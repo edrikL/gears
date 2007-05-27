@@ -1,0 +1,227 @@
+<!--
+Copyright 2007, Google Inc.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, 
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ 3. Neither the name of Google Inc. nor the names of its contributors may be
+    used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>Gears API Developer's Guide - WorkerPool API</title>
+
+
+<link rel="stylesheet" type="text/css" href="./dev_docs.css" />
+<link rel="stylesheet" type="text/css" href="./local_extensions.css" />
+<!--[if IE 7]><link rel="stylesheet" type="text/css" href="ie7only.css" /><![endif]-->
+<!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="ie6only.css" /><![endif]-->
+<!--[if IE]><link rel="stylesheet" type="text/css" href="ieonly.css" />  <![endif]-->
+</head>
+<body id="api_threads_page">
+<a name="top" id="top"></a>
+<!-- ########## PAGE HEADER ########## -->
+<div id="header">
+
+<div id="logo">
+<a href="index.html"><img src="resources/code_sm.png"  alt="Return to Google Gears Home page" width="150" height="55" border="0" /></a></div>
+
+<h1 id="doc_title">Google Gears API Developer's Guide (Beta)</h1>
+
+<ul class="trail">
+<li>Google Code Home</li> &gt;
+<!-- <li><a href="http://code.google.com/">Google Code Home</a></li> &gt; -->
+<li><a href="api_summary.html">Gears API Reference</a></li> 
+&gt;
+<li>WorkerPool Module</li>
+</ul>
+</div>
+<!-- ########## END PAGE HEADER ########## -->
+
+<div id="wrapper">
+
+<!-- ########## SIDE NAVIGATION ########## -->
+
+<div id="sidenav">
+  <script src="nav.js"></script>
+</div>
+<!-- ########## END SIDE NAVIGATION ########## -->
+
+
+
+
+<!-- ########## PAGE CONTENT ########## -->
+<div id="pagecontent">
+
+<h1 id="page_title">WorkerPool Module API</h1>
+<p>The Google Gears WorkerPool module enables your applications to run code in parallel. </p>
+<h2>Overview</h2>
+<p>WorkerPool is used to increase an application's responsiveness by allowing  time-consuming operations to run in parallel.</p>
+<p> A single web application performing a time-intensive task can cause  the browser to be unresponsive to the user's UI interactions. By using the WorkerPool to run  operations such as I/O or heavy computation, the browser can remain responsive. </p>
+<h3>Using Workers and WorkerPool </h3>
+<p>A WorkerPool is created by calling the Gears Factory. Each WorkerPool can have any number of
+Workers, which are created by calling <span class="code">createWorker()</span>. Workers are identified by a unique  ID. </p>
+<p>Workers  communicate with each other via message-passing, using <span class="code">sendMessage()</span>. Receiving a message triggers the Worker's callback function, <span class="code">onmessage</span>. <strong style="color:red">Note:</strong> <b>There is no shared state between workers.</b></p>
+<p>Messages can be sent and received only by members of the same WorkerPool.</p>
+<p>Note that the <span class="code">onmessage</span> callback must be defined within the <span class="code">fullScript</span> parameter when <span class="code">createWorker()</span> is called. The script is guaranteed to run once before <span class="code">createWorker</span> returns. </p>
+<p><br>
+  <a name="WorkerPool" id="WorkerPool"></a></p>
+<h2>WorkerPool class</h2>
+
+<pre><code>callback <b>onmessage</b>(messageString, srcWorkerId)
+int  <b>createWorker</b>(fullScript)
+void <b>sendMessage</b>(messageString, destWorkerId)</code></pre>
+<br>
+
+<p>To create a WorkerPool object, use the Gears Factory as follows:</p>
+<pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
+&lt;script type="text/javascript"&gt;
+var workerPool = google.gears.factory.create('beta.workerpool', '1.0');
+&lt;/script&gt;</code></pre>
+
+
+<h3>Event Handler </h3>
+<table>
+  <tr class="odd">
+    <th colspan="2"><div align="left"><code>callback onmessage(messageString, srcWorkerId)</code></div></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Parameters:</td>
+    <td width="489" class="odd"><span class="code">messageString
+                                       </span>- the message to send<span class="code"> <br />
+                                       srcWorkerId - </span>ID of the source worker, as provided by <span class="code">createWorker</span> <span class="code"><br />
+                                       </span></td>
+  </tr>
+  <tr class="odd">
+    <td>Description:</td>
+    <td class="odd">Specifies the message handler that is called when this Worker receives a message.</td>
+  </tr>
+</table>
+
+<h3>Methods</h3>
+<table>
+  <tr class="odd">
+    <th colspan="2"><div align="left"><code>createWorker(fullScript)</code></div></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Return value: </td>
+    <td width="489"><span class="code">int </span>-  worker ID </td>
+  </tr>
+  <tr class="odd">
+    <td>Parameters:</td>
+    <td class="odd"><span class="code">fullScript</span><span class="code"> <br />
+    </span></td>
+  </tr>
+  <tr class="odd">
+    <td>Exceptions:</td>
+    <td class="" >    </td>
+  </tr>
+  <tr class="odd">
+    <td>Description:</td>
+    <td class="odd">
+      Creates a worker with <span class="code">fullScript</span> as the entire body of code for that worker.
+      <br><br>
+      Returns the ID of the new worker.
+      <br><br>
+      Worker IDs are guaranteed to be positive integers that are never reused within the same worker pool.
+      <br><br>
+      The code provided in <span class="code">fullScript</span>  is guaranteed to run once before
+      <span class="code">createWorker()</span> returns. &nbsp;The code must set an <span class="code">onmessage</span>
+      handler during that time, otherwise the worker will never receive messages.
+      <br><br>
+      Two global objects are inserted into the namespace of every created worker:<br>
+      &bull; <span class="code">google.gears.factory</span> - Provides a Factory for the worker.<br>
+      &bull; <span class="code">gearsWorkerPool</span> - Gives access to the WorkerPool that created the worker.<br>
+    </td>
+  </tr>
+</table>
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>void sendMessage(messageString, destWorkerId)</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Return value: </td>
+    <td width="489"><code>void</code></td>
+  </tr>
+  <tr class="odd">
+    <td>Parameters:</td>
+    <td class="odd">
+      <span class="code">messageString</span>- the message to send
+      <br />
+      <span class="code">destWorkerId</span> - ID of the destination worker
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Exceptions:</td>
+    <td class="" ></td>
+  </tr>
+  <tr class="odd">
+    <td>Description:</td>
+    <td class="odd">
+      <p>Sends <code>messageString</code> to the  <span name="st">worker specified by <span class="code">destWorkerId</span> </span>.
+        <br>
+        <br>
+        All messages are strings.
+        <br>
+        <br>
+        Messages sent from worker 1 to worker 2 in a particular order will be received in the same order.</p>
+      <p>Messages can be sent and received only by Workers that were created in the same WorkerPool. </p></td>
+  </tr>
+</table>
+
+</div><!-- end page content -->
+<!-- ########## END PAGE CONTENT ########## -->
+</div><!-- end wrapper -->
+<!-- ########## PAGE FOOTER ########## -->
+<div id="footer">
+
+<div id="footerlogo">
+<img src="resources/art.gif" alt="Google color balls" />
+</div>
+
+<div>
+    <p id="copyright">&copy;2007 Google -
+	<a href="terms.html">Terms of Service</a>
+	</p>
+  </div>
+
+</div><!--end footer -->
+<!-- ########## END PAGE FOOTER ########## -->
+<!-- BEGIN  date this page was updated -->
+<p id="date">
+Updated on
+<script type="text/javascript">
+<!-- hide script from old browsers
+    var lm = new Date(document.lastModified);
+    document.write(lm.toDateString());
+//-->
+</script>
+<!-- END date this page was updated -->
+
+
+<script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-1619145-1";
+if (typeof urchinTracker != 'undefined') {
+  urchinTracker();
+}
+</script></body></html>

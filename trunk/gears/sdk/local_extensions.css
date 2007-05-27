@@ -1,0 +1,221 @@
+/*
+Copyright 2007, Google Inc.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, 
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ 3. Neither the name of Google Inc. nor the names of its contributors may be
+    used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+#page_title {
+  margin-left:25px;
+}
+
+.view-source {
+  font-size:.9em;
+}
+
+.backtotop {
+  text-align:right;
+  float:none;
+  clear:none;
+}
+
+/* for download terms */
+.acceptterms{
+    padding:.5em;
+	margin: 1em 0 0 25px;
+	background-color: #efefef;
+	border-top: #fff;
+	width:500px;
+	border: 1px solid #000;
+	border-color: #0000ff;
+}
+
+/* For confidential stmt */
+.confidential{
+	float:right;
+	clear:both;
+	margin: 1.5em 0 1em 4em;
+	position:relative;
+	padding:0;
+	font-size:x-small;
+	color:red;
+	}
+.feedback{
+    float:right;
+	clear:both;
+	margin: 1.5em 0 1em 4em;
+	position:relative;
+	padding:0;
+	font-size:x-small;
+	color:green;
+	}
+
+/* Alert box */
+.alert {
+  border: 1px solid #224499;
+  background-color:#e5ecf9;
+  padding: 1em;
+  font-weight:bold;
+  margin: 1em 0 0 25px;
+}
+
+/* Default color for code, if JS is turned off. */
+code, pre, samp, var, xref {
+  color: #006000;
+}
+
+.code {
+  color: #006000;
+  font-family: "Courier", monospace;
+  font-size: 100%;
+}
+
+/* Background color for code */
+pre {
+  background-color:#fff8ec;
+}
+
+/* Make sure the text wraps; otherwise, we get ugly ugly scrollbars for
+ * pre-formatted text. This works in most browsers (listed below). */
+pre {
+  white-space: pre-wrap;       /* css-3 */
+  white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+  white-space: -pre-wrap;      /* Opera 4-6 */
+  white-space: -o-pre-wrap;    /* Opera 7 */
+  word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
+
+/* Table of Contents */
+
+.toc{margin-top:1em;}
+.toc .column {
+  width: 49.5%;
+  float: left;
+}
+
+.toc .column3 {
+  width: 33%;
+  float: left;
+}
+
+.toc ol {
+  margin: 0;
+  list-style:none;
+}
+
+.toc ol li {
+  font-weight: bold;
+}
+
+.toc ol li ol li {
+  margin: 0;
+  padding: 0;
+  margin-left: 1em;
+  font-weight:normal;
+}
+
+/* IE float clearing */
+
+* html .toc {
+  height: 1%;
+}
+
+
+
+.promo {
+  margin-top: 2em;
+  border: 1px solid #ff9900;
+}
+
+/* pretty printing styles.  See prettify.js */
+.str { color: #080; }
+.kwd { color: #008; }
+.com { color: #800; }
+.typ { color: #606; }
+.lit { color: #066; }
+.pun { color: #660; }
+.pln { color: #000; }
+.tag { color: #008; }
+.atn { color: #606; }
+.atv { color: #080; }
+
+pre.prettyprint { padding: 0.5 em; border: 1px solid #888;}
+
+/* ---- STANDARD LOCAL EXTENSIONS ---- */
+
+/* ---- COLOR DEFINITION ---- */
+#doc_title, h1, h2, hr, .sidebox h2, .linkbox a,
+    table, td, th, .alert{
+    background-color: #e5ecf9;
+    border-color: #3366cc;
+    }
+
+/* ----  do not change  ---- */
+table, td, h2 {
+   background-color: #fff;
+}
+/* ------------------------- */
+
+
+/* a yellow look and feel */
+
+
+/* Zebra tables */
+TR.odd TD {
+  background-color: #f4f4f4;
+}
+
+TR.even TD {
+  background-color: #eeeeee;
+}
+
+
+/* ---- PAGE ID TAGS ---- */
+
+
+#home_page #home_link,
+#start_page #start_link,
+#download_page #download_link,
+#install_page #install_link,
+#overview_page #overview_link,
+#clientlib_page #clientlib_link,
+#sample_page #sample_link,
+#dev_page #dev_link,
+#devdb_page #devdb_link,
+#devthread_page #devthread_link,
+#devwebcapture_page #devwebcapture_link,
+#api_summary_page #api_summary_link,
+#api_factory_page #api_factory_link,
+#api_db_page #api_db_link,
+#api_threads_page #api_threads_link,
+#api_webcapture_page #api_webcapture_link,
+#tools_page #tools_link,
+#design_page #design_link,
+#life_page #life_link {
+
+
+/* ---- ! DO NOT MODIFY ! ---- */
+	color:#000;
+	text-decoration:none;
+	}
+/* ------------------------ */

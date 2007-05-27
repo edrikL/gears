@@ -1,0 +1,172 @@
+<!--
+Copyright 2007, Google Inc.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, 
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ 3. Neither the name of Google Inc. nor the names of its contributors may be
+    used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html><head><title>Gears API Developer's Guide - Release Notes</title>
+
+
+<link rel="stylesheet" type="text/css" href="./dev_docs.css" />
+<link rel="stylesheet" type="text/css" href="./local_extensions.css" />
+<!--[if IE 7]><link rel="stylesheet" type="text/css" href="ie7only.css" /><![endif]-->
+<!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="ie6only.css" /><![endif]-->
+<!--[if IE]><link rel="stylesheet" type="text/css" href="ieonly.css" />  <![endif]-->
+</head><body id="relnotes_page">
+<a name="top"></a>
+<!-- ########## PAGE HEADER ########## -->
+<div id="header">
+
+<div id="logo">
+<a href="index.html"><img src="resources/code_sm.png"  alt="Return to Google Gears Home page" width="150" height="55" border="0" /></a></div>
+
+
+<h1 id="doc_title">Google Gears API Developer's Guide (Beta)</h1>
+
+<ul class="trail">
+  <li><a href="http://code.google.com/">Google Code Home</a></li> &gt;
+  <li><a href="index.html">Gears Home</a></li> &gt;
+  <li>Release Notes</li>
+</ul>
+</div>
+<!-- ########## END PAGE HEADER ########## -->
+
+<div id="wrapper">
+<!-- ########## SIDE NAVIGATION ########## -->
+
+<div id="sidenav">
+  <script src="nav.js"></script>
+</div>
+<!-- ########## END SIDE NAVIGATION ########## -->
+
+
+
+
+<!-- ########## PAGE CONTENT ########## -->
+<div id="pagecontent">
+
+
+<h1 id="page_title">Gears Release Notes</h1>
+
+
+
+<h2>Build 0.1.41.0 (2007/05/14)</h2>
+
+<h3>API Changes</h3>
+<ul>
+  <li>scour_utils.js has been removed. Gears now has a "canned" version of this file that you can request with: <code>https://www.google.com/gears?file=common.js</code>. <b>Note:</b> if Gears is not installed this URL is a 404.
+  <li>Factory: create() module names are now <code>'beta.database'</code>, <code>'beta.localserver'</code>, and <code>'beta.workerpool'</code>. (Formerly they were 'google.com.beta.*'.)
+  <li>LocalServer: manifest entries can match arbitrary query strings using the flag <code>"ignoreQuery": true</code>.
+  <li>LocalServer: store names have the same disallowed characters are Database names.
+</ul>
+
+
+
+<h2>Build 0.1.38.0 (2007/04/20)</h2>
+
+<h3>API Changes</h3>
+<ul>
+  <li>General: the global Factory object is exposed as <code'google.gears.factory'</code> (formerly 'gearsFactory') for consistency with other Google AJAX APIs.
+</ul>
+
+<h3>New Features</h3>
+<ul>
+  <li>Users have control over whether a site can use Gears APIs.
+  <li>A stricter security model is now used for all Gears components (same-origin: identical scheme + host + port).
+</ul>
+
+<h3>Resolved Issues</h3>
+<ul>
+  <li><em>Too many to list here.</em>
+</ul>
+
+
+
+<h2>Known Issues </h2>
+
+<p><strong>LocalServer</strong></p>
+<ul>
+  <li>Stale images may be served when the content changes for a captured URL.
+</ul>
+
+<p><strong>WorkerPool</strong></p>
+<ul>
+  <li>The onmessage property is write-only.
+  <li>The onmessage property must be set before sending a message (rather than receiving a message).
+</ul>
+
+<p><strong>Installation</strong></p>
+<ul>
+  <li>Installation on Windows requires administrator rights.
+  <li>The installer is missing user-friendly text.
+  <li>Installation requires a browser restart, but users are not told this.
+</ul>
+
+<p><strong>Other</strong></p>
+<ul>
+  <li>Exceptions in Firefox are not instanceof nsIConsoleError. This makes them not work properly with Firebug and JS console. As a workaround, you can catch the errors and print their .message property, or override all Objects' toString() to check if there is a message property and if so, print it.
+</ul>
+
+
+
+<p>&nbsp;</p>
+</div>
+<!-- ########## END PAGE CONTENT ########## -->
+</div><!-- end wrapper -->
+<!-- ########## PAGE FOOTER ########## -->
+<div id="footer">
+
+<div id="footerlogo">
+<img src="resources/art.gif" alt="Google color balls" />
+</div>
+
+<div>
+    <p id="copyright">&copy;2007 Google -
+	<a href="terms.html">Terms of Service</a>
+	</p>
+  </div>
+
+</div><!--end footer -->
+<!-- ########## END PAGE FOOTER ########## -->
+<!-- BEGIN  date this page was updated -->
+<p id="date">
+Updated on
+<script type="text/javascript">
+<!-- hide script from old browsers
+    var lm = new Date(document.lastModified);
+    document.write(lm.toDateString());
+//-->
+</script>
+<!-- END date this page was updated -->
+
+
+<script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-1619145-1";
+if (typeof urchinTracker != 'undefined') {
+  urchinTracker();
+}
+</script></body></html>
