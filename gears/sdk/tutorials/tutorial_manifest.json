@@ -1,0 +1,9 @@
+{
+  "betaManifestVersion": 1,
+  "version": "my_version_string",
+  "entries": [
+      { "url": "main.html" },
+      { "url": "page1.html"},
+      { "url": "images/image.gif"}
+    ]
+}

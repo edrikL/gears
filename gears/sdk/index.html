@@ -1,0 +1,187 @@
+<!--
+Copyright 2007, Google Inc.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, 
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ 3. Neither the name of Google Inc. nor the names of its contributors may be
+    used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html><head>
+<title>Gears API Developer's Guide - Home</title>
+
+
+<link rel="stylesheet" type="text/css" href="./dev_docs.css" />
+<link rel="stylesheet" type="text/css" href="./local_extensions.css" /> 
+<!--[if IE 7]><link rel="stylesheet" type="text/css" href="ie7only.css" /><![endif]-->
+<!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="ie6only.css" /><![endif]-->
+<!--[if IE]><link rel="stylesheet" type="text/css" href="ieonly.css" />  <![endif]-->
+
+<style type="text/css">
+#pagecontent table, #pagecontent td {
+  border:none;
+}
+
+#pagecontent img {
+  margin:0;
+}
+</style>
+</head>
+<body id="home_page">
+<a name="top"></a>
+<!-- ########## PAGE HEADER ########## -->
+<div id="header">
+
+<div id="logo">
+<a href="index.html"><img src="resources/code_sm.png" alt="Return to Google Gears Home page" width="150" height="55" border="0" /></a></div>
+
+<h1 id="doc_title">Google Gears API Developer's Guide (Beta)</h1>
+
+
+</div>
+<!-- ########## END PAGE HEADER ########## -->
+
+<div id="wrapper">
+<!-- ########## SIDE NAVIGATION ########## -->
+
+<div id="sidenav">
+  <script src="nav.js"></script>
+</div>
+<!-- ########## END SIDE NAVIGATION ########## -->
+
+
+  <!-- ########## PAGE CONTENT ########## -->
+<div id="pagecontent">
+  <h1 id="page_title">Google Gears: Enabling Offline Web Applications </h1>
+  <p>Google Gears is an open source browser extension that enables developers to create web applications that run offline.</p>
+  <!--
+  <div class="alert">
+    <a href="#">Start developing Google Gears applications</a>
+  </div>
+  -->
+  <br>
+
+  <h2>Features</h2>
+  <p>Google Gears consists of three modules which address the core challenges in making web applications work offline.</p>
+
+  <table cellpadding="0" cellspacing="0">      
+  <tr>
+    <td>
+      <a href="api_localserver.html"><img src="resources/localserver.gif" alt="LocalServer" width="43" height="35" style="border:none;"></a>
+    </td>
+    <td>
+      <a href="api_localserver.html">LocalServer</a><br />
+      Cache and serve application resources (HTML, JavaScript, images, etc.) locally
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <a href="api_database.html"><img src="resources/database.gif" alt="Database" width="43" height="35" style="border:none;"></a>
+    </td>
+    <td>
+      <a href="api_database.html">Database</a><br>
+      Store data locally in a fully-searchable relational database
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <a href="api_workerpool.html"><img src="resources/workerpool.gif" alt="WorkerPool" width="43" height="35" style="border:none;"></a>
+    </td>
+    <td>
+      <a href="api_workerpool.html">WorkerPool</a><br>
+      Make your web applications more responsive by performing resource-intensive operations asynchronously
+    </td>
+  </tr>
+</table>
+
+
+
+  <p><a href="overview.html">Learn more &raquo;</a></p>
+  <br>
+
+  <h2>Samples</h2>
+  <p>The samples below demonstrate some of the Google Gears functionality. View source to see how the samples use the Google Gears API.<br> 
+	<strong style="color:red">Note:</strong> You must <a href="install.html"><strong>install Google Gears</strong></a> to use these samples.</p>
+  <ul>
+    <li>
+      <a href="samples/hello_world_database.html">Simple Database Demo</a> -
+      Store and retrieve a single value from the database
+    <li>
+      <a href="samples/hello_world_resourcestore.html">Simple ResourceStore Demo</a> -
+      Capture a URL and display it while offline
+    </li>
+    <li>
+      <a href="samples/hello_world_managedstore">Simple ManagedResourceStore Demo</a> -
+      Capture a versioned set of URLs atomically and update them together
+    </li>
+    <li>
+      <a href="samples/hello_world_workerpool.html">Simple WorkerPool Demo</a> -
+      Perform a long-running computation without blocking the browser UI
+    </li>
+  </ul>
+</div>
+<!-- ########## END PAGE CONTENT ########## -->
+</div><!-- end wrapper -->
+<!-- ########## PAGE FOOTER ########## -->
+<div id="footer">
+
+<div id="footerlogo">
+<img src="resources/art.gif" alt="Google color balls" />
+</div>
+
+<div>
+    <p id="copyright">&copy;2007 Google -
+	<a href="terms.html">Terms of Service</a>
+	</p>
+  </div>
+
+</div><!--end footer -->
+<!-- ########## END PAGE FOOTER ########## -->
+
+
+<p id="date">
+Updated on
+<!-- BEGIN date of last update AND is Gears installed -->
+<script type="text/javascript" src="tools/gears_init.js"></script>
+<script type="text/javascript">
+  var lm = new Date(document.lastModified);
+  var statusText = lm.toDateString();
+
+  if (!window.google || !google.gears) {
+    statusText += " - <a href='install.html'>Gears not installed</a>";
+  } else {
+    var buildInfo = google.gears.factory.getBuildInfo();
+    statusText += " - Gears build " + buildInfo;
+  }
+
+  document.write(statusText);
+</script>
+<!-- END javascript -->
+
+<script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-1619145-1";
+if (typeof urchinTracker != 'undefined') {
+  urchinTracker();
+}
+</script></body></html>
