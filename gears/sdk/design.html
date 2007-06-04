@@ -26,14 +26,16 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
-<html><head><title>Google Gears API Developer's Guide (Beta) - Design Topics</title>
+<html><head><title>Google Gears API Developer's Guide (Beta) - Getting Started</title>
 
 
-<link rel="stylesheet" type="text/css" href="./dev_docs.css" />
+<!-- Begin Templates -->
+<link rel="stylesheet" type="text/css" href="http://code.google.com/css/dev_docs.css" /> 
 <link rel="stylesheet" type="text/css" href="./local_extensions.css" /> 
-<!--[if IE 7]><link rel="stylesheet" type="text/css" href="ie7only.css" /><![endif]-->
-<!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="ie6only.css" /><![endif]-->
-<!--[if IE]><link rel="stylesheet" type="text/css" href="ieonly.css" />  <![endif]-->
+<!--[if IE 7]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie7only.css" /><![endif]-->
+<!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie6only.css" /><![endif]-->
+<!--[if IE]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ieonly.css" />  <![endif]-->
+<!-- End Templates -->
 </head><body id="design_page">
 <a name="top"></a>
 <!-- ########## PAGE HEADER ########## -->
@@ -44,9 +46,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <h1 id="doc_title">Google Gears API Developer's Guide (Beta)</h1>
 
-<ul class="trail"><li><a href="http://code.google.com/">Google Code Home</a>&nbsp;&gt;</li>
-	  <li><a href="overview.html"> Developer's Guide</a>&nbsp;&gt;</li>
-      <li>Design Topics </li>
+<ul class="trail"><li><a href="http://code.google.com/">Google Code Home</a></li>
+	   <li>&gt;&nbsp;<a href="index.html">Gears Home</a></li>
+	   <li>&gt;&nbsp;Getting Started </li>
 </ul>
 </div>
 <!-- ########## END PAGE HEADER ########## -->
@@ -65,115 +67,51 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <!-- ########## PAGE CONTENT ########## -->
 <div id="pagecontent">
 
-<h1 id="page_title">Design  Topics</h1>
-
+<h1 id="page_title">Getting Started with Google Gears</h1>
+<p>A short introduction to enabling an application to work offline using Gears.</p>
 <h3>Contents</h3>
 <ol class="toc">
-  <li><a href="#overview">Overview</a></li>
-  <li><a href="#topic">&lt;PlaceHolder Title&gt;</a></li>
-  <li><a href="#designconsider">Design Considerations</a>
-  <li><a href="tutorial.html">Tutorial: Enabling Static Files to Work Offline using Google Gears</a></li>
-      <li><a href="#detecting">Nuts and Bolts: Detecting and Installing Google Gears </a></li>
-      <a name="overview" id="overview"></a>
+  <li><a href="#start">Getting Started   </a></li>
+  <li><a href="#detecting">Nuts and Bolts: Detecting and Installing Google Gears </a></li>
+      <a name="start" id="start"></a>
       </li>
 </ol>
-<h2>Overview</h2>
-<p>Read this to find out everything you ever wanted to know about enabling your application to work offline using Google Gears.</p>
-<p>&nbsp;</p>
-<h1><a name="topic" id="topic"></a>&lt;PlaceHolder Title&gt; </h1>
-<p>&lt;text&gt;</p>
-<h2>(Consider using H1 if the content is an entire article. H2 if its only a major section only. ) </h2>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&lt;placeholder area for new text</p>
-<h1><a name="designconsider" id="designconsider"></a>Design Considerations for Offline-enabled Apps </h1>
-<p>Modifying a web application to work offline introduces new states that an application must handle. Below is a list of design issues to consider when using Gears functionality in your application. </p>
-
-<h3>Will the app have explicit online/offline modes?</h3>
-<p>
-Application developers need to decide how they would like their users to experience offline functionality. A common misconception is that it is possible to reliably detect whether a browser is connected. However, connectivity is a relative term - for example, a server can be unreachable (or slow) despite the fact that the network is available. Running an application locally makes it possible to offer applications that are highly responsive despite slow network connections.
+<h1>Getting Started </h1>
+<p>First, if you haven't already, <a href="install.html">install</a> Google Gears on your computer to be able to use the sample applications and tools. </p>
+<h3>Going Offline </h3>
+<p>The first thing you need to run a web application offline is the ability to start it without an Internet connection. This is the purpose of the <a href="api_localserver.html">LocalServer module</a>. </p>
+<p>For a fast introduction to taking web content offline, work through the tutorial <a href="tutorial.html">Enabling Static Files to Work Offline using Gears</a>. You will be introduced  to the <a href="api_localserver.html">LocalServer API</a> and the <a href="api_localserver.html#manifest_file">manifest file</a>, the key components that cache your application's resources and make it available offline. </p>
+<h3>Storing User's Data  </h3>
+<p>Applications that are more than just static files  have data that is typically stored on the server. For the application to be useful offline, this data must be accessible locally. The <a href="api_database.html">Database module</a> provides a relational database for storing data. On the <a href="architecture.html">Architecture</a> page you will find a discussion of  strategies for designing the local storage that your application needs.</p>
+<p>When an offline application reconnects, you will need to <em>synchronize</em> any changes made in the local database with the server. There are many different approaches to synchronizing data, and there is no single perfect approach. The Architecture page describes some strategies for synching. </p>
+<p>An additional feature of the Google Gears database is Full-Text Search, providing a fast way to search text within a database file. Read the <a href="api_database.html#sqlite_fts">details</a> here. </p>
+<h3>Performance</h3>
 </p>
-<p>
-In some cases, it is worthwhile to have users "switch" into online vs. offline modes. However, it is also possible to design applications to run "locally" such that users can (almost) ignore whether the app is connected. Under the latter design, when a user enables the application to run locally, the app runs from the local database (even when connected) and syncs data whenever a connection is available. 
-</p>
-<p>
-	Some characteristics of these two designs are:<br>
-	<ul>
-	<li><b>Explicit online/offline modes</b>
-	<ul>
-	  <li> Can be an easier initial design </li>
-	  <li> Requires users to be conscious of the connectivity state </li>
-	  <li> App does not work if the the browser gets disconnected before the user engages the offline mode </li>
-	</ul></li>
-	<li><b>Run in local mode</b>
-	<ul>
-	  <li> Users can ignore connectivity (simpler experience) </li>
-	  <li> App can offer superior performance irrespective of network (ex. remain highly responsive despite a slow connection) </li>
-	  <li> Requires background synchronization logic </li>
-	  <li> App needs to handle network-critical events  </li>
-	</ul></li>
-	</ul>
-</p>
-<h3>Login and authentication</h3>
-<ul>
-  <li> Do you need to capture different versions of your application for different users? For example, applications that are translated or support customizeable functionality may have multiple versions.</li>
-  <li> How will users log in offline? </li>
-  <li> Once a user logs in offline, how will authentication work when they reconnect to the Internet? </li>
-  <li> How will the application handle switching users? </li>
-  <li> How long are sessions supposed to last? </li>
-  <li> Should a session still be valid across an online/offline switch? </li>
-  <li> Should a session still be valid across users switches? </li>
-  <li> Do you need to support something like Single-Sign-On across a number of apps? </li>
-</ul>
-<h3>What will the synchronization strategy be? </h3>
-<p>There is no one-size-fits-all solution for synchronizing data. If your application stores users data on a server, and will be using Google Gears to store user data locally, then you will need a customized solution to synchronize the local data with the data  on the server. If your web application ignores concurrency today, is it still safe to do so when offline?
-</p>
-<p>
-  Some examples of a synchronization strategy include:
-  <ul>
-    <li> Queueing actions and ignoring conflicts </li>
-    <li> Optimistic concurrency </li>
-    <li> Queueing 'diffs' and saving the union of the diffs on the server </li>
-    <li> Explicit conflict resolution </li>
-  </ul>
-<h3>Application Versioning</h3>
-<ul>
-  <li> How will you handle version updates that require local schema migration? </li>
-  <li> What happens if a server gets rolled back to a previous version?</li>
-  <li> If you have a server farm, how will you handle version skew across servers? </li>
-  <li> What should happen if the server version changes while the app is running? </li>
-  <li> What if the server version changes in a way that is incompatible with the client? </li>
-</ul>
-<h3>How many databases will the app have?</h3>
-  <p> Google Gears doesn't set a limit on how many databases are used per application. You can decide if your app will create one database for each user, one database for everyone, or some other scheme, as your app requires. </p>
-  <p>Some benefits of creating one database for each user:
-    <ul>
-      <li>Easier to isolate per-user data </li>
-      <li>For large datastores, one database-per-user could improve performance </li>
-    </ul>
-  </p>
-  <h1><a name="detecting" id="detecting"></a>Nuts and Bolts: Detecting and Installing Google Gears </h1>
+<p>When synchronizing large amounts of data, you may find that the database operations begin to affect the responsiveness of the browser. The <a href="api_workerpool.html">WorkerPool</a> allows you to move your database operations to the background to keep the browser responsive.</p>
+<p>The WorkerPool is useful for any expensive operations that  slow down the UI.</p>
+<h3>Next Steps </h3>
+<p>Check out the Resources and Tools page to download useful files and sample applications. </p>
+<p>See the FAQ to find answers to common questions. And finally, we invite you to participate in the Developer Forum for Google Gears. </p>
+<p><a name="detecting" id="detecting"></a></p>
+<h1>Nuts and Bolts: Detecting and Installing Google Gears </h1>
   <p>Your web application needs to detect whether or not Google Gears is installed on a user's machine before calling the APIs, and also to determine when to display an installation prompt to the user.</p>
-  <h3>Detecting Google Gears Programmatically</h3>
-  <p>Use the following code snippet to determine if Google Gears is installed before calling any of the APIs.</p>
-  <p> If your application detects that Google Gears is not installed, you can give the user the option to install it. See the following section for details. </p>
-  <p class="note"><strong>Note:</strong> Remember that even if Google Gears is installed on the computer, your application should ask <em>each</em> user whether or not offline storage should be enabled for their account, to prevent user data from being stored inadvertantly on untrusted computers. </p>
-  <p>&lt;code snippet&gt; </p>
-  <p>&nbsp;</p>
-  <p>&nbsp;</p>
-  <p>&nbsp;</p>
-  <h3>Calling Google Gears Installer from Your Application</h3>
-  <p>Your application can provide the user with a near-seamless way to install Google Gears by directing  users to the official Google Gears installation page with  parameters that you include to identify your application.</p>
-  <p>Use the following URL to access the Google Gears installation page. Substitute your message and your URL in the parameters. </p>
-  <pre class="code">http://gears.google.com/?message=Example Message&amp;returnaddr=http://code.google.com/apis/gears/index.html
- </pre>
-  <p>Parameters:</p>
-  <p> <code>message:</code> Provide any text up to 150 characters. This message appears at the top of the installation page. <br />
-    For example: &quot;Install Google Gears to enable MyGreatApp's offline features!&quot;</p>
-  <p><code>returnaddr:</code> Provide your application's URL. The user will be directed to return to this URL when installation is complete. </p>
-  <p>&nbsp;</p>
-  <p></p>
-  <p>&nbsp;</p>
+  <p>Always initialize Google Gears using <code><a href="resources/gears_init.js">gears_init.js</a></code> . If Gears is installed, then <code>google.gears</code> will be defined. If Gears isn't installed, you can direct the user to a customized installation page, as shown below.
+  <p><b>Note:</b> Always use gears_init.js to access Gears. Other uses may not be supported in the future.
+
+<pre class="code">&lt;script src="<a href="tools/gears_init.js">gears_init.js</a>"&gt;&lt;/script&gt;
+&lt;script&gt;
+  if (!window.google || !google.gears) {
+    location.href = "http://gears.google.com/?action=install&amp;message=&lt;your welcome message&gt;" +<br>                    "&amp;return=&lt;your website url&gt;";
+  }
+&lt;/script&gt;</pre>
+  <p>Use the  URL in the code above to access the Google Gears installation page. Substitute your customized message and your URL in the parameters. </p>
+    <p>Parameters:
+  <ul>
+	<li><code>action</code>: Include the 'action' parameter with the value 'install' to cause the Google Gears installation page to use the <span class="code">message</span> and <span class="code">return</span> parameters. </li>
+    <li><code>message</code>: Provide any text up to 150 characters. This message appears at the top of the installation page. For example: &quot;Install Google Gears to enable MyGreatApp's offline features!&quot;</li>
+    <li><code>return</code>: Provide your application's URL. The user will be directed back to this URL when installation is complete. </li>
+  </ul>
+  </p>
 </div>
 
 <!-- ########## END PAGE CONTENT ########## -->
@@ -187,29 +125,21 @@ In some cases, it is worthwhile to have users "switch" into online vs. offline m
 
 <div>
     <p id="copyright">&copy;2007 Google -
-	<a href="terms.html">Terms of Service</a>
+	<a href="http://gears.google.com/tos.html">Terms of Service</a>
 	</p>
   </div>
 
 </div><!--end footer -->
 <!-- ########## END PAGE FOOTER ########## -->
-<!-- BEGIN  date this page was updated -->
-<p id="date">
-Updated on
-<script type="text/javascript">
-<!-- hide script from old browsers
-    var lm = new Date(document.lastModified);
-    document.write(lm.toDateString());
-//-->
-</script>
-<!-- END date this page was updated -->
 
 
-<script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript">
-</script>
+
+<!-- ########## ANALYTICS ########## -->
+<script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript"></script>
 <script type="text/javascript">
-_uacct = "UA-1619145-1";
-if (typeof urchinTracker != 'undefined') {
+  _uacct = "UA-18071-1";
+  _uanchor=1;
   urchinTracker();
-}
-</script></body></html>
+</script>
+<!-- ########## END ANALYTICS ########## -->
+</body></html>

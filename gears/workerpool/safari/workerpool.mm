@@ -117,7 +117,23 @@ static const float kTimeoutDelay = 0.5;
   argv[1] = [[identifier description] UTF8String];
   argv[2] = [[self serverName] UTF8String];
   argv[3] = NULL;
-
+  
+  // We need to be sure to use the environment variables that point the worker
+  // to use the WebKit.app frameworks as documented:
+  // http://developer.apple.com/opensource/internet/nightlywebkit.html
+  Class webViewClass = NSClassFromString(@"WebView");
+  NSBundle *webkitBundle = [NSBundle bundleForClass:webViewClass];
+  NSString *webkitResourcesPath = 
+    [[webkitBundle bundlePath] stringByDeletingLastPathComponent];
+  NSString *frameworkPath = 
+    [NSString stringWithFormat:@"DYLD_FRAMEWORK_PATH=%s",
+      [webkitResourcesPath fileSystemRepresentation]];
+  
+  const char *env[3];
+  env[0] = [frameworkPath UTF8String];
+  env[1] = "WEBKIT_UNSET_DYLD_FRAMEWORK_PATH=YES";
+  env[2] = NULL;
+  
   pid_t pid = fork();
 
   // If we're in the child, load in our new executable and run.  The parent
@@ -131,7 +147,7 @@ static const float kTimeoutDelay = 0.5;
     pid_t newPid = fork();
     
     if (newPid == 0) {
-      execv(argv[0], (char * const *)argv);
+      execve(argv[0], (char * const *)argv, (char * const *)env);
       _exit(errno);
     }
 
@@ -304,8 +320,15 @@ static const float kTimeoutDelay = 0.5;
   
   isDisconnected_ = YES;
   [[factory_ supervisor] unsuperviseWorkerPool:self];
-  factory_ = nil;
-  [workers_ makeObjectsPerformSelector:@selector(cancel)];
+  
+  @try {
+    [workers_ makeObjectsPerformSelector:@selector(cancel)];
+  }
+  @catch (id exception) {
+    // We're shutting down, so don't worry about the exception and just
+    // continue processing
+  }
+    
   [workers_ release];
   workers_ = nil;
   [sources_ release];

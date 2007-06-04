@@ -48,20 +48,25 @@ var nav = [
     title: "Developer's Guide",
     submenu: [
       { 
-        title: "Design Topics",
+        title: "Getting Started",
         id: "design",
         url: "design.html" 
       },
       {
-        title: "Security",
-        id: "security",
-        url: "security.html" 
-      },
-	  {
         title: "Tutorial",
         id: "tutorial",
         url: "tutorial.html" 
       },
+      {
+        title: "Architecture",
+        id: "architecture",
+        url: "architecture.html" 
+      },	  
+      {
+        title: "Security",
+        id: "security",
+        url: "security.html" 
+      },	  
       { 
         title: "Resources and Tools",
         id: "tools",
@@ -85,17 +90,17 @@ var nav = [
       },
       { 
         title: "Database",
-        id: "api_db",
+        id: "api_database",
         url: "api_database.html" 
       },
       { 
         title: "LocalServer",
-        id: "api_webcapture",
+        id: "api_localserver",
         url: "api_localserver.html" 
       },
       { 
         title: "WorkerPool",
-        id: "api_threads",
+        id: "api_workerpool",
         url: "api_workerpool.html" 
       } 
     ] 
@@ -111,11 +116,15 @@ var resources = [
         url: "http://code.google.com/support/bin/topic.py?topic=11628" 
       },
       { 
+        title: "Gears Blog",
+        url: "http://gearsblog.blogspot.com/" 
+      },
+      { 
         title: "Developer Forum",
         url: "http://groups.google.com/group/google-gears/" 
       },
       { 
-        title: "Open Source",
+        title: "Contributor Site",
         url: "http://code.google.com/p/google-gears/" 
       } 
     ] 

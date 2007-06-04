@@ -23,28 +23,40 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// JavaScript for go_offline.html
-//*****************************************
-//  Edit the following two variables to match your 
-//  project's naming needs.
-//
-//  Provide a filename to save your application's info 
-//  on the user's local computer.
-var STORE_FILENAME = "my_offline_docset";
+// Change this to set the name of the managed resource store to create.
+// You use the name with the createManagedStore, and removeManagedStore,
+// and openManagedStore APIs. It isn't visible to the user.
+var STORE_NAME = "my_offline_docset";
 
-//  Provide your Manifest file name below.
-var MANIFEST_FILENAME = "manifest.json";
-//*****************************************
+// Change this to set the URL of tha manifest file, which describe which
+// URLs to capture. It can be relative to the current page, or an
+// absolute URL.
+var MANIFEST_FILENAME = "tutorial_manifest.json";
 
-// -----------Begin API calls ------
+var localServer;
+var store;
 
-// ManagedResourceStore create, update, and erase
-function createManagedStore(storeName, manifestFileName) {
-  var localServer = google.gears.factory.create("beta.localserver","1.0");
-  var store = localServer.createManagedStore(storeName);
-  store.manifestUrl = manifestFileName;
+// Called onload to initialize local server and store variables
+function init() {
+  if (!window.google || !google.gears) {
+    textOut("NOTE:  You must install Google Gears first.");
+  } else {
+    localServer = google.gears.factory.create("beta.localserver","1.0");
+    store = localServer.createManagedStore(STORE_NAME);
+    textOut("Yeay, Google Gears is already installed.");
+  }
+}
+
+// Create the managed resource store
+function createStore() {
+  if (!window.google || !google.gears) {
+    alert("You must install Google Gears first.");
+    return;
+  }
+
+  store.manifestUrl = MANIFEST_FILENAME;
   store.checkForUpdate();
-  
+
   var timerId = window.setInterval(function() {
     // When the currentVersion property has a value, all of the resources
     // listed in the manifest file for that version are captured. There is
@@ -52,71 +64,33 @@ function createManagedStore(storeName, manifestFileName) {
     if (store.currentVersion) {
       window.clearInterval(timerId);
       textOut("The documents are now available offline.\n" + 
-              "Refresh the browser to see the locally served version. " +
-              "The version stored is: " + store.currentVersion);
+              "With your browser offline, load the document at " +
+              "its normal online URL to see the locally stored " +
+			        "version. The version stored is: " + 
+              store.currentVersion);
+    } else if (store.updateStatus == 3) {
+      textOut("Error: " + store.lastErrorMessage);
     }
   }, 500);  
 }
-// Call this function whenever you want to check if the static files you 
-// have stored locally are up-to-date or if they need to be updated.
-// If old files are stored locally, this function will update them.
-// 
-// (Assumes same name for manifest file; however, it is OK to
-//  use a new manifest file.)
-function updateManagedStore(storeName, manifestFileName) { 
-  var localServer = google.gears.factory.create("beta.localserver","1.0");
-  var store = localServer.openManagedStore(storeName);
-  store.manifestUrl = manifestFileName;
-  store.checkForUpdate();
-  
-  var timerId = window.setInterval(function() {
-    // There is an open bug to surface this state change as an event.  
-    if (store.currentVersion != "whatever") {
-      window.clearInterval(timerId);
-      textOut("Update is complete. Reload browser to see version: " +
-           store.currentVersion);
-    }
-  }, 500);
+
+// Remove the managed resource store.
+function removeStore() {
+  if (!window.google || !google.gears) {
+    alert("You must install Google Gears first.");
+    return;
+  }
+
+  localServer.removeManagedStore(STORE_NAME);
+  textOut("Done. The local store has been removed." +
+          "You will now see online versions of the documents.");
 }
 
-function removeManagedStore(storeName) { 
-  var localServer = google.gears.factory.create("beta.localserver","1.0");
-  localServer.removeManagedStore(storeName);
-  textOut("Done. Store has been removed." +
-          "Press reload to see the online version again.");
-}
-//------------ End API calls -----------
-
-//Button Event Handlers
-function doCapture() {
-  // Makes files available offline.
-  createManagedStore(STORE_FILENAME, MANIFEST_FILENAME);	
-}
-
-function doUpdate() {
-  // Assumes the store has previously been captured, and updates it.
-  updateManagedStore(STORE_FILENAME, MANIFEST_FILENAME);
-}
-
-function doErase() {
-  removeManagedStore(STORE_FILENAME);
-}
-
-// Utilities
+// Utility function to output some status text.
 function textOut(s) {
  var elm = document.getElementById("textOut");
   while (elm.firstChild) {
     elm.removeChild(elm.firstChild);
   } 
   elm.appendChild(document.createTextNode(s));
-}
-
-
-window.onload = function() {
-  //This tests if Google Gears is installed or not.
-  if (!google.gears.factory) {
-    textOut("NOTE:  You must install Google Gears first.");
-  } else {
-    textOut("Yeay, Google Gears is already installed.");
-  }
 }

@@ -28,18 +28,22 @@
 //
 // IMPORTANT: IDs >= 1000 are reserved for /ui/ie/ui_resources.h
 
+// Registry (.rgs) files
 #define IDR_SCOURIE                     100
 #define IDR_BROWSERHELPEROBJECT         101
 #define IDR_GEARSFACTORY                102
 #define IDR_TOOLSMENUITEM               103
 
+// Icons and bitmaps
+#define IDI_ICON                        200
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        201
+#define _APS_NEXT_RESOURCE_VALUE        300
 #define _APS_NEXT_COMMAND_VALUE         32768
-#define _APS_NEXT_CONTROL_VALUE         201
-#define _APS_NEXT_SYMED_VALUE           104
+#define _APS_NEXT_CONTROL_VALUE         300
+#define _APS_NEXT_SYMED_VALUE           201
 #endif
 #endif

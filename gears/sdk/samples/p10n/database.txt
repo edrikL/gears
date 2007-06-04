@@ -43,12 +43,12 @@
     },
     { title: "AJAX application architecture",
       points: [
-        "<div class='img'><img src='arch1.png'></div>"
+        "<div class='img'><img src='arch1.jpg'></div>"
       ]
     },
     { title: "Gears application architecture",
       points: [
-        "<div class='img' style='text-align:left;'><img src='arch2.png'></div>"
+        "<div class='img' style='text-align:left;'><img src='arch2.jpg'></div>"
       ]
     },
     { title: "Traditional Web Traffic Patterns",
@@ -162,7 +162,7 @@
         "pool.onmessage = function(message) {<br>" +
         "  alert('next prime is: ' + message);<br>" +
         "}<br><br>" +
-        "var worker = pool.createWorker(String(nextPrime));</pre>"
+        "var worker = pool.createWorker(String(nextPrime) + '; nextPrime()');</pre>"
       ]
     },
     { title: "Demo: WorkerPool",
@@ -193,8 +193,8 @@
         "<pre><span class='keyword'>SELECT</span> title <span class='keyword'>FROM</span> Search <span class='keyword'>WHERE</span> title <span class='keyword'>MATCH</span> 'sql';<br>" +
         "<span class='keyword'>SELECT</span> snippet(Search) <span class='keyword'>FROM</span> Search <span class='keyword'>WHERE</span> Search <span class='keyword'>MATCH</span> 'sql';</pre>",
         "<pre><span class='keyword'>INSERT INTO</span> Data <span class='keyword'>VALUES</span> (<span class='string'>1</span>, <span class='string'>2</span>, <span class='string'>3</span>);<br>" +
-        "<span class='keyword'>INSERT INTO</span> Search (rowid, data) <span class='keyword'>VALUES</span><br>" +
-        "&nbsp;&nbsp;&nbsp;&nbsp;(<span class='keyword'>LAST_INSERT_ROWID()</span>, 'Hello World');</pre>"
+        "<span class='keyword'>INSERT INTO</span> Search (rowid, title, data) <span class='keyword'>VALUES</span><br>" +
+        "&nbsp;&nbsp;&nbsp;&nbsp;(<span class='keyword'>LAST_INSERT_ROWID()</span>, 'My Slide', 'Hello World');</pre>"
       ]
     }
   ]

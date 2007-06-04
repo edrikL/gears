@@ -36,5 +36,19 @@
 	</dict>
 	<key>WebPluginName</key>
 	<string>Google Gears</string>
+  <key>Google</key>
+  <dict>
+    <key>updateInfo</key>
+    <dict>
+      <key>actions</key>
+      <dict>
+        <key>uninstall</key>
+        <dict>
+          <key>action</key>
+          <string>./Contents/Resources/googlegearsuninstall</string>
+        </dict>
+      </dict>
+    </dict>
+  </dict>
 </dict>
 </plist>

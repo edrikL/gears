@@ -61,7 +61,7 @@ extern NSString *kGearsWorkerSenderKey;  // NSNumber, GearsWorker identifier
 @end
 
 // See detailed descriptions above
-@interface GearsWorkerPool : GearsComponent <GearsWorkerPoolProtocol> {
+@interface GearsWorkerPool : GearsBase <GearsWorkerPoolProtocol> {
  @private
   NSMutableSet *workers_;             // Workers owned by this manager (STRONG)
   NSNumber *identifier_;              // Unique identifier (STRONG)

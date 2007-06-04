@@ -78,10 +78,14 @@ COMMON_RESOURCES = \
 	$(COMMON_OUTDIR)/genfiles/settings_dialog.html
 
 FF_RESOURCES = \
+	ui/common/icon_32x32.png \
 	$(FF_OUTDIR)/genfiles/browser-overlay.*
 
 FF_LOCALE = \
 	$(FF_OUTDIR)/genfiles/i18n-en-US.dtd
+
+IE_RESOURCES = \
+	ui/common/icon_merged.ico
 
 DEPS = \
 	$(FF_OBJS:$(OBJ_SUFFIX)=.pp) \
@@ -273,7 +277,7 @@ $(THIRD_PARTY_OUTDIR)/%$(OBJ_SUFFIX): %.c
 
 # RESOURCE TARGETS
 
-$(IE_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
+$(IE_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES) $(IE_RESOURCES)
 	$(RC) $(RCFLAGS) $<
 
 # LINK TARGETS

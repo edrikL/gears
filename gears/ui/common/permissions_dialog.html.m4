@@ -60,7 +60,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         issues (the code that would do the navigate is blocked behind this
         modal dialog). Using onclick fixes, for some reason.
         -->
-        &nbsp;(<a href="http://gears.google.com/?help"
+        &nbsp;(<a href="http://gears.google.com/?action=help"
           onclick="window.open(this.href); return false;">What is this?</a>)
       </p>
       <p id="checkbox-row">

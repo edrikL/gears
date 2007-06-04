@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+// Copyright 2006, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,27 +23,18 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "GearsVersion"
+// Implement the FileSubmitter for Safari
 
-ARCHS = ppc i386
+#import <Foundation/Foundation.h>
 
-// define Safari and OSX
-OTHER_CFLAGS = -DBROWSER_SAFARI=1 -DOSX=1 -fshort-wchar -Wall -Werror
-OTHER_CPLUSPLUSFLAGS = $(OTHER_CFLAGS) -Wno-non-virtual-dtor
-OTHER_LDFLAGS = -framework Foundation -framework AppKit
+#import "gears/base/safari/base_class.h"
 
-// Places to search
-USER_HEADER_SEARCH_PATHS = . $(SRCROOT)/../../../../ $(SRCROOT)/../../../../../google3/
-ALWAYS_SEARCH_USER_PATHS = NO
+@interface GearsFileSubmitter : GearsBase {
+}
 
-// Always C99
-GCC_C_LANGUAGE_STANDARD =c99
+//------------------------------------------------------------------------------
+// GearsBase
+//------------------------------------------------------------------------------
++ (NSDictionary *)webScriptSelectorStrings;
 
-// Never zerolink
-ZERO_LINK = NO
-
-// Not needed
-GCC_ENABLE_FIX_AND_CONTINUE = NO
-
-// Need exceptions
-GCC_ENABLE_OBJC_EXCEPTIONS = YES
+@end
