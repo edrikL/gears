@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+// Copyright 2006, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,27 +23,35 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "GearsVersion"
+#import <WebKit/WebKit.h>
 
-ARCHS = ppc i386
+#import "gears/localserver/safari/file_submitter_sf.h"
 
-// define Safari and OSX
-OTHER_CFLAGS = -DBROWSER_SAFARI=1 -DOSX=1 -fshort-wchar -Wall -Werror
-OTHER_CPLUSPLUSFLAGS = $(OTHER_CFLAGS) -Wno-non-virtual-dtor
-OTHER_LDFLAGS = -framework Foundation -framework AppKit
+@interface GearsFileSubmitter(PrivateMethods)
+- (void)setFileInput:(id)input url:(NSString *)urlStr;
+@end
 
-// Places to search
-USER_HEADER_SEARCH_PATHS = . $(SRCROOT)/../../../../ $(SRCROOT)/../../../../../google3/
-ALWAYS_SEARCH_USER_PATHS = NO
+@implementation GearsFileSubmitter
+//------------------------------------------------------------------------------
+#pragma mark -
+#pragma mark || GearsBase ||
+//------------------------------------------------------------------------------
++ (NSDictionary *)webScriptSelectorStrings {
+  return [NSDictionary dictionaryWithObjectsAndKeys:
+    @"setFileInputElement", @"setFileInput:url:",
+    nil];
+}
 
-// Always C99
-GCC_C_LANGUAGE_STANDARD =c99
+//------------------------------------------------------------------------------
+#pragma mark -
+#pragma mark || Private ||
+//------------------------------------------------------------------------------
+- (void)setFileInput:(id)input url:(NSString *)urlStr {
+  // TODO(waylonis): It seems like this is supposed to insert the data
+  // from a previously captured |urlStr| into |input|.  The problem is that
+  // WebKit will not allow you to set the file parameter of a html file input
+  // element.
+  [WebScriptObject throwException:@"setFileInputElement() not implemented"];
+}
 
-// Never zerolink
-ZERO_LINK = NO
-
-// Not needed
-GCC_ENABLE_FIX_AND_CONTINUE = NO
-
-// Need exceptions
-GCC_ENABLE_OBJC_EXCEPTIONS = YES
+@end

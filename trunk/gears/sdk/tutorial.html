@@ -26,15 +26,16 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
-<html><head><title>Gears API Developer's Guide - Release Notes</title>
+<html><head><title>Google Gears API Developer's Guide - Tutorial</title>
 
-
-<link rel="stylesheet" type="text/css" href="./dev_docs.css" /> 
-<link rel="stylesheet" type="text/css" href="./local_extensions.css" /> 
-<!--[if IE 7]><link rel="stylesheet" type="text/css" href="ie7only.css" /><![endif]-->
-<!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="ie6only.css" /><![endif]-->
-<!--[if IE]><link rel="stylesheet" type="text/css" href="ieonly.css" />  <![endif]-->
-</head><body id="relnotes_page">
+<!-- Begin Templates -->
+<link rel="stylesheet" type="text/css" href="http://code.google.com/css/dev_docs.css" />
+<link rel="stylesheet" type="text/css" href="./local_extensions.css" />
+<!--[if IE 7]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie7only.css" /><![endif]-->
+<!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie6only.css" /><![endif]-->
+<!--[if IE]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ieonly.css" />  <![endif]-->
+<!-- End Templates -->
+</head><body id="tutorial_page">
 <a name="top"></a>
 <!-- ########## PAGE HEADER ########## -->
 <div id="header">
@@ -44,11 +45,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <h1 id="doc_title">Google Gears API Developer's Guide (Beta)</h1>
 
-<ul class="trail"><li><a href="http://code.google.com/">Google Code Home</a>&nbsp;&gt;</li>
-	   <li><a href="overview.html">Developer's Guide</a> &gt;</li>
-      <li> Tutorial </li>
+<ul class="trail">
+  <li><a href="http://code.google.com/">Google Code Home</a></li>
+  <li>&gt;&nbsp;<a href="index.html">Gears Home</a></li>
+  <li>&gt;&nbsp;Tutorial </li>
 </ul>
-</div> 
+</div>
 <!-- ########## END PAGE HEADER ########## -->
 
 <div id="wrapper">
@@ -56,7 +58,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <div id="sidenav">
   <script src="nav.js"></script>
-</div> 
+</div>
 <!-- ########## END SIDE NAVIGATION ########## -->
 
 
@@ -67,20 +69,21 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 <h1 id="page_title">Tutorial: Enabling static files to work offline using Gears</h1>
-<p>Any static HTML files, such as  documentation, can be enabled for viewing  offline by following these steps. This tutorial shows you how to create  a manifest file, and make your files  available  offline, using Gears. </p>
+<p>Any static HTML files, such as  documentation, can be enabled for viewing  offline by following these steps. This tutorial shows you how to create  a manifest file, and make your files  available  offline, using Gears. (Time estimate: 15 minutes.) </p>
 <h4>You will need:</h4>
 <ul>
   <li>Ability to edit basic JavaScript </li>
-  <li>Access to an HTTP server that hosts your files</li>
-  <li>The documentation files that you want to enable for offline viewing </li>
-  </ul>
+  <li>Ability to publish files to the HTTP server that hosts your files</li>
+  <li>The static files that you want to enable for offline viewing</li>
+  <li>For a list of supported browsers and platforms, see <a href="http://gears.google.com/">gears.google.com</a>.  </li>
+</ul>
 <h4>Files to download for this tutorial: </h4>
-<ul>
-  <li><a href="tutorials/tutorial_manifest.json">tutorial_manifest.json</a></li>
+<ul><li><a href="tutorials/tutorial_manifest.json">tutorial_manifest.json</a></li>
   <li><a href="tutorials/go_offline.html">go_offline.html</a></li>
   <li><a href="tutorials/go_offline.js">go_offline.js</a></li>
-  </ul>
-<h2>1. Edit the sample manifest file </h2>
+  <li><a href="resources/gears_init.js">gears_init.js</a></li>
+</ul>
+<h1>1. Edit the sample manifest file </h1>
 <h3>Save this <a href="tutorials/tutorial_manifest.json">tutorial manifest file</a> to your computer. </h3>
 <ul>
   <li>Rename it &quot;manifest.json&quot;. </li>
@@ -97,19 +100,24 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <ul>
   <li>For every file and image that you wish to capture, add a <span class="code">&quot;url&quot;</span> entry into the <span class="code">&quot;entries&quot;</span> array. Follow the format in the sample manifest file.</li>
   <li>Check that each entry except for the last one is followed by a comma. </li>
+  <li>To have the tutorial's &quot;go_offline&quot; files available offline too, include them in the manifest. </li>
 </ul>
-<p>For example, if your documentation consists of an index.html page, a stylesheet style.css, and a logo in the file resources/logo.gif, you will have three <span class="code">&quot;url&quot;</span> entries:</p>
-<pre>&quot;entries&quot;: [ 
+<p>For example, if your documentation consists of an index.html page, a stylesheet style.css,  and a logo in the file resources/logo.gif in addition to the tutorial's files, you will have the following <span class="code">&quot;url&quot;</span> entries:</p>
+<pre>&quot;entries&quot;: [
     { &quot;url&quot;: &quot;index.html&quot; },
-    { &quot;url&quot;: &quot;style.css&quot; },              
-    { &quot;url&quot;: &quot;resources/logo.gif&quot; }      
+    { &quot;url&quot;: &quot;style.css&quot; },
+    { &quot;url&quot;: &quot;resources/logo.gif&quot; },
+    { &quot;url&quot;: &quot;gears_init.js&quot;},
+    { &quot;url&quot;: &quot;go_offline.html&quot;},
+    { &quot;url&quot;: &quot;go_offline.js&quot;}
 ] </pre>
 <p><strong>Note</strong>: The    URLs can be fully-qualified, for example &quot;http://www.example.com/index.html&quot;, or they can be relative to the manifest file's location.</p>
-<h2>2. Add some User Interface </h2>
+<h1>2. Add some User Interface </h1>
 <p>Some basic user interface is needed to provide a way for your user to request the offline functionality. </p>
-<h4>Download and save these two files to your computer:</h4>
-<p><a href="tutorials/go_offline.html">go_offline.html</a> <br />
-  <a href="tutorials/go_offline.js">go_offline.js</a></p>
+<h4>Download and save these  files to your computer:</h4>
+<p><a href="tutorials/go_offline.html">go_offline.html</a> - user interface sample <br />
+  <a href="tutorials/go_offline.js">go_offline.js</a><br />
+  <a href="resources/gears_init.js">gears_init.js</a> - provides access to Google Gears. </p>
 <p><strong><em>Special note:</em></strong> To keep this tutorial simple, the go_offline.html file is provided  to act as the user interface.</p>
 <p>You are not limited to using the provided file; you can  integrate the functionality provided in the go_offline.js JavaScript file into your application in other ways. </p>
 <p>Keep in mind that  the user will need to:</p>
@@ -118,16 +126,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <li>Allow your website to use Gears (a permissions dialog appears automatically) </li>
   <li>Enable the offline version of your documents </li>
 </ul>
-<h2>3. Upload files to your HTTP server </h2>
+<h1>3. Upload files to your HTTP server </h1>
 <h4>Upload all the files and your documents to your HTTP server. </h4>
 <ul>
   <li>go_offline.html</li>
   <li>go_offline.js</li>
+  <li>gears_init.js</li>
   <li>manifest.json</li>
   <li>All the files listed in your manifest.json file.</li>
 </ul>
 <p><strong>Important:</strong> Be sure all the files listed in the manifest file are available and accessible as listed. </p>
-<h2>4. Test: capture the files locally </h2>
+<h1>4. Test: capture the files locally </h1>
 <p>In the testing steps, you act as the user. </p>
 <ul><li>If you haven't already, <a href="install.html">install Gears</a> on your computer. </li>
   <li>In your browser, type the URL of the go_offline.html page on your HTTP server
@@ -137,10 +146,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       </ul>
   <li>Click Capture. A status message  appears when the file capture is complete.</li>
   </ul>
-<h2>5. Test: access the captured files </h2>
+<h1>5. Test: access the captured files </h1>
 <ul>
   <li>Take your browser offline. Select File &gt; Work Offline. </li>
-  <li>Clear your browser cache. In FireFox, select Tools &gt; Clear Private Data..., and check Cache. </li>
+  <li>Clear your browser cache. In Firefox, select Tools &gt; Clear Private Data...,  check Cache, and click the &quot;Clear Private Data Now&quot; button. </li>
   <li>Type the URL of your document.
     <ul>
       <li>If the offline capture is in effect, you will see your stored document.</li>
@@ -151,15 +160,24 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <p>Clear your browser cache often while testing, to prevent seeing cached (but not necessarily offline-enabled) content. </p>
 <h3>Troubleshooting</h3>
 <ul>
-  <li>All the URLs in the manifest file must be correct, and reachable from the directory that the manifest resides in. </li>
+  <li>Make sure you have installed Google Gears. </li>
+  <li>All the URLs in the manifest file must be correct, and reachable from the directory that the manifest resides in. The manifest file and the URLs it references must be located in the same domain.  </li>
   <li>Check  that there aren't any typos or extraneous files listed in the manifest.</li>
   <li>The  code in <strong>go_offline.js</strong> expects that the manifest file is named &quot;manifest.json&quot; and that it resides in the same directory. Update the manifest.json references in go_offline.js as needed. </li>
   <li>Use a JavaScript debugger to see any errors that may be returned from the Gears API calls. </li>
-</ul>
-<h2>6. Publish it to your users</h2>
+  </ul>
+<h1>6. Publish it to your users</h1>
 <p>Your users can now access your documents offline by following the  instructions in Step 4 above.</p>
+<h1>7. Future changes: maintaining the manifest </h1>
+<p>Whenever you update the contents in the static HTML files, or if you add or remove  files, you must update the manifest file. When Google Gears detects a new manifest version string, the updated contents are automatically copied to your user's local machine when they next view any of your files. </p>
+<ul>
+  <li>Always update the version string in the manifest file to indicate any changes. </li>
+  <li>Update the manifest entries to correspond to any added or removed files.</li>
+  <li>If you change just the content in the files, you need only to update the version string in the manifest file.</li>
+</ul>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
+<p>For more information on the manifest file or the APIs used in this tutorial, see the <a href="api_localserver.html">LocalServer API Reference</a>. </p>
 </div>
 <!-- ########## END PAGE CONTENT ########## -->
 </div><!-- end wrapper -->
@@ -171,30 +189,22 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </div>
 
 <div>
-    <p id="copyright">&copy;2007 Google - 
-	<a href="terms.html">Terms of Service</a>
+    <p id="copyright">&copy;2007 Google -
+	<a href="http://gears.google.com/tos.html">Terms of Service</a>
 	</p>
-  </div> 
+  </div>
 
-</div><!--end footer --> 
+</div><!--end footer -->
 <!-- ########## END PAGE FOOTER ########## -->
-<!-- BEGIN  date this page was updated -->
-<p id="date">
-Updated on
-<script type="text/javascript">
-<!-- hide script from old browsers
-    var lm = new Date(document.lastModified);
-    document.write(lm.toDateString());
-//-->
-</script>
-<!-- END date this page was updated -->
 
 
-<script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript">
-</script>
+
+<!-- ########## ANALYTICS ########## -->
+<script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript"></script>
 <script type="text/javascript">
-_uacct = "UA-1619145-1";
-if (typeof urchinTracker != 'undefined') {
+  _uacct = "UA-18071-1";
+  _uanchor=1;
   urchinTracker();
-}
-</script></body></html>
+</script>
+<!-- ########## END ANALYTICS ########## -->
+</body></html>

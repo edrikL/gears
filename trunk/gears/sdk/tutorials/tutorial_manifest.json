@@ -2,8 +2,8 @@
   "betaManifestVersion": 1,
   "version": "my_version_string",
   "entries": [
-      { "url": "main.html" },
-      { "url": "page1.html"},
-      { "url": "images/image.gif"}
+      { "url": "go_offline.html"},
+      { "url": "go_offline.js"},
+      { "url": "gears_init.js"}
     ]
 }

@@ -68,30 +68,32 @@ init();
 
 // Open this page's local database.
 function init() {
-  if (!window.google || !google.gears) {
-    return;
-  }
+  var success = false;
 
-  try {
-    db = google.gears.factory.create('beta.database', '1.0');
-  } catch (ex) {
-    setError('Could not create database: ' + ex.message);
-  }
+  if (window.google && google.gears) {
+    try {
+      db = google.gears.factory.create('beta.database', '1.0');
 
-  if (db) {
-    db.open('database-demo');
-    db.execute('create table if not exists Demo' +
-               ' (Phrase varchar(255), Timestamp int)');
+      if (db) {
+        db.open('database-demo');
+        db.execute('create table if not exists Demo' +
+                   ' (Phrase varchar(255), Timestamp int)');
 
-    // Initialize the UI at startup.
-    displayRecentPhrases();
+        success = true;
+        // Initialize the UI at startup.
+        displayRecentPhrases();
+      }
+
+    } catch (ex) {
+      setError('Could not create database: ' + ex.message);
+    }
   }
 
   // Enable or disable UI elements
-  var init_succeeded = !!db;
+
   var inputs = document.getElementsByTagName('input');
   for (var i = 0, el; el = inputs[i]; i++) {
-    el.disabled = !init_succeeded;
+    el.disabled = !success;
   }
 
 }

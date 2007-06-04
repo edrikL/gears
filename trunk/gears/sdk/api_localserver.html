@@ -26,15 +26,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
-<html><head><title>Gears API Developer's Guide - LocalServer API</title>
+<html><head><title>Google Gears API Developer's Guide - LocalServer API</title>
 
-<link rel="stylesheet" type="text/css" href="./dev_docs.css" />
-<link rel="stylesheet" type="text/css" href="./local_extensions.css" />
-<!--[if IE 7]><link rel="stylesheet" type="text/css" href="ie7only.css" /><![endif]-->
-<!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="ie6only.css" /><![endif]-->
-<!--[if IE]><link rel="stylesheet" type="text/css" href="ieonly.css" />  <![endif]-->
+<!-- Begin Templates -->
+<link rel="stylesheet" type="text/css" href="http://code.google.com/css/dev_docs.css" /> 
+<link rel="stylesheet" type="text/css" href="./local_extensions.css" /> 
+<!--[if IE 7]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie7only.css" /><![endif]-->
+<!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie6only.css" /><![endif]-->
+<!--[if IE]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ieonly.css" />  <![endif]-->
+<!-- End Templates -->
 </head>
-<body id="api_webcapture_page">
+<body id="api_localserver_page">
 <a name="top"></a>
 <!-- ########## PAGE HEADER ########## -->
 <div id="header">
@@ -68,8 +70,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <div id="pagecontent">
 
 <h1 id="page_title">LocalServer Module API</h1>
-<p>The LocalServer Module  allows a JavaScript application to manage the
-  resource stores that are needed to support its offline execution.</p>
+<p>The LocalServer module allows a web application to cache and serve its HTTP
+resources locally, without a network connection.</p>
 <h3>Contents</h3>
 <ol class="toc">
   <li><a href="#overview">Overview</a></li>
@@ -86,30 +88,44 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </ol>
 <a name="overview" id="overview"></a>
   <h2>Overview</h2>
-  <p>The LocalServer class manages the<em> resource stores</em> that your application creates and uses. A resource store is a collection of your web application's resources, such as HTML files, images, JavaScript files, and other files. Resource stores are saved locally on the user's computer.</p>
-  <p>This module also has a FileSubmitter class,  used for submitting local files previously captured   in
-  multipart/form-data encoded form submissions. </p>
+  <p>The LocalServer module is a specialized URL cache that the web application controls.
+  Requests for URLs in the LocalServer's cache are intercepted and served
+  locally from the user's disk.</p>
   <h4>Resource stores </h4>
+  <p>A <em>resource store</em> is a container of URLs. Using the LocalServer module, 
+  applications can create any number of resource stores, and a resource store can contain any number of URLs.</p>
   <p>There are two types of resource stores:</p>
   <ul>
-    <li><a href="#ResourceStore">ResourceStore</a> - for capturing ad-hoc URLs using JavaScript. </li>
-    <li><a href="#ManagedResourceStore">ManagedResourceStore</a> - for capturing a related set of URLs that are declared in a <em>manifest file</em>, and are updated automatically.</li>
-    </ul>
-  <p>The LocalServer intercepts HTTP/HTTPS requests and serves them  from a local resource store when all of these conditions are met:</p>
+    <li><a href="#ResourceStore">ResourceStore</a> - for capturing ad-hoc URLs using JavaScript.
+        The ResourceStore allows an application to capture user data files that need to be addressed with a URL,
+        such as a PDF file or an image.</li>
+    <li><a href="#ManagedResourceStore">ManagedResourceStore</a> - for capturing a related set of URLs that are
+        declared in a <em>manifest file</em>, and are updated automatically.
+        The ManagedResourceStore allows the set of resources needed to run a web application to be captured.</li>
+  </ul>  
+  <p>For both types of stores, the set of URLs captured is explicitly controlled by the web application.</p>
+  
+  <h4>Updating of cached resources</h4>  
+  <p>A key difference between the two types of stores is how resources are updated. The contents of a ManagedResourceStore are automatically
+  updated whenever the version string in the store's manifest file changes. The ResourceStore's contents are never automatically
+  updated, and are only updated explicitly by the appliction.</p>
+  <p>Google Gears automatically updates ManagedResourceStores according to these rules:</p>
   <ul>
-    <li>The URL is cached in a ResourceStore or ManagedResourceStore,</li>
-    <li>The resource store's attribute <span class="code">enabled</span> is set to true, and </li>
-    <li>If the resource store has a   <span class="code">requiredCookie</span>, the cookie is present in the client. </li>
-    </ul>
-  <p>The LocalServer always serves the   stored resource when the conditions are met, regardless of the network connection. All resource stores that have been created for the application's domain are accessible by the LocalServer, without requiring the application  to open the  stores. </p>
-  <p>To disable  local serving of stored resources and force URLs to be served using the regular network connection, the application can set the <span class="code">enabled</span> parameter to false in the resource store. </p>
-  <h4>Updating cached resources </h4>
-  <p>The key difference between the two types of resource stores is how resources in these stores are updated. The contents of a ManagedResourceStore are automatically updated whenever the version string in the store's manifest file changes. The ResourceStore's contents are never automatically updated, and are only  updated explicitly by the appliction.</p>
-  <p>Automatic updating of ManagedResourceStore follows these rules:</p>
-  <ul>
-    <li>LocalServer calls <span class="code">checkForUpdate()</span>  each time  a resource contained in a ManagedResourceStore is requested and served locally, but no more often than once every 10 minutes. The contents of the store at the time of the request are served immediately, without waiting for the update task to complete.</li>
+    <li><span class="code">checkForUpdate()</span> is called each time  a resource contained in a ManagedResourceStore is requested and served locally, but no more often than once every 10 seconds.</li>
     <li>If the manifest file's <span class="code">version</span> value has changed, the automatic update process runs. For further details, see <a href="#checkforupdate">checkForUpdate</a>. </li>
   </ul>
+  
+  <h4>Local serving of cached resources</h4>
+  <p>The LocalServer intercepts HTTP/HTTPS requests and serves them from the cache when all of these conditions are met:</p>
+  <ul>
+    <li>The URL is cached in a ResourceStore or ManagedResourceStore,</li>
+    <li>The resource store's <span class="code">enabled</span> attribute is set to true, and </li>
+    <li>If the resource store has a   <span class="code">requiredCookie</span>, the cookie is present in the client. </li>
+  </ul>  
+  <p>The LocalServer <em>always</em> serves a cached resource when the conditions are met, regardless of the network connection. The URLs contained in a store
+  are eligible for local serving without requiring the application to open the  store.</p>
+  <p>To disable local serving of stored resources and force URLs to be served using the regular network connection, the application can set
+  the store's <span class="code">enabled</span> attribute to false.</p>
   <p>&nbsp;</p>
 
   <a name="classes" id="classes"></a>  </p>
@@ -197,7 +213,8 @@ var localServer = google.gears.factory.create('beta.localserver', '1.0');
     <tr class="odd">
       <td>Description</td>
         <td class="odd">
-          Returns true if a request for the URL can be satisfied from any of the resource stores available.
+          Returns true if a request for the URL can be satisfied from any of the resource stores available,
+          taking into account whether the containing store is enabled and if its requiredCookie is present</span>.
         Relative URLs are interpreted according to the current page location.</td>
     </tr>
   </table>
@@ -972,29 +989,21 @@ that this class provides.</p>
 
 <div>
     <p id="copyright">&copy;2007 Google -
-	<a href="terms.html">Terms of Service</a>
+	<a href="http://gears.google.com/tos.html">Terms of Service</a>
 	</p>
   </div>
 
 </div><!--end footer -->
 <!-- ########## END PAGE FOOTER ########## -->
-<!-- BEGIN  date this page was updated -->
-<p id="date">
-Updated on
-<script type="text/javascript">
-<!-- hide script from old browsers
-    var lm = new Date(document.lastModified);
-    document.write(lm.toDateString());
-//-->
-</script>
-<!-- END date this page was updated -->
 
 
-<script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript">
-</script>
+
+<!-- ########## ANALYTICS ########## -->
+<script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript"></script>
 <script type="text/javascript">
-_uacct = "UA-1619145-1";
-if (typeof urchinTracker != 'undefined') {
+  _uacct = "UA-18071-1";
+  _uanchor=1;
   urchinTracker();
-}
-</script></body></html>
+</script>
+<!-- ########## END ANALYTICS ########## -->
+</body></html>

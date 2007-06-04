@@ -26,20 +26,22 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
-<html><head><title>Gears API Developer's Guide - Database API</title>
+<html><head><title>Google Gears API Developer's Guide - Database API</title>
 
 
-<link rel="stylesheet" type="text/css" href="./dev_docs.css" />
+<!-- Begin Templates -->
+<link rel="stylesheet" type="text/css" href="http://code.google.com/css/dev_docs.css" />
 <link rel="stylesheet" type="text/css" href="./local_extensions.css" />
-<!--[if IE 7]><link rel="stylesheet" type="text/css" href="ie7only.css" /><![endif]-->
-<!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="ie6only.css" /><![endif]-->
-<!--[if IE]><link rel="stylesheet" type="text/css" href="ieonly.css" />  <![endif]-->
+<!--[if IE 7]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie7only.css" /><![endif]-->
+<!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie6only.css" /><![endif]-->
+<!--[if IE]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ieonly.css" />  <![endif]-->
+<!-- End Templates -->
 <style type="text/css">
 <!--
 .style1 {font-size: medium}
 -->
 </style>
-</head><body id="api_db_page">
+</head><body id="api_database_page">
 <a name="top"></a>
 <!-- ########## PAGE HEADER ########## -->
 <div id="header">
@@ -73,7 +75,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <!-- API Overview                                            -->
 <!------------------------------------------------------------->
 <h1 id="page_title">Database Module API</h1>
-<p>The Google Gears database module provides browser-local relational data storage to your JavaScript web application. Google Gears uses the open source <a href="http://www.google.com/url?sa=D&amp;q=http://www.sqlite.org/">SQLite</a> database system.</p>
+
+<p>The Database module provides browser-local relational data storage to
+your JavaScript web application. Google Gears uses the open source
+<a href="http://www.google.com/url?sa=D&amp;q=http://www.sqlite.org/">SQLite</a>
+database system.</p>
+
 <h3>Contents</h3>
 <ol class="toc">
   <li><a href="#overview">Overview</a></li>
@@ -83,19 +90,19 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <li><a href="#Database" >Database</a></li>
       <li><a href="#ResultSet">ResultSet</a></li>
       </ol>
-	  <li><a href="#directories">Database File Directories</a> </li>
+	  <li><a href="#directories">Location of Database Files</a> </li>
 	  <li><a href="#sqlite_changes">Local Modifications to SQLite</a> </li>
 	  <li><a href="#sqlite_fts">Full-Text Search</a> </li>
       </li>
-  
 </ol>
+
 <h2>Overview</h2>
 <p>The Database module is used to persistently store an application user's data on the user's computer.  Data is stored using the same-origin security policy, meaning that a web application cannot access data outside of its domain (see <a href="security.html#model">Security</a>).</p>
 <p>Data is stored and retrieved by executing SQL statements.  For information on the SQL syntax supported, see the SQLite document &quot;<a href="http://www.google.com/url?sa=D&amp;q=http://www.sqlite.org/lang.html">SQL as Understood By SQLite</a>&quot;, and also <a href="#sqlite_changes">local modifications to SQLite</a>, below.  Google Gears includes SQLite's <a href="#sqlite_fts">full-text search</a> extension fts2.</p>
 <h4>Security considerations</h4>
 <p>SQL statements passed to <code>execute()</code> can and should use bind parameters (<code>?</code>) to prevent SQL injection attacks.  Read about <a href="security.html#database">database security</a> best practices on the Security page. </p>
 <h4>Permission from user </h4>
-<p>The database module's persistent data is stored on the user's disk.  It is important that your application request the user's explicit permission to do so, to prevent inadvertently storing data on an untrusted computer.</p>
+<p>The database module stores persistent data on the user's disk.  It is important that your application request the user's explicit permission to do so, to prevent inadvertently storing data on an untrusted computer.</p>
 <p>  <a name="classes" id="classes"></a>
 </p>
 <h2>Classes</h2>
@@ -412,29 +419,24 @@ rs.close();</code></pre>
 <a name="directories" id="directories"></a><br />
 <br />
 
-<h2>Database File Directories
-</h2>
+<h2>Location of Database File </h2>
 <p>Database files that your application creates are stored on the user's computer in a location that is determined by the browser being used and the platform. </p>
-<p><strong>Windows Vista </strong></p>
-<p> Internet Explorer </p>
+<p><strong>Windows Vista - Internet Explorer </strong></p>
 <p> Location: {FOLDERID_LocalAppDataLow}\Google\Google Gears for Internet Explorer<br />
-  Example: C:\Users\&lt;username&gt;\AppData\LocalLow\Google\Google Gears for Internet Explorer</p>
-<p>Firefox </p>
-<p>Location: {?<br />
-  Example: </p>
-<p><strong>Windows XP </strong></p>
-<p> Internet Explorer - database files are stored in the user profile directory </p>
+  Example: C:\Users\Bob\AppData\LocalLow\Google\Google Gears for Internet Explorer</p>
+<p><strong>Windows Vista - Firefox </strong>- Database files are stored in the user profile directory. </p>
+<p>Location: C:\Users\&lt;username&gt;\AppData\Local\Mozilla\Firefox\Profiles\{profile}.default\Google Gears for Firefox <br />
+  Example:  C:\Users\Bob\AppData\Local\Mozilla\Firefox\Profiles\uelib44s.default\Google Gears for Firefox  </p>
+<p><strong>Windows XP - Internet Explorer </strong>- Database files are stored in the user profile directory. </p>
 <p> Location: C:\Documents and Settings\&lt;username&gt;\Local Settings\Application Data\Google\Google Gears for Internet Explorer<br />
-  Example: C:\Documents and Settings\bob\Local Settings\Application Data\Google\Google Gears for Internet Explorer</p>
-<p> Firefox - database files are stored in the user profile directory </p>
-<p>Location: C:\Documents and Settings\&lt;bob&gt;\Local Settings\Application Data\Mozilla\Firefox\Profiles\&lt;firefox profile id&gt;\Google Gears for Firefox<br />
-  Example: C:\Documents and Settings\bob\Local Settings\Application Data\Mozilla\Firefox\Profiles\uelib44s.default\Google Gears for Firefox</p>
-<p><strong>Mac OS/X </strong></p>
-<p> Firefox - database files are stored in the user profile directory </p>
-<p>Location: ? <br />
-  Example: ? </p>
-<p><strong>Linux</strong></p>
-<p> Firefox - database files are stored in the user home directory </p>
+  Example: C:\Documents and Settings\Bob\Local Settings\Application Data\Google\Google Gears for Internet Explorer</p>
+<p><strong> Windows XP - Firefox </strong>- Database files are stored in the user profile directory. </p>
+<p>Location: C:\Documents and Settings\&lt;username&gt;\Local Settings\Application Data\Mozilla\Firefox\Profiles\{profile}\Google Gears for Firefox<br />
+  Example: C:\Documents and Settings\Bob\Local Settings\Application Data\Mozilla\Firefox\Profiles\uelib44s.default\Google Gears for Firefox</p>
+<p><strong>Mac OS/X - Firefox </strong>- Database files are stored in the user profile directory. </p>
+<p>Location: Users/&lt;username&gt;/Library/Caches/Firefox/Profiles/{profile}.default/Google Gears for Firefox <br />
+  Example: Users/Bob/Library/Caches/Firefox/Profiles/08ywpi3q.default/Google Gears for Firefox</p>
+<p><strong>Linux - Firefox </strong>- Database files are stored in the user home directory.</p>
 <p>Location: ~<em>bob</em>/.mozilla/firefox/&lt;firefox's profile id&gt;/Google Gears for Firefox <br />
   Example: ~bob/.mozilla/firefox/08ywpi3q.default/Google Gears for Firefox </p>
 
@@ -442,7 +444,7 @@ rs.close();</code></pre>
 <br />
 
 <h2>Local Modifications to SQLite</h2>
-
+<p>This section describes  modifications that Google Gears makes to SQLite. </p>
 <h4>Attached databases</h4>
 <p>The SQLite <a href="http://www.sqlite.org/lang_attach.html">ATTACH
 and DETACH</a> commands can be used to open an arbitrary SQLite
@@ -457,7 +459,7 @@ policy.</p>
 command allows setting and inspection of various platform settings,
 including certain settings which could potentially be used to
 compromise security.  At this time, Google Gears disables PRAGMA,
-though it is possible that specific PRAGMA uses may be reenabled or
+though it is possible that specific PRAGMA uses may be re-enabled or
 exposed in the Database interface.</p>
 
 <p>The default PRAGMA settings for Google Gears which differ from the
@@ -487,7 +489,7 @@ SQLite defaults:
   <li>PRAGMA synchronous = NORMAL;<br/>
       Synchronous controls whether data is synchronized to disk before
       COMMIT commands return (commands not in transactions are
-      implicitely wrapped in one).  Setting synchronous to OFF can
+      implicitly wrapped in one).  Setting synchronous to OFF can
       provide a significant performance boost, at the expense of
       potential data corruption.  Much of the benefit of turning
       synchronous off can generally be achieved by using a combination
@@ -502,7 +504,7 @@ SQLite defaults:
 
 <p>Google Gears includes an SQLite extension called <a
 href="http://www.sqlite.org/cvstrac/wiki?p=FtsTwo">fts2</a>, for
-"Full-Text Search".  fts2 allows you to search for words in TEXT data.
+"Full-Text Search".  fts2 allows you to create a table and search for words in TEXT data.
 An fts2 table is created as follows:</p>
 
 <pre><code>db.execute('CREATE VIRTUAL TABLE recipe USING fts2(dish, ingredients)');</code></pre>
@@ -511,46 +513,57 @@ An fts2 table is created as follows:</p>
 'ingredients'.  All fts2 fields are of type TEXT.  Data in the table
 is manipulated using standard SQL commands such as INSERT, UPDATE, and
 DELETE.  Like other SQLite tables, the fts2 table has an implicit
-unique rowid field, which acts as a unique index.  No indices other
-than the rowid and full-text indices are allowed.</p>
-
-<p><em>Note that fts2 tables contain a special field with the same
-name as the table.  Use of this field is described below.  For this
-reason, it is important to always list the specific fields being
-inserted in INSERT statements, and list specific result fields in
-SELECT statements.  SELECT * will throw exceptions when run on an fts2
-table.</em></p>
-
+unique rowid field, which acts as a unique index.  </p>
+<p>fts2 tables have some unique properties:</p>
+<ul>
+  <li> No indices other
+    than the rowid and full-text indices are allowed.</li>
+  <li> fts2 tables contain a special field with the same
+    name as the table. This field is used in search queries, as described below. </li>
+  <li>Because the special field exists,  is important to always list the specific fields being
+    inserted in INSERT statements, and list specific result fields in
+    SELECT statements.  <em>SELECT * will throw exceptions when run on an fts2
+    table.</em></li>
+</ul>
+<h3>Full-text Query Syntax </h3>
 <p>To query using the full-text index, use the MATCH operator as
 follows:</p>
 
 <pre><code>&lt;table_or_field_name&gt; MATCH &lt;query&gt;</code></pre>
 
-<p>If <code>&lt;table_or_field_name&gt;</code> is the name of the
-table, then the match is done against all fields of the table.  If
-<code>&lt;table_or_field_name&gt;</code> is the name of a field, then
-the match is done by default against that field.  The following
-returns the names of all recipes which include 'tomatoes' in any
-field:</p>
-
+<ul>
+  <li>If <code>&lt;table_or_field_name&gt;</code> is the name of the
+    table, then the match is done against all fields of the table.</li>
+	<li>If
+    <code>&lt;table_or_field_name&gt;</code> is the name of a field, then
+    the match is done   against that field.</li>
+	</ul>
+<p>&nbsp;</p>
+<ul>
+  The following
+  returns the names of all recipes which include 'tomatoes' in any
+  field:
+  </li>
+</ul>
 <pre><code>var rs = db.execute('SELECT dish FROM recipe WHERE recipe MATCH ?', ['tomatoes']);</code></pre>
 
-<p>Examples of different fts2 query syntax:</p>
+<p>Examples of  fts2 query syntax:</p>
 <dl>
 <dt>cheese tomatoes</td>
 <dd>Find rows containing 'cheese' and 'tomatoes' in any field.</dd>
 <dt>dish:stew tomatoes</td>
 <dd>Find rows with 'stew' in the <code>dish</code> field, and 'tomatoes' in any field.</dd>
 <dt>cheese OR tomatoes</td>
-<dd>Find rows containing either 'cheese' or 'tomatoes' in any field.  OR must be capitalized.</dd>
+<dd>Find rows containing either 'cheese' or 'tomatoes' in any field.  Note that OR operator must be capitalized.</dd>
 <dt>"green tomatoes"</td>
-<dd>Find rows where 'green' is immediately followed by 'tomatoes', in any field, but both in the same field.</dd>
+<dd>Find rows where 'green' is immediately followed by 'tomatoes', in any single field.</dd>
 <dt>cheese -tomatoes</td>
 <dd>Find rows containing 'cheese' in any field, and not containing 'tomatoes' in any field.</dd>
 <dt>ch*</td>
 <dd>Find rows containing words which start with 'ch', including rows containing 'cheese' or 'chowder'.  The '*' must come at the end of the word.</dd>
 </dl>
 
+<h3>Using Indices with fts2 </h3>
 <p>fts2 tables are restricted to contain only TEXT fields and the
 full-text index.  To simulate additional indices or non-TEXT fields,
 an auxiliary table can be used:</p>
@@ -558,7 +571,7 @@ an auxiliary table can be used:</p>
 <pre><code>db.execute('CREATE TABLE recipe_aux (dish TEXT PRIMARY KEY, rating INTEGER)');
 db.execute('CREATE VIRTUAL TABLE recipe USING fts2(dish, ingredients)');</code></pre>
 
-<p>A logical row is be split across the <code>recipe</code> and
+<p>A logical row is  split across the <code>recipe</code> and
 <code>recipe_aux</code> tables, joined on the rowid.  The
 <code>recipe_aux</code> table constrains <code>dish</code> to be
 unique, and adds field <code>rating</code>, which will not be included
@@ -591,29 +604,20 @@ db.execute('COMMIT');</code></pre>
 
 <div>
     <p id="copyright">&copy;2007 Google -
-	<a href="terms.html">Terms of Service</a>
+	<a href="http://gears.google.com/tos.html">Terms of Service</a>
 	</p>
   </div>
 
 </div><!--end footer -->
 <!-- ########## END PAGE FOOTER ########## -->
-<!-- BEGIN  date this page was updated -->
-<p id="date">
-Updated on
-<script type="text/javascript">
-<!-- hide script from old browsers
-    var lm = new Date(document.lastModified);
-    document.write(lm.toDateString());
-//-->
-</script>
-<!-- END date this page was updated -->
 
 
-<script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript">
-</script>
+<!-- ########## ANALYTICS ########## -->
+<script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript"></script>
 <script type="text/javascript">
-_uacct = "UA-1619145-1";
-if (typeof urchinTracker != 'undefined') {
+  _uacct = "UA-18071-1";
+  _uanchor=1;
   urchinTracker();
-}
-</script></body></html>
+</script>
+<!-- ########## END ANALYTICS ########## -->
+</body></html>

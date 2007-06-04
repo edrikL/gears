@@ -29,6 +29,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<script type="text/javascript" src="gears_init.js"></script>
 <script type="text/javascript" src="go_offline.js"></script>
 
 <title>Enable Offline Usage</title>
@@ -49,7 +50,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </style>
 </head>
 
-<body>
+<body onload="init()">
 <h2>Getting offline-enabled documents with Google Gears </h2>
 <p>&nbsp;</p>
 <div>
@@ -58,16 +59,16 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 <p><strong>Q:</strong> I want to see these documents when I'm not online! What must I do?<br />
-<strong>A:</strong> <a href="http://gears.google.com/">Install Google Gears </a>on your computer and then click &quot;Capture&quot; to store the documents to your computer. You can then access the URLs without a network connection. </p>
+<strong>A:</strong> <a href="http://gears.google.com/">Install Google Gears</a> on your computer and then click &quot;Capture&quot; to store the documents to your computer. You can then access the URLs without a network connection. </p>
 <p>
-  <button onclick="doCapture()" > Capture </button>
+  <button onclick="createStore()" > Capture </button>
  </p>
 
 
 <p><strong>Q:</strong> I want to remove my offline access to these documents. What must I do?<br />
 <strong>A: </strong>Click &quot;Erase&quot; below to removed the &quot;captured&quot; documents from your computer.  The documents will no longer be available without a network connection. </p>
 <p>
-  <button onclick="doErase()" > Erase </button>
+  <button onclick="removeStore()" > Erase </button>
 </p>
 </body>
 </html>
