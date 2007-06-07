@@ -1,0 +1,171 @@
+<!--
+Copyright 2007, Google Inc.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, 
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ 3. Neither the name of Google Inc. nor the names of its contributors may be
+    used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<html>
+<title>ScourSafari Test</title>
+<head></head>
+<script type="text/javascript">
+function hasScour() {
+  var scourPlugin = navigator.mimeTypes["application/x-googlegears"];
+  
+  return scourPlugin ? true : false;
+}
+
+// Create or return the global factory object
+function getFactory() {
+  var factory = document.getElementById("GOBSFactory");
+  
+  // If missing, create a place for it
+  if (!factory) {
+    var factory = document.createElement("object");
+    
+    factory.width = "1";
+    factory.height = "1";
+    factory.type = "application/x-googlegears";
+    factory.id = "GOBSFactory";
+    document.body.appendChild(factory);
+    appendComponent("Factory", factory);
+  }
+
+  return factory;
+}
+
+
+function appendComponent(name, item) {
+  var components = document.getElementById("components");
+  var br = document.createElement("br");
+  var str = name + ": " + item;
+  var text = document.createTextNode(str);
+  
+  components.appendChild(br);
+  components.appendChild(text);
+}
+
+function appendStatus(str) {
+  var status = document.getElementById("status");
+  var br = document.createElement("br");
+  var text = document.createTextNode(str);
+  
+  status.appendChild(br);
+  status.appendChild(text);
+}
+
+function dbTest() {
+  var factory = getFactory();
+  var db = factory.create('beta.database', '1.0');
+  var result;
+  var value;
+  
+  appendStatus("Has scour: " + hasScour());
+
+  db.open();
+  try {
+    db.execute("drop table DEMO");
+  }
+  catch (e) {
+    // No error if it doesn't exist
+  }
+  
+  db.execute("create table DEMO (id int, num int, dec float)");
+  db.execute("insert into DEMO values (1, ?, ?)", 32, 3.14159);
+  result = db.execute("select id, dec from DEMO where num=32");
+  appendStatus("Result: " + result);
+
+  while (result.isValidRow()) {
+    appendStatus("Result: " + result.field(0) + ", " + result.field(1) +
+      " (Field: " + result.fieldName(0) + ")");
+    appendStatus("Result (id): " + result.fieldByName("id"));
+    appendStatus("Result (foobar): " + result.fieldByName("foobar"));
+    result.next();
+  }
+
+  result.close();
+  db.close();
+}
+
+var testSite = 'http://www.w3.org';
+
+function webCaptureStoreTest() {
+  var factory = getFactory();
+  var wcs = factory.create('beta.webcapturestore', '1.0');
+  
+  appendComponent("WebCaptureStore", wcs);
+  appendStatus("Headers: '" + wcs.getAllHeaders(testSite) + "'");
+}
+
+function webCaptureTest() {
+  var factory = getFactory();
+  var wc = factory.create('beta.webcapture', '1.0');
+
+  var onLoadHandler = function() {
+    appendStatus("Loaded: " + wc.URI);
+    // Fire off a timer to do the other test
+    setTimeout("webCaptureStoreTest()", 100);
+  };
+
+  var onErrorHandler = function() {
+    alert('Error capturing ' + wc.URI);
+  };
+  
+  appendComponent("WebCapture", wc);
+  
+  wc.onload = onLoadHandler;
+  wc.onerror = onErrorHandler;
+  wc.open(testSite);
+}
+
+function fileCaptureTest() {
+  var factory = getFactory();
+  var fs = factory.create('beta.filesubmitter', '1.0');
+  appendComponent("FileSubmitter", fs);
+  fs.setFileInputElement(document.getElementById("fileInput"), "http://www.google.com");
+  document.getElementById("linkText").innerHTML = document.getElementById("fileInput").href;
+}
+
+</script>
+<body>
+<b>Components:</b><div id="components"></div>
+<p>
+<b>Status:</b><div id="status"></div>
+
+<form method="post" enctype="multipart/form-data">
+<input type="hidden" name="Foo" value="bar">
+<div id="linkText">Link</div>
+<link id="fileInput" name="testLink">
+</form>
+
+<script type="text/javascript">
+
+    
+//appendStatus("Plugin Check: " + navigator.plugins["application/x-googlegears"]);
+
+dbTest();
+webCaptureTest();
+fileCaptureTest();
+</script>
+</body>
+</html>
