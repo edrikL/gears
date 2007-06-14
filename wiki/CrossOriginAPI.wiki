@@ -1,0 +1,28 @@
+#summary Means of exporting an API between origins.
+
+_DRAFT(shess) I'm still thinking about what I want,here.  For now, please send comments directly to me, once I'm further along I'll post to the discussion list for discussion._
+
+= Introduction =
+
+There are many use-cases, such as mash-ups or groups of related apps, where one app needs to expose functionality to other apps.  Here I propose a way to handle this in a secure fashion which can be managed by the service provider.
+
+
+= Details =
+
+{{{
+var service = google.gears.factory.create('beta.service', '1.0');
+service.bind('www.todo.com');
+var taskRef = service.create('tasklist', '1.0');
+var tasks = taskRef.tasks();
+taskRef.addTask('Take out the garbage');
+}}}
+
+'beta.service' is a new Gears API which creates an object representing a service.  bind() binds the service object to a particular service vendor.  The service origin is passed as a parameter - this is not the local code's origin.  Perhaps the default could be the current origin, so that you use the same service for your UI as other users use when using your service?
+
+create() creates an object which acts as a handle to an API exported by the service.  In this case the 'tasklist' API.  Versioning is just like Gears, there could be multiple versions of an API supported by the service.  Clearly there could be reflect methods on the service object to enumerate the set of APIs that are exported.
+
+The taskRef returned from create() is a synthetic object with a certain structure.  Calls to that object's methods are synchronous, just like regular JavaScript calls.
+
+---
+
+Under the covers, this creates a very minimal JavaScript context similar to the context created for WorkerPool.  The service provides the code to run in that context, either using API calls to set things up, or using something like a manifest.  The service provider publishes an interface description (TBD), which the client software includes in its code to call things.
