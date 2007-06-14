@@ -1,0 +1,185 @@
+<!--
+Copyright 2007, Google Inc.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, 
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ 3. Neither the name of Google Inc. nor the names of its contributors may be
+    used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html><head><title>Google Gears API Developer's Guide - API Summary</title>
+
+
+<!-- Begin Templates -->
+<link rel="stylesheet" type="text/css" href="http://code.google.com/css/dev_docs.css" /> 
+<link rel="stylesheet" type="text/css" href="./local_extensions.css" /> 
+<!--[if IE 7]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie7only.css" /><![endif]-->
+<!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie6only.css" /><![endif]-->
+<!--[if IE]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ieonly.css" />  <![endif]-->
+<!-- End Templates -->
+</head><body id="api_summary_page">
+<a name="top"></a>
+<!-- ########## PAGE HEADER ########## -->
+<div id="header">
+
+<div id="logo">
+<a href="index.html"><img src="resources/code_sm.png" alt="Return to Google Gears Home page" width="150" height="55" border="0" /></a></div>
+
+<h1 id="doc_title">Google Gears API Developer's Guide (Beta)</h1>
+
+
+<ul class="trail">
+<li><a href="http://code.google.com/">Google Code Home</a></li>
+<li>&gt;&nbsp;Gears API Reference</li> 
+</ul>
+</div>
+<!-- ########## END PAGE HEADER ########## -->
+
+<div id="wrapper">
+<!-- ########## SIDE NAVIGATION ########## -->
+
+<div id="sidenav">
+  <script src="nav.js"></script>
+</div>
+<!-- ########## END SIDE NAVIGATION ########## -->
+
+
+
+
+<!-- ########## PAGE CONTENT ########## -->
+<div id="pagecontent">
+
+<!------------------------------------------------------------->
+<!-- Gears API Summary Reference                             -->
+<!------------------------------------------------------------->
+<h1 id="page_title">API Summary </h1>
+<p>This is the complete Google Gears API. Click the class names to see the details. </p>
+<p>Google Gears is under active development. Be sure to view the <a href="relnotes.html">Release Notes</a> to keep track of updates and known issues.</p> 
+
+<h3>Factory</h3>
+<p>Instantiates all other Gears objects. </p>
+<pre><code><a href="api_factory.html">Factory class</a>
+   Object <b>create</b>(className, version)
+   string <b>getBuildInfo</b>()</code></pre>
+
+<h3>Database module</h3>
+<p>Provides a SQL database for storing data on the local machine.</p>
+<pre><code><a href="api_database.html">Database class</a>
+   readonly int <b>lastInsertRowId</b>
+   void      <b>open</b>([name])
+   ResultSet <b>execute</b>(sqlStatement, [argArray])
+   void      <b>close</b>()</code></pre>
+
+<pre><code><a href="api_database.html">ResultSet class</a>
+   boolean <b>isValidRow</b>()
+   void    <b>next</b>()
+   int     <b>fieldCount</b>()
+   string  <b>fieldName</b>(fieldIndex)
+   variant <b>field</b>(fieldIndex)
+   variant <b>fieldByName</b>(fieldName)
+   void    <b>close</b>()</code></pre>
+
+<br>
+
+<h3>LocalServer module</h3>
+<p>Caches and serves your application's resources locally, making it possible to start a web application without a network connection. </p>
+<pre><code><a href="api_localserver.html" class="section">LocalServer class</a>
+   boolean              <b>canServeLocally</b>(url)
+   ResourceStore        <b>createStore</b>(name, [requiredCookie])
+   ResourceStore        <b>openStore</b>(name, [requiredCookie])
+   void                 <b>removeStore</b>(name, [requiredCookie])
+   ManagedResourceStore <b>createManagedStore</b>(name, [requiredCookie])
+   ManagedResourceStore <b>openManagedStore</b>(name, [requiredCookie])
+   void                 <b>removeManagedStore</b>(name, [requiredCookie])</code></pre>
+
+<pre><code><a href="api_localserver.html#ManagedResourceStore">ManagedResourceStore class</a>
+   readonly  attribute string  <b>name</b>
+   readonly  attribute string  <b>requiredCookie</b>
+   readwrite attribute boolean <b>enabled</b>
+   readwrite attribute string  <b>manifestUrl</b>
+   readonly  attribute int     <b>lastUpdateCheckTime</b>
+   readonly  attribute int     <b>updateStatus</b>
+   readonly  attribute string  <b>lastErrorMessage</b>
+   readonly  attribute string  <b>currentVersion</b>
+   void      <b>checkForUpdate</b>()</code></pre>
+
+<pre><code><a href="api_localserver.html#ResourceStore">ResourceStore class</a>
+   readonly  attribute string  <b>name</b>
+   readonly  attribute string  <b>requiredCookie</b>
+   readwrite attribute boolean <b>enabled</b>
+   int       <b>capture</b>(urlOrUrlArray, callback)
+   void      <b>abortCapture</b>(captureId)
+   void      <b>remove</b>(url)
+   void      <b>rename</b>(srcUrl, destUrl)
+   void      <b>copy</b>(srcUrl, destUrl)
+   boolean   <b>isCaptured</b>(url)
+   void      <b>captureFile</b>(fileInputElement, url)
+   string    <b>getCapturedFileName</b>(url)
+   string    <b>getHeader</b>(url, name)
+   string    <b>getAllHeaders</b>(url)
+   FileSubmitter <b>createFileSubmitter()</b></code></pre>
+
+<pre><code><a href="api_localserver.html#FileSubmitter">FileSubmitter class</a>
+   void      <b>setFileInputElement</b>(htmlElement, url)
+</code></pre>
+
+
+<br>
+
+
+<h3>WorkerPool module</h3>
+<p>Provides the ability to run JavaScript code asynchronously.</p>
+<pre><code><a href="api_workerpool.html">WorkerPool class</a>
+   callback <b>onMessage</b>(messageString, srcWorkerId)
+   int      <b>createWorker</b>(fullScript)
+   void     <b>sendMessage</b>(messageString, destWorkerId)</code></pre>
+
+</div>
+<!-- ########## END PAGE CONTENT ########## -->
+</div><!-- end wrapper -->
+<!-- ########## PAGE FOOTER ########## -->
+<div id="footer">
+
+<div id="footerlogo">
+<img src="resources/art.gif" alt="Google color balls" />
+</div>
+
+<div>
+    <p id="copyright">&copy;2007 Google -
+	<a href="http://gears.google.com/tos.html">Terms of Service</a>
+	</p>
+  </div>
+
+</div><!--end footer -->
+<!-- ########## END PAGE FOOTER ########## -->
+
+
+
+<!-- ########## ANALYTICS ########## -->
+<script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript"></script>
+<script type="text/javascript">
+  _uacct = "UA-18071-1";
+  _uanchor=1;
+  urchinTracker();
+</script>
+<!-- ########## END ANALYTICS ########## -->
+</body></html>

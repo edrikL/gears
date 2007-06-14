@@ -1,0 +1,626 @@
+# 2007 May 10
+#
+# The author disclaims copyright to this source code.  In place of
+# a legal notice, here is a blessing:
+#
+#    May you do good and not evil.
+#    May you find forgiveness for yourself and forgive others.
+#    May you share freely, never taking more than you give.
+#
+#***********************************************************************
+# This file implements regression tests for SQLite library.  The
+# focus of this file is generating semi-random strings of SQL
+# (a.k.a. "fuzz") and sending it into the parser to try to 
+# generate errors.
+#
+# The tests in this file are really about testing fuzzily generated
+# SQL parse-trees. The majority of the fuzzily generated SQL is 
+# valid as far as the parser is concerned. 
+#
+# The most complicated trees are for SELECT statements.
+#
+# $Id: fuzz.test,v 1.12 2007/05/15 07:14:33 danielk1977 Exp $
+
+set testdir [file dirname $argv0]
+source $testdir/tester.tcl
+
+set ::REPEATS 5000
+if {[info exists ::ISQUICK]} {
+  if {$::ISQUICK} { set ::REPEATS 20 }
+}
+
+proc fuzz {TemplateList} {
+  set n [llength $TemplateList]
+  set i [expr {int(rand()*$n)}]
+  set r [uplevel 1 subst -novar [list [lindex $TemplateList $i]]]
+
+  string map {"\n" " "} $r
+}
+
+# Fuzzy generation primitives:
+#
+#     Literal
+#     UnaryOp
+#     BinaryOp
+#     Expr
+#     Table
+#     Select
+#     Insert
+#
+
+# Returns a string representing an SQL literal.
+#
+proc Literal {} {
+  set TemplateList {
+    456 0 -456 1 -1 
+    2147483648 2147483647 2147483649 -2147483647 -2147483648 -2147483649
+    'The' 'first' 'experiments' 'in' 'hardware' 'fault' 'injection'
+    zeroblob(1000)
+    NULL
+    56.1 -56.1
+    123456789.1234567899
+  }
+  fuzz $TemplateList
+}
+
+# Returns a string containing an SQL unary operator (e.g. "+" or "NOT").
+#
+proc UnaryOp {} {
+  set TemplateList {+ - NOT ~}
+  fuzz $TemplateList
+}
+
+# Returns a string containing an SQL binary operator (e.g. "*" or "/").
+#
+proc BinaryOp {} {
+  set TemplateList {
+    || * / % + - << >> & | < <= > >= = == != <> AND OR
+    LIKE GLOB {NOT LIKE}
+  }
+  fuzz $TemplateList
+}
+
+# Return the complete text of an SQL expression.
+#
+set ::ExprDepth 0
+proc Expr { {c {}} } {
+  incr ::ExprDepth
+
+  set TemplateList [concat $c $c $c {[Literal]}]
+  if {$::ExprDepth < 3} {
+    lappend TemplateList \
+      {[Expr $c] [BinaryOp] [Expr $c]}                              \
+      {[UnaryOp] [Expr $c]}                                         \
+      {[Expr $c] ISNULL}                                            \
+      {[Expr $c] NOTNULL}                                           \
+      {CAST([Expr $c] AS blob)}                                     \
+      {CAST([Expr $c] AS text)}                                     \
+      {CAST([Expr $c] AS integer)}                                  \
+      {CAST([Expr $c] AS real)}                                     \
+      {abs([Expr])}                                                 \
+      {coalesce([Expr], [Expr])}                                    \
+      {hex([Expr])}                                                 \
+      {length([Expr])}                                              \
+      {lower([Expr])}                                               \
+      {upper([Expr])}                                               \
+      {quote([Expr])}                                               \
+      {random()}                                                    \
+      {randomblob(min(max([Expr],1), 500))}                         \
+      {typeof([Expr])}                                              \
+      {substr([Expr],[Expr],[Expr])}                                \
+      {CASE WHEN [Expr $c] THEN [Expr $c] ELSE [Expr $c] END}       \
+      {[Literal]} {[Literal]} {[Literal]}                           \
+      {[Literal]} {[Literal]} {[Literal]}                           \
+      {[Literal]} {[Literal]} {[Literal]}                           \
+      {[Literal]} {[Literal]} {[Literal]}
+  }
+  if {$::SelectDepth < 4} {
+    lappend TemplateList \
+      {([Select 1])}                       \
+      {[Expr $c] IN ([Select 1])}          \
+      {[Expr $c] NOT IN ([Select 1])}      \
+      {EXISTS ([Select 1])}                \
+  } 
+  set res [fuzz $TemplateList]
+  incr ::ExprDepth -1
+  return $res
+}
+
+# Return a valid table name.
+#
+set ::TableList [list]
+proc Table {} {
+  set TemplateList [concat sqlite_master $::TableList]
+  fuzz $TemplateList
+}
+
+# Return one of:
+#
+#     "SELECT DISTINCT", "SELECT ALL" or "SELECT"
+#
+proc SelectKw {} {
+  set TemplateList {
+    "SELECT DISTINCT"
+    "SELECT ALL"
+    "SELECT"
+  }
+  fuzz $TemplateList
+}
+
+# Return a result set for a SELECT statement.
+#
+proc ResultSet {{nRes 0} {c ""}} {
+  if {$nRes == 0} {
+    set nRes [expr {rand()*2 + 1}]
+  }
+
+  set aRes [list]
+  for {set ii 0} {$ii < $nRes} {incr ii} {
+    lappend aRes [Expr $c]
+  }
+
+  join $aRes ", "
+}
+
+set ::SelectDepth 0
+set ::ColumnList [list]
+proc SimpleSelect {{nRes 0}} {
+
+  set TemplateList {
+      {[SelectKw] [ResultSet $nRes]}
+  }
+
+  # The ::SelectDepth variable contains the number of ancestor SELECT
+  # statements (i.e. for a top level SELECT it is set to 0, for a
+  # sub-select 1, for a sub-select of a sub-select 2 etc.).
+  #
+  # If this is already greater than 3, do not generate a complicated
+  # SELECT statement. This tends to cause parser stack overflow (too
+  # boring to bother with).
+  #
+  if {$::SelectDepth < 4} {
+    lappend TemplateList \
+        {[SelectKw] [ResultSet $nRes $::ColumnList] FROM ([Select])}     \
+        {[SelectKw] [ResultSet $nRes] FROM ([Select])}                   \
+        {[SelectKw] [ResultSet $nRes $::ColumnList] FROM [Table]}        \
+        {
+             [SelectKw] [ResultSet $nRes $::ColumnList] 
+             FROM ([Select]) 
+             GROUP BY [Expr]
+             HAVING [Expr]
+        }                                                                \
+
+    if {0 == $nRes} {
+      lappend TemplateList                                               \
+          {[SelectKw] * FROM ([Select])}                                 \
+          {[SelectKw] * FROM [Table]}                                    \
+          {[SelectKw] * FROM [Table] WHERE [Expr $::ColumnList]}         \
+          {
+             [SelectKw] * 
+             FROM [Table],[Table] AS t2 
+             WHERE [Expr $::ColumnList] 
+          } {
+             [SelectKw] * 
+             FROM [Table] LEFT OUTER JOIN [Table] AS t2 
+             ON [Expr $::ColumnList]
+             WHERE [Expr $::ColumnList] 
+          }
+    }
+  } 
+
+  fuzz $TemplateList
+}
+
+# Return a SELECT statement.
+#
+# If boolean parameter $isExpr is set to true, make sure the
+# returned SELECT statement returns a single column of data.
+#
+proc Select {{nMulti 0}} {
+  set TemplateList {
+    {[SimpleSelect $nMulti]} {[SimpleSelect $nMulti]} {[SimpleSelect $nMulti]} 
+    {[SimpleSelect $nMulti]} {[SimpleSelect $nMulti]} {[SimpleSelect $nMulti]} 
+    {[SimpleSelect $nMulti]} {[SimpleSelect $nMulti]} {[SimpleSelect $nMulti]} 
+    {[SimpleSelect $nMulti]} {[SimpleSelect $nMulti]} {[SimpleSelect $nMulti]} 
+    {[SimpleSelect $nMulti] ORDER BY [Expr] DESC}
+    {[SimpleSelect $nMulti] ORDER BY [Expr] ASC}
+    {[SimpleSelect $nMulti] ORDER BY [Expr] ASC, [Expr] DESC}
+    {[SimpleSelect $nMulti] ORDER BY [Expr] LIMIT [Expr] OFFSET [Expr]}
+  }
+
+  if {$::SelectDepth < 4} {
+    if {$nMulti == 0} {
+      set nMulti [expr {(rand()*2)+1}]
+    }
+    lappend TemplateList                                             \
+        {[SimpleSelect $nMulti] UNION     [Select $nMulti]}          \
+        {[SimpleSelect $nMulti] UNION ALL [Select $nMulti]}          \
+        {[SimpleSelect $nMulti] EXCEPT    [Select $nMulti]}          \
+        {[SimpleSelect $nMulti] INTERSECT [Select $nMulti]}
+  }
+
+  incr ::SelectDepth
+  set res [fuzz $TemplateList]
+  incr ::SelectDepth -1
+  set res
+}
+
+# Generate and return a fuzzy INSERT statement.
+#
+proc Insert {} {
+  set TemplateList {
+      {INSERT INTO [Table] VALUES([Expr], [Expr], [Expr]);}
+      {INSERT INTO [Table] VALUES([Expr], [Expr], [Expr], [Expr]);}
+      {INSERT INTO [Table] VALUES([Expr], [Expr]);}
+  }
+  fuzz $TemplateList
+}
+
+proc Column {} {
+  fuzz $::ColumnList
+}
+
+# Generate and return a fuzzy UPDATE statement.
+#
+proc Update {} {
+  set TemplateList {
+    {UPDATE [Table] 
+     SET [Column] = [Expr $::ColumnList] 
+     WHERE [Expr $::ColumnList]}
+  }
+  fuzz $TemplateList
+}
+
+proc Delete {} {
+  set TemplateList {
+    {DELETE FROM [Table] WHERE [Expr $::ColumnList]}
+  }
+  fuzz $TemplateList
+}
+
+proc Statement {} {
+  set TemplateList {
+    {[Update]}
+    {[Insert]}
+    {[Select]}
+    {[Delete]}
+  }
+  fuzz $TemplateList
+}
+
+# Return an identifier. This just chooses randomly from a fixed set
+# of strings.
+proc Identifier {} {
+  set TemplateList {
+    This just chooses randomly a fixed 
+    We would also thank the developers 
+    for their analysis Samba
+  }
+  fuzz $TemplateList
+}
+
+proc Check {} {
+  # Use a large value for $::SelectDepth, because sub-selects are
+  # not allowed in expressions used by CHECK constraints.
+  #
+  set sd $::SelectDepth 
+  set ::SelectDepth 500
+  set TemplateList {
+    {}
+    {CHECK ([Expr])}
+  }
+  set res [fuzz $TemplateList]
+  set ::SelectDepth $sd
+  set res
+}
+
+proc Coltype {} {
+  set TemplateList {
+    {INTEGER PRIMARY KEY}
+    {VARCHAR [Check]}
+    {PRIMARY KEY}
+  }
+  fuzz $TemplateList
+}
+
+proc DropTable {} {
+  set TemplateList {
+    {DROP TABLE IF EXISTS [Identifier]}
+  }
+  fuzz $TemplateList
+}
+
+proc CreateView {} {
+  set TemplateList {
+    {CREATE VIEW [Identifier] AS [Select]}
+  }
+  fuzz $TemplateList
+}
+proc DropView {} {
+  set TemplateList {
+    {DROP VIEW IF EXISTS [Identifier]}
+  }
+  fuzz $TemplateList
+}
+
+proc CreateTable {} {
+  set TemplateList {
+    {CREATE TABLE [Identifier]([Identifier] [Coltype], [Identifier] [Coltype])}
+    {CREATE TEMP TABLE [Identifier]([Identifier] [Coltype])}
+  }
+  fuzz $TemplateList
+}
+
+proc CreateOrDropTableOrView {} {
+  set TemplateList {
+    {[CreateTable]}
+    {[DropTable]}
+    {[CreateView]}
+    {[DropView]}
+  }
+  fuzz $TemplateList
+}
+
+########################################################################
+
+set ::log [open fuzzy.log w]
+
+#
+# Usage: do_fuzzy_test <testname> ?<options>?
+# 
+#     -template
+#     -errorlist
+#     -repeats
+#     
+proc do_fuzzy_test {testname args} {
+  set ::fuzzyopts(-errorlist) [list]
+  set ::fuzzyopts(-repeats) $::REPEATS
+  array set ::fuzzyopts $args
+
+  lappend ::fuzzyopts(-errorlist) {parser stack overflow} 
+  lappend ::fuzzyopts(-errorlist) {ORDER BY}
+  lappend ::fuzzyopts(-errorlist) {GROUP BY}
+  lappend ::fuzzyopts(-errorlist) {datatype mismatch}
+
+  for {set ii 0} {$ii < $::fuzzyopts(-repeats)} {incr ii} {
+    do_test ${testname}.$ii {
+      set ::sql [subst $::fuzzyopts(-template)]
+      puts $::log $::sql
+      flush $::log
+      set rc [catch {execsql $::sql} msg]
+      set e 1
+      if {$rc} {
+        set e 0
+        foreach error $::fuzzyopts(-errorlist) {
+          if {0 == [string first $error $msg]} {
+            set e 1
+            break
+          }
+        }
+      }
+      if {$e == 0} {
+        puts ""
+        puts $::sql
+        puts $msg
+      }
+      set e
+    } {1}
+  }
+}
+
+#----------------------------------------------------------------
+# These tests caused errors that were first caught by the tests
+# in this file. They are still here.
+do_test fuzz-1.1 {
+  execsql {
+    SELECT 'abc' LIKE X'ABCD';
+  }
+} {0}
+do_test fuzz-1.2 {
+  execsql {
+    SELECT 'abc' LIKE zeroblob(10);
+  }
+} {0}
+do_test fuzz-1.3 {
+  execsql {
+    SELECT zeroblob(10) LIKE 'abc';
+  }
+} {0}
+do_test fuzz-1.4 {
+  execsql {
+    SELECT (- -21) % NOT (456 LIKE zeroblob(10));
+  }
+} {0}
+do_test fuzz-1.5 {
+  execsql {
+    SELECT (SELECT (
+        SELECT (SELECT -2147483648) FROM (SELECT 1) ORDER BY 1
+    ))
+  }
+} {-2147483648}
+do_test fuzz-1.6 {
+  execsql {
+    SELECT 'abc', zeroblob(1) FROM (SELECT 1) ORDER BY 1
+  }
+} [execsql {SELECT 'abc', zeroblob(1)}]
+
+do_test fuzz-1.7 {
+  execsql {
+    SELECT ( SELECT zeroblob(1000) FROM ( 
+      SELECT * FROM (SELECT 'first') ORDER BY NOT 'in') 
+    )
+  }
+} [execsql {SELECT zeroblob(1000)}]
+
+do_test fuzz-1.8 {
+  # Problems with opcode OP_ToText (did not account for MEM_Zero).
+  # Also MemExpandBlob() was marking expanded blobs as nul-terminated.
+  # They are not.
+  execsql {
+    SELECT CAST(zeroblob(1000) AS text);
+  }
+} {{}}
+
+do_test fuzz-1.9 {
+  # This was causing a NULL pointer dereference of Expr.pList.
+  execsql {
+    SELECT 1 FROM (SELECT * FROM sqlite_master WHERE random())
+  }
+} {}
+
+do_test fuzz-1.10 {
+  # Bug in calculation of Parse.ckOffset causing an assert() 
+  # to fail. Probably harmless.
+  execsql {
+    SELECT coalesce(1, substr( 1, 2, length('in' IN (SELECT 1))))
+  }
+} {1}
+
+do_test fuzz-1.11 {
+  # The literals (A, B, C, D) are not important, they are just used
+  # to make the EXPLAIN output easier to read.
+  #
+  # The problem here is that the EXISTS(...) expression leaves an
+  # extra value on the VDBE stack. This is confusing the parent and
+  # leads to an assert() failure when OP_Insert encounters an integer
+  # when it expects a record blob.
+  #
+  # Update: Any query with (LIMIT 0) was leaking stack.
+  #
+  execsql {
+    SELECT 'A' FROM (SELECT 'B') ORDER BY EXISTS (
+      SELECT 'C' FROM (SELECT 'D' LIMIT 0)
+    )
+  }
+} {A}
+
+do_test fuzz-1.12.1 {
+  # Create a table with a single row.
+  execsql {
+    CREATE TABLE abc(b);
+    INSERT INTO abc VALUES('ABCDE');
+  }
+
+  # The following query was crashing. The later subquery (in the FROM)
+  # clause was flattened into the parent, but the code was not repairng
+  # the "b" reference in the other sub-query. When the query was executed,
+  # that "b" refered to a non-existant vdbe table-cursor.
+  #
+  execsql {
+    SELECT 1 IN ( SELECT b UNION SELECT 1 ) FROM (SELECT b FROM abc);
+  }
+} {1}
+do_test fuzz-1.12.2 {
+  # Clean up after the previous query.
+  execsql {
+    DROP TABLE abc;
+  }
+} {}
+
+
+do_test fuzz-1.13 {
+  # The problem here was that when there were more expressions in
+  # the ORDER BY list than the result-set list. The temporary b-tree
+  # used for sorting was being misconfigured in this case.
+  #
+  execsql {
+    SELECT 'abcd' UNION SELECT 'efgh' ORDER BY 1 ASC, 1 ASC;
+  }
+} {abcd efgh}
+
+do_test fuzz-1.14.1 {
+  execsql {
+    CREATE TABLE abc(a, b, c);
+    INSERT INTO abc VALUES(123, 456, 789);
+  }
+ 
+  # The [a] reference in the sub-select was causing a problem. Because
+  # the internal walkSelectExpr() function was not considering compound
+  # SELECT operators.
+  execsql {
+    SELECT 1 FROM abc
+    GROUP BY c HAVING EXISTS (SELECT a UNION SELECT 123);
+  }
+} {1}
+do_test fuzz-1.14.2 {
+  execsql {
+    DROP TABLE abc;
+  }
+} {}
+
+#----------------------------------------------------------------
+# Test some fuzzily generated expressions.
+#
+do_fuzzy_test fuzz-2 -template  { SELECT [Expr] }
+
+do_test fuzz-3.1 {
+  execsql {
+    CREATE TABLE abc(a, b, c);
+    CREATE TABLE def(a, b, c);
+    CREATE TABLE ghi(a, b, c);
+  }
+} {}
+set ::TableList  [list abc def ghi]
+
+#----------------------------------------------------------------
+# Test some fuzzily generated SELECT statements.
+#
+do_fuzzy_test fuzz-3.2 -template  {[Select]}
+
+#----------------------------------------------------------------
+# Insert a small amount of data into the database and then run 
+# some more generated SELECT statements.
+#
+do_test fuzz-4.1 {
+  execsql {
+    INSERT INTO abc VALUES(1, 2, 3);
+    INSERT INTO abc VALUES(4, 5, 6);
+    INSERT INTO abc VALUES(7, 8, 9);
+    INSERT INTO def VALUES(1, 2, 3);
+    INSERT INTO def VALUES(4, 5, 6);
+    INSERT INTO def VALUES(7, 8, 9);
+    INSERT INTO ghi VALUES(1, 2, 3);
+    INSERT INTO ghi VALUES(4, 5, 6);
+    INSERT INTO ghi VALUES(7, 8, 9);
+    CREATE INDEX abc_i ON abc(a, b, c);
+    CREATE INDEX def_i ON def(c, a, b);
+    CREATE INDEX ghi_i ON ghi(b, c, a);
+  }
+} {}
+do_fuzzy_test fuzz-4.2 -template {[Select]}
+
+#----------------------------------------------------------------
+# Test some fuzzy INSERT statements:
+#
+do_test         fuzz-5.1 {execsql BEGIN} {}
+do_fuzzy_test   fuzz-5.2 -template  {[Insert]} -errorlist table
+integrity_check fuzz-5.2.integrity
+do_test         fuzz-5.3 {execsql COMMIT} {}
+integrity_check fuzz-5.4.integrity
+
+#----------------------------------------------------------------
+# Now that there is data in the database, run some more SELECT 
+# statements
+#
+set ::ColumnList [list a b c]
+set E {{no such col} {ambiguous column name}}
+do_fuzzy_test fuzz-6.1 -template {[Select]} -errorlist $E
+
+#----------------------------------------------------------------
+# Run some SELECTs, INSERTs, UPDATEs and DELETEs in a transaction.
+#
+set E {{no such col} {ambiguous column name} {table}}
+do_test         fuzz-7.1 {execsql BEGIN} {}
+do_fuzzy_test   fuzz-7.2 -template {[Statement]} -errorlist $E
+integrity_check fuzz-7.3.integrity
+do_test         fuzz-7.4 {execsql COMMIT} {}
+integrity_check fuzz-7.5.integrity
+
+#----------------------------------------------------------------
+# Many CREATE and DROP TABLE statements:
+#
+set E [list table duplicate {no such col} {ambiguous column name} {use DROP}]
+do_fuzzy_test fuzz-8.1 -template {[CreateOrDropTableOrView]} -errorlist $E
+
+close $::log
+finish_test
