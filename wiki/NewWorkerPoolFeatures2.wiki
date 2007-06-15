@@ -7,21 +7,21 @@
   * Errors do not get reported anywhere by default, making it hard to get going at first.
   * The code to run in the worker has to get passed in as a string - most AJAX applications do not have access to their code as a string, and this also makes it hard to have the worker have dependencies.
   * There's no debugger or logging support in most browsers.
-  * You need to set google.gears.!WorkerPool.onmessage or you get an error. This isn't intuitive. Most people's first attempt seems to be to put "hello?" or something simple in the worker code.
+  * You need to set google.gears.workerPool.onmessage or you get an error. This isn't intuitive. Most people's first attempt seems to be to put "hello?" or something simple in the worker code.
 
 This proposal addresses these issues by making the following changes:
 
   * Add !WorkerPool.load();
   * Add !WorkerPool.onerror;
   * Support for the defacto standard Console object
-  * Remove the requirement to set google.gears.!WorkerPool.onmessage inside workers
+  * Remove the requirement to set google.gears.workerPool.onmessage inside workers
 
 = WorkerPool.load() =
 
-You should be able to load the contents of multiple JavaScript files to start a Worker. This is easier for most web developers since it is similar to the way that windows are loaded.
+You should be able to load the contents of multiple !JavaScript files to start a Worker. This is easier for most web developers since it is similar to the way that windows are loaded.
 
 {{{
-var wp = google.gears.factory.create("beta.!WorkerPool", "1.1");
+var wp = google.gears.factory.create("beta.workerpool", "1.1");
 var workerId = wp.load(["foo.js", "bar.js", "baz.js"]);
 // load() is async. sendMessage's that happen before the worker is loaded are queued
 // and send when load is complete.
@@ -38,7 +38,7 @@ If this function is not set, all errors that happen inside a worker should be re
 If the function is set, then all errors that happen inside the worker are routed to the function, which can be used for logging, etc.
 
 {{{
-var wp = google.gears.factory.create("beta.!WorkerPool", "1.1");
+var wp = google.gears.factory.create("beta.workerpool", "1.1");
 // Optional property. If not set, error is thrown globally.
 wp.onerror = function(e) {
   myLogger.logWorkerError(e);
@@ -49,18 +49,18 @@ var workerId = wp.load(["buggy.js"]);
 
 = Support the defacto standard Console object in Workers =
 
-When [http://www.getfirebug.com/ Firebug] is installed, it adds a very useful object called `[http://www.getfirebug.com/console.html console]` to the global javascript scope. This object is quickly becoming a defacto standard for logging and debugging in various libraries and toolkits and we should support it too!
+When [http://www.getfirebug.com/ Firebug] is installed, it adds a very useful object called [http://www.getfirebug.com/console.html console] to the global javascript scope. This object is quickly becoming a defacto standard for logging and debugging in various libraries and toolkits and we should support it too!
 
 So you could do things like:
 
 {{{
 // parent code
-var wp = google.gears.factory.create("beta.!WorkerPool", "1.1");
+var wp = google.gears.factory.create("beta.workerpool", "1.1");
 wp.load(["test.js"]);
 sp.sendMessage("hello!");
 
 // test.js
-google.gears.!WorkerPool.onmessage = function(message, senderId) {
+google.gears.workerPool.onmessage = function(message, senderId) {
   console.log("worker got message %s from sender %s", message, sender);
 }}}
 
@@ -77,7 +77,7 @@ Together with `console` support, above, this reduces the minimum observable work
 
 {{{
 // parent code
-var wp = google.gears.factory.create("beta.!WorkerPool", "1.1");
+var wp = google.gears.factory.create("beta.workerpool", "1.1");
 wp.load(["test.js"]);
 
 // test.js
