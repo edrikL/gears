@@ -2,19 +2,23 @@
 
 = Introduction =
 
-!WorkerPool has a couple issues today that make it hard to get started with:
+!WorkerPool has several issues today that make it harder to get started with compared to the other Gears APIs.
 
-  * Errors do not get reported anywhere by default, making it hard to get going at first.
+  * Errors do not get reported anywhere by default, making it hard to get working code at first.
   * The code to run in the worker has to get passed in as a string - most AJAX applications do not have access to their code as a string, and this also makes it hard to have the worker have dependencies.
   * There's no debugger or logging support in most browsers.
   * You need to set google.gears.workerPool.onmessage or you get an error. This isn't intuitive. Most people's first attempt seems to be to put "hello?" or something simple in the worker code.
 
-This proposal addresses these issues by making the following changes:
+This proposal addresses these issues by recommending the following changes:
 
   * Add !WorkerPool.load();
   * Add !WorkerPool.onerror;
   * Support for the defacto standard Console object
   * Remove the requirement to set google.gears.workerPool.onmessage inside workers
+
+Note that there are many other features (!XHR, setTimeout, !RPC-style  messages, support for passing rich datatypes, etc, etc, etc) that would be very useful to add to !WorkerPool. I think the features listed in this proposal are the highest priority because they enable other features to be implemented in !JavaScript with minimum pain. 
+
+For example, if you can load JS libraries into Workers, it's not hard to add your own JSON encoding and decoding to either side of !WorkerPool to enable passing rich datatypes through `sendMessage`. And improving the bootstrap and debugging experience will generally makes building more complex mechanisms on top of !WorkerPool easier.
 
 = WorkerPool.load() =
 
