@@ -57,7 +57,7 @@ So you could do things like:
 // parent code
 var wp = google.gears.factory.create("beta.workerpool", "1.1");
 wp.load(["test.js"]);
-sp.sendMessage("hello!");
+wp.sendMessage("hello!");
 
 // test.js
 google.gears.workerPool.onmessage = function(message, senderId) {
