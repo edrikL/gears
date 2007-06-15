@@ -297,7 +297,9 @@ $(FF_INSTALLER_XPI): $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB) $(COMMON_RESOURCES) $
 	rm -rf $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)
 	cp -R base/firefox/static_files/components $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
+	rm -rf $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/.svn
 	cp -R base/firefox/static_files/lib        $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib
+	rm -rf $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib/.svn
 	cp $(FF_OUTDIR)/genfiles/install.rdf $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/install.rdf
 	cp $(FF_OUTDIR)/genfiles/chrome.manifest $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome.manifest
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
