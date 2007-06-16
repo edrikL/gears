@@ -34,7 +34,6 @@
 
 /* Begin PBXBuildFile section */
 		9B0B2B5A0BCC32D00067F075 /* database_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9B0B2B580BCC32D00067F075 /* database_utils.cc */; };
-		9B11DDEF0C0E12580020032F /* googlegearsuninstall in Resources */ = {isa = PBXBuildFile; fileRef = 9B11DDEE0C0E12580020032F /* googlegearsuninstall */; };
 		9B39030F0B2E36660059FABE /* GearsWorker.app in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9B3903020B2E36270059FABE /* GearsWorker.app */; };
 		9B3903470B2E36F80059FABE /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9B61330B0A5F2363003F08FE /* WebKit.framework */; };
 		9B5D3D420A9E2037000F4AD1 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9B5D3D3F0A9E2037000F4AD1 /* SystemConfiguration.framework */; };
@@ -269,6 +268,7 @@
 		9B7D0C680C05018700A91693 /* Worker-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "Worker-Info.plist"; sourceTree = "<group>"; };
 		9BAA41620A95561C00EEDF60 /* security_model.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = security_model.cc; path = ../../common/security_model.cc; sourceTree = SOURCE_ROOT; };
 		9BAA41630A95561C00EEDF60 /* security_model.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = security_model.h; path = ../../common/security_model.h; sourceTree = SOURCE_ROOT; };
+		9BB1C9FD0C10C4B100D919FA /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = Info.plist; sourceTree = "<group>"; };
 		9BC00A450B8639B2001CBBCE /* scoped_token.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = scoped_token.h; path = ../../common/scoped_token.h; sourceTree = SOURCE_ROOT; };
 		9BC332120BC6CD70006249FE /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/Localizable.strings; sourceTree = "<group>"; };
 		9BC67D570BE136BC00F1FC5B /* file_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = file_test.cc; path = ../../common/file_test.cc; sourceTree = SOURCE_ROOT; };
@@ -575,6 +575,7 @@
 				9B7D0C680C05018700A91693 /* Worker-Info.plist */,
 				9BC332110BC6CD70006249FE /* Localizable.strings */,
 				9B11DDEE0C0E12580020032F /* googlegearsuninstall */,
+				9BB1C9FD0C10C4B100D919FA /* Info.plist */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -1153,7 +1154,6 @@
 				9B61336F0A5F2DE7003F08FE /* InfoPlist.strings in Resources */,
 				9B6133530A5F24D7003F08FE /* Plugin-Info.plist in Resources */,
 				9BC332130BC6CD70006249FE /* Localizable.strings in Resources */,
-				9B11DDEF0C0E12580020032F /* googlegearsuninstall in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

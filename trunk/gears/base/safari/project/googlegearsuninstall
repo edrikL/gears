@@ -15,5 +15,9 @@ rm -rf "/Library/InputManagers/GoogleGearsEnabler"
 echo "Removing Database..."
 rm -rf ~/"Library/Application Support/Google/Google Gears for Safari"
 
+# Removing this bundle
+echo "Removing Uninstaller..."
+rm -rf "/Library/Google/Google Gears"
+
 # Done
 echo "Done."
