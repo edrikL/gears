@@ -173,9 +173,11 @@ HRESULT GearsDatabase::BindArg(const CComVariant &arg, int index,
   return (err == SQLITE_OK) ? S_OK :  E_FAIL;
 }
 
-STDMETHODIMP GearsDatabase::execute(const BSTR expression, 
+STDMETHODIMP GearsDatabase::execute(const BSTR expression_in, 
                                     const VARIANT *arg_array,
                                     GearsResultSetInterface **rs_retval) {
+  const BSTR expression = ActiveXUtils::SafeBSTR(expression_in);
+
 #ifdef DEBUG
   ScopedTimer scoped_timer(&GearsDatabase::g_timer_);
 #endif // DEBUG

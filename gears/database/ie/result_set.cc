@@ -25,6 +25,7 @@
 
 #include "gears/base/common/common.h"
 #include "gears/base/common/timer.h"
+#include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/database/ie/database.h"
@@ -127,8 +128,10 @@ STDMETHODIMP GearsResultSet::field(int index, VARIANT *retval) {
   RETURN_EXCEPTION(STRING16(L"Data type not supported."));
 }
 
-STDMETHODIMP GearsResultSet::fieldByName(const BSTR field_name,
+STDMETHODIMP GearsResultSet::fieldByName(const BSTR field_name_in,
                                          VARIANT *retval) {
+  const BSTR field_name = ActiveXUtils::SafeBSTR(field_name_in);
+
 #ifdef DEBUG
   ScopedTimer scoped_timer(&GearsDatabase::g_timer_);
 #endif // DEBUG

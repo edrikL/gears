@@ -97,7 +97,7 @@ static bool OneTimeDetectVersionCollision() {
 static bool alerted_user = false;
 const wchar_t *kVersionCollisionErrorMessage = 
     L"A " PRODUCT_FRIENDLY_NAME L" update has been downloaded.\n\n"
-    L"Please close all browser windows to complete the ugrade process.\n";
+    L"Please close all browser windows to complete the upgrade process.\n";
 
 void MaybeNotifyUserOfVersionCollision() {
   assert(detected_collision);

@@ -490,6 +490,39 @@ function testDB1_PragmaGetDisabled() {
   return g.FAILED;
 }
 
+// On IE, the specialEmpty value below will be a NULL BSTR.  This is
+// supposed to be treated the same as the empty string, but some code
+// dereferenced it.
+function testDB1_SpecialEmptyString() {
+  if (typeof document != 'undefined') {
+    var specialEmpty = document.getElementById("empty").value;
+
+    try {
+      // NULL-dereference crash.
+      g.db.execute(specialEmpty).close();
+      return g.FAILED;
+    } catch(e) {
+      // good, we expected an error
+    }
+
+    // Sanity check for same bug in bind parameters (there wasn't
+    // one).
+    g.db.execute('select ?', [specialEmpty]).close();
+
+    var rs = g.db.execute('select ? as field', ['value']);
+    try {
+      // NULL-dereference crash.
+      rs.fieldByName(specialEmpty);
+      return g.FAILED;
+    } catch(e) {
+      // good, we expected an error
+    } finally {
+      rs.close();
+    }
+  }
+  return g.SUCCEEDED;
+}
+
 function testDB1_CloseDatabase() {
   g.db.close();
   return g.SUCCEEDED;
@@ -1117,6 +1150,7 @@ var databaseTests = [
   testDB1_ValidStatementError,
   testDB1_PragmaSetDisabled,
   testDB1_PragmaGetDisabled,
+  testDB1_SpecialEmptyString,
   testDB1_CloseDatabase,
   testDB1_CloseDatabaseTwice,
   testDB1_ExecuteMsecOnlyInDebug,
@@ -1191,6 +1225,55 @@ function test_DisallowDirectObjectCreation() {
   return g.SUCCEEDED;
 }
 
+// Test the create() factory method with various strange inputs.
+function test_CreateErrors() {
+  try {
+    google.gears.factory.create('strange', '1.0');
+    return g.FAILED;
+  } catch (e) {
+    // Good, we want an exception.
+  }
+
+  try {
+    google.gears.factory.create('beta.strange', '1.0');
+    return g.FAILED;
+  } catch (e) {
+    // Good, we want an exception.
+  }
+
+  try {
+    google.gears.factory.create('beta.workerpool', '2.0');
+    return g.FAILED;
+  } catch (e) {
+    // Good, we want an exception.
+  }
+
+  if (typeof document != 'undefined') {
+    // On IE, the specialEmpty value below will be a NULL BSTR.  This
+    // is supposed to be treated the same as the empty string, but
+    // some code dereferenced it.
+    var specialEmpty = document.getElementById("empty").value;
+
+    try {
+      // Crash parsing NULL version number.
+      google.gears.factory.create('beta.workerpool', specialEmpty);
+      return g.FAILED;
+    } catch(e) {
+      // Good, we want an exception.
+    }
+
+    try {
+      // Crash creating a string from contents of NULL.
+      google.gears.factory.create(specialEmpty, '1.0');
+      return g.FAILED;
+    } catch(e) {
+      // Good, we want an exception.
+    }
+  }
+
+  return g.SUCCEEDED;
+}
+
 
 function test_WorkerSecurityContext() {
   if (!gIsChildWorker) {
@@ -1241,6 +1324,7 @@ function test_WorkerSecurityContext() {
 
 var miscTests = [
   test_DisallowDirectObjectCreation,
+  test_CreateErrors,
   test_WorkerSecurityContext
 ];
 

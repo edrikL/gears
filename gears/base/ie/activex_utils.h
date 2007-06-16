@@ -106,6 +106,12 @@ class ActiveXUtils {
   static HRESULT GetHTMLElementAttributeValue(IHTMLElement *element,
                                               const WCHAR *name,
                                               VARIANT *value);
+
+  // Convert NULL BSTR to the empty string.
+  static const CComBSTR kEmptyBSTR;
+  static const BSTR SafeBSTR(const BSTR value) {
+    return value ? value : kEmptyBSTR.m_str;
+  }
 };
 
 

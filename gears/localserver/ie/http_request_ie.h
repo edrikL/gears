@@ -179,11 +179,15 @@ class IEHttpRequest
   // status code, status line, headers, data
   WebCacheDB::PayloadInfo response_payload_;
 
+  // The amount of data we've read into the response_payload_.data
+  // Initially the stl vector is allocated to a large size. We keep
+  // track of how much of that allocated space is actually used here. 
+  size_t actual_data_size_;
+
   // URLMON object references
   CComPtr<IMoniker> url_moniker_;
   CComPtr<IBindCtx> bind_ctx_;
   CComPtr<IBinding> binding_;
-  CComPtr<IStream> stream_;
 };
 
 #endif  // GEARS_LOCALSERVER_IE_HTTP_REQUEST_IE_H__
