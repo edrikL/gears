@@ -13,7 +13,6 @@
 			buildPhases = (
 			);
 			dependencies = (
-				9B61337D0A5F2E9E003F08FE /* PBXTargetDependency */,
 				9B61337F0A5F2E9E003F08FE /* PBXTargetDependency */,
 			);
 			name = All;
@@ -188,13 +187,6 @@
 			remoteGlobalIDString = 9B3903010B2E36270059FABE;
 			remoteInfo = ThreadProcess;
 		};
-		9B61337C0A5F2E9E003F08FE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 089C1669FE841209C02AAC07 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 9B61327B0A5F1EA7003F08FE;
-			remoteInfo = sqlite;
-		};
 		9B61337E0A5F2E9E003F08FE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 089C1669FE841209C02AAC07 /* Project object */;
@@ -251,8 +243,6 @@
 		9B2FD8910BE7E315008A4C59 /* Project.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
 		9B3501BB0B28A9A5008DE8C7 /* captured_application.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = captured_application.cc; path = ../../../webcache/common/captured_application.cc; sourceTree = SOURCE_ROOT; };
 		9B3501BC0B28A9A5008DE8C7 /* captured_application.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = captured_application.h; path = ../../../webcache/common/captured_application.h; sourceTree = SOURCE_ROOT; };
-		9B3501CD0B28A9A5008DE8C7 /* web_capture_store.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = web_capture_store.cc; path = ../../../webcache/common/web_capture_store.cc; sourceTree = SOURCE_ROOT; };
-		9B3501CE0B28A9A5008DE8C7 /* web_capture_store.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = web_capture_store.h; path = ../../../webcache/common/web_capture_store.h; sourceTree = SOURCE_ROOT; };
 		9B3903020B2E36270059FABE /* GearsWorker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GearsWorker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B57EEA30BE7E6A300451F56 /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		9B5D3D3F0A9E2037000F4AD1 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = /System/Library/Frameworks/SystemConfiguration.framework; sourceTree = "<absolute>"; };
@@ -282,8 +272,6 @@
 		9BDFC00D0B856DE500DE3642 /* scoped_CF.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = scoped_CF.h; path = ../scoped_CF.h; sourceTree = SOURCE_ROOT; };
 		9BDFC0BC0B600027009960DE /* thread_locals.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = thread_locals.cc; path = ../../common/thread_locals.cc; sourceTree = SOURCE_ROOT; };
 		9BDFC0BD0B600027009960DE /* thread_locals.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = thread_locals.h; path = ../../common/thread_locals.h; sourceTree = SOURCE_ROOT; };
-		9BDFC34D0B605790009960DE /* sf_resource_store.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sf_resource_store.h; path = ../../../webcache/safari/sf_resource_store.h; sourceTree = SOURCE_ROOT; };
-		9BDFC34E0B605790009960DE /* sf_resource_store.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = sf_resource_store.mm; path = ../../../webcache/safari/sf_resource_store.mm; sourceTree = SOURCE_ROOT; };
 		9BDFC55E0B61A842009960DE /* sf_managed_resource_store.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sf_managed_resource_store.h; path = ../../../webcache/safari/sf_managed_resource_store.h; sourceTree = SOURCE_ROOT; };
 		9BDFC55F0B61A842009960DE /* sf_managed_resource_store.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = sf_managed_resource_store.mm; path = ../../../webcache/safari/sf_managed_resource_store.mm; sourceTree = SOURCE_ROOT; };
 		9BE4FCFF0BDD670800B26C45 /* base_class.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = base_class.cc; path = ../../common/base_class.cc; sourceTree = SOURCE_ROOT; };
@@ -546,7 +534,6 @@
 				9BDFC3890B605B47009960DE /* LocalServer */,
 				9BDFC3880B605B39009960DE /* ManagedResourceStore */,
 				9B2532FD0C03A85600FBDD02 /* Resources */,
-				9BDFC23E0B6046CF009960DE /* ResourceStore */,
 				9BDFC1BF0B6043F0009960DE /* third-party */,
 				9B6133B40A5F2FB8003F08FE /* Utilities */,
 				9B3501F70B28B0EB008DE8C7 /* WorkerPool */,
@@ -755,16 +742,6 @@
 			name = JSON;
 			sourceTree = "<group>";
 		};
-		9BDFC23E0B6046CF009960DE /* ResourceStore */ = {
-			isa = PBXGroup;
-			children = (
-				9BDFC36E0B6058F1009960DE /* Common */,
-				9BDFC34D0B605790009960DE /* sf_resource_store.h */,
-				9BDFC34E0B605790009960DE /* sf_resource_store.mm */,
-			);
-			name = ResourceStore;
-			sourceTree = "<group>";
-		};
 		9BDFC36B0B6058C3009960DE /* Common */ = {
 			isa = PBXGroup;
 			children = (
@@ -795,15 +772,6 @@
 				9BED904D0C0CEC5A00006966 /* resource_store.h */,
 				9BED904E0C0CEC5A00006966 /* update_task.cc */,
 				9BED904F0C0CEC5A00006966 /* update_task.h */,
-			);
-			name = Common;
-			sourceTree = "<group>";
-		};
-		9BDFC36E0B6058F1009960DE /* Common */ = {
-			isa = PBXGroup;
-			children = (
-				9B3501CE0B28A9A5008DE8C7 /* web_capture_store.h */,
-				9B3501CD0B28A9A5008DE8C7 /* web_capture_store.cc */,
 			);
 			name = Common;
 			sourceTree = "<group>";
@@ -1360,11 +1328,6 @@
 			isa = PBXTargetDependency;
 			target = 9B3903010B2E36270059FABE /* Worker */;
 			targetProxy = 9B39030A0B2E36540059FABE /* PBXContainerItemProxy */;
-		};
-		9B61337D0A5F2E9E003F08FE /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 9B61327B0A5F1EA7003F08FE /* sqlite */;
-			targetProxy = 9B61337C0A5F2E9E003F08FE /* PBXContainerItemProxy */;
 		};
 		9B61337F0A5F2E9E003F08FE /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
