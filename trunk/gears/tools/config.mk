@@ -67,7 +67,7 @@ FF_CPPFLAGS = -DBROWSER_FF=1 -I$(GECKO_SDK)/include
 IE_CPPFLAGS = -DBROWSER_IE=1
 SQLITE_CFLAGS += -DSQLITE_CORE -DSQLITE_ENABLE_FTS1 -DSQLITE_ENABLE_FTS2 \
   -DTHREADSAFE=1 -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600 \
-  -DSQLITE_OMIT_ATTACH=1 \
+  -DSQLITE_OMIT_ATTACH=1 -DSQLITE_OMIT_LOAD_EXTENSION=1 \
   -Ithird_party/sqlite_google/src -Ithird_party/sqlite_google/preprocessed
 
 # TODO(miket): we don't currently have a way to distinguish scheduled (nightly)
