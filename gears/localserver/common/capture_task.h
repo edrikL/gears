@@ -43,9 +43,6 @@ struct CaptureRequest {
   // captureId assigned by GearsResourceStore for this request
   int id;
 
-  // security origin of the page initiating this request
-  SecurityOrigin security_origin;
-
   // list of un-resolved urls provided by the JavaScript caller
   std::vector<std::string16> urls;
 

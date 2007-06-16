@@ -33,7 +33,6 @@
 //------------------------------------------------------------------------------
 struct SFCaptureRequest : public CaptureRequest {
   id completion_callback;
-  BOOL successful;
 };
 
 #endif  // GEARS_LOCALSERVER_SAFARI_CAPTURE_TASK_SF_H__
