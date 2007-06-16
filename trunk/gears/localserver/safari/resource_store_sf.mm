@@ -32,7 +32,7 @@
 #import "gears/base/safari/browser_utils.h"
 #import "gears/localserver/common/capture_task.h"
 #import "gears/localserver/safari/file_submitter_sf.h"
-#import "gears/localserver/safari/resource_store.h"
+#import "gears/localserver/safari/resource_store_sf.h"
 
 @interface GearsResourceStore(PrivateMethods)
 - (NSNumber *)capture:(id)urlOrArray callback:(id)callback;
@@ -79,7 +79,7 @@ void CaptureStoreListener::HandleEvent(int msg_code, int msg_param, AsyncTask *s
 #pragma mark || Class ||
 //------------------------------------------------------------------------------
 + (BOOL)hasStoreNamed:(NSString *)name cookie:(NSString *)cookie 
-             security:(SecurityOrigin *)security 
+             security:(const SecurityOrigin *)security 
              existing:(int64 *)existing_store_id {
   std::string16 nameStr, cookieStr, domainStr;
   
@@ -121,7 +121,8 @@ void CaptureStoreListener::HandleEvent(int msg_code, int msg_param, AsyncTask *s
         self = nil;
       }
     } else {
-      if (!cpp_->store_.CreateOrOpen(*envPageOrigin_, nameStr.c_str(),
+      if (!cpp_->store_.CreateOrOpen(base_->EnvPageSecurityOrigin(),
+                                     nameStr.c_str(),
                                      cookieStr.c_str()) || !isValid) {
         [self release];
         self = nil;
@@ -139,7 +140,7 @@ void CaptureStoreListener::HandleEvent(int msg_code, int msg_param, AsyncTask *s
 
 //------------------------------------------------------------------------------
 #pragma mark -
-#pragma mark || GearsComponent ||
+#pragma mark || SafariGearsBaseClass ||
 //------------------------------------------------------------------------------
 + (NSDictionary *)webScriptSelectorStrings {
   return [NSDictionary dictionaryWithObjectsAndKeys:
@@ -498,7 +499,7 @@ void CaptureStoreListener::HandleEvent(int msg_code, int msg_param, AsyncTask *s
   if (![fullURLStr string16:&full_url])
     return NO;
   
-  if (!envPageOrigin_->IsSameOriginAsUrl(full_url.c_str())) {
+  if (!base_->EnvPageSecurityOrigin().IsSameOriginAsUrl(full_url.c_str())) {
     ThrowExceptionKeyAndReturnNo(@"invalidDomainAccess");
   }
   

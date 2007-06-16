@@ -26,7 +26,7 @@
 // Implement the ResourceStore for Safari
 #import <deque>
 
-#import "gears/base/safari/scour_component.h"
+#import "gears/base/safari/base_class.h"
 #import "gears/localserver/common/async_task.h"
 #import "gears/localserver/common/resource_store.h"
 #import "gears/localserver/safari/capture_task_sf.h"
@@ -49,7 +49,7 @@ typedef struct CPP_resource_store {
   scoped_ptr<CaptureStoreListener> listener_;
 } CPP_resource_store;
 
-@interface GearsResourceStore : GearsComponent {
+@interface GearsResourceStore : SafariGearsBaseClass {
  @protected
   CPP_resource_store *cpp_;  // Structure to hold c++ things (STRONG)
   
@@ -64,7 +64,7 @@ typedef struct CPP_resource_store {
 // Class
 //------------------------------------------------------------------------------
 + (BOOL)hasStoreNamed:(NSString *)name cookie:(NSString *)cookie 
-             security:(SecurityOrigin *)security 
+             security:(const SecurityOrigin *)security 
              existing:(int64 *)existing_store_id;
 
 //------------------------------------------------------------------------------
@@ -77,7 +77,7 @@ typedef struct CPP_resource_store {
 - (BOOL)removeStore;
 
 //------------------------------------------------------------------------------
-// GearsComponent
+// SafariGearsBaseClass
 //------------------------------------------------------------------------------
 + (NSDictionary *)webScriptSelectorStrings;
 + (NSDictionary *)webScriptKeys;

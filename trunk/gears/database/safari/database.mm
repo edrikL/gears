@@ -53,7 +53,7 @@ Timer g_database_timer_;
 @implementation GearsDatabase
 //------------------------------------------------------------------------------
 #pragma mark -
-#pragma mark || GearsComponent ||
+#pragma mark || SafariGearsBaseClass ||
 //------------------------------------------------------------------------------
 + (NSDictionary *)webScriptSelectorStrings {
   return [NSDictionary dictionaryWithObjectsAndKeys:
@@ -137,7 +137,8 @@ Timer g_database_timer_;
     ThrowExceptionKeyAndReturn(@"invalidParameter");
     
   // Open the database.
-  if (!OpenSqliteDatabase(database_name_str.c_str(), *envPageOrigin_, &db_)) {
+  if (!OpenSqliteDatabase(database_name_str.c_str(), 
+                          base_->EnvPageSecurityOrigin(), &db_)) {
     ThrowExceptionKeyAndReturn(@"unableToOpenDB");
   }
   
@@ -176,7 +177,7 @@ Timer g_database_timer_;
 //------------------------------------------------------------------------------
 - (BOOL)bindArgs:(id)args statement:(sqlite3_stmt *)statement {
   // Convert any arguments from WebScriptObject to NSArray
-  NSArray *converted = [GearsComponent convertWebScriptArray:args];
+  NSArray *converted = [SafariGearsBaseClass convertWebScriptArray:args];
 
   // Check if there was an error in converting the arguments
   if (converted == (NSArray *)[NSNull null])

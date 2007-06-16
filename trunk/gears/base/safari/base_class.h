@@ -24,19 +24,18 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Components that will be loaded by the Gears Factory will conform to the
-// GearsComponent protocol. There is also a base class GearsComponent that
-// can be subclassed to provide convenient interaction 
-
-// TODO(waylonis): Rename to GearsBaseClass to match with IE/FF implementations.
+// SafariGearsBaseClass protocol. There is also a base class 
+// SafariGearsBaseClass that can be subclassed to provide convenient
+// interaction with the script environment.
 
 #import <Cocoa/Cocoa.h>
 
 @class SafariGearsFactory;
 @class WebScriptObject;
-class SecurityOrigin;
+class GearsBaseClass;
 
 //------------------------------------------------------------------------------
-@protocol GearsComponent
+@protocol SafariGearsBaseClass
 // The dictionary of exposed selector strings and their web kit names
 + (NSDictionary *)webScriptSelectorStrings;
 
@@ -44,26 +43,28 @@ class SecurityOrigin;
 + (NSDictionary *)webScriptKeys;
 @end
 
-@interface GearsComponent : NSObject <GearsComponent> {
+@interface SafariGearsBaseClass : NSObject <SafariGearsBaseClass> {
  @protected
+  GearsBaseClass *base_;            // The base class for C++ objects (STRONG)
   SafariGearsFactory *factory_;     // The creator (STRONG)
-  SecurityOrigin *envPageOrigin_;   // The security origin (STRONG)
   BOOL isWorker_;                   // YES, if this is a worker pool instance
 }
 
 //------------------------------------------------------------------------------
 // Class
 //------------------------------------------------------------------------------
-// Convert |array| into an NSArray.  If |array| is nil or WebUndefined, return
-// nil.  If |array| is not a WebScriptObject (e.g., string or number), return
+// Convert 'array' into an NSArray.  If 'array' is nil or WebUndefined, return
+// nil.  If 'array' is not a WebScriptObject (e.g., string or number), return
 // [NSNull null] to indicate there was a conversion error.
 + (NSArray *)convertWebScriptArray:(WebScriptObject *)array;
 
 //------------------------------------------------------------------------------
-// GearsComponent (Protocol)
+// SafariGearsBaseClass
 //------------------------------------------------------------------------------
-// |factory| is the SafariGearsFactory that created this component instance.
+// 'factory' is the SafariGearsFactory that created this component instance.
 - (id)initWithFactory:(SafariGearsFactory *)factory;
+
+- (GearsBaseClass *)gearsBaseClass;
 
 //------------------------------------------------------------------------------
 // NSObject (WebScripting)

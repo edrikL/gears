@@ -57,7 +57,7 @@ void CaptureManagedStoreListener::HandleEvent(int msg_code, int msg_param,
 #pragma mark || Class ||
 //------------------------------------------------------------------------------
 + (BOOL)hasStoreNamed:(NSString *)name cookie:(NSString *)cookie 
-             security:(SecurityOrigin *)security 
+             security:(const SecurityOrigin *)security 
              existing:(int64 *)existing_store_id {
   std::string16 nameStr, cookieStr, domainStr;
   
@@ -101,7 +101,8 @@ void CaptureManagedStoreListener::HandleEvent(int msg_code, int msg_param,
       if (!isValid)
         ThrowExceptionKey(@"invalidParameter");
 
-      if (!cpp_->store_.CreateOrOpen(*envPageOrigin_, nameStr.c_str(),
+      if (!cpp_->store_.CreateOrOpen(base_->EnvPageSecurityOrigin(),
+                                     nameStr.c_str(),
                                      cookieStr.c_str()) || !isValid) {
         ThrowExceptionKey(@"unableToCreateStore");
         [self release];
@@ -114,13 +115,13 @@ void CaptureManagedStoreListener::HandleEvent(int msg_code, int msg_param,
 }
 
 //------------------------------------------------------------------------------
-- (BOOL)remove {
+- (BOOL)removeStore {
   return cpp_ ? cpp_->store_.Remove() : NO;
 }
 
 //------------------------------------------------------------------------------
 #pragma mark -
-#pragma mark || GearsComponent ||
+#pragma mark || SafariGearsBaseClass ||
 //------------------------------------------------------------------------------
 + (NSDictionary *)webScriptSelectorStrings {
   return [NSDictionary dictionaryWithObjectsAndKeys:
@@ -164,7 +165,7 @@ void CaptureManagedStoreListener::HandleEvent(int msg_code, int msg_param,
     std::string16 url;
     [resolved string16:&url];
     
-    if (!envPageOrigin_->IsSameOriginAsUrl(url.c_str()))
+    if (!base_->EnvPageSecurityOrigin().IsSameOriginAsUrl(url.c_str()))
       ThrowExceptionKeyAndReturn(@"invalidDomainAccess");
     
     if (!cpp_->store_.SetManifestUrl(url.c_str()))

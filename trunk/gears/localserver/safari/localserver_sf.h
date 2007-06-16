@@ -28,9 +28,9 @@
 #import "gears/base/safari/base_class.h"
 #import "gears/localserver/common/localserver.h"
 
-@interface GearsLocalServer : GearsComponent
+@interface GearsLocalServer : SafariGearsBaseClass
 //------------------------------------------------------------------------------
-// GearsComponent
+// SafariGearsBaseClass
 //------------------------------------------------------------------------------
 + (NSDictionary *)webScriptSelectorStrings;
 

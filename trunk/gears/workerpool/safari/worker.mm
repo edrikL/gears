@@ -59,7 +59,6 @@
       // Create a factory
       factory_ = [[SafariGearsFactory alloc] initWithArguments:
         [pool_ arguments]];
-      [factory_ setIsWorker:YES];
     }
     
     // Check for notification when the server dies

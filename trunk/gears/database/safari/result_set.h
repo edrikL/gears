@@ -28,7 +28,7 @@
 
 #import "gears/base/safari/base_class.h"
 
-@interface GearsResultSet : GearsComponent {
+@interface GearsResultSet : SafariGearsBaseClass {
  @private
   struct sqlite3_stmt *statement_;  // The result from sqlite (STRONG)
   NSMapTable *fieldNames_;          // The column names (STRONG)
@@ -43,7 +43,7 @@
 - (void)close;
 
 //------------------------------------------------------------------------------
-// GearsComponent
+// SafariGearsBaseClass
 //------------------------------------------------------------------------------
 + (NSDictionary *)webScriptSelectorStrings;
 + (NSDictionary *)webScriptKeys;

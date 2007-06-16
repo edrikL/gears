@@ -28,7 +28,7 @@
 
 #import "gears/base/safari/base_class.h"
 
-@interface GearsDatabase : GearsComponent {
+@interface GearsDatabase : SafariGearsBaseClass {
  @private
   struct sqlite3 *db_;            // sqlite3 database (STRONG)
   unsigned long lastInsertRowId_; // rowId of last insert
@@ -38,7 +38,7 @@
 }
 
 //------------------------------------------------------------------------------
-// GearsComponent
+// SafariGearsBaseClass
 //------------------------------------------------------------------------------
 + (NSDictionary *)webScriptSelectorStrings; // methods
 + (NSDictionary *)webScriptKeys;            // properties
