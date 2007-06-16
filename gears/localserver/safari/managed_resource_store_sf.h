@@ -30,7 +30,7 @@
 #import "gears/base/safari/base_class.h"
 #import "gears/localserver/common/async_task.h"
 #import "gears/localserver/common/update_task.h"
-#import "gears/localserver/common/captured_application.h"
+#import "gears/localserver/common/managed_resource_store.h"
 
 class CaptureManagedStoreListener : public AsyncTask::Listener {
  public:
@@ -46,7 +46,7 @@ typedef struct CPP_managed_resource_store {
   scoped_ptr<CaptureManagedStoreListener> listener_;
 } CPP_managed_resource_store;
 
-@interface GearsManagedResourceStore : GearsComponent {
+@interface GearsManagedResourceStore : SafariGearsBaseClass {
  @protected
   CPP_managed_resource_store *cpp_;  // Structure to hold c++ things (STRONG)
   
@@ -65,20 +65,22 @@ typedef struct CPP_managed_resource_store {
 // Class
 //------------------------------------------------------------------------------
 + (BOOL)hasStoreNamed:(NSString *)name cookie:(NSString *)cookie 
-             security:(SecurityOrigin *)security 
+             security:(const SecurityOrigin *)security 
              existing:(int64 *)existing_store_id;
 
 //------------------------------------------------------------------------------
 // Public
 //------------------------------------------------------------------------------
+// If 'existing_store_id' is not WebCacheDB::kInvalidID, then the 'cookie' and
+// 'name' parameters are ignored.
 - (id)initWithName:(NSString *)name cookie:(NSString *)cookie 
-         factory:(SafariGearsFactory *)factory
+           factory:(SafariGearsFactory *)factory
           existing:(int64)existing_store_id;
 
-- (BOOL)remove;
+- (BOOL)removeStore;
 
 //------------------------------------------------------------------------------
-// GearsComponent
+// SafariGearsBaseClass
 //------------------------------------------------------------------------------
 + (NSDictionary *)webScriptSelectorStrings;
 + (NSDictionary *)webScriptKeys;

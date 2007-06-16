@@ -43,9 +43,9 @@
 @class GearsWorkerPool;
 
 @interface SafariGearsFactory(PrivateMethods)
-// Return an autoreleased instance of a GearsComponent that has previously
+// Return an autoreleased instance of a SafariGearsBaseClass that has previously
 // registered itself with this class. The |version| string should match the
-// style described for the GearsComponent protocol.  The script visible
+// style described for the SafariGearsBaseClass protocol.  The script visible
 // "create" function comes through here.
 - (id)createModule:(NSString *)name versionString:(NSString *)versionStr;
 
@@ -94,13 +94,8 @@
 }
 
 //------------------------------------------------------------------------------
-- (void)setIsWorker:(BOOL)isWorker {
-  isWorker_ = isWorker;
-}
-
-//------------------------------------------------------------------------------
-- (BOOL)isWorker {
-  return isWorker_;
+- (GearsFactory *)gearsFactory {
+  return factory_;
 }
 
 //------------------------------------------------------------------------------

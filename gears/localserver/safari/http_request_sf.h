@@ -78,13 +78,14 @@ class SFHttpRequest : public HttpRequest {
   static void ConcatenateResponseHeadersToString(const void *key,
                                                  const void *value,
                                                  void *context);
-  static void ReadStreamClientCallBack(CFReadStreamRef stream,
-                                       CFStreamEventType type,
-                                       void *clientCallBackInfo);
+  static void StreamReaderFunc(CFReadStreamRef stream,
+                               CFStreamEventType type,
+                               void *clientCallBackInfo);
   void SetReadyState(long ready_state);
-  void TerminateReadStream();
+  void TerminateStreamReader();
   void Reset();
-
+  void CopyHeadersIfAvailable();
+  
   ReadyStateListener *listener_;
   int ref_count_;
   long ready_state_;

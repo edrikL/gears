@@ -32,7 +32,6 @@ class GearsFactory;
  @private
   NSDictionary *arguments_;           // WebKit page arguments (STRONG)
   GearsFactory *factory_;             // C++ factory (STRONG)  
-  BOOL isWorker_;                     // YES, if in a worker pool process
   GearsWorkerSupervisor *supervisor_; // The supervisor for the factory (STRONG)
 }
 
@@ -46,8 +45,7 @@ class GearsFactory;
 - (void)setArguments:(NSDictionary *)arguments;
 - (NSDictionary *)arguments;
 
-- (void)setIsWorker:(BOOL)isWorker;
-- (BOOL)isWorker;
+- (GearsFactory *)gearsFactory;
 
 - (GearsWorkerSupervisor *)supervisor;
 

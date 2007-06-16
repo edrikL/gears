@@ -29,6 +29,7 @@
 #import <stdlib.h>
 #import <unistd.h>
 
+#import "gears/base/safari/loader.h"
 #import "gears/workerpool/safari/worker.h"
 
 static const NSTimeInterval kRunLoopTimeInterval = 0.5;

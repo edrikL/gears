@@ -28,11 +28,12 @@
 #import "gears/base/common/common_sf.h"
 #import "gears/base/common/product_version.h"
 #import "gears/base/safari/factory.h"
+#import "gears/base/safari/factory_utils.h"
 #import "gears/base/safari/browser_utils.h"
-#import "gears/localserver/safari/localserver.h"
+#import "gears/localserver/safari/localserver_sf.h"
 #import "gears/localserver/safari/localserver_db_proxy.h"
-#import "gears/localserver/safari/managed_resource_store.h"
-#import "gears/localserver/safari/resource_store.h"
+#import "gears/localserver/safari/managed_resource_store_sf.h"
+#import "gears/localserver/safari/resource_store_sf.h"
 
 #ifdef DEBUG
 #include "gears/localserver/common/localserver_tests.h" // for testing
@@ -52,7 +53,7 @@
 @implementation GearsLocalServer
 //------------------------------------------------------------------------------
 #pragma mark -
-#pragma mark || GearsComponent ||
+#pragma mark || SafariGearsBaseClass ||
 //------------------------------------------------------------------------------
 + (NSDictionary *)webScriptSelectorStrings {
   return [NSDictionary dictionaryWithObjectsAndKeys:
@@ -107,7 +108,7 @@
   
   std::string16 full_url;
   [fullURLStr string16:&full_url];
-  if (!envPageOrigin_->IsSameOriginAsUrl(full_url.c_str())) {
+  if (!base_->EnvPageSecurityOrigin().IsSameOriginAsUrl(full_url.c_str())) {
     ThrowExceptionKey(@"invalidDomainAccess");
     return [NSNumber numberWithBool:NO];
   }
@@ -141,7 +142,7 @@
 
   int64 existing_store_id = WebCacheDB::kInvalidID;
   if (![GearsResourceStore hasStoreNamed:name cookie:cookie 
-                                security:envPageOrigin_
+                                security:&base_->EnvPageSecurityOrigin()
                                 existing:&existing_store_id]) {
     return nil;
   }
@@ -193,7 +194,7 @@
  
   int64 existing_store_id = WebCacheDB::kInvalidID;
   if (![GearsManagedResourceStore hasStoreNamed:name cookie:cookie 
-                                       security:envPageOrigin_
+                                       security:&base_->EnvPageSecurityOrigin()
                                        existing:&existing_store_id]) {
     return nil;
   }

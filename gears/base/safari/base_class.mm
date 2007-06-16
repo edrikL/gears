@@ -25,14 +25,16 @@
 
 #import <WebKit/WebKit.h>
 
+#import "gears/base/common/base_class.h"
 #import "gears/base/common/common_sf.h"
 #import "gears/base/common/security_model.h"
 #import "gears/base/safari/base_class.h"
 #import "gears/base/safari/browser_utils.h"
 #import "gears/base/safari/factory.h"
+#import "gears/base/safari/factory_utils.h"
 #import "gears/base/safari/string_utils.h"
 
-@implementation GearsComponent
+@implementation SafariGearsBaseClass
 //------------------------------------------------------------------------------
 #pragma mark -
 #pragma mark || Class ||
@@ -71,7 +73,7 @@
   
 //------------------------------------------------------------------------------
 #pragma mark -
-#pragma mark || GearsComponent (protocol) ||
+#pragma mark || SafariGearsBaseClass (protocol) ||
 //------------------------------------------------------------------------------
 + (NSDictionary *)webScriptSelectorStrings {
   return nil;
@@ -87,10 +89,13 @@
   if ((self = [super init])) {
     factory_ = [factory retain];
     factory_ = factory;
-    envPageOrigin_ = new SecurityOrigin();
-    NSDictionary *arguments = [factory_ arguments];
-    SafariURLUtilities::GetPageOriginFromArguments((CFDictionaryRef)arguments, 
-                                                   envPageOrigin_);
+    base_ = new GearsBaseClass();
+    
+    if (!base_->InitBaseFromSibling([factory gearsFactory])) {
+      [self release];
+      self = nil;
+    }
+
     // When building the WorkerPool application, GEARS_WORKER will be
     // defined to be 1
 #if GEARS_WORKER
@@ -102,12 +107,17 @@
 }
 
 //------------------------------------------------------------------------------
+- (GearsBaseClass *)gearsBaseClass {
+  return base_;
+}
+
+//------------------------------------------------------------------------------
 #pragma mark -
 #pragma mark || NSObject ||
 //------------------------------------------------------------------------------
 - (void)dealloc {
   [factory_ release];
-  delete envPageOrigin_;
+  delete base_;
   [super dealloc];
 }
 
