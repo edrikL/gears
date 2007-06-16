@@ -23,10 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// Expected first line
-// Please do not change the first line of this file as the webcapture tests
-// contained in this file depend on this value.
-
 // INSTRUCTIONS FOR WRITING TESTS:
 // - Each test case should be a separate function.
 // - To propagate errors from your test case:
@@ -1638,7 +1634,7 @@ function checkWorkerPoolTests() {
 
 var STORE_NAME = "unittest-store";
 var CAPTURE_URI = "unit_tests.js";
-var EXPECTED_CAPTURE_URI_CONTENT = "// Expected first line";
+var EXPECTED_CAPTURE_URI_CONTENT = "// Copyright 2007, Google Inc.";
 var CAPTURE_TEST_FILE_FRAGMENT = "test_file_fragment";
 var CAPTURE_TEST_FILES = {
   "test_file_0.txt": 0,
