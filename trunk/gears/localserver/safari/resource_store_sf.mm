@@ -214,9 +214,6 @@ void CaptureStoreListener::HandleEvent(int msg_code, int msg_param, AsyncTask *s
   
   request->id = next_capture_id_++;
   request->completion_callback = [callback retain];
-  NSDictionary *arguments = [factory_ arguments];
-  SafariURLUtilities::GetPageOriginFromArguments((CFDictionaryRef)arguments,
-                                                 &request->security_origin);
  
   // Determine what was passed as arguments
   if ([urlOrArray isKindOfClass:[WebScriptObject class]]) {
