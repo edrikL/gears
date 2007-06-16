@@ -8,7 +8,7 @@ The sample code itself can be found at
 
   http://home.nyc.rr.com/itandetnik/PassthruAppBeta.zip
 
-Scour changes:
+Gears changes:
 
 * Only a subset of the package PassthruAppBeta.zip has been extracted
   and submitted to perforce; the subset required to use the framework to
@@ -25,5 +25,5 @@ Scour changes:
 * Modifications to the class factory to not blow up when a caller
   requests an object with a particular interface (for example
   IInternetProtocolInfo) be created, returns E_NOINTERFACE in that case.
-  Scour uses an InternetSession option that tickles this problem.
+  Gears uses an InternetSession option that tickles this problem.
   (see ProtocolCF.inl)  
