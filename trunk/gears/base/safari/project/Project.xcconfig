@@ -33,7 +33,7 @@ OTHER_CPLUSPLUSFLAGS = $(OTHER_CFLAGS) -Wno-non-virtual-dtor
 OTHER_LDFLAGS = -framework Foundation -framework AppKit
 
 // Places to search
-USER_HEADER_SEARCH_PATHS = . $(SRCROOT)/../../../../ $(SRCROOT)/../../../../../google3/
+USER_HEADER_SEARCH_PATHS = . $(SRCROOT)/../../../../
 ALWAYS_SEARCH_USER_PATHS = NO
 
 // Always C99
