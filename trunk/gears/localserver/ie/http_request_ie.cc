@@ -57,7 +57,7 @@ HttpRequest *HttpRequest::Create() {
 IEHttpRequest::IEHttpRequest() :
     was_sent_(false), is_complete_(false), follow_redirects_(true),
     was_redirected_(false), was_aborted_(false), listener_(NULL),
-    ready_state_(0) {
+    ready_state_(0), actual_data_size_(0) {
 }
 
 HRESULT IEHttpRequest::FinalConstruct() {
@@ -354,8 +354,8 @@ STDMETHODIMP IEHttpRequest::OnProgress(ULONG progress, ULONG progress_max,
 HRESULT IEHttpRequest::OnRedirect(const char16 *redirect_url) {
   ATLTRACE(_T("IEHttpRequest::OnRedirect( %s )\n"), redirect_url);
   if (!follow_redirects_) {
-  if (!binding_)
-    return E_UNEXPECTED;
+    if (!binding_)
+      return E_UNEXPECTED;
     // When we're not supposed to follow redirects, we abort the request when
     // a redirect is reported to us. This causes the bind to fail w/o ever
     // having seen the actual response data. Our HttpRequest interface dictates
@@ -388,7 +388,6 @@ STDMETHODIMP IEHttpRequest::OnStopBinding(HRESULT hresult, LPCWSTR error_text) {
   binding_.Release();
   bind_ctx_.Release();
   url_moniker_.Release();
-  stream_.Release();
   is_complete_ = true;
   SetReadyState(4);
   return S_OK;
@@ -429,81 +428,73 @@ STDMETHODIMP IEHttpRequest::GetBindInfo(DWORD *flags, BINDINFO *info) {
 //------------------------------------------------------------------------------
 STDMETHODIMP IEHttpRequest::OnDataAvailable(
     DWORD flags,
-    DWORD total_stream_size,
+    DWORD unreliable_stream_size,  // With IE6, this value is not reliable
     FORMATETC *formatetc,
     STGMEDIUM *stgmed) {
-  ATLTRACE(_T("IEHttpRequest::OnDataAvailable\n"));
+  ATLTRACE(_T("IEHttpRequest::OnDataAvailable( 0x%x, %d )\n"), 
+           flags, unreliable_stream_size);
   HRESULT hr = S_OK;
 
   SetReadyState(3);
 
-  if (BSCF_FIRSTDATANOTIFICATION & flags) {
-    if (!stgmed || !formatetc) {
-      abort();
-      return E_POINTER;
-    }
-    if ((stgmed->tymed != TYMED_ISTREAM) || !stgmed->pstm) {
-      abort();
-      return E_UNEXPECTED;
-    }
-    assert(!stream_);
-    stream_ = stgmed->pstm;
+  if (!stgmed || !formatetc) {
+    abort();
+    return E_POINTER;
+  }
+  if ((stgmed->tymed != TYMED_ISTREAM) || !stgmed->pstm) {
+    abort();
+    return E_UNEXPECTED;
   }
 
-  if (stream_) {
-    std::vector<unsigned char> *data = response_payload_.data.get();
-    if (!data) {
-      assert(data);
-      abort();
-      return E_UNEXPECTED;
+  // Be careful not to overwrite a synthesized redirect response 
+  if (!follow_redirects_ && was_redirected_) {
+    do {
+      // We don't expect to get here. If we do for some reason, just read
+      // data and drop it on the floor, otherwise the bind will stall
+      unsigned char buf[kReadAheadAmount];
+      DWORD amount_read = 0;
+      hr = stgmed->pstm->Read(buf, kReadAheadAmount, &amount_read);
+    } while (!(hr == E_PENDING || hr == S_FALSE) && SUCCEEDED(hr));
+    return hr;
+  }
+
+  std::vector<unsigned char> *data = response_payload_.data.get();
+  if (!data) {
+    assert(data);
+    abort();
+    return E_UNEXPECTED;
+  }
+
+  if (flags & BSCF_FIRSTDATANOTIFICATION) {
+    assert(actual_data_size_ == 0);
+  }
+
+  // We use the data-pull model as the push model doesn't work
+  // in some circumstances. In the pull model we have to read
+  // beyond then end of what's currently available to encourage
+  // the stream to read from the wire, otherwise the bind will stall
+  // http://msdn2.microsoft.com/en-us/library/aa380034.aspx
+  do {
+    // Read in big gulps to spin as little as possible
+    DWORD amount_to_read = max(data->size() - actual_data_size_,
+                               kReadAheadAmount);
+
+    // Ensure our data buffer is large enough
+    size_t needed_size = actual_data_size_ + amount_to_read;
+    if (data->size() < needed_size) {
+      data->resize(needed_size * 2);
     }
 
-    size_t cur_size = data->size();
-    DWORD amount_to_read = total_stream_size - cur_size;
-    if (amount_to_read > 0) {
-      do {
-        DWORD amount_read = 0;
+    // Read into our data buffer
+    DWORD amount_read = 0;
+    hr = stgmed->pstm->Read(&(*data)[actual_data_size_],
+                            amount_to_read, &amount_read);
+    actual_data_size_ += amount_read;
+  } while (!(hr == E_PENDING || hr == S_FALSE) && SUCCEEDED(hr));
 
-        // Be careful not to overwrite a redirect response synthesized
-        // in OnRedirect
-        if (!follow_redirects_ && was_redirected_) {
-          // we don't expect to get here, if we do for some reason, just
-          // read data and drop it on the floor
-          unsigned char buf[kReadAheadAmount];
-          amount_to_read = kReadAheadAmount;
-          hr = stream_->Read(buf, amount_to_read, &amount_read);
-        } else {
-          // Ensure our data buffer is large enough
-          size_t needed_size = cur_size + amount_to_read;
-          if (data->capacity() < needed_size) {
-            data->reserve(needed_size * 2);
-          }
-          data->resize(needed_size);
-          if (data->size() != needed_size) {
-            abort();
-            return E_OUTOFMEMORY;
-          }
 
-          // Read into our data buffer and resize it to fit what was read
-          hr = stream_->Read(&(*data)[cur_size], amount_to_read, &amount_read);
-          if (amount_read != amount_to_read) {
-            data->resize(cur_size + amount_read);
-          }
-
-          // We use the data-pull model as the push model doesn't work
-          // in some circumstances. In the pull model we have to read
-          // beyond then end of what's currently available to encourage
-          // the stream to read from the wire.
-          // http://msdn2.microsoft.com/en-us/library/aa380034.aspx
-          cur_size = data->size();
-          amount_to_read = kReadAheadAmount;
-        }
-      } while (!(hr == E_PENDING || hr == S_FALSE) && SUCCEEDED(hr));
-    }
-
-    if (BSCF_LASTDATANOTIFICATION & flags) {
-      stream_.Release();
-    }
+  if (flags & BSCF_LASTDATANOTIFICATION) {
+    data->resize(actual_data_size_);
   }
 
   return hr;
@@ -571,6 +562,7 @@ STDMETHODIMP IEHttpRequest::OnResponse(DWORD status_code,
                                        crlf - response_headers);
   response_payload_.headers = (crlf + 2); // skip over the LF
   response_payload_.data.reset(new std::vector<unsigned char>);
+  actual_data_size_ = 0;
 
   // We only gather the body for good 200 OK responses
   if (status_code == HttpConstants::HTTP_OK) {
@@ -586,7 +578,7 @@ STDMETHODIMP IEHttpRequest::OnResponse(DWORD status_code,
       if (content_length < 0)
         content_length = 0;
     }
-    response_payload_.data->reserve(content_length + kReadAheadAmount);
+    response_payload_.data->resize(content_length + kReadAheadAmount);
   }
 
   // According to http://msdn2.microsoft.com/en-us/library/ms775055.aspx

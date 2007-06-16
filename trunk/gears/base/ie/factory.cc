@@ -42,9 +42,11 @@ GearsFactory::GearsFactory()
 }
 
 
-STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr,
-                                  const BSTR version_bstr,
+STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
+                                  const BSTR version_bstr_in,
                                   IDispatch **retval) {
+  const BSTR object_name_bstr = ActiveXUtils::SafeBSTR(object_name_bstr_in);
+  const BSTR version_bstr = ActiveXUtils::SafeBSTR(version_bstr_in);
   HRESULT hr;
 
   ATLTRACE(_T("GearsFactory::create(%s, %s)\n"),
@@ -69,8 +71,8 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr,
   int major_version_desired;
   int minor_version_desired;
   if (!ParseMajorMinorVersion(version_bstr,
-                              &major_version_desired,
-                              &minor_version_desired)) {
+			      &major_version_desired,
+			      &minor_version_desired)) {
     RETURN_EXCEPTION(STRING16(L"Invalid version string."));
   }
 

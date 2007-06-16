@@ -30,6 +30,7 @@
 #include "gears/base/common/security_model.h"
 #include "gears/base/ie/activex_utils.h"
 
+const CComBSTR ActiveXUtils::kEmptyBSTR(STRING16(L""));
 
 bool ActiveXUtils::GetPageLocation(IUnknown *site,
                                    std::string16 *page_location_url) {
