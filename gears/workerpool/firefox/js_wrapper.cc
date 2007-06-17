@@ -710,8 +710,10 @@ JSBool JsContextWrapper::JsWrapperCaller(JSContext *cx, JSObject *obj,
     nsresult err;
     js_ok = JSData2Native(cx, &param->val, src, type_info,
                           use_allocator, &param_iid, &err);
+
     if (!js_ok) {
       assert(false); // NOT YET IMPLEMENTED!
+      return js_ok;
       //ThrowBadParam(err, i, cx);
       //goto done;
     }
@@ -2148,6 +2150,7 @@ static JSBool JSData2Native(JSContext *cx, void* d, jsval s,
                 else if(JSVAL_IS_NULL(s))
                 {
                   assert(false); // NOT YET IMPLEMENTED! (missing XPCReadableJSStringWrapper, and more)
+                  return JS_FALSE;
 /***
                     XPCReadableJSStringWrapper *wrapper =
                         new XPCReadableJSStringWrapper();
@@ -2164,6 +2167,7 @@ static JSBool JSData2Native(JSContext *cx, void* d, jsval s,
                 else
                 {
                   assert(false); // NOT YET IMPLEMENTED! (commented this out b/c cleanup code casts void* to invoke nsDependentString dtor. Note: cannot access nsAString_external dtor.)
+                  return JS_FALSE;
 /***
                     // use nsString to encourage sharing
                     const nsAString *rs = new nsString(chars, length);

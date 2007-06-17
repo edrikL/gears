@@ -65,7 +65,7 @@ bool OpenSqliteDatabase(const char16 *name, const SecurityOrigin &origin,
   // Set reasonable defaults.
   sql_status = sqlite3_exec(*db,
                             "PRAGMA encoding = 'UTF-8';"
-                            "PRAGMA auto_vacuum = 0;"
+                            "PRAGMA auto_vacuum = 1;"
                             "PRAGMA cache_size = 2048;"
                             "PRAGMA page_size = 4096;"
                             "PRAGMA synchronous = NORMAL;",
