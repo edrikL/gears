@@ -264,7 +264,7 @@ bool IEHttpRequest::setOnReadyStateChange(ReadyStateListener *listener) {
 }
 
 void IEHttpRequest::SetReadyState(int state) {
-  if (state != ready_state_) {
+  if (state > ready_state_) {
     ready_state_ = state;
     if (listener_) {
       listener_->ReadyStateChanged(this);

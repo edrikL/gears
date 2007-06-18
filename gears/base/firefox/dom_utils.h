@@ -86,6 +86,9 @@ class DOMUtils {
   // Returns the page's security origin which is based on the location url.
   // Returns true on success
   static bool GetPageOrigin(SecurityOrigin *security_origin);
+
+  // Returns true if there the browser is in 'online' mode
+  static bool IsOnline();
 };
 
 #endif // GEARS_BASE_FIREFOX_DOM_UTILS_H__

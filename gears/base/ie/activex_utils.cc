@@ -25,7 +25,9 @@
 
 #include <assert.h>
 #include <mshtml.h>
+#include <sensapi.h>
 #include <shlguid.h>      // for SID_SWebBrowserApp
+#include <wininet.h>
 #include "gears/base/common/common.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/ie/activex_utils.h"
@@ -226,4 +228,14 @@ HRESULT ActiveXUtils::GetHTMLElementAttributeValue(IHTMLElement *element,
     return E_NOINTERFACE;
   }
   return attribute->get_nodeValue(value);
+}
+
+bool ActiveXUtils::IsOnline() {
+  // Note: InternetGetConnectedState detects IE's workoffline mode.
+  DWORD connected_state_flags_out = 0;
+  DWORD network_alive_flags_out = 0;
+  BOOL connected = InternetGetConnectedState(&connected_state_flags_out, 0);
+  BOOL alive = IsNetworkAlive(&network_alive_flags_out);
+  return connected && alive &&
+         ((connected_state_flags_out & INTERNET_CONNECTION_OFFLINE) == 0);
 }

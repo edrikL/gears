@@ -23,6 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/base/ie/activex_utils.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/common/critical_section.h"
@@ -30,6 +31,9 @@
 
 const char16 *AsyncTask::kCookieRequiredErrorMessage =
                   STRING16(L"Required cookie is not present");
+
+const char16 *kIsOfflineErrorMessage =
+                  STRING16(L"The browser is offline");
 
 //------------------------------------------------------------------------------
 // AsyncTask
@@ -205,6 +209,13 @@ bool AsyncTask::HttpGet(const char16 *full_url,
   }
   if (error_message) {
     error_message->clear();
+  }
+
+  if (is_capturing && !ActiveXUtils::IsOnline()) {
+    if (error_message) {
+      *error_message = kIsOfflineErrorMessage;
+    }
+    return false;
   }
 
   if (required_cookie && required_cookie[0]) {

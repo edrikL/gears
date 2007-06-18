@@ -28,6 +28,7 @@
 #ifdef WIN32
 #include <windows.h> // must manually #include before nsIEventQueueService.h
 #endif
+#include "gears/base/firefox/dom_utils.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/firefox/async_task_ff.h"
@@ -36,6 +37,9 @@
 
 const char16 *AsyncTask::kCookieRequiredErrorMessage =
                   STRING16(L"Required cookie is not present");
+
+const char16 *kIsOfflineErrorMessage =
+                  STRING16(L"The browser is offline");
 
 // Returns true if the currently executing thread is the main UI thread,
 // firefox/mozila has one such very special thread
@@ -267,6 +271,13 @@ bool AsyncTask::HttpGet(const char16 *full_url,
   }
   if (error_message) {
     error_message->clear();
+  }
+
+  if (is_capturing && !DOMUtils::IsOnline()) {
+    if (error_message) {
+      *error_message = kIsOfflineErrorMessage;
+    }
+    return false;
   }
 
   CritSecLock locker(lock_);
