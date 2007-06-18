@@ -134,13 +134,8 @@ if (window.google && google.gears) {
         </tr>
       </table>
 
-      <p><span class="code"><strong>
-      version</strong> </span>- optional version number of the class to instantiate.
-      
+      <p><span class="code"><strong>version</strong></span> - version of the class's API that the app will use.  See below for <a href="#versioning">API versioning</a> information.
 
-      <p>If <span class="code">version</span> is omitted, then <span class="code">create()</span> returns the latest version of the object. It is valid to provide just the major version number, such as '1', or provide both major and minor version numbers, such as '1.1'.
-
-      <p>See below for <a href="#versioning">API versioning</a> information.
       </td>
   </tr>
   <tr class="odd">
@@ -175,19 +170,13 @@ if (window.google && google.gears) {
   <p>A request for an interface can be thought of as a contract between Gears and the application.
     If Gears returns an object, it promises that the object will support the  interface of the requested version.
     The application promises it will only use functionality that was present in the requested interface.</p>
-  <p>A version is specified as a dotted string of the form '<em>MAJOR.MINOR</em>', representing the major and minor versions of the object. A version string that specifies only the major version is also valid. Numbers beyond the major and minor versions are ignored.</p>
+
+  <p>A version is specified as a dotted string of the form '<em>MAJOR.MINOR</em>', representing the major and minor versions of the object.</p>
   <ul>
     <li>Minor version number changes represent API changes that are backward-compatible with all previous versions having the same <em>major</em> version number. </li>
     <li>Major version number changes represent API changes that break backward compatibility.</li>
   </ul>
-  <p>
-      <b>Examples of valid version number syntax: </b>
-  </p>
-  <p> <span class="code">'1' </span>returns the latest version of the object that has the major version of 1.<br />
-      <span class="code">'1.2'</span> returns the latest version of the object that has the major version of 1 and minor version of 2. <br />
-      <span class="code">'1.2.3'</span> ignores the &quot;3&quot; and returns the latest version with a major version of 1 and minor version of 2. Requesting version <span class="code">&quot;1.2.3&quot;</span> may return version 1.2.4.0 if that is the latest available version
-    having major number 1 and minor number 2.</p>
-  <p>&nbsp;</p>
+
 </div>
 <!-- ########## END PAGE CONTENT ########## -->
 </div><!-- end wrapper -->
