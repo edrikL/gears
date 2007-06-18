@@ -270,3 +270,13 @@ bool DOMUtils::GetPageOrigin(SecurityOrigin *security_origin) {
     return false;
   return security_origin->InitFromUrl(location.c_str());
 }
+
+
+bool DOMUtils::IsOnline() {
+  nsCOMPtr<nsIIOService> ios = do_GetService(
+                                    "@mozilla.org/network/io-service;1");
+  NS_ENSURE_TRUE(ios, false);
+  PRBool offline = PR_FALSE;
+  ios->GetOffline(&offline);
+  return offline ? false : true;
+}

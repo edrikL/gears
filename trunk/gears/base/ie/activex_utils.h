@@ -112,6 +112,10 @@ class ActiveXUtils {
   static const BSTR SafeBSTR(const BSTR value) {
     return value ? value : kEmptyBSTR.m_str;
   }
+
+  // Returns true if there the browser is in 'online' mode and the local
+  // system is connected to a network.
+  static bool IsOnline();
 };
 
 

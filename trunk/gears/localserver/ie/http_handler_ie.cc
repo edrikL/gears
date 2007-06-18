@@ -24,10 +24,10 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <windows.h>
-#include <sensapi.h>
 #include <wininet.h>
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/base/ie/activex_utils.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/ie/http_handler_ie.h"
 #include "gears/localserver/ie/urlmon_utils.h"
@@ -187,22 +187,6 @@ static const bool kAlertCacheMiss = InitAlertCacheMiss();
 #else
 static const bool kAlertCacheMiss = false;
 #endif
-
-// Returns true if there the browser is in 'online' mode and the local system
-// is connected to a network. We only depend on this function when the
-// debugging feature to 'AlertCacheMiss' is enabled.
-static bool IsOnline() {
-  // TODO (michaeln): look into better way to detect this condition.
-  // Perhaps poll or only test if we haven't checked in the last <n> msecs.
-  // Perhaps use the IP Helper APIs to detect when something has changed.
-  // Note: InternetGetConnectedState detects IE's workoffline mode.
-  DWORD connected_state_flags_out = 0;
-  DWORD network_alive_flags_out = 0;
-  BOOL connected = InternetGetConnectedState(&connected_state_flags_out, 0);
-  BOOL alive = IsNetworkAlive(&network_alive_flags_out);
-  return connected && alive &&
-    ((connected_state_flags_out & INTERNET_CONNECTION_OFFLINE) == 0);
-}
 
 
 //------------------------------------------------------------------------------
@@ -750,7 +734,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
   // to get the default handling
   if (!is_captured) {
     ATLTRACE(_T("  cache miss - using default protocol handler\n"));
-    if (kAlertCacheMiss && !IsOnline()) {
+    if (kAlertCacheMiss && !ActiveXUtils::IsOnline()) {
       MessageBoxW(NULL, url, L"WebCapture cache miss",
                   MB_OK | MB_SETFOREGROUND | MB_TOPMOST);
     }
