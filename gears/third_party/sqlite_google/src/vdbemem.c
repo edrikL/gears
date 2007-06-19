@@ -21,11 +21,6 @@
 #include <ctype.h>
 #include "vdbeInt.h"
 
-#if OS_WIN
-#include <float.h>
-#define isnan(X) _isnan(X)
-#endif
-
 /*
 ** Call sqlite3VdbeMemExpandBlob() on the supplied value (type Mem*)
 ** P if required.
@@ -103,8 +98,11 @@ int sqlite3VdbeMemDynamicify(Mem *pMem){
 int sqlite3VdbeMemExpandBlob(Mem *pMem){
   if( pMem->flags & MEM_Zero ){
     char *pNew;
+    int nByte;
     assert( (pMem->flags & MEM_Blob)!=0 );
-    pNew = sqliteMalloc(pMem->n+pMem->u.i);
+    nByte = pMem->n + pMem->u.i;
+    if( nByte<=0 ) nByte = 1;
+    pNew = sqliteMalloc(nByte);
     if( pNew==0 ){ 
       return SQLITE_NOMEM;
     }
@@ -167,7 +165,10 @@ int sqlite3VdbeMemNulTerminate(Mem *pMem){
   if( pMem->flags & (MEM_Static|MEM_Ephem) ){
     return sqlite3VdbeMemMakeWriteable(pMem);
   }else{
-    char *z = sqliteMalloc(pMem->n+2);
+    char *z; 
+    sqlite3VdbeMemExpandBlob(pMem);
+    z = sqliteMalloc(pMem->n+2);
+
     if( !z ) return SQLITE_NOMEM;
     memcpy(z, pMem->z, pMem->n);
     z[pMem->n] = 0;
@@ -413,6 +414,7 @@ void sqlite3VdbeMemSetZeroBlob(Mem *pMem, int n){
   pMem->flags = MEM_Blob|MEM_Zero|MEM_Short;
   pMem->type = SQLITE_BLOB;
   pMem->n = 0;
+  if( n<0 ) n = 0;
   pMem->u.i = n;
   pMem->z = pMem->zShort;
   pMem->enc = SQLITE_UTF8;

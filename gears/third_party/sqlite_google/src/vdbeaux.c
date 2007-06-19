@@ -1358,7 +1358,8 @@ int sqlite3VdbeHalt(Vdbe *p){
     int mrc;   /* Primary error code from p->rc */
     /* Check for one of the special errors - SQLITE_NOMEM or SQLITE_IOERR */
     mrc = p->rc & 0xff;
-    isSpecialError = ((mrc==SQLITE_NOMEM || mrc==SQLITE_IOERR)?1:0);
+    isSpecialError = (
+        (mrc==SQLITE_NOMEM || mrc==SQLITE_IOERR || mrc==SQLITE_INTERRUPT)?1:0);
     if( isSpecialError ){
       /* This loop does static analysis of the query to see which of the
       ** following three categories it falls into:
@@ -1379,7 +1380,19 @@ int sqlite3VdbeHalt(Vdbe *p){
       for(i=0; i<p->nOp; i++){ 
         switch( p->aOp[i].opcode ){
           case OP_Transaction:
-            isReadOnly = 0;
+            /* This is a bit strange. If we hit a malloc() or IO error and
+            ** the statement did not open a statement transaction, we will
+            ** rollback any active transaction and abort all other active
+            ** statements. Or, if this is an SQLITE_INTERRUPT error, we
+            ** will only rollback if the interrupted statement was a write.
+            **
+            ** It could be argued that read-only statements should never
+            ** rollback anything. But careful analysis is required before
+            ** making this change
+            */
+            if( p->aOp[i].p2 || mrc!=SQLITE_INTERRUPT ){
+              isReadOnly = 0;
+            }
             break;
           case OP_Statement:
             isStatement = 1;
@@ -1391,7 +1404,10 @@ int sqlite3VdbeHalt(Vdbe *p){
       ** proceed with the special handling.
       */
       if( !isReadOnly ){
-        if( p->rc==SQLITE_NOMEM && isStatement ){
+        if( p->rc==SQLITE_IOERR_BLOCKED && isStatement ){
+          xFunc = sqlite3BtreeRollbackStmt;
+          p->rc = SQLITE_BUSY;
+        } else if( p->rc==SQLITE_NOMEM && isStatement ){
           xFunc = sqlite3BtreeRollbackStmt;
         }else{
           /* We are forced to roll back the active transaction. Before doing
@@ -1773,10 +1789,24 @@ int sqlite3VdbeSerialTypeLen(u32 serial_type){
 
 /*
 ** If we are on an architecture with mixed-endian floating 
-*** points (ex: ARM7) then swap the lower 4 bytes with the 
+** points (ex: ARM7) then swap the lower 4 bytes with the 
 ** upper 4 bytes.  Return the result.
 **
-** For most (sane) architectures, this is a no-op.
+** For most architectures, this is a no-op.
+**
+** (later):  It is reported to me that the mixed-endian problem
+** on ARM7 is an issue with GCC, not with the ARM7 chip.  It seems
+** that early versions of GCC stored the two words of a 64-bit
+** float in the wrong order.  And that error has been propagated
+** ever since.  The blame is not necessarily with GCC, though.
+** GCC might have just copying the problem from a prior compiler.
+** I am also told that newer versions of GCC that follow a different
+** ABI get the byte order right.
+**
+** Developers using SQLite on an ARM7 should compile and run their
+** application using -DSQLITE_DEBUG=1 at least once.  With DEBUG
+** enabled, some asserts below will ensure that the byte order of
+** floating point values is correct.
 */
 #ifdef SQLITE_MIXED_ENDIAN_64BIT_FLOAT
 static double floatSwap(double in){

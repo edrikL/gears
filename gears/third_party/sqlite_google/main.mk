@@ -453,6 +453,9 @@ testfixture$(EXE):	$(TOP)/src/tclsqlite.c libsqlite3.a $(TESTSRC)
 fulltest:	testfixture$(EXE) sqlite3$(EXE)
 	./testfixture$(EXE) $(TOP)/test/all.test
 
+soaktest:	testfixture$(EXE) sqlite3$(EXE)
+	./testfixture$(EXE) $(TOP)/test/all.test -soak 1
+
 test:	testfixture$(EXE) sqlite3$(EXE)
 	./testfixture$(EXE) $(TOP)/test/quick.test
 
@@ -490,8 +493,8 @@ c_interface.html:	$(TOP)/www/c_interface.tcl
 capi3.html:	$(TOP)/www/capi3.tcl
 	tclsh $(TOP)/www/capi3.tcl >capi3.html
 
-capi3ref.html:	$(TOP)/www/capi3ref.tcl
-	tclsh $(TOP)/www/capi3ref.tcl >capi3ref.html
+capi3ref.html:	$(TOP)/www/mkapidoc.tcl sqlite3.h
+	tclsh $(TOP)/www/mkapidoc.tcl <sqlite3.h >capi3ref.html
 
 changes.html:	$(TOP)/www/changes.tcl
 	tclsh $(TOP)/www/changes.tcl >changes.html
@@ -541,6 +544,9 @@ formatchng.html:	$(TOP)/www/formatchng.tcl
 
 index.html:	$(TOP)/www/index.tcl last_change
 	tclsh $(TOP)/www/index.tcl >index.html
+
+limits.html:	$(TOP)/www/limits.tcl last_change
+	tclsh $(TOP)/www/limits.tcl >limits.html
 
 lang.html:	$(TOP)/www/lang.tcl
 	tclsh $(TOP)/www/lang.tcl doc >lang.html
@@ -623,6 +629,7 @@ DOC = \
   fileformat.html \
   formatchng.html \
   index.html \
+  limits.html \
   lang.html \
   lockingv3.html \
   mingw.html \
