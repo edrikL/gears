@@ -29,7 +29,7 @@
 
 #import "gears/base/safari/base_class.h"
 
-@interface GearsFileSubmitter : GearsBase {
+@interface GearsFileSubmitter : SafariGearsBaseClass {
 }
 
 //------------------------------------------------------------------------------
