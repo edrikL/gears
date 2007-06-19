@@ -12,7 +12,7 @@
 ** A TCL Interface to SQLite.  Append this file to sqlite3.c and
 ** compile the whole thing to build a TCL-enabled version of SQLite.
 **
-** $Id: tclsqlite.c,v 1.187 2007/05/08 01:08:49 drh Exp $
+** $Id: tclsqlite.c,v 1.189 2007/06/15 18:53:14 drh Exp $
 */
 #include "tcl.h"
 #include <errno.h>
@@ -294,7 +294,6 @@ static Tcl_ChannelType IncrblobChannelType = {
   0,                                 /* flushProc                            */
   0,                                 /* handlerProc                          */
   0,                                 /* wideSeekProc                         */
-  0,                                 /* threadActionProc                     */
 };
 
 /*
@@ -2193,7 +2192,9 @@ static int DbObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv){
       } else {
         zEnd = "COMMIT";
       }
-      (void)sqlite3_exec(pDb->db, zEnd, 0, 0, 0);
+      if( sqlite3_exec(pDb->db, zEnd, 0, 0, 0) ){
+        sqlite3_exec(pDb->db, "ROLLBACK", 0, 0, 0);
+      }
     }
     break;
   }

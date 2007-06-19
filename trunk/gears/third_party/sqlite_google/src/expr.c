@@ -12,7 +12,7 @@
 ** This file contains routines used for analyzing expressions and
 ** for generating VDBE code that evaluates expressions in SQLite.
 **
-** $Id: expr.c,v 1.294 2007/05/15 07:00:34 danielk1977 Exp $
+** $Id: expr.c,v 1.298 2007/06/15 16:37:29 danielk1977 Exp $
 */
 #include "sqliteInt.h"
 #include <ctype.h>
@@ -171,15 +171,21 @@ static int binaryCompareP1(Expr *pExpr1, Expr *pExpr2, int jumpIfNull){
 ** used. Otherwise the collation sequence for the right hand expression
 ** is used, or the default (BINARY) if neither expression has a collating
 ** type.
+**
+** Argument pRight (but not pLeft) may be a null pointer. In this case,
+** it is not considered.
 */
-static CollSeq* binaryCompareCollSeq(Parse *pParse, Expr *pLeft, Expr *pRight){
+CollSeq* sqlite3BinaryCompareCollSeq(
+  Parse *pParse, 
+  Expr *pLeft, 
+  Expr *pRight
+){
   CollSeq *pColl;
   assert( pLeft );
-  assert( pRight );
   if( pLeft->flags & EP_ExpCollate ){
     assert( pLeft->pColl );
     pColl = pLeft->pColl;
-  }else if( pRight->flags & EP_ExpCollate ){
+  }else if( pRight && pRight->flags & EP_ExpCollate ){
     assert( pRight->pColl );
     pColl = pRight->pColl;
   }else{
@@ -203,7 +209,7 @@ static int codeCompare(
   int jumpIfNull    /* If true, jump if either operand is NULL */
 ){
   int p1 = binaryCompareP1(pLeft, pRight, jumpIfNull);
-  CollSeq *p3 = binaryCompareCollSeq(pParse, pLeft, pRight);
+  CollSeq *p3 = sqlite3BinaryCompareCollSeq(pParse, pLeft, pRight);
   return sqlite3VdbeOp3(pParse->pVdbe, opcode, p1, dest, (void*)p3, P3_COLLSEQ);
 }
 
@@ -825,11 +831,21 @@ static int walkSelectExpr(Select *p, int (*xFunc)(void *, Expr*), void *pArg){
 ** is constant.  See sqlite3ExprIsConstant() for additional information.
 */
 static int exprNodeIsConstant(void *pArg, Expr *pExpr){
+  int *pN = (int*)pArg;
+
+  /* If *pArg is 3 then any term of the expression that comes from
+  ** the ON or USING clauses of a join disqualifies the expression
+  ** from being considered constant. */
+  if( (*pN)==3 && ExprHasAnyProperty(pExpr, EP_FromJoin) ){
+    *pN = 0;
+    return 2;
+  }
+
   switch( pExpr->op ){
     /* Consider functions to be constant if all their arguments are constant
     ** and *pArg==2 */
     case TK_FUNCTION:
-      if( *((int*)pArg)==2 ) return 0;
+      if( (*pN)==2 ) return 0;
       /* Fall through */
     case TK_ID:
     case TK_COLUMN:
@@ -840,11 +856,11 @@ static int exprNodeIsConstant(void *pArg, Expr *pExpr){
     case TK_SELECT:
     case TK_EXISTS:
 #endif
-      *((int*)pArg) = 0;
+      *pN = 0;
       return 2;
     case TK_IN:
       if( pExpr->pSelect ){
-        *((int*)pArg) = 0;
+        *pN = 0;
         return 2;
       }
     default:
@@ -864,6 +880,18 @@ int sqlite3ExprIsConstant(Expr *p){
   int isConst = 1;
   walkExprTree(p, exprNodeIsConstant, &isConst);
   return isConst;
+}
+
+/*
+** Walk an expression tree.  Return 1 if the expression is constant
+** that does no originate from the ON or USING clauses of a join.
+** Return 0 if it involves variables or function calls or terms from
+** an ON or USING clause.
+*/
+int sqlite3ExprIsConstantNotJoin(Expr *p){
+  int isConst = 3;
+  walkExprTree(p, exprNodeIsConstant, &isConst);
+  return isConst!=0;
 }
 
 /*
@@ -1119,6 +1147,8 @@ static int lookupName(
             pDup->pColl = pExpr->pColl;
             pDup->flags |= EP_ExpCollate;
           }
+          if( pExpr->span.dyn ) sqliteFree((char*)pExpr->span.z);
+          if( pExpr->token.dyn ) sqliteFree((char*)pExpr->token.z);
           memcpy(pExpr, pDup, sizeof(*pExpr));
           sqliteFree(pDup);
           cnt = 1;
@@ -1533,7 +1563,7 @@ void sqlite3CodeSubselect(Parse *pParse, Expr *pExpr){
         }
         pEList = pExpr->pSelect->pEList;
         if( pEList && pEList->nExpr>0 ){ 
-          keyInfo.aColl[0] = binaryCompareCollSeq(pParse, pExpr->pLeft,
+          keyInfo.aColl[0] = sqlite3BinaryCompareCollSeq(pParse, pExpr->pLeft,
               pEList->a[0].pExpr);
         }
       }else if( pExpr->pList ){
@@ -1621,13 +1651,16 @@ void sqlite3CodeSubselect(Parse *pParse, Expr *pExpr){
 ** text z[0..n-1] on the stack.
 */
 static void codeInteger(Vdbe *v, const char *z, int n){
-  int i;
-  if( sqlite3GetInt32(z, &i) ){
-    sqlite3VdbeAddOp(v, OP_Integer, i, 0);
-  }else if( sqlite3FitsIn64Bits(z) ){
-    sqlite3VdbeOp3(v, OP_Int64, 0, 0, z, n);
-  }else{
-    sqlite3VdbeOp3(v, OP_Real, 0, 0, z, n);
+  assert( z || sqlite3MallocFailed() );
+  if( z ){
+    int i;
+    if( sqlite3GetInt32(z, &i) ){
+      sqlite3VdbeAddOp(v, OP_Integer, i, 0);
+    }else if( sqlite3FitsIn64Bits(z) ){
+      sqlite3VdbeOp3(v, OP_Int64, 0, 0, z, n);
+    }else{
+      sqlite3VdbeOp3(v, OP_Real, 0, 0, z, n);
+    }
   }
 }
 

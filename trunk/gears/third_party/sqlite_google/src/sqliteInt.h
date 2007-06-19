@@ -11,7 +11,7 @@
 *************************************************************************
 ** Internal interface definitions for SQLite.
 **
-** @(#) $Id: sqliteInt.h,v 1.569 2007/05/16 17:28:43 danielk1977 Exp $
+** @(#) $Id: sqliteInt.h,v 1.572 2007/06/10 22:57:33 drh Exp $
 */
 #ifndef _SQLITEINT_H_
 #define _SQLITEINT_H_
@@ -64,6 +64,10 @@
 #include <string.h>
 #include <assert.h>
 #include <stddef.h>
+
+#if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(__BORLANDC__)
+# define isnan(X)  ((X)!=(X))
+#endif
 
 /*
 ** If compiling for a processor that lacks floating point support,
@@ -1569,7 +1573,7 @@ extern const unsigned char sqlite3UtfTrans1[];
 **     be encoded as a multi-byte character.  Any multi-byte character that
 **     attempts to encode a value between 0x00 and 0x7f is rendered as 0xfffd.
 **
-**  *  These macros never allow a UTF16 surragate value to be encoded.
+**  *  These macros never allow a UTF16 surrogate value to be encoded.
 **     If a multi-byte character attempts to encode a value between
 **     0xd800 and 0xe000 then it is rendered as 0xfffd.
 **
@@ -1742,6 +1746,7 @@ void sqlite3BeginTransaction(Parse*, int);
 void sqlite3CommitTransaction(Parse*);
 void sqlite3RollbackTransaction(Parse*);
 int sqlite3ExprIsConstant(Expr*);
+int sqlite3ExprIsConstantNotJoin(Expr*);
 int sqlite3ExprIsConstantOrFunction(Expr*);
 int sqlite3ExprIsInteger(Expr*, int*);
 int sqlite3IsRowid(const char*);
@@ -1954,6 +1959,7 @@ FuncDef *sqlite3VtabOverloadFunction(FuncDef*, int nArg, Expr*);
 void sqlite3InvalidFunction(sqlite3_context*,int,sqlite3_value**);
 int sqlite3Reprepare(Vdbe*);
 void sqlite3ExprListCheckLength(Parse*, ExprList*, int, const char*);
+CollSeq* sqlite3BinaryCompareCollSeq(Parse *, Expr *, Expr *);
 
 #if SQLITE_MAX_EXPR_DEPTH>0
   void sqlite3ExprSetHeight(Expr *);

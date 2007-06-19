@@ -12,7 +12,7 @@
 ** This file contains C code routines that are called by the parser
 ** to handle SELECT statements in SQLite.
 **
-** $Id: select.c,v 1.348 2007/05/14 16:50:49 danielk1977 Exp $
+** $Id: select.c,v 1.351 2007/06/15 15:31:50 drh Exp $
 */
 #include "sqliteInt.h"
 
@@ -1771,6 +1771,9 @@ static int multiSelect(
       pOffset = p->pOffset;
       p->pOffset = 0;
       rc = sqlite3Select(pParse, p, op, unionTab, 0, 0, 0, aff);
+      /* Query flattening in sqlite3Select() might refill p->pOrderBy.
+      ** Be sure to delete p->pOrderBy, therefore, to avoid a memory leak. */
+      sqlite3ExprListDelete(p->pOrderBy);
       p->pPrior = pPrior;
       p->pOrderBy = pOrderBy;
       sqlite3ExprDelete(p->pLimit);
@@ -2650,6 +2653,10 @@ int sqlite3SelectResolve(
     }
   }
 
+  if( sqlite3MallocFailed() ){
+    return SQLITE_NOMEM;
+  }
+
   /* Make sure the GROUP BY clause does not contain aggregate functions.
   */
   if( pGroupBy ){
@@ -2866,8 +2873,13 @@ int sqlite3Select(
   if( p->pPrior ){
     if( p->pRightmost==0 ){
       Select *pLoop;
-      for(pLoop=p; pLoop; pLoop=pLoop->pPrior){
+      int cnt = 0;
+      for(pLoop=p; pLoop; pLoop=pLoop->pPrior, cnt++){
         pLoop->pRightmost = p;
+      }
+      if( SQLITE_MAX_COMPOUND_SELECT>0 && cnt>SQLITE_MAX_COMPOUND_SELECT ){
+        sqlite3ErrorMsg(pParse, "too many terms in compound SELECT");
+        return 1;
       }
     }
     return multiSelect(pParse, p, eDest, iParm, aff);

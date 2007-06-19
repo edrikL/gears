@@ -16,7 +16,7 @@
 ** so is applicable.  Because this module is responsible for selecting
 ** indices, you might also think of this module as the "query optimizer".
 **
-** $Id: where.c,v 1.248 2007/05/04 13:15:57 drh Exp $
+** $Id: where.c,v 1.253 2007/06/11 12:56:15 drh Exp $
 */
 #include "sqliteInt.h"
 
@@ -452,15 +452,17 @@ static WhereTerm *findTerm(
 
         idxaff = pIdx->pTable->aCol[iColumn].affinity;
         if( !sqlite3IndexAffinityOk(pX, idxaff) ) continue;
-        pColl = sqlite3ExprCollSeq(pParse, pX->pLeft);
+
+        /* Figure out the collation sequence required from an index for
+        ** it to be useful for optimising expression pX. Store this
+        ** value in variable pColl.
+        */
+        assert(pX->pLeft);
+        pColl = sqlite3BinaryCompareCollSeq(pParse, pX->pLeft, pX->pRight);
         if( !pColl ){
-          if( pX->pRight ){
-            pColl = sqlite3ExprCollSeq(pParse, pX->pRight);
-          }
-          if( !pColl ){
-            pColl = pParse->db->pDfltColl;
-          }
+          pColl = pParse->db->pDfltColl;
         }
+
         for(j=0; j<pIdx->nColumn && pIdx->aiColumn[j]!=iColumn; j++){}
         assert( j<pIdx->nColumn );
         if( sqlite3StrICmp(pColl->zName, pIdx->azColl[j]) ) continue;
@@ -876,6 +878,7 @@ or_not_possible:
     if( pStr1 ){
       sqlite3TokenCopy(&pStr1->token, &pRight->token);
       pStr1->token.n = nPattern;
+      pStr1->flags = EP_Dequoted;
     }
     pStr2 = sqlite3ExprDup(pStr1);
     if( pStr2 ){
@@ -1985,7 +1988,7 @@ WhereInfo *sqlite3WhereBegin(
   /* Special case: a WHERE clause that is constant.  Evaluate the
   ** expression and either jump over all of the code or fall thru.
   */
-  if( pWhere && (pTabList->nSrc==0 || sqlite3ExprIsConstant(pWhere)) ){
+  if( pWhere && (pTabList->nSrc==0 || sqlite3ExprIsConstantNotJoin(pWhere)) ){
     sqlite3ExprIfFalse(pParse, pWhere, pWInfo->iBreak, 1);
     pWhere = 0;
   }
@@ -2346,7 +2349,7 @@ WhereInfo *sqlite3WhereBegin(
       if( testOp!=OP_Noop ){
         sqlite3VdbeAddOp(v, OP_Rowid, iCur, 0);
         sqlite3VdbeAddOp(v, OP_MemLoad, pLevel->iMem, 0);
-        sqlite3VdbeAddOp(v, testOp, SQLITE_AFF_NUMERIC, brk);
+        sqlite3VdbeAddOp(v, testOp, SQLITE_AFF_NUMERIC|0x100, brk);
       }
     }else if( pLevel->flags & WHERE_COLUMN_RANGE ){
       /* Case 3: The WHERE clause term that refers to the right-most
@@ -2412,7 +2415,7 @@ WhereInfo *sqlite3WhereBegin(
         pX = pTerm->pExpr;
         assert( (pTerm->flags & TERM_CODED)==0 );
         sqlite3ExprCode(pParse, pX->pRight);
-        sqlite3VdbeAddOp(v, OP_IsNull, -(nEq+1), nxt);
+        sqlite3VdbeAddOp(v, OP_IsNull, -(nEq*2+1), nxt);
         topEq = pTerm->eOperator & (WO_LE|WO_GE);
         disableTerm(pLevel, pTerm);
         testOp = OP_IdxGE;
