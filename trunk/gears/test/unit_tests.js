@@ -519,6 +519,22 @@ function testDB1_SpecialEmptyString() {
   return g.SUCCEEDED;
 }
 
+// Causes a segmentation fault.
+function testDB1_StackOverflow() {
+  var q = "select * from (select 1";
+  for (var i = 0; i < 50000; ++i) {
+    q += " union select 1";
+  }
+  q += ")";
+  try {
+    g.db.execute(q).close();
+  } catch(e) {
+    // good, we expected an error
+    return g.SUCCEEDED;
+  }
+  return g.FAILED;
+}
+
 function testDB1_CloseDatabase() {
   g.db.close();
   return g.SUCCEEDED;
@@ -1147,6 +1163,7 @@ var databaseTests = [
   testDB1_PragmaSetDisabled,
   testDB1_PragmaGetDisabled,
   testDB1_SpecialEmptyString,
+  testDB1_StackOverflow,
   testDB1_CloseDatabase,
   testDB1_CloseDatabaseTwice,
   testDB1_ExecuteMsecOnlyInDebug,
