@@ -26,6 +26,11 @@ cvs -d :pserver:anonymous@www.sqlite.org:/sqlite \
 g4 revert -a sqlite_vendor/...
 # Add anything new that perforce doesn't have.
 g4 nothave sqlite_vendor/ | xargs g4 add
+# Check to see if anything was deleted.  Fixing left as exercise for
+# the reader.
+for file in `g4 maptofiles sqlite_vendor/...`; do
+  if [ ! -e $file ] ; then echo $file; fi
+done
 # TODO(shess) If we don't want the CVS dirs.
 # find sqlite_vendor -name CVS -execdir rm -rf {} + -prune
 g4 mail sqlite_vendor/...
