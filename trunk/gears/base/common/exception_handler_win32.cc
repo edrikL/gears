@@ -40,8 +40,8 @@
 // Product-specific constants.  MODIFY THESE TO SUIT YOUR PROJECT.
 #include "common/genfiles/product_name_constants.h"
 #include "common/genfiles/product_version_constants.h"
-const wchar_t *kCrashReportProductName = PRODUCT_FRIENDLY_NAME;
-const wchar_t *kCrashReportProductVersion = L"Google_Gears"  // [naming]
+const wchar_t *kCrashReportProductName = L"Google_Gears";  // [naming]
+const wchar_t *kCrashReportProductVersion = PRODUCT_VERSION_STRING
 #if BROWSER_FF
                                             L" (win32 firefox)";
 #elif BROWSER_IE
