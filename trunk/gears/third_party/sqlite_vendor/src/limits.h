@@ -12,7 +12,7 @@
 ** 
 ** This file defines various limits of what SQLite can process.
 **
-** @(#) $Id: limits.h,v 1.6 2007/05/10 10:46:56 danielk1977 Exp $
+** @(#) $Id: limits.h,v 1.9 2007/06/09 09:53:51 drh Exp $
 */
 
 /*
@@ -63,11 +63,24 @@
 ** any limitation on expression tree depth.
 */
 #ifndef SQLITE_MAX_EXPR_DEPTH
-# define SQLITE_MAX_EXPR_DEPTH 0
+# define SQLITE_MAX_EXPR_DEPTH 1000
+#endif
+
+/*
+** The maximum number of terms in a compound SELECT statement.
+** The code generator for compound SELECT statements does one
+** level of recursion for each term.  A stack overflow can result
+** if the number of terms is too large.  In practice, most SQL
+** never has more than 3 or 4 terms.  Use a value of 0 to disable
+** any limit on the number of terms in a compount SELECT.
+*/
+#ifndef SQLITE_MAX_COMPOUND_SELECT
+# define SQLITE_MAX_COMPOUND_SELECT 500
 #endif
 
 /*
 ** The maximum number of opcodes in a VDBE program.
+** Not currently enforced.
 */
 #ifndef SQLITE_MAX_VDBE_OP
 # define SQLITE_MAX_VDBE_OP 25000

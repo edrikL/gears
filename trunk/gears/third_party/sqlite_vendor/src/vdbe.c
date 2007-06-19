@@ -43,7 +43,7 @@
 ** in this file for details.  If in doubt, do not deviate from existing
 ** commenting and indentation practices when changing or adding code.
 **
-** $Id: vdbe.c,v 1.622 2007/05/17 16:38:30 danielk1977 Exp $
+** $Id: vdbe.c,v 1.626 2007/06/15 14:53:53 danielk1977 Exp $
 */
 #include "sqliteInt.h"
 #include "os.h"
@@ -545,14 +545,15 @@ int sqlite3VdbeExec(
     */
     if( db->xProgress ){
       if( db->nProgressOps==nProgressOps ){
+        int prc;
         if( sqlite3SafetyOff(db) ) goto abort_due_to_misuse;
-        if( db->xProgress(db->pProgressArg)!=0 ){
-          sqlite3SafetyOn(db);
-          rc = SQLITE_ABORT;
-          continue; /* skip to the next iteration of the for loop */
+        prc =db->xProgress(db->pProgressArg);
+        if( sqlite3SafetyOn(db) ) goto abort_due_to_misuse;
+        if( prc!=0 ){
+          rc = SQLITE_INTERRUPT;
+          goto vdbe_halt;
         }
         nProgressOps = 0;
-        if( sqlite3SafetyOn(db) ) goto abort_due_to_misuse;
       }
       nProgressOps++;
     }
@@ -1033,6 +1034,7 @@ case OP_Concat: {           /* same as TK_CONCAT */
       nByte = -1;
       break;
     }
+    ExpandBlob(pTerm);
     Stringify(pTerm, encoding);
     nByte += pTerm->n;
   }
@@ -5138,8 +5140,7 @@ too_big:
   rc = SQLITE_TOOBIG;
   goto vdbe_halt;
 
-  /* Jump to here if a malloc() fails.  It's hard to get a malloc()
-  ** to fail on a modern VM computer, so this code is untested.
+  /* Jump to here if a malloc() fails.
   */
 no_mem:
   sqlite3SetString(&p->zErrMsg, "out of memory", (char*)0);

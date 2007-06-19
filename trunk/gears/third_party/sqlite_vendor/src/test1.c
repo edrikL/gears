@@ -13,7 +13,7 @@
 ** is not included in the SQLite library.  It is used for automated
 ** testing of the SQLite library.
 **
-** $Id: test1.c,v 1.254 2007/05/17 16:34:44 danielk1977 Exp $
+** $Id: test1.c,v 1.256 2007/06/15 20:29:20 drh Exp $
 */
 #include "sqliteInt.h"
 #include "tcl.h"
@@ -457,9 +457,9 @@ static int test_snprintf_int(
 ){
   char zStr[100];
   int n = atoi(argv[1]);
-  if( n>sizeof(zStr) ) n = sizeof(zStr);
   const char *zFormat = argv[2];
   int a1 = atoi(argv[3]);
+  if( n>sizeof(zStr) ) n = sizeof(zStr);
   strcpy(zStr, "abcdefghijklmnopqrstuvwxyz");
   sqlite3_snprintf(n, zStr, zFormat, a1);
   Tcl_AppendResult(interp, zStr, 0);
@@ -4445,7 +4445,6 @@ int Sqlitetest1_Init(Tcl_Interp *interp){
   extern int sqlite3_sync_count, sqlite3_fullsync_count;
   extern int sqlite3_opentemp_count;
   extern int sqlite3_memUsed;
-  extern char *sqlite3_malloc_id;
   extern int sqlite3_memMax;
   extern int sqlite3_like_count;
   extern int sqlite3_tsd_count;
@@ -4516,8 +4515,14 @@ int Sqlitetest1_Init(Tcl_Interp *interp){
       (char*)&pzNeededCollation, TCL_LINK_STRING|TCL_LINK_READ_ONLY);
 #endif
 #ifdef SQLITE_MEMDEBUG
-  Tcl_LinkVar(interp, "sqlite_malloc_id",
-      (char*)&sqlite3_malloc_id, TCL_LINK_STRING);
+  {
+    extern char *sqlite3_malloc_id;
+    extern int sqlite3_mallocfail_trace;
+    Tcl_LinkVar(interp, "sqlite_malloc_id",
+        (char*)&sqlite3_malloc_id, TCL_LINK_STRING);
+    Tcl_LinkVar(interp, "sqlite3_mallocfail_trace",
+        (char*)&sqlite3_mallocfail_trace, TCL_LINK_INT);
+  }
 #endif
 #if OS_WIN
   Tcl_LinkVar(interp, "sqlite_os_type",
