@@ -24,13 +24,14 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <prtime.h>
-#include <nsIChannel.h>
-#include <nsIObserver.h>
-#include <nsIObserverService.h>
 #include <nsICategoryManager.h>
+#include <nsIChannel.h>
 #include <nsIComponentRegistrar.h>
+#include <nsIHttpChannel.h>
 #include <nsIInputStream.h>
 #include <nsIInterfaceRequestor.h>
+#include <nsIObserver.h>
+#include <nsIObserverService.h>
 #include <nsIOutputStream.h>
 #include <nsIRequest.h>
 #include <nsIURI.h>
@@ -691,14 +692,28 @@ void CacheIntercept::MaybeForceToCache(nsISupports *subject) {
     return;
   }
 
-  // Scour requests always bypass the cache.
-  if (IsScourRequest(channel)) {
+  // Gears requests always bypass the cache.
+  if (IsGearsRequest(channel)) {
     return;
   }
 
-  // If the URL has been captured, force it to go to the cache.
+  // Only drive GET and HEAD requests to our cache.
+  nsCOMPtr<nsIHttpChannel> http_channel(do_QueryInterface(channel));
+  if (!http_channel) {
+    LOG(("CacheIntercept: could not get http channel"));
+    return;
+  }
+
+  nsCString method;
+  http_channel->GetRequestMethod(method);
+  if (!method.Equals(NS_LITERAL_CSTRING("GET")) &&
+      !method.Equals(NS_LITERAL_CSTRING("HEAD"))) {
+    return;
+  }
+
+  // If the URL can be served locally, force it to go to the cache.
   nsCOMPtr<nsIURI> uri;
-  channel->GetOriginalURI(getter_AddRefs(uri));
+  channel->GetURI(getter_AddRefs(uri));
   if (!uri) {
     LOG(("CacheIntercept: could not get uri"));
     return;
@@ -720,16 +735,20 @@ void CacheIntercept::MaybeForceToCache(nsISupports *subject) {
   }
 }
 
-bool CacheIntercept::IsScourRequest(nsIChannel *channel) {
+bool CacheIntercept::IsGearsRequest(nsIChannel *channel) {
+  // TODO(michaeln): perhaps we should use Get/SetOwner() for this purpose
+  // instead. If some other OnModifyRequest listener injects their own
+  // listener which chains to the existing listener, we could get cut
+  // out of the loop?
   nsCOMPtr<nsIInterfaceRequestor> listener;
   channel->GetNotificationCallbacks(getter_AddRefs(listener));
   if (!listener) {
     return false;
   }
 
-  nsCOMPtr<SpecialHttpRequestInterface> scour_request(
+  nsCOMPtr<SpecialHttpRequestInterface> gears_request(
       do_QueryInterface(listener));
-  return !!scour_request;
+  return !!gears_request;
 }
 
 bool IsUiThread() {

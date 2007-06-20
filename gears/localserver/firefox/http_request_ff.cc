@@ -29,13 +29,13 @@
 #include <nsIIOService.h>
 #include <nsIURI.h>
 #include "gears/third_party/gecko_internal/nsIEncodedChannel.h"
+#include "gears/third_party/gecko_internal/nsNetError.h"
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/localserver/common/http_constants.h"
+#include "gears/localserver/firefox/cache_intercept.h"
 #include "gears/localserver/firefox/http_request_ff.h"
 
-// From nsNetError.h:
-#define NS_BINDING_ABORTED 0x804b0002
 
 NS_IMPL_ISUPPORTS5(FFHttpRequest,
                    nsIRequestObserver,
@@ -255,14 +255,13 @@ bool FFHttpRequest::getRedirectUrl(std::string16 *full_redirect_url) {
 //------------------------------------------------------------------------------
 bool FFHttpRequest::send() {
   NS_ENSURE_TRUE(channel_ && !was_sent_, false);
-  if (follow_redirects_) {
-    channel_->SetNotificationCallbacks(this);
-  } else {
+  if (!follow_redirects_) {
     nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
     NS_ENSURE_TRUE(http_channel, false);
     nsresult rv = http_channel->SetRedirectionLimit(0);
     NS_ENSURE_SUCCESS(rv, false);
   }
+  channel_->SetNotificationCallbacks(this);
   nsresult rv = channel_->AsyncOpen(this, nsnull);
   NS_ENSURE_SUCCESS(rv, false);
   was_sent_ = true;
@@ -391,7 +390,7 @@ bool FFHttpRequest::setOnReadyStateChange(ReadyStateListener *listener) {
 // SetReadyState
 //------------------------------------------------------------------------------
 void FFHttpRequest::SetReadyState(int state) {
-  if (state != state_) {
+  if (state > state_) {
     state_ = state;
     is_complete_ = (state == 4);
     if (listener_) {
@@ -469,9 +468,7 @@ NS_IMETHODIMP FFHttpRequest::OnStopRequest(nsIRequest *request,
                                            nsISupports *context,
                                            nsresult status) {
   NS_ENSURE_TRUE(channel_, NS_ERROR_UNEXPECTED);
-  if (follow_redirects_) {
-    channel_->SetNotificationCallbacks(NULL);
-  }
+  channel_->SetNotificationCallbacks(NULL);
   SetReadyState(4);
   return NS_OK;
 }
@@ -493,27 +490,29 @@ already_AddRefed<nsIHttpChannel> FFHttpRequest::GetCurrentHttpChannel() {
 NS_IMETHODIMP FFHttpRequest::OnChannelRedirect(nsIChannel *old_channel,
                                                nsIChannel *new_channel,
                                                PRUint32 flags) {
-  NS_PRECONDITION(new_channel, "Redirect without a channel?");
+  if (follow_redirects_) {
+    NS_PRECONDITION(new_channel, "Redirect without a channel?");
 
-  redirect_url_.clear();
+    redirect_url_.clear();
 
-  // Get the redirect url
-  nsCOMPtr<nsIURI> url;
-  nsresult rv = new_channel->GetURI(getter_AddRefs(url));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCString url_utf8;
-  rv = url->GetSpec(url_utf8);
-  NS_ENSURE_SUCCESS(rv, rv);
+    // Get the redirect url
+    nsCOMPtr<nsIURI> url;
+    nsresult rv = new_channel->GetURI(getter_AddRefs(url));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCString url_utf8;
+    rv = url->GetSpec(url_utf8);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  // Convert to string16 and remember where we've been redirected to
-  nsString url_utf16;
-  rv = NS_CStringToUTF16(url_utf8, NS_CSTRING_ENCODING_UTF8, url_utf16);
-  NS_ENSURE_SUCCESS(rv, rv);
-  redirect_url_ = url_utf16.get();
-  was_redirected_ = true;
+    // Convert to string16 and remember where we've been redirected to
+    nsString url_utf16;
+    rv = NS_CStringToUTF16(url_utf8, NS_CSTRING_ENCODING_UTF8, url_utf16);
+    NS_ENSURE_SUCCESS(rv, rv);
+    redirect_url_ = url_utf16.get();
+    was_redirected_ = true;
 
-  // We now have a new channel
-  channel_ = new_channel;
+    // We now have a new channel
+    channel_ = new_channel;
+  }
   return NS_OK;
 }
 
