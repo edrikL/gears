@@ -289,7 +289,7 @@ bool JsParamFetcher::TokenToString(JsToken t, std::string16 *out) {
   JSString *js_str = JS_ValueToString(js_context_, t);
   if (!js_str) { return false; }
 
-  out->assign(JS_GetStringChars(js_str),
+  out->assign(reinterpret_cast<const char16 *>(JS_GetStringChars(js_str)),
               JS_GetStringLength(js_str));
   return true;
 }
@@ -341,7 +341,9 @@ JsNativeMethodRetval JsSetException(const GearsBaseClass *obj,
     // don't quite do what we need.
     JSObject *exception = JS_NewObject(cx, nsnull, nsnull, nsnull);
     if (exception) {
-      JSString *jstr = JS_NewUCStringCopyZ(cx, message);
+      JSString *jstr = JS_NewUCStringCopyZ(
+                          cx,
+                          reinterpret_cast<const jschar *>(message));
       if (jstr) {
         JSBool ok = JS_DefineProperty(cx, exception, "message",
                                       STRING_TO_JSVAL(jstr),

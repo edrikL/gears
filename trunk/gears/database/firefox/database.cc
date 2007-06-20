@@ -209,7 +209,7 @@ NS_IMETHODIMP GearsDatabase::Execute(//const nsAString &expr,
       // than the string "null".
       case JSTYPE_OBJECT: {
         JSString *js_str = JS_ValueToString(cx, arg);
-        std::string16 str(JS_GetStringChars(js_str),
+        std::string16 str(reinterpret_cast<char16 *>(JS_GetStringChars(js_str)),
                           JS_GetStringLength(js_str));
         if (str == STRING16(L"null")) {
           LOG(("        Parameter %i: null", i));
@@ -224,7 +224,7 @@ NS_IMETHODIMP GearsDatabase::Execute(//const nsAString &expr,
 
       default: {
         JSString *js_str = JS_ValueToString(cx, arg);
-        std::string16 str(JS_GetStringChars(js_str),
+        std::string16 str(reinterpret_cast<char16 *>(JS_GetStringChars(js_str)),
                           JS_GetStringLength(js_str));
         LOG(("        Parameter %i: %S", i, str.c_str()));
         sql_status = sqlite3_bind_text16(

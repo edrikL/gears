@@ -527,7 +527,7 @@ bool UpdateTask::SetHttpError(const char16 *url, const int *http_status) {
     error_msg_ += STRING16(L"' failed");
   } else {
     // http status codes are always three digits.
-    if (*http_status >= pow(10, HttpConstants::kHttpStatusCodeMaxDigits)) {
+    if (*http_status >= pow(10.0, HttpConstants::kHttpStatusCodeMaxDigits)) {
       LOG(("Unexpected status code '%d'", *http_status));
       error_msg_ += STRING16(L"' failed");
       return false;

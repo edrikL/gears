@@ -268,7 +268,8 @@ void* OnReceiveThreadsEvent(ThreadsEvent *event) {
   // while the main JS worker gives us a WorkerOnmessageHandler*)
   JSString *message_arg_jsstring = JS_NewUCStringCopyZ(
       wi->onmessage_handler.context,
-      message_string.c_str()); // TODO(cprince): ensure freeing memory
+      reinterpret_cast<const jschar *>(
+          message_string.c_str())); // TODO(cprince): ensure freeing memory
   uintN argc = 2;
   jsval argv[] = { STRING_TO_JSVAL(message_arg_jsstring),
                    INT_TO_JSVAL(src_worker_id) };
@@ -583,7 +584,7 @@ void JS_DLL_CALLBACK PoolThreadsManager::JsErrorHandler(JSContext *cx,
   JavaScriptWorkerInfo *wi = static_cast<JavaScriptWorkerInfo*>(
                                  JS_GetContextPrivate(cx));
   if (wi && report && report->ucmessage) { // string16 faults on NULL assignment
-    wi->last_script_error = report->ucmessage;
+    wi->last_script_error = reinterpret_cast<const char16 *>(report->ucmessage);
   }
 }
 
@@ -745,10 +746,11 @@ bool PoolThreadsManager::InitJavaScriptEngine(JavaScriptWorkerInfo *wi) {
   //
 
   uintN line_number_start = 0;
-  JSScript *compiled_script = JS_CompileUCScript(cx.get(), global_obj,
-                                                 wi->full_script.get(),
-                                                 wi->full_script.Length(),
-                                                 "script", line_number_start);
+  JSScript *compiled_script = JS_CompileUCScript(
+                       cx.get(), global_obj,
+                       reinterpret_cast<const jschar *>(wi->full_script.get()),
+                       wi->full_script.Length(),
+                       "script", line_number_start);
   if (!compiled_script) { return false; }
 
   // we must root any script returned by JS_Compile* (see jsapi.h)
