@@ -758,8 +758,9 @@ void GearsResourceStore::InvokeCompletionCallback(FFCaptureRequest *request,
 
   // Setup the callback parameters in JS argc/argv format
   // TODO(cprince): ensure freeing this memory
-  JSString *capture_url_jsstring = JS_NewUCStringCopyZ(request->context,
-                                                       capture_url);
+  JSString *capture_url_jsstring = JS_NewUCStringCopyZ(
+                              request->context,
+                              reinterpret_cast<const jschar *>(capture_url));
   uintN argc = 3;
   jsval argv[] = { STRING_TO_JSVAL(capture_url_jsstring),
                    succeeded ? JSVAL_TRUE : JSVAL_FALSE,
