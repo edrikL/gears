@@ -61,12 +61,12 @@ class CacheIntercept : public nsICacheService, public nsIObserver {
   // service.
   void Init();
 
-  // Force requests which are set to bypass the cache but which Scour has a
-  // response for to go to Scour's cache.
+  // Force requests which are set to bypass the cache, but which Gears has a
+  // response for, to go to Gears's cache.
   void MaybeForceToCache(nsISupports *request);
 
-  // Helper to determine if a given request was initiated by scour.
-  static bool IsScourRequest(nsIChannel *channel);
+  // Helper to determine if a given request was initiated by Gears.
+  static bool IsGearsRequest(nsIChannel *channel);
 };
 
 #endif // GEARS_LOCALSERVER_FIREFOX_CACHE_INTERCEPT_H__
