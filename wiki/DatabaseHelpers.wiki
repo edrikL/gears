@@ -1,4 +1,4 @@
-A suggested set of helpers for the Database API.
+# A suggested set of helpers for the Database API.
 
 = Introduction =
 
