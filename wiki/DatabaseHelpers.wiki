@@ -1,0 +1,37 @@
+A suggested set of helpers for the Database API.
+
+= Introduction =
+
+The Gears Database API is sweet and simple.  Almost *too* simple.  A major wart is that to fetch a very large set of results, the minimum footprint is about this long:
+
+{{{
+  var rs = do.execute('SELECT v FROM t WHERE k > ?', ['17']);
+  try {
+    while (rs.isValidRow()) {
+      // Do stuff with rs.field(0) here.
+      rs.next();
+    }
+  } finally {
+    rs.close();
+  }
+}}}
+
+while to fetch a very small set of results, the minimum footprint is hardly shorter:
+
+{{{
+  var rs = do.execute('SELECT COALESCE(COUNT(v),0) FROM t WHERE k > ?', ['17']);
+  try {
+    // rs.field(0) be the count.
+  } finally {
+    rs.close();
+  }
+}}}
+
+Of course, if you're willing to play fast and loose, you could omit the exception-handling, and hope that field() never throws an exception.  We shouldn't encourage people to play fast and loose.
+
+See also [http://code.google.com/p/google-gears/issues/detail?id=111 Bug111]
+
+= Details =
+
+There are a set of common idioms which people are likely to write wrappers to accomplish.  Maybe we could just release the wrappers ourselves?
+
