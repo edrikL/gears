@@ -33,11 +33,10 @@ This should give you a proper build for Firefox.  IE will fail unless you have a
 
 = Installing =
 
-To install Gears for Firefox, go to bin-dbg\win32\installers\ from your Gears directory and open the .xpi you find there in Firefox.
-To install Gears for Internet Explorer, go to bin-dbg\win32\installers\ from your Gears directory.  Right click on the .msi, and select "Install".
+* To install Gears for Firefox, go to bin-dbg\win32\installers\ from your Gears directory and open the .xpi you find there in Firefox.
+* To install Gears for Internet Explorer, go to bin-dbg\win32\installers\ from your Gears directory.  Right click on the .msi, and select "Install".
 
 = Testing =
 After installing, you should restart your browser.  Go to the Google Gears API [http://code.google.com/apis/gears/ page].  At the lower left corner, it should indicate the build of Google Gears that is active.  You should be able to try out the demos or create your own.
-
 
 
