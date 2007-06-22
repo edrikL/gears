@@ -23,9 +23,9 @@ Finally open a command prompt, setup your build environment, and build Gears.  (
     * cd \svn-gears\google-gears\gears\
     * "c:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat"
     * "c:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\SetEnv.cmd"
-    * set PATH=%PATH%;<<python path>>;<<unxutils path>>;<<wix path>>
+    * set PATH=%PATH%;<<python path>>;<<unxutils path>>\bin;<<unxutils path>>\usr\local\wbin;<<wix path>>
   * Build Gears
-    * make  (To build only the Firefox version, add BROWSER=FF)
+    * sh -c "make"  (To build only the Firefox version, add BROWSER=FF)
 
 = Installing =
 
@@ -33,5 +33,4 @@ To install Gears, go to bin-dbg\win32\installers\ from your Gears directory and 
 
 = Testing =
 After installing, you should restart your browser.  Go to the Google Gears API [http://code.google.com/apis/gears/ page].  At the lower left corner, it should indicate the build of Google Gears that is active.  You should be able to try out the demos or create your own.  You can also run the unit tests in the source tree (/gears/test/unit_tests.html).
-
 
