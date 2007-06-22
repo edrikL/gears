@@ -84,6 +84,45 @@ function doit(port, msg) {
   return a[0];
 }}}
 
+Cross-domain messages will need slight API mods both at the sender:
+
+{{{
+var port = google.gears.factory.create('beta.messageport', '1.0');
+port.open("name", "my.domain.com");
+port.sendMessage("hello there");
+}}}
+
+and at the receiver:
+
+{{{
+var port = google.gears.workerPool.port;
+port.allowCrossOrigin();
+
+while (1) {
+  var a = port.getMessage();
+  var msg = a[0];
+  var fromPort = a[1];
+  var fromOrigin = a[2];
+  if (fromOrigin != "www.evil.com") {
+    fromPort.sendMessage(msg, port);
+  }
+}
+}}}
+
+Alternately, perhaps it could be:
+
+{{{
+var port = google.gears.workerPool.port;
+port.allowCrossOrigin(["www.good.com", "www.angelic.com"]);
+
+while (1) {
+  var a = port.getMessage();
+  var msg = a[0];
+  var fromPort = a[1];
+  fromPort.sendMessage(msg, port);
+}
+}}}
+
 ---
 
 Weird idea for use in WorkerPool:
