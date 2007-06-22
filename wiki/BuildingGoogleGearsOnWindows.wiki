@@ -16,7 +16,7 @@ Install the following to create the build environment:
   * Python 2.4 - http://www.python.org/ftp/python/2.4.4/python-2.4.4.msi
   * Subversion - http://subversion.tigris.org/downloads/subversion-1.4.4.zip 
 
-Follow the instructions at http://code.google.com/p/google-gears/source to set up your source tree
+Follow the instructions at http://code.google.com/p/google-gears/source to set up your source tree.
 
 Finally open a command prompt, setup your build environment, and build Gears.  (These instructions assume you put Gears in c:\svn-gears and installed Visual Studio and the Platform SDK to their default locations.)
   * Start -> Run -> cmd.exe
@@ -33,6 +33,5 @@ To install Gears, go to bin-dbg\win32\installers\ from your Gears directory and 
 
 = Testing =
 After installing, you should restart your browser.  Go to the Google Gears API [http://code.google.com/apis/gears/ page].  At the lower left corner, it should indicate the build of Google Gears that is active.  You should be able to try out the demos or create your own.  You can also run the unit tests in the source tree (/gears/test/unit_tests.html).
-
 
 
