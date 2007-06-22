@@ -12,7 +12,7 @@ Install the following to create the build environment:
      * VS Express - This free package can only build the Firefox version of Gears. http://msdn.microsoft.com/vstudio/express/downloads/
   * Microsoft Platform SDK for Windows Server 2003 R2 - http://msdn.microsoft.com/vstudio/express/visualc/usingpsdk/
   * Wix 3.0.2925 - http://wix.sourceforge.net/downloadv3.html
-  * UnxUtils - http://unxutils.sourceforge.net/UnxUtils.zip
+  * Unxutils - http://unxutils.sourceforge.net/UnxUtils.zip
   * Python 2.4 - http://www.python.org/ftp/python/2.4.4/python-2.4.4.msi
   * Subversion - http://subversion.tigris.org/downloads/subversion-1.4.4.zip 
 
@@ -33,7 +33,6 @@ To install Gears, go to bin-dbg\win32\installers\ from your Gears directory and 
 
 = Testing =
 After installing, you should restart your browser.  Go to the Google Gears API [http://code.google.com/apis/gears/ page].  At the lower left corner, it should indicate the build of Google Gears that is active.  You should be able to try out the demos or create your own.  You can also run the unit tests in the source tree (/gears/test/unit_tests.html).
-
 
 
 
