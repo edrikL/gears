@@ -2,7 +2,7 @@
 
 = Introduction =
 
-This document describes how to build Google Gears for Firefox on Windows.  Most of the same process will also work for building for Internet Explorer, but you'll need a commercial version of Visual Studio for ATL. 
+This document describes how to build Google Gears for Firefox on Windows.  Most of the same process will also work for building for Internet Explorer, but you'll need a commercial version of Visual Studio for the ATL headers and libraries. 
 
 = Building =
 
@@ -22,14 +22,14 @@ I installed the following to create the build environment:
 Follow the instructions at http://code.google.com/p/google-gears/source to set up your source tree
 
 Finally open a command prompt, and set up your build environment:
-  * Start -> Run -> cmd.exe
-  > cd \svn-gears\google-gears\gears\
-  > "c:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat"
-  > "c:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\SetEnv.cmd"
-  > make BROWSER=FF
   * This assumes that you put Gears in c:\svn-gears and installed VS Express and the Platform SDKs to their default locations.
+  * Start -> Run -> cmd.exe
+    # > cd \svn-gears\google-gears\gears\
+    # > "c:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat"
+    # > "c:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\SetEnv.cmd"
+    #  > make BROWSER=FF
 
-This should give you a proper build for FireFox.  IE will fail unless you have a commercial version of Visual Studio installed, as it requires ATL.
+This should give you a proper build for Firefox.  IE will fail unless you have a commercial version of Visual Studio installed, as it requires ATL.
 
 = Installing =
 
@@ -37,6 +37,7 @@ To install Gears, go to bin-dbg\win32\installers\ from your Gears directory and 
 
 = Testing =
 After installing, you should restart your browser.  Go to the Google Gears API [http://code.google.com/apis/gears/ page].  At the lower left corner, it should indicate the build of Google Gears that is active.  You should be able to try out the demos or create your own.
+
 
 
 
