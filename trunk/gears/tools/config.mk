@@ -176,6 +176,7 @@ CPPFLAGS += /nologo /DWIN32 /D_WINDOWS /DSTRICT \
             /D_USRDLL /D_WINDLL /D_MERGE_PROXYSTUB \
             -D_UNICODE -DUNICODE \
             -DBREAKPAD_AVOID_STREAMS \
+	    /D_CRT_SECURE_NO_DEPRECATE \
             /DXP_WIN $(CPPFLAGS_$(MODE))
 # Note: XP_WIN is only used by Firefox headers
 

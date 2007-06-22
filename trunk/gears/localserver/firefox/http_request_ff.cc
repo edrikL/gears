@@ -153,12 +153,12 @@ bool FFHttpRequest::getStatusLine(std::string16 *status_line) {
   long status_code;
   if (!getStatus(&status_code))
     return false;
-  char status_code_str[32];
-  sprintf(status_code_str, "%d", static_cast<int>(status_code));
+  std::string status_code_str;
+  IntegerToString(static_cast<int>(status_code), &status_code_str);
 
   nsCString status_line8;
   status_line8.Assign("HTTP/1.1 ");
-  status_line8.Append(status_code_str);
+  status_line8.Append(status_code_str.c_str());
   status_line8.Append(" ");
   status_line8.Append(status_text);
 
