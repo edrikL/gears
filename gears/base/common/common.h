@@ -77,9 +77,15 @@
 // Kudos to Jorg Brown for this simple and elegant implementation.
 //
 // - wan 2005-11-16
+// 
+// Starting with Visual C++ 2005, ARRAYSIZE is defined in WinNT.h
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+#include <windows.h>
+#else
 #define ARRAYSIZE(a) \
   ((sizeof(a) / sizeof(*(a))) / \
    static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
+#endif
 
 // Defines private prototypes for copy constructor and assigment operator. Do
 // not implement these methods.

@@ -120,7 +120,8 @@ class UnsafeArena {
     Reset();
   }
   char* Strdup(const char* s) {
-    return strcpy(Alloc(strlen(s) + 1), s);
+    size_t size = strlen(s) + 1;
+    return strncpy(Alloc(size), s, size);
   }
   char* Alloc(const size_t size) {
     char *alloced = new char[size];
@@ -477,9 +478,9 @@ const char* HTTPHeaders::AppendValueToHeader(pair<char*,char*>* header,
   const size_t len3 = strlen(value);
   // The + 1 is for the \0 terminator.
   char* const new_second = arena_->Alloc(len1 + len2 + len3 + 1);
-  strcpy(new_second, header->second);
-  strcpy(new_second + len1, separator);
-  strcpy(new_second + len1 + len2, value);
+  strncpy(new_second, header->second, len1 + len2 + len3 + 1);
+  strncpy(new_second + len1, separator, len2 + len3 + 1);
+  strncpy(new_second + len1 + len2, value, len3 + 1);
   NOVLOG(5) << "Appended to replace HTTP header '"
           << header->first << "':'" << header->second
           << "' with value '" << new_second << "'";

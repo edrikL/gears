@@ -439,8 +439,8 @@ nsresult GearsResourceStore::CaptureFile(nsIFile *file,
 
   // We don't support very large files yet
   // TODO(michaeln): support large files
-  NS_ENSURE_TRUE(file_size <= PR_UINT32_MAX, NS_ERROR_OUT_OF_MEMORY);
-  PRUint32 data_len = static_cast<PRUint32>(file_size);
+  NS_ENSURE_TRUE(file_size <= PR_INT32_MAX, NS_ERROR_OUT_OF_MEMORY);
+  PRInt32 data_len = static_cast<PRInt32>(file_size);
 
   // Get the file input stream
   nsCOMPtr<nsIInputStream> stream;
@@ -480,9 +480,9 @@ nsresult GearsResourceStore::CaptureFile(nsIFile *file,
   const char *kContentTypeHeader = "Content-Type";
   const char *kXCapturedFilenameHeader = "X-Captured-Filename";
   nsCString headers;
-  char data_len_str[64];
-  sprintf(data_len_str, "%d", data_len);
-  AppendHeader(headers, kContentLengthHeader, data_len_str);
+  std::string data_len_str;
+  IntegerToString(data_len, &data_len_str);
+  AppendHeader(headers, kContentLengthHeader, data_len_str.c_str());
   AppendHeader(headers, kContentTypeHeader, mime_type.get());
   AppendHeader(headers, kXCapturedFilenameHeader, native_filename.get());
   // TODO(michaeln): provide a flag on scriptable captureFile() method

@@ -533,14 +533,8 @@ bool UpdateTask::SetHttpError(const char16 *url, const int *http_status) {
       return false;
     }
 
-    char status_code_chars[HttpConstants::kHttpStatusCodeMaxDigits + 1];
     std::string16 status_code_str;
-    if (sprintf(status_code_chars, "%d", *http_status) < 0) {
-      LOG(("Could not format status code '%d'", *http_status));
-      error_msg_ += STRING16(L"' failed");
-      return false;
-    }
-    UTF8ToString16(&status_code_chars[0], &status_code_str);
+    IntegerToString(*http_status, &status_code_str);
 
     error_msg_ += STRING16(L"' returned response code ");
     error_msg_ += status_code_str;
