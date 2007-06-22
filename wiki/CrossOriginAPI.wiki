@@ -6,7 +6,6 @@ _DRAFT(shess) I'm still thinking about what I want, here.  For now, please send 
 
 There are many use-cases, such as mash-ups or groups of related apps, where one app needs to expose functionality to other apps.  Here I propose a way to handle this in a secure fashion which can be managed by the service provider.
 
-
 = Details =
 
 Provide a means by which an origin can vend a service to clients.  The service should manifest as a JavaScript object which can be called in a natural fashion with methods defined by the service.  The code for the service executes synchronously in the client's thread, but in a distinct JavaScript context within the service's origin.
