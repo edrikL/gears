@@ -82,6 +82,7 @@ function doit(port, msg) {
   var a = responsePort.getMessage()
   port.close();
   return a[0];
+}
 }}}
 
 Cross-domain messages will need slight API mods both at the sender:
