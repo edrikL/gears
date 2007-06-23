@@ -12,4 +12,4 @@ There are many use-cases, such as mash-ups or groups of related apps, where one 
 
 The basic idea is to provide a container for a JS security context, along with a means of passing requests into the container and receiving results from the container.  An example usage might look like:
 
-_Damn, gotta go, will work on this later, see CrossOriginApiOld_
+_Damn, gotta go, will work on this later, see CrossOriginApiOld._
