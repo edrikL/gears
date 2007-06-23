@@ -2,7 +2,7 @@
 
 _DRAFT(shess) I'm still thinking about what I want, here.  For now, please send comments directly to me, once I'm further along I'll post to the google-gears-eng discussion list, hopefully this week._
 
-_See also CrossOriginAPIOld, my original stream-of-conciousness on this._
+_See also CrossOriginApiOld, my original stream-of-conciousness on this._
 
 = Introduction =
 
@@ -12,4 +12,4 @@ There are many use-cases, such as mash-ups or groups of related apps, where one 
 
 The basic idea is to provide a container for a JS security context, along with a means of passing requests into the container and receiving results from the container.  An example usage might look like:
 
-_Damn, gotta go, will work on this later, see CrossOriginAPIOld_
+_Damn, gotta go, will work on this later, see CrossOriginApiOld_
