@@ -2,7 +2,7 @@
 
 = Introduction =
 
-This document describes how to build Google Gears for Firefox on Windows.  Most of the same process will also work for building for Internet Explorer, but you'll need a commercial version of Visual Studio for the ATL headers and libraries. 
+This document describes how to build Google Gears for Windows.
 
 = Building =
 
@@ -33,5 +33,4 @@ To install Gears, go to bin-dbg\win32\installers\ from your Gears directory and 
 
 = Testing =
 After installing, you should restart your browser.  Go to the Google Gears API [http://code.google.com/apis/gears/ page].  At the lower left corner, it should indicate the build of Google Gears that is active.  You should be able to try out the demos or create your own.  You can also run the unit tests in the source tree (/gears/test/unit_tests.html).
-
 
