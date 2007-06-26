@@ -67,7 +67,7 @@ h2 {
 function Generator() {
   function isPrime(probe) {
     if (probe % 2 == 0) return false;
-    for (var factor = 3; factor * factor < probe; factor += 2) {
+    for (var factor = 3; factor * factor <= probe; factor += 2) {
       if (probe % factor == 0) return false;
     }
     return true;
