@@ -22,14 +22,18 @@ For example, if you can load JS libraries into Workers, it's not hard to add you
 
 = WorkerPool.load() =
 
-You should be able to load the contents of multiple !JavaScript files to start a Worker. This is easier for most web developers since it is similar to the way that windows are loaded.
+You should be able to load the contents of a !JavaScript file to start a Worker. This is easier for most web developers since it is similar to the way that windows are loaded. Most javascript programs are split into many separate files, so there also needs to be a way for workers to include additional javascript files synchronously.
 
 {{{
+// parent code
 var wp = google.gears.factory.create("beta.workerpool", "1.1");
 var workerId = wp.load(["foo.js", "bar.js", "baz.js"]);
 // load() is async. sendMessage's that happen before the worker is loaded are queued
 // and send when load is complete.
 wp.sendMessage("muah!", workerId);
+
+// worker code
+google.gears.workerContext.include("library1.js");
 }}}
 
 
