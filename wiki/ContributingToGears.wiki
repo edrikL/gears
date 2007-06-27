@@ -1,0 +1,80 @@
+#summary How to contribute to Gears
+
+= Contributing to Gears =
+
+Gears is [http://en.wikipedia.org/wiki/Open_source open source software]. At it's most basic, that means that you can [http://code.google.com/p/google-gears/source get the source code] for Gears and use it for, [http://www.opensource.org/licenses/bsd-license.php basically], whatever you want. But Gears is also developed openly. Anyone can sign up to our [http://groups.google.com/group/google-gears-eng development mailing list] to listen in on what we're working on or make suggestions. Anyone can [http://code.google.com/p/google-gears/issues/list file bugs], or even submit changes to the Gears source code.
+
+Sound like fun? This document covers the basics of how to get involved and start contributing to Gears.
+
+
+= The Gears Mission =
+
+The development of Gears is motivated by and organized around a simple desire:
+*
+ The Gears mission is to add new capabilities to web browsers to enable developers to create better applications.*
+
+This may sound broad, especially compared to the relatively few modules we provide today. But we have big dreams for Gears. If there is a capability that is missing from web browsers which would enable better applications, we want to provide that capability as a Gears module.
+
+
+= Join the Community =
+
+The Gears community exists primarily through our mailing lists ([http://groups.google.com/group/google-gears google-gears] and [http://groups.google.com/group/google-gears-eng google-gears-eng]), the [http://code.google.com/p/google-gears/issues/list issue tracker], and our [http://en.wikipedia.org/wiki/Internet_Relay_Chat IRC] channel, `#gears` on `irc.freenode.net`. 
+
+Everyone is encouraged to contribute to the discussion, and you can help us stay effective by following these guidelines:
+
+  * *Please be friendly:* Showing courtesy and respect to others is a vital part of any project, but it is especially important in open source projects where communication is often not face-to-face. Misunderstandings are easy and a negative environment can easily ruin an otherwise successful project. Please go out of your way to show everyone respect, and to assume no disrespect from those you interact with.
+
+  * *Stay on topic:* Different forums in the Gears community are optimized for different types of discussion. The [http://groups.google.com/group/google-gears google-gears] mailing list is the place for general discussion about Gears, and for questions on using Gears to develop applications. Discussion about development of Gears itself should happen on [http://groups.google.com/group/google-gears-eng google-gears-eng]. The `#gears` IRC channel is a hangout for anyone interested in Gears, and can be a convenient place to get quick questions answered. For longer or more detailed discussion, please use one of the two mailing lists instead.
+
+
+= Filing Bugs =
+
+Anyone can file bugs or feature requests in the Gears [http://code.google.com/p/google-gears/issues/list issue tracker]. Please search carefully before creating an issue to keep the number of duplicates manageable. Also, try to provide as much information as possible when creating an issue so that a developer can easily reproduce and debug it.
+
+
+= Submitting Changes =
+
+The Gears team would love help with changes to the code. To keep things efficient, we request that contributors follow the system below:
+
+== Submit a CLA ==
+
+Before we can accept a patch from you, you must sign a Contributor License Agreement (CLA). The CLA protects you and us.
+
+ * If you are an individual writing original source code and you're sure you own the intellectual property, then you'll need to sign an [http://code.google.com/legal/individual-cla-v1.0.html individual CLA].
+ * If you work for a company that wants to allow you to contribute your work to GWT, then you'll need to sign a [http://code.google.com/legal/corporate-cla-v1.0.html corporate CLA].
+
+Follow either of the two links above to access the appropriate CLA and instructions for how to sign and return it.
+
+
+== Choose a Bug ==
+
+Gears development is driven primarily from the issue tracker. Bugs that the team wants to resolve before the next release are marked M1. Bugs for the release after that are marked M2. All other bugs are marked M3.
+
+If the project you want to work on does not have a bug, please create one. If the project already has a bug, assign the bug to yourself.
+
+
+== Communicate your plans ==
+
+Once you take ownership of a bug, please communicate your plans early and often. You should update the bug with your ideas for addressing the issue. Depending on the size of the change, you may want to send intermediate patches to the mailing list for feedback. Do not go away for weeks at a time and then come back with a huge patch all at once. These patches will probably not get approved.
+
+
+== Get the code ==
+
+Gears can be checked out anonymously using any SVN client. See the [http://code.google.com/p/google-gears/source instructions] for more information.
+
+
+== Compile ==
+
+There are wiki pages explaining how to compile for [http://code.google.com/p/google-gears/wiki/BuildingGoogleGearsOnWindows Windows] and [http://code.google.com/p/google-gears/wiki/GoogleGearsForSafariWebKit Safari]. Builds for Firefox on mac and linux can usually be built by simply typing `make` on the command line, but sometimes linux builds do not work. Perhaps you can help [http://code.google.com/p/google-gears/issues/detail?id=68 make this better].
+
+
+== Test ==
+
+Unit tests are critical to keeping the quality of Gears high. Since Gears is primarily exposed as !JavaScript, our unit tests are implemented in a slightly unusual way: we have an HTML file (in `test/unit_test.html`) which we load into a browser with Gears installed which exercises all the APIs.
+
+You should add appropriate unit tests to `test/unit_test.js` for your changes.
+
+
+== Send Your Patch ==
+
+Once your change is complete and you have implemented tests, create a patch file by running `svn diff` on your client. Attach the patch file to your bug and update the bug to request review of the patch. A Gears team member will likely request one or more changes to the patch. Once the review is complete, the Gears team member will commit your patch to the Gears codebase.
