@@ -2,7 +2,7 @@
 
 = Contributing to Gears =
 
-Gears is [http://en.wikipedia.org/wiki/Open_source open source software]. At it's most basic, that means that you can [http://code.google.com/p/google-gears/source get the source code] for Gears and use it for, [http://www.opensource.org/licenses/bsd-license.php basically], whatever you want. But Gears is also developed openly. Anyone can sign up to our [http://groups.google.com/group/google-gears-eng development mailing list] to listen in on what we're working on or make suggestions. Anyone can [http://code.google.com/p/google-gears/issues/list file bugs], or even submit changes to the Gears source code.
+Gears is [http://en.wikipedia.org/wiki/Open_source open source software]. At its most basic, that means that you can [http://code.google.com/p/google-gears/source get the source code] for Gears and use it for, [http://www.opensource.org/licenses/bsd-license.php basically], whatever you want. But Gears is also developed openly. Anyone can sign up to our [http://groups.google.com/group/google-gears-eng development mailing list] to listen in on what we're working on or make suggestions. Anyone can [http://code.google.com/p/google-gears/issues/list file bugs], or even submit changes to the Gears source code.
 
 Sound like fun? This document covers the basics of how to get involved and start contributing to Gears.
 
