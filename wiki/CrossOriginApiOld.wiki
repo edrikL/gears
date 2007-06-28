@@ -1,4 +1,5 @@
 #summary Dump of original CrossOriginAPI while I work it over.
+#labels Deprecated
 summary Means of exporting an API between origins.
 
 _DRAFT(shess) I'm still thinking about what I want, here.  For now, please send comments directly to me, once I'm further along I'll post to the google-gears-eng discussion list, hopefully this week._
