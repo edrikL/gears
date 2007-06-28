@@ -55,7 +55,7 @@ If the project you want to work on does not have a bug, please create one. If th
 
 == Communicate your plans ==
 
-Once you take ownership of a bug, please communicate your plans early and often. You should update the bug with your ideas for addressing the issue. Depending on the size of the change, you may want to send intermediate patches to the mailing list for feedback. Do not go away for weeks at a time and then come back with a huge patch all at once. These patches will probably not get approved.
+Once you decide to start work on a bug, please communicate your plans early and often. You should update the bug with your ideas for addressing the issue. Depending on the size of the change, you may want to send intermediate patches to the mailing list for feedback. Do not go away for weeks at a time and then come back with a huge patch all at once. These patches will probably not get approved.
 
 
 == Get the code ==
