@@ -1,5 +1,5 @@
 #summary Proposal for new WorkerPool features to improve usability
-#labels DesignDoc-InProgress
+#labels DesignDoc-Accepted
 
 = Introduction =
 
