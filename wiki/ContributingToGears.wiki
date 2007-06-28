@@ -50,7 +50,7 @@ Follow either of the two links above to access the appropriate CLA and instructi
 
 Gears development is driven primarily from the issue tracker. Bugs that the team wants to resolve before the next release are marked M1. Bugs for the release after that are marked M2. All other bugs are marked M3.
 
-If the project you want to work on does not have a bug, please create one. If the project already has a bug, assign the bug to yourself.
+If the project you want to work on does not have a bug, please create one. If the project already has a bug, assign the bug to yourself. If the bug is already assigned to someone else, update the bug or send mail to that person to see how you can help.
 
 
 == Communicate your plans ==
