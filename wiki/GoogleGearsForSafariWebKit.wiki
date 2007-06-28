@@ -1,4 +1,5 @@
 #summary Building Google Gears for Safari/WebKit
+#labels Deprecated
 
 = Introduction =
 
@@ -28,7 +29,6 @@ Otherwise, you can install the components manually:
 
 = Testing =
 After installing, you should restart WebKit.  Go to the Google Gears API [http://code.google.com/apis/gears/ page].  At the lower left corner, it should indicate the build of Google Gears that is active.  You should be able to try out the demos or create your own.
-
 
 
 
