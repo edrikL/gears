@@ -36,7 +36,6 @@
 @interface GearsWorkerSupervisor : NSObject {
  @private
   NSMutableSet *pools_;         // Set of known GearsWorkerPools (STRONG)
-  unsigned int nextIdentifier_; // Value of next available identifier
 }
 
 //------------------------------------------------------------------------------
@@ -46,7 +45,5 @@
 
 - (NSNumber *)superviseWorkerPool:(GearsWorkerPool *)pool;
 - (void)unsuperviseWorkerPool:(GearsWorkerPool*)pool;
-
-- (GearsWorkerPool *)workerPoolContainingIdentifier:(NSNumber *)ident;
 
 @end

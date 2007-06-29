@@ -40,10 +40,13 @@ NSString *kGearsWorkerTargetKey = @"target";
 NSString *kGearsWorkerSenderKey = @"sender";
 
 // Time to wait before processing the queue
-static const float kQueueProcessingDelay = 0.05;
+static const float kQueueProcessingDelaySeconds = 0.05;
 
 // Time to wait before timing out
-static const float kTimeoutDelay = 0.5;
+static const float kTimeoutDelaySeconds = 0.5;
+
+// Time to wait before killing workers
+static const float kSleepIntervalSecondsBeforeKillingWorkerProcess = 0.5;
 
 @interface GearsWorkerPool(PrivateMethods)
 - (NSString *)serverName;
@@ -63,7 +66,7 @@ static const float kTimeoutDelay = 0.5;
 //------------------------------------------------------------------------------
 - (NSString *)serverName {
   return [NSString stringWithFormat:@"%sWorkerPool-%d-%@", 
-    PRODUCT_SHORT_NAME_ASCII, getpid(), identifier_];
+    PRODUCT_SHORT_NAME_ASCII, getpid(), serverIdentifier_];
 }
 
 //------------------------------------------------------------------------------
@@ -80,8 +83,8 @@ static const float kTimeoutDelay = 0.5;
   [serverConnection_ setDelegate:self];
   
   // We're willing to timeout in a much shorter time
-  [serverConnection_ setRequestTimeout:kTimeoutDelay];
-  [serverConnection_ setReplyTimeout:kTimeoutDelay];
+  [serverConnection_ setRequestTimeout:kTimeoutDelaySeconds];
+  [serverConnection_ setReplyTimeout:kTimeoutDelaySeconds];
 
   if (![serverConnection_ registerName:[self serverName]]) {
     MethodLog("Unable to register server: %@", [self serverName]);
@@ -140,19 +143,15 @@ static const float kTimeoutDelay = 0.5;
   // is ignoring the children because the child will install an observer for
   // NSConnectionDidDieNotification and will exit if/when the parent exits.
   if (pid == 0) {
-    // Invoke a new instance so that we'll no longer be the parent of the child
-    // and so that it won't be a Zombie process since we're not going to 
-    // wait() on the child.  jgm says that fork() / fork() is a common pattern
-    // in Unix when you want to disassociate the child from the parent.
-    pid_t newPid = fork();
-    
-    if (newPid == 0) {
-      execve(argv[0], (char * const *)argv, (char * const *)env);
-      _exit(errno);
-    }
-
+    execve(argv[0], (char * const *)argv, (char * const *)env);
     _exit(errno);
   }
+  
+  // Save this pid as a worker so we can kill it when we quit
+  if (!createdWorkerPIDs_)
+    createdWorkerPIDs_ = [[NSMutableArray alloc] init];
+  
+  [createdWorkerPIDs_ addObject:[NSNumber numberWithInt:pid]];
   
   return identifier;
 }
@@ -205,7 +204,7 @@ static const float kTimeoutDelay = 0.5;
   
   [queueForIdentifier addObject:message];
   [self performSelector:@selector(processQueue) withObject:nil 
-             afterDelay:kQueueProcessingDelay];
+             afterDelay:kQueueProcessingDelaySeconds];
 }
 
 //------------------------------------------------------------------------------
@@ -260,7 +259,7 @@ static const float kTimeoutDelay = 0.5;
     // If there are still messages, schedule this to be performed again
     if ([messageQueue_ count])
       [self performSelector:@selector(processQueue) withObject:nil 
-                 afterDelay:kQueueProcessingDelay];    
+                 afterDelay:kQueueProcessingDelaySeconds];    
   }
 }
 
@@ -293,6 +292,7 @@ static const float kTimeoutDelay = 0.5;
   if ((self = [super initWithFactory:factory])) {
     GearsWorkerSupervisor *supervisor = [factory_ supervisor];
     identifier_ = [[supervisor superviseWorkerPool:self] retain];
+    serverIdentifier_ = [[supervisor uniqueIdentifier] retain];
     [self installServer];
   }
   
@@ -320,7 +320,9 @@ static const float kTimeoutDelay = 0.5;
   
   isDisconnected_ = YES;
   [[factory_ supervisor] unsuperviseWorkerPool:self];
-  
+
+  // Tell each worker to cancel what they're doing.  This gives a chance for
+  // them to cleanup before their eventual murder.
   @try {
     [workers_ makeObjectsPerformSelector:@selector(cancel)];
   }
@@ -328,7 +330,7 @@ static const float kTimeoutDelay = 0.5;
     // We're shutting down, so don't worry about the exception and just
     // continue processing
   }
-    
+  
   [workers_ release];
   workers_ = nil;
   [sources_ release];
@@ -345,6 +347,25 @@ static const float kTimeoutDelay = 0.5;
   [[serverConnection_ sendPort] invalidate];
   [serverConnection_ release];
   serverConnection_ = nil;
+  
+  // Kill each of the workers.  This is used so that any non-responsive worker
+  // process (e.g., something in an infinite loop) will be killed rather than
+  // keep spinning.  Sleep for a short time before killing so that if a 
+  // worker process is functioning properly, it will have already exited.
+  usleep(kSleepIntervalSecondsBeforeKillingWorkerProcess * 1e6);
+  NSEnumerator *e = [createdWorkerPIDs_ objectEnumerator];
+  NSNumber *pid;
+  while ((pid = [e nextObject])) {
+    // We're not concerned if this failed because the process may have already
+    // exited because of the cancel
+    kill([pid intValue], SIGKILL);
+    // Wait on the child so that it's not a zombie process
+    int status;
+    waitpid([pid intValue], &status, 0);
+  }
+  
+  [createdWorkerPIDs_ release];
+  createdWorkerPIDs_ = nil;
 }
 
 //------------------------------------------------------------------------------
@@ -429,6 +450,7 @@ static const float kTimeoutDelay = 0.5;
   [self disconnect];
   [onmessage_ release];
   [identifier_ release];
+  [serverIdentifier_ release];
   [super dealloc];
 }
 
