@@ -342,7 +342,7 @@ class WebCacheDB : SQLTransactionListener {
                          PayloadInfo *payload);
 
   // Starts an update task for the specified managed store
-  void MaybeInitiateUpdateTask(int64 server_id, int64 last_update);
+  void MaybeInitiateUpdateTask(int64 server_id);
 
   // Reads a server record from a row in result set
   void ReadServerInfo(SQLStatement &stmt, ServerInfo *server);

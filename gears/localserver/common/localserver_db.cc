@@ -481,8 +481,7 @@ bool WebCacheDB::Service(const char16 *url,
 
 #define SQL_PREFIX \
     L"SELECT s.ServerID, s.RequiredCookie, s.ServerType, " \
-    L"       s.LastUpdateCheckTime, v.SessionRedirectUrl, " \
-    L"       e.IgnoreQuery, e.PayloadID " \
+    L"       v.SessionRedirectUrl, e.IgnoreQuery, e.PayloadID " \
     L"FROM Entries e, Versions v, Servers s "
 
 #define SQL_POSTFIX \
@@ -532,10 +531,9 @@ bool WebCacheDB::Service(const char16 *url,
     const int64 server_id = stmt.column_int64(0);
     const char16 *required_cookie = stmt.column_text16_safe(1);
     const ServerType server_type = static_cast<ServerType>(stmt.column_int(2));
-    const int64 last_update = stmt.column_int64(3);
-    const char16 *redirect = stmt.column_text16_safe(4);
-    const bool ignore_query = (stmt.column_int(5) == 1);
-    const int64 payload_id = stmt.column_int64(6);
+    const char16 *redirect = stmt.column_text16_safe(3);
+    const bool ignore_query = (stmt.column_int(4) == 1);
+    const int64 payload_id = stmt.column_int64(5);
     
     std::string16 cookie_name;
     std::string16 cookie_value;
@@ -555,7 +553,7 @@ bool WebCacheDB::Service(const char16 *url,
       if (server_type == MANAGED_RESOURCE_STORE) {
         // We found a match from a managed store, try to update it
         // Note that a failure does not prevent servicing the request
-        MaybeInitiateUpdateTask(server_id, last_update);
+        MaybeInitiateUpdateTask(server_id);
       }
 
       if (ignore_query) {
@@ -596,14 +594,26 @@ bool WebCacheDB::Service(const char16 *url,
 //------------------------------------------------------------------------------
 // MaybeInitiateUpdateTask
 //------------------------------------------------------------------------------
-void WebCacheDB::MaybeInitiateUpdateTask(int64 server_id, int64 last_update) {
+static Mutex last_auto_update_lock;
+typedef std::map< int64, int64 > Int64Map;
+static Int64Map last_auto_update_map;
+
+void WebCacheDB::MaybeInitiateUpdateTask(int64 server_id) {
   int64 now = GetCurrentTimeMillis();
   const int kUpdateCheckDelayMsec = 10 * 1000;
 
   // Rate-limit update checks so that we don't barrage the server while loading
   // a page with many linked web-captured resources.
-  if ((now - last_update) <= kUpdateCheckDelayMsec) {
-    return;
+  {
+    MutexLock locker(&last_auto_update_lock);
+    Int64Map::iterator found = last_auto_update_map.find(server_id);
+    if (found != last_auto_update_map.end()) {
+      int64 last_update = found->second;
+      if (now - last_update <= kUpdateCheckDelayMsec) {
+        return;
+      }
+    }
+    last_auto_update_map[server_id] = now;
   }
 
   LOG(("Automatically initiating update for managed store"));
