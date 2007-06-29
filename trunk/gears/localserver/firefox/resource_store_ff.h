@@ -84,10 +84,9 @@ class GearsResourceStore
   ~GearsResourceStore();
 
  private:
-  nsresult ResolveAndAppendUrl(const std::string16 &url,
-                               FFCaptureRequest *request);
-  nsresult ResolveUrl(const char16 *url, std::string16 *resolved_url);
-  nsresult StartCaptureTaskIfNeeded(bool fire_events_on_failure);
+  bool ResolveAndAppendUrl(const std::string16 &url, FFCaptureRequest *request);
+  bool ResolveUrl(const char16 *url, std::string16 *resolved_url);
+  bool StartCaptureTaskIfNeeded(bool fire_events_on_failure);
   void FireFailedEvents(FFCaptureRequest *request);
   void InvokeCompletionCallback(FFCaptureRequest *request,
                                 const char16 *capture_url,
@@ -111,6 +110,7 @@ class GearsResourceStore
   scoped_ptr<CaptureTask> capture_task_;
   scoped_ptr<HtmlEventMonitor> page_unload_monitor_;
   bool page_is_unloaded_;
+  std::string16 exception_message_;
   ResourceStore store_;
 
   friend class GearsLocalServer;

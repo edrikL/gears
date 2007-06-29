@@ -132,8 +132,6 @@ NS_IMETHODIMP GearsResourceStore::Capture(
     nsIVariant *urls,
     ResourceCaptureCompletionHandler *completion_callback,
     PRInt32 *capture_id_retval) {
-  nsresult nr;
-
   if (!urls) {
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
@@ -168,10 +166,8 @@ NS_IMETHODIMP GearsResourceStore::Capture(
 
   if (js_params.GetAsString(0, &url)) {
     // 'urls' was a string
-
-    nr = ResolveAndAppendUrl(url.c_str(), request.get());
-    if (NS_FAILED(nr)) {
-      return nr;
+    if (!ResolveAndAppendUrl(url.c_str(), request.get())) {
+      RETURN_EXCEPTION(exception_message_.c_str());
     }
 
   } else if (js_params.GetAsArray(0, &array, &array_length)) {
@@ -182,9 +178,8 @@ NS_IMETHODIMP GearsResourceStore::Capture(
         RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
       }
 
-      nr = ResolveAndAppendUrl(url.c_str(), request.get());
-      if (NS_FAILED(nr)) {
-        return nr;
+      if (!ResolveAndAppendUrl(url.c_str(), request.get())) {
+        RETURN_EXCEPTION(exception_message_.c_str());
       }
     }
 
@@ -193,12 +188,10 @@ NS_IMETHODIMP GearsResourceStore::Capture(
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
 
-
   pending_requests_.push_back(request.release());
 
-  nr = StartCaptureTaskIfNeeded(false);
-  if (NS_FAILED(nr)) {
-    return nr;  // StartCaptureTask sets a more specific exception message
+  if (!StartCaptureTaskIfNeeded(false)) {
+    RETURN_EXCEPTION(exception_message_.c_str());
   }
 
   RETURN_NORMAL();
@@ -248,11 +241,11 @@ NS_IMETHODIMP GearsResourceStore::IsCaptured(const nsAString &url,
 
   nsString url_concrete(url);
   std::string16 full_url;
-  nsresult nr = ResolveUrl(url_concrete.get(), &full_url);
-  if (NS_FAILED(nr)) {
-    return nr;
+  if (!ResolveUrl(url_concrete.get(), &full_url)) {
+    RETURN_EXCEPTION(exception_message_.c_str());
   }
-  *is_captured_retval = store_.IsCaptured(full_url.c_str()) ? PR_TRUE : PR_FALSE;
+  *is_captured_retval = store_.IsCaptured(full_url.c_str()) ? PR_TRUE
+                                                            : PR_FALSE;
   RETURN_NORMAL();
 }
 
@@ -266,9 +259,8 @@ NS_IMETHODIMP GearsResourceStore::Remove(const nsAString &url) {
 
   nsString url_concrete(url);
   std::string16 full_url;
-  nsresult nr = ResolveUrl(url_concrete.get(), &full_url);
-  if (NS_FAILED(nr)) {
-    return nr;
+  if (!ResolveUrl(url_concrete.get(), &full_url)) {
+    RETURN_EXCEPTION(exception_message_.c_str());
   }
 
   if (!store_.Delete(full_url.c_str())) {
@@ -289,15 +281,13 @@ NS_IMETHODIMP GearsResourceStore::Rename(const nsAString &src_url,
 
   nsString src_url_concrete(src_url);
   std::string16 full_src_url;
-  nsresult nr = ResolveUrl(src_url_concrete.get(), &full_src_url);
-  if (NS_FAILED(nr)) {
-    return nr;
+  if (!ResolveUrl(src_url_concrete.get(), &full_src_url)) {
+    RETURN_EXCEPTION(exception_message_.c_str());
   }
   nsString dst_url_concrete(dst_url);
   std::string16 full_dest_url;
-  nr = ResolveUrl(dst_url_concrete.get(), &full_dest_url);
-  if (NS_FAILED(nr)) {
-    return nr;
+  if (!ResolveUrl(dst_url_concrete.get(), &full_dest_url)) {
+    RETURN_EXCEPTION(exception_message_.c_str());
   }
 
   if (!store_.Rename(full_src_url.c_str(), full_dest_url.c_str())) {
@@ -317,15 +307,13 @@ NS_IMETHODIMP GearsResourceStore::Copy(const nsAString &src_url,
 
   nsString src_url_concrete(src_url);
   std::string16 full_src_url;
-  nsresult nr = ResolveUrl(src_url_concrete.get(), &full_src_url);
-  if (NS_FAILED(nr)) {
-    return nr;
+  if (!ResolveUrl(src_url_concrete.get(), &full_src_url)) {
+    RETURN_EXCEPTION(exception_message_.c_str());
   }
   nsString dst_url_concrete(dst_url);
   std::string16 full_dest_url;
-  nr = ResolveUrl(dst_url_concrete.get(), &full_dest_url);
-  if (NS_FAILED(nr)) {
-    return nr;
+  if (!ResolveUrl(dst_url_concrete.get(), &full_dest_url)) {
+    RETURN_EXCEPTION(exception_message_.c_str());
   }
 
   if (!store_.Copy(full_src_url.c_str(), full_dest_url.c_str())) {
@@ -369,9 +357,8 @@ NS_IMETHODIMP GearsResourceStore::CaptureFile(nsISupports *file_input_element,
 
   // Get the full normalized url
   std::string16 full_url;
-  nr = ResolveUrl(url.c_str(), &full_url);
-  if (NS_FAILED(nr)) {
-    return nr;
+  if (!ResolveUrl(url.c_str(), &full_url)) {
+    RETURN_EXCEPTION(exception_message_.c_str());
   }
 
   // Capture that filepath
@@ -522,9 +509,8 @@ GearsResourceStore::GetCapturedFileName(const nsAString &url,
 
   nsString url_concrete(url);
   std::string16 full_url;
-  nsresult nr = ResolveUrl(url_concrete.get(), &full_url);
-  if (NS_FAILED(nr)) {
-    return nr;
+  if (!ResolveUrl(url_concrete.get(), &full_url)) {
+    RETURN_EXCEPTION(exception_message_.c_str());
   }
 
   std::string16 file_name;
@@ -548,9 +534,8 @@ NS_IMETHODIMP GearsResourceStore::GetHeader(const nsAString &url,
 
   nsString url_concrete(url);
   std::string16 full_url;
-  nsresult nr = ResolveUrl(url_concrete.get(), &full_url);
-  if (NS_FAILED(nr)) {
-    return nr;
+  if (!ResolveUrl(url_concrete.get(), &full_url)) {
+    RETURN_EXCEPTION(exception_message_.c_str());
   }
 
   nsString header(header_in);
@@ -574,9 +559,8 @@ NS_IMETHODIMP GearsResourceStore::GetAllHeaders(const nsAString &url,
 
   nsString url_concrete(url);
   std::string16 full_url;
-  nsresult nr = ResolveUrl(url_concrete.get(), &full_url);
-  if (NS_FAILED(nr)) {
-    return nr;
+  if (!ResolveUrl(url_concrete.get(), &full_url)) {
+    RETURN_EXCEPTION(exception_message_.c_str());
   }
 
   std::string16 all_headers;
@@ -610,12 +594,12 @@ GearsResourceStore::CreateFileSubmitter(GearsFileSubmitterInterface **retval) {
 //------------------------------------------------------------------------------
 // StartCaptureTaskIfNeeded
 //------------------------------------------------------------------------------
-nsresult
+bool
 GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
   if (page_is_unloaded_) {
     // We silently fail for this particular error condition to prevent callers
     // from detecting errors and making noises after the page has been unloaded
-    RETURN_NORMAL();
+    return true;
   }
 
   if (!EnvIsWorker() && !page_unload_monitor_.get()) {
@@ -632,11 +616,11 @@ GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
 
   if (capture_task_.get()) {
     assert(current_request_.get());
-    RETURN_NORMAL();
+    return true;
   }
 
   if (pending_requests_.empty()) {
-    RETURN_NORMAL();
+    return true;
   }
 
   assert(!current_request_.get());
@@ -650,7 +634,8 @@ GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
     if (fire_events_on_failure) {
       FireFailedEvents(failed_request.get());
     }
-    RETURN_EXCEPTION(STRING16(L"Failed to initialize capture task."));
+    exception_message_ = STRING16(L"Failed to initialize capture task.");
+    return false;
   }
 
   capture_task_->SetListener(this);
@@ -660,10 +645,11 @@ GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
     if (fire_events_on_failure) {
       FireFailedEvents(failed_request.get());
     }
-    RETURN_EXCEPTION(STRING16(L"Failed to start capture task."));
+    exception_message_ = STRING16(L"Failed to start capture task.");
+    return false;
   }
 
-  RETURN_NORMAL();
+  return true;
 }
 
 //------------------------------------------------------------------------------
@@ -784,16 +770,15 @@ void GearsResourceStore::InvokeCompletionCallback(FFCaptureRequest *request,
 //------------------------------------------------------------------------------
 // ResolveAndAppendUrl
 //------------------------------------------------------------------------------
-nsresult GearsResourceStore::ResolveAndAppendUrl(const std::string16 &url,
-                                                 FFCaptureRequest *request) {
+bool GearsResourceStore::ResolveAndAppendUrl(const std::string16 &url,
+                                             FFCaptureRequest *request) {
   std::string16 full_url;
-  nsresult nr = ResolveUrl(url.c_str(), &full_url);
-  if (NS_FAILED(nr)) {
-    return nr;
+  if (!ResolveUrl(url.c_str(), &full_url)) {
+    return false;
   }
   request->urls.push_back(url);
   request->full_urls.push_back(full_url);
-  RETURN_NORMAL();
+  return true;
 }
 
 //------------------------------------------------------------------------------
@@ -805,13 +790,15 @@ nsresult GearsResourceStore::ResolveAndAppendUrl(const std::string16 &url,
 // - ensures the the resulting url is from the same-origin
 // - rejects the URL to our canned scour.js file as input
 //------------------------------------------------------------------------------
-nsresult GearsResourceStore::ResolveUrl(const char16 *url,
-                                        std::string16 *resolved_url) {
+bool GearsResourceStore::ResolveUrl(const char16 *url,
+                                    std::string16 *resolved_url) {
   if (!ResolveRelativeUrl(EnvPageLocationUrl().c_str(), url, resolved_url)) {
-    RETURN_EXCEPTION(STRING16(L"Failed to resolve url."));
+    exception_message_ = STRING16(L"Failed to resolve url.");
+    return false;
   }
   if (!EnvPageSecurityOrigin().IsSameOriginAsUrl(resolved_url->c_str())) {
-    RETURN_EXCEPTION(STRING16(L"Url is not from the same origin"));
+    exception_message_ = STRING16(L"Url is not from the same origin");
+    return false;
   }
-  RETURN_NORMAL();
+  return true;
 }

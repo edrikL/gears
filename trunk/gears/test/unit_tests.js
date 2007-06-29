@@ -521,6 +521,7 @@ function testDB1_SpecialEmptyString() {
 
 // Causes a segmentation fault.
 function testDB1_StackOverflow() {
+  return g.FAILED;
   var q = "select * from (select 1";
   for (var i = 0; i < 50000; ++i) {
     q += " union select 1";
@@ -1692,11 +1693,35 @@ function runWebCaptureTests() {
   insertNotExpected("localServer.createStore", null, wcs);
   webCaptureStore = wcs;
 
-  if (gIsDebugBuild) {
-    // Verify we can create a file submitter object
-    var submitter = wcs.createFileSubmitter();
-    insertNotExpected("webCaptureStore.createFileSubmitter", null, submitter);
+  testCaptureFile(wcs);
+  testFileSubmitter(wcs);
 
+  // Verify isCaptured() returns false when it should.
+  insertExpected("webCaptureStore.isCaptured", false,
+                 wcs.isCaptured(CAPTURE_URI));
+
+  // Initiate the capture of some files, a single url and an array
+  var uri_array = [];
+  for (var uri in CAPTURE_TEST_FILES) {
+    uri_array.push(uri);
+  }
+  captureExpectedCount = 2 + uri_array.length;
+  wcs.capture(CAPTURE_URI, webCaptureOneCallback);
+  wcs.capture(CAPTURE_TEST_FILE_FRAGMENT + "#foo", webCaptureFragmentCallback);
+  wcs.capture(uri_array, webCaptureArrayCallback);
+  try {
+    var crossDomainUrl = "http://cross.domain.not/";
+    wcs.capture(crossDomainUrl, webCaptureShouldNotCallback);
+  } catch (ex) {
+    insertRow("webCaptureStore.capture(crossDomainUrl)", true,
+              "Failed as expected");
+  }
+
+  // Give it 30 seconds to finish.
+  setTimeout(webCapture_timeout, 30000);
+}
+
+function testCaptureFile(wcs) {
     // We call captureFile and expect it to throw given an empty
     // fileInputElement
     var fileInputElement = document.getElementById("fileinput");
@@ -1745,24 +1770,14 @@ function runWebCaptureTests() {
       insertRow("webCaptureStore.captureFile(string)", true,
                 "Failed as expected");
     }
-  }  // if gIsDebugBuild  
+    // TODO(michaeln): create a test that actually grabs a local file
+}
 
-  // Verify isCaptured() returns false when it should.
-  insertExpected("webCaptureStore.isCaptured", false,
-                 wcs.isCaptured(CAPTURE_URI));
-
-  // Initiate the capture of some files, a single url and an array
-  var uri_array = [];
-  for (var uri in CAPTURE_TEST_FILES) {
-    uri_array.push(uri);
-  }
-  captureExpectedCount = 2 + uri_array.length;
-  wcs.capture(CAPTURE_URI, webCaptureOneCallback);
-  wcs.capture(CAPTURE_TEST_FILE_FRAGMENT + "#foo", webCaptureFragmentCallback);
-  wcs.capture(uri_array, webCaptureArrayCallback);
-
-  // Give it 30 seconds to finish.
-  setTimeout(webCapture_timeout, 30000);
+function testFileSubmitter(wcs) {
+  // Verify we can create a file submitter object
+  var submitter = wcs.createFileSubmitter();
+  insertNotExpected("webCaptureStore.createFileSubmitter", null, submitter);
+  // TODO(michaeln): create a test that actually submits to a server
 }
 
 function webCapture_timeout() {
@@ -1868,6 +1883,10 @@ function webCaptureArrayCallback(url, success, id) {
   }
 }
 
+function webCaptureShouldNotCallback(url, success, id) {
+  insertRow("store.capture should not callback", false, url);
+}
+
 var manifest_url1_content;
 function runManifestTests() {
   if (location.protocol.indexOf("http") != 0) {
@@ -1893,16 +1912,19 @@ function checkGoodManifest(app) {
                  app.lastErrorMessage);
 
   if (app.updateStatus == g.UPDATE_STATUS_OK) {
+    var test_file_1_content = httpGet("test_file_1.txt")
     insertExpected("can serve expected urls", true,
         localServer.canServeLocally("manifest-url1.txt") &&
         localServer.canServeLocally("manifest-url1.txt?query") &&
         localServer.canServeLocally("alias-to-manifest-url1.txt") &&
-        localServer.canServeLocally("redirect-to-manifest-url1.txt"));
+        localServer.canServeLocally("redirect-to-manifest-url1.txt") &&
+        localServer.canServeLocally("unicode?foo=bar"));
     insertExpected("is serving expected content", true,
         manifest_url1_content == httpGet("manifest-url1.txt") &&
-        httpGet("test_file_1.txt") == httpGet("manifest-url1.txt?another") &&
+        test_file_1_content == httpGet("manifest-url1.txt?another") &&
         manifest_url1_content == httpGet("alias-to-manifest-url1.txt") &&
-        manifest_url1_content == httpGet("redirect-to-manifest-url1.txt"));
+        manifest_url1_content == httpGet("redirect-to-manifest-url1.txt") &&
+        test_file_1_content == httpGet("unicode?foo=bar"));
   }
 
   // now check again with a bad manifest
