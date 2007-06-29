@@ -28,7 +28,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <HTML>
   <HEAD>
     <TITLE>Manual Gears WebCache Tests</TITLE>
-    <script src="gears_init.js"></script>
+    <script type="text/javascript" src="gears_init.js"></script>
     <script type="text/javascript" language="javascript">
 
       var localServer;
@@ -71,7 +71,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         var info = "";
         info += "enabled = " + managedStore.enabled + "\n";
         info += "name = " + managedStore.name + "\n";
-        info + "requiredCookie = " + managedStore.requiredCookie + "\n";
+        info += "requiredCookie = " + managedStore.requiredCookie + "\n";
         info += "manifestUrl = " + managedStore.manifestUrl + "\n";
         info += "updateStatus = " + managedStore.updateStatus + "\n";
         info += "lastUpdateCheckTime = " + managedStore.lastUpdateCheckTime + "\n";
@@ -102,7 +102,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         var info = "";
         info += "enabled = " + store.enabled + "\n";
         info += "name = " + store.name + "\n";
-        info + "requiredCookie = " + store.requiredCookie + "\n";
+        info += "requiredCookie = " + store.requiredCookie + "\n";
         alert(info);
       }
 
@@ -158,7 +158,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </script>
   </HEAD>
   <BODY onload="OnLoad()">
-    <form method="post" enctype="multipart/form-data" />
+    <form method="post" enctype="multipart/form-data">
       name:<input type="text" size="10" name="nameInput" id="nameInput">
       cookie:<input type="text" size="10" name="cookieInput" id="cookieInput">
       <br>
