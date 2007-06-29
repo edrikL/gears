@@ -31,6 +31,8 @@
 - (void)factoryWillTerminate:(NSNotification *)note;
 @end
 
+static unsigned int gNextIdentifier = 1;
+
 @implementation GearsWorkerSupervisor
 //------------------------------------------------------------------------------
 #pragma mark -
@@ -54,7 +56,7 @@
 
 //------------------------------------------------------------------------------
 - (NSNumber *)uniqueIdentifier {
-  return [NSNumber numberWithUnsignedInt:++nextIdentifier_];
+  return [NSNumber numberWithUnsignedInt:gNextIdentifier++];
 }
 
 //------------------------------------------------------------------------------
@@ -64,27 +66,13 @@
   
   [pools_ addObject:pool];
   
-  return [self uniqueIdentifier];
+  // The root worker always gets the identifier "0" by convention
+  return [NSNumber numberWithInt:0];
 }
 
 //------------------------------------------------------------------------------
 - (void)unsuperviseWorkerPool:(GearsWorkerPool *)pool {
   [pools_ removeObject:pool];
-}
-
-//------------------------------------------------------------------------------
-- (GearsWorkerPool *)workerPoolContainingIdentifier:(NSNumber *)ident {
-  NSArray *pools = [pools_ allObjects];
-  int count = [pools count];
-  
-  for (int i = 0; i < count; ++i) {
-    GearsWorkerPool *pool = [pools objectAtIndex:i];
-    
-    if ([pool canProcessMessageToIdentifier:ident])
-      return pool;
-  }
-  
-  return nil;
 }
 
 @end

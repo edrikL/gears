@@ -64,12 +64,14 @@ extern NSString *kGearsWorkerSenderKey;  // NSNumber, GearsWorker identifier
 @interface GearsWorkerPool : SafariGearsBaseClass <GearsWorkerPoolProtocol> {
  @private
   NSMutableSet *workers_;             // Workers owned by this manager (STRONG)
-  NSNumber *identifier_;              // Unique identifier (STRONG)
+  NSNumber *identifier_;              // WorkerPool identifier (STRONG)
+  NSNumber *serverIdentifier_;        // Unique Server identifier (STRONG)
   id onmessage_;                      // onmessage property (STRONG)
   NSConnection *serverConnection_;    // Distributed object connection (STRONG)
   NSMutableDictionary *sources_;      // Pending sources (STRONG)
   NSMutableDictionary *identifierMap_;// Map: identifier to Worker (STRONG)
   NSMutableDictionary *messageQueue_; // Pending Messages (STRONG)
+  NSMutableArray *createdWorkerPIDs_; // NSNumber array of pid's (STRONG)
   BOOL cancelMessageQueueSends_;      // YES, if we should cancel sending
   BOOL isDisconnected_;               // YES, if we're disconnected
 }
