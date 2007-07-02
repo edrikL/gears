@@ -2,7 +2,7 @@
 
 _DRAFT(shess) I'm still thinking about what I want, here.  For now, please send comments directly to me, once I'm further along I'll post to the google-gears-eng discussion list, hopefully this week._
 
-_See also CrossOriginApiOld, my original stream-of-conciousness on this._
+_See also JavascriptServiceApiOld, my original stream-of-conciousness on this._
 
 = Introduction =
 
