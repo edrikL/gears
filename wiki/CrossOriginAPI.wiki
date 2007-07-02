@@ -56,7 +56,7 @@ Assume mash-up.com wants to read and write tasks managed by task-list.com.
  
 *Description of `createWorkerFromUrl()`*
   * The function returns immediately.
-  * Gears asynchronously fetches the given URL and populates a new worker with the JavaScript code that was fetched.
+  * Gears asynchronously fetches the given URL and populates a new worker with the !JavaScript code that was fetched.
   * Any error triggers the workerpool's 'onerror' callback.
   * Messages sent to the worker before it finishes initializing get queued.
  
