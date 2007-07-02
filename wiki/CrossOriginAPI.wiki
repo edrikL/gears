@@ -76,7 +76,7 @@ Assume mash-up.com wants to read and write tasks managed by task-list.com.
  
 *Q: Why require workers to set `receiveCrossOrigin`?*
 
-A: For security, our mantra is "make the lazy case secure".
+For security, our mantra is "make the lazy case secure".
 Requiring 'receiveCrossOrigin' helps protect against XSS attacks.
 Simple code that doesn't think about cross-origin access cannot be attacked,
 because it won't receive messages from external origins. 
@@ -84,14 +84,14 @@ because it won't receive messages from external origins.
 
 *Q: Why not allow direct access to databases / etc in other origins?*
 
-A: Two reasons:
+Two reasons:
   # Every current and future Gears API would need to contain parameters for cross-origin access.  This is messy to use, and also messy to design. 
   # Simultaneous access across origins can require tricky synchronization.  Consider cross-origin database access when the schema needs to change.  Our cross-origin API pushes developers toward exposing !JavaScript "services" which avoid this problem, by adding a layer of indirection.
 
 
 *Q: Does this abandon the messaging API proposals?*
 
-A: Not really.  Those proposals are just as relevant to this design as they
+Not really.  Those proposals are just as relevant to this design as they
 were before.  Gears provides a way to create JS engines (via !CreateWorker),
 and a way to communicate between them (via !SendMessage).  The messaging API
 proposals are a way to improve on !SendMessage, which is still a possibility.
@@ -102,6 +102,5 @@ proposals are a way to improve on !SendMessage, which is still a possibility.
   * A better design for the onmessage() callback is to have a single parameter: a 'message' object with multiple fields.  This is how the WHATWG postMessage() proposal works.  The advantage is that we can add future fields without adding a long sequence of optional API parameters.
 
   If we choose to bite this bullet now, we would change the 'srcOrigin' string to a 'message' object that has the fields 'body', 'sourceId', and 'sourceOrigin'.
-
 
 
