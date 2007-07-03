@@ -1,6 +1,6 @@
 #summary What's coming in future releases
 
-==Mid-August 2007==
+==Mid August 2007==
 
 *Highlights:*
 
