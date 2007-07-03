@@ -27,7 +27,7 @@ void sendMessage(messageString, destWorkerId)
 
 Workers also need networking capabilities akin to !XmlHttpRequest
 if they want to implement certain services like data synchronization.
-That API, which is not strictly part of cross-domain API usage,
+That API, which is not strictly part of cross-origin API usage,
 should be addressed in a separate design document.
  
 
@@ -64,7 +64,7 @@ Assume mash-up.com wants to read and write tasks managed by task-list.com.
   * A worker must call this method if it expects to be used across origins.
   * If a worker does not call this method:
     # It only receives messages from workers in its origin.  Other messages trigger the pool's 'onerror' callback.
-    # All Gears APIs will fail _if_ the worker was created from a different origin (possibly by an attacker).
+    # All Gears APIs fail _if_ the worker was created from a different origin (possibly by an attacker).  You can think of this as running in a "null" origin until `allowCrossOrigin()` is called.
  
 *Description of `srcOrigin`*
   * Receivers can examine this to decide whether to respond to each message.
@@ -104,6 +104,8 @@ proposals are a way to improve on !SendMessage, which is still a possibility.
   * A better design for the onmessage() callback is to have a single parameter: a 'message' object with multiple fields.  This is how the WHATWG postMessage() proposal works.  The advantage is that we can add future fields without adding a long sequence of optional API parameters.
 
   If we choose to bite this bullet now, we would change the 'srcOrigin' string to a 'message' object that has the fields 'body', 'sourceId', and 'sourceOrigin'.
+
+
 
 
 
