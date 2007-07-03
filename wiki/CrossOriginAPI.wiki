@@ -1,4 +1,4 @@
-#summary Affecting Gears resources across origins.
+#summary API for affecting Gears resources across origins.
 #labels DesignDoc-Accepted
 
 
@@ -19,10 +19,10 @@ to the !WorkerPool class.  Those additions are noted below.
 
 {{{
 int  createWorker(fullScript)
-int  createWorkerFromUrl(scriptUrl)   // NEW METHOD
+int  createWorkerFromUrl(scriptUrl) // NEW METHOD
+void allowCrossOrigin()             // NEW METHOD
 void sendMessage(messageString, destWorkerId)
 [write] callback onmessage(messageString, srcWorkerId, [srcOrigin]) // NEW 3RD PARAM
-[read/write] bool receiveCrossOrigin  // NEW PROPERTY
 }}}
 
 Workers also need networking capabilities akin to !XmlHttpRequest
@@ -50,15 +50,21 @@ Assume mash-up.com wants to read and write tasks managed by task-list.com.
   * That origin determines what Gears resources can be accessed.
   * A worker pool can contain workers with different origins.
   * The origin for each worker is determined as follows:
-    * the "parent" worker gets it's origin from the page's URL
-    * createWorkerFromUrl() uses the origin of the given URL
+    * the "root" worker gets it's origin from the page's URL
     * createWorker() uses the origin of the caller
+    * createWorkerFromUrl() uses the origin of the given URL
  
 *Description of `createWorkerFromUrl()`*
   * The function returns immediately.
   * Gears asynchronously fetches the given URL and populates a new worker with the !JavaScript code that was fetched.
   * Any error triggers the workerpool's 'onerror' callback.
   * Messages sent to the worker before it finishes initializing get queued.
+
+*Description of `allowCrossOrigin()`*
+  * A worker must call this method if it expects to be used across origins.
+  * If a worker does not call this method:
+    # It only receives messages from workers in its origin.  Other messages trigger the pool's 'onerror' callback.
+    # All Gears APIs will fail _if_ the worker was created from a different origin (possibly by an attacker).
  
 *Description of `srcOrigin`*
   * Receivers can examine this to decide whether to respond to each message.
@@ -66,20 +72,16 @@ Assume mash-up.com wants to read and write tasks managed by task-list.com.
       SCHEME://DOMAIN[:PORT]
   * The port is omitted for standard ports (http port 80, https port 443)
  
-*Description of `receiveCrossOrigin`*
-  * By default this value is false.
-  * When true, the worker receives messages from workers in all origins.
-  * When false, the worker only receives messages from workers in its origin.  Other messages trigger the pool's 'onerror' callback.
- 
 
 =DESIGN Q&A=
  
-*Q: Why require workers to set `receiveCrossOrigin`?*
+*Q: Why require workers to call `allowCrossOrigin()`?*
 
 For security, our mantra is "make the lazy case secure".
-Requiring 'receiveCrossOrigin' helps protect against XSS attacks.
+Requiring 'allowCrossOrigin()' helps protect against XSS attacks.
 Simple code that doesn't think about cross-origin access cannot be attacked,
-because it won't receive messages from external origins. 
+because (a) it won't receive messages from external origins, and
+(b) any Gears work attempted during initialization will also fail.
 
 
 *Q: Why not allow direct access to databases / etc in other origins?*
@@ -102,5 +104,7 @@ proposals are a way to improve on !SendMessage, which is still a possibility.
   * A better design for the onmessage() callback is to have a single parameter: a 'message' object with multiple fields.  This is how the WHATWG postMessage() proposal works.  The advantage is that we can add future fields without adding a long sequence of optional API parameters.
 
   If we choose to bite this bullet now, we would change the 'srcOrigin' string to a 'message' object that has the fields 'body', 'sourceId', and 'sourceOrigin'.
+
+
 
 
