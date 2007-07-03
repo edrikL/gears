@@ -123,9 +123,9 @@ function BackgroundGenerator() {
 
   this.child = function(g) {
     var ff = new g();
-    gearsWorkerPool.onmessage = function(msg, sender) {
+    google.gears.workerPool.onmessage = function(msg, sender) {
       ff.next(Number(msg), function(val) {
-        gearsWorkerPool.sendMessage(String(val), sender);
+        google.gears.workerPool.sendMessage(String(val), sender);
       });
     }
   }
