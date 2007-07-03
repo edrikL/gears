@@ -11,7 +11,7 @@
     * Support timers ([http://code.google.com/p/google-gears/issues/detail?id=80 tracking bug])
     * Improve error reporting  ([http://code.google.com/p/google-gears/issues/detail?id=33&can=2&q=onerror tracking bug], [http://code.google.com/p/google-gears/wiki/NewWorkerPoolFeatures design doc])
 
-For all changes in this release, see [http://code.google.com/p/google-gears/issues/list?q=milestone%3AM1 this query].
+For all changes in this release, see [http://code.google.com/p/google-gears/issues/list?q=Milestone%3AM1 this query].
 
 
 ==Late September 2007==
@@ -24,5 +24,4 @@ For all changes in this release, see [http://code.google.com/p/google-gears/issu
 
   * Improved full-text-search scalability (FTS3) ([http://code.google.com/p/google-gears/issues/detail?id=137 tracking bug])
 
-For all changes in this release, see [http://code.google.com/p/google-gears/issues/list?q=milestone%3AM2 this query].
-
+For all changes in this release, see [http://code.google.com/p/google-gears/issues/list?q=Milestone%3AM2 this query].
