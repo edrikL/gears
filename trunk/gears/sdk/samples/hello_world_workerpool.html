@@ -144,7 +144,7 @@ function parentHandler(msg, sender) {
 
 
 function childInit() {
-  gearsWorkerPool.onmessage = childHandler;
+  google.gears.workerPool.onmessage = childHandler;
 }
 
 function childHandler(msg, sender) {
@@ -153,12 +153,12 @@ function childHandler(msg, sender) {
   var arg = msg.substr(5);
   if (cmd == 'fibo') {
     var result = fibonacci(arg);
-    gearsWorkerPool.sendMessage(String(result), sender);
+    google.gears.workerPool.sendMessage(String(result), sender);
   } else if (cmd == 'iden') {
     var result = identity(arg);
-    gearsWorkerPool.sendMessage(String(result), sender);
+    google.gears.workerPool.sendMessage(String(result), sender);
   } else {
-    gearsWorkerPool.sendMessage('Unknown command.', sender);
+    google.gears.workerPool.sendMessage('Unknown command.', sender);
   }
 
   function fibonacci(n) {
