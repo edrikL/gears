@@ -1,0 +1,29 @@
+#summary What's coming in future releases
+
+==Mid-August 2007==
+
+*Highlights:*
+
+  * Cross-origin API support ([http://code.google.com/p/google-gears/issues/detail?id=150 tracking bug], [CrossOriginAPI design doc])
+
+  * !WorkerPool improvements:
+    * Add HTTP requests ([http://code.google.com/p/google-gears/issues/detail?id=79 tracking bug])
+    * Add timers ([http://code.google.com/p/google-gears/issues/detail?id=80 tracking bug])
+    * Improve error reporting  ([http://code.google.com/p/google-gears/issues/detail?id=33&can=2&q=onerror tracking bug], [http://code.google.com/p/google-gears/wiki/NewWorkerPoolFeatures design doc])
+
+For all changes in this release, see [http://code.google.com/p/google-gears/issues/list?q=milestone%3AM1 this query].
+
+
+==Late September 2007==
+
+*Highlights:*
+
+  * i18n for Gears UI ([http://code.google.com/p/google-gears/issues/detail?id=138 tracking bug])
+
+  * i18n for Database full-text-search ([http://code.google.com/p/google-gears/issues/detail?id=153 tracking bug])
+
+  * Improved full-text-search scalability (FTS3) ([http://code.google.com/p/google-gears/issues/detail?id=137 tracking bug])
+
+For all changes in this release, see [http://code.google.com/p/google-gears/issues/list?q=milestone%3AM2 this query].
+
+
