@@ -436,19 +436,29 @@ Expected cookie format is &quot;name=value&quot;.</td>
     </tr>
     <tr class="odd">
       <td><strong>updateStatus</strong></td>
-        <td class="odd">readonly attribute int </td>
-        <td class="odd">enum {UPDATE_OK, UPDATE_CHECKING, UPDATE_DOWNLOADING, UPDATE_FAILED}
-          <ul>
-            <li>UPDATE_OK: An update task is not running. The last update task to run succeeded.</li>
-            <li>UPDATE_CHECKING: Checking for a new manifest file. </li>
-            <li>UPDATE_DOWNLOADING: Downloading the resources listed in a new manifest flie. </li>
-            <li>UPDATE_FAIL: An update task is not running. The last update task to run failed, and the error message is in <code>lastErrorMessage</code>.</li>          </ul>
+        <td class="odd">readonly attribute int</td>
+        <td class="odd">
+	      Can be one of four values:
+	      <table class="noborders">
+	        <tr>
+	          <td><strong>0</strong>
+	          <td>Update OK. An update task is not running. The last update task to run succeeded.
+            <tr>
+              <td><strong>1</strong>
+              <td>Update checking. Gears is checking for a new manifest file.
+            <tr>
+              <td><strong>2</strong>
+              <td>Update downloading. Gears is found a new manifest and is downloading the new resources.
+            <tr>
+              <td><strong>3</strong>
+              <td>Update failed. An update task is not running. The last update task to run failed, and the error message is in the <code>lastErrorMessage</code> property.
+       </table>
     </td>
     </tr>
     <tr class="odd">
       <td><strong> lastErrorMessage</strong> </td>
         <td class="odd">readonly attribute string</td>
-        <td class="odd">When updateStatus is UPDATE_FAILED, this property contains details about the error.</td>
+        <td class="odd">When updateStatus is <strong>3</strong> (update failed), this property contains details about the error.</td>
     </tr>
     <tr class="odd">
       <td><strong>currentVersion</strong></td>
