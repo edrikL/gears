@@ -1,9 +1,9 @@
 // Copyright 2005, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <nsIDOMHTMLInputElement.h>
@@ -71,7 +71,7 @@ static PRBool StringBeginsWith(const nsAString &source,
 //-----------------------------------------------------------------------------
 // AppendHeader
 //-----------------------------------------------------------------------------
-static void AppendHeader(nsCString &headers, 
+static void AppendHeader(nsCString &headers,
                          const char *name,
                          const char *value) {
   const char *kDelimiter = ": ";
@@ -440,13 +440,15 @@ nsresult GearsResourceStore::CaptureFile(nsIFile *file,
   item.payload.data.reset(new std::vector<uint8>);
   if (data_len > 0) {
     item.payload.data->resize(data_len);
-    NS_ENSURE_TRUE(item.payload.data->size() == data_len,
-                   NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(
+        item.payload.data->size() == static_cast<PRUint32>(data_len),
+        NS_ERROR_OUT_OF_MEMORY);
     PRUint32 data_actually_read = 0;
-    nr = stream->Read(reinterpret_cast<char*>(&(item.payload.data->at(0))), 
+    nr = stream->Read(reinterpret_cast<char*>(&(item.payload.data->at(0))),
                       data_len, &data_actually_read);
     NS_ENSURE_SUCCESS(nr, nr);
-    NS_ENSURE_TRUE(data_len == data_actually_read, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(static_cast<PRUint32>(data_len) == data_actually_read,
+                   NS_ERROR_FAILURE);
   }
 
   // Get the mime type
@@ -477,7 +479,7 @@ nsresult GearsResourceStore::CaptureFile(nsIFile *file,
   //const char *kContentDispositionHeader = "Content-Disposition";
   //const char *kContentDispositionValuePrefix = "attachment" "; filename=\"";
   //const char *kContentDispositionValueSuffix = "\"";
-  //AppendHeader(headers, 
+  //AppendHeader(headers,
   //             kContentDispositionHeader,
   //             kContentDispositionValuePrefix);
   //headers.SetLength(headers.Length() - 2);  // remove trailing CRLF
@@ -603,9 +605,9 @@ GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
   }
 
   if (!EnvIsWorker() && !page_unload_monitor_.get()) {
-    // If we haven't already done so, we attach a handler to the OnUnload 
+    // If we haven't already done so, we attach a handler to the OnUnload
     // event so we can abort a running capture task when the page is unloaded.
-    page_unload_monitor_.reset(new HtmlEventMonitor(kEventUnload, 
+    page_unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
                                                     OnPageUnload, this));
     nsCOMPtr<nsIDOMEventTarget> event_source;
     if (NS_SUCCEEDED(DOMUtils::GetWindowEventTarget(
