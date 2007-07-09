@@ -46,6 +46,8 @@ function Gears() {
   this.app_ = this.localServer_.openManagedStore('gearpad');
   this.isCaptured = this.app_ && this.app_.currentVersion;
   this.canGoLocal = this.hasGears && this.hasDb && this.isCaptured;
+
+  this.upgradeDatabase_();
 }
 
 Gears.NOBODY_USER_ID = -1;
@@ -84,7 +86,10 @@ Gears.prototype.capture = function() {
 };
 
 Gears.prototype.createDatabase = function() {
-  var schema = 'create table user (' +
+  var schema = [
+      // Stores information about each user who has setup local mode on this
+      // browser.
+      'create table user (' +
       // the id of the user on the server
       'id int not null primary key, ' +
       // the last version from the server that we got
@@ -93,13 +98,45 @@ Gears.prototype.createDatabase = function() {
       'dirty int not null, ' +
       // cookie that should be used when this user is active
       'cookie text not null, ' +
-      // current contentof note
-      'content text not null)';
+      // current content of note
+      'content text not null, ' +
+      // unique ID of this client
+      'clientid int not null default 0)',
+      // Version table. Not used for anything except indicating current version
+      // through presence. We use a table to exploit a SQLite feature where we
+      // are warned if the db physical schema changes.
+      'create table version_2 (foo text)'
+  ];
 
-  this.execute(schema);
+  var self = this;
+  this.transact(function() {
+    for (var i = 0, stmt; stmt = schema[i]; i++) {
+      self.execute(stmt);
+    }
+  });
 };
 
-Gears.prototype.addUser = function(userid, cookie, content, version) {
+Gears.prototype.upgradeDatabase_ = function() {
+  if (!this.hasDb) {
+    return;
+  }
+
+  var version = 1;
+  var rslt = this.executeToObjects(
+      "select name from sqlite_master where tbl_name like 'version_%'")[0];
+  if (rslt) {
+    // version 1 did not have a version table
+    version = Number(rslt.name.match(/version_(\d+)/)[1]);
+  }
+
+  // Upgrade users from version 1
+  if (version < 2) {
+    this.execute('alter table user add clientid int not null default 0');
+    this.execute('create table version_2 (foo text)');
+  }
+};
+
+Gears.prototype.addUser = function(userid, cookie, content, version, clientid) {
   var self = this;
   this.transact(function() {
     var rslt = self.executeToObjects('select * from user where id = ?', 
@@ -109,8 +146,8 @@ Gears.prototype.addUser = function(userid, cookie, content, version) {
       return;
     }
 
-    self.execute('insert into user values (?, ?, ?, ?, ?)', 
-                 [userid, version, 0, cookie, content]);
+    self.execute('insert into user values (?, ?, ?, ?, ?, ?)', 
+                 [userid, version, 0, cookie, content, clientid]);
   });
 };
 
@@ -153,11 +190,8 @@ Gears.prototype.executeToObjects = function(sql, args) {
  */
 Gears.prototype.execute = function(sql, args) {
   try {
-    if (args) {
-      return this.db_.execute(sql, args);
-    } else {
-      return this.db_.execute(sql);
-    }
+    console.log('sql: %s, args: %s', sql, args);
+    return this.db_.execute(sql, args);
   } catch (e) {
     // e is not a real error, so we can't just let it bubble up -- it won't 
     // display in error uis correctly. So we basically convert it to a real 

@@ -33,11 +33,12 @@ function DataStore(syncCallback) {
   this.localMode = false;
   this.online = true;
   this.version = 0;
+  this.clientId = 0;
 
+  this.isFirstSync_ = true;
   this.dirty_ = false;
   this.syncCallback_ = syncCallback;
   this.abortLastRequest_ = function(){};
-  this.firstRun_ = true;
 
   this.initUser_();
   this.initLocalMode_();
@@ -70,11 +71,19 @@ DataStore.prototype.initLocalMode_ = function() {
   }
 
   this.version = state.version;
+  this.clientId = state.clientid;
   this.dirty_ = state.dirty;
   this.localMode = true;
 };
 
 DataStore.prototype.sync = function(clientUpdate) {
+  if (!this.clientId) {
+    this.initClient_();
+    return;
+  }
+
+  // Strict comparison to null so we don't confuse null with updates to empty
+  // string.
   if (clientUpdate !== null) {
     this.dirty_ = true;
 
@@ -86,95 +95,126 @@ DataStore.prototype.sync = function(clientUpdate) {
 
   this.abortLastRequest_();
 
-  // whether the ui meant it or not, if we are dirty, we update
-  if (!this.firstRun_ && this.dirty_) {
+  if (this.dirty_) {
     this.updateServer_(clientUpdate);
   } else {
     this.syncFromServer_();
   }
+};
 
-  this.firstRun_ = false;
+DataStore.prototype.initClient_ = function() {
+  var self = this;
+  doRequest("GET", "init.php", null, 
+    function(status, statusText, responseText) {
+      var responseText =
+        self.parseServerResponse_(status, statusText, responseText);
+      if (!responseText) {
+        return;
+      }
+
+      self.clientId = responseText[0];
+
+      // we are upgrading from an old schema that didn't have clientID. Save it.
+      if (self.localMode) {
+	gears.execute('update user set clientid = ? where id = ?',
+		      [responseText[0], self.userId]);
+	// ... and then do the first sync
+	self.sync(null);
+	return;
+      }
+
+      // otherwise we are just initializting a regular client
+      self.version = responseText[1];
+      responseText.splice(0, 2);
+    
+      // Tell the UI the result.
+      self.handleSync_(responseText.join("\n"));
+    }
+  );
 };
 
 DataStore.prototype.updateServer_ = function(clientUpdate) {
   var self = this;
-  var handler = function(status, statusText, responseText) {
-    var response = self.parseServerResponse_(status, statusText, responseText);
-    if (!response) {
-      self.syncCallback_(null);
-      return;
-    }
-
-    // check to see if the server says there is a conflict
-    if (clientUpdate && response.content) {
-      if (promptToOverrideConflict()) {
-        self.version = response.version;
-        self.sync(clientUpdate);
-        return;
+  this.abortLastRequest_ = doRequest("POST", "update.php",
+    {version: this.version, client: this.clientId},
+    function(status, statusText, responseText) {
+      var response = self.parseSyncResponse_(status, statusText, responseText);
+      if (!response) {
+	self.handleSync_(null);
+	return;
       }
-    }
 
-    if (self.localMode) {
-      var sets = ['dirty = ?'];
-      var vals = [0];
+      // check to see if the server says there is a conflict
+      if (clientUpdate && response.content) {
+	if (promptToOverrideConflict()) {
+	  self.version = response.version;
+	  self.sync(clientUpdate);
+	  return;
+	}
+      }
 
+      if (self.localMode) {
+	var sets = ['dirty = ?'];
+	var vals = [0];
+
+	if (response.version) {
+	  sets.push('version = ?');
+	  vals.push(response.version);
+	}
+
+	if (response.content) {
+	  sets.push('content = ?');
+	  vals.push(response.content);
+	}
+
+	vals.push(self.userId);
+	gears.execute('update user set ' + sets.join(', ') + ' where id = ?',
+		      vals);
+      }
+
+      self.dirty_ = false;
       if (response.version) {
-        sets.push('version = ?');
-        vals.push(response.version);
+	self.version = response.version;
       }
-
-      if (response.content) {
-        sets.push('content = ?');
-        vals.push(response.content);
-      }
-
-      vals.push(self.userId);
-      gears.execute('update user set ' + sets.join(', ') + ' where id = ?',
-                   vals);
-    }
-
-    self.dirty_ = false;
-    if (response.version) {
-      self.version = response.version;
-    }
-
-    self.syncCallback_(response.content);
-  };
-
-  this.abortLastRequest_ = doRequest(
-      "POST", "update.php", {version: this.version}, handler, clientUpdate);
+      self.handleSync_(response.content);
+    },
+    clientUpdate
+  );
 };
 
 DataStore.prototype.syncFromServer_ = function() {
   var self = this;
-  var handler = function(status, statusText, responseText) {
-    var response = self.parseServerResponse_(status, statusText, responseText);
+  this.abortLastRequest_ = doRequest("GET", "sync.php", {version: this.version},
+    function(status, statusText, responseText) {
+      var response = self.parseSyncResponse_(status, statusText, responseText);
 
-    // If there was a change, update our internal state.
-    if (response && response.content !== null) {
-      if (self.localMode) {
-        gears.execute('update user set version = ?, content = ? where id = ?',
-                      [response.version, response.content, self.userId]);
+      // If there was a change, update our internal state.
+      if (response && response.content !== null) {
+	if (self.localMode) {
+	  gears.execute('update user set version = ?, content = ? where id = ?',
+			[response.version, response.content, self.userId]);
+	}
+
+	self.version = response.version;
       }
 
-      self.version = response.version;
+      self.handleSync_(response && response.content);
     }
+  );
+};
 
-    // Tell the UI the result. If we didn't get one and we are in local mode, 
-    // we can get it from the localstore.
-    if (response && response.content) {
-      self.syncCallback_(response ? response.content : null);
-    } else if (self.localMode) {
-      var rslt = gears.executeToObjects('select content from user where id = ?', 
-                                        [self.userId])[0];
-      self.syncCallback_(rslt.content);
-    } else {
-      self.syncCallback_(null);
-    }
-  };
+DataStore.prototype.handleSync_ = function(serverUpdate) {
+  if (serverUpdate !== null) {
+    this.syncCallback_(serverUpdate);
+  } else if (this.localMode && this.isFirstSync_) {
+    this.syncCallback_(
+      gears.executeToObjects('select content from user where id = ?',
+                             [this.userId])[0].content);
+  } else {
+    this.syncCallback_(null);
+  }
 
-  this.abortLastRequest_ = doRequest(
-      "GET", "sync.php", {version: this.version}, handler);
+  this.isFirstSync_ = false;
 };
 
 DataStore.prototype.parseServerResponse_ = 
@@ -193,7 +233,16 @@ DataStore.prototype.parseServerResponse_ =
 
   this.online = true;
   this.log('Got response: ', status, statusText, responseText);
-  responseText = responseText.split("\n");
+  return responseText.split("\n");
+};
+
+DataStore.prototype.parseSyncResponse_ = 
+    function(status, statusText, responseText) {
+  var responseText = 
+    this.parseServerResponse_(status, statusText, responseText);
+  if (!responseText) {
+    return null;
+  }
 
   // The first line, if any, should be the new version on the server.
   var version = responseText[0] || null;

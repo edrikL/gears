@@ -47,12 +47,12 @@ function doRequest(method, url, opt_params, handler, opt_body) {
   }
 
   // To prevent browsers from caching xhr responses
-  opt_params['r'] = new Date().getTime();
-
-  url += "?";
+  var terms = ['r=' + new Date().getTime()];
   for (var n in opt_params) {
-    url += n + "=" + opt_params[n];
+    terms.push(n + '=' + opt_params[n]);
   }
+
+  url += '?' + terms.join('&');
 
   var req = createRequest();
 

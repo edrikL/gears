@@ -140,7 +140,8 @@ function setupOffline() {
   gears.addUser(store.userId,
                 unescape(readCookie('c')),
                 t.value,
-                store.version);
+                store.version,
+                store.clientId);
 
   if (!gears.isCaptured) {
     gears.capture();

@@ -28,18 +28,19 @@ require("_database.php");
 require("_functions.php");
 
 $id = validateUserCookie();
+$client = $_GET['client'];
 $version = $_GET['version'];
 $content = file_get_contents('php://input');
 
-$conflict = updateNote($id, $version, $content);
-if ($conflict) {
+$rslt = updateNote($id, $client, $version, $content);
+if ($rslt['conflict']) {
   $version = $conflict['version'];
   $existing = $conflict['content'];
  } else {
-  $version += 1;
+  $version = $rslt['version'];
 }
 
-if (!$conflict) {
+if (!$rslt['conflict']) {
   print "$version";
 } else {
   print "$version\n$existing";
