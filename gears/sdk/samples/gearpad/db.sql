@@ -42,6 +42,8 @@ CREATE TABLE `user` (
   `content` text NOT NULL,
   `version` int(11) NOT NULL,
   `updated` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `last_client_id` int(11) NOT NULL default 0,
+  `next_client_id` int(11) NOT NULL default 1,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `email` (`email`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;

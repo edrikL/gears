@@ -113,22 +113,37 @@ function handleInvalidUserCookie($redirectIfInvalid) {
 // Account management
 //==============================================================================
 
-function updateNote($id, $version, $content) {
+function updateNote($id, $client, $version, $content) {
   $id = db_escape($id);
+  $client = db_escape($client);
   $version = db_escape($version);
   $content = db_escape($content);
 
+  // We allow the update if the version the client is sending is the current
+  // version OR the client is the last client we spoke with
   $rslt = db_query_set(
-      "update user set content='$content', version=version+1 
-       where id = '$id' and version = '$version'");
+      "update user set
+         content='$content', version=version+1, last_client_id='$client' 
+       where id = '$id' and 
+         (last_client_id = '$client' or version = '$version') and
+         @last_version := version"); // Assign the version before the update
+									 // to a mysql variable. We then read this
+									 // variable with the next SELECT statement.
+									 // This ensures atomicy since mysql
+									 // variables are per-connection and our
+									 // connections are per-page-view.
   $num_rows = mysql_affected_rows();
   
-  if ($num_rows == 0) {
-    return firstRow(db_query_get(
+  if ($num_rows == 1) {
+    $rslt = firstRow(db_query_get("select @last_version + 1 as version"));
+    $rslt['conflict'] = false;
+  } else {
+    $rslt = firstRow(db_query_get(
         "select version, content from user where id = '$id'"));
+    $rslt['conflict'] = true;
   }
 
-  return false;
+  return $rslt;
 }
 
 function createAccount($email, $password) {
