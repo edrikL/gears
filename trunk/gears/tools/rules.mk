@@ -88,9 +88,6 @@ FF_LOCALE = \
 	$(FF_OUTDIR)/genfiles/i18n-en-US.dtd
 # End: resource lists that MUST be kept in sync with "win32_msi.wxs.m4"
 
-IE_RESOURCES = \
-	ui/common/icon_merged.ico
-
 DEPS = \
 	$(FF_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(IE_OBJS:$(OBJ_SUFFIX)=.pp) \
@@ -281,7 +278,7 @@ $(THIRD_PARTY_OUTDIR)/%$(OBJ_SUFFIX): %.c
 
 # RESOURCE TARGETS
 
-$(IE_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES) $(IE_RESOURCES)
+$(IE_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 	$(RC) $(RCFLAGS) $<
 
 # LINK TARGETS

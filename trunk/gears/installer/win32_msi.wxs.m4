@@ -188,6 +188,6 @@ m4_ifdef(^DEBUG^,^m4_dnl
     <Property Id="ALLUSERS">1</Property>
     <!-- Set the icon in Add/Remove Programs -->
     <Property Id="ARPPRODUCTICON">MainIcon</Property>
-    <Icon Id="MainIcon" SourceFile="$(var.OurIEPath)/PRODUCT_SHORT_NAME_UQ.dll" />
+    <Icon Id="MainIcon" SourceFile="ui/common/icon_merged.ico" />
   </Product>
 </Wix>
