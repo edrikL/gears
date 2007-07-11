@@ -371,7 +371,7 @@ class WebCacheDB : SQLTransactionListener {
 #ifdef USE_FILE_STORE
   friend class WebCacheBlobStore;
   friend class WebCacheFileStore;
-  WebCacheFileStore *response_bodies_store_;
+  class WebCacheFileStore *response_bodies_store_;
 
   // Implementation of SQLTransactionListener used to inform the file store 
   // of transactions
@@ -379,8 +379,8 @@ class WebCacheDB : SQLTransactionListener {
   virtual void OnCommit();
   virtual void OnRollback();
 #else
-  friend  class WebCacheBlobStore;
-  WebCacheBlobStore *response_bodies_store_;
+  friend class WebCacheBlobStore;
+  class WebCacheBlobStore *response_bodies_store_;
 
   // These are a noop when everything is stored in the database
   virtual void OnBegin() {}
