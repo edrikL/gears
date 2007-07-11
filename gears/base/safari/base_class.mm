@@ -107,6 +107,11 @@
 }
 
 //------------------------------------------------------------------------------
+- (SafariGearsFactory *)factory {
+  return factory_;
+}
+
+//------------------------------------------------------------------------------
 - (GearsBaseClass *)gearsBaseClass {
   return base_;
 }
@@ -133,7 +138,7 @@
 //------------------------------------------------------------------------------
 + (NSString *)webScriptNameForSelector:(SEL)sel {
   NSString *selStr = NSStringFromSelector(sel);
-  NSDictionary *strs = [[self class] webScriptSelectorStrings];
+  NSDictionary *strs = [self webScriptSelectorStrings];
   NSString *name = [strs objectForKey:selStr];
 
   return name;

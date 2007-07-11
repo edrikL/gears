@@ -76,6 +76,8 @@ typedef struct CPP_resource_store {
 
 - (BOOL)removeStore;
 
+- (ResourceStore *)resourceStore;
+
 //------------------------------------------------------------------------------
 // SafariGearsBaseClass
 //------------------------------------------------------------------------------
