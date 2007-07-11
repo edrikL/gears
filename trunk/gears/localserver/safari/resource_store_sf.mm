@@ -26,15 +26,20 @@
 #import <WebKit/WebKit.h>
 
 #import "gears/base/common/common_sf.h"
+#import "gears/base/common/http_utils.h"
+#import "gears/base/safari/browser_utils.h"
 #import "gears/base/safari/factory.h"
 #import "gears/base/safari/factory_utils.h"
+#import "gears/base/safari/scoped_CF.h"
 #import "gears/base/safari/string_utils.h"
-#import "gears/base/safari/browser_utils.h"
 #import "gears/localserver/common/capture_task.h"
+#import "gears/localserver/common/http_constants.h"
 #import "gears/localserver/safari/file_submitter_sf.h"
 #import "gears/localserver/safari/resource_store_sf.h"
 
 @interface GearsResourceStore(PrivateMethods)
+// Many of these methods are exposed to the Gears API and are therefore named
+// to closely match that API rather than the Objective C style guidelines.
 - (NSNumber *)capture:(id)urlOrArray callback:(id)callback;
 - (void)abortCapture:(NSNumber *)captureID;
 - (void)remove:(NSString *)url;
@@ -42,6 +47,7 @@
 - (void)copySrc:(NSString *)src dest:(NSString *)dest;
 - (NSNumber *)isCaptured:(NSString *)url;
 - (void)captureFile:(id)element url:(NSString *)url;
+- (BOOL)captureFileAtPath:(NSString *)path url:(NSString *)url;
 - (NSString *)getCapturedFileName:(NSString *)url;
 - (NSString *)getHeaderURL:(NSString *)url name:(NSString *)name;
 - (NSString *)getAllHeaders:(NSString *)url;
@@ -136,6 +142,11 @@ void CaptureStoreListener::HandleEvent(int msg_code, int msg_param, AsyncTask *s
 //------------------------------------------------------------------------------
 - (BOOL)removeStore {
   return cpp_ ? cpp_->store_.Remove() : NO;
+}
+
+//------------------------------------------------------------------------------
+- (ResourceStore *)resourceStore {
+  return cpp_ ? &cpp_->store_ : NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -274,10 +285,15 @@ void CaptureStoreListener::HandleEvent(int msg_code, int msg_param, AsyncTask *s
   NSString *fullURL = [factory_ resolveURLString:url];
   std::string16 url16;
   
-  if ([fullURL string16:&url16])
+  if ([fullURL string16:&url16]) {
+    if (!base_->EnvPageSecurityOrigin().IsSameOriginAsUrl(url16.c_str()))
+      ThrowExceptionKeyAndReturn(@"invalidDomainAccess");
+
     cpp_->store_.Delete(url16.c_str());
-  else
+  }
+  else {
     ThrowExceptionKeyAndReturn(@"invalidParameter");
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -293,7 +309,13 @@ void CaptureStoreListener::HandleEvent(int msg_code, int msg_param, AsyncTask *s
     
   if (![fullDest string16:&dest16])
     ThrowExceptionKeyAndReturn(@"invalidParameter");
-    
+
+  if (!base_->EnvPageSecurityOrigin().IsSameOriginAsUrl(src16.c_str()))
+    ThrowExceptionKeyAndReturn(@"invalidDomainAccess");
+
+  if (!base_->EnvPageSecurityOrigin().IsSameOriginAsUrl(dest16.c_str()))
+    ThrowExceptionKeyAndReturn(@"invalidDomainAccess");
+
   if (!cpp_->store_.Rename(src16.c_str(), dest16.c_str()))
     ThrowExceptionKeyAndReturn(@"unableToRenameFmt", src, dest);
 }
@@ -312,6 +334,12 @@ void CaptureStoreListener::HandleEvent(int msg_code, int msg_param, AsyncTask *s
   if (![fullDest string16:&dest16])
     ThrowExceptionKeyAndReturn(@"invalidParameter");
 
+  if (!base_->EnvPageSecurityOrigin().IsSameOriginAsUrl(src16.c_str()))
+    ThrowExceptionKeyAndReturn(@"invalidDomainAccess");
+  
+  if (!base_->EnvPageSecurityOrigin().IsSameOriginAsUrl(dest16.c_str()))
+    ThrowExceptionKeyAndReturn(@"invalidDomainAccess");
+  
   if (!cpp_->store_.Copy(src16.c_str(), dest16.c_str()))
     ThrowExceptionKeyAndReturn(@"unableToCopyFmt", src, dest);
 }
@@ -324,13 +352,103 @@ void CaptureStoreListener::HandleEvent(int msg_code, int msg_param, AsyncTask *s
   if (![fullURL string16:&url16])
     ThrowExceptionKeyAndReturnNil(@"invalidParameter");
 
+  if (!base_->EnvPageSecurityOrigin().IsSameOriginAsUrl(url16.c_str()))
+    ThrowExceptionKeyAndReturnNil(@"invalidDomainAccess");
+  
   return [NSNumber numberWithBool:cpp_->store_.IsCaptured(url16.c_str())];
 }
 
 //------------------------------------------------------------------------------
 - (void)captureFile:(id)element url:(NSString *)url {
-  // TODO(waylonis)
-  [WebScriptObject throwException:@"Invalid file input parameter."];
+  NSString *fullURL = [factory_ resolveURLString:url];
+
+  if (![element isKindOfClass:[DOMHTMLInputElement class]])
+    ThrowExceptionKeyAndReturn(@"invalidParameter");
+
+  if (!fullURL)
+    ThrowExceptionKeyAndReturn(@"invalidParameter");
+
+  std::string16 url16;
+  if (![fullURL string16:&url16])
+    ThrowExceptionKeyAndReturn(@"invalidParameter");
+  
+  if (!base_->EnvPageSecurityOrigin().IsSameOriginAsUrl(url16.c_str()))
+    ThrowExceptionKeyAndReturn(@"invalidDomainAccess");
+  
+  NSString *path = [(DOMHTMLInputElement *)element value];
+  
+  if (!path)
+    ThrowExceptionKeyAndReturn(@"invalidParameter");
+  
+  if (![self captureFileAtPath:path url:fullURL])
+    ThrowExceptionKeyAndReturn(@"invalidParameter");
+}
+
+//------------------------------------------------------------------------------
+- (BOOL)captureFileAtPath:(NSString *)path url:(NSString *)url {
+  // Get the mimetype for the file
+  NSURL *fileURL = [NSURL URLWithString:[path stringByStandardizingPath]];
+  
+  FSRef fsRef;
+  CFURLGetFSRef((CFURLRef)fileURL, &fsRef);
+  CFStringRef lsType;
+  LSCopyItemAttribute(&fsRef, kLSRolesAll, kLSItemContentType, 
+                      (CFTypeRef *)&lsType);
+  scoped_CFString 
+    mime_type(UTTypeCopyPreferredTagWithClass(lsType, kUTTagClassMIMEType));
+  
+  if (lsType)
+    CFRelease(lsType);
+  
+  if (!mime_type.get())
+    mime_type.reset(CFSTR("application/octet-stream"));
+
+  // Prepare for storage
+  ResourceStore::Item item;
+  std::string16 full_url;
+  
+  if (![url string16:&full_url])
+    return NO;
+  
+  item.entry.url = full_url;
+  item.payload.status_code = HttpConstants::HTTP_OK;
+  item.payload.status_line = HttpConstants::kOKStatusLine;
+
+  // Load & copy the data
+  NSData *data = [NSData dataWithContentsOfFile:path];
+  unsigned int data_len = [data length];
+  
+  if (!data_len)
+    return NO;
+  
+  item.payload.data.reset(new std::vector<uint8>);
+  item.payload.data->resize(data_len);
+  
+  if (item.payload.data->size() != data_len)
+    return NO;
+  
+  memcpy(reinterpret_cast<char*>(&(item.payload.data->at(0))),
+         [data bytes], data_len);
+  
+  // Synthesize the http headers we'll store with this item
+  NSString *capturedNameHeader = 
+    [NSString stringWithString16:HttpConstants::kXCapturedFilenameHeader];
+  NSMutableString *headers = [NSMutableString string];
+  
+  [headers appendFormat:@"%s: %d%s", HTTPHeaders::CONTENT_LENGTH, data_len,
+    HttpConstants::kCrLfAscii];
+  [headers appendFormat:@"%s: %@%s", HTTPHeaders::CONTENT_TYPE, mime_type.get(),
+    HttpConstants::kCrLfAscii];
+  [headers appendFormat:@"%@: %@%s%s", capturedNameHeader, 
+    [path lastPathComponent], HttpConstants::kCrLfAscii,
+    HttpConstants::kCrLfAscii];
+  const char *headersUTF8 = [headers UTF8String];
+  unsigned int headersLen = strlen(headersUTF8);
+  
+  if (!UTF8ToString16(headersUTF8, headersLen, &item.payload.headers))
+    return NO;
+  
+  return cpp_->store_.PutItem(&item);
 }
 
 //------------------------------------------------------------------------------
@@ -340,7 +458,10 @@ void CaptureStoreListener::HandleEvent(int msg_code, int msg_param, AsyncTask *s
 
   if (![fullURL string16:&url16])
     ThrowExceptionKeyAndReturnNil(@"invalidParameter");
-    
+
+  if (!base_->EnvPageSecurityOrigin().IsSameOriginAsUrl(url16.c_str()))
+    ThrowExceptionKeyAndReturnNil(@"invalidDomainAccess");
+
   std::string16 result;
   
   if (!cpp_->store_.GetCapturedFileName(url16.c_str(), &result))
@@ -356,6 +477,9 @@ void CaptureStoreListener::HandleEvent(int msg_code, int msg_param, AsyncTask *s
   
   if (![fullURL string16:&url16])
     ThrowExceptionKeyAndReturnNil(@"invalidParameter");
+
+  if (!base_->EnvPageSecurityOrigin().IsSameOriginAsUrl(url16.c_str()))
+    ThrowExceptionKeyAndReturnNil(@"invalidDomainAccess");
 
   std::string16 name16;
   
@@ -378,6 +502,9 @@ void CaptureStoreListener::HandleEvent(int msg_code, int msg_param, AsyncTask *s
   if (![fullURL string16:&url16])
     ThrowExceptionKeyAndReturnNil(@"invalidParameter");
 
+  if (!base_->EnvPageSecurityOrigin().IsSameOriginAsUrl(url16.c_str()))
+    ThrowExceptionKeyAndReturnNil(@"invalidDomainAccess");
+
   std::string16 result;
   
   if (!cpp_->store_.GetAllHeaders(url16.c_str(), &result))
@@ -389,7 +516,7 @@ void CaptureStoreListener::HandleEvent(int msg_code, int msg_param, AsyncTask *s
 //------------------------------------------------------------------------------
 - (id)createFileSubmitter {
   GearsFileSubmitter *submitter = 
-    [[[GearsFileSubmitter alloc] initWithFactory:factory_] autorelease];
+    [[[GearsFileSubmitter alloc] initWithStore:self] autorelease];
 
   return submitter;
 }
@@ -496,9 +623,8 @@ void CaptureStoreListener::HandleEvent(int msg_code, int msg_param, AsyncTask *s
   if (![fullURLStr string16:&full_url])
     return NO;
   
-  if (!base_->EnvPageSecurityOrigin().IsSameOriginAsUrl(full_url.c_str())) {
+  if (!base_->EnvPageSecurityOrigin().IsSameOriginAsUrl(full_url.c_str()))
     ThrowExceptionKeyAndReturnNo(@"invalidDomainAccess");
-  }
   
   request->urls.push_back(std::string16());
   request->urls.back() = url;

@@ -29,12 +29,18 @@
 
 #import "gears/base/safari/base_class.h"
 
+@class GearsResourceStore;
+
 @interface GearsFileSubmitter : SafariGearsBaseClass {
+ @private
+  GearsResourceStore *gearsResourceStore_;  // The C++ Gears object (STRONG)
 }
 
 //------------------------------------------------------------------------------
-// GearsBase
+// SafariGearsBaseClass
 //------------------------------------------------------------------------------
 + (NSDictionary *)webScriptSelectorStrings;
+
+- (id)initWithStore:(GearsResourceStore *)store;
 
 @end

@@ -64,6 +64,7 @@ class GearsBaseClass;
 // 'factory' is the SafariGearsFactory that created this component instance.
 - (id)initWithFactory:(SafariGearsFactory *)factory;
 
+- (SafariGearsFactory *)factory;
 - (GearsBaseClass *)gearsBaseClass;
 
 //------------------------------------------------------------------------------

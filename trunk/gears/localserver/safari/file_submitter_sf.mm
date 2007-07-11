@@ -25,16 +25,29 @@
 
 #import <WebKit/WebKit.h>
 
+#import "gears/base/common/common_sf.h"
+#import "gears/base/common/file.h"
+#import "gears/base/safari/factory.h"
+#import "gears/base/safari/factory_utils.h"
+#import "gears/base/safari/string_utils.h"
 #import "gears/localserver/safari/file_submitter_sf.h"
+#import "gears/localserver/safari/resource_store_sf.h"
 
 @interface GearsFileSubmitter(PrivateMethods)
 - (void)setFileInput:(id)input url:(NSString *)urlStr;
 @end
 
+// Get the underlying implementation
+@interface DOMHTMLInputElement (GoogleGearsWebCoreInternal)
+- (void /*WebCore::HTMLInputElement*/ *)_HTMLInputElement;
+@end
+
+static const char16 *kMissingFilename = STRING16(L"Unknown");
+
 @implementation GearsFileSubmitter
 //------------------------------------------------------------------------------
 #pragma mark -
-#pragma mark || GearsBase ||
+#pragma mark || SafariGearsBaseClass ||
 //------------------------------------------------------------------------------
 + (NSDictionary *)webScriptSelectorStrings {
   return [NSDictionary dictionaryWithObjectsAndKeys:
@@ -43,15 +56,70 @@
 }
 
 //------------------------------------------------------------------------------
+- (id)initWithStore:(GearsResourceStore *)store {
+  if ((self = [super initWithFactory:[store factory]])) {
+    gearsResourceStore_ = [store retain];
+  }
+  
+  return self;
+}
+
+//------------------------------------------------------------------------------
 #pragma mark -
 #pragma mark || Private ||
 //------------------------------------------------------------------------------
-- (void)setFileInput:(id)input url:(NSString *)urlStr {
-  // TODO(waylonis): It seems like this is supposed to insert the data
-  // from a previously captured |urlStr| into |input|.  The problem is that
-  // WebKit will not allow you to set the file parameter of a html file input
-  // element.
-  [WebScriptObject throwException:@"setFileInputElement() not implemented"];
+- (void)setFileInput:(id)element url:(NSString *)url {
+  NSString *fullURL = [factory_ resolveURLString:url];
+  std::string16 url16;
+  
+  if (![fullURL string16:&url16])
+    ThrowExceptionKeyAndReturn(@"invalidParameter");
+  
+  if (!base_->EnvPageSecurityOrigin().IsSameOriginAsUrl(url16.c_str()))
+    ThrowExceptionKeyAndReturn(@"invalidDomainAccess");
+  
+  // Must be some kind of input element...
+  if (![element isKindOfClass:[DOMHTMLInputElement class]])
+    ThrowExceptionKeyAndReturn(@"invalidParameter");
+  
+  // Retrieve data from the store
+  ResourceStore *store = [gearsResourceStore_ resourceStore];
+  
+  if (!store)
+    return;
+  
+  // Read data from our local store
+  ResourceStore::Item item;
+  if (!store->GetItem(url16.c_str(), &item))
+    ThrowExceptionKeyAndReturn(@"failedToGetItem");
+  
+  std::string16 filename_str;
+  item.payload.GetHeader(HttpConstants::kXCapturedFilenameHeader,
+                         &filename_str);
+  if (filename_str.empty()) {
+    // This handles the case where the URL didn't get into the database
+    // using the captureFile API. It's arguable whether we should support this.
+    filename_str = kMissingFilename;
+  }
+  
+  // Create a temporary directory to hold the file
+  std::string16 temp_dir;
+  if (!File::CreateNewTempDirectory(&temp_dir))
+    ThrowExceptionKeyAndReturn(@"failedToCreateDir");
+  
+  // Create the file with the contents
+  NSString *tempDirStr = [NSString stringWithString16:temp_dir.c_str()];
+  NSString *fileName = [NSString stringWithString16:filename_str.c_str()];
+  NSString *path = [tempDirStr stringByAppendingPathComponent:fileName];
+  std::string16 full_path;
+
+  [path string16:&full_path];
+  
+  if (!File::WriteVectorToFile(full_path.c_str(), item.payload.data.get()))
+    ThrowExceptionKeyAndReturn(@"failedToCreateFile");
+
+  // TODO(waylonis): Figure out how to send file data in form
+  [WebScriptObject throwException:@"File Submitter not implemented"];
 }
 
 @end
