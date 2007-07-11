@@ -65,10 +65,12 @@ THIRD_PARTY_OBJS = \
 TEST_OBJS = \
 	$(patsubst %.cc,$(COMMON_OUTDIR)/%$(OBJ_SUFFIX),$(TEST_CPPSRCS))
 
-# IMPORTANT: If you change these files, you need to change the corresponding
+# IMPORTANT: If you change these lists, you need to change the corresponding
 # files in win32_msi.wxs.m4 as well.
 # TODO(aa): We should somehow generate win32_msi.wxs because it is lame to
 # repeat the file list.
+#
+# Begin: resource lists that MUST be kept in sync with "win32_msi.wxs.m4"
 COMMON_RESOURCES = \
 	ui/common/button_row_background.gif \
 	ui/common/html_dialog.css \
@@ -78,11 +80,13 @@ COMMON_RESOURCES = \
 	$(COMMON_OUTDIR)/genfiles/settings_dialog.html
 
 FF_RESOURCES = \
-	ui/common/icon_32x32.png \
-	$(FF_OUTDIR)/genfiles/browser-overlay.*
+	$(FF_OUTDIR)/genfiles/browser-overlay.js \
+	$(FF_OUTDIR)/genfiles/browser-overlay.xul \
+	ui/common/icon_32x32.png
 
 FF_LOCALE = \
 	$(FF_OUTDIR)/genfiles/i18n-en-US.dtd
+# End: resource lists that MUST be kept in sync with "win32_msi.wxs.m4"
 
 IE_RESOURCES = \
 	ui/common/icon_merged.ico

@@ -115,6 +115,8 @@ m4_ifdef(^DEBUG^,^m4_dnl
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.xpt" />
                 </Component>
               </Directory>
+
+              <!-- Begin: resource lists that MUST be kept in sync with "rules.mk" -->
               <Directory Id='OurFFChromeDir' Name='chrome'>
                 <Directory Id='OurFFChromeFilesDir' Name='chromeFiles'>
                   <Directory Id='OurFFContentDir' Name='content'>
@@ -122,10 +124,6 @@ m4_ifdef(^DEBUG^,^m4_dnl
                       Guid='$(var.OurComponentGUID_FFContentDirFiles)'>
                       <File Id='ff_button_row_background.gif' Name='button_row_background.gif'
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/button_row_background.gif" />
-                      <File Id='ff_browser_overlay.js' Name='browser-overlay.js'
-                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/browser-overlay.js" />
-                      <File Id='ff_browser_overlay.xul' Name='browser-overlay.xul'
-                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/browser-overlay.xul" />
                       <File Id='ff_html_dialog.css' Name='html_dialog.css'
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/html_dialog.css" />
                       <File Id='ff_html_dialog.js' Name='html_dialog.js'
@@ -136,6 +134,12 @@ m4_ifdef(^DEBUG^,^m4_dnl
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/permissions_dialog.html" />
                       <File Id='ff_settings_dialog.html' Name='settings_dialog.html'
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/settings_dialog.html" />
+                      <File Id='ff_browser_overlay.js' Name='browser-overlay.js'
+                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/browser-overlay.js" />
+                      <File Id='ff_browser_overlay.xul' Name='browser-overlay.xul'
+                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/browser-overlay.xul" />
+                      <File Id='ff_icon_32x32.png' Name='icon_32x32.png'
+                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/icon_32x32.png" />
                     </Component>
                   </Directory>
                   <Directory Id='OurFFLocaleDir' Name='locale'>
@@ -149,6 +153,8 @@ m4_ifdef(^DEBUG^,^m4_dnl
                   </Directory>
                 </Directory>
               </Directory>
+              <!-- End: resource lists that MUST be kept in sync with "rules.mk" -->
+
               <Directory Id='OurFFLibDir' Name='lib'>
                 <Component Id='OurFFLibDirFiles'
                   Guid='$(var.OurComponentGUID_FFLibDirFiles)'>
