@@ -310,10 +310,10 @@ $(FF_INSTALLER_XPI): $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB) $(COMMON_RESOURCES) $
 ifneq ($(OS),osx)
 	cp $(FF_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 	cp $(FF_MODULE_TYPELIB) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
+ifeq ($(MODE),dbg)
 ifeq ($(OS),win32)
-        # TODO(cprince): remove the PDB before launch, or make it debug-only
 	cp $(FF_OUTDIR)/$(MODULE).pdb $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
-	chmod -R 777 $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/*
+endif
 endif
 else
     # For OSX, create a universal binary by combining the ppc and i386 versions
@@ -323,6 +323,8 @@ else
     # And copy any xpt file to the output dir. (The i386 and ppc xpt files are identical.)
 	cp $(OUTDIR)/i386/ff/$(notdir $(FF_MODULE_TYPELIB)) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 endif
+    # Mark files writeable to allow .xpi rebuilds
+	chmod -R 777 $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/*
 	(cd $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME) && zip -r ../$(INSTALLER_BASE_NAME).xpi .)
 
 $(WIN32_INSTALLER_MSI): $(FF_INSTALLER_XPI) $(IE_MODULE_DLL) $(WIXOBJ)
