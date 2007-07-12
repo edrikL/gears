@@ -68,6 +68,7 @@ class ATL_NO_VTABLE JsRunnerImpl
   // JsRunnerInterface implementation
   bool AddGlobal(const char16 *name, IGeneric *object);
   bool Start(const char16 *full_script);
+  bool Stop();
   const char16 * GetLastScriptError();
 
   // IActiveScriptSiteImpl overrides
@@ -120,6 +121,8 @@ JsRunnerImpl::~JsRunnerImpl() {
 bool JsRunnerImpl::AddGlobal(const char16 *name, IGeneric *object) {
   if (!object) { return false; }
 
+  // We AddRef() once here to make sure that the object lives the lifetime of
+  // JSRunner. This gets removed in ~JsRunnerImpl.
   object->AddRef();
   global_name_to_object_[name] = object;
   return true;
@@ -200,7 +203,7 @@ bool JsRunnerImpl::Start(const char16 *full_script) {
 
   // TODO(cprince): do we need STARTED *and* CONNECTED? (Does it matter?)
   // CONNECTED "runs the script and blocks until the script is finished"
-  hr = javascript_engine_->SetScriptState(SCRIPTSTATE_STARTED);
+  hr = javascript_engine_->SetScriptState(SCRIPTSTATE_STARTED);	
   if (FAILED(hr)) { return false; }
   hr = javascript_engine_->SetScriptState(SCRIPTSTATE_CONNECTED);
   if (FAILED(hr)) { return false; }
@@ -213,17 +216,24 @@ bool JsRunnerImpl::Start(const char16 *full_script) {
 }
 
 
-const char16 * JsRunnerImpl::GetLastScriptError() {
-  return last_script_error_.c_str();
+bool JsRunnerImpl::Stop() {
+  return SUCCEEDED(javascript_engine_->Close());
 }
 
 
+const char16 * JsRunnerImpl::GetLastScriptError() {
+  return last_script_error_.c_str();
+}
 
 STDMETHODIMP JsRunnerImpl::LookupNamedItem(const OLECHAR *name,
                                            IUnknown **item) {
   IGeneric *found_item = global_name_to_object_[name];
   if (!found_item) { return TYPE_E_ELEMENTNOTFOUND; }
 
+  // IActiveScript expects items coming into it to already be AddRef()'d. It
+  // will Release() these references on IActiveScript.Close().
+  // For an example of this, see: http://support.microsoft.com/kb/q221992/.
+  found_item->AddRef();
   *item = found_item;
   return S_OK;
 }
@@ -295,15 +305,24 @@ class JsRunner : public JsRunnerInterface {
     }
   }
   ~JsRunner() {
-    if (com_obj_) { com_obj_->Release(); }
+    if (com_obj_) { 
+      com_obj_->Stop();
+      com_obj_->Release();
+    }
   }
 
   bool JsRunner::AddGlobal(const char16 *name, IGeneric *object) {
     return com_obj_->AddGlobal(name, object);
   }
+
   bool JsRunner::Start(const char16 *full_script) {
     return com_obj_->Start(full_script);
   }
+
+  bool JsRunner::Stop() {
+    return com_obj_->Stop();
+  }
+
   const char16 * JsRunner::GetLastScriptError() {
     return com_obj_->GetLastScriptError();
   }

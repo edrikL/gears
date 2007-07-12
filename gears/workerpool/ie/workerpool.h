@@ -67,7 +67,7 @@ class ATL_NO_VTABLE GearsWorkerPool
   DECLARE_PROTECT_FINAL_CONSTRUCT()
   // End boilerplate code. Begin interface.
 
-  // need a default constructor to CreateInstance objects in IE
+  // Need a default constructor to CreateInstance objects in IE.
   GearsWorkerPool();
   ~GearsWorkerPool();
 
@@ -90,11 +90,16 @@ class ATL_NO_VTABLE GearsWorkerPool
 #endif
 
  private:
-  friend class PoolThreadsManager;
-  void UseExternalThreadsManager(PoolThreadsManager *manager);
+  friend class PoolThreadsManager; // for SetThreadsManager
+
+  void Initialize(); // okay to call this multiple times
+  void SetThreadsManager(PoolThreadsManager *manager);
+
+  static void HandleEventUnload(void *user_param);  // callback for 'onunload'
 
   PoolThreadsManager *threads_manager_;
   bool owns_threads_manager_;
+  scoped_ptr<HtmlEventMonitor> unload_monitor_;  // for 'onunload' notifications
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsWorkerPool);
 };
@@ -102,29 +107,35 @@ class ATL_NO_VTABLE GearsWorkerPool
 
 class PoolThreadsManager {
  public:
-  PoolThreadsManager(IUnknown *page_site,
-                     const SecurityOrigin &page_security_origin);
-  ~PoolThreadsManager();
+  PoolThreadsManager(const SecurityOrigin &page_security_origin);
+
+  // We handle the lifetime of the PoolThreadsMananger using ref-counting. Each
+  // of the GearsWorkerPool instances associated with a PoolThreadsManager has a
+  // reference. When they all go away, the PoolThreadsManager deletes itself.
+  void AddWorkerRef();
+  void ReleaseWorkerRef();
 
   bool SetCurrentThreadMessageHandler(IDispatch *handler);
   bool CreateThread(const BSTR *full_script,
                     int *worker_id,
                     std::string16 *script_error);
+  JavaScriptWorkerInfo *GetCurrentThreadWorkerInfo();
   bool PutPoolMessage(const BSTR *message_string, int dest_worker_id);
+  void ShutDown();
 
   const SecurityOrigin& page_security_origin() { return page_security_origin_; }
 
  private:
+  ~PoolThreadsManager();
+
   int GetCurrentPoolWorkerId();
   bool GetPoolMessage(std::string16 *message_string, int *src_worker_id);
   static unsigned __stdcall JavaScriptThreadEntry(void *args);
   static LRESULT CALLBACK ThreadWndProc(HWND hwnd, UINT message,
                                         WPARAM wparam, LPARAM lparam);
 
-  static void HandleEventUnload(void *user_param);  // callback for 'onunload'
-  void StopAllCreatedThreads();
-  bool is_pool_stopping_;  // indicates all threads and messages should stop
-  scoped_ptr<HtmlEventMonitor> unload_monitor_;  // for 'onunload' notifications
+  int num_workers_; // used by Add/ReleaseWorkerRef()
+  bool is_shutting_down_;
 
   std::vector<DWORD> worker_id_to_os_thread_id_;
   // this _must_ be a vector of pointers, since each worker references its
@@ -133,7 +144,6 @@ class PoolThreadsManager {
 
   Mutex mutex_;  // for exclusive access to all class methods and data
 
-  CComPtr<IUnknown> page_site_;  // NULL for pools not created from main thread
   SecurityOrigin page_security_origin_;
 
   DISALLOW_EVIL_CONSTRUCTORS(PoolThreadsManager);
