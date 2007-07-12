@@ -53,6 +53,7 @@ class JsRunnerInterface {
   // increments refcount
   virtual bool AddGlobal(const char16 *name, IGeneric *object) = 0;
   virtual bool Start(const char16 *full_script) = 0;
+  virtual bool Stop() = 0;
   virtual const char16 * GetLastScriptError() = 0;
 };
 
