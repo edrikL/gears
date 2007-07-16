@@ -1,6 +1,6 @@
 #summary API for affecting Gears resources across origins.
 #labels DesignDoc-Accepted
-
+*OWNER:* Chris Prince
 
 =PROBLEM=
  
@@ -104,7 +104,6 @@ proposals are a way to improve on !SendMessage, which is still a possibility.
   * A better design for the onmessage() callback is to have a single parameter: a 'message' object with multiple fields.  This is how the WHATWG postMessage() proposal works.  The advantage is that we can add future fields without adding a long sequence of optional API parameters.
 
   If we choose to bite this bullet now, we would change the 'srcOrigin' string to a 'message' object that has the fields 'body', 'sourceId', and 'sourceOrigin'.
-
 
 
 
