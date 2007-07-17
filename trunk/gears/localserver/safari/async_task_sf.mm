@@ -237,30 +237,30 @@ bool AsyncTask::HttpGet(const char16 *full_url,
   if (!http_request)
     return false;
 
-  if (!http_request->open(HttpConstants::kHttpGET, full_url, true)) {
+  if (!http_request->Open(HttpConstants::kHttpGET, full_url, true)) {
     return false;
   }
 
   if (is_capturing) {
-    http_request->setFollowRedirects(false);
-    if (!http_request->setRequestHeader(HttpConstants::kXGoogleGearsHeader,
+    http_request->SetFollowRedirects(false);
+    if (!http_request->SetRequestHeader(HttpConstants::kXGoogleGearsHeader,
                                         STRING16(L"1"))) {
       return false;
     }
   }
 
-  if (!http_request->setRequestHeader(HttpConstants::kCacheControlHeader,
+  if (!http_request->SetRequestHeader(HttpConstants::kCacheControlHeader,
                                       HttpConstants::kNoCache)) {
     return false;
   }
 
-  if (!http_request->setRequestHeader(HttpConstants::kPragmaHeader,
+  if (!http_request->SetRequestHeader(HttpConstants::kPragmaHeader,
                                       HttpConstants::kNoCache)) {
     return false;
   }
 
   if (if_mod_since_date && if_mod_since_date[0]) {
-    if (!http_request->setRequestHeader(HttpConstants::kIfModifiedSinceHeader,
+    if (!http_request->SetRequestHeader(HttpConstants::kIfModifiedSinceHeader,
                                         if_mod_since_date)) {
       return false;
     }
@@ -268,19 +268,19 @@ bool AsyncTask::HttpGet(const char16 *full_url,
 
   payload->data.reset();
 
-  if (!http_request->send())
+  if (!http_request->Send())
     return false;
 
   // Wait for the data to come back from the HTTP request
   while (1) {
     long ready_state;
-    http_request->getReadyState(&ready_state);
+    http_request->GetReadyState(&ready_state);
 
     if (ready_state == 4) // Completed
       break;
 
     if (is_aborted_) {
-      http_request->abort();
+      http_request->Abort();
       break;
     }
 
@@ -290,22 +290,22 @@ bool AsyncTask::HttpGet(const char16 *full_url,
 
   // Extract the status & data
   long status;
-  if (http_request->getStatus(&status)) {
+  if (http_request->GetStatus(&status)) {
     payload->status_code = status;
-    if (http_request->getStatusLine(&payload->status_line)) {
-      if (http_request->getAllResponseHeaders(&payload->headers)) {
-        payload->data.reset(http_request->getResponseBody());
+    if (http_request->GetStatusLine(&payload->status_line)) {
+      if (http_request->GetAllResponseHeaders(&payload->headers)) {
+        payload->data.reset(http_request->GetResponseBody());
       }
     }
   }
 
   // If we were redirected during the load, setup the return variables
-  if (http_request->wasRedirected()) {
+  if (http_request->WasRedirected()) {
     if (was_redirected)
       *was_redirected = true;
 
     if (full_redirect_url)
-      http_request->getRedirectUrl(full_redirect_url);
+      http_request->GetRedirectUrl(full_redirect_url);
   }
 
   return !is_aborted_ && payload->data.get();

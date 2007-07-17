@@ -76,28 +76,28 @@ int IEHttpRequest::ReleaseReference() {
 }
 
 //------------------------------------------------------------------------------
-// getReadyState
+// GetReadyState
 //------------------------------------------------------------------------------
-bool IEHttpRequest::getReadyState(long *state) {
+bool IEHttpRequest::GetReadyState(long *state) {
   *state = ready_state_;
   return true;
 }
 
 //------------------------------------------------------------------------------
-// getResponseBody
+// GetResponseBody
 //------------------------------------------------------------------------------
-std::vector<unsigned char> *IEHttpRequest::getResponseBody() {
+std::vector<unsigned char> *IEHttpRequest::GetResponseBody() {
   if (!is_complete_ || was_aborted_)
     return NULL;
   return response_payload_.data.release();
 }
 
 //------------------------------------------------------------------------------
-// getResponseBody
+// GetResponseBody
 // TODO(michaeln): remove one or the other of these getResponseBody methods from
 // the interface.
 //------------------------------------------------------------------------------
-bool IEHttpRequest::getResponseBody(std::vector<unsigned char> *body) {
+bool IEHttpRequest::GetResponseBody(std::vector<unsigned char> *body) {
   if (!is_complete_ || was_aborted_)
     return false;
   if (response_payload_.data.get()) {
@@ -105,13 +105,13 @@ bool IEHttpRequest::getResponseBody(std::vector<unsigned char> *body) {
   } else {
     body->clear();
   }
-  return false;
+  return true;
 }
 
 //------------------------------------------------------------------------------
-// getStatus
+// GetStatus
 //------------------------------------------------------------------------------
-bool IEHttpRequest::getStatus(long *status) {
+bool IEHttpRequest::GetStatus(long *status) {
   if (!is_complete_ || was_aborted_)
     return false;
   *status = response_payload_.status_code;
@@ -119,10 +119,10 @@ bool IEHttpRequest::getStatus(long *status) {
 }
 
 //------------------------------------------------------------------------------
-// getStatusText
+// GetStatusText
 // TODO(michaeln): remove this method from the interface, prefer getStatusLine
 //------------------------------------------------------------------------------
-bool IEHttpRequest::getStatusText(std::string16 *status_text) {
+bool IEHttpRequest::GetStatusText(std::string16 *status_text) {
   if (!is_complete_ || was_aborted_)
     return false;
   *status_text = response_payload_.status_line;
@@ -130,9 +130,9 @@ bool IEHttpRequest::getStatusText(std::string16 *status_text) {
 }
 
 //------------------------------------------------------------------------------
-// getStatusLine
+// GetStatusLine
 //------------------------------------------------------------------------------
-bool IEHttpRequest::getStatusLine(std::string16 *status_line) {
+bool IEHttpRequest::GetStatusLine(std::string16 *status_line) {
   if (!is_complete_ || was_aborted_)
     return false;
   *status_line = response_payload_.status_line;
@@ -140,9 +140,9 @@ bool IEHttpRequest::getStatusLine(std::string16 *status_line) {
 }
 
 //------------------------------------------------------------------------------
-// getAllResponseHeaders
+// GetAllResponseHeaders
 //------------------------------------------------------------------------------
-bool IEHttpRequest::getAllResponseHeaders(std::string16 *headers) {
+bool IEHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
   if (!is_complete_ || was_aborted_)
     return false;
   headers->assign(response_payload_.headers);
@@ -150,9 +150,9 @@ bool IEHttpRequest::getAllResponseHeaders(std::string16 *headers) {
 }
 
 //------------------------------------------------------------------------------
-// getResponseHeader
+// GetResponseHeader
 //------------------------------------------------------------------------------
-bool IEHttpRequest::getResponseHeader(const char16* name,
+bool IEHttpRequest::GetResponseHeader(const char16* name,
                                       std::string16 *value) {
   if (!is_complete_ || was_aborted_)
     return false;
@@ -160,12 +160,12 @@ bool IEHttpRequest::getResponseHeader(const char16* name,
 }
 
 //------------------------------------------------------------------------------
-// open
+// Open
 // This class only knows how to make async GET requests at this time, although
 // the interface promises to do more (sync POSTS etc). We assert that we're
 // being asked to do an async GET, which is all we need to do for now.
 //------------------------------------------------------------------------------
-bool IEHttpRequest::open(const char16 *method, const char16* url, bool async) {
+bool IEHttpRequest::Open(const char16 *method, const char16* url, bool async) {
   if (was_sent_)
     return false;
   assert(async);
@@ -176,11 +176,11 @@ bool IEHttpRequest::open(const char16 *method, const char16* url, bool async) {
 }
 
 //------------------------------------------------------------------------------
-// setRequestHeader
+// SetRequestHeader
 // Here we gather additional request headers to be sent. They are plumbed
 // into URLMON in our IHttpNegotiate::BeginningTransaction method.
 //------------------------------------------------------------------------------
-bool IEHttpRequest::setRequestHeader(const char16* name, const char16* value) {
+bool IEHttpRequest::SetRequestHeader(const char16* name, const char16* value) {
   if (was_sent_)
     return false;
   additional_headers_ += name;
@@ -190,28 +190,28 @@ bool IEHttpRequest::setRequestHeader(const char16* name, const char16* value) {
   return true;
 }
 
-bool IEHttpRequest::setFollowRedirects(bool follow) {
+bool IEHttpRequest::SetFollowRedirects(bool follow) {
   if (was_sent_)
     return false;
   follow_redirects_ = follow;
   return true;
 }
 
-bool IEHttpRequest::wasRedirected() {
+bool IEHttpRequest::WasRedirected() {
   return follow_redirects_ && is_complete_ && was_redirected_ && !was_aborted_;
 }
 
-bool IEHttpRequest::getRedirectUrl(std::string16 *full_redirect_url) {
-  if (!wasRedirected())
+bool IEHttpRequest::GetRedirectUrl(std::string16 *full_redirect_url) {
+  if (!WasRedirected())
     return false;
   *full_redirect_url = redirect_url_;
   return true;
 }
 
 //------------------------------------------------------------------------------
-// send
+// Send
 //------------------------------------------------------------------------------
-bool IEHttpRequest::send() {
+bool IEHttpRequest::Send() {
   if (was_sent_ || url_.empty())
     return false;
   HRESULT hr = CreateURLMonikerEx(NULL, url_.c_str(), &url_moniker_,
@@ -245,9 +245,9 @@ bool IEHttpRequest::send() {
 }
 
 //------------------------------------------------------------------------------
-// abort
+// Abort
 //------------------------------------------------------------------------------
-bool IEHttpRequest::abort() {
+bool IEHttpRequest::Abort() {
   if (!binding_)
     return true;
   HRESULT hr = binding_->Abort();
@@ -256,9 +256,9 @@ bool IEHttpRequest::abort() {
 }
 
 //------------------------------------------------------------------------------
-// setOnReadyStateChange
+// SetOnReadyStateChange
 //------------------------------------------------------------------------------
-bool IEHttpRequest::setOnReadyStateChange(ReadyStateListener *listener) {
+bool IEHttpRequest::SetOnReadyStateChange(ReadyStateListener *listener) {
   listener_ = listener;
   return true;
 }

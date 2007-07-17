@@ -164,8 +164,8 @@ void AsyncTask::Abort() {
       LOG(("AsyncTask::Abort\n"));
       is_aborted_ = true;
       if (http_request_.get()) {
-        http_request_.get()->setOnReadyStateChange(NULL);
-        http_request_.get()->abort();
+        http_request_.get()->SetOnReadyStateChange(NULL);
+        http_request_.get()->Abort();
         http_request_.reset(NULL);
       }
       PR_Notify(lock_);
@@ -337,40 +337,40 @@ bool AsyncTask::OnStartHttpGet() {
     return false;
   }
 
-  if (!http_request->open(HttpConstants::kHttpGET, params_->full_url, true)) {
+  if (!http_request->Open(HttpConstants::kHttpGET, params_->full_url, true)) {
     return false;
   }
 
   if (params_->is_capturing) {
-    http_request->setFollowRedirects(false);
-    if (!http_request->setRequestHeader(HttpConstants::kXGoogleGearsHeader,
+    http_request->SetFollowRedirects(false);
+    if (!http_request->SetRequestHeader(HttpConstants::kXGoogleGearsHeader,
                                         STRING16(L"1"))) {
       return false;
     }
   }
 
-  if (!http_request->setRequestHeader(HttpConstants::kCacheControlHeader,
+  if (!http_request->SetRequestHeader(HttpConstants::kCacheControlHeader,
                                       HttpConstants::kNoCache)) {
     return false;
   }
 
-  if (!http_request->setRequestHeader(HttpConstants::kPragmaHeader,
+  if (!http_request->SetRequestHeader(HttpConstants::kPragmaHeader,
                                       HttpConstants::kNoCache)) {
     return false;
   }
 
   if (params_->if_mod_since_date && params_->if_mod_since_date[0]) {
-    if (!http_request->setRequestHeader(HttpConstants::kIfModifiedSinceHeader,
+    if (!http_request->SetRequestHeader(HttpConstants::kIfModifiedSinceHeader,
                                         params_->if_mod_since_date)) {
       return false;
     }
   }
 
-  http_request->setOnReadyStateChange(this);
+  http_request->SetOnReadyStateChange(this);
 
   http_request_.reset(scoped_http_request.release());
-  if (!http_request->send()) {
-    http_request->setOnReadyStateChange(NULL);
+  if (!http_request->Send()) {
+    http_request->SetOnReadyStateChange(NULL);
     http_request_.reset(NULL);
     return false;
   }
@@ -385,26 +385,26 @@ void AsyncTask::ReadyStateChanged(HttpRequest *http_request) {
   assert(params_);
   assert(http_request_.get() == http_request);
   long state;
-  if (http_request->getReadyState(&state)) {
+  if (http_request->GetReadyState(&state)) {
     if (state == 4) {
       if (!is_aborted_) {
         long status;
-        if (http_request->getStatus(&status)) {
+        if (http_request->GetStatus(&status)) {
           params_->payload->status_code = status;
-          if (http_request->getStatusLine(&params_->payload->status_line)) {
-            if (http_request->getAllResponseHeaders(&params_->payload->headers)) {
-              params_->payload->data.reset(http_request->getResponseBody());
+          if (http_request->GetStatusLine(&params_->payload->status_line)) {
+            if (http_request->GetAllResponseHeaders(&params_->payload->headers)) {
+              params_->payload->data.reset(http_request->GetResponseBody());
             }
           }
         }
       }
-      http_request->setOnReadyStateChange(NULL);
-      if (http_request->wasRedirected()) {
+      http_request->SetOnReadyStateChange(NULL);
+      if (http_request->WasRedirected()) {
         if (params_->was_redirected) {
           *(params_->was_redirected) = true;
         }
         if (params_->full_redirect_url) {
-          http_request->getRedirectUrl(params_->full_redirect_url);
+          http_request->GetRedirectUrl(params_->full_redirect_url);
         }
       }
       http_request_.reset(NULL);
@@ -412,8 +412,8 @@ void AsyncTask::ReadyStateChanged(HttpRequest *http_request) {
       PR_Notify(lock_);
     }
   } else {
-    http_request->setOnReadyStateChange(NULL);
-    http_request->abort();
+    http_request->SetOnReadyStateChange(NULL);
+    http_request->Abort();
     http_request_.reset(NULL);
     CritSecLock locker(lock_);
     PR_Notify(lock_);

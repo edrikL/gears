@@ -64,19 +64,19 @@ int SFHttpRequest::ReleaseReference() {
 }
 
 //------------------------------------------------------------------------------
-// getReadyState
+// GetReadyState
 //------------------------------------------------------------------------------
-bool SFHttpRequest::getReadyState(long *state) {
+bool SFHttpRequest::GetReadyState(long *state) {
   *state = ready_state_;
   return true;
 }
 
 //------------------------------------------------------------------------------
-// getResponseBody
+// GetResponseBody
 //------------------------------------------------------------------------------
-std::vector<unsigned char> *SFHttpRequest::getResponseBody() {
+std::vector<unsigned char> *SFHttpRequest::GetResponseBody() {
   scoped_ptr< std::vector<unsigned char> > body(new std::vector<unsigned char>);
-  if (!getResponseBody(body.get())) {
+  if (!GetResponseBody(body.get())) {
     return NULL;
   } else {
     return body.release();
@@ -84,9 +84,9 @@ std::vector<unsigned char> *SFHttpRequest::getResponseBody() {
 }
 
 //------------------------------------------------------------------------------
-// getResponseBody
+// GetResponseBody
 //------------------------------------------------------------------------------
-bool SFHttpRequest::getResponseBody(std::vector<unsigned char> *body) {
+bool SFHttpRequest::GetResponseBody(std::vector<unsigned char> *body) {
   assert(body);
   unsigned long body_len = CFDataGetLength(body_.get());
 
@@ -102,9 +102,9 @@ bool SFHttpRequest::getResponseBody(std::vector<unsigned char> *body) {
 }
 
 //------------------------------------------------------------------------------
-// getStatus
+// GetStatus
 //------------------------------------------------------------------------------
-bool SFHttpRequest::getStatus(long *status) {
+bool SFHttpRequest::GetStatus(long *status) {
   if (!response_.get())
     return false;
 
@@ -113,9 +113,9 @@ bool SFHttpRequest::getStatus(long *status) {
 }
 
 //------------------------------------------------------------------------------
-// getStatusText
+// GetStatusText
 //------------------------------------------------------------------------------
-bool SFHttpRequest::getStatusText(std::string16 *status_text) {
+bool SFHttpRequest::GetStatusText(std::string16 *status_text) {
   // If we've got a response, copy everything to the right of the HTTP
   // response code in the response status
   if (response_.get()) {
@@ -139,9 +139,9 @@ bool SFHttpRequest::getStatusText(std::string16 *status_text) {
 }
 
 //------------------------------------------------------------------------------
-// getStatusLine
+// GetStatusLine
 //------------------------------------------------------------------------------
-bool SFHttpRequest::getStatusLine(std::string16 *status_line) {
+bool SFHttpRequest::GetStatusLine(std::string16 *status_line) {
   if (response_.get()) {
     scoped_CFString 
       response_status(CFHTTPMessageCopyResponseStatusLine(response_.get()));
@@ -152,9 +152,9 @@ bool SFHttpRequest::getStatusLine(std::string16 *status_line) {
 }
 
 //------------------------------------------------------------------------------
-// open
+// Open
 //------------------------------------------------------------------------------
-bool SFHttpRequest::open(const char16 *method, const char16* url, bool async) {
+bool SFHttpRequest::Open(const char16 *method, const char16* url, bool async) {
   Reset();
   
   scoped_CFString method_str(CFStringCreateWithString16(method));  
@@ -168,9 +168,9 @@ bool SFHttpRequest::open(const char16 *method, const char16* url, bool async) {
 }
 
 //------------------------------------------------------------------------------
-// setRequestHeader
+// SetRequestHeader
 //------------------------------------------------------------------------------
-bool SFHttpRequest::setRequestHeader(const char16* name, const char16* value) {
+bool SFHttpRequest::SetRequestHeader(const char16* name, const char16* value) {
   if (!request_.get())
     return false;
 
@@ -182,14 +182,14 @@ bool SFHttpRequest::setRequestHeader(const char16* name, const char16* value) {
 }
 
 //------------------------------------------------------------------------------
-// setFollowRedirects
+// SetFollowRedirects
 //------------------------------------------------------------------------------
-bool SFHttpRequest::setFollowRedirects(bool follow) {
+bool SFHttpRequest::SetFollowRedirects(bool follow) {
   follow_redirect_ = follow;
   return true;
 }
 
-bool SFHttpRequest::wasRedirected() {
+bool SFHttpRequest::WasRedirected() {
   if (!response_.get())
     return false;
   
@@ -206,11 +206,11 @@ bool SFHttpRequest::wasRedirected() {
   return result;
 }
 
-bool SFHttpRequest::getRedirectUrl(std::string16 *full_redirect_url) {
+bool SFHttpRequest::GetRedirectUrl(std::string16 *full_redirect_url) {
   if (!response_.get() || !follow_redirect_)
     return false;
   
-  if (!wasRedirected())
+  if (!WasRedirected())
     return false;
   
   scoped_CFURL final_url(CFHTTPMessageCopyRequestURL(response_.get()));
@@ -220,9 +220,9 @@ bool SFHttpRequest::getRedirectUrl(std::string16 *full_redirect_url) {
 
 
 //------------------------------------------------------------------------------
-// send
+// Send
 //------------------------------------------------------------------------------
-bool SFHttpRequest::send() {
+bool SFHttpRequest::Send() {
   if (!request_.get())
     return false;
 
@@ -258,9 +258,9 @@ bool SFHttpRequest::send() {
 }
 
 //------------------------------------------------------------------------------
-// getAllResponseHeaders
+// GetAllResponseHeaders
 //------------------------------------------------------------------------------
-bool SFHttpRequest::getAllResponseHeaders(std::string16 *headers) {
+bool SFHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
   if (!response_.get())
     return false;
   
@@ -281,9 +281,9 @@ bool SFHttpRequest::getAllResponseHeaders(std::string16 *headers) {
 }
 
 //------------------------------------------------------------------------------
-// getResponseHeader
+// GetResponseHeader
 //------------------------------------------------------------------------------
-bool SFHttpRequest::getResponseHeader(const char16* name, 
+bool SFHttpRequest::GetResponseHeader(const char16* name, 
                                       std::string16 *header) {
   if (!response_.get())
     return false;
@@ -306,9 +306,9 @@ bool SFHttpRequest::getResponseHeader(const char16* name,
 }
 
 //------------------------------------------------------------------------------
-// abort
+// Abort
 //------------------------------------------------------------------------------
-bool SFHttpRequest::abort() {
+bool SFHttpRequest::Abort() {
   if (read_stream_.get()) {
     SetReadyState(4); // Complete
     TerminateStreamReader();
@@ -319,9 +319,9 @@ bool SFHttpRequest::abort() {
 }
 
 //------------------------------------------------------------------------------
-// setOnReadyStateChange
+// SetOnReadyStateChange
 //------------------------------------------------------------------------------
-bool SFHttpRequest::setOnReadyStateChange(ReadyStateListener *listener) {
+bool SFHttpRequest::SetOnReadyStateChange(ReadyStateListener *listener) {
   listener_ = listener;
   return true;
 }

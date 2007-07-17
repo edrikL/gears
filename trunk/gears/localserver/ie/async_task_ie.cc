@@ -233,41 +233,41 @@ bool AsyncTask::HttpGet(const char16 *full_url,
     return false;
   }
 
-  if (!http_request->open(HttpConstants::kHttpGET, full_url, true)) {
+  if (!http_request->Open(HttpConstants::kHttpGET, full_url, true)) {
     return false;
   }
 
   if (is_capturing) {
-    http_request->setFollowRedirects(false);
-    if (!http_request->setRequestHeader(HttpConstants::kXGoogleGearsHeader,
+    http_request->SetFollowRedirects(false);
+    if (!http_request->SetRequestHeader(HttpConstants::kXGoogleGearsHeader,
                                         STRING16(L"1"))) {
       return false;
     }
   }
 
-  if (!http_request->setRequestHeader(HttpConstants::kCacheControlHeader,
+  if (!http_request->SetRequestHeader(HttpConstants::kCacheControlHeader,
                                       HttpConstants::kNoCache)) {
     return false;
   }
 
-  if (!http_request->setRequestHeader(HttpConstants::kPragmaHeader,
+  if (!http_request->SetRequestHeader(HttpConstants::kPragmaHeader,
                                       HttpConstants::kNoCache)) {
     return false;
   }
 
   if (if_mod_since_date && if_mod_since_date[0]) {
-    if (!http_request->setRequestHeader(HttpConstants::kIfModifiedSinceHeader,
+    if (!http_request->SetRequestHeader(HttpConstants::kIfModifiedSinceHeader,
                                         if_mod_since_date)) {
       return false;
     }
   }
 
   payload->data.reset();
-  http_request->setOnReadyStateChange(this);
+  http_request->SetOnReadyStateChange(this);
   ready_state_changed_event_.Reset();
 
-  if (!http_request->send()) {
-    http_request->setOnReadyStateChange(NULL);
+  if (!http_request->Send()) {
+    http_request->SetOnReadyStateChange(NULL);
     return false;
   }
 
@@ -287,16 +287,16 @@ bool AsyncTask::HttpGet(const char16 *full_url,
       long state;
       // TODO(michaeln): perhaps simplify the HttpRequest interface to
       // include a getResponse(&payload) method?
-      if (http_request->getReadyState(&state)) {
+      if (http_request->GetReadyState(&state)) {
         if (state == 4) {
           done = true;
           if (!is_aborted_) {
             long status;
-            if (http_request->getStatus(&status)) {
+            if (http_request->GetStatus(&status)) {
               payload->status_code = status;
-              if (http_request->getStatusLine(&payload->status_line)) {
-                if (http_request->getAllResponseHeaders(&payload->headers)) {
-                  payload->data.reset(http_request->getResponseBody());
+              if (http_request->GetStatusLine(&payload->status_line)) {
+                if (http_request->GetAllResponseHeaders(&payload->headers)) {
+                  payload->data.reset(http_request->GetResponseBody());
                 }
               }
             }
@@ -304,14 +304,14 @@ bool AsyncTask::HttpGet(const char16 *full_url,
         }
       } else {
         ATLTRACE(_T("AsyncTask - getReadyState failed, aborting request\n"));
-        http_request->abort();
+        http_request->Abort();
         done = true;
       }
     } else if (rv == kAbortEvent) {
       ATLTRACE(_T("AsyncTask - abort event signalled, aborting request\n"));
       // We abort the request but continue the loop waiting for it to complete
       // TODO(michaeln): paranoia, what if it never does complete, timer?
-      http_request->abort();
+      http_request->Abort();
     } else {
       // We have message queue input to pump. We pump the queue dry
       // prior to looping and calling MsgWaitForMultipleObjects
@@ -323,14 +323,14 @@ bool AsyncTask::HttpGet(const char16 *full_url,
     }
   }
 
-  http_request->setOnReadyStateChange(NULL);
+  http_request->SetOnReadyStateChange(NULL);
 
-  if (http_request->wasRedirected()) {
+  if (http_request->WasRedirected()) {
     if (was_redirected) {
       *was_redirected = true;
     }
     if (full_redirect_url) {
-      http_request->getRedirectUrl(full_redirect_url);
+      http_request->GetRedirectUrl(full_redirect_url);
     }
   }
   

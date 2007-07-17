@@ -31,14 +31,12 @@
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string16.h"
 
-// TODO(michaeln): these method names s/b uppercase
-
 //------------------------------------------------------------------------------
 // A browser neutral interface for sending HTTP requests. Different
 // implementations are provided that use the underlying capabilities of
 // different browsers.
 //
-// WARNING: Requests made with this class always bypasses all caches, including
+// NOTE: Requests made with this class always bypasses all caches, including
 // scour's own webcache.
 //------------------------------------------------------------------------------
 class HttpRequest {
@@ -51,39 +49,39 @@ class HttpRequest {
   virtual int ReleaseReference() = 0;
 
   // properties
-  virtual bool getReadyState(long *state) = 0;
-  virtual bool getResponseBody(std::vector<unsigned char> *body) = 0;
-  virtual std::vector<unsigned char> *getResponseBody() = 0;
-  virtual bool getStatus(long *status) = 0;
-  virtual bool getStatusText(std::string16 *status_text) = 0;
-  virtual bool getStatusLine(std::string16 *status_line) = 0;
+  virtual bool GetReadyState(long *state) = 0;
+  virtual bool GetResponseBody(std::vector<unsigned char> *body) = 0;
+  virtual std::vector<unsigned char> *GetResponseBody() = 0;
+  virtual bool GetStatus(long *status) = 0;
+  virtual bool GetStatusText(std::string16 *status_text) = 0;
+  virtual bool GetStatusLine(std::string16 *status_line) = 0;
 
   // Set whether or not to follow HTTP redirection, the default is to
   // follow redirects. To disable redirection, call this method after open
   // has been called and prior to calling send.
-  virtual bool setFollowRedirects(bool follow) = 0;
+  virtual bool SetFollowRedirects(bool follow) = 0;
 
   // Whether or not this request has followed a redirect
-  virtual bool wasRedirected() = 0;
+  virtual bool WasRedirected() = 0;
 
   // Returns true and the full url to the final location if this request
   // has followed any redirects
-  virtual bool getRedirectUrl(std::string16 *full_redirect_url) = 0;
+  virtual bool GetRedirectUrl(std::string16 *full_redirect_url) = 0;
 
   // methods
-  virtual bool open(const char16 *method, const char16* url, bool async) = 0;
-  virtual bool setRequestHeader(const char16* name, const char16* value) = 0;
-  virtual bool send() = 0;
-  virtual bool getAllResponseHeaders(std::string16 *headers) = 0;
-  virtual bool getResponseHeader(const char16* name, std::string16 *header) = 0;
-  virtual bool abort() = 0;
+  virtual bool Open(const char16 *method, const char16* url, bool async) = 0;
+  virtual bool SetRequestHeader(const char16 *name, const char16 *value) = 0;
+  virtual bool Send() = 0;
+  virtual bool GetAllResponseHeaders(std::string16 *headers) = 0;
+  virtual bool GetResponseHeader(const char16* name, std::string16 *header) = 0;
+  virtual bool Abort() = 0;
 
   // events and listeners
   class ReadyStateListener {
    public:
     virtual void ReadyStateChanged(HttpRequest *source) = 0;
   };
-  virtual bool setOnReadyStateChange(ReadyStateListener *listener) = 0;
+  virtual bool SetOnReadyStateChange(ReadyStateListener *listener) = 0;
 
  protected:
   HttpRequest() {}
