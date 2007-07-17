@@ -39,35 +39,35 @@ class SFHttpRequest : public HttpRequest {
   virtual int ReleaseReference();
 
   // properties
-  virtual bool getReadyState(long *state);
-  virtual bool getResponseBody(std::vector<unsigned char> *body);
-  virtual std::vector<unsigned char> *getResponseBody();
-  virtual bool getStatus(long *status);
-  virtual bool getStatusText(std::string16 *status_text);
-  virtual bool getStatusLine(std::string16 *status_line);
+  virtual bool GetReadyState(long *state);
+  virtual bool GetResponseBody(std::vector<unsigned char> *body);
+  virtual std::vector<unsigned char> *GetResponseBody();
+  virtual bool GetStatus(long *status);
+  virtual bool GetStatusText(std::string16 *status_text);
+  virtual bool GetStatusLine(std::string16 *status_line);
 
   // Set whether or not to follow HTTP redirection, the default is to
   // follow redirects. To disable redirection, call this method after open
   // has been called and prior to calling send.
-  virtual bool setFollowRedirects(bool follow);
+  virtual bool SetFollowRedirects(bool follow);
 
   // Whether or not this request has followed a redirect
-  virtual bool wasRedirected();
+  virtual bool WasRedirected();
 
   // Returns true and the full url to the final location if this request
   // has followed any redirects
-  virtual bool getRedirectUrl(std::string16 *full_redirect_url);
+  virtual bool GetRedirectUrl(std::string16 *full_redirect_url);
 
   // methods
-  virtual bool open(const char16 *method, const char16* url, bool async);
-  virtual bool setRequestHeader(const char16* name, const char16* value);
-  virtual bool send();
-  virtual bool getAllResponseHeaders(std::string16 *headers);
-  virtual bool getResponseHeader(const char16* name, std::string16 *header);
-  virtual bool abort();
+  virtual bool Open(const char16 *method, const char16* url, bool async);
+  virtual bool SetRequestHeader(const char16* name, const char16* value);
+  virtual bool Send();
+  virtual bool GetAllResponseHeaders(std::string16 *headers);
+  virtual bool GetResponseHeader(const char16* name, std::string16 *header);
+  virtual bool Abort();
 
   // events
-  virtual bool setOnReadyStateChange(ReadyStateListener *listener);
+  virtual bool SetOnReadyStateChange(ReadyStateListener *listener);
 
  private:
   friend HttpRequest *HttpRequest::Create();

@@ -73,17 +73,17 @@ int FFHttpRequest::ReleaseReference() {
 }
 
 //------------------------------------------------------------------------------
-// getReadyState
+// GetReadyState
 //------------------------------------------------------------------------------
-bool FFHttpRequest::getReadyState(long *state) {
+bool FFHttpRequest::GetReadyState(long *state) {
   *state = state_;
   return true;
 }
 
 //------------------------------------------------------------------------------
-// getResponseBody
+// GetResponseBody
 //------------------------------------------------------------------------------
-bool FFHttpRequest::getResponseBody(std::vector<unsigned char> *body) {
+bool FFHttpRequest::GetResponseBody(std::vector<unsigned char> *body) {
   NS_ENSURE_TRUE(is_complete_ && !was_aborted_, false);
   if (!response_body_.get()) {
     return false;
@@ -97,17 +97,17 @@ bool FFHttpRequest::getResponseBody(std::vector<unsigned char> *body) {
 }
 
 //------------------------------------------------------------------------------
-// getResponseBody
+// GetResponseBody
 //------------------------------------------------------------------------------
-std::vector<unsigned char> *FFHttpRequest::getResponseBody() {
+std::vector<unsigned char> *FFHttpRequest::GetResponseBody() {
   NS_ENSURE_TRUE(is_complete_ && !was_aborted_, NULL);
   return response_body_.release();
 }
 
 //------------------------------------------------------------------------------
-// getStatus
+// GetStatus
 //------------------------------------------------------------------------------
-bool FFHttpRequest::getStatus(long *status) {
+bool FFHttpRequest::GetStatus(long *status) {
   NS_ENSURE_TRUE(is_complete_ && !was_aborted_, false);
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   if (!http_channel) {
@@ -121,9 +121,9 @@ bool FFHttpRequest::getStatus(long *status) {
 }
 
 //------------------------------------------------------------------------------
-// getStatusText
+// GetStatusText
 //------------------------------------------------------------------------------
-bool FFHttpRequest::getStatusText(std::string16 *status_text) {
+bool FFHttpRequest::GetStatusText(std::string16 *status_text) {
   NS_ENSURE_TRUE(is_complete_ && !was_aborted_, false);
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   if (!http_channel) {
@@ -136,9 +136,9 @@ bool FFHttpRequest::getStatusText(std::string16 *status_text) {
 }
 
 //------------------------------------------------------------------------------
-// getStatusLine
+// GetStatusLine
 //------------------------------------------------------------------------------
-bool FFHttpRequest::getStatusLine(std::string16 *status_line) {
+bool FFHttpRequest::GetStatusLine(std::string16 *status_line) {
   NS_ENSURE_TRUE(is_complete_ && !was_aborted_, false);
   // TODO(michaeln): get the actual status line instead of synthesizing one
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
@@ -151,7 +151,7 @@ bool FFHttpRequest::getStatusLine(std::string16 *status_line) {
   NS_ENSURE_SUCCESS(rv, false);
 
   long status_code;
-  if (!getStatus(&status_code))
+  if (!GetStatus(&status_code))
     return false;
   std::string status_code_str;
   IntegerToString(static_cast<int>(status_code), &status_code_str);
@@ -166,9 +166,9 @@ bool FFHttpRequest::getStatusLine(std::string16 *status_line) {
 }
 
 //------------------------------------------------------------------------------
-// open
+// Open
 //------------------------------------------------------------------------------
-bool FFHttpRequest::open(const char16 *method, const char16 *url, bool async) {
+bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async) {
   NS_ENSURE_TRUE(state_ == 0, false);
 
   nsCOMPtr<nsIIOService> ios =
@@ -204,9 +204,9 @@ bool FFHttpRequest::open(const char16 *method, const char16 *url, bool async) {
 }
 
 //------------------------------------------------------------------------------
-// setRequestHeader
+// SetRequestHeader
 //------------------------------------------------------------------------------
-bool FFHttpRequest::setRequestHeader(const char16* name, const char16* value) {
+bool FFHttpRequest::SetRequestHeader(const char16* name, const char16* value) {
   if (was_sent_)
     return false;
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
@@ -228,9 +228,9 @@ bool FFHttpRequest::setRequestHeader(const char16* name, const char16* value) {
 }
 
 //------------------------------------------------------------------------------
-// setFollowRedirects
+// SetFollowRedirects
 //------------------------------------------------------------------------------
-bool FFHttpRequest::setFollowRedirects(bool follow) {
+bool FFHttpRequest::SetFollowRedirects(bool follow) {
   assert(channel_);
   if (was_sent_)
     return false;
@@ -238,12 +238,12 @@ bool FFHttpRequest::setFollowRedirects(bool follow) {
   return true;
 }
 
-bool FFHttpRequest::wasRedirected() {
+bool FFHttpRequest::WasRedirected() {
   return follow_redirects_ && is_complete_ && was_redirected_ && !was_aborted_;
 }
 
-bool FFHttpRequest::getRedirectUrl(std::string16 *full_redirect_url) {
-  if (!wasRedirected())
+bool FFHttpRequest::GetRedirectUrl(std::string16 *full_redirect_url) {
+  if (!WasRedirected())
     return false;
   *full_redirect_url = redirect_url_;
   return true;
@@ -251,9 +251,9 @@ bool FFHttpRequest::getRedirectUrl(std::string16 *full_redirect_url) {
 
 
 //------------------------------------------------------------------------------
-// send
+// Send
 //------------------------------------------------------------------------------
-bool FFHttpRequest::send() {
+bool FFHttpRequest::Send() {
   NS_ENSURE_TRUE(channel_ && !was_sent_, false);
   if (!follow_redirects_) {
     nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
@@ -302,9 +302,9 @@ public:
 };
 
 //------------------------------------------------------------------------------
-// getAllResponseHeaders
+// GetAllResponseHeaders
 //------------------------------------------------------------------------------
-bool FFHttpRequest::getAllResponseHeaders(std::string16 *headers) {
+bool FFHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
   NS_ENSURE_TRUE(is_complete_ && !was_aborted_, false);
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   NS_ENSURE_TRUE(http_channel, false);
@@ -343,9 +343,9 @@ bool FFHttpRequest::getAllResponseHeaders(std::string16 *headers) {
 }
 
 //------------------------------------------------------------------------------
-// getResponseHeader
+// GetResponseHeader
 //------------------------------------------------------------------------------
-bool FFHttpRequest::getResponseHeader(const char16* name,
+bool FFHttpRequest::GetResponseHeader(const char16* name,
                                       std::string16 *value) {
   NS_ENSURE_TRUE(is_complete_ && !was_aborted_, false);
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
@@ -366,9 +366,9 @@ bool FFHttpRequest::getResponseHeader(const char16* name,
 }
 
 //------------------------------------------------------------------------------
-// abort
+// Abort
 //------------------------------------------------------------------------------
-bool FFHttpRequest::abort() {
+bool FFHttpRequest::Abort() {
   // NS_BINDING_ABORTED is a special error code reserved for this purpose that
   // should not be generated for any other reason.
   if (channel_) {
@@ -379,9 +379,9 @@ bool FFHttpRequest::abort() {
 }
 
 //------------------------------------------------------------------------------
-// setOnReadyStateChange
+// SetOnReadyStateChange
 //------------------------------------------------------------------------------
-bool FFHttpRequest::setOnReadyStateChange(ReadyStateListener *listener) {
+bool FFHttpRequest::SetOnReadyStateChange(ReadyStateListener *listener) {
   listener_ = listener;
   return true;
 }
