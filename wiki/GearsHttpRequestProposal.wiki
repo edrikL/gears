@@ -1,0 +1,5 @@
+#summary Gears Http Request Proposal
+#labels DesignDoc
+
+Please see the following document...
+http://docs.google.com/Doc?id=dhp488sb_0fxfdz3 
