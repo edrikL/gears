@@ -35,7 +35,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <Package Id='$(var.OurPackageId)' Description='PRODUCT_FRIENDLY_NAME_UQ'
       Comments='PRODUCT_FRIENDLY_NAME_UQ' Manufacturer='Google'
       InstallerVersion='200' Compressed='yes' />
-    <Media Id='1' Cabinet='product.cab' EmbedCab='yes' />
+    <Media Id='1' Cabinet='product.cab' EmbedCab='yes'
+      CompressionLevel="high" />
     <Upgrade Id='D91DF85A-1C3B-4d62-914B-DEEEF73AD78C'>
       <UpgradeVersion Property='UPGRADING' OnlyDetect='no'
         Minimum='0.0.0.0' IncludeMinimum='yes'
