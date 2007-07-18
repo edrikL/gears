@@ -36,6 +36,14 @@
 #include <nsCOMPtr.h>
 #include "gears/third_party/gecko_internal/jsapi.h"
 
+class IIDLessThanFunctor {
+ public:
+  bool operator()(const nsIID &x, const nsIID &y) const {
+    // Mozilla also treats nsIID as 16 contiguous bytes.
+    return memcmp(&x, &y, 16) < 0;
+  }
+};
+typedef std::map<nsIID, JSObject*, IIDLessThanFunctor> IIDToProtoMap;
 
 struct JsWrapperDataForProto;
 class JsContextWrapper {
@@ -60,7 +68,7 @@ class JsContextWrapper {
   // Defines a named object of the given type in the JS global namespace.
   bool DefineGlobal(JSObject *proto_obj,
                     nsISupports *instance_isupports,
-                    const char *instance_name);
+                    const char16 *instance_name);
 
  private:
   bool AddFunctionsToPrototype(JSObject *proto_obj,
@@ -81,14 +89,6 @@ class JsContextWrapper {
                             const nsXPTType &type_info, const nsIID *iid,
                             JsContextWrapper *js_wrapper,
                             nsresult *error_out);
-  class IIDLessThanFunctor {
-   public:
-    bool operator()(const nsIID &x, const nsIID &y) const {
-      // Mozilla also treats nsIID as 16 contiguous bytes.
-      return memcmp(&x, &y, 16) < 0;
-    }
-  };
-  typedef std::map<nsIID, JSObject*, IIDLessThanFunctor> IIDToProtoMap;
   IIDToProtoMap iid_to_proto_map_;
 };
 

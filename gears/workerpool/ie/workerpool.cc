@@ -203,7 +203,8 @@ void GearsWorkerPool::Initialize() {
     CComPtr<IHTMLWindow3> event_source;
     IUnknown *site = this->EnvPageIUnknownSite();
     assert(site);
-    assert(SUCCEEDED(ActiveXUtils::GetHtmlWindow3(site, &event_source)));
+    HRESULT hr = ActiveXUtils::GetHtmlWindow3(site, &event_source);
+    assert(SUCCEEDED(hr));
     unload_monitor_->Start(event_source);
   }
 }
@@ -449,19 +450,21 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
     } else {
       if (!alloc_workerpool->InitBaseManually(true, // is_worker
                                 NULL, // page_site is NULL in workers
-                                wi->threads_manager->page_security_origin())) {
+                                wi->threads_manager->page_security_origin(),
+                                js_runner.get())) {
         js_init_succeeded = false;
       } else {
         // WorkerPool object needs same underlying PoolThreadsManager
         alloc_workerpool->SetThreadsManager(wi->threads_manager);
 
         if (!js_runner->AddGlobal(kWorkerInsertedWorkerPoolName,
-                                  alloc_workerpool->_GetRawUnknown())) {
+                                  alloc_workerpool->_GetRawUnknown(),
+                                  0)) {
           js_init_succeeded = false;
         }
       }
     }
-    
+
     CComObject<GearsFactory> *alloc_factory;
     hr = CComObject<GearsFactory>::CreateInstance(&alloc_factory);
     if (FAILED(hr)) {
@@ -469,7 +472,8 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
     } else {
       if (!alloc_factory->InitBaseManually(true, // is_worker
                               NULL, // page_site is NULL in workers
-                              wi->threads_manager->page_security_origin())) {
+                              wi->threads_manager->page_security_origin(),
+                              js_runner.get())) {
         js_init_succeeded = false;
       } else {
         // The worker's Factory inherits the capabilities from
@@ -478,7 +482,8 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
         alloc_factory->is_permission_value_from_user_ = true;
 
         if (!js_runner->AddGlobal(kWorkerInsertedFactoryName,
-                                  alloc_factory->_GetRawUnknown())) {
+                                  alloc_factory->_GetRawUnknown(),
+                                  0)) {
           js_init_succeeded = false;
         }
       }

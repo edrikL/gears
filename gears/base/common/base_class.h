@@ -67,6 +67,7 @@ typedef HRESULT    JsNativeMethodRetval;
 
 #endif // BROWSER_xyz
 
+class JsRunnerInterface;
 
 // Exposes the minimal set of information that Scour objects need to work
 // consistently across the main-thread and worker-thread JavaScript engines.
@@ -96,6 +97,8 @@ class GearsBaseClass {
   IUnknown* EnvPageIUnknownSite() const;
 #endif
   const SecurityOrigin& EnvPageSecurityOrigin() const;
+
+  JsRunnerInterface *GetJsRunner();
 
 #if BROWSER_FF
   // JavaScript worker-thread parameter information
@@ -128,7 +131,8 @@ class GearsBaseClass {
 #elif BROWSER_IE
                         IUnknown *site,
 #endif
-                        const SecurityOrigin &page_origin);
+                        const SecurityOrigin &page_origin,
+                        JsRunnerInterface *js_runner);
 
 #if BROWSER_FF
   int           worker_js_argc_;
@@ -136,6 +140,8 @@ class GearsBaseClass {
 #elif BROWSER_IE
   // These do not exist in IE yet.
 #endif
+
+  JsRunnerInterface *js_runner_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsBaseClass);
 };

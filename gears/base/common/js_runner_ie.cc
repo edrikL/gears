@@ -38,6 +38,7 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/activex_utils.h"
 #include "gears/third_party/AtlActiveScriptSite.h"
 
 
@@ -66,13 +67,18 @@ class ATL_NO_VTABLE JsRunnerImpl
   ~JsRunnerImpl();
 
   // JsRunnerInterface implementation
-  bool AddGlobal(const char16 *name, IGeneric *object);
+  bool GetContext(JsContextPtr *context) {
+    *context = NULL;
+    return true;
+  }
+  bool AddGlobal(const char16 *name, IGeneric *object, gIID iface_id);
   bool Start(const char16 *full_script);
   bool Stop();
+  bool Eval(const char16 *script);
   const char16 * GetLastScriptError();
 
   // IActiveScriptSiteImpl overrides
-  STDMETHOD(LookupNamedItem)(const OLECHAR *name, IUnknown **item); 
+  STDMETHOD(LookupNamedItem)(const OLECHAR *name, IUnknown **item);
   STDMETHOD(HandleScriptError)(EXCEPINFO *ei, ULONG line, LONG pos, BSTR src);
 
   // Implement IInternetHostSecurityManager. We use this to prevent the script
@@ -118,7 +124,9 @@ JsRunnerImpl::~JsRunnerImpl() {
 }
 
 
-bool JsRunnerImpl::AddGlobal(const char16 *name, IGeneric *object) {
+bool JsRunnerImpl::AddGlobal(const char16 *name,
+                             IGeneric *object,
+                             gIID iface_id) {
   if (!object) { return false; }
 
   // We AddRef() once here to make sure that the object lives the lifetime of
@@ -215,6 +223,21 @@ bool JsRunnerImpl::Start(const char16 *full_script) {
   return true; // succeeded
 }
 
+bool JsRunnerImpl::Eval(const char16 *script) {
+  CComQIPtr<IActiveScriptParse> javascript_engine_parser;
+
+  // Get the parser interface
+  javascript_engine_parser = javascript_engine_;
+  if (!javascript_engine_parser) { return false; }
+
+  // Execute the script
+  HRESULT hr = javascript_engine_parser->ParseScriptText(script,
+                                                         NULL, NULL, 0, 0, 0,
+                                                         SCRIPTITEM_ISVISIBLE,
+                                                         NULL, NULL);
+  if (FAILED(hr)) { return false; }
+  return true;
+}
 
 bool JsRunnerImpl::Stop() {
   return SUCCEEDED(javascript_engine_->Close());
@@ -293,7 +316,6 @@ STDMETHODIMP JsRunnerImpl::GetSecurityId(BYTE *security_id,
   return E_NOTIMPL;
 }
 
-
 // A wrapper class to AddRef/Release the internal COM object,
 // while exposing a simpler new/delete interface to users.
 class JsRunner : public JsRunnerInterface {
@@ -304,15 +326,17 @@ class JsRunner : public JsRunnerInterface {
       com_obj_->AddRef(); // MSDN says call AddRef after CreateInstance
     }
   }
-  ~JsRunner() {
+  virtual ~JsRunner() {
     if (com_obj_) { 
       com_obj_->Stop();
       com_obj_->Release();
     }
   }
 
-  bool JsRunner::AddGlobal(const char16 *name, IGeneric *object) {
-    return com_obj_->AddGlobal(name, object);
+  bool JsRunner::AddGlobal(const char16 *name,
+                           IGeneric *object,
+                           gIID iface_id) {
+    return com_obj_->AddGlobal(name, object, iface_id);
   }
 
   bool JsRunner::Start(const char16 *full_script) {
@@ -321,6 +345,14 @@ class JsRunner : public JsRunnerInterface {
 
   bool JsRunner::Stop() {
     return com_obj_->Stop();
+  }
+
+  bool JsRunner::GetContext(JsContextPtr *context) {
+    return com_obj_->GetContext(context);
+  }
+
+  bool JsRunner::Eval(const char16 *script) {
+    return com_obj_->Eval(script);
   }
 
   const char16 * JsRunner::GetLastScriptError() {
@@ -333,7 +365,61 @@ class JsRunner : public JsRunnerInterface {
   DISALLOW_EVIL_CONSTRUCTORS(JsRunner);
 };
 
+// This class is a stub that is used to present a uniform interface to
+// common functionality to both workers and the main thread.
+class ParentJsRunner : public JsRunnerInterface {
+ public:
+  ParentJsRunner(IGeneric *site, JsContextPtr context)
+    : site_(site) {
+  }
+  virtual ~ParentJsRunner() {
+  }
+
+  bool ParentJsRunner::AddGlobal(const char16 *name,
+                                 IGeneric *object,
+                                 gIID iface_id) {
+    // TODO(zork): Add this functionality to parent js runners.
+    return false;
+  }
+  bool ParentJsRunner::Start(const char16 *full_script) {
+    assert(false); // Should not be called on the parent.
+    return false;
+  }
+  bool ParentJsRunner::Stop() {
+    assert(false); // Should not be called on the parent.
+    return false;
+  }
+  bool ParentJsRunner::GetContext(JsContextPtr *context) {
+    context = NULL;
+    return false;
+  }
+  bool Eval(const char16 *script);
+  const char16 * ParentJsRunner::GetLastScriptError() {
+    return NULL;
+  }
+
+ private:
+  CComPtr<IUnknown> site_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(ParentJsRunner);
+};
+
+bool ParentJsRunner::Eval(const char16 *script) {
+  CComPtr<IHTMLWindow2> window;
+  HRESULT hr = ActiveXUtils::GetHtmlWindow2(site_, &window);
+  if (FAILED(hr)) { return false; }
+
+  VARIANT ret_val;
+  hr = window->execScript(BSTR(script), NULL, &ret_val);
+  if (FAILED(hr)) { return false; }
+
+  return true;
+}
 
 JsRunnerInterface* NewJsRunner() {
   return static_cast<JsRunnerInterface*>(new JsRunner());
+}
+
+JsRunnerInterface* NewParentJsRunner(IGeneric *base, JsContextPtr context) {
+  return static_cast<JsRunnerInterface*>(new ParentJsRunner(base, context));
 }
