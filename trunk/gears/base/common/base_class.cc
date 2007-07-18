@@ -27,6 +27,7 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/security_model.h" // for kUnknownDomain
+#include "gears/base/common/js_runner.h"
 
 #if BROWSER_FF
 #include "gears/base/firefox/dom_utils.h"
@@ -45,7 +46,8 @@ bool GearsBaseClass::InitBaseFromSibling(const GearsBaseClass *other) {
 #elif BROWSER_IE
                           other->env_page_iunknown_site_,
 #endif
-                          other->env_page_origin_);
+                          other->env_page_origin_,
+                          other->js_runner_);
 }
 
 
@@ -62,13 +64,15 @@ bool GearsBaseClass::InitBaseFromDOM(const char *url_str) {
   JsContextPtr cx;
   bool succeeded = DOMUtils::GetJsContext(&cx) &&
                    DOMUtils::GetPageOrigin(&security_origin);
-  return succeeded && InitBaseManually(is_worker, cx, security_origin);
+  return succeeded && InitBaseManually(is_worker, cx, security_origin,
+                                       NewParentJsRunner(NULL, cx));
 #elif BROWSER_IE
   bool succeeded = ActiveXUtils::GetPageOrigin(site, &security_origin);
-  return succeeded && InitBaseManually(is_worker, site, security_origin);
+  return succeeded && InitBaseManually(is_worker, site, security_origin,
+                                       NewParentJsRunner(site, NULL));
 #elif BROWSER_SAFARI
   bool succeeded = SafariURLUtilities::GetPageOrigin(url_str, &security_origin);
-  return succeeded && InitBaseManually(is_worker, security_origin);
+  return succeeded && InitBaseManually(is_worker, security_origin, 0);
 #endif
 }
 
@@ -79,7 +83,8 @@ bool GearsBaseClass::InitBaseManually(bool is_worker,
 #elif BROWSER_IE
                                       IUnknown *site,
 #endif
-                                      const SecurityOrigin &page_origin) {
+                                      const SecurityOrigin &page_origin,
+                                      JsRunnerInterface *js_runner) {
   assert(!is_initialized_);
   env_is_worker_ = is_worker;
 #if BROWSER_FF
@@ -88,7 +93,8 @@ bool GearsBaseClass::InitBaseManually(bool is_worker,
   env_page_iunknown_site_ = site;
 #endif
   env_page_origin_ = page_origin;
-   
+  js_runner_ = js_runner;
+
 #if BROWSER_FF
   worker_js_argc_ = 0;
   worker_js_argv_ = NULL;
@@ -126,6 +132,11 @@ IUnknown* GearsBaseClass::EnvPageIUnknownSite() const {
 const SecurityOrigin& GearsBaseClass::EnvPageSecurityOrigin() const {
   assert(is_initialized_);
   return env_page_origin_;
+}
+
+JsRunnerInterface *GearsBaseClass::GetJsRunner() {
+  assert(is_initialized_);
+  return js_runner_;
 }
 
 

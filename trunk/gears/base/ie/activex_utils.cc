@@ -75,9 +75,9 @@ HRESULT ActiveXUtils::GetWebBrowser2(IUnknown *site, IWebBrowser2 **browser2) {
 }
 
 
-HRESULT ActiveXUtils::GetHtmlWindow3(IUnknown *site, IHTMLWindow3 **window3) {
+HRESULT ActiveXUtils::GetHtmlWindow2(IUnknown *site, IHTMLWindow2 **window2) {
   // To hook an event on the page's root window, follow the path
-  // IWebBrowser2->document->parentWindow->IHTMLWindow3
+  // IWebBrowser2->document->parentWindow->IHTMLWindow2
 
   HRESULT hr;
 
@@ -91,7 +91,13 @@ HRESULT ActiveXUtils::GetHtmlWindow3(IUnknown *site, IHTMLWindow3 **window3) {
   if (!html_document2) { return E_FAIL; }
 
   CComPtr<IHTMLWindow2> html_window2;
-  hr = html_document2->get_parentWindow(&html_window2);
+  return html_document2->get_parentWindow(window2);
+}
+
+
+HRESULT ActiveXUtils::GetHtmlWindow3(IUnknown *site, IHTMLWindow3 **window3) {
+  CComPtr<IHTMLWindow2> html_window2;
+  HRESULT hr = GetHtmlWindow2(site, &html_window2);
   if (FAILED(hr) || !html_window2) { return E_FAIL; }
 
   return html_window2->QueryInterface(window3);

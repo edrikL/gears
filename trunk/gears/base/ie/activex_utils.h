@@ -47,6 +47,10 @@ class ActiveXUtils {
   static HRESULT GetWebBrowser2(IUnknown *site,
                                 IWebBrowser2 **browser2);
 
+  // Returns the IHTMLWindow2 interface corresponding to the given site.
+  static HRESULT GetHtmlWindow2(IUnknown *site,
+                                IHTMLWindow2 **window2);
+
   // Returns the IHTMLWindow3 interface corresponding to the given site.
   // Can be used with our HtmlEventMonitor.
   static HRESULT GetHtmlWindow3(IUnknown *site,

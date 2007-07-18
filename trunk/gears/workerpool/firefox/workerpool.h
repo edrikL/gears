@@ -115,9 +115,6 @@ class PoolThreadsManager {
   int GetCurrentPoolWorkerId();
 
   static void JavaScriptThreadEntry(void *args);
-  static bool InitJavaScriptEngine(JavaScriptWorkerInfo *ti);
-  static void JS_DLL_CALLBACK JsErrorHandler(JSContext *cx, const char *message,
-                                             JSErrorReport *report);
   static void *OnReceiveThreadsEvent(ThreadsEvent *event);
 
   int num_workers_; // used by Add/ReleaseWorkerRef()

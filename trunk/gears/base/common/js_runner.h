@@ -30,6 +30,7 @@
 #define GEARS_BASE_COMMON_JS_RUNNER_H__
 
 #include "gears/base/common/string16.h"
+#include "gears/base/common/base_class.h"
 
 
 // To insert C++ objects into JavaScript, most (all?) JS engines take a C++
@@ -40,8 +41,10 @@
 #if defined BROWSER_IE
   #include <windows.h>
   typedef IUnknown IGeneric;
+  typedef int gIID;
 #elif defined BROWSER_FF
   typedef nsISupports IGeneric;
+  typedef nsIID gIID;
 #endif
 
 
@@ -51,9 +54,13 @@ class JsRunnerInterface {
  public:
   virtual ~JsRunnerInterface() {};
   // increments refcount
-  virtual bool AddGlobal(const char16 *name, IGeneric *object) = 0;
+  virtual bool AddGlobal(const char16 *name,
+                         IGeneric *object,
+                         gIID iface_iid) = 0;
   virtual bool Start(const char16 *full_script) = 0;
   virtual bool Stop() = 0;
+  virtual bool GetContext(JsContextPtr *context) = 0;
+  virtual bool Eval(const char16 *script) = 0;
   virtual const char16 * GetLastScriptError() = 0;
 };
 
@@ -63,7 +70,12 @@ class JsRunnerInterface {
 // Destroy the object using regular 'delete'.
 //
 // This interface plays nicely with scoped_ptr, which was a design goal.
+
+// This creates a JsRunner that is used in a worker.
 JsRunnerInterface* NewJsRunner();
+
+// This creates a JsRunner that can be used with the parent script.
+JsRunnerInterface* NewParentJsRunner(IGeneric *base, JsContextPtr context);
 
 
 #endif  // GEARS_BASE_COMMON_JS_RUNNER_H__

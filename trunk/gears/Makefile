@@ -200,6 +200,8 @@ FF_CPPSRCS	+= \
 		html_event_monitor.cc \
 		html_event_monitor_ff.cc \
 		http_utils.cc \
+		js_runner_ff.cc \
+		js_runner_ff_marshaling.cc \
 		module.cc \
 		mutex.cc \
 		name_value_table.cc \
@@ -395,7 +397,6 @@ FF_IDLSRCS	+= \
 
 FF_CPPSRCS	+= \
 		workerpool.cc \
-		js_wrapper.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------

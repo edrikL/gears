@@ -78,11 +78,11 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include "ff/genfiles/database.h"
 #include "ff/genfiles/localserver.h"
 #include "gears/base/common/atomic_ops.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/base/firefox/factory.h"
 #include "gears/workerpool/common/workerpool_utils.h"
-#include "gears/workerpool/firefox/js_wrapper.h"
 #include "gears/workerpool/firefox/workerpool.h"
 
 
@@ -117,9 +117,7 @@ struct JavaScriptWorkerInfo {
   JavaScriptWorkerInfo()
       : threads_manager(NULL), // onmessage_handler(),
         js_init_mutex(NULL), js_init_signalled(false), js_init_ok(false),
-        thread_pointer(NULL),
-        js_engine_context(NULL), js_runtime(NULL), js_script(NULL),
-        alloc_workerpool(NULL), alloc_factory(NULL), alloc_js_wrapper(NULL) {}
+        thread_pointer(NULL) {}
 
   //
   // These fields are used by all workers (main + children)
@@ -130,22 +128,15 @@ struct JavaScriptWorkerInfo {
   nsCOMPtr<nsIEventQueue> thread_event_queue;
   std::queue< std::pair<std::string16, int> > message_queue;
 
-  // 
+  //
   // These fields are used only with descendants (i.e., workers).
   //
   nsString full_script;            // store the script code and error in this
-  std::string16 last_script_error; // struct to cross the OS thread boundary
   Mutex  *js_init_mutex; // protects: js_init_signalled
   bool    js_init_signalled;
   bool    js_init_ok; // owner: thread before signal, caller after signal
   PRThread  *thread_pointer;
-  JSContext *js_engine_context;
-  JSRuntime *js_runtime;
-  JSScript *js_script;
-  GearsWorkerPool *alloc_workerpool; // (created in thread) to access
-                                     // PoolThreadsManager
-  GearsFactory *alloc_factory; // (created in thread) to create new objects
-  JsContextWrapper *alloc_js_wrapper; // (created in thread)
+  std::string16 last_script_error; // struct to cross the OS thread boundary
 };
 
 
@@ -270,8 +261,8 @@ void GearsWorkerPool::Initialize() {
     unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
                                                HandleEventUnload, this));
     nsCOMPtr<nsIDOMEventTarget> event_source;
-    assert(NS_SUCCEEDED(
-      DOMUtils::GetWindowEventTarget(getter_AddRefs(event_source))));
+    nsresult nr = DOMUtils::GetWindowEventTarget(getter_AddRefs(event_source));
+    assert(NS_SUCCEEDED(nr));
     unload_monitor_->Start(event_source);
   }
 }
@@ -567,9 +558,64 @@ void PoolThreadsManager::JavaScriptThreadEntry(void *args) {
 
   wi->threads_manager->AddWorkerRef();
 
+  scoped_ptr<JsRunnerInterface> js_runner(NewJsRunner());
+
+  JsContextPtr cx;
+
+  bool js_init_succeeded = js_runner->GetContext(&cx);
+
+  if (js_init_succeeded) {
+    // Add global Factory and WorkerPool objects into the namespace.
+    //
+    // The factory alone is not enough; GearsFactory.create(GearsWorkerPool)
+    // would return a NEW PoolThreadsManager instance, but we want access to
+    // the one that was previously created for the current page.
+
+    scoped_ptr<GearsFactory> factory(new GearsFactory()); // will AddRef below
+    factory->InitBaseManually(true, // is_worker
+                              cx,
+                              wi->threads_manager->page_security_origin(),
+                              js_runner.get());
+    // the worker's Factory inherits the capabilities from
+    // the main thread that created this WorkerPool
+    factory->is_permission_granted_ = true;
+    factory->is_permission_value_from_user_ = true;
+
+    // the worker needs to have a _new_ GearsWorkerPool object (to avoid issues
+    // with XPConnect on main worker, vs JsContextWrapper on child worker)
+    scoped_ptr<GearsWorkerPool>
+        workerpool(new GearsWorkerPool()); // will AddRef below
+    workerpool->InitBaseManually(true, // is_worker
+                                 cx,
+                                 wi->threads_manager->page_security_origin(),
+                                 js_runner.get());
+    // but it must have the same underlying PoolThreadsManager
+    workerpool->SetThreadsManager(wi->threads_manager);
+
+    const nsIID workerpool_iface_id = GEARSWORKERPOOLINTERFACE_IID;
+    if (!js_runner->AddGlobal(kWorkerInsertedWorkerPoolName,
+                              workerpool.release(), // nsISupports
+                              workerpool_iface_id)) {
+      js_init_succeeded = false;
+    }
+
+    const nsIID factory_iface_id = GEARSFACTORYINTERFACE_IID;
+    if (!js_runner->AddGlobal(kWorkerInsertedFactoryName,
+                              factory.release(), // nsISupports
+                              factory_iface_id)) {
+      js_init_succeeded = false;
+    }
+
+    // Run the script
+    if (!js_runner->Start(wi->full_script.get())) {
+      js_init_succeeded = false;
+    }
+  }
+
+  wi->last_script_error = js_runner->GetLastScriptError();
+
   // NOTE: things seem to work without calling InitXPCOM() here,
   // though code in /mozilla/netwerk/test/... [sic] did call it.
-  bool js_init_succeeded = InitJavaScriptEngine(wi);
 
   //
   // Tell caller we finished initializing, and indicate status
@@ -579,9 +625,7 @@ void PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   wi->js_init_signalled = true;
   wi->js_init_mutex->Unlock();
 
-  //
   // Pump messages
-  //
   if (js_init_succeeded) {
     assert(wi->thread_event_queue);
     while (1) {
@@ -602,21 +646,6 @@ void PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   // TODO(aa): Alas, none of this results in Gears modules created in workers
   // getting deleted. Therefore nested workers never stop or get deleted. I
   // don't understand this!
-  if (wi->js_script) {
-    JS_DestroyScript(wi->js_engine_context, wi->js_script);
-  }
-
-  if (wi->js_engine_context) {
-    JS_DestroyContext(wi->js_engine_context);
-  }
-
-  if (wi->js_runtime) {
-    JS_DestroyRuntime(wi->js_runtime);
-  }
-
-  delete wi->alloc_factory;
-  delete wi->alloc_js_wrapper;
-  delete wi->alloc_workerpool;
 
   wi->threads_manager->ReleaseWorkerRef();
 
@@ -625,227 +654,6 @@ void PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   // seems a little cleaner too.
 
   // PRThread functions don't return a value
-}
-
-
-void JS_DLL_CALLBACK PoolThreadsManager::JsErrorHandler(JSContext *cx,
-                                                        const char *message,
-                                                        JSErrorReport *report) {
-  JavaScriptWorkerInfo *wi = static_cast<JavaScriptWorkerInfo*>(
-                                 JS_GetContextPrivate(cx));
-  if (wi && report && report->ucmessage) { // string16 faults on NULL assignment
-    wi->last_script_error = reinterpret_cast<const char16 *>(report->ucmessage);
-  }
-}
-
-class JS_DestroyContextFunctor {
- public:
-  inline void operator()(JSContext* x) const {
-    if (x != NULL) { JS_DestroyContext(x); }
-  }
-};
-typedef scoped_token<JSContext*, JS_DestroyContextFunctor> scoped_jscontext_ptr;
-
-bool PoolThreadsManager::InitJavaScriptEngine(JavaScriptWorkerInfo *wi) {
-  JSBool js_ok;
-  bool succeeded;
-
-  // To cleanup after failures we use scoped objects to manage everything that
-  // should be destroyed.  On success we take ownership to avoid cleanup.
-
-  // These structs are static because they must live for duration of JS engine.
-  // SpiderMonkey README also suggests using static for one-off objects.
-  static JSClass global_class = {
-      "Global", 0, // name, flags
-      JS_PropertyStub, JS_PropertyStub,  // defineProperty, deleteProperty
-      JS_PropertyStub, JS_PropertyStub, // getProperty, setProperty
-      JS_EnumerateStub, JS_ResolveStub, // enum, resolve
-      JS_ConvertStub, JS_FinalizeStub // convert, finalize
-  };
-
-
-  //
-  // Instantiate a JavaScript engine
-  //
-
-  // Create a new runtime.  If we instead use xpc/RuntimeService to get a
-  // runtime, strange things break (like eval).
-  const int kRuntimeMaxBytes = 64 * 1024 * 1024; // mozilla/.../js.c uses 64 MB
-  wi->js_runtime = JS_NewRuntime(kRuntimeMaxBytes);
-  if (!wi->js_runtime) { return false; }
-
-  const int kContextStackChunkSize = 1024; // Firefox often uses 1024;
-                                           // also see js/src/readme.html
-
-  scoped_jscontext_ptr cx(
-      JS_NewContext(wi->js_runtime, kContextStackChunkSize));
-  if (!cx.get()) { return false; }
-  // VAROBJFIX is recommended in /mozilla/js/src/jsapi.h
-  JS_SetOptions(cx.get(), JS_GetOptions(cx.get()) | JSOPTION_VAROBJFIX);
-
-  // JS_SetErrorReporter takes a static callback, so we need
-  // JS_SetContextPrivate to later save the error in a per-worker location
-  JS_SetErrorReporter(cx.get(), JsErrorHandler);
-  JS_SetContextPrivate(cx.get(), static_cast<void*>(wi));
-#ifdef DEBUG
-  // must set this here to allow workerPool.forceGC() during child init
-  wi->js_engine_context = cx.get();
-#endif
-
-  JSObject *global_obj = JS_NewObject(cx.get(), &global_class, 0, 0);
-
-  if (!global_obj) { return false; }
-  js_ok = JS_InitStandardClasses(cx.get(), global_obj);
-  if (!js_ok) { return false; }
-  // Note: an alternative is to lazily define the "standard classes" (which
-  // include things like eval).  To do that, change JS_InitStandardClasses
-  // to JS_SetGlobalObject, and add handlers for Enumerate and Resolve in
-  // global_class.  See /mozilla/js/src/js.c for sample code.
-
-
-  //
-  // Define classes in the JSContext
-  //
-
-  // first need to create a JsWrapperManager for this thread
-  scoped_ptr<JsContextWrapper> js_wrapper(new JsContextWrapper(cx.get(),
-                                                               global_obj));
-
-  struct {
-    const nsIID iface_id;
-    JSObject *proto_obj; // gets set by code below
-  } classes[] = {
-    // TODO(cprince): Unify the interface lists here and in GearsFactory.
-    // Could share code, or could query GearsFactory.
-    {GEARSFACTORYINTERFACE_IID, NULL},
-    // workerpool
-    {GEARSWORKERPOOLINTERFACE_IID, NULL},
-    // database
-    {GEARSDATABASEINTERFACE_IID, NULL},
-    {GEARSRESULTSETINTERFACE_IID, NULL},
-    // localserver
-    {GEARSLOCALSERVERINTERFACE_IID, NULL},
-    {GEARSMANAGEDRESOURCESTOREINTERFACE_IID, NULL},
-    {GEARSRESOURCESTOREINTERFACE_IID, NULL},
-    // GEARSFILESUBMITTERINTERFACE_IID can never be created in a child worker
-  };
-  const int num_classes = sizeof(classes) / sizeof(classes[0]);
-
-  for (int i = 0; i < num_classes; ++i) {
-    // passing NULL for class_id and class_name prevents child workers
-    // from using "new CLASSNAME"
-    succeeded = js_wrapper->DefineClass(&classes[i].iface_id,
-                                        NULL, // class_id
-                                        NULL, // class_name
-                                        &classes[i].proto_obj);
-    if (!succeeded) { return false; }
-  }
-
-
-  //
-  // Add global Factory and WorkerPool objects into the namespace.
-  // 
-  // The factory alone is not enough; GearsFactory.create(GearsWorkerPool)
-  // would return a NEW PoolThreadsManager instance, but we want access to
-  // the one that was previously created for the current page.
-  //
-
-  scoped_ptr<GearsFactory> factory(new GearsFactory()); // will AddRef below
-  factory->InitBaseManually(true, // is_worker
-                            cx.get(),
-                            wi->threads_manager->page_security_origin());
-  // The worker's Factory inherits the capabilities from the main thread that
-  // created this WorkerPool.
-  factory->is_permission_granted_ = true;
-  factory->is_permission_value_from_user_ = true;
-
-  // The worker needs to have a _new_ GearsWorkerPool object (to avoid issues
-  // with XPConnect on main worker, vs JsContextWrapper on child worker).
-  scoped_ptr<GearsWorkerPool> workerpool(
-      new GearsWorkerPool()); // will AddRef below
-  workerpool->InitBaseManually(true, // is_worker
-                               cx.get(),
-                               wi->threads_manager->page_security_origin());
-  // but it must have the same underlying PoolThreadsManager
-  workerpool->SetThreadsManager(wi->threads_manager);
-
-
-  const int workerpool_class_index = 1;
-#ifdef DEBUG
-  const nsIID workerpool_iface_id = GEARSWORKERPOOLINTERFACE_IID;
-  assert(classes[workerpool_class_index].iface_id.Equals(workerpool_iface_id));
-#endif
-  succeeded = js_wrapper->DefineGlobal(classes[workerpool_class_index].proto_obj,
-                                       workerpool.get(), // nsISupports
-                                       kWorkerInsertedWorkerPoolNameAscii);
-  if (!succeeded) { return false; }
-
-  const int factory_class_index = 0;
-#ifdef DEBUG
-  const nsIID factory_iface_id = GEARSFACTORYINTERFACE_IID;
-  assert(classes[factory_class_index].iface_id.Equals(factory_iface_id));
-#endif
-  succeeded = js_wrapper->DefineGlobal(classes[factory_class_index].proto_obj,
-                                       factory.get(), // nsISupports
-                                       kWorkerInsertedFactoryNameAscii);
-  if (!succeeded) { return false; }
-
-
-  //
-  // Add script code to the engine instance
-  //
-
-  uintN line_number_start = 0;
-  wi->js_script = JS_CompileUCScript(
-                      cx.get(), global_obj,
-                      reinterpret_cast<const jschar *>(wi->full_script.get()),
-                      wi->full_script.Length(),
-                      "script", line_number_start);
-  if (!wi->js_script) { return false; }
-
-  // we must root any script returned by JS_Compile* (see jsapi.h)
-  JSObject *compiled_script_obj = JS_NewScriptObject(cx.get(), wi->js_script);
-  if (!compiled_script_obj) { return false; }
-  if (!RootJsToken(cx.get(), OBJECT_TO_JSVAL(compiled_script_obj))) {
-    return false;
-  }
-
-
-  //
-  // Start the engine running
-  //
-
-  jsval return_string;
-  js_ok = JS_ExecuteScript(cx.get(), global_obj, wi->js_script,
-                           &return_string);
-  if (!js_ok) { return false; }
-
-  // NOTE: at this point, the JS code has returned, and it should have set
-  // an onmessage handler.  (If it didn't, the worker is most likely cut off
-  // from other workers.  There are ways to prevent this, but they are poor.)
-
-  // Success! Tell the code not to release our objects,
-  // and save values for cleanup later.
-  wi->js_engine_context = cx.release();
-  wi->alloc_js_wrapper = js_wrapper.release();
-  wi->alloc_workerpool = workerpool.release();
-  NS_ADDREF(wi->alloc_workerpool);
-  wi->alloc_factory = factory.release();
-  NS_ADDREF(wi->alloc_factory);
-
-  // Worker init should have set an onmessage handler, and the JS context value
-  // should match the context we created for this child worker.
-  if (wi->js_engine_context != wi->onmessage_handler.context) {
-    return false;
-  }
-
-#ifdef DEBUG
-  // After JS_ExecuteScript() should always be a "safe" time to garbage collect.
-  // Do it here to trigger potential GC bugs in our code.
-  JS_GC(wi->js_engine_context); 
-#endif
-
-  return true; // succeeded
 }
 
 void PoolThreadsManager::ShutDown() {
