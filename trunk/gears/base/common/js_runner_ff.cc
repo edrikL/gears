@@ -152,9 +152,9 @@ JsRunner::~JsRunner() {
     delete *global;
   }
 
-  if (js_script_) {
-    JS_DestroyScript(js_engine_context_, js_script_);
-  }
+  // TODO(zork): The script object should be cleaned up here,
+  // but it currently causes JS_DestroyContext to occasionally crash.
+
   if (js_engine_context_) {
     JS_DestroyContext(js_engine_context_);
   }
