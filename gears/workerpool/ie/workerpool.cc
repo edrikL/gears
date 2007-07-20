@@ -105,7 +105,13 @@ GearsWorkerPool::~GearsWorkerPool() {
   if (threads_manager_) {
     JavaScriptWorkerInfo *wi = threads_manager_->GetCurrentThreadWorkerInfo();
     assert(wi);
-    assert(DestroyWindow(wi->message_hwnd));
+
+    // message_hwnd can be null if initialization never occurred or if it
+    // failed.
+    if (wi->message_hwnd) {
+      BOOL success = DestroyWindow(wi->message_hwnd);
+      assert(success);
+    }
 
     threads_manager_->ReleaseWorkerRef();
   }
