@@ -71,10 +71,10 @@ class ATL_NO_VTABLE JsRunnerImpl
     *context = NULL;
     return true;
   }
-  bool AddGlobal(const char16 *name, IGeneric *object, gIID iface_id);
-  bool Start(const char16 *full_script);
+  bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id);
+  bool Start(const std::string16 &full_script);
   bool Stop();
-  bool Eval(const char16 *script);
+  bool Eval(const std::string16 &script);
   const char16 * GetLastScriptError();
 
   // IActiveScriptSiteImpl overrides
@@ -124,7 +124,7 @@ JsRunnerImpl::~JsRunnerImpl() {
 }
 
 
-bool JsRunnerImpl::AddGlobal(const char16 *name,
+bool JsRunnerImpl::AddGlobal(const std::string16 &name,
                              IGeneric *object,
                              gIID iface_id) {
   if (!object) { return false; }
@@ -137,7 +137,7 @@ bool JsRunnerImpl::AddGlobal(const char16 *name,
 }
 
 
-bool JsRunnerImpl::Start(const char16 *full_script) {
+bool JsRunnerImpl::Start(const std::string16 &full_script) {
   HRESULT hr;
 
   coinit_succeeded_ = SUCCEEDED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED));
@@ -199,7 +199,7 @@ bool JsRunnerImpl::Start(const char16 *full_script) {
   hr = javascript_engine_parser->InitNew();
   if (FAILED(hr)) { return false; }
   // why does ParseScriptText also AddRef the object?
-  hr = javascript_engine_parser->ParseScriptText(full_script,
+  hr = javascript_engine_parser->ParseScriptText(full_script.c_str(),
                                                  NULL, NULL, NULL, 0, 0,
                                                  SCRIPTITEM_ISVISIBLE,
                                                  NULL, NULL);
@@ -223,7 +223,7 @@ bool JsRunnerImpl::Start(const char16 *full_script) {
   return true; // succeeded
 }
 
-bool JsRunnerImpl::Eval(const char16 *script) {
+bool JsRunnerImpl::Eval(const std::string16 &script) {
   CComQIPtr<IActiveScriptParse> javascript_engine_parser;
 
   // Get the parser interface
@@ -231,7 +231,7 @@ bool JsRunnerImpl::Eval(const char16 *script) {
   if (!javascript_engine_parser) { return false; }
 
   // Execute the script
-  HRESULT hr = javascript_engine_parser->ParseScriptText(script,
+  HRESULT hr = javascript_engine_parser->ParseScriptText(script.c_str(),
                                                          NULL, NULL, 0, 0, 0,
                                                          SCRIPTITEM_ISVISIBLE,
                                                          NULL, NULL);
@@ -333,13 +333,13 @@ class JsRunner : public JsRunnerInterface {
     }
   }
 
-  bool JsRunner::AddGlobal(const char16 *name,
+  bool JsRunner::AddGlobal(const std::string16 &name,
                            IGeneric *object,
                            gIID iface_id) {
     return com_obj_->AddGlobal(name, object, iface_id);
   }
 
-  bool JsRunner::Start(const char16 *full_script) {
+  bool JsRunner::Start(const std::string16 &full_script) {
     return com_obj_->Start(full_script);
   }
 
@@ -351,7 +351,7 @@ class JsRunner : public JsRunnerInterface {
     return com_obj_->GetContext(context);
   }
 
-  bool JsRunner::Eval(const char16 *script) {
+  bool JsRunner::Eval(const std::string16 &script) {
     return com_obj_->Eval(script);
   }
 
@@ -375,13 +375,13 @@ class ParentJsRunner : public JsRunnerInterface {
   virtual ~ParentJsRunner() {
   }
 
-  bool ParentJsRunner::AddGlobal(const char16 *name,
+  bool ParentJsRunner::AddGlobal(const std::string16 &name,
                                  IGeneric *object,
                                  gIID iface_id) {
     // TODO(zork): Add this functionality to parent js runners.
     return false;
   }
-  bool ParentJsRunner::Start(const char16 *full_script) {
+  bool ParentJsRunner::Start(const std::string16 &full_script) {
     assert(false); // Should not be called on the parent.
     return false;
   }
@@ -393,7 +393,7 @@ class ParentJsRunner : public JsRunnerInterface {
     context = NULL;
     return false;
   }
-  bool Eval(const char16 *script);
+  bool Eval(const std::string16 &script);
   const char16 * ParentJsRunner::GetLastScriptError() {
     return NULL;
   }
@@ -404,13 +404,13 @@ class ParentJsRunner : public JsRunnerInterface {
   DISALLOW_EVIL_CONSTRUCTORS(ParentJsRunner);
 };
 
-bool ParentJsRunner::Eval(const char16 *script) {
+bool ParentJsRunner::Eval(const std::string16 &script) {
   CComPtr<IHTMLWindow2> window;
   HRESULT hr = ActiveXUtils::GetHtmlWindow2(site_, &window);
   if (FAILED(hr)) { return false; }
 
   VARIANT ret_val;
-  hr = window->execScript(BSTR(script), NULL, &ret_val);
+  hr = window->execScript(BSTR(script.c_str()), NULL, &ret_val);
   if (FAILED(hr)) { return false; }
 
   return true;

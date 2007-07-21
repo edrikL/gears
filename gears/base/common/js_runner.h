@@ -54,13 +54,13 @@ class JsRunnerInterface {
  public:
   virtual ~JsRunnerInterface() {};
   // increments refcount
-  virtual bool AddGlobal(const char16 *name,
+  virtual bool AddGlobal(const std::string16 &name,
                          IGeneric *object,
                          gIID iface_iid) = 0;
-  virtual bool Start(const char16 *full_script) = 0;
+  virtual bool Start(const std::string16 &full_script) = 0;
   virtual bool Stop() = 0;
   virtual bool GetContext(JsContextPtr *context) = 0;
-  virtual bool Eval(const char16 *script) = 0;
+  virtual bool Eval(const std::string16 &script) = 0;
   virtual const char16 * GetLastScriptError() = 0;
 };
 

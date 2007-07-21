@@ -45,14 +45,16 @@ class JsRunner : public JsRunnerInterface {
   }
   ~JsRunner();
 
-  bool JsRunner::AddGlobal(const char16 *name, IGeneric *object, gIID iface_id);
-  bool JsRunner::Start(const char16 *full_script);
+  bool JsRunner::AddGlobal(const std::string16 &name,
+                           IGeneric *object,
+                           gIID iface_id);
+  bool JsRunner::Start(const std::string16 &full_script);
   bool JsRunner::Stop();
   bool JsRunner::GetContext(JsContextPtr *context) {
     *context = js_engine_context_;
     return true;
   }
-  bool JsRunner::Eval(const char16 *full_script);
+  bool JsRunner::Eval(const std::string16 &full_script);
   const char16 * JsRunner::GetLastScriptError() {
     return last_script_error_.c_str();
   }
@@ -85,13 +87,13 @@ class ParentJsRunner : public JsRunnerInterface {
   ~ParentJsRunner() {
   }
 
-  bool ParentJsRunner::AddGlobal(const char16 *name,
+  bool ParentJsRunner::AddGlobal(const std::string16 &name,
                                  IGeneric *object,
                                  gIID iface_id) {
     // TODO(zork): Add this functionality to parent js runners.
     return false;
   }
-  bool ParentJsRunner::Start(const char16 *full_script) {
+  bool ParentJsRunner::Start(const std::string16 &full_script) {
     assert(false); // This should not be called on the parent.
     return false;
   }
@@ -103,7 +105,7 @@ class ParentJsRunner : public JsRunnerInterface {
     *context = js_engine_context;
     return true;
   }
-  bool ParentJsRunner::Eval(const char16 *full_script);
+  bool ParentJsRunner::Eval(const std::string16 &full_script);
   const char16 * ParentJsRunner::GetLastScriptError() {
     return NULL;
   }
@@ -115,19 +117,16 @@ class ParentJsRunner : public JsRunnerInterface {
 };
 
 
-bool ParentJsRunner::Eval(const char16 *script) {
+bool ParentJsRunner::Eval(const std::string16 &script) {
   /*
   JSObject *object = JS_GetGlobalObject(js_engine_context);
 
   uintN line_number_start = 0;
   jsval rval;
   JSBool js_ok = JS_EvaluateUCScript(
-                       js_engine_context,
-                       object,
-                       reinterpret_cast<const jschar *>(script),
-                       wcslen(script),
-                       "script", line_number_start,
-                       &rval);
+      js_engine_context, object,
+      reinterpret_cast<const jschar *>(script.c_str()),
+      script.length(), "script", line_number_start, &rval);
   if (!js_ok) { return false; }
   return true;
   */
@@ -298,13 +297,15 @@ bool JsRunner::InitJavaScriptEngine() {
   return true; // succeeded
 }
 
-bool JsRunner::AddGlobal(const char16 *name, IGeneric *object, gIID iface_id) {
+bool JsRunner::AddGlobal(const std::string16 &name,
+                         IGeneric *object,
+                         gIID iface_id) {
   JSObject *proto_object;
   if (!GetProtoFromIID(iface_id, &proto_object)) {
     return false;
   }
 
-  if (!alloc_js_wrapper_->DefineGlobal(proto_object, object, name)) {
+  if (!alloc_js_wrapper_->DefineGlobal(proto_object, object, name.c_str())) {
     return false;
   }
 
@@ -314,7 +315,7 @@ bool JsRunner::AddGlobal(const char16 *name, IGeneric *object, gIID iface_id) {
   return true; // succeeded
 }
 
-bool JsRunner::Start(const char16 *full_script) {
+bool JsRunner::Start(const std::string16 &full_script) {
   //
   // Add script code to the engine instance
   //
@@ -322,8 +323,8 @@ bool JsRunner::Start(const char16 *full_script) {
   uintN line_number_start = 0;
   js_script_ = JS_CompileUCScript(
                        js_engine_context_, global_obj_,
-                       reinterpret_cast<const jschar *>(full_script),
-                       wcslen(full_script),
+                       reinterpret_cast<const jschar *>(full_script.c_str()),
+                       full_script.length(),
                        "script", line_number_start);
   if (!js_script_) { return false; }
 
@@ -354,7 +355,7 @@ bool JsRunner::Stop() {
   return false;
 }
 
-bool JsRunner::Eval(const char16 *script) {
+bool JsRunner::Eval(const std::string16 &script) {
   JSObject *object = JS_GetGlobalObject(js_engine_context_);
 
   uintN line_number_start = 0;
@@ -362,8 +363,8 @@ bool JsRunner::Eval(const char16 *script) {
   JSBool js_ok = JS_EvaluateUCScript(
                        js_engine_context_,
                        object,
-                       reinterpret_cast<const jschar *>(script),
-                       wcslen(script),
+                       reinterpret_cast<const jschar *>(script.c_str()),
+                       script.length(),
                        "script", line_number_start,
                        &rval);
   if (!js_ok) { return false; }
