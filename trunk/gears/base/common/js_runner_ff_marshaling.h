@@ -68,7 +68,7 @@ class JsContextWrapper {
   // Defines a named object of the given type in the JS global namespace.
   bool DefineGlobal(JSObject *proto_obj,
                     nsISupports *instance_isupports,
-                    const char16 *instance_name);
+                    const std::string16 &instance_name);
 
  private:
   bool AddFunctionsToPrototype(JSObject *proto_obj,

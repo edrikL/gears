@@ -496,7 +496,7 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
     }
 
     // Add JS code
-    if (!js_runner->Start(wi->full_script)) {
+    if (!js_runner->Start(static_cast<char16 *>(wi->full_script))) {
       js_init_succeeded = false;
     }
   }

@@ -278,7 +278,7 @@ bool JsContextWrapper::DefineClass(const nsIID *iface_id,
 
 bool JsContextWrapper::DefineGlobal(JSObject *proto_obj,
                                     nsISupports *instance_isupports,
-                                    const char16 *instance_name) {
+                                    const std::string16 &instance_name) {
 
   JsWrapperDataForProto *proto_data =
       static_cast<JsWrapperDataForProto*>(JS_GetPrivate(cx_, proto_obj));
@@ -301,15 +301,16 @@ bool JsContextWrapper::DefineGlobal(JSObject *proto_obj,
   // To define a global instance, add the name as a property of the
   // global namespace.
   JSBool js_ok;
-  js_ok = JS_DefineUCProperty(cx_, global_obj_,
-                              reinterpret_cast<const jschar *>(instance_name),
-                              wcslen(instance_name),
-                              OBJECT_TO_JSVAL(instance_obj),
-                              NULL, NULL, // getter, setter
-                              0 |     // these flags are optional
-                              //JSPROP_PERMANENT |
-                              //JSPROP_READONLY |
-                              JSPROP_ENUMERATE);
+  js_ok = JS_DefineUCProperty(
+              cx_, global_obj_,
+              reinterpret_cast<const jschar *>(instance_name.c_str()),
+              instance_name.length(),
+              OBJECT_TO_JSVAL(instance_obj),
+              NULL, NULL, // getter, setter
+              0 |     // these flags are optional
+              //JSPROP_PERMANENT |
+              //JSPROP_READONLY |
+              JSPROP_ENUMERATE);
   if (!js_ok) { return false; }
 
   return true; // succeeded
