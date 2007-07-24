@@ -241,8 +241,6 @@
 		9B11DDEE0C0E12580020032F /* googlegearsuninstall */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = googlegearsuninstall; sourceTree = "<group>"; };
 		9B2FD8820BE7E2D3008A4C59 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		9B2FD8910BE7E315008A4C59 /* Project.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
-		9B3501BB0B28A9A5008DE8C7 /* captured_application.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = captured_application.cc; path = ../../../webcache/common/captured_application.cc; sourceTree = SOURCE_ROOT; };
-		9B3501BC0B28A9A5008DE8C7 /* captured_application.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = captured_application.h; path = ../../../webcache/common/captured_application.h; sourceTree = SOURCE_ROOT; };
 		9B3903020B2E36270059FABE /* GearsWorker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GearsWorker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B57EEA30BE7E6A300451F56 /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		9B5D3D3F0A9E2037000F4AD1 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = /System/Library/Frameworks/SystemConfiguration.framework; sourceTree = "<absolute>"; };
@@ -272,8 +270,6 @@
 		9BDFC00D0B856DE500DE3642 /* scoped_CF.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = scoped_CF.h; path = ../scoped_CF.h; sourceTree = SOURCE_ROOT; };
 		9BDFC0BC0B600027009960DE /* thread_locals.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = thread_locals.cc; path = ../../common/thread_locals.cc; sourceTree = SOURCE_ROOT; };
 		9BDFC0BD0B600027009960DE /* thread_locals.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = thread_locals.h; path = ../../common/thread_locals.h; sourceTree = SOURCE_ROOT; };
-		9BDFC55E0B61A842009960DE /* sf_managed_resource_store.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sf_managed_resource_store.h; path = ../../../webcache/safari/sf_managed_resource_store.h; sourceTree = SOURCE_ROOT; };
-		9BDFC55F0B61A842009960DE /* sf_managed_resource_store.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = sf_managed_resource_store.mm; path = ../../../webcache/safari/sf_managed_resource_store.mm; sourceTree = SOURCE_ROOT; };
 		9BE4FCFF0BDD670800B26C45 /* base_class.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = base_class.cc; path = ../../common/base_class.cc; sourceTree = SOURCE_ROOT; };
 		9BE4FD000BDD670800B26C45 /* base_class.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = base_class.h; path = ../../common/base_class.h; sourceTree = SOURCE_ROOT; };
 		9BE4FD300BDD68D500B26C45 /* security_model_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = security_model_test.cc; path = ../../common/security_model_test.cc; sourceTree = SOURCE_ROOT; };
@@ -532,7 +528,6 @@
 				9B6131CC0A5F1BD2003F08FE /* Database */,
 				9BD6F1320B961C6200439BFD /* Factory */,
 				9BDFC3890B605B47009960DE /* LocalServer */,
-				9BDFC3880B605B39009960DE /* ManagedResourceStore */,
 				9B2532FD0C03A85600FBDD02 /* Resources */,
 				9BDFC1BF0B6043F0009960DE /* third-party */,
 				9B6133B40A5F2FB8003F08FE /* Utilities */,
@@ -776,16 +771,6 @@
 			name = Common;
 			sourceTree = "<group>";
 		};
-		9BDFC3880B605B39009960DE /* ManagedResourceStore */ = {
-			isa = PBXGroup;
-			children = (
-				9BDFC38A0B605B6C009960DE /* Common */,
-				9BDFC55E0B61A842009960DE /* sf_managed_resource_store.h */,
-				9BDFC55F0B61A842009960DE /* sf_managed_resource_store.mm */,
-			);
-			name = ManagedResourceStore;
-			sourceTree = "<group>";
-		};
 		9BDFC3890B605B47009960DE /* LocalServer */ = {
 			isa = PBXGroup;
 			children = (
@@ -810,15 +795,6 @@
 				9BED901B0C0CEC3100006966 /* localserver_db_proxy.mm */,
 			);
 			name = LocalServer;
-			sourceTree = "<group>";
-		};
-		9BDFC38A0B605B6C009960DE /* Common */ = {
-			isa = PBXGroup;
-			children = (
-				9B3501BC0B28A9A5008DE8C7 /* captured_application.h */,
-				9B3501BB0B28A9A5008DE8C7 /* captured_application.cc */,
-			);
-			name = Common;
 			sourceTree = "<group>";
 		};
 		9BED44E30BCAFFDD0046AD7C /* Common */ = {
@@ -1618,8 +1594,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = (
-					"$(NATIVE_ARCH)",
 					ppc,
+					i386,
 				);
 				COPY_PHASE_STRIP = YES;
 				DEPLOYMENT_LOCATION = NO;
