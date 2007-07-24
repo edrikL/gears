@@ -65,6 +65,14 @@ typedef HRESULT    JsNativeMethodRetval;
 // Implementations of boilerplate code.
 // - We don't currently need GetNativeBaseClass on IE.
 
+#elif BROWSER_SAFARI
+
+// Just placeholder values for Safari since the created workers use a separate
+// process for JS execution.
+typedef void  JsToken;
+typedef void* JsContextPtr;
+typedef void  JsNativeMethodRetval;
+
 #endif // BROWSER_xyz
 
 class JsRunnerInterface;
