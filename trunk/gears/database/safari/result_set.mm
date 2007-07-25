@@ -26,12 +26,12 @@
 #import <WebKit/WebKit.h>
 
 #import "gears/base/common/sqlite_wrapper.h"
-#import "gears/base/common/timer.h"
+#import "gears/base/common/stopwatch.h"
 #import "gears/base/common/common_sf.h"
 #import "gears/database/safari/result_set.h"
 
 #ifdef DEBUG
-extern Timer g_database_timer_;
+extern Stopwatch g_database_stopwatch_;
 #endif
 
 @interface GearsResultSet(PrivateMethods)
@@ -133,7 +133,7 @@ extern Timer g_database_timer_;
 //------------------------------------------------------------------------------
 - (bool)nextImpl:(NSString **)error {
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&g_database_timer_);
+  ScopedStopwatch scoped_stopwatch(&g_database_stopwatch_);
 #endif
   
   int sql_status = sqlite3_step(statement_);
@@ -172,7 +172,7 @@ extern Timer g_database_timer_;
 //------------------------------------------------------------------------------
 - (NSNumber *)fieldCount {
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&g_database_timer_);
+  ScopedStopwatch scoped_stopwatch(&g_database_stopwatch_);
 #endif
 
   int count = 0;
@@ -186,7 +186,7 @@ extern Timer g_database_timer_;
 //------------------------------------------------------------------------------
 - (NSString *)fieldName:(NSNumber *)index {
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&g_database_timer_);
+  ScopedStopwatch scoped_stopwatch(&g_database_stopwatch_);
 #endif
   
   if (!statement_)
@@ -206,7 +206,7 @@ extern Timer g_database_timer_;
 //------------------------------------------------------------------------------
 - (id)field:(NSNumber *)index {
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&g_database_timer_);
+  ScopedStopwatch scoped_stopwatch(&g_database_stopwatch_);
 #endif
 
   if (!statement_)
@@ -250,7 +250,7 @@ extern Timer g_database_timer_;
 //------------------------------------------------------------------------------
 - (id)fieldByName:(NSString *)name {
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&g_database_timer_);
+  ScopedStopwatch scoped_stopwatch(&g_database_stopwatch_);
 #endif
 
   if (!statement_)

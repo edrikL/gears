@@ -27,7 +27,7 @@
 
 #import "gears/base/common/paths.h"
 #import "gears/base/common/sqlite_wrapper.h"
-#import "gears/base/common/timer.h"
+#import "gears/base/common/stopwatch.h"
 #import "gears/base/safari/factory_utils.h"
 #import "gears/base/common/paths_sf_more.h"
 #import "gears/base/common/common_sf.h"
@@ -38,7 +38,7 @@
 #import "gears/database/safari/result_set.h"
 
 #ifdef DEBUG
-Timer g_database_timer_;
+Stopwatch g_database_stopwatch_;
 #endif
 
 @class GearsResultSet;
@@ -92,7 +92,7 @@ Timer g_database_timer_;
 
 #ifdef DEBUG
   if ([key isEqualToString:@"executeMsec_"]) {
-    return [NSNumber numberWithFloat:g_database_timer_.GetElapsed()];
+    return [NSNumber numberWithFloat:g_database_stopwatch_.GetElapsed()];
   }
 #endif
   
@@ -205,7 +205,7 @@ Timer g_database_timer_;
 //------------------------------------------------------------------------------
 - (GearsResultSet *)execute:(NSString *)expr array:(id)array {
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&g_database_timer_);
+  ScopedStopwatch scoped_stopwatch(&g_database_stopwatch_);
 #endif // DEBUG
   
   if (!db_)
