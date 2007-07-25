@@ -30,7 +30,7 @@
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/string_utils.h"
-#include "gears/base/common/timer.h"
+#include "gears/base/common/stopwatch.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/database/common/database_utils.h"
@@ -38,7 +38,7 @@
 #include "gears/database/ie/result_set.h"
 
 #ifdef DEBUG
-Timer GearsDatabase::g_timer_;
+Stopwatch GearsDatabase::g_stopwatch_;
 #endif // DEBUG
 
 GearsDatabase::GearsDatabase() : db_(NULL) {}
@@ -179,7 +179,7 @@ STDMETHODIMP GearsDatabase::execute(const BSTR expression_in,
   const BSTR expression = ActiveXUtils::SafeBSTR(expression_in);
 
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&GearsDatabase::g_timer_);
+  ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   ATLTRACE(_T("GearsDatabase::execute(%s)\n"), expression);
@@ -276,7 +276,7 @@ STDMETHODIMP GearsDatabase::get_lastInsertRowId(VARIANT *retval) {
 #ifdef DEBUG
 STDMETHODIMP GearsDatabase::get_executeMsec(int *retval) {
   ATLTRACE(_T("GearsDatabase::executeMSec()\n"));
-  *retval = GearsDatabase::g_timer_.GetElapsed();
+  *retval = GearsDatabase::g_stopwatch_.GetElapsed();
   RETURN_NORMAL();
 }
 #endif

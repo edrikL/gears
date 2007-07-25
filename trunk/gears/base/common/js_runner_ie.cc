@@ -409,7 +409,7 @@ bool ParentJsRunner::Eval(const std::string16 &script) {
   HRESULT hr = ActiveXUtils::GetHtmlWindow2(site_, &window);
   if (FAILED(hr)) { return false; }
 
-  VARIANT ret_val;
+  CComVariant ret_val;
   hr = window->execScript(BSTR(script.c_str()), NULL, &ret_val);
   if (FAILED(hr)) { return false; }
 

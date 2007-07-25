@@ -29,7 +29,7 @@
 #include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-#include "gears/base/common/timer.h"
+#include "gears/base/common/stopwatch.h"
 
 struct sqlite3;
 struct sqlite3_stmt;
@@ -61,11 +61,12 @@ class ATL_NO_VTABLE GearsDatabase
   STDMETHOD(get_lastInsertRowId)(VARIANT *retval);
 
 // Right now this is just used for testing perf. If we ever want to make it a
-// real feature of Scour, then it will need to keep separate timers for each
-// database file, not a single timer for the entire process as it does now.
+// real feature of Gears, then it will need to keep separate stopwatches for
+// each database file, not a single stopwatch for the entire process as it does
+// now.
 #ifdef DEBUG
   STDMETHOD(get_executeMsec)(int *retval);
-  static Timer g_timer_;
+  static Stopwatch g_stopwatch_;
 #endif
 
  private:

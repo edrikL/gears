@@ -25,12 +25,12 @@
 
 #include <assert.h>
 #include "gears/base/common/common.h"
-#include "gears/base/common/timer.h"
+#include "gears/base/common/stopwatch.h"
 
 //------------------------------------------------------------------------------
 // Start
 //------------------------------------------------------------------------------
-void Timer::Start() {
+void Stopwatch::Start() {
   MutexLock lock(&mutex_);
 
   if (nested_count_ == 0) {
@@ -43,7 +43,7 @@ void Timer::Start() {
 //------------------------------------------------------------------------------
 // Stop
 //------------------------------------------------------------------------------
-void Timer::Stop() {
+void Stopwatch::Stop() {
   MutexLock lock(&mutex_);
 
   // You shouldn't call stop() before ever calling start; that would be silly.
@@ -58,15 +58,15 @@ void Timer::Stop() {
 //------------------------------------------------------------------------------
 // GetElapsed
 //------------------------------------------------------------------------------
-int Timer::GetElapsed() {
+int Stopwatch::GetElapsed() {
   return total_;
 }
 
 
 //------------------------------------------------------------------------------
-// ScopedTimer constructor
+// ScopedStopwatch constructor
 //------------------------------------------------------------------------------
-ScopedTimer::ScopedTimer(Timer *t) {
+ScopedStopwatch::ScopedStopwatch(Stopwatch *t) {
   assert(t);
   t_ = t;
   t_->Start();
@@ -75,7 +75,7 @@ ScopedTimer::ScopedTimer(Timer *t) {
 //------------------------------------------------------------------------------
 // Timing destructor
 //------------------------------------------------------------------------------
-ScopedTimer::~ScopedTimer() {
+ScopedStopwatch::~ScopedStopwatch() {
   assert(t_);
   t_->Stop();
 }

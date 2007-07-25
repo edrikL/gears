@@ -29,7 +29,7 @@
 #include "gears/third_party/gecko_internal/nsIVariant.h"
 #include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
 #include "gears/base/common/sqlite_wrapper.h"
-#include "gears/base/common/timer.h"
+#include "gears/base/common/stopwatch.h"
 
 #ifdef DEBUG
 #include "gears/database/firefox/database.h"
@@ -94,7 +94,7 @@ bool GearsResultSet::SetStatement(sqlite3_stmt *statement,
 
 NS_IMETHODIMP GearsResultSet::Field(PRInt32 index, nsIVariant **retval) {
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&GearsDatabase::g_timer_);
+  ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   if (statement_ == NULL) {
@@ -152,7 +152,7 @@ NS_IMETHODIMP GearsResultSet::Field(PRInt32 index, nsIVariant **retval) {
 NS_IMETHODIMP GearsResultSet::FieldByName(const nsAString &field_name,
                                           nsIVariant **retval) {
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&GearsDatabase::g_timer_);
+  ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   if (statement_ == NULL) {
@@ -178,7 +178,7 @@ NS_IMETHODIMP GearsResultSet::FieldByName(const nsAString &field_name,
 
 NS_IMETHODIMP GearsResultSet::FieldName(PRInt32 index, nsAString &retval) {
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&GearsDatabase::g_timer_);
+  ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   if (statement_ == NULL) {
@@ -195,7 +195,7 @@ NS_IMETHODIMP GearsResultSet::FieldName(PRInt32 index, nsAString &retval) {
 
 NS_IMETHODIMP GearsResultSet::FieldCount(PRInt32 *retval) {
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&GearsDatabase::g_timer_);
+  ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   // rs.fieldCount() should never throw. Return 0 if there is no statement.
@@ -209,7 +209,7 @@ NS_IMETHODIMP GearsResultSet::FieldCount(PRInt32 *retval) {
 
 NS_IMETHODIMP GearsResultSet::Close() {
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&GearsDatabase::g_timer_);
+  ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   if (statement_) { // redundant closes are harmless; ignore
@@ -241,7 +241,7 @@ NS_IMETHODIMP GearsResultSet::Next() {
 
 bool GearsResultSet::NextImpl(std::string16 *error_message) {
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&GearsDatabase::g_timer_);
+  ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
   assert(statement_);
   assert(error_message);
@@ -261,8 +261,8 @@ bool GearsResultSet::NextImpl(std::string16 *error_message) {
       break;
   }
   bool succeeded = (sql_status == SQLITE_ROW) ||
-                 (sql_status == SQLITE_DONE) ||
-                 (sql_status == SQLITE_OK);
+                   (sql_status == SQLITE_DONE) ||
+                   (sql_status == SQLITE_OK);
   if (!succeeded) {
     BuildSqliteErrorString(STRING16(L"Database operation failed."),
                            sql_status, sqlite3_db_handle(statement_),

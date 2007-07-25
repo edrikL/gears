@@ -23,9 +23,40 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/product_version.h"
+#ifndef GEARS_BASE_COMMON_STOPWATCH_H__
+#define GEARS_BASE_COMMON_STOPWATCH_H__
 
-DEFINE_MODULE_VERSION_VARIABLES(Database, 1, 0);
-DEFINE_MODULE_VERSION_VARIABLES(WorkerPool, 1, 0);
-DEFINE_MODULE_VERSION_VARIABLES(LocalServer, 1, 0);
-DEFINE_MODULE_VERSION_VARIABLES(Timer, 1, 0);
+#include "gears/base/common/int_types.h"
+#include "gears/base/common/mutex.h"
+
+//------------------------------------------------------------------------------
+// Simple perf timer. Supports nested calls.
+//------------------------------------------------------------------------------
+class Stopwatch {
+ public:
+  Stopwatch() : start_(0), total_(0), nested_count_(0) {};
+  void Start();
+  void Stop();
+  int GetElapsed();
+
+ private:
+  Mutex mutex_;
+  int start_;
+  int total_;
+  int nested_count_;
+};
+
+
+//------------------------------------------------------------------------------
+// Times an individual block of code.
+//------------------------------------------------------------------------------
+class ScopedStopwatch {
+ public:
+  ScopedStopwatch(Stopwatch *t);
+  ~ScopedStopwatch();
+
+ private:
+  Stopwatch *t_;
+};
+
+#endif  // GEARS_BASE_COMMON_STOPWATCH_H__

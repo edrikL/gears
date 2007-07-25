@@ -24,7 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/common/common.h"
-#include "gears/base/common/timer.h"
+#include "gears/base/common/stopwatch.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/common/sqlite_wrapper.h"
@@ -32,7 +32,7 @@
 #include "gears/database/ie/result_set.h"
 #include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
 
-GearsResultSet::GearsResultSet() : 
+GearsResultSet::GearsResultSet() :
     statement_(NULL),
     column_indexes_built_(false),
     is_valid_row_(false) {
@@ -52,7 +52,7 @@ bool GearsResultSet::SetStatement(sqlite3_stmt *statement,
   assert(error_message);
   statement_ = statement;
   // convention: call next() when the statement is set
-  bool succeeded = NextImpl(error_message); 
+  bool succeeded = NextImpl(error_message);
   if (!succeeded || sqlite3_column_count(statement_) == 0) {
     // Either an error occurred or this was a command that does
     // not return a row, so we can just close automatically
@@ -64,7 +64,7 @@ bool GearsResultSet::SetStatement(sqlite3_stmt *statement,
 STDMETHODIMP GearsResultSet::field(int index, VARIANT *retval) {
   ATLTRACE(_T("GearsResultSet::field(%d)\n"), index);
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&GearsDatabase::g_timer_);
+  ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   if (statement_ == NULL) {
@@ -96,7 +96,7 @@ STDMETHODIMP GearsResultSet::field(int index, VARIANT *retval) {
         HRESULT hr = VariantChangeType(retval, retval, 0, VT_DECIMAL);
         if (FAILED(hr)) {
           RETURN_EXCEPTION(STRING16(L"Converting int64 to VT_DECIMAL failed."));
-	}
+        }
       }
       RETURN_NORMAL();
     }
@@ -133,7 +133,7 @@ STDMETHODIMP GearsResultSet::fieldByName(const BSTR field_name_in,
   const BSTR field_name = ActiveXUtils::SafeBSTR(field_name_in);
 
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&GearsDatabase::g_timer_);
+  ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   ATLTRACE(_T("GearsResultSet::fieldByName\n"));
@@ -171,7 +171,7 @@ STDMETHODIMP GearsResultSet::fieldByName(const BSTR field_name_in,
 STDMETHODIMP GearsResultSet::fieldName(int index, VARIANT *retval) {
   ATLTRACE(_T("GearsResultSet::fieldName(%d)\n"), index);
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&GearsDatabase::g_timer_);
+  ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   if (statement_ == NULL) {
@@ -196,7 +196,7 @@ STDMETHODIMP GearsResultSet::fieldName(int index, VARIANT *retval) {
 STDMETHODIMP GearsResultSet::fieldCount(int *retval) {
   ATLTRACE(_T("GearsResultSet::fieldCount()\n"));
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&GearsDatabase::g_timer_);
+  ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   // rs.fieldCount() should never throw. Return 0 if there is no statement.
@@ -211,7 +211,7 @@ STDMETHODIMP GearsResultSet::fieldCount(int *retval) {
 STDMETHODIMP GearsResultSet::close() {
   ATLTRACE(_T("GearsResultSet::close()\n"));
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&GearsDatabase::g_timer_);
+  ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   if (statement_ != NULL) {
@@ -238,7 +238,7 @@ STDMETHODIMP GearsResultSet::next() {
 
 bool GearsResultSet::NextImpl(std::string16 *error_message) {
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&GearsDatabase::g_timer_);
+  ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
   assert(statement_);
   assert(error_message);
@@ -258,8 +258,8 @@ bool GearsResultSet::NextImpl(std::string16 *error_message) {
       break;
   }
   bool succeeded = (sql_status == SQLITE_ROW) ||
-                 (sql_status == SQLITE_DONE) ||
-                 (sql_status == SQLITE_OK);
+                   (sql_status == SQLITE_DONE) ||
+                   (sql_status == SQLITE_OK);
   if (!succeeded) {
     BuildSqliteErrorString(STRING16(L"Database operation failed."),
                            sql_status, sqlite3_db_handle(statement_),

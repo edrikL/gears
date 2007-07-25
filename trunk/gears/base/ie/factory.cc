@@ -33,6 +33,7 @@
 #include "gears/database/ie/database.h"
 #include "gears/workerpool/ie/workerpool.h"
 #include "gears/localserver/ie/localserver_ie.h"
+#include "gears/timer/ie/timer.h"
 
 
 GearsFactory::GearsFactory()
@@ -112,6 +113,15 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
         minor_version_desired <= kGearsLocalServerVersionMinor) {
       CComObject<GearsLocalServer> *obj;
       hr = CComObject<GearsLocalServer>::CreateInstance(&obj);
+      base_class = obj;
+      idispatch = obj;
+    }
+  } else if (object_name == STRING16(L"beta.timer") ||
+             object_name == STRING16(L"com.google.beta.timer")) {
+    if (major_version_desired == kGearsTimerVersionMajor &&
+        minor_version_desired <= kGearsTimerVersionMinor) {
+      CComObject<GearsTimer> *obj;
+      hr = CComObject<GearsTimer>::CreateInstance(&obj);
       base_class = obj;
       idispatch = obj;
     }
