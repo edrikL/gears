@@ -65,6 +65,7 @@ function doit(document) {
   runDatabaseTests();
   runManifestTests();
   runWorkerPoolTests();
+  runTimerTests();
   runMiscTests();
 
   var c = document.getElementById("complete");
@@ -1643,6 +1644,223 @@ function checkWorkerPoolTests() {
             pingReceived_GCWithFunctionClosures,  // success
             '',  // reason
             0); // execTime
+}
+
+
+//------------------------------------------------------------------------------
+// Timer tests
+//------------------------------------------------------------------------------
+
+var TIMER_TARGET_INTERVALS = 3;
+
+var parentTimeoutTestSucceeded = false;
+var parentIntervalTestIntervals = 0;
+var workerTimeoutTestSucceeded = false;
+var workerIntervalTestIntervals = 0;
+var parent1000msTimeoutTime = 0;
+var worker1000msTimeoutTime = 0;
+
+function timer_ParentTimeoutTest() {
+  var timerFired = false;
+  var timers = google.gears.factory.create('beta.timer', '1.0');
+
+  timers.setTimeout(timeoutHandler, 300);
+
+  function timeoutHandler() {
+    // Set success to true on the first firing, false if it fires again.
+    parentTimeoutTestSucceeded = !timerFired;
+    timerFired = true;
+  }
+}
+
+function timer_ParentIntervalTest() {
+  var timers = google.gears.factory.create('beta.timer', '1.0');
+  var timerId = timers.setInterval(intervalHandler, 300);
+
+  function intervalHandler() {
+    ++parentIntervalTestIntervals;
+    if (parentIntervalTestIntervals == TIMER_TARGET_INTERVALS) {
+      timers.clearInterval(timerId);
+    }
+  }
+}
+
+function timer_WorkerTimeoutTest() {
+  var timerFired = false;
+  var workerPool = google.gears.factory.create('beta.workerpool', '1.0');
+  workerPool.onmessage = function(message, senderId) {
+    if (message == 'timeout') {
+      // Set success to true on the first firing, false if it fires again.
+      workerTimeoutTestSucceeded = !timerFired;
+      timerFired = true;
+    }
+  }
+
+  var childCode = String(workerInit) +
+                  String(workerHandler) +
+                  'var timers;' +
+                  'var parentId;' +
+                  'workerInit();';
+
+  var workerId = workerPool.createWorker(childCode);
+  workerPool.sendMessage('setTimeout', workerId);
+
+  function workerInit() {
+    timers = google.gears.factory.create('beta.timer', '1.0');
+    google.gears.workerPool.onmessage = workerHandler;
+  }
+
+  function workerHandler(message, sender) {
+    if (message == 'setTimeout') {
+      parentId = sender;
+      timers.setTimeout(timeoutHandler, 300);
+    }
+
+    function timeoutHandler() {
+      google.gears.workerPool.sendMessage('timeout', parentId);
+    }
+  }
+}
+
+function timer_WorkerIntervalTest() {
+  var timerFired = false;
+  var workerPool = google.gears.factory.create('beta.workerpool', '1.0');
+  workerPool.onmessage = function(message, senderId) {
+    if (message == 'interval') {
+      ++workerIntervalTestIntervals;
+    }
+  }
+
+  var childCode = String(workerInit) +
+                  String(workerHandler) +
+                  'var timers;' +
+                  'var parentId;' +
+                  'var timerId;' +
+                  'var intervals;' +
+                  'workerInit();';
+
+  var workerId = workerPool.createWorker(childCode);
+  workerPool.sendMessage('setInterval', workerId);
+
+  function workerInit() {
+    timers = google.gears.factory.create('beta.timer', '1.0');
+    google.gears.workerPool.onmessage = workerHandler;
+  }
+
+  function workerHandler(message, sender) {
+    if (message == 'setInterval') {
+      parentId = sender;
+      intervals = 0;
+      timerId = timers.setInterval(intervalHandler, 300);
+    }
+
+    function intervalHandler() {
+      google.gears.workerPool.sendMessage('interval', parentId);
+      ++intervals;
+      if (intervals == 3) { // TIMER_TARGET_INTERVALS
+        timers.clearInterval(timerId);
+      }
+    }
+  }
+}
+
+function timer_Parent1000msTimeoutTest() {
+  var timerBegin = new Date().getTime();
+  var timers = google.gears.factory.create('beta.timer', '1.0');
+
+  timers.setTimeout(timeoutHandler, 1000);
+
+  function timeoutHandler() {
+    parent1000msTimeoutTime = new Date().getTime() - timerBegin;
+  }
+}
+
+function timer_Worker1000msTimeoutTest() {
+  var workerPool = google.gears.factory.create('beta.workerpool', '1.0');
+  workerPool.onmessage = function(message, senderId) {
+    // The only message we get is the time delta
+    worker1000msTimeoutTime = message;
+  }
+
+  var childCode = String(workerInit) +
+                  String(workerHandler) +
+                  'var timers;' +
+                  'var parentId;' +
+                  'var timerBegin;' +
+                  'workerInit();';
+
+  var workerId = workerPool.createWorker(childCode);
+  workerPool.sendMessage('setTimeout', workerId);
+
+  function workerInit() {
+    timers = google.gears.factory.create('beta.timer', '1.0');
+    google.gears.workerPool.onmessage = workerHandler;
+  }
+
+  function workerHandler(message, sender) {
+    if (message == 'setTimeout') {
+      parentId = sender;
+      timerBegin = new Date().getTime();
+      timers.setTimeout(timeoutHandler, 1000);
+    }
+
+    function timeoutHandler() {
+      var delta = new Date().getTime() - timerBegin;
+      google.gears.workerPool.sendMessage(String(delta), parentId);
+    }
+  }
+}
+
+function runTimerTests() {
+  // Start the tests
+  timer_ParentTimeoutTest();
+  timer_ParentIntervalTest();
+  timer_WorkerTimeoutTest();
+  timer_WorkerIntervalTest();
+  timer_Parent1000msTimeoutTest();
+  timer_Worker1000msTimeoutTest();
+
+  // Check the results after a delay
+  setTimeout('checkTimerTests()',
+             MSEC_DELAY_BEFORE_CHECKING_TIMER_RESULTS);
+}
+
+
+// checkTimerTests() should be called by setTimeout,
+// after giving workers time to finish.
+var MSEC_DELAY_BEFORE_CHECKING_TIMER_RESULTS = 3000;
+
+function checkTimerTests() {
+
+  // We make sure the test finished without crashing.
+  insertRow(String(timer_ParentTimeoutTest), // testBody
+            parentTimeoutTestSucceeded,  // success
+            '',  // reason
+            0); // execTime
+  insertRow(String(timer_ParentIntervalTest), // testBody
+            parentIntervalTestIntervals == TIMER_TARGET_INTERVALS,
+            '',  // reason
+            0); // execTime
+  insertRow(String(timer_WorkerTimeoutTest), // testBody
+            workerTimeoutTestSucceeded,  // success
+            '',  // reason
+            0); // execTime
+  insertRow(String(timer_WorkerIntervalTest), // testBody
+            workerIntervalTestIntervals == TIMER_TARGET_INTERVALS,
+            '',  // reason
+            0); // execTime
+  // Parent gets 200 ms variance, because it is in the same thread as the rest
+  // of the unit tests
+  insertRow(String(timer_Parent1000msTimeoutTest),
+            Math.abs(1000 - parent1000msTimeoutTime) < 200,
+            '',  // reason
+            parent1000msTimeoutTime); // execTime
+  // Since the worker is in its own thread, the maximum delta should be smaller
+  // than in the parent.
+  insertRow(String(timer_Worker1000msTimeoutTest),
+            Math.abs(1000 - worker1000msTimeoutTime) < 50,
+            '',  // reason
+            worker1000msTimeoutTime); // execTime
 }
 
 

@@ -51,6 +51,7 @@ import "base/ie/factory.idl";
 import "database/ie/database.idl";
 import "localserver/ie/localserver.idl";
 import "workerpool/ie/workerpool.idl";
+import "timer/ie/timer.idl";
 
 //------------------------------------------------------------------------------
 // GearsTypelib
@@ -117,6 +118,14 @@ library GearsTypelib
   coclass GearsLocalServer
   {
     [default] interface GearsLocalServerInterface;
+  };
+
+  [
+    uuid(D056D8FA-05D8-4575-903F-180C85D2C318)
+  ]
+  coclass GearsTimer
+  {
+    [default] interface GearsTimerInterface;
   };
 
 };

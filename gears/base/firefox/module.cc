@@ -42,6 +42,7 @@
 #include "gears/localserver/firefox/managed_resource_store_ff.h"
 #include "gears/localserver/firefox/resource_store_ff.h"
 #include "gears/localserver/firefox/file_submitter_ff.h"
+#include "gears/timer/firefox/timer.h"
 
 //-----------------------------------------------------------------------------
 
@@ -145,6 +146,13 @@ NS_DOMCI_EXTENSION(Scour)
     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsFileSubmitterInterface)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsFileSubmitter, PR_TRUE,
                                              &kGearsFileSubmitterClassId)
+
+  // timer
+  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsTimer)
+    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsTimerInterface)
+  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsTimer, PR_TRUE,
+                                             &kGearsTimerClassId)
+
 NS_DOMCI_EXTENSION_END
 
 static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
@@ -192,7 +200,10 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
     { kGearsResourceStoreClassName, "GearsResourceStoreInterface",
       GEARSRESOURCESTOREINTERFACE_IID_STR },
     { kGearsFileSubmitterClassName, "GearsFileSubmitterInterface",
-      GEARSFILESUBMITTERINTERFACE_IID_STR }
+      GEARSFILESUBMITTERINTERFACE_IID_STR },
+    // timer
+    { kGearsTimerClassName, "GearsTimerInterface",
+      GEARSTIMERINTERFACE_IID_STR }
   };
 
   for (size_t i = 0; i < NS_ARRAY_LENGTH(jsDOMClasses); ++i) {
@@ -231,6 +242,8 @@ NS_DECL_DOM_CLASSINFO(GearsLocalServer)
 NS_DECL_DOM_CLASSINFO(GearsManagedResourceStore)
 NS_DECL_DOM_CLASSINFO(GearsResourceStore)
 NS_DECL_DOM_CLASSINFO(GearsFileSubmitter)
+// timer
+NS_DECL_DOM_CLASSINFO(GearsTimer)
 
 nsresult PR_CALLBACK ScourModuleConstructor(nsIModule *self) {
   return ThreadLocals::HandleModuleConstructed();
@@ -252,6 +265,8 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsLocalServer));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsManagedResourceStore));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsResourceStore));
+  // timer
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsTimer));
 #ifdef DEBUG
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsFileSubmitter));
 #endif

@@ -213,10 +213,10 @@ FF_CPPSRCS	+= \
 		security_model.cc \
 		security_model_test.cc \
 		sqlite_wrapper.cc \
+		stopwatch.cc \
 		string16.cc \
 		string_utils.cc \
 		thread_locals.cc \
-		timer.cc \
 		xpcom_dynamic_load.cc \
 		$(NULL)
 
@@ -265,10 +265,10 @@ IE_CPPSRCS	+= \
 		security_model.cc \
 		security_model_test.cc \
 		sqlite_wrapper.cc \
+		stopwatch.cc \
 		string16.cc \
 		string_utils.cc \
 		thread_locals.cc \
-		timer.cc \
 		vista_utils.cc \
 		$(NULL)
 
@@ -412,6 +412,36 @@ IE_IDLSRCS	+= \
 
 IE_CPPSRCS	+= \
 		workerpool.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# timer/firefox
+
+FF_VPATH	+= \
+		timer/firefox \
+		$(NULL)
+
+FF_IDLSRCS	+= \
+		timer.idl \
+		$(NULL)
+
+FF_CPPSRCS	+= \
+		timer.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# timer/ie
+
+IE_VPATH	+= \
+		timer/ie \
+		$(NULL)
+
+IE_IDLSRCS	+= \
+		timer.idl \
+		$(NULL)
+
+IE_CPPSRCS	+= \
+		timer.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------

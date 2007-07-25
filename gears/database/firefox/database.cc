@@ -69,7 +69,7 @@ const nsCID kGearsDatabaseClassId = {0xbb360bcc, 0xd770, 0x478e, {0xa2, 0x2f,
 
 
 #ifdef DEBUG
-Timer GearsDatabase::g_timer_;
+Stopwatch GearsDatabase::g_stopwatch_;
 #endif // DEBUG
 
 GearsDatabase::GearsDatabase(): db_(NULL) {
@@ -124,7 +124,7 @@ NS_IMETHODIMP GearsDatabase::Execute(//const nsAString &expr,
                                      //OPTIONAL nsIVariant arg_array,
                                      GearsResultSetInterface **retval) {
 #ifdef DEBUG
-  ScopedTimer scoped_timer(&GearsDatabase::g_timer_);
+  ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   int sql_status;
@@ -286,7 +286,7 @@ NS_IMETHODIMP GearsDatabase::GetLastInsertRowId(PRInt64 *retval) {
 
 #ifdef DEBUG
 NS_IMETHODIMP GearsDatabase::GetExecuteMsec(PRInt32 *retval) {
-  *retval = GearsDatabase::g_timer_.GetElapsed();
+  *retval = GearsDatabase::g_stopwatch_.GetElapsed();
   RETURN_NORMAL();
 }
 #endif

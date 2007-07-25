@@ -38,6 +38,7 @@
 #include "gears/database/firefox/database.h"
 #include "gears/workerpool/firefox/workerpool.h"
 #include "gears/localserver/firefox/localserver_ff.h"
+#include "gears/timer/firefox/timer.h"
 
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
@@ -126,6 +127,12 @@ NS_IMETHODIMP GearsFactory::Create(const nsAString &object_nsstring,
     if (major_version_desired == kGearsLocalServerVersionMajor &&
         minor_version_desired <= kGearsLocalServerVersionMinor) {
       isupports = do_QueryInterface(new GearsLocalServer(), &nr);
+    }
+  } else if (object == STRING16(L"beta.timer") ||
+             object == STRING16(L"com.google.beta.timer")) {
+    if (major_version_desired == kGearsTimerVersionMajor &&
+        minor_version_desired <= kGearsTimerVersionMinor) {
+      isupports = do_QueryInterface(new GearsTimer(), &nr);
     }
   } else {
     RETURN_EXCEPTION(STRING16(L"Unknown object."));
