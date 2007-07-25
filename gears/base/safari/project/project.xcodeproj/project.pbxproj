@@ -165,7 +165,7 @@
 		9BED93AD0C0D020700006966 /* sqlite_wrapper_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BED93AB0C0D020700006966 /* sqlite_wrapper_test.cc */; };
 		9BF709240B8295EF006C8C9F /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9BF709220B8295EF006C8C9F /* Security.framework */; };
 		9BF709250B8295EF006C8C9F /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9BF709220B8295EF006C8C9F /* Security.framework */; };
-		9BF8DD860BD437060087AF70 /* timer.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BF8DD840BD437060087AF70 /* timer.cc */; };
+		9BF8DD860BD437060087AF70 /* stopwatch.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BF8DD840BD437060087AF70 /* stopwatch.cc */; };
 		9BF8E2BC0BD6C9D90087AF70 /* name_value_table_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BF8E2B80BD6C9D90087AF70 /* name_value_table_test.cc */; };
 		9BF8E2BE0BD6C9D90087AF70 /* name_value_table.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BF8E2BA0BD6C9D90087AF70 /* name_value_table.cc */; };
 		9BF8E66D0BD984180087AF70 /* factory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9BF8E66B0BD984180087AF70 /* factory.mm */; };
@@ -463,8 +463,8 @@
 		9BED93AA0C0D020700006966 /* permissions_db_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = permissions_db_test.cc; path = ../../common/permissions_db_test.cc; sourceTree = SOURCE_ROOT; };
 		9BED93AB0C0D020700006966 /* sqlite_wrapper_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = sqlite_wrapper_test.cc; path = ../../common/sqlite_wrapper_test.cc; sourceTree = SOURCE_ROOT; };
 		9BF709220B8295EF006C8C9F /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = /System/Library/Frameworks/Security.framework; sourceTree = "<absolute>"; };
-		9BF8DD840BD437060087AF70 /* timer.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = timer.cc; path = ../../common/timer.cc; sourceTree = SOURCE_ROOT; };
-		9BF8DD850BD437060087AF70 /* timer.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = timer.h; path = ../../common/timer.h; sourceTree = SOURCE_ROOT; };
+		9BF8DD840BD437060087AF70 /* stopwatch.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = stopwatch.cc; path = ../../common/stopwatch.cc; sourceTree = SOURCE_ROOT; };
+		9BF8DD850BD437060087AF70 /* stopwatch.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = stopwatch.h; path = ../../common/stopwatch.h; sourceTree = SOURCE_ROOT; };
 		9BF8E2B80BD6C9D90087AF70 /* name_value_table_test.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = name_value_table_test.cc; path = ../../common/name_value_table_test.cc; sourceTree = SOURCE_ROOT; };
 		9BF8E2B90BD6C9D90087AF70 /* name_value_table_test.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = name_value_table_test.h; path = ../../common/name_value_table_test.h; sourceTree = SOURCE_ROOT; };
 		9BF8E2BA0BD6C9D90087AF70 /* name_value_table.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = name_value_table.cc; path = ../../common/name_value_table.cc; sourceTree = SOURCE_ROOT; };
@@ -966,8 +966,8 @@
 				9BED93440C0D007500006966 /* string_utils.h */,
 				9BDFC0BC0B600027009960DE /* thread_locals.cc */,
 				9BDFC0BD0B600027009960DE /* thread_locals.h */,
-				9BF8DD840BD437060087AF70 /* timer.cc */,
-				9BF8DD850BD437060087AF70 /* timer.h */,
+				9BF8DD840BD437060087AF70 /* stopwatch.cc */,
+				9BF8DD850BD437060087AF70 /* stopwatch.h */,
 				9B6DB8020ADC5DEE0092D85B /* version.mk */,
 			);
 			name = Common;
@@ -1222,7 +1222,7 @@
 				9BD6EF8A0B95188400439BFD /* mutex.cc in Sources */,
 				9BED44E60BCAFFFA0046AD7C /* factory_utils.cc in Sources */,
 				9B0B2B5A0BCC32D00067F075 /* database_utils.cc in Sources */,
-				9BF8DD860BD437060087AF70 /* timer.cc in Sources */,
+				9BF8DD860BD437060087AF70 /* stopwatch.cc in Sources */,
 				9BF8E2BC0BD6C9D90087AF70 /* name_value_table_test.cc in Sources */,
 				9BF8E2BE0BD6C9D90087AF70 /* name_value_table.cc in Sources */,
 				9BF8E66D0BD984180087AF70 /* factory.mm in Sources */,
