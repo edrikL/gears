@@ -86,7 +86,7 @@ bool IEHttpRequest::GetReadyState(long *state) {
 //------------------------------------------------------------------------------
 // GetResponseBody
 //------------------------------------------------------------------------------
-std::vector<unsigned char> *IEHttpRequest::GetResponseBody() {
+std::vector<uint8> *IEHttpRequest::GetResponseBody() {
   if (!is_complete_ || was_aborted_)
     return NULL;
   return response_payload_.data.release();
@@ -97,7 +97,7 @@ std::vector<unsigned char> *IEHttpRequest::GetResponseBody() {
 // TODO(michaeln): remove one or the other of these getResponseBody methods from
 // the interface.
 //------------------------------------------------------------------------------
-bool IEHttpRequest::GetResponseBody(std::vector<unsigned char> *body) {
+bool IEHttpRequest::GetResponseBody(std::vector<uint8> *body) {
   if (!is_complete_ || was_aborted_)
     return false;
   if (response_payload_.data.get()) {
@@ -451,14 +451,14 @@ STDMETHODIMP IEHttpRequest::OnDataAvailable(
     do {
       // We don't expect to get here. If we do for some reason, just read
       // data and drop it on the floor, otherwise the bind will stall
-      unsigned char buf[kReadAheadAmount];
+      uint8 buf[kReadAheadAmount];
       DWORD amount_read = 0;
       hr = stgmed->pstm->Read(buf, kReadAheadAmount, &amount_read);
     } while (!(hr == E_PENDING || hr == S_FALSE) && SUCCEEDED(hr));
     return hr;
   }
 
-  std::vector<unsigned char> *data = response_payload_.data.get();
+  std::vector<uint8> *data = response_payload_.data.get();
   if (!data) {
     assert(data);
     abort();
@@ -561,7 +561,7 @@ STDMETHODIMP IEHttpRequest::OnResponse(DWORD status_code,
   response_payload_.status_line.assign(response_headers,
                                        crlf - response_headers);
   response_payload_.headers = (crlf + 2); // skip over the LF
-  response_payload_.data.reset(new std::vector<unsigned char>);
+  response_payload_.data.reset(new std::vector<uint8>);
   actual_data_size_ = 0;
 
   // We only gather the body for good 200 OK responses

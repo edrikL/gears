@@ -74,8 +74,8 @@ bool SFHttpRequest::GetReadyState(long *state) {
 //------------------------------------------------------------------------------
 // GetResponseBody
 //------------------------------------------------------------------------------
-std::vector<unsigned char> *SFHttpRequest::GetResponseBody() {
-  scoped_ptr< std::vector<unsigned char> > body(new std::vector<unsigned char>);
+std::vector<uint8> *SFHttpRequest::GetResponseBody() {
+  scoped_ptr< std::vector<uint8> > body(new std::vector<uint8>);
   if (!GetResponseBody(body.get())) {
     return NULL;
   } else {
@@ -86,7 +86,7 @@ std::vector<unsigned char> *SFHttpRequest::GetResponseBody() {
 //------------------------------------------------------------------------------
 // GetResponseBody
 //------------------------------------------------------------------------------
-bool SFHttpRequest::GetResponseBody(std::vector<unsigned char> *body) {
+bool SFHttpRequest::GetResponseBody(std::vector<uint8> *body) {
   assert(body);
   unsigned long body_len = CFDataGetLength(body_.get());
 
@@ -94,7 +94,7 @@ bool SFHttpRequest::GetResponseBody(std::vector<unsigned char> *body) {
   body->resize(body_len);
   
   if (body_len) {
-    const unsigned char *ptr = CFDataGetBytePtr(body_.get());
+    const uint8 *ptr = CFDataGetBytePtr(body_.get());
     memcpy(&(*body)[0], ptr, body_len);
   }
 
@@ -390,7 +390,7 @@ void SFHttpRequest::StreamReaderFunc(CFReadStreamRef stream,
       // Append the data to the body a page at a time.  This will be called
       // repeatedly if there's more data available.
       CFIndex buffer_size = getpagesize();
-      unsigned char *buffer = (unsigned char *)malloc(buffer_size);
+      uint8 *buffer = (uint8 *)malloc(buffer_size);
       
       if (buffer) {
         CFIndex bytes_read;

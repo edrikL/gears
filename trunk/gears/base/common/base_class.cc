@@ -195,6 +195,9 @@ JsParamFetcher::JsParamFetcher(GearsBaseClass *obj) {
 // Consider a Firefox function with optional params and a string retval.  XPIDL
 // makes the retval the final param.  So params[0] might point at an optional
 // param or the required retval. We need has_string_retval to know which it is.
+//
+// TODO(cprince): 'has_string_retval' isn't quite right.  Notice workaround in
+// Execute() [database/firefox/database.cc] where 'false' must be passed.
 bool JsParamFetcher::IsOptionalParamPresent(int i, bool has_string_retval) {
   int retval_count = has_string_retval ? 1 : 0;
 

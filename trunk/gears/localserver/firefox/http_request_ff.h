@@ -62,8 +62,8 @@ class FFHttpRequest : public HttpRequest,
 
   // properties
   virtual bool GetReadyState(long *state);
-  virtual bool GetResponseBody(std::vector<unsigned char> *body);
-  virtual std::vector<unsigned char> *GetResponseBody();
+  virtual bool GetResponseBody(std::vector<uint8> *body);
+  virtual std::vector<uint8> *GetResponseBody();
   virtual bool GetStatus(long *status);
   virtual bool GetStatusText(std::string16 *status_text);
   virtual bool GetStatusLine(std::string16 *status_line);
@@ -100,7 +100,7 @@ class FFHttpRequest : public HttpRequest,
                                     PRUint32 count,
                                     PRUint32 *writeCount);
   int state_;
-  scoped_ptr< std::vector< unsigned char > > response_body_;
+  scoped_ptr< std::vector<uint8> > response_body_;
   bool was_sent_;
   bool is_complete_;
   bool was_aborted_;

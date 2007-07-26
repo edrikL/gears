@@ -28,16 +28,15 @@
 
 #include <assert.h>
 #include <vector>
+#include "gears/base/common/int_types.h"
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string16.h"
 
 //------------------------------------------------------------------------------
-// A browser neutral interface for sending HTTP requests. Different
-// implementations are provided that use the underlying capabilities of
-// different browsers.
+// A cross-platform interface for sending HTTP requests.  Implementations
+// use the underlying capabilities of different browsers.
 //
-// NOTE: Requests made with this class always bypasses all caches, including
-// scour's own webcache.
+// IMPORTANT: this class bypasses all caches, including Gears localserver!
 //------------------------------------------------------------------------------
 class HttpRequest {
  public:
@@ -50,8 +49,8 @@ class HttpRequest {
 
   // properties
   virtual bool GetReadyState(long *state) = 0;
-  virtual bool GetResponseBody(std::vector<unsigned char> *body) = 0;
-  virtual std::vector<unsigned char> *GetResponseBody() = 0;
+  virtual bool GetResponseBody(std::vector<uint8> *body) = 0;
+  virtual std::vector<uint8> *GetResponseBody() = 0;
   virtual bool GetStatus(long *status) = 0;
   virtual bool GetStatusText(std::string16 *status_text) = 0;
   virtual bool GetStatusLine(std::string16 *status_line) = 0;

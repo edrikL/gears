@@ -75,6 +75,8 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include "gears/third_party/gecko_internal/nsIScriptContext.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
+#include "gears/workerpool/firefox/workerpool.h"
+
 #include "ff/genfiles/database.h"
 #include "ff/genfiles/localserver.h"
 #include "gears/base/common/atomic_ops.h"
@@ -83,7 +85,6 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/base/firefox/factory.h"
 #include "gears/workerpool/common/workerpool_utils.h"
-#include "gears/workerpool/firefox/workerpool.h"
 
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
@@ -120,8 +121,7 @@ struct JavaScriptWorkerInfo {
         thread_pointer(NULL) {}
 
   //
-  // These fields are used by all workers (main + children)
-  // and should therefore be initialized when a message handler is set.
+  // These fields are used by all workers in pool (root + descendants).
   //
   PoolThreadsManager *threads_manager;
   OnmessageHandler onmessage_handler;
@@ -129,14 +129,14 @@ struct JavaScriptWorkerInfo {
   std::queue< std::pair<std::string16, int> > message_queue;
 
   //
-  // These fields are used only with descendants (i.e., workers).
+  // These fields are used only by created workers (descendants).
   //
-  nsString full_script;            // store the script code and error in this
-  Mutex  *js_init_mutex; // protects: js_init_signalled
+  std::string16 full_script;        // Store the script code and error in this
+  std::string16 last_script_error;  // struct to cross the OS thread boundary.
+  Mutex  *js_init_mutex; // Protects: js_init_signalled
   bool    js_init_signalled;
-  bool    js_init_ok; // owner: thread before signal, caller after signal
+  bool    js_init_ok; // Owner: thread before signal, caller after signal
   PRThread  *thread_pointer;
-  std::string16 last_script_error; // struct to cross the OS thread boundary
 };
 
 
@@ -200,13 +200,25 @@ NS_IMETHODIMP GearsWorkerPool::GetOnmessage(
   RETURN_NORMAL();
 }
 
-NS_IMETHODIMP GearsWorkerPool::CreateWorker(const nsAString &full_script,
+NS_IMETHODIMP GearsWorkerPool::CreateWorker(//const nsAString &full_script
                                             PRInt32 *retval) {
   Initialize();
+  
+  // Get parameters.
+  std::string16 full_script;
+
+  JsParamFetcher js_params(this);
+
+  if (js_params.GetCount() < 1) {
+    RETURN_EXCEPTION(STRING16(L"Not enough paramenters."));
+  } else if (!js_params.GetAsString(0, &full_script)) {
+    RETURN_EXCEPTION(STRING16(L"Script must be a string."));
+  }
+
 
   int worker_id_temp; // protects against modifying output param on failure
   std::string16 script_error;
-  bool succeeded = threads_manager_->CreateThread(full_script,
+  bool succeeded = threads_manager_->CreateThread(full_script.c_str(),
                                                   &worker_id_temp,
                                                   &script_error);
   if (!succeeded) {
@@ -480,7 +492,7 @@ bool PoolThreadsManager::SetCurrentThreadMessageHandler(
 }
 
 
-bool PoolThreadsManager::CreateThread(const nsAString &full_script,
+bool PoolThreadsManager::CreateThread(const char16 *full_script,
                                       int *worker_id,
                                       std::string16 *script_error) {
   int new_worker_id = -1;
@@ -495,8 +507,8 @@ bool PoolThreadsManager::CreateThread(const nsAString &full_script,
     wi = worker_info_.back();
   }
 
-  wi->full_script = kWorkerInsertedPreamble; // calls NS_StringCopy
-  wi->full_script.Append(full_script);
+  wi->full_script = kWorkerInsertedPreamble;
+  wi->full_script += full_script;
   wi->threads_manager = this;
 
   // Setup notifier to know when thread init has finished.
@@ -607,7 +619,7 @@ void PoolThreadsManager::JavaScriptThreadEntry(void *args) {
     }
 
     // Run the script
-    if (!js_runner->Start(wi->full_script.get())) {
+    if (!js_runner->Start(wi->full_script)) {
       js_init_succeeded = false;
     }
   }

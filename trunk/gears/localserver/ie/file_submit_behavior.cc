@@ -282,7 +282,7 @@ HRESULT SubmitFileBehavior::SetCapturedUrl(BSTR full_url) {
   temp_file_ += filename;
 
   size_t data_len = 0;
-  const unsigned char *data = NULL;
+  const uint8 *data = NULL;
   if (item.payload.data.get()) {
     data_len = item.payload.data->size();
     data = &(item.payload.data->at(0));
