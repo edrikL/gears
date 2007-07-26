@@ -131,7 +131,7 @@ NS_IMETHODIMP GearsFileSubmitter::SetFileInputElement(
   NS_ENSURE_TRUE(out, NS_ERROR_FAILURE);
   item.payload.data->size();
   PRUint32 length = item.payload.data->size();
-  const unsigned char *buf = &(item.payload.data->at(0));
+  const uint8 *buf = &(item.payload.data->at(0));
   while (length > 0) {
     PRUint32 written = 0;
     nr = out->Write(reinterpret_cast<const char*>(buf), length, &written);

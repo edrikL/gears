@@ -58,7 +58,8 @@ class GearsWorkerPool
   GearsWorkerPool();
   ~GearsWorkerPool();
 
-  NS_IMETHOD CreateWorker(const nsAString &full_script, PRInt32 *retval);
+  NS_IMETHOD CreateWorker(//const nsAString &full_script
+                          PRInt32 *retval);
   NS_IMETHOD SendMessage(const nsAString &message_string,
                          PRInt32 dest_worker_id);
   NS_IMETHOD SetOnmessage(WorkerOnmessageHandler *in_value);
@@ -98,7 +99,7 @@ class PoolThreadsManager {
   void ReleaseWorkerRef();
 
   bool SetCurrentThreadMessageHandler(OnmessageHandler *handler);
-  bool CreateThread(const nsAString &full_script, int *worker_id,
+  bool CreateThread(const char16 *full_script, int *worker_id,
                     std::string16 *script_error); // script_error can be NULL
   bool PutPoolMessage(const nsAString &message_string, int dest_worker_id);
   void ShutDown();

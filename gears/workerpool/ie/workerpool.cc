@@ -42,6 +42,9 @@
 
 #include <assert.h> // TODO(cprince): use DCHECK() when have google3 logging
 #include <queue>
+
+#include "gears/workerpool/ie/workerpool.h"
+
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/string_utils.h"
@@ -50,7 +53,6 @@
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/factory.h"
 #include "gears/workerpool/common/workerpool_utils.h"
-#include "gears/workerpool/ie/workerpool.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 
@@ -66,8 +68,7 @@ struct JavaScriptWorkerInfo {
         thread_handle(INVALID_HANDLE_VALUE) {}
 
   //
-  // These fields are used by all workers (main + children)
-  // and should therefore be initialized when a message handler is set.
+  // These fields are used by all workers in pool (root + descendants).
   //
   PoolThreadsManager *threads_manager;
   IDispatch *onmessage_handler; // set by thread, not by thread creator
@@ -75,13 +76,13 @@ struct JavaScriptWorkerInfo {
   std::queue< std::pair<std::string16, int> > message_queue;
 
   // 
-  // These fields are used only with descendants (i.e., workers).
+  // These fields are used only by created workers (descendants).
   //
-  CComBSTR full_script; // store the script code and error in this
-  std::string16 last_script_error; // struct to cross the OS thread boundary
-  Mutex *js_init_mutex; // protects: js_init_signalled
+  std::string16 full_script;        // Store the script code and error in this
+  std::string16 last_script_error;  // struct to cross the OS thread boundary.
+  Mutex *js_init_mutex; // Protects: js_init_signalled
   bool js_init_signalled;
-  bool js_init_ok; // owner: thread before signal, caller after signal
+  bool js_init_ok; // Owner: thread before signal, caller after signal
   SAFE_HANDLE thread_handle;
 };
 
@@ -128,9 +129,11 @@ void GearsWorkerPool::SetThreadsManager(PoolThreadsManager *manager) {
 
 // NOTE: get_onmessage() is not yet implemented (low priority)
 
-STDMETHODIMP GearsWorkerPool::createWorker(const BSTR *full_script,
+STDMETHODIMP GearsWorkerPool::createWorker(const BSTR *full_script_bstr,
                                            int *worker_id) {
   Initialize();
+
+  const char16 *full_script = *full_script_bstr;
 
   int worker_id_temp; // protects against modifying output param on failure
   std::string16 script_error;
@@ -355,7 +358,7 @@ bool PoolThreadsManager::SetCurrentThreadMessageHandler(IDispatch *handler) {
   return true;
 }
 
-bool PoolThreadsManager::CreateThread(const BSTR *full_script,
+bool PoolThreadsManager::CreateThread(const char16 *full_script,
                                       int *worker_id,
                                       std::string16 *script_error) {
   int new_worker_id = -1;
@@ -376,7 +379,7 @@ bool PoolThreadsManager::CreateThread(const BSTR *full_script,
   // worker_info_ vector.
 
   wi->full_script = kWorkerInsertedPreamble;
-  wi->full_script.Append(*full_script);
+  wi->full_script += full_script;
   wi->threads_manager = this;
 
   // Setup notifier to know when thread init has finished.
@@ -496,7 +499,7 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
     }
 
     // Add JS code
-    if (!js_runner->Start(static_cast<char16 *>(wi->full_script))) {
+    if (!js_runner->Start(wi->full_script)) {
       js_init_succeeded = false;
     }
   }

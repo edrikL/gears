@@ -29,7 +29,6 @@
 // them to the normal pitfalls of synchronizing data access.
 //
 // TODO(cprince): in the IE and FF code
-// - [P1] Kill threads when page changes. (Browser thread stays the same.)
 // - [P2] Measure performance of JS engine instancing; consider caching.
 
 #ifndef GEARS_WORKERPOOL_IE_WORKERPOOL_H__
@@ -116,9 +115,8 @@ class PoolThreadsManager {
   void ReleaseWorkerRef();
 
   bool SetCurrentThreadMessageHandler(IDispatch *handler);
-  bool CreateThread(const BSTR *full_script,
-                    int *worker_id,
-                    std::string16 *script_error);
+  bool CreateThread(const char16 *full_script, int *worker_id,
+                    std::string16 *script_error); // script_error can be NULL
   JavaScriptWorkerInfo *GetCurrentThreadWorkerInfo();
   bool PutPoolMessage(const BSTR *message_string, int dest_worker_id);
   void ShutDown();

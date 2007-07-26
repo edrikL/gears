@@ -49,7 +49,8 @@ interface WorkerOnmessageHandler : nsISupports {
 //
 [scriptable, function, uuid(074EB1A4-80BE-4fce-85DA-19C9EFAEC2FD)]
 interface GearsWorkerPoolInterface : GearsBaseClassInterface {
-  long createWorker(in AString full_script);
+  long createWorker(//in AString full_script
+                   );
   void sendMessage(in AString message_string, in long dest_worker_id);
   attribute WorkerOnmessageHandler onmessage;
 m4_changequote(`^',`^')m4_dnl

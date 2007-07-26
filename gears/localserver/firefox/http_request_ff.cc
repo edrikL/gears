@@ -83,7 +83,7 @@ bool FFHttpRequest::GetReadyState(long *state) {
 //------------------------------------------------------------------------------
 // GetResponseBody
 //------------------------------------------------------------------------------
-bool FFHttpRequest::GetResponseBody(std::vector<unsigned char> *body) {
+bool FFHttpRequest::GetResponseBody(std::vector<uint8> *body) {
   NS_ENSURE_TRUE(is_complete_ && !was_aborted_, false);
   if (!response_body_.get()) {
     return false;
@@ -99,7 +99,7 @@ bool FFHttpRequest::GetResponseBody(std::vector<unsigned char> *body) {
 //------------------------------------------------------------------------------
 // GetResponseBody
 //------------------------------------------------------------------------------
-std::vector<unsigned char> *FFHttpRequest::GetResponseBody() {
+std::vector<uint8> *FFHttpRequest::GetResponseBody() {
   NS_ENSURE_TRUE(is_complete_ && !was_aborted_, NULL);
   return response_body_.release();
 }
@@ -405,7 +405,7 @@ void FFHttpRequest::SetReadyState(int state) {
 NS_IMETHODIMP FFHttpRequest::OnStartRequest(nsIRequest *request,
                                             nsISupports *context) {
   NS_ENSURE_TRUE(channel_, NS_ERROR_UNEXPECTED);
-  response_body_.reset(new std::vector<unsigned char>);
+  response_body_.reset(new std::vector<uint8>);
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(request));
   if (chan) {
     PRInt32 length = -1;
@@ -428,7 +428,7 @@ NS_METHOD FFHttpRequest::StreamReaderFunc(nsIInputStream *stream,
                                           PRUint32 count,
                                           PRUint32 *write_count) {
   FFHttpRequest *self = reinterpret_cast<FFHttpRequest*>(closure);
-  std::vector<unsigned char> *body = self->response_body_.get();
+  std::vector<uint8> *body = self->response_body_.get();
   if (!body) {
     return NS_ERROR_UNEXPECTED;
   }

@@ -877,7 +877,7 @@ HRESULT HttpHandler::ReadImpl(void *buffer,
                               ULONG *bytes_read) {
   ATLTRACE(_T("HttpHandler::Read(%d)\n"), byte_count);
   if (is_handling_) {
-    std::vector<unsigned char> *data = payload_.data.get();
+    std::vector<uint8> *data = payload_.data.get();
     size_t bytes_available = data ? (data->size() - read_pointer_) : 0;
     size_t bytes_to_copy = min(byte_count, bytes_available);
 
