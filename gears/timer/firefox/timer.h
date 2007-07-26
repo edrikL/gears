@@ -64,7 +64,7 @@ class GearsTimer
 
  private:
   struct TimerInfo {
-    TimerInfo() : timer_id(0), function(0), context(NULL) {}
+    TimerInfo() : function(0), context(NULL), timer_id(0) {}
 
     JsToken function;
     JsContextPtr context;
