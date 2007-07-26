@@ -273,8 +273,10 @@ void GearsWorkerPool::Initialize() {
     unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
                                                HandleEventUnload, this));
     nsCOMPtr<nsIDOMEventTarget> event_source;
+#ifdef DEBUG
     nsresult nr = DOMUtils::GetWindowEventTarget(getter_AddRefs(event_source));
     assert(NS_SUCCEEDED(nr));
+#endif
     unload_monitor_->Start(event_source);
   }
 }

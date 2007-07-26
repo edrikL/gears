@@ -115,8 +115,10 @@ void GearsTimer::Initialize() {
     unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
                                                HandleEventUnload, this));
     nsCOMPtr<nsIDOMEventTarget> event_source;
+#ifdef DEBUG
     nsresult nr = DOMUtils::GetWindowEventTarget(getter_AddRefs(event_source));
     assert(NS_SUCCEEDED(nr));
+#endif
     unload_monitor_->Start(event_source);
   }
 }
@@ -175,8 +177,12 @@ PRInt32 GearsTimer::CreateTimerCommon(TimerInfo *timer_info, int timeout) {
   nsCOMPtr<nsITimerInternal> timer_internal(do_QueryInterface(ti->timer));
   timer_internal->SetIdle(false);
 
-  PRUint32 type = ti->repeat ? nsITimer::TYPE_REPEATING_SLACK :
-                               nsITimer::TYPE_ONE_SHOT;
+  // Cast because the two constants are defined in different anonymous
+  // enums, so they aren't literally of the same type, which throws a
+  // warning on gcc.
+  PRUint32 type = ti->repeat
+      ? static_cast<PRUint32>(nsITimer::TYPE_REPEATING_SLACK)
+      : static_cast<PRUint32>(nsITimer::TYPE_ONE_SHOT);
 
   // Start the timer
   ti->timer->InitWithFuncCallback(TimerCallback, ti, timeout, type);
@@ -199,12 +205,12 @@ void GearsTimer::HandleEventUnload(void *user_param) {
   nsCOMPtr<GearsTimer> gears_timer = static_cast<GearsTimer*>(user_param);
 
   // Iterate through the timers, removing them.
-  std::map<int, TimerInfo>::iterator timer =
-      gears_timer->worker_timers_.begin();
-  while (timer != gears_timer->worker_timers_.end()) {
+  while (!gears_timer->worker_timers_.empty()) {
+    std::map<int, TimerInfo>::iterator timer =
+        gears_timer->worker_timers_.begin();
     timer->second.timer->Cancel();
     // TODO(zork): Add cleanup: UnrootJsToken(function, context);
-    timer = gears_timer->worker_timers_.erase(timer);
+    gears_timer->worker_timers_.erase(timer);
   }
 }
 
