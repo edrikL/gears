@@ -9,6 +9,7 @@ Let's grow this document into a set of easy to follow conventions for designing 
 
 == All Errors ==
 
+Rules:
   * Start with a capital letter, and end with a period.
   * Use correct grammar.
   * _Do not_ contain filename, call stack, or other details available elsewhere.
@@ -17,31 +18,36 @@ Let's grow this document into a set of easy to follow conventions for designing 
 
 _Bad:_ invalid param
 
-== Developer Errors ==
+== Specific Error Categories ==
 
-  * Developer or user's "fault".
-  * Occur if Gears is used improperly.
-  * Are something a developer could conceivably do something about.
+=== Internal errors ===
+
+Description:
+  * Are unexpected and should almost never happen (OS / hardware failure).
+  * Are not things the developer could have avoided.
+
+Rules:
+  * Return "Gears internal error".
+  * _(What if a developer does encounter these? We'll want a way to pinpoint which error is being hit. Perhaps we should append `__FILE__` and `__LINE__`?)_
+
+Examples:
+  * *Good:* Gears internal error.
+  * _Bad:_ could not initialize file handle - maybe a bad disk?
+
+
+=== Developer Errors ===
+
+Description:
+  * Are caused by a developer using Gears improperly.
+  * Are things the developer could have fixed. 
+
+Rules:
   * Provide enough detail to identify problem.
   * Don't repeat things available in documentation.
   * Put invalid input after a colon at the end of the sentence.
 
-*Good:* Invalid database name: really neat name!.
-
-_Bad:_ Invalid database name: really neat name!. Invalid character was '!'. Database names cannot contain any of these characters: !~$#@....
-
-*Good:* Permission denied to capture resource: http://www.google.com/.
-
-_Bad:_ Permission denied.
-
-== Internal errors ==
-
-  * Gears's, browser's, or OS's "fault".
-  * Should happen very rarely, are unexpected.
-  * There is nothing the developer could practically do.
-  * Clearly distinguishable as internal, unexpected errors.
-  * Don't spew useless information at developer.
-
-*Good:* Gears internal error.
-
-_Bad:_ could not initialize file handle - maybe a bad disk?
+Examples:
+  * *Good:* Invalid database name: really neat name!.
+  * _Bad:_ Invalid database name: really neat name!. Invalid character was '!'. Database names cannot contain any of these characters: !~$#@....
+  * *Good:* Permission denied to capture resource: http://www.google.com/.
+  * _Bad:_ Permission denied.
