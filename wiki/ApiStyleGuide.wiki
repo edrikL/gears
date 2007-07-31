@@ -14,9 +14,9 @@ Rules:
   * Use correct grammar.
   * _Do not_ contain filename, call stack, or other details available elsewhere.
 
-*Good:* First parameter must be a string.
-
-_Bad:_ invalid param
+Examples:
+  * *Good:* First parameter must be a string.
+  * _Bad:_ invalid param
 
 == Specific Error Categories ==
 
