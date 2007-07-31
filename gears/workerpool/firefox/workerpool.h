@@ -84,7 +84,6 @@ class GearsWorkerPool
 };
 
 
-struct OnmessageHandler;
 struct JavaScriptWorkerInfo;
 struct ThreadsEvent;
 
@@ -98,7 +97,7 @@ class PoolThreadsManager {
   void AddWorkerRef();
   void ReleaseWorkerRef();
 
-  bool SetCurrentThreadMessageHandler(OnmessageHandler *handler);
+  bool SetCurrentThreadMessageHandler(JsCallback *handler);
   bool CreateThread(const char16 *full_script, int *worker_id,
                     std::string16 *script_error); // script_error can be NULL
   bool PutPoolMessage(const nsAString &message_string, int dest_worker_id);

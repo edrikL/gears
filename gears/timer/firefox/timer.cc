@@ -60,7 +60,7 @@ NS_IMETHODIMP GearsTimer::SetTimeout(//variant *timer_code,
                                      PRInt32 *retval) {
 
   // Create a param fetcher so we can also retrieve the context.
-  JsToken timer_function;
+  JsCallback timer_callback;
   std::string16 script;
   PRInt32 timeout;
   JsParamFetcher js_params(this);
@@ -80,9 +80,8 @@ NS_IMETHODIMP GearsTimer::SetTimeout(//variant *timer_code,
   // a function.
   if (js_params.GetAsString(0, &script)) {
     timer_id = CreateStringTimer(script.c_str(), timeout, false);
-  } else if (js_params.GetAsToken(0, &timer_function)) {
-    timer_id = CreateFunctionTimer(timer_function, js_params.GetContextPtr(),
-                                   timeout, false);
+  } else if (js_params.GetAsCallback(0, &timer_callback)) {
+    timer_id = CreateFunctionTimer(&timer_callback, timeout, false);
   } else {
     RETURN_EXCEPTION(
         STRING16(L"First parameter must be a function or string."));
@@ -106,7 +105,7 @@ NS_IMETHODIMP GearsTimer::SetInterval(//variant *timer_code,
                                       PRInt32 *retval) {
 
   // Create a param fetcher so we can also retrieve the context.
-  JsToken timer_function;
+  JsCallback timer_callback;
   std::string16 script;
   PRInt32 timeout;
   JsParamFetcher js_params(this);
@@ -126,9 +125,8 @@ NS_IMETHODIMP GearsTimer::SetInterval(//variant *timer_code,
   // a function.
   if (js_params.GetAsString(0, &script)) {
     timer_id = CreateStringTimer(script.c_str(), timeout, true);
-  } else if (js_params.GetAsToken(0, &timer_function)) {
-    timer_id = CreateFunctionTimer(timer_function, js_params.GetContextPtr(),
-                                   timeout, true);
+  } else if (js_params.GetAsCallback(0, &timer_callback)) {
+    timer_id = CreateFunctionTimer(&timer_callback, timeout, true);
   } else {
     RETURN_EXCEPTION(
         STRING16(L"First parameter must be a function or string."));
@@ -164,17 +162,15 @@ void GearsTimer::Initialize() {
   }
 }
 
-PRInt32 GearsTimer::CreateFunctionTimer(JsToken timer_function,
-                                        JsContextPtr script_context,
+PRInt32 GearsTimer::CreateFunctionTimer(JsCallback *timer_callback,
                                         int timeout,
                                         bool repeat) {
   TimerInfo timer_info;
-  timer_info.function = timer_function;
-  timer_info.context = script_context;
+  timer_info.callback = *timer_callback;
   timer_info.repeat = repeat;
 
   // Prevent the token from getting garbage collected
-  if (!RootJsToken(script_context, timer_function)) {
+  if (!RootJsToken(timer_callback->context, timer_callback->function)) {
     return false;
   }
 
@@ -259,13 +255,13 @@ void GearsTimer::TimerCallback(nsITimer *timer, void *closure) {
   TimerInfo *ti = reinterpret_cast<TimerInfo *>(closure);
 
   // Invoke JavaScript timer handler
-  if (ti->function) {
+  if (ti->callback.function) {
     jsval js_retval;
     //JSBool js_ok =  // comment out until we use it, to avoid compiler warning
     JS_CallFunctionValue( // goes to js_InternalInvoke()
-        ti->context,
-        JS_GetGlobalObject(ti->context),
-        ti->function, 0, 0, &js_retval);
+        ti->callback.context,
+        JS_GetGlobalObject(ti->callback.context),
+        ti->callback.function, 0, 0, &js_retval);
   } else {
     ti->owner->GetJsRunner()->Eval(ti->script.c_str());
   }

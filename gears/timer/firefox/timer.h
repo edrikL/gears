@@ -66,10 +66,9 @@ class GearsTimer
 
  private:
   struct TimerInfo {
-    TimerInfo() : function(0), context(NULL), timer_id(0) {}
+    TimerInfo() : timer_id(0) {}
 
-    JsToken function;
-    JsContextPtr context;
+    JsCallback callback;
     std::string16 script;
     bool repeat;
     nsCOMPtr<GearsTimer> owner;
@@ -78,8 +77,7 @@ class GearsTimer
   };
 
   void Initialize(); // okay to call this multiple times
-  PRInt32 CreateFunctionTimer(JsToken timer_function,
-                              JsContextPtr script_context,
+  PRInt32 CreateFunctionTimer(JsCallback *timer_callback,
                               int timeout,
                               bool repeat);
   PRInt32 CreateStringTimer(const char16 *script,

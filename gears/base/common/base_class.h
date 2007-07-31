@@ -45,6 +45,12 @@ typedef jsval      JsToken;
 typedef JSContext* JsContextPtr;
 typedef nsresult   JsNativeMethodRetval;
 
+struct JsCallback {
+  JsCallback() : function(0), context(NULL) {};
+  JsToken function;
+  JsContextPtr context;
+};
+
 // Implementations of boilerplate code.
 #define GEARS_IMPL_BASECLASS \
   NS_IMETHOD GetNativeBaseClass(GearsBaseClass **retval) { \
@@ -177,6 +183,7 @@ class JsParamFetcher {
   bool GetAsInt(int i, int *out);
   bool GetAsString(int i, std::string16 *out);
   bool GetAsArray(int i, JsToken *out_array, int *out_length);
+  bool GetAsCallback(int i, JsCallback *out);
 
   bool GetFromArrayAsToken(JsToken array, int i, JsToken *out);
   bool GetFromArrayAsInt(JsToken array, int i, int *out);

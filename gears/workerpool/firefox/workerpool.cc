@@ -108,11 +108,6 @@ const nsCID kGearsWorkerPoolClassId = {0x0a15a787, 0x9aef, 0x4a5e, {0x92, 0x7d,
 // JavaScriptWorkerInfo -- contains the state of each JavaScript worker.
 //
 
-struct OnmessageHandler {
-  JsToken function;
-  JsContextPtr context;
-};
-
 struct JavaScriptWorkerInfo {
   // Our code assumes some items begin cleared. Zero all members w/o ctors.
   JavaScriptWorkerInfo()
@@ -124,7 +119,7 @@ struct JavaScriptWorkerInfo {
   // These fields are used by all workers in pool (root + descendants).
   //
   PoolThreadsManager *threads_manager;
-  OnmessageHandler onmessage_handler;
+  JsCallback onmessage_handler;
   nsCOMPtr<nsIEventQueue> thread_event_queue;
   std::queue< std::pair<std::string16, int> > message_queue;
 
@@ -173,12 +168,11 @@ NS_IMETHODIMP GearsWorkerPool::SetOnmessage(
                                    WorkerOnmessageHandler *in_value) {
   Initialize();
 
-  OnmessageHandler onmessage_handler = {0};
+  JsCallback onmessage_handler;
   JsParamFetcher js_params(this);
-  if (!js_params.GetAsToken(0, &onmessage_handler.function)) {
+  if (!js_params.GetAsCallback(0, &onmessage_handler)) {
     RETURN_EXCEPTION(STRING16(L"Invalid parameter"));
   }
-  onmessage_handler.context = js_params.GetContextPtr();
 
   // "Root" the handler so it cannot get garbage collected.
   if (!RootJsToken(onmessage_handler.context, onmessage_handler.function)) {
@@ -438,8 +432,7 @@ bool PoolThreadsManager::GetPoolMessage(std::string16 *message_string,
 
 
 // TODO(cprince): consider returning success/failure here (and in IE code)
-bool PoolThreadsManager::SetCurrentThreadMessageHandler(
-    OnmessageHandler *handler) {
+bool PoolThreadsManager::SetCurrentThreadMessageHandler(JsCallback *handler) {
 
   MutexLock lock(&mutex_);
 
