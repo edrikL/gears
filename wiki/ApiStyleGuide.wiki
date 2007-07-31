@@ -1,0 +1,47 @@
+= Introduction =
+
+It's easier to use an API when it has a consistent style. For that reason Gears should try to be as consistent as possible across it's various APIs.
+
+
+= Error Messages =
+
+== All Errors ==
+
+  * Start with a capital letter, and end with a period.
+  * Use correct grammar.
+  * _Do not_ contain filename, call stack, or other details available elsewhere.
+
+*Good:* First parameter must be a string.
+
+_Bad:_ invalid param
+
+== Developer Errors ==
+
+  * Developer or user's "fault".
+  * Occur if Gears is used improperly.
+  * Are something a developer could conceivably do something about.
+  * Provide enough detail to identify problem.
+  * Don't repeat things available in documentation.
+
+*Good:* Invalid database name: really neat name!.
+
+_Bad:_ Invalid database name: really neat name!. Invalid character was '!'. Database names cannot contain any of these characters: !~$#@....
+
+*Good:* Permission denied to capture resource: http://www.google.com/
+
+_Bad:_ Permission denied.
+
+== Internal errors ==
+
+  * Gears's, browser's, or OS's "fault".
+  * Should happen very rarely, are unexpected.
+  * There is nothing the developer could practically do.
+  * Identify themselves clearly as internal errors.
+  * Don't spew useless information at developer.
+
+*Good:* Internal error.
+
+_Bad:_ could not initialize file handle - maybe a bad disk?
+
+
+
