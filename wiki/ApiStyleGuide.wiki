@@ -1,4 +1,4 @@
-#Summary Guide to producing stylish APIs
+#summary Guide to producing stylish APIs
 
 = Introduction =
 
