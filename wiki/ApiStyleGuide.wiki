@@ -41,10 +41,9 @@ _Bad:_ Permission denied.
   * Gears's, browser's, or OS's "fault".
   * Should happen very rarely, are unexpected.
   * There is nothing the developer could practically do.
-  * Identify themselves clearly as internal errors.
+  * Clearly distinguishable as internal, unexpected errors.
   * Don't spew useless information at developer.
 
 *Good:* Internal error.
 
 _Bad:_ could not initialize file handle - maybe a bad disk?
-
