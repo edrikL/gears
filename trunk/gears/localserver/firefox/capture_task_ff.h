@@ -35,8 +35,7 @@
 // FFCaptureRequest
 //------------------------------------------------------------------------------
 struct FFCaptureRequest : public CaptureRequest {
-  JsToken function;
-  JsContextPtr context;
+  JsCallback callback;
 };
 
 #endif  // GEARS_LOCALSERVER_FIREFOX_CAPTURE_TASK_FF_H__

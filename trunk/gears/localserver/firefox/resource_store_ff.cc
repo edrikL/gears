@@ -149,12 +149,11 @@ NS_IMETHODIMP GearsResourceStore::Capture(
   JsParamFetcher js_params(this);
 
   const int kIndexCallbackFunction = 1;
-  if (!js_params.GetAsToken(kIndexCallbackFunction, &request->function)) {
+  if (!js_params.GetAsCallback(kIndexCallbackFunction, &request->callback)) {
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
-  request->context = js_params.GetContextPtr();
 
-  if (!RootJsToken(request->context, request->function)) {
+  if (!RootJsToken(request->callback.context, request->callback.function)) {
     RETURN_EXCEPTION(STRING16(L"Error rooting JS value."));
   }
 
@@ -742,12 +741,12 @@ void GearsResourceStore::InvokeCompletionCallback(FFCaptureRequest *request,
                                                   int capture_id,
                                                   bool succeeded) {
   // If completion callback was not set, return immediately
-  if (!request->function) { return; }
+  if (!request->callback.function) { return; }
 
   // Setup the callback parameters in JS argc/argv format
   // TODO(cprince): ensure freeing this memory
   JSString *capture_url_jsstring = JS_NewUCStringCopyZ(
-                              request->context,
+                              request->callback.context,
                               reinterpret_cast<const jschar *>(capture_url));
   uintN argc = 3;
   jsval argv[] = { STRING_TO_JSVAL(capture_url_jsstring),
@@ -764,9 +763,9 @@ void GearsResourceStore::InvokeCompletionCallback(FFCaptureRequest *request,
   jsval js_retval;
   //JSBool js_ok =  // comment out until we use it, to avoid compiler warning
   JS_CallFunctionValue( // goes to js_InternalInvoke()
-      request->context,
-      JS_GetGlobalObject(request->context),
-      request->function, argc, argv, &js_retval);
+      request->callback.context,
+      JS_GetGlobalObject(request->callback.context),
+      request->callback.function, argc, argv, &js_retval);
 }
 
 //------------------------------------------------------------------------------

@@ -252,6 +252,12 @@ bool JsParamFetcher::GetAsArray(int i, JsToken *out_array, int *out_length) {
   return false; // failed
 }
 
+bool JsParamFetcher::GetAsCallback(int i, JsCallback *out) {
+  out->function = js_argv_[i];
+  out->context = GetContextPtr();
+  return true;
+}
+
 
 bool JsParamFetcher::GetFromArrayAsToken(JsToken array, int i, JsToken *out) {
   if (ArrayIndexToToken(array, i, out)) {
