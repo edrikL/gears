@@ -22,12 +22,13 @@ _Bad:_ invalid param
   * Are something a developer could conceivably do something about.
   * Provide enough detail to identify problem.
   * Don't repeat things available in documentation.
+  * Put invalid input after a colon at the end of the sentence.
 
 *Good:* Invalid database name: really neat name!.
 
 _Bad:_ Invalid database name: really neat name!. Invalid character was '!'. Database names cannot contain any of these characters: !~$#@....
 
-*Good:* Permission denied to capture resource: http://www.google.com/
+*Good:* Permission denied to capture resource: http://www.google.com/.
 
 _Bad:_ Permission denied.
 
