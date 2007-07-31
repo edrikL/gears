@@ -42,6 +42,6 @@ _Bad:_ Permission denied.
   * Clearly distinguishable as internal, unexpected errors.
   * Don't spew useless information at developer.
 
-*Good:* Internal error.
+*Good:* Internal Gears error.
 
 _Bad:_ could not initialize file handle - maybe a bad disk?
