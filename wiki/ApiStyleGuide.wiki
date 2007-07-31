@@ -1,3 +1,5 @@
+#Summary Guide to producing stylish APIs
+
 = Introduction =
 
 It's easier to use an API when it has a consistent style because you can guess how something works without thinking too hard. It's also easier to implement such APIs because  it lets you focus on your feature rather than grammar and stylist minutiae.
