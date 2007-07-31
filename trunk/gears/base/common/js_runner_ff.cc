@@ -28,6 +28,9 @@
 #include <nsCOMPtr.h>
 #include <nspr.h> // for PR_*
 #include "gears/third_party/gecko_internal/jsapi.h"
+#include "gears/third_party/gecko_internal/nsIScriptGlobalObject.h"
+#include "gears/third_party/gecko_internal/nsIScriptObjectPrincipal.h"
+#include "gears/third_party/gecko_internal/nsIPrincipal.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/js_runner_ff_marshaling.h"
@@ -37,6 +40,7 @@
 #include "ff/genfiles/localserver.h"
 #include "ff/genfiles/timer.h"
 #include "ff/genfiles/workerpool.h"
+
 
 class JsRunner : public JsRunnerInterface {
  public:
@@ -119,20 +123,51 @@ class ParentJsRunner : public JsRunnerInterface {
 
 
 bool ParentJsRunner::Eval(const std::string16 &script) {
-  /*
   JSObject *object = JS_GetGlobalObject(js_engine_context);
+  if (!object) { return false; }
+
+  // To eval the script, we need the JSPrincipals to be acquired through
+  // nsIPrincipal.  nsIPrincipal can be queried through the
+  // nsIScriptObjectPrincipal interface on the Script Global Object.  In order
+  // to get the Script Global Object, we need to request the private data
+  // associated with the global JSObject on the current context.
+  nsCOMPtr<nsIScriptGlobalObject> sgo;
+  nsISupports *priv = reinterpret_cast<nsISupports *>(JS_GetPrivate(
+                                                          js_engine_context,
+                                                          object));
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapped_native = do_QueryInterface(priv);
+
+  if (wrapped_native) {
+    // The global object is a XPConnect wrapped native, the native in
+    // the wrapper might be the nsIScriptGlobalObject.
+    sgo = do_QueryWrappedNative(wrapped_native);
+  } else {
+    sgo = do_QueryInterface(priv);
+  }
+
+  JSPrincipals *jsprin;
+  nsresult nr;
+
+  nsCOMPtr<nsIScriptObjectPrincipal> obj_prin = do_QueryInterface(sgo, &nr);
+  if (NS_FAILED(nr)) { return false; }
+
+  nsIPrincipal *principal = obj_prin->GetPrincipal();
+  if (!principal) { return false; }
+
+  principal->GetJSPrincipals(js_engine_context, &jsprin);
 
   uintN line_number_start = 0;
   jsval rval;
-  JSBool js_ok = JS_EvaluateUCScript(
-      js_engine_context, object,
+  JSBool js_ok = JS_EvaluateUCScriptForPrincipals(
+      js_engine_context, object, jsprin,
       reinterpret_cast<const jschar *>(script.c_str()),
       script.length(), "script", line_number_start, &rval);
+
+
+  // Decrements ref count on jsprin (Was added in GetJSPrincipals()).
+  JSPRINCIPALS_DROP(js_engine_context, jsprin);
   if (!js_ok) { return false; }
   return true;
-  */
-  // TODO(zork): This code is currently broken in Firefox.
-  return false;
 }
 
 void JS_DLL_CALLBACK JsRunner::JsErrorHandler(JSContext *cx,

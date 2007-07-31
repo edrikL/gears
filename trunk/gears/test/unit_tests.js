@@ -1659,12 +1659,16 @@ var workerTimeoutTestSucceeded = false;
 var workerIntervalTestIntervals = 0;
 var parent1000msTimeoutTime = 0;
 var worker1000msTimeoutTime = 0;
+var ParentTimeoutScriptTestSucceeded = false;
+var ParentIntervalScriptTestIntervals = 0;
+var WorkerTimeoutScriptTestSucceeded = false;
+var WorkerIntervalScriptTestIntervals = 0;
 
 function timer_ParentTimeoutTest() {
   var timerFired = false;
-  var timers = google.gears.factory.create('beta.timer', '1.0');
+  var timer = google.gears.factory.create('beta.timer', '1.0');
 
-  timers.setTimeout(timeoutHandler, 300);
+  timer.setTimeout(timeoutHandler, 300);
 
   function timeoutHandler() {
     // Set success to true on the first firing, false if it fires again.
@@ -1674,13 +1678,13 @@ function timer_ParentTimeoutTest() {
 }
 
 function timer_ParentIntervalTest() {
-  var timers = google.gears.factory.create('beta.timer', '1.0');
-  var timerId = timers.setInterval(intervalHandler, 300);
+  var timer = google.gears.factory.create('beta.timer', '1.0');
+  var timerId = timer.setInterval(intervalHandler, 300);
 
   function intervalHandler() {
     ++parentIntervalTestIntervals;
     if (parentIntervalTestIntervals == TIMER_TARGET_INTERVALS) {
-      timers.clearInterval(timerId);
+      timer.clearInterval(timerId);
     }
   }
 }
@@ -1698,7 +1702,7 @@ function timer_WorkerTimeoutTest() {
 
   var childCode = String(workerInit) +
                   String(workerHandler) +
-                  'var timers;' +
+                  'var timer;' +
                   'var parentId;' +
                   'workerInit();';
 
@@ -1706,14 +1710,14 @@ function timer_WorkerTimeoutTest() {
   workerPool.sendMessage('setTimeout', workerId);
 
   function workerInit() {
-    timers = google.gears.factory.create('beta.timer', '1.0');
+    timer = google.gears.factory.create('beta.timer', '1.0');
     google.gears.workerPool.onmessage = workerHandler;
   }
 
   function workerHandler(message, sender) {
     if (message == 'setTimeout') {
       parentId = sender;
-      timers.setTimeout(timeoutHandler, 300);
+      timer.setTimeout(timeoutHandler, 300);
     }
 
     function timeoutHandler() {
@@ -1733,7 +1737,7 @@ function timer_WorkerIntervalTest() {
 
   var childCode = String(workerInit) +
                   String(workerHandler) +
-                  'var timers;' +
+                  'var timer;' +
                   'var parentId;' +
                   'var timerId;' +
                   'var intervals;' +
@@ -1743,7 +1747,7 @@ function timer_WorkerIntervalTest() {
   workerPool.sendMessage('setInterval', workerId);
 
   function workerInit() {
-    timers = google.gears.factory.create('beta.timer', '1.0');
+    timer = google.gears.factory.create('beta.timer', '1.0');
     google.gears.workerPool.onmessage = workerHandler;
   }
 
@@ -1751,14 +1755,14 @@ function timer_WorkerIntervalTest() {
     if (message == 'setInterval') {
       parentId = sender;
       intervals = 0;
-      timerId = timers.setInterval(intervalHandler, 300);
+      timerId = timer.setInterval(intervalHandler, 300);
     }
 
     function intervalHandler() {
       google.gears.workerPool.sendMessage('interval', parentId);
       ++intervals;
       if (intervals == 3) { // TIMER_TARGET_INTERVALS
-        timers.clearInterval(timerId);
+        timer.clearInterval(timerId);
       }
     }
   }
@@ -1766,9 +1770,9 @@ function timer_WorkerIntervalTest() {
 
 function timer_Parent1000msTimeoutTest() {
   var timerBegin = new Date().getTime();
-  var timers = google.gears.factory.create('beta.timer', '1.0');
+  var timer = google.gears.factory.create('beta.timer', '1.0');
 
-  timers.setTimeout(timeoutHandler, 1000);
+  timer.setTimeout(timeoutHandler, 1000);
 
   function timeoutHandler() {
     parent1000msTimeoutTime = new Date().getTime() - timerBegin;
@@ -1784,7 +1788,7 @@ function timer_Worker1000msTimeoutTest() {
 
   var childCode = String(workerInit) +
                   String(workerHandler) +
-                  'var timers;' +
+                  'var timer;' +
                   'var parentId;' +
                   'var timerBegin;' +
                   'workerInit();';
@@ -1793,7 +1797,7 @@ function timer_Worker1000msTimeoutTest() {
   workerPool.sendMessage('setTimeout', workerId);
 
   function workerInit() {
-    timers = google.gears.factory.create('beta.timer', '1.0');
+    timer = google.gears.factory.create('beta.timer', '1.0');
     google.gears.workerPool.onmessage = workerHandler;
   }
 
@@ -1801,12 +1805,110 @@ function timer_Worker1000msTimeoutTest() {
     if (message == 'setTimeout') {
       parentId = sender;
       timerBegin = new Date().getTime();
-      timers.setTimeout(timeoutHandler, 1000);
+      timer.setTimeout(timeoutHandler, 1000);
     }
 
     function timeoutHandler() {
       var delta = new Date().getTime() - timerBegin;
       google.gears.workerPool.sendMessage(String(delta), parentId);
+    }
+  }
+}
+
+var ParentTimeoutScriptTimerFired = false;
+function timer_ParentTimeoutScriptTest() {
+  var timer = google.gears.factory.create('beta.timer', '1.0');
+
+  timer.setTimeout(
+      'ParentTimeoutScriptTestSucceeded = !ParentTimeoutScriptTimerFired;' +
+      'ParentTimeoutScriptTimerFired = true;',
+      300);
+}
+
+var ParentIntervalScriptTimerId;
+var ParentIntervalScriptTimer;
+function timer_ParentIntervalScriptTest() {
+  ParentIntervalScriptTimer = google.gears.factory.create('beta.timer', '1.0');
+  ParentIntervalScriptTimerId =
+      ParentIntervalScriptTimer .setInterval(
+        'ParentIntervalScriptTestIntervals++;' +
+        'if (ParentIntervalScriptTestIntervals == TIMER_TARGET_INTERVALS) {' +
+        '  ParentIntervalScriptTimer.clearInterval(' +
+        '      ParentIntervalScriptTimerId);' +
+        '}',
+        300);
+}
+
+function timer_WorkerTimeoutScriptTest() {
+  var timerFired = false;
+  var workerPool = google.gears.factory.create('beta.workerpool', '1.0');
+  workerPool.onmessage = function(message, senderId) {
+    if (message == 'timeout') {
+      // Set success to true on the first firing, false if it fires again.
+      WorkerTimeoutScriptTestSucceeded = !timerFired;
+      timerFired = true;
+    }
+  }
+
+  var childCode = String(workerInit) +
+                  String(workerHandler) +
+                  'var timer;' +
+                  'var parentId;' +
+                  'workerInit();';
+
+  var workerId = workerPool.createWorker(childCode);
+  workerPool.sendMessage('setTimeout', workerId);
+
+  function workerInit() {
+    timer = google.gears.factory.create('beta.timer', '1.0');
+    google.gears.workerPool.onmessage = workerHandler;
+  }
+
+  function workerHandler(message, sender) {
+    if (message == 'setTimeout') {
+      parentId = sender;
+      timer.setTimeout(
+        'google.gears.workerPool.sendMessage(\'timeout\', parentId);',
+        300);
+    }
+  }
+}
+
+function timer_WorkerIntervalScriptTest() {
+  var timerFired = false;
+  var workerPool = google.gears.factory.create('beta.workerpool', '1.0');
+  workerPool.onmessage = function(message, senderId) {
+    if (message == 'interval') {
+      WorkerIntervalScriptTestIntervals++;
+      if (WorkerIntervalScriptTestIntervals == TIMER_TARGET_INTERVALS) {
+        workerPool.sendMessage('clearInterval', workerId);
+      }
+    }
+  }
+
+  var childCode = String(workerInit) +
+                  String(workerHandler) +
+                  'var timer;' +
+                  'var parentId;' +
+                  'var timerId;' +
+                  'workerInit();';
+
+  var workerId = workerPool.createWorker(childCode);
+  workerPool.sendMessage('setInterval', workerId);
+
+  function workerInit() {
+    timer = google.gears.factory.create('beta.timer', '1.0');
+    google.gears.workerPool.onmessage = workerHandler;
+  }
+
+  function workerHandler(message, sender) {
+    if (message == 'setInterval') {
+      parentId = sender;
+      timerId = timer.setInterval(
+        'google.gears.workerPool.sendMessage(\'interval\', parentId);',
+        300);
+    } else if (message == 'clearInterval') {
+      timer.clearInterval(timerId);
     }
   }
 }
@@ -1819,6 +1921,10 @@ function runTimerTests() {
   timer_WorkerIntervalTest();
   timer_Parent1000msTimeoutTest();
   timer_Worker1000msTimeoutTest();
+  timer_ParentTimeoutScriptTest();
+  timer_ParentIntervalScriptTest();
+  timer_WorkerTimeoutScriptTest();
+  timer_WorkerIntervalScriptTest();
 
   // Check the results after a delay
   setTimeout('checkTimerTests()',
@@ -1861,6 +1967,23 @@ function checkTimerTests() {
             Math.abs(1000 - worker1000msTimeoutTime) < 50,
             '',  // reason
             worker1000msTimeoutTime); // execTime
+
+  insertRow(String(timer_ParentTimeoutScriptTest), // testBody
+            ParentTimeoutScriptTestSucceeded,  // success
+            '',  // reason
+            0); // execTime
+  insertRow(String(timer_ParentIntervalScriptTest), // testBody
+            ParentIntervalScriptTestIntervals == TIMER_TARGET_INTERVALS,
+            '',  // reason
+            0); // execTime
+  insertRow(String(timer_WorkerTimeoutScriptTest), // testBody
+            WorkerTimeoutScriptTestSucceeded,  // success
+            '',  // reason
+            0); // execTime
+  insertRow(String(timer_WorkerIntervalScriptTest), // testBody
+            WorkerIntervalScriptTestIntervals == TIMER_TARGET_INTERVALS,
+            '',  // reason
+            0); // execTime
 }
 
 
