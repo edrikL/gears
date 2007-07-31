@@ -52,13 +52,15 @@ class ATL_NO_VTABLE GearsTimer
   // End boilerplate code. Begin interface.
 
   // need a default constructor to CreateInstance objects in IE
-  GearsTimer() : next_timer_id_(1), in_handler_(false) {}
+  GearsTimer()
+      : next_timer_id_(1), in_handler_(false),
+        release_on_final_message_(false) {}
 
   void FinalRelease();
 
-  STDMETHOD(setTimeout)(IDispatch *in_value, int timeout, int *timer_id);
+  STDMETHOD(setTimeout)(VARIANT in_value, int timeout, int *timer_id);
   STDMETHOD(clearTimeout)(int timer_id);
-  STDMETHOD(setInterval)(IDispatch *in_value, int timeout, int *timer_id);
+  STDMETHOD(setInterval)(VARIANT in_value, int timeout, int *timer_id);
   STDMETHOD(clearInterval)(int timer_id);
 
   BEGIN_MSG_MAP(GearsTimer)
@@ -94,6 +96,7 @@ class ATL_NO_VTABLE GearsTimer
                         bool repeat);
   int CreateTimerCommon(TimerInfo &timer_info, int timeout);
   LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+  void OnFinalMessage();
 
   static void HandleEventUnload(void *user_param);  // callback for 'onunload'
 
@@ -102,6 +105,7 @@ class ATL_NO_VTABLE GearsTimer
   std::map<int, TimerInfo> timers_;
   int next_timer_id_;
   bool in_handler_;
+  bool release_on_final_message_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsTimer);
 };

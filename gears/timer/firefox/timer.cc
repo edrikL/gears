@@ -55,19 +55,39 @@ const nsCID kGearsTimerClassId = {0x8ba11b96, 0x1431, 0x4796, {0xa4, 0xd3,
                                   0x19, 0xbd, 0xb2, 0xb0, 0xeb, 0x8}};
                                   // {8BA11B96-1431-4796-A4D3-19BDB2B0EB08}
 
-NS_IMETHODIMP GearsTimer::SetTimeout(TimerHandler *timer_callback,
-                                     PRInt32 timeout,
+NS_IMETHODIMP GearsTimer::SetTimeout(//variant *timer_code,
+                                     //PRInt32 timeout,
                                      PRInt32 *retval) {
-  // Create a param fetcher so we can also retreive the context.
+
+  // Create a param fetcher so we can also retrieve the context.
   JsToken timer_function;
+  std::string16 script;
+  PRInt32 timeout;
   JsParamFetcher js_params(this);
-  if (!js_params.GetAsToken(0, &timer_function)) {
-      RETURN_EXCEPTION(STRING16(L"Invalid parameter"));
+
+  if (js_params.GetCount() != 2) {
+    RETURN_EXCEPTION(STRING16(L"Requires two parameters."));
   }
 
-  // Temporary variable to hold the timer id, so we only set it on success
-  int timer_id = CreateFunctionTimer(timer_function, js_params.GetContextPtr(),
-                                     timeout, false);
+  if (!js_params.GetAsInt(1, &timeout)) {
+    RETURN_EXCEPTION(STRING16(L"Second parameter must be an integer."));
+  }
+
+  // Temporary variable to hold the timer id, so we only set it on success.
+  int timer_id;
+
+  // If a string was passed in, create as a string timer.  Otherwise it's
+  // a function.
+  if (js_params.GetAsString(0, &script)) {
+    timer_id = CreateStringTimer(script.c_str(), timeout, false);
+  } else if (js_params.GetAsToken(0, &timer_function)) {
+    timer_id = CreateFunctionTimer(timer_function, js_params.GetContextPtr(),
+                                   timeout, false);
+  } else {
+    RETURN_EXCEPTION(
+        STRING16(L"First parameter must be a function or string."));
+  }
+
   if (timer_id == 0) {
     RETURN_EXCEPTION(STRING16(L"setTimeout failed."));
   }
@@ -81,18 +101,39 @@ NS_IMETHODIMP GearsTimer::ClearTimeout(PRInt32 timer_id) {
   RETURN_NORMAL();
 }
 
-NS_IMETHODIMP GearsTimer::SetInterval(TimerHandler *timer_callback,
-                                      PRInt32 timeout,
+NS_IMETHODIMP GearsTimer::SetInterval(//variant *timer_code,
+                                      //PRInt32 timeout,
                                       PRInt32 *retval) {
+
+  // Create a param fetcher so we can also retrieve the context.
   JsToken timer_function;
+  std::string16 script;
+  PRInt32 timeout;
   JsParamFetcher js_params(this);
-  if (!js_params.GetAsToken(0, &timer_function)) {
-      RETURN_EXCEPTION(STRING16(L"Invalid parameter"));
+
+  if (js_params.GetCount() != 2) {
+    RETURN_EXCEPTION(STRING16(L"Requires two parameters."));
   }
 
-  // Temporary variable to hold the timer id, so we only set it on success
-  int timer_id = CreateFunctionTimer(timer_function, js_params.GetContextPtr(),
-                                     timeout, true);
+  if (!js_params.GetAsInt(1, &timeout)) {
+    RETURN_EXCEPTION(STRING16(L"Second parameter must be an integer."));
+  }
+
+  // Temporary variable to hold the timer id, so we only set it on success.
+  int timer_id;
+
+  // If a string was passed in, create as a string timer.  Otherwise it's
+  // a function.
+  if (js_params.GetAsString(0, &script)) {
+    timer_id = CreateStringTimer(script.c_str(), timeout, true);
+  } else if (js_params.GetAsToken(0, &timer_function)) {
+    timer_id = CreateFunctionTimer(timer_function, js_params.GetContextPtr(),
+                                   timeout, true);
+  } else {
+    RETURN_EXCEPTION(
+        STRING16(L"First parameter must be a function or string."));
+  }
+
   if (timer_id == 0) {
     RETURN_EXCEPTION(STRING16(L"setInterval failed."));
   }

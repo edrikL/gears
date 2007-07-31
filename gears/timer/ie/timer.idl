@@ -39,11 +39,11 @@ import "ocidl.idl";
   pointer_default(unique)
 ]
 interface GearsTimerInterface : IDispatch {
-  HRESULT setTimeout([in] IDispatch *handler,
+  HRESULT setTimeout([in] VARIANT handler,
                      [in] int timeout,
                      [out, retval] int *timer_id);
   HRESULT clearTimeout([in] int timer_id);
-  HRESULT setInterval([in] IDispatch *handler,
+  HRESULT setInterval([in] VARIANT handler,
                       [in] int timeout,
                       [out, retval] int *timer_id);
   HRESULT clearInterval([in] int timer_id);

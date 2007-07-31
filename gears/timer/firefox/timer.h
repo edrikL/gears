@@ -53,13 +53,15 @@ class GearsTimer
   GearsTimer() : next_timer_id_(1) {}
   ~GearsTimer() {}
 
-  NS_IMETHOD SetTimeout(TimerHandler *timer_callback,
-                        PRInt32 timeout,
+  NS_IMETHOD SetTimeout(//variant *timer_code,
+                        //PRInt32 timeout,
                         PRInt32 *retval);
+
   NS_IMETHOD ClearTimeout(PRInt32 timer_id);
-  NS_IMETHOD SetInterval(TimerHandler *timer_callback,
-                         PRInt32 timeout,
+  NS_IMETHOD SetInterval(//variant *timer_code,
+                         //PRInt32 timeout,
                          PRInt32 *retval);
+
   NS_IMETHOD ClearInterval(PRInt32 timer_id);
 
  private:

@@ -30,7 +30,7 @@
 
 
 GearsTimer::TimerInfo::~TimerInfo() {
-  if (owner != NULL && timer_id != 0) {
+  if (owner != NULL && owner->IsWindow() && timer_id != 0) {
     owner->KillTimer(timer_id);
   }
 }
@@ -41,11 +41,29 @@ void GearsTimer::FinalRelease() {
   }
 }
 
-STDMETHODIMP GearsTimer::setTimeout(IDispatch *in_value,
+void GearsTimer::OnFinalMessage() {
+  // Release the last reference to this, and cause a delete.
+  if (release_on_final_message_) {
+    this->Release();
+  }
+}
+
+STDMETHODIMP GearsTimer::setTimeout(VARIANT in_value,
                                     int timeout,
                                     int *timer_id) {
-  // protects against modifying output param on failure
-  int timer_id_temp = CreateDispatchTimer(in_value, timeout, false);
+  // Protect against modifying output param on failure.
+  int timer_id_temp;
+
+  // Determine which type of timer to create based on the in_value type.
+  if (in_value.vt == VT_BSTR) {
+    timer_id_temp = CreateStringTimer(in_value.bstrVal, timeout, false);
+  } else if (in_value.vt == VT_DISPATCH) {
+    timer_id_temp = CreateDispatchTimer(in_value.pdispVal, timeout, false);
+  } else {
+    RETURN_EXCEPTION(
+        STRING16(L"First parameter must be a function or string."));
+  }
+
   if (timer_id_temp == 0) {
     RETURN_EXCEPTION(STRING16(L"Timer creation failed."));
   }
@@ -59,11 +77,22 @@ STDMETHODIMP GearsTimer::clearTimeout(int timer_id) {
   RETURN_NORMAL();
 }
 
-STDMETHODIMP GearsTimer::setInterval(IDispatch *in_value,
+STDMETHODIMP GearsTimer::setInterval(VARIANT in_value,
                                      int timeout,
                                      int *timer_id) {
-  // protects against modifying output param on failure
-  int timer_id_temp = CreateDispatchTimer(in_value, timeout, true);
+  // Protect against modifying output param on failure.
+  int timer_id_temp;
+
+  // Determine which type of timer to create based on the in_value type.
+  if (in_value.vt == VT_BSTR) {
+    timer_id_temp = CreateStringTimer(in_value.bstrVal, timeout, true);
+  } else if (in_value.vt == VT_DISPATCH) {
+    timer_id_temp = CreateDispatchTimer(in_value.pdispVal, timeout, true);
+  } else {
+    RETURN_EXCEPTION(
+        STRING16(L"First parameter must be a function or string."));
+  }
+
   if (timer_id_temp == 0) {
     RETURN_EXCEPTION(STRING16(L"Timer creation failed."));
   }
@@ -149,9 +178,11 @@ LRESULT GearsTimer::OnTimer(UINT uMsg,
                             WPARAM wParam,
                             LPARAM lParam,
                             BOOL& bHandled) {
+  // Protect against a delete while running the timer handler.
+  CComPtr<GearsTimer> gears_timer = this;
   bHandled = TRUE;
 
-  // Prevent re-entry
+  // Prevent re-entry.
   if (in_handler_) {
     return 0;
   }
@@ -165,7 +196,7 @@ LRESULT GearsTimer::OnTimer(UINT uMsg,
     KillTimer(wParam);
   } else {
 
-    // Disable the timer now if it's a one shot
+    // Disable the timer now if it's a one shot.
     if (!timer->second.repeat) {
       KillTimer(wParam);
     }
@@ -220,7 +251,15 @@ LRESULT GearsTimer::OnTimer(UINT uMsg,
 
   }
 
-  // Turn off re-entry prevention
+  // If we would delete ourself here, we need to defer the release until we're
+  // out of the message handler.
+  if (gears_timer->m_dwRef == 1) {
+    release_on_final_message_ = true;
+    AddRef();
+    PostMessage(WM_DESTROY, 0, 0);
+  }
+
+  // Turn off re-entry prevention.
   in_handler_ = false;
 
   return 0;
