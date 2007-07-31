@@ -1,6 +1,10 @@
 = Introduction =
 
-It's easier to use an API when it has a consistent style. For that reason Gears should try to be as consistent as possible across it's various APIs.
+It's easier to use an API when it has a consistent style because you can guess how something works without thinking too hard.
+
+It's also easier to implement such APIs because you don't have to think too hard about how something _should_ work.
+
+Let's grow this document into a set of easy to follow conventions about how to design Gears APIs.
 
 
 = Error Messages =
@@ -43,6 +47,5 @@ _Bad:_ Permission denied.
 *Good:* Internal error.
 
 _Bad:_ could not initialize file handle - maybe a bad disk?
-
 
 
