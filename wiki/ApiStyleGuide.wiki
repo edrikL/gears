@@ -1,4 +1,4 @@
-#summary Guide to producing stylish APIs
+#summary Guide to producing stylish Gears APIs
 
 = Introduction =
 
