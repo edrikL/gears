@@ -37,9 +37,29 @@
 #include <map>
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/string_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/third_party/AtlActiveScriptSite.h"
+
+
+// Helper function used by ThrowGlobalError in JsRunnerImpl and ParentJsRunner.
+static void ThrowErrorUsingEval(const std::string16 &message,
+                                JsRunnerInterface *js_runner) {
+  std::string16 string_to_eval(message);
+
+  ReplaceAll(string_to_eval, std::string16(STRING16(L"'")),
+             std::string16(STRING16(L"\\'")));
+  ReplaceAll(string_to_eval, std::string16(STRING16(L"\r")),
+             std::string16(STRING16(L"\\r")));
+  ReplaceAll(string_to_eval, std::string16(STRING16(L"\n")),
+             std::string16(STRING16(L"\\n")));
+
+  string_to_eval.insert(0, std::string16(STRING16(L"throw new Error('")));
+  string_to_eval.append(std::string16(STRING16(L"')")));
+
+  js_runner->Eval(string_to_eval.c_str());
+}
 
 
 class ATL_NO_VTABLE JsRunnerImpl
@@ -75,7 +95,12 @@ class ATL_NO_VTABLE JsRunnerImpl
   bool Start(const std::string16 &full_script);
   bool Stop();
   bool Eval(const std::string16 &script);
-  const char16 * GetLastScriptError();
+  void SetErrorHandler(JsErrorHandlerInterface *error_handler) {
+    error_handler_ = error_handler;
+  }
+  void ThrowGlobalError(const std::string16 &message) {
+    ThrowErrorUsingEval(message, this);
+  }
 
   // IActiveScriptSiteImpl overrides
   STDMETHOD(LookupNamedItem)(const OLECHAR *name, IUnknown **item);
@@ -95,7 +120,7 @@ class ATL_NO_VTABLE JsRunnerImpl
 
  private:
   CComPtr<IActiveScript> javascript_engine_;
-  std::string16 last_script_error_;
+  JsErrorHandlerInterface *error_handler_;
 
   typedef std::map<std::string16, IGeneric *> NameToObjectMap;
   NameToObjectMap global_name_to_object_;
@@ -243,11 +268,6 @@ bool JsRunnerImpl::Stop() {
   return SUCCEEDED(javascript_engine_->Close());
 }
 
-
-const char16 * JsRunnerImpl::GetLastScriptError() {
-  return last_script_error_.c_str();
-}
-
 STDMETHODIMP JsRunnerImpl::LookupNamedItem(const OLECHAR *name,
                                            IUnknown **item) {
   IGeneric *found_item = global_name_to_object_[name];
@@ -264,12 +284,15 @@ STDMETHODIMP JsRunnerImpl::LookupNamedItem(const OLECHAR *name,
 
 STDMETHODIMP JsRunnerImpl::HandleScriptError(EXCEPINFO *ei, ULONG line,
                                              LONG pos, BSTR src) {
-  last_script_error_ = ei->bstrDescription;
   // TODO(cprince): think about how to get 'line' and 'pos' into the string16.
   // It's not a high priority, because AtlActiveScriptSite can fail to get these
   // values, and because many of the apps we've seen build-up the JS worker
   // code from snippets, making 'line' and 'pos' meaningless.  Fortunately,
   // 'bstrDescription' is available and is the most useful.
+  if (error_handler_) {
+    error_handler_->HandleError(static_cast<char16 *>(ei->bstrDescription));
+  }
+
   return E_FAIL; // returning success here would hide SetScriptState failures
 }
 
@@ -333,30 +356,26 @@ class JsRunner : public JsRunnerInterface {
     }
   }
 
-  bool JsRunner::AddGlobal(const std::string16 &name,
-                           IGeneric *object,
-                           gIID iface_id) {
+  bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
     return com_obj_->AddGlobal(name, object, iface_id);
   }
-
-  bool JsRunner::Start(const std::string16 &full_script) {
+  bool Start(const std::string16 &full_script) {
     return com_obj_->Start(full_script);
   }
-
-  bool JsRunner::Stop() {
+  bool Stop() {
     return com_obj_->Stop();
   }
-
-  bool JsRunner::GetContext(JsContextPtr *context) {
+  bool GetContext(JsContextPtr *context) {
     return com_obj_->GetContext(context);
   }
-
-  bool JsRunner::Eval(const std::string16 &script) {
+  bool Eval(const std::string16 &script) {
     return com_obj_->Eval(script);
   }
-
-  const char16 * JsRunner::GetLastScriptError() {
-    return com_obj_->GetLastScriptError();
+  void SetErrorHandler(JsErrorHandlerInterface *error_handler) {
+    return com_obj_->SetErrorHandler(error_handler);
+  }
+  void ThrowGlobalError(const std::string16 &message) {
+    return com_obj_->ThrowGlobalError(message);
   }
 
  private:
@@ -374,28 +393,28 @@ class ParentJsRunner : public JsRunnerInterface {
   }
   virtual ~ParentJsRunner() {
   }
-
-  bool ParentJsRunner::AddGlobal(const std::string16 &name,
-                                 IGeneric *object,
-                                 gIID iface_id) {
+  bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
     // TODO(zork): Add this functionality to parent js runners.
     return false;
   }
-  bool ParentJsRunner::Start(const std::string16 &full_script) {
+  bool Start(const std::string16 &full_script) {
     assert(false); // Should not be called on the parent.
     return false;
   }
-  bool ParentJsRunner::Stop() {
+  bool Stop() {
     assert(false); // Should not be called on the parent.
     return false;
   }
-  bool ParentJsRunner::GetContext(JsContextPtr *context) {
+  bool GetContext(JsContextPtr *context) {
     context = NULL;
     return false;
   }
   bool Eval(const std::string16 &script);
-  const char16 * ParentJsRunner::GetLastScriptError() {
-    return NULL;
+  void SetErrorHandler(JsErrorHandlerInterface *handler) {
+    assert(false); // Should not be called on the parent.
+  }
+  void ThrowGlobalError(const std::string16 &message) {
+    ThrowErrorUsingEval(message, this);
   }
 
  private:

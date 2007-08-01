@@ -45,6 +45,7 @@ interface GearsWorkerPoolInterface : IDispatch {
   HRESULT sendMessage([in] const BSTR *message_string,
                       [in] int dest_worker_id);
   [propput] HRESULT onmessage([in] IDispatch *handler);
+  [propput] HRESULT onerror([in] IDispatch *handler);
 #ifdef DEBUG
   HRESULT forceGC();
 #endif

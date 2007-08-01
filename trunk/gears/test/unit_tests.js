@@ -1589,10 +1589,43 @@ function workerpool_GCWithFunctionClosures() {
 }
 
 
+function workerpool_OnErrorTest() {
+  // Test that onerror gets called.
+  workerpool_OnErrorTest.handler_called = false;
+  var wp = google.gears.factory.create('beta.workerpool', '1.0');
+  wp.onerror = function(msg, sender) {
+    workerpool_OnErrorTest.handler_called = true;
+  };
+  var worker = wp.createWorker('');
+  // Should cause an error because there is no onmessage handler in the worker.
+  wp.sendMessage('hello', worker);
+
+
+  // Test that errors get thrown globally if there is no onerror handler.
+  workerpool_OnErrorTest.global_called = false;
+  var wp2 = google.gears.factory.create('beta.workerpool', '1.0');
+  window.onerror = function(msg) {
+    if (msg.indexOf(
+            "Destination worker 1 does not have an onmessage handler") > -1) {
+      workerpool_OnErrorTest.global_called = true;
+      // This was the error we caused on purpose, so return true to prevent
+      // error from going to normal browser error UI.
+      return true;
+    } else {
+      // This was some other error, let it go through to the normal browser UI.
+      return false;
+    }
+  };
+  var worker = wp2.createWorker('');
+  wp2.sendMessage('hello', worker);
+}
+
+
 function runWorkerPoolTests() {
   // Start the tests
   workerpool_SynchronizationStressTest();
   workerpool_GCWithFunctionClosures();
+  workerpool_OnErrorTest();
 
   // Check the results after a delay
   setTimeout('checkWorkerPoolTests()',
@@ -1644,6 +1677,18 @@ function checkWorkerPoolTests() {
             pingReceived_GCWithFunctionClosures,  // success
             '',  // reason
             0); // execTime
+            
+  // Check the OnError tests.
+
+  insertRow('workerpool_OnErrorTest.handler_called', // test body
+            workerpool_OnErrorTest.handler_called,
+            '', // reason
+            0);
+
+  insertRow('workerpool_OnErrorTest.global_called', // test body
+            workerpool_OnErrorTest.global_called,
+            '', // reason
+            0);
 }
 
 

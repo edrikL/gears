@@ -53,7 +53,14 @@
 #endif
 
 
-// Declares the platform-independent interface that Scour internals require
+// Interface for clients of JsRunner to implement if they want to handle errors.
+class JsErrorHandlerInterface {
+ public:
+  virtual void HandleError(const std::string16 &message) = 0;
+};
+
+
+// Declares the platform-independent interface that Gears internals require
 // for running JavaScript code.
 class JsRunnerInterface {
  public:
@@ -66,7 +73,8 @@ class JsRunnerInterface {
   virtual bool Stop() = 0;
   virtual bool GetContext(JsContextPtr *context) = 0;
   virtual bool Eval(const std::string16 &script) = 0;
-  virtual const char16 * GetLastScriptError() = 0;
+  virtual void SetErrorHandler(JsErrorHandlerInterface *error_handler) = 0;
+  virtual void ThrowGlobalError(const std::string16 &message) = 0;
 };
 
 // Callers: create instances using the following instead of 'new JsRunner'.

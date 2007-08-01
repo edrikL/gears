@@ -35,6 +35,7 @@
 #include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
 
@@ -62,8 +63,10 @@ class GearsWorkerPool
                           PRInt32 *retval);
   NS_IMETHOD SendMessage(const nsAString &message_string,
                          PRInt32 dest_worker_id);
-  NS_IMETHOD SetOnmessage(WorkerOnmessageHandler *in_value);
-  NS_IMETHOD GetOnmessage(WorkerOnmessageHandler **out_value);
+  NS_IMETHOD SetOnmessage(nsIVariant *in_handler);
+  NS_IMETHOD GetOnmessage(nsIVariant **out_handler);
+  NS_IMETHOD SetOnerror(nsIVariant *in_handler);
+  NS_IMETHOD GetOnerror(nsIVariant **out_handler);
 #ifdef DEBUG
   NS_IMETHOD ForceGC();
 #endif
@@ -87,9 +90,11 @@ class GearsWorkerPool
 struct JavaScriptWorkerInfo;
 struct ThreadsEvent;
 
-class PoolThreadsManager {
+class PoolThreadsManager
+    : JsErrorHandlerInterface {
  public:
-  PoolThreadsManager(const SecurityOrigin &page_security_origin);
+  PoolThreadsManager(const SecurityOrigin &page_security_origin,
+                     JsRunnerInterface *root_js_runner);
 
   // We handle the lifetime of PoolThreadsManager using ref-counting. Each of
   // the GearsWorkerPool instances associated with a PoolThreadsManager has a
@@ -98,9 +103,15 @@ class PoolThreadsManager {
   void ReleaseWorkerRef();
 
   bool SetCurrentThreadMessageHandler(JsCallback *handler);
-  bool CreateThread(const char16 *full_script, int *worker_id,
-                    std::string16 *script_error); // script_error can be NULL
+  bool SetCurrentThreadErrorHandler(JsCallback *handler);
+  bool CreateThread(const char16 *full_script, int *worker_id);
+  void HandleError(const std::string16 &message);
   bool PutPoolMessage(const nsAString &message_string, int dest_worker_id);
+
+  // Worker initialization that must be done from the worker's thread.
+  bool InitWorkerThread(JavaScriptWorkerInfo *wi);
+  void UninitWorkerThread();
+
   void ShutDown();
 #ifdef DEBUG
   void ForceGCCurrentThread();
@@ -112,10 +123,23 @@ class PoolThreadsManager {
   ~PoolThreadsManager();
 
   bool GetPoolMessage(std::string16 *message_string, int *src_worker_id);
+
+  // Gets the id of the worker associated with the current thread. Caller must
+  // acquire the mutex.
   int GetCurrentPoolWorkerId();
 
   static void JavaScriptThreadEntry(void *args);
+  static bool SetupJsRunner(JsRunnerInterface *js_runner,
+                            JavaScriptWorkerInfo *wi);
   static void *OnReceiveThreadsEvent(ThreadsEvent *event);
+
+  // Helpers for processing events received from other workers.
+  void ProcessMessage(JavaScriptWorkerInfo *wi,
+                      const std::string16 &message_string, int src_worker_id);
+  void ProcessError(JavaScriptWorkerInfo *wi,
+                    const std::string16 &message_string, int src_worker_id);
+  void FireHandler(const JsCallback &handler, const std::string16 &message,
+                   int src_worker_id);
 
   int num_workers_; // used by Add/ReleaseWorkerRef()
   bool is_shutting_down_;
@@ -128,6 +152,10 @@ class PoolThreadsManager {
   Mutex mutex_;  // for exclusive access to all class methods and data
 
   SecurityOrigin page_security_origin_;
+
+  // The JsRunner for the root worker. For non-nested workerpools (the usual
+  // case), this will actually be a ParentJsRunner.
+  JsRunnerInterface *root_js_runner_;
 
   DISALLOW_EVIL_CONSTRUCTORS(PoolThreadsManager);
 };

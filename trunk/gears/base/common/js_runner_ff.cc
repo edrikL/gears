@@ -35,33 +35,43 @@
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/js_runner_ff_marshaling.h"
 #include "gears/base/common/scoped_token.h"
+#include "gears/base/common/string_utils.h"
 #include "gears/base/firefox/factory.h"
 #include "ff/genfiles/database.h"
 #include "ff/genfiles/localserver.h"
 #include "ff/genfiles/timer.h"
 #include "ff/genfiles/workerpool.h"
 
+static void ThrowErrorOnContext(const std::string16 &error, JSContext *cx) {
+  if (!cx) { return; }
+
+  std::string error_utf8;
+  String16ToUTF8(error.c_str(), error.length(), &error_utf8);
+  JS_ReportError(cx, error_utf8.c_str());
+}
 
 class JsRunner : public JsRunnerInterface {
  public:
   JsRunner() : js_engine_context_(NULL), alloc_js_wrapper_(NULL),
-               global_obj_(NULL), js_runtime_(NULL), js_script_(NULL) {
+               error_handler_(NULL), global_obj_(NULL), js_runtime_(NULL),
+               js_script_(NULL) {
     InitJavaScriptEngine();
   }
   ~JsRunner();
 
-  bool JsRunner::AddGlobal(const std::string16 &name,
-                           IGeneric *object,
-                           gIID iface_id);
-  bool JsRunner::Start(const std::string16 &full_script);
-  bool JsRunner::Stop();
-  bool JsRunner::GetContext(JsContextPtr *context) {
+  bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id);
+  bool Start(const std::string16 &full_script);
+  bool Stop();
+  bool GetContext(JsContextPtr *context) {
     *context = js_engine_context_;
     return true;
   }
-  bool JsRunner::Eval(const std::string16 &full_script);
-  const char16 * JsRunner::GetLastScriptError() {
-    return last_script_error_.c_str();
+  bool Eval(const std::string16 &full_script);
+  void SetErrorHandler(JsErrorHandlerInterface *handler) {
+    error_handler_ = handler;
+  }
+  void ThrowGlobalError(const std::string16 &message) {
+    ThrowErrorOnContext(message, js_engine_context_);
   }
 
  private:
@@ -73,9 +83,9 @@ class JsRunner : public JsRunnerInterface {
 
   JSContext *js_engine_context_;
   JsContextWrapper *alloc_js_wrapper_; // (created in thread)
+  JsErrorHandlerInterface *error_handler_;
   JSObject *global_obj_;
   IIDToProtoMap proto_interfaces_;
-  std::string16 last_script_error_; // struct to cross the OS thread boundary
   std::vector<IGeneric *> globals_;
   JSRuntime *js_runtime_;
   JSScript *js_script_;
@@ -83,47 +93,53 @@ class JsRunner : public JsRunnerInterface {
   DISALLOW_EVIL_CONSTRUCTORS(JsRunner);
 };
 
+// Provides the same interface as JsRunner, but for the normal JavaScript engine
+// that runs in HTML pages.
+// TODO(aa): Should rename to DocumentJsRunner, or RootJsRunner, or something.
+// If a worker creates a workerpool, it is also a "parent", but this class
+// cannot be used there.
 class ParentJsRunner : public JsRunnerInterface {
  public:
   ParentJsRunner(IGeneric *base, JsContextPtr context)
-      : js_engine_context(context) {
+      : js_engine_context_(context) {
   }
 
   ~ParentJsRunner() {
   }
 
-  bool ParentJsRunner::AddGlobal(const std::string16 &name,
-                                 IGeneric *object,
-                                 gIID iface_id) {
+  bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
     // TODO(zork): Add this functionality to parent js runners.
     return false;
   }
-  bool ParentJsRunner::Start(const std::string16 &full_script) {
+  void SetErrorHandler(JsErrorHandlerInterface *handler) {
+    assert(false); // This should not be called on the parent.
+  }
+  bool Start(const std::string16 &full_script) {
     assert(false); // This should not be called on the parent.
     return false;
   }
-  bool ParentJsRunner::Stop() {
+  bool Stop() {
     assert(false); // This should not be called on the parent.
     return false;
   }
-  bool ParentJsRunner::GetContext(JsContextPtr *context) {
-    *context = js_engine_context;
+  bool GetContext(JsContextPtr *context) {
+    *context = js_engine_context_;
     return true;
   }
-  bool ParentJsRunner::Eval(const std::string16 &full_script);
-  const char16 * ParentJsRunner::GetLastScriptError() {
-    return NULL;
+  bool Eval(const std::string16 &full_script);
+  void ThrowGlobalError(const std::string16 &message) {
+    ThrowErrorOnContext(message, js_engine_context_);
   }
 
  private:
-  JSContext *js_engine_context;
+  JSContext *js_engine_context_;
 
   DISALLOW_EVIL_CONSTRUCTORS(ParentJsRunner);
 };
 
 
 bool ParentJsRunner::Eval(const std::string16 &script) {
-  JSObject *object = JS_GetGlobalObject(js_engine_context);
+  JSObject *object = JS_GetGlobalObject(js_engine_context_);
   if (!object) { return false; }
 
   // To eval the script, we need the JSPrincipals to be acquired through
@@ -133,7 +149,7 @@ bool ParentJsRunner::Eval(const std::string16 &script) {
   // associated with the global JSObject on the current context.
   nsCOMPtr<nsIScriptGlobalObject> sgo;
   nsISupports *priv = reinterpret_cast<nsISupports *>(JS_GetPrivate(
-                                                          js_engine_context,
+                                                          js_engine_context_,
                                                           object));
   nsCOMPtr<nsIXPConnectWrappedNative> wrapped_native = do_QueryInterface(priv);
 
@@ -154,18 +170,18 @@ bool ParentJsRunner::Eval(const std::string16 &script) {
   nsIPrincipal *principal = obj_prin->GetPrincipal();
   if (!principal) { return false; }
 
-  principal->GetJSPrincipals(js_engine_context, &jsprin);
+  principal->GetJSPrincipals(js_engine_context_, &jsprin);
 
   uintN line_number_start = 0;
   jsval rval;
   JSBool js_ok = JS_EvaluateUCScriptForPrincipals(
-      js_engine_context, object, jsprin,
+      js_engine_context_, object, jsprin,
       reinterpret_cast<const jschar *>(script.c_str()),
       script.length(), "script", line_number_start, &rval);
 
 
   // Decrements ref count on jsprin (Was added in GetJSPrincipals()).
-  JSPRINCIPALS_DROP(js_engine_context, jsprin);
+  JSPRINCIPALS_DROP(js_engine_context_, jsprin);
   if (!js_ok) { return false; }
   return true;
 }
@@ -174,9 +190,9 @@ void JS_DLL_CALLBACK JsRunner::JsErrorHandler(JSContext *cx,
                                               const char *message,
                                               JSErrorReport *report) {
   JsRunner *js_runner = static_cast<JsRunner*>(JS_GetContextPrivate(cx));
-  if (js_runner && report && report->ucmessage) {
-    js_runner->last_script_error_ =
-        reinterpret_cast<const char16 *>(report->ucmessage);
+  if (js_runner && js_runner->error_handler_ && report && report->ucmessage) {
+    js_runner->error_handler_->HandleError(static_cast<const char16 *>(
+                                               report->ucmessage));
   }
 }
 
@@ -187,8 +203,9 @@ JsRunner::~JsRunner() {
     delete *global;
   }
 
-  // TODO(zork): The script object should be cleaned up here,
-  // but it currently causes JS_DestroyContext to occasionally crash.
+  // TODO(aa): Gears objects inside the js context do not get destroyed here
+  // for some reason. This means that nested workers never stop or get deleted,
+  // localstore doesn't stop capturing, etc.
 
   if (js_engine_context_) {
     JS_DestroyContext(js_engine_context_);
