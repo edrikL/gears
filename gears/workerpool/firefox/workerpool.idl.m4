@@ -29,22 +29,6 @@
 interface nsIVariant;
 
 //
-// WorkerOnmessageHandler
-//
-[scriptable, function, uuid(06F6FE3E-92DF-4c24-8DFB-F250E8ECFCF6)]
-interface WorkerOnmessageHandler : nsISupports {
-  // Voodoo!  We never provide any implementation of this interface, but we
-  // declare the 'onmessage' attribute to be of this type.  JavaScript code
-  // can set 'onmessage' to a function, and calling the 'invoke' method
-  // listed here (the name doesn't matter) will call that JS function, with
-  // the arguments we have listed.
-  //
-  // But the Firefox sources for XMLHttpRequest do the same thing for
-  // nsIOnReadyStateChangeHandler, so this is sanctioned voodoo.
-  void invoke(in AString message_string, in long src_thread);
-};
-
-//
 // GearsWorkerPoolInterface
 //
 [scriptable, function, uuid(074EB1A4-80BE-4fce-85DA-19C9EFAEC2FD)]
@@ -52,7 +36,13 @@ interface GearsWorkerPoolInterface : GearsBaseClassInterface {
   long createWorker(//in AString full_script
                    );
   void sendMessage(in AString message_string, in long dest_worker_id);
-  attribute WorkerOnmessageHandler onmessage;
+  
+  // nsIVariant is used for these two arbitrarily. We get the params using
+  // JsParamFetcher. IDL requires us to provide a type for properties, but this
+  // could be anything.
+  attribute nsIVariant onmessage;
+  attribute nsIVariant onerror;
+
 m4_changequote(`^',`^')m4_dnl
 m4_ifdef(^DEBUG^,^m4_dnl
   void forceGC();

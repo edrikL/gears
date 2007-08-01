@@ -38,4 +38,9 @@ const char16 *kWorkerInsertedPreamble = STRING16(
   L"google.gears.factory = gearsFactory;"
   L"google.gears.workerPool = gearsWorkerPool;");
 
+// The "owning" worker is the first worker that creates the workerpool and
+// whose deletion causes the workerpool to shutdown.
+static const int kOwningWorkerId = 0;
+static const int kInvalidWorkerId = -1;
+
 #endif  // GEARS_WORKERPOOL_COMMON_WORKERPOOL_UTILS_H__
