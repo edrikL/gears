@@ -172,7 +172,9 @@ class JsParamFetcher {
   explicit JsParamFetcher(GearsBaseClass *obj);
 
   JsContextPtr GetContextPtr() { return js_context_; }
-  int GetCount() { return js_argc_; }
+  int GetCount(bool has_mysterious_retval) {
+    return has_mysterious_retval ? js_argc_ - 1 : js_argc_;
+  }
   // In Firefox, set has_string_retval iff method has a string return value.
   bool IsOptionalParamPresent(int i, bool has_string_retval);
 
