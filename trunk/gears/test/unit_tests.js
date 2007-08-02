@@ -2053,6 +2053,32 @@ var captureComplete = false;
 var captureCompleteCount = 0;
 var captureExpectedCount = 0;
 
+function testLocalServerEmptyParams() {
+  var shouldFail = [
+    "localServer.createStore()",
+    "localServer.createStore('')",
+    "localServer.createStore(null)",
+    "localServer.createStore(undefined)",
+    "localServer.createManagedStore()",
+    "localServer.createManagedStore('')",
+    "localServer.createManagedStore(null)",
+    "localServer.createManagedStore(undefined)"
+  ];
+  
+  for (var i = 0, str; str = shouldFail[i]; i++) {
+    try {
+      eval(str);
+    } catch (e) {
+      // good, we expected an exception
+      continue;
+    }
+    insertRow("testLocalServerEmptyParams", false,
+              "Did not get expected error for: " + str);
+    return;
+  }
+  insertRow("testLocalServerEmptyParams", true, "");
+}
+
 function runWebCaptureTests() {
   if (location.protocol.indexOf("http") != 0) {
     insertRow("webcapture tests", false,
@@ -2064,6 +2090,8 @@ function runWebCaptureTests() {
   localServer =
       google.gears.factory.create("beta.localserver", "1.0");
   insertNotExpected("Create LocalServer object", null, localServer);
+
+  testLocalServerEmptyParams();
 
   // Start from a clean slate
   localServer.removeStore(STORE_NAME);

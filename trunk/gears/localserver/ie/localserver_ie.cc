@@ -353,19 +353,23 @@ HRESULT GearsLocalServer::CheckLocalServerParameters(
                                             const VARIANT *required_cookie,
                                             CComBSTR &required_cookie_bstr) {
   if (!name || !name[0]) {
-    assert(name && name[0]);
-    RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
+    RETURN_EXCEPTION(STRING16(L"The name parameter is required."));
   }
 
   if (ActiveXUtils::OptionalVariantIsPresent(required_cookie)) {
     if (required_cookie->vt != VT_BSTR) {
-      RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
+      RETURN_EXCEPTION(STRING16(L"The required_cookie parameter must be a "
+                                L"string."));
     }
     required_cookie_bstr = required_cookie->bstrVal;
   }
 
   if (!IsStringValidPathComponent(name)) {
-    RETURN_EXCEPTION(STRING16(L"The 'name' contains invalid characters."));
+    std::string16 error(STRING16(L"The name parameter contains invalid "
+                                 L"characters:"));
+    error += static_cast<const char16 *>(name);
+    error += STRING16(L".");
+    RETURN_EXCEPTION(error.c_str());
   }
 
   RETURN_NORMAL();

@@ -196,13 +196,12 @@ JsParamFetcher::JsParamFetcher(GearsBaseClass *obj) {
 // makes the retval the final param.  So params[0] might point at an optional
 // param or the required retval. We need has_string_retval to know which it is.
 //
-// TODO(cprince): 'has_string_retval' isn't quite right.  Notice workaround in
-// Execute() [database/firefox/database.cc] where 'false' must be passed.
-bool JsParamFetcher::IsOptionalParamPresent(int i, bool has_string_retval) {
-  int retval_count = has_string_retval ? 1 : 0;
-
+// TODO(aa): has_mysterious_retval is named thusly because we have observed that
+// sometimes other types than strings cause the behavior described above. This
+// needs to be investigated and encapsulated.
+bool JsParamFetcher::IsOptionalParamPresent(int i, bool has_mysterious_retval) {
   // Return false if there weren't enough params.
-  if (i >= (GetCount() - retval_count)) {
+  if (i >= GetCount(has_mysterious_retval)) {
     return false;
   }
 

@@ -140,10 +140,10 @@ NS_IMETHODIMP GearsDatabase::Execute(//const nsAString &expr,
 
   JsParamFetcher js_params(this);
 
-  if (js_params.GetCount() < 1) {
-    RETURN_EXCEPTION(STRING16(L"Not enough paramenters."));
+  if (js_params.GetCount(false) < 1) {
+    RETURN_EXCEPTION(STRING16(L"The sql parameter is required."));
   } else if (!js_params.GetAsString(0, &expr)) {
-    RETURN_EXCEPTION(STRING16(L"SQL expression must be a string."));
+    RETURN_EXCEPTION(STRING16(L"The sql parameter must be a string."));
   }
 
 

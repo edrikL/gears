@@ -65,7 +65,7 @@ NS_IMETHODIMP GearsLocalServer::CanServeLocally(//const nsAString &url,
   JsParamFetcher js_params(this);
 
   // Get required parameters
-  if (js_params.GetCount() != 1) { // only AString retvals are treated as params
+  if (js_params.GetCount(false) < 1) {
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
 
@@ -322,26 +322,35 @@ nsresult GearsLocalServer::GetAndCheckParameters(
   const int kNameParamIndex = 0;
   const int kRequiredCookieParamIndex = 1;
 
+  if (js_params.GetCount(has_string_retval) < 1) {
+    RETURN_EXCEPTION(STRING16(L"The name parameter is required."));
+  }
+
   // Get required parameters
   if (!js_params.GetAsString(kNameParamIndex, name)) {
-    RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
+    RETURN_EXCEPTION(STRING16(L"The name parameter must be a string."));
   }
 
   // Get optional parameters
   if (js_params.IsOptionalParamPresent(kRequiredCookieParamIndex,
                                        has_string_retval)) {
     if (!js_params.GetAsString(kRequiredCookieParamIndex, required_cookie)) {
-      RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
+      RETURN_EXCEPTION(STRING16(L"The required_cookie parameter must be a "
+                                L"string."));
     }
   }
 
   // Validate parameters
   if (name->empty()) {
-    RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
+    RETURN_EXCEPTION(STRING16(L"The name parameter is required."));
   }
 
   if (!IsStringValidPathComponent(name->c_str())) {
-    RETURN_EXCEPTION(STRING16(L"The 'name' contains invalid characters."));
+    std::string16 error(STRING16(L"The name parameter contains invalid "
+                                 L"characters: "));
+    error += *name;
+    error += STRING16(L".");
+    RETURN_EXCEPTION(error.c_str());
   }
 
   RETURN_NORMAL();

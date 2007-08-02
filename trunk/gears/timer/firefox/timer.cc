@@ -65,7 +65,7 @@ NS_IMETHODIMP GearsTimer::SetTimeout(//variant *timer_code,
   PRInt32 timeout;
   JsParamFetcher js_params(this);
 
-  if (js_params.GetCount() != 2) {
+  if (js_params.GetCount(false) != 2) {
     RETURN_EXCEPTION(STRING16(L"Requires two parameters."));
   }
 
@@ -110,7 +110,7 @@ NS_IMETHODIMP GearsTimer::SetInterval(//variant *timer_code,
   PRInt32 timeout;
   JsParamFetcher js_params(this);
 
-  if (js_params.GetCount() != 2) {
+  if (js_params.GetCount(false) != 2) {
     RETURN_EXCEPTION(STRING16(L"Requires two parameters."));
   }
 

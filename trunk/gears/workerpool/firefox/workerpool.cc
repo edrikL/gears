@@ -170,6 +170,11 @@ NS_IMETHODIMP GearsWorkerPool::SetOnmessage(nsIVariant *in_value) {
 
   JsCallback onmessage_handler;
   JsParamFetcher js_params(this);
+
+  if (js_params.GetCount(false) < 1) {
+    RETURN_EXCEPTION(STRING16(L"Value is required."));
+  }
+
   if (!js_params.GetAsCallback(0, &onmessage_handler)) {
     RETURN_EXCEPTION(STRING16(L"Invalid value for onmesssage property."));
   }
@@ -201,6 +206,11 @@ NS_IMETHODIMP GearsWorkerPool::SetOnerror(nsIVariant *in_value) {
 
   JsCallback onerror_handler;
   JsParamFetcher js_params(this);
+
+  if (js_params.GetCount(false) < 1) {
+    RETURN_EXCEPTION(STRING16(L"Value is required."));
+  }
+
   if (!js_params.GetAsCallback(0, &onerror_handler)) {
     RETURN_EXCEPTION(STRING16(L"Invalid value for onerror property."));
   }
@@ -237,10 +247,10 @@ NS_IMETHODIMP GearsWorkerPool::CreateWorker(//const nsAString &full_script
 
   JsParamFetcher js_params(this);
 
-  if (js_params.GetCount() < 1) {
-    RETURN_EXCEPTION(STRING16(L"Not enough paramenters."));
+  if (js_params.GetCount(false) < 1) {
+    RETURN_EXCEPTION(STRING16(L"The full_script parameter is required."));
   } else if (!js_params.GetAsString(0, &full_script)) {
-    RETURN_EXCEPTION(STRING16(L"Script must be a string."));
+    RETURN_EXCEPTION(STRING16(L"The full_script parameter must be a string."));
   }
 
 
@@ -248,7 +258,7 @@ NS_IMETHODIMP GearsWorkerPool::CreateWorker(//const nsAString &full_script
   bool succeeded = threads_manager_->CreateThread(full_script.c_str(),
                                                   &worker_id_temp);
   if (!succeeded) {
-    RETURN_EXCEPTION(STRING16(L"Worker creation failed."));
+    RETURN_EXCEPTION(STRING16(L"Internal error."));
   }
 
   *retval = worker_id_temp;
