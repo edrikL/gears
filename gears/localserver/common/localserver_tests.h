@@ -31,8 +31,9 @@ bool TestWebCacheAll();
 
 bool TestStrUtilsReplaceAll();
 bool TestHttpCookies();
+bool TestHttpRequest();
 bool TestManifest();
-bool TestWebCacheDB();
+bool TestLocalServerDB();
 bool TestResourceStore();
 bool TestManagedResourceStore();
 bool TestParseHttpStatusLine();

@@ -57,8 +57,9 @@ HttpRequest *HttpRequest::Create() {
 // Constructor / Destructor / Refcounting
 //------------------------------------------------------------------------------
 FFHttpRequest::FFHttpRequest()
-  : state_(0), was_sent_(false), is_complete_(false), was_aborted_(false), 
-    follow_redirects_(true), was_redirected_(false), listener_(NULL) {
+  : state_(0), caching_behavior_(USE_ALL_CACHES), was_sent_(false),
+    is_complete_(false), was_aborted_(false), follow_redirects_(true),
+    was_redirected_(false), listener_(NULL) {
 }
 
 FFHttpRequest::~FFHttpRequest() {
@@ -75,9 +76,29 @@ int FFHttpRequest::ReleaseReference() {
 //------------------------------------------------------------------------------
 // GetReadyState
 //------------------------------------------------------------------------------
-bool FFHttpRequest::GetReadyState(long *state) {
+bool FFHttpRequest::GetReadyState(int *state) {
   *state = state_;
   return true;
+}
+
+//------------------------------------------------------------------------------
+// GetResponseBodyAsText
+//------------------------------------------------------------------------------
+bool FFHttpRequest::GetResponseBodyAsText(std::string16 *text) {
+  assert(text);
+  // TODO(michaeln): support incremental reading
+  if (!is_complete_ || was_aborted_)
+    return false;
+
+  std::vector<uint8> *data = response_body_.get();
+  if (!data || data->empty()) {
+    text->clear();
+    return true;
+  }
+
+  // TODO(michaeln): detect charset and decode using nsICharsetConverterManager
+  return UTF8ToString16(reinterpret_cast<const char*>(&(*data)[0]),
+                        data->size(), text);
 }
 
 //------------------------------------------------------------------------------
@@ -107,7 +128,7 @@ std::vector<uint8> *FFHttpRequest::GetResponseBody() {
 //------------------------------------------------------------------------------
 // GetStatus
 //------------------------------------------------------------------------------
-bool FFHttpRequest::GetStatus(long *status) {
+bool FFHttpRequest::GetStatus(int *status) {
   NS_ENSURE_TRUE(is_complete_ && !was_aborted_, false);
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   if (!http_channel) {
@@ -116,7 +137,7 @@ bool FFHttpRequest::GetStatus(long *status) {
   PRUint32 pr_status;
   nsresult rv = http_channel->GetResponseStatus(&pr_status);
   NS_ENSURE_SUCCESS(rv, false);
-  *status = static_cast<long>(pr_status);
+  *status = static_cast<int>(pr_status);
   return true;
 }
 
@@ -150,11 +171,11 @@ bool FFHttpRequest::GetStatusLine(std::string16 *status_line) {
   nsresult rv = http_channel->GetResponseStatusText(status_text);
   NS_ENSURE_SUCCESS(rv, false);
 
-  long status_code;
+  int status_code;
   if (!GetStatus(&status_code))
     return false;
   std::string status_code_str;
-  IntegerToString(static_cast<int>(status_code), &status_code_str);
+  IntegerToString(status_code, &status_code_str);
 
   nsCString status_line8;
   status_line8.Assign("HTTP/1.1 ");
@@ -185,9 +206,11 @@ bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async) {
   NS_ENSURE_SUCCESS(rv, false);
   NS_ENSURE_TRUE(channel_, false);
 
-  rv = channel_->SetLoadFlags(nsIRequest::LOAD_BYPASS_CACHE |
-                              nsIRequest::INHIBIT_CACHING);
-  NS_ENSURE_SUCCESS(rv, false);
+  if (ShouldBypassBrowserCache()) {
+    rv = channel_->SetLoadFlags(nsIRequest::LOAD_BYPASS_CACHE |
+                                nsIRequest::INHIBIT_CACHING);
+    NS_ENSURE_SUCCESS(rv, false);
+  }
 
   std::string method_utf8;
   if (!String16ToUTF8(method, &method_utf8)) {
@@ -521,4 +544,12 @@ NS_IMETHODIMP FFHttpRequest::OnChannelRedirect(nsIChannel *old_channel,
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP FFHttpRequest::GetInterface(const nsIID &iid, void **result) {
   return QueryInterface(iid, result);
+}
+
+//-----------------------------------------------------------------------------
+// SpecialHttpRequestInterface::GetNativeHttpRequest
+//-----------------------------------------------------------------------------
+NS_IMETHODIMP FFHttpRequest::GetNativeHttpRequest(FFHttpRequest **retval) {
+  *retval = this;
+  return NS_OK;
 }

@@ -24,6 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <msxml2.h>
+#include "gears/base/common/string_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/localserver/ie/http_handler_ie.h"
 #include "gears/localserver/ie/http_request_ie.h"
@@ -55,9 +56,9 @@ HttpRequest *HttpRequest::Create() {
 //------------------------------------------------------------------------------
 
 IEHttpRequest::IEHttpRequest() :
-    was_sent_(false), is_complete_(false), follow_redirects_(true),
-    was_redirected_(false), was_aborted_(false), listener_(NULL),
-    ready_state_(0), actual_data_size_(0) {
+    caching_behavior_(USE_ALL_CACHES), was_sent_(false), is_complete_(false),
+    follow_redirects_(true), was_redirected_(false), was_aborted_(false),
+    listener_(NULL), ready_state_(0), actual_data_size_(0) {
 }
 
 HRESULT IEHttpRequest::FinalConstruct() {
@@ -78,9 +79,29 @@ int IEHttpRequest::ReleaseReference() {
 //------------------------------------------------------------------------------
 // GetReadyState
 //------------------------------------------------------------------------------
-bool IEHttpRequest::GetReadyState(long *state) {
+bool IEHttpRequest::GetReadyState(int *state) {
   *state = ready_state_;
   return true;
+}
+
+//------------------------------------------------------------------------------
+// GetResponseBodyAsText
+//------------------------------------------------------------------------------
+bool IEHttpRequest::GetResponseBodyAsText(std::string16 *text) {
+  assert(text);
+  // TODO(michaeln): support incremental reading
+  if (!is_complete_ || was_aborted_)
+    return false;
+
+  std::vector<uint8> *data = response_payload_.data.get();
+  if (!data || data->empty()) {
+    text->clear();
+    return true;
+  }
+
+  // TODO(michaeln): detect charset and decode using MLang
+  return UTF8ToString16(reinterpret_cast<const char*>(&(*data)[0]), 
+                        data->size(), text);
 }
 
 //------------------------------------------------------------------------------
@@ -111,7 +132,7 @@ bool IEHttpRequest::GetResponseBody(std::vector<uint8> *body) {
 //------------------------------------------------------------------------------
 // GetStatus
 //------------------------------------------------------------------------------
-bool IEHttpRequest::GetStatus(long *status) {
+bool IEHttpRequest::GetStatus(int *status) {
   if (!is_complete_ || was_aborted_)
     return false;
   *status = response_payload_.status_code;
@@ -195,6 +216,8 @@ bool IEHttpRequest::SetFollowRedirects(bool follow) {
     return false;
   follow_redirects_ = follow;
   return true;
+  // TODO(michaeln): is there a bind flag that influences redirects?
+  // INTERNET_FLAG_NO_AUTO_REDIRECT?
 }
 
 bool IEHttpRequest::WasRedirected() {
@@ -212,6 +235,12 @@ bool IEHttpRequest::GetRedirectUrl(std::string16 *full_redirect_url) {
 // Send
 //------------------------------------------------------------------------------
 bool IEHttpRequest::Send() {
+  // The request can complete prior to Send returning depending on whether
+  // the response is retrieved from the cache. We guard against a caller's
+  // listener removing the last reference prior to return by adding our own
+  // reference here.
+  CComPtr<IUnknown> reference(_GetRawUnknown());
+
   if (was_sent_ || url_.empty())
     return false;
   HRESULT hr = CreateURLMonikerEx(NULL, url_.c_str(), &url_moniker_,
@@ -284,13 +313,15 @@ STDMETHODIMP IEHttpRequest::QueryService(REFGUID guidService, REFIID riid,
     return E_POINTER;
   *ppvObject = NULL;
 
-  // Our HttpHandler (see ie_http_handler.cc h) provides a mechanism to
-  // bypass our webcache that involves querying for a particular service
+  // Our HttpHandler (see http_handler_ie.cc h) provides a mechanism to
+  // bypass the LocalServer that involves querying for a particular service
   // id that does not exists. Here we detect that query and set our handler
   // in bypass mode.
   if (InlineIsEqualGUID(guidService, HttpHandler::SID_QueryBypassCache) &&
       InlineIsEqualGUID(riid, HttpHandler::IID_QueryBypassCache)) {
-    HttpHandler::SetBypassCache();
+    if (ShouldBypassLocalServer()) {
+      HttpHandler::SetBypassCache();
+    }
     return E_NOINTERFACE;
   }
 
@@ -404,17 +435,20 @@ STDMETHODIMP IEHttpRequest::GetBindInfo(DWORD *flags, BINDINFO *info) {
   if (!info->cbSize)
     return E_INVALIDARG;
 
-  // We setup bind flags such that we send a request all the way through
-  // to the server, bypassing caching proxies between here and there;
-  // and such that we don't write the response to the browser's cache.
-  // We also use the pull-data model as push is unreliable.
-  // TODO(michaeln): is there a flag that turns off auto-follow of redirects?
-  // INTERNET_FLAG_NO_AUTO_REDIRECT?
-  const int kBindFlags = BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE |
-                         BINDF_GETNEWESTVERSION | BINDF_NOWRITECACHE |
-                         BINDF_PRAGMA_NO_CACHE | BINDF_FROMURLMON |
-                         BINDF_PULLDATA | BINDF_NO_UI;
-  *flags = kBindFlags;
+  *flags = 0;
+
+  // We use the pull-data model as push is unreliable.
+  *flags |= BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE |
+            BINDF_FROMURLMON | BINDF_PULLDATA | BINDF_NO_UI;
+
+  if (ShouldBypassBrowserCache()) {
+    // Setup bind flags such that we send a request all the way through
+    // to the server, bypassing caching proxies between here and there;
+    // and such that we don't write the response to the browser's cache.
+    *flags |= BINDF_GETNEWESTVERSION | BINDF_NOWRITECACHE |
+              BINDF_PRAGMA_NO_CACHE;
+  }
+
   int save_size = static_cast<int>(info->cbSize);
   memset(info, 0, save_size);
   info->cbSize = save_size;
@@ -438,11 +472,11 @@ STDMETHODIMP IEHttpRequest::OnDataAvailable(
   SetReadyState(3);
 
   if (!stgmed || !formatetc) {
-    abort();
+    Abort();
     return E_POINTER;
   }
   if ((stgmed->tymed != TYMED_ISTREAM) || !stgmed->pstm) {
-    abort();
+    Abort();
     return E_UNEXPECTED;
   }
 
@@ -461,7 +495,7 @@ STDMETHODIMP IEHttpRequest::OnDataAvailable(
   std::vector<uint8> *data = response_payload_.data.get();
   if (!data) {
     assert(data);
-    abort();
+    Abort();
     return E_UNEXPECTED;
   }
 
@@ -525,7 +559,7 @@ STDMETHODIMP IEHttpRequest::BeginningTransaction(LPCWSTR url,
     *additional_headers = static_cast<LPWSTR>
         (CoTaskMemAlloc((additional_headers_.size() + 1) * sizeof(char16)));
     if (!(*additional_headers)) {
-      abort();
+      Abort();
       return E_OUTOFMEMORY;
     }
     wcscpy(*additional_headers, additional_headers_.c_str());
@@ -555,7 +589,7 @@ STDMETHODIMP IEHttpRequest::OnResponse(DWORD status_code,
   const char16 *crlf = wcsstr(response_headers, HttpConstants::kCrLf);
   if (!crlf) {
     assert(false);
-    abort();
+    Abort();
     return E_UNEXPECTED;
   }
   response_payload_.status_line.assign(response_headers,
