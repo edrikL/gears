@@ -5,7 +5,7 @@
 Fts and Gears in general need to expose functionality to let people write good offline i18n web apps.
 
 
-= Details =
+= Details - Collation =
 
 _Note, this is just a dump of text data, I'll be hacking it into place._
 
@@ -103,8 +103,11 @@ just have pre-defined collators like icu_en_us, and do on-demand data
 loads.
 
 
+= Details - Segmentation =
 
-Segmentation API.
+Segmentation is the process of breaking text up into words.  In English, you can usually get by using spaces and punctuation, though things like contractions can break this assumption.  Some languages, such as Japanese, do not have explicit word boundaries of this sort, and the grouping of characters into words is dependent on context.
+
+See also http://en.wikipedia.org/wiki/Text_segmentation and http://www.icu-project.org/userguide/boundaryAnalysis.html .
 
 For segmentation in fts, we provide a special column as follows:
 
