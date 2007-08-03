@@ -9,29 +9,10 @@ Fts and Gears in general need to expose functionality to let people write good o
 
 _Note, this is just a dump of text data, I'll be hacking it into place._
 
-Collation is the part of sorting which indicates what order values should go in.  Something like `memcmp()` would be binary collation.  For ASCII text, you might additionally collate case-insensitively:
+Collation is the part of sorting which indicates what order values should go in.  Something like `memcmp()` would be binary collation.  ASCII collation is very easy, for either case-sensitive or case-insensitive.  Various languages additionally need to collate accented characters correctly.  If you used binary collation, then 'o' and 'ô' might be widely separated in the output.  Lastly, some languages use Unicode characters which are not ordered at all lexographically.
 
-{{{
-  Ten
-  three
-  Two
-}}}
+See also http://en.wikipedia.org/wiki/Collation and http://www.icu-project.org/userguide/Collate_Intro.html .
 
-Accented text adds another level:
-
-{{{
-  role
-  rôle
-  roles
-}}}
-
-For some languages, collation has to be driven by tables of data, because the Unicode characters used to express things simply aren't ordered in a way which allows for binary collation.
-
-http://en.wikipedia.org/wiki/Collation
-
-
-
-Collation is sorting.
 
 
 There are two collation cases we can do in ICU, general and
