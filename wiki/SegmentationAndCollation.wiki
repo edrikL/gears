@@ -1,0 +1,139 @@
+#summary API Changes Exposing ICU-Based Segmentation and Collation
+
+= Introduction =
+
+Fts and Gears in general need to expose functionality to let people write good offline i18n web apps.
+
+
+= Details =
+
+_Note, this is just a dump of text data, I'll be hacking it into place._
+
+
+
+There are two collation cases we can do in ICU, general and
+language-specific.  THIS DIFFERS FROM MY PRIOR STATEMENTS.  The ICU
+module Dan Kennedy wrote for SQLite exposes this in a couple ways.
+The case-mapping functions can be called as:
+
+{{{
+  SELECT lower('ABC'); -- 'abc'
+  SELECT lower('I', 'en_us'); -- 'i'
+  SELECT lower('I', 'tr_tr'); -- small dotless i
+}}}
+
+We can leave that in place.  For collation, you use a loader to name
+things:
+
+{{{
+  SELECT icu_load_collation('tr_TR', 'turkish');
+  CREATE TABLE t(
+    a TEXT COLLATE turkish
+  );
+  SELECT x FROM y ORDER BY x COLLATE turkish;
+}}}
+
+I believe that there is a neutral table which could be the default
+(perhaps an "icu" collation).  You'd use the SELECT version if you
+have arbitrary data you want to sort, the CREATE version would provide
+a default ordering for that column if you used it in ORDER BY, and
+would also provide the ordering of any index on that column.
+
+I propose adding a Gears Database function:
+
+{{{
+ db.sort(array);           // sort array in root locale
+ db.sort(array, collator); // sort array using the given SQLite collator.
+}}}
+
+This function would be literally the same as:
+
+{{{
+  db.execute('CREATE TEMPORARY TABLE t (c TEXT COLLATE my_collator)');
+  for (var ii = 0; ii < a.length; ++ii) {
+    db.execute('INSERT INTO t VALUES (?)', [a[i]]);
+  }
+  var r = new Array(a.length);
+  var rs = db.execute('SELECT c FROM t ORDER BY c');
+  while (rs.isValidRow()) {
+    r.push(rs.field(0));
+  }
+  rs.close();
+  db.execute('DROP TEMPORARY TABLE t');
+  return r;
+}}}
+
+The main difference is that db.sort() would call the collator
+directly, and would use whatever refcounting tricks JavaScript allows
+to make the output array efficient.
+
+The canonical JavaScript style would be to pass a function to the
+array.sort() method.  As of yet, I don't understand how this would
+want to look, much less if it's possible.  I think that it would
+require a Database function which returned a function, like:
+
+{{{
+  a.sort(db.sorter('Turkish'));
+}}}
+
+Is that doable?
+
+Why is this hanging off of Database?  Because this feature provides
+the same ordering as the database ORDER BY.  We could instead define
+things the other way, saying that Gears has an
+internationalized-ordering API, and that you can use that from the
+database.  That probably implies that instead of calling
+icu_load_collation() in a SQLite statement, we'd add something like:
+
+{{{
+ db.loadCollation(locale, collation_name).
+}}}
+
+TBD: Verify that we can really poke through and snag the SQLite
+collators directly.  Currently I believe that it can be done without
+too much SQLite hacking.
+
+TBD: I'm not entirely sure about how collations are being named and
+loaded, that might just be a SQLite wart.  It might be reasonable to
+just have pre-defined collators like icu_en_us, and do on-demand data
+loads.
+
+
+
+Segmentation API.
+
+For segmentation in fts, we provide a special column as follows:
+
+{{{
+ CREATE VIRTUAL TABLE t USING fts2(l LOCALE, content);
+ INSERT INTO t (l, content) VALUES ('en_us', 'This is a test');
+}}}
+
+l would be a hidden column like rowid (and a RANKING proposal I put to
+sqlite-users awhile back).  This means that when you do SELECT *, you
+won't see the column.
+
+Exposing at the Gears level would look like:
+
+{{{
+  db.split(s);      // Split using the root locale.
+  db.split(s, l);   // Split using the given locale.
+}}}
+
+As with collation, it should be defined to provide the segmentation
+which fts would use.  If you inserted db.split(s, l).join(' '), you'd
+get the same exact hits for the document (though it might not be an
+identical document, of course).
+
+Again, I'm hanging it off Database because I'm designing from the
+Database outward.  Again, we could easily invert the sense and have a
+Gears API for segmentation, and define the Database segmentation as
+matching _that_.
+
+TBD: Hiddenness could be optional, like SQLite's existing HIDDEN
+keyword.  I'm mixed on this, because this is metadata, not data.
+
+TBD: Do we require a way to apply a specific locale as a hint to the
+query?  Possibly.  If so, we could provide a MATCH alternative which
+also adds the locale.  This would _not_ imply a localte MATCH, though,
+that should be done using standard SQLite WHERE syntax.
