@@ -31,6 +31,7 @@
 #include "gears/base/common/common_ff.h"
 #include "gears/third_party/gecko_internal/nsICacheService.h"
 
+class FFHttpRequest;
 
 // Object identifiers
 extern const char *kCacheInterceptContractId;
@@ -65,8 +66,9 @@ class CacheIntercept : public nsICacheService, public nsIObserver {
   // response for, to go to Gears's cache.
   void MaybeForceToCache(nsISupports *request);
 
-  // Helper to determine if a given request was initiated by Gears.
-  static bool IsGearsRequest(nsIChannel *channel);
+  // Helper to determine if a given request was initiated by Gears and
+  // to return a pointer to the C++ instance.
+  static FFHttpRequest *GetGearsHttpRequest(nsIChannel *channel);
 };
 
 #endif // GEARS_LOCALSERVER_FIREFOX_CACHE_INTERCEPT_H__

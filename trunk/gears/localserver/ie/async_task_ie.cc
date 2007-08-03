@@ -233,6 +233,8 @@ bool AsyncTask::HttpGet(const char16 *full_url,
     return false;
   }
 
+  http_request->SetCachingBehavior(HttpRequest::BYPASS_ALL_CACHES);
+
   if (!http_request->Open(HttpConstants::kHttpGET, full_url, true)) {
     return false;
   }
@@ -284,14 +286,14 @@ bool AsyncTask::HttpGet(const char16 *full_url,
                    ARRAYSIZE(handles), handles, INFINITE, QS_ALLINPUT,
                    MWMO_ALERTABLE | MWMO_INPUTAVAILABLE);
     if (rv == kReadyStateChangedEvent) {
-      long state;
+      int state;
       // TODO(michaeln): perhaps simplify the HttpRequest interface to
       // include a getResponse(&payload) method?
       if (http_request->GetReadyState(&state)) {
         if (state == 4) {
           done = true;
           if (!is_aborted_) {
-            long status;
+            int status;
             if (http_request->GetStatus(&status)) {
               payload->status_code = status;
               if (http_request->GetStatusLine(&payload->status_line)) {

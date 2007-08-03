@@ -147,9 +147,12 @@ interface GearsLocalServerInterface : GearsBaseClassInterface {
 //------------------------------------------------------------------------------
 // SpecialHttpRequestInterface
 //------------------------------------------------------------------------------
+interface FFHttpRequest; // defined in C++
+[ptr] native FFHttpRequestPtr(FFHttpRequest);
+
 [noscript, uuid(c1aa6650-21da-4b68-bde4-a2f8cf5cc091)]
 interface SpecialHttpRequestInterface : nsISupports {
-  // This is a dummy interface for use by CacheIntercept.  We QueryInterface
-  // for it to see whether a given request came from Scour.
-  // See: CacheIntercept::IsScourRequest().
+  // This is an interface for use by CacheIntercept.  We QueryInterface
+  // for it to see whether a given request came from Gears.
+  [noscript] FFHttpRequestPtr getNativeHttpRequest();
 };

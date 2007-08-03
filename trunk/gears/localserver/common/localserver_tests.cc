@@ -30,6 +30,7 @@
 #include "gears/base/common/sqlite_wrapper_test.h"
 #include "gears/localserver/common/managed_resource_store.h"
 #include "gears/localserver/common/http_cookies.h"
+#include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/manifest.h"
 #include "gears/localserver/common/localserver_db.h"
 #include "gears/localserver/common/localserver_tests.h"
@@ -44,18 +45,19 @@ bool TestFileUtils();  // from file_test.cc
 //------------------------------------------------------------------------------
 bool TestWebCacheAll() {
   bool ok = true;
+  ok &= TestStartsWithAndEndsWith();
+  ok &= TestStrUtilsReplaceAll();
   ok &= TestFileUtils();
+  ok &= TestParseHttpStatusLine();
+  ok &= TestHttpRequest();
+  ok &= TestHttpCookies();
   ok &= TestSecurityModel();
-  ok &= TestCapabilitiesDBAll();
   ok &= TestSqliteUtilsAll();
   ok &= TestNameValueTableAll();
-  ok &= TestStrUtilsReplaceAll();
-  ok &= TestHttpCookies();
-  ok &= TestStartsWithAndEndsWith();
-  ok &= TestParseHttpStatusLine();
-  ok &= TestManifest();
-  ok &= TestWebCacheDB();
+  ok &= TestCapabilitiesDBAll();
+  ok &= TestLocalServerDB();
   ok &= TestResourceStore();
+  ok &= TestManifest();
   ok &= TestManagedResourceStore();
   LOG(("TestWebCacheAll - %s\n", ok ? "passed" : "failed"));
   return ok;
@@ -398,9 +400,9 @@ bool TestManagedResourceStore() {
 }
 
 //------------------------------------------------------------------------------
-// TestWebCacheDB
+// TestLocalServerDB
 //------------------------------------------------------------------------------
-bool TestWebCacheDB() {
+bool TestLocalServerDB() {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
@@ -635,6 +637,50 @@ bool TestStartsWithAndEndsWith() {
     TEST_ASSERT(!EndsWith(suffix, test));
   }
   LOG(("TestStartsWithAndEndsWith - passed\n"));
+  return true;
+}
+
+
+class TestHttpRequestListener : public HttpRequest::ReadyStateListener {
+  virtual void ReadyStateChanged(HttpRequest *source) {
+    int state = 0;
+    source->GetReadyState(&state);
+    if (state == 4) {
+      int status;
+      std::string16 headers;
+      std::string16 body;
+      source->GetStatus(&status);
+      source->GetAllResponseHeaders(&headers);
+      source->GetResponseBodyAsText(&body);
+      source->SetOnReadyStateChange(NULL);
+      source->ReleaseReference();
+      delete this;
+      LOG(("TestHttpRequest - complete (%d)\n", status));
+    }
+  }
+};
+
+bool TestHttpRequest() {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    LOG(("TestHttpRequest - failed (%d)\n", __LINE__)); \
+    return false; \
+  } \
+}
+  // A request is created with a refcount of one, our listener will
+  // release this reference upon completion. If something goes wrong
+  // we leak, not good in a real program but fine for this test.
+  HttpRequest *request = HttpRequest::Create();
+  request->SetOnReadyStateChange(new TestHttpRequestListener());
+  bool ok = request->Open(HttpConstants::kHttpGET,
+                          STRING16(L"http://www.google.com/"),
+                          true);
+  TEST_ASSERT(ok);
+
+  ok = request->Send();
+  TEST_ASSERT(ok);
   return true;
 }
 

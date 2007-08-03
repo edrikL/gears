@@ -43,11 +43,23 @@ class IEHttpRequest
   virtual int AddReference();
   virtual int ReleaseReference();
 
+  // Get or set whether to use or bypass caches, the default is USE_ALL_CACHES
+  virtual CachingBehavior GetCachingBehavior() {
+    return caching_behavior_;
+  }
+
+  virtual void SetCachingBehavior(CachingBehavior behavior) {
+    if (!was_sent_) {
+      caching_behavior_ = behavior;
+    }
+  }
+
   // properties
-  virtual bool GetReadyState(long *state);
+  virtual bool GetReadyState(int *state);
+  virtual bool GetResponseBodyAsText(std::string16 *text);
   virtual bool GetResponseBody(std::vector<uint8> *body);
   virtual std::vector<uint8> *GetResponseBody();
-  virtual bool GetStatus(long *status);
+  virtual bool GetStatus(int *status);
   virtual bool GetStatusText(std::string16 *status_text);
   virtual bool GetStatusLine(std::string16 *status_line);
 
@@ -145,6 +157,9 @@ class IEHttpRequest
 
   // The url we've been asked to get
   std::string16 url_;
+
+  // Whether to bypass caches
+  CachingBehavior caching_behavior_;
 
   // Additional request headers we've been asked to send with the request
   std::string16 additional_headers_;

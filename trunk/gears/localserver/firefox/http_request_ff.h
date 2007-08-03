@@ -53,18 +53,31 @@ class FFHttpRequest : public HttpRequest,
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_SPECIALHTTPREQUESTINTERFACE  // see localserver.idl.m4
 
-  // Scour's HttpRequest interface
+  // Our C++ HttpRequest interface
 
   // refcounting
   virtual int AddReference();
   virtual int ReleaseReference();
 
+  // Get or set whether to use or bypass caches, the default is USE_ALL_CACHES
+  virtual CachingBehavior GetCachingBehavior() {
+    return caching_behavior_;
+  }
+
+  virtual void SetCachingBehavior(CachingBehavior behavior) {
+    if (!was_sent_) {
+      caching_behavior_ = behavior;
+    }
+  }
+
   // properties
-  virtual bool GetReadyState(long *state);
+  virtual bool GetReadyState(int *state);
+  virtual bool GetResponseBodyAsText(std::string16 *text);
   virtual bool GetResponseBody(std::vector<uint8> *body);
   virtual std::vector<uint8> *GetResponseBody();
-  virtual bool GetStatus(long *status);
+  virtual bool GetStatus(int *status);
   virtual bool GetStatusText(std::string16 *status_text);
   virtual bool GetStatusLine(std::string16 *status_line);
 
@@ -101,6 +114,7 @@ class FFHttpRequest : public HttpRequest,
                                     PRUint32 *writeCount);
   int state_;
   scoped_ptr< std::vector<uint8> > response_body_;
+  CachingBehavior caching_behavior_;
   bool was_sent_;
   bool is_complete_;
   bool was_aborted_;

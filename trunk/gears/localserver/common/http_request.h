@@ -35,8 +35,6 @@
 //------------------------------------------------------------------------------
 // A cross-platform interface for sending HTTP requests.  Implementations
 // use the underlying capabilities of different browsers.
-//
-// IMPORTANT: this class bypasses all caches, including Gears localserver!
 //------------------------------------------------------------------------------
 class HttpRequest {
  public:
@@ -47,11 +45,20 @@ class HttpRequest {
   virtual int AddReference() = 0;
   virtual int ReleaseReference() = 0;
 
+  // Get or set whether to use or bypass caches, the default is USE_ALL_CACHES
+  enum CachingBehavior {
+    USE_ALL_CACHES,
+    BYPASS_ALL_CACHES  // bypass the browser cache and our local server
+  };
+  virtual CachingBehavior GetCachingBehavior() = 0;
+  virtual void SetCachingBehavior(CachingBehavior behavior) = 0;
+
   // properties
-  virtual bool GetReadyState(long *state) = 0;
+  virtual bool GetReadyState(int *state) = 0;
+  virtual bool GetResponseBodyAsText(std::string16 *text) = 0;
   virtual bool GetResponseBody(std::vector<uint8> *body) = 0;
   virtual std::vector<uint8> *GetResponseBody() = 0;
-  virtual bool GetStatus(long *status) = 0;
+  virtual bool GetStatus(int *status) = 0;
   virtual bool GetStatusText(std::string16 *status_text) = 0;
   virtual bool GetStatusLine(std::string16 *status_line) = 0;
 
@@ -85,6 +92,14 @@ class HttpRequest {
  protected:
   HttpRequest() {}
   virtual ~HttpRequest() {}
+
+  bool ShouldBypassLocalServer() {
+    return GetCachingBehavior() == BYPASS_ALL_CACHES;
+  }
+
+  bool ShouldBypassBrowserCache() {
+    return GetCachingBehavior() == BYPASS_ALL_CACHES;
+  }
 };
 
 //------------------------------------------------------------------------------

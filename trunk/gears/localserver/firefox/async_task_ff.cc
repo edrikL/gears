@@ -337,6 +337,8 @@ bool AsyncTask::OnStartHttpGet() {
     return false;
   }
 
+  http_request->SetCachingBehavior(HttpRequest::BYPASS_ALL_CACHES);
+
   if (!http_request->Open(HttpConstants::kHttpGET, params_->full_url, true)) {
     return false;
   }
@@ -384,16 +386,17 @@ bool AsyncTask::OnStartHttpGet() {
 void AsyncTask::ReadyStateChanged(HttpRequest *http_request) {
   assert(params_);
   assert(http_request_.get() == http_request);
-  long state;
+  int state;
   if (http_request->GetReadyState(&state)) {
     if (state == 4) {
       if (!is_aborted_) {
-        long status;
+        int status;
         if (http_request->GetStatus(&status)) {
-          params_->payload->status_code = status;
-          if (http_request->GetStatusLine(&params_->payload->status_line)) {
-            if (http_request->GetAllResponseHeaders(&params_->payload->headers)) {
-              params_->payload->data.reset(http_request->GetResponseBody());
+          WebCacheDB::PayloadInfo *payload = params_->payload;
+          payload->status_code = status;
+          if (http_request->GetStatusLine(&payload->status_line)) {
+            if (http_request->GetAllResponseHeaders(&payload->headers)) {
+              payload->data.reset(http_request->GetResponseBody());
             }
           }
         }

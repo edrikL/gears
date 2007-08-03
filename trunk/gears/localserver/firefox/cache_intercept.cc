@@ -46,6 +46,7 @@
 #include "gears/third_party/gecko_internal/nsICacheVisitor.h"
 #include "gears/localserver/common/localserver_db.h"
 #include "gears/localserver/firefox/cache_intercept.h"
+#include "gears/localserver/firefox/http_request_ff.h"
 
 // Used to determine when we're executing on the main thread of control
 static PRThread* g_ui_thread = NULL;
@@ -692,8 +693,11 @@ void CacheIntercept::MaybeForceToCache(nsISupports *subject) {
     return;
   }
 
-  // Gears requests always bypass the cache.
-  if (IsGearsRequest(channel)) {
+  // Gears requests can intentionally bypass caches.
+  FFHttpRequest *gears_http_request = GetGearsHttpRequest(channel);
+  if (gears_http_request &&
+      gears_http_request->GetCachingBehavior() ==
+                              HttpRequest::BYPASS_ALL_CACHES) {
     return;
   }
 
@@ -735,20 +739,22 @@ void CacheIntercept::MaybeForceToCache(nsISupports *subject) {
   }
 }
 
-bool CacheIntercept::IsGearsRequest(nsIChannel *channel) {
+FFHttpRequest *CacheIntercept::GetGearsHttpRequest(nsIChannel *channel) {
   // TODO(michaeln): perhaps we should use Get/SetOwner() for this purpose
   // instead. If some other OnModifyRequest listener injects their own
   // listener which chains to the existing listener, we could get cut
   // out of the loop?
   nsCOMPtr<nsIInterfaceRequestor> listener;
   channel->GetNotificationCallbacks(getter_AddRefs(listener));
-  if (!listener) {
-    return false;
-  }
+  if (!listener) return NULL;
 
   nsCOMPtr<SpecialHttpRequestInterface> gears_request(
       do_QueryInterface(listener));
-  return !!gears_request;
+  if (!gears_request) return NULL;
+
+  FFHttpRequest *http_request = NULL;
+  gears_request->GetNativeHttpRequest(&http_request);
+  return http_request;
 }
 
 bool IsUiThread() {
