@@ -34,15 +34,6 @@ Segmentation is the process of breaking text up into words.  In English, you can
 
 See also http://en.wikipedia.org/wiki/Text_segmentation and http://www.icu-project.org/userguide/boundaryAnalysis.html .
 
-As with collation, it should be defined to provide the segmentation
-which fts would use.  If you inserted db.split(s, l).join(' '), you'd
-get the same exact hits for the document (though it might not be an
-identical document, of course).
-
-TBD: Do we require a way to apply a specific locale as a hint to the
-query?  Possibly.  If so, we could provide a MATCH alternative which
-also adds the locale.  This would _not_ imply a localte MATCH, though,
-that should be done using standard SQLite WHERE syntax.
 
 = Proposal 1 =
 
@@ -59,7 +50,7 @@ INSERT INTO t (l, content) VALUES ('en_us', 'This is a test');
   db.split(s, l);   // Split using the given locale.
 }}}
 
-Either option allows for a default, which should probably be English.  It is tempting to make it the browser locale, but since the segmentation is baked into the fts index, that may cause future problems.
+If you inserted `db.split(s, l).join(' ')` into an fts table, you'd get the same exact hits as if you inserted `s` (though it might not result in an identical string, of course).  The `split()` function may allow for a default locale, which should probably be English.  It is tempting to make it the browser locale, but since the segmentation is baked into the fts index, that may cause future problems.
 
 For collation, the SQLite would look like:
 
