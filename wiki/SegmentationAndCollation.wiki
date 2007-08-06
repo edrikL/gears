@@ -144,3 +144,50 @@ TBD: Do we require a way to apply a specific locale as a hint to the
 query?  Possibly.  If so, we could provide a MATCH alternative which
 also adds the locale.  This would _not_ imply a localte MATCH, though,
 that should be done using standard SQLite WHERE syntax.
+
+= Proposal 1 =
+
+Build i18n segmentation and collation support into SQLite, and expose it with new methods on Gears.Database.  For segmentation in SQLite:
+
+{{{
+CREATE VIRTUAL TABLE t USING fts2(l LOCALE, content);
+INSERT INTO t (l, content) VALUES ('en_us', 'This is a test');
+}}}
+
+On Gears.Database:
+
+{{{
+  db.split(s, l);   // Split using the given locale.
+}}}
+
+Either option allows for a default, which should probably be English.  It is tempting to make it the browser locale, but since the segmentation is baked into the fts index, that may cause future problems.
+
+For collation, the SQLite would look like:
+
+{{{
+SELECT x FROM y ORDER BY x COLLATE en_us;
+
+CREATE TABLE t(
+  a TEXT COLLATE en_us
+);
+SELECT a FROM t ORDER BY a;  -- collates with en_us.
+}}}
+
+*TBD:* I bet the locale cannot be a bind parameter.
+
+Gears.Database additionally adds:
+
+{{{
+var a1 = db.sort(ary);          // sort using global ordering
+var a2 = db.sort(ary, 'en_us'); // sort using named SQLite collator
+}}}
+
+= Proposal 1a =
+
+Just like the first proposal, but modifying the Gears.Database addition like:
+
+{{{
+var a = ary.sort(db.sorter('en_us'));
+}}}
+
+This may be more appropriate for JavaScript, but I'm a little nervous about whether it's theoretically pure but practically hard to use.  The first proposal is pretty clear.
