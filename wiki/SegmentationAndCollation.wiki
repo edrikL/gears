@@ -26,62 +26,6 @@ The case-mapping functions can be called as:
   SELECT lower('I', 'tr_tr'); -- small dotless i
 }}}
 
-We can leave that in place.  For collation, you use a loader to name
-things:
-
-{{{
-  SELECT icu_load_collation('tr_TR', 'turkish');
-  CREATE TABLE t(
-    a TEXT COLLATE turkish
-  );
-  SELECT x FROM y ORDER BY x COLLATE turkish;
-}}}
-
-I believe that there is a neutral table which could be the default
-(perhaps an "icu" collation).  You'd use the SELECT version if you
-have arbitrary data you want to sort, the CREATE version would provide
-a default ordering for that column if you used it in ORDER BY, and
-would also provide the ordering of any index on that column.
-
-I propose adding a Gears Database function:
-
-{{{
- db.sort(array);           // sort array in root locale
- db.sort(array, collator); // sort array using the given SQLite collator.
-}}}
-
-This function would be literally the same as:
-
-{{{
-  db.execute('CREATE TEMPORARY TABLE t (c TEXT COLLATE my_collator)');
-  for (var ii = 0; ii < a.length; ++ii) {
-    db.execute('INSERT INTO t VALUES (?)', [a[i]]);
-  }
-  var r = new Array(a.length);
-  var rs = db.execute('SELECT c FROM t ORDER BY c');
-  while (rs.isValidRow()) {
-    r.push(rs.field(0));
-  }
-  rs.close();
-  db.execute('DROP TEMPORARY TABLE t');
-  return r;
-}}}
-
-The main difference is that db.sort() would call the collator
-directly, and would use whatever refcounting tricks JavaScript allows
-to make the output array efficient.
-
-The canonical JavaScript style would be to pass a function to the
-array.sort() method.  As of yet, I don't understand how this would
-want to look, much less if it's possible.  I think that it would
-require a Database function which returned a function, like:
-
-{{{
-  a.sort(db.sorter('Turkish'));
-}}}
-
-Is that doable?
-
 Why is this hanging off of Database?  Because this feature provides
 the same ordering as the database ORDER BY.  We could instead define
 things the other way, saying that Gears has an
@@ -182,6 +126,27 @@ var a1 = db.sort(ary);          // sort using global ordering
 var a2 = db.sort(ary, 'en_us'); // sort using named SQLite collator
 }}}
 
+This function would be literally the same as:
+
+{{{
+  db.execute('CREATE TEMPORARY TABLE t (c TEXT COLLATE my_collator)');
+  for (var ii = 0; ii < a.length; ++ii) {
+    db.execute('INSERT INTO t VALUES (?)', [a[i]]);
+  }
+  var r = new Array(a.length);
+  var rs = db.execute('SELECT c FROM t ORDER BY c');
+  while (rs.isValidRow()) {
+    r.push(rs.field(0));
+  }
+  rs.close();
+  db.execute('DROP TEMPORARY TABLE t');
+  return r;
+}}}
+
+The main difference is that db.sort() would call the collator
+directly, and would use whatever refcounting tricks JavaScript allows
+to make the output array efficient.
+
 = Proposal 1a =
 
 Just like the first proposal, but modifying the Gears.Database addition like:
@@ -190,4 +155,4 @@ Just like the first proposal, but modifying the Gears.Database addition like:
 var a = ary.sort(db.sorter('en_us'));
 }}}
 
-This may be more appropriate for JavaScript, but I'm a little nervous about whether it's theoretically pure but practically hard to use.  The first proposal is pretty clear.
+This may be more appropriate for JavaScript, but I'm a little nervous about whether it's theoretically pure but practically hard to use.  The first proposal is pretty easy to follow.
