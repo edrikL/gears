@@ -317,6 +317,8 @@ STDMETHODIMP HttpHandler::Abort(
 STDMETHODIMP HttpHandler::Terminate(
     /* [in] */ DWORD options) {
   ATLTRACE(_T("HttpHandler::Terminate()\n"));
+  protocol_sink_.Release();
+  http_negotiate_.Release();
   if (is_passingthru_) {
     return BaseClass::Terminate(options);
   } else if (is_handling_) {
