@@ -75,10 +75,8 @@ HRESULT ActiveXUtils::GetWebBrowser2(IUnknown *site, IWebBrowser2 **browser2) {
 }
 
 
-HRESULT ActiveXUtils::GetHtmlWindow2(IUnknown *site, IHTMLWindow2 **window2) {
-  // To hook an event on the page's root window, follow the path
-  // IWebBrowser2->document->parentWindow->IHTMLWindow2
-
+HRESULT ActiveXUtils::GetHtmlDocument2(IUnknown *site,
+                                       IHTMLDocument2 **document2) {
   HRESULT hr;
 
   CComPtr<IWebBrowser2> web_browser2;
@@ -86,11 +84,23 @@ HRESULT ActiveXUtils::GetHtmlWindow2(IUnknown *site, IHTMLWindow2 **window2) {
   if (FAILED(hr) || !web_browser2) { return E_FAIL; }
 
   CComPtr<IDispatch> doc_dispatch;
-  web_browser2->get_Document(&doc_dispatch);
-  CComQIPtr<IHTMLDocument2> html_document2 = doc_dispatch;
-  if (!html_document2) { return E_FAIL; }
+  hr = web_browser2->get_Document(&doc_dispatch);
+  if (FAILED(hr) || !doc_dispatch) { return E_FAIL; }
 
-  CComPtr<IHTMLWindow2> html_window2;
+  return doc_dispatch->QueryInterface(document2);
+}
+
+
+HRESULT ActiveXUtils::GetHtmlWindow2(IUnknown *site, IHTMLWindow2 **window2) {
+  // To hook an event on a page's window object, follow the path
+  // IWebBrowser2->document->parentWindow->IHTMLWindow2
+
+  HRESULT hr;
+
+  CComPtr<IHTMLDocument2> html_document2;
+  hr = GetHtmlDocument2(site, &html_document2);
+  if (FAILED(hr) || !html_document2) { return E_FAIL; }
+
   return html_document2->get_parentWindow(window2);
 }
 

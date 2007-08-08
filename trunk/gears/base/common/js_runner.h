@@ -29,8 +29,10 @@
 #ifndef GEARS_BASE_COMMON_JS_RUNNER_H__
 #define GEARS_BASE_COMMON_JS_RUNNER_H__
 
-#include "gears/base/common/string16.h"
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/scoped_token.h"
+#include "gears/base/common/string16.h"
+#include "gears/base/common/string_utils.h"
 
 
 // To insert C++ objects into JavaScript, most (all?) JS engines take a C++
@@ -71,10 +73,28 @@ class JsRunnerInterface {
                          gIID iface_iid) = 0;
   virtual bool Start(const std::string16 &full_script) = 0;
   virtual bool Stop() = 0;
-  virtual bool GetContext(JsContextPtr *context) = 0;
+  virtual JsContextPtr GetContext() = 0;
   virtual bool Eval(const std::string16 &script) = 0;
   virtual void SetErrorHandler(JsErrorHandlerInterface *error_handler) = 0;
-  virtual void ThrowGlobalError(const std::string16 &message) = 0;
+
+  // Creates a new object in the JavaScript engine using the specified
+  // constructor. If the constructor is NULL, it defaults to "Object". The
+  // caller takes ownership of the returned value.
+  virtual JsRootedToken *NewObject(
+                             const char16 *optional_global_ctor_name) = 0;
+
+  // SetProperty*() overwrites the existing named property or adds a new one if
+  // none exists.
+  virtual bool SetPropertyString(JsToken object, const char16 *name,
+                                 const char16 *val) = 0;
+  virtual bool SetPropertyInt(JsToken object, const char16 *name,
+                              int val) = 0;
+  // TODO(aa): SetPropertyBool, SetPropertyObject (to build trees), etc...
+  // TODO(aa): Support for building arrays?
+
+#ifdef DEBUG
+  virtual void ForceGC() = 0;
+#endif
 };
 
 // Callers: create instances using the following instead of 'new JsRunner'.
@@ -87,8 +107,9 @@ class JsRunnerInterface {
 // This creates a JsRunner that is used in a worker.
 JsRunnerInterface* NewJsRunner();
 
-// This creates a JsRunner that can be used with the parent script.
-JsRunnerInterface* NewParentJsRunner(IGeneric *base, JsContextPtr context);
+// This creates a JsRunner that can be used with the script engine running in an
+// document.
+JsRunnerInterface* NewDocumentJsRunner(IGeneric *base, JsContextPtr context);
 
 
 #endif  // GEARS_BASE_COMMON_JS_RUNNER_H__

@@ -45,6 +45,29 @@ typedef jsval      JsToken;
 typedef JSContext* JsContextPtr;
 typedef nsresult   JsNativeMethodRetval;
 
+// A JsToken that won't get GC'd out from under you.
+class JsRootedToken {
+ public:
+  JsRootedToken(JsContextPtr context, JsToken token)
+      : context_(context), token_(token) {
+    JS_AddRoot(context_, &token_);
+  }
+
+  ~JsRootedToken() {
+    JS_RemoveRoot(context_, &token_);
+  }
+
+  JsToken GetToken() { return token_; }
+  JsContextPtr GetContext() { return context_; }
+
+ private:
+  JsContextPtr context_;
+  JsToken token_;
+  DISALLOW_EVIL_CONSTRUCTORS(JsRootedToken);
+};
+
+// TODO(aa): This can probably get replaced with JsToken, it also has the
+// advantage of not having to track JS_AddRoot() or AddRef() manually.
 struct JsCallback {
   JsCallback() : function(0), context(NULL) {};
   JsToken function;
@@ -67,6 +90,28 @@ struct JsCallback {
 typedef IDispatch* JsToken;
 typedef void*      JsContextPtr; // unused in IE
 typedef HRESULT    JsNativeMethodRetval;
+
+// A JsToken that won't get GC'd out from under you. We could have used
+// CComPtr<IDispatch> for this IE implementation, but went with this for
+// parallelism with FF.
+class JsRootedToken {
+ public:
+  JsRootedToken(JsContextPtr context, JsToken token)
+      : token_(token) { // We don't use JsContextPtr in IE.
+    token_->AddRef();
+  }
+
+  ~JsRootedToken() {
+    token_->Release();
+  }
+
+  JsToken GetToken() { return token_; }
+  JsContextPtr GetContext() { return NULL; }
+
+ private:
+  JsToken token_;
+  DISALLOW_EVIL_CONSTRUCTORS(JsRootedToken);
+};
 
 // Implementations of boilerplate code.
 // - We don't currently need GetNativeBaseClass on IE.

@@ -47,6 +47,7 @@
 
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/js_runner_utils.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/scoped_win32_handles.h"
 #include "gears/base/ie/activex_utils.h"
@@ -691,7 +692,7 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
     message += STRING16(L":\n");
     message += error;
 
-    root_js_runner_->ThrowGlobalError(message);
+    ThrowGlobalError(root_js_runner_, message);
   }
 }
 
