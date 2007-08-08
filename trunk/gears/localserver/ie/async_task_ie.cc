@@ -211,7 +211,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
     error_message->clear();
   }
 
-  if (is_capturing && !ActiveXUtils::IsOnline()) {
+  if (!ActiveXUtils::IsOnline()) {
     if (error_message) {
       *error_message = kIsOfflineErrorMessage;
     }
