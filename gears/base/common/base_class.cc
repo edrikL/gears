@@ -65,11 +65,11 @@ bool GearsBaseClass::InitBaseFromDOM(const char *url_str) {
   bool succeeded = DOMUtils::GetJsContext(&cx) &&
                    DOMUtils::GetPageOrigin(&security_origin);
   return succeeded && InitBaseManually(is_worker, cx, security_origin,
-                                       NewParentJsRunner(NULL, cx));
+                                       NewDocumentJsRunner(NULL, cx));
 #elif BROWSER_IE
   bool succeeded = ActiveXUtils::GetPageOrigin(site, &security_origin);
   return succeeded && InitBaseManually(is_worker, site, security_origin,
-                                       NewParentJsRunner(site, NULL));
+                                       NewDocumentJsRunner(site, NULL));
 #elif BROWSER_SAFARI
   bool succeeded = SafariURLUtilities::GetPageOrigin(url_str, &security_origin);
   return succeeded && InitBaseManually(is_worker, security_origin, 0);

@@ -81,6 +81,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include "ff/genfiles/localserver.h"
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/js_runner_utils.h"
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/base/firefox/factory.h"
@@ -435,7 +436,7 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
     message += std::string16(STRING16(L":\n"));
     message += error;
 
-    root_js_runner_->ThrowGlobalError(message);
+    ThrowGlobalError(root_js_runner_, message);
   }
 }
 
@@ -451,6 +452,7 @@ void PoolThreadsManager::FireHandler(const JsCallback &handler,
   uintN argc = 2;
   jsval argv[] = { STRING_TO_JSVAL(message_arg_jsstring),
                    INT_TO_JSVAL(src_worker_id) };
+
   jsval js_retval;
   //JSBool js_ok =  // comment out until we use it, to avoid compiler warning
   JS_CallFunctionValue( // goes to js_InternalInvoke()
@@ -801,8 +803,8 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
                                        JavaScriptWorkerInfo *wi) {
   if (!js_runner) { return false; }
 
-  JsContextPtr cx;
-  if (!js_runner->GetContext(&cx)) { return false; }
+  JsContextPtr cx = js_runner->GetContext();
+  if (!cx) { return false; }
 
   // Add global Factory and WorkerPool objects into the namespace.
   //

@@ -34,41 +34,117 @@
 // from externally into the engine, is all handled via IDispatch pointers.
 
 #include <assert.h>
+#include <dispex.h>
 #include <map>
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
-#include "gears/base/common/string_utils.h"
+#include "gears/base/common/scoped_token.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/third_party/AtlActiveScriptSite.h"
 
 
-// Helper function used by ThrowGlobalError in JsRunnerImpl and ParentJsRunner.
-static void ThrowErrorUsingEval(const std::string16 &message,
-                                JsRunnerInterface *js_runner) {
-  std::string16 string_to_eval(message);
+// Internal base class used to share some code between DocumentJsRunner and
+// JsRunner. Do not override these methods from JsRunner or DocumentJsRunner.
+// Either share the code here, or move it to those two classes if it's
+// different.
+class JsRunnerBase : public JsRunnerInterface {
+ public:
+  JsRunnerBase(){};
 
-  ReplaceAll(string_to_eval, std::string16(STRING16(L"'")),
-             std::string16(STRING16(L"\\'")));
-  ReplaceAll(string_to_eval, std::string16(STRING16(L"\r")),
-             std::string16(STRING16(L"\\r")));
-  ReplaceAll(string_to_eval, std::string16(STRING16(L"\n")),
-             std::string16(STRING16(L"\\n")));
+  JsContextPtr GetContext() {
+    return NULL; // not used in IE
+  }
 
-  string_to_eval.insert(0, std::string16(STRING16(L"throw new Error('")));
-  string_to_eval.append(std::string16(STRING16(L"')")));
+  JsRootedToken *NewObject(const char16 *optional_global_ctor_name) {
+    CComPtr<IDispatch> global_object = GetGlobalObject();
+    if (!global_object) {
+      LOG((L"Could not get global object from script engine."));
+      return NULL;
+    }
 
-  js_runner->Eval(string_to_eval.c_str());
-}
+    CComQIPtr<IDispatchEx> global_dispex = global_object;
+    if (!global_dispex) { return NULL; }
+
+    DISPID error_dispid;
+    CComBSTR ctor_name(optional_global_ctor_name ? optional_global_ctor_name :
+                       STRING16(L"Object"));
+    HRESULT hr = global_dispex->GetDispID(ctor_name, fdexNameCaseSensitive,
+                                          &error_dispid);
+    if (FAILED(hr)) { return NULL; }
+
+    CComVariant result;
+    DISPPARAMS no_args = {NULL, NULL, 0, 0};
+    hr = global_dispex->InvokeEx(
+                            error_dispid, LOCALE_USER_DEFAULT,
+                            DISPATCH_CONSTRUCT, &no_args, &result,
+                            NULL, // receives exception (NULL okay)
+                            NULL // pointer to "this" object (NULL okay)
+                            );
+    if (FAILED(hr)) {
+      LOG(("Could not invoke object constructor."));
+      return NULL;
+    }
+
+    return new JsRootedToken(GetContext(), result.pdispVal);
+  }
+
+  bool SetPropertyString(JsToken object, const char16 *name,
+                         const char16 *value) {
+    return SetProperty(object, name, CComVariant(CComBSTR(value)));
+  }
+
+  bool SetPropertyInt(JsToken object, const char16 *name, int value) {
+    return SetProperty(object, name, CComVariant(value));
+  }
+
+#ifdef DEBUG
+  void ForceGC() {
+    // TODO(aa): There is probably a more clever way to do it, but this works.
+    Eval(STRING16(L"CollectGarbage();"));
+  }
+#endif
+
+ protected:
+  virtual IDispatch *GetGlobalObject() = 0;
+
+ private:
+  bool SetProperty(JsToken object, const char16 *name, const VARIANT &value) {
+    CComQIPtr<IDispatchEx> dispatchex = object;
+    if (!dispatchex) { return false; }
+
+    DISPID dispid;
+    HRESULT hr = dispatchex->GetDispID(CComBSTR(name),
+                                       fdexNameCaseSensitive | fdexNameEnsure,
+                                       &dispid);
+    if (FAILED(hr)) { return false; }
+
+    DISPPARAMS params = {NULL, NULL, 1, 1};
+    params.rgvarg = const_cast<VARIANT *>(&value);
+    DISPID dispid_put = DISPID_PROPERTYPUT;
+    params.rgdispidNamedArgs = &dispid_put;
+
+    hr = object->Invoke(dispid, IID_NULL,
+                        LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT,
+                        &params, NULL, NULL, NULL);
+    if (FAILED(hr)) { return false; }
+
+    return true;
+  }
+
+  DISALLOW_EVIL_CONSTRUCTORS(JsRunnerBase);
+};
 
 
+// Internal helper COM object that implements IActiveScriptSite so we can host
+// new ActiveScript engine instances. This class does the majority of the work
+// of the real JsRunner.
 class ATL_NO_VTABLE JsRunnerImpl
     : public CComObjectRootEx<CComMultiThreadModel>,
       public IDispatchImpl<IDispatch>,
       public IActiveScriptSiteImpl,
       public IInternetHostSecurityManager,
-      public IServiceProviderImpl<JsRunnerImpl>,
-      public JsRunnerInterface {
+      public IServiceProviderImpl<JsRunnerImpl> {
  public:
   BEGIN_COM_MAP(JsRunnerImpl)
     COM_INTERFACE_ENTRY(IDispatch)
@@ -83,23 +159,27 @@ class ATL_NO_VTABLE JsRunnerImpl
     SERVICE_ENTRY(SID_SInternetHostSecurityManager)
   END_SERVICE_MAP()
 
-  JsRunnerImpl();
+  JsRunnerImpl() : coinit_succeeded_(false) {}
   ~JsRunnerImpl();
 
-  // JsRunnerInterface implementation
-  bool GetContext(JsContextPtr *context) {
-    *context = NULL;
-    return true;
+  // JsRunnerBase implementation
+  IDispatch *GetGlobalObject() {
+    IDispatch *global_object;
+    HRESULT hr = javascript_engine_->GetScriptDispatch(
+                                         NULL, // get global object
+                                         &global_object);
+    if (FAILED(hr)) { return NULL; }
+
+    return global_object;
   }
+
+  // JsRunner implementation
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id);
   bool Start(const std::string16 &full_script);
   bool Stop();
   bool Eval(const std::string16 &script);
   void SetErrorHandler(JsErrorHandlerInterface *error_handler) {
     error_handler_ = error_handler;
-  }
-  void ThrowGlobalError(const std::string16 &message) {
-    ThrowErrorUsingEval(message, this);
   }
 
   // IActiveScriptSiteImpl overrides
@@ -129,10 +209,6 @@ class ATL_NO_VTABLE JsRunnerImpl
 
   DISALLOW_EVIL_CONSTRUCTORS(JsRunnerImpl);
 };
-
-
-JsRunnerImpl::JsRunnerImpl() : coinit_succeeded_(false) {
-}
 
 
 JsRunnerImpl::~JsRunnerImpl() {
@@ -339,9 +415,10 @@ STDMETHODIMP JsRunnerImpl::GetSecurityId(BYTE *security_id,
   return E_NOTIMPL;
 }
 
+
 // A wrapper class to AddRef/Release the internal COM object,
 // while exposing a simpler new/delete interface to users.
-class JsRunner : public JsRunnerInterface {
+class JsRunner : public JsRunnerBase {
  public:
   JsRunner() {
     HRESULT hr = CComObject<JsRunnerImpl>::CreateInstance(&com_obj_);
@@ -356,6 +433,9 @@ class JsRunner : public JsRunnerInterface {
     }
   }
 
+  IDispatch *GetGlobalObject() {
+    return com_obj_->GetGlobalObject();
+  }
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
     return com_obj_->AddGlobal(name, object, iface_id);
   }
@@ -365,17 +445,11 @@ class JsRunner : public JsRunnerInterface {
   bool Stop() {
     return com_obj_->Stop();
   }
-  bool GetContext(JsContextPtr *context) {
-    return com_obj_->GetContext(context);
-  }
   bool Eval(const std::string16 &script) {
     return com_obj_->Eval(script);
   }
   void SetErrorHandler(JsErrorHandlerInterface *error_handler) {
     return com_obj_->SetErrorHandler(error_handler);
-  }
-  void ThrowGlobalError(const std::string16 &message) {
-    return com_obj_->ThrowGlobalError(message);
   }
 
  private:
@@ -384,61 +458,75 @@ class JsRunner : public JsRunnerInterface {
   DISALLOW_EVIL_CONSTRUCTORS(JsRunner);
 };
 
+
 // This class is a stub that is used to present a uniform interface to
 // common functionality to both workers and the main thread.
-class ParentJsRunner : public JsRunnerInterface {
+class DocumentJsRunner : public JsRunnerBase {
  public:
-  ParentJsRunner(IGeneric *site, JsContextPtr context)
-    : site_(site) {
+  DocumentJsRunner(IGeneric *site) : site_(site) {}
+
+  virtual ~DocumentJsRunner() {}
+
+  IDispatch *GetGlobalObject() {
+    CComPtr<IHTMLDocument2> html_document2;
+    HRESULT hr = ActiveXUtils::GetHtmlDocument2(site_, &html_document2);
+    if (FAILED(hr) || !html_document2) {
+      LOG(("Could not get IHTMLDocument2 for current site."));
+      return NULL;
+    }
+
+    CComQIPtr<IHTMLDocument> html_document = html_document2;
+    assert(html_document);
+
+    CComPtr<IDispatch> script_dispatch;
+    hr = html_document->get_Script(&script_dispatch);
+    if (FAILED(hr) || !script_dispatch) { return NULL; }
+
+    return script_dispatch;    
   }
-  virtual ~ParentJsRunner() {
-  }
+
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
-    // TODO(zork): Add this functionality to parent js runners.
+    // TODO(zork): Add this functionality to DocumentJsRunner.
     return false;
   }
+
   bool Start(const std::string16 &full_script) {
-    assert(false); // Should not be called on the parent.
+    assert(false); // Should not be called on the DocumentJsRunner.
     return false;
   }
+
   bool Stop() {
-    assert(false); // Should not be called on the parent.
+    assert(false); // Should not be called on the DocumentJsRunner.
     return false;
   }
-  bool GetContext(JsContextPtr *context) {
-    context = NULL;
-    return false;
+
+  bool Eval(const std::string16 &script) {
+    CComPtr<IHTMLWindow2> window;
+    HRESULT hr = ActiveXUtils::GetHtmlWindow2(site_, &window);
+    if (FAILED(hr)) { return false; }
+
+    CComVariant retval;
+    hr = window->execScript(BSTR(script.c_str()), NULL, &retval);
+    if (FAILED(hr)) { return false; }
+
+    return true;
   }
-  bool Eval(const std::string16 &script);
+
   void SetErrorHandler(JsErrorHandlerInterface *handler) {
-    assert(false); // Should not be called on the parent.
-  }
-  void ThrowGlobalError(const std::string16 &message) {
-    ThrowErrorUsingEval(message, this);
+    assert(false); // Should not be called on the DocumentJsRunner.
   }
 
  private:
   CComPtr<IUnknown> site_;
 
-  DISALLOW_EVIL_CONSTRUCTORS(ParentJsRunner);
+  DISALLOW_EVIL_CONSTRUCTORS(DocumentJsRunner);
 };
 
-bool ParentJsRunner::Eval(const std::string16 &script) {
-  CComPtr<IHTMLWindow2> window;
-  HRESULT hr = ActiveXUtils::GetHtmlWindow2(site_, &window);
-  if (FAILED(hr)) { return false; }
-
-  CComVariant ret_val;
-  hr = window->execScript(BSTR(script.c_str()), NULL, &ret_val);
-  if (FAILED(hr)) { return false; }
-
-  return true;
-}
 
 JsRunnerInterface* NewJsRunner() {
   return static_cast<JsRunnerInterface*>(new JsRunner());
 }
 
-JsRunnerInterface* NewParentJsRunner(IGeneric *base, JsContextPtr context) {
-  return static_cast<JsRunnerInterface*>(new ParentJsRunner(base, context));
+JsRunnerInterface* NewDocumentJsRunner(IGeneric *base, JsContextPtr context) {
+  return static_cast<JsRunnerInterface*>(new DocumentJsRunner(base));
 }

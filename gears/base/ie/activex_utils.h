@@ -47,6 +47,10 @@ class ActiveXUtils {
   static HRESULT GetWebBrowser2(IUnknown *site,
                                 IWebBrowser2 **browser2);
 
+  // Returns the IHTMLDocument2 interface corresponding to the given site.
+  static HRESULT GetHtmlDocument2(IUnknown *site,
+                                  IHTMLDocument2 **document2);
+
   // Returns the IHTMLWindow2 interface corresponding to the given site.
   static HRESULT GetHtmlWindow2(IUnknown *site,
                                 IHTMLWindow2 **window2);

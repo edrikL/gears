@@ -42,17 +42,144 @@
 #include "ff/genfiles/timer.h"
 #include "ff/genfiles/workerpool.h"
 
-static void ThrowErrorOnContext(const std::string16 &error, JSContext *cx) {
-  if (!cx) { return; }
-
-  std::string error_utf8;
-  String16ToUTF8(error.c_str(), error.length(), &error_utf8);
-  JS_ReportError(cx, error_utf8.c_str());
-}
-
-class JsRunner : public JsRunnerInterface {
+// Internal base class used to share some code between DocumentJsRunner and
+// JsRunner. Do not override these methods from JsRunner or DocumentJsRunner.
+// Either share the code here, or move it to those two classes if it's
+// different.
+class JsRunnerBase : public JsRunnerInterface {
  public:
-  JsRunner() : js_engine_context_(NULL), alloc_js_wrapper_(NULL),
+  JsRunnerBase() : js_engine_context_(NULL) {}
+
+  JsContextPtr GetContext() {
+    return js_engine_context_;
+  }
+
+  JsRootedToken *NewObject(const char16 *optional_global_ctor_name) {
+    if (!js_engine_context_) {
+      LOG(("Could not get JavaScript engine context."));
+      return NULL;
+    }
+
+    JSObject *global_object = JS_GetGlobalObject(js_engine_context_);
+    if (!global_object) {
+      LOG(("Could not get global object from script engine."));
+      return NULL;
+    }
+
+    std::string ctor_name_utf8;
+    if (optional_global_ctor_name) {
+      if (!String16ToUTF8(optional_global_ctor_name, &ctor_name_utf8)) {
+        LOG(("Could not convert constructor name."));
+        return NULL;
+      }
+    } else {
+      ctor_name_utf8 = "Object";
+    }
+
+    jsval val = NULL;
+    JSBool result = JS_GetProperty(js_engine_context_, global_object,
+                                   ctor_name_utf8.c_str(), &val);
+    if (!result) {
+      LOG(("Could not get constructor property from global object."));
+      return NULL;
+    }
+
+    JSFunction *ctor = JS_ValueToFunction(js_engine_context_, val);
+    if (!ctor) {
+      LOG(("Could not convert constructor property to function."));
+      return NULL;
+    }
+
+    // NOTE: We are calling the specified function here as a regular function,
+    // not as a constructor. I could not find a way to call a function as a
+    // constructor using JSAPI other than JS_ConstructObject which takes
+    // arguments I don't know how to provide. Ideally, there would be something
+    // like DISPATCH_CONSTRUCT in IE.
+    //
+    // This is OK for the built-in constructors that we want to call (such as
+    // "Error", "Object", etc) because those objects are specified to behave as
+    // constructors even without the 'new' keyword.
+    //
+    // For more information, see:
+    // * ECMAScript spec section 15.2.1, 15.3.1, 15.4.1, etc.
+    // * DISPATCH_CONSTRUCT:
+    //     http://msdn2.microsoft.com/en-us/library/asd22sd4.aspx
+    result = JS_CallFunction(js_engine_context_, global_object, ctor, 0, NULL,
+                             &val);
+    if (!result) {
+      LOG(("Could not call constructor function."));
+      return NULL;
+    }
+
+    if (JSVAL_IS_OBJECT(val)) {
+      return new JsRootedToken(GetContext(), val);
+    } else {
+      LOG(("Constructor did not return an object"));
+      return NULL;
+    }
+  }
+
+  bool SetPropertyString(JsToken object, const char16 *name,
+                         const char16 *value) {
+    // TODO(aa): Figure out the lifetime of this string.
+    JSString *jstr = JS_NewUCStringCopyZ(
+                         js_engine_context_,
+                         reinterpret_cast<const jschar *>(value));
+    if (jstr) {
+      return SetProperty(object, name, STRING_TO_JSVAL(jstr));
+    } else {
+      return false;
+    }
+  }
+
+  bool SetPropertyInt(JsToken object, const char16 *name, int value) {
+    return SetProperty(object, name, INT_TO_JSVAL(value));
+  }
+
+#ifdef DEBUG
+  void ForceGC() {
+    if (js_engine_context_) {
+      JS_GC(js_engine_context_);
+    }
+  }
+#endif
+
+ protected:
+  JSContext *js_engine_context_;
+
+ private:
+  bool SetProperty(JsToken object, const char16 *name, jsval value) {
+    if (!JSVAL_IS_OBJECT(object)) {
+      LOG(("Specified token is not an object."));
+      return false;
+    }
+
+    std::string name_utf8;
+    if (!String16ToUTF8(name, &name_utf8)) {
+      LOG(("Could not convert property name to utf8."));
+      return false;
+    }
+
+    JSBool result = JS_DefineProperty(js_engine_context_,
+                                      JSVAL_TO_OBJECT(object),
+                                      name_utf8.c_str(), value,
+                                      nsnull, nsnull, // getter, setter
+                                      JSPROP_ENUMERATE);
+    if (!result) {
+      LOG(("Could not define property."));
+      return false;
+    }
+
+    return true;
+  }
+
+  DISALLOW_EVIL_CONSTRUCTORS(JsRunnerBase);
+};
+
+
+class JsRunner : public JsRunnerBase {
+ public:
+  JsRunner() : alloc_js_wrapper_(NULL),
                error_handler_(NULL), global_obj_(NULL), js_runtime_(NULL),
                js_script_(NULL) {
     InitJavaScriptEngine();
@@ -62,16 +189,9 @@ class JsRunner : public JsRunnerInterface {
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id);
   bool Start(const std::string16 &full_script);
   bool Stop();
-  bool GetContext(JsContextPtr *context) {
-    *context = js_engine_context_;
-    return true;
-  }
   bool Eval(const std::string16 &full_script);
   void SetErrorHandler(JsErrorHandlerInterface *handler) {
     error_handler_ = handler;
-  }
-  void ThrowGlobalError(const std::string16 &message) {
-    ThrowErrorOnContext(message, js_engine_context_);
   }
 
  private:
@@ -81,7 +201,6 @@ class JsRunner : public JsRunnerInterface {
   static void JS_DLL_CALLBACK JsErrorHandler(JSContext *cx, const char *message,
                                              JSErrorReport *report);
 
-  JSContext *js_engine_context_;
   JsContextWrapper *alloc_js_wrapper_; // (created in thread)
   JsErrorHandlerInterface *error_handler_;
   JSObject *global_obj_;
@@ -93,106 +212,27 @@ class JsRunner : public JsRunnerInterface {
   DISALLOW_EVIL_CONSTRUCTORS(JsRunner);
 };
 
-// Provides the same interface as JsRunner, but for the normal JavaScript engine
-// that runs in HTML pages.
-// TODO(aa): Should rename to DocumentJsRunner, or RootJsRunner, or something.
-// If a worker creates a workerpool, it is also a "parent", but this class
-// cannot be used there.
-class ParentJsRunner : public JsRunnerInterface {
- public:
-  ParentJsRunner(IGeneric *base, JsContextPtr context)
-      : js_engine_context_(context) {
-  }
-
-  ~ParentJsRunner() {
-  }
-
-  bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
-    // TODO(zork): Add this functionality to parent js runners.
-    return false;
-  }
-  void SetErrorHandler(JsErrorHandlerInterface *handler) {
-    assert(false); // This should not be called on the parent.
-  }
-  bool Start(const std::string16 &full_script) {
-    assert(false); // This should not be called on the parent.
-    return false;
-  }
-  bool Stop() {
-    assert(false); // This should not be called on the parent.
-    return false;
-  }
-  bool GetContext(JsContextPtr *context) {
-    *context = js_engine_context_;
-    return true;
-  }
-  bool Eval(const std::string16 &full_script);
-  void ThrowGlobalError(const std::string16 &message) {
-    ThrowErrorOnContext(message, js_engine_context_);
-  }
-
- private:
-  JSContext *js_engine_context_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(ParentJsRunner);
-};
-
-
-bool ParentJsRunner::Eval(const std::string16 &script) {
-  JSObject *object = JS_GetGlobalObject(js_engine_context_);
-  if (!object) { return false; }
-
-  // To eval the script, we need the JSPrincipals to be acquired through
-  // nsIPrincipal.  nsIPrincipal can be queried through the
-  // nsIScriptObjectPrincipal interface on the Script Global Object.  In order
-  // to get the Script Global Object, we need to request the private data
-  // associated with the global JSObject on the current context.
-  nsCOMPtr<nsIScriptGlobalObject> sgo;
-  nsISupports *priv = reinterpret_cast<nsISupports *>(JS_GetPrivate(
-                                                          js_engine_context_,
-                                                          object));
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapped_native = do_QueryInterface(priv);
-
-  if (wrapped_native) {
-    // The global object is a XPConnect wrapped native, the native in
-    // the wrapper might be the nsIScriptGlobalObject.
-    sgo = do_QueryWrappedNative(wrapped_native);
-  } else {
-    sgo = do_QueryInterface(priv);
-  }
-
-  JSPrincipals *jsprin;
-  nsresult nr;
-
-  nsCOMPtr<nsIScriptObjectPrincipal> obj_prin = do_QueryInterface(sgo, &nr);
-  if (NS_FAILED(nr)) { return false; }
-
-  nsIPrincipal *principal = obj_prin->GetPrincipal();
-  if (!principal) { return false; }
-
-  principal->GetJSPrincipals(js_engine_context_, &jsprin);
-
-  uintN line_number_start = 0;
-  jsval rval;
-  JSBool js_ok = JS_EvaluateUCScriptForPrincipals(
-      js_engine_context_, object, jsprin,
-      reinterpret_cast<const jschar *>(script.c_str()),
-      script.length(), "script", line_number_start, &rval);
-
-
-  // Decrements ref count on jsprin (Was added in GetJSPrincipals()).
-  JSPRINCIPALS_DROP(js_engine_context_, jsprin);
-  if (!js_ok) { return false; }
-  return true;
-}
-
 void JS_DLL_CALLBACK JsRunner::JsErrorHandler(JSContext *cx,
                                               const char *message,
                                               JSErrorReport *report) {
   JsRunner *js_runner = static_cast<JsRunner*>(JS_GetContextPrivate(cx));
-  if (js_runner && js_runner->error_handler_ && report && report->ucmessage) {
-    js_runner->error_handler_->HandleError(static_cast<const char16 *>(
-                                               report->ucmessage));
+  if (js_runner && js_runner->error_handler_ && report) {
+    // The error message can either be in the separate *message param or in
+    // *report->ucmessage. For example, running the following JS in a worker
+    // causes the separate message param to get used:
+    //   throw new Error("foo")
+    // Other errors cause the report->ucmessage property to get used.
+    //
+    // Mozilla also does this, see:
+    // http://lxr.mozilla.org/mozilla1.8.0/source/dom/src/base/nsJSEnvironment.cpp#163
+    if (report->ucmessage) {
+      js_runner->error_handler_->HandleError(report->ucmessage);
+    } else if (message) {
+      std::string16 message_str;
+      if (UTF8ToString16(message, &message_str)) {
+        js_runner->error_handler_->HandleError(message_str);
+      }
+    }
   }
 }
 
@@ -426,10 +466,92 @@ bool JsRunner::Eval(const std::string16 &script) {
   return true;
 }
 
+// Provides the same interface as JsRunner, but for the normal JavaScript engine
+// that runs in HTML pages.
+class DocumentJsRunner : public JsRunnerBase {
+ public:
+  DocumentJsRunner(IGeneric *base, JsContextPtr context) {
+    js_engine_context_ = context;
+  }
+
+  ~DocumentJsRunner() {
+  }
+
+  bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
+    // TODO(zork): Add this functionality to DocumentJsRunner.
+    return false;
+  }
+  void SetErrorHandler(JsErrorHandlerInterface *handler) {
+    assert(false); // This should not be called on DocumentJsRunner.
+  }
+  bool Start(const std::string16 &full_script) {
+    assert(false); // This should not be called on DocumentJsRunner.
+    return false;
+  }
+  bool Stop() {
+    assert(false); // This should not be called on DocumentJsRunner.
+    return false;
+  }
+  bool Eval(const std::string16 &full_script);
+
+ private:
+  DISALLOW_EVIL_CONSTRUCTORS(DocumentJsRunner);
+};
+
+
+bool DocumentJsRunner::Eval(const std::string16 &script) {
+  JSObject *object = JS_GetGlobalObject(js_engine_context_);
+  if (!object) { return false; }
+
+  // To eval the script, we need the JSPrincipals to be acquired through
+  // nsIPrincipal.  nsIPrincipal can be queried through the
+  // nsIScriptObjectPrincipal interface on the Script Global Object.  In order
+  // to get the Script Global Object, we need to request the private data
+  // associated with the global JSObject on the current context.
+  nsCOMPtr<nsIScriptGlobalObject> sgo;
+  nsISupports *priv = reinterpret_cast<nsISupports *>(JS_GetPrivate(
+                                                          js_engine_context_,
+                                                          object));
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapped_native = do_QueryInterface(priv);
+
+  if (wrapped_native) {
+    // The global object is a XPConnect wrapped native, the native in
+    // the wrapper might be the nsIScriptGlobalObject.
+    sgo = do_QueryWrappedNative(wrapped_native);
+  } else {
+    sgo = do_QueryInterface(priv);
+  }
+
+  JSPrincipals *jsprin;
+  nsresult nr;
+
+  nsCOMPtr<nsIScriptObjectPrincipal> obj_prin = do_QueryInterface(sgo, &nr);
+  if (NS_FAILED(nr)) { return false; }
+
+  nsIPrincipal *principal = obj_prin->GetPrincipal();
+  if (!principal) { return false; }
+
+  principal->GetJSPrincipals(js_engine_context_, &jsprin);
+
+  uintN line_number_start = 0;
+  jsval rval;
+  JSBool js_ok = JS_EvaluateUCScriptForPrincipals(
+      js_engine_context_, object, jsprin,
+      reinterpret_cast<const jschar *>(script.c_str()),
+      script.length(), "script", line_number_start, &rval);
+
+
+  // Decrements ref count on jsprin (Was added in GetJSPrincipals()).
+  JSPRINCIPALS_DROP(js_engine_context_, jsprin);
+  if (!js_ok) { return false; }
+  return true;
+}
+
+
 JsRunnerInterface* NewJsRunner() {
   return static_cast<JsRunnerInterface*>(new JsRunner());
 }
 
-JsRunnerInterface* NewParentJsRunner(IGeneric *base, JsContextPtr context) {
-  return static_cast<JsRunnerInterface*>(new ParentJsRunner(base, context));
+JsRunnerInterface* NewDocumentJsRunner(IGeneric *base, JsContextPtr context) {
+  return static_cast<JsRunnerInterface*>(new DocumentJsRunner(base, context));
 }
