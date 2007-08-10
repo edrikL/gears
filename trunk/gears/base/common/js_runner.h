@@ -95,6 +95,13 @@ class JsRunnerInterface {
 #ifdef DEBUG
   virtual void ForceGC() = 0;
 #endif
+
+#ifdef BROWSER_FF
+  // For now, this only exists for Firefox. It could also be implemented for IE,
+  // but no need for that right now and it would be a lot more work.
+  virtual bool InvokeCallback(const JsCallback &callback, int argc,
+                              JsToken *argv) = 0;
+#endif
 };
 
 // Callers: create instances using the following instead of 'new JsRunner'.

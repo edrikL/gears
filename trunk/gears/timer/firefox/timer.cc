@@ -256,12 +256,7 @@ void GearsTimer::TimerCallback(nsITimer *timer, void *closure) {
 
   // Invoke JavaScript timer handler
   if (ti->callback.function) {
-    jsval js_retval;
-    //JSBool js_ok =  // comment out until we use it, to avoid compiler warning
-    JS_CallFunctionValue( // goes to js_InternalInvoke()
-        ti->callback.context,
-        JS_GetGlobalObject(ti->callback.context),
-        ti->callback.function, 0, 0, &js_retval);
+    ti->owner->GetJsRunner()->InvokeCallback(ti->callback, 0, NULL);
   } else {
     ti->owner->GetJsRunner()->Eval(ti->script.c_str());
   }

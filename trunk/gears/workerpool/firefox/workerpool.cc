@@ -121,6 +121,7 @@ struct JavaScriptWorkerInfo {
   // These fields are used by all workers in pool (root + descendants).
   //
   PoolThreadsManager *threads_manager;
+  JsRunnerInterface *js_runner;
   JsCallback onmessage_handler;
   JsCallback onerror_handler;
   nsCOMPtr<nsIEventQueue> thread_event_queue;
@@ -383,7 +384,8 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
                                         const std::string16 &message_string,
                                         int src_worker_id) {
   if (wi->onmessage_handler.function) {
-    FireHandler(wi->onmessage_handler, message_string, src_worker_id);
+    FireHandler(wi->js_runner, wi->onmessage_handler, message_string,
+                src_worker_id);
   } else {
     // It is an error to send a message to a worker that does not have an
     // onmessage handler.
@@ -423,7 +425,7 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
 #endif
 
   if (wi->onerror_handler.function) {
-    FireHandler(wi->onerror_handler, error, src_worker_id);
+    FireHandler(wi->js_runner, wi->onerror_handler, error, src_worker_id);
   } else {
     // If there's no onerror handler, we bubble the error up to the owning
     // worker's script context. If that worker is also nested, this will cause
@@ -436,12 +438,13 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
     message += std::string16(STRING16(L":\n"));
     message += error;
 
-    ThrowGlobalError(root_js_runner_, message);
+    ThrowGlobalError(wi->js_runner, message);
   }
 }
 
 
-void PoolThreadsManager::FireHandler(const JsCallback &handler,
+void PoolThreadsManager::FireHandler(JsRunnerInterface *js_runner,
+                                     const JsCallback &handler,
                                      const std::string16 &message,
                                      int src_worker_id) {
   // Invoke JavaScript onmessage handler
@@ -453,12 +456,7 @@ void PoolThreadsManager::FireHandler(const JsCallback &handler,
   jsval argv[] = { STRING_TO_JSVAL(message_arg_jsstring),
                    INT_TO_JSVAL(src_worker_id) };
 
-  jsval js_retval;
-  //JSBool js_ok =  // comment out until we use it, to avoid compiler warning
-  JS_CallFunctionValue( // goes to js_InternalInvoke()
-      handler.context,
-      JS_GetGlobalObject(handler.context),
-      handler.function, argc, argv, &js_retval);
+  js_runner->InvokeCallback(handler, argc, argv);
 }
 
 
@@ -478,12 +476,12 @@ PoolThreadsManager::PoolThreadsManager(
                         JsRunnerInterface *root_js_runner)
     : num_workers_(0), 
       is_shutting_down_(false),
-      page_security_origin_(page_security_origin),
-      root_js_runner_(root_js_runner) {
+      page_security_origin_(page_security_origin) {
 
   // Add a JavaScriptWorkerInfo entry for the owning worker.
   JavaScriptWorkerInfo *wi = new JavaScriptWorkerInfo;
   wi->threads_manager = this;
+  wi->js_runner = root_js_runner;
   InitWorkerThread(wi);
   worker_info_.push_back(wi);
 }
@@ -755,6 +753,7 @@ void PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   wi->threads_manager->AddWorkerRef();
 
   scoped_ptr<JsRunnerInterface> js_runner(NewJsRunner());
+  wi->js_runner = js_runner.get();
 
   bool js_init_succeeded = wi->threads_manager->InitWorkerThread(wi);
   if (js_init_succeeded) {
