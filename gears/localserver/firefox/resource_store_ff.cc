@@ -27,6 +27,7 @@
 #include <nsILocalFile.h>
 #include <nsMemory.h>
 #include <nsXPCOM.h>
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/base/firefox/ns_file_utils.h"
@@ -754,18 +755,7 @@ void GearsResourceStore::InvokeCompletionCallback(FFCaptureRequest *request,
                    INT_TO_JSVAL(capture_id) };
 
   // Invoke the callback
-  //
-  // We don't need to push/pop the context stack because we are calling the
-  // JavaScript API and directly providing the JS context
-  //
-  // TODO(cprince): MichaelN wisely suggests a unittest to make sure this
-  // method of invocation doesn't bypass any security checks inside XPConnect.
-  jsval js_retval;
-  //JSBool js_ok =  // comment out until we use it, to avoid compiler warning
-  JS_CallFunctionValue( // goes to js_InternalInvoke()
-      request->callback.context,
-      JS_GetGlobalObject(request->callback.context),
-      request->callback.function, argc, argv, &js_retval);
+  GetJsRunner()->InvokeCallback(request->callback, argc, argv);
 }
 
 //------------------------------------------------------------------------------

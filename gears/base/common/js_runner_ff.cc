@@ -28,6 +28,7 @@
 #include <nsCOMPtr.h>
 #include <nspr.h> // for PR_*
 #include "gears/third_party/gecko_internal/jsapi.h"
+#include "gears/third_party/gecko_internal/nsIScriptContext.h"
 #include "gears/third_party/gecko_internal/nsIScriptGlobalObject.h"
 #include "gears/third_party/gecko_internal/nsIScriptObjectPrincipal.h"
 #include "gears/third_party/gecko_internal/nsIPrincipal.h"
@@ -193,6 +194,7 @@ class JsRunner : public JsRunnerBase {
   void SetErrorHandler(JsErrorHandlerInterface *handler) {
     error_handler_ = handler;
   }
+  bool InvokeCallback(const JsCallback &callback, int argc, JsToken *argv);
 
  private:
   bool InitJavaScriptEngine();
@@ -466,6 +468,15 @@ bool JsRunner::Eval(const std::string16 &script) {
   return true;
 }
 
+bool JsRunner::InvokeCallback(const JsCallback &callback, int argc,
+                              JsToken *argv) {
+  jsval retval; // not used for now
+  JSBool result = JS_CallFunctionValue(callback.context,
+                                       JS_GetGlobalObject(callback.context),
+                                       callback.function, argc, argv, &retval);
+  return result == JS_TRUE;
+}
+
 // Provides the same interface as JsRunner, but for the normal JavaScript engine
 // that runs in HTML pages.
 class DocumentJsRunner : public JsRunnerBase {
@@ -493,6 +504,7 @@ class DocumentJsRunner : public JsRunnerBase {
     return false;
   }
   bool Eval(const std::string16 &full_script);
+  bool InvokeCallback(const JsCallback &callback, int argc, JsToken *argv);
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(DocumentJsRunner);
@@ -545,6 +557,24 @@ bool DocumentJsRunner::Eval(const std::string16 &script) {
   JSPRINCIPALS_DROP(js_engine_context_, jsprin);
   if (!js_ok) { return false; }
   return true;
+}
+
+bool DocumentJsRunner::InvokeCallback(const JsCallback &callback, int argc,
+                                      JsToken *argv) {
+  // When invoking a callback on the document context, we must go through
+  // nsIScriptContext->CallEventHandler because it sets up certain state that
+  // the browser error handler expects to find if there is an error. Without
+  // this, crashes happen.
+  // See http://code.google.com/p/google-gears/issues/detail?id=32 for more
+  // information.
+  nsCOMPtr<nsIScriptContext> sc;
+  sc = GetScriptContextFromJSContext(callback.context);
+
+  jsval retval;
+  nsresult result = sc->CallEventHandler(JS_GetGlobalObject(callback.context),
+                                         JSVAL_TO_OBJECT(callback.function),
+                                         argc, argv, &retval);
+  return NS_SUCCEEDED(result);
 }
 
 
