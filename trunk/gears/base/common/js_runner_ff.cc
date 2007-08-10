@@ -76,7 +76,7 @@ class JsRunnerBase : public JsRunnerInterface {
       ctor_name_utf8 = "Object";
     }
 
-    jsval val = NULL;
+    jsval val(0);
     JSBool result = JS_GetProperty(js_engine_context_, global_object,
                                    ctor_name_utf8.c_str(), &val);
     if (!result) {
