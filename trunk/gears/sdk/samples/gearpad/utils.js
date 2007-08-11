@@ -189,15 +189,8 @@ Gears.prototype.executeToObjects = function(sql, args) {
  * error reporting UI correctly.
  */
 Gears.prototype.execute = function(sql, args) {
-  try {
-    console.log('sql: %s, args: %s', sql, args);
-    return this.db_.execute(sql, args);
-  } catch (e) {
-    // e is not a real error, so we can't just let it bubble up -- it won't 
-    // display in error uis correctly. So we basically convert it to a real 
-    // error.
-    throw new Error("Error executing SQL: " + sql + ". Error was: " + e.message);
-  }
+  console.log('sql: %s, args: %s', sql, args);
+  return this.db_.execute(sql, args);
 };
 
 Gears.prototype.initFactory_ = function() {

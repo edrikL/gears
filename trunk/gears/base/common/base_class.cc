@@ -28,6 +28,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/security_model.h" // for kUnknownDomain
 #include "gears/base/common/js_runner.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 #if BROWSER_FF
 #include "gears/base/firefox/dom_utils.h"
@@ -134,7 +135,7 @@ const SecurityOrigin& GearsBaseClass::EnvPageSecurityOrigin() const {
   return env_page_origin_;
 }
 
-JsRunnerInterface *GearsBaseClass::GetJsRunner() {
+JsRunnerInterface *GearsBaseClass::GetJsRunner() const {
   assert(is_initialized_);
   return js_runner_;
 }
@@ -328,23 +329,26 @@ JsNativeMethodRetval JsSetException(const GearsBaseClass *obj,
 
   if (obj->EnvIsWorker()) {
     cx = obj->EnvPageJsContext();
+    if (!cx) { return retval; }
   } else {
     nsresult nr;
     nsCOMPtr<nsIXPConnect> xpc;
     xpc = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
-    if (xpc && NS_SUCCEEDED(nr)) {
-      nsCOMPtr<nsIXPCNativeCallContext> ncc;
-      nr = xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
-      if (ncc && NS_SUCCEEDED(nr)) {
-        ncc->GetJSContext(&cx);
-        // To make XPConnect display a user-defined exception message, we must
-        // call SetExceptionWasThrown AND ALSO return a _success_ error code
-        // from our native object.  Otherwise XPConnect will look for an
-        // exception object it created, rather than using the one we set below.
-        ncc->SetExceptionWasThrown(PR_TRUE);
-        retval = NS_OK;
-      }
-    }
+    if (!xpc || NS_FAILED(nr)) { return retval; }
+
+    nsCOMPtr<nsIXPCNativeCallContext> ncc;
+    nr = xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+    if (!ncc || NS_FAILED(nr)) { return retval; }
+
+    ncc->GetJSContext(&cx);
+    if (!cx) { return retval; }
+
+    // To make XPConnect display a user-defined exception message, we must
+    // call SetExceptionWasThrown AND ALSO return a _success_ error code
+    // from our native object.  Otherwise XPConnect will look for an
+    // exception object it created, rather than using the one we set below.
+    ncc->SetExceptionWasThrown(PR_TRUE);
+    retval = NS_OK;
   }
 
   // First set the exception to any value, in case we fail to create the full
@@ -352,28 +356,29 @@ JsNativeMethodRetval JsSetException(const GearsBaseClass *obj,
   // we just won't get e.message.  We use INT_TO_JSVAL(1) here for simplicity.
   JS_SetPendingException(cx, INT_TO_JSVAL(1));
 
-  if (cx) {
-    // Create any JS object with a '.message' property.  That's the only
-    // part of the exception object we need for now.
-    //
-    // Note: JS_ThrowReportedError and JS_ReportError look promising, but they
-    // don't quite do what we need.
-    JSObject *exception = JS_NewObject(cx, nsnull, nsnull, nsnull);
-    if (exception) {
-      JSString *jstr = JS_NewUCStringCopyZ(
-                          cx,
-                          reinterpret_cast<const jschar *>(message));
-      if (jstr) {
-        JSBool ok = JS_DefineProperty(cx, exception, "message",
-                                      STRING_TO_JSVAL(jstr),
-                                      nsnull, nsnull, JSPROP_ENUMERATE);
-        if (ok) {
-          // Note: need JS_SetPendingException to bubble 'catch' in workers.
-          JS_SetPendingException(cx, OBJECT_TO_JSVAL(exception));
-        }
-      }
-    }
-  }
+  // Create a JS Error object with a '.message' property. The other fields
+  // like "lineNumber" and "fileName" are filled in automatically by Firefox
+  // based on the top frame of the JS stack. It's important to use an actual
+  // Error object so that some tools work correctly. See:
+  // http://code.google.com/p/google-gears/issues/detail?id=5
+  //
+  // Note: JS_ThrowReportedError and JS_ReportError look promising, but they
+  // don't quite do what we need.
+
+  JsRunnerInterface *js_runner = obj->GetJsRunner();
+  if (!js_runner) { return retval; }
+
+  scoped_ptr<JsRootedToken> error_object(
+                                js_runner->NewObject(STRING16(L"Error")));
+  if (!error_object.get()) { return retval; }
+
+  // Note: need JS_SetPendingException to bubble 'catch' in workers.
+  JS_SetPendingException(cx, error_object->GetToken());
+
+  bool success = js_runner->SetPropertyString(error_object->GetToken(),
+                                              STRING16(L"message"),
+                                              message);
+  if (!success) { return retval; }
 
   return retval;
 }
