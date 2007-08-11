@@ -157,7 +157,7 @@ class GearsBaseClass {
 #endif
   const SecurityOrigin& EnvPageSecurityOrigin() const;
 
-  JsRunnerInterface *GetJsRunner();
+  JsRunnerInterface *GetJsRunner() const;
 
 #if BROWSER_FF
   // JavaScript worker-thread parameter information

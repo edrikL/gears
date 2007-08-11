@@ -120,27 +120,19 @@ function handleSubmit() {
 function displayRecentPhrases() {
   var recentPhrases = ['', '', ''];
 
-  // We re-throw Gears exceptions to make them play nice with certain tools.
-  // This will be unnecessary in a future version of Gears.
-  try {
-
-    // Get the 3 most recent entries. Delete any others.
-    var rs = db.execute('select * from Demo order by Timestamp desc');
-    var index = 0;
-    while (rs.isValidRow()) {
-      if (index < 3) {
-        recentPhrases[index] = rs.field(0);
-      } else {
-        db.execute('delete from Demo where Timestamp=?', [rs.field(1)]);
-      }
-      ++index;
-      rs.next();
+  // Get the 3 most recent entries. Delete any others.
+  var rs = db.execute('select * from Demo order by Timestamp desc');
+  var index = 0;
+  while (rs.isValidRow()) {
+    if (index < 3) {
+      recentPhrases[index] = rs.field(0);
+    } else {
+      db.execute('delete from Demo where Timestamp=?', [rs.field(1)]);
     }
-    rs.close();
-
-  } catch (e) {
-    throw new Error(e.message);
+    ++index;
+    rs.next();
   }
+  rs.close();
 
   var status = document.getElementById('status');
   status.innerHTML = '';
