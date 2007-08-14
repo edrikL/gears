@@ -178,10 +178,10 @@ bool TestManifest() {
   } \
 }
 
-  const char16 *manifest_url = STRING16(L"http://server/manifest.json");
+  const char16 *manifest_url = STRING16(L"http://cc_tests/manifest.json");
   const std::string16 expected_version = STRING16(L"expected_version");
   const std::string16 expected_redirect(
-                          STRING16(L"http://server/redirectUrl"));
+                          STRING16(L"http://cc_tests/redirectUrl"));
   const char16 *json16 = STRING16(
     L"{ 'betaManifestVersion': 1, \n"
     L"  'version': 'expected_version', \n"
@@ -207,26 +207,26 @@ bool TestManifest() {
   TEST_ASSERT(manifest.GetEntries()->size() == 4);
 
   const Manifest::Entry *entry1 = &manifest.GetEntries()->at(0);
-  TEST_ASSERT(entry1->url == STRING16(L"http://server/test_url"));
-  TEST_ASSERT(entry1->src == STRING16(L"http://server/test_src"));
+  TEST_ASSERT(entry1->url == STRING16(L"http://cc_tests/test_url"));
+  TEST_ASSERT(entry1->src == STRING16(L"http://cc_tests/test_src"));
   TEST_ASSERT(entry1->redirect.empty());
   TEST_ASSERT(!entry1->ignore_query);
 
   const Manifest::Entry *entry2 = &manifest.GetEntries()->at(1);
-  TEST_ASSERT(entry2->url == STRING16(L"http://server/test_url2"));
+  TEST_ASSERT(entry2->url == STRING16(L"http://cc_tests/test_url2"));
   TEST_ASSERT(entry2->src.empty());
   TEST_ASSERT(entry2->redirect.empty());
 
   const Manifest::Entry *entry3 = &manifest.GetEntries()->at(2);
-  TEST_ASSERT(entry3->url == STRING16(L"http://server/test_url3"));
+  TEST_ASSERT(entry3->url == STRING16(L"http://cc_tests/test_url3"));
   TEST_ASSERT(entry3->src.empty());
   TEST_ASSERT(entry3->redirect.empty());
   TEST_ASSERT(entry3->ignore_query);
 
   const Manifest::Entry *entry4 = &manifest.GetEntries()->at(3);
-  TEST_ASSERT(entry4->url == STRING16(L"http://server/test_redirect_url"));
+  TEST_ASSERT(entry4->url == STRING16(L"http://cc_tests/test_redirect_url"));
   TEST_ASSERT(entry4->src.empty());
-  TEST_ASSERT(entry4->redirect == STRING16(L"http://server/test_url3?blah"));
+  TEST_ASSERT(entry4->redirect == STRING16(L"http://cc_tests/test_url3?blah"));
 
   LOG(("TestManifest - passed\n"));
   return true;
@@ -245,9 +245,9 @@ bool TestResourceStore() {
   } \
 }
   const char16 *name = STRING16(L"name");
-  const char16 *url1 = STRING16(L"http://server/url1");
-  const char16 *url2 = STRING16(L"http://server/url2");
-  const char16 *url3 = STRING16(L"http://server/url3");
+  const char16 *url1 = STRING16(L"http://cc_tests/url1");
+  const char16 *url2 = STRING16(L"http://cc_tests/url2");
+  const char16 *url3 = STRING16(L"http://cc_tests/url3");
   const char16 *required_cookie = STRING16(L"required_cookie");
   const char *data1 = "Hello world";
   const char16 *headers1 =
@@ -337,7 +337,7 @@ bool TestManagedResourceStore() {
     "     ]"
     "}";
 
-  const char16 *manifest_url = STRING16(L"http://server/manifest.json");
+  const char16 *manifest_url = STRING16(L"http://cc_tests/manifest.json");
   const char16 *name = STRING16(L"name");
   const char16 *required_cookie = STRING16(L"user=joe");
 
@@ -415,7 +415,7 @@ bool TestLocalServerDB() {
 
   const char16 *name = STRING16(L"name");
   const char16 *required_cookie = STRING16(L"user=joe");
-  const char16 *testurl = STRING16(L"http://server/url");
+  const char16 *testurl = STRING16(L"http://cc_tests/url");
 
   SecurityOrigin security_origin;
   TEST_ASSERT(security_origin.InitFromUrl(testurl));
@@ -437,7 +437,7 @@ bool TestLocalServerDB() {
   server.security_origin_url = security_origin.url();
   server.name = name;
   server.required_cookie = required_cookie;
-  server.manifest_url = STRING16(L"http://server/manifest_url");
+  server.manifest_url = STRING16(L"http://cc_tests/manifest_url");
   TEST_ASSERT(db->InsertServer(&server));
 
   // insert a current version1 that specifies a redirect
@@ -445,7 +445,7 @@ bool TestLocalServerDB() {
   version1.server_id = server.id;
   version1.version_string = STRING16(L"version_string");
   version1.ready_state = WebCacheDB::VERSION_CURRENT;
-  version1.session_redirect_url = STRING16(L"http://server/redirect_url");
+  version1.session_redirect_url = STRING16(L"http://cc_tests/redirect_url");
   TEST_ASSERT(db->InsertVersion(&version1));
 
   // insert an entry with a bogus payload id for the current version
@@ -517,7 +517,7 @@ bool TestLocalServerDB() {
   version3.server_id = server.id;
   version3.version_string = STRING16(L"version_string3");
   version3.ready_state = WebCacheDB::VERSION_CURRENT;
-  version3.session_redirect_url = STRING16(L"http://server/session_redirect_url");
+  version3.session_redirect_url = STRING16(L"http://cc_tests/session_redirect_url");
   TEST_ASSERT(db->InsertVersion(&version3));
 
   // insert an entry for the ready version
