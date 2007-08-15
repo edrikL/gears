@@ -61,6 +61,8 @@ class GearsWorkerPool
 
   NS_IMETHOD CreateWorker(//const nsAString &full_script
                           PRInt32 *retval);
+  NS_IMETHOD CreateWorkerFromUrl(//const nsAString &url
+                                 PRInt32 *retval);
   NS_IMETHOD SendMessage(const nsAString &message_string,
                          PRInt32 dest_worker_id);
   NS_IMETHOD SetOnmessage(nsIVariant *in_handler);
@@ -96,15 +98,16 @@ class PoolThreadsManager
   PoolThreadsManager(const SecurityOrigin &page_security_origin,
                      JsRunnerInterface *root_js_runner);
 
-  // We handle the lifetime of PoolThreadsManager using ref-counting. Each of
-  // the GearsWorkerPool instances associated with a PoolThreadsManager has a
-  // reference. When they all go away, the PoolThreadsManager deletes itself.
+  // We handle the lifetime of the PoolThreadsMananger using ref-counting. 
+  // When all references go away, the PoolThreadsManager deletes itself.
+  // NOTE: each worker will add (and release) multiple references.
   void AddWorkerRef();
   void ReleaseWorkerRef();
 
   bool SetCurrentThreadMessageHandler(JsCallback *handler);
   bool SetCurrentThreadErrorHandler(JsCallback *handler);
-  bool CreateThread(const char16 *full_script, int *worker_id);
+  bool CreateThread(const char16 *url_or_full_script, bool is_param_script,
+                    int *worker_id);
   void HandleError(const JsErrorInfo &message);
   bool PutPoolMessage(const nsAString &message_string, int dest_worker_id);
 

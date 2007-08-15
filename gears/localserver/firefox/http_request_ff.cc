@@ -254,7 +254,6 @@ bool FFHttpRequest::SetRequestHeader(const char16* name, const char16* value) {
 // SetFollowRedirects
 //------------------------------------------------------------------------------
 bool FFHttpRequest::SetFollowRedirects(bool follow) {
-  assert(channel_);
   if (was_sent_)
     return false;
   follow_redirects_ = follow;
@@ -398,6 +397,7 @@ bool FFHttpRequest::Abort() {
     channel_->Cancel(NS_BINDING_ABORTED);
     channel_ = NULL;
   }
+  was_aborted_ = true;
   return true;
 }
 
