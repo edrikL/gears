@@ -231,7 +231,7 @@ void JS_DLL_CALLBACK JsRunner::JsErrorHandler(JSContext *cx,
     // Mozilla also does this, see:
     // http://lxr.mozilla.org/mozilla1.8.0/source/dom/src/base/nsJSEnvironment.cpp#163
     if (report->ucmessage) {
-      error_info.message = report->ucmessage;
+      error_info.message = reinterpret_cast<const char16 *>(report->ucmessage);
     } else if (message) {
       std::string16 message_str;
       if (UTF8ToString16(message, &message_str)) {
