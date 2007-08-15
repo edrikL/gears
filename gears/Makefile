@@ -386,6 +386,7 @@ IE_LINK_EXTRAS	+= \
 # workerpool/firefox
 
 FF_VPATH	+= \
+		workerpool/common \
 		workerpool/firefox \
 		$(NULL)
 
@@ -399,12 +400,14 @@ FF_IDLSRCS	+= \
 
 FF_CPPSRCS	+= \
 		workerpool.cc \
+		workerpool_utils.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
 # workerpool/ie
 
 IE_VPATH	+= \
+		workerpool/common \
 		workerpool/ie \
 		$(NULL)
 
@@ -414,6 +417,7 @@ IE_IDLSRCS	+= \
 
 IE_CPPSRCS	+= \
 		workerpool.cc \
+		workerpool_utils.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------

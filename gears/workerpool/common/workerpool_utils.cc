@@ -23,27 +23,40 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_WORKERPOOL_COMMON_WORKERPOOL_UTILS_H__
-#define GEARS_WORKERPOOL_COMMON_WORKERPOOL_UTILS_H__
+#include "gears/workerpool/common/workerpool_utils.h"
 
-#include "gears/base/common/string16.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/string_utils.h"
 
-extern const char16 *kWorkerInsertedFactoryName;
-extern const char16 *kWorkerInsertedWorkerPoolName;
+const char16 *kWorkerInsertedFactoryName    = STRING16(L"gearsFactory");
+const char16 *kWorkerInsertedWorkerPoolName = STRING16(L"gearsWorkerPool");
 
-extern const char *kWorkerInsertedFactoryNameAscii;
-extern const char *kWorkerInsertedWorkerPoolNameAscii;
+const char *kWorkerInsertedFactoryNameAscii    = "gearsFactory";
+const char *kWorkerInsertedWorkerPoolNameAscii = "gearsWorkerPool";
 
-extern const char16 *kWorkerInsertedPreamble;
+const char16 *kWorkerInsertedPreamble = STRING16(
+  L"var google = {};"
+  L"google.gears = {};"
+  L"google.gears.factory = gearsFactory;"
+  L"google.gears.workerPool = gearsWorkerPool;");
 
 // The "owning" worker is the first worker that creates the workerpool and
 // whose deletion causes the workerpool to shutdown.
-extern const int kOwningWorkerId;
-extern const int kInvalidWorkerId;
+const int kOwningWorkerId = 0;
+const int kInvalidWorkerId = -1;
 
 void FormatWorkerPoolErrorMessage(const JsErrorInfo &error_info,
                                   int src_worker_id,
-                                  std::string16 *message);
+                                  std::string16 *message) {
+  std::string16 src_worker_id_string;
+  std::string16 line_number_string;
+  IntegerToString(src_worker_id, &src_worker_id_string);
+  IntegerToString(error_info.line, &line_number_string);
 
-#endif  // GEARS_WORKERPOOL_COMMON_WORKERPOOL_UTILS_H__
+  *message = STRING16(L"Error in worker: ");
+  *message += src_worker_id_string;
+  *message += STRING16(L", line: ");
+  *message += line_number_string;
+  *message += STRING16(L". ");
+  *message += error_info.message;
+}

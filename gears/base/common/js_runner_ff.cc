@@ -219,6 +219,9 @@ void JS_DLL_CALLBACK JsRunner::JsErrorHandler(JSContext *cx,
                                               JSErrorReport *report) {
   JsRunner *js_runner = static_cast<JsRunner*>(JS_GetContextPrivate(cx));
   if (js_runner && js_runner->error_handler_ && report) {
+    JsErrorInfo error_info;
+    error_info.line = report->lineno + 1; // Reported lines start at zero.
+
     // The error message can either be in the separate *message param or in
     // *report->ucmessage. For example, running the following JS in a worker
     // causes the separate message param to get used:
@@ -228,13 +231,15 @@ void JS_DLL_CALLBACK JsRunner::JsErrorHandler(JSContext *cx,
     // Mozilla also does this, see:
     // http://lxr.mozilla.org/mozilla1.8.0/source/dom/src/base/nsJSEnvironment.cpp#163
     if (report->ucmessage) {
-      js_runner->error_handler_->HandleError(report->ucmessage);
+      error_info.message = report->ucmessage;
     } else if (message) {
       std::string16 message_str;
       if (UTF8ToString16(message, &message_str)) {
-        js_runner->error_handler_->HandleError(message_str);
+        error_info.message = message_str;
       }
     }
+
+    js_runner->error_handler_->HandleError(error_info);
   }
 }
 

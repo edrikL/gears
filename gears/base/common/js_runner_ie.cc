@@ -360,13 +360,13 @@ STDMETHODIMP JsRunnerImpl::LookupNamedItem(const OLECHAR *name,
 
 STDMETHODIMP JsRunnerImpl::HandleScriptError(EXCEPINFO *ei, ULONG line,
                                              LONG pos, BSTR src) {
-  // TODO(cprince): think about how to get 'line' and 'pos' into the string16.
-  // It's not a high priority, because AtlActiveScriptSite can fail to get these
-  // values, and because many of the apps we've seen build-up the JS worker
-  // code from snippets, making 'line' and 'pos' meaningless.  Fortunately,
-  // 'bstrDescription' is available and is the most useful.
   if (error_handler_) {
-    error_handler_->HandleError(static_cast<char16 *>(ei->bstrDescription));
+    const JsErrorInfo error_info = {
+      line + 1, // Reported lines start at zero.
+      static_cast<char16 *>(ei->bstrDescription)
+    };
+
+    error_handler_->HandleError(error_info);
   }
 
   return E_FAIL; // returning success here would hide SetScriptState failures

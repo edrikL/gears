@@ -127,7 +127,7 @@ class PoolThreadsManager
   bool SetCurrentThreadMessageHandler(IDispatch *handler);
   bool SetCurrentThreadErrorHandler(IDispatch *handler);
   bool CreateThread(const char16 *full_script, int *worker_id);
-  void HandleError(const std::string16 &message);
+  void HandleError(const JsErrorInfo &error_info);
   bool PutPoolMessage(const BSTR *message_string, int dest_worker_id);
 
   // Worker initialization that must be done from the worker's thread.

@@ -274,13 +274,17 @@ int PoolThreadsManager::GetCurrentPoolWorkerId() {
   return kInvalidWorkerId;
 }
 
-void PoolThreadsManager::HandleError(const std::string16 &message) {
+void PoolThreadsManager::HandleError(const JsErrorInfo &error_info) {
   MutexLock lock(&mutex_);
 
   int src_worker_id = GetCurrentPoolWorkerId();
   // We only expect to receive errors from created workers.
   assert(src_worker_id != kOwningWorkerId);
 
+  std::string16 message;
+  FormatWorkerPoolErrorMessage(error_info, src_worker_id, &message);
+
+  // Post the error to the parent worker.
   JavaScriptWorkerInfo *dest_wi = worker_info_[kOwningWorkerId];
   std::pair<std::string16, int> error_item(message, src_worker_id);
   dest_wi->message_queue.push(error_item);
@@ -650,16 +654,15 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
       worker_id = GetCurrentPoolWorkerId();
     }
 
-    std::string16 worker_id_string;
-    IntegerToString(worker_id, &worker_id_string);
-
-    std::string16 error = STRING16(L"Destination worker ");
-    error += worker_id_string;
-    error += STRING16(L" does not have an onmessage handler");
+    JsErrorInfo error_info = {
+      0, // line number -- What we really want is the line number in the
+         // sending worker, but that would be hard to get.
+      STRING16(L"Worker does not have an onmessage handler.")
+    };
 
     // We go through the message queue even in the case where this happens on
     // the owning worker, just so that things are consistent for all cases.
-    HandleError(error);
+    HandleError(error_info);
   }
 }
 
@@ -684,15 +687,7 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
     // If there's no onerror handler, we bubble the error up to the owning
     // worker's script context. If that worker is also nested, this will cause
     // PoolThreadsManager::HandleError to get called again on that context.
-    std::string16 worker_string;
-    IntegerToString(src_worker_id, &worker_string);
-
-    std::string16 message(STRING16(L"Unhandled exception in worker "));
-    message += worker_string;
-    message += STRING16(L":\n");
-    message += error;
-
-    ThrowGlobalError(root_js_runner_, message);
+    ThrowGlobalError(root_js_runner_, error);
   }
 }
 

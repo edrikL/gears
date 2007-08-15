@@ -1606,7 +1606,7 @@ function workerpool_OnErrorTest() {
   var wp2 = google.gears.factory.create('beta.workerpool', '1.0');
   window.onerror = function(msg) {
     if (msg.indexOf(
-            "Destination worker 1 does not have an onmessage handler") > -1) {
+            "Worker does not have an onmessage handler") > -1) {
       workerpool_OnErrorTest.global_called = true;
       // This was the error we caused on purpose, so return true to prevent
       // error from going to normal browser error UI.
