@@ -42,6 +42,8 @@ interface GearsWorkerPoolInterface : IDispatch {
   // TODO(cprince): use BSTR instead of BSTR* for in params
   HRESULT createWorker([in] const BSTR *full_script,
                        [out, retval] int *worker_id);
+  HRESULT createWorkerFromUrl([in] const BSTR *url,
+                              [out, retval] int *worker_id);
   HRESULT sendMessage([in] const BSTR *message_string,
                       [in] int dest_worker_id);
   [propput] HRESULT onmessage([in] IDispatch *handler);

@@ -1589,25 +1589,25 @@ function workerpool_GCWithFunctionClosures() {
 }
 
 
-function workerpool_OnErrorTest() {
+function workerpool_OnErrorTests() {
   // Test that onerror gets called.
-  workerpool_OnErrorTest.handler_called = false;
+  workerpool_OnErrorTests.handler_called = false;
   var wp = google.gears.factory.create('beta.workerpool', '1.0');
   wp.onerror = function(msg, sender) {
-    workerpool_OnErrorTest.handler_called = true;
+    workerpool_OnErrorTests.handler_called = true;
   };
-  var worker = wp.createWorker('');
+  var childId = wp.createWorker('');
   // Should cause an error because there is no onmessage handler in the worker.
-  wp.sendMessage('hello', worker);
+  wp.sendMessage('hello', childId);
 
 
   // Test that errors get thrown globally if there is no onerror handler.
-  workerpool_OnErrorTest.global_called = false;
+  workerpool_OnErrorTests.global_called = false;
   var wp2 = google.gears.factory.create('beta.workerpool', '1.0');
-  window.onerror = function(msg) {
+  window.onerror = function(msg, sender) {
     if (msg.indexOf(
             "Worker does not have an onmessage handler") > -1) {
-      workerpool_OnErrorTest.global_called = true;
+      workerpool_OnErrorTests.global_called = true;
       // This was the error we caused on purpose, so return true to prevent
       // error from going to normal browser error UI.
       return true;
@@ -1616,8 +1616,51 @@ function workerpool_OnErrorTest() {
       return false;
     }
   };
-  var worker = wp2.createWorker('');
-  wp2.sendMessage('hello', worker);
+  var childId = wp2.createWorker('');
+  wp2.sendMessage('hello', childId);
+}
+
+
+function workerpool_CreateWorkerFromUrl() {
+  // TEST 1
+  workerpool_CreateWorkerFromUrl.result1 = '';
+  workerpool_CreateWorkerFromUrl.description1 =
+      'CreateWorkerFromUrl Test 1: ' +
+      'Basic functionality should work.';
+
+  var workerFile = '/unit_tests_worker.js';
+  if (gIsDebugBuild) {
+    // TODO(cprince): In dbg builds, add a 2nd param to createWorkerFromUrl()
+    // so callers can optionally simulate a different origin.
+    var currentUrl = location.href;
+    var workerUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/')) +
+                        workerFile;
+  } else {
+    // When the origin override is not available, load from googlecode.com.
+    var workerUrl = 'http://google-gears.googlecode.com/svn/trunk/gears/test' +
+                        workerFile;
+  }
+
+  var wp1 = google.gears.factory.create('beta.workerpool', '1.0');
+  wp1.onmessage = function(body, sender) {
+    workerpool_CreateWorkerFromUrl.result1 = body;
+  }
+  var childId = wp1.createWorkerFromUrl(workerUrl);
+  wp1.sendMessage('ping', childId);
+
+
+  // TEST 2
+  workerpool_CreateWorkerFromUrl.result2 = '';
+  workerpool_CreateWorkerFromUrl.description2 =
+      'CreateWorkerFromUrl Test 2: ' +
+      'File Not Found should invoke onerror.';
+
+  var wp2 = google.gears.factory.create('beta.workerpool', '1.0');
+  wp2.onerror = function(msg, sender) {
+    workerpool_CreateWorkerFromUrl.result2 = msg;
+  }
+  wp2.createWorkerFromUrl('http://example.com/non-existent-file.js');
+
 }
 
 
@@ -1625,7 +1668,8 @@ function runWorkerPoolTests() {
   // Start the tests
   workerpool_SynchronizationStressTest();
   workerpool_GCWithFunctionClosures();
-  workerpool_OnErrorTest();
+  workerpool_OnErrorTests();
+  workerpool_CreateWorkerFromUrl();
 
   // Check the results after a delay
   setTimeout('checkWorkerPoolTests()',
@@ -1680,14 +1724,26 @@ function checkWorkerPoolTests() {
             
   // Check the OnError tests.
 
-  insertRow('workerpool_OnErrorTest.handler_called', // test body
-            workerpool_OnErrorTest.handler_called,
-            '', // reason
+  insertRow('workerpool_OnErrorTests.handler_called',
+            workerpool_OnErrorTests.handler_called,
+            '',
             0);
 
-  insertRow('workerpool_OnErrorTest.global_called', // test body
-            workerpool_OnErrorTest.global_called,
-            '', // reason
+  insertRow('workerpool_OnErrorTests.global_called',
+            workerpool_OnErrorTests.global_called,
+            '',
+            0);
+
+  // Check the CreateWorkerFromUrl tests.
+
+  insertRow(workerpool_CreateWorkerFromUrl.description1,
+            '' != workerpool_CreateWorkerFromUrl.result1,
+            workerpool_CreateWorkerFromUrl.result1, // explanation
+            0);
+
+  insertRow(workerpool_CreateWorkerFromUrl.description2,
+            '' != workerpool_CreateWorkerFromUrl.result2,
+            workerpool_CreateWorkerFromUrl.result2, // explanation
             0);
 }
 

@@ -35,6 +35,8 @@ interface nsIVariant;
 interface GearsWorkerPoolInterface : GearsBaseClassInterface {
   long createWorker(//in AString full_script
                    );
+  long createWorkerFromUrl(//in AString url
+                          );
   void sendMessage(in AString message_string, in long dest_worker_id);
   
   // nsIVariant is used for these two arbitrarily. We get the params using

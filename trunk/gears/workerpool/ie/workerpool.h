@@ -74,10 +74,11 @@ class ATL_NO_VTABLE GearsWorkerPool
 
   // Creates a new worker.
   // 'full_script' is the entire body of JavaScript the worker will know about.
-  // Any top-level code gets executed once before createWorker() returns, and
-  // this is how all required initialization (which includes setting onmessage)
-  // should be done.  Returns the worker_id of the created worker.
-  STDMETHOD(createWorker)(const BSTR *full_script, int *worker_id);
+  // 'url' is a file to fetch to use as the full body of JavaScript.
+  // Returns, with the ID of the created worker, as soon as the worker finishes
+  // message queue initialization, possibly before any script has been executed.
+  STDMETHOD(createWorker)(const BSTR *full_script, int *retval);
+  STDMETHOD(createWorkerFromUrl)(const BSTR *url, int *retval);
 
   // Sends message_string to a given worker_id.
   STDMETHOD(sendMessage)(const BSTR *message_string, int dest_worker_id);
@@ -118,15 +119,16 @@ class PoolThreadsManager
   PoolThreadsManager(const SecurityOrigin &page_security_origin,
                      JsRunnerInterface *root_js_runner);
 
-  // We handle the lifetime of the PoolThreadsMananger using ref-counting. Each
-  // of the GearsWorkerPool instances associated with a PoolThreadsManager has a
-  // reference. When they all go away, the PoolThreadsManager deletes itself.
+  // We handle the lifetime of the PoolThreadsMananger using ref-counting. 
+  // When all references go away, the PoolThreadsManager deletes itself.
+  // NOTE: each worker will add (and release) multiple references.
   void AddWorkerRef();
   void ReleaseWorkerRef();
 
   bool SetCurrentThreadMessageHandler(IDispatch *handler);
   bool SetCurrentThreadErrorHandler(IDispatch *handler);
-  bool CreateThread(const char16 *full_script, int *worker_id);
+  bool CreateThread(const char16 *url_or_full_script, bool is_param_script,
+                    int *worker_id);
   void HandleError(const JsErrorInfo &error_info);
   bool PutPoolMessage(const BSTR *message_string, int dest_worker_id);
 
@@ -135,6 +137,9 @@ class PoolThreadsManager
   void UninitWorkerThread();
 
   void ShutDown();
+#ifdef DEBUG
+  void ForceGCCurrentThread();
+#endif
 
   const SecurityOrigin& page_security_origin() { return page_security_origin_; }
 

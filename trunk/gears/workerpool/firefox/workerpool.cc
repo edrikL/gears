@@ -85,6 +85,8 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/base/firefox/factory.h"
+#include "gears/localserver/common/http_constants.h"
+#include "gears/localserver/common/http_request.h"
 #include "gears/workerpool/common/workerpool_utils.h"
 
 
@@ -114,11 +116,12 @@ struct JavaScriptWorkerInfo {
   // Our code assumes some items begin cleared. Zero all members w/o ctors.
   JavaScriptWorkerInfo()
       : threads_manager(NULL),
-        js_init_mutex(NULL), js_init_signalled(false), js_init_ok(false),
+        js_init_signalled(false), js_init_ok(false),
+        full_script_ready(false), http_request(NULL),
         thread_pointer(NULL) {}
 
   //
-  // These fields are used by all workers in pool (root + descendants).
+  // These fields are used for all workers in pool (parent + children).
   //
   PoolThreadsManager *threads_manager;
   JsRunnerInterface *js_runner;
@@ -128,13 +131,19 @@ struct JavaScriptWorkerInfo {
   std::queue< std::pair<std::string16, int> > message_queue;
 
   //
-  // These fields are used only by created workers (descendants).
+  // These fields are used only for created workers (children).
   //
-  std::string16 full_script; // Keep copy to cross OS thread broundary
-  Mutex  *js_init_mutex; // Protects: js_init_signalled
-  bool    js_init_signalled;
-  bool    js_init_ok; // Owner: thread before signal, caller after signal
-  PRThread  *thread_pointer;
+  Mutex js_init_mutex;  // Protects: js_init_signalled
+  bool js_init_signalled;
+  bool js_init_ok;  // Owner: child before signal, parent after signal
+
+  Mutex full_script_mutex;  // Protects: full_script_ready
+  bool full_script_ready;
+  std::string16 full_script;  // Owner: parent before ready (immutable after)
+
+  ScopedHttpRequestPtr http_request;  // For createWorkerFromUrl()
+  scoped_ptr<HttpRequest::ReadyStateListener> http_request_listener;
+  PRThread *thread_pointer;
 };
 
 
@@ -154,6 +163,7 @@ GearsWorkerPool::~GearsWorkerPool() {
   }
 
   if (threads_manager_) {
+    threads_manager_->UninitWorkerThread();
     threads_manager_->ReleaseWorkerRef();
   }
 }
@@ -244,10 +254,8 @@ NS_IMETHODIMP GearsWorkerPool::CreateWorker(//const nsAString &full_script
                                             PRInt32 *retval) {
   Initialize();
   
-  // Get parameters.
-  std::string16 full_script;
-
   JsParamFetcher js_params(this);
+  std::string16 full_script;
 
   if (js_params.GetCount(false) < 1) {
     RETURN_EXCEPTION(STRING16(L"The full_script parameter is required."));
@@ -255,9 +263,41 @@ NS_IMETHODIMP GearsWorkerPool::CreateWorker(//const nsAString &full_script
     RETURN_EXCEPTION(STRING16(L"The full_script parameter must be a string."));
   }
 
-
-  int worker_id_temp; // protects against modifying output param on failure
+  int worker_id_temp;  // protects against modifying output param on failure
   bool succeeded = threads_manager_->CreateThread(full_script.c_str(),
+                                                  true,  // is_param_script
+                                                  &worker_id_temp);
+  if (!succeeded) {
+    RETURN_EXCEPTION(STRING16(L"Internal error."));
+  }
+
+  *retval = worker_id_temp;
+  RETURN_NORMAL();
+}
+
+NS_IMETHODIMP GearsWorkerPool::CreateWorkerFromUrl(//const nsAString &url
+                                                   PRInt32 *retval) {
+  Initialize();
+
+  // Make sure URLs are only fetched from the main thread.
+  // TODO(michaeln): Remove this limitation of Firefox HttpRequest someday.
+  if (EnvIsWorker()) {
+    RETURN_EXCEPTION(STRING16(L"createWorkerFromUrl() cannot be called from a"
+                              L" worker."));
+  }
+  
+  JsParamFetcher js_params(this);
+  std::string16 url;
+
+  if (js_params.GetCount(false) < 1) {
+    RETURN_EXCEPTION(STRING16(L"The url parameter is required."));
+  } else if (!js_params.GetAsString(0, &url)) {
+    RETURN_EXCEPTION(STRING16(L"The url parameter must be a string."));
+  }
+
+  int worker_id_temp;  // protects against modifying output param on failure
+  bool succeeded = threads_manager_->CreateThread(url.c_str(),
+                                                  false,  // is_param_script
                                                   &worker_id_temp);
   if (!succeeded) {
     RETURN_EXCEPTION(STRING16(L"Internal error."));
@@ -509,8 +549,12 @@ void PoolThreadsManager::HandleError(const JsErrorInfo &error_info) {
   MutexLock lock(&mutex_);
 
   int src_worker_id = GetCurrentPoolWorkerId();
-  // We only expect to receive errors from created workers.
-  assert(src_worker_id != kOwningWorkerId);
+
+  // TODO(cprince): Add the following lines when ReadyStateChanged doesn't need
+  // to be called from the main thread -- i.e. when HttpRequest can fetch URLs
+  // from threads other than the main thread.
+  //   // We only expect to receive errors from created workers.
+  //   assert(src_worker_id != kOwningWorkerId);
 
   std::string16 message;
   FormatWorkerPoolErrorMessage(error_info, src_worker_id, &message);
@@ -666,15 +710,62 @@ bool PoolThreadsManager::SetCurrentThreadErrorHandler(JsCallback *handler) {
 }
 
 
-bool PoolThreadsManager::CreateThread(const char16 *full_script,
-                                      int *worker_id) {
+class CreateWorkerUrlFetchListener : public HttpRequest::ReadyStateListener {
+ public:
+  explicit CreateWorkerUrlFetchListener(JavaScriptWorkerInfo *wi) : wi_(wi) {}
+
+  virtual void ReadyStateChanged(HttpRequest *source) {
+    int ready_state;
+    source->GetReadyState(&ready_state);
+    if (ready_state == 4) {
+      // Fetch completed.  First, unregister this listener.
+      source->SetOnReadyStateChange(NULL);
+
+      int status_code;
+      std::string16 body;
+      if (source->GetStatus(&status_code) &&
+          status_code == HttpConstants::HTTP_OK &&
+          source->GetResponseBodyAsText(&body)) {
+        wi_->full_script += body;  // purposely before mutex; owned by parent
+      } else {
+        // Throw an error, but don't return!  Continue and set full_script_ready
+        // so the worker doesn't spin forever in Mutex::Await().
+        std::string16 message(STRING16(L"Failed to load worker code."));
+        std::string16 status_line;
+        if (source->GetStatusLine(&status_line)) {
+          message += STRING16(L" Status: ");
+          message += status_line;
+        }
+        // TODO(cprince): uncomment these lines after adding GetRequestedUrl().
+        //std::string16 requested_url;
+        //if (source->GetRequestedUrl(&requested_url)) {
+        //  message += STRING16(L" URL: ");
+        //  message += requested_url;
+        //}
+        JsErrorInfo error_info = { 0, message };  // line, message
+        wi_->threads_manager->HandleError(error_info);
+      }
+
+      wi_->full_script_mutex.Lock();
+      assert(!wi_->full_script_ready);
+      wi_->full_script_ready = true;
+      wi_->full_script_mutex.Unlock();
+    }
+  }
+ private:
+  JavaScriptWorkerInfo *wi_;
+};
+
+
+bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
+                                      bool is_param_script, int *worker_id) {
   int new_worker_id = -1;
   JavaScriptWorkerInfo *wi = NULL;
   {
     MutexLock lock(&mutex_);
 
-    // If this worker didn't intialize properly there won't be an hwnd, so
-    // there's no point in starting a thread.
+    // If the creating thread didn't intialize properly it doesn't have a
+    // message queue, so there's no point in letting it start a new thread.
     if (!worker_info_[GetCurrentPoolWorkerId()]->thread_event_queue) {
       return false;
     }
@@ -686,15 +777,58 @@ bool PoolThreadsManager::CreateThread(const char16 *full_script,
     wi = worker_info_.back();
   }
 
-  wi->full_script = kWorkerInsertedPreamble;
-  wi->full_script += full_script;
+  // The code below should not access shared data structures. We
+  // only synchronize the block above, which modifies the shared 
+  // worker_info_ vector.
+
   wi->threads_manager = this;
+
+  wi->full_script = kWorkerInsertedPreamble;
+  if (is_param_script) {
+    wi->full_script += url_or_full_script;
+
+    wi->full_script_mutex.Lock();
+    wi->full_script_ready = true;
+    wi->full_script_mutex.Unlock();
+  } else {
+    // For URL params we start an async fetch here.  The created thread will
+    // setup an incoming message queue, then Mutex::Await for the script to be
+    // fetched, before finally pumping messages.
+
+    // TODO(cprince):
+    // * Decide whether to support relative URLs.
+    //   - Ensure url matches expectations (rel/abs), and return error if not.
+    // * Set security origin based on FINAL REDIRECT url, not original url.
+
+    wi->http_request.swap(ScopedHttpRequestPtr(HttpRequest::Create()));
+    if (!wi->http_request.get()) { return false; }
+    
+    wi->http_request_listener.swap(
+        scoped_ptr<HttpRequest::ReadyStateListener>(
+            new CreateWorkerUrlFetchListener(wi)));
+    if (!wi->http_request_listener.get()) { return false; }
+
+    HttpRequest *request = wi->http_request.get();  // shorthand
+
+    request->SetOnReadyStateChange(wi->http_request_listener.get());
+    request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
+    request->SetFollowRedirects(true);
+
+    bool is_async = true;
+    if (!request->Open(HttpConstants::kHttpGET,
+                       url_or_full_script, is_async) ||
+        !request->Send()) {
+      request->SetOnReadyStateChange(NULL);
+      request->Abort();
+      return false;
+    }
+
+    // 'full_script_ready' will be set when async fetch completes.
+  }
 
   // Setup notifier to know when thread init has finished.
   // Then create thread and wait for signal.
-  Mutex mu;
-  wi->js_init_mutex = &mu;
-  wi->js_init_mutex->Lock();
+  wi->js_init_mutex.Lock();
   wi->js_init_signalled = false;
 
   wi->thread_pointer = PR_CreateThread(
@@ -703,13 +837,12 @@ bool PoolThreadsManager::CreateThread(const char16 *full_script,
                            PR_LOCAL_THREAD,          // scheduled by whom?
                            PR_UNJOINABLE_THREAD, 0); // joinable?, stack bytes
   if (wi->thread_pointer != NULL) {
-    // thread needs to set onmessage handler before we continue
-    wi->js_init_mutex->Await(Condition(&wi->js_init_signalled));
+    // thread needs to message queue init before we continue
+    wi->js_init_mutex.Await(Condition(&wi->js_init_signalled));
   }
 
   // cleanup notifier
-  wi->js_init_mutex->Unlock();
-  wi->js_init_mutex = NULL;
+  wi->js_init_mutex.Unlock();
 
   if (wi->thread_pointer == NULL || !wi->js_init_ok) {
     return false; // failed
@@ -720,51 +853,36 @@ bool PoolThreadsManager::CreateThread(const char16 *full_script,
 }
 
 
-#ifdef DEBUG
-void PoolThreadsManager::ForceGCCurrentThread() {
-  MutexLock lock(&mutex_);
-
-  int worker_id = GetCurrentPoolWorkerId();
-
-  JavaScriptWorkerInfo *wi = worker_info_[worker_id];
-
-  JS_GC(wi->onmessage_handler.context);
-}
-#endif // DEBUG
-
-
 // Creates the JS engine, then pumps messages for the thread.
 void PoolThreadsManager::JavaScriptThreadEntry(void *args) {
-  // WARNING: must fire js_init_signalled even on failure, or the caller won't
-  // continue.  So must fire event from a non-nested location (after JS init).
-
-  //
-  // Setup JS engine
-  //
   assert(args);
   JavaScriptWorkerInfo *wi = static_cast<JavaScriptWorkerInfo*>(args);
   wi->threads_manager->AddWorkerRef();
 
+  // Setup JS engine.
+  // Then signal that initialization is done, and indicate success/failure.
+  //
+  // WARNING: must fire js_init_signalled even on failure, or the caller won't
+  // continue.  So fire it from a non-nested location, before any early exits.
   scoped_ptr<JsRunnerInterface> js_runner(NewJsRunner());
   wi->js_runner = js_runner.get();
 
-  bool js_init_succeeded = wi->threads_manager->InitWorkerThread(wi);
-  if (js_init_succeeded) {
-    js_init_succeeded = SetupJsRunner(js_runner.get(), wi);
-  }
+  bool js_init_succeeded = wi->threads_manager->InitWorkerThread(wi) &&
+                           SetupJsRunner(js_runner.get(), wi);
 
-  // NOTE: things seem to work without calling InitXPCOM() here,
-  // though code in /mozilla/netwerk/test/... [sic] did call it.
-
-  // Tell caller we finished initializing, and indicate status
   wi->js_init_ok = js_init_succeeded;
-  wi->js_init_mutex->Lock();
+  wi->js_init_mutex.Lock();
   wi->js_init_signalled = true;
-  wi->js_init_mutex->Unlock();
-
+  wi->js_init_mutex.Unlock();
 
   if (js_init_succeeded) {
-    // Add JS code. If this fails, it will be reported via HandleError().
+    // Block until full_script_ready (i.e. wait for URL fetch, if being used).
+    // Thread shutdown will set this flag as well.
+    wi->full_script_mutex.Lock();
+    wi->full_script_mutex.Await(Condition(&wi->full_script_ready));
+    wi->full_script_mutex.Unlock();
+
+    // Add JS code to engine.  This triggers HandleError() if it fails.
     js_runner->Start(wi->full_script);
 
     // Pump messages. We do this whether or not the initial script evaluation
@@ -782,11 +900,11 @@ void PoolThreadsManager::JavaScriptThreadEntry(void *args) {
     }
   }
 
-  wi->threads_manager->ReleaseWorkerRef();
-
   // TODO(aa): Consider deleting wi here and setting PTM.worker_info_[i] to
   // NULL. This allows us to free up these thread resources sooner, and it
   // seems a little cleaner too.
+  wi->js_runner = NULL;  // scoped_ptr is about to delete the underlying object
+  wi->threads_manager->ReleaseWorkerRef();
 
   // PRThread functions don't return a value
 }
@@ -845,20 +963,34 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   return true;
 }
 
+
 void PoolThreadsManager::ShutDown() {
   MutexLock lock(&mutex_);
-  if (is_shutting_down_) {
-    return;
-  }
 
+  assert(GetCurrentPoolWorkerId() == kOwningWorkerId);
+
+  if (is_shutting_down_) { return; }
   is_shutting_down_ = true;
 
-  // Tell all the running threads to stop.
   for (size_t i = 0; i < worker_info_.size(); ++i) {
     JavaScriptWorkerInfo *wi = worker_info_[i];
 
+    // Cancel any createWorkerFromUrl() network requests that might be pending.
+    HttpRequest *request = wi->http_request.get();
+    if (request) {
+      request->SetOnReadyStateChange(NULL);
+      request->Abort();
+    }
+
+    // If the worker is a created thread...
     if (wi->thread_pointer && wi->thread_event_queue) {
-      // Send a dummy message in case the thread is waiting.
+      // Ensure the thread isn't waiting on 'full_script_ready'.
+      wi->full_script_mutex.Lock();
+      wi->full_script_ready = true;
+      wi->full_script_mutex.Unlock();
+
+      // Ensure the thread sees 'is_shutting_down_' by sending a dummy message,
+      // in case it is blocked waiting for messages.
       ThreadsEvent *event = new ThreadsEvent(wi, EVENT_TYPE_MESSAGE);
       wi->thread_event_queue->InitEvent(
           &event->e, nsnull, // event, owner
@@ -866,14 +998,28 @@ void PoolThreadsManager::ShutDown() {
           reinterpret_cast<PLDestroyEventProc>(OnDestroyThreadsEvent));
       wi->thread_event_queue->PostEvent(&event->e);
 
-      // TODO(cprince): Better handle any thread spinning in a busy loop.
-      // Ideas: (1) force it to the lowest priority level here, or (2) interrupt
+      // TODO(cprince): Improve handling of a worker spinning in a JS busy loop.
+      // Ideas: (1) set it to the lowest thread priority level, or (2) interrupt
       // the JS engine externally (see IActiveScript::InterruptScriptThread
-      // on IE, JS_THREADSAFE for Firefox).  We cannot simply terminate it;
-      // that can leave us in a bad state (e.g. mutexes locked forever).
+      // on IE, JS_THREADSAFE for Firefox).  We cannot simply terminate the
+      // thread; that can leave us in a bad state (e.g. mutexes locked forever).
     }
   }
 }
+
+
+#ifdef DEBUG
+void PoolThreadsManager::ForceGCCurrentThread() {
+  MutexLock lock(&mutex_);
+
+  int worker_id = GetCurrentPoolWorkerId();
+
+  JavaScriptWorkerInfo *wi = worker_info_[worker_id];
+  assert(wi->js_runner);
+  wi->js_runner->ForceGC();
+}
+#endif // DEBUG
+
 
 void PoolThreadsManager::AddWorkerRef() {
   AtomicIncrement(&num_workers_, 1);
