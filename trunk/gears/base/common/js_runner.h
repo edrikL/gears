@@ -55,10 +55,19 @@
 #endif
 
 
+// Represents an error that occured inside a JsRunner.
+struct JsErrorInfo {
+  int line;
+  std::string16 message;
+  // TODO(aa): code, so that people can detect certain errors programatically.
+  // TODO(aa): file, when workers can have multiple files?
+};
+
+
 // Interface for clients of JsRunner to implement if they want to handle errors.
 class JsErrorHandlerInterface {
  public:
-  virtual void HandleError(const std::string16 &message) = 0;
+  virtual void HandleError(const JsErrorInfo &error_info) = 0;
 };
 
 
