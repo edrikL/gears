@@ -89,7 +89,7 @@ class GearsResourceStore
   bool StartCaptureTaskIfNeeded(bool fire_events_on_failure);
   void FireFailedEvents(FFCaptureRequest *request);
   void InvokeCompletionCallback(FFCaptureRequest *request,
-                                const char16 *capture_url,
+                                const std::string16 &capture_url,
                                 int capture_id,
                                 bool succeeded);
 

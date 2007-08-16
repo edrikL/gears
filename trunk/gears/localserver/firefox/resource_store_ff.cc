@@ -677,7 +677,7 @@ void GearsResourceStore::HandleEvent(int code, int param,
 void GearsResourceStore::OnCaptureUrlComplete(int index, bool success) {
   if (current_request_.get()) {
     InvokeCompletionCallback(current_request_.get(),
-                             current_request_->urls[index].c_str(),
+                             current_request_->urls[index],
                              current_request_->id,
                              success);
   }
@@ -728,7 +728,7 @@ void GearsResourceStore::FireFailedEvents(FFCaptureRequest *request) {
   assert(request);
   for (size_t i = 0; i < request->urls.size(); ++i) {
     InvokeCompletionCallback(request,
-                             request->urls[i].c_str(),
+                             request->urls[i],
                              request->id,
                              false);
   }
@@ -737,24 +737,20 @@ void GearsResourceStore::FireFailedEvents(FFCaptureRequest *request) {
 //------------------------------------------------------------------------------
 // InvokeCompletionCallback
 //------------------------------------------------------------------------------
-void GearsResourceStore::InvokeCompletionCallback(FFCaptureRequest *request,
-                                                  const char16 *capture_url,
-                                                  int capture_id,
-                                                  bool succeeded) {
+void GearsResourceStore::InvokeCompletionCallback(
+                             FFCaptureRequest *request,
+                             const std::string16 &capture_url,
+                             int capture_id,
+                             bool succeeded) {
   // If completion callback was not set, return immediately
   if (!request->callback.function) { return; }
 
-  // Setup the callback parameters in JS argc/argv format
-  // TODO(cprince): ensure freeing this memory
-  JSString *capture_url_jsstring = JS_NewUCStringCopyZ(
-                              request->callback.context,
-                              reinterpret_cast<const jschar *>(capture_url));
-  uintN argc = 3;
-  jsval argv[] = { STRING_TO_JSVAL(capture_url_jsstring),
-                   succeeded ? JSVAL_TRUE : JSVAL_FALSE,
-                   INT_TO_JSVAL(capture_id) };
-
-  // Invoke the callback
+  const int argc = 3;
+  JsParamToSend argv[argc] = {
+    { JSPARAM_STRING16, &capture_url },
+    { JSPARAM_BOOL, &succeeded },
+    { JSPARAM_INT, &capture_id }
+  };
   GetJsRunner()->InvokeCallback(request->callback, argc, argv);
 }
 

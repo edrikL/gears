@@ -76,8 +76,13 @@ struct JavaScriptWorkerInfo {
   //
   PoolThreadsManager *threads_manager;
   JsRunnerInterface *js_runner;
-  CComPtr<IDispatch> onmessage_handler; // set by thread, not by thread creator
-  CComPtr<IDispatch> onerror_handler;
+  // TODO(aa): Find a cleaner way to store the callback and prevent GC, without
+  // requiring two values here.  Relates to the RootJsToken TODO in the FF impl.
+  CComPtr<IDispatch> onmessage_handler_ref;
+  CComPtr<IDispatch> onerror_handler_ref;
+  JsCallback onmessage_handler;
+  JsCallback onerror_handler;
+
   HWND message_hwnd;
   std::queue< std::pair<std::string16, int> > message_queue;
 
@@ -295,12 +300,12 @@ PoolThreadsManager::PoolThreadsManager(
                         JsRunnerInterface *root_js_runner)
     : num_workers_(0),
       is_shutting_down_(false),
-      page_security_origin_(page_security_origin),
-      root_js_runner_(root_js_runner) {
+      page_security_origin_(page_security_origin) {
 
   // Add a JavaScriptWorkerInfo entry for the owning worker.
   JavaScriptWorkerInfo *wi = new JavaScriptWorkerInfo;
   wi->threads_manager = this;
+  wi->js_runner = root_js_runner;
   InitWorkerThread(wi);
   worker_info_.push_back(wi);
 }
@@ -470,7 +475,8 @@ bool PoolThreadsManager::SetCurrentThreadMessageHandler(IDispatch *handler) {
   int worker_id = GetCurrentPoolWorkerId();
   JavaScriptWorkerInfo *wi = worker_info_[worker_id];
 
-  wi->onmessage_handler = handler;
+  wi->onmessage_handler_ref = handler;
+  wi->onmessage_handler.function = handler;
   return true;
 }
 
@@ -485,7 +491,8 @@ bool PoolThreadsManager::SetCurrentThreadErrorHandler(IDispatch *handler) {
   }
 
   JavaScriptWorkerInfo *wi = worker_info_[worker_id];
-  wi->onerror_handler = handler;
+  wi->onerror_handler_ref = handler;
+  wi->onerror_handler.function = handler;
   return true;
 }
 
@@ -786,8 +793,13 @@ LRESULT CALLBACK PoolThreadsManager::ThreadWndProc(HWND hwnd, UINT message,
 void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
                                         const std::string16 &message,
                                         int src_worker_id) {
-  if (wi->onmessage_handler) {
-    FireHandler(wi->onmessage_handler, message, src_worker_id);
+  if (wi->onmessage_handler.function) {
+    const int argc = 2;
+    JsParamToSend argv[argc] = {
+      { JSPARAM_STRING16, &message },
+      { JSPARAM_INT, &src_worker_id }
+    };
+    wi->js_runner->InvokeCallback(wi->onmessage_handler, argc, argv);
   } else {
     // It is an error to send a message to a worker that does not have an
     // onmessage handler.
@@ -816,8 +828,6 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
 void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
                                       const std::string16 &error,
                                       int src_worker_id) {
-  int worker_id = kInvalidWorkerId;
-
 #ifdef DEBUG
   {
     // We only expect to be receive errors on the owning worker, all workers
@@ -827,41 +837,19 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
   }
 #endif
 
-  if (wi->onerror_handler) {
-    FireHandler(wi->onerror_handler, error, src_worker_id);
+  if (wi->onerror_handler.function) {
+    const int argc = 2;
+    JsParamToSend argv[argc] = {
+      { JSPARAM_STRING16, &error },
+      { JSPARAM_INT, &src_worker_id }
+    };
+    wi->js_runner->InvokeCallback(wi->onerror_handler, argc, argv);
   } else {
     // If there's no onerror handler, we bubble the error up to the owning
     // worker's script context. If that worker is also nested, this will cause
     // PoolThreadsManager::HandleError to get called again on that context.
-    ThrowGlobalError(root_js_runner_, error);
+    ThrowGlobalError(wi->js_runner, error);
   }
-}
-
-
-void PoolThreadsManager::FireHandler(IDispatch *handler,
-                                     const std::string16 &message,
-                                     int src_worker_id) {
-  // Invoke JavaScript onmessage handler
-  VARIANTARG invoke_argv[2];
-  invoke_argv[1].vt = VT_BSTR; // args are expected in reverse order!!
-  invoke_argv[0].vt = VT_INT;
-
-  DISPPARAMS invoke_params = {0};
-  invoke_params.cArgs = 2;
-  invoke_params.rgvarg = invoke_argv;
-
-  CComBSTR message_bstr(message.c_str());
-  message_bstr.CopyTo(&invoke_argv[1].bstrVal);
-  invoke_argv[0].intVal = src_worker_id;
-
-  HRESULT hr = handler->Invoke(
-      DISPID_VALUE, IID_NULL, // DISPID_VALUE = default action
-      LOCALE_SYSTEM_DEFAULT,  // TODO(cprince): should this be user default?
-      DISPATCH_METHOD,        // dispatch/invoke as...
-      &invoke_params,         // parameters
-      NULL,                   // receives result (NULL okay)
-      NULL,                   // receives exception (NULL okay)
-      NULL);                  // receives badarg index (NULL okay)
 }
 
 

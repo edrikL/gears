@@ -36,7 +36,10 @@
 #include <assert.h>
 #include <dispex.h>
 #include <map>
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+
 #include "gears/base/common/js_runner.h"
+
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/ie/atl_headers.h"
@@ -96,6 +99,56 @@ class JsRunnerBase : public JsRunnerInterface {
 
   bool SetPropertyInt(JsToken object, const char16 *name, int value) {
     return SetProperty(object, name, CComVariant(value));
+  }
+
+  bool InvokeCallback(const JsCallback &callback,
+                      int argc, JsParamToSend *argv) {
+    // Setup argument array.
+    scoped_array<VARIANTARG> js_engine_argv(new VARIANTARG[argc]);
+    for (int i = 0; i < argc; ++i) {
+      int dest = argc - 1 - i;  // args are expected in reverse order!!
+
+      switch (argv[i].type) {
+        case JSPARAM_BOOL: {
+          const bool *value = static_cast<const bool *>(argv[i].value_ptr);
+          js_engine_argv[dest].vt = VT_BOOL;
+          js_engine_argv[dest].boolVal = *value ? VARIANT_TRUE : VARIANT_FALSE;
+          break;
+        }
+        case JSPARAM_INT: {
+          const int *value = static_cast<const int *>(argv[i].value_ptr);
+          js_engine_argv[dest].vt = VT_INT;
+          js_engine_argv[dest].intVal = *value;
+          break;
+        }
+        case JSPARAM_STRING16: {
+          const std::string16 *value = static_cast<const std::string16 *>(
+                                           argv[i].value_ptr);
+          js_engine_argv[dest].vt = VT_BSTR;
+          CComBSTR bstr(value->c_str());
+          // TODO(cprince): Does this string copy get freed?
+          bstr.CopyTo(&js_engine_argv[dest].bstrVal);
+          break;
+        }
+      }
+    }
+
+    // Invoke the method.
+    DISPPARAMS invoke_params = {0};
+    invoke_params.cArgs = argc;
+    invoke_params.rgvarg = js_engine_argv.get();
+
+    HRESULT hr = callback.function->Invoke(
+        DISPID_VALUE, IID_NULL, // DISPID_VALUE = default action
+        LOCALE_SYSTEM_DEFAULT,  // TODO(cprince): should this be user default?
+        DISPATCH_METHOD,        // dispatch/invoke as...
+        &invoke_params,         // parameters
+        NULL,                   // receives result (NULL okay)
+        NULL,                   // receives exception (NULL okay)
+        NULL);                  // receives badarg index (NULL okay)
+    if (FAILED(hr)) { return false; }
+
+    return true;
   }
 
 #ifdef DEBUG

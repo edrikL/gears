@@ -420,12 +420,22 @@ void* PoolThreadsManager::OnReceiveThreadsEvent(ThreadsEvent *event) {
 }
 
 
+// Called when the event has been processed.
+static void OnDestroyThreadsEvent(ThreadsEvent *event) {
+  delete event;
+}
+
+
 void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
-                                        const std::string16 &message_string,
+                                        const std::string16 &message,
                                         int src_worker_id) {
   if (wi->onmessage_handler.function) {
-    FireHandler(wi->js_runner, wi->onmessage_handler, message_string,
-                src_worker_id);
+    const int argc = 2;
+    JsParamToSend argv[argc] = {
+      { JSPARAM_STRING16, &message },
+      { JSPARAM_INT, &src_worker_id }
+    };
+    wi->js_runner->InvokeCallback(wi->onmessage_handler, argc, argv);
   } else {
     // It is an error to send a message to a worker that does not have an
     // onmessage handler.
@@ -464,7 +474,12 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
 #endif
 
   if (wi->onerror_handler.function) {
-    FireHandler(wi->js_runner, wi->onerror_handler, error, src_worker_id);
+    const int argc = 2;
+    JsParamToSend argv[argc] = {
+      { JSPARAM_STRING16, &error },
+      { JSPARAM_INT, &src_worker_id }
+    };
+    wi->js_runner->InvokeCallback(wi->onerror_handler, argc, argv);
   } else {
     // If there's no onerror handler, we bubble the error up to the owning
     // worker's script context. If that worker is also nested, this will cause
@@ -472,30 +487,6 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
     ThrowGlobalError(wi->js_runner, error);
   }
 }
-
-
-void PoolThreadsManager::FireHandler(JsRunnerInterface *js_runner,
-                                     const JsCallback &handler,
-                                     const std::string16 &message,
-                                     int src_worker_id) {
-  // Invoke JavaScript onmessage handler
-  JSString *message_arg_jsstring = JS_NewUCStringCopyZ(
-      handler.context,
-      reinterpret_cast<const jschar *>(
-          message.c_str())); // TODO(cprince): ensure freeing memory
-  uintN argc = 2;
-  jsval argv[] = { STRING_TO_JSVAL(message_arg_jsstring),
-                   INT_TO_JSVAL(src_worker_id) };
-
-  js_runner->InvokeCallback(handler, argc, argv);
-}
-
-
-// Called when the event has been processed.
-static void OnDestroyThreadsEvent(ThreadsEvent *event) {
-  delete event;
-}
-
 
 
 //

@@ -71,6 +71,24 @@ class JsErrorHandlerInterface {
 };
 
 
+// The JsParam* types define values for sending and receiving JS parameters.
+enum JsParamType {
+  JSPARAM_BOOL,
+  JSPARAM_INT,
+  JSPARAM_STRING16
+};
+
+struct JsParamToSend {
+  JsParamType type;
+  const void *value_ptr;
+};
+
+struct JsParamToRecv {
+  JsParamType type;
+  void *value_ptr;
+};
+
+
 // Declares the platform-independent interface that Gears internals require
 // for running JavaScript code.
 class JsRunnerInterface {
@@ -101,16 +119,13 @@ class JsRunnerInterface {
   // TODO(aa): SetPropertyBool, SetPropertyObject (to build trees), etc...
   // TODO(aa): Support for building arrays?
 
+  virtual bool InvokeCallback(const JsCallback &callback,
+                              int argc, JsParamToSend *argv) = 0;
+
 #ifdef DEBUG
   virtual void ForceGC() = 0;
 #endif
 
-#ifdef BROWSER_FF
-  // For now, this only exists for Firefox. It could also be implemented for IE,
-  // but no need for that right now and it would be a lot more work.
-  virtual bool InvokeCallback(const JsCallback &callback, int argc,
-                              JsToken *argv) = 0;
-#endif
 };
 
 // Callers: create instances using the following instead of 'new JsRunner'.
