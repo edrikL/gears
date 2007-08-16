@@ -622,8 +622,12 @@ NS_IMETHODIMP CacheIntercept::Observe(nsISupports *subject,
 
 void CacheIntercept::Init() {
 #ifdef WIN32
+// Only send crash reports for offical builds.  Crashes on an engineer's machine
+// during internal development are confusing false alarms.
+#ifdef OFFICIAL_BUILD
   static ExceptionManager exception_manager(false); // false == only our DLL
   exception_manager.StartCapture();
+#endif
 #endif
 
   // We're initialized on the main ui thread of which there is exactly one
