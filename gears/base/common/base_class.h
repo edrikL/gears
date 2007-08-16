@@ -66,14 +66,6 @@ class JsRootedToken {
   DISALLOW_EVIL_CONSTRUCTORS(JsRootedToken);
 };
 
-// TODO(aa): This can probably get replaced with JsToken, it also has the
-// advantage of not having to track JS_AddRoot() or AddRef() manually.
-struct JsCallback {
-  JsCallback() : function(0), context(NULL) {};
-  JsToken function;
-  JsContextPtr context;
-};
-
 // Implementations of boilerplate code.
 #define GEARS_IMPL_BASECLASS \
   NS_IMETHOD GetNativeBaseClass(GearsBaseClass **retval) { \
@@ -125,6 +117,17 @@ typedef void* JsContextPtr;
 typedef void  JsNativeMethodRetval;
 
 #endif // BROWSER_xyz
+
+
+
+// TODO(aa): This can probably get replaced with JsToken, it also has the
+// advantage of not having to track JS_AddRoot() or AddRef() manually.
+struct JsCallback {
+  JsCallback() : function(0), context(NULL) {};
+
+  JsToken function;
+  JsContextPtr context;
+};
 
 class JsRunnerInterface;
 

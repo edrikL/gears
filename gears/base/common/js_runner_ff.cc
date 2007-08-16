@@ -32,7 +32,9 @@
 #include "gears/third_party/gecko_internal/nsIScriptGlobalObject.h"
 #include "gears/third_party/gecko_internal/nsIScriptObjectPrincipal.h"
 #include "gears/third_party/gecko_internal/nsIPrincipal.h"
+
 #include "gears/base/common/js_runner.h"
+
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/js_runner_ff_marshaling.h"
 #include "gears/base/common/scoped_token.h"
@@ -137,6 +139,41 @@ class JsRunnerBase : public JsRunnerInterface {
     return SetProperty(object, name, INT_TO_JSVAL(value));
   }
 
+  virtual bool InvokeCallbackSpecialized(const JsCallback &callback,
+                                         int argc, jsval *argv) = 0;
+  bool InvokeCallback(const JsCallback &callback,
+                      int argc, JsParamToSend *argv) {
+    // Setup argument array.
+    scoped_array<jsval> js_engine_argv(new jsval[argc]);
+    for (int i = 0; i < argc; ++i) {
+      switch (argv[i].type) {
+        case JSPARAM_BOOL: {
+          const bool *value = static_cast<const bool *>(argv[i].value_ptr);
+          js_engine_argv[i] = *value ? JSVAL_TRUE : JSVAL_FALSE;
+          break;
+        }
+        case JSPARAM_INT: {
+          const int *value = static_cast<const int *>(argv[i].value_ptr);
+          js_engine_argv[i] = INT_TO_JSVAL(*value);
+          break;
+        }
+        case JSPARAM_STRING16: {
+          const std::string16 *value = static_cast<const std::string16 *>(
+                                           argv[i].value_ptr);
+          // TODO(cprince): Does this string copy get freed?
+          JSString *js_string = JS_NewUCStringCopyZ(
+              callback.context,
+              reinterpret_cast<const jschar *>(value->c_str()));
+          js_engine_argv[i] = STRING_TO_JSVAL(js_string);
+          break;
+        }
+      }
+    }
+
+    // Invoke the method.
+    return InvokeCallbackSpecialized(callback, argc, js_engine_argv.get());
+  }
+
 #ifdef DEBUG
   void ForceGC() {
     if (js_engine_context_) {
@@ -194,7 +231,8 @@ class JsRunner : public JsRunnerBase {
   void SetErrorHandler(JsErrorHandlerInterface *handler) {
     error_handler_ = handler;
   }
-  bool InvokeCallback(const JsCallback &callback, int argc, JsToken *argv);
+  bool InvokeCallbackSpecialized(const JsCallback &callback,
+                                 int argc, jsval *argv);
 
  private:
   bool InitJavaScriptEngine();
@@ -473,12 +511,13 @@ bool JsRunner::Eval(const std::string16 &script) {
   return true;
 }
 
-bool JsRunner::InvokeCallback(const JsCallback &callback, int argc,
-                              JsToken *argv) {
-  jsval retval; // not used for now
+bool JsRunner::InvokeCallbackSpecialized(const JsCallback &callback,
+                                         int argc, jsval *argv) {
+  jsval retval;  // not used for now
   JSBool result = JS_CallFunctionValue(callback.context,
                                        JS_GetGlobalObject(callback.context),
-                                       callback.function, argc, argv, &retval);
+                                       callback.function, argc, argv,
+                                       &retval);
   return result == JS_TRUE;
 }
 
@@ -509,7 +548,8 @@ class DocumentJsRunner : public JsRunnerBase {
     return false;
   }
   bool Eval(const std::string16 &full_script);
-  bool InvokeCallback(const JsCallback &callback, int argc, JsToken *argv);
+  bool InvokeCallbackSpecialized(const JsCallback &callback,
+                                 int argc, jsval *argv);
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(DocumentJsRunner);
@@ -564,18 +604,17 @@ bool DocumentJsRunner::Eval(const std::string16 &script) {
   return true;
 }
 
-bool DocumentJsRunner::InvokeCallback(const JsCallback &callback, int argc,
-                                      JsToken *argv) {
+bool DocumentJsRunner::InvokeCallbackSpecialized(const JsCallback &callback,
+                                                 int argc, jsval *argv) {
   // When invoking a callback on the document context, we must go through
   // nsIScriptContext->CallEventHandler because it sets up certain state that
   // the browser error handler expects to find if there is an error. Without
-  // this, crashes happen.
-  // See http://code.google.com/p/google-gears/issues/detail?id=32 for more
-  // information.
+  // this, crashes happen. For more information, see:
+  // http://code.google.com/p/google-gears/issues/detail?id=32
   nsCOMPtr<nsIScriptContext> sc;
   sc = GetScriptContextFromJSContext(callback.context);
 
-  jsval retval;
+  jsval retval;  // not used for now
   nsresult result = sc->CallEventHandler(JS_GetGlobalObject(callback.context),
                                          JSVAL_TO_OBJECT(callback.function),
                                          argc, argv, &retval);

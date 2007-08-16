@@ -160,5 +160,4 @@ class PoolThreadsManager
 };
 
 
-
 #endif // GEARS_WORKERPOOL_FIREFOX_WORKERPOOL_H__

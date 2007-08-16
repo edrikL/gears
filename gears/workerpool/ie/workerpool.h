@@ -163,8 +163,6 @@ class PoolThreadsManager
                       const std::string16 &message_string, int src_worker_id);
   void ProcessError(JavaScriptWorkerInfo *wi,
                     const std::string16 &message_string, int src_worker_id);
-  void FireHandler(IDispatch *handler, const std::string16 &message,
-                   int src_worker_id);
 
   int num_workers_; // used by Add/ReleaseWorkerRef()
   bool is_shutting_down_;
@@ -177,10 +175,6 @@ class PoolThreadsManager
   Mutex mutex_;  // for exclusive access to all class methods and data
 
   SecurityOrigin page_security_origin_;
-
-  // The JsRunner for the root worker. For non-nested workerpools (the usual
-  // case), this will actually be a ParentJsRunner.
-  JsRunnerInterface *root_js_runner_;
 
   DISALLOW_EVIL_CONSTRUCTORS(PoolThreadsManager);
 };

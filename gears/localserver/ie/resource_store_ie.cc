@@ -697,6 +697,10 @@ void GearsResourceStore::FireEvent(IDispatch *handler,
                                    const char16 *url,
                                    bool success,
                                    int id) {
+  // TODO(michaeln): Convert this function to use JsRunner::InvokeCallback(),
+  // just like the Firefox version (and most Gears code) does.  See if the
+  // problems described below go away when using InvokeCallback().
+
   if (!handler) {
     return;
   }
