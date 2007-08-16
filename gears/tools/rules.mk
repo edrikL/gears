@@ -39,31 +39,29 @@ OUTDIR = bin-$(MODE)/$(OS)
 # INSTALLERS_OUTDIR doesn't include $(ARCH) because OSes that support
 # multiple CPU architectures (namely, OSX) have merged install packages.
 COMMON_OUTDIR	   = $(OUTDIR)/$(ARCH)/common
+FF_OUTDIR	   = $(OUTDIR)/$(ARCH)/ff
+IE_OUTDIR	   = $(OUTDIR)/$(ARCH)/ie
 SQLITE_OUTDIR	   = $(COMMON_OUTDIR)/sqlite
 THIRD_PARTY_OUTDIR = $(COMMON_OUTDIR)/third_party
-IE_OUTDIR	   = $(OUTDIR)/$(ARCH)/ie
-FF_OUTDIR	   = $(OUTDIR)/$(ARCH)/ff
 INSTALLERS_OUTDIR  = $(OUTDIR)/installers
 # TODO(cprince): unify the Firefox directory name across the output dirs
 # (where it is 'ff') and the source dirs (where it is 'firefox').  Changing
 # the output dirs would require changing #includes that reference genfiles.
 
+COMMON_OBJS = \
+	$(patsubst %.cc,$(COMMON_OUTDIR)/%$(OBJ_SUFFIX),$(COMMON_CPPSRCS)) \
+	$(patsubst %.c,$(COMMON_OUTDIR)/%$(OBJ_SUFFIX),$(COMMON_CSRCS))
 FF_OBJS = \
 	$(patsubst %.cc,$(FF_OUTDIR)/%$(OBJ_SUFFIX),$(FF_CPPSRCS)) \
 	$(patsubst %.c,$(FF_OUTDIR)/%$(OBJ_SUFFIX),$(FF_CSRCS))
 IE_OBJS = \
 	$(patsubst %.cc,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IE_CPPSRCS)) \
 	$(patsubst %.c,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IE_CSRCS))
-COMMON_OBJS = \
-	$(patsubst %.cc,$(COMMON_OUTDIR)/%$(OBJ_SUFFIX),$(COMMON_CPPSRCS)) \
-	$(patsubst %.c,$(COMMON_OUTDIR)/%$(OBJ_SUFFIX),$(COMMON_CSRCS))
 SQLITE_OBJS = \
 	$(patsubst %.c,$(SQLITE_OUTDIR)/%$(OBJ_SUFFIX),$(SQLITE_CSRCS))
 THIRD_PARTY_OBJS = \
 	$(patsubst %.cc,$(THIRD_PARTY_OUTDIR)/%$(OBJ_SUFFIX),$(THIRD_PARTY_CPPSRCS)) \
 	$(patsubst %.c,$(THIRD_PARTY_OUTDIR)/%$(OBJ_SUFFIX),$(THIRD_PARTY_CSRCS))
-TEST_OBJS = \
-	$(patsubst %.cc,$(COMMON_OUTDIR)/%$(OBJ_SUFFIX),$(TEST_CPPSRCS))
 
 # IMPORTANT: If you change these lists, you need to change the corresponding
 # files in win32_msi.wxs.m4 as well.
@@ -89,12 +87,11 @@ FF_LOCALE = \
 # End: resource lists that MUST be kept in sync with "win32_msi.wxs.m4"
 
 DEPS = \
+	$(COMMON_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(FF_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(IE_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(SQLITE_OBJS:$(OBJ_SUFFIX)=.pp) \
-	$(THIRD_PARTY_OBJS:$(OBJ_SUFFIX)=.pp) \
-	$(COMMON_OBJS:$(OBJ_SUFFIX)=.pp) \
-	$(TEST_OBJS:$(OBJ_SUFFIX)=.pp)
+	$(THIRD_PARTY_OBJS:$(OBJ_SUFFIX)=.pp)
 
 FF_GEN_HEADERS = \
 	$(patsubst %.idl,$(FF_OUTDIR)/genfiles/%.h,$(FF_IDLSRCS))
@@ -238,6 +235,14 @@ $(IE_OUTDIR)/genfiles/%.h: %.idl
 
 # C/C++ TARGETS
 
+$(COMMON_OUTDIR)/%$(OBJ_SUFFIX): %.cc
+	@$(MKDEP)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CXXFLAGS) $<
+
+$(COMMON_OUTDIR)/%$(OBJ_SUFFIX): %.c
+	@$(MKDEP)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CFLAGS) $<
+
 $(FF_OUTDIR)/%$(OBJ_SUFFIX): %.cc
 	@$(MKDEP)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(FF_CPPFLAGS) $(FF_CXXFLAGS) $<
@@ -253,14 +258,6 @@ $(IE_OUTDIR)/%$(OBJ_SUFFIX): %.cc
 $(IE_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	@$(MKDEP)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(IE_CPPFLAGS) $(IE_CFLAGS) $<
-
-$(COMMON_OUTDIR)/%$(OBJ_SUFFIX): %.cc
-	@$(MKDEP)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CXXFLAGS) $<
-
-$(COMMON_OUTDIR)/%$(OBJ_SUFFIX): %.c
-	@$(MKDEP)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CFLAGS) $<
 
 # Omit @$(MKDEP) in this case because sqlite files include files which
 # aren't in the same directory, but doesn't use explicit paths.  All
