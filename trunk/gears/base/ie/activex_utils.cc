@@ -114,22 +114,6 @@ HRESULT ActiveXUtils::GetHtmlWindow3(IUnknown *site, IHTMLWindow3 **window3) {
 }
 
 
-bool ActiveXUtils::OptionalVariantIsPresent(const VARIANT *arg) {
-  // If an optional variant was not passed, we get this
-  // See: http://msdn2.microsoft.com/en-us/library/ms931135.aspx
-  if (arg->vt == VT_ERROR && arg->scode == DISP_E_PARAMNOTFOUND) {
-    return false;
-  }
-
-  // Also return false if the value was <undefined> or <null>.
-  if (arg->vt == VT_EMPTY || arg->vt == VT_NULL) {
-    return false;
-  }
-
-  return true;
-}
-
-
 HRESULT ActiveXUtils::ConvertJsArrayToSafeArray(const VARIANT *js_array, 
                                                 VARIANT *safe_array, 
                                                 LONG *array_len) {

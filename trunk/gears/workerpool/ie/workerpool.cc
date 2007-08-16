@@ -192,20 +192,40 @@ STDMETHODIMP GearsWorkerPool::sendMessage(const BSTR *message_string,
   RETURN_NORMAL();
 }
 
-STDMETHODIMP GearsWorkerPool::put_onmessage(IDispatch *in_value) {
+STDMETHODIMP GearsWorkerPool::put_onmessage(const VARIANT *in_value) {
+  IDispatch *handler = NULL;
+
+  if (!ActiveXUtils::VariantIsNullOrUndefined(in_value)) {
+    if (in_value->vt == VT_DISPATCH) {
+      handler = in_value->pdispVal;
+    } else {
+      RETURN_EXCEPTION(STRING16(L"The onmessage callback must be a function."));
+    }
+  }
+
   Initialize();
 
-  if (!threads_manager_->SetCurrentThreadMessageHandler(in_value)) {
+  if (!threads_manager_->SetCurrentThreadMessageHandler(handler)) {
     RETURN_EXCEPTION(STRING16(L"Error setting onmessage handler."));
   }
 
   RETURN_NORMAL();
 }
 
-STDMETHODIMP GearsWorkerPool::put_onerror(IDispatch *in_value) {
+STDMETHODIMP GearsWorkerPool::put_onerror(const VARIANT *in_value) {
+  IDispatch *handler = NULL;
+
+  if (!ActiveXUtils::VariantIsNullOrUndefined(in_value)) {
+    if (in_value->vt == VT_DISPATCH) {
+      handler = in_value->pdispVal;
+    } else {
+      RETURN_EXCEPTION(STRING16(L"The onerror callback must be a function."));
+    }
+  }
+
   Initialize();
 
-  if (!threads_manager_->SetCurrentThreadErrorHandler(in_value)) {
+  if (!threads_manager_->SetCurrentThreadErrorHandler(handler)) {
     // Currently, the only reason this can fail is because of this one
     // particular error.
     // TODO(aa): We need a system throughout Gears for being able to handle

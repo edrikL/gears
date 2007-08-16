@@ -68,11 +68,28 @@ class ActiveXUtils {
                                    dispid);
   }
 
+  // Determine whether a variant is, ahem, null or undefined.
+  static bool VariantIsNullOrUndefined(const VARIANT *var) {
+    return var->vt == VT_NULL || var->vt == VT_EMPTY;
+  }
+
   // Determine whether an optional variant parameter was specified. Handles
   // unpassed params, as well as <undefined> and <null> valued params.
   // TODO(cprince): When JsParamFetcher is implemented for IE, move this
   // function there.
-  static bool OptionalVariantIsPresent(const VARIANT *arg);
+  static bool OptionalVariantIsPresent(const VARIANT *arg) {
+    // If an optional variant was not passed, we get this
+    // See: http://msdn2.microsoft.com/en-us/library/ms931135.aspx
+    if (arg->vt == VT_ERROR && arg->scode == DISP_E_PARAMNOTFOUND) {
+      return false;
+    }
+
+    if (VariantIsNullOrUndefined(arg)) {
+      return false;
+    }
+
+    return true;
+  }
 
   // Converts the VARIANT received when JS passes an array to a COM into a more
   // manageable SAFEARRAY.
