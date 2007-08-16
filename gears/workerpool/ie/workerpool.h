@@ -85,13 +85,13 @@ class ATL_NO_VTABLE GearsWorkerPool
 
   // Sets the onmessage handler for the current worker.
   // The handler has the prototype Handler(message_string, src_worker_id).
-  STDMETHOD(put_onmessage)(IDispatch *in_value);
+  STDMETHOD(put_onmessage)(const VARIANT *in_value);
 
   // Sets the onerror handler for the current worker. This can only be set on
   // the owning worker (the one that created the PoolThreadsManager). Calls
   // from other workers will fail.
   // The handler has the prototype Handler(error_message, src_worker_id).
-  STDMETHOD(put_onerror)(IDispatch *in_value);
+  STDMETHOD(put_onerror)(const VARIANT *in_value);
 
 #ifdef DEBUG
   STDMETHOD(forceGC)();
