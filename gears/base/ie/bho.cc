@@ -31,8 +31,12 @@
 
 STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
 #ifdef WIN32
+// Only send crash reports for offical builds.  Crashes on an engineer's machine
+// during internal development are confusing false alarms.
+#ifdef OFFICIAL_BUILD
   static ExceptionManager exception_manager(false); // false == only our DLL
   exception_manager.StartCapture();
+#endif
 #endif
 
   if (DetectedVersionCollision()) 
