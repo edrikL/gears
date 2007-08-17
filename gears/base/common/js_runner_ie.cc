@@ -394,7 +394,12 @@ bool JsRunnerImpl::Eval(const std::string16 &script) {
 }
 
 bool JsRunnerImpl::Stop() {
-  return SUCCEEDED(javascript_engine_->Close());
+  // Check pointer because dtor calls Stop() regardless of whether Start()
+  // happened.
+  if (javascript_engine_) {
+    javascript_engine_->Close();
+  }
+  return S_OK;
 }
 
 STDMETHODIMP JsRunnerImpl::LookupNamedItem(const OLECHAR *name,
