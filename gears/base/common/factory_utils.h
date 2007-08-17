@@ -38,7 +38,7 @@ class GearsFactory;
 // On any failure, returns false and leaves *major and *minor untouched.
 bool ParseMajorMinorVersion(const char16 *version, int *major, int *minor);
 
-// Appends information about the Scour build to the string provided.
+// Appends information about the Gears build to the string provided.
 void AppendBuildInfo(std::string16 *s);
 
 // Returns true if factory.create() should succeed.
@@ -46,13 +46,13 @@ void AppendBuildInfo(std::string16 *s);
 // TODO(cprince): PromptUser doesn't really need to be a member of
 // GearsFactory. If we move it out of there, we can remove the parameter
 // here, which makes the flow of control cleaner.
-bool HasPermissionToUseScour(GearsFactory *factory);
+bool HasPermissionToUseGears(GearsFactory *factory);
 
 // Shows a warning prompt asking a user if origin should be allowed.
 void ShowPermissionsPrompt(const SecurityOrigin &origin, bool *allow_origin,
                            bool *remember_choice);
 
-// Sets a usage-tracking bit once per instantiation of Scour module. On
+// Sets a usage-tracking bit once per instantiation of Gears module. On
 // machines that have the Google Update Service available, this bit is
 // periodically reported and then reset. Currently Windows-only.
 void SetActiveUserFlag();

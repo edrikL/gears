@@ -29,9 +29,13 @@
 #include "gears/base/common/int_types.h"
 #include "gears/base/common/mutex.h"
 
-//------------------------------------------------------------------------------
+
+// Returns the current time in milliseconds since the epoch
+// (midnight January 1, 1970 GMT).
+int64 GetCurrentTimeMillis();
+
+
 // Simple perf timer. Supports nested calls.
-//------------------------------------------------------------------------------
 class Stopwatch {
  public:
   Stopwatch() : start_(0), total_(0), nested_count_(0) {};
@@ -47,9 +51,7 @@ class Stopwatch {
 };
 
 
-//------------------------------------------------------------------------------
 // Times an individual block of code.
-//------------------------------------------------------------------------------
 class ScopedStopwatch {
  public:
   ScopedStopwatch(Stopwatch *t);
@@ -58,5 +60,6 @@ class ScopedStopwatch {
  private:
   Stopwatch *t_;
 };
+
 
 #endif  // GEARS_BASE_COMMON_STOPWATCH_H__

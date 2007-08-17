@@ -26,11 +26,14 @@
 #include <assert.h>
 #include <math.h>
 #include <set>
+
+#include "gears/localserver/common/update_task.h"
+
 #include "gears/base/common/file.h"
+#include "gears/base/common/stopwatch.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/manifest.h"
-#include "gears/localserver/common/update_task.h"
 
 const char16* kDefaultErrorMessage = STRING16(L"Internal error");
 const char16 *kMissingManifestUrlErrorMessage =

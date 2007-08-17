@@ -33,8 +33,8 @@
 
 
 // This class provides an API to manage the capabilities of pages within
-// Scour. Right now, it is a baby API and only manages a single capability:
-// the ability to access Scour at all. But we anticipate it growing into a
+// Gears. Right now, it is a baby API and only manages a single capability:
+// the ability to access Gears at all. But we anticipate it growing into a
 // bigger API, which would manage more fine-grained capabilities, such as the
 // ability to store more than 1MB on disk, etc.
 //
@@ -55,11 +55,11 @@ class CapabilitiesDB {
   // Gets a thread-specific CapabilitiesDB instance.
   static CapabilitiesDB *GetDB();
 
-  // Sets the Scour access level for a given SecurityOrigin.
-  void SetCanAccessScour(const SecurityOrigin &origin, CapabilityStatus status);
+  // Sets the Gears access level for a given SecurityOrigin.
+  void SetCanAccessGears(const SecurityOrigin &origin, CapabilityStatus status);
 
-  // Gets the Scour access level for a given SecurityOrigin.
-  const CapabilityStatus GetCanAccessScour(const SecurityOrigin &origin);
+  // Gets the Gears access level for a given SecurityOrigin.
+  const CapabilityStatus GetCanAccessGears(const SecurityOrigin &origin);
 
   // Get all the origins with a specific status.
   bool GetOriginsByStatus(CapabilityStatus status,
@@ -94,7 +94,7 @@ class CapabilitiesDB {
   // Version metadata for the capabilities database.
   NameValueTable version_table_;
 
-  // Maps origins to ability to access Scour.
+  // Maps origins to ability to access Gears.
   NameValueTable access_table_;
 
   DISALLOW_EVIL_CONSTRUCTORS(CapabilitiesDB);

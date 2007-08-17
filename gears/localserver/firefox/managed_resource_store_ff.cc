@@ -26,8 +26,10 @@
 #include "gears/third_party/gecko_internal/nsIDOMClassInfo.h"
 #include "gears/third_party/gecko_internal/nsIVariant.h"
 
-#include "gears/base/firefox/dom_utils.h"
 #include "gears/localserver/firefox/managed_resource_store_ff.h"
+
+#include "gears/base/common/url_utils.h"
+#include "gears/base/firefox/dom_utils.h"
 
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
@@ -121,7 +123,8 @@ GearsManagedResourceStore::SetManifestUrl(const nsAString &url_abstract) {
 
   nsString url(url_abstract); // nsAString doesn't have get()
   std::string16 full_url;    
-  if (!ResolveRelativeUrl(EnvPageLocationUrl().c_str(), url.get(), &full_url)) {
+  if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), url.get(),
+                           &full_url)) {
     RETURN_EXCEPTION(STRING16(L"Failed to resolve url."));
   }
   if (!EnvPageSecurityOrigin().IsSameOriginAsUrl(full_url.c_str())) {

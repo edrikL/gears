@@ -283,10 +283,19 @@ bool JsRunnerImpl::AddGlobal(const std::string16 &name,
                              gIID iface_id) {
   if (!object) { return false; }
 
-  // We AddRef() once here to make sure that the object lives the lifetime of
-  // JSRunner. This gets removed in ~JsRunnerImpl.
+  // We AddRef() to make sure the object lives as long as the JS engine.
+  // This gets removed in ~JsRunnerImpl.
   object->AddRef();
   global_name_to_object_[name] = object;
+
+  // Start() will insert any globals added before the JS engine started.
+  // But we must call AddNamedItem() here if the JS engine is already running.
+  if (javascript_engine_) {
+    HRESULT hr = javascript_engine_->AddNamedItem(name.c_str(),
+                                                  SCRIPTITEM_ISVISIBLE);
+    if (FAILED(hr)) { return false; }
+  }
+
   return true;
 }
 

@@ -23,18 +23,21 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/localserver/common/localserver_db.h"
+
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/security_model.h"
+#include "gears/base/common/stopwatch.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
-#include "gears/localserver/common/managed_resource_store.h"
-#include "gears/localserver/common/http_cookies.h"
-#include "gears/localserver/common/update_task.h"
+#include "gears/base/common/url_utils.h"
 #include "gears/localserver/common/blob_store.h"
-#include "gears/localserver/common/localserver_db.h"
 #ifdef USE_FILE_STORE
 #include "gears/localserver/common/file_store.h"
 #endif
+#include "gears/localserver/common/http_cookies.h"
+#include "gears/localserver/common/managed_resource_store.h"
+#include "gears/localserver/common/update_task.h"
 
 const char16 *WebCacheDB::kFilename = STRING16(L"localserver.db");
 
@@ -1926,7 +1929,7 @@ WebCacheDB::PayloadInfo::SynthesizeHttpRedirect(const char16 *base_url,
                                                 const char16 *location) {
   std::string16 full_location;
   if (base_url) {
-    if (!ResolveRelativeUrl(base_url, location, &full_location)) {
+    if (!ResolveAndNormalize(base_url, location, &full_location)) {
       return false;
     }
   } else {

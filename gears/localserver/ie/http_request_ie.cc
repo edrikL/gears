@@ -24,11 +24,14 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <msxml2.h>
+
+#include "gears/localserver/ie/http_request_ie.h"
+
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/url_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/stream_buffer.h"
 #include "gears/localserver/ie/http_handler_ie.h"
-#include "gears/localserver/ie/http_request_ie.h"
 #include "gears/localserver/ie/urlmon_utils.h"
 
 // We use URLMON's pull-data model which requires making stream read calls
@@ -185,6 +188,7 @@ bool IEHttpRequest::GetResponseHeader(const char16* name,
 // Open
 //------------------------------------------------------------------------------
 bool IEHttpRequest::Open(const char16 *method, const char16* url, bool async) {
+  assert(!IsRelativeUrl(url));
   if (!IsUninitialized())
     return false;
   if (!async) {
@@ -231,14 +235,23 @@ bool IEHttpRequest::SetFollowRedirects(bool follow) {
 }
 
 bool IEHttpRequest::WasRedirected() {
-  return follow_redirects_ && IsInteractiveOrComplete() &&
-         was_redirected_ && !was_aborted_;
+  return IsInteractiveOrComplete() && !was_aborted_ &&
+         follow_redirects_ && was_redirected_;
 }
 
-bool IEHttpRequest::GetRedirectUrl(std::string16 *full_redirect_url) {
-  if (!WasRedirected())
+bool IEHttpRequest::GetFinalUrl(std::string16 *full_url) {
+  if (!IsInteractiveOrComplete() || was_aborted_)
     return false;
-  *full_redirect_url = redirect_url_;
+
+  if (WasRedirected())
+    *full_url = redirect_url_;
+  else
+    *full_url = url_;
+  return true;
+}
+
+bool IEHttpRequest::GetInitialUrl(std::string16 *full_url) {
+  *full_url = url_;  // may be empty if request has not occurred
   return true;
 }
 

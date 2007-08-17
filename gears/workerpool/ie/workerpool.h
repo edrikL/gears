@@ -80,6 +80,9 @@ class ATL_NO_VTABLE GearsWorkerPool
   STDMETHOD(createWorker)(const BSTR *full_script, int *retval);
   STDMETHOD(createWorkerFromUrl)(const BSTR *url, int *retval);
 
+  // Lets a worker opt-in to being created from another origin.
+  STDMETHOD(allowCrossOriginMonkeys)();
+
   // Sends message_string to a given worker_id.
   STDMETHOD(sendMessage)(const BSTR *message_string, int dest_worker_id);
 
@@ -129,6 +132,7 @@ class PoolThreadsManager
   bool SetCurrentThreadErrorHandler(IDispatch *handler);
   bool CreateThread(const char16 *url_or_full_script, bool is_param_script,
                     int *worker_id);
+  void AllowCrossOriginMonkeys();
   void HandleError(const JsErrorInfo &error_info);
   bool PutPoolMessage(const BSTR *message_string, int dest_worker_id);
 

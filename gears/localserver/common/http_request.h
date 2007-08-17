@@ -77,9 +77,12 @@ class HttpRequest {
   // Whether or not this request has followed a redirect
   virtual bool WasRedirected() = 0;
 
-  // Returns true and the full url to the final location if this request
-  // has followed any redirects
-  virtual bool GetRedirectUrl(std::string16 *full_redirect_url) = 0;
+  // Sets full_url to final location of the request, including any redirects.
+  // Returns false on failure (e.g. final redirect url not yet known).
+  virtual bool GetFinalUrl(std::string16 *full_url) = 0;
+  // Similar to GetFinalUrl, but retrieves the initial URL requested.
+  // Always succeeds.
+  virtual bool GetInitialUrl(std::string16 *full_url) = 0;
 
   // methods
   virtual bool Open(const char16 *method, const char16* url, bool async) = 0;

@@ -97,7 +97,7 @@ bool CapabilitiesDB::Init() {
 }
 
 
-const CapabilitiesDB::CapabilityStatus CapabilitiesDB::GetCanAccessScour(
+const CapabilitiesDB::CapabilityStatus CapabilitiesDB::GetCanAccessGears(
     const SecurityOrigin &origin) {
   int result = 0;
   if (access_table_.GetInt(origin.url().c_str(), &result)) {
@@ -108,7 +108,7 @@ const CapabilitiesDB::CapabilityStatus CapabilitiesDB::GetCanAccessScour(
 }
 
 
-void CapabilitiesDB::SetCanAccessScour(
+void CapabilitiesDB::SetCanAccessGears(
     const SecurityOrigin &origin,
     CapabilitiesDB::CapabilityStatus status) {
   if (origin.url().empty()) {
@@ -121,7 +121,7 @@ void CapabilitiesDB::SetCanAccessScour(
   } else if (status == CAPABILITY_ALLOWED || status == CAPABILITY_DENIED) {
     access_table_.SetInt(origin.url().c_str(), status);
   } else {
-    LOG(("CapabilitiesDB::SetCanAccessScour invalid status: %d", status));
+    LOG(("CapabilitiesDB::SetCanAccessGears invalid status: %d", status));
     assert(false);
   }
 }
@@ -153,14 +153,14 @@ bool CapabilitiesDB::GetOriginsByStatus(
   int rv;
   while (SQLITE_DONE != (rv = statement.step())) {
     if (SQLITE_ROW != rv) {
-      LOG(("CapabilitiesDB::ListScourAccess: Could not iterate. Error was: %d",
+      LOG(("CapabilitiesDB::ListGearsAccess: Could not iterate. Error was: %d",
            sqlite3_errcode(db_.GetDBHandle())));
       return false;
     }
 
     SecurityOrigin origin;
     if (!origin.InitFromUrl(statement.column_text16_safe(0))) {
-      LOG(("CapabilitiesDB::ListScourAccess: InitFromUrl() failed."));
+      LOG(("CapabilitiesDB::ListGearsAccess: InitFromUrl() failed."));
       // If we can't initialize a single URL, don't freak out. Try to do the
       // other ones.
       continue;

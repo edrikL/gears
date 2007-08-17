@@ -34,11 +34,13 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include "gears/third_party/gecko_internal/nsIJSContextStack.h"
 #include "gears/third_party/gecko_internal/nsIVariant.h"
 
+#include "gears/localserver/firefox/file_submitter_ff.h"
+
 #include "gears/base/common/file.h"
 #include "gears/base/common/string16.h"
+#include "gears/base/common/url_utils.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/base/firefox/ns_file_utils.h"
-#include "gears/localserver/firefox/file_submitter_ff.h"
 
 static const char16 *kMissingFilename = STRING16(L"Unknown");
 
@@ -95,8 +97,8 @@ NS_IMETHODIMP GearsFileSubmitter::SetFileInputElement(
 
   std::string16 full_url;
   nsString url_concrete(captured_url_key); // nsAString doesn't have get()
-  if (!ResolveRelativeUrl(EnvPageLocationUrl().c_str(), url_concrete.get(),
-                          &full_url)) {
+  if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), url_concrete.get(),
+                           &full_url)) {
     RETURN_EXCEPTION(STRING16(L"Failed to resolve url."));
   }
   if (!EnvPageSecurityOrigin().IsSameOriginAsUrl(full_url.c_str())) {

@@ -23,8 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/ie/activex_utils.h"
 #include "gears/localserver/ie/file_submitter_ie.h"
+
+#include "gears/base/common/url_utils.h"
+#include "gears/base/ie/activex_utils.h"
 #include "gears/localserver/ie/file_submit_behavior.h"
 
 
@@ -43,8 +45,8 @@ STDMETHODIMP GearsFileSubmitter::setFileInputElement(
   // 'capturedUrl' property (undocumented API) without using the
   // FileSubmitter object.
   std::string16 full_url;
-  if (!ResolveRelativeUrl(EnvPageLocationUrl().c_str(), captured_url_key,
-                          &full_url)) {
+  if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), captured_url_key,
+                           &full_url)) {
     RETURN_EXCEPTION(STRING16(L"Failed to resolve url."));
   }
   if (!EnvPageSecurityOrigin().IsSameOriginAsUrl(full_url.c_str())) {

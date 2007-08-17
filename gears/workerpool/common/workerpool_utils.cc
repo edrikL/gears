@@ -53,11 +53,11 @@ void FormatWorkerPoolErrorMessage(const JsErrorInfo &error_info,
   IntegerToString(src_worker_id, &src_worker_id_string);
   IntegerToString(error_info.line, &line_number_string);
 
-  *message = STRING16(L"Error in worker: ");
+  *message = STRING16(L"Error in worker ");
   *message += src_worker_id_string;
 
   if (error_info.line != 0) {
-    *message += STRING16(L", line: ");
+    *message += STRING16(L", line ");
     *message += line_number_string;
   }
 

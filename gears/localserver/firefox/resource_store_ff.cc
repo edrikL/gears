@@ -27,17 +27,20 @@
 #include <nsILocalFile.h>
 #include <nsMemory.h>
 #include <nsXPCOM.h>
-#include "gears/base/common/js_runner.h"
-#include "gears/base/common/string_utils.h"
-#include "gears/base/firefox/dom_utils.h"
-#include "gears/base/firefox/ns_file_utils.h"
 #include "gears/third_party/gecko_internal/nsIDOMClassInfo.h"
 #include "gears/third_party/gecko_internal/nsIFileProtocolHandler.h"
 #include "gears/third_party/gecko_internal/nsIFileStreams.h"
 #include "gears/third_party/gecko_internal/nsIMIMEService.h"
 #include "gears/third_party/gecko_internal/nsIVariant.h"
-#include "gears/localserver/firefox/file_submitter_ff.h"
+
 #include "gears/localserver/firefox/resource_store_ff.h"
+
+#include "gears/base/common/js_runner.h"
+#include "gears/base/common/string_utils.h"
+#include "gears/base/common/url_utils.h"
+#include "gears/base/firefox/dom_utils.h"
+#include "gears/base/firefox/ns_file_utils.h"
+#include "gears/localserver/firefox/file_submitter_ff.h"
 
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
@@ -779,7 +782,7 @@ bool GearsResourceStore::ResolveAndAppendUrl(const std::string16 &url,
 //------------------------------------------------------------------------------
 bool GearsResourceStore::ResolveUrl(const char16 *url,
                                     std::string16 *resolved_url) {
-  if (!ResolveRelativeUrl(EnvPageLocationUrl().c_str(), url, resolved_url)) {
+  if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), url, resolved_url)) {
     exception_message_ = STRING16(L"Failed to resolve url.");
     return false;
   }

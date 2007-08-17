@@ -23,45 +23,16 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <assert.h>
+#ifndef GEARS_BASE_COMMON_URL_UTILS_H__
+#define GEARS_BASE_COMMON_URL_UTILS_H__
 
-#include "gears/base/common/stopwatch.h"
+#include "gears/base/common/string16.h" // for string16
 
+bool IsRelativeUrl(const char16 *url);
 
-void Stopwatch::Start() {
-  MutexLock lock(&mutex_);
+// Returns a resolved, normalized URL in 'out'.
+// 'url' can be relative or absolute.  'base' can be NULL for absolute URLs.
+bool ResolveAndNormalize(const char16 *base, const char16 *url,
+                         std::string16 *out);
 
-  if (nested_count_ == 0) {
-    start_ = static_cast<int>(GetCurrentTimeMillis());
-  }
-
-  nested_count_++;
-}
-
-void Stopwatch::Stop() {
-  MutexLock lock(&mutex_);
-
-  // You shouldn't call stop() before ever calling start; that would be silly.
-  assert(nested_count_ > 0);
-
-  nested_count_--;
-  if (nested_count_ == 0) {
-    total_ += (static_cast<int>(GetCurrentTimeMillis()) - start_);
-  }
-}
-
-int Stopwatch::GetElapsed() {
-  return total_;
-}
-
-
-ScopedStopwatch::ScopedStopwatch(Stopwatch *t) {
-  assert(t);
-  t_ = t;
-  t_->Start();
-}
-
-ScopedStopwatch::~ScopedStopwatch() {
-  assert(t_);
-  t_->Stop();
-}
+#endif // GEARS_BASE_COMMON_URL_UTILS_H__

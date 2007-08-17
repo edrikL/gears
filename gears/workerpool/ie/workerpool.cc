@@ -42,21 +42,22 @@
 
 #include <assert.h> // TODO(cprince): use DCHECK() when have google3 logging
 #include <queue>
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 #include "gears/workerpool/ie/workerpool.h"
 
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_runner_utils.h"
-#include "gears/base/common/string_utils.h"
 #include "gears/base/common/scoped_win32_handles.h"
+#include "gears/base/common/string_utils.h"
+#include "gears/base/common/url_utils.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/factory.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/workerpool/common/workerpool_utils.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 
 //
@@ -66,10 +67,10 @@
 struct JavaScriptWorkerInfo {
   // Our code assumes some items begin cleared. Zero all members w/o ctors.
   JavaScriptWorkerInfo()
-      : threads_manager(NULL), message_hwnd(0),
-        js_init_signalled(false), js_init_ok(false),
-        full_script_ready(false), http_request(NULL),
-        thread_handle(INVALID_HANDLE_VALUE) {}
+      : threads_manager(NULL), js_runner(NULL), message_hwnd(0),
+        thread_init_signalled(false), thread_init_ok(false),
+        script_signalled(false), script_ok(false), http_request(NULL),
+        is_factory_suspended(false), thread_handle(INVALID_HANDLE_VALUE) {}
 
   //
   // These fields are used for all workers in pool (parent + children).
@@ -89,16 +90,23 @@ struct JavaScriptWorkerInfo {
   // 
   // These fields are used only for created workers (children).
   //
-  Mutex js_init_mutex;  // Protects: js_init_signalled
-  bool js_init_signalled;
-  bool js_init_ok;  // Owner: child before signal, parent after signal
+  Mutex thread_init_mutex;  // Protects: thread_init_signalled
+  bool thread_init_signalled;
+  bool thread_init_ok;  // Owner: child before signal, parent after signal
 
-  Mutex full_script_mutex;  // Protects: full_script_ready
-  bool full_script_ready;  
-  std::string16 full_script;  // Owner: parent before ready (immutable after)
+  Mutex script_mutex;  // Protects: script_signalled
+  bool script_signalled;  
+  bool script_ok;  // Owner: parent before signal, immutable after
+  std::string16 script_text;  // Owner: parent before signal, immutable after
+  SecurityOrigin script_origin;  // Owner: parent before signal, immutable after
 
   ScopedHttpRequestPtr http_request;  // For createWorkerFromUrl()
   scoped_ptr<HttpRequest::ReadyStateListener> http_request_listener;
+  // TODO(cprince): Find a clean way in IE to store the native interface and
+  // keep a scoped AddRef, without requiring two separate pointers.
+  GearsFactory *factory_ptr;
+  CComPtr<IUnknown> factory_ref;
+  bool is_factory_suspended;
   SAFE_HANDLE thread_handle;
 };
 
@@ -175,6 +183,17 @@ STDMETHODIMP GearsWorkerPool::createWorkerFromUrl(const BSTR *url_bstr,
   }
 
   *retval = worker_id_temp;
+  RETURN_NORMAL();
+}
+
+STDMETHODIMP GearsWorkerPool::allowCrossOriginMonkeys() {
+  Initialize();
+
+  if (!owns_threads_manager_) {
+    RETURN_EXCEPTION(STRING16(L"Method is only used by child workers."));
+  }
+
+  threads_manager_->AllowCrossOriginMonkeys();
   RETURN_NORMAL();
 }
 
@@ -310,11 +329,13 @@ PoolThreadsManager::PoolThreadsManager(
   worker_info_.push_back(wi);
 }
 
+
 PoolThreadsManager::~PoolThreadsManager() {
   for (size_t i = 0; i < worker_info_.size(); ++i) {
     delete worker_info_[i];
   }
 }
+
 
 int PoolThreadsManager::GetCurrentPoolWorkerId() {
   // no MutexLock here because this function is private, and callers are
@@ -336,6 +357,22 @@ int PoolThreadsManager::GetCurrentPoolWorkerId() {
   assert(false);
   return kInvalidWorkerId;
 }
+
+
+void PoolThreadsManager::AllowCrossOriginMonkeys() {
+  MutexLock lock(&mutex_);
+
+  int current_worker_id = GetCurrentPoolWorkerId();
+  JavaScriptWorkerInfo *wi = worker_info_[current_worker_id];
+
+  // is_factory_suspended ensures ...UpdatePermissions() happens at most once,
+  // and only for cross-origin workers.
+  if (wi->is_factory_suspended) {
+    wi->is_factory_suspended = false;
+    wi->factory_ptr->ResumeObjectCreationAndUpdatePermissions();
+  }
+}
+
 
 void PoolThreadsManager::HandleError(const JsErrorInfo &error_info) {
   MutexLock lock(&mutex_);
@@ -359,6 +396,7 @@ void PoolThreadsManager::HandleError(const JsErrorInfo &error_info) {
   PostMessage(dest_wi->message_hwnd, WM_WORKERPOOL_ONERROR, 0,
               reinterpret_cast<LPARAM>(dest_wi));
 }
+
 
 bool PoolThreadsManager::PutPoolMessage(const BSTR *message_string,
                                         int dest_worker_id) {
@@ -426,7 +464,7 @@ bool PoolThreadsManager::InitWorkerThread(JavaScriptWorkerInfo *wi) {
   // parent; see if that helps with cleanup.
   static const char16* kWindowClassName = STRING16(L"JsWorkerCommWnd");
 
-  // hinstance should be the Scour DLL's base address, not the process handle
+  // hinstance should be the Gears DLL's base address, not the process handle
   //   (http://blogs.msdn.com/oldnewthing/archive/2005/04/18/409205.aspx)
   HMODULE hmodule = _AtlBaseModule.GetModuleInstance();
 
@@ -510,33 +548,39 @@ class CreateWorkerUrlFetchListener : public HttpRequest::ReadyStateListener {
 
       int status_code;
       std::string16 body;
+      std::string16 final_url;
       if (source->GetStatus(&status_code) &&
           status_code == HttpConstants::HTTP_OK &&
-          source->GetResponseBodyAsText(&body)) {
-        wi_->full_script += body;  // purposely before mutex; owned by parent
+          source->GetResponseBodyAsText(&body) &&
+          source->GetFinalUrl(&final_url)) {
+        // These are purposely set before locking mutex, because they are still
+        // owned by the parent thread at this point.
+        wi_->script_ok = true;
+        wi_->script_text += body;
+        // Must use security origin of final url, in case there were redirects.
+        wi_->script_origin.InitFromUrl(final_url.c_str());
       } else {
-        // Throw an error, but don't return!  Continue and set full_script_ready
+        // Throw an error, but don't return!  Continue and set script_signalled
         // so the worker doesn't spin forever in Mutex::Await().
-        std::string16 message(STRING16(L"Failed to load worker code."));
+        std::string16 message(STRING16(L"Failed to load script."));
         std::string16 status_line;
         if (source->GetStatusLine(&status_line)) {
           message += STRING16(L" Status: ");
           message += status_line;
         }
-        // TODO(cprince): uncomment these lines after adding GetRequestedUrl().
-        //std::string16 requested_url;
-        //if (source->GetRequestedUrl(&requested_url)) {
-        //  message += STRING16(L" URL: ");
-        //  message += requested_url;
-        //}
+        std::string16 requested_url;
+        if (source->GetInitialUrl(&requested_url)) {
+          message += STRING16(L" URL: ");
+          message += requested_url;
+        }
         JsErrorInfo error_info = { 0, message };  // line, message
         wi_->threads_manager->HandleError(error_info);
       }
 
-      wi_->full_script_mutex.Lock();
-      assert(!wi_->full_script_ready);
-      wi_->full_script_ready = true;
-      wi_->full_script_mutex.Unlock();
+      wi_->script_mutex.Lock();
+      assert(!wi_->script_signalled);
+      wi_->script_signalled = true;
+      wi_->script_mutex.Unlock();
     }
   }
  private:
@@ -570,22 +614,19 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
 
   wi->threads_manager = this;
 
-  wi->full_script = kWorkerInsertedPreamble;
+  wi->script_text = kWorkerInsertedPreamble;
   if (is_param_script) {
-    wi->full_script += url_or_full_script;
+    wi->script_ok = true;
+    wi->script_text += url_or_full_script;
+    wi->script_origin = page_security_origin_;
 
-    wi->full_script_mutex.Lock();
-    wi->full_script_ready = true;
-    wi->full_script_mutex.Unlock();
+    wi->script_mutex.Lock();
+    wi->script_signalled = true;
+    wi->script_mutex.Unlock();
   } else {
     // For URL params we start an async fetch here.  The created thread will
     // setup an incoming message queue, then Mutex::Await for the script to be
     // fetched, before finally pumping messages.
-
-    // TODO(cprince):
-    // * Decide whether to support relative URLs.
-    //   - Ensure url matches expectations (rel/abs), and return error if not.
-    // * Set security origin based on FINAL REDIRECT url, not original url.
 
     wi->http_request.swap(ScopedHttpRequestPtr(HttpRequest::Create()));
     if (!wi->http_request.get()) { return false; }
@@ -601,22 +642,25 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
     request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
     request->SetFollowRedirects(true);
 
+    std::string16 url;
+    ResolveAndNormalize(page_security_origin_.url().c_str(),
+                  url_or_full_script, &url);
+
     bool is_async = true;
-    if (!request->Open(HttpConstants::kHttpGET,
-                       url_or_full_script, is_async) ||
+    if (!request->Open(HttpConstants::kHttpGET, url.c_str(), is_async) ||
         !request->Send()) {
       request->SetOnReadyStateChange(NULL);
       request->Abort();
       return false;
     }
 
-    // 'full_script_ready' will be set when async fetch completes.
+    // 'script_signalled' will be set when async fetch completes.
   }
 
   // Setup notifier to know when thread init has finished.
   // Then create thread and wait for signal.
-  wi->js_init_mutex.Lock();
-  wi->js_init_signalled = false;
+  wi->thread_init_mutex.Lock();
+  wi->thread_init_signalled = false;
 
   wi->thread_handle.reset((HANDLE)_beginthreadex(
                               NULL, // security descriptor
@@ -627,13 +671,13 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
                               NULL)); // variable to receive thread ID
   if (wi->thread_handle != 0) { // 0 means _beginthreadex() error
     // thread needs to finish message queue init before we continue
-    wi->js_init_mutex.Await(Condition(&wi->js_init_signalled));
+    wi->thread_init_mutex.Await(Condition(&wi->thread_init_signalled));
   }
 
   // cleanup notifier
-  wi->js_init_mutex.Unlock();
+  wi->thread_init_mutex.Unlock();
 
-  if (wi->thread_handle == 0 || !wi->js_init_ok) {
+  if (wi->thread_handle == 0 || !wi->thread_init_ok) {
     return false; // failed
   }
 
@@ -641,37 +685,43 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
   return true; // succeeded
 }
 
+
 // Creates the JS engine, then pumps messages for the thread.
 unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   assert(args);
   JavaScriptWorkerInfo *wi = static_cast<JavaScriptWorkerInfo*>(args);
   wi->threads_manager->AddWorkerRef();
 
-  // Setup JS engine.
+  // Setup worker thread.
   // Then signal that initialization is done, and indicate success/failure.
   //
-  // WARNING: must fire js_init_signalled even on failure, or the caller won't
+  // WARNING: must fire thread_init_signalled even on failure, or caller won't
   // continue.  So fire it from a non-nested location, before any early exits.
   scoped_ptr<JsRunnerInterface> js_runner(NewJsRunner());
+  assert(NULL == wi->js_runner);
   wi->js_runner = js_runner.get();
 
-  bool js_init_succeeded = wi->threads_manager->InitWorkerThread(wi) &&
-                           SetupJsRunner(js_runner.get(), wi);
+  bool thread_init_succeeded = (NULL != js_runner.get()) &&
+                               wi->threads_manager->InitWorkerThread(wi);
 
-  wi->js_init_ok = js_init_succeeded;
-  wi->js_init_mutex.Lock();
-  wi->js_init_signalled = true;
-  wi->js_init_mutex.Unlock();
+  wi->thread_init_ok = thread_init_succeeded;
+  wi->thread_init_mutex.Lock();
+  wi->thread_init_signalled = true;
+  wi->thread_init_mutex.Unlock();
 
-  if (js_init_succeeded) {
-    // Block until full_script_ready (i.e. wait for URL fetch, if being used).
+  if (thread_init_succeeded) {
+    // Block until 'script_signalled' (i.e. wait for URL fetch, if being used).
     // Thread shutdown will set this flag as well.
-    wi->full_script_mutex.Lock();
-    wi->full_script_mutex.Await(Condition(&wi->full_script_ready));
-    wi->full_script_mutex.Unlock();
+    wi->script_mutex.Lock();
+    wi->script_mutex.Await(Condition(&wi->script_signalled));
+    wi->script_mutex.Unlock();
 
-    // Add JS code to engine.  This triggers HandleError() if it fails.
-    js_runner->Start(wi->full_script);
+    if (wi->script_ok) {
+      if (SetupJsRunner(js_runner.get(), wi)) {
+        // Add JS code to engine.  Any script errors trigger HandleError().
+        js_runner->Start(wi->script_text);
+      }
+    }
 
     // Pump messages. We do this whether or not the initial script evaluation
     // succeeded (just like in browsers).
@@ -705,53 +755,70 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   // The factory alone is not enough; GearsFactory.create(GearsWorkerPool)
   // would return a NEW PoolThreadsManager instance, but we want access to
   // the one that was previously created for the current page.
+  //
+  // js_runner manages the lifetime of these allocated objects.
+  // ::CreateInstance does not AddRef (see MSDN), but js_runner handles it.
 
-  // ::CreateInstance does not AddRef (see MSDN).  The js_runner instance
-  // will handle that, as it will manage the lifetime of these objects.
-
-  CComObject<GearsWorkerPool> *alloc_workerpool;
-  HRESULT hr = CComObject<GearsWorkerPool>::CreateInstance(&alloc_workerpool);
+  CComObject<GearsFactory> *factory;
+  HRESULT hr = CComObject<GearsFactory>::CreateInstance(&factory);
   if (FAILED(hr)) { return false; }
 
-  if (!alloc_workerpool->InitBaseManually(true, // is_worker
-                            NULL, // page_site is NULL in workers
-                            wi->threads_manager->page_security_origin(),
-                            js_runner)) {
+  if (!factory->InitBaseManually(true, // is_worker
+                                 NULL, // page_site is NULL in workers
+                                 wi->script_origin,
+                                 js_runner)) {
     return false;
   }
 
-  // WorkerPool object needs same underlying PoolThreadsManager
-  alloc_workerpool->SetThreadsManager(wi->threads_manager);
-  if (!js_runner->AddGlobal(kWorkerInsertedWorkerPoolName,
-                            alloc_workerpool->_GetRawUnknown(),
-                            0)) {
-    return false;
-  }
-
-  CComObject<GearsFactory> *alloc_factory;
-  hr = CComObject<GearsFactory>::CreateInstance(&alloc_factory);
+  CComObject<GearsWorkerPool> *workerpool;
+  hr = CComObject<GearsWorkerPool>::CreateInstance(&workerpool);
   if (FAILED(hr)) { return false; }
 
-  if (!alloc_factory->InitBaseManually(true, // is_worker
-                          NULL, // page_site is NULL in workers
-                          wi->threads_manager->page_security_origin(),
-                          js_runner)) {
+  if (!workerpool->InitBaseManually(true, // is_worker
+                                    NULL, // page_site is NULL in workers
+                                    wi->script_origin,
+                                    js_runner)) {
     return false;
   }
 
-  // The worker's Factory inherits the capabilities from
-  // the main thread that created this WorkerPool
-  alloc_factory->is_permission_granted_ = true;
-  alloc_factory->is_permission_value_from_user_ = true;
 
+  // This Factory always inherits opt-in permissions.
+  factory->is_permission_granted_ = true;
+  factory->is_permission_value_from_user_ = true;
+  // But for cross-origin workers, object creation is suspended until the
+  // callee invokes allowCrossOriginMonkeys().
+  if (!wi->threads_manager->page_security_origin().IsSameOrigin(
+                                                       wi->script_origin)) {
+    factory->SuspendObjectCreation();
+    wi->is_factory_suspended = true;
+  }
+
+  // This WorkerPool needs the same underlying PoolThreadsManager as its parent.
+  workerpool->SetThreadsManager(wi->threads_manager);
+
+
+  // Save an AddRef'd pointer to the factory so we can access it later.
+  wi->factory_ptr = factory;
+  wi->factory_ref = factory->_GetRawUnknown();
+
+
+  // Expose created objects as globals in the JS engine.
   if (!js_runner->AddGlobal(kWorkerInsertedFactoryName,
-                            alloc_factory->_GetRawUnknown(),
+                            factory->_GetRawUnknown(),
                             0)) {
     return false;
   }
 
-  // Hook ourselves up to receive error messages
+  if (!js_runner->AddGlobal(kWorkerInsertedWorkerPoolName,
+                            workerpool->_GetRawUnknown(),
+                            0)) {
+    return false;
+  }
+
+
+  // Register the PoolThreadsManager as the error handler for this JS engine.
   js_runner->SetErrorHandler(wi->threads_manager);
+
   return true;
 }
 
@@ -794,6 +861,7 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
                                         const std::string16 &message,
                                         int src_worker_id) {
   if (wi->onmessage_handler.function) {
+    // TODO(cprince): Add a 'message' object with srcOrigin as the 3rd param.
     const int argc = 2;
     JsParamToSend argv[argc] = {
       { JSPARAM_STRING16, &message },
@@ -874,10 +942,10 @@ void PoolThreadsManager::ShutDown() {
 
     // If the worker is a created thread...
     if (wi->thread_handle != INVALID_HANDLE_VALUE) {
-      // Ensure the thread isn't waiting on 'full_script_ready'.
-      wi->full_script_mutex.Lock();
-      wi->full_script_ready = true;
-      wi->full_script_mutex.Unlock();
+      // Ensure the thread isn't waiting on 'script_signalled'.
+      wi->script_mutex.Lock();
+      wi->script_signalled = true;
+      wi->script_mutex.Unlock();
 
       // Ensure the thread sees 'is_shutting_down_' by sending a dummy message,
       // in case it is blocked waiting for messages.

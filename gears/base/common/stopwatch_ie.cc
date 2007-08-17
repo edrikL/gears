@@ -24,13 +24,11 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
-#include "gears/base/common/common.h"
-#include "gears/base/ie/atl_headers.h"
+#include <windows.h>
+
+#include "gears/base/common/stopwatch.h"
 
 
-//------------------------------------------------------------------------------
-// GetCurrentTimeMillis
-//------------------------------------------------------------------------------
 int64 GetCurrentTimeMillis() {
   // The FILETIME structure is a 64-bit value representing the 
   // number of 100-nanosecond intervals since January 1, 1601 (UTC).
@@ -40,37 +38,4 @@ int64 GetCurrentTimeMillis() {
   int64 filetime;
   GetSystemTimeAsFileTime(reinterpret_cast<LPFILETIME>(&filetime));
   return (filetime - kOffset) / 10000i64;
-}
-
-//------------------------------------------------------------------------------
-// ResolveRelativeUrl
-//------------------------------------------------------------------------------
-bool ResolveRelativeUrl(const char16 *base, const char16 *url,
-                        std::string16 *resolved) {
-  CComPtr<IMoniker> base_moniker;
-  HRESULT hr = CreateURLMonikerEx(NULL, base, &base_moniker, URL_MK_UNIFORM);
-  if (FAILED(hr)) {
-    return false;
-  }
-
-  CComPtr<IMoniker> url_moniker;
-  hr = CreateURLMonikerEx(base_moniker, url, &url_moniker, URL_MK_UNIFORM);
-  if (FAILED(hr)) {
-    return false;
-  }
-
-  LPOLESTR displayname;
-  hr = url_moniker->GetDisplayName(NULL, NULL, &displayname);
-  if (FAILED(hr)) {
-    return false;
-  }
-
-  wchar_t *hash = wcschr(displayname, L'#');
-  if (hash) {
-    *hash = 0;
-  }
-
-  *resolved = displayname;
-  CComAllocator::Free(displayname);
-  return true;
 }

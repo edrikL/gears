@@ -25,43 +25,37 @@
 
 #include <assert.h>
 
-#include "gears/base/common/stopwatch.h"
+#include "gears/base/common/url_utils.h"
+
+#include "gears/base/ie/atl_headers.h"
 
 
-void Stopwatch::Start() {
-  MutexLock lock(&mutex_);
-
-  if (nested_count_ == 0) {
-    start_ = static_cast<int>(GetCurrentTimeMillis());
+bool ResolveAndNormalize(const char16 *base, const char16 *url,
+                         std::string16 *out) {
+  CComPtr<IMoniker> base_moniker;
+  HRESULT hr = CreateURLMonikerEx(NULL, base, &base_moniker, URL_MK_UNIFORM);
+  if (FAILED(hr)) {
+    return false;
   }
 
-  nested_count_++;
-}
-
-void Stopwatch::Stop() {
-  MutexLock lock(&mutex_);
-
-  // You shouldn't call stop() before ever calling start; that would be silly.
-  assert(nested_count_ > 0);
-
-  nested_count_--;
-  if (nested_count_ == 0) {
-    total_ += (static_cast<int>(GetCurrentTimeMillis()) - start_);
+  CComPtr<IMoniker> url_moniker;
+  hr = CreateURLMonikerEx(base_moniker, url, &url_moniker, URL_MK_UNIFORM);
+  if (FAILED(hr)) {
+    return false;
   }
-}
 
-int Stopwatch::GetElapsed() {
-  return total_;
-}
+  LPOLESTR displayname;
+  hr = url_moniker->GetDisplayName(NULL, NULL, &displayname);
+  if (FAILED(hr)) {
+    return false;
+  }
 
+  wchar_t *hash = wcschr(displayname, L'#');
+  if (hash) {
+    *hash = 0;
+  }
 
-ScopedStopwatch::ScopedStopwatch(Stopwatch *t) {
-  assert(t);
-  t_ = t;
-  t_->Start();
-}
-
-ScopedStopwatch::~ScopedStopwatch() {
-  assert(t_);
-  t_->Stop();
+  *out = displayname;
+  CComAllocator::Free(displayname);
+  return true;
 }

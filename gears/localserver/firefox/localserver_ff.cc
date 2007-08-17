@@ -26,16 +26,17 @@
 #include "gears/third_party/gecko_internal/nsIDOMClassInfo.h"
 #include "gears/third_party/gecko_internal/nsIVariant.h"
 
+#include "gears/localserver/firefox/localserver_ff.h"
+
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/url_utils.h"
 #include "gears/base/firefox/dom_utils.h"
-#include "gears/localserver/firefox/managed_resource_store_ff.h"
-#include "gears/localserver/firefox/localserver_ff.h"
-#include "gears/localserver/firefox/resource_store_ff.h"
-
 #ifdef DEBUG
 #include "gears/localserver/common/localserver_tests.h" // for testing
 #endif
+#include "gears/localserver/firefox/managed_resource_store_ff.h"
+#include "gears/localserver/firefox/resource_store_ff.h"
 
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
@@ -88,8 +89,8 @@ NS_IMETHODIMP GearsLocalServer::CanServeLocally(//const nsAString &url,
   }
 
   std::string16 full_url;
-  if (!ResolveRelativeUrl(EnvPageLocationUrl().c_str(), url.c_str(),
-                          &full_url)) {
+  if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), url.c_str(),
+                           &full_url)) {
     RETURN_EXCEPTION(STRING16(L"Failed to resolve url."));
   }
   if (!EnvPageSecurityOrigin().IsSameOriginAsUrl(full_url.c_str())) {

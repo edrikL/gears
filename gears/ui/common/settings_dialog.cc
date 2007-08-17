@@ -122,7 +122,7 @@ void SettingsDialog::ProcessResult(Json::Value *dialog_result) {
       continue;
     }
 
-    capabilities->SetCanAccessScour(origin, 
+    capabilities->SetCanAccessGears(origin, 
                                     CapabilitiesDB::CAPABILITY_DEFAULT);
   }
 }

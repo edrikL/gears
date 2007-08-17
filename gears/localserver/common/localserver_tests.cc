@@ -39,6 +39,7 @@
 
 bool TestSecurityModel();  // from security_model_test.cc
 bool TestFileUtils();  // from file_test.cc
+bool TestUrlUtils();  // from url_utils_test.cc
 
 //------------------------------------------------------------------------------
 // TestWebCacheAll
@@ -48,6 +49,7 @@ bool TestWebCacheAll() {
   ok &= TestStartsWithAndEndsWith();
   ok &= TestStrUtilsReplaceAll();
   ok &= TestFileUtils();
+  ok &= TestUrlUtils();
   ok &= TestParseHttpStatusLine();
   ok &= TestHttpRequest();
   ok &= TestHttpCookies();

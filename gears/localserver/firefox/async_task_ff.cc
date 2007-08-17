@@ -407,7 +407,7 @@ void AsyncTask::ReadyStateChanged(HttpRequest *http_request) {
           *(params_->was_redirected) = true;
         }
         if (params_->full_redirect_url) {
-          http_request->GetRedirectUrl(params_->full_redirect_url);
+          http_request->GetFinalUrl(params_->full_redirect_url);
         }
       }
       http_request_.reset(NULL);

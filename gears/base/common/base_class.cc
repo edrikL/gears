@@ -87,6 +87,10 @@ bool GearsBaseClass::InitBaseManually(bool is_worker,
                                       const SecurityOrigin &page_origin,
                                       JsRunnerInterface *js_runner) {
   assert(!is_initialized_);
+  // We want to make sure page_origin is initialized, but that isn't exposed
+  // directly.  So access any member to trip its internal 'initialized_' assert.
+  assert(page_origin.port() != -1);
+
   env_is_worker_ = is_worker;
 #if BROWSER_FF
   env_page_js_context_ = cx;

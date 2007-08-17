@@ -25,9 +25,12 @@
 
 #include <assert.h>
 #include <set>
+
+#include "gears/localserver/common/manifest.h"
+
 #include "gears/base/common/common.h"
 #include "gears/base/common/string_utils.h"
-#include "gears/localserver/common/manifest.h"
+#include "gears/base/common/url_utils.h"
 #include "gears/third_party/jsoncpp/json.h"
 
 //------------------------------------------------------------------------------
@@ -269,7 +272,7 @@ bool Manifest::ResolveRelativeUrl(const char16 *base, std::string16 *url) {
   const char16 *kNotSameOriginErrorMessage =
       STRING16(L"Url is not from the same origin - ");
   std::string16 resolved;
-  if (!::ResolveRelativeUrl(base, url->c_str(), &resolved)) {
+  if (!::ResolveAndNormalize(base, url->c_str(), &resolved)) {
     error_message_ = kResolveErrorMessage;
     error_message_ += *url;
     return false;

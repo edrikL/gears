@@ -23,45 +23,46 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <assert.h>
+#include "gears/base/common/url_utils.h"
 
-#include "gears/base/common/stopwatch.h"
+#include "gears/base/common/common.h"  // only for LOG()
 
 
-void Stopwatch::Start() {
-  MutexLock lock(&mutex_);
-
-  if (nested_count_ == 0) {
-    start_ = static_cast<int>(GetCurrentTimeMillis());
-  }
-
-  nested_count_++;
+bool TestUrlUtils() {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    LOG(("TestUrlUtils - failed (%d)\n", __LINE__)); \
+    return false; \
+  } \
 }
 
-void Stopwatch::Stop() {
-  MutexLock lock(&mutex_);
+  // URLs that begin with a possibly-valid scheme should be non-relative.
 
-  // You shouldn't call stop() before ever calling start; that would be silly.
-  assert(nested_count_ > 0);
+  TEST_ASSERT(!IsRelativeUrl(STRING16(L"http:")));
+  TEST_ASSERT(!IsRelativeUrl(STRING16(L"HTTP:")));
+  TEST_ASSERT(!IsRelativeUrl(STRING16(L"hTTp:")));
 
-  nested_count_--;
-  if (nested_count_ == 0) {
-    total_ += (static_cast<int>(GetCurrentTimeMillis()) - start_);
-  }
-}
+  TEST_ASSERT(!IsRelativeUrl(STRING16(L"funkyABCDEFGHIJKLMNOPQRSTUVWXYZ:")));
+  TEST_ASSERT(!IsRelativeUrl(STRING16(L"funkyabcdefghijklmnopqrstuvwxyz:")));
+  TEST_ASSERT(!IsRelativeUrl(STRING16(L"funky0123456789:")));
+  TEST_ASSERT(!IsRelativeUrl(STRING16(L"funky+.-:")));
 
-int Stopwatch::GetElapsed() {
-  return total_;
-}
+  TEST_ASSERT(!IsRelativeUrl(STRING16(L"http://www.example.com/foo.txt")));
 
 
-ScopedStopwatch::ScopedStopwatch(Stopwatch *t) {
-  assert(t);
-  t_ = t;
-  t_->Start();
-}
+  // All other URLs should be relative.
 
-ScopedStopwatch::~ScopedStopwatch() {
-  assert(t_);
-  t_->Stop();
+  TEST_ASSERT(IsRelativeUrl(STRING16(L"foo.txt")));
+  TEST_ASSERT(IsRelativeUrl(STRING16(L"foo.txt?http://evil.com")));
+  TEST_ASSERT(IsRelativeUrl(STRING16(L"/foo.txt")));
+
+  TEST_ASSERT(IsRelativeUrl(STRING16(L"http")));  // no trailing colon
+  TEST_ASSERT(IsRelativeUrl(STRING16(L"0http:")));  // no leading alpha
+  TEST_ASSERT(IsRelativeUrl(STRING16(L":")));
+
+
+  LOG(("TestUrlUtilsAll - passed\n"));
+  return true;
 }

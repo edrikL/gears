@@ -138,15 +138,4 @@
 #endif
 
 
-// Returns the current time in milliseconds since the epoch.
-// The epoch is midnight January 1, 1970 GMT.
-// The implementation is machine dependent.
-int64 GetCurrentTimeMillis();
-
-// Resolves relative urls, normalizes them, and strips the fragment part
-// off the url. 
-bool ResolveRelativeUrl(const char16 *base, const char16 *url,
-                        std::string16 *resolved);
-
-
 #endif // GEARS_BASE_COMMON_COMMON_H__

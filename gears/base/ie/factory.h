@@ -35,8 +35,8 @@
 #include "gears/base/ie/resource.h" // for .rgs resource ids (IDR_*)
 
 
-// The factory class satisfies requests for Scour objects matching specific
-// versions. Scour offers multiple side-by-side versions of components so that
+// The factory class satisfies requests for Gears objects matching specific
+// versions. Gears offers multiple side-by-side versions of components so that
 // applications can request specific component configurations. We didn't want
 // to change class/method signatures each time a version changed, so we use
 // this factory class to choose at runtime which version of an object to
@@ -73,14 +73,23 @@ class ATL_NO_VTABLE GearsFactory
   // Hook into SetSite() to do some init work that requires the site.
   STDMETHOD(SetSite)(IUnknown *site);
 
+  // Non-scriptable methods
+  void SuspendObjectCreation();
+  void ResumeObjectCreationAndUpdatePermissions();
+
  private:
   // friends for exposing 'is_permission_*' fields
   friend class PoolThreadsManager;
-  friend bool HasPermissionToUseScour(GearsFactory *factory);
+  friend bool HasPermissionToUseGears(GearsFactory *factory);
 
-  // We remember for the life of this page even if 'remember_choice'
-  // is not chosen. The page and it's workers will be allowed to use
-  // Scour without prompts until the page is unloaded.
+  // A factory starts out operational, but it can be put in a "suspended" state,
+  // unable to create objects.  This is important for some use cases, like
+  // cross-origin workers.
+  bool is_creation_suspended_;
+
+  // We remember opt-in for the life of this page even if 'remember_choice'
+  // is not selected. The page and it's workers will be allowed to use Gears
+  // without prompts until the page is unloaded.
   //
   // TODO(cprince): move this into GearsBaseClass to auto-pass permission data
   // around. Do that when we have a single instance of the info per page,

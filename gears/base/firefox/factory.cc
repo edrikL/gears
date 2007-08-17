@@ -61,7 +61,8 @@ const nsCID kGearsFactoryClassId = {0x93b2e433, 0x35ab, 0x46e7, {0xa9, 0x50,
 
 
 GearsFactory::GearsFactory()
-    : is_permission_granted_(false),
+    : is_creation_suspended_(false),
+      is_permission_granted_(false),
       is_permission_value_from_user_(false) {
   SetActiveUserFlag();
 }
@@ -72,9 +73,9 @@ NS_IMETHODIMP GearsFactory::Create(const nsAString &object_nsstring,
                                    nsISupports **retval) {
   nsresult nr;
 
-  // Make sure the user gives this site permission to use Scour.
+  // Make sure the user gives this site permission to use Gears.
 
-  if (!HasPermissionToUseScour(this)) {
+  if (!HasPermissionToUseGears(this)) {
     RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
                               PRODUCT_FRIENDLY_NAME L"."));
   }
@@ -108,38 +109,31 @@ NS_IMETHODIMP GearsFactory::Create(const nsAString &object_nsstring,
 
   nsCOMPtr<nsISupports> isupports = NULL;
 
-  // TODO(cprince): remove support for legacy names ("com.google.") in June,
-  // after pre-release developers have some time to update their code.
   nr = NS_ERROR_FAILURE;
-  if (object == STRING16(L"beta.database") ||
-      object == STRING16(L"com.google.beta.database")) {
+  if (object == STRING16(L"beta.database")) {
     if (major_version_desired == kGearsDatabaseVersionMajor &&
         minor_version_desired <= kGearsDatabaseVersionMinor) {
       isupports = do_QueryInterface(new GearsDatabase(), &nr);
     }
-  } else if (object == STRING16(L"beta.httprequest") ||
-             object == STRING16(L"com.google.beta.httprequest")) {
+  } else if (object == STRING16(L"beta.httprequest")) {
     if (major_version_desired == kGearsHttpRequestVersionMajor &&
         minor_version_desired <= kGearsHttpRequestVersionMinor) {
       isupports = do_QueryInterface(new GearsHttpRequest(), &nr);
     }
-  } else if (object == STRING16(L"beta.workerpool") ||
-             object == STRING16(L"com.google.beta.workerpool")) {
-    if (major_version_desired == kGearsWorkerPoolVersionMajor &&
-        minor_version_desired <= kGearsWorkerPoolVersionMinor) {
-      isupports = do_QueryInterface(new GearsWorkerPool(), &nr);
-    }
-  } else if (object == STRING16(L"beta.localserver") ||
-             object == STRING16(L"com.google.beta.localserver")) {
+  } else if (object == STRING16(L"beta.localserver")) {
     if (major_version_desired == kGearsLocalServerVersionMajor &&
         minor_version_desired <= kGearsLocalServerVersionMinor) {
       isupports = do_QueryInterface(new GearsLocalServer(), &nr);
     }
-  } else if (object == STRING16(L"beta.timer") ||
-             object == STRING16(L"com.google.beta.timer")) {
+  } else if (object == STRING16(L"beta.timer")) {
     if (major_version_desired == kGearsTimerVersionMajor &&
         minor_version_desired <= kGearsTimerVersionMinor) {
       isupports = do_QueryInterface(new GearsTimer(), &nr);
+    }
+  } else if (object == STRING16(L"beta.workerpool")) {
+    if (major_version_desired == kGearsWorkerPoolVersionMajor &&
+        minor_version_desired <= kGearsWorkerPoolVersionMinor) {
+      isupports = do_QueryInterface(new GearsWorkerPool(), &nr);
     }
   } else {
     RETURN_EXCEPTION(STRING16(L"Unknown object."));
@@ -182,4 +176,17 @@ NS_IMETHODIMP GearsFactory::GetBuildInfo(nsAString &retval) {
   AppendBuildInfo(&build_info);
   retval.Assign(build_info.c_str());
   RETURN_NORMAL();
+}
+
+
+// TODO(cprince): See if we can use Suspend/Resume with the opt-in dialog too,
+// rather than just the cross-origin worker case.  (Code re-use == good.)
+void GearsFactory::SuspendObjectCreation() {
+  is_creation_suspended_ = true;
+}
+
+void GearsFactory::ResumeObjectCreationAndUpdatePermissions() {
+  // TODO(cprince): The transition from suspended to resumed is where we should
+  // propagate cross-origin opt-in to the permissions DB.
+  is_creation_suspended_ = false;
 }
