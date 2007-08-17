@@ -110,39 +110,113 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         alert(url + "\n" + success + " " + id);
       }
 
+
       //----------------------------------------------------------
-      // XmlHttp tests
+      // XmlHttpRequest tests
       //----------------------------------------------------------
 
-      function DoXmlHttp(url, verb) {
-        var local = "xmlhttpcomplete ";
+      function NewXHR() {
         if (window.XMLHttpRequest) {
-          xmlhttp = new XMLHttpRequest();
+          return new XMLHttpRequest();
         } else if (window.ActiveXObject) {
-          xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+          return new ActiveXObject("Msxml2.XMLHTTP");
+        } else {
+          return null;
+        }
+      }
+      
+      function DoXmlHttpRequest(url, verb, data) {
+        var xmlhttp = NewXHR();
+        var statesReached = [0, 0, 0, 0, 0];
+        xmlhttp.onreadystatechange = function() {
+          var state = xmlhttp.readyState;
+          statesReached[state] += 1;
+          if (state == 4) {
+            var responseText = "";
+            try { responseText = xmlhttp.responseText; }
+            catch (e) {}
+            display_text(statesReached + "\n" +
+                         xmlhttp.status + " " + xmlhttp.statusText + "\n" +
+                         xmlhttp.getAllResponseHeaders() + 
+                         "----------------------------\n" +
+                         responseText);
+          }
         }
         xmlhttp.open(verb, url, true);
-        xmlhttp.onreadystatechange=function() {
-            if (xmlhttp.readyState==4) {
-                var b = (this == xmlhttp);
-                display_text(local + "thistest=" + b + " " +
-                       xmlhttp.getAllResponseHeaders() + " " +
-                       xmlhttp.responseText);
-            }
+        xmlhttp.send(data)
+      }
+      
+      var xmlhttpmany;
+      var xmlhttpmany_baseurl;
+      var xmlhttpmany_num_to_get;
+      var xmlhttpmany_num_got;
+     
+      function DoXhrGetMany(urlbase, count) {
+        if (xmlhttpmany) {
+          alert("Already getting many");
+          return;
+        }
+        xmlhttpmany = NewXHR();
+        xmlhttpmany_baseurl = urlbase;
+        xmlhttpmany_num_to_get = count;
+        xmlhttpmany_num_got = 0;
+        DoXhrGetOne();
+      }
+      
+      function DoXhrGetOne() {          
+        if (xmlhttpmany_num_got >= xmlhttpmany_num_to_get) {
+          display_text("Got all");
+          xmlhttpmany = null;
+          return;
+        }  
+        var url = xmlhttpmany_baseurl + xmlhttpmany_num_got++;
+        var xmlhttp = NewXHR();
+        xmlhttp.open("GET", url, true);
+        xmlhttp.onreadystatechange = function() {
+          if (xmlhttp.readyState==4) {
+            display_text("Got " + xmlhttpmany_num_got +
+                         " of " + xmlhttpmany_num_to_get);
+            DoXhrGetOne();
           }
+        }
         xmlhttp.send(null)
       }
 
+      //----------------------------------------------------------
+      // Gears.HttpRequest tests
+      //----------------------------------------------------------
+
+      function DoGearsHttpRequest(url, verb, data) {
+        var gearshttp = google.gears.factory.create("beta.httprequest", "1.0");
+        var statesReached = [0, 0, 0, 0, 0];
+        gearshttp.onreadystatechange = function() {
+          var state = gearshttp.readyState;
+          statesReached[state] += 1;
+          if (state == 4) {
+            var responseText = "";
+            try { responseText = gearshttp.responseText; }
+            catch (e) {}
+            display_text(statesReached + "\n" +
+                         gearshttp.status + " " + gearshttp.statusText + "\n" +
+                         gearshttp.getAllResponseHeaders() +
+                         "----------------------------\n" +
+                         responseText);
+          }
+        }
+        gearshttp.open(verb, url, true);
+        gearshttp.send(data)
+      }
+
+      
       //----------------------------------------------------------
       // Output stuff to the results div
       //----------------------------------------------------------
 
       function display_text(text) {
-        var result = document.getElementById("result");
-        while (result.hasChildNodes()) {
-          result.removeChild(result.firstChild);
-        }
-        result.appendChild(document.createTextNode(text));
+        var html = '<pre>' + text + '</pre>';
+        var div = document.getElementById("result");
+        div.innerHTML = html;
+        // TODO(michaeln): this doesn't always clear previous contents in FF
       }
 
       function display_result(url, status) {
@@ -204,12 +278,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <input type="button" value="getHeader(url, url2AsName)" onclick="display_text(store.getHeader( urlinput.value, url2input.value ))">
       <input type="button" value="getAllHeaders(url)" onclick="display_text(store.getAllHeaders( urlinput.value ))">
 
-
       <!-- Misc --><h5>Misc</h5>
       <br><!-- XmlHttp -->
-      <input type="button" value="XmlHttpGET(url)" onclick="DoXmlHttp( urlinput.value, 'GET' )">
-      <input type="button" value="XmlHttpHEAD(url)" onclick="DoXmlHttp( urlinput.value, 'HEAD' )">
-
+      <input type="button" value="XmlHttpGET(url)" onclick="DoXmlHttpRequest( urlinput.value, 'GET' )">
+      <input type="button" value="XmlHttpHEAD(url)" onclick="DoXmlHttpRequest( urlinput.value, 'HEAD' )">
+      <input type="button" value="XmlHttpPOST(url, url2AsData)" onclick="DoXmlHttpRequest( urlinput.value, 'POST', url2input.value )">
+      <br><!-- GearsHttp -->
+      <input type="button" value="GearsHttpGET(url)" onclick="DoGearsHttpRequest( urlinput.value, 'GET', null )">
+      <input type="button" value="GearsHttpHEAD(url)" onclick="DoGearsHttpRequest( urlinput.value, 'HEAD', null )">
+      <input type="button" value="GearsHttpPOST(url, url2AsData)" onclick="DoGearsHttpRequest( urlinput.value, 'POST', url2input.value )">
+      <br>
+      <input type="button" value="XHR.GetMany(urlAsBase, url2AsNumber)" onclick="DoXhrGetMany(urlinput.value, url2input.value)">
     </form>
 
     <div id="result"></div>

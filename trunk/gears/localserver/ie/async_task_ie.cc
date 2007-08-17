@@ -286,11 +286,11 @@ bool AsyncTask::HttpGet(const char16 *full_url,
                    ARRAYSIZE(handles), handles, INFINITE, QS_ALLINPUT,
                    MWMO_ALERTABLE | MWMO_INPUTAVAILABLE);
     if (rv == kReadyStateChangedEvent) {
-      int state;
       // TODO(michaeln): perhaps simplify the HttpRequest interface to
       // include a getResponse(&payload) method?
+      HttpRequest::ReadyState state;
       if (http_request->GetReadyState(&state)) {
-        if (state == 4) {
+        if (state == HttpRequest::COMPLETE) {
           done = true;
           if (!is_aborted_) {
             int status;

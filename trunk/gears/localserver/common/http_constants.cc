@@ -45,12 +45,15 @@ const char16 *HttpConstants::kPragmaHeader = STRING16(L"Pragma");
 const char16 *HttpConstants::kHttpGET = STRING16(L"GET");
 const char   *HttpConstants::kHttpGETAscii = "GET";
 const char16 *HttpConstants::kHttpHEAD = STRING16(L"HEAD");
+const char16 *HttpConstants::kHttpPOST = STRING16(L"POST");
+const char16 *HttpConstants::kHttpPUT = STRING16(L"PUT");
 const char16 *HttpConstants::kHttpScheme = STRING16(L"http");
 const char   *HttpConstants::kHttpSchemeAscii =      "http";
 const char16 *HttpConstants::kHttpsScheme = STRING16(L"https");
 const char   *HttpConstants::kHttpsSchemeAscii =      "https";
 const char16 *HttpConstants::kFileScheme = STRING16(L"file");
 const char   *HttpConstants::kFileSchemeAscii =      "file";
+const char16 *HttpConstants::kMimeApplicationXml = STRING16(L"application/xml");
 const char16 *HttpConstants::kXCapturedFilenameHeader =
                                  STRING16(L"X-Captured-Filename");
 

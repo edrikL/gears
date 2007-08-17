@@ -1,3 +1,4 @@
+<?php 
 // Copyright 2007, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
@@ -23,10 +24,13 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/product_version.h"
+if (isset($_GET["all"]))
+  $what = INFO_ALL;
+else
+  $what = INFO_VARIABLES;
 
-DEFINE_MODULE_VERSION_VARIABLES(Database, 1, 0);
-DEFINE_MODULE_VERSION_VARIABLES(HttpRequest, 1, 0);
-DEFINE_MODULE_VERSION_VARIABLES(LocalServer, 1, 0);
-DEFINE_MODULE_VERSION_VARIABLES(Timer, 1, 0);
-DEFINE_MODULE_VERSION_VARIABLES(WorkerPool, 1, 0);
+phpinfo($what);
+
+if ($what == INFO_VARIABLES)
+  echo "Add an ?all query string to see additional info"
+?>

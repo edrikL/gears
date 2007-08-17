@@ -49,6 +49,7 @@ import "ui/ie/html_dialog_host.idl";
 
 import "base/ie/factory.idl";
 import "database/ie/database.idl";
+import "httprequest/ie/httprequest.idl";
 import "localserver/ie/localserver.idl";
 import "workerpool/ie/workerpool.idl";
 import "timer/ie/timer.idl";
@@ -126,6 +127,14 @@ library GearsTypelib
   coclass GearsTimer
   {
     [default] interface GearsTimerInterface;
+  };
+
+  [
+    uuid(AAF5DBC9-70C8-45c2-B7AB-6576428F3CA3)
+  ]
+  coclass GearsHttpRequest
+  {
+    [default] interface GearsHttpRequestInterface;
   };
 
 };

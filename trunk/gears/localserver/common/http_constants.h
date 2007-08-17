@@ -60,9 +60,12 @@ class HttpConstants {
   static const char16 *kHttpGET;
   static const char   *kHttpGETAscii;
   static const char16 *kHttpHEAD;
+  static const char16 *kHttpPOST;
+  static const char16 *kHttpPUT;
   static const char16 *kIfModifiedSinceHeader;
   static const char16 *kLastModifiedHeader;
   static const char16 *kLocationHeader;
+  static const char16 *kMimeApplicationXml;
   static const char16 *kNoCache;
   static const char16 *kOKStatusLine;
   static const char16 *kPragmaHeader;

@@ -386,9 +386,9 @@ bool AsyncTask::OnStartHttpGet() {
 void AsyncTask::ReadyStateChanged(HttpRequest *http_request) {
   assert(params_);
   assert(http_request_.get() == http_request);
-  int state;
+  HttpRequest::ReadyState state;
   if (http_request->GetReadyState(&state)) {
-    if (state == 4) {
+    if (state == HttpRequest::COMPLETE) {
       if (!is_aborted_) {
         int status;
         if (http_request->GetStatus(&status)) {

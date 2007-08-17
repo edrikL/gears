@@ -1,3 +1,4 @@
+<?php 
 // Copyright 2007, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
@@ -23,10 +24,22 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/product_version.h"
+// This testing and debugging utility echos information contained in
+// the request back in the response.
 
-DEFINE_MODULE_VERSION_VARIABLES(Database, 1, 0);
-DEFINE_MODULE_VERSION_VARIABLES(HttpRequest, 1, 0);
-DEFINE_MODULE_VERSION_VARIABLES(LocalServer, 1, 0);
-DEFINE_MODULE_VERSION_VARIABLES(Timer, 1, 0);
-DEFINE_MODULE_VERSION_VARIABLES(WorkerPool, 1, 0);
+$method = $_SERVER["REQUEST_METHOD"];
+header("echo-Method: $method");
+
+$protocol = $_SERVER["SERVER_PROTOCOL"];
+header("echo-Protocol: $protocol");
+
+$headers = getallheaders();
+foreach ($headers as $name => $value) {
+  header("echo-$name: $value");
+}
+
+if ($method == "POST" || $method == "PUT") {
+  $body = @file_get_contents('php://input');
+  echo $body;
+}
+?>

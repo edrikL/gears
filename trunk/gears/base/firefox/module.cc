@@ -35,14 +35,15 @@
 #include "gears/base/firefox/factory.h"
 #include "gears/database/firefox/database.h"
 #include "gears/database/firefox/result_set.h"
-#include "gears/ui/firefox/ui_utils.h"
-#include "gears/workerpool/firefox/workerpool.h"
+#include "gears/httprequest/firefox/httprequest_ff.h"
 #include "gears/localserver/firefox/cache_intercept.h"
 #include "gears/localserver/firefox/localserver_ff.h"
 #include "gears/localserver/firefox/managed_resource_store_ff.h"
 #include "gears/localserver/firefox/resource_store_ff.h"
 #include "gears/localserver/firefox/file_submitter_ff.h"
 #include "gears/timer/firefox/timer.h"
+#include "gears/ui/firefox/ui_utils.h"
+#include "gears/workerpool/firefox/workerpool.h"
 
 //-----------------------------------------------------------------------------
 
@@ -123,6 +124,12 @@ NS_DOMCI_EXTENSION(Scour)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsResultSet, PR_TRUE,
                                              &kGearsResultSetClassId)
 
+  // httprequest
+  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsHttpRequest)
+    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsHttpRequestInterface)
+  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsHttpRequest, PR_TRUE,
+                                             &kGearsHttpRequestClassId)
+
   // workerpool
   NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsWorkerPool)
     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsWorkerPoolInterface)
@@ -189,6 +196,9 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
       GEARSDATABASEINTERFACE_IID_STR },
     { kGearsResultSetClassName, "GearsResultSetInterface",
       GEARSRESULTSETINTERFACE_IID_STR },
+    // httprequest
+    { kGearsHttpRequestClassName, "GearsHttpRequestInterface",
+      GEARSHTTPREQUESTINTERFACE_IID_STR },
     // workerpool
     { kGearsWorkerPoolClassName, "GearsWorkerPoolInterface",
       GEARSWORKERPOOLINTERFACE_IID_STR },
@@ -235,6 +245,8 @@ NS_DECL_DOM_CLASSINFO(GearsFactory)
 // database
 NS_DECL_DOM_CLASSINFO(GearsDatabase)
 NS_DECL_DOM_CLASSINFO(GearsResultSet)
+// httprequest
+NS_DECL_DOM_CLASSINFO(GearsHttpRequest)
 // workerpool
 NS_DECL_DOM_CLASSINFO(GearsWorkerPool)
 // localserver
@@ -259,6 +271,8 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
   // database
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsDatabase));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsResultSet));
+  // httprequest
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsHttpRequest));
   // workerpool
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsWorkerPool));
   // localserver

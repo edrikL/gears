@@ -32,6 +32,7 @@
 #include "ff/genfiles/localserver.h" // from OUTDIR
 #include "gears/base/common/common.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
 
 class nsIChannel;
@@ -73,7 +74,7 @@ class FFHttpRequest : public HttpRequest,
   }
 
   // properties
-  virtual bool GetReadyState(int *state);
+  virtual bool GetReadyState(ReadyState *state);
   virtual bool GetResponseBodyAsText(std::string16 *text);
   virtual bool GetResponseBody(std::vector<uint8> *body);
   virtual std::vector<uint8> *GetResponseBody();
@@ -86,11 +87,12 @@ class FFHttpRequest : public HttpRequest,
   virtual bool GetRedirectUrl(std::string16 *full_redirect_url);
 
   // methods
-  virtual bool Open(const char16 *method, const char16* url, bool async);
-  virtual bool SetRequestHeader(const char16* name, const char16* value);
+  virtual bool Open(const char16 *method, const char16 *url, bool async);
+  virtual bool SetRequestHeader(const char16 *name, const char16 *value);
   virtual bool Send();
+  virtual bool SendString(const char16 *data);
   virtual bool GetAllResponseHeaders(std::string16 *headers);
-  virtual bool GetResponseHeader(const char16* name, std::string16 *header);
+  virtual bool GetResponseHeader(const char16 *name, std::string16 *header);
   virtual bool Abort();
 
   // events
@@ -104,15 +106,25 @@ class FFHttpRequest : public HttpRequest,
 
   already_AddRefed<nsIHttpChannel> GetCurrentHttpChannel();
 
-  void SetReadyState(int state);
+  void SetReadyState(ReadyState state);
+  bool SendImpl(nsIInputStream *post_data);
+  bool NewByteInputStream(nsIInputStream **stream,
+                          const char *data,
+                          int data_size);
+  bool IsPostOrPut() {
+    return method_ == HttpConstants::kHttpPOST || 
+           method_ == HttpConstants::kHttpPUT;
+  }
 
-  static NS_METHOD StreamReaderFunc(nsIInputStream* in,
-                                    void* closure,
-                                    const char* fromRawSegment,
+  static NS_METHOD StreamReaderFunc(nsIInputStream *in,
+                                    void *closure,
+                                    const char *fromRawSegment,
                                     PRUint32 toOffset,
                                     PRUint32 count,
-                                    PRUint32 *writeCount);
-  int state_;
+                                    PRUint32* writeCount);
+  ReadyState state_;
+  std::string16 method_;
+  std::string post_data_string_;
   scoped_ptr< std::vector<uint8> > response_body_;
   CachingBehavior caching_behavior_;
   bool was_sent_;

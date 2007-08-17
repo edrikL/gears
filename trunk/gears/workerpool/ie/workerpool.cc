@@ -502,9 +502,9 @@ class CreateWorkerUrlFetchListener : public HttpRequest::ReadyStateListener {
   explicit CreateWorkerUrlFetchListener(JavaScriptWorkerInfo *wi) : wi_(wi) {}
 
   virtual void ReadyStateChanged(HttpRequest *source) {
-    int ready_state;
+    HttpRequest::ReadyState ready_state = HttpRequest::UNINITIALIZED;
     source->GetReadyState(&ready_state);
-    if (ready_state == 4) {
+    if (ready_state == HttpRequest::COMPLETE) {
       // Fetch completed.  First, unregister this listener.
       source->SetOnReadyStateChange(NULL);
 

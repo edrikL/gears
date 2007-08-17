@@ -544,4 +544,34 @@ FF_CPPSRCS	+= \
 		update_task_ff.cc \
 		$(NULL)		
 
+#-----------------------------------------------------------------------------
+# httprequest/ie
+
+IE_VPATH	+= \
+		httprequest/ie \
+		$(NULL)
+
+IE_IDLSRCS	+= \
+		httprequest.idl \
+		$(NULL)
+
+IE_CPPSRCS	+= \
+		httprequest_ie.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# httprequest/ff
+
+FF_VPATH	+= \
+		httprequest/firefox \
+		$(NULL)
+
+FF_IDLSRCS	+= \
+		httprequest.idl \
+		$(NULL)
+
+FF_CPPSRCS	+= \
+		httprequest_ff.cc \
+		$(NULL)
+
 include tools/rules.mk
