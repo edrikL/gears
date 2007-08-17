@@ -36,9 +36,10 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/database/firefox/database.h"
-#include "gears/workerpool/firefox/workerpool.h"
+#include "gears/httprequest/firefox/httprequest_ff.h"
 #include "gears/localserver/firefox/localserver_ff.h"
 #include "gears/timer/firefox/timer.h"
+#include "gears/workerpool/firefox/workerpool.h"
 
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
@@ -115,6 +116,12 @@ NS_IMETHODIMP GearsFactory::Create(const nsAString &object_nsstring,
     if (major_version_desired == kGearsDatabaseVersionMajor &&
         minor_version_desired <= kGearsDatabaseVersionMinor) {
       isupports = do_QueryInterface(new GearsDatabase(), &nr);
+    }
+  } else if (object == STRING16(L"beta.httprequest") ||
+             object == STRING16(L"com.google.beta.httprequest")) {
+    if (major_version_desired == kGearsHttpRequestVersionMajor &&
+        minor_version_desired <= kGearsHttpRequestVersionMinor) {
+      isupports = do_QueryInterface(new GearsHttpRequest(), &nr);
     }
   } else if (object == STRING16(L"beta.workerpool") ||
              object == STRING16(L"com.google.beta.workerpool")) {

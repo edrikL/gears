@@ -67,6 +67,7 @@ function doit(document) {
   runWorkerPoolTests();
   runTimerTests();
   runMiscTests();
+  runHttpRequestTests();
 
   var c = document.getElementById("complete");
   c.innerHTML =
@@ -2501,4 +2502,247 @@ function stringEndsWith(str, postfix) {
   return str && postfix &&
          str.length >= postfix.length &&
          str.substring(str.length - postfix.length) == postfix;
+}
+
+
+//------------------------------------------------------------------------------
+// Gears.HttpRequest tests
+//------------------------------------------------------------------------------
+
+
+function runHttpRequestTests() {
+  httpRequestTestSuite(false);    // run on the main thread
+  runHttpRequestTestsOnWorker();  // run on a worker thread
+}
+
+
+// Called upon completion of each distinct test. Both main and worker
+// test results get plumbed thru this function.
+function httpRequestTestComplete(testName, result) {
+  insertRow(testName, result);
+}
+
+
+// Helper that runs our test suite in a worker
+function runHttpRequestTestsOnWorker() {
+  function myOnMessage(msg, sender) {
+    var retvals = eval('(' + msg + ')');
+    httpRequestTestComplete('<b>[WORKER THREAD]</b> ' + retvals[0], // testName
+                            retvals[1]); // success;
+  }
+  
+  function childTestComplete(testName, result) {
+    google.gears.workerPool.sendMessage('["' + testName + '", ' + result + ']',
+                                        0);  // parent id
+  }
+
+  var childCode = 'var httpRequestTestComplete = ' + childTestComplete + ';' + 
+                  'var runIt = ' + httpRequestTestSuite +  ';' + 
+                  'runIt(true);';
+
+  var workerPool = google.gears.factory.create('beta.workerpool', '1.0');
+  workerPool.onmessage = myOnMessage;
+  try {
+    workerPool.createWorker(childCode);
+  } catch (e) {
+    insertRow('While creating worker in runHttpRequestTestsOnWorker...',
+              false,  // success
+              e.message,  // reason
+              0); // execTime
+  }
+}
+
+
+// Function that encapsulates the HttpRequest test suite. Upon completion
+// of each test the external function httpRequestTestComplete is invoked.
+// Other than that, this function is self contained.
+function httpRequestTestSuite(inWorker) {
+  // TODO(michaeln): detect if tests fail to complete and report those as errors
+  var tests = [
+    [httpGet_200, 'httpGet_200'],
+    [httpPost_200, 'httpPost_200'],
+    [httpGet_404, 'httpGet_404'],
+    [httpGet_302_200, 'httpGet_302_200'],
+    [httpGet_302_404, 'httpGet_302_404'],
+    [httpPost_302_200, 'httpPost_302_200'],
+    [httpGet_NoCrossOrigin, 'httpGet_NoCrossOrigin']
+  ];
+
+  for (var testIndex = 0; testIndex < tests.length; ++testIndex) {
+    var testName = tests[testIndex][1];
+    try {
+      tests[testIndex][0](testName);
+    } catch (e) {
+      httpRequestTestComplete(testName + ', should fail to initiate', false);    
+    }
+  }
+  return;  // Only nested functions follow
+
+  function httpGet_200(testName) {
+    testRequest(testName,
+        'test_file_1.txt', 'GET', null, null, // url, method, data, reqHeaders[]
+        200, '1', null);  // expected status, responseText, responseHeaders[]
+  }
+
+  function httpPost_200(testName) {
+    var data = 'hello';
+    var headers = [["Name1", "Value1"],
+                   ["Name2", "Value2"]];
+    var expectedHeaders = getExpectedEchoHeaders(headers);
+    testRequest(testName,
+        'echo_request.php', 'POST', data, headers,
+        200, data, expectedHeaders); 
+  }
+
+  function httpPost_302_200(testName) {
+    // A POST that gets redirected should GET the new location
+    var data = 'hello';
+    var expectedHeaders = [["echo-Method", "GET"]];
+    testRequest(testName,
+        'server_redirect.php?location=echo_request.php',
+        'POST', data, null,
+        200, null, expectedHeaders); 
+  }
+  
+  function httpGet_404(testName) {
+    testRequest(testName,
+        'nosuchfile___', 'GET', null, null, // url, method, data, reqHeaders[]
+        404, null, null);  // expected status, responseText, responseHeaders[]
+  }
+
+  function httpGet_302_200(testName) {
+    testRequest(testName,
+        'server_redirect.php?location=test_file_1.txt', 'GET', null, null,
+        200, '1', null);  // expected status, responseText, responseHeaders[]
+  }
+
+  function httpGet_302_404(testName) {
+    testRequest(testName,
+        'server_redirect.php?location=nosuchfile___', 'GET', null, null,
+        404, null, null);  // expected status, responseText, responseHeaders[]
+  }  
+
+  function httpGet_NoCrossOrigin(testName) {
+    try {
+      testRequest(testName,
+          'http://www.google.com/', 'GET', null, null,
+          0, null, null);  // expected status, responseText, responseHeaders[]
+      httpRequestTestComplete(testName + ', should fail to initiate', false);    
+    } catch(e) {
+      // should fail to initiate
+      httpRequestTestComplete(testName, true);
+    }
+  }
+
+  /*
+  // TODO(michaeln): implement me
+  // how should this fail exactly, throw when trying to
+  // access properties, return a particular status code, what?
+  function httpGet_302_NoCrossOrigin(testName) {
+    // we expect this test to initiate, but to fail on completion
+    testRequest(testName,
+        'server_redirect.php?location=http://www.google.com/',
+        'GET', null, null,
+        0, null, null);  // expected status, responseText, responseHeaders[]
+  }
+  */
+
+  function httpGet_BinaryResponse(testName) {
+    // TODO(michaeln): do something reasonable with binary responses
+  }
+
+  function httpGet_CapturedResource(testName) {
+    // TODO(michaeln): ensure we can fetch 'captured' urls
+  }
+
+  // Generates header name value pairs echo_requests.php will respond
+  // with for the given request headers.
+  function getExpectedEchoHeaders(requestHeaders) {
+    var echoHeaders = [];
+    for (var i = 0; i < requestHeaders.length; ++i) {
+      var name = 'echo-' + requestHeaders[i][0];
+      var value = requestHeaders[i][1];
+      echoHeaders.push([name, value]);
+    }
+    return echoHeaders;
+  }
+
+  // A helper that initiates a request and examines the response.
+  function testRequest(testName,
+                       url, method, data, requestHeaders,
+                       expectedStatus,
+                       expectedResponse,
+                       expectedHeaders) {
+    var request = google.gears.factory.create('beta.httprequest', '1.0');
+    var isComplete = false;
+
+    request.onreadystatechange = function() {
+      try {
+        var state = request.readyState;
+        if (state < 0 || state > 4) {
+          throw "Invalid readyState value, " + state;
+        }
+        if (request.readyState >= 3) {
+          // fetch all of the values we can fetch
+          var status = request.status;
+          var statusText = request.statusText;
+          var headers = request.getAllResponseHeaders();
+
+          if (request.readyState == 4) {
+            if (isComplete) {
+              httpRequestTestComplete(
+                  testName + ', completion called too many times',
+                  false);
+              return;
+            }
+            isComplete = true;
+            var responseText = request.responseText;
+          }
+
+          // see if we got what we expected to get
+          var result = true;
+          var msg = '';
+          if (expectedStatus != null) {
+            if (expectedStatus != status) {
+              result = false;
+              msg += ', status!=expected'
+            }
+          }
+          if (expectedHeaders != null) {
+            for (var i = 0; i < expectedHeaders.length; ++i) {
+              var name = expectedHeaders[i][0];
+              var expectedValue = expectedHeaders[i][1];
+              var actualValue = request.getResponseHeader(name);
+              if (actualValue != expectedValue) {
+                result = false;
+                msg += ', hdr[' + name + '] ' +
+                       actualValue + '!=' +
+                       expectedValue;
+              }
+            }
+          }
+          if (isComplete && expectedResponse != null) {
+            if (expectedResponse != responseText) {
+              result = false;
+              msg += ', resposeText!=expected'
+            }
+          }
+
+          if (isComplete || !result) {
+            httpRequestTestComplete(testName + msg, result);
+          }
+        }
+      } catch(e) {
+        httpRequestTestComplete(testName + ', ' + e.message, false);
+      }
+    };
+    request.open(method, url, true);
+    if (requestHeaders) {
+      for (var i = 0; i < requestHeaders.length; ++i) {
+        request.setRequestHeader(requestHeaders[i][0],
+                                 requestHeaders[i][1]);
+      }
+    }
+    request.send(data);  
+  }
 }

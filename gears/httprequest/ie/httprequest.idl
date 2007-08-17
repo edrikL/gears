@@ -23,10 +23,41 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/product_version.h"
+import "oaidl.idl";
+import "ocidl.idl";
 
-DEFINE_MODULE_VERSION_VARIABLES(Database, 1, 0);
-DEFINE_MODULE_VERSION_VARIABLES(HttpRequest, 1, 0);
-DEFINE_MODULE_VERSION_VARIABLES(LocalServer, 1, 0);
-DEFINE_MODULE_VERSION_VARIABLES(Timer, 1, 0);
-DEFINE_MODULE_VERSION_VARIABLES(WorkerPool, 1, 0);
+//------------------------------------------------------------------------------
+// GearsHttpRequest
+//------------------------------------------------------------------------------
+[
+  object,
+  uuid(28652DBF-5165-46bf-9E5E-78ACEA260237),
+  dual,
+  nonextensible,
+  pointer_default(unique)
+]
+interface GearsHttpRequestInterface : IDispatch {
+  // event handler
+  [propput] HRESULT onreadystatechange([in] IDispatch *handler);
+  [propget] HRESULT onreadystatechange([out, retval] IDispatch **handler);
+
+  // state
+  [propget] HRESULT readyState([out, retval] int *state);
+
+  // request
+  HRESULT open([in] const BSTR method,
+               [in] const BSTR url,
+               [in, optional] const VARIANT *async);
+  HRESULT setRequestHeader([in] const BSTR header,
+                           [in] const BSTR value);
+  HRESULT send([in, optional] const VARIANT *data);
+  HRESULT abort();
+
+  // response
+  HRESULT getAllResponseHeaders([out, retval] BSTR *headers);
+  HRESULT getResponseHeader([in] const BSTR headerName,
+                            [out, retval] BSTR *headerValues);
+  [propget] HRESULT responseText([out, retval] BSTR *body);
+  [propget] HRESULT status([out, retval] int *statusCode);
+  [propget] HRESULT statusText([out, retval] BSTR *statusText);
+};

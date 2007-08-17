@@ -26,6 +26,7 @@
 #include <msxml2.h>
 #include "gears/base/common/string_utils.h"
 #include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/stream_buffer.h"
 #include "gears/localserver/ie/http_handler_ie.h"
 #include "gears/localserver/ie/http_request_ie.h"
 #include "gears/localserver/ie/urlmon_utils.h"
@@ -56,9 +57,9 @@ HttpRequest *HttpRequest::Create() {
 //------------------------------------------------------------------------------
 
 IEHttpRequest::IEHttpRequest() :
-    caching_behavior_(USE_ALL_CACHES), was_sent_(false), is_complete_(false),
-    follow_redirects_(true), was_redirected_(false), was_aborted_(false),
-    listener_(NULL), ready_state_(0), actual_data_size_(0) {
+    caching_behavior_(USE_ALL_CACHES), follow_redirects_(true), 
+    was_redirected_(false), was_aborted_(false), listener_(NULL),
+    ready_state_(UNINITIALIZED), actual_data_size_(0) {
 }
 
 HRESULT IEHttpRequest::FinalConstruct() {
@@ -79,7 +80,7 @@ int IEHttpRequest::ReleaseReference() {
 //------------------------------------------------------------------------------
 // GetReadyState
 //------------------------------------------------------------------------------
-bool IEHttpRequest::GetReadyState(int *state) {
+bool IEHttpRequest::GetReadyState(ReadyState *state) {
   *state = ready_state_;
   return true;
 }
@@ -90,7 +91,7 @@ bool IEHttpRequest::GetReadyState(int *state) {
 bool IEHttpRequest::GetResponseBodyAsText(std::string16 *text) {
   assert(text);
   // TODO(michaeln): support incremental reading
-  if (!is_complete_ || was_aborted_)
+  if (!IsComplete() || was_aborted_)
     return false;
 
   std::vector<uint8> *data = response_payload_.data.get();
@@ -108,7 +109,7 @@ bool IEHttpRequest::GetResponseBodyAsText(std::string16 *text) {
 // GetResponseBody
 //------------------------------------------------------------------------------
 std::vector<uint8> *IEHttpRequest::GetResponseBody() {
-  if (!is_complete_ || was_aborted_)
+  if (!IsComplete() || was_aborted_)
     return NULL;
   return response_payload_.data.release();
 }
@@ -119,7 +120,7 @@ std::vector<uint8> *IEHttpRequest::GetResponseBody() {
 // the interface.
 //------------------------------------------------------------------------------
 bool IEHttpRequest::GetResponseBody(std::vector<uint8> *body) {
-  if (!is_complete_ || was_aborted_)
+  if (!IsComplete() || was_aborted_)
     return false;
   if (response_payload_.data.get()) {
     body->swap(*response_payload_.data.get());
@@ -133,7 +134,7 @@ bool IEHttpRequest::GetResponseBody(std::vector<uint8> *body) {
 // GetStatus
 //------------------------------------------------------------------------------
 bool IEHttpRequest::GetStatus(int *status) {
-  if (!is_complete_ || was_aborted_)
+  if (!IsInteractiveOrComplete() || was_aborted_)
     return false;
   *status = response_payload_.status_code;
   return true;
@@ -144,17 +145,17 @@ bool IEHttpRequest::GetStatus(int *status) {
 // TODO(michaeln): remove this method from the interface, prefer getStatusLine
 //------------------------------------------------------------------------------
 bool IEHttpRequest::GetStatusText(std::string16 *status_text) {
-  if (!is_complete_ || was_aborted_)
+  if (!IsInteractiveOrComplete() || was_aborted_)
     return false;
-  *status_text = response_payload_.status_line;
-  return true;
+  return ParseHttpStatusLine(response_payload_.status_line,
+                             NULL, NULL, status_text);
 }
 
 //------------------------------------------------------------------------------
 // GetStatusLine
 //------------------------------------------------------------------------------
 bool IEHttpRequest::GetStatusLine(std::string16 *status_line) {
-  if (!is_complete_ || was_aborted_)
+  if (!IsInteractiveOrComplete() || was_aborted_)
     return false;
   *status_line = response_payload_.status_line;
   return true;
@@ -164,7 +165,7 @@ bool IEHttpRequest::GetStatusLine(std::string16 *status_line) {
 // GetAllResponseHeaders
 //------------------------------------------------------------------------------
 bool IEHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
-  if (!is_complete_ || was_aborted_)
+  if (!IsInteractiveOrComplete() || was_aborted_)
     return false;
   headers->assign(response_payload_.headers);
   return true;
@@ -175,24 +176,33 @@ bool IEHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
 //------------------------------------------------------------------------------
 bool IEHttpRequest::GetResponseHeader(const char16* name,
                                       std::string16 *value) {
-  if (!is_complete_ || was_aborted_)
+  if (!IsInteractiveOrComplete() || was_aborted_)
     return false;
   return response_payload_.GetHeader(name, value);
 }
 
 //------------------------------------------------------------------------------
 // Open
-// This class only knows how to make async GET requests at this time, although
-// the interface promises to do more (sync POSTS etc). We assert that we're
-// being asked to do an async GET, which is all we need to do for now.
 //------------------------------------------------------------------------------
 bool IEHttpRequest::Open(const char16 *method, const char16* url, bool async) {
-  if (was_sent_)
+  if (!IsUninitialized())
     return false;
-  assert(async);
-  assert(std::string16(L"GET") == method);
+  if (!async) {
+    // TODO(michaeln): support sync requests in some form
+    return false;
+  }
   url_ = url;
-  SetReadyState(1);
+  method_ = method;
+  UpperString(method_);
+  if (method_ == HttpConstants::kHttpGET)
+    bind_verb_ = BINDVERB_GET;
+  else if (method_ == HttpConstants::kHttpPOST)
+    bind_verb_ = BINDVERB_POST;
+  else if (method == HttpConstants::kHttpPUT)
+    bind_verb_ = BINDVERB_PUT;
+  else
+    bind_verb_ = BINDVERB_CUSTOM;
+  SetReadyState(HttpRequest::OPEN);
   return true;
 }
 
@@ -202,7 +212,7 @@ bool IEHttpRequest::Open(const char16 *method, const char16* url, bool async) {
 // into URLMON in our IHttpNegotiate::BeginningTransaction method.
 //------------------------------------------------------------------------------
 bool IEHttpRequest::SetRequestHeader(const char16* name, const char16* value) {
-  if (was_sent_)
+  if (!IsOpen())
     return false;
   additional_headers_ += name;
   additional_headers_ += L": ";
@@ -212,7 +222,7 @@ bool IEHttpRequest::SetRequestHeader(const char16* name, const char16* value) {
 }
 
 bool IEHttpRequest::SetFollowRedirects(bool follow) {
-  if (was_sent_)
+  if (!IsUninitialized() && !IsOpen())
     return false;
   follow_redirects_ = follow;
   return true;
@@ -221,7 +231,8 @@ bool IEHttpRequest::SetFollowRedirects(bool follow) {
 }
 
 bool IEHttpRequest::WasRedirected() {
-  return follow_redirects_ && is_complete_ && was_redirected_ && !was_aborted_;
+  return follow_redirects_ && IsInteractiveOrComplete() &&
+         was_redirected_ && !was_aborted_;
 }
 
 bool IEHttpRequest::GetRedirectUrl(std::string16 *full_redirect_url) {
@@ -232,17 +243,45 @@ bool IEHttpRequest::GetRedirectUrl(std::string16 *full_redirect_url) {
 }
 
 //------------------------------------------------------------------------------
-// Send
+// Send, SendString, SendImp
 //------------------------------------------------------------------------------
+
 bool IEHttpRequest::Send() {
+  if (IsPostOrPut()) {
+    return SendString(L"");
+  } else {
+    return SendImpl();
+  }
+}
+
+
+bool IEHttpRequest::SendString(const char16 *data) {
+  if (!IsOpen() || !data) return false;
+  if (!IsPostOrPut())
+    return false;
+
+  String16ToUTF8(data, &post_data_string_);
+
+  // TODO(michaeln): do we have to set this or will URLMON do so based
+  // on the size of our stream?
+  std::string16 size_str;
+  IntegerToString(post_data_string_.size(), &size_str);
+  SetRequestHeader(HttpConstants::kContentLengthHeader, size_str.c_str());
+
+  return SendImpl();
+}
+
+
+bool IEHttpRequest::SendImpl() {
   // The request can complete prior to Send returning depending on whether
   // the response is retrieved from the cache. We guard against a caller's
   // listener removing the last reference prior to return by adding our own
   // reference here.
   CComPtr<IUnknown> reference(_GetRawUnknown());
 
-  if (was_sent_ || url_.empty())
+  if (!IsOpen() || url_.empty())
     return false;
+
   HRESULT hr = CreateURLMonikerEx(NULL, url_.c_str(), &url_moniker_,
                                   URL_MK_UNIFORM);
   if (FAILED(hr)) {
@@ -266,11 +305,7 @@ bool IEHttpRequest::Send() {
     return false;
   }
 
-  if (was_aborted_) {
-    return false;
-  }
-  SetReadyState(1);
-  return !was_aborted_;;
+  return !was_aborted_;
 }
 
 //------------------------------------------------------------------------------
@@ -292,7 +327,7 @@ bool IEHttpRequest::SetOnReadyStateChange(ReadyStateListener *listener) {
   return true;
 }
 
-void IEHttpRequest::SetReadyState(int state) {
+void IEHttpRequest::SetReadyState(ReadyState state) {
   if (state > ready_state_) {
     ready_state_ = state;
     if (listener_) {
@@ -342,7 +377,7 @@ STDMETHODIMP IEHttpRequest::OnStartBinding(DWORD reserved,IBinding *binding) {
   }
   assert(!binding_);
   binding_ = binding;
-  SetReadyState(1);
+  SetReadyState(HttpRequest::SENT);
   return S_OK;
 }
 
@@ -403,6 +438,8 @@ HRESULT IEHttpRequest::OnRedirect(const char16 *redirect_url) {
     response_payload_.SynthesizeHttpRedirect(NULL, redirect_url);
     binding_->Abort();
   } else {
+    // TODO(michaeln): Check same-origin, sometimes but not always. For example
+    // when loading worker via url, x-origin should be allowed.
     was_redirected_ = true;
     redirect_url_ = redirect_url;
   }
@@ -419,8 +456,7 @@ STDMETHODIMP IEHttpRequest::OnStopBinding(HRESULT hresult, LPCWSTR error_text) {
   binding_.Release();
   bind_ctx_.Release();
   url_moniker_.Release();
-  is_complete_ = true;
-  SetReadyState(4);
+  SetReadyState(HttpRequest::COMPLETE);
   return S_OK;
 }
 
@@ -435,13 +471,25 @@ STDMETHODIMP IEHttpRequest::GetBindInfo(DWORD *flags, BINDINFO *info) {
   if (!info->cbSize)
     return E_INVALIDARG;
 
+  // When a POST results in a redirect, we GET the new url. The POSTMON
+  // sample app does this; although, using IE7 I have not seen a second
+  // call to GetBindInfo in this case. BeginningTransaction can get called
+  // twice in specific circumstances (see that method for comments).
+  // TODO(michaeln): run this in IE6 and see what happens?
+  int bind_verb = bind_verb_;
+  bool is_post_or_put = IsPostOrPut();
+  if (is_post_or_put && was_redirected_) {
+    bind_verb = BINDVERB_GET;
+    is_post_or_put = false;
+  }
+
   *flags = 0;
 
   // We use the pull-data model as push is unreliable.
   *flags |= BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE |
             BINDF_FROMURLMON | BINDF_PULLDATA | BINDF_NO_UI;
 
-  if (ShouldBypassBrowserCache()) {
+  if (ShouldBypassBrowserCache() || is_post_or_put) {
     // Setup bind flags such that we send a request all the way through
     // to the server, bypassing caching proxies between here and there;
     // and such that we don't write the response to the browser's cache.
@@ -452,7 +500,28 @@ STDMETHODIMP IEHttpRequest::GetBindInfo(DWORD *flags, BINDINFO *info) {
   int save_size = static_cast<int>(info->cbSize);
   memset(info, 0, save_size);
   info->cbSize = save_size;
-  info->dwBindVerb = BINDVERB_GET;
+  info->dwBindVerb = bind_verb;
+  if (bind_verb == BINDVERB_CUSTOM) {
+    info->szCustomVerb = static_cast<LPWSTR>
+        (CoTaskMemAlloc((method_.size() + 1) * sizeof(char16)));
+    wcscpy(info->szCustomVerb, method_.c_str());
+  }
+
+  if (is_post_or_put && !post_data_string_.empty()) {
+    CComObject<StreamBuffer> *buf = NULL;
+    HRESULT hr = CComObject<StreamBuffer>::CreateInstance(&buf);
+    if (FAILED(hr))
+      return hr;
+    CComQIPtr<IStream> buf_stream(buf->GetUnknown());
+    buf->Initialize(post_data_string_.data(), post_data_string_.size());
+    info->stgmedData.tymed = TYMED_ISTREAM;
+    info->stgmedData.pstm = buf_stream.Detach();  // we want URLMON to ownership
+    // TODO(michaeln): Our StreamBuffer is not being freed, how is this
+    // stgmedData supposed to work? Currently we're giving URLMON a reference
+    // to an object with a refcount of 1, the count goes up and back down, but
+    // never down to zero.
+  }
+
   return S_OK;
 }
 
@@ -468,8 +537,6 @@ STDMETHODIMP IEHttpRequest::OnDataAvailable(
   ATLTRACE(_T("IEHttpRequest::OnDataAvailable( 0x%x, %d )\n"), 
            flags, unreliable_stream_size);
   HRESULT hr = S_OK;
-
-  SetReadyState(3);
 
   if (!stgmed || !formatetc) {
     Abort();
@@ -555,7 +622,13 @@ STDMETHODIMP IEHttpRequest::BeginningTransaction(LPCWSTR url,
                                                  DWORD reserved,
                                                  LPWSTR *additional_headers) {
   ATLTRACE(_T("IEHttpRequest::BeginningTransaction\n"));
-  if (!additional_headers_.empty()) {
+  // In the case of a POST with a body which results in a redirect, this 
+  // method is called more than once. We don't set the additional headers
+  // in this case. Those headers include content-length and all user specified
+  // headers set by our SetRequestHeader method. The addition of the content
+  // length header in this case would result in a malformed request being
+  // sent over the network.
+  if (!was_redirected_ && !additional_headers_.empty()) {
     *additional_headers = static_cast<LPWSTR>
         (CoTaskMemAlloc((additional_headers_.size() + 1) * sizeof(char16)));
     if (!(*additional_headers)) {
@@ -614,6 +687,8 @@ STDMETHODIMP IEHttpRequest::OnResponse(DWORD status_code,
     }
     response_payload_.data->resize(content_length + kReadAheadAmount);
   }
+
+  SetReadyState(HttpRequest::INTERACTIVE);
 
   // According to http://msdn2.microsoft.com/en-us/library/ms775055.aspx
   // Returning S_OK when the response_code indicates an error implies resending

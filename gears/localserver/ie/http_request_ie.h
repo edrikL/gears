@@ -49,13 +49,13 @@ class IEHttpRequest
   }
 
   virtual void SetCachingBehavior(CachingBehavior behavior) {
-    if (!was_sent_) {
+    if (IsUninitialized() || IsOpen()) {
       caching_behavior_ = behavior;
     }
   }
 
   // properties
-  virtual bool GetReadyState(int *state);
+  virtual bool GetReadyState(ReadyState *state);
   virtual bool GetResponseBodyAsText(std::string16 *text);
   virtual bool GetResponseBody(std::vector<uint8> *body);
   virtual std::vector<uint8> *GetResponseBody();
@@ -71,6 +71,7 @@ class IEHttpRequest
   virtual bool Open(const char16 *method, const char16* url, bool async);
   virtual bool SetRequestHeader(const char16* name, const char16* value);
   virtual bool Send();
+  virtual bool SendString(const char16 *data);
   virtual bool GetAllResponseHeaders(std::string16 *headers);
   virtual bool GetResponseHeader(const char16* name, std::string16 *header);
   virtual bool Abort();
@@ -152,27 +153,38 @@ class IEHttpRequest
       /* [out] */ void __RPC_FAR *__RPC_FAR *ppvObject);
 
  private:
+  bool SendImpl();
   HRESULT OnRedirect(const char16 *redirect_url);
-  void SetReadyState(int state);
+  void SetReadyState(ReadyState state);
+  bool IsUninitialized() { return ready_state_ == HttpRequest::UNINITIALIZED; }
+  bool IsOpen() { return ready_state_ == HttpRequest::OPEN; }
+  bool IsSent() { return ready_state_ == HttpRequest::SENT; }
+  bool IsInteractive() { return ready_state_ == HttpRequest::INTERACTIVE; }
+  bool IsComplete() { return ready_state_ == HttpRequest::COMPLETE; }
+  bool IsInteractiveOrComplete() { return IsInteractive() || IsComplete(); }
+  bool IsPostOrPut() {
+    return bind_verb_ == BINDVERB_POST ||
+           bind_verb_ == BINDVERB_PUT;
+  }
 
-  // The url we've been asked to get
+  // The request url
   std::string16 url_;
 
   // Whether to bypass caches
   CachingBehavior caching_behavior_;
 
+  // The request method
+  std::string16 method_;
+  int bind_verb_;
+
+  // The POST data
+  std::string post_data_string_;
+
   // Additional request headers we've been asked to send with the request
   std::string16 additional_headers_;
 
   // Our XmlHttpRequest like ready state, 0 thru 4
-  // TODO(michaeln): change the interface to just report 'complete'
-  int ready_state_;
-
-  // Whether this request has been sent
-  bool was_sent_;
-
-  // Whether this request is complete
-  bool is_complete_;
+  ReadyState ready_state_;
 
   // Whether this request was aborted
   bool was_aborted_;

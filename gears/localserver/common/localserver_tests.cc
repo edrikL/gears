@@ -643,10 +643,10 @@ bool TestStartsWithAndEndsWith() {
 
 class TestHttpRequestListener : public HttpRequest::ReadyStateListener {
   virtual void ReadyStateChanged(HttpRequest *source) {
-    int state = 0;
+    HttpRequest::ReadyState state = HttpRequest::UNINITIALIZED;
     source->GetReadyState(&state);
-    if (state == 4) {
-      int status;
+    if (state == HttpRequest::COMPLETE) {
+      int status = 0;
       std::string16 headers;
       std::string16 body;
       source->GetStatus(&status);

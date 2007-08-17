@@ -27,12 +27,13 @@
 #include <nsIHttpHeaderVisitor.h>
 #include <nsIInputStream.h>
 #include <nsIIOService.h>
+#include <nsIUploadChannel.h>
 #include <nsIURI.h>
 #include "gears/third_party/gecko_internal/nsIEncodedChannel.h"
 #include "gears/third_party/gecko_internal/nsNetError.h"
+#include "gears/third_party/gecko_internal/nsIStringStream.h"
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/string_utils.h"
-#include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/firefox/cache_intercept.h"
 #include "gears/localserver/firefox/http_request_ff.h"
 
@@ -57,7 +58,7 @@ HttpRequest *HttpRequest::Create() {
 // Constructor / Destructor / Refcounting
 //------------------------------------------------------------------------------
 FFHttpRequest::FFHttpRequest()
-  : state_(0), caching_behavior_(USE_ALL_CACHES), was_sent_(false),
+  : state_(UNINITIALIZED), caching_behavior_(USE_ALL_CACHES), was_sent_(false),
     is_complete_(false), was_aborted_(false), follow_redirects_(true),
     was_redirected_(false), listener_(NULL) {
 }
@@ -76,7 +77,7 @@ int FFHttpRequest::ReleaseReference() {
 //------------------------------------------------------------------------------
 // GetReadyState
 //------------------------------------------------------------------------------
-bool FFHttpRequest::GetReadyState(int *state) {
+bool FFHttpRequest::GetReadyState(ReadyState *state) {
   *state = state_;
   return true;
 }
@@ -129,7 +130,7 @@ std::vector<uint8> *FFHttpRequest::GetResponseBody() {
 // GetStatus
 //------------------------------------------------------------------------------
 bool FFHttpRequest::GetStatus(int *status) {
-  NS_ENSURE_TRUE(is_complete_ && !was_aborted_, false);
+  NS_ENSURE_TRUE((state_ >= INTERACTIVE) && !was_aborted_, false);
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   if (!http_channel) {
     return false;
@@ -145,7 +146,7 @@ bool FFHttpRequest::GetStatus(int *status) {
 // GetStatusText
 //------------------------------------------------------------------------------
 bool FFHttpRequest::GetStatusText(std::string16 *status_text) {
-  NS_ENSURE_TRUE(is_complete_ && !was_aborted_, false);
+  NS_ENSURE_TRUE((state_ >= INTERACTIVE) && !was_aborted_, false);
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   if (!http_channel) {
     return false;
@@ -160,7 +161,7 @@ bool FFHttpRequest::GetStatusText(std::string16 *status_text) {
 // GetStatusLine
 //------------------------------------------------------------------------------
 bool FFHttpRequest::GetStatusLine(std::string16 *status_line) {
-  NS_ENSURE_TRUE(is_complete_ && !was_aborted_, false);
+  NS_ENSURE_TRUE((state_ >= INTERACTIVE) && !was_aborted_, false);
   // TODO(michaeln): get the actual status line instead of synthesizing one
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   if (!http_channel) {
@@ -190,7 +191,12 @@ bool FFHttpRequest::GetStatusLine(std::string16 *status_line) {
 // Open
 //------------------------------------------------------------------------------
 bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async) {
-  NS_ENSURE_TRUE(state_ == 0, false);
+  NS_ENSURE_TRUE(state_ == UNINITIALIZED, false);
+
+  if (!async) {
+    // TODO(michaeln): support sync requests in some form
+    return false;
+  }
 
   nsCOMPtr<nsIIOService> ios =
     do_GetService("@mozilla.org/network/io-service;1");
@@ -206,14 +212,10 @@ bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async) {
   NS_ENSURE_SUCCESS(rv, false);
   NS_ENSURE_TRUE(channel_, false);
 
-  if (ShouldBypassBrowserCache()) {
-    rv = channel_->SetLoadFlags(nsIRequest::LOAD_BYPASS_CACHE |
-                                nsIRequest::INHIBIT_CACHING);
-    NS_ENSURE_SUCCESS(rv, false);
-  }
-
+  method_ = method;
+  UpperString(method_);
   std::string method_utf8;
-  if (!String16ToUTF8(method, &method_utf8)) {
+  if (!String16ToUTF8(method_.c_str(), &method_utf8)) {
     return false;
   }
   nsCString method_str(method_utf8.c_str());
@@ -222,7 +224,13 @@ bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async) {
   rv = http_channel->SetRequestMethod(method_str);
   NS_ENSURE_SUCCESS(rv, false);
 
-  SetReadyState(1);
+  if (ShouldBypassBrowserCache() || IsPostOrPut()) {
+    rv = channel_->SetLoadFlags(nsIRequest::LOAD_BYPASS_CACHE |
+                                nsIRequest::INHIBIT_CACHING);
+    NS_ENSURE_SUCCESS(rv, false);
+  }
+
+  SetReadyState(HttpRequest::OPEN);
   return true;
 }
 
@@ -273,21 +281,104 @@ bool FFHttpRequest::GetRedirectUrl(std::string16 *full_redirect_url) {
 
 
 //------------------------------------------------------------------------------
-// Send
+// Send, SendString, SendImpl
 //------------------------------------------------------------------------------
+
 bool FFHttpRequest::Send() {
+  if (IsPostOrPut()) {
+    return SendString(STRING16(L""));
+  } else {
+    return SendImpl(NULL);
+  }
+}
+
+
+bool FFHttpRequest::SendString(const char16 *data) {
+  if (was_sent_ || !data) return false;
+  if (!IsPostOrPut())
+    return false;
+
+  String16ToUTF8(data, &post_data_string_);
+  nsCOMPtr<nsIInputStream> post_data_stream;
+  if (!NewByteInputStream(getter_AddRefs(post_data_stream),
+                          post_data_string_.data(),
+                          post_data_string_.size())) {
+    return false;
+  }
+
+  return SendImpl(post_data_stream);
+}
+
+
+bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
   NS_ENSURE_TRUE(channel_ && !was_sent_, false);
+  nsresult rv = NS_OK;
+  was_sent_ = true;
+
+  nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
+  NS_ENSURE_TRUE(http_channel, false);
+
   if (!follow_redirects_) {
-    nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
-    NS_ENSURE_TRUE(http_channel, false);
-    nsresult rv = http_channel->SetRedirectionLimit(0);
+    rv = http_channel->SetRedirectionLimit(0);
     NS_ENSURE_SUCCESS(rv, false);
   }
+
+  if (post_data_stream) {
+    nsCOMPtr<nsIUploadChannel> upload_channel(do_QueryInterface(http_channel));
+    NS_ENSURE_TRUE(upload_channel, false);
+
+    nsCString method;
+    http_channel->GetRequestMethod(method);
+
+    nsCString content_type;
+
+    // If no content type header was set by the client, we set it to
+    // application/xml.
+    if (NS_FAILED(http_channel->
+                    GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
+                                      content_type)) ||
+        content_type.IsEmpty()) {
+      content_type = NS_LITERAL_CSTRING("application/xml");
+    }
+
+    const int kGetLengthFromStream = -1;
+    rv = upload_channel->SetUploadStream(post_data_stream, 
+                                         content_type,
+                                         kGetLengthFromStream);
+    NS_ENSURE_SUCCESS(rv, false);
+
+    // Reset the method to its original value because SetUploadStream has the
+    // side effect of squashing the previously set value.
+    http_channel->SetRequestMethod(method);
+  }
+
   channel_->SetNotificationCallbacks(this);
-  nsresult rv = channel_->AsyncOpen(this, nsnull);
+  rv = channel_->AsyncOpen(this, nsnull);
   NS_ENSURE_SUCCESS(rv, false);
-  was_sent_ = true;
-  SetReadyState(1);
+  return true;
+}
+
+bool FFHttpRequest::NewByteInputStream(nsIInputStream **stream,
+                                       const char *data,
+                                       int data_size) {
+  assert(stream);
+  assert(!(*stream));
+  assert(data);
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIStringInputStream> string_stream(
+      do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv));
+  if (NS_FAILED(rv))
+    return false;
+
+  rv = string_stream->ShareData(data, data_size);
+  if (NS_FAILED(rv))
+    return false;
+
+  rv = CallQueryInterface(string_stream, stream);
+  if (NS_FAILED(rv))
+    return false;
+
   return true;
 }
 
@@ -327,7 +418,7 @@ public:
 // GetAllResponseHeaders
 //------------------------------------------------------------------------------
 bool FFHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
-  NS_ENSURE_TRUE(is_complete_ && !was_aborted_, false);
+  NS_ENSURE_TRUE((state_ >= INTERACTIVE) && !was_aborted_, false);
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   NS_ENSURE_TRUE(http_channel, false);
 
@@ -339,7 +430,8 @@ bool FFHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
   // headers since the response body we have has already been decoded.
   // Otherwise when replaying a cached entry, the browser would try to
   // decode an already decoded response body and fail.
-  if (response_body_.get()) {
+  // TODO(michaeln): don't do this for scriptable Gears.HttpRequests
+  if (is_complete_ && response_body_.get()) {
     std::string data_len_str;
     IntegerToString(static_cast<int>(response_body_.get()->size()),
                     &data_len_str);
@@ -367,9 +459,9 @@ bool FFHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
 //------------------------------------------------------------------------------
 // GetResponseHeader
 //------------------------------------------------------------------------------
-bool FFHttpRequest::GetResponseHeader(const char16* name,
+bool FFHttpRequest::GetResponseHeader(const char16 *name,
                                       std::string16 *value) {
-  NS_ENSURE_TRUE(is_complete_ && !was_aborted_, false);
+  NS_ENSURE_TRUE((state_ >= INTERACTIVE) && !was_aborted_, false);
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   NS_ENSURE_TRUE(http_channel, false);
 
@@ -412,10 +504,10 @@ bool FFHttpRequest::SetOnReadyStateChange(ReadyStateListener *listener) {
 //------------------------------------------------------------------------------
 // SetReadyState
 //------------------------------------------------------------------------------
-void FFHttpRequest::SetReadyState(int state) {
+void FFHttpRequest::SetReadyState(ReadyState state) {
   if (state > state_) {
     state_ = state;
-    is_complete_ = (state == 4);
+    is_complete_ = (state == COMPLETE);
     if (listener_) {
       listener_->ReadyStateChanged(this);
     }
@@ -437,7 +529,7 @@ NS_IMETHODIMP FFHttpRequest::OnStartRequest(nsIRequest *request,
       response_body_->reserve(length);
     }
   }
-  SetReadyState(1);
+  SetReadyState(HttpRequest::SENT);
   return NS_OK;
 }
 
@@ -467,6 +559,7 @@ NS_METHOD FFHttpRequest::StreamReaderFunc(nsIInputStream *stream,
   const unsigned char *p = reinterpret_cast<const unsigned char*>(from_segment);
   memcpy(&(*body)[cur_size], p, count);
   *write_count = count;
+
   return NS_OK;
 }
 
@@ -479,7 +572,7 @@ NS_IMETHODIMP FFHttpRequest::OnDataAvailable(nsIRequest *request,
                                              PRUint32 offset,
                                              PRUint32 count) {
   NS_ENSURE_TRUE(channel_, NS_ERROR_UNEXPECTED);
-  SetReadyState(3);
+  SetReadyState(HttpRequest::INTERACTIVE);
   PRUint32 n;
   return stream->ReadSegments(StreamReaderFunc, this, count, &n);
 }
@@ -492,7 +585,7 @@ NS_IMETHODIMP FFHttpRequest::OnStopRequest(nsIRequest *request,
                                            nsresult status) {
   NS_ENSURE_TRUE(channel_, NS_ERROR_UNEXPECTED);
   channel_->SetNotificationCallbacks(NULL);
-  SetReadyState(4);
+  SetReadyState(HttpRequest::COMPLETE);
   return NS_OK;
 }
 
@@ -515,6 +608,8 @@ NS_IMETHODIMP FFHttpRequest::OnChannelRedirect(nsIChannel *old_channel,
                                                PRUint32 flags) {
   if (follow_redirects_) {
     NS_PRECONDITION(new_channel, "Redirect without a channel?");
+
+    // TODO(michaeln): check same-origin, sometimes but not always
 
     redirect_url_.clear();
 

@@ -53,8 +53,15 @@ class HttpRequest {
   virtual CachingBehavior GetCachingBehavior() = 0;
   virtual void SetCachingBehavior(CachingBehavior behavior) = 0;
 
-  // properties
-  virtual bool GetReadyState(int *state) = 0;
+  enum ReadyState {
+    UNINITIALIZED = 0,
+    OPEN = 1,
+    SENT = 2,
+    INTERACTIVE = 3,
+    COMPLETE = 4
+  };
+  virtual bool GetReadyState(ReadyState *state) = 0;
+
   virtual bool GetResponseBodyAsText(std::string16 *text) = 0;
   virtual bool GetResponseBody(std::vector<uint8> *body) = 0;
   virtual std::vector<uint8> *GetResponseBody() = 0;
@@ -78,6 +85,7 @@ class HttpRequest {
   virtual bool Open(const char16 *method, const char16* url, bool async) = 0;
   virtual bool SetRequestHeader(const char16 *name, const char16 *value) = 0;
   virtual bool Send() = 0;
+  virtual bool SendString(const char16 *name) = 0;
   virtual bool GetAllResponseHeaders(std::string16 *headers) = 0;
   virtual bool GetResponseHeader(const char16* name, std::string16 *header) = 0;
   virtual bool Abort() = 0;

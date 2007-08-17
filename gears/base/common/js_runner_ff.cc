@@ -41,6 +41,7 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/firefox/factory.h"
 #include "ff/genfiles/database.h"
+#include "ff/genfiles/httprequest.h"
 #include "ff/genfiles/localserver.h"
 #include "ff/genfiles/timer.h"
 #include "ff/genfiles/workerpool.h"
@@ -416,9 +417,11 @@ bool JsRunner::InitJavaScriptEngine() {
     {GEARSLOCALSERVERINTERFACE_IID, NULL},
     {GEARSMANAGEDRESOURCESTOREINTERFACE_IID, NULL},
     {GEARSRESOURCESTOREINTERFACE_IID, NULL},
+    // GEARSFILESUBMITTERINTERFACE_IID can never be created in a child worker
     // timer
     {GEARSTIMERINTERFACE_IID, NULL},
-    // GEARSFILESUBMITTERINTERFACE_IID can never be created in a child worker
+    // httprequest
+    {GEARSHTTPREQUESTINTERFACE_IID, NULL}
   };
   const int num_classes = sizeof(classes) / sizeof(classes[0]);
 

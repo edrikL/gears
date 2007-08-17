@@ -31,6 +31,7 @@
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/base/ie/factory.h"
 #include "gears/database/ie/database.h"
+#include "gears/httprequest/ie/httprequest_ie.h"
 #include "gears/workerpool/ie/workerpool.h"
 #include "gears/localserver/ie/localserver_ie.h"
 #include "gears/timer/ie/timer.h"
@@ -122,6 +123,15 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
         minor_version_desired <= kGearsTimerVersionMinor) {
       CComObject<GearsTimer> *obj;
       hr = CComObject<GearsTimer>::CreateInstance(&obj);
+      base_class = obj;
+      idispatch = obj;
+    }
+  } else if (object_name == STRING16(L"beta.httprequest") ||
+             object_name == STRING16(L"com.google.beta.httprequest")) {
+    if (major_version_desired == kGearsHttpRequestVersionMajor &&
+        minor_version_desired <= kGearsHttpRequestVersionMinor) {
+      CComObject<GearsHttpRequest> *obj;
+      hr = CComObject<GearsHttpRequest>::CreateInstance(&obj);
       base_class = obj;
       idispatch = obj;
     }
