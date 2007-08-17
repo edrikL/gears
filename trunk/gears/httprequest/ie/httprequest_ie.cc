@@ -25,10 +25,13 @@
 
 #include <assert.h>
 #include <dispex.h>
+
+#include "gears/httprequest/ie/httprequest_ie.h"
+
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/url_utils.h"
 #include "gears/base/ie/activex_utils.h"
-#include "gears/httprequest/ie/httprequest_ie.h"
 #include "gears/localserver/common/http_constants.h"
 
 
@@ -336,7 +339,7 @@ bool GearsHttpRequest::ResolveUrl(const char16 *url,
                                   std::string16 *resolved_url,
                                   std::string16 *exception_message) {
   assert(url && resolved_url && exception_message);
-  if (!ResolveRelativeUrl(EnvPageLocationUrl().c_str(), url, resolved_url)) {
+  if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), url, resolved_url)) {
     *exception_message = kUrlError;
     return false;
   }

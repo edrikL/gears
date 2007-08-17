@@ -28,9 +28,12 @@
 #endif
 #include "gears/third_party/gecko_internal/nsIDOMClassInfo.h"
 #include "gears/third_party/gecko_internal/nsIEventQueueService.h"
+
+#include "gears/httprequest/firefox/httprequest_ff.h"
+
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/string_utils.h"
-#include "gears/httprequest/firefox/httprequest_ff.h"
+#include "gears/base/common/url_utils.h"
 #include "gears/localserver/common/http_constants.h"
 
 // Returns true if the currently executing thread is the main UI thread,
@@ -516,7 +519,7 @@ bool GearsHttpRequest::ResolveUrl(const char16 *url,
                                   std::string16 *resolved_url,
                                   std::string16 *exception_message) {
   assert(url && resolved_url && exception_message);
-  if (!ResolveRelativeUrl(EnvPageLocationUrl().c_str(), url, resolved_url)) {
+  if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), url, resolved_url)) {
     *exception_message = STRING16(L"Failed to resolve url.");
     return false;
   }
