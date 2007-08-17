@@ -190,7 +190,6 @@ FF_IDLSRCS	+= \
 
 FF_CPPSRCS	+= \
 		base_class.cc \
-		common_ff.cc \
 		dom_utils.cc \
 		factory.cc \
 		factory_utils.cc \
@@ -215,9 +214,13 @@ FF_CPPSRCS	+= \
 		security_model_test.cc \
 		sqlite_wrapper.cc \
 		stopwatch.cc \
+		stopwatch_ff.cc \
 		string16.cc \
 		string_utils.cc \
 		thread_locals.cc \
+		url_utils.cc \
+		url_utils_ff.cc \
+		url_utils_test.cc \
 		xpcom_dynamic_load.cc \
 		$(NULL)
 
@@ -245,7 +248,6 @@ IE_CPPSRCS	+= \
 		activex_utils.cc \
 		base_class.cc \
 		bho.cc \
-		common_ie.cc \
 		detect_version_collision.cc \
 		factory.cc \
 		factory_utils.cc \
@@ -268,9 +270,13 @@ IE_CPPSRCS	+= \
 		security_model_test.cc \
 		sqlite_wrapper.cc \
 		stopwatch.cc \
+		stopwatch_ie.cc \
 		string16.cc \
 		string_utils.cc \
 		thread_locals.cc \
+		url_utils.cc \
+		url_utils_ie.cc \
+		url_utils_test.cc \
 		vista_utils.cc \
 		$(NULL)
 

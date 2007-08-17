@@ -794,7 +794,7 @@ function test_OpenDatabaseWithIllegalIds() {
   doIllegalIdTest('.a_perfectly_valid_id_except_for_leading_dot');
   doIllegalIdTest('a_perfectly_valid_id_except_for_trailing_dot.');
   doIllegalIdTest('an id with spaces');
-  doIllegalIdTest('an_id_with_an_eight_bit_charácter');
+  doIllegalIdTest('an_id_with_an_eight_bit_charï¿½cter');
   return g.SUCCEEDED;
 }
 
@@ -1623,44 +1623,110 @@ function workerpool_OnErrorTests() {
 
 
 function workerpool_CreateWorkerFromUrl() {
+  var sameOriginWorkerFile = 'unit_tests_worker_same_origin.js';
+  var crossOriginWorkerFile = 'unit_tests_worker_cross_origin.js';
+
+  var currentUrl = location.href;
+  var sameOriginPath = currentUrl.substring(0, 1 + currentUrl.lastIndexOf('/'));
+  var crossOriginPath =
+      'http://google-gears.googlecode.com/svn/trunk/gears/test/';
+
+
   // TEST 1
   workerpool_CreateWorkerFromUrl.result1 = '';
   workerpool_CreateWorkerFromUrl.description1 =
-      'CreateWorkerFromUrl Test 1: ' +
-      'Basic functionality should work.';
-
-  var workerFile = '/unit_tests_worker.js';
-  if (gIsDebugBuild) {
-    // TODO(cprince): In dbg builds, add a 2nd param to createWorkerFromUrl()
-    // so callers can optionally simulate a different origin.
-    var currentUrl = location.href;
-    var workerUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/')) +
-                        workerFile;
-  } else {
-    // When the origin override is not available, load from googlecode.com.
-    var workerUrl = 'http://google-gears.googlecode.com/svn/trunk/gears/test' +
-                        workerFile;
-  }
+      'createWorkerFromUrl() Test 1: ' +
+      'Same-origin, relative URLs should work.';
 
   var wp1 = google.gears.factory.create('beta.workerpool', '1.0');
   wp1.onmessage = function(body, sender) {
     workerpool_CreateWorkerFromUrl.result1 = body;
   }
-  var childId = wp1.createWorkerFromUrl(workerUrl);
-  wp1.sendMessage('ping', childId);
+  var childId = wp1.createWorkerFromUrl(sameOriginWorkerFile);
+  wp1.sendMessage('PING1', childId);
 
 
   // TEST 2
   workerpool_CreateWorkerFromUrl.result2 = '';
   workerpool_CreateWorkerFromUrl.description2 =
-      'CreateWorkerFromUrl Test 2: ' +
-      'File Not Found should invoke onerror.';
+      'createWorkerFromUrl() Test 2: ' +
+      'Same-origin, absolute URLs should work. ' +
+      'And worker database SHOULD exist in parent origin. ';
 
   var wp2 = google.gears.factory.create('beta.workerpool', '1.0');
-  wp2.onerror = function(msg, sender) {
-    workerpool_CreateWorkerFromUrl.result2 = msg;
+  wp2.onmessage = function(body, sender) {
+    // Worker database SHOULD exist in parent origin.
+    var db2 = google.gears.factory.create('beta.database', '1.0');
+    db2.open('worker_js');
+    db2.execute('drop table PING2');  // to throw if table doesn't exist
+    db2.close();
+
+    // If we reach this line, the test succeeded.
+    workerpool_CreateWorkerFromUrl.result2 = body;
   }
-  wp2.createWorkerFromUrl('http://example.com/non-existent-file.js');
+  var childId = wp2.createWorkerFromUrl(sameOriginPath + sameOriginWorkerFile);
+  wp2.sendMessage('PING2', childId);
+
+
+  // TEST 3
+  workerpool_CreateWorkerFromUrl.result3 = '';
+  workerpool_CreateWorkerFromUrl.description3 =
+      'createWorkerFromUrl() Test 3: ' +
+      'Cross-origin, absolute URLs should work. ' +
+      'And worker database should NOT exist in parent origin. ';
+
+  var wp3 = google.gears.factory.create('beta.workerpool', '1.0');
+  wp3.onmessage = function(body, sender) {
+    // Worker database should NOT exist in parent origin.
+    var db3 = google.gears.factory.create('beta.database', '1.0');
+    db3.open('worker_js');
+    db3.execute('create table PING3 (DUMMY)');  // to throw if table exists
+    db3.execute('drop table PING3');
+    db3.close();
+
+    // If we reach this line, the test succeeded.
+    workerpool_CreateWorkerFromUrl.result3 = body;
+  }
+
+  // TODO(cprince): In dbg builds, add a 2nd param to createWorkerFromUrl()
+  // so callers can simulate a different origin without being online.
+  //if (!gIsDebugBuild) {
+  var childId = wp3.createWorkerFromUrl(crossOriginPath +
+                                            crossOriginWorkerFile);
+  //} else {
+  //  var childId = wp3.createWorkerFromUrl(sameOriginPath +
+  //                                            crossOriginWorkerFile,
+  //                                        crossOriginPath);
+  //}
+  wp3.sendMessage('PING3', childId);
+
+
+  // TEST 4
+  workerpool_CreateWorkerFromUrl.result4 = '';
+  workerpool_CreateWorkerFromUrl.description4 =
+      'createWorkerFromUrl() Test 4: ' +
+      'File Not Found should fire error.';
+
+  var wp4 = google.gears.factory.create('beta.workerpool', '1.0');
+  wp4.onerror = function(msg, sender) {
+    workerpool_CreateWorkerFromUrl.result4 = msg;
+  }
+  wp4.createWorkerFromUrl('http://example.com/non-existent-file.js');
+
+
+  // TEST 5
+  workerpool_CreateWorkerFromUrl.result5 = '';
+  workerpool_CreateWorkerFromUrl.description5 =
+      'createWorkerFromUrl() Test 5: ' +
+      'Cross-origin worker missing allowCrossOriginMonkeys() should fire error.';
+
+  var wp5 = google.gears.factory.create('beta.workerpool', '1.0');
+  wp5.onerror = function(msg, sender) {
+    workerpool_CreateWorkerFromUrl.result5 = msg;
+  }
+  wp5.createWorkerFromUrl(crossOriginPath + sameOriginWorkerFile);
+  // TODO(cprince): Could add debug-only origin override here too.
+  wp5.sendMessage('PING5', childId);
 
 }
 
@@ -1681,7 +1747,7 @@ function runWorkerPoolTests() {
 // chekcWorkerPoolTests() should be called by setTimeout,
 // after giving workers time to finish.
 
-var MSEC_DELAY_BEFORE_CHECKING_WORKER_RESULTS = 3000;
+var MSEC_DELAY_BEFORE_CHECKING_WORKER_RESULTS = 4000;
 
 function checkWorkerPoolTests() {
 
@@ -1745,6 +1811,21 @@ function checkWorkerPoolTests() {
   insertRow(workerpool_CreateWorkerFromUrl.description2,
             '' != workerpool_CreateWorkerFromUrl.result2,
             workerpool_CreateWorkerFromUrl.result2, // explanation
+            0);
+
+  insertRow(workerpool_CreateWorkerFromUrl.description3,
+            '' != workerpool_CreateWorkerFromUrl.result3,
+            workerpool_CreateWorkerFromUrl.result3, // explanation
+            0);
+
+  insertRow(workerpool_CreateWorkerFromUrl.description4,
+            '' != workerpool_CreateWorkerFromUrl.result4,
+            workerpool_CreateWorkerFromUrl.result4, // explanation
+            0);
+
+  insertRow(workerpool_CreateWorkerFromUrl.description5,
+            '' != workerpool_CreateWorkerFromUrl.result5,
+            workerpool_CreateWorkerFromUrl.result5, // explanation
             0);
 }
 

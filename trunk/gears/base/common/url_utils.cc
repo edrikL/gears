@@ -23,45 +23,34 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <assert.h>
-
-#include "gears/base/common/stopwatch.h"
+#include "gears/base/common/url_utils.h"
 
 
-void Stopwatch::Start() {
-  MutexLock lock(&mutex_);
+bool IsRelativeUrl(const char16 *url) {
+  // From RFC 2396 (URI Generic Syntax):
+  // * "Relative URI references are distinguished from absolute URI in that
+  //    they do not begin with a scheme name."
+  // * "Scheme names consist of a sequence of characters beginning with a
+  //    lower case letter and followed by any combination of lower case
+  //    letters, digits, plus ('+'), period ('.'), or hyphen ('-').  For
+  //    resiliency, programs interpreting URI should treat upper case letters
+  //    as equivalent to lower case in scheme names (e.g., allow 'HTTP' as
+  //    well as 'http')."
+  // The algorithm below does not support escaped characters.
 
-  if (nested_count_ == 0) {
-    start_ = static_cast<int>(GetCurrentTimeMillis());
+  bool first_is_alpha = (url[0] >= 'a' && url[0] <= 'z') || 
+                        (url[0] >= 'A' && url[0] <= 'Z');
+  if (first_is_alpha) {
+    int i = 1;
+    while ((url[i] >= 'a' && url[i] <= 'z') || 
+           (url[i] >= 'A' && url[i] <= 'Z') ||
+           (url[i] >= '0' && url[i] <= '9') ||
+           (url[i] == '+') || (url[i] == '.') || (url[i] == '-')) {
+      ++i;
+    }
+    if (url[i] == ':') {
+      return false;  // absolute URL
+    }
   }
-
-  nested_count_++;
-}
-
-void Stopwatch::Stop() {
-  MutexLock lock(&mutex_);
-
-  // You shouldn't call stop() before ever calling start; that would be silly.
-  assert(nested_count_ > 0);
-
-  nested_count_--;
-  if (nested_count_ == 0) {
-    total_ += (static_cast<int>(GetCurrentTimeMillis()) - start_);
-  }
-}
-
-int Stopwatch::GetElapsed() {
-  return total_;
-}
-
-
-ScopedStopwatch::ScopedStopwatch(Stopwatch *t) {
-  assert(t);
-  t_ = t;
-  t_->Start();
-}
-
-ScopedStopwatch::~ScopedStopwatch() {
-  assert(t_);
-  t_->Stop();
+  return true;
 }

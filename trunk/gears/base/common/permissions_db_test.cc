@@ -45,11 +45,11 @@ bool TestCapabilitiesDBAll() {
   // Set some capabilities
   SecurityOrigin foo;
   foo.InitFromUrl(STRING16(L"http://unittest.foo.example.com"));
-  capabilities->SetCanAccessScour(foo, CapabilitiesDB::CAPABILITY_ALLOWED);
+  capabilities->SetCanAccessGears(foo, CapabilitiesDB::CAPABILITY_ALLOWED);
 
   SecurityOrigin bar;
   bar.InitFromUrl(STRING16(L"http://unittest.bar.example.com"));
-  capabilities->SetCanAccessScour(bar, CapabilitiesDB::CAPABILITY_DENIED);
+  capabilities->SetCanAccessGears(bar, CapabilitiesDB::CAPABILITY_DENIED);
 
   // Get the threadlocal instance and make sure we got the same instance back
   TEST_ASSERT(CapabilitiesDB::GetDB() == capabilities);
@@ -60,9 +60,9 @@ bool TestCapabilitiesDBAll() {
   capabilities = CapabilitiesDB::GetDB();
 
   TEST_ASSERT(CapabilitiesDB::CAPABILITY_ALLOWED ==
-              capabilities->GetCanAccessScour(foo));
+              capabilities->GetCanAccessGears(foo));
   TEST_ASSERT(CapabilitiesDB::CAPABILITY_DENIED ==
-              capabilities->GetCanAccessScour(bar));
+              capabilities->GetCanAccessGears(bar));
 
   // Try searching by default status (should not be allowed).
   std::vector<SecurityOrigin> list;
@@ -70,9 +70,9 @@ bool TestCapabilitiesDBAll() {
       CapabilitiesDB::CAPABILITY_DEFAULT, &list));
 
   // Now try resetting
-  capabilities->SetCanAccessScour(bar, CapabilitiesDB::CAPABILITY_DEFAULT);
+  capabilities->SetCanAccessGears(bar, CapabilitiesDB::CAPABILITY_DEFAULT);
   TEST_ASSERT(CapabilitiesDB::CAPABILITY_DEFAULT ==
-              capabilities->GetCanAccessScour(bar));
+              capabilities->GetCanAccessGears(bar));
 
   LOG(("TestCapabilitiesDBAll - passed\n"));
   return true;

@@ -38,7 +38,8 @@
 
 
 GearsFactory::GearsFactory()
-    : is_permission_granted_(false),
+    : is_creation_suspended_(false),
+      is_permission_granted_(false),
       is_permission_value_from_user_(false) {
   SetActiveUserFlag();
 }
@@ -61,9 +62,9 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
     RETURN_EXCEPTION(kVersionCollisionErrorMessage);
   }
 
-  // Make sure the user gives this site permission to use Scour.
+  // Make sure the user gives this origin permission to use Gears.
 
-  if (!HasPermissionToUseScour(this)) {
+  if (!HasPermissionToUseGears(this)) {
     RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
                               PRODUCT_FRIENDLY_NAME L"."));
   }
@@ -87,11 +88,8 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
   GearsBaseClass *base_class = NULL;
   CComQIPtr<IDispatch> idispatch;
 
-  // TODO(cprince): remove support for legacy names ("com.google.") in June,
-  // after pre-release developers have some time to update their code.
   hr = E_FAIL;
-  if (object_name == STRING16(L"beta.database") ||
-      object_name == STRING16(L"com.google.beta.database")) {
+  if (object_name == STRING16(L"beta.database")) {
     if (major_version_desired == kGearsDatabaseVersionMajor &&
         minor_version_desired <= kGearsDatabaseVersionMinor) {
       CComObject<GearsDatabase> *obj;
@@ -99,17 +97,15 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
       base_class = obj;
       idispatch = obj;
     }
-  } else if (object_name == STRING16(L"beta.workerpool") ||
-             object_name == STRING16(L"com.google.beta.workerpool")) {
-    if (major_version_desired == kGearsWorkerPoolVersionMajor &&
-        minor_version_desired <= kGearsWorkerPoolVersionMinor) {
-      CComObject<GearsWorkerPool> *obj;
-      hr = CComObject<GearsWorkerPool>::CreateInstance(&obj);
+  } else if (object_name == STRING16(L"beta.httprequest")) {
+    if (major_version_desired == kGearsHttpRequestVersionMajor &&
+        minor_version_desired <= kGearsHttpRequestVersionMinor) {
+      CComObject<GearsHttpRequest> *obj;
+      hr = CComObject<GearsHttpRequest>::CreateInstance(&obj);
       base_class = obj;
       idispatch = obj;
     }
-  } else if (object_name == STRING16(L"beta.localserver") ||
-             object_name == STRING16(L"com.google.beta.localserver")) {
+  } else if (object_name == STRING16(L"beta.localserver")) {
     if (major_version_desired == kGearsLocalServerVersionMajor &&
         minor_version_desired <= kGearsLocalServerVersionMinor) {
       CComObject<GearsLocalServer> *obj;
@@ -117,8 +113,7 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
       base_class = obj;
       idispatch = obj;
     }
-  } else if (object_name == STRING16(L"beta.timer") ||
-             object_name == STRING16(L"com.google.beta.timer")) {
+  } else if (object_name == STRING16(L"beta.timer")) {
     if (major_version_desired == kGearsTimerVersionMajor &&
         minor_version_desired <= kGearsTimerVersionMinor) {
       CComObject<GearsTimer> *obj;
@@ -126,12 +121,11 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
       base_class = obj;
       idispatch = obj;
     }
-  } else if (object_name == STRING16(L"beta.httprequest") ||
-             object_name == STRING16(L"com.google.beta.httprequest")) {
-    if (major_version_desired == kGearsHttpRequestVersionMajor &&
-        minor_version_desired <= kGearsHttpRequestVersionMinor) {
-      CComObject<GearsHttpRequest> *obj;
-      hr = CComObject<GearsHttpRequest>::CreateInstance(&obj);
+  } else if (object_name == STRING16(L"beta.workerpool")) {
+    if (major_version_desired == kGearsWorkerPoolVersionMajor &&
+        minor_version_desired <= kGearsWorkerPoolVersionMinor) {
+      CComObject<GearsWorkerPool> *obj;
+      hr = CComObject<GearsWorkerPool>::CreateInstance(&obj);
       base_class = obj;
       idispatch = obj;
     }
@@ -190,4 +184,17 @@ STDMETHODIMP GearsFactory::SetSite(IUnknown *site) {
   HRESULT hr = IObjectWithSiteImpl<GearsFactory>::SetSite(site);
   InitBaseFromDOM(m_spUnkSite);
   return hr;
+}
+
+
+// TODO(cprince): See if we can use Suspend/Resume with the opt-in dialog too,
+// rather than just the cross-origin worker case.  (Code re-use == good.)
+void GearsFactory::SuspendObjectCreation() {
+  is_creation_suspended_ = true;
+}
+
+void GearsFactory::ResumeObjectCreationAndUpdatePermissions() {
+  // TODO(cprince): The transition from suspended to resumed is where we should
+  // propagate cross-origin opt-in to the permissions DB.
+  is_creation_suspended_ = false;
 }

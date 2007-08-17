@@ -24,44 +24,38 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
+#include <nsIIOService.h>
+#include <nsIURI.h>
 
-#include "gears/base/common/stopwatch.h"
+#include "gears/base/common/url_utils.h"
+
+#include "gears/base/firefox/dom_utils.h"
 
 
-void Stopwatch::Start() {
-  MutexLock lock(&mutex_);
-
-  if (nested_count_ == 0) {
-    start_ = static_cast<int>(GetCurrentTimeMillis());
+bool ResolveAndNormalize(const char16 *base, const char16 *url,
+                         std::string16 *out) {
+  // manufacture a full URL
+  nsCOMPtr<nsIURI> full_url;
+  if (!DOMUtils::NewResolvedURI(base, url, getter_AddRefs(full_url))) {
+    return false;
   }
 
-  nested_count_++;
-}
+  // get the full url string
+  nsCString full_utf8;
+  nsresult nr = full_url->GetSpec(full_utf8);
+  NS_ENSURE_SUCCESS(nr, false);
 
-void Stopwatch::Stop() {
-  MutexLock lock(&mutex_);
-
-  // You shouldn't call stop() before ever calling start; that would be silly.
-  assert(nested_count_ > 0);
-
-  nested_count_--;
-  if (nested_count_ == 0) {
-    total_ += (static_cast<int>(GetCurrentTimeMillis()) - start_);
+  // strip the fragment part of the url
+  const char *start = full_utf8.get();
+  const char *hash = strchr(start, '#');
+  if (hash) {
+    full_utf8.SetLength(hash - start);
   }
-}
 
-int Stopwatch::GetElapsed() {
-  return total_;
-}
-
-
-ScopedStopwatch::ScopedStopwatch(Stopwatch *t) {
-  assert(t);
-  t_ = t;
-  t_->Start();
-}
-
-ScopedStopwatch::~ScopedStopwatch() {
-  assert(t_);
-  t_->Stop();
+  // convert to string16
+  nsString full_utf16;
+  nr = NS_CStringToUTF16(full_utf8, NS_CSTRING_ENCODING_UTF8, full_utf16);
+  NS_ENSURE_SUCCESS(nr, false);
+  out->assign(full_utf16.get());
+  return true;
 }

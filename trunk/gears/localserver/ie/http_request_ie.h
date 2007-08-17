@@ -28,6 +28,7 @@
 
 #include "gears/base/ie/atl_headers.h"
 #include "gears/localserver/common/http_request.h"
+#include "gears/localserver/common/localserver_db.h"
 
 
 class IEHttpRequest
@@ -65,7 +66,8 @@ class IEHttpRequest
 
   virtual bool SetFollowRedirects(bool follow);
   virtual bool WasRedirected();
-  virtual bool GetRedirectUrl(std::string16 *full_redirect_url);
+  virtual bool GetFinalUrl(std::string16 *full_url);
+  virtual bool GetInitialUrl(std::string16 *full_url);
 
   // methods
   virtual bool Open(const char16 *method, const char16* url, bool async);
@@ -167,7 +169,7 @@ class IEHttpRequest
            bind_verb_ == BINDVERB_PUT;
   }
 
-  // The request url
+  // The (non-relative) request url
   std::string16 url_;
 
   // Whether to bypass caches

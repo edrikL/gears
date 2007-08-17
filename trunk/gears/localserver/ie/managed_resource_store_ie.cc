@@ -24,12 +24,15 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
+
+#include "gears/localserver/ie/managed_resource_store_ie.h"
+
 #include "gears/base/common/common.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
+#include "gears/base/common/url_utils.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
-#include "gears/localserver/ie/managed_resource_store_ie.h"
 
 
 //------------------------------------------------------------------------------
@@ -126,9 +129,8 @@ GearsManagedResourceStore::put_manifestUrl(const BSTR manifest_url) {
   ATLTRACE(_T("ManagedResourceStore::put_manifestUrl( %s )\n"), manifest_url);
 
   std::string16 full_manifest_url;
-  if (!ResolveRelativeUrl(this->EnvPageLocationUrl().c_str(),
-                          manifest_url,
-                          &full_manifest_url)) {
+  if (!ResolveAndNormalize(this->EnvPageLocationUrl().c_str(), manifest_url,
+                           &full_manifest_url)) {
     RETURN_EXCEPTION(STRING16(L"Failed to resolve url."));
   }
 

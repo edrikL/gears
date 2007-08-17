@@ -284,9 +284,8 @@ void JS_DLL_CALLBACK JsRunner::JsErrorHandler(JSContext *cx,
 
 JsRunner::~JsRunner() {
   std::vector<IGeneric *>::iterator global;
-  for (global = globals_.begin(); global != globals_.end(); global++) {
+  for (global = globals_.begin(); global != globals_.end(); ++global) {
     NS_RELEASE(*global);
-    delete *global;
   }
 
   // TODO(aa): Gears objects inside the js context do not get destroyed here

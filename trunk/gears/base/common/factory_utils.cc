@@ -42,7 +42,7 @@
 
 #define GoogleUpdateClientStateRegKey L"Software\\Google\\Update\\ClientState"
 #define GoogleUpdateDidRunValue L"dr"
-#define ScourUpdateClientGUID L"{283EAF47-8817-4c2b-A801-AD1FADFB7BAA}"
+#define GearsUpdateClientGUID L"{283EAF47-8817-4c2b-A801-AD1FADFB7BAA}"
 
 bool ParseMajorMinorVersion(const char16 *version, int *major, int *minor) {
 
@@ -106,7 +106,13 @@ void AppendBuildInfo(std::string16 *s) {
 }
 
 
-bool HasPermissionToUseScour(GearsFactory *factory) {
+bool HasPermissionToUseGears(GearsFactory *factory) {
+
+  // First check is_creation_suspended, because the factory can be suspended
+  // even when is_permission_granted.
+  if (factory->is_creation_suspended_) {
+    return false;
+  }
 
   // Check for a cached value.
   if (factory->is_permission_granted_) {
@@ -122,7 +128,7 @@ bool HasPermissionToUseScour(GearsFactory *factory) {
   CapabilitiesDB *capabilities = CapabilitiesDB::GetDB();
   if (!capabilities) { return false; }
 
-  switch (capabilities->GetCanAccessScour(origin)) {
+  switch (capabilities->GetCanAccessGears(origin)) {
     // Origin was found in database. Save choice for page lifetime,
     // so things continue working even if underlying database changes.
     case CapabilitiesDB::CAPABILITY_DENIED:
@@ -153,7 +159,7 @@ bool HasPermissionToUseScour(GearsFactory *factory) {
     CapabilitiesDB::CapabilityStatus status =
         allow_origin ? CapabilitiesDB::CAPABILITY_ALLOWED
                      : CapabilitiesDB::CAPABILITY_DENIED;
-    capabilities->SetCanAccessScour(origin, status);
+    capabilities->SetCanAccessGears(origin, status);
   }
 
   // Return the decision.
@@ -227,7 +233,7 @@ void SetActiveUserFlag() {
       &reg_client_state);
   if (result == ERROR_SUCCESS) {
     HKEY reg_client;
-    result = RegOpenKeyExW(reg_client_state, ScourUpdateClientGUID, 0,
+    result = RegOpenKeyExW(reg_client_state, GearsUpdateClientGUID, 0,
         KEY_WRITE, &reg_client);
     if (result == ERROR_SUCCESS) {
       const char16 *kVal = L"1";

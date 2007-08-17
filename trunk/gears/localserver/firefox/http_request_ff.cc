@@ -30,12 +30,15 @@
 #include <nsIUploadChannel.h>
 #include <nsIURI.h>
 #include "gears/third_party/gecko_internal/nsIEncodedChannel.h"
-#include "gears/third_party/gecko_internal/nsNetError.h"
 #include "gears/third_party/gecko_internal/nsIStringStream.h"
+#include "gears/third_party/gecko_internal/nsNetError.h"
+
+#include "gears/localserver/firefox/http_request_ff.h"
+
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/url_utils.h"
 #include "gears/localserver/firefox/cache_intercept.h"
-#include "gears/localserver/firefox/http_request_ff.h"
 
 
 NS_IMPL_ISUPPORTS5(FFHttpRequest,
@@ -191,6 +194,9 @@ bool FFHttpRequest::GetStatusLine(std::string16 *status_line) {
 // Open
 //------------------------------------------------------------------------------
 bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async) {
+  assert(!IsRelativeUrl(url));
+  // TODO(michaeln): Add some of the sanity checks the IE implementation has.
+
   NS_ENSURE_TRUE(state_ == UNINITIALIZED, false);
 
   if (!async) {
@@ -230,6 +236,7 @@ bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async) {
     NS_ENSURE_SUCCESS(rv, false);
   }
 
+  url_ = url;
   SetReadyState(HttpRequest::OPEN);
   return true;
 }
@@ -269,16 +276,24 @@ bool FFHttpRequest::SetFollowRedirects(bool follow) {
 }
 
 bool FFHttpRequest::WasRedirected() {
-  return follow_redirects_ && is_complete_ && was_redirected_ && !was_aborted_;
+  return is_complete_ && !was_aborted_ && follow_redirects_ && was_redirected_;
 }
 
-bool FFHttpRequest::GetRedirectUrl(std::string16 *full_redirect_url) {
-  if (!WasRedirected())
+bool FFHttpRequest::GetFinalUrl(std::string16 *full_url) {
+  if (!is_complete_ || was_aborted_)
     return false;
-  *full_redirect_url = redirect_url_;
+
+  if (WasRedirected())
+    *full_url = redirect_url_;
+  else
+    *full_url = url_;
   return true;
 }
 
+bool FFHttpRequest::GetInitialUrl(std::string16 *full_url) {
+  *full_url = url_;  // may be empty if request has not occurred
+  return true;
+}
 
 //------------------------------------------------------------------------------
 // Send, SendString, SendImpl

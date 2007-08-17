@@ -25,15 +25,18 @@
 
 #include <assert.h>
 #include <dispex.h>
+
+#include "gears/localserver/ie/resource_store_ie.h"
+
+#include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/scoped_win32_handles.h"
-#include "gears/base/common/common.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
+#include "gears/base/common/url_utils.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/localserver/ie/file_submitter_ie.h"
-#include "gears/localserver/ie/resource_store_ie.h"
 
 
 //------------------------------------------------------------------------------
@@ -205,7 +208,7 @@ HRESULT GearsResourceStore::ResolveAndAppendUrl(const char16 *url,
 //------------------------------------------------------------------------------
 HRESULT GearsResourceStore::ResolveUrl(const char16 *url,
                                        std::string16 *resolved_url) {
-  if (!ResolveRelativeUrl(EnvPageLocationUrl().c_str(), url, resolved_url)) {
+  if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), url, resolved_url)) {
     RETURN_EXCEPTION(STRING16(L"Failed to resolve url."));
   }
   if (!EnvPageSecurityOrigin().IsSameOriginAsUrl(resolved_url->c_str())) {

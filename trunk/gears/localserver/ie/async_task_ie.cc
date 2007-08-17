@@ -332,7 +332,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
       *was_redirected = true;
     }
     if (full_redirect_url) {
-      http_request->GetRedirectUrl(full_redirect_url);
+      http_request->GetFinalUrl(full_redirect_url);
     }
   }
   

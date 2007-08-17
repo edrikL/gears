@@ -99,16 +99,16 @@ bool TestSecurityModel() {
   origin.Init(kEmpty, kScheme, kHost, kPort);
   origin2.Init(kEmpty, kScheme, kHost, kPort);
 
-  ASSERT_TRUE(origin.IsSameOrigin(&origin2));
+  ASSERT_TRUE(origin.IsSameOrigin(origin2));
 
   origin2.Init(kEmpty, kScheme, kHost, kPort + 1);
-  ASSERT_FALSE(origin.IsSameOrigin(&origin2));
+  ASSERT_FALSE(origin.IsSameOrigin(origin2));
 
   origin2.Init(kEmpty, kHost, kHost, kPort);
-  ASSERT_FALSE(origin.IsSameOrigin(&origin2));
+  ASSERT_FALSE(origin.IsSameOrigin(origin2));
 
   origin2.Init(kEmpty, kScheme, kScheme, kPort);
-  ASSERT_FALSE(origin.IsSameOrigin(&origin2));
+  ASSERT_FALSE(origin.IsSameOrigin(origin2));
 
   LOG(("TestSecurityModel - passed\n"));
   return true;

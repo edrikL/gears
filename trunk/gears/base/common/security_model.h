@@ -74,20 +74,19 @@ class SecurityOrigin {
 
   // Returns true if 'other' and 'this' represent the same origin. If 
   // either origin is not initalized, returns false.
-  bool IsSameOrigin(const SecurityOrigin *other) const {
+  bool IsSameOrigin(const SecurityOrigin &other) const {
     assert(initialized_);
-    assert(other);
-    return initialized_ && other->initialized_ &&
-           (port_ == other->port_) &&
-           (scheme_ == other->scheme_) &&
-           (host_ == other->host_);
+    assert(other.initialized_);
+    return (port_ == other.port_) &&
+           (scheme_ == other.scheme_) &&
+           (host_ == other.host_);
   }
 
   // Returns true if 'full_url' is form the same origin as 'this'
   bool IsSameOriginAsUrl(const char16 *full_url) const {
     SecurityOrigin origin;
     return origin.InitFromUrl(full_url) &&
-           IsSameOrigin(&origin);
+           IsSameOrigin(origin);
   }
 
  private:

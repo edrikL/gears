@@ -24,17 +24,19 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
+
+#include "gears/localserver/ie/localserver_ie.h"
+
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/url_utils.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
-#include "gears/localserver/ie/managed_resource_store_ie.h"
-#include "gears/localserver/ie/localserver_ie.h"
-#include "gears/localserver/ie/resource_store_ie.h"
-
 #ifdef DEBUG
 #include "gears/localserver/common/localserver_tests.h" // for testing
 #endif
+#include "gears/localserver/ie/managed_resource_store_ie.h"
+#include "gears/localserver/ie/resource_store_ie.h"
 
 
 //------------------------------------------------------------------------------
@@ -57,7 +59,7 @@ STDMETHODIMP GearsLocalServer::canServeLocally(
 #endif
 
   std::string16 full_url;
-  if (!ResolveRelativeUrl(EnvPageLocationUrl().c_str(), url, &full_url)) {
+  if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), url, &full_url)) {
     RETURN_EXCEPTION(STRING16(L"Failed to resolve url."));
   }
   if (!EnvPageSecurityOrigin().IsSameOriginAsUrl(full_url.c_str())) {

@@ -84,7 +84,8 @@ class FFHttpRequest : public HttpRequest,
 
   virtual bool SetFollowRedirects(bool follow);
   virtual bool WasRedirected();
-  virtual bool GetRedirectUrl(std::string16 *full_redirect_url);
+  virtual bool GetFinalUrl(std::string16 *full_url);
+  virtual bool GetInitialUrl(std::string16 *full_url);
 
   // methods
   virtual bool Open(const char16 *method, const char16 *url, bool async);
@@ -126,6 +127,7 @@ class FFHttpRequest : public HttpRequest,
   std::string16 method_;
   std::string post_data_string_;
   scoped_ptr< std::vector<uint8> > response_body_;
+  std::string16 url_;
   CachingBehavior caching_behavior_;
   bool was_sent_;
   bool is_complete_;
