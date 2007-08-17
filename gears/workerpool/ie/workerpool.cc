@@ -815,7 +815,8 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
     JsErrorInfo error_info = {
       0, // line number -- What we really want is the line number in the
          // sending worker, but that would be hard to get.
-      STRING16(L"Worker does not have an onmessage handler.")
+      STRING16(L"Could not process message because worker does not have an "
+               L"onmessage handler.")
     };
 
     // We go through the message queue even in the case where this happens on

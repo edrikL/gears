@@ -42,6 +42,9 @@ extern const char16 *kWorkerInsertedPreamble;
 extern const int kOwningWorkerId;
 extern const int kInvalidWorkerId;
 
+// Creates an error message for display in the parent when a child worker has an
+// unhandled exception. The line number is only included in the message if it is
+// non-zero.
 void FormatWorkerPoolErrorMessage(const JsErrorInfo &error_info,
                                   int src_worker_id,
                                   std::string16 *message);
