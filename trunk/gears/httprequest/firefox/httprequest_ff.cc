@@ -59,11 +59,6 @@ const nsCID kGearsHttpRequestClassId = // {033D8D37-95A2-478e-91A3-B0FA60A9CA8D}
 
 // Error messages
 static const char16 *kInternalError = STRING16(L"Internal error.");
-static const char16 *kUrlError = STRING16(L"Failed to resolve url.");
-static const char16 *kSecurityOriginError =
-                        STRING16(L"Url is not from the same origin.");
-static const char16 *kDataParameterError =
-                        STRING16(L"Data parameter must be a string.");
 static const char16 *kAlreadyOpenError =  STRING16(L"Request is already open.");
 static const char16 *kNotOpenError = STRING16(L"Request is not open.");
 static const char16 *kNotCompleteError = STRING16(L"Request is not done.");
@@ -208,7 +203,7 @@ NS_IMETHODIMP GearsHttpRequest::Send() {
     JsParamFetcher js_params(this);
     if (js_params.GetCount(false) > 0) {
       if (!js_params.GetAsString(0, &request_info_->post_data)) {
-        RETURN_EXCEPTION(STRING16(L"The data parameter must be a string."));
+        RETURN_EXCEPTION(STRING16(L"Data parameter must be a string."));
       }
       request_info_->has_post_data = !request_info_->post_data.empty();
     }
@@ -524,7 +519,7 @@ bool GearsHttpRequest::ResolveUrl(const char16 *url,
     return false;
   }
   if (!EnvPageSecurityOrigin().IsSameOriginAsUrl(resolved_url->c_str())) {
-    *exception_message = STRING16(L"Url is not from the same origin");
+    *exception_message = STRING16(L"Url is not from the same origin.");
     return false;
   }
   return true;

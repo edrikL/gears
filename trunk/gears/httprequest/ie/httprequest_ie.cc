@@ -37,11 +37,6 @@
 
 // Error messages
 static const char16 *kInternalError = STRING16(L"Internal error.");
-static const char16 *kUrlError = STRING16(L"Failed to resolve url.");
-static const char16 *kSecurityOriginError =
-                        STRING16(L"Url is not from the same origin.");
-static const char16 *kDataParameterError =
-                        STRING16(L"Data parameter must be a string.");
 static const char16 *kAlreadyOpenError =  STRING16(L"Request is already open.");
 static const char16 *kNotOpenError = STRING16(L"Request is not open.");
 static const char16 *kNotCompleteError = STRING16(L"Request is not done.");
@@ -133,7 +128,7 @@ STDMETHODIMP GearsHttpRequest::send(
   const char16 *post_data_str = NULL;
   if (ActiveXUtils::OptionalVariantIsPresent(data)) {
     if (data->vt != VT_BSTR) {
-      RETURN_EXCEPTION(kDataParameterError);
+      RETURN_EXCEPTION(STRING16(L"Data parameter must be a string."));
     }
     post_data_str = data->bstrVal;
   }
@@ -340,11 +335,11 @@ bool GearsHttpRequest::ResolveUrl(const char16 *url,
                                   std::string16 *exception_message) {
   assert(url && resolved_url && exception_message);
   if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), url, resolved_url)) {
-    *exception_message = kUrlError;
+    *exception_message = STRING16(L"Failed to resolve url.");
     return false;
   }
   if (!EnvPageSecurityOrigin().IsSameOriginAsUrl(resolved_url->c_str())) {
-    *exception_message = kSecurityOriginError;
+    *exception_message = STRING16(L"Url is not from the same origin.");
     return false;
   }
   return true;

@@ -40,12 +40,14 @@
 // Converts a string to lower case in place
 template<class StringT>
 inline void LowerString(StringT &str) {
-  std::transform(str.begin(), str.end(), str.begin(), std::tolower);
+  std::transform(str.begin(), str.end(), str.begin(), 
+                 static_cast<int(*)(int)>(std::tolower));
 }
 // Converts a string to upper case in place
 template<class StringT>
 inline void UpperString(StringT &str) {
-  std::transform(str.begin(), str.end(), str.begin(), std::toupper);
+  std::transform(str.begin(), str.end(), str.begin(), 
+                 static_cast<int(*)(int)>(std::toupper));
 }
 
 // Returns a lower case version of the string

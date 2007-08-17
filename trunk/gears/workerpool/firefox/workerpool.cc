@@ -829,12 +829,10 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
     // setup an incoming message queue, then Mutex::Await for the script to be
     // fetched, before finally pumping messages.
 
-    wi->http_request.swap(ScopedHttpRequestPtr(HttpRequest::Create()));
+    wi->http_request.reset(HttpRequest::Create());
     if (!wi->http_request.get()) { return false; }
     
-    wi->http_request_listener.swap(
-        scoped_ptr<HttpRequest::ReadyStateListener>(
-            new CreateWorkerUrlFetchListener(wi)));
+    wi->http_request_listener.reset(new CreateWorkerUrlFetchListener(wi));
     if (!wi->http_request_listener.get()) { return false; }
 
     HttpRequest *request = wi->http_request.get();  // shorthand
