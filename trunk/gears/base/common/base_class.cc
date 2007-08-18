@@ -256,9 +256,8 @@ bool JsParamFetcher::GetAsArray(int i, JsToken *out_array, int *out_length) {
   return false; // failed
 }
 
-bool JsParamFetcher::GetAsCallback(int i, JsCallback *out) {
-  out->function = js_argv_[i];
-  out->context = GetContextPtr();
+bool JsParamFetcher::GetAsNewRootedCallback(int i, JsRootedCallback **out) {
+  *out = new JsRootedCallback(GetContextPtr(), js_argv_[i]);
   return true;
 }
 
@@ -377,9 +376,9 @@ JsNativeMethodRetval JsSetException(const GearsBaseClass *obj,
   if (!error_object.get()) { return retval; }
 
   // Note: need JS_SetPendingException to bubble 'catch' in workers.
-  JS_SetPendingException(cx, error_object->GetToken());
+  JS_SetPendingException(cx, error_object->token());
 
-  bool success = js_runner->SetPropertyString(error_object->GetToken(),
+  bool success = js_runner->SetPropertyString(error_object->token(),
                                               STRING16(L"message"),
                                               message);
   if (!success) { return retval; }

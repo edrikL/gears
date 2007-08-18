@@ -85,16 +85,13 @@ NS_IMETHODIMP GearsHttpRequest::SetOnreadystatechange(
     RETURN_EXCEPTION(STRING16(L"Value is required."));
   }
 
-  JsCallback callback;
-  if (!js_params.GetAsCallback(0, &callback)) {
+  JsRootedCallback *callback;
+  if (!js_params.GetAsNewRootedCallback(0, &callback)) {
     RETURN_EXCEPTION(
         STRING16(L"Invalid value for onreadystatechange property."));
   }
 
-  // "Root" the handler so it cannot get garbage collected.
-  onreadystatechange_.reset(new JsRootedToken(callback.context,
-                                              callback.function));
-
+  onreadystatechange_.reset(callback);
   RETURN_NORMAL();
 }
 
@@ -472,10 +469,7 @@ void GearsHttpRequest::FireReadyStateChangedEvent() {
   JsRunnerInterface *runner = GetJsRunner();
   assert(runner);
   if (runner) {
-    JsCallback callback;
-    callback.function = onreadystatechange_.get()->GetToken();
-    callback.context = onreadystatechange_.get()->GetContext();
-    runner->InvokeCallback(callback, 0, NULL);
+    runner->InvokeCallback(onreadystatechange_.get(), 0, NULL);
   }
 }
 

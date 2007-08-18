@@ -49,7 +49,7 @@ typedef nsresult   JsNativeMethodRetval;
 class JsRootedToken {
  public:
   JsRootedToken(JsContextPtr context, JsToken token)
-      : context_(context), token_(token) {
+    : context_(context), token_(token) {
     JS_AddRoot(context_, &token_);
   }
 
@@ -57,8 +57,8 @@ class JsRootedToken {
     JS_RemoveRoot(context_, &token_);
   }
 
-  JsToken GetToken() { return token_; }
-  JsContextPtr GetContext() { return context_; }
+  JsToken token() const { return token_; }
+  JsContextPtr context() const { return context_; }
 
  private:
   JsContextPtr context_;
@@ -97,8 +97,8 @@ class JsRootedToken {
     token_->Release();
   }
 
-  JsToken GetToken() { return token_; }
-  JsContextPtr GetContext() { return NULL; }
+  JsToken token() const { return token_; }
+  JsContextPtr context() const { return NULL; }
 
  private:
   JsToken token_;
@@ -119,15 +119,7 @@ typedef void  JsNativeMethodRetval;
 #endif // BROWSER_xyz
 
 
-
-// TODO(aa): This can probably get replaced with JsToken, it also has the
-// advantage of not having to track JS_AddRoot() or AddRef() manually.
-struct JsCallback {
-  JsCallback() : function(0), context(NULL) {};
-
-  JsToken function;
-  JsContextPtr context;
-};
+typedef JsRootedToken JsRootedCallback;
 
 class JsRunnerInterface;
 
@@ -233,7 +225,7 @@ class JsParamFetcher {
   bool GetAsInt(int i, int *out);
   bool GetAsString(int i, std::string16 *out);
   bool GetAsArray(int i, JsToken *out_array, int *out_length);
-  bool GetAsCallback(int i, JsCallback *out);
+  bool GetAsNewRootedCallback(int i, JsRootedCallback **out);
 
   bool GetFromArrayAsToken(JsToken array, int i, JsToken *out);
   bool GetFromArrayAsInt(JsToken array, int i, int *out);

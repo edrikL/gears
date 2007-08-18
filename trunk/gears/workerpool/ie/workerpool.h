@@ -128,8 +128,8 @@ class PoolThreadsManager
   void AddWorkerRef();
   void ReleaseWorkerRef();
 
-  bool SetCurrentThreadMessageHandler(IDispatch *handler);
-  bool SetCurrentThreadErrorHandler(IDispatch *handler);
+  bool SetCurrentThreadMessageHandler(JsRootedCallback *handler);
+  bool SetCurrentThreadErrorHandler(JsRootedCallback *handler);
   bool CreateThread(const char16 *url_or_full_script, bool is_param_script,
                     int *worker_id);
   void AllowCrossOrigin();

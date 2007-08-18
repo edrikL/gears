@@ -105,8 +105,8 @@ class PoolThreadsManager
   void AddWorkerRef();
   void ReleaseWorkerRef();
 
-  bool SetCurrentThreadMessageHandler(JsCallback *handler);
-  bool SetCurrentThreadErrorHandler(JsCallback *handler);
+  bool SetCurrentThreadMessageHandler(JsRootedCallback *handler);
+  bool SetCurrentThreadErrorHandler(JsRootedCallback *handler);
   bool CreateThread(const char16 *url_or_full_script, bool is_param_script,
                     int *worker_id);
   void AllowCrossOrigin();
@@ -143,8 +143,6 @@ class PoolThreadsManager
                       const std::string16 &message_string, int src_worker_id);
   void ProcessError(JavaScriptWorkerInfo *wi,
                     const std::string16 &message_string, int src_worker_id);
-  void FireHandler(JsRunnerInterface *js_runner, const JsCallback &handler,
-                   const std::string16 &message, int src_worker_id);
 
   int num_workers_; // used by Add/ReleaseWorkerRef()
   bool is_shutting_down_;

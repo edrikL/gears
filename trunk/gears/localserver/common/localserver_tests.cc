@@ -40,6 +40,7 @@
 bool TestSecurityModel();  // from security_model_test.cc
 bool TestFileUtils();  // from file_test.cc
 bool TestUrlUtils();  // from url_utils_test.cc
+bool TestJsRootedTokenLifetime();  // from base_class_test.cc
 
 //------------------------------------------------------------------------------
 // TestWebCacheAll
@@ -61,6 +62,8 @@ bool TestWebCacheAll() {
   ok &= TestResourceStore();
   ok &= TestManifest();
   ok &= TestManagedResourceStore();
+  // TODO(zork): Add this test back in once it doesn't crash the browser.
+  //ok &= TestJsRootedTokenLifetime();
   LOG(("TestWebCacheAll - %s\n", ok ? "passed" : "failed"));
   return ok;
 }

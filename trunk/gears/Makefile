@@ -190,6 +190,7 @@ FF_IDLSRCS	+= \
 
 FF_CPPSRCS	+= \
 		base_class.cc \
+		base_class_test.cc \
 		dom_utils.cc \
 		factory.cc \
 		factory_utils.cc \
@@ -247,6 +248,7 @@ IE_IDLSRCS	+= \
 IE_CPPSRCS	+= \
 		activex_utils.cc \
 		base_class.cc \
+		base_class_test.cc \
 		bho.cc \
 		detect_version_collision.cc \
 		factory.cc \

@@ -126,8 +126,8 @@ struct JavaScriptWorkerInfo {
   //
   PoolThreadsManager *threads_manager;
   JsRunnerInterface *js_runner;
-  JsCallback onmessage_handler;
-  JsCallback onerror_handler;
+  scoped_ptr<JsRootedCallback> onmessage_handler;
+  scoped_ptr<JsRootedCallback> onerror_handler;
   nsCOMPtr<nsIEventQueue> thread_event_queue;
   std::queue< std::pair<std::string16, int> > message_queue;
 
@@ -185,26 +185,20 @@ void GearsWorkerPool::SetThreadsManager(PoolThreadsManager *manager) {
 NS_IMETHODIMP GearsWorkerPool::SetOnmessage(nsIVariant *in_value) {
   Initialize();
 
-  JsCallback onmessage_handler;
   JsParamFetcher js_params(this);
 
   if (js_params.GetCount(false) < 1) {
     RETURN_EXCEPTION(STRING16(L"Value is required."));
   }
 
-  if (!js_params.GetAsCallback(0, &onmessage_handler)) {
+  // Once we aquire the callback, we're responsible for its lifetime until it's
+  // passed into SetCurrentThreadMessageHandler.
+  JsRootedCallback *onmessage_handler;
+  if (!js_params.GetAsNewRootedCallback(0, &onmessage_handler)) {
     RETURN_EXCEPTION(STRING16(L"Invalid value for onmesssage property."));
   }
 
-  // "Root" the handler so it cannot get garbage collected.
-  // TODO(aa): Since we never undo this, it leaks. We should do something
-  // similar to the CComPtr<IDispatch> that the IE version has so that this is
-  // handled cleanly. Same thing for onerror handler.
-  if (!RootJsToken(onmessage_handler.context, onmessage_handler.function)) {
-    RETURN_EXCEPTION(STRING16(L"Error rooting JS value."));
-  }
-
-  if (!threads_manager_->SetCurrentThreadMessageHandler(&onmessage_handler)) {
+  if (!threads_manager_->SetCurrentThreadMessageHandler(onmessage_handler)) {
     RETURN_EXCEPTION(STRING16(L"Error setting onmessage handler."));
   }
 
@@ -221,23 +215,20 @@ NS_IMETHODIMP GearsWorkerPool::GetOnmessage(nsIVariant **out_value) {
 NS_IMETHODIMP GearsWorkerPool::SetOnerror(nsIVariant *in_value) {
   Initialize();
 
-  JsCallback onerror_handler;
+  JsRootedCallback *onerror_handler;
   JsParamFetcher js_params(this);
 
   if (js_params.GetCount(false) < 1) {
     RETURN_EXCEPTION(STRING16(L"Value is required."));
   }
 
-  if (!js_params.GetAsCallback(0, &onerror_handler)) {
+  // Once we aquire the callback, we're responsible for its lifetime until it's
+  // passed into SetCurrentThreadErrorHandler.
+  if (!js_params.GetAsNewRootedCallback(0, &onerror_handler)) {
     RETURN_EXCEPTION(STRING16(L"Invalid value for onerror property."));
   }
 
-  // "Root" the handler so it cannot get garbage collected.
-  if (!RootJsToken(onerror_handler.context, onerror_handler.function)) {
-    RETURN_EXCEPTION(STRING16(L"Error rooting JS value."));
-  }
-
-  if (!threads_manager_->SetCurrentThreadErrorHandler(&onerror_handler)) {
+  if (!threads_manager_->SetCurrentThreadErrorHandler(onerror_handler)) {
     // Currently, the only reason this can fail is because of this one
     // particular error.
     // TODO(aa): We need a system throughout Gears for being able to handle
@@ -445,14 +436,14 @@ static void OnDestroyThreadsEvent(ThreadsEvent *event) {
 void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
                                         const std::string16 &message,
                                         int src_worker_id) {
-  if (wi->onmessage_handler.function) {
+  if (wi->onmessage_handler.get()) {
     // TODO(cprince): Add a 'message' object with srcOrigin as the 3rd param.
     const int argc = 2;
     JsParamToSend argv[argc] = {
       { JSPARAM_STRING16, &message },
       { JSPARAM_INT, &src_worker_id }
     };
-    wi->js_runner->InvokeCallback(wi->onmessage_handler, argc, argv);
+    wi->js_runner->InvokeCallback(wi->onmessage_handler.get(), argc, argv);
   } else {
     // It is an error to send a message to a worker that does not have an
     // onmessage handler.
@@ -491,13 +482,13 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
   }
 #endif
 
-  if (wi->onerror_handler.function) {
+  if (wi->onerror_handler.get()) {
     const int argc = 2;
     JsParamToSend argv[argc] = {
       { JSPARAM_STRING16, &error },
       { JSPARAM_INT, &src_worker_id }
     };
-    wi->js_runner->InvokeCallback(wi->onerror_handler, argc, argv);
+    wi->js_runner->InvokeCallback(wi->onerror_handler.get(), argc, argv);
   } else {
     // If there's no onerror handler, we bubble the error up to the owning
     // worker's script context. If that worker is also nested, this will cause
@@ -709,18 +700,20 @@ void PoolThreadsManager::UninitWorkerThread() {
 }
 
 
-bool PoolThreadsManager::SetCurrentThreadMessageHandler(JsCallback *handler) {
+bool PoolThreadsManager::SetCurrentThreadMessageHandler(
+                             JsRootedCallback *handler) {
   MutexLock lock(&mutex_);
 
   int worker_id = GetCurrentPoolWorkerId();
   JavaScriptWorkerInfo *wi = worker_info_[worker_id];
 
-  wi->onmessage_handler = *handler;
+  wi->onmessage_handler.reset(handler);
   return true;
 }
 
 
-bool PoolThreadsManager::SetCurrentThreadErrorHandler(JsCallback *handler) {
+bool PoolThreadsManager::SetCurrentThreadErrorHandler(
+                             JsRootedCallback *handler) {
   MutexLock lock(&mutex_);
 
   int worker_id = GetCurrentPoolWorkerId();
@@ -731,7 +724,8 @@ bool PoolThreadsManager::SetCurrentThreadErrorHandler(JsCallback *handler) {
   }
 
   JavaScriptWorkerInfo *wi = worker_info_[worker_id];
-  wi->onerror_handler = *handler;
+  wi->onerror_handler.reset(handler);
+
   return true;
 }
 

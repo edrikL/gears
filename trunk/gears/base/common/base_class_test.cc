@@ -1,4 +1,4 @@
-// Copyright 2006, Google Inc.
+// Copyright 2007, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,19 +23,20 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_LOCALSERVER_FIREFOX_CAPTURE_TASK_FF_H__
-#define GEARS_LOCALSERVER_FIREFOX_CAPTURE_TASK_FF_H__
+#include "gears/base/common/base_class.h"
+#include "gears/base/common/js_runner.h"
 
-#include "ff/genfiles/localserver.h" // from OUTDIR
-#include "gears/base/common/base_class.h" // only for Js* types
-#include "gears/third_party/gecko_internal/nsIScriptContext.h"
-#include "gears/localserver/common/capture_task.h"
+bool TestJsRootedTokenLifetime() {
+  JsRunnerInterface *js_runner = NewJsRunner();
+  JsToken token(0);
 
-//------------------------------------------------------------------------------
-// FFCaptureRequest
-//------------------------------------------------------------------------------
-struct FFCaptureRequest : public CaptureRequest {
-  scoped_ptr<JsRootedCallback> callback;
-};
+  JsRootedToken *rooted_token = new JsRootedToken(js_runner->GetContext(),
+                                                  token);
 
-#endif  // GEARS_LOCALSERVER_FIREFOX_CAPTURE_TASK_FF_H__
+  // If we don't handle the case of tokens outliving the js_runner, this
+  // cleanup code will crash the browser.
+  delete js_runner;
+  delete rooted_token;
+
+  return true;
+}

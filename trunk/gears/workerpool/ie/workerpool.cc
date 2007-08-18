@@ -77,12 +77,8 @@ struct JavaScriptWorkerInfo {
   //
   PoolThreadsManager *threads_manager;
   JsRunnerInterface *js_runner;
-  // TODO(aa): Find a cleaner way to store the callback and prevent GC, without
-  // requiring two values here.  Relates to the RootJsToken TODO in the FF impl.
-  CComPtr<IDispatch> onmessage_handler_ref;
-  CComPtr<IDispatch> onerror_handler_ref;
-  JsCallback onmessage_handler;
-  JsCallback onerror_handler;
+  scoped_ptr<JsRootedCallback> onmessage_handler;
+  scoped_ptr<JsRootedCallback> onerror_handler;
 
   HWND message_hwnd;
   std::queue< std::pair<std::string16, int> > message_queue;
@@ -217,11 +213,11 @@ STDMETHODIMP GearsWorkerPool::sendMessage(const BSTR *message_string,
 }
 
 STDMETHODIMP GearsWorkerPool::put_onmessage(const VARIANT *in_value) {
-  IDispatch *handler = NULL;
+  scoped_ptr<JsRootedCallback> onmessage_handler;
 
   if (!ActiveXUtils::VariantIsNullOrUndefined(in_value)) {
     if (in_value->vt == VT_DISPATCH) {
-      handler = in_value->pdispVal;
+      onmessage_handler.reset(new JsRootedCallback(NULL, in_value->pdispVal));
     } else {
       RETURN_EXCEPTION(STRING16(L"The onmessage callback must be a function."));
     }
@@ -229,7 +225,8 @@ STDMETHODIMP GearsWorkerPool::put_onmessage(const VARIANT *in_value) {
 
   Initialize();
 
-  if (!threads_manager_->SetCurrentThreadMessageHandler(handler)) {
+  if (!threads_manager_->SetCurrentThreadMessageHandler(
+                             onmessage_handler.release())) {
     RETURN_EXCEPTION(STRING16(L"Error setting onmessage handler."));
   }
 
@@ -237,11 +234,11 @@ STDMETHODIMP GearsWorkerPool::put_onmessage(const VARIANT *in_value) {
 }
 
 STDMETHODIMP GearsWorkerPool::put_onerror(const VARIANT *in_value) {
-  IDispatch *handler = NULL;
+  scoped_ptr<JsRootedCallback> onerror_handler;
 
   if (!ActiveXUtils::VariantIsNullOrUndefined(in_value)) {
     if (in_value->vt == VT_DISPATCH) {
-      handler = in_value->pdispVal;
+      onerror_handler.reset(new JsRootedCallback(NULL, in_value->pdispVal));
     } else {
       RETURN_EXCEPTION(STRING16(L"The onerror callback must be a function."));
     }
@@ -249,7 +246,8 @@ STDMETHODIMP GearsWorkerPool::put_onerror(const VARIANT *in_value) {
 
   Initialize();
 
-  if (!threads_manager_->SetCurrentThreadErrorHandler(handler)) {
+  if (!threads_manager_->SetCurrentThreadErrorHandler(
+                             onerror_handler.release())) {
     // Currently, the only reason this can fail is because of this one
     // particular error.
     // TODO(aa): We need a system throughout Gears for being able to handle
@@ -507,18 +505,22 @@ void PoolThreadsManager::UninitWorkerThread() {
 }
 
 
-bool PoolThreadsManager::SetCurrentThreadMessageHandler(IDispatch *handler) {
+bool PoolThreadsManager::SetCurrentThreadMessageHandler(
+                             JsRootedCallback *handler) {
   MutexLock lock(&mutex_);
 
   int worker_id = GetCurrentPoolWorkerId();
   JavaScriptWorkerInfo *wi = worker_info_[worker_id];
 
-  wi->onmessage_handler_ref = handler;
-  wi->onmessage_handler.function = handler;
+  // This is where we take ownership of the handler.  If the function returns
+  // before this point, we need to delete handler.
+  wi->onmessage_handler.reset(handler);
   return true;
 }
 
-bool PoolThreadsManager::SetCurrentThreadErrorHandler(IDispatch *handler) {
+
+bool PoolThreadsManager::SetCurrentThreadErrorHandler(
+                             JsRootedCallback *handler) {
   MutexLock lock(&mutex_);
 
   int worker_id = GetCurrentPoolWorkerId();
@@ -529,8 +531,10 @@ bool PoolThreadsManager::SetCurrentThreadErrorHandler(IDispatch *handler) {
   }
 
   JavaScriptWorkerInfo *wi = worker_info_[worker_id];
-  wi->onerror_handler_ref = handler;
-  wi->onerror_handler.function = handler;
+
+  // This is where we take ownership of the handler.  If the function returns
+  // before this point, we need to delete handler.
+  wi->onerror_handler.reset(handler);
   return true;
 }
 
@@ -858,14 +862,14 @@ LRESULT CALLBACK PoolThreadsManager::ThreadWndProc(HWND hwnd, UINT message,
 void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
                                         const std::string16 &message,
                                         int src_worker_id) {
-  if (wi->onmessage_handler.function) {
+  if (wi->onmessage_handler.get()) {
     // TODO(cprince): Add a 'message' object with srcOrigin as the 3rd param.
     const int argc = 2;
     JsParamToSend argv[argc] = {
       { JSPARAM_STRING16, &message },
       { JSPARAM_INT, &src_worker_id }
     };
-    wi->js_runner->InvokeCallback(wi->onmessage_handler, argc, argv);
+    wi->js_runner->InvokeCallback(wi->onmessage_handler.get(), argc, argv);
   } else {
     // It is an error to send a message to a worker that does not have an
     // onmessage handler.
@@ -904,13 +908,13 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
   }
 #endif
 
-  if (wi->onerror_handler.function) {
+  if (wi->onerror_handler.get()) {
     const int argc = 2;
     JsParamToSend argv[argc] = {
       { JSPARAM_STRING16, &error },
       { JSPARAM_INT, &src_worker_id }
     };
-    wi->js_runner->InvokeCallback(wi->onerror_handler, argc, argv);
+    wi->js_runner->InvokeCallback(wi->onerror_handler.get(), argc, argv);
   } else {
     // If there's no onerror handler, we bubble the error up to the owning
     // worker's script context. If that worker is also nested, this will cause
