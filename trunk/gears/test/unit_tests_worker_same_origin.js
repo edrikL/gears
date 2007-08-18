@@ -1,5 +1,5 @@
 var wp = google.gears.workerPool;
-// We purposely do NOT call allowCrossOriginMonkeys() in the same-origin worker.
+// We purposely do NOT call allowCrossOrigin() in the same-origin worker.
 
 wp.onmessage = function(body, sender) {
 

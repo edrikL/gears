@@ -1241,8 +1241,13 @@ function test_DisallowDirectObjectCreation() {
   return g.SUCCEEDED;
 }
 
-// Test the create() factory method with various strange inputs.
-function test_CreateErrors() {
+function test_FactoryCreate() {
+  // Make sure older versions of objects can be created.
+  // TODO(ace): Think about how to keep this test from becoming stale when
+  // the Gears object version numbers are incremented.
+  google.gears.factory.create('beta.workerpool', '1.0');
+
+  // Test the create() factory method with various strange inputs.
   try {
     google.gears.factory.create('strange', '1.0');
     return g.FAILED;
@@ -1258,7 +1263,7 @@ function test_CreateErrors() {
   }
 
   try {
-    google.gears.factory.create('beta.workerpool', '2.0');
+    google.gears.factory.create('beta.workerpool', '9.9');
     return g.FAILED;
   } catch (e) {
     // Good, we want an exception.
@@ -1340,7 +1345,7 @@ function test_WorkerSecurityContext() {
 
 var miscTests = [
   test_DisallowDirectObjectCreation,
-  test_CreateErrors,
+  test_FactoryCreate,
   test_WorkerSecurityContext
 ];
 
@@ -1396,15 +1401,15 @@ function runArrayOfTests(tests) {
     google.gears.workerPool.onmessage = onmessageHandler;
   }
 
-  function child_onmessage(msg, sender) {
+  function child_onmessage(text, sender, m) {
     // runs any code received (should always be a single test function)
-    var retvals = runOneTest(msg);
+    var retvals = runOneTest(m.text);
     google.gears.workerPool.sendMessage('[' + String(retvals) + ']', sender);
   }
 
-  function parent_onmessage(msg, sender) {
+  function parent_onmessage(text, sender, m) {
     // calls insertRow() with the values returned by the child worker
-    var retvals = eval('(' + msg + ')');
+    var retvals = eval('(' + m.text + ')');
     insertRow('<b>[WORKER THREAD]</b> ' + retvals[0], // testBody
               retvals[1],  // success
               retvals[2],  // reason
@@ -1421,13 +1426,13 @@ function runArrayOfTests(tests) {
                   'runInit();';
 
   var workerPool =
-      google.gears.factory.create('beta.workerpool', '1.0');
+      google.gears.factory.create('beta.workerpool', '1.1');
   workerPool.onmessage = parent_onmessage;
   try {
     var childId = workerPool.createWorker(childCode);
     for (var testIndex = 0; testIndex < tests.length; ++testIndex) {
-      var msg = String(tests[testIndex]);
-      workerPool.sendMessage(msg, childId);
+      var text = String(tests[testIndex]);
+      workerPool.sendMessage(text, childId);
     }
   } catch (e) {
     insertRow('While creating worker in runArrayOfTests...', // testBody
@@ -1468,10 +1473,10 @@ function workerpool_SynchronizationStressTest() {
   // the number of messages requested by the parent.  The parent is programmed
   // to tally each response, and to look for dropped messages.
 
-  function parent_onmessage(msg, sender) {
+  function parent_onmessage(text, sender, m) {
     // Track cumulative per-worker message count.
     // Detect out-of-order responses.
-    var retval = parseInt(msg);
+    var retval = parseInt(m.text);
     var expected = nextValueToRecvFromWorkerId[sender];
     if (retval != expected) {
       insertRow('SynchronizationStressTest()',
@@ -1493,8 +1498,8 @@ function workerpool_SynchronizationStressTest() {
     google.gears.workerPool.onmessage = onmessageHandler;
   }
 
-  function child_onmessage(msg, sender) {
-    var numResponses = parseInt(msg);
+  function child_onmessage(text, sender, m) {
+    var numResponses = parseInt(m.text);
     for (var i = 0; i < numResponses; ++i) {
       google.gears.workerPool.sendMessage(String(gFirstResponse + g.messageTotal),
                                           sender);
@@ -1511,7 +1516,7 @@ function workerpool_SynchronizationStressTest() {
                   'runInit();';
 
   var workerPool =
-      google.gears.factory.create('beta.workerpool', '1.0');
+      google.gears.factory.create('beta.workerpool', '1.1');
   workerPool.onmessage = parent_onmessage;
 
 
@@ -1558,9 +1563,9 @@ function workerpool_GCWithFunctionClosures() {
 
   function childThread() {
 
-    google.gears.workerPool.onmessage = function(message, senderId) {
-      if (message == 'ping') {
-        google.gears.workerPool.sendMessage('pong', senderId);
+    google.gears.workerPool.onmessage = function(text, sender, m) {
+      if (m.text == 'ping') {
+        google.gears.workerPool.sendMessage('pong', m.sender);
       }
     }
 
@@ -1568,9 +1573,9 @@ function workerpool_GCWithFunctionClosures() {
 
   }
 
-  var wp = google.gears.factory.create('beta.workerpool', '1.0');
-  wp.onmessage = function(message, senderId) {
-    if (message == 'pong') {
+  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  wp.onmessage = function(text, sender, m) {
+    if (m.text == 'pong') {
       pingReceived_GCWithFunctionClosures = 1;
     }
   }
@@ -1593,8 +1598,8 @@ function workerpool_GCWithFunctionClosures() {
 function workerpool_OnErrorTests() {
   // Test that onerror gets called.
   workerpool_OnErrorTests.handler_called = false;
-  var wp = google.gears.factory.create('beta.workerpool', '1.0');
-  wp.onerror = function(msg, sender) {
+  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  wp.onerror = function(text, sender) {
     workerpool_OnErrorTests.handler_called = true;
   };
   var childId = wp.createWorker('');
@@ -1604,7 +1609,7 @@ function workerpool_OnErrorTests() {
 
   // Test that errors get thrown globally if there is no onerror handler.
   workerpool_OnErrorTests.global_called = false;
-  var wp2 = google.gears.factory.create('beta.workerpool', '1.0');
+  var wp2 = google.gears.factory.create('beta.workerpool', '1.1');
   window.onerror = function(msg, sender) {
     if (msg.indexOf(
             "Worker does not have an onmessage handler") > -1) {
@@ -1638,8 +1643,8 @@ function workerpool_CreateWorkerFromUrl() {
       'createWorkerFromUrl() Test 1: ' +
       'Same-origin, relative URLs should work.';
 
-  var wp1 = google.gears.factory.create('beta.workerpool', '1.0');
-  wp1.onmessage = function(body, sender) {
+  var wp1 = google.gears.factory.create('beta.workerpool', '1.1');
+  wp1.onmessage = function(text, sender, m) {
     workerpool_CreateWorkerFromUrl.result1 = body;
   }
   var childId = wp1.createWorkerFromUrl(sameOriginWorkerFile);
@@ -1653,8 +1658,8 @@ function workerpool_CreateWorkerFromUrl() {
       'Same-origin, absolute URLs should work. ' +
       'And worker database SHOULD exist in parent origin. ';
 
-  var wp2 = google.gears.factory.create('beta.workerpool', '1.0');
-  wp2.onmessage = function(body, sender) {
+  var wp2 = google.gears.factory.create('beta.workerpool', '1.1');
+  wp2.onmessage = function(text, sender, m) {
     // Worker database SHOULD exist in parent origin.
     var db2 = google.gears.factory.create('beta.database', '1.0');
     db2.open('worker_js');
@@ -1675,8 +1680,8 @@ function workerpool_CreateWorkerFromUrl() {
       'Cross-origin, absolute URLs should work. ' +
       'And worker database should NOT exist in parent origin. ';
 
-  var wp3 = google.gears.factory.create('beta.workerpool', '1.0');
-  wp3.onmessage = function(body, sender) {
+  var wp3 = google.gears.factory.create('beta.workerpool', '1.1');
+  wp3.onmessage = function(text, sender, m) {
     // Worker database should NOT exist in parent origin.
     var db3 = google.gears.factory.create('beta.database', '1.0');
     db3.open('worker_js');
@@ -1707,7 +1712,7 @@ function workerpool_CreateWorkerFromUrl() {
       'createWorkerFromUrl() Test 4: ' +
       'File Not Found should fire error.';
 
-  var wp4 = google.gears.factory.create('beta.workerpool', '1.0');
+  var wp4 = google.gears.factory.create('beta.workerpool', '1.1');
   wp4.onerror = function(msg, sender) {
     workerpool_CreateWorkerFromUrl.result4 = msg;
   }
@@ -1718,9 +1723,9 @@ function workerpool_CreateWorkerFromUrl() {
   workerpool_CreateWorkerFromUrl.result5 = '';
   workerpool_CreateWorkerFromUrl.description5 =
       'createWorkerFromUrl() Test 5: ' +
-      'Cross-origin worker missing allowCrossOriginMonkeys() should fire error.';
+      'Cross-origin worker missing allowCrossOrigin() should fire error.';
 
-  var wp5 = google.gears.factory.create('beta.workerpool', '1.0');
+  var wp5 = google.gears.factory.create('beta.workerpool', '1.1');
   wp5.onerror = function(msg, sender) {
     workerpool_CreateWorkerFromUrl.result5 = msg;
   }
@@ -1874,9 +1879,9 @@ function timer_ParentIntervalTest() {
 
 function timer_WorkerTimeoutTest() {
   var timerFired = false;
-  var workerPool = google.gears.factory.create('beta.workerpool', '1.0');
-  workerPool.onmessage = function(message, senderId) {
-    if (message == 'timeout') {
+  var workerPool = google.gears.factory.create('beta.workerpool', '1.1');
+  workerPool.onmessage = function(text, sender, m) {
+    if (text == 'timeout') {
       // Set success to true on the first firing, false if it fires again.
       workerTimeoutTestSucceeded = !timerFired;
       timerFired = true;
@@ -1894,12 +1899,12 @@ function timer_WorkerTimeoutTest() {
 
   function workerInit() {
     timer = google.gears.factory.create('beta.timer', '1.0');
-    google.gears.workerPool.onmessage = workerHandler;
+    google.gears.workerPool.onmessage = workerOnmessage;
   }
 
-  function workerHandler(message, sender) {
-    if (message == 'setTimeout') {
-      parentId = sender;
+  function workerOnmessage(text, sender, m) {
+    if (m.text == 'setTimeout') {
+      parentId = m.sender;
       timer.setTimeout(timeoutHandler, 300);
     }
 
@@ -1911,9 +1916,9 @@ function timer_WorkerTimeoutTest() {
 
 function timer_WorkerIntervalTest() {
   var timerFired = false;
-  var workerPool = google.gears.factory.create('beta.workerpool', '1.0');
-  workerPool.onmessage = function(message, senderId) {
-    if (message == 'interval') {
+  var workerPool = google.gears.factory.create('beta.workerpool', '1.1');
+  workerPool.onmessage = function(text, sender, m) {
+    if (m.text == 'interval') {
       ++workerIntervalTestIntervals;
     }
   }
@@ -1931,12 +1936,12 @@ function timer_WorkerIntervalTest() {
 
   function workerInit() {
     timer = google.gears.factory.create('beta.timer', '1.0');
-    google.gears.workerPool.onmessage = workerHandler;
+    google.gears.workerPool.onmessage = workerOnmessage;
   }
 
-  function workerHandler(message, sender) {
-    if (message == 'setInterval') {
-      parentId = sender;
+  function workerOnmessage(text, sender, m) {
+    if (m.text == 'setInterval') {
+      parentId = m.sender;
       intervals = 0;
       timerId = timer.setInterval(intervalHandler, 300);
     }
@@ -1963,10 +1968,10 @@ function timer_Parent1000msTimeoutTest() {
 }
 
 function timer_Worker1000msTimeoutTest() {
-  var workerPool = google.gears.factory.create('beta.workerpool', '1.0');
-  workerPool.onmessage = function(message, senderId) {
+  var workerPool = google.gears.factory.create('beta.workerpool', '1.1');
+  workerPool.onmessage = function(text, sender, m) {
     // The only message we get is the time delta
-    worker1000msTimeoutTime = message;
+    worker1000msTimeoutTime = m.text;
   }
 
   var childCode = String(workerInit) +
@@ -1981,12 +1986,12 @@ function timer_Worker1000msTimeoutTest() {
 
   function workerInit() {
     timer = google.gears.factory.create('beta.timer', '1.0');
-    google.gears.workerPool.onmessage = workerHandler;
+    google.gears.workerPool.onmessage = workerOnmessage;
   }
 
-  function workerHandler(message, sender) {
-    if (message == 'setTimeout') {
-      parentId = sender;
+  function workerOnmessage(text, sender, m) {
+    if (m.text == 'setTimeout') {
+      parentId = m.sender;
       timerBegin = new Date().getTime();
       timer.setTimeout(timeoutHandler, 1000);
     }
@@ -2024,9 +2029,9 @@ function timer_ParentIntervalScriptTest() {
 
 function timer_WorkerTimeoutScriptTest() {
   var timerFired = false;
-  var workerPool = google.gears.factory.create('beta.workerpool', '1.0');
-  workerPool.onmessage = function(message, senderId) {
-    if (message == 'timeout') {
+  var workerPool = google.gears.factory.create('beta.workerpool', '1.1');
+  workerPool.onmessage = function(text, sender, m) {
+    if (m.text == 'timeout') {
       // Set success to true on the first firing, false if it fires again.
       WorkerTimeoutScriptTestSucceeded = !timerFired;
       timerFired = true;
@@ -2044,12 +2049,12 @@ function timer_WorkerTimeoutScriptTest() {
 
   function workerInit() {
     timer = google.gears.factory.create('beta.timer', '1.0');
-    google.gears.workerPool.onmessage = workerHandler;
+    google.gears.workerPool.onmessage = workerOnmessage;
   }
 
-  function workerHandler(message, sender) {
-    if (message == 'setTimeout') {
-      parentId = sender;
+  function workerOnmessage(text, sender, m) {
+    if (m.text == 'setTimeout') {
+      parentId = m.sender;
       timer.setTimeout(
         'google.gears.workerPool.sendMessage(\'timeout\', parentId);',
         300);
@@ -2059,9 +2064,9 @@ function timer_WorkerTimeoutScriptTest() {
 
 function timer_WorkerIntervalScriptTest() {
   var timerFired = false;
-  var workerPool = google.gears.factory.create('beta.workerpool', '1.0');
-  workerPool.onmessage = function(message, senderId) {
-    if (message == 'interval') {
+  var workerPool = google.gears.factory.create('beta.workerpool', '1.1');
+  workerPool.onmessage = function(text, sender, m) {
+    if (m.text == 'interval') {
       WorkerIntervalScriptTestIntervals++;
       if (WorkerIntervalScriptTestIntervals == TIMER_TARGET_INTERVALS) {
         workerPool.sendMessage('clearInterval', workerId);
@@ -2081,7 +2086,7 @@ function timer_WorkerIntervalScriptTest() {
 
   function workerInit() {
     timer = google.gears.factory.create('beta.timer', '1.0');
-    google.gears.workerPool.onmessage = workerHandler;
+    google.gears.workerPool.onmessage = workerOnmessage;
   }
 
   function workerHandler(message, sender) {
@@ -2606,8 +2611,8 @@ function httpRequestTestComplete(testName, result) {
 
 // Helper that runs our test suite in a worker
 function runHttpRequestTestsOnWorker() {
-  function myOnMessage(msg, sender) {
-    var retvals = eval('(' + msg + ')');
+  function myOnmessage(text, sender, m) {
+    var retvals = eval('(' + m.text + ')');
     httpRequestTestComplete('<b>[WORKER THREAD]</b> ' + retvals[0], // testName
                             retvals[1]); // success;
   }
@@ -2621,8 +2626,8 @@ function runHttpRequestTestsOnWorker() {
                   'var runIt = ' + httpRequestTestSuite +  ';' + 
                   'runIt(true);';
 
-  var workerPool = google.gears.factory.create('beta.workerpool', '1.0');
-  workerPool.onmessage = myOnMessage;
+  var workerPool = google.gears.factory.create('beta.workerpool', '1.1');
+  workerPool.onmessage = myOnmessage;
   try {
     workerPool.createWorker(childCode);
   } catch (e) {
