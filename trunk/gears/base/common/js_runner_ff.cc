@@ -158,9 +158,15 @@ class JsRunnerBase : public JsRunnerInterface {
           js_engine_argv[i] = INT_TO_JSVAL(*value);
           break;
         }
+        case JSPARAM_OBJECT_TOKEN: {
+          const JsRootedToken *value = static_cast<const JsRootedToken *>(
+                                                       argv[i].value_ptr);
+          js_engine_argv[i] = value->token();
+          break;
+        }
         case JSPARAM_STRING16: {
           const std::string16 *value = static_cast<const std::string16 *>(
-                                           argv[i].value_ptr);
+                                                       argv[i].value_ptr);
           // TODO(cprince): Does this string copy get freed?
           JSString *js_string = JS_NewUCStringCopyZ(
               callback->context(),

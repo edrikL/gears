@@ -75,6 +75,7 @@ class JsErrorHandlerInterface {
 enum JsParamType {
   JSPARAM_BOOL,
   JSPARAM_INT,
+  JSPARAM_OBJECT_TOKEN,
   JSPARAM_STRING16
 };
 

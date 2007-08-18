@@ -1595,24 +1595,44 @@ function workerpool_GCWithFunctionClosures() {
 }
 
 
+function workerpool_OnMessageTests() {
+  // Test that onmessage Object parameter is correct.
+  workerpool_OnMessageTests.message_object_ok = false;
+  var wp1 = google.gears.factory.create('beta.workerpool', '1.0');
+  wp1.onmessage = function(text, sender, m) {
+    workerpool_OnMessageTests.message_object_ok = (text == 'PING1' &&
+                                                   m.text == text &&
+                                                   m.sender == sender &&
+                                                   m.origin != '');
+  };
+  var childId = wp1.createWorker('var wp = google.gears.workerPool;' +
+                                 'wp.onmessage = function(a, b, m) {' +
+                                 '  wp.sendMessage(m.text, m.sender);' +
+                                 '};');
+  wp1.sendMessage('PING1', childId);
+  // TODO(ace): Add tests that m.origin is _correct_ for same-origin,
+  // cross-origin, and different URL schemes.
+}
+
+
 function workerpool_OnErrorTests() {
   // Test that onerror gets called.
   workerpool_OnErrorTests.handler_called = false;
-  var wp = google.gears.factory.create('beta.workerpool', '1.1');
-  wp.onerror = function(text, sender) {
+  var wp1 = google.gears.factory.create('beta.workerpool', '1.1');
+  wp1.onerror = function(e) {
     workerpool_OnErrorTests.handler_called = true;
   };
-  var childId = wp.createWorker('');
+  var childId = wp1.createWorker('');
   // Should cause an error because there is no onmessage handler in the worker.
-  wp.sendMessage('hello', childId);
+  wp1.sendMessage('hello', childId);
 
 
   // Test that errors get thrown globally if there is no onerror handler.
   workerpool_OnErrorTests.global_called = false;
   var wp2 = google.gears.factory.create('beta.workerpool', '1.1');
-  window.onerror = function(msg, sender) {
+  window.onerror = function(msg) {
     if (msg.indexOf(
-            "Worker does not have an onmessage handler") > -1) {
+            'because worker does not have an onmessage handler') > -1) {
       workerpool_OnErrorTests.global_called = true;
       // This was the error we caused on purpose, so return true to prevent
       // error from going to normal browser error UI.
@@ -1624,6 +1644,7 @@ function workerpool_OnErrorTests() {
   };
   var childId = wp2.createWorker('');
   wp2.sendMessage('hello', childId);
+
 }
 
 
@@ -1645,52 +1666,62 @@ function workerpool_CreateWorkerFromUrl() {
 
   var wp1 = google.gears.factory.create('beta.workerpool', '1.1');
   wp1.onmessage = function(text, sender, m) {
-    workerpool_CreateWorkerFromUrl.result1 = body;
+    workerpool_CreateWorkerFromUrl.result1 = m.text;
   }
   var childId = wp1.createWorkerFromUrl(sameOriginWorkerFile);
   wp1.sendMessage('PING1', childId);
 
 
   // TEST 2
-  workerpool_CreateWorkerFromUrl.result2 = '';
-  workerpool_CreateWorkerFromUrl.description2 =
-      'createWorkerFromUrl() Test 2: ' +
-      'Same-origin, absolute URLs should work. ' +
+  workerpool_CreateWorkerFromUrl.result2A = '';
+  workerpool_CreateWorkerFromUrl.description2B =
+      'createWorkerFromUrl() Test 2A: ' +
+      'Same-origin, absolute URLs should work. ';
+  workerpool_CreateWorkerFromUrl.result2B = '';
+  workerpool_CreateWorkerFromUrl.description2B =
+      'createWorkerFromUrl() Test 2B: ' +
       'And worker database SHOULD exist in parent origin. ';
 
   var wp2 = google.gears.factory.create('beta.workerpool', '1.1');
   wp2.onmessage = function(text, sender, m) {
+    // If we reach this line, test 2A succeeded.
+    workerpool_CreateWorkerFromUrl.result2A = m.text;
+
     // Worker database SHOULD exist in parent origin.
     var db2 = google.gears.factory.create('beta.database', '1.0');
     db2.open('worker_js');
     db2.execute('drop table PING2');  // to throw if table doesn't exist
     db2.close();
-
-    // If we reach this line, the test succeeded.
-    workerpool_CreateWorkerFromUrl.result2 = body;
+    // If we reach this line, test 2B succeeded.
+    workerpool_CreateWorkerFromUrl.result2B = 'DB ok';  // did not throw
   }
   var childId = wp2.createWorkerFromUrl(sameOriginPath + sameOriginWorkerFile);
   wp2.sendMessage('PING2', childId);
 
 
   // TEST 3
-  workerpool_CreateWorkerFromUrl.result3 = '';
-  workerpool_CreateWorkerFromUrl.description3 =
-      'createWorkerFromUrl() Test 3: ' +
-      'Cross-origin, absolute URLs should work. ' +
+  workerpool_CreateWorkerFromUrl.result3A = '';
+  workerpool_CreateWorkerFromUrl.description3A =
+      'createWorkerFromUrl() Test 3A: ' +
+      'Cross-origin, absolute URLs should work. ';
+  workerpool_CreateWorkerFromUrl.result3B = '';
+  workerpool_CreateWorkerFromUrl.description3B =
+      'createWorkerFromUrl() Test 3B: ' +
       'And worker database should NOT exist in parent origin. ';
 
   var wp3 = google.gears.factory.create('beta.workerpool', '1.1');
   wp3.onmessage = function(text, sender, m) {
+    // If we reach this line, test 3A succeeded.
+    workerpool_CreateWorkerFromUrl.result3A = m.text + ' Origin: ' + m.origin;
+
     // Worker database should NOT exist in parent origin.
     var db3 = google.gears.factory.create('beta.database', '1.0');
     db3.open('worker_js');
     db3.execute('create table PING3 (DUMMY)');  // to throw if table exists
     db3.execute('drop table PING3');
     db3.close();
-
-    // If we reach this line, the test succeeded.
-    workerpool_CreateWorkerFromUrl.result3 = body;
+    // If we reach this line, test 3B succeeded.
+    workerpool_CreateWorkerFromUrl.result3B = 'DB ok';  // did not throw
   }
 
   // TODO(cprince): In dbg builds, add a 2nd param to createWorkerFromUrl()
@@ -1713,8 +1744,8 @@ function workerpool_CreateWorkerFromUrl() {
       'File Not Found should fire error.';
 
   var wp4 = google.gears.factory.create('beta.workerpool', '1.1');
-  wp4.onerror = function(msg, sender) {
-    workerpool_CreateWorkerFromUrl.result4 = msg;
+  wp4.onerror = function(e) {
+    workerpool_CreateWorkerFromUrl.result4 = e.message;
   }
   wp4.createWorkerFromUrl('http://example.com/non-existent-file.js');
 
@@ -1726,8 +1757,8 @@ function workerpool_CreateWorkerFromUrl() {
       'Cross-origin worker missing allowCrossOrigin() should fire error.';
 
   var wp5 = google.gears.factory.create('beta.workerpool', '1.1');
-  wp5.onerror = function(msg, sender) {
-    workerpool_CreateWorkerFromUrl.result5 = msg;
+  wp5.onerror = function(e) {
+    workerpool_CreateWorkerFromUrl.result5 = e.message;
   }
   wp5.createWorkerFromUrl(crossOriginPath + sameOriginWorkerFile);
   // TODO(cprince): Could add debug-only origin override here too.
@@ -1740,6 +1771,7 @@ function runWorkerPoolTests() {
   // Start the tests
   workerpool_SynchronizationStressTest();
   workerpool_GCWithFunctionClosures();
+  workerpool_OnMessageTests();
   workerpool_OnErrorTests();
   workerpool_CreateWorkerFromUrl();
 
@@ -1794,6 +1826,13 @@ function checkWorkerPoolTests() {
             '',  // reason
             0); // execTime
             
+  // Check the OnMessage tests.
+
+  insertRow('workerpool_OnMessageTests.message_object_ok',
+            workerpool_OnMessageTests.message_object_ok,
+            '',
+            0);
+
   // Check the OnError tests.
 
   insertRow('workerpool_OnErrorTests.handler_called',
@@ -1813,14 +1852,24 @@ function checkWorkerPoolTests() {
             workerpool_CreateWorkerFromUrl.result1, // explanation
             0);
 
-  insertRow(workerpool_CreateWorkerFromUrl.description2,
-            '' != workerpool_CreateWorkerFromUrl.result2,
-            workerpool_CreateWorkerFromUrl.result2, // explanation
+  insertRow(workerpool_CreateWorkerFromUrl.description2A,
+            '' != workerpool_CreateWorkerFromUrl.result2A,
+            workerpool_CreateWorkerFromUrl.result2A, // explanation
             0);
 
-  insertRow(workerpool_CreateWorkerFromUrl.description3,
-            '' != workerpool_CreateWorkerFromUrl.result3,
-            workerpool_CreateWorkerFromUrl.result3, // explanation
+  insertRow(workerpool_CreateWorkerFromUrl.description2B,
+            '' != workerpool_CreateWorkerFromUrl.result2B,
+            workerpool_CreateWorkerFromUrl.result2B, // explanation
+            0);
+
+  insertRow(workerpool_CreateWorkerFromUrl.description3A,
+            '' != workerpool_CreateWorkerFromUrl.result3A,
+            workerpool_CreateWorkerFromUrl.result3A, // explanation
+            0);
+
+  insertRow(workerpool_CreateWorkerFromUrl.description3B,
+            '' != workerpool_CreateWorkerFromUrl.result3B,
+            workerpool_CreateWorkerFromUrl.result3B, // explanation
             0);
 
   insertRow(workerpool_CreateWorkerFromUrl.description4,
@@ -1889,7 +1938,7 @@ function timer_WorkerTimeoutTest() {
   }
 
   var childCode = String(workerInit) +
-                  String(workerHandler) +
+                  String(workerOnmessage) +
                   'var timer;' +
                   'var parentId;' +
                   'workerInit();';
@@ -1924,7 +1973,7 @@ function timer_WorkerIntervalTest() {
   }
 
   var childCode = String(workerInit) +
-                  String(workerHandler) +
+                  String(workerOnmessage) +
                   'var timer;' +
                   'var parentId;' +
                   'var timerId;' +
@@ -1975,7 +2024,7 @@ function timer_Worker1000msTimeoutTest() {
   }
 
   var childCode = String(workerInit) +
-                  String(workerHandler) +
+                  String(workerOnmessage) +
                   'var timer;' +
                   'var parentId;' +
                   'var timerBegin;' +
@@ -2039,7 +2088,7 @@ function timer_WorkerTimeoutScriptTest() {
   }
 
   var childCode = String(workerInit) +
-                  String(workerHandler) +
+                  String(workerOnmessage) +
                   'var timer;' +
                   'var parentId;' +
                   'workerInit();';
@@ -2075,7 +2124,7 @@ function timer_WorkerIntervalScriptTest() {
   }
 
   var childCode = String(workerInit) +
-                  String(workerHandler) +
+                  String(workerOnmessage) +
                   'var timer;' +
                   'var parentId;' +
                   'var timerId;' +
@@ -2089,7 +2138,7 @@ function timer_WorkerIntervalScriptTest() {
     google.gears.workerPool.onmessage = workerOnmessage;
   }
 
-  function workerHandler(message, sender) {
+  function workerOnmessage(message, sender) {
     if (message == 'setInterval') {
       parentId = sender;
       timerId = timer.setInterval(

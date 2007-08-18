@@ -104,30 +104,31 @@ class JsRunnerBase : public JsRunnerInterface {
   bool InvokeCallback(const JsRootedCallback *callback,
                       int argc, JsParamToSend *argv) {
     // Setup argument array.
-    scoped_array<VARIANTARG> js_engine_argv(new VARIANTARG[argc]);
+    scoped_array<CComVariant> js_engine_argv(new CComVariant[argc]);
     for (int i = 0; i < argc; ++i) {
       int dest = argc - 1 - i;  // args are expected in reverse order!!
 
       switch (argv[i].type) {
         case JSPARAM_BOOL: {
           const bool *value = static_cast<const bool *>(argv[i].value_ptr);
-          js_engine_argv[dest].vt = VT_BOOL;
-          js_engine_argv[dest].boolVal = *value ? VARIANT_TRUE : VARIANT_FALSE;
+          js_engine_argv[dest] = *value;  // CComVariant understands 'bool'
           break;
         }
         case JSPARAM_INT: {
           const int *value = static_cast<const int *>(argv[i].value_ptr);
-          js_engine_argv[dest].vt = VT_INT;
-          js_engine_argv[dest].intVal = *value;
+          js_engine_argv[dest] = *value;  // CComVariant understands 'int'
+          break;
+        }
+        case JSPARAM_OBJECT_TOKEN: {
+          const JsRootedToken *value = static_cast<const JsRootedToken *>(
+                                                       argv[i].value_ptr);
+          js_engine_argv[dest] = value->token();  // understands 'IDispatch*'
           break;
         }
         case JSPARAM_STRING16: {
           const std::string16 *value = static_cast<const std::string16 *>(
-                                           argv[i].value_ptr);
-          js_engine_argv[dest].vt = VT_BSTR;
-          CComBSTR bstr(value->c_str());
-          // TODO(cprince): Does this string copy get freed?
-          bstr.CopyTo(&js_engine_argv[dest].bstrVal);
+                                                       argv[i].value_ptr);
+          js_engine_argv[dest] = value->c_str();  // copies 'wchar*' for us
           break;
         }
       }
