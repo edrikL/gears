@@ -92,7 +92,7 @@ class GearsHttpRequest
   scoped_ptr<RequestInfo> request_info_;
   scoped_ptr<ResponseInfo> response_info_;
   HttpRequest *request_;
-  scoped_ptr<JsRootedToken> onreadystatechange_;
+  scoped_ptr<JsRootedCallback> onreadystatechange_;
   PRThread *apartment_thread_;
   nsCOMPtr<nsIEventQueue> apartment_event_queue_;
   nsCOMPtr<nsIEventQueue> ui_event_queue_;

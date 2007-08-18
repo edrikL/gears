@@ -101,7 +101,7 @@ class JsRunnerBase : public JsRunnerInterface {
     return SetProperty(object, name, CComVariant(value));
   }
 
-  bool InvokeCallback(const JsCallback &callback,
+  bool InvokeCallback(const JsRootedCallback *callback,
                       int argc, JsParamToSend *argv) {
     // Setup argument array.
     scoped_array<VARIANTARG> js_engine_argv(new VARIANTARG[argc]);
@@ -138,7 +138,7 @@ class JsRunnerBase : public JsRunnerInterface {
     invoke_params.cArgs = argc;
     invoke_params.rgvarg = js_engine_argv.get();
 
-    HRESULT hr = callback.function->Invoke(
+    HRESULT hr = callback->token()->Invoke(
         DISPID_VALUE, IID_NULL, // DISPID_VALUE = default action
         LOCALE_SYSTEM_DEFAULT,  // TODO(cprince): should this be user default?
         DISPATCH_METHOD,        // dispatch/invoke as...

@@ -140,9 +140,9 @@ class JsRunnerBase : public JsRunnerInterface {
     return SetProperty(object, name, INT_TO_JSVAL(value));
   }
 
-  virtual bool InvokeCallbackSpecialized(const JsCallback &callback,
+  virtual bool InvokeCallbackSpecialized(const JsRootedCallback *callback,
                                          int argc, jsval *argv) = 0;
-  bool InvokeCallback(const JsCallback &callback,
+  bool InvokeCallback(const JsRootedCallback *callback,
                       int argc, JsParamToSend *argv) {
     // Setup argument array.
     scoped_array<jsval> js_engine_argv(new jsval[argc]);
@@ -163,7 +163,7 @@ class JsRunnerBase : public JsRunnerInterface {
                                            argv[i].value_ptr);
           // TODO(cprince): Does this string copy get freed?
           JSString *js_string = JS_NewUCStringCopyZ(
-              callback.context,
+              callback->context(),
               reinterpret_cast<const jschar *>(value->c_str()));
           js_engine_argv[i] = STRING_TO_JSVAL(js_string);
           break;
@@ -232,7 +232,7 @@ class JsRunner : public JsRunnerBase {
   void SetErrorHandler(JsErrorHandlerInterface *handler) {
     error_handler_ = handler;
   }
-  bool InvokeCallbackSpecialized(const JsCallback &callback,
+  bool InvokeCallbackSpecialized(const JsRootedCallback *callback,
                                  int argc, jsval *argv);
 
  private:
@@ -249,6 +249,7 @@ class JsRunner : public JsRunnerBase {
   std::vector<IGeneric *> globals_;
   JSRuntime *js_runtime_;
   JSScript *js_script_;
+  scoped_ptr<JsRootedToken> js_script_root_;
 
   DISALLOW_EVIL_CONSTRUCTORS(JsRunner);
 };
@@ -287,6 +288,10 @@ JsRunner::~JsRunner() {
   for (global = globals_.begin(); global != globals_.end(); ++global) {
     NS_RELEASE(*global);
   }
+
+  // Reset the scoped_ptr to unroot the script.  This needs to be done before
+  // we destroy the context and runtime, so we can't wait for the destructor.
+  js_script_root_.reset(NULL);
 
   // TODO(aa): Gears objects inside the js context do not get destroyed here
   // for some reason. This means that nested workers never stop or get deleted,
@@ -474,10 +479,9 @@ bool JsRunner::Start(const std::string16 &full_script) {
   JSObject *compiled_script_obj = JS_NewScriptObject(js_engine_context_,
                                                      js_script_);
   if (!compiled_script_obj) { return false; }
-  if (!RootJsToken(js_engine_context_,
-                   OBJECT_TO_JSVAL(compiled_script_obj))) {
-    return false;
-  }
+  js_script_root_.reset(new JsRootedToken(
+                                js_engine_context_,
+                                OBJECT_TO_JSVAL(compiled_script_obj)));
 
 
   //
@@ -513,13 +517,13 @@ bool JsRunner::Eval(const std::string16 &script) {
   return true;
 }
 
-bool JsRunner::InvokeCallbackSpecialized(const JsCallback &callback,
+bool JsRunner::InvokeCallbackSpecialized(const JsRootedCallback *callback,
                                          int argc, jsval *argv) {
   jsval retval;  // not used for now
-  JSBool result = JS_CallFunctionValue(callback.context,
-                                       JS_GetGlobalObject(callback.context),
-                                       callback.function, argc, argv,
-                                       &retval);
+  JSBool result = JS_CallFunctionValue(
+                      callback->context(),
+                      JS_GetGlobalObject(callback->context()),
+                      callback->token(), argc, argv, &retval);
   return result == JS_TRUE;
 }
 
@@ -550,7 +554,7 @@ class DocumentJsRunner : public JsRunnerBase {
     return false;
   }
   bool Eval(const std::string16 &full_script);
-  bool InvokeCallbackSpecialized(const JsCallback &callback,
+  bool InvokeCallbackSpecialized(const JsRootedCallback *callback,
                                  int argc, jsval *argv);
 
  private:
@@ -606,20 +610,23 @@ bool DocumentJsRunner::Eval(const std::string16 &script) {
   return true;
 }
 
-bool DocumentJsRunner::InvokeCallbackSpecialized(const JsCallback &callback,
-                                                 int argc, jsval *argv) {
+bool DocumentJsRunner::InvokeCallbackSpecialized(
+                           const JsRootedCallback *callback,
+                           int argc, jsval *argv) {
   // When invoking a callback on the document context, we must go through
   // nsIScriptContext->CallEventHandler because it sets up certain state that
   // the browser error handler expects to find if there is an error. Without
   // this, crashes happen. For more information, see:
   // http://code.google.com/p/google-gears/issues/detail?id=32
   nsCOMPtr<nsIScriptContext> sc;
-  sc = GetScriptContextFromJSContext(callback.context);
+  sc = GetScriptContextFromJSContext(callback->context());
+  if (!sc) { return false; }
 
   jsval retval;  // not used for now
-  nsresult result = sc->CallEventHandler(JS_GetGlobalObject(callback.context),
-                                         JSVAL_TO_OBJECT(callback.function),
-                                         argc, argv, &retval);
+  nsresult result = sc->CallEventHandler(
+                            JS_GetGlobalObject(callback->context()),
+                            JSVAL_TO_OBJECT(callback->token()),
+                            argc, argv, &retval);
   return NS_SUCCEEDED(result);
 }
 

@@ -29,6 +29,7 @@
 #include <map>
 #include <nsComponentManagerUtils.h>
 #include "gears/third_party/gecko_internal/nsITimer.h"
+#include "gears/third_party/linked_ptr/linked_ptr.h"
 
 #include "ff/genfiles/timer.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
@@ -68,7 +69,7 @@ class GearsTimer
   struct TimerInfo {
     TimerInfo() : timer_id(0) {}
 
-    JsCallback callback;
+    linked_ptr<JsRootedCallback> callback;
     std::string16 script;
     bool repeat;
     nsCOMPtr<GearsTimer> owner;
@@ -77,7 +78,7 @@ class GearsTimer
   };
 
   void Initialize(); // okay to call this multiple times
-  PRInt32 CreateFunctionTimer(JsCallback *timer_callback,
+  PRInt32 CreateFunctionTimer(JsRootedCallback *timer_callback,
                               int timeout,
                               bool repeat);
   PRInt32 CreateStringTimer(const char16 *script,

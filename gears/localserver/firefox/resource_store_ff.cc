@@ -153,13 +153,11 @@ NS_IMETHODIMP GearsResourceStore::Capture(
   JsParamFetcher js_params(this);
 
   const int kIndexCallbackFunction = 1;
-  if (!js_params.GetAsCallback(kIndexCallbackFunction, &request->callback)) {
+  JsRootedCallback *callback;
+  if (!js_params.GetAsNewRootedCallback(kIndexCallbackFunction, &callback)) {
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
-
-  if (!RootJsToken(request->callback.context, request->callback.function)) {
-    RETURN_EXCEPTION(STRING16(L"Error rooting JS value."));
-  }
+  request->callback.reset(callback);
 
   // get the 'urls' param as a raw JS token, so we can tell whether it's
   // a string or array-of-strings.
@@ -746,7 +744,7 @@ void GearsResourceStore::InvokeCompletionCallback(
                              int capture_id,
                              bool succeeded) {
   // If completion callback was not set, return immediately
-  if (!request->callback.function) { return; }
+  if (!request->callback.get()) { return; }
 
   const int argc = 3;
   JsParamToSend argv[argc] = {
@@ -754,7 +752,7 @@ void GearsResourceStore::InvokeCompletionCallback(
     { JSPARAM_BOOL, &succeeded },
     { JSPARAM_INT, &capture_id }
   };
-  GetJsRunner()->InvokeCallback(request->callback, argc, argv);
+  GetJsRunner()->InvokeCallback(request->callback.get(), argc, argv);
 }
 
 //------------------------------------------------------------------------------

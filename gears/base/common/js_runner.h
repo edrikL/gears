@@ -119,7 +119,7 @@ class JsRunnerInterface {
   // TODO(aa): SetPropertyBool, SetPropertyObject (to build trees), etc...
   // TODO(aa): Support for building arrays?
 
-  virtual bool InvokeCallback(const JsCallback &callback,
+  virtual bool InvokeCallback(const JsRootedCallback *callback,
                               int argc, JsParamToSend *argv) = 0;
 
 #ifdef DEBUG
