@@ -538,6 +538,18 @@ function testDB1_StackOverflow() {
   return g.FAILED;
 }
 
+// Using VACUUM would cause corruption of fts2 tables.  We have
+// auto_vacuum turned on, so VACUUM isn't really necessary.
+function testDB1_VacuumDisabled() {
+  try {
+    g.db.execute('VACUUM').close();
+  } catch(e) {
+    // good, we expected an error
+    return g.SUCCEEDED;
+  }
+  return g.FAILED;
+}
+
 function testDB1_CloseDatabase() {
   g.db.close();
   return g.SUCCEEDED;
@@ -1167,6 +1179,7 @@ var databaseTests = [
   testDB1_PragmaGetDisabled,
   testDB1_SpecialEmptyString,
   testDB1_StackOverflow,
+  testDB1_VacuumDisabled,
   testDB1_CloseDatabase,
   testDB1_CloseDatabaseTwice,
   testDB1_ExecuteMsecOnlyInDebug,
