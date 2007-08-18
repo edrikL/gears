@@ -36,7 +36,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       
       function OnLoad() {
         threadManager = 
-            google.gears.factory.create("beta.workerpool", "1.0");
+            google.gears.factory.create("beta.workerpool", "1.1");
         threadManager.onmessage = OnThreadMessage;
         var threadCode = Fetch("threaded_webcapture_test.js");
         workerThreadId = threadManager.createWorker(threadCode);
@@ -47,9 +47,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         threadManager.sendMessage(msg, workerThreadId);
       }
       
-      function OnThreadMessage(msg, sender) {
-        TextOut(msg);
-        if (msg == "Init OK") {
+      function OnThreadMessage(text, sender, m) {
+        TextOut(m.text);
+        if (m.text == "Init OK") {
           DoTests();
         }
       }

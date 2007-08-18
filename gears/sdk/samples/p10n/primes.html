@@ -112,9 +112,9 @@ function Generator() {
 // is in a WorkerPool child.
 function BackgroundGenerator() {
   try {
-    this.workerPool = google.gears.factory.create('beta.workerpool', '1.0');
-  } catch (ex) {
-    setError('Could not create worker pool: ' + ex.message);
+    this.workerPool = google.gears.factory.create('beta.workerpool', '1.1');
+  } catch (e) {
+    setError('Could not create workerpool: ' + e.message);
     this.error = true;
     return;
   }
@@ -123,16 +123,16 @@ function BackgroundGenerator() {
 
   this.child = function(g) {
     var ff = new g();
-    google.gears.workerPool.onmessage = function(msg, sender) {
-      ff.next(Number(msg), function(val) {
-        google.gears.workerPool.sendMessage(String(val), sender);
+    google.gears.workerPool.onmessage = function(messageText,senderId,message) {
+      ff.next(Number(message.text), function(val) {
+        google.gears.workerPool.sendMessage(String(val), message.sender);
       });
     }
   }
 
   // A generic handler because we have to.
-  this.workerPool.onmessage = function(msg,sender) {
-    alert(msg);
+  this.workerPool.onmessage = function(messageText, senderId, message) {
+    alert(message.text);
   };
 
   try {
@@ -150,8 +150,8 @@ function BackgroundGenerator() {
   this.next = function(prime, cb) {
     var self = this;
     this.cb = cb;
-    this.workerPool.onmessage = function(msg, sender) {
-      self.cb(Number(msg));
+    this.workerPool.onmessage = function(messageText, senderId, message) {
+      self.cb(Number(message.text));
     };
     this.workerPool.sendMessage(String(prime), this.childId);
   }
