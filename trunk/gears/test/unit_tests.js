@@ -1674,13 +1674,19 @@ function workerpool_CreateWorkerFromUrl() {
 
   // TEST 2
   workerpool_CreateWorkerFromUrl.result2A = '';
-  workerpool_CreateWorkerFromUrl.description2B =
+  workerpool_CreateWorkerFromUrl.description2A =
       'createWorkerFromUrl() Test 2A: ' +
       'Same-origin, absolute URLs should work. ';
   workerpool_CreateWorkerFromUrl.result2B = '';
   workerpool_CreateWorkerFromUrl.description2B =
       'createWorkerFromUrl() Test 2B: ' +
       'And worker database SHOULD exist in parent origin. ';
+
+  // Cleanup any local DB before starting test.  
+  var db2 = google.gears.factory.create('beta.database', '1.0');
+  db2.open('worker_js');
+  db2.execute('drop table if exists PING2').close();
+  db2.close();
 
   var wp2 = google.gears.factory.create('beta.workerpool', '1.1');
   wp2.onmessage = function(text, sender, m) {
@@ -1708,6 +1714,12 @@ function workerpool_CreateWorkerFromUrl() {
   workerpool_CreateWorkerFromUrl.description3B =
       'createWorkerFromUrl() Test 3B: ' +
       'And worker database should NOT exist in parent origin. ';
+
+  // Cleanup any local DB before starting test.  
+  var db3 = google.gears.factory.create('beta.database', '1.0');
+  db3.open('worker_js');
+  db3.execute('drop table if exists PING3').close();
+  db3.close();
 
   var wp3 = google.gears.factory.create('beta.workerpool', '1.1');
   wp3.onmessage = function(text, sender, m) {
@@ -2173,6 +2185,12 @@ function runTimerTests() {
 // after giving workers time to finish.
 var MSEC_DELAY_BEFORE_CHECKING_TIMER_RESULTS = 3000;
 
+// Parent timer test gets larger tolerance because it is in the same thread
+// as the rest of the unit tests.  Worker is in its own thread, so the
+// maximum delta should be smaller.
+var MSEC_MAX_TIMER_EPSILON_IN_PARENT = 200;  // for 1000 ms interval
+var MSEC_MAX_TIMER_EPSILON_IN_WORKER = 50;   // for 1000 ms interval
+
 function checkTimerTests() {
 
   // We make sure the test finished without crashing.
@@ -2192,16 +2210,14 @@ function checkTimerTests() {
             workerIntervalTestIntervals == TIMER_TARGET_INTERVALS,
             '',  // reason
             0); // execTime
-  // Parent gets 200 ms variance, because it is in the same thread as the rest
-  // of the unit tests
   insertRow(String(timer_Parent1000msTimeoutTest),
-            Math.abs(1000 - parent1000msTimeoutTime) < 200,
+            Math.abs(1000 - parent1000msTimeoutTime)
+                < MSEC_MAX_TIMER_EPSILON_IN_PARENT,
             '',  // reason
             parent1000msTimeoutTime); // execTime
-  // Since the worker is in its own thread, the maximum delta should be smaller
-  // than in the parent.
   insertRow(String(timer_Worker1000msTimeoutTest),
-            Math.abs(1000 - worker1000msTimeoutTime) < 50,
+            Math.abs(1000 - worker1000msTimeoutTime)
+              < MSEC_MAX_TIMER_EPSILON_IN_WORKER,
             '',  // reason
             worker1000msTimeoutTime); // execTime
 
