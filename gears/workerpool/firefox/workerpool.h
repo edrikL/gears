@@ -43,8 +43,10 @@
 extern const char *kGearsWorkerPoolClassName;
 extern const nsCID kGearsWorkerPoolClassId;
 
-
 class PoolThreadsManager;
+struct Message;
+struct JavaScriptWorkerInfo;
+struct ThreadsEvent;
 
 
 class GearsWorkerPool
@@ -64,8 +66,9 @@ class GearsWorkerPool
   NS_IMETHOD CreateWorkerFromUrl(//const nsAString &url
                                  PRInt32 *retval);
   NS_IMETHOD AllowCrossOrigin();
-  NS_IMETHOD SendMessage(const nsAString &message_string,
-                         PRInt32 dest_worker_id);
+  NS_IMETHOD SendMessage(//const nsAString &message
+                         //PRInt32 dest_worker_id
+                        );
   NS_IMETHOD SetOnmessage(nsIVariant *in_handler);
   NS_IMETHOD GetOnmessage(nsIVariant **out_handler);
   NS_IMETHOD SetOnerror(nsIVariant *in_handler);
@@ -90,9 +93,6 @@ class GearsWorkerPool
 };
 
 
-struct JavaScriptWorkerInfo;
-struct ThreadsEvent;
-
 class PoolThreadsManager
     : JsErrorHandlerInterface {
  public:
@@ -111,7 +111,8 @@ class PoolThreadsManager
                     int *worker_id);
   void AllowCrossOrigin();
   void HandleError(const JsErrorInfo &message);
-  bool PutPoolMessage(const nsAString &message_string, int dest_worker_id);
+  bool PutPoolMessage(const char16 *text, int dest_worker_id,
+                      const SecurityOrigin &src_origin);
 
   // Worker initialization that must be done from the worker's thread.
   bool InitWorkerThread(JavaScriptWorkerInfo *wi);
@@ -127,7 +128,7 @@ class PoolThreadsManager
  private:
   ~PoolThreadsManager();
 
-  bool GetPoolMessage(std::string16 *message_string, int *src_worker_id);
+  bool GetPoolMessage(Message *msg);
 
   // Gets the id of the worker associated with the current thread. Caller must
   // acquire the mutex.
@@ -140,9 +141,9 @@ class PoolThreadsManager
 
   // Helpers for processing events received from other workers.
   void ProcessMessage(JavaScriptWorkerInfo *wi,
-                      const std::string16 &message_string, int src_worker_id);
+                      const Message &msg);
   void ProcessError(JavaScriptWorkerInfo *wi,
-                    const std::string16 &message_string, int src_worker_id);
+                    const Message &msg);
 
   int num_workers_; // used by Add/ReleaseWorkerRef()
   bool is_shutting_down_;

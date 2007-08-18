@@ -38,7 +38,9 @@ interface GearsWorkerPoolInterface : GearsBaseClassInterface {
   long createWorkerFromUrl(//in AString url
                           );
   void allowCrossOrigin();
-  void sendMessage(in AString message_string, in long dest_worker_id);
+  void sendMessage(//in AString message_string
+                   //in long dest_worker_id
+                  );
   
   // nsIVariant is used for these two arbitrarily. We get the params using
   // JsParamFetcher. IDL requires us to provide a type for properties, but this

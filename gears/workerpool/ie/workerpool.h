@@ -48,8 +48,8 @@
 const UINT WM_WORKERPOOL_ONMESSAGE = (WM_USER + 0);
 const UINT WM_WORKERPOOL_ONERROR = (WM_USER + 1);
 
-class GearsFactory;
 class PoolThreadsManager;
+struct Message;
 struct JavaScriptWorkerInfo;
 
 
@@ -84,7 +84,7 @@ class ATL_NO_VTABLE GearsWorkerPool
   STDMETHOD(allowCrossOrigin)();
 
   // Sends message_string to a given worker_id.
-  STDMETHOD(sendMessage)(const BSTR *message_string, int dest_worker_id);
+  STDMETHOD(sendMessage)(const BSTR *message, int dest_worker_id);
 
   // Sets the onmessage handler for the current worker.
   // The handler has the prototype Handler(message_string, src_worker_id).
@@ -134,7 +134,8 @@ class PoolThreadsManager
                     int *worker_id);
   void AllowCrossOrigin();
   void HandleError(const JsErrorInfo &error_info);
-  bool PutPoolMessage(const BSTR *message_string, int dest_worker_id);
+  bool PutPoolMessage(const char16 *text, int dest_worker_id,
+                      const SecurityOrigin &src_origin);
 
   // Worker initialization that must be done from the worker's thread.
   bool InitWorkerThread(JavaScriptWorkerInfo *wi);
@@ -154,7 +155,7 @@ class PoolThreadsManager
   // acquire the mutex.
   int GetCurrentPoolWorkerId();
 
-  bool GetPoolMessage(std::string16 *message_string, int *src_worker_id);
+  bool GetPoolMessage(Message *msg);
 
   static unsigned __stdcall JavaScriptThreadEntry(void *args);
   static bool SetupJsRunner(JsRunnerInterface *js_runner,
@@ -164,9 +165,9 @@ class PoolThreadsManager
 
   // Helpers for processing events received from other workers.
   void ProcessMessage(JavaScriptWorkerInfo *wi,
-                      const std::string16 &message_string, int src_worker_id);
+                      const Message &msg);
   void ProcessError(JavaScriptWorkerInfo *wi,
-                    const std::string16 &message_string, int src_worker_id);
+                    const Message &msg);
 
   int num_workers_; // used by Add/ReleaseWorkerRef()
   bool is_shutting_down_;
