@@ -9,7 +9,12 @@ mkdir bld
 cd bld
 ../configure
 FILES="keywordhash.h opcodes.c opcodes.h parse.c parse.h sqlite3.h"
-make 'OPTS=-DSQLITE_OMIT_ATTACH=1 -DSQLITE_OMIT_LOAD_EXTENSION=1' $FILES
+OPTS=""
+# These options should match those in ../../tools/config.mk.
+OPTS="$OPTS -DSQLITE_OMIT_ATTACH=1"
+OPTS="$OPTS -DSQLITE_OMIT_LOAD_EXTENSION=1"
+OPTS="$OPTS -DSQLITE_OMIT_VACUUM=1"
+make "OPTS=$OPTS" $FILES
 cp -f $FILES ../preprocessed
 
 cd ..
