@@ -186,14 +186,14 @@ STDMETHODIMP GearsWorkerPool::createWorkerFromUrl(const BSTR *url_bstr,
   RETURN_NORMAL();
 }
 
-STDMETHODIMP GearsWorkerPool::allowCrossOriginMonkeys() {
+STDMETHODIMP GearsWorkerPool::allowCrossOrigin() {
   Initialize();
 
   if (!owns_threads_manager_) {
     RETURN_EXCEPTION(STRING16(L"Method is only used by child workers."));
   }
 
-  threads_manager_->AllowCrossOriginMonkeys();
+  threads_manager_->AllowCrossOrigin();
   RETURN_NORMAL();
 }
 
@@ -359,7 +359,7 @@ int PoolThreadsManager::GetCurrentPoolWorkerId() {
 }
 
 
-void PoolThreadsManager::AllowCrossOriginMonkeys() {
+void PoolThreadsManager::AllowCrossOrigin() {
   MutexLock lock(&mutex_);
 
   int current_worker_id = GetCurrentPoolWorkerId();
@@ -784,7 +784,7 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   factory->is_permission_granted_ = true;
   factory->is_permission_value_from_user_ = true;
   // But for cross-origin workers, object creation is suspended until the
-  // callee invokes allowCrossOriginMonkeys().
+  // callee invokes allowCrossOrigin().
   if (!wi->threads_manager->page_security_origin().IsSameOrigin(
                                                        wi->script_origin)) {
     factory->SuspendObjectCreation();

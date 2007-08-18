@@ -1,4 +1,4 @@
-google.gears.workerPool.allowCrossOriginMonkeys();
+google.gears.workerPool.allowCrossOrigin();
 
 // TODO(cprince): When we have include(), replace all code below with
 // include('unit_tests_worker_same_origin.js').
