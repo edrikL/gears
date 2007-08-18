@@ -298,8 +298,9 @@ void GearsWorkerPool::HandleEventUnload(void *user_param) {
 
 void GearsWorkerPool::Initialize() {
   if (!threads_manager_) {
-    SetThreadsManager(
-        new PoolThreadsManager(EnvPageSecurityOrigin(), GetJsRunner()));
+    assert(EnvPageSecurityOrigin().full_url() == EnvPageLocationUrl());
+    SetThreadsManager(new PoolThreadsManager(EnvPageSecurityOrigin(),
+                                             GetJsRunner()));
     owns_threads_manager_ = true;
   }
 
@@ -660,7 +661,7 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
     request->SetFollowRedirects(true);
 
     std::string16 url;
-    ResolveAndNormalize(page_security_origin_.url().c_str(),
+    ResolveAndNormalize(page_security_origin_.full_url().c_str(),
                   url_or_full_script, &url);
 
     bool is_async = true;
