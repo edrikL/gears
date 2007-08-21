@@ -45,7 +45,7 @@ static const char16 *kNotInteractiveError =
 
 
 GearsHttpRequest::GearsHttpRequest()
-  : request_(NULL) {
+  : request_(NULL), content_type_header_was_set_(false) {
 }
 
 GearsHttpRequest::~GearsHttpRequest() {
@@ -104,18 +104,27 @@ STDMETHODIMP GearsHttpRequest::open(
   if (!request_->Open(method, full_url.c_str(), true))
     RETURN_EXCEPTION(kInternalError);
 
+  content_type_header_was_set_ = false;
+
   RETURN_NORMAL();
 }
 
 
 STDMETHODIMP GearsHttpRequest::setRequestHeader( 
-      /* [in] */ const BSTR header,
+      /* [in] */ const BSTR name,
       /* [in] */ const BSTR value) {
-  if (!header) return E_POINTER;
+  if (!name) return E_POINTER;
   if (!IsOpen())
     RETURN_EXCEPTION(kNotOpenError);
-  if (!request_->SetRequestHeader(header, value ? value : L""))
+  if (!request_->SetRequestHeader(name, value ? value : L""))
     RETURN_EXCEPTION(kInternalError);
+  
+  std::string16 name_str(name);
+  LowerString(name_str);
+  if (name_str == STRING16(L"content-type")) {
+    content_type_header_was_set_ = true;
+  }
+
   RETURN_NORMAL();
 }
 
@@ -135,9 +144,10 @@ STDMETHODIMP GearsHttpRequest::send(
 
   bool ok = false;
   if (post_data_str && post_data_str[0]) {
-    // TODO(michaeln): set only if not already set to some value
-    request_->SetRequestHeader(HttpConstants::kContentTypeHeader,
-                               HttpConstants::kMimeApplicationXml);
+    if (!content_type_header_was_set_) {
+      request_->SetRequestHeader(HttpConstants::kContentTypeHeader,
+                                 HttpConstants::kMimeTextPlain);
+    }
     ok = request_->SendString(post_data_str);
   } else {
     ok = request_->Send();
@@ -170,6 +180,7 @@ STDMETHODIMP GearsHttpRequest::getAllResponseHeaders(
   std::string16 headers_str;
   if (!request_->GetAllResponseHeaders(&headers_str))
     RETURN_EXCEPTION(kInternalError);
+
   CComBSTR headers_bstr(headers_str.c_str());
   *headers = headers_bstr.Detach();
   RETURN_NORMAL();

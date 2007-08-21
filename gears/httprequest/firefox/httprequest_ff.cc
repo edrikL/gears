@@ -67,7 +67,8 @@ static const char16 *kNotInteractiveError =
 
 
 GearsHttpRequest::GearsHttpRequest()
-    : request_(NULL), apartment_thread_(PR_GetCurrentThread()) {
+    : request_(NULL), apartment_thread_(PR_GetCurrentThread()),
+      content_type_header_was_set_(false) {
 }
 
 GearsHttpRequest::~GearsHttpRequest() {
@@ -144,6 +145,7 @@ NS_IMETHODIMP GearsHttpRequest::Open() {
     }
 
     request_info_.swap(scoped_info);
+    content_type_header_was_set_ = false;
   }
 
   FireReadyStateChangedEvent();
@@ -178,6 +180,12 @@ NS_IMETHODIMP GearsHttpRequest::SetRequestHeader() {
   }
 
   request_info_->headers.push_back(std::make_pair(name, value));
+
+  LowerString(name);
+  if (name == STRING16(L"content-type")) {
+    content_type_header_was_set_ = true;
+  }
+
   RETURN_NORMAL();
 }
 
@@ -249,9 +257,10 @@ void GearsHttpRequest::OnSendCall() {
   }
 
   if (request_info_->has_post_data) {
-    // TODO(michaeln): set only if not already set to some value
-    request_->SetRequestHeader(HttpConstants::kContentTypeHeader,
-                               HttpConstants::kMimeApplicationXml);
+    if (!content_type_header_was_set_) {
+      request_->SetRequestHeader(HttpConstants::kContentTypeHeader,
+                                 HttpConstants::kMimeTextPlain);
+    }
     ok = request_->SendString(request_info_->post_data.c_str());
   } else {
     ok = request_->Send();

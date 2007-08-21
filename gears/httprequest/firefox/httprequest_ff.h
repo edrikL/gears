@@ -96,6 +96,7 @@ class GearsHttpRequest
   PRThread *apartment_thread_;
   nsCOMPtr<nsIEventQueue> apartment_event_queue_;
   nsCOMPtr<nsIEventQueue> ui_event_queue_;
+  bool content_type_header_was_set_;
   // TODO(michaeln): abort pending requests on unload
   // scoped_ptr<HtmlEventMonitor> page_unload_monitor_;
 

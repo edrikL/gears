@@ -100,6 +100,7 @@ class ATL_NO_VTABLE GearsHttpRequest
  private:
   CComPtr<IDispatch> onreadystatechangehandler_;
   HttpRequest *request_;
+  bool content_type_header_was_set_;
   // TODO(michaeln): abort pending requests on unload
   // scoped_ptr<HtmlEventMonitor> page_unload_monitor_;
 
