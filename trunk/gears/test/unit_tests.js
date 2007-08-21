@@ -68,7 +68,7 @@ function doit(document) {
   runTimerTests();
   runMiscTests();
   runHttpRequestTests();
-
+  
   var c = document.getElementById("complete");
   c.innerHTML =
       "All unit tests <span class='success'>ran to completion</span>.";
@@ -1709,7 +1709,7 @@ function workerpool_CreateWorkerFromUrl() {
     // Worker database SHOULD exist in parent origin.
     var db2 = google.gears.factory.create('beta.database', '1.0');
     db2.open('worker_js');
-    db2.execute('drop table PING2');  // to throw if table doesn't exist
+    db2.execute('drop table PING2').close();  // to throw if table doesn't exist
     db2.close();
     // If we reach this line, test 2B succeeded.
     workerpool_CreateWorkerFromUrl.result2B = 'DB ok';  // did not throw
@@ -1743,7 +1743,7 @@ function workerpool_CreateWorkerFromUrl() {
     var db3 = google.gears.factory.create('beta.database', '1.0');
     db3.open('worker_js');
     db3.execute('create table PING3 (DUMMY)');  // to throw if table exists
-    db3.execute('drop table PING3');
+    db3.execute('drop table PING3').close();
     db3.close();
     // If we reach this line, test 3B succeeded.
     workerpool_CreateWorkerFromUrl.result3B = 'DB ok';  // did not throw
@@ -1806,10 +1806,10 @@ function runWorkerPoolTests() {
 }  
 
 
-// chekcWorkerPoolTests() should be called by setTimeout,
+// checkWorkerPoolTests() should be called by setTimeout,
 // after giving workers time to finish.
 
-var MSEC_DELAY_BEFORE_CHECKING_WORKER_RESULTS = 4000;
+var MSEC_DELAY_BEFORE_CHECKING_WORKER_RESULTS = 8000;
 
 function checkWorkerPoolTests() {
 
