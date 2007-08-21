@@ -65,7 +65,7 @@ class HttpConstants {
   static const char16 *kIfModifiedSinceHeader;
   static const char16 *kLastModifiedHeader;
   static const char16 *kLocationHeader;
-  static const char16 *kMimeApplicationXml;
+  static const char16 *kMimeTextPlain;
   static const char16 *kNoCache;
   static const char16 *kOKStatusLine;
   static const char16 *kPragmaHeader;

@@ -346,14 +346,15 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
     http_channel->GetRequestMethod(method);
 
     nsCString content_type;
-
-    // If no content type header was set by the client, we set it to
-    // application/xml.
-    if (NS_FAILED(http_channel->
-                    GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
-                                      content_type)) ||
+    if (NS_FAILED(http_channel->GetRequestHeader(
+                      NS_LITERAL_CSTRING("Content-Type"), content_type)) ||
         content_type.IsEmpty()) {
-      content_type = NS_LITERAL_CSTRING("application/xml");
+      // If no content type was set by the client, we set it to text/plain.
+      // Ideally, we should not be setting the content type here at all,
+      // however not doing so changes the semantics of SetUploadStream such
+      // that we would need to prefix the data in the stream with http headers.
+      // To avoid doing that, we set it to something.
+      content_type = NS_LITERAL_CSTRING("text/plain");
     }
 
     const int kGetLengthFromStream = -1;

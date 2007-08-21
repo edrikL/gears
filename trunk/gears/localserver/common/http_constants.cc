@@ -53,7 +53,7 @@ const char16 *HttpConstants::kHttpsScheme = STRING16(L"https");
 const char   *HttpConstants::kHttpsSchemeAscii =      "https";
 const char16 *HttpConstants::kFileScheme = STRING16(L"file");
 const char   *HttpConstants::kFileSchemeAscii =      "file";
-const char16 *HttpConstants::kMimeApplicationXml = STRING16(L"application/xml");
+const char16 *HttpConstants::kMimeTextPlain = STRING16(L"text/plain");
 const char16 *HttpConstants::kXCapturedFilenameHeader =
                                  STRING16(L"X-Captured-Filename");
 
