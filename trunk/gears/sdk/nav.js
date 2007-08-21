@@ -99,6 +99,11 @@ var nav = [
         url: "api_localserver.html" 
       },
       { 
+        title: "Timer",
+        id: "api_timer",
+        url: "api_timer.html" 
+      },
+      { 
         title: "WorkerPool",
         id: "api_workerpool",
         url: "api_workerpool.html" 
