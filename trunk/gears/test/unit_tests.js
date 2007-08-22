@@ -2196,7 +2196,7 @@ function runTimerTests() {
 
 // checkTimerTests() should be called by setTimeout,
 // after giving workers time to finish.
-var MSEC_DELAY_BEFORE_CHECKING_TIMER_RESULTS = 3000;
+var MSEC_DELAY_BEFORE_CHECKING_TIMER_RESULTS = 4000;
 
 // Parent timer test gets larger tolerance because it is in the same thread
 // as the rest of the unit tests.  Worker is in its own thread, so the
@@ -2213,7 +2213,8 @@ function checkTimerTests() {
             0); // execTime
   insertRow(String(timer_ParentIntervalTest), // testBody
             parentIntervalTestIntervals == TIMER_TARGET_INTERVALS,
-            '',  // reason
+            String(parentIntervalTestIntervals) + ' intervals observed, ' +
+                'expected ' + TIMER_TARGET_INTERVALS + ' intervals.',  // reason
             0); // execTime
   insertRow(String(timer_WorkerTimeoutTest), // testBody
             workerTimeoutTestSucceeded,  // success
@@ -2221,17 +2222,20 @@ function checkTimerTests() {
             0); // execTime
   insertRow(String(timer_WorkerIntervalTest), // testBody
             workerIntervalTestIntervals == TIMER_TARGET_INTERVALS,
-            '',  // reason
+            String(workerIntervalTestIntervals) + ' intervals observed, ' +
+                'expected ' + TIMER_TARGET_INTERVALS + ' intervals.',  // reason
             0); // execTime
   insertRow(String(timer_Parent1000msTimeoutTest),
             Math.abs(1000 - parent1000msTimeoutTime)
                 < MSEC_MAX_TIMER_EPSILON_IN_PARENT,
-            '',  // reason
+            'Took ' + parent1000msTimeoutTime + ' ms, expected 1000 +/- ' +
+                MSEC_MAX_TIMER_EPSILON_IN_PARENT + ' ms.',  // reason
             parent1000msTimeoutTime); // execTime
   insertRow(String(timer_Worker1000msTimeoutTest),
             Math.abs(1000 - worker1000msTimeoutTime)
               < MSEC_MAX_TIMER_EPSILON_IN_WORKER,
-            '',  // reason
+            'Took ' + worker1000msTimeoutTime + ' ms, expected 1000 +/- ' +
+                MSEC_MAX_TIMER_EPSILON_IN_WORKER + ' ms.',  // reason
             worker1000msTimeoutTime); // execTime
 
   insertRow(String(timer_ParentTimeoutScriptTest), // testBody
@@ -2240,7 +2244,8 @@ function checkTimerTests() {
             0); // execTime
   insertRow(String(timer_ParentIntervalScriptTest), // testBody
             ParentIntervalScriptTestIntervals == TIMER_TARGET_INTERVALS,
-            '',  // reason
+            String(ParentIntervalScriptTestIntervals) + ' intervals observed,' +
+                ' expected ' + TIMER_TARGET_INTERVALS + ' intervals.', // reason
             0); // execTime
   insertRow(String(timer_WorkerTimeoutScriptTest), // testBody
             WorkerTimeoutScriptTestSucceeded,  // success
@@ -2248,7 +2253,8 @@ function checkTimerTests() {
             0); // execTime
   insertRow(String(timer_WorkerIntervalScriptTest), // testBody
             WorkerIntervalScriptTestIntervals == TIMER_TARGET_INTERVALS,
-            '',  // reason
+            String(WorkerIntervalScriptTestIntervals) + ' intervals observed,' +
+                ' expected ' + TIMER_TARGET_INTERVALS + ' intervals.', // reason
             0); // execTime
 }
 
