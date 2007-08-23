@@ -116,6 +116,11 @@ bool SQLDatabase::Init(const char16 *name) {
   }
 
   if (SQLITE_OK != sqlite3_open16(path.c_str(), &db_)) {
+    // sqlite3_close() should be called after sqlite3_open() failures.
+    // The DB handle may be valid or NULL, sqlite3_close() handles
+    // either.
+    sqlite3_close(db_);
+    db_ = NULL;
     return false;
   }
 
