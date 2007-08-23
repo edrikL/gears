@@ -60,13 +60,18 @@ bool OpenSqliteDatabase(const char16 *name, const SecurityOrigin &origin,
     return false;
   }
 
-  int sql_status = sqlite3_open16(filename.c_str(), db);
+  sqlite3 *temp_db = NULL;
+  int sql_status = sqlite3_open16(filename.c_str(), &temp_db);
   if (sql_status != SQLITE_OK) {
+    // sqlite3_close() should be called after sqlite3_open() failures.
+    // The DB handle may be valid or NULL, sqlite3_close() handles
+    // either.
+    sqlite3_close(temp_db);
     return false; // error = "SQLite open() failed."
   }
 
   // Set reasonable defaults.
-  sql_status = sqlite3_exec(*db,
+  sql_status = sqlite3_exec(temp_db,
                             "PRAGMA encoding = 'UTF-8';"
                             "PRAGMA auto_vacuum = 1;"
                             "PRAGMA cache_size = 2048;"
@@ -75,15 +80,16 @@ bool OpenSqliteDatabase(const char16 *name, const SecurityOrigin &origin,
                             NULL, NULL, NULL
                             );
   if (sql_status != SQLITE_OK) {
-    sqlite3_close(*db);
+    sqlite3_close(temp_db);
     return false;
   }
 
-  sql_status = sqlite3_set_authorizer(*db, ForbidAllPragmas, NULL);
+  sql_status = sqlite3_set_authorizer(temp_db, ForbidAllPragmas, NULL);
   if (sql_status != SQLITE_OK) {
-    sqlite3_close(*db);
+    sqlite3_close(temp_db);
     return false;
   }
 
+  *db = temp_db;
   return true;
 }
