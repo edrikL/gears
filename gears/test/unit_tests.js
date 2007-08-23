@@ -2004,6 +2004,8 @@ function timer_WorkerIntervalTest() {
                   'var parentId;' +
                   'var timerId;' +
                   'var intervals;' +
+                  'var TIMER_TARGET_INTERVALS = ' +
+                     String(TIMER_TARGET_INTERVALS) + ';' +
                   'workerInit();';
 
   var workerId = workerPool.createWorker(childCode);
@@ -2024,7 +2026,7 @@ function timer_WorkerIntervalTest() {
     function intervalHandler() {
       google.gears.workerPool.sendMessage('interval', parentId);
       ++intervals;
-      if (intervals == 3) { // TIMER_TARGET_INTERVALS
+      if (intervals == TIMER_TARGET_INTERVALS) {
         timer.clearInterval(timerId);
       }
     }
@@ -2138,14 +2140,12 @@ function timer_WorkerTimeoutScriptTest() {
 }
 
 function timer_WorkerIntervalScriptTest() {
-  var timerFired = false;
+  // Checks that intervals created via the full script setInterval() in workers
+  // fire until clearInterval() is called, and no longer.
   var workerPool = google.gears.factory.create('beta.workerpool', '1.1');
   workerPool.onmessage = function(text, sender, m) {
     if (m.text == 'interval') {
       WorkerIntervalScriptTestIntervals++;
-      if (WorkerIntervalScriptTestIntervals == TIMER_TARGET_INTERVALS) {
-        workerPool.sendMessage('clearInterval', workerId);
-      }
     }
   }
 
@@ -2154,6 +2154,9 @@ function timer_WorkerIntervalScriptTest() {
                   'var timer;' +
                   'var parentId;' +
                   'var timerId;' +
+                  'var intervals;' +
+                  'var TIMER_TARGET_INTERVALS = ' +
+                     String(TIMER_TARGET_INTERVALS) + ';' +
                   'workerInit();';
 
   var workerId = workerPool.createWorker(childCode);
@@ -2167,11 +2170,14 @@ function timer_WorkerIntervalScriptTest() {
   function workerOnmessage(message, sender) {
     if (message == 'setInterval') {
       parentId = sender;
+      intervals = 0;
       timerId = timer.setInterval(
-        'google.gears.workerPool.sendMessage(\'interval\', parentId);',
+        'google.gears.workerPool.sendMessage(\'interval\', parentId);' +
+        '++intervals;' +
+        'if (intervals == TIMER_TARGET_INTERVALS) {' +
+        '  timer.clearInterval(timerId);' +
+        '}',
         300);
-    } else if (message == 'clearInterval') {
-      timer.clearInterval(timerId);
     }
   }
 }
