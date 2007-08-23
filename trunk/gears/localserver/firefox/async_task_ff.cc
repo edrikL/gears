@@ -344,7 +344,7 @@ bool AsyncTask::OnStartHttpGet() {
   }
 
   if (params_->is_capturing) {
-    http_request->SetFollowRedirects(false);
+    http_request->SetRedirectBehavior(HttpRequest::FOLLOW_NONE);
     if (!http_request->SetRequestHeader(HttpConstants::kXGoogleGearsHeader,
                                         STRING16(L"1"))) {
       return false;

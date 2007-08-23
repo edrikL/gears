@@ -60,9 +60,10 @@ HttpRequest *HttpRequest::Create() {
 //------------------------------------------------------------------------------
 
 IEHttpRequest::IEHttpRequest() :
-    caching_behavior_(USE_ALL_CACHES), follow_redirects_(true), 
+    caching_behavior_(USE_ALL_CACHES), redirect_behavior_(FOLLOW_ALL), 
     was_redirected_(false), was_aborted_(false), listener_(NULL),
-    ready_state_(UNINITIALIZED), actual_data_size_(0) {
+    ready_state_(UNINITIALIZED), has_synthesized_response_payload_(false),
+    actual_data_size_(0) {
 }
 
 HRESULT IEHttpRequest::FinalConstruct() {
@@ -196,6 +197,9 @@ bool IEHttpRequest::Open(const char16 *method, const char16* url, bool async) {
     return false;
   }
   url_ = url;
+  if (!origin_.InitFromUrl(url)) {
+    return false;
+  }
   method_ = method;
   UpperString(method_);
   if (method_ == HttpConstants::kHttpGET)
@@ -225,18 +229,8 @@ bool IEHttpRequest::SetRequestHeader(const char16* name, const char16* value) {
   return true;
 }
 
-bool IEHttpRequest::SetFollowRedirects(bool follow) {
-  if (!IsUninitialized() && !IsOpen())
-    return false;
-  follow_redirects_ = follow;
-  return true;
-  // TODO(michaeln): is there a bind flag that influences redirects?
-  // INTERNET_FLAG_NO_AUTO_REDIRECT?
-}
-
 bool IEHttpRequest::WasRedirected() {
-  return IsInteractiveOrComplete() && !was_aborted_ &&
-         follow_redirects_ && was_redirected_;
+  return IsInteractiveOrComplete() && !was_aborted_ && was_redirected_;
 }
 
 bool IEHttpRequest::GetFinalUrl(std::string16 *full_url) {
@@ -382,6 +376,8 @@ STDMETHODIMP IEHttpRequest::QueryService(REFGUID guidService, REFIID riid,
 // IBindStatusCallback::OnStartBinding
 // This method is called by URLMON once per bind operation, even if the bind
 // involves a chain of redirects, its only called once at the start.
+// Note: binding->Abort() should not be called within this callback, instead
+// return E_FAIL to cancel the bind process
 //------------------------------------------------------------------------------
 STDMETHODIMP IEHttpRequest::OnStartBinding(DWORD reserved,IBinding *binding) {
   ATLTRACE(_T("IEHttpRequest::OnStartBinding\n"));
@@ -432,27 +428,35 @@ STDMETHODIMP IEHttpRequest::OnProgress(ULONG progress, ULONG progress_max,
 //------------------------------------------------------------------------------
 HRESULT IEHttpRequest::OnRedirect(const char16 *redirect_url) {
   ATLTRACE(_T("IEHttpRequest::OnRedirect( %s )\n"), redirect_url);
-  if (!follow_redirects_) {
+
+  bool follow = false;
+  switch (redirect_behavior_) {
+    case FOLLOW_ALL:
+      follow = true;
+      break;
+
+    case FOLLOW_NONE:
+      follow = false;
+      break;
+
+    case FOLLOW_WITHIN_ORIGIN:
+      follow = origin_.IsSameOriginAsUrl(redirect_url);
+      break;
+  }
+
+  if (!follow) {
     if (!binding_)
       return E_UNEXPECTED;
     // When we're not supposed to follow redirects, we abort the request when
     // a redirect is reported to us. This causes the bind to fail w/o ever
     // having seen the actual response data. Our HttpRequest interface dictates
     // that we return a valid reponse payload containing the redirect in this
-    // case. Here we synthesize a valid redirect response. This is done prior
-    // to calling Abort so our response_payload is setup in advance of
-    // OnStopBinding being called. I've observed that OnStopBinding gets called
-    // prior to Abort returning, but don't have any confidence that behavior can
-    // be depended on. We also set the was_redirected_ flag in this case so
-    // our other URLMON callbacks know not to overwrite our synthesized
-    // redirect response.
+    // case. Here we synthesize a valid redirect response for that purpose.
     // TODO(michaeln): we 'should' get the actual response data
-    was_redirected_ = true;
     response_payload_.SynthesizeHttpRedirect(NULL, redirect_url);
-    binding_->Abort();
+    has_synthesized_response_payload_ = true;
+    return E_ABORT;
   } else {
-    // TODO(michaeln): Check same-origin, sometimes but not always. For example
-    // when loading worker via url, x-origin should be allowed.
     was_redirected_ = true;
     redirect_url_ = redirect_url;
   }
@@ -561,7 +565,7 @@ STDMETHODIMP IEHttpRequest::OnDataAvailable(
   }
 
   // Be careful not to overwrite a synthesized redirect response 
-  if (!follow_redirects_ && was_redirected_) {
+  if (has_synthesized_response_payload_) {
     do {
       // We don't expect to get here. If we do for some reason, just read
       // data and drop it on the floor, otherwise the bind will stall
@@ -664,7 +668,7 @@ STDMETHODIMP IEHttpRequest::OnResponse(DWORD status_code,
                                        LPWSTR *additional_request_headers) {
   ATLTRACE(_T("IEHttpRequest::OnResponse (%d)\n"), status_code);
   // Be careful not to overwrite a redirect response synthesized in OnRedirect
-  if (!follow_redirects_ && was_redirected_) {
+  if (has_synthesized_response_payload_) {
     return E_ABORT;
   }
   

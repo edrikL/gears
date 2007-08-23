@@ -29,7 +29,6 @@
 
 bool TestWebCacheAll();
 
-bool TestStrUtilsReplaceAll();
 bool TestHttpCookies();
 bool TestHttpRequest();
 bool TestManifest();
@@ -37,7 +36,6 @@ bool TestLocalServerDB();
 bool TestResourceStore();
 bool TestManagedResourceStore();
 bool TestParseHttpStatusLine();
-bool TestStartsWithAndEndsWith();
 
 #endif  // DEBUG
 #endif  // GEARS_LOCALSERVER_COMMON_LOCALSERVER_TESTS_H__

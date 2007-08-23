@@ -58,20 +58,37 @@ function doit(document) {
   }
   gIsChildWorker = 0;
 
+  var queryString = window.location.search;
+  var doAll = !queryString ||
+              queryString.length == 0 ||
+              queryString.indexOf('all') != -1
+  
   // Note: Keep runWebCaptureTests() first in this list. Otherwise, when
   // debugging the C++ in the internal tests, you get stopped at every single
   // exception the other tests cause.
-  runWebCaptureTests();
-  runDatabaseTests();
-  runManifestTests();
-  runWorkerPoolTests();
-  runTimerTests();
-  runMiscTests();
-  runHttpRequestTests();
+  if (doAll || queryString.indexOf('localserver') != -1) {
+    runWebCaptureTests();
+    runManifestTests();
+  }
+  if (doAll || queryString.indexOf('database') != -1) {
+    runDatabaseTests();
+  }
+  if (doAll || queryString.indexOf('workerpool') != -1) {
+    runWorkerPoolTests();
+  }
+  if (doAll || queryString.indexOf('timer') != -1) {
+    runTimerTests();
+  }
+  if (doAll || queryString.indexOf('misc') != -1) {
+    runMiscTests();
+  }
+  if (doAll || queryString.indexOf('httprequest') != -1) {
+    runHttpRequestTests();
+  }
   
   var c = document.getElementById("complete");
   c.innerHTML =
-      "All unit tests <span class='success'>ran to completion</span>.";
+      "All unit tests <span class='success'>initiated without error</span>.";
 }
 
 function insertRow(name, result, reason, runTime) {
@@ -2736,21 +2753,26 @@ function runHttpRequestTestsOnWorker() {
 function httpRequestTestSuite(inWorker) {
   // TODO(michaeln): detect if tests fail to complete and report those as errors
   var tests = [
-    [httpGet_200, 'httpGet_200'],
-    [httpPost_200, 'httpPost_200'],
-    [httpGet_404, 'httpGet_404'],
-    [httpGet_302_200, 'httpGet_302_200'],
-    [httpGet_302_404, 'httpGet_302_404'],
-    [httpPost_302_200, 'httpPost_302_200'],
-    [httpGet_NoCrossOrigin, 'httpGet_NoCrossOrigin']
+    'httpGet_200',
+    'httpPost_200',
+    'httpGet_404',
+    'httpGet_302_200',
+    'httpGet_302_404',
+    'httpPost_302_200',
+    'httpGet_NoCrossOrigin',
+    'httpGet_302_NoCrossOrigin',
+    'httpRequestReuse',
+    'httpRequest_DisallowedHeaders',
+    'httpGet_CapturedResource'
   ];
 
   for (var testIndex = 0; testIndex < tests.length; ++testIndex) {
-    var testName = tests[testIndex][1];
+    var testName = tests[testIndex];
     try {
-      tests[testIndex][0](testName);
+      var testProc = eval(testName);
+      testProc(testName);
     } catch (e) {
-      httpRequestTestComplete(testName + ', should fail to initiate', false);    
+      httpRequestTestComplete(testName + ', ' + e.message, false);    
     }
   }
   return;  // Only nested functions follow
@@ -2806,30 +2828,81 @@ function httpRequestTestSuite(inWorker) {
           0, null, null);  // expected status, responseText, responseHeaders[]
       httpRequestTestComplete(testName + ', should fail to initiate', false);    
     } catch(e) {
-      // should fail to initiate
-      httpRequestTestComplete(testName, true);
+      httpRequestTestComplete(testName + ', ' + e.message, true);
     }
   }
 
-  /*
-  // TODO(michaeln): implement me
-  // how should this fail exactly, throw when trying to
-  // access properties, return a particular status code, what?
   function httpGet_302_NoCrossOrigin(testName) {
-    // we expect this test to initiate, but to fail on completion
+    var headers = [["location", "http://www.google.com/"]];
     testRequest(testName,
         'server_redirect.php?location=http://www.google.com/',
         'GET', null, null,
-        0, null, null);  // expected status, responseText, responseHeaders[]
+        302, "", headers);
   }
-  */
 
+  function httpRequest_DisallowedHeaders(testName) {
+    var headers = [["Referer", "http://somewhere.else.com/"]];
+    try {
+      testRequest(testName,
+          'should_fail',
+          'GET', null, headers,
+          null, null, null);
+      httpRequestTestComplete(testName + ', should fail to initiate', false);    
+    } catch(e) {
+      httpRequestTestComplete(testName + ', ' + e.message, true);
+    }
+  }
+  
+  function httpRequestReuse(testName) {
+    var reusedRequest = google.gears.factory.create('beta.httprequest', '1.0');
+    var numGot = 0;
+    var numToGet = 2;
+  
+    getOne();
+    
+    function getOne() {          
+      if (numGot >= numToGet) {
+        httpRequestTestComplete(testName, true);
+        return;
+      }  
+      var url = 'echo_request.php?' + numGot++;
+      reusedRequest.onreadystatechange = function() {
+        if (reusedRequest.readyState==4) {
+          try {
+            if (reusedRequest.status != 200)
+              throw 'status != 200';
+            getOne();
+          } catch (e) {
+            httpRequestTestComplete(testName + ', ' + e.message, false);
+          }
+        }
+      }
+      reusedRequest.open('GET', url, true);
+      reusedRequest.send(null);
+    }    
+  }
+  
+  function httpGet_CapturedResource(testName) {
+    var myLocalServer = google.gears.factory.create('beta.localserver', '1.0');
+    // We don't delete and recreate the store or captured url to avoid
+    // interfering with this same test running in the other thread. 
+    var myStore = myLocalServer.createStore('HTTP_TEST_STORE');
+    myStore.capture('echo_request.php?httprequest_a_captured_url',
+                    myCaptureComplete);
+        
+    function myCaptureComplete(url, success, id) {
+      try {
+        if (!success)
+          throw 'Capture failed'
+        testRequest(testName, url, 'GET', null, null, 200, null, null);
+      } catch (e) {
+        httpRequestTestComplete(testName + ', ' + e.message, false);
+      }
+    }
+  }
+    
   function httpGet_BinaryResponse(testName) {
     // TODO(michaeln): do something reasonable with binary responses
-  }
-
-  function httpGet_CapturedResource(testName) {
-    // TODO(michaeln): ensure we can fetch 'captured' urls
   }
 
   // Generates header name value pairs echo_requests.php will respond

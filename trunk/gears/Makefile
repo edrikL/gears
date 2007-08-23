@@ -218,6 +218,7 @@ FF_CPPSRCS	+= \
 		stopwatch_ff.cc \
 		string16.cc \
 		string_utils.cc \
+		string_utils_test.cc \
 		thread_locals.cc \
 		url_utils.cc \
 		url_utils_ff.cc \
@@ -275,6 +276,7 @@ IE_CPPSRCS	+= \
 		stopwatch_ie.cc \
 		string16.cc \
 		string_utils.cc \
+		string_utils_test.cc \
 		thread_locals.cc \
 		url_utils.cc \
 		url_utils_ie.cc \

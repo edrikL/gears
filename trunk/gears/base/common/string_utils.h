@@ -331,7 +331,7 @@ inline int ReplaceAll(StringT &str,
 
 // Does "left" start with "right"
 template<class StringT>
-bool StartsWith(const StringT &left, const StringT &right) {
+inline bool StartsWith(const StringT &left, const StringT &right) {
   size_t right_len = right.length();
   return (left.length() >= right_len) &&
          memstr(left.c_str(), right_len, right.c_str(), right_len);
@@ -339,7 +339,7 @@ bool StartsWith(const StringT &left, const StringT &right) {
 
 // Does "left" end with "right"
 template<class StringT>
-bool EndsWith(const StringT &left, const StringT &right) {
+inline bool EndsWith(const StringT &left, const StringT &right) {
   size_t left_len = left.length();
   size_t right_len = right.length();
   return (left_len >= right_len) &&
@@ -366,6 +366,23 @@ inline int Tokenize(const StringT &str,
     }
   }
   return tokens->size();
+}
+
+
+// Performs a case-insensitive comparison of char* or char16* strings.
+template<class CharT>
+inline int StringCompareIgnoreCase(const CharT *lhs, const CharT *rhs) {
+  assert(lhs && rhs);
+  int ret = 0;
+  while (!(ret = std::tolower(*lhs) - std::tolower(*rhs)) && *rhs) {
+    ++lhs;
+    ++rhs;
+  }
+  if (ret < 0)
+    ret = -1 ;
+  else if (ret > 0)
+    ret = 1 ;
+  return ret;
 }
 
 #endif  // GEARS_BASE_COMMON_STRING_UTILS_H__

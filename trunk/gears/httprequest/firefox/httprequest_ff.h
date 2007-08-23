@@ -102,7 +102,6 @@ class GearsHttpRequest
 
   bool ResolveUrl(const char16 *url, std::string16 *resolved_url,
                   std::string16 *exception_message);
-  void FireReadyStateChangedEvent();
   virtual void ReadyStateChanged(HttpRequest *source);
   void CreateRequest();
   void ReleaseRequest();

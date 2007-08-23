@@ -45,13 +45,24 @@ class HttpRequest {
   virtual int AddReference() = 0;
   virtual int ReleaseReference() = 0;
 
-  // Get or set whether to use or bypass caches, the default is USE_ALL_CACHES
+  // Get or set whether to use or bypass caches, the default is USE_ALL_CACHES.
+  // May only be set prior to calling Send.
   enum CachingBehavior {
     USE_ALL_CACHES,
     BYPASS_ALL_CACHES  // bypass the browser cache and our local server
   };
   virtual CachingBehavior GetCachingBehavior() = 0;
-  virtual void SetCachingBehavior(CachingBehavior behavior) = 0;
+  virtual bool SetCachingBehavior(CachingBehavior behavior) = 0;
+
+  // Get or set the redirect behavior, the default is FOLLOW_ALL.
+  // May only be set prior to calling Send.
+  enum RedirectBehavior {
+    FOLLOW_ALL,
+    FOLLOW_WITHIN_ORIGIN,
+    FOLLOW_NONE
+  };
+  virtual RedirectBehavior GetRedirectBehavior() = 0;
+  virtual bool SetRedirectBehavior(RedirectBehavior behavior) = 0;
 
   enum ReadyState {
     UNINITIALIZED = 0,
@@ -69,17 +80,13 @@ class HttpRequest {
   virtual bool GetStatusText(std::string16 *status_text) = 0;
   virtual bool GetStatusLine(std::string16 *status_line) = 0;
 
-  // Set whether or not to follow HTTP redirection, the default is to
-  // follow redirects. To disable redirection, call this method after open
-  // has been called and prior to calling send.
-  virtual bool SetFollowRedirects(bool follow) = 0;
-
   // Whether or not this request has followed a redirect
   virtual bool WasRedirected() = 0;
 
   // Sets full_url to final location of the request, including any redirects.
   // Returns false on failure (e.g. final redirect url not yet known).
   virtual bool GetFinalUrl(std::string16 *full_url) = 0;
+
   // Similar to GetFinalUrl, but retrieves the initial URL requested.
   // Always succeeds.
   virtual bool GetInitialUrl(std::string16 *full_url) = 0;
