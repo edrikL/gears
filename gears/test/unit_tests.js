@@ -523,7 +523,6 @@ function testDB1_SpecialEmptyString() {
 
 // Causes a segmentation fault.
 function testDB1_StackOverflow() {
-  return g.FAILED;
   var q = "select * from (select 1";
   for (var i = 0; i < 50000; ++i) {
     q += " union select 1";
@@ -1178,7 +1177,9 @@ var databaseTests = [
   testDB1_PragmaSetDisabled,
   testDB1_PragmaGetDisabled,
   testDB1_SpecialEmptyString,
-  testDB1_StackOverflow,
+  // TODO(shess) Fix things so that we can run this, again.  See bug
+  // 199.
+  //testDB1_StackOverflow,
   testDB1_VacuumDisabled,
   testDB1_CloseDatabase,
   testDB1_CloseDatabaseTwice,
