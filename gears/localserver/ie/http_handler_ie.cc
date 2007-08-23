@@ -797,7 +797,11 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
   // by the client, this is how XmlHttpRequest accesses header information
   if (http_negotiate_) {
     WCHAR *extra_headers = NULL;
-    hr = CallOnResponse(HttpConstants::HTTP_OK, payload_.headers.c_str(),
+    std::string16 statusline_and_headers;
+    statusline_and_headers = payload_.status_line;
+    statusline_and_headers += HttpConstants::kCrLf;
+    statusline_and_headers += payload_.headers;
+    hr = CallOnResponse(HttpConstants::HTTP_OK, statusline_and_headers.c_str(),
                         L"", &extra_headers);
     CoTaskMemFree(extra_headers);
     if (FAILED(hr)) return hr;
@@ -1024,7 +1028,7 @@ HRESULT HttpHandler::QueryInfoImpl(/* [in] */ DWORD dwOption,
       // the list of headers
       value_str = payload_.status_line;
       value_str += HttpConstants::kCrLf;
-      value_str = payload_.headers;
+      value_str += payload_.headers;
       ReplaceAll(value_str,
                  std::string16(HttpConstants::kCrLf),
                  std::string16(1, '\0'));  // string containing an embedded NULL
@@ -1039,7 +1043,7 @@ HRESULT HttpHandler::QueryInfoImpl(/* [in] */ DWORD dwOption,
       value_str = payload_.status_line;
       value_str += HttpConstants::kCrLf;
       value_str += payload_.headers;
-      value = payload_.headers.c_str();
+      value = value_str.c_str();
       value_len = value_str.length();
       break;
 

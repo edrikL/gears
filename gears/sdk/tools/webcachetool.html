@@ -146,48 +146,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         xmlhttp.send(data)
       }
       
-      var xmlhttpmany;
-      var xmlhttpmany_baseurl;
-      var xmlhttpmany_num_to_get;
-      var xmlhttpmany_num_got;
-     
-      function DoXhrGetMany(urlbase, count) {
-        if (xmlhttpmany) {
-          alert("Already getting many");
-          return;
-        }
-        xmlhttpmany = NewXHR();
-        xmlhttpmany_baseurl = urlbase;
-        xmlhttpmany_num_to_get = count;
-        xmlhttpmany_num_got = 0;
-        DoXhrGetOne();
-      }
-      
-      function DoXhrGetOne() {          
-        if (xmlhttpmany_num_got >= xmlhttpmany_num_to_get) {
-          display_text("Got all");
-          xmlhttpmany = null;
-          return;
-        }  
-        var url = xmlhttpmany_baseurl + xmlhttpmany_num_got++;
-        var xmlhttp = NewXHR();
-        xmlhttp.open("GET", url, true);
-        xmlhttp.onreadystatechange = function() {
-          if (xmlhttp.readyState==4) {
-            display_text("Got " + xmlhttpmany_num_got +
-                         " of " + xmlhttpmany_num_to_get);
-            DoXhrGetOne();
-          }
-        }
-        xmlhttp.send(null)
-      }
 
       //----------------------------------------------------------
       // Gears.HttpRequest tests
       //----------------------------------------------------------
 
+      function NewGearsHR() {
+        return google.gears.factory.create("beta.httprequest", "1.0");
+      }
+      
       function DoGearsHttpRequest(url, verb, data) {
-        var gearshttp = google.gears.factory.create("beta.httprequest", "1.0");
+        var gearshttp = NewGearsHR();
         var statesReached = [0, 0, 0, 0, 0];
         gearshttp.onreadystatechange = function() {
           var state = gearshttp.readyState;
@@ -205,6 +174,54 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         }
         gearshttp.open(verb, url, true);
         gearshttp.send(data)
+      }
+
+
+      //----------------------------------------------------------
+      // GetMany
+      //----------------------------------------------------------
+      
+      var getmany;   // either an XmlHttpRequest or a Gears.HttpReqeust
+      var getmany_baseurl;
+      var getmany_num_to_get;
+      var getmany_num_got;
+     
+      function DoXhrGetMany(urlbase, count) {
+        DoGetMany(NewXHR(), urlbase, count);
+      }
+      
+      function DoGearsGetMany(urlbase, count) {
+        DoGetMany(NewGearsHR(), urlbase, count);
+      }
+      
+      function DoGetMany(request, urlbase, count) {
+        if (getmany) {
+          alert("Already getting many");
+          return;
+        }
+        getmany = request;
+        getmany_baseurl = urlbase;
+        getmany_num_to_get = count;
+        getmany_num_got = 0;
+        DoGetOne();
+      }
+      
+      function DoGetOne() {          
+        if (getmany_num_got >= getmany_num_to_get) {
+          display_text("Got all");
+          getmany = null;
+          return;
+        }  
+        var url = getmany_baseurl + getmany_num_got++;
+        getmany.open("GET", url, true);
+        getmany.onreadystatechange = function() {
+          if (getmany.readyState==4) {
+            display_text("Got " + getmany_num_got +
+                         " of " + getmany_num_to_get);
+            setTimeout(DoGetOne, 1);
+          }
+        }
+        getmany.send(null);
       }
 
       
@@ -289,6 +306,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <input type="button" value="GearsHttpPOST(url, url2AsData)" onclick="DoGearsHttpRequest( urlinput.value, 'POST', url2input.value )">
       <br>
       <input type="button" value="XHR.GetMany(urlAsBase, url2AsNumber)" onclick="DoXhrGetMany(urlinput.value, url2input.value)">
+      <input type="button" value="Gears.GetMany(urlAsBase, url2AsNumber)" onclick="DoGearsGetMany(urlinput.value, url2input.value)">
     </form>
 
     <div id="result"></div>

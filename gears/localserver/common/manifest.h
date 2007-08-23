@@ -74,7 +74,9 @@ class Manifest {
 
  private:
   bool ResolveRelativeUrls();
-  bool ResolveRelativeUrl(const char16 *base, std::string16 *url);
+  bool ResolveRelativeUrl(const char16 *base,
+                          std::string16 *url,
+                          bool check_origin);
 
   bool is_valid_;
   std::string16 manifest_url_;

@@ -27,6 +27,7 @@
 #define GEARS_LOCALSERVER_IE_HTTP_REQUEST_IE_H__
 
 #include "gears/base/ie/atl_headers.h"
+#include "gears/base/common/security_model.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
 
@@ -45,14 +46,27 @@ class IEHttpRequest
   virtual int ReleaseReference();
 
   // Get or set whether to use or bypass caches, the default is USE_ALL_CACHES
+  // May only be set prior to calling Send.
   virtual CachingBehavior GetCachingBehavior() {
     return caching_behavior_;
   }
 
-  virtual void SetCachingBehavior(CachingBehavior behavior) {
-    if (IsUninitialized() || IsOpen()) {
-      caching_behavior_ = behavior;
-    }
+  virtual bool SetCachingBehavior(CachingBehavior behavior) {
+    if (!(IsUninitialized() || IsOpen())) return false;
+    caching_behavior_ = behavior;
+    return true;
+  }
+
+  // Get or set the redirect behavior, the default is FOLLOW_ALL
+  // May only be set prior to calling Send.
+  virtual RedirectBehavior GetRedirectBehavior() { 
+    return redirect_behavior_;
+  }
+
+  virtual bool SetRedirectBehavior(RedirectBehavior behavior) {
+    if (!(IsUninitialized() || IsOpen())) return false;
+    redirect_behavior_ = behavior;
+    return true;
   }
 
   // properties
@@ -64,7 +78,6 @@ class IEHttpRequest
   virtual bool GetStatusText(std::string16 *status_text);
   virtual bool GetStatusLine(std::string16 *status_line);
 
-  virtual bool SetFollowRedirects(bool follow);
   virtual bool WasRedirected();
   virtual bool GetFinalUrl(std::string16 *full_url);
   virtual bool GetInitialUrl(std::string16 *full_url);
@@ -171,9 +184,13 @@ class IEHttpRequest
 
   // The (non-relative) request url
   std::string16 url_;
+  SecurityOrigin origin_;
 
   // Whether to bypass caches
   CachingBehavior caching_behavior_;
+
+  // Whether to follow redirects
+  RedirectBehavior redirect_behavior_;
 
   // The request method
   std::string16 method_;
@@ -191,9 +208,6 @@ class IEHttpRequest
   // Whether this request was aborted
   bool was_aborted_;
 
-  // Whether we should follow redirects
-  bool follow_redirects_;
-
   // Whether or not we have been redirected
   bool was_redirected_;
 
@@ -207,6 +221,8 @@ class IEHttpRequest
   // We populate this structure with various pieces of response data:
   // status code, status line, headers, data
   WebCacheDB::PayloadInfo response_payload_;
+
+  bool has_synthesized_response_payload_;
 
   // The amount of data we've read into the response_payload_.data
   // Initially the stl vector is allocated to a large size. We keep

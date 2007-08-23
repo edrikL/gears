@@ -41,14 +41,15 @@ bool TestSecurityModel();  // from security_model_test.cc
 bool TestFileUtils();  // from file_test.cc
 bool TestUrlUtils();  // from url_utils_test.cc
 bool TestJsRootedTokenLifetime();  // from base_class_test.cc
+bool TestStringUtils();  // from string_utils_test.cc
+
 
 //------------------------------------------------------------------------------
 // TestWebCacheAll
 //------------------------------------------------------------------------------
 bool TestWebCacheAll() {
   bool ok = true;
-  ok &= TestStartsWithAndEndsWith();
-  ok &= TestStrUtilsReplaceAll();
+  ok &= TestStringUtils();
   ok &= TestFileUtils();
   ok &= TestUrlUtils();
   ok &= TestParseHttpStatusLine();
@@ -68,46 +69,6 @@ bool TestWebCacheAll() {
   return ok;
 }
 
-//------------------------------------------------------------------------------
-// TestStrUtilsReplaceAll
-//------------------------------------------------------------------------------
-bool TestStrUtilsReplaceAll() {
-#undef TEST_ASSERT
-#define TEST_ASSERT(b) \
-{ \
-  if (!(b)) { \
-    LOG(("TestStrUtilsReplaceAll - failed (%d)\n", __LINE__)); \
-    return false; \
-  } \
-}
-  std::string str("bbaaabbaaabb");
-  TEST_ASSERT(ReplaceAll(str, std::string("bb"), std::string("cc")) == 3);
-  TEST_ASSERT(str == "ccaaaccaaacc");
-
-  TEST_ASSERT(ReplaceAll(str, std::string("cc"), std::string("d")) == 3);
-  TEST_ASSERT(str == "daaadaaad");
-
-  TEST_ASSERT(ReplaceAll(str, std::string("d"), std::string("ff")) == 3);
-  TEST_ASSERT(str == "ffaaaffaaaff");
-
-  TEST_ASSERT(ReplaceAll(str, std::string("ff"), std::string(1, 0)) == 3);
-  TEST_ASSERT(str.length() == 9);
-  
-  TEST_ASSERT(ReplaceAll(str, std::string(1, 0), std::string("bb")) == 3);
-  TEST_ASSERT(str == "bbaaabbaaabb");
-
-  str = "aaaa";
-  TEST_ASSERT(ReplaceAll(str, std::string("a"), std::string("aa")) == 4);
-  TEST_ASSERT(str == "aaaaaaaa");
-
-  TEST_ASSERT(ReplaceAll(str, std::string("aa"), std::string("a")) == 4);
-  TEST_ASSERT(str == "aaaa");
-
-  TEST_ASSERT(ReplaceAll(str, std::string("b"), std::string("c")) == 0);
-  TEST_ASSERT(str == "aaaa");
-
-  return true;
-}
 
 //------------------------------------------------------------------------------
 // TestHttpCookies
@@ -186,11 +147,11 @@ bool TestManifest() {
   const char16 *manifest_url = STRING16(L"http://cc_tests/manifest.json");
   const std::string16 expected_version = STRING16(L"expected_version");
   const std::string16 expected_redirect(
-                          STRING16(L"http://cc_tests/redirectUrl"));
+                 STRING16(L"http://cc_tests.other_origin/redirectUrl"));
   const char16 *json16 = STRING16(
     L"{ 'betaManifestVersion': 1, \n"
     L"  'version': 'expected_version', \n"
-    L"  'redirectUrl': 'redirectUrl', \n"
+    L"  'redirectUrl': 'http://cc_tests.other_origin/redirectUrl', \n"
     L"  'entries': [ \n"
     L"       { 'url': 'test_url', 'src': 'test_src' }, \n"
     L"       { 'url': 'test_url2' }, \n"
@@ -232,6 +193,12 @@ bool TestManifest() {
   TEST_ASSERT(entry4->url == STRING16(L"http://cc_tests/test_redirect_url"));
   TEST_ASSERT(entry4->src.empty());
   TEST_ASSERT(entry4->redirect == STRING16(L"http://cc_tests/test_url3?blah"));
+
+
+  const char *json_not_an_object = "\"A string, but we need an object\"";
+  Manifest manifest_should_not_parse;
+  ok = manifest_should_not_parse.Parse(manifest_url, json_not_an_object);
+  TEST_ASSERT(!ok);
 
   LOG(("TestManifest - passed\n"));
   return true;
@@ -605,43 +572,6 @@ bool TestParseHttpStatusLine() {
     TEST_ASSERT(!ParseHttpStatusLine(bad_str, NULL, NULL, NULL));
   }
   LOG(("TestParseHttpStatusLine - passed\n"));
-  return true;
-}
-
-bool TestStartsWithAndEndsWith() {
-#undef TEST_ASSERT
-#define TEST_ASSERT(b) \
-{ \
-  if (!(b)) { \
-    LOG(("TestBeginsWithAndEndsWith - failed (%d)\n", __LINE__)); \
-    return false; \
-  } \
-}
-  // std::string16 tests
-  {
-    const std::string16 prefix(STRING16(L"prefix"));
-    const std::string16 suffix(STRING16(L"suffix"));
-    const std::string16 test(STRING16(L"prefix_string_suffix"));
-    TEST_ASSERT(StartsWith(test, prefix));
-    TEST_ASSERT(EndsWith(test, suffix));
-    TEST_ASSERT(!StartsWith(test, suffix));
-    TEST_ASSERT(!EndsWith(test, prefix));
-    TEST_ASSERT(!StartsWith(prefix, test));
-    TEST_ASSERT(!EndsWith(suffix, test));
-  }
-  // std::string tests
-  {
-    const std::string prefix("prefix");
-    const std::string suffix("suffix");
-    const std::string test("prefix_string_suffix");
-    TEST_ASSERT(StartsWith(test, prefix));
-    TEST_ASSERT(EndsWith(test, suffix));
-    TEST_ASSERT(!StartsWith(test, suffix));
-    TEST_ASSERT(!EndsWith(test, prefix));
-    TEST_ASSERT(!StartsWith(prefix, test));
-    TEST_ASSERT(!EndsWith(suffix, test));
-  }
-  LOG(("TestStartsWithAndEndsWith - passed\n"));
   return true;
 }
 

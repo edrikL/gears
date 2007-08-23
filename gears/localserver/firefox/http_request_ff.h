@@ -31,6 +31,7 @@
 #include "gears/third_party/gecko_internal/nsIChannelEventSink.h"
 #include "ff/genfiles/localserver.h" // from OUTDIR
 #include "gears/base/common/common.h"
+#include "gears/base/common/security_model.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
@@ -63,14 +64,27 @@ class FFHttpRequest : public HttpRequest,
   virtual int ReleaseReference();
 
   // Get or set whether to use or bypass caches, the default is USE_ALL_CACHES
+  // May only be set prior to calling Send.
   virtual CachingBehavior GetCachingBehavior() {
     return caching_behavior_;
   }
 
-  virtual void SetCachingBehavior(CachingBehavior behavior) {
-    if (!was_sent_) {
-      caching_behavior_ = behavior;
-    }
+  virtual bool SetCachingBehavior(CachingBehavior behavior) {
+    if (was_sent_) return false;
+    caching_behavior_ = behavior;
+    return true;
+  }
+
+  // Get or set the redirect behavior, the default is FOLLOW_ALL
+  // May only be set prior to calling Send.
+  virtual RedirectBehavior GetRedirectBehavior() { 
+    return redirect_behavior_;
+  }
+
+  virtual bool SetRedirectBehavior(RedirectBehavior behavior) {
+    if (was_sent_) return false;
+    redirect_behavior_ = behavior;
+    return true;
   }
 
   // properties
@@ -82,7 +96,6 @@ class FFHttpRequest : public HttpRequest,
   virtual bool GetStatusText(std::string16 *status_text);
   virtual bool GetStatusLine(std::string16 *status_line);
 
-  virtual bool SetFollowRedirects(bool follow);
   virtual bool WasRedirected();
   virtual bool GetFinalUrl(std::string16 *full_url);
   virtual bool GetInitialUrl(std::string16 *full_url);
@@ -108,6 +121,13 @@ class FFHttpRequest : public HttpRequest,
   already_AddRefed<nsIHttpChannel> GetCurrentHttpChannel();
 
   void SetReadyState(ReadyState state);
+  bool IsUninitialized() { return ready_state_ == HttpRequest::UNINITIALIZED; }
+  bool IsOpen() { return ready_state_ == HttpRequest::OPEN; }
+  bool IsSent() { return ready_state_ == HttpRequest::SENT; }
+  bool IsInteractive() { return ready_state_ == HttpRequest::INTERACTIVE; }
+  bool IsComplete() { return ready_state_ == HttpRequest::COMPLETE; }
+  bool IsInteractiveOrComplete() { return IsInteractive() || IsComplete(); }
+
   bool SendImpl(nsIInputStream *post_data);
   bool NewByteInputStream(nsIInputStream **stream,
                           const char *data,
@@ -123,16 +143,16 @@ class FFHttpRequest : public HttpRequest,
                                     PRUint32 toOffset,
                                     PRUint32 count,
                                     PRUint32* writeCount);
-  ReadyState state_;
+  ReadyState ready_state_;
   std::string16 method_;
   std::string post_data_string_;
   scoped_ptr< std::vector<uint8> > response_body_;
   std::string16 url_;
+  SecurityOrigin origin_;
   CachingBehavior caching_behavior_;
+  RedirectBehavior redirect_behavior_;
   bool was_sent_;
-  bool is_complete_;
   bool was_aborted_;
-  bool follow_redirects_;
   bool was_redirected_;
   std::string16 redirect_url_;
   nsCOMPtr<nsIChannel> channel_;

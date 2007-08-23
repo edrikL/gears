@@ -61,8 +61,8 @@ HttpRequest *HttpRequest::Create() {
 // Constructor / Destructor / Refcounting
 //------------------------------------------------------------------------------
 FFHttpRequest::FFHttpRequest()
-  : state_(UNINITIALIZED), caching_behavior_(USE_ALL_CACHES), was_sent_(false),
-    is_complete_(false), was_aborted_(false), follow_redirects_(true),
+  : ready_state_(UNINITIALIZED), caching_behavior_(USE_ALL_CACHES),
+    redirect_behavior_(FOLLOW_ALL), was_sent_(false), was_aborted_(false),
     was_redirected_(false), listener_(NULL) {
 }
 
@@ -81,7 +81,7 @@ int FFHttpRequest::ReleaseReference() {
 // GetReadyState
 //------------------------------------------------------------------------------
 bool FFHttpRequest::GetReadyState(ReadyState *state) {
-  *state = state_;
+  *state = ready_state_;
   return true;
 }
 
@@ -91,7 +91,7 @@ bool FFHttpRequest::GetReadyState(ReadyState *state) {
 bool FFHttpRequest::GetResponseBodyAsText(std::string16 *text) {
   assert(text);
   // TODO(michaeln): support incremental reading
-  if (!is_complete_ || was_aborted_)
+  if (!IsComplete() || was_aborted_)
     return false;
 
   std::vector<uint8> *data = response_body_.get();
@@ -109,7 +109,7 @@ bool FFHttpRequest::GetResponseBodyAsText(std::string16 *text) {
 // GetResponseBody
 //------------------------------------------------------------------------------
 bool FFHttpRequest::GetResponseBody(std::vector<uint8> *body) {
-  NS_ENSURE_TRUE(is_complete_ && !was_aborted_, false);
+  NS_ENSURE_TRUE(IsComplete() && !was_aborted_, false);
   if (!response_body_.get()) {
     return false;
   }
@@ -125,7 +125,7 @@ bool FFHttpRequest::GetResponseBody(std::vector<uint8> *body) {
 // GetResponseBody
 //------------------------------------------------------------------------------
 std::vector<uint8> *FFHttpRequest::GetResponseBody() {
-  NS_ENSURE_TRUE(is_complete_ && !was_aborted_, NULL);
+  NS_ENSURE_TRUE(IsComplete() && !was_aborted_, NULL);
   return response_body_.release();
 }
 
@@ -133,7 +133,7 @@ std::vector<uint8> *FFHttpRequest::GetResponseBody() {
 // GetStatus
 //------------------------------------------------------------------------------
 bool FFHttpRequest::GetStatus(int *status) {
-  NS_ENSURE_TRUE((state_ >= INTERACTIVE) && !was_aborted_, false);
+  NS_ENSURE_TRUE(IsInteractiveOrComplete() && !was_aborted_, false);
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   if (!http_channel) {
     return false;
@@ -149,7 +149,7 @@ bool FFHttpRequest::GetStatus(int *status) {
 // GetStatusText
 //------------------------------------------------------------------------------
 bool FFHttpRequest::GetStatusText(std::string16 *status_text) {
-  NS_ENSURE_TRUE((state_ >= INTERACTIVE) && !was_aborted_, false);
+  NS_ENSURE_TRUE(IsInteractiveOrComplete() && !was_aborted_, false);
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   if (!http_channel) {
     return false;
@@ -164,7 +164,7 @@ bool FFHttpRequest::GetStatusText(std::string16 *status_text) {
 // GetStatusLine
 //------------------------------------------------------------------------------
 bool FFHttpRequest::GetStatusLine(std::string16 *status_line) {
-  NS_ENSURE_TRUE((state_ >= INTERACTIVE) && !was_aborted_, false);
+  NS_ENSURE_TRUE(IsInteractiveOrComplete() && !was_aborted_, false);
   // TODO(michaeln): get the actual status line instead of synthesizing one
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   if (!http_channel) {
@@ -197,10 +197,15 @@ bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async) {
   assert(!IsRelativeUrl(url));
   // TODO(michaeln): Add some of the sanity checks the IE implementation has.
 
-  NS_ENSURE_TRUE(state_ == UNINITIALIZED, false);
+  NS_ENSURE_TRUE(IsUninitialized(), false);
 
   if (!async) {
     // TODO(michaeln): support sync requests in some form
+    return false;
+  }
+
+  url_ = url;
+  if (!origin_.InitFromUrl(url)) {
     return false;
   }
 
@@ -236,7 +241,6 @@ bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async) {
     NS_ENSURE_SUCCESS(rv, false);
   }
 
-  url_ = url;
   SetReadyState(HttpRequest::OPEN);
   return true;
 }
@@ -266,21 +270,15 @@ bool FFHttpRequest::SetRequestHeader(const char16* name, const char16* value) {
 }
 
 //------------------------------------------------------------------------------
-// SetFollowRedirects
+// RedirectBehavior
 //------------------------------------------------------------------------------
-bool FFHttpRequest::SetFollowRedirects(bool follow) {
-  if (was_sent_)
-    return false;
-  follow_redirects_ = follow;
-  return true;
-}
 
 bool FFHttpRequest::WasRedirected() {
-  return is_complete_ && !was_aborted_ && follow_redirects_ && was_redirected_;
+  return IsInteractiveOrComplete() && !was_aborted_ && was_redirected_;
 }
 
 bool FFHttpRequest::GetFinalUrl(std::string16 *full_url) {
-  if (!is_complete_ || was_aborted_)
+  if (!IsInteractiveOrComplete() || was_aborted_)
     return false;
 
   if (WasRedirected())
@@ -332,11 +330,6 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
 
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   NS_ENSURE_TRUE(http_channel, false);
-
-  if (!follow_redirects_) {
-    rv = http_channel->SetRedirectionLimit(0);
-    NS_ENSURE_SUCCESS(rv, false);
-  }
 
   if (post_data_stream) {
     nsCOMPtr<nsIUploadChannel> upload_channel(do_QueryInterface(http_channel));
@@ -434,7 +427,7 @@ public:
 // GetAllResponseHeaders
 //------------------------------------------------------------------------------
 bool FFHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
-  NS_ENSURE_TRUE((state_ >= INTERACTIVE) && !was_aborted_, false);
+  NS_ENSURE_TRUE(IsInteractiveOrComplete() && !was_aborted_, false);
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   NS_ENSURE_TRUE(http_channel, false);
 
@@ -447,7 +440,7 @@ bool FFHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
   // Otherwise when replaying a cached entry, the browser would try to
   // decode an already decoded response body and fail.
   // TODO(michaeln): don't do this for scriptable Gears.HttpRequests
-  if (is_complete_ && response_body_.get()) {
+  if (IsComplete() && response_body_.get()) {
     std::string data_len_str;
     IntegerToString(static_cast<int>(response_body_.get()->size()),
                     &data_len_str);
@@ -477,7 +470,7 @@ bool FFHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
 //------------------------------------------------------------------------------
 bool FFHttpRequest::GetResponseHeader(const char16 *name,
                                       std::string16 *value) {
-  NS_ENSURE_TRUE((state_ >= INTERACTIVE) && !was_aborted_, false);
+  NS_ENSURE_TRUE(IsInteractiveOrComplete() && !was_aborted_, false);
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   NS_ENSURE_TRUE(http_channel, false);
 
@@ -521,9 +514,8 @@ bool FFHttpRequest::SetOnReadyStateChange(ReadyStateListener *listener) {
 // SetReadyState
 //------------------------------------------------------------------------------
 void FFHttpRequest::SetReadyState(ReadyState state) {
-  if (state > state_) {
-    state_ = state;
-    is_complete_ = (state == COMPLETE);
+  if (state > ready_state_) {
+    ready_state_ = state;
     if (listener_) {
       listener_->ReadyStateChanged(this);
     }
@@ -622,32 +614,51 @@ already_AddRefed<nsIHttpChannel> FFHttpRequest::GetCurrentHttpChannel() {
 NS_IMETHODIMP FFHttpRequest::OnChannelRedirect(nsIChannel *old_channel,
                                                nsIChannel *new_channel,
                                                PRUint32 flags) {
-  if (follow_redirects_) {
-    NS_PRECONDITION(new_channel, "Redirect without a channel?");
+  NS_PRECONDITION(new_channel, "Redirect without a channel?");
 
-    // TODO(michaeln): check same-origin, sometimes but not always
+  std::string16 redirect_url;
 
-    redirect_url_.clear();
+  // Get the redirect url
+  nsCOMPtr<nsIURI> url;
+  nsresult rv = new_channel->GetURI(getter_AddRefs(url));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCString url_utf8;
+  rv = url->GetSpec(url_utf8);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Convert to string16
+  nsString url_utf16;
+  rv = NS_CStringToUTF16(url_utf8, NS_CSTRING_ENCODING_UTF8, url_utf16);
+  NS_ENSURE_SUCCESS(rv, rv);
+  redirect_url = url_utf16.get();
 
-    // Get the redirect url
-    nsCOMPtr<nsIURI> url;
-    nsresult rv = new_channel->GetURI(getter_AddRefs(url));
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCString url_utf8;
-    rv = url->GetSpec(url_utf8);
-    NS_ENSURE_SUCCESS(rv, rv);
+  bool follow = false;
+  switch (redirect_behavior_) {
+    case FOLLOW_ALL:
+      follow = true;
+      break;
 
-    // Convert to string16 and remember where we've been redirected to
-    nsString url_utf16;
-    rv = NS_CStringToUTF16(url_utf8, NS_CSTRING_ENCODING_UTF8, url_utf16);
-    NS_ENSURE_SUCCESS(rv, rv);
-    redirect_url_ = url_utf16.get();
-    was_redirected_ = true;
+    case FOLLOW_NONE:
+      follow = false;
+      break;
 
-    // We now have a new channel
-    channel_ = new_channel;
+    case FOLLOW_WITHIN_ORIGIN:
+      follow = origin_.IsSameOriginAsUrl(redirect_url.c_str());
+      break;
   }
-  return NS_OK;
+
+  nsresult nr;
+  if (!follow) {
+    // After cancelling in this fashion, out response getter methods will
+    // reflect the response containing the redirect_url in the location header.
+    nr = NS_ERROR_ABORT;
+  } else {
+    was_redirected_ = true;
+    redirect_url_ = redirect_url;
+    channel_ = new_channel;
+    nr = NS_OK;
+  }
+
+  return nr;
 }
 
 //-----------------------------------------------------------------------------

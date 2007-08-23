@@ -110,21 +110,48 @@ STDMETHODIMP GearsHttpRequest::open(
 }
 
 
+static bool IsDisallowedHeader(const char16 *header) {
+  // Headers which cannot be set according to the w3c spec
+  static const char16* kDisallowedHeaders[] = {
+      STRING16(L"Accept-Charset"), 
+      STRING16(L"Accept-Encoding"),
+      STRING16(L"Connection"),
+      STRING16(L"Content-Length"),
+      STRING16(L"Content-Transfer-Encoding"),
+      STRING16(L"Date"),
+      STRING16(L"Expect"),
+      STRING16(L"Host"),
+      STRING16(L"Keep-Alive"),
+      STRING16(L"Referer"),
+      STRING16(L"TE"),
+      STRING16(L"Trailer"),
+      STRING16(L"Transfer-Encoding"),
+      STRING16(L"Upgrade"),
+      STRING16(L"Via") };
+  for (int i = 0; i < ARRAYSIZE(kDisallowedHeaders); ++i) {
+    if (StringCompareIgnoreCase(header, kDisallowedHeaders[i]) == 0)
+      return true;
+  }
+  return false;
+}
+
+
 STDMETHODIMP GearsHttpRequest::setRequestHeader( 
       /* [in] */ const BSTR name,
       /* [in] */ const BSTR value) {
   if (!name) return E_POINTER;
-  if (!IsOpen())
+  if (!IsOpen()) {
     RETURN_EXCEPTION(kNotOpenError);
-  if (!request_->SetRequestHeader(name, value ? value : L""))
+  }
+  if (IsDisallowedHeader(name)) {
+    RETURN_EXCEPTION(STRING16(L"This header may not be set."));
+  }
+  if (!request_->SetRequestHeader(name, value ? value : L"")) {
     RETURN_EXCEPTION(kInternalError);
-  
-  std::string16 name_str(name);
-  LowerString(name_str);
-  if (name_str == STRING16(L"content-type")) {
+  }
+  if (StringCompareIgnoreCase(name, HttpConstants::kContentTypeHeader) == 0) {
     content_type_header_was_set_ = true;
   }
-
   RETURN_NORMAL();
 }
 
@@ -254,16 +281,22 @@ STDMETHODIMP GearsHttpRequest::get_statusText(
 void GearsHttpRequest::ReadyStateChanged(HttpRequest *source) {
   assert(source == request_);
   if (onreadystatechangehandler_) {
-    bool was_complete = IsComplete();
     HRESULT hr = 0;
     DISPPARAMS dispparams = {0};
+
+    // To remove cyclic dependencies we drop our reference to the
+    // callback when the request is complete.
+    CComPtr<IDispatch> dispatch = onreadystatechangehandler_;
+    if (IsComplete()) {
+      onreadystatechangehandler_.Release();
+    }
 
     // TODO(michaeln): The JavaScript 'this' pointer should be a reference
     // to the HttpRequest object. This is not currently the case.
 
     // Note: strangely, the parameters passed thru IDispatch(Ex) are in
     // reverse order as compared to the method signature being invoked
-    CComQIPtr<IDispatchEx> dispatchex = onreadystatechangehandler_;
+    CComQIPtr<IDispatchEx> dispatchex = dispatch;
     if (dispatchex) {
       // We prefer to call things thru IDispatchEx in order to use DISPID_THIS
       // such that the closure is scoped properly.
@@ -288,19 +321,10 @@ void GearsHttpRequest::ReadyStateChanged(HttpRequest *source) {
       dispparams.rgvarg = var;
       dispparams.cArgs = 0;
 
-      hr = onreadystatechangehandler_->Invoke(
+      hr = dispatch->Invoke(
           DISPID_VALUE, IID_NULL, LOCALE_USER_DEFAULT,
           DISPATCH_METHOD, &dispparams,
           NULL, NULL, &arg_err);
-    }
-
-    // To remove cyclic dependencies we drop our reference to the
-    // callback when the request is complete. We have to be careful
-    // about this for multipart responses and we have to document this
-    // behavior so callers know they need to reset the event handler
-    // when reusing an instance.
-    if (was_complete) {
-      onreadystatechangehandler_.Release();
     }
   }
 }
@@ -320,7 +344,7 @@ void GearsHttpRequest::CreateRequest() {
   request_ = HttpRequest::Create();
   request_->SetOnReadyStateChange(this);
   request_->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
-  request_->SetFollowRedirects(true);
+  request_->SetRedirectBehavior(HttpRequest::FOLLOW_WITHIN_ORIGIN);
 }
 
 

@@ -146,9 +146,13 @@ NS_IMETHODIMP GearsHttpRequest::Open() {
 
     request_info_.swap(scoped_info);
     content_type_header_was_set_ = false;
+
+    response_info_.reset(new ResponseInfo());
+    response_info_->pending_ready_state = HttpRequest::OPEN;
+    response_info_->ready_state = HttpRequest::UNINITIALIZED;
   }
 
-  FireReadyStateChangedEvent();
+  OnReadyStateChangedCall();
 
   RETURN_NORMAL();
 }
@@ -156,6 +160,32 @@ NS_IMETHODIMP GearsHttpRequest::Open() {
 //------------------------------------------------------------------------------
 // void setRequestHeader(name, value)
 //------------------------------------------------------------------------------
+
+static bool IsDisallowedHeader(const char16 *header) {
+  // Headers which cannot be set according to the w3c spec
+  static const char16* kDisallowedHeaders[] = {
+      STRING16(L"Accept-Charset"), 
+      STRING16(L"Accept-Encoding"),
+      STRING16(L"Connection"),
+      STRING16(L"Content-Length"),
+      STRING16(L"Content-Transfer-Encoding"),
+      STRING16(L"Date"),
+      STRING16(L"Expect"),
+      STRING16(L"Host"),
+      STRING16(L"Keep-Alive"),
+      STRING16(L"Referer"),
+      STRING16(L"TE"),
+      STRING16(L"Trailer"),
+      STRING16(L"Transfer-Encoding"),
+      STRING16(L"Upgrade"),
+      STRING16(L"Via") };
+  for (int i = 0; i < ARRAYSIZE(kDisallowedHeaders); ++i) {
+    if (StringCompareIgnoreCase(header, kDisallowedHeaders[i]) == 0)
+      return true;
+  }
+  return false;
+}
+
 NS_IMETHODIMP GearsHttpRequest::SetRequestHeader() {
   assert(IsApartmentThread());
   MutexLock locker(&lock_);
@@ -179,10 +209,14 @@ NS_IMETHODIMP GearsHttpRequest::SetRequestHeader() {
     RETURN_EXCEPTION(STRING16(L"The value parameter must be a string."));
   }
 
+  if (IsDisallowedHeader(name.c_str())) {
+    RETURN_EXCEPTION(STRING16(L"This header may not be set."));
+  }
+
   request_info_->headers.push_back(std::make_pair(name, value));
 
-  LowerString(name);
-  if (name == STRING16(L"content-type")) {
+  if (StringCompareIgnoreCase(name.c_str(),
+                              HttpConstants::kContentTypeHeader) == 0) {
     content_type_header_was_set_ = true;
   }
 
@@ -213,10 +247,6 @@ NS_IMETHODIMP GearsHttpRequest::Send() {
       request_info_->has_post_data = !request_info_->post_data.empty();
     }
   }
-
-  response_info_.reset(new ResponseInfo());
-  response_info_->pending_ready_state = HttpRequest::OPEN;
-  response_info_->ready_state = HttpRequest::OPEN;
 
   if (!CallSendOnUiThread()) {
     response_info_.reset(NULL);
@@ -461,24 +491,21 @@ void GearsHttpRequest::OnReadyStateChangedCall() {
   assert(IsApartmentThread());
   lock_.Lock();
   response_info_->ready_state = response_info_->pending_ready_state;
-  bool drop_reference = IsComplete();
+  bool is_complete = IsComplete();
   lock_.Unlock();
-    
-  FireReadyStateChangedEvent();
- 
-  if (drop_reference) {
-    // unroot / drop our reference to the callback
-    onreadystatechange_.reset(NULL);
-  }
-}
-
-void GearsHttpRequest::FireReadyStateChangedEvent() {
-  if (!onreadystatechange_.get()) { return; }
-
-  JsRunnerInterface *runner = GetJsRunner();
-  assert(runner);
-  if (runner) {
-    runner->InvokeCallback(onreadystatechange_.get(), 0, NULL);
+  
+  // To remove cyclic dependencies we drop our reference to the
+  // callback when the request is complete.
+  JsRootedCallback *handler = is_complete ? onreadystatechange_.release()
+                                          : onreadystatechange_.get();
+  if (handler) {
+    JsRunnerInterface *runner = GetJsRunner();
+    assert(runner);
+    if (runner) {
+      runner->InvokeCallback(handler, 0, NULL);
+    }
+    if (is_complete)
+      delete handler;
   }
 }
 
@@ -492,7 +519,7 @@ void GearsHttpRequest::CreateRequest() {
   ReleaseRequest();
   request_ = HttpRequest::Create();
   request_->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
-  request_->SetFollowRedirects(true);
+  request_->SetRedirectBehavior(HttpRequest::FOLLOW_WITHIN_ORIGIN);
 }
 
 void GearsHttpRequest::ReleaseRequest() {
@@ -537,14 +564,14 @@ bool GearsHttpRequest::ResolveUrl(const char16 *url,
 
 bool GearsHttpRequest::IsUninitialized() {
   assert(IsApartmentThread());
-  return !request_info_.get()  &&
-         !response_info_.get();
+  return !response_info_.get() ||
+         response_info_->ready_state == HttpRequest::UNINITIALIZED;
 }
 
 bool GearsHttpRequest::IsOpen() {
   assert(IsApartmentThread());
-  return request_info_.get() &&
-         !response_info_.get();
+  return response_info_.get() &&
+         response_info_->ready_state == HttpRequest::OPEN;
 }
 
 bool GearsHttpRequest::IsSent() {

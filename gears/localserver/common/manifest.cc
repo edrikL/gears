@@ -66,7 +66,7 @@ int JsonUtils::GetInteger(const Json::Value &object,
                           const char *name,
                           int default_value) {
   assert(object.isObject());
-  Json::Value value = object.get(name, Json::Value::null);
+  const Json::Value value = object.get(name, Json::Value::null);
   if (value.isInt())
     return value.asInt();
   else
@@ -77,7 +77,7 @@ bool JsonUtils::GetString(const Json::Value &object,
                           const char *name,
                           std::string *out) {
   assert(object.isObject());
-  Json::Value value = object.get(name, Json::Value::null);
+  const Json::Value value = object.get(name, Json::Value::null);
   if (!value.isString())
     return false;
   *out = value.asString();
@@ -88,7 +88,7 @@ bool JsonUtils::GetString16(const Json::Value &object,
                             const char *name,
                             std::string16 *out) {
   assert(object.isObject());
-  Json::Value value = object.get(name, Json::Value::null);
+  const Json::Value value = object.get(name, Json::Value::null);
   if (!value.isString())
     return false;
   return UTF8ToString16(value.asCString(), out);
@@ -98,7 +98,7 @@ bool JsonUtils::GetBool(const Json::Value &object,
                         const char *name,
                         bool default_value) {
   assert(object.isObject());
-  Json::Value value = object.get(name, Json::Value::null);
+  const Json::Value value = object.get(name, Json::Value::null);
   if (value.isBool())
     return value.asBool();
   else
@@ -155,6 +155,10 @@ bool Manifest::Parse(const char16 *manifest_url, const char *json, int len) {
                    &error_message_);
     return false;
   }
+  if (!root.isObject()) {
+    error_message_ = STRING16(L"Not an object");
+    return false;
+  }
 
   // Verify the data format is the version we're expecting
   if (JsonUtils::GetInteger(root, kManifestVersionField) !=
@@ -184,11 +188,6 @@ bool Manifest::Parse(const char16 *manifest_url, const char *json, int len) {
     return false;
   }
 
-  // We build a list of redirects and a set of concrete urls which we'll use
-  // later to test that all redirects specified in the manifest point to
-  // to a concrete url which is also specified
-  std::vector<std::string16> redirects;
-  std::set<std::string16> urls;
 
   for (size_t i = 0; i < entries.size(); ++i) {
     entries_.push_back(Entry());
@@ -218,18 +217,7 @@ bool Manifest::Parse(const char16 *manifest_url, const char *json, int len) {
                                 L" attributes cannot both be present");
       return false;
     }
-    
-    // add to the redirects or urls collection
-    if (!entry->redirect.empty()) {
-      redirects.push_back(entry->redirect);
-    } else {
-      urls.insert(entry->url);
-    }
   }
-
-  // TODO(michaeln): perhaps ensure that redirects specified in the manifest
-  // come back to something concrete in the manifest file, or is that too
-  // draconian, what's wrong with redirecting back to the server?
 
   is_valid_ = ResolveRelativeUrls();
 
@@ -240,10 +228,12 @@ bool Manifest::Parse(const char16 *manifest_url, const char *json, int len) {
 // ResolveRelativeUrls
 //------------------------------------------------------------------------------
 bool Manifest::ResolveRelativeUrls() {
+  const bool kCheckOrigin = true;
+  const bool kDontCheckOrigin = false;
   const char16 *base = manifest_url_.c_str();
 
   if (!redirect_url_.empty()) {
-    if (!ResolveRelativeUrl(base, &redirect_url_)) {
+    if (!ResolveRelativeUrl(base, &redirect_url_, kDontCheckOrigin)) {
       return false;
     }
   }
@@ -251,15 +241,15 @@ bool Manifest::ResolveRelativeUrls() {
   for (std::vector<Entry>::iterator iter = entries_.begin();
        iter != entries_.end();
        ++iter) {
-    if (!ResolveRelativeUrl(base, &iter->url)) {
+    if (!ResolveRelativeUrl(base, &iter->url, kCheckOrigin)) {
       return false;
     }
     if (!iter->src.empty() &&  // src is optional
-        !ResolveRelativeUrl(base, &iter->src)) {
+        !ResolveRelativeUrl(base, &iter->src, kCheckOrigin)) {
       return false;
     }
     if (!iter->redirect.empty() && // redirect is optional
-        !ResolveRelativeUrl(base, &iter->redirect)) {
+        !ResolveRelativeUrl(base, &iter->redirect, kDontCheckOrigin)) {
       return false;
     }
   }
@@ -267,7 +257,9 @@ bool Manifest::ResolveRelativeUrls() {
   return true;
 }
 
-bool Manifest::ResolveRelativeUrl(const char16 *base, std::string16 *url) {
+bool Manifest::ResolveRelativeUrl(const char16 *base,
+                                  std::string16 *url,
+                                  bool check_origin) {
   const char16 *kResolveErrorMessage = STRING16(L"Failed to resolve url - ");
   const char16 *kNotSameOriginErrorMessage =
       STRING16(L"Url is not from the same origin - ");
@@ -277,7 +269,7 @@ bool Manifest::ResolveRelativeUrl(const char16 *base, std::string16 *url) {
     error_message_ += *url;
     return false;
   }
-  if (!manifest_origin_.IsSameOriginAsUrl(resolved.c_str())) {
+  if (check_origin && !manifest_origin_.IsSameOriginAsUrl(resolved.c_str())) {
     error_message_ = kNotSameOriginErrorMessage;
     error_message_ += *url;
     return false;

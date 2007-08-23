@@ -658,7 +658,7 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
 
     request->SetOnReadyStateChange(wi->http_request_listener.get());
     request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
-    request->SetFollowRedirects(true);
+    request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
 
     std::string16 url;
     ResolveAndNormalize(page_security_origin_.full_url().c_str(),
