@@ -128,7 +128,7 @@ static bool IsDisallowedHeader(const char16 *header) {
       STRING16(L"Transfer-Encoding"),
       STRING16(L"Upgrade"),
       STRING16(L"Via") };
-  for (int i = 0; i < ARRAYSIZE(kDisallowedHeaders); ++i) {
+  for (int i = 0; i < static_cast<int>(ARRAYSIZE(kDisallowedHeaders)); ++i) {
     if (StringCompareIgnoreCase(header, kDisallowedHeaders[i]) == 0)
       return true;
   }
