@@ -75,11 +75,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <!-- Prevent this XPI from being installed on the wrong platform. -->
 m4_changequote(`^|',`|^')m4_dnl
 m4_ifelse(PRODUCT_OS,^|win32|^,^|m4_dnl
-    <em:targetPlatform>WINNT</em:targetPlatform>
+    <em:targetPlatform>WINNT_x86-msvc</em:targetPlatform>
 |^,PRODUCT_OS,^|linux|^,^|m4_dnl
-    <em:targetPlatform>Linux</em:targetPlatform>
-    <!-- Ubuntu Edgy Eft requires this platform name. -->
-    <em:targetPlatform>linux-gnu</em:targetPlatform>
+    <em:targetPlatform>Linux_x86-gcc3</em:targetPlatform>
+    <!-- Ubuntu Edgy Eft requires "linux-gnu" for the OS_TARGET prefix. -->
+    <em:targetPlatform>linux-gnu_x86-gcc3</em:targetPlatform>
 |^,PRODUCT_OS,^|osx|^,^|m4_dnl
     <em:targetPlatform>Darwin</em:targetPlatform>
 |^)
