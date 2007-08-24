@@ -175,9 +175,10 @@ JsParamFetcher::JsParamFetcher(GearsBaseClass *obj) {
     js_argc_ = obj->JsWorkerGetArgc();
     js_argv_ = obj->JsWorkerGetArgv();
   } else {
+    // In the main thread use the caller's current JS context, NOT the context
+    // where 'obj' was created.  These can be different!  Each frame has its
+    // own JS context, and code can reference 'top.OtherFrame.FooObject'.
     nsresult nr;
-    // TODO(cprince): Use context from 'obj' instead of 'ncc_'.
-    // Also, can we get argc/argv from that JS context, instead of from 'ncc_'?
     xpc_ = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
     if (xpc_ && NS_SUCCEEDED(nr)) {
       nr = xpc_->GetCurrentNativeCallContext(getter_AddRefs(ncc_));
