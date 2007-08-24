@@ -195,12 +195,17 @@ LRESULT GearsTimer::OnTimer(UINT uMsg,
     // deleted.
     KillTimer(wParam);
   } else {
+    // Store the repeat flag, in case the timer object is deleted in the
+    // callback.
+    bool repeat = timer->second.repeat;
 
     // Disable the timer now if it's a one shot.
-    if (!timer->second.repeat) {
+    if (!repeat) {
       KillTimer(wParam);
     }
 
+    // Invoke the handler.  timer can potentially be invalid after this, if the
+    // handler deletes the timer.
     if (timer->second.timer_func) {
 
       CComQIPtr<IDispatchEx> dispatchex = timer->second.timer_func;
@@ -244,7 +249,7 @@ LRESULT GearsTimer::OnTimer(UINT uMsg,
       GetJsRunner()->Eval(timer->second.script.c_str());
     }
 
-    if (!timer->second.repeat) {
+    if (!repeat) {
       // If this is just a timeout, we're done with the timer.
       timers_.erase(wParam);
     }
