@@ -254,7 +254,14 @@ void GearsTimer::HandleEventUnload(void *user_param) {
 void GearsTimer::TimerCallback(nsITimer *timer, void *closure) {
   TimerInfo *ti = reinterpret_cast<TimerInfo *>(closure);
 
-  // Invoke JavaScript timer handler
+  // Store the information required to clean up the timer, in case it gets
+  // deleted in the handler.
+  bool repeat = ti->repeat;
+  nsCOMPtr<GearsTimer> owner = ti->owner;
+  int timer_id = ti->timer_id;
+
+  // Invoke JavaScript timer handler.  *ti can become invalid here, if the timer
+  // gets deleted.
   if (ti->callback.get()) {
     ti->owner->GetJsRunner()->InvokeCallback(ti->callback.get(), 0, NULL);
   } else {
@@ -262,7 +269,7 @@ void GearsTimer::TimerCallback(nsITimer *timer, void *closure) {
   }
 
   // If this is a one shot timer, we're done with the timer object.
-  if (!ti->repeat) {
-    ti->owner->DeleteTimer(ti->timer_id);
+  if (!repeat) {
+    owner->DeleteTimer(timer_id);
   }
 }
