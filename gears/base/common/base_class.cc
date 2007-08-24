@@ -183,7 +183,6 @@ JsParamFetcher::JsParamFetcher(GearsBaseClass *obj) {
       nr = xpc_->GetCurrentNativeCallContext(getter_AddRefs(ncc_));
       if (ncc_ && NS_SUCCEEDED(nr)) {
         ncc_->GetJSContext(&js_context_);
-        assert(js_context_ == obj->EnvPageJsContext());
         PRUint32 argc;
         ncc_->GetArgc(&argc);
         js_argc_ = static_cast<int>(argc);
