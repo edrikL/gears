@@ -56,7 +56,7 @@ endif
 
 MAKEFLAGS = --no-print-directory
 
-CPPFLAGS = -I.. -I$(OUTDIR)/$(ARCH)
+CPPFLAGS = -I.. -I$(OUTDIR)/$(OS)-$(ARCH)
 
 ifeq ($(OS),win32)
 # Breakpad assumes it is in the include path
@@ -230,7 +230,7 @@ MIDLFLAGS = $(CPPFLAGS) -env win32 -Oicf -tlb "$(@D)/$*.tlb" -h "$(@D)/$*.h" -ii
 RC = rc
 RCFLAGS_dbg = /DDEBUG=1
 RCFLAGS_opt = /DNDEBUG=1
-RCFLAGS = $(RCFLAGS_$(MODE)) /d "_UNICODE" /d "UNICODE" /i $(OUTDIR)/$(ARCH) /l 0x409 /fo"$(@D)/$*.res"
+RCFLAGS = $(RCFLAGS_$(MODE)) /d "_UNICODE" /d "UNICODE" /i $(OUTDIR)/$(OS)-$(ARCH) /l 0x409 /fo"$(@D)/$*.res"
 endif
 
 # This is a tool that helps with MSI development.

@@ -30,7 +30,7 @@
 #     instead of built-in mkdir command.  (Running mkdir.exe without
 #     quotes creates a directory named '.exe'!!)
 
-OUTDIR = bin-$(MODE)/$(OS)
+OUTDIR = bin-$(MODE)
 
 # SQLITE_OUTDIR and THIRD_PARTY_OUTDIR are separate from COMMON_OUTDIR
 # because we want different build flags for them, and flags are set per
@@ -38,9 +38,9 @@ OUTDIR = bin-$(MODE)/$(OS)
 #
 # INSTALLERS_OUTDIR doesn't include $(ARCH) because OSes that support
 # multiple CPU architectures (namely, OSX) have merged install packages.
-COMMON_OUTDIR	   = $(OUTDIR)/$(ARCH)/common
-FF_OUTDIR	   = $(OUTDIR)/$(ARCH)/ff
-IE_OUTDIR	   = $(OUTDIR)/$(ARCH)/ie
+COMMON_OUTDIR	   = $(OUTDIR)/$(OS)-$(ARCH)/common
+FF_OUTDIR	   = $(OUTDIR)/$(OS)-$(ARCH)/ff
+IE_OUTDIR	   = $(OUTDIR)/$(OS)-$(ARCH)/ie
 SQLITE_OUTDIR	   = $(COMMON_OUTDIR)/sqlite
 THIRD_PARTY_OUTDIR = $(COMMON_OUTDIR)/third_party
 INSTALLERS_OUTDIR  = $(OUTDIR)/installers
@@ -316,10 +316,10 @@ endif
 else
     # For OSX, create a universal binary by combining the ppc and i386 versions
 	/usr/bin/lipo -output $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(notdir $(FF_MODULE_DLL)) -create \
-		$(OUTDIR)/i386/ff/$(notdir $(FF_MODULE_DLL)) \
-		$(OUTDIR)/ppc/ff/$(notdir $(FF_MODULE_DLL))
+		$(OUTDIR)/$(OS)-i386/ff/$(notdir $(FF_MODULE_DLL)) \
+		$(OUTDIR)/$(OS)-ppc/ff/$(notdir $(FF_MODULE_DLL))
     # And copy any xpt file to the output dir. (The i386 and ppc xpt files are identical.)
-	cp $(OUTDIR)/i386/ff/$(notdir $(FF_MODULE_TYPELIB)) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
+	cp $(OUTDIR)/$(OS)-i386/ff/$(notdir $(FF_MODULE_TYPELIB)) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 endif
     # Mark files writeable to allow .xpi rebuilds
 	chmod -R 777 $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/*
