@@ -33,6 +33,7 @@
 #include "ff/genfiles/httprequest.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string16.h"
@@ -97,20 +98,21 @@ class GearsHttpRequest
   nsCOMPtr<nsIEventQueue> apartment_event_queue_;
   nsCOMPtr<nsIEventQueue> ui_event_queue_;
   bool content_type_header_was_set_;
-  // TODO(michaeln): abort pending requests on unload
-  // scoped_ptr<HtmlEventMonitor> page_unload_monitor_;
+  bool page_is_unloaded_;
+  scoped_ptr<HtmlEventMonitor> page_unload_monitor_;
 
   bool ResolveUrl(const char16 *url, std::string16 *resolved_url,
                   std::string16 *exception_message);
   virtual void ReadyStateChanged(HttpRequest *source);
   void CreateRequest();
-  void ReleaseRequest();
+  void RemoveRequest();
   bool IsUninitialized();  // ready_state 0
   bool IsOpen();           // ready_state 1
   bool IsSent();           // ready_state 2
   bool IsInteractive();    // ready_state 3
   bool IsComplete();       // ready_state 4
 
+  static void OnPageUnload(void* self);
 
   // Initiating HTTP requests in Firefox can only be performed from the
   // main ui thread. When an instance of this class is created on

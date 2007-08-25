@@ -190,6 +190,7 @@ STDMETHODIMP GearsHttpRequest::send(
 
 STDMETHODIMP GearsHttpRequest::abort() {
   if (request_) {
+    request_->SetOnReadyStateChange(NULL);
     request_->Abort();
     ReleaseRequest();
   }
