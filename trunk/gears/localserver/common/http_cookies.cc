@@ -32,7 +32,7 @@
 // Browser-independent code
 //------------------------------------------------------------------------------
 
-const std::string16 kNegatedRequiredCookieValue(STRING16(L";none;"));
+const std::string16 kNegatedRequiredCookieValue(STRING16(L";NONE;"));
 
 static const std::string16 kCookieDelimiter(STRING16(L";"));
 
