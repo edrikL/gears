@@ -117,9 +117,8 @@ class HttpHandler
   static void SetBypassCache();
 
   HttpHandler();
-#ifdef DEBUG
   ~HttpHandler();
-#endif
+
   HRESULT FinalConstruct();
 
   // This class implements all of the interfaces supported by an

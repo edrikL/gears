@@ -260,6 +260,7 @@ IE_CPPSRCS	+= \
 		html_event_monitor.cc \
 		html_event_monitor_ie.cc \
 		http_utils.cc \
+		ie_version.cc \
 		js_runner_ie.cc \
 		js_runner_utils.cc \
 		module.cc \
