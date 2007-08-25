@@ -34,6 +34,7 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
+#include "gears/base/firefox/dom_utils.h"
 #include "gears/localserver/common/http_constants.h"
 
 // Returns true if the currently executing thread is the main UI thread,
@@ -68,10 +69,11 @@ static const char16 *kNotInteractiveError =
 
 GearsHttpRequest::GearsHttpRequest()
     : request_(NULL), apartment_thread_(PR_GetCurrentThread()),
-      content_type_header_was_set_(false) {
+      content_type_header_was_set_(false), page_is_unloaded_(false) {
 }
 
 GearsHttpRequest::~GearsHttpRequest() {
+  assert(!request_);
 }
 
 //------------------------------------------------------------------------------
@@ -248,6 +250,25 @@ NS_IMETHODIMP GearsHttpRequest::Send() {
     }
   }
 
+  if (page_is_unloaded_) {
+    // We silently fail for this particular error condition to prevent callers
+    // from detecting errors and making noises after the page has been unloaded
+    return true;
+  }
+
+  if (!EnvIsWorker() && !page_unload_monitor_.get()) {
+    // TODO(michaeln): Do this for workers too.
+    // If we haven't already done so, we attach a handler to the OnUnload
+    // event so we can abort request when the page is unloaded.
+    page_unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
+                                                    OnPageUnload, this));
+    nsCOMPtr<nsIDOMEventTarget> event_source;
+    if (NS_SUCCEEDED(DOMUtils::GetWindowEventTarget(
+                                   getter_AddRefs(event_source)))) {
+      page_unload_monitor_->Start(event_source);
+    }
+  }
+
   if (!CallSendOnUiThread()) {
     response_info_.reset(NULL);
     RETURN_EXCEPTION(kInternalError);
@@ -273,7 +294,7 @@ void GearsHttpRequest::OnSendCall() {
                            true);  // async
   if (!ok) {
     response_info_->pending_ready_state = HttpRequest::COMPLETE;
-    ReleaseRequest();
+    RemoveRequest();
     CallReadyStateChangedOnApartmentThread();
     return;
   }
@@ -298,7 +319,7 @@ void GearsHttpRequest::OnSendCall() {
   
   if (!ok) {
     response_info_->pending_ready_state = HttpRequest::COMPLETE;
-    ReleaseRequest();
+    RemoveRequest();
     CallReadyStateChangedOnApartmentThread();
     return;
   }
@@ -315,7 +336,12 @@ NS_IMETHODIMP GearsHttpRequest::Abort() {
 }
 
 bool GearsHttpRequest::CallAbortOnUiThread() {
-  return CallAsync(ui_event_queue_, kAbort) == NS_OK;
+  if (IsUiThread()) {
+    OnAbortCall();
+    return true;
+  } else {
+    return CallAsync(ui_event_queue_, kAbort) == NS_OK;
+  }
 }
 
 void GearsHttpRequest::OnAbortCall() {
@@ -324,8 +350,9 @@ void GearsHttpRequest::OnAbortCall() {
   if (request_) {
     request_info_.reset(NULL);
     response_info_.reset(NULL);
+    request_->SetOnReadyStateChange(NULL);
     request_->Abort();
-    ReleaseRequest();
+    RemoveRequest();
   }
 }
 
@@ -477,7 +504,7 @@ void GearsHttpRequest::ReadyStateChanged(HttpRequest *source) {
     }
     if (state == HttpRequest::COMPLETE) {
       source->GetResponseBodyAsText(&response_info_->response_text);
-      ReleaseRequest();
+      RemoveRequest();
     }
     CallReadyStateChangedOnApartmentThread();
   }
@@ -511,23 +538,25 @@ void GearsHttpRequest::OnReadyStateChangedCall() {
 
 
 //------------------------------------------------------------------------------
-// CreateRequest, ReleaseRequest
+// CreateRequest, RemoveRequest
 //------------------------------------------------------------------------------
 
 void GearsHttpRequest::CreateRequest() {
   assert(IsUiThread());
-  ReleaseRequest();
+  RemoveRequest();
   request_ = HttpRequest::Create();
   request_->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
   request_->SetRedirectBehavior(HttpRequest::FOLLOW_WITHIN_ORIGIN);
+  this->AddRef();
 }
 
-void GearsHttpRequest::ReleaseRequest() {
+void GearsHttpRequest::RemoveRequest() {
   assert(IsUiThread());
   if (request_) {
     request_->SetOnReadyStateChange(NULL);
     request_->ReleaseReference();
     request_ = NULL;
+    this->Release();
   }
 }
 
@@ -691,4 +720,11 @@ GearsHttpRequest::AsyncCall_EventHandlerFunc(AsyncCallEvent *event) {
 void PR_CALLBACK
 GearsHttpRequest::AsyncCall_EventCleanupFunc(AsyncCallEvent *event) {
   delete event;
+}
+
+
+// static
+void GearsHttpRequest::OnPageUnload(void *self) {
+  (reinterpret_cast<GearsHttpRequest*>(self))->page_is_unloaded_ = true;
+  (reinterpret_cast<GearsHttpRequest*>(self))->Abort();
 }
