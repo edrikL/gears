@@ -363,6 +363,9 @@ HRESULT GearsLocalServer::CheckLocalServerParameters(
       RETURN_EXCEPTION(STRING16(L"The required_cookie parameter must be a "
                                 L"string."));
     }
+    // TODO(michaeln): validate this parameter value, parse the name & value,
+    // name must not be empty, value must not contain ';' unless its the
+    // kNegatedRequiredCookieValue. Ditto for firefox.
     required_cookie_bstr = required_cookie->bstrVal;
   }
 
