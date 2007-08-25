@@ -85,6 +85,7 @@ in the background, without blocking the main page's script execution.
   <ol class="toc">
   <li><a href="#overview">Overview</a>
     <ol>
+    <li><a href="#example">Example</a>
     <li><a href="#isolation">Code and data isolation</a>
     <li><a href="#limitations">Limitations</a>
     <li><a href="#typical_use">Usage pattern</a>
@@ -103,6 +104,23 @@ runs operations in the background, without blocking the UI.
 Scripts executing in the WorkerPool will not trigger the browser's
 "unresponsive script" dialog.
 
+
+<h3 id="example">Example</h3>
+<pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
+&lt;script type="text/javascript"&gt;
+var workerPool = google.gears.factory.create("beta.workerpool", "1.0");
+
+workerPool.onmessage = function(message, sender) {
+  alert("Received message from worker " + sender + ": " + message);
+};
+
+var childWorkerId = workerPool.createWorker(
+  "google.gears.workerPool.onmessage = function(body, sender) {\n" +
+  "  google.gears.workerPool.sendMessage('RECEIVED: ' + body, sender);\n" +
+  "}");
+
+workerPool.sendMessage("hello, world!", childWorkerId);
+&lt;/script&gt;</code></pre>
 
 <a name="isolation" id="isolation"></a>
 <h3>Code and data isolation</h3>
@@ -195,22 +213,16 @@ common ways:
 <a name="workerpool_class" id="workerpool_class"></a>
 <h2>WorkerPool class</h2>
 
-<pre><code>callback <b>onmessage</b>(messageString, srcWorkerId)
+<pre><code>callback <b>onmessage</b>(messageBody, srcWorkerId)
+callback <b>onerror</b>(errorMessage, srcWorkerId)
 int  <b>createWorker</b>(fullScript)
-void <b>sendMessage</b>(messageString, destWorkerId)</code></pre>
+void <b>sendMessage</b>(messageBody, destWorkerId)</code></pre>
 <br>
 
-<p>To create a WorkerPool object, use the Gears Factory as follows:</p>
-<pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
-&lt;script type="text/javascript"&gt;
-var workerPool = google.gears.factory.create('beta.workerpool', '1.1');
-&lt;/script&gt;</code></pre>
-
-
-<h3>Event Handler </h3>
+<h3>Event Handlers</h3>
 <table>
   <tr class="odd">
-    <th colspan="2"><div align="left"><code>callback onmessage(messageString, srcWorkerId)</code></div></th>
+    <th colspan="2"><div align="left"><code>callback onmessage(messageBody, srcWorkerId)</code></div></th>
   </tr>
   <tr class="odd">
     <td>Description:</td>
@@ -218,9 +230,32 @@ var workerPool = google.gears.factory.create('beta.workerpool', '1.1');
   </tr>
   <tr class="odd">
     <td width="113">Parameters:</td>
-    <td width="489" class="odd"><span class="code">messageString
-                                       </span>- the message to send<span class="code"> <br />
-                                       srcWorkerId - </span>ID of the source worker
+    <td width="489" class="odd">
+      <span class="code">messageString</span>
+      - the message to send<br>
+      <span class="code">srcWorkerId</span>
+      - ID of the source worker
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr class="odd">
+    <th colspan="2"><div align="left"><code>callback onerror(errorMessage, srcWorkerId)</code></div></th>
+  </tr>
+  <tr class="odd">
+    <td>Description:</td>
+    <td class="odd">Optional, and can only be set on the parent worker. If 
+    specified, this function will be called when an error occurs in any 
+    child worker.</td>
+  </tr>
+  <tr class="odd">
+    <td width="113">Parameters:</td>
+    <td width="489" class="odd">
+      <span class="code">errorMessage</span>
+      - the error that occurred<br>
+      <span class="code">srcWorkerId</span>
+      - ID of the worker that caused the error
     </td>
   </tr>
 </table>
@@ -238,10 +273,6 @@ var workerPool = google.gears.factory.create('beta.workerpool', '1.1');
     <td>Parameters:</td>
     <td class="odd"><span class="code">fullScript</span><span class="code"> <br />
     </span></td>
-  </tr>
-  <tr class="odd">
-    <td>Exceptions:</td>
-    <td class="" >    </td>
   </tr>
   <tr class="odd">
     <td>Description:</td>
@@ -264,7 +295,7 @@ var workerPool = google.gears.factory.create('beta.workerpool', '1.1');
 </table>
 <table>
   <tr class="odd">
-    <th colspan="2"><code>void sendMessage(messageString, destWorkerId)</code></th>
+    <th colspan="2"><code>void sendMessage(messageBody, destWorkerId)</code></th>
   </tr>
   <tr class="odd">
     <td width="113">Return value: </td>
@@ -273,19 +304,15 @@ var workerPool = google.gears.factory.create('beta.workerpool', '1.1');
   <tr class="odd">
     <td>Parameters:</td>
     <td class="odd">
-      <span class="code">messageString</span>- the message to send
+      <span class="code">messageBody</span>- the message to send
       <br />
       <span class="code">destWorkerId</span> - ID of the destination worker
     </td>
   </tr>
   <tr class="odd">
-    <td>Exceptions:</td>
-    <td class="" ></td>
-  </tr>
-  <tr class="odd">
     <td>Description:</td>
     <td class="odd">
-      <p>Sends <code>messageString</code> to the  <span name="st">worker specified by <span class="code">destWorkerId</span> </span>.
+      <p>Sends <code>messageBody</code> to the  <span name="st">worker specified by <span class="code">destWorkerId</span> </span>.
       <p>Messages must be strings.
       <p>Messages sent from worker 1 to worker 2 in a particular order will be received in the same order.</p>
       <p>Messages can be sent and received only between members of the same WorkerPool. </p></td>
