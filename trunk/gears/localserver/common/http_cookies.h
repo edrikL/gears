@@ -44,7 +44,7 @@
 #include <map>
 #include "gears/base/common/string16.h"
 
-const char16 kNegatedCookiePrefix = '!';
+extern const std::string16 kNegatedRequiredCookieValue;
 
 class CookieMap;
 
@@ -109,7 +109,7 @@ class CookieMap : public std::map<std::string16, std::string16> {
   // of cookie with a particular name.
   // "foo=bar" --> a cookie name "foo" must have the value "bar"
   // "foo" | "foo=" --> "foo" must be present but have an empty value
-  // "!foo" --> the collection must not contain a cookie for "foo" of any value
+  // "foo=;none;" --> the collection must not contain a cookie for "foo"
   bool HasLocalServerRequiredCookie(const std::string16 &required_cookie);
 };
 
