@@ -32,6 +32,8 @@
 // Browser-independent code
 //------------------------------------------------------------------------------
 
+const std::string16 kNegatedRequiredCookieValue(STRING16(L";none;"));
+
 static const std::string16 kCookieDelimiter(STRING16(L";"));
 
 void ParseCookieString(const std::string16 &cookies, CookieMap *map) {
@@ -91,8 +93,8 @@ bool CookieMap::HasLocalServerRequiredCookie(
   if (name.empty())
     return false;
 
-  return HasSpecificCookie(name, value) ||
-         (name[0] == kNegatedCookiePrefix && !HasCookie(&name[1]));
+  return (value == kNegatedRequiredCookieValue)
+                       ? !HasCookie(name) : HasSpecificCookie(name, value);
 }
 
 void ParseCookieNameAndValue(const std::string16 &name_and_value, 

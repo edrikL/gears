@@ -322,15 +322,19 @@ bool AsyncTask::OnStartHttpGet() {
     return false;
   }
 
-  if (params_->required_cookie && params_->required_cookie[0] && 
-      params_->required_cookie[0] != kNegatedCookiePrefix) {
-    CookieMap cookie_map;
-    cookie_map.LoadMapForUrl(params_->full_url);
-    if (!cookie_map.HasLocalServerRequiredCookie(params_->required_cookie)) {
-      if (params_->error_message) {
-        *(params_->error_message) = kCookieRequiredErrorMessage;
+  if (params_->required_cookie && params_->required_cookie[0]) {
+    std::string16 required_cookie_str(params_->required_cookie);
+    std::string16 name, value;
+    ParseCookieNameAndValue(required_cookie_str, &name, &value);
+    if (value != kNegatedRequiredCookieValue) {
+      CookieMap cookie_map;
+      cookie_map.LoadMapForUrl(params_->full_url);
+      if (!cookie_map.HasLocalServerRequiredCookie(required_cookie_str)) {
+        if (params_->error_message) {
+          *(params_->error_message) = kCookieRequiredErrorMessage;
+        }
+        return false;
       }
-      return false;
     }
   }
 
