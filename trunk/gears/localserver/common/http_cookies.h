@@ -44,6 +44,8 @@
 #include <map>
 #include "gears/base/common/string16.h"
 
+const char16 kNegatedCookiePrefix = '!';
+
 class CookieMap;
 
 // Retrieves the cookies for the specified URL. Cookies are represented as
@@ -57,13 +59,6 @@ class CookieMap;
 // that proxied method call returns. It is best to arrange for this
 // function to be called on the main thread in Firefox.
 bool GetCookieString(const char16 *url, std::string16 *cookies_out);
-
-// Returns true if the cookies for 'url' contains the 'required_cookie'
-// The required cookie string can be in one of two forms:
-//  1) "name=value" - returns true if the first cookie having 'name' has
-//                    the desired 'value'
-//  2) "name" - returns true if the first cookie having 'name' has no value
-bool IsCookiePresent(const char16 *url, const char16 *required_cookie);
 
 // Parses a cookie string, as returned by GetCookieString, populating
 // map with an entry for each value. If a cookie in the string does not
@@ -88,6 +83,12 @@ void ParseCookieNameAndValue(const std::string16 &name_and_value,
 // A collection of cookie name and optional value pairs
 class CookieMap : public std::map<std::string16, std::string16> {
  public:
+  // Retrieves the cookies for the specified URL and populates the
+  // map with an entry for each value. Previous values in the map
+  // are cleared prior to loading the new values. If the cookie string
+  // cannot be retrieved, returns false and the map is not modified.
+  bool LoadMapForUrl(const char16 *url);
+
   // Retrieves the value of the cookie named 'cookie_name'. If the cookie
   // is present but does not have a value, the value string will be empty.
   // Returns true if the cookie is present.
@@ -101,6 +102,15 @@ class CookieMap : public std::map<std::string16, std::string16> {
   // value 'cookie_value'
   bool HasSpecificCookie(const std::string16 &cookie_name,
                          const std::string16 &cookie_value);
+
+  // Returns true if the 'requiredCookie' attribute of a resource store
+  // is satisfied by the contents of this CookieMap. The 'requiredCookie'
+  // can express either a particular cookie name/value pair, or the absence
+  // of cookie with a particular name.
+  // "foo=bar" --> a cookie name "foo" must have the value "bar"
+  // "foo" | "foo=" --> "foo" must be present but have an empty value
+  // "!foo" --> the collection must not contain a cookie for "foo" of any value
+  bool HasLocalServerRequiredCookie(const std::string16 &required_cookie);
 };
 
 #ifdef DEBUG

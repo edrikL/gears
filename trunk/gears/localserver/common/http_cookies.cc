@@ -34,30 +34,6 @@
 
 static const std::string16 kCookieDelimiter(STRING16(L";"));
 
-bool IsCookiePresent(const char16 *url, const char16 *required_cookie) {
-  assert(url && url[0]);
-  assert(required_cookie && required_cookie[0]);
-
-  std::string16 cookies_string;
-  if (!GetCookieString(url, &cookies_string))
-    return false;
-
-  std::string16 required_name, required_value;
-  ParseCookieNameAndValue(std::string16(required_cookie),
-                          &required_name, &required_value);
-  
-  std::vector<std::string16> tokens;
-  Tokenize(cookies_string, kCookieDelimiter, &tokens);
-  for (int i = 0; i < static_cast<int>(tokens.size()); ++i) {
-    std::string16 name, value;
-    ParseCookieNameAndValue(tokens[i], &name, &value);
-    if (name == required_name) {
-      return value == required_value;
-    }
-  }
-  return false;
-}
-
 void ParseCookieString(const std::string16 &cookies, CookieMap *map) {
   map->clear();
   std::vector<std::string16> tokens;
@@ -73,6 +49,14 @@ void ParseCookieString(const std::string16 &cookies, CookieMap *map) {
       }
     }
   }
+}
+
+bool CookieMap::LoadMapForUrl(const char16 *url) {
+  std::string16 cookies_string;
+  if (!GetCookieString(url, &cookies_string))
+    return false;
+  ParseCookieString(cookies_string, this);
+  return true;
 }
 
 bool CookieMap::GetCookie(const std::string16 &cookie_name,
@@ -95,6 +79,20 @@ bool CookieMap::HasSpecificCookie(const std::string16 &cookie_name,
   if (found == end())
     return false;
   return cookie_value == found->second;
+}
+
+bool CookieMap::HasLocalServerRequiredCookie(
+                    const std::string16 &required_cookie) {
+  if (required_cookie.empty())
+    return true;
+
+  std::string16 name, value;
+  ParseCookieNameAndValue(required_cookie, &name, &value);
+  if (name.empty())
+    return false;
+
+  return HasSpecificCookie(name, value) ||
+         (name[0] == kNegatedCookiePrefix && !HasCookie(&name[1]));
 }
 
 void ParseCookieNameAndValue(const std::string16 &name_and_value, 
