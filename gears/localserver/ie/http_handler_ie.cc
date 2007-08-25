@@ -23,13 +23,15 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <set>
 #include <windows.h>
 #include <wininet.h>
+#include "gears/localserver/ie/http_handler_ie.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/ie/activex_utils.h"
+#include "gears/base/ie/ie_version.h"
 #include "gears/localserver/common/http_constants.h"
-#include "gears/localserver/ie/http_handler_ie.h"
 #include "gears/localserver/ie/urlmon_utils.h"
 
 // NOTE: Undocumented voodoo to kick IE into using IInternetProtocolInfo
@@ -218,6 +220,77 @@ STDMETHODIMP PassthruSink::ReportProgress(
   return BaseClass::ReportProgress(ulStatusCode, szStatusText);
 }
 
+
+//------------------------------------------------------------------------------
+// ActiveHandlers
+//
+// This class is here to workaround a crash in IE6SP2 when the browser process
+// is exiting. In some circumstances, HttpHandlers are not terminated as they
+// should be. Some time after our DLL is unloaded during shutdown, IE
+// invokes methods on these orphaned handlers resulting in a crash.
+// See http://code.google.com/p/google-gears/issues/detail?id=182
+//
+// To avoid this problem, we maintain a collection of the active HttpHandlers
+// when running in IE6 or earlier. When our DLL is unloaded, we explicitly
+// Terminate() any orphaned handlers. This prevents the crash.
+// TODO(michaeln): If and when we find and fix the source of this bug,
+// remove this workaround code.
+//------------------------------------------------------------------------------
+
+class ActiveHandlers : public std::set<HttpHandler*> {
+ public:
+  ActiveHandlers()
+      : has_determined_ie_version_(false), is_at_least_version_7_(false) {}
+
+  virtual ~ActiveHandlers() {
+    while (HttpHandler* handler = GetAndRemoveFirstHandler()) {
+      handler->Terminate(0);
+      handler->Release();
+    }
+  }
+  
+  void Add(HttpHandler *handler) {
+    assert(handler);
+    if (!IsIEAtLeastVersion7()) {
+      MutexLock lock(&mutex_);
+      insert(handler);
+    }
+  }
+
+  void Remove(HttpHandler *handler) {
+    assert(handler);
+    if (!IsIEAtLeastVersion7()) {
+      MutexLock lock(&mutex_);
+      erase(handler);
+    }
+  }
+
+ private:
+  HttpHandler *GetAndRemoveFirstHandler() {
+    MutexLock lock(&mutex_);
+    if (empty()) return NULL;
+    HttpHandler *handler = *begin();
+    erase(handler);
+    handler->AddRef();  // released by our caller
+    return handler;
+  }
+
+  bool IsIEAtLeastVersion7() {
+    if (!has_determined_ie_version_) {
+      MutexLock lock(&mutex_);
+      is_at_least_version_7_ = IsIEAtLeastVersion(7, 0, 0, 0);
+      has_determined_ie_version_ = true;
+    }
+    return is_at_least_version_7_;
+  }
+
+  Mutex mutex_;
+  bool has_determined_ie_version_;
+  bool is_at_least_version_7_;
+};
+
+static ActiveHandlers g_active_handlers;
+
 //------------------------------------------------------------------------------
 // class HttpHandler
 //------------------------------------------------------------------------------
@@ -229,11 +302,10 @@ HttpHandler::HttpHandler() :
     read_pointer_(0), passthru_sink_(NULL) {
 }
 
-#ifdef DEBUG
 HttpHandler::~HttpHandler() {
-  // ATLTRACE(_T("HttpHandler deleted\n"));
+  ATLTRACE(_T("~HttpHandler\n"));
+  g_active_handlers.Remove(this);   // okay to Remove() multiple times from set
 }
-#endif
 
 HRESULT HttpHandler::FinalConstruct() {
   passthru_sink_ = PassthruStartPolicy::GetSink(this);
@@ -256,6 +328,8 @@ STDMETHODIMP HttpHandler::StartEx(
   ATLTRACE(L"HttpHandler::StartEx( %s )\n", uri_bstr.m_str);
   rv = StartImpl(uri_bstr.m_str, protocol_sink, bind_info, flags, reserved);
   if (rv == INET_E_USE_DEFAULT_PROTOCOLHANDLER) {
+    protocol_sink_.Release();
+    http_negotiate_.Release();
     if (is_passingthru_) {
       return BaseClass::StartEx(uri, protocol_sink, bind_info, flags, reserved);
     } else {
@@ -276,6 +350,8 @@ STDMETHODIMP HttpHandler::Start(
   ATLTRACE(L"HttpHandler::Start( %s )\n", url);
   HRESULT rv = StartImpl(url, protocol_sink, bind_info, flags, reserved);
   if (rv == INET_E_USE_DEFAULT_PROTOCOLHANDLER) {
+    protocol_sink_.Release();
+    http_negotiate_.Release();
     if (is_passingthru_) {
       return BaseClass::Start(url, protocol_sink, bind_info, flags, reserved);
     } else {
@@ -319,6 +395,7 @@ STDMETHODIMP HttpHandler::Terminate(
   ATLTRACE(_T("HttpHandler::Terminate()\n"));
   protocol_sink_.Release();
   http_negotiate_.Release();
+  g_active_handlers.Remove(this);
   if (is_passingthru_) {
     return BaseClass::Terminate(options);
   } else if (is_handling_) {
@@ -671,6 +748,8 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
     ATLASSERT(bind_info);
     return E_INVALIDARG;
   }
+
+  g_active_handlers.Add(this);
 
   protocol_sink_ = protocol_sink;
 
