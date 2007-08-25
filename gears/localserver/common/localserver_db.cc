@@ -524,15 +524,15 @@ bool WebCacheDB::Service(const char16 *url,
   // Iterate looking for an entry with no cookie required or with the required
   // cookie present.
 
-  bool got_cookie_string = false; // we defer reading cookies until needed
-  std::string16 cookie_string;
+  bool loaded_cookie_map = false; // we defer reading cookies until needed
+  bool loaded_cookie_map_ok = false;
   CookieMap cookie_map;
 
   std::string16 possible_redirect;
   int64 possible_ignored_query_payload_id = kInvalidID;
   while (stmt.step() == SQLITE_ROW) {
     const int64 server_id = stmt.column_int64(0);
-    const char16 *required_cookie = stmt.column_text16_safe(1);
+    const std::string16 required_cookie(stmt.column_text16_safe(1));
     const ServerType server_type = static_cast<ServerType>(stmt.column_int(2));
     const char16 *redirect = stmt.column_text16_safe(3);
     const bool ignore_query = (stmt.column_int(4) == 1);
@@ -540,19 +540,25 @@ bool WebCacheDB::Service(const char16 *url,
     
     std::string16 cookie_name;
     std::string16 cookie_value;
-    bool is_cookie_required = required_cookie && required_cookie[0];
+    bool is_cookie_required = !required_cookie.empty();
+    bool has_required_cookie = false;
     if (is_cookie_required) {
-      if (!got_cookie_string) {
-        got_cookie_string = true;
-        GetCookieString(url, &cookie_string);
-        ParseCookieString(cookie_string, &cookie_map);
+      if (!loaded_cookie_map) {
+        loaded_cookie_map = true;
+        loaded_cookie_map_ok = cookie_map.LoadMapForUrl(url);
       }
-      ParseCookieNameAndValue(std::string16(required_cookie),
-                              &cookie_name, &cookie_value);
+
+      if (!loaded_cookie_map_ok) {
+        LOG(("WebCacheDB.Service failed to read cookies\n"));
+        continue;
+      }
+
+      ParseCookieNameAndValue(required_cookie, &cookie_name, &cookie_value);
+      has_required_cookie = cookie_map.HasLocalServerRequiredCookie(
+                                           required_cookie);
     }
 
-    if (!is_cookie_required || cookie_map.HasSpecificCookie(cookie_name,
-                                                            cookie_value)) {
+    if (!is_cookie_required || has_required_cookie) {
       if (server_type == MANAGED_RESOURCE_STORE) {
         // We found a match from a managed store, try to update it
         // Note that a failure does not prevent servicing the request
@@ -568,7 +574,7 @@ bool WebCacheDB::Service(const char16 *url,
       }
     }
 
-    if (redirect && redirect[0] && !cookie_map.HasCookie(cookie_name)) {
+    if (is_cookie_required && !has_required_cookie && redirect && redirect[0]) {
       if (!possible_redirect.empty() && (possible_redirect != redirect)) {
         LOG(("WebCacheDB.Service conflicting possible redirects\n"));
       }

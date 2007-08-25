@@ -322,8 +322,11 @@ bool AsyncTask::OnStartHttpGet() {
     return false;
   }
 
-  if (params_->required_cookie && params_->required_cookie[0]) {
-    if (!IsCookiePresent(params_->full_url, params_->required_cookie)) {
+  if (params_->required_cookie && params_->required_cookie[0] && 
+      params_->required_cookie[0] != kNegatedCookiePrefix) {
+    CookieMap cookie_map;
+    cookie_map.LoadMapForUrl(params_->full_url);
+    if (!cookie_map.HasLocalServerRequiredCookie(params_->required_cookie)) {
       if (params_->error_message) {
         *(params_->error_message) = kCookieRequiredErrorMessage;
       }
