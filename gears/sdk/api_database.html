@@ -68,7 +68,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <!-- ########## END SIDE NAVIGATION ########## -->
 
 
-
 <!-- ########## PAGE CONTENT ########## -->
 <div id="pagecontent">
 
@@ -85,6 +84,7 @@ database system.</p>
 <h3>Contents</h3>
 <ol class="toc">
   <li><a href="#overview">Overview</a></li>
+  <li><a href="#example">Example</a></li>
   <li><a href="#classes">Classes
     </a>
     <ol>
@@ -104,6 +104,31 @@ database system.</p>
 <p>SQL statements passed to <code>execute()</code> can and should use bind parameters (<code>?</code>) to prevent SQL injection attacks.  Read about <a href="security.html#database">database security</a> best practices on the Security page. </p>
 <h4>Permission from user </h4>
 <p>The database module stores persistent data on the user's disk.  It is important that your application request the user's explicit permission to do so, to prevent inadvertently storing data on an untrusted computer.</p>
+
+
+<a name="example"></a>
+<h2>Example</h2>
+
+
+<pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
+&lt;script type="text/javascript"&gt;
+var db = google.gears.factory.create('beta.database', '1.0');
+db.open('database-test');
+db.execute('create table if not exists Test' +
+           ' (Phrase text, Timestamp int)');
+db.execute('insert into Test values (?, ?)', ['Monkey!', new Date().getTime()]);
+var rs = db.execute('select * from Test order by Timestamp desc');
+
+while (rs.isValidRow()) {
+  alert(rs.field(0) + '@' + rs.field(1));
+  rs.next();
+}
+rs.close();
+&lt;/script&gt;
+</code></pre>
+
+
+
 <p>  <a name="classes" id="classes"></a>
 </p>
 <h2>Classes</h2>
@@ -132,12 +157,6 @@ database system.</p>
 <br>
 <a name="Database"></a>
 <h2>Database class</h2>
-
-<p>To create a Database object, use the Gears Factory as follows:</p>
-<pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
-&lt;script type="text/javascript"&gt;
-var db = google.gears.factory.create('beta.database', '1.0');
-&lt;/script&gt;</code></pre>
 
 <h3>Methods</h3>
 <table>
