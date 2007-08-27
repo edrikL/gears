@@ -76,6 +76,7 @@ resources locally, without a network connection.</p>
 <h3>Contents</h3>
 <ol class="toc">
   <li><a href="#overview">Overview</a></li>
+  <li><a href="#example">Example</a>
   <li><a href="#classes">Classes
     </a>
     <ol>
@@ -128,6 +129,30 @@ resources locally, without a network connection.</p>
   <p>To disable local serving of stored resources and force URLs to be served using the regular network connection, the application can set
   the store's <span class="code">enabled</span> attribute to false.</p>
   <p>&nbsp;</p>
+
+
+
+<a name="example"></a>
+<h2>Example</h2>
+
+
+<pre><code>&lt;html&gt;&lt;head&gt;&lt;/head&gt;&lt;body&gt;
+&lt;button onclick="store.capture(filesToCapture, captureCallback);"&gt;Capture&lt;/button&gt;
+&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
+&lt;script type="text/javascript"&gt;
+var filesToCapture = [
+  location.pathname,
+  'gears_init.js'
+];
+var localServer = google.gears.factory.create('beta.localserver', '1.1');
+var store = localServer.createStore('test-store');
+function captureCallback(url, success, captureId) {
+  alert(url + 'captured: ' + success ? 'success' : 'failure');
+}
+&lt;/script&gt;
+&lt;/html&gt;
+</code></pre>
+
 
   <a name="classes" id="classes"></a>  </p>
 

@@ -121,6 +121,24 @@ var childWorkerId = workerPool.createWorker(
 
 workerPool.sendMessage("hello, world!", childWorkerId);
 &lt;/script&gt;</code></pre>
+<h4>createWorkerFromUrl example</h4>
+<pre><code>&lt;!-- main.js --&gt;
+&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
+&lt;script type="text/javascript"&gt;
+var workerPool = google.gears.factory.create("beta.workerpool", "1.0");
+
+workerPool.onmessage = function(message, sender) {
+  alert("Received message from worker " + sender + ": " + message);
+};
+
+var childWorkerId = workerPool.createWorkerFromUrl('worker.js');
+
+workerPool.sendMessage("hello, world!", childWorkerId);
+&lt;/script&gt;</code></pre>
+<pre><code>// worker.js
+google.gears.workerPool.onmessage = function(body, sender) {
+  google.gears.workerPool.sendMessage('RECEIVED: ' + body, sender);
+}</code></pre>
 
 <a name="isolation" id="isolation"></a>
 <h3>Code and data isolation</h3>
