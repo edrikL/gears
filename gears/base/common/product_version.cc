@@ -30,20 +30,22 @@
 //     Initial release.
 DEFINE_MODULE_VERSION_VARIABLES(Database, 1, 0);
 // HttpRequest
-// 1.0 - (build 0.1.55 in 08/2007)
+// 1.0 - (build 0.1.56 in 08/2007)
 //     Initial release.
 DEFINE_MODULE_VERSION_VARIABLES(HttpRequest, 1, 0);
 // LocalServer
 // 1.0 - (build 0.1.47 in 05/2007)
 //     Initial release.
-DEFINE_MODULE_VERSION_VARIABLES(LocalServer, 1, 0);
+// 1.1 - (build 0.1.56 in 08/2007)
+//     requiredCookie param adds "myCookieName=;NONE;" support.
+DEFINE_MODULE_VERSION_VARIABLES(LocalServer, 1, 1);
 // Timer
-// 1.0 - (build 0.1.55 in 08/2007)
+// 1.0 - (build 0.1.56 in 08/2007)
 //     Initial release.
 DEFINE_MODULE_VERSION_VARIABLES(Timer, 1, 0);
 // WorkerPool
 // 1.0 - (build 0.1.47 in 05/2007)
 //     Initial release.
-// 1.1 - (build 0.1.55 in 08/2007)
+// 1.1 - (build 0.1.56 in 08/2007)
 //     createWorkerFromUrl; allowCrossOrigin; onerror; onmessage 3rd param.
 DEFINE_MODULE_VERSION_VARIABLES(WorkerPool, 1, 1);

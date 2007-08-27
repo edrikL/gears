@@ -98,7 +98,7 @@
     { title: "ManagedResourceStore Code Sample",
       points: [
         "<pre><span class='title'>myapp.js</span><br>" +
-          "var localserver = google.gears.factory.create('beta.localserver', '1.0');<br>" +
+          "var localserver = google.gears.factory.create('beta.localserver', '1.1');<br>" +
           "var store = localserver.createManagedStore('mystore');<br>" +
           "store.manifestUrl = 'http://myapp.com/offline-manifest.json';<br>" +
           "store.checkForUpdates();</pre>",
