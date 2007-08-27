@@ -33,7 +33,7 @@ function Gears() {
 
   this.db_ = this.factory_.create('beta.database', '1.0');
   this.localServer_ = 
-      this.factory_.create('beta.localserver', '1.0');
+      this.factory_.create('beta.localserver', '1.1');
 
   this.db_.open();
   try {

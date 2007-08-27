@@ -26,7 +26,7 @@
 // The online version
 function createManagedStore() {
   try {
-    var localServer = google.gears.factory.create('beta.localserver', '1.0');
+    var localServer = google.gears.factory.create('beta.localserver', '1.1');
   } catch (ex) {
     setError('Could not create local server: ' + ex.message);
     return;
