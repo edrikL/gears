@@ -573,7 +573,9 @@ bool WebCacheDB::Service(const char16 *url,
       }
     }
 
-    if (is_cookie_required && !has_required_cookie && redirect && redirect[0]) {
+    if (is_cookie_required && redirect && redirect[0] &&
+        (cookie_value != kNegatedRequiredCookieValue) && 
+        !cookie_map.HasCookie(cookie_name)) {
       if (!possible_redirect.empty() && (possible_redirect != redirect)) {
         LOG(("WebCacheDB.Service conflicting possible redirects\n"));
       }
