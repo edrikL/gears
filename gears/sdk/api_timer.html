@@ -136,22 +136,20 @@ void <b>clearInterval</b>(timerId)</code></pre>
     <th colspan="2"><div align="left"><code>setTimer(function, msecDelay)</code></div></th>
   </tr>
   <tr class="odd">
-    <td width="113">Return value: </td>
-    <td width="489">timer ID </td>
-  </tr>
-  <tr class="odd">
     <td>Parameters:</td>
     <td class="odd"><span class="code">function</span><span class="code"> <br />
       <span class="code">msecDelay</span><span class="code"> 
     </span></td>
   </tr>
   <tr class="odd">
+    <td width="113">Return value:</td>
+    <td width="489">The ID of the new timeout.</td>
+  </tr>
+  <tr class="odd">
     <td>Description:</td>
     <td class="odd">
       Creates a timeout that will call <span class="code">function</span> after
       <span class="code">msecDelay</span> milliseconds have elapsed.
-      <br><br>
-      Returns the ID of the new timeout.
       <br><br>
       Timer IDs are guaranteed to be unique values that are never reused
       within the same Timer.
@@ -163,22 +161,20 @@ void <b>clearInterval</b>(timerId)</code></pre>
     <th colspan="2"><div align="left"><code>setTimer(fullScript, msecDelay)</code></div></th>
   </tr>
   <tr class="odd">
-    <td width="113">Return value: </td>
-    <td width="489">timer ID </td>
-  </tr>
-  <tr class="odd">
     <td>Parameters:</td>
     <td class="odd"><span class="code">fullScript</span><span class="code"> <br />
       <span class="code">msecDelay</span><span class="code">
     </span></td>
   </tr>
   <tr class="odd">
+    <td width="113">Return value: </td>
+    <td width="489">The ID of the new timeout.</td>
+  </tr>
+  <tr class="odd">
     <td>Description:</td>
     <td class="odd">
       Creates a timeout that will evaluate <span class="code">fullScript</span>
       after <span class="code">msecDelay</span> milliseconds have elapsed.
-      <br><br>
-      Returns the ID of the new timeout.
       <br><br>
       Timer IDs are guaranteed to be unique values that are never reused
       within the same Timer.
@@ -190,14 +186,14 @@ void <b>clearInterval</b>(timerId)</code></pre>
     <th colspan="2"><div align="left"><code>setInterval(function, msecDelay)</code></div></th>
   </tr>
   <tr class="odd">
-    <td width="113">Return value: </td>
-    <td width="489">timer ID </td>
-  </tr>
-  <tr class="odd">
     <td>Parameters:</td>
     <td class="odd"><span class="code">function</span><span class="code"> <br />
       <span class="code">msecDelay</span><span class="code"> 
     </span></td>
+  </tr>
+  <tr class="odd">
+    <td width="113">Return value:</td>
+    <td width="489">The ID of the new interval.</td>
   </tr>
   <tr class="odd">
     <td>Description:</td>
@@ -206,8 +202,6 @@ void <b>clearInterval</b>(timerId)</code></pre>
       after every <span class="code">msecDelay</span> milliseconds have elapsed.
       It will continue to fire until you call clearInterval() with this
       interval's ID, or the page is unloaded.
-      <br><br>
-      Returns the ID of the new interval.
       <br><br>
       Timer IDs are guaranteed to be unique values that are never reused
       within the same Timer.
@@ -219,14 +213,14 @@ void <b>clearInterval</b>(timerId)</code></pre>
     <th colspan="2"><div align="left"><code>setInterval(fullScript, msecDelay)</code></div></th>
   </tr>
   <tr class="odd">
-    <td width="113">Return value: </td>
-    <td width="489">tiemr ID </td>
-  </tr>
-  <tr class="odd">
     <td>Parameters:</td>
     <td class="odd"><span class="code">fullScript</span><span class="code"> <br />
       <span class="code">msecDelay</span><span class="code"> 
     </span></td>
+  </tr>
+  <tr class="odd">
+    <td width="113">Return value:</td>
+    <td width="489">The ID of the new interval.</td>
   </tr>
   <tr class="odd">
     <td>Description:</td>
@@ -235,8 +229,6 @@ void <b>clearInterval</b>(timerId)</code></pre>
       after every <span class="code">msecDelay</span> milliseconds have elapsed.
       It will continue to fire until you call clearInterval() with this
       interval's ID, or the page is unloaded.
-      <br><br>
-      Returns the ID of the new interval.
       <br><br>
       Timer IDs are guaranteed to be unique values that are never reused
       within the same Timer.
@@ -248,18 +240,15 @@ void <b>clearInterval</b>(timerId)</code></pre>
     <th colspan="2"><div align="left"><code>clearTimeout(timeoutId)</code></div></th>
   </tr>
   <tr class="odd">
-    <td width="113">Return value: </td>
-    <td width="489">void </td>
-  </tr>
-  <tr class="odd">
     <td>Parameters:</td>
-    <td class="odd"><span class="code">timeoutId</span><span class="code"> <br />
-    </span></td>
+    <td class="odd"><span class="code">timeoutId</span>
+    - The ID of the timeout to remove.
+    </td>
   </tr>
   <tr class="odd">
     <td>Description:</td>
     <td class="odd">
-      Removes the timeout with the specified ID.  This works with timeouts
+      Works with timeouts
       created with either the <span class="code">fullScript</span> or
       <span class="code">function</span> version.
     </td>
@@ -270,21 +259,17 @@ void <b>clearInterval</b>(timerId)</code></pre>
     <th colspan="2"><div align="left"><code>clearInterval(intervalId)</code></div></th>
   </tr>
   <tr class="odd">
-    <td width="113">Return value: </td>
-    <td width="489">void </td>
-  </tr>
-  <tr class="odd">
     <td>Parameters:</td>
-    <td class="odd"><span class="code">intervalId</span><span class="code"> <br />
-    </span></td>
+    <td class="odd"><span class="code">intervalId</span>
+    - The ID of the interval to remove.
+    </td>
   </tr>
   <tr class="odd">
     <td>Description:</td>
     <td class="odd">
-      Removes the interval with the specified ID.  No future events will fire
-      from that interval.  This works with intervals created with either the
+      Works with intervals created with either the
       <span class="code">fullScript</span> or <span class="code">function</span>
-      version.
+      version.  No future events will fire from the given interval.  
     </td>
   </tr>
 </table>
