@@ -99,7 +99,20 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    variant <b>fieldByName</b>(fieldName)
    void    <b>close</b>()</code></pre>
 
-<br>
+<h3>HttpRequest module</h3>
+<p>Provides the ability to send HTTP requests in workers, as well as on the main page.</p>
+<pre><code><a href="api_httprequest.html">HttpRequest class</a>
+   void     <b>open</b>(method, url)
+   void     <b>setRequestHeader</b>(name, value)
+   void     <b>send</b>([postData])
+   void     <b>abort</b>()
+   string   <b>getResponseHeader</b>(name)
+   string   <b>getAllResponseHeaders</b>()
+   callback <b>onreadystatechange</b>
+   readonly attribute int <b>readyState</b>
+   readonly attribute string <b>responseText</b>
+   readonly attribute int    <b>status</b>
+   readonly attribute string <b>statusText</b> </code></pre>
 
 <h3>LocalServer module</h3>
 <p>Caches and serves your application's resources locally, making it possible to start a web application without a network connection. </p>
