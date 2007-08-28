@@ -78,8 +78,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <h1 id="page_title">HttpRequest Module API <span class="highlight">[New in <a href="index.html#relnotes">0.2</a>]</span></h1>
 
 <p>The HttpRequest module implements a subset of the
-   <a href="http://www.w3.org/TR/XMLHttpRequest/">W3C XmlHttpRequest spec</a>, 
-   and makes it available in both workers and the main HTML page.</p>
+   <a href="http://www.w3.org/TR/XMLHttpRequest/">W3C XmlHttpRequest
+   specification</a>, and makes it available in both workers and the
+   main HTML page.</p>
 
 <h3>Contents</h3>
 <ol class="toc">
@@ -97,7 +98,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <a name="example"></a><h2>Example</h2>
 
-<p>To send an HttpRequest request, use the Gears as follows:</p>
 <pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
 &lt;script type="text/javascript"&gt;
 var request = google.gears.factory.create('beta.httprequest', '1.0');

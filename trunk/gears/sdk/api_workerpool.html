@@ -84,8 +84,9 @@ in the background, without blocking the main page's script execution.
 
   <ol class="toc">
   <li><a href="#overview">Overview</a>
+  <li><a href="#example">Example</a>
+  <li><a href="#details">Details</a>
     <ol>
-    <li><a href="#example">Example</a>
     <li><a href="#isolation">Code and data isolation</a>
     <li><a href="#limitations">Limitations</a>
     <li><a href="#typical_use">Usage pattern</a>
@@ -95,8 +96,7 @@ in the background, without blocking the main page's script execution.
 
 
 
-<a name="overview" id="overview"></a>
-<h2>Overview</h2>
+<h2 id="overview">Overview</h2>
 
 <p>In web browsers a single time-intensive operation, such as I/O or
 heavy computation, can make the UI unresponsive.  The WorkerPool module
@@ -105,9 +105,11 @@ Scripts executing in the WorkerPool will not trigger the browser's
 "unresponsive script" dialog.
 
 
-<h3 id="example">Example</h3>
+<h2 id="example">Example</h2>
 
-<pre><code>// main.js
+<pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
+&lt;script type="text/javascript"&gt;
+// main.js
 var workerPool = google.gears.factory.create('beta.workerpool', '1.1');
 
 workerPool.onmessage = function(a, b, message) {
@@ -117,7 +119,7 @@ workerPool.onmessage = function(a, b, message) {
 var childWorkerId = workerPool.createWorkerFromUrl('worker.js');
 
 workerPool.sendMessage('Hello, world!', childWorkerId);
-</code></pre>
+&lt;/script&gt;</code></pre>
 
 <pre><code>// worker.js
 var wp = google.gears.workerPool;
@@ -125,8 +127,10 @@ wp.onmessage = function(a, b, message) {
   wp.sendMessage('Received: ' + message.text, message.sender);
 }</code></pre>
 
-<a name="isolation" id="isolation"></a>
-<h3>Code and data isolation</h3>
+
+<h2 id="details">Details</h2>
+
+<h3 id="isolation">Code and data isolation</h3>
 
 <p>The WorkerPool behaves like a collection of processes, rather than threads.
 <b>Workers do not share any execution state.</b>  Changing a variable in
@@ -138,8 +142,7 @@ strings. Workers can also pass richer data types, by first converting objects
 to strings using <a href="http://www.json.org/">JSON</a>.
 
 
-<a name="limitations" id="limitations"></a>
-<h3>Limitations</h3>
+<h3 id="limitations">Limitations</h3>
 
 <p>A created worker does not have access to the DOM; objects like
 <code>document</code> and <code>window</code> exist only on the main page.
@@ -152,8 +155,7 @@ the LocalServer file submitter, which requires the DOM.)  For other
 functionality, created workers can ask the main page to carry out requests.
 
 
-<a name="typical_use" id="typical_use"></a>
-<h3>Usage pattern</h3>
+<h3 id="typical_use">Usage pattern</h3>
 
 <p>To understand how to use the WorkerPool module, it is useful to look at
 a typical example.
@@ -214,8 +216,7 @@ common ways:
 
 
 
-<a name="workerpool_class" id="workerpool_class"></a>
-<h2>WorkerPool class</h2>
+<h2 id="workerpool_class">WorkerPool class</h2>
 
 <pre><code>callback <b>onmessage</b>(messageText, senderId, [messageObject:{text,sender,origin}])
 callback <b>onerror</b>(errorObject:{message}) <span class="highlight">[New in <a href="index.html#relnotes">0.2</a>]</span>

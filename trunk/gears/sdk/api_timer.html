@@ -93,8 +93,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 
-<a name="overview" id="overview"></a>
-<h2>Overview</h2>
+<h2 id="overview">Overview</h2>
 
 <p>Since workers don't have access to the window object, they also don't have
 access to the standard timer functionality.  The Timer module exposes similar
@@ -102,24 +101,17 @@ functionality that can be used both in the main page and in workers.  This
 allows code to be shared across both contexts.
 
 
-<a name="Example" id="example"></a>
-<h2>Example</h2>
+<h2 id="example">Example</h2>
 
-
-<p>
 <pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
 &lt;script type="text/javascript"&gt;
 var timer = google.gears.factory.create("beta.timer", "1.0");
-timer.setTimeout(function() {
-  alert("Hello, from the future!");
-}, 1000);
-&lt;/script&gt;
-</code></pre>
+timer.setTimeout(function() { alert("Hello, from the future!"); },
+                 1000);
+&lt;/script&gt;</code></pre>
 
 
-
-<a name="timer_class" id="timer_class"></a>
-<h2>Timer class</h2>
+<h2 id="timer_class">Timer class</h2>
 
 <pre><code>int  <b>setTimeout</b>(fullScript, msecDelay)
 int  <b>setTimeout</b>(function, msecDelay)
@@ -131,6 +123,7 @@ void <b>clearInterval</b>(timerId)</code></pre>
 
 
 <h3>Methods</h3>
+
 <table>
   <tr class="odd">
     <th colspan="2"><div align="left"><code>setTimer(function, msecDelay)</code></div></th>
