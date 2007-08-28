@@ -97,7 +97,7 @@ database system.</p>
       </li>
 </ol>
 
-<h2>Overview</h2>
+<h2 id="overview">Overview</h2>
 <p>The Database module is used to persistently store an application user's data on the user's computer.  Data is stored using the same-origin security policy, meaning that a web application cannot access data outside of its domain (see <a href="security.html#model">Security</a>).</p>
 <p>Data is stored and retrieved by executing SQL statements.  For information on the SQL syntax supported, see the SQLite document &quot;<a href="http://www.google.com/url?sa=D&amp;q=http://www.sqlite.org/lang.html">SQL as Understood By SQLite</a>&quot;, and also <a href="#sqlite_changes">local modifications to SQLite</a>, below.  Google Gears includes SQLite's <a href="#sqlite_fts">full-text search</a> extension fts2.</p>
 <h4>Security considerations</h4>
@@ -106,9 +106,7 @@ database system.</p>
 <p>The database module stores persistent data on the user's disk.  It is important that your application request the user's explicit permission to do so, to prevent inadvertently storing data on an untrusted computer.</p>
 
 
-<a name="example"></a>
-<h2>Example</h2>
-
+<h2 id="example">Example</h2>
 
 <pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
 &lt;script type="text/javascript"&gt;
@@ -124,14 +122,11 @@ while (rs.isValidRow()) {
   rs.next();
 }
 rs.close();
-&lt;/script&gt;
-</code></pre>
+&lt;/script&gt;</code></pre>
 
 
+<h2 id="classes">Classes</h2>
 
-<p>  <a name="classes" id="classes"></a>
-</p>
-<h2>Classes</h2>
 <pre><code><a href="#Database">Database class</a>
    void      <b>open</b>([name])
    ResultSet <b>execute</b>(sqlStatement, [argArray])

@@ -90,8 +90,9 @@ resources locally, without a network connection.</p>
   <li><a href="#required_cookie">Cookies and the LocalServer</a></li>
   <li><a href="#filesystem_location">Location of cached files</a></li> 
 </ol>
-<a name="overview" id="overview"></a>
-  <h2>Overview</h2>
+
+
+<h2 id="overview">Overview</h2>
   <p>The LocalServer module is a specialized URL cache that the web application controls.
   Requests for URLs in the LocalServer's cache are intercepted and served
   locally from the user's disk.</p>
@@ -135,13 +136,9 @@ resources locally, without a network connection.</p>
 
 
 
-<a name="example"></a>
-<h2>Example</h2>
+<h2 id="example">Example</h2>
 
-
-<pre><code>&lt;html&gt;&lt;head&gt;&lt;/head&gt;&lt;body&gt;
-&lt;button onclick="store.capture(filesToCapture, captureCallback);"&gt;Capture&lt;/button&gt;
-&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
+<pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
 &lt;script type="text/javascript"&gt;
 var filesToCapture = [
   location.pathname,
@@ -152,15 +149,10 @@ var store = localServer.createStore('test-store');
 function captureCallback(url, success, captureId) {
   alert(url + 'captured: ' + success ? 'success' : 'failure');
 }
-&lt;/script&gt;
-&lt;/html&gt;
-</code></pre>
+&lt;/script&gt;</code></pre>
 
 
-  <a name="classes" id="classes"></a>  </p>
-
-
-<h3>Classes</h3>
+<h3 id="classes">Classes</h3>
   <pre><code><a href="#LocalServer" class="section">LocalServer class</a>
    boolean              <b>canServeLocally</b>(string url)
    ResourceStore        <b>createStore</b>(string name, [string requiredCookie])
