@@ -86,7 +86,9 @@ resources locally, without a network connection.</p>
       <li><a href="#FileSubmitter">FileSubmitter</a></li>
     </ol>
   </li>
-  <li><a href="#manifest_file">Manifest File </a></li>
+  <li><a href="#manifest_file">Manifest file</a></li>
+  <li><a href="#required_cookie">Cookies and the LocalServer</a></li>
+  <li><a href="#filesystem_location">Location of cached files</a></li> 
 </ol>
 <a name="overview" id="overview"></a>
   <h2>Overview</h2>
@@ -122,7 +124,8 @@ resources locally, without a network connection.</p>
   <ul>
     <li>The URL is cached in a ResourceStore or ManagedResourceStore,</li>
     <li>The resource store's <span class="code">enabled</span> attribute is set to true, and </li>
-    <li>If the resource store has a   <span class="code">requiredCookie</span>, the cookie is present in the client. </li>
+    <li>If the resource store has a  <span class="code">requiredCookie</span> attribute,
+        the request must have a cookie that matches. For further details read <a href="#required_cookie">Cookies and the LocalServer</a>.</li>
   </ul>  
   <p>The LocalServer <em>always</em> serves a cached resource when the conditions are met, regardless of the network connection. The URLs contained in a store
   are eligible for local serving without requiring the application to open the  store.</p>
@@ -240,7 +243,7 @@ var localServer = google.gears.factory.create('beta.localserver', '1.1');
       <td>Description</td>
         <td class="odd">
           Returns true if a request for the URL can be satisfied from any of the resource stores available,
-          taking into account whether the containing store is enabled and if its requiredCookie is present</span>.
+          taking into account whether the containing store is enabled and if its requiredCookie matches.
         Relative URLs are interpreted according to the current page location.</td>
     </tr>
   </table>
@@ -269,7 +272,7 @@ var localServer = google.gears.factory.create('beta.localserver', '1.1');
         <td class="odd">Opens an existing ResourceStore or creates a new one if
       no such store exists.<br />
       <br />
-      If a requiredCookie is given, creates a ResourceStore that requires the  cookie to be present in the client in order to serve the contents from the store.
+      If a requiredCookie is given, creates a ResourceStore that requires the cookie to be present in the client in order to serve the contents from the store.
     </tr>
   </table>
   <table width="695">
@@ -294,7 +297,7 @@ Expected cookie format is &quot;name=value&quot;.</td>
     </tr>
     <tr class="odd">
       <td>Description</td>
-      <td class="odd">Opens an existing ResourceStore or returns null if no such store exists. If the store was originally created with a requiredCookie, the cookie must be provided in order to open this ResourceStore.
+      <td class="odd">Opens an existing ResourceStore or returns null if no such store exists. If the store was originally created with a requiredCookie, the same value must be provided in order to open this ResourceStore.
     </tr>
   </table>
   <table>
@@ -419,7 +422,7 @@ Expected cookie format is &quot;name=value&quot;.</td>
         <br><font face=monospace>/ \ : * ? " &lt; &gt; | ; , </font><br>
         <i>Before finalization of the API we expect to remove this restriction.</i></li>
       <li><span class="code">requiredCookie</span> - a cookie of the format &quot;name=value&quot; or null </li>
-      <li><span class="code">domain</span> - the domain, protocol and port of the current page.</li>
+      <li><span class="code">origin</span> - the scheme, domain, and port of the current page.</li>
   </ul>
 
 
@@ -441,7 +444,8 @@ Expected cookie format is &quot;name=value&quot;.</td>
     <tr class="odd">
       <td><strong><a name="MRScookie" id="MRScookie"></a>requiredCookie</strong></td>
         <td class="" >readonly attribute string </td>
-        <td class="" >A cookie that must be present in the browser in order to serve resources contained in this store.
+        <td class="" >The cookie requirements of the store.<br>
+        For further details see <a href="#required_cookie">Cookies and the LocalServer</a>.
         If empty, resources within this store are always served locally, provided the store is <code>enabled</code>.</td>
     </tr>
     <tr class="odd">
@@ -576,9 +580,8 @@ that this class provides.</p>
     <tr class="odd">
       <td><strong>requiredCookie</strong></td>
       <td class="" >readonly attribute string </td>
-      <td class="" >A cookie that must be present in the browser in order to serve resources contained in this store.
-        <br />
-        <br />
+      <td class="" >The cookie requirements of the store.
+        For further details see <a href="#required_cookie">Cookies and the LocalServer</a>.<br>
         If requiredCookie is empty, then resources within this store are always served locally, provided the store is <code>enabled</code>.</td>
     </tr>
     <tr class="odd">
@@ -1012,7 +1015,62 @@ that this class provides.</p>
         Note: An entry with an exact URL match takes precedence over a match found by ignoring the query string. </td>
       </tr>
     </table>
-    <p>&nbsp;</p>
+
+<!------------------------------------------------------------->
+<!-- Cookies and the LocalServer                             -->
+<!------------------------------------------------------------->
+  <p>&nbsp;</p>
+  <a name="required_cookie"></a>
+  <h2>Cookies and the LocalServer</h2>
+  <p>Both the <span class="code">ResourceStore</span> and <span class="code">ManagedResourceStore</span>
+  support an optional <span class="code">requiredCookie</span> attribute. 
+  This value causes LocalServer to examine cookies when
+  deciding which resource to serve for a request. The attribute is used as follows:</p>
+  
+  <table>
+    <tr class="odd">
+      <th><div align="center" >requiredCookie</div></th>
+      <th width="100%"><div align="center" >Behavior</div></th>
+    </tr>
+    <tr class="odd">
+      <td class="code">&quot;foo=bar&quot;</td>
+      <td>Serves the resource from the store if cookie <code>foo</code> is present in the request, and
+        has the value <code>bar</code>.
+      </td>
+    </tr>
+    <tr class="odd">
+      <td class="code">&quot;foo=;NONE;&quot;</td>
+      <td class="odd">Serves the resource from the store if cookie <code>foo</code>
+        is <b>not</b> present in the request.</td>
+    </tr>
+  </table>
+
+<!------------------------------------------------------------->
+<!-- File system location                                    -->
+<!------------------------------------------------------------->
+  <p>&nbsp;</p>
+  <a name="filesystem_location"></a>
+  <h2>Location of cached files</h2>
+  <p>The LocalServer stores files that your application captures in a location determined by the browser and platform. </p>
+  <p><strong>Windows Vista - Internet Explorer </strong></p>
+  <p> Location: {FOLDERID_LocalAppDataLow}\Google\Google Gears for Internet Explorer<br />
+    Example: C:\Users\Bob\AppData\LocalLow\Google\Google Gears for Internet Explorer</p>
+  <p><strong>Windows Vista - Firefox </strong>- Database files are stored in the user profile directory. </p>
+  <p>Location: C:\Users\&lt;username&gt;\AppData\Local\Mozilla\Firefox\Profiles\{profile}.default\Google Gears for Firefox <br />
+    Example:  C:\Users\Bob\AppData\Local\Mozilla\Firefox\Profiles\uelib44s.default\Google Gears for Firefox  </p>
+  <p><strong>Windows XP - Internet Explorer </strong>- Database files are stored in the user profile directory. </p>
+  <p> Location: C:\Documents and Settings\&lt;username&gt;\Local Settings\Application Data\Google\Google Gears for Internet Explorer<br />
+    Example: C:\Documents and Settings\Bob\Local Settings\Application Data\Google\Google Gears for Internet Explorer</p>
+  <p><strong> Windows XP - Firefox </strong>- Database files are stored in the user profile directory. </p>
+  <p>Location: C:\Documents and Settings\&lt;username&gt;\Local Settings\Application Data\Mozilla\Firefox\Profiles\{profile}\Google Gears for Firefox<br />
+    Example: C:\Documents and Settings\Bob\Local Settings\Application Data\Mozilla\Firefox\Profiles\uelib44s.default\Google Gears for Firefox</p>
+  <p><strong>Mac OS/X - Firefox </strong>- Database files are stored in the user profile directory. </p>
+  <p>Location: Users/&lt;username&gt;/Library/Caches/Firefox/Profiles/{profile}.default/Google Gears for Firefox <br />
+    Example: Users/Bob/Library/Caches/Firefox/Profiles/08ywpi3q.default/Google Gears for Firefox</p>
+  <p><strong>Linux - Firefox </strong>- Database files are stored in the user home directory.</p>
+  <p>Location: ~<em>bob</em>/.mozilla/firefox/&lt;firefox's profile id&gt;/Google Gears for Firefox <br />
+    Example: ~bob/.mozilla/firefox/08ywpi3q.default/Google Gears for Firefox </p>
+
   </div>
 <!-- ########## END PAGE CONTENT ########## -->
 </div><!-- end wrapper -->
