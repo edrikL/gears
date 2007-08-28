@@ -218,11 +218,11 @@ common ways:
 <h2>WorkerPool class</h2>
 
 <pre><code>callback <b>onmessage</b>(messageText, senderId, [messageObject:{text,sender,origin}])
-callback <b>onerror</b>(errorObject:{message})
+callback <b>onerror</b>(errorObject:{message}) <span class="highlight">[New in <a href="index.html#relnotes">0.2</a>]</span>
 int  <b>createWorker</b>(scriptText)
-int  <b>createWorkerFromUrl</b>(scriptUrl)
+int  <b>createWorkerFromUrl</b>(scriptUrl) <span class="highlight">[New in <a href="index.html#relnotes">0.2</a>]</span>
 void <b>sendMessage</b>(messageText, destWorkerId)
-void <b>allowCrossOrigin</b>()
+void <b>allowCrossOrigin</b>() <span class="highlight">[New in <a href="index.html#relnotes">0.2</a>]</span>
 </code></pre>
 <br>
 
@@ -246,7 +246,7 @@ void <b>allowCrossOrigin</b>()
       - ID of the source worker. <i>(Deprecated. Prefer <code>messageObject.sender</code>.)</i>
       <br>
       <code>messageObject</code>
-      - An object containing all information about the message. Has these properties:
+      - <span class="highlight">[New in <a href="index.html#relnotes">0.2</a>]</span> An object containing all information about the message. Has these properties:
         <!-- TODO: Create a CSS class for an indented list of object properties, which doesn't space things out as much as vanilla <ul> does. -->
         <br>&nbsp; &nbsp; &bull; <code>text</code> - The message contents.
         <br>&nbsp; &nbsp; &bull; <code>sender</code> - ID of the source worker.
@@ -256,9 +256,10 @@ void <b>allowCrossOrigin</b>()
   </tr>
 </table>
 
+<a name="onerror" id="onerror"></a>
 <table>
   <tr class="odd">
-    <th colspan="2"><code>callback onerror(errorObject)</code></th>
+    <th colspan="2"><code>callback onerror(errorObject)</code> <span class="highlight">[New in <a href="index.html#relnotes">0.2</a>]</th>
   </tr>
   <tr class="odd">
     <td width="113">Summary:</td>
@@ -322,9 +323,10 @@ void <b>allowCrossOrigin</b>()
   </tr>
 </table>
 
+<a name="createworkerfromurl" id="createworkerfromurl"></a>
 <table>
   <tr class="odd">
-    <th colspan="2"><code>int createWorkerFromUrl(scriptUrl)</code></th>
+    <th colspan="2"><code>int createWorkerFromUrl(scriptUrl)</code> <span class="highlight">[New in <a href="index.html#relnotes">0.2</a>]</span></th>
   </tr>
   <tr class="odd">
     <td width="113">Summary:</td>
@@ -392,9 +394,10 @@ void <b>allowCrossOrigin</b>()
   </tr>
 </table>
 
+<a name="allowcrossorigin" id="allowcrossorigin"></a>
 <table>
   <tr class="odd">
-    <th colspan="2"><code>void allowCrossOrigin()</code></th>
+    <th colspan="2"><code>void allowCrossOrigin()</code> <span class="highlight">[New in <a href="index.html#relnotes">0.2</a>]</th>
   </tr>
   <tr class="odd">
     <td width="113">Summary:</td>
