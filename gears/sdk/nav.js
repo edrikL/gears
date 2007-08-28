@@ -94,6 +94,11 @@ var nav = [
         url: "api_database.html" 
       },
       { 
+        title: "HttpRequest",
+        id: "api_httprequest",
+        url: "api_httprequest.html" 
+      },      
+      { 
         title: "LocalServer",
         id: "api_localserver",
         url: "api_localserver.html" 
