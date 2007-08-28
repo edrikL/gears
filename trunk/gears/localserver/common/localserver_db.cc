@@ -212,7 +212,6 @@ bool WebCacheDB::Init() {
 // destructor
 //------------------------------------------------------------------------------
 WebCacheDB::~WebCacheDB() {
-  ASSERT_SINGLE_THREAD();
   delete response_bodies_store_;
 }
 

@@ -62,9 +62,16 @@ class ThreadLocals {
   // replaced with the new value.
   // @key, the key of the value to set
   // @value, the value to store for the current thread
-  // @destructor, optional destructor callback that will be invoked when the
-  //              value is cleared (by DestroyValue) or when the thread dies,
-  //              can be null.
+  // @destructor, optional destructor callback that will be invoked
+  //              when the value is cleared (by DestroyValue) or when
+  //              the thread dies, can be null.  Note that the thread
+  //              the destructor is called in may differ across
+  //              platforms.  For DestroyValue, it should always be
+  //              the same thread SetValue was called from.  On thread
+  //              death under Windows, the destructor is called in the
+  //              same thread SetValue() was called from.  On thread
+  //              death under Firefox on Linux and MacOS X, the
+  //              destructor is called in the joining thread.
   static void SetValue(const std::string &key,
                        void *value,
                        DestructorCallback destructor);
