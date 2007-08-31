@@ -891,6 +891,18 @@ that this class provides.</p>
     </tr>
   </table>
 
+  <pre><code>&lt;form method="POST" entcyp="multipart/form-data" /&gt;
+  &lt;input id="fileinput" type="file" name="formFieldName" /&gt;
+  &lt;link id="iefileinput" name="formFieldName" /&gt;
+&lt;/form&gt;
+
+&lt;script&gt;
+  var fileSubmitter = store.createFileSubmitter();
+  var htmlElement = isIE ? document.getElementById("iefileinput");
+                         : document.getElementById("fileinput");
+  fileSubmitter.setFileInputElement(htmlElement, urlOfStoredResource);
+&lt;/script&gt;</code></pre>
+
 <!------------------------------------------------------------->
 <!-- Manifest File Format                                    -->
 <!------------------------------------------------------------->

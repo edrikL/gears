@@ -2763,7 +2763,8 @@ function httpRequestTestSuite(inWorker) {
     'httpGet_302_NoCrossOrigin',
     'httpRequestReuse',
     'httpRequest_DisallowedHeaders',
-    'httpGet_CapturedResource'
+    'httpGet_CapturedResource',
+    'nullOnReadyStateChange'
   ];
 
   for (var testIndex = 0; testIndex < tests.length; ++testIndex) {
@@ -2904,6 +2905,22 @@ function httpRequestTestSuite(inWorker) {
   function httpGet_BinaryResponse(testName) {
     // TODO(michaeln): do something reasonable with binary responses
   }
+
+  function nullOnReadyStateChange(testName) {
+    var nullHandlerRequest = google.gears.factory.create('beta.httprequest',
+                                                         '1.0');
+    nullHandlerRequest.onreadystatechange = function() {};
+    nullHandlerRequest.onreadystatechange = null;
+    nullHandlerRequest.open('GET', 'nosuchfile___');
+    nullHandlerRequest.send();
+
+    var unsetHandlerRequest = google.gears.factory.create('beta.httprequest',
+                                                          '1.0');
+    unsetHandlerRequest.open('GET', 'nosuchfile___');
+    unsetHandlerRequest.send();
+
+    httpRequestTestComplete(testName, true);
+}
 
   // Generates header name value pairs echo_requests.php will respond
   // with for the given request headers.

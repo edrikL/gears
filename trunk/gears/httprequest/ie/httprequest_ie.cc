@@ -54,15 +54,30 @@ GearsHttpRequest::~GearsHttpRequest() {
 
 
 STDMETHODIMP GearsHttpRequest::put_onreadystatechange(
-    /* [in] */ IDispatch *handler) {
-  onreadystatechangehandler_ = handler;
+    /* [in] */ VARIANT *handler) {
+  IDispatch *handler_dispatch = NULL;
+  if (!ActiveXUtils::VariantIsNullOrUndefined(handler)) {
+    if (handler->vt == VT_DISPATCH) {
+      handler_dispatch = handler->pdispVal;
+    } else {
+      RETURN_EXCEPTION(STRING16(
+          L"The onmesonreadystatechangesage callback must be a function."));
+    }
+  }
+  onreadystatechangehandler_ = handler_dispatch;
   RETURN_NORMAL();
 }
 
   
 STDMETHODIMP GearsHttpRequest::get_onreadystatechange( 
-      /* [retval][out] */ IDispatch **handler){
-  return onreadystatechangehandler_.CopyTo(handler);
+      /* [retval][out] */ VARIANT *handler){
+  ::VariantClear(handler);
+  if (onreadystatechangehandler_) {
+    handler->vt = VT_DISPATCH;
+    handler->pdispVal = onreadystatechangehandler_;
+    handler->pdispVal->AddRef();  // the caller must release
+  }
+  RETURN_NORMAL();
 }
 
 
@@ -101,8 +116,9 @@ STDMETHODIMP GearsHttpRequest::open(
 
   CreateRequest();
 
-  if (!request_->Open(method, full_url.c_str(), true))
+  if (!request_->Open(method, full_url.c_str(), true)) {
     RETURN_EXCEPTION(kInternalError);
+  }
 
   content_type_header_was_set_ = false;
 
@@ -365,6 +381,7 @@ void GearsHttpRequest::ReleaseRequest() {
 // - normalizes the resulting absolute url, ie. removes path navigation
 // - removes the fragment part of the url, ie. truncates at the '#' character
 // - ensures the the resulting url is from the same-origin
+// - ensures the requested url is HTTP or HTTPS
 //------------------------------------------------------------------------------
 bool GearsHttpRequest::ResolveUrl(const char16 *url,
                                   std::string16 *resolved_url,
@@ -374,9 +391,19 @@ bool GearsHttpRequest::ResolveUrl(const char16 *url,
     *exception_message = STRING16(L"Failed to resolve url.");
     return false;
   }
-  if (!EnvPageSecurityOrigin().IsSameOriginAsUrl(resolved_url->c_str())) {
+
+  SecurityOrigin url_origin;
+  if (!url_origin.InitFromUrl(resolved_url->c_str()) ||
+      !url_origin.IsSameOrigin(EnvPageSecurityOrigin())) {
     *exception_message = STRING16(L"Url is not from the same origin.");
     return false;
   }
+
+  if (url_origin.scheme() != HttpConstants::kHttpScheme &&
+      url_origin.scheme() != HttpConstants::kHttpsScheme) {
+    *exception_message = STRING16(L"Protocol is not HTTP or HTTPS.");
+    return false;
+  }
+
   return true;
 }

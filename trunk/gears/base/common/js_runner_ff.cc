@@ -142,8 +142,12 @@ class JsRunnerBase : public JsRunnerInterface {
 
   virtual bool InvokeCallbackSpecialized(const JsRootedCallback *callback,
                                          int argc, jsval *argv) = 0;
+
   bool InvokeCallback(const JsRootedCallback *callback,
                       int argc, JsParamToSend *argv) {
+    assert(callback && (!argc || argv));
+    if (!callback->token()) { return false; }
+
     // Setup argument array.
     scoped_array<jsval> js_engine_argv(new jsval[argc]);
     for (int i = 0; i < argc; ++i) {

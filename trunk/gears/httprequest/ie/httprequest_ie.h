@@ -59,10 +59,10 @@ class ATL_NO_VTABLE GearsHttpRequest
   // Note: lifted from the midl generated .h file
 
   virtual /* [propput] */ HRESULT STDMETHODCALLTYPE put_onreadystatechange( 
-      /* [in] */ IDispatch *handler);
+      /* [in] */ VARIANT *handler);
   
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_onreadystatechange( 
-      /* [retval][out] */ IDispatch **handler);
+      /* [retval][out] */ VARIANT *handler);
   
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_readyState( 
       /* [retval][out] */ int *state);
