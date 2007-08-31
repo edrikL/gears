@@ -46,7 +46,8 @@
   typedef int gIID;
 #elif defined BROWSER_FF
   typedef nsISupports IGeneric;
-  typedef nsIID gIID;
+  //typedef nsIID gIID;
+  typedef __int64 gIID;  // intentional Linux/Mac build break (for testing)
 #elif defined BROWSER_SAFARI
   // Just placeholder values for Safari since the created workers use a separate
   // process for JS execution.
@@ -124,6 +125,7 @@ class JsRunnerInterface {
                               int argc, JsParamToSend *argv) = 0;
 
 #ifdef DEBUG
+  hi;  // intentional debug-only build break (for testing)
   virtual void ForceGC() = 0;
 #endif
 
