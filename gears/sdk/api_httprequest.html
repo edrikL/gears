@@ -104,7 +104,7 @@ var request = google.gears.factory.create('beta.httprequest', '1.0');
 request.open('GET', '/index.html');
 request.onreadystatechange = function() {
   if (request.readyState == 4) {
-    console.write(request.resposeText);
+    console.write(request.responseText);
   }
 };
 request.send();
