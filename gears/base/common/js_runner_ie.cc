@@ -103,6 +103,9 @@ class JsRunnerBase : public JsRunnerInterface {
 
   bool InvokeCallback(const JsRootedCallback *callback,
                       int argc, JsParamToSend *argv) {
+    assert(callback && (!argc || argv));
+    if (!callback->token()) { return false; }
+
     // Setup argument array.
     scoped_array<CComVariant> js_engine_argv(new CComVariant[argc]);
     for (int i = 0; i < argc; ++i) {

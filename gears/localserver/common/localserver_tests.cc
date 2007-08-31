@@ -476,6 +476,7 @@ bool TestLocalServerDB() {
   // we should be able to service a request for testurl again
   TEST_ASSERT(db->CanService(testurl));
 
+  // clear the cookie string for our testurl (fake)
   SetFakeCookieString(testurl, NULL);
 
   // off again
@@ -505,7 +506,9 @@ bool TestLocalServerDB() {
   testurl_query += STRING16(L"?blah");
 
   // on again, s/b responding with redirects
+  SetFakeCookieString(testurl, NULL);
   TEST_ASSERT(db->CanService(testurl));
+  SetFakeCookieString(testurl_query.c_str(), NULL);
   TEST_ASSERT(db->CanService(testurl_query.c_str()));
 
   // still on, s/b responding with payloads

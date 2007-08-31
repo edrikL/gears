@@ -38,8 +38,8 @@ import "ocidl.idl";
 ]
 interface GearsHttpRequestInterface : IDispatch {
   // event handler
-  [propput] HRESULT onreadystatechange([in] IDispatch *handler);
-  [propget] HRESULT onreadystatechange([out, retval] IDispatch **handler);
+  [propput] HRESULT onreadystatechange([in] VARIANT *handler);
+  [propget] HRESULT onreadystatechange([out, retval] VARIANT *handler);
 
   // state
   [propget] HRESULT readyState([out, retval] int *state);
