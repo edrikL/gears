@@ -178,6 +178,27 @@ STDMETHODIMP GearsFactory::getBuildInfo(BSTR *retval) {
 }
 
 
+STDMETHODIMP GearsFactory::isVersionAtLeast(const BSTR version_bstr_in,
+                                            VARIANT_BOOL *retval) {
+  const BSTR version_bstr = ActiveXUtils::SafeBSTR(version_bstr_in);
+
+  int major;
+  int minor;
+  if (!ParseMajorMinorVersion(version_bstr, &major, &minor)) {
+    RETURN_EXCEPTION(STRING16(L"Invalid version string."));
+  }
+
+  if ((PRODUCT_VERSION_MAJOR < major) ||
+      (PRODUCT_VERSION_MAJOR == major && PRODUCT_VERSION_MINOR < minor)) {
+    *retval = VARIANT_FALSE;
+  } else {
+    *retval = VARIANT_TRUE;
+  }
+
+  RETURN_NORMAL();
+}
+
+
 // InitBaseFromDOM needs the object to be sited.  We override SetSite just to
 // know when this happens, so we can do some one-time setup afterward.
 STDMETHODIMP GearsFactory::SetSite(IUnknown *site) {

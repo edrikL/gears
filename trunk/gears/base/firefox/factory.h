@@ -56,9 +56,12 @@ class GearsFactory
 
   GearsFactory();
 
-  NS_IMETHOD GetBuildInfo(nsAString &retval);
-  NS_IMETHOD Create(const nsAString &object, const nsAString &version,
+  NS_IMETHOD Create(//const nsAString &object
+                    //const nsAString &version
                     nsISupports **retval);
+  NS_IMETHOD GetBuildInfo(nsAString &retval);
+  NS_IMETHOD IsVersionAtLeast(//const nsAString &version
+                              PRBool *retval);
 
   // Non-scriptable methods
   void SuspendObjectCreation();

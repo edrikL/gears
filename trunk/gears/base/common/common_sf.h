@@ -30,9 +30,9 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
+#include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/int_types.h"
 #include "gears/base/safari/string_utils.h"
-#include "common/genfiles/product_version_constants.h"
 
 // Stupid MacTypes defines this as 0
 #undef kInvalidID

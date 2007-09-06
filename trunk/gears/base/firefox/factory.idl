@@ -31,6 +31,10 @@
 //
 [scriptable, uuid(8A06E8B5-60D2-4268-B2F6-C9AEEAAF8392)]
 interface GearsFactoryInterface : GearsBaseClassInterface {
-  nsISupports create(in AString className, in AString classVersion);
+  nsISupports create(//in AString object
+                     //in AString version
+                    );
   AString getBuildInfo();
+  boolean isVersionAtLeast(//in AString version
+                          );
 };

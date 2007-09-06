@@ -1,4 +1,4 @@
-// Copyright 2006, Google Inc.
+// Copyright 2007, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,10 +23,25 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_BASE_COMMON_PRODUCT_VERSION_H__
-#define GEARS_BASE_COMMON_PRODUCT_VERSION_H__
+m4_changequote(`^',`^')m4_dnl
+m4_changecom()m4_dnl
+#ifndef GEARS_BASE_COMMON_PRODUCT_CONSTANTS_H__
+#define GEARS_BASE_COMMON_PRODUCT_CONSTANTS_H__
 
 #include "gears/base/common/string16.h"
+
+
+#define PRODUCT_VERSION_STRING       L"PRODUCT_VERSION"
+#define PRODUCT_VERSION_STRING_ASCII  "PRODUCT_VERSION"
+
+#define ^PRODUCT_VERSION_MAJOR^  PRODUCT_VERSION_MAJOR
+#define ^PRODUCT_VERSION_MINOR^  PRODUCT_VERSION_MINOR
+
+#define PRODUCT_FRIENDLY_NAME       L"PRODUCT_FRIENDLY_NAME_UQ"
+#define PRODUCT_FRIENDLY_NAME_ASCII  "PRODUCT_FRIENDLY_NAME_UQ"
+#define PRODUCT_SHORT_NAME          L"PRODUCT_SHORT_NAME_UQ"
+#define PRODUCT_SHORT_NAME_ASCII     "PRODUCT_SHORT_NAME_UQ"
+
 
 // To change the version of an interface, decide whether it's an incompatible
 // change (meaning you should increment the major version number and reset
@@ -59,4 +74,4 @@ DECLARE_GEARS_MODULE_VERSION_VARIABLES(Timer);
 DECLARE_GEARS_MODULE_VERSION_VARIABLES(WorkerPool);
 
 
-#endif // GEARS_BASE_COMMON_PRODUCT_VERSION_H__
+#endif  // GEARS_BASE_COMMON_PRODUCT_CONSTANTS_H__

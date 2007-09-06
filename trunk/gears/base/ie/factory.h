@@ -27,11 +27,11 @@
 #define GEARS_BASE_IE_FACTORY_H__
 
 #include <objsafe.h> 
-#include "ie/genfiles/interfaces.h" // from OUTDIR
+#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "ie/genfiles/interfaces.h"  // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/common.h"
-#include "gears/base/common/product_version.h"
 #include "gears/base/ie/resource.h" // for .rgs resource ids (IDR_*)
 
 
@@ -69,6 +69,7 @@ class ATL_NO_VTABLE GearsFactory
   // GearsFactoryInterface methods
   STDMETHOD(create)(const BSTR object, const BSTR version, IDispatch **retval);
   STDMETHOD(getBuildInfo)(BSTR *retval);
+  STDMETHOD(isVersionAtLeast)(const BSTR version, VARIANT_BOOL *retval);
 
   // Hook into SetSite() to do some init work that requires the site.
   STDMETHOD(SetSite)(IUnknown *site);

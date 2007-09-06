@@ -70,6 +70,9 @@ function doit(document) {
     runWebCaptureTests();
     runManifestTests();
   }
+  if (doAll || queryString.indexOf('factory') != -1) {
+    runFactoryTests();
+  }
   if (doAll || queryString.indexOf('database') != -1) {
     runDatabaseTests();
   }
@@ -152,6 +155,45 @@ var testGlobals =
   '}';
 
 var g = eval('(' + testGlobals + ')');
+
+
+//------------------------------------------------------------------------------
+// Factory tests
+//------------------------------------------------------------------------------
+
+function factory_RequirePastVersion() {
+  var versionOkay = google.gears.factory.isVersionAtLeast('0.1');
+  return versionOkay ? g.SUCCEEDED : g.FAILED;
+}
+
+function factory_RequireCurrentVersion() {
+  var buildInfo = google.gears.factory.getBuildInfo();
+  var versionArray = buildInfo.split('.');
+  var currentVersion = versionArray[0] + '.' + versionArray[1];
+
+  var versionOkay = google.gears.factory.isVersionAtLeast(currentVersion);
+  return versionOkay ? g.SUCCEEDED : g.FAILED;
+}
+
+function factory_RequireFutureVersion() {
+  var versionOkay = google.gears.factory.isVersionAtLeast('999.0');
+  return versionOkay ? g.FAILED : g.SUCCEEDED;  // expect failure here
+}
+
+
+//
+// Array of all tests in this category
+//
+
+var factoryTests = [
+  factory_RequirePastVersion,
+  factory_RequireCurrentVersion,
+  factory_RequireFutureVersion
+];
+
+function runFactoryTests() {
+  runArrayOfTests(factoryTests);
+}
 
 //------------------------------------------------------------------------------
 // Database tests

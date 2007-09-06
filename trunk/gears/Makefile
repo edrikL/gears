@@ -154,8 +154,7 @@ COMMON_VPATH	+= \
 		$(NULL)
 
 COMMON_M4SRCS	+= \
-		product_name_constants.h.m4 \
-		product_version_constants.h.m4 \
+		product_constants.h.m4 \
 		product_version.rc.m4 \
 		win32_msi.wxs.m4 \
 		$(NULL)
@@ -210,7 +209,7 @@ FF_CPPSRCS	+= \
 		paths.cc \
 		paths_ff.cc \
 		permissions_db.cc \
-		product_version.cc \
+		product_constants.cc \
 		security_model.cc \
 		security_model_test.cc \
 		sqlite_wrapper.cc \
@@ -269,7 +268,7 @@ IE_CPPSRCS	+= \
 		paths.cc \
 		paths_ie.cc \
 		permissions_db.cc \
-		product_version.cc \
+		product_constants.cc \
 		security_model.cc \
 		security_model_test.cc \
 		sqlite_wrapper.cc \

@@ -38,8 +38,7 @@
 
 
 // Product-specific constants.  MODIFY THESE TO SUIT YOUR PROJECT.
-#include "common/genfiles/product_name_constants.h"
-#include "common/genfiles/product_version_constants.h"
+#include "common/genfiles/product_constants.h"  // from OUTDIR
 const wchar_t *kCrashReportProductName = L"Google_Gears";  // [naming]
 const wchar_t *kCrashReportProductVersion = PRODUCT_VERSION_STRING
 #if BROWSER_FF
