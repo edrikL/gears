@@ -85,8 +85,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <h2 id="Factory">Factory class</h2>
 
-<pre><code>Object <b>create</b>(className, version)
-string <b>getBuildInfo</b>()</code></pre>
+<pre><code>Object  <b>create</b>(className, classVersion)
+string  <b>getBuildInfo</b>()
+boolean <b>isVersionAtLeast</b>(gearsVersion) <span class="highlight">[New in <a href="index.html#relnotes">0.2</a>]</span>
+</code></pre>
+
 
 <p>Code Example:</p>
 <pre><code>// gears_init.js defines google.gears.factory.
@@ -101,25 +104,41 @@ if (window.google && google.gears) {
 }
 &lt;/script&gt;</code></pre>
 
-<h3><a name="methods" id="methods"></a>Methods </h3>
+<h3>Methods</h3>
+
 <table>
   <tr class="odd">
-    <th width="100%" colspan="2"><div align="left" class="code"><strong>Object create(className, version) </strong></div></th>
+    <th colspan="2"><code>Object create(className, classVersion)</code></th>
   </tr>
   <tr class="odd">
-    <td width="113">Return Value </td>
-    <td width="489"><span class="code">Object: </span>if successful</td>
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">Creates a Gears object of the given class with the given version.</td>
   </tr>
   <tr class="odd">
-    <td>Parameters</td>
-    <td class="odd"><span class="code"><strong>className</strong></span>
-      
-      <p>Supported class names are:
-     
-      <p><table width="79%" border="0" cellpadding="0" cellspacing="0">
+    <td>Return value:</td>
+    <td class="odd">The new object.</td>
+  </tr>
+  <tr class="odd">
+    <td>Parameters:</td>
+    <td class="odd">
+      <code>className</code>
+      - Type of object to create.
+      <br>
+      <code>classVersion</code>
+      - Version of the class's API that the app will use.  See below for <a href="#versioning">API versioning</a> information.
+
+      </td>
+  </tr>
+  <tr class="odd">
+    <td>Details:</td>
+    <td class="odd">
+      An exception is thrown if <code>className</code> is not recognized, or if the <code>classVersion</code> is unrecognized.
+      <p>
+      The supported class names are:
+      <table width="79%" border="0" cellpadding="0" cellspacing="0">
         <tr>
-          <th width="177" >className</th>
-          <th width="216" >Google Gears class created </th>
+          <th width="177">className</th>
+          <th width="216">Google Gears class created</th>
         </tr>
         <tr>
           <td class="code">beta.database</td>
@@ -142,35 +161,52 @@ if (window.google && google.gears) {
           <td><a href="api_workerpool.html">WorkerPool</a></td>
         </tr>
       </table>
-
-      <p><span class="code"><strong>version</strong></span> - version of the class's API that the app will use.  See below for <a href="#versioning">API versioning</a> information.
-
-      </td>
-  </tr>
-  <tr class="odd">
-    <td>Exceptions</td>
-    <td class="" >An exception with message "Unknown object" is thrown if <span class="code">className</span> is not recognized, or if the requested version for a class name is unavailable.</td>
-  </tr>
-  <tr class="odd">
-    <td height="30">Description</td>
-    <td class="odd">Creates an object of the given <span class="code">className</span> with the given version, or the latest version if <span class="code">version</span> is omitted. </td>
+    </td>
   </tr>
 </table>
+
 <table>
   <tr class="odd">
-    <th colspan="2" width="100%"><span class="code"><strong>string getBuildInfo()</strong></span></th>
+    <th colspan="2"><code>string getBuildInfo()</code></th>
   </tr>
   <tr class="odd">
-    <td width="113">Return value: </td>
-    <td width="489" class="code">string</td>
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">Returns a description of the build of Gears installed.</td>
   </tr>
   <tr class="odd">
-    <td>Description:</td>
-    <td class="odd"><p>Returns a string describing the build of Gears that is installed. </p>
-      <p><br />
-      This string is purely informational.  Application developers should not rely on the format of data returned.  The contents and layout may change over time. </p></td>
+    <td>Return value:</td>
+    <td class="odd">The build description string.</td>
+  </tr>
+  <tr class="odd">
+    <td>Details:</td>
+    <td class="odd">This string is purely informational.  Application developers
+      should not rely on the format of data returned.  The contents and layout
+      may change over time.
+    </td>
   </tr>
 </table>
+
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>boolean isVersionAtLeast(gearsVersion)</code> <span class="highlight">[New in <a href="index.html#relnotes">0.2</a>]</span></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">Checks whether the version of Gears installed has all the features of the requested version.</td>
+  </tr>
+  <tr class="odd">
+    <td>Return value:</td>
+    <td class="odd">The result of the version check.</td>
+  </tr>
+  <tr class="odd">
+    <td>Parameters:</td>
+    <td class="odd">
+      <code>gearsVersion</code>
+      - A string containing the desired version of Gears, expressed as '<code>MAJOR.MINOR</code>'.
+    </td>
+  </tr>
+</table>
+
 <br>
 
 <a name="versioning" id="versioning"></a>

@@ -30,11 +30,12 @@ class nsIFile; // must declare this before including nsDirectoryServiceUtils.h
 #include <nsILocalFile.h>
 #include <nsStringAPI.h>
 #include <nsXPCOM.h>
+
+#include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/string16.h"
-#include "common/genfiles/product_version_constants.h"
 
 #ifdef WIN32
 #include <shlobj.h>

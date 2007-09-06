@@ -29,9 +29,9 @@
 #ifndef GEARS_BASE_COMMON_COMMON_H__
 #define GEARS_BASE_COMMON_COMMON_H__
 
+#include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/int_types.h"
 #include "gears/base/common/string16.h"
-#include "common/genfiles/product_name_constants.h" // from OUTDIR
 
 // TODO(michaeln): would be nice to be able to include base/basictypes.h
 // here rather than cherry pick and duplicate code, resolve issues with

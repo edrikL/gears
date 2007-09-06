@@ -27,8 +27,7 @@
 #include <atlbase.h>
 #include <atlsync.h>
 #include <windows.h>
-#include "common/genfiles/product_name_constants.h"
-#include "common/genfiles/product_version_constants.h"
+#include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/ie/detect_version_collision.h"
 
 // We run our detection code once at startup

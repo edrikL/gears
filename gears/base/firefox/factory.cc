@@ -30,9 +30,9 @@
 
 #include "gears/base/firefox/factory.h"
 
+#include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/common.h"
 #include "gears/base/common/factory_utils.h"
-#include "gears/base/common/product_version.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/database/firefox/database.h"
@@ -68,8 +68,8 @@ GearsFactory::GearsFactory()
 }
 
 
-NS_IMETHODIMP GearsFactory::Create(const nsAString &object_nsstring,
-                                   const nsAString &version_nsstring,
+NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
+                                   //const nsAString &version
                                    nsISupports **retval) {
   nsresult nr;
 
@@ -175,6 +175,31 @@ NS_IMETHODIMP GearsFactory::GetBuildInfo(nsAString &retval) {
   std::string16 build_info;
   AppendBuildInfo(&build_info);
   retval.Assign(build_info.c_str());
+  RETURN_NORMAL();
+}
+
+
+NS_IMETHODIMP GearsFactory::IsVersionAtLeast(//const nsAString &version
+                                             PRBool *retval) {
+  JsParamFetcher js_params(this);
+  std::string16 version;
+  if (!js_params.GetAsString(0, &version)) {
+    RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
+  }
+
+  int major;
+  int minor;
+  if (!ParseMajorMinorVersion(version.c_str(), &major, &minor)) {
+    RETURN_EXCEPTION(STRING16(L"Invalid version string."));
+  }
+
+  if ((PRODUCT_VERSION_MAJOR < major) ||
+      (PRODUCT_VERSION_MAJOR == major && PRODUCT_VERSION_MINOR < minor)) {
+    *retval = PR_FALSE;
+  } else {
+    *retval = PR_TRUE;
+  }
+
   RETURN_NORMAL();
 }
 

@@ -25,12 +25,12 @@
 
 #include <shlobj.h>
 #include <shlwapi.h>
+#include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/ie/vista_utils.h"
-#include "common/genfiles/product_version_constants.h"
 
 const char16 kPathSeparator = L'\\';  // can always use backslash with IE
 
