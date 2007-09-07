@@ -194,12 +194,13 @@ JsParamFetcher::JsParamFetcher(GearsBaseClass *obj) {
 }
 
 
-// We need has_string_retval for correct lookups, since sometimes retvals are
-// required parameters and count toward js_argc_.
+// We need has_mysterious_retval for correct lookups, since sometimes retvals
+// are required parameters and count toward js_argc_.
 //
 // Consider a Firefox function with optional params and a string retval.  XPIDL
 // makes the retval the final param.  So params[0] might point at an optional
-// param or the required retval. We need has_string_retval to know which it is.
+// param or the required retval.  We need has_mysterious_retval to know which it
+// is.
 //
 // TODO(aa): has_mysterious_retval is named thusly because we have observed that
 // sometimes other types than strings cause the behavior described above. This
@@ -223,21 +224,29 @@ bool JsParamFetcher::IsOptionalParamPresent(int i, bool has_mysterious_retval) {
 
 
 bool JsParamFetcher::GetAsToken(int i, JsToken *out) {
+  // 'has_mysterious_retval' can cause js_argc_ to be one larger than the "real"
+  // number of parameters.  So comparing against js_argc_ here doesn't ensure we
+  // are reading a real parameter.  However, it does ensure we don't read past
+  // the end of the js_argv_ array.
+  if (i >= js_argc_) return false;
   *out = js_argv_[i];
   return true;
 }
 
 bool JsParamFetcher::GetAsInt(int i, int *out) {
+  if (i >= js_argc_) return false;  // see comment above, in GetAsToken()
   JsToken t = js_argv_[i];
   return TokenToInt(t, out);
 }
 
 bool JsParamFetcher::GetAsString(int i, std::string16 *out) {
+  if (i >= js_argc_) return false;  // see comment above, in GetAsToken()
   JsToken t = js_argv_[i];
   return TokenToString(t, out);
 }
 
 bool JsParamFetcher::GetAsArray(int i, JsToken *out_array, int *out_length) {
+  if (i >= js_argc_) return false;  // see comment above, in GetAsToken()
   JsToken array;
   if (GetAsToken(i, &array)) {
 
@@ -257,6 +266,7 @@ bool JsParamFetcher::GetAsArray(int i, JsToken *out_array, int *out_length) {
 }
 
 bool JsParamFetcher::GetAsNewRootedCallback(int i, JsRootedCallback **out) {
+  if (i >= js_argc_) return false;  // see comment above, in GetAsToken()
   *out = new JsRootedCallback(GetContextPtr(), js_argv_[i]);
   return true;
 }
