@@ -111,6 +111,7 @@ class GearsHttpRequest
   bool IsSent();           // ready_state 2
   bool IsInteractive();    // ready_state 3
   bool IsComplete();       // ready_state 4
+  bool IsValidResponse();
 
   static void OnPageUnload(void* self);
 
