@@ -59,6 +59,7 @@ const nsCID kGearsHttpRequestClassId = // {033D8D37-95A2-478e-91A3-B0FA60A9CA8D}
                   { 0x91, 0xa3, 0xb0, 0xfa, 0x60, 0xa9, 0xca, 0x8d } };
 
 // Error messages
+static const char16 *kRequestFailedError = STRING16(L"The request failed.");
 static const char16 *kInternalError = STRING16(L"Internal error.");
 static const char16 *kAlreadyOpenError =  STRING16(L"Request is already open.");
 static const char16 *kNotOpenError = STRING16(L"Request is not open.");
@@ -66,6 +67,7 @@ static const char16 *kNotCompleteError = STRING16(L"Request is not done.");
 static const char16 *kNotInteractiveError =
                         STRING16(L"Request is not loading or done.");
 
+static const char16 *kEmptyString = STRING16(L"");
 
 GearsHttpRequest::GearsHttpRequest()
     : request_(NULL), apartment_thread_(PR_GetCurrentThread()),
@@ -379,6 +381,10 @@ NS_IMETHODIMP GearsHttpRequest::GetReadyState(PRInt32 *retval) {
   RETURN_NORMAL();
 }
 
+bool GearsHttpRequest::IsValidResponse() {
+  assert(IsInteractive() || IsComplete());
+  return ::IsValidResponseCode(response_info_->status);
+}
 
 //------------------------------------------------------------------------------
 // AString getAllResponseHeaders()
@@ -388,6 +394,10 @@ NS_IMETHODIMP GearsHttpRequest::GetAllResponseHeaders(nsAString &retval) {
   MutexLock locker(&lock_);
   if (!(IsInteractive() || IsComplete())) {
     RETURN_EXCEPTION(kNotInteractiveError);
+  }
+  if (!IsValidResponse()) {
+    retval.Assign(kEmptyString);
+    RETURN_NORMAL();
   }
   retval.Assign(response_info_->headers.c_str());
   RETURN_NORMAL();
@@ -403,7 +413,10 @@ NS_IMETHODIMP GearsHttpRequest::GetResponseHeader(nsAString &retval) {
   if (!(IsInteractive() || IsComplete())) {
     RETURN_EXCEPTION(kNotInteractiveError);
   }
-
+  if (!IsValidResponse()) {
+    retval.Assign(kEmptyString);
+    RETURN_NORMAL();
+  }
   if (!response_info_->parsed_headers.get()) {
     scoped_ptr<HTTPHeaders> parsed_headers(new HTTPHeaders);
     std::string headers_utf8;
@@ -448,6 +461,10 @@ NS_IMETHODIMP GearsHttpRequest::GetResponseText(nsAString &retval) {
   if (!IsComplete()) {
     RETURN_EXCEPTION(kNotCompleteError);
   }
+  if (!IsValidResponse()) {
+    retval.Assign(kEmptyString);
+    RETURN_NORMAL();
+  }
   retval.Assign(response_info_->response_text.c_str());
   RETURN_NORMAL();
 }
@@ -462,6 +479,9 @@ NS_IMETHODIMP GearsHttpRequest::GetStatus(PRInt32 *retval) {
   if (!(IsInteractive() || IsComplete())) {
     RETURN_EXCEPTION(kNotInteractiveError);
   }
+  if (!IsValidResponse()) {
+    RETURN_EXCEPTION(kRequestFailedError);
+  }
   *retval = response_info_->status;
   RETURN_NORMAL();
 }
@@ -475,6 +495,9 @@ NS_IMETHODIMP GearsHttpRequest::GetStatusText(nsAString &retval) {
   MutexLock locker(&lock_);
   if (!(IsInteractive() || IsComplete())) {
     RETURN_EXCEPTION(kNotInteractiveError);
+  }
+  if (!IsValidResponse()) {
+    RETURN_EXCEPTION(kRequestFailedError);
   }
   retval.Assign(response_info_->status_text.c_str());
   RETURN_NORMAL();

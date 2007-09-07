@@ -36,6 +36,7 @@
 
 
 // Error messages
+static const char16 *kRequestFailedError = STRING16(L"The request failed.");
 static const char16 *kInternalError = STRING16(L"Internal error.");
 static const char16 *kAlreadyOpenError =  STRING16(L"Request is already open.");
 static const char16 *kNotOpenError = STRING16(L"Request is not open.");
@@ -45,7 +46,8 @@ static const char16 *kNotInteractiveError =
 
 
 GearsHttpRequest::GearsHttpRequest()
-  : request_(NULL), content_type_header_was_set_(false) {
+  : request_(NULL), content_type_header_was_set_(false),
+    has_fired_completion_event_(false) {
 }
 
 GearsHttpRequest::~GearsHttpRequest() {
@@ -121,6 +123,7 @@ STDMETHODIMP GearsHttpRequest::open(
   }
 
   content_type_header_was_set_ = false;
+  has_fired_completion_event_ = false;
 
   RETURN_NORMAL();
 }
@@ -185,6 +188,8 @@ STDMETHODIMP GearsHttpRequest::send(
     post_data_str = data->bstrVal;
   }
 
+  HttpRequest *request_being_sent = request_;
+
   bool ok = false;
   if (post_data_str && post_data_str[0]) {
     if (!content_type_header_was_set_) {
@@ -197,8 +202,19 @@ STDMETHODIMP GearsHttpRequest::send(
   }
 
   if (!ok) {
-    onreadystatechangehandler_.Release();
-    RETURN_EXCEPTION(kInternalError);
+    if (!has_fired_completion_event_) {
+      // We only throw here if we haven't surfaced the error through
+      // an onreadystatechange callback. Since the JS code for
+      // xhr.onreadystatechange might call xhr.open(), check whether 
+      // 'request_' has changed, which indicates that happened.
+      // Also, we don't trust IsComplete() to indicate that we actually
+      // fired the event, the underlying C++ object *may* declare itself
+      // complete without having called our callback. We're being defensive.
+      if (request_ == request_being_sent) {
+        onreadystatechangehandler_.Release();
+        RETURN_EXCEPTION(kInternalError);
+      }
+    }
   }
   RETURN_NORMAL();
 }
@@ -214,12 +230,25 @@ STDMETHODIMP GearsHttpRequest::abort() {
 }
 
 
+bool GearsHttpRequest::IsValidResponse() {
+  assert(IsInteractive() || IsComplete());
+  int status_code = -1;
+  if (!request_->GetStatus(&status_code))
+    return false;
+  return ::IsValidResponseCode(status_code);
+}
+
+
 STDMETHODIMP GearsHttpRequest::getAllResponseHeaders( 
       /* [retval][out] */ BSTR *headers) {
   if (!headers) return E_POINTER;
 
   if (!(IsInteractive() || IsComplete()))
     RETURN_EXCEPTION(kNotInteractiveError);
+  if (!IsValidResponse()) {
+    *headers = NULL;  // NULL means empty string
+    RETURN_NORMAL();
+  }
 
   std::string16 headers_str;
   if (!request_->GetAllResponseHeaders(&headers_str))
@@ -238,7 +267,10 @@ STDMETHODIMP GearsHttpRequest::getResponseHeader(
 
   if (!(IsInteractive() || IsComplete()))
     RETURN_EXCEPTION(kNotInteractiveError);
-
+  if (!IsValidResponse()) {
+    *header_value = NULL;
+    RETURN_NORMAL();
+  }
   std::string16 value_str;
   if (!request_->GetResponseHeader(header_name, &value_str))
     RETURN_EXCEPTION(kInternalError);
@@ -255,7 +287,11 @@ STDMETHODIMP GearsHttpRequest::get_responseText(
   
   if (!IsComplete())
     RETURN_EXCEPTION(kNotCompleteError);
- 
+  if (!IsValidResponse()) {
+    *body = NULL;
+    RETURN_NORMAL();
+  }
+
   std::string16 body_str;
   if (!request_->GetResponseBodyAsText(&body_str))
     RETURN_EXCEPTION(kInternalError);
@@ -275,6 +311,10 @@ STDMETHODIMP GearsHttpRequest::get_status(
 
   if (!request_->GetStatus(status_code))
     RETURN_EXCEPTION(kInternalError);
+
+  if (!IsValidResponseCode(*status_code))
+    RETURN_EXCEPTION(kRequestFailedError);
+
   RETURN_NORMAL();
 }
 
@@ -285,6 +325,8 @@ STDMETHODIMP GearsHttpRequest::get_statusText(
 
   if (!(IsInteractive() || IsComplete()))
     RETURN_EXCEPTION(kNotInteractiveError);
+  if (!IsValidResponse())
+    RETURN_EXCEPTION(kRequestFailedError);
 
   std::string16 status_str;
   if (!request_->GetStatusText(&status_str))
@@ -305,6 +347,7 @@ void GearsHttpRequest::ReadyStateChanged(HttpRequest *source) {
     // callback when the request is complete.
     CComPtr<IDispatch> dispatch = onreadystatechangehandler_;
     if (IsComplete()) {
+      has_fired_completion_event_ = true;
       onreadystatechangehandler_.Release();
     }
 

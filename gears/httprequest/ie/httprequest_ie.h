@@ -101,6 +101,7 @@ class ATL_NO_VTABLE GearsHttpRequest
   CComPtr<IDispatch> onreadystatechangehandler_;
   HttpRequest *request_;
   bool content_type_header_was_set_;
+  bool has_fired_completion_event_;
 
   void CreateRequest();
   void ReleaseRequest();
@@ -111,6 +112,7 @@ class ATL_NO_VTABLE GearsHttpRequest
   bool IsSent()          { return GetState() == HttpRequest::SENT; }
   bool IsInteractive()   { return GetState() == HttpRequest::INTERACTIVE; }
   bool IsComplete()      { return GetState() == HttpRequest::COMPLETE; }
+  bool IsValidResponse();
 
   bool ResolveUrl(const char16 *url, std::string16 *resolved_url,
                   std::string16 *exception_message);

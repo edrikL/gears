@@ -237,6 +237,7 @@ bool TestResourceStore() {
   item1.payload.data.reset(new std::vector<uint8>);
   item1.payload.data->assign(data1, data1 + strlen(data1));
   item1.payload.status_line = STRING16(L"HTTP/1.0 200 OK");
+  item1.payload.status_code = HttpConstants::HTTP_OK;
   TEST_ASSERT(wcs.PutItem(&item1));
 
   TEST_ASSERT(wcs.IsCaptured(url1));
@@ -265,6 +266,7 @@ bool TestResourceStore() {
   TEST_ASSERT(test_item1.payload.creation_date == test_item2.payload.creation_date);
   TEST_ASSERT(test_item1.payload.headers == test_item2.payload.headers);
   TEST_ASSERT(test_item1.payload.status_line == test_item2.payload.status_line);
+  TEST_ASSERT(test_item1.payload.status_code == test_item2.payload.status_code);
 
   TEST_ASSERT(wcs.Rename(url2, url3));
 
@@ -279,6 +281,7 @@ bool TestResourceStore() {
   TEST_ASSERT(test_item3.payload.creation_date == test_item2.payload.creation_date);
   TEST_ASSERT(test_item3.payload.headers == test_item2.payload.headers);
   TEST_ASSERT(test_item3.payload.status_line == test_item2.payload.status_line);
+  TEST_ASSERT(test_item3.payload.status_code == test_item2.payload.status_code);
 
   LOG(("TestResourceStore - passed\n"));
   return true;

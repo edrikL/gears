@@ -150,7 +150,7 @@ class WebCacheDB : SQLTransactionListener {
 
     PayloadInfo() : id(kInvalidID),
                     creation_date(0),
-                    status_code(HttpConstants::HTTP_OK),
+                    status_code(0),
                     is_synthesized_http_redirect(false) {}
 
     // Returns a particular header value
