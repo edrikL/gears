@@ -245,7 +245,6 @@ void GearsTimer::HandleEventUnload(void *user_param) {
     std::map<int, TimerInfo>::iterator timer =
         gears_timer->worker_timers_.begin();
     timer->second.timer->Cancel();
-    // TODO(zork): Add cleanup: UnrootJsToken(function, context);
     gears_timer->worker_timers_.erase(timer);
   }
 }

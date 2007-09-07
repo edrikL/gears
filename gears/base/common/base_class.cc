@@ -395,10 +395,6 @@ bool RootJsToken(JsContextPtr cx, JsToken t) {
   // Our code treats jsval like a handle, not an allocated object.  So taking
   // the address of a jsval usually gives a transient value.  To fix this,
   // RootJsToken allocates a jsval copy and uses _that_ pointer for the root.
-  //
-  // TODO(cprince): Track the lifetime of these root containers, to avoid the
-  // small memory leak.  Idea: maybe we should only return scoped JsToken
-  // objects, which transfer ownership on assignment and RemoveRoot on release.
   assert(JSVAL_IS_GCTHING(t));
   jsval *root_container = new jsval(t);
   JSBool js_ok = JS_AddRoot(cx, root_container);
