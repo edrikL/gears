@@ -99,7 +99,7 @@ SQLITE_CFLAGS += -Wno-uninitialized
 
 COMPILE_FLAGS_dbg = -g -O0
 COMPILE_FLAGS_opt = -O2
-COMPILE_FLAGS = -c -o $@ -fPIC -Wall -Werror $(COMPILE_FLAGS_$(MODE))
+COMPILE_FLAGS = -c -o $@ -fPIC -fmessage-length=0 -Wall -Werror $(COMPILE_FLAGS_$(MODE))
 
 # NS_LITERAL_STRING does not work properly without this compiler option
 COMPILE_FLAGS += -fshort-wchar
@@ -132,7 +132,7 @@ SQLITE_CFLAGS += -Wno-uninitialized -Wno-pointer-sign -isysroot $(OSX_SDK_ROOT)
 
 COMPILE_FLAGS_dbg = -g -O0
 COMPILE_FLAGS_opt = -O2
-COMPILE_FLAGS = -c -o $@ -fPIC -Wall -Werror $(COMPILE_FLAGS_$(MODE)) -isysroot $(OSX_SDK_ROOT)
+COMPILE_FLAGS = -c -o $@ -fPIC -fmessage-length=0 -Wall -Werror $(COMPILE_FLAGS_$(MODE)) -isysroot $(OSX_SDK_ROOT)
 
 # NS_LITERAL_STRING does not work properly without this compiler option
 COMPILE_FLAGS += -fshort-wchar
