@@ -261,7 +261,7 @@ void GearsTimer::TimerCallback(nsITimer *timer, void *closure) {
   // Invoke JavaScript timer handler.  *ti can become invalid here, if the timer
   // gets deleted.
   if (ti->callback.get()) {
-    ti->owner->GetJsRunner()->InvokeCallback(ti->callback.get(), 0, NULL);
+    ti->owner->GetJsRunner()->InvokeCallback(ti->callback.get(), 0, NULL, NULL);
   } else {
     ti->owner->GetJsRunner()->Eval(ti->script.c_str());
   }

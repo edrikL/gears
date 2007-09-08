@@ -486,7 +486,8 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
       { JSPARAM_INT, &msg.sender },
       { JSPARAM_OBJECT_TOKEN, onmessage_param.get() }
     };
-    wi->js_runner->InvokeCallback(wi->onmessage_handler.get(), argc, argv);
+    wi->js_runner->InvokeCallback(wi->onmessage_handler.get(), argc, argv,
+                                  NULL);
   } else {
     // It is an error to send a message to a worker that does not have an
     // onmessage handler.
@@ -536,7 +537,7 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
     JsParamToSend argv[argc] = {
       { JSPARAM_OBJECT_TOKEN, onerror_param.get() }
     };
-    wi->js_runner->InvokeCallback(wi->onerror_handler.get(), argc, argv);
+    wi->js_runner->InvokeCallback(wi->onerror_handler.get(), argc, argv, NULL);
   } else {
     // If there's no onerror handler, we bubble the error up to the owning
     // worker's script context. If that worker is also nested, this will cause

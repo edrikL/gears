@@ -120,8 +120,11 @@ class JsRunnerInterface {
   // TODO(aa): SetPropertyBool, SetPropertyObject (to build trees), etc...
   // TODO(aa): Support for building arrays?
 
+  // Invokes a callback. If optional_alloc_retval is specified, this method will
+  // create a new JsRootedToken that the caller is responsible for deleting.
   virtual bool InvokeCallback(const JsRootedCallback *callback,
-                              int argc, JsParamToSend *argv) = 0;
+                              int argc, JsParamToSend *argv,
+                              JsRootedToken **optional_alloc_retval) = 0;
 
 #ifdef DEBUG
   virtual void ForceGC() = 0;

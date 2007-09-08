@@ -45,6 +45,27 @@ typedef jsval      JsToken;
 typedef JSContext* JsContextPtr;
 typedef nsresult   JsNativeMethodRetval;
 
+#elif BROWSER_IE
+
+#include <windows.h>
+// no "base_interface_ie.h" because IE doesn't require a COM base interface
+
+// Abstracted types for values used with JavaScript engines.
+typedef VARIANT JsToken;
+typedef void* JsContextPtr; // unused in IE
+typedef HRESULT JsNativeMethodRetval;
+
+#endif
+
+// Utility functions to convert JsToken to various primitives.
+// TODO(aa): Add coercion to these functions (since they include the word "to")
+// and add new functions to determine what the token really is.
+bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out);
+bool JsTokenToInt(JsToken t, JsContextPtr cx, int *out);
+bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out);
+
+#if BROWSER_FF
+
 // A JsToken that won't get GC'd out from under you.
 class JsRootedToken {
  public:
@@ -59,6 +80,13 @@ class JsRootedToken {
 
   JsToken token() const { return token_; }
   JsContextPtr context() const { return context_; }
+
+  bool GetAsBool(bool *out) const {
+    return JsTokenToBool(token_, context_, out);
+  }
+
+  // TODO(aa): GetAsString(), etc. But needs restructuring first. See note below
+  // above IE implementation.
 
  private:
   JsContextPtr context_;
@@ -75,30 +103,31 @@ class JsRootedToken {
 
 #elif BROWSER_IE
 
-#include <windows.h>
-// no "base_interface_ie.h" because IE doesn't require a COM base interface
-
-// Abstracted types for values used with JavaScript engines.
-typedef IDispatch* JsToken;
-typedef void*      JsContextPtr; // unused in IE
-typedef HRESULT    JsNativeMethodRetval;
-
-// A JsToken that won't get GC'd out from under you. We could have used
-// CComPtr<IDispatch> for this IE implementation, but went with this for
-// parallelism with FF.
+// A JsToken that won't get GC'd out from under you.
+// TODO(aa): This leaks for things like strings and arrays. We need to correctly
+// handle lifetime. Also need to think of different requirements for when token
+// is an input parameter vs a return value.
 class JsRootedToken {
  public:
   JsRootedToken(JsContextPtr context, JsToken token)
-      : token_(token) { // We don't use JsContextPtr in IE.
-    token_->AddRef();
+       : token_(token) { // IE doesn't use JsContextPtr
+    if (token_.vt == VT_DISPATCH) {
+      token_.pdispVal->AddRef();
+    }
   }
 
   ~JsRootedToken() {
-    token_->Release();
+    if (token_.vt == VT_DISPATCH) {
+      token_.pdispVal->Release();
+    }
   }
 
   JsToken token() const { return token_; }
   JsContextPtr context() const { return NULL; }
+
+  bool GetAsBool(bool *out) const {
+    return JsTokenToBool(token_, NULL, out);
+  }
 
  private:
   JsToken token_;
@@ -218,22 +247,20 @@ class JsParamFetcher {
   // In Firefox, set has_string_retval iff method has a string return value.
   bool IsOptionalParamPresent(int i, bool has_string_retval);
 
-  // Tokens are opaque values that can be passed back to the JS engine later.
-  // All other functions check the type of the requested value, and they will
-  // return false on a mismatch.
-  bool GetAsToken(int i, JsToken *out);
+  // All functions check the type of the requested value, and they will return
+  // false on a mismatch.
   bool GetAsInt(int i, int *out);
   bool GetAsString(int i, std::string16 *out);
   bool GetAsArray(int i, JsToken *out_array, int *out_length);
   bool GetAsNewRootedCallback(int i, JsRootedCallback **out);
 
+  // TODO(aa): This should probably go away because the tokens you get can
+  // become invalid if you store them.
   bool GetFromArrayAsToken(JsToken array, int i, JsToken *out);
   bool GetFromArrayAsInt(JsToken array, int i, int *out);
   bool GetFromArrayAsString(JsToken array, int i, std::string16 *out);
 
  private:
-  bool TokenToInt(JsToken t, int *out);
-  bool TokenToString(JsToken t, std::string16 *out);
   bool ArrayIndexToToken(JsToken array, int i, JsToken *out);
 
   JsContextPtr  js_context_;

@@ -752,7 +752,7 @@ void GearsResourceStore::InvokeCompletionCallback(
     { JSPARAM_BOOL, &succeeded },
     { JSPARAM_INT, &capture_id }
   };
-  GetJsRunner()->InvokeCallback(request->callback.get(), argc, argv);
+  GetJsRunner()->InvokeCallback(request->callback.get(), argc, argv, NULL);
 }
 
 //------------------------------------------------------------------------------

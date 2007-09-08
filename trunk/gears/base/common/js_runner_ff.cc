@@ -140,11 +140,13 @@ class JsRunnerBase : public JsRunnerInterface {
     return SetProperty(object, name, INT_TO_JSVAL(value));
   }
 
-  virtual bool InvokeCallbackSpecialized(const JsRootedCallback *callback,
-                                         int argc, jsval *argv) = 0;
+  virtual bool InvokeCallbackSpecialized(
+                   const JsRootedCallback *callback, int argc, jsval *argv,
+                   JsRootedToken **optional_alloc_retval) = 0;
 
   bool InvokeCallback(const JsRootedCallback *callback,
-                      int argc, JsParamToSend *argv) {
+                      int argc, JsParamToSend *argv,
+                      JsRootedToken **optional_alloc_retval) {
     assert(callback && (!argc || argv));
     if (!callback->token()) { return false; }
 
@@ -182,7 +184,8 @@ class JsRunnerBase : public JsRunnerInterface {
     }
 
     // Invoke the method.
-    return InvokeCallbackSpecialized(callback, argc, js_engine_argv.get());
+    return InvokeCallbackSpecialized(callback, argc, js_engine_argv.get(),
+                                     optional_alloc_retval);
   }
 
 #ifdef DEBUG
@@ -243,7 +246,8 @@ class JsRunner : public JsRunnerBase {
     error_handler_ = handler;
   }
   bool InvokeCallbackSpecialized(const JsRootedCallback *callback,
-                                 int argc, jsval *argv);
+                                 int argc, jsval *argv,
+                                 JsRootedCallback **optional_alloc_retval);
 
  private:
   bool InitJavaScriptEngine();
@@ -527,13 +531,25 @@ bool JsRunner::Eval(const std::string16 &script) {
   return true;
 }
 
-bool JsRunner::InvokeCallbackSpecialized(const JsRootedCallback *callback,
-                                         int argc, jsval *argv) {
-  jsval retval;  // not used for now
+bool JsRunner::InvokeCallbackSpecialized(
+                   const JsRootedCallback *callback, int argc, jsval *argv,
+                   JsRootedToken **optional_alloc_retval) {
+  jsval retval;
   JSBool result = JS_CallFunctionValue(
                       callback->context(),
                       JS_GetGlobalObject(callback->context()),
                       callback->token(), argc, argv, &retval);
+
+  if (optional_alloc_retval) {
+    // Note: A valid jsval is returned no matter what the javascript function
+    // returns. If the javascript function returns nothing, or explicitly
+    // returns <undefined>, the the jsval will be JSVAL_IS_VOID. If the
+    // javascript function returns <null>, then the jsval will be JSVAL_IS_NULL.
+    // Always returning a JsRootedToken should allow us to coerce these values
+    // to other types correctly in the future.
+    *optional_alloc_retval = new JsRootedToken(js_engine_context_, retval);
+  }
+
   return result == JS_TRUE;
 }
 
@@ -565,7 +581,8 @@ class DocumentJsRunner : public JsRunnerBase {
   }
   bool Eval(const std::string16 &full_script);
   bool InvokeCallbackSpecialized(const JsRootedCallback *callback,
-                                 int argc, jsval *argv);
+                                 int argc, jsval *argv,
+                                 JsRootedToken **optional_alloc_retval);
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(DocumentJsRunner);
@@ -622,7 +639,8 @@ bool DocumentJsRunner::Eval(const std::string16 &script) {
 
 bool DocumentJsRunner::InvokeCallbackSpecialized(
                            const JsRootedCallback *callback,
-                           int argc, jsval *argv) {
+                           int argc, jsval *argv,
+                           JsRootedToken **optional_alloc_retval) {
   // When invoking a callback on the document context, we must go through
   // nsIScriptContext->CallEventHandler because it sets up certain state that
   // the browser error handler expects to find if there is an error. Without
@@ -632,11 +650,18 @@ bool DocumentJsRunner::InvokeCallbackSpecialized(
   sc = GetScriptContextFromJSContext(callback->context());
   if (!sc) { return false; }
 
-  jsval retval;  // not used for now
+  jsval retval;
   nsresult result = sc->CallEventHandler(
                             JS_GetGlobalObject(callback->context()),
                             JSVAL_TO_OBJECT(callback->token()),
                             argc, argv, &retval);
+
+  if (optional_alloc_retval) {
+    // See note in JsRunner::InvokeCallbackSpecialized about return values of
+    // javascript functions.
+    *optional_alloc_retval = new JsRootedToken(js_engine_context_, retval);
+  }
+
   return NS_SUCCEEDED(result);
 }
 
