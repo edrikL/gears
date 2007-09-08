@@ -28,7 +28,7 @@
 
 bool TestJsRootedTokenLifetime() {
   JsRunnerInterface *js_runner = NewJsRunner();
-  JsToken token(0);
+  JsToken token = {0};
 
   JsRootedToken *rooted_token = new JsRootedToken(js_runner->GetContext(),
                                                   token);

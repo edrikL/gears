@@ -39,6 +39,66 @@
 #endif
 
 
+#if BROWSER_FF
+
+bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out) {
+  if (!JSVAL_IS_BOOLEAN(t)) { return false; }
+
+  JSBool bool_value;
+  if (!JS_ValueToBoolean(cx, t, &bool_value)) { return false; }
+  *out = (bool_value == JS_TRUE);
+  return true;
+}
+
+bool JsTokenToInt(JsToken t, JsContextPtr cx, int *out) {
+  if (!JSVAL_IS_INT(t)) { return false; }
+
+  int32 i32_value;
+  if (!JS_ValueToECMAInt32(cx, t, &i32_value)) { return false; }
+  *out = i32_value;
+  return true;
+}
+
+bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
+  // for optional args, we want JS null to act like the default _typed_ value
+  if (JSVAL_IS_NULL(t)) {
+    out->clear();
+    return true;
+  }
+
+  if (!JSVAL_IS_STRING(t)) { return false; }
+
+  JSString *js_str = JS_ValueToString(cx, t);
+  if (!js_str) { return false; }
+
+  out->assign(reinterpret_cast<const char16 *>(JS_GetStringChars(js_str)),
+              JS_GetStringLength(js_str));
+  return true;
+}
+
+#elif BROWSER_IE
+
+bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out) {
+  if (t.vt != VT_BOOL) { return false; }
+  *out = (t.boolVal == VARIANT_TRUE);
+  return true;
+}
+
+bool JsTokenToInt(JsToken t, JsContextPtr cx, int *out) {
+  if (t.vt != VT_I4) { return false; }
+  *out = t.lVal;
+  return true;
+}
+
+bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
+  if (t.vt != VT_BSTR) { return false; }
+  out->assign(t.bstrVal);
+  return true;
+}
+
+#endif
+
+
 bool GearsBaseClass::InitBaseFromSibling(const GearsBaseClass *other) {
   assert(other->is_initialized_);
   return InitBaseManually(other->env_is_worker_,
@@ -211,10 +271,8 @@ bool JsParamFetcher::IsOptionalParamPresent(int i, bool has_mysterious_retval) {
     return false;
   }
 
-  JsToken token;
-
   // Also return false if the value was <undefined> or <null>.
-  GetAsToken(i, &token);
+  JsToken token = js_argv_[i];
   if (JSVAL_IS_VOID(token) || JSVAL_IS_NULL(token)) {
     return false;
   }
@@ -222,51 +280,43 @@ bool JsParamFetcher::IsOptionalParamPresent(int i, bool has_mysterious_retval) {
   return true;
 }
 
-
-bool JsParamFetcher::GetAsToken(int i, JsToken *out) {
+bool JsParamFetcher::GetAsInt(int i, int *out) {
   // 'has_mysterious_retval' can cause js_argc_ to be one larger than the "real"
   // number of parameters.  So comparing against js_argc_ here doesn't ensure we
   // are reading a real parameter.  However, it does ensure we don't read past
   // the end of the js_argv_ array.
   if (i >= js_argc_) return false;
-  *out = js_argv_[i];
-  return true;
-}
-
-bool JsParamFetcher::GetAsInt(int i, int *out) {
-  if (i >= js_argc_) return false;  // see comment above, in GetAsToken()
   JsToken t = js_argv_[i];
-  return TokenToInt(t, out);
+  return JsTokenToInt(t, js_context_, out);
 }
 
 bool JsParamFetcher::GetAsString(int i, std::string16 *out) {
-  if (i >= js_argc_) return false;  // see comment above, in GetAsToken()
+  if (i >= js_argc_) return false;  // see comment above, in GetAsInt()
   JsToken t = js_argv_[i];
-  return TokenToString(t, out);
+  return JsTokenToString(t, js_context_, out);
 }
 
 bool JsParamFetcher::GetAsArray(int i, JsToken *out_array, int *out_length) {
-  if (i >= js_argc_) return false;  // see comment above, in GetAsToken()
-  JsToken array;
-  if (GetAsToken(i, &array)) {
+  if (i >= js_argc_) return false;  // see comment above, in GetAsInt()
+  JsToken array = js_argv_[i];
 
-    // check that it's an array
-    if (JSVAL_IS_OBJECT(array) &&
-        JS_IsArrayObject(js_context_, JSVAL_TO_OBJECT(array))) {
+  // check that it's an array
+  if (JSVAL_IS_OBJECT(array) &&
+      JS_IsArrayObject(js_context_, JSVAL_TO_OBJECT(array))) {
 
-      jsuint length;
-      if (JS_GetArrayLength(js_context_, JSVAL_TO_OBJECT(array), &length)) {
-        *out_array = array;
-        *out_length = static_cast<int>(length);
-        return true; // succeeded
-      }
+    jsuint length;
+    if (JS_GetArrayLength(js_context_, JSVAL_TO_OBJECT(array), &length)) {
+      *out_array = array;
+      *out_length = static_cast<int>(length);
+      return true; // succeeded
     }
   }
+
   return false; // failed
 }
 
 bool JsParamFetcher::GetAsNewRootedCallback(int i, JsRootedCallback **out) {
-  if (i >= js_argc_) return false;  // see comment above, in GetAsToken()
+  if (i >= js_argc_) return false;  // see comment above, in GetAsInt()
   *out = new JsRootedCallback(GetContextPtr(), js_argv_[i]);
   return true;
 }
@@ -282,7 +332,7 @@ bool JsParamFetcher::GetFromArrayAsToken(JsToken array, int i, JsToken *out) {
 bool JsParamFetcher::GetFromArrayAsInt(JsToken array, int i, int *out) {
   JsToken token;
   if (ArrayIndexToToken(array, i, &token)) {
-    if (TokenToInt(token, out)) {
+    if (JsTokenToInt(token, js_context_, out)) {
       return true;
     }
   }
@@ -293,38 +343,11 @@ bool JsParamFetcher::GetFromArrayAsString(JsToken array, int i,
                                           std::string16 *out) {
   JsToken token;
   if (ArrayIndexToToken(array, i, &token)) {
-    if (TokenToString(token, out)) {
+    if (JsTokenToString(token, js_context_, out)) {
       return true;
     }
   }
   return false;
-}
-
-
-bool JsParamFetcher::TokenToInt(JsToken t, int *out) {
-  if (!JSVAL_IS_INT(t)) { return false; }
-
-  int32 i32_value;
-  if (!JS_ValueToECMAInt32(js_context_, t, &i32_value)) { return false; }
-  *out = i32_value;
-  return true;
-}
-
-bool JsParamFetcher::TokenToString(JsToken t, std::string16 *out) {
-  // for optional args, we want JS null to act like the default _typed_ value
-  if (JSVAL_IS_NULL(t)) {
-    out->clear();
-    return true;
-  }
-
-  if (!JSVAL_IS_STRING(t)) { return false; }
-
-  JSString *js_str = JS_ValueToString(js_context_, t);
-  if (!js_str) { return false; }
-
-  out->assign(reinterpret_cast<const char16 *>(JS_GetStringChars(js_str)),
-              JS_GetStringLength(js_str));
-  return true;
 }
 
 bool JsParamFetcher::ArrayIndexToToken(JsToken array, int i, JsToken *out) {

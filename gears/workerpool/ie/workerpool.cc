@@ -235,7 +235,7 @@ STDMETHODIMP GearsWorkerPool::put_onmessage(const VARIANT *in_value) {
 
   if (!ActiveXUtils::VariantIsNullOrUndefined(in_value)) {
     if (in_value->vt == VT_DISPATCH) {
-      onmessage_handler.reset(new JsRootedCallback(NULL, in_value->pdispVal));
+      onmessage_handler.reset(new JsRootedCallback(NULL, *in_value));
     } else {
       RETURN_EXCEPTION(STRING16(L"The onmessage callback must be a function."));
     }
@@ -256,7 +256,7 @@ STDMETHODIMP GearsWorkerPool::put_onerror(const VARIANT *in_value) {
 
   if (!ActiveXUtils::VariantIsNullOrUndefined(in_value)) {
     if (in_value->vt == VT_DISPATCH) {
-      onerror_handler.reset(new JsRootedCallback(NULL, in_value->pdispVal));
+      onerror_handler.reset(new JsRootedCallback(NULL, *in_value));
     } else {
       RETURN_EXCEPTION(STRING16(L"The onerror callback must be a function."));
     }
@@ -895,7 +895,8 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
       { JSPARAM_INT, &msg.sender },
       { JSPARAM_OBJECT_TOKEN, onmessage_param.get() }
     };
-    wi->js_runner->InvokeCallback(wi->onmessage_handler.get(), argc, argv);
+    wi->js_runner->InvokeCallback(wi->onmessage_handler.get(), argc, argv,
+                                  NULL);
   } else {
     // It is an error to send a message to a worker that does not have an
     // onmessage handler.
@@ -945,7 +946,7 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
     JsParamToSend argv[argc] = {
       { JSPARAM_OBJECT_TOKEN, onerror_param.get() }
     };
-    wi->js_runner->InvokeCallback(wi->onerror_handler.get(), argc, argv);
+    wi->js_runner->InvokeCallback(wi->onerror_handler.get(), argc, argv, NULL);
   } else {
     // If there's no onerror handler, we bubble the error up to the owning
     // worker's script context. If that worker is also nested, this will cause

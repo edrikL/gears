@@ -89,7 +89,7 @@ class JsRunnerBase : public JsRunnerInterface {
       return NULL;
     }
 
-    return new JsRootedToken(GetContext(), result.pdispVal);
+    return new JsRootedToken(GetContext(), result);
   }
 
   bool SetPropertyString(JsToken object, const char16 *name,
@@ -102,9 +102,10 @@ class JsRunnerBase : public JsRunnerInterface {
   }
 
   bool InvokeCallback(const JsRootedCallback *callback,
-                      int argc, JsParamToSend *argv) {
+                      int argc, JsParamToSend *argv,
+                      JsRootedToken **optional_alloc_retval) {
     assert(callback && (!argc || argv));
-    if (!callback->token()) { return false; }
+    if (callback->token().vt != VT_DISPATCH) { return false; }
 
     // Setup argument array.
     scoped_array<CComVariant> js_engine_argv(new CComVariant[argc]);
@@ -142,15 +143,25 @@ class JsRunnerBase : public JsRunnerInterface {
     invoke_params.cArgs = argc;
     invoke_params.rgvarg = js_engine_argv.get();
 
-    HRESULT hr = callback->token()->Invoke(
+    VARIANT retval = {0};
+    HRESULT hr = callback->token().pdispVal->Invoke(
         DISPID_VALUE, IID_NULL, // DISPID_VALUE = default action
         LOCALE_SYSTEM_DEFAULT,  // TODO(cprince): should this be user default?
         DISPATCH_METHOD,        // dispatch/invoke as...
         &invoke_params,         // parameters
-        NULL,                   // receives result (NULL okay)
+        optional_alloc_retval ? &retval : NULL, // receives result (NULL okay)
         NULL,                   // receives exception (NULL okay)
         NULL);                  // receives badarg index (NULL okay)
     if (FAILED(hr)) { return false; }
+
+    if (optional_alloc_retval) {
+      // Note: A valid VARIANT is returned no matter what the js function
+      // returns. If it returns nothing, or explicitly returns <undefined>, the
+      // variant will contain VT_EMPTY. If it returns <null>, the variant will
+      // contain VT_NULL. Always returning a JsRootedToken should allow us to
+      // coerce these values to other types correctly in the future.
+      *optional_alloc_retval = new JsRootedToken(NULL, retval);
+    }
 
     return true;
   }
@@ -167,7 +178,9 @@ class JsRunnerBase : public JsRunnerInterface {
 
  private:
   bool SetProperty(JsToken object, const char16 *name, const VARIANT &value) {
-    CComQIPtr<IDispatchEx> dispatchex = object;
+    if (object.vt != VT_DISPATCH) { return false; }
+
+    CComQIPtr<IDispatchEx> dispatchex = object.pdispVal;
     if (!dispatchex) { return false; }
 
     DISPID dispid;
@@ -181,9 +194,9 @@ class JsRunnerBase : public JsRunnerInterface {
     DISPID dispid_put = DISPID_PROPERTYPUT;
     params.rgdispidNamedArgs = &dispid_put;
 
-    hr = object->Invoke(dispid, IID_NULL,
-                        LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT,
-                        &params, NULL, NULL, NULL);
+    hr = object.pdispVal->Invoke(dispid, IID_NULL,
+                                 LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT,
+                                 &params, NULL, NULL, NULL);
     if (FAILED(hr)) { return false; }
 
     return true;
