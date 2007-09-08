@@ -552,7 +552,7 @@ void GearsHttpRequest::OnReadyStateChangedCall() {
     JsRunnerInterface *runner = GetJsRunner();
     assert(runner);
     if (runner) {
-      runner->InvokeCallback(handler, 0, NULL);
+      runner->InvokeCallback(handler, 0, NULL, NULL);
     }
     if (is_complete)
       delete handler;
