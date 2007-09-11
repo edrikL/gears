@@ -539,7 +539,8 @@ bool JsRunner::InvokeCallbackSpecialized(
                       callback->context(),
                       JS_GetGlobalObject(callback->context()),
                       callback->token(), argc, argv, &retval);
-
+  if (result == JS_FALSE) { return false; }
+  
   if (optional_alloc_retval) {
     // Note: A valid jsval is returned no matter what the javascript function
     // returns. If the javascript function returns nothing, or explicitly
@@ -550,7 +551,7 @@ bool JsRunner::InvokeCallbackSpecialized(
     *optional_alloc_retval = new JsRootedToken(js_engine_context_, retval);
   }
 
-  return result == JS_TRUE;
+  return true;
 }
 
 // Provides the same interface as JsRunner, but for the normal JavaScript engine
@@ -655,6 +656,7 @@ bool DocumentJsRunner::InvokeCallbackSpecialized(
                             JS_GetGlobalObject(callback->context()),
                             JSVAL_TO_OBJECT(callback->token()),
                             argc, argv, &retval);
+  if (NS_FAILED(result)) { return false; }
 
   if (optional_alloc_retval) {
     // See note in JsRunner::InvokeCallbackSpecialized about return values of
@@ -662,7 +664,7 @@ bool DocumentJsRunner::InvokeCallbackSpecialized(
     *optional_alloc_retval = new JsRootedToken(js_engine_context_, retval);
   }
 
-  return NS_SUCCEEDED(result);
+  return true;
 }
 
 

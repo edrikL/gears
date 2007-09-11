@@ -166,8 +166,7 @@ a typical example.
 <li>JavaScript code (the "parent" worker) uses <code>google.gears.factory</code>
     to create a WorkerPool <code>wp</code>.
 <li>The parent indicates where incoming messages should go by setting
-    <code>wp.onmessage</code>, and sets <code>wp.onerror</code> to indicate
-    where worker errors should be sent.  It does this <i>before</i> calling
+    <code>wp.onmessage</code>.  It does this <i>before</i> calling
     <code>createWorker()</code> to help ensure no messages will be lost.
 <li>For each new worker (a "child" worker):
 
@@ -265,7 +264,7 @@ void <b>allowCrossOrigin</b>() <span class="highlight">[New in <a href="index.ht
   <tr class="odd">
     <td width="113">Summary:</td>
     <td width="550" class="odd">
-      Specifies the function to call when an error occurs in any child worker.
+      Specifies a handler for unhandled errors inside a worker.
     </td>
   </tr>
   <tr class="odd">
@@ -274,12 +273,27 @@ void <b>allowCrossOrigin</b>() <span class="highlight">[New in <a href="index.ht
       <code>errorObject</code>
       - An object of type "Error" that explains the problem. Has these properties:
         <br>&nbsp; &nbsp; &bull; <code>message</code> - Description of the error.
+        <br>&nbsp; &nbsp; &bull; <code>lineNumber</code> - The line number on which the error occurred.
     </td>
+  </tr>
+  <tr class="odd">
+    <td>Return value:</td>
+    <td>Return <code>true</code> to indicate the error was handled, which prevents it from bubbling
+up to the parent.</td>
   </tr>
   <tr class="odd">
     <td>Details:</td>
     <td class="odd">
-      Callback is optional, and can only be set in the parent worker.
+      This callback provides functionality in workers similar to the
+      <code><a href="http://developer.mozilla.org/en/docs/DOM:window.onerror"
+      >window.onerror</code></a> property. If set, it will be
+      called for any unhandled errors that occur inside a worker.<br><br>
+
+      You can use this callback to implement "last-chance" error handling for
+      your workers. For example, you could log all unhandled errors into the
+      <a href="api_database.html">Database module</a>.<br><br>
+
+      <span color='red'>NOTE:</span> This callback can only be set from child workers.
     </td>
   </tr>
 </table>

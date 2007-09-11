@@ -128,11 +128,12 @@ class PoolThreadsManager
  private:
   ~PoolThreadsManager();
 
-  bool GetPoolMessage(Message *msg);
-
   // Gets the id of the worker associated with the current thread. Caller must
   // acquire the mutex.
   int GetCurrentPoolWorkerId();
+  bool GetPoolMessage(Message *msg);
+  bool InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
+                            const JsErrorInfo &error_info);
 
   static void JavaScriptThreadEntry(void *args);
   static bool SetupJsRunner(JsRunnerInterface *js_runner,

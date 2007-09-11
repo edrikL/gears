@@ -70,12 +70,16 @@ bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out);
 class JsRootedToken {
  public:
   JsRootedToken(JsContextPtr context, JsToken token)
-    : context_(context), token_(token) {
-    JS_AddRoot(context_, &token_);
+      : context_(context), token_(token) {
+    if (JSVAL_IS_GCTHING(token_)) {
+      JS_AddRoot(context_, &token_);
+    }
   }
 
   ~JsRootedToken() {
-    JS_RemoveRoot(context_, &token_);
+    if (JSVAL_IS_GCTHING(token_)) {
+      JS_RemoveRoot(context_, &token_);
+    }
   }
 
   JsToken token() const { return token_; }

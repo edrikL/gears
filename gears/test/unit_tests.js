@@ -38,6 +38,36 @@
 var gIsDebugBuild;
 var gIsChildWorker;
 
+var gExpectedErrors = [];
+var gReceivedErrors = [];
+
+window.onerror = function(errorMessage) {
+  for (var i = 0; i < gExpectedErrors.length; i++) {
+    if (errorMessage.indexOf(gExpectedErrors[i]) > -1) {
+      // This is an error we were expecting. Note down that we got it and
+      // prevent the browser UI.
+      gReceivedErrors.push(errorMessage);
+
+      // Remove the error from the expected list so that we minimize the chance
+      // we will remove other errors accidentally.
+      gExpectedErrors.splice(i, 1);
+      return true;
+    }
+  }
+
+  // This is some other error. Fall through to the regular browser UI.
+  return false;
+};
+
+function receivedError(errorMessage) {
+  for (var i = 0; i < gReceivedErrors.length; i++) {
+    if (gReceivedErrors[i].indexOf(errorMessage) > -1) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function doit(document) {
   document.getElementById("browserInfo").innerHTML =
       "<b>Browser Version:</b> " + navigator.userAgent;
@@ -1688,36 +1718,82 @@ function workerpool_OnMessageTests() {
 }
 
 
+// Class used to test that the onerror handler bubbles correctly.
+function WorkerPoolBubbleTest(name, onerrorContent, shouldBubble) {
+  this.fullName = 'WorkerPoolBubbleTest: ' + name;
+  this.onerrorContent = onerrorContent;
+  this.shouldBubble = shouldBubble;
+}
+
+WorkerPoolBubbleTest.prototype.start = function() {
+  this.wp = google.gears.factory.create('beta.workerpool', '1.1');
+  var str = [];
+
+  if (this.shouldBubble) {
+    gExpectedErrors.push(this.fullName);
+  }
+
+  if (this.onerrorContent) {
+    str.push('google.gears.workerPool.onerror = function() {');
+    str.push(this.onerrorContent);
+    str.push('}');
+  }
+
+  str.push('throw new Error("' + this.fullName + '")');
+  this.wp.createWorker(str.join('\n'));
+};
+
+WorkerPoolBubbleTest.prototype.checkResult = function() {
+  if (this.shouldBubble) {
+    if (receivedError(this.fullName)) {
+      insertRow(this.fullName, true, '');
+    } else {
+      insertRow(this.fullName, false, 'Expected global error was not thrown');
+    }
+  } // else, the error was unexpected and was allowed to bubble up to the
+    // browser error UI.
+};
+
+
+workerpool_bubbleTests = [
+  new WorkerPoolBubbleTest('no bubble', 'return true;', false),
+  new WorkerPoolBubbleTest('bubble 1', 'return false;', true),
+  // TODO(aa): When coercion is implemented these next two should *not* bubble
+  // because they would get coerced to <true>.
+  new WorkerPoolBubbleTest('bubble 2', 'return 42;', true),
+  new WorkerPoolBubbleTest('bubble 3', 'return {};', true),
+  new WorkerPoolBubbleTest('bubble 4', 'return;', true),
+  new WorkerPoolBubbleTest('bubble 5', null, true),
+  new WorkerPoolBubbleTest('nested error outer',
+                           'throw new Error("nested error inner")', true)
+];
+
 function workerpool_OnErrorTests() {
   // Test that onerror gets called.
   workerpool_OnErrorTests.handler_called = false;
   var wp1 = google.gears.factory.create('beta.workerpool', '1.1');
-  wp1.onerror = function(e) {
+  wp1.onmessage = function() {
     workerpool_OnErrorTests.handler_called = true;
   };
-  var childId = wp1.createWorker('');
-  // Should cause an error because there is no onmessage handler in the worker.
+  var childId = wp1.createWorker(
+      ['var parentId;',
+       'google.gears.workerPool.onmessage = function(m, senderId) {',
+       'parentId = senderId;',
+       'throw new Error("hello");',
+       '}',
+       'google.gears.workerPool.onerror = function() {',
+       'google.gears.workerPool.sendMessage("", parentId);',
+       'return true;',
+       '}'].join('\n'));
   wp1.sendMessage('hello', childId);
 
+  // Test errors are bubbled up correctly for different onerror configurations
+  for (var i = 0, test; test = workerpool_bubbleTests[i]; i++) {
+    test.start();
+  }
 
-  // Test that errors get thrown globally if there is no onerror handler.
-  workerpool_OnErrorTests.global_called = false;
-  var wp2 = google.gears.factory.create('beta.workerpool', '1.1');
-  window.onerror = function(msg) {
-    if (msg.indexOf(
-            'because worker does not have an onmessage handler') > -1) {
-      workerpool_OnErrorTests.global_called = true;
-      // This was the error we caused on purpose, so return true to prevent
-      // error from going to normal browser error UI.
-      return true;
-    } else {
-      // This was some other error, let it go through to the normal browser UI.
-      return false;
-    }
-  };
-  var childId = wp2.createWorker('');
-  wp2.sendMessage('hello', childId);
-
+  // The last test generates one extra error
+  gExpectedErrors.push('nested error inner');
 }
 
 
@@ -1823,28 +1899,26 @@ function workerpool_CreateWorkerFromUrl() {
 
 
   // TEST 4
-  workerpool_CreateWorkerFromUrl.result4 = '';
+  workerpool_CreateWorkerFromUrl.expectedError4 =
+      'http://example.com/non-existent-file.js';
   workerpool_CreateWorkerFromUrl.description4 =
       'createWorkerFromUrl() Test 4: ' +
       'File Not Found should fire error.';
 
   var wp4 = google.gears.factory.create('beta.workerpool', '1.1');
-  wp4.onerror = function(e) {
-    workerpool_CreateWorkerFromUrl.result4 = e.message;
-  }
+  gExpectedErrors.push(workerpool_CreateWorkerFromUrl.expectedError4);
   wp4.createWorkerFromUrl('http://example.com/non-existent-file.js');
 
 
   // TEST 5
-  workerpool_CreateWorkerFromUrl.result5 = '';
+  workerpool_CreateWorkerFromUrl.expectedError5 =
+      'Page does not have permission to use Google Gears';
   workerpool_CreateWorkerFromUrl.description5 =
       'createWorkerFromUrl() Test 5: ' +
       'Cross-origin worker missing allowCrossOrigin() should fire error.';
 
   var wp5 = google.gears.factory.create('beta.workerpool', '1.1');
-  wp5.onerror = function(e) {
-    workerpool_CreateWorkerFromUrl.result5 = e.message;
-  }
+  gExpectedErrors.push(workerpool_CreateWorkerFromUrl.expectedError5);
   wp5.createWorkerFromUrl(crossOriginPath + sameOriginWorkerFile);
   // TODO(cprince): Could add debug-only origin override here too.
   wp5.sendMessage('PING5', childId);
@@ -1925,10 +1999,9 @@ function checkWorkerPoolTests() {
             '',
             0);
 
-  insertRow('workerpool_OnErrorTests.global_called',
-            workerpool_OnErrorTests.global_called,
-            '',
-            0);
+  for (var i = 0, test; test = workerpool_bubbleTests[i]; i++) {
+    test.checkResult();
+  }
 
   // Check the CreateWorkerFromUrl tests.
 
@@ -1958,13 +2031,13 @@ function checkWorkerPoolTests() {
             0);
 
   insertRow(workerpool_CreateWorkerFromUrl.description4,
-            '' != workerpool_CreateWorkerFromUrl.result4,
-            workerpool_CreateWorkerFromUrl.result4, // explanation
+            receivedError(workerpool_CreateWorkerFromUrl.expectedError4),
+            'Expected global error was not received', // explanation
             0);
 
   insertRow(workerpool_CreateWorkerFromUrl.description5,
-            '' != workerpool_CreateWorkerFromUrl.result5,
-            workerpool_CreateWorkerFromUrl.result5, // explanation
+            receivedError(workerpool_CreateWorkerFromUrl.expectedError5),
+            'Expected global error was not received', // explanation
             0);
 }
 
