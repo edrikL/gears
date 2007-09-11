@@ -83,6 +83,7 @@ struct JavaScriptWorkerInfo {
   // Our code assumes some items begin cleared. Zero all members w/o ctors.
   JavaScriptWorkerInfo()
       : threads_manager(NULL), js_runner(NULL), message_hwnd(0),
+        is_invoking_error_handler(false),
         thread_init_signalled(false), thread_init_ok(false),
         script_signalled(false), script_ok(false), http_request(NULL),
         is_factory_suspended(false), thread_handle(INVALID_HANDLE_VALUE) {}
@@ -97,6 +98,8 @@ struct JavaScriptWorkerInfo {
 
   HWND message_hwnd;
   std::queue<Message> message_queue;
+
+  bool is_invoking_error_handler;  // prevents recursive onerror
 
   // 
   // These fields are used only for created workers (children).
@@ -270,8 +273,8 @@ STDMETHODIMP GearsWorkerPool::put_onerror(const VARIANT *in_value) {
     // particular error.
     // TODO(aa): We need a system throughout Gears for being able to handle
     // exceptions from deep inside the stack better.
-    RETURN_EXCEPTION(STRING16(L"The onerror property cannot be set from "
-                              L"inside a worker"));
+    RETURN_EXCEPTION(STRING16(L"The onerror property cannot be set on a "
+                              L"parent worker"));
   }
 
   RETURN_NORMAL();
@@ -392,9 +395,18 @@ void PoolThreadsManager::AllowCrossOrigin() {
 
 
 void PoolThreadsManager::HandleError(const JsErrorInfo &error_info) {
-  MutexLock lock(&mutex_);
+  // If there is an error handler on this thread, invoke it.
+  int src_worker_id = kInvalidWorkerId;
+  JavaScriptWorkerInfo *src_wi = NULL;
+  bool error_was_handled = false;
 
-  int src_worker_id = GetCurrentPoolWorkerId();
+  // Must lock conservatively here because InvokeOnErrorHandler() below can end
+  // up calling methods on workerpool which also acquire the mutex.
+  {
+    MutexLock lock(&mutex_);
+    src_worker_id = GetCurrentPoolWorkerId();
+    src_wi = worker_info_[src_worker_id];
+  }
 
   // TODO(cprince): Add the following lines when ReadyStateChanged doesn't need
   // to be called from the main thread -- i.e. when HttpRequest can fetch URLs
@@ -402,17 +414,64 @@ void PoolThreadsManager::HandleError(const JsErrorInfo &error_info) {
   //   // We only expect to receive errors from created workers.
   //   assert(src_worker_id != kOwningWorkerId);
 
-  std::string16 text;
-  FormatWorkerPoolErrorMessage(error_info, src_worker_id, &text);
+  // Guard against the onerror handler itself throwing an error and causing a
+  // loop.
+  if (!src_wi->is_invoking_error_handler) {
+    src_wi->is_invoking_error_handler = true;
+    error_was_handled = InvokeOnErrorHandler(src_wi, error_info);
+    src_wi->is_invoking_error_handler = false;
+  }
 
-  JavaScriptWorkerInfo *dest_wi = worker_info_[kOwningWorkerId];  // parent
+  // If the error was not handled, bubble it up to the parent worker.
+  if (!error_was_handled) {
+    MutexLock lock(&mutex_);
 
-  // Copy the message to an internal queue.
-  dest_wi->message_queue.push(Message(text, src_worker_id,
-                                      dest_wi->script_origin));
-  // Notify the receiving worker.
-  PostMessage(dest_wi->message_hwnd, WM_WORKERPOOL_ONERROR, 0,
-              reinterpret_cast<LPARAM>(dest_wi));
+    std::string16 text;
+    FormatWorkerPoolErrorMessage(error_info, src_worker_id, &text);
+
+    JavaScriptWorkerInfo *dest_wi = worker_info_[kOwningWorkerId];  // parent
+
+    // Copy the message to an internal queue.
+    dest_wi->message_queue.push(Message(text, src_worker_id,
+                                        dest_wi->script_origin));
+    // Notify the receiving worker.
+    PostMessage(dest_wi->message_hwnd, WM_WORKERPOOL_ONERROR, 0,
+                reinterpret_cast<LPARAM>(dest_wi));
+  }
+}
+
+
+bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
+                                              const JsErrorInfo &error_info) {
+  if (!wi->onerror_handler.get()) { return false; }
+
+  // Setup the onerror parameter (type: Error).
+  scoped_ptr<JsRootedToken> onerror_param(
+      wi->js_runner->NewObject(STRING16(L"Error")));
+  wi->js_runner->SetPropertyString(onerror_param->token(),
+                                   STRING16(L"message"),
+                                   error_info.message.c_str());
+  wi->js_runner->SetPropertyInt(onerror_param->token(),
+                                STRING16(L"lineNumber"),
+                                error_info.line);
+  // TODO(aa): Additional information, like fragment of code where the error
+  // occurred, stack?
+
+  const int argc = 1;
+  JsParamToSend argv[argc] = {
+    { JSPARAM_OBJECT_TOKEN, onerror_param.get() }
+  };
+
+  JsRootedToken *alloc_js_retval = NULL;
+  bool js_retval = false;
+
+  if (wi->js_runner->InvokeCallback(wi->onerror_handler.get(), argc, argv,
+                                    &alloc_js_retval)) {
+    alloc_js_retval->GetAsBool(&js_retval);
+    delete alloc_js_retval;
+  }
+
+  return js_retval;
 }
 
 
@@ -540,9 +599,9 @@ bool PoolThreadsManager::SetCurrentThreadErrorHandler(
   MutexLock lock(&mutex_);
 
   int worker_id = GetCurrentPoolWorkerId();
-  if (kOwningWorkerId != worker_id) {
+  if (kOwningWorkerId == worker_id) {
     // TODO(aa): Change this error to an assert when we remove the ability to
-    // set 'onerror' from created workers.
+    // set 'onerror' on parent workers.
     return false;
   }
 
@@ -934,25 +993,10 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
   }
 #endif
 
-  if (wi->onerror_handler.get()) {
-    // Setup the onerror parameter (type: Error).
-    scoped_ptr<JsRootedToken> onerror_param(
-                                  wi->js_runner->NewObject(STRING16(L"Error")));
-    wi->js_runner->SetPropertyString(onerror_param->token(),
-                                     STRING16(L"message"),
-                                     msg.text.c_str());
-
-    const int argc = 1;
-    JsParamToSend argv[argc] = {
-      { JSPARAM_OBJECT_TOKEN, onerror_param.get() }
-    };
-    wi->js_runner->InvokeCallback(wi->onerror_handler.get(), argc, argv, NULL);
-  } else {
-    // If there's no onerror handler, we bubble the error up to the owning
-    // worker's script context. If that worker is also nested, this will cause
-    // PoolThreadsManager::HandleError to get called again on that context.
-    ThrowGlobalError(wi->js_runner, msg.text);
-  }
+  // Bubble the error up to the owning worker's script context. If that
+  // worker is also nested, this will cause PoolThreadsManager::HandleError
+  // to get called again on that context.
+  ThrowGlobalError(wi->js_runner, msg.text);
 }
 
 
