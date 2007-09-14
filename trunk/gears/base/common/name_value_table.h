@@ -49,6 +49,9 @@ class NameValueTable {
   // Gets a string value that was previously created with SetString().
   bool GetString(const char16 *name, std::string16 *value);
 
+  // Check whether the specified name exists in the table.
+  bool HasName(const char16 *name, bool *retval);
+
   // Removes a value that was previously created with one of the Set methods.
   bool Clear(const char16 *name);
 

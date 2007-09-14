@@ -82,6 +82,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_runner_utils.h"
+#include "gears/base/common/permissions_db.h"
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/firefox/dom_utils.h"
@@ -310,8 +311,39 @@ NS_IMETHODIMP GearsWorkerPool::CreateWorkerFromUrl(//const nsAString &url
     RETURN_EXCEPTION(STRING16(L"The url parameter must be a string."));
   }
 
+  std::string16 absolute_url;
+  ResolveAndNormalize(EnvPageLocationUrl().c_str(), url.c_str(), &absolute_url);
+
+  SecurityOrigin script_origin;
+  if (!script_origin.InitFromUrl(absolute_url.c_str())) {
+    RETURN_EXCEPTION(STRING16(L"Internal error."));
+  }
+  
+  // TODO(aa): Check that the scheme is supported. Need to add an
+  // IsSupportedScheme() method to httprequest.
+  
+  // Enable the worker's origin for gears access if it isn't explicitly
+  // disabled.
+  // NOTE: It is OK to do this here, even though there is a race with starting
+  // the background thread. Even if permission is revoked before after this
+  // happens that is no different than what happens if permission is revoked
+  // after the thread starts.
+  if (!script_origin.IsSameOrigin(EnvPageSecurityOrigin())) {
+    PermissionsDB *db = PermissionsDB::GetDB();
+    if (!db) {
+      RETURN_EXCEPTION(STRING16(L"Internal error."));
+    }
+
+    if (!db->EnableGearsForWorker(script_origin)) {
+      std::string16 message(STRING16(L"Gears access is denied for url: "));
+      message += absolute_url;
+      message += STRING16(L".");
+      RETURN_EXCEPTION(message.c_str());
+    }
+  }
+
   int worker_id_temp;  // protects against modifying output param on failure
-  bool succeeded = threads_manager_->CreateThread(url.c_str(),
+  bool succeeded = threads_manager_->CreateThread(absolute_url.c_str(),
                                                   false,  // is_param_script
                                                   &worker_id_temp);
   if (!succeeded) {

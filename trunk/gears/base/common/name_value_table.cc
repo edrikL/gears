@@ -150,6 +150,35 @@ bool NameValueTable::GetString(const char16 *name, std::string16 *value) {
 }
 
 
+bool NameValueTable::HasName(const char16 *name, bool *retval) {
+  assert(name);
+  if (!name) {
+    return false;
+  }
+
+  const char16 *sql_prefix = STRING16(L"SELECT 1 FROM ");
+  const char16 *sql_suffix = STRING16(L" WHERE Name = ?");
+
+  SQLStatement statement;
+  if (!PrepareStatement(statement, sql_prefix, sql_suffix, name)) {
+    return false;
+  }
+
+  int result = statement.step();
+  if (SQLITE_ROW == result) {
+    *retval = true;
+    return true;
+  } else if (SQLITE_DONE == result) {
+    *retval = false;
+    return true;
+  } else {
+    LOG(("NameValueTable::HasName unable to step statement: %d\n",
+         sqlite3_errcode(db_->GetDBHandle())));
+    return false;
+  }
+}
+
+
 bool NameValueTable::Clear(const char16 *name) {
   assert(name);
   if (!name) {

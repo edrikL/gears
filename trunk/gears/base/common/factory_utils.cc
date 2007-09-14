@@ -128,7 +128,12 @@ bool HasPermissionToUseGears(GearsFactory *factory) {
   PermissionsDB *permissions = PermissionsDB::GetDB();
   if (!permissions) { return false; }
 
-  switch (permissions->GetCanAccessGears(origin)) {
+  PermissionsDB::PermissionValue value;
+  if (!permissions->GetCanAccessGears(origin, &value)) {
+    value = PermissionsDB::PERMISSION_DENIED;
+  }
+
+  switch (value) {
     // Origin was found in database. Save choice for page lifetime,
     // so things continue working even if underlying database changes.
     case PermissionsDB::PERMISSION_DENIED:

@@ -97,14 +97,27 @@ bool PermissionsDB::Init() {
 }
 
 
-const PermissionsDB::PermissionValue PermissionsDB::GetCanAccessGears(
-    const SecurityOrigin &origin) {
-  int result = 0;
-  if (access_table_.GetInt(origin.url().c_str(), &result)) {
-    return static_cast<PermissionValue>(result);
-  } else {
-    return PERMISSION_DEFAULT;
+bool PermissionsDB::GetCanAccessGears(const SecurityOrigin &origin,
+                                      PermissionsDB::PermissionValue *retval) {
+  SQLTransaction transaction(&db_);
+
+  bool has_setting;
+  if (!access_table_.HasName(origin.url().c_str(), &has_setting)) {
+    return false;
   }
+
+  if (!has_setting) {
+    *retval = PERMISSION_DEFAULT;
+    return true;
+  }
+
+  int retval_int;
+  if (!access_table_.GetInt(origin.url().c_str(), &retval_int)) {
+    return false;
+  }
+
+  *retval = static_cast<PermissionsDB::PermissionValue>(retval_int);
+  return true;
 }
 
 
@@ -166,6 +179,22 @@ bool PermissionsDB::GetOriginsByValue(PermissionsDB::PermissionValue value,
   }
 
   return true;
+}
+
+
+bool PermissionsDB::EnableGearsForWorker(const SecurityOrigin &origin) {
+  SQLTransaction transaction(&db_);
+
+  PermissionValue current_value;
+  if (!GetCanAccessGears(origin, &current_value)) {
+    return false;
+  }
+
+  if (current_value == PERMISSION_DEFAULT) {
+    return access_table_.SetInt(origin.url().c_str(), PERMISSION_ALLOWED);
+  }
+
+  return current_value == PERMISSION_ALLOWED;
 }
 
 

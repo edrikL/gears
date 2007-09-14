@@ -56,11 +56,14 @@ class PermissionsDB {
   void SetCanAccessGears(const SecurityOrigin &origin, PermissionValue value);
 
   // Gets the Gears access level for a given SecurityOrigin.
-  const PermissionValue GetCanAccessGears(const SecurityOrigin &origin);
+  bool GetCanAccessGears(const SecurityOrigin &origin, PermissionValue *retval);
 
   // Get all the origins with a specific value.
   bool GetOriginsByValue(PermissionValue value,
                          std::vector<SecurityOrigin> *result);
+
+  // Attempts to enable Gears for a worker with the given SecurityOrigin.
+  bool EnableGearsForWorker(const SecurityOrigin &origin);
 
   // The key used to cache instances of PermissionsDB in ThreadLocals.
   static const std::string kThreadLocalKey;
