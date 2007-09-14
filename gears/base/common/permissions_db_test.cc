@@ -58,11 +58,12 @@ bool TestPermissionsDBAll() {
   // values were saved.
   ThreadLocals::DestroyValue(PermissionsDB::kThreadLocalKey);
   permissions = PermissionsDB::GetDB();
+  PermissionsDB::PermissionValue value;
 
-  TEST_ASSERT(PermissionsDB::PERMISSION_ALLOWED ==
-              permissions->GetCanAccessGears(foo));
-  TEST_ASSERT(PermissionsDB::PERMISSION_DENIED ==
-              permissions->GetCanAccessGears(bar));
+  TEST_ASSERT(permissions->GetCanAccessGears(foo, &value));
+  TEST_ASSERT(PermissionsDB::PERMISSION_ALLOWED == value);
+  TEST_ASSERT(permissions->GetCanAccessGears(bar, &value));
+  TEST_ASSERT(PermissionsDB::PERMISSION_DENIED == value);
 
   // Try searching by default value (should not be allowed).
   std::vector<SecurityOrigin> list;
@@ -71,8 +72,8 @@ bool TestPermissionsDBAll() {
 
   // Now try resetting
   permissions->SetCanAccessGears(bar, PermissionsDB::PERMISSION_DEFAULT);
-  TEST_ASSERT(PermissionsDB::PERMISSION_DEFAULT ==
-              permissions->GetCanAccessGears(bar));
+  TEST_ASSERT(permissions->GetCanAccessGears(bar, &value));
+  TEST_ASSERT(PermissionsDB::PERMISSION_DEFAULT == value);
 
   LOG(("TestPermissionsDBAll - passed\n"));
   return true;
