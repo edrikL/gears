@@ -33,11 +33,11 @@ void SettingsDialog::Run() {
   // Populate the arguments() property with the current allowed and denied
   // sites.
   if (!PopulateArguments(&settings_dialog.arguments["allowed"],
-                         CapabilitiesDB::CAPABILITY_ALLOWED)) {
+                         PermissionsDB::PERMISSION_ALLOWED)) {
     return;
   }
   if (!PopulateArguments(&settings_dialog.arguments["denied"],
-                         CapabilitiesDB::CAPABILITY_DENIED)) {
+                         PermissionsDB::PERMISSION_DENIED)) {
     return;
   }
 
@@ -53,14 +53,14 @@ void SettingsDialog::Run() {
 
 
 bool SettingsDialog::PopulateArguments(Json::Value *json_object,
-    CapabilitiesDB::CapabilityStatus status) {
-  CapabilitiesDB *capabilities = CapabilitiesDB::GetDB();
+    PermissionsDB::PermissionValue value) {
+  PermissionsDB *capabilities = PermissionsDB::GetDB();
   if (!capabilities) {
     return false;
   }
 
   std::vector<SecurityOrigin> list;
-  if (!capabilities->GetOriginsByStatus(status, &list)) {
+  if (!capabilities->GetOriginsByValue(value, &list)) {
     return false;
   }
 
@@ -97,7 +97,7 @@ void SettingsDialog::ProcessResult(Json::Value *dialog_result) {
     return;
   }
 
-  CapabilitiesDB *capabilities = CapabilitiesDB::GetDB();
+  PermissionsDB *capabilities = PermissionsDB::GetDB();
   if (!capabilities) {
     return;
   }
@@ -123,6 +123,6 @@ void SettingsDialog::ProcessResult(Json::Value *dialog_result) {
     }
 
     capabilities->SetCanAccessGears(origin, 
-                                    CapabilitiesDB::CAPABILITY_DEFAULT);
+                                    PermissionsDB::PERMISSION_DEFAULT);
   }
 }

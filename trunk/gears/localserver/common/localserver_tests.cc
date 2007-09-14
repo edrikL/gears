@@ -58,7 +58,7 @@ bool TestWebCacheAll() {
   ok &= TestSecurityModel();
   ok &= TestSqliteUtilsAll();
   ok &= TestNameValueTableAll();
-  ok &= TestCapabilitiesDBAll();
+  ok &= TestPermissionsDBAll();
   ok &= TestLocalServerDB();
   ok &= TestResourceStore();
   ok &= TestManifest();

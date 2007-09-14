@@ -28,52 +28,52 @@
 #include "gears/base/common/thread_locals.h"
 
 
-bool TestCapabilitiesDBAll() {
+bool TestPermissionsDBAll() {
 // TODO(aa): Refactor into a common location for all the internal tests.
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
-    LOG(("TestCapabilitiesDBAll - failed (%d)\n", __LINE__)); \
+    LOG(("TestPermissionsDBAll - failed (%d)\n", __LINE__)); \
     return false; \
   } \
 }
 
-  CapabilitiesDB *capabilities = CapabilitiesDB::GetDB();
-  TEST_ASSERT(capabilities);
+  PermissionsDB *permissions = PermissionsDB::GetDB();
+  TEST_ASSERT(permissions);
 
-  // Set some capabilities
+  // Set some permissions
   SecurityOrigin foo;
   foo.InitFromUrl(STRING16(L"http://unittest.foo.example.com"));
-  capabilities->SetCanAccessGears(foo, CapabilitiesDB::CAPABILITY_ALLOWED);
+  permissions->SetCanAccessGears(foo, PermissionsDB::PERMISSION_ALLOWED);
 
   SecurityOrigin bar;
   bar.InitFromUrl(STRING16(L"http://unittest.bar.example.com"));
-  capabilities->SetCanAccessGears(bar, CapabilitiesDB::CAPABILITY_DENIED);
+  permissions->SetCanAccessGears(bar, PermissionsDB::PERMISSION_DENIED);
 
   // Get the threadlocal instance and make sure we got the same instance back
-  TEST_ASSERT(CapabilitiesDB::GetDB() == capabilities);
+  TEST_ASSERT(PermissionsDB::GetDB() == permissions);
 
   // Now destory the threadlocal instance and get a new one to test whether our
   // values were saved.
-  ThreadLocals::DestroyValue(CapabilitiesDB::kThreadLocalKey);
-  capabilities = CapabilitiesDB::GetDB();
+  ThreadLocals::DestroyValue(PermissionsDB::kThreadLocalKey);
+  permissions = PermissionsDB::GetDB();
 
-  TEST_ASSERT(CapabilitiesDB::CAPABILITY_ALLOWED ==
-              capabilities->GetCanAccessGears(foo));
-  TEST_ASSERT(CapabilitiesDB::CAPABILITY_DENIED ==
-              capabilities->GetCanAccessGears(bar));
+  TEST_ASSERT(PermissionsDB::PERMISSION_ALLOWED ==
+              permissions->GetCanAccessGears(foo));
+  TEST_ASSERT(PermissionsDB::PERMISSION_DENIED ==
+              permissions->GetCanAccessGears(bar));
 
-  // Try searching by default status (should not be allowed).
+  // Try searching by default value (should not be allowed).
   std::vector<SecurityOrigin> list;
-  TEST_ASSERT(!capabilities->GetOriginsByStatus(
-      CapabilitiesDB::CAPABILITY_DEFAULT, &list));
+  TEST_ASSERT(!permissions->GetOriginsByValue(
+      PermissionsDB::PERMISSION_DEFAULT, &list));
 
   // Now try resetting
-  capabilities->SetCanAccessGears(bar, CapabilitiesDB::CAPABILITY_DEFAULT);
-  TEST_ASSERT(CapabilitiesDB::CAPABILITY_DEFAULT ==
-              capabilities->GetCanAccessGears(bar));
+  permissions->SetCanAccessGears(bar, PermissionsDB::PERMISSION_DEFAULT);
+  TEST_ASSERT(PermissionsDB::PERMISSION_DEFAULT ==
+              permissions->GetCanAccessGears(bar));
 
-  LOG(("TestCapabilitiesDBAll - passed\n"));
+  LOG(("TestPermissionsDBAll - passed\n"));
   return true;
 }
