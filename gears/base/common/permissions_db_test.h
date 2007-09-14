@@ -26,6 +26,6 @@
 #ifndef GEARS_BASE_COMMON_PERMISSIONS_DB_TEST_H__
 #define GEARS_BASE_COMMON_PERMISSIONS_DB_TEST_H__
 
-bool TestCapabilitiesDBAll();
+bool TestPermissionsDBAll();
 
 #endif  // GEARS_BASE_COMMON_PERMISSIONS_DB_TEST_H__

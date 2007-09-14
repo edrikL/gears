@@ -35,16 +35,16 @@ static const int kCurrentVersion = 2;
 static const int kOldestUpgradeableVersion = 1;
 
 
-const std::string CapabilitiesDB::kThreadLocalKey("base:permissions");
+const std::string PermissionsDB::kThreadLocalKey("base:permissions");
 
 
-CapabilitiesDB *CapabilitiesDB::GetDB() {
+PermissionsDB *PermissionsDB::GetDB() {
   if (ThreadLocals::HasValue(kThreadLocalKey)) {
-    return reinterpret_cast<CapabilitiesDB*>(
+    return reinterpret_cast<PermissionsDB*>(
         ThreadLocals::GetValue(kThreadLocalKey));
   }
 
-  CapabilitiesDB *db = new CapabilitiesDB();
+  PermissionsDB *db = new PermissionsDB();
 
   // If we can't initialize, we store NULL in the map so that we don't keep
   // trying to Init() over and over.
@@ -58,21 +58,21 @@ CapabilitiesDB *CapabilitiesDB::GetDB() {
 }
 
 
-void CapabilitiesDB::DestroyDB(void *context) {
-  CapabilitiesDB *db = reinterpret_cast<CapabilitiesDB*>(context);
+void PermissionsDB::DestroyDB(void *context) {
+  PermissionsDB *db = reinterpret_cast<PermissionsDB*>(context);
   if (db) {
     delete db;
   }
 }
 
 
-CapabilitiesDB::CapabilitiesDB()
+PermissionsDB::PermissionsDB()
     : version_table_(&db_, kVersionTableName),
       access_table_(&db_, kAccessTableName) {
 }
 
 
-bool CapabilitiesDB::Init() {
+bool PermissionsDB::Init() {
   // Initialize the database and tables
   if (!db_.Init(kDatabaseName)) {
     return false;
@@ -97,42 +97,39 @@ bool CapabilitiesDB::Init() {
 }
 
 
-const CapabilitiesDB::CapabilityStatus CapabilitiesDB::GetCanAccessGears(
+const PermissionsDB::PermissionValue PermissionsDB::GetCanAccessGears(
     const SecurityOrigin &origin) {
   int result = 0;
   if (access_table_.GetInt(origin.url().c_str(), &result)) {
-    return static_cast<CapabilityStatus>(result);
+    return static_cast<PermissionValue>(result);
   } else {
-    return CAPABILITY_DEFAULT;
+    return PERMISSION_DEFAULT;
   }
 }
 
 
-void CapabilitiesDB::SetCanAccessGears(
-    const SecurityOrigin &origin,
-    CapabilitiesDB::CapabilityStatus status) {
+void PermissionsDB::SetCanAccessGears(const SecurityOrigin &origin,
+                                      PermissionsDB::PermissionValue value) {
   if (origin.url().empty()) {
     assert(false);
     return;
   }
 
-  if (status == CAPABILITY_DEFAULT) {
+  if (value == PERMISSION_DEFAULT) {
     access_table_.Clear(origin.url().c_str());
-  } else if (status == CAPABILITY_ALLOWED || status == CAPABILITY_DENIED) {
-    access_table_.SetInt(origin.url().c_str(), status);
+  } else if (value == PERMISSION_ALLOWED || value == PERMISSION_DENIED) {
+    access_table_.SetInt(origin.url().c_str(), value);
   } else {
-    LOG(("CapabilitiesDB::SetCanAccessGears invalid status: %d", status));
+    LOG(("PermissionsDB::SetCanAccessGears invalid value: %d", value));
     assert(false);
   }
 }
 
 
-bool CapabilitiesDB::GetOriginsByStatus(
-    CapabilitiesDB::CapabilityStatus status,
-    std::vector<SecurityOrigin> *result) {
-  if (CAPABILITY_ALLOWED != status &&
-      CAPABILITY_DENIED != status) {
-    LOG(("Unexpected status: %d", status));
+bool PermissionsDB::GetOriginsByValue(PermissionsDB::PermissionValue value,
+                                      std::vector<SecurityOrigin> *result) {
+  if (PERMISSION_ALLOWED != value && PERMISSION_DENIED != value) {
+    LOG(("Unexpected value: %d", value));
     return false;
   }
 
@@ -146,21 +143,21 @@ bool CapabilitiesDB::GetOriginsByStatus(
     return false;
   }
 
-  if (SQLITE_OK != statement.bind_int(0, status)) {
+  if (SQLITE_OK != statement.bind_int(0, value)) {
     return false;
   }
 
   int rv;
   while (SQLITE_DONE != (rv = statement.step())) {
     if (SQLITE_ROW != rv) {
-      LOG(("CapabilitiesDB::ListGearsAccess: Could not iterate. Error was: %d",
+      LOG(("PermissionsDB::ListGearsAccess: Could not iterate. Error was: %d",
            sqlite3_errcode(db_.GetDBHandle())));
       return false;
     }
 
     SecurityOrigin origin;
     if (!origin.InitFromUrl(statement.column_text16_safe(0))) {
-      LOG(("CapabilitiesDB::ListGearsAccess: InitFromUrl() failed."));
+      LOG(("PermissionsDB::ListGearsAccess: InitFromUrl() failed."));
       // If we can't initialize a single URL, don't freak out. Try to do the
       // other ones.
       continue;
@@ -172,7 +169,7 @@ bool CapabilitiesDB::GetOriginsByStatus(
 }
 
 
-bool CapabilitiesDB::CreateOrUpgradeDatabase() {
+bool PermissionsDB::CreateOrUpgradeDatabase() {
   // Doing this in a transaction effectively locks the database file and
   // ensures that this is synchronized across all threads and processes
   SQLTransaction transaction(&db_);
@@ -213,7 +210,7 @@ bool CapabilitiesDB::CreateOrUpgradeDatabase() {
 }
 
 
-bool CapabilitiesDB::CreateDatabase() {
+bool PermissionsDB::CreateDatabase() {
   ASSERT_SINGLE_THREAD();
 
   SQLTransaction transaction(&db_);
@@ -244,7 +241,7 @@ bool CapabilitiesDB::CreateDatabase() {
 }
 
 
-bool CapabilitiesDB::UpgradeFromVersion1ToVersion2() {
+bool PermissionsDB::UpgradeFromVersion1ToVersion2() {
   SQLTransaction transaction(&db_);
   if (!transaction.Begin()) {
     return false;

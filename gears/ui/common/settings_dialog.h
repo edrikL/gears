@@ -43,7 +43,7 @@ class SettingsDialog {
 
   // Helper method. Populates one of the two lists passed to dialogArguments.
   static bool PopulateArguments(Json::Value *list,
-                                CapabilitiesDB::CapabilityStatus status);
+                                PermissionsDB::PermissionValue value);
 
   // Helper method. Process the results of the dialog.
   static void ProcessResult(Json::Value *dialogResult);

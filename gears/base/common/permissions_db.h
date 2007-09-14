@@ -40,37 +40,34 @@
 //
 // TODO(aa): Think about factoring some of the commonalities between this class
 // and WebCacheDB into a common base class.
-//
-// TODO(aa): "Capabilities" and "Status" were both poor naming choices. Rename.
-// Perhaps to "Permission" and "PermissionValue"?
-class CapabilitiesDB {
+class PermissionsDB {
  public:
-  // The capabilities a page can have.
-  enum CapabilityStatus {
-    CAPABILITY_DEFAULT = 0,
-    CAPABILITY_ALLOWED = 1,
-    CAPABILITY_DENIED = 2
+  // The allowable values of a permission.
+  enum PermissionValue {
+    PERMISSION_DEFAULT = 0,
+    PERMISSION_ALLOWED = 1,
+    PERMISSION_DENIED = 2
   };
 
-  // Gets a thread-specific CapabilitiesDB instance.
-  static CapabilitiesDB *GetDB();
+  // Gets a thread-specific PermissionsDB instance.
+  static PermissionsDB *GetDB();
 
   // Sets the Gears access level for a given SecurityOrigin.
-  void SetCanAccessGears(const SecurityOrigin &origin, CapabilityStatus status);
+  void SetCanAccessGears(const SecurityOrigin &origin, PermissionValue value);
 
   // Gets the Gears access level for a given SecurityOrigin.
-  const CapabilityStatus GetCanAccessGears(const SecurityOrigin &origin);
+  const PermissionValue GetCanAccessGears(const SecurityOrigin &origin);
 
-  // Get all the origins with a specific status.
-  bool GetOriginsByStatus(CapabilityStatus status,
-                          std::vector<SecurityOrigin> *result);
+  // Get all the origins with a specific value.
+  bool GetOriginsByValue(PermissionValue value,
+                         std::vector<SecurityOrigin> *result);
 
-  // The key used to cache instances of CapabilitiesDB in ThreadLocals.
+  // The key used to cache instances of PermissionsDB in ThreadLocals.
   static const std::string kThreadLocalKey;
 
  private:
   // Private constructor, callers must use GetDB().
-  CapabilitiesDB();
+  PermissionsDB();
 
   // Initializes the database. Must be called before other methods.
   bool Init();
@@ -97,7 +94,7 @@ class CapabilitiesDB {
   // Maps origins to ability to access Gears.
   NameValueTable access_table_;
 
-  DISALLOW_EVIL_CONSTRUCTORS(CapabilitiesDB);
+  DISALLOW_EVIL_CONSTRUCTORS(PermissionsDB);
   DECL_SINGLE_THREAD
 };
 

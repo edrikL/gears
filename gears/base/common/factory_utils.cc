@@ -125,22 +125,22 @@ bool HasPermissionToUseGears(GearsFactory *factory) {
   // See if the user has permanently allowed or denied this origin.
   const SecurityOrigin &origin = factory->EnvPageSecurityOrigin();
 
-  CapabilitiesDB *capabilities = CapabilitiesDB::GetDB();
-  if (!capabilities) { return false; }
+  PermissionsDB *permissions = PermissionsDB::GetDB();
+  if (!permissions) { return false; }
 
-  switch (capabilities->GetCanAccessGears(origin)) {
+  switch (permissions->GetCanAccessGears(origin)) {
     // Origin was found in database. Save choice for page lifetime,
     // so things continue working even if underlying database changes.
-    case CapabilitiesDB::CAPABILITY_DENIED:
+    case PermissionsDB::PERMISSION_DENIED:
       factory->is_permission_granted_ = false;
       factory->is_permission_value_from_user_ = true;
       return factory->is_permission_granted_;
-    case CapabilitiesDB::CAPABILITY_ALLOWED:
+    case PermissionsDB::PERMISSION_ALLOWED:
       factory->is_permission_granted_ = true;
       factory->is_permission_value_from_user_ = true;
       return factory->is_permission_granted_;
     // Origin was not found in database.
-    case CapabilitiesDB::CAPABILITY_DEFAULT:
+    case PermissionsDB::PERMISSION_DEFAULT:
       break;
     // All other values are unexpected.
     default:
@@ -156,10 +156,10 @@ bool HasPermissionToUseGears(GearsFactory *factory) {
 
   // If the user told us to remember the choice, do so.
   if (remember_choice) { 
-    CapabilitiesDB::CapabilityStatus status =
-        allow_origin ? CapabilitiesDB::CAPABILITY_ALLOWED
-                     : CapabilitiesDB::CAPABILITY_DENIED;
-    capabilities->SetCanAccessGears(origin, status);
+    PermissionsDB::PermissionValue value =
+        allow_origin ? PermissionsDB::PERMISSION_ALLOWED
+                     : PermissionsDB::PERMISSION_DENIED;
+    permissions->SetCanAccessGears(origin, value);
   }
 
   // Return the decision.
