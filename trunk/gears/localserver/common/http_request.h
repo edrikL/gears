@@ -31,6 +31,8 @@
 #include "gears/base/common/int_types.h"
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string16.h"
+#include "gears/base/common/string_utils.h"
+#include "gears/localserver/common/http_constants.h"
 
 //------------------------------------------------------------------------------
 // A cross-platform interface for sending HTTP requests.  Implementations
@@ -40,6 +42,16 @@ class HttpRequest {
  public:
   // factory
   static HttpRequest *Create();
+
+  // Returns true if the given scheme is supported by HttpRequest.
+  static bool IsSchemeSupported(const char16 *scheme) {
+    if (StringCompareIgnoreCase(scheme, HttpConstants::kHttpScheme) == 0 ||
+        StringCompareIgnoreCase(scheme, HttpConstants::kHttpsScheme) == 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   // refcounting
   virtual int AddReference() = 0;
