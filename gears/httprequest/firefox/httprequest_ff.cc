@@ -348,13 +348,17 @@ bool GearsHttpRequest::CallAbortOnUiThread() {
 
 void GearsHttpRequest::OnAbortCall() {
   assert(IsUiThread());
-  MutexLock locker(&lock_);
-  if (request_) {
-    request_info_.reset(NULL);
-    response_info_.reset(NULL);
-    request_->SetOnReadyStateChange(NULL);
-    request_->Abort();
-    RemoveRequest();
+  nsCOMPtr<GearsHttpRequest> reference(this);
+  { 
+    // The extra scope is to ensure we unlock prior to reference.Release
+    MutexLock locker(&lock_);
+    if (request_) {
+      request_info_.reset(NULL);
+      response_info_.reset(NULL);
+      request_->SetOnReadyStateChange(NULL);
+      request_->Abort();
+      RemoveRequest();
+    }
   }
 }
 
