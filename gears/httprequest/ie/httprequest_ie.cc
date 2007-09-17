@@ -431,20 +431,21 @@ bool GearsHttpRequest::ResolveUrl(const char16 *url,
                                   std::string16 *exception_message) {
   assert(url && resolved_url && exception_message);
   if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), url, resolved_url)) {
-    *exception_message = STRING16(L"Failed to resolve url.");
+    *exception_message = STRING16(L"Failed to resolve URL.");
     return false;
   }
 
   SecurityOrigin url_origin;
   if (!url_origin.InitFromUrl(resolved_url->c_str()) ||
       !url_origin.IsSameOrigin(EnvPageSecurityOrigin())) {
-    *exception_message = STRING16(L"Url is not from the same origin.");
+    *exception_message = STRING16(L"URL is not from the same origin.");
     return false;
   }
 
-  if (url_origin.scheme() != HttpConstants::kHttpScheme &&
-      url_origin.scheme() != HttpConstants::kHttpsScheme) {
-    *exception_message = STRING16(L"Protocol is not HTTP or HTTPS.");
+  if (!HttpRequest::IsSchemeSupported(url_origin.scheme().c_str())) {
+    *exception_message = STRING16(L"URL scheme '");
+    *exception_message += url_origin.scheme();
+    *exception_message += STRING16(L"' is not supported.");
     return false;
   }
 

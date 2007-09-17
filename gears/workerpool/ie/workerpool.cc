@@ -195,8 +195,14 @@ STDMETHODIMP GearsWorkerPool::createWorkerFromUrl(const BSTR *url_bstr,
     RETURN_EXCEPTION(STRING16(L"Internal error."));
   }
 
-  // TODO(aa): Check that the scheme is supported. Need to add an
-  // IsSupportedScheme() method to httprequest.
+  // We do not currently support file:// URLs. See bug:
+  // http://code.google.com/p/google-gears/issues/detail?id=239.
+  if (!HttpRequest::IsSchemeSupported(script_origin.scheme().c_str())) {
+    std::string16 message(STRING16(L"URL scheme '"));
+    message += script_origin.scheme();
+    message += STRING16(L"' is not supported.");
+    RETURN_EXCEPTION(message.c_str());
+  }
   
   // Enable the worker's origin for gears access if it isn't explicitly
   // disabled.
