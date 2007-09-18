@@ -58,6 +58,11 @@ class PermissionsDB {
   // Gets the Gears access level for a given SecurityOrigin.
   PermissionsDB::PermissionValue GetCanAccessGears(const SecurityOrigin &origin);
 
+  // Returns true if the origin has permission to use Gears.
+  bool IsOriginAllowed(const SecurityOrigin &origin) {
+    return GetCanAccessGears(origin) == PERMISSION_ALLOWED;
+  }
+
   // Get all the origins with a specific value.
   bool GetOriginsByValue(PermissionValue value,
                          std::vector<SecurityOrigin> *result);

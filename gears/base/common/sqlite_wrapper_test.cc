@@ -62,7 +62,7 @@ static bool TestSQLDatabaseTransactions() {
   // Put something into the DB using a nested transaction
   {
     SQLDatabase db1;
-    TEST_ASSERT(db1.Init(STRING16(L"SqliteUtils_test.db")));
+    TEST_ASSERT(db1.Open(STRING16(L"SqliteUtils_test.db")));
 
     TEST_ASSERT(SQLITE_OK ==
       sqlite3_exec(db1.GetDBHandle(), 
@@ -85,7 +85,7 @@ static bool TestSQLDatabaseTransactions() {
   // Now check that it is there
   {
     SQLDatabase db2;
-    TEST_ASSERT(db2.Init(STRING16(L"SqliteUtils_test.db")));
+    TEST_ASSERT(db2.Open(STRING16(L"SqliteUtils_test.db")));
 
     SQLStatement stmt;
     TEST_ASSERT(SQLITE_OK ==
@@ -106,7 +106,7 @@ static bool TestSQLTransaction() {
   // Put something into the DB using a nested transaction
   {
     SQLDatabase db1;
-    TEST_ASSERT(db1.Init(STRING16(L"SqliteUtils_test.db")));
+    TEST_ASSERT(db1.Open(STRING16(L"SqliteUtils_test.db")));
 
     TEST_ASSERT(SQLITE_OK == 
       sqlite3_exec(db1.GetDBHandle(), "DROP TABLE test", NULL, NULL, NULL));
@@ -117,7 +117,7 @@ static bool TestSQLTransaction() {
   // Now verify that the table is not there
   {
     SQLDatabase db2;
-    TEST_ASSERT(db2.Init(STRING16(L"SqliteUtils_test.db")));
+    TEST_ASSERT(db2.Open(STRING16(L"SqliteUtils_test.db")));
 
     SQLStatement stmt;
     TEST_ASSERT(SQLITE_OK == 

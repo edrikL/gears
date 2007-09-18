@@ -24,6 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef DEBUG
 
+#include "gears/base/common/permissions_db.h"
 #include "gears/base/common/permissions_db_test.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/name_value_table_test.h"
@@ -48,6 +49,14 @@ bool TestStringUtils();  // from string_utils_test.cc
 // TestWebCacheAll
 //------------------------------------------------------------------------------
 bool TestWebCacheAll() {
+  // We need permissions to use the localserver.
+  SecurityOrigin cc_tests_origin;
+  cc_tests_origin.InitFromUrl(STRING16(L"http://cc_tests/"));
+  PermissionsDB *permissions = PermissionsDB::GetDB();
+  if (!permissions) return false;
+  permissions->SetCanAccessGears(cc_tests_origin,
+                                 PermissionsDB::PERMISSION_ALLOWED);
+
   bool ok = true;
   ok &= TestStringUtils();
   ok &= TestFileUtils();
@@ -66,6 +75,12 @@ bool TestWebCacheAll() {
   // TODO(zork): Add this test back in once it doesn't crash the browser.
   //ok &= TestJsRootedTokenLifetime();
   LOG(("TestWebCacheAll - %s\n", ok ? "passed" : "failed"));
+
+  // We have to call GetDB again since TestCapabilitiesDBAll deletes
+  // the previous instance.
+  permissions = PermissionsDB::GetDB();
+  permissions->SetCanAccessGears(cc_tests_origin,
+                                 PermissionsDB::PERMISSION_DEFAULT);
   return ok;
 }
 

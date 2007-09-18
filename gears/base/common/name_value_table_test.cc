@@ -42,7 +42,7 @@ bool TestNameValueTableAll() {
 
   // Create a test database to test in
   SQLDatabase db;
-  TEST_ASSERT(db.Init(STRING16(L"TestNameValueTable.db")));
+  TEST_ASSERT(db.Open(STRING16(L"TestNameValueTable.db")));
   TEST_ASSERT(db.DropAllObjects());
 
   NameValueTable nvt(&db, STRING16(L"TestNameValueTable"));

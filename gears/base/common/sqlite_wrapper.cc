@@ -80,18 +80,23 @@ void BuildSqliteErrorString(const char16 *summary, int sql_status, sqlite3 *db,
 
 
 //------------------------------------------------------------------------------
-// Constructor
+// Constructor and Destructor
 //------------------------------------------------------------------------------
+
 SQLDatabase::SQLDatabase() : 
     db_(NULL), transaction_count_(0), needs_rollback_(false), 
     transaction_listener_(NULL) {
 }
 
 
+SQLDatabase::~SQLDatabase() {
+  Close();
+}
+
 //------------------------------------------------------------------------------
-// Init
+// Open
 //------------------------------------------------------------------------------
-bool SQLDatabase::Init(const char16 *name) {
+bool SQLDatabase::Open(const char16 *name) {
   ASSERT_SINGLE_THREAD();
 
   // When parameter binding multiple parameters, we frequently use a scheme
@@ -163,20 +168,20 @@ bool SQLDatabase::Init(const char16 *name) {
 
 
 //------------------------------------------------------------------------------
-// Destructor
+// Close
 //------------------------------------------------------------------------------
-SQLDatabase::~SQLDatabase() {
+void SQLDatabase::Close() {
   if (db_) {
     sqlite3_close(db_);
     db_ = NULL;
-  }
+  }  
 }
 
 
 //------------------------------------------------------------------------------
-// IsInitialized
+// IsOpen
 //------------------------------------------------------------------------------
-bool SQLDatabase::IsInitialized() {
+bool SQLDatabase::IsOpen() {
   ASSERT_SINGLE_THREAD();
   return db_ != NULL;
 }

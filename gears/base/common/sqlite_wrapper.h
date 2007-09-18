@@ -64,9 +64,14 @@ class SQLDatabase {
   SQLDatabase();
   ~SQLDatabase();
 
-  // Initializes the database wrapper. sqlite3 handles can only be accessed on 
-  // one thread, so we store them in ThreadLocal storage keyed by their name.
-  bool Init(const char16 *name);
+  // Open the database
+  bool Open(const char16 *name);
+
+  // Returns true if the database connection is open
+  bool IsOpen();
+
+  // Closes the database.
+  void Close();
 
   // Begin a transaction. SQLite does not support nested transactions so we
   // simulate them by keeping a count of how many open ones there are.
@@ -110,9 +115,6 @@ class SQLDatabase {
   // transactions are open, the commit will occur when the last transaction is
   // committed, so long as RollbackTransaction() has not been called.
   bool CommitTransaction();
-
-  // Returns true if Init() completed successfully.
-  bool IsInitialized();
 
   // Returns the sqlite3 database connection associated with this site.
   sqlite3 *GetDBHandle();
