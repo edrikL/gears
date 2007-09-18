@@ -179,27 +179,8 @@ NS_IMETHODIMP GearsFactory::GetBuildInfo(nsAString &retval) {
 }
 
 
-NS_IMETHODIMP GearsFactory::IsVersionAtLeast(//const nsAString &version
-                                             PRBool *retval) {
-  JsParamFetcher js_params(this);
-  std::string16 version;
-  if (!js_params.GetAsString(0, &version)) {
-    RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
-  }
-
-  int major;
-  int minor;
-  if (!ParseMajorMinorVersion(version.c_str(), &major, &minor)) {
-    RETURN_EXCEPTION(STRING16(L"Invalid version string."));
-  }
-
-  if ((PRODUCT_VERSION_MAJOR < major) ||
-      (PRODUCT_VERSION_MAJOR == major && PRODUCT_VERSION_MINOR < minor)) {
-    *retval = PR_FALSE;
-  } else {
-    *retval = PR_TRUE;
-  }
-
+NS_IMETHODIMP GearsFactory::GetVersion(nsAString &retval) {
+  retval.Assign(STRING16(PRODUCT_VERSION_STRING));
   RETURN_NORMAL();
 }
 

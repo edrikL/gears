@@ -69,7 +69,8 @@ class ATL_NO_VTABLE GearsFactory
   // GearsFactoryInterface methods
   STDMETHOD(create)(const BSTR object, const BSTR version, IDispatch **retval);
   STDMETHOD(getBuildInfo)(BSTR *retval);
-  STDMETHOD(isVersionAtLeast)(const BSTR version, VARIANT_BOOL *retval);
+  STDMETHOD(get_version)(BSTR *retval);
+
 
   // Hook into SetSite() to do some init work that requires the site.
   STDMETHOD(SetSite)(IUnknown *site);

@@ -169,32 +169,20 @@ STDMETHODIMP GearsFactory::getBuildInfo(BSTR *retval) {
   if (DetectedVersionCollision()) {
     build_info += L" (pending browser restart)";
   }
+
   *retval = SysAllocString(build_info.c_str());
-  if (*retval != NULL) {
-    return S_OK;
-  } else {
-    return E_OUTOFMEMORY;
+  if (*retval == NULL) {
+    RETURN_EXCEPTION(STRING16(L"Internal error."));
   }
+  RETURN_NORMAL();
 }
 
 
-STDMETHODIMP GearsFactory::isVersionAtLeast(const BSTR version_bstr_in,
-                                            VARIANT_BOOL *retval) {
-  const BSTR version_bstr = ActiveXUtils::SafeBSTR(version_bstr_in);
-
-  int major;
-  int minor;
-  if (!ParseMajorMinorVersion(version_bstr, &major, &minor)) {
-    RETURN_EXCEPTION(STRING16(L"Invalid version string."));
+STDMETHODIMP GearsFactory::get_version(BSTR *retval) {
+  *retval = SysAllocString(STRING16(PRODUCT_VERSION_STRING));
+  if (*retval == NULL) {
+    RETURN_EXCEPTION(STRING16(L"Internal error."));
   }
-
-  if ((PRODUCT_VERSION_MAJOR < major) ||
-      (PRODUCT_VERSION_MAJOR == major && PRODUCT_VERSION_MINOR < minor)) {
-    *retval = VARIANT_FALSE;
-  } else {
-    *retval = VARIANT_TRUE;
-  }
-
   RETURN_NORMAL();
 }
 

@@ -35,6 +35,5 @@ interface GearsFactoryInterface : GearsBaseClassInterface {
                      //in AString version
                     );
   AString getBuildInfo();
-  boolean isVersionAtLeast(//in AString version
-                          );
+  readonly attribute AString version;
 };
