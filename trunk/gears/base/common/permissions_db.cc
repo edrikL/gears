@@ -26,6 +26,7 @@
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/thread_locals.h"
+#include "gears/localserver/common/localserver_db.h"
 
 static const char16 *kDatabaseName = STRING16(L"permissions.db");
 static const char16 *kVersionTableName = STRING16(L"VersionInfo");
@@ -74,7 +75,7 @@ PermissionsDB::PermissionsDB()
 
 bool PermissionsDB::Init() {
   // Initialize the database and tables
-  if (!db_.Init(kDatabaseName)) {
+  if (!db_.Open(kDatabaseName)) {
     return false;
   }
 
@@ -119,6 +120,13 @@ void PermissionsDB::SetCanAccessGears(const SecurityOrigin &origin,
   } else {
     LOG(("PermissionsDB::SetCanAccessGears invalid value: %d", value));
     assert(false);
+  }
+
+  if (value == PERMISSION_DENIED || value == PERMISSION_DEFAULT) {
+    WebCacheDB *webcacheDB = WebCacheDB::GetDB();
+    if (webcacheDB) {
+      webcacheDB->DeleteServersForOrigin(origin);
+    }
   }
 }
 

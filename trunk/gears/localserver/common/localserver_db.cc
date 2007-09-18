@@ -26,6 +26,7 @@
 #include "gears/localserver/common/localserver_db.h"
 
 #include "gears/base/common/http_utils.h"
+#include "gears/base/common/permissions_db.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/common/string_utils.h"
@@ -127,6 +128,10 @@ static const int kWebCacheTableCount = ARRAYSIZE(kWebCacheTables);
   version 8: Renamed 'SessionValue' column to 'RequiredCookie'
   version 9: Added IgnoreQuery and removed IsUserSpecified columns
   version 10: Added SecurityOriginUrl and removed Domain columns
+  version 11: No actual database schema change, but if an origin does not have
+              PERMISSION_ALLOWED, the DB should not contain anything for that
+              origin. The version was bumped to trigger an upgrade script which
+              removes existing data that should not be there.
 */
 
 // The names of values stored in the system_info table
@@ -134,7 +139,7 @@ static const char16 *kSchemaVersionName = STRING16(L"version");
 static const char16 *kSchemaBrowserName = STRING16(L"browser");
 
 // The values stored in the system_info table
-const int kCurrentVersion = 10;
+const int kCurrentVersion = 11;
 #if BROWSER_IE
 static const char16 *kCurrentBrowser = STRING16(L"ie");
 #elif BROWSER_FF
@@ -165,7 +170,7 @@ WebCacheDB::WebCacheDB()
 //------------------------------------------------------------------------------
 bool WebCacheDB::Init() {
   // Initialize the database
-  if (!db_.Init(kFilename)) {
+  if (!db_.Open(kFilename)) {
     return false;
   }
 
@@ -258,20 +263,17 @@ bool WebCacheDB::CreateOrUpgradeDatabase() {
     }
   } else {
     // we can upgrade the db
-    /* sample upgrade code... see sample definition of UpgradeFromXToY below
     switch (version) {
-      case X:
-        if (!UpgradeFromXToY()) {
-          LOG(("WebCache: UpgradeFromXToY failed\n"));
-          sqlite3_close(db_);
-          db_ = NULL;
+      case 10:
+        if (!UpgradeFrom10To11()) {
+          LOG(("WebCache: UpgradeFrom10To11 failed\n"));
+          db_.Close();
           return false;
         }
         // fallthru...
 
       // additional upgrades here...
     }
-    */
   }
 
 #ifdef DEBUG
@@ -298,7 +300,7 @@ bool WebCacheDB::CreateOrUpgradeDatabase() {
 //------------------------------------------------------------------------------
 bool WebCacheDB::CreateDatabase() {
   ASSERT_SINGLE_THREAD();
-  assert(db_.IsInitialized());
+  assert(db_.IsOpen());
 
   SQLTransaction transaction(&db_);
   if (!transaction.Begin())
@@ -387,6 +389,71 @@ bool WebCacheDB::UpgradeFromXToY() {
 */
 
 //------------------------------------------------------------------------------
+// UpgradeFrom10To11
+//------------------------------------------------------------------------------
+bool WebCacheDB::UpgradeFrom10To11() {
+  SQLTransaction transaction(&db_);
+  if (!transaction.Begin())
+    return false;
+
+  // NOTE: This upgrade depends on aspects of the current WebCacheDB impl
+  // being compatible with the version 10/11 schema. Specifically, the
+  // current implementation of DeleteServersForOrigin() is assumed to
+  // be compatible with the 10/11 schema. If future versions change the
+  // implementation of that method in an incompatible fashion, this upgrade
+  // script must be revised.
+
+  // Build an array of SecurityOrigin that have Servers in the DB
+
+  std::vector<SecurityOrigin> origins;
+  const char16* sql =
+            STRING16(L"SELECT DISTINCT SecurityOriginUrl FROM Servers");
+
+  SQLStatement stmt;
+  int rv = stmt.prepare16(&db_, sql);
+  if (rv != SQLITE_OK) {
+    LOG(("WebCacheDB.UpgradeFrom10To11 failed to prepare statement\n"));
+    return false;
+  }
+
+  while (stmt.step() == SQLITE_ROW) {
+    origins.push_back(SecurityOrigin());
+    if (!origins.back().InitFromUrl(stmt.column_text16_safe(0))) {
+      LOG(("WebCacheDB.UpgradeFrom10To11 failed to origin.InitFromUrl\n"));
+      return false;
+    }
+  }
+  stmt.finalize();
+
+  // Check perms on each and if not allowed delete data for that origin
+
+  PermissionsDB *permissions = PermissionsDB::GetDB();
+  if (!permissions) {
+    return false;
+  }
+
+  for (std::vector<SecurityOrigin>::const_iterator iter = origins.begin();
+       iter != origins.end(); ++iter) {
+    if (!permissions->IsOriginAllowed(*iter)) {
+      if (!DeleteServersForOrigin(*iter)) {
+        return false;
+      }
+    }
+  }
+
+  // Bump the schema version
+
+  const char *kUpgradeCommands[] = {
+      "UPDATE SystemInfo SET value=11 WHERE name=\"version\""
+  };
+  const int kUpgradeCommandsCount = ARRAYSIZE(kUpgradeCommands);
+  if (!ExecuteSqlCommands(kUpgradeCommands, kUpgradeCommandsCount))
+    return false;
+
+  return transaction.Commit();
+}
+
+//------------------------------------------------------------------------------
 // ExecuteSqlCommandsInTransaction
 //------------------------------------------------------------------------------
 bool WebCacheDB::ExecuteSqlCommandsInTransaction(const char *commands[],
@@ -466,6 +533,14 @@ bool WebCacheDB::Service(const char16 *url,
 
   *payload_id_out = kInvalidID;
   redirect_url_out->clear();
+
+  // If the origin is not explicitly allowed, don't serve anything
+  SecurityOrigin origin;
+  PermissionsDB *permissions = PermissionsDB::GetDB();
+  if (!permissions || !origin.InitFromUrl(url) ||
+      !permissions->IsOriginAllowed(origin)) {
+    return false;
+  }
 
   // If the requested url contains query parameters, we have to do additional
   // work to respect the 'ignoreQuery' attribute which allows an entry to
@@ -829,6 +904,66 @@ bool WebCacheDB::FindServer(const SecurityOrigin &security_origin,
   ReadServerInfo(stmt, server);
   return true;
 }
+
+
+//------------------------------------------------------------------------------
+// FindServersForOrigin
+//------------------------------------------------------------------------------
+bool WebCacheDB::FindServersForOrigin(const SecurityOrigin &origin,
+                                      std::vector<ServerInfo> *servers) {
+  ASSERT_SINGLE_THREAD();
+  assert(servers);
+
+  const char16* sql = STRING16(L"SELECT * "
+                               L"FROM Servers "
+                               L"WHERE SecurityOriginUrl=?");
+
+  SQLStatement stmt;
+  int rv = stmt.prepare16(&db_, sql);
+  if (rv != SQLITE_OK) {
+    LOG(("WebCacheDB.FindServersForOrigin failed\n"));
+    return false;
+  }
+  rv = stmt.bind_text16(0, origin.url().c_str());
+  if (rv != SQLITE_OK) {
+    return false;
+  }
+
+  while (stmt.step() == SQLITE_ROW) {
+    servers->push_back(ServerInfo());
+    ReadServerInfo(stmt, &servers->back());
+  }
+
+  return true;
+}
+
+
+//------------------------------------------------------------------------------
+// DeleteServersForOrigin
+//------------------------------------------------------------------------------
+bool WebCacheDB::DeleteServersForOrigin(const SecurityOrigin &origin) {
+  ASSERT_SINGLE_THREAD();
+
+  SQLTransaction transaction(&db_);
+  if (!transaction.Begin()) {
+    return false;
+  }
+
+  std::vector<ServerInfo> servers;
+  if (!FindServersForOrigin(origin, &servers)) {
+    return false;
+  }
+
+  for (std::vector<ServerInfo>::const_iterator iter = servers.begin();
+       iter != servers.end(); ++iter) {
+    if (!DeleteServer(iter->id)) {
+      return false;
+    }
+  }
+
+  return transaction.Commit();
+}
+
 
 //------------------------------------------------------------------------------
 // InsertServer

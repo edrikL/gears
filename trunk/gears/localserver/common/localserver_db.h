@@ -207,6 +207,13 @@ class WebCacheDB : SQLTransactionListener {
                   ServerType server_type,
                   ServerInfo *server);
 
+  // Returns all servers for the given origin
+  bool FindServersForOrigin(const SecurityOrigin &origin,
+                            std::vector<ServerInfo> *versions);
+
+  // Deletes all servers and associated data for the given origin
+  bool DeleteServersForOrigin(const SecurityOrigin &origin);
+
   // Inserts a new row into the Servers table. The id field of the server
   // parameter is updated with the id of the inserted row.
   bool InsertServer(ServerInfo *server);
@@ -361,6 +368,8 @@ class WebCacheDB : SQLTransactionListener {
   bool CreateOrUpgradeDatabase();
   bool CreateDatabase();
   bool CreateTables();
+
+  bool UpgradeFrom10To11();
 
   bool ExecuteSqlCommandsInTransaction(const char *commands[], int count);
   bool ExecuteSqlCommands(const char *commands[], int count);
