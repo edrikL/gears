@@ -981,6 +981,14 @@ bool WebCacheDB::InsertServer(ServerInfo *server) {
     return false;
   }
 
+  SecurityOrigin origin;
+  PermissionsDB *permissions = PermissionsDB::GetDB();
+  if (!permissions || 
+      !origin.InitFromUrl(server->security_origin_url.c_str()) ||
+      !permissions->IsOriginAllowed(origin)) {
+    return false;
+  }
+
   const char16* sql = STRING16(
                           L"INSERT INTO Servers"
                           L" (Enabled, SecurityOriginUrl, Name, RequiredCookie,"
