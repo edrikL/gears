@@ -56,7 +56,7 @@ class PermissionsDB {
   void SetCanAccessGears(const SecurityOrigin &origin, PermissionValue value);
 
   // Gets the Gears access level for a given SecurityOrigin.
-  bool GetCanAccessGears(const SecurityOrigin &origin, PermissionValue *retval);
+  PermissionsDB::PermissionValue GetCanAccessGears(const SecurityOrigin &origin);
 
   // Get all the origins with a specific value.
   bool GetOriginsByValue(PermissionValue value,
