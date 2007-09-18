@@ -43,6 +43,5 @@ interface GearsFactoryInterface : IDispatch {
                  [in] const BSTR class_version,
                  [out, retval] IDispatch **retval);
   HRESULT getBuildInfo([out, retval] BSTR *retval);
-  HRESULT isVersionAtLeast([in] const BSTR version,
-                           [out, retval] VARIANT_BOOL *retval);
+  [propget] HRESULT version([out, retval] BSTR *retval);
 };

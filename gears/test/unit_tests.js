@@ -191,23 +191,18 @@ var g = eval('(' + testGlobals + ')');
 // Factory tests
 //------------------------------------------------------------------------------
 
-function factory_RequirePastVersion() {
-  var versionOkay = google.gears.factory.isVersionAtLeast('0.1');
-  return versionOkay ? g.SUCCEEDED : g.FAILED;
-}
-
-function factory_RequireCurrentVersion() {
-  var buildInfo = google.gears.factory.getBuildInfo();
-  var versionArray = buildInfo.split('.');
-  var currentVersion = versionArray[0] + '.' + versionArray[1];
-
-  var versionOkay = google.gears.factory.isVersionAtLeast(currentVersion);
-  return versionOkay ? g.SUCCEEDED : g.FAILED;
-}
-
-function factory_RequireFutureVersion() {
-  var versionOkay = google.gears.factory.isVersionAtLeast('999.0');
-  return versionOkay ? g.FAILED : g.SUCCEEDED;  // expect failure here
+function factory_CheckVersionProperty() {
+  var versionComponents = google.gears.factory.version.split('.');
+  var major = versionComponents[0];
+  var minor = versionComponents[1];
+  // Update this test when the major/minor version changes (not very often).
+  if (major != 0) {
+    return g.FAILED;
+  }
+  if (minor != 2) {
+    return g.FAILED;
+  }
+  return g.SUCCEEDED;
 }
 
 
@@ -216,9 +211,7 @@ function factory_RequireFutureVersion() {
 //
 
 var factoryTests = [
-  factory_RequirePastVersion,
-  factory_RequireCurrentVersion,
-  factory_RequireFutureVersion
+  factory_CheckVersionProperty
 ];
 
 function runFactoryTests() {

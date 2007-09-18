@@ -87,7 +87,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <pre><code>Object  <b>create</b>(className, classVersion)
 string  <b>getBuildInfo</b>()
-boolean <b>isVersionAtLeast</b>(gearsVersion) <span class="highlight">[New in <a href="index.html#relnotes">0.2</a>]</span>
+readonly attribute string <b>version</b> <span class="highlight">[New in <a href="index.html#relnotes">0.2</a>]</span>
 </code></pre>
 
 
@@ -186,24 +186,19 @@ if (window.google && google.gears) {
   </tr>
 </table>
 
+
+<h3>Attributes</h3>
+
 <table>
   <tr class="odd">
-    <th colspan="2"><code>boolean isVersionAtLeast(gearsVersion)</code> <span class="highlight">[New in <a href="index.html#relnotes">0.2</a>]</span></th>
+    <th width="113">Attribute</th>
+    <th width="113">Type</th>
+    <th width="437">Description</th>
   </tr>
   <tr class="odd">
-    <td width="113">Summary:</td>
-    <td width="550" class="odd">Checks whether the version of Gears installed has all the features of the requested version.</td>
-  </tr>
-  <tr class="odd">
-    <td>Return value:</td>
-    <td class="odd">The result of the version check.</td>
-  </tr>
-  <tr class="odd">
-    <td>Parameters:</td>
-    <td class="odd">
-      <code>gearsVersion</code>
-      - A string containing the desired version of Gears, expressed as '<code>MAJOR.MINOR</code>'.
-    </td>
+    <td><code><b>version</b></code></td>
+    <td>readonly string</td>
+    <td>Returns the version of Gears installed, as a string of the form <code>Major.Minor.Build.Patch</code> (e.g., '0.10.2.0').
   </tr>
 </table>
 
