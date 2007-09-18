@@ -97,27 +97,11 @@ bool PermissionsDB::Init() {
 }
 
 
-bool PermissionsDB::GetCanAccessGears(const SecurityOrigin &origin,
-                                      PermissionsDB::PermissionValue *retval) {
-  SQLTransaction transaction(&db_);
-
-  bool has_setting;
-  if (!access_table_.HasName(origin.url().c_str(), &has_setting)) {
-    return false;
-  }
-
-  if (!has_setting) {
-    *retval = PERMISSION_DEFAULT;
-    return true;
-  }
-
-  int retval_int;
-  if (!access_table_.GetInt(origin.url().c_str(), &retval_int)) {
-    return false;
-  }
-
-  *retval = static_cast<PermissionsDB::PermissionValue>(retval_int);
-  return true;
+PermissionsDB::PermissionValue PermissionsDB::GetCanAccessGears(
+                                   const SecurityOrigin &origin) {
+  int retval_int = PERMISSION_DEFAULT;
+  access_table_.GetInt(origin.url().c_str(), &retval_int);
+  return static_cast<PermissionsDB::PermissionValue>(retval_int);
 }
 
 
@@ -184,17 +168,24 @@ bool PermissionsDB::GetOriginsByValue(PermissionsDB::PermissionValue value,
 
 bool PermissionsDB::EnableGearsForWorker(const SecurityOrigin &origin) {
   SQLTransaction transaction(&db_);
-
-  PermissionValue current_value;
-  if (!GetCanAccessGears(origin, &current_value)) {
+  if (!transaction.Begin()) {
     return false;
   }
 
-  if (current_value == PERMISSION_DEFAULT) {
-    return access_table_.SetInt(origin.url().c_str(), PERMISSION_ALLOWED);
+  switch (GetCanAccessGears(origin)) {
+    case PERMISSION_ALLOWED:
+      return true;
+    case PERMISSION_DENIED:
+      return false;
+    case PERMISSION_DEFAULT:
+      if (!access_table_.SetInt(origin.url().c_str(), PERMISSION_ALLOWED)) {
+        return false;
+      }
+      return transaction.Commit();
+    default:
+      LOG(("Unexpected permission value"));
+      return false;
   }
-
-  return current_value == PERMISSION_ALLOWED;
 }
 
 
