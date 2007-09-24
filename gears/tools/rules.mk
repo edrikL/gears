@@ -70,17 +70,19 @@ THIRD_PARTY_OBJS = \
 #
 # Begin: resource lists that MUST be kept in sync with "win32_msi.wxs.m4"
 COMMON_RESOURCES = \
+	ui/common/button.css \
+	ui/common/button_bg.gif \
 	ui/common/button_row_background.gif \
 	ui/common/html_dialog.css \
 	ui/common/html_dialog.js \
+	ui/common/icon_32x32.png \
 	third_party/jsonjs/json_noeval.js \
 	$(COMMON_OUTDIR)/genfiles/permissions_dialog.html \
 	$(COMMON_OUTDIR)/genfiles/settings_dialog.html
 
 FF_RESOURCES = \
 	$(FF_OUTDIR)/genfiles/browser-overlay.js \
-	$(FF_OUTDIR)/genfiles/browser-overlay.xul \
-	ui/common/icon_32x32.png
+	$(FF_OUTDIR)/genfiles/browser-overlay.xul
 
 FF_LOCALE = \
 	$(FF_OUTDIR)/genfiles/i18n-en-US.dtd

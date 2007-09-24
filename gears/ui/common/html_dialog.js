@@ -114,9 +114,6 @@ function layoutDialog() {
     clientHeight = window.innerHeight;
   } else if (document.body.offsetHeight) {
     // IE
-    // Note: document.body.offsetHeight working relies on IE being in
-    // "quirks mode", which happens with certain doctypes, or when there is no
-    // doctype specified.
     clientHeight = document.body.offsetHeight;
   }
   

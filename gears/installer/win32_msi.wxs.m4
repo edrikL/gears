@@ -123,6 +123,10 @@ m4_ifdef(^DEBUG^,^m4_dnl
                   <Directory Id='OurFFContentDir' Name='content'>
                     <Component Id='OurFFContentDirFiles'
                       Guid='$(var.OurComponentGUID_FFContentDirFiles)'>
+                      <File Id='button.css' Name='button.css'
+                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/button.css" />
+                      <File Id='button_bg.gif' Name='button_bg.gif'
+                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/button_bg.gif" />
                       <File Id='ff_button_row_background.gif' Name='button_row_background.gif'
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/button_row_background.gif" />
                       <File Id='ff_html_dialog.css' Name='html_dialog.css'
