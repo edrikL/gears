@@ -38,7 +38,6 @@
 #include <vector>
 #include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/common.h"
@@ -57,7 +56,8 @@ class ATL_NO_VTABLE GearsWorkerPool
     : public GearsBaseClass,
       public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<GearsWorkerPool>,
-      public IDispatchImpl<GearsWorkerPoolInterface> {
+      public IDispatchImpl<GearsWorkerPoolInterface>,
+      public JsEventHandlerInterface {
  public:
   BEGIN_COM_MAP(GearsWorkerPool)
     COM_INTERFACE_ENTRY(GearsWorkerPoolInterface)
@@ -96,6 +96,8 @@ class ATL_NO_VTABLE GearsWorkerPool
   // The handler has the prototype Handler(error_message, src_worker_id).
   STDMETHOD(put_onerror)(const VARIANT *in_value);
 
+  void HandleEvent(JsEventType event_type);
+
 #ifdef DEBUG
   STDMETHOD(forceGC)();
 #endif
@@ -106,11 +108,9 @@ class ATL_NO_VTABLE GearsWorkerPool
   void Initialize(); // okay to call this multiple times
   void SetThreadsManager(PoolThreadsManager *manager);
 
-  static void HandleEventUnload(void *user_param);  // callback for 'onunload'
-
   PoolThreadsManager *threads_manager_;
   bool owns_threads_manager_;
-  scoped_ptr<HtmlEventMonitor> unload_monitor_;  // for 'onunload' notifications
+  scoped_ptr<JsEventMonitor> unload_monitor_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsWorkerPool);
 };

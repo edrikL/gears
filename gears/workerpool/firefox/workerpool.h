@@ -32,7 +32,6 @@
 
 #include "ff/genfiles/workerpool.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
@@ -51,7 +50,8 @@ struct ThreadsEvent;
 
 class GearsWorkerPool
     : public GearsBaseClass,
-      public GearsWorkerPoolInterface {
+      public GearsWorkerPoolInterface,
+      public JsEventHandlerInterface {
  public:
   NS_DECL_ISUPPORTS
   GEARS_IMPL_BASECLASS
@@ -83,11 +83,11 @@ class GearsWorkerPool
   void Initialize(); // okay to call this multiple times
   void SetThreadsManager(PoolThreadsManager *manager);
 
-  static void HandleEventUnload(void *user_param);  // callback for 'onunload'
+  void HandleEvent(JsEventType event_type);
 
   PoolThreadsManager *threads_manager_;
   bool owns_threads_manager_;
-  scoped_ptr<HtmlEventMonitor> unload_monitor_;  // for 'onunload' notifications
+  scoped_ptr<JsEventMonitor> unload_monitor_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsWorkerPool);
 };

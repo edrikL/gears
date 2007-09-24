@@ -29,10 +29,12 @@
 #define GEARS_TIMERS_IE_TIMERS_H__
 
 #include <map>
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+
 #include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/mutex.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/common.h"
 
 class ATL_NO_VTABLE GearsTimer
@@ -40,7 +42,8 @@ class ATL_NO_VTABLE GearsTimer
       public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<GearsTimer>,
       public CWindowImpl<GearsTimer>,
-      public IDispatchImpl<GearsTimerInterface> {
+      public IDispatchImpl<GearsTimerInterface>,
+      public JsEventHandlerInterface {
  public:
   BEGIN_COM_MAP(GearsTimer)
     COM_INTERFACE_ENTRY(GearsTimerInterface)
@@ -66,6 +69,8 @@ class ATL_NO_VTABLE GearsTimer
   BEGIN_MSG_MAP(GearsTimer)
     MESSAGE_HANDLER(WM_TIMER, OnTimer)
   END_MSG_MAP()
+
+  void HandleEvent(JsEventType event_type);
 
  private:
   struct TimerInfo {
@@ -98,14 +103,11 @@ class ATL_NO_VTABLE GearsTimer
   LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
   void OnFinalMessage();
 
-  static void HandleEventUnload(void *user_param);  // callback for 'onunload'
-
-  scoped_ptr<HtmlEventMonitor> unload_monitor_;  // for 'onunload' notifications
-
   std::map<int, TimerInfo> timers_;
   int next_timer_id_;
   bool in_handler_;
   bool release_on_final_message_;
+  scoped_ptr<JsEventMonitor> unload_monitor_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsTimer);
 };
