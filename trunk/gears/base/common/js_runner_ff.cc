@@ -25,6 +25,7 @@
 
 #include <assert.h>
 #include <map>
+#include <set>
 #include <nsCOMPtr.h>
 #include <nspr.h> // for PR_*
 #include "gears/third_party/gecko_internal/jsapi.h"
@@ -36,9 +37,11 @@
 #include "gears/base/common/js_runner.h"
 
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/js_runner_ff_marshaling.h"
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/base/firefox/dom_utils.h"
 #include "gears/base/firefox/factory.h"
 #include "ff/genfiles/database.h"
 #include "ff/genfiles/httprequest.h"
@@ -188,6 +191,25 @@ class JsRunnerBase : public JsRunnerInterface {
                                      optional_alloc_retval);
   }
 
+  // Add the provided handler to the notification list for the specified event.
+  virtual bool AddEventHandler(JsEventType event_type,
+                               JsEventHandlerInterface *handler) {
+    assert(event_type >= 0 && event_type < MAX_JSEVENTS);
+
+    event_handlers_[event_type].insert(handler);
+    return true;
+  }
+
+  // Remove the provided handler from the notification list for the specified
+  // event.
+  virtual bool RemoveEventHandler(JsEventType event_type,
+                                  JsEventHandlerInterface *handler) {
+    assert(event_type >= 0 && event_type < MAX_JSEVENTS);
+
+    event_handlers_[event_type].erase(handler);
+    return true;
+  }
+
 #ifdef DEBUG
   void ForceGC() {
     if (js_engine_context_) {
@@ -197,6 +219,30 @@ class JsRunnerBase : public JsRunnerInterface {
 #endif
 
  protected:
+  // Alert all monitors that an event has occured.
+  void SendEvent(JsEventType event_type) {
+    assert(event_type >= 0 && event_type < MAX_JSEVENTS);
+
+    // Make a copy of the list of listeners, in case they change during the
+    // alert phase.
+    std::vector<JsEventHandlerInterface *> monitors;
+    monitors.insert(monitors.end(),
+                    event_handlers_[event_type].begin(),
+                    event_handlers_[event_type].end());
+
+    std::vector<JsEventHandlerInterface *>::iterator monitor;
+    for (monitor = monitors.begin();
+         monitor != monitors.end();
+         ++monitor) {
+      // Check that the listener hasn't been removed.  This can occur if a
+      // listener removes another listener from the list.
+      if (event_handlers_[event_type].find(*monitor) !=
+                                     event_handlers_[event_type].end()) {
+        (*monitor)->HandleEvent(event_type);
+      }
+    }
+  }
+
   JSContext *js_engine_context_;
 
  private:
@@ -224,6 +270,8 @@ class JsRunnerBase : public JsRunnerInterface {
 
     return true;
   }
+
+  std::set<JsEventHandlerInterface *> event_handlers_[MAX_JSEVENTS];
 
   DISALLOW_EVIL_CONSTRUCTORS(JsRunnerBase);
 };
@@ -298,6 +346,9 @@ void JS_DLL_CALLBACK JsRunner::JsErrorHandler(JSContext *cx,
 }
 
 JsRunner::~JsRunner() {
+  // Alert modules that the engine is unloading.
+  SendEvent(JSEVENT_UNLOAD);
+
   std::vector<IGeneric *>::iterator global;
   for (global = globals_.begin(); global != globals_.end(); ++global) {
     NS_RELEASE(*global);
@@ -584,8 +635,13 @@ class DocumentJsRunner : public JsRunnerBase {
   bool InvokeCallbackSpecialized(const JsRootedCallback *callback,
                                  int argc, jsval *argv,
                                  JsRootedToken **optional_alloc_retval);
+  bool AddEventHandler(JsEventType event_type,
+                       JsEventHandlerInterface *handler);
 
  private:
+  static void HandleEventUnload(void *user_param);  // Callback for 'onunload'
+
+  scoped_ptr<HtmlEventMonitor> unload_monitor_;  // For 'onunload' notifications
   DISALLOW_EVIL_CONSTRUCTORS(DocumentJsRunner);
 };
 
@@ -636,6 +692,32 @@ bool DocumentJsRunner::Eval(const std::string16 &script) {
   JSPRINCIPALS_DROP(js_engine_context_, jsprin);
   if (!js_ok) { return false; }
   return true;
+}
+
+bool DocumentJsRunner::AddEventHandler(JsEventType event_type,
+                                       JsEventHandlerInterface *handler) {
+  if (event_type == JSEVENT_UNLOAD) {
+    // Monitor 'onunload' to send the unload event when the page goes away.
+    if (unload_monitor_ == NULL) {
+      unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
+                                                 HandleEventUnload,
+                                                 this));
+      nsCOMPtr<nsIDOMEventTarget> event_source;
+      if (NS_SUCCEEDED(DOMUtils::GetWindowEventTarget(
+                                     getter_AddRefs(event_source))))
+      {
+        unload_monitor_->Start(event_source);
+      } else {
+        return false;
+      }
+    }
+  }
+
+  return JsRunnerBase::AddEventHandler(event_type, handler);
+}
+
+void DocumentJsRunner::HandleEventUnload(void *user_param) {
+  static_cast<DocumentJsRunner*>(user_param)->SendEvent(JSEVENT_UNLOAD);
 }
 
 bool DocumentJsRunner::InvokeCallbackSpecialized(

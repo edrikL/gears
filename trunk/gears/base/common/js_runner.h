@@ -70,6 +70,17 @@ class JsErrorHandlerInterface {
   virtual void HandleError(const JsErrorInfo &error_info) = 0;
 };
 
+enum JsEventType {
+  JSEVENT_UNLOAD,
+  MAX_JSEVENTS
+};
+
+// Interface for clients of JsRunner to implement if they want to handle events.
+class JsEventHandlerInterface {
+ public:
+  virtual void HandleEvent(JsEventType event) = 0;
+};
+
 
 // The JsParam* types define values for sending and receiving JS parameters.
 enum JsParamType {
@@ -88,7 +99,6 @@ struct JsParamToRecv {
   JsParamType type;
   void *value_ptr;
 };
-
 
 // Declares the platform-independent interface that Gears internals require
 // for running JavaScript code.
@@ -126,11 +136,37 @@ class JsRunnerInterface {
                               int argc, JsParamToSend *argv,
                               JsRootedToken **optional_alloc_retval) = 0;
 
+  virtual bool AddEventHandler(JsEventType event_type,
+                               JsEventHandlerInterface *handler) = 0;
+  virtual bool RemoveEventHandler(JsEventType event_type,
+                                  JsEventHandlerInterface *handler) = 0;
+
 #ifdef DEBUG
   virtual void ForceGC() = 0;
 #endif
 
 };
+
+// Wraps the calls for adding and removing event handlers.  This is designed to
+// be used with scoped_ptr<>.
+class JsEventMonitor {
+ public:
+  JsEventMonitor(JsRunnerInterface *js_runner,
+                 JsEventType event_type,
+                 JsEventHandlerInterface *handler)
+    : js_runner_(js_runner), event_type_(event_type), handler_(handler) {
+    js_runner_->AddEventHandler(event_type_, handler_);
+  }
+
+  ~JsEventMonitor() {
+    js_runner_->RemoveEventHandler(event_type_, handler_);
+  }
+ private:
+  JsRunnerInterface *js_runner_;
+  JsEventType event_type_;
+  JsEventHandlerInterface *handler_;
+};
+
 
 // Callers: create instances using the following instead of 'new JsRunner'.
 // The latter would require a full class description for JsRunner in this file,

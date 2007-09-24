@@ -33,8 +33,8 @@
 #include "ff/genfiles/httprequest.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-#include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/http_utils.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string16.h"
 #include "gears/localserver/common/http_request.h"
@@ -54,7 +54,8 @@ class HTTPHeaders;
 class GearsHttpRequest
     : public GearsBaseClass,
       public GearsHttpRequestInterface,
-      public HttpRequest::ReadyStateListener {
+      public HttpRequest::ReadyStateListener,
+      public JsEventHandlerInterface {
  public:
   NS_DECL_ISUPPORTS
   GEARS_IMPL_BASECLASS
@@ -62,6 +63,8 @@ class GearsHttpRequest
 
   GearsHttpRequest();
   NS_DECL_GEARSHTTPREQUESTINTERFACE
+
+  void HandleEvent(JsEventType event_type);
 
  protected:
   // need an accessible destructor to use with nsCOMPtr<GearsHttpRequest>
@@ -99,7 +102,7 @@ class GearsHttpRequest
   nsCOMPtr<nsIEventQueue> ui_event_queue_;
   bool content_type_header_was_set_;
   bool page_is_unloaded_;
-  scoped_ptr<HtmlEventMonitor> page_unload_monitor_;
+  scoped_ptr<JsEventMonitor> unload_monitor_;
 
   bool ResolveUrl(const char16 *url, std::string16 *resolved_url,
                   std::string16 *exception_message);
@@ -112,8 +115,6 @@ class GearsHttpRequest
   bool IsInteractive();    // ready_state 3
   bool IsComplete();       // ready_state 4
   bool IsValidResponse();
-
-  static void OnPageUnload(void* self);
 
   // Initiating HTTP requests in Firefox can only be performed from the
   // main ui thread. When an instance of this class is created on

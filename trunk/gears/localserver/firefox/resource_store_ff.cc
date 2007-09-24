@@ -605,16 +605,10 @@ GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
     return true;
   }
 
-  if (!EnvIsWorker() && !page_unload_monitor_.get()) {
-    // If we haven't already done so, we attach a handler to the OnUnload
-    // event so we can abort a running capture task when the page is unloaded.
-    page_unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
-                                                    OnPageUnload, this));
-    nsCOMPtr<nsIDOMEventTarget> event_source;
-    if (NS_SUCCEEDED(DOMUtils::GetWindowEventTarget(
-                                   getter_AddRefs(event_source)))) {
-      page_unload_monitor_->Start(event_source);
-    }
+  // Create an event monitor to alert us when the page unloads.
+  if (unload_monitor_ == NULL) {
+    unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
+                                             this));
   }
 
   if (capture_task_.get()) {
@@ -695,12 +689,13 @@ void GearsResourceStore::OnCaptureTaskComplete() {
 }
 
 //------------------------------------------------------------------------------
-// OnPageUnload
+// HandleEvent
 //------------------------------------------------------------------------------
-// static
-void GearsResourceStore::OnPageUnload(void* self) {
-  (reinterpret_cast<GearsResourceStore*>(self))->page_is_unloaded_ = true;
-  (reinterpret_cast<GearsResourceStore*>(self))->AbortAllRequests();
+void GearsResourceStore::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+
+  page_is_unloaded_ = true;
+  AbortAllRequests();
 }
 
 //------------------------------------------------------------------------------

@@ -36,11 +36,13 @@
 #include <assert.h>
 #include <dispex.h>
 #include <map>
+#include <set>
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 #include "gears/base/common/js_runner.h"
 
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/activex_utils.h"
@@ -166,6 +168,25 @@ class JsRunnerBase : public JsRunnerInterface {
     return true;
   }
 
+  // Add the provided handler to the notification list for the specified event.
+  virtual bool AddEventHandler(JsEventType event_type,
+                               JsEventHandlerInterface *handler) {
+    assert(event_type >= 0 && event_type < MAX_JSEVENTS);
+
+    event_handlers_[event_type].insert(handler);
+    return true;
+  }
+
+  // Remove the provided handler from the notification list for the specified
+  // event.
+  virtual bool RemoveEventHandler(JsEventType event_type,
+                                  JsEventHandlerInterface *handler) {
+    assert(event_type >= 0 && event_type < MAX_JSEVENTS);
+
+    event_handlers_[event_type].erase(handler);
+    return true;
+  }
+
 #ifdef DEBUG
   void ForceGC() {
     // TODO(aa): There is probably a more clever way to do it, but this works.
@@ -174,6 +195,30 @@ class JsRunnerBase : public JsRunnerInterface {
 #endif
 
  protected:
+  // Alert all monitors that an event has occured.
+  void SendEvent(JsEventType event_type) {
+    assert(event_type >= 0 && event_type < MAX_JSEVENTS);
+
+    // Make a copy of the list of listeners, in case they change during the
+    // alert phase.
+    std::vector<JsEventHandlerInterface *> monitors;
+    monitors.insert(monitors.end(),
+                    event_handlers_[event_type].begin(),
+                    event_handlers_[event_type].end());
+
+    std::vector<JsEventHandlerInterface *>::iterator monitor;
+    for (monitor = monitors.begin();
+         monitor != monitors.end();
+         ++monitor) {
+      // Check that the listener hasn't been removed.  This can occur if a
+      // listener removes another listener from the list.
+      if (event_handlers_[event_type].find(*monitor) !=
+                                     event_handlers_[event_type].end()) {
+        (*monitor)->HandleEvent(event_type);
+      }
+    }
+  }
+
   virtual IDispatch *GetGlobalObject() = 0;
 
  private:
@@ -201,6 +246,8 @@ class JsRunnerBase : public JsRunnerInterface {
 
     return true;
   }
+
+  std::set<JsEventHandlerInterface *> event_handlers_[MAX_JSEVENTS];
 
   DISALLOW_EVIL_CONSTRUCTORS(JsRunnerBase);
 };
@@ -511,6 +558,9 @@ class JsRunner : public JsRunnerBase {
     }
   }
   virtual ~JsRunner() {
+    // Alert modules that the engine is unloading.
+    SendEvent(JSEVENT_UNLOAD);
+
     if (com_obj_) { 
       com_obj_->Stop();
       com_obj_->Release();
@@ -600,7 +650,33 @@ class DocumentJsRunner : public JsRunnerBase {
     assert(false); // Should not be called on the DocumentJsRunner.
   }
 
+  bool AddEventHandler(JsEventType event_type,
+                       JsEventHandlerInterface *handler) {
+    if (event_type == JSEVENT_UNLOAD) {
+      // Create an HTML event monitor to send the unload event when the page
+      // goes away.
+      if (unload_monitor_ == NULL) {
+        unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
+                                                   HandleEventUnload, this));
+        CComPtr<IHTMLWindow3> event_source;
+        if (FAILED(ActiveXUtils::GetHtmlWindow3(site_, &event_source))) {
+          return false;
+        }
+
+        unload_monitor_->Start(event_source);
+      }
+    }
+
+    return JsRunnerBase::AddEventHandler(event_type, handler);
+  }
+
  private:
+  static void HandleEventUnload(void *user_param) {
+    // Callback for 'onunload'
+    static_cast<DocumentJsRunner*>(user_param)->SendEvent(JSEVENT_UNLOAD);
+  }
+
+  scoped_ptr<HtmlEventMonitor> unload_monitor_;  // For 'onunload' notifications
   CComPtr<IUnknown> site_;
 
   DISALLOW_EVIL_CONSTRUCTORS(DocumentJsRunner);

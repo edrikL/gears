@@ -29,8 +29,8 @@
 #include <deque>
 #include "ff/genfiles/localserver.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/string16.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/localserver/common/resource_store.h"
@@ -52,7 +52,8 @@ class nsIScriptContext;
 class GearsResourceStore
     : public GearsBaseClass,
       public GearsResourceStoreInterface,
-      private AsyncTask::Listener {
+      private AsyncTask::Listener,
+      public JsEventHandlerInterface {
  public:
   NS_DECL_ISUPPORTS
   GEARS_IMPL_BASECLASS
@@ -80,6 +81,8 @@ class GearsResourceStore
                                  nsAString &file_name_retval);
   NS_IMETHOD CreateFileSubmitter(GearsFileSubmitterInterface **_retval);
 
+  void HandleEvent(JsEventType event_type);
+
  protected:
   ~GearsResourceStore();
 
@@ -102,14 +105,12 @@ class GearsResourceStore
 
   void AbortAllRequests();
 
-  static void OnPageUnload(void* self);
-
   int next_capture_id_;
   std::deque<FFCaptureRequest*> pending_requests_;
   scoped_ptr<FFCaptureRequest> current_request_;
   scoped_ptr<CaptureTask> capture_task_;
-  scoped_ptr<HtmlEventMonitor> page_unload_monitor_;
   bool page_is_unloaded_;
+  scoped_ptr<JsEventMonitor> unload_monitor_;
   std::string16 exception_message_;
   ResourceStore store_;
 

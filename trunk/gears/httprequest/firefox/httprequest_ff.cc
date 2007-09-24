@@ -258,17 +258,10 @@ NS_IMETHODIMP GearsHttpRequest::Send() {
     return true;
   }
 
-  if (!EnvIsWorker() && !page_unload_monitor_.get()) {
-    // TODO(michaeln): Do this for workers too.
-    // If we haven't already done so, we attach a handler to the OnUnload
-    // event so we can abort request when the page is unloaded.
-    page_unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
-                                                    OnPageUnload, this));
-    nsCOMPtr<nsIDOMEventTarget> event_source;
-    if (NS_SUCCEEDED(DOMUtils::GetWindowEventTarget(
-                                   getter_AddRefs(event_source)))) {
-      page_unload_monitor_->Start(event_source);
-    }
+  // Create an event monitor to alert us when the page unloads.
+  if (unload_monitor_ == NULL) {
+    unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
+                                             this));
   }
 
   if (!CallSendOnUiThread()) {
@@ -746,6 +739,12 @@ nsresult GearsHttpRequest::CallAsync(nsIEventQueue *event_queue,
   return rv;
 }
 
+void GearsHttpRequest::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+
+  page_is_unloaded_ = true;
+  Abort();
+}
 
 // static
 void *PR_CALLBACK
@@ -759,11 +758,4 @@ GearsHttpRequest::AsyncCall_EventHandlerFunc(AsyncCallEvent *event) {
 void PR_CALLBACK
 GearsHttpRequest::AsyncCall_EventCleanupFunc(AsyncCallEvent *event) {
   delete event;
-}
-
-
-// static
-void GearsHttpRequest::OnPageUnload(void *self) {
-  (reinterpret_cast<GearsHttpRequest*>(self))->page_is_unloaded_ = true;
-  (reinterpret_cast<GearsHttpRequest*>(self))->Abort();
 }

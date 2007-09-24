@@ -34,8 +34,6 @@
 #include "gears/third_party/gecko_internal/nsIDOMClassInfo.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-#include "gears/base/common/js_runner.h"
-#include "gears/base/firefox/dom_utils.h"
 #include "gears/base/firefox/factory.h"
 #include "gears/timer/firefox/timer.h"
 
@@ -152,18 +150,11 @@ NS_IMETHODIMP GearsTimer::ClearInterval(PRInt32 timer_id) {
 }
 
 void GearsTimer::Initialize() {
-  // Monitor 'onunload' to shutdown timers when the page goes away.
-  //
-  // TODO(zork): This code needs to be updated to fire the unload event
-  // for workers
-  if (!EnvIsWorker() && unload_monitor_ == NULL) {
-    unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
-                                               HandleEventUnload, this));
-    nsCOMPtr<nsIDOMEventTarget> event_source;
-    if (NS_SUCCEEDED(DOMUtils::GetWindowEventTarget(
-                                   getter_AddRefs(event_source)))) {
-      unload_monitor_->Start(event_source);
-    }
+  // Create an event monitor to remove remaining timers when the page
+  // unloads.
+  if (unload_monitor_ == NULL) {
+    unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
+                                             this));
   }
 }
 
@@ -235,17 +226,18 @@ void GearsTimer::DeleteTimer(PRInt32 timer_id) {
   }
 }
 
-void GearsTimer::HandleEventUnload(void *user_param) {
+void GearsTimer::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+
   // Use a nsCOMPtr to prevent gears_timer from getting deleted while we
   // iterate throught the map.
-  nsCOMPtr<GearsTimer> gears_timer = static_cast<GearsTimer*>(user_param);
+  nsCOMPtr<GearsTimer> gears_timer(this);
 
   // Iterate through the timers, removing them.
-  while (!gears_timer->worker_timers_.empty()) {
-    std::map<int, TimerInfo>::iterator timer =
-        gears_timer->worker_timers_.begin();
+  while (!worker_timers_.empty()) {
+    std::map<int, TimerInfo>::iterator timer = worker_timers_.begin();
     timer->second.timer->Cancel();
-    gears_timer->worker_timers_.erase(timer);
+    worker_timers_.erase(timer);
   }
 }
 

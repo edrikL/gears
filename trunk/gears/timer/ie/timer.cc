@@ -25,7 +25,6 @@
 
 #include <dispex.h>
 #include "gears/timer/ie/timer.h"
-#include "gears/base/common/js_runner.h"
 #include "gears/base/ie/activex_utils.h"
 
 
@@ -114,20 +113,11 @@ void GearsTimer::Initialize() {
     }
   }
 
-  // Create an HTML event monitor to remove remaining timers when the page
-  // unloads
-  //
-  // TODO(zork): This needs to be updated to send an unload event to workers
-  // as well.
-  if (!EnvIsWorker() && unload_monitor_ == NULL) {
-    unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
-                                               HandleEventUnload, this));
-    CComPtr<IHTMLWindow3> event_source;
-    IUnknown *site = this->EnvPageIUnknownSite();
-    assert(site);
-    HRESULT hr = ActiveXUtils::GetHtmlWindow3(site, &event_source);
-    assert(SUCCEEDED(hr));
-    unload_monitor_->Start(event_source);
+  // Create an event monitor to remove remaining timers when the page
+  // unloads.
+  if (unload_monitor_ == NULL) {
+    unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
+                                             this));
   }
 }
 
@@ -166,12 +156,14 @@ int GearsTimer::CreateTimerCommon(TimerInfo &timer_info, int timeout) {
   return timer_id;
 }
 
-void GearsTimer::HandleEventUnload(void *user_param) {
+void GearsTimer::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+
   // Use a CComPtr to AddRef the Timer object to keep it from getting deleted
   // while we iterate through the map
-  CComPtr<GearsTimer> gears_timer = static_cast<GearsTimer*>(user_param);
+  CComPtr<GearsTimer> gears_timer(this);
 
-  gears_timer->timers_.clear();
+  timers_.clear();
 }
 
 LRESULT GearsTimer::OnTimer(UINT uMsg,

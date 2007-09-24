@@ -33,10 +33,9 @@
 
 #include "ff/genfiles/timer.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/common.h"
-
-struct TimerEvent;
 
 // Object identifiers
 extern const char *kGearsTimerClassName;
@@ -44,7 +43,8 @@ extern const nsCID kGearsTimerClassId;
 
 class GearsTimer
     : public GearsBaseClass,
-      public GearsTimerInterface {
+      public GearsTimerInterface,
+      public JsEventHandlerInterface {
  public:
   NS_DECL_ISUPPORTS
   GEARS_IMPL_BASECLASS
@@ -64,6 +64,8 @@ class GearsTimer
                          PRInt32 *retval);
 
   NS_IMETHOD ClearInterval(PRInt32 timer_id);
+
+  void HandleEvent(JsEventType event_type);
 
  private:
   struct TimerInfo {
@@ -87,12 +89,11 @@ class GearsTimer
   PRInt32 CreateTimerCommon(TimerInfo *timer_info, int timeout);
   void DeleteTimer(PRInt32 timer_id);
 
-  static void HandleEventUnload(void *user_param);  // callback for 'onunload'
   static void TimerCallback(nsITimer *timer, void *closure);
 
   std::map<int, TimerInfo> worker_timers_;
   int next_timer_id_;
-  scoped_ptr<HtmlEventMonitor> unload_monitor_;  // for 'onunload' notifications
+  scoped_ptr<JsEventMonitor> unload_monitor_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsTimer);
 };

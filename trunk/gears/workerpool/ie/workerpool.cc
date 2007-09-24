@@ -328,10 +328,11 @@ STDMETHODIMP GearsWorkerPool::forceGC() {
 }
 #endif
 
-void GearsWorkerPool::HandleEventUnload(void *user_param) {
-  GearsWorkerPool *wp = static_cast<GearsWorkerPool*>(user_param);
-  if (wp->threads_manager_) {
-    wp->threads_manager_->ShutDown();
+void GearsWorkerPool::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+
+  if (owns_threads_manager_ && threads_manager_) {
+    threads_manager_->ShutDown();
   }
 }
 
@@ -348,20 +349,9 @@ void GearsWorkerPool::Initialize() {
   // A thread that keeps running after the page changes can cause odd problems,
   // if it continues to send messages. (This can happen if it busy-loops.)  On
   // Firefox, such a thread triggered the Print dialog after the page changed!
-  //
-  // TODO(cprince): Expose HTML event notifications to threads other than
-  // the main thread.  If a worker thread creates a _new_ workerpool + thread,
-  // the latter thread will not get destroyed. (TBD: do we need to make sure
-  // thread hierarchies get cleaned up in a particular order?)
-  if (!EnvIsWorker() && unload_monitor_ == NULL) {
-    unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
-                                               HandleEventUnload, this));
-    CComPtr<IHTMLWindow3> event_source;
-    IUnknown *site = this->EnvPageIUnknownSite();
-    assert(site);
-    HRESULT hr = ActiveXUtils::GetHtmlWindow3(site, &event_source);
-    assert(SUCCEEDED(hr));
-    unload_monitor_->Start(event_source);
+  if (unload_monitor_ == NULL) {
+    unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
+                                             this));
   }
 }
 
