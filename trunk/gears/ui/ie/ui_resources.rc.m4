@@ -34,9 +34,12 @@
 // using something else? It seems to work as is.
 //-----------------------------------------------------------------------------
 
+button.css                 HTML  "ui/common/button.css"
+button_bg.gif              HTML  "ui/common/button_bg.gif"
 button_row_background.gif  HTML  "ui/common/button_row_background.gif"
 html_dialog.css            HTML  "ui/common/html_dialog.css"
 html_dialog.js             HTML  "ui/common/html_dialog.js"
+icon_32x32.png             HTML  "ui/common/icon_32x32.png"
 json_noeval.js             HTML  "third_party/jsonjs/json_noeval.js"
 permissions_dialog.html    HTML  "common/genfiles/permissions_dialog.html"
 settings_dialog.html       HTML  "common/genfiles/settings_dialog.html"

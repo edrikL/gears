@@ -198,8 +198,8 @@ void ShowPermissionsPrompt(const SecurityOrigin &origin, bool *allow_origin,
   HtmlDialog dialog;
   dialog.arguments = Json::Value(display_origin_utf8);
 
-  const int kDialogWidth = 340;
-  const int kDialogHeight = 215;
+  const int kDialogWidth = 360;
+  const int kDialogHeight = 265;
   const char16 *kDialogFile = STRING16(L"permissions_dialog.html");
 
   dialog.DoModal(kDialogFile, kDialogWidth, kDialogHeight);
