@@ -23,25 +23,36 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-function testCheckVersionProperty() {
-  var versionComponents = google.gears.factory.version.split('.');
-  var major = versionComponents[0];
-  var minor = versionComponents[1];
-  assertEqual(4, versionComponents.length);
-  assertEqual(0, major);
-  assertEqual(2, minor);
+/**
+ * Baseclass providing common callbacks for all things that run tests.
+ * @constructor
+ */
+function RunnerBase() {
 }
 
-function testCreateInvalidModule() {
-  assertError(function() {
-    google.gears.factory.create('invalid', '1.0');
-  });
+/**
+ * Callback for when all tests are loaded.
+ * @param success Whether the tests were successfully loaded.
+ * @param errorMessage The message to display if success is false.
+ */
+RunnerBase.prototype.onTestsLoaded = function(success, errorMessage) {};
 
-  assertError(function() {
-    google.gears.factory.create('beta.database', '42');
-  });
+/**
+ * Callback for when an individual test has completed.
+ * @param name The name of the test that completed.
+ * @param success Whether the test passed.
+ * @param errorMessage The message to display if the test failed.
+ */
+RunnerBase.prototype.onTestComplete = function(name, success, errorMessage) {};
 
-  assertError(function() {
-    google.gears.factory.create('beta.database', '42.0');
-  });
-}
+/**
+ * Callback for when all synchronous tests have completed.
+ */
+RunnerBase.prototype.onAllSyncTestsComplete = function() {};
+
+/**
+ * Callback for when an asynchronous test has started.
+ * @param name The name of the test that was started.
+ */
+RunnerBase.prototype.onAsyncTestStart = function(name) {};
+
