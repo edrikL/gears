@@ -270,7 +270,7 @@ function partial(fn, var_args) {
 function bindMethods(obj) {
   for (var p in obj) {
     if (isFunction(obj[p])) {
-      obj[p] = obj[p].bind(obj);
+      obj[p] = bind(obj[p], obj);
     }
   }
 }

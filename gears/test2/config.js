@@ -23,25 +23,41 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-function testCheckVersionProperty() {
-  var versionComponents = google.gears.factory.version.split('.');
-  var major = versionComponents[0];
-  var minor = versionComponents[1];
-  assertEqual(4, versionComponents.length);
-  assertEqual(0, major);
-  assertEqual(2, minor);
+// This file contains information about all the Gears unit tests. It is used by
+// the test runners to find tests to run.
+
+/**
+ * Represents a suite of tests that are logically related.
+ * @constructor
+ */
+function TestSuite(name) {
+  this.name = name;
+  this.files = [];
 }
 
-function testCreateInvalidModule() {
-  assertError(function() {
-    google.gears.factory.create('invalid', '1.0');
+/**
+ * Adds an individual file to a test suite. Files can group related tests, or
+ * can be used to separate tests with different configuration requirements.
+ * @param relativePath The path of the file to add to the suite.
+ * @param config An object containing flags to control how the test runs.
+ * Currently, support useWorker and useIFrame.
+ */
+TestSuite.prototype.addFile = function(relativePath, config) {
+  this.files.push({
+    relativePath: relativePath,
+    config: config
   });
+};
 
-  assertError(function() {
-    google.gears.factory.create('beta.database', '42');
-  });
+// Lists test configuration below...
 
-  assertError(function() {
-    google.gears.factory.create('beta.database', '42.0');
-  });
-}
+var suites = [];
+
+var factorySuite = new TestSuite('Factory');
+factorySuite.addFile('../factory_tests.js',
+                     {useWorker: true, useIFrame: true});
+suites.push(factorySuite);
+
+var timerSuite = new TestSuite('Timer');
+timerSuite.addFile('../timer_tests.js', {useWorker: true, useIFrame: true});
+suites.push(timerSuite);
