@@ -117,7 +117,9 @@ bool FFHttpRequest::GetResponseBody(std::vector<uint8> *body) {
   if (body->size() != response_body_->size()) {
     return false;
   }
-  memcpy(&(*body)[0], &(*response_body_)[0], response_body_->size());
+  if (body->size() > 0) {
+    memcpy(&(*body)[0], &(*response_body_)[0], response_body_->size());
+  }
   return true;
 }
 

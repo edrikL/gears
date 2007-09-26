@@ -342,7 +342,7 @@ public:
   typedef void (*Function)(void*);
 
   int bind_blob(int index, std::vector<uint8> *blob) {
-    if (blob) {
+    if (blob && (blob->size() > 0)) {
       const void *value = &(*blob)[0];
       size_t len = blob->size();
       return bind_blob(index, value, len);
@@ -436,7 +436,9 @@ public:
     if (blob->size() != len) {
       return false;
     }
-    memcpy(&(*blob)[0], p, len);
+    if (blob->size() > 0) {
+      memcpy(&(*blob)[0], p, len);
+    }
     return true;
   }
 

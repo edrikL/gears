@@ -162,7 +162,15 @@ inline HRESULT CMetaFactory<Factory, Protocol, FactoryComObject>::
   {
     p->SetVoid(pv);
     p->InternalFinalConstructAddRef();
-    hr = p->FinalConstruct();
+#if _ATL_VER >= 0x800  // gears - added by cprince
+    hr = p->_AtlInitialConstruct();  
+    if (SUCCEEDED(hr))
+#endif
+      hr = p->FinalConstruct();
+#if _ATL_VER >= 0x800  // gears - added by cprince
+    if (SUCCEEDED(hr))
+      hr = p->_AtlFinalConstruct();
+#endif
     p->InternalFinalConstructRelease();
     if (FAILED(hr))
     {
