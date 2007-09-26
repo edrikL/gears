@@ -44,6 +44,8 @@ const char16 *kTooManyRedirectsErrorMessage =
                   STRING16(L"Redirect chain too long");
 const char16 *kRedirectErrorMessage =
                   STRING16(L"Illegal redirect to a different origin");
+const char16 *kEmptyManifestErrorMessage =
+                  STRING16(L"No content returned");
 
 
 //------------------------------------------------------------------------------
@@ -240,6 +242,12 @@ bool UpdateTask::UpdateManifest() {
   } else if (manifest_payload.status_code == HttpConstants::HTTP_OK) {
     // Parse the manifest json data
     Manifest manifest;
+    if (manifest_payload.data->size() <= 0) {
+      LOG(("UpdateTask::UpdateManifest - manifest.Parse failed\n"));
+      error_msg_ = kManifestParseErrorMessagePrefix;
+      error_msg_ += kEmptyManifestErrorMessage;
+      return false;
+    }
     if (!manifest.Parse(actual_manifest_url,
                         reinterpret_cast<const char*>
                             (&(*manifest_payload.data)[0]),
