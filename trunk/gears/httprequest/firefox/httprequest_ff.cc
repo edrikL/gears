@@ -334,8 +334,10 @@ bool GearsHttpRequest::CallAbortOnUiThread() {
   if (IsUiThread()) {
     OnAbortCall();
     return true;
-  } else {
+  } else if (ui_event_queue_) {
     return CallAsync(ui_event_queue_, kAbort) == NS_OK;
+  } else {
+    return true;
   }
 }
 
@@ -508,25 +510,31 @@ void GearsHttpRequest::ReadyStateChanged(HttpRequest *source) {
   assert(IsUiThread());
   assert(source == request_);
 
-  MutexLock locker(&lock_);
+  nsCOMPtr<GearsHttpRequest> reference(this);
+  {
+    // The extra scope is to ensure we unlock prior to reference.Release
 
-  HttpRequest::ReadyState previous_state = response_info_->pending_ready_state;
-  HttpRequest::ReadyState state;
-  source->GetReadyState(&state);
-  if (state > previous_state) {
-    response_info_->pending_ready_state = state;
-    if (state >= HttpRequest::INTERACTIVE &&
-        previous_state < HttpRequest::INTERACTIVE) {
-      // For HEAD requests, we skip INTERACTIVE and jump straight to COMPLETE
-      source->GetAllResponseHeaders(&response_info_->headers);
-      source->GetStatus(&response_info_->status);
-      source->GetStatusText(&response_info_->status_text);
+    MutexLock locker(&lock_);
+
+    HttpRequest::ReadyState previous_state =
+        response_info_->pending_ready_state;
+    HttpRequest::ReadyState state;
+    source->GetReadyState(&state);
+    if (state > previous_state) {
+      response_info_->pending_ready_state = state;
+      if (state >= HttpRequest::INTERACTIVE &&
+          previous_state < HttpRequest::INTERACTIVE) {
+        // For HEAD requests, we skip INTERACTIVE and jump straight to COMPLETE
+        source->GetAllResponseHeaders(&response_info_->headers);
+        source->GetStatus(&response_info_->status);
+        source->GetStatusText(&response_info_->status_text);
+      }
+      if (state == HttpRequest::COMPLETE) {
+        source->GetResponseBodyAsText(&response_info_->response_text);
+        RemoveRequest();
+      }
+      CallReadyStateChangedOnApartmentThread();
     }
-    if (state == HttpRequest::COMPLETE) {
-      source->GetResponseBodyAsText(&response_info_->response_text);
-      RemoveRequest();
-    }
-    CallReadyStateChangedOnApartmentThread();
   }
 }
 
