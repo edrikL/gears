@@ -26,7 +26,9 @@
 #ifndef GEARS_BASE_IE_ATL_HEADERS_H__
 #define GEARS_BASE_IE_ATL_HEADERS_H__
 
+#ifndef _ATL_NO_EXCEPTIONS  // may be defined via command-line flags
 #define _ATL_NO_EXCEPTIONS
+#endif
 #define _ATL_APARTMENT_THREADED
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS
 #define _ATL_ALL_WARNINGS
