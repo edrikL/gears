@@ -76,6 +76,10 @@ bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
   return true;
 }
 
+bool JsTokenIsNullOrUndefined(JsToken t) {
+  return JSVAL_IS_NULL(t) || JSVAL_IS_VOID(t); // null or undefined
+}
+
 #elif BROWSER_IE
 
 bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out) {
@@ -94,6 +98,10 @@ bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
   if (t.vt != VT_BSTR) { return false; }
   out->assign(t.bstrVal);
   return true;
+}
+
+bool JsTokenIsNullOrUndefined(JsToken t) {
+  return t.vt == VT_NULL || t.vt == VT_EMPTY; // null or undefined
 }
 
 #endif
@@ -317,6 +325,13 @@ bool JsParamFetcher::GetAsArray(int i, JsToken *out_array, int *out_length) {
 
 bool JsParamFetcher::GetAsNewRootedCallback(int i, JsRootedCallback **out) {
   if (i >= js_argc_) return false;  // see comment above, in GetAsInt()
+
+  // We allow null or undefined rooted callbacks but not non-function values.
+  if (!JsTokenIsNullOrUndefined(js_argv_[i])) {
+    JSObject *obj = JSVAL_TO_OBJECT(js_argv_[i]);
+    if (!JS_ObjectIsFunction(GetContextPtr(), obj)) { return false; }
+  }
+
   *out = new JsRootedCallback(GetContextPtr(), js_argv_[i]);
   return true;
 }

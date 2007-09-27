@@ -64,6 +64,10 @@ bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out);
 bool JsTokenToInt(JsToken t, JsContextPtr cx, int *out);
 bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out);
 
+// Utility function to check for the JavaScript values null and undefined. We
+// usually treat these two identically to prevent confusion.
+bool JsTokenIsNullOrUndefined(JsToken t);
+
 #if BROWSER_FF
 
 // A JsToken that won't get GC'd out from under you.
@@ -87,6 +91,10 @@ class JsRootedToken {
 
   bool GetAsBool(bool *out) const {
     return JsTokenToBool(token_, context_, out);
+  }
+
+  bool IsNullOrUndefined() const {
+    return JsTokenIsNullOrUndefined(token_);
   }
 
   // TODO(aa): GetAsString(), etc. But needs restructuring first. See note below

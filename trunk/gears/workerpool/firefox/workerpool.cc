@@ -504,8 +504,9 @@ static void OnDestroyThreadsEvent(ThreadsEvent *event) {
 
 void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
                                         const Message &msg) {
-  if (wi->onmessage_handler.get()) {
-    // Setup the onerror parameter (type: Object).
+  if (wi->onmessage_handler.get() &&
+      !wi->onmessage_handler->IsNullOrUndefined()) {
+    // Setup the onmessage parameter (type: Object).
     scoped_ptr<JsRootedToken> onmessage_param(
                                   wi->js_runner->NewObject(NULL));
     wi->js_runner->SetPropertyString(onmessage_param->token(),
@@ -687,7 +688,9 @@ void PoolThreadsManager::HandleError(const JsErrorInfo &error_info) {
 
 bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
                                               const JsErrorInfo &error_info) {
-  if (!wi->onerror_handler.get()) { return false; }
+  if (!wi->onerror_handler.get() || wi->onerror_handler->IsNullOrUndefined()) {
+    return false;
+  }
 
   // Setup the onerror parameter (type: Error).
   scoped_ptr<JsRootedToken> onerror_param(
