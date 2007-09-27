@@ -160,7 +160,11 @@ MKDEP = python tools/mkdepend.py $< $@ > $(@D)/$*.pp
 
 COMPILE_FLAGS_dbg = /MTd /Zi
 COMPILE_FLAGS_opt = /MT  /Zi /Ox
-COMPILE_FLAGS = /c /Fo"$@" /Fd"$(@D)/$*.pdb" /W3 /WX /EHsc /GR- $(COMPILE_FLAGS_$(MODE))
+COMPILE_FLAGS = /c /Fo"$@" /Fd"$(@D)/$*.pdb" /W3 /WX /GR- $(COMPILE_FLAGS_$(MODE))
+
+# In VC8, the way to disable exceptions is to remove all /EH* flags, and to
+# define _HAS_EXCEPTIONS=0 (for C++ headers) and _ATL_NO_EXCEPTIONS (for ATL).
+COMPILE_FLAGS += /D_HAS_EXCEPTIONS=0 /D_ATL_NO_EXCEPTIONS
 
 # Most Win32 headers use the cross-platform NDEBUG and DEBUG #defines
 # (handled later).  But a few Win32 files look at _DEBUG instead.
