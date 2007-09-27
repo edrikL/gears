@@ -40,9 +40,11 @@
 #include "gears/base/safari/factory_utils.h"
 #endif
 
-#define GoogleUpdateClientStateRegKey L"Software\\Google\\Update\\ClientState"
-#define GoogleUpdateDidRunValue L"dr"
-#define GearsUpdateClientGUID L"{283EAF47-8817-4c2b-A801-AD1FADFB7BAA}"
+const char16 *kGoogleUpdateClientsRegKey =
+                  STRING16(L"Software\\Google\\Update\\ClientState");
+const char16 *kGoogleUpdateGearsClientGuid =
+                  STRING16(L"{283EAF47-8817-4c2b-A801-AD1FADFB7BAA}");
+const char16 *kGoogleUpdateDidRunValue = STRING16(L"dr");
 
 bool ParseMajorMinorVersion(const char16 *version, int *major, int *minor) {
 
@@ -226,20 +228,22 @@ void SetActiveUserFlag() {
 #ifdef WIN32
   // We won't create any registry keys here; instead, we'll just open
   // preexisting ones. This means that this code should be a no-op on
-  // installations that didn't include the Google Update Service.
+  // installations that didn't include the Google Update service.
+  //
+  // We use the HKCU version of the Google Update "did run" value so that
+  // we can write to it from IE on Vista.
   HKEY reg_client_state;
-  DWORD result = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-      GoogleUpdateClientStateRegKey, 0, KEY_READ,
-      &reg_client_state);
+  DWORD result = RegOpenKeyExW(HKEY_CURRENT_USER, kGoogleUpdateClientsRegKey,
+                               0, KEY_READ, &reg_client_state);
   if (result == ERROR_SUCCESS) {
     HKEY reg_client;
-    result = RegOpenKeyExW(reg_client_state, GearsUpdateClientGUID, 0,
-        KEY_WRITE, &reg_client);
+    result = RegOpenKeyExW(reg_client_state, kGoogleUpdateGearsClientGuid,
+                           0, KEY_WRITE, &reg_client);
     if (result == ERROR_SUCCESS) {
-      const char16 *kVal = L"1";
-      const size_t num_bytes = sizeof(kVal);
-      RegSetValueExW(reg_client, GoogleUpdateDidRunValue, 0, REG_SZ,
-          reinterpret_cast<const BYTE *>(kVal), num_bytes);
+      const char16 *kValue = L"1";
+      const size_t num_bytes = sizeof(kValue[0]) * 2;  // includes trailing '\0'
+      RegSetValueExW(reg_client, kGoogleUpdateDidRunValue, 0, REG_SZ,
+                     reinterpret_cast<const BYTE *>(kValue), num_bytes);
       RegCloseKey(reg_client);
     }
     RegCloseKey(reg_client_state);
