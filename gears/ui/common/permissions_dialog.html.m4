@@ -126,11 +126,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <table cellspacing="0" cellpadding="0" border="0">
           <tr>
             <td valign="middle">
-              <input type="checkbox" id="unlock" accesskey="A">
+              <input type="checkbox" id="unlock" accesskey="T">
             </td>
             <td valign="middle">
               <label for="unlock">
-                &nbsp;I trust this site. <span class="accesskey">A</span>llow
+                &nbsp;I <span class="accesskey">t</span>rust this site. Allow
                 it to use PRODUCT_FRIENDLY_NAME_UQ.
               </label>
             </td>
@@ -143,8 +143,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <table cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="100%" align="left" valign="middle">
-          <a href="#" onclick="denyAccessPermanently()">Never allow this
-          site</a>
+          <a href="#" onclick="denyAccessPermanently(); return false;">Never
+          allow this site</a>
         </td>
         <td nowrap="true" align="right" valign="middle">
           <!--
@@ -155,7 +155,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           like an anchor. Inner elements should theoretically be able to be
           <span>, but IE renders incorrectly in this case.
           -->
-          <a href="#" accesskey="A" id="allow-button" onclick="allowAccess()"
+          <a href="#" accesskey="A" id="allow-button" 
+              onclick="allowAccess(); return false;"
               class="inline-block custom-button">
             <div class="inline-block custom-button-outer-box">
               <div class="inline-block custom-button-inner-box"
@@ -167,7 +168,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           between the buttons, but I am reluctant to hack things even further
           to fix that.
           -->
-          <a href="#" accesskey="C" id="deny-button" onclick="denyAccess()"
+          <a href="#" accesskey="C" id="deny-button"
+              onclick="denyAccess(); return false;"
               class="inline-block custom-button">
             <div class="inline-block custom-button-outer-box">
               <div class="inline-block custom-button-inner-box"
@@ -215,10 +217,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   // Note: The structure that the following functions pass are coupled to the
   // code in CapabilitiesDB that processes it.
   function allowAccess() {
-    saveAndClose({
-      allow: true,
-      remember: true
-    });
+    if (!disabled) {
+      saveAndClose({
+        allow: true,
+        remember: true
+      });
+    }
   }
 
   function denyAccess() {
