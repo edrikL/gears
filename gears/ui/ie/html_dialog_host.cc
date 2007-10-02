@@ -93,22 +93,22 @@ LRESULT HtmlDialogHost::MessageProc(int code, WPARAM wparam, LPARAM lparam) {
     MSG* message = reinterpret_cast<MSG*>(lparam);
     if (message->message >= WM_KEYFIRST && message->message <= WM_KEYLAST &&
         ::IsChild(m_hWnd, message->hwnd)) {
-      if (message->message != WM_KEYDOWN || message->wParam != VK_BACK) {
-        CComPtr<IOleInPlaceActiveObject> active_object;
-        VERIFY(SUCCEEDED(browser_->QueryInterface(&active_object)));
-        if (active_object != NULL)
-          active_object->TranslateAccelerator(message);
+      CComPtr<IOleInPlaceActiveObject> active_object;
+      VERIFY(SUCCEEDED(browser_->QueryInterface(&active_object)));
 
-        // We don't want the dialog itself handling keys we handle
-        // For some reason clobbering all of the keys we handle
-        // results in the space not working.
-        // TODO(abodenha): Figure out why.
-        if ((message->message == WM_KEYDOWN || message->message == WM_KEYUP) &&
-            (message->wParam == VK_TAB || message->wParam == VK_LEFT ||
-             message->wParam == VK_RIGHT || message->wParam == VK_UP ||
-             message->wParam == VK_DOWN)) {
-          ZeroMemory(message, sizeof(MSG));
-        }
+      // Enables access keys in side the browser control.
+      if (active_object != NULL) {
+        active_object->TranslateAccelerator(message);
+      }
+
+      // Prevent the dialog box from handling certain messages.
+      // - tab: If the dialog handles this, if shifts focus away from the
+      //   browser control each time tab is pressed.
+      // - syschar: This is ALT+<anything except F4>. We prevent the dialog
+      //   from handling these because otherwise it beeps because there is no
+      //   menu bar visible.
+      if (message->wParam == VK_TAB || message->message == WM_SYSCHAR) {
+        ZeroMemory(message, sizeof(MSG));
       }
     }
   }
