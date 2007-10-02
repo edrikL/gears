@@ -281,13 +281,6 @@ HRESULT SubmitFileBehavior::SetCapturedUrl(BSTR full_url) {
   temp_file_ += kPathSeparator;  // PathAppend() and basic_string don't mix
   temp_file_ += filename;
 
-  size_t data_len = 0;
-  const uint8 *data = NULL;
-  if (item.payload.data.get()) {
-    data_len = item.payload.data->size();
-    data = &(item.payload.data->at(0));
-  }
-
   if (!File::CreateNewFile(temp_file_.c_str()) ||
       !File::WriteVectorToFile(temp_file_.c_str(), item.payload.data.get())) {
     Reset();

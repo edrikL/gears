@@ -748,8 +748,10 @@ nsresult GearsHttpRequest::CallAsync(nsIEventQueue *event_queue,
 }
 
 void GearsHttpRequest::HandleEvent(JsEventType event_type) {
+  assert(IsApartmentThread());
   assert(event_type == JSEVENT_UNLOAD);
 
+  onreadystatechange_.reset();  // drop reference, js context is going away
   page_is_unloaded_ = true;
   Abort();
 }
