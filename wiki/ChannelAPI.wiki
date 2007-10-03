@@ -23,8 +23,10 @@ The Channel module will expose one new object in javascript, and an abstract cla
 {{{
   class GearsEndpoint {
    public:
-    GearsEndpoint(const char *requesting_page);
+    explicit GearsEndpoint(const char *requesting_page);
     virtual ~GearsEndpoint();
+
+    void DispatchMessages();
 
     void Send(const char *message_string);
 
@@ -79,8 +81,8 @@ int main(int argc, const char *argv[]) {
 
   SayHello endpoint(argv[1]);
 
-  // this just waits for messages
-  endpoint.start();
+  // this just waits for messages and hands them to OnMessage
+  endpoint.DispatchMessages();
 }
 }}}
 
