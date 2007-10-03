@@ -105,6 +105,8 @@ Harness.prototype.handleRequestReadyStateChange_ = function() {
       // Have to use this hack to eval in the global scope in IE workers.
       var timer = google.gears.factory.create('beta.timer', '1.0');
       timer.setTimeout(
+        '\n' + // This whitespace is required. For an explanation of why, see:
+               // http://code.google.com/p/google-gears/issues/detail?id=265
         this.request_.responseText +
         '\nHarness.instances_[' + this.instanceId_ + '].' +
         'handleTestsLoaded_(true)',
@@ -136,8 +138,11 @@ Harness.prototype.runTests_ = function() {
   // it luckily has this hack you can use to get around it.
   var globalScope = global.RuntimeObject ? global.RuntimeObject('test*')
                                          : global;
+  var testSucceeded;
 
   for (var name in globalScope) {
+    testSucceeded = true;
+
     this.scheduledCallback_ = false;
     this.currentTestName_ = name;
 
@@ -145,10 +150,11 @@ Harness.prototype.runTests_ = function() {
       try {
         globalScope[name]();
       } catch (e) {
+        testSucceeded = false;
         this.onTestComplete(name, false, e.message);
       }
 
-      if (!this.scheduledCallback_) {
+      if (testSucceeded && !this.scheduledCallback_) {
         this.onTestComplete(name, true);
       }
     }

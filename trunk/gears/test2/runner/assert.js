@@ -38,20 +38,36 @@
  */
 function assert(expr, opt_message) {
   if (!expr) {
-    throw new Error(opt_message || 'Assertion failed');
+    if (isFunction(opt_message)) {
+      throw new Error(opt_message());
+    } else if (isString(opt_message)) {
+      throw new Error(opt_message);
+    } else {
+      throw new Error('Assertion failed');
+    }
   }
 }
 
 /**
- * Assert that two values are equal.
+ * Assert that two values are equal. A strict equality test is used; 4 and "4"
+ * are not equal.
  *
  * @param expected The expected value.
  * @param actual The actual value.
- * @param opt_message An optional message to display if the values aren't equal.
+ * @param opt_description An optional description of what went wrong, or a
+ * function which can be called to provide the description.
  */
-function assertEqual(expected, actual, opt_message) {
-  assert(expected == actual,
-         opt_message || 'Expected: ' + expected + ', actual: ' + actual);
+function assertEqual(expected, actual, opt_description) {
+  assert(expected === actual, function() {
+    var message = 'Expected: %s (%s), actual: %s (%s)'.subs(
+       expected, typeof expected, actual, typeof actual);
+
+    if (opt_description) {
+      message = opt_description + ' - ' + message;
+    }
+
+    return message;
+  });
 }
 
 /**
@@ -62,8 +78,9 @@ function assertEqual(expected, actual, opt_message) {
  * @param opt_expected_error An optional error message that is expected. If the
  * message that results from running fn contains this substring, the assert
  * succeeds. Otherwise, it fails.
+ * @param opt_description An optional description of what went wrong.
  */
-function assertError(fn, opt_expected_error) {
+function assertError(fn, opt_expected_error, opt_description) {
   try {
     fn();
   } catch (e) {
@@ -80,6 +97,10 @@ function assertError(fn, opt_expected_error) {
     message += ': "' + opt_expected_error + '"';
   }
 
+  if (opt_description) {
+    message = opt_description + ' - ' + message;
+  }
+
   throw new Error(message);
 }
 
@@ -92,3 +113,17 @@ function scheduleCallback(callback, delayMs) {
   // NOTE: This function is implemented by the Harness class when it is running
   // tests.
 }
+
+/**
+ * Process a resultset and ensure it is closed, even if there is an error.
+ * @param rs The resultset to process.
+ * @param fn A function that will receive the resultset as an argument.
+ */
+function handleResult(rs, fn) {
+  try {
+    fn(rs);
+  } finally {
+    rs.close();
+  }
+}
+
