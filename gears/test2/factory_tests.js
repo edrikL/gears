@@ -28,8 +28,8 @@ function testCheckVersionProperty() {
   var major = versionComponents[0];
   var minor = versionComponents[1];
   assertEqual(4, versionComponents.length);
-  assertEqual(0, major);
-  assertEqual(2, minor);
+  assertEqual('0', major);
+  assertEqual('2', minor);
 }
 
 function testCreateInvalidModule() {
@@ -44,4 +44,36 @@ function testCreateInvalidModule() {
   assertError(function() {
     google.gears.factory.create('beta.database', '42.0');
   });
+}
+
+function testCreateOldModule() {
+  var wp = google.gears.factory.create('beta.workerpool', '1.0');
+}
+
+function testDisallowDirectObjectCreation() {
+  // JS code should only be able to instantiate the GearsFactory object;
+  // everything else should go through GearsFactory.
+  var objects = [
+    'GearsDatabase',
+    'GearsResultSet',
+    'GearsWorkerPool',
+    'GearsLocalServer',
+    'GearsResourceStore' // testing one indirect localserver interface is enough
+  ];
+
+  for (var i = 0; i < objects.length; ++i) {
+    // test 'new FOO()'
+    //  and 'new ActiveXObject("Gears.FOO")'
+    var prefix_suffix = [
+      ['new ',                       '();'],
+      ['new ActiveXObject("Gears.',  '");']
+    ];
+
+    for (var j = 0; j < prefix_suffix.length; ++j) {
+      assertError(function() {
+        var toEval = prefix_suffix[j][0] + objects[i] + prefix_suffix[j][1];
+        var instance = eval(toEval);
+      });
+    }
+  }
 }
