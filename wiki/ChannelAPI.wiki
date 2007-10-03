@@ -1,4 +1,4 @@
-#summary Provide a way to communicate with native code from javascript; future versions will allow page <-> page communication.
+#summary Provide a way to communicate with native code from javascript.
 
 = Introduction =
 
@@ -119,6 +119,3 @@ We do, however, provide a guarantee of order: if you send messages A and B, one 
     * Message A is received, and message B is not
     * Message A is not received, and message B is received
     * Neither message A nor message B is received.
-
-==Future Plans==
-The Channel API could be easily extended to allow communication between pages; the 'connect' method could receive the url of another page, and set up a communication channel between the pages.
