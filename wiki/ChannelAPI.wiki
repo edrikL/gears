@@ -28,9 +28,9 @@ The Channel module will expose one new object in javascript, and an abstract cla
 
     void Send(const char *message_string);
 
-    virtual OnMessage(const char *message_string) = 0;
-    virtual OnError(int error) = 0;
-    virtual OnDisconnect() = 0;
+    virtual void OnMessage(const char *message_string) = 0;
+    virtual void OnError(int error) = 0;
+    virtual void OnDisconnect() = 0;
 
     // no need for 'connect' and 'disconnect'; they are implicit in the
     // processes' creation and destruction.
@@ -41,16 +41,16 @@ The Channel module will expose one new object in javascript, and an abstract cla
 The Channel module will maintain a registry of native services identified by a URI. For security reasons, this registry will also maintain information about what sites are allowed to access this service. Fields in this registry will include:
 
     * Full path to the executable
-    * URI identifier of the module
-    * URIs that may access this module.
+    * URI identifier of the service
+    * URIs that may access this service.
 
-When javascript requests a connection to a registered URI identifier, Gears will spin up the referenced executable as a subprocess of the browser process. Every instance of the endpoint executes its own process, which then communicate through pipes redirecting stdin and stdout. In this sense, you can think of these modules as client-side CGI scripts.
+When javascript requests a connection to a registered URI identifier, Gears will spin up the referenced executable as a subprocess of the browser process. Every instance of the endpoint executes its own process, which then communicate through pipes redirecting stdin and stdout. In this sense, you can think of these services as client-side CGI scripts.
 
 Details of where this registration file is stored are tbd, and will be OS-specific.
 
 ==Example==
 
-The HelloWorld module registers with the Channel module as follows:
+The HelloWorld service registers with the Channel module as follows:
 
 `"c:\program files\helloworld\helloworld.exe","http://www.example.com/helloworld","http://www.example.com/hellohost.js"`
 
@@ -67,7 +67,7 @@ class SayHello : public GearsEndpoint {
     JSONObject parsed_message;
     parsed_message.parse(message);
 
-    if (parsed_message.getproperty("type") == 'sayhello') {
+    if (parsed_message.getproperty("type") == "sayhello") {
       MessageBox(NULL, "Hello World", "Hello World", MB_OK);
     }
   }
@@ -84,7 +84,7 @@ int main(int argc, const char *argv[]) {
 }
 }}}
 
-Note that the GearsEndpoint class is just a helper class to read and write from stdin and stdout. As the endpoint object merely reads and writes strings, such a module could very easily be written as a shell script (on Linux or OS X -- Windows users aren't so lucky). This module is accessed from a web app running on http://www.example.com/hellohost.js as such:
+Note that the GearsEndpoint class is just a helper class to read and write from stdin and stdout. As the endpoint object merely reads and writes strings, such a service could very easily be written as a shell script (on Linux or OS X -- Windows users aren't so lucky). This service is accessed from a web app running on http://www.example.com/hellohost.js as such:
 
 {{{
 var localendpoint = google.gears.factory.create('beta.localendpoint', '1.0');
