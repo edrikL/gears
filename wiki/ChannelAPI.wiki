@@ -8,7 +8,7 @@ Javascript is great but sometimes you just need to get at the guts of the machin
 
 The Channel module will expose one new object in javascript, and an abstract class in C++.
 
-==LocalEndpoint javascript class==
+==!LocalEndpoint javascript class==
 {{{
   callback onmessage(messageString)
   callback onerror(errorNum)
@@ -19,7 +19,7 @@ The Channel module will expose one new object in javascript, and an abstract cla
   void disconnect()
 }}}
 
-==GearsEndpoint C++ class==
+==!GearsEndpoint C++ class==
 {{{
   class GearsEndpoint {
    public:
