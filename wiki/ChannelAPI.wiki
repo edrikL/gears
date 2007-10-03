@@ -6,6 +6,38 @@ Javascript is great but sometimes you just need to get at the guts of the machin
 
 = Details =
 
+The Channel module will expose one new object in javascript, and an abstract class in C++.
+
+==LocalEndpoint javascript class==
+{{{
+  callback onmessage(messageString)
+  callback onerror(errorNum)
+  callback ondisconnect()
+  
+  void send(messageString)
+  void connect(channelName)
+  void disconnect()
+}}}
+
+==GearsEndpoint C++ class==
+{{{
+  class GearsEndpoint {
+   public:
+    GearsEndpoint(const char *requesting_page);
+    virtual ~GearsEndpoint();
+
+    void Send(const char *message_string);
+
+    virtual OnMessage(const char *message_string) = 0;
+    virtual OnError(int error) = 0;
+    virtual OnDisconnect() = 0;
+
+    // no need for 'connect' and 'disconnect'; they are implicit in the
+    // processes' creation and destruction.
+  };
+}}}
+
+==Registration==
 The Channel module will maintain a registry of native services identified by a URI. For security reasons, this registry will also maintain information about what sites are allowed to access this service. Fields in this registry will include:
 
     * Full path to the executable
