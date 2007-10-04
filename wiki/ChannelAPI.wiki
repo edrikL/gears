@@ -21,10 +21,10 @@ The Channel module will expose one new object in javascript, and an abstract cla
 
 ==!GearsChannel  C++ class==
 {{{
-  class GearsEndpoint {
+  class GearsChannel {
    public:
-    explicit GearsEndpoint(const char *requesting_page);
-    virtual ~GearsEndpoint();
+    explicit GearsChannel(const char *requesting_page);
+    virtual ~GearsChannel();
 
     void DispatchMessages();
 
