@@ -8,7 +8,7 @@ Javascript is great but sometimes you just need to get at the guts of the machin
 
 The Channel module will expose one new object in javascript, and an abstract class in C++.
 
-==!LocalEndpoint javascript class==
+==!channel javascript class==
 {{{
   callback onmessage(messageString)
   callback onerror(errorNum)
@@ -19,7 +19,7 @@ The Channel module will expose one new object in javascript, and an abstract cla
   void disconnect()
 }}}
 
-==!GearsEndpoint C++ class==
+==!GearsChannel  C++ class==
 {{{
   class GearsEndpoint {
    public:
@@ -59,9 +59,9 @@ The HelloWorld service registers with the Channel module as follows:
 and is written in C++ as this:
 
 {{{
-class SayHello : public GearsEndpoint {
+class SayHello : public GearsChannel {
  public:
-  SayHello(const char *connection_id) : GearsEndpoint(connection_id) {}
+  SayHello(const char *connection_id) : GearsChannel(connection_id) {}
   virtual ~SayHello() {}
 
   virtual void OnMessage(const char *message) {
@@ -79,24 +79,24 @@ int main(int argc, const char *argv[]) {
   if (argc != 2)
     return -1; // invalid args
 
-  SayHello endpoint(argv[1]);
+  SayHello channel(argv[1]);
 
   // this just waits for messages and hands them to OnMessage
-  endpoint.DispatchMessages();
+  channel.DispatchMessages();
 }
 }}}
 
-Note that the GearsEndpoint class is just a helper class to read and write from stdin and stdout. As the endpoint object merely reads and writes strings, such a service could very easily be written as a shell script (on Linux or OS X -- Windows users aren't so lucky). This service is accessed from a web app running on http://www.example.com/hellohost.js as such:
+Note that the GearsChannel class is just a helper class to read and write from stdin and stdout. As the endpoint object merely reads and writes strings, such a service could very easily be written as a shell script (on Linux or OS X -- Windows users aren't so lucky). This service is accessed from a web app running on http://www.example.com/hellohost.js as such:
 
 {{{
-var localendpoint = google.gears.factory.create('beta.localendpoint', '1.0');
+var channel = google.gears.factory.create('beta.channel', '1.0');
 
-localendpoint.onmessage = function(message) {
+channel.onmessage = function(message) {
   // don't handle any messages for now
 };
 
-localendpoint.connect('http://www.example.com/helloworld');
-localendpoint.send({type:'sayhello'});
+channel.connect('http://www.example.com/helloworld');
+channel.send({type:'sayhello'});
 }}}
 
 This causes the Channel module to launch:
