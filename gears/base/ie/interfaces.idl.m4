@@ -48,11 +48,12 @@ import "ocidl.idl";
 import "ui/ie/html_dialog_host.idl";
 
 import "base/ie/factory.idl";
+import "channel/ie/channel.idl";
 import "database/ie/database.idl";
 import "httprequest/ie/httprequest.idl";
 import "localserver/ie/localserver.idl";
-import "workerpool/ie/workerpool.idl";
 import "timer/ie/timer.idl";
+import "workerpool/ie/workerpool.idl";
 
 //------------------------------------------------------------------------------
 // GearsTypelib
@@ -135,6 +136,14 @@ library GearsTypelib
   coclass GearsHttpRequest
   {
     [default] interface GearsHttpRequestInterface;
+  };
+
+  [
+    uuid(3DE5BB83-50C4-4F73-AA69-6DE89C65C1AE)
+  ]
+  coclass GearsChannel
+  {
+    [default] interface GearsChannelInterface;
   };
 
 };

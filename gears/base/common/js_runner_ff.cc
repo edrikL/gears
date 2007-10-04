@@ -43,6 +43,7 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/base/firefox/factory.h"
+#include "ff/genfiles/channel.h"
 #include "ff/genfiles/database.h"
 #include "ff/genfiles/httprequest.h"
 #include "ff/genfiles/localserver.h"
@@ -491,7 +492,9 @@ bool JsRunner::InitJavaScriptEngine() {
     // timer
     {GEARSTIMERINTERFACE_IID, NULL},
     // httprequest
-    {GEARSHTTPREQUESTINTERFACE_IID, NULL}
+    {GEARSHTTPREQUESTINTERFACE_IID, NULL},
+    // channel
+    {GEARSCHANNELINTERFACE_IID, NULL}
   };
   const int num_classes = sizeof(classes) / sizeof(classes[0]);
 

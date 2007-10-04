@@ -30,6 +30,7 @@
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/base/ie/factory.h"
+#include "gears/channel/ie/channel.h"
 #include "gears/database/ie/database.h"
 #include "gears/httprequest/ie/httprequest_ie.h"
 #include "gears/workerpool/ie/workerpool.h"
@@ -89,7 +90,15 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
   CComQIPtr<IDispatch> idispatch;
 
   hr = E_FAIL;
-  if (object_name == STRING16(L"beta.database")) {
+  if (object_name == STRING16(L"beta.channel")) {
+    if (major_version_desired == kGearsChannelVersionMajor &&
+        minor_version_desired <= kGearsChannelVersionMinor) {
+      CComObject<GearsChannel> *obj;
+      hr = CComObject<GearsChannel>::CreateInstance(&obj);
+      base_class = obj;
+      idispatch = obj;
+    }
+  } else if (object_name == STRING16(L"beta.database")) {
     if (major_version_desired == kGearsDatabaseVersionMajor &&
         minor_version_desired <= kGearsDatabaseVersionMinor) {
       CComObject<GearsDatabase> *obj;
