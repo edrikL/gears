@@ -29,6 +29,7 @@
 #include <nsCOMPtr.h>
 #include <nspr.h> // for PR_*
 #include "gears/third_party/gecko_internal/jsapi.h"
+#include "gears/third_party/gecko_internal/nsIJSContextStack.h"
 #include "gears/third_party/gecko_internal/nsIScriptContext.h"
 #include "gears/third_party/gecko_internal/nsIScriptGlobalObject.h"
 #include "gears/third_party/gecko_internal/nsIScriptObjectPrincipal.h"
@@ -684,6 +685,14 @@ bool DocumentJsRunner::Eval(const std::string16 &script) {
 
   principal->GetJSPrincipals(js_engine_context_, &jsprin);
 
+  // Set up the JS stack so that our context is on top.  This is needed to
+  // play nicely with plugins that access the context stack, such as Firebug.
+  nsCOMPtr<nsIJSContextStack> stack =
+      do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+  if (!stack) { return false; }
+
+  stack->Push(js_engine_context_);
+
   uintN line_number_start = 0;
   jsval rval;
   JSBool js_ok = JS_EvaluateUCScriptForPrincipals(
@@ -691,6 +700,9 @@ bool DocumentJsRunner::Eval(const std::string16 &script) {
       reinterpret_cast<const jschar *>(script.c_str()),
       script.length(), "script", line_number_start, &rval);
 
+  // Restore the context stack.
+  JSContext *cx;
+  stack->Pop(&cx);
 
   // Decrements ref count on jsprin (Was added in GetJSPrincipals()).
   JSPRINCIPALS_DROP(js_engine_context_, jsprin);
