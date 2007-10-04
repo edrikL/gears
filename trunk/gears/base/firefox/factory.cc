@@ -35,6 +35,7 @@
 #include "gears/base/common/factory_utils.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/firefox/dom_utils.h"
+#include "gears/channel/firefox/channel.h"
 #include "gears/database/firefox/database.h"
 #include "gears/httprequest/firefox/httprequest_ff.h"
 #include "gears/localserver/firefox/localserver_ff.h"
@@ -110,7 +111,12 @@ NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
   nsCOMPtr<nsISupports> isupports = NULL;
 
   nr = NS_ERROR_FAILURE;
-  if (object == STRING16(L"beta.database")) {
+  if (object == STRING16(L"beta.channel")) {
+    if (major_version_desired == kGearsChannelVersionMajor &&
+        minor_version_desired <= kGearsChannelVersionMinor) {
+      isupports = do_QueryInterface(new GearsChannel(), &nr);
+    }
+  } else if (object == STRING16(L"beta.database")) {
     if (major_version_desired == kGearsDatabaseVersionMajor &&
         minor_version_desired <= kGearsDatabaseVersionMinor) {
       isupports = do_QueryInterface(new GearsDatabase(), &nr);
@@ -135,7 +141,7 @@ NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
         minor_version_desired <= kGearsWorkerPoolVersionMinor) {
       isupports = do_QueryInterface(new GearsWorkerPool(), &nr);
     }
-  } else {
+  }  else {
     RETURN_EXCEPTION(STRING16(L"Unknown object."));
   }
 

@@ -23,33 +23,28 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#ifndef GEARS_CHANNEL_FIREFOX_CHANNEL_H__
+#define GEARS_CHANNEL_FIREFOX_CHANNEL_H__
 
+#include "ff/genfiles/channel.h"
+#include "gears/base/common/base_class.h"
 
-// Channel
-// 1.0
-DEFINE_MODULE_VERSION_VARIABLES(Channel, 1, 0);
-// Database
-// 1.0 - (build 0.1.47 in 05/2007)
-//     Initial release.
-DEFINE_MODULE_VERSION_VARIABLES(Database, 1, 0);
-// HttpRequest
-// 1.0 - (build 0.1.56 in 08/2007)
-//     Initial release.
-DEFINE_MODULE_VERSION_VARIABLES(HttpRequest, 1, 0);
-// LocalServer
-// 1.0 - (build 0.1.47 in 05/2007)
-//     Initial release.
-// 1.1 - (build 0.1.56 in 08/2007)
-//     requiredCookie param adds "myCookieName=;NONE;" support.
-DEFINE_MODULE_VERSION_VARIABLES(LocalServer, 1, 1);
-// Timer
-// 1.0 - (build 0.1.56 in 08/2007)
-//     Initial release.
-DEFINE_MODULE_VERSION_VARIABLES(Timer, 1, 0);
-// WorkerPool
-// 1.0 - (build 0.1.47 in 05/2007)
-//     Initial release.
-// 1.1 - (build 0.1.56 in 08/2007)
-//     createWorkerFromUrl; allowCrossOrigin; onerror; onmessage 3rd param.
-DEFINE_MODULE_VERSION_VARIABLES(WorkerPool, 1, 1);
+// Object identifiers
+extern const char *kGearsChannelClassName;
+extern const nsCID kGearsChannelClassId;
+
+class GearsChannel
+    : public GearsBaseClass,
+      public GearsChannelInterface {
+ public:
+  NS_DECL_ISUPPORTS
+  GEARS_IMPL_BASECLASS
+  // End boilerplate code. Begin interface.
+
+  GearsChannel(); 
+
+ private:
+  ~GearsChannel();
+};
+
+#endif  // GEARS_CHANNEL_FIREFOX_CHANNEL_H__
