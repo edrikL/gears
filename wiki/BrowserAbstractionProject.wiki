@@ -1,0 +1,44 @@
+#summary Work needed to support new browsers and keep features in sync across all platforms
+
+=PROBLEM=
+
+Since the launch of Gears, only Internet Explorer and Firefox have always had the latest features.  Safari support has lagged behind.  Other browsers, like Windows Mobile, have not been supported at all.
+
+=SOLUTION=
+
+We can fix the problem by doing two things:
+  # Formalize the browser abstractions that exist today.  This will make it easier to support new browsers.
+  # Have only one (shared) implementation of each Gears module.  This will ensure all browsers get the latest features.
+
+The `/base` directory will contain all browser-specific underpinnings.  Each abstraction will consist of a shared interface, and some combination of shared code and browser-specific code.  For example:
+
+{{{
+   /base/file.h      // single interface
+   /base/file.cc     // code that is shared
+   /base/file_ie.cc  // code that is IE-specific
+   /base/file_ff.cc  // code that is Firefox-specific
+}}}
+
+Each Gears module will live in its own directory.  Modules will have a single implementation, based on browser-neutral types (int, bool, string16).  There will also be a brower-specific interface definition file.
+
+{{{
+   /database/database.h       // single interface
+   /database/database.cc      // single implementation
+   /database/database_ie.idl  // interface definition for IE
+   /database/database_ff.idl  // interface definition for Firefox
+}}}
+
+
+=DETAILS=
+
+Some initial work items come to mind:
+
+  # Look through `/base/common` to understand what abstractions exist today.  Understand whether these abstractions can be implemented on additional browsers.
+  # Move some abstractions into `/base`.  These examples come to mind:
+    * http_request
+    * http_constants
+  # Move non-abstractions out of `/base`.  These examples come to mind:
+    * factory
+  # Make any changes required to share a single module (perhaps `Database`?) across Firefox and IE.  Known work items:
+    * implement JsParamFetcher for IE
+    * switch to a consistent LOG() framework
