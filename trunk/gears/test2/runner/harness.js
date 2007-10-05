@@ -44,20 +44,15 @@
  */
 function Harness() {
   bindMethods(this);
-  this.instanceId_ = Harness.instances_.length;
-  Harness.instances_[this.instanceId_] = this;
+  Harness.current_ = this;
+  this.testNames_ = [];
 }
 Harness.inherits(RunnerBase);
 
 /**
- * A list of instances of Harness.
+ * The current harness active in this context.
  */
-Harness.instances_ = [];
-
-/**
- * Identifies this instance in Harness.instances_.
- */
-Harness.prototype.instanceId_ = -1;
+Harness.current_ = null;
 
 /**
  * The latest GearsHttpRequest instance used.
@@ -78,6 +73,22 @@ Harness.prototype.currentTestName_ = null;
  * The url of the test to load.
  */
 Harness.prototype.testUrl_ = null;
+
+/**
+ * The global scope to use for finding test names. In IE this is a special
+ * 'RuntimeObject' that allows lookup in the global scope by name.
+ */
+Harness.prototype.globalScope_ = null;
+
+/**
+ * An array of all tests found in this context.
+ */
+Harness.prototype.testNames_ = null;
+
+/**
+ * The index of the current running test in testNames_.
+ */
+Harness.prototype.currentTestIndex_ = -1;
 
 /**
  * Load and run a test file.
@@ -108,8 +119,7 @@ Harness.prototype.handleRequestReadyStateChange_ = function() {
         '\n' + // This whitespace is required. For an explanation of why, see:
                // http://code.google.com/p/google-gears/issues/detail?id=265
         this.request_.responseText +
-        '\nHarness.instances_[' + this.instanceId_ + '].' +
-        'handleTestsLoaded_(true)',
+        '\nHarness.current_.handleTestsLoaded_(true)',
         0);
     } else {
       this.onTestsLoaded(
@@ -132,35 +142,56 @@ Harness.prototype.handleTestsLoaded_ = function(content) {
  * Runs all the tests found in the current context.
  */
 Harness.prototype.runTests_ = function() {
-  global.scheduleCallback = this.scheduleCallback;
-
   // IE has a bug where you can't iterate the objects in the global scope, but
   // it luckily has this hack you can use to get around it.
-  var globalScope = global.RuntimeObject ? global.RuntimeObject('test*')
-                                         : global;
-  var testSucceeded;
+  this.globalScope_ = global.RuntimeObject ? global.RuntimeObject('test*')
+                                           : global;
 
-  for (var name in globalScope) {
-    testSucceeded = true;
-
-    this.scheduledCallback_ = false;
-    this.currentTestName_ = name;
-
+  // Find all the test names
+  for (var name in this.globalScope_) {
     if (name.substring(0, 4) == 'test') {
-      try {
-        globalScope[name]();
-      } catch (e) {
-        testSucceeded = false;
-        this.onTestComplete(name, false, e.message);
-      }
-
-      if (testSucceeded && !this.scheduledCallback_) {
-        this.onTestComplete(name, true);
-      }
+      this.testNames_.push(name);
     }
   }
 
-  this.onAllSyncTestsComplete();
+  this.runNextTest_();
+};
+
+/**
+ * Starts the next test, or ends the test run if there are no more tests.
+ */
+Harness.prototype.runNextTest_ = function() {
+  this.currentTestIndex_++;
+
+  if (this.currentTestIndex_ == this.testNames_.length) {
+    // We're done!
+    this.onAllTestsComplete();
+    return;
+  }
+
+  // Start the next test
+  this.currentTestName_ = this.testNames_[this.currentTestIndex_];
+  this.startOrResumeCurrentTest_(this.globalScope_[this.currentTestName_]);
+};
+
+/**
+ * Starts or resumes the current test using the supplied function.
+ */
+Harness.prototype.startOrResumeCurrentTest_ = function(testFunction) {
+  this.scheduledCallback_ = false;
+
+  var testSucceeded = true;
+  try {
+    testFunction();
+  } catch (e) {
+    testSucceeded = false;
+    this.onTestComplete(this.currentTestName_, false, e.message);
+  }
+
+  if (testSucceeded && !this.scheduledCallback_) {
+    this.onTestComplete(this.currentTestName_, true);
+    this.runNextTest_();
+  }
 };
 
 /**
@@ -171,27 +202,12 @@ Harness.prototype.runTests_ = function() {
  *
  */
 Harness.prototype.scheduleCallback = function(callback, delayMs) {
+  if (this.scheduledCallback_) {
+    throw new Error('There is already a callback scheduled for this test');
+  }
+
   this.onAsyncTestStart(this.currentTestName_);
 
   this.scheduledCallback_ = true;
-  var timer = google.gears.factory.create('beta.timer', '1.0');
-  timer.setTimeout(partial(this.fireCallback_, this.currentTestName_, callback),
-                   delayMs);
-};
-
-/**
- * Fires a callback that was scheduled with scheduleCallback.
- * @param name The name of the test to complete by calling callback.
- * @param callback A function to call to complete a test previously scheduled
- * with scheduleCallback_().
- */
-Harness.prototype.fireCallback_ = function(name, callback) {
-  try {
-    callback();
-  } catch (e) {
-    this.onTestComplete(name, false, e.message);
-    return;
-  }
-
-  this.onTestComplete(name, true);
+  timer.setTimeout(partial(this.startOrResumeCurrentTest_, callback), delayMs);
 };

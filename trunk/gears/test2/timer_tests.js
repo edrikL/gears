@@ -26,23 +26,21 @@
 function testTimeout() {
   var success = false;
   var timerFired = false;
-  var timer = google.gears.factory.create('beta.timer', '1.0');
 
   timer.setTimeout(function() {
     // Set success to true on the first firing, false if it fires again.
     success = !timerFired;
     timerFired = true;
-  }, 300);
+  }, 20);
 
   scheduleCallback(function() {
     assert(timerFired, 'Timer did not fire');
     assert(success, 'Timer fired more than once');
-  }, 600);
+  }, 100);
 }
 
 function testInterval() {
-  var timer = google.gears.factory.create('beta.timer', '1.0');
-  var timerId = timer.setInterval(intervalHandler, 300);
+  var timerId = timer.setInterval(intervalHandler, 20);
   var targetIntervals = 3;
   var intervals = 0;
 
@@ -54,7 +52,7 @@ function testInterval() {
 
   scheduleCallback(function() {
     assertEqual(3, targetIntervals);
-  }, 1500);
+  }, 100); // Give a little leeway
 }
 
 
@@ -62,15 +60,14 @@ testScriptTimeout.fired = false;
 testScriptTimeout.succeeded = false;
 
 function testScriptTimeout() {
-  var timer = google.gears.factory.create('beta.timer', '1.0');
   timer.setTimeout('testScriptTimeout.succeeded = !testScriptTimeout.fired;' +
                    'testScriptTimeout.fired = true;',
-                   300);
+                   20);
 
   scheduleCallback(function() {
     assert(testScriptTimeout.fired, 'Timer did not fire');
     assert(testScriptTimeout.succeeded, 'Timer fired more than once');
-  }, 600);
+  }, 100);
 }
 
 
@@ -78,17 +75,15 @@ testScriptInterval.intervals = 0;
 testScriptInterval.targetIntervals = 3;
 
 function testScriptInterval() {
-  testScriptInterval.timer = google.gears.factory.create('beta.timer', '1.0');
-  testScriptInterval.timerId = testScriptInterval.timer.setInterval(
+  testScriptInterval.timerId = timer.setInterval(
         'testScriptInterval.intervals++;' +
         'if (testScriptInterval.intervals == ' +
         '    testScriptInterval.targetIntervals) {' +
-        '  testScriptInterval.timer.clearInterval(' +
-        '      testScriptInterval.timerId);' +
+        '  timer.clearInterval(testScriptInterval.timerId);' +
         '}',
-        300);
+        20);
 
   scheduleCallback(function() {
     assertEqual(3, testScriptInterval.targetIntervals);
-  }, 1500);
+  }, 100);
 }

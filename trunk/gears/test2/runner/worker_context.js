@@ -94,8 +94,8 @@
     harness.onTestComplete = partial(handleHarnessCallback, 'onTestComplete');
     harness.onAsyncTestStart = partial(handleHarnessCallback,
                                        'onAsyncTestStart');
-    harness.onAllSyncTestsComplete = partial(handleHarnessCallback,
-                                             'onAllSyncTestsComplete');
+    harness.onAllTestsComplete = partial(handleHarnessCallback,
+                                         'onAllTestsComplete');
 
     harness.load(testUrl + '?r=' + new Date().getTime());
   }
@@ -108,6 +108,7 @@
    */
   function handleHarnessCallback(name, var_args) {
     var messageName = name;
+
     var args = Array.prototype.slice.call(arguments, 1);
     google.gears.workerPool.sendMessage(JSON.stringify({
       name: messageName,

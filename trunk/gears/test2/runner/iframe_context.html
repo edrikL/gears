@@ -50,7 +50,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   harness.onTestsLoaded = host.handleTestsLoaded;
   harness.onTestComplete = host.onTestComplete;
   harness.onAsyncTestStart = host.onAsyncTestStart;
-  harness.onAllSyncTestsComplete = host.onAllSyncTestsComplete;
+  harness.onAllTestsComplete = host.onAllTestsComplete;
 
   harness.load(test + '?r=' + new Date().getTime());
 })();

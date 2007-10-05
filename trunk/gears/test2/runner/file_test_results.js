@@ -42,9 +42,9 @@ FileTestResults.prototype.testsStarted = 0;
 FileTestResults.prototype.testsComplete = 0;
 
 /**
- * Callback for when all synchronous tests have completed.
+ * Callback for when all tests have completed.
  */
-FileTestResults.prototype.onAllSyncTestsComplete = function() {};
+FileTestResults.prototype.onAllTestsComplete = function() {};
 
 /**
  * Starts the tests.
@@ -81,8 +81,7 @@ FileTestResults.prototype.startIFrameTests_ = function() {
   iframeHost.onTestsLoaded = partial(this.handleTestsLoaded, false);
   iframeHost.onTestComplete = partial(this.handleTestComplete, false);
   iframeHost.onAsyncTestStart = partial(this.handleAsyncTestStart, false);
-  iframeHost.onAllSyncTestsComplete = partial(this.handleAllSyncTestsComplete,
-                                              false);
+  iframeHost.onAllTestsComplete = partial(this.handleAllTestsComplete, false);
   iframeHost.load(this.testData_.relativePath);
 };
 
@@ -94,8 +93,7 @@ FileTestResults.prototype.startWorkerTests_ = function() {
   workerHost.onTestsLoaded = partial(this.handleTestsLoaded, true);
   workerHost.onTestComplete = partial(this.handleTestComplete, true);
   workerHost.onAsyncTestStart = partial(this.handleAsyncTestStart, true);
-  workerHost.onAllSyncTestsComplete = partial(this.onAllSyncTestsComplete,
-                                              true);
+  workerHost.onAllTestsComplete = partial(this.handleAllTestsComplete, true);
   workerHost.load(this.testData_.relativePath);
 };
 
@@ -146,20 +144,23 @@ FileTestResults.prototype.handleTestComplete = function(isWorker, name, success,
 FileTestResults.prototype.handleAsyncTestStart = function(isWorker, name) {
   this.testsStarted++;
   var pendingLookupKey = name + '_' + isWorker;
-  var row = this.createResultRow_(isWorker, name);
-  this.pendingLookup_[pendingLookupKey] = row;
-  this.addRow_(name, row);
+  var pendingRow = this.pendingLookup_[pendingLookupKey];
+  if (!pendingRow) {
+    var row = this.createResultRow_(isWorker, name);
+    this.pendingLookup_[pendingLookupKey] = row;
+    this.addRow_(name, row);
+  }
 };
 
 /**
  * Called when all synchronous tests have been completed.
  * @param isWorker Whether the tests were run in a worker.
  */
-FileTestResults.prototype.handleAllSyncTestsComplete = function(isWorker) {
+FileTestResults.prototype.handleAllTestsComplete = function(isWorker) {
   if (!isWorker && this.testData_.config.useWorker) {
     this.startWorkerTests_();
   } else {
-    this.onAllSyncTestsComplete();
+    this.onAllTestsComplete();
   }
 };
 
