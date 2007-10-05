@@ -19,7 +19,7 @@ The `/base` directory will contain all browser-specific underpinnings.  Each abs
    /base/file_ff.cc  // code that is Firefox-specific
 }}}
 
-Each Gears module will live in its own directory.  Modules will have a single implementation, based on browser-neutral types (int, bool, string16).  There will also be a browser-specific interface definition file.
+Each Gears module will live in its own directory.  Modules will have a single implementation, based on browser-neutral types (`int`, `bool`, `string16`).  There will also be a browser-specific interface definition file.
 
 {{{
    /database/database.h       // single interface
