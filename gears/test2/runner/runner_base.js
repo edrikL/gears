@@ -46,13 +46,15 @@ RunnerBase.prototype.onTestsLoaded = function(success, errorMessage) {};
 RunnerBase.prototype.onTestComplete = function(name, success, errorMessage) {};
 
 /**
- * Callback for when all synchronous tests have completed.
+ * Callback for when all tests have completed.
  */
-RunnerBase.prototype.onAllSyncTestsComplete = function() {};
+RunnerBase.prototype.onAllTestsComplete = function() {};
 
 /**
  * Callback for when an asynchronous test has started.
  * @param name The name of the test that was started.
+ * TODO(aa): This should really be called 'onScheduledCallback' or
+ * 'onTestPending'.
  */
 RunnerBase.prototype.onAsyncTestStart = function(name) {};
 

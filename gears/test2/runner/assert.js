@@ -30,11 +30,22 @@
 // ... etc ...
 
 /**
+ * Whether the installed Gears extension is a debug build.
+ */
+var isDebug = google.gears.factory.getBuildInfo().indexOf("dbg") > -1;
+
+/**
+ * A shared timer tests can use.
+ */
+var timer = google.gears.factory.create('beta.timer', '1.0');
+
+/**
  * Assert that something is true and throw an error if not.
  *
  * @param expr The expression to test. This will be coerced to bool if it isn't
  * already.
- * @param opt_message The message to display if expr is not true.
+ * @param opt_message The message to display if expr is not true, or a function
+ * which will return the message.
  */
 function assert(expr, opt_message) {
   if (!expr) {
@@ -54,8 +65,7 @@ function assert(expr, opt_message) {
  *
  * @param expected The expected value.
  * @param actual The actual value.
- * @param opt_description An optional description of what went wrong, or a
- * function which can be called to provide the description.
+ * @param opt_description An optional description of what went wrong.
  */
 function assertEqual(expected, actual, opt_description) {
   assert(expected === actual, function() {
@@ -66,6 +76,40 @@ function assertEqual(expected, actual, opt_description) {
       message = opt_description + ' - ' + message;
     }
 
+    return message;
+  });
+}
+
+/**
+ * Assert a value is null. This tests for strict equality to null, no coercion
+ * is done.
+ *
+ * @param val The value expected to be null.
+ * @param opt_description An optional description of what went wrong.
+ */
+function assertNull(val, opt_description) {
+  assert(val === null, function() {
+    var message = "Expected null value.";
+    if (opt_description) {
+      message += " " + opt_description;
+    }
+    return message;
+  });
+}
+
+/**
+ * Assert a value is not null. This tests for strict equality to null, no
+ * coercion is done.
+ *
+ * @param val The value expected to be non-null.
+ * @param opt_description An optional description of what went wrong.
+ */
+function assertNotNull(val, opt_description) {
+  assert(val !== null, function() {
+    var message = "Unexpected null value.";
+    if (opt_description) {
+      message += " " + opt_description;
+    }
     return message;
   });
 }
@@ -105,13 +149,13 @@ function assertError(fn, opt_expected_error, opt_description) {
 }
 
 /**
- * Schedule the test runner to invoke callback to finish the test later.
- * @param callback Callback to invoke to finish test.
- * @param delayMs Length of time to wait before calling callback.
+ * Schedules a callback to continue a test at a later time.
+ *
+ * @param fn The function to call to resume the test.
+ * @param timeoutMsec The amount of time to wait before resuming.
  */
-function scheduleCallback(callback, delayMs) {
-  // NOTE: This function is implemented by the Harness class when it is running
-  // tests.
+function scheduleCallback(fn, timeoutMsec) {
+  return Harness.current_.scheduleCallback(fn, timeoutMsec);
 }
 
 /**
@@ -127,3 +171,24 @@ function handleResult(rs, fn) {
   }
 }
 
+/**
+ * Utility to asynchronously get a URL and return the content.
+ * @param url The url to fetch
+ * @param callback Will be called with contents of URL, or null if the request
+ * was unsuccessful.
+ */
+function httpGet(url, callback) {
+  var req = google.gears.factory.create('beta.httprequest', '1.0');
+  req.onreadystatechange = function() {
+    if (req.readyState == 4) {
+      if (req.status == 200) {
+        callback(req.responseText);
+      } else {
+        callback(null);
+      }
+    }
+  };
+
+  req.open('GET', url, true); // async
+  req.send(null);
+}
