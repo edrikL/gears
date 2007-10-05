@@ -28,4 +28,13 @@
 
 [scriptable, uuid(9297185B-4ED5-452C-95A9-88166E931888)]
 interface GearsChannelInterface : GearsBaseClassInterface {
+  attribute nsIVariant onmessage;
+  attribute nsIVariant onerror;
+  attribute nsIVariant ondisconnect;
+
+  void send(//in AString message_string
+           );
+  void connect(//in AString channel_name
+              );
+  void disconnect();
 };

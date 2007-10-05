@@ -26,6 +26,8 @@
 #ifndef GEARS_CHANNEL_IE_CHANNEL_H__
 #define GEARS_CHANNEL_IE_CHANNEL_H__
 
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+
 #include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 
@@ -46,6 +48,19 @@ class ATL_NO_VTABLE GearsChannel
 
   // need a default constructor to CreateInstance objects in IE
   GearsChannel() {}
+
+  STDMETHOD(put_onmessage)(const VARIANT *in_handler);
+  STDMETHOD(put_onerror)(const VARIANT *in_handler);
+  STDMETHOD(put_ondisconnect)(const VARIANT *in_handler);
+
+  STDMETHOD(send)(const BSTR *message_string);
+  STDMETHOD(connect)(const BSTR *channel_name);
+  STDMETHOD(disconnect)();
+
+private:
+  scoped_ptr<JsRootedCallback> onmessage_handler_;
+  scoped_ptr<JsRootedCallback> onerror_handler_;
+  scoped_ptr<JsRootedCallback> ondisconnect_handler_;
 };  
 
 #endif  // GEARS_CHANNEL_IE_CHANNEL_H__
