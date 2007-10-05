@@ -40,5 +40,5 @@ Some initial work items come to mind:
   # Move non-abstractions out of `/base`.  These examples come to mind:
     * factory
   # Make any changes required to share a single module (perhaps `Database`?) across Firefox and IE.  Known work items:
-    * implement JsParamFetcher for IE
+    * implement !JsParamFetcher for IE
     * switch to a consistent LOG() framework
