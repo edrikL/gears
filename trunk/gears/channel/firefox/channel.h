@@ -26,6 +26,8 @@
 #ifndef GEARS_CHANNEL_FIREFOX_CHANNEL_H__
 #define GEARS_CHANNEL_FIREFOX_CHANNEL_H__
 
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+
 #include "ff/genfiles/channel.h"
 #include "gears/base/common/base_class.h"
 
@@ -43,8 +45,25 @@ class GearsChannel
 
   GearsChannel(); 
 
- private:
+  NS_IMETHOD SetOnmessage(nsIVariant *in_handler);
+  NS_IMETHOD GetOnmessage(nsIVariant **out_handler);
+  NS_IMETHOD SetOnerror(nsIVariant *in_handler);
+  NS_IMETHOD GetOnerror(nsIVariant **out_handler);
+  NS_IMETHOD SetOndisconnect(nsIVariant *in_handler);
+  NS_IMETHOD GetOndisconnect(nsIVariant **out_handler);
+
+  NS_IMETHOD Send(//const nsAString &message_string
+                 );
+  NS_IMETHOD Connect(//const nsAString &channel_name
+                    );
+  NS_IMETHOD Disconnect();
+
+private:
   ~GearsChannel();
+
+  scoped_ptr<JsRootedCallback> onmessage_handler_;
+  scoped_ptr<JsRootedCallback> onerror_handler_;
+  scoped_ptr<JsRootedCallback> ondisconnect_handler_;
 };
 
 #endif  // GEARS_CHANNEL_FIREFOX_CHANNEL_H__

@@ -40,12 +40,99 @@ NS_INTERFACE_MAP_BEGIN(GearsChannel)
 NS_INTERFACE_MAP_END
 
 const char *kGearsChannelClassName = "GearsChannel";
-const nsCID kGearsChannelClassId = {0x577033F4, 0xF38B, 0x4815, { 0xBB, 0x9C,
-                                    0xD6, 0x55, 0xA4, 0x35, 0x22, 0x5D }};
+const nsCID kGearsChannelClassId = {0x577033F4, 0xF38B, 0x4815, {0xBB, 0x9C,
+                                    0xD6, 0x55, 0xA4, 0x35, 0x22, 0x5D}};
                                    // 577033F4-F38B-4815-BB9C-D655A435225D
 
 GearsChannel::GearsChannel() {
 }
 
 GearsChannel::~GearsChannel() {
+}
+
+NS_IMETHODIMP GearsChannel::SetOnmessage(nsIVariant *in_handler) {
+  JsRootedCallback *onerror_handler;
+  JsParamFetcher js_params(this);
+
+  if (js_params.GetCount(false) < 1) {
+    RETURN_EXCEPTION(STRING16(L"Value is required."));
+  }
+
+  // Once we aquire the callback, we're responsible for its lifetime
+  if (!js_params.GetAsNewRootedCallback(0, &onerror_handler)) {
+    RETURN_EXCEPTION(STRING16(L"Invalid value for onmessage property."));
+  }
+
+  onerror_handler_.reset(onerror_handler);
+
+  RETURN_NORMAL();
+}
+
+NS_IMETHODIMP GearsChannel::GetOnmessage(nsIVariant **out_value) {
+  // TODO(pankaj): NYI
+  *out_value = NULL;
+  RETURN_NORMAL();
+}
+
+NS_IMETHODIMP GearsChannel::SetOnerror(nsIVariant *in_handler) {
+  JsRootedCallback *onerror_handler;
+  JsParamFetcher js_params(this);
+
+  if (js_params.GetCount(false) < 1) {
+    RETURN_EXCEPTION(STRING16(L"Value is required."));
+  }
+
+  // Once we aquire the callback, we're responsible for its lifetime
+  if (!js_params.GetAsNewRootedCallback(0, &onerror_handler)) {
+    RETURN_EXCEPTION(STRING16(L"Invalid value for onerror property."));
+  }
+
+  onerror_handler_.reset(onerror_handler);
+
+  RETURN_NORMAL();
+}
+
+NS_IMETHODIMP GearsChannel::GetOnerror(nsIVariant **out_value) {
+  // TODO(pankaj): NYI
+  *out_value = NULL;
+  RETURN_NORMAL();
+}
+
+NS_IMETHODIMP GearsChannel::SetOndisconnect(nsIVariant *in_handler) {
+  JsRootedCallback *onerror_handler;
+  JsParamFetcher js_params(this);
+
+  if (js_params.GetCount(false) < 1) {
+    RETURN_EXCEPTION(STRING16(L"Value is required."));
+  }
+
+  // Once we aquire the callback, we're responsible for its lifetime
+  if (!js_params.GetAsNewRootedCallback(0, &onerror_handler)) {
+    RETURN_EXCEPTION(STRING16(L"Invalid value for ondisconnect property."));
+  }
+
+  onerror_handler_.reset(onerror_handler);
+
+  RETURN_NORMAL();
+}
+
+NS_IMETHODIMP GearsChannel::GetOndisconnect(nsIVariant **out_value) {
+  // TODO(pankaj): NYI
+  *out_value = NULL;
+  RETURN_NORMAL();
+}
+
+NS_IMETHODIMP GearsChannel::Send() {
+  // TODO(pankaj): NYI
+  RETURN_NORMAL();
+}
+
+NS_IMETHODIMP GearsChannel::Connect() {
+  // TODO(pankaj): NYI
+  RETURN_NORMAL();
+}
+
+NS_IMETHODIMP GearsChannel::Disconnect() {
+  // TODO(pankaj): NYI
+  RETURN_NORMAL();
 }
