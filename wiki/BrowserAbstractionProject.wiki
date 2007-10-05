@@ -1,4 +1,4 @@
-#summary Work needed to support new browsers and keep features in sync across all platforms
+#summary Work needed to support new browsers and keep features in sync across all platforms.
 
 =PROBLEM=
 
