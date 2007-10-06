@@ -180,16 +180,19 @@ Harness.prototype.runNextTest_ = function() {
 Harness.prototype.startOrResumeCurrentTest_ = function(testFunction) {
   this.scheduledCallback_ = false;
 
-  var testSucceeded = true;
+  var success = true;
   try {
     testFunction();
   } catch (e) {
-    testSucceeded = false;
+    success = false;
     this.onTestComplete(this.currentTestName_, false, e.message);
   }
 
-  if (testSucceeded && !this.scheduledCallback_) {
-    this.onTestComplete(this.currentTestName_, true);
+  if (!this.scheduledCallback_) {
+    if (success) {
+      this.onTestComplete(this.currentTestName_, true);
+    }
+
     this.runNextTest_();
   }
 };

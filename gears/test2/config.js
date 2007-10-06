@@ -53,11 +53,6 @@ TestSuite.prototype.addFile = function(relativePath, config) {
 
 var suites = [];
 
-var factorySuite = new TestSuite('Factory');
-factorySuite.addFile('../factory_tests.js',
-                     {useWorker: true, useIFrame: true});
-suites.push(factorySuite);
-
 var databaseSuite = new TestSuite('Database');
 databaseSuite.addFile('../database_tests.js',
                       {useWorker: true, useIFrame: true});
@@ -66,6 +61,23 @@ databaseSuite.addFile('../database_noworker_tests.js',
 databaseSuite.addFile('../database_fts_tests.js',
                       {useWorker: true, useIFrame: true});
 suites.push(databaseSuite);
+
+var factorySuite = new TestSuite('Factory');
+factorySuite.addFile('../factory_tests.js',
+                     {useWorker: true, useIFrame: true});
+suites.push(factorySuite);
+
+var httpRequestSuite = new TestSuite('HttpRequest');
+httpRequestSuite.addFile('../httprequest_tests.js',
+                         {useWorker: true, useIFrame: true});
+suites.push(httpRequestSuite);
+
+var localServerSuite = new TestSuite('LocalServer');
+localServerSuite.addFile('../localserver_tests.js',
+                         {useWorker: true, useIFrame: true});
+localServerSuite.addFile('../localserver_noworker_tests.js',
+                         {useWorker: false, useIFrame: true});
+suites.push(localServerSuite);
 
 var timerSuite = new TestSuite('Timer');
 timerSuite.addFile('../timer_tests.js', {useWorker: true, useIFrame: true});
