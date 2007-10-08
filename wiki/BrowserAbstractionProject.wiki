@@ -28,6 +28,7 @@ Each Gears module will live in its own directory.  Modules will have a single im
    /database/database_ff.idl  // interface definition for Firefox
 }}}
 
+Code for each module should depend only on `/base` and not on other modules.
 
 =DETAILS=
 
