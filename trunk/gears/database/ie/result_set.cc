@@ -33,6 +33,7 @@
 #include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
 
 GearsResultSet::GearsResultSet() :
+    database_(NULL),
     statement_(NULL),
     column_indexes_built_(false),
     is_valid_row_(false) {
@@ -41,14 +42,22 @@ GearsResultSet::GearsResultSet() :
 GearsResultSet::~GearsResultSet() {
   if (statement_) {
     ATLTRACE(_T("~GearsResultSet - was NOT closed by caller\n"));
-    sqlite3_finalize(statement_);
-    statement_ = NULL;
+  }
+
+  Finalize();
+
+  if (database_ != NULL) {
+    database_->RemoveResultSet(this);
+    database_->Release();
+    database_ = NULL;
   }
 }
 
-bool GearsResultSet::SetStatement(sqlite3_stmt *statement,
-                                  std::string16 *error_message) {
+bool GearsResultSet::InitializeResultSet(sqlite3_stmt *statement,
+                                         GearsDatabase *db,
+                                         std::string16 *error_message) {
   assert(statement);
+  assert(db);
   assert(error_message);
   statement_ = statement;
   // convention: call next() when the statement is set
@@ -57,8 +66,26 @@ bool GearsResultSet::SetStatement(sqlite3_stmt *statement,
     // Either an error occurred or this was a command that does
     // not return a row, so we can just close automatically
     close();
+  } else {
+    database_ = db;
+    database_->AddRef();
+    db->AddResultSet(this);
   }
   return succeeded;
+}
+
+bool GearsResultSet::Finalize() {
+  if (statement_) {
+    int sql_status = sqlite3_finalize(statement_);
+    statement_ = NULL;
+
+    ATLTRACE(_T("DB ResultSet Close: %d"), sql_status);
+
+    if (sql_status != SQLITE_OK) {
+      return false;
+    }
+  }
+  return true;
 }
 
 STDMETHODIMP GearsResultSet::field(int index, VARIANT *retval) {
@@ -214,13 +241,10 @@ STDMETHODIMP GearsResultSet::close() {
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
-  if (statement_ != NULL) {
-    int sql_status = sqlite3_finalize(statement_);
-    statement_ = NULL;
-    if (sql_status != SQLITE_OK) {
-      RETURN_EXCEPTION(STRING16(L"SQLite finalize() failed."));
-    }
+  if (!Finalize()) {
+    RETURN_EXCEPTION(STRING16(L"SQLite finalize() failed."));
   }
+
   RETURN_NORMAL();
 }
 

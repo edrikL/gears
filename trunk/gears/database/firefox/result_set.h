@@ -40,9 +40,7 @@ extern const nsCID kGearsResultSetClassId;
 
 
 struct sqlite3_stmt;
-#ifdef DEBUG
 class GearsDatabase;
-#endif // DEBUG
 
 class GearsResultSet
     : public GearsBaseClass,
@@ -69,17 +67,15 @@ class GearsResultSet
   friend class GearsDatabase;
 
   // Helper called by GearsDatabase.execute to initialize the result set
-  bool SetStatement(sqlite3_stmt *statement, std::string16 *error_message);
+  bool InitializeResultSet(sqlite3_stmt *statement,
+                           GearsDatabase *db,
+                           std::string16 *error_message);
 
   // Helper shared by Next() and SetStatement()
   bool NextImpl(std::string16 *error_message);
-
-#ifdef DEBUG
-  bool NeedsClose() { return statement_ != NULL; }
-  void SetDatabase(GearsDatabase *db) { database_ = db; }
+  bool Finalize();
 
   GearsDatabase *database_;
-#endif // DEBUG
   sqlite3_stmt *statement_;
   bool is_valid_row_;
 

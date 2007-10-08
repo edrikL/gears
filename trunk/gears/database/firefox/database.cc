@@ -76,6 +76,8 @@ GearsDatabase::GearsDatabase(): db_(NULL) {
 }
 
 GearsDatabase::~GearsDatabase() {
+  assert(result_sets_.empty());
+
   if (db_) {
     sqlite3_close(db_);
     db_ = NULL;
@@ -87,7 +89,14 @@ NS_IMETHODIMP GearsDatabase::Open(//OPTIONAL const nsAString &database_name
   if (db_) {
     RETURN_EXCEPTION(STRING16(L"A database is already open."));
   }
-  
+
+  // Create an event monitor to close remaining ResultSets when the page
+  // unloads.
+  if (unload_monitor_ == NULL) {
+    unload_monitor_.reset(new JsEventMonitor(GetJsRunner(),
+                                             JSEVENT_UNLOAD, this));
+  }
+
   // Get parameters.
   // database_name is an optional arg
   std::string16 database_name;
@@ -112,10 +121,6 @@ NS_IMETHODIMP GearsDatabase::Open(//OPTIONAL const nsAString &database_name
 
   const int kSQLiteBusyTimeout = 5000;
   sqlite3_busy_timeout(db_, kSQLiteBusyTimeout);
-
-#ifdef DEBUG
-  select_count_ = 0;
-#endif // DEBUG
 
   RETURN_NORMAL();
 }
@@ -149,11 +154,7 @@ NS_IMETHODIMP GearsDatabase::Execute(//const nsAString &expr,
 
   // Prepare a statement for execution.
 
-#ifdef DEBUG
-  LOG(("DB Execute(%d): %S", select_count_, expr.c_str()));
-#else
   LOG(("DB Execute: %S", expr.c_str()));
-#endif // DEBUG
 
   scoped_sqlite3_stmt_ptr stmt;
   sql_status = sqlite3_prepare16_v2(db_, expr.c_str(), -1, &stmt, NULL);
@@ -249,29 +250,20 @@ NS_IMETHODIMP GearsDatabase::Execute(//const nsAString &expr,
 
   // Note the ResultSet takes ownership of the statement
   std::string16 error_message;
-  if (!rs_internal->SetStatement(stmt.release(), &error_message)) {
+  if (!rs_internal->InitializeResultSet(stmt.release(), this, &error_message)) {
     RETURN_EXCEPTION(error_message.c_str());
   }
 
-#ifdef DEBUG
-  if (rs_internal->NeedsClose()) {
-    select_count_++;
-    rs_internal->SetDatabase(this);
-  }
-#endif // DEBUG
   NS_ADDREF(*retval = rs_internal);
 
   RETURN_NORMAL();
 }
 
 NS_IMETHODIMP GearsDatabase::Close() {
-  if (db_) {
-    int sql_status = sqlite3_close(db_);
-    db_ = NULL;
-    if (sql_status != SQLITE_OK) {
-      RETURN_EXCEPTION(STRING16(L"SQLite close() failed."));
-    }
+  if (!CloseInternal()) {
+    RETURN_EXCEPTION(STRING16(L"SQLite close() failed."));
   }
+
   RETURN_NORMAL();
 }
 
@@ -282,6 +274,40 @@ NS_IMETHODIMP GearsDatabase::GetLastInsertRowId(PRInt64 *retval) {
 
   *retval = sqlite3_last_insert_rowid(db_);
   RETURN_NORMAL();
+}
+
+void GearsDatabase::AddResultSet(GearsResultSet *rs) {
+  result_sets_.insert(rs);
+}
+
+void GearsDatabase::RemoveResultSet(GearsResultSet *rs) {
+  assert(result_sets_.find(rs) != result_sets_.end());
+
+  result_sets_.erase(rs);
+}
+
+
+bool GearsDatabase::CloseInternal() {
+  if (db_) {
+    for (std::set<GearsResultSet *>::iterator result_set = result_sets_.begin();
+         result_set != result_sets_.end();
+         ++result_set) {
+      (*result_set)->Finalize();
+    }
+
+    int sql_status = sqlite3_close(db_);
+    db_ = NULL;
+    if (sql_status != SQLITE_OK) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void GearsDatabase::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+
+  CloseInternal();
 }
 
 #ifdef DEBUG
