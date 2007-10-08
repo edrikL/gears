@@ -65,11 +65,16 @@ class ATL_NO_VTABLE GearsResultSet
   friend class GearsDatabase;
 
   // Helper called by GearsDatabase.execute to initialize the result set
-  bool SetStatement(sqlite3_stmt *statement, std::string16 *error_message);
+  bool InitializeResultSet(sqlite3_stmt *statement,
+                           GearsDatabase *db,
+                           std::string16 *error_message);
+
 
   // Helper shared by next() and SetStatement()
   bool NextImpl(std::string16 *error_message);
+  bool Finalize();
 
+  GearsDatabase *database_;
   sqlite3_stmt *statement_;
   CAtlMap<CStringW, int> column_indexes_; // TODO(miket): switch to STL
   bool column_indexes_built_;

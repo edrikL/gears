@@ -31,9 +31,7 @@
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/stopwatch.h"
 
-#ifdef DEBUG
 #include "gears/database/firefox/database.h"
-#endif // DEBUG
 #include "gears/database/firefox/result_set.h"
 
 
@@ -55,9 +53,7 @@ const nsCID kGearsResultSetClassId = {0x94e65f73, 0x63d1, 0x443d, {0xa8, 0xa8,
 
 
 GearsResultSet::GearsResultSet() :
-#ifdef DEBUG
     database_(NULL),
-#endif
     statement_(NULL),
     is_valid_row_(false) {
 }
@@ -66,20 +62,22 @@ GearsResultSet::GearsResultSet() :
 GearsResultSet::~GearsResultSet() {
   if (statement_) {
     LOG(("~GearsResultSet - was NOT closed by caller\n"));
-    sqlite3_finalize(statement_);
-    statement_ = NULL;
-#ifdef DEBUG
-    if (database_ != NULL) {
-      database_->RegisterResultSetClose(this);
-    }
-#endif // DEBUG
+  }
+
+  Finalize();
+
+  if (database_ != NULL) {
+    database_->RemoveResultSet(this);
+    database_->Release();
+    database_ = NULL;
   }
 }
 
-
-bool GearsResultSet::SetStatement(sqlite3_stmt *statement,
-                                  std::string16 *error_message) {
+bool GearsResultSet::InitializeResultSet(sqlite3_stmt *statement,
+                                         GearsDatabase *db,
+                                         std::string16 *error_message) {
   assert(statement);
+  assert(db);
   assert(error_message);
   statement_ = statement;
   // convention: call next() when the statement is set
@@ -88,8 +86,26 @@ bool GearsResultSet::SetStatement(sqlite3_stmt *statement,
     // Either an error occurred or this was a command that does
     // not return a row, so we can just close automatically
     Close();
+  } else {
+    database_ = db;
+    database_->AddRef();
+    db->AddResultSet(this);
   }
   return succeeded;
+}
+
+bool GearsResultSet::Finalize() {
+  if (statement_) {
+    int sql_status = sqlite3_finalize(statement_);
+    statement_ = NULL;
+
+    LOG(("DB ResultSet Close: %d", sql_status));
+
+    if (sql_status != SQLITE_OK) {
+      return false;
+    }
+  }
+  return true;
 }
 
 NS_IMETHODIMP GearsResultSet::Field(PRInt32 index, nsIVariant **retval) {
@@ -212,19 +228,10 @@ NS_IMETHODIMP GearsResultSet::Close() {
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
-  if (statement_) { // redundant closes are harmless; ignore
-    int sql_status = sqlite3_finalize(statement_);
-    statement_ = NULL;
-    LOG(("DB ResultSet Close: %d", sql_status));
-#ifdef DEBUG
-    if (database_ != NULL) {
-      database_->RegisterResultSetClose(this);
-    }
-#endif // DEBUG
-    if (sql_status != SQLITE_OK) {
-      RETURN_EXCEPTION(STRING16(L"SQLite finalize() failed."));
-    }
+  if (!Finalize()) {
+    RETURN_EXCEPTION(STRING16(L"SQLite finalize() failed."));
   }
+
   RETURN_NORMAL();
 }
 

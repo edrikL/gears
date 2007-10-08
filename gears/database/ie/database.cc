@@ -44,6 +44,8 @@ Stopwatch GearsDatabase::g_stopwatch_;
 GearsDatabase::GearsDatabase() : db_(NULL) {}
 
 GearsDatabase::~GearsDatabase() {
+  assert(result_sets_.empty());
+
   if (db_ != NULL) {
     ATLTRACE(_T("~GearsDatabase - client did not call Close() \n"));
     sqlite3_close(db_);
@@ -54,6 +56,13 @@ GearsDatabase::~GearsDatabase() {
 HRESULT GearsDatabase::open(const VARIANT *database_name) {
   if (db_) {
     RETURN_EXCEPTION(STRING16(L"A database is already open."));
+  }
+
+  // Create an event monitor to close remaining ResultSets when the page
+  // unloads.
+  if (unload_monitor_ == NULL) {
+    unload_monitor_.reset(new JsEventMonitor(GetJsRunner(),
+                                             JSEVENT_UNLOAD, this));
   }
 
   // Get the database_name arg (if caller passed it in).
@@ -212,7 +221,7 @@ STDMETHODIMP GearsDatabase::execute(const BSTR expression_in,
     return hr;
   }
 
-  // We go through this manual COM stuff because SetStatement() is
+  // We go through this manual COM stuff because InitializeResultSet() is
   // not part of the public GearsResultSetInterface, so this is the
   // right way to get a pointer to the actual object (not its
   // interface), call the object method, and then grab the interface
@@ -223,23 +232,23 @@ STDMETHODIMP GearsDatabase::execute(const BSTR expression_in,
     RETURN_EXCEPTION(STRING16(L"Could not create ResultSet."));
   }
 
+  CComQIPtr<GearsResultSetInterface> rs_external = rs_internal;
+  if (!rs_external) {
+    RETURN_EXCEPTION(STRING16(L"Could not get GearsResultSet interface."));
+  }
+
   if (!rs_internal->InitBaseFromSibling(this)) {
     RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
   }
 
   // Note the ResultSet takes ownership of the statement
   std::string16 error_message;
-  if (!rs_internal->SetStatement(stmt.release(), &error_message)) {
+  if (!rs_internal->InitializeResultSet(stmt.release(), this, &error_message)) {
     ATLTRACE(error_message.c_str());
     RETURN_EXCEPTION(error_message.c_str());
   }
 
-  // TODO(cprince): track the open ResultSet objects, so we can
-  // auto-close them when the Database is closed.
-  hr = rs_internal->QueryInterface(rs_retval);
-  if (FAILED(hr)) {
-    RETURN_EXCEPTION(STRING16(L"Could not get GearsResultSet interface."));
-  }
+  *rs_retval = rs_external.Detach();
 
   assert((*rs_retval)->AddRef() == 2 &&
          (*rs_retval)->Release() == 1); // CComObject* does not Release
@@ -248,13 +257,10 @@ STDMETHODIMP GearsDatabase::execute(const BSTR expression_in,
 
 STDMETHODIMP GearsDatabase::close() {
   ATLTRACE(_T("GearsDatabase::close()\n"));
-  if (db_ != NULL) {
-    int sql_status = sqlite3_close(db_);
-    db_ = NULL;
-    if (sql_status != SQLITE_OK) {
-      RETURN_EXCEPTION(STRING16(L"SQLite close() failed."));
-    }
+  if (!CloseInternal()) {
+    RETURN_EXCEPTION(STRING16(L"SQLite close() failed."));
   }
+
   RETURN_NORMAL();
 }
 
@@ -271,6 +277,39 @@ STDMETHODIMP GearsDatabase::get_lastInsertRowId(VARIANT *retval) {
   } else {
     RETURN_EXCEPTION(STRING16(L"Database handle was NULL."));
   }
+}
+
+void GearsDatabase::AddResultSet(GearsResultSet *rs) {
+  result_sets_.insert(rs);
+}
+
+void GearsDatabase::RemoveResultSet(GearsResultSet *rs) {
+  assert(result_sets_.find(rs) != result_sets_.end());
+
+  result_sets_.erase(rs);
+}
+
+bool GearsDatabase::CloseInternal() {
+  if (db_) {
+    for (std::set<GearsResultSet *>::iterator result_set = result_sets_.begin();
+         result_set != result_sets_.end();
+         ++result_set) {
+      (*result_set)->Finalize();
+    }
+
+    int sql_status = sqlite3_close(db_);
+    db_ = NULL;
+    if (sql_status != SQLITE_OK) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void GearsDatabase::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+
+  CloseInternal();
 }
 
 #ifdef DEBUG
