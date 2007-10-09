@@ -145,7 +145,7 @@ bool TestUrlUtils() {
     }
   };
 
-  for (int i = 0; i < ARRAYSIZE(kCases); ++i) {
+  for (size_t i = 0; i < ARRAYSIZE(kCases); ++i) {
     std::string16 resolved;
     TEST_ASSERT(ResolveAndNormalize(kCases[i].base, kCases[i].url, &resolved));
     TEST_ASSERT(resolved == kCases[i].resolved);
