@@ -44,9 +44,7 @@ extern const nsCID kGearsDatabaseClassId;
 
 
 struct sqlite3;
-#ifdef DEBUG
 class GearsResultSet;
-#endif
 
 class GearsDatabase
     : public GearsBaseClass,
