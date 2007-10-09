@@ -63,6 +63,94 @@ bool TestUrlUtils() {
   TEST_ASSERT(IsRelativeUrl(STRING16(L":")));
 
 
+  // ResolveAndNormalize test cases
+
+  const char16 *base_page =
+                   STRING16(L"http://server/directory/page");
+  const char16 *base_page_with_hash =
+                   STRING16(L"http://server/directory/page#bar");
+  const char16 *base_page_with_query =
+                   STRING16(L"http://server/directory/page?query");
+  const char16 *base_dir =
+                   STRING16(L"http://server/directory/");
+  const char16 *base_dir_with_hash =
+                   STRING16(L"http://server/directory/#bar");
+  const char16 *base_dir_with_query =
+                   STRING16(L"http://server/directory/?query");
+
+  const struct {
+      const char16 *base;
+      const char16 *url;
+      const char16 *resolved;
+  } kCases[] = {
+    {
+      base_page,
+      STRING16(L"foo"),
+      STRING16(L"http://server/directory/foo")
+    },
+    {
+      base_page_with_hash,
+      STRING16(L"foo"),
+      STRING16(L"http://server/directory/foo")
+    },
+    {
+      base_page_with_query,
+      STRING16(L"foo"),
+      STRING16(L"http://server/directory/foo")
+    },
+    {
+      base_dir,
+      STRING16(L"foo"),
+      STRING16(L"http://server/directory/foo")
+    },
+    {
+      base_dir_with_hash,
+      STRING16(L"foo"),
+      STRING16(L"http://server/directory/foo")
+    },
+    {
+      base_dir_with_query,
+      STRING16(L"foo"),
+      STRING16(L"http://server/directory/foo")
+    },
+    {
+      base_page,
+      STRING16(L"/foo"),
+      STRING16(L"http://server/foo")
+    },
+    {
+      base_page,
+      STRING16(L"./foo"),
+      STRING16(L"http://server/directory/foo")
+    },
+    {
+      base_page,
+      STRING16(L"../foo"),
+      STRING16(L"http://server/foo")
+    },
+    {
+      base_page,
+      STRING16(L"foo#bar"),
+      STRING16(L"http://server/directory/foo")
+    },
+    {
+      base_page,
+      STRING16(L"foo?bar"),
+      STRING16(L"http://server/directory/foo?bar")
+    },
+    {
+      NULL,
+      STRING16(L"http://server/directory/foo#bar"),
+      STRING16(L"http://server/directory/foo")
+    }
+  };
+
+  for (int i = 0; i < ARRAYSIZE(kCases); ++i) {
+    std::string16 resolved;
+    TEST_ASSERT(ResolveAndNormalize(kCases[i].base, kCases[i].url, &resolved));
+    TEST_ASSERT(resolved == kCases[i].resolved);
+  }
+
   LOG(("TestUrlUtilsAll - passed\n"));
   return true;
 }

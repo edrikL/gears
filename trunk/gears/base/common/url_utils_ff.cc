@@ -34,10 +34,18 @@
 
 bool ResolveAndNormalize(const char16 *base, const char16 *url,
                          std::string16 *out) {
+  assert(url && out);
+
   // manufacture a full URL
   nsCOMPtr<nsIURI> full_url;
-  if (!DOMUtils::NewResolvedURI(base, url, getter_AddRefs(full_url))) {
-    return false;
+  if (base) {
+    if (!DOMUtils::NewResolvedURI(base, url, getter_AddRefs(full_url))) {
+      return false;
+    }
+  } else {
+    if (!DOMUtils::NewAbsoluteURI(url, getter_AddRefs(full_url))) {
+      return false;
+    }
   }
 
   // get the full url string
