@@ -32,10 +32,21 @@
 
 bool ResolveAndNormalize(const char16 *base, const char16 *url,
                          std::string16 *out) {
+  assert(url && out);
+  HRESULT hr;
   CComPtr<IMoniker> base_moniker;
-  HRESULT hr = CreateURLMonikerEx(NULL, base, &base_moniker, URL_MK_UNIFORM);
-  if (FAILED(hr)) {
-    return false;
+  std::string16 base_without_hash;
+  if (base) {
+    // IE6 returns the wrong url if the base contains a '#'
+    const char16 *hash_in_base = wcschr(base, L'#');
+    if (hash_in_base) {
+      base_without_hash.assign(base, hash_in_base - base);
+      base = base_without_hash.c_str();
+    }
+    hr = CreateURLMonikerEx(NULL, base, &base_moniker, URL_MK_UNIFORM);
+    if (FAILED(hr)) {
+      return false;
+    }
   }
 
   CComPtr<IMoniker> url_moniker;
@@ -44,15 +55,15 @@ bool ResolveAndNormalize(const char16 *base, const char16 *url,
     return false;
   }
 
-  LPOLESTR displayname;
+  LPOLESTR displayname = NULL;
   hr = url_moniker->GetDisplayName(NULL, NULL, &displayname);
-  if (FAILED(hr)) {
+  if (FAILED(hr) || !displayname) {
     return false;
   }
 
-  wchar_t *hash = wcschr(displayname, L'#');
-  if (hash) {
-    *hash = 0;
+  char16 *hash_in_result = wcschr(displayname, L'#');
+  if (hash_in_result) {
+    *hash_in_result = 0;
   }
 
   *out = displayname;
