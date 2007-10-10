@@ -154,7 +154,12 @@ NS_IMETHODIMP GearsDatabase::Execute(//const nsAString &expr,
 
   // Prepare a statement for execution.
 
-  LOG(("DB Execute: %S", expr.c_str()));
+// TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
+#ifdef DEBUG
+  std::string expr_ascii;
+  String16ToUTF8(expr.c_str(), expr.length(), &expr_ascii);
+  LOG(("DB Execute: %s", expr_ascii.c_str()));
+#endif
 
   scoped_sqlite3_stmt_ptr stmt;
   sql_status = sqlite3_prepare16_v2(db_, expr.c_str(), -1, &stmt, NULL);
@@ -216,7 +221,12 @@ NS_IMETHODIMP GearsDatabase::Execute(//const nsAString &expr,
           LOG(("        Parameter %i: null", i));
           sql_status = sqlite3_bind_null(stmt.get(), sql_index);
         } else {
-          LOG(("        Parameter %i: %S", i, str.c_str()));
+// TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
+#ifdef DEBUG
+          std::string str_ascii;
+          String16ToUTF8(str.c_str(), str.length(), &str_ascii);
+          LOG(("        Parameter %i: %s", i, str_ascii.c_str()));
+#endif
           sql_status = sqlite3_bind_text16(stmt.get(), sql_index, str.c_str(), 
                                            -1, SQLITE_TRANSIENT);
         }
@@ -227,7 +237,12 @@ NS_IMETHODIMP GearsDatabase::Execute(//const nsAString &expr,
         JSString *js_str = JS_ValueToString(cx, arg);
         std::string16 str(reinterpret_cast<char16 *>(JS_GetStringChars(js_str)),
                           JS_GetStringLength(js_str));
-        LOG(("        Parameter %i: %S", i, str.c_str()));
+// TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
+#ifdef DEBUG
+          std::string str_ascii;
+          String16ToUTF8(str.c_str(), str.length(), &str_ascii);
+          LOG(("        Parameter %i: %s", i, str_ascii.c_str()));
+#endif
         sql_status = sqlite3_bind_text16(
             stmt.get(), sql_index, str.c_str(), -1,
             SQLITE_TRANSIENT); // so SQLite copies string immediately
