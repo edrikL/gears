@@ -159,6 +159,9 @@ void FinalizeNative(JSContext *cx, JSObject *obj) {
         instance->js_wrapper->instance_wrappers_.erase(instance);
       }
       break;
+    default:
+      assert(false);  // Should never reach this line.
+      break;
   }
 }
 
