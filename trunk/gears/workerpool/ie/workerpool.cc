@@ -836,6 +836,11 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
     }
   }
 
+  // Remove the message handlers here, since we're destroying the context they
+  // belong to.
+  wi->onmessage_handler.reset(NULL);
+  wi->onerror_handler.reset(NULL);
+
   // TODO(aa): Consider deleting wi here and setting PTM.worker_info_[i] to
   // NULL. This allows us to free up these thread resources sooner, and it
   // seems a little cleaner too.

@@ -352,6 +352,11 @@ JsRunner::~JsRunner() {
   // Alert modules that the engine is unloading.
   SendEvent(JSEVENT_UNLOAD);
 
+  // We need to remove the roots now, because they will be referencing an
+  // invalid context if we wait for the destructor.
+  if (alloc_js_wrapper_)
+    alloc_js_wrapper_->CleanupRoots();
+
   std::vector<IGeneric *>::iterator global;
   for (global = globals_.begin(); global != globals_.end(); ++global) {
     NS_RELEASE(*global);
@@ -361,16 +366,18 @@ JsRunner::~JsRunner() {
   // we destroy the context and runtime, so we can't wait for the destructor.
   js_script_root_.reset(NULL);
 
-  // TODO(aa): Gears objects inside the js context do not get destroyed here
-  // for some reason. This means that nested workers never stop or get deleted,
-  // localstore doesn't stop capturing, etc.
-
   if (js_engine_context_) {
     JS_DestroyContext(js_engine_context_);
   }
   if (js_runtime_) {
     JS_DestroyRuntime(js_runtime_);
   }
+
+  // This has to occur after the context and runtime have been destroyed,
+  // because it maintains data structures that the JS engine requires.
+  // Specifically, any of the JSObjects stored in the JsWrapperData and the
+  // global_boj_ need to exist as long as the object in the JS Engine which
+  // they are linked to.
   delete alloc_js_wrapper_;
 }
 

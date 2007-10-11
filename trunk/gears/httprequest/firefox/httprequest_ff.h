@@ -142,6 +142,7 @@ class GearsHttpRequest
   nsresult CallAsync(nsIEventQueue *event_queue, AsyncCallType call_type);
   void OnAsyncCall(AsyncCallType call_type);
   bool InitEventQueues();
+  void InitUnloadMonitor();
 
   struct AsyncCallEvent;
   static void *PR_CALLBACK AsyncCall_EventHandlerFunc(AsyncCallEvent*);
