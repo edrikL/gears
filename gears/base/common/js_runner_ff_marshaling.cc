@@ -81,10 +81,10 @@
 #include "nsComponentManagerUtils.h"
 #include "nsMemory.h" // for use in JSData2Native
 #include "gears/third_party/gecko_internal/nsIInterfaceInfoManager.h"
+#include "gears/third_party/gecko_internal/nsITimerInternal.h"
 #include "gears/third_party/gecko_internal/nsIVariant.h" // for use in JSData2Native
 // TODO(cprince): see if we can remove nsIVariant.h/nsMemory.h after cleanup.
 #include "gears/third_party/gecko_internal/xptinfo.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 #include "ff/genfiles/base_interface_ff.h"
 #include "gears/base/common/base_class.h"
@@ -101,64 +101,11 @@ static const int kFunctionDataReservedSlotIndex = 0;
 static const int kArgvFunctionIndex = -2; // negative indices [sic]
 static const int kArgvInstanceIndex = -1;
 
-//
-// Structs that record different custom data for the different JSObject types.
-// The structs have a common header so we can differentiate generic JSObjects.
-//
-
-enum JsWrapperDataType {
-  PROTO_JSOBJECT,
-  INSTANCE_JSOBJECT,
-  FUNCTION_JSOBJECT,
-  UNKNOWN_JSOBJECT // do not use
-};
-
-struct JsWrapperDataHeader {
-  JsWrapperDataType type;
-
-  explicit JsWrapperDataHeader(JsWrapperDataType t) : type(t) {}
-};
-
-struct JsWrapperDataForProto {
-  const JsWrapperDataHeader  header;
-  JSObject                   *jsobject;
-  scoped_ptr<std::string>    alloc_name;
-  scoped_ptr<JSClass>        alloc_jsclass;
-  nsIID                      iface_id;
-  nsCOMPtr<nsIInterfaceInfo> iface_info;
-  nsCOMPtr<nsIFactory>       factory;
-  JsContextWrapper           *js_wrapper;
-
-  JsWrapperDataForProto() : header(PROTO_JSOBJECT) {}
-};
-
-struct JsWrapperDataForInstance {
-  const JsWrapperDataHeader  header;
-  JSObject                   *jsobject;
-  nsCOMPtr<nsISupports>      isupports;
-
-  JsWrapperDataForInstance() : header(INSTANCE_JSOBJECT) {}
-};
-
-struct JsWrapperDataForFunction {
-  const JsWrapperDataHeader  header;
-  const char                 *name; // NOT dynamically allocated; do not free
-  JsWrapperDataForProto      *proto_data; // parent proto (purposely not scoped)
-  const nsXPTMethodInfo      *function_info; // NOT a refcounted type
-  nsCOMPtr<nsIInterfaceInfo> iface_info;
-  int                        vtable_index;
-
-  JsWrapperDataForFunction() : header(FUNCTION_JSOBJECT) {}
-};
-
+static const int kGarbageCollectionIntervalMsec = 2000;
 
 //
 // Forward declarations of local functions defined below.
 //
-
-// Shared code for initializing the custom wrapper data for an instance.
-bool SetupInstanceObject(JSContext *cx, JSObject *instance_obj,
-                         nsISupports *isupports);
 
 // Functions for converting data between JavaScript and XPCOM C++.
 static JSBool NativeSimpleData2JS(JSContext *cx, jsval *dest, const void *src,
@@ -191,9 +138,76 @@ static JSBool GetInterfaceTypeFromParam(nsIInterfaceInfo *iface_info,
                                         nsIID *result);
 
 
+// Called when a JS object based on native code is cleaned up.  We need to
+// remove any reference counters it held here.
+void FinalizeNative(JSContext *cx, JSObject *obj) {
+  JsWrapperData *p = reinterpret_cast<JsWrapperData *>(JS_GetPrivate(cx, obj));
+  if (!p)
+    return;
+  switch(p->header.type) {
+    case PROTO_JSOBJECT:
+      {
+        JsWrapperDataForProto *proto =
+            static_cast<JsWrapperDataForProto *>(p);
+        proto->js_wrapper->iid_to_proto_map_.erase(proto->iface_id);
+      }
+      break;
+    case INSTANCE_JSOBJECT:
+      {
+        JsWrapperDataForInstance *instance =
+            static_cast<JsWrapperDataForInstance *>(p);
+        instance->js_wrapper->instance_wrappers_.erase(instance);
+      }
+      break;
+  }
+}
 
 
+JsContextWrapper::JsContextWrapper(JSContext *cx, JSObject *global_obj)
+    : cx_(cx), global_obj_(global_obj) {
+  // This creates a timer to run the garbage collector on a repeating interval,
+  // which is what Firefox does in source/dom/src/base/nsJSEnvironment.cpp.
+  nsresult result;
+  gc_timer_ = do_CreateInstance("@mozilla.org/timer;1", &result);
 
+  if (NS_SUCCEEDED(result)) {
+    // Turning off idle causes the callback to be invoked in this thread,
+    // instead of in the Timer idle thread.
+    nsCOMPtr<nsITimerInternal> timer_internal(do_QueryInterface(gc_timer_));
+    timer_internal->SetIdle(false);
+
+    // Start the timer
+    gc_timer_->InitWithFuncCallback(GarbageCollectionCallback,
+                                    cx_,
+                                    kGarbageCollectionIntervalMsec,
+                                    nsITimer::TYPE_REPEATING_SLACK);
+  }
+}
+
+void JsContextWrapper::GarbageCollectionCallback(nsITimer *timer,
+                                                 void *context) {
+  JSContext *cx = reinterpret_cast<JSContext *>(context);
+  JS_GC(cx);
+}
+
+void JsContextWrapper::CleanupRoots() {
+  // Stop garbage collection now.
+  gc_timer_ = NULL;
+
+  // Remove the roots associated with the protos we've created.  We need to
+  // keep the rest of the structure around until the JS engine has been shut
+  // down.
+  std::vector<linked_ptr<JsWrapperDataForProto> >::iterator proto;
+  for (proto = proto_wrappers_.begin();
+       proto != proto_wrappers_.end();
+       ++proto) {
+    (*proto)->proto_root.reset();
+  }
+
+  // Clean up the rest of the roots.
+  function_wrappers_.clear();
+  global_roots_.clear();
+}
 
 bool JsContextWrapper::DefineClass(const nsIID *iface_id,
                                    const nsCID *class_id,
@@ -217,7 +231,7 @@ bool JsContextWrapper::DefineClass(const nsIID *iface_id,
     JS_PropertyStub, JS_PropertyStub,  // defineProperty, deleteProperty
     JS_PropertyStub, JS_PropertyStub, // getProperty, setProperty
     JS_EnumerateStub, JS_ResolveStub, // enum, resolve
-    JS_ConvertStub, JS_FinalizeStub, // convert, finalize
+    JS_ConvertStub, FinalizeNative, // convert, finalize
     JSCLASS_NO_OPTIONAL_MEMBERS
   };
   scoped_ptr<JSClass> alloc_jsclass(new JSClass(js_wrapper_class));
@@ -232,8 +246,6 @@ bool JsContextWrapper::DefineClass(const nsIID *iface_id,
                                      NULL, NULL); // "constructor" props/funcs
   if (!proto_obj) { return false; }
 
-  if (!RootJsToken(cx_, OBJECT_TO_JSVAL(proto_obj))) { return false; }
-
   // setup the JsWrapperDataForProto struct
   scoped_ptr<JsWrapperDataForProto> proto_data(new JsWrapperDataForProto);
 
@@ -242,6 +254,8 @@ bool JsContextWrapper::DefineClass(const nsIID *iface_id,
   proto_data->js_wrapper = this;
   proto_data->alloc_name.swap(class_name_copy); // take ownership
   proto_data->alloc_jsclass.swap(alloc_jsclass); // take ownership
+  proto_data->proto_root.reset(new JsRootedToken(cx_,
+                                                 OBJECT_TO_JSVAL(proto_obj)));
 
   // nsIFactory for this class lets us create instances later
   if (!class_id) {
@@ -270,6 +284,9 @@ bool JsContextWrapper::DefineClass(const nsIID *iface_id,
     *proto_obj_out = proto_data->jsobject;
   }
 
+  proto_wrappers_.push_back(
+                      linked_ptr<JsWrapperDataForProto>(proto_data.get()));
+
   // succeeded; prevent scoped cleanup of allocations, and save the pointer
   JS_SetPrivate(cx_, proto_obj, proto_data.release());
   return true;
@@ -293,7 +310,9 @@ bool JsContextWrapper::DefineGlobal(JSObject *proto_obj,
                                         global_obj_); // parent
   if (!instance_obj) { return false; }
 
-  if (!RootJsToken(cx_, OBJECT_TO_JSVAL(instance_obj))) { return false; }
+  global_roots_.push_back(linked_ptr<JsRootedToken>(
+                            new JsRootedToken(cx_,
+                                              OBJECT_TO_JSVAL(instance_obj))));
 
   bool succeeded = SetupInstanceObject(cx_, instance_obj, instance_isupports);
   if (!succeeded) { return false; }
@@ -367,8 +386,6 @@ bool JsContextWrapper::AddFunctionsToPrototype(JSObject *proto_obj,
     // outside this function.)
     JSObject *function_obj = JS_GetFunctionObject(function);
 
-    if (!RootJsToken(cx_, OBJECT_TO_JSVAL(function_obj))) { return false; }
-
     // Save info about the function.
     scoped_ptr<JsWrapperDataForFunction> function_data(
                                              new JsWrapperDataForFunction);
@@ -377,6 +394,9 @@ bool JsContextWrapper::AddFunctionsToPrototype(JSObject *proto_obj,
     function_data->iface_info = iface_info;
     function_data->vtable_index = i;
     function_data->proto_data = proto_data;
+    function_data->function_root.reset(new JsRootedToken(
+                                               cx_,
+                                               OBJECT_TO_JSVAL(function_obj)));
 
     // Assume function is a method, and revise if it's a getter or setter.
     // FYI: xptinfo reports getters/setters separately (but with same name).
@@ -416,6 +436,8 @@ bool JsContextWrapper::AddFunctionsToPrototype(JSObject *proto_obj,
     // We must use PRIVATE_TO_JSVAL (only works on pointers!) to prevent the
     // garbage collector from touching any private data stored in JS 'slots'.
     assert(0 == (0x01 & reinterpret_cast<int>(function_data.get())));
+    function_wrappers_.push_back(
+        linked_ptr<JsWrapperDataForFunction>(function_data.get()));
     jsval pointer_jsval = PRIVATE_TO_JSVAL((jsval)function_data.release());
     assert(!JSVAL_IS_GCTHING(pointer_jsval));
     JS_SetReservedSlot(cx_, function_obj, kFunctionDataReservedSlotIndex,
@@ -426,15 +448,23 @@ bool JsContextWrapper::AddFunctionsToPrototype(JSObject *proto_obj,
 }
 
 
-bool SetupInstanceObject(JSContext *cx, JSObject *instance_obj,
-                         nsISupports *isupports) {
+bool JsContextWrapper::SetupInstanceObject(JSContext *cx,
+                                           JSObject *instance_obj,
+                                           nsISupports *isupports) {
   assert(isupports);
 
   // setup the JsWrapperDataForInstance struct
-  scoped_ptr<JsWrapperDataForInstance> instance_data(new JsWrapperDataForInstance);
+  scoped_ptr<JsWrapperDataForInstance> instance_data(
+      new JsWrapperDataForInstance);
 
+  // Keep a pointer to the context wrapper so that we can access it in the
+  // static finalize function.
+  instance_data->js_wrapper = this;
   instance_data->jsobject = instance_obj;
   instance_data->isupports = isupports;
+
+  instance_wrappers_[instance_data.get()] =
+      linked_ptr<JsWrapperDataForInstance>(instance_data.get());
 
   // succeeded; prevent scoped cleanup of allocations, and save the pointer
   JS_SetPrivate(cx, instance_obj, instance_data.release());
@@ -1824,13 +1854,19 @@ JSBool NativeData2JS(JSContext *cx, JSObject *scope_obj,
                 assert(false); // NOT YET IMPLEMENTED??
                 //return <FAILURE>
               }
+
               // TODO: cleanup JSObject if code BELOW fails?
 
-              bool succeeded = SetupInstanceObject(cx, out_instance_obj, isupports);
+              bool succeeded = js_wrapper->SetupInstanceObject(
+                                               cx, out_instance_obj, isupports);
               if (!succeeded) {
                 assert(false); // NOT YET IMPLEMENTED??
                 //return <FAILURE>
               }
+
+              // This object has now been AddRef'd in the JS engine, so we can
+              // release our pointer.
+              isupports->Release();
 
               *d = OBJECT_TO_JSVAL(out_instance_obj);
             } // END: if (nsIVariant) ... else ...

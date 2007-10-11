@@ -33,8 +33,13 @@
 #define GEARS_WORKERPOOL_FIREFOX_JS_WRAPPER_H__
 
 #include <map>
+#include <vector>
+
 #include <nsCOMPtr.h>
 #include "gears/third_party/gecko_internal/jsapi.h"
+#include "gears/third_party/gecko_internal/nsITimer.h"
+#include "gears/third_party/linked_ptr/linked_ptr.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 class IIDLessThanFunctor {
  public:
@@ -45,13 +50,71 @@ class IIDLessThanFunctor {
 };
 typedef std::map<nsIID, JSObject*, IIDLessThanFunctor> IIDToProtoMap;
 
-struct JsWrapperDataForProto;
+class JsContextWrapper;
+
+//
+// Structs that record different custom data for the different JSObject types.
+// The structs have a common header so we can differentiate generic JSObjects.
+//
+
+enum JsWrapperDataType {
+  PROTO_JSOBJECT,
+  INSTANCE_JSOBJECT,
+  FUNCTION_JSOBJECT,
+  UNKNOWN_JSOBJECT // do not use
+};
+
+// These structures are saved as the private data on JSObjects.
+// By sharing a common base class, we can cast the raw pointer
+// stored on the JSObject to a JsWrapperDataHeader to determine the
+// JsWrapperData type.
+struct JsWrapperDataHeader {
+  JsWrapperDataType type;
+
+  explicit JsWrapperDataHeader(JsWrapperDataType t) : type(t) {}
+};
+
+struct JsWrapperData {
+  const JsWrapperDataHeader  header;
+  JsWrapperData(JsWrapperDataType t) : header(t) {};
+};
+
+struct JsWrapperDataForProto : public JsWrapperData {
+  JSObject                   *jsobject;
+  scoped_ptr<std::string>    alloc_name;
+  scoped_ptr<JSClass>        alloc_jsclass;
+  nsIID                      iface_id;
+  nsCOMPtr<nsIInterfaceInfo> iface_info;
+  nsCOMPtr<nsIFactory>       factory;
+  JsContextWrapper           *js_wrapper;
+  scoped_ptr<JsRootedToken>  proto_root;
+
+  JsWrapperDataForProto() : JsWrapperData(PROTO_JSOBJECT) {}
+};
+
+struct JsWrapperDataForInstance : public JsWrapperData {
+  JSObject                   *jsobject;
+  nsCOMPtr<nsISupports>      isupports;
+  JsContextWrapper           *js_wrapper;
+
+  JsWrapperDataForInstance() : JsWrapperData(INSTANCE_JSOBJECT) {}
+};
+
+struct JsWrapperDataForFunction : public JsWrapperData {
+  const char                 *name; // NOT dynamically allocated; do not free
+  JsWrapperDataForProto      *proto_data; // parent proto (purposely not scoped)
+  const nsXPTMethodInfo      *function_info; // NOT a refcounted type
+  nsCOMPtr<nsIInterfaceInfo> iface_info;
+  int                        vtable_index;
+  scoped_ptr<JsRootedToken>  function_root;
+
+  JsWrapperDataForFunction() : JsWrapperData(FUNCTION_JSOBJECT) {}
+};
+
 class JsContextWrapper {
  public:
-  JsContextWrapper(JSContext *cx, JSObject *global_obj)
-      : cx_(cx),
-        global_obj_(global_obj) {
-  }
+  JsContextWrapper(JSContext *cx, JSObject *global_obj);
+  void CleanupRoots();
 
   // Defines a class prototype in the JS context.  This must be called for
   // every class that will be defined as a global (see below) _OR_ returned
@@ -73,11 +136,16 @@ class JsContextWrapper {
  private:
   bool AddFunctionsToPrototype(JSObject *proto_obj,
                                JsWrapperDataForProto *proto_data);
+  // Shared code for initializing the custom wrapper data for an instance.
+  bool SetupInstanceObject(JSContext *cx, JSObject *instance_obj,
+                           nsISupports *isupports);
+
 
   static JSBool JsWrapperCaller(JSContext *cx, JSObject *obj,
                                 uintN argc, jsval *argv, jsval *retval);
   static JSBool JsWrapperConstructor(JSContext *cx, JSObject *obj,
                                      uintN argc, jsval *argv, jsval *retval);
+  static void GarbageCollectionCallback(nsITimer *timer, void *context);
 
   JSContext *cx_;
   JSObject  *global_obj_;
@@ -89,7 +157,19 @@ class JsContextWrapper {
                             const nsXPTType &type_info, const nsIID *iid,
                             JsContextWrapper *js_wrapper,
                             nsresult *error_out);
+  friend void FinalizeNative(JSContext *cx, JSObject *obj);
+
   IIDToProtoMap iid_to_proto_map_;
+
+  // This is stored as a map because we need to be able to selectively
+  // remove elements when the associated JS object is finalized.
+  std::map<JsWrapperDataForInstance *, linked_ptr<JsWrapperDataForInstance> >
+      instance_wrappers_;
+  std::vector<linked_ptr<JsWrapperDataForProto> > proto_wrappers_;
+  std::vector<linked_ptr<JsWrapperDataForFunction> > function_wrappers_;
+  std::vector<linked_ptr<JsRootedToken> > global_roots_;
+
+  nsCOMPtr<nsITimer> gc_timer_;
 };
 
 

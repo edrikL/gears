@@ -708,6 +708,10 @@ void GearsResourceStore::AbortAllRequests() {
     capture_task_.release()->DeleteWhenDone();
   }
 
+  if (current_request_.get()) {
+    current_request_->callback.reset(NULL);
+  }
+
   std::deque<FFCaptureRequest*>::iterator iter;
   for (iter = pending_requests_.begin();
        iter < pending_requests_.end();

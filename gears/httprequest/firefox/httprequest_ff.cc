@@ -97,6 +97,8 @@ NS_IMETHODIMP GearsHttpRequest::SetOnreadystatechange(
   }
 
   onreadystatechange_.reset(callback);
+  InitUnloadMonitor();
+
   RETURN_NORMAL();
 }
 
@@ -258,11 +260,7 @@ NS_IMETHODIMP GearsHttpRequest::Send() {
     return true;
   }
 
-  // Create an event monitor to alert us when the page unloads.
-  if (unload_monitor_ == NULL) {
-    unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
-                                             this));
-  }
+  InitUnloadMonitor();
 
   if (!CallSendOnUiThread()) {
     response_info_.reset(NULL);
@@ -696,6 +694,18 @@ bool GearsHttpRequest::InitEventQueues() {
 
 
 //------------------------------------------------------------------------------
+// InitUnloadMonitor
+//------------------------------------------------------------------------------
+void GearsHttpRequest::InitUnloadMonitor() {
+  // Create an event monitor to alert us when the page unloads.
+  if (unload_monitor_ == NULL) {
+    unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
+                                             this));
+  }
+}
+
+
+//------------------------------------------------------------------------------
 // OnAsyncCall - Called when a message sent via CallAsync is delivered to us
 // on the target thread of control.
 //------------------------------------------------------------------------------
@@ -752,6 +762,11 @@ void GearsHttpRequest::HandleEvent(JsEventType event_type) {
   assert(event_type == JSEVENT_UNLOAD);
 
   onreadystatechange_.reset();  // drop reference, js context is going away
+
+  // The object can live past the life of js_runner, so remove the monitor
+  // manually.
+  unload_monitor_.reset(NULL);
+
   page_is_unloaded_ = true;
   Abort();
 }
