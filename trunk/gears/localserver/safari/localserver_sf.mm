@@ -27,9 +27,9 @@
 
 #import "gears/base/common/common_sf.h"
 #import "gears/base/common/product_version.h"
-#import "gears/base/safari/factory.h"
-#import "gears/base/safari/factory_utils.h"
 #import "gears/base/safari/browser_utils.h"
+#import "gears/factory/safari/factory.h"
+#import "gears/factory/safari/factory_utils.h"
 #import "gears/localserver/safari/localserver_sf.h"
 #import "gears/localserver/safari/localserver_db_proxy.h"
 #import "gears/localserver/safari/managed_resource_store_sf.h"

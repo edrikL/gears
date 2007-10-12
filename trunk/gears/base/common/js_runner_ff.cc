@@ -43,7 +43,7 @@
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/firefox/dom_utils.h"
-#include "gears/base/firefox/factory.h"
+#include "gears/factory/firefox/factory.h"
 #include "ff/genfiles/channel.h"
 #include "ff/genfiles/database.h"
 #include "ff/genfiles/httprequest.h"

@@ -29,8 +29,8 @@
 #import <WebKit/WebKit.h>
 
 #import "gears/base/common/product_version.h"
-#import "gears/base/safari/factory_utils.h"
-#import "gears/base/safari/factory.h"
+#import "gears/factory/safari/factory.h"
+#import "gears/factory/safari/factory_utils.h"
 #import "gears/workerpool/safari/worker.h"
 #import "gears/workerpool/safari/workerpool.h"
 #import "gears/workerpool/safari/worker_supervisor.h"

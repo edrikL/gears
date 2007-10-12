@@ -55,7 +55,7 @@
 #include "gears/base/common/url_utils.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
-#include "gears/base/ie/factory.h"
+#include "gears/factory/ie/factory.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/workerpool/common/workerpool_utils.h"

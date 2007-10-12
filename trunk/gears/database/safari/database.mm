@@ -28,7 +28,6 @@
 #import "gears/base/common/paths.h"
 #import "gears/base/common/sqlite_wrapper.h"
 #import "gears/base/common/stopwatch.h"
-#import "gears/base/safari/factory_utils.h"
 #import "gears/base/common/paths_sf_more.h"
 #import "gears/base/common/common_sf.h"
 #import "gears/base/safari/string_utils.h"
@@ -36,6 +35,7 @@
 #import "gears/database/common/database_utils.h"
 #import "gears/database/safari/database.h"
 #import "gears/database/safari/result_set.h"
+#import "gears/factory/safari/factory_utils.h"
 
 #ifdef DEBUG
 Stopwatch g_database_stopwatch_;

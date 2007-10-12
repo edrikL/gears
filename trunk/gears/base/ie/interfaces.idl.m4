@@ -47,9 +47,9 @@ import "ocidl.idl";
 
 import "ui/ie/html_dialog_host.idl";
 
-import "base/ie/factory.idl";
 import "channel/ie/channel.idl";
 import "database/ie/database.idl";
+import "factory/ie/factory.idl";
 import "httprequest/ie/httprequest.idl";
 import "localserver/ie/localserver.idl";
 import "timer/ie/timer.idl";

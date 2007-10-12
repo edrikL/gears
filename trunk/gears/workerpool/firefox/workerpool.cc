@@ -86,7 +86,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/firefox/dom_utils.h"
-#include "gears/base/firefox/factory.h"
+#include "gears/factory/firefox/factory.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/workerpool/common/workerpool_utils.h"

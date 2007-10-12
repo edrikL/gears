@@ -24,8 +24,8 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #import "gears/base/safari/browser_utils.h"
-#import "gears/base/safari/factory.h"
-#import "gears/base/safari/factory_utils.h"
+#import "gears/factory/safari/factory.h"
+#import "gears/factory/safari/factory_utils.h"
 #import "gears/localserver/safari/managed_resource_store_sf.h"
 #import "gears/localserver/safari/update_task_sf.h"
 

@@ -34,7 +34,7 @@
 #include "gears/third_party/gecko_internal/nsIDOMClassInfo.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-#include "gears/base/firefox/factory.h"
+#include "gears/factory/firefox/factory.h"
 #include "gears/timer/firefox/timer.h"
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO

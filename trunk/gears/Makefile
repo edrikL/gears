@@ -183,7 +183,6 @@ FF_M4SRCS	+= \
 		$(NULL)
 
 FF_IDLSRCS	+= \
-		factory.idl \
 		base_interface_ff.idl \
 		$(NULL)
 
@@ -191,8 +190,6 @@ FF_CPPSRCS	+= \
 		base_class.cc \
 		base_class_test.cc \
 		dom_utils.cc \
-		factory.cc \
-		factory_utils.cc \
 		file.cc \
 		file_ff.cc \
 		file_test.cc \
@@ -235,13 +232,11 @@ IE_VPATH	+= \
 
 IE_M4SRCS	+= \
 		bho.rgs.m4 \
-		factory.rgs.m4 \
 		interfaces.idl.m4 \
 		module.rgs.m4 \
 		$(NULL)
 
 IE_IDLSRCS	+= \
-		factory.idl \
 		interfaces.idl \
 		$(NULL)
 
@@ -251,8 +246,6 @@ IE_CPPSRCS	+= \
 		base_class_test.cc \
 		bho.cc \
 		detect_version_collision.cc \
-		factory.cc \
-		factory_utils.cc \
 		file.cc \
 		file_ie.cc \
 		file_test.cc \
@@ -612,6 +605,44 @@ IE_IDLSRCS	+= \
 
 IE_CPPSRCS	+= \
 		channel.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# factory/ff
+
+FF_VPATH	+= \
+		factory/common \
+		factory/firefox \
+		$(NULL)
+
+FF_IDLSRCS	+= \
+		factory.idl \
+		$(NULL)
+
+FF_CPPSRCS	+= \
+		factory.cc \
+		factory_utils.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# factory/ie
+
+IE_VPATH	+= \
+		factory/common \
+		factory/ie \
+		$(NULL)
+
+IE_M4SRCS	+= \
+		factory.rgs.m4 \
+		$(NULL)
+
+IE_IDLSRCS	+= \
+		factory.idl \
+		$(NULL)
+
+IE_CPPSRCS	+= \
+		factory.cc \
+		factory_utils.cc \
 		$(NULL)
 
 include tools/rules.mk

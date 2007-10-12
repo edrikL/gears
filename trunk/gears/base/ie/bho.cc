@@ -24,9 +24,9 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/common/exception_handler_win32.h"
-#include "gears/base/common/factory_utils.h"
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/base/ie/bho.h"
+#include "gears/factory/common/factory_utils.h"
 #include "gears/localserver/ie/http_handler_ie.h"
 
 STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
