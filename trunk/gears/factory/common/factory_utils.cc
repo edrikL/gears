@@ -28,16 +28,16 @@
 #endif
 #include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/permissions_db.h"
-#include "gears/base/common/factory_utils.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/factory/common/factory_utils.h"
 #include "gears/ui/common/html_dialog.h"
 
 #if BROWSER_IE
-#include "gears/base/ie/factory.h"
+#include "gears/factory/ie/factory.h"
 #elif BROWSER_FF
-#include "gears/base/firefox/factory.h"
+#include "gears/factory/firefox/factory.h"
 #elif BROWSER_SAFARI
-#include "gears/base/safari/factory_utils.h"
+#include "gears/factory/safari/factory_utils.h"
 #endif
 
 const char16 *kGoogleUpdateClientsRegKey =
