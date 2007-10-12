@@ -58,3 +58,8 @@ RunnerBase.prototype.onAllTestsComplete = function() {};
  */
 RunnerBase.prototype.onAsyncTestStart = function(name) {};
 
+/**
+ * Callback for when any test is about to start.
+ * @param name The name of the test that will be started.
+ */
+RunnerBase.prototype.onBeforeTestStart = function(name) {};

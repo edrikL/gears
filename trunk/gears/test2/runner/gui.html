@@ -41,6 +41,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <script src='runner_base.js'></script>
   <script src='iframe_host.js'></script>
   <script src='worker_host.js'></script>
+  <script src='results_publisher.js'></script>
 </head>
 <body>
 
@@ -87,6 +88,9 @@ function init() {
   document.getElementById('content').style.display = 'block';
 
   initSuiteChoices();
+  
+  setTimeout(resultsPublisher.postbackTestResultsOnTimeout, 
+             TEST_TIMEOUT_SECONDS);
 
   selectedSuite = location.search.replace(/^\?/, '');
   runNextTestFile();
@@ -115,21 +119,30 @@ function initSuiteChoices() {
   }
 }
 
-
+var resultsPublisher = new ResultsPublisher();
 var suiteIndex = 0;
 var fileIndex = 0;
 var resultsElm = document.getElementById('results');
+
+/**
+ * Test if current suite should be skipped, if it was not selected for testing.
+ */
+function shouldSkipTestcase() {
+  return selectedSuite && suites[suiteIndex].name != selectedSuite;
+}
 
 /**
  * Test files are run serially and are asynchronous. This function picks the
  * next test to run and starts it.
  */
 function runNextTestFile() {
+  // no more test files
   if (suiteIndex == suites.length) {
+    resultsPublisher.postbackTestResults();
     return;
   }
-
-  if (selectedSuite && suites[suiteIndex].name != selectedSuite) {
+   
+  if (shouldSkipTestcase()) {
     suiteIndex++;
     fileIndex = 0;
     runNextTestFile();
@@ -149,12 +162,25 @@ function runNextTestFile() {
     resultsElm.appendChild(suiteHeader);
   }
 
-  var results = new FileTestResults();
-  results.onAllTestsComplete = runNextTestFile;
-  results.start(resultsElm, suites[suiteIndex].files[fileIndex]);
+  var fileTestResults = new FileTestResults();
+  fileTestResults.onAllTestsComplete = partial(handleTestsComplete, 
+                                               fileTestResults);
+  fileTestResults.start(resultsElm, suites[suiteIndex].files[fileIndex], 
+                        suites[suiteIndex].name);
 
   fileIndex++;
 }
+
+/**
+ * Called as all the test cases are started. In current implementation 
+ * onAllSyncTestsComplete is synonymous to starting all the tests.
+ * @param fileTestResults
+ */
+function handleTestsComplete(fileTestResults) {
+  resultsPublisher.addFileTestResults(fileTestResults);
+  runNextTestFile();
+}
+
 </script>
 </body>
 </html>

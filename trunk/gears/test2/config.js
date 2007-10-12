@@ -51,6 +51,7 @@ TestSuite.prototype.addFile = function(relativePath, config) {
 
 // Lists test configuration below...
 
+var TEST_TIMEOUT_SECONDS = 30 * 1000;
 var suites = [];
 
 var databaseSuite = new TestSuite('Database');
@@ -67,10 +68,11 @@ factorySuite.addFile('../factory_tests.js',
                      {useWorker: true, useIFrame: true});
 suites.push(factorySuite);
 
-var httpRequestSuite = new TestSuite('HttpRequest');
-httpRequestSuite.addFile('../httprequest_tests.js',
-                         {useWorker: true, useIFrame: true});
-suites.push(httpRequestSuite);
+//TODO(aa): add httprequest_tests.js to test2 and uncomment this
+//var httpRequestSuite = new TestSuite('HttpRequest');
+//httpRequestSuite.addFile('../httprequest_tests.js',
+//                         {useWorker: true, useIFrame: true});
+//suites.push(httpRequestSuite);
 
 var localServerSuite = new TestSuite('LocalServer');
 localServerSuite.addFile('../localserver_tests.js',
