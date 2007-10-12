@@ -2401,9 +2401,9 @@ var EXPECTED_CAPTURE_URI_CONTENT = "// Copyright 2007, Google Inc.";
 var CAPTURE_TEST_FILE_FRAGMENT = "test_file_fragment";
 var CAPTURE_TEST_FILES = {
   "test_file_0.txt": 0,
-  "test_file_missing": -1,  // should fail
+  "nonexistent_file": -1,  // should fail
   "test_file_1.txt": 1,
-  "server_redirect.php?location=test_file_missing": -1, // should fail
+  "server_redirect.php?location=nonexistent_file": -1, // should fail
   "test_file_1024.txt": 1024
 };
 var localServer;
@@ -2489,6 +2489,9 @@ function runWebCaptureTests() {
     insertRow("webCaptureStore.capture(crossDomainUrl)", true,
               "Failed as expected");
   }
+  
+  // null completion callback should be allowed
+  wcs.capture('nonexistent_file', null);
 
   // Give it 30 seconds to finish.
   setTimeout(webCapture_timeout, 30000);

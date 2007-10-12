@@ -103,7 +103,7 @@ interface GearsResourceStoreInterface : IDispatch {
 
   HRESULT capture(
       [in] const VARIANT *urls, 
-      [in] IDispatch *completion_callback, 
+      [in] VARIANT *completion_callback, 
       [out, retval] long *capture_id);
   
   HRESULT abortCapture(
