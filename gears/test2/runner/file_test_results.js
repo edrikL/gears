@@ -42,20 +42,33 @@ FileTestResults.prototype.testsStarted = 0;
 FileTestResults.prototype.testsComplete = 0;
 
 /**
+ * The name of the test suite this resides in.
+ */
+FileTestResults.prototype.suiteName = '';
+
+/**
+ * Holds the persistent state of all run tests.
+ */
+FileTestResults.prototype.testResults = {};
+
+/**
  * Callback for when all tests have completed.
  */
 FileTestResults.prototype.onAllTestsComplete = function() {};
+
 
 /**
  * Starts the tests.
  * @param div The element to populate with the results.
  * @param testData The test file to run.
  */
-FileTestResults.prototype.start = function(div, testData) {
+FileTestResults.prototype.start = function(div, testData, suiteName) {
   this.div_ = div;
   this.testData_ = testData;
   this.rowLookup_ = {};
   this.pendingLookup_ = {};
+  
+  this.suiteName = suiteName;
 
   var heading = document.createElement('h3');
   heading.appendChild(document.createTextNode(testData.relativePath));
@@ -71,7 +84,7 @@ FileTestResults.prototype.start = function(div, testData) {
   } else if (this.testData_.config.useWorker) {
     this.startWorkerTests_();
   }
-}
+};
 
 /**
  * Helper to start the iframe tests.
@@ -82,6 +95,8 @@ FileTestResults.prototype.startIFrameTests_ = function() {
   iframeHost.onTestComplete = partial(this.handleTestComplete, false);
   iframeHost.onAsyncTestStart = partial(this.handleAsyncTestStart, false);
   iframeHost.onAllTestsComplete = partial(this.handleAllTestsComplete, false);
+  iframeHost.onBeforeTestStart = this.handleBeforeSyncTestStart;
+                        
   iframeHost.load(this.testData_.relativePath);
 };
 
@@ -94,7 +109,24 @@ FileTestResults.prototype.startWorkerTests_ = function() {
   workerHost.onTestComplete = partial(this.handleTestComplete, true);
   workerHost.onAsyncTestStart = partial(this.handleAsyncTestStart, true);
   workerHost.onAllTestsComplete = partial(this.handleAllTestsComplete, true);
+  workerHost.onBeforeTestStart = this.handleBeforeAsyncTestStart;
   workerHost.load(this.testData_.relativePath);
+};
+
+/**
+ * Records synchronous test case with results object.  
+ * @param name
+ */
+FileTestResults.prototype.handleBeforeSyncTestStart = function(name) {
+  this.testResults[name] = {status: "started"};
+};
+
+/**
+ * Records async test case with results object.
+ * @param name
+ */
+FileTestResults.prototype.handleBeforeAsyncTestStart = function(name) {
+  this.testResults[name + '_worker'] = {status: "started"};
 };
 
 /**
@@ -122,6 +154,11 @@ FileTestResults.prototype.handleTestsLoaded = function(isWorker, success,
  */
 FileTestResults.prototype.handleTestComplete = function(isWorker, name, success,
                                                         errorMessage) {
+
+  var statusKey = (isWorker) ? name + '_worker' : name;
+  var status = (success) ? "passed" : "failed";        
+  this.testResults[statusKey] = {status: status, message: errorMessage};
+  
   var pendingLookupKey = name + '_' + isWorker;
   var pendingRow = this.pendingLookup_[pendingLookupKey];
 
@@ -242,4 +279,13 @@ FileTestResults.prototype.updateResultCell_ = function(cell, success,
     cell.className = 'failure';
     cell.appendChild(document.createTextNode(errorMessage));
   }
+};
+
+/**
+ * Creates a JSON friendly representation of test results.
+ */
+FileTestResults.prototype.toJson = function() {
+  return {suitename: this.suiteName, 
+          filename: this.testData_.relativePath, 
+          results: this.testResults};
 };

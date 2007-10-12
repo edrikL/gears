@@ -96,7 +96,8 @@
                                        'onAsyncTestStart');
     harness.onAllTestsComplete = partial(handleHarnessCallback,
                                          'onAllTestsComplete');
-
+    harness.onBeforeTestStart = partial(handleHarnessCallback,
+                                        'onBeforeTestStart');
     harness.load(testUrl + '?r=' + new Date().getTime());
   }
 

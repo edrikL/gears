@@ -171,6 +171,7 @@ Harness.prototype.runNextTest_ = function() {
 
   // Start the next test
   this.currentTestName_ = this.testNames_[this.currentTestIndex_];
+  this.onBeforeTestStart(this.currentTestName_);
   this.startOrResumeCurrentTest_(this.globalScope_[this.currentTestName_]);
 };
 

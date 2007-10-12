@@ -51,7 +51,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   harness.onTestComplete = host.onTestComplete;
   harness.onAsyncTestStart = host.onAsyncTestStart;
   harness.onAllTestsComplete = host.onAllTestsComplete;
-
+  harness.onBeforeTestStart = host.onBeforeTestStart;
   harness.load(test + '?r=' + new Date().getTime());
 })();
 </script>
