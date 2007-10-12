@@ -30,9 +30,9 @@
 #import "gears/base/common/security_model.h"
 #import "gears/base/safari/base_class.h"
 #import "gears/base/safari/browser_utils.h"
-#import "gears/base/safari/factory.h"
-#import "gears/base/safari/factory_utils.h"
 #import "gears/base/safari/string_utils.h"
+#import "gears/factory/safari/factory.h"
+#import "gears/factory/safari/factory_utils.h"
 
 @implementation SafariGearsBaseClass
 //------------------------------------------------------------------------------

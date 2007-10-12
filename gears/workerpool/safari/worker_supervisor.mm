@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#import "gears/base/safari/factory.h"
+#import "gears/factory/safari/factory.h"
 #import "gears/workerpool/safari/workerpool.h"
 #import "gears/workerpool/safari/worker_supervisor.h"
 

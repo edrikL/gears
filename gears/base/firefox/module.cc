@@ -32,10 +32,10 @@
 #include "gears/third_party/gecko_internal/nsIScriptNameSpaceManager.h"
 
 #include "gears/base/common/thread_locals.h"
-#include "gears/base/firefox/factory.h"
 #include "gears/channel/firefox/channel.h"
 #include "gears/database/firefox/database.h"
 #include "gears/database/firefox/result_set.h"
+#include "gears/factory/firefox/factory.h"
 #include "gears/httprequest/firefox/httprequest_ff.h"
 #include "gears/localserver/firefox/cache_intercept.h"
 #include "gears/localserver/firefox/localserver_ff.h"
