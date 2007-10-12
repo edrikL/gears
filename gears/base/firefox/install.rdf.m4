@@ -100,9 +100,9 @@ m4_ifelse(PRODUCT_OS,^|win32|^,^|m4_dnl
          mechanism on tbhome is confirmed to be working properly).
          -->
 m4_ifdef(^|OFFICIAL_BUILD|^,^|m4_dnl
-    <em:updateURL><![CDATA[https://tools.google.com/firefox/update?guid=%ITEM_ID%&version=%ITEM_VERSION%&application=%APP_ID%&appversion=%APP_VERSION%&dist=google&os=PRODUCT_OS]]></em:updateURL>
+    <em:updateURL><![CDATA[https://tools.google.com/service/update2/ff?guid=%ITEM_ID%&version=%ITEM_VERSION%&application=%APP_ID%&appversion=%APP_VERSION%&dist=google&os=PRODUCT_OS]]></em:updateURL>
 |^,^|m4_dnl // OFFICIAL_BUILD else...
-    <em:updateURL><![CDATA[https://tools.google.com/firefox/update?guid=%ITEM_ID%&version=%ITEM_VERSION%&application=%APP_ID%&appversion=%APP_VERSION%&dist=google&os=PRODUCT_OS&dev=1]]></em:updateURL>
+    <em:updateURL><![CDATA[https://tools.google.com/service/update2/ff?guid=%ITEM_ID%&version=%ITEM_VERSION%&application=%APP_ID%&appversion=%APP_VERSION%&dist=google&os=PRODUCT_OS&dev=1]]></em:updateURL>
 |^)m4_dnl // OFFICIAL_BUILD end
 
 |^)m4_dnl // PRODUCT_OS end
