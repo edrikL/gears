@@ -85,29 +85,30 @@ bool TestSecurityModel() {
 
   ASSERT_FALSE(origin.InitFromUrl(STRING16(L"ftp://ftp.google.com/")));
   ASSERT_FALSE(origin.InitFromUrl(STRING16(L"blah")));
-  
+  ASSERT_FALSE(origin.InitFromUrl(STRING16(L"http://")));
+  ASSERT_FALSE(origin.InitFromUrl(STRING16(L"")));
 
   SecurityOrigin origin2;
-  const char16 *kEmpty = STRING16(L"");
   const char16 *kScheme = STRING16(L"http");
   const char16 *kHost = STRING16(L"file");  
+  const char16 *kFullUrl = STRING16(L"http://dummy.url.not.used/");
   const int kPort = 1;
   // We use a value for kHost that is a supported scheme to avoid an
   // assert in IsDefaultPort about unsupported schemes. The private
   // Init method we use below calls thru to that function.
 
-  origin.Init(kEmpty, kScheme, kHost, kPort);
-  origin2.Init(kEmpty, kScheme, kHost, kPort);
+  origin.Init(kFullUrl, kScheme, kHost, kPort);
+  origin2.Init(kFullUrl, kScheme, kHost, kPort);
 
   ASSERT_TRUE(origin.IsSameOrigin(origin2));
 
-  origin2.Init(kEmpty, kScheme, kHost, kPort + 1);
+  origin2.Init(kFullUrl, kScheme, kHost, kPort + 1);
   ASSERT_FALSE(origin.IsSameOrigin(origin2));
 
-  origin2.Init(kEmpty, kHost, kHost, kPort);
+  origin2.Init(kFullUrl, kHost, kHost, kPort);
   ASSERT_FALSE(origin.IsSameOrigin(origin2));
 
-  origin2.Init(kEmpty, kScheme, kScheme, kPort);
+  origin2.Init(kFullUrl, kScheme, kScheme, kPort);
   ASSERT_FALSE(origin.IsSameOrigin(origin2));
 
   LOG(("TestSecurityModel - passed\n"));

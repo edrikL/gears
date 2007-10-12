@@ -92,7 +92,7 @@ class SecurityOrigin {
  private:
   friend bool TestSecurityModel();
 
-  void Init(const char16 *full_url, const char16 *scheme,
+  bool Init(const char16 *full_url, const char16 *scheme,
             const char16 *host, int port);
 
   bool initialized_;

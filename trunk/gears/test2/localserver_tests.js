@@ -32,6 +32,9 @@ var UPDATE_STATUS = {
   failure: 3
 };
 
+// TODO(michaeln): Some of the tests want to open the same
+// store rather than deleting then recreating a new one.
+// These tests are not quite correct yet.
 function getFreshStore() {
   if (localServer.openStore(STORE_NAME)) {
     localServer.removeStore(STORE_NAME);
@@ -204,9 +207,9 @@ function testCaptureFragment() {
 function testCaptureMany() {
   var urls = {
     "../test_file_0.txt": 0,
-    "../test_file_missing": -1,  // should fail
+    "../nonexistent_file": -1,  // should fail
     "../test_file_1.txt": 1,
-    "../server_redirect.php?location=test_file_missing": -1,
+    "../server_redirect.php?location=nonexistent_file": -1,
     "../test_file_1024.txt": 1024
   };
 
@@ -265,6 +268,11 @@ function testCaptureCrossDomain() {
   scheduleCallback(function() {
     assert(!calledBack, 'Should not have fired callback');
   }, 10);
+}
+
+function testCaptureWithNullCallback() {
+  var resourceStore = getFreshStore();
+  resourceStore.capture('../nonexistent_file', null);
 }
 
 function testGoodManifest() {

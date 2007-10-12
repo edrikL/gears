@@ -50,14 +50,17 @@ const char*   kUnknownDomainAscii =           "_null_.localdomain";
 //------------------------------------------------------------------------------
 // Init
 //------------------------------------------------------------------------------
-void SecurityOrigin::Init(const char16 *full_url, const char16 *scheme,
+bool SecurityOrigin::Init(const char16 *full_url, const char16 *scheme,
                           const char16 *host, int port) {
   assert(full_url && scheme && host); // file URLs pass 0 for 'port'
-  initialized_ = true;
+  if (!full_url[0] || !scheme[0] || !host[0])
+    return false;
+
   full_url_ = full_url;
   scheme_ = scheme;
   host_ = host;
   port_ = port;
+
   IntegerToString(port_, &port_string_);
   LowerString(scheme_);
   LowerString(host_);
@@ -69,6 +72,9 @@ void SecurityOrigin::Init(const char16 *full_url, const char16 *scheme,
     url_ += STRING16(L":");
     url_ += port_string_;
   }
+
+  initialized_ = true;
+  return true;
 }
 
 
@@ -96,14 +102,15 @@ bool SecurityOrigin::InitFromUrl(const char16 *full_url) {
   switch (components.nScheme) {
     case INTERNET_SCHEME_HTTP:
     case INTERNET_SCHEME_HTTPS: {
+      if (!components.lpszScheme || !components.lpszHostName) {
+        return false;
+      }
       std::string16 scheme(components.lpszScheme, components.dwSchemeLength);
       std::string16 host(components.lpszHostName, components.dwHostNameLength);
-      Init(full_url, scheme.c_str(), host.c_str(), components.nPort);
-      return true;
+      return Init(full_url, scheme.c_str(), host.c_str(), components.nPort);
     }
     case INTERNET_SCHEME_FILE:
-      Init(full_url, HttpConstants::kFileScheme, kUnknownDomain, 0);
-      return true;
+      return Init(full_url, HttpConstants::kFileScheme, kUnknownDomain, 0);
     default:
       return false;
   }
@@ -159,12 +166,10 @@ bool SecurityOrigin::InitFromUrl(const char16 *full_url) {
         // -1 implies the default port for the scheme
         port = kSchemes[i].default_port;
       }
-      Init(full_url, kSchemes[i].scheme, host.c_str(), port);
-      return true;
+      return Init(full_url, kSchemes[i].scheme, host.c_str(), port);
     }
     case kSchemeTypeFile:
-      Init(full_url, HttpConstants::kFileScheme, kUnknownDomain, 0);
-      return true;
+      return Init(full_url, HttpConstants::kFileScheme, kUnknownDomain, 0);
     default:
       return false;
   }
@@ -208,11 +213,9 @@ bool SecurityOrigin::InitFromUrl(const char16 *full_url) {
         port = HttpConstants::kHttpDefaultPort;
     }
 
-    Init(full_url, scheme.c_str(), host.c_str(), port);
-    return true;
+    return Init(full_url, scheme.c_str(), host.c_str(), port);
   } else if (scheme == HttpConstants::kFileScheme) {
-    Init(full_url, HttpConstants::kFileScheme, kUnknownDomain, 0);
-    return true;
+    return Init(full_url, HttpConstants::kFileScheme, kUnknownDomain, 0);
   }
 #endif
   

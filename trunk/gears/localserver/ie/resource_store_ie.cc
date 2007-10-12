@@ -115,12 +115,21 @@ STDMETHODIMP GearsResourceStore::put_enabled(VARIANT_BOOL enabled) {
 //------------------------------------------------------------------------------
 STDMETHODIMP GearsResourceStore::capture(
       /* [in] */ const VARIANT *urls,
-      /* [in] */ IDispatch *completion_callback,
+      /* [in] */ VARIANT *completion_callback,
       /* [retval][out] */ long *capture_id) {
   if (!urls || !capture_id) {
     assert(urls);
     assert(capture_id);
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
+  }
+
+  IDispatch *callback_dispatch = NULL;
+  if (!ActiveXUtils::VariantIsNullOrUndefined(completion_callback)) {
+    if (completion_callback->vt == VT_DISPATCH) {
+      callback_dispatch = completion_callback->pdispVal;
+    } else {
+      RETURN_EXCEPTION(STRING16(L"Invalid callback parameter."));
+    }
   }
 
   *capture_id = next_capture_id_++;
@@ -129,7 +138,7 @@ STDMETHODIMP GearsResourceStore::capture(
 
   scoped_ptr<IECaptureRequest> request(new IECaptureRequest);
   request->id = *capture_id;
-  request->completion_callback = completion_callback;
+  request->completion_callback = callback_dispatch;
 
   HRESULT hr;
 

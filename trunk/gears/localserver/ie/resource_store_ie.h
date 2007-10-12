@@ -75,7 +75,7 @@ class ATL_NO_VTABLE GearsResourceStore
 
   virtual HRESULT STDMETHODCALLTYPE capture(
       /* [in] */ const VARIANT *urls,
-      /* [in] */ IDispatch *completion_callback,
+      /* [in] */ VARIANT *completion_callback,
       /* [retval][out] */ long *capture_id);
 
   virtual HRESULT STDMETHODCALLTYPE abortCapture(
