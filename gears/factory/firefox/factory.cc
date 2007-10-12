@@ -28,15 +28,15 @@
 #include <nsXPCOM.h>
 #include "gears/third_party/gecko_internal/nsIDOMClassInfo.h"
 
-#include "gears/base/firefox/factory.h"
+#include "gears/factory/firefox/factory.h"
 
 #include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/common.h"
-#include "gears/base/common/factory_utils.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/channel/firefox/channel.h"
 #include "gears/database/firefox/database.h"
+#include "gears/factory/common/factory_utils.h"
 #include "gears/httprequest/firefox/httprequest_ff.h"
 #include "gears/localserver/firefox/localserver_ff.h"
 #include "gears/timer/firefox/timer.h"

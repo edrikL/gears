@@ -24,14 +24,14 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
-#include "gears/base/common/factory_utils.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/detect_version_collision.h"
-#include "gears/base/ie/factory.h"
 #include "gears/channel/ie/channel.h"
 #include "gears/database/ie/database.h"
+#include "gears/factory/common/factory_utils.h"
+#include "gears/factory/ie/factory.h"
 #include "gears/httprequest/ie/httprequest_ie.h"
 #include "gears/workerpool/ie/workerpool.h"
 #include "gears/localserver/ie/localserver_ie.h"
