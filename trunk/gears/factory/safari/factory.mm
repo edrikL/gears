@@ -26,16 +26,16 @@
 #import <WebKit/WebKit.h>
 
 #import "gears/base/common/common_sf.h"
-#import "gears/base/common/factory_utils.h"
 #import "gears/base/common/product_version.h"
 #import "gears/base/common/string_utils.h"
 #import "gears/base/safari/base_class.h"
 #import "gears/base/safari/browser_utils.h"
-#import "gears/base/safari/factory.h"
-#import "gears/base/safari/factory_utils.h"
 #import "gears/base/safari/loader.h"
 #import "gears/base/safari/string_utils.h"
 #import "gears/database/safari/database.h"
+#import "gears/factory/common/factory_utils.h"
+#import "gears/factory/safari/factory.h"
+#import "gears/factory/safari/factory_utils.h"
 #import "gears/workerpool/safari/workerpool.h"
 
 @class GearsDatabase;

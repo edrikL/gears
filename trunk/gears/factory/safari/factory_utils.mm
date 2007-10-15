@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/safari/factory_utils.h"
 #include "gears/base/safari/string_utils.h"
+#include "gears/factory/safari/factory_utils.h"
 #include "common/genfiles/product_name_constants.h"  // OUTDIR
 
 //------------------------------------------------------------------------------
