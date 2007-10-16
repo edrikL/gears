@@ -787,6 +787,26 @@ function test_AttachFnShouldNotWork() {
   return g.FAILED;
 }
 
+// Test if "BEGIN" works like "BEGIN IMMEDIATE" or "BEGIN DEFERRED".
+function test_BeginIsImmediate() {
+  var db1 = google.gears.factory.create('beta.database', '1.0');
+  db1.open('foo');
+
+  var db2 = google.gears.factory.create('beta.database', '1.0');
+  db2.open('foo');
+
+  db1.execute("BEGIN");
+  try {
+    db2.execute("BEGIN");
+    return g.FAILED;
+  } catch(e) {
+    return g.SUCCEEDED;
+  } finally {
+    db1.close();
+    db2.close();
+  }
+}
+
 function test_OpenDatabaseWithIds() {
 
   function setupDB(db) {
@@ -1273,6 +1293,8 @@ var databaseTests = [
 
   test_AttachShouldNotWork,
   test_AttachFnShouldNotWork,
+
+  test_BeginIsImmediate,
 
   test_OpenDatabaseWithIds,
   test_OpenDatabaseWithIllegalIds,
@@ -3001,12 +3023,12 @@ function httpRequestTestSuite(inWorker) {
     var myStore = myLocalServer.createStore('HTTP_TEST_STORE');
     myStore.capture('echo_request.php?httprequest_a_captured_url',
                     myCaptureComplete);
-        
+
     function myCaptureComplete(url, success, id) {
       try {
         if (!success)
           throw 'Capture failed'
-        testRequest(testName, url, 'GET', null, null, 200, null, null);
+              testRequest(testName, url, 'GET', null, null, 200, null, null);
       } catch (e) {
         httpRequestTestComplete(testName + ', ' + e.message, false);
       }

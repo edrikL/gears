@@ -73,6 +73,7 @@ SQLITE_CFLAGS += -DSQLITE_CORE -DSQLITE_ENABLE_FTS1 -DSQLITE_ENABLE_FTS2 \
   -DSQLITE_OMIT_ATTACH=1 \
   -DSQLITE_OMIT_LOAD_EXTENSION=1 \
   -DSQLITE_OMIT_VACUUM=1 \
+  -DSQLITE_TRANSACTION_DEFAULT_IMMEDIATE=1 \
   -Ithird_party/sqlite_google/src -Ithird_party/sqlite_google/preprocessed
 
 # TODO(miket): we don't currently have a way to distinguish scheduled (nightly)
