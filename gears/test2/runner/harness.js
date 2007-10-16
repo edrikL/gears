@@ -186,7 +186,8 @@ Harness.prototype.startOrResumeCurrentTest_ = function(testFunction) {
     testFunction();
   } catch (e) {
     success = false;
-    this.onTestComplete(this.currentTestName_, false, e.message);
+    this.onTestComplete(this.currentTestName_, false,
+                        e.message || e); // sometimes the error is just a string
   }
 
   if (!this.scheduledCallback_) {

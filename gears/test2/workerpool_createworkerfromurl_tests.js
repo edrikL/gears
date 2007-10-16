@@ -1,0 +1,162 @@
+// Copyright 2007, Google Inc.
+//
+// Redistribution and use in source and binary forms, with or without 
+// modification, are permitted provided that the following conditions are met:
+//
+//  1. Redistributions of source code must retain the above copyright notice, 
+//     this list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright notice,
+//     this list of conditions and the following disclaimer in the documentation
+//     and/or other materials provided with the distribution.
+//  3. Neither the name of Google Inc. nor the names of its contributors may be
+//     used to endorse or promote products derived from this software without
+//     specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+// OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+var globalErrorHandler = new GlobalErrorHandler();
+
+var currentUrl = location.href;
+
+var sameOriginPath = currentUrl.substring(0, 1 + currentUrl.lastIndexOf('/'));
+var sameOriginWorkerFile = '../workerpool_same_origin.js';
+
+// TODO(aa): Change this to the file in the test2 directory after the initial
+// checkin when these files are copied to SVN.
+var crossOriginPath =
+  'http://google-gears.googlecode.com/svn/trunk/gears/test/';
+var crossOriginWorkerFile = 'unit_tests_worker_cross_origin.js';
+var crossOriginWorkerFileNoPerms = 'unit_tests_worker_same_origin.js';
+
+function testCreateWorkerFromUrl1() {
+  var onmessageCalled;
+  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  wp.onmessage = function(text, sender, m) {
+    onmessageCalled = true;
+  }
+  var childId = wp.createWorkerFromUrl(sameOriginWorkerFile);
+  wp.sendMessage('PING1', childId);
+
+  scheduleCallback(function() {
+    assert(onmessageCalled, 'Onmessage should have been called');
+  }, 100);
+}
+
+function testCreateWorkerFromUrl2() {
+  // Cleanup any local DB before starting test.  
+  var db = google.gears.factory.create('beta.database', '1.0');
+  db.open('worker_js');
+  db.execute('drop table if exists PING2').close();
+  db.close();
+
+  var onmessageCalled;
+  var tableExists;
+
+  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  wp.onmessage = function(text, sender, m) {
+    onmessageCalled = true;
+
+    // Worker database SHOULD exist in parent origin.
+    var db = google.gears.factory.create('beta.database', '1.0');
+    db.open('worker_js');
+    var rs = db.execute('select * from sqlite_master where name = ? limit 1',
+                        ['PING2']);
+    handleResult(rs, function(rs) {
+      tableExists = rs.isValidRow();
+    });
+    db.close();
+  };
+  var childId = wp.createWorkerFromUrl(sameOriginPath + sameOriginWorkerFile);
+  wp.sendMessage('PING2', childId);
+
+  scheduleCallback(function() {
+    assert(onmessageCalled, 'Onmessage should have been called');
+    assert(tableExists, 'PING2 table should have been created');
+  }, 100);
+}
+
+function testCreateWorkerFromUrl3() {
+  // Cleanup any local DB before starting test.  
+  var db = google.gears.factory.create('beta.database', '1.0');
+  db.open('worker_js');
+  db.execute('drop table if exists PING3').close();
+  db.close();
+
+  var onmessageCalled;
+  var tableExists;
+
+  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  wp.onmessage = function(text, sender, m) {
+    onmessageCalled = true;
+
+    // Worker database should NOT exist in parent origin.
+    var db = google.gears.factory.create('beta.database', '1.0');
+    db.open('worker_js');
+    var rs = db.execute('select * from sqlite_master where name = ? limit 1',
+                        ['PING3']);
+    handleResult(rs, function(rs) {
+      tableExists = rs.isValidRow();
+    });
+    db.close();
+  };
+
+  // TODO(cprince): In dbg builds, add a 2nd param to createWorkerFromUrl()
+  // so callers can simulate a different origin without being online.
+  //if (!gIsDebugBuild) {
+  var childId = wp.createWorkerFromUrl(crossOriginPath + crossOriginWorkerFile);
+  //} else {
+  //  var childId = wp.createWorkerFromUrl(sameOriginPath +
+  //                                            crossOriginWorkerFile,
+  //                                        crossOriginPath);
+  //}
+  wp.sendMessage('PING3', childId);
+
+  scheduleCallback(function() {
+    assertEqual(true, onmessageCalled, 'Onmessage should have been called');
+    assertEqual(false, tableExists, 'PING3 table should not exist');
+  }, 5000);
+}
+
+function testCreateWorkerFromUrl4() {
+  var workerUrl = 'http://example.com/non-existent-file.js';
+
+  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  globalErrorHandler.expectError(workerUrl);
+  wp.createWorkerFromUrl(workerUrl);
+
+  scheduleCallback(function() {
+    assert(globalErrorHandler.wasErrorReceived(workerUrl),
+           'Expected error trying to load non-existant worker');
+  }, 5000);
+}
+
+function testCreateWorkerFromUrl5() {
+  var expectedError = 'Page does not have permission to use Google Gears';
+
+  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  // Have to keep a reference to the workerpool otherwise, sometimes the message
+  // never gets processed!
+  // TODO(aa): Investigate why this happens -- ThreadInfo objects are
+  // AddRef()'ing the workerpool, so I would assume this shouldn't be possible.
+  testCreateWorkerFromUrl5.wp = wp;
+  globalErrorHandler.expectError(expectedError);
+  var childId = wp.createWorkerFromUrl(
+    crossOriginPath + crossOriginWorkerFileNoPerms);
+  // TODO(cprince): Could add debug-only origin override here too.
+  wp.sendMessage('PING5', childId);
+
+  scheduleCallback(function() {
+    assert(globalErrorHandler.wasErrorReceived(expectedError),
+           'Expected error trying to load worker that does not have ' +
+           'permission to access gears');
+  }, 5000);
+}
