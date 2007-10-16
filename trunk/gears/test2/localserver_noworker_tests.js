@@ -11,15 +11,15 @@ function testCaptureEmptyFileElement() {
   document.body.appendChild(div);
   div.innerHTML = '<input type="file">';
   var input = document.getElementsByTagName('input')[0];
-
   assertError(function() {
-    localServer.captureFile(input);
-  }, null, 'Expected capturing empty file input element to fail');
+    resourceStore.captureFile(input, 'should_fail');
+    }, 'File path is empty.',
+    'Expected capturing empty file input element to fail');
 }
 
 function testCaptureSpoofedInputElement() {
-  // QueryInterface is a Firefox-specific thing, but this test doesn't hurt to
-  // run in other browsers.
+  // QueryInterface is a Firefox-specific thing, but this test is also useful
+  // for IE.
   var fileInputSpoofer = {
     type: "file",
     value: "c:\\autoexec.bat",
@@ -30,7 +30,7 @@ function testCaptureSpoofedInputElement() {
 
   assertError(function() {
     resourceStore.captureFile(fileInputSpoofer, 'foo');
-  });
+  }, 'Invalid file input parameter.');
 }
 
 function testCaptureFilenameString() {

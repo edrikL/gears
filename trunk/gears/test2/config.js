@@ -68,11 +68,10 @@ factorySuite.addFile('../factory_tests.js',
                      {useWorker: true, useIFrame: true});
 suites.push(factorySuite);
 
-//TODO(aa): add httprequest_tests.js to test2 and uncomment this
-//var httpRequestSuite = new TestSuite('HttpRequest');
-//httpRequestSuite.addFile('../httprequest_tests.js',
-//                         {useWorker: true, useIFrame: true});
-//suites.push(httpRequestSuite);
+var httpRequestSuite = new TestSuite('HttpRequest');
+httpRequestSuite.addFile('../httprequest_tests.js',
+                         {useWorker: true, useIFrame: true});
+suites.push(httpRequestSuite);
 
 var localServerSuite = new TestSuite('LocalServer');
 localServerSuite.addFile('../localserver_tests.js',
@@ -84,3 +83,12 @@ suites.push(localServerSuite);
 var timerSuite = new TestSuite('Timer');
 timerSuite.addFile('../timer_tests.js', {useWorker: true, useIFrame: true});
 suites.push(timerSuite);
+
+var workerPoolSuite = new TestSuite('WorkerPool');
+workerPoolSuite.addFile('../workerpool_tests.js',
+                        {useWorker: true, useIFrame: true});
+workerPoolSuite.addFile('../workerpool_onerror_tests.js',
+                        {useWorker: true, useIFrame: true});
+workerPoolSuite.addFile('../workerpool_createworkerfromurl_tests.js',
+                        {useWorker: false, useIFrame: true});
+suites.push(workerPoolSuite);

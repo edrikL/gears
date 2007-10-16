@@ -1,0 +1,215 @@
+// Copyright 2007, Google Inc.
+//
+// Redistribution and use in source and binary forms, with or without 
+// modification, are permitted provided that the following conditions are met:
+//
+//  1. Redistributions of source code must retain the above copyright notice, 
+//     this list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright notice,
+//     this list of conditions and the following disclaimer in the documentation
+//     and/or other materials provided with the distribution.
+//  3. Neither the name of Google Inc. nor the names of its contributors may be
+//     used to endorse or promote products derived from this software without
+//     specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+// OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+// TODO(cprince): use the following to test performance of large messages
+//var LONG_STRING_PADDING = 'a';
+//for (var i = 0; i < 10; ++i) {  // generates a 2^N character string
+//  LONG_STRING_PADDING = LONG_STRING_PADDING + LONG_STRING_PADDING;
+//}
+
+function testSynchronizationStressTest() {
+  var NUM_WORKERS = 10;  // set >= 10 to break Firefox (2007/02/22)
+  var workerIndexToWorkerId = [];
+  var nextValueToRecvFromWorkerId = []; // [worker] -> value
+  var NUM_REQUEST_LOOPS = 5;            // set workers * requests * responses
+  var NUM_RESPONSES_PER_REQUEST = 100;  // >= 10000 to break IE (2007/02/22)
+  var EXPECTED_RESPONSES_PER_WORKER =
+    NUM_REQUEST_LOOPS * NUM_RESPONSES_PER_REQUEST;
+
+  var createBeginTime;
+  var createEndTime;
+  var sendRecvBeginTime;
+  var sendRecvEndTime;
+
+  // Parent/child worker code.  Each child is programmed to respond with the
+  // the number of messages requested by the parent.  The parent is programmed
+  // to tally each response, and to look for dropped messages.
+
+  var outOfOrderValues = [];
+
+  function parentOnMessage(text, sender, m) {
+    // Track cumulative per-worker message count.
+    // Detect out-of-order responses.
+    var retval = parseInt(m.text);
+    var expected = nextValueToRecvFromWorkerId[sender];
+    if (retval != expected) {
+      outOfOrderValues.push(retval);
+      /*
+      insertRow('SynchronizationStressTest()',
+                false,  // success
+                'Out-of-order value ' + retval,  // reason
+                0); // execTime
+                */
+    }
+    nextValueToRecvFromWorkerId[sender] = retval + 1;
+
+    if (0 == (nextValueToRecvFromWorkerId[sender] % 
+              EXPECTED_RESPONSES_PER_WORKER)) {
+      // will update this once per worker, which is fine
+      sendRecvEndTime = new Date().getTime();
+    }
+  }
+
+  function childInit() {
+    messageTotal = 0;
+    google.gears.workerPool.onmessage = childOnMessage;
+  }
+
+  function childOnMessage(text, sender, m) {
+    var numResponses = parseInt(m.text);
+    for (var i = 0; i < numResponses; ++i) {
+      google.gears.workerPool.sendMessage(String(gFirstResponse + messageTotal),
+                                          sender);
+      messageTotal += 1;
+    }
+  }
+
+  var childCode = childOnMessage + childInit + 'childInit();';
+  var workerPool = google.gears.factory.create('beta.workerpool', '1.1');
+  workerPool.onmessage = parentOnMessage;
+
+
+  // Create all workers.
+  createBeginTime = new Date().getTime();
+  for (var t = 0; t < NUM_WORKERS; ++t) {
+    var firstResponse = t * EXPECTED_RESPONSES_PER_WORKER;
+    // test with different code in every worker
+    var thisChildCode = 'var gFirstResponse = ' + firstResponse + ';' +
+                        childCode;
+    var childId = workerPool.createWorker(thisChildCode);
+    workerIndexToWorkerId[t] = childId;
+    nextValueToRecvFromWorkerId[childId] = firstResponse;
+  }
+  createEndTime = new Date().getTime();
+
+
+  // Loop over the workers several times, asking them to return some number
+  // of messages each time. This floods the message path into the parent worker.
+  sendRecvBeginTime = new Date().getTime();
+  for (var i = 0; i < NUM_REQUEST_LOOPS; ++i) {
+    for (var t = 0; t < NUM_WORKERS; ++t) {
+      var workerId = workerIndexToWorkerId[t];
+      workerPool.sendMessage(String(NUM_RESPONSES_PER_REQUEST) + ',' +
+                             String(t * EXPECTED_RESPONSES_PER_WORKER),
+                             workerId);
+    }
+  }
+
+  // wait a little while and see how the test did
+  scheduleCallback(function() {
+    assertEqual('', outOfOrderValues.toString(),
+                'Out of order values received');
+
+    // TODO(aa): add support for visibly logging stuff like this.
+    // insertRow('Workers: creation time (' +
+    //            NUM_WORKERS + ' workers)', // testBody
+    //           true,  // success
+    //           '',  // reason
+    //           workersCreateEndTime - workersCreateBeginTime); // execTime
+
+    for (var t = 0; t < NUM_WORKERS; ++t) {
+      var workerId = workerIndexToWorkerId[t];
+      var firstValueToRecv = t * EXPECTED_RESPONSES_PER_WORKER;
+      var numReceived =
+        nextValueToRecvFromWorkerId[workerId] - firstValueToRecv;
+
+      assertEqual(EXPECTED_RESPONSES_PER_WORKER, numReceived,
+                  'Did not receive all messages from worker %s'.subs(workerId));
+    }
+
+    // TODO(aa): add support for visibly logging stuff like this.
+    // insertRow('Workers: correctness, and send/recv time (' +
+    //           EXPECTED_RESPONSES_PER_WORKER * NUM_WORKERS + ' msgs)',
+    //           succeeded,  // success
+    //           resultString,  // reason
+    //           workersSendRecvEndTime - workersSendRecvBeginTime); // execTime
+  }, 1000);
+}
+
+function testGCWithFunctionClosures() {
+  if (!isDebug) {
+    // This test relies on forceGC(), which only exists in debug builds.
+    return;
+  }
+
+  function childThread() {
+    google.gears.workerPool.onmessage = function(text, sender, m) {
+      if (m.text == 'ping') {
+        google.gears.workerPool.sendMessage('pong', m.sender);
+      }
+    }
+
+    google.gears.workerPool.forceGC();
+  }
+
+  var pingReceived = false;
+
+  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  wp.onmessage = function(text, sender, m) {
+    if (m.text == 'pong') {
+      pingReceived = true;
+    }
+  }
+
+  var childCode = childThread + ';childThread();';
+  var childId = wp.createWorker(childCode);
+
+  wp.forceGC();
+  wp.sendMessage('ping', childId);
+  wp.forceGC();
+
+  scheduleCallback(function() {
+    assert(pingReceived, 'Should have received ping');
+  }, 100);
+}
+
+function testOnMessageTests() {
+  var textReceived;
+  var senderReceived;
+  var messageReceived;
+
+  var wp1 = google.gears.factory.create('beta.workerpool', '1.0');
+  wp1.onmessage = function(text, sender, message) {
+    textReceived = text;
+    senderReceived = sender;
+    messageReceived = message;
+  };
+
+  var childId = wp1.createWorker('var wp = google.gears.workerPool;' +
+                                 'wp.onmessage = function(a, b, m) {' +
+                                 '  wp.sendMessage(m.text, m.sender);' +
+                                 '};');
+  wp1.sendMessage('PING1', childId);
+
+  scheduleCallback(function() {
+    assertEqual('PING1', textReceived, 'Incorrect text');
+    assertEqual(textReceived, messageReceived.text, 'Incorrect message.text');
+    assertEqual(senderReceived, messageReceived.sender, 'Incorrect sender');
+    assertNotEqual('', messageReceived.origin, 'Incorrect origin');
+  }, 50);
+  // TODO(ace): Add tests that m.origin is _correct_ for same-origin,
+  // cross-origin, and different URL schemes.
+}
+

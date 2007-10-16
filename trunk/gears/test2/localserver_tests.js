@@ -32,9 +32,6 @@ var UPDATE_STATUS = {
   failure: 3
 };
 
-// TODO(michaeln): Some of the tests want to open the same
-// store rather than deleting then recreating a new one.
-// These tests are not quite correct yet.
 function getFreshStore() {
   if (localServer.openStore(STORE_NAME)) {
     localServer.removeStore(STORE_NAME);
@@ -86,9 +83,9 @@ function testInternal() {
 }
 
 function testCaptureUrl() {
-  var captureUri = '../localserver_tests.js';
-  var renameUri = 'renamed.js';
-  var expectedCaptureContent = '// Copyright 2007, Google Inc.';
+  var captureUri = '../test_file_1024.txt';
+  var renameUri = 'renamed.txt';
+  var expectedCaptureContent = '1111111111111111111111111111111111111111111111';
   var resourceStore = getFreshStore();
 
   assert(!resourceStore.isCaptured(captureUri),
@@ -113,7 +110,7 @@ function testCaptureUrl() {
     originalCaptured = resourceStore.isCaptured(captureUri);
 
     // Make a copy of it
-    var copyUri = "Copy_of_" + captureUri;
+    var copyUri = "copied.txt";
     resourceStore.copy(captureUri, copyUri);
     copyCaptured = resourceStore.isCaptured(copyUri);
     originalCapturedAfterCopy = resourceStore.isCaptured(captureUri);
@@ -177,7 +174,7 @@ function testCaptureUrl() {
            'Rename should not have been captured after remove');
     assert(!copyIsCapturedAfterRemove,
            'Copy should not have been captured after remove');
-  }, 200);
+  }, 500);
 }
 
 function testCaptureFragment() {

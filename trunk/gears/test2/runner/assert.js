@@ -44,15 +44,15 @@ var timer = google.gears.factory.create('beta.timer', '1.0');
  *
  * @param expr The expression to test. This will be coerced to bool if it isn't
  * already.
- * @param opt_message The message to display if expr is not true, or a function
+ * @param optMessage The message to display if expr is not true, or a function
  * which will return the message.
  */
-function assert(expr, opt_message) {
+function assert(expr, optMessage) {
   if (!expr) {
-    if (isFunction(opt_message)) {
-      throw new Error(opt_message());
-    } else if (isString(opt_message)) {
-      throw new Error(opt_message);
+    if (isFunction(optMessage)) {
+      throw new Error(optMessage());
+    } else if (isString(optMessage)) {
+      throw new Error(optMessage);
     } else {
       throw new Error('Assertion failed');
     }
@@ -65,15 +65,36 @@ function assert(expr, opt_message) {
  *
  * @param expected The expected value.
  * @param actual The actual value.
- * @param opt_description An optional description of what went wrong.
+ * @param optDescription An optional description of what went wrong.
  */
-function assertEqual(expected, actual, opt_description) {
+function assertEqual(expected, actual, optDescription) {
   assert(expected === actual, function() {
     var message = 'Expected: %s (%s), actual: %s (%s)'.subs(
        expected, typeof expected, actual, typeof actual);
 
-    if (opt_description) {
-      message = opt_description + ' - ' + message;
+    if (optDescription) {
+      message = optDescription + ' - ' + message;
+    }
+
+    return message;
+  });
+}
+
+/**
+ * Assert that two values are not equal. A strict equality test is used; 4 and
+ * "4" are not equal.
+ *
+ * @param unexpected The unexpected value.
+ * @param actual The actual value.
+ * @param optDescription An optional description of what went wrong.
+ */
+function assertNotEqual(unexpected, actual, optDescription) {
+  assert(unexpected !== actual, function() {
+    var message = 'Expected value other than "%s" (%s)'.subs(
+       unexpected, typeof unexpected);
+
+    if (optDescription) {
+      message = optDescription + ' - ' + message;
     }
 
     return message;
@@ -85,13 +106,13 @@ function assertEqual(expected, actual, opt_description) {
  * is done.
  *
  * @param val The value expected to be null.
- * @param opt_description An optional description of what went wrong.
+ * @param optDescription An optional description of what went wrong.
  */
-function assertNull(val, opt_description) {
+function assertNull(val, optDescription) {
   assert(val === null, function() {
     var message = "Expected null value.";
-    if (opt_description) {
-      message += " " + opt_description;
+    if (optDescription) {
+      message += " " + optDescription;
     }
     return message;
   });
@@ -102,13 +123,13 @@ function assertNull(val, opt_description) {
  * coercion is done.
  *
  * @param val The value expected to be non-null.
- * @param opt_description An optional description of what went wrong.
+ * @param optDescription An optional description of what went wrong.
  */
-function assertNotNull(val, opt_description) {
+function assertNotNull(val, optDescription) {
   assert(val !== null, function() {
     var message = "Unexpected null value.";
-    if (opt_description) {
-      message += " " + opt_description;
+    if (optDescription) {
+      message += " " + optDescription;
     }
     return message;
   });
@@ -119,30 +140,33 @@ function assertNotNull(val, opt_description) {
  *
  * @param fn This function will be run. If it produces an error, the assert
  * succeeds. Otherwise, it fails.
- * @param opt_expected_error An optional error message that is expected. If the
+ * @param optExpectedError An optional error message that is expected. If the
  * message that results from running fn contains this substring, the assert
  * succeeds. Otherwise, it fails.
- * @param opt_description An optional description of what went wrong.
+ * @param optDescription An optional description of what went wrong.
  */
-function assertError(fn, opt_expected_error, opt_description) {
+function assertError(fn, optExpectedError, optDescription) {
   try {
     fn();
   } catch (e) {
-    if (!opt_expected_error) {
+    if (!optExpectedError) {
       return;
-    } else if (e.message.indexOf(opt_expected_error) > -1) {
-      return;
+    } else {
+      var actualError = e.message || e.toString();
+      if (actualError.indexOf(optExpectedError) > -1) {
+        return;
+      }
     }
   }
 
   var message = 'Did not receive expected error';
 
-  if (opt_expected_error) {
-    message += ': "' + opt_expected_error + '"';
+  if (optExpectedError) {
+    message += ': "' + optExpectedError + '"';
   }
 
-  if (opt_description) {
-    message = opt_description + ' - ' + message;
+  if (optDescription) {
+    message = optDescription + ' - ' + message;
   }
 
   throw new Error(message);
@@ -192,3 +216,79 @@ function httpGet(url, callback) {
   req.open('GET', url, true); // async
   req.send(null);
 }
+
+/**
+ * This class helps test for errors that are expected to be unhandled and
+ * bubble up to the global handler.
+ */
+function GlobalErrorHandler() {
+  bindMethods(this);
+
+  this.expectedErrors_ = [];
+  this.receivedErrors_ = [];
+
+  // Global errors are reported by a different object in workers than in the
+  // DOM.
+  var globalErrorSource = google.gears.workerPool || window;
+  globalErrorSource.onerror = this.handleError_;
+}
+
+/**
+ * List of error substrings that are expected.
+ */
+GlobalErrorHandler.prototype.expectedErrors_ = null;
+
+/**
+ * List of error messages that have been received.
+ */
+GlobalErrorHandler.prototype.receivedErrors_ = null;
+
+/**
+ * Handle a top-level errors. Ir the error was expected, remember that it was
+ * received for later checking. Otherwise, re-throw it.
+ *
+ * @param errorMessage The error to handle.
+ */
+GlobalErrorHandler.prototype.handleError_ = function(errorMessage) {
+  // In workers, the errorMessage is actually an object with various properties,
+  // one of which is the message.
+  errorMessage = google.gears.workerPool ? errorMessage.message : errorMessage;
+
+  for (var i = 0; i < this.expectedErrors_.length; i++) {
+    if (errorMessage.indexOf(this.expectedErrors_[i]) > -1) {
+      // This is an error we were expecting. Note down that we got it and
+      // prevent the browser UI.
+      this.receivedErrors_.push(errorMessage);
+
+      // Remove the error from the expected list so that we minimize the chance
+      // we will remove other errors accidentally.
+      this.expectedErrors_.splice(i, 1);
+      return true;
+    }
+  }
+
+  // This is some other error. Fall through to the regular browser UI.
+  return false;
+};
+
+/**
+ * Add an error to the list of expected ones.
+ * @param A substring of the error message expected.
+ */
+GlobalErrorHandler.prototype.expectError = function(errorMessageSubstring) {
+  this.expectedErrors_.push(errorMessageSubstring);
+};
+
+/**
+ * Check to see if an expected error was in fact received.
+ * @param errorMessageSubstring A substring of the error to search for.
+ */
+GlobalErrorHandler.prototype.wasErrorReceived =
+    function(errorMessageSubstring) {
+  for (var i = 0; i < this.receivedErrors_.length; i++) {
+    if (this.receivedErrors_[i].indexOf(errorMessageSubstring) > -1) {
+      return true;
+    }
+  }
+  return false;
+};
