@@ -106,6 +106,7 @@ class GearsHttpRequest
 
   bool ResolveUrl(const char16 *url, std::string16 *resolved_url,
                   std::string16 *exception_message);
+  virtual void DataAvailable(HttpRequest *source);
   virtual void ReadyStateChanged(HttpRequest *source);
   void CreateRequest();
   void RemoveRequest();
@@ -130,14 +131,17 @@ class GearsHttpRequest
   enum AsyncCallType {
     kSend,  // invoked from apartment to execute on ui thread
     kAbort, // invoked from apartment to execute on ui thread
-    kReadyStateChanged  // invoked from ui thread to execute on apartment thread
+    kReadyStateChanged,  // invoked from ui to execute on apartment thread
+    kDataAvailable  // invoked from ui to execute on apartment thread
   };
   bool CallAbortOnUiThread();
   bool CallSendOnUiThread();
   bool CallReadyStateChangedOnApartmentThread();
+  bool CallDataAvailableOnApartmentThread();
   void OnAbortCall();
   void OnSendCall();
   void OnReadyStateChangedCall();
+  void OnDataAvailableCall();
 
   nsresult CallAsync(nsIEventQueue *event_queue, AsyncCallType call_type);
   void OnAsyncCall(AsyncCallType call_type);

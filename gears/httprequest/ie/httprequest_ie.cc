@@ -50,6 +50,7 @@ GearsHttpRequest::GearsHttpRequest()
     has_fired_completion_event_(false) {
 }
 
+
 GearsHttpRequest::~GearsHttpRequest() {
   abort();
 }
@@ -118,6 +119,11 @@ STDMETHODIMP GearsHttpRequest::open(
 
   CreateRequest();
 
+  if (unload_monitor_ == NULL) {
+    unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
+                                             this));
+  }
+
   if (!request_->Open(method, full_url.c_str(), true)) {
     RETURN_EXCEPTION(kInternalError);
   }
@@ -126,6 +132,14 @@ STDMETHODIMP GearsHttpRequest::open(
   has_fired_completion_event_ = false;
 
   RETURN_NORMAL();
+}
+
+
+void GearsHttpRequest::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+  onreadystatechangehandler_.Release();
+  unload_monitor_.reset(NULL);
+  abort();
 }
 
 
@@ -285,8 +299,8 @@ STDMETHODIMP GearsHttpRequest::get_responseText(
       /* [retval][out] */ BSTR *body) {
   if (!body) return E_POINTER;
   
-  if (!IsComplete())
-    RETURN_EXCEPTION(kNotCompleteError);
+  if (!(IsInteractive() || IsComplete()))
+    RETURN_EXCEPTION(kNotInteractiveError);
   if (!IsValidResponse()) {
     *body = NULL;
     RETURN_NORMAL();
@@ -295,6 +309,9 @@ STDMETHODIMP GearsHttpRequest::get_responseText(
   std::string16 body_str;
   if (!request_->GetResponseBodyAsText(&body_str))
     RETURN_EXCEPTION(kInternalError);
+
+  ATLTRACE(L"GearsHttpRequest::get_responseText - %d chars\n",
+           body_str.length());
 
   CComBSTR body_bstr(body_str.c_str());
   *body = body_bstr.Detach();
@@ -334,6 +351,13 @@ STDMETHODIMP GearsHttpRequest::get_statusText(
   CComBSTR status_bstr(status_str.c_str());
   *status_text = status_bstr.Detach();
   RETURN_NORMAL();
+}
+
+
+void GearsHttpRequest::DataAvailable(HttpRequest *source) {
+  assert(source == request_);
+  ATLTRACE(L"GearsHttpRequest::DataAvailable\n");
+  ReadyStateChanged(source);
 }
 
 

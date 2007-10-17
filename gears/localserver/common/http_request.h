@@ -115,6 +115,7 @@ class HttpRequest {
   // events and listeners
   class ReadyStateListener {
    public:
+    virtual void DataAvailable(HttpRequest *source) {};
     virtual void ReadyStateChanged(HttpRequest *source) = 0;
   };
   virtual bool SetOnReadyStateChange(ReadyStateListener *listener) = 0;

@@ -251,7 +251,7 @@ readonly attribute string <b>statusText</b> </code></pre>
     </tr>
   <tr class="odd">
     <td width="113">Description: </td>
-    <td width="489">An event handler that fires at every state change.</td>
+    <td width="489">An event handler that fires at every state change and repeatedly as new responseText data becomes available while the request is in the Interactive state.</td>
     </tr>
 </table>
 
@@ -293,17 +293,17 @@ readonly attribute string <b>statusText</b> </code></pre>
     <tr class="odd">
       <td><strong>responseText</strong></td>
         <td class="" >readonly string </td>
-        <td class="" >Returns the response as a string.</td>
+        <td class="" >Returns the response body as a string. This property can be read when the request is in the Interactive or Complete state.</td>
     </tr>
     <tr class="odd">
       <td><strong>status</strong></td>
         <td class="odd">readonly int</td>
-        <td class="odd">Returns the status as a number (e.g. 404 for "Not Found" or 200 for "OK")</td>
+        <td class="odd">Returns the status as a number (e.g. 404 for "Not Found" or 200 for "OK"). This property can be read when the request is in the Interactive or Complete state.</td>
     </tr>
     <tr class="odd">
       <td><strong>statusText</strong></td>
         <td class="odd">readonly string </td>
-        <td class="odd">Returns the status as a string (e.g. "Not Found" or "OK")</td>
+        <td class="odd">Returns the status as a string (e.g. "Not Found" or "OK"). This property can be read when the request is in the Interactive or Complete state.</td>
     </tr>
   </table>
 

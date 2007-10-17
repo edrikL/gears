@@ -455,8 +455,8 @@ NS_IMETHODIMP GearsHttpRequest::GetResponseHeader(nsAString &retval) {
 NS_IMETHODIMP GearsHttpRequest::GetResponseText(nsAString &retval) {
   assert(IsApartmentThread());
   MutexLock locker(&lock_);
-  if (!IsComplete()) {
-    RETURN_EXCEPTION(kNotCompleteError);
+  if (!(IsInteractive() || IsComplete())) {
+    RETURN_EXCEPTION(kNotInteractiveError);
   }
   if (!IsValidResponse()) {
     retval.Assign(kEmptyString);
@@ -500,6 +500,30 @@ NS_IMETHODIMP GearsHttpRequest::GetStatusText(nsAString &retval) {
   RETURN_NORMAL();
 }
 
+//------------------------------------------------------------------------------
+// DataAvailable called by our lower level HttpRequest class
+//------------------------------------------------------------------------------
+void GearsHttpRequest::DataAvailable(HttpRequest *source) {
+  assert(IsUiThread());
+  assert(source == request_);
+
+  nsCOMPtr<GearsHttpRequest> reference(this);
+  {
+    // The extra scope is to ensure we unlock prior to reference.Release
+    MutexLock locker(&lock_);
+    source->GetResponseBodyAsText(&response_info_->response_text);
+    CallDataAvailableOnApartmentThread();
+  }
+}
+
+bool GearsHttpRequest::CallDataAvailableOnApartmentThread() {
+  return CallAsync(apartment_event_queue_, kDataAvailable) == NS_OK;
+}
+
+void GearsHttpRequest::OnDataAvailableCall() {
+  assert(IsApartmentThread());
+  OnReadyStateChangedCall();
+}
 
 //------------------------------------------------------------------------------
 // ReadyStateChanged called by our lower level HttpRequest class
@@ -511,7 +535,6 @@ void GearsHttpRequest::ReadyStateChanged(HttpRequest *source) {
   nsCOMPtr<GearsHttpRequest> reference(this);
   {
     // The extra scope is to ensure we unlock prior to reference.Release
-
     MutexLock locker(&lock_);
 
     HttpRequest::ReadyState previous_state =
@@ -546,7 +569,7 @@ void GearsHttpRequest::OnReadyStateChangedCall() {
   response_info_->ready_state = response_info_->pending_ready_state;
   bool is_complete = IsComplete();
   lock_.Unlock();
-  
+
   // To remove cyclic dependencies we drop our reference to the
   // callback when the request is complete.
   JsRootedCallback *handler = is_complete ? onreadystatechange_.release()
@@ -712,6 +735,9 @@ void GearsHttpRequest::InitUnloadMonitor() {
 
 void GearsHttpRequest::OnAsyncCall(AsyncCallType call_type) {
   switch (call_type) {
+    case kDataAvailable:
+      OnDataAvailableCall();
+      break;
     case kReadyStateChanged:
       OnReadyStateChangedCall();
       break;
