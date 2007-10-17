@@ -40,7 +40,6 @@ static const char16 *kRequestFailedError = STRING16(L"The request failed.");
 static const char16 *kInternalError = STRING16(L"Internal error.");
 static const char16 *kAlreadyOpenError =  STRING16(L"Request is already open.");
 static const char16 *kNotOpenError = STRING16(L"Request is not open.");
-static const char16 *kNotCompleteError = STRING16(L"Request is not done.");
 static const char16 *kNotInteractiveError =
                         STRING16(L"Request is not loading or done.");
 
