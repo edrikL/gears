@@ -572,6 +572,7 @@ bool TestParseHttpStatusLine() {
   const char16 *acceptable[] = {
     STRING16(L"HTTP/1.0 200"), // no status
     STRING16(L"HTTP 200 ABBREVIATED VERSION"),
+    STRING16(L"HTTP/1.1 500 REASON: CONTAINING COLON")
   };
   for (size_t i = 0; i < ARRAYSIZE(acceptable); ++i) {
     std::string16 acceptable_str(acceptable[i]);

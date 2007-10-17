@@ -90,8 +90,7 @@ bool FFHttpRequest::GetReadyState(ReadyState *state) {
 //------------------------------------------------------------------------------
 bool FFHttpRequest::GetResponseBodyAsText(std::string16 *text) {
   assert(text);
-  // TODO(michaeln): support incremental reading
-  if (!IsComplete() || was_aborted_)
+  if (!IsInteractiveOrComplete() || was_aborted_)
     return false;
 
   std::vector<uint8> *data = response_body_.get();
@@ -583,8 +582,24 @@ NS_IMETHODIMP FFHttpRequest::OnDataAvailable(nsIRequest *request,
                                              PRUint32 count) {
   NS_ENSURE_TRUE(channel_, NS_ERROR_UNEXPECTED);
   SetReadyState(HttpRequest::INTERACTIVE);
+
+  std::vector<uint8> *body = response_body_.get();
+  if (!body) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  size_t prev_size = body->size();
+
   PRUint32 n;
-  return stream->ReadSegments(StreamReaderFunc, this, count, &n);
+  nsresult rv = stream->ReadSegments(StreamReaderFunc, this, count, &n);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (body->size() > prev_size) {
+    if (listener_) {
+      listener_->DataAvailable(this);
+    }
+  }
+
+  return rv;
 }
 
 //------------------------------------------------------------------------------

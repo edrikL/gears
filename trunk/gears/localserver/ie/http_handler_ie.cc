@@ -431,13 +431,16 @@ STDMETHODIMP HttpHandler::Read(
     /* [in, out] */ void *pv,
     /* [in] */ ULONG cb,
     /* [out] */ ULONG *pcbRead) {
-  ATLTRACE(_T("HttpHandler::Read()\n"));
-  if (is_passingthru_)
-    return BaseClass::Read(pv, cb, pcbRead);
-  else if (is_handling_)
+  if (is_passingthru_) {
+    HRESULT hr = BaseClass::Read(pv, cb, pcbRead);
+    ATLTRACE(_T("HttpHandler::Read() - passing thru, %d bytes\n"), *pcbRead);
+    return hr;
+  } else if (is_handling_) {
     return ReadImpl(pv, cb, pcbRead);
-  else
+  } else {
+    ATLTRACE(_T("HttpHandler::Read() - unexpected\n"));
     return E_UNEXPECTED;
+  }
 }
 
 STDMETHODIMP HttpHandler::Seek(
@@ -587,14 +590,14 @@ STDMETHODIMP HttpHandler::Continue() {
 
 // IWinInetInfo
 STDMETHODIMP HttpHandler::QueryOption(
-    /* [in] */ DWORD dwOption,
-    /* [in, out] */ LPVOID pBuffer,
-    /* [in, out] */ DWORD *pcbBuf) {
-  ATLTRACE(_T("HttpHandler::QueryOption()\n"));
+    /* [in] */ DWORD option,
+    /* [in, out] */ LPVOID buffer,
+    /* [in, out] */ DWORD *len) {
+  ATLTRACE(_T("HttpHandler::QueryOption(%d)\n"), option);
   if (is_passingthru_)
-    return BaseClass::QueryOption(dwOption, pBuffer, pcbBuf);
+    return BaseClass::QueryOption(option, buffer, len);
   else if (is_handling_)
-    return QueryOptionImpl(dwOption, pBuffer, pcbBuf);
+    return QueryOptionImpl(option, buffer, len);
   else
     return E_UNEXPECTED;
 }
@@ -606,7 +609,7 @@ STDMETHODIMP HttpHandler::QueryInfo(
     /* [in, out] */ DWORD *len,
     /* [in, out] */ DWORD *flags,
     /* [in, out] */ DWORD *reserved) {
-  ATLTRACE(_T("HttpHandler::QueryInfo()\n"));
+  ATLTRACE(_T("HttpHandler::QueryInfo(%d)\n"), option);
   if (is_passingthru_)
     return BaseClass::QueryInfo(option, buffer, len, flags, reserved);
   else if (is_handling_)
@@ -960,7 +963,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
 HRESULT HttpHandler::ReadImpl(void *buffer,
                               ULONG byte_count,
                               ULONG *bytes_read) {
-  ATLTRACE(_T("HttpHandler::Read(%d)\n"), byte_count);
+  ATLTRACE(_T("HttpHandler::ReadImpl(%d)\n"), byte_count);
   if (is_handling_) {
     std::vector<uint8> *data = payload_.data.get();
     size_t bytes_available = data ? (data->size() - read_pointer_) : 0;
@@ -976,13 +979,13 @@ HRESULT HttpHandler::ReadImpl(void *buffer,
     }
 
     if (bytes_available - bytes_to_copy == 0) {
-      ATLTRACE(_T("----> HttpHandler::Read() complete\n"));
+      ATLTRACE(_T("----> HttpHandler::ReadImpl() complete\n"));
       return S_FALSE;
     } else {
       return S_OK;
     }
   } else {
-    ATLTRACE(_T("----> HttpHandler::Read() E_UNEXPECTED\n"));
+    ATLTRACE(_T("----> HttpHandler::ReadImpl() E_UNEXPECTED\n"));
     assert(false);
     return E_UNEXPECTED;
   }

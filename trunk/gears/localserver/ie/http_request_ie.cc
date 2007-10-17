@@ -94,19 +94,18 @@ bool IEHttpRequest::GetReadyState(ReadyState *state) {
 //------------------------------------------------------------------------------
 bool IEHttpRequest::GetResponseBodyAsText(std::string16 *text) {
   assert(text);
-  // TODO(michaeln): support incremental reading
-  if (!IsComplete() || was_aborted_)
+  if (!IsInteractiveOrComplete() || was_aborted_)
     return false;
 
   std::vector<uint8> *data = response_payload_.data.get();
-  if (!data || data->empty()) {
+  if (!data || data->empty() || !actual_data_size_) {
     text->clear();
     return true;
   }
 
   // TODO(michaeln): detect charset and decode using MLang
-  return UTF8ToString16(reinterpret_cast<const char*>(&(*data)[0]), 
-                        data->size(), text);
+  return UTF8ToString16(reinterpret_cast<const char*>(&(*data)[0]),
+                        actual_data_size_, text);
 }
 
 //------------------------------------------------------------------------------
@@ -587,6 +586,8 @@ STDMETHODIMP IEHttpRequest::OnDataAvailable(
     assert(actual_data_size_ == 0);
   }
 
+  bool is_new_data_available = false;
+
   // We use the data-pull model as the push model doesn't work
   // in some circumstances. In the pull model we have to read
   // beyond then end of what's currently available to encourage
@@ -608,11 +609,15 @@ STDMETHODIMP IEHttpRequest::OnDataAvailable(
     hr = stgmed->pstm->Read(&(*data)[actual_data_size_],
                             amount_to_read, &amount_read);
     actual_data_size_ += amount_read;
+    is_new_data_available |= (amount_read != 0);
   } while (!(hr == E_PENDING || hr == S_FALSE) && SUCCEEDED(hr));
-
 
   if (flags & BSCF_LASTDATANOTIFICATION) {
     data->resize(actual_data_size_);
+  }
+
+  if (is_new_data_available && listener_) {
+    listener_->DataAvailable(this);
   }
 
   return hr;

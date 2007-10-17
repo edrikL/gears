@@ -29,6 +29,8 @@
 #include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_runner.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/localserver/common/http_request.h"
 
 //------------------------------------------------------------------------------
@@ -39,7 +41,8 @@ class ATL_NO_VTABLE GearsHttpRequest
       public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<GearsHttpRequest>,
       public IDispatchImpl<GearsHttpRequestInterface>,
-      public HttpRequest::ReadyStateListener {
+      public HttpRequest::ReadyStateListener,
+      public JsEventHandlerInterface {
  public:
   BEGIN_COM_MAP(GearsHttpRequest)
     COM_INTERFACE_ENTRY(GearsHttpRequestInterface)
@@ -102,6 +105,7 @@ class ATL_NO_VTABLE GearsHttpRequest
   HttpRequest *request_;
   bool content_type_header_was_set_;
   bool has_fired_completion_event_;
+  scoped_ptr<JsEventMonitor> unload_monitor_;
 
   void CreateRequest();
   void ReleaseRequest();
@@ -118,7 +122,11 @@ class ATL_NO_VTABLE GearsHttpRequest
                   std::string16 *exception_message);
 
   // HttpRequest::ReadyStateListener impl
+  virtual void DataAvailable(HttpRequest *source);
   virtual void ReadyStateChanged(HttpRequest *source);
+
+  // JsEventHandlerInterface impl
+  virtual void HandleEvent(JsEventType event_type);
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsHttpRequest);
 };

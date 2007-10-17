@@ -88,6 +88,11 @@ bool ParseHttpStatusLine(const std::string16 &status_line,
   String16ToUTF8(status_line.c_str(), status_line.length(), &status_line_ascii);
   status_line_ascii += HttpConstants::kCrLfAscii;
   status_line_ascii += HttpConstants::kCrLfAscii;
+  // Also workaround a bug in ParseHTTPHeaders when the reason phrase
+  // contains a ':'
+  const std::string kColon(":");
+  const std::string kDash("-");
+  ReplaceAll(status_line_ascii, kColon, kDash);
   const char *body = status_line_ascii.c_str();
   uint32 body_len = status_line_ascii.length();
   HTTPHeaders headers;
