@@ -1785,16 +1785,16 @@ workerpool_bubbleTests = [
 
 function workerpool_OnErrorTests() {
   // Test that onerror gets called.
-  workerpool_OnErrorTests.handler_called = false;
+  workerpool_OnErrorTests.handler_called_count = 0;
   var wp1 = google.gears.factory.create('beta.workerpool', '1.1');
   wp1.onmessage = function() {
-    workerpool_OnErrorTests.handler_called = true;
+    workerpool_OnErrorTests.handler_called_count++;
   };
   var childId = wp1.createWorker(
       ['var parentId;',
        'google.gears.workerPool.onmessage = function(m, senderId) {',
        'parentId = senderId;',
-       'throw new Error("hello");',
+       'eval(\'throw new Error("hello");\')',
        '}',
        'google.gears.workerPool.onerror = function() {',
        'google.gears.workerPool.sendMessage("", parentId);',
@@ -2009,8 +2009,8 @@ function checkWorkerPoolTests() {
 
   // Check the OnError tests.
 
-  insertRow('workerpool_OnErrorTests.handler_called',
-            workerpool_OnErrorTests.handler_called,
+  insertRow('workerpool_OnErrorTests.handler_called_count',
+            1 == workerpool_OnErrorTests.handler_called_count,
             '',
             0);
 

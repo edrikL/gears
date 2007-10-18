@@ -491,16 +491,15 @@ STDMETHODIMP JsRunnerImpl::LookupNamedItem(const OLECHAR *name,
 
 STDMETHODIMP JsRunnerImpl::HandleScriptError(EXCEPINFO *ei, ULONG line,
                                              LONG pos, BSTR src) {
-  if (error_handler_) {
-    const JsErrorInfo error_info = {
-      line + 1, // Reported lines start at zero.
-      static_cast<char16 *>(ei->bstrDescription)
-    };
+  if (!error_handler_) { return E_FAIL; }
 
-    error_handler_->HandleError(error_info);
-  }
+  const JsErrorInfo error_info = {
+    line + 1, // Reported lines start at zero.
+    static_cast<char16 *>(ei->bstrDescription)
+  };
 
-  return E_FAIL; // returning success here would hide SetScriptState failures
+  error_handler_->HandleError(error_info);
+  return S_OK;
 }
 
 
