@@ -30,8 +30,12 @@
 //}
 
 function testSynchronizationStressTest() {
+  startAsync();
+
   var NUM_WORKERS = 10;  // set >= 10 to break Firefox (2007/02/22)
   var workerIndexToWorkerId = [];
+  var workerIdToWorkerIndex = [];
+  var totalMessagesReceived = 0;
   var nextValueToRecvFromWorkerId = []; // [worker] -> value
   var NUM_REQUEST_LOOPS = 5;            // set workers * requests * responses
   var NUM_RESPONSES_PER_REQUEST = 100;  // >= 10000 to break IE (2007/02/22)
@@ -47,29 +51,36 @@ function testSynchronizationStressTest() {
   // the number of messages requested by the parent.  The parent is programmed
   // to tally each response, and to look for dropped messages.
 
-  var outOfOrderValues = [];
-
   function parentOnMessage(text, sender, m) {
     // Track cumulative per-worker message count.
     // Detect out-of-order responses.
     var retval = parseInt(m.text);
     var expected = nextValueToRecvFromWorkerId[sender];
-    if (retval != expected) {
-      outOfOrderValues.push(retval);
-      /*
-      insertRow('SynchronizationStressTest()',
-                false,  // success
-                'Out-of-order value ' + retval,  // reason
-                0); // execTime
-                */
-    }
+    assertEqual(expected, retval, 'Out of order value');
     nextValueToRecvFromWorkerId[sender] = retval + 1;
+
+    var workerIndex = workerIdToWorkerIndex[sender];
+    var firstValueToRecv = workerIndex * EXPECTED_RESPONSES_PER_WORKER;
 
     if (0 == (nextValueToRecvFromWorkerId[sender] % 
               EXPECTED_RESPONSES_PER_WORKER)) {
       // will update this once per worker, which is fine
+      // TODO(aa): Add support to the test runner for visibly logging
+      // information like this.
       sendRecvEndTime = new Date().getTime();
+
+      var numReceived = nextValueToRecvFromWorkerId[sender] - firstValueToRecv;
+      assertEqual(EXPECTED_RESPONSES_PER_WORKER, numReceived,
+                  'Did not receive all messages from worker %s'.subs(workerId));
     }
+
+    ++totalMessagesReceived;
+    if (totalMessagesReceived == EXPECTED_RESPONSES_PER_WORKER * NUM_WORKERS) {
+      completeAsync();
+    }
+
+    assert(retval < (firstValueToRecv + EXPECTED_RESPONSES_PER_WORKER),
+           'Received an extra message %s for worker %s'.subs(retval, workerId));
   }
 
   function childInit() {
@@ -100,6 +111,7 @@ function testSynchronizationStressTest() {
                         childCode;
     var childId = workerPool.createWorker(thisChildCode);
     workerIndexToWorkerId[t] = childId;
+    workerIdToWorkerIndex[childId] = t;
     nextValueToRecvFromWorkerId[childId] = firstResponse;
   }
   createEndTime = new Date().getTime();
@@ -116,36 +128,6 @@ function testSynchronizationStressTest() {
                              workerId);
     }
   }
-
-  // wait a little while and see how the test did
-  scheduleCallback(function() {
-    assertEqual('', outOfOrderValues.toString(),
-                'Out of order values received');
-
-    // TODO(aa): add support for visibly logging stuff like this.
-    // insertRow('Workers: creation time (' +
-    //            NUM_WORKERS + ' workers)', // testBody
-    //           true,  // success
-    //           '',  // reason
-    //           workersCreateEndTime - workersCreateBeginTime); // execTime
-
-    for (var t = 0; t < NUM_WORKERS; ++t) {
-      var workerId = workerIndexToWorkerId[t];
-      var firstValueToRecv = t * EXPECTED_RESPONSES_PER_WORKER;
-      var numReceived =
-        nextValueToRecvFromWorkerId[workerId] - firstValueToRecv;
-
-      assertEqual(EXPECTED_RESPONSES_PER_WORKER, numReceived,
-                  'Did not receive all messages from worker %s'.subs(workerId));
-    }
-
-    // TODO(aa): add support for visibly logging stuff like this.
-    // insertRow('Workers: correctness, and send/recv time (' +
-    //           EXPECTED_RESPONSES_PER_WORKER * NUM_WORKERS + ' msgs)',
-    //           succeeded,  // success
-    //           resultString,  // reason
-    //           workersSendRecvEndTime - workersSendRecvBeginTime); // execTime
-  }, 1000);
 }
 
 function testGCWithFunctionClosures() {
@@ -154,23 +136,23 @@ function testGCWithFunctionClosures() {
     return;
   }
 
+  startAsync();
+
   function childThread() {
     google.gears.workerPool.onmessage = function(text, sender, m) {
-      if (m.text == 'ping') {
-        google.gears.workerPool.sendMessage('pong', m.sender);
+      if (m.text != 'ping') {
+        throw new Error('unexpected message "' + m.text + '" to child worker');
       }
+      google.gears.workerPool.sendMessage('pong', m.sender);
     }
 
     google.gears.workerPool.forceGC();
   }
 
-  var pingReceived = false;
-
   var wp = google.gears.factory.create('beta.workerpool', '1.1');
   wp.onmessage = function(text, sender, m) {
-    if (m.text == 'pong') {
-      pingReceived = true;
-    }
+    assertEqual('pong', m.text, 'Unexpected message to parent worker');
+    completeAsync();
   }
 
   var childCode = childThread + ';childThread();';
@@ -179,22 +161,15 @@ function testGCWithFunctionClosures() {
   wp.forceGC();
   wp.sendMessage('ping', childId);
   wp.forceGC();
-
-  scheduleCallback(function() {
-    assert(pingReceived, 'Should have received ping');
-  }, 100);
 }
 
 function testOnMessageTests() {
-  var textReceived;
-  var senderReceived;
-  var messageReceived;
-
   var wp1 = google.gears.factory.create('beta.workerpool', '1.0');
   wp1.onmessage = function(text, sender, message) {
-    textReceived = text;
-    senderReceived = sender;
-    messageReceived = message;
+    assertEqual('PING1', text, 'Incorrect text');
+    assertEqual(text, message.text, 'Incorrect message.text');
+    assertEqual(sender, message.sender, 'Incorrect sender');
+    assertNotEqual('', message.origin, 'Incorrect origin');
   };
 
   var childId = wp1.createWorker('var wp = google.gears.workerPool;' +
@@ -202,14 +177,4 @@ function testOnMessageTests() {
                                  '  wp.sendMessage(m.text, m.sender);' +
                                  '};');
   wp1.sendMessage('PING1', childId);
-
-  scheduleCallback(function() {
-    assertEqual('PING1', textReceived, 'Incorrect text');
-    assertEqual(textReceived, messageReceived.text, 'Incorrect message.text');
-    assertEqual(senderReceived, messageReceived.sender, 'Incorrect sender');
-    assertNotEqual('', messageReceived.origin, 'Incorrect origin');
-  }, 50);
-  // TODO(ace): Add tests that m.origin is _correct_ for same-origin,
-  // cross-origin, and different URL schemes.
 }
-

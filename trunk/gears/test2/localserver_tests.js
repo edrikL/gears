@@ -49,11 +49,17 @@ function getFreshManagedStore() {
 function updateManagedStore(url, callback) {
   var managedStore = getFreshManagedStore();
   managedStore.manifestUrl = url;
+
   managedStore.checkForUpdate();
 
-  // Wait 1 second for the update check to complete
-  scheduleCallback(partial(callback, managedStore),
-                   200);
+  // Wait for the update to complete
+  var timerId = timer.setInterval(function() {
+    if (managedStore.currentVersion ||
+        managedStore.updateStatus == UPDATE_STATUS.failure) {
+      timer.clearInterval(timerId);
+      callback(managedStore);
+    }
+  }, 50);
 }
 
 function testEmptyParams() {
@@ -91,114 +97,86 @@ function testCaptureUrl() {
   assert(!resourceStore.isCaptured(captureUri),
          'test file should not be captured');
 
-  var originalSuccess;
-  var originalCaptured;
-  var copyCaptured;
-  var originalCapturedAfterCopy;
-  var renameCaptured;
-  var originalCapturedAfterRename;
-  var renameCanBeServed;
-  var renameContent;
-  var canServeAfterDisable;
-  var disabledContent;
-  var redirectedContent;
-  var renameIsCapturedAfterRemove;
-  var copyIsCapturedAfterRemove;
-
+  startAsync();
   resourceStore.capture(captureUri, function(url, success, id) {
-    originalSuccess = success;
-    originalCaptured = resourceStore.isCaptured(captureUri);
+    assert(success, 'Original should have succeeded');
+    assert(resourceStore.isCaptured(captureUri),
+           'Original should have been captured');
 
     // Make a copy of it
     var copyUri = "copied.txt";
     resourceStore.copy(captureUri, copyUri);
-    copyCaptured = resourceStore.isCaptured(copyUri);
-    originalCapturedAfterCopy = resourceStore.isCaptured(captureUri);
+    assert(resourceStore.isCaptured(copyUri), 'Copy should have been captured');
+    assert(resourceStore.isCaptured(captureUri),
+           'Original should have been captured after copy');
 
     // Rename it
     resourceStore.rename(captureUri, renameUri);
-    renameCaptured = resourceStore.isCaptured(renameUri);
-    originalCapturedAfterRename = resourceStore.isCaptured(captureUri);
+    assert(resourceStore.isCaptured(renameUri),
+           'Rename should have been captured');
+    assert(!resourceStore.isCaptured(captureUri),
+           'Original should not have been captured after rename');
 
     // Verify the local server claims to be able to serve renameUri now
-    renameCanBeServed =  localServer.canServeLocally(renameUri);
+    assert(localServer.canServeLocally(renameUri),
+           'Rename should have been servable');
 
     // Fetch the contents of renameUri and see if its what we expect
     httpGet(renameUri, function(content) {
-      renameContent = content;
+      var renameContent = content;
+      assert(renameContent.startsWith(expectedCaptureContent),
+             'Unexpected content in renamed resource');
 
       // Disable our store and verify we can no longer fetch renameUri
       // note: depends on renameUri not being available on the server)
       resourceStore.enabled = false;
-      canServeAfterDisable = localServer.canServeLocally(renameUri);
+      assert(!localServer.canServeLocally(renameUri),
+             'Should not have been able to serve after disable');
 
       // Fetch and make sure disabled
       httpGet(renameUri, function(content) {
-        disabledContent = content;
+        var disabledContent = content;
+        assertNull(disabledContent, 'Should not have served disabled content');
 
         // Now re-enable and try to redirect back into cache
         resourceStore.enabled = true;
         httpGet("../server_redirect.php?location=runner/" + renameUri,
           function(content) {
-            redirectedContent = content;
+            var redirectedContent = content;
+            assertEqual(renameContent, redirectedContent, 
+                        'Redirected content should match');
 
             // Now remove the uris, and verify isCaptured() returns false.
             resourceStore.remove(renameUri);
             resourceStore.remove(copyUri);
-            renameIsCapturedAfterRemove = resourceStore.isCaptured(renameUri);
-            copyIsCapturedAfterRemove = resourceStore.isCaptured(copyUri);
+            assert(!resourceStore.isCaptured(renameUri),
+                   'Rename should not have been captured after remove');
+            assert(!resourceStore.isCaptured(copyUri),
+                   'Copy should not have been captured after remove');
+
+            completeAsync();
           }
         );
       });
     });
   });
-
-  scheduleCallback(function() {
-    assert(originalSuccess, 'Original should have succeeded');
-    assert(originalCaptured, 'Original should have been captured');
-    assert(copyCaptured, 'Copy should have been captured');
-    assert(originalCapturedAfterCopy,
-           'Original should have been captured after copy');
-    assert(renameCaptured, 'Rename should have been captured');
-    assert(!originalCapturedAfterRename,
-           'Original should not have been captured after rename');
-    assert(renameCanBeServed, 'Rename should have been servable');
-    assert(renameContent.startsWith(expectedCaptureContent),
-           'Unexpected content in renamed resource');
-    assert(!canServeAfterDisable,
-           'Should not have been able to serve after disable');
-    assertNull(disabledContent, 'Should not have served disabled content');
-    assertEqual(renameContent, redirectedContent, 
-                'Redirected content should match');
-    assert(!renameIsCapturedAfterRemove,
-           'Rename should not have been captured after remove');
-    assert(!copyIsCapturedAfterRemove,
-           'Copy should not have been captured after remove');
-  }, 500);
 }
 
 function testCaptureFragment() {
   var baseUri = '../test_file_fragment';
   var resourceStore = getFreshStore();
 
-  var captureSuccess;
-  var baseIsCaptured;
-  var fooIsCaptured;
-  var barIsCaptured;
-
+  startAsync();
   resourceStore.capture(baseUri + '#foo', function(url, success, id) {
-    captureSuccess = success;
-    baseIsCaptured = resourceStore.isCaptured(baseUri);
-    fooIsCaptured = resourceStore.isCaptured(baseUri + '#foo');
-    barIsCaptured = resourceStore.isCaptured(baseUri + '#bar');
+    assert(success, 'Capture should have succeeded');
+    assert(resourceStore.isCaptured(baseUri),
+           'baseUri without fragment should be captured');
+    assert(resourceStore.isCaptured(baseUri + '#foo'),
+           '#foo should be captured');
+    assert(resourceStore.isCaptured(baseUri + '#bar'),
+           '#bar should be captured');
+    completeAsync();
   });
-
-  scheduleCallback(function() {
-    assert(captureSuccess, 'Capture should have succeeded');
-    assert(baseIsCaptured, 'baseUri without fragment should be captured');
-    assert(fooIsCaptured, '#foo should be captured');
-    assert(barIsCaptured, '#bar should be captured');
-  }, 300);
 }
 
 function testCaptureMany() {
@@ -212,64 +190,70 @@ function testCaptureMany() {
 
   var resourceStore = getFreshStore();
   var captureCompleteCount = 0;
+  var urlList = getObjectProps(urls);
   var results = {};
 
-  resourceStore.capture(getObjectProps(urls), function(url, success, id) {
-    results[url] = {success: success};
+  startAsync();
 
-    httpGet(url, function(content) {
-      results[url].content = content;
-      if (content !== null) {
-        results[url].contentType =
-          resourceStore.getHeader(url, "Content-Type");
-        results[url].length = content.length;
-      }
-    });
+  // Capture all the URLs
+  resourceStore.capture(urlList, function(url, success, id) {
+    assert(!(url in results),
+           'Callback called more than once for url "%s"'.subs(url));
+    results[url] = 1;
+
+    if (urls[url] == -1) {
+      assert(!success, 'Capture of "%s" should have failed'.subs(url));
+    } else {
+      assert(success, 'Capture of "%s" should have succeeded'.subs(url));
+    }
+
+    // Once they are all complete, fetch them all to make sure they were
+    // captured correctly.
+    ++captureCompleteCount;
+    if (captureCompleteCount == urlList.length) {
+      fetchNextUrl();
+    }
   });
 
-  scheduleCallback(function() {
-    for (var url in urls) {
-      assert(Boolean(results[url]),
-             'Capture of "%s" did not complete'.subs(url));
-      
+  function fetchNextUrl() {
+    var url = urlList.shift();
+
+    if (!url) {
+      completeAsync();
+      return;
+    }
+
+    httpGet(url, function(content) {
       if (urls[url] == -1) {
-        assert(!results[url].success,
-               'Capture of "%s" should have failed'.subs(url));
-        assertNull(results[url].content,
+        assertNull(content,
                    'Should not have been able to fetch "%s"'.subs(url));
       } else {
-        assert(results[url].success,
-               'Capture of "%s" should have succeeded'.subs(url));
-        assertNotNull(results[url].content,
-                      'Should have been able to fetch "%s"'.subs(url));
-        assertEqual('text/plain', results[url].contentType,
+        assertNotNull(content, 'Should have been able to fetch "%s"'.subs(url));
+        assertEqual('text/plain', resourceStore.getHeader(url, "Content-Type"),
                     'Wrong contentType for url "%s"'.subs(url));
-        assertEqual(urls[url], results[url].length,
+        assertEqual(urls[url], content.length,
                    'Wrong content length for url "%s"'.subs(url));
       }
-    }
-  }, 400);
+
+      fetchNextUrl();
+    });
+  }
 }
 
 function testCaptureCrossDomain() {
-  var calledBack = false;
   var resourceStore = getFreshStore();
 
   assertError(function() {
     resourceStore.capture('http://cross.domain.not/',
         function(url, success, id) {
-      calledBack = true;
+      assert(false, 'Should not have fired callback');
     });
   }, null, 'Should have thrown error trying to capture cross-domain resource');
-
-  scheduleCallback(function() {
-    assert(!calledBack, 'Should not have fired callback');
-  }, 10);
 }
 
-function testCaptureWithNullCallback() {
-  var resourceStore = getFreshStore();
-  resourceStore.capture('../nonexistent_file', null);
+function testCaptureWithNullCallback() {	
+  var resourceStore = getFreshStore();	
+  resourceStore.capture('../nonexistent_file', null);	
 }
 
 function testGoodManifest() {
@@ -280,57 +264,50 @@ function testGoodManifest() {
   });
 
   // Then, capture a manifest containing many references to that URL
-  scheduleCallback(function() {
-    updateManagedStore("../manifest-good.txt",
-                 partial(checkGoodManifest, expectedUrl1Content));
-  }, 50);
-}
+  startAsync();
+  updateManagedStore("../manifest-good.txt", function(managedStore) {
+    assertEqual(UPDATE_STATUS.ok, managedStore.updateStatus,
+                'updateStatus should be OK after good manifest');
 
-function checkGoodManifest(expectedUrl1Content, managedStore) {
-  assertEqual(UPDATE_STATUS.ok, managedStore.updateStatus,
-              'updateStatus should be OK after good manifest');
+    // TODO(aa): It would be cool if we could actually return null in this case
+    assertEqual('', managedStore.lastErrorMessage,
+                'lastErrorMessage should be empty string after good manifest');
 
-  // TODO(aa): It would be cool if we could actually return null in this case
-  assertEqual('', managedStore.lastErrorMessage,
-              'lastErrorMessage should be empty string after good manifest');
+    var testUrls = [
+      '../manifest-url1.txt',
+      '../manifest-url1.txt?query',
+      '../alias-to-manifest-url1.txt',
+      '../redirect-to-manifest-url1.txt',
+      '../unicode?foo=bar'
+    ];
 
-  var testUrls = [
-    '../manifest-url1.txt',
-    '../manifest-url1.txt?query',
-    '../alias-to-manifest-url1.txt',
-    '../redirect-to-manifest-url1.txt',
-    '../unicode?foo=bar'
-  ];
-
-  for (var i = 0; i < testUrls.length; i++) {
-    assert(localServer.canServeLocally(testUrls[i]),
-           'Should be able to serve "%s" locally'.subs(testUrls[i]));
-  }
-
-  var fetchResults = {};
-
-  function fetchTestUrl(url) {
-    httpGet(url, function(content) {
-      fetchResults[url] = content;
-    });
-  }
-
-  // Fetch all the URLs and make sure they  have the right content
-  for (var i = 0; i < testUrls.length; i++) {
-    fetchTestUrl(testUrls[i]);
-  }
-
-  // Wait for them to complete and then verify contents. They are captured, so
-  // it should be fast.
-  scheduleCallback(function() {
     for (var i = 0; i < testUrls.length; i++) {
-      assertEqual(expectedUrl1Content, fetchResults[testUrls[i]],
-                  'Incorrect content for url "%s"'.subs(testUrls[i]));
+      assert(localServer.canServeLocally(testUrls[i]),
+             'Should be able to serve "%s" locally'.subs(testUrls[i]));
     }
-  }, 100);
+
+    fetchNextTestUrl();
+
+    function fetchNextTestUrl() {
+      var nextUrl = testUrls.shift();
+      if (!nextUrl) {
+        // we're done!
+        completeAsync();
+        return;
+      }
+
+      httpGet(nextUrl, function(content) {
+        assertEqual(expectedUrl1Content, content, 
+                    'Incorrect content for url "%s"'.subs(nextUrl));
+        fetchNextTestUrl();
+      });
+    }
+  });
 }
 
 function testBadManifest() {
+  startAsync();
+  
   updateManagedStore("../manifest-bad.txt", function(managedStore) {
     assertEqual(UPDATE_STATUS.failure, managedStore.updateStatus,
                 'updateStatus should be FAILED after bad manifest');
@@ -338,20 +315,28 @@ function testBadManifest() {
     var re = /^Download of '.+?url2.txt' returned response code 404$/;
     assert(re.test(managedStore.lastErrorMessage), 
            'Incorrect lastErrorMessage after bad manifest');
+
+    completeAsync();
   });
 }
 
 function testInvalidManifest() {
+  startAsync();
+
   updateManagedStore('../manifest-ugly.txt', function(managedStore) {
     assertEqual(UPDATE_STATUS.failure, managedStore.updateStatus,
                 'updateStatus should be FAILED after ivalid manifest');
 
     assert(managedStore.lastErrorMessage.startsWith("Invalid manifest"),
            'Incorrect lastErrorMessage after invalid manifest');
+
+    completeAsync();
   });
 }
 
 function testIllegalRedirectManifest() {
+  startAsync();
+
   updateManagedStore('../manifest-illegal-redirect.txt',
     function(managedStore) {
       assertEqual(
@@ -360,6 +345,8 @@ function testIllegalRedirectManifest() {
 
       assert(managedStore.lastErrorMessage.indexOf('302') > -1,
              'Incorrect lastErrorMessage after illegal-redirect manifest');
+
+      completeAsync();
     }
   );
 }

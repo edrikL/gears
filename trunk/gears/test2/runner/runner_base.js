@@ -53,13 +53,14 @@ RunnerBase.prototype.onAllTestsComplete = function() {};
 /**
  * Callback for when an asynchronous test has started.
  * @param name The name of the test that was started.
- * TODO(aa): This should really be called 'onScheduledCallback' or
- * 'onTestPending'.
+ * TODO(aa): We don't really need this. We can simply create each row in the
+ * 'pending' state to begin with and change it to complete when the test
+ * completes.
  */
 RunnerBase.prototype.onAsyncTestStart = function(name) {};
 
-/**
- * Callback for when any test is about to start.
- * @param name The name of the test that will be started.
- */
+/**	
+ * Callback for when any test is about to start.	
+ * @param name The name of the test that will be started.	
+ */	
 RunnerBase.prototype.onBeforeTestStart = function(name) {};

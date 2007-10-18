@@ -173,13 +173,33 @@ function assertError(fn, optExpectedError, optDescription) {
 }
 
 /**
- * Schedules a callback to continue a test at a later time.
- *
- * @param fn The function to call to resume the test.
- * @param timeoutMsec The amount of time to wait before resuming.
+ * Starts the current test running asynchronously. The next test will not be
+ * started until completeAsync() is called.
  */
-function scheduleCallback(fn, timeoutMsec) {
-  return Harness.current_.scheduleCallback(fn, timeoutMsec);
+function startAsync() {
+  Harness.current_.startAsync();
+}
+
+/**
+ * Marks the currently running asynchronous test as successful and starts the
+ * next test.
+ */
+function completeAsync() {
+  Harness.current_.completeAsync();
+}
+
+/**
+ * Wait for one or more global errors to occur before starting the next test. If
+ * the errors do not occur, occur out of order, or if some other error occurs,
+ * the test is marked failed.
+ *
+ * @param errorMessages Array of expected error substrings. When an error occurs
+ * the first item in this array is removed and compared to the full error text.
+ * If it occurs as a substring, the expected error is considered found.
+ * Otherwise the test is marked failed.
+ */
+function waitForGlobalErrors(errorMessages) {
+  Harness.current_.waitForGlobalErrors(errorMessages);
 }
 
 /**
@@ -216,79 +236,3 @@ function httpGet(url, callback) {
   req.open('GET', url, true); // async
   req.send(null);
 }
-
-/**
- * This class helps test for errors that are expected to be unhandled and
- * bubble up to the global handler.
- */
-function GlobalErrorHandler() {
-  bindMethods(this);
-
-  this.expectedErrors_ = [];
-  this.receivedErrors_ = [];
-
-  // Global errors are reported by a different object in workers than in the
-  // DOM.
-  var globalErrorSource = google.gears.workerPool || window;
-  globalErrorSource.onerror = this.handleError_;
-}
-
-/**
- * List of error substrings that are expected.
- */
-GlobalErrorHandler.prototype.expectedErrors_ = null;
-
-/**
- * List of error messages that have been received.
- */
-GlobalErrorHandler.prototype.receivedErrors_ = null;
-
-/**
- * Handle a top-level errors. Ir the error was expected, remember that it was
- * received for later checking. Otherwise, re-throw it.
- *
- * @param errorMessage The error to handle.
- */
-GlobalErrorHandler.prototype.handleError_ = function(errorMessage) {
-  // In workers, the errorMessage is actually an object with various properties,
-  // one of which is the message.
-  errorMessage = google.gears.workerPool ? errorMessage.message : errorMessage;
-
-  for (var i = 0; i < this.expectedErrors_.length; i++) {
-    if (errorMessage.indexOf(this.expectedErrors_[i]) > -1) {
-      // This is an error we were expecting. Note down that we got it and
-      // prevent the browser UI.
-      this.receivedErrors_.push(errorMessage);
-
-      // Remove the error from the expected list so that we minimize the chance
-      // we will remove other errors accidentally.
-      this.expectedErrors_.splice(i, 1);
-      return true;
-    }
-  }
-
-  // This is some other error. Fall through to the regular browser UI.
-  return false;
-};
-
-/**
- * Add an error to the list of expected ones.
- * @param A substring of the error message expected.
- */
-GlobalErrorHandler.prototype.expectError = function(errorMessageSubstring) {
-  this.expectedErrors_.push(errorMessageSubstring);
-};
-
-/**
- * Check to see if an expected error was in fact received.
- * @param errorMessageSubstring A substring of the error to search for.
- */
-GlobalErrorHandler.prototype.wasErrorReceived =
-    function(errorMessageSubstring) {
-  for (var i = 0; i < this.receivedErrors_.length; i++) {
-    if (this.receivedErrors_[i].indexOf(errorMessageSubstring) > -1) {
-      return true;
-    }
-  }
-  return false;
-};
