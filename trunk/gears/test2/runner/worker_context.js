@@ -117,3 +117,14 @@
     }), parentWorkerId);
   }
 })();
+
+/**
+ * Simple debug utility used to debug at all costs. Note that this is sometimes
+ * needed before we get the first message, hence the need to assume the parent
+ * worker ID.
+ */
+function printLine(msg) {
+  // HACK: assumes the parent worker id is zero.
+  // TODO(aa): Replace this when we have proper console support from workers.
+  google.gears.workerPool.sendMessage('DEBUG ' + msg, 0);
+}

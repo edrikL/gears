@@ -77,6 +77,14 @@ WorkerHost.prototype.load = function(url) {
  * @param senderId The ID of the worker sending the message.
  */
 WorkerHost.prototype.handleMessage_ = function(message, senderId) {
+  if (/^DEBUG/.test(message)) {
+    document.body.insertBefore(document.createElement("br"),
+                               document.body.firstChild);
+    document.body.insertBefore(document.createTextNode(message),
+                               document.body.firstChild);
+    return;
+  }
+
   message = JSON.parse(message);
 
   if (message.name == 'onTestsLoaded') {
