@@ -24,38 +24,48 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 function testGet200() {
+  startAsync();
   doRequest(
       '../test_file_1.txt', 'GET', null, null, // url, method, data, reqHeaders[]
       200, '1', null);  // expected status, responseText, responseHeaders[]
 }
 
 function testPost200() {
+  startAsync();
+
   var data = 'hello';
   var headers = [["Name1", "Value1"],
                  ["Name2", "Value2"]];
   var expectedHeaders = getExpectedEchoHeaders(headers);
+
   doRequest('../echo_request.php', 'POST', data, headers, 200, data,
             expectedHeaders); 
 }
 
 function testPost302_200() {
   // A POST that gets redirected should GET the new location
+  startAsync();
+
   var data = 'hello';
   var expectedHeaders = [["echo-Method", "GET"]];
+
   doRequest('../server_redirect.php?location=echo_request.php', 'POST', data,
             null, 200, null, expectedHeaders); 
 }
 
 function testGet404() {
+  startAsync();
   doRequest('../nosuchfile___', 'GET', null, null, 404, null, null);
 }
 
 function testGet302_200() {
+  startAsync();
   doRequest('../server_redirect.php?location=test_file_1.txt', 'GET', null,
             null, 200, '1', null);
 }
 
 function testGet302_404() {
+  startAsync();
   doRequest('../server_redirect.php?location=nosuchfile___', 'GET', null, null,
             404, null, null);
 }  
@@ -67,6 +77,7 @@ function testGetNoCrossOrigin() {
 }
 
 function testGet302NoCrossOrigin() {
+  startAsync();
   var headers = [["location", "http://www.google.com/"]];
   doRequest('../server_redirect.php?location=http://www.google.com/', 'GET',
             null, null, 302, "", headers);
@@ -80,42 +91,36 @@ function testRequestDisallowedHeaders() {
 }
 
 function testRequestReuse() {
+  startAsync();
+
   var reusedRequest = google.gears.factory.create('beta.httprequest', '1.0');
   var numGot = 0;
   var numToGet = 2;
 
-  var errorMessage = null;
-  var status;
-
   getOne();
   
   function getOne() {          
-    if (numGot >= numToGet) {
-      return;
-    }  
-    var url = '../echo_request.php?' + numGot++;
+    var url = '../echo_request.php?' + numGot;
     reusedRequest.onreadystatechange = function() {
       if (reusedRequest.readyState == 4) {
-        try {
-          status = reusedRequest.status;
+        assertEqual(200, reusedRequest.status);
+        ++numGot;
+        
+        if (numGot == numToGet) {
+          completeAsync();
+        } else {
           getOne();
-        } catch (e) {
-          errorMessage = e.message;
         }
       }
     };
     reusedRequest.open('GET', url, true);
     reusedRequest.send(null);
-  }    
-
-  scheduleCallback(function() {
-    assertEqual(numToGet, numGot, 'Did not expected number of requests');
-    assertNull(errorMessage, 'Unexpected error');
-    assertEqual(200, status, 'Unexpected status value');
-  }, 400);
+  }
 }
 
 function testGetCapturedResource() {
+  startAsync();
+
   var myLocalServer = google.gears.factory.create('beta.localserver', '1.0');
   // We don't delete and recreate the store or captured url to avoid
   // interfering with this same test running in the other thread. 
@@ -126,14 +131,11 @@ function testGetCapturedResource() {
   var captureSuccess;
 
   myStore.capture(url, function(url, success, id) {
-    captureSuccess = success;
-  });
-
-  scheduleCallback(function() {
+    assert(success, 'Expected captured to succeed');
     doRequest(url, 'GET', null, null, 200, null, null);
-  }, 100);
+  });
 }
-  
+
 function testGet_BinaryResponse() {
   // TODO(michaeln): do something reasonable with binary responses
 }
@@ -168,50 +170,48 @@ function getExpectedEchoHeaders(requestHeaders) {
 function doRequest(url, method, data, requestHeaders, expectedStatus,
                    expectedResponse, expectedHeaders) {
   var request = google.gears.factory.create('beta.httprequest', '1.0');
-  var isComplete = false;
-  var status;
-  var statusText;
-  var headers;
-  var calledTooManyTimes = false;
-  var responseText;
 
-  request.onreadystatechange = function() {
-    var state = request.readyState;
-    if (state < 0 || state > 4) {
-      throw new Error('Invalid readyState value, ' + state);
-    }
-    if (request.readyState >= 3) {
-      // fetch all of the values we can fetch
-      status = request.status;
-      statusText = request.statusText;
-      headers = request.getAllResponseHeaders();
-
-      if (request.readyState == 4) {
-        if (isComplete) {
-          calledTooManyTimes = true;
-          return;
-        }
-        isComplete = true;
-        responseText = request.responseText;
-      }
-    }
-  };
+  request.onreadystatechange = handleReadyStateChange;
   request.open(method, url, true);
+
   if (requestHeaders) {
     for (var i = 0; i < requestHeaders.length; ++i) {
       request.setRequestHeader(requestHeaders[i][0],
                                requestHeaders[i][1]);
     }
   }
+
   request.send(data);
 
-  scheduleCallback(function() {
+  var success = false;
+  function handleReadyStateChange() {
+    var state = request.readyState;
+    assert(state >= 0 && state <= 4, 'Invalid readyState value, ' + state);
+
+    if (state != 4) {
+      return;
+    }
+
+    assert(!success,
+           'onreadystatechange called multiple times with readyState == 4');
+    success = true;
+
+    // Make sure we can fetch all properties
+    assert(isNumber(request.status),
+           'Should be able to get status after request');
+    assert(isString(request.statusText),
+           'Should be able to get statusText after request');
+    assert(isString(request.getAllResponseHeaders()),
+           'Should be able to call getAllResponseHeaders() after request');
+    assert(isString(request.responseText),
+           'Should be able to get responseText after request');
+
     // see if we got what we expected to get
-    var msg = '';
     if (expectedStatus != null) {
-      assertEqual(expectedStatus, status,
+      assertEqual(expectedStatus, request.status,
                   'Wrong value for status property');
     }
+
     if (expectedHeaders != null) {
       for (var i = 0; i < expectedHeaders.length; ++i) {
         var name = expectedHeaders[i][0];
@@ -221,8 +221,11 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
                     'Wrong value for header "%s"'.subs(name));
       }
     }
-    if (isComplete && expectedResponse != null) {
-      assertEqual(expectedResponse, responseText, 'Wrong responseText');
+
+    if (expectedResponse != null) {
+      assertEqual(expectedResponse, request.responseText, 'Wrong responseText');
     }
-  }, 200);
+
+    completeAsync();
+  }
 }

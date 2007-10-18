@@ -23,90 +23,77 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-var globalErrorHandler = new GlobalErrorHandler();
-
 var currentUrl = location.href;
 
-var sameOriginPath = currentUrl.substring(0, 1 + currentUrl.lastIndexOf('/'));
+var sameOriginPath =
+  currentUrl.substring(0, 1 + currentUrl.lastIndexOf('/'));
 var sameOriginWorkerFile = '../workerpool_same_origin.js';
 
-// TODO(aa): Change this to the file in the test2 directory after the initial
-// checkin when these files are copied to SVN.
+// TODO(aa): Change this to test2 when the code is mirrored to SVN.
 var crossOriginPath =
   'http://google-gears.googlecode.com/svn/trunk/gears/test/';
 var crossOriginWorkerFile = 'unit_tests_worker_cross_origin.js';
 var crossOriginWorkerFileNoPerms = 'unit_tests_worker_same_origin.js';
 
 function testCreateWorkerFromUrl1() {
-  var onmessageCalled;
+  startAsync();
+
   var wp = google.gears.factory.create('beta.workerpool', '1.1');
   wp.onmessage = function(text, sender, m) {
-    onmessageCalled = true;
+    completeAsync();
   }
   var childId = wp.createWorkerFromUrl(sameOriginWorkerFile);
   wp.sendMessage('PING1', childId);
-
-  scheduleCallback(function() {
-    assert(onmessageCalled, 'Onmessage should have been called');
-  }, 100);
 }
 
 function testCreateWorkerFromUrl2() {
+  startAsync();
+
   // Cleanup any local DB before starting test.  
   var db = google.gears.factory.create('beta.database', '1.0');
   db.open('worker_js');
   db.execute('drop table if exists PING2').close();
   db.close();
 
-  var onmessageCalled;
-  var tableExists;
-
   var wp = google.gears.factory.create('beta.workerpool', '1.1');
   wp.onmessage = function(text, sender, m) {
-    onmessageCalled = true;
-
     // Worker database SHOULD exist in parent origin.
     var db = google.gears.factory.create('beta.database', '1.0');
     db.open('worker_js');
     var rs = db.execute('select * from sqlite_master where name = ? limit 1',
                         ['PING2']);
     handleResult(rs, function(rs) {
-      tableExists = rs.isValidRow();
+      assert(rs.isValidRow(), 'PING2 table should have been created');
     });
     db.close();
+    completeAsync();
   };
+
   var childId = wp.createWorkerFromUrl(sameOriginPath + sameOriginWorkerFile);
   wp.sendMessage('PING2', childId);
-
-  scheduleCallback(function() {
-    assert(onmessageCalled, 'Onmessage should have been called');
-    assert(tableExists, 'PING2 table should have been created');
-  }, 100);
 }
 
 function testCreateWorkerFromUrl3() {
+  startAsync();
+
   // Cleanup any local DB before starting test.  
   var db = google.gears.factory.create('beta.database', '1.0');
   db.open('worker_js');
   db.execute('drop table if exists PING3').close();
   db.close();
 
-  var onmessageCalled;
-  var tableExists;
-
   var wp = google.gears.factory.create('beta.workerpool', '1.1');
   wp.onmessage = function(text, sender, m) {
-    onmessageCalled = true;
-
     // Worker database should NOT exist in parent origin.
     var db = google.gears.factory.create('beta.database', '1.0');
     db.open('worker_js');
     var rs = db.execute('select * from sqlite_master where name = ? limit 1',
                         ['PING3']);
     handleResult(rs, function(rs) {
-      tableExists = rs.isValidRow();
+      assert(!rs.isValidRow(), 'PING3 table should not have been created');
     });
     db.close();
+    completeAsync();
   };
 
   // TODO(cprince): In dbg builds, add a 2nd param to createWorkerFromUrl()
@@ -119,24 +106,15 @@ function testCreateWorkerFromUrl3() {
   //                                        crossOriginPath);
   //}
   wp.sendMessage('PING3', childId);
-
-  scheduleCallback(function() {
-    assertEqual(true, onmessageCalled, 'Onmessage should have been called');
-    assertEqual(false, tableExists, 'PING3 table should not exist');
-  }, 5000);
 }
 
 function testCreateWorkerFromUrl4() {
   var workerUrl = 'http://example.com/non-existent-file.js';
 
-  var wp = google.gears.factory.create('beta.workerpool', '1.1');
-  globalErrorHandler.expectError(workerUrl);
-  wp.createWorkerFromUrl(workerUrl);
+  waitForGlobalErrors([workerUrl]);
 
-  scheduleCallback(function() {
-    assert(globalErrorHandler.wasErrorReceived(workerUrl),
-           'Expected error trying to load non-existant worker');
-  }, 5000);
+  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  wp.createWorkerFromUrl(workerUrl);
 }
 
 function testCreateWorkerFromUrl5() {
@@ -148,15 +126,11 @@ function testCreateWorkerFromUrl5() {
   // TODO(aa): Investigate why this happens -- ThreadInfo objects are
   // AddRef()'ing the workerpool, so I would assume this shouldn't be possible.
   testCreateWorkerFromUrl5.wp = wp;
-  globalErrorHandler.expectError(expectedError);
+
+  waitForGlobalErrors([expectedError]);
+
   var childId = wp.createWorkerFromUrl(
     crossOriginPath + crossOriginWorkerFileNoPerms);
   // TODO(cprince): Could add debug-only origin override here too.
   wp.sendMessage('PING5', childId);
-
-  scheduleCallback(function() {
-    assert(globalErrorHandler.wasErrorReceived(expectedError),
-           'Expected error trying to load worker that does not have ' +
-           'permission to access gears');
-  }, 5000);
 }

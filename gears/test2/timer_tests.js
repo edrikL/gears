@@ -24,66 +24,59 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 function testTimeout() {
-  var success = false;
   var timerFired = false;
 
+  startAsync();
   timer.setTimeout(function() {
-    // Set success to true on the first firing, false if it fires again.
-    success = !timerFired;
-    timerFired = true;
+    assert(!timerFired, 'Timer fired more than once');
+    completeAsync();
   }, 20);
-
-  scheduleCallback(function() {
-    assert(timerFired, 'Timer did not fire');
-    assert(success, 'Timer fired more than once');
-  }, 100);
 }
 
 function testInterval() {
-  var timerId = timer.setInterval(intervalHandler, 20);
   var targetIntervals = 3;
   var intervals = 0;
 
+  startAsync();
+  var timerId = timer.setInterval(intervalHandler, 20);
+
   function intervalHandler() {
-    if (++intervals == targetIntervals) {
+    ++intervals;
+
+    if (intervals == targetIntervals) {
       timer.clearInterval(timerId);
+      completeAsync();
+    } else if (intervals > targetIntervals) {
+      assert(false, 'Timer fired too many times');
     }
   }
-
-  scheduleCallback(function() {
-    assertEqual(3, targetIntervals);
-  }, 100); // Give a little leeway
 }
-
 
 testScriptTimeout.fired = false;
-testScriptTimeout.succeeded = false;
 
 function testScriptTimeout() {
-  timer.setTimeout('testScriptTimeout.succeeded = !testScriptTimeout.fired;' +
-                   'testScriptTimeout.fired = true;',
-                   20);
-
-  scheduleCallback(function() {
-    assert(testScriptTimeout.fired, 'Timer did not fire');
-    assert(testScriptTimeout.succeeded, 'Timer fired more than once');
-  }, 100);
+  startAsync();
+  timer.setTimeout(
+    'assert(!testScriptTimeout.fired);' +
+    'testScriptTimeout.fired = true;' +
+    'completeAsync();',
+    20);
 }
-
 
 testScriptInterval.intervals = 0;
 testScriptInterval.targetIntervals = 3;
 
 function testScriptInterval() {
+  startAsync();
   testScriptInterval.timerId = timer.setInterval(
         'testScriptInterval.intervals++;' +
         'if (testScriptInterval.intervals == ' +
         '    testScriptInterval.targetIntervals) {' +
         '  timer.clearInterval(testScriptInterval.timerId);' +
+        '  completeAsync();' +
+        '} else if (testScriptInterval.intervals > ' +
+        '           testScriptInterval.targetIntervals) {' +
+        '  assert(false, "Timer fired too many times");' +
         '}',
         20);
-
-  scheduleCallback(function() {
-    assertEqual(3, testScriptInterval.targetIntervals);
-  }, 100);
 }

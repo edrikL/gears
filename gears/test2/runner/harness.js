@@ -50,6 +50,11 @@ function Harness() {
 Harness.inherits(RunnerBase);
 
 /**
+ * Length of time to wait before giving up on async tests.
+ */
+Harness.ASYNC_TIMEOUT_MSEC = 10000; // 10 seconds
+
+/**
  * The current harness active in this context.
  */
 Harness.current_ = null;
@@ -58,11 +63,6 @@ Harness.current_ = null;
  * The latest GearsHttpRequest instance used.
  */
 Harness.prototype.request_ = null;
-
-/**
- * Whether the last test called scheduleCallback().
- */
-Harness.prototype.scheduledCallback_ = false;
 
 /**
  * The name of current running test.
@@ -89,6 +89,21 @@ Harness.prototype.testNames_ = null;
  * The index of the current running test in testNames_.
  */
 Harness.prototype.currentTestIndex_ = -1;
+
+/**
+ * The id of the timer that is used to timeout startAsync().
+ */
+Harness.prototype.asyncTimerId_ = null;
+
+/**
+ * The id of the timer that is used to timeout waitForGlobalErrors().
+ */
+Harness.prototype.globalErrorTimerId_ = null;
+
+/**
+ * A list of global errors being waited for with waitForGlobalErrors().
+ */
+Harness.prototype.expectedGlobalErrors_ = null;
 
 /**
  * Load and run a test file.
@@ -154,6 +169,14 @@ Harness.prototype.runTests_ = function() {
     }
   }
 
+  // The global error handler is in a different place inside a worker than in
+  // a document.
+  if (google.gears.workerPool) {
+    google.gears.workerPool.onerror = this.handleGlobalError_;
+  } else {
+    window.onerror = this.handleGlobalError_;
+  }
+
   this.runNextTest_();
 };
 
@@ -161,6 +184,17 @@ Harness.prototype.runTests_ = function() {
  * Starts the next test, or ends the test run if there are no more tests.
  */
 Harness.prototype.runNextTest_ = function() {
+  // Clear any async timer still dangling from the previous test
+  if (this.asyncTimerId_) {
+    timer.clearTimeout(this.asyncTimerId_);
+    this.asyncTimerId_ = null;
+  }
+
+  if (this.globalErrorTimerId_) {
+    timer.clearTimeout(this.globalErrorTimerId_);
+    this.globalErrorTimerId_ = null;
+  }
+
   this.currentTestIndex_++;
 
   if (this.currentTestIndex_ == this.testNames_.length) {
@@ -171,48 +205,151 @@ Harness.prototype.runNextTest_ = function() {
 
   // Start the next test
   this.currentTestName_ = this.testNames_[this.currentTestIndex_];
-  this.onBeforeTestStart(this.currentTestName_);
-  this.startOrResumeCurrentTest_(this.globalScope_[this.currentTestName_]);
-};
+  this.expectedErrors_ = null;
 
-/**
- * Starts or resumes the current test using the supplied function.
- */
-Harness.prototype.startOrResumeCurrentTest_ = function(testFunction) {
-  this.scheduledCallback_ = false;
+  // Tests that caller thinks are going to be async can sometimes actually work
+  // out to be synchronous (eg, when xhr.onreadystatechange fires inside
+  // send()). Detect this by comparing currentTestIndex_ before and after the
+  // test is executed.
+  var testIndexBefore = this.currentTestIndex_;
 
-  var success = true;
-  try {
-    testFunction();
-  } catch (e) {
-    success = false;
-    this.onTestComplete(this.currentTestName_, false,
-                        e.message || e); // sometimes the error is just a string
+  // This might throw, but that is OK -- handleGlobalError_ will get called and
+  // we continue there. Doing that is better than try/catch here so that when
+  // unit tests fail the default browser error UI gets invoked, which contains
+  // more information than we can easily get out of a caught error.
+  this.globalScope_[this.currentTestName_]();
+
+  // If the test index has changed, the test already called completeAsync.
+  if (testIndexBefore != this.currentTestIndex_) {
+    return;
   }
 
-  if (!this.scheduledCallback_) {
-    if (success) {
-      this.onTestComplete(this.currentTestName_, true);
-    }
-
+  // The test was started successfully if we got here, but it might not be done.
+  // If the test wasn't asynchronous, it is done, so finish up and move on.
+  if (!this.asyncTimerId_ && !this.globalErrorTimerId_) {
+    this.onTestComplete(this.currentTestName_, true);
     this.runNextTest_();
   }
 };
 
 /**
- * Schedules a callback for the current test. This method is exported into the
- * global scope when running tests.
- * @param callback The function to call to check results later.
- * @param delayMs The length of time to wait to call callback.
- *
+ * Starts the current test running asynchronously. After this is called,
+ * completeAsync() must eventually be called or the test will be marked as
+ * failed after a timeout period.
  */
-Harness.prototype.scheduleCallback = function(callback, delayMs) {
-  if (this.scheduledCallback_) {
-    throw new Error('There is already a callback scheduled for this test');
+Harness.prototype.startAsync = function() {
+  if (this.asyncTimerId_) {
+    throw new Error('Test is already asynchronous');
   }
 
   this.onAsyncTestStart(this.currentTestName_);
 
-  this.scheduledCallback_ = true;
-  timer.setTimeout(partial(this.startOrResumeCurrentTest_, callback), delayMs);
+  this.asyncTimerId_ = timer.setTimeout(this.handleAsyncTimeout_,
+                                        Harness.ASYNC_TIMEOUT_MSEC);
+};
+
+/**
+ * Called when an async test times out. Mark the test failed and start the next
+ * test.
+ */
+Harness.prototype.handleAsyncTimeout_ = function() {
+  this.asyncTimerId_ = null;
+  this.onTestComplete(this.currentTestName_, false,
+                      'Asynchronous test timed out. Call completeAsync() to ' +
+                      'mark an asynchronous test successful.');
+
+  this.runNextTest_();
+};
+
+/**
+ * Marks the currently running asynchronous test as complete and starts the next
+ * test.
+ */
+Harness.prototype.completeAsync = function() {
+  if (!this.asyncTimerId_) {
+    throw new Error('Test is not asynchronous');
+  }
+
+  this.onTestComplete(this.currentTestName_, true);
+  this.runNextTest_();
+};
+
+/**
+ * Wait for the specified global errors to occur and then run the next test. If
+ * the errors do not occur, in order, or if a different error occurs, the test
+ * is marked failed.
+ *
+ * Each error message is a substring of a global error that is expected to
+ * occur.
+ */
+Harness.prototype.waitForGlobalErrors = function(errorMessages) {
+  // TODO(aa): Support a callback after all expected errors have been caught?
+  // This would allow tests to verify that invariants are preserved after errors
+  // are thrown.
+  if (this.expectedErrors_) {
+    throw new Error('Already waiting for errors');
+  }
+
+  if (!errorMessages.length) {
+    throw new Error('Must specify array of at least one expected global error');
+  }
+
+  this.onAsyncTestStart(this.currentTestName_);
+
+  this.expectedErrors_ = errorMessages;
+  this.globalErrorTimerId_ = timer.setTimeout(this.handleGlobalErrorTimeout_,
+                                              Harness.ASYNC_TIMEOUT_MSEC);
+};
+
+/**
+ * Called just before an error is reported to the browser UI. Decide whether to
+ * let the browser display the error (if the error was unexpected) and whether
+ * to start the next test (if there are no more errors we are waiting for).
+ */
+Harness.prototype.handleGlobalError_ = function(message) {
+  // In the case of workers, message is actually an error object with a message
+  // property.
+  if (google.gears.workerPool) {
+    message = message.message;
+  }
+
+  var expectedError = this.expectedErrors_ && this.expectedErrors_.shift();
+
+  // If the error was expected, swallow it and either wait for the next expected
+  // error or run the next test.
+  if (expectedError && message.indexOf(expectedError) > -1) {
+    if (!this.expectedErrors_.length) {
+      // No more expected errors, mark test succeeded and continue.
+      this.onTestComplete(this.currentTestName_, true);
+      this.runNextTest_();
+    } // else, wait for the next error
+
+    return true; // swallow the error, don't show the browser default error UI.
+  }
+
+  // If the error was unexpected, show an error and run the next test.
+  if (expectedError) {
+    // There was an expected error, but the received error doesn't match.
+    this.onTestComplete(
+      this.currentTestName_, false,
+      'Error "%s" does not match expected error "%s"'.subs(
+        message, expectedError));
+  } else {
+    this.onTestComplete(this.currentTestName_, false, message);
+  }
+
+  this.runNextTest_();
+  return false; // show the browser default error UI.
+};
+
+/**
+ * Called when waitForGlobalErrors() times out. Mark the test as failed and
+ * start the next one.
+ */
+Harness.prototype.handleGlobalErrorTimeout_ = function() {
+  this.globalErrorTimerId_ = null;
+  this.onTestComplete(
+    this.currentTestName_, false,
+    'Expected errors did not occur: ' + this.expectedErrors_.join(','));
+  this.runNextTest_();
 };
