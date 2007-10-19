@@ -1,4 +1,15 @@
-m4_changequote(`^',`^')m4_dnl
+m4_changequote(`[',`]')m4_dnl
+m4_changequote([~`],[`~])m4_dnl
+m4_define(~`m4_underscore`~, ~`m4_translit(~`$1`~,~`-`~,~`_`~)`~)m4_dnl
+m4_divert(~`-1`~)
+# foreach(x, (item_1, item_2, ..., item_n), stmt)
+#   parenthesized list, simple version
+m4_define(~`m4_foreach`~,
+~`m4_pushdef(~`$1`~)_foreach($@)m4_popdef(~`$1`~)`~)
+m4_define(~`_arg1`~, ~`$1`~)
+m4_define(~`_foreach`~, ~`m4_ifelse(~`$2`~, ~`()`~, ~``~,
+  ~`m4_define(~`$1`~, _arg1$2)$3~``~$0(~`$1`~, (m4_shift$2), ~`$3`~)`~)`~)
+m4_divert~``~m4_dnl
 <?xml version='1.0' ?>
 
 <!--
@@ -84,10 +95,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 <Component Id='OurIEDirFiles' Guid='$(var.OurComponentGUID_IEFiles)'>
                   <File Id='ie_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
                     Source="$(var.OurIEPath)/PRODUCT_SHORT_NAME_UQ.dll" SelfRegCost="1" />
-m4_ifdef(^DEBUG^,^m4_dnl
+m4_ifdef(~`DEBUG`~,~`m4_dnl
                   <File Id='ie_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
                     Source="$(var.OurIEPath)/PRODUCT_SHORT_NAME_UQ.pdb" />
-^)
+`~)
                 </Component>
               </Directory>
             </Directory>
@@ -108,10 +119,10 @@ m4_ifdef(^DEBUG^,^m4_dnl
                     DiskId='1' Source="$(var.OurFFPath)/components/bootstrap.js" />
                   <File Id='ff_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.dll" />
-m4_ifdef(^DEBUG^,^m4_dnl
+m4_ifdef(~`DEBUG`~,~`m4_dnl
                   <File Id='ff_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.pdb" />
-^)
+`~)
                   <File Id='ff_xpt' Name='PRODUCT_SHORT_NAME_UQ.xpt' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.xpt" />
                 </Component>
@@ -135,10 +146,6 @@ m4_ifdef(^DEBUG^,^m4_dnl
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/html_dialog.js" />
                       <File Id='ff_json_noeval.js' Name='json_noeval.js'
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/json_noeval.js" />
-                      <File Id='ff_permissions_dialog.html' Name='permissions_dialog.html'
-                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/permissions_dialog.html" />
-                      <File Id='ff_settings_dialog.html' Name='settings_dialog.html'
-                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/settings_dialog.html" />
                       <File Id='ff_browser_overlay.js' Name='browser-overlay.js'
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/browser-overlay.js" />
                       <File Id='ff_browser_overlay.xul' Name='browser-overlay.xul'
@@ -148,13 +155,19 @@ m4_ifdef(^DEBUG^,^m4_dnl
                     </Component>
                   </Directory>
                   <Directory Id='OurFFLocaleDir' Name='locale'>
-                    <Directory Id='OurFFEnUsDir' Name='en-US'>
-                      <Component Id='OurFFEnUsDirFiles'
-                        Guid='$(var.OurComponentGUID_FFEnUsDirFiles)'>
-                        <File Id='ff_en_US_i18n.dtd' Name='i18n.dtd'
-                          DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/locale/en-US/i18n.dtd" />
+m4_foreach(~`LANG`~, I18N_LANGUAGES, ~`m4_dnl
+                    <Directory Id='~`Our`~m4_underscore(LANG)~`Dir`~' Name='LANG'>
+                      <Component Id='~`OurFF`~m4_underscore(LANG)~`DirFiles`~'
+                        Guid='$(var.~`OurComponentGUID_FFLang`~m4_underscore(LANG)~`DirFiles`~)'>
+                        <File Id='~`ff_`~m4_underscore(LANG)~`_i18n.dtd`~' Name='i18n.dtd'
+                          DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/locale/LANG/i18n.dtd" />
+                        <File Id='~`ff_`~m4_underscore(LANG)~`_permissions_dialog.html`~' Name='permissions_dialog.html'
+                          DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/locale/LANG/permissions_dialog.html" />
+                        <File Id='~`ff_`~m4_underscore(LANG)~`_settings_dialog.html`~' Name='settings_dialog.html'
+                          DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/locale/LANG/settings_dialog.html" />
                       </Component>
                     </Directory>
+`~)m4_dnl
                   </Directory>
                 </Directory>
               </Directory>
@@ -181,7 +194,9 @@ m4_ifdef(^DEBUG^,^m4_dnl
       <ComponentRef Id='OurFFComponentsDirFiles' />
       <ComponentRef Id='OurFFLibDirFiles' />
       <ComponentRef Id='OurFFContentDirFiles' />
-      <ComponentRef Id='OurFFEnUsDirFiles' />
+m4_foreach(~`LANG`~, I18N_LANGUAGES, ~`m4_dnl
+      <ComponentRef Id='~`OurFF`~m4_underscore(LANG)~`DirFiles`~' />
+`~)m4_dnl
     </Feature>
     <Condition Message='PRODUCT_FRIENDLY_NAME_UQ has already been updated.'>
       NOT NEWERVERSIONDETECTED

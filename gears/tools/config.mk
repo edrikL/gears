@@ -250,7 +250,7 @@ M4FLAGS  += --prefix-builtins
 
 ifeq ($(MODE),dbg)
 CPPFLAGS += -DDEBUG=1
-M4FLAGS  += -DDEBUG=1  
+M4FLAGS  += -DDEBUG=1
 else
 CPPFLAGS += -DNDEBUG=1
 M4FLAGS  += -DNDEBUG=1
@@ -270,6 +270,13 @@ M4FLAGS  += -DPRODUCT_VERSION_BUILD=$(BUILD)
 M4FLAGS  += -DPRODUCT_VERSION_PATCH=$(PATCH)
 
 M4FLAGS  += -DPRODUCT_OS=$(OS)
+
+# These three macros are suggested by the GNU make documentation for creating
+# a comma-separated list.
+COMMA    := ,
+EMPTY    :=
+SPACE    := $(EMPTY) $(EMPTY)
+M4FLAGS  += -DI18N_LANGUAGES=($(subst $(SPACE),$(COMMA),$(strip $(I18N_LANGS))))
 
 # The friendly name can include spaces.
 # The short name should be lowercase_with_underscores.
