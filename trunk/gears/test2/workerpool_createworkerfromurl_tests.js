@@ -134,3 +134,12 @@ function testCreateWorkerFromUrl5() {
   // TODO(cprince): Could add debug-only origin override here too.
   wp.sendMessage('PING5', childId);
 }
+
+function testOneShotWorkerFromUrl() {
+  // Not having a global reference to wp or any callbacks causes this
+  // GearsWorkerPool instance to get GC'd before page unload. This found a bug
+  // where the HttpRequest used to load from url was getting destroyed from a
+  // different thread than it was created on.
+  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  wp.createWorkerFromUrl(sameOriginWorkerFile);
+}
