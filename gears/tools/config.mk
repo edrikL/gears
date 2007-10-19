@@ -276,7 +276,7 @@ M4FLAGS  += -DPRODUCT_OS=$(OS)
 COMMA    := ,
 EMPTY    :=
 SPACE    := $(EMPTY) $(EMPTY)
-M4FLAGS  += -DI18N_LANGUAGES=($(subst $(SPACE),$(COMMA),$(strip $(I18N_LANGS))))
+M4FLAGS  += -DI18N_LANGUAGES="($(subst $(SPACE),$(COMMA),$(strip $(I18N_LANGS))))"
 
 # The friendly name can include spaces.
 # The short name should be lowercase_with_underscores.
