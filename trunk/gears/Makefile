@@ -322,14 +322,38 @@ IE_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
-# ui/common
+# ui/generated
+#
+# Anything with the _I18N suffix will be expanded for each language in
+# I18N_LANGS
 
-COMMON_VPATH	+= \
-		ui/common \
+I18N_LANGS	+= \
+		en-US \
 		$(NULL)
 
-COMMON_M4SRCS	+= \
+# ui/generated is not specified here, because it's included in the generated
+# name for _I18N source files.
+COMMON_VPATH	+= \
+		$(NULL)
+
+COMMON_M4SRCS_I18N += \
 		permissions_dialog.html.m4 \
+		settings_dialog.html.m4 \
+		$(NULL)
+
+FF_VPATH	+= \
+		$(NULL)
+
+FF_M4SRCS_I18N	+= \
+		i18n.dtd.m4 \
+		$(NULL)
+
+IE_VPATH	+= \
+		ui/generated \
+		$(NULL)
+
+IE_M4SRCS	+= \
+		ui_html.rc.m4 \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -344,7 +368,6 @@ FF_M4SRCS	+= \
 		browser-overlay.js.m4 \
 		browser-overlay.xul.m4 \
 		chrome.manifest.m4 \
-		i18n-en-US.dtd.m4 \
 		$(NULL)
 
 FF_IDLSRCS	+= \

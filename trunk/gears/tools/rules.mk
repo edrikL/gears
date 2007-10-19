@@ -38,15 +38,22 @@ OUTDIR = bin-$(MODE)
 #
 # INSTALLERS_OUTDIR doesn't include $(ARCH) because OSes that support
 # multiple CPU architectures (namely, OSX) have merged install packages.
-COMMON_OUTDIR	   = $(OUTDIR)/$(OS)-$(ARCH)/common
-FF_OUTDIR	   = $(OUTDIR)/$(OS)-$(ARCH)/ff
-IE_OUTDIR	   = $(OUTDIR)/$(OS)-$(ARCH)/ie
-SQLITE_OUTDIR	   = $(COMMON_OUTDIR)/sqlite
-THIRD_PARTY_OUTDIR = $(COMMON_OUTDIR)/third_party
-INSTALLERS_OUTDIR  = $(OUTDIR)/installers
+COMMON_OUTDIR	    = $(OUTDIR)/$(OS)-$(ARCH)/common
+FF_OUTDIR	    = $(OUTDIR)/$(OS)-$(ARCH)/ff
+IE_OUTDIR	    = $(OUTDIR)/$(OS)-$(ARCH)/ie
+SQLITE_OUTDIR	    = $(COMMON_OUTDIR)/sqlite
+THIRD_PARTY_OUTDIR  = $(COMMON_OUTDIR)/third_party
+INSTALLERS_OUTDIR   = $(OUTDIR)/installers
+COMMON_OUTDIRS_I18N = $(foreach lang,$(I18N_LANGS),$(COMMON_OUTDIR)/genfiles/i18n/$(lang))
+FF_OUTDIRS_I18N	    = $(foreach lang,$(I18N_LANGS),$(FF_OUTDIR)/genfiles/i18n/$(lang))
+IE_OUTDIRS_I18N	    = $(foreach lang,$(I18N_LANGS),$(IE_OUTDIR)/genfiles/i18n/$(lang))
 # TODO(cprince): unify the Firefox directory name across the output dirs
 # (where it is 'ff') and the source dirs (where it is 'firefox').  Changing
 # the output dirs would require changing #includes that reference genfiles.
+
+# This is the base directory used for I18N files.  Files used under it
+# will keep their relative sub-directory.
+I18N_INPUTS_BASEDIR = ui/generated
 
 COMMON_OBJS = \
 	$(patsubst %.cc,$(COMMON_OUTDIR)/%$(OBJ_SUFFIX),$(COMMON_CPPSRCS)) \
@@ -76,16 +83,11 @@ COMMON_RESOURCES = \
 	ui/common/html_dialog.css \
 	ui/common/html_dialog.js \
 	ui/common/icon_32x32.png \
-	third_party/jsonjs/json_noeval.js \
-	$(COMMON_OUTDIR)/genfiles/permissions_dialog.html \
-	$(COMMON_OUTDIR)/genfiles/settings_dialog.html
+	third_party/jsonjs/json_noeval.js
 
 FF_RESOURCES = \
 	$(FF_OUTDIR)/genfiles/browser-overlay.js \
 	$(FF_OUTDIR)/genfiles/browser-overlay.xul
-
-FF_LOCALE = \
-	$(FF_OUTDIR)/genfiles/i18n-en-US.dtd
 # End: resource lists that MUST be kept in sync with "win32_msi.wxs.m4"
 
 DEPS = \
@@ -111,6 +113,13 @@ FF_M4FILES = \
 	$(patsubst %.m4,$(FF_OUTDIR)/genfiles/%,$(FF_M4SRCS))
 IE_M4FILES = \
 	$(patsubst %.m4,$(IE_OUTDIR)/genfiles/%,$(IE_M4SRCS))
+
+COMMON_M4FILES_I18N = \
+	$(foreach lang,$(I18N_LANGS),$(addprefix $(COMMON_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$(COMMON_M4SRCS_I18N))))
+FF_M4FILES_I18N = \
+	$(foreach lang,$(I18N_LANGS),$(addprefix $(FF_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$(FF_M4SRCS_I18N))))
+IE_M4FILES_I18N = \
+	$(foreach lang,$(I18N_LANGS),$(addprefix $(IE_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$(IE_M4SRCS_I18N))))
 
 FF_VPATH += $(FF_OUTDIR)/genfiles
 
@@ -171,19 +180,19 @@ endif
 
 windowsinstaller:: $(WIN32_INSTALLER_MSI)
 
-prereqs:: $(COMMON_OUTDIR) $(SQLITE_OUTDIR) $(THIRD_PARTY_OUTDIR) $(COMMON_OUTDIR)/genfiles $(INSTALLERS_OUTDIR)
+prereqs:: $(COMMON_OUTDIR) $(SQLITE_OUTDIR) $(THIRD_PARTY_OUTDIR) $(COMMON_OUTDIR)/genfiles $(COMMON_OUTDIRS_I18N) $(INSTALLERS_OUTDIR)
 
 genheaders::
 
 ifeq ($(BROWSER),FF)
-prereqs:: $(FF_OUTDIR)/genfiles $(COMMON_M4FILES) $(FF_M4FILES)
+prereqs:: $(FF_OUTDIR)/genfiles $(FF_OUTDIRS_I18N) $(COMMON_M4FILES) $(COMMON_M4FILES_I18N) $(FF_M4FILES) $(FF_M4FILES_I18N)
 genheaders:: $(FF_GEN_HEADERS)
 modules:: $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB)
 installer:: $(FF_INSTALLER_XPI)
 endif
 
 ifeq ($(BROWSER),IE)
-prereqs:: $(IE_OUTDIR)/genfiles $(COMMON_M4FILES) $(IE_M4FILES)
+prereqs:: $(IE_OUTDIR)/genfiles $(IE_OUTDIRS_I18N) $(COMMON_M4FILES) $(COMMON_M4FILES_I18N) $(IE_M4FILES) $(IE_M4FILES_I18N)
 genheaders:: $(IE_GEN_HEADERS)
 modules:: $(IE_MODULE_DLL)
 endif
@@ -201,9 +210,15 @@ $(THIRD_PARTY_OUTDIR):
 	"mkdir" -p $@
 $(COMMON_OUTDIR)/genfiles:
 	"mkdir" -p $@
+$(COMMON_OUTDIRS_I18N):
+	"mkdir" -p $@
 $(FF_OUTDIR)/genfiles:
 	"mkdir" -p $@
+$(FF_OUTDIRS_I18N):
+	"mkdir" -p $@
 $(IE_OUTDIR)/genfiles:
+	"mkdir" -p $@
+$(IE_OUTDIRS_I18N):
 	"mkdir" -p $@
 $(INSTALLERS_OUTDIR):
 	"mkdir" -p $@
@@ -217,6 +232,15 @@ $(FF_OUTDIR)/genfiles/%: %.m4
 	m4 $(M4FLAGS) $< > $@
 
 $(IE_OUTDIR)/genfiles/%: %.m4
+	m4 $(M4FLAGS) $< > $@
+
+# I18N M4 (GENERIC PREPROCESSOR) TARGETS
+
+$(COMMON_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
+	m4 $(M4FLAGS) $< > $@
+$(FF_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
+	m4 $(M4FLAGS) $< > $@
+$(IE_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
 	m4 $(M4FLAGS) $< > $@
 
 # IDL TARGETS
@@ -293,7 +317,7 @@ $(FF_MODULE_TYPELIB): $(FF_GEN_TYPELIBS)
 
 # INSTALLER TARGETS
 
-$(FF_INSTALLER_XPI): $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB) $(COMMON_RESOURCES) $(FF_RESOURCES) $(FF_LOCALE) $(FF_OUTDIR)/genfiles/chrome.manifest
+$(FF_INSTALLER_XPI): $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB) $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(FF_RESOURCES) $(FF_M4FILES_I18N) $(FF_OUTDIR)/genfiles/chrome.manifest
 	rm -rf $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)
 	cp -R base/firefox/static_files/components $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
@@ -303,10 +327,11 @@ $(FF_INSTALLER_XPI): $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB) $(COMMON_RESOURCES) $
 	cp $(FF_OUTDIR)/genfiles/install.rdf $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/install.rdf
 	cp $(FF_OUTDIR)/genfiles/chrome.manifest $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome.manifest
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
-	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale/en-US
+	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
 	cp $(COMMON_RESOURCES) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
 	cp $(FF_RESOURCES) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
-	cp $(FF_LOCALE) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale/en-US/i18n.dtd
+	cp -R $(COMMON_OUTDIR)/genfiles/i18n/* $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
+	cp -R $(FF_OUTDIR)/genfiles/i18n/* $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
 ifneq ($(OS),osx)
 	cp $(FF_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 	cp $(FF_MODULE_TYPELIB) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
@@ -342,8 +367,6 @@ OUR_COMPONENT_GUID_FF_CONTENT_DIR_FILES = \
   $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_FF_CONTENT_DIR_FILES-$(VERSION))
 OUR_COMPONENT_GUID_FF_DIR_FILES = \
   $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_FF_DIR_FILES-$(VERSION))
-OUR_COMPONENT_GUID_FF_ENUS_DIR_FILES = \
-  $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_FF_ENUS_DIR_FILES-$(VERSION))
 OUR_COMPONENT_GUID_FF_LIB_DIR_FILES = \
   $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_FF_LIB_DIR_FILES-$(VERSION))
 OUR_COMPONENT_GUID_FF_REGISTRY = \
@@ -352,6 +375,8 @@ OUR_COMPONENT_GUID_IE_FILES = \
   $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_IE_FILES-$(VERSION))
 OUR_COMPONENT_GUID_IE_REGISTRY = \
   $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_IE_REGISTRY-$(VERSION))
+
+WIX_DEFINES_I18N = $(foreach lang,$(subst -,_,$(I18N_LANGS)),-dOurComponentGUID_FFLang$(lang)DirFiles=$(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_FF_$(lang)_DIR_FILES-$(VERSION)))
 endif
 
 $(WIXOBJ): $(WIXSRC)
@@ -364,11 +389,11 @@ $(WIXOBJ): $(WIXSRC)
 	  -dOurComponentGUID_FFComponentsDirFiles=$(OUR_COMPONENT_GUID_FF_COMPONENTS_DIR_FILES) \
 	  -dOurComponentGUID_FFContentDirFiles=$(OUR_COMPONENT_GUID_FF_CONTENT_DIR_FILES) \
 	  -dOurComponentGUID_FFDirFiles=$(OUR_COMPONENT_GUID_FF_DIR_FILES) \
-	  -dOurComponentGUID_FFEnUsDirFiles=$(OUR_COMPONENT_GUID_FF_ENUS_DIR_FILES) \
 	  -dOurComponentGUID_FFLibDirFiles=$(OUR_COMPONENT_GUID_FF_LIB_DIR_FILES) \
 	  -dOurComponentGUID_FFRegistry=$(OUR_COMPONENT_GUID_FF_REGISTRY) \
 	  -dOurComponentGUID_IEFiles=$(OUR_COMPONENT_GUID_IE_FILES) \
-	  -dOurComponentGUID_IERegistry=$(OUR_COMPONENT_GUID_IE_REGISTRY)
+	  -dOurComponentGUID_IERegistry=$(OUR_COMPONENT_GUID_IE_REGISTRY) \
+	  $(WIX_DEFINES_I18N)
 
 # We generate dependency information for each source file as it is compiled.
 # Here, we include the generated dependency information, which silently fails
