@@ -1057,6 +1057,9 @@ void PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   wi->onmessage_handler.reset(NULL);
   wi->onerror_handler.reset(NULL);
 
+  // nsCOMPtr is not threadsafe, must release from creation thread.
+  wi->factory_ref = NULL;
+
   // TODO(aa): Consider deleting wi here and setting PTM.worker_info_[i] to
   // NULL. This allows us to free up these thread resources sooner, and it
   // seems a little cleaner too.
@@ -1152,6 +1155,12 @@ void PoolThreadsManager::ShutDown() {
   if (is_shutting_down_) { return; }
   is_shutting_down_ = true;
 
+  // Releasing callbacks in Firefox requires a valid pointer to the js engine.
+  // So release the callbacks for the owning worker now, while there is still
+  // an engine for the owning worker's thread.
+  worker_info_[kOwningWorkerId]->onmessage_handler.reset(NULL);
+  worker_info_[kOwningWorkerId]->onerror_handler.reset(NULL);
+
   for (size_t i = 0; i < worker_info_.size(); ++i) {
     JavaScriptWorkerInfo *wi = worker_info_[i];
 
@@ -1160,6 +1169,10 @@ void PoolThreadsManager::ShutDown() {
     if (request) {
       request->SetOnReadyStateChange(NULL);
       request->Abort();
+      // HttpRequest is not threadsafe, must destroy from same thread that
+      // created it (which is always the owning thread for now, since we cannot
+      // yet make requests from background threads).
+      wi->http_request.reset(NULL);
     }
 
     // If the worker is a created thread...
