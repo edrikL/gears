@@ -22,49 +22,54 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
 
+#define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
 //
-// Version
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+#include "common/genfiles/product_version.rc"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
 //
 
-VS_VERSION_INFO VERSIONINFO
- FILEVERSION    PRODUCT_VERSION_MAJOR,PRODUCT_VERSION_MINOR,PRODUCT_VERSION_BUILD,PRODUCT_VERSION_PATCH
- PRODUCTVERSION PRODUCT_VERSION_MAJOR,PRODUCT_VERSION_MINOR,PRODUCT_VERSION_BUILD,PRODUCT_VERSION_PATCH
- FILEFLAGSMASK 0x3fL
-#ifdef DEBUG
- FILEFLAGS 0x1L
-#else
- FILEFLAGS 0x0L
-#endif
- FILEOS 0x4L
- FILETYPE 0x2L
- FILESUBTYPE 0x0L
+1 TEXTINCLUDE 
 BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "040904e4"
-        BEGIN
-            VALUE "CompanyName", "Google Inc."
-            VALUE "FileVersion", "PRODUCT_VERSION"
-            VALUE "LegalCopyright", "Copyright 2006-2007 Google Inc. All Rights Reserved."
-            VALUE "ProductName", "PRODUCT_FRIENDLY_NAME_UQ"
-            VALUE "ProductVersion", "PRODUCT_VERSION"
-#if BROWSER_NPAPI
-            // NPAPI requires np*.dll formatted filenames.
-            VALUE "FileDescription", "`np'PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "InternalName", "`np'PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "OriginalFilename", "`np'PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "MIMEType", "application/x-googlegears"
-#else
-            VALUE "FileDescription", "PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "InternalName", "PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "OriginalFilename", "PRODUCT_SHORT_NAME_UQ.dll"
-#endif
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x409, 1252
-    END
+    "resource.h\0"
 END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "#include ""common/genfiles/product_version.rc""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "1 TYPELIB ""ie/genfiles/interfaces.tlb""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////

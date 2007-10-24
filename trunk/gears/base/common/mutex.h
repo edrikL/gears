@@ -28,6 +28,10 @@
 
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
 
+// TODO(mpcomplete): implement these.
+#if BROWSER_NPAPI
+#define BROWSER_IE 1
+#endif
 
 class Condition;
 
@@ -168,5 +172,9 @@ inline Condition::Condition(const T *object, bool (T::*method)() const) :
   this->function_ = reinterpret_cast<InternalFunctionType>(caller);
 }
 
+// TODO(mpcomplete): remove
+#if BROWSER_NPAPI
+#undef BROWSER_IE
+#endif
 
 #endif // GEARS_BASE_COMMON_MUTEX_H__

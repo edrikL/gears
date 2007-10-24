@@ -47,6 +47,9 @@
 #elif defined BROWSER_FF
   typedef nsISupports IGeneric;
   typedef nsIID gIID;
+#elif defined BROWSER_NPAPI
+  typedef void IGeneric;
+  typedef int gIID;
 #elif defined BROWSER_SAFARI
   // Just placeholder values for Safari since the created workers use a separate
   // process for JS execution.

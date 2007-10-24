@@ -122,6 +122,17 @@
     return JsSetException(this, msg); \
   }
 
+#elif BROWSER_NPAPI
+
+#include "gears/base/common/common_np.h"
+
+// TODO(mpcomplete): implement these
+#define RETURN_NORMAL()  return true
+#define RETURN_EXCEPTION(msg) \
+{ \
+    return false; \
+}
+
 #elif BROWSER_SAFARI
 
 #include "gears/base/common/common_sf.h"
@@ -133,6 +144,7 @@
     NSLog(@"Exception: %s", msg); \
     return 1; \
 }
+
 #else
 #error "common.h: BROWSER_?? not defined."
 #endif

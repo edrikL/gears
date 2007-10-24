@@ -28,6 +28,9 @@
 #include <windows.h>
 #elif BROWSER_FF
 #include <prlock.h>
+#elif BROWSER_NPAPI
+// TODO(mpcomplete): do this right.
+#include <windows.h>
 #elif BROWSER_SAFARI
 #include <pthread.h>
 #include <sched.h>
@@ -37,6 +40,10 @@
 
 #include "gears/base/common/mutex.h"
 
+// TODO(mpcomplete): implement these.
+#if BROWSER_NPAPI
+#define BROWSER_IE 1
+#endif
 
 Mutex::Mutex()
 #ifdef DEBUG

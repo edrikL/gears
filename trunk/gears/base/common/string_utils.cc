@@ -27,6 +27,12 @@
 
 #include "gears/base/common/common.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
+
+// TODO(mpcomplete): implement these.
+#if BROWSER_NPAPI
+#define BROWSER_IE 1
+#endif
+
 #if BROWSER_IE
 #include "gears/base/ie/atl_headers.h"
 #elif BROWSER_SAFARI
