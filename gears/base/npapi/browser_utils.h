@@ -23,48 +23,23 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Version
-//
+#ifndef GEARS_BASE_NPAPI_BROWSER_UTILS_H__
+#define GEARS_BASE_NPAPI_BROWSER_UTILS_H__
 
-VS_VERSION_INFO VERSIONINFO
- FILEVERSION    PRODUCT_VERSION_MAJOR,PRODUCT_VERSION_MINOR,PRODUCT_VERSION_BUILD,PRODUCT_VERSION_PATCH
- PRODUCTVERSION PRODUCT_VERSION_MAJOR,PRODUCT_VERSION_MINOR,PRODUCT_VERSION_BUILD,PRODUCT_VERSION_PATCH
- FILEFLAGSMASK 0x3fL
-#ifdef DEBUG
- FILEFLAGS 0x1L
-#else
- FILEFLAGS 0x0L
-#endif
- FILEOS 0x4L
- FILETYPE 0x2L
- FILESUBTYPE 0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "040904e4"
-        BEGIN
-            VALUE "CompanyName", "Google Inc."
-            VALUE "FileVersion", "PRODUCT_VERSION"
-            VALUE "LegalCopyright", "Copyright 2006-2007 Google Inc. All Rights Reserved."
-            VALUE "ProductName", "PRODUCT_FRIENDLY_NAME_UQ"
-            VALUE "ProductVersion", "PRODUCT_VERSION"
-#if BROWSER_NPAPI
-            // NPAPI requires np*.dll formatted filenames.
-            VALUE "FileDescription", "`np'PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "InternalName", "`np'PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "OriginalFilename", "`np'PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "MIMEType", "application/x-googlegears"
-#else
-            VALUE "FileDescription", "PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "InternalName", "PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "OriginalFilename", "PRODUCT_SHORT_NAME_UQ.dll"
-#endif
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x409, 1252
-    END
-END
+#include "gears/base/common/base_class.h"
+#include "gears/base/common/string16.h"
+
+class BrowserUtils {
+ public:
+  // Returns the page's location url (absolute)
+  // Returns true on success
+  static bool GetPageLocationUrl(JsContextPtr context,
+                                 std::string16 *location_url);
+
+  // Returns the page's security origin which is based on the location url.
+  // Returns true on success.
+  static bool GetPageSecurityOrigin(JsContextPtr context,
+                                    SecurityOrigin *security_origin);
+};
+
+#endif  // GEARS_BASE_NPAPI_BROWSER_UTILS_H__

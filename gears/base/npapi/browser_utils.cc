@@ -23,26 +23,47 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/base_class.h"
-#include "gears/base/common/js_runner.h"
+#include "gears/base/npapi/browser_utils.h"
 
-#if BROWSER_NPAPI
-static JsToken empty_token;
-#else
-static JsToken empty_token = {0};
-#endif
+#include "gears/base/common/string_utils.h"
+#include "gears/base/npapi/scoped_npapi_handles.h"
 
-bool TestJsRootedTokenLifetime() {
-  JsRunnerInterface *js_runner = NewJsRunner();
-  JsToken token = empty_token;
+bool BrowserUtils::GetPageLocationUrl(JsContextPtr context,
+                                      std::string16 *location_url) {
+  assert(location_url);
 
-  JsRootedToken *rooted_token = new JsRootedToken(js_runner->GetContext(),
-                                                  token);
+  // Retrieve window.location.href.
+  NPObject* window;
+  if (NPN_GetValue(context, NPNVWindowNPObject, &window) != NPERR_NO_ERROR)
+    return false;
+  ScopedNPObject window_scoped(window);
 
-  // If we don't handle the case of tokens outliving the js_runner, this
-  // cleanup code will crash the browser.
-  delete js_runner;
-  delete rooted_token;
+  NPIdentifier location_id = NPN_GetStringIdentifier("location");
+  NPVariant np_location;
+  if (!NPN_GetProperty(context, window, location_id, &np_location))
+    return false;
+  ScopedNPVariant np_location_scoped(np_location);
 
-  return true;
+  NPIdentifier href_id = NPN_GetStringIdentifier("href");
+  NPVariant np_href;
+  if (!NPN_GetProperty(context, NPVARIANT_TO_OBJECT(np_location),
+                       href_id, &np_href)) {
+    return false;
+  }
+  ScopedNPVariant np_href_scoped(np_href);
+
+  assert(NPVARIANT_IS_STRING(np_href));
+  NPString np_str = NPVARIANT_TO_STRING(np_href);
+
+  return (UTF8ToString16(np_str.utf8characters,
+                         np_str.utf8length,
+                         location_url));
+}
+
+bool BrowserUtils::GetPageSecurityOrigin(JsContextPtr context,
+                                         SecurityOrigin *security_origin) {
+  std::string16 location;
+  if (!GetPageLocationUrl(context, &location))
+    return false;
+  return security_origin->InitFromUrl(location.c_str());
 }

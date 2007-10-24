@@ -28,12 +28,16 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/security_model.h" // for kUnknownDomain
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/string_utils.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 #if BROWSER_FF
 #include "gears/base/firefox/dom_utils.h"
 #elif BROWSER_IE
 #include "gears/base/ie/activex_utils.h"
+#elif BROWSER_NPAPI
+#include "gears/base/npapi/browser_utils.h"
+#include "gears/base/npapi/np_utils.h"
 #elif BROWSER_SAFARI
 #include "gears/base/safari/browser_utils.h"
 #endif
@@ -104,7 +108,74 @@ bool JsTokenIsNullOrUndefined(JsToken t) {
   return t.vt == VT_NULL || t.vt == VT_EMPTY; // null or undefined
 }
 
+#elif BROWSER_NPAPI
+
+bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out) {
+  if (!NPVARIANT_IS_BOOLEAN(t)) { return false; }
+  *out = NPVARIANT_TO_BOOLEAN(t);
+  return true;
+}
+
+bool JsTokenToInt(JsToken t, JsContextPtr cx, int *out) {
+  if (!NPVARIANT_IS_INT32(t)) { return false; }
+  *out = NPVARIANT_TO_INT32(t);
+  return true;
+}
+
+bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
+  if (!NPVARIANT_IS_STRING(t)) { return false; }
+  NPString str = NPVARIANT_TO_STRING(t);
+  return UTF8ToString16(str.utf8characters, str.utf8length, out);
+}
+
+bool JsTokenIsNullOrUndefined(JsToken t) {
+  return NPVARIANT_IS_NULL(t) || NPVARIANT_IS_VOID(t);
+}
+
+JsRootedToken::JsRootedToken(JsContextPtr context, JsToken token) :
+    context_(context), token_(token) {
+  if (NPVARIANT_IS_OBJECT(token_)) {
+    NPN_RetainObject(NPVARIANT_TO_OBJECT(token_));
+  } else if (NPVARIANT_IS_STRING(token_)) {
+    NPString npstr = NPN_StringDup(NPVARIANT_TO_STRING(token_));
+    STRINGN_TO_NPVARIANT(npstr.utf8characters, npstr.utf8length, token_);
+  }
+}
+
+JsRootedToken::~JsRootedToken() {
+  NPN_ReleaseVariantValue(&token_);
+}
+
+void OwnedNPVariant::reset() {
+  NPN_ReleaseVariantValue(this);
+  VOID_TO_NPVARIANT(*this);
+}
+
+void OwnedNPVariant::reset(int value) {
+  reset();
+  INT32_TO_NPVARIANT(value, *this);
+}
+
+void OwnedNPVariant::reset(const char *value) {
+  reset();
+  NPString npstr = NPN_StringDup(value, strlen(value));
+  STRINGN_TO_NPVARIANT(npstr.utf8characters, npstr.utf8length, *this);
+}
+
+void OwnedNPVariant::reset(const char16 *value) {
+  reset();
+  NPString npstr = NPN_StringDup(value, std::char_traits<char16>::length(value));
+  STRINGN_TO_NPVARIANT(npstr.utf8characters, npstr.utf8length, *this);
+}
+
+void OwnedNPVariant::reset(NPObject *value) {
+  reset();
+  OBJECT_TO_NPVARIANT(value, *this);
+  NPN_RetainObject(value);
+}
+
 #endif
+
 
 
 bool GearsBaseClass::InitBaseFromSibling(const GearsBaseClass *other) {
@@ -124,6 +195,8 @@ bool GearsBaseClass::InitBaseFromSibling(const GearsBaseClass *other) {
 bool GearsBaseClass::InitBaseFromDOM() {
 #elif BROWSER_IE
 bool GearsBaseClass::InitBaseFromDOM(IUnknown *site) {
+#elif BROWSER_NPAPI
+bool GearsBaseClass::InitBaseFromDOM(JsContextPtr instance) {
 #elif BROWSER_SAFARI
 bool GearsBaseClass::InitBaseFromDOM(const char *url_str) {
 #endif
@@ -139,6 +212,11 @@ bool GearsBaseClass::InitBaseFromDOM(const char *url_str) {
   bool succeeded = ActiveXUtils::GetPageOrigin(site, &security_origin);
   return succeeded && InitBaseManually(is_worker, site, security_origin,
                                        NewDocumentJsRunner(site, NULL));
+#elif BROWSER_NPAPI
+  bool succeeded = BrowserUtils::GetPageSecurityOrigin(instance,
+                                                       &security_origin);
+  return succeeded && InitBaseManually(is_worker, security_origin,
+                                       NewDocumentJsRunner(NULL, instance));
 #elif BROWSER_SAFARI
   bool succeeded = SafariURLUtilities::GetPageOrigin(url_str, &security_origin);
   return succeeded && InitBaseManually(is_worker, security_origin, 0);

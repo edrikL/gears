@@ -22,49 +22,35 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-/////////////////////////////////////////////////////////////////////////////
 //
-// Version
-//
+// Scoped objects for the various NPAPI handle types.
+// Destructor implementation must be provided for each type.
 
-VS_VERSION_INFO VERSIONINFO
- FILEVERSION    PRODUCT_VERSION_MAJOR,PRODUCT_VERSION_MINOR,PRODUCT_VERSION_BUILD,PRODUCT_VERSION_PATCH
- PRODUCTVERSION PRODUCT_VERSION_MAJOR,PRODUCT_VERSION_MINOR,PRODUCT_VERSION_BUILD,PRODUCT_VERSION_PATCH
- FILEFLAGSMASK 0x3fL
-#ifdef DEBUG
- FILEFLAGS 0x1L
-#else
- FILEFLAGS 0x0L
-#endif
- FILEOS 0x4L
- FILETYPE 0x2L
- FILESUBTYPE 0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "040904e4"
-        BEGIN
-            VALUE "CompanyName", "Google Inc."
-            VALUE "FileVersion", "PRODUCT_VERSION"
-            VALUE "LegalCopyright", "Copyright 2006-2007 Google Inc. All Rights Reserved."
-            VALUE "ProductName", "PRODUCT_FRIENDLY_NAME_UQ"
-            VALUE "ProductVersion", "PRODUCT_VERSION"
-#if BROWSER_NPAPI
-            // NPAPI requires np*.dll formatted filenames.
-            VALUE "FileDescription", "`np'PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "InternalName", "`np'PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "OriginalFilename", "`np'PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "MIMEType", "application/x-googlegears"
-#else
-            VALUE "FileDescription", "PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "InternalName", "PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "OriginalFilename", "PRODUCT_SHORT_NAME_UQ.dll"
-#endif
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x409, 1252
-    END
-END
+#ifndef GEARS_BASE_NPAPI_SCOPED_NPAPI_HANDLES_H__
+#define GEARS_BASE_NPAPI_SCOPED_NPAPI_HANDLES_H__
+
+#include "gears/base/common/scoped_token.h"
+
+#include "npapi.h"
+#include "npruntime.h"
+
+// ScopedNPObject: automatically call NPN_ReleaseObject()
+class ReleaseObjectFunctor {
+ public:
+  void operator()(NPObject* x) const {
+    if (x != NULL) { NPN_ReleaseObject(x); }
+  }
+};
+typedef scoped_token<NPObject*, ReleaseObjectFunctor> ScopedNPObject;
+
+// ScopedNPVariant: automatically call NPN_ReleaseVariantValue()
+class ReleaseVariantValueFunctor {
+ public:
+  void operator()(NPVariant& x) const {
+    NPN_ReleaseVariantValue(&x);
+  }
+};
+typedef scoped_token<NPVariant&, ReleaseVariantValueFunctor> ScopedNPVariant;
+
+
+#endif // GEARS_BASE_NPAPI_SCOPED_NPAPI_HANDLES_H__

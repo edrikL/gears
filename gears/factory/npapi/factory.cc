@@ -23,26 +23,43 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/base_class.h"
-#include "gears/base/common/js_runner.h"
+#include "gears/factory/npapi/factory.h"
 
-#if BROWSER_NPAPI
-static JsToken empty_token;
-#else
-static JsToken empty_token = {0};
-#endif
+#include <assert.h>
+#include <stdlib.h>
 
-bool TestJsRootedTokenLifetime() {
-  JsRunnerInterface *js_runner = NewJsRunner();
-  JsToken token = empty_token;
+#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "gears/base/common/common.h"
+#include "gears/base/common/string16.h"
+#include "gears/factory/common/factory_utils.h"
 
-  JsRootedToken *rooted_token = new JsRootedToken(js_runner->GetContext(),
-                                                  token);
+GearsFactory::GearsFactory()
+    : is_creation_suspended_(false),
+      is_permission_granted_(false),
+      is_permission_value_from_user_(false) {
+  SetActiveUserFlag();
+}
 
-  // If we don't handle the case of tokens outliving the js_runner, this
-  // cleanup code will crash the browser.
-  delete js_runner;
-  delete rooted_token;
+void GearsFactory::Create() {
+  // TODO(mpcomplete): implement me
+}
 
-  return true;
+void GearsFactory::GetBuildInfo() {
+  // TODO(mpcomplete): implement me
+}
+
+void GearsFactory::GetVersion() {
+  // TODO(mpcomplete): implement me
+}
+
+// TODO(cprince): See if we can use Suspend/Resume with the opt-in dialog too,
+// rather than just the cross-origin worker case.  (Code re-use == good.)
+void GearsFactory::SuspendObjectCreation() {
+  is_creation_suspended_ = true;
+}
+
+void GearsFactory::ResumeObjectCreationAndUpdatePermissions() {
+  // TODO(cprince): The transition from suspended to resumed is where we should
+  // propagate cross-origin opt-in to the permissions DB.
+  is_creation_suspended_ = false;
 }

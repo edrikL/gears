@@ -55,6 +55,16 @@ typedef VARIANT JsToken;
 typedef void* JsContextPtr; // unused in IE
 typedef HRESULT JsNativeMethodRetval;
 
+#elif BROWSER_NPAPI
+
+#include "npapi.h"
+#include "npupp.h"
+
+// Abstracted types for values used with JavaScript engines.
+typedef NPVariant JsToken;
+typedef NPP JsContextPtr;
+typedef NPError JsNativeMethodRetval;
+
 #endif
 
 // Utility functions to convert JsToken to various primitives.
@@ -149,6 +159,58 @@ class JsRootedToken {
 // Implementations of boilerplate code.
 // - We don't currently need GetNativeBaseClass on IE.
 
+#elif BROWSER_NPAPI
+
+// A JsToken that won't get GC'd out from under you.
+class JsRootedToken {
+ public:
+  JsRootedToken(JsContextPtr context, JsToken token);
+  ~JsRootedToken();
+
+  JsToken token() const { return token_; }
+  JsContextPtr context() const { return context_; }
+
+  bool GetAsBool(bool *out) const {
+    return JsTokenToBool(token_, context_, out);
+  }
+
+ private:
+  JsContextPtr context_;  // TODO(mpcomplete): figure out if this is necessary
+  JsToken token_;
+  DISALLOW_EVIL_CONSTRUCTORS(JsRootedToken);
+};
+
+// An NPVariant that takes ownership of its value and releases it when it goes
+// out of scope.
+class OwnedNPVariant : public NPVariant {
+ public:
+  explicit OwnedNPVariant() {
+    VOID_TO_NPVARIANT(*this);
+  }
+  explicit OwnedNPVariant(int value) {
+    reset(value);
+  }
+  explicit OwnedNPVariant(const char *value) {
+    reset(value);
+  }
+  explicit OwnedNPVariant(const char16 *value) {
+    reset(value);
+  }
+  explicit OwnedNPVariant(NPObject *value) {
+    reset(value);
+  }
+
+  ~OwnedNPVariant() {
+    reset();
+  }
+
+  void reset();
+  void reset(int value);
+  void reset(const char *value);
+  void reset(const char16 *value);
+  void reset(NPObject *value);
+};
+
 #elif BROWSER_SAFARI
 
 // Just placeholder values for Safari since the created workers use a separate
@@ -179,6 +241,8 @@ class GearsBaseClass {
   bool InitBaseFromDOM();
 #elif BROWSER_IE
   bool InitBaseFromDOM(IUnknown *site);
+#elif BROWSER_NPAPI
+  bool InitBaseFromDOM(JsContextPtr instance);
 #elif BROWSER_SAFARI
   bool InitBaseFromDOM(const char *url_str);
 #endif

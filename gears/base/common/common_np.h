@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+// Copyright 2005, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,26 +23,42 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/base_class.h"
-#include "gears/base/common/js_runner.h"
+#ifndef GEARS_BASE_COMMON_COMMON_NPAPI_H__
+#define GEARS_BASE_COMMON_COMMON_NPAPI_H__
 
-#if BROWSER_NPAPI
-static JsToken empty_token;
+// TODO(mpcomplete): make this not win32 specific.
+
+#include <windows.h>  // for DWORD
+#include "gears/base/ie/atl_headers.h" // TODO(cprince): change ATLASSERT to DCHECK
+
+#define LOG(args) ATLTRACE args
+
+// Debug only code to help us assert that class methods are restricted to a
+// single thread.  To use, add a DECL_SINGLE_THREAD to your class declaration.
+// Then, add ASSERT_SINGLE_THREAD() calls to the top of each class method.
+#ifdef DEBUG
+
+class ThreadID {
+ public:
+  ThreadID() {
+    id_ = GetCurrentThreadId();
+  }
+  DWORD get() {
+    return id_;
+  }
+ private:
+  DWORD id_;
+};
+
+#define DECL_SINGLE_THREAD \
+    ThreadID thread_id_;
+
+#define ASSERT_SINGLE_THREAD() \
+    ATLASSERT(thread_id_.get() == GetCurrentThreadId())
+
 #else
-static JsToken empty_token = {0};
+#define DECL_SINGLE_THREAD
+#define ASSERT_SINGLE_THREAD()
 #endif
 
-bool TestJsRootedTokenLifetime() {
-  JsRunnerInterface *js_runner = NewJsRunner();
-  JsToken token = empty_token;
-
-  JsRootedToken *rooted_token = new JsRootedToken(js_runner->GetContext(),
-                                                  token);
-
-  // If we don't handle the case of tokens outliving the js_runner, this
-  // cleanup code will crash the browser.
-  delete js_runner;
-  delete rooted_token;
-
-  return true;
-}
+#endif // GEARS_BASE_COMMON_COMMON_NPAPI_H__

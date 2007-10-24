@@ -26,6 +26,10 @@
 #include <assert.h>
 #include "gears/base/common/thread_locals.h"
 
+// TODO(mpcomplete): implement these.
+#if BROWSER_NPAPI
+#define BROWSER_IE 1
+#endif
 
 // TODO(michaeln): figure out if it's safe to initialize this tls_index_ here or
 // not. It's set in when DllMain(processAttached) is called, will initializing

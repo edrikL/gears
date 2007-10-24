@@ -23,48 +23,24 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Version
-//
+#include "gears/base/npapi/np_utils.h"
 
-VS_VERSION_INFO VERSIONINFO
- FILEVERSION    PRODUCT_VERSION_MAJOR,PRODUCT_VERSION_MINOR,PRODUCT_VERSION_BUILD,PRODUCT_VERSION_PATCH
- PRODUCTVERSION PRODUCT_VERSION_MAJOR,PRODUCT_VERSION_MINOR,PRODUCT_VERSION_BUILD,PRODUCT_VERSION_PATCH
- FILEFLAGSMASK 0x3fL
-#ifdef DEBUG
- FILEFLAGS 0x1L
-#else
- FILEFLAGS 0x0L
-#endif
- FILEOS 0x4L
- FILETYPE 0x2L
- FILESUBTYPE 0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "040904e4"
-        BEGIN
-            VALUE "CompanyName", "Google Inc."
-            VALUE "FileVersion", "PRODUCT_VERSION"
-            VALUE "LegalCopyright", "Copyright 2006-2007 Google Inc. All Rights Reserved."
-            VALUE "ProductName", "PRODUCT_FRIENDLY_NAME_UQ"
-            VALUE "ProductVersion", "PRODUCT_VERSION"
-#if BROWSER_NPAPI
-            // NPAPI requires np*.dll formatted filenames.
-            VALUE "FileDescription", "`np'PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "InternalName", "`np'PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "OriginalFilename", "`np'PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "MIMEType", "application/x-googlegears"
-#else
-            VALUE "FileDescription", "PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "InternalName", "PRODUCT_SHORT_NAME_UQ.dll"
-            VALUE "OriginalFilename", "PRODUCT_SHORT_NAME_UQ.dll"
-#endif
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x409, 1252
-    END
-END
+#include "gears/base/common/string_utils.h"
+
+NPString NPN_StringDup(const char *value, int length) {
+  char* chars = reinterpret_cast<char*>(NPN_MemAlloc(length + 1));
+  strncpy(chars, value, length);
+  chars[length] = 0;
+  NPString new_str = { chars, length };
+  return new_str;
+}
+
+NPString NPN_StringDup(const char16 *value, int length) {
+  std::string value_utf8;
+  String16ToUTF8(value, length, &value_utf8);
+  return NPN_StringDup(value_utf8.data(), value_utf8.length());
+}
+
+NPString NPN_StringDup(const NPString &str) {
+  return NPN_StringDup(str.utf8characters, str.utf8length);
+}

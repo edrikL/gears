@@ -33,6 +33,11 @@
 #include <pthread.h>
 #endif
 
+// TODO(mpcomplete): implement these.
+#if BROWSER_NPAPI
+#define BROWSER_IE 1
+#endif
+
 //------------------------------------------------------------------------------
 // Provides for per thread-local storage in a win32 DLL. This classes allocates
 // a single TLS index from the OS, and keeps multiple entries in a map
@@ -150,5 +155,10 @@ class ThreadLocals {
   static void FinalizeKey(void *context);
 #endif
 };
+
+// TODO(mpcomplete): remove.
+#if BROWSER_NPAPI
+#undef BROWSER_IE
+#endif
 
 #endif  // GEARS_BASE_COMMON_THREAD_LOCALS_H__

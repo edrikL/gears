@@ -26,7 +26,7 @@
 #ifndef GEARS_BASE_COMMON_INT_TYPES_H__
 #define GEARS_BASE_COMMON_INT_TYPES_H__
 
-#if BROWSER_FF
+#if BROWSER_FF || BROWSER_NPAPI
 //------------------------------------------------------------------------------
 // BROWSER_FF
 //------------------------------------------------------------------------------

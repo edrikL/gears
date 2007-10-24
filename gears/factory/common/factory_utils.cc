@@ -36,6 +36,8 @@
 #include "gears/factory/ie/factory.h"
 #elif BROWSER_FF
 #include "gears/factory/firefox/factory.h"
+#elif BROWSER_NPAPI
+#include "gears/factory/npapi/factory.h"
 #elif BROWSER_SAFARI
 #include "gears/factory/safari/factory_utils.h"
 #endif

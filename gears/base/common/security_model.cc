@@ -30,6 +30,11 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/localserver/common/http_constants.h"
 
+// TODO(mpcomplete): implement these.
+#if BROWSER_NPAPI
+#define BROWSER_IE 1
+#endif
+
 #if BROWSER_IE
 #include <windows.h>
 #include <wininet.h>
