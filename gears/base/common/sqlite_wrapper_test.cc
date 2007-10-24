@@ -68,18 +68,20 @@ static bool TestSQLDatabaseTransactions() {
       sqlite3_exec(db1.GetDBHandle(), 
         "DROP TABLE IF EXISTS test", NULL, NULL, NULL));
 
-    TEST_ASSERT(db1.BeginTransaction());
+    const char *kTransactionLabel = "TestSQLDatabaseTransactions";
+
+    TEST_ASSERT(db1.BeginTransaction(kTransactionLabel));
     TEST_ASSERT(SQLITE_OK ==
       sqlite3_exec(db1.GetDBHandle(), 
         "CREATE TABLE test (val TEXT)", NULL, NULL, NULL));
 
-    TEST_ASSERT(db1.BeginTransaction());
+    TEST_ASSERT(db1.BeginTransaction(kTransactionLabel));
     TEST_ASSERT(SQLITE_OK ==
       sqlite3_exec(db1.GetDBHandle(), 
         "INSERT INTO test VALUES ('foo')", NULL, NULL, NULL));
 
-    TEST_ASSERT(db1.CommitTransaction());
-    TEST_ASSERT(db1.CommitTransaction());
+    TEST_ASSERT(db1.CommitTransaction(kTransactionLabel));
+    TEST_ASSERT(db1.CommitTransaction(kTransactionLabel));
   }
 
   // Now check that it is there
@@ -135,7 +137,7 @@ static bool TestSQLTransaction() {
 // CreateTable helper used by TestSQLTransaction
 //------------------------------------------------------------------------------
 static bool CreateTable(SQLDatabase &db) {
-  SQLTransaction tx(&db);
+  SQLTransaction tx(&db, "TestSQLTransaction::CreateTable");
   TEST_ASSERT(tx.Begin());
 
   TEST_ASSERT(SQLITE_OK == 
@@ -151,7 +153,7 @@ static bool CreateTable(SQLDatabase &db) {
 // InsertRow helper used by TestSQLTransaction
 //------------------------------------------------------------------------------
 static bool InsertRow(SQLDatabase &db) {
-  SQLTransaction tx(&db);
+  SQLTransaction tx(&db, "TestSQLTransaction::InsertRow");
 
   TEST_ASSERT(tx.Begin());
 

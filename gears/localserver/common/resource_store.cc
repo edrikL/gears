@@ -72,7 +72,8 @@ bool ResourceStore::CreateOrOpen(const SecurityOrigin &security_origin,
     return false;
   }
 
-  SQLTransaction transaction(db->GetSQLDatabase());
+  SQLTransaction transaction(db->GetSQLDatabase(),
+                             "ResourceStore::CreateOrOpen");
   if (!transaction.Begin()) {
     return false;
   }
@@ -159,7 +160,7 @@ bool ResourceStore::PutItem(Item *item) {
     return false;
   }
 
-  SQLTransaction transaction(db->GetSQLDatabase());
+  SQLTransaction transaction(db->GetSQLDatabase(), "ResourceStore::PutItem");
   if (!transaction.Begin()) {
     return false;
   }
@@ -237,7 +238,7 @@ bool ResourceStore::Rename(const char16* orig_url, const char16 *new_url) {
     return false;
   }
 
-  SQLTransaction transaction(db->GetSQLDatabase());
+  SQLTransaction transaction(db->GetSQLDatabase(), "ResourceStore::Rename");
   if (!transaction.Begin()) {
     return false;
   }
@@ -276,7 +277,7 @@ bool ResourceStore::Copy(const char16* src_url, const char16 *dst_url) {
     return false;
   }
 
-  SQLTransaction transaction(db->GetSQLDatabase());
+  SQLTransaction transaction(db->GetSQLDatabase(), "ResourceStore::Copy");
   if (!transaction.Begin()) {
     return false;
   }

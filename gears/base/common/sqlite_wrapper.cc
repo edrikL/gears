@@ -27,9 +27,12 @@
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/sqlite_wrapper.h"
+#include "gears/base/common/stopwatch.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
 
+
+const char *SQLDatabase::kUnspecifiedTransactionLabel = "Unspecified";
 
 // Returns a static string describing any SQLite status code.
 // Based on SQLite's internal function sqlite3ErrStr().
@@ -79,13 +82,23 @@ void BuildSqliteErrorString(const char16 *summary, int sql_status, sqlite3 *db,
 }
 
 
+static void LogIfConspicuouslyLongTime(const char *format_str,
+                                       int64 start_time,
+                                       const char *label) {
+  const int64 kConspicuoslyLongTimeMsec = 5 * 1000;
+  int64 duration = GetCurrentTimeMillis() - start_time;
+  if (duration > kConspicuoslyLongTimeMsec) {
+    LOG((format_str, static_cast<int>(duration), label));
+  }
+}
+
 //------------------------------------------------------------------------------
 // Constructor and Destructor
 //------------------------------------------------------------------------------
 
 SQLDatabase::SQLDatabase() : 
     db_(NULL), transaction_count_(0), needs_rollback_(false), 
-    transaction_listener_(NULL) {
+    transaction_start_time_(0), transaction_listener_(NULL) {
 }
 
 
@@ -190,19 +203,24 @@ bool SQLDatabase::IsOpen() {
 //------------------------------------------------------------------------------
 // BeginTransaction
 //------------------------------------------------------------------------------
-bool SQLDatabase::BeginTransaction() {
+bool SQLDatabase::BeginTransaction(const char *log_label) {
   ASSERT_SINGLE_THREAD();
   assert(db_);
   if (!db_) {
     return false;
   }
 
+  if (!log_label)
+    log_label = kUnspecifiedTransactionLabel;
+
   // EndTransaction should have been watching out for us going negative.
   assert(transaction_count_ >= 0);
 
   if (transaction_count_ > 0) {
     if (needs_rollback_) {
-      LOG(("SQLDatabase: Cannot begin transaction - already rolled back\n"));
+      LOG(("SQLDatabase: Cannot begin transaction for %s"
+               " - already rolled back\n",
+           log_label));
       return false;
     } else {
       ++transaction_count_;
@@ -210,13 +228,21 @@ bool SQLDatabase::BeginTransaction() {
     }
   }
 
+  LOG(("SQLDatabase: BeginTransaction for %s\n", log_label));
+  transaction_start_time_ = GetCurrentTimeMillis();
+
   // We always use BEGIN IMMEDIATE for now but this could be parameterized in
   // the future if necessary.
   if (SQLITE_OK != sqlite3_exec(db_, "BEGIN IMMEDIATE", NULL, NULL, NULL)) {
-    LOG(("SQLDatabase: Cannot exceute BEGIN IMMEDIATE: %d\n", 
-         sqlite3_errcode(db_)));
+    LOG(("SQLDatabase: Cannot exceute BEGIN IMMEDIATE: %d for %s\n", 
+         sqlite3_errcode(db_),
+         log_label));
     return false;
   }
+
+  LogIfConspicuouslyLongTime(
+      "SQLDatabase: Warning, BEGIN IMMEDIATE took %d ms for %s\n",
+      transaction_start_time_, log_label);
 
   if (transaction_listener_) {
     transaction_listener_->OnBegin();
@@ -231,20 +257,20 @@ bool SQLDatabase::BeginTransaction() {
 //------------------------------------------------------------------------------
 // RollbackTransaction
 //------------------------------------------------------------------------------
-void SQLDatabase::RollbackTransaction() {
+void SQLDatabase::RollbackTransaction(const char *log_label) {
   ASSERT_SINGLE_THREAD();
   needs_rollback_ = true;
-  EndTransaction();
+  EndTransaction(log_label);
 }
 
 
 //------------------------------------------------------------------------------
 // CommitTransaction
 //------------------------------------------------------------------------------
-bool SQLDatabase::CommitTransaction() {
+bool SQLDatabase::CommitTransaction(const char *log_label) {
   ASSERT_SINGLE_THREAD();
 
-  if (!EndTransaction()) {
+  if (!EndTransaction(log_label)) {
     return false;
   }
 
@@ -255,11 +281,14 @@ bool SQLDatabase::CommitTransaction() {
 //------------------------------------------------------------------------------
 // EndTransaction
 //------------------------------------------------------------------------------
-bool SQLDatabase::EndTransaction() {
+bool SQLDatabase::EndTransaction(const char *log_label) {
   ASSERT_SINGLE_THREAD();
 
+  if (!log_label)
+    log_label = kUnspecifiedTransactionLabel;
+
   if (0 == transaction_count_) {
-    LOG(("SQLDatabase: unbalanced transaction\n"));
+    LOG(("SQLDatabase: unbalanced transaction - %s\n", log_label));
     assert(false);
     return false;
   }
@@ -277,33 +306,43 @@ bool SQLDatabase::EndTransaction() {
     return true;
   }
 
-  // OK, we are closing the last transaction, commit so long as rollback has
+  LOG(("SQLDatabase: EndTransaction for %s\n", log_label));
+
+  // OK, we are closing the last transaction, commit provided rollback has
   // not been called.
   if (!needs_rollback_) {
     if (SQLITE_OK == sqlite3_exec(db_, "COMMIT", NULL, NULL, NULL)) {
+      LogIfConspicuouslyLongTime(
+          "SQLDatabase: Committed transaction was open for %d ms for %s\n",
+          transaction_start_time_, log_label);
+
       if (transaction_listener_) {
         transaction_listener_->OnCommit();
       }
       return true;
     }
 
-    LOG(("SQLDatabase: Could not execute COMMIT: %d\n", 
+    LOG(("SQLDatabase: Could not execute COMMIT: %d\n",
          sqlite3_errcode(db_)));
 
-    // Since commit did not succeed, we should rollback. For most types of 
-    // errors, sqlite has already rolled back at this point. But for 
-    // SQLITE_BUSY, it won't have, and we want to treat that as an error. 
+    // Since commit did not succeed, we should rollback. For most types of
+    // errors, sqlite has already rolled back at this point. But for
+    // SQLITE_BUSY, it won't have, and we want to treat that as an error.
   }
 
   // Rollback is necessary.
   // TODO(aa): What, if any, are the cases that rollback can fail. Should we do
   // anything about them?
   sqlite3_exec(db_, "ROLLBACK", NULL, NULL, NULL);
+  LogIfConspicuouslyLongTime(
+      "SQLDatabase: Rolled back transaction was open for %d ms for %s\n",
+      transaction_start_time_, log_label);
+
   if (transaction_listener_) {
     transaction_listener_->OnRollback();
   }
 
-  LOG(("SQLDatabase: Rolled back transaction\n"));
+  LOG(("SQLDatabase: Rolled back transaction for %s\n", log_label));
   return false;
 }
 
@@ -319,7 +358,7 @@ bool SQLDatabase::DropAllObjects() {
   // virtual tables with this class, we may need to revisit this
   // implementation and find a way to distinguish virtual tables from regular
   // ones and drop those first.
-  SQLTransaction tx(this);
+  SQLTransaction tx(this, "SQLDatabase::DropAllObjects");
   if (!tx.Begin()) {
     return false;
   }

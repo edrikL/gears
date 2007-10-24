@@ -446,7 +446,7 @@ bool UpdateTask::ProcessUrl(const std::string16 &url,
     return false;
   }
 
-  SQLTransaction transaction(db->GetSQLDatabase());
+  SQLTransaction transaction(db->GetSQLDatabase(), "UpdateTask::ProcessUrl");
   if (new_payload.status_code == HttpConstants::HTTP_NOT_MODIFIED) {
     // TODO(michaeln): what if mod-date is older than what we have?
     LOG(("UpdateTask::ProcessUrl - received HTTP_NOT_MODIFIED\n"));
