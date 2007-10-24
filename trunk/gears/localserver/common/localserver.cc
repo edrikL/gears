@@ -106,7 +106,7 @@ bool LocalServer::CreateOrOpen(const SecurityOrigin &security_origin,
 
   // We start a transaction here to guard against two threads calling
   // InsertServer with the same ServerInfo.
-  SQLTransaction transaction(db->GetSQLDatabase());
+  SQLTransaction transaction(db->GetSQLDatabase(), "LocalServer::CreateOrOpen");
   if (!transaction.Begin()) {
     return false;
   }

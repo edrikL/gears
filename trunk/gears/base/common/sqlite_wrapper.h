@@ -74,7 +74,8 @@ class SQLDatabase {
   void Close();
 
   // Begin a transaction. SQLite does not support nested transactions so we
-  // simulate them by keeping a count of how many open ones there are.
+  // simulate them by keeping a count of how many open ones there are. The
+  // log_label parameter is optional and may be NULL.
   //
   // NOTE: There are very strict requirements regarding the use of these
   // methods. For each BeginTransaction() that returns true,
@@ -87,34 +88,36 @@ class SQLDatabase {
   //
   // The general pattern is:
   //
-  // if (!db.BeginTransaction()) {
+  // if (!db.BeginTransaction("LoggingLabel")) {
   //   return false;
   // }
   //
   // ... do your db stuff here ...
   //
   // if (youDecideToRollback) {
-  //   db.Rollback();
+  //   db.Rollback("LoggingLabel");
   //   return false;
   // }
   //
-  // if (!db.CommitTransaction()) {
+  // if (!db.CommitTransaction("LoggingLabel")) {
   //   ... The db has been rolled back. Do no manually call db.Rollback() ...
   //   return false;
   // }
   //
   // return true;
-  bool BeginTransaction();
+  bool BeginTransaction(const char *log_label);
 
   // Rollback a transaction started with BeginTransaction. If multiple 
   // transactions are open, the rollback will occur when the last transaction 
-  // is committed or rolled back.
-  void RollbackTransaction();
+  // is committed or rolled back. The log_label parameter is optional and may
+  // be NULL.
+  void RollbackTransaction(const char *log_label);
 
   // Commit a transaction started with BeginTransaction. If multiple
   // transactions are open, the commit will occur when the last transaction is
-  // committed, so long as RollbackTransaction() has not been called.
-  bool CommitTransaction();
+  // committed, so long as RollbackTransaction() has not been called. The
+  // log_label parameter is optional and may be NULL.
+  bool CommitTransaction(const char *log_label);
 
   // Returns the sqlite3 database connection associated with this site.
   sqlite3 *GetDBHandle();
@@ -125,13 +128,14 @@ class SQLDatabase {
   // Drop all objects (tables, indicies, etc) from the database
   bool DropAllObjects();
 
+  static const char *kUnspecifiedTransactionLabel;
  private:
   // SQLite handles, which this class wraps, can only be used on a single
   // thread.
   DECL_SINGLE_THREAD
 
   // Private helper called by CommmitTransaction and RollbackTransaction
-  bool EndTransaction();
+  bool EndTransaction(const char *log_label);
 
   // Creates (if necessary) the directory for the specified scour database 
   // file, and stores the full path of this file in 'path'. Returns true if
@@ -148,6 +152,10 @@ class SQLDatabase {
   // Whether the current transaction needs rollback
   bool needs_rollback_;
 
+  // When the current transaction was started, not valid when there is
+  // no transaction open
+  int64 transaction_start_time_;  // used for logging only
+
   // callbacks
   SQLTransactionListener *transaction_listener_;
 };
@@ -160,7 +168,11 @@ class SQLDatabase {
 //------------------------------------------------------------------------------
 class SQLTransaction {
  public:
-   SQLTransaction(SQLDatabase *db) : began_(false), db_(db) {}
+   SQLTransaction(SQLDatabase *db, const char *log_label)
+     : began_(false), db_(db),
+       log_label_(log_label ? log_label
+                            : SQLDatabase::kUnspecifiedTransactionLabel) {
+  }
 
   ~SQLTransaction() {
     if (began_) {
@@ -174,7 +186,7 @@ class SQLTransaction {
       return false;
     }
 
-    if (!db_->BeginTransaction()) {
+    if (!db_->BeginTransaction(log_label_.c_str())) {
       return false;
     }
     began_ = true;
@@ -210,15 +222,16 @@ class SQLTransaction {
 
     began_ = false;
     if (commit) {
-      return db_->CommitTransaction();
+      return db_->CommitTransaction(log_label_.c_str());
     } else {
-      db_->RollbackTransaction();
+      db_->RollbackTransaction(log_label_.c_str());
       return true;
     }
   }
 
   bool began_;
   SQLDatabase *db_;
+  std::string log_label_;
   DISALLOW_EVIL_CONSTRUCTORS(SQLTransaction);
 };
 

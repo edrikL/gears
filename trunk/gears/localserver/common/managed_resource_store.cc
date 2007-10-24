@@ -138,7 +138,8 @@ bool ManagedResourceStore::AddManifestAsDownloadingVersion(Manifest *manifest,
     return false;
   }
 
-  SQLTransaction transaction(db->GetSQLDatabase());
+  SQLTransaction transaction(db->GetSQLDatabase(),
+                             "AddManifestAsDownloadingVersion");
   if (!transaction.Begin()) {
     return false;
   }
@@ -216,7 +217,8 @@ bool ManagedResourceStore::SetDownloadingVersionAsCurrent() {
     return false;
   }
 
-  SQLTransaction transaction(db->GetSQLDatabase());
+  SQLTransaction transaction(db->GetSQLDatabase(),
+                             "SetDownloadingVersionAsCurrent");
   if (!transaction.Begin()) {
     return false;
   }

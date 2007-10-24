@@ -175,7 +175,7 @@ bool PermissionsDB::GetOriginsByValue(PermissionsDB::PermissionValue value,
 
 
 bool PermissionsDB::EnableGearsForWorker(const SecurityOrigin &origin) {
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_, "PermissionsDB::EnableGearsForWorker");
   if (!transaction.Begin()) {
     return false;
   }
@@ -200,7 +200,7 @@ bool PermissionsDB::EnableGearsForWorker(const SecurityOrigin &origin) {
 bool PermissionsDB::CreateOrUpgradeDatabase() {
   // Doing this in a transaction effectively locks the database file and
   // ensures that this is synchronized across all threads and processes
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_, "PermissionsDB::CreateOrUpgradeDatabase");
   if (!transaction.Begin()) {
     return false;
   }
@@ -241,7 +241,7 @@ bool PermissionsDB::CreateOrUpgradeDatabase() {
 bool PermissionsDB::CreateDatabase() {
   ASSERT_SINGLE_THREAD();
 
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_, "PermissionsDB::CreateDatabase");
   if (!transaction.Begin()) {
     return false;
   }
@@ -270,7 +270,8 @@ bool PermissionsDB::CreateDatabase() {
 
 
 bool PermissionsDB::UpgradeFromVersion1ToVersion2() {
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_,
+                             "PermissionsDB::UpgradeFromVersion1ToVersion2");
   if (!transaction.Begin()) {
     return false;
   }

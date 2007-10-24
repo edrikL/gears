@@ -229,7 +229,7 @@ bool WebCacheDB::CreateOrUpgradeDatabase() {
 
   // Doing this in a transaction effectively locks the database file and
   // ensures that this is synchronized across all threads and processes
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_, "CreateOrUpgradeDatabase");
   if (!transaction.Begin()) {
     return false;
   }
@@ -302,7 +302,7 @@ bool WebCacheDB::CreateDatabase() {
   ASSERT_SINGLE_THREAD();
   assert(db_.IsOpen());
 
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_, "CreateDatabase");
   if (!transaction.Begin())
     return false;
 
@@ -392,7 +392,7 @@ bool WebCacheDB::UpgradeFromXToY() {
 // UpgradeFrom10To11
 //------------------------------------------------------------------------------
 bool WebCacheDB::UpgradeFrom10To11() {
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_, "UpgradeFrom10To11");
   if (!transaction.Begin())
     return false;
 
@@ -458,7 +458,7 @@ bool WebCacheDB::UpgradeFrom10To11() {
 //------------------------------------------------------------------------------
 bool WebCacheDB::ExecuteSqlCommandsInTransaction(const char *commands[],
                                                  int count) {
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_, "ExecuteSqlCommandsInTransaction");
   if (!transaction.Begin())
     return false;
   if (!ExecuteSqlCommands(commands, count))
@@ -741,7 +741,7 @@ bool WebCacheDB::InsertPayload(int64 server_id,
     return false;
   }
 
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_, "InsertPayload");
   if (!transaction.Begin()) {
     return false;
   }
@@ -944,7 +944,7 @@ bool WebCacheDB::FindServersForOrigin(const SecurityOrigin &origin,
 bool WebCacheDB::DeleteServersForOrigin(const SecurityOrigin &origin) {
   ASSERT_SINGLE_THREAD();
 
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_, "DeleteServersForOrigin");
   if (!transaction.Begin()) {
     return false;
   }
@@ -976,7 +976,7 @@ bool WebCacheDB::InsertServer(ServerInfo *server) {
     return false;  // invalid user-defined name
   }
 
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_, "InsertServer");
   if (!transaction.Begin()) {
     return false;
   }
@@ -1136,7 +1136,7 @@ bool WebCacheDB::UpdateServer(int64 id, bool enabled) {
 bool WebCacheDB::DeleteServer(int64 id) {
   ASSERT_SINGLE_THREAD();
 
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_, "DeleteServer");
   if (!transaction.Begin()) {
     return false;
   }
@@ -1390,7 +1390,7 @@ bool WebCacheDB::DeleteVersion(int64 id) {
 bool WebCacheDB::DeleteVersions(int64 server_id) {
   ASSERT_SINGLE_THREAD();
 
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_, "DeleteVersions");
   if (!transaction.Begin()) {
     return false;
   }
@@ -1417,7 +1417,7 @@ bool WebCacheDB::DeleteVersions(std::vector<int64> *version_ids) {
     return true;
   }
 
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_, "DeleteVersions");
   if (!transaction.Begin()) {
     return false;
   }
@@ -1518,7 +1518,7 @@ bool WebCacheDB::InsertEntry(EntryInfo *entry) {
 bool WebCacheDB::DeleteEntry(int64 id) {
   ASSERT_SINGLE_THREAD();
 
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_, "DeleteEntry");
   if (!transaction.Begin()) {
     return false;
   }
@@ -1574,7 +1574,7 @@ bool WebCacheDB::DeleteEntries(std::vector<int64> *version_ids) {
     return true;
   }
 
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_, "DeleteEntries");
   if (!transaction.Begin()) {
     return false;
   }
@@ -1703,7 +1703,7 @@ bool WebCacheDB::DeleteEntry(int64 version_id, const char16 *url) {
   ASSERT_SINGLE_THREAD();
   assert(url);
 
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_, "DeleteEntry");
   if (!transaction.Begin()) {
     return false;
   }
@@ -1883,7 +1883,7 @@ bool WebCacheDB::FindMostRecentPayload(int64 server_id,
 bool WebCacheDB::DeleteUnreferencedPayloads() {
   ASSERT_SINGLE_THREAD();
 
-  SQLTransaction transaction(&db_);
+  SQLTransaction transaction(&db_, "DeleteUnreferencedPayloads");
   if (!transaction.Begin()) {
     return false;
   }
