@@ -53,7 +53,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         Minimum='0.0.0.0' IncludeMinimum='yes'
         Maximum='PRODUCT_VERSION' IncludeMaximum='no' />
       <UpgradeVersion Property='NEWERVERSIONDETECTED' OnlyDetect='yes'
-        Minimum='PRODUCT_VERSION' IncludeMinimum='yes' />
+        Minimum='PRODUCT_VERSION' IncludeMinimum='no' />
     </Upgrade>
     <Directory Id='TARGETDIR' Name='SourceDir'>
       <Directory Id='ProgramFilesFolder' Name='PFiles'>
