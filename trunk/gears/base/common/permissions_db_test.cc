@@ -115,7 +115,7 @@ bool TestPermissionsDBAll() {
   list.clear();
   TEST_ASSERT(permissions->GetOriginsWithShortcuts(&list));
   TEST_ASSERT(list.size() == 2);
-  sort(list.begin(), list.end(), SecurityOriginLT);
+  std::sort(list.begin(), list.end(), SecurityOriginLT);
   TEST_ASSERT(list[0].url() == bar.url());
   TEST_ASSERT(list[1].url() == foo.url());
 
@@ -123,7 +123,7 @@ bool TestPermissionsDBAll() {
   std::vector<std::string16> names;
   TEST_ASSERT(permissions->GetOriginShortcuts(foo, &names));
   TEST_ASSERT(names.size() == 2);
-  sort(names.begin(), names.end());
+  std::sort(names.begin(), names.end());
   TEST_ASSERT(names[0] == kFooTest2);
   TEST_ASSERT(names[1] == kFooTest1);
 
@@ -142,7 +142,7 @@ bool TestPermissionsDBAll() {
   list.clear();
   TEST_ASSERT(permissions->GetOriginsWithShortcuts(&list));
   TEST_ASSERT(list.size() == 2);
-  sort(list.begin(), list.end(), SecurityOriginLT);
+  std::sort(list.begin(), list.end(), SecurityOriginLT);
   TEST_ASSERT(list[0].url() == bar.url());
   TEST_ASSERT(list[1].url() == foo.url());
 
