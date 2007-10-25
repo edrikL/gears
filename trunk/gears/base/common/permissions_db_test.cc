@@ -23,6 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <algorithm>
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/thread_locals.h"
