@@ -265,6 +265,7 @@ IE_CPPSRCS	+= \
 		product_constants.cc \
 		security_model.cc \
 		security_model_test.cc \
+		shortcut_table.cc \
 		sqlite_wrapper.cc \
 		stopwatch.cc \
 		stopwatch_ie.cc \
