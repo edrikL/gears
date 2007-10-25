@@ -27,6 +27,11 @@
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/thread_locals.h"
 
+// For use with sort().
+static bool SecurityOriginLT(const SecurityOrigin &a,
+                             const SecurityOrigin &b) {
+  return a.url() < b.url();
+}
 
 bool TestPermissionsDBAll() {
 // TODO(aa): Refactor into a common location for all the internal tests.
@@ -73,6 +78,88 @@ bool TestPermissionsDBAll() {
   permissions->SetCanAccessGears(bar, PermissionsDB::PERMISSION_DEFAULT);
   TEST_ASSERT(permissions->GetCanAccessGears(bar) ==
       PermissionsDB::PERMISSION_DEFAULT);
+
+  // TODO(shess) Constants for later comparison.
+  const std::string16 kFooTest1(STRING16(L"Test"));
+  const std::string16 kFooTest1Url(STRING16(L"http://www.foo.com/Test.html"));
+  const std::string16
+      kFooTest1IcoUrl(STRING16(L"http://www.foo.com/Test.ico"));
+  const std::string16 kFooTest1Msg(STRING16(L"This is the message."));
+
+  const std::string16 kFooTest2(STRING16(L"Another"));
+  const std::string16
+      kFooTest2Url(STRING16(L"http://www.foo.com/Another.html"));
+  const std::string16
+      kFooTest2IcoUrl(STRING16(L"http://www.foo.com/Another.ico"));
+  const std::string16 kFooTest2Msg(STRING16(L"This is another message."));
+
+  const std::string16 kBarTest(STRING16(L"Test"));
+  const std::string16 kBarTestUrl(STRING16(L"http://www.bar.com/Test.html"));
+  const std::string16 kBarTestIcoUrl(STRING16(L"http://www.bar.com/Test.ico"));
+  const std::string16 kBarTestMsg(STRING16(L"This is a message."));
+
+  // Load up some shortcuts.
+  TEST_ASSERT(
+      permissions->SetShortcut(foo, kFooTest1.c_str(), kFooTest1Url.c_str(),
+                               kFooTest1IcoUrl.c_str(), kFooTest1Msg.c_str()));
+
+  TEST_ASSERT(
+      permissions->SetShortcut(foo, kFooTest2.c_str(), kFooTest2Url.c_str(),
+                               kFooTest2IcoUrl.c_str(), kFooTest2Msg.c_str()));
+
+  TEST_ASSERT(
+      permissions->SetShortcut(bar, kBarTest.c_str(), kBarTestUrl.c_str(),
+                               kBarTestIcoUrl.c_str(), kBarTestMsg.c_str()));
+
+  // Expect 2 origins with shortcuts.
+  list.clear();
+  TEST_ASSERT(permissions->GetOriginsWithShortcuts(&list));
+  TEST_ASSERT(list.size() == 2);
+  sort(list.begin(), list.end(), SecurityOriginLT);
+  TEST_ASSERT(list[0].url() == bar.url());
+  TEST_ASSERT(list[1].url() == foo.url());
+
+  // Expect 2 shortcuts for origin foo.
+  std::vector<std::string16> names;
+  TEST_ASSERT(permissions->GetOriginShortcuts(foo, &names));
+  TEST_ASSERT(names.size() == 2);
+  sort(names.begin(), names.end());
+  TEST_ASSERT(names[0] == kFooTest2);
+  TEST_ASSERT(names[1] == kFooTest1);
+
+  // Test a specific shortcut to see if the data comes back right.
+  std::string16 app_url, ico_url, msg;
+  TEST_ASSERT(permissions->GetShortcut(foo, kFooTest2.c_str(),
+                                       &app_url, &ico_url, &msg));
+  TEST_ASSERT(app_url == kFooTest2Url);
+  TEST_ASSERT(ico_url == kFooTest2IcoUrl);
+  TEST_ASSERT(msg == kFooTest2Msg);
+
+  // Test that deleting a specific shortcut doesn't impact other
+  // shortcuts.
+  TEST_ASSERT(permissions->DeleteShortcut(foo, kFooTest2.c_str()));
+
+  list.clear();
+  TEST_ASSERT(permissions->GetOriginsWithShortcuts(&list));
+  TEST_ASSERT(list.size() == 2);
+  sort(list.begin(), list.end(), SecurityOriginLT);
+  TEST_ASSERT(list[0].url() == bar.url());
+  TEST_ASSERT(list[1].url() == foo.url());
+
+  names.clear();
+  TEST_ASSERT(permissions->GetOriginShortcuts(foo, &names));
+  LOG(("names.size() == %d\n", names.size()));
+  TEST_ASSERT(names.size() == 1);
+  TEST_ASSERT(names[0] == kFooTest1);
+
+  // Test that deleting a specific origin's shortcuts doesn't impact
+  // other origins.
+  TEST_ASSERT(permissions->DeleteShortcuts(foo));
+
+  list.clear();
+  TEST_ASSERT(permissions->GetOriginsWithShortcuts(&list));
+  TEST_ASSERT(list.size() == 1);
+  TEST_ASSERT(list[0].url() == bar.url());
 
   LOG(("TestPermissionsDBAll - passed\n"));
   return true;
