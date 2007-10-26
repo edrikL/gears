@@ -89,8 +89,8 @@ function testInternal() {
 }
 
 function testCaptureUrl() {
-  var captureUri = '../test_file_1024.txt';
-  var renameUri = 'renamed.txt';
+  var captureUri = '/testcases/test_file_1024.txt';
+  var renameUri = '/testcases/renamed.txt';
   var expectedCaptureContent = '1111111111111111111111111111111111111111111111';
   var resourceStore = getFreshStore();
 
@@ -104,7 +104,7 @@ function testCaptureUrl() {
            'Original should have been captured');
 
     // Make a copy of it
-    var copyUri = "copied.txt";
+    var copyUri = "/testcases/copied.txt";
     resourceStore.copy(captureUri, copyUri);
     assert(resourceStore.isCaptured(copyUri), 'Copy should have been captured');
     assert(resourceStore.isCaptured(captureUri),
@@ -140,7 +140,7 @@ function testCaptureUrl() {
 
         // Now re-enable and try to redirect back into cache
         resourceStore.enabled = true;
-        httpGet("../server_redirect.php?location=runner/" + renameUri,
+        httpGet("testcases/cgi/server_redirect.py?location=" + renameUri,
           function(content) {
             var redirectedContent = content;
             assertEqual(renameContent, redirectedContent, 
@@ -163,7 +163,7 @@ function testCaptureUrl() {
 }
 
 function testCaptureFragment() {
-  var baseUri = '../test_file_fragment';
+  var baseUri = '/testcases/test_file_fragment';
   var resourceStore = getFreshStore();
 
   startAsync();
@@ -181,11 +181,11 @@ function testCaptureFragment() {
 
 function testCaptureMany() {
   var urls = {
-    "../test_file_0.txt": 0,
-    "../nonexistent_file": -1,  // should fail
-    "../test_file_1.txt": 1,
-    "../server_redirect.php?location=nonexistent_file": -1,
-    "../test_file_1024.txt": 1024
+    "/testcases/test_file_0.txt": 0,
+    "/testcases/nonexistent_file": -1,  // should fail
+    "/testcases/test_file_1.txt": 1,
+    "/testcases/cgi/server_redirect.py?location=/testcases/nonexistent_file": -1,
+    "/testcases/test_file_1024.txt": 1024
   };
 
   var resourceStore = getFreshStore();
@@ -253,19 +253,19 @@ function testCaptureCrossDomain() {
 
 function testCaptureWithNullCallback() {	
   var resourceStore = getFreshStore();	
-  resourceStore.capture('../nonexistent_file', null);	
+  resourceStore.capture('/testcases/nonexistent_file', null);	
 }
 
 function testGoodManifest() {
   // First, fetch url1's contents for later comparison
   var expectedUrl1Content;
-  httpGet("../manifest-url1.txt", function(content) {
+  httpGet("/testcases/manifest-url1.txt", function(content) {
     expectedUrl1Content = content;
   });
 
   // Then, capture a manifest containing many references to that URL
   startAsync();
-  updateManagedStore("../manifest-good.txt", function(managedStore) {
+  updateManagedStore("/testcases/manifest-good.txt", function(managedStore) {
     assertEqual(UPDATE_STATUS.ok, managedStore.updateStatus,
                 'updateStatus should be OK after good manifest');
 
@@ -274,11 +274,11 @@ function testGoodManifest() {
                 'lastErrorMessage should be empty string after good manifest');
 
     var testUrls = [
-      '../manifest-url1.txt',
-      '../manifest-url1.txt?query',
-      '../alias-to-manifest-url1.txt',
-      '../redirect-to-manifest-url1.txt',
-      '../unicode?foo=bar'
+      '/testcases/manifest-url1.txt',
+      '/testcases/manifest-url1.txt?query',
+      '/testcases/alias-to-manifest-url1.txt',
+      '/testcases/redirect-to-manifest-url1.txt',
+      '/testcases/unicode?foo=bar'
     ];
 
     for (var i = 0; i < testUrls.length; i++) {
@@ -308,7 +308,7 @@ function testGoodManifest() {
 function testBadManifest() {
   startAsync();
   
-  updateManagedStore("../manifest-bad.txt", function(managedStore) {
+  updateManagedStore("/testcases/manifest-bad.txt", function(managedStore) {
     assertEqual(UPDATE_STATUS.failure, managedStore.updateStatus,
                 'updateStatus should be FAILED after bad manifest');
 
@@ -323,7 +323,7 @@ function testBadManifest() {
 function testInvalidManifest() {
   startAsync();
 
-  updateManagedStore('../manifest-ugly.txt', function(managedStore) {
+  updateManagedStore('/testcases/manifest-ugly.txt', function(managedStore) {
     assertEqual(UPDATE_STATUS.failure, managedStore.updateStatus,
                 'updateStatus should be FAILED after ivalid manifest');
 
@@ -337,7 +337,7 @@ function testInvalidManifest() {
 function testIllegalRedirectManifest() {
   startAsync();
 
-  updateManagedStore('../manifest-illegal-redirect.txt',
+  updateManagedStore('/testcases/manifest-illegal-redirect.txt',
     function(managedStore) {
       assertEqual(
         UPDATE_STATUS.failure, managedStore.updateStatus,
