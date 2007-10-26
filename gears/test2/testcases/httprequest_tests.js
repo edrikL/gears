@@ -26,7 +26,7 @@
 function testGet200() {
   startAsync();
   doRequest(
-      '../test_file_1.txt', 'GET', null, null, // url, method, data, reqHeaders[]
+      '/testcases/test_file_1.txt', 'GET', null, null, // url, method, data, reqHeaders[]
       200, '1', null);  // expected status, responseText, responseHeaders[]
 }
 
@@ -38,7 +38,7 @@ function testPost200() {
                  ["Name2", "Value2"]];
   var expectedHeaders = getExpectedEchoHeaders(headers);
 
-  doRequest('../echo_request.php', 'POST', data, headers, 200, data,
+  doRequest('testcases/cgi/echo_request.py', 'POST', data, headers, 200, data,
             expectedHeaders); 
 }
 
@@ -49,24 +49,24 @@ function testPost302_200() {
   var data = 'hello';
   var expectedHeaders = [["echo-Method", "GET"]];
 
-  doRequest('../server_redirect.php?location=echo_request.php', 'POST', data,
+  doRequest('/testcases/cgi/server_redirect.py?location=/testcases/cgi/echo_request.py', 'POST', data,
             null, 200, null, expectedHeaders); 
 }
 
 function testGet404() {
   startAsync();
-  doRequest('../nosuchfile___', 'GET', null, null, 404, null, null);
+  doRequest('nosuchfile___', 'GET', null, null, 404, null, null);
 }
 
 function testGet302_200() {
   startAsync();
-  doRequest('../server_redirect.php?location=test_file_1.txt', 'GET', null,
+  doRequest('testcases/cgi/server_redirect.py?location=/testcases/test_file_1.txt', 'GET', null,
             null, 200, '1', null);
 }
 
 function testGet302_404() {
   startAsync();
-  doRequest('../server_redirect.php?location=nosuchfile___', 'GET', null, null,
+  doRequest('testcases/cgi/server_redirect.py?location=nosuchfile___', 'GET', null, null,
             404, null, null);
 }  
 
@@ -79,14 +79,14 @@ function testGetNoCrossOrigin() {
 function testGet302NoCrossOrigin() {
   startAsync();
   var headers = [["location", "http://www.google.com/"]];
-  doRequest('../server_redirect.php?location=http://www.google.com/', 'GET',
+  doRequest('testcases/cgi/server_redirect.py?location=http://www.google.com/', 'GET',
             null, null, 302, "", headers);
 }
 
 function testRequestDisallowedHeaders() {
   var headers = [["Referer", "http://somewhere.else.com/"]];
   assertError(function() {
-    doRequest('../should_fail', 'GET', null, headers, null, null, null);
+    doRequest('should_fail', 'GET', null, headers, null, null, null);
   });
 }
 
@@ -100,7 +100,7 @@ function testRequestReuse() {
   getOne();
   
   function getOne() {          
-    var url = '../echo_request.php?' + numGot;
+    var url = 'testcases/cgi/echo_request.py?' + numGot;
     reusedRequest.onreadystatechange = function() {
       if (reusedRequest.readyState == 4) {
         assertEqual(200, reusedRequest.status);
@@ -127,7 +127,7 @@ function testGetCapturedResource() {
   var storeName = 'testGet_CapturedResource';
   myLocalServer.removeStore(storeName);
   var myStore = myLocalServer.createStore(storeName);
-  var url = '../echo_request.php?httprequest_a_captured_url';
+  var url = 'testcases/cgi/echo_request.py?httprequest_a_captured_url';
   var captureSuccess;
 
   myStore.capture(url, function(url, success, id) {
@@ -154,7 +154,7 @@ function testNullOnReadyStateChange() {
   unsetHandlerRequest.send();
 }
 
-// Generates header name value pairs echo_requests.php will respond
+// Generates header name value pairs testcases/cgi/echo_requests.py will respond
 // with for the given request headers.
 function getExpectedEchoHeaders(requestHeaders) {
   var echoHeaders = [];

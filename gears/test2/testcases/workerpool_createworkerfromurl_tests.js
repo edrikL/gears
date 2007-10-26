@@ -27,7 +27,7 @@ var currentUrl = location.href;
 
 var sameOriginPath =
   currentUrl.substring(0, 1 + currentUrl.lastIndexOf('/'));
-var sameOriginWorkerFile = '../workerpool_same_origin.js';
+var sameOriginWorkerFile = '../testcases/workerpool_same_origin.js';
 
 // TODO(aa): Change this to test2 when the code is mirrored to SVN.
 var crossOriginPath =

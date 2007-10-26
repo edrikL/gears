@@ -51,44 +51,44 @@ TestSuite.prototype.addFile = function(relativePath, config) {
 
 // Lists test configuration below...
 
-var TEST_TIMEOUT_SECONDS = 30 * 1000;
+var TEST_TIMEOUT_SECONDS = 90 * 1000;
 var suites = [];
 
 var databaseSuite = new TestSuite('Database');
-databaseSuite.addFile('../database_tests.js',
+databaseSuite.addFile('../testcases/database_tests.js',
                       {useWorker: true, useIFrame: true});
-databaseSuite.addFile('../database_noworker_tests.js',
+databaseSuite.addFile('../testcases/database_noworker_tests.js',
                       {useWorker: false, useIFrame: true});
-databaseSuite.addFile('../database_fts_tests.js',
+databaseSuite.addFile('../testcases/database_fts_tests.js',
                       {useWorker: true, useIFrame: true});
 suites.push(databaseSuite);
 
 var factorySuite = new TestSuite('Factory');
-factorySuite.addFile('../factory_tests.js',
+factorySuite.addFile('../testcases/factory_tests.js',
                      {useWorker: true, useIFrame: true});
 suites.push(factorySuite);
 
 var httpRequestSuite = new TestSuite('HttpRequest');
-httpRequestSuite.addFile('../httprequest_tests.js',
+httpRequestSuite.addFile('../testcases/httprequest_tests.js',
                          {useWorker: true, useIFrame: true});
 suites.push(httpRequestSuite);
 
 var localServerSuite = new TestSuite('LocalServer');
-localServerSuite.addFile('../localserver_tests.js',
+localServerSuite.addFile('../testcases/localserver_tests.js',
                          {useWorker: true, useIFrame: true});
-localServerSuite.addFile('../localserver_noworker_tests.js',
+localServerSuite.addFile('../testcases/localserver_noworker_tests.js',
                          {useWorker: false, useIFrame: true});
 suites.push(localServerSuite);
 
 var timerSuite = new TestSuite('Timer');
-timerSuite.addFile('../timer_tests.js', {useWorker: true, useIFrame: true});
+timerSuite.addFile('../testcases/timer_tests.js', {useWorker: true, useIFrame: true});
 suites.push(timerSuite);
 
 var workerPoolSuite = new TestSuite('WorkerPool');
-workerPoolSuite.addFile('../workerpool_tests.js',
+workerPoolSuite.addFile('../testcases/workerpool_tests.js',
                         {useWorker: true, useIFrame: true});
-workerPoolSuite.addFile('../workerpool_onerror_tests.js',
+workerPoolSuite.addFile('../testcases/workerpool_onerror_tests.js',
                         {useWorker: true, useIFrame: true});
-workerPoolSuite.addFile('../workerpool_createworkerfromurl_tests.js',
+workerPoolSuite.addFile('../testcases/workerpool_createworkerfromurl_tests.js',
                         {useWorker: false, useIFrame: true});
 suites.push(workerPoolSuite);
