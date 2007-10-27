@@ -27,50 +27,18 @@ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<html><head><title>Google Gears API Developer's Guide - LocalServer API</title>
+<html>
+  <head>
+    <title>LocalServer API</title>
+    <link rel="stylesheet" type="text/css" href="gears.css" />
+  </head>
 
-<!-- Begin Templates -->
-<link rel="stylesheet" type="text/css" href="http://code.google.com/css/dev_docs.css" /> 
-<link rel="stylesheet" type="text/css" href="./local_extensions.css" /> 
-<!--[if IE 7]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie7only.css" /><![endif]-->
-<!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie6only.css" /><![endif]-->
-<!--[if IE]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ieonly.css" />  <![endif]-->
-<!-- End Templates -->
-</head>
-<body id="api_localserver_page">
-<a name="top"></a>
-<!-- ########## PAGE HEADER ########## -->
-<div id="header">
+<body>
 
-<div id="logo">
-<a href="http://code.google.com/"><img src="resources/code_sm.png"  alt="Google Code" width="150" height="55" border="0" /></a></div>
+<h1>LocalServer API</h1>
 
-<h1 id="doc_title">Google Gears API Developer's Guide (Beta)</h1>
-
-
-<ul class="trail">
-<li>Google Code Home</li> &gt;
-<!-- <li><a href="http://code.google.com/">Google Code Home</a></li> &gt; -->
-<li><a href="api_summary.html">Gears API Reference</a></li> 
-&gt;
-<li>LocalServer Module</li>
-</ul>
-</div>
-<!-- ########## END PAGE HEADER ########## -->
-
-<div id="wrapper">
-<!-- ########## SIDE NAVIGATION ########## -->
-
-<div id="sidenav">
-  <script src="nav.js"></script>
-</div>
-<!-- ########## END SIDE NAVIGATION ########## -->
-
-
-<!-- ########## PAGE CONTENT ########## -->
 <div id="pagecontent">
 
-<h1 id="page_title">LocalServer Module API</h1>
 <p>The LocalServer module allows a web application to cache and serve its HTTP
 resources locally, without a network connection.</p>
 <h3>Contents</h3>
@@ -116,22 +84,22 @@ resources locally, without a network connection.</p>
   updated, and are only updated explicitly by the appliction.</p>
   <p>Google Gears automatically updates ManagedResourceStores according to these rules:</p>
   <ul>
-    <li><span class="code">checkForUpdate()</span> is called each time  a resource contained in a ManagedResourceStore is requested and served locally, but no more often than once every 10 seconds.</li>
-    <li>If the manifest file's <span class="code">version</span> value has changed, the automatic update process runs. For further details, see <a href="#checkforupdate">checkForUpdate</a>. </li>
+    <li><code>checkForUpdate()</code> is called each time  a resource contained in a ManagedResourceStore is requested and served locally, but no more often than once every 10 seconds.</li>
+    <li>If the manifest file's <code>version</code> value has changed, the automatic update process runs. For further details, see <a href="#checkforupdate">checkForUpdate</a>. </li>
   </ul>
   
   <h4>Local serving of cached resources</h4>
   <p>The LocalServer intercepts HTTP/HTTPS requests and serves them from the cache when all of these conditions are met:</p>
   <ul>
     <li>The URL is cached in a ResourceStore or ManagedResourceStore,</li>
-    <li>The resource store's <span class="code">enabled</span> attribute is set to true, and </li>
-    <li>If the resource store has a  <span class="code">requiredCookie</span> attribute,
+    <li>The resource store's <code>enabled</code> attribute is set to true, and </li>
+    <li>If the resource store has a  <code>requiredCookie</code> attribute,
         the request must have a cookie that matches. For further details read <a href="#required_cookie">Cookies and the LocalServer</a>.</li>
   </ul>  
   <p>The LocalServer <em>always</em> serves a cached resource when the conditions are met, regardless of the network connection. The URLs contained in a store
   are eligible for local serving without requiring the application to open the  store.</p>
   <p>To disable local serving of stored resources and force URLs to be served using the regular network connection, the application can set
-  the store's <span class="code">enabled</span> attribute to false.</p>
+  the store's <code>enabled</code> attribute to false.</p>
   <p>&nbsp;</p>
 
 
@@ -216,7 +184,7 @@ var localServer = google.gears.factory.create('beta.localserver', '1.1');
   <h4>Methods</h4>
   <table width="696">
     <tr class="odd">
-      <th colspan="2"><div align="left" class="code"><strong>canServeLocally(string url)</strong></div></th>
+      <th colspan="2"><div align="left"><code><strong>canServeLocally(string url)</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="105">Return Value </td>
@@ -224,7 +192,7 @@ var localServer = google.gears.factory.create('beta.localserver', '1.1');
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-        <td class="odd"><strong class="code">url</strong> - relative or absolute URL that is from the same origin as the current page </td>
+        <td class="odd"><strong><code>url</code></strong> - relative or absolute URL that is from the same origin as the current page </td>
     </tr>
     <tr class="odd">
       <td>Exceptions</td>
@@ -241,17 +209,17 @@ var localServer = google.gears.factory.create('beta.localserver', '1.1');
   </table>
   <table width="699">
     <tr class="odd">
-      <th colspan="2"><div align="left" class="code"><strong>createStore(string name, [string requiredCookie])</strong></div></th>
+      <th colspan="2"><div align="left"><code><strong>createStore(string name, [string requiredCookie])</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="108">Return Value </td>
-        <td width="579" class="code" >ResourceStore </td>
+        <td width="579"><code>ResourceStore </code></td>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-        <td><span class="code">name</span>
-                - string identifying the store <span class="code"><br />
-            requiredCookie - </span>optional.<br />
+        <td><code>name</code>
+                - string identifying the store <br />
+            <code>requiredCookie</code> - optional.<br />
             The combination of name and requiredCookie (along with the domain) identify a unique store. <br />
           Expected cookie format is &quot;name=value&quot;. </td>
     </tr>
@@ -269,17 +237,17 @@ var localServer = google.gears.factory.create('beta.localserver', '1.1');
   </table>
   <table width="695">
     <tr class="odd">
-      <th colspan="2"><div align="left" class="code"><strong>openStore(string name, [string requiredCookie])</strong></div></th>
+      <th colspan="2"><div align="left"><code><strong>openStore(string name, [string requiredCookie])</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="137">Return Value </td>
-        <td width="546" class="code" >ResourceStore<br />
-      null - if no such store exists</td>
+        <td width="546"><code>ResourceStore </code><br />
+      <code>null</code> - if no such store exists</td>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-        <td><span class="code">name</span> - string identifying the store<span class="code"> <br />
-  requiredCookie</span> - optional.<br />
+        <td><code>name</code> - string identifying the store <br />
+  <code>requiredCookie</code> - optional.<br />
 The combination of name and requiredCookie (along with the domain) identify a unique store. <br />
 Expected cookie format is &quot;name=value&quot;.</td>
     </tr>
@@ -294,7 +262,7 @@ Expected cookie format is &quot;name=value&quot;.</td>
   </table>
   <table>
     <tr class="odd">
-      <th colspan="2" width="100%"><div align="left" class="code"><strong> removeStore(string name, [string requiredCookie])</strong></div></th>
+      <th colspan="2" width="100%"><div align="left"><code><strong> removeStore(string name, [string requiredCookie])</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="113">Return Value </td>
@@ -302,8 +270,8 @@ Expected cookie format is &quot;name=value&quot;.</td>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-        <td><span class="code">name</span> - string identifying the store<span class="code"><br>
-          requiredCookie </span>- optional.<br />
+        <td><code>name</code> - string identifying the store <br>
+          <code>requiredCookie</code> - optional.<br />
           The combination of name and requiredCookie (along with the domain) identify a unique store. <br />
       Expected cookie format is &quot;name=value&quot;.</td>
     </tr>
@@ -318,16 +286,16 @@ Expected cookie format is &quot;name=value&quot;.</td>
   </table>
   <table width="699">
     <tr class="odd">
-      <th colspan="2"><div align="left" class="code"><strong>createManagedStore(string name, [string requiredCookie])</strong></div></th>
+      <th colspan="2"><div align="left"><code><strong>createManagedStore(string name, [string requiredCookie])</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="125">Return Value </td>
-        <td width="562" class="code" >ManagedResourceStore </td>
+        <td width="562"><code>ManagedResourceStore </code></td>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-        <td><span class="code">name </span>- string identifying the store<span class="code"><br />
-  requiredCookie </span>- optional.<br />
+        <td><code>name</code> - string identifying the store <br />
+  <code>requiredCookie</code> - optional.<br />
   The combination of name and requiredCookie (along with the domain) identify a unique store. <br />
   Expected cookie format is &quot;name=value&quot;.</td>
     </tr>
@@ -342,16 +310,16 @@ Expected cookie format is &quot;name=value&quot;.</td>
   </table>
   <table>
     <tr class="odd">
-      <th colspan="2" width="100%"><div align="left" class="code"><strong>openManagedStore(string name, [string requiredCookie])</strong></div></th>
+      <th colspan="2" width="100%"><div align="left"><code><strong>openManagedStore(string name, [string requiredCookie])</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="113">Return Value </td>
-        <td width="489" class="code" >ManagedResourceStore</td>
+        <td width="489"><code>ManagedResourceStore</code></td>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-        <td><span class="code">name</span>           - string identifying the store<span class="code"><br />
-requiredCookie </span>- optional.<br />
+        <td><code>name</code>           - string identifying the store<br />
+<code>requiredCookie</code> - optional.<br />
 The combination of name and requiredCookie (along with the domain) identify a unique store. <br />
 Expected cookie format is &quot;name=value&quot;.</td>
     </tr>
@@ -365,7 +333,7 @@ Expected cookie format is &quot;name=value&quot;.</td>
   </table>
   <table width="699">
     <tr class="odd">
-      <th colspan="2"><div align="left" class="code"><strong> removeManagedStore(string name, [string requiredCookie])</strong></div></th>
+      <th colspan="2"><div align="left"><code><strong> removeManagedStore(string name, [string requiredCookie])</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="129">Return Value </td>
@@ -373,8 +341,8 @@ Expected cookie format is &quot;name=value&quot;.</td>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-        <td class="code">name<br>
-        [requiredCookie]</td>
+        <td><code>name</code><br>
+        <code>[requiredCookie]</code></td>
     </tr>
     <tr class="odd">
       <td>Exceptions</td>
@@ -409,16 +377,16 @@ Expected cookie format is &quot;name=value&quot;.</td>
   <p>A ManagedResourceStore is a container of cached URLs. Each distinct ManagedResourceStore is uniquely identified by these attributes: </p>
 
   <ul>
-      <li><span class="code">name</span> - a string identifying the store.<br>
+      <li><code>name</code> - a string identifying the store.<br>
         <i>Currently the name must consist  only of visible ASCII characters excluding the following:</i>
-        <br><font face=monospace>/ \ : * ? " &lt; &gt; | ; , </font><br>
+        <br><kbr>/ \ : * ? " &lt; &gt; | ; , </kbr><br>
         <i>Before finalization of the API we expect to remove this restriction.</i></li>
-      <li><span class="code">requiredCookie</span> - a cookie of the format &quot;name=value&quot; or null </li>
-      <li><span class="code">origin</span> - the scheme, domain, and port of the current page.</li>
+      <li><code>requiredCookie</code> - a cookie of the format &quot;name=value&quot; or null </li>
+      <li><code>origin</code> - the scheme, domain, and port of the current page.</li>
   </ul>
 
 
-  <p> An application can have many <span class="code">ManagedResourceStores</span>.</p>
+  <p> An application can have many <code>ManagedResourceStores</code>.</p>
   <p>The ManagedResourceStores class requires a <em>manifest file</em> to define the URLs to store. The <a href="#manifest_file">manifest file</a> is described in detail, below. </p>
 
   <h3>Attributes</h3>
@@ -494,7 +462,7 @@ Expected cookie format is &quot;name=value&quot;.</td>
   <h3>Methods</h3>
 <table>
   <tr class="odd">
-    <th colspan="2"><div align="left" class="code"><strong>void checkForUpdate()</strong></div></th>
+    <th colspan="2"><div align="left"><code><strong>void checkForUpdate()</strong></code></div></th>
   </tr>
   <tr class="odd">
     <td width="91">Return Value </td>
@@ -540,21 +508,21 @@ Expected cookie format is &quot;name=value&quot;.</td>
 <a name="ResourceStore"></a>
 <h2>ResourceStore class </h2>
 
-<p>A <span class="code">ResourceStore</span> is a container of cached URLs.
-Each distinct <span class="code">ResourceStores</span> is uniquely identified by three attributes:
+<p>A <code>ResourceStore</code> is a container of cached URLs.
+Each distinct <code>ResourceStores</code> is uniquely identified by three attributes:
 <ul>
-  <li> <span class="code">name</span> - a  string name identifying the ResourceStore<br>
+  <li> <code>name</code> - a  string name identifying the ResourceStore<br>
         <i>Currently the name must consist  only of visible ASCII characters excluding the following:</i>
-        <br><font face=monospace>/ \ : * ? " &lt; &gt; | ; , </font><br>
+        <br><kbr>/ \ : * ? " &lt; &gt; | ; , </kbr><br>
         <i>Before finalization of the API we expect to remove this restriction.</i></li>
-  <li><span class="code">requiredCookie</span> - a cookie of the format &quot;name=value&quot; or null </li>
-  <li><span class="code">domain</span> -  the domain, protocol and port of the current page.</li>
+  <li><code>requiredCookie</code> - a cookie of the format &quot;name=value&quot; or null </li>
+  <li><code>domain</code> -  the domain, protocol and port of the current page.</li>
   </ul>
 </p>
 
- <p>There can be many <span class="code">ResourceStores</span> in the system. </p>
+ <p>There can be many <code>ResourceStores</code> in the system. </p>
  <p>
-A <span class="code">ResourceStore</span> is populated with URLs explicitly through the use of the JavaScript API
+A <code>ResourceStore</code> is populated with URLs explicitly through the use of the JavaScript API
 that this class provides.</p>
 
   <h3>Attributes  </h3>
@@ -586,7 +554,7 @@ that this class provides.</p>
   <h3>Methods</h3>
   <table width="645">
     <tr class="odd">
-      <th colspan="2"><div align="left" class="code"> <strong>capture(urlOrUrlArray, callback)</strong> </div></th>
+      <th colspan="2"><div align="left"><code> <strong>capture(urlOrUrlArray, callback)</strong> </code></div></th>
     </tr>
     <tr class="odd">
       <td width="113">Return Value </td>
@@ -594,9 +562,9 @@ that this class provides.</p>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-      <td class="odd"><span class="code">urlOrUrlArray</span><br />
+      <td class="odd"><code>urlOrUrlArray</code><br />
         <br />
-      <span class="code">callback(string url, boolean success, int captureId)</span></td>
+      <code>callback(string url, boolean success, int captureId)</code></td>
     </tr>
     <tr class="odd">
       <td>Exceptions</td>
@@ -606,18 +574,18 @@ that this class provides.</p>
     <tr class="odd">
       <td>Description</td>
       <td class="odd"><p>Initiates a capture task that runs asynchronously in the
-      background, and returns immediately. The return value is a <span class="code">captureId</span> which
+      background, and returns immediately. The return value is a <code>captureId</code> which
       can be passed to <code>abortCapture</code> to cancel the task. <br />
       <br />
       Relative URLs are
-      interpreted according to the current page's location. Upon completion of each URL the <span class="code">callback</span> function is invoked.
+      interpreted according to the current page's location. Upon completion of each URL the <code>callback</code> function is invoked.
       <p>An additional HTTP header is added when Gears is capturing  URLs<br><code>X-Gears-Google: 1</code></td>
     </tr>
   </table>
 
   <table>
     <tr class="odd">
-      <th colspan="2" width="100%"><div align="left" class="code"><strong> abortCapture(int captureId)</strong></div></th>
+      <th colspan="2" width="100%"><div align="left"><code><strong> abortCapture(int captureId)</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="113">Return Value </td>
@@ -625,7 +593,7 @@ that this class provides.</p>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-      <td class="odd"><span class="code">captureId</span><span class="code"></span></td>
+      <td class="odd"><code>captureId</code></td>
     </tr>
     <tr class="odd">
       <td>Exceptions</td>
@@ -638,7 +606,7 @@ that this class provides.</p>
   </table>
   <table width="648">
     <tr class="odd">
-      <th colspan="2"><div align="left" class="code"> <strong> remove(string url)</strong></div></th>
+      <th colspan="2"><div align="left"><code> <strong> remove(string url)</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="113">Return Value </td>
@@ -646,7 +614,7 @@ that this class provides.</p>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-      <td class="code">url</td>
+      <td><code>url</code></td>
     </tr>
     <tr class="odd">
       <td>Exceptions</td>
@@ -660,7 +628,7 @@ that this class provides.</p>
   </table>
   <table width="651">
     <tr class="odd">
-      <th colspan="2"><div align="left" class="code"><strong>rename(string srcUrl, string destUrl)</strong></div></th>
+      <th colspan="2"><div align="left"><code><strong>rename(string srcUrl, string destUrl)</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="131">Return Value </td>
@@ -668,9 +636,9 @@ that this class provides.</p>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-      <td class="code">srcUrl <br />
+      <td><code>srcUrl</code> <br />
         <br />
-      destUrl</td>
+      <code>destUrl</code></td>
     </tr>
     <tr class="odd">
       <td>Exceptions</td>
@@ -684,7 +652,7 @@ that this class provides.</p>
   </table>
   <table width="652">
     <tr class="odd">
-      <th colspan="2"><div align="left" class="code"><strong>copy(string srcUrl, string destUrl)</strong></div></th>
+      <th colspan="2"><div align="left"><code><strong>copy(string srcUrl, string destUrl)</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="113">Return Value </td>
@@ -692,9 +660,9 @@ that this class provides.</p>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-      <td class="code">srcUrl <br />
+      <td><code>srcUrl</code> <br />
         <br />
-        destUrl</td>
+        <code>destUrl</code></td>
     </tr>
     <tr class="odd">
       <td>Exceptions</td>
@@ -708,7 +676,7 @@ that this class provides.</p>
   </table>
   <table>
     <tr class="odd">
-      <th colspan="2" width="100%"><div align="left" class="code"><strong>isCaptured(string url)</strong></div></th>
+      <th colspan="2" width="100%"><div align="left"><code><strong>isCaptured(string url)</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="113">Return Value </td>
@@ -716,7 +684,7 @@ that this class provides.</p>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-      <td class="code">url</td>
+      <td><code>url</code></td>
     </tr>
     <tr class="odd">
       <td>Exceptions</td>
@@ -730,7 +698,7 @@ that this class provides.</p>
   </table>
   <table>
     <tr class="odd">
-      <th colspan="2" width="100%"><div align="left" class="code"><strong>captureFile(HtmlElement fileInputElement, string url)</strong></div></th>
+      <th colspan="2" width="100%"><div align="left"><code><strong>captureFile(HtmlElement fileInputElement, string url)</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="113">Return Value </td>
@@ -738,9 +706,9 @@ that this class provides.</p>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-      <td class="code">fileInputElement<br/>
+      <td><code>fileInputElement</code><br/>
                        <br/>
-                       url</td>
+                       <code>url</code></td>
     </tr>
     <tr class="odd">
       <td>Exceptions</td>
@@ -750,15 +718,15 @@ that this class provides.</p>
     <tr class="odd">
       <td>Description</td>
       <td class="odd">Captures the contents of the file indicated by the
-        <span class="code">fileInputElement</span> into the store and associates
-        that content with the given URL. The <span class="code">fileInputElement</span>
-        argument must be a reference to an<span class="code"> &lt;input type=file&gt;</span>
+        <code>fileInputElement</code> into the store and associates
+        that content with the given URL. The <code>fileInputElement</code>
+        argument must be a reference to an<code> &lt;input type=file&gt;</code>
         HTML element.</td>
     </tr>
   </table>
   <table>
     <tr class="odd">
-      <th colspan="2" width="100%"><div align="left" class="code"><strong>getCapturedFileName(string url)</strong></div></th>
+      <th colspan="2" width="100%"><div align="left"><code><strong>getCapturedFileName(string url)</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="113">Return Value </td>
@@ -766,22 +734,22 @@ that this class provides.</p>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-      <td class="code">url</td>
+      <td><code>url</code></td>
     </tr>
     <tr class="odd">
       <td>Exceptions</td>
-      <td class="" >Throws an exception if the <span class="code">url</span> is not from the same
+      <td class="" >Throws an exception if the <code>url</code> is not from the same
       origin as the current page.</td>
     </tr>
     <tr class="odd">
       <td>Description</td>
-      <td class="odd">Returns the leaf file name associated with <span class="code">url</span> that was previously captured by
-      calling <span class="code">captureFile.</span></td>
+      <td class="odd">Returns the leaf file name associated with <code>url</code> that was previously captured by
+      calling <code>captureFile.</code></td>
     </tr>
   </table>
   <table>
     <tr class="odd">
-      <th colspan="2" width="100%"><div align="left" class="code"><strong>getHeader(string url, string name)</strong></div></th>
+      <th colspan="2" width="100%"><div align="left"><code><strong>getHeader(string url, string name)</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="113">Return Value </td>
@@ -789,12 +757,12 @@ that this class provides.</p>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-      <td class="code">url<br/><br/>
-      name</td>
+      <td><code>url</code><br/><br/>
+      <code>name</code></td>
     </tr>
     <tr class="odd">
       <td>Exceptions</td>
-      <td class="" >Throws an exception if the <span class="code">url</span> is not from the same
+      <td class="" >Throws an exception if the <code>url</code> is not from the same
       origin as the current page.</td>
     </tr>
     <tr class="odd">
@@ -804,7 +772,7 @@ that this class provides.</p>
   </table>
   <table>
     <tr class="odd">
-      <th colspan="2" width="100%"><div align="left" class="code"><strong>getAllHeaders(string url)</strong></div></th>
+      <th colspan="2" width="100%"><div align="left"><code><strong>getAllHeaders(string url)</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="113">Return Value </td>
@@ -812,30 +780,29 @@ that this class provides.</p>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-      <td class="odd"><span class="code">url</span><strong class="code"> <br />
-      </strong></td>
+      <td class="odd"><code>url</code></td>
     </tr>
     <tr class="odd">
       <td>Exceptions</td>
-      <td class="" >Throws an exception if the <span class="code">url</span> is not from the same
+      <td class="" >Throws an exception if the <code>url</code> is not from the same
       origin as the current page.</td>
     </tr>
     <tr class="odd">
       <td>Description</td>
-      <td width="489">Returns all HTTP headers associated with the captured <span class="code">url</span>.</td>
+      <td width="489">Returns all HTTP headers associated with the captured <code>url</code>.</td>
     </tr>
   </table>
   <table>
     <tr class="odd">
-      <th colspan="2" width="100%"><div align="left" class="code"><strong>createFileSubmitter()</strong></div></th>
+      <th colspan="2" width="100%"><div align="left"><code><strong>createFileSubmitter()</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="113">Return Value </td>
-      <td width="489" class="code">FileSubmitter</td>
+      <td width="489"><code>FileSubmitter</code></td>
     </tr>
     <tr class="odd">
       <td>Description</td>
-      <td width="489">Returns a <span class="code">FileSubmitter</span> object, which is used to submit URLs that are contained in this  store
+      <td width="489">Returns a <code>FileSubmitter</code> object, which is used to submit URLs that are contained in this  store
       in HTML form submissions.</td>
     </tr>
   </table>
@@ -846,26 +813,26 @@ that this class provides.</p>
 <!------------------------------------------------------------->
 <a name="FileSubmitter"></a>
 <h2>FileSubmitter class </h2>
-<p>The <span class="code">FileSubmitter</span> object facilitates the submission of local files, that
-  were previously captured using <span class="code">ResourceStore.captureFile</span>, in
+<p>The <code>FileSubmitter</code> object facilitates the submission of local files, that
+  were previously captured using <code>ResourceStore.captureFile</code>, in
   multipart/form-data encoded form submissions. </p>
-<p>To create a <span class="code">FileSubmitter</span>, call
-  <span class="code">ResourceStore.createFileSubmitter()</span>. The returned object allows only
+<p>To create a <code>FileSubmitter</code>, call
+  <code>ResourceStore.createFileSubmitter()</code>. The returned object allows only
   URLs contained in the originating resource store to be submitted. </p>
 
   <h3>Methods</h3>
   <table>
     <tr class="odd">
-      <th colspan="2" width="100%"><div align="left" class="code"><strong>setFileInputElement(htmlElement, url)</strong></div></th>
+      <th colspan="2" width="100%"><div align="left"><code><strong>setFileInputElement(htmlElement, url)</strong></code></div></th>
     </tr>
     <tr class="odd">
       <td width="113">Return Value </td>
-      <td width="489" class="code">void</td>
+      <td width="489"><code>void</code></td>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-      <td class="code">htmlElement<br/><br/>
-                       url</td>
+      <td><code>htmlElement</code><br/><br/>
+                       <code>url</code></td>
     </tr>
     <tr class="odd">
       <td>Exceptions</td>
@@ -883,9 +850,9 @@ that this class provides.</p>
       <p>Due to differences between Firefox and Internet Explorer, this method's
         behavior is browser specific. </p>
       <ul>
-        <li> Firefox: The <span class="code">htmlElement</span> must be a reference to an<span class="code"> &lt;input type=&quot;file&quot;&gt;</span>
+        <li> Firefox: The <code>htmlElement</code> must be a reference to an<code> &lt;input type=&quot;file&quot;&gt;</code>
           element. </li>
-        <li> Internet Explorer: The <span class="code">htmlElement</span> must NOT be a reference to an &lt;input&gt;
+        <li> Internet Explorer: The <code>htmlElement</code> must NOT be a reference to an &lt;input&gt;
           of any type. </li>
       </ul></td>
     </tr>
@@ -947,14 +914,13 @@ that this class provides.</p>
         <th width="336"><div align="center" >Notes</div></th>
       </tr>
       <tr class="odd">
-        <td width="186" class="code">&quot;betaManifestVersion&quot;</td>
-        <td width="208" class="code" >1</td>
+        <td width="186"><code>&quot;betaManifestVersion&quot;</code></td>
+        <td width="208"><code>1</code></td>
         <td width="336" >Required. Represents the version of the manifest file format itself. The manifest file is recognized only if this attribute and value appear and are correct. </td>
       </tr>
       <tr class="odd">
-        <td class="code">&quot;version&quot;</td>
-        <td class="odd">string<strong class="code"> <br />
-        </strong></td>
+        <td><code>&quot;version&quot;</code></td>
+        <td class="odd">string<strong></td>
         <td class="odd">Required. Represents the version, which you determine, of the manifest file's contents. This version is usually your application's version. 
           <ul>
             <li>Version string is any  value determined by your application. </li>
@@ -963,12 +929,12 @@ that this class provides.</p>
         </ul></td>
       </tr>
       <tr class="odd">
-        <td class="code">&quot;redirectUrl&quot;</td>
+        <td><code>&quot;redirectUrl&quot;</code></td>
         <td class="" >URL</td>
         <td class="" >Optional. The redirect URL is returned from the localServer if a &quot;<a href="#MRScookie">requiredCookie</a>&quot; is not present for the URL requested. </td>
       </tr>
       <tr class="odd">
-        <td class="code">&quot;entries&quot;</td>
+        <td><code>&quot;entries&quot;</code></td>
         <td width="208">An array of URL resources,  in JavaScript object format. (See table below for details.) </td>
         <td width="336">Lists the URLs of all the resources to be captured for this manifest file. </td>
       </tr>
@@ -982,39 +948,38 @@ that this class provides.</p>
         <th width="365"><div align="center" >Notes</div></th>
       </tr>
       <tr class="odd">
-        <td width="186" class="code">&quot;url&quot;</td>
+        <td width="186"><code>&quot;url&quot;</code></td>
         <td width="179"  >URL</td>
         <td width="365" >Required. A URL of a resource to be stored locally and served when <code>&quot;url&quot;</code> is requested locally. <br />
           <br />
         All URLs must follow the same-origin <a href="security.html">security</a> policy. </td>
       </tr>
       <tr class="odd">
-        <td class="code">&quot;src&quot;</td>
-        <td class="odd">URL<strong class="code"> <br />
-        </strong></td>
+        <td><code>&quot;src&quot;</code></td>
+        <td class="odd">URL<strong></td>
         <td class="odd">Optional.
         If <code>&quot;src&quot;</code> is present, the given URL is fetched and
         served when <code>&quot;url&quot;</code> is requested locally.<br />
         <br />
-        The<code>&quot;src&quot;</code>and<code>&quot;redirect&quot;</code> are mutually
+        The<code>&quot;src&quot;</code> and <code>&quot;redirect&quot;</code> are mutually
       exclusive.</td>
       </tr>
       <tr class="odd">
-        <td class="code">&quot;redirect&quot;</td>
+        <td><code>&quot;redirect&quot;</code></td>
         <td class="" >URL</td>
         <td class="" >Optional. If  <code>&quot;redirect&quot;</code> is present, the
         local server responds with a 302 redirect to the given URL when <code>&quot;url&quot;</code> is
          requested locally.<br />
          <br />
-         The<code>&quot;src&quot;</code>and<code>&quot;redirect&quot;</code> are mutually
+         The<code>&quot;src&quot;</code> and <code>&quot;redirect&quot;</code> are mutually
       exclusive.</td>
       </tr>
       <tr class="odd">
-        <td class="code">&quot;ignoreQuery&quot;</td>
-        <td width="179">boolean (default is <span class="code">false</span>) </td>
-        <td width="365">Optional. If the value is <span class="code">true</span> the query string in the request URL is ignored when matching against this entry's URL.<br />
+        <td><code>&quot;ignoreQuery&quot;</code></td>
+        <td width="179">boolean (default is <code>false</code>) </td>
+        <td width="365">Optional. If the value is <code>true</code> the query string in the request URL is ignored when matching against this entry's URL.<br />
           <br/>
-        For example, a request for <span class="code">formHandler.html?name=value</span> can match the entries for the full URL including the query, or just the <span class="code">formHandler.html</span> portion of the URL. <br />
+        For example, a request for <code>formHandler.html?name=value</code> can match the entries for the full URL including the query, or just the <code>formHandler.html</code> portion of the URL. <br />
         <br/>
         Note: An entry with an exact URL match takes precedence over a match found by ignoring the query string. </td>
       </tr>
@@ -1026,8 +991,8 @@ that this class provides.</p>
   <p>&nbsp;</p>
   <a name="required_cookie"></a>
   <h2>Cookies and the LocalServer</h2>
-  <p>Both the <span class="code">ResourceStore</span> and <span class="code">ManagedResourceStore</span>
-  support an optional <span class="code">requiredCookie</span> attribute. 
+  <p>Both the <code>ResourceStore</code> and <code>ManagedResourceStore</code>
+  support an optional <code>requiredCookie</code> attribute. 
   This value causes LocalServer to examine cookies when
   deciding which resource to serve for a request. The attribute is used as follows:</p>
   
@@ -1037,13 +1002,13 @@ that this class provides.</p>
       <th width="100%"><div align="center" >Behavior</div></th>
     </tr>
     <tr class="odd">
-      <td class="code">&quot;foo=bar&quot;</td>
+      <td><code>&quot;foo=bar&quot;</code></td>
       <td>Serves the resource from the store if cookie <code>foo</code> is present in the request, and
         has the value <code>bar</code>.
       </td>
     </tr>
     <tr class="odd">
-      <td class="code">&quot;foo=;NONE;&quot;</td>
+      <td><code>&quot;foo=;NONE;&quot;</code></td>
       <td class="odd">Serves the resource from the store if cookie <code>foo</code>
         is <b>not</b> present in the request.
         <span class="highlight">[New in <a href="index.html#relnotes">0.2</a>]</span></td>
@@ -1076,33 +1041,7 @@ that this class provides.</p>
   <p>Location: ~<em>bob</em>/.mozilla/firefox/&lt;firefox's profile id&gt;/Google Gears for Firefox <br />
     Example: ~bob/.mozilla/firefox/08ywpi3q.default/Google Gears for Firefox </p>
 
-  </div>
-<!-- ########## END PAGE CONTENT ########## -->
-</div><!-- end wrapper -->
-<!-- ########## PAGE FOOTER ########## -->
-<div id="footer">
 
-<div id="footerlogo">
-<img src="resources/art.gif" alt="Google color balls" />
 </div>
-
-<div>
-    <p id="copyright">&copy;2007 Google -
-	<a href="http://gears.google.com/tos.html">Terms of Service</a>
-	</p>
-  </div>
-
-</div><!--end footer -->
-<!-- ########## END PAGE FOOTER ########## -->
-
-
-
-<!-- ########## ANALYTICS ########## -->
-<script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript"></script>
-<script type="text/javascript">
-  _uacct = "UA-18071-1";
-  _uanchor=1;
-  urchinTracker();
-</script>
-<!-- ########## END ANALYTICS ########## -->
-</body></html>
+</body>
+</html>

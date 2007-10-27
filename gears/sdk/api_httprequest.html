@@ -27,55 +27,17 @@ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<html><head><title>Google Gears API Developer's Guide - HttpRequest API</title>
+<html>
+  <head>
+    <title>HttpRequest Module API</title>
+    <link rel="stylesheet" type="text/css" href="gears.css" />
+  </head>
 
+<body>
 
-<!-- Begin Templates -->
-<link rel="stylesheet" type="text/css" href="http://code.google.com/css/dev_docs.css" />
-<link rel="stylesheet" type="text/css" href="./local_extensions.css" />
-<!--[if IE 7]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie7only.css" /><![endif]-->
-<!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie6only.css" /><![endif]-->
-<!--[if IE]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ieonly.css" />  <![endif]-->
-<!-- End Templates -->
-<style type="text/css">
-<!--
-.style1 {font-size: medium}
--->
-</style>
-</head><body id="api_httprequest_page">
-<a name="top"></a>
-<!-- ########## PAGE HEADER ########## -->
-<div id="header">
+<h1>HttpRequest Module API <span class="new">[New in <a href="index.html#relnotes">0.2</a>]</span></h1>
 
-<div id="logo">
-<a href="http://code.google.com/"><img src="resources/code_sm.png"  alt="Google Code" width="150" height="55" border="0" /></a></div>
-
-<h1 id="doc_title">Google Gears API Developer's Guide (Beta)</h1>
-
-<ul class="trail"><li><a href="http://code.google.com/">Google Code Home</a>&nbsp;&gt;</li>
-	  <li><a href="api_summary.html">Gears API Reference</a>&nbsp;&gt;</li>
-      <li>HttpRequest Module</li>
-</ul>
-</div>
-<!-- ########## END PAGE HEADER ########## -->
-
-<div id="wrapper">
-<!-- ########## SIDE NAVIGATION ########## -->
-
-<div id="sidenav">
-  <script src="nav.js"></script>
-</div>
-<!-- ########## END SIDE NAVIGATION ########## -->
-
-
-
-<!-- ########## PAGE CONTENT ########## -->
 <div id="pagecontent">
-
-
-<!-- ########## Class Overview ########## -->
-
-<h1 id="page_title">HttpRequest Module API <span class="highlight">[New in <a href="index.html#relnotes">0.2</a>]</span></h1>
 
 <p>The HttpRequest module implements a subset of the
    <a href="http://www.w3.org/TR/XMLHttpRequest/">W3C XmlHttpRequest
@@ -132,11 +94,11 @@ readonly attribute string <b>statusText</b> </code></pre>
 <h3>Methods</h3>
 <table>
   <tr class="odd">
-    <th colspan="2"><div align="left"><span class="code">abort()</span></div></th>
+    <th colspan="2"><div align="left"><code>abort()</code></div></th>
     </tr>
   <tr class="odd">
     <td width="113">Return value: </td>
-    <td width="489" class="code">void</td>
+    <td width="489" ><code>void</code></td>
     </tr>
   <tr class="odd">
     <td>Description:</td>
@@ -147,11 +109,11 @@ readonly attribute string <b>statusText</b> </code></pre>
 </table>
 <table>
   <tr class="odd">
-    <th colspan="2"><div align="left"><span class="code">getAllResponseHeaders()</span></div></th>
+    <th colspan="2"><div align="left"><code>getAllResponseHeaders()</code></div></th>
     </tr>
   <tr class="odd">
     <td width="113">Return value: </td>
-    <td width="489" class="code">string</td>
+    <td width="489"><code>string</code></td>
     </tr>
   <tr class="odd">
     <td>Description:</td>
@@ -162,11 +124,11 @@ readonly attribute string <b>statusText</b> </code></pre>
 </table>
 <table>
   <tr class="odd">
-    <th colspan="2"><div align="left"><span class="code">getResponseHeader(headerName)</span></div></th>
+    <th colspan="2"><div align="left"><code>getResponseHeader(headerName)</code></div></th>
     </tr>
   <tr class="odd">
     <td width="113">Return value: </td>
-    <td width="489" class="code">string</td>
+    <td width="489"><code>string</code></td>
     </tr>
   <tr class="odd">
     <td>Description:</td>
@@ -177,17 +139,17 @@ readonly attribute string <b>statusText</b> </code></pre>
 </table>
 <table>
   <tr class="odd">
-    <th colspan="2"><div align="left"><span class="code">open(method, url)</span></div></th>
+    <th colspan="2"><div align="left"><code>open(method, url)</code></div></th>
     </tr>
   <tr class="odd">
     <td width="113">Return value: </td>
-    <td width="489" class="code">void</td>
+    <td width="489"><code>void</code></td>
     </tr>
   <tr class="odd">
     <td>Parameters:</td>
     <td class="odd">
-        <span class="code">method</span><br/>
-        <span class="code">url</span>
+        <code>method</code><br/>
+        <code>url</code>
     </td>
   </tr>
   <tr class="odd">
@@ -201,16 +163,16 @@ readonly attribute string <b>statusText</b> </code></pre>
 </table>
 <table>
   <tr class="odd">
-    <th colspan="2"><div align="left"><span class="code">send([postData])</span></div></th>
+    <th colspan="2"><div align="left"><code>send([postData])</code></div></th>
     </tr>
   <tr class="odd">
     <td width="113">Return value: </td>
-    <td width="489" class="code">void</td>
+    <td width="489"><code>void</code></td>
     </tr>
   <tr class="odd">
     <td>Parameters:</td>
     <td class="odd">
-        <span class="code">postData</span> - an optional string to be sent as the body of a POST or PUT request.<br/>
+        <code>postData</code> - an optional string to be sent as the body of a POST or PUT request.<br/>
     </td>
   </tr>
   <tr class="odd">
@@ -222,17 +184,17 @@ readonly attribute string <b>statusText</b> </code></pre>
 </table>
 <table>
   <tr class="odd">
-    <th colspan="2"><div align="left"><span class="code">setRequestHeader(name, value)</span></div></th>
+    <th colspan="2"><div align="left"><code>setRequestHeader(name, value)</code></div></th>
     </tr>
   <tr class="odd">
     <td width="113">Return value: </td>
-    <td width="489" class="code">void</td>
+    <td width="489"><code>void</code></td>
     </tr>
   <tr class="odd">
     <td>Parameters:</td>
     <td class="odd">
-        <span class="code">name</span> - the HTTP header to set<br/>
-        <span class="code">value</span> - the value of the header<br/>
+        <code>name</code> - the HTTP header to set<br/>
+        <code>value</code> - the value of the header<br/>
     </td>
   </tr>
   <tr class="odd">
@@ -247,7 +209,7 @@ readonly attribute string <b>statusText</b> </code></pre>
 <h3>Event Handler</h3>
 <table>
   <tr class="odd">
-    <th colspan="2"><div align="left"><span class="code">callback onreadystatechange()</span></div></th>
+    <th colspan="2"><div align="left"><code>callback onreadystatechange()</code></div></th>
     </tr>
   <tr class="odd">
     <td width="113">Description: </td>
@@ -308,31 +270,5 @@ readonly attribute string <b>statusText</b> </code></pre>
   </table>
 
 </div>
-<!-- ########## END PAGE CONTENT ########## -->
-</div><!-- end wrapper -->
-<!-- ########## PAGE FOOTER ########## -->
-<div id="footer">
-
-<div id="footerlogo">
-<img src="resources/art.gif" alt="Google color balls" />
-</div>
-
-<div>
-    <p id="copyright">&copy;2007 Google -
-	<a href="http://gears.google.com/tos.html">Terms of Service</a>
-	</p>
-  </div>
-
-</div><!--end footer -->
-<!-- ########## END PAGE FOOTER ########## -->
-
-
-<!-- ########## ANALYTICS ########## -->
-<script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript"></script>
-<script type="text/javascript">
-  _uacct = "UA-18071-1";
-  _uanchor=1;
-  urchinTracker();
-</script>
-<!-- ########## END ANALYTICS ########## -->
-</body></html>
+</body>
+</html>

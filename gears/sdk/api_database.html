@@ -27,54 +27,17 @@ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<html><head><title>Google Gears API Developer's Guide - Database API</title>
+<html>
+  <head>
+    <title>Database Module API</title>
+    <link rel="stylesheet" type="text/css" href="gears.css" />
+  </head>
 
+<body>
 
-<!-- Begin Templates -->
-<link rel="stylesheet" type="text/css" href="http://code.google.com/css/dev_docs.css" />
-<link rel="stylesheet" type="text/css" href="./local_extensions.css" />
-<!--[if IE 7]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie7only.css" /><![endif]-->
-<!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie6only.css" /><![endif]-->
-<!--[if IE]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ieonly.css" />  <![endif]-->
-<!-- End Templates -->
-<style type="text/css">
-<!--
-.style1 {font-size: medium}
--->
-</style>
-</head><body id="api_database_page">
-<a name="top"></a>
-<!-- ########## PAGE HEADER ########## -->
-<div id="header">
+<h1>Database Module API</h1>
 
-<div id="logo">
-<a href="http://code.google.com/"><img src="resources/code_sm.png"  alt="Google Code" width="150" height="55" border="0" /></a></div>
-
-<h1 id="doc_title">Google Gears API Developer's Guide (Beta)</h1>
-
-<ul class="trail"><li><a href="http://code.google.com/">Google Code Home</a>&nbsp;&gt;</li>
-	  <li><a href="api_summary.html">Gears API Reference</a>&nbsp;&gt;</li>
-      <li>Database Module</li>
-</ul>
-</div>
-<!-- ########## END PAGE HEADER ########## -->
-
-<div id="wrapper">
-<!-- ########## SIDE NAVIGATION ########## -->
-
-<div id="sidenav">
-  <script src="nav.js"></script>
-</div>
-<!-- ########## END SIDE NAVIGATION ########## -->
-
-
-<!-- ########## PAGE CONTENT ########## -->
 <div id="pagecontent">
-
-<!------------------------------------------------------------->
-<!-- API Overview                                            -->
-<!------------------------------------------------------------->
-<h1 id="page_title">Database Module API</h1>
 
 <p>The Database module provides browser-local relational data storage to
 your JavaScript web application. Google Gears uses the open source
@@ -165,7 +128,7 @@ rs.close();
   <tr class="odd">
     <td>Parameters:</td>
     <td class="odd">
-        <span class="code">name</span> - optional
+        <code>name</code> - optional
     </td>
   </tr>
   <tr class="odd">
@@ -174,7 +137,7 @@ rs.close();
       <i>Currently the name, if supplied and of length greater than zero, must consist only of visible ASCII characters excluding the following
         characters:<br />
           <br />
-        </i><font face="monospace">/ \ : * ? &quot; &lt; &gt; | ; ,</font><br />
+        </i><kbd>/ \ : * ? &quot; &lt; &gt; | ; ,</kbd><br />
           <br />
           <i>Otherwise, open() will throw an exception. Before finalization of the API we
       expect to remove this restriction.</i></td>
@@ -182,7 +145,7 @@ rs.close();
   <tr class="odd">
     <td>Description:</td>
     <td class="odd">
-        Opens the database <span class="code">name</span>, or an unnamed database if <span class="code">name</span> is omitted.  <span class="code">name</span> is local to the application's origin (see <a href="security.html#model">Security</a>).
+        Opens the database <code>name</code>, or an unnamed database if <code>name</code> is omitted.  <code>name</code> is local to the application's origin (see <a href="security.html#model">Security</a>).
   </td>
     </tr>
 </table>
@@ -196,24 +159,24 @@ rs.close();
   </tr>
   <tr class="odd">
     <td>Parameters</td>
-    <td class="odd"><span class="code">sqlStatement</span> is a string containing a SQL statement, with <span class="code">?</span> as a placeholder for bind parameters.<br />
+    <td class="odd"><code>sqlStatement</code> is a string containing a SQL statement, with <code>?</code> as a placeholder for bind parameters.<br />
       <br />
-      <span class="code">argArray</span> is an optional array of bind parameters to be substituted for the placeholders.</td>
+      <code>argArray</code> is an optional array of bind parameters to be substituted for the placeholders.</td>
   </tr>
   <tr class="odd">
     <td>Exceptions</td>
     <td class="" >
       Throws an exception if the SQL statement fails to execute. See the exception object's <code>message</code> attribute for details.
       <br><br>
-      <span style="color:red">Note: </span>If multiple processes (including <a href="api_workerpool.html">Workers</a>) attempt to write to the
-        database at the same time, one can fail. It is up to the application to retry in these situations.
+      <p class="note">Note: If multiple processes (including <a href="api_workerpool.html">Workers</a>) attempt to write to the
+        database at the same time, one can fail. It is up to the application to retry in these situations.</p>
   </tr>
   <tr class="odd">
     <td>Description</td>
     <td class="odd">
-      Substitute zero or more bind parameters from <span class="code">argArray</span> into <span class="code">sqlStatement</span> and execute the resulting SQL statement.  There must be exactly as many items in <code>argArray</code> as their are <code>?</code> placeholders in <code>sqlStatement</code>.  <code>argArray</code> can be omitted if there are no placeholders.  The results of executing the statement are returned in a <a href="#ResultSet">ResultSet</a>.<br/>
+      Substitute zero or more bind parameters from <code>argArray</code> into <code>sqlStatement</code> and execute the resulting SQL statement.  There must be exactly as many items in <code>argArray</code> as their are <code>?</code> placeholders in <code>sqlStatement</code>.  <code>argArray</code> can be omitted if there are no placeholders.  The results of executing the statement are returned in a <a href="#ResultSet">ResultSet</a>.<br/>
       <br/>
-      <span class="code">open()</span> must be called and must return successfully before calling <span class="code">execute().</span><br/>
+      <code>open()</code> must be called and must return successfully before calling <code>execute().</code><br/>
       <h4>Example: </h4><br/>
       <code>resultSet = db.execute (<br/>
       &nbsp;&nbsp;'INSERT INTO MYTABLE VALUES (?, ?, ?) WHERE id=?',<br/>
@@ -279,10 +242,10 @@ rs.close();
 
 <p class="backtotop"><a href="#top">Back to top</a></p>
 <p>
- A <span class="code">ResultSet</span> is returned from a successful call to <span class="code">Database.execute()</span>.  It contains the results of executing the SQL statement.</p>
-<p>A <span class="code">ResultSet</span> is immutable, subsequent changes to the
+ A <code>ResultSet</code> is returned from a successful call to <code>Database.execute()</code>.  It contains the results of executing the SQL statement.</p>
+<p>A <code>ResultSet</code> is immutable, subsequent changes to the
   underlying database do not affect the contents. </p>
-<p>Iterate over the rows of the result set using <span class="code">isValidRow()</span>, <span class="code">next()</span>, and <span class="code">close()</span>, calling data extraction methods for valid rows.  For example:
+<p>Iterate over the rows of the result set using <code>isValidRow()</code>, <code>next()</code>, and <code>close()</code>, calling data extraction methods for valid rows.  For example:
 </p>
 <pre><code>while (rs.isValidRow()) {
   console.log(rs.fieldName(0) + " == " + rs.field(0));
@@ -374,11 +337,11 @@ rs.close();</code></pre>
   </tr>
   <tr class="odd">
     <td>Exceptions:</td>
-    <td class="" >Throws an exception if <span class="code">fieldIndex</span> is out of range.</td>
+    <td class="" >Throws an exception if <code>fieldIndex</code> is out of range.</td>
   </tr>
   <tr class="odd">
     <td>Parameters:</td>
-    <td class="odd"><span class="code">fieldIndex</span> : the zero-based index of the desired field </td>
+    <td class="odd"><code>fieldIndex</code> : the zero-based index of the desired field </td>
   </tr>
   <tr class="odd">
     <td>Description:</td>
@@ -397,11 +360,11 @@ rs.close();</code></pre>
   </tr>
   <tr class="odd">
     <td>Exceptions:</td>
-    <td class="" >Throws an exception if <span class="code">fieldIndex</span> is out of range.</td>
+    <td class="" >Throws an exception if <code>fieldIndex</code> is out of range.</td>
   </tr>
   <tr class="odd">
     <td>Parameters:</td>
-    <td class="odd"><span class="code">fieldIndex</span> : the zero-based index of the desired field </td>
+    <td class="odd"><code>fieldIndex</code> : the zero-based index of the desired field </td>
   </tr>
   <tr class="odd">
     <td>Description:</td>
@@ -419,11 +382,11 @@ rs.close();</code></pre>
   </tr>
   <tr class="odd">
     <td>Exceptions:</td>
-    <td class="" >Throws an exception if <span class="code">fieldName</span> names a nonexistent field.</td>
+    <td class="" >Throws an exception if <code>fieldName</code> names a nonexistent field.</td>
   </tr>
   <tr class="odd">
     <td>Parameters:</td>
-    <td class="odd"><span class="code">fieldName</span>: the name of the desired field </td>
+    <td class="odd"><code>fieldName</code>: the name of the desired field </td>
   </tr>
   <tr class="odd">
     <td>Description:</td>
@@ -608,31 +571,5 @@ db.execute('INSERT INTO recipe (rowid, dish, ingredients) ' +
 db.execute('COMMIT');</code></pre>
 
 </div>
-<!-- ########## END PAGE CONTENT ########## -->
-</div><!-- end wrapper -->
-<!-- ########## PAGE FOOTER ########## -->
-<div id="footer">
-
-<div id="footerlogo">
-<img src="resources/art.gif" alt="Google color balls" />
-</div>
-
-<div>
-    <p id="copyright">&copy;2007 Google -
-	<a href="http://gears.google.com/tos.html">Terms of Service</a>
-	</p>
-  </div>
-
-</div><!--end footer -->
-<!-- ########## END PAGE FOOTER ########## -->
-
-
-<!-- ########## ANALYTICS ########## -->
-<script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript"></script>
-<script type="text/javascript">
-  _uacct = "UA-18071-1";
-  _uanchor=1;
-  urchinTracker();
-</script>
-<!-- ########## END ANALYTICS ########## -->
-</body></html>
+</body>
+</html>
