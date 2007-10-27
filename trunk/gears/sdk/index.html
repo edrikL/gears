@@ -27,57 +27,23 @@ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<html><head>
-<title>Google Gears API Developer's Guide - Home</title>
+<html>
+  <head>
+    <title>Home</title>
+    <link rel="stylesheet" type="text/css" href="gears.css" />
+  </head>
 
-<!-- Begin Templates -->
-<link rel="stylesheet" type="text/css" href="http://code.google.com/css/dev_docs.css" /> 
-<link rel="stylesheet" type="text/css" href="./local_extensions.css" /> 
-<!--[if IE 7]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie7only.css" /><![endif]-->
-<!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie6only.css" /><![endif]-->
-<!--[if IE]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ieonly.css" />  <![endif]-->
-<!-- End Templates -->
-<style type="text/css">
-#pagecontent table, #pagecontent td {
-  border:none;
-}
+<body>
 
-#pagecontent img {
-  margin:0;
-}
-</style>
-</head>
-<body id="home_page">
-<a name="top"></a>
-<!-- ########## PAGE HEADER ########## -->
-<div id="header">
+<h1>Home</h1>
 
-<div id="logo">
-<a href="http://code.google.com/"><img src="resources/code_sm.png" alt="Google Code" width="150" height="55" border="0" /></a></div>
-
-<h1 id="doc_title">Google Gears API Developer's Guide (Beta)</h1>
-
-
-</div>
-<!-- ########## END PAGE HEADER ########## -->
-
-<div id="wrapper">
-<!-- ########## SIDE NAVIGATION ########## -->
-
-<div id="sidenav">
-  <script src="nav.js"></script>
-</div>
-<!-- ########## END SIDE NAVIGATION ########## -->
-
-
-  <!-- ########## PAGE CONTENT ########## -->
 <div id="pagecontent">
-  <h1 id="page_title">Google Gears: Enabling Offline Web Applications </h1>
+
   <p>Google Gears is an open source browser extension that lets developers create web applications that can run offline.</p>
   <!--
-  <div class="alert">
+  <p class="notice">
     <a href="#">Start developing Google Gears applications</a>
-  </div>
+  </p>
   -->
   <br>
 
@@ -155,48 +121,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       Perform a long-running computation without blocking the browser UI
     </li>
   </ul>
+
+
 </div>
-<!-- ########## END PAGE CONTENT ########## -->
-</div><!-- end wrapper -->
-<!-- ########## PAGE FOOTER ########## -->
-<div id="footer">
-
-<div id="footerlogo">
-<img src="resources/art.gif" alt="Google color balls" />
-</div>
-
-<div>
-    <p id="copyright">&copy;2007 Google -
-	<a href="http://gears.google.com/tos.html">Terms of Service</a>
-	</p>
-  </div>
-
-</div><!--end footer -->
-<!-- ########## END PAGE FOOTER ########## -->
-
-<!-- BEGIN  is Gears installed -->
-<p id="date">
-<script type="text/javascript" src="tools/gears_init.js"></script>
-<script type="text/javascript">
-  var statusText;
- 
-  if (!window.google || !google.gears) {
-    statusText = "<a href='install.html'>Gears is not installed</a>";
-  } else {
-    var buildInfo = google.gears.factory.getBuildInfo();
-    statusText = "Gears build " + buildInfo;
-  }
-
-  document.write(statusText);
-</script>
-<!-- END javascript -->
-
-<!-- ########## ANALYTICS ########## -->
-<script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript"></script>
-<script type="text/javascript">
-  _uacct = "UA-18071-1";
-  _uanchor=1;
-  urchinTracker();
-</script>
-<!-- ########## END ANALYTICS ########## -->
-</body></html>
+</body>
+</html>

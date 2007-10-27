@@ -27,55 +27,18 @@ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>Google Gears API Developer's Guide - Timer API</title>
+<html>
+  <head>
+    <title>Timer API</title>
+    <link rel="stylesheet" type="text/css" href="gears.css" />
+  </head>
 
-<!-- Begin Templates -->
-<link rel="stylesheet" type="text/css" href="http://code.google.com/css/dev_docs.css" /> 
-<link rel="stylesheet" type="text/css" href="./local_extensions.css" /> 
-<!--[if IE 7]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie7only.css" /><![endif]-->
-<!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ie6only.css" /><![endif]-->
-<!--[if IE]><link rel="stylesheet" type="text/css" href="http://code.google.com/css/ieonly.css" />  <![endif]-->
-<!-- End Templates -->
-</head>
-<body id="api_timer_page">
-<a name="top" id="top"></a>
-<!-- ########## PAGE HEADER ########## -->
-<div id="header">
+<body>
 
-<div id="logo">
-<a href="http://code.google.com/"><img src="resources/code_sm.png"  alt="Google Code" width="150" height="55" border="0" /></a></div>
+<h1>Timer API  <span class="new">[New in <a href="index.html#relnotes">0.2</a>]</h1>
 
-<h1 id="doc_title">Google Gears API Developer's Guide (Beta)</h1>
-
-<ul class="trail">
-<li>Google Code Home</li> &gt;
-<!-- <li><a href="http://code.google.com/">Google Code Home</a></li> &gt; -->
-<li><a href="api_summary.html">Gears API Reference</a></li> 
-&gt;
-<li>Timer Module</li>
-</ul>
-</div>
-<!-- ########## END PAGE HEADER ########## -->
-
-<div id="wrapper">
-
-<!-- ########## SIDE NAVIGATION ########## -->
-
-<div id="sidenav">
-  <script src="nav.js"></script>
-</div>
-<!-- ########## END SIDE NAVIGATION ########## -->
-
-
-
-
-<!-- ########## PAGE CONTENT ########## -->
 <div id="pagecontent">
 
-<h1 id="page_title">Timer Module API <span class="highlight">[New in <a href="index.html#relnotes">0.2</a>]</span></h1>
-<p>
-</p>
 <p>The Timer module implements the <a
   href="http://www.whatwg.org/specs/web-apps/current-work/multipage/section-timers.html">WhatWG
   Timer specification</a>, and makes it available in both workers and the main
@@ -130,9 +93,8 @@ void <b>clearInterval</b>(timerId)</code></pre>
   </tr>
   <tr class="odd">
     <td>Parameters:</td>
-    <td class="odd"><span class="code">function</span><span class="code"> <br />
-      <span class="code">msecDelay</span><span class="code"> 
-    </span></td>
+    <td class="odd"><code>function</code> <br />
+      <code>msecDelay</code></td>
   </tr>
   <tr class="odd">
     <td width="113">Return value:</td>
@@ -141,8 +103,8 @@ void <b>clearInterval</b>(timerId)</code></pre>
   <tr class="odd">
     <td>Description:</td>
     <td class="odd">
-      Creates a timeout that will call <span class="code">function</span> after
-      <span class="code">msecDelay</span> milliseconds have elapsed.
+      Creates a timeout that will call <code>function</code> after
+      <code>msecDelay</code> milliseconds have elapsed.
       <br><br>
       Timer IDs are guaranteed to be unique values that are never reused
       within the same Timer.
@@ -155,9 +117,8 @@ void <b>clearInterval</b>(timerId)</code></pre>
   </tr>
   <tr class="odd">
     <td>Parameters:</td>
-    <td class="odd"><span class="code">fullScript</span><span class="code"> <br />
-      <span class="code">msecDelay</span><span class="code">
-    </span></td>
+    <td class="odd"><code>fullScript</code><code> <br />
+      <code>msecDelay</code></td>
   </tr>
   <tr class="odd">
     <td width="113">Return value: </td>
@@ -166,8 +127,8 @@ void <b>clearInterval</b>(timerId)</code></pre>
   <tr class="odd">
     <td>Description:</td>
     <td class="odd">
-      Creates a timeout that will evaluate <span class="code">fullScript</span>
-      after <span class="code">msecDelay</span> milliseconds have elapsed.
+      Creates a timeout that will evaluate <code>fullScript</code>
+      after <code>msecDelay</code> milliseconds have elapsed.
       <br><br>
       Timer IDs are guaranteed to be unique values that are never reused
       within the same Timer.
@@ -180,9 +141,8 @@ void <b>clearInterval</b>(timerId)</code></pre>
   </tr>
   <tr class="odd">
     <td>Parameters:</td>
-    <td class="odd"><span class="code">function</span><span class="code"> <br />
-      <span class="code">msecDelay</span><span class="code"> 
-    </span></td>
+    <td class="odd"><code>function</code><code> <br />
+      <code>msecDelay</code></td>
   </tr>
   <tr class="odd">
     <td width="113">Return value:</td>
@@ -191,8 +151,8 @@ void <b>clearInterval</b>(timerId)</code></pre>
   <tr class="odd">
     <td>Description:</td>
     <td class="odd">
-      Creates an interval that will call <span class="code">function</span>
-      after every <span class="code">msecDelay</span> milliseconds have elapsed.
+      Creates an interval that will call <code>function</code>
+      after every <code>msecDelay</code> milliseconds have elapsed.
       It will continue to fire until you call clearInterval() with this
       interval's ID, or the page is unloaded.
       <br><br>
@@ -207,9 +167,8 @@ void <b>clearInterval</b>(timerId)</code></pre>
   </tr>
   <tr class="odd">
     <td>Parameters:</td>
-    <td class="odd"><span class="code">fullScript</span><span class="code"> <br />
-      <span class="code">msecDelay</span><span class="code"> 
-    </span></td>
+    <td class="odd"><code>fullScript</code><code> <br />
+      <code>msecDelay</code></td>
   </tr>
   <tr class="odd">
     <td width="113">Return value:</td>
@@ -218,8 +177,8 @@ void <b>clearInterval</b>(timerId)</code></pre>
   <tr class="odd">
     <td>Description:</td>
     <td class="odd">
-      Creates an interval that will evaluate <span class="code">fullScript</span>
-      after every <span class="code">msecDelay</span> milliseconds have elapsed.
+      Creates an interval that will evaluate <code>fullScript</code>
+      after every <code>msecDelay</code> milliseconds have elapsed.
       It will continue to fire until you call clearInterval() with this
       interval's ID, or the page is unloaded.
       <br><br>
@@ -234,7 +193,7 @@ void <b>clearInterval</b>(timerId)</code></pre>
   </tr>
   <tr class="odd">
     <td>Parameters:</td>
-    <td class="odd"><span class="code">timeoutId</span>
+    <td class="odd"><code>timeoutId</code>
     - The ID of the timeout to remove.
     </td>
   </tr>
@@ -242,8 +201,8 @@ void <b>clearInterval</b>(timerId)</code></pre>
     <td>Description:</td>
     <td class="odd">
       Works with timeouts
-      created with either the <span class="code">fullScript</span> or
-      <span class="code">function</span> version.
+      created with either the <code>fullScript</code> or
+      <code>function</code> version.
     </td>
   </tr>
 </table>
@@ -253,7 +212,7 @@ void <b>clearInterval</b>(timerId)</code></pre>
   </tr>
   <tr class="odd">
     <td>Parameters:</td>
-    <td class="odd"><span class="code">intervalId</span>
+    <td class="odd"><code>intervalId</code>
     - The ID of the interval to remove.
     </td>
   </tr>
@@ -261,40 +220,13 @@ void <b>clearInterval</b>(timerId)</code></pre>
     <td>Description:</td>
     <td class="odd">
       Works with intervals created with either the
-      <span class="code">fullScript</span> or <span class="code">function</span>
+      <code>fullScript</code> or <code>function</code>
       version.  No future events will fire from the given interval.  
     </td>
   </tr>
 </table>
 
 
-</div><!-- end page content -->
-<!-- ########## END PAGE CONTENT ########## -->
-</div><!-- end wrapper -->
-<!-- ########## PAGE FOOTER ########## -->
-<div id="footer">
-
-<div id="footerlogo">
-<img src="resources/art.gif" alt="Google color balls" />
 </div>
-
-<div>
-    <p id="copyright">&copy;2007 Google -
-	<a href="http://gears.google.com/tos.html">Terms of Service</a>
-	</p>
-  </div>
-
-</div><!--end footer -->
-<!-- ########## END PAGE FOOTER ########## -->
-
-
-
-<!-- ########## ANALYTICS ########## -->
-<script src="https://ssl.google-analytics.com/urchin.js" type="text/javascript"></script>
-<script type="text/javascript">
-  _uacct = "UA-18071-1";
-  _uanchor=1;
-  urchinTracker();
-</script>
-<!-- ########## END ANALYTICS ########## -->
-</body></html>
+</body>
+</html>
