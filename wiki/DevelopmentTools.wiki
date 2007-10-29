@@ -2,7 +2,7 @@
 
 = Problem =
 
-The existing tools that we provide in our SDK are lacking some key features that would enable developers to more easily build complex Gears applications. Additionally, the fact that they are not integrated into Gears themselves makes them harder to use because you have to copy them into your application.
+The existing tools that we provide in our SDK are lacking some key features that would enable developers to more easily build complex Gears applications. Additionally, the fact that they are not integrated into Gears makes them harder to use because you have to copy them into your application.
 
 
 = Solution =
