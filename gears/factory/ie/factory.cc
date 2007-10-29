@@ -196,6 +196,32 @@ STDMETHODIMP GearsFactory::get_version(BSTR *retval) {
 }
 
 
+STDMETHODIMP GearsFactory::getPermission(const BSTR app_name_in,
+                                         const BSTR image_url_in,
+                                         const BSTR extra_message_in,
+                                         VARIANT_BOOL *retval) {
+  // Guard against NULL BSTRs.
+  // TODO(cprince): Do this automatically in JsParamFetcher for IE.
+  const BSTR app_name = ActiveXUtils::SafeBSTR(app_name_in);
+  const BSTR image_url = ActiveXUtils::SafeBSTR(image_url_in);
+  const BSTR extra_message = ActiveXUtils::SafeBSTR(extra_message_in);
+
+  // TODO(cprince): use the parameters when the security dialog supports them.
+  // TODO(cprince): Allow relative URLs? Even in workers?
+  *retval = HasPermissionToUseGears(this) ? VARIANT_TRUE : VARIANT_FALSE;
+  RETURN_NORMAL();
+}
+
+
+// Purposely ignores 'is_creation_suspended_'.  The 'hasPermission' property
+// indicates whether USER opt-in is still required, not whether DEVELOPER
+// methods have been called correctly (e.g. allowCrossOrigin).
+STDMETHODIMP GearsFactory::get_hasPermission(VARIANT_BOOL *retval) {
+  *retval = is_permission_granted_ ? VARIANT_TRUE : VARIANT_FALSE;
+  RETURN_NORMAL();
+}
+
+
 // InitBaseFromDOM needs the object to be sited.  We override SetSite just to
 // know when this happens, so we can do some one-time setup afterward.
 STDMETHODIMP GearsFactory::SetSite(IUnknown *site) {
