@@ -33,14 +33,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <link rel="stylesheet" href="button.css">
   <link rel="stylesheet" href="html_dialog.css">
   <style type="text/css">
-    #button-row {
-      /* 
-      Override the background in html_dialog.css
-      TODO(aa): Remove this when the settings dialog is redesigned and
-      doesn't need the background anymore.
-       */
-      background:none;
-      margin:0 0.5em;
+    #content {
+      margin:0 1em;
     }
 
     #checkbox-row {
@@ -69,7 +63,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     }
 
     #yellowbox {
-      margin:1em 0;
+      margin:1em 1px;
       border:solid #f1cc1d;
       border-width:1px 0;
       background:#faefb8;
@@ -89,94 +83,98 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   </style>
 </head>
 <body>
-  <div id="scroll">
-    <div id="content">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td align="left" valign="middle">
-            <img id="icon" src="icon_32x32.png" width="32" height="32">
-          </td>
-          <td width="100%" align="left" valign="middle">The website below
-          wants to use PRODUCT_FRIENDLY_NAME_UQ.</td>
-        </tr>
-      </table>
-
-      <div id="yellowbox">
-        <div id="yellowbox-inner">
-          <p>This site will be able to store and access information on your
-          computer.
-          <!-- 
-          [naming] - Not using short_name here because not sure if url always
-          changes when name does.
-
-          HACK: What I wanted here was target="_blank" to open this URL in a new
-          window. However, when I did that Firefox opened the new window, but
-          did not actually navigate it anywhere. This is probably due to
-          modality issues (the code that would do the navigate is blocked behind
-          this modal dialog). Using onclick fixes, for some reason.
-          -->
-          &nbsp;<a href="http://gears.google.com/?action=help"
-            onclick="window.open(this.href); return false;">What is
-            this?</a></p>
-
-          <div id="sitename"><div id="sitename-inner"></div></div>
-        </div>
-      </div>
-      <p id="checkbox-row">
-        <table cellspacing="0" cellpadding="0" border="0">
-          <tr>
-            <td valign="middle">
-              <input type="checkbox" id="unlock" accesskey="T">
-            </td>
-            <td valign="middle">
-              <label for="unlock">
-                &nbsp;I <span class="accesskey">t</span>rust this site. Allow
-                it to use PRODUCT_FRIENDLY_NAME_UQ.
-              </label>
-            </td>
-          </tr>
-        </table>
-      </p>
-    </div>
-  </div>
-  <div id="button-row">
-    <table cellpadding="0" cellspacing="0" border="0">
+  <div id="head">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
-        <td width="100%" align="left" valign="middle">
-          <a href="#" onclick="denyAccessPermanently(); return false;">Never
-          allow this site</a>
+        <td align="left" valign="middle">
+          <img id="icon" src="icon_32x32.png" width="32" height="32">
         </td>
-        <td nowrap="true" align="right" valign="middle">
-          <!--
-          Fancy buttons
-          Note: Weird line breaks are on purpose to avoid extra space between
-          buttons.
-          Note: Outer element is <a> because we want it to focusable and behave
-          like an anchor. Inner elements should theoretically be able to be
-          <span>, but IE renders incorrectly in this case.
-          -->
-          <a href="#" accesskey="A" id="allow-button" 
-              onclick="allowAccess(); return false;"
-              class="inline-block custom-button">
-            <div class="inline-block custom-button-outer-box">
-              <div class="inline-block custom-button-inner-box"
-                ><span class="accesskey">A</span>llow</div></div></a>
-          <!--
-          Note: There must be whitespace here or Firefox messes up the
-          rendering.
-          TODO(aa): This results in inconsistent spacing in IE vs Firefox
-          between the buttons, but I am reluctant to hack things even further
-          to fix that.
-          -->
-          <a href="#" accesskey="C" id="deny-button"
-              onclick="denyAccess(); return false;"
-              class="inline-block custom-button">
-            <div class="inline-block custom-button-outer-box">
-              <div class="inline-block custom-button-inner-box"
-                ><span class="accesskey">C</span>ancel</div></div></a>
-        </td>
+        <td width="100%" align="left" valign="middle">The website below
+        wants to use PRODUCT_FRIENDLY_NAME_UQ.</td>
       </tr>
     </table>
+  </div>
+
+  <div id="content">
+    <div id="yellowbox">
+      <div id="yellowbox-inner">
+        <p>This site will be able to store and access information on your
+        computer.
+        <!-- 
+        [naming] - Not using short_name here because not sure if url always
+        changes when name does.
+
+        HACK: What I wanted here was target="_blank" to open this URL in a new
+        window. However, when I did that Firefox opened the new window, but
+        did not actually navigate it anywhere. This is probably due to
+        modality issues (the code that would do the navigate is blocked behind
+        this modal dialog). Using onclick fixes, for some reason.
+        -->
+        &nbsp;<a href="http://gears.google.com/?action=help"
+          onclick="window.open(this.href); return false;">What is
+          this?</a></p>
+
+        <div id="sitename"><div id="sitename-inner"></div></div>
+      </div>
+    </div>
+
+    <p id="checkbox-row">
+      <table cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td valign="middle">
+            <input type="checkbox" id="unlock" accesskey="T">
+          </td>
+          <td valign="middle">
+            <label for="unlock">
+              &nbsp;I <span class="accesskey">t</span>rust this site. Allow
+              it to use PRODUCT_FRIENDLY_NAME_UQ.
+            </label>
+          </td>
+        </tr>
+      </table>
+    </p>
+  </div>
+
+  <div id="foot">
+    <div id="button-row">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td width="100%" align="left" valign="middle">
+            <a href="#" onclick="denyAccessPermanently(); return false;">Never
+            allow this site</a>
+          </td>
+          <td nowrap="true" align="right" valign="middle">
+            <!--
+            Fancy buttons
+            Note: Weird line breaks are on purpose to avoid extra space between
+            buttons.
+            Note: Outer element is <a> because we want it to focusable and
+            behave like an anchor. Inner elements should theoretically be able
+            to be <span>, but IE renders incorrectly in this case.
+            -->
+            <a href="#" accesskey="A" id="allow-button" 
+                onclick="allowAccess(); return false;"
+                class="inline-block custom-button">
+              <div class="inline-block custom-button-outer-box">
+                <div class="inline-block custom-button-inner-box"
+                  ><span class="accesskey">A</span>llow</div></div></a>
+            <!--
+            Note: There must be whitespace here or Firefox messes up the
+            rendering.
+            TODO(aa): This results in inconsistent spacing in IE vs Firefox
+            between the buttons, but I am reluctant to hack things even further
+            to fix that.
+            -->
+            <a href="#" accesskey="C" id="deny-button"
+                onclick="denyAccess(); return false;"
+                class="inline-block custom-button">
+              <div class="inline-block custom-button-outer-box">
+                <div class="inline-block custom-button-inner-box"
+                  ><span class="accesskey">C</span>ancel</div></div></a>
+          </td>
+        </tr>
+      </table>
+    </div>
   </div>
 </body>
 <script src="json_noeval.js"></script>
@@ -201,17 +199,16 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   }
 
   function updateAllowButtonEnabledState() {
-    var button = document.getElementById("allow-button");
-    var classes = button.className.split(" ");
+    var allowButton = document.getElementById("allow-button");
+    var checkbox = document.getElementById("unlock");
+
+    disabled = !checkbox.checked;
 
     if (disabled) {
-      classes.pop();
+      disableButton(allowButton);
     } else {
-      classes.push("custom-button-disabled");
+      enableButton(allowButton);
     }
-
-    button.className = classes.join(" ");
-    disabled = !disabled;
   }
 
   // Note: The structure that the following functions pass are coupled to the

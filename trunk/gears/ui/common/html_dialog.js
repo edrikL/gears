@@ -28,8 +28,43 @@
  */
 function initDialog() {
   addEvent(document, "keyup", handleKeyUp);
-  addEvent(window, "resize", layoutDialog);
-  layoutDialog();
+}
+
+/**
+ * Allows a dialog to do custom layout when the window changes sizes. The
+ * provided function will be called with the height of the content area when the
+ * dialog should relayout.
+ */
+function initCustomLayout(layoutFunction) {
+  function doLayout() {
+    layoutFunction(getContentHeight());
+  }
+
+  doLayout();
+
+  // We do an additional layout in onload because sometimes things aren't
+  // stabilized when the first doLayout() is called above.
+  addEvent(window, "load", doLayout);
+  addEvent(window, "resize", doLayout);
+
+  // Mozilla doesn't fire continuous events during resize, so if we want to get
+  // somewhat smooth resizing, we need to run our own timer loop. This still
+  // doesn't look perfect, because the timer goes off out of sync with the
+  // browser's internal reflow, but I think it's better than nothing.
+  // TODO(aa): Keep looking for a way to get an event for each reflow, like IE.
+  if (navigator.product == "Gecko") {
+    var lastHeight = -1;
+
+    function maybeDoLayout() {
+      var currentHeight = getWindowInnerHeight();
+      if (currentHeight != lastHeight) {
+        lastHeight = currentHeight;
+        doLayout();
+      }
+    }
+
+    window.setInterval(maybeDoLayout, 30);
+  }
 }
 
 /**
@@ -97,31 +132,25 @@ function saveFirefoxResults(resultString) {
 }
 
 /**
- * Workaround for the fact that CSS doesn't have any way to create
- * variable-height scrolling regions. We measure the dialog's inner height
- * manually and set the scrolling region's height based on that.
+ * Returns the height of the content area of the dialog.
  */
-function layoutDialog() {
-  var buttonRow = document.getElementById("button-row");
-  var scroll = document.getElementById("scroll");
-  if (!buttonRow || !scroll) {
-    throw new Error("button-row or main element not found.");
+function getContentHeight() {
+  var head = document.getElementById("head");
+  var foot = document.getElementById("foot");
+  return getWindowInnerHeight() - head.offsetHeight - foot.offsetHeight;
+}
+
+/**
+ * Returns the height of the inside of the window.
+ */
+function getWindowInnerHeight() {
+  if (typeof window.innerHeight != 'undefined') { // Firefox
+    return window.innerHeight;
+  } else if (typeof document.body.offsetHeight != 'undefined') { // IE
+    return document.body.offsetHeight;
   }
-  
-  var clientHeight = 0;
-  if (window.innerHeight) {
-    // Firefox
-    clientHeight = window.innerHeight;
-  } else if (document.body.offsetHeight) {
-    // IE
-    clientHeight = document.body.offsetHeight;
-  }
-  
-  if (!clientHeight) {
-    throw new Error("Could not get clientHeight.");
-  }
-  
-  scroll.style.height = (clientHeight - buttonRow.offsetHeight) + "px";
+
+  throw new Error("Could not get windowInnerHeight.");
 }
 
 /**
@@ -147,5 +176,33 @@ function addEvent(element, eventName, handler) {
   } else {
     // IE
     element.attachEvent("on" + eventName, handler);
+  }
+}
+
+/**
+ * Disables one of our fancy custom buttons.
+ */
+function disableButton(buttonElm) {
+  var classes = buttonElm.className.split(" ");
+  for (var i = 0, className; className = classes[i]; i++) {
+    if (className == "custom-button-disabled") {
+      // already disabled
+      return;
+    }
+  }
+  buttonElm.className += " custom-button-disabled";
+}
+
+/**
+ * Enables one of our fancy custom buttons.
+ */
+function enableButton(buttonElm) {
+  var classes = buttonElm.className.split(" ");
+  for (var i = 0, className; className = classes[i]; i++) {
+    if (className == "custom-button-disabled") {
+      classes.splice(i, 1);
+      buttonElm.className = classes.join(" ");
+      return;
+    }
   }
 }
