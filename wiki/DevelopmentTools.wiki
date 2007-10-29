@@ -7,7 +7,7 @@ The existing tools that we provide in our SDK are lacking some key features that
 
 = Solution =
 
-We should integrate these tools into Gears itself, so that they are available on every installation. Additionally, we should extend the tools with additional useful features.
+We should integrate these tools into Gears, so that they are available on every installation. Additionally, we should extend the tools with additional useful features.
 
 Specifically, the tools could contain:
 
