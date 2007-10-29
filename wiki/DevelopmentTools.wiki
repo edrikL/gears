@@ -27,7 +27,7 @@ Specifically, the tools could contain:
     * We could add a logging module to Gears and have it's output could show up here
     * Sort/filter by origin/page of source page
 
-We can implement the tools as HTML/!JavaScript applications packaged with Gears and served from a special set of URLs with the form: `<origin>/__gears__/<tools>`. For example:
+We can implement the tools as HTML/!JavaScript applications packaged with Gears and served from a special set of URLs with the form: `<origin>/__gears__/<tool_name>`. For example:
 
 {{{
 http://www.rememberthemilk.com/__gears__/databases.html
