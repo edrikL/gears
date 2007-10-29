@@ -1,4 +1,4 @@
-\#summary A plan for adding some useful development tools to Gears
+#summary A plan for adding some useful development tools to Gears
 
 = Problem =
 
