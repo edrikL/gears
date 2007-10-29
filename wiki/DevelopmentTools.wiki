@@ -1,0 +1,42 @@
+\#summary A plan for adding some useful development tools to Gears
+
+= Problem =
+
+The existing tools that we provide in our SDK are lacking some key features that would enable developers to more easily build complex Gears applications. Additionally, the fact that they are not integrated into Gears themselves makes them harder to use because you have to copy them into your application.
+
+
+= Solution =
+
+We should integrate these tools into Gears itself, so that they are available on every installation. Additionally, we should extend the tools with additional useful features.
+
+Specifically, the tools could contain:
+
+  * Database
+    * explorer (list, create, and delete databases)
+    * command line (like our existing db command line)
+    * performance statistics (we can gather statistics about all databases and keep them for some default amount of time)
+  * !LocalServer
+    * explorer (list, create, and delete !ResourceStores and !ManagedResourceStores)
+    * store contents (similar to the db command line, for stores)
+    * store status, last error, and update history, in the case of !ManagedResourceStore
+  * !WorkerPool
+    * explorer (show running workers, create new workers)
+    * command line (execute JS inside a worker)
+    * message tester (interactively send, receive messages to a worker)
+  * Logging
+    * We could add a logging module to Gears and have it's output could show up here
+    * Sort/filter by origin/page of source page
+
+We can implement the tools as HTML/!JavaScript applications packaged with Gears and served from a special set of URLs with the form: `<origin>/__gears__/<tools>`. For example:
+
+{{{
+http://www.rememberthemilk.com/__gears__/databases.html
+http://www.rememberthemilk.com/__gears__/show_database.html?mydb
+... etc ...
+}}}
+
+Serving the Gears tools from within the origin they are manipulating means that we don't have to add any special debug override abilities anywhere in Gears. The tools can manipulate Gears resources because they are being run inside that origin.
+
+There is a minor chance of the `__gears__` keyword conflicting with an existing application. We can make this configurable if people think this is a big deal.
+
+We should reuse the existing Gears APIs to implement these tools. In the cases where there is no Gears API to provide a feature, it would be preferable to add the API. For example, there is currently no API to list the databases for a given origin. But there is an outstanding feature request for such an API. Perhaps we should add it instead of adding something special just for these tools.
