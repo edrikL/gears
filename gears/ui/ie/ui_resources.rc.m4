@@ -36,7 +36,6 @@
 
 button.css                 HTML  "ui/common/button.css"
 button_bg.gif              HTML  "ui/common/button_bg.gif"
-button_row_background.gif  HTML  "ui/common/button_row_background.gif"
 html_dialog.css            HTML  "ui/common/html_dialog.css"
 html_dialog.js             HTML  "ui/common/html_dialog.js"
 icon_32x32.png             HTML  "ui/common/icon_32x32.png"

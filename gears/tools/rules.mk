@@ -79,7 +79,6 @@ THIRD_PARTY_OBJS = \
 COMMON_RESOURCES = \
 	ui/common/button.css \
 	ui/common/button_bg.gif \
-	ui/common/button_row_background.gif \
 	ui/common/html_dialog.css \
 	ui/common/html_dialog.js \
 	ui/common/icon_32x32.png \
