@@ -41,16 +41,25 @@ bool ParseMajorMinorVersion(const char16 *version, int *major, int *minor);
 // Appends information about the Gears build to the string provided.
 void AppendBuildInfo(std::string16 *s);
 
-// Returns true if factory.create() should succeed.
+// Returns true if the calling security origin has been granted
+// access by the user. Will prompt the user for permission only if
+// needed. The custom_<<>> parameters are optional and may be NULL.
 //
 // TODO(cprince): PromptUser doesn't really need to be a member of
 // GearsFactory. If we move it out of there, we can remove the parameter
 // here, which makes the flow of control cleaner.
-bool HasPermissionToUseGears(GearsFactory *factory);
+bool HasPermissionToUseGears(GearsFactory *factory,
+                             const char16 *custom_icon_url,
+                             const char16 *custom_name,
+                             const char16 *custom_message);
 
-// Shows a warning prompt asking a user if origin should be allowed.
-void ShowPermissionsPrompt(const SecurityOrigin &origin, bool *allow_origin,
-                           bool *remember_choice);
+// Shows a warning prompt asking a user if origin should be allowed, and
+// saves the result in the PermissionsDB. Returns true if access is allowed.
+// The custom_<<>> parameters are optional and may be NULL.
+bool ShowPermissionsPrompt(const SecurityOrigin &origin,
+                           const char16 *custom_icon_url,
+                           const char16 *custom_name,
+                           const char16 *custom_message);
 
 // Sets a usage-tracking bit once per instantiation of Gears module. On
 // machines that have the Google Update Service available, this bit is

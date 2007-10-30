@@ -378,6 +378,7 @@ FF_IDLSRCS	+= \
 
 FF_CPPSRCS	+= \
 		html_dialog.cc \
+		permissions_dialog.cc \
 		settings_dialog.cc \
 		ui_utils.cc \
 		$(NULL)
@@ -402,6 +403,7 @@ IE_IDLSRCS	+= \
 IE_CPPSRCS	+= \
 		html_dialog.cc \
 		html_dialog_host.cc \
+		permissions_dialog.cc \
 		settings_dialog.cc \
 		tools_menu_item.cc \
 		$(NULL)

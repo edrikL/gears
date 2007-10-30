@@ -47,9 +47,9 @@ json_noeval.js             HTML  "third_party/jsonjs/json_noeval.js"
 // Dialogs
 //-----------------------------------------------------------------------------
 
-IDD_GENERIC_HTML DIALOGEX 0, 0, 500, 500
+IDD_GENERIC_HTML DIALOGEX -5000, -5000, 500, 500
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
-    WS_CAPTION | WS_SYSMENU
+    WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION ""
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
