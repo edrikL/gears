@@ -76,7 +76,7 @@ NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
 
   // Make sure the user gives this site permission to use Gears.
 
-  if (!HasPermissionToUseGears(this)) {
+  if (!HasPermissionToUseGears(this, NULL, NULL, NULL)) {
     RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
                               PRODUCT_FRIENDLY_NAME L"."));
   }
@@ -207,9 +207,12 @@ NS_IMETHODIMP GearsFactory::GetPermission(PRBool *retval) {
     RETURN_EXCEPTION(STRING16(L"extraMessage must be a string."));
   }
 
-  // TODO(cprince): use the parameters when the security dialog supports them.
-  // TODO(cprince): Allow relative URLs? Even in workers?
-  *retval = HasPermissionToUseGears(this) ? PR_TRUE : PR_FALSE;
+  if (HasPermissionToUseGears(this, image_url.c_str(),
+                              app_name.c_str(), extra_message.c_str())) {
+    *retval = PR_TRUE;
+  } else {
+    *retval = PR_FALSE;
+  }
   RETURN_NORMAL();
 }
 

@@ -24,25 +24,24 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // This class is branched from googleclient/bar/common/htmldialog.h. Some
-// changes have been made to make it work with Scour:
+// changes have been made to make it work with Gears:
 // - The powerful HtmlExternal interface was replaced with simpler
 //   dialogArguments/dialogResult string properties since Scour interacts with
 //   HTML dialogs purely through JSON strings.
-// - Some macros were defined locally since they don't exist in Scour.
-// - Pure virtual methods were removed since in Scour this class is not used as
+// - Some macros were defined locally since they don't exist in Gears.
+// - Pure virtual methods were removed since in Gears this class is not used as
 //   a base class.
 // - The title is now automatically set based on the title in the HTML for
 //   compatibility with the Firefox implementation.
-// - Support for localization was removed since Scour is not yet
-//   internationalized. This will have to be added back at some point.
 // - Support for specifying a parent window was removed, since specifying the
 //   parent window in a cross-platform way would be challenging. Instead the
-//   root window of the calling thread/context is always used.
+//   active window of the calling thread/context is always used.
 
 #ifndef GEARS_UI_IE_HTML_DIALOG_HOST_H__
 #define GEARS_UI_IE_HTML_DIALOG_HOST_H__
 
 #include <exdispid.h>
+#include <mshtmhst.h>  // for IHTMLOMWindowServices
 
 #include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/common.h"
@@ -63,6 +62,7 @@ class HtmlDialogHost
       public IDispEventImpl<0, HtmlDialogHost, &DIID_DWebBrowserEvents2,
                             &LIBID_SHDocVw, 0xFFFF, 0xFFFF>,
       public IInternetSecurityManager,
+      public IHTMLOMWindowServices,
       public IServiceProviderImpl<HtmlDialogHost> {
  public:
   // Required for HtmlDialogHost
@@ -70,7 +70,7 @@ class HtmlDialogHost
 
   // constructor
   HtmlDialogHost() 
-    : browser_(NULL), document_(NULL), is_position_set_(NULL), hook_(NULL) {}
+    : browser_(NULL), document_(NULL), is_position_set_(false), hook_(NULL) {}
 
   DECLARE_PROTECT_FINAL_CONSTRUCT();
   DECLARE_NOT_AGGREGATABLE(HtmlDialogHost)
@@ -79,6 +79,7 @@ class HtmlDialogHost
     COM_INTERFACE_ENTRY(HtmlDialogHostInterface)
     COM_INTERFACE_ENTRY(IDispatch)
     COM_INTERFACE_ENTRY(IInternetSecurityManager)
+    COM_INTERFACE_ENTRY(IHTMLOMWindowServices)
     COM_INTERFACE_ENTRY(IServiceProvider)
   END_COM_MAP()
 
@@ -86,10 +87,12 @@ class HtmlDialogHost
     MESSAGE_HANDLER(WM_CLOSE, OnClose)
     MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
     MESSAGE_HANDLER(WM_TIMER, OnTimer)
+    MESSAGE_HANDLER(WM_SIZE, OnSize)
   END_MSG_MAP()
 
   BEGIN_SERVICE_MAP(HtmlDialogHost)
     SERVICE_ENTRY(__uuidof(IInternetSecurityManager))
+    SERVICE_ENTRY(SID_SHTMLOMWindowServices)
   END_SERVICE_MAP()
 
   BEGIN_SINK_MAP(HtmlDialogHost)
@@ -154,6 +157,13 @@ class HtmlDialogHost
     return INET_E_DEFAULT_ACTION;
   }
 
+  // IHTMLOMWindowServices implementation to respond to JavaScript
+  // window.resizeBy(x,y) calls, we ignore the other methods.
+  STDMETHODIMP moveTo(LONG x, LONG y) { return S_OK; }
+  STDMETHODIMP moveBy(LONG x, LONG y) { return S_OK; }
+  STDMETHODIMP resizeTo(LONG x, LONG y) { return S_OK; }
+  STDMETHODIMP resizeBy(LONG x, LONG y);
+
   // Shows the dialog, encapsulating required calls in addition to DoModal.
   bool ShowDialog(const char16 *resource_file_name, const CSize& size,
                   const BSTR dialog_argument, BSTR *dialog_result);
@@ -183,6 +193,9 @@ class HtmlDialogHost
 
   // Handles a timer firing.
   LRESULT OnTimer(UINT message, WPARAM w, LPARAM l, BOOL& handled);
+
+  // Handles user resizing of the dialog window frame
+  LRESULT OnSize(UINT message, WPARAM w, LPARAM l, BOOL& handled);
 
   // Sets the dialog position.
   void SetDialogPosition();

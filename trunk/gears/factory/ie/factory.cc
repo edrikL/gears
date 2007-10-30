@@ -65,7 +65,7 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
 
   // Make sure the user gives this origin permission to use Gears.
 
-  if (!HasPermissionToUseGears(this)) {
+  if (!HasPermissionToUseGears(this, NULL, NULL, NULL)) {
     RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
                               PRODUCT_FRIENDLY_NAME L"."));
   }
@@ -206,9 +206,12 @@ STDMETHODIMP GearsFactory::getPermission(const BSTR app_name_in,
   const BSTR image_url = ActiveXUtils::SafeBSTR(image_url_in);
   const BSTR extra_message = ActiveXUtils::SafeBSTR(extra_message_in);
 
-  // TODO(cprince): use the parameters when the security dialog supports them.
-  // TODO(cprince): Allow relative URLs? Even in workers?
-  *retval = HasPermissionToUseGears(this) ? VARIANT_TRUE : VARIANT_FALSE;
+  if (HasPermissionToUseGears(this, image_url,
+                              app_name, extra_message)) {
+    *retval = VARIANT_TRUE;
+  } else {
+    *retval = VARIANT_FALSE;
+  }
   RETURN_NORMAL();
 }
 

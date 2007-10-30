@@ -33,8 +33,6 @@
 #include "gears/base/ie/atl_headers.h"
 #include "gears/ui/ie/html_dialog_host.h"
 
-// TODO(jperkins): Remove once the options dialog is stable.
-DWORD g_tick;
 
 // The timer associated with making sure navigation errors don't cause a
 // problem.
@@ -175,7 +173,6 @@ HRESULT HtmlDialogHost::NavigateToUrl(const char16 *url) {
   KillTimer(kNavigationErrorTimer);
   SetTimer(kNavigationErrorTimer, 5000, NULL);
 
-  g_tick = GetTickCount();
   return S_OK;
 }
 
@@ -202,25 +199,27 @@ LRESULT HtmlDialogHost::OnInitDialog(UINT message, WPARAM w, LPARAM l,
   // Validate member variables.
   ASSERT(!url_.IsEmpty());
   ASSERT(desired_size_.cx > 0 && desired_size_.cy > 0);
+  ASSERT(!is_position_set_);
+
+  // Make sure window is offscreen so the dialog doesn't display
+  // prior to loading the page.
+  MoveWindow(CRect(-5000, -5000, 0, 0));
 
   // Prepare the dialog.
   VERIFY(SUCCEEDED(InitBrowser()));
   CAxDialogImpl<HtmlDialogHost>::OnInitDialog(message, w, l, handled);
 
-  // Navigate to the first page.
+  // Initially size the browser control to its desired size so as the page
+  // loads, it will observe that size layout accordingly.
+  browser_window_.MoveWindow(CRect(0, 0, desired_size_.cx, desired_size_.cy));
+
+  // Navigate to the first page
   VERIFY(SUCCEEDED(NavigateToUrl(url_)));
-
-  // Make sure the size is zero so that the dialog doesn't display before it's
-  // navigated to the first page.
-  MoveWindow(CRect(0, 0, 0, 0));
-  is_position_set_ = false;
-
   return TRUE;
 }
 
 
 void HtmlDialogHost::OnReadyStateChanged() {
-  DWORD time = GetTickCount() - g_tick;
   UpdateCaption();
   SetDialogPosition();
 }
@@ -242,6 +241,56 @@ LRESULT HtmlDialogHost::OnTimer(UINT message, WPARAM w, LPARAM l,
     SetMsgHandled(FALSE);
   }
   return TRUE;
+}
+
+
+LRESULT HtmlDialogHost::OnSize(UINT message, WPARAM w, LPARAM l,
+                               BOOL& handled) {
+  // The user has resized the dialog window frame.
+  if (is_position_set_ && browser_window_.IsWindow()) {
+    int width = GET_X_LPARAM(l);  // width of client area
+    int height = GET_Y_LPARAM(l); // height of client area
+    browser_window_.MoveWindow(CRect(0, 0, width, height));
+  }
+  handled = FALSE;
+  return 0;
+}
+
+
+HRESULT HtmlDialogHost::resizeBy(LONG x, LONG y) {
+  // Script in the hosted page has called window.resizeBy(). When
+  // called prior to the initial display of the window, we adjust 
+  // the 'desired_size_' which will be used to set the actual window
+  // position later. Otherwise, we actually resize the window.
+
+  // Get our current bounds
+  CRect bounds;
+  if (is_position_set_) {
+    if (!GetWindowRect(&bounds))
+      return S_OK;  // give up if anything goes wrong
+  } else {
+    bounds.SetRect(0, 0, desired_size_.cx, desired_size_.cy);
+  }
+
+  // Constrain new bounds based on the desktop size
+  CRect desktop;
+  if (!::GetWindowRect(GetDesktopWindow(), &desktop))
+    return S_OK;  // give up if anything goes wrong
+  const int kMinDimension = 32;
+  int width = bounds.Width() + static_cast<int>(x);
+  int height = bounds.Height() + static_cast<int>(y);
+  if (width < desktop.Width() && width > kMinDimension)
+    bounds.right = bounds.left + width;
+  if (height < desktop.Height() && height > kMinDimension)
+    bounds.bottom = bounds.top + height;
+
+  // Set our new bounds
+  if (is_position_set_) {
+    MoveWindow(bounds);
+  } else {
+    desired_size_ = bounds.Size();
+  }
+  return S_OK;
 }
 
 

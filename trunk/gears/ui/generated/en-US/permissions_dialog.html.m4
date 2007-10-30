@@ -29,7 +29,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <html>
 <head>
-  <title>Security Warning</title>
+  <title>PRODUCT_FRIENDLY_NAME_UQ Security Warning</title>
   <link rel="stylesheet" href="button.css">
   <link rel="stylesheet" href="html_dialog.css">
   <style type="text/css">
@@ -45,25 +45,35 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       margin-right:0.5em;
     }
 
-    #sitename {
-      text-align:center;
-      font-weight:bold;
-      font-size:1.1em;
-      background:white;
-      border:solid #f1cc1d;
-      border-width:1px 0;
-      margin:1em 0.5em 0;
+    #custom-icon {
+      margin-right:1em;
+      margin-left:1em;
+      display:none;
     }
 
-    #sitename-inner {
-      border:solid #f1cc1d;
-      border-width:0 1px;
-      margin:0 -1px;
-      padding:0.5em;
+    #custom-name {
+      font-weight:bold;
+      font-size:1.1em;
+      display:none;
+    }
+
+    #origin {
+      display:none;
+    }
+
+    #custom-message {
+      margin-top:6px;
+      display:none;
+    }
+
+    #origin-only {
+      font-weight:bold;
+      font-size:1.1em;
+      display:none;
     }
 
     #yellowbox {
-      margin:1em 1px;
+      margin:0 1px;
       border:solid #f1cc1d;
       border-width:1px 0;
       background:#faefb8;
@@ -86,11 +96,16 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <div id="head">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
-        <td align="left" valign="middle">
+        <td align="left" valign="top">
           <img id="icon" src="icon_32x32.png" width="32" height="32">
         </td>
         <td width="100%" align="left" valign="middle">The website below
-        wants to use PRODUCT_FRIENDLY_NAME_UQ.</td>
+          wants to use PRODUCT_FRIENDLY_NAME_UQ.This site will be able to
+          store and access information on your computer.&nbsp;
+          <a href="http://gears.google.com/?action=help"
+             onclick="window.open(this.href); return false;">
+          What is this?</a>
+        </td>
       </tr>
     </table>
   </div>
@@ -98,23 +113,19 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <div id="content">
     <div id="yellowbox">
       <div id="yellowbox-inner">
-        <p>This site will be able to store and access information on your
-        computer.
-        <!-- 
-        [naming] - Not using short_name here because not sure if url always
-        changes when name does.
-
-        HACK: What I wanted here was target="_blank" to open this URL in a new
-        window. However, when I did that Firefox opened the new window, but
-        did not actually navigate it anywhere. This is probably due to
-        modality issues (the code that would do the navigate is blocked behind
-        this modal dialog). Using onclick fixes, for some reason.
-        -->
-        &nbsp;<a href="http://gears.google.com/?action=help"
-          onclick="window.open(this.href); return false;">What is
-          this?</a></p>
-
-        <div id="sitename"><div id="sitename-inner"></div></div>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td align="left" valign="top">
+              <img id="custom-icon" width="0" height="0">
+            </td>
+            <td width="100%" align="left" valign="middle">
+              <div id="custom-name"></div>
+              <div id="origin"></div>
+              <div id="custom-message"></div>
+              <div id="origin-only" align="center"></div>
+            </td>
+          </tr>
+        </table>
       </div>
     </div>
 
@@ -186,9 +197,45 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   var disabled = true;
 
   function initWarning() {
-    // The arguments to this dialog are a single string. See CapabilitiesDB.
-    document.getElementById("sitename-inner").appendChild(
-      document.createTextNode(getArguments()));
+    // The arguments to this dialog are a single string, see PermissionsDialog
+    var args = getArguments();
+
+    var origin = args['origin'];  // required parameter
+    var customIcon = args['customIcon'];
+    var customName = args['customName'];
+    var customMessage = args['customMessage'];
+
+    var elem;
+
+    if (!customIcon && !customName && !customMessage) {
+       elem = document.getElementById("origin-only");
+       elem.style.display = "block";
+       elem.appendChild(document.createTextNode(origin));
+    } else {
+       elem = document.getElementById("origin");
+       elem.style.display = "block";
+       elem.appendChild(document.createTextNode(origin));
+    }
+
+    if (customIcon) {
+      elem = document.getElementById("custom-icon");
+      elem.style.display = "inline";
+      elem.src = customIcon;
+      elem.height = 32;
+      elem.width = 32;
+    }
+
+    if (customName) {
+      elem = document.getElementById("custom-name");
+      elem.style.display = "block";
+      elem.appendChild(document.createTextNode(customName));
+    }
+
+    if (customMessage) {
+      elem = document.getElementById("custom-message");
+      elem.style.display = "block";
+      elem.appendChild(document.createTextNode(customMessage));
+    }
 
     // Focus deny by default
     document.getElementById("deny-button").focus();
@@ -196,7 +243,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     // Set up the checkbox to toggle the enabledness of the Allow button.
     document.getElementById("unlock").onclick = updateAllowButtonEnabledState;
     updateAllowButtonEnabledState();
+
+    // Resize the window to fit
+    var contentDiv = document.getElementById("content");
+    var contentHeightProvided = getContentHeight();
+    var contentHeightDesired = contentDiv.offsetHeight;
+    if (contentHeightDesired != contentHeightProvided) {
+      var dy = contentHeightDesired - contentHeightProvided;
+      window.resizeBy(0, dy);
+    }
   }
+
 
   function updateAllowButtonEnabledState() {
     var allowButton = document.getElementById("allow-button");
@@ -212,12 +269,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   }
 
   // Note: The structure that the following functions pass are coupled to the
-  // code in CapabilitiesDB that processes it.
+  // code in PermissionsDialog that processes it.
   function allowAccess() {
     if (!disabled) {
       saveAndClose({
-        allow: true,
-        remember: true
+        allow: true
       });
     }
   }
@@ -228,8 +284,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
   function denyAccessPermanently() {
     saveAndClose({
-      allow: false,
-      remember: true
+      allow: false
     });
   }
 </script>

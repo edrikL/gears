@@ -29,8 +29,9 @@
 #include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/url_utils.h"
 #include "gears/factory/common/factory_utils.h"
-#include "gears/ui/common/html_dialog.h"
+#include "gears/ui/common/permissions_dialog.h"
 
 #if BROWSER_IE
 #include "gears/factory/ie/factory.h"
@@ -49,7 +50,6 @@ const char16 *kGoogleUpdateGearsClientGuid =
 const char16 *kGoogleUpdateDidRunValue = STRING16(L"dr");
 
 bool ParseMajorMinorVersion(const char16 *version, int *major, int *minor) {
-
   const char16 *start = version;
   const char16 *end;
 
@@ -110,8 +110,10 @@ void AppendBuildInfo(std::string16 *s) {
 }
 
 
-bool HasPermissionToUseGears(GearsFactory *factory) {
-
+bool HasPermissionToUseGears(GearsFactory *factory,
+                             const char16 *custom_icon_url,
+                             const char16 *custom_name,
+                             const char16 *custom_message) {
   // First check is_creation_suspended, because the factory can be suspended
   // even when is_permission_granted.
   if (factory->is_creation_suspended_) {
@@ -151,78 +153,38 @@ bool HasPermissionToUseGears(GearsFactory *factory) {
       assert(false); 
   }
 
-  bool allow_origin;
-  bool remember_choice;
-  ShowPermissionsPrompt(origin, &allow_origin, &remember_choice);
+  std::string16 full_icon_url;
+  if (custom_icon_url) {
+    if (ResolveAndNormalize(factory->EnvPageLocationUrl().c_str(),
+                            custom_icon_url,
+                            &full_icon_url)) {
+      custom_icon_url = full_icon_url.c_str();
+    }
+  }
+
+  // Display the modal dialog. Should not happen in a faceless worker.
+  assert(!factory->EnvIsWorker());
+  bool allow_origin = ShowPermissionsPrompt(origin,
+                                            custom_icon_url,
+                                            custom_name,
+                                            custom_message);
 
   factory->is_permission_granted_ = allow_origin;
   factory->is_permission_value_from_user_ = true;
-
-  // If the user told us to remember the choice, do so.
-  if (remember_choice) { 
-    PermissionsDB::PermissionValue value =
-        allow_origin ? PermissionsDB::PERMISSION_ALLOWED
-                     : PermissionsDB::PERMISSION_DENIED;
-    permissions->SetCanAccessGears(origin, value);
-  }
 
   // Return the decision.
   return allow_origin;
 }
 
 #ifndef BROWSER_SAFARI
-void ShowPermissionsPrompt(const SecurityOrigin &origin, bool *allow_origin,
-                           bool *remember_choice) {
-  assert(allow_origin);
-  assert(remember_choice);
-
-  // Set output params to default in case we return early.
-  *allow_origin = false;
-  *remember_choice = false;
-
-  // Show something more user-friendly for kUnknownDomain.
-  // TODO(aa): This is needed by settings dialog too. Factor this out into a
-  // common utility.
-  std::string16 display_origin(origin.url());
-  if (origin.host() == kUnknownDomain) {
-    ReplaceAll(display_origin,
-               std::string16(kUnknownDomain),
-               std::string16(STRING16(L"<no domain>")));
-  }
-
-  // HtmlDialog needs UTF-8 strings.
-  std::string display_origin_utf8;
-  if (!String16ToUTF8(display_origin.c_str(), &display_origin_utf8)) {
-    LOG(("ShowPermissionPrompt: Could not convert origin url"));
-    return;
-  }
-
-  // Note: Arguments and results are coupled to the values that 
-  // permissions_dialog.html.m4 is expecting.
-  HtmlDialog dialog;
-  dialog.arguments = Json::Value(display_origin_utf8);
-
-  const int kDialogWidth = 360;
-  const int kDialogHeight = 265;
-  const char16 *kDialogFile = STRING16(L"permissions_dialog.html");
-
-  dialog.DoModal(kDialogFile, kDialogWidth, kDialogHeight);
-
-  // A null value is OK. The user closed the dialog without allowing or
-  // denying. We interpret that as deny.
-  if (dialog.result == Json::Value::null) {
-    return;
-  }
-
-  if (!dialog.result["allow"].isBool() ||
-      !dialog.result["remember"].isBool()) {
-    assert(false);
-    LOG(("ShowPermissionPrompt: Unexpected result"));
-    return;
-  }
-
-  *allow_origin = dialog.result["allow"].asBool();
-  *remember_choice = dialog.result["remember"].asBool();
+bool ShowPermissionsPrompt(const SecurityOrigin &origin,
+                           const char16 *custom_icon_url,
+                           const char16 *custom_name,
+                           const char16 *custom_message) {
+  return PermissionsDialog::Prompt(origin,
+                                   custom_icon_url,
+                                   custom_name,
+                                   custom_message);
 }
 #endif
 
