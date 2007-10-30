@@ -163,6 +163,8 @@ m4_foreach(~`LANG`~, I18N_LANGUAGES, ~`m4_dnl
                           DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/locale/LANG/permissions_dialog.html" />
                         <File Id='~`ff_`~m4_underscore(LANG)~`_settings_dialog.html`~' Name='settings_dialog.html'
                           DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/locale/LANG/settings_dialog.html" />
+                        <File Id='~`ff_`~m4_underscore(LANG)~`_shortcuts_dialog.html`~' Name='shortcuts_dialog.html'
+                          DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/locale/LANG/shortcuts_dialog.html" />
                       </Component>
                     </Directory>
 `~)m4_dnl

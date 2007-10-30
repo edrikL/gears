@@ -341,6 +341,7 @@ COMMON_VPATH	+= \
 COMMON_M4SRCS_I18N += \
 		permissions_dialog.html.m4 \
 		settings_dialog.html.m4 \
+		shortcuts_dialog.html.m4 \
 		$(NULL)
 
 FF_VPATH	+= \
