@@ -40,3 +40,8 @@ Serving the Gears tools from within the origin they are manipulating means that 
 There is a minor chance of the `__gears__` keyword conflicting with an existing application. We can make this configurable if people think this is a big deal.
 
 We should reuse the existing Gears APIs to implement these tools. In the cases where there is no Gears API to provide a feature, it would be preferable to add the API. For example, there is currently no API to list the databases for a given origin. But there is an outstanding feature request for such an API. Perhaps we should add it instead of adding something special just for these tools.
+
+
+= Security =
+
+One risk is that we push a buggy tool which introduces an XSS into other people's applications. To protect against this, users should have to specifically enable the Gears toolset. This will protect the vast majority of users (all non-developers) from being affected by any problems in them.
