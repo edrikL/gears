@@ -1,5 +1,5 @@
 #summary Proposal for new WorkerPool features to improve usability
-#labels DesignDoc-Accepted
+#labels DesignDoc-Implemented
 *OWNER:* Aaron Boodman
 
 = Introduction =
