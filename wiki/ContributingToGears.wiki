@@ -11,7 +11,7 @@ Sound like fun? This document covers the basics of how to get involved and start
 
 The development of Gears is motivated by and organized around a simple desire:
 
-  *The Gears mission is to add new capabilities to web browsers, enabling developers to create better applications.*
+*The Gears mission is to add new capabilities to web browsers, enabling developers to create better applications.*
 
 This may sound broad, especially compared to the relatively few modules we provide today. But we have big dreams for Gears. If there is a capability that is missing from web browsers which would enable better applications, we want to provide that capability as a Gears module.
 
