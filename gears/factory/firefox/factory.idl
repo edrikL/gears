@@ -37,7 +37,7 @@ interface GearsFactoryInterface : GearsBaseClassInterface {
   AString getBuildInfo();
   readonly attribute AString version;
 
-  boolean getPermission(//in AString app_name
+  boolean getPermission(//in AString site_name
                         //in AString image_url
                         //in AString extra_message
                        );
