@@ -27,7 +27,7 @@
 
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. LINUX_CPPSRCS) are implemented
-#ifdef LINUX
+#if defined(LINUX) && !defined(OS_MACOSX)
 #include "gears/base/common/file.h"
 #include "gears/base/common/int_types.h"
 #include "gears/base/common/string16.h"
@@ -38,4 +38,4 @@ bool File::CreateDesktopShortcut(BrowserType browser_type,
                                  const char16 *icon_url) {
   return false;  // TODO(miket): implement
 }
-#endif  // #ifdef LINUX
+#endif  // #if defined(LINUX) && !defined(OS_MACOSX)
