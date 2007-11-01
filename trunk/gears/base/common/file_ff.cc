@@ -36,6 +36,7 @@ class nsIFile;  // must declare this before including nsDirectoryServiceUtils.h
 #include <nsILocalFile.h>
 #include <nsISimpleEnumerator.h>
 #include <nsXPCOM.h>
+#include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
@@ -280,4 +281,3 @@ bool File::DeleteRecursively(const char16 *full_dirpath) {
   }
   return NS_SUCCEEDED(directory_obj->Remove(kRecursive));
 }
-

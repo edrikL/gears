@@ -226,7 +226,7 @@ EXE_SUFFIX = .exe
 MKEXE = link
 EXEFLAGS = /NOLOGO /OUT:$@
 
-FF_LIBS = $(GECKO_SDK)/lib/xpcom.lib $(GECKO_SDK)/lib/xpcomglue_s.lib $(GECKO_SDK)/lib/nspr4.lib $(GECKO_SDK)/lib/js3250.lib ole32.lib shell32.lib advapi32.lib wininet.lib
+FF_LIBS = $(GECKO_SDK)/lib/xpcom.lib $(GECKO_SDK)/lib/xpcomglue_s.lib $(GECKO_SDK)/lib/nspr4.lib $(GECKO_SDK)/lib/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib
 IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib
 
 MIDL = midl

@@ -24,9 +24,10 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <vector>
+#include "gears/base/common/common.h"
+#include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
-#include "gears/base/common/file.h"
 
 
 //------------------------------------------------------------------------------

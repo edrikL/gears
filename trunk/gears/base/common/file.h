@@ -27,7 +27,7 @@
 #define GEARS_BASE_COMMON_FILE_H__
 
 #include <vector>
-#include "gears/base/common/common.h"
+#include "gears/base/common/int_types.h"
 #include "gears/base/common/string16.h"
 
 class File {
@@ -91,6 +91,31 @@ class File {
   // at this time.
   static bool GetLastFileError(std::string16 *error_out);
 
+  typedef enum {
+    FIREFOX,
+    IE,
+    SAFARI
+  } BrowserType;
+
+  // Creates a shortcut that opens a URL in a specific browser.
+  //
+  // link_name is a string that will be used to create the user-visible
+  // shortcut name. Do not append ".lnk" or pass a path.
+  //
+  // launch_url is the fully-qualified HTTP or HTTPS URL that the browser
+  // should open when the user invokes the shortcut.
+  //
+  // icon_url is currently not used. TODO(aa): implement.
+  //
+  // Returns true iff successful.
+  //
+  // TODO(miket): consider moving this to a more specific file set, like
+  // desktop_(platform).[h,cc].
+  static bool CreateDesktopShortcut(BrowserType browser_type,
+                                    const char16 *link_name,
+                                    const char16 *launch_url,
+                                    const char16 *icon_url);
+
  private:
   static void SetLastFileError(const char16 *message,
                                const char16 *filepath,
@@ -99,9 +124,11 @@ class File {
   static const char16 *kCreateFileFailedMessage;
 
   File() {}
-  DISALLOW_EVIL_CONSTRUCTORS(File);
+
+  // TODO(miket): someone fix common.h so that it doesn't require a browser
+  // flag to be defined! Or better yet, someone shoot common.h in the head!
+  //  DISALLOW_EVIL_CONSTRUCTORS(File);
 };
 
 
 #endif  // GEARS_BASE_COMMON_FILE_H__
-
