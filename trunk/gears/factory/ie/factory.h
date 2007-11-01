@@ -71,8 +71,8 @@ class ATL_NO_VTABLE GearsFactory
   STDMETHOD(getBuildInfo)(BSTR *retval);
   STDMETHOD(get_version)(BSTR *retval);
 
-  // bool getPermission(string appName, string imageUrl, string extraMessage)
-  STDMETHOD(getPermission)(const BSTR app_name,
+  // bool getPermission(string siteName, string imageUrl, string extraMessage)
+  STDMETHOD(getPermission)(const BSTR site_name,
                            const BSTR image_url,
                            const BSTR extra_message,
                            VARIANT_BOOL *retval);

@@ -62,8 +62,8 @@ class GearsFactory
   NS_IMETHOD GetBuildInfo(nsAString &retval);
   NS_IMETHOD GetVersion(nsAString &retval);
 
-  // bool getPermission(string appName, string imageUrl, string extraMessage)
-  NS_IMETHOD GetPermission(//const nsAString &appName
+  // bool getPermission(string siteName, string imageUrl, string extraMessage)
+  NS_IMETHOD GetPermission(//const nsAString &siteName
                            //const nsAString &imageUrl
                            //const nsAString &extraMessage
                            PRBool *retval);

@@ -196,18 +196,18 @@ STDMETHODIMP GearsFactory::get_version(BSTR *retval) {
 }
 
 
-STDMETHODIMP GearsFactory::getPermission(const BSTR app_name_in,
+STDMETHODIMP GearsFactory::getPermission(const BSTR site_name_in,
                                          const BSTR image_url_in,
                                          const BSTR extra_message_in,
                                          VARIANT_BOOL *retval) {
   // Guard against NULL BSTRs.
   // TODO(cprince): Do this automatically in JsParamFetcher for IE.
-  const BSTR app_name = ActiveXUtils::SafeBSTR(app_name_in);
+  const BSTR site_name = ActiveXUtils::SafeBSTR(site_name_in);
   const BSTR image_url = ActiveXUtils::SafeBSTR(image_url_in);
   const BSTR extra_message = ActiveXUtils::SafeBSTR(extra_message_in);
 
   if (HasPermissionToUseGears(this, image_url,
-                              app_name, extra_message)) {
+                              site_name, extra_message)) {
     *retval = VARIANT_TRUE;
   } else {
     *retval = VARIANT_FALSE;

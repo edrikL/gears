@@ -45,7 +45,7 @@ interface GearsFactoryInterface : IDispatch {
   HRESULT getBuildInfo([out, retval] BSTR *retval);
   [propget] HRESULT version([out, retval] BSTR *retval);
 
-  HRESULT getPermission([in] const BSTR app_name,
+  HRESULT getPermission([in] const BSTR site_name,
                         [in] const BSTR image_url,
                         [in] const BSTR extra_message,
                         [out, retval] VARIANT_BOOL *retval);
