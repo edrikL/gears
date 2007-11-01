@@ -30,6 +30,7 @@
 
 #include <assert.h>
 #include <shlobj.h>
+#include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/scoped_win32_handles.h"
@@ -228,4 +229,3 @@ bool File::DeleteRecursively(const char16 *full_dirpath) {
   fileop.fFlags = FOF_NOERRORUI | FOF_SILENT | FOF_NOCONFIRMATION;
   return (SHFileOperationW(&fileop) == 0);
 }
-

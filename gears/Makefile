@@ -160,6 +160,9 @@ COMMON_M4SRCS	+= \
 		$(NULL)
 
 COMMON_CPPSRCS	+= \
+		file_win32.cc \
+		file_osx.cc \
+		file_linux.cc \
 		$(NULL)
 # WARNING: Think carefully before listing any non-third-party C/C++ files in
 # COMMON_*SRCS. Such files only get built once per platform (not per browser),
@@ -168,6 +171,8 @@ COMMON_CPPSRCS	+= \
 # One important exception: unit-tested code is only built once per platform, so
 # it should be listed in CPPSRCS. Thus it must not use any BROWSER_* #defines,
 # directly or indirectly.
+#
+# TODO(cprince): investigate OS-specific sources (e.g. WIN32_CPPSRCS)
 
 
 #-----------------------------------------------------------------------------
