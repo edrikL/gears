@@ -70,9 +70,24 @@ class SQLDatabase {
   // Returns true if the database connection is open
   bool IsOpen();
 
-  // Closes the database.
+  // Close the database.
   void Close();
 
+  int Execute(const char *sql) {
+    assert(db_);
+    return sqlite3_exec(db_, sql, NULL, NULL, NULL);
+  }
+
+  int GetErrorCode() { 
+    assert(db_);
+    return sqlite3_errcode(db_);
+  }
+
+  const char *GetErrorMessage() {
+    assert(db_);
+    return sqlite3_errmsg(db_);
+  }
+  
   // Begin a transaction. SQLite does not support nested transactions so we
   // simulate them by keeping a count of how many open ones there are. The
   // log_label parameter is optional and may be NULL.
@@ -120,6 +135,8 @@ class SQLDatabase {
   bool CommitTransaction(const char *log_label);
 
   // Returns the sqlite3 database connection associated with this site.
+  // TODO(michaeln): Remove this method from public scope. The sqlite3 pointer
+  // should not leak outside of this wrapper.
   sqlite3 *GetDBHandle();
 
   // Callbacks
@@ -129,10 +146,22 @@ class SQLDatabase {
   bool DropAllObjects();
 
   static const char *kUnspecifiedTransactionLabel;
+
+  // We set the busy timeout to 5 seconds. What we are basically saying here is
+  // that if a single Scour SQL operation ever takes longer than 5 seconds
+  // something very serious has gone wrong and it should be considered an
+  // error. It may be that there are legitimite reasons for this to be higher,
+  // but let's start out strict and loosen if necessary.
+  static const int kBusyTimeout = 5 * 1000;
+
  private:
   // SQLite handles, which this class wraps, can only be used on a single
   // thread.
   DECL_SINGLE_THREAD
+
+  friend bool TestSQLConcurrency();
+  bool OpenConnection(const char16 *name);
+  bool ConfigureConnection();
 
   // Private helper called by CommmitTransaction and RollbackTransaction
   bool EndTransaction(const char *log_label);
@@ -168,7 +197,7 @@ class SQLDatabase {
 //------------------------------------------------------------------------------
 class SQLTransaction {
  public:
-   SQLTransaction(SQLDatabase *db, const char *log_label)
+  SQLTransaction(SQLDatabase *db, const char *log_label)
      : began_(false), db_(db),
        log_label_(log_label ? log_label
                             : SQLDatabase::kUnspecifiedTransactionLabel) {

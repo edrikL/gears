@@ -118,10 +118,26 @@ bool SQLDatabase::Open(const char16 *name) {
   // SQLITE_OK being 0.
   assert(SQLITE_OK == 0);
 
-  // Nobody should be calling Init() twice.
+  // For testing purposes, we've seperated opening and configuring the
+  // sqlite3 connection.
+  if (!OpenConnection(name)) {
+    return false;
+  }
+
+  if (!ConfigureConnection()) {
+    sqlite3_close(db_);
+    db_ = NULL;
+    return false;
+  }
+
+  return true; 
+}
+
+bool SQLDatabase::OpenConnection(const char16 *name) {
+  // Nobody should be calling Open() twice.
   assert(!db_);
   if (db_) {
-    LOG(("SQLDatabase: already initialized\n"));
+    LOG(("SQLDatabase: already open\n"));
     return false;
   }
 
@@ -142,13 +158,26 @@ bool SQLDatabase::Open(const char16 *name) {
     return false;
   }
 
+  return true;
+}
+
+bool SQLDatabase::ConfigureConnection() {
+  assert(db_);
+  // Set the busy timeout value before executing any SQL statements.
+  // With the timeout value set, SQLite will wait and retry if another
+  // thread has the database locked rather than immediately fail with an
+  // SQLITE_BUSY error.
+  if (SQLITE_OK != sqlite3_busy_timeout(db_, kBusyTimeout)) {
+    LOG(("SQLDatabase: Could not set busy timeout: %d\n",
+         sqlite3_errcode(db_)));
+    return false;
+  }
+
   // Turn off flushing writes thru to disk, significantly faster (2x)
   if (SQLITE_OK != 
       sqlite3_exec(db_, "PRAGMA synchronous = OFF" , NULL, NULL, NULL)) {
     LOG(("SQLDatabase: Could not set PRAGMA synchronous: %d\n", 
          sqlite3_errcode(db_)));
-    sqlite3_close(db_);
-    db_ = NULL;
     return false;
   }
 
@@ -157,22 +186,6 @@ bool SQLDatabase::Open(const char16 *name) {
       sqlite3_exec(db_, "PRAGMA encoding = \"UTF-8\"", NULL, NULL, NULL)) {
     LOG(("SQLDatabase: Could not set PRAGMA encoding: %d\n", 
          sqlite3_errcode(db_)));
-    sqlite3_close(db_);
-    db_ = NULL;
-    return false;
-  }
-
-  // Set the busy timeout to 5 seconds. What we are basically saying here is
-  // that if a single Scour SQL operation ever takes longer than 5 seconds
-  // something very serious has gone wrong and it should be considered an
-  // error. It may be that there are legitimite reasons for this to be higher,
-  // but let's start out strict and loosen if necessary.
-  const int kBusyTimeout = 5 * 1000;
-  if (SQLITE_OK != sqlite3_busy_timeout(db_, kBusyTimeout)) {
-    LOG(("SQLDatabase: Could not set busy timeout: %d\n",
-         sqlite3_errcode(db_)));
-    sqlite3_close(db_);
-    db_ = NULL;
     return false;
   }
 
@@ -244,12 +257,13 @@ bool SQLDatabase::BeginTransaction(const char *log_label) {
       "SQLDatabase: Warning, BEGIN IMMEDIATE took %d ms for %s\n",
       transaction_start_time_, log_label);
 
+  needs_rollback_ = false;
+  ++transaction_count_;
+
   if (transaction_listener_) {
     transaction_listener_->OnBegin();
   }
 
-  needs_rollback_ = false;
-  ++transaction_count_;
   return true;
 }
 

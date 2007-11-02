@@ -70,6 +70,13 @@ bool OpenSqliteDatabase(const char16 *name, const SecurityOrigin &origin,
     return false; // error = "SQLite open() failed."
   }
 
+  // Set the busy timeout value before executing any SQL statements.
+  // With the timeout value set, SQLite will wait and retry if another
+  // thread has the database locked rather than immediately fail with an
+  // SQLITE_BUSY error.
+  const int kSQLiteBusyTimeout = 5000;
+  sqlite3_busy_timeout(temp_db, kSQLiteBusyTimeout);
+
   // Set reasonable defaults.
   sql_status = sqlite3_exec(temp_db,
                             "PRAGMA encoding = 'UTF-8';"

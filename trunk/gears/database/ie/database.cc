@@ -85,8 +85,6 @@ HRESULT GearsDatabase::open(const VARIANT *database_name) {
                           &db_)) {
     RETURN_EXCEPTION(STRING16(L"Couldn't open SQLite database."));
   }
-  const int kSQLiteBusyTimeout = 5000;
-  sqlite3_busy_timeout(db_, kSQLiteBusyTimeout);
 
   RETURN_NORMAL();
 }
