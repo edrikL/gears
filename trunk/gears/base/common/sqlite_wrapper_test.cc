@@ -33,7 +33,9 @@ static bool TestSQLDatabaseTransactions();
 static bool TestSQLTransaction();
 static bool CreateTable(SQLDatabase &db);
 static bool InsertRow(SQLDatabase &db);
-static bool TestSQLConcurrency();
+
+// Not static because this function is declared as a friend of SQLDatabase
+bool TestSQLConcurrency();
 
 
 //------------------------------------------------------------------------------
@@ -198,7 +200,7 @@ static bool InsertRow(SQLDatabase &db) {
 }
 
 
-static bool TestSQLConcurrency() {
+bool TestSQLConcurrency() {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
