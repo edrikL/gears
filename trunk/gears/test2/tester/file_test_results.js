@@ -29,6 +29,8 @@
  */
 function FileTestResults() {
   bindMethods(this);
+  // Holds the persistent state of all run tests.
+  this.testResults = {};  
 }
 
 /**
@@ -47,15 +49,9 @@ FileTestResults.prototype.testsComplete = 0;
 FileTestResults.prototype.suiteName = '';
 
 /**
- * Holds the persistent state of all run tests.
- */
-FileTestResults.prototype.testResults = {};
-
-/**
  * Callback for when all tests have completed.
  */
 FileTestResults.prototype.onAllTestsComplete = function() {};
-
 
 /**
  * Starts the tests.
