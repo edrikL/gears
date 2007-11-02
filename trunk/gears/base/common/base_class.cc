@@ -146,32 +146,40 @@ JsRootedToken::~JsRootedToken() {
   NPN_ReleaseVariantValue(&token_);
 }
 
-void OwnedNPVariant::reset() {
+void ScopedNPVariant::Reset() {
   NPN_ReleaseVariantValue(this);
   VOID_TO_NPVARIANT(*this);
 }
 
-void OwnedNPVariant::reset(int value) {
-  reset();
+void ScopedNPVariant::Reset(int value) {
+  Reset();
   INT32_TO_NPVARIANT(value, *this);
 }
 
-void OwnedNPVariant::reset(const char *value) {
-  reset();
+void ScopedNPVariant::Reset(const char *value) {
+  Reset();
   NPString npstr = NPN_StringDup(value, strlen(value));
   STRINGN_TO_NPVARIANT(npstr.utf8characters, npstr.utf8length, *this);
 }
 
-void OwnedNPVariant::reset(const char16 *value) {
-  reset();
+void ScopedNPVariant::Reset(const char16 *value) {
+  Reset();
   NPString npstr = NPN_StringDup(value, std::char_traits<char16>::length(value));
   STRINGN_TO_NPVARIANT(npstr.utf8characters, npstr.utf8length, *this);
 }
 
-void OwnedNPVariant::reset(NPObject *value) {
-  reset();
+void ScopedNPVariant::Reset(NPObject *value) {
+  Reset();
   OBJECT_TO_NPVARIANT(value, *this);
   NPN_RetainObject(value);
+}
+
+void ScopedNPVariant::Release() {
+  VOID_TO_NPVARIANT(*this);
+}
+
+void JsSetException(const char16 *message) {
+  BrowserUtils::SetJsException(message);
 }
 
 #endif

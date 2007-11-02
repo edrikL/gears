@@ -26,91 +26,99 @@
 #ifndef GEARS_BASE_NPAPI_PLUGIN_H__
 #define GEARS_BASE_NPAPI_PLUGIN_H__
 
-#include <vector>
+#include <map>
 
 #include "gears/base/common/base_class.h"
 
-// Name/ID pair used for JavaScript properties and methods.
-struct NamedIdentifier {
-  const char* name;
-  NPIdentifier id;
-
-  NamedIdentifier(const char* name) : name(name), id(0) {}
-};
+// Associates a Gears class with its corresponding NPAPI bridge class.
+template<class Plugin> struct PluginTraits {};
 
 // This is a base class for the bridge between the JavaScript engine and the
-// Gears class implementations.  See GearsFactoryPlugin for an example.
+// Gears class implementations.  See GearsFactoryBridge for an example.
+//
+// Note: This class assumes its template parameter has the following methods:
+// // Called once per class type to initialize properties and methods.
+// static void InitClass();
+// // Returns a pointer to the class that handles the property/method callbacks.
+// GearsClass *gears_obj();
+template<class T>
 class PluginBase : public NPObject {
  public:
-  // Get a NPClass for a Plugin type (the type must derive from PluginBase).
-  template<class Plugin>
-  static NPClass* GetClass();
+  // The NPAPI scriptable plugin interface class.
+  typedef T PluginClass;
 
-  // NPClass callbacks.  Most of these will simply call through to the virtual
-  // versions below.
-  static void ClassDeallocate(NPObject *npobj);
-  static void ClassInvalidate(NPObject *npobj);
-  static bool ClassHasMethod(NPObject *npobj, NPIdentifier name);
-  static bool ClassInvoke(NPObject *npobj, NPIdentifier name,
-                          const NPVariant *args, uint32_t num_args,
+  // The corresponding GearsClass that implements the functionality for our
+  // bridge.
+  typedef typename PluginTraits<T>::GearsClass GearsClass;
+
+  // Callback function used for property and method invokations.
+  typedef void (GearsClass::*GearsCallback)();
+
+  // NPClass callbacks.  The browser calls these functions when JavaScript
+  // interacts with a Gears object.
+  static NPObject* Allocate(NPP npp, NPClass *npclass);
+  static void Deallocate(NPObject *npobj);
+  static bool HasMethod(NPObject *npobj, NPIdentifier name);
+  static bool Invoke(NPObject *npobj, NPIdentifier name,
+                     const NPVariant *args, uint32_t num_args,
+                     NPVariant *result);
+  static bool HasProperty(NPObject * npobj, NPIdentifier name);
+  static bool GetProperty(NPObject *npobj, NPIdentifier name,
                           NPVariant *result);
-  static bool ClassInvokeDefault(NPObject *npobj, const NPVariant *args,
-                                 uint32_t num_args, NPVariant *result);
-  static bool ClassHasProperty(NPObject * npobj, NPIdentifier name);
-  static bool ClassGetProperty(NPObject *npobj, NPIdentifier name,
-                               NPVariant *result);
-  static bool ClassSetProperty(NPObject *npobj, NPIdentifier name,
-                               const NPVariant *value);
-  static bool ClassRemoveProperty(NPObject *npobj, NPIdentifier name);
 
-  PluginBase(NPP instance);
-  virtual ~PluginBase();
-
-  // Overrideable versions of the NPClass callbacks.
-  virtual void Invalidate();
-  virtual bool Invoke(NPIdentifier name, const NPVariant *args,
-                      uint32_t num_args, NPVariant *result);
-  virtual bool InvokeDefault(const NPVariant *args, uint32_t num_args,
-                             NPVariant *result);
-  virtual bool GetProperty(NPIdentifier name, NPVariant *result);
-  virtual bool SetProperty(NPIdentifier name, const NPVariant *value);
-  virtual bool RemoveProperty(NPIdentifier name);
-
-  virtual int HandleEvent(void* event) { return 0; }
+  PluginBase(NPP instance) : instance_(instance) {}
 
  protected:
+  // Register JavaScript property/methods.
+  static void RegisterProperty(const char *name, GearsCallback callback);
+  static void RegisterMethod(const char *name, GearsCallback callback);
+
   NPP instance_;
 
-  typedef std::vector<NPIdentifier> IDList;
+ private:
+  typedef std::map<NPIdentifier, GearsCallback> IDList;
 
-  // Derived classes should override these methods so that each class has its
-  // own static instance of the property and method lists.
-  virtual IDList& GetPropertyList() = 0;
-  virtual IDList& GetMethodList() = 0;
+  static IDList& GetPropertyList() {
+    static IDList properties;
+    return properties;
+  }
+  static IDList& GetMethodList() {
+    static IDList methods;
+    return methods;
+  }
 
-  // Register JavaScript property/methods.
-  void RegisterProperty(NamedIdentifier* id);
-  void RegisterMethod(NamedIdentifier* id);
+  DISALLOW_EVIL_CONSTRUCTORS(PluginBase<T>);
 };
 
-// static
+// Get the NPClass for a Plugin type (the type must derive from PluginBase).
 template<class Plugin>
-NPClass* PluginBase::GetClass() {
+NPClass* GetNPClass() {
   static NPClass plugin_class = {
     NP_CLASS_STRUCT_VERSION,
-    Plugin::ClassAllocate,
-    Plugin::ClassDeallocate,
-    Plugin::ClassInvalidate,
-    Plugin::ClassHasMethod,
-    Plugin::ClassInvoke,
-    Plugin::ClassInvokeDefault,
-    Plugin::ClassHasProperty,
-    Plugin::ClassGetProperty,
-    Plugin::ClassSetProperty,
-    Plugin::ClassRemoveProperty
+    Plugin::Allocate,
+    Plugin::Deallocate,
+    NULL,  // Plugin::Invalidate,
+    Plugin::HasMethod,
+    Plugin::Invoke,
+    NULL,  // Plugin::InvokeDefault,
+    Plugin::HasProperty,
+    Plugin::GetProperty,
+    NULL,  // Plugin::SetProperty,
+    NULL,  // Plugin::RemoveProperty,
   };
 
   return &plugin_class;
 }
+
+// Used to define the association between a Gears class and its NPAPI bridge.
+#define DECLARE_GEARS_BRIDGE(GearsClassType, PluginClass) \
+class PluginClass; \
+template<> \
+struct PluginTraits<PluginClass> { \
+  typedef GearsClassType GearsClass; \
+}
+
+// Need to include .cc for template definitions.
+#include "gears/base/npapi/plugin.cc"
 
 #endif // GEARS_BASE_NPAPI_PLUGIN_H__

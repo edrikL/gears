@@ -126,11 +126,12 @@
 
 #include "gears/base/common/common_np.h"
 
-// TODO(mpcomplete): implement these
-#define RETURN_NORMAL()  return true
+#define RETURN_NORMAL()  return;
 #define RETURN_EXCEPTION(msg) \
 { \
-    return false; \
+    LOG(("Exception: %s", msg)); \
+    JsSetException(msg); \
+    return; \
 }
 
 #elif BROWSER_SAFARI

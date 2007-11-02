@@ -93,6 +93,11 @@ enum JsParamType {
   JSPARAM_STRING16
 };
 
+enum JsParamRequirement {
+  JSPARAM_OPTIONAL,
+  JSPARAM_REQUIRED,
+};
+
 struct JsParamToSend {
   JsParamType type;
   const void *value_ptr;
@@ -102,6 +107,14 @@ struct JsParamToRecv {
   JsParamType type;
   void *value_ptr;
 };
+
+struct JsArgument {
+  JsParamRequirement requirement;
+  JsParamType type;
+  void* value_ptr;
+};
+
+typedef JsParamToSend JsReturnValue;
 
 // Declares the platform-independent interface that Gears internals require
 // for running JavaScript code.
@@ -117,6 +130,17 @@ class JsRunnerInterface {
   virtual JsContextPtr GetContext() = 0;
   virtual bool Eval(const std::string16 &script) = 0;
   virtual void SetErrorHandler(JsErrorHandlerInterface *error_handler) = 0;
+
+  // Temporary: npapi only.
+#if BROWSER_NPAPI
+  // Get the arguments for a JavaScript callback.  Returns the number of
+  // arguments successfully read (will bail at the first invalid argument).
+  virtual int GetArguments(int argc, JsArgument *argv) = 0;
+
+  // Use the given value as the return value to calling JavaScript.  Returns
+  // true on success.
+  virtual bool SetReturnValue(const JsReturnValue &value) = 0;
+#endif
 
   // Creates a new object in the JavaScript engine using the specified
   // constructor. If the constructor is NULL, it defaults to "Object". The

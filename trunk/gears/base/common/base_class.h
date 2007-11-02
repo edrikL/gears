@@ -182,34 +182,30 @@ class JsRootedToken {
 
 // An NPVariant that takes ownership of its value and releases it when it goes
 // out of scope.
-class OwnedNPVariant : public NPVariant {
+class ScopedNPVariant : public NPVariant {
  public:
-  explicit OwnedNPVariant() {
-    VOID_TO_NPVARIANT(*this);
-  }
-  explicit OwnedNPVariant(int value) {
-    reset(value);
-  }
-  explicit OwnedNPVariant(const char *value) {
-    reset(value);
-  }
-  explicit OwnedNPVariant(const char16 *value) {
-    reset(value);
-  }
-  explicit OwnedNPVariant(NPObject *value) {
-    reset(value);
-  }
+  ScopedNPVariant() { VOID_TO_NPVARIANT(*this); }
+  template<class T>
+  explicit ScopedNPVariant(T value) { Reset(value); }
 
-  ~OwnedNPVariant() {
-    reset();
-  }
+  ~ScopedNPVariant() { Reset(); }
 
-  void reset();
-  void reset(int value);
-  void reset(const char *value);
-  void reset(const char16 *value);
-  void reset(NPObject *value);
+  // Frees the old value and replaces it with the new value.  Strings are
+  // copied, and objects are retained.
+  void Reset();
+  void Reset(int value);
+  void Reset(const char *value);
+  void Reset(const char16 *value);
+  void Reset(NPObject *value);
+
+  // Gives up ownership of this variant, without freeing or releasing the
+  // underyling object.  The variant will be VOID after this call.
+  void Release();
 };
+
+// Sets JavaScript exceptions, in a way that hides differences
+// between main-thread and worker-thread environments.
+void JsSetException(const char16 *message);
 
 #elif BROWSER_SAFARI
 

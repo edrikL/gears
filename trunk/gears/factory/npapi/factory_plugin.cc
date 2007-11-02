@@ -29,92 +29,41 @@
 #include "gears/factory/npapi/factory.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-// Properties and Methods
-static NamedIdentifier kVersionId("version");
-static NamedIdentifier kCreateId("create");
-static NamedIdentifier kGetBuildInfoId("getBuildInfo");
+DECLARE_GEARS_BRIDGE(GearsFactory, GearsFactoryBridge);
+
+// TODO(mpcomplete): The naming is temporary.  Right now we have:
+// - GearsFactoryBridge: serves as the bridge between implementation and the
+// JavaScript engine.
+// - GearsFactory: the actual implementation of the factory module.
+//
+// We want to eventually rename GearsFactory -> GearsFactoryImpl, and
+// GearsFactoryBridge -> GearsFactory.  But until we have this abstraction layer
+// for all browsers, we need to preserve the old naming scheme.
 
 // This class serves as the bridge between the GearsFactory implementation and
 // the browser binding layer.
-class GearsFactoryPlugin : public PluginBase {
+class GearsFactoryBridge : public PluginBase<GearsFactoryBridge> {
  public:
-  static NPObject* ClassAllocate(NPP npp, NPClass *npclass) {
-    return new GearsFactoryPlugin(npp);
+  GearsFactoryBridge(NPP instance) :
+       PluginBase<GearsFactoryBridge>(instance),
+       impl_(new GearsFactory) {
+    impl_->InitBaseFromDOM(instance);
   }
 
-  GearsFactoryPlugin(NPP instance);
-  virtual ~GearsFactoryPlugin() {}
+  GearsFactory *gears_obj() { return impl_.get(); }
 
-  virtual bool Invoke(NPIdentifier name, const NPVariant *args,
-                      uint32_t num_args, NPVariant *result);
-  virtual bool GetProperty(NPIdentifier name, NPVariant *result);
-
-  virtual IDList& GetPropertyList() {
-    static IDList properties;
-    return properties;
-  }
-  virtual IDList& GetMethodList() {
-    static IDList methods;
-    return methods;
+  static void InitClass() {
+    RegisterProperty("version", &GearsFactory::GetVersion);
+    RegisterMethod("create", &GearsFactory::Create);
+    RegisterMethod("getBuildInfo", &GearsFactory::GetBuildInfo);
   }
 
  private:
-  void InitPluginIds();
-
   scoped_ptr<GearsFactory> impl_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(GearsFactoryBridge);
 };
 
-static NPClass* GetNPClass() {
-  return PluginBase::GetClass<GearsFactoryPlugin>();
-}
-
-PluginBase* CreateGearsFactoryPlugin(JsContextPtr context) {
-  return static_cast<PluginBase*>(NPN_CreateObject(context, GetNPClass()));
-}
-
-GearsFactoryPlugin::GearsFactoryPlugin(NPP instance) :
-    PluginBase(instance),
-    impl_(new GearsFactory) {
-  InitPluginIds();
-  impl_->InitBaseFromDOM(instance);
-}
-
-void GearsFactoryPlugin::InitPluginIds() {
-  static bool did_init = false;
-  if (did_init)
-    return;
-  did_init = true;
-
-  RegisterProperty(&kVersionId);
-  RegisterMethod(&kCreateId);
-  RegisterMethod(&kGetBuildInfoId);
-}
-
-bool GearsFactoryPlugin::Invoke(NPIdentifier name, const NPVariant *args,
-                                uint32_t num_args, NPVariant *result) {
-  if (name == kCreateId.id) {
-    // TODO(mpcomplete): implement me
-    char val[] = "create invoked";
-    NPString np_val = NPN_StringDup(val, ARRAYSIZE(val)+1);
-    STRINGN_TO_NPVARIANT(np_val.utf8characters, np_val.utf8length, *result);
-    impl_->Create();
-    return true;
-  } else if (name == kGetBuildInfoId.id) {
-    // TODO(mpcomplete): implement me
-    return true;
-  }
- 
-  return false;
-}
-
-bool GearsFactoryPlugin::GetProperty(NPIdentifier name, NPVariant *result) {
-  if (name == kVersionId.id) {
-    // TODO(mpcomplete): implement me
-    char16 val[] = PRODUCT_VERSION_STRING;
-    NPString np_val = NPN_StringDup(val, ARRAYSIZE(val)+1);
-    STRINGN_TO_NPVARIANT(np_val.utf8characters, np_val.utf8length, *result);
-    return true;
-  }
-
-  return false;
+NPObject* CreateGearsFactoryBridge(JsContextPtr context) {
+  return NPN_CreateObject(context, GetNPClass<GearsFactoryBridge>());
 }

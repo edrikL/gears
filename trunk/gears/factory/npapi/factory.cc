@@ -29,9 +29,11 @@
 #include <stdlib.h>
 
 #include "common/genfiles/product_constants.h"  // from OUTDIR
-#include "gears/base/common/common.h"
+#include "gears/base/common/base_class.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/string16.h"
 #include "gears/factory/common/factory_utils.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 GearsFactory::GearsFactory()
     : is_creation_suspended_(false),
@@ -41,15 +43,45 @@ GearsFactory::GearsFactory()
 }
 
 void GearsFactory::Create() {
-  // TODO(mpcomplete): implement me
+  JsRunnerInterface* js_runner = GetJsRunner();
+
+  // TODO(mpcomplete): implement HTMLDialog.
+#if 0
+  if (!HasPermissionToUseGears(this, NULL, NULL, NULL)) {
+    RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
+                              PRODUCT_FRIENDLY_NAME L"."));
+  }
+#endif
+
+  std::string16 class_name;
+  std::string16 version;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &class_name },
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &version },
+  };
+  int argc = js_runner->GetArguments(ARRAYSIZE(argv), argv);
+  if (argc < 2)
+    return;  // JsRunner sets an error message.
+
+  // TODO(mpcomplete): implement me.
+
+  RETURN_NORMAL();
 }
 
 void GearsFactory::GetBuildInfo() {
-  // TODO(mpcomplete): implement me
+  std::string16 build_info;
+  AppendBuildInfo(&build_info);
+  JsParamToSend js_retval = { JSPARAM_STRING16, &build_info };
+  GetJsRunner()->SetReturnValue(js_retval);
+
+  RETURN_NORMAL();
 }
 
 void GearsFactory::GetVersion() {
-  // TODO(mpcomplete): implement me
+  std::string16 version(PRODUCT_VERSION_STRING);
+  JsParamToSend js_retval = { JSPARAM_STRING16, &version };
+  GetJsRunner()->SetReturnValue(js_retval);
+  RETURN_NORMAL();
 }
 
 // TODO(cprince): See if we can use Suspend/Resume with the opt-in dialog too,

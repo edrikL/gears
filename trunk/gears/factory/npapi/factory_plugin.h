@@ -30,6 +30,6 @@
 #include "gears/base/npapi/plugin.h"
 
 // Creates a new NPObject representing a GearsFactory class.
-PluginBase* CreateGearsFactoryPlugin(JsContextPtr context);
+NPObject* CreateGearsFactoryBridge(JsContextPtr context);
 
 #endif // GEARS_BASE_NPAPI_FACTORY_PLUGIN_H__

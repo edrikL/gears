@@ -60,7 +60,10 @@ class GearsFactory
  private:
   // friends for exposing 'is_permission_*' fields
   friend class PoolThreadsManager;
-  friend bool HasPermissionToUseGears(GearsFactory *factory);
+  friend bool HasPermissionToUseGears(GearsFactory *factory,
+                                      const char16 *custom_icon_url,
+                                      const char16 *custom_name,
+                                      const char16 *custom_message);
 
   // A factory starts out operational, but it can be put in a "suspended" state,
   // unable to create objects.  This is important for some use cases, like
