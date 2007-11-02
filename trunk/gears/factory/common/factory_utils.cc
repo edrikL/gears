@@ -190,19 +190,16 @@ bool ShowPermissionsPrompt(const SecurityOrigin &origin,
 
 void SetActiveUserFlag() {
 #ifdef WIN32
-  // We won't create any registry keys here; instead, we'll just open
-  // preexisting ones. This means that this code should be a no-op on
-  // installations that didn't include the Google Update service.
-  //
   // We use the HKCU version of the Google Update "did run" value so that
   // we can write to it from IE on Vista.
   HKEY reg_client_state;
-  DWORD result = RegOpenKeyExW(HKEY_CURRENT_USER, kGoogleUpdateClientsRegKey,
-                               0, KEY_READ, &reg_client_state);
+  DWORD result = RegCreateKeyExW(HKEY_CURRENT_USER, kGoogleUpdateClientsRegKey,
+                                 0, NULL, 0, KEY_WRITE, NULL,
+                                 &reg_client_state, NULL);
   if (result == ERROR_SUCCESS) {
     HKEY reg_client;
-    result = RegOpenKeyExW(reg_client_state, kGoogleUpdateGearsClientGuid,
-                           0, KEY_WRITE, &reg_client);
+    result = RegCreateKeyExW(reg_client_state, kGoogleUpdateGearsClientGuid,
+                             0, NULL, 0, KEY_WRITE, NULL, &reg_client, NULL);
     if (result == ERROR_SUCCESS) {
       const char16 *kValue = L"1";
       const size_t num_bytes = sizeof(kValue[0]) * 2;  // includes trailing '\0'
