@@ -124,6 +124,13 @@ bool File::CreateDesktopShortcut(BrowserType browser_type,
     default:
       return false;
   }
+	
+  // Check link name for safety. As long as it's a plain filename it is valid.
+  // Note that we append .lnk to it later, so we don't need to worry about
+  // whether it has a (possibly malicious) extension.
+  if (NULL == link_name || !PathIsFileSpec(link_name)) {
+    return false;
+  }
 
   // Check input URL for safety.
   std::string16 safe_launch_url;
