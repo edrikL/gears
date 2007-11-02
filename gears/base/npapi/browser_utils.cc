@@ -25,8 +25,55 @@
 
 #include "gears/base/npapi/browser_utils.h"
 
+#include <stack>
+
 #include "gears/base/common/string_utils.h"
 #include "gears/base/npapi/scoped_npapi_handles.h"
+
+// Holds a collection of information about the calling JavaScript context.
+struct JsScope {
+  NPObject *object;
+  int argc;
+  const JsToken* argv;
+  JsToken* retval;
+};
+
+static std::stack<JsScope> scope_stack;
+
+void BrowserUtils::EnterScope(NPObject *object,
+                              int argc, const JsToken *argv, JsToken *retval) {
+  VOID_TO_NPVARIANT(*retval);
+  JsScope scope = { object, argc, argv, retval };
+  scope_stack.push(scope);
+}
+
+void BrowserUtils::ExitScope() {
+  assert(!scope_stack.empty());
+  scope_stack.pop();
+}
+
+void BrowserUtils::GetJsArguments(int *argc, const JsToken **argv) {
+  assert(!scope_stack.empty());
+
+  *argc = scope_stack.top().argc;
+  *argv = scope_stack.top().argv;
+}
+
+void BrowserUtils::SetJsReturnValue(const JsToken& return_value) {
+  assert(!scope_stack.empty());
+
+  *scope_stack.top().retval = return_value;
+}
+
+void BrowserUtils::SetJsException(const std::string16& message) {
+  assert(!scope_stack.empty());
+
+  std::string message_utf8;
+  if (!String16ToUTF8(message.data(), message.length(), &message_utf8))
+    message_utf8 = "Unknown Gears Error";  // better to throw *something*
+
+  NPN_SetException(scope_stack.top().object, message_utf8.c_str());
+}
 
 bool BrowserUtils::GetPageLocationUrl(JsContextPtr context,
                                       std::string16 *location_url) {
@@ -39,18 +86,17 @@ bool BrowserUtils::GetPageLocationUrl(JsContextPtr context,
   ScopedNPObject window_scoped(window);
 
   NPIdentifier location_id = NPN_GetStringIdentifier("location");
-  NPVariant np_location;
+  ScopedNPVariant np_location;
   if (!NPN_GetProperty(context, window, location_id, &np_location))
     return false;
-  ScopedNPVariant np_location_scoped(np_location);
 
+  assert(NPVARIANT_IS_OBJECT(np_location));
   NPIdentifier href_id = NPN_GetStringIdentifier("href");
-  NPVariant np_href;
+  ScopedNPVariant np_href;
   if (!NPN_GetProperty(context, NPVARIANT_TO_OBJECT(np_location),
                        href_id, &np_href)) {
     return false;
   }
-  ScopedNPVariant np_href_scoped(np_href);
 
   assert(NPVARIANT_IS_STRING(np_href));
   NPString np_str = NPVARIANT_TO_STRING(np_href);

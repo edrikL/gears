@@ -43,7 +43,7 @@
 #include "gears/base/npapi/plugin.h"
 #include "gears/factory/npapi/factory_plugin.h"
 
-// here the plugin creates an instance of our PluginBase object which 
+// here the plugin creates an instance of our NPObject object which 
 // will be associated with this newly created plugin instance and 
 // will do all the neccessary job
 NPError NPP_New(NPMIMEType pluginType,
@@ -59,20 +59,20 @@ NPError NPP_New(NPMIMEType pluginType,
 
   NPError rv = NPERR_NO_ERROR;
 
-  PluginBase* obj = CreateGearsFactoryPlugin(instance);
+  NPObject* obj = CreateGearsFactoryBridge(instance);
   instance->pdata = obj;
 
   // Make this a windowless plugin.
   return NPN_SetValue(instance, NPPVpluginWindowBool, NULL);
 }
 
-// here is the place to clean up and destroy the PluginBase object
+// here is the place to clean up and destroy the NPObject object
 NPError NPP_Destroy(NPP instance, NPSavedData** save)
 {
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  PluginBase* obj = static_cast<PluginBase*>(instance->pdata);
+  NPObject* obj = static_cast<NPObject*>(instance->pdata);
   if (obj)
     NPN_ReleaseObject(obj);
 
@@ -100,7 +100,7 @@ NPError	NPP_GetValue(NPP instance, NPPVariable variable, void *value)
 
   NPError rv = NPERR_NO_ERROR;
 
-  PluginBase* plugin = static_cast<PluginBase*>(instance->pdata);
+  NPObject* plugin = static_cast<NPObject*>(instance->pdata);
   if (plugin == NULL)
     return NPERR_GENERIC_ERROR;
 
@@ -193,15 +193,7 @@ NPError NPP_SetValue(NPP instance, NPNVariable variable, void *value)
 
 int16 NPP_HandleEvent(NPP instance, void* event)
 {
-  if (instance == NULL)
-    return 0;
-
-  int rv = 0;
-  PluginBase* plugin = static_cast<PluginBase*>(instance->pdata);
-  if (plugin)
-    rv = plugin->HandleEvent(event);
-
-  return static_cast<int16>(rv);
+  return 0;
 }
 
 NPObject *NPP_GetScriptableInstance(NPP instance)
@@ -209,7 +201,7 @@ NPObject *NPP_GetScriptableInstance(NPP instance)
   if (!instance)
     return 0;
 
-  PluginBase* plugin = static_cast<PluginBase*>(instance->pdata);
+  NPObject* plugin = static_cast<NPObject*>(instance->pdata);
   NPN_RetainObject(plugin);  // caller expects it retained.
   return plugin;
 }

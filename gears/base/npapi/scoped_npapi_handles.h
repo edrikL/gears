@@ -43,14 +43,4 @@ class ReleaseObjectFunctor {
 };
 typedef scoped_token<NPObject*, ReleaseObjectFunctor> ScopedNPObject;
 
-// ScopedNPVariant: automatically call NPN_ReleaseVariantValue()
-class ReleaseVariantValueFunctor {
- public:
-  void operator()(NPVariant& x) const {
-    NPN_ReleaseVariantValue(&x);
-  }
-};
-typedef scoped_token<NPVariant&, ReleaseVariantValueFunctor> ScopedNPVariant;
-
-
 #endif // GEARS_BASE_NPAPI_SCOPED_NPAPI_HANDLES_H__

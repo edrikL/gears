@@ -23,121 +23,92 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "plugin.h"
+#include "gears/base/npapi/plugin.h"
+
+#include "gears/base/npapi/browser_utils.h"
 
 // static
-void PluginBase::ClassDeallocate(NPObject *npobj) {
-  PluginBase* plugin = static_cast<PluginBase *>(npobj);
-  delete plugin;
-}
-
-// static
-void PluginBase::ClassInvalidate(NPObject *npobj) {
-  PluginBase* plugin = static_cast<PluginBase *>(npobj);
-  plugin->Invalidate();
-}
-
-// static
-bool PluginBase::ClassHasMethod(NPObject *npobj, NPIdentifier name) {
-  PluginBase* plugin = static_cast<PluginBase *>(npobj);
-  const IDList& methods = plugin->GetMethodList();
-  for (size_t i = 0; i < methods.size(); ++i) {
-    if (methods[i] == name)
-      return true;
+template<class T>
+NPObject* PluginBase<T>::Allocate(NPP npp, NPClass *npclass) {
+  // Initialize property and method mappings for the derived class.
+  static bool did_init = false;
+  if (!did_init) {
+    did_init = true;
+    PluginClass::InitClass();
   }
 
-  return false;
+  return new PluginClass(npp);
 }
 
 // static
-bool PluginBase::ClassInvoke(NPObject *npobj, NPIdentifier name,
+template<class T>
+void PluginBase<T>::Deallocate(NPObject *npobj) {
+  delete static_cast<PluginClass *>(npobj);
+}
+
+// static
+template<class T>
+bool PluginBase<T>::HasMethod(NPObject *npobj, NPIdentifier name) {
+  const IDList& methods = GetMethodList();
+  return methods.find(name) != methods.end();
+}
+
+// static
+template<class T>
+bool PluginBase<T>::Invoke(NPObject *npobj, NPIdentifier name,
                              const NPVariant *args, uint32_t num_args,
                              NPVariant *result) {
-  PluginBase* plugin = static_cast<PluginBase *>(npobj);
-  return plugin->Invoke(name, args, num_args, result);
+  GearsClass* gears = static_cast<PluginClass *>(npobj)->gears_obj();
+
+  const IDList& methods = GetMethodList();
+  IDList::const_iterator method = methods.find(name);
+  if (method == methods.end())
+    return false;
+  GearsCallback callback = method->second;
+
+  BrowserUtils::EnterScope(npobj, static_cast<int>(num_args), args, result);
+  (gears->*callback)();
+  BrowserUtils::ExitScope();
+  return true;
 }
 
 // static
-bool PluginBase::ClassInvokeDefault(NPObject *npobj, const NPVariant *args,
-                                    uint32_t num_args, NPVariant *result) {
-  PluginBase* plugin = static_cast<PluginBase *>(npobj);
-  return plugin->InvokeDefault(args, num_args, result);
+template<class T>
+bool PluginBase<T>::HasProperty(NPObject * npobj, NPIdentifier name) {
+  const IDList& properties = GetPropertyList();
+  return properties.find(name) != properties.end();
 }
 
 // static
-bool PluginBase::ClassHasProperty(NPObject * npobj, NPIdentifier name) {
-  PluginBase* plugin = static_cast<PluginBase *>(npobj);
-  const IDList& properties = plugin->GetPropertyList();
-  for (size_t i = 0; i < properties.size(); ++i) {
-    if (properties[i] == name)
-      return true;
-  }
-
-  return false;
-}
-
-// static
-bool PluginBase::ClassGetProperty(NPObject *npobj, NPIdentifier name,
+template<class T>
+bool PluginBase<T>::GetProperty(NPObject *npobj, NPIdentifier name,
                                   NPVariant *result) {
-  PluginBase* plugin = static_cast<PluginBase *>(npobj);
-  return plugin->GetProperty(name, result);
+  GearsClass* gears = static_cast<PluginClass *>(npobj)->gears_obj();
+
+  const IDList& properties = GetPropertyList();
+  IDList::const_iterator property = properties.find(name);
+  if (property == properties.end())
+    return false;
+  GearsCallback callback = property->second;
+
+  BrowserUtils::EnterScope(npobj, 0, NULL, result);
+  (gears->*callback)();
+  BrowserUtils::ExitScope();
+  return true;
 }
 
 // static
-bool PluginBase::ClassSetProperty(NPObject *npobj, NPIdentifier name,
-                                  const NPVariant *value) {
-  PluginBase* plugin = static_cast<PluginBase *>(npobj);
-  return plugin->SetProperty(name, value);
+template<class T>
+void PluginBase<T>::RegisterProperty(const char *name,
+                                     GearsCallback callback) {
+  NPIdentifier id = NPN_GetStringIdentifier(name);
+  GetPropertyList()[id] = callback;
 }
 
 // static
-bool PluginBase::ClassRemoveProperty(NPObject *npobj, NPIdentifier name) {
-  PluginBase* plugin = static_cast<PluginBase *>(npobj);
-  return plugin->RemoveProperty(name);
-}
-
-
-PluginBase::PluginBase(NPP pNPInstance) :
-    instance_(pNPInstance)
-{
-}
-
-PluginBase::~PluginBase()
-{
-}
-
-void PluginBase::Invalidate() {
-}
-
-bool PluginBase::Invoke(NPIdentifier name, const NPVariant *args,
-                        uint32_t num_args, NPVariant *result) {
-  return false;
-}
-
-bool PluginBase::InvokeDefault(const NPVariant *args,
-                               uint32_t num_args, NPVariant *result) {
-  return false;
-}
-
-bool PluginBase::GetProperty(NPIdentifier name, NPVariant *result) {
-  return false;
-}
-
-bool PluginBase::SetProperty(NPIdentifier name, const NPVariant *value) {
-  return false;
-}
-
-bool PluginBase::RemoveProperty(NPIdentifier name) {
-  return false;
-}
-
-
-void PluginBase::RegisterProperty(NamedIdentifier* id) {
-  id->id = NPN_GetStringIdentifier(id->name);
-  GetPropertyList().push_back(id->id);
-}
-
-void PluginBase::RegisterMethod(NamedIdentifier* id) {
-  id->id = NPN_GetStringIdentifier(id->name);
-  GetMethodList().push_back(id->id);
+template<class T>
+void PluginBase<T>::RegisterMethod(const char *name,
+                                   GearsCallback callback) {
+  NPIdentifier id = NPN_GetStringIdentifier(name);
+  GetMethodList()[id] = callback;
 }

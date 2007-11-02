@@ -26,9 +26,8 @@
 #include "gears/base/common/js_runner.h"
 
 #include <assert.h>
-#include <dispex.h>
-#include <map>
 #include <set>
+#include <stdio.h>
 
 #include "npapi.h"
 #include "npruntime.h"
@@ -38,8 +37,15 @@
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/scoped_token.h"
+#include "gears/base/common/string_utils.h"
+#include "gears/base/npapi/browser_utils.h"
 #include "gears/base/npapi/np_utils.h"
 
+
+inline void LogAndSetException(const char16 *msg) {
+  LOG((msg));
+  JsSetException(msg);
+}
 
 // Internal base class used to share some code between DocumentJsRunner and
 // JsRunner. Do not override these methods from JsRunner or DocumentJsRunner.
@@ -63,7 +69,7 @@ class JsRunnerBase : public JsRunnerInterface {
   }
 
   JsRootedToken *NewObject(const char16 *optional_global_ctor_name) {
-    NPObject* global_object = GetGlobalObject();
+    NPObject *global_object = GetGlobalObject();
     if (!global_object) {
       LOG(("Could not get global object from script engine."));
       return NULL;
@@ -89,16 +95,18 @@ class JsRunnerBase : public JsRunnerInterface {
       return NULL;
     }
 
-    return new JsRootedToken(np_instance_, object);
+    JsRootedToken *token = new JsRootedToken(np_instance_, object);
+    NPN_ReleaseVariantValue(&object);  // token has the only ref now.
+    return token;
   }
 
   bool SetPropertyString(JsToken object, const char16 *name,
                          const char16 *value) {
-    return SetProperty(object, name, OwnedNPVariant(value));
+    return SetProperty(object, name, ScopedNPVariant(value));
   }
 
   bool SetPropertyInt(JsToken object, const char16 *name, int value) {
-    return SetProperty(object, name, OwnedNPVariant(value));
+    return SetProperty(object, name, ScopedNPVariant(value));
   }
 
   bool InvokeCallback(const JsRootedCallback *callback,
@@ -108,33 +116,9 @@ class JsRunnerBase : public JsRunnerInterface {
     if (!NPVARIANT_IS_OBJECT(callback->token())) { return false; }
 
     // Setup argument array.
-    scoped_array<OwnedNPVariant> js_engine_argv(new OwnedNPVariant[argc]);
-    for (int i = 0; i < argc; ++i) {
-      switch (argv[i].type) {
-        case JSPARAM_BOOL: {
-          const bool *value = static_cast<const bool *>(argv[i].value_ptr);
-          js_engine_argv[i].reset(*value);
-          break;
-        }
-        case JSPARAM_INT: {
-          const int *value = static_cast<const int *>(argv[i].value_ptr);
-          js_engine_argv[i].reset(*value);
-          break;
-        }
-        case JSPARAM_OBJECT_TOKEN: {
-          const JsRootedToken *value = static_cast<const JsRootedToken *>(
-                                                       argv[i].value_ptr);
-          js_engine_argv[i].reset(NPVARIANT_TO_OBJECT(value->token()));
-          break;
-        }
-        case JSPARAM_STRING16: {
-          const std::string16 *value = static_cast<const std::string16 *>(
-                                                       argv[i].value_ptr);
-          js_engine_argv[i].reset(value->c_str());
-          break;
-        }
-      }
-    }
+    scoped_array<ScopedNPVariant> js_engine_argv(new ScopedNPVariant[argc]);
+    for (int i = 0; i < argc; ++i)
+      ConvertParamToToken(argv[i], &js_engine_argv[i]);
 
     // Invoke the method.
     NPVariant retval;
@@ -151,6 +135,8 @@ class JsRunnerBase : public JsRunnerInterface {
       // coerce these values to other types correctly in the future.
       *optional_alloc_retval = new JsRootedToken(np_instance_, retval);
     }
+
+    NPN_ReleaseVariantValue(&retval);
 
     return true;
   }
@@ -171,6 +157,46 @@ class JsRunnerBase : public JsRunnerInterface {
     assert(event_type >= 0 && event_type < MAX_JSEVENTS);
 
     event_handlers_[event_type].erase(handler);
+    return true;
+  }
+
+  virtual int GetArguments(int argc, JsArgument *argv) {
+    // Arguments received from the calling JavaScript function.
+    int input_argc;
+    const NPVariant *input_argv;
+    BrowserUtils::GetJsArguments(&input_argc, &input_argv);
+
+    for (int i = 0; i < argc; ++i) {
+      if (i >= input_argc) {
+        // Out of arguments
+        if (argv[i].requirement == JSPARAM_REQUIRED) {
+          std::string16 msg, i_str;
+          IntegerToString(i + 1, &i_str);
+          msg += STRING16(L"Required argument ");
+          msg += i_str;
+          msg += STRING16(L" is missing.");
+          LogAndSetException(msg.c_str());
+        }
+
+        return i;
+      }
+
+      if (!ConvertTokenToParam(input_argv[i], &argv[i]))
+        return i;
+    }
+
+    return argc;
+  }
+
+  virtual bool SetReturnValue(const JsReturnValue &retval) {
+    ScopedNPVariant np_retval;
+    ConvertParamToToken(retval, &np_retval);
+    BrowserUtils::SetJsReturnValue(np_retval);
+
+    // In NPAPI, return values from callbacks are released by the browser.
+    // Therefore, we give up ownership of this variant without releasing it.
+    np_retval.Release();
+
     return true;
   }
 
@@ -207,7 +233,7 @@ class JsRunnerBase : public JsRunnerInterface {
   }
 
   NPP np_instance_;
-  NPObject* global_object_;
+  NPObject *global_object_;
 
  private:
   bool SetProperty(JsToken object, const char16 *name, const NPVariant &value) {
@@ -216,9 +242,90 @@ class JsRunnerBase : public JsRunnerInterface {
     std::string name_utf8;
     if (!String16ToUTF8(name, &name_utf8)) { return false; }
 
-    NPObject* np_object = NPVARIANT_TO_OBJECT(object);
+    NPObject *np_object = NPVARIANT_TO_OBJECT(object);
     NPIdentifier np_name = NPN_GetStringIdentifier(name_utf8.c_str());
     return NPN_SetProperty(np_instance_, np_object, np_name, &value);
+  }
+
+  // Given a JsParamToSend, extract it into a ScopedNPVariant.  Resulting
+  // variant increases the reference count for objects.
+  void ConvertParamToToken(const JsParamToSend &param, ScopedNPVariant *variant) {
+    switch (param.type) {
+      case JSPARAM_BOOL: {
+        const bool *value = static_cast<const bool *>(param.value_ptr);
+        variant->Reset(*value);
+        break;
+      }
+      case JSPARAM_INT: {
+        const int *value = static_cast<const int *>(param.value_ptr);
+        variant->Reset(*value);
+        break;
+      }
+      case JSPARAM_OBJECT_TOKEN: {
+        const JsRootedToken *value = static_cast<const JsRootedToken *>(
+                                                     param.value_ptr);
+        variant->Reset(NPVARIANT_TO_OBJECT(value->token()));
+        break;
+      }
+      case JSPARAM_STRING16: {
+        const std::string16 *value = static_cast<const std::string16 *>(
+                                                     param.value_ptr);
+        variant->Reset(value->c_str());
+        break;
+      }
+      default:
+        assert(false);
+    }
+  }
+
+  // Given an NPVariant, extract it into a JsArgument.  Object pointers are
+  // weak references (ref count is not increased).
+  bool ConvertTokenToParam(const JsToken &variant, JsArgument *param) {
+    switch (param->type) {
+      case JSPARAM_BOOL: {
+        bool *value = static_cast<bool *>(param->value_ptr);
+        if (!JsTokenToBool(variant, np_instance_, value)) {
+          LogAndSetException(
+              STRING16(L"Invalid argument type: expected bool."));
+          return false;
+        }
+        break;
+      }
+      case JSPARAM_INT: {
+        int *value = static_cast<int *>(param->value_ptr);
+        if (!JsTokenToInt(variant, np_instance_, value)) {
+          LogAndSetException(
+              STRING16(L"Invalid argument type: expected int."));
+          return false;
+        }
+        break;
+      }
+      case JSPARAM_OBJECT_TOKEN: {
+        JsToken *value = static_cast<JsToken *>(param->value_ptr);
+        if (!NPVARIANT_IS_OBJECT(variant)) {
+          // TODO(mpcomplete): should we accept null/void here?
+          LogAndSetException(
+              STRING16(L"Invalid argument type: expected object."));
+          return false;
+        }
+        *value = variant;
+        break;
+      }
+      case JSPARAM_STRING16: {
+        std::string16 *value = static_cast<std::string16 *>(param->value_ptr);
+        if (!JsTokenToString(variant, np_instance_, value)) {
+          LogAndSetException(
+              STRING16(L"Invalid argument type: expected string."));
+          return false;
+        }
+        break;
+      }
+      default:
+        assert(false);
+        return false;
+    }
+
+    return true;
   }
 
   std::set<JsEventHandlerInterface *> event_handlers_[MAX_JSEVENTS];
@@ -284,7 +391,7 @@ class DocumentJsRunner : public JsRunnerBase {
   }
 
   bool Eval(const std::string16 &script) {
-    NPObject* global_object = GetGlobalObject();
+    NPObject *global_object = GetGlobalObject();
 
     std::string script_utf8;
     if (!String16ToUTF8(script.data(), script.length(), &script_utf8)) {
@@ -294,8 +401,10 @@ class DocumentJsRunner : public JsRunnerBase {
 
     NPString np_script = {script_utf8.data(), script_utf8.length()};
     NPVariant retval;
-    NPN_Evaluate(np_instance_, global_object, &np_script, &retval);
+    if (!NPN_Evaluate(np_instance_, global_object, &np_script, &retval))
+      return false;
 
+    NPN_ReleaseVariantValue(&retval);
     return true;
   }
 
@@ -319,10 +428,10 @@ class DocumentJsRunner : public JsRunnerBase {
 };
 
 
-JsRunnerInterface* NewJsRunner() {
-  return static_cast<JsRunnerInterface*>(new JsRunner());
+JsRunnerInterface *NewJsRunner() {
+  return static_cast<JsRunnerInterface *>(new JsRunner());
 }
 
-JsRunnerInterface* NewDocumentJsRunner(IGeneric *base, JsContextPtr context) {
-  return static_cast<JsRunnerInterface*>(new DocumentJsRunner(context));
+JsRunnerInterface *NewDocumentJsRunner(IGeneric *base, JsContextPtr context) {
+  return static_cast<JsRunnerInterface *>(new DocumentJsRunner(context));
 }

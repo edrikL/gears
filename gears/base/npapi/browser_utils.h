@@ -31,6 +31,30 @@
 
 class BrowserUtils {
  public:
+  // Called when JavaScript calls into a Gears class to access a property or
+  // method.  object refers to the object whose property is being accessed.
+  // argc/argv are the arguments passed to the method (NULL for property
+  // accesses).  retval is an output param where we should put our result when
+  // we are done.
+  static void EnterScope(NPObject *object,
+                         int argc, const JsToken *argv, JsToken *retval);
+
+  // Called when we are done handling a JavaScript callback and return
+  // execution to the script.
+  static void ExitScope();
+
+  // Returns the topmost scope's arguments into the output params.  It is an
+  // error to call this when not inside a plugin entry point.
+  static void GetJsArguments(int *argc, const JsToken **argv);
+
+  // Sets the return value for the topmost scope.  It is an error to call this
+  // when not inside a plugin entry point.
+  static void SetJsReturnValue(const JsToken& return_value);
+
+  // Sets a JavaScript exception to be thrown upon return from plugin entry
+  // point.  It is an error to call this when not inside a plugin entry point.
+  static void SetJsException(const std::string16& message);
+
   // Returns the page's location url (absolute)
   // Returns true on success
   static bool GetPageLocationUrl(JsContextPtr context,
