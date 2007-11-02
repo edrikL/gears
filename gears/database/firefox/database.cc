@@ -119,9 +119,6 @@ NS_IMETHODIMP GearsDatabase::Open(//OPTIONAL const nsAString &database_name
     RETURN_EXCEPTION(STRING16(L"Couldn't open SQLite database."));
   }
 
-  const int kSQLiteBusyTimeout = 5000;
-  sqlite3_busy_timeout(db_, kSQLiteBusyTimeout);
-
   RETURN_NORMAL();
 }
 

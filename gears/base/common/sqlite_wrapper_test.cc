@@ -27,12 +27,13 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
-
+#include "gears/base/common/stopwatch.h"
 
 static bool TestSQLDatabaseTransactions();
 static bool TestSQLTransaction();
 static bool CreateTable(SQLDatabase &db);
 static bool InsertRow(SQLDatabase &db);
+static bool TestSQLConcurrency();
 
 
 //------------------------------------------------------------------------------
@@ -42,6 +43,7 @@ bool TestSqliteUtilsAll() {
   bool ok = true;
   ok &= TestSQLDatabaseTransactions();
   ok &= TestSQLTransaction();
+  ok &= TestSQLConcurrency();
   return ok;
 }
 
@@ -105,6 +107,15 @@ static bool TestSQLDatabaseTransactions() {
 // TestSQLTransaction
 //------------------------------------------------------------------------------
 static bool TestSQLTransaction() {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    LOG(("TestSQLTransaction - failed (%d)\n", __LINE__)); \
+    return false; \
+  } \
+}
+
   // Put something into the DB using a nested transaction
   {
     SQLDatabase db1;
@@ -137,6 +148,15 @@ static bool TestSQLTransaction() {
 // CreateTable helper used by TestSQLTransaction
 //------------------------------------------------------------------------------
 static bool CreateTable(SQLDatabase &db) {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    LOG(("CreateTable - failed (%d)\n", __LINE__)); \
+    return false; \
+  } \
+}
+
   SQLTransaction tx(&db, "TestSQLTransaction::CreateTable");
   TEST_ASSERT(tx.Begin());
 
@@ -153,6 +173,15 @@ static bool CreateTable(SQLDatabase &db) {
 // InsertRow helper used by TestSQLTransaction
 //------------------------------------------------------------------------------
 static bool InsertRow(SQLDatabase &db) {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    LOG(("InsertRow - failed (%d)\n", __LINE__)); \
+    return false; \
+  } \
+}
+
   SQLTransaction tx(&db, "TestSQLTransaction::InsertRow");
 
   TEST_ASSERT(tx.Begin());
@@ -167,5 +196,46 @@ static bool InsertRow(SQLDatabase &db) {
 
   return true;
 }
+
+
+static bool TestSQLConcurrency() {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    LOG(("TestSQLConcurrency - failed (%d)\n", __LINE__)); \
+    return false; \
+  } \
+}
+
+  // db1, open and configure our connection with pragmas as desired
+  SQLDatabase db1;
+  TEST_ASSERT(db1.Open(STRING16(L"SqliteUtils_test.db")));
+  
+  // db2, open a connection but don't configure yet
+  SQLDatabase db2;
+  TEST_ASSERT(db2.OpenConnection(STRING16(L"SqliteUtils_test.db")));
+
+  // db1, get an exclusive lock
+  TEST_ASSERT(SQLITE_OK == db1.Execute("BEGIN EXCLUSIVE"));
+    
+  // db2, now try to configure our pragmas.
+  // This should fail with a busy error after a timeout 
+  int64 start_msec = GetCurrentTimeMillis();
+  TEST_ASSERT(!db2.ConfigureConnection());
+  TEST_ASSERT(db2.GetErrorCode() == SQLITE_BUSY);
+  int kSlopMillis = 500;
+  TEST_ASSERT(GetCurrentTimeMillis() - start_msec >
+              SQLDatabase::kBusyTimeout - kSlopMillis);
+  db2.Close();  // cleanup
+  
+  // After releasing the exclusive lock, we should be able to
+  // open and configure a second connection
+  TEST_ASSERT(SQLITE_OK == db1.Execute("ROLLBACK"));
+  TEST_ASSERT(db2.Open(STRING16(L"SqliteUtils_test.db")));
+
+  return true;
+}
+
 
 #endif  // DEBUG
