@@ -1,3 +1,5 @@
+import sys
+
 class TestRunner:
   """ Run browser tests.
   
@@ -30,22 +32,34 @@ class TestRunner:
     test_results = {}
     self.test_server.startServing()
     try:
-      try:
-        for browser_launcher in self.browser_lauchers:
-          self.test_server.startTest(TestRunner.TIMEOUT)
-          try:
-            browser_launcher.launch(TestRunner.TEST_URL)
-          finally:
-            browser_type = browser_launcher.type()
-            test_results[browser_type] = self.test_server.testResults()
-          if automated:
-            browser_launcher.kill()
-      except:
-        print 'error in test_server.startTest'
+      for browser_launcher in self.browser_lauchers:
+        self.test_server.startTest(TestRunner.TIMEOUT)
+        try:
+          browser_launcher.launch(TestRunner.TEST_URL)
+        except:
+          self.__handleBrowserTestCompletion(browser_launcher, 
+                                           test_results, automated)
+          print "Error launching browser ", sys.exc_info()[0]
+        else: 
+          # There is not try/catch/finally available to us so
+          # we will go with code duplication
+          self.__handleBrowserTestCompletion(browser_launcher, 
+                                           test_results, automated)
     finally:
       self.test_server.shutdown()
       return test_results
 
+
+  def __handleBrowserTestCompletion(self, browser_launcher, test_results, 
+                                    automated):
+    """ Extract results and kill the browser"""
+    test_results[browser_launcher.type()] = self.test_server.testResults()
+    if automated:
+      try:
+        browser_launcher.kill()
+      except:
+        print "Error killing browser ", sys.exc_info()[0]
+          
 
   def __verifyBrowserLauncherTypesUnique(self, browser_launchers):
     """ Check that the given launchers represent unique browser type.
