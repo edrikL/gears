@@ -48,11 +48,11 @@ class TestRunnerTest(unittest.TestCase):
       browser_launcher.verify()
   
   
-  def test_run_tests_requires_at_least_one_browser_laucher(self):
+  def testRunTestsRequiresAtLeastOneBrowserLaucher(self):
     self.assertRaises(ValueError, TestRunner, [], self.test_webserver)
     
     
-  def test_run_tests_webserver_lanched_before_browser_invoked(self):
+  def testRunTestsWebserverLanchedBeforeBrowserInvoked(self):
     self.test_webserver.expects(pmock.once()).startServing()
     self.test_webserver.expects(pmock.once()) \
                                 .startTest(pmock.eq(TestRunner.TIMEOUT))
@@ -69,8 +69,90 @@ class TestRunnerTest(unittest.TestCase):
     
     TestRunner([self.browser_launcher], self.test_webserver).runTests()
     
+  
+  def testOneBrowserLaunchFailureDoesNotAffectOtherBrowserTesting(self):
+    self.test_webserver.expects(pmock.once()).startServing()
+    self.test_webserver.expects(pmock.once()) \
+                                .startTest(pmock.eq(TestRunner.TIMEOUT))
+    self.test_webserver.expects(pmock.once()) \
+                                .startTest(pmock.eq(TestRunner.TIMEOUT))
+    
+    
+    failing_browser_launcher = pmock.Mock()
+    failing_browser_launcher.stubs().type() \
+        .will(pmock.return_value("launcher1"))
+    failing_browser_launcher.expects(pmock.once()) \
+      .launch(pmock.eq(TestRunner.TEST_URL)) \
+      .will(pmock.raise_exception(RuntimeError("browser lauch failed")))
+    failing_browser_launcher.expects(pmock.once()).kill()
+    
+    self.test_webserver.expects(pmock.once()) \
+      .testResults() \
+      .after("launch", failing_browser_launcher)
+      
 
-  def test_browser_type_must_be_unique(self):
+    second_browser_launcher = pmock.Mock()
+    second_browser_launcher.stubs().type() \
+        .will(pmock.return_value("launcher2"))
+    second_browser_launcher.expects(pmock.once()) \
+      .launch(pmock.eq(TestRunner.TEST_URL)) 
+    second_browser_launcher.expects(pmock.once()).kill()
+    
+    self.test_webserver.expects(pmock.once()) \
+      .testResults() \
+      .after("launch", second_browser_launcher)
+      
+      
+    self.test_webserver.expects(pmock.once()).shutdown()
+    
+    TestRunner([failing_browser_launcher, second_browser_launcher], 
+               self.test_webserver).runTests()
+    failing_browser_launcher.verify()
+    second_browser_launcher.verify()
+    
+
+  def testOneBrowserKillFailureDoesNotAffectOtherBrowserTesting(self):
+    self.test_webserver.expects(pmock.once()).startServing()
+    self.test_webserver.expects(pmock.once()) \
+                                .startTest(pmock.eq(TestRunner.TIMEOUT))
+    self.test_webserver.expects(pmock.once()) \
+                                .startTest(pmock.eq(TestRunner.TIMEOUT))
+    
+    
+    failing_browser_launcher = pmock.Mock()
+    failing_browser_launcher.stubs().type() \
+        .will(pmock.return_value("launcher1"))
+    failing_browser_launcher.expects(pmock.once()) \
+      .launch(pmock.eq(TestRunner.TEST_URL))
+    failing_browser_launcher.expects(pmock.once()).kill() \
+      .will(pmock.raise_exception(RuntimeError("browser kill failed")))
+    
+    self.test_webserver.expects(pmock.once()) \
+      .testResults() \
+      .after("launch", failing_browser_launcher)
+      
+
+    second_browser_launcher = pmock.Mock()
+    second_browser_launcher.stubs().type() \
+        .will(pmock.return_value("launcher2"))
+    second_browser_launcher.expects(pmock.once()) \
+      .launch(pmock.eq(TestRunner.TEST_URL)) 
+    second_browser_launcher.expects(pmock.once()).kill()
+    
+    self.test_webserver.expects(pmock.once()) \
+      .testResults() \
+      .after("launch", second_browser_launcher)
+      
+      
+    self.test_webserver.expects(pmock.once()).shutdown()
+    
+    TestRunner([failing_browser_launcher, second_browser_launcher], 
+               self.test_webserver).runTests()
+    failing_browser_launcher.verify()
+    second_browser_launcher.verify()
+        
+
+  def testBrowserTypeMustBeUnique(self):
     browser_launcher1 = pmock.Mock()
     browser_launcher2 = pmock.Mock()
     
