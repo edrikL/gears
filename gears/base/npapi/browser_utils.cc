@@ -38,6 +38,8 @@ struct JsScope {
   JsToken* retval;
 };
 
+// TODO(mpcomplete): when we have workerpool support, these will probably need
+// to be thread-local variables.
 static std::stack<JsScope> scope_stack;
 
 void BrowserUtils::EnterScope(NPObject *object,

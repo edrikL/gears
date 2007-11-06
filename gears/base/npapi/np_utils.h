@@ -35,4 +35,11 @@ NPString NPN_StringDup(const char *value, int length);
 NPString NPN_StringDup(const char16 *value, int length);
 NPString NPN_StringDup(const NPString &str);
 
+// Convenience wrappers to make an NPVariant from various string types.
+#define STDSTRING_TO_NPVARIANT(str, var) \
+  STRINGN_TO_NPVARIANT(str.data(), str.length(), var)
+
+#define NPSTRING_TO_NPVARIANT(npstr, var) \
+  STRINGN_TO_NPVARIANT(npstr.utf8characters, npstr.utf8length, var)
+
 #endif  // GEARS_BASE_NPAPI_NP_UTILS_H__

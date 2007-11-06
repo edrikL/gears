@@ -138,7 +138,7 @@ JsRootedToken::JsRootedToken(JsContextPtr context, JsToken token) :
     NPN_RetainObject(NPVARIANT_TO_OBJECT(token_));
   } else if (NPVARIANT_IS_STRING(token_)) {
     NPString npstr = NPN_StringDup(NPVARIANT_TO_STRING(token_));
-    STRINGN_TO_NPVARIANT(npstr.utf8characters, npstr.utf8length, token_);
+    NPSTRING_TO_NPVARIANT(npstr, token_);
   }
 }
 
@@ -159,13 +159,13 @@ void ScopedNPVariant::Reset(int value) {
 void ScopedNPVariant::Reset(const char *value) {
   Reset();
   NPString npstr = NPN_StringDup(value, strlen(value));
-  STRINGN_TO_NPVARIANT(npstr.utf8characters, npstr.utf8length, *this);
+  NPSTRING_TO_NPVARIANT(npstr, *this);
 }
 
 void ScopedNPVariant::Reset(const char16 *value) {
   Reset();
   NPString npstr = NPN_StringDup(value, std::char_traits<char16>::length(value));
-  STRINGN_TO_NPVARIANT(npstr.utf8characters, npstr.utf8length, *this);
+  NPSTRING_TO_NPVARIANT(npstr, *this);
 }
 
 void ScopedNPVariant::Reset(NPObject *value) {
