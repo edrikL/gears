@@ -26,6 +26,11 @@
 #ifndef GEARS_THIRD_PARTY_LIBPNG_PNGUSR_H__
 #define GEARS_THIRD_PARTY_LIBPNG_PNGUSR_H__
 
+// Windows CE doesn't have an abort function.
+#ifdef WINCE
+  #define abort() exit(EXIT_FAILURE)
+#endif
+
 #define PNG_NO_GLOBAL_ARRAYS
 
 #define PNG_NO_INFO_IMAGE

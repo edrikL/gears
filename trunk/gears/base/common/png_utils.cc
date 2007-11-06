@@ -374,7 +374,7 @@ static void DecodeInfoCallback(png_struct* png_ptr, png_info* info_ptr) {
     longjmp(png_ptr->jmpbuf, 1);
   }
 
-  int new_size = state->width * state->output_channels * state->height;
+  size_t new_size = state->width * state->output_channels * state->height;
   state->output->resize(new_size);
 
   // sanity-check that we were able to allocate all the memory we asked for.
