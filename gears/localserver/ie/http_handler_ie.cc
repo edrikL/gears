@@ -1076,7 +1076,7 @@ HRESULT HttpHandler::QueryInfoImpl(/* [in] */ DWORD dwOption,
   switch (dwOption) {
     case HTTP_QUERY_STATUS_CODE:
       if (IsValidResponseCode(payload_.status_code)) {
-        IntegerToString(payload_.status_code, &value_str);
+        value_str = IntegerToString16(payload_.status_code);
         value = value_str.c_str();
         value_len = value_str.length();
       }

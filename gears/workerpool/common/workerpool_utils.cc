@@ -48,17 +48,12 @@ const int kInvalidWorkerId = -1;
 void FormatWorkerPoolErrorMessage(const JsErrorInfo &error_info,
                                   int src_worker_id,
                                   std::string16 *message) {
-  std::string16 src_worker_id_string;
-  std::string16 line_number_string;
-  IntegerToString(src_worker_id, &src_worker_id_string);
-  IntegerToString(error_info.line, &line_number_string);
-
   *message = STRING16(L"Error in worker ");
-  *message += src_worker_id_string;
+  *message += IntegerToString16(src_worker_id);
 
   if (error_info.line != 0) {
     *message += STRING16(L" at line ");
-    *message += line_number_string;
+    *message += IntegerToString16(error_info.line);
   }
 
   *message += STRING16(L". ");

@@ -66,7 +66,7 @@ bool SecurityOrigin::Init(const char16 *full_url, const char16 *scheme,
   host_ = host;
   port_ = port;
 
-  IntegerToString(port_, &port_string_);
+  port_string_ = IntegerToString16(port_);
   LowerString(scheme_);
   LowerString(host_);
   

@@ -84,14 +84,11 @@ bool File::GetLastFileError(std::string16 *error_out) {
 void File::SetLastFileError(const char16 *message,
                             const char16 *filepath,
                             int error_code) {
-  std::string16 error_code_str;
-  IntegerToString(error_code, &error_code_str);
-
   std::string16 *value = new std::string16(message);
   (*value) += STRING16(L", '");
   (*value) += filepath;
   (*value) += STRING16(L"', error = ");
-  (*value) += error_code_str;
+  (*value) += IntegerToString16(error_code);
 
   ThreadLocals::SetValue(kLastFileErrorKey, 
                          value,

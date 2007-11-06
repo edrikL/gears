@@ -45,17 +45,12 @@ static bool LaunchDialog(nsIProperties *params, const char16 *html_filename,
 
   // Build the options string which tells Firefox various bits about how we
   // would like the dialog to display.
-  std::string16 width_string;
-  IntegerToString(width, &width_string);
-  std::string16 height_string;
-  IntegerToString(height, &height_string);
-
   std::string16 options(STRING16(
       L"chrome,centerscreen,modal,dialog,titlebar,resizable,"));
   options += STRING16(L"width=");
-  options += width_string;
+  options += IntegerToString16(width);
   options += STRING16(L",height=");
-  options += height_string;
+  options += IntegerToString16(height);
 
   // Get the browser window corresponding to the calling JS
   // NOTE: We assume that there is a js window somewhere on the stack.
