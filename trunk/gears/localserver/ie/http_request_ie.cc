@@ -270,8 +270,7 @@ bool IEHttpRequest::SendString(const char16 *data) {
 
   // TODO(michaeln): do we have to set this or will URLMON do so based
   // on the size of our stream?
-  std::string16 size_str;
-  IntegerToString(post_data_string_.size(), &size_str);
+  std::string16 size_str = IntegerToString16(post_data_string_.size());
   SetRequestHeader(HttpConstants::kContentLengthHeader, size_str.c_str());
 
   return SendImpl();

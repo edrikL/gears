@@ -208,7 +208,7 @@ int ParseLeadingInteger(const char *str, const char **endptr);
 
 // Converting to decimal strings is also important.
 // This version does support negative values.
-void IntegerToString(int i, std::string16 *result);
-void IntegerToString(int i, std::string *result);
+std::string IntegerToString(int i);
+std::string16 IntegerToString16(int i);
 
 #endif // GEARS_BASE_COMMON_STRING16_H__

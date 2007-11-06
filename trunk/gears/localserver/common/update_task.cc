@@ -544,11 +544,8 @@ bool UpdateTask::SetHttpError(const char16 *url, const int *http_status) {
       return false;
     }
 
-    std::string16 status_code_str;
-    IntegerToString(*http_status, &status_code_str);
-
     error_msg_ += STRING16(L"' returned response code ");
-    error_msg_ += status_code_str;
+    error_msg_ += IntegerToString16(*http_status);
   }
 
   return true;

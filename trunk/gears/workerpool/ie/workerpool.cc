@@ -257,11 +257,8 @@ STDMETHODIMP GearsWorkerPool::sendMessage(const BSTR *message_bstr,
                                                     dest_worker_id,
                                                     EnvPageSecurityOrigin());
   if (!succeeded) {
-    std::string16 worker_id_string;
-    IntegerToString(dest_worker_id, &worker_id_string);
-
     std::string16 error(STRING16(L"Worker "));
-    error += worker_id_string;
+    error += IntegerToString16(dest_worker_id);
     error += STRING16(L" does not exist.");
 
     RETURN_EXCEPTION(error.c_str());

@@ -179,12 +179,10 @@ bool FFHttpRequest::GetStatusLine(std::string16 *status_line) {
   int status_code;
   if (!GetStatus(&status_code))
     return false;
-  std::string status_code_str;
-  IntegerToString(status_code, &status_code_str);
 
   nsCString status_line8;
   status_line8.Assign("HTTP/1.1 ");
-  status_line8.Append(status_code_str.c_str());
+  status_line8.Append(IntegerToString(status_code).c_str());
   status_line8.Append(" ");
   status_line8.Append(status_text);
 
@@ -442,9 +440,8 @@ bool FFHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
   // decode an already decoded response body and fail.
   // TODO(michaeln): don't do this for scriptable Gears.HttpRequests
   if (IsComplete() && response_body_.get()) {
-    std::string data_len_str;
-    IntegerToString(static_cast<int>(response_body_.get()->size()),
-                    &data_len_str);
+    std::string data_len_str =
+        IntegerToString(static_cast<int>(response_body_.get()->size()));
     visitor.headers_.SetHeader(HTTPHeaders::CONTENT_LENGTH,
                                data_len_str.c_str(),
                                HTTPHeaders::OVERWRITE);

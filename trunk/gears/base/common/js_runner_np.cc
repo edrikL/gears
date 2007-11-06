@@ -170,10 +170,9 @@ class JsRunnerBase : public JsRunnerInterface {
       if (i >= input_argc) {
         // Out of arguments
         if (argv[i].requirement == JSPARAM_REQUIRED) {
-          std::string16 msg, i_str;
-          IntegerToString(i + 1, &i_str);
+          std::string16 msg;
           msg += STRING16(L"Required argument ");
-          msg += i_str;
+          msg += IntegerToString16(i + 1);
           msg += STRING16(L" is missing.");
           LogAndSetException(msg.c_str());
         }

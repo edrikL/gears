@@ -115,10 +115,14 @@ inline void IntegerToStringT(int i, StringT *result) {
   result->assign(start); 
 }
 
-void IntegerToString(int i, std::string16 *result) {
-  IntegerToStringT(i, result);
+std::string IntegerToString(int i) {
+  std::string result;
+  IntegerToStringT(i, &result);
+  return result;
 }
 
-void IntegerToString(int i, std::string *result) {
-  IntegerToStringT(i, result);
+std::string16 IntegerToString16(int i) {
+  std::string16 result;
+  IntegerToStringT(i, &result);
+  return result;
 }

@@ -470,8 +470,7 @@ nsresult GearsResourceStore::CaptureFile(nsIFile *file,
   const char *kContentTypeHeader = "Content-Type";
   const char *kXCapturedFilenameHeader = "X-Captured-Filename";
   nsCString headers;
-  std::string data_len_str;
-  IntegerToString(data_len, &data_len_str);
+  std::string data_len_str = IntegerToString(data_len);
   AppendHeader(headers, kContentLengthHeader, data_len_str.c_str());
   AppendHeader(headers, kContentTypeHeader, mime_type.get());
   AppendHeader(headers, kXCapturedFilenameHeader, native_filename.get());

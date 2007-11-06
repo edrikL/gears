@@ -483,10 +483,8 @@ WebCacheFileStore::FindDirectoryWithSpaceAvailable(const char16 *parent,
     // files into them. Subdirectory names are numbers in the
     // range [0, kMaxSubDirectoriesPerLevel).
     int random = rand() % kMaxSubDirectoriesPerLevel;
-    std::string16 number_str;
-    IntegerToString(random, &number_str);
     dir += kPathSeparator;
-    dir += number_str;
+    dir += IntegerToString16(random);
   }
   *available = dir;
 }
@@ -619,10 +617,8 @@ static bool CreateUniqueFile(const char16* full_dirpath,
 // AppendBracketedNumber
 //------------------------------------------------------------------------------
 static void AppendBracketedNumber(int number, std::string16 &str) {
-  std::string16 number_str;
-  IntegerToString(number, &number_str);
   str += STRING16(L"[");
-  str += number_str;
+  str += IntegerToString16(number);
   str += STRING16(L"]");
 }
 
