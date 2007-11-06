@@ -40,6 +40,7 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/npapi/np_utils.h"
+#include "gears/base/npapi/scoped_npapi_handles.h"
 
 
 inline void LogAndSetException(const char16 *msg) {
@@ -411,18 +412,34 @@ class DocumentJsRunner : public JsRunnerBase {
     assert(false); // Should not be called on the DocumentJsRunner.
   }
 
+  static void HandleEventUnload(void *user_param) {
+    static_cast<DocumentJsRunner*>(user_param)->SendEvent(JSEVENT_UNLOAD);
+  }
+
   bool AddEventHandler(JsEventType event_type,
                        JsEventHandlerInterface *handler) {
     if (event_type == JSEVENT_UNLOAD) {
-      // TODO(mpcomplete): implement me
-      // Create an HTML event monitor to send the unload event when the page
-      // goes away.
+      // Monitor 'onunload' to send the unload event when the page goes away.
+      if (unload_monitor_ == NULL) {
+        // Retrieve retrieve the DOM window.
+        NPObject* window;
+        if (NPN_GetValue(GetContext(), NPNVWindowNPObject, &window)
+            != NPERR_NO_ERROR)
+          return false;
+        ScopedNPObject window_scoped(window);
+
+        unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
+                                                   HandleEventUnload,
+                                                   this));
+        unload_monitor_->Start(GetContext(), window);
+      }
     }
 
     return JsRunnerBase::AddEventHandler(event_type, handler);
   }
 
  private:
+  scoped_ptr<HtmlEventMonitor> unload_monitor_;  // For 'onunload' notifications
   DISALLOW_EVIL_CONSTRUCTORS(DocumentJsRunner);
 };
 

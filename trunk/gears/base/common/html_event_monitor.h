@@ -27,6 +27,7 @@
 #define GEARS_BASE_COMMON_HTML_EVENT_MONITOR_H__
 
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/base_class.h"
 #include "gears/base/common/string16.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
@@ -60,6 +61,8 @@ class HtmlEventMonitor {
   bool Start(nsIDOMEventTarget *event_source);
 #elif BROWSER_IE
   bool Start(IHTMLWindow3 *event_source);
+#elif BROWSER_NPAPI
+  bool Start(NPP context, NPObject *event_source);
 #endif
   void Stop();
 
@@ -74,6 +77,9 @@ class HtmlEventMonitor {
   nsCOMPtr<nsIDOMEventTarget> event_source_;
 #elif BROWSER_IE
   CComPtr<IHTMLWindow3> event_source_;
+#elif BROWSER_NPAPI
+  NPP event_context_;
+  ScopedNPVariant event_source_;
 #endif
 
   DISALLOW_EVIL_CONSTRUCTORS(HtmlEventMonitor);
