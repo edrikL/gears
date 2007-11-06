@@ -58,6 +58,10 @@ MAKEFLAGS = --no-print-directory
 
 CPPFLAGS = -I.. -I$(OUTDIR)/$(OS)-$(ARCH)
 
+LIBPNG_CFLAGS = -DPNG_USER_CONFIG -DGEARS_PNG_WRITE_SUPPORT -Ithird_party/zlib
+CFLAGS += $(LIBPNG_CFLAGS)
+CPPFLAGS += $(LIBPNG_CFLAGS)
+
 ifeq ($(OS),win32)
 # Breakpad assumes it is in the include path
 CPPFLAGS += -Ithird_party/breakpad/src

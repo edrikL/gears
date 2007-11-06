@@ -97,6 +97,55 @@ SQLITE_CSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# third_party/libpng
+
+THIRD_PARTY_VPATH	+= \
+		third_party/libpng \
+		$(NULL)
+
+THIRD_PARTY_CSRCS	+= \
+		png.c \
+		pngerror.c \
+		pnggccrd.c \
+		pngget.c \
+		pngmem.c \
+		pngpread.c \
+		pngread.c \
+		pngrio.c \
+		pngrtran.c \
+		pngrutil.c \
+		pngset.c \
+		pngtrans.c \
+		pngvcrd.c \
+		pngwio.c \
+		pngwrite.c \
+		pngwtran.c \
+		pngwutil.c \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# third_party/zlib
+
+THIRD_PARTY_VPATH	+= \
+		third_party/zlib \
+		$(NULL)
+
+THIRD_PARTY_CSRCS	+= \
+		adler32.c \
+		compress.c \
+		crc32.c \
+		deflate.c \
+		gzio.c \
+		infback.c \
+		inffast.c \
+		inflate.c \
+		inftrees.c \
+		trees.c \
+		uncompr.c \
+		zutil.c \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # third_party/jsoncpp
 
 THIRD_PARTY_VPATH	+= \
@@ -211,6 +260,7 @@ FF_CPPSRCS	+= \
 		paths.cc \
 		paths_ff.cc \
 		permissions_db.cc \
+		png_utils.cc \
 		product_constants.cc \
 		security_model.cc \
 		security_model_test.cc \
@@ -267,6 +317,7 @@ IE_CPPSRCS	+= \
 		paths.cc \
 		paths_ie.cc \
 		permissions_db.cc \
+		png_utils.cc \
 		product_constants.cc \
 		security_model.cc \
 		security_model_test.cc \
