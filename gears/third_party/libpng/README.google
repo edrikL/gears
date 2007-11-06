@@ -1,0 +1,10 @@
+URL:  http://www.libpng.org/
+Version: 1.2.22
+License: zlib
+License File: LICENSE
+
+Description:
+A PNG image encoder/decoder.
+
+Local Modifications:
+Our custom configuration options are defined in pngusr.h.
