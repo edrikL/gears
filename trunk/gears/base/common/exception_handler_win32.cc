@@ -222,7 +222,7 @@ static bool MinidumpCallback(const wchar_t *minidump_folder,
   return handled_exception;
 }
 
-void ExceptionManager::StartCapture() {
+void ExceptionManager::StartMonitoring() {
   if (exception_handler_) { return; }  // don't init more than once
 
   wchar_t temp_path[MAX_PATH];
