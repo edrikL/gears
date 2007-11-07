@@ -30,22 +30,16 @@ ShortcutTable::ShortcutTable(SQLDatabase *db)
 }
 
 bool ShortcutTable::MaybeCreateTable() {
-  const char16 *sql = STRING16(L"CREATE TABLE IF NOT EXISTS Shortcut ("
-                               L" Origin TEXT, Name TEXT, "
-                               L" AppUrl TEXT, IcoUrl TEXT, Msg TEXT, "
-                               L" PRIMARY KEY (Origin, Name)"
-                               L")");
+  const char *sql =
+      "CREATE TABLE IF NOT EXISTS Shortcut ("
+      " Origin TEXT, Name TEXT, "
+      " AppUrl TEXT, IcoUrl TEXT, Msg TEXT, "
+      " PRIMARY KEY (Origin, Name)"
+      ")";
 
-  SQLStatement statement;
-  if (SQLITE_OK != statement.prepare16(db_, sql)) {
-    LOG(("ShortcutTable::MaybeCreateTable unable to prepare: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
-    return false;
-  }
-
-  if (SQLITE_DONE != statement.step()) {
-    LOG(("ShortcutTable::MaybeCreateTable unable to step: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+  if (SQLITE_OK != db_->Execute(sql)) {
+    LOG(("ShortcutTable::MaybeCreateTable create "
+         "unable to execute: %d", db_->GetErrorCode()));
     return false;
   }
 
@@ -62,43 +56,43 @@ bool ShortcutTable::SetShortcut(const char16 *origin, const char16 *name,
   SQLStatement statement;
   if (SQLITE_OK != statement.prepare16(db_, sql)) {
     LOG(("ShortcutTable::SetShortcut unable to prepare: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_OK != statement.bind_text16(0, origin)) {
     LOG(("ShortcutTable::SetShortcut unable to bind origin: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_OK != statement.bind_text16(1, name)) {
     LOG(("ShortcutTable::SetShortcut unable to bind name: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_OK != statement.bind_text16(2, app_url)) {
     LOG(("ShortcutTable::SetShortcut unable to bind app_url: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_OK != statement.bind_text16(3, ico_url)) {
     LOG(("ShortcutTable::SetShortcut unable to bind ico_url: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_OK != statement.bind_text16(4, msg)) {
     LOG(("ShortcutTable::SetShortcut unable to bind msg: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_DONE != statement.step()) {
     LOG(("ShortcutTable::SetShortcut unable to step: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
@@ -112,7 +106,7 @@ GetOriginsWithShortcuts(std::vector<std::string16> *result) {
   SQLStatement statement;
   if (SQLITE_OK != statement.prepare16(db_, sql)) {
     LOG(("ShortcutTable::GetOriginsWithShortcuts unable to prepare: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
@@ -125,7 +119,7 @@ GetOriginsWithShortcuts(std::vector<std::string16> *result) {
 
   if (SQLITE_DONE != rv) {
     LOG(("ShortcutTable::GetOriginsWithShortcuts unable to step: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
@@ -140,13 +134,13 @@ bool ShortcutTable::GetOriginShortcuts(const char16 *origin,
   SQLStatement statement;
   if (SQLITE_OK != statement.prepare16(db_, sql)) {
     LOG(("ShortcutTable::GetOriginShortcuts unable to prepare: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_OK != statement.bind_text16(0, origin)) {
     LOG(("ShortcutTable::GetOriginShortcuts unable to bind origin: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
@@ -159,7 +153,7 @@ bool ShortcutTable::GetOriginShortcuts(const char16 *origin,
 
   if (SQLITE_DONE != rv) {
     LOG(("ShortcutTable::GetOriginShortcuts unable to step: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
@@ -176,25 +170,25 @@ bool ShortcutTable::GetShortcut(const char16 *origin, const char16 *name,
   SQLStatement statement;
   if (SQLITE_OK != statement.prepare16(db_, sql)) {
     LOG(("ShortcutTable::GetShortcut unable to prepare: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_OK != statement.bind_text16(0, origin)) {
     LOG(("ShortcutTable::GetShortcut unable to bind origin: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_OK != statement.bind_text16(1, name)) {
     LOG(("ShortcutTable::GetShortcut unable to bind name: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_ROW != statement.step()) {
     LOG(("ShortcutTable::GetShortcut got too few results: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
@@ -204,7 +198,7 @@ bool ShortcutTable::GetShortcut(const char16 *origin, const char16 *name,
 
   if (SQLITE_DONE != statement.step()) {
     LOG(("ShortcutTable::GetShortcut got too many results: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
   }
 
   return true;
@@ -217,25 +211,25 @@ bool ShortcutTable::DeleteShortcut(const char16 *origin, const char16 *name) {
   SQLStatement statement;
   if (SQLITE_OK != statement.prepare16(db_, sql)) {
     LOG(("ShortcutTable::DeleteShortcut unable to prepare: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_OK != statement.bind_text16(0, origin)) {
     LOG(("ShortcutTable::DeleteShortcut unable to bind origin: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_OK != statement.bind_text16(1, name)) {
     LOG(("ShortcutTable::DeleteShortcut unable to bind name: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_DONE != statement.step()) {
     LOG(("ShortcutTable::DeleteShortcut unable to step: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
@@ -248,19 +242,19 @@ bool ShortcutTable::DeleteShortcuts(const char16 *origin) {
   SQLStatement statement;
   if (SQLITE_OK != statement.prepare16(db_, sql)) {
     LOG(("ShortcutTable::DeleteShortcuts unable to prepare: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_OK != statement.bind_text16(0, origin)) {
     LOG(("ShortcutTable::DeleteShortcuts unable to bind origin: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_DONE != statement.step()) {
     LOG(("ShortcutTable::DeleteShortcuts unable to step: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
