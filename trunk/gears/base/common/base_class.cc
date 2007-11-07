@@ -189,7 +189,7 @@ void JsSetException(const char16 *message) {
 bool GearsBaseClass::InitBaseFromSibling(const GearsBaseClass *other) {
   assert(other->is_initialized_);
   return InitBaseManually(other->env_is_worker_,
-#if BROWSER_FF
+#if BROWSER_FF || BROWSER_NPAPI
                           other->env_page_js_context_,
 #elif BROWSER_IE
                           other->env_page_iunknown_site_,
@@ -223,7 +223,7 @@ bool GearsBaseClass::InitBaseFromDOM(const char *url_str) {
 #elif BROWSER_NPAPI
   bool succeeded = BrowserUtils::GetPageSecurityOrigin(instance,
                                                        &security_origin);
-  return succeeded && InitBaseManually(is_worker, security_origin,
+  return succeeded && InitBaseManually(is_worker, instance, security_origin,
                                        NewDocumentJsRunner(NULL, instance));
 #elif BROWSER_SAFARI
   bool succeeded = SafariURLUtilities::GetPageOrigin(url_str, &security_origin);
@@ -233,7 +233,7 @@ bool GearsBaseClass::InitBaseFromDOM(const char *url_str) {
 
 
 bool GearsBaseClass::InitBaseManually(bool is_worker,
-#if BROWSER_FF
+#if BROWSER_FF || BROWSER_NPAPI
                                       JsContextPtr cx,
 #elif BROWSER_IE
                                       IUnknown *site,
@@ -246,7 +246,7 @@ bool GearsBaseClass::InitBaseManually(bool is_worker,
   assert(page_origin.port() != -1);
 
   env_is_worker_ = is_worker;
-#if BROWSER_FF
+#if BROWSER_FF || BROWSER_NPAPI
   env_page_js_context_ = cx;
 #elif BROWSER_IE
   env_page_iunknown_site_ = site;
@@ -276,7 +276,7 @@ const std::string16& GearsBaseClass::EnvPageLocationUrl() const {
   return env_page_origin_.full_url();
 }
 
-#if BROWSER_FF
+#if BROWSER_FF || BROWSER_NPAPI
 JsContextPtr GearsBaseClass::EnvPageJsContext() const {
   assert(is_initialized_);
   return env_page_js_context_;

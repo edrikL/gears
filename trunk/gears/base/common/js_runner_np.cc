@@ -262,9 +262,8 @@ class JsRunnerBase : public JsRunnerInterface {
         break;
       }
       case JSPARAM_OBJECT_TOKEN: {
-        const JsRootedToken *value = static_cast<const JsRootedToken *>(
-                                                     param.value_ptr);
-        variant->Reset(NPVARIANT_TO_OBJECT(value->token()));
+        const JsToken *value = static_cast<const JsToken *>(param.value_ptr);
+        variant->Reset(NPVARIANT_TO_OBJECT(*value));
         break;
       }
       case JSPARAM_STRING16: {

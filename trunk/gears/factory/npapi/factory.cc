@@ -32,6 +32,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/string16.h"
+#include "gears/database/npapi/database.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
@@ -65,13 +66,48 @@ void GearsFactory::Create() {
 
   // TODO(mpcomplete): implement me.
 
+  // Parse the version string.
+
+  int major_version_desired;
+  int minor_version_desired;
+  if (!ParseMajorMinorVersion(version.c_str(),
+                              &major_version_desired,
+                              &minor_version_desired)) {
+    RETURN_EXCEPTION(STRING16(L"Invalid version string."));
+  }
+
+  // Create an instance of the object.
+  //
+  // Do case-sensitive comparisons, which are always better in APIs. They make
+  // code consistent across callers, and they are easier to support over time.
+  ScopedModuleWrapper object(NULL);
+  if (class_name == STRING16(L"beta.database")) {
+    if (major_version_desired == kGearsDatabaseVersionMajor &&
+        minor_version_desired <= kGearsDatabaseVersionMinor) {
+      object.reset(CreateGearsDatabase(this));
+    }
+  } else {
+    RETURN_EXCEPTION(STRING16(L"Unknown object."));
+  }
+
+  if (!object.get())
+    RETURN_EXCEPTION(STRING16(L"Failed to create requested object."));
+
+  if (!object.get()->GetGearsObject()->InitBaseFromSibling(this))
+    RETURN_EXCEPTION(STRING16(L"Error initializing base class."));
+
+  // Give up ownership of the object and return it.
+  JsToken token = object.get()->GetWrapperToken();
+  JsReturnValue js_retval = { JSPARAM_OBJECT_TOKEN, &token };
+  js_runner->SetReturnValue(js_retval);
+
   RETURN_NORMAL();
 }
 
 void GearsFactory::GetBuildInfo() {
   std::string16 build_info;
   AppendBuildInfo(&build_info);
-  JsParamToSend js_retval = { JSPARAM_STRING16, &build_info };
+  JsReturnValue js_retval = { JSPARAM_STRING16, &build_info };
   GetJsRunner()->SetReturnValue(js_retval);
 
   RETURN_NORMAL();
@@ -79,7 +115,7 @@ void GearsFactory::GetBuildInfo() {
 
 void GearsFactory::GetVersion() {
   std::string16 version(PRODUCT_VERSION_STRING);
-  JsParamToSend js_retval = { JSPARAM_STRING16, &version };
+  JsReturnValue js_retval = { JSPARAM_STRING16, &version };
   GetJsRunner()->SetReturnValue(js_retval);
   RETURN_NORMAL();
 }

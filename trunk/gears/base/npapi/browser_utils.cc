@@ -87,13 +87,13 @@ bool BrowserUtils::GetPageLocationUrl(JsContextPtr context,
     return false;
   ScopedNPObject window_scoped(window);
 
-  NPIdentifier location_id = NPN_GetStringIdentifier("location");
+  static NPIdentifier location_id = NPN_GetStringIdentifier("location");
   ScopedNPVariant np_location;
   if (!NPN_GetProperty(context, window, location_id, &np_location))
     return false;
 
   assert(NPVARIANT_IS_OBJECT(np_location));
-  NPIdentifier href_id = NPN_GetStringIdentifier("href");
+  static NPIdentifier href_id = NPN_GetStringIdentifier("href");
   ScopedNPVariant np_href;
   if (!NPN_GetProperty(context, NPVARIANT_TO_OBJECT(np_location),
                        href_id, &np_href)) {
