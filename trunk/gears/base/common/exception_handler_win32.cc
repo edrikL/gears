@@ -27,11 +27,12 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
+#include <assert.h>
 #include <windows.h>
 #include <shellapi.h>
 #include <time.h>
 
-#include "exception_handler_win32.h"
+#include "gears/base/common/exception_handler_win32.h"
 
 #include "client/windows/handler/exception_handler.h"  // from breakpad/src
 #include "client/windows/sender/crash_report_sender.h"  // from breakpad/src
@@ -66,14 +67,20 @@ const int kCrashReportsIntervalSeconds = (24 * 60  * 60);
 using namespace google_breakpad;
 
 
+ExceptionManager* ExceptionManager::instance_ = NULL;
+
 ExceptionManager::ExceptionManager(bool catch_entire_process)
     : catch_entire_process_(catch_entire_process),
       exception_handler_(NULL) {
+  assert(!instance_);
+  instance_ = this;
 }
 
 ExceptionManager::~ExceptionManager() {
   if (exception_handler_)
     delete exception_handler_;
+  assert(instance_ == this);
+  instance_ = NULL;
 }
 
 bool ExceptionManager::CanSendMinidump() {
@@ -153,6 +160,9 @@ static bool FilterCallback(void *context,
   if (this_ptr->catch_entire_process())
     return true;
 
+  if (!exinfo)
+    return true;
+
   return IsAddressInCurrentModule(exinfo->ExceptionRecord->ExceptionAddress);
 }
 
@@ -223,6 +233,16 @@ void ExceptionManager::StartCapture() {
                                                              MinidumpCallback,
                                                              this, true);
 }
+
+// static
+bool ExceptionManager::CaptureAndSendMinidump() {
+  if (instance_ && instance_->exception_handler_) {
+    return instance_->exception_handler_->WriteMinidump();
+  } else {
+    return false;
+  }
+}
+
 
 void ExceptionManager::SendMinidump(const char *minidump_filename) {
   if (CanSendMinidump()) {
