@@ -47,6 +47,7 @@
 #include "gears/workerpool/ie/workerpool.h"
 
 #include "gears/base/common/atomic_ops.h"
+#include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_runner_utils.h"
 #include "gears/base/common/permissions_db.h"
@@ -466,11 +467,18 @@ void PoolThreadsManager::HandleError(const JsErrorInfo &error_info) {
 
 bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
                                               const JsErrorInfo &error_info) {
+  assert(wi);
   if (!wi->onerror_handler.get()) { return false; }
 
   // Setup the onerror parameter (type: Error).
+  assert(wi->js_runner);
   scoped_ptr<JsRootedToken> onerror_param(
       wi->js_runner->NewObject(STRING16(L"Error")));
+  if (!onerror_param.get()) {
+    ExceptionManager::CaptureAndSendMinidump();
+    return false;
+  }
+
   wi->js_runner->SetPropertyString(onerror_param->token(),
                                    STRING16(L"message"),
                                    error_info.message.c_str());
@@ -961,10 +969,23 @@ LRESULT CALLBACK PoolThreadsManager::ThreadWndProc(HWND hwnd, UINT message_type,
 
 void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
                                         const Message &msg) {
+  assert(wi);
   if (wi->onmessage_handler.get()) {
     // Setup the onerror parameter (type: Object).
+    assert(wi->js_runner);
     scoped_ptr<JsRootedToken> onmessage_param(
                                   wi->js_runner->NewObject(NULL));
+    if (!onmessage_param.get()) {
+      // We hit this unexpected error in 0.2.4
+      ExceptionManager::CaptureAndSendMinidump();
+      JsErrorInfo error_info = { 
+        0,
+        STRING16(L"Internal error. (Could not create message object.)")
+      };
+      HandleError(error_info);
+      return;
+    }
+
     wi->js_runner->SetPropertyString(onmessage_param->token(),
                                      STRING16(L"text"),
                                      msg.text.c_str());
@@ -984,17 +1005,6 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
     wi->js_runner->InvokeCallback(wi->onmessage_handler.get(), argc, argv,
                                   NULL);
   } else {
-    // It is an error to send a message to a worker that does not have an
-    // onmessage handler.
-    int worker_id = kInvalidWorkerId;
-
-    // Synchronize only this section because HandleError() below also acquires
-    // the lock and locks are not reentrant.
-    {
-      MutexLock lock(&mutex_);
-      worker_id = GetCurrentPoolWorkerId();
-    }
-
     JsErrorInfo error_info = {
       0, // line number -- What we really want is the line number in the
          // sending worker, but that would be hard to get.
