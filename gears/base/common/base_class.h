@@ -30,6 +30,7 @@
 
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string16.h" // for string16
 
 
@@ -167,7 +168,7 @@ class JsRootedToken {
   JsRootedToken(JsContextPtr context, JsToken token);
   ~JsRootedToken();
 
-  JsToken token() const { return token_; }
+  const JsToken& token() const { return token_; }
   JsContextPtr context() const { return context_; }
 
   bool GetAsBool(bool *out) const {
@@ -222,6 +223,7 @@ typedef JsRootedToken JsRootedCallback;
 
 class JsRunnerInterface;
 
+// TODO(mpcomplete): rename to ModuleImplBaseClass
 // Exposes the minimal set of information that Scour objects need to work
 // consistently across the main-thread and worker-thread JavaScript engines.
 class GearsBaseClass {
@@ -246,7 +248,7 @@ class GearsBaseClass {
   // Host environment information
   bool EnvIsWorker() const;
   const std::string16& EnvPageLocationUrl() const;
-#if BROWSER_FF
+#if BROWSER_FF || BROWSER_NPAPI
   JsContextPtr EnvPageJsContext() const;
 #elif BROWSER_IE
   IUnknown* EnvPageIUnknownSite() const;
@@ -271,7 +273,7 @@ class GearsBaseClass {
   // (Recall idea for PageSharedState + PageThreadSharedState classes.)
   bool is_initialized_;
   bool env_is_worker_;
-#if BROWSER_FF
+#if BROWSER_FF || BROWSER_NPAPI
   JsContextPtr  env_page_js_context_;
 #elif BROWSER_IE
   CComPtr<IUnknown> env_page_iunknown_site_;
@@ -281,7 +283,7 @@ class GearsBaseClass {
   // Init manually -- should only be used for worker-thread factories.
   friend class PoolThreadsManager;
   bool InitBaseManually(bool is_worker,
-#if BROWSER_FF
+#if BROWSER_FF || BROWSER_NPAPI
                         JsContextPtr cx,
 #elif BROWSER_IE
                         IUnknown *site,
@@ -301,6 +303,34 @@ class GearsBaseClass {
   DISALLOW_EVIL_CONSTRUCTORS(GearsBaseClass);
 };
 
+// Interface for the wrapper class that binds the Gears object to the
+// JavaScript engine.
+class ModuleWrapperBaseClass {
+ public:
+  // Returns the object that implements the Gears functionality.
+  virtual GearsBaseClass *GetGearsObject() const = 0;
+
+  // Returns a token for this wrapper class that can be returned via the
+  // JsRunnerInterface.
+  virtual JsToken GetWrapperToken() const = 0;
+
+  // Releases this reference to the wraper class.
+  virtual void Release() = 0;
+ protected:
+  // Don't allow direct deletion via this interface.
+  virtual ~ModuleWrapperBaseClass() { }
+};
+
+// ScopedGearsWrapper: automatically call Release()
+class ReleaseWrapperFunctor {
+ public:
+  void operator()(ModuleWrapperBaseClass *x) const {
+    if (x != NULL) { x->Release(); }
+  }
+};
+
+typedef scoped_token<ModuleWrapperBaseClass*, ReleaseWrapperFunctor>
+    ScopedModuleWrapper;
 
 //-----------------------------------------------------------------------------
 #if BROWSER_FF  // the rest of this file only applies to Firefox, for now
