@@ -48,7 +48,7 @@ namespace google_breakpad {
 // Sample usage:
 //   int main(void) {
 //     static ExceptionManager exception_manager(false);
-//     exception_manager.StartCapture();
+//     exception_manager.StartMonitoring();
 //     ...
 //   }
 class ExceptionManager {
@@ -56,7 +56,7 @@ class ExceptionManager {
   // If catch_entire_process is true, then all minidumps are captured.
   // Otherwise, only crashes in this module are captured.
   // Use the latter when running inside IE or Firefox.
-  // StartCapture needs to be called before any minidumps are captured.
+  // StartMonitoring needs to be called before any minidumps are captured.
   ExceptionManager(bool catch_entire_process);
   ~ExceptionManager();
 
@@ -89,7 +89,7 @@ class ExceptionManager {
 class ExceptionManager {
  public:
   ExceptionManager(bool catch_entire_process) {}
-  void StartCapture() {}
+  void StartMonitoring() {}
   static bool CaptureAndSendMinidump() { return false; }
 };
 

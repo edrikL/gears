@@ -626,7 +626,7 @@ void CacheIntercept::Init() {
 // during internal development are confusing false alarms.
 #ifdef OFFICIAL_BUILD
   static ExceptionManager exception_manager(false); // false == only our DLL
-  exception_manager.StartCapture();
+  exception_manager.StartMonitoring();
 #endif
 #endif
 
