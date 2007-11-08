@@ -69,6 +69,7 @@ endif
 
 FF_CPPFLAGS = -DBROWSER_FF=1 -I$(GECKO_SDK)/include
 IE_CPPFLAGS = -DBROWSER_IE=1
+IEMOBILE_CPPFLAGS = -DBROWSER_IE=1
 
 # When adding or removing SQLITE_OMIT_* options, also update and
 # re-run ../third_party/sqlite_google/google_generate_preprocessed.sh.
@@ -176,6 +177,22 @@ COMPILE_FLAGS += /D_HAS_EXCEPTIONS=0 /D_ATL_NO_EXCEPTIONS
 CPPFLAGS_dbg = /D_DEBUG=1
 CPPFLAGS_opt =
 
+CPPFLAGS += /DSTRICT /D_UNICODE /DUNICODE /D_USRDLL /DWIN32 /D_WINDLL /D_CRT_SECURE_NO_DEPRECATE \
+
+ifeq ($(BROWSER),IEMOBILE)
+# For Windows Mobile we need:
+#   C defines:  _WIN32_WCE=0x0501
+#               _UNDER_CE=0x0501
+CPPFLAGS += /D_WIN32_WCE=0x501 \
+	    /DUNDER_CE=0x501 \
+	    /DWINCE \
+	    /DWIN32_PLATFORM_PSPC \
+	    /DARM \
+	    /D_ARM_ \
+	    /DPOCKETPC2003_UI_MODEL \
+	    /D_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA \
+	    $(CPPFLAGS_$(MODE))
+else
 # We require APPVER=5.0 for things like HWND_MESSAGE.
 # When APPVER=5.0, win32.mak in the Platform SDK sets:
 #   C defines:  WINVER=0x0500
@@ -185,13 +202,17 @@ CPPFLAGS_opt =
 #   RC defines: WINVER=0x0500
 #   MIDL flags: /target NT50
 # Note: _WIN32_WINDOWS was replaced by _WIN32_WINNT for post-Win95 builds.
-CPPFLAGS += /nologo /DWIN32 /D_WINDOWS /DSTRICT \
-            /DWINVER=0x0500 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /D_RICHEDIT_VER=0x0010 \
-            /D_USRDLL /D_WINDLL /D_MERGE_PROXYSTUB \
-            -D_UNICODE -DUNICODE \
-            -DBREAKPAD_AVOID_STREAMS \
-	    /D_CRT_SECURE_NO_DEPRECATE \
-            /DXP_WIN $(CPPFLAGS_$(MODE))
+CPPFLAGS += /nologo \
+            /D_WINDOWS \
+            /DWINVER=0x0500 \
+            /D_WIN32_WINNT=0x0500 \
+            /D_WIN32_IE=0x0500 \
+            /D_RICHEDIT_VER=0x0010 \
+            /D_MERGE_PROXYSTUB \
+            /DBREAKPAD_AVOID_STREAMS \
+            /DXP_WIN \
+            $(CPPFLAGS_$(MODE))
+endif
 # Note: XP_WIN is only used by Firefox headers
 
 CFLAGS = $(COMPILE_FLAGS)
@@ -205,15 +226,25 @@ THIRD_PARTY_CPPFLAGS = /wd4018 /wd4003
 # disable some warnings when building SQLite on Windows, so we can enable /WX
 # warning C4244: conversion from 'type1' to 'type2', possible loss of data
 SQLITE_CFLAGS += /wd4018 /wd4244
+ifeq ($(BROWSER),IEMOBILE)
+SQLITE_CFLAGS += /wd4146
+endif
 
 DLL_PREFIX =
 DLL_SUFFIX = .dll
 MKSHLIB	= link
 SHLIBFLAGS_dbg =
 SHLIBFLAGS_opt = /INCREMENTAL:NO /OPT:REF /OPT:ICF
-SHLIBFLAGS = /NOLOGO /OUT:$@ /DLL /SUBSYSTEM:WINDOWS /RELEASE \
-             /DEBUG /PDB:"$(@D)/$(MODULE).pdb" \
-             $(SHLIBFLAGS_$(MODE))
+SHLIBFLAGS = /NOLOGO /OUT:$@ /DLL /DEBUG /PDB:"$(@D)/$(MODULE).pdb" /RELEASE
+ifeq ($(BROWSER),IEMOBILE)
+SHLIBFLAGS += /SUBSYSTEM:WINDOWSCE,5.01 \
+              /NODEFAULTLIB:secchk.lib \
+              $(SHLIBFLAGS_$(MODE))
+else
+SHLIBFLAGS += /SUBSYSTEM:WINDOWS \
+              $(SHLIBFLAGS_$(MODE))
+endif
+
 # /RELEASE adds a checksum to the PE header to aid symbol loading.
 # /DEBUG causes PDB files to be produced.
 # We want both these flags in all build modes, despite their names.
@@ -232,6 +263,7 @@ EXEFLAGS = /NOLOGO /OUT:$@
 
 FF_LIBS = $(GECKO_SDK)/lib/xpcom.lib $(GECKO_SDK)/lib/xpcomglue_s.lib $(GECKO_SDK)/lib/nspr4.lib $(GECKO_SDK)/lib/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib
 IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib
+IEMOBILE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib
 
 MIDL = midl
 MIDLFLAGS = $(CPPFLAGS) -env win32 -Oicf -tlb "$(@D)/$*.tlb" -h "$(@D)/$*.h" -iid "$(IE_OUTDIR)/$*_i.c" -proxy "$(IE_OUTDIR)/$*_p.c" -dlldata "$(IE_OUTDIR)/$*_d.c"
@@ -240,6 +272,10 @@ RC = rc
 RCFLAGS_dbg = /DDEBUG=1
 RCFLAGS_opt = /DNDEBUG=1
 RCFLAGS = $(RCFLAGS_$(MODE)) /d "_UNICODE" /d "UNICODE" /i $(OUTDIR)/$(OS)-$(ARCH) /l 0x409 /fo"$(@D)/$*.res"
+ifeq ($(BROWSER),IEMOBILE)
+RCFLAGS += /d "WINCE" /d "_WIN32" /d "_WIN32_WCE" /d "UNDER_CE"
+endif
+
 endif
 
 # This is a tool that helps with MSI development.

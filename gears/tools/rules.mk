@@ -29,6 +29,11 @@
 # - Quotes around "mkdir" are required so Win32 cmd.exe uses mkdir.exe
 #     instead of built-in mkdir command.  (Running mkdir.exe without
 #     quotes creates a directory named '.exe'!!)
+# - For IEMOBILE and IE we want to share the IE_OUTDIR variable so that
+#     we avoid #ifdefs in the files that include headers from the OUTDIR. 
+#     This means that we also need to share the IE_MOBILE_DLL link target 
+#     (otherwise we end up with two identical link targets when 
+#     building IE for i386).
 
 OUTDIR = bin-$(MODE)
 
@@ -38,15 +43,15 @@ OUTDIR = bin-$(MODE)
 #
 # INSTALLERS_OUTDIR doesn't include $(ARCH) because OSes that support
 # multiple CPU architectures (namely, OSX) have merged install packages.
-COMMON_OUTDIR	    = $(OUTDIR)/$(OS)-$(ARCH)/common
-FF_OUTDIR	    = $(OUTDIR)/$(OS)-$(ARCH)/ff
-IE_OUTDIR	    = $(OUTDIR)/$(OS)-$(ARCH)/ie
-SQLITE_OUTDIR	    = $(COMMON_OUTDIR)/sqlite
-THIRD_PARTY_OUTDIR  = $(COMMON_OUTDIR)/third_party
-INSTALLERS_OUTDIR   = $(OUTDIR)/installers
-COMMON_OUTDIRS_I18N = $(foreach lang,$(I18N_LANGS),$(COMMON_OUTDIR)/genfiles/i18n/$(lang))
-FF_OUTDIRS_I18N	    = $(foreach lang,$(I18N_LANGS),$(FF_OUTDIR)/genfiles/i18n/$(lang))
-IE_OUTDIRS_I18N	    = $(foreach lang,$(I18N_LANGS),$(IE_OUTDIR)/genfiles/i18n/$(lang))
+COMMON_OUTDIR           = $(OUTDIR)/$(OS)-$(ARCH)/common
+FF_OUTDIR               = $(OUTDIR)/$(OS)-$(ARCH)/ff
+IE_OUTDIR               = $(OUTDIR)/$(OS)-$(ARCH)/ie
+SQLITE_OUTDIR           = $(COMMON_OUTDIR)/sqlite
+THIRD_PARTY_OUTDIR      = $(COMMON_OUTDIR)/third_party
+INSTALLERS_OUTDIR       = $(OUTDIR)/installers
+COMMON_OUTDIRS_I18N     = $(foreach lang,$(I18N_LANGS),$(COMMON_OUTDIR)/genfiles/i18n/$(lang))
+FF_OUTDIRS_I18N         = $(foreach lang,$(I18N_LANGS),$(FF_OUTDIR)/genfiles/i18n/$(lang))
+IE_OUTDIRS_I18N         = $(foreach lang,$(I18N_LANGS),$(IE_OUTDIR)/genfiles/i18n/$(lang))
 # TODO(cprince): unify the Firefox directory name across the output dirs
 # (where it is 'ff') and the source dirs (where it is 'firefox').  Changing
 # the output dirs would require changing #includes that reference genfiles.
@@ -64,6 +69,9 @@ FF_OBJS = \
 IE_OBJS = \
 	$(patsubst %.cc,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IE_CPPSRCS)) \
 	$(patsubst %.c,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IE_CSRCS))
+IEMOBILE_OBJS = \
+	$(patsubst %.cc,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IEMOBILE_CPPSRCS)) \
+	$(patsubst %.c,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IEMOBILE_CSRCS))
 SQLITE_OBJS = \
 	$(patsubst %.c,$(SQLITE_OUTDIR)/%$(OBJ_SUFFIX),$(SQLITE_CSRCS))
 THIRD_PARTY_OBJS = \
@@ -93,6 +101,7 @@ DEPS = \
 	$(COMMON_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(FF_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(IE_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(IEMOBILE_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(SQLITE_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(THIRD_PARTY_OBJS:$(OBJ_SUFFIX)=.pp)
 
@@ -106,12 +115,19 @@ IE_GEN_HEADERS = \
 IE_OBJS += \
 	$(patsubst %.idl,$(IE_OUTDIR)/%_i$(OBJ_SUFFIX),$(IE_IDLSRCS))
 
+IEMOBILE_GEN_HEADERS = \
+	$(patsubst %.idl,$(IE_OUTDIR)/genfiles/%.h,$(IEMOBILE_IDLSRCS))
+IEMOBILE_OBJS += \
+	$(patsubst %.idl,$(IE_OUTDIR)/%_i$(OBJ_SUFFIX),$(IEMOBILE_IDLSRCS))
+
 COMMON_M4FILES = \
 	$(patsubst %.m4,$(COMMON_OUTDIR)/genfiles/%,$(COMMON_M4SRCS))
 FF_M4FILES = \
 	$(patsubst %.m4,$(FF_OUTDIR)/genfiles/%,$(FF_M4SRCS))
 IE_M4FILES = \
 	$(patsubst %.m4,$(IE_OUTDIR)/genfiles/%,$(IE_M4SRCS))
+IEMOBILE_M4FILES = \
+	$(patsubst %.m4,$(IE_OUTDIR)/genfiles/%,$(IEMOBILE_M4SRCS))
 
 COMMON_M4FILES_I18N = \
 	$(foreach lang,$(I18N_LANGS),$(addprefix $(COMMON_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$(COMMON_M4SRCS_I18N))))
@@ -119,11 +135,18 @@ FF_M4FILES_I18N = \
 	$(foreach lang,$(I18N_LANGS),$(addprefix $(FF_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$(FF_M4SRCS_I18N))))
 IE_M4FILES_I18N = \
 	$(foreach lang,$(I18N_LANGS),$(addprefix $(IE_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$(IE_M4SRCS_I18N))))
+IEMOBILE_M4FILES_I18N = \
+	$(foreach lang,$(I18N_LANGS),$(addprefix $(IE_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$(IEMOBILE_M4SRCS_I18N))))
 
 FF_VPATH += $(FF_OUTDIR)/genfiles
 
 IE_VPATH += $(IE_OUTDIR)/genfiles
 IE_VPATH += $(IE_OUTDIR)
+
+# The usage of IE_OUTDIR for IEMOBILE is intentional. ARCH variable makes sure that IE_OUTDIR is different 
+# for IE MOBILE and IE desktop.
+IEMOBILE_VPATH += $(IE_OUTDIR)/genfiles
+IEMOBILE_VPATH += $(IE_OUTDIR)
 
 # Make VPATH search our paths before third-party paths.
 VPATH += $(COMMON_VPATH) $($(BROWSER)_VPATH) $(THIRD_PARTY_VPATH)
@@ -142,6 +165,8 @@ IE_MODULE_DLL     = $(IE_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 WIN32_INSTALLER_MSI = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).msi
 WIXOBJ = $(COMMON_OUTDIR)/win32_msi.wxiobj
 WIXSRC = $(COMMON_OUTDIR)/genfiles/win32_msi.wxs
+
+# TODO(andreip): create installer target for Windows Mobile
 
 # BUILD TARGETS
 
@@ -193,6 +218,12 @@ endif
 ifeq ($(BROWSER),IE)
 prereqs:: $(IE_OUTDIR)/genfiles $(IE_OUTDIRS_I18N) $(COMMON_M4FILES) $(COMMON_M4FILES_I18N) $(IE_M4FILES) $(IE_M4FILES_I18N)
 genheaders:: $(IE_GEN_HEADERS)
+modules:: $(IE_MODULE_DLL)
+endif
+
+ifeq ($(BROWSER),IEMOBILE)
+prereqs:: $(IE_OUTDIR)/genfiles $(IE_OUTDIRS_I18N) $(COMMON_M4FILES) $(COMMON_M4FILES_I18N) $(IEMOBILE_M4FILES) $(IEMOBILE_M4FILES_I18N)
+genheaders:: $(IEMOBILE_GEN_HEADERS)
 modules:: $(IE_MODULE_DLL)
 endif
 
@@ -276,13 +307,15 @@ $(FF_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	@$(MKDEP)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(FF_CPPFLAGS) $(FF_CFLAGS) $<
 
+# The following two targets handle both IE and IEMOBILE by using 
+# the $(BROWSER) variable in the rule definitions.
 $(IE_OUTDIR)/%$(OBJ_SUFFIX): %.cc
 	@$(MKDEP)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(IE_CPPFLAGS) $(IE_CXXFLAGS) $<
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $($(BROWSER)_CPPFLAGS) $($(BROWSER)_CXXFLAGS) $<
 
 $(IE_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	@$(MKDEP)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(IE_CPPFLAGS) $(IE_CFLAGS) $<
+	$(CC) $(CPPFLAGS) $(CFLAGS) $($(BROWSER)_CPPFLAGS) $($(BROWSER)_CFLAGS) $<
 
 # Omit @$(MKDEP) in this case because sqlite files include files which
 # aren't in the same directory, but doesn't use explicit paths.  All
@@ -305,8 +338,10 @@ $(IE_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 
 # LINK TARGETS
 
-$(IE_MODULE_DLL): $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(IE_OBJS) $(IE_LINK_EXTRAS)
-	$(MKSHLIB) $(SHLIBFLAGS) $(IE_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(IE_OBJS) $(IE_LINK_EXTRAS) $(IE_LIBS)
+# This target handles both IE and IEMOBILE by using the $(BROWSER) variable in the
+# rule definitions. $(IE_SHLIBFLAGS) is shared by both browsers.
+$(IE_MODULE_DLL): $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
+	$(MKSHLIB) $(SHLIBFLAGS) $(IE_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS)
 
 $(FF_MODULE_DLL): $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_OBJS) $(FF_LINK_EXTRAS)
 	$(MKSHLIB) $(SHLIBFLAGS) $(FF_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_OBJS) $(FF_LINK_EXTRAS) $(FF_LIBS)
@@ -316,7 +351,7 @@ $(FF_MODULE_TYPELIB): $(FF_GEN_TYPELIBS)
 
 # INSTALLER TARGETS
 
-$(FF_INSTALLER_XPI): $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB) $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(FF_RESOURCES) $(FF_M4FILES_I18N) $(FF_OUTDIR)/genfiles/chrome.manifest
+$(FF_INSTALLER_XPI): $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB) $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(FF_RESOURCES) $(FF_M4FILES_I18N) $(FF_OUTDIR)/genfiles/chrome.manifest	
 	rm -rf $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)
 	cp -R base/firefox/static_files/components $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
@@ -374,6 +409,10 @@ OUR_COMPONENT_GUID_IE_FILES = \
   $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_IE_FILES-$(VERSION))
 OUR_COMPONENT_GUID_IE_REGISTRY = \
   $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_IE_REGISTRY-$(VERSION))
+OUR_COMPONENT_GUID_IEMOBILE_FILES = \
+  $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_IEMOBILE_FILES-$(VERSION))
+OUR_COMPONENT_GUID_IEMOBILE_REGISTRY = \
+  $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_IEMOBILE_REGISTRY-$(VERSION))
 
 WIX_DEFINES_I18N = $(foreach lang,$(subst -,_,$(I18N_LANGS)),-dOurComponentGUID_FFLang$(lang)DirFiles=$(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_FF_$(lang)_DIR_FILES-$(VERSION)))
 endif
