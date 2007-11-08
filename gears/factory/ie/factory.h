@@ -72,14 +72,6 @@ class ATL_NO_VTABLE GearsFactory
   STDMETHOD(getBuildInfo)(BSTR *retval);
   STDMETHOD(get_version)(BSTR *retval);
 
-  // bool getPermission(string siteName, string imageUrl, string extraMessage)
-  STDMETHOD(getPermission)(const BSTR site_name,
-                           const BSTR image_url,
-                           const BSTR extra_message,
-                           VARIANT_BOOL *retval);
-  // readonly bool hasPermission
-  STDMETHOD(get_hasPermission)(VARIANT_BOOL *retval);
-
 
   // Hook into SetSite() to do some init work that requires the site.
   STDMETHOD(SetSite)(IUnknown *site);

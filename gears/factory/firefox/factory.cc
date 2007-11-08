@@ -173,41 +173,6 @@ NS_IMETHODIMP GearsFactory::GetVersion(nsAString &retval) {
 }
 
 
-NS_IMETHODIMP GearsFactory::GetPermission(PRBool *retval) {
-  JsParamFetcher js_params(this);
-  std::string16 site_name;
-  std::string16 image_url;
-  std::string16 extra_message;
-
-  if (js_params.GetCount(false) != 3) {
-    RETURN_EXCEPTION(STRING16(L"getPermission() requires 3 parameters."));
-  } else if (!js_params.GetAsString(0, &site_name)) {
-    RETURN_EXCEPTION(STRING16(L"siteName must be a string."));
-  } else if (!js_params.GetAsString(1, &image_url)) {
-    RETURN_EXCEPTION(STRING16(L"imageUrl must be a string."));
-  } else if (!js_params.GetAsString(2, &extra_message)) {
-    RETURN_EXCEPTION(STRING16(L"extraMessage must be a string."));
-  }
-
-  if (HasPermissionToUseGears(this, image_url.c_str(),
-                              site_name.c_str(), extra_message.c_str())) {
-    *retval = PR_TRUE;
-  } else {
-    *retval = PR_FALSE;
-  }
-  RETURN_NORMAL();
-}
-
-
-// Purposely ignores 'is_creation_suspended_'.  The 'hasPermission' property
-// indicates whether USER opt-in is still required, not whether DEVELOPER
-// methods have been called correctly (e.g. allowCrossOrigin).
-NS_IMETHODIMP GearsFactory::GetHasPermission(PRBool *retval) {
-  *retval = is_permission_granted_ ? PR_TRUE : PR_FALSE;
-  RETURN_NORMAL();
-}
-
-
 // TODO(cprince): See if we can use Suspend/Resume with the opt-in dialog too,
 // rather than just the cross-origin worker case.  (Code re-use == good.)
 void GearsFactory::SuspendObjectCreation() {

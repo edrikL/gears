@@ -32,7 +32,7 @@ static const char16 *kDatabaseName = STRING16(L"permissions.db");
 static const char16 *kVersionTableName = STRING16(L"VersionInfo");
 static const char16 *kVersionKeyName = STRING16(L"Version");
 static const char16 *kAccessTableName = STRING16(L"Access");
-static const int kCurrentVersion = 3;
+static const int kCurrentVersion = 2;
 static const int kOldestUpgradeableVersion = 1;
 
 
@@ -69,8 +69,7 @@ void PermissionsDB::DestroyDB(void *context) {
 
 PermissionsDB::PermissionsDB()
     : version_table_(&db_, kVersionTableName),
-      access_table_(&db_, kAccessTableName),
-      shortcut_table_(&db_) {
+      access_table_(&db_, kAccessTableName) {
 }
 
 
@@ -197,56 +196,6 @@ bool PermissionsDB::EnableGearsForWorker(const SecurityOrigin &origin) {
   }
 }
 
-bool PermissionsDB::SetShortcut(const SecurityOrigin &origin,
-                                const char16 *name,
-                                const char16 *app_url, const char16 *ico_url,
-                                const char16 *msg) {
-  return shortcut_table_.SetShortcut(origin.url().c_str(), name,
-                                     app_url, ico_url, msg);
-}
-
-bool PermissionsDB::GetOriginsWithShortcuts(
-    std::vector<SecurityOrigin> *result) {
-
-  std::vector<std::string16> origin_urls;
-  if (!shortcut_table_.GetOriginsWithShortcuts(&origin_urls)) {
-    return false;
-  }
-
-  for (size_t ii = 0; ii < origin_urls.size(); ++ii) {
-    SecurityOrigin origin;
-    if (!origin.InitFromUrl(origin_urls[ii].c_str())) {
-      LOG(("PermissionsDB::GetOriginsWithShortcuts: InitFromUrl() failed."));
-      // If we can't initialize a single URL, don't freak out. Try to do the
-      // other ones.
-      continue;
-    }
-    result->push_back(origin);
-  }
-  return true;
-}
-
-bool PermissionsDB::GetOriginShortcuts(const SecurityOrigin &origin,
-                                       std::vector<std::string16> *names) {
-  return shortcut_table_.GetOriginShortcuts(origin.url().c_str(), names);
-}
-
-bool PermissionsDB::GetShortcut(const SecurityOrigin &origin,
-                                const char16 *name,
-                                std::string16 *app_url, std::string16 *ico_url,
-                                std::string16 *msg) {
-  return shortcut_table_.GetShortcut(origin.url().c_str(), name,
-                                     app_url, ico_url, msg);
-}
-
-bool PermissionsDB::DeleteShortcut(const SecurityOrigin &origin,
-                                   const char16 *name) {
-  return shortcut_table_.DeleteShortcut(origin.url().c_str(), name);
-}
-
-bool PermissionsDB::DeleteShortcuts(const SecurityOrigin &origin) {
-  return shortcut_table_.DeleteShortcuts(origin.url().c_str());
-}
 
 bool PermissionsDB::CreateOrUpgradeDatabase() {
   // Doing this in a transaction effectively locks the database file and
@@ -270,20 +219,15 @@ bool PermissionsDB::CreateOrUpgradeDatabase() {
     if (!CreateDatabase()) {
       return false;
     }
-  } else if (1 == version) {
-      if (!UpgradeFromVersion1ToVersion2()) {
-        return false;
-      }
-      if (!UpgradeFromVersion2ToVersion3()) {
-        return false;
-      }
-  } else if (2 == version) {
-      if (!UpgradeFromVersion2ToVersion3()) {
-        return false;
-      }
-  } else {
+  } else if (version < kOldestUpgradeableVersion || version > kCurrentVersion) {
     LOG(("Unexpected version: %d", version));
     return false;
+  } else {
+    // We only have one historical version at this time.
+    assert(version == 1);
+    if (!UpgradeFromVersion1ToVersion2()) {
+      return false;
+    }
   }
 
   if (!transaction.Commit()) {
@@ -306,9 +250,9 @@ bool PermissionsDB::CreateDatabase() {
     return false;
   }
 
+  // Create our two tables
   if (!version_table_.MaybeCreateTable() ||
-      !access_table_.MaybeCreateTable() ||
-      !shortcut_table_.MaybeCreateTable()) {
+      !access_table_.MaybeCreateTable()) {
     return false;
   }
 
@@ -343,31 +287,6 @@ bool PermissionsDB::UpgradeFromVersion1ToVersion2() {
   }
 
   if (!version_table_.SetInt(kVersionKeyName, 2)) {
-    return false;
-  }
-
-  return transaction.Commit();
-}
-
-bool PermissionsDB::UpgradeFromVersion2ToVersion3() {
-  SQLTransaction transaction(&db_,
-                             "PermissionsDB::UpgradeFromVersion2ToVersion3");
-  if (!transaction.Begin()) {
-    return false;
-  }
-
-  int version = 0;
-  version_table_.GetInt(kVersionKeyName, &version);
-
-  if (version != 2) {
-    return false;
-  }
-
-  if (!shortcut_table_.MaybeCreateTable()) {
-    return false;
-  }
-
-  if (!version_table_.SetInt(kVersionKeyName, 3)) {
     return false;
   }
 
