@@ -36,8 +36,10 @@
 #include <tchar.h>
 #include "gears/base/common/file.h"
 #include "gears/base/common/int_types.h"
+#include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/url_utils.h"
 #include "gears/localserver/common/http_constants.h"
 
 static bool CreateShellLink(const char16 *object_path,
@@ -71,7 +73,7 @@ static bool GetAppPath(const char16 *process_name, std::string16 *app_path) {
   HKEY hkey;
   std::string16 key_name(STRING16(L"SOFTWARE\\Microsoft\\Windows\\"
                                   L"CurrentVersion\\App Paths\\"));
-  
+ 
   key_name += process_name;
 
   result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, key_name.c_str(), 0, KEY_READ,
@@ -94,7 +96,7 @@ static bool GetAppPath(const char16 *process_name, std::string16 *app_path) {
 static bool GetDesktopPath(std::string16 *desktop_path) {
   bool succeeded = false;
   char16 path_buf[MAX_PATH];
-  
+
   // We use the old version of this function because the new version apparently
   // won't tell you the Desktop folder path.
   BOOL result = SHGetSpecialFolderPath(NULL, path_buf,
@@ -108,11 +110,12 @@ static bool GetDesktopPath(std::string16 *desktop_path) {
 
 bool File::CreateDesktopShortcut(BrowserType browser_type,
                                  const char16 *link_name,
+                                 const SecurityOrigin *security_origin,
                                  const char16 *launch_url,
                                  const char16 *icon_url) {
   bool creation_result = false;
   std::string16 app_path;
-  const char16 *process_name;                              
+  const char16 *process_name;
 
   switch (browser_type) {
     case FIREFOX:
@@ -124,7 +127,11 @@ bool File::CreateDesktopShortcut(BrowserType browser_type,
     default:
       return false;
   }
-	
+
+  if (NULL == security_origin) {
+    return false;
+  }
+
   // Check link name for safety. As long as it's a plain filename it is valid.
   // Note that we append .lnk to it later, so we don't need to worry about
   // whether it has a (possibly malicious) extension.
@@ -132,38 +139,18 @@ bool File::CreateDesktopShortcut(BrowserType browser_type,
     return false;
   }
 
-  // Check input URL for safety.
-  std::string16 safe_launch_url;
-  if (NULL == launch_url) {
+  if (launch_url == NULL || !IsRelativeUrl(launch_url)) {
     return false;
   }
-  if (!UrlIs(launch_url, URLIS_URL)) {
+  if (icon_url == NULL || !IsRelativeUrl(icon_url)) {
     return false;
   }
-  char16 launch_url_buf[INTERNET_MAX_URL_LENGTH];
-  DWORD launch_url_buf_size = INTERNET_MAX_URL_LENGTH;
-  HRESULT hresult = UrlCanonicalize(launch_url, launch_url_buf,
-                                    &launch_url_buf_size,
-                                    URL_ESCAPE_PERCENT | URL_ESCAPE_UNSAFE);
-  if (FAILED(hresult)) {
-    return false;
+
+  std::string16 full_launch_url(security_origin->url());
+  if (launch_url[0] != L'/') {
+    full_launch_url += STRING16(L"/");
   }
-  safe_launch_url = launch_url_buf;
-  launch_url_buf_size = INTERNET_MAX_URL_LENGTH;
-  hresult = UrlGetPart(safe_launch_url.c_str(), launch_url_buf,
-                       &launch_url_buf_size, URL_PART_SCHEME, 0);
-  if (FAILED(hresult)) {
-    return false;
-  }
-  int compare_result = StringCompareIgnoreCase(HttpConstants::kHttpScheme,
-                                               launch_url_buf);
-  if (0 != compare_result) {
-    compare_result = StringCompareIgnoreCase(HttpConstants::kHttpsScheme,
-                                             launch_url_buf);
-    if (0 != compare_result) {
-      return false;
-    }
-  }
+  full_launch_url += launch_url;
 
   if (GetAppPath(process_name, &app_path)) {
     std::string16 link_path;
@@ -175,7 +162,7 @@ bool File::CreateDesktopShortcut(BrowserType browser_type,
       link_path += link_name;
       link_path += STRING16(L".lnk");
       creation_result = CreateShellLink(app_path.c_str(), link_path.c_str(),
-                                        safe_launch_url.c_str());
+                                        full_launch_url.c_str());
     }
   }
   return creation_result;
