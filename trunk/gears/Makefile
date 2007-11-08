@@ -99,6 +99,8 @@ SQLITE_CSRCS	+= \
 #-----------------------------------------------------------------------------
 # third_party/libpng
 
+# TODO(andreip): fix errors in zlib before building this
+ifneq ($(BROWSER),IEMOBILE)
 THIRD_PARTY_VPATH	+= \
 		third_party/libpng \
 		$(NULL)
@@ -122,10 +124,13 @@ THIRD_PARTY_CSRCS	+= \
 		pngwtran.c \
 		pngwutil.c \
 		$(NULL)
+endif
 
 #-----------------------------------------------------------------------------
 # third_party/zlib
 
+# TODO(andreip): fix errors in gzio.c
+ifneq ($(BROWSER),IEMOBILE)
 THIRD_PARTY_VPATH	+= \
 		third_party/zlib \
 		$(NULL)
@@ -144,6 +149,7 @@ THIRD_PARTY_CSRCS	+= \
 		uncompr.c \
 		zutil.c \
 		$(NULL)
+endif
 
 #-----------------------------------------------------------------------------
 # third_party/jsoncpp
@@ -162,6 +168,7 @@ THIRD_PARTY_CPPSRCS	+= \
 # third_party/breakpad
 
 ifeq ($(OS),win32)
+ifneq ($(BROWSER),IEMOBILE)
 THIRD_PARTY_VPATH	+= \
 		third_party/breakpad/src/client/windows/handler \
 		third_party/breakpad/src/client/windows/sender \
@@ -192,6 +199,7 @@ IE_VPATH	+= \
 IE_CPPSRCS	+= \
 		exception_handler_win32.cc \
 		$(NULL)
+endif
 endif
 
 #-----------------------------------------------------------------------------
@@ -338,6 +346,45 @@ IE_LINK_EXTRAS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# base/iemobile
+
+IEMOBILE_VPATH	+= \
+		base/common \
+		base/ie \
+		$(NULL)
+
+IEMOBILE_M4SRCS	+= \
+		bho.rgs.m4 \
+		interfaces.idl.m4 \
+		module.rgs.m4 \
+		$(NULL)
+
+IEMOBILE_IDLSRCS	+= \
+		interfaces.idl \
+		$(NULL)
+
+IEMOBILE_CPPSRCS	+= \
+		activex_utils.cc \
+		base_class.cc \
+		detect_version_collision.cc \
+		html_event_monitor.cc \
+		html_event_monitor_ie.cc \
+		http_constants.cc \
+		http_utils.cc \
+		js_runner_ie.cc \
+		js_runner_utils.cc \
+		module.cc \
+		security_model.cc \
+		string16.cc \
+		string_utils.cc \
+		thread_locals.cc \
+		$(NULL)
+
+IEMOBILE_LINK_EXTRAS	+= \
+		$(IE_OUTDIR)/module.res \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # database/firefox
 
 FF_VPATH	+= \
@@ -378,6 +425,18 @@ IE_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# database/iemobile
+
+IEMOBILE_VPATH	+= \
+		database/common \
+		database/ie \
+		$(NULL)
+
+IEMOBILE_IDLSRCS	+= \
+		database.idl \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # ui/generated
 #
 # Anything with the _I18N suffix will be expanded for each language in
@@ -410,6 +469,14 @@ IE_VPATH	+= \
 		$(NULL)
 
 IE_M4SRCS	+= \
+		ui_html.rc.m4 \
+		$(NULL)
+
+IEMOBILE_VPATH	+= \
+		ui/generated \
+		$(NULL)
+
+IEMOBILE_M4SRCS	+= \
 		ui_html.rc.m4 \
 		$(NULL)
 
@@ -468,6 +535,23 @@ IE_LINK_EXTRAS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# ui/iemobile
+
+IEMOBILE_VPATH	+= \
+		ui/common \
+		ui/ie \
+		$(NULL)
+
+IEMOBILE_M4SRCS	+= \
+		ui_resources.rc.m4 \
+		tools_menu_item.rgs.m4 \
+		$(NULL)
+
+IEMOBILE_IDLSRCS	+= \
+		html_dialog_host.idl \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # workerpool/firefox
 
 FF_VPATH	+= \
@@ -506,6 +590,18 @@ IE_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# workerpool/iemobile
+
+IEMOBILE_VPATH	+= \
+		workerpool/common \
+		workerpool/ie \
+		$(NULL)
+
+IEMOBILE_IDLSRCS	+= \
+		workerpool.idl \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # timer/firefox
 
 FF_VPATH	+= \
@@ -533,6 +629,17 @@ IE_IDLSRCS	+= \
 
 IE_CPPSRCS	+= \
 		timer.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# timer/iemobile
+
+IEMOBILE_VPATH	+= \
+		timer/ie \
+		$(NULL)
+
+IEMOBILE_IDLSRCS	+= \
+		timer.idl \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -579,6 +686,19 @@ IE_CPPSRCS	+= \
 		resource_store_ie.cc \
 		update_task_ie.cc \
 		urlmon_utils.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# localserver/iemobile
+
+IEMOBILE_VPATH	+= \
+		base/common \
+		localserver/common \
+		localserver/ie \
+		$(NULL)
+
+IEMOBILE_IDLSRCS	+= \
+		localserver.idl \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -645,6 +765,17 @@ IE_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# httprequest/iemobile
+
+IEMOBILE_VPATH	+= \
+		httprequest/ie \
+		$(NULL)
+
+IEMOBILE_IDLSRCS	+= \
+		httprequest.idl \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # httprequest/ff
 
 FF_VPATH	+= \
@@ -690,6 +821,17 @@ IE_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# channel/iemobile
+
+IEMOBILE_VPATH	+= \
+		channel/ie \
+		$(NULL)
+
+IEMOBILE_IDLSRCS	+= \
+		channel.idl \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # factory/ff
 
 FF_VPATH	+= \
@@ -723,6 +865,27 @@ IE_IDLSRCS	+= \
 		$(NULL)
 
 IE_CPPSRCS	+= \
+		factory.cc \
+		factory_utils.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# factory/iemobile
+
+IEMOBILE_VPATH	+= \
+		factory/common \
+		factory/ie \
+		$(NULL)
+
+IEMOBILE_M4SRCS	+= \
+		factory.rgs.m4 \
+		$(NULL)
+
+IEMOBILE_IDLSRCS += \
+		factory.idl \
+		$(NULL)
+
+IEMOBILE_CPPSRCS += \
 		factory.cc \
 		factory_utils.cc \
 		$(NULL)
