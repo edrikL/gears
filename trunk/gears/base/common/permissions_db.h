@@ -29,7 +29,6 @@
 #include <map>
 #include "gears/base/common/name_value_table.h"
 #include "gears/base/common/security_model.h"
-#include "gears/base/common/shortcut_table.h"
 #include "gears/base/common/sqlite_wrapper.h"
 
 
@@ -74,30 +73,6 @@ class PermissionsDB {
   // The key used to cache instances of PermissionsDB in ThreadLocals.
   static const std::string kThreadLocalKey;
 
-  // Add (or overwrite) a shortcut for origin/name, with appUrl,
-  // icoUrl, and msg as data.
-  bool SetShortcut(const SecurityOrigin &origin, const char16 *name,
-                   const char16 *app_url, const char16 *ico_url,
-                   const char16 *msg);
-
-  // Get the set of origins which have shortcuts.
-  bool GetOriginsWithShortcuts(std::vector<SecurityOrigin> *result);
-
-  // Get the set of named shortcuts for a specific origin.
-  bool GetOriginShortcuts(const SecurityOrigin &origin,
-                          std::vector<std::string16> *names);
-
-  // Get the data for a specific shortcut.
-  bool GetShortcut(const SecurityOrigin &origin, const char16 *name,
-                   std::string16 *app_url, std::string16 *ico_url,
-                   std::string16 *msg);
-
-  // Delete a specific shortcut.
-  bool DeleteShortcut(const SecurityOrigin &origin, const char16 *name);
-
-  // Delete all shortcuts for an origin.
-  bool DeleteShortcuts(const SecurityOrigin &origin);
-
  private:
   // Private constructor, callers must use GetDB().
   PermissionsDB();
@@ -114,9 +89,6 @@ class PermissionsDB {
   // Upgrade the schema from 1 to 2.
   bool UpgradeFromVersion1ToVersion2();
 
-  // Upgrade the schema from 2 to 3.
-  bool UpgradeFromVersion2ToVersion3();
-
   // Destructor function called by ThreadLocals to dispose of a thread-specific
   // DB instance when a thread dies.
   static void DestroyDB(void *context);
@@ -129,9 +101,6 @@ class PermissionsDB {
 
   // Maps origins to ability to access Gears.
   NameValueTable access_table_;
-
-  // Shortcuts origins have defined.
-  ShortcutTable shortcut_table_;
 
   DISALLOW_EVIL_CONSTRUCTORS(PermissionsDB);
   DECL_SINGLE_THREAD
