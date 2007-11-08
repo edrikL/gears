@@ -30,6 +30,8 @@
 #include "gears/base/common/int_types.h"
 #include "gears/base/common/string16.h"
 
+class SecurityOrigin;  // base/common/security_model.h
+
 class File {
  public:
   // Creates a new file. If the file already exists, returns false.
@@ -102,8 +104,10 @@ class File {
   // link_name is a string that will be used to create the user-visible
   // shortcut name. Do not append ".lnk" or pass a path.
   //
-  // launch_url is the fully-qualified HTTP or HTTPS URL that the browser
-  // should open when the user invokes the shortcut.
+  // security_origin specifies the base of relative URLs.
+  //
+  // launch_url is a relative URL that the browser should open when the user
+  // invokes the shortcut.
   //
   // icon_url is currently not used. TODO(aa): implement.
   //
@@ -113,6 +117,7 @@ class File {
   // desktop_(platform).[h,cc].
   static bool CreateDesktopShortcut(BrowserType browser_type,
                                     const char16 *link_name,
+                                    const SecurityOrigin *security_origin,
                                     const char16 *launch_url,
                                     const char16 *icon_url);
 
