@@ -32,12 +32,15 @@ void SettingsDialog::Run() {
 
   // Populate the arguments() property with the current allowed and denied
   // sites.
-  if (!PopulateArguments(&settings_dialog.arguments["allowed"],
-                         PermissionsDB::PERMISSION_ALLOWED)) {
+  if (!PopulateOrigins(&settings_dialog.arguments["allowed"],
+                       PermissionsDB::PERMISSION_ALLOWED)) {
     return;
   }
-  if (!PopulateArguments(&settings_dialog.arguments["denied"],
-                         PermissionsDB::PERMISSION_DENIED)) {
+  if (!PopulateOrigins(&settings_dialog.arguments["denied"],
+                       PermissionsDB::PERMISSION_DENIED)) {
+    return;
+  }
+  if (!PopulateShortcuts(&settings_dialog.arguments["shortcuts"])) {
     return;
   }
 
@@ -47,12 +50,13 @@ void SettingsDialog::Run() {
   settings_dialog.DoModal(STRING16(L"settings_dialog.html"),
                           kSettingsDialogWidth, kSettingsDialogHeight);
 
-  // Process the result() property and remove any sites the user removed.
+  // Process the result() property and remove any sites or shortcuts the user
+  // removed.
   ProcessResult(&settings_dialog.result);
 }
 
 
-bool SettingsDialog::PopulateArguments(Json::Value *json_object,
+bool SettingsDialog::PopulateOrigins(Json::Value *json_array,
     PermissionsDB::PermissionValue value) {
   PermissionsDB *capabilities = PermissionsDB::GetDB();
   if (!capabilities) {
@@ -64,7 +68,7 @@ bool SettingsDialog::PopulateArguments(Json::Value *json_object,
     return false;
   }
 
-  (*json_object) = Json::Value(Json::arrayValue);
+  (*json_array) = Json::Value(Json::arrayValue);
   for (size_t i = 0; i < list.size(); ++i) {
     // JSON needs UTF-8.
     std::string site_string;
@@ -73,7 +77,64 @@ bool SettingsDialog::PopulateArguments(Json::Value *json_object,
       return false;
     }
 
-    json_object->append(Json::Value(site_string));
+    json_array->append(Json::Value(site_string));
+  }
+
+  return true;
+}
+
+
+bool SettingsDialog::PopulateShortcuts(Json::Value *json_array) {
+  PermissionsDB *capabilities = PermissionsDB::GetDB();
+  if (!capabilities) {
+    return false;
+  }
+
+  (*json_array) = Json::Value(Json::arrayValue);
+  std::vector<SecurityOrigin> origins;
+
+  if (!capabilities->GetOriginsWithShortcuts(&origins)) {
+    return false;
+  }
+
+  for (std::vector<SecurityOrigin>::iterator origin = origins.begin();
+       origin != origins.end(); ++origin) {
+    std::vector<std::string16> names;
+    if (!capabilities->GetOriginShortcuts(*origin, &names)) {
+      return false;
+    }
+
+    for (std::vector<std::string16>::iterator name = names.begin();
+         name != names.end(); ++name) {
+      std::string16 app_url;
+      std::string16 ico_url;
+      std::string16 msg;
+
+      if (!capabilities->GetShortcut(*origin, name->c_str(), &app_url,
+                                     &ico_url, &msg)) {
+        return false;
+      }
+
+      // JSON needs UTF-8.
+      std::string app_url_utf8;
+      std::string ico_url_utf8;
+      std::string name_utf8;
+      std::string origin_utf8;
+      if (!String16ToUTF8(app_url.c_str(), &app_url_utf8) ||
+          !String16ToUTF8(ico_url.c_str(), &ico_url_utf8) ||
+          !String16ToUTF8(name->c_str(), &name_utf8) ||
+          !String16ToUTF8(origin->url().c_str(), &origin_utf8)) {
+        return false;
+      }
+
+      Json::Value shortcut;
+      shortcut["iconUrl"] = Json::Value(ico_url_utf8);
+      shortcut["appUrl"] = Json::Value(app_url_utf8);
+      shortcut["appName"] = Json::Value(name_utf8);
+      shortcut["origin"] = Json::Value(origin_utf8);
+
+      json_array->append(shortcut);
+    }
   }
 
   return true;
@@ -83,15 +144,16 @@ bool SettingsDialog::PopulateArguments(Json::Value *json_object,
 void SettingsDialog::ProcessResult(Json::Value *dialog_result) {
   // Note: the logic here is coupled to the way the JS inside of
   // settings_dialog.html.m4 packages it's results. As implemented now, the
-  // dialog should only ever return null or an array of one or more
-  // SecurityOrigin urls.
+  // dialog should only ever return null or an object containing an array of
+  // zero or more SecurityOrigin urls, and an array containing zero or more
+  // shortcuts to remove.
 
   if (Json::nullValue == dialog_result->type()) {
     // Nothing to do, the user pressed cancel.
     return;
   }
 
-  if (!dialog_result->isArray()) {
+  if (!dialog_result->isObject()) {
     LOG(("SettingsDialog::ProcessResult: Invalid dialog_result type."));
     assert(false);
     return;
@@ -102,8 +164,15 @@ void SettingsDialog::ProcessResult(Json::Value *dialog_result) {
     return;
   }
 
-  for (size_t i = 0; i < dialog_result->size(); ++i) {
-    Json::Value item = (*dialog_result)[i];
+  const Json::Value remove_sites = (*dialog_result)["removeSites"];
+  if (!remove_sites.isArray()) {
+    LOG(("SettingsDialog::ProcessResult: Invalid remove_sites type."));
+    assert(false);
+    return;
+  }
+
+  for (size_t i = 0; i < remove_sites.size(); ++i) {
+    Json::Value item = remove_sites[i];
 
     if (!item.isString()) {
       LOG(("SettingsDialog::ProcessResult: Invalid item type."));
@@ -122,7 +191,55 @@ void SettingsDialog::ProcessResult(Json::Value *dialog_result) {
       continue;
     }
 
-    capabilities->SetCanAccessGears(origin, 
+    capabilities->SetCanAccessGears(origin,
                                     PermissionsDB::PERMISSION_DEFAULT);
+  }
+
+  const Json::Value remove_shortcuts = (*dialog_result)["removeShortcuts"];
+  if (!remove_shortcuts.isArray()) {
+    LOG(("SettingsDialog::ProcessResult: Invalid remove_shortcuts type."));
+    assert(false);
+    return;
+  }
+
+  for (size_t i = 0; i < remove_shortcuts.size(); ++i) {
+    Json::Value item = remove_shortcuts[i];
+
+    if (!item.isObject()) {
+      LOG(("SettingsDialog::ProcessResult: Invalid item type."));
+      assert(false);
+      continue;
+    }
+
+    if (!item["origin"].isString()) {
+      LOG(("SettingsDialog::ProcessResult: Invalid item.origin type."));
+      assert(false);
+      continue;
+    }
+
+    if (!item["appName"].isString()) {
+      LOG(("SettingsDialog::ProcessResult: Invalid item.appName type."));
+      assert(false);
+      continue;
+    }
+
+    std::string16 origin_string;
+    if (!UTF8ToString16(item["origin"].asString().c_str(), &origin_string)) {
+      LOG(("SettingsDialog::ProcessResult: Could not convert origin."));
+      continue;
+    }
+
+    std::string16 app_name_string;
+    if (!UTF8ToString16(item["appName"].asString().c_str(), &app_name_string)) {
+      LOG(("SettingsDialog::ProcessResult: Could not convert appName."));
+      continue;
+    }
+
+    SecurityOrigin origin;
+    if (!origin.InitFromUrl(origin_string.c_str())) {
+      continue;
+    }
+
+    capabilities->DeleteShortcut(origin, app_name_string.c_str());
   }
 }

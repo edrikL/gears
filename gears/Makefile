@@ -263,6 +263,7 @@ FF_CPPSRCS	+= \
 		png_utils.cc \
 		security_model.cc \
 		security_model_test.cc \
+		shortcut_table.cc \
 		sqlite_wrapper.cc \
 		stopwatch.cc \
 		stopwatch_ff.cc \
@@ -318,6 +319,7 @@ IE_CPPSRCS	+= \
 		png_utils.cc \
 		security_model.cc \
 		security_model_test.cc \
+		shortcut_table.cc \
 		sqlite_wrapper.cc \
 		stopwatch.cc \
 		stopwatch_ie.cc \
@@ -393,6 +395,7 @@ COMMON_VPATH	+= \
 COMMON_M4SRCS_I18N += \
 		permissions_dialog.html.m4 \
 		settings_dialog.html.m4 \
+		shortcuts_dialog.html.m4 \
 		$(NULL)
 
 FF_VPATH	+= \

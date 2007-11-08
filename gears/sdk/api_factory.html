@@ -55,6 +55,8 @@ object.</p>
 
 <pre><code>Object  <b>create</b>(className, classVersion)
 string  <b>getBuildInfo</b>()
+boolean <b>getPermission</b>(siteName, imageUrl, extraMessage) <span class="new">[New in <a href="index.html#relnotes">0.2</a>]</span>
+readonly attribute boolean <b>hasPermission</b> <span class="new">[New in <a href="index.html#relnotes">0.2</a>]</span>
 readonly attribute string <b>version</b> <span class="new">[New in <a href="index.html#relnotes">0.2</a>]</span>
 </code></pre>
 
@@ -156,6 +158,41 @@ if (window.google && google.gears) {
   </tr>
 </table>
 
+<table>
+  <tr class="odd">
+    <th colspan="2"><code>boolean getPermission(siteName, imageUrl, extraMessage)</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">Lets a site manually trigger the Gears security dialog, optionally with UI customizations.</td>
+  </tr>
+  <tr class="odd">
+    <td>Parameters:</td>
+    <td class="odd">
+      <code>siteName</code>
+      - Friendly name of the site requesting permission.
+      <br>
+      <code>imageUrl</code>
+      - URL of a .png file to display in the dialog.
+      <br>
+      <code>extraMessage</code>
+      - Site-specific text to display to users in the security dialog.
+      </td>
+  </tr>
+  <tr class="odd">
+    <td>Return value:</td>
+    <td class="odd">Indicates whether the site has permission to use Gears.</td>
+  </tr>
+  <tr class="odd">
+    <td>Details:</td>
+    <td class="odd">It is always safe to call this function; it will return
+    immediately if the site already has permission to use Gears.
+    <br><br>
+    All arguments are required, but an empty string can be passed for any value
+    a site does not wish to use.
+    </td>
+  </tr>
+</table>
 
 <h3>Attributes</h3>
 
@@ -169,6 +206,11 @@ if (window.google && google.gears) {
     <td><code><b>version</b></code></td>
     <td>readonly string</td>
     <td>Returns the version of Gears installed, as a string of the form <code>Major.Minor.Build.Patch</code> (e.g., '0.10.2.0').
+  </tr>
+  <tr class="odd">
+    <td><code><b>hasPermission</b></code></td>
+    <td>readonly boolean</td>
+    <td>Returns true if the site already has permission to use Gears.
   </tr>
 </table>
 
