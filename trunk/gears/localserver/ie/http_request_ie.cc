@@ -63,7 +63,7 @@ IEHttpRequest::IEHttpRequest() :
     caching_behavior_(USE_ALL_CACHES), redirect_behavior_(FOLLOW_ALL), 
     was_redirected_(false), was_aborted_(false), listener_(NULL),
     ready_state_(UNINITIALIZED), has_synthesized_response_payload_(false),
-    actual_data_size_(0) {
+    actual_data_size_(0), async_(false) {
 }
 
 HRESULT IEHttpRequest::FinalConstruct() {
@@ -191,10 +191,8 @@ bool IEHttpRequest::Open(const char16 *method, const char16* url, bool async) {
   assert(!IsRelativeUrl(url));
   if (!IsUninitialized())
     return false;
-  if (!async) {
-    // TODO(michaeln): support sync requests in some form
-    return false;
-  }
+
+  async_ = async;
   url_ = url;
   if (!origin_.InitFromUrl(url)) {
     return false;
@@ -501,8 +499,11 @@ STDMETHODIMP IEHttpRequest::GetBindInfo(DWORD *flags, BINDINFO *info) {
   *flags = 0;
 
   // We use the pull-data model as push is unreliable.
-  *flags |= BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE |
-            BINDF_FROMURLMON | BINDF_PULLDATA | BINDF_NO_UI;
+  *flags |= BINDF_FROMURLMON | BINDF_PULLDATA | BINDF_NO_UI;
+
+  if (async_) {
+    *flags |= BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE;
+  }
 
   if (ShouldBypassBrowserCache() || is_post_or_put) {
     // Setup bind flags such that we send a request all the way through

@@ -626,16 +626,28 @@ bool TestHttpRequest() {
     return false; \
   } \
 }
+
   // A request is created with a refcount of one, our listener will
   // release this reference upon completion. If something goes wrong
   // we leak, not good in a real program but fine for this test.
+
+  // Send a request synchronously
   HttpRequest *request = HttpRequest::Create();
   request->SetOnReadyStateChange(new TestHttpRequestListener());
   bool ok = request->Open(HttpConstants::kHttpGET,
                           STRING16(L"http://www.google.com/"),
-                          true);
+                          false);
+  TEST_ASSERT(ok);
+  ok = request->Send();
   TEST_ASSERT(ok);
 
+  // Send an async request
+  request = HttpRequest::Create();
+  request->SetOnReadyStateChange(new TestHttpRequestListener());
+  ok = request->Open(HttpConstants::kHttpGET,
+                     STRING16(L"http://www.google.com/"),
+                     true);
+  TEST_ASSERT(ok);
   ok = request->Send();
   TEST_ASSERT(ok);
   return true;
