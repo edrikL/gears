@@ -98,7 +98,7 @@
     { title: "ManagedResourceStore Code Sample",
       points: [
         "<pre><span class='title'>myapp.js</span><br>" +
-          "var localserver = google.gears.factory.create('beta.localserver', '1.1');<br>" +
+          "var localserver = google.gears.factory.create('beta.localserver');<br>" +
           "var store = localserver.createManagedStore('mystore');<br>" +
           "store.manifestUrl = 'http://myapp.com/offline-manifest.json';<br>" +
           "store.checkForUpdates();</pre>",
@@ -128,7 +128,7 @@
     },
     { title: "Database Code Sample",
       points: [
-        "<pre>var db = google.gears.factory.create('beta.database', '1.0');<br>" +
+        "<pre>var db = google.gears.factory.create('beta.database');<br>" +
         "db.execute('insert into Delicious (Name, NumStars) values (?, ?)',<br>" +
         "           ['burrito', 5]);<br><br>" +
         "var rs = db.execute('select * from Delicious order by NumStars desc');<br>" +
@@ -158,7 +158,7 @@
         "  <span class='comment'>// TODO: New top-secret prime-finding algorithm goes here.</span><br>" +
         "  google.gears.workerPool.sendMessage(result);<br>" +
         "}<br><br>" +
-        "var pool = google.gears.factory.create('beta.workerpool', '1.1');<br>" +
+        "var pool = google.gears.factory.create('beta.workerpool');<br>" +
         "pool.onmessage = function(message) {<br>" +
         "  alert('next prime is: ' + message);<br>" +
         "}<br><br>" +

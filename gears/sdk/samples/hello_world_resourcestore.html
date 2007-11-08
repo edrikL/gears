@@ -87,7 +87,7 @@ function init() {
 
   try {
     localServer =
-        google.gears.factory.create('beta.localserver', '1.1');
+        google.gears.factory.create('beta.localserver');
   } catch (ex) {
     var buttons = document.getElementsByTagName('button');
     for (var i = 0, el; el = buttons[i]; i++) {

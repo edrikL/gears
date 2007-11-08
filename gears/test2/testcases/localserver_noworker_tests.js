@@ -1,4 +1,4 @@
-var localServer = google.gears.factory.create('beta.localserver', '1.1');
+var localServer = google.gears.factory.create('beta.localserver');
 var resourceStore = localServer.createStore('noworker_tests');
 
 function testCreateFileSubmitter() {

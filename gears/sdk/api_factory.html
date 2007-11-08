@@ -48,12 +48,6 @@ application for the easiest way to create a Factory object.  The
 script defines <code>google.gears.factory</code> to refer to a Factory
 object.</p>
 
-<h3>Contents</h3>
-
-<ol>
-  <li><a href="#factoryclass">Factory Class</a></li>
-  <li><a href="#versioning">API Versioning for Gears Interfaces</a> </li>
-</ol>
 
 <p><a name="factoryclass" id="factoryclass"></a></p>
 
@@ -75,7 +69,7 @@ readonly attribute string <b>version</b> <span class="new">[New in <a href="inde
 // Check whether Google Gears is installed.
 if (window.google && google.gears) {
   // Instantiate Gears objects
-  var db = google.gears.factory.create('beta.database', '1.0');
+  var db = google.gears.factory.create('beta.database');
   db.open();
 }
 &lt;/script&gt;</code></pre>
@@ -88,7 +82,7 @@ if (window.google && google.gears) {
   </tr>
   <tr class="odd">
     <td width="113">Summary:</td>
-    <td width="550" class="odd">Creates a Gears object of the given class with the given version.</td>
+    <td width="550" class="odd">Creates a Gears object of the given class.</td>
   </tr>
   <tr class="odd">
     <td>Parameters:</td>
@@ -97,8 +91,9 @@ if (window.google && google.gears) {
       - Type of object to create.
       <br>
       <code>classVersion</code>
-      - Version of the class's API that the app will use.  See below for <a href="#versioning">API versioning</a> information.
-
+      - Optional. If the value does not exist, <code>'1.0'</code> is assumed.
+        (To see if the machine has the minimum version of Gears you require, use
+        <code>factory.version</code> instead.)
       </td>
   </tr>
   <tr class="odd">
@@ -108,7 +103,8 @@ if (window.google && google.gears) {
   <tr class="odd">
     <td>Details:</td>
     <td class="odd">
-      An exception is thrown if <code>className</code> is not recognized, or if the <code>classVersion</code> is unrecognized.
+      An exception is thrown if the given <code>className</code> is not
+      recognized.
       <p>
       The supported class names are:
       <table width="79%" border="0" cellpadding="0" cellspacing="0">
@@ -219,19 +215,6 @@ if (window.google && google.gears) {
 </table>
 
 <br>
-
-<a name="versioning" id="versioning"></a>
-<h2>API Versioning  for Google Gears Interfaces</h2>
-<p>Each Google Gears interface has a major and minor version number.</p>
-  <p>A request for an interface can be thought of as a contract between Gears and the application.
-    If Gears returns an object, it promises that the object will support the  interface of the requested version.
-    The application promises it will only use functionality that was present in the requested interface.</p>
-
-  <p>A version is specified as a dotted string of the form '<em>MAJOR.MINOR</em>', representing the major and minor versions of the object.</p>
-  <ul>
-    <li>Minor version number changes represent API changes that are backward-compatible with all previous versions having the same <em>major</em> version number. </li>
-    <li>Major version number changes represent API changes that break backward compatibility.</li>
-  </ul>
 
 
 </div>

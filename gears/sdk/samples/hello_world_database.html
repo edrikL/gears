@@ -72,7 +72,7 @@ function init() {
 
   if (window.google && google.gears) {
     try {
-      db = google.gears.factory.create('beta.database', '1.0');
+      db = google.gears.factory.create('beta.database');
 
       if (db) {
         db.open('database-demo');

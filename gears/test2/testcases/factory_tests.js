@@ -32,22 +32,32 @@ function testCheckVersionProperty() {
   assertEqual('2', minor);
 }
 
-function testCreateInvalidModule() {
+function testCreateValidModules() {
+  // optional version param
+  assert(isObject(google.gears.factory.create('beta.timer')));
+
+  // explicit version param (real-world code does this!)
+  assert(isObject(google.gears.factory.create('beta.timer', '1.0')));
+}
+
+function testCreateInvalidModules() {
+  // bad module name
   assertError(function() {
-    google.gears.factory.create('invalid', '1.0');
+    google.gears.factory.create('invalid');
   });
 
+  // bad module version formats
   assertError(function() {
-    google.gears.factory.create('beta.database', '42');
+    google.gears.factory.create('beta.database', '1');
+  });
+  assertError(function() {
+    google.gears.factory.create('beta.database', '1.');
   });
 
+  // bad module version number
   assertError(function() {
     google.gears.factory.create('beta.database', '42.0');
   });
-}
-
-function testCreateOldModule() {
-  var wp = google.gears.factory.create('beta.workerpool', '1.0');
 }
 
 function testDisallowDirectObjectCreation() {

@@ -332,7 +332,7 @@ function databaseDump() {
 
 // Capture the presentation.
 function capture() {
-  var localServer = google.gears.factory.create('beta.localserver', '1.1');
+  var localServer = google.gears.factory.create('beta.localserver');
   localServer.removeManagedStore('slides');
   resourceStore = localServer.createManagedStore('slides');
   resourceStore.manifestUrl = 'p10n_manifest.txt';
@@ -403,7 +403,7 @@ function prev() {
 
 function initDatabase() {
   try {
-    db = google.gears.factory.create('beta.database', '1.0');
+    db = google.gears.factory.create('beta.database');
     db.open('slides');
   } catch(e) {
     $('.place#body').text('Cannot create database');
@@ -412,7 +412,7 @@ function initDatabase() {
   }
 
   try {
-    var server = google.gears.factory.create('beta.localserver', '1.1');
+    var server = google.gears.factory.create('beta.localserver');
     resourceStore = server.openManagedStore('slides');
   } catch (e) {
     alert('Could not create localserver');

@@ -43,35 +43,4 @@ m4_changecom()m4_dnl
 #define PRODUCT_SHORT_NAME_ASCII     "PRODUCT_SHORT_NAME_UQ"
 
 
-// To change the version of an interface, decide whether it's an incompatible
-// change (meaning you should increment the major version number and reset
-// the minor to zero), or a backward-compatible change (meaning you should
-// increment the minor version by one and leave the major version as-is).
-//
-// The rest of the codebase does not yet support multiple major versions
-// of the same interface, so neither does this file.
-
-#define DECLARE_GEARS_MODULE_VERSION_VARIABLES(MODULE) \
-  extern const int kGears##MODULE##VersionMajor; \
-  extern const int kGears##MODULE##VersionMinor; \
-  extern const char16 *kGears##MODULE##VersionString;
-
-// Need a wrapper so any arguments that are themselves macros get expanded.
-// Otherwise we could see "1.MYVAR" instead of "1.2"
-#define DEFINE_MODULE_VERSION_VARIABLES(MODULE,MAJOR,MINOR) \
-  DEFINE_GEARS_VARS_CORE(MODULE,MAJOR,MINOR)
-#define DEFINE_GEARS_VARS_CORE(MODULE,MAJOR,MINOR) \
-  const int kGears##MODULE##VersionMajor = MAJOR; \
-  const int kGears##MODULE##VersionMinor = MINOR; \
-  const char16 *kGears##MODULE##VersionString = \
-      STRING16(L###MAJOR L"." L###MINOR);
-
-
-DECLARE_GEARS_MODULE_VERSION_VARIABLES(Channel);
-DECLARE_GEARS_MODULE_VERSION_VARIABLES(Database);
-DECLARE_GEARS_MODULE_VERSION_VARIABLES(HttpRequest);
-DECLARE_GEARS_MODULE_VERSION_VARIABLES(LocalServer);
-DECLARE_GEARS_MODULE_VERSION_VARIABLES(Timer);
-DECLARE_GEARS_MODULE_VERSION_VARIABLES(WorkerPool);
-
 #endif  // GEARS_BASE_COMMON_PRODUCT_CONSTANTS_H__

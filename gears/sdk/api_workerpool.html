@@ -73,7 +73,7 @@ Scripts executing in the WorkerPool will not trigger the browser's
 <pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
 &lt;script type="text/javascript"&gt;
 // main.js
-var workerPool = google.gears.factory.create('beta.workerpool', '1.1');
+var workerPool = google.gears.factory.create('beta.workerpool');
 
 workerPool.onmessage = function(a, b, message) {
   alert('Received message from worker ' + message.sender + ': ' + message.text);

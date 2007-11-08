@@ -242,7 +242,7 @@ function init(opt_databaseName) {
   hideInstallMessage();
 
   try {
-    db = google.gears.factory.create('beta.database', '1.0');
+    db = google.gears.factory.create('beta.database');
   } catch (ex) {
     // Gears not installed
     alert('Could not create database:\n\n' + ex.message);

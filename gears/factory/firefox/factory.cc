@@ -83,19 +83,19 @@ NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
 
   JsParamFetcher js_params(this);
 
-  // Parse the version string.
+  // Check the version string.
 
   std::string16 version;
-  if (!js_params.GetAsString(1, &version)) {
-    RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
+  if (!js_params.IsOptionalParamPresent(1, false)) {
+    version = STRING16(L"1.0");  // default value for this optional param
+  } else {
+    if (!js_params.GetAsString(1, &version)) {
+      RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
+    }
   }
 
-  int major_version_desired;
-  int minor_version_desired;
-  if (!ParseMajorMinorVersion(version.c_str(),
-                              &major_version_desired,
-                              &minor_version_desired)) {
-    RETURN_EXCEPTION(STRING16(L"Invalid version string."));
+  if (version != kAllowedClassVersion) {
+    RETURN_EXCEPTION(STRING16(L"Invalid version string. Must be 1.0."));
   }
 
   // Create an instance of the object.
@@ -112,35 +112,17 @@ NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
 
   nr = NS_ERROR_FAILURE;
   if (object == STRING16(L"beta.channel")) {
-    if (major_version_desired == kGearsChannelVersionMajor &&
-        minor_version_desired <= kGearsChannelVersionMinor) {
-      isupports = do_QueryInterface(new GearsChannel(), &nr);
-    }
+    isupports = do_QueryInterface(new GearsChannel(), &nr);
   } else if (object == STRING16(L"beta.database")) {
-    if (major_version_desired == kGearsDatabaseVersionMajor &&
-        minor_version_desired <= kGearsDatabaseVersionMinor) {
-      isupports = do_QueryInterface(new GearsDatabase(), &nr);
-    }
+    isupports = do_QueryInterface(new GearsDatabase(), &nr);
   } else if (object == STRING16(L"beta.httprequest")) {
-    if (major_version_desired == kGearsHttpRequestVersionMajor &&
-        minor_version_desired <= kGearsHttpRequestVersionMinor) {
-      isupports = do_QueryInterface(new GearsHttpRequest(), &nr);
-    }
+    isupports = do_QueryInterface(new GearsHttpRequest(), &nr);
   } else if (object == STRING16(L"beta.localserver")) {
-    if (major_version_desired == kGearsLocalServerVersionMajor &&
-        minor_version_desired <= kGearsLocalServerVersionMinor) {
-      isupports = do_QueryInterface(new GearsLocalServer(), &nr);
-    }
+    isupports = do_QueryInterface(new GearsLocalServer(), &nr);
   } else if (object == STRING16(L"beta.timer")) {
-    if (major_version_desired == kGearsTimerVersionMajor &&
-        minor_version_desired <= kGearsTimerVersionMinor) {
-      isupports = do_QueryInterface(new GearsTimer(), &nr);
-    }
+    isupports = do_QueryInterface(new GearsTimer(), &nr);
   } else if (object == STRING16(L"beta.workerpool")) {
-    if (major_version_desired == kGearsWorkerPoolVersionMajor &&
-        minor_version_desired <= kGearsWorkerPoolVersionMinor) {
-      isupports = do_QueryInterface(new GearsWorkerPool(), &nr);
-    }
+    isupports = do_QueryInterface(new GearsWorkerPool(), &nr);
   }  else {
     RETURN_EXCEPTION(STRING16(L"Unknown object."));
   }

@@ -67,7 +67,7 @@
       return;
     }
 
-    var req = google.gears.factory.create('beta.httprequest', '1.0');
+    var req = google.gears.factory.create('beta.httprequest');
     req.open('GET', url, false);
     req.onreadystatechange = function() {
       if (req.readyState == 4) {
@@ -76,7 +76,7 @@
           // IE/workers without the magic execScript() method. Work around by
           // using the script form of setTimeout(), which does run in the global
           // scope.
-          var timer = google.gears.factory.create('beta.timer', '1.0');
+          var timer = google.gears.factory.create('beta.timer');
           timer.setTimeout(req.responseText + '\nloadNextInclude();', 0);
         }
       }

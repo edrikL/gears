@@ -40,7 +40,7 @@ import "ocidl.idl";
 ]
 interface GearsFactoryInterface : IDispatch {
   HRESULT create([in] const BSTR class_name,
-                 [in] const BSTR class_version,
+                 [in, optional] const VARIANT *class_version,
                  [out, retval] IDispatch **retval);
   HRESULT getBuildInfo([out, retval] BSTR *retval);
   [propget] HRESULT version([out, retval] BSTR *retval);

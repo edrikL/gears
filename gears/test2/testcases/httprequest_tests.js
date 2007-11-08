@@ -93,7 +93,7 @@ function testRequestDisallowedHeaders() {
 function testRequestReuse() {
   startAsync();
 
-  var reusedRequest = google.gears.factory.create('beta.httprequest', '1.0');
+  var reusedRequest = google.gears.factory.create('beta.httprequest');
   var numGot = 0;
   var numToGet = 2;
 
@@ -121,7 +121,7 @@ function testRequestReuse() {
 function testGetCapturedResource() {
   startAsync();
 
-  var myLocalServer = google.gears.factory.create('beta.localserver', '1.0');
+  var myLocalServer = google.gears.factory.create('beta.localserver');
   // We don't delete and recreate the store or captured url to avoid
   // interfering with this same test running in the other thread. 
   var storeName = 'testGet_CapturedResource';
@@ -141,15 +141,13 @@ function testGet_BinaryResponse() {
 }
 
 function testNullOnReadyStateChange() {
-  var nullHandlerRequest = google.gears.factory.create('beta.httprequest',
-                                                       '1.0');
+  var nullHandlerRequest = google.gears.factory.create('beta.httprequest');
   nullHandlerRequest.onreadystatechange = function() {};
   nullHandlerRequest.onreadystatechange = null;
   nullHandlerRequest.open('GET', 'nosuchfile___');
   nullHandlerRequest.send();
 
-  var unsetHandlerRequest = google.gears.factory.create('beta.httprequest',
-                                                        '1.0');
+  var unsetHandlerRequest = google.gears.factory.create('beta.httprequest');
   unsetHandlerRequest.open('GET', 'nosuchfile___');
   unsetHandlerRequest.send();
 }
@@ -169,7 +167,7 @@ function getExpectedEchoHeaders(requestHeaders) {
 // A helper that initiates a request and examines the response.
 function doRequest(url, method, data, requestHeaders, expectedStatus,
                    expectedResponse, expectedHeaders) {
-  var request = google.gears.factory.create('beta.httprequest', '1.0');
+  var request = google.gears.factory.create('beta.httprequest');
 
   request.onreadystatechange = handleReadyStateChange;
   request.open(method, url, true);

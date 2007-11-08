@@ -43,42 +43,15 @@
 #include "gears/factory/safari/factory_utils.h"
 #endif
 
+
+const char16 *kAllowedClassVersion = STRING16(L"1.0");
+
+
 const char16 *kGoogleUpdateClientsRegKey =
                   STRING16(L"Software\\Google\\Update\\ClientState");
 const char16 *kGoogleUpdateGearsClientGuid =
                   STRING16(L"{283EAF47-8817-4c2b-A801-AD1FADFB7BAA}");
 const char16 *kGoogleUpdateDidRunValue = STRING16(L"dr");
-
-bool ParseMajorMinorVersion(const char16 *version, int *major, int *minor) {
-  const char16 *start = version;
-  const char16 *end;
-
-  bool parsed_ok = false;
-  int major_version = -1;
-  int minor_version = -1;
-
-  // scan for: DIGITS '.' DIGITS '\0'
-  major_version = ParseLeadingInteger(start, &end);
-  if (start != end) { // equal on str16tol() error
-    if (*end == L'.') {
-      start = end + 1;
-      minor_version = ParseLeadingInteger(start, &end);
-      if (start != end) {
-        if (*end == L'\0') {
-          parsed_ok = true;
-        }
-      }
-    }
-  }
-
-  if (!parsed_ok || major_version < 0 || minor_version < 0) {
-    return false;
-  }
-
-  if (major) *major = major_version;
-  if (minor) *minor = minor_version;
-  return true; // succeeded
-}
 
 
 void AppendBuildInfo(std::string16 *s) {

@@ -261,7 +261,6 @@ FF_CPPSRCS	+= \
 		paths_ff.cc \
 		permissions_db.cc \
 		png_utils.cc \
-		product_constants.cc \
 		security_model.cc \
 		security_model_test.cc \
 		shortcut_table.cc \
@@ -318,7 +317,6 @@ IE_CPPSRCS	+= \
 		paths_ie.cc \
 		permissions_db.cc \
 		png_utils.cc \
-		product_constants.cc \
 		security_model.cc \
 		security_model_test.cc \
 		shortcut_table.cc \

@@ -73,7 +73,7 @@ database system.</p>
 
 <pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
 &lt;script type="text/javascript"&gt;
-var db = google.gears.factory.create('beta.database', '1.0');
+var db = google.gears.factory.create('beta.database');
 db.open('database-test');
 db.execute('create table if not exists Test' +
            ' (Phrase text, Timestamp int)');

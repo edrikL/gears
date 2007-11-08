@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-var localServer = google.gears.factory.create('beta.localserver', '1.1');
+var localServer = google.gears.factory.create('beta.localserver');
 var STORE_NAME = 'unit_test';
 var UPDATE_STATUS = {
   ok: 0,

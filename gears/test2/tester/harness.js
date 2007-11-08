@@ -110,7 +110,7 @@ Harness.prototype.expectedGlobalErrors_ = null;
  * @param url The url of a file containing the tests to run.
  */
 Harness.prototype.load = function(testUrl) {
-  this.request_ = google.gears.factory.create('beta.httprequest', '1.0');
+  this.request_ = google.gears.factory.create('beta.httprequest');
   this.request_.onreadystatechange = this.handleRequestReadyStateChange_;
   this.testUrl_ = testUrl;
 
@@ -129,7 +129,7 @@ Harness.prototype.handleRequestReadyStateChange_ = function() {
   if (this.request_.readyState == 4) {
     if (this.request_.status == 0 || this.request_.status == 200) {
       // Have to use this hack to eval in the global scope in IE workers.
-      var timer = google.gears.factory.create('beta.timer', '1.0');
+      var timer = google.gears.factory.create('beta.timer');
       timer.setTimeout(
         '\n' + // This whitespace is required. For an explanation of why, see:
                // http://code.google.com/p/google-gears/issues/detail?id=265

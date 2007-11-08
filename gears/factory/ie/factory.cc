@@ -47,14 +47,13 @@ GearsFactory::GearsFactory()
 
 
 STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
-                                  const BSTR version_bstr_in,
+                                  const VARIANT *version_variant,
                                   IDispatch **retval) {
-  const BSTR object_name_bstr = ActiveXUtils::SafeBSTR(object_name_bstr_in);
-  const BSTR version_bstr = ActiveXUtils::SafeBSTR(version_bstr_in);
   HRESULT hr;
 
-  ATLTRACE(_T("GearsFactory::create(%s, %s)\n"),
-           object_name_bstr, version_bstr);
+  const BSTR object_name_bstr = ActiveXUtils::SafeBSTR(object_name_bstr_in);
+
+  ATLTRACE(_T("GearsFactory::create(%s)\n"), object_name_bstr);
 
   if (DetectedVersionCollision()) {
     if (!EnvIsWorker()) {
@@ -70,14 +69,20 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
                               PRODUCT_FRIENDLY_NAME L"."));
   }
 
-  // Parse the version string.
+  // Check the version string.
 
-  int major_version_desired;
-  int minor_version_desired;
-  if (!ParseMajorMinorVersion(version_bstr,
-			      &major_version_desired,
-			      &minor_version_desired)) {
-    RETURN_EXCEPTION(STRING16(L"Invalid version string."));
+  std::string16 version;
+  if (!ActiveXUtils::OptionalVariantIsPresent(version_variant)) {
+    version = STRING16(L"1.0");  // default value for this optional param
+  } else {
+    if (version_variant->vt != VT_BSTR) {
+      RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
+    }
+    version = version_variant->bstrVal;
+  }
+
+  if (version != kAllowedClassVersion) {
+    RETURN_EXCEPTION(STRING16(L"Invalid version string. Must be 1.0."));
   }
 
   // Create an instance of the object.
@@ -91,53 +96,35 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
 
   hr = E_FAIL;
   if (object_name == STRING16(L"beta.channel")) {
-    if (major_version_desired == kGearsChannelVersionMajor &&
-        minor_version_desired <= kGearsChannelVersionMinor) {
-      CComObject<GearsChannel> *obj;
-      hr = CComObject<GearsChannel>::CreateInstance(&obj);
-      base_class = obj;
-      idispatch = obj;
-    }
+    CComObject<GearsChannel> *obj;
+    hr = CComObject<GearsChannel>::CreateInstance(&obj);
+    base_class = obj;
+    idispatch = obj;
   } else if (object_name == STRING16(L"beta.database")) {
-    if (major_version_desired == kGearsDatabaseVersionMajor &&
-        minor_version_desired <= kGearsDatabaseVersionMinor) {
-      CComObject<GearsDatabase> *obj;
-      hr = CComObject<GearsDatabase>::CreateInstance(&obj);
-      base_class = obj;
-      idispatch = obj;
-    }
+    CComObject<GearsDatabase> *obj;
+    hr = CComObject<GearsDatabase>::CreateInstance(&obj);
+    base_class = obj;
+    idispatch = obj;
   } else if (object_name == STRING16(L"beta.httprequest")) {
-    if (major_version_desired == kGearsHttpRequestVersionMajor &&
-        minor_version_desired <= kGearsHttpRequestVersionMinor) {
-      CComObject<GearsHttpRequest> *obj;
-      hr = CComObject<GearsHttpRequest>::CreateInstance(&obj);
-      base_class = obj;
-      idispatch = obj;
-    }
+    CComObject<GearsHttpRequest> *obj;
+    hr = CComObject<GearsHttpRequest>::CreateInstance(&obj);
+    base_class = obj;
+    idispatch = obj;
   } else if (object_name == STRING16(L"beta.localserver")) {
-    if (major_version_desired == kGearsLocalServerVersionMajor &&
-        minor_version_desired <= kGearsLocalServerVersionMinor) {
-      CComObject<GearsLocalServer> *obj;
-      hr = CComObject<GearsLocalServer>::CreateInstance(&obj);
-      base_class = obj;
-      idispatch = obj;
-    }
+    CComObject<GearsLocalServer> *obj;
+    hr = CComObject<GearsLocalServer>::CreateInstance(&obj);
+    base_class = obj;
+    idispatch = obj;
   } else if (object_name == STRING16(L"beta.timer")) {
-    if (major_version_desired == kGearsTimerVersionMajor &&
-        minor_version_desired <= kGearsTimerVersionMinor) {
-      CComObject<GearsTimer> *obj;
-      hr = CComObject<GearsTimer>::CreateInstance(&obj);
-      base_class = obj;
-      idispatch = obj;
-    }
+    CComObject<GearsTimer> *obj;
+    hr = CComObject<GearsTimer>::CreateInstance(&obj);
+    base_class = obj;
+    idispatch = obj;
   } else if (object_name == STRING16(L"beta.workerpool")) {
-    if (major_version_desired == kGearsWorkerPoolVersionMajor &&
-        minor_version_desired <= kGearsWorkerPoolVersionMinor) {
-      CComObject<GearsWorkerPool> *obj;
-      hr = CComObject<GearsWorkerPool>::CreateInstance(&obj);
-      base_class = obj;
-      idispatch = obj;
-    }
+    CComObject<GearsWorkerPool> *obj;
+    hr = CComObject<GearsWorkerPool>::CreateInstance(&obj);
+    base_class = obj;
+    idispatch = obj;
   } else {
     RETURN_EXCEPTION(STRING16(L"Unknown object."));
   }

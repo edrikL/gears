@@ -39,7 +39,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         nameInput = document.getElementById("nameInput");
         cookieInput = document.getElementById("cookieInput");
         localServer = 
-          google.gears.factory.create("beta.localserver", "1.1");
+          google.gears.factory.create("beta.localserver");
       }
 
       //----------------------------------------------------------
@@ -152,7 +152,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       //----------------------------------------------------------
 
       function NewGearsHR() {
-        return google.gears.factory.create("beta.httprequest", "1.0");
+        return google.gears.factory.create("beta.httprequest");
       }
       
       function DoGearsHttpRequest(url, verb, data) {

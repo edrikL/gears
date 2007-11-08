@@ -32,11 +32,10 @@ class SecurityOrigin;
 class GearsFactory;
 
 
-// Given a null-terminated string of the form "X.Y", where X and Y are
-// positive decimal integers, parses X and Y and returns them as integers.
-//
-// On any failure, returns false and leaves *major and *minor untouched.
-bool ParseMajorMinorVersion(const char16 *version, int *major, int *minor);
+// The 'classVersion' parameter to factory.create() is reserved / deprecated.
+// Currently only '1.0' is allowed.
+extern const char16 *kAllowedClassVersion;
+
 
 // Appends information about the Gears build to the string provided.
 void AppendBuildInfo(std::string16 *s);
