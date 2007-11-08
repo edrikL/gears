@@ -186,6 +186,9 @@ class IEHttpRequest
   std::string16 url_;
   SecurityOrigin origin_;
 
+  // Whether the request should be performed asynchronously
+  bool async_;
+
   // Whether to bypass caches
   CachingBehavior caching_behavior_;
 
