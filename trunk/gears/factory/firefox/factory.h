@@ -62,6 +62,14 @@ class GearsFactory
   NS_IMETHOD GetBuildInfo(nsAString &retval);
   NS_IMETHOD GetVersion(nsAString &retval);
 
+  // bool getPermission(string siteName, string imageUrl, string extraMessage)
+  NS_IMETHOD GetPermission(//const nsAString &siteName
+                           //const nsAString &imageUrl
+                           //const nsAString &extraMessage
+                           PRBool *retval);
+  // readonly bool hasPermission
+  NS_IMETHOD GetHasPermission(PRBool *retval);
+
 
   // Non-scriptable methods
   void SuspendObjectCreation();

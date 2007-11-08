@@ -41,9 +41,13 @@ class SettingsDialog {
   // Private constructor. Use static Run() method instead.
   SettingsDialog() {}
 
-  // Helper method. Populates one of the two lists passed to dialogArguments.
-  static bool PopulateArguments(Json::Value *list,
-                                PermissionsDB::PermissionValue value);
+  // Helper method. Populates one of the two origin lists passed to
+  // dialogArguments.
+  static bool PopulateOrigins(Json::Value *json_array,
+                              PermissionsDB::PermissionValue value);
+
+  // Helper method. Populates the shortcut array passed to dialogArguments.
+  static bool PopulateShortcuts(Json::Value *json_array);
 
   // Helper method. Process the results of the dialog.
   static void ProcessResult(Json::Value *dialogResult);

@@ -26,3 +26,4 @@
 LANGUAGE 0x09, 0x01
 permissions_dialog.html HTML "common/genfiles/i18n/en-US/permissions_dialog.html"
 settings_dialog.html    HTML "common/genfiles/i18n/en-US/settings_dialog.html"
+shortcuts_dialog.html   HTML "common/genfiles/i18n/en-US/shortcuts_dialog.html"

@@ -87,3 +87,13 @@ function testDisallowDirectObjectCreation() {
     }
   }
 }
+
+function testGetPermissionMultipleTimes() {
+  // The running unittests must already have permission to use Gears.
+  // So only test that calling getPermission() multiple times does not throw.
+  var hasPermission = false;
+  hasPermission = google.gears.factory.getPermission('', '', '');
+  assertEqual(hasPermission, true);
+  hasPermission = google.gears.factory.getPermission('', '', '');
+  assertEqual(hasPermission, true);
+}
