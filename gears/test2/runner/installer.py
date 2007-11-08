@@ -1,8 +1,9 @@
 import os
 import shutil
 import stat
-import subprocess
+import browser_launchers
 import zipfile
+import time
 
 # Workaround permission, stat.I_WRITE not allowing delete on some systems
 DELETABLE = int('777', 8)
@@ -10,7 +11,7 @@ DELETABLE = int('777', 8)
 class Installer:
   """ Handle extension installation and browser profile adjustments. """
   GUID = '{000a9d1c-beef-4f90-9363-039d445309b8}'
-  PROFILE = 'gears'
+  INSTALL_TIMEOUT = 10
 
   def prepareProfiles(self):
     """ Unzip profiles. """
@@ -62,6 +63,7 @@ class Installer:
       os.mkdir(ext)
     gears = os.path.join(ext, Installer.GUID)
     self.copyAndChmod(extension, gears)
+    self.completeInstall(profile_folder)
 
 
   def findProfileFolderIn(self, path):
@@ -75,7 +77,7 @@ class Installer:
     """
     dir = os.listdir(path)
     for folder in dir:
-      if folder.find('.' + Installer.PROFILE) > 0:
+      if folder.find('.' + self.profile) > 0:
         profile_folder = os.path.join(path, folder)
         return profile_folder
     return False
@@ -98,7 +100,30 @@ class Installer:
         return build
     raise "Can't locate build of type: %s" % type
 
-  
+
+  def completeInstall(self, profile_path):
+    """ Launch and quit firefox, wait for it to close before returning.
+
+    If a lockfile is available, wait for it to be removed and throw an 
+    error after timeout.  Otherwise wait 5 seconds.
+
+    Args:
+      profile_path: path to current firefox profile
+    """
+    url = 'chrome://quit/content/quit.html'
+    self.launcher.launch(url)
+    time.sleep(2)
+    if self.lockname:
+      timer = 0
+      while self.isFirefoxLocked(profile_path):
+        time.sleep(1)
+        timer = timer + 1
+        if timer > Installer.INSTALL_TIMEOUT:
+          raise StandardError('Browser restart timed out.  Failed to complete install.')
+    else:
+      time.sleep(3)
+
+
   def copyAndChmod(self, src, targ):
     shutil.copytree(src, targ)
     os.chmod(targ, DELETABLE)
@@ -149,6 +174,20 @@ class Win32Installer(Installer):
     """ Do installation.  """
     os.system(self.buildPath())
     self.__copyProfile()
+    self.completeInstall(self.profile)
+
+  
+  def isFirefoxLocked(self, profile_path):
+    """ Checks if a firefox profile is open.
+
+    Looks for parent lock file in firefox profile.  If file exists, profile
+    is open.
+
+    Args:
+      profile_path: path to profile folder
+    """
+    lock = os.path.join(profile_path, self.lockname)
+    return os.path.exists(lock)
 
   
   def __copyProfile(self):
@@ -164,19 +203,21 @@ class Win32Installer(Installer):
     self.copyAndChmod(self.ieprofile, ieprofile_path)
 
 
-
 class WinXpInstaller(Win32Installer):
   """ Installer for WinXP, extends Win32Installer. """
-  def __init__(self):
+  def __init__(self, profile_name):
     """ Set up xp specific variables. """
+    self.profile = profile_name
     self.prepareProfiles()
     home = os.getenv('USERPROFILE')
     self.appdata_path = os.path.join(home, 'Local Settings\\Application Data')
     self.ieprofile = 'ieprofile'
+    self.launcher = browser_launchers.FirefoxWin32Launcher(self.profile)
+    self.lockname = 'parent.lock'
 
 
   def buildPath(self):
-    return self.findBuildPath('win32')
+    return self.findBuildPath('msi')
 
 
   def type(self):
@@ -185,22 +226,29 @@ class WinXpInstaller(Win32Installer):
 
 class WinVistaInstaller(Win32Installer):
   """ Installer for Vista, extends Win32Installer. """
-  def __init__(self):
+  def __init__(self, profile_name):
+    self.profile = profile_name
     self.prepareProfiles()
-    """ Set vista specific variables. """
     home = os.getenv('USERPROFILE')
-    self.appdata_path = os.path.join(home, 'appdata\\local')
+    self.appdata_path = os.path.join(home, 'AppData\\LocalLow')
     self.ieprofile = 'ieprofile'
+    self.launcher = browser_launchers.FirefoxWin32Launcher(self.profile)
+    self.lockname = 'parent.lock'
 
 
+  def buildPath(self):
+    return self.findBuildPath('msi')
+
+  
   def type(self):
     return 'WinVistaInstaller'
 
 
 class MacInstaller(Installer):
   """ Installer for Mac, extends Installer. """
-  def __init__(self):
+  def __init__(self, profile_name):
     """ Set mac specific variables. """
+    self.profile = profile_name
     self.prepareProfiles()
     home = os.getenv('HOME')
     ffprofile = 'Library/Application Support/Firefox/Profiles'
@@ -209,11 +257,13 @@ class MacInstaller(Installer):
     self.ffprofile_path = os.path.join(home, ffprofile)
     self.ffcache_path = os.path.join(home, ffcache)
     self.ffprofile = 'ffprofile-mac'
-    self.profile_arg = '-CreateProfile %s' % Installer.PROFILE
+    self.profile_arg = '-CreateProfile %s' % self.profile
+    self.launcher = browser_launchers.FirefoxMacLauncher(self.profile)
+    self.lockname = False
   
   
   def buildPath(self):
-    return self.findBuildPath('osx')
+    return self.findBuildPath('xpi')
 
   
   def type(self):
@@ -247,18 +297,21 @@ class MacInstaller(Installer):
 
 class LinuxInstaller(Installer):
   """ Installer for linux, extends Installer. """
-  def __init__(self):
+  def __init__(self, profile_name):
     """ Set linux specific variables. """
+    self.profile = profile_name
     self.prepareProfiles()
     home = os.getenv('HOME')
     self.ffprofile_path = os.path.join(home, '.mozilla/firefox')
     self.firefox = 'firefox'
     self.ffprofile = 'ffprofile-linux'
-    self.profile_arg = '-CreateProfile %s' % Installer.PROFILE
+    self.profile_arg = '-CreateProfile %s' % self.profile
+    self.launcher = browser_launchers.FirefoxLinuxLauncher(self.profile)
+    self.lockname = 'lock'
 
 
   def buildPath(self):
-    return self.findBuildPath('linux')
+    return self.findBuildPath('xpi')
 
 
   def type(self):
@@ -269,3 +322,16 @@ class LinuxInstaller(Installer):
     """ Do installation. """
     os.system('%s %s' % (self.firefox, self.profile_arg))
     self.installExtension(self.buildPath())
+
+
+  def isFirefoxLocked(self, profile_path):
+    """ Checks if a firefox profile is open.
+
+    Looks for lock file in firefox profile.  If file exists, profile
+    is open.
+
+    Args:
+      profile_path: path to profile folder
+    """
+    lock = os.path.join(profile_path, self.lockname)
+    return os.path.islink(lock)
