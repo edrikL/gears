@@ -98,7 +98,7 @@ function testSynchronizationStressTest() {
   }
 
   var childCode = childOnMessage + childInit + 'childInit();';
-  var workerPool = google.gears.factory.create('beta.workerpool', '1.1');
+  var workerPool = google.gears.factory.create('beta.workerpool');
   workerPool.onmessage = parentOnMessage;
 
 
@@ -149,7 +149,7 @@ function testGCWithFunctionClosures() {
     google.gears.workerPool.forceGC();
   }
 
-  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  var wp = google.gears.factory.create('beta.workerpool');
   wp.onmessage = function(text, sender, m) {
     assertEqual('pong', m.text, 'Unexpected message to parent worker');
     completeAsync();
@@ -164,7 +164,7 @@ function testGCWithFunctionClosures() {
 }
 
 function testOnMessageTests() {
-  var wp1 = google.gears.factory.create('beta.workerpool', '1.0');
+  var wp1 = google.gears.factory.create('beta.workerpool');
   wp1.onmessage = function(text, sender, message) {
     assertEqual('PING1', text, 'Incorrect text');
     assertEqual(text, message.text, 'Incorrect message.text');

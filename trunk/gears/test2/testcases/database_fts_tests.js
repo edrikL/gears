@@ -1,4 +1,4 @@
-var db = google.gears.factory.create('beta.database', '1.0');
+var db = google.gears.factory.create('beta.database');
 db.open('fts_test');
 db.execute('drop table if exists foo');
 db.execute('create virtual table foo using fts1(content)');

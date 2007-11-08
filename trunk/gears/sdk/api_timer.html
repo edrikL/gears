@@ -35,7 +35,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <body>
 
-<h1>Timer API  <span class="new">[New in <a href="index.html#relnotes">0.2</a>]</h1>
+<h1>Timer API  <span class="new">[New in <a href="index.html#relnotes">0.2</a>]</span></h1>
 
 <div id="pagecontent">
 
@@ -68,8 +68,8 @@ allows code to be shared across both contexts.
 
 <pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
 &lt;script type="text/javascript"&gt;
-var timer = google.gears.factory.create("beta.timer", "1.0");
-timer.setTimeout(function() { alert("Hello, from the future!"); },
+var timer = google.gears.factory.create('beta.timer');
+timer.setTimeout(function() { alert('Hello, from the future!'); },
                  1000);
 &lt;/script&gt;</code></pre>
 

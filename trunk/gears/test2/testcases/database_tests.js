@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-var db = google.gears.factory.create('beta.database', '1.0');
+var db = google.gears.factory.create('beta.database');
 db.open('unittestdb');
 db.execute('drop table if exists simple');
 db.execute('create table simple ' +
@@ -330,13 +330,13 @@ function testVacuumDisabled() {
 }
 
 function testCloseDatabase() {
-  var db = google.gears.factory.create('beta.database', '1.0');
+  var db = google.gears.factory.create('beta.database');
   db.open('testclosedb');
   db.close();
 }
 
 function testCloseDatabaseTwice() {
-  var db = google.gears.factory.create('beta.database', '1.0');
+  var db = google.gears.factory.create('beta.database');
   db.open('testclosedb');
   db.close();
   db.close();
@@ -351,7 +351,7 @@ function testExecuteMsecOnlyInDebug() {
 // <undefined>, <null>, and not passing any arguments should all mean the
 // same thing, on all APIs throughout Google Gears.
 function testOptionalDatabaseName() {
-  var db1 = google.gears.factory.create('beta.database', '1.0');
+  var db1 = google.gears.factory.create('beta.database');
 
   // pass '' for the database name
   db1.open('');
@@ -380,7 +380,7 @@ function testOptionalDatabaseName() {
 }
 
 function testInvalidDatabaseNameType() {
-  var db1 = google.gears.factory.create('beta.database', '1.0');
+  var db1 = google.gears.factory.create('beta.database');
 
   function tryOpen(notAString) {
     assertError(function() {
@@ -444,10 +444,10 @@ function testAttachFnShouldNotWork() {
 
 // Test if "BEGIN" works like "BEGIN IMMEDIATE" or "BEGIN DEFERRED".
 function testBeginIsImmediate() {
-  var db1 = google.gears.factory.create('beta.database', '1.0');
+  var db1 = google.gears.factory.create('beta.database');
   db1.open('foo');
 
-  var db2 = google.gears.factory.create('beta.database', '1.0');
+  var db2 = google.gears.factory.create('beta.database');
   db2.open('foo');
 
   db1.execute("BEGIN");
@@ -461,7 +461,7 @@ function testBeginIsImmediate() {
 
 function testOpenDatabaseWithIds() {
   function setupDB(id) {
-    var db1 = google.gears.factory.create('beta.database', '1.0');
+    var db1 = google.gears.factory.create('beta.database');
     db1.open(String(id));
     db1.execute('drop table if exists xxx');
     db1.execute('create table xxx (id int auto_increment primary key, ' +
@@ -471,7 +471,7 @@ function testOpenDatabaseWithIds() {
   }
 
   function testDB(id) {
-    var db1 = google.gears.factory.create('beta.database', '1.0');
+    var db1 = google.gears.factory.create('beta.database');
     db1.open(String(id));
 
     handleResult(db1.execute('select * from xxx where id=?', [id]),
@@ -494,7 +494,7 @@ function testOpenDatabaseWithIds() {
 
 function testOpenDatabaseWithIllegalIds() {
   function doIllegalIdTest(id) {
-    var db1 = google.gears.factory.create('beta.database', '1.0');
+    var db1 = google.gears.factory.create('beta.database');
     assertError(function() {
       db1.open(id);
       db1.close();
@@ -524,11 +524,11 @@ function testSimultaneousDatabaseOpens() {
     db.execute('create table TestTable (i int)');
   }
 
-  var db1 = google.gears.factory.create('beta.database', '1.0');
+  var db1 = google.gears.factory.create('beta.database');
   db1.open('foo');
   useDB(db1);
 
-  var db2 = google.gears.factory.create('beta.database', '1.0');
+  var db2 = google.gears.factory.create('beta.database');
   db2.open('bar');
   useDB(db2);
 

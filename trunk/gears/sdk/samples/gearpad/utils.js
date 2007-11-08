@@ -31,9 +31,9 @@ function Gears() {
     return;
   }
 
-  this.db_ = this.factory_.create('beta.database', '1.0');
+  this.db_ = this.factory_.create('beta.database');
   this.localServer_ = 
-      this.factory_.create('beta.localserver', '1.1');
+      this.factory_.create('beta.localserver');
 
   this.db_.open();
   try {

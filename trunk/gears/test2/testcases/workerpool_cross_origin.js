@@ -18,7 +18,7 @@ wp.onmessage = function(body, sender) {
 
   var tableName = body.split(' ')[0];
 
-  var db = google.gears.factory.create('beta.database', '1.0');
+  var db = google.gears.factory.create('beta.database');
 
   db.open('worker_js');
   db.execute('create table if not exists ' + tableName +

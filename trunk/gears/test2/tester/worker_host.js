@@ -60,7 +60,7 @@ WorkerHost.prototype.workerPool_ = null;
  * @param url The url of a file containing the tests to run.
  */
 WorkerHost.prototype.load = function(url) {
-  this.workerPool_ = google.gears.factory.create('beta.workerpool', '1.0');
+  this.workerPool_ = google.gears.factory.create('beta.workerpool');
   this.workerPool_.onmessage = this.handleMessage_;
 
   this.workerId_ = this.workerPool_.createWorkerFromUrl('worker_context.js');

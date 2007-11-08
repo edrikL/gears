@@ -112,7 +112,7 @@ function parentInit() {
 
   try {
     workerPool =
-        google.gears.factory.create('beta.workerpool', '1.1');
+        google.gears.factory.create('beta.workerpool');
   } catch (e) {
     document.getElementById('asyncButton').disabled = true;
     setError('Could not create workerpool: ' + e.message);

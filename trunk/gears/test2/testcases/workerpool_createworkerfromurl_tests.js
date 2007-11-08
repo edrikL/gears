@@ -38,7 +38,7 @@ var crossOriginWorkerFileNoPerms = 'unit_tests_worker_same_origin.js';
 function testCreateWorkerFromUrl1() {
   startAsync();
 
-  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  var wp = google.gears.factory.create('beta.workerpool');
   wp.onmessage = function(text, sender, m) {
     completeAsync();
   }
@@ -50,15 +50,15 @@ function testCreateWorkerFromUrl2() {
   startAsync();
 
   // Cleanup any local DB before starting test.  
-  var db = google.gears.factory.create('beta.database', '1.0');
+  var db = google.gears.factory.create('beta.database');
   db.open('worker_js');
   db.execute('drop table if exists PING2').close();
   db.close();
 
-  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  var wp = google.gears.factory.create('beta.workerpool');
   wp.onmessage = function(text, sender, m) {
     // Worker database SHOULD exist in parent origin.
-    var db = google.gears.factory.create('beta.database', '1.0');
+    var db = google.gears.factory.create('beta.database');
     db.open('worker_js');
     var rs = db.execute('select * from sqlite_master where name = ? limit 1',
                         ['PING2']);
@@ -77,15 +77,15 @@ function testCreateWorkerFromUrl3() {
   startAsync();
 
   // Cleanup any local DB before starting test.  
-  var db = google.gears.factory.create('beta.database', '1.0');
+  var db = google.gears.factory.create('beta.database');
   db.open('worker_js');
   db.execute('drop table if exists PING3').close();
   db.close();
 
-  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  var wp = google.gears.factory.create('beta.workerpool');
   wp.onmessage = function(text, sender, m) {
     // Worker database should NOT exist in parent origin.
-    var db = google.gears.factory.create('beta.database', '1.0');
+    var db = google.gears.factory.create('beta.database');
     db.open('worker_js');
     var rs = db.execute('select * from sqlite_master where name = ? limit 1',
                         ['PING3']);
@@ -113,14 +113,14 @@ function testCreateWorkerFromUrl4() {
 
   waitForGlobalErrors([workerUrl]);
 
-  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  var wp = google.gears.factory.create('beta.workerpool');
   wp.createWorkerFromUrl(workerUrl);
 }
 
 function testCreateWorkerFromUrl5() {
   var expectedError = 'Page does not have permission to use Google Gears';
 
-  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  var wp = google.gears.factory.create('beta.workerpool');
   // Have to keep a reference to the workerpool otherwise, sometimes the message
   // never gets processed!
   // TODO(aa): Investigate why this happens -- ThreadInfo objects are
@@ -140,6 +140,6 @@ function testOneShotWorkerFromUrl() {
   // GearsWorkerPool instance to get GC'd before page unload. This found a bug
   // where the HttpRequest used to load from url was getting destroyed from a
   // different thread than it was created on.
-  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  var wp = google.gears.factory.create('beta.workerpool');
   wp.createWorkerFromUrl(sameOriginWorkerFile);
 }

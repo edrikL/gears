@@ -112,7 +112,7 @@ function Generator() {
 // is in a WorkerPool child.
 function BackgroundGenerator() {
   try {
-    this.workerPool = google.gears.factory.create('beta.workerpool', '1.1');
+    this.workerPool = google.gears.factory.create('beta.workerpool');
   } catch (e) {
     setError('Could not create workerpool: ' + e.message);
     this.error = true;

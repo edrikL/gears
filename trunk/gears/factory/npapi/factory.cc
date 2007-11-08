@@ -58,11 +58,18 @@ void GearsFactory::Create() {
   std::string16 version;
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &class_name },
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &version },
+    { JSPARAM_OPTIONAL, JSPARAM_STRING16, &version },
   };
   int argc = js_runner->GetArguments(ARRAYSIZE(argv), argv);
-  if (argc < 2)
+  if (argc < 1)
     return;  // JsRunner sets an error message.
+  if (argc < 2)
+    version = STRING16(L"1.0");  // default value for this optional param
+
+  // Check the version string.
+  if (version != kAllowedClassVersion) {
+    RETURN_EXCEPTION(STRING16(L"Invalid version string. Must be 1.0."));
+  }
 
   // TODO(mpcomplete): implement me.
 

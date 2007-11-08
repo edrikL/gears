@@ -41,7 +41,7 @@ function init() {
   if (!window.google || !google.gears) {
     textOut("NOTE:  You must install Google Gears first.");
   } else {
-    localServer = google.gears.factory.create("beta.localserver", "1.1");
+    localServer = google.gears.factory.create("beta.localserver");
     store = localServer.createManagedStore(STORE_NAME);
     textOut("Yeay, Google Gears is already installed.");
   }

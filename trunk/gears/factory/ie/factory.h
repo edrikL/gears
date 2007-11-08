@@ -67,7 +67,8 @@ class ATL_NO_VTABLE GearsFactory
   GearsFactory();
 
   // GearsFactoryInterface methods
-  STDMETHOD(create)(const BSTR object, const BSTR version, IDispatch **retval);
+  STDMETHOD(create)(const BSTR object, const VARIANT *version,
+                    IDispatch **retval);
   STDMETHOD(getBuildInfo)(BSTR *retval);
   STDMETHOD(get_version)(BSTR *retval);
 

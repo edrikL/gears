@@ -112,7 +112,7 @@ var filesToCapture = [
   location.pathname,
   'gears_init.js'
 ];
-var localServer = google.gears.factory.create('beta.localserver', '1.1');
+var localServer = google.gears.factory.create('beta.localserver');
 var store = localServer.createStore('test-store');
 function captureCallback(url, success, captureId) {
   alert(url + 'captured: ' + success ? 'success' : 'failure');
@@ -178,7 +178,7 @@ function captureCallback(url, success, captureId) {
 
   <pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
 &lt;script type="text/javascript"&gt;
-var localServer = google.gears.factory.create('beta.localserver', '1.1');
+var localServer = google.gears.factory.create('beta.localserver');
 &lt;/script&gt;</code></pre>
 
   <h4>Methods</h4>

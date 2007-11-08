@@ -1,4 +1,4 @@
-var db = google.gears.factory.create('beta.database', '1.0');
+var db = google.gears.factory.create('beta.database');
 db.open('database_noworker_tests');
 
 // On IE, the specialEmpty value below will be a NULL BSTR.  This is

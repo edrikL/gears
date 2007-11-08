@@ -2,7 +2,7 @@
 function workerPoolBubbleTest(name, onerrorContent, shouldBubble, firstError) {
   var fullName = 'WorkerPoolBubbleTest: ' + name;
 
-  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  var wp = google.gears.factory.create('beta.workerpool');
   // Have to create a reference to the wp so that it doesn't get gc'd early.
   workerPoolBubbleTest.wp = wp;
 
@@ -67,7 +67,7 @@ function testWorkerOnError() {
   // well as whether onerror is working at all.
   startAsync();
 
-  var wp = google.gears.factory.create('beta.workerpool', '1.1');
+  var wp = google.gears.factory.create('beta.workerpool');
   var onErrorCount = 0;
 
   wp.onmessage = function() {

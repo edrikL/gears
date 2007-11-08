@@ -37,7 +37,7 @@ var isDebug = google.gears.factory.getBuildInfo().indexOf("dbg") > -1;
 /**
  * A shared timer tests can use.
  */
-var timer = google.gears.factory.create('beta.timer', '1.0');
+var timer = google.gears.factory.create('beta.timer');
 
 /**
  * Assert that something is true and throw an error if not.
@@ -222,7 +222,7 @@ function handleResult(rs, fn) {
  * was unsuccessful.
  */
 function httpGet(url, callback) {
-  var req = google.gears.factory.create('beta.httprequest', '1.0');
+  var req = google.gears.factory.create('beta.httprequest');
   req.onreadystatechange = function() {
     if (req.readyState == 4) {
       if (req.status == 200) {

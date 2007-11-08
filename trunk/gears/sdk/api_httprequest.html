@@ -62,7 +62,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
 &lt;script type="text/javascript"&gt;
-var request = google.gears.factory.create('beta.httprequest', '1.0');
+var request = google.gears.factory.create('beta.httprequest');
 request.open('GET', '/index.html');
 request.onreadystatechange = function() {
   if (request.readyState == 4) {

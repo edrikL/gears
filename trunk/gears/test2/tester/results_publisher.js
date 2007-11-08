@@ -27,7 +27,7 @@ ResultsPublisher.prototype.postbackTestResultsOnTimeout = function() {
  * @param parameters post data
  */
 ResultsPublisher.prototype.publish = function(url, parameters) {
-  var http_request = google.gears.factory.create('beta.httprequest', '1.0');
+  var http_request = google.gears.factory.create('beta.httprequest');
   if (!http_request) {
     alert('Cannot create Gears HTTP Request Obj');
     return false;
