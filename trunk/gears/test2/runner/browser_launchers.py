@@ -5,9 +5,14 @@ import signal
 class BrowserLauncher:
   """ Handle launching and killing of a specific test browser. """
   def launch(self, url):
-    """ Do launch. """
+    """ Do launch. 
+    
+    Handle chrome addresses by using the -chrome parameter.
+    """
     command = [self.browser_path]
     command.extend(self.args)
+    if url[0:9] == 'chrome://':
+      command.append('-chrome')
     command.append(url)
     print 'launching: %s' % str(command)
     self.process = subprocess.Popen(command)
@@ -21,6 +26,18 @@ class BrowserLauncher:
 
 class Win32Launcher(BrowserLauncher):
   """ Launcher for Win32 platforms. """
+  def launch(self, url):
+    """ Do launch. 
+    
+    Windows doesn't use the -chrome parameter.
+    """
+    command = [self.browser_path]
+    command.extend(self.args)
+    command.append(url)
+    print 'launching: %s' % str(command)
+    self.process = subprocess.Popen(command)
+
+
   def kill(self):
     """ Kill browser process. """
     import win32api
@@ -54,7 +71,24 @@ class IExploreWin32Launcher(Win32Launcher):
                                      'internet explorer\\iexplore.exe')
     self.args = []
 
-  
+
+  def kill(self):
+    """ Kill all instances of iexplore.exe
+    
+    Must kill ie by name and not pid for ie7 compatibility.
+    """
+    import win32api
+    import win32pdhutil
+    import win32con
+
+    pid_list = win32pdhutil.FindPerformanceAttributesByName('iexplore')
+    for pid in pid_list:
+      print 'killing process: %d' % pid
+      handle = win32api.OpenProcess(win32con.PROCESS_TERMINATE, 0, pid)
+      win32api.TerminateProcess(handle, 0)
+      win32api.CloseHandle(handle)
+
+
   def type(self):
     return 'IExploreWin32'
 
@@ -84,7 +118,7 @@ class FirefoxLinuxLauncher(BrowserLauncher):
       self.args = ['-P', profile]
     else:
       self.args = []
-  
 
+    
   def type(self):
     return 'FirefoxLinux'

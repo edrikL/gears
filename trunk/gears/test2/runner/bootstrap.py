@@ -95,6 +95,7 @@ def server_root_dir():
     return os.path.join(os.path.dirname(__file__), '../')
                     
 if __name__ == '__main__':
+  profile_name = 'gears'
   test_server = TestWebserver(server_root_dir())
   suites_report = SuitesReport('TESTS-TestSuites.xml.tmpl')
   installers = []
@@ -104,16 +105,16 @@ if __name__ == '__main__':
     launchers.append(IExploreWin32Launcher())
     launchers.append(FirefoxWin32Launcher('ffprofile-win'))
     if osutils.osIsVista():
-      installers.append(WinVistaInstaller())
+      installers.append(WinVistaInstaller('ffprofile-win'))
     else:
-      installers.append(WinXpInstaller())
+      installers.append(WinXpInstaller('ffprofile-win'))
   elif osutils.osIsNix():
     if osutils.osIsMac():
-      launchers.append(FirefoxMacLauncher('gears'))
-      installers.append(MacInstaller())
+      launchers.append(FirefoxMacLauncher(profile_name))
+      installers.append(MacInstaller(profile_name))
     else:
-      launchers.append(FirefoxLinuxLauncher('gears'))
-      installers.append(LinuxInstaller())
+      launchers.append(FirefoxLinuxLauncher(profile_name))
+      installers.append(LinuxInstaller(profile_name))
       
   gears_binaries = sys.argv[1]
   testrunner = TestRunner(launchers, test_server)
