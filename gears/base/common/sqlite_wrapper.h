@@ -134,11 +134,6 @@ class SQLDatabase {
   // log_label parameter is optional and may be NULL.
   bool CommitTransaction(const char *log_label);
 
-  // Returns the sqlite3 database connection associated with this site.
-  // TODO(michaeln): Remove this method from public scope. The sqlite3 pointer
-  // should not leak outside of this wrapper.
-  sqlite3 *GetDBHandle();
-
   // Callbacks
   void SetTransactionListener(SQLTransactionListener *listener);
 
@@ -158,6 +153,11 @@ class SQLDatabase {
   // SQLite handles, which this class wraps, can only be used on a single
   // thread.
   DECL_SINGLE_THREAD
+
+  // Returns the sqlite3 database connection associated with this site.
+  // TODO(shess) Friends are our own worst enemy.  Kill this.
+  friend class SQLStatement;
+  sqlite3 *GetDBHandle();
 
   friend bool TestSQLConcurrency();
   bool OpenConnection(const char16 *name);

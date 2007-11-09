@@ -42,13 +42,13 @@ bool NameValueTable::MaybeCreateTable() {
   SQLStatement statement;
   if (SQLITE_OK != statement.prepare16(db_, sql.c_str())) {
     LOG(("NameValueTable::MaybeCreateTable unable to prepare statement: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_DONE != statement.step()) {
     LOG(("NameValueTable::MaybeCreateTable unable to step statement: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
@@ -64,13 +64,13 @@ bool NameValueTable::SetInt(const char16 *name, int value) {
 
   if (SQLITE_OK != statement.bind_int(1, value)) {
     LOG(("NameValueTable::SetInt unable to bind int: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_DONE != statement.step()) {
     LOG(("NameValueTable::SetInt unable to step statement: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
@@ -97,7 +97,7 @@ bool NameValueTable::GetInt(const char16* name, int *value) {
     return false;
   } else {
     LOG(("NameValueTable::GetInt unable to step statement: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 }
@@ -111,13 +111,13 @@ bool NameValueTable::SetString(const char16 *name, const char16 *value) {
 
   if (SQLITE_OK != statement.bind_text16(1, value)) {
     LOG(("NameValueTable::SetString unable to bind int: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_DONE != statement.step()) {
     LOG(("NameValueTable::SetString unable to step statement: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
@@ -144,7 +144,7 @@ bool NameValueTable::GetString(const char16 *name, std::string16 *value) {
     return false;
   } else {
     LOG(("NameValueTable::GetString unable to step statement: %d\n",
-      sqlite3_errcode(db_->GetDBHandle())));
+      db_->GetErrorCode()));
     return false;
   }
 }
@@ -173,7 +173,7 @@ bool NameValueTable::HasName(const char16 *name, bool *retval) {
     return true;
   } else {
     LOG(("NameValueTable::HasName unable to step statement: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 }
@@ -195,7 +195,7 @@ bool NameValueTable::Clear(const char16 *name) {
 
   if (SQLITE_DONE != statement.step()) {
     LOG(("NameValueTable::Clear unable to step: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
@@ -220,13 +220,13 @@ bool NameValueTable::PrepareStatement(SQLStatement &statement,
 
   if (SQLITE_OK != statement.prepare16(db_, sql.c_str())) {
     LOG(("NameValueTable::PrepareStatement unable to prepare statement: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
   if (SQLITE_OK != statement.bind_text16(0, name)) {
     LOG(("NameValueTable::PrepareStatement unable to bind name: %d\n",
-         sqlite3_errcode(db_->GetDBHandle())));
+         db_->GetErrorCode()));
     return false;
   }
 
