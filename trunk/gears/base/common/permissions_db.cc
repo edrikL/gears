@@ -32,7 +32,7 @@ static const char16 *kDatabaseName = STRING16(L"permissions.db");
 static const char16 *kVersionTableName = STRING16(L"VersionInfo");
 static const char16 *kVersionKeyName = STRING16(L"Version");
 static const char16 *kAccessTableName = STRING16(L"Access");
-static const int kCurrentVersion = 3;
+static const int kCurrentVersion = 4;
 static const int kOldestUpgradeableVersion = 1;
 
 
@@ -90,12 +90,43 @@ bool PermissionsDB::Init() {
     return true;
   }
 
-  // We have to either create or upgrade the database
-  if (!CreateOrUpgradeDatabase()) {
+  // Doing this in a transaction effectively locks the database file and
+  // ensures that this is synchronized across all threads and processes
+  SQLTransaction transaction(&db_, "PermissionsDB::Init");
+  if (!transaction.Begin()) {
     return false;
   }
 
-  return true;
+  // Fetch the version again in case someone else beat us to the
+  // upgrade.
+  version_table_.GetInt(kVersionKeyName, &version);
+  if (version == kCurrentVersion) {
+    return true;
+  }
+
+  if (0 == version) {
+    // No database in place, create it.
+    //
+    // TODO(shess) Verify that this is true.  Is it _no_ database, or
+    // is there a database which didn't have a version?  The latter
+    // case would be masked by the CREATE IF NOT EXISTS statements
+    // we're using.
+    if (!CreateDatabase()) {
+      return false;
+    }
+  } else {
+    if (!UpgradeToVersion4()) {
+      return false;
+    }
+  }
+
+  // Double-check that we ended up with the right version.
+  version_table_.GetInt(kVersionKeyName, &version);
+  if (version != kCurrentVersion) {
+    return false;
+  }
+
+  return transaction.Commit();
 }
 
 
@@ -248,52 +279,6 @@ bool PermissionsDB::DeleteShortcuts(const SecurityOrigin &origin) {
   return shortcut_table_.DeleteShortcuts(origin.url().c_str());
 }
 
-bool PermissionsDB::CreateOrUpgradeDatabase() {
-  // Doing this in a transaction effectively locks the database file and
-  // ensures that this is synchronized across all threads and processes
-  SQLTransaction transaction(&db_, "PermissionsDB::CreateOrUpgradeDatabase");
-  if (!transaction.Begin()) {
-    return false;
-  }
-
-  // Now that we have locked the database, fetch the version again
-  int version = 0;
-  version_table_.GetInt(kVersionKeyName, &version);
-
-  if (version == kCurrentVersion) {
-    // some other thread/process has performed the create or upgrade already
-    return true;
-  }
-
-  if (0 == version) {
-    // There is no database. Create one.
-    if (!CreateDatabase()) {
-      return false;
-    }
-  } else if (1 == version) {
-      if (!UpgradeFromVersion1ToVersion2()) {
-        return false;
-      }
-      if (!UpgradeFromVersion2ToVersion3()) {
-        return false;
-      }
-  } else if (2 == version) {
-      if (!UpgradeFromVersion2ToVersion3()) {
-        return false;
-      }
-  } else {
-    LOG(("Unexpected version: %d", version));
-    return false;
-  }
-
-  if (!transaction.Commit()) {
-    return false;
-  }
-
-  return true;
-}
-
-
 bool PermissionsDB::CreateDatabase() {
   ASSERT_SINGLE_THREAD();
 
@@ -317,26 +302,32 @@ bool PermissionsDB::CreateDatabase() {
     return false;
   }
 
-  if (!transaction.Commit()) {
+  return transaction.Commit();
+}
+
+bool PermissionsDB::UpgradeToVersion2() {
+  SQLTransaction transaction(&db_, "PermissionsDB::UpgradeToVersion2");
+  if (!transaction.Begin()) {
     return false;
   }
 
-  return true;
-}
+  int version = 0;
+  version_table_.GetInt(kVersionKeyName, &version);
 
-
-bool PermissionsDB::UpgradeFromVersion1ToVersion2() {
-  SQLTransaction transaction(&db_,
-                             "PermissionsDB::UpgradeFromVersion1ToVersion2");
-  if (!transaction.Begin()) {
+  if (version != 1) {
+    LOG(("PermissionsDB::UpgradeToVersion2 unexpected version: %d", version));
     return false;
   }
 
   // There was a bug in v1 of this db where we inserted some corrupt UTF-8
   // characters into the db. This was pre-release, so it's not worth trying
   // to clean it up. Instead just remove old permissions.
-  int rv = db_.Execute("DELETE FROM ScourAccess");
-  if (SQLITE_OK != rv) {
+  //
+  // TODO(shess) I'm inclined to say "DROP TABLE IF EXISTS
+  // ScourAccess".  Or, since this was from a pre-release schema,
+  // "upgrade" version 1 by calling CreateDatabase(), which will drop
+  // all existing tables.
+  if (SQLITE_OK != db_.Execute("DELETE FROM ScourAccess")) {
     return false;
   }
 
@@ -347,9 +338,8 @@ bool PermissionsDB::UpgradeFromVersion1ToVersion2() {
   return transaction.Commit();
 }
 
-bool PermissionsDB::UpgradeFromVersion2ToVersion3() {
-  SQLTransaction transaction(&db_,
-                             "PermissionsDB::UpgradeFromVersion2ToVersion3");
+bool PermissionsDB::UpgradeToVersion3() {
+  SQLTransaction transaction(&db_, "PermissionsDB::UpgradeToVersion3");
   if (!transaction.Begin()) {
     return false;
   }
@@ -357,7 +347,15 @@ bool PermissionsDB::UpgradeFromVersion2ToVersion3() {
   int version = 0;
   version_table_.GetInt(kVersionKeyName, &version);
 
+  if (version < 2) {
+    if (!UpgradeToVersion2()) {
+      return false;
+    }
+    version_table_.GetInt(kVersionKeyName, &version);
+  }
+
   if (version != 2) {
+    LOG(("PermissionsDB::UpgradeToVersion3 unexpected version: %d", version));
     return false;
   }
 
@@ -366,6 +364,38 @@ bool PermissionsDB::UpgradeFromVersion2ToVersion3() {
   }
 
   if (!version_table_.SetInt(kVersionKeyName, 3)) {
+    return false;
+  }
+
+  return transaction.Commit();
+}
+
+bool PermissionsDB::UpgradeToVersion4() {
+  SQLTransaction transaction(&db_, "PermissionsDB::UpgradeToVersion4");
+  if (!transaction.Begin()) {
+    return false;
+  }
+
+  int version = 0;
+  version_table_.GetInt(kVersionKeyName, &version);
+
+  if (version < 3) {
+    if (!UpgradeToVersion3()) {
+      return false;
+    }
+    version_table_.GetInt(kVersionKeyName, &version);
+  }
+
+  if (version != 3) {
+    LOG(("PermissionsDB::UpgradeToVersion4 unexpected version: %d", version));
+    return false;
+  }
+
+  if (!shortcut_table_.UpgradeFromVersion3ToVersion4()) {
+    return false;
+  }
+
+  if (!version_table_.SetInt(kVersionKeyName, 4)) {
     return false;
   }
 
