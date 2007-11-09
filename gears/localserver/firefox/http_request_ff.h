@@ -144,6 +144,7 @@ class FFHttpRequest : public HttpRequest,
                                     PRUint32 count,
                                     PRUint32* writeCount);
   ReadyState ready_state_;
+  bool async_;
   std::string16 method_;
   std::string post_data_string_;
   scoped_ptr< std::vector<uint8> > response_body_;
