@@ -38,6 +38,9 @@ class ShortcutTable {
   // Creates the table if it doesn't already exist.
   bool MaybeCreateTable();
 
+  // Upgrade version 3 schema to version 4.
+  bool UpgradeFromVersion3ToVersion4();
+
   // Add (or overwrite) a shortcut for origin/name, with app_url,
   // ico_url, and msg as data.
   bool SetShortcut(const char16 *origin, const char16 *name,

@@ -111,11 +111,11 @@ class PermissionsDB {
   // Creates the database's schema.
   bool CreateDatabase();
 
-  // Upgrade the schema from 1 to 2.
-  bool UpgradeFromVersion1ToVersion2();
-
-  // Upgrade the schema from 2 to 3.
-  bool UpgradeFromVersion2ToVersion3();
+  // Schema upgrade functions.  Higher-numbered functions call
+  // lower-numbered functions as appropriate.
+  bool UpgradeToVersion4();
+  bool UpgradeToVersion3();
+  bool UpgradeToVersion2();
 
   // Destructor function called by ThreadLocals to dispose of a thread-specific
   // DB instance when a thread dies.
