@@ -68,21 +68,15 @@ static bool TestSQLDatabaseTransactions() {
     SQLDatabase db1;
     TEST_ASSERT(db1.Open(STRING16(L"SqliteUtils_test.db")));
 
-    TEST_ASSERT(SQLITE_OK ==
-      sqlite3_exec(db1.GetDBHandle(), 
-        "DROP TABLE IF EXISTS test", NULL, NULL, NULL));
+    TEST_ASSERT(SQLITE_OK == db1.Execute("DROP TABLE IF EXISTS test"));
 
     const char *kTransactionLabel = "TestSQLDatabaseTransactions";
 
     TEST_ASSERT(db1.BeginTransaction(kTransactionLabel));
-    TEST_ASSERT(SQLITE_OK ==
-      sqlite3_exec(db1.GetDBHandle(), 
-        "CREATE TABLE test (val TEXT)", NULL, NULL, NULL));
+    TEST_ASSERT(SQLITE_OK == db1.Execute("CREATE TABLE test (val TEXT)"));
 
     TEST_ASSERT(db1.BeginTransaction(kTransactionLabel));
-    TEST_ASSERT(SQLITE_OK ==
-      sqlite3_exec(db1.GetDBHandle(), 
-        "INSERT INTO test VALUES ('foo')", NULL, NULL, NULL));
+    TEST_ASSERT(SQLITE_OK == db1.Execute("INSERT INTO test VALUES ('foo')"));
 
     TEST_ASSERT(db1.CommitTransaction(kTransactionLabel));
     TEST_ASSERT(db1.CommitTransaction(kTransactionLabel));
@@ -123,8 +117,7 @@ static bool TestSQLTransaction() {
     SQLDatabase db1;
     TEST_ASSERT(db1.Open(STRING16(L"SqliteUtils_test.db")));
 
-    TEST_ASSERT(SQLITE_OK == 
-      sqlite3_exec(db1.GetDBHandle(), "DROP TABLE test", NULL, NULL, NULL));
+    TEST_ASSERT(SQLITE_OK == db1.Execute("DROP TABLE test"));
 
     TEST_ASSERT(CreateTable(db1));
   }
@@ -162,9 +155,7 @@ static bool CreateTable(SQLDatabase &db) {
   SQLTransaction tx(&db, "TestSQLTransaction::CreateTable");
   TEST_ASSERT(tx.Begin());
 
-  TEST_ASSERT(SQLITE_OK == 
-    sqlite3_exec(db.GetDBHandle(), 
-      "CREATE TABLE test (val TEXT)", NULL, NULL, NULL));
+  TEST_ASSERT(SQLITE_OK == db.Execute("CREATE TABLE test (val TEXT)"));
 
   TEST_ASSERT(InsertRow(db));
   return true;
@@ -189,9 +180,7 @@ static bool InsertRow(SQLDatabase &db) {
   TEST_ASSERT(tx.Begin());
 
   // There should be an error because test doesn't exist
-  TEST_ASSERT(SQLITE_OK == 
-    sqlite3_exec(db.GetDBHandle(), 
-      "INSERT INTO test VALUES ('foo')", NULL, NULL, NULL));
+  TEST_ASSERT(SQLITE_OK == db.Execute("INSERT INTO test VALUES ('foo')"));
 
   // Now roll it back
   tx.Rollback();

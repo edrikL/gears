@@ -157,7 +157,7 @@ bool PermissionsDB::GetOriginsByValue(PermissionsDB::PermissionValue value,
   while (SQLITE_DONE != (rv = statement.step())) {
     if (SQLITE_ROW != rv) {
       LOG(("PermissionsDB::ListGearsAccess: Could not iterate. Error was: %d",
-           sqlite3_errcode(db_.GetDBHandle())));
+           db_.GetErrorCode()));
       return false;
     }
 
@@ -335,9 +335,7 @@ bool PermissionsDB::UpgradeFromVersion1ToVersion2() {
   // There was a bug in v1 of this db where we inserted some corrupt UTF-8
   // characters into the db. This was pre-release, so it's not worth trying
   // to clean it up. Instead just remove old permissions.
-  int rv = sqlite3_exec(db_.GetDBHandle(), "DELETE FROM ScourAccess", NULL,
-                        NULL, NULL);
-
+  int rv = db_.Execute("DELETE FROM ScourAccess");
   if (SQLITE_OK != rv) {
     return false;
   }

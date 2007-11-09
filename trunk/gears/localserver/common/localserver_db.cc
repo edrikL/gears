@@ -366,7 +366,7 @@ bool WebCacheDB::CreateTables() {
     std::string sql("CREATE TABLE ");
     sql += kWebCacheTables[i].table_name;
     sql += kWebCacheTables[i].columns;
-    rv |= sqlite3_exec(db_.GetDBHandle(), sql.c_str(), NULL, NULL, NULL);
+    rv |= db_.Execute(sql.c_str());
   }
   return (rv == SQLITE_OK);
 }
@@ -471,12 +471,12 @@ bool WebCacheDB::ExecuteSqlCommandsInTransaction(const char *commands[],
 //------------------------------------------------------------------------------
 bool WebCacheDB::ExecuteSqlCommands(const char *commands[], int count) {
   for (int i = 0; i < count; ++i) {
-    int rv = sqlite3_exec(db_.GetDBHandle(), commands[i], NULL, NULL, NULL);
+    int rv = db_.Execute(commands[i]);
     if (rv != SQLITE_OK) {
       return false;
     }
   }
-  return true;;
+  return true;
 }
 
 
