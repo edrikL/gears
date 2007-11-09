@@ -23,13 +23,19 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef WIN32
+#include <windows.h>  // Needs to be included before nsIEventQueueService.h
+#endif
+
 #include <nsIHttpChannel.h>
 #include <nsIHttpHeaderVisitor.h>
 #include <nsIInputStream.h>
 #include <nsIIOService.h>
 #include <nsIUploadChannel.h>
 #include <nsIURI.h>
+#include "gears/third_party/gecko_internal/nsICachingChannel.h"
 #include "gears/third_party/gecko_internal/nsIEncodedChannel.h"
+#include "gears/third_party/gecko_internal/nsIEventQueueService.h"
 #include "gears/third_party/gecko_internal/nsIStringStream.h"
 #include "gears/third_party/gecko_internal/nsNetError.h"
 
@@ -61,8 +67,9 @@ HttpRequest *HttpRequest::Create() {
 // Constructor / Destructor / Refcounting
 //------------------------------------------------------------------------------
 FFHttpRequest::FFHttpRequest()
-  : ready_state_(UNINITIALIZED), caching_behavior_(USE_ALL_CACHES),
-    redirect_behavior_(FOLLOW_ALL), was_sent_(false), was_aborted_(false),
+  : ready_state_(UNINITIALIZED), async_(false),
+    caching_behavior_(USE_ALL_CACHES), redirect_behavior_(FOLLOW_ALL),
+    was_sent_(false), was_aborted_(false),
     was_redirected_(false), listener_(NULL) {
 }
 
@@ -198,10 +205,7 @@ bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async) {
 
   NS_ENSURE_TRUE(IsUninitialized(), false);
 
-  if (!async) {
-    // TODO(michaeln): support sync requests in some form
-    return false;
-  }
+  async_ = async;
 
   url_ = url;
   if (!origin_.InitFromUrl(url)) {
@@ -237,6 +241,10 @@ bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async) {
   if (ShouldBypassBrowserCache() || IsPostOrPut()) {
     rv = channel_->SetLoadFlags(nsIRequest::LOAD_BYPASS_CACHE |
                                 nsIRequest::INHIBIT_CACHING);
+    NS_ENSURE_SUCCESS(rv, false);
+  } else if (!async_) {
+    rv = channel_->SetLoadFlags(
+                       nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
     NS_ENSURE_SUCCESS(rv, false);
   }
 
@@ -360,9 +368,42 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
     http_channel->SetRequestMethod(method);
   }
 
+  nsCOMPtr<nsIEventQueueService> event_queue_service;
+  nsCOMPtr<nsIEventQueue> modal_event_queue;
+
+  if (!async_) {
+    event_queue_service = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, false);
+
+    rv = event_queue_service->PushThreadEventQueue(
+                                  getter_AddRefs(modal_event_queue));
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+  }
+
   channel_->SetNotificationCallbacks(this);
   rv = channel_->AsyncOpen(this, nsnull);
-  NS_ENSURE_SUCCESS(rv, false);
+
+  if (NS_FAILED(rv)) {
+    if (!async_) {
+      event_queue_service->PopThreadEventQueue(modal_event_queue);
+    }
+    return false;
+  }
+
+  if (!async_) {
+    while (ready_state_ != HttpRequest::COMPLETE && !was_aborted_) {
+      modal_event_queue->ProcessPendingEvents();
+
+      // Do not busy wait.
+      if (ready_state_ != HttpRequest::COMPLETE && !was_aborted_)
+        PR_Sleep(PR_MillisecondsToInterval(10));
+    }
+
+    event_queue_service->PopThreadEventQueue(modal_event_queue);
+  }
+
   return true;
 }
 
