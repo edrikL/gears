@@ -85,32 +85,40 @@ bool TestPermissionsDBAll() {
   const std::string16 kFooTest1Url(STRING16(L"http://www.foo.com/Test.html"));
   const std::string16
       kFooTest1IcoUrl(STRING16(L"http://www.foo.com/Test.ico"));
+  const std::vector<std::string16> kFooTest1IconUrls(1, kFooTest1IcoUrl);
   const std::string16 kFooTest1Msg(STRING16(L"This is the message."));
 
   const std::string16 kFooTest2(STRING16(L"Another"));
   const std::string16
       kFooTest2Url(STRING16(L"http://www.foo.com/Another.html"));
   const std::string16
-      kFooTest2IcoUrl(STRING16(L"http://www.foo.com/Another.ico"));
+      kFooTest2IcoUrl1(STRING16(L"http://www.foo.com/Another.ico"));
+  const std::string16
+      kFooTest2IcoUrl2(STRING16(L"http://www.foo.com/YetAnother.ico"));
+  std::vector<std::string16> kFooTest2IconUrls;
+  kFooTest2IconUrls.push_back(kFooTest2IcoUrl1);
+  kFooTest2IconUrls.push_back(kFooTest2IcoUrl2);
+  kFooTest2IconUrls.push_back(kFooTest2IcoUrl1);
   const std::string16 kFooTest2Msg(STRING16(L"This is another message."));
 
   const std::string16 kBarTest(STRING16(L"Test"));
   const std::string16 kBarTestUrl(STRING16(L"http://www.bar.com/Test.html"));
   const std::string16 kBarTestIcoUrl(STRING16(L"http://www.bar.com/Test.ico"));
+  const std::vector<std::string16> kBarTestIconUrls(1, kBarTestIcoUrl);
   const std::string16 kBarTestMsg(STRING16(L"This is a message."));
 
   // Load up some shortcuts.
   TEST_ASSERT(
       permissions->SetShortcut(foo, kFooTest1.c_str(), kFooTest1Url.c_str(),
-                               kFooTest1IcoUrl.c_str(), kFooTest1Msg.c_str()));
+                               kFooTest1IconUrls, kFooTest1Msg.c_str()));
 
   TEST_ASSERT(
       permissions->SetShortcut(foo, kFooTest2.c_str(), kFooTest2Url.c_str(),
-                               kFooTest2IcoUrl.c_str(), kFooTest2Msg.c_str()));
+                               kFooTest2IconUrls, kFooTest2Msg.c_str()));
 
   TEST_ASSERT(
       permissions->SetShortcut(bar, kBarTest.c_str(), kBarTestUrl.c_str(),
-                               kBarTestIcoUrl.c_str(), kBarTestMsg.c_str()));
+                               kBarTestIconUrls, kBarTestMsg.c_str()));
 
   // Expect 2 origins with shortcuts.
   list.clear();
@@ -130,11 +138,15 @@ bool TestPermissionsDBAll() {
 
   // Test a specific shortcut to see if the data comes back right.
   std::string16 app_url, ico_url, msg;
+  std::vector<std::string16> icon_urls;
   TEST_ASSERT(permissions->GetShortcut(foo, kFooTest2.c_str(),
-                                       &app_url, &ico_url, &msg));
+                                       &app_url, &icon_urls, &msg));
   TEST_ASSERT(app_url == kFooTest2Url);
-  TEST_ASSERT(ico_url == kFooTest2IcoUrl);
   TEST_ASSERT(msg == kFooTest2Msg);
+  TEST_ASSERT(icon_urls.size() == 2);
+  std::sort(icon_urls.begin(), icon_urls.end());
+  TEST_ASSERT(icon_urls[0] == kFooTest2IcoUrl1);
+  TEST_ASSERT(icon_urls[1] == kFooTest2IcoUrl2);
 
   // Test that deleting a specific shortcut doesn't impact other
   // shortcuts.

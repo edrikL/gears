@@ -42,9 +42,10 @@ class ShortcutTable {
   bool UpgradeFromVersion3ToVersion4();
 
   // Add (or overwrite) a shortcut for origin/name, with app_url,
-  // ico_url, and msg as data.
+  // icon_urls, and msg as data.
   bool SetShortcut(const char16 *origin, const char16 *name,
-                   const char16 *app_url, const char16 *ico_url,
+                   const char16 *app_url,
+                   const std::vector<std::string16> &icon_urls,
                    const char16 *msg);
 
   // Get the set of origins which have shortcuts.
@@ -56,7 +57,8 @@ class ShortcutTable {
 
   // Get the data for a specific shortcut.
   bool GetShortcut(const char16 *origin, const char16 *name,
-                   std::string16 *app_url, std::string16 *ico_url,
+                   std::string16 *app_url,
+                   std::vector<std::string16> *icon_urls,
                    std::string16 *msg);
 
   // Delete a specific shortcut.

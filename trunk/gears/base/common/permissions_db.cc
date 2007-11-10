@@ -229,11 +229,11 @@ bool PermissionsDB::EnableGearsForWorker(const SecurityOrigin &origin) {
 }
 
 bool PermissionsDB::SetShortcut(const SecurityOrigin &origin,
-                                const char16 *name,
-                                const char16 *app_url, const char16 *ico_url,
+                                const char16 *name, const char16 *app_url,
+                                const std::vector<std::string16> &icon_urls,
                                 const char16 *msg) {
   return shortcut_table_.SetShortcut(origin.url().c_str(), name,
-                                     app_url, ico_url, msg);
+                                     app_url, icon_urls, msg);
 }
 
 bool PermissionsDB::GetOriginsWithShortcuts(
@@ -263,11 +263,11 @@ bool PermissionsDB::GetOriginShortcuts(const SecurityOrigin &origin,
 }
 
 bool PermissionsDB::GetShortcut(const SecurityOrigin &origin,
-                                const char16 *name,
-                                std::string16 *app_url, std::string16 *ico_url,
+                                const char16 *name, std::string16 *app_url,
+                                std::vector<std::string16> *icon_urls,
                                 std::string16 *msg) {
   return shortcut_table_.GetShortcut(origin.url().c_str(), name,
-                                     app_url, ico_url, msg);
+                                     app_url, icon_urls, msg);
 }
 
 bool PermissionsDB::DeleteShortcut(const SecurityOrigin &origin,

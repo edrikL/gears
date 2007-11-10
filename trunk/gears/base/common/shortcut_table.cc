@@ -46,8 +46,8 @@ bool ShortcutTable::MaybeCreateTable() {
   // The set of shortcuts, one per Origin/Name.
   const char *sql = "CREATE TABLE IF NOT EXISTS Shortcut ("
                     " ShortcutID INTEGER PRIMARY KEY, "
-                    " Origin TEXT, Name TEXT, "
-                    " AppUrl TEXT, Msg TEXT, "
+                    " Origin TEXT NOT NULL, Name TEXT NOT NULL, "
+                    " AppUrl TEXT NOT NULL, Msg TEXT NOT NULL, "
                     " UNIQUE (Origin, Name)"
                     ")";
   if (SQLITE_OK != db_->Execute(sql)) {
@@ -58,7 +58,7 @@ bool ShortcutTable::MaybeCreateTable() {
 
   // A set of icon urls for each shortcut.
   sql = "CREATE TABLE IF NOT EXISTS ShortcutIcon "
-        "(ShortcutID INTEGER, IconUrl TEXT, "
+        "(ShortcutID INTEGER NOT NULL, IconUrl TEXT NOT NULL,"
         " PRIMARY KEY (ShortcutID, IconUrl))";
   if (SQLITE_OK != db_->Execute(sql)) {
     LOG(("ShortcutTable::MaybeCreateTable create ShortcutIcon "
@@ -69,8 +69,8 @@ bool ShortcutTable::MaybeCreateTable() {
   return transaction.Commit();
 }
 
-// Shift the version3 Shortcut table aside, create empty version-4
-// tables, populate them from the old table, and drop the old table.
+// Shift the version-3 Shortcut table aside, create version-4 tables,
+// populate them from the old table, and drop the old table.
 bool ShortcutTable::UpgradeFromVersion3ToVersion4() {
   SQLTransaction transaction(db_,
       "ShortcutTable::UpgradeFromVersion3ToVersion4");
@@ -123,7 +123,8 @@ bool ShortcutTable::UpgradeFromVersion3ToVersion4() {
 }
 
 bool ShortcutTable::SetShortcut(const char16 *origin, const char16 *name,
-                                const char16 *app_url, const char16 *ico_url,
+                                const char16 *app_url,
+                                const std::vector<std::string16> &icon_urls,
                                 const char16 *msg) {
   SQLTransaction transaction(db_, "ShortcutTable::SetShortcut");
   if (!transaction.Begin()) {
@@ -136,6 +137,7 @@ bool ShortcutTable::SetShortcut(const char16 *origin, const char16 *name,
     return false;
   }
 
+  sqlite_int64 shortcut_id;
   {
     const char16 *sql = STRING16(L"INSERT INTO Shortcut "
                                  L"(Origin, Name, AppUrl, Msg) "
@@ -177,12 +179,15 @@ bool ShortcutTable::SetShortcut(const char16 *origin, const char16 *name,
            db_->GetErrorCode()));
       return false;
     }
+
+    shortcut_id = statement.last_insert_rowid();
   }
 
-  {
-    const char16 *sql = STRING16(L"INSERT INTO ShortcutIcon "
-                                 L"(ShortcutID, IconUrl) "
-                                 L"VALUES (LAST_INSERT_ROWID(), ?)");
+  if (icon_urls.size()) {
+    // "OR IGNORE" means that if we get a duplicate
+    // ShortcutID/IconUrl, we can safely drop the duplicate.
+    const char16 *sql = STRING16(L"INSERT OR IGNORE INTO ShortcutIcon "
+                                 L"(ShortcutID, IconUrl) VALUES (?, ?)");
 
     SQLStatement statement;
     if (SQLITE_OK != statement.prepare16(db_, sql)) {
@@ -191,16 +196,30 @@ bool ShortcutTable::SetShortcut(const char16 *origin, const char16 *name,
       return false;
     }
 
-    if (SQLITE_OK != statement.bind_text16(0, ico_url)) {
-      LOG(("ShortcutTable::SetShortcut icons unable to bind icon: %d\n",
+    if (SQLITE_OK != statement.bind_int64(0, shortcut_id)) {
+      LOG(("ShortcutTable::SetShortcut icons unable to bind id: %d\n",
            db_->GetErrorCode()));
       return false;
     }
 
-    if (SQLITE_DONE != statement.step()) {
-      LOG(("ShortcutTable::SetShortcut icons unable to step: %d\n",
-           db_->GetErrorCode()));
-      return false;
+    for (size_t ii = 0; ii<icon_urls.size(); ++ii) {
+      if (SQLITE_OK != statement.bind_text16(1, icon_urls[ii].c_str())) {
+        LOG(("ShortcutTable::SetShortcut icons unable to bind icon: %d\n",
+             db_->GetErrorCode()));
+        return false;
+      }
+
+      if (SQLITE_DONE != statement.step()) {
+        LOG(("ShortcutTable::SetShortcut icons unable to step: %d\n",
+             db_->GetErrorCode()));
+        return false;
+      }
+
+      if (SQLITE_OK != statement.reset()) {
+        LOG(("ShortcutTable::SetShortcut icons unable to reset: %d\n",
+             db_->GetErrorCode()));
+        return false;
+      }
     }
   }
 
@@ -270,7 +289,8 @@ bool ShortcutTable::GetOriginShortcuts(const char16 *origin,
 }
 
 bool ShortcutTable::GetShortcut(const char16 *origin, const char16 *name,
-                                std::string16 *app_url, std::string16 *ico_url,
+                                std::string16 *app_url,
+                                std::vector<std::string16> *icon_urls,
                                 std::string16 *msg) {
   // This query is a little convoluted in the interests of avoiding an
   // explicit transaction.  There will be one row for every associated
@@ -314,14 +334,24 @@ bool ShortcutTable::GetShortcut(const char16 *origin, const char16 *name,
   *app_url = statement.column_text16_safe(0);
   *msg = statement.column_text16_safe(1);
 
-  // NOTE(shess) This will expand into a loop when the API changes.
-  *ico_url = statement.column_text16_safe(2);
+  // If NULL, there were no icons.
+  if (!statement.column_text16(2)) {
+    // There should be exactly one row.
+    if (SQLITE_DONE != statement.step()) {
+      LOG(("ShortcutTable::GetShortcut unexpected empty results: %d\n",
+           db_->GetErrorCode()));
+      return false;
+    }
+  } else {
+    do {
+      icon_urls->push_back(statement.column_text16_safe(2));
+    } while (SQLITE_ROW == (rc = statement.step()));
 
-  // There should be at most one row at this time.
-  if (SQLITE_DONE != statement.step()) {
-    LOG(("ShortcutTable::GetShortcut unexpected results: %d\n",
-         db_->GetErrorCode()));
-    return false;
+    if (SQLITE_DONE != rc) {
+      LOG(("ShortcutTable::GetShortcut unexpected results: %d\n",
+           db_->GetErrorCode()));
+      return false;
+    }
   }
 
   return true;
