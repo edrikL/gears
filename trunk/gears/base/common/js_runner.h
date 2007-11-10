@@ -89,8 +89,10 @@ class JsEventHandlerInterface {
 enum JsParamType {
   JSPARAM_BOOL,
   JSPARAM_INT,
+  JSPARAM_DOUBLE,
   JSPARAM_OBJECT_TOKEN,
-  JSPARAM_STRING16
+  JSPARAM_STRING16,
+  JSPARAM_NULL,
 };
 
 enum JsParamRequirement {
@@ -114,8 +116,6 @@ struct JsArgument {
   void* value_ptr;
 };
 
-typedef JsParamToSend JsReturnValue;
-
 // Declares the platform-independent interface that Gears internals require
 // for running JavaScript code.
 class JsRunnerInterface {
@@ -137,9 +137,9 @@ class JsRunnerInterface {
   // arguments successfully read (will bail at the first invalid argument).
   virtual int GetArguments(int argc, JsArgument *argv) = 0;
 
-  // Use the given value as the return value to calling JavaScript.  Returns
-  // true on success.
-  virtual bool SetReturnValue(const JsReturnValue &value) = 0;
+  // Sets the value to be returned to the calling JavaScript.  Returns true on
+  // success.
+  virtual bool SetReturnValue(JsParamType type, const void *value_ptr) = 0;
 #endif
 
   // Creates a new object in the JavaScript engine using the specified

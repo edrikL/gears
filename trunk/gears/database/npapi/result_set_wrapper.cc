@@ -24,33 +24,33 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/common/base_class.h"
-#include "gears/base/npapi/browser_utils.h"
 #include "gears/base/npapi/plugin.h"
-#include "gears/database/npapi/database.h"
+#include "gears/database/npapi/result_set.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-DECLARE_GEARS_BRIDGE(GearsDatabase, GearsDatabaseWrapper);
+DECLARE_GEARS_BRIDGE(GearsResultSet, GearsResultSetWrapper);
 
-// This class serves as the bridge between the GearsDatabase implementation and
+// This class serves as the bridge between the GearsResultSet implementation and
 // the browser binding layer.
-class GearsDatabaseWrapper :
-    public PluginBase<GearsDatabaseWrapper>,
+class GearsResultSetWrapper :
+    public PluginBase<GearsResultSetWrapper>,
     public ModuleWrapperBaseClass {
  public:
-  GearsDatabaseWrapper(NPP instance) :
-       PluginBase<GearsDatabaseWrapper>(instance),
-       impl_(new GearsDatabase) {
+  GearsResultSetWrapper(NPP instance) :
+       PluginBase<GearsResultSetWrapper>(instance),
+       impl_(new GearsResultSet) {
     impl_->SetJsWrapper(this);
   }
-  virtual ~GearsDatabaseWrapper() {}
+  virtual ~GearsResultSetWrapper() {}
 
-  virtual GearsDatabase *GetGearsObject() const { return impl_.get(); }
+  virtual GearsResultSet *GetGearsObject() const { return impl_.get(); }
   virtual JsToken GetWrapperToken() const {
     NPVariant token;
-    OBJECT_TO_NPVARIANT(const_cast<GearsDatabaseWrapper*>(this), token);
+    OBJECT_TO_NPVARIANT(const_cast<GearsResultSetWrapper*>(this), token);
     return token;
   }
 
+  // TODO(mpcomplete): refactor
   virtual void AddRef() {
     NPN_RetainObject(this);
   }
@@ -59,24 +59,26 @@ class GearsDatabaseWrapper :
   }
 
   // TODO(mpcomplete): consolidate with GetGearsObject and remove.
-  GearsDatabase *gears_obj() const { return impl_.get(); }
+  GearsResultSet *gears_obj() const { return impl_.get(); }
 
   static void InitClass() {
-    RegisterMethod("open", &GearsDatabase::Open);
-    RegisterMethod("execute", &GearsDatabase::Execute);
-    RegisterMethod("close", &GearsDatabase::Close);
-    RegisterMethod("getLastInsertRowId", &GearsDatabase::GetLastInsertRowId);
-    RegisterMethod("getExecuteMsec", &GearsDatabase::GetExecuteMsec);
+    RegisterMethod("field", &GearsResultSet::Field);
+    RegisterMethod("fieldByName", &GearsResultSet::FieldByName);
+    RegisterMethod("fieldName", &GearsResultSet::FieldName);
+    RegisterMethod("fieldCount", &GearsResultSet::FieldCount);
+    RegisterMethod("close", &GearsResultSet::Close);
+    RegisterMethod("next", &GearsResultSet::Next);
+    RegisterMethod("isValidRow", &GearsResultSet::IsValidRow);
   }
 
  private:
-  scoped_ptr<GearsDatabase> impl_;
+  scoped_ptr<GearsResultSet> impl_;
 
-  DISALLOW_EVIL_CONSTRUCTORS(GearsDatabaseWrapper);
+  DISALLOW_EVIL_CONSTRUCTORS(GearsResultSetWrapper);
 };
 
-ModuleWrapperBaseClass *CreateGearsDatabase(GearsBaseClass *sibling) {
+ModuleWrapperBaseClass *CreateGearsResultSet(GearsBaseClass *sibling) {
   JsContextPtr context = sibling->EnvPageJsContext();
-  return static_cast<GearsDatabaseWrapper *>(
-      NPN_CreateObject(context, GetNPClass<GearsDatabaseWrapper>()));
+  return static_cast<GearsResultSetWrapper *>(
+      NPN_CreateObject(context, GetNPClass<GearsResultSetWrapper>()));
 }
