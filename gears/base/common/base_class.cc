@@ -156,6 +156,11 @@ void ScopedNPVariant::Reset(int value) {
   INT32_TO_NPVARIANT(value, *this);
 }
 
+void ScopedNPVariant::Reset(double value) {
+  Reset();
+  DOUBLE_TO_NPVARIANT(value, *this);
+}
+
 void ScopedNPVariant::Reset(const char *value) {
   Reset();
   NPString npstr = NPN_StringDup(value, strlen(value));
@@ -297,6 +302,16 @@ JsRunnerInterface *GearsBaseClass::GetJsRunner() const {
   assert(is_initialized_);
   return js_runner_;
 }
+
+#if BROWSER_NPAPI
+void GearsBaseClass::AddRef() {
+  js_wrapper_->AddRef();
+}
+
+void GearsBaseClass::Release() {
+  js_wrapper_->Release();
+}
+#endif
 
 
 //-----------------------------------------------------------------------------

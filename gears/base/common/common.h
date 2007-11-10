@@ -127,10 +127,14 @@
 #include "gears/base/common/common_np.h"
 
 #define RETURN_NORMAL()  return;
-#define RETURN_EXCEPTION(msg) \
+#define SET_EXCEPTION(msg) \
 { \
     LOG(("Exception: %s", msg)); \
     JsSetException(msg); \
+}
+#define RETURN_EXCEPTION(msg) \
+{ \
+    SET_EXCEPTION(msg); \
     return; \
 }
 

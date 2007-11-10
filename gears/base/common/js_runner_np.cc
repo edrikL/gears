@@ -188,7 +188,8 @@ class JsRunnerBase : public JsRunnerInterface {
     return argc;
   }
 
-  virtual bool SetReturnValue(const JsReturnValue &retval) {
+  virtual bool SetReturnValue(JsParamType type, const void *value_ptr) {
+    JsParamToSend retval = { type, value_ptr };
     ScopedNPVariant np_retval;
     ConvertParamToToken(retval, &np_retval);
     BrowserUtils::SetJsReturnValue(np_retval);
@@ -261,6 +262,11 @@ class JsRunnerBase : public JsRunnerInterface {
         variant->Reset(*value);
         break;
       }
+      case JSPARAM_DOUBLE: {
+        const double *value = static_cast<const double *>(param.value_ptr);
+        variant->Reset(*value);
+        break;
+      }
       case JSPARAM_OBJECT_TOKEN: {
         const JsToken *value = static_cast<const JsToken *>(param.value_ptr);
         variant->Reset(NPVARIANT_TO_OBJECT(*value));
@@ -270,6 +276,11 @@ class JsRunnerBase : public JsRunnerInterface {
         const std::string16 *value = static_cast<const std::string16 *>(
                                                      param.value_ptr);
         variant->Reset(value->c_str());
+        break;
+      }
+      case JSPARAM_NULL: {
+        variant->Reset();  // makes it VOID (undefined).
+        NULL_TO_NPVARIANT(*variant);
         break;
       }
       default:

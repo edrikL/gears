@@ -73,26 +73,13 @@ void GearsFactory::Create() {
 
   // TODO(mpcomplete): implement me.
 
-  // Parse the version string.
-
-  int major_version_desired;
-  int minor_version_desired;
-  if (!ParseMajorMinorVersion(version.c_str(),
-                              &major_version_desired,
-                              &minor_version_desired)) {
-    RETURN_EXCEPTION(STRING16(L"Invalid version string."));
-  }
-
   // Create an instance of the object.
   //
   // Do case-sensitive comparisons, which are always better in APIs. They make
   // code consistent across callers, and they are easier to support over time.
   ScopedModuleWrapper object(NULL);
   if (class_name == STRING16(L"beta.database")) {
-    if (major_version_desired == kGearsDatabaseVersionMajor &&
-        minor_version_desired <= kGearsDatabaseVersionMinor) {
-      object.reset(CreateGearsDatabase(this));
-    }
+    object.reset(CreateGearsDatabase(this));
   } else {
     RETURN_EXCEPTION(STRING16(L"Unknown object."));
   }
@@ -105,8 +92,7 @@ void GearsFactory::Create() {
 
   // Give up ownership of the object and return it.
   JsToken token = object.get()->GetWrapperToken();
-  JsReturnValue js_retval = { JSPARAM_OBJECT_TOKEN, &token };
-  js_runner->SetReturnValue(js_retval);
+  js_runner->SetReturnValue(JSPARAM_OBJECT_TOKEN, &token);
 
   RETURN_NORMAL();
 }
@@ -114,16 +100,14 @@ void GearsFactory::Create() {
 void GearsFactory::GetBuildInfo() {
   std::string16 build_info;
   AppendBuildInfo(&build_info);
-  JsReturnValue js_retval = { JSPARAM_STRING16, &build_info };
-  GetJsRunner()->SetReturnValue(js_retval);
+  GetJsRunner()->SetReturnValue(JSPARAM_STRING16, &build_info);
 
   RETURN_NORMAL();
 }
 
 void GearsFactory::GetVersion() {
   std::string16 version(PRODUCT_VERSION_STRING);
-  JsReturnValue js_retval = { JSPARAM_STRING16, &version };
-  GetJsRunner()->SetReturnValue(js_retval);
+  GetJsRunner()->SetReturnValue(JSPARAM_STRING16, &version);
   RETURN_NORMAL();
 }
 

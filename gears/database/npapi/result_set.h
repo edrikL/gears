@@ -23,70 +23,70 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_DATABASE_NPAPI_DATABASE_H__
-#define GEARS_DATABASE_NPAPI_DATABASE_H__
-
-#include <set>
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#ifndef GEARS_DATABASE_NPAPI_RESULT_SET_H__
+#define GEARS_DATABASE_NPAPI_RESULT_SET_H__
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-#include "gears/base/common/js_runner.h"
-#include "gears/base/common/stopwatch.h"
 
-struct sqlite3;
 struct sqlite3_stmt;
-class GearsResultSet;
+class GearsDatabase;
 class ModuleWrapperBaseClass;
 
-class GearsDatabase
-    : public GearsBaseClass,
-      public JsEventHandlerInterface {
+class GearsResultSet
+    : public GearsBaseClass {
  public:
-  GearsDatabase();
-  ~GearsDatabase();
+  GearsResultSet();
+  ~GearsResultSet();
 
-  // OPTIONAL IN: string database_name
-  void Open();
+  // IN: int index
+  // OUT: obj something
+  void Field();
 
-  // IN: string expression
-  // OPTIONAL IN: array args
-  // OUT: GearsResultSet results
-  void Execute();
+  // IN: string field_name
+  // OUT: obj something
+  void FieldByName();
+
+  // IN: int index
+  // OUT: string field_name
+  void FieldName();
+
+  // OUT: int field_count
+  void FieldCount();
 
   void Close();
 
-  // OUT: int last_insert_row_id
-  void GetLastInsertRowId();
+  void Next();
 
-  void HandleEvent(JsEventType event_type);
-
-// Right now this is just used for testing perf. If we ever want to make it a
-// real feature of Gears, then it will need to keep separate stopwatches for
-// each database file, not a single stopwatch for the entire process as it does
-// now.
-#ifdef DEBUG
-  // OUT: int execution_time_ms
-  void GetExecuteMsec();
-  static Stopwatch g_stopwatch_;
-#endif // DEBUG
-
-  friend class GearsResultSet;
+  // OUT: bool is_valid_row
+  void IsValidRow();
 
  private:
+  friend class GearsDatabase;
 
-  void AddResultSet(GearsResultSet *rs);
-  void RemoveResultSet(GearsResultSet *rs);
-  bool CloseInternal();
-  bool BindArgsToStatement(const JsToken *arg_array, sqlite3_stmt *stmt);
+  // Helper called by GearsDatabase.execute to initialize the result set
+  bool InitializeResultSet(sqlite3_stmt *statement,
+                           GearsDatabase *db,
+                           std::string16 *error_message);
 
-  sqlite3 *db_;
-  std::set<GearsResultSet *> result_sets_;
-  scoped_ptr<JsEventMonitor> unload_monitor_;
+  // Called by GearsDatabase to let us know the page is going away, and so
+  // our database_ pointer won't be valid for long.
+  void PageUnloading();
 
-  DISALLOW_EVIL_CONSTRUCTORS(GearsDatabase);
+  // Helper shared by Field() and FieldByName()
+  void FieldImpl(int index);
+
+  // Helper shared by Next() and SetStatement()
+  bool NextImpl(std::string16 *error_message);
+  bool Finalize();
+
+  GearsDatabase *database_;
+  sqlite3_stmt *statement_;
+  bool is_valid_row_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(GearsResultSet);
 };
 
-ModuleWrapperBaseClass *CreateGearsDatabase(GearsBaseClass *sibling);
+ModuleWrapperBaseClass *CreateGearsResultSet(GearsBaseClass *sibling);
 
-#endif // GEARS_DATABASE_NPAPI_DATABASE_H__
+#endif // GEARS_DATABASE_NPAPI_RESULT_SET_H__

@@ -195,6 +195,7 @@ class ScopedNPVariant : public NPVariant {
   // copied, and objects are retained.
   void Reset();
   void Reset(int value);
+  void Reset(double value);
   void Reset(const char *value);
   void Reset(const char16 *value);
   void Reset(NPObject *value);
@@ -221,6 +222,7 @@ typedef void  JsNativeMethodRetval;
 
 typedef JsRootedToken JsRootedCallback;
 
+class ModuleWrapperBaseClass;
 class JsRunnerInterface;
 
 // TODO(mpcomplete): rename to ModuleImplBaseClass
@@ -266,6 +268,13 @@ class GearsBaseClass {
   // These do not exist in IE yet.
 #endif
 
+#if BROWSER_NPAPI
+  // Methods for dealing with the JavaScript wrapper interface.
+  void SetJsWrapper(ModuleWrapperBaseClass *wrapper) { js_wrapper_ = wrapper; }
+  void AddRef();
+  void Release();
+#endif
+
  private:
   // TODO(cprince): This state should be constant per (thread,page) tuple.
   // Instead of making a copy for every object (GearsBaseClass), we could
@@ -300,6 +309,11 @@ class GearsBaseClass {
 
   JsRunnerInterface *js_runner_;
 
+#if BROWSER_NPAPI
+  // Weak pointer to our JavaScript wrapper.
+  ModuleWrapperBaseClass *js_wrapper_;
+#endif
+
   DISALLOW_EVIL_CONSTRUCTORS(GearsBaseClass);
 };
 
@@ -314,14 +328,17 @@ class ModuleWrapperBaseClass {
   // JsRunnerInterface.
   virtual JsToken GetWrapperToken() const = 0;
 
-  // Releases this reference to the wraper class.
+  // Adds a reference to the wraper class.
+  virtual void AddRef() = 0;
+
+  // Releases a reference to the wraper class.
   virtual void Release() = 0;
  protected:
   // Don't allow direct deletion via this interface.
   virtual ~ModuleWrapperBaseClass() { }
 };
 
-// ScopedGearsWrapper: automatically call Release()
+// ScopedModuleWrapper: automatically call Release()
 class ReleaseWrapperFunctor {
  public:
   void operator()(ModuleWrapperBaseClass *x) const {
