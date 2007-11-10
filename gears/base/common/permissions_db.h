@@ -77,7 +77,8 @@ class PermissionsDB {
   // Add (or overwrite) a shortcut for origin/name, with appUrl,
   // icoUrl, and msg as data.
   bool SetShortcut(const SecurityOrigin &origin, const char16 *name,
-                   const char16 *app_url, const char16 *ico_url,
+                   const char16 *app_url,
+                   const std::vector<std::string16> &icon_urls,
                    const char16 *msg);
 
   // Get the set of origins which have shortcuts.
@@ -89,7 +90,8 @@ class PermissionsDB {
 
   // Get the data for a specific shortcut.
   bool GetShortcut(const SecurityOrigin &origin, const char16 *name,
-                   std::string16 *app_url, std::string16 *ico_url,
+                   std::string16 *app_url,
+                   std::vector<std::string16> *icon_urls,
                    std::string16 *msg);
 
   // Delete a specific shortcut.

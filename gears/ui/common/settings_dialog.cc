@@ -107,21 +107,24 @@ bool SettingsDialog::PopulateShortcuts(Json::Value *json_array) {
     for (std::vector<std::string16>::iterator name = names.begin();
          name != names.end(); ++name) {
       std::string16 app_url;
-      std::string16 ico_url;
+      std::vector<std::string16> icon_urls;
       std::string16 msg;
 
       if (!capabilities->GetShortcut(*origin, name->c_str(), &app_url,
-                                     &ico_url, &msg)) {
+                                     &icon_urls, &msg)) {
         return false;
       }
 
       // JSON needs UTF-8.
       std::string app_url_utf8;
+      // TODO(shess) Fix this to enumerate the set of icon urls.  Here
+      // it just pulls out the first one.
       std::string ico_url_utf8;
       std::string name_utf8;
       std::string origin_utf8;
       if (!String16ToUTF8(app_url.c_str(), &app_url_utf8) ||
-          !String16ToUTF8(ico_url.c_str(), &ico_url_utf8) ||
+          (!icon_urls.empty() &&
+           !String16ToUTF8(icon_urls[0].c_str(), &ico_url_utf8)) ||
           !String16ToUTF8(name->c_str(), &name_utf8) ||
           !String16ToUTF8(origin->url().c_str(), &origin_utf8)) {
         return false;
