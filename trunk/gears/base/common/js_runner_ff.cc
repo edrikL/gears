@@ -186,6 +186,11 @@ class JsRunnerBase : public JsRunnerInterface {
           js_engine_argv[i] = STRING_TO_JSVAL(js_string);
           break;
         }
+        case JSPARAM_DOUBLE:
+        case JSPARAM_NULL:
+          // TODO(mpcomplete): not used yet. implement me.
+          assert(false);
+          break;
       }
     }
 

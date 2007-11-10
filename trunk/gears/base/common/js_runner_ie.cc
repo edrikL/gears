@@ -137,6 +137,11 @@ class JsRunnerBase : public JsRunnerInterface {
           js_engine_argv[dest] = value->c_str();  // copies 'wchar*' for us
           break;
         }
+        case JSPARAM_DOUBLE:
+        case JSPARAM_NULL:
+          // TODO(mpcomplete): not used yet. implement me.
+          assert(false);
+          break;
       }
     }
 
