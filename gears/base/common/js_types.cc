@@ -41,7 +41,7 @@
 
 // Browser specific JsArray functions.
 #if BROWSER_FF
-JsArray::JsArray() : js_context_(NULL), array_(NULL) {
+JsArray::JsArray() : js_context_(NULL), array_(0) {
 }
 
 bool JsArray::SetArray(JsToken value, JsContextPtr context) {
@@ -153,7 +153,7 @@ bool JsArray::GetElementAsObject(int index, JsObject *out) {
 // Browser specific JsObject functions.
 #if BROWSER_FF
 
-JsObject::JsObject() : js_context_(NULL), js_object_(NULL) {
+JsObject::JsObject() : js_context_(NULL), js_object_(0) {
 }
 
 bool JsObject::SetObject(JsToken value, JsContextPtr context) {
