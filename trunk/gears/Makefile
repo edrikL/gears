@@ -261,6 +261,7 @@ FF_CPPSRCS	+= \
 		js_runner_ff.cc \
 		js_runner_ff_marshaling.cc \
 		js_runner_utils.cc \
+		js_types.cc \
 		module.cc \
 		mutex.cc \
 		name_value_table.cc \
@@ -318,6 +319,7 @@ IE_CPPSRCS	+= \
 		ie_version.cc \
 		js_runner_ie.cc \
 		js_runner_utils.cc \
+		js_types.cc \
 		module.cc \
 		mutex.cc \
 		name_value_table.cc \
