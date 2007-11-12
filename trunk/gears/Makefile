@@ -604,44 +604,38 @@ IEMOBILE_IDLSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
-# timer/firefox
+# timer
 
 FF_VPATH	+= \
-		timer/firefox \
+		timer\
 		$(NULL)
 
 FF_IDLSRCS	+= \
-		timer.idl \
+		timer_ff.idl \
 		$(NULL)
 
 FF_CPPSRCS	+= \
 		timer.cc \
 		$(NULL)
 
-#-----------------------------------------------------------------------------
-# timer/ie
-
 IE_VPATH	+= \
-		timer/ie \
+		timer \
 		$(NULL)
 
 IE_IDLSRCS	+= \
-		timer.idl \
+		timer_ie.idl \
 		$(NULL)
 
 IE_CPPSRCS	+= \
 		timer.cc \
 		$(NULL)
 
-#-----------------------------------------------------------------------------
-# timer/iemobile
-
 IEMOBILE_VPATH	+= \
-		timer/ie \
+		timer \
 		$(NULL)
 
 IEMOBILE_IDLSRCS	+= \
-		timer.idl \
+		timer_ie.idl \
 		$(NULL)
 
 #-----------------------------------------------------------------------------

@@ -52,7 +52,7 @@ import "database/ie/database.idl";
 import "factory/ie/factory.idl";
 import "httprequest/ie/httprequest.idl";
 import "localserver/ie/localserver.idl";
-import "timer/ie/timer.idl";
+import "timer/timer_ie.idl";
 import "workerpool/ie/workerpool.idl";
 
 //------------------------------------------------------------------------------

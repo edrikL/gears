@@ -35,7 +35,7 @@
 #include "gears/httprequest/ie/httprequest_ie.h"
 #include "gears/workerpool/ie/workerpool.h"
 #include "gears/localserver/ie/localserver_ie.h"
-#include "gears/timer/ie/timer.h"
+#include "gears/timer/timer.h"
 
 
 GearsFactory::GearsFactory()
