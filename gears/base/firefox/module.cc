@@ -42,7 +42,7 @@
 #include "gears/localserver/firefox/managed_resource_store_ff.h"
 #include "gears/localserver/firefox/resource_store_ff.h"
 #include "gears/localserver/firefox/file_submitter_ff.h"
-#include "gears/timer/firefox/timer.h"
+#include "gears/timer/timer.h"
 #include "gears/ui/firefox/ui_utils.h"
 #include "gears/workerpool/firefox/workerpool.h"
 

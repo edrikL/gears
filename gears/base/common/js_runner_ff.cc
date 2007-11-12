@@ -48,7 +48,7 @@
 #include "ff/genfiles/database.h"
 #include "ff/genfiles/httprequest.h"
 #include "ff/genfiles/localserver.h"
-#include "ff/genfiles/timer.h"
+#include "ff/genfiles/timer_ff.h"
 #include "ff/genfiles/workerpool.h"
 
 // Internal base class used to share some code between DocumentJsRunner and

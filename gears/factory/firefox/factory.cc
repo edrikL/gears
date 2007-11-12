@@ -39,7 +39,7 @@
 #include "gears/factory/common/factory_utils.h"
 #include "gears/httprequest/firefox/httprequest_ff.h"
 #include "gears/localserver/firefox/localserver_ff.h"
-#include "gears/timer/firefox/timer.h"
+#include "gears/timer/timer.h"
 #include "gears/workerpool/firefox/workerpool.h"
 
 
