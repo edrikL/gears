@@ -42,7 +42,9 @@ class Bootstrap:
 
     then copies them to local directory. 
     """
-    while not os.path.exists(self.__gears_binaries):
+    exists = False
+    while not exists:
+      exists = os.path.exists(self.__gears_binaries)
       time.sleep(POLL_INTERVAL_SECONDS)
     self.__createOutputDir()
     if os.path.exists('output/installers'):
@@ -50,7 +52,7 @@ class Bootstrap:
       shutil.rmtree('output/installers')
     shutil.copytree(self.__gears_binaries, 'output/installers')
 
-  
+
   def install(self):
     for installer in self.__installers:
       installer.install()

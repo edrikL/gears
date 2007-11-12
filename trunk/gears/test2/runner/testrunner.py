@@ -13,7 +13,7 @@ class TestRunner:
   """
   
   TEST_URL = "http://localhost:8001/tester/gui.html"
-  TIMEOUT = 60
+  TIMEOUT = 90
     
   def __init__(self, browser_launchers, test_server):
     if not browser_launchers or len(browser_launchers) < 1:
