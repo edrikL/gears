@@ -54,8 +54,9 @@ function updateManagedStore(url, callback) {
 
   // Wait for the update to complete
   var timerId = timer.setInterval(function() {
-    if (managedStore.currentVersion ||
-        managedStore.updateStatus == UPDATE_STATUS.failure) {
+    var status = managedStore.updateStatus;
+    if (status == UPDATE_STATUS.ok ||
+        status == UPDATE_STATUS.failure) {
       timer.clearInterval(timerId);
       callback(managedStore);
     }
@@ -257,51 +258,54 @@ function testCaptureWithNullCallback() {
 }
 
 function testGoodManifest() {
-  // First, fetch url1's contents for later comparison
-  var expectedUrl1Content;
-  httpGet("/testcases/manifest-url1.txt", function(content) {
-    expectedUrl1Content = content;
-  });
-
-  // Then, capture a manifest containing many references to that URL
   startAsync();
-  updateManagedStore("/testcases/manifest-good.txt", function(managedStore) {
-    assertEqual(UPDATE_STATUS.ok, managedStore.updateStatus,
-                'updateStatus should be OK after good manifest');
 
-    // TODO(aa): It would be cool if we could actually return null in this case
-    assertEqual('', managedStore.lastErrorMessage,
-                'lastErrorMessage should be empty string after good manifest');
+  // First, fetch url1's contents for later comparison
+  httpGet("/testcases/manifest-url1.txt", function(content) {
+    var expectedUrl1Content = content;
 
-    var testUrls = [
-      '/testcases/manifest-url1.txt',
-      '/testcases/manifest-url1.txt?query',
-      '/testcases/alias-to-manifest-url1.txt',
-      '/testcases/redirect-to-manifest-url1.txt',
-      '/testcases/unicode?foo=bar'
-    ];
+    // Then, capture a manifest containing many references to that URL
+    updateManagedStore("/testcases/manifest-good.txt", function(managedStore) {
+      assertEqual(UPDATE_STATUS.ok, managedStore.updateStatus,
+                  'updateStatus should be OK after good manifest');
 
-    for (var i = 0; i < testUrls.length; i++) {
-      assert(localServer.canServeLocally(testUrls[i]),
-             'Should be able to serve "%s" locally'.subs(testUrls[i]));
-    }
+      assertEqual('1', managedStore.currentVersion,
+          'currentVersion should reflect the value in the manifest file');
 
-    fetchNextTestUrl();
+      // TODO(aa): Would be cool if we could actually return null in this case
+      assertEqual('', managedStore.lastErrorMessage,
+          'lastErrorMessage should be empty string after good manifest');
 
-    function fetchNextTestUrl() {
-      var nextUrl = testUrls.shift();
-      if (!nextUrl) {
-        // we're done!
-        completeAsync();
-        return;
+      var testUrls = [
+        '/testcases/manifest-url1.txt',
+        '/testcases/manifest-url1.txt?query',
+        '/testcases/alias-to-manifest-url1.txt',
+        '/testcases/redirect-to-manifest-url1.txt',
+        '/testcases/unicode?foo=bar'
+      ];
+
+      for (var i = 0; i < testUrls.length; i++) {
+        assert(localServer.canServeLocally(testUrls[i]),
+               'Should be able to serve "%s" locally'.subs(testUrls[i]));
       }
 
-      httpGet(nextUrl, function(content) {
-        assertEqual(expectedUrl1Content, content, 
-                    'Incorrect content for url "%s"'.subs(nextUrl));
-        fetchNextTestUrl();
-      });
-    }
+      fetchNextTestUrl();
+
+      function fetchNextTestUrl() {
+        var nextUrl = testUrls.shift();
+        if (!nextUrl) {
+          // we're done!
+          completeAsync();
+          return;
+        }
+
+        httpGet(nextUrl, function(content) {
+          assertEqual(expectedUrl1Content, content, 
+                      'Incorrect content for url "%s"'.subs(nextUrl));
+          fetchNextTestUrl();
+        });
+      }
+    });
   });
 }
 
