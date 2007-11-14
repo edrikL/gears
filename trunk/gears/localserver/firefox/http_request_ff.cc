@@ -47,6 +47,11 @@
 #include "gears/localserver/firefox/cache_intercept.h"
 
 
+// Returns true if the currently executing thread is the main UI thread,
+// firefox/mozila has one such very special thread
+// See cache_intercept.cc for implementation
+bool IsUiThread();
+
 NS_IMPL_ISUPPORTS5(FFHttpRequest,
                    nsIRequestObserver,
                    nsIStreamListener,
@@ -58,6 +63,7 @@ NS_IMPL_ISUPPORTS5(FFHttpRequest,
 // HttpRequest::Create
 //------------------------------------------------------------------------------
 HttpRequest *HttpRequest::Create() {
+  assert(IsUiThread());
   FFHttpRequest *request = new FFHttpRequest();
   request->AddReference();
   return request;
@@ -202,6 +208,10 @@ bool FFHttpRequest::GetStatusLine(std::string16 *status_line) {
 bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async) {
   assert(!IsRelativeUrl(url));
   // TODO(michaeln): Add some of the sanity checks the IE implementation has.
+
+  // This class can only be used on the main UI thread
+  if (!IsUiThread())
+    return false;
 
   NS_ENSURE_TRUE(IsUninitialized(), false);
 
