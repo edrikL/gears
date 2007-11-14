@@ -172,18 +172,40 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
 #endif
 
   cookies_out->clear();
-  unsigned long len = 0;
-  if (!InternetGetCookieW(url, NULL, NULL, &len))
-    return false;
-  CStringW cookies_str;
-  BOOL rv = InternetGetCookieW(url, NULL, cookies_str.GetBuffer(len + 1), &len);
-  cookies_str.ReleaseBuffer(len);
-  if (rv) {
-    cookies_out->assign(cookies_str.GetString());
-    return true;
-  } else {
-    return false;
+
+  // To defend against the cookie string changing between the first and second
+  // calls to InternetGetCookieW, we loop if we need to
+  DWORD last_len = 0xffffffff;
+  while (true) {
+    DWORD len = 0;
+    if (!InternetGetCookieW(url, NULL, NULL, &len)) {
+      // FALSE is returned when the cookie string is empty, but this is
+      // not an error condition, return true and an empty string.
+      return GetLastError() == ERROR_NO_MORE_ITEMS;
+    }
+
+    if (len == last_len)
+      return false;  // don't loop forever
+    else
+      last_len = len;
+
+    CStringW cookies_str;
+    BOOL ok = InternetGetCookieW(url, NULL, cookies_str.GetBuffer(len + 1),
+                                 &len);
+    DWORD last_error = GetLastError();
+    cookies_str.ReleaseBuffer(len);
+    if (ok) {
+      cookies_out->assign(cookies_str.GetString());
+      return true;
+    } else if (last_error == ERROR_NO_MORE_ITEMS) {
+      return true;
+    } else if (last_error == ERROR_INSUFFICIENT_BUFFER) {
+      continue;  // loop and try again with a larger buffer
+    } else {
+      return false;
+    }
   }
+
   // GetBuffer(len + 1) followied ReleaseBuffer(len) looks odd, here's
   // what's going on with that ATL::CString wart.
   // For GetBuffer, len is the minimum size of the character buffer in
