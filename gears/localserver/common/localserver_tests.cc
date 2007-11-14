@@ -617,6 +617,13 @@ class TestHttpRequestListener : public HttpRequest::ReadyStateListener {
   }
 };
 
+#ifdef BROWSER_FF
+// Returns true if the currently executing thread is the main UI thread,
+// firefox/mozila has one such very special thread
+// See cache_intercept.cc for implementation
+bool IsUiThread();
+#endif
+
 bool TestHttpRequest() {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
@@ -626,6 +633,12 @@ bool TestHttpRequest() {
     return false; \
   } \
 }
+
+#ifdef BROWSER_FF
+  if (!IsUiThread()) {
+    return true;
+  }
+#endif
 
   // A request is created with a refcount of one, our listener will
   // release this reference upon completion. If something goes wrong
