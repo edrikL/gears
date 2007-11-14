@@ -310,6 +310,37 @@ inline bool String16ToUTF8(const char16 *in, std::string *out8) {
 
 
 // ----------------------------------------------------------------------
+// Converts a UTF8 path to a percent encoded "file:///" URL.
+// ----------------------------------------------------------------------
+enum {
+  ESCAPE_SCHEME        =     1,
+  ESCAPE_USERNAME      =     2,
+  ESCAPE_PASSWORD      =     4,
+  ESCAPE_HOST          =     8,
+  ESCAPE_DIRECTORY     =    16,
+  ESCAPE_FILEBASENAME  =    32,
+  ESCAPE_FILEEXTENSION =    64,
+  ESCAPE_PARAM         =   128,
+  ESCAPE_QUERY         =   256,
+  ESCAPE_REF           =   512,
+  // special flags
+  ESCAPE_FORCED        =  1024,  // forces escaping of existing escape
+                              // sequences
+  ESCAPE_ONLYASCII     =  2048,  // causes non-ascii octets to be skipped
+  ESCAPE_ONLYNONASCII  =  4096,  // causes _graphic_ ascii octets (0x20-0x7E)
+                              // to be skipped when escaping. causes all
+                              // ascii octets to be skipped when
+                              // unescaping
+  ESCAPE_ALWAYSCOPY    =  8192,  // copy input to result buf even if escaping
+                              // is unnecessary
+  ESCAPE_COLON         = 16384,  // forces escape of colon
+  ESCAPE_SKIPCONTROL   = 32768   // skips C0 and DEL from unescaping
+
+};
+std::string UTF8PathToUrl(const std::string &path, bool directory);
+std::string EscapeUrl(const std::string &source, unsigned int flags);
+
+// ----------------------------------------------------------------------
 // Replaces all occurences of old_pattern found in str with new_pattern
 // and returns the number of replacements that were made. All arguments
 // must be of the same type of basic_string derived class.
