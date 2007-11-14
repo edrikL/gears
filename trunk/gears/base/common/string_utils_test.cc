@@ -220,13 +220,13 @@ static bool TestStringUTF8FileToUrl() {
     {"c:\\Dead\\Beef", "file:///c:/Dead/Beef/", "No trailing backslash"},
   };
 
-  for (int i = 0; i < ARRAYSIZE(cases); ++i) {
+  for (unsigned int i = 0; i < ARRAYSIZE(cases); ++i) {
     std::string input(cases[i].input);
     std::string output(UTF8PathToUrl(input, false));
     TEST_ASSERT(output == cases[i].expected, cases[i].test_name);
   }
 
-  for (int i = 0; i < ARRAYSIZE(directory_cases); ++i) {
+  for (unsigned int i = 0; i < ARRAYSIZE(directory_cases); ++i) {
     std::string input(directory_cases[i].input);
     std::string output(UTF8PathToUrl(input, true));
     TEST_ASSERT(output == directory_cases[i].expected,
