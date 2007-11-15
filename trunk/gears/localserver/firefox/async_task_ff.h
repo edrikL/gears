@@ -116,9 +116,8 @@ class AsyncTask : protected HttpRequest::ReadyStateListener {
  private:
   struct HttpRequestParameters;
 
-  static const int kThreadDoneMessageCode = -1;
-  static const int kStartHttpGetMessageCode = -2;
-  static const int kAbortMessageCode = -3;
+  static const int kStartHttpGetMessageCode = -1;
+  static const int kAbortHttpGetMessageCode = -2;
 
   // worker thread methods
 
@@ -128,19 +127,33 @@ class AsyncTask : protected HttpRequest::ReadyStateListener {
   // listener and main thread methods
 
   void OnAsyncCall(int msg_code, void *msg_param);
-  void OnThreadDone();
+  void OnAbortHttpGet();
   bool OnStartHttpGet();
   void OnListenerEvent(int msg_code, int msg_param);
   void ReadyStateChanged(HttpRequest *source);
 
-  bool is_destructing_;
+  // Returns true if the currently executing thread is our listener thread
+  bool IsListenerThread() { 
+    return listener_thread_ == PR_GetCurrentThread();
+  }
+
+  // Returns true if the currently executing thread is our task thread
+  bool IsTaskThread() {
+    return thread_ == PR_GetCurrentThread();
+  }
+
+  void AddReference();
+  void RemoveReference();
+
   bool delete_when_done_;
   Listener *listener_;
   PRThread *thread_;
+  PRThread *listener_thread_;
   nsCOMPtr<nsIEventQueue> listener_event_queue_;
   nsCOMPtr<nsIEventQueue> ui_event_queue_;
   ScopedHttpRequestPtr http_request_;
   HttpRequestParameters *params_;
+  int refcount_;
 
   struct AsyncCallEvent;
   static void *PR_CALLBACK AsyncCall_EventHandlerFunc(AsyncCallEvent*);
