@@ -24,7 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/common/base_class.h"
-#include "gears/base/npapi/plugin.h"
+#include "gears/base/npapi/module_wrapper.h"
 #include "gears/database/npapi/result_set.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
@@ -32,34 +32,12 @@ DECLARE_GEARS_BRIDGE(GearsResultSet, GearsResultSetWrapper);
 
 // This class serves as the bridge between the GearsResultSet implementation and
 // the browser binding layer.
-class GearsResultSetWrapper :
-    public PluginBase<GearsResultSetWrapper>,
-    public ModuleWrapperBaseClass {
+class GearsResultSetWrapper
+    : public ModuleWrapper<GearsResultSetWrapper> {
  public:
-  GearsResultSetWrapper(NPP instance) :
-       PluginBase<GearsResultSetWrapper>(instance),
-       impl_(new GearsResultSet) {
-    impl_->SetJsWrapper(this);
+  GearsResultSetWrapper(NPP instance)
+      : ModuleWrapper<GearsResultSetWrapper>(instance) {
   }
-  virtual ~GearsResultSetWrapper() {}
-
-  virtual GearsResultSet *GetGearsObject() const { return impl_.get(); }
-  virtual JsToken GetWrapperToken() const {
-    NPVariant token;
-    OBJECT_TO_NPVARIANT(const_cast<GearsResultSetWrapper*>(this), token);
-    return token;
-  }
-
-  // TODO(mpcomplete): refactor
-  virtual void AddRef() {
-    NPN_RetainObject(this);
-  }
-  virtual void Release() {
-    NPN_ReleaseObject(this);
-  }
-
-  // TODO(mpcomplete): consolidate with GetGearsObject and remove.
-  GearsResultSet *gears_obj() const { return impl_.get(); }
 
   static void InitClass() {
     RegisterMethod("field", &GearsResultSet::Field);
@@ -72,13 +50,9 @@ class GearsResultSetWrapper :
   }
 
  private:
-  scoped_ptr<GearsResultSet> impl_;
-
   DISALLOW_EVIL_CONSTRUCTORS(GearsResultSetWrapper);
 };
 
 ModuleWrapperBaseClass *CreateGearsResultSet(GearsBaseClass *sibling) {
-  JsContextPtr context = sibling->EnvPageJsContext();
-  return static_cast<GearsResultSetWrapper *>(
-      NPN_CreateObject(context, GetNPClass<GearsResultSetWrapper>()));
+  return GearsResultSetWrapper::Create(sibling);
 }

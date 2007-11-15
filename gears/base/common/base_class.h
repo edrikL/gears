@@ -163,7 +163,7 @@ class GearsBaseClass {
 class ModuleWrapperBaseClass {
  public:
   // Returns the object that implements the Gears functionality.
-  virtual GearsBaseClass *GetGearsObject() const = 0;
+  virtual GearsBaseClass *GetImplObject() const = 0;
 
   // Returns a token for this wrapper class that can be returned via the
   // JsRunnerInterface.

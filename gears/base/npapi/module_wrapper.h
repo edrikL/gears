@@ -23,13 +23,57 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_BASE_NPAPI_FACTORY_PLUGIN_H__
-#define GEARS_BASE_NPAPI_FACTORY_PLUGIN_H__
+#ifndef GEARS_BASE_NPAPI_MODULE_WRAPPER_H__
+#define GEARS_BASE_NPAPI_MODULE_WRAPPER_H__
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/npapi/plugin.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-// Creates a new NPObject representing a GearsFactory class.
-NPObject* CreateGearsFactoryBridge(JsContextPtr context);
+// Base class that implements common functionality to module wrappers.
+template<class T>
+class ModuleWrapper
+    : public PluginBase<T>,
+      public ModuleWrapperBaseClass {
+ public:
+  static ModuleWrapperBaseClass *Create(GearsBaseClass *sibling) {
+    JsContextPtr context = sibling->EnvPageJsContext();
+    PluginClass *wrapper = static_cast<PluginClass *>(
+        NPN_CreateObject(context, GetNPClass<PluginClass>()));
 
-#endif // GEARS_BASE_NPAPI_FACTORY_PLUGIN_H__
+    if (!wrapper) {
+      SET_EXCEPTION(STRING16(L"Failed to create requested object."));
+      return NULL;
+    }
+
+    if (!wrapper->GetImplObject()->InitBaseFromSibling(sibling)) {
+      SET_EXCEPTION(STRING16(L"Error initializing base class."));
+      wrapper->Release();
+      return NULL;
+    }
+
+    return wrapper;
+  }
+
+  ModuleWrapper(NPP instance) :
+       PluginBase<T>(instance),
+       impl_(new ImplClass) {
+    impl_->SetJsWrapper(this);
+  }
+
+  virtual ImplClass *GetImplObject() const { return impl_.get(); }
+  virtual JsToken GetWrapperToken() const {
+    NPVariant token;
+    OBJECT_TO_NPVARIANT(const_cast<ModuleWrapper<T> *>(this), token);
+    return token;
+  }
+  virtual void AddRef() { NPN_RetainObject(this); }
+  virtual void Release() { NPN_ReleaseObject(this); }
+
+ protected:
+  scoped_ptr<ImplClass> impl_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(ModuleWrapper);
+};
+
+#endif // GEARS_BASE_NPAPI_MODULE_WRAPPER_H__

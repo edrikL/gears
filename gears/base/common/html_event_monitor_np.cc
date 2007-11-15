@@ -39,8 +39,6 @@
 // HtmlEventMonitorHook handles its own callbacks.
 DECLARE_GEARS_BRIDGE(HtmlEventMonitorHook, HtmlEventMonitorHook);
 
-// This class serves as the bridge between the GearsFactory implementation and
-// the browser binding layer.
 class HtmlEventMonitorHook : public PluginBase<HtmlEventMonitorHook> {
  public:
   static void InitClass() {
@@ -59,7 +57,7 @@ class HtmlEventMonitorHook : public PluginBase<HtmlEventMonitorHook> {
     user_param_ = user_param;
   }
 
-  HtmlEventMonitorHook *gears_obj() { return this; }
+  HtmlEventMonitorHook *GetImplObject() { return this; }
 
   void HandleEvent() {
     function_(user_param_);  // invoke user callback
