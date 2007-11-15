@@ -23,34 +23,31 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/factory/npapi/factory_plugin.h"
+#include "gears/factory/npapi/factory_wrapper.h"
 
-#include "gears/base/npapi/np_utils.h"
+#include "gears/base/npapi/module_wrapper.h"
 #include "gears/factory/npapi/factory.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-DECLARE_GEARS_BRIDGE(GearsFactory, GearsFactoryBridge);
+DECLARE_GEARS_BRIDGE(GearsFactory, GearsFactoryWrapper);
 
 // TODO(mpcomplete): The naming is temporary.  Right now we have:
-// - GearsFactoryBridge: serves as the bridge between implementation and the
+// - GearsFactoryWrapper: serves as the bridge between implementation and the
 // JavaScript engine.
 // - GearsFactory: the actual implementation of the factory module.
 //
 // We want to eventually rename GearsFactory -> GearsFactoryImpl, and
-// GearsFactoryBridge -> GearsFactory.  But until we have this abstraction layer
+// GearsFactoryWrapper -> GearsFactory.  But until we have this abstraction layer
 // for all browsers, we need to preserve the old naming scheme.
 
 // This class serves as the bridge between the GearsFactory implementation and
 // the browser binding layer.
-class GearsFactoryBridge : public PluginBase<GearsFactoryBridge> {
+class GearsFactoryWrapper : public ModuleWrapper<GearsFactoryWrapper> {
  public:
-  GearsFactoryBridge(NPP instance) :
-       PluginBase<GearsFactoryBridge>(instance),
-       impl_(new GearsFactory) {
+  GearsFactoryWrapper(NPP instance)
+      : ModuleWrapper<GearsFactoryWrapper>(instance) {
     impl_->InitBaseFromDOM(instance);
   }
-
-  GearsFactory *gears_obj() { return impl_.get(); }
 
   static void InitClass() {
     RegisterProperty("version", &GearsFactory::GetVersion);
@@ -59,11 +56,9 @@ class GearsFactoryBridge : public PluginBase<GearsFactoryBridge> {
   }
 
  private:
-  scoped_ptr<GearsFactory> impl_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(GearsFactoryBridge);
+  DISALLOW_EVIL_CONSTRUCTORS(GearsFactoryWrapper);
 };
 
-NPObject* CreateGearsFactoryBridge(JsContextPtr context) {
-  return NPN_CreateObject(context, GetNPClass<GearsFactoryBridge>());
+NPObject* CreateGearsFactoryWrapper(JsContextPtr context) {
+  return NPN_CreateObject(context, GetNPClass<GearsFactoryWrapper>());
 }

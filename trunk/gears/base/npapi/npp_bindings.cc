@@ -41,7 +41,7 @@
 // particular plugin.
 //
 #include "gears/base/npapi/plugin.h"
-#include "gears/factory/npapi/factory_plugin.h"
+#include "gears/factory/npapi/factory_wrapper.h"
 
 // here the plugin creates an instance of our NPObject object which 
 // will be associated with this newly created plugin instance and 
@@ -59,7 +59,7 @@ NPError NPP_New(NPMIMEType pluginType,
 
   NPError rv = NPERR_NO_ERROR;
 
-  NPObject* obj = CreateGearsFactoryBridge(instance);
+  NPObject* obj = CreateGearsFactoryWrapper(instance);
   instance->pdata = obj;
 
   // Make this a windowless plugin.

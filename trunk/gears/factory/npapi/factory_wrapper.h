@@ -23,33 +23,13 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef GEARS_BASE_NPAPI_FACTORY_PLUGIN_H__
+#define GEARS_BASE_NPAPI_FACTORY_PLUGIN_H__
+
 #include "gears/base/common/base_class.h"
-#include "gears/base/npapi/module_wrapper.h"
-#include "gears/database/npapi/database.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/base/npapi/plugin.h"
 
-DECLARE_GEARS_BRIDGE(GearsDatabase, GearsDatabaseWrapper);
+// Creates a new NPObject representing a GearsFactory class.
+NPObject* CreateGearsFactoryWrapper(JsContextPtr context);
 
-// This class serves as the bridge between the GearsDatabase implementation and
-// the browser binding layer.
-class GearsDatabaseWrapper : public ModuleWrapper<GearsDatabaseWrapper> {
- public:
-  GearsDatabaseWrapper(NPP instance)
-      : ModuleWrapper<GearsDatabaseWrapper>(instance) {
-  }
-
-  static void InitClass() {
-    RegisterMethod("open", &GearsDatabase::Open);
-    RegisterMethod("execute", &GearsDatabase::Execute);
-    RegisterMethod("close", &GearsDatabase::Close);
-    RegisterMethod("getLastInsertRowId", &GearsDatabase::GetLastInsertRowId);
-    RegisterMethod("getExecuteMsec", &GearsDatabase::GetExecuteMsec);
-  }
-
- private:
-  DISALLOW_EVIL_CONSTRUCTORS(GearsDatabaseWrapper);
-};
-
-ModuleWrapperBaseClass *CreateGearsDatabase(GearsBaseClass *sibling) {
-  return GearsDatabaseWrapper::Create(sibling);
-}
+#endif // GEARS_BASE_NPAPI_FACTORY_PLUGIN_H__

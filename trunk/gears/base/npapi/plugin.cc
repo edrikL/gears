@@ -49,22 +49,22 @@ void PluginBase<T>::Deallocate(NPObject *npobj) {
 // static
 template<class T>
 bool PluginBase<T>::HasMethod(NPObject *npobj, NPIdentifier name) {
-  const IDList& methods = GetMethodList();
+  const IDList &methods = GetMethodList();
   return methods.find(name) != methods.end();
 }
 
 // static
 template<class T>
 bool PluginBase<T>::Invoke(NPObject *npobj, NPIdentifier name,
-                             const NPVariant *args, uint32_t num_args,
-                             NPVariant *result) {
-  GearsClass* gears = static_cast<PluginClass *>(npobj)->gears_obj();
+                           const NPVariant *args, uint32_t num_args,
+                           NPVariant *result) {
+  ImplClass *gears = static_cast<PluginClass *>(npobj)->GetImplObject();
 
-  const IDList& methods = GetMethodList();
+  const IDList &methods = GetMethodList();
   IDList::const_iterator method = methods.find(name);
   if (method == methods.end())
     return false;
-  GearsCallback callback = method->second;
+  ImplCallback callback = method->second;
 
   BrowserUtils::EnterScope(npobj, static_cast<int>(num_args), args, result);
   (gears->*callback)();
@@ -75,21 +75,21 @@ bool PluginBase<T>::Invoke(NPObject *npobj, NPIdentifier name,
 // static
 template<class T>
 bool PluginBase<T>::HasProperty(NPObject * npobj, NPIdentifier name) {
-  const IDList& properties = GetPropertyList();
+  const IDList &properties = GetPropertyList();
   return properties.find(name) != properties.end();
 }
 
 // static
 template<class T>
 bool PluginBase<T>::GetProperty(NPObject *npobj, NPIdentifier name,
-                                  NPVariant *result) {
-  GearsClass* gears = static_cast<PluginClass *>(npobj)->gears_obj();
+                                NPVariant *result) {
+  ImplClass *gears = static_cast<PluginClass *>(npobj)->GetImplObject();
 
-  const IDList& properties = GetPropertyList();
+  const IDList &properties = GetPropertyList();
   IDList::const_iterator property = properties.find(name);
   if (property == properties.end())
     return false;
-  GearsCallback callback = property->second;
+  ImplCallback callback = property->second;
 
   BrowserUtils::EnterScope(npobj, 0, NULL, result);
   (gears->*callback)();
@@ -100,7 +100,7 @@ bool PluginBase<T>::GetProperty(NPObject *npobj, NPIdentifier name,
 // static
 template<class T>
 void PluginBase<T>::RegisterProperty(const char *name,
-                                     GearsCallback callback) {
+                                     ImplCallback callback) {
   NPIdentifier id = NPN_GetStringIdentifier(name);
   GetPropertyList()[id] = callback;
 }
@@ -108,7 +108,7 @@ void PluginBase<T>::RegisterProperty(const char *name,
 // static
 template<class T>
 void PluginBase<T>::RegisterMethod(const char *name,
-                                   GearsCallback callback) {
+                                   ImplCallback callback) {
   NPIdentifier id = NPN_GetStringIdentifier(name);
   GetMethodList()[id] = callback;
 }

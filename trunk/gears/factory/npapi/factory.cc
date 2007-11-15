@@ -85,10 +85,7 @@ void GearsFactory::Create() {
   }
 
   if (!object.get())
-    RETURN_EXCEPTION(STRING16(L"Failed to create requested object."));
-
-  if (!object.get()->GetGearsObject()->InitBaseFromSibling(this))
-    RETURN_EXCEPTION(STRING16(L"Error initializing base class."));
+    return;  // Create function sets an error message.
 
   // Give up ownership of the object and return it.
   JsToken token = object.get()->GetWrapperToken();

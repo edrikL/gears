@@ -40,19 +40,19 @@ template<class Plugin> struct PluginTraits {};
 // // Called once per class type to initialize properties and methods.
 // static void InitClass();
 // // Returns a pointer to the class that handles the property/method callbacks.
-// GearsClass *gears_obj();
+// ImplClass *GetImplObject();
 template<class T>
 class PluginBase : public NPObject {
  public:
   // The NPAPI scriptable plugin interface class.
   typedef T PluginClass;
 
-  // The corresponding GearsClass that implements the functionality for our
+  // The corresponding ImplClass that implements the functionality for our
   // bridge.
-  typedef typename PluginTraits<T>::GearsClass GearsClass;
+  typedef typename PluginTraits<T>::ImplClass ImplClass;
 
   // Callback function used for property and method invokations.
-  typedef void (GearsClass::*GearsCallback)();
+  typedef void (ImplClass::*ImplCallback)();
 
   // NPClass callbacks.  The browser calls these functions when JavaScript
   // interacts with a Gears object.
@@ -70,13 +70,13 @@ class PluginBase : public NPObject {
 
  protected:
   // Register JavaScript property/methods.
-  static void RegisterProperty(const char *name, GearsCallback callback);
-  static void RegisterMethod(const char *name, GearsCallback callback);
+  static void RegisterProperty(const char *name, ImplCallback callback);
+  static void RegisterMethod(const char *name, ImplCallback callback);
 
   NPP instance_;
 
  private:
-  typedef std::map<NPIdentifier, GearsCallback> IDList;
+  typedef std::map<NPIdentifier, ImplCallback> IDList;
 
   static IDList& GetPropertyList() {
     static IDList properties;
@@ -111,11 +111,11 @@ NPClass* GetNPClass() {
 }
 
 // Used to define the association between a Gears class and its NPAPI bridge.
-#define DECLARE_GEARS_BRIDGE(GearsClassType, PluginClass) \
+#define DECLARE_GEARS_BRIDGE(ImplClassType, PluginClass) \
 class PluginClass; \
 template<> \
 struct PluginTraits<PluginClass> { \
-  typedef GearsClassType GearsClass; \
+  typedef ImplClassType ImplClass; \
 }
 
 // Need to include .cc for template definitions.

@@ -132,15 +132,11 @@ void GearsDatabase::Execute() {
 
   // Wrap a GearsResultSet around the statement and execute it
   ScopedModuleWrapper rs_internal(CreateGearsResultSet(this));
-
   if (!rs_internal.get())
-    RETURN_EXCEPTION(STRING16(L"Failed to create requested object."));
-
-  if (!rs_internal.get()->GetGearsObject()->InitBaseFromSibling(this))
-    RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
+    return;  // Create function sets an error message.
 
   GearsResultSet *result_set =
-      static_cast<GearsResultSet *>(rs_internal.get()->GetGearsObject());
+      static_cast<GearsResultSet *>(rs_internal.get()->GetImplObject());
 
   // Note the ResultSet takes ownership of the statement
   std::string16 error_message;
@@ -211,7 +207,7 @@ bool GearsDatabase::CloseInternal() {
     db_ = NULL;
     if (sql_status != SQLITE_OK) {
       return false;
-    }
+  }
   }
   return true;
 }
