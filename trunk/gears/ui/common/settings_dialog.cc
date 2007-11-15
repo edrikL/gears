@@ -24,6 +24,11 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/common/string_utils.h"
+#if BROWSER_FF
+#include "gears/desktop/desktop_ff.h"
+#elif BROWSER_IE
+#include "gears/desktop/desktop_ie.h"
+#endif
 #include "gears/ui/common/html_dialog.h"
 #include "gears/ui/common/settings_dialog.h"
 
@@ -115,23 +120,29 @@ bool SettingsDialog::PopulateShortcuts(Json::Value *json_array) {
         return false;
       }
 
+      std::string16 ico_loc;
+      if (!GearsDesktop::GetControlPanelIconLocation(*origin, *name,
+                                                     &ico_loc)) {
+        return false;
+      }
+
+
       // JSON needs UTF-8.
       std::string app_url_utf8;
-      // TODO(shess) Fix this to enumerate the set of icon urls.  Here
-      // it just pulls out the first one.
-      std::string ico_url_utf8;
+      std::string ico_loc_utf8;
       std::string name_utf8;
       std::string origin_utf8;
       if (!String16ToUTF8(app_url.c_str(), &app_url_utf8) ||
-          (!icon_urls.empty() &&
-           !String16ToUTF8(icon_urls[0].c_str(), &ico_url_utf8)) ||
+          !String16ToUTF8(ico_loc.c_str(), &ico_loc_utf8) ||
           !String16ToUTF8(name->c_str(), &name_utf8) ||
           !String16ToUTF8(origin->url().c_str(), &origin_utf8)) {
         return false;
       }
 
+      ico_loc_utf8 = UTF8PathToUrl(ico_loc_utf8, false);
+
       Json::Value shortcut;
-      shortcut["iconUrl"] = Json::Value(ico_url_utf8);
+      shortcut["iconUrl"] = Json::Value(ico_loc_utf8);
       shortcut["appUrl"] = Json::Value(app_url_utf8);
       shortcut["appName"] = Json::Value(name_utf8);
       shortcut["origin"] = Json::Value(origin_utf8);

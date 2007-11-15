@@ -439,6 +439,33 @@ IEMOBILE_IDLSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# desktop
+
+FF_VPATH	+= \
+		desktop \
+		$(NULL)
+
+FF_IDLSRCS	+= \
+		desktop_ff.idl \
+		$(NULL)
+
+FF_CPPSRCS	+= \
+		desktop.cc \
+		$(NULL)
+
+IE_VPATH	+= \
+		desktop \
+		$(NULL)
+
+IE_IDLSRCS	+= \
+		desktop_ie.idl \
+		$(NULL)
+
+IE_CPPSRCS	+= \
+		desktop.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # ui/generated
 #
 # Anything with the _I18N suffix will be expanded for each language in

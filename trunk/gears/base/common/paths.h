@@ -44,6 +44,7 @@ extern const char16 kPathSeparator;
 // All data for a given security origin lives in a single directory.
 // Here are the unique suffixes each module uses to identify its files/dirs.
 extern const char16 *kDataSuffixForDatabase;
+extern const char16 *kDataSuffixForDesktop;
 extern const char16 *kDataSuffixForLocalServer;
 
 

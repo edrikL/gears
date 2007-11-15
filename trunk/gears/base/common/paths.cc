@@ -29,6 +29,7 @@
 
 // Define the unique suffixes for each module.
 const char16 *kDataSuffixForDatabase    = STRING16(L"#database");
+const char16 *kDataSuffixForDesktop     = STRING16(L"#desktop");
 const char16 *kDataSuffixForLocalServer = STRING16(L"#localserver");
 
 
