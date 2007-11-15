@@ -41,7 +41,6 @@ const char16 *kIsOfflineErrorMessage =
 AsyncTask::AsyncTask() :
     is_initialized_(false),
     is_aborted_(false),
-    is_running_async_(false),
     delete_when_done_(false),
     listener_window_(NULL),
     listener_message_base_(WM_USER),
@@ -52,14 +51,7 @@ AsyncTask::AsyncTask() :
 // ~AsyncTask
 //------------------------------------------------------------------------------
 AsyncTask::~AsyncTask() {
-  if (thread_) {
-    if (WaitForSingleObject(thread_, 0) == WAIT_TIMEOUT) {
-      ATLTRACE(_T("~AsyncTask - thread is still running\n"));
-      Abort();
-      WaitForSingleObject(thread_, INFINITE);
-    }
-    CloseHandle(thread_);
-  }
+  assert(!thread_);
 }
 
 //------------------------------------------------------------------------------
@@ -98,23 +90,18 @@ void AsyncTask::SetListenerWindow(HWND listener_window,
 // Start
 //------------------------------------------------------------------------------
 bool AsyncTask::Start() {
-  if (!is_initialized_ || is_running_async_) {
+  if (!is_initialized_ || thread_) {
     return false;
   }
 
-  if (thread_) {
-    CloseHandle(thread_);
-    thread_ = NULL;
-  }
-
+  CritSecLock locker(lock_);
   is_aborted_ = false;
   abort_event_.Reset();
   ready_state_changed_event_.Reset();
   unsigned int thread_id;
   thread_ = reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, ThreadMain, 
                                                     this, 0, &thread_id));
-  is_running_async_ = (thread_ != NULL);
-  return is_running_async_;
+  return (thread_ != NULL);
 }
 
 //------------------------------------------------------------------------------
@@ -122,7 +109,7 @@ bool AsyncTask::Start() {
 //------------------------------------------------------------------------------
 void AsyncTask::Abort() {
   CritSecLock locker(lock_);
-  if (is_running_async_ && !is_aborted_) {
+  if (thread_ && !is_aborted_) {
     ATLTRACE(_T("AsyncTask::Abort\n"));
     is_aborted_ = true;
     abort_event_.Set();
@@ -137,7 +124,8 @@ void AsyncTask::DeleteWhenDone() {
   assert(!delete_when_done_);
   if (!delete_when_done_) {
     ATLTRACE(_T("AsyncTask::DeleteWhenDone\n"));
-    if (!is_running_async_) {
+    SetListenerWindow(NULL, 0);
+    if (!thread_) {
       // In this particular code path, we have to call unlock prior to delete 
       // otherwise the locker would try to access deleted memory, &lock_,
       // after it's been freed.
@@ -161,10 +149,9 @@ unsigned int __stdcall AsyncTask::ThreadMain(void *task) {
 
   {
     CritSecLock locker(self->lock_);
-    self->is_running_async_ = false;
+    CloseHandle(self->thread_);
+    self->thread_ = NULL;
     if (self->delete_when_done_) {
-      CloseHandle(self->thread_);
-      self->thread_ = NULL;
       // In this particular code path, we have to call unlock prior to delete 
       // otherwise the locker would try to access deleted memory, &lock_,
       // after it's been freed.

@@ -28,6 +28,7 @@
 #ifdef WIN32
 #include <windows.h> // must manually #include before nsIEventQueueService.h
 #endif
+#include "gears/base/common/atomic_ops.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_cookies.h"
@@ -52,42 +53,44 @@ bool IsUiThread();
 AsyncTask::AsyncTask() :
     is_aborted_(false),
     is_initialized_(false),
-    is_destructing_(false),
     delete_when_done_(false),
     listener_(NULL),
     thread_(NULL),
+    listener_thread_(NULL),
     http_request_(NULL),
-    params_(NULL) {
+    params_(NULL),
+    refcount_(1) {
 }
 
 //------------------------------------------------------------------------------
 // ~AsyncTask
 //------------------------------------------------------------------------------
 AsyncTask::~AsyncTask() {
-  if (thread_) {
-    LOG(("~AsyncTask - thread is still running\n"));
-    // extra scope to lock our monitor
-    {
-      CritSecLock locker(lock_);
-      is_destructing_ = true;
-      Abort();
-    }
-    PR_JoinThread(thread_);
-    thread_ = NULL;
-  }
+  assert(!thread_);
+  assert(!http_request_.get());
+  assert(!params_);
+  assert(refcount_ == 0 || 
+         (refcount_ == 1 && !delete_when_done_));  
+}
 
-  if (listener_event_queue_) {
-    listener_event_queue_->RevokeEvents(this);
-  }
-  if (ui_event_queue_) {
-    ui_event_queue_->RevokeEvents(this);
+
+void AsyncTask::AddReference() {
+  AtomicIncrement(&refcount_, 1);
+}
+
+void AsyncTask::RemoveReference() {
+  if (AtomicIncrement(&refcount_, -1) == 0) {
+    delete this;
   }
 }
+
 
 //------------------------------------------------------------------------------
 // Init
 //------------------------------------------------------------------------------
 bool AsyncTask::Init() {
+  assert(!delete_when_done_);
+
   if (is_initialized_) {
     assert(!is_initialized_);
     return false;
@@ -96,8 +99,6 @@ bool AsyncTask::Init() {
   if (!static_cast<PRMonitor*>(lock_)) {
     return false;
   }
-
-  is_aborted_ = false;
 
   nsresult rv;
   nsCOMPtr<nsIEventQueueService> event_queue_service =
@@ -118,6 +119,8 @@ bool AsyncTask::Init() {
     return false;
   }
 
+  listener_thread_ = PR_GetCurrentThread();
+  is_aborted_ = false;
   is_initialized_ = true;
   return true;
 }
@@ -126,6 +129,8 @@ bool AsyncTask::Init() {
 // SetListener
 //------------------------------------------------------------------------------
 void AsyncTask::SetListener(Listener *listener) {
+  assert(!delete_when_done_);
+  assert(IsListenerThread());
   listener_ = listener;
 }
 
@@ -133,64 +138,79 @@ void AsyncTask::SetListener(Listener *listener) {
 // Start
 //------------------------------------------------------------------------------
 bool AsyncTask::Start() {
-  if (!is_initialized_) {
-    assert(is_initialized_);
+  assert(!delete_when_done_);
+  assert(IsListenerThread());
+
+  if (!is_initialized_ || thread_) {
+    assert(!(!is_initialized_ || thread_));
     return false;
   }
 
-  is_aborted_ = false;
-
   // Start our worker thread
+  CritSecLock locker(lock_);
+  is_aborted_ = false;
   thread_ = PR_CreateThread(PR_USER_THREAD, ThreadEntry, // type, func
                             this, PR_PRIORITY_NORMAL,   // arg, priority
                             PR_LOCAL_THREAD,          // scheduled by whom?
-                            PR_JOINABLE_THREAD, 0); // joinable?, stack bytes
-  return (thread_ != NULL);
+                            PR_UNJOINABLE_THREAD, 0); // joinable?, stack bytes
+  if (thread_ == NULL) {
+    return false;
+  }
+  
+  AddReference();  // reference is removed upon worker thread exit
+
+  return true;
 }
 
 //------------------------------------------------------------------------------
 // Abort
 //------------------------------------------------------------------------------
 void AsyncTask::Abort() {
-  if (!IsUiThread()) {
-    // We only initiate / terminate HTTP requests from the UI thread as it's
-    // not safe to do from random worker threads. If Abort() has not been
-    // called on the UI thread, post a message to the UI thread to execute
-    // the block of code below else on the UI thread.
-    CallAsync(ui_event_queue_, kAbortMessageCode, NULL);
-  } else {
-    CritSecLock locker(lock_);
-    if (thread_ && !is_aborted_) {
-      LOG(("AsyncTask::Abort\n"));
-      is_aborted_ = true;
-      if (http_request_.get()) {
-        http_request_.get()->SetOnReadyStateChange(NULL);
-        http_request_.get()->Abort();
-        http_request_.reset(NULL);
-      }
-      PR_Notify(lock_);
-    }
+  LOG(("AsyncTask::Abort\n"));
+  assert(!delete_when_done_);
+  assert(IsListenerThread());
+
+  CritSecLock locker(lock_);
+  is_aborted_ = true;
+
+  if (params_) {
+    // An http request is in progress that we must terminate.
+    // We can only terminate HTTP requests from the UI thread.
+    CallAsync(ui_event_queue_, kAbortHttpGetMessageCode, NULL);
   }
 }
+
+void AsyncTask::OnAbortHttpGet() {
+  assert(IsUiThread());
+  LOG(("AsyncTask::OnAbortHttpGet - ui thread\n"));
+
+  if (http_request_.get()) {
+    http_request_.get()->SetOnReadyStateChange(NULL);
+    http_request_.get()->Abort();
+    http_request_.reset(NULL);
+  }
+  CritSecLock locker(lock_);
+  PR_Notify(lock_);  // notify our waiting worker thread
+}
+
 
 //------------------------------------------------------------------------------
 // DeleteWhenDone
 //------------------------------------------------------------------------------
 void AsyncTask::DeleteWhenDone() {
-  CritSecLock locker(lock_);
   assert(!delete_when_done_);
-  if (!delete_when_done_) {
-    LOG(("AsyncTask::DeleteWhenDone\n"));
-    if (!thread_) {
-      // In this particular code path, we have to call unlock prior to delete 
-      // otherwise the locker would try to access deleted memory, &lock_,
-      // after it's been freed.
-      locker.Unlock();
-      delete this;
-    } else {
-      delete_when_done_ = true;
-    }
-  }
+  assert(IsListenerThread());
+
+  LOG(("AsyncTask::DeleteWhenDone\n"));
+  CritSecLock locker(lock_);
+  SetListener(NULL);
+  delete_when_done_ = true;
+
+  // We have to call unlock prior to calling RemoveReference 
+  // otherwise the locker would try to access deleted memory, &lock_,
+  // after it's been freed.
+  locker.Unlock();
+  RemoveReference();  // remove the reference added by the constructor
 }
 
 
@@ -200,36 +220,32 @@ void AsyncTask::DeleteWhenDone() {
 void AsyncTask::ThreadEntry(void *task) {
   AsyncTask *self = reinterpret_cast<AsyncTask*>(task);
   self->Run();
-  self->CallAsync(self->listener_event_queue_, kThreadDoneMessageCode, NULL);
+  CritSecLock locker(self->lock_);
+  self->thread_ = NULL;
+  locker.Unlock();
+  self->RemoveReference();  // remove the reference added by the Start
 }
 
 //------------------------------------------------------------------------------
 // NotifyListener
 //------------------------------------------------------------------------------
 void AsyncTask::NotifyListener(int code, int param) {
-  CallAsync(listener_event_queue_, code, reinterpret_cast<void*>(param));
+  assert(IsTaskThread());
+  if (listener_) {
+    CallAsync(listener_event_queue_, code, reinterpret_cast<void*>(param));
+  }
 }
 
 //------------------------------------------------------------------------------
 // OnListenerEvent
 //------------------------------------------------------------------------------
 void AsyncTask::OnListenerEvent(int msg_code, int msg_param) {
+  assert(IsListenerThread());
   if (listener_) {
     listener_->HandleEvent(msg_code, msg_param, this);
   }
 }
 
-//------------------------------------------------------------------------------
-// OnThreadDone
-//------------------------------------------------------------------------------
-void AsyncTask::OnThreadDone() {
-  CritSecLock locker(lock_);
-  thread_ = NULL;
-  if (delete_when_done_) {
-    locker.Unlock();
-    delete this;
-  }
-}
 
 //------------------------------------------------------------------------------
 // struct HttpRequestParameters
@@ -260,8 +276,8 @@ bool AsyncTask::HttpGet(const char16 *full_url,
                         bool *was_redirected,
                         std::string16 *full_redirect_url,
                         std::string16 *error_message) {
-  // This method cannot be called from the UI thread.
-  assert(!IsUiThread());
+  // This method should only be called our worker thread.
+  assert(IsTaskThread());
 
   if (was_redirected) {
     *was_redirected = false;
@@ -306,6 +322,8 @@ bool AsyncTask::HttpGet(const char16 *full_url,
   // Wait for completion
   PR_Wait(lock_, PR_INTERVAL_NO_TIMEOUT);
 
+  params_ = NULL;
+
   return !is_aborted_ && payload->data.get();
 }
 
@@ -316,9 +334,8 @@ bool AsyncTask::HttpGet(const char16 *full_url,
 //------------------------------------------------------------------------------
 bool AsyncTask::OnStartHttpGet() {
   if (is_aborted_) {
-    // This can happen if Abort() is called after the worker thread has
-    // queued a call to start a request but prior to having started that
-    // request. In this case params_ will have been deleted.
+    // This can happen if Abort() is called after the worker thread has queued
+    // a call to start a request but prior to having started that request.
     return false;
   }
 
@@ -436,9 +453,6 @@ void AsyncTask::ReadyStateChanged(HttpRequest *http_request) {
 //------------------------------------------------------------------------------
 void AsyncTask::OnAsyncCall(int msg_code, void *msg_param) {
   switch (msg_code) {
-    case kThreadDoneMessageCode:
-      OnThreadDone();
-      break;
     case kStartHttpGetMessageCode:
       assert(IsUiThread());
       if (!OnStartHttpGet()) {
@@ -446,11 +460,12 @@ void AsyncTask::OnAsyncCall(int msg_code, void *msg_param) {
         PR_Notify(lock_);
       }
       break;
-    case kAbortMessageCode:
+    case kAbortHttpGetMessageCode:
       assert(IsUiThread());
-      Abort();
+      OnAbortHttpGet();
       break;
     default:
+      assert(IsListenerThread());
       OnListenerEvent(msg_code, reinterpret_cast<int>(msg_param));
       break;
   }
@@ -461,7 +476,18 @@ void AsyncTask::OnAsyncCall(int msg_code, void *msg_param) {
 //------------------------------------------------------------------------------
 struct AsyncTask::AsyncCallEvent : PLEvent {
   AsyncCallEvent(AsyncTask *task, int code, void *param)
-      : task(task), msg_code(code), msg_param(param) {}
+      : task(task), msg_code(code), msg_param(param) {
+    task->AddReference();
+  }
+  ~AsyncCallEvent() {
+    if (task) {
+      AbandonReference();
+    }
+  }
+  void AbandonReference() {
+    task->RemoveReference();
+    task = NULL;
+  }
   AsyncTask *task;
   int msg_code;
   void *msg_param;
@@ -473,11 +499,6 @@ struct AsyncTask::AsyncCallEvent : PLEvent {
 //------------------------------------------------------------------------------
 nsresult AsyncTask::CallAsync(nsIEventQueue *event_queue, 
                               int msg_code, void *msg_param) {
-  CritSecLock locker(lock_);
-  if (is_destructing_) {
-    return NS_ERROR_FAILURE;
-  }
-
   AsyncCallEvent *event = new AsyncCallEvent(this, msg_code, msg_param);
   if (!event) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -486,12 +507,14 @@ nsresult AsyncTask::CallAsync(nsIEventQueue *event_queue,
       reinterpret_cast<PLHandleEventProc>(AsyncCall_EventHandlerFunc),
       reinterpret_cast<PLDestroyEventProc>(AsyncCall_EventCleanupFunc));
   if (NS_FAILED(rv)) {
+    event->AbandonReference();
     return rv;
   }
 
   rv = event_queue->PostEvent(event);
   if (NS_FAILED(rv)) {
     // TODO(michaeln): PL_DestroyEvent(event);
+    event->AbandonReference();
   }
   return rv;
 }
@@ -502,7 +525,10 @@ nsresult AsyncTask::CallAsync(nsIEventQueue *event_queue,
 // static
 void *PR_CALLBACK
 AsyncTask::AsyncCall_EventHandlerFunc(AsyncCallEvent *event) {
-  event->task->OnAsyncCall(event->msg_code, event->msg_param);
+  if (event->task) {
+    event->task->OnAsyncCall(event->msg_code, event->msg_param);
+    event->AbandonReference();
+  }
   return nsnull;
 }
 

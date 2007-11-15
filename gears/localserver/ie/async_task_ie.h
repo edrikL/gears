@@ -112,7 +112,6 @@ class AsyncTask : protected HttpRequest::ReadyStateListener {
 
   static unsigned int _stdcall ThreadMain(void *self);
 
-  bool is_running_async_;
   bool delete_when_done_;
   HWND listener_window_;
   int listener_message_base_;
