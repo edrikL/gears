@@ -118,6 +118,12 @@ class HtmlDialogHost
                                 DWORD context_size, DWORD flags,
                                 DWORD reserved);
 
+  // From IInternetSecurityManager. We override this to make sure that our
+  // dialog can use our local files, when the local zone in IE is in high
+  // security mode.
+  STDMETHODIMP MapUrlToZone(LPCWSTR url, DWORD *zone, DWORD flags);
+
+
   // Runs default IInternetSecurityManager behavior.
   STDMETHODIMP GetSecurityId(LPCWSTR url, BYTE *security_id,
                              DWORD *security_id_size, DWORD_PTR reserved) {
@@ -132,11 +138,6 @@ class HtmlDialogHost
   // Runs default IInternetSecurityManager behavior.
   STDMETHODIMP GetZoneMappings(DWORD zone, IEnumString **enum_string,
                                DWORD flags) {
-    return INET_E_DEFAULT_ACTION;
-  }
-
-  // Runs default IInternetSecurityManager behavior.
-  STDMETHODIMP MapUrlToZone(LPCWSTR url, DWORD *zone, DWORD flags) {
     return INET_E_DEFAULT_ACTION;
   }
 
@@ -206,7 +207,7 @@ class HtmlDialogHost
   // Releases resources held by the dialog.
   void TearDown();
 
-  // Initializes base_url_.
+  // Initializes base_url_ and data_url_.
   bool InitBaseUrl();
 
   // Sets the caption based on the <title> of the HTML document being displayed.
@@ -232,6 +233,9 @@ class HtmlDialogHost
 
   // The res:// URL representing the folder where our HTML, images, etc are.
   CString base_url_;
+
+  // The file:// URL representing the folder where our data is.
+  CString data_url_;
 
   // The current URL.
   CString url_;

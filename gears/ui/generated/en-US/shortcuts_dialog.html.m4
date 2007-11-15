@@ -323,8 +323,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         result.push(checkbox.checked);
       }
 
-      alert(result);
-      //saveAndClose(result);
+      saveAndClose(result);
     }
   }
 

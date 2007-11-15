@@ -29,6 +29,8 @@
 #include <windows.h>
 
 #include "gears/base/common/common.h"
+#include "gears/base/common/paths.h"
+#include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/ui/ie/html_dialog_host.h"
@@ -308,6 +310,20 @@ HRESULT HtmlDialogHost::ProcessUrlAction(LPCWSTR url, DWORD action,
   return INET_E_DEFAULT_ACTION;
 }
 
+HRESULT HtmlDialogHost::MapUrlToZone(LPCWSTR url, DWORD *zone, DWORD flags) {
+  // If the file is in our data directory, and is a png file, trust it.
+  size_t length = wcslen(url);
+  if (wcsncmp(url, data_url_, data_url_.GetLength()) == 0 &&
+      length >= 4 &&
+      _wcsicmp(&url[length - 4], L".png") == 0) {
+    *zone = URLZONE_TRUSTED;
+    return S_OK;
+  }
+
+  // Run default IInternetSecurityManager behavior.
+  return INET_E_DEFAULT_ACTION;
+}
+
 
 void HtmlDialogHost::UpdateCaption() {
   CComBSTR caption;
@@ -473,6 +489,27 @@ bool HtmlDialogHost::InitBaseUrl() {
   base_url_ = STRING16(L"res://");
   base_url_ += module_path;
   base_url_ += L'/';
+
+  std::string data_url_utf8;
+  std::string16 data_url;
+  if (!GetBaseDataDirectory(&data_url)) {
+    ERROR_MSG("GetBaseDataDirectory() failed.");
+    return false;
+  }
+
+  if (!String16ToUTF8(data_url.c_str(), &data_url_utf8)) {
+    ERROR_MSG("String16ToUTF8() failed.");
+    return false;
+  }
+
+  data_url_utf8 = UTF8PathToUrl(data_url_utf8, true);
+
+  if (!UTF8ToString16(data_url_utf8.c_str(), &data_url)) {
+    ERROR_MSG("UTF8ToString16() failed.");
+    return false;
+  }
+
+  data_url_ = data_url.c_str();
 
   return true;
 }

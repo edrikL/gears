@@ -275,6 +275,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     right.className = "right";
 
     iconImage.src = shortcut.iconUrl;
+    iconImage.width = 16;
+    iconImage.height= 16;
 
     origin.appendChild(document.createTextNode(shortcut.origin));
     row.appName = shortcut.appName;

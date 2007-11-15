@@ -30,6 +30,7 @@
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/channel/ie/channel.h"
 #include "gears/database/ie/database.h"
+#include "gears/desktop/desktop_ie.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/factory/ie/factory.h"
 #include "gears/httprequest/ie/httprequest_ie.h"
@@ -103,6 +104,11 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
   } else if (object_name == STRING16(L"beta.database")) {
     CComObject<GearsDatabase> *obj;
     hr = CComObject<GearsDatabase>::CreateInstance(&obj);
+    base_class = obj;
+    idispatch = obj;
+  } else if (object_name == STRING16(L"beta.desktop")) {
+    CComObject<GearsDesktop> *obj;
+    hr = CComObject<GearsDesktop>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
   } else if (object_name == STRING16(L"beta.httprequest")) {

@@ -35,6 +35,7 @@
 #include "gears/channel/firefox/channel.h"
 #include "gears/database/firefox/database.h"
 #include "gears/database/firefox/result_set.h"
+#include "gears/desktop/desktop_ff.h"
 #include "gears/factory/firefox/factory.h"
 #include "gears/httprequest/firefox/httprequest_ff.h"
 #include "gears/localserver/firefox/cache_intercept.h"
@@ -125,6 +126,12 @@ NS_DOMCI_EXTENSION(Scour)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsResultSet, PR_TRUE,
                                              &kGearsResultSetClassId)
 
+  // desktop
+  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsDesktop)
+    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsDesktopInterface)
+  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsDesktop, PR_TRUE,
+                                             &kGearsDesktopClassId)
+
   // httprequest
   NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsHttpRequest)
     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsHttpRequestInterface)
@@ -203,6 +210,9 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
       GEARSDATABASEINTERFACE_IID_STR },
     { kGearsResultSetClassName, "GearsResultSetInterface",
       GEARSRESULTSETINTERFACE_IID_STR },
+    // desktop
+    { kGearsDesktopClassName, "GearsDesktopInterface",
+      GEARSDESKTOPINTERFACE_IID_STR },
     // httprequest
     { kGearsHttpRequestClassName, "GearsHttpRequestInterface",
       GEARSHTTPREQUESTINTERFACE_IID_STR },
@@ -255,6 +265,8 @@ NS_DECL_DOM_CLASSINFO(GearsFactory)
 // database
 NS_DECL_DOM_CLASSINFO(GearsDatabase)
 NS_DECL_DOM_CLASSINFO(GearsResultSet)
+// desktop
+NS_DECL_DOM_CLASSINFO(GearsDesktop)
 // httprequest
 NS_DECL_DOM_CLASSINFO(GearsHttpRequest)
 // workerpool
@@ -283,6 +295,8 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
   // database
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsDatabase));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsResultSet));
+  // desktop
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsDesktop));
   // httprequest
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsHttpRequest));
   // workerpool
