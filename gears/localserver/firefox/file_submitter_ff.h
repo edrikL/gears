@@ -45,7 +45,7 @@ extern const nsCID kGearsFileSubmitterClassId;
 // previously captured via store.CaptureFile().
 //------------------------------------------------------------------------------
 class GearsFileSubmitter
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public GearsFileSubmitterInterface {
  public:
   NS_DECL_ISUPPORTS

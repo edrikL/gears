@@ -32,8 +32,8 @@
 #include "domstubs.idl"
 interface nsIVariant;
 
-interface GearsBaseClass; // defined in C++
-[ptr] native GearsBaseClassPtr(GearsBaseClass);
+interface ModuleImplBaseClass; // defined in C++
+[ptr] native GearsBaseClassPtr(ModuleImplBaseClass);
 
 [/*NOT scriptable*/ uuid(FCC9884F-E13C-477a-AB0F-FEEEA86D58EE)]
 interface GearsBaseClassInterface : nsISupports {

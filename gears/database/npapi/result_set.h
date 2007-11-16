@@ -34,7 +34,7 @@ class GearsDatabase;
 class ModuleWrapperBaseClass;
 
 class GearsResultSet
-    : public GearsBaseClass {
+    : public ModuleImplBaseClass {
  public:
   GearsResultSet();
   ~GearsResultSet();
@@ -87,6 +87,6 @@ class GearsResultSet
   DISALLOW_EVIL_CONSTRUCTORS(GearsResultSet);
 };
 
-ModuleWrapperBaseClass *CreateGearsResultSet(GearsBaseClass *sibling);
+ModuleWrapperBaseClass *CreateGearsResultSet(ModuleImplBaseClass *sibling);
 
 #endif // GEARS_DATABASE_NPAPI_RESULT_SET_H__

@@ -36,7 +36,7 @@ extern const char *kGearsChannelClassName;
 extern const nsCID kGearsChannelClassId;
 
 class GearsChannel
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public GearsChannelInterface {
  public:
   NS_DECL_ISUPPORTS

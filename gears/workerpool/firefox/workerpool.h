@@ -49,7 +49,7 @@ struct ThreadsEvent;
 
 
 class GearsWorkerPool
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public GearsWorkerPoolInterface,
       public JsEventHandlerInterface {
  public:

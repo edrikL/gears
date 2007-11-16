@@ -55,7 +55,7 @@
 // @see SubmitFileBehavior
 //------------------------------------------------------------------------------
 class ATL_NO_VTABLE GearsFileSubmitter
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<GearsFileSubmitter>,
       public IElementBehaviorFactory,

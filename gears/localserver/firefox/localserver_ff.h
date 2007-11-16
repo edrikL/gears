@@ -40,7 +40,7 @@ extern const nsCID kGearsLocalServerClassId;
 // GearsLocalServer
 //-----------------------------------------------------------------------------
 class GearsLocalServer
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public GearsLocalServerInterface {
  public:
   NS_DECL_ISUPPORTS

@@ -52,7 +52,7 @@ class HTTPHeaders;
 // GearsHttpRequest
 //-----------------------------------------------------------------------------
 class GearsHttpRequest
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public GearsHttpRequestInterface,
       public HttpRequest::ReadyStateListener,
       public JsEventHandlerInterface {

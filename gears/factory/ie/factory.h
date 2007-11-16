@@ -43,7 +43,7 @@
 // instantiate.
 
 class ATL_NO_VTABLE GearsFactory
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<GearsFactory, &CLSID_GearsFactory>,
       public IObjectWithSiteImpl<GearsFactory>,
@@ -105,8 +105,8 @@ class ATL_NO_VTABLE GearsFactory
   // is not selected. The page and it's workers will be allowed to use Gears
   // without prompts until the page is unloaded.
   //
-  // TODO(cprince): move this into GearsBaseClass to auto-pass permission data
-  // around. Do that when we have a single instance of the info per page,
+  // TODO(cprince): move this into ModuleImplBaseClass to auto-pass permission
+  // data around. Do that when we have a single instance of the info per page,
   // because multiple copies can get out of sync (permission data is mutable).
   bool is_permission_granted_;
   bool is_permission_value_from_user_; // user prompt, or persisted DB value

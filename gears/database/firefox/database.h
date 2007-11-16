@@ -47,7 +47,7 @@ struct sqlite3;
 class GearsResultSet;
 
 class GearsDatabase
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public GearsDatabaseInterface,
       public JsEventHandlerInterface {
  public:

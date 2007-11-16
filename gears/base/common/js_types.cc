@@ -383,7 +383,7 @@ void JsSetException(const char16 *message) {
 //-----------------------------------------------------------------------------
 #if BROWSER_FF  // the rest of this file only applies to Firefox, for now
 
-JsParamFetcher::JsParamFetcher(GearsBaseClass *obj) {
+JsParamFetcher::JsParamFetcher(ModuleImplBaseClass *obj) {
   if (obj->EnvIsWorker()) {
     js_context_ = obj->EnvPageJsContext();
     js_argc_ = obj->JsWorkerGetArgc();
@@ -531,7 +531,7 @@ bool JsParamFetcher::ArrayIndexToToken(JsToken array, int i, JsToken *out) {
 }
 
 
-JsNativeMethodRetval JsSetException(const GearsBaseClass *obj,
+JsNativeMethodRetval JsSetException(const ModuleImplBaseClass *obj,
                                     const char16 *message) {
   JsContextPtr cx = NULL;
   JsNativeMethodRetval retval = NS_ERROR_FAILURE;

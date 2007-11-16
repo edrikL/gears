@@ -32,7 +32,7 @@
 #include "gears/base/common/base_class.h"
 
 class ATL_NO_VTABLE GearsChannel
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<GearsChannel>,
       public IDispatchImpl<GearsChannelInterface> {

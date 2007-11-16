@@ -53,7 +53,7 @@
 
 // Implementations of boilerplate code.
 #define GEARS_IMPL_BASECLASS \
-  NS_IMETHOD GetNativeBaseClass(GearsBaseClass **retval) { \
+  NS_IMETHOD GetNativeBaseClass(ModuleImplBaseClass **retval) { \
     *retval = this; \
     return NS_OK; \
   }
@@ -69,15 +69,15 @@ class JsRunnerInterface;
 // TODO(mpcomplete): rename to ModuleImplBaseClass
 // Exposes the minimal set of information that Scour objects need to work
 // consistently across the main-thread and worker-thread JavaScript engines.
-class GearsBaseClass {
+class ModuleImplBaseClass {
  public:
-  GearsBaseClass() : is_initialized_(false) {}
+  ModuleImplBaseClass() : is_initialized_(false) {}
 
   // Initialization functions
   //
   // Init from sibling -- should be used for most objects.
   // Init from DOM -- should only be used for main-thread factories.
-  bool InitBaseFromSibling(const GearsBaseClass *other);
+  bool InitBaseFromSibling(const ModuleImplBaseClass *other);
 #if BROWSER_FF
   bool InitBaseFromDOM();
 #elif BROWSER_IE
@@ -118,7 +118,7 @@ class GearsBaseClass {
 
  private:
   // TODO(cprince): This state should be constant per (thread,page) tuple.
-  // Instead of making a copy for every object (GearsBaseClass), we could
+  // Instead of making a copy for every object (ModuleImplBaseClass), we could
   // keep a reference to one shared class per tuple.
   // (Recall idea for PageSharedState + PageThreadSharedState classes.)
   bool is_initialized_;
@@ -155,7 +155,7 @@ class GearsBaseClass {
   ModuleWrapperBaseClass *js_wrapper_;
 #endif
 
-  DISALLOW_EVIL_CONSTRUCTORS(GearsBaseClass);
+  DISALLOW_EVIL_CONSTRUCTORS(ModuleImplBaseClass);
 };
 
 // Interface for the wrapper class that binds the Gears object to the
@@ -163,7 +163,7 @@ class GearsBaseClass {
 class ModuleWrapperBaseClass {
  public:
   // Returns the object that implements the Gears functionality.
-  virtual GearsBaseClass *GetImplObject() const = 0;
+  virtual ModuleImplBaseClass *GetImplObject() const = 0;
 
   // Returns a token for this wrapper class that can be returned via the
   // JsRunnerInterface.

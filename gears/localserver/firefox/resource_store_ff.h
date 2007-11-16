@@ -50,7 +50,7 @@ class nsIScriptContext;
 // GearsResourceStore
 //-----------------------------------------------------------------------------
 class GearsResourceStore
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public GearsResourceStoreInterface,
       private AsyncTask::Listener,
       public JsEventHandlerInterface {

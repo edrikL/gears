@@ -57,7 +57,7 @@ extern const nsCID kGearsTimerClassId;
 //   var timer = google.gears.factory.create('beta.timer', '1.0');
 //   timer.setTimeout('alert(\'Hello!\');', 1000);
 class GearsTimer
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
 #if BROWSER_FF
       public GearsTimerInterface,
 #elif BROWSER_IE

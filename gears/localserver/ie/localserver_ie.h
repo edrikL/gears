@@ -34,7 +34,7 @@
 // GearsLocalServer
 //------------------------------------------------------------------------------
 class ATL_NO_VTABLE GearsLocalServer
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<GearsLocalServer>,
       public IDispatchImpl<GearsLocalServerInterface> {

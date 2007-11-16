@@ -53,7 +53,7 @@ struct JavaScriptWorkerInfo;
 
 
 class ATL_NO_VTABLE GearsWorkerPool
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<GearsWorkerPool>,
       public IDispatchImpl<GearsWorkerPoolInterface>,

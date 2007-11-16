@@ -27,7 +27,7 @@
 
 #include "gears/base/common/base_class.h"
 
-class GearsFactory : public GearsBaseClass {
+class GearsFactory : public ModuleImplBaseClass {
  public:
   GearsFactory();
   

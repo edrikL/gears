@@ -50,8 +50,8 @@
 //
 // More specifically, optional params and varargs must be extracted from the
 // internal jsval argument array.  We pass this array to C++ objects using the
-// GearsBaseClass interface.  To simplify life, use the JsParamFetcher class
-// (from base_class.h) for optional params and varargs, since it hides the
+// ModuleImplBaseClass interface.  To simplify life, use the JsParamFetcher
+// class (from base_class.h) for optional params and varargs, since it hides the
 // differences between XPConnect and the internal jsval array.
 //
 // (Note: it may be possible to remove the above limitations, but this wrapper
@@ -476,7 +476,7 @@ bool JsContextWrapper::SetupInstanceObject(JSContext *cx,
 
 
 // Helper class that uses scope to ensure cleanup of JsWorkerSetParams()
-// in GearsBaseClass.
+// in ModuleImplBaseClass.
 class ScopedJsArgSetter {
  public:
   // sets argc/argv/context on construction
@@ -505,7 +505,7 @@ class ScopedJsArgSetter {
   }
  private:
   nsCOMPtr<GearsBaseClassInterface> scour_idl_;
-  GearsBaseClass *scour_native_;
+  ModuleImplBaseClass *scour_native_;
   // must save/restore any previous values to handle re-entrancy
   // (example: JS code calls foo.abort(), C++ abort() invokes a JS handler
   // for 'onabort', and the JS handler calls any C++ function)
@@ -552,7 +552,7 @@ JSBool JsContextWrapper::JsWrapperCaller(JSContext *cx, JSObject *obj,
   assert(instance_data);
   assert(instance_data->header.type == INSTANCE_JSOBJECT);
 
-  // Give the GearsBaseClass direct access to JS params
+  // Give the ModuleImplBaseClass direct access to JS params
   ScopedJsArgSetter arg_setter(instance_data->isupports, cx, argc, argv);
 
   // Get interface information about this function.

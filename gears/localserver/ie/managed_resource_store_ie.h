@@ -36,7 +36,7 @@
 // GearsManagedResourceStore
 //------------------------------------------------------------------------------
 class ATL_NO_VTABLE GearsManagedResourceStore
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<GearsManagedResourceStore>,
       public CWindowImpl<GearsManagedResourceStore>,

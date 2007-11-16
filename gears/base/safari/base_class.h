@@ -32,7 +32,7 @@
 
 @class SafariGearsFactory;
 @class WebScriptObject;
-class GearsBaseClass;
+class ModuleImplBaseClass;
 
 //------------------------------------------------------------------------------
 @protocol SafariGearsBaseClass
@@ -45,7 +45,7 @@ class GearsBaseClass;
 
 @interface SafariGearsBaseClass : NSObject <SafariGearsBaseClass> {
  @protected
-  GearsBaseClass *base_;            // The base class for C++ objects (STRONG)
+  ModuleImplBaseClass *base_;       // The base class for C++ objects (STRONG)
   SafariGearsFactory *factory_;     // The creator (STRONG)
   BOOL isWorker_;                   // YES, if this is a worker pool instance
 }
@@ -65,7 +65,7 @@ class GearsBaseClass;
 - (id)initWithFactory:(SafariGearsFactory *)factory;
 
 - (SafariGearsFactory *)factory;
-- (GearsBaseClass *)gearsBaseClass;
+- (ModuleImplBaseClass *)gearsBaseClass;
 
 //------------------------------------------------------------------------------
 // NSObject (WebScripting)

@@ -39,7 +39,7 @@ struct sqlite3;
 struct sqlite3_stmt;
 
 class ATL_NO_VTABLE GearsDatabase
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<GearsDatabase>,
       public IDispatchImpl<GearsDatabaseInterface>,

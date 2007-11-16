@@ -50,6 +50,6 @@ class GearsDatabaseWrapper : public ModuleWrapper<GearsDatabaseWrapper> {
   DISALLOW_EVIL_CONSTRUCTORS(GearsDatabaseWrapper);
 };
 
-ModuleWrapperBaseClass *CreateGearsDatabase(GearsBaseClass *sibling) {
+ModuleWrapperBaseClass *CreateGearsDatabase(ModuleImplBaseClass *sibling) {
   return GearsDatabaseWrapper::Create(sibling);
 }

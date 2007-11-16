@@ -43,7 +43,8 @@
 #endif
 
 
-bool GearsBaseClass::InitBaseFromSibling(const GearsBaseClass *other) {
+bool ModuleImplBaseClass::InitBaseFromSibling(
+                              const ModuleImplBaseClass *other) {
   assert(other->is_initialized_);
   return InitBaseManually(other->env_is_worker_,
 #if BROWSER_FF || BROWSER_NPAPI
@@ -57,13 +58,13 @@ bool GearsBaseClass::InitBaseFromSibling(const GearsBaseClass *other) {
 
 
 #if BROWSER_FF
-bool GearsBaseClass::InitBaseFromDOM() {
+bool ModuleImplBaseClass::InitBaseFromDOM() {
 #elif BROWSER_IE
-bool GearsBaseClass::InitBaseFromDOM(IUnknown *site) {
+bool ModuleImplBaseClass::InitBaseFromDOM(IUnknown *site) {
 #elif BROWSER_NPAPI
-bool GearsBaseClass::InitBaseFromDOM(JsContextPtr instance) {
+bool ModuleImplBaseClass::InitBaseFromDOM(JsContextPtr instance) {
 #elif BROWSER_SAFARI
-bool GearsBaseClass::InitBaseFromDOM(const char *url_str) {
+bool ModuleImplBaseClass::InitBaseFromDOM(const char *url_str) {
 #endif
   bool is_worker = false;
   SecurityOrigin security_origin;
@@ -89,7 +90,7 @@ bool GearsBaseClass::InitBaseFromDOM(const char *url_str) {
 }
 
 
-bool GearsBaseClass::InitBaseManually(bool is_worker,
+bool ModuleImplBaseClass::InitBaseManually(bool is_worker,
 #if BROWSER_FF || BROWSER_NPAPI
                                       JsContextPtr cx,
 #elif BROWSER_IE
@@ -123,44 +124,44 @@ bool GearsBaseClass::InitBaseManually(bool is_worker,
 }
 
 
-bool GearsBaseClass::EnvIsWorker() const {
+bool ModuleImplBaseClass::EnvIsWorker() const {
   assert(is_initialized_);
   return env_is_worker_;
 }
 
-const std::string16& GearsBaseClass::EnvPageLocationUrl() const {
+const std::string16& ModuleImplBaseClass::EnvPageLocationUrl() const {
   assert(is_initialized_);
   return env_page_origin_.full_url();
 }
 
 #if BROWSER_FF || BROWSER_NPAPI
-JsContextPtr GearsBaseClass::EnvPageJsContext() const {
+JsContextPtr ModuleImplBaseClass::EnvPageJsContext() const {
   assert(is_initialized_);
   return env_page_js_context_;
 }
 #elif BROWSER_IE
-IUnknown* GearsBaseClass::EnvPageIUnknownSite() const {
+IUnknown* ModuleImplBaseClass::EnvPageIUnknownSite() const {
   assert(is_initialized_);
   return env_page_iunknown_site_;
 }
 #endif
 
-const SecurityOrigin& GearsBaseClass::EnvPageSecurityOrigin() const {
+const SecurityOrigin& ModuleImplBaseClass::EnvPageSecurityOrigin() const {
   assert(is_initialized_);
   return env_page_origin_;
 }
 
-JsRunnerInterface *GearsBaseClass::GetJsRunner() const {
+JsRunnerInterface *ModuleImplBaseClass::GetJsRunner() const {
   assert(is_initialized_);
   return js_runner_;
 }
 
 #if BROWSER_NPAPI
-void GearsBaseClass::AddRef() {
+void ModuleImplBaseClass::AddRef() {
   js_wrapper_->AddRef();
 }
 
-void GearsBaseClass::Release() {
+void ModuleImplBaseClass::Release() {
   js_wrapper_->Release();
 }
 #endif
@@ -170,19 +171,19 @@ void GearsBaseClass::Release() {
 #if BROWSER_FF  // the rest of this file only applies to Firefox, for now
 
 
-void GearsBaseClass::JsWorkerSetParams(int argc, JsToken *argv) {
+void ModuleImplBaseClass::JsWorkerSetParams(int argc, JsToken *argv) {
   assert(is_initialized_);
   worker_js_argc_ = argc;
   worker_js_argv_ = argv;
 }
 
-int GearsBaseClass::JsWorkerGetArgc() const {
+int ModuleImplBaseClass::JsWorkerGetArgc() const {
   assert(is_initialized_);
   assert(EnvIsWorker());
   return worker_js_argc_;
 }
 
-JsToken* GearsBaseClass::JsWorkerGetArgv() const {
+JsToken* ModuleImplBaseClass::JsWorkerGetArgv() const {
   assert(is_initialized_);
   assert(EnvIsWorker());
   return worker_js_argv_;

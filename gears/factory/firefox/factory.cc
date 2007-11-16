@@ -130,14 +130,14 @@ NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
     RETURN_EXCEPTION(STRING16(L"Unknown object."));
   }
 
-  // setup the GearsBaseClass (copy settings from this factory)
+  // setup the ModuleImplBaseClass (copy settings from this factory)
   if (NS_SUCCEEDED(nr) && isupports) {
     bool base_init_succeeded = false;
 
     nsCOMPtr<GearsBaseClassInterface> idl_base =
         do_QueryInterface(isupports, &nr);
     if (NS_SUCCEEDED(nr) && idl_base) {
-      GearsBaseClass *native_base = NULL;
+      ModuleImplBaseClass *native_base = NULL;
       idl_base->GetNativeBaseClass(&native_base);
       if (native_base) {
         if (native_base->InitBaseFromSibling(this)) {

@@ -41,7 +41,7 @@ extern const nsCID kGearsManagedResourceStoreClassId;
 // GearsManagedResourceStore
 //-----------------------------------------------------------------------------
 class GearsManagedResourceStore
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public GearsManagedResourceStoreInterface,
       private AsyncTask::Listener {
  public:

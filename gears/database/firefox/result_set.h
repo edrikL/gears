@@ -43,7 +43,7 @@ struct sqlite3_stmt;
 class GearsDatabase;
 
 class GearsResultSet
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public GearsResultSetInterface {
  public:
   NS_DECL_ISUPPORTS

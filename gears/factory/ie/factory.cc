@@ -92,7 +92,7 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
   // code consistent across callers, and they are easier to support over time.
 
   std::string16 object_name(object_name_bstr);
-  GearsBaseClass *base_class = NULL;
+  ModuleImplBaseClass *base_class = NULL;
   CComQIPtr<IDispatch> idispatch;
 
   hr = E_FAIL;
@@ -139,14 +139,14 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
     RETURN_EXCEPTION(STRING16(L"Failed to create requested object."));
   }
 
-  // setup the GearsBaseClass (copy settings from this factory)
+  // setup the ModuleImplBaseClass (copy settings from this factory)
   if (!base_class->InitBaseFromSibling(this)) {
     RETURN_EXCEPTION(STRING16(L"Error initializing base class."));
   }
 
   // Our factory-created Gears objects no longer need to be sited, since we get
-  // the domain and location_url from GearsBaseClass.  But we may someday later
-  // need an object to be sited, in which case we should enable this code.
+  // the domain and location_url from ModuleImplBaseClass.  But we may someday
+  // later need an object to be sited, in which case we should enable this code.
   //
   //// SetSite any object that supports IObjectWithSite
   //if (SUCCEEDED(hr)) {

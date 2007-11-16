@@ -36,7 +36,7 @@ class ModuleWrapper
     : public PluginBase<T>,
       public ModuleWrapperBaseClass {
  public:
-  static ModuleWrapperBaseClass *Create(GearsBaseClass *sibling) {
+  static ModuleWrapperBaseClass *Create(ModuleImplBaseClass *sibling) {
     JsContextPtr context = sibling->EnvPageJsContext();
     PluginClass *wrapper = static_cast<PluginClass *>(
         NPN_CreateObject(context, GetNPClass<PluginClass>()));
