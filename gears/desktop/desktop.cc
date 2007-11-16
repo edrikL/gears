@@ -146,8 +146,8 @@ STDMETHODIMP GearsDesktop::createShortcuts(VARIANT shortcuts) {
     JsArray icon_array;
 
     // Iterate across the array of Icon URLs
-    if (shortcut_object.GetPropertyAsArray(std::string16(L"iconUrls"),
-                                          &icon_array)) {
+    if (shortcut_object.GetPropertyAsArray(std::string16(STRING16(L"iconUrls")),
+                                           &icon_array)) {
       int icon_count;
       if (!icon_array.GetLength(&icon_count)) {
         RETURN_EXCEPTION(
@@ -178,18 +178,20 @@ STDMETHODIMP GearsDesktop::createShortcuts(VARIANT shortcuts) {
       RETURN_EXCEPTION(STRING16(L"Invalid icon data. iconUrls was not set."));
     }
 
-    if (!shortcut_object.GetPropertyAsString(std::string16(L"appName"),
-                                             &shortcut_info.app_name)) {
+    if (!shortcut_object.GetPropertyAsString(
+                             std::string16(STRING16(L"appName")),
+                             &shortcut_info.app_name)) {
       RETURN_EXCEPTION(STRING16(L"Invalid icon data. appName was not set."));
     }
 
-    if (!shortcut_object.GetPropertyAsString(std::string16(L"appUrl"),
+    if (!shortcut_object.GetPropertyAsString(std::string16(STRING16(L"appUrl")),
                                              &shortcut_info.app_url)) {
       RETURN_EXCEPTION(STRING16(L"Invalid icon data. appUrl was not set."));
     }
 
-    if (!shortcut_object.GetPropertyAsString(std::string16(L"appDescription"),
-                                             &shortcut_info.app_description)) {
+    if (!shortcut_object.GetPropertyAsString(
+                             std::string16(STRING16(L"appDescription")),
+                             &shortcut_info.app_description)) {
       RETURN_EXCEPTION(
           STRING16(L"Invalid icon data. appDescription was not set."));
     }
@@ -252,7 +254,7 @@ STDMETHODIMP GearsDesktop::createShortcuts(VARIANT shortcuts) {
   // Ensure the directory we'll be storing the icons in exists.
   std::string16 icon_dir;
   if (!GetDataDirectory(EnvPageSecurityOrigin(), &icon_dir) ||
-      !AppendDataName(L"icons", kDataSuffixForDesktop, &icon_dir) ||
+      !AppendDataName(STRING16(L"icons"), kDataSuffixForDesktop, &icon_dir) ||
       !File::RecursivelyCreateDir(icon_dir.c_str())) {
     return false;
   }
@@ -379,13 +381,13 @@ bool GearsDesktop::GetControlPanelIconLocation(SecurityOrigin origin,
     return false;
   }
 
-  if (!AppendDataName(L"icons", kDataSuffixForDesktop, icon_loc)) {
+  if (!AppendDataName(STRING16(L"icons"), kDataSuffixForDesktop, icon_loc)) {
     return false;
   }
 
   *icon_loc += kPathSeparator;
   *icon_loc += app_name;
-  *icon_loc += L".png";
+  *icon_loc += STRING16(L".png");
 
   return true;
 }

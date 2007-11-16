@@ -166,7 +166,7 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
   return false;
 }
 
-bool JsObject::GetProperty(std::string16 &name, JsToken *out) {
+bool JsObject::GetProperty(const std::string16 &name, JsToken *out) {
   if (!js_object_) return false;
 
   return JS_GetUCProperty(js_context_, JSVAL_TO_OBJECT(js_object_),
@@ -187,7 +187,7 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
   return true;
 }
 
-bool JsObject::GetProperty(std::string16 &name, JsToken *out) {
+bool JsObject::GetProperty(const std::string16 &name, JsToken *out) {
   if (js_object_.vt != VT_DISPATCH) return false;
 
   return SUCCEEDED(ActiveXUtils::GetDispatchProperty(js_object_.pdispVal,
@@ -198,35 +198,36 @@ bool JsObject::GetProperty(std::string16 &name, JsToken *out) {
 
 // Common JsObject functions
 
-bool JsObject::GetPropertyAsBool(std::string16 &name, bool *out) {
+bool JsObject::GetPropertyAsBool(const std::string16 &name, bool *out) {
   JsToken token;
   if (!GetProperty(name, &token)) return false;
 
   return JsTokenToBool(token, js_context_, out);
 }
 
-bool JsObject::GetPropertyAsInt(std::string16 &name, int *out) {
+bool JsObject::GetPropertyAsInt(const std::string16 &name, int *out) {
   JsToken token;
   if (!GetProperty(name, &token)) return false;
 
   return JsTokenToInt(token, js_context_, out);
 }
 
-bool JsObject::GetPropertyAsString(std::string16 &name, std::string16 *out) {
+bool JsObject::GetPropertyAsString(const std::string16 &name,
+                                   std::string16 *out) {
   JsToken token;
   if (!GetProperty(name, &token)) return false;
 
   return JsTokenToString(token, js_context_, out);
 }
 
-bool JsObject::GetPropertyAsArray(std::string16 &name, JsArray *out) {
+bool JsObject::GetPropertyAsArray(const std::string16 &name, JsArray *out) {
   JsToken token;
   if (!GetProperty(name, &token)) return false;
 
   return out->SetArray(token, js_context_);
 }
 
-bool JsObject::GetPropertyAsObject(std::string16 &name, JsObject *out) {
+bool JsObject::GetPropertyAsObject(const std::string16 &name, JsObject *out) {
   JsToken token;
   if (!GetProperty(name, &token)) return false;
 

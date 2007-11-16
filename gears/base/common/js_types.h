@@ -231,12 +231,12 @@ class JsObject {
  public:
   JsObject();
   bool SetObject(JsToken value, JsContextPtr context);
-  bool GetProperty(std::string16 &name, JsToken *value);
-  bool GetPropertyAsBool(std::string16 &name, bool *out);
-  bool GetPropertyAsInt(std::string16 &name, int *out);
-  bool GetPropertyAsString(std::string16 &name, std::string16 *out);
-  bool GetPropertyAsArray(std::string16 &name, JsArray *out);
-  bool GetPropertyAsObject(std::string16 &name, JsObject *out);
+  bool GetProperty(const std::string16 &name, JsToken *value);
+  bool GetPropertyAsBool(const std::string16 &name, bool *out);
+  bool GetPropertyAsInt(const std::string16 &name, int *out);
+  bool GetPropertyAsString(const std::string16 &name, std::string16 *out);
+  bool GetPropertyAsArray(const std::string16 &name, JsArray *out);
+  bool GetPropertyAsObject(const std::string16 &name, JsObject *out);
  private:
   JsContextPtr js_context_;
   JsToken js_object_;
