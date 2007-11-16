@@ -32,7 +32,7 @@
 #include "gears/base/common/common.h"
 
 class GearsDesktop
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<GearsDesktop>,
       public IDispatchImpl<GearsDesktopInterface> {
