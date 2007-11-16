@@ -25,6 +25,7 @@
 
 #include "gears/base/common/paths.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_types.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/string16.h"
@@ -102,8 +103,6 @@ void GearsDatabase::Execute() {
   if (argc < 1)
     return;  // JsRunner sets an error message.
 
-  // Get parameters.
-
   // Prepare a statement for execution.
 
 // TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
@@ -125,7 +124,7 @@ void GearsDatabase::Execute() {
   }
 
   // Bind parameters
-  if (!BindArgsToStatement((argc > 2) ? &arg_array : NULL, stmt.get())) {
+  if (!BindArgsToStatement((argc >= 2) ? &arg_array : NULL, stmt.get())) {
     // BindArgsToStatement already called RETURN_EXCEPTION
     return;
   }
@@ -154,15 +153,55 @@ bool GearsDatabase::BindArgsToStatement(const JsToken *arg_array,
   int num_args_expected = sqlite3_bind_parameter_count(stmt);
   int num_args = 0;
 
-  // TODO(mpcomplete): implement array accessor.
-  if (arg_array) {
-    SET_EXCEPTION(STRING16(L"not implemented yet"));
+  JsContextPtr context = EnvPageJsContext();
+  JsArray array;
+
+  if (arg_array && (!array.SetArray(*arg_array, context) ||
+                    !array.GetLength(&num_args))) {
+    SET_EXCEPTION(STRING16(L"Invalid SQL parameters array."));
     return false;
   }
 
   if (num_args_expected != num_args) {
     SET_EXCEPTION(STRING16(L"Wrong number of SQL parameters."));
     return false;
+  }
+
+  for (int i = 0; i < num_args; i++) {
+    int sql_index = i + 1; // sql parameters are 1-based
+    int sql_status = SQLITE_ERROR;
+    std::string16 arg_str;
+    int arg_int;
+    double arg_double;
+    if (array.GetElementAsString(i, &arg_str)) {
+// TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
+#ifdef DEBUG
+      std::string str_utf8;
+      String16ToUTF8(arg_str.c_str(), arg_str.length(), &str_utf8);
+      LOG(("        Parameter %i: %s", i, str_utf8.c_str()));
+#endif
+      sql_status = sqlite3_bind_text16(
+          stmt, sql_index, arg_str.c_str(), -1,
+          SQLITE_TRANSIENT); // so SQLite copies string immediately
+    } else if (array.GetElementAsInt(i, &arg_int)) {
+      LOG(("        Parameter %i: %i", i, arg_int));
+      sql_status = sqlite3_bind_int(stmt, sql_index, arg_int);
+    } else if (array.GetElementAsDouble(i, &arg_double)) {
+      LOG(("        Parameter %i: %lf", i, arg_double));
+      sql_status = sqlite3_bind_double(stmt, sql_index, arg_double);
+    } else {
+      // TODO(mpcomplete): figure out what else we need to support here.
+      std::string16 error =
+          STRING16(L"SQL parameter ") + IntegerToString16(i) +
+          STRING16(" has unknown type.");
+      SET_EXCEPTION(error.c_str());
+      return false;
+    }
+
+    if (sql_status != SQLITE_OK) {
+      SET_EXCEPTION(STRING16(L"Could not bind arguments to expression."));
+      return false;
+    }
   }
 
   return true;

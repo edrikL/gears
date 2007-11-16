@@ -111,6 +111,54 @@ bool JsArray::GetElement(int index, JsToken *out) {
                                                      name.c_str(),
                                                      out));
 }
+
+#elif BROWSER_NPAPI
+
+JsArray::JsArray() : js_context_(NULL) {
+  VOID_TO_NPVARIANT(array_);
+}
+
+bool JsArray::SetArray(JsToken value, JsContextPtr context) {
+  // check that it's an array (can only test that it has a length property).
+  static NPIdentifier length_id = NPN_GetStringIdentifier("length");
+  if (!NPVARIANT_IS_OBJECT(value) ||
+      !NPN_HasProperty(context, NPVARIANT_TO_OBJECT(value), length_id)) {
+    return false;
+  }
+
+  array_ = value;
+  js_context_ = context;
+  return true;
+}
+
+bool JsArray::GetLength(int *length) {
+  if (!NPVARIANT_IS_OBJECT(array_)) return false;
+
+  NPObject *array = NPVARIANT_TO_OBJECT(array_);
+
+  static NPIdentifier length_id = NPN_GetStringIdentifier("length");
+  if (!NPN_HasProperty(js_context_, array, length_id)) return false;
+
+  NPVariant np_length;
+  if (!NPN_GetProperty(js_context_, array, length_id, &np_length)) return false;
+
+  return JsTokenToInt(np_length, js_context_, length);
+}
+
+bool JsArray::GetElement(int index, JsToken *out) {
+  if (!NPVARIANT_IS_OBJECT(array_)) return false;
+
+  NPObject *array = NPVARIANT_TO_OBJECT(array_);
+
+  std::string index_utf8 = IntegerToString(index);
+  NPIdentifier index_id = NPN_GetStringIdentifier(index_utf8.c_str());
+  if (!NPN_HasProperty(js_context_, array, index_id)) return false;
+
+  if (!NPN_GetProperty(js_context_, array, index_id, out)) return false;
+
+  return true;
+}
+
 #endif
 
 // Common JsArray functions
@@ -127,6 +175,13 @@ bool JsArray::GetElementAsInt(int index, int *out) {
   if (!GetElement(index, &token)) return false;
 
   return JsTokenToInt(token, js_context_, out);
+}
+
+bool JsArray::GetElementAsDouble(int index, double *out) {
+  JsToken token;
+  if (!GetElement(index, &token)) return false;
+
+  return JsTokenToDouble(token, js_context_, out);
 }
 
 bool JsArray::GetElementAsString(int index, std::string16 *out) {
@@ -194,6 +249,35 @@ bool JsObject::GetProperty(const std::string16 &name, JsToken *out) {
                                                      name.c_str(),
                                                      out));
 }
+
+#elif BROWSER_NPAPI
+
+JsObject::JsObject() : js_context_(NULL) {
+  VOID_TO_NPVARIANT(js_object_);
+}
+
+bool JsObject::SetObject(JsToken value, JsContextPtr context) {
+  if (NPVARIANT_IS_OBJECT(value)) {
+    js_object_ = value;
+    js_context_ = context;
+    return true;
+  }
+
+  return false;
+}
+
+bool JsObject::GetProperty(const std::string16 &name, JsToken *out) {
+  if (!NPVARIANT_IS_OBJECT(js_object_)) return false;
+
+  std::string name_utf8;
+  if (!String16ToUTF8(name.c_str(), &name_utf8)) return false;
+
+  NPObject *object = NPVARIANT_TO_OBJECT(js_object_);
+  NPIdentifier name_id = NPN_GetStringIdentifier(name_utf8.c_str());
+
+  return NPN_GetProperty(js_context_, object, name_id, out);
+}
+
 #endif
 
 // Common JsObject functions
@@ -210,6 +294,13 @@ bool JsObject::GetPropertyAsInt(const std::string16 &name, int *out) {
   if (!GetProperty(name, &token)) return false;
 
   return JsTokenToInt(token, js_context_, out);
+}
+
+bool JsObject::GetPropertyAsDouble(const std::string16 &name, double *out) {
+  JsToken token;
+  if (!GetProperty(name, &token)) return false;
+
+  return JsTokenToDouble(token, js_context_, out);
 }
 
 bool JsObject::GetPropertyAsString(const std::string16 &name,
@@ -254,6 +345,15 @@ bool JsTokenToInt(JsToken t, JsContextPtr cx, int *out) {
   return true;
 }
 
+bool JsTokenToDouble(JsToken t, JsContextPtr cx, double *out) {
+  if (!JSVAL_IS_DOUBLE(t)) { return false; }
+
+  jsdouble dbl_value;
+  if (!JS_ValueToNumber(cx, t, &dbl_value)) { return false; }
+  *out = dbl_value;
+  return true;
+}
+
 bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
   // for optional args, we want JS null to act like the default _typed_ value
   if (JSVAL_IS_NULL(t)) {
@@ -289,6 +389,12 @@ bool JsTokenToInt(JsToken t, JsContextPtr cx, int *out) {
   return true;
 }
 
+bool JsTokenToDouble(JsToken t, JsContextPtr cx, double *out) {
+  if (t.vt != VT_R8) { return false; }
+  *out = t.dblVal;
+  return true;
+}
+
 bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
   if (t.vt != VT_BSTR) { return false; }
   out->assign(t.bstrVal);
@@ -308,14 +414,40 @@ bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out) {
 }
 
 bool JsTokenToInt(JsToken t, JsContextPtr cx, int *out) {
-  if (!NPVARIANT_IS_INT32(t)) { return false; }
-  *out = NPVARIANT_TO_INT32(t);
-  return true;
+  if (NPVARIANT_IS_INT32(t)) {
+    *out = NPVARIANT_TO_INT32(t);
+    return true;
+  } else if (NPVARIANT_IS_DOUBLE(t)) {
+    double d = NPVARIANT_TO_DOUBLE(t);
+    if (d >= INT_MIN && d <= INT_MAX) {
+      *out = static_cast<int>(d);
+      return true;
+    }
+  }
+  return false;
+}
+
+bool JsTokenToDouble(JsToken t, JsContextPtr cx, double *out) {
+  if (NPVARIANT_IS_DOUBLE(t)) {
+    *out = NPVARIANT_TO_DOUBLE(t);
+    return true;
+  } else if (NPVARIANT_IS_INT32(t)) {
+    *out = static_cast<double>(NPVARIANT_TO_INT32(t));
+    return true;
+  }
+
+  return false;
 }
 
 bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
   if (!NPVARIANT_IS_STRING(t)) { return false; }
   NPString str = NPVARIANT_TO_STRING(t);
+  if (str.utf8length == 0) {
+    // TODO(mpcomplete): find out if UTF8ToString16 can be changed to return
+    // true in this case.
+    out->clear();
+    return true;
+  }
   return UTF8ToString16(str.utf8characters, str.utf8length, out);
 }
 
