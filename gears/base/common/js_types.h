@@ -69,6 +69,7 @@ typedef NPError JsNativeMethodRetval;
 bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out);
 bool JsTokenToInt(JsToken t, JsContextPtr cx, int *out);
 bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out);
+bool JsTokenToDouble(JsToken t, JsContextPtr cx, double *out);
 
 // Utility function to check for the JavaScript values null and undefined. We
 // usually treat these two identically to prevent confusion.
@@ -218,6 +219,7 @@ class JsArray {
   bool GetElement(int index, JsToken *out);
   bool GetElementAsBool(int index, bool *out);
   bool GetElementAsInt(int index, int *out);
+  bool GetElementAsDouble(int index, double *out);
   bool GetElementAsString(int index, std::string16 *out);
   bool GetElementAsArray(int index, JsArray *out);
   bool GetElementAsObject(int index, JsObject *out);
@@ -237,6 +239,7 @@ class JsObject {
   bool GetPropertyAsString(const std::string16 &name, std::string16 *out);
   bool GetPropertyAsArray(const std::string16 &name, JsArray *out);
   bool GetPropertyAsObject(const std::string16 &name, JsObject *out);
+  bool GetPropertyAsDouble(const std::string16 &name, double *out);
  private:
   JsContextPtr js_context_;
   JsToken js_object_;
