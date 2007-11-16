@@ -29,7 +29,7 @@ function testCheckVersionProperty() {
   var minor = versionComponents[1];
   assertEqual(4, versionComponents.length);
   assertEqual('0', major);
-  assertEqual('2', minor);
+  assertEqual('3', minor);
 }
 
 function testCreateValidModules() {
