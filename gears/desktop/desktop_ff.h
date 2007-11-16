@@ -38,7 +38,7 @@ extern const char *kGearsDesktopClassName;
 extern const nsCID kGearsDesktopClassId;
 
 class GearsDesktop
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public GearsDesktopInterface {
  public:
   NS_DECL_ISUPPORTS
