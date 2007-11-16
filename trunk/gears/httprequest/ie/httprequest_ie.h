@@ -37,7 +37,7 @@
 // GearsHttpRequest
 //------------------------------------------------------------------------------
 class ATL_NO_VTABLE GearsHttpRequest
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<GearsHttpRequest>,
       public IDispatchImpl<GearsHttpRequestInterface>,

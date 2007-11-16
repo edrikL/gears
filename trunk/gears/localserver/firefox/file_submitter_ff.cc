@@ -49,7 +49,7 @@ static const char16 *kMissingFilename = STRING16(L"Unknown");
 NS_IMPL_THREADSAFE_ADDREF(GearsFileSubmitter)
 NS_IMPL_THREADSAFE_RELEASE(GearsFileSubmitter)
 NS_INTERFACE_MAP_BEGIN(GearsFileSubmitter)
-  //NS_INTERFACE_MAP_ENTRY(GearsBaseClassInterface)  GearsBaseClass not required
+  //NS_INTERFACE_MAP_ENTRY(GearsBaseClassInterface) ModuleImplBaseClass not reqd
   NS_INTERFACE_MAP_ENTRY(GearsFileSubmitterInterface)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, GearsFileSubmitterInterface)
   NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(GearsFileSubmitter)

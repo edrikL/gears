@@ -89,7 +89,7 @@
   if ((self = [super init])) {
     factory_ = [factory retain];
     factory_ = factory;
-    base_ = new GearsBaseClass();
+    base_ = new ModuleImplBaseClass();
     
     if (!base_->InitBaseFromSibling([factory gearsFactory])) {
       [self release];
@@ -112,7 +112,7 @@
 }
 
 //------------------------------------------------------------------------------
-- (GearsBaseClass *)gearsBaseClass {
+- (ModuleImplBaseClass *)gearsBaseClass {
   return base_;
 }
 

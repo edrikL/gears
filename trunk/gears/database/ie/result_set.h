@@ -35,7 +35,7 @@
 struct sqlite3_stmt;
 
 class ATL_NO_VTABLE GearsResultSet
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<GearsResultSet>,
       public IDispatchImpl<GearsResultSetInterface> {

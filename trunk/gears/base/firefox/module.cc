@@ -321,7 +321,7 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
 // We do not need to define a factory constructor for Scour objects that
 // should only be created via GearsFactory (rather than instanced directly).
 //
-// IMPORTANT: objects that derive from GearsBaseClass should not use
+// IMPORTANT: objects that derive from ModuleImplBaseClass should not use
 // singleton init because their state (like security origin) will not get
 // updated when the page changes!
 

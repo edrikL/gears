@@ -53,6 +53,6 @@ class GearsResultSetWrapper
   DISALLOW_EVIL_CONSTRUCTORS(GearsResultSetWrapper);
 };
 
-ModuleWrapperBaseClass *CreateGearsResultSet(GearsBaseClass *sibling) {
+ModuleWrapperBaseClass *CreateGearsResultSet(ModuleImplBaseClass *sibling) {
   return GearsResultSetWrapper::Create(sibling);
 }

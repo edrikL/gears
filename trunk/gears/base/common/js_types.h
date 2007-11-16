@@ -247,14 +247,14 @@ typedef JsRootedToken JsRootedCallback;
 //-----------------------------------------------------------------------------
 #if BROWSER_FF  // the rest of this file only applies to Firefox, for now
 
-class GearsBaseClass;
+class ModuleImplBaseClass;
 
 // Helper class to extract JavaScript parameters (including optional params
 // and varargs), in a way that hides differences between main-thread and
 // worker-thread environments.
 class JsParamFetcher {
  public:
-  explicit JsParamFetcher(GearsBaseClass *obj);
+  explicit JsParamFetcher(ModuleImplBaseClass *obj);
 
   JsContextPtr GetContextPtr() { return js_context_; }
   int GetCount(bool has_mysterious_retval) {
@@ -298,7 +298,7 @@ class JsParamFetcher {
 // Sets JavaScript exceptions, in a way that hides differences
 // between main-thread and worker-thread environments.
 // Returns the value the caller should return to the JavaScript host engine.
-JsNativeMethodRetval JsSetException(const GearsBaseClass *obj,
+JsNativeMethodRetval JsSetException(const ModuleImplBaseClass *obj,
                                     const char16 *message);
 
 // Garbage collection helper functions

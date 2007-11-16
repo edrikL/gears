@@ -40,7 +40,7 @@ class GearsResultSet;
 class ModuleWrapperBaseClass;
 
 class GearsDatabase
-    : public GearsBaseClass,
+    : public ModuleImplBaseClass,
       public JsEventHandlerInterface {
  public:
   GearsDatabase();
@@ -87,6 +87,6 @@ class GearsDatabase
   DISALLOW_EVIL_CONSTRUCTORS(GearsDatabase);
 };
 
-ModuleWrapperBaseClass *CreateGearsDatabase(GearsBaseClass *sibling);
+ModuleWrapperBaseClass *CreateGearsDatabase(ModuleImplBaseClass *sibling);
 
 #endif // GEARS_DATABASE_NPAPI_DATABASE_H__
