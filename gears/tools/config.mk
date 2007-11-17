@@ -70,6 +70,7 @@ endif
 FF_CPPFLAGS = -DBROWSER_FF=1 -I$(GECKO_SDK)/include
 IE_CPPFLAGS = -DBROWSER_IE=1
 IEMOBILE_CPPFLAGS = -DBROWSER_IE=1
+NPAPI_CPPFLAGS = -DBROWSER_NPAPI=1 -I$(GECKO_SDK)/include
 
 # When adding or removing SQLITE_OMIT_* options, also update and
 # re-run ../third_party/sqlite_google/google_generate_preprocessed.sh.
@@ -230,7 +231,11 @@ ifeq ($(BROWSER),IEMOBILE)
 SQLITE_CFLAGS += /wd4146
 endif
 
+ifeq ($(BROWSER),NPAPI)
+DLL_PREFIX = np
+else
 DLL_PREFIX =
+endif
 DLL_SUFFIX = .dll
 MKSHLIB	= link
 SHLIBFLAGS_dbg =
@@ -257,6 +262,10 @@ IE_SHLIBFLAGS_dbg =
 IE_SHLIBFLAGS_opt =
 IE_SHLIBFLAGS = $(IE_SHLIBFLAGS_$(MODE)) /DEF:tools/mscom.def
 
+NPAPI_SHLIBFLAGS_dbg = /NODEFAULTLIB:MSVCRT
+NPAPI_SHLIBFLAGS_opt = /NODEFAULTLIB:MSVCRT
+NPAPI_SHLIBFLAGS = $(NPAPI_SHLIBFLAGS_$(MODE)) /DEF:base/npapi/npgears.def
+
 EXE_SUFFIX = .exe
 MKEXE = link
 EXEFLAGS = /NOLOGO /OUT:$@
@@ -264,6 +273,7 @@ EXEFLAGS = /NOLOGO /OUT:$@
 FF_LIBS = $(GECKO_SDK)/lib/xpcom.lib $(GECKO_SDK)/lib/xpcomglue_s.lib $(GECKO_SDK)/lib/nspr4.lib $(GECKO_SDK)/lib/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib
 IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib
 IEMOBILE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib
+NPAPI_LIBS = ole32.lib shell32.lib advapi32.lib wininet.lib
 
 MIDL = midl
 MIDLFLAGS = $(CPPFLAGS) -env win32 -Oicf -tlb "$(@D)/$*.tlb" -h "$(@D)/$*.h" -iid "$(IE_OUTDIR)/$*_i.c" -proxy "$(IE_OUTDIR)/$*_p.c" -dlldata "$(IE_OUTDIR)/$*_d.c"

@@ -23,7 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/npapi/plugin.h"
+// Don't actually include plugin.h, since this is a template file and will be
+// included by the .h file.  If we do, mkdepend.py explodes in a whirlwind of
+// angry recursion as it tries to follow the infinite include chain.
 
 #include "gears/base/npapi/browser_utils.h"
 

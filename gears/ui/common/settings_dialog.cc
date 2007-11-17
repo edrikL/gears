@@ -28,6 +28,8 @@
 #include "gears/desktop/desktop_ff.h"
 #elif BROWSER_IE
 #include "gears/desktop/desktop_ie.h"
+#elif BROWSER_NPAPI
+#include "gears/desktop/desktop_np.h"
 #endif
 #include "gears/ui/common/html_dialog.h"
 #include "gears/ui/common/settings_dialog.h"

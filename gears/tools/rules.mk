@@ -46,12 +46,14 @@ OUTDIR = bin-$(MODE)
 COMMON_OUTDIR           = $(OUTDIR)/$(OS)-$(ARCH)/common
 FF_OUTDIR               = $(OUTDIR)/$(OS)-$(ARCH)/ff
 IE_OUTDIR               = $(OUTDIR)/$(OS)-$(ARCH)/ie
+NPAPI_OUTDIR            = $(OUTDIR)/$(OS)-$(ARCH)/npapi
 SQLITE_OUTDIR           = $(COMMON_OUTDIR)/sqlite
 THIRD_PARTY_OUTDIR      = $(COMMON_OUTDIR)/third_party
 INSTALLERS_OUTDIR       = $(OUTDIR)/installers
 COMMON_OUTDIRS_I18N     = $(foreach lang,$(I18N_LANGS),$(COMMON_OUTDIR)/genfiles/i18n/$(lang))
 FF_OUTDIRS_I18N         = $(foreach lang,$(I18N_LANGS),$(FF_OUTDIR)/genfiles/i18n/$(lang))
 IE_OUTDIRS_I18N         = $(foreach lang,$(I18N_LANGS),$(IE_OUTDIR)/genfiles/i18n/$(lang))
+NPAPI_OUTDIRS_I18N      = $(foreach lang,$(I18N_LANGS),$(NPAPI_OUTDIR)/genfiles/i18n/$(lang))
 # TODO(cprince): unify the Firefox directory name across the output dirs
 # (where it is 'ff') and the source dirs (where it is 'firefox').  Changing
 # the output dirs would require changing #includes that reference genfiles.
@@ -72,6 +74,9 @@ IE_OBJS = \
 IEMOBILE_OBJS = \
 	$(patsubst %.cc,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IEMOBILE_CPPSRCS)) \
 	$(patsubst %.c,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IEMOBILE_CSRCS))
+NPAPI_OBJS = \
+	$(patsubst %.cc,$(NPAPI_OUTDIR)/%$(OBJ_SUFFIX),$(NPAPI_CPPSRCS)) \
+	$(patsubst %.c,$(NPAPI_OUTDIR)/%$(OBJ_SUFFIX),$(NPAPI_CSRCS))
 SQLITE_OBJS = \
 	$(patsubst %.c,$(SQLITE_OUTDIR)/%$(OBJ_SUFFIX),$(SQLITE_CSRCS))
 THIRD_PARTY_OBJS = \
@@ -102,6 +107,7 @@ DEPS = \
 	$(FF_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(IE_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(IEMOBILE_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(NPAPI_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(SQLITE_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(THIRD_PARTY_OBJS:$(OBJ_SUFFIX)=.pp)
 
@@ -120,6 +126,11 @@ IEMOBILE_GEN_HEADERS = \
 IEMOBILE_OBJS += \
 	$(patsubst %.idl,$(IE_OUTDIR)/%_i$(OBJ_SUFFIX),$(IEMOBILE_IDLSRCS))
 
+NPAPI_GEN_HEADERS = \
+	$(patsubst %.idl,$(NPAPI_OUTDIR)/genfiles/%.h,$(NPAPI_IDLSRCS))
+NPAPI_GEN_TYPELIBS = \
+	$(patsubst %.idl,$(NPAPI_OUTDIR)/genfiles/%.xpt,$(NPAPI_IDLSRCS))
+
 COMMON_M4FILES = \
 	$(patsubst %.m4,$(COMMON_OUTDIR)/genfiles/%,$(COMMON_M4SRCS))
 FF_M4FILES = \
@@ -128,6 +139,8 @@ IE_M4FILES = \
 	$(patsubst %.m4,$(IE_OUTDIR)/genfiles/%,$(IE_M4SRCS))
 IEMOBILE_M4FILES = \
 	$(patsubst %.m4,$(IE_OUTDIR)/genfiles/%,$(IEMOBILE_M4SRCS))
+NPAPI_M4FILES = \
+	$(patsubst %.m4,$(NPAPI_OUTDIR)/genfiles/%,$(NPAPI_M4SRCS))
 
 COMMON_M4FILES_I18N = \
 	$(foreach lang,$(I18N_LANGS),$(addprefix $(COMMON_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$(COMMON_M4SRCS_I18N))))
@@ -137,6 +150,8 @@ IE_M4FILES_I18N = \
 	$(foreach lang,$(I18N_LANGS),$(addprefix $(IE_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$(IE_M4SRCS_I18N))))
 IEMOBILE_M4FILES_I18N = \
 	$(foreach lang,$(I18N_LANGS),$(addprefix $(IE_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$(IEMOBILE_M4SRCS_I18N))))
+NPAPI_M4FILES_I18N = \
+	$(foreach lang,$(I18N_LANGS),$(addprefix $(NPAPI_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$(NPAPI_M4SRCS_I18N))))
 
 FF_VPATH += $(FF_OUTDIR)/genfiles
 
@@ -147,6 +162,8 @@ IE_VPATH += $(IE_OUTDIR)
 # for IE MOBILE and IE desktop.
 IEMOBILE_VPATH += $(IE_OUTDIR)/genfiles
 IEMOBILE_VPATH += $(IE_OUTDIR)
+
+NPAPI_VPATH += $(NPAPI_OUTDIR)/genfiles
 
 # Make VPATH search our paths before third-party paths.
 VPATH += $(COMMON_VPATH) $($(BROWSER)_VPATH) $(THIRD_PARTY_VPATH)
@@ -165,6 +182,8 @@ IE_MODULE_DLL     = $(IE_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 WIN32_INSTALLER_MSI = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).msi
 WIXOBJ = $(COMMON_OUTDIR)/win32_msi.wxiobj
 WIXSRC = $(COMMON_OUTDIR)/genfiles/win32_msi.wxs
+
+NPAPI_MODULE_DLL  = $(NPAPI_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 
 # TODO(andreip): create installer target for Windows Mobile
 
@@ -227,6 +246,12 @@ genheaders:: $(IEMOBILE_GEN_HEADERS)
 modules:: $(IE_MODULE_DLL)
 endif
 
+ifeq ($(BROWSER),NPAPI)
+prereqs:: $(NPAPI_OUTDIR)/genfiles $(NPAPI_OUTDIRS_I18N) $(COMMON_M4FILES) $(COMMON_M4FILES_I18N) $(NPAPI_M4FILES) $(NPAPI_M4FILES_I18N)
+genheaders:: $(NPAPI_GEN_HEADERS)
+modules:: $(NPAPI_MODULE_DLL)
+endif
+
 clean::
 	rm -rf $(OUTDIR)
 
@@ -250,6 +275,10 @@ $(IE_OUTDIR)/genfiles:
 	"mkdir" -p $@
 $(IE_OUTDIRS_I18N):
 	"mkdir" -p $@
+$(NPAPI_OUTDIR)/genfiles:
+	"mkdir" -p $@
+$(NPAPI_OUTDIRS_I18N):
+	"mkdir" -p $@
 $(INSTALLERS_OUTDIR):
 	"mkdir" -p $@
 
@@ -264,6 +293,9 @@ $(FF_OUTDIR)/genfiles/%: %.m4
 $(IE_OUTDIR)/genfiles/%: %.m4
 	m4 $(M4FLAGS) $< > $@
 
+$(NPAPI_OUTDIR)/genfiles/%: %.m4
+	m4 $(M4FLAGS) $< > $@
+
 # I18N M4 (GENERIC PREPROCESSOR) TARGETS
 
 $(COMMON_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
@@ -271,6 +303,8 @@ $(COMMON_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
 $(FF_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
 	m4 $(M4FLAGS) $< > $@
 $(IE_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
+	m4 $(M4FLAGS) $< > $@
+$(NPAPI_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
 	m4 $(M4FLAGS) $< > $@
 
 # IDL TARGETS
@@ -317,6 +351,14 @@ $(IE_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	@$(MKDEP)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $($(BROWSER)_CPPFLAGS) $($(BROWSER)_CFLAGS) $<
 
+$(NPAPI_OUTDIR)/%$(OBJ_SUFFIX): %.cc
+	$(MKDEP)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(NPAPI_CPPFLAGS) $(NPAPI_CXXFLAGS) $<
+
+$(NPAPI_OUTDIR)/%$(OBJ_SUFFIX): %.c
+	$(MKDEP)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(NPAPI_CPPFLAGS) $(NPAPI_CFLAGS) $<
+
 # Omit @$(MKDEP) in this case because sqlite files include files which
 # aren't in the same directory, but doesn't use explicit paths.  All
 # necessary -I flags are in SQLITE_CFLAGS.
@@ -336,6 +378,9 @@ $(THIRD_PARTY_OUTDIR)/%$(OBJ_SUFFIX): %.c
 $(IE_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 	$(RC) $(RCFLAGS) $<
 
+$(NPAPI_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
+	$(RC) $(RCFLAGS) /DBROWSER_NPAPI=1 $<
+
 # LINK TARGETS
 
 # This target handles both IE and IEMOBILE by using the $(BROWSER) variable in the
@@ -348,6 +393,9 @@ $(FF_MODULE_DLL): $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_OBJS) $
 
 $(FF_MODULE_TYPELIB): $(FF_GEN_TYPELIBS)
 	$(GECKO_SDK)/bin/xpt_link $@ $^
+
+$(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS)
+	$(MKSHLIB) $(SHLIBFLAGS) $(NPAPI_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS) $(NPAPI_LIBS)
 
 # INSTALLER TARGETS
 
@@ -409,10 +457,10 @@ OUR_COMPONENT_GUID_IE_FILES = \
   $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_IE_FILES-$(VERSION))
 OUR_COMPONENT_GUID_IE_REGISTRY = \
   $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_IE_REGISTRY-$(VERSION))
-OUR_COMPONENT_GUID_IEMOBILE_FILES = \
-  $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_IEMOBILE_FILES-$(VERSION))
-OUR_COMPONENT_GUID_IEMOBILE_REGISTRY = \
-  $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_IEMOBILE_REGISTRY-$(VERSION))
+OUR_COMPONENT_GUID_NPAPI_FILES = \
+  $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_NPAPI_FILES-$(VERSION))
+OUR_COMPONENT_GUID_NPAPI_REGISTRY = \
+  $(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_NPAPI_REGISTRY-$(VERSION))
 
 WIX_DEFINES_I18N = $(foreach lang,$(subst -,_,$(I18N_LANGS)),-dOurComponentGUID_FFLang$(lang)DirFiles=$(shell $(GGUIDGEN) $(NAMESPACE_GUID) OUR_COMPONENT_GUID_FF_$(lang)_DIR_FILES-$(VERSION)))
 endif
@@ -431,6 +479,8 @@ $(WIXOBJ): $(WIXSRC)
 	  -dOurComponentGUID_FFRegistry=$(OUR_COMPONENT_GUID_FF_REGISTRY) \
 	  -dOurComponentGUID_IEFiles=$(OUR_COMPONENT_GUID_IE_FILES) \
 	  -dOurComponentGUID_IERegistry=$(OUR_COMPONENT_GUID_IE_REGISTRY) \
+	  -dOurComponentGUID_NPAPIFiles=$(OUR_COMPONENT_GUID_NPAPI_FILES) \
+	  -dOurComponentGUID_NPAPIRegistry=$(OUR_COMPONENT_GUID_NPAPI_REGISTRY) \
 	  $(WIX_DEFINES_I18N)
 
 # We generate dependency information for each source file as it is compiled.

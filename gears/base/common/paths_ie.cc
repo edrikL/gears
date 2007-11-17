@@ -30,7 +30,7 @@
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
-#include "gears/base/ie/vista_utils.h"
+#include "gears/base/common/vista_utils.h"
 
 const char16 kPathSeparator = L'\\';  // can always use backslash with IE
 
