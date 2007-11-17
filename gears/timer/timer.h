@@ -176,7 +176,7 @@ class GearsTimer
   // Called by Create*Timer() to actually create the timer.  Returns the id of
   // the new timer, or -1 on failure.
   int CreateTimerCommon(TimerInfo &timer_info, int timeout);
-  static void HandleTimer(TimerInfo *timer_info);
+  void HandleTimer(TimerInfo *timer_info);
 
   std::map<int, TimerInfo> timers_;
   int next_timer_id_;
