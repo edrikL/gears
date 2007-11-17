@@ -81,7 +81,7 @@ resources locally, without a network connection.</p>
   <h4>Updating of cached resources</h4>  
   <p>A key difference between the two types of stores is how resources are updated. The contents of a ManagedResourceStore are automatically
   updated whenever the version string in the store's manifest file changes. The ResourceStore's contents are never automatically
-  updated, and are only updated explicitly by the appliction.</p>
+  updated, and are only updated explicitly by the application.</p>
   <p>Google Gears automatically updates ManagedResourceStores according to these rules:</p>
   <ul>
     <li><code>checkForUpdate()</code> is called each time  a resource contained in a ManagedResourceStore is requested and served locally, but no more often than once every 10 seconds.</li>
