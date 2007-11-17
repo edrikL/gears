@@ -387,6 +387,66 @@ IEMOBILE_LINK_EXTRAS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# base/npapi
+
+NPAPI_VPATH	+= \
+		base/common \
+		base/npapi \
+		$(NULL)
+
+NPAPI_M4SRCS	+= \
+		$(NULL)
+
+NPAPI_IDLSRCS	+= \
+		$(NULL)
+
+NPAPI_CPPSRCS	+= \
+		base_class.cc \
+		base_class_test.cc \
+		browser_utils.cc \
+		file.cc \
+		file_ie.cc \
+		file_test.cc \
+		html_event_monitor.cc \
+		html_event_monitor_np.cc \
+		http_utils.cc \
+		js_runner_np.cc \
+		js_runner_utils.cc \
+		js_types.cc \
+		module.cc \
+		mutex.cc \
+		name_value_table.cc \
+		np_utils.cc \
+		npn_bindings.cc \
+		npp_bindings.cc \
+		paths.cc \
+		paths_ie.cc \
+		permissions_db.cc \
+		png_utils.cc \
+		security_model.cc \
+		security_model_test.cc \
+		shortcut_table.cc \
+		sqlite_wrapper.cc \
+		stopwatch.cc \
+		stopwatch_ie.cc \
+		string16.cc \
+		string_utils.cc \
+		string_utils_test.cc \
+		thread_locals.cc \
+		url_utils.cc \
+		url_utils_ie.cc \
+		url_utils_test.cc \
+		vista_utils.cc \
+		$(NULL)
+
+# TODO(mpcomplete): use WIN32_LINK_EXTRAS here.
+ifeq ($(OS),win32)
+NPAPI_LINK_EXTRAS  += \
+                $(NPAPI_OUTDIR)/module.res \
+                $(NULL)
+endif
+
+#-----------------------------------------------------------------------------
 # database/firefox
 
 FF_VPATH	+= \
@@ -439,6 +499,25 @@ IEMOBILE_IDLSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# database/npapi
+
+NPAPI_VPATH	+= \
+		database/common \
+		database/npapi \
+		$(NULL)
+
+NPAPI_IDLSRCS	+= \
+		$(NULL)
+
+NPAPI_CPPSRCS	+= \
+		database.cc \
+		database_wrapper.cc \
+		database_utils.cc \
+		result_set.cc \
+		result_set_wrapper.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # desktop
 
 FF_VPATH	+= \
@@ -464,6 +543,16 @@ IE_IDLSRCS	+= \
 IE_CPPSRCS	+= \
 		desktop.cc \
 		$(NULL)
+
+NPAPI_VPATH     += \
+                desktop \
+                $(NULL)
+
+NPAPI_IDLSRCS	+= \
+		$(NULL)
+
+NPAPI_CPPSRCS   += \
+                $(NULL)
 
 #-----------------------------------------------------------------------------
 # ui/generated
@@ -578,6 +667,22 @@ IEMOBILE_M4SRCS	+= \
 
 IEMOBILE_IDLSRCS	+= \
 		html_dialog_host.idl \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# ui/npapi
+
+NPAPI_VPATH	+= \
+		ui/common \
+		$(NULL)
+
+NPAPI_IDLSRCS	+= \
+		$(NULL)
+
+NPAPI_CPPSRCS	+= \
+		html_dialog.cc \
+		permissions_dialog.cc \
+		settings_dialog.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -773,6 +878,31 @@ FF_CPPSRCS	+= \
 		$(NULL)		
 
 #-----------------------------------------------------------------------------
+# localserver/npapi
+
+NPAPI_VPATH	+= \
+		base/common \
+		localserver/common \
+		localserver/npapi \
+		$(NULL)
+
+NPAPI_M4SRCS	+= \
+		$(NULL)
+
+NPAPI_IDLSRCS	+= \
+		$(NULL)
+
+NPAPI_CPPSRCS	+= \
+		$(NULL)
+
+# localserver/common
+NPAPI_CPPSRCS	+= \
+		http_constants.cc \
+		localserver_db_stub.cc \
+		$(NULL)
+
+
+#-----------------------------------------------------------------------------
 # httprequest/ie
 
 IE_VPATH	+= \
@@ -910,6 +1040,23 @@ IEMOBILE_IDLSRCS += \
 
 IEMOBILE_CPPSRCS += \
 		factory.cc \
+		factory_utils.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# factory/npapi
+
+NPAPI_VPATH	+= \
+		factory/common \
+		factory/npapi \
+		$(NULL)
+
+NPAPI_IDLSRCS	+= \
+		$(NULL)
+
+NPAPI_CPPSRCS	+= \
+		factory.cc \
+		factory_wrapper.cc \
 		factory_utils.cc \
 		$(NULL)
 

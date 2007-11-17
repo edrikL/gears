@@ -23,9 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/base/common/vista_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/ie_version.h"
-#include "gears/base/ie/vista_utils.h"
 
 
 static CString GetIEVersion() {

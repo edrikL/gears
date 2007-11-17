@@ -25,7 +25,7 @@
 
 #include <assert.h>
 #include <tchar.h>
-#include "gears/base/ie/vista_utils.h"
+#include "gears/base/common/vista_utils.h"
 
 
 bool VistaUtils::IsRunningOnVista() {
