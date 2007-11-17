@@ -53,15 +53,22 @@ bool File::CreateNewFile(const char16 *path) {
   nsDependentString filename(path);
   nsCOMPtr<nsILocalFile> file;
   nsresult nr = NS_NewLocalFile(filename, PR_FALSE, getter_AddRefs(file));
+  if (NS_SUCCEEDED(nr)) {
+    nr = file->Create(nsIFile::NORMAL_FILE_TYPE, 0700);
+
+// There is a bug in OSX where creating a file with initial permissions doesn't
+// stick. You need to reset it.
+#ifdef OS_MACOSX
+    if (NS_SUCCEEDED(nr)) {
+      nr = file->SetPermissions(0700);
+    }
+#endif    
+  }
+  
   if (NS_FAILED(nr)) {
     SetLastFileError(kCreateFileFailedMessage, path, nr);
     return false;
   }
-  nr = file->Create(nsIFile::NORMAL_FILE_TYPE, 0700);
-  if (NS_FAILED(nr)) {
-    SetLastFileError(kCreateFileFailedMessage, path, nr);
-    return false;
-  }  
   return true;
 }
 
@@ -139,6 +146,13 @@ bool File::ReadFileToVector(const char16 *full_filepath,
 
 bool File::WriteVectorToFile(const char16 *full_filepath,
                              const std::vector<uint8> *data) {
+  const uint8 *first_byte = data->size() ? &(data->at(0)) : NULL;
+  return WriteBytesToFile(full_filepath, first_byte, data->size());
+}
+
+
+bool File::WriteBytesToFile(const char16 *full_filepath, const uint8 *buf,
+                            int length) {
   // Create a file object
   nsDependentString filename(full_filepath);
   nsCOMPtr<nsILocalFile> file_obj;
@@ -155,19 +169,15 @@ bool File::WriteVectorToFile(const char16 *full_filepath,
   nr = NSFileUtils::NewLocalFileOutputStream(getter_AddRefs(stream), file_obj);
   if (NS_FAILED(nr)) return false;
   if (!stream) return false;
-  PRUint32 length = data->size();
-  if (length > 0) {
-    const unsigned char *buf = &(data->at(0));
-    while (length > 0) {
-      // We loop since write can consume less than we want, in theory at least
-      PRUint32 written = 0;
-      nr = stream->Write(reinterpret_cast<const char*>(buf), length, &written);
-      if (NS_FAILED(nr)) return false;
-      if (written <= 0) return false;
-      if (written > length) return false;
-      length -= written;
-      buf += written;
-    }
+  while (length > 0) {
+    // We loop since write can consume less than we want, in theory at least
+    PRUint32 written = 0;
+    nr = stream->Write(reinterpret_cast<const char*>(buf), length, &written);
+    if (NS_FAILED(nr)) return false;
+    if (written <= 0) return false;
+    if (written > static_cast<uint>(length)) return false;
+    length -= written;
+    buf += written;
   }
   return true;
 }
@@ -280,4 +290,27 @@ bool File::DeleteRecursively(const char16 *full_dirpath) {
     return false;
   }
   return NS_SUCCEEDED(directory_obj->Remove(kRecursive));
+}
+
+
+bool File::MoveDirectory(const char16 *src_path, const char16 *dest_path) {
+  nsCOMPtr<nsILocalFile> src_dir;
+  nsCOMPtr<nsILocalFile> dest_dir;
+  nsCOMPtr<nsIFile> dest_parent;
+  nsresult nr;
+
+  nr = NS_NewLocalFile(nsDependentString(src_path), PR_FALSE,
+                       getter_AddRefs(src_dir));
+  if (NS_FAILED(nr)) return false;
+  nr = NS_NewLocalFile(nsDependentString(dest_path), PR_FALSE,
+                       getter_AddRefs(dest_dir));
+  if (NS_FAILED(nr)) return false;
+  nr = dest_dir->GetParent(getter_AddRefs(dest_parent));
+  if (NS_FAILED(nr)) return false;
+  
+  nsString dest_name;
+  nr = dest_dir->GetLeafName(dest_name);
+  if (NS_FAILED(nr)) return false;
+
+  return NS_SUCCEEDED(src_dir->MoveTo(dest_parent, dest_name));
 }

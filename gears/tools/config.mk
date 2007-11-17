@@ -148,7 +148,7 @@ CXXFLAGS = $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wno
 
 DLL_PREFIX = lib
 DLL_SUFFIX = .dylib
-MKSHLIB = g++ -arch $(ARCH) -isysroot $(OSX_SDK_ROOT)
+MKSHLIB = g++ -framework CoreServices -framework Carbon -arch $(ARCH) -isysroot $(OSX_SDK_ROOT)
 SHLIBFLAGS = -o $@ -bundle -Wl,-dead_strip -Wl,-exported_symbols_list -Wl,tools/xpcom-ld-script.darwin
 
 FF_LIBS = -L$(GECKO_SDK)/bin -L$(GECKO_SDK)/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4 -lxpcom_core

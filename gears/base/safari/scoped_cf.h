@@ -42,6 +42,27 @@ class ReleaseCFTypeFunctor {
   }
 };
 
+template<typename T>
+class scoped_cftype : public scoped_token<T, ReleaseCFTypeFunctor> {
+ public:
+  explicit scoped_cftype(T value) :
+      scoped_token<T, ReleaseCFTypeFunctor>(value) {
+  }
+};
+
+
+class ReleaseHandleFunctor {
+ public:
+  void operator()(Handle x) const {
+    if (x != NULL) { DisposeHandle(x); }
+  }
+};
+
+typedef scoped_token<Handle, ReleaseHandleFunctor> scoped_Handle;
+
+
+// TODO(aa): Replace usages of the below with scoped_cftype above?
+
 // CFDictionaryRef
 typedef scoped_token<CFDictionaryRef, ReleaseCFTypeFunctor> scoped_CFDictionary;
 
