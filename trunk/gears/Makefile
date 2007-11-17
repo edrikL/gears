@@ -218,7 +218,6 @@ COMMON_M4SRCS	+= \
 
 COMMON_CPPSRCS	+= \
 		file_win32.cc \
-		file_osx.cc \
 		file_linux.cc \
 		$(NULL)
 # WARNING: Think carefully before listing any non-third-party C/C++ files in
@@ -254,6 +253,7 @@ FF_CPPSRCS	+= \
 		dom_utils.cc \
 		file.cc \
 		file_ff.cc \
+		file_osx.cc \
 		file_test.cc \
 		html_event_monitor.cc \
 		html_event_monitor_ff.cc \

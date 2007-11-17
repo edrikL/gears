@@ -108,49 +108,22 @@ static bool GetDesktopPath(std::string16 *desktop_path) {
   return succeeded;
 }
 
-bool File::CreateDesktopShortcut(BrowserType browser_type,
-                                 const char16 *link_name,
-                                 const SecurityOrigin *security_origin,
-                                 const char16 *launch_url,
-                                 const char16 *icon_url) {
+bool File::CreateDesktopShortcut(const std::string16 &link_name,
+                                 const std::string16 &launch_url,
+                                 const std::vector<IconData *> &icons) {
   bool creation_result = false;
   std::string16 app_path;
   const char16 *process_name;
 
-  switch (browser_type) {
-    case FIREFOX:
-      process_name = STRING16(L"FIREFOX.EXE");
-      break;
-    case IE:
-      process_name = STRING16(L"IEXPLORE.EXE");
-      break;
-    default:
-      return false;
-  }
+// TODO(aa): Look up the running process name/path/args dynamically
+#ifdef BROWSER_FF
+  process_name = STRING16(L"FIREFOX.EXE");
+#else BROWSER_IE
+  process_name = STRING16(L"IEXPLORE.EXE");
+#endif 
 
-  if (NULL == security_origin) {
-    return false;
-  }
-
-  // Check link name for safety. As long as it's a plain filename it is valid.
-  // Note that we append .lnk to it later, so we don't need to worry about
-  // whether it has a (possibly malicious) extension.
-  if (NULL == link_name || !PathIsFileSpec(link_name)) {
-    return false;
-  }
-
-  if (launch_url == NULL || !IsRelativeUrl(launch_url)) {
-    return false;
-  }
-  if (icon_url == NULL || !IsRelativeUrl(icon_url)) {
-    return false;
-  }
-
-  std::string16 full_launch_url(security_origin->url());
-  if (launch_url[0] != L'/') {
-    full_launch_url += STRING16(L"/");
-  }
-  full_launch_url += launch_url;
+  // Note: We assume that link_name has been validated as a valid filename and
+  // that the launch_url has been converted to absolute URL by the caller.
 
   if (GetAppPath(process_name, &app_path)) {
     std::string16 link_path;
@@ -162,7 +135,7 @@ bool File::CreateDesktopShortcut(BrowserType browser_type,
       link_path += link_name;
       link_path += STRING16(L".lnk");
       creation_result = CreateShellLink(app_path.c_str(), link_path.c_str(),
-                                        full_launch_url.c_str());
+                                        launch_url.c_str());
     }
   }
   return creation_result;

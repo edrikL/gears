@@ -36,49 +36,18 @@
 #include "gears/base/common/url_utils.h"
 #include "gears/localserver/common/http_constants.h"
 
-bool File::CreateDesktopShortcut(BrowserType browser_type,
-                                 const char16 *link_name,
-                                 const SecurityOrigin *security_origin,
-                                 const char16 *launch_url,
-                                 const char16 *icon_url) {
-  const char16 *browser_path;
-
-  // In Linux, /usr/bin/browsername is the closest we have to a well-known
-  // location for a given browser. TODO(miket): consider firefox2, firefox3,
-  // other symlinks.
-  switch (browser_type) {
-    case FIREFOX:
-      browser_path = STRING16(L"/usr/bin/firefox");
-      break;
-    default:
-      return false;
-  }
-
-  if (security_origin == NULL || link_name == NULL) {
-    return false;
-  }
-  if (launch_url == NULL || !IsRelativeUrl(launch_url)) {
-    return false;
-  }
-  if (icon_url == NULL || !IsRelativeUrl(icon_url)) {
-    return false;
-  }
-  if (!IsStringValidPathComponent(link_name)) {
-    return false;
-  }
-
-  std::string16 full_launch_url(security_origin->url());
-  if (launch_url[0] != L'/') {
-    full_launch_url += STRING16(L"/");
-  }
-  full_launch_url += launch_url;
+bool File::CreateDesktopShortcut(const std::string16 &link_name,
+                                 const std::string16 &launch_url,
+                                 const std::vector<IconData *> &icons) {
+  // Note: We assume that link_name has already been validated by the caller to
+  // have only legal filename characters and that launch_url has already been
+  // resolved to an absolute URL.
+  
+  // TODO(aa): Get current process path, flags, etc
+  const char16 *browser_path = STRING16(L"/usr/bin/firefox");
 
   std::string link_name_utf8;
-  std::string16 link_name_str16(link_name);
-
-  String16ToUTF8(link_name_str16.c_str(), link_name_str16.size(),
-                 &link_name_utf8);
-  if (link_name_utf8.size() == 0) {
+  if (!String16ToUTF8(link_name.c_str(), link_name.length(), &link_name_utf8)) {
     return false;
   }
 
@@ -88,29 +57,27 @@ bool File::CreateDesktopShortcut(BrowserType browser_type,
   shortcut_path += ".desktop";
 
   FILE *f = fopen(shortcut_path.c_str(), "w");
-  if (f != NULL) {
-    // See http://standards.freedesktop.org/desktop-entry-spec/latest/ for
-    // format documentation.
-    std::string16 shortcut_contents(
-        STRING16(L"[Desktop Entry]\nType=Application\nVersion=1.0"));
-    shortcut_contents += STRING16(L"\nName=");
-    shortcut_contents += link_name;
-    shortcut_contents += STRING16(L"\nExec=");
-    shortcut_contents += browser_path;
-    shortcut_contents += STRING16(L" ");
-    shortcut_contents += full_launch_url;
-    shortcut_contents += STRING16(L"\n");
+  if (f == NULL) return false;
+  
+  // See http://standards.freedesktop.org/desktop-entry-spec/latest/ for
+  // format documentation.
+  std::string16 shortcut_contents(
+      STRING16(L"[Desktop Entry]\nType=Application\nVersion=1.0"));
+  shortcut_contents += STRING16(L"\nName=");
+  shortcut_contents += link_name;
+  shortcut_contents += STRING16(L"\nExec=");
+  shortcut_contents += browser_path;
+  shortcut_contents += STRING16(L" ");
+  shortcut_contents += launch_url;
+  shortcut_contents += STRING16(L"\n");
 
-    std::string shortcut_contents_utf8;
-    String16ToUTF8(shortcut_contents.c_str(), shortcut_contents.size(),
-                   &shortcut_contents_utf8);
-    if (shortcut_contents_utf8.size() > 0) {
-      fputs(shortcut_contents_utf8.c_str(), f);
-    }
-    fclose(f);
-    return true;
-  } else {
-    return false;
+  std::string shortcut_contents_utf8;
+  if (String16ToUTF8(shortcut_contents.c_str(), shortcut_contents.size(),
+                     &shortcut_contents_utf8)) {
+    fputs(shortcut_contents_utf8.c_str(), f);
   }
+
+  fclose(f);
+  return true;
 }
 #endif  // #if defined(LINUX) && !defined(OS_MACOSX)

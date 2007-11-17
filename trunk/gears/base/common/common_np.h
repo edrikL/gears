@@ -38,9 +38,9 @@
 // Then, add ASSERT_SINGLE_THREAD() calls to the top of each class method.
 #ifdef DEBUG
 
-class ThreadID {
+class CurrentThreadID {
  public:
-  ThreadID() {
+  CurrentThreadID() {
     id_ = GetCurrentThreadId();
   }
   DWORD get() {
@@ -51,7 +51,7 @@ class ThreadID {
 };
 
 #define DECL_SINGLE_THREAD \
-    ThreadID thread_id_;
+    CurrentThreadID thread_id_;
 
 #define ASSERT_SINGLE_THREAD() \
     ATLASSERT(thread_id_.get() == GetCurrentThreadId())

@@ -50,9 +50,9 @@ extern PRLogModuleInfo *gLog;
 // Then, add ASSERT_SINGLE_THREAD() calls to the top of each class method.
 #ifdef DEBUG
 #include <prthread.h>
-class ThreadID {
+class CurrentThreadID {
  public:
-  ThreadID() {
+  CurrentThreadID() {
     thr_ = PR_GetCurrentThread();
   }
   PRThread *get() {
@@ -62,7 +62,7 @@ class ThreadID {
   PRThread *thr_;
 };
 #define DECL_SINGLE_THREAD \
-    ThreadID thread_id_;
+    CurrentThreadID thread_id_;
 #define ASSERT_SINGLE_THREAD() \
     PR_ASSERT(thread_id_.get() == PR_GetCurrentThread())
 #else

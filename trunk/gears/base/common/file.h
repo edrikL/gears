@@ -83,6 +83,16 @@ class File {
   // Removes the directory and all of its children. If the directory does
   // not exist, returns false. Returns true if the function succeeds.
   static bool DeleteRecursively(const char16 *full_dirpath);
+  
+// TODO(aa): Implement these on other platforms as needed
+#if BROWSER_FF
+  // Writes raw data to a file.
+  static bool WriteBytesToFile(const char16 *full_filepath, const uint8 *data,
+                               int length);
+
+  // Moves a directory to a new location. Returns true if the function succeeds.
+  static bool MoveDirectory(const char16 *src_path, const char16 *dest_path);
+#endif
 
   // Clears the last file error for the current thread
   static void ClearLastFileError();
@@ -93,33 +103,25 @@ class File {
   // at this time.
   static bool GetLastFileError(std::string16 *error_out);
 
-  typedef enum {
-    FIREFOX,
-    IE,
-    SAFARI
-  } BrowserType;
+  struct IconData {
+    int width;
+    int height;
+    std::vector<uint8> bytes;
+  };
 
   // Creates a shortcut that opens a URL in a specific browser.
   //
   // link_name is a string that will be used to create the user-visible
   // shortcut name. Do not append ".lnk" or pass a path.
   //
-  // security_origin specifies the base of relative URLs.
-  //
   // launch_url is a relative URL that the browser should open when the user
   // invokes the shortcut.
   //
-  // icon_url is currently not used. TODO(aa): implement.
-  //
-  // Returns true iff successful.
-  //
-  // TODO(miket): consider moving this to a more specific file set, like
-  // desktop_(platform).[h,cc].
-  static bool CreateDesktopShortcut(BrowserType browser_type,
-                                    const char16 *link_name,
-                                    const SecurityOrigin *security_origin,
-                                    const char16 *launch_url,
-                                    const char16 *icon_url);
+  // icon_data is a list of icons of different sizes to be used to generate the
+  // desktop shortcut.
+  static bool CreateDesktopShortcut(const std::string16 &link_name,
+                                    const std::string16 &launch_url,
+                                    const std::vector<IconData *> &icons);
 
  private:
   static void SetLastFileError(const char16 *message,
