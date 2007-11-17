@@ -80,3 +80,12 @@ function testScriptInterval() {
         '}',
         20);
 }
+
+function testTimeoutDeleteSelf() {
+  startAsync();
+  var timerId = timer.setTimeout(function() {
+    timer.clearTimeout(timerId);
+    completeAsync();
+  }, 20);
+}
+

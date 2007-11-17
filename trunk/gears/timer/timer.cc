@@ -346,15 +346,14 @@ void GearsTimer::HandleTimer(TimerInfo *timer_info) {
   // Invoke JavaScript timer handler.  *timer_info can become invalid here, if
   // the timer gets deleted in the handler.
   if (timer_info->callback.get()) {
-    timer_info->owner->GetJsRunner()->InvokeCallback(timer_info->callback.get(),
-                                                     0, NULL, NULL);
+    GetJsRunner()->InvokeCallback(timer_info->callback.get(), 0, NULL, NULL);
   } else {
-    timer_info->owner->GetJsRunner()->Eval(timer_info->script);
+    GetJsRunner()->Eval(timer_info->script);
   }
 
   // If this is a one shot timer, we're done with the timer object.
   if (!repeat) {
-    timer_info->owner->timers_.erase(timer_id);
+    timers_.erase(timer_id);
   }
 }
 
@@ -366,7 +365,7 @@ void GearsTimer::TimerCallback(nsITimer *timer, void *closure) {
   // Protect against a delete while running the timer handler.
   nsCOMPtr<GearsTimer> owner = timer_info->owner;
 
-  HandleTimer(timer_info);
+  owner->HandleTimer(timer_info);
 }
 #elif BROWSER_IE
 LRESULT GearsTimer::OnTimer(UINT msg,
