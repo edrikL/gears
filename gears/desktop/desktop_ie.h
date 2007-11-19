@@ -58,12 +58,17 @@ class GearsDesktop
                                           std::string16 *icon_loc);
  private:
   struct ShortcutInfo;
-  struct IconData;
+  struct ShortcutIcon;
+  struct DesktopIcons;
 
-  bool SetShortcut(ShortcutInfo *shortcut);
+  bool SetShortcut(ShortcutInfo *shortcut, std::string16 *error);
 
-  bool UpdateControlPanelIcon(const std::vector<uint8> &png, IconData *icon);
-  bool UpdateDesktopIcon(const std::vector<uint8> &png, IconData *icon);
+  bool UpdateControlPanelIcon(const std::vector<uint8> &png,
+                              ShortcutIcon *icon,
+                              std::string16 *error);
+  bool UpdateDesktopIcons(const std::vector<uint8> &png,
+                          DesktopIcons *icons,
+                          std::string16 *error);
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsDesktop);
 };

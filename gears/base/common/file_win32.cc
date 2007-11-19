@@ -116,9 +116,9 @@ bool File::CreateDesktopShortcut(const std::string16 &link_name,
   const char16 *process_name;
 
 // TODO(aa): Look up the running process name/path/args dynamically
-#ifdef BROWSER_FF
+#if BROWSER_FF
   process_name = STRING16(L"FIREFOX.EXE");
-#else BROWSER_IE
+#elif BROWSER_IE
   process_name = STRING16(L"IEXPLORE.EXE");
 #endif 
 
