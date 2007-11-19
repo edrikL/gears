@@ -368,6 +368,7 @@ IEMOBILE_IDLSRCS	+= \
 IEMOBILE_CPPSRCS	+= \
 		activex_utils.cc \
 		base_class.cc \
+		bho.cc \
 		detect_version_collision.cc \
 		html_event_monitor.cc \
 		html_event_monitor_ie.cc \
@@ -494,7 +495,7 @@ IEMOBILE_VPATH	+= \
 		database/ie \
 		$(NULL)
 
-IEMOBILE_IDLSRCS	+= \
+IEMOBILE_IDLSRCS += \
 		database.idl \
 		$(NULL)
 
@@ -535,8 +536,16 @@ FF_CPPSRCS	+= \
 IE_VPATH	+= \
 		desktop \
 		$(NULL)
+		
+IEMOBILE_VPATH	+= \
+		desktop \
+		$(NULL)
 
 IE_IDLSRCS	+= \
+		desktop_ie.idl \
+		$(NULL)
+
+IEMOBILE_IDLSRCS += \
 		desktop_ie.idl \
 		$(NULL)
 

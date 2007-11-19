@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,26 +13,43 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
+#ifdef WINCE
+#include <piedocvw.h>
+#include <webvw.h>
+#else
 #include <mshtml.h>
 #include <sensapi.h>
-#include <shlguid.h>      // for SID_SWebBrowserApp
+#endif
+#include <shlguid.h>      // for SID_SWebBrowserApp (except on WINCE)
 #include <wininet.h>
 #include "gears/base/common/common.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/ie/activex_utils.h"
 
 const CComBSTR ActiveXUtils::kEmptyBSTR(STRING16(L""));
+
+#ifdef WINCE
+// There seems to be no way to get an instance of IWebBrowser2 object
+// from an ActiveX control. The site object passed to SetSite() 
+// should provide an instance of IServiceProvider, which could be queried
+// for IWebBrowser2 via QueryService. Unfortunately, QueryService 
+// always retuned E_NOINTERFACE. The only workaround we found
+// is to use the browser helper object to get the IWebBrowser2 pointer
+// and cache it here as a global variable, which is accessible by our ActiveX
+// object.
+CComPtr<IWebBrowser2> ActiveXUtils::web_browser2_;
+#endif
 
 bool ActiveXUtils::GetPageLocation(IUnknown *site,
                                    std::string16 *page_location_url) {
@@ -64,6 +81,17 @@ bool ActiveXUtils::GetPageOrigin(IUnknown *site,
 
 
 HRESULT ActiveXUtils::GetWebBrowser2(IUnknown *site, IWebBrowser2 **browser2) {
+#ifdef WINCE
+  HRESULT hr = E_FAIL;
+  if (web_browser2_) {
+    // We get here if SetSite was called in the context of an ActiveX
+    // and there has been a previous call to SetSite as a result of
+    // a BHO being initialized.
+    *browser2 = web_browser2_;
+    hr = S_OK;
+  }
+  return hr;
+#else
   CComQIPtr<IServiceProvider> service_provider = site;
   if (!service_provider) { return E_FAIL; }
 
@@ -72,6 +100,7 @@ HRESULT ActiveXUtils::GetWebBrowser2(IUnknown *site, IWebBrowser2 **browser2) {
                                         IID_IWebBrowser2,
                                         reinterpret_cast<void**>(browser2));
   //return (SUCCEEDED(hr) && *browser2);
+#endif
 }
 
 
@@ -90,21 +119,26 @@ HRESULT ActiveXUtils::GetHtmlDocument2(IUnknown *site,
   return doc_dispatch->QueryInterface(document2);
 }
 
-
+#ifdef WINCE
+HRESULT ActiveXUtils::GetHtmlWindow2(IUnknown *site,
+                                     IPIEHTMLWindow2 **window2) {
+  CComPtr<IPIEHTMLDocument2> html_document2;
+#else
 HRESULT ActiveXUtils::GetHtmlWindow2(IUnknown *site, IHTMLWindow2 **window2) {
+  CComPtr<IHTMLDocument2> html_document2;
+#endif
   // To hook an event on a page's window object, follow the path
   // IWebBrowser2->document->parentWindow->IHTMLWindow2
 
-  HRESULT hr;
-
-  CComPtr<IHTMLDocument2> html_document2;
-  hr = GetHtmlDocument2(site, &html_document2);
+  HRESULT hr = GetHtmlDocument2(site, &html_document2);
   if (FAILED(hr) || !html_document2) { return E_FAIL; }
 
   return html_document2->get_parentWindow(window2);
 }
 
-
+#ifdef WINCE
+  // TODO(andreip): no IHTMLWindow3 in Windows Mobile.
+#else
 HRESULT ActiveXUtils::GetHtmlWindow3(IUnknown *site, IHTMLWindow3 **window3) {
   CComPtr<IHTMLWindow2> html_window2;
   HRESULT hr = GetHtmlWindow2(site, &html_window2);
@@ -112,7 +146,7 @@ HRESULT ActiveXUtils::GetHtmlWindow3(IUnknown *site, IHTMLWindow3 **window3) {
 
   return html_window2->QueryInterface(window3);
 }
-
+#endif
 
 HRESULT ActiveXUtils::ConvertJsArrayToSafeArray(const VARIANT *js_array, 
                                                 VARIANT *safe_array, 
@@ -189,7 +223,9 @@ HRESULT ActiveXUtils::SetDispatchProperty(IDispatch *dispatch,
                           &dispparams, NULL, NULL, NULL);
 }
 
-
+#ifdef WINCE
+// TODO(andreip): Implement on Windows Mobile
+#else
 HRESULT ActiveXUtils::GetHTMLElementAttributeValue(IHTMLElement *element,
                                                    const WCHAR *name,
                                                    VARIANT *value) {
@@ -229,13 +265,29 @@ HRESULT ActiveXUtils::GetHTMLElementAttributeValue(IHTMLElement *element,
   }
   return attribute->get_nodeValue(value);
 }
-
+#endif
 bool ActiveXUtils::IsOnline() {
   // Note: InternetGetConnectedState detects IE's workoffline mode.
   DWORD connected_state_flags_out = 0;
   DWORD network_alive_flags_out = 0;
   BOOL connected = InternetGetConnectedState(&connected_state_flags_out, 0);
+#ifdef WINCE
+  // TODO(andreip): implement this using the ConnectionManager.
+  BOOL alive = true;
+#else
   BOOL alive = IsNetworkAlive(&network_alive_flags_out);
+#endif
   return connected && alive &&
          ((connected_state_flags_out & INTERNET_CONNECTION_OFFLINE) == 0);
 }
+
+#ifdef WINCE
+void ActiveXUtils::SetWebBrowser2FromSite(IUnknown* site) {
+  if (site) {
+    site->QueryInterface(
+      IID_IWebBrowser2, reinterpret_cast<void**>(&web_browser2_));
+  } else {
+    web_browser2_.Release();
+  }
+}
+#endif

@@ -34,6 +34,15 @@
 struct IHTMLElement;
 class SecurityOrigin;
 
+#ifdef WINCE
+struct IWebBrowser2;
+struct IPIEHTMLDocument;
+struct IPIEHTMLDocument2;
+struct IPIEHTMLWindow2;
+typedef IPIEHTMLDocument IHTMLDocument;
+typedef IPIEHTMLDocument2 IHTMLDocument2;
+#endif
+
 class ActiveXUtils {
  public:
   // Returns the location url of the containing webBrowser as determined by
@@ -51,14 +60,24 @@ class ActiveXUtils {
   static HRESULT GetHtmlDocument2(IUnknown *site,
                                   IHTMLDocument2 **document2);
 
+// Returns the IHTMLWindow2 interface corresponding to the given site.  
+#ifdef WINCE
+  static HRESULT GetHtmlWindow2(IUnknown *site,
+                                IPIEHTMLWindow2 **window2);
+#else
   // Returns the IHTMLWindow2 interface corresponding to the given site.
   static HRESULT GetHtmlWindow2(IUnknown *site,
                                 IHTMLWindow2 **window2);
+#endif
 
+#ifdef WINCE
+  // TODO(andreip): no IHTMLWindow3 in Windows Mobile.
+#else
   // Returns the IHTMLWindow3 interface corresponding to the given site.
   // Can be used with our HtmlEventMonitor.
   static HRESULT GetHtmlWindow3(IUnknown *site,
                                 IHTMLWindow3 **window3);
+#endif
 
   // Returns the dispatch id of the named member.
   static HRESULT GetDispatchMemberId(IDispatch *dispatch, const WCHAR *name,
@@ -94,8 +113,8 @@ class ActiveXUtils {
   // Converts the VARIANT received when JS passes an array to a COM into a more
   // manageable SAFEARRAY.
   // Note: The caller should clean up *safearray.
-  static HRESULT ConvertJsArrayToSafeArray(const VARIANT *jsarray, 
-                                           VARIANT *safearray, 
+  static HRESULT ConvertJsArrayToSafeArray(const VARIANT *jsarray,
+                                           VARIANT *safearray,
                                            LONG *array_len);
 
   // Returns the property value by name.
@@ -126,21 +145,30 @@ class ActiveXUtils {
   static HRESULT SetDispatchProperty(IDispatch *dispatch, DISPID dispid,
                                      const VARIANT *value);
 
+#ifdef WINCE
+  // TODO(andreip): implement on Windows Mobile.
+#else
   // Returns the html attribute value of the given HTMLElement.
   // The caller is responsible for freeing the returned VARIANT.
   static HRESULT GetHTMLElementAttributeValue(IHTMLElement *element,
                                               const WCHAR *name,
                                               VARIANT *value);
+#endif
 
   // Convert NULL BSTR to the empty string.
   static const CComBSTR kEmptyBSTR;
   static const BSTR SafeBSTR(const BSTR value) {
     return value ? value : kEmptyBSTR.m_str;
   }
-
   // Returns true if there the browser is in 'online' mode and the local
   // system is connected to a network.
   static bool IsOnline();
+
+#ifdef WINCE
+  static void SetWebBrowser2FromSite(IUnknown* site);
+ private:
+  static CComPtr<IWebBrowser2> web_browser2_;
+#endif
 };
 
 

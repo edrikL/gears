@@ -35,7 +35,14 @@
 // not. It's set in when DllMain(processAttached) is called, will initializing
 // it via the CRT squash that value set via DllMain?
 #if BROWSER_IE
+#ifdef WINCE
+// On Windows Mobile 5 TLS_OUT_OF_INDEXES is undefined.
+// On Windows Mobile 6 TLS_OUT_OF_INDEXES is defined to 0xffffffff
+// (see http://msdn2.microsoft.com/en-us/library/aa908741.aspx).
+const DWORD kNoIndex = 0xffffffff;
+#else
 const DWORD kNoIndex = TLS_OUT_OF_INDEXES;
+#endif
 DWORD ThreadLocals::tls_index_;
 #elif BROWSER_FF
 const PRUintn kNoIndex = 0xffffffff;
@@ -171,7 +178,7 @@ ThreadLocals::Map* ThreadLocals::GetTlsMap() {
 //------------------------------------------------------------------------------
 BOOL ThreadLocals::HandleProcessAttached() {
   tls_index_ = TlsAlloc();
-  return (tls_index_ != TLS_OUT_OF_INDEXES) ? TRUE : FALSE;
+  return (tls_index_ != kNoIndex) ? TRUE : FALSE;
 }
 
 
@@ -180,10 +187,10 @@ BOOL ThreadLocals::HandleProcessAttached() {
 // Frees our TLS slot.
 //------------------------------------------------------------------------------
 void ThreadLocals::HandleProcessDetached() {
-  if (tls_index_ != TLS_OUT_OF_INDEXES) {
+  if (tls_index_ != kNoIndex) {
     HandleThreadDetached();
     TlsFree(tls_index_);
-    tls_index_ = TLS_OUT_OF_INDEXES;
+    tls_index_ = kNoIndex;
   }
 }
 
@@ -194,7 +201,7 @@ void ThreadLocals::HandleProcessDetached() {
 // per thread map we've been using for this thread.
 //------------------------------------------------------------------------------
 void ThreadLocals::HandleThreadDetached() {
-  if (tls_index_ != TLS_OUT_OF_INDEXES) {
+  if (tls_index_ != kNoIndex) {
     Map* map = GetTlsMap();
     if (map) {
       DestroyMap(map);

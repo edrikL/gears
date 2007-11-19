@@ -112,7 +112,7 @@ class ThreadLocals {
   // Some private methods of this class need to be called by the containing DLL.
   // We declare the function that calls these methods a friend.
   // @see ScourIE.cc
-  friend inline BOOL MyDllMain(HINSTANCE instance,
+  friend inline BOOL MyDllMain(HANDLE instance,
                                DWORD reason,
                                LPVOID reserved);
 

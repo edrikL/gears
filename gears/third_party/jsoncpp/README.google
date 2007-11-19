@@ -46,6 +46,9 @@ The following changes were made:
   comparisons and assignments
 # modified some lines exceeding 80 characters to fit within 80 chars   
 # include paths were changed to match Scour's build environment
+# and more. To see all changes, diff against the original files
+  (see below for how to find them).
+
 
 The original files (revision 23) can be found in jsoncpp_orig.tar.gz.
 Patches from original files can be found in patches/ subdirectory.
