@@ -386,10 +386,22 @@ $(NPAPI_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 # This target handles both IE and IEMOBILE by using the $(BROWSER) variable in the
 # rule definitions. $(IE_SHLIBFLAGS) is shared by both browsers.
 $(IE_MODULE_DLL): $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
-	$(MKSHLIB) $(SHLIBFLAGS) $(IE_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS)
+
+    #use SANITIZE_LINKER_FILE_LIST to keep things consistent with FF build.
+	
+	@echo $($(BROWSER)_OBJS) | $(SANITIZE_LINKER_FILE_LIST) > $(OUTDIR)/obj_file_list.txt
+	$(MKSHLIB) $(SHLIBFLAGS) $(IE_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)@$(OUTDIR)/obj_file_list.txt
+	rm $(OUTDIR)/obj_file_list.txt
 
 $(FF_MODULE_DLL): $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_OBJS) $(FF_LINK_EXTRAS)
-	$(MKSHLIB) $(SHLIBFLAGS) $(FF_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_OBJS) $(FF_LINK_EXTRAS) $(FF_LIBS)
+
+    #ld on OS X requires filenames to be separated by a newline rather than
+    #a whitespace which is acceptable by other platforms.
+    #ESCAPE_LINKER_FILE_LIST translates ' ' to '\n' on OSs where it's appropriate.
+
+	@echo $(FF_OBJS) | $(SANITIZE_LINKER_FILE_LIST) > $(OUTDIR)/obj_file_list.txt
+	$(MKSHLIB) $(SHLIBFLAGS) $(FF_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_LINK_EXTRAS) $(FF_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_file_list.txt
+	rm $(OUTDIR)/obj_file_list.txt
 
 $(FF_MODULE_TYPELIB): $(FF_GEN_TYPELIBS)
 	$(GECKO_SDK)/bin/xpt_link $@ $^
