@@ -727,14 +727,26 @@ void CacheIntercept::MaybeForceToCache(nsISupports *subject) {
     return;
   }
 
-  nsCString spec;
-  uri->GetSpec(spec);
   WebCacheDB *db = WebCacheDB::GetDB();
   if (!db) {
     LOG(("CacheIntercept: Could not get WebCacheDB"));
     return;
   }
 
+  nsCString spec;
+  uri->GetSpec(spec);
+
+  // FF mac and linux (not windows) have a bug where at this point in the
+  // request lifecycle, these URIs contain their fragment identifiers, which
+  // trips up WebCacheDB.
+#if defined(LINUX) || defined(OS_MACOSX)
+  const char *start = spec.get();
+  const char *hash = strchr(start, '#');
+  if (hash) {
+    spec.SetLength(hash - start);
+  }
+#endif
+  
   // TODO(aa): It would be nice to not have to hit the database twice for these
   // requests. Perhaps cache the result of this query somewhere?
   if (db->CanService(NS_ConvertUTF8toUTF16(spec).get())) {
