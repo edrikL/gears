@@ -212,6 +212,7 @@ STDMETHODIMP PassthruSink::ReportProgress(
       // causes URMLON to abandon this handler instance an create a new one
       // to follow the redirect. When that new instance of our handler is
       // created, it will satisfy the request locally.
+      ATLTRACE(L"HttpHandler::ReportProgress - hijacking redirect");
       return BaseClass::ReportResult(INET_E_REDIRECT_FAILED,
                                      HttpConstants::HTTP_FOUND,
                                      szStatusText);
@@ -778,7 +779,9 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
   TraceBindFlags(bindinfoflags);
 #endif
 
-  // We only handle GET and HEAD requests
+  // We only directly handle GET and HEAD requests, but we run in
+  // passthru mode for all requests to detect when redirects back 
+  // into our cache occur, see ReportProgress.
   is_head_request_ = false;
   if (bindinfo.dwBindVerb != BINDVERB_GET) {
     if ((bindinfo.dwBindVerb == BINDVERB_CUSTOM) &&
@@ -786,7 +789,9 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
       ATLTRACE(_T(" HEAD request"));
       is_head_request_ = true;
     } else {
-      ATLTRACE(_T("  not a GET or HEAD request - using default handler\n"));
+      ATLTRACE(L"  not a GET or HEAD request - "
+               L"passing thru to default handler\n");
+      is_passingthru_ = true;
       return INET_E_USE_DEFAULT_PROTOCOLHANDLER;
     }
   }
@@ -813,11 +818,8 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
   }
   bool is_captured = db->Service(url, is_head_request_, &payload_);
 
-  // We can only satisfy requests that are actually in the store, so
-  // when we don't have it simply return INET_E_USE_DEFAULT_PROTOCOLHANDLER
-  // to get the default handling
   if (!is_captured) {
-    ATLTRACE(_T("  cache miss - using default protocol handler\n"));
+    ATLTRACE(_T("  cache miss - passing thru to default protocol handler\n"));
     if (kAlertCacheMiss && !ActiveXUtils::IsOnline()) {
       MessageBoxW(NULL, url, L"WebCapture cache miss",
                   MB_OK | MB_SETFOREGROUND | MB_TOPMOST);

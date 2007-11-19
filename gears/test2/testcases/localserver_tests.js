@@ -257,6 +257,30 @@ function testCaptureWithNullCallback() {
   resourceStore.capture('/testcases/nonexistent_file', null);	
 }
 
+function testPostRedirectBackToCache() {
+  var captureUri = '/testcases/test_file_1024.txt';
+  var renameUri = '/testcases/renamed_not_on_server.txt';
+  var resourceStore = getFreshStore();
+
+  startAsync();
+
+  // capture something
+  resourceStore.capture(captureUri, function(url, success, id) {
+    assert(success, 'capture failed');
+
+    // rename it to something that does not exist on the server
+    resourceStore.rename(captureUri, renameUri);
+
+    // now send a POST that redirects to it
+    httpPost("/testcases/cgi/server_redirect.py?location=" + renameUri,
+      "ignored data string",
+      function(content) {
+        assert(content != null, 'Should have redirected to our cache');
+        completeAsync();
+      });
+  });
+}
+
 function testGoodManifest() {
   startAsync();
 
