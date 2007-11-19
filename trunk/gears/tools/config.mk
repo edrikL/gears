@@ -101,6 +101,9 @@ CC = gcc
 CXX = g++
 MKDEP = gcc -M -MF $(@D)/$*.pp -MT $@ $(CPPFLAGS) $(FF_CPPFLAGS) $<
 
+EXT_LINKER_CMD_FLAG = -x @
+SANITIZE_LINKER_FILE_LIST = cat -
+
 CPPFLAGS += -DLINUX
 SQLITE_CFLAGS += -Wno-uninitialized
 
@@ -134,6 +137,9 @@ CC = gcc -arch $(ARCH)
 CXX = g++ -arch $(ARCH)
 MKDEP = gcc -M -MF $(@D)/$*.pp -MT $@ $(CPPFLAGS) $(FF_CPPFLAGS) $<
 
+EXT_LINKER_CMD_FLAG = -Xlinker -filelist -Xlinker 
+SANITIZE_LINKER_FILE_LIST = tr " " "\n"
+
 CPPFLAGS += -DLINUX -DOS_MACOSX
 SQLITE_CFLAGS += -Wno-uninitialized -Wno-pointer-sign -isysroot $(OSX_SDK_ROOT)
 
@@ -164,6 +170,9 @@ OBJ_SUFFIX = .obj
 CC = cl
 CXX = cl
 MKDEP = python tools/mkdepend.py $< $@ > $(@D)/$*.pp
+
+EXT_LINKER_CMD_FLAG = @
+SANITIZE_LINKER_FILE_LIST = cat -
 
 COMPILE_FLAGS_dbg = /MTd /Zi
 COMPILE_FLAGS_opt = /MT  /Zi /Ox
