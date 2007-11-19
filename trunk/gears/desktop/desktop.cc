@@ -68,6 +68,7 @@ const nsCID kGearsDesktopClassId = { 0x273640f, 0xfe6d, 0x4a26, { 0x95, 0xc7,
 #endif
 
 static const int kControlPanelIconDimensions = 16;
+static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_RGBA;
 
 struct GearsDesktop::ShortcutInfo {
   std::vector<std::string16> icon_urls;
@@ -76,12 +77,18 @@ struct GearsDesktop::ShortcutInfo {
   std::string16 app_description;
 };
 
-struct GearsDesktop::IconData {
+struct GearsDesktop::ShortcutIcon {
   std::vector<uint8> image;
   int width;
   int height;
-  PngUtils::ColorFormat format;
   uint32 score;
+};
+
+struct GearsDesktop::DesktopIcons {
+  File::IconData icon16x16;
+  File::IconData icon32x32;
+  File::IconData icon48x48;
+  File::IconData icon128x128;
 };
 
 // JS function is createShortcuts(variant shortcuts).
@@ -263,8 +270,9 @@ STDMETHODIMP GearsDesktop::createShortcuts(VARIANT shortcuts) {
   for (size_t i = 0; i < shortcuts_dialog.result.size(); ++i) {
     if (shortcuts_dialog.result[i].isBool() &&
         shortcuts_dialog.result[i].asBool()) {
-      if (!SetShortcut(&(shortcut_infos[i]))) {
-        RETURN_EXCEPTION(STRING16(L"Could not create shortcuts."));
+      std::string16 error;
+      if (!SetShortcut(&(shortcut_infos[i]), &error)) {
+        RETURN_EXCEPTION(error.c_str());
       }
     }
   }
@@ -274,12 +282,15 @@ STDMETHODIMP GearsDesktop::createShortcuts(VARIANT shortcuts) {
 
 // Handle all the icon creation and creation call required to actually install
 // a shortcut.
-bool GearsDesktop::SetShortcut(ShortcutInfo *shortcut) {
+bool GearsDesktop::SetShortcut(ShortcutInfo *shortcut, std::string16 *error) {
   PermissionsDB *capabilities = PermissionsDB::GetDB();
-  if (!capabilities) return false;
+  if (!capabilities) {
+    *error = STRING16(L"Could not open permissions Database.");
+    return false;
+  }
 
-  IconData control_panel_icon;
-  IconData desktop_icon;
+  ShortcutIcon control_panel_icon;
+  DesktopIcons desktop_icons;
 
   std::vector<std::string16>::iterator icon_url;
   for (icon_url = shortcut->icon_urls.begin();
@@ -294,24 +305,27 @@ bool GearsDesktop::SetShortcut(ShortcutInfo *shortcut) {
     if (!request.get()->Open(HttpConstants::kHttpGET,
                              icon_url->c_str(), false) ||
         !request.get()->Send()) {
+      *error = STRING16(L"Could not retreive icon.");
       return false;
     }
 
     // Extract the data.
     std::vector<uint8> png;
     if (!request.get()->GetResponseBody(&png)) {
+      *error = STRING16(L"Could not retreive icon.");
       return false;
     }
 
     // Update our selected icons.
-    if (!UpdateControlPanelIcon(png, &control_panel_icon) ||
-        !UpdateDesktopIcon(png, &desktop_icon)) {
+    if (!UpdateControlPanelIcon(png, &control_panel_icon, error) ||
+        !UpdateDesktopIcons(png, &desktop_icons, error)) {
       return false;
     }
   }
 
   // Ensure that we actually have an image
   if (control_panel_icon.image.empty()) {
+      *error = STRING16(L"No suitable icons provided.");
     return false;
   }
 
@@ -319,14 +333,40 @@ bool GearsDesktop::SetShortcut(ShortcutInfo *shortcut) {
   if (!GetControlPanelIconLocation(EnvPageSecurityOrigin(),
                                    shortcut->app_name,
                                    &icon_loc)) {
+    *error = STRING16(L"Could not determine control panel icon location.");
     return false;
   }
 
   // Write the control panel icon.
   File::CreateNewFile(icon_loc.c_str());
   if (!File::WriteVectorToFile(icon_loc.c_str(), &control_panel_icon.image)) {
+    *error = STRING16(L"Could not write control panel icon.");
     return false;
   }
+
+  // Create the Desktop shortcut
+  std::vector<File::IconData *> icons;
+  if (!desktop_icons.icon16x16.bytes.empty()) {
+    icons.push_back(&desktop_icons.icon16x16);
+  }
+  if (!desktop_icons.icon32x32.bytes.empty()) {
+    icons.push_back(&desktop_icons.icon32x32);
+  }
+  if (!desktop_icons.icon48x48.bytes.empty()) {
+    icons.push_back(&desktop_icons.icon48x48);
+  }
+  if (!desktop_icons.icon128x128.bytes.empty()) {
+    icons.push_back(&desktop_icons.icon128x128);
+  }
+
+  // TODO:(zork) pass error through for callee to fill out.
+  if (!File::CreateDesktopShortcut(shortcut->app_name,
+                                   shortcut->app_url,
+                                   icons)) {
+    *error = STRING16(L"Could not create desktop shortcut.");
+    return false;
+  }
+
 
   // Create the database entry.
   capabilities->SetShortcut(EnvPageSecurityOrigin(),
@@ -341,10 +381,12 @@ bool GearsDesktop::SetShortcut(ShortcutInfo *shortcut) {
 // replaces the current image with the new one.  The image data in icon is
 // assumed to be the raw png bits.
 bool GearsDesktop::UpdateControlPanelIcon(const std::vector<uint8> &png,
-                                          IconData *icon) {
-  IconData new_icon;
+                                          ShortcutIcon *icon,
+                                          std::string16 *error) {
+  ShortcutIcon new_icon;
   if (!PngUtils::Decode(&png.at(0), png.size(), PngUtils::FORMAT_RGB,
                         &new_icon.image, &new_icon.width, &new_icon.height)) {
+    *error = STRING16(L"Could not decode PNG.");
     return false;
   }
 
@@ -366,10 +408,46 @@ bool GearsDesktop::UpdateControlPanelIcon(const std::vector<uint8> &png,
   return true;
 }
 
-bool GearsDesktop::UpdateDesktopIcon(const std::vector<uint8> &png,
-                                     IconData *icon) {
-  // TODO(zork): Add a scoring routine for desktop icons.  This will be
-  // platform dependent.
+bool GearsDesktop::UpdateDesktopIcons(const std::vector<uint8> &png,
+                                      DesktopIcons *icons,
+                                      std::string16 *error) {
+  File::IconData new_icon;
+  if (!PngUtils::Decode(&png.at(0), png.size(), kDesktopIconFormat,
+                        &new_icon.bytes, &new_icon.width, &new_icon.height)) {
+    *error = STRING16(L"Could not decode PNG.");
+    return false;
+  }
+
+  if (new_icon.width != new_icon.height) {
+    *error = STRING16(L"Icon width and height must be equal.");
+    return false;
+  }
+
+  File::IconData *icon = NULL;
+  switch (new_icon.width) {
+    case 16:
+      icon = &icons->icon16x16;
+      break;
+    case 32:
+      icon = &icons->icon32x32;
+      break;
+    case 48:
+      icon = &icons->icon48x48;
+      break;
+    case 128:
+      icon = &icons->icon128x128;
+      break;
+    default:
+      *error = STRING16(L"Icon width ");
+      *error += IntegerToString16(new_icon.width);
+      *error += STRING16(L" isn't supported.");
+      return false;
+  }
+
+  if (icon->bytes.empty()) {
+    *icon = new_icon;
+  }
+
   return true;
 }
 
