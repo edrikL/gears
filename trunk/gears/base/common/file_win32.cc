@@ -27,7 +27,7 @@
 
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented
-#ifdef WIN32
+#if defined(WIN32) && !defined(WINCE)
 #include <windows.h>
 #include <assert.h>
 #include <shlobj.h>
@@ -140,4 +140,4 @@ bool File::CreateDesktopShortcut(const std::string16 &link_name,
   }
   return creation_result;
 }
-#endif  // #ifdef WIN32
+#endif  // #if defined(WIN32) && !defined(WINCE)

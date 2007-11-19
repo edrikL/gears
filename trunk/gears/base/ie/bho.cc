@@ -22,7 +22,9 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+#ifdef WINCE
+#include "gears/base/ie/activex_utils.h"
+#endif
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/base/ie/bho.h"
@@ -42,10 +44,18 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
   if (DetectedVersionCollision()) 
     return S_OK;
 
+#ifdef WINCE
+  ActiveXUtils::SetWebBrowser2FromSite(pUnkSite);
+#endif
+
   if (pUnkSite == NULL) {
     ATLTRACE(_T("SetSite(): pUnkSite is NULL\n"));
   } else {
+#ifdef WINCE
+    // TODO(andreip): implement localserver.
+#else
     HttpHandler::Register();
+#endif
   }
   return S_OK;
 }

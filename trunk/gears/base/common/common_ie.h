@@ -29,7 +29,42 @@
 #include <windows.h>  // for DWORD
 #include "gears/base/ie/atl_headers.h" // TODO(cprince): change ATLASSERT to DCHECK
 
+#ifdef WINCE
+// TODO(cprince): Remove this class as part of LOG() refactoring.
+// Also note that LOG() calls should take string16, so the string conversion
+// done below can go away at that time.
+class GearsTrace {
+ public:
+  GearsTrace(const char* file_name, int line_no)
+      : file_name_(file_name), line_no_(line_no) {}
+
+  void operator() (const char* format, ...) const {
+    va_list ptr; va_start(ptr, format);
+    // convert the format string to wchar_t
+    int in_len = strlen(format);
+    int wide_len = MultiByteToWideChar(CP_UTF8, 0, format, in_len , NULL, 0);
+    if (wide_len > 0) {
+      wchar_t* format_wide = new wchar_t[wide_len + 1];
+      wide_len = MultiByteToWideChar(
+         CP_UTF8, 0, format, in_len, format_wide, wide_len);
+      if (wide_len > 0) {
+        ATL::CTrace::s_trace.TraceV(
+            file_name_, line_no_, atlTraceGeneral, 0, format_wide, ptr);
+      }
+      delete format_wide;
+    }
+    va_end(ptr);
+  }
+ private:
+  GearsTrace& operator=(const GearsTrace& other);
+  const char *const file_name_;
+  const int line_no_;
+};
+
+#define LOG(args) GearsTrace(__FILE__, __LINE__) args
+#else
 #define LOG(args) ATLTRACE args
+#endif
 
 // Debug only code to help us assert that class methods are restricted to a
 // single thread.  To use, add a DECL_SINGLE_THREAD to your class declaration.

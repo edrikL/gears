@@ -37,6 +37,10 @@
 #include <dispex.h>
 #include <map>
 #include <set>
+#ifdef WINCE
+#include <shldisp.h>
+#include <webvw.h>
+#endif
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 #include "gears/base/common/js_runner.h"
@@ -64,7 +68,7 @@ class JsRunnerBase : public JsRunnerInterface {
   JsRootedToken *NewObject(const char16 *optional_global_ctor_name) {
     CComPtr<IDispatch> global_object = GetGlobalObject();
     if (!global_object) {
-      LOG((L"Could not get global object from script engine."));
+      LOG(("Could not get global object from script engine."));
       return NULL;
     }
 
@@ -617,7 +621,14 @@ class DocumentJsRunner : public JsRunnerBase {
     assert(html_document);
 
     CComPtr<IDispatch> script_dispatch;
+#ifdef WINCE
+    // TODO(andreip): fixme!
+    // get_Script() is only defined on IShellFolderViewDual:
+    // CComQIPtr<IShellFolderViewDual> shell = html_document2;
+    // hr = shell->get_Script(&script_dispatch);
+#else
     hr = html_document->get_Script(&script_dispatch);
+#endif
     if (FAILED(hr) || !script_dispatch) { return NULL; }
 
     return script_dispatch;    
@@ -639,6 +650,12 @@ class DocumentJsRunner : public JsRunnerBase {
   }
 
   bool Eval(const std::string16 &script) {
+#ifdef WINCE
+    // TODO(andreip): No execScript() method in the SDK.
+    // Investigate possible workarounds.
+    assert(false);
+    return false;
+#else
     CComPtr<IHTMLWindow2> window;
     HRESULT hr = ActiveXUtils::GetHtmlWindow2(site_, &window);
     if (FAILED(hr)) { return false; }
@@ -648,6 +665,7 @@ class DocumentJsRunner : public JsRunnerBase {
     if (FAILED(hr)) { return false; }
 
     return true;
+#endif
   }
 
   void SetErrorHandler(JsErrorHandlerInterface *handler) {
@@ -656,6 +674,11 @@ class DocumentJsRunner : public JsRunnerBase {
 
   bool AddEventHandler(JsEventType event_type,
                        JsEventHandlerInterface *handler) {
+#ifdef WINCE
+    // TODO(andreip): implement HTML events monitoring
+    assert(false);
+    return false;
+#else
     if (event_type == JSEVENT_UNLOAD) {
       // Create an HTML event monitor to send the unload event when the page
       // goes away.
@@ -672,6 +695,7 @@ class DocumentJsRunner : public JsRunnerBase {
     }
 
     return JsRunnerBase::AddEventHandler(event_type, handler);
+#endif
   }
 
  private:

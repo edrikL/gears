@@ -35,8 +35,11 @@ class DllModule : public CAtlDllModuleT< DllModule > {
 };
 
 DllModule atl_module;
+#ifdef WINCE
+int _charmax = 255;
+#endif
 
-inline BOOL MyDllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
+inline BOOL MyDllMain(HANDLE instance, DWORD reason, LPVOID reserved) {
   switch (reason) {
     case DLL_THREAD_DETACH:
       ThreadLocals::HandleThreadDetached();
@@ -56,8 +59,8 @@ inline BOOL MyDllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
 }
 
 extern "C"
-BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
-  return MyDllMain(instance, reason, reserved);
+BOOL WINAPI DllMain(HANDLE instance, DWORD reason, LPVOID reserved) {
+ return MyDllMain(instance, reason, reserved);
 }
 
 

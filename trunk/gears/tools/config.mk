@@ -272,7 +272,7 @@ EXEFLAGS = /NOLOGO /OUT:$@
 
 FF_LIBS = $(GECKO_SDK)/lib/xpcom.lib $(GECKO_SDK)/lib/xpcomglue_s.lib $(GECKO_SDK)/lib/nspr4.lib $(GECKO_SDK)/lib/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib
 IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib
-IEMOBILE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib
+IEMOBILE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib
 NPAPI_LIBS = ole32.lib shell32.lib advapi32.lib wininet.lib
 
 MIDL = midl
@@ -320,6 +320,9 @@ M4FLAGS  += -DPRODUCT_VERSION_BUILD=$(BUILD)
 M4FLAGS  += -DPRODUCT_VERSION_PATCH=$(PATCH)
 
 M4FLAGS  += -DPRODUCT_OS=$(OS)
+ifeq ($(BROWSER),IEMOBILE)
+M4FLAGS  += -DWINCE=1
+endif
 
 # These three macros are suggested by the GNU make documentation for creating
 # a comma-separated list.
