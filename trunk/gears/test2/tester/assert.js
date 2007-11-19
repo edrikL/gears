@@ -215,13 +215,16 @@ function handleResult(rs, fn) {
   }
 }
 
+
 /**
- * Utility to asynchronously get a URL and return the content.
+ * Utility to send an HTTP request.
  * @param url The url to fetch
+ * @param method The http method (ie. 'GET' or 'POST')
+ * @param data The data to send, may be null
  * @param callback Will be called with contents of URL, or null if the request
  * was unsuccessful.
  */
-function httpGet(url, callback) {
+function sendHttpRequest(url, method, data, callback) {
   var req = google.gears.factory.create('beta.httprequest');
   req.onreadystatechange = function() {
     if (req.readyState == 4) {
@@ -233,6 +236,27 @@ function httpGet(url, callback) {
     }
   };
 
-  req.open('GET', url, true); // async
-  req.send(null);
+  req.open(method, url, true);  // async
+  req.send(data);
+}
+
+/**
+ * Utility to asynchronously get a URL and return the content.
+ * @param url The url to fetch
+ * @param callback Will be called with contents of URL, or null if the request
+ * was unsuccessful.
+ */
+function httpGet(url, callback) {
+  sendHttpRequest(url, 'GET', null, callback);
+}
+
+/**
+ * Utility to asynchronously POST to a URL and return the content.
+ * @param url The url to fetch
+ * @param data The data to post
+ * @param callback Will be called with contents of URL, or null if the request
+ * was unsuccessful.
+ */
+function httpPost(url, data, callback) {
+  sendHttpRequest(url, 'POST', data, callback);
 }
