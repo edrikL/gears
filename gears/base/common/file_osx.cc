@@ -313,7 +313,8 @@ static bool GetApplicationPath(const std::string16 &app_name,
 // shortcuts aren't used the same way they are on pc, so this does something
 // more appropriate: creates an application package containing a shell script to
 // open the browser to the correct URL.
-bool File::CreateDesktopShortcut(const std::string16 &link_name,
+bool File::CreateDesktopShortcut(const SecurityOrigin origin,
+                                 const std::string16 &link_name,
                                  const std::string16 &launch_url,
                                  const std::vector<File::IconData *> &icons) {
   // Build the bundle in the temp folder so that if something goes wrong we

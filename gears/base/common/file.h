@@ -83,13 +83,13 @@ class File {
   // Removes the directory and all of its children. If the directory does
   // not exist, returns false. Returns true if the function succeeds.
   static bool DeleteRecursively(const char16 *full_dirpath);
-  
-// TODO(aa): Implement these on other platforms as needed
-#if BROWSER_FF
+
   // Writes raw data to a file.
   static bool WriteBytesToFile(const char16 *full_filepath, const uint8 *data,
                                int length);
 
+// TODO(aa): Implement this on other platforms as needed
+#if BROWSER_FF
   // Moves a directory to a new location. Returns true if the function succeeds.
   static bool MoveDirectory(const char16 *src_path, const char16 *dest_path);
 #endif
@@ -119,7 +119,8 @@ class File {
   //
   // icon_data is a list of icons of different sizes to be used to generate the
   // desktop shortcut.
-  static bool CreateDesktopShortcut(const std::string16 &link_name,
+  static bool CreateDesktopShortcut(const SecurityOrigin origin,
+                                    const std::string16 &link_name,
                                     const std::string16 &launch_url,
                                     const std::vector<IconData *> &icons);
 

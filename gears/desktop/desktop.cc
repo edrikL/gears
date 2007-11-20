@@ -68,7 +68,11 @@ const nsCID kGearsDesktopClassId = { 0x273640f, 0xfe6d, 0x4a26, { 0x95, 0xc7,
 #endif
 
 static const int kControlPanelIconDimensions = 16;
+#ifdef WIN32
+static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_BGRA;
+#else
 static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_RGBA;
+#endif
 
 struct GearsDesktop::ShortcutInfo {
   std::vector<std::string16> icon_urls;
@@ -360,7 +364,8 @@ bool GearsDesktop::SetShortcut(ShortcutInfo *shortcut, std::string16 *error) {
   }
 
   // TODO:(zork) pass error through for callee to fill out.
-  if (!File::CreateDesktopShortcut(shortcut->app_name,
+  if (!File::CreateDesktopShortcut(EnvPageSecurityOrigin(),
+                                   shortcut->app_name,
                                    shortcut->app_url,
                                    icons)) {
     *error = STRING16(L"Could not create desktop shortcut.");
