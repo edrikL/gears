@@ -37,6 +37,7 @@
 
 // Abstracted types for values used with JavaScript engines.
 typedef jsval      JsToken;
+typedef jsval      JsScopedToken;  // unneeded in FF, see comment on JsArray
 typedef JSContext* JsContextPtr;
 typedef nsresult   JsNativeMethodRetval;
 
@@ -47,6 +48,7 @@ typedef nsresult   JsNativeMethodRetval;
 
 // Abstracted types for values used with JavaScript engines.
 typedef VARIANT JsToken;
+typedef CComVariant JsScopedToken;
 typedef void* JsContextPtr; // unused in IE
 typedef HRESULT JsNativeMethodRetval;
 
@@ -151,25 +153,6 @@ class JsRootedToken {
 
 #elif BROWSER_NPAPI
 
-// A JsToken that won't get GC'd out from under you.
-class JsRootedToken {
- public:
-  JsRootedToken(JsContextPtr context, JsToken token);
-  ~JsRootedToken();
-
-  const JsToken& token() const { return token_; }
-  JsContextPtr context() const { return context_; }
-
-  bool GetAsBool(bool *out) const {
-    return JsTokenToBool(token_, context_, out);
-  }
-
- private:
-  JsContextPtr context_;  // TODO(mpcomplete): figure out if this is necessary
-  JsToken token_;
-  DISALLOW_EVIL_CONSTRUCTORS(JsRootedToken);
-};
-
 // An NPVariant that takes ownership of its value and releases it when it goes
 // out of scope.
 class ScopedNPVariant : public NPVariant {
@@ -180,6 +163,12 @@ class ScopedNPVariant : public NPVariant {
 
   ~ScopedNPVariant() { Reset(); }
 
+  // This is necessary for API transparency.
+  ScopedNPVariant& operator=(const NPVariant &value) {
+    Reset(value);
+    return *this;
+  }
+
   // Frees the old value and replaces it with the new value.  Strings are
   // copied, and objects are retained.
   void Reset();
@@ -188,35 +177,63 @@ class ScopedNPVariant : public NPVariant {
   void Reset(const char *value);
   void Reset(const char16 *value);
   void Reset(NPObject *value);
+  void Reset(const NPVariant &value);
 
   // Gives up ownership of this variant, without freeing or releasing the
   // underyling object.  The variant will be VOID after this call.
   void Release();
 };
 
+typedef ScopedNPVariant JsScopedToken;
+
+// A JsToken that won't get GC'd out from under you.
+class JsRootedToken {
+ public:
+  JsRootedToken(JsContextPtr context, JsToken token) 
+       : context_(context), token_(token) { }
+
+  const JsToken& token() const { return token_; }
+  JsContextPtr context() const { return context_; }
+
+  bool GetAsBool(bool *out) const {
+    return JsTokenToBool(token_, context_, out);
+  }
+
+ private:
+  JsContextPtr context_;  // TODO(mpcomplete): figure out if this is necessary
+  JsScopedToken token_;
+  DISALLOW_EVIL_CONSTRUCTORS(JsRootedToken);
+};
+
 // Sets JavaScript exceptions, in a way that hides differences
 // between main-thread and worker-thread environments.
 void JsSetException(const char16 *message);
-
 
 #elif BROWSER_SAFARI
 
 // Just placeholder values for Safari since the created workers use a separate
 // process for JS execution.
 typedef void  JsToken;
+typedef void  JsScopedToken;
 typedef void* JsContextPtr;
 typedef void  JsNativeMethodRetval;
 
 #endif // BROWSER_xyz
 
+// JsArray and JsObject make use of a JsScopedToken, which is a token that
+// releases any references it has when it goes out of scope.  This is necessary
+// in IE and NPAPI, because getting an array element or object property
+// increases the reference count, and we need a way to release that reference
+// *after* we're done using the object.  In Firefox, JsToken == JsScopedToken
+// because Firefox only gives us a weak pointer to the value.
 
 class JsObject;
 
 class JsArray {
  public:
   JsArray();
+  bool GetElement(int index, JsScopedToken *out);
   bool SetArray(JsToken value, JsContextPtr context);
-  bool GetElement(int index, JsToken *out);
   bool GetElementAsBool(int index, bool *out);
   bool GetElementAsInt(int index, int *out);
   bool GetElementAsDouble(int index, double *out);
@@ -226,14 +243,14 @@ class JsArray {
   bool GetLength(int *length);
  private:
   JsContextPtr js_context_;
-  JsToken array_;
+  JsScopedToken array_;
 };
 
 class JsObject {
  public:
   JsObject();
+  bool GetProperty(const std::string16 &name, JsScopedToken *value);
   bool SetObject(JsToken value, JsContextPtr context);
-  bool GetProperty(const std::string16 &name, JsToken *value);
   bool GetPropertyAsBool(const std::string16 &name, bool *out);
   bool GetPropertyAsInt(const std::string16 &name, int *out);
   bool GetPropertyAsString(const std::string16 &name, std::string16 *out);
@@ -242,7 +259,7 @@ class JsObject {
   bool GetPropertyAsDouble(const std::string16 &name, double *out);
  private:
   JsContextPtr js_context_;
-  JsToken js_object_;
+  JsScopedToken js_object_;
 };
 
 typedef JsRootedToken JsRootedCallback;
