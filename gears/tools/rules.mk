@@ -390,21 +390,22 @@ $(IE_MODULE_DLL): $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)
     #use SANITIZE_LINKER_FILE_LIST to keep things consistent with FF build.
 	
 	@echo $($(BROWSER)_OBJS) | $(SANITIZE_LINKER_FILE_LIST) > $(OUTDIR)/obj_file_list.txt
-	$(MKSHLIB) $(SHLIBFLAGS) $(IE_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)@$(OUTDIR)/obj_file_list.txt
+	$(MKSHLIB) $(SHLIBFLAGS) $(IE_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_file_list.txt
 	rm $(OUTDIR)/obj_file_list.txt
 
 $(FF_MODULE_DLL): $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_OBJS) $(FF_LINK_EXTRAS)
 
 ifeq ($(OS),linux)
 
-        #Temp. workaround - Redhat linux's LD doesn't support @file directive.
+  # Temp. workaround - Redhat linux's LD doesn't support @file directive.
 
 	$(MKSHLIB) $(SHLIBFLAGS) $(FF_SHLIBFLAGS) $(FF_OBJS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_LINK_EXTRAS) $(FF_LIBS)
 
 else
-    #ld on OS X requires filenames to be separated by a newline rather than
-    #a whitespace which is acceptable by other platforms.
-    #ESCAPE_LINKER_FILE_LIST translates ' ' to '\n' on OSs where it's appropriate.
+  # ld on OS X requires filenames to be separated by a newline rather than
+  # a whitespace which is acceptable by other platforms.
+  # ESCAPE_LINKER_FILE_LIST translates ' ' to '\n' on OSs where it's 
+  # appropriate.
 
 	@echo $(FF_OBJS) | $(SANITIZE_LINKER_FILE_LIST) > $(OUTDIR)/obj_file_list.txt
 	$(MKSHLIB) $(SHLIBFLAGS) $(FF_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_LINK_EXTRAS) $(FF_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_file_list.txt

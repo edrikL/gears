@@ -176,7 +176,7 @@ CC = cl
 CXX = cl
 MKDEP = python tools/mkdepend.py $< $@ > $(@D)/$*.pp
 
-EXT_LINKER_CMD_FLAG = 
+EXT_LINKER_CMD_FLAG = @
 SANITIZE_LINKER_FILE_LIST = cat -
 
 COMPILE_FLAGS_dbg = /MTd /Zi
