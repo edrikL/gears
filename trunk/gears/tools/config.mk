@@ -101,8 +101,13 @@ CC = gcc
 CXX = g++
 MKDEP = gcc -M -MF $(@D)/$*.pp -MT $@ $(CPPFLAGS) $(FF_CPPFLAGS) $<
 
-EXT_LINKER_CMD_FLAG = -x @
-SANITIZE_LINKER_FILE_LIST = cat -
+
+# These aren't used on Linux because the ld command in redhat doesn't support 
+# the @file directive, maybe useful if we build using a newer ld version under
+# linux.
+
+#EXT_LINKER_CMD_FLAG = -Xlinker @
+#SANITIZE_LINKER_FILE_LIST = cat -
 
 CPPFLAGS += -DLINUX
 SQLITE_CFLAGS += -Wno-uninitialized
