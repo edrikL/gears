@@ -67,7 +67,7 @@ bool JsArray::GetLength(int *length) {
   return false;
 }
 
-bool JsArray::GetElement(int index, JsToken *out) {
+bool JsArray::GetElement(int index, JsScopedToken *out) {
   if (!array_) return false;
 
   return JS_GetElement(js_context_, JSVAL_TO_OBJECT(array_),
@@ -102,7 +102,7 @@ bool JsArray::GetLength(int *length) {
   return true;
 }
 
-bool JsArray::GetElement(int index, JsToken *out) {
+bool JsArray::GetElement(int index, JsScopedToken *out) {
   if (array_.vt != VT_DISPATCH) return false;
 
   std::string16 name = IntegerToString16(index);
@@ -145,7 +145,7 @@ bool JsArray::GetLength(int *length) {
   return JsTokenToInt(np_length, js_context_, length);
 }
 
-bool JsArray::GetElement(int index, JsToken *out) {
+bool JsArray::GetElement(int index, JsScopedToken *out) {
   if (!NPVARIANT_IS_OBJECT(array_)) return false;
 
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
@@ -164,42 +164,42 @@ bool JsArray::GetElement(int index, JsToken *out) {
 // Common JsArray functions
 
 bool JsArray::GetElementAsBool(int index, bool *out) {
-  JsToken token;
+  JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return JsTokenToBool(token, js_context_, out);
 }
 
 bool JsArray::GetElementAsInt(int index, int *out) {
-  JsToken token;
+  JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return JsTokenToInt(token, js_context_, out);
 }
 
 bool JsArray::GetElementAsDouble(int index, double *out) {
-  JsToken token;
+  JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return JsTokenToDouble(token, js_context_, out);
 }
 
 bool JsArray::GetElementAsString(int index, std::string16 *out) {
-  JsToken token;
+  JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return JsTokenToString(token, js_context_, out);
 }
 
 bool JsArray::GetElementAsArray(int index, JsArray *out) {
-  JsToken token;
+  JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return out->SetArray(token, js_context_);
 }
 
 bool JsArray::GetElementAsObject(int index, JsObject *out) {
-  JsToken token;
+  JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return out->SetObject(token, js_context_);
@@ -221,7 +221,7 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
   return false;
 }
 
-bool JsObject::GetProperty(const std::string16 &name, JsToken *out) {
+bool JsObject::GetProperty(const std::string16 &name, JsScopedToken *out) {
   if (!js_object_) return false;
 
   return JS_GetUCProperty(js_context_, JSVAL_TO_OBJECT(js_object_),
@@ -242,7 +242,7 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
   return true;
 }
 
-bool JsObject::GetProperty(const std::string16 &name, JsToken *out) {
+bool JsObject::GetProperty(const std::string16 &name, JsScopedToken *out) {
   if (js_object_.vt != VT_DISPATCH) return false;
 
   return SUCCEEDED(ActiveXUtils::GetDispatchProperty(js_object_.pdispVal,
@@ -266,7 +266,7 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
   return false;
 }
 
-bool JsObject::GetProperty(const std::string16 &name, JsToken *out) {
+bool JsObject::GetProperty(const std::string16 &name, JsScopedToken *out) {
   if (!NPVARIANT_IS_OBJECT(js_object_)) return false;
 
   std::string name_utf8;
@@ -283,21 +283,21 @@ bool JsObject::GetProperty(const std::string16 &name, JsToken *out) {
 // Common JsObject functions
 
 bool JsObject::GetPropertyAsBool(const std::string16 &name, bool *out) {
-  JsToken token;
+  JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
   return JsTokenToBool(token, js_context_, out);
 }
 
 bool JsObject::GetPropertyAsInt(const std::string16 &name, int *out) {
-  JsToken token;
+  JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
   return JsTokenToInt(token, js_context_, out);
 }
 
 bool JsObject::GetPropertyAsDouble(const std::string16 &name, double *out) {
-  JsToken token;
+  JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
   return JsTokenToDouble(token, js_context_, out);
@@ -305,21 +305,21 @@ bool JsObject::GetPropertyAsDouble(const std::string16 &name, double *out) {
 
 bool JsObject::GetPropertyAsString(const std::string16 &name,
                                    std::string16 *out) {
-  JsToken token;
+  JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
   return JsTokenToString(token, js_context_, out);
 }
 
 bool JsObject::GetPropertyAsArray(const std::string16 &name, JsArray *out) {
-  JsToken token;
+  JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
   return out->SetArray(token, js_context_);
 }
 
 bool JsObject::GetPropertyAsObject(const std::string16 &name, JsObject *out) {
-  JsToken token;
+  JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
   return out->SetObject(token, js_context_);
@@ -455,20 +455,6 @@ bool JsTokenIsNullOrUndefined(JsToken t) {
   return NPVARIANT_IS_NULL(t) || NPVARIANT_IS_VOID(t);
 }
 
-JsRootedToken::JsRootedToken(JsContextPtr context, JsToken token) :
-    context_(context), token_(token) {
-  if (NPVARIANT_IS_OBJECT(token_)) {
-    NPN_RetainObject(NPVARIANT_TO_OBJECT(token_));
-  } else if (NPVARIANT_IS_STRING(token_)) {
-    NPString npstr = NPN_StringDup(NPVARIANT_TO_STRING(token_));
-    NPSTRING_TO_NPVARIANT(npstr, token_);
-  }
-}
-
-JsRootedToken::~JsRootedToken() {
-  NPN_ReleaseVariantValue(&token_);
-}
-
 void ScopedNPVariant::Reset() {
   NPN_ReleaseVariantValue(this);
   VOID_TO_NPVARIANT(*this);
@@ -500,6 +486,19 @@ void ScopedNPVariant::Reset(NPObject *value) {
   Reset();
   OBJECT_TO_NPVARIANT(value, *this);
   NPN_RetainObject(value);
+}
+
+void ScopedNPVariant::Reset(const NPVariant &value) {
+  if (static_cast<NPVariant*>(this) == &value) return;
+
+  Reset();
+  memcpy(this, &value, sizeof(value));
+  if (NPVARIANT_IS_OBJECT(value)) {
+    NPN_RetainObject(NPVARIANT_TO_OBJECT(*this));
+  } else if (NPVARIANT_IS_STRING(value)) {
+    NPString npstr = NPN_StringDup(NPVARIANT_TO_STRING(*this));
+    NPSTRING_TO_NPVARIANT(npstr, *this);
+  }
 }
 
 void ScopedNPVariant::Release() {
