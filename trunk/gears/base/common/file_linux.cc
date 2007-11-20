@@ -36,7 +36,8 @@
 #include "gears/base/common/url_utils.h"
 #include "gears/localserver/common/http_constants.h"
 
-bool File::CreateDesktopShortcut(const std::string16 &link_name,
+bool File::CreateDesktopShortcut(const SecurityOrigin origin,
+                                 const std::string16 &link_name,
                                  const std::string16 &launch_url,
                                  const std::vector<IconData *> &icons) {
   // Note: We assume that link_name has already been validated by the caller to

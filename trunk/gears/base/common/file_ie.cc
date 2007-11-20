@@ -115,6 +115,13 @@ bool File::ReadFileToVector(const char16 *full_filepath,
 
 bool File::WriteVectorToFile(const char16 *full_filepath,
                              const std::vector<uint8> *data) {
+  const uint8 *first_byte = data->size() ? &(data->at(0)) : NULL;
+  return WriteBytesToFile(full_filepath, first_byte, data->size());
+}
+
+
+bool File::WriteBytesToFile(const char16 *full_filepath, const uint8 *buf,
+                            int length) {
   // Open the file for writing.
   SAFE_HANDLE safe_file_handle(::CreateFileW(full_filepath,
                                              GENERIC_WRITE,
@@ -128,11 +135,11 @@ bool File::WriteVectorToFile(const char16 *full_filepath,
   }
   // Write the file.
   // TODO(michaeln): support large files here, where len > maxInt
-  size_t data_size = data->size();
+  size_t data_size = length;
   DWORD bytes_written;
   unsigned char nothing;
   if (!::WriteFile(safe_file_handle.get(), 
-                   (data_size > 0) ? &(*data)[0] : &nothing,
+                   (data_size > 0) ? buf : &nothing,
                    data_size, &bytes_written, NULL)
       || (bytes_written != data_size)) {
     return false;

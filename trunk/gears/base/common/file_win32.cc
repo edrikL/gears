@@ -36,6 +36,7 @@
 #include <tchar.h>
 #include "gears/base/common/file.h"
 #include "gears/base/common/int_types.h"
+#include "gears/base/common/paths.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
@@ -44,6 +45,7 @@
 
 static bool CreateShellLink(const char16 *object_path,
                             const char16 *link_path,
+                            const char16 *icon_path,
                             const char16 *arguments) {
   HRESULT result;
   IShellLink* shell_link;
@@ -53,6 +55,7 @@ static bool CreateShellLink(const char16 *object_path,
   if (SUCCEEDED(result)) {
     shell_link->SetPath(object_path);
     shell_link->SetArguments(arguments);
+    shell_link->SetIconLocation(icon_path, 0);
 
     IPersistFile* persist_file;
     result = shell_link->QueryInterface(IID_IPersistFile,
@@ -73,7 +76,7 @@ static bool GetAppPath(const char16 *process_name, std::string16 *app_path) {
   HKEY hkey;
   std::string16 key_name(STRING16(L"SOFTWARE\\Microsoft\\Windows\\"
                                   L"CurrentVersion\\App Paths\\"));
- 
+
   key_name += process_name;
 
   result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, key_name.c_str(), 0, KEY_READ,
@@ -108,7 +111,160 @@ static bool GetDesktopPath(std::string16 *desktop_path) {
   return succeeded;
 }
 
-bool File::CreateDesktopShortcut(const std::string16 &link_name,
+// Creates the icon file which contains the various different sized icons.
+static bool CreateIcnsFile(const std::string16 &icons_path,
+                           const std::vector<File::IconData *> &icons) {
+  bool icon16x16 = false;
+  bool icon32x32 = false;
+  bool icon48x48 = false;
+
+  struct IcoHeader {
+    uint16 reserved;
+    uint16 type;
+    uint16 count;
+  };
+
+  struct IcoDirectory {
+    uint8 width;
+    uint8 height;
+    uint8 color_count;
+    uint8 reserved;
+    uint16 planes;
+    uint16 bpp;
+    uint32 data_size;
+    uint32 offset;
+  };
+
+  // Initialize to the size of the header.
+  int data_size = sizeof(IcoHeader);
+
+  std::vector<File::IconData *> icons_to_write;
+
+  std::vector<File::IconData *>::const_iterator icon;
+  for (icon = icons.begin(); icon != icons.end(); ++icon) {
+    switch ((*icon)->width) {
+      case 16:
+        if (icon16x16) return false;
+        icon16x16 = true;
+        icons_to_write.push_back(*icon);
+        break;
+      case 32:
+        if (icon32x32) return false;
+        icon32x32 = true;
+        icons_to_write.push_back(*icon);
+        break;
+      case 48:
+        if (icon48x48) return false;
+        icon48x48 = true;
+        icons_to_write.push_back(*icon);
+        break;
+      default:
+        return false;
+    }
+
+    // Increase data_size by size of the icon data.
+    data_size += sizeof(BITMAPINFOHEADER);
+
+    // 32 bits per pixel for the image data.
+    data_size += 4 * (*icon)->width * (*icon)->height;
+
+    // 2 bits per pixel for the AND mask.
+    data_size += (*icon)->width * (*icon)->height / 4;
+
+    // Increase data_size by size of directory entry.
+    data_size += sizeof(IcoDirectory);
+  }
+
+  // Make sure we have at least one icon.
+  if (!(icon16x16 || icon32x32 || icon48x48)) {
+    return false;
+  }
+
+  File::CreateNewFile(icons_path.c_str());
+
+  // Allocate the space for the icon.
+  uint8 *data = new uint8[data_size];
+  memset(data, 0, data_size);
+
+  IcoHeader *icon_header = reinterpret_cast<IcoHeader *>(data);
+  icon_header->reserved = 0;  // Must be 0;
+  icon_header->type = 1;  // 1 for ico.
+  icon_header->count = icons_to_write.size();
+
+  // Icon image data starts past the header and the directory.
+  int base_offset = sizeof(IcoHeader) +
+      icons_to_write.size() * sizeof(IcoDirectory);
+  for (unsigned int i = 0; i < icons_to_write.size(); ++i) {
+    IcoDirectory directory;
+    directory.width = icons_to_write[i]->width;
+    directory.height = icons_to_write[i]->height;
+    directory.color_count = 0;
+    directory.reserved = 0;
+    directory.planes = 1;
+    directory.bpp = 32;
+
+    // Size of the header + size of the pixels + size of the hitmask.
+    directory.data_size =
+        sizeof(BITMAPINFOHEADER) +
+        4 * icons_to_write[i]->width * icons_to_write[i]->height +
+        icons_to_write[i]->width * icons_to_write[i]->height / 4;
+
+    directory.offset = base_offset;
+
+    BITMAPINFOHEADER bmp_header;
+    memset(&bmp_header, 0, sizeof(bmp_header));
+    bmp_header.biSize = sizeof(bmp_header);
+    bmp_header.biWidth = icons_to_write[i]->width;
+    // Windows expects the height to be doubled for the AND mask(unused).
+    bmp_header.biHeight = icons_to_write[i]->height * 2;
+    bmp_header.biPlanes = 1;
+    bmp_header.biBitCount = 32;
+
+    // Write the directory entry.
+    memcpy(&data[sizeof(IcoHeader) + i * sizeof(IcoDirectory)],
+           reinterpret_cast<uint8 *>(&directory),
+           sizeof(IcoDirectory));
+
+    // Write the bitmap header to the data segment.
+    memcpy(&data[base_offset],
+           reinterpret_cast<uint8 *>(&bmp_header),
+           sizeof(BITMAPINFOHEADER));
+
+    // Move the offset past the header
+    base_offset += sizeof(BITMAPINFOHEADER);
+
+    // Iterate across the rows and reverse them.  Icons are stored upside down.
+    int row_offset = (icons_to_write[i]->height - 1) *
+        4 * icons_to_write[i]->width;
+    for (int row = 0; row < icons_to_write[i]->height; ++row) {
+      // Copy a single row.
+      memcpy(&data[base_offset],
+             reinterpret_cast<uint8*>(&icons_to_write[i]->bytes.at(row_offset)),
+             4 * icons_to_write[i]->width);
+
+      // Move the write offset forward one row.
+      base_offset += 4 * icons_to_write[i]->width;
+
+      // Move the read offset back one row.
+      row_offset -= 4 * icons_to_write[i]->width;
+    }
+
+    // Move the write offset past the AND mask.  The AND mask is unused for
+    // icons with 32 bits per pixel; the alpha channel is used instead.
+    base_offset += icons_to_write[i]->width * icons_to_write[i]->height / 4;
+  }
+
+  bool success = File::WriteBytesToFile(icons_path.c_str(),
+                                        data,
+                                        data_size);
+
+  delete[] data;
+
+  return success;
+}
+
+bool File::CreateDesktopShortcut(const SecurityOrigin origin,
+                                 const std::string16 &link_name,
                                  const std::string16 &launch_url,
                                  const std::vector<IconData *> &icons) {
   bool creation_result = false;
@@ -120,7 +276,25 @@ bool File::CreateDesktopShortcut(const std::string16 &link_name,
   process_name = STRING16(L"FIREFOX.EXE");
 #elif BROWSER_IE
   process_name = STRING16(L"IEXPLORE.EXE");
-#endif 
+#endif
+
+  std::string16 icons_path;
+  if (!GetDataDirectory(origin, &icons_path)) {
+    return false;
+  }
+
+  if (!AppendDataName(STRING16(L"icons"), kDataSuffixForDesktop, &icons_path)) {
+    return false;
+  }
+
+  icons_path += kPathSeparator;
+  icons_path += link_name;
+  icons_path += STRING16(L".ico");
+
+
+  if (!CreateIcnsFile(icons_path, icons)) {
+    return false;
+  }
 
   // Note: We assume that link_name has been validated as a valid filename and
   // that the launch_url has been converted to absolute URL by the caller.
@@ -135,7 +309,7 @@ bool File::CreateDesktopShortcut(const std::string16 &link_name,
       link_path += link_name;
       link_path += STRING16(L".lnk");
       creation_result = CreateShellLink(app_path.c_str(), link_path.c_str(),
-                                        launch_url.c_str());
+                                        icons_path.c_str(), launch_url.c_str());
     }
   }
   return creation_result;
