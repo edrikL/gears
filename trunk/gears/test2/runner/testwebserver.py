@@ -490,4 +490,14 @@ def server_root_dir():
 
 
 if __name__ == '__main__':
-  TestWebserver(server_root_dir()).startServing()
+  if len(sys.argv) > 1:
+    try:
+      port_number = int(sys.argv[1])
+    except:
+      print 'usage:\nArgument must be an integer'\
+            'port number, or blank for default.'
+      sys.exit()
+  else:
+    port_number = 8001
+
+  TestWebserver(server_root_dir(), port=port_number).startServing()
