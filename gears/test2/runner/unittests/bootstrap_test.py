@@ -45,8 +45,21 @@ class BootstrapTest(unittest.TestCase):
     for installer in self.installers:
       installer.expects(pmock.once()).install()
     self.bootstrap.install()
-    
-    
+
+
+  def testClean(self):
+    self.__create_output_dir()
+    self.assert_(os.path.exists('output'))
+    self.bootstrap.clean()
+    self.assert_(not os.path.exists('output'))
+
+
+  def testCleanDoesNotFailIfOutputDirMissing(self):
+    self.__delete_output_dir()
+    self.assert_(not os.path.exists('output'))
+    self.bootstrap.clean()
+
+
   def __create_output_dir(self):
     self.__delete_output_dir()
     os.mkdir('output')
