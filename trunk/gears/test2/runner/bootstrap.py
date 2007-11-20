@@ -15,6 +15,11 @@ POLL_INTERVAL_SECONDS = 5
 class Bootstrap:
   """ Set up test environment and handles test execution. """
 
+  # output and temp directory
+  OUTPUT_DIR = 'output'
+  INSTALLER_DIR = os.path.join(OUTPUT_DIR, 'installers')
+  
+  
   def __init__(self, gears_binaries, installers, testrunner, suites_report):
     """ Set test objects. 
     
@@ -31,6 +36,7 @@ class Bootstrap:
     
   def invoke(self):
     """ Start everything, main method. """
+    self.clean()
     self.copyFilesLocally()
     self.install()
     self.startTesting()
@@ -47,10 +53,10 @@ class Bootstrap:
       exists = os.path.exists(self.__gears_binaries)
       time.sleep(POLL_INTERVAL_SECONDS)
     self.__createOutputDir()
-    if os.path.exists('output/installers'):
-      os.chmod('output/installers', DELETABLE)
-      shutil.rmtree('output/installers')
-    shutil.copytree(self.__gears_binaries, 'output/installers')
+    if os.path.exists(Bootstrap.INSTALLER_DIR):
+      os.chmod(Bootstrap.INSTALLER_DIR, DELETABLE)
+      shutil.rmtree(Bootstrap.INSTALLER_DIR)
+    shutil.copytree(self.__gears_binaries, Bootstrap.INSTALLER_DIR)
 
 
   def install(self):
@@ -67,14 +73,19 @@ class Bootstrap:
     stream = open('output/TESTS-TestSuites.xml', 'w')
     self.__suites_report.writeReport(self.test_results, stream)
     stream.close()
-  
+
+
+  def clean(self):
+    if os.path.exists(Bootstrap.OUTPUT_DIR):
+      shutil.rmtree(Bootstrap.OUTPUT_DIR)
+
 
   def __createOutputDir(self, force_recreate=False):
-    if os.path.exists('output'):
+    if os.path.exists(Bootstrap.OUTPUT_DIR):
       if force_recreate:
-        shutil.rmtree('output')
-    if not os.path.exists('output'):
-      os.mkdir('output')
+        shutil.rmtree(Bootstrap.OUTPUT_DIR)
+    if not os.path.exists(Bootstrap.OUTPUT_DIR):
+      os.mkdir(Bootstrap.OUTPUT_DIR)
 
 
 from config import Config
