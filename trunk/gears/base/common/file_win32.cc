@@ -34,6 +34,7 @@
 #include <wininet.h>
 #include <shlwapi.h>
 #include <tchar.h>
+#include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/int_types.h"
 #include "gears/base/common/paths.h"
@@ -112,12 +113,8 @@ static bool GetDesktopPath(std::string16 *desktop_path) {
 }
 
 // Creates the icon file which contains the various different sized icons.
-static bool CreateIcnsFile(const std::string16 &icons_path,
-                           const std::vector<File::IconData *> &icons) {
-  bool icon16x16 = false;
-  bool icon32x32 = false;
-  bool icon48x48 = false;
-
+static bool CreateIcoFile(const std::string16 &icons_path,
+                           const File::DesktopIcons &icons) {
   struct IcoHeader {
     uint16 reserved;
     uint16 type;
@@ -138,45 +135,58 @@ static bool CreateIcnsFile(const std::string16 &icons_path,
   // Initialize to the size of the header.
   int data_size = sizeof(IcoHeader);
 
-  std::vector<File::IconData *> icons_to_write;
+  std::vector<const File::IconData *> icons_to_write;
 
-  std::vector<File::IconData *>::const_iterator icon;
-  for (icon = icons.begin(); icon != icons.end(); ++icon) {
-    switch ((*icon)->width) {
-      case 16:
-        if (icon16x16) return false;
-        icon16x16 = true;
-        icons_to_write.push_back(*icon);
-        break;
-      case 32:
-        if (icon32x32) return false;
-        icon32x32 = true;
-        icons_to_write.push_back(*icon);
-        break;
-      case 48:
-        if (icon48x48) return false;
-        icon48x48 = true;
-        icons_to_write.push_back(*icon);
-        break;
-      default:
-        return false;
-    }
+  if (!icons.icon16x16.bytes.empty()) {
+    icons_to_write.push_back(&icons.icon16x16);
 
     // Increase data_size by size of the icon data.
     data_size += sizeof(BITMAPINFOHEADER);
 
     // 32 bits per pixel for the image data.
-    data_size += 4 * (*icon)->width * (*icon)->height;
+    data_size += 4 * icons.icon16x16.width * icons.icon16x16.height;
 
     // 2 bits per pixel for the AND mask.
-    data_size += (*icon)->width * (*icon)->height / 4;
+    data_size += icons.icon16x16.height * icons.icon16x16.height / 4;
+
+    // Increase data_size by size of directory entry.
+    data_size += sizeof(IcoDirectory);
+  }
+
+  if (!icons.icon32x32.bytes.empty()) {
+    icons_to_write.push_back(&icons.icon32x32);
+
+    // Increase data_size by size of the icon data.
+    data_size += sizeof(BITMAPINFOHEADER);
+
+    // 32 bits per pixel for the image data.
+    data_size += 4 * icons.icon32x32.width * icons.icon32x32.height;
+
+    // 2 bits per pixel for the AND mask.
+    data_size += icons.icon32x32.height * icons.icon32x32.height / 4;
+
+    // Increase data_size by size of directory entry.
+    data_size += sizeof(IcoDirectory);
+  }
+
+  if (!icons.icon48x48.bytes.empty()) {
+    icons_to_write.push_back(&icons.icon48x48);
+
+    // Increase data_size by size of the icon data.
+    data_size += sizeof(BITMAPINFOHEADER);
+
+    // 32 bits per pixel for the image data.
+    data_size += 4 * icons.icon48x48.width * icons.icon48x48.height;
+
+    // 2 bits per pixel for the AND mask.
+    data_size += icons.icon48x48.height * icons.icon48x48.height / 4;
 
     // Increase data_size by size of directory entry.
     data_size += sizeof(IcoDirectory);
   }
 
   // Make sure we have at least one icon.
-  if (!(icon16x16 || icon32x32 || icon48x48)) {
+  if (icons_to_write.empty()) {
     return false;
   }
 
@@ -239,7 +249,8 @@ static bool CreateIcnsFile(const std::string16 &icons_path,
     for (int row = 0; row < icons_to_write[i]->height; ++row) {
       // Copy a single row.
       memcpy(&data[base_offset],
-             reinterpret_cast<uint8*>(&icons_to_write[i]->bytes.at(row_offset)),
+             reinterpret_cast<const uint8*>(
+                 &icons_to_write[i]->bytes.at(row_offset)),
              4 * icons_to_write[i]->width);
 
       // Move the write offset forward one row.
@@ -263,10 +274,11 @@ static bool CreateIcnsFile(const std::string16 &icons_path,
   return success;
 }
 
-bool File::CreateDesktopShortcut(const SecurityOrigin origin,
+bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
                                  const std::string16 &link_name,
                                  const std::string16 &launch_url,
-                                 const std::vector<IconData *> &icons) {
+                                 const DesktopIcons &icons,
+                                 std::string16 *error) {
   bool creation_result = false;
   std::string16 app_path;
   const char16 *process_name;
@@ -280,10 +292,12 @@ bool File::CreateDesktopShortcut(const SecurityOrigin origin,
 
   std::string16 icons_path;
   if (!GetDataDirectory(origin, &icons_path)) {
+    *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
 
   if (!AppendDataName(STRING16(L"icons"), kDataSuffixForDesktop, &icons_path)) {
+    *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
 
@@ -292,7 +306,8 @@ bool File::CreateDesktopShortcut(const SecurityOrigin origin,
   icons_path += STRING16(L".ico");
 
 
-  if (!CreateIcnsFile(icons_path, icons)) {
+  if (!CreateIcoFile(icons_path, icons)) {
+    *error = STRING16(L"Could not create desktop icon.");
     return false;
   }
 
@@ -312,6 +327,11 @@ bool File::CreateDesktopShortcut(const SecurityOrigin origin,
                                         icons_path.c_str(), launch_url.c_str());
     }
   }
+
+  if (!creation_result) {
+    *error = GET_INTERNAL_ERROR_MESSAGE();
+  }
+
   return creation_result;
 }
 #endif  // #if defined(WIN32) && !defined(WINCE)

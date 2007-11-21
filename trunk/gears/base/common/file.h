@@ -109,6 +109,13 @@ class File {
     std::vector<uint8> bytes;
   };
 
+  struct DesktopIcons {
+    IconData icon16x16;
+    IconData icon32x32;
+    IconData icon48x48;
+    IconData icon128x128;
+  };
+
   // Creates a shortcut that opens a URL in a specific browser.
   //
   // link_name is a string that will be used to create the user-visible
@@ -117,12 +124,15 @@ class File {
   // launch_url is a relative URL that the browser should open when the user
   // invokes the shortcut.
   //
-  // icon_data is a list of icons of different sizes to be used to generate the
+  // icons is a list of icons of different sizes to be used to generate the
   // desktop shortcut.
-  static bool CreateDesktopShortcut(const SecurityOrigin origin,
+  //
+  // error is filled with an error string if the function fails.
+  static bool CreateDesktopShortcut(const SecurityOrigin &origin,
                                     const std::string16 &link_name,
                                     const std::string16 &launch_url,
-                                    const std::vector<IconData *> &icons);
+                                    const DesktopIcons &icons,
+                                    std::string16 *error);
 
  private:
   static void SetLastFileError(const char16 *message,

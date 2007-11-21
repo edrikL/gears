@@ -36,19 +36,21 @@
 #include "gears/base/common/url_utils.h"
 #include "gears/localserver/common/http_constants.h"
 
-bool File::CreateDesktopShortcut(const SecurityOrigin origin,
+bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
                                  const std::string16 &link_name,
                                  const std::string16 &launch_url,
-                                 const std::vector<IconData *> &icons) {
+                                 const DesktopIcons &icons,
+                                 std::string16 *error) {
   // Note: We assume that link_name has already been validated by the caller to
   // have only legal filename characters and that launch_url has already been
   // resolved to an absolute URL.
-  
+
   // TODO(aa): Get current process path, flags, etc
   const char16 *browser_path = STRING16(L"/usr/bin/firefox");
 
   std::string link_name_utf8;
   if (!String16ToUTF8(link_name.c_str(), link_name.length(), &link_name_utf8)) {
+    *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
 
@@ -58,8 +60,11 @@ bool File::CreateDesktopShortcut(const SecurityOrigin origin,
   shortcut_path += ".desktop";
 
   FILE *f = fopen(shortcut_path.c_str(), "w");
-  if (f == NULL) return false;
-  
+  if (f == NULL) {
+    *error = GET_INTERNAL_ERROR_MESSAGE();
+    return false;
+  }
+
   // See http://standards.freedesktop.org/desktop-entry-spec/latest/ for
   // format documentation.
   std::string16 shortcut_contents(

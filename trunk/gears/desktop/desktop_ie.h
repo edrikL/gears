@@ -28,8 +28,9 @@
 
 #include "ie/genfiles/desktop_ie.h"  // from OUTDIR
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/js_runner.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/file.h"
+#include "gears/base/common/js_runner.h"
 
 class GearsDesktop
     : public ModuleImplBaseClass,
@@ -53,13 +54,12 @@ class GearsDesktop
   // JS function is createShortcuts(variant shortcuts).
   STDMETHOD(createShortcuts)(VARIANT shortcuts);
 
-  static bool GetControlPanelIconLocation(SecurityOrigin origin,
+  static bool GetControlPanelIconLocation(const SecurityOrigin &origin,
                                           std::string16 &app_name,
                                           std::string16 *icon_loc);
  private:
   struct ShortcutInfo;
   struct ShortcutIcon;
-  struct DesktopIcons;
 
   bool SetShortcut(ShortcutInfo *shortcut, std::string16 *error);
 
@@ -67,7 +67,7 @@ class GearsDesktop
                               ShortcutIcon *icon,
                               std::string16 *error);
   bool UpdateDesktopIcons(const std::vector<uint8> &png,
-                          DesktopIcons *icons,
+                          File::DesktopIcons *icons,
                           std::string16 *error);
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsDesktop);
