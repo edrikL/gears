@@ -28,6 +28,7 @@
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. LINUX_CPPSRCS) are implemented
 #if defined(LINUX) && !defined(OS_MACOSX)
+#include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/int_types.h"
 #include "gears/base/common/security_model.h"
