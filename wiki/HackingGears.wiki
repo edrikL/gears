@@ -1,0 +1,61 @@
+#summary Tips on Hacking the Gears Code Base.
+
+This page provides some tips for hacking the Gears codebase using VS 2005 under Windows, some of it is probably applicable to other platforms and environments.
+
+If you simply want to build Gears from source, you can find instructions for that [BuildingGearsForWindows  here].
+
+= Make Targets =
+
+{{{>> make BROWSER=[IE|FF] MODE=[dbg|opt]}}}
+
+e.g.
+
+{{{>> make BROWSER=FF MODE=dbg}}}
+
+Typing _make_ with no parameters in Windows will default to debug mode and will build installers for both Firefox & IE.
+
+When _MODE_ is omitted from the command line, the default is _dbg_.
+
+Build output is placed in *gears\bin-dbg* or *gears\bin-opt*.
+
+= Setting Up Visual Studio =
+
+A script to automatically generate a VS 2005 project file from the Gears source tree can be found at *gears\tools\gen_vs_project.py*.
+
+C++ code in Gears is wrapped to 80 columns, You can use the tip [http://blogs.msdn.com/saraford/archive/2004/05/05/257953.aspx here] to add a vertical rule to VS to ease conformance.
+
+= Running Gears Directly From The Build Directory =
+
+When developing gears it's useful to be able to run the gears extension directly from the build directory, rather than having to uninstall and install it manually after each build.
+
+This allows you to test your changes quickly.
+
+== In IE this can be achieved in the following manner: ==
+ * Add a right click "Register DLL" menu by saving the following in a .reg file and double clicking it:
+
+{{{
+[HKEY_CLASSES_ROOT\dllfile\shell\Register DLL\command]
+@="%WINDIR%\\system32\\regsvr32.exe %1"
+[HKEY_CLASSES_ROOT\dllfile\shell\Unregister DLL\command]
+@="%WINDIR%\\system32\\regsvr32.exe /u %1"
+}}}
+
+ * Build Gears for IE as described above and install it using the installer in the build directory.
+
+ * Right click on *gears\bin-{MODE}\win32-i386\ie\gears.dll* and select the Register DLL item you just installed.
+
+== In FF: ==
+
+ * Uninstall the Gears Firefox addon, restart Firefox and make sure that Gears no longer appears in the add-ons window.
+
+ * As detailed [http://developer.mozilla.org/en/docs/Adding_Extensions_using_the_Windows_Registry here], run the following command in a dos prompt:
+
+{{{
+>> reg add HKLM\Software\Mozilla\Firefox\Extensions /f /v "{000a9d1c-beef-4f90-9363-039d445309b8}" /d "{PATH_TO_GEARS_SVN}\gears\bin-dbg\installers\gears-win32-dbg-{GEARS_VERSION}"
+}}}
+where {PATH_TO_GEARS_SVN} is the full path to your local copy of the gears source tree and {GEARS_VERSION} is replaced by the current version string e.g. 0.3.0.0.
+
+ * Reopen Firefox and make sure Gears appears in the Add-ons window.  If it doesn't check that the path you specified at the end of the previous command exists and contains the build output.
+
+== Running Unit Tests ==
+For detailed information on running the unit tests, refer to the *gears/test2/README.txt* file.
