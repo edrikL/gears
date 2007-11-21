@@ -137,7 +137,7 @@ static bool CreateIcoFile(const std::string16 &icons_path,
 
   std::vector<const File::IconData *> icons_to_write;
 
-  if (!icons.icon16x16.bytes.empty()) {
+  if (!icons.icon16x16.raw_data.empty()) {
     icons_to_write.push_back(&icons.icon16x16);
 
     // Increase data_size by size of the icon data.
@@ -153,7 +153,7 @@ static bool CreateIcoFile(const std::string16 &icons_path,
     data_size += sizeof(IcoDirectory);
   }
 
-  if (!icons.icon32x32.bytes.empty()) {
+  if (!icons.icon32x32.raw_data.empty()) {
     icons_to_write.push_back(&icons.icon32x32);
 
     // Increase data_size by size of the icon data.
@@ -169,7 +169,7 @@ static bool CreateIcoFile(const std::string16 &icons_path,
     data_size += sizeof(IcoDirectory);
   }
 
-  if (!icons.icon48x48.bytes.empty()) {
+  if (!icons.icon48x48.raw_data.empty()) {
     icons_to_write.push_back(&icons.icon48x48);
 
     // Increase data_size by size of the icon data.
@@ -250,7 +250,7 @@ static bool CreateIcoFile(const std::string16 &icons_path,
       // Copy a single row.
       memcpy(&data[base_offset],
              reinterpret_cast<const uint8*>(
-                 &icons_to_write[i]->bytes.at(row_offset)),
+                 &icons_to_write[i]->raw_data.at(row_offset)),
              4 * icons_to_write[i]->width);
 
       // Move the write offset forward one row.

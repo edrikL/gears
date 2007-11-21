@@ -80,13 +80,6 @@ struct GearsDesktop::ShortcutInfo {
   std::string16 app_description;
 };
 
-struct GearsDesktop::ShortcutIcon {
-  std::vector<uint8> image;
-  int width;
-  int height;
-  uint32 score;
-};
-
 // JS function is createShortcuts(variant shortcuts).
 // shortcuts should be an object with the structure:
 // var shortcuts = [ {
@@ -304,7 +297,6 @@ bool GearsDesktop::SetShortcut(ShortcutInfo *shortcut, std::string16 *error) {
     return false;
   }
 
-  ShortcutIcon control_panel_icon;
   File::DesktopIcons desktop_icons;
 
   std::vector<std::string16>::iterator icon_url;
@@ -320,46 +312,53 @@ bool GearsDesktop::SetShortcut(ShortcutInfo *shortcut, std::string16 *error) {
     if (!request.get()->Open(HttpConstants::kHttpGET,
                              icon_url->c_str(), false) ||
         !request.get()->Send()) {
-      *error = STRING16(L"Could not retreive icon.");
+      *error = STRING16(L"Could not load icon ");
+      *error += icon_url->c_str();
+      *error += STRING16(L".");
       return false;
     }
 
     // Extract the data.
     std::vector<uint8> png;
     if (!request.get()->GetResponseBody(&png)) {
-      *error = STRING16(L"Could not retreive icon.");
+      *error = STRING16(L"Could not load icon ");
+      *error += icon_url->c_str();
+      *error += STRING16(L".");
       return false;
     }
 
-    // Update our selected icons.
-    if (!UpdateControlPanelIcon(png, &control_panel_icon, error) ||
-        !UpdateDesktopIcons(png, &desktop_icons, error)) {
+    // Decode the png
+    File::IconData new_icon;
+    if (!PngUtils::Decode(&png.at(0), png.size(), kDesktopIconFormat,
+                          &new_icon.raw_data, &new_icon.width,
+                          &new_icon.height)) {
+      *error = STRING16(L"Could not decode PNG data for icon ");
+      *error += icon_url->c_str();
+      *error += STRING16(L".");
+      return false;
+    }
+
+    if (new_icon.width != new_icon.height) {
+      *error = STRING16(L"Icon width and height must be equal.");
+      return false;
+    }
+
+    // TODO(aa): Blech, this has to copy the data out of new_icon and png
+    // because we don't know which slot in desktop_icons to use ahead of time.
+    // This can be fixed later when the caller passes us the dimensions of
+    // each icon.
+    if (!UpdateDesktopIcons(png, new_icon, &desktop_icons, error)) {
       return false;
     }
   }
 
-  // Ensure that we actually have an image
-  if (control_panel_icon.image.empty()) {
-      *error = STRING16(L"No suitable icons provided.");
+  // Save the icon file that will be used in the control panel
+  if (!WriteControlPanelIcon(shortcut->app_name, desktop_icons)) {
+    *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
 
-  std::string16 icon_loc;
-  if (!GetControlPanelIconLocation(EnvPageSecurityOrigin(),
-                                   shortcut->app_name,
-                                   &icon_loc)) {
-    *error = STRING16(L"Could not determine control panel icon location.");
-    return false;
-  }
-
-  // Write the control panel icon.
-  File::CreateNewFile(icon_loc.c_str());
-  if (!File::WriteVectorToFile(icon_loc.c_str(), &control_panel_icon.image)) {
-    *error = STRING16(L"Could not write control panel icon.");
-    return false;
-  }
-
-  // Create the Desktop shortcut
+  // Create the desktop shortcut using platform-specific code
   if (!File::CreateDesktopShortcut(EnvPageSecurityOrigin(),
                                    shortcut->app_name,
                                    shortcut->app_url,
@@ -368,8 +367,8 @@ bool GearsDesktop::SetShortcut(ShortcutInfo *shortcut, std::string16 *error) {
     return false;
   }
 
-
   // Create the database entry.
+  // TODO(aa): Check for failure?
   capabilities->SetShortcut(EnvPageSecurityOrigin(),
                             shortcut->app_name.c_str(),
                             shortcut->app_url.c_str(),
@@ -378,51 +377,38 @@ bool GearsDesktop::SetShortcut(ShortcutInfo *shortcut, std::string16 *error) {
   return true;
 }
 
-// Checks if the new image is a better fit than the current one.  If so,
-// replaces the current image with the new one.  The image data in icon is
-// assumed to be the raw png bits.
-bool GearsDesktop::UpdateControlPanelIcon(const std::vector<uint8> &png,
-                                          ShortcutIcon *icon,
-                                          std::string16 *error) {
-  ShortcutIcon new_icon;
-  if (!PngUtils::Decode(&png.at(0), png.size(), PngUtils::FORMAT_RGB,
-                        &new_icon.image, &new_icon.width, &new_icon.height)) {
-    *error = STRING16(L"Could not decode PNG.");
+bool GearsDesktop::WriteControlPanelIcon(const std::string16 &name,
+                                         const File::DesktopIcons &icons) {
+  const File::IconData *chosen_icon;
+  
+  // Pick the best icon we can for the control panel
+  if (!icons.icon16x16.png_data.empty()) {
+    chosen_icon = &icons.icon16x16;
+  } else if (!icons.icon32x32.png_data.empty()) {
+    chosen_icon = &icons.icon32x32;
+  } else if (!icons.icon48x48.png_data.empty()) {
+    chosen_icon = &icons.icon48x48;
+  } else if (!icons.icon128x128.png_data.empty()) {
+    chosen_icon = &icons.icon128x128;
+  } else {
+    // Caller should have ensured that there was at least one icon
+    assert(false);
+  }
+
+  std::string16 icon_loc;
+  if (!GetControlPanelIconLocation(EnvPageSecurityOrigin(), name, &icon_loc)) {
     return false;
   }
 
-  // Use the sum of the squares of the differences in dimensions as the score.
-  uint32 score = ((kControlPanelIconDimensions - new_icon.width) *
-                  (kControlPanelIconDimensions - new_icon.width)) +
-                 ((kControlPanelIconDimensions - new_icon.height) *
-                  (kControlPanelIconDimensions - new_icon.height));
-
-  // If we have no current image, or the new image has a lower score than the
-  // old image, use the new image.
-  if (icon->image.empty() || score < icon->score) {
-    icon->score = score;
-    icon->width = new_icon.width;
-    icon->height = new_icon.height;
-    icon->image = png;
-  }
-
-  return true;
+  // Write the control panel icon.
+  File::CreateNewFile(icon_loc.c_str());
+  return File::WriteVectorToFile(icon_loc.c_str(), &chosen_icon->png_data);
 }
 
 bool GearsDesktop::UpdateDesktopIcons(const std::vector<uint8> &png,
+                                      const File::IconData &new_icon,
                                       File::DesktopIcons *icons,
                                       std::string16 *error) {
-  File::IconData new_icon;
-  if (!PngUtils::Decode(&png.at(0), png.size(), kDesktopIconFormat,
-                        &new_icon.bytes, &new_icon.width, &new_icon.height)) {
-    *error = STRING16(L"Could not decode PNG.");
-    return false;
-  }
-
-  if (new_icon.width != new_icon.height) {
-    *error = STRING16(L"Icon width and height must be equal.");
-    return false;
-  }
 
   File::IconData *icon = NULL;
   switch (new_icon.width) {
@@ -445,16 +431,21 @@ bool GearsDesktop::UpdateDesktopIcons(const std::vector<uint8> &png,
       return false;
   }
 
-  if (icon->bytes.empty()) {
-    *icon = new_icon;
+  if (!icon->png_data.empty()) {
+    *error = STRING16(L"Duplicate icon with ");
+    *error += IntegerToString16(new_icon.width);
+    *error += STRING16(L" found.");
+    return false;
   }
 
+  *icon = new_icon;
+  icon->png_data = png;
   return true;
 }
 
-// Get the location of the file used by the control panel.
+// Get the location of one of the icon files stored in the data directory.
 bool GearsDesktop::GetControlPanelIconLocation(const SecurityOrigin &origin,
-                                               std::string16 &app_name,
+                                               const std::string16 &app_name,
                                                std::string16 *icon_loc) {
   if (!GetDataDirectory(origin, icon_loc)) {
     return false;
@@ -466,6 +457,7 @@ bool GearsDesktop::GetControlPanelIconLocation(const SecurityOrigin &origin,
 
   *icon_loc += kPathSeparator;
   *icon_loc += app_name;
+  *icon_loc += STRING16(L"_cp");
   *icon_loc += STRING16(L".png");
 
   return true;

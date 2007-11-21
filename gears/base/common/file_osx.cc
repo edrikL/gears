@@ -138,12 +138,12 @@ static bool CreateShellScript(const std::string16 &script_path,
 // Defines the visible icon for a given icon size
 static bool SetIconData(IconFamilyHandle family_handle,
                         const File::IconData *icon_data, OSType icon_type) {
-  scoped_Handle data_handle(NewHandle(icon_data->bytes.size()));
+  scoped_Handle data_handle(NewHandle(icon_data->raw_data.size()));
   if (!data_handle.get()) return false;
 
   // Copy the icon data into the handle and convert from RGBA to ARGB
   const std::vector<char> *icon_bytes =
-    reinterpret_cast<const std::vector<char> *>(&icon_data->bytes);
+    reinterpret_cast<const std::vector<char> *>(&icon_data->raw_data);
   char *dest = static_cast<char *>(*data_handle.get());
 
   for (size_t i = 0; i < icon_bytes->size(); i += 4) {
@@ -169,10 +169,10 @@ static bool SetIconAlphaMask(IconFamilyHandle family_handle,
 
   // Copy the alpha data into the handle
   const std::vector<char> *icon_bytes =
-    reinterpret_cast<const std::vector<char> *>(&icon_data->bytes);
+    reinterpret_cast<const std::vector<char> *>(&icon_data->raw_data);
   char *dest = static_cast<char *>(*alpha_handle.get());
 
-  for (size_t i = 0; i < icon_data->bytes.size(); i += 4) {
+  for (size_t i = 0; i < icon_data->raw_data.size(); i += 4) {
     *dest = icon_bytes->at(i + 3);
     ++dest;
   }
@@ -198,11 +198,11 @@ static bool SetIconHitMask(IconFamilyHandle family_handle,
   // Create the hit mask. We consider a pixel clickable if it isn't totally
   // transparent.
   const std::vector<char> *icon_bytes =
-    reinterpret_cast<const std::vector<char> *>(&icon_data->bytes);
+    reinterpret_cast<const std::vector<char> *>(&icon_data->raw_data);
   char *start = static_cast<char *>(*hit_handle.get());
   char *dest = start;
   
-  if (icon_data->bytes.size() < 4) {
+  if (icon_data->raw_data.size() < 4) {
     assert(false);
     return false;
   }
@@ -242,28 +242,28 @@ static bool CreateIcnsFile(const std::string16 &icons_path,
   IconFamilyHandle family_handle =
       reinterpret_cast<IconFamilyHandle>(handle.get());
 
-  if (!icons.icon16x16.bytes.empty()) {
+  if (!icons.icon16x16.raw_data.empty()) {
     if (!SetIconData(family_handle, &icons.icon16x16, kSmall32BitData) ||
         !SetIconAlphaMask(family_handle, &icons.icon16x16, kSmall8BitMask) ||
         !SetIconHitMask(family_handle, &icons.icon16x16, kSmall1BitMask))
       return false;
   }
 
-  if (!icons.icon32x32.bytes.empty()) {
+  if (!icons.icon32x32.raw_data.empty()) {
     if (!SetIconData(family_handle, &icons.icon32x32, kLarge32BitData) ||
         !SetIconAlphaMask(family_handle, &icons.icon32x32, kLarge8BitMask) ||
         !SetIconHitMask(family_handle, &icons.icon32x32, kLarge1BitMask))
       return false;
   }
 
-  if (!icons.icon48x48.bytes.empty()) {
+  if (!icons.icon48x48.raw_data.empty()) {
     if (!SetIconData(family_handle, &icons.icon48x48, kHuge32BitData) ||
         !SetIconAlphaMask(family_handle, &icons.icon48x48, kHuge8BitMask) ||
         !SetIconHitMask(family_handle, &icons.icon48x48, kHuge1BitMask))
       return false;
   }
 
-  if (!icons.icon128x128.bytes.empty()) {
+  if (!icons.icon128x128.raw_data.empty()) {
     // For 128, the hit mask is computed from the alpha mask
     if (!SetIconData(family_handle, &icons.icon128x128, kThumbnail32BitData) ||
         !SetIconAlphaMask(family_handle, &icons.icon128x128,

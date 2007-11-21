@@ -106,7 +106,8 @@ class File {
   struct IconData {
     int width;
     int height;
-    std::vector<uint8> bytes;
+    std::vector<uint8> png_data;
+    std::vector<uint8> raw_data;
   };
 
   struct DesktopIcons {

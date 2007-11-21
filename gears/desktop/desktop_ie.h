@@ -55,18 +55,19 @@ class GearsDesktop
   STDMETHOD(createShortcuts)(VARIANT shortcuts);
 
   static bool GetControlPanelIconLocation(const SecurityOrigin &origin,
-                                          std::string16 &app_name,
+                                          const std::string16 &app_name,
                                           std::string16 *icon_loc);
+
  private:
   struct ShortcutInfo;
   struct ShortcutIcon;
 
   bool SetShortcut(ShortcutInfo *shortcut, std::string16 *error);
 
-  bool UpdateControlPanelIcon(const std::vector<uint8> &png,
-                              ShortcutIcon *icon,
-                              std::string16 *error);
+  bool WriteControlPanelIcon(const std::string16 &name,
+                             const File::DesktopIcons &icons);
   bool UpdateDesktopIcons(const std::vector<uint8> &png,
+                          const File::IconData &new_icon,
                           File::DesktopIcons *icons,
                           std::string16 *error);
 
