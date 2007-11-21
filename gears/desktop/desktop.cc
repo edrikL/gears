@@ -40,7 +40,6 @@
 #include "gears/desktop/desktop_ie.h"
 #endif
 
-#include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/png_utils.h"
@@ -86,13 +85,6 @@ struct GearsDesktop::ShortcutIcon {
   int width;
   int height;
   uint32 score;
-};
-
-struct GearsDesktop::DesktopIcons {
-  File::IconData icon16x16;
-  File::IconData icon32x32;
-  File::IconData icon48x48;
-  File::IconData icon128x128;
 };
 
 // JS function is createShortcuts(variant shortcuts).
@@ -207,6 +199,25 @@ STDMETHODIMP GearsDesktop::createShortcuts(VARIANT shortcuts) {
           STRING16(L"Invalid icon data. appDescription was not set."));
     }
 
+    // Verify that the name is acceptable.
+    if (shortcut_info.app_name.length() >= 50) {
+      RETURN_EXCEPTION(
+          STRING16(L"Application name must be less than 50 characters."));
+    }
+
+    if (shortcut_info.app_name.find('\\', 0) != std::string16::npos ||
+        shortcut_info.app_name.find('/', 0) != std::string16::npos ||
+        shortcut_info.app_name.find(':', 0) != std::string16::npos ||
+        shortcut_info.app_name.find('*', 0) != std::string16::npos ||
+        shortcut_info.app_name.find('?', 0) != std::string16::npos ||
+        shortcut_info.app_name.find('\"', 0) != std::string16::npos ||
+        shortcut_info.app_name.find('<', 0) != std::string16::npos ||
+        shortcut_info.app_name.find('>', 0) != std::string16::npos ||
+        shortcut_info.app_name.find('|', 0) != std::string16::npos) {
+      RETURN_EXCEPTION(
+          STRING16(L"Application name cannot contain: \"\\/:*?<>|"));
+    }
+
     // Normalize and resolve, in case this is a relative URL.
     std::string16 full_url;
     if (ResolveAndNormalize(EnvPageLocationUrl().c_str(),
@@ -294,7 +305,7 @@ bool GearsDesktop::SetShortcut(ShortcutInfo *shortcut, std::string16 *error) {
   }
 
   ShortcutIcon control_panel_icon;
-  DesktopIcons desktop_icons;
+  File::DesktopIcons desktop_icons;
 
   std::vector<std::string16>::iterator icon_url;
   for (icon_url = shortcut->icon_urls.begin();
@@ -349,26 +360,11 @@ bool GearsDesktop::SetShortcut(ShortcutInfo *shortcut, std::string16 *error) {
   }
 
   // Create the Desktop shortcut
-  std::vector<File::IconData *> icons;
-  if (!desktop_icons.icon16x16.bytes.empty()) {
-    icons.push_back(&desktop_icons.icon16x16);
-  }
-  if (!desktop_icons.icon32x32.bytes.empty()) {
-    icons.push_back(&desktop_icons.icon32x32);
-  }
-  if (!desktop_icons.icon48x48.bytes.empty()) {
-    icons.push_back(&desktop_icons.icon48x48);
-  }
-  if (!desktop_icons.icon128x128.bytes.empty()) {
-    icons.push_back(&desktop_icons.icon128x128);
-  }
-
-  // TODO:(zork) pass error through for callee to fill out.
   if (!File::CreateDesktopShortcut(EnvPageSecurityOrigin(),
                                    shortcut->app_name,
                                    shortcut->app_url,
-                                   icons)) {
-    *error = STRING16(L"Could not create desktop shortcut.");
+                                   desktop_icons,
+                                   error)) {
     return false;
   }
 
@@ -414,7 +410,7 @@ bool GearsDesktop::UpdateControlPanelIcon(const std::vector<uint8> &png,
 }
 
 bool GearsDesktop::UpdateDesktopIcons(const std::vector<uint8> &png,
-                                      DesktopIcons *icons,
+                                      File::DesktopIcons *icons,
                                       std::string16 *error) {
   File::IconData new_icon;
   if (!PngUtils::Decode(&png.at(0), png.size(), kDesktopIconFormat,
@@ -457,7 +453,7 @@ bool GearsDesktop::UpdateDesktopIcons(const std::vector<uint8> &png,
 }
 
 // Get the location of the file used by the control panel.
-bool GearsDesktop::GetControlPanelIconLocation(SecurityOrigin origin,
+bool GearsDesktop::GetControlPanelIconLocation(const SecurityOrigin &origin,
                                                std::string16 &app_name,
                                                std::string16 *icon_loc) {
   if (!GetDataDirectory(origin, icon_loc)) {

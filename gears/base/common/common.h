@@ -87,6 +87,14 @@
    static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
 #endif
 
+#define WIDEN2(x) L ## x
+#define WIDEN(x) WIDEN2(x)
+#define __WFILE__ WIDEN(__FILE__)
+
+#define GET_INTERNAL_ERROR_MESSAGE() \
+    (std::string16(STRING16(L"Internal Error: " __WFILE__ L" Line ")) + \
+     IntegerToString16(__LINE__))
+
 // Defines private prototypes for copy constructor and assigment operator. Do
 // not implement these methods.
 #define DISALLOW_EVIL_CONSTRUCTORS(CLASS) \
