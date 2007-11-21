@@ -36,6 +36,7 @@
 #include <CoreServices/CoreServices.h>
 #include <CoreFoundation/CoreFoundation.h>
 
+#include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/int_types.h"
 #include "gears/base/common/security_model.h"
@@ -136,13 +137,13 @@ static bool CreateShellScript(const std::string16 &script_path,
 
 // Defines the visible icon for a given icon size
 static bool SetIconData(IconFamilyHandle family_handle,
-                        File::IconData *icon_data, OSType icon_type) {
+                        const File::IconData *icon_data, OSType icon_type) {
   scoped_Handle data_handle(NewHandle(icon_data->bytes.size()));
   if (!data_handle.get()) return false;
 
   // Copy the icon data into the handle and convert from RGBA to ARGB
-  std::vector<char> *icon_bytes =
-    reinterpret_cast<std::vector<char> *>(&icon_data->bytes);
+  const std::vector<char> *icon_bytes =
+    reinterpret_cast<const std::vector<char> *>(&icon_data->bytes);
   char *dest = static_cast<char *>(*data_handle.get());
 
   for (size_t i = 0; i < icon_bytes->size(); i += 4) {
@@ -161,13 +162,14 @@ static bool SetIconData(IconFamilyHandle family_handle,
 
 // Defines the alpha for a given icon size
 static bool SetIconAlphaMask(IconFamilyHandle family_handle,
-                             File::IconData *icon_data, OSType icon_type) {
+                             const File::IconData *icon_data,
+                             OSType icon_type) {
   scoped_Handle alpha_handle(NewHandle(icon_data->width * icon_data->height));
   if (!alpha_handle.get()) return false;
 
   // Copy the alpha data into the handle
-  std::vector<char> *icon_bytes =
-    reinterpret_cast<std::vector<char> *>(&icon_data->bytes);
+  const std::vector<char> *icon_bytes =
+    reinterpret_cast<const std::vector<char> *>(&icon_data->bytes);
   char *dest = static_cast<char *>(*alpha_handle.get());
 
   for (size_t i = 0; i < icon_data->bytes.size(); i += 4) {
@@ -183,7 +185,7 @@ static bool SetIconAlphaMask(IconFamilyHandle family_handle,
 
 // Defines the clickable area for a given icon size
 static bool SetIconHitMask(IconFamilyHandle family_handle,
-                           File::IconData *icon_data, OSType icon_type) {
+                           const File::IconData *icon_data, OSType icon_type) {
   // NOTE: It would seem that you only need w * h / 8 bytes for this hit mask,
   // but that doesn't work. I don't understand why, but OSX actually wants twice
   // that much data. I figured this out by looking closely at what the
@@ -195,8 +197,8 @@ static bool SetIconHitMask(IconFamilyHandle family_handle,
 
   // Create the hit mask. We consider a pixel clickable if it isn't totally
   // transparent.
-  std::vector<char> *icon_bytes =
-    reinterpret_cast<std::vector<char> *>(&icon_data->bytes);
+  const std::vector<char> *icon_bytes =
+    reinterpret_cast<const std::vector<char> *>(&icon_data->bytes);
   char *start = static_cast<char *>(*hit_handle.get());
   char *dest = start;
   
@@ -332,7 +334,7 @@ bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
   std::string16 resources_path(contents_path + STRING16(L"/Resources"));
 
   // Create our directory structure
-  if (!File::RecursivelyCreateDir(mac_os_path.c_str())) i{
+  if (!File::RecursivelyCreateDir(mac_os_path.c_str())) {
     *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
