@@ -44,8 +44,12 @@
   }
 
   // Now set up the objects, being careful not to overwrite anything.
+  //
+  // Note: In Internet Explorer for Windows Mobile, you can't add properties to
+  // the window object. However, global objects are automatically added as
+  // properties of the window object in all browsers.
   if (!window.google) {
-    window.google = {};
+    google = {};
   }
 
   if (!google.gears) {
