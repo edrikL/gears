@@ -371,6 +371,9 @@ IEMOBILE_CPPSRCS	+= \
 		base_class.cc \
 		bho.cc \
 		detect_version_collision.cc \
+		file.cc \
+		file_ie.cc \
+		file_test.cc \
 		html_event_monitor.cc \
 		html_event_monitor_ie.cc \
 		http_constants.cc \
@@ -378,10 +381,18 @@ IEMOBILE_CPPSRCS	+= \
 		js_runner_ie.cc \
 		js_runner_utils.cc \
 		module.cc \
+		mutex.cc \
+		paths.cc \
+		paths_ie.cc \
 		security_model.cc \
+		sqlite_wrapper.cc \
+		stopwatch.cc \
+		stopwatch_ie.cc \
 		string16.cc \
 		string_utils.cc \
 		thread_locals.cc \
+		vista_utils.cc \
+		wince_compatibility.cc \
 		$(NULL)
 
 IEMOBILE_LINK_EXTRAS	+= \
@@ -498,6 +509,12 @@ IEMOBILE_VPATH	+= \
 
 IEMOBILE_IDLSRCS += \
 		database.idl \
+		$(NULL)
+
+IEMOBILE_CPPSRCS += \
+		database.cc \
+		database_utils.cc \
+		result_set.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------

@@ -26,19 +26,27 @@
 #include <assert.h>
 #include <tchar.h>
 #include "gears/base/common/vista_utils.h"
+#ifdef WINCE
+// Force GetProcAddress to be defined to the ASCII version in order to
+// make the call compile.
+#undef GetProcAddress
+#define GetProcAddress GetProcAddressA
+#endif
 
 
 bool VistaUtils::IsRunningOnVista() {
   static DWORD os_major_version = 0;
+  static DWORD platform_id = 0;
 
   if (0 == os_major_version) {
     OSVERSIONINFO os_version = {0};
     os_version.dwOSVersionInfoSize = sizeof(os_version);
     GetVersionEx(&os_version);
     os_major_version = os_version.dwMajorVersion;
+    platform_id = os_version.dwPlatformId;
   }
 
-  return (6 == os_major_version);
+  return (6 == os_major_version) && (VER_PLATFORM_WIN32_NT == platform_id);
 }
 
 

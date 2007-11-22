@@ -29,6 +29,8 @@
 #ifndef GEARS_BASE_COMMON_COMMON_H__
 #define GEARS_BASE_COMMON_COMMON_H__
 
+#include <float.h>
+
 #include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/int_types.h"
 #include "gears/base/common/string16.h"
@@ -79,7 +81,7 @@
 // - wan 2005-11-16
 // 
 // Starting with Visual C++ 2005, ARRAYSIZE is defined in WinNT.h
-#if defined(_MSC_VER) && _MSC_VER >= 1400
+#if defined(_MSC_VER) && _MSC_VER >= 1400 && !defined(WINCE)
 #include <windows.h>
 #else
 #define ARRAYSIZE(a) \
@@ -94,6 +96,17 @@
 #define GET_INTERNAL_ERROR_MESSAGE() \
     (std::string16(STRING16(L"Internal Error: " __WFILE__ L" Line ")) + \
      IntegerToString16(__LINE__))
+
+// JS represents all numbers as doubles (IEEE 754). This
+// effectively gives the [-2^53, 2^53] range of integers that
+// can be represented by IEEE 754 without loss of precision.
+// For this reason, we cap the range of supported integers
+// to [-2^53, 2^53] by throwing an exception if the values
+// are outside this interval. This restriction is enforced, 
+// for example, in GearsDatabase::get_lastInsertRowId() and
+// GearsResultSet::field().
+#define JS_INT_MAX (1i64 << DBL_MANT_DIG)  // 2^53
+#define JS_INT_MIN (-JS_INT_MAX)  // -2^53
 
 // Defines private prototypes for copy constructor and assigment operator. Do
 // not implement these methods.

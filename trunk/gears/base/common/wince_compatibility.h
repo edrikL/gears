@@ -1,4 +1,4 @@
-// Copyright 2006, Google Inc.
+// Copyright 2007, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,21 +23,33 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <assert.h>
+// TODO(andreip): remove platform-specific #ifdef guards when OS-specific
+// sources (e.g. WIN32_CPPSRCS) are implemented
+#ifdef WINCE
+#ifndef GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
+#define GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
+
 #include <windows.h>
 
-#include "gears/base/common/stopwatch.h"
-#ifdef WINCE
-#include "gears/base/common/wince_compatibility.h"
-#endif
+#define CSIDL_LOCAL_APPDATA CSIDL_APPDATA
+#define SHGFP_TYPE_CURRENT 0
+#define SHGetFolderPath SHGetFolderPathW
 
-int64 GetCurrentTimeMillis() {
-  // The FILETIME structure is a 64-bit value representing the 
-  // number of 100-nanosecond intervals since January 1, 1601 (UTC).
-  // We offset to our epoch (January 1, 1970 GMT) and convert to msecs.
-  const int64 kOffset = 116444736000000000i64;
-  assert(sizeof(int64) == sizeof(FILETIME));
-  int64 filetime;
-  GetSystemTimeAsFileTime(reinterpret_cast<LPFILETIME>(&filetime));
-  return (filetime - kOffset) / 10000i64;
-}
+void GetSystemTimeAsFileTime(LPFILETIME filetime);
+
+DWORD GetShortPathNameW(LPCTSTR path_long,
+                       LPTSTR path_short,
+                       DWORD path_short_max_size);
+
+int SHCreateDirectoryEx(HWND window,
+                        LPCTSTR full_dirpath,
+                        const SECURITY_ATTRIBUTES *security_attributes);
+
+HRESULT SHGetFolderPathW(HWND hwndOwner,
+                        int nFolder,
+                        HANDLE hToken,
+                        DWORD dwFlags,
+                        LPTSTR pszPath);
+
+#endif  // GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
+#endif  // WINCE
