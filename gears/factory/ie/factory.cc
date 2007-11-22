@@ -65,14 +65,11 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
 
   // Make sure the user gives this origin permission to use Gears.
 
-#ifdef WINCE
-  // TODO(andreip): implement HTML permissions dialog for IE Mobile.
-#else
   if (!HasPermissionToUseGears(this, NULL, NULL, NULL)) {
     RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
                               PRODUCT_FRIENDLY_NAME L"."));
   }
-#endif
+
   // Check the version string.
 
   std::string16 version;
@@ -100,7 +97,7 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
 
   hr = E_FAIL;
 #ifdef WINCE
-  // TODO(andreip): add the Gears modules, starting with database.  
+  // TODO(andreip) add the channel API.
 #else
   if (object_name == STRING16(L"beta.channel")) {
     CComObject<GearsChannel> *obj;
@@ -108,10 +105,17 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
     base_class = obj;
     idispatch = obj;
   } else if (object_name == STRING16(L"beta.database")) {
+#endif
+#ifdef WINCE
+  if (object_name == STRING16(L"beta.database")) {
+#endif
     CComObject<GearsDatabase> *obj;
     hr = CComObject<GearsDatabase>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
+#ifdef WINCE
+    // TODO(andreip) Add the rest of the APIs
+#else
   } else if (object_name == STRING16(L"beta.desktop")) {
     CComObject<GearsDesktop> *obj;
     hr = CComObject<GearsDesktop>::CreateInstance(&obj);
@@ -137,10 +141,10 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
     hr = CComObject<GearsWorkerPool>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
+#endif
   } else {
     RETURN_EXCEPTION(STRING16(L"Unknown object."));
   }
-#endif
   if (FAILED(hr) || !base_class || !idispatch) {
     RETURN_EXCEPTION(STRING16(L"Failed to create requested object."));
   }

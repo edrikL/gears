@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,17 +13,16 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <shlobj.h> // for SID_SWebBrowserApp
 #include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
 
 #include "gears/base/common/paths.h"
@@ -39,7 +38,7 @@
 
 #ifdef DEBUG
 Stopwatch GearsDatabase::g_stopwatch_;
-#endif // DEBUG
+#endif  // DEBUG
 
 GearsDatabase::GearsDatabase() : db_(NULL) {}
 
@@ -180,14 +179,14 @@ HRESULT GearsDatabase::BindArg(const CComVariant &arg, int index,
   return (err == SQLITE_OK) ? S_OK :  E_FAIL;
 }
 
-STDMETHODIMP GearsDatabase::execute(const BSTR expression_in, 
+STDMETHODIMP GearsDatabase::execute(const BSTR expression_in,
                                     const VARIANT *arg_array,
                                     GearsResultSetInterface **rs_retval) {
   const BSTR expression = ActiveXUtils::SafeBSTR(expression_in);
 
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
-#endif // DEBUG
+#endif  // DEBUG
 
   ATLTRACE(_T("GearsDatabase::execute(%s)\n"), expression);
 
@@ -249,7 +248,7 @@ STDMETHODIMP GearsDatabase::execute(const BSTR expression_in,
   *rs_retval = rs_external.Detach();
 
   assert((*rs_retval)->AddRef() == 2 &&
-         (*rs_retval)->Release() == 1); // CComObject* does not Release
+         (*rs_retval)->Release() == 1);  // CComObject* does not Release
   RETURN_NORMAL();
 }
 
@@ -265,12 +264,13 @@ STDMETHODIMP GearsDatabase::close() {
 STDMETHODIMP GearsDatabase::get_lastInsertRowId(VARIANT *retval) {
   ATLTRACE(_T("GearsDatabase::lastInsertRowId()\n"));
   if (db_ != NULL) {
-    VariantClear(retval);
-    retval->vt = VT_I8;
-    retval->llVal = sqlite3_last_insert_rowid(db_);
-    if (FAILED(VariantChangeType(retval, retval, 0, VT_DECIMAL))) {
-      RETURN_EXCEPTION(STRING16(L"Converting int64 to VT_DECIMAL failed."));
+    VariantClear(retval);    
+    sqlite_int64 rowid = sqlite3_last_insert_rowid(db_);
+    if ((rowid < JS_INT_MIN) || (rowid > JS_INT_MAX)) {
+      RETURN_EXCEPTION(STRING16(L"lastInsertRowId is out of range."));
     }
+    retval->vt = VT_R8;
+    retval->dblVal = static_cast<DOUBLE>(rowid);
     RETURN_NORMAL();
   } else {
     RETURN_EXCEPTION(STRING16(L"Database handle was NULL."));

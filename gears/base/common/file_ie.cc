@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // The methods of the File class implemented for use in IE.
@@ -29,13 +29,16 @@
 
 
 #include <assert.h>
+#include <windows.h>
 #include <shlobj.h>
 #include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/scoped_win32_handles.h"
 #include "gears/base/common/string_utils.h"
-
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"
+#endif
 
 bool File::CreateNewFile(const char16 *full_filepath) {
   // Create a new file, if a file already exists this will fail
@@ -138,7 +141,7 @@ bool File::WriteBytesToFile(const char16 *full_filepath, const uint8 *buf,
   size_t data_size = length;
   DWORD bytes_written;
   unsigned char nothing;
-  if (!::WriteFile(safe_file_handle.get(), 
+  if (!::WriteFile(safe_file_handle.get(),
                    (data_size > 0) ? buf : &nothing,
                    data_size, &bytes_written, NULL)
       || (bytes_written != data_size)) {
@@ -155,9 +158,9 @@ int File::GetDirectoryFileCount(const char16 *full_dirpath) {
   find_spec += L"\\*";
   WIN32_FIND_DATA find_data;
   HANDLE find_handle = FindFirstFile(find_spec.c_str(), &find_data);
-  if (find_handle == INVALID_HANDLE_VALUE) { 
+  if (find_handle == INVALID_HANDLE_VALUE) {
     return 0;  // expected if the directory does not exist
-  } 
+  }
   int count = 0;
   do {
     if ((wcscmp(find_data.cFileName, L"..") == 0) ||
@@ -194,7 +197,7 @@ bool File::CreateNewTempFile(std::string16 *path) {
 
 
 bool File::CreateNewTempDirectory(std::string16 *path) {
-  std::string16 temp; // to avoid modifying 'path' if something fails
+  std::string16 temp;  // to avoid modifying 'path' if something fails
   if (!CreateNewTempFile(&temp)) {
     return false;
   }
@@ -215,11 +218,14 @@ bool File::CreateNewTempDirectory(std::string16 *path) {
 bool File::RecursivelyCreateDir(const char16 *full_dirpath) {
   // Note: SHCreateDirectoryEx is available in shell32.dll version 5.0+,
   // which means Win2K/XP and higher, plus WinME.
+  // For Windows Mobile, we implement it in wince_compatibility.cc.
   int r = SHCreateDirectoryEx(NULL,   // parent HWND, if UI desired
                               full_dirpath,
                               NULL);  // security attributes for new folders
   if (r != ERROR_SUCCESS &&
       r != ERROR_FILE_EXISTS && r != ERROR_ALREADY_EXISTS) {
+    return false;
+  } else if (r == ERROR_ALREADY_EXISTS && File::Exists(full_dirpath)) {
     return false;
   }
 
@@ -228,11 +234,16 @@ bool File::RecursivelyCreateDir(const char16 *full_dirpath) {
 
 bool File::DeleteRecursively(const char16 *full_dirpath) {
   std::string16 delete_op_path(full_dirpath);
-  delete_op_path += L'\0'; // SHFileOperation needs double null termination
+  delete_op_path += L'\0';  // SHFileOperation needs double null termination
 
   SHFILEOPSTRUCTW fileop = {0};
   fileop.wFunc = FO_DELETE;
   fileop.pFrom = delete_op_path.c_str();
-  fileop.fFlags = FOF_NOERRORUI | FOF_SILENT | FOF_NOCONFIRMATION;
+  fileop.fFlags = FOF_SILENT | FOF_NOCONFIRMATION;
+#ifdef WINCE
+  // FOF_NOERRORUI is not defined in Windows Mobile.
+#else
+  fileop.fFlags |= FOF_NOERRORUI;
+#endif
   return (SHFileOperationW(&fileop) == 0);
 }

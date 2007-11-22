@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,24 +13,32 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <windows.h>
 #include <shlobj.h>
+#ifdef WINCE
+// No shlwapi.h on Windows Mobile.
+#else
 #include <shlwapi.h>
+#endif
 #include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/vista_utils.h"
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"
+#endif
 
 const char16 kPathSeparator = L'\\';  // can always use backslash with IE
 
@@ -53,7 +61,7 @@ bool GetBaseComponentsDirectory(std::string16 *path) {
   HRESULT hr = SHGetFolderPathW(NULL, CSIDL_PROGRAM_FILES,
                                 NULL, // user access token
                                 SHGFP_TYPE_CURRENT, dir);
-  if (FAILED(hr) || hr == S_FALSE) { // MSDN says to handle S_FALSE"
+  if (FAILED(hr) || hr == S_FALSE) {  // MSDN says to handle S_FALSE
     return false;
   }
 
@@ -82,11 +90,12 @@ bool GetBaseDataDirectory(std::string16 *path) {
                                 NULL, // user access token
                                 SHGFP_TYPE_CURRENT, dir);
     // Note: CSIDL_LOCAL_APPDATA is available in shell32.dll version 5.0+,
-    // which means Win2K/XP and higher, plus WinME.
+    // which means Win2K/XP and higher, plus WinME. On Windows Mobile
+    // we define it to CSIDL_APPDATA.
     if (FAILED(hr)) {
       return false;
     }
-    
+
     path_long = dir;
   }
 
@@ -94,7 +103,7 @@ bool GetBaseDataDirectory(std::string16 *path) {
   path_long += kDataSubdir;
 
   // Create the directory prior to getting the name in short form on Windows.
-  // We do this to ensure the short name generated will actually map to our 
+  // We do this to ensure the short name generated will actually map to our
   // directory rather than another file system object created before ours.
   // Also, we do this for all OSes to behave consistently.
   if (!File::RecursivelyCreateDir(path_long.c_str())) {

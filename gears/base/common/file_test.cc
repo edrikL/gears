@@ -28,11 +28,16 @@
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"
+#endif
 
 
 //------------------------------------------------------------------------------
 // TestFileUtils
 //------------------------------------------------------------------------------
+static bool CheckDirectoryCreation(const char16 *dir);
+
 bool TestFileUtils() {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
@@ -113,15 +118,48 @@ bool TestFileUtils() {
   sub_dir += STRING16(L"sub");
   TEST_ASSERT(!File::DirectoryExists(sub_dir.c_str()));
   TEST_ASSERT(File::GetDirectoryFileCount(sub_dir.c_str()) == 0);
-  TEST_ASSERT(File::RecursivelyCreateDir(sub_dir.c_str()));
-  TEST_ASSERT(File::DirectoryExists(sub_dir.c_str()));
+  TEST_ASSERT(CheckDirectoryCreation(sub_dir.c_str()));
   TEST_ASSERT(File::GetDirectoryFileCount(temp_dir.c_str()) == 1);
 
   // Remove the entire tmp_dir incuding the sub-dir it contains
   TEST_ASSERT(File::DeleteRecursively(temp_dir.c_str()));
   TEST_ASSERT(!File::DirectoryExists(temp_dir.c_str()));
 
+#ifdef WINCE
+   // Test the directory creation on Windows Mobile
+  const char16 *kValidDirNames[] = {
+      STRING16(L"\\Dir1"),
+      STRING16(L"\\Dir1\\Dir2"),
+      STRING16(L"\\Dir1\\Dir2\\"),
+      STRING16(L"/Dir1"),
+      STRING16(L"/Dir1/Dir2/"),
+      STRING16(L"/Dir1\\Dir2/"),      
+      STRING16("\\Dir1/Dir2/"),      
+      STRING16(L".\\Dir"),
+      STRING16(L"..\\Dir.Dir2.Dir3/Dir4/")
+  };
+  const char16 *kInvalidDirNames[] = {      
+      STRING16(L"//Dir1/////Dir2/"),
+      STRING16(L"\\\\Dir1\\Dir2\\"),
+      STRING16(L"\\Dir1\\:Dir2"),
+      STRING16(L"&.<>:\"/\\|?*"),
+      STRING16(L""),      
+      STRING16(L"?")
+  };
+
+  for (int i = 0; i < ARRAYSIZE(kValidDirNames); i++) {
+    TEST_ASSERT(CheckDirectoryCreation(kValidDirNames[i]));
+    TEST_ASSERT(File::DeleteRecursively(kValidDirNames[i]));
+  }
+
+  for (int i = 0; i < ARRAYSIZE(kInvalidDirNames); i++) {
+    TEST_ASSERT(!(File::RecursivelyCreateDir(kInvalidDirNames[i])));
+  }    
+#endif
   LOG(("TestFileUtils - passed\n"));
   return true;
 }
 
+static bool CheckDirectoryCreation(const char16 *dir) {
+  return File::RecursivelyCreateDir(dir) && File::DirectoryExists(dir);  
+}

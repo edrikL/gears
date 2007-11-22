@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/common/common.h"
@@ -92,7 +92,7 @@ STDMETHODIMP GearsResultSet::field(int index, VARIANT *retval) {
   ATLTRACE(_T("GearsResultSet::field(%d)\n"), index);
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
-#endif // DEBUG
+#endif  // DEBUG
 
   if (statement_ == NULL) {
     RETURN_EXCEPTION(STRING16(L"SQL statement is NULL."));
@@ -106,24 +106,17 @@ STDMETHODIMP GearsResultSet::field(int index, VARIANT *retval) {
   switch (column_type) {
     case SQLITE_INTEGER: {
       sqlite_int64 i64 = sqlite3_column_int64(statement_, index);
-      // TODO(cprince): the Firefox code doesn't handle this UInt32 case.
-      // Should it?  Michael says we only check for it here because I64
-      // is painful on IE (because it requires VT_DECIMAL).
       if ((i64 >= INT_MIN) && (i64 <= INT_MAX)) {
         retval->intVal = static_cast<int>(i64);
         retval->vt = VT_INT;
       } else if ((i64 >= 0) && (i64 <= UINT_MAX)) {
         retval->uintVal = static_cast<unsigned int>(i64);
         retval->vt = VT_UINT;
+      } else if ((i64 >= JS_INT_MIN) && (i64 <= JS_INT_MAX)) {
+        retval->dblVal = static_cast<double>(i64);
+        retval->vt = VT_R8;
       } else {
-        retval->llVal = i64;
-        retval->vt = VT_I8;
-        // IE's javascript engine doesn't seem to understand VT_I8 variants,
-        // so we return these large integer values in VT_DECIMAL form.
-        HRESULT hr = VariantChangeType(retval, retval, 0, VT_DECIMAL);
-        if (FAILED(hr)) {
-          RETURN_EXCEPTION(STRING16(L"Converting int64 to VT_DECIMAL failed."));
-        }
+        RETURN_EXCEPTION(STRING16(L"Integer value is out of range."));
       }
       RETURN_NORMAL();
     }
@@ -161,7 +154,7 @@ STDMETHODIMP GearsResultSet::fieldByName(const BSTR field_name_in,
 
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
-#endif // DEBUG
+#endif  // DEBUG
 
   ATLTRACE(_T("GearsResultSet::fieldByName\n"));
   if (statement_ == NULL) {
@@ -199,7 +192,7 @@ STDMETHODIMP GearsResultSet::fieldName(int index, VARIANT *retval) {
   ATLTRACE(_T("GearsResultSet::fieldName(%d)\n"), index);
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
-#endif // DEBUG
+#endif  // DEBUG
 
   if (statement_ == NULL) {
     RETURN_EXCEPTION(STRING16(L"SQL statement is NULL."));
@@ -224,7 +217,7 @@ STDMETHODIMP GearsResultSet::fieldCount(int *retval) {
   ATLTRACE(_T("GearsResultSet::fieldCount()\n"));
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
-#endif // DEBUG
+#endif  // DEBUG
 
   // rs.fieldCount() should never throw. Return 0 if there is no statement.
   if (statement_ == NULL) {
@@ -239,7 +232,7 @@ STDMETHODIMP GearsResultSet::close() {
   ATLTRACE(_T("GearsResultSet::close()\n"));
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
-#endif // DEBUG
+#endif  // DEBUG
 
   if (!Finalize()) {
     RETURN_EXCEPTION(STRING16(L"SQLite finalize() failed."));
@@ -263,7 +256,7 @@ STDMETHODIMP GearsResultSet::next() {
 bool GearsResultSet::NextImpl(std::string16 *error_message) {
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
-#endif // DEBUG
+#endif  // DEBUG
   assert(statement_);
   assert(error_message);
   int sql_status = sqlite3_step(statement_);
