@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,18 +13,21 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
 #include <dispex.h>
+
+#include <deque>
+#include <vector>
 
 #include "gears/localserver/ie/resource_store_ie.h"
 
@@ -36,8 +39,11 @@
 #include "gears/base/common/url_utils.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
+#ifdef WINCE
+// TODO(steveblock): Implement file submitter.
+#else
 #include "gears/localserver/ie/file_submitter_ie.h"
-
+#endif
 
 //------------------------------------------------------------------------------
 // FinalConstruct
@@ -470,6 +476,10 @@ STDMETHODIMP GearsResourceStore::copy(
 STDMETHODIMP GearsResourceStore::captureFile(
       /* [in] */ IDispatch *file_input_element,
       /* [in] */ const BSTR url) {
+#ifdef WINCE
+  // TODO(steveblock): Implement GearsResourceStore::captureFile.
+  RETURN_EXCEPTION(STRING16(L"captureFile not yet implemented for WinCE."));
+#else
   if (EnvIsWorker()) {
     RETURN_EXCEPTION(STRING16(L"captureFile cannot be called in a worker."));
   }
@@ -492,7 +502,7 @@ STDMETHODIMP GearsResourceStore::captureFile(
   HRESULT hr = input->get_value(&filepath);
   if (FAILED(hr) || filepath.Length() <= 0) {
     RETURN_EXCEPTION(STRING16(L"File path is empty."));
-  } 
+  }
 
   ATLTRACE(_T("ResourceStore::captureFile( %s, %s )\n"), filepath.m_str, url);
 
@@ -527,13 +537,13 @@ STDMETHODIMP GearsResourceStore::captureFile(
   // Synthesize the headers to save with the item
   CStringW headers;
   const WCHAR *filename = PathFindFileNameW(filepath.m_str);
-  headers.AppendFormat(L"%s:%s\r\n", 
+  headers.AppendFormat(L"%s:%s\r\n",
                        HttpConstants::kContentTypeHeader,
                        mimetype ? mimetype : kOctetStreamType);
-  headers.AppendFormat(L"%s:%d\r\n", 
+  headers.AppendFormat(L"%s:%d\r\n",
                        HttpConstants::kContentLengthHeader,
                        item.payload.data->size());
-  headers.AppendFormat(L"%s:%s\r\n", 
+  headers.AppendFormat(L"%s:%s\r\n",
                        HttpConstants::kXCapturedFilenameHeader,
                        filename);
   // TODO(michaeln): provide a flag on scriptable captureFile() method
@@ -552,6 +562,7 @@ STDMETHODIMP GearsResourceStore::captureFile(
   }
 
   RETURN_NORMAL();
+#endif
 }
 
 
@@ -646,6 +657,11 @@ STDMETHODIMP GearsResourceStore::getAllHeaders(
 //------------------------------------------------------------------------------
 STDMETHODIMP GearsResourceStore::createFileSubmitter(
       /* [retval][out] */ GearsFileSubmitterInterface **file_submitter) {
+#ifdef WINCE
+  // TODO(steveblock): Implement GearsResourceStore::createFileSubmitter.
+  RETURN_EXCEPTION(
+        STRING16(L"createFileSubmitter not yet implemented for WinCE."));
+#else
   if (EnvIsWorker()) {
     RETURN_EXCEPTION(
         STRING16(L"createFileSubmitter cannot be called in a worker."));
@@ -673,18 +689,25 @@ STDMETHODIMP GearsResourceStore::createFileSubmitter(
   }
 
   RETURN_NORMAL();
+#endif
 }
 
 //------------------------------------------------------------------------------
 // CreateWindowIfNeeded
 //------------------------------------------------------------------------------
 HRESULT GearsResourceStore::CreateWindowIfNeeded() {
+#ifdef WINCE
+  // TODO(steveblock): Implement GearsResourceStore::CreateWindowIfNeeded.
+  RETURN_EXCEPTION(
+      STRING16(L"CreateWindowIfNeeded not yet implemented for WinCE."));
+#else
   if (!IsWindow()) {
     if (!Create(HWND_MESSAGE)) {
       RETURN_EXCEPTION(STRING16(L"Failed to create message window."));
     }
   }
   RETURN_NORMAL();
+#endif
 }
 
 

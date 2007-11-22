@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,18 +13,21 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef GEARS_LOCALSERVER_IE_HTTP_REQUEST_IE_H__
 #define GEARS_LOCALSERVER_IE_HTTP_REQUEST_IE_H__
+
+#include <string>
+#include <vector>
 
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/common/security_model.h"
@@ -59,7 +62,7 @@ class IEHttpRequest
 
   // Get or set the redirect behavior, the default is FOLLOW_ALL
   // May only be set prior to calling Send.
-  virtual RedirectBehavior GetRedirectBehavior() { 
+  virtual RedirectBehavior GetRedirectBehavior() {
     return redirect_behavior_;
   }
 
@@ -106,55 +109,55 @@ class IEHttpRequest
     SERVICE_ENTRY(__uuidof(IHttpNegotiate))
   END_SERVICE_MAP()
 
-  IEHttpRequest();  
+  IEHttpRequest();
   HRESULT FinalConstruct();
   void FinalRelease();
 
   // IBindStatusCallback
 
-  virtual HRESULT STDMETHODCALLTYPE OnStartBinding( 
+  virtual HRESULT STDMETHODCALLTYPE OnStartBinding(
       /* [in] */ DWORD dwReserved,
       /* [in] */ IBinding *pib);
 
-  virtual HRESULT STDMETHODCALLTYPE GetPriority( 
+  virtual HRESULT STDMETHODCALLTYPE GetPriority(
       /* [out] */ LONG *pnPriority);
 
-  virtual HRESULT STDMETHODCALLTYPE OnLowResource( 
+  virtual HRESULT STDMETHODCALLTYPE OnLowResource(
       /* [in] */ DWORD reserved);
 
-  virtual HRESULT STDMETHODCALLTYPE OnProgress( 
+  virtual HRESULT STDMETHODCALLTYPE OnProgress(
       /* [in] */ ULONG ulProgress,
       /* [in] */ ULONG ulProgressMax,
       /* [in] */ ULONG ulStatusCode,
       /* [in] */ LPCWSTR szStatusText);
 
-  virtual HRESULT STDMETHODCALLTYPE OnStopBinding( 
+  virtual HRESULT STDMETHODCALLTYPE OnStopBinding(
       /* [in] */ HRESULT hresult,
       /* [unique][in] */ LPCWSTR szError);
 
-  virtual HRESULT STDMETHODCALLTYPE GetBindInfo( 
+  virtual HRESULT STDMETHODCALLTYPE GetBindInfo(
       /* [out] */ DWORD *grfBINDF,
       /* [unique][out][in] */ BINDINFO *pbindinfo);
 
-  virtual HRESULT STDMETHODCALLTYPE OnDataAvailable( 
+  virtual HRESULT STDMETHODCALLTYPE OnDataAvailable(
       /* [in] */ DWORD grfBSCF,
       /* [in] */ DWORD dwSize,
       /* [in] */ FORMATETC *pformatetc,
       /* [in] */ STGMEDIUM *pstgmed);
 
-  virtual HRESULT STDMETHODCALLTYPE OnObjectAvailable( 
+  virtual HRESULT STDMETHODCALLTYPE OnObjectAvailable(
       /* [in] */ REFIID riid,
       /* [iid_is][in] */ IUnknown *punk);
 
   // IHttpNegotiate
 
-  virtual HRESULT STDMETHODCALLTYPE BeginningTransaction( 
+  virtual HRESULT STDMETHODCALLTYPE BeginningTransaction(
       /* [in] */ LPCWSTR szURL,
       /* [unique][in] */ LPCWSTR szHeaders,
       /* [in] */ DWORD dwReserved,
       /* [out] */ LPWSTR *pszAdditionalHeaders);
 
-  virtual HRESULT STDMETHODCALLTYPE OnResponse( 
+  virtual HRESULT STDMETHODCALLTYPE OnResponse(
       /* [in] */ DWORD dwResponseCode,
       /* [unique][in] */ LPCWSTR szResponseHeaders,
       /* [unique][in] */ LPCWSTR szRequestHeaders,
@@ -162,10 +165,14 @@ class IEHttpRequest
 
   // IServiceProvider
 
-  virtual HRESULT STDMETHODCALLTYPE QueryService( 
+#ifdef WINCE
+// TODO(steveblock): Implement this
+#else
+  virtual HRESULT STDMETHODCALLTYPE QueryService(
       /* [in] */ REFGUID guidService,
       /* [in] */ REFIID riid,
       /* [out] */ void __RPC_FAR *__RPC_FAR *ppvObject);
+#endif
 
  private:
   bool SendImpl();
@@ -229,7 +236,7 @@ class IEHttpRequest
 
   // The amount of data we've read into the response_payload_.data
   // Initially the stl vector is allocated to a large size. We keep
-  // track of how much of that allocated space is actually used here. 
+  // track of how much of that allocated space is actually used here.
   size_t actual_data_size_;
 
   // URLMON object references

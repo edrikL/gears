@@ -75,9 +75,18 @@ bool ModuleImplBaseClass::InitBaseFromDOM(const char *url_str) {
   return succeeded && InitBaseManually(is_worker, cx, security_origin,
                                        NewDocumentJsRunner(NULL, cx));
 #elif BROWSER_IE
+  JsRunnerInterface *runner = NewDocumentJsRunner(site, NULL);
+#ifdef WINCE
+  // Start the local script engine. This engine is used simply to create objects
+  // which are passed as parameters to callbacks running in the page's script
+  // engine.
+  if (!runner->Start(L"")) {
+    return false;
+  }
+#endif
   bool succeeded = ActiveXUtils::GetPageOrigin(site, &security_origin);
   return succeeded && InitBaseManually(is_worker, site, security_origin,
-                                       NewDocumentJsRunner(site, NULL));
+                                       runner);
 #elif BROWSER_NPAPI
   bool succeeded = BrowserUtils::GetPageSecurityOrigin(instance,
                                                        &security_origin);

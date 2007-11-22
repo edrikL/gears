@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // In IE, JsRunner is a wrapper and most work happens in
@@ -37,15 +37,12 @@
 #include <dispex.h>
 #include <map>
 #include <set>
-#ifdef WINCE
-#include <shldisp.h>
-#include <webvw.h>
-#endif
+#include <vector>
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 #include "gears/base/common/js_runner.h"
 
-#include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/ie/atl_headers.h"
@@ -59,10 +56,10 @@
 // different.
 class JsRunnerBase : public JsRunnerInterface {
  public:
-  JsRunnerBase(){};
+  JsRunnerBase() {}
 
   JsContextPtr GetContext() {
-    return NULL; // not used in IE
+    return NULL;  // not used in IE
   }
 
   JsRootedToken *NewObject(const char16 *optional_global_ctor_name) {
@@ -87,9 +84,8 @@ class JsRunnerBase : public JsRunnerInterface {
     hr = global_dispex->InvokeEx(
                             error_dispid, LOCALE_USER_DEFAULT,
                             DISPATCH_CONSTRUCT, &no_args, &result,
-                            NULL, // receives exception (NULL okay)
-                            NULL // pointer to "this" object (NULL okay)
-                            );
+                            NULL,  // receives exception (NULL okay)
+                            NULL);  // pointer to "this" object (NULL okay)
     if (FAILED(hr)) {
       LOG(("Could not invoke object constructor."));
       return NULL;
@@ -156,13 +152,13 @@ class JsRunnerBase : public JsRunnerInterface {
 
     VARIANT retval = {0};
     HRESULT hr = callback->token().pdispVal->Invoke(
-        DISPID_VALUE, IID_NULL, // DISPID_VALUE = default action
-        LOCALE_SYSTEM_DEFAULT,  // TODO(cprince): should this be user default?
-        DISPATCH_METHOD,        // dispatch/invoke as...
-        &invoke_params,         // parameters
-        optional_alloc_retval ? &retval : NULL, // receives result (NULL okay)
-        NULL,                   // receives exception (NULL okay)
-        NULL);                  // receives badarg index (NULL okay)
+        DISPID_VALUE, IID_NULL,  // DISPID_VALUE = default action
+        LOCALE_SYSTEM_DEFAULT,   // TODO(cprince): should this be user default?
+        DISPATCH_METHOD,         // dispatch/invoke as...
+        &invoke_params,          // parameters
+        optional_alloc_retval ? &retval : NULL,  // receives result (NULL okay)
+        NULL,                    // receives exception (NULL okay)
+        NULL);                   // receives badarg index (NULL okay)
     if (FAILED(hr)) { return false; }
 
     if (optional_alloc_retval) {
@@ -292,7 +288,7 @@ class ATL_NO_VTABLE JsRunnerImpl
   IDispatch *GetGlobalObject() {
     IDispatch *global_object;
     HRESULT hr = javascript_engine_->GetScriptDispatch(
-                                         NULL, // get global object
+                                         NULL,  // get global object
                                          &global_object);
     if (FAILED(hr)) { return NULL; }
 
@@ -376,7 +372,11 @@ bool JsRunnerImpl::AddGlobal(const std::string16 &name,
 bool JsRunnerImpl::Start(const std::string16 &full_script) {
   HRESULT hr;
 
+#ifdef WINCE
+  coinit_succeeded_ = SUCCEEDED(CoInitializeEx(NULL, COINIT_MULTITHREADED));
+#else
   coinit_succeeded_ = SUCCEEDED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED));
+#endif
   if (!coinit_succeeded_) { return false; }
   // CoUninitialize is handled in dtor
 
@@ -447,7 +447,7 @@ bool JsRunnerImpl::Start(const std::string16 &full_script) {
 
   // TODO(cprince): do we need STARTED *and* CONNECTED? (Does it matter?)
   // CONNECTED "runs the script and blocks until the script is finished"
-  hr = javascript_engine_->SetScriptState(SCRIPTSTATE_STARTED);	
+  hr = javascript_engine_->SetScriptState(SCRIPTSTATE_STARTED);
   if (FAILED(hr)) { return false; }
   hr = javascript_engine_->SetScriptState(SCRIPTSTATE_CONNECTED);
   if (FAILED(hr)) { return false; }
@@ -456,7 +456,7 @@ bool JsRunnerImpl::Start(const std::string16 &full_script) {
   // an onmessage handler.  (If it didn't, the worker is most likely cut off
   // from other workers.  There are ways to prevent this, but they are poor.)
 
-  return true; // succeeded
+  return true;  // succeeded
 }
 
 bool JsRunnerImpl::Eval(const std::string16 &script) {
@@ -503,7 +503,7 @@ STDMETHODIMP JsRunnerImpl::HandleScriptError(EXCEPINFO *ei, ULONG line,
   if (!error_handler_) { return E_FAIL; }
 
   const JsErrorInfo error_info = {
-    line + 1, // Reported lines start at zero.
+    line + 1,  // Reported lines start at zero.
     static_cast<char16 *>(ei->bstrDescription)
   };
 
@@ -513,7 +513,7 @@ STDMETHODIMP JsRunnerImpl::HandleScriptError(EXCEPINFO *ei, ULONG line,
 
 
 STDMETHODIMP JsRunnerImpl::ProcessUrlAction(DWORD action, BYTE *policy,
-                                            DWORD policy_size, BYTE *context, 
+                                            DWORD policy_size, BYTE *context,
                                             DWORD context_size, DWORD flags,
                                             DWORD reserved) {
   // There are many different values of action that could conceivably be
@@ -562,14 +562,14 @@ class JsRunner : public JsRunnerBase {
   JsRunner() {
     HRESULT hr = CComObject<JsRunnerImpl>::CreateInstance(&com_obj_);
     if (com_obj_) {
-      com_obj_->AddRef(); // MSDN says call AddRef after CreateInstance
+      com_obj_->AddRef();  // MSDN says call AddRef after CreateInstance
     }
   }
   virtual ~JsRunner() {
     // Alert modules that the engine is unloading.
     SendEvent(JSEVENT_UNLOAD);
 
-    if (com_obj_) { 
+    if (com_obj_) {
       com_obj_->Stop();
       com_obj_->Release();
     }
@@ -603,13 +603,43 @@ class JsRunner : public JsRunnerBase {
 
 // This class is a stub that is used to present a uniform interface to
 // common functionality to both workers and the main thread.
+//
+// For desktop IE, this class is a wrapper around the main page's script engine.
+// For WinCE, we can not get a handle to the main page's script engine, because
+// IHTMLDocument::get_Script is not available. Instead, we use JsRunnerImpl to
+// instantiate a local script engine that is used to create the objects which
+// are passed as arguments to the callback functions. The callbacks themselves
+// are executed in the context of the main page's script engine.
+//
+// TODO(steveblock): A limitation with this approach is that the arguments
+// passed to callbacks do not support extensions to Object that are defined in
+// the context of the main page's script engine.
 class DocumentJsRunner : public JsRunnerBase {
  public:
-  DocumentJsRunner(IGeneric *site) : site_(site) {}
+  DocumentJsRunner(IGeneric *site) : site_(site) {
+#ifdef WINCE
+    HRESULT hr = CComObject<JsRunnerImpl>::CreateInstance(
+        &local_script_engine_);
+    if (local_script_engine_) {
+      // MSDN says call AddRef after CreateInstance
+      local_script_engine_->AddRef();
+    }
+#endif
+}
 
-  virtual ~DocumentJsRunner() {}
+  virtual ~DocumentJsRunner() {
+#ifdef WINCE
+    if (local_script_engine_) {
+      local_script_engine_->Stop();
+      local_script_engine_->Release();
+    }
+#endif
+  }
 
   IDispatch *GetGlobalObject() {
+#ifdef WINCE
+  return local_script_engine_->GetGlobalObject();
+#else
     CComPtr<IHTMLDocument2> html_document2;
     HRESULT hr = ActiveXUtils::GetHtmlDocument2(site_, &html_document2);
     if (FAILED(hr) || !html_document2) {
@@ -621,39 +651,49 @@ class DocumentJsRunner : public JsRunnerBase {
     assert(html_document);
 
     CComPtr<IDispatch> script_dispatch;
-#ifdef WINCE
-    // TODO(andreip): fixme!
-    // get_Script() is only defined on IShellFolderViewDual:
-    // CComQIPtr<IShellFolderViewDual> shell = html_document2;
-    // hr = shell->get_Script(&script_dispatch);
-#else
     hr = html_document->get_Script(&script_dispatch);
-#endif
-    if (FAILED(hr) || !script_dispatch) { return NULL; }
+    if (FAILED(hr) || !script_dispatch) {
+      LOG(("Could not get script engine for current site."));
+      return NULL;
+    }
 
-    return script_dispatch;    
+    return script_dispatch;
+#endif
   }
 
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
     // TODO(zork): Add this functionality to DocumentJsRunner.
+#ifdef WINCE
+    // TODO(steveblock): Determine why such a call would be required.
+    // Need to add the global to the page's script engine, not our local script
+    // engine.
+#endif
     return false;
   }
 
   bool Start(const std::string16 &full_script) {
-    assert(false); // Should not be called on the DocumentJsRunner.
+#ifdef WINCE
+    return local_script_engine_->Start(full_script);
+#else
+    assert(false);  // Should not be called on the DocumentJsRunner.
     return false;
+#endif
   }
 
   bool Stop() {
-    assert(false); // Should not be called on the DocumentJsRunner.
+#ifdef WINCE
+    return local_script_engine_->Stop();
+#else
+    assert(false);  // Should not be called on the DocumentJsRunner.
     return false;
+#endif
   }
 
   bool Eval(const std::string16 &script) {
 #ifdef WINCE
-    // TODO(andreip): No execScript() method in the SDK.
-    // Investigate possible workarounds.
-    assert(false);
+    // Execute the script in the page's script engine, not our local engine.
+    // IPIEHTMLWindow2 does not provide execScript.
+    // TODO(steveblock): Implement this somehow.
     return false;
 #else
     CComPtr<IHTMLWindow2> window;
@@ -669,33 +709,33 @@ class DocumentJsRunner : public JsRunnerBase {
   }
 
   void SetErrorHandler(JsErrorHandlerInterface *handler) {
-    assert(false); // Should not be called on the DocumentJsRunner.
+    assert(false);  // Should not be called on the DocumentJsRunner.
   }
 
   bool AddEventHandler(JsEventType event_type,
                        JsEventHandlerInterface *handler) {
-#ifdef WINCE
-    // TODO(andreip): implement HTML events monitoring
-    assert(false);
-    return false;
-#else
     if (event_type == JSEVENT_UNLOAD) {
       // Create an HTML event monitor to send the unload event when the page
       // goes away.
       if (unload_monitor_ == NULL) {
         unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
                                                    HandleEventUnload, this));
+#ifdef WINCE
+        // TODO(steveblock): Investigate whether IPIEHTMLWindow2 will meet our
+        // needs here.
+        return false;
+#else
         CComPtr<IHTMLWindow3> event_source;
         if (FAILED(ActiveXUtils::GetHtmlWindow3(site_, &event_source))) {
           return false;
         }
 
         unload_monitor_->Start(event_source);
+#endif
       }
     }
 
     return JsRunnerBase::AddEventHandler(event_type, handler);
-#endif
   }
 
  private:
@@ -706,6 +746,9 @@ class DocumentJsRunner : public JsRunnerBase {
 
   scoped_ptr<HtmlEventMonitor> unload_monitor_;  // For 'onunload' notifications
   CComPtr<IUnknown> site_;
+#ifdef WINCE
+  CComObject<JsRunnerImpl> *local_script_engine_;
+#endif
 
   DISALLOW_EVIL_CONSTRUCTORS(DocumentJsRunner);
 };

@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/ie/activex_utils.h"
@@ -38,13 +38,13 @@ const char16 *kIsOfflineErrorMessage =
 //------------------------------------------------------------------------------
 // AsyncTask
 //------------------------------------------------------------------------------
-AsyncTask::AsyncTask() :
-    is_initialized_(false),
-    is_aborted_(false),
-    delete_when_done_(false),
-    listener_window_(NULL),
-    listener_message_base_(WM_USER),
-    thread_(NULL) {
+AsyncTask::AsyncTask()
+    : is_initialized_(false),
+      is_aborted_(false),
+      delete_when_done_(false),
+      listener_window_(NULL),
+      listener_message_base_(WM_USER),
+      thread_(NULL) {
 }
 
 //------------------------------------------------------------------------------
@@ -99,7 +99,7 @@ bool AsyncTask::Start() {
   abort_event_.Reset();
   ready_state_changed_event_.Reset();
   unsigned int thread_id;
-  thread_ = reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, ThreadMain, 
+  thread_ = reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, &ThreadMain,
                                                     this, 0, &thread_id));
   return (thread_ != NULL);
 }
@@ -126,7 +126,7 @@ void AsyncTask::DeleteWhenDone() {
     ATLTRACE(_T("AsyncTask::DeleteWhenDone\n"));
     SetListenerWindow(NULL, 0);
     if (!thread_) {
-      // In this particular code path, we have to call unlock prior to delete 
+      // In this particular code path, we have to call unlock prior to delete
       // otherwise the locker would try to access deleted memory, &lock_,
       // after it's been freed.
       locker.Unlock();
@@ -152,7 +152,7 @@ unsigned int __stdcall AsyncTask::ThreadMain(void *task) {
     CloseHandle(self->thread_);
     self->thread_ = NULL;
     if (self->delete_when_done_) {
-      // In this particular code path, we have to call unlock prior to delete 
+      // In this particular code path, we have to call unlock prior to delete
       // otherwise the locker would try to access deleted memory, &lock_,
       // after it's been freed.
       locker.Unlock();
@@ -269,7 +269,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
 
   enum {
     kReadyStateChangedEvent = WAIT_OBJECT_0,
-    kAbortEvent 
+    kAbortEvent
   };
   HANDLE handles[] = { ready_state_changed_event_.m_h,
                        abort_event_.m_h };
@@ -278,7 +278,11 @@ bool AsyncTask::HttpGet(const char16 *full_url,
     // We need to run a message loop receive COM callbacks from URLMON
     DWORD rv = MsgWaitForMultipleObjectsEx(
                    ARRAYSIZE(handles), handles, INFINITE, QS_ALLINPUT,
-                   MWMO_ALERTABLE | MWMO_INPUTAVAILABLE);
+#ifdef WINCE
+                   MWMO_INPUTAVAILABLE);
+#else
+                   MWMO_INPUTAVAILABLE | MWMO_ALERTABLE);
+#endif
     if (rv == kReadyStateChangedEvent) {
       // TODO(michaeln): perhaps simplify the HttpRequest interface to
       // include a getResponse(&payload) method?
@@ -329,7 +333,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
       http_request->GetFinalUrl(full_redirect_url);
     }
   }
-  
+
   return !is_aborted_ && payload->data.get();
 }
 
