@@ -379,7 +379,7 @@ bool GearsDesktop::SetShortcut(ShortcutInfo *shortcut, std::string16 *error) {
 
 bool GearsDesktop::WriteControlPanelIcon(const std::string16 &name,
                                          const File::DesktopIcons &icons) {
-  const File::IconData *chosen_icon;
+  const File::IconData *chosen_icon = NULL;
   
   // Pick the best icon we can for the control panel
   if (!icons.icon16x16.png_data.empty()) {
