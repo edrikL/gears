@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // JavaScript worker threads in Internet Explorer.
@@ -40,7 +40,7 @@
 // We didn't need to use the same scheme for the non-root (created) threads,
 // but it makes sense to be consistent.
 
-#include <assert.h> // TODO(cprince): use DCHECK() when have google3 logging
+#include <assert.h>  // TODO(cprince): use DCHECK() when have google3 logging
 #include <queue>
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
@@ -103,7 +103,7 @@ struct JavaScriptWorkerInfo {
 
   bool is_invoking_error_handler;  // prevents recursive onerror
 
-  // 
+  //
   // These fields are used only for created workers (children).
   //
   Mutex thread_init_mutex;  // Protects: thread_init_signalled
@@ -111,7 +111,7 @@ struct JavaScriptWorkerInfo {
   bool thread_init_ok;  // Owner: child before signal, parent after signal
 
   Mutex script_mutex;  // Protects: script_signalled
-  bool script_signalled;  
+  bool script_signalled;
   bool script_ok;  // Owner: parent before signal, immutable after
   std::string16 script_text;  // Owner: parent before signal, immutable after
   SecurityOrigin script_origin;  // Owner: parent before signal, immutable after
@@ -187,7 +187,7 @@ STDMETHODIMP GearsWorkerPool::createWorkerFromUrl(const BSTR *url_bstr,
     RETURN_EXCEPTION(STRING16(L"createWorkerFromUrl() cannot be called from a"
                               L" worker."));
   }
-  
+
   std::string16 absolute_url;
   ResolveAndNormalize(EnvPageLocationUrl().c_str(), *url_bstr, &absolute_url);
 
@@ -204,7 +204,7 @@ STDMETHODIMP GearsWorkerPool::createWorkerFromUrl(const BSTR *url_bstr,
     message += STRING16(L"' is not supported.");
     RETURN_EXCEPTION(message.c_str());
   }
-  
+
   // Enable the worker's origin for gears access if it isn't explicitly
   // disabled.
   // NOTE: It is OK to do this here, even though there is a race with starting
@@ -475,7 +475,11 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
   scoped_ptr<JsRootedToken> onerror_param(
       wi->js_runner->NewObject(STRING16(L"Error")));
   if (!onerror_param.get()) {
+#ifdef WINCE
+    // TODO(steveblock): Implement CaptureAndSendMinidump
+#else
     ExceptionManager::CaptureAndSendMinidump();
+#endif
     return false;
   }
 
@@ -530,7 +534,7 @@ bool PoolThreadsManager::PutPoolMessage(const char16 *text,
   PostMessage(dest_wi->message_hwnd, WM_WORKERPOOL_ONMESSAGE, 0,
               reinterpret_cast<LPARAM>(dest_wi));
 
-  return true; // succeeded
+  return true;  // succeeded
 }
 
 
@@ -572,24 +576,47 @@ bool PoolThreadsManager::InitWorkerThread(JavaScriptWorkerInfo *wi) {
   //   (http://blogs.msdn.com/oldnewthing/archive/2005/04/18/409205.aspx)
   HMODULE hmodule = _AtlBaseModule.GetModuleInstance();
 
+#ifdef WINCE
+  WNDCLASS wc = {0};
+#else
   WNDCLASSEX wc = {0};
   wc.cbSize        = sizeof(wc);
+#endif
   wc.lpfnWndProc   = ThreadWndProc;
   wc.hInstance     = hmodule;
   wc.lpszClassName = kWindowClassName;
   // use 0 for all other fields
+#ifdef WINCE
+  RegisterClass(&wc);
+#else
   RegisterClassEx(&wc);
+#endif
 
   HWND message_hwnd;
-  message_hwnd = CreateWindow(kWindowClassName, // class name
-                              kWindowClassName, // window name
-                              0 ,               // style
-                              0, 0,             // pos
-                              0, 0,             // size
-                              HWND_MESSAGE,     // parent
-                              0,                // ID if a child, else hMenu
-                              hmodule,          // module instance
-                              NULL);            // fooCREATESTRUCT param
+#ifdef WINCE
+  // Windows mobile doesn't allow message-only windows (HWND_MESSAGE)
+  // Instead, create a pop-up window (doesn't require a parent) and
+  // don't make visible (default)
+  message_hwnd = CreateWindow(kWindowClassName,  // class name
+                              kWindowClassName,  // window name
+                              WS_POPUP,          // style
+                              0, 0,              // pos
+                              0, 0,              // size
+                              NULL,              // parent
+                              0,                 // ID if a child, else hMenu
+                              hmodule,           // module instance
+                              NULL);             // fooCREATESTRUCT param
+#else
+  message_hwnd = CreateWindow(kWindowClassName,  // class name
+                              kWindowClassName,  // window name
+                              0 ,                // style
+                              0, 0,              // pos
+                              0, 0,              // size
+                              HWND_MESSAGE,      // parent
+                              0,                 // ID if a child, else hMenu
+                              hmodule,           // module instance
+                              NULL);             // fooCREATESTRUCT param
+#endif
   wi->message_hwnd = message_hwnd;
   return message_hwnd != NULL;
 }
@@ -719,7 +746,7 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
   }
 
   // The code below should not access shared data structures. We
-  // only synchronize the block above, which modifies the shared 
+  // only synchronize the block above, which modifies the shared
   // worker_info_ vector.
 
   wi->threads_manager = this;
@@ -740,7 +767,7 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
 
     wi->http_request.reset(HttpRequest::Create());
     if (!wi->http_request.get()) { return false; }
-    
+
     wi->http_request_listener.reset(new CreateWorkerUrlFetchListener(wi));
     if (!wi->http_request_listener.get()) { return false; }
 
@@ -767,13 +794,13 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
   wi->thread_init_signalled = false;
 
   wi->thread_handle.reset((HANDLE)_beginthreadex(
-                              NULL, // security descriptor
-                              0, // stack size (or 0 for default)
-                              JavaScriptThreadEntry, // start address
-                              wi, // argument pointer
-                              0, // initial state (0 for running)
-                              NULL)); // variable to receive thread ID
-  if (wi->thread_handle != 0) { // 0 means _beginthreadex() error
+      NULL,                   // security descriptor
+      0,                      // stack size (or 0 for default)
+      JavaScriptThreadEntry,  // start address
+      wi,                     // argument pointer
+      0,                      // initial state (0 for running)
+      NULL));                 // variable to receive thread ID
+  if (wi->thread_handle != 0) {  // 0 means thread creation error
     // thread needs to finish message queue init before we continue
     wi->thread_init_mutex.Await(Condition(&wi->thread_init_signalled));
   }
@@ -782,11 +809,11 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
   wi->thread_init_mutex.Unlock();
 
   if (wi->thread_handle == 0 || !wi->thread_init_ok) {
-    return false; // failed
+    return false;  // failed
   }
 
   *worker_id = new_worker_id;
-  return true; // succeeded
+  return true;  // succeeded
 }
 
 
@@ -830,10 +857,10 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
     // Pump messages. We do this whether or not the initial script evaluation
     // succeeded (just like in browsers).
     MSG msg;
-    BOOL ret; // 0 if WM_QUIT, else non-zero (but -1 if error)
+    BOOL ret;  // 0 if WM_QUIT, else non-zero (but -1 if error)
     while (ret = GetMessage(&msg, NULL, 0, 0)) {
       // check flag after waiting, before handling (see ShutDown)
-      if (wi->threads_manager->is_shutting_down_) { break; } 
+      if (wi->threads_manager->is_shutting_down_) { break; }
       if (ret != -1) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
@@ -855,7 +882,7 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   wi->js_runner = NULL;  // scoped_ptr is about to delete the underlying object
   wi->threads_manager->ReleaseWorkerRef();
 
-  return 0; // value is currently unused
+  return 0;  // value is currently unused
 }
 
 bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
@@ -863,10 +890,11 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   if (!js_runner) { return false; }
 
   // Add global Factory and WorkerPool objects into the namespace.
-  //  
+  //
   // The factory alone is not enough; GearsFactory.create(GearsWorkerPool)
   // would return a NEW PoolThreadsManager instance, but we want access to
-  // the one that was previously created for the current page.
+  // the one that was previously created for this pool. (There may be multiple
+  // pools in a page.)
   //
   // js_runner manages the lifetime of these allocated objects.
   // ::CreateInstance does not AddRef (see MSDN), but js_runner handles it.
@@ -875,8 +903,8 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   HRESULT hr = CComObject<GearsFactory>::CreateInstance(&factory);
   if (FAILED(hr)) { return false; }
 
-  if (!factory->InitBaseManually(true, // is_worker
-                                 NULL, // page_site is NULL in workers
+  if (!factory->InitBaseManually(true,  // is_worker
+                                 NULL,  // page_site is NULL in workers
                                  wi->script_origin,
                                  js_runner)) {
     return false;
@@ -886,8 +914,8 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   hr = CComObject<GearsWorkerPool>::CreateInstance(&workerpool);
   if (FAILED(hr)) { return false; }
 
-  if (!workerpool->InitBaseManually(true, // is_worker
-                                    NULL, // page_site is NULL in workers
+  if (!workerpool->InitBaseManually(true,  // is_worker
+                                    NULL,  // page_site is NULL in workers
                                     wi->script_origin,
                                     js_runner)) {
     return false;
@@ -941,7 +969,8 @@ LRESULT CALLBACK PoolThreadsManager::ThreadWndProc(HWND hwnd, UINT message_type,
     case WM_WORKERPOOL_ONMESSAGE:
     case WM_WORKERPOOL_ONERROR: {
       // Dequeue the message and dispatch it
-      JavaScriptWorkerInfo *wi = reinterpret_cast<JavaScriptWorkerInfo*>(lparam);
+      JavaScriptWorkerInfo *wi =
+        reinterpret_cast<JavaScriptWorkerInfo*>(lparam);
       assert(wi->message_hwnd == hwnd);
 
       // See if the workerpool has been invalidated (as on termination).
@@ -960,7 +989,7 @@ LRESULT CALLBACK PoolThreadsManager::ThreadWndProc(HWND hwnd, UINT message_type,
         wi->threads_manager->ProcessError(wi, msg);
       }
 
-      return 0; // anything will do; retval "depends on the message"
+      return 0;  // anything will do; retval "depends on the message"
     }
   }
   return DefWindowProc(hwnd, message_type, wparam, lparam);
@@ -971,16 +1000,20 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
                                         const Message &msg) {
   assert(wi);
   if (wi->onmessage_handler.get()) {
-    // Setup the onerror parameter (type: Object).
+    // Setup the onmessage parameter (type: Object).
     assert(wi->js_runner);
     scoped_ptr<JsRootedToken> onmessage_param(
-                                  wi->js_runner->NewObject(NULL));
+        wi->js_runner->NewObject(NULL));
     if (!onmessage_param.get()) {
       // We hit this unexpected error in 0.2.4
+#ifdef WINCE
+      // TODO(steveblock): Implement CaptureAndSendMinidump
+#else
       ExceptionManager::CaptureAndSendMinidump();
-      JsErrorInfo error_info = { 
+#endif
+      JsErrorInfo error_info = {
         0,
-        STRING16(L"Internal error. (Could not create message object.)")
+        STRING16(L"Internal error. (Could not create onmessage object.)")
       };
       HandleError(error_info);
       return;
@@ -1006,8 +1039,8 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
                                   NULL);
   } else {
     JsErrorInfo error_info = {
-      0, // line number -- What we really want is the line number in the
-         // sending worker, but that would be hard to get.
+      0,  // line number -- What we really want is the line number in the
+          // sending worker, but that would be hard to get.
       STRING16(L"Could not process message because worker does not have an "
                L"onmessage handler.")
     };
@@ -1093,7 +1126,7 @@ void PoolThreadsManager::ForceGCCurrentThread() {
   assert(wi->js_runner);
   wi->js_runner->ForceGC();
 }
-#endif // DEBUG
+#endif  // DEBUG
 
 
 void PoolThreadsManager::AddWorkerRef() {

@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,17 +13,18 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <msxml2.h>
+#include <vector>
 
 #include "gears/localserver/ie/http_request_ie.h"
 
@@ -59,11 +60,11 @@ HttpRequest *HttpRequest::Create() {
 // Construction, destruction and refcounting
 //------------------------------------------------------------------------------
 
-IEHttpRequest::IEHttpRequest() :
-    caching_behavior_(USE_ALL_CACHES), redirect_behavior_(FOLLOW_ALL), 
-    was_redirected_(false), was_aborted_(false), listener_(NULL),
-    ready_state_(UNINITIALIZED), has_synthesized_response_payload_(false),
-    actual_data_size_(0), async_(false) {
+IEHttpRequest::IEHttpRequest()
+    : caching_behavior_(USE_ALL_CACHES), redirect_behavior_(FOLLOW_ALL),
+      was_redirected_(false), was_aborted_(false), listener_(NULL),
+      ready_state_(UNINITIALIZED), has_synthesized_response_payload_(false),
+      actual_data_size_(0), async_(false) {
 }
 
 HRESULT IEHttpRequest::FinalConstruct() {
@@ -339,6 +340,9 @@ void IEHttpRequest::SetReadyState(ReadyState state) {
   }
 }
 
+#ifdef WINCE
+// TODO(steveblock): Implement this for WinCE
+#else
 //------------------------------------------------------------------------------
 // IServiceProvider::QueryService
 // Implemented to return an interface pointer for IHttpNegotiate and
@@ -367,6 +371,7 @@ STDMETHODIMP IEHttpRequest::QueryService(REFGUID guidService, REFIID riid,
   return IServiceProviderImpl<IEHttpRequest>::QueryService(guidService, riid,
                                                            ppvObject);
 }
+#endif  // WINCE
 
 //------------------------------------------------------------------------------
 // IBindStatusCallback::OnStartBinding
@@ -375,7 +380,7 @@ STDMETHODIMP IEHttpRequest::QueryService(REFGUID guidService, REFIID riid,
 // Note: binding->Abort() should not be called within this callback, instead
 // return E_FAIL to cancel the bind process
 //------------------------------------------------------------------------------
-STDMETHODIMP IEHttpRequest::OnStartBinding(DWORD reserved,IBinding *binding) {
+STDMETHODIMP IEHttpRequest::OnStartBinding(DWORD reserved, IBinding *binding) {
   ATLTRACE(_T("IEHttpRequest::OnStartBinding\n"));
   if (!binding) {
     return E_POINTER;
@@ -404,7 +409,7 @@ STDMETHODIMP IEHttpRequest::OnLowResource(DWORD reserved) {
 // Implemented to receive redirect notifications
 //------------------------------------------------------------------------------
 STDMETHODIMP IEHttpRequest::OnProgress(ULONG progress, ULONG progress_max,
-                                       ULONG status_code, LPCWSTR status_text){
+                                       ULONG status_code, LPCWSTR status_text) {
 #ifdef DEBUG
   ATLTRACE(_T("IEHttpRequest::OnProgress(%s (%d), %s)\n"),
            GetBindStatusLabel(status_code), status_code,
@@ -550,7 +555,7 @@ STDMETHODIMP IEHttpRequest::OnDataAvailable(
     DWORD unreliable_stream_size,  // With IE6, this value is not reliable
     FORMATETC *formatetc,
     STGMEDIUM *stgmed) {
-  ATLTRACE(_T("IEHttpRequest::OnDataAvailable( 0x%x, %d )\n"), 
+  ATLTRACE(_T("IEHttpRequest::OnDataAvailable( 0x%x, %d )\n"),
            flags, unreliable_stream_size);
   HRESULT hr = S_OK;
 
@@ -563,7 +568,7 @@ STDMETHODIMP IEHttpRequest::OnDataAvailable(
     return E_UNEXPECTED;
   }
 
-  // Be careful not to overwrite a synthesized redirect response 
+  // Be careful not to overwrite a synthesized redirect response
   if (has_synthesized_response_payload_) {
     do {
       // We don't expect to get here. If we do for some reason, just read
@@ -644,7 +649,7 @@ STDMETHODIMP IEHttpRequest::BeginningTransaction(LPCWSTR url,
                                                  DWORD reserved,
                                                  LPWSTR *additional_headers) {
   ATLTRACE(_T("IEHttpRequest::BeginningTransaction\n"));
-  // In the case of a POST with a body which results in a redirect, this 
+  // In the case of a POST with a body which results in a redirect, this
   // method is called more than once. We don't set the additional headers
   // in this case. Those headers include content-length and all user specified
   // headers set by our SetRequestHeader method. The addition of the content
@@ -676,9 +681,9 @@ STDMETHODIMP IEHttpRequest::OnResponse(DWORD status_code,
   if (has_synthesized_response_payload_) {
     return E_ABORT;
   }
-  
+
   response_payload_.status_code = status_code;
-  
+
   // 'response_headers' contains the status line followed by the headers,
   // we split them apart at the CRLF that seperates them
   const char16 *crlf = wcsstr(response_headers, HttpConstants::kCrLf);
@@ -689,7 +694,7 @@ STDMETHODIMP IEHttpRequest::OnResponse(DWORD status_code,
   }
   response_payload_.status_line.assign(response_headers,
                                        crlf - response_headers);
-  response_payload_.headers = (crlf + 2); // skip over the LF
+  response_payload_.headers = (crlf + 2);  // skip over the LF
   response_payload_.data.reset(new std::vector<uint8>);
   actual_data_size_ = 0;
 

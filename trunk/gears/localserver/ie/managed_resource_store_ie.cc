@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
@@ -157,7 +157,7 @@ STDMETHODIMP GearsManagedResourceStore::get_lastUpdateCheckTime(long *time) {
   int64 time64 = 0;
   WebCacheDB::UpdateStatus status;
   if (store_.GetUpdateInfo(&status, &time64, NULL, NULL)) {
-    *time = static_cast<long>(time64/1000); // convert to seconds
+    *time = static_cast<long>(time64/1000);  // convert to seconds
   } else {
     RETURN_EXCEPTION(STRING16(L"Failed to get update info."));
   }
@@ -196,9 +196,9 @@ STDMETHODIMP GearsManagedResourceStore::get_lastErrorMessage(
   // values to get the one we want. Also, updateStatus and
   // lastErrorMessage will typically be called one after another,
   // creating two sqlite calls. Can this be improved?
-  if (store_.GetUpdateInfo(&update_status, 
-                                 &time64, 
-                                 NULL, 
+  if (store_.GetUpdateInfo(&update_status,
+                                 &time64,
+                                 NULL,
                                  &last_error_message)) {
     bstr = last_error_message.c_str();
     *lastErrorMessage = bstr.Detach();
@@ -212,12 +212,18 @@ STDMETHODIMP GearsManagedResourceStore::get_lastErrorMessage(
 // CreateWindowIfNeeded
 //------------------------------------------------------------------------------
 HRESULT GearsManagedResourceStore::CreateWindowIfNeeded() {
+#ifdef WINCE
+  // TODO(steveblock): Implment GearsManagedResourceStore::CreateWindowIfNeeded.
+  RETURN_EXCEPTION(
+      STRING16(L"CreateWindowIfNeeded not yet implemented for WinCE."));
+#else
   if (!IsWindow()) {
     if (!Create(HWND_MESSAGE)) {
       RETURN_EXCEPTION(STRING16(L"Failed to create message window."));
     }
   }
   RETURN_NORMAL();
+#endif
 }
 
 //------------------------------------------------------------------------------
@@ -281,7 +287,7 @@ STDMETHODIMP GearsManagedResourceStore::get_currentVersion(BSTR *ver) {
 // GetVersionString
 //------------------------------------------------------------------------------
 HRESULT GearsManagedResourceStore::GetVersionString(
-                    WebCacheDB::VersionReadyState state,BSTR *ver_out) {
+                    WebCacheDB::VersionReadyState state, BSTR *ver_out) {
   if (!ver_out) {
     assert(ver_out);
     RETURN_EXCEPTION(STRING16(L"Invalid parameters."));

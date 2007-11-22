@@ -1,9 +1,9 @@
 // Copyright 2005, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,21 +13,22 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef GEARS_BASE_COMMON_COMMON_IE_H__
 #define GEARS_BASE_COMMON_COMMON_IE_H__
 
 #include <windows.h>  // for DWORD
-#include "gears/base/ie/atl_headers.h" // TODO(cprince): change ATLASSERT to DCHECK
+// TODO(cprince): change ATLASSERT to DCHECK
+#include "gears/base/ie/atl_headers.h"
 
 #ifdef WINCE
 // TODO(cprince): Remove this class as part of LOG() refactoring.
@@ -94,4 +95,23 @@ class CurrentThreadID {
 #define ASSERT_SINGLE_THREAD()
 #endif
 
-#endif // GEARS_BASE_COMMON_COMMON_IE_H__
+// Windows Mobile doesn't provide _beginthreadex or _beginthread. Note that
+// unlike on the desktop, CreateThread for WinCE does support the CRT.
+#ifdef WINCE
+inline uintptr_t _beginthreadex(void *security,
+                                unsigned stack_size,
+                                unsigned (*start_address)(void*),
+                                void *arglist,
+                                unsigned initflag,
+                                unsigned *thrdaddr) {
+  return reinterpret_cast<uintptr_t>(CreateThread(
+      reinterpret_cast<SECURITY_ATTRIBUTES*>(security),
+      stack_size,
+      reinterpret_cast<DWORD (*)(void*)>(start_address),
+      arglist,
+      initflag,
+      reinterpret_cast<DWORD*>(thrdaddr)));
+}
+#endif
+
+#endif  // GEARS_BASE_COMMON_COMMON_IE_H__

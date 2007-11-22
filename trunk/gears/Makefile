@@ -376,21 +376,26 @@ IEMOBILE_CPPSRCS	+= \
 		file_test.cc \
 		html_event_monitor.cc \
 		html_event_monitor_ie.cc \
-		http_constants.cc \
 		http_utils.cc \
 		js_runner_ie.cc \
 		js_runner_utils.cc \
+		js_types.cc \
 		module.cc \
 		mutex.cc \
+		name_value_table.cc \
 		paths.cc \
 		paths_ie.cc \
+		permissions_db.cc \
 		security_model.cc \
+		shortcut_table.cc \
 		sqlite_wrapper.cc \
 		stopwatch.cc \
 		stopwatch_ie.cc \
 		string16.cc \
 		string_utils.cc \
 		thread_locals.cc \
+		url_utils.cc \
+		url_utils_ie.cc \
 		vista_utils.cc \
 		wince_compatibility.cc \
 		$(NULL)
@@ -762,6 +767,11 @@ IEMOBILE_IDLSRCS	+= \
 		workerpool.idl \
 		$(NULL)
 
+IEMOBILE_CPPSRCS	+= \
+		workerpool.cc \
+		workerpool_utils.cc \
+		$(NULL)
+
 #-----------------------------------------------------------------------------
 # timer
 
@@ -796,6 +806,54 @@ IEMOBILE_VPATH	+= \
 IEMOBILE_IDLSRCS	+= \
 		timer_ie.idl \
 		$(NULL)
+
+#-----------------------------------------------------------------------------
+# localserver/ff
+
+FF_VPATH	+= \
+		base/common \
+		localserver/common \
+		localserver/firefox \
+		$(NULL)
+
+FF_M4SRCS	+= \
+		localserver.idl.m4 \
+		$(NULL)
+
+FF_IDLSRCS	+= \
+		localserver.idl \
+		$(NULL)
+
+# localserver/common
+FF_CPPSRCS	+= \
+		blob_store.cc \
+		capture_task.cc \
+		file_store.cc \
+		http_constants.cc \
+		http_cookies.cc \
+		localserver.cc \
+		localserver_db.cc \
+		localserver_tests.cc \
+		managed_resource_store.cc \
+		manifest.cc \
+		name_value_table_test.cc \
+		permissions_db_test.cc \
+		resource_store.cc \
+		sqlite_wrapper_test.cc \
+		update_task.cc \
+		$(NULL)
+
+# localserver/firefox
+FF_CPPSRCS	+= \
+		async_task_ff.cc \
+		cache_intercept.cc \
+		file_submitter_ff.cc \
+		http_request_ff.cc \
+		localserver_ff.cc \
+		managed_resource_store_ff.cc \
+		resource_store_ff.cc \
+		update_task_ff.cc \
+		$(NULL)		
 
 #-----------------------------------------------------------------------------
 # localserver/ie
@@ -856,53 +914,46 @@ IEMOBILE_IDLSRCS	+= \
 		localserver.idl \
 		$(NULL)
 
-#-----------------------------------------------------------------------------
-# localserver/ff
-
-FF_VPATH	+= \
-		base/common \
-		localserver/common \
-		localserver/firefox \
-		$(NULL)
-
-FF_M4SRCS	+= \
-		localserver.idl.m4 \
-		$(NULL)
-
-FF_IDLSRCS	+= \
-		localserver.idl \
-		$(NULL)
-
-# localserver/common
-FF_CPPSRCS	+= \
+# localserver/common		
+IEMOBILE_CPPSRCS	+= \
 		blob_store.cc \
 		capture_task.cc \
 		file_store.cc \
-		http_constants.cc \
 		http_cookies.cc \
 		localserver.cc \
 		localserver_db.cc \
-		localserver_tests.cc \
 		managed_resource_store.cc \
 		manifest.cc \
-		name_value_table_test.cc \
-		permissions_db_test.cc \
 		resource_store.cc \
-		sqlite_wrapper_test.cc \
+		http_constants.cc \
 		update_task.cc \
 		$(NULL)
 
-# localserver/firefox
+# localserver/iemobile
+IEMOBILE_CPPSRCS	+= \
+		async_task_ie.cc \
+		http_request_ie.cc \
+		localserver_ie.cc \
+		managed_resource_store_ie.cc \
+		resource_store_ie.cc \
+		update_task_ie.cc \
+		urlmon_utils.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# httprequest/ff
+
+FF_VPATH	+= \
+		httprequest/firefox \
+		$(NULL)
+
+FF_IDLSRCS	+= \
+		httprequest.idl \
+		$(NULL)
+
 FF_CPPSRCS	+= \
-		async_task_ff.cc \
-		cache_intercept.cc \
-		file_submitter_ff.cc \
-		http_request_ff.cc \
-		localserver_ff.cc \
-		managed_resource_store_ff.cc \
-		resource_store_ff.cc \
-		update_task_ff.cc \
-		$(NULL)		
+		httprequest_ff.cc \
+		$(NULL)
 
 #-----------------------------------------------------------------------------
 # localserver/npapi
@@ -955,19 +1006,8 @@ IEMOBILE_IDLSRCS	+= \
 		httprequest.idl \
 		$(NULL)
 
-#-----------------------------------------------------------------------------
-# httprequest/ff
-
-FF_VPATH	+= \
-		httprequest/firefox \
-		$(NULL)
-
-FF_IDLSRCS	+= \
-		httprequest.idl \
-		$(NULL)
-
-FF_CPPSRCS	+= \
-		httprequest_ff.cc \
+IEMOBILE_CPPSRCS	+= \
+		httprequest_ie.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------

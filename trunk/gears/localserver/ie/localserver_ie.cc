@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
@@ -33,7 +33,7 @@
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #ifdef DEBUG
-#include "gears/localserver/common/localserver_tests.h" // for testing
+#include "gears/localserver/common/localserver_tests.h"  // for testing
 #endif
 #include "gears/localserver/ie/managed_resource_store_ie.h"
 #include "gears/localserver/ie/resource_store_ie.h"
@@ -51,11 +51,15 @@ STDMETHODIMP GearsLocalServer::canServeLocally(
   }
 
 #ifdef DEBUG
+#ifdef WINCE
+  // TODO(steveblock): Implement this.
+#else
   const std::string16 kWebCacheTestUrl(STRING16(L"test:webcache"));
   if (kWebCacheTestUrl == url) {
     *can = TestWebCacheAll() ? VARIANT_TRUE : VARIANT_FALSE;
     RETURN_NORMAL();
   }
+#endif
 #endif
 
   std::string16 full_url;
