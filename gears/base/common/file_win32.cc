@@ -280,15 +280,12 @@ bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
                                  const DesktopIcons &icons,
                                  std::string16 *error) {
   bool creation_result = false;
-  std::string16 app_path;
-  const char16 *process_name;
+  char16 process_name[MAX_PATH] = {0};
 
-// TODO(aa): Look up the running process name/path/args dynamically
-#if BROWSER_FF
-  process_name = STRING16(L"FIREFOX.EXE");
-#elif BROWSER_IE
-  process_name = STRING16(L"IEXPLORE.EXE");
-#endif
+  if (!GetModuleFileName(NULL, process_name, MAX_PATH)) {
+    *error = GET_INTERNAL_ERROR_MESSAGE();
+    return false;
+  }
 
   std::string16 icons_path;
   if (!GetDataDirectory(origin, &icons_path)) {
@@ -313,19 +310,16 @@ bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
 
   // Note: We assume that link_name has been validated as a valid filename and
   // that the launch_url has been converted to absolute URL by the caller.
+  std::string16 link_path;
 
-  if (GetAppPath(process_name, &app_path)) {
-    std::string16 link_path;
-
-    if (GetDesktopPath(&link_path)) {
-      if (link_path[link_path.size()] != L'\\') {
-        link_path += STRING16(L"\\");
-      }
-      link_path += link_name;
-      link_path += STRING16(L".lnk");
-      creation_result = CreateShellLink(app_path.c_str(), link_path.c_str(),
-                                        icons_path.c_str(), launch_url.c_str());
+  if (GetDesktopPath(&link_path)) {
+    if (link_path[link_path.size()] != L'\\') {
+      link_path += STRING16(L"\\");
     }
+    link_path += link_name;
+    link_path += STRING16(L".lnk");
+    creation_result = CreateShellLink(process_name, link_path.c_str(),
+                                      icons_path.c_str(), launch_url.c_str());
   }
 
   if (!creation_result) {
