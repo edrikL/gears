@@ -23,11 +23,15 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/localserver/ie/async_task_ie.h"
+
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"
+#endif
 #include "gears/base/ie/activex_utils.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/common/critical_section.h"
-#include "gears/localserver/ie/async_task_ie.h"
 
 const char16 *AsyncTask::kCookieRequiredErrorMessage =
                   STRING16(L"Required cookie is not present");
