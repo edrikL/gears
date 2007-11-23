@@ -14,9 +14,7 @@ Let's grow this document into a set of easy to follow conventions for designing 
 Rules:
   * Start with a capital letter, and end with a period.
   * Use correct grammar.
-  * _Do not_ contain filename, call stack, or other details available elsewhere.
   * Avoid abbreviations (eg, "param", "proc").
-  * Unique error messages for unique causes, to make it easy to determine which statement is at fault.
 
 Examples:
   * *Good:* First parameter must be a string.
@@ -31,13 +29,11 @@ Description:
   * Are not things the developer could have avoided.
 
 Rules:
-  * Return "Gears internal error".
-  * _(What if a developer does encounter these? We'll want a way to pinpoint which error is being hit. Perhaps we should append `__FILE__` and `__LINE__`?)_
+* Use the GET_INTERNAL_ERROR_MESSAGE() macro. It outputs something like "Internal Error. File gears/base/string_utils.cc Line 325.".
+* Strive to create an error message in every unique place something could fail.
 
-Examples:
-  * *Good:* Gears internal error.
-  * _Bad:_ could not initialize file handle - maybe a bad disk?
-
+TODO:
+* We should implement something like SetLastError() where the actual system call that failed can specify the error at that moment and callers don't need to worry about it.
 
 === Developer Errors ===
 
@@ -48,7 +44,6 @@ Description:
 Rules:
   * Provide enough detail to identify problem.
   * Don't repeat things available in documentation.
-  * Put invalid input after a colon at the end of the sentence.
 
 Examples:
   * *Good:* Invalid database name: really neat name!.
