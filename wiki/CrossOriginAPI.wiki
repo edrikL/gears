@@ -1,5 +1,5 @@
 #summary API for affecting Gears resources across origins.
-#labels DesignDoc-Implemented
+#labels DesignDoc-Implemented,Deprecated
 *OWNER:* Chris Prince
 
 =PROBLEM=
