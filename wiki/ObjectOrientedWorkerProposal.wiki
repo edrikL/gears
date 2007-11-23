@@ -1,4 +1,5 @@
 #summary Proposal for a object-oriented refinement of the Worker api
+#labels Deprecated
 
 = Introduction =
 
