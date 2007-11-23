@@ -54,6 +54,9 @@
 #include "gears/base/common/scoped_win32_handles.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"
+#endif
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/factory/ie/factory.h"

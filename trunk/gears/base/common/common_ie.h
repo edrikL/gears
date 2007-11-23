@@ -95,23 +95,4 @@ class CurrentThreadID {
 #define ASSERT_SINGLE_THREAD()
 #endif
 
-// Windows Mobile doesn't provide _beginthreadex or _beginthread. Note that
-// unlike on the desktop, CreateThread for WinCE does support the CRT.
-#ifdef WINCE
-inline uintptr_t _beginthreadex(void *security,
-                                unsigned stack_size,
-                                unsigned (*start_address)(void*),
-                                void *arglist,
-                                unsigned initflag,
-                                unsigned *thrdaddr) {
-  return reinterpret_cast<uintptr_t>(CreateThread(
-      reinterpret_cast<SECURITY_ATTRIBUTES*>(security),
-      stack_size,
-      reinterpret_cast<DWORD (*)(void*)>(start_address),
-      arglist,
-      initflag,
-      reinterpret_cast<DWORD*>(thrdaddr)));
-}
-#endif
-
 #endif  // GEARS_BASE_COMMON_COMMON_IE_H__

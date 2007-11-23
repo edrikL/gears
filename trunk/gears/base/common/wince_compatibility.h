@@ -30,10 +30,28 @@
 #define GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
 
 #include <windows.h>
+#include <crtdefs.h>
 
 #define CSIDL_LOCAL_APPDATA CSIDL_APPDATA
 #define SHGFP_TYPE_CURRENT 0
 #define SHGetFolderPath SHGetFolderPathW
+
+// Windows Mobile doesn't provide _beginthreadex or _beginthread. Note that
+// unlike on the desktop, CreateThread for WinCE does support the CRT.
+inline uintptr_t _beginthreadex(void *security,
+                                unsigned stack_size,
+                                unsigned (*start_address)(void*),
+                                void *arglist,
+                                unsigned initflag,
+                                unsigned *thrdaddr) {
+  return reinterpret_cast<uintptr_t>(CreateThread(
+      reinterpret_cast<SECURITY_ATTRIBUTES*>(security),
+      stack_size,
+      reinterpret_cast<DWORD (*)(void*)>(start_address),
+      arglist,
+      initflag,
+      reinterpret_cast<DWORD*>(thrdaddr)));
+}
 
 void GetSystemTimeAsFileTime(LPFILETIME filetime);
 
