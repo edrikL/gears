@@ -22,4 +22,4 @@ of this.
 How to run tests:
 
 Run python test2/runner/testwebserver.py
-Then go to http://localhost:8001/runner/gui.html.
+Then go to http://localhost:8001/tester/gui.html.
