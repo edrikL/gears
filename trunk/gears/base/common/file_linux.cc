@@ -62,20 +62,20 @@ static bool GetIconPath(const SecurityOrigin &origin,
   return true;
 }
 
-static bool WriteIconFile(const File::DesktopIcons &icons,
+static bool WriteIconFile(const File::ShortcutInfo &shortcut,
                           const std::string16 &icon_path,
                           std::string16 *error) {
   const File::IconData *chosen_icon = NULL;
 
   // Try to pick the best icon size of the available choices.
-  if (!icons.icon48x48.png_data.empty()) { // 48 is default size for gnome
-    chosen_icon = &icons.icon48x48;
-  } else if (!icons.icon128x128.png_data.empty()) { // better to be too big
-    chosen_icon = &icons.icon128x128;
-  } else if (!icons.icon32x32.png_data.empty()) {
-    chosen_icon = &icons.icon32x32;
-  } else if (!icons.icon16x16.png_data.empty()) {
-    chosen_icon = &icons.icon16x16;
+  if (!shortcut.icon48x48.png_data.empty()) { // 48 is default size for gnome
+    chosen_icon = &shortcut.icon48x48;
+  } else if (!shortcut.icon128x128.png_data.empty()) { // better to be too big
+    chosen_icon = &shortcut.icon128x128;
+  } else if (!shortcut.icon32x32.png_data.empty()) {
+    chosen_icon = &shortcut.icon32x32;
+  } else if (!shortcut.icon16x16.png_data.empty()) {
+    chosen_icon = &shortcut.icon16x16;
   } else {
     // Caller should have verified that we had at least one icon
     assert(false);
@@ -92,20 +92,18 @@ static bool WriteIconFile(const File::DesktopIcons &icons,
 }
 
 bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
-                                 const std::string16 &link_name,
-                                 const std::string16 &launch_url,
-                                 const DesktopIcons &icons,
+                                 const File::ShortcutInfo &shortcut,
                                  std::string16 *error) {
   // Note: We assume that link_name has already been validated by the caller to
   // have only legal filename characters and that launch_url has already been
   // resolved to an absolute URL.
 
   std::string16 icon_path;
-  if (!GetIconPath(origin, link_name, &icon_path, error)) {
+  if (!GetIconPath(origin, shortcut.app_name, &icon_path, error)) {
     return false;
   }
 
-  if (!WriteIconFile(icons, icon_path, error)) {
+  if (!WriteIconFile(shortcut, icon_path, error)) {
     return false;
   }
 
@@ -113,7 +111,8 @@ bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
   const char16 *browser_path = STRING16(L"/usr/bin/firefox");
 
   std::string link_name_utf8;
-  if (!String16ToUTF8(link_name.c_str(), link_name.length(), &link_name_utf8)) {
+  if (!String16ToUTF8(shortcut.app_name.c_str(), shortcut.app_name.length(),
+                      &link_name_utf8)) {
     *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
@@ -134,13 +133,13 @@ bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
   std::string16 shortcut_contents(
       STRING16(L"[Desktop Entry]\nType=Application\nVersion=1.0"));
   shortcut_contents += STRING16(L"\nName=");
-  shortcut_contents += link_name;
+  shortcut_contents += shortcut.app_name;
   shortcut_contents += STRING16(L"\nIcon=");
   shortcut_contents += icon_path;
   shortcut_contents += STRING16(L"\nExec=");
   shortcut_contents += browser_path;
   shortcut_contents += STRING16(L" '");
-  shortcut_contents += launch_url;
+  shortcut_contents += shortcut.app_url;
   shortcut_contents += STRING16(L"'\n");
 
   std::string shortcut_contents_utf8;

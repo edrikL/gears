@@ -27,6 +27,7 @@
 #define GEARS_BASE_COMMON_FILE_H__
 
 #include <vector>
+#include "gears/base/common/common.h"
 #include "gears/base/common/int_types.h"
 #include "gears/base/common/string16.h"
 
@@ -104,17 +105,25 @@ class File {
   static bool GetLastFileError(std::string16 *error_out);
 
   struct IconData {
+    IconData() : width(0), height(0) {}
     int width;
     int height;
+    std::string16 url;
     std::vector<uint8> png_data;
     std::vector<uint8> raw_data;
+    DISALLOW_EVIL_CONSTRUCTORS(IconData);
   };
 
-  struct DesktopIcons {
+  struct ShortcutInfo {
+    ShortcutInfo(){}
+    std::string16 app_name;
+    std::string16 app_url;
+    std::string16 app_description;
     IconData icon16x16;
     IconData icon32x32;
     IconData icon48x48;
     IconData icon128x128;
+    DISALLOW_EVIL_CONSTRUCTORS(ShortcutInfo);
   };
 
   // Creates a shortcut that opens a URL in a specific browser.
@@ -130,9 +139,7 @@ class File {
   //
   // error is filled with an error string if the function fails.
   static bool CreateDesktopShortcut(const SecurityOrigin &origin,
-                                    const std::string16 &link_name,
-                                    const std::string16 &launch_url,
-                                    const DesktopIcons &icons,
+                                    const ShortcutInfo &shortcut,
                                     std::string16 *error);
 
  private:

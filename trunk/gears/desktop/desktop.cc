@@ -42,6 +42,7 @@
 
 #include "gears/base/common/paths.h"
 #include "gears/base/common/permissions_db.h"
+#include "gears/base/common/http_utils.h"
 #include "gears/base/common/png_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/localserver/common/http_constants.h"
@@ -73,175 +74,152 @@ static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_BGRA;
 static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_RGBA;
 #endif
 
-struct GearsDesktop::ShortcutInfo {
-  std::vector<std::string16> icon_urls;
-  std::string16 app_name;
-  std::string16 app_url;
-  std::string16 app_description;
-};
 
-// JS function is createShortcuts(variant shortcuts).
-// shortcuts should be an object with the structure:
-// var shortcuts = [ {
-//     appName: 'My App',
-//     appDescription: 'It does things.',
-//     appUrl: 'http://www.myapp.com/',
-//     iconUrls: ['http://www.myapp.com/icon48x48.png',
-//                'http://www.myapp.com/icon16x16.png',
-//                'http://www.myapp.com/icon32x32.png']
-//   }, {...} ]
 #if BROWSER_FF
-NS_IMETHODIMP GearsDesktop::CreateShortcuts() {
+NS_IMETHODIMP GearsDesktop::CreateShortcut() {
 #elif BROWSER_IE
-STDMETHODIMP GearsDesktop::createShortcuts(VARIANT shortcuts) {
+STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
+                                          VARIANT var_icons) {
 #endif
   if (EnvIsWorker()) {
-    RETURN_EXCEPTION(STRING16(L"createShortcuts is not supported in workers."));
+    RETURN_EXCEPTION(STRING16(L"createShortcut is not supported in workers."));
   }
 
-  JsArray shortcut_array;
+  File::ShortcutInfo shortcut_info;
+  JsObject icons;
 
 #if BROWSER_FF
   // Create a param fetcher so we can also retrieve the context.
   JsParamFetcher js_params(this);
 
-  if (js_params.GetCount(false) != 1) {
-    RETURN_EXCEPTION(STRING16(L"Requires one parameter."));
+  if (js_params.GetCount(false) != 4) {
+    RETURN_EXCEPTION(STRING16(L"Incorrect number of arguments."));
   }
-
-  if (!js_params.GetAsArray(0, &shortcut_array)) {
-    RETURN_EXCEPTION(
-        STRING16(L"First parameter must be an array of objects."));
+  
+  if (!js_params.GetAsString(0, &shortcut_info.app_name) ||
+      shortcut_info.app_name.empty()) {
+    RETURN_EXCEPTION(STRING16(L"First parameter is required and must be a "
+                              L"string."));
+  }
+  
+  if (!js_params.GetAsString(1, &shortcut_info.app_description) ||
+      shortcut_info.app_description.empty()) {
+    RETURN_EXCEPTION(STRING16(L"Second parameter is required and must be a "
+                              L"string."));
+  }
+  
+  if (!js_params.GetAsString(2, &shortcut_info.app_url) ||
+      shortcut_info.app_url.empty()) {
+    RETURN_EXCEPTION(STRING16(L"Third parameter is required and must be a "
+                              L"string."));
+  }
+  
+  if (!js_params.GetAsObject(3, &icons)) {
+    RETURN_EXCEPTION(STRING16(L"Fourth parameter is required and must be an "
+                              L"object."));
   }
 #elif BROWSER_IE
-  // Verify that we were passed an array.
-  if (!(shortcuts.vt & VT_DISPATCH) ||
-      !shortcut_array.SetArray(shortcuts, NULL)) {
-    RETURN_EXCEPTION(
-        STRING16(L"First parameter must be an array of objects."));
+  if (name && name[0]) {
+    shortcut_info.app_name = name;
+  } else {
+    RETURN_EXCEPTION(STRING16(L"First parameter is required."));
+  }
+  
+  if (description && description[0]) {
+    shortcut_info.app_description = description;
+  } else {
+    RETURN_EXCEPTION(STRING16(L"Second parameter is required."));
+  }
+  
+  if (url && url[0]) {
+    shortcut_info.app_url = url;
+  } else {
+    RETURN_EXCEPTION(STRING16(L"Third parameter is required."));
+  }
+  
+  // Verify that we were passed an object for the icons parameter.
+  if (!(var_icons.vt & VT_DISPATCH) || !icons.SetObject(var_icons, NULL)) {
+    RETURN_EXCEPTION(STRING16(L"Fourth parameter is requied and must be an "
+                              L"object."));
   }
 #endif
 
-  int length;
-  if (!shortcut_array.GetLength(&length)) {
-    RETURN_EXCEPTION(STRING16(L"First parameter is not a valid array."));
+  // Verify that the name is acceptable.
+  if (shortcut_info.app_name.length() >= 50) {
+    RETURN_EXCEPTION(STRING16(L"Application name must be less than 50 "
+                              L"characters."));
   }
 
-  std::vector<ShortcutInfo> shortcut_infos;
+  if (shortcut_info.app_name.find('\\', 0) != std::string16::npos ||
+      shortcut_info.app_name.find('/', 0) != std::string16::npos ||
+      shortcut_info.app_name.find(':', 0) != std::string16::npos ||
+      shortcut_info.app_name.find('*', 0) != std::string16::npos ||
+      shortcut_info.app_name.find('?', 0) != std::string16::npos ||
+      shortcut_info.app_name.find('\"', 0) != std::string16::npos ||
+      shortcut_info.app_name.find('<', 0) != std::string16::npos ||
+      shortcut_info.app_name.find('>', 0) != std::string16::npos ||
+      shortcut_info.app_name.find('|', 0) != std::string16::npos) {
+    RETURN_EXCEPTION(STRING16(L"Application name cannot contain: \"\\/:*?<>|"));
+  }
+
+  // Normalize and resolve, in case this is a relative URL.
+  std::string16 error;
+  if (!ResolveUrl(&shortcut_info.app_url, &error)) {
+    RETURN_EXCEPTION(error.c_str());
+  }
+
+  // Get the icons the user specified
+  icons.GetPropertyAsString(STRING16(L"16x16"), &shortcut_info.icon16x16.url);
+  icons.GetPropertyAsString(STRING16(L"32x32"), &shortcut_info.icon32x32.url);
+  icons.GetPropertyAsString(STRING16(L"48x48"), &shortcut_info.icon48x48.url);
+  icons.GetPropertyAsString(STRING16(L"128x128"),
+                            &shortcut_info.icon128x128.url);
+
+  // Validate that we got at least one that we can use on all platforms
+  if (shortcut_info.icon16x16.url.empty() &&
+      shortcut_info.icon32x32.url.empty() &&
+      shortcut_info.icon48x48.url.empty()) {
+    RETURN_EXCEPTION(STRING16(L"Invalid value for icon parameter. At least one "
+                              L"of the 16x16, 32x32, or 48x48 sizes must be "
+                              L"specified."));
+  }
+  
+  // Resolve the icon urls
+  if (!shortcut_info.icon16x16.url.empty() &&
+      !ResolveUrl(&shortcut_info.icon16x16.url, &error) ||
+      !shortcut_info.icon32x32.url.empty() &&
+      !ResolveUrl(&shortcut_info.icon32x32.url, &error) ||
+      !shortcut_info.icon48x48.url.empty() &&
+      !ResolveUrl(&shortcut_info.icon48x48.url, &error) ||
+      !shortcut_info.icon128x128.url.empty() &&
+      !ResolveUrl(&shortcut_info.icon128x128.url, &error)) {
+    RETURN_EXCEPTION(error.c_str());
+  }
+
+  // Set up the shortcuts dialog
   HtmlDialog shortcuts_dialog;
-  shortcuts_dialog.arguments = Json::Value(Json::arrayValue);
-
-  // Iterate across the array of shortcuts
-  for (int i = 0; i < length; ++i) {
-    JsObject shortcut_object;
-    if( !shortcut_array.GetElementAsObject(i, &shortcut_object)) {
-      RETURN_EXCEPTION(STRING16(L"First parameter is not a valid array."));
-    }
-
-    ShortcutInfo shortcut_info;
-    JsArray icon_array;
-
-    // Iterate across the array of Icon URLs
-    if (shortcut_object.GetPropertyAsArray(std::string16(STRING16(L"iconUrls")),
-                                           &icon_array)) {
-      int icon_count;
-      if (!icon_array.GetLength(&icon_count)) {
-        RETURN_EXCEPTION(
-            STRING16(L"Invalid icon data. iconUrls is not a valid array."));
-      }
-      if (icon_count == 0) {
-        RETURN_EXCEPTION(STRING16(
-            L"Invalid icon data. iconUrls doesn't have any entries."));
-      }
-      for (int j = 0; j < icon_count; ++j) {
-        std::string16 icon_string;
-        if( !icon_array.GetElementAsString(j, &icon_string)) {
-          RETURN_EXCEPTION(
-              STRING16(L"Invalid icon data. iconUrls is not a valid array."));
-        }
-
-        // Normalize and resolve, in case this is a relative URL.
-        std::string16 full_url;
-        if (ResolveAndNormalize(EnvPageLocationUrl().c_str(),
-                                icon_string.c_str(),
-                                &full_url)) {
-          icon_string = full_url;
-        }
-
-        shortcut_info.icon_urls.push_back(icon_string);
-      }
-    } else {
-      RETURN_EXCEPTION(STRING16(L"Invalid icon data. iconUrls was not set."));
-    }
-
-    if (!shortcut_object.GetPropertyAsString(
-                             std::string16(STRING16(L"appName")),
-                             &shortcut_info.app_name)) {
-      RETURN_EXCEPTION(STRING16(L"Invalid icon data. appName was not set."));
-    }
-
-    if (!shortcut_object.GetPropertyAsString(std::string16(STRING16(L"appUrl")),
-                                             &shortcut_info.app_url)) {
-      RETURN_EXCEPTION(STRING16(L"Invalid icon data. appUrl was not set."));
-    }
-
-    if (!shortcut_object.GetPropertyAsString(
-                             std::string16(STRING16(L"appDescription")),
-                             &shortcut_info.app_description)) {
-      RETURN_EXCEPTION(
-          STRING16(L"Invalid icon data. appDescription was not set."));
-    }
-
-    // Verify that the name is acceptable.
-    if (shortcut_info.app_name.length() >= 50) {
-      RETURN_EXCEPTION(
-          STRING16(L"Application name must be less than 50 characters."));
-    }
-
-    if (shortcut_info.app_name.find('\\', 0) != std::string16::npos ||
-        shortcut_info.app_name.find('/', 0) != std::string16::npos ||
-        shortcut_info.app_name.find(':', 0) != std::string16::npos ||
-        shortcut_info.app_name.find('*', 0) != std::string16::npos ||
-        shortcut_info.app_name.find('?', 0) != std::string16::npos ||
-        shortcut_info.app_name.find('\"', 0) != std::string16::npos ||
-        shortcut_info.app_name.find('<', 0) != std::string16::npos ||
-        shortcut_info.app_name.find('>', 0) != std::string16::npos ||
-        shortcut_info.app_name.find('|', 0) != std::string16::npos) {
-      RETURN_EXCEPTION(
-          STRING16(L"Application name cannot contain: \"\\/:*?<>|"));
-    }
-
-    // Normalize and resolve, in case this is a relative URL.
-    std::string16 full_url;
-    if (ResolveAndNormalize(EnvPageLocationUrl().c_str(),
-                            shortcut_info.app_url.c_str(),
-                            &full_url)) {
-      shortcut_info.app_url = full_url;
-    }
-
-    // Json needs utf8.
-    std::string app_url_utf8;
-    std::string icon_url_utf8;
-    std::string app_name_utf8;
-    std::string app_description_utf8;
-    if (!String16ToUTF8(shortcut_info.app_url.c_str(), &app_url_utf8) ||
-        !String16ToUTF8(shortcut_info.icon_urls[0].c_str(), &icon_url_utf8) ||
-        !String16ToUTF8(shortcut_info.app_name.c_str(), &app_name_utf8) ||
-        !String16ToUTF8(shortcut_info.app_description.c_str(),
-                        &app_description_utf8)) {
-      RETURN_EXCEPTION(STRING16(L"Error converting to utf8."));
-    }
-
-    // Populate the JSON object we're passing to the dialog.
-    Json::Value shortcut;
-    shortcut["name"] = Json::Value(app_name_utf8);
-    shortcut["icon"] = Json::Value(icon_url_utf8);
-    shortcut["link"] = Json::Value(app_url_utf8);
-    shortcut["description"] = Json::Value(app_description_utf8);
-
-    shortcuts_dialog.arguments.append(shortcut);
-    shortcut_infos.push_back(shortcut_info);
+  shortcuts_dialog.arguments = Json::Value(Json::objectValue);
+  
+  // Json needs utf8.
+  // TODO(aa): Pass all the icons to the dialog. It will pick which one to
+  // display and preload the others.
+  std::string app_url_utf8;
+  std::string app_name_utf8;
+  std::string app_description_utf8;
+  std::string icon_url_utf8;
+  if (!String16ToUTF8(shortcut_info.app_url.c_str(), &app_url_utf8) ||
+      !String16ToUTF8(shortcut_info.icon32x32.url.c_str(), &icon_url_utf8) ||
+      !String16ToUTF8(shortcut_info.app_name.c_str(), &app_name_utf8) ||
+      !String16ToUTF8(shortcut_info.app_description.c_str(),
+                      &app_description_utf8)) {
+    RETURN_EXCEPTION(GET_INTERNAL_ERROR_MESSAGE().c_str());
   }
+
+  // Populate the JSON object we're passing to the dialog.
+  shortcuts_dialog.arguments["name"] = Json::Value(app_name_utf8);
+  shortcuts_dialog.arguments["icon"] = Json::Value(icon_url_utf8);
+  shortcuts_dialog.arguments["link"] = Json::Value(app_url_utf8);
+  shortcuts_dialog.arguments["description"] = Json::Value(app_description_utf8);
 
   // Show the dialog.
   const int kShortcutsDialogWidth = 360;
@@ -249,20 +227,18 @@ STDMETHODIMP GearsDesktop::createShortcuts(VARIANT shortcuts) {
   shortcuts_dialog.DoModal(STRING16(L"shortcuts_dialog.html"),
                            kShortcutsDialogWidth, kShortcutsDialogHeight);
 
-  // A null value is ok.  We interpret this as denying all shortcuts.
+  // A null value is ok.  We interpret this as denying the shortcut.
   if (shortcuts_dialog.result == Json::Value::null) {
     RETURN_NORMAL();
   }
-
-  if (!shortcuts_dialog.result.isArray()) {
+  
+  if (!shortcuts_dialog.result.isBool()) {
     assert(false);
     LOG(("ShortcutsDialog: Unexpected result type."));
     RETURN_NORMAL();
   }
 
-  if (shortcuts_dialog.result.size() != shortcut_infos.size()) {
-    assert(false);
-    LOG(("ShortcutsDialog: Unexpected result size."));
+  if (!shortcuts_dialog.result.asBool()) {
     RETURN_NORMAL();
   }
 
@@ -274,129 +250,82 @@ STDMETHODIMP GearsDesktop::createShortcuts(VARIANT shortcuts) {
     return false;
   }
 
-  // Find the shortcuts the user approved, and create them.
-  for (size_t i = 0; i < shortcuts_dialog.result.size(); ++i) {
-    if (shortcuts_dialog.result[i].isBool() &&
-        shortcuts_dialog.result[i].asBool()) {
-      std::string16 error;
-      if (!SetShortcut(&(shortcut_infos[i]), &error)) {
-        RETURN_EXCEPTION(error.c_str());
-      }
-    }
+  if (!SetShortcut(&shortcut_info, &error)) {
+    RETURN_EXCEPTION(error.c_str());
+  } else {
+    RETURN_NORMAL();
   }
-
-  RETURN_NORMAL();
 }
 
 // Handle all the icon creation and creation call required to actually install
 // a shortcut.
-bool GearsDesktop::SetShortcut(ShortcutInfo *shortcut, std::string16 *error) {
+bool GearsDesktop::SetShortcut(File::ShortcutInfo *shortcut,
+                               std::string16 *error) {
   PermissionsDB *capabilities = PermissionsDB::GetDB();
   if (!capabilities) {
-    *error = STRING16(L"Could not open permissions Database.");
+    *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
 
-  File::DesktopIcons desktop_icons;
-
-  std::vector<std::string16>::iterator icon_url;
-  for (icon_url = shortcut->icon_urls.begin();
-       icon_url != shortcut->icon_urls.end();
-       ++icon_url) {
-    ScopedHttpRequestPtr request(HttpRequest::Create());
-
-    request.get()->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
-    request.get()->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
-
-    // Get the current icon.
-    if (!request.get()->Open(HttpConstants::kHttpGET,
-                             icon_url->c_str(), false) ||
-        !request.get()->Send()) {
-      *error = STRING16(L"Could not load icon ");
-      *error += icon_url->c_str();
-      *error += STRING16(L".");
-      return false;
-    }
-
-    // Extract the data.
-    std::vector<uint8> png;
-    if (!request.get()->GetResponseBody(&png)) {
-      *error = STRING16(L"Could not load icon ");
-      *error += icon_url->c_str();
-      *error += STRING16(L".");
-      return false;
-    }
-
-    // Decode the png
-    File::IconData new_icon;
-    if (!PngUtils::Decode(&png.at(0), png.size(), kDesktopIconFormat,
-                          &new_icon.raw_data, &new_icon.width,
-                          &new_icon.height)) {
-      *error = STRING16(L"Could not decode PNG data for icon ");
-      *error += icon_url->c_str();
-      *error += STRING16(L".");
-      return false;
-    }
-
-    if (new_icon.width != new_icon.height) {
-      *error = STRING16(L"Icon width and height must be equal.");
-      return false;
-    }
-
-    // TODO(aa): Blech, this has to copy the data out of new_icon and png
-    // because we don't know which slot in desktop_icons to use ahead of time.
-    // This can be fixed later when the caller passes us the dimensions of
-    // each icon.
-    if (!UpdateDesktopIcons(png, new_icon, &desktop_icons, error)) {
-      return false;
-    }
+  if (!FetchIcon(&shortcut->icon16x16, 16, error) ||
+      !FetchIcon(&shortcut->icon32x32, 32, error) ||
+      !FetchIcon(&shortcut->icon48x48, 48, error) ||
+      !FetchIcon(&shortcut->icon128x128, 128, error)) {
+    return false;
   }
 
   // Save the icon file that will be used in the control panel
-  if (!WriteControlPanelIcon(shortcut->app_name, desktop_icons)) {
+  if (!WriteControlPanelIcon(*shortcut)) {
     *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
 
   // Create the desktop shortcut using platform-specific code
-  if (!File::CreateDesktopShortcut(EnvPageSecurityOrigin(),
-                                   shortcut->app_name,
-                                   shortcut->app_url,
-                                   desktop_icons,
-                                   error)) {
+  if (!File::CreateDesktopShortcut(EnvPageSecurityOrigin(), *shortcut, error)) {
     return false;
   }
 
   // Create the database entry.
-  // TODO(aa): Check for failure?
+  // TODO(aa): Perhaps we want to change how we store these in permissions db
+  // now that we have them in a more structured way?
+  std::vector<std::string16> icon_urls;
+  if (!shortcut->icon16x16.url.empty())
+    icon_urls.push_back(shortcut->icon16x16.url);
+  if (!shortcut->icon32x32.url.empty())
+    icon_urls.push_back(shortcut->icon32x32.url);
+  if (!shortcut->icon48x48.url.empty())
+    icon_urls.push_back(shortcut->icon48x48.url);
+  if (!shortcut->icon128x128.url.empty())
+    icon_urls.push_back(shortcut->icon128x128.url);
+
   capabilities->SetShortcut(EnvPageSecurityOrigin(),
                             shortcut->app_name.c_str(),
                             shortcut->app_url.c_str(),
-                            shortcut->icon_urls,
+                            icon_urls,
                             shortcut->app_description.c_str());
   return true;
 }
 
-bool GearsDesktop::WriteControlPanelIcon(const std::string16 &name,
-                                         const File::DesktopIcons &icons) {
+bool GearsDesktop::WriteControlPanelIcon(const File::ShortcutInfo &shortcut) {
   const File::IconData *chosen_icon = NULL;
   
   // Pick the best icon we can for the control panel
-  if (!icons.icon16x16.png_data.empty()) {
-    chosen_icon = &icons.icon16x16;
-  } else if (!icons.icon32x32.png_data.empty()) {
-    chosen_icon = &icons.icon32x32;
-  } else if (!icons.icon48x48.png_data.empty()) {
-    chosen_icon = &icons.icon48x48;
-  } else if (!icons.icon128x128.png_data.empty()) {
-    chosen_icon = &icons.icon128x128;
+  if (!shortcut.icon16x16.png_data.empty()) {
+    chosen_icon = &shortcut.icon16x16;
+  } else if (!shortcut.icon32x32.png_data.empty()) {
+    chosen_icon = &shortcut.icon32x32;
+  } else if (!shortcut.icon48x48.png_data.empty()) {
+    chosen_icon = &shortcut.icon48x48;
+  } else if (!shortcut.icon128x128.png_data.empty()) {
+    chosen_icon = &shortcut.icon128x128;
   } else {
     // Caller should have ensured that there was at least one icon
     assert(false);
   }
 
   std::string16 icon_loc;
-  if (!GetControlPanelIconLocation(EnvPageSecurityOrigin(), name, &icon_loc)) {
+  if (!GetControlPanelIconLocation(EnvPageSecurityOrigin(), shortcut.app_name,
+                                   &icon_loc)) {
     return false;
   }
 
@@ -405,41 +334,61 @@ bool GearsDesktop::WriteControlPanelIcon(const std::string16 &name,
   return File::WriteVectorToFile(icon_loc.c_str(), &chosen_icon->png_data);
 }
 
-bool GearsDesktop::UpdateDesktopIcons(const std::vector<uint8> &png,
-                                      const File::IconData &new_icon,
-                                      File::DesktopIcons *icons,
-                                      std::string16 *error) {
-
-  File::IconData *icon = NULL;
-  switch (new_icon.width) {
-    case 16:
-      icon = &icons->icon16x16;
-      break;
-    case 32:
-      icon = &icons->icon32x32;
-      break;
-    case 48:
-      icon = &icons->icon48x48;
-      break;
-    case 128:
-      icon = &icons->icon128x128;
-      break;
-    default:
-      *error = STRING16(L"Icon width ");
-      *error += IntegerToString16(new_icon.width);
-      *error += STRING16(L" isn't supported.");
-      return false;
+bool GearsDesktop::FetchIcon(File::IconData *icon, int expected_size,
+                             std::string16 *error) {
+  // Icons are optional. Only try to fetch if one was provided.
+  if (icon->url.empty()) {
+    return true;
   }
 
-  if (!icon->png_data.empty()) {
-    *error = STRING16(L"Duplicate icon with ");
-    *error += IntegerToString16(new_icon.width);
-    *error += STRING16(L" found.");
+  // Fetch the png data
+  ScopedHttpRequestPtr request(HttpRequest::Create());
+
+  request.get()->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
+  request.get()->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
+
+  // Get the current icon.
+  int status = 0;
+  if (!request.get()->Open(HttpConstants::kHttpGET,
+                           icon->url.c_str(), false) ||
+      !request.get()->Send() ||
+      !request.get()->GetStatus(&status) ||
+      status != HTTPResponse::RC_REQUEST_OK) {
+    *error = STRING16(L"Could not load icon ");
+    *error += icon->url.c_str();
+    *error += STRING16(L".");
     return false;
   }
 
-  *icon = new_icon;
-  icon->png_data = png;
+  // Extract the data.
+  if (!request.get()->GetResponseBody(&icon->png_data)) {
+    *error = STRING16(L"Invalid data for icon ");
+    *error += icon->url;
+    *error += STRING16(L".");
+    return false;
+  }
+
+  // Decode the png
+  if (!PngUtils::Decode(&icon->png_data.at(0), icon->png_data.size(),
+                        kDesktopIconFormat,
+                        &icon->raw_data, &icon->width, &icon->height)) {
+    *error = STRING16(L"Could not decode PNG data for icon ");
+    *error += icon->url;
+    *error += STRING16(L".");
+    return false;
+  }
+  
+  if (icon->width != expected_size || icon->height != expected_size) {
+    *error = STRING16(L"Icon ");
+    *error += icon->url;
+    *error += STRING16(L" has incorrect size. Expected ");
+    *error += IntegerToString16(expected_size);
+    *error += STRING16(L"x");
+    *error += IntegerToString16(expected_size);
+    *error += STRING16(L".");
+    return false;
+  }
+
   return true;
 }
 
@@ -460,5 +409,18 @@ bool GearsDesktop::GetControlPanelIconLocation(const SecurityOrigin &origin,
   *icon_loc += STRING16(L"_cp");
   *icon_loc += STRING16(L".png");
 
+  return true;
+}
+
+bool GearsDesktop::ResolveUrl(std::string16 *url, std::string16 *error) {
+  std::string16 full_url;
+  if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), url->c_str(),
+                           &full_url)) {
+    *error = STRING16(L"Could not resolve url ");
+    *error += *url;
+    *error += STRING16(L".");
+    return false;
+  }
+  *url = full_url;
   return true;
 }

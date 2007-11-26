@@ -51,25 +51,20 @@ class GearsDesktop
   GearsDesktop() {}
   ~GearsDesktop() {}
 
-  // JS function is createShortcuts(variant shortcuts).
-  NS_IMETHOD CreateShortcuts();
+  // JS function is createShortcut(string name, string description, string url,
+  //                               object icons)
+  NS_IMETHOD CreateShortcut();
 
   static bool GetControlPanelIconLocation(const SecurityOrigin &origin,
                                           const std::string16 &app_name,
                                           std::string16 *icon_loc);
 
  private:
-  struct ShortcutInfo;
-  struct ShortcutIcon;
+  bool SetShortcut(File::ShortcutInfo *shortcut, std::string16 *error);
 
-  bool SetShortcut(ShortcutInfo *shortcut, std::string16 *error);
-
-  bool WriteControlPanelIcon(const std::string16 &name,
-                             const File::DesktopIcons &icons);
-  bool UpdateDesktopIcons(const std::vector<uint8> &png,
-                          const File::IconData &new_icon,
-                          File::DesktopIcons *icons,
-                          std::string16 *error);
+  bool WriteControlPanelIcon(const File::ShortcutInfo &shortcut);
+  bool FetchIcon(File::IconData *icon, int expected_size, std::string16 *error);
+  bool ResolveUrl(std::string16 *url, std::string16 *error);
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsDesktop);
 };

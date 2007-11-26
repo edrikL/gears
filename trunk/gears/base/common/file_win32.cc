@@ -114,7 +114,7 @@ static bool GetDesktopPath(std::string16 *desktop_path) {
 
 // Creates the icon file which contains the various different sized icons.
 static bool CreateIcoFile(const std::string16 &icons_path,
-                           const File::DesktopIcons &icons) {
+                          const File::ShortcutInfo &shortcut) {
   struct IcoHeader {
     uint16 reserved;
     uint16 type;
@@ -137,49 +137,49 @@ static bool CreateIcoFile(const std::string16 &icons_path,
 
   std::vector<const File::IconData *> icons_to_write;
 
-  if (!icons.icon16x16.raw_data.empty()) {
-    icons_to_write.push_back(&icons.icon16x16);
+  if (!shortcut.icon16x16.raw_data.empty()) {
+    icons_to_write.push_back(&shortcut.icon16x16);
 
     // Increase data_size by size of the icon data.
     data_size += sizeof(BITMAPINFOHEADER);
 
     // 32 bits per pixel for the image data.
-    data_size += 4 * icons.icon16x16.width * icons.icon16x16.height;
+    data_size += 4 * shortcut.icon16x16.width * shortcut.icon16x16.height;
 
     // 2 bits per pixel for the AND mask.
-    data_size += icons.icon16x16.height * icons.icon16x16.height / 4;
+    data_size += shortcut.icon16x16.height * shortcut.icon16x16.height / 4;
 
     // Increase data_size by size of directory entry.
     data_size += sizeof(IcoDirectory);
   }
 
-  if (!icons.icon32x32.raw_data.empty()) {
-    icons_to_write.push_back(&icons.icon32x32);
+  if (!shortcut.icon32x32.raw_data.empty()) {
+    icons_to_write.push_back(&shortcut.icon32x32);
 
     // Increase data_size by size of the icon data.
     data_size += sizeof(BITMAPINFOHEADER);
 
     // 32 bits per pixel for the image data.
-    data_size += 4 * icons.icon32x32.width * icons.icon32x32.height;
+    data_size += 4 * shortcut.icon32x32.width * shortcut.icon32x32.height;
 
     // 2 bits per pixel for the AND mask.
-    data_size += icons.icon32x32.height * icons.icon32x32.height / 4;
+    data_size += shortcut.icon32x32.height * shortcut.icon32x32.height / 4;
 
     // Increase data_size by size of directory entry.
     data_size += sizeof(IcoDirectory);
   }
 
-  if (!icons.icon48x48.raw_data.empty()) {
-    icons_to_write.push_back(&icons.icon48x48);
+  if (!shortcut.icon48x48.raw_data.empty()) {
+    icons_to_write.push_back(&shortcut.icon48x48);
 
     // Increase data_size by size of the icon data.
     data_size += sizeof(BITMAPINFOHEADER);
 
     // 32 bits per pixel for the image data.
-    data_size += 4 * icons.icon48x48.width * icons.icon48x48.height;
+    data_size += 4 * shortcut.icon48x48.width * shortcut.icon48x48.height;
 
     // 2 bits per pixel for the AND mask.
-    data_size += icons.icon48x48.height * icons.icon48x48.height / 4;
+    data_size += shortcut.icon48x48.height * shortcut.icon48x48.height / 4;
 
     // Increase data_size by size of directory entry.
     data_size += sizeof(IcoDirectory);
@@ -275,9 +275,7 @@ static bool CreateIcoFile(const std::string16 &icons_path,
 }
 
 bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
-                                 const std::string16 &link_name,
-                                 const std::string16 &launch_url,
-                                 const DesktopIcons &icons,
+                                 const ShortcutInfo &shortcut,
                                  std::string16 *error) {
   bool creation_result = false;
   char16 process_name[MAX_PATH] = {0};
@@ -299,27 +297,29 @@ bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
   }
 
   icons_path += kPathSeparator;
-  icons_path += link_name;
+  icons_path += shortcut.app_name;
   icons_path += STRING16(L".ico");
 
 
-  if (!CreateIcoFile(icons_path, icons)) {
+  if (!CreateIcoFile(icons_path, shortcut)) {
     *error = STRING16(L"Could not create desktop icon.");
     return false;
   }
 
-  // Note: We assume that link_name has been validated as a valid filename and
-  // that the launch_url has been converted to absolute URL by the caller.
+  // Note: We assume that shortcut.app_name has been validated as a valid
+  // filename and that the shortuct.app_url has been converted to absolute URL
+  // by the caller.
   std::string16 link_path;
 
   if (GetDesktopPath(&link_path)) {
     if (link_path[link_path.size()] != L'\\') {
       link_path += STRING16(L"\\");
     }
-    link_path += link_name;
+    link_path += shortcut.app_name;
     link_path += STRING16(L".lnk");
     creation_result = CreateShellLink(process_name, link_path.c_str(),
-                                      icons_path.c_str(), launch_url.c_str());
+                                      icons_path.c_str(),
+                                      shortcut.app_url.c_str());
   }
 
   if (!creation_result) {

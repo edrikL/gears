@@ -235,38 +235,39 @@ static bool SetIconHitMask(IconFamilyHandle family_handle,
 
 // Creates the icon file which contains the various different sized icons.
 static bool CreateIcnsFile(const std::string16 &icons_path,
-                           const File::DesktopIcons &icons) {
+                           const File::ShortcutInfo &shortcut) {
   scoped_Handle handle(NewHandle(0));
   if (!handle.get()) { return false; }
 
   IconFamilyHandle family_handle =
       reinterpret_cast<IconFamilyHandle>(handle.get());
 
-  if (!icons.icon16x16.raw_data.empty()) {
-    if (!SetIconData(family_handle, &icons.icon16x16, kSmall32BitData) ||
-        !SetIconAlphaMask(family_handle, &icons.icon16x16, kSmall8BitMask) ||
-        !SetIconHitMask(family_handle, &icons.icon16x16, kSmall1BitMask))
+  if (!shortcut.icon16x16.raw_data.empty()) {
+    if (!SetIconData(family_handle, &shortcut.icon16x16, kSmall32BitData) ||
+        !SetIconAlphaMask(family_handle, &shortcut.icon16x16, kSmall8BitMask) ||
+        !SetIconHitMask(family_handle, &shortcut.icon16x16, kSmall1BitMask))
       return false;
   }
 
-  if (!icons.icon32x32.raw_data.empty()) {
-    if (!SetIconData(family_handle, &icons.icon32x32, kLarge32BitData) ||
-        !SetIconAlphaMask(family_handle, &icons.icon32x32, kLarge8BitMask) ||
-        !SetIconHitMask(family_handle, &icons.icon32x32, kLarge1BitMask))
+  if (!shortcut.icon32x32.raw_data.empty()) {
+    if (!SetIconData(family_handle, &shortcut.icon32x32, kLarge32BitData) ||
+        !SetIconAlphaMask(family_handle, &shortcut.icon32x32, kLarge8BitMask) ||
+        !SetIconHitMask(family_handle, &shortcut.icon32x32, kLarge1BitMask))
       return false;
   }
 
-  if (!icons.icon48x48.raw_data.empty()) {
-    if (!SetIconData(family_handle, &icons.icon48x48, kHuge32BitData) ||
-        !SetIconAlphaMask(family_handle, &icons.icon48x48, kHuge8BitMask) ||
-        !SetIconHitMask(family_handle, &icons.icon48x48, kHuge1BitMask))
+  if (!shortcut.icon48x48.raw_data.empty()) {
+    if (!SetIconData(family_handle, &shortcut.icon48x48, kHuge32BitData) ||
+        !SetIconAlphaMask(family_handle, &shortcut.icon48x48, kHuge8BitMask) ||
+        !SetIconHitMask(family_handle, &shortcut.icon48x48, kHuge1BitMask))
       return false;
   }
 
-  if (!icons.icon128x128.raw_data.empty()) {
+  if (!shortcut.icon128x128.raw_data.empty()) {
     // For 128, the hit mask is computed from the alpha mask
-    if (!SetIconData(family_handle, &icons.icon128x128, kThumbnail32BitData) ||
-        !SetIconAlphaMask(family_handle, &icons.icon128x128,
+    if (!SetIconData(family_handle, &shortcut.icon128x128,
+                     kThumbnail32BitData) ||
+        !SetIconAlphaMask(family_handle, &shortcut.icon128x128,
                           kThumbnail8BitMask))
       return false;
   }
@@ -317,9 +318,7 @@ static bool GetApplicationPath(const std::string16 &app_name,
 // more appropriate: creates an application package containing a shell script to
 // open the browser to the correct URL.
 bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
-                                 const std::string16 &link_name,
-                                 const std::string16 &launch_url,
-                                 const DesktopIcons &icons,
+                                 const File::ShortcutInfo &shortcut,
                                  std::string16 *error) {
   // Build the bundle in the temp folder so that if something goes wrong we
   // don't leave a partially built bundle on the desktop.
@@ -354,22 +353,23 @@ bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
                            STRING16(L".icns"));
   std::string16 script_path(mac_os_path + STRING16(L"/") + script_file);
 
-  if (!CreateInfoPlist(contents_path, icons_file, script_file, link_name)) {
+  if (!CreateInfoPlist(contents_path, icons_file, script_file,
+                       shortcut.app_name)) {
     *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
-  if (!CreateShellScript(script_path, launch_url)) {
+  if (!CreateShellScript(script_path, shortcut.app_url)) {
     *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
-  if (!CreateIcnsFile(icons_path, icons)) {
+  if (!CreateIcnsFile(icons_path, shortcut)) {
     *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
 
   // Move to the desktop. Replace any existing icon.
   std::string16 application_path;
-  if (!GetApplicationPath(link_name, &application_path)) {
+  if (!GetApplicationPath(shortcut.app_name, &application_path)) {
     *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
