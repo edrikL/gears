@@ -26,7 +26,7 @@ C++ code in Gears is wrapped to 80 columns, You can use the tip [http://blogs.ms
 
 = Running Gears Directly From The Build Directory =
 
-When developing new code, it's useful to be able to run the gears dll directly from the build directory, rather than having to uninstall and install it manually after each build.
+When developing new code, it's useful to be able to run the Gears dll directly from the build directory, rather than having to uninstall and install it manually after each build.
 
 This allows you to test your changes quickly.
 
