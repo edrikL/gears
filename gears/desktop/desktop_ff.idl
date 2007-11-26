@@ -31,6 +31,13 @@
 //
 [scriptable, function, uuid(0273640F-FE6D-4a26-95C7-455DE83C6049)]
 interface GearsDesktopInterface : GearsBaseClassInterface {
-  void createShortcuts(//in variant shortcuts
+
+  // icons parameter is expected to be a javascript object with properties for
+  // each available icon size. Valid property names are currently "16x16",
+  // "32x32", "48x48", and "128x128". 
+  void createShortcut(//in string name,
+                      //in string description,
+                      //in string url,
+                      //in object icons
                       );
 };

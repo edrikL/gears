@@ -177,7 +177,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   var checkboxHeight = -1;
   var iconHeight = 32;
   var iconWidth = 32;
-  var isDisabled = false;
+  var disabled = false;
 
   initDialog();
   initCustomLayout(layoutShortcuts);
@@ -187,7 +187,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    * Populate the shortcuts UI based on the data passed in from C++.
    */
   function initShortcuts() {
-    var args = getArguments();
+    // NOTE: We only expect one argument for now, but leaving in the ability to
+    // handle multiple shortcuts in case we decide we want it.
+    var args = [getArguments()];
     var template = document.getElementById("template");
     var parent = template.parentNode;
     parent.removeChild(template);
@@ -323,7 +325,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         result.push(checkbox.checked);
       }
 
-      saveAndClose(result);
+      // NOTE: Caller only expects a single result right now, but leaving in
+      // support for multiple in case we want it later.
+      saveAndClose(result[0]);
     }
   }
 
