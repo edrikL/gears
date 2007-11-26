@@ -107,8 +107,32 @@ bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
     return false;
   }
 
-  // TODO(aa): Get current process path, flags, etc
-  const char16 *browser_path = STRING16(L"/usr/bin/firefox");
+  // Execute 'which' to determine where the firefox launch script is.
+  FILE *binary_location = popen("which firefox", "r");
+  if (binary_location == NULL ) {
+    *error = GET_INTERNAL_ERROR_MESSAGE();
+    return false;
+  }
+
+  std::string browser_path_utf8("\"");
+  int input = fgetc(binary_location);
+  while (input != EOF) {
+    // Ignore the carrage return.
+    if (input != '\n') {
+      browser_path_utf8.push_back(input);
+    }
+    input = fgetc(binary_location);
+  }
+  browser_path_utf8.push_back('\"');
+
+  pclose(binary_location);
+
+  std::string16 browser_path;
+  if (!UTF8ToString16(browser_path_utf8.c_str(), browser_path_utf8.length(),
+                      &browser_path)) {
+    *error = GET_INTERNAL_ERROR_MESSAGE();
+    return false;
+  }
 
   std::string link_name_utf8;
   if (!String16ToUTF8(shortcut.app_name.c_str(), shortcut.app_name.length(),
@@ -153,3 +177,4 @@ bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
 }
  
 #endif  // #if defined(LINUX) && !defined(OS_MACOSX)
+
