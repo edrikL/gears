@@ -336,6 +336,9 @@ def LoadFolderContents(folder_path, templatizer):
   names = os.listdir(folder_path)
 
   for name in names:
+    if name.startswith("."):
+      continue
+
     full_path = os.path.join(folder_path, name)
 
     try:
@@ -343,7 +346,9 @@ def LoadFolderContents(folder_path, templatizer):
     except os.error:
       continue
     if stat.S_ISDIR(st.st_mode):
-      
+
+      # TODO(aa): Consider a more data-driven approach to ignoring directories
+      # and files.
       if name.find("bin-") > -1 or name.find("third_party") > -1:
         continue
         
