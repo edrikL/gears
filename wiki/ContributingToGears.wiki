@@ -67,6 +67,8 @@ Gears can be checked out anonymously using any SVN client. See the [http://code.
 
 There are wiki pages explaining how to compile for [http://code.google.com/p/google-gears/wiki/BuildingGoogleGearsOnWindows Windows] and [http://code.google.com/p/google-gears/wiki/GoogleGearsForSafariWebKit Safari]. Builds for Firefox on mac and linux can usually be built by simply typing `make` on the command line, but sometimes linux builds do not work. Perhaps you can help [http://code.google.com/p/google-gears/issues/detail?id=68 make this better].
 
+More info on hacking the Gears codebase can be found [HackingGears here].
+
 
 == Test ==
 
