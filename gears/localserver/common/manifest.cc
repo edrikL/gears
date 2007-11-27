@@ -127,18 +127,9 @@ bool Manifest::Parse(const char16 *manifest_url, const char *json, int len) {
 
 #ifdef DEBUG
   // Log a portion of manifest file we're parsing
-  std::string16 json_null_terminated;
-  if (!UTF8ToString16(json, len, &json_null_terminated)) {
-    error_message_ = GET_INTERNAL_ERROR_MESSAGE();
-    return false;
-  }
-
-  if (json_null_terminated.length() > 1024) {
-    json_null_terminated.resize(1024);
-  }
-
+  std::string json_null_terminated(json, (len < 1024) ? len : 1024);
   LOG(("Manifest::Parse - parsing\n"));
-  LOG((json_null_terminated.c_str()));
+  LOG(("%s", json_null_terminated.c_str()));
   LOG(("\n"));
 #endif
 
