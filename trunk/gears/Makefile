@@ -932,6 +932,7 @@ IEMOBILE_CPPSRCS	+= \
 # localserver/iemobile
 IEMOBILE_CPPSRCS	+= \
 		async_task_ie.cc \
+		http_handler_ie.cc \
 		http_request_ie.cc \
 		localserver_ie.cc \
 		managed_resource_store_ie.cc \

@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,19 +13,25 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <set>
+// On WinCE, windows.h must be included before set to allow us to use the max
+// and min macros. This is because set indirectly includes atlcecert.h, which
+// sets NOMINMAX. windef.h (included from windows.h), defines the macros only if
+// NOMINMAX is not defined.
 #include <windows.h>
 #include <wininet.h>
+#include <set>
+#include <string>
+#include <vector>
 #include "gears/localserver/ie/http_handler_ie.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string_utils.h"
@@ -61,7 +67,7 @@ static HRESULT RegisterNoLock();
 static HRESULT UnregisterNoLock();
 
 
-// static 
+// static
 HRESULT HttpHandler::Register() {
   if (has_registered_handler) return S_OK;
   MutexLock lock(&global_mutex);
@@ -109,7 +115,7 @@ static HRESULT RegisterNoLock() {
     UnregisterNoLock();
     return E_FAIL;
   }
-  hr = session->RegisterNameSpace(factory_http, CLSID_NULL, 
+  hr = session->RegisterNameSpace(factory_http, CLSID_NULL,
                                   HttpConstants::kHttpScheme, 0, 0, 0);
   if (FAILED(hr)) {
     UnregisterNoLock();
@@ -144,13 +150,13 @@ static HRESULT UnregisterNoLock() {
   if (FAILED(rv) || !session) {
     return FAILED(rv) ? rv : E_FAIL;
   }
-  if(factory_http != NULL) {
+  if (factory_http != NULL) {
     session->UnregisterNameSpace(factory_http, HttpConstants::kHttpScheme);
-    factory_http.Release();	
+    factory_http.Release();
   }
-  if(factory_https != NULL) {
+  if (factory_https != NULL) {
     session->UnregisterNameSpace(factory_https, HttpConstants::kHttpScheme);
-    factory_https.Release();	
+    factory_https.Release();
   }
   factory_protocol_info.Release();
   BOOL bypass = TRUE;
@@ -249,7 +255,7 @@ class ActiveHandlers : public std::set<HttpHandler*> {
       handler->Release();
     }
   }
-  
+
   void Add(HttpHandler *handler) {
     assert(handler);
     if (!IsIEAtLeastVersion7()) {
@@ -277,12 +283,18 @@ class ActiveHandlers : public std::set<HttpHandler*> {
   }
 
   bool IsIEAtLeastVersion7() {
+#ifdef WINCE
+    // TODO(steveblock): Once LocalServer is working, test to see whether or not
+    // WinCE is subject to this bug.
+    return true;
+#else
     if (!has_determined_ie_version_) {
       MutexLock lock(&mutex_);
       is_at_least_version_7_ = IsIEAtLeastVersion(7, 0, 0, 0);
       has_determined_ie_version_ = true;
     }
     return is_at_least_version_7_;
+#endif
   }
 
   Mutex mutex_;
@@ -296,11 +308,11 @@ static ActiveHandlers g_active_handlers;
 // class HttpHandler
 //------------------------------------------------------------------------------
 
-HttpHandler::HttpHandler() :
-    is_passingthru_(false), is_handling_(false),
-    is_head_request_(false), has_reported_result_(false),
-    was_aborted_(false), was_terminated_(false),
-    read_pointer_(0), passthru_sink_(NULL) {
+HttpHandler::HttpHandler()
+    : is_passingthru_(false), is_handling_(false),
+      is_head_request_(false), has_reported_result_(false),
+      was_aborted_(false), was_terminated_(false),
+      read_pointer_(0), passthru_sink_(NULL) {
 }
 
 HttpHandler::~HttpHandler() {
@@ -370,7 +382,7 @@ STDMETHODIMP HttpHandler::Continue(
     return BaseClass::Continue(data);
   else if (is_handling_)
     return S_OK;
-  else 
+  else
     return E_UNEXPECTED;
 }
 
@@ -386,7 +398,7 @@ STDMETHODIMP HttpHandler::Abort(
     // our handler is aborted regardless of the sink's return value.
     CallReportResult(reason, E_ABORT, L"Aborted");
     return S_OK;
-  } else { 
+  } else {
     return E_UNEXPECTED;
   }
 }
@@ -413,7 +425,7 @@ STDMETHODIMP HttpHandler::Suspend() {
     return BaseClass::Suspend();
   else if (is_handling_)
     return S_OK;
-  else 
+  else
     return E_UNEXPECTED;
 }
 
@@ -423,7 +435,7 @@ STDMETHODIMP HttpHandler::Resume() {
     return BaseClass::Resume();
   else if (is_handling_)
     return S_OK;
-  else 
+  else
     return E_UNEXPECTED;
 }
 
@@ -453,7 +465,7 @@ STDMETHODIMP HttpHandler::Seek(
     return BaseClass::Seek(dlibMove, dwOrigin, plibNewPosition);
   else if (is_handling_)
     return S_OK;
-  else 
+  else
     return E_UNEXPECTED;
 }
 
@@ -464,7 +476,7 @@ STDMETHODIMP HttpHandler::LockRequest(
     return BaseClass::LockRequest(dwOptions);
   else if (is_handling_)
     return S_OK;
-  else 
+  else
     return E_UNEXPECTED;
 }
 
@@ -474,7 +486,7 @@ STDMETHODIMP HttpHandler::UnlockRequest() {
     return BaseClass::UnlockRequest();
   else if (is_handling_)
     return S_OK;
-  else 
+  else
     return E_UNEXPECTED;
 }
 
@@ -575,7 +587,7 @@ STDMETHODIMP HttpHandler::Prepare() {
     return BaseClass::Prepare();
   else if (is_handling_)
     return S_OK;
-  else 
+  else
     return E_UNEXPECTED;
 }
 
@@ -585,7 +597,7 @@ STDMETHODIMP HttpHandler::Continue() {
     return BaseClass::Continue();
   else if (is_handling_)
     return S_OK;
-  else 
+  else
     return E_UNEXPECTED;
 }
 
@@ -729,7 +741,7 @@ HRESULT HttpHandler::CallOnResponse(DWORD status_code,
 //------------------------------------------------------------------------------
 // Called from both Start and StartEx, this method determines whether or not
 // our handler will run in one of three possible modes. The return value and
-// the state of the flags is_passingthru_ and is_handling_ indicate which mode 
+// the state of the flags is_passingthru_ and is_handling_ indicate which mode
 // should be used.
 //
 // 1) passthru - We delegate all method calls to an instance of the default
@@ -780,7 +792,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
 #endif
 
   // We only directly handle GET and HEAD requests, but we run in
-  // passthru mode for all requests to detect when redirects back 
+  // passthru mode for all requests to detect when redirects back
   // into our cache occur, see ReportProgress.
   is_head_request_ = false;
   if (bindinfo.dwBindVerb != BINDVERB_GET) {
@@ -831,7 +843,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
   // The requested url may redirect to another location
   std::string16 redirect_url;
   if (payload_.IsHttpRedirect()) {
-    // We collapse a chain of redirects and hop directly to the final 
+    // We collapse a chain of redirects and hop directly to the final
     // location for which we have a cache entry
     while (payload_.IsHttpRedirect()) {
       if (!payload_.GetHeader(HttpConstants::kLocationHeader, &redirect_url)) {
@@ -842,12 +854,13 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
       // Fetch a response for redirect_url from our DB
       if (!db->Service(redirect_url.c_str(), is_head_request_, &payload_)) {
         // We don't have a response for redirect_url. So report
-        // INET_E_REDIRECT_FAILED which causes the aggregating outer 
+        // INET_E_REDIRECT_FAILED which causes the aggregating outer
         // object (URLMON) to create a new inner APP and release us.
         ATLTRACE(_T("  cache hit, almost - redirect out of cache ( %s )\n"),
                  redirect_url.c_str());
         is_handling_ = true;  // set to true so we respond to QueryInfo calls
-        return CallReportResult(INET_E_REDIRECT_FAILED, HttpConstants::HTTP_FOUND,
+        return CallReportResult(INET_E_REDIRECT_FAILED,
+                                HttpConstants::HTTP_FOUND,
                                 redirect_url.c_str());
       }
     }
@@ -947,7 +960,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
     // We never expect to get here because when inserting payloads into
     // the database, we verify that they can be parsed w/o error. To make
     // ReportResults happy we return a made up value.
-    assert(false); 
+    assert(false);
     status_text = L"UNKNOWN";
   }
 
@@ -1276,7 +1289,7 @@ STDMETHODIMP HttpHandlerFactory::QueryInfo(LPCWSTR pwzUrl,
       result = false;
       break;
 
-    case QUERY_IS_CACHED:    
+    case QUERY_IS_CACHED:
       // Checks if the resource is cached locally
       result = true;
       break;
