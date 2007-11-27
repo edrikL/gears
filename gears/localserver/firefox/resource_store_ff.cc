@@ -162,7 +162,7 @@ NS_IMETHODIMP GearsResourceStore::Capture(
   // get the 'urls' param as a raw JS token, so we can tell whether it's
   // a string or array-of-strings.
   std::string16 url;
-  JsToken array;
+  JsArray array;
   int array_length;
 
   if (js_params.GetAsString(0, &url)) {
@@ -171,11 +171,14 @@ NS_IMETHODIMP GearsResourceStore::Capture(
       RETURN_EXCEPTION(exception_message_.c_str());
     }
 
-  } else if (js_params.GetAsArray(0, &array, &array_length)) {
+  } else if (js_params.GetAsArray(0, &array)) {
     // 'urls' was an array of strings
+    if (!array.GetLength(&array_length)) {
+      RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
+    }
 
     for (int i = 0; i < array_length; ++i) {
-      if (!js_params.GetFromArrayAsString(array, i, &url)) {
+      if (!array.GetElementAsString(i, &url)) {
         RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
       }
 

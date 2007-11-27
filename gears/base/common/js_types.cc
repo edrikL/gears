@@ -107,9 +107,23 @@ bool JsArray::GetElement(int index, JsScopedToken *out) {
 
   std::string16 name = IntegerToString16(index);
 
-  return SUCCEEDED(ActiveXUtils::GetDispatchProperty(array_.pdispVal,
-                                                     name.c_str(),
-                                                     out));
+  HRESULT hr = ActiveXUtils::GetDispatchProperty(array_.pdispVal,
+                                                 name.c_str(),
+                                                 out);
+  if (SUCCEEDED(hr)) {
+    return true;
+  } else if (hr == DISP_E_UNKNOWNNAME) {
+    // There's no value at this index.
+    int length;
+    if (GetLength(&length)) {
+      if (index < length) {
+        // If the index is valid, then this element is undefined.
+        out->Clear();
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 #elif BROWSER_NPAPI
@@ -593,25 +607,6 @@ bool JsParamFetcher::GetAsObject(int i, JsObject *out) {
   return out->SetObject(js_argv_[i], js_context_);
 }
 
-bool JsParamFetcher::GetAsArray(int i, JsToken *out_array, int *out_length) {
-  if (i >= js_argc_) return false;  // see comment above, in GetAsInt()
-  JsToken array = js_argv_[i];
-
-  // check that it's an array
-  if (JSVAL_IS_OBJECT(array) &&
-      JS_IsArrayObject(js_context_, JSVAL_TO_OBJECT(array))) {
-
-    jsuint length;
-    if (JS_GetArrayLength(js_context_, JSVAL_TO_OBJECT(array), &length)) {
-      *out_array = array;
-      *out_length = static_cast<int>(length);
-      return true; // succeeded
-    }
-  }
-
-  return false; // failed
-}
-
 bool JsParamFetcher::GetAsNewRootedCallback(int i, JsRootedCallback **out) {
   if (i >= js_argc_) return false;  // see comment above, in GetAsInt()
 
@@ -624,43 +619,6 @@ bool JsParamFetcher::GetAsNewRootedCallback(int i, JsRootedCallback **out) {
   *out = new JsRootedCallback(GetContextPtr(), js_argv_[i]);
   return true;
 }
-
-
-bool JsParamFetcher::GetFromArrayAsToken(JsToken array, int i, JsToken *out) {
-  if (ArrayIndexToToken(array, i, out)) {
-    return true;
-  }
-  return false;
-}
-
-bool JsParamFetcher::GetFromArrayAsInt(JsToken array, int i, int *out) {
-  JsToken token;
-  if (ArrayIndexToToken(array, i, &token)) {
-    if (JsTokenToInt(token, js_context_, out)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool JsParamFetcher::GetFromArrayAsString(JsToken array, int i,
-                                          std::string16 *out) {
-  JsToken token;
-  if (ArrayIndexToToken(array, i, &token)) {
-    if (JsTokenToString(token, js_context_, out)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool JsParamFetcher::ArrayIndexToToken(JsToken array, int i, JsToken *out) {
-  if (!JS_GetElement(js_context_, JSVAL_TO_OBJECT(array), i, out)) {
-    return false;
-  }
-  return true;
-}
-
 
 JsNativeMethodRetval JsSetException(const ModuleImplBaseClass *obj,
                                     const char16 *message) {

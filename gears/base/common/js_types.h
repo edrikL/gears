@@ -289,20 +289,9 @@ class JsParamFetcher {
   bool GetAsString(int i, std::string16 *out);
   bool GetAsArray(int i, JsArray *out);
   bool GetAsObject(int i, JsObject *out);
-  bool GetAsArray(int i, JsToken *out_array, int *out_length);
   bool GetAsNewRootedCallback(int i, JsRootedCallback **out);
 
-  // TODO(aa): This should probably go away because the tokens you get can
-  // become invalid if you store them.
-  // TODO(zork): These are deprecated by JsArray and JsObject classes.  They
-  // should be removed, and anything that uses them corrected.
-  bool GetFromArrayAsToken(JsToken array, int i, JsToken *out);
-  bool GetFromArrayAsInt(JsToken array, int i, int *out);
-  bool GetFromArrayAsString(JsToken array, int i, std::string16 *out);
-
  private:
-  bool ArrayIndexToToken(JsToken array, int i, JsToken *out);
-
   JsContextPtr  js_context_;
   int           js_argc_;
   JsToken      *js_argv_;

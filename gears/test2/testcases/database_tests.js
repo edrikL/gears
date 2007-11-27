@@ -91,17 +91,9 @@ function testInsertNull() {
 
 function testInsertUndefined() {
   db.execute('delete from simple');
-  db.execute('insert into simple values (?, ?, ?, ?)',
-             [undefined, undefined, undefined, undefined]);
-
-  handleResult(db.execute('select * from simple'), function(rs) {
-    for (var i = 0; i < 3; i++) {
-      // TODO(aa): I am not sure what this should do, but it definitely should
-      // not do this. Maybe undefined is an illegal value to insert? Maybe it
-      // gets converted to null?
-      assertEqual('undefined', rs.field(i),
-                  'Expected field number %s to be undefined'.subs(i));
-    }
+  assertError(function() {
+    db.execute('insert into simple values (?, ?, ?, ?)',
+               [undefined, undefined, undefined, undefined]);
   });
 }
 
@@ -154,29 +146,6 @@ function testCertainResultSetMethodsShouldAlwaysBeSafe() {
       invokeResultSetMethods(rs);
     });
   }
-}
-
-// TODO(aa): Following two functions should should throw, as if not enough
-// params were passed.
-function testUndefinedQueryParamThatFails() {
-  db.execute('delete from simple');
-
-  handleResult(db.execute('select * from simple where myint=?', [undefined]),
-               function(rs) {
-    assert(!rs.isValidRow(), 'Expected no results');
-  });
-}
-
-function testUndefinedQueryParamThatWorks() {
-  db.execute('delete from simple');
-  db.execute('insert into simple values (?, ?, ?, ?)',
-             [undefined, 4, 4, 4]);
-
-  handleResult(
-    db.execute('select * from simple where myvarchar=?', [undefined]),
-    function(rs) {
-      assertEqual('undefined', rs.field(0));
-  });
 }
 
 function testArgsRequired() {

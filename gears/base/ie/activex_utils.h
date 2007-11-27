@@ -110,13 +110,6 @@ class ActiveXUtils {
     return true;
   }
 
-  // Converts the VARIANT received when JS passes an array to a COM into a more
-  // manageable SAFEARRAY.
-  // Note: The caller should clean up *safearray.
-  static HRESULT ConvertJsArrayToSafeArray(const VARIANT *jsarray,
-                                           VARIANT *safearray,
-                                           LONG *array_len);
-
   // Returns the property value by name.
   // The caller is responsible for freeing the returned VARIANT.
   static HRESULT GetDispatchProperty(IDispatch *dispatch, const WCHAR *name,

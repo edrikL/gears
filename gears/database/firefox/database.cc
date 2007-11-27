@@ -173,10 +173,11 @@ NS_IMETHODIMP GearsDatabase::Execute(//const nsAString &expr,
 
   int num_args_expected = sqlite3_bind_parameter_count(stmt.get());
   int num_args = 0;
-  JsToken arg_array;
+  JsArray arg_array;
 
   if (js_params.IsOptionalParamPresent(1, false)) {
-    if (!js_params.GetAsArray(1, &arg_array, &num_args)) {
+    if (!js_params.GetAsArray(1, &arg_array) ||
+        !arg_array.GetLength(&num_args)) {
       RETURN_EXCEPTION(STRING16(L"Invalid SQL parameters array."));
     }
   }
@@ -191,13 +192,23 @@ NS_IMETHODIMP GearsDatabase::Execute(//const nsAString &expr,
   for (int i = 0; i < num_args_expected; ++i) {
     JsToken arg;
     int sql_index = i + 1; // sql parameters are 1-based
-    js_params.GetFromArrayAsToken(arg_array, i, &arg);
+    if (!arg_array.GetElement(i, &arg)) {
+      RETURN_EXCEPTION(STRING16(L"Invalid SQL parameters array."));
+    }
 
     // TODO(michaeln): perhaps add cases for additional types rather than
     // using string conversion for them so sqlite is aware of the actual
     // types being bound to parameters.
     JSType type = JS_TypeOfValue(cx, arg);
     switch (type) {
+      case JSTYPE_VOID: {
+        std::string16 exception(STRING16(L"SQL parameter "));
+        exception += IntegerToString16(i);
+        exception += STRING16(L" is undefined.");
+        RETURN_EXCEPTION(exception.c_str());
+      }
+
+
       case JSTYPE_NULL:
         LOG(("        Parameter %i: null", i));
         sql_status = sqlite3_bind_null(stmt.get(), sql_index);

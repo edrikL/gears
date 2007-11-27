@@ -154,26 +154,21 @@ STDMETHODIMP GearsResourceStore::capture(
       return hr;
     }
   } else {
-    CComVariant converted_array;
-    LONG count;
+    JsArray url_array;
+    int count;
 
-    hr = ActiveXUtils::ConvertJsArrayToSafeArray(
-        urls, &converted_array, &count);
-    if (FAILED(hr)) {
+    if (!url_array.SetArray(*urls, NULL) ||
+        !url_array.GetLength(&count)) {
       RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
     }
 
     // Resolve each url and add it to the request
-    for (LONG i = 0; i < count; ++i) {
-      CComVariant url;
-      hr = SafeArrayGetElement(converted_array.parray, &i, &url);
-      if (FAILED(hr)) {
+    for (int i = 0; i < count; ++i) {
+      std::string16 url;
+      if (!url_array.GetElementAsString(i, &url)) {
         RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
       }
-      if (url.vt != VT_BSTR) {
-        RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
-      }
-      hr = ResolveAndAppendUrl(url.bstrVal, request.get());
+      hr = ResolveAndAppendUrl(url.c_str(), request.get());
       if (FAILED(hr)) {
         return hr;
       }
