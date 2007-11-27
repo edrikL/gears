@@ -94,14 +94,13 @@ HRESULT GearsDatabase::BindArgsToStatement(const VARIANT *arg_array,
   _ASSERTE(stmt != NULL);
 
   int num_args_expected = sqlite3_bind_parameter_count(stmt);
-  LONG num_args = 0;
-  CComVariant args_safearray;
+  int num_args = 0;
+  JsArray args_jsarray;
   HRESULT hr;
 
   if (ActiveXUtils::OptionalVariantIsPresent(arg_array)) {
-    HRESULT hr = ActiveXUtils::ConvertJsArrayToSafeArray(
-        arg_array, &args_safearray, &num_args);
-    if (FAILED(hr)) {
+    if (!args_jsarray.SetArray(*arg_array, 0) ||
+        !args_jsarray.GetLength(&num_args)) {
       RETURN_EXCEPTION(STRING16(L"Invalid SQL parameters array."));
     }
   }
@@ -112,11 +111,10 @@ HRESULT GearsDatabase::BindArgsToStatement(const VARIANT *arg_array,
   }
 
   // Bind each arg to its sql param
-  for (LONG i = 0; i < num_args_expected; i++) {
+  for (int i = 0; i < num_args_expected; i++) {
     CComVariant arg;
-    hr = SafeArrayGetElement(args_safearray.parray, &i, &arg);
-    if (FAILED(hr)) {
-      return hr;
+    if (!args_jsarray.GetElement(i, &arg)) {
+      return E_FAIL;
     }
     hr = BindArg(arg, i, stmt);
     if (FAILED(hr)) {
@@ -137,15 +135,12 @@ HRESULT GearsDatabase::BindArg(const CComVariant &arg, int index,
   // string conversion so sqlite is aware of the actual types being
   // bound to parameters.
   switch (arg.vt) {
-    case VT_EMPTY:
-      // TODO(miket): We'd like to come up with a more principled approach
-      // to undefined and missing parameters. For now, this is consistent
-      // with the Firefox implementation.
-      err = sqlite3_bind_text16(stmt, index + 1,
-                                L"undefined", -1,
-                                SQLITE_TRANSIENT);
-      ATLTRACE(L"  Parameter: [VT_EMPTY]\n");
-      break;
+    case VT_EMPTY: {
+        std::string16 exception(STRING16(L"SQL parameter "));
+        exception += IntegerToString16(index);
+        exception += STRING16(L" is undefined.");
+        RETURN_EXCEPTION(exception.c_str());
+      }
 
     case VT_NULL:
       err = sqlite3_bind_null(stmt, index + 1);

@@ -148,55 +148,6 @@ HRESULT ActiveXUtils::GetHtmlWindow3(IUnknown *site, IHTMLWindow3 **window3) {
 }
 #endif
 
-HRESULT ActiveXUtils::ConvertJsArrayToSafeArray(const VARIANT *js_array, 
-                                                VARIANT *safe_array, 
-                                                LONG *array_len) {
-  // When JavaScript passes arrays to a param typed VARIANT, they come out as 
-  // VARIANT with internal type IDispatch. This can be used to get a VARIANT of 
-  // type (VT_ARRAY | VT_VARIANT), which can in turn be used to get a SAFEARRAY.
-  assert(js_array);
-  assert(safe_array);
-  assert(array_len);
-
-  if (js_array->vt != VT_DISPATCH) {
-    return E_INVALIDARG;
-  }
-
-  // We use an undocumented DISPID (-2700) to extract a SAFEARRAY from the 
-  // IDispatch of a JavaScript array object.
-  if (FAILED(GetDispatchProperty(js_array->pdispVal, -2700, safe_array))) {
-    return E_INVALIDARG;
-  }
-
-  // make sure that the resulting variant is now an array of variants
-  if (safe_array->vt != (VT_ARRAY | VT_VARIANT)) {
-    return E_INVALIDARG;
-  }
-
-  // Get the number of elements in the array.
-  HRESULT hr = SafeArrayGetUBound(safe_array->parray, 1, array_len);
-
-  // E_INVALIDARG is returned when the array is empty. This is a lame way to
-  // check for this. 
-  // TODO(aa): Maybe better to ditch SAFEARRAY and use IEnumVARIANT instead, 
-  // which you can also get from the IDispatch instance and doesn't have this
-  // problem.
-  if (E_INVALIDARG == hr) {
-    *array_len = 0;
-    return S_OK;
-  }
-
-  // For other types of failures, return the failure.
-  if (FAILED(hr)) {
-    return hr;
-  }
-
-  // Otherwise, to get the length, add 1 and return
-  (*array_len)++;
-  return S_OK;
-}
-
-
 HRESULT ActiveXUtils::GetDispatchProperty(IDispatch *dispatch,
                                           DISPID dispid,
                                           VARIANT *value) {

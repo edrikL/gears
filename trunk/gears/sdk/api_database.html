@@ -166,7 +166,8 @@ rs.close();
   <tr class="odd">
     <td>Exceptions</td>
     <td class="" >
-      Throws an exception if the SQL statement fails to execute. See the exception object's <code>message</code> attribute for details.
+      Throws an exception if the SQL statement fails to execute, or if one of
+      the arguments in argArray is undefined. See the exception object's <code>message</code> attribute for details.
       <br><br>
       <p class="note">Note: If multiple processes (including <a href="api_workerpool.html">Workers</a>) attempt to write to the
         database at the same time, one can fail. It is up to the application to retry in these situations.</p>
