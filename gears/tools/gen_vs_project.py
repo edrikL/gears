@@ -11,6 +11,11 @@ make.bat as an external tool in your VS environment).
 This script is Windows only and must reside in the gears/tools directory, it 
 will not run if this is not the case.
 
+Assumptions:
+* All paths in this script are specified relative to the svn root directory. 
+On output, all paths are converted to be absolute.
+* bin-* & third_party directories are not added to the project file.
+
   Templatizer: A bare-bones templating engine.
   DevEnvSettings: Encapsulate the settings for a build target.
   CreateTargets(): Construct DevEnvSettings for all build targets.
@@ -20,17 +25,10 @@ will not run if this is not the case.
 
 __author__ = 'playmobil@google.com (Jeremy Moskovich)'
 
-import copy
 import os
+import re
 import stat
 import sys
-
-"""
-Assumptions:
-*  All paths in this script are specified relative to the svn root directory. 
-On output, all paths are converted to be absolute.
-* bin-* & third_party directories are not added to the project file.
-"""
 
 # Module Constants
 
@@ -62,24 +60,26 @@ FILE_EXCLUSIONS_TAG = 'FILE_EXCLUSIONS'
 BUILD_EXCLUDE_GROUP_TAG = 'BUILD_EXCLUDE_GROUP'
 EXCLUDE_TARGET_NAME_TAG = 'EXCLUDE_TARGET_NAME'
 
-def _ParentDir(theDir):
+
+def _ParentDir(the_dir):
   """Return parent of directory in an OS independent manner.
   
-  If the root directory is passed in then we return the input
-  parameter.
+  If the root directory is passed in then this function will return a
+  normalised version of it's input e.g. an input of c:\\ gives c:\ as output.
   
   Args:
-    theDir: a string whose parent we want to retrieve.
+    the_dir: a string whose parent we want to retrieve.
     
   Returns:
     A string representing the absolute path of the parent directory.
   """
-  theDir = os.path.abspath(theDir)
+  the_dir = os.path.abspath(the_dir)
+  the_dir = os.path.normpath(the_dir)
   
-  if theDir == os.sep:
-    return theDir
+  if the_dir == os.sep or re.match(r'\[a-zA-Z]:\\*', the_dir):
+    return the_dir
   else:
-    return os.sep.join(theDir.split(os.sep)[:-1])
+    return os.sep.join(the_dir.split(os.sep)[:-1])
     
 # Absolute path to tools directory
 
@@ -93,14 +93,19 @@ GEARS_DIR_PATH = _ParentDir(TOOLS_DIR_PATH)
 
 REPO_ROOT_PATH = _ParentDir(GEARS_DIR_PATH)
 
+
 class Templatizer(object):
   """Simple templating engine.
   
   Templates are simply Python files which are evaled. All local variables in
   these .py files are assumed to be strings. The template's name is just the
   name of the string in the .py file.
-  Within each string {{IDENTIFIER}} tags can be replaced with content.
+  Within each string %(IDENTIFIER)s tags can be replaced with content.
   """
+  
+  class InvalidTempateNameException(Exception):
+    """Raised when attempting to access a non-existent template."""
+    pass
   
   def __init__(self, data_file_name):
     """Loads & parses template file.
@@ -120,8 +125,11 @@ class Templatizer(object):
   def SubstituteIntoTemplate(self, template_name, vars):
     """Performs template substitution.
     
-    Templates are strings in the format {{IDENTIFIER}}. Here we substitute
+    Templates are strings in the format %(IDENTIFIER)s. Here we substitute
     each IDENTIFIER with a value.
+    
+    Note: all identifiers in a template must have entries in vars, otherwise
+    an exception will be thrown.
     
     Args:
       template_name: A string representing the name of the template we wish to
@@ -136,21 +144,10 @@ class Templatizer(object):
     """
     
     if not self.templates.has_key(template_name):
-      exit("Attempt to access invalid template: %s" % template_name)
+      raise InvalidTempateNameException(
+          "Attempt to access invalid template: %s" % template_name)
       
-    ret = copy.copy(self.templates[template_name])
-    
-    # Perform substitution. This has bad performance, but it's easy to read 
-    # and performance isn't critical in this scenario.
-    
-    for keyword_to_replace, value_to_replace_with in vars.iteritems():
-      template_tag = '{{%s}}' % keyword_to_replace
-      
-      # Make sure that there is actually something to replace!
-      
-      assert(template_tag in ret)
-      
-      ret = ret.replace(template_tag, value_to_replace_with)
+    ret = self.templates[template_name] % vars
       
     return ret
     
@@ -186,7 +183,7 @@ class DevEnvSettings(object):
     self.preprocessor_symbols = []
 		
     if settings_objects_to_inherit_from:
-		  self._CopyFrom(settings_objects_to_inherit_from)
+      self._CopyFrom(settings_objects_to_inherit_from)
 		  
   def _CopyFrom(self, settings_objects_to_inherit_from):
     """Implement inheritance by copying values from sibling objects.
@@ -349,7 +346,7 @@ def LoadFolderContents(folder_path, templatizer):
 
       # TODO(aa): Consider a more data-driven approach to ignoring directories
       # and files.
-      if name.find("bin-") > -1 or name.find("third_party") > -1:
+      if "bin-" in name or "third_party" in name:
         continue
         
       file_list_string = LoadFolderContents(full_path, templatizer)
@@ -425,12 +422,12 @@ def main():
   if os.path.basename(TOOLS_DIR_PATH) != 'tools':
     exit('This script must reside in the tools directory in order to run.')
   
-  vs_project_filename = os.path.join(TOOLS_DIR_PATH,OUTPUT_FILE_NAME)
+  vs_project_filename = os.path.join(TOOLS_DIR_PATH, OUTPUT_FILE_NAME)
   
   # Open output VS project file.
   
   try:
-    output_file = open(vs_project_filename,'w')
+    output_file = open(vs_project_filename, 'w')
   except IOError, err:
     exit("Got error: %s\nIs your VS project file (%s) editable?" %
          (err.strerror, vs_project_filename))
