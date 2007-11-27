@@ -10,7 +10,7 @@ execFile('filename.py', {}, dictToPlaceValuesFromThisFileIn)
 executed by the Templatizer class.
 
 As described in the documentation for the Templatizer class, each string 
-contains {{identifier}} tags to be used for template substitution.
+uses Python style %(identifier)s tags to be used for template substitution.
 
 What follows is a definition of each template name defined in this file. For
 each template we specify all parameters that can be replaced:
@@ -31,7 +31,7 @@ FILE_GROUP: definition of file group
 
 FILE_DEFINITION: marker for an individual file
   REL_PATH_TO_FILE: path to file relative to the project. 
-  FILE_EXCLUSIONS: zero or more BUILD_EXCLUDE_GROUPs
+  FILE_EXCLUSIONS: zero or more BUILD_EXCLUDE_GROUPs
 
 BUILD_EXCLUDE_GROUP: exclude current file from building in the specified
   environment.
@@ -40,15 +40,15 @@ EXCLUDE_TARGET_NAME: target to exclude this file in."""
 
 __author__ = 'playmobil@google.com (Jeremy Moskovich)'
 
-FILE_GROUP = r"""<Filter Name="{{FILE_GROUP_NAME}}">
-	{{FILE_LIST}}
+FILE_GROUP = r"""<Filter Name="%(FILE_GROUP_NAME)s">
+	%(FILE_LIST)s
 	</Filter>"""
 	
 # TODO(playmobil): this goes inside file tag to exclude files from a build 
 # group.
 
-BUILD_EXCLUDE_GROUP=r"""<FileConfiguration
-  						Name="{{EXCLUDE_TARGET_NAME}}"
+BUILD_EXCLUDE_GROUP = r"""<FileConfiguration
+  						Name="%(EXCLUDE_TARGET_NAME)s"
   						ExcludedFromBuild="true"
   						>
   						<Tool
@@ -57,13 +57,13 @@ BUILD_EXCLUDE_GROUP=r"""<FileConfiguration
   					</FileConfiguration>"""
 	
 FILE_DEFINITION = r"""<File
-			RelativePath="{{REL_PATH_TO_FILE}}"
+			RelativePath="%(REL_PATH_TO_FILE)s"
 			>
-			{{FILE_EXCLUSIONS}}
+			%(FILE_EXCLUSIONS)s
 		</File>"""
 
 TARGET_SECTION = r"""<Configuration
-	Name="{{TARGET_NAME}}"
+	Name="%(TARGET_NAME)s"
 	OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 	IntermediateDirectory="$(ConfigurationName)"
 	ConfigurationType="1"
@@ -87,8 +87,8 @@ TARGET_SECTION = r"""<Configuration
 	/>
 	<Tool
 		Name="VCCLCompilerTool"
-		AdditionalIncludeDirectories="{{INCLUDE_DIRECTORIES}}"
-		PreprocessorDefinitions="{{PREPROCESSOR_DEFINES}}"
+		AdditionalIncludeDirectories="%(INCLUDE_DIRECTORIES)s"
+		PreprocessorDefinitions="%(PREPROCESSOR_DEFINES)s"
 	/>
 	<Tool
 		Name="VCManagedResourceCompilerTool"
@@ -144,12 +144,12 @@ MAIN_VS_PROJECT_SKELETON = r"""<?xml version="1.0" encoding="Windows-1252"?>
 	<ToolFiles>
 	</ToolFiles>
 	<Configurations>
-	  {{TARGET_SECTIONS}}
+	  %(TARGET_SECTIONS)s
 	</Configurations>
 	<References>
 	</References>
 	<Files>
-	  {{FILES_SECTION}}
+	  %(FILES_SECTION)s
 	</Files>
 	<Globals>
 	</Globals>
