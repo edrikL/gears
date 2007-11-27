@@ -107,20 +107,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </table>
   </div>
   <div id="content">
-    <h2>Shortcuts</h2>
-    <p>Installed sites using PRODUCT_FRIENDLY_NAME_UQ.</p>
-    <div>
-      <table>
-        <tbody id="shortcuts">
-          <tr>
-            <td class="left"><em>No installed sites.</em></td>
-            <td></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <br>
-    <br>
     <h2>Allowed Sites</h2>
     <p>These sites are always allowed to access PRODUCT_FRIENDLY_NAME_UQ.</p>
     <div>
@@ -196,7 +182,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <script src="json_noeval.js"></script>
 <script src="html_dialog.js"></script>
 <script>
-  var g_dialogResult = {"removeSites": [], "removeShortcuts": []};
+  var g_dialogResult = {"removeSites": []};
 
   initDialog();
   initCustomLayout(layoutSettings);
@@ -206,7 +192,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     var args = getArguments();
     initList("allowed-list", args.allowed);
     initList("denied-list", args.denied);
-    initShortcuts("shortcuts", args.shortcuts);
   }
 
   function initList(tableId, sites) {
@@ -244,65 +229,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     table.appendChild(row);
   }
 
-  function initShortcuts(tableId, shortcuts) {
-    var table = document.getElementById(tableId);
-    if (!shortcuts.length) {
-      return;
-    }
-
-    // Hide the empty message
-    table.rows[0].style.display = "none";
-
-    // Add rows for each child
-    for (var shortcut, i = 0; shortcut = shortcuts[i]; i++) {
-      initShortcut(table, shortcut);
-    }
-  }
-
-  function initShortcut(table, shortcut) {
-    var row = document.createElement("TR");
-    var icon = document.createElement("TD");
-    var name = document.createElement("TD");
-    var origin = document.createElement("TD");
-    var right = document.createElement("TD");
-    var iconImage = document.createElement("IMG");
-    var launchLink = document.createElement("A");
-    var removeLink = document.createElement("A");
-
-    icon.className = "app-icon";
-    name.className = "app-name";
-    origin.className = "app-origin";
-    right.className = "right";
-
-    iconImage.src = shortcut.iconUrl;
-    iconImage.width = 16;
-    iconImage.height= 16;
-
-    origin.appendChild(document.createTextNode(shortcut.origin));
-    row.appName = shortcut.appName;
-    row.origin = shortcut.origin;
-
-    launchLink.appendChild(document.createTextNode(shortcut.appName));
-    launchLink.onclick = handleLaunchShortcutClick;
-    launchLink.href = shortcut.appUrl;
-
-    removeLink.appendChild(document.createTextNode("Remove"));
-    removeLink.onclick = handleRemoveShortcutClick;
-    removeLink.row = row;
-    removeLink.shortcutName = shortcut.appName;
-    removeLink.shortcutOrigin = shortcut.origin;
-    removeLink.href = "#";
-
-    icon.appendChild(iconImage);
-    name.appendChild(launchLink);
-    right.appendChild(removeLink);
-    row.appendChild(icon);
-    row.appendChild(name);
-    row.appendChild(origin);
-    row.appendChild(right);
-    table.appendChild(row);
-  }
-
   function handleRemoveClick() {
     removeOrigin(this.row, this.siteName);
 
@@ -324,24 +250,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       table.rows[0].style.display = "";
     }
 
-    // Remove any shortcuts using this domain
-    var shortcutTable = document.getElementById("shortcuts");
-    for (var i = shortcutTable.rows.length - 1; i > 0; --i) {
-      if (shortcutTable.rows[i].origin == origin) {
-        removeShortcut(shortcutTable.rows[i], true);
-      }
-    }
-
     // Enable the save button since we have now made a change.
     document.getElementById("confirm-button").disabled = false;
-  }
-
-  function handleRemoveShortcutClick() {
-    removeShortcut(this.row, false);
-
-    // Return false to prevent the default link action (scrolling up to top of
-    // page in this case).
-    return false;
   }
 
   function layoutSettings(contentHeight) {
@@ -357,62 +267,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       content.style.paddingRight = "1em";
     } else {
       content.style.paddingRight = "";
-    }
-  }
-
-  function removeShortcut(row, skipDialog) {
-    // Add to the list of things to be removed from database.
-    g_dialogResult.removeShortcuts.push({"appName": row.appName,
-                                         "origin": row.origin});
-
-    // Remove the row visually.
-    var table = row.parentNode;
-    table.removeChild(row);
-
-    // If we have removed all the rows, show the empty message again.
-    if (table.rows.length == 1) {
-      table.rows[0].style.display = "";
-    }
-
-    if (!skipDialog) {
-      // Check if this was the last shortcut to use this origin.
-      var shortcutTable = document.getElementById("shortcuts");
-      for (var i = shortcutTable.rows.length - 1; i > 0; --i) {
-        if (shortcutTable.rows[i].origin == row.origin) {
-          break;
-        }
-      }
-
-      // If no other shortcuts were found, ask the user if they wish to delete
-      // the origin.
-      if (i == 0) {
-        if (confirm("Would you like to remove permissions for " +
-                row.origin+" as well?")) {
-          deleteUnusedOrigin(row.origin);
-        }
-
-      }
-    }
-
-    // Enable the save button since we have now made a change.
-    document.getElementById("confirm-button").disabled = false;
-  }
-
-  function handleLaunchShortcutClick() {
-    // Launch the URL in a new window.
-    window.open(this.href);
-
-    // Return false to prevent the default link action (scrolling up to top of
-    // page in this case).
-    return false;
-  }
-
-  function deleteUnusedOrigin(origin) {
-    var originTable = document.getElementById("allowed-list");
-    for (var i = originTable.rows.length - 1; i > 0; --i) {
-      if (originTable.rows[i].origin == origin) {
-        removeOrigin(originTable.rows[i], origin);
-      }
     }
   }
 </script>

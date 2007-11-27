@@ -47,9 +47,6 @@ void SettingsDialog::Run() {
                        PermissionsDB::PERMISSION_DENIED)) {
     return;
   }
-  if (!PopulateShortcuts(&settings_dialog.arguments["shortcuts"])) {
-    return;
-  }
 
   // Show the dialog.
   const int kSettingsDialogWidth = 400;
@@ -85,72 +82,6 @@ bool SettingsDialog::PopulateOrigins(Json::Value *json_array,
     }
 
     json_array->append(Json::Value(site_string));
-  }
-
-  return true;
-}
-
-
-bool SettingsDialog::PopulateShortcuts(Json::Value *json_array) {
-  PermissionsDB *capabilities = PermissionsDB::GetDB();
-  if (!capabilities) {
-    return false;
-  }
-
-  (*json_array) = Json::Value(Json::arrayValue);
-  std::vector<SecurityOrigin> origins;
-
-  if (!capabilities->GetOriginsWithShortcuts(&origins)) {
-    return false;
-  }
-
-  for (std::vector<SecurityOrigin>::iterator origin = origins.begin();
-       origin != origins.end(); ++origin) {
-    std::vector<std::string16> names;
-    if (!capabilities->GetOriginShortcuts(*origin, &names)) {
-      return false;
-    }
-
-    for (std::vector<std::string16>::iterator name = names.begin();
-         name != names.end(); ++name) {
-      std::string16 app_url;
-      std::vector<std::string16> icon_urls;
-      std::string16 msg;
-
-      if (!capabilities->GetShortcut(*origin, name->c_str(), &app_url,
-                                     &icon_urls, &msg)) {
-        return false;
-      }
-
-      std::string16 ico_loc;
-      if (!GearsDesktop::GetControlPanelIconLocation(*origin, *name,
-                                                     &ico_loc)) {
-        return false;
-      }
-
-
-      // JSON needs UTF-8.
-      std::string app_url_utf8;
-      std::string ico_loc_utf8;
-      std::string name_utf8;
-      std::string origin_utf8;
-      if (!String16ToUTF8(app_url.c_str(), &app_url_utf8) ||
-          !String16ToUTF8(ico_loc.c_str(), &ico_loc_utf8) ||
-          !String16ToUTF8(name->c_str(), &name_utf8) ||
-          !String16ToUTF8(origin->url().c_str(), &origin_utf8)) {
-        return false;
-      }
-
-      ico_loc_utf8 = UTF8PathToUrl(ico_loc_utf8, false);
-
-      Json::Value shortcut;
-      shortcut["iconUrl"] = Json::Value(ico_loc_utf8);
-      shortcut["appUrl"] = Json::Value(app_url_utf8);
-      shortcut["appName"] = Json::Value(name_utf8);
-      shortcut["origin"] = Json::Value(origin_utf8);
-
-      json_array->append(shortcut);
-    }
   }
 
   return true;
@@ -209,53 +140,5 @@ void SettingsDialog::ProcessResult(Json::Value *dialog_result) {
 
     capabilities->SetCanAccessGears(origin,
                                     PermissionsDB::PERMISSION_DEFAULT);
-  }
-
-  const Json::Value remove_shortcuts = (*dialog_result)["removeShortcuts"];
-  if (!remove_shortcuts.isArray()) {
-    LOG(("SettingsDialog::ProcessResult: Invalid remove_shortcuts type."));
-    assert(false);
-    return;
-  }
-
-  for (size_t i = 0; i < remove_shortcuts.size(); ++i) {
-    Json::Value item = remove_shortcuts[i];
-
-    if (!item.isObject()) {
-      LOG(("SettingsDialog::ProcessResult: Invalid item type."));
-      assert(false);
-      continue;
-    }
-
-    if (!item["origin"].isString()) {
-      LOG(("SettingsDialog::ProcessResult: Invalid item.origin type."));
-      assert(false);
-      continue;
-    }
-
-    if (!item["appName"].isString()) {
-      LOG(("SettingsDialog::ProcessResult: Invalid item.appName type."));
-      assert(false);
-      continue;
-    }
-
-    std::string16 origin_string;
-    if (!UTF8ToString16(item["origin"].asString().c_str(), &origin_string)) {
-      LOG(("SettingsDialog::ProcessResult: Could not convert origin."));
-      continue;
-    }
-
-    std::string16 app_name_string;
-    if (!UTF8ToString16(item["appName"].asString().c_str(), &app_name_string)) {
-      LOG(("SettingsDialog::ProcessResult: Could not convert appName."));
-      continue;
-    }
-
-    SecurityOrigin origin;
-    if (!origin.InitFromUrl(origin_string.c_str())) {
-      continue;
-    }
-
-    capabilities->DeleteShortcut(origin, app_name_string.c_str());
   }
 }
