@@ -97,40 +97,46 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
 
   hr = E_FAIL;
 #ifdef WINCE
-  // TODO(andreip) add the channel API.
+  // TODO(steveblock): Implement channel for WinCE.
+  if (false) {
 #else
   if (object_name == STRING16(L"beta.channel")) {
     CComObject<GearsChannel> *obj;
     hr = CComObject<GearsChannel>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
+#endif
   } else if (object_name == STRING16(L"beta.database")) {
-#endif
-#ifdef WINCE
-  if (object_name == STRING16(L"beta.database")) {
-#endif
     CComObject<GearsDatabase> *obj;
     hr = CComObject<GearsDatabase>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
 #ifdef WINCE
-    // TODO(andreip) Add the rest of the APIs
+  // TODO(steveblock): Implement desktop for WinCE.
 #else
   } else if (object_name == STRING16(L"beta.desktop")) {
     CComObject<GearsDesktop> *obj;
     hr = CComObject<GearsDesktop>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
+#endif
   } else if (object_name == STRING16(L"beta.httprequest")) {
     CComObject<GearsHttpRequest> *obj;
     hr = CComObject<GearsHttpRequest>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
+#ifdef WINCE
+  // TODO(steveblock): Implement localserver for WinCE.
+#else
   } else if (object_name == STRING16(L"beta.localserver")) {
     CComObject<GearsLocalServer> *obj;
     hr = CComObject<GearsLocalServer>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
+#endif
+#ifdef WINCE
+  // TODO(steveblock): Implement timer for WinCE.
+#else
   } else if (object_name == STRING16(L"beta.timer")) {
     CComObject<GearsTimer> *obj;
     hr = CComObject<GearsTimer>::CreateInstance(&obj);
@@ -168,7 +174,7 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
   //}
 
   *retval = idispatch;
-  (*retval)->AddRef(); // ~CComQIPtr will Release, so must AddRef here
+  (*retval)->AddRef();  // ~CComQIPtr will Release, so must AddRef here
   assert((*retval)->AddRef() == 3 &&
          (*retval)->Release() == 2);
   RETURN_NORMAL();
