@@ -175,7 +175,7 @@ class GearsTimer
 
   // Called by Create*Timer() to actually create the timer.  Returns the id of
   // the new timer, or -1 on failure.
-  int CreateTimerCommon(TimerInfo &timer_info, int timeout);
+  int CreateTimerCommon(const TimerInfo &timer_info, int timeout);
   void HandleTimer(TimerInfo *timer_info);
 
   std::map<int, TimerInfo> timers_;
@@ -185,7 +185,8 @@ class GearsTimer
 #if BROWSER_FF
   static void TimerCallback(nsITimer *timer, void *closure);
 #elif BROWSER_IE
-  LRESULT OnTimer(UINT msg, WPARAM timer_id, LPARAM unused_param, BOOL& handled);
+  LRESULT OnTimer(UINT msg, WPARAM timer_id,
+                  LPARAM unused_param, BOOL& handled);
   void OnFinalMessage();
 
   bool in_handler_;
@@ -195,4 +196,4 @@ class GearsTimer
   DISALLOW_EVIL_CONSTRUCTORS(GearsTimer);
 };
 
-#endif // GEARS_TIMER_TIMER_H__
+#endif  // GEARS_TIMER_TIMER_H__

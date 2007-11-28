@@ -856,6 +856,10 @@ IEMOBILE_IDLSRCS	+= \
 		timer_ie.idl \
 		$(NULL)
 
+IEMOBILE_CPPSRCS	+= \
+		timer.cc \
+		$(NULL)
+
 #-----------------------------------------------------------------------------
 # localserver/ff
 
