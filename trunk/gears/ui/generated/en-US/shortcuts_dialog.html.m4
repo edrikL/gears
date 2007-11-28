@@ -204,6 +204,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       }
 
       parent.appendChild(shortcutRow);
+      preloadIcons(args[i]);
     }
 
     // Show the right heading, depending on whether we are showing multiple
@@ -249,12 +250,40 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     link.href = shortcutData.link;
     link.appendChild(document.createTextNode(shortcutData.name));
-    icon.src = shortcutData.icon;
+    icon.src = pickIconToRender(shortcutData);
     icon.height = iconHeight;
     icon.width = iconWidth;
     span.appendChild(document.createTextNode(shortcutData.description));
 
     return shortcutRow;
+  }
+
+  /**
+   * Picks the best icon to render in the UI.
+   */
+  function pickIconToRender(shortcutData) {
+    if (shortcutData.icon32x32) { // ideal size
+      return shortcutData.icon32x32;
+    } else if (shortcutData.icon48x48) { // better to pick one that is too big
+      return shortcutData.icon48x48;
+    } else if (shortcutData.icon128x128) {
+      return shortcutData.icon128x128;
+    } else {
+      return shortcutData.icon16x16; // pick too small icon last
+    }
+  }
+
+  /**
+   * Preloads the icons for a shortcut so that later when they are requested
+   * from C++, they will be fast.
+   */
+  function preloadIcons(shortcutData) {
+    for (var prop in shortcutData) {
+      if (prop.indexOf("icon") == 0) {
+        var img = new Image();
+        img.src = shortcutData[prop];
+      }
+    }
   }
 
   /**
