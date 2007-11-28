@@ -147,15 +147,11 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
 #else
     RETURN_EXCEPTION(STRING16(L"Object is only available in debug build."));
 #endif
-#ifdef WINCE
-  // TODO(steveblock): Implement timer for WinCE.
-#else
   } else if (object_name == STRING16(L"beta.timer")) {
     CComObject<GearsTimer> *obj;
     hr = CComObject<GearsTimer>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
-#endif
   } else if (object_name == STRING16(L"beta.workerpool")) {
     CComObject<GearsWorkerPool> *obj;
     hr = CComObject<GearsWorkerPool>::CreateInstance(&obj);

@@ -233,7 +233,10 @@ void GearsTimer::Initialize() {
 #if BROWSER_IE
   // Make sure we have an HWND
   if (!IsWindow()) {
-    if (!Create(HWND_MESSAGE)) {
+    if (!Create(kMessageOnlyWindowParent,    // parent
+                NULL,                        // position
+                NULL,                        // name
+                kMessageOnlyWindowStyle)) {  // style
       assert(false);
     }
   }
@@ -273,7 +276,7 @@ int GearsTimer::CreateStringTimer(const char16 *full_script,
 
 // Creates the platform's timer object, perform all common initialization of the
 // TimerInfo structure, and store the TimerInfo in the map.
-int GearsTimer::CreateTimerCommon(TimerInfo &timer_info, int timeout) {
+int GearsTimer::CreateTimerCommon(const TimerInfo &timer_info, int timeout) {
   Initialize();
 
   // Store the timer info
