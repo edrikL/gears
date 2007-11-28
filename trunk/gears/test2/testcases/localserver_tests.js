@@ -82,13 +82,6 @@ function testEmptyParams() {
   }
 }
 
-function testInternal() {
-  if (isDebug) {
-    assert(localServer.canServeLocally('test:webcache'),
-           'Internal tests failed.');
-  }
-}
-
 function testCaptureUrl() {
   var captureUri = '/testcases/test_file_1024.txt';
   var renameUri = '/testcases/renamed.txt';

@@ -32,9 +32,6 @@
 #include "gears/base/common/url_utils.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
-#ifdef DEBUG
-#include "gears/localserver/common/localserver_tests.h"  // for testing
-#endif
 #include "gears/localserver/ie/managed_resource_store_ie.h"
 #include "gears/localserver/ie/resource_store_ie.h"
 
@@ -49,18 +46,6 @@ STDMETHODIMP GearsLocalServer::canServeLocally(
     assert(url && url[0]);
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
-
-#ifdef DEBUG
-#ifdef WINCE
-  // TODO(steveblock): Implement this.
-#else
-  const std::string16 kWebCacheTestUrl(STRING16(L"test:webcache"));
-  if (kWebCacheTestUrl == url) {
-    *can = TestWebCacheAll() ? VARIANT_TRUE : VARIANT_FALSE;
-    RETURN_NORMAL();
-  }
-#endif
-#endif
 
   std::string16 full_url;
   if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), url, &full_url)) {

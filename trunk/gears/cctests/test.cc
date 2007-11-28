@@ -1,9 +1,9 @@
-// Copyright 2006, Google Inc.
+// Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,16 +13,33 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 #ifdef DEBUG
+
+#ifdef WIN32
+#include <windows.h>  // must manually #include before nsIEventQueueService.h
+#endif
+
+#if BROWSER_FF
+#include <nsCOMPtr.h>
+#include <nspr.h>  // for PR_*
+#include <nsServiceManagerUtils.h>  // for NS_IMPL_* and NS_INTERFACE_*
+#include "gears/third_party/gecko_internal/jsapi.h"
+#include "gears/third_party/gecko_internal/nsIDOMClassInfo.h"
+#include "gears/cctests/test_ff.h"
+#elif BROWSER_IE
+#include "gears/base/ie/activex_utils.h"
+#include "gears/cctests/test_ie.h"
+#endif
 
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/permissions_db_test.h"
@@ -34,10 +51,43 @@
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/manifest.h"
 #include "gears/localserver/common/localserver_db.h"
-#include "gears/localserver/common/localserver_tests.h"
 #include "gears/localserver/common/resource_store.h"
 
+// Constants for returning a boolean value - hopefully there should be a
+// standard way to do this one day.
+#if BROWSER_FF
+  const PRBool BROWSER_TRUE  = PR_TRUE;
+  const PRBool BROWSER_FALSE = PR_FALSE;
+#elif BROWSER_IE
+  const VARIANT_BOOL BROWSER_TRUE  = VARIANT_TRUE;
+  const VARIANT_BOOL BROWSER_FALSE = VARIANT_FALSE;
+#endif
 
+#if BROWSER_FF
+// Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
+NS_IMPL_ADDREF(GearsTest)
+NS_IMPL_RELEASE(GearsTest)
+NS_INTERFACE_MAP_BEGIN(GearsTest)
+  NS_INTERFACE_MAP_ENTRY(GearsBaseClassInterface)
+  NS_INTERFACE_MAP_ENTRY(GearsTestInterface)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, GearsTestInterface)
+  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(GearsTest)
+NS_INTERFACE_MAP_END
+
+// Object identifiers
+const char *kGearsTestClassName = "GearsTest";
+const nsCID kGearsTestClassId = { 0xF2C21A3C, 0x09D2, 0x42ab, { 0xA4, 0x52,
+                                     0xB5, 0xE3, 0x63, 0xF3, 0x71, 0x09 } };
+                                  // {F2C21A3C-09D2-42ab-A452-B5E363F37109}
+#endif
+
+bool TestHttpCookies();
+bool TestHttpRequest();
+bool TestManifest();
+bool TestLocalServerDB();
+bool TestResourceStore();
+bool TestManagedResourceStore();
+bool TestParseHttpStatusLine();
 bool TestSecurityModel();  // from security_model_test.cc
 bool TestFileUtils();  // from file_test.cc
 bool TestUrlUtils();  // from url_utils_test.cc
@@ -45,10 +95,16 @@ bool TestJsRootedTokenLifetime();  // from base_class_test.cc
 bool TestStringUtils();  // from string_utils_test.cc
 
 
-//------------------------------------------------------------------------------
-// TestWebCacheAll
-//------------------------------------------------------------------------------
-bool TestWebCacheAll() {
+#if BROWSER_FF
+NS_IMETHODIMP GearsTest::RunTests(PRBool *retval) {
+#elif BROWSER_IE
+STDMETHODIMP GearsTest::RunTests(VARIANT_BOOL *retval) {
+#endif
+  *retval = RunTestsImpl() ? BROWSER_TRUE : BROWSER_FALSE;
+  RETURN_NORMAL();
+}
+
+bool GearsTest::RunTestsImpl() {
   // We need permissions to use the localserver.
   SecurityOrigin cc_tests_origin;
   cc_tests_origin.InitFromUrl(STRING16(L"http://cc_tests/"));
@@ -74,16 +130,15 @@ bool TestWebCacheAll() {
   ok &= TestManagedResourceStore();
   // TODO(zork): Add this test back in once it doesn't crash the browser.
   //ok &= TestJsRootedTokenLifetime();
-  LOG(("TestWebCacheAll - %s\n", ok ? "passed" : "failed"));
 
   // We have to call GetDB again since TestCapabilitiesDBAll deletes
   // the previous instance.
   permissions = PermissionsDB::GetDB();
   permissions->SetCanAccessGears(cc_tests_origin,
                                  PermissionsDB::PERMISSION_DEFAULT);
+  
   return ok;
 }
-
 
 //------------------------------------------------------------------------------
 // TestHttpCookies
@@ -278,7 +333,8 @@ bool TestResourceStore() {
   TEST_ASSERT(test_item1.entry.url != test_item2.entry.url);
   TEST_ASSERT(test_item1.entry.version_id == test_item2.entry.version_id);
   TEST_ASSERT(test_item1.payload.id == test_item2.payload.id);
-  TEST_ASSERT(test_item1.payload.creation_date == test_item2.payload.creation_date);
+  TEST_ASSERT(test_item1.payload.creation_date == 
+              test_item2.payload.creation_date);
   TEST_ASSERT(test_item1.payload.headers == test_item2.payload.headers);
   TEST_ASSERT(test_item1.payload.status_line == test_item2.payload.status_line);
   TEST_ASSERT(test_item1.payload.status_code == test_item2.payload.status_code);
@@ -293,7 +349,8 @@ bool TestResourceStore() {
   TEST_ASSERT(test_item3.entry.url != test_item2.entry.url);
   TEST_ASSERT(test_item3.entry.version_id == test_item2.entry.version_id);
   TEST_ASSERT(test_item3.payload.id == test_item2.payload.id);
-  TEST_ASSERT(test_item3.payload.creation_date == test_item2.payload.creation_date);
+  TEST_ASSERT(test_item3.payload.creation_date == 
+              test_item2.payload.creation_date);
   TEST_ASSERT(test_item3.payload.headers == test_item2.payload.headers);
   TEST_ASSERT(test_item3.payload.status_line == test_item2.payload.status_line);
   TEST_ASSERT(test_item3.payload.status_code == test_item2.payload.status_code);
@@ -508,7 +565,8 @@ bool TestLocalServerDB() {
   version3.server_id = server.id;
   version3.version_string = STRING16(L"version_string3");
   version3.ready_state = WebCacheDB::VERSION_CURRENT;
-  version3.session_redirect_url = STRING16(L"http://cc_tests/session_redirect_url");
+  version3.session_redirect_url = STRING16(
+                                      L"http://cc_tests/session_redirect_url");
   TEST_ASSERT(db->InsertVersion(&version3));
 
   // insert an entry for the ready version

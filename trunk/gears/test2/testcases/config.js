@@ -80,8 +80,14 @@ localServerSuite.addFile('../testcases/localserver_noworker_tests.js',
                          {useWorker: false, useIFrame: true});
 suites.push(localServerSuite);
 
+var internalTestSuite = new TestSuite('Internal_Tests');
+internalTestSuite.addFile('../testcases/internal_tests.js', 
+                          {useWorker: true, useIFrame: true});
+suites.push(internalTestSuite);
+
 var timerSuite = new TestSuite('Timer');
-timerSuite.addFile('../testcases/timer_tests.js', {useWorker: true, useIFrame: true});
+timerSuite.addFile('../testcases/timer_tests.js', 
+                   {useWorker: true, useIFrame: true});
 suites.push(timerSuite);
 
 var workerPoolSuite = new TestSuite('WorkerPool');

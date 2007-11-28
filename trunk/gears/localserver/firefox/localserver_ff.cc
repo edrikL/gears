@@ -32,9 +32,6 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/firefox/dom_utils.h"
-#ifdef DEBUG
-#include "gears/localserver/common/localserver_tests.h" // for testing
-#endif
 #include "gears/localserver/firefox/managed_resource_store_ff.h"
 #include "gears/localserver/firefox/resource_store_ff.h"
 
@@ -74,14 +71,6 @@ NS_IMETHODIMP GearsLocalServer::CanServeLocally(//const nsAString &url,
   if (!js_params.GetAsString(0, &url)) {
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
-
-#ifdef DEBUG
-  const std::string16 kWebCacheTestUrl(STRING16(L"test:webcache"));
-  if (kWebCacheTestUrl == url) {
-    *retval = TestWebCacheAll() ? PR_TRUE : PR_FALSE;
-    RETURN_NORMAL();
-  }
-#endif
 
   // Validate parameters
   if (url.empty()) {
