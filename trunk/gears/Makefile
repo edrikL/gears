@@ -387,15 +387,18 @@ IEMOBILE_CPPSRCS	+= \
 		paths_ie.cc \
 		permissions_db.cc \
 		security_model.cc \
+		security_model_test.cc \
 		shortcut_table.cc \
 		sqlite_wrapper.cc \
 		stopwatch.cc \
 		stopwatch_ie.cc \
 		string16.cc \
 		string_utils.cc \
+		string_utils_test.cc \
 		thread_locals.cc \
 		url_utils.cc \
 		url_utils_ie.cc \
+		url_utils_test.cc \
 		vista_utils.cc \
 		wince_compatibility.cc \
 		$(NULL)
@@ -616,6 +619,18 @@ IE_IDLSRCS	+= \
 		$(NULL)
 
 IE_CPPSRCS	+= \
+		test.cc \
+		$(NULL)
+
+IEMOBILE_VPATH += \
+		cctests \
+		$(NULL)
+
+IEMOBILE_IDLSRCS += \
+		test_ie.idl \
+		$(NULL)
+
+IEMOBILE_CPPSRCS += \
 		test.cc \
 		$(NULL)
 
@@ -970,13 +985,16 @@ IEMOBILE_CPPSRCS	+= \
 		blob_store.cc \
 		capture_task.cc \
 		file_store.cc \
+		http_constants.cc \
 		http_cookies.cc \
 		localserver.cc \
 		localserver_db.cc \
 		managed_resource_store.cc \
 		manifest.cc \
+		name_value_table_test.cc \
+		permissions_db_test.cc \
 		resource_store.cc \
-		http_constants.cc \
+		sqlite_wrapper_test.cc \
 		update_task.cc \
 		$(NULL)
 
