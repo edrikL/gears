@@ -13,13 +13,14 @@ and test2/tester/assert.js.
 
 The test runner also has support for asynchronous tests. To use it, set up your
 test as usual in a test* function. After you start the asynchronous bit, call
-scheduleCallback(fn, delayMs) with a callback function as the first argument
-and a length of time to wait as the second. You can then check the results of
-the asynchronous operation in the callback. See timer_tests.js for an example
-of this.
+startAsync(). When your asynchronous test completes successfully, call
+completeAsync() to notify the test runner that the next test should begin.
+Asynchronous tests that don't call completeAsync() are eventually timed out and
+marked failed. For an example of asynchronous tests, see
+testcases/timer_tests.js.
 
 
 How to run tests:
 
 Run python test2/runner/testwebserver.py
-Then go to http://localhost:8001/tester/gui.html.
+Then go to http://localhost:8001/tester/gui.html
