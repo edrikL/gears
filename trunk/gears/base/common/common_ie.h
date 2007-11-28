@@ -30,6 +30,17 @@
 // TODO(cprince): change ATLASSERT to DCHECK
 #include "gears/base/ie/atl_headers.h"
 
+
+#ifdef WINCE
+// WinCE doesn't allow message-only windows (HWND_MESSAGE). Instead, create a
+// pop-up window (doesn't require a parent) and don't make visible (default).
+const HWND  kMessageOnlyWindowParent = NULL; 
+const DWORD kMessageOnlyWindowStyle  = WS_POPUP;
+#else
+const HWND  kMessageOnlyWindowParent = HWND_MESSAGE; 
+const DWORD kMessageOnlyWindowStyle  = NULL;
+#endif
+
 #ifdef WINCE
 // TODO(cprince): Remove this class as part of LOG() refactoring.
 // Also note that LOG() calls should take string16, so the string conversion

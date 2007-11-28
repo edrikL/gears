@@ -596,30 +596,15 @@ bool PoolThreadsManager::InitWorkerThread(JavaScriptWorkerInfo *wi) {
 #endif
 
   HWND message_hwnd;
-#ifdef WINCE
-  // Windows mobile doesn't allow message-only windows (HWND_MESSAGE)
-  // Instead, create a pop-up window (doesn't require a parent) and
-  // don't make visible (default)
-  message_hwnd = CreateWindow(kWindowClassName,  // class name
-                              kWindowClassName,  // window name
-                              WS_POPUP,          // style
-                              0, 0,              // pos
-                              0, 0,              // size
-                              NULL,              // parent
-                              0,                 // ID if a child, else hMenu
-                              hmodule,           // module instance
-                              NULL);             // fooCREATESTRUCT param
-#else
-  message_hwnd = CreateWindow(kWindowClassName,  // class name
-                              kWindowClassName,  // window name
-                              0 ,                // style
-                              0, 0,              // pos
-                              0, 0,              // size
-                              HWND_MESSAGE,      // parent
-                              0,                 // ID if a child, else hMenu
-                              hmodule,           // module instance
-                              NULL);             // fooCREATESTRUCT param
-#endif
+  message_hwnd = CreateWindow(kWindowClassName,          // class name
+                              kWindowClassName,          // window name
+                              kMessageOnlyWindowStyle,   // style
+                              0, 0,                      // pos
+                              0, 0,                      // size
+                              kMessageOnlyWindowParent,  // parent
+                              0,        // ID if a child, else hMenu
+                              hmodule,  // module instance
+                              NULL);    // fooCREATESTRUCT param
   wi->message_hwnd = message_hwnd;
   return message_hwnd != NULL;
 }
