@@ -35,6 +35,7 @@
 #include "gears/database/npapi/database.h"
 #include "gears/workerpool/npapi/workerpool.h"
 #include "gears/factory/common/factory_utils.h"
+#include "gears/localserver/npapi/localserver_np.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 GearsFactory::GearsFactory()
@@ -79,6 +80,8 @@ void GearsFactory::Create() {
   ScopedModuleWrapper object(NULL);
   if (class_name == STRING16(L"beta.database")) {
     object.reset(CreateGearsDatabase(this));
+  } else if (class_name == STRING16(L"beta.localserver")) {
+    object.reset(CreateGearsLocalServer(this));
   } else if (class_name == STRING16(L"beta.workerpool")) {
     object.reset(CreateGearsWorkerPool(this));
   } else {
