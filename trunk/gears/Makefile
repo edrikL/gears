@@ -808,6 +808,20 @@ IEMOBILE_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# workerpool/npapi
+
+NPAPI_VPATH	+= \
+		workerpool/common \
+		workerpool/npapi \
+		$(NULL)
+
+NPAPI_CPPSRCS	+= \
+		workerpool.cc \
+		workerpool_wrapper.cc \
+		workerpool_utils.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # timer
 
 FF_VPATH	+= \

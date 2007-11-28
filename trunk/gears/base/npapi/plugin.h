@@ -65,12 +65,15 @@ class PluginBase : public NPObject {
   static bool HasProperty(NPObject * npobj, NPIdentifier name);
   static bool GetProperty(NPObject *npobj, NPIdentifier name,
                           NPVariant *result);
-
+  static bool SetProperty(NPObject *npobj, NPIdentifier name,
+                          const NPVariant *value);
   PluginBase(NPP instance) : instance_(instance) {}
 
  protected:
   // Register JavaScript property/methods.
-  static void RegisterProperty(const char *name, ImplCallback callback);
+  // Note: setter may be NULL, but getter may not.
+  static void RegisterProperty(const char *name,
+                               ImplCallback getter, ImplCallback setter);
   static void RegisterMethod(const char *name, ImplCallback callback);
 
   NPP instance_;
@@ -78,9 +81,13 @@ class PluginBase : public NPObject {
  private:
   typedef std::map<NPIdentifier, ImplCallback> IDList;
 
-  static IDList& GetPropertyList() {
-    static IDList properties;
-    return properties;
+  static IDList& GetPropertyGetterList() {
+    static IDList getters;
+    return getters;
+  }
+  static IDList& GetPropertySetterList() {
+    static IDList setters;
+    return setters;
   }
   static IDList& GetMethodList() {
     static IDList methods;
@@ -103,7 +110,7 @@ NPClass* GetNPClass() {
     NULL,  // Plugin::InvokeDefault,
     Plugin::HasProperty,
     Plugin::GetProperty,
-    NULL,  // Plugin::SetProperty,
+    Plugin::SetProperty,
     NULL,  // Plugin::RemoveProperty,
   };
 

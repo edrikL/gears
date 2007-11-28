@@ -44,7 +44,7 @@ static std::stack<JsScope> scope_stack;
 
 void BrowserUtils::EnterScope(NPObject *object,
                               int argc, const JsToken *argv, JsToken *retval) {
-  VOID_TO_NPVARIANT(*retval);
+  if (retval) VOID_TO_NPVARIANT(*retval);
   JsScope scope = { object, argc, argv, retval };
   scope_stack.push(scope);
 }
@@ -63,6 +63,7 @@ void BrowserUtils::GetJsArguments(int *argc, const JsToken **argv) {
 
 void BrowserUtils::SetJsReturnValue(const JsToken& return_value) {
   assert(!scope_stack.empty());
+  assert(scope_stack.top().retval);  // setters don't have retvals.
 
   *scope_stack.top().retval = return_value;
 }

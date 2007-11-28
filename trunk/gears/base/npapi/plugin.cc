@@ -60,7 +60,7 @@ template<class T>
 bool PluginBase<T>::Invoke(NPObject *npobj, NPIdentifier name,
                            const NPVariant *args, uint32_t num_args,
                            NPVariant *result) {
-  ImplClass *gears = static_cast<PluginClass *>(npobj)->GetImplObject();
+  ImplClass *impl = static_cast<PluginClass *>(npobj)->GetImplObject();
 
   const IDList &methods = GetMethodList();
   IDList::const_iterator method = methods.find(name);
@@ -69,7 +69,7 @@ bool PluginBase<T>::Invoke(NPObject *npobj, NPIdentifier name,
   ImplCallback callback = method->second;
 
   BrowserUtils::EnterScope(npobj, static_cast<int>(num_args), args, result);
-  (gears->*callback)();
+  (impl->*callback)();
   BrowserUtils::ExitScope();
   return true;
 }
@@ -77,7 +77,7 @@ bool PluginBase<T>::Invoke(NPObject *npobj, NPIdentifier name,
 // static
 template<class T>
 bool PluginBase<T>::HasProperty(NPObject * npobj, NPIdentifier name) {
-  const IDList &properties = GetPropertyList();
+  const IDList &properties = GetPropertyGetterList();
   return properties.find(name) != properties.end();
 }
 
@@ -85,16 +85,34 @@ bool PluginBase<T>::HasProperty(NPObject * npobj, NPIdentifier name) {
 template<class T>
 bool PluginBase<T>::GetProperty(NPObject *npobj, NPIdentifier name,
                                 NPVariant *result) {
-  ImplClass *gears = static_cast<PluginClass *>(npobj)->GetImplObject();
+  ImplClass *impl = static_cast<PluginClass *>(npobj)->GetImplObject();
 
-  const IDList &properties = GetPropertyList();
+  const IDList &properties = GetPropertyGetterList();
   IDList::const_iterator property = properties.find(name);
   if (property == properties.end())
     return false;
   ImplCallback callback = property->second;
 
   BrowserUtils::EnterScope(npobj, 0, NULL, result);
-  (gears->*callback)();
+  (impl->*callback)();
+  BrowserUtils::ExitScope();
+  return true;
+}
+
+// static
+template<class T>
+bool PluginBase<T>::SetProperty(NPObject *npobj, NPIdentifier name,
+                                const NPVariant *value) {
+  ImplClass *impl = static_cast<PluginClass *>(npobj)->GetImplObject();
+
+  const IDList &properties = GetPropertySetterList();
+  IDList::const_iterator property = properties.find(name);
+  if (property == properties.end() || property->second == NULL)
+    return false;
+  ImplCallback callback = property->second;
+
+  BrowserUtils::EnterScope(npobj, 1, value, NULL);
+  (impl->*callback)();
   BrowserUtils::ExitScope();
   return true;
 }
@@ -102,15 +120,16 @@ bool PluginBase<T>::GetProperty(NPObject *npobj, NPIdentifier name,
 // static
 template<class T>
 void PluginBase<T>::RegisterProperty(const char *name,
-                                     ImplCallback callback) {
+                                     ImplCallback getter, ImplCallback setter) {
+  assert(getter);
   NPIdentifier id = NPN_GetStringIdentifier(name);
-  GetPropertyList()[id] = callback;
+  GetPropertyGetterList()[id] = getter;
+  GetPropertySetterList()[id] = setter;
 }
 
 // static
 template<class T>
-void PluginBase<T>::RegisterMethod(const char *name,
-                                   ImplCallback callback) {
+void PluginBase<T>::RegisterMethod(const char *name, ImplCallback callback) {
   NPIdentifier id = NPN_GetStringIdentifier(name);
   GetMethodList()[id] = callback;
 }

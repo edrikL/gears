@@ -45,7 +45,7 @@ class HtmlEventMonitorHook : public PluginBase<HtmlEventMonitorHook> {
     // Safari treats "handleEvent" as a method, while Firefox treats it as a
     // property.  Go figure.
     RegisterMethod("handleEvent", &HtmlEventMonitorHook::HandleEvent);
-    RegisterProperty("handleEvent", &HtmlEventMonitorHook::HandleEvent);
+    RegisterProperty("handleEvent", &HtmlEventMonitorHook::HandleEvent, NULL);
   }
 
   HtmlEventMonitorHook(NPP instance) :
