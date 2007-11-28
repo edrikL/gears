@@ -1027,6 +1027,17 @@ NPAPI_CPPSRCS	+= \
 		localserver_db_stub.cc \
 		$(NULL)
 
+# localserver/npapi
+NPAPI_CPPSRCS	+= \
+		file_submitter_np.cc \
+		file_submitter_wrapper.cc \
+		localserver_np.cc \
+		localserver_wrapper.cc \
+		managed_resource_store_np.cc \
+		managed_resource_store_wrapper.cc \
+		resource_store_np.cc \
+		resource_store_wrapper.cc \
+		$(NULL)		
 
 #-----------------------------------------------------------------------------
 # httprequest/ie
