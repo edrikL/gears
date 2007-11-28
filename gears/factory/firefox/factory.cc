@@ -43,6 +43,9 @@
 #include "gears/timer/timer.h"
 #include "gears/workerpool/firefox/workerpool.h"
 
+#ifdef DEBUG
+#include "gears/cctests/test_ff.h"
+#endif
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
 NS_IMPL_ADDREF(GearsFactory)
@@ -122,6 +125,12 @@ NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
     isupports = do_QueryInterface(new GearsHttpRequest(), &nr);
   } else if (object == STRING16(L"beta.localserver")) {
     isupports = do_QueryInterface(new GearsLocalServer(), &nr);
+  } else if (object == STRING16(L"beta.test")) {
+#ifdef DEBUG
+    isupports = do_QueryInterface(new GearsTest(), &nr);
+#else
+    RETURN_EXCEPTION(STRING16(L"Object is only available in debug build."));
+#endif
   } else if (object == STRING16(L"beta.timer")) {
     isupports = do_QueryInterface(new GearsTimer(), &nr);
   } else if (object == STRING16(L"beta.workerpool")) {

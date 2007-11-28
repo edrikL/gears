@@ -38,6 +38,10 @@
 #include "gears/localserver/ie/localserver_ie.h"
 #include "gears/timer/timer.h"
 
+#ifdef DEBUG
+#include "gears/cctests/test_ie.h"
+#endif
+
 
 GearsFactory::GearsFactory()
     : is_creation_suspended_(false),
@@ -133,6 +137,15 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
     hr = CComObject<GearsLocalServer>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
+#endif
+  } else if (object_name == STRING16(L"beta.test")) {
+#ifdef DEBUG
+    CComObject<GearsTest> *obj;
+    hr = CComObject<GearsTest>::CreateInstance(&obj);
+    base_class = obj;
+    idispatch = obj;
+#else
+    RETURN_EXCEPTION(STRING16(L"Object is only available in debug build."));
 #endif
 #ifdef WINCE
   // TODO(steveblock): Implement timer for WinCE.

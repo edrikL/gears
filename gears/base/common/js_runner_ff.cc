@@ -52,6 +52,10 @@
 #include "ff/genfiles/timer_ff.h"
 #include "ff/genfiles/workerpool.h"
 
+#ifdef DEBUG
+#include "ff/genfiles/test_ff.h"
+#endif
+
 // Internal base class used to share some code between DocumentJsRunner and
 // JsRunner. Do not override these methods from JsRunner or DocumentJsRunner.
 // Either share the code here, or move it to those two classes if it's
@@ -505,6 +509,10 @@ bool JsRunner::InitJavaScriptEngine() {
     {GEARSMANAGEDRESOURCESTOREINTERFACE_IID, NULL},
     {GEARSRESOURCESTOREINTERFACE_IID, NULL},
     // GEARSFILESUBMITTERINTERFACE_IID can never be created in a child worker
+#ifdef DEBUG
+    // test
+    {GEARSTESTINTERFACE_IID, NULL},
+#endif
     // timer
     {GEARSTIMERINTERFACE_IID, NULL},
     // httprequest

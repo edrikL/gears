@@ -585,6 +585,41 @@ NPAPI_IDLSRCS	+= \
 
 NPAPI_CPPSRCS   += \
                 $(NULL)
+                
+#-----------------------------------------------------------------------------
+# test
+
+ifeq ($(MODE),dbg)
+
+FF_VPATH	+= \
+		cctests \
+		$(NULL)
+
+FF_M4SRCS	+= \
+		test_ff.idl.m4 \
+		$(NULL)
+		
+FF_IDLSRCS	+= \
+		test_ff.idl \
+		$(NULL)
+
+FF_CPPSRCS	+= \
+		test.cc \
+		$(NULL)
+
+IE_VPATH	+= \
+		cctests \
+		$(NULL)
+		
+IE_IDLSRCS	+= \
+		test_ie.idl \
+		$(NULL)
+
+IE_CPPSRCS	+= \
+		test.cc \
+		$(NULL)
+
+endif
 
 #-----------------------------------------------------------------------------
 # ui/generated
@@ -833,7 +868,6 @@ FF_CPPSRCS	+= \
 		http_cookies.cc \
 		localserver.cc \
 		localserver_db.cc \
-		localserver_tests.cc \
 		managed_resource_store.cc \
 		manifest.cc \
 		name_value_table_test.cc \
@@ -877,7 +911,6 @@ IE_CPPSRCS	+= \
 		http_cookies.cc \
 		localserver.cc \
 		localserver_db.cc \
-		localserver_tests.cc \
 		managed_resource_store.cc \
 		manifest.cc \
 		name_value_table_test.cc \
