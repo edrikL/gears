@@ -212,18 +212,15 @@ STDMETHODIMP GearsManagedResourceStore::get_lastErrorMessage(
 // CreateWindowIfNeeded
 //------------------------------------------------------------------------------
 HRESULT GearsManagedResourceStore::CreateWindowIfNeeded() {
-#ifdef WINCE
-  // TODO(steveblock): Implment GearsManagedResourceStore::CreateWindowIfNeeded.
-  RETURN_EXCEPTION(
-      STRING16(L"CreateWindowIfNeeded not yet implemented for WinCE."));
-#else
   if (!IsWindow()) {
-    if (!Create(HWND_MESSAGE)) {
+    if (!Create(kMessageOnlyWindowParent,    // parent
+                NULL,                        // position
+                NULL,                        // name
+                kMessageOnlyWindowStyle)) {  // style
       RETURN_EXCEPTION(STRING16(L"Failed to create message window."));
     }
   }
   RETURN_NORMAL();
-#endif
 }
 
 //------------------------------------------------------------------------------
