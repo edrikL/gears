@@ -201,29 +201,37 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
   shortcuts_dialog.arguments = Json::Value(Json::objectValue);
   
   // Json needs utf8.
-  // TODO(aa): Pass all the icons to the dialog. It will pick which one to
-  // display and preload the others.
   std::string app_url_utf8;
   std::string app_name_utf8;
   std::string app_description_utf8;
-  std::string icon_url_utf8;
+  std::string icon16_url_utf8;
+  std::string icon32_url_utf8;
+  std::string icon48_url_utf8;
+  std::string icon128_url_utf8;
   if (!String16ToUTF8(shortcut_info.app_url.c_str(), &app_url_utf8) ||
-      !String16ToUTF8(shortcut_info.icon32x32.url.c_str(), &icon_url_utf8) ||
       !String16ToUTF8(shortcut_info.app_name.c_str(), &app_name_utf8) ||
       !String16ToUTF8(shortcut_info.app_description.c_str(),
-                      &app_description_utf8)) {
+                      &app_description_utf8) ||
+      !String16ToUTF8(shortcut_info.icon16x16.url.c_str(), &icon16_url_utf8) ||
+      !String16ToUTF8(shortcut_info.icon32x32.url.c_str(), &icon32_url_utf8) ||
+      !String16ToUTF8(shortcut_info.icon48x48.url.c_str(), &icon48_url_utf8) ||
+      !String16ToUTF8(shortcut_info.icon128x128.url.c_str(),
+                      &icon128_url_utf8)) {
     RETURN_EXCEPTION(GET_INTERNAL_ERROR_MESSAGE().c_str());
   }
 
   // Populate the JSON object we're passing to the dialog.
   shortcuts_dialog.arguments["name"] = Json::Value(app_name_utf8);
-  shortcuts_dialog.arguments["icon"] = Json::Value(icon_url_utf8);
   shortcuts_dialog.arguments["link"] = Json::Value(app_url_utf8);
   shortcuts_dialog.arguments["description"] = Json::Value(app_description_utf8);
+  shortcuts_dialog.arguments["icon16x16"] = Json::Value(icon16_url_utf8);
+  shortcuts_dialog.arguments["icon32x32"] = Json::Value(icon32_url_utf8);
+  shortcuts_dialog.arguments["icon48x48"] = Json::Value(icon48_url_utf8);
+  shortcuts_dialog.arguments["icon128x128"] = Json::Value(icon128_url_utf8);
 
   // Show the dialog.
   const int kShortcutsDialogWidth = 360;
-  const int kShortcutsDialogHeight = 265;
+  const int kShortcutsDialogHeight = 200;
   shortcuts_dialog.DoModal(STRING16(L"shortcuts_dialog.html"),
                            kShortcutsDialogWidth, kShortcutsDialogHeight);
 
@@ -231,13 +239,8 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
   if (shortcuts_dialog.result == Json::Value::null) {
     RETURN_NORMAL();
   }
-  
-  if (!shortcuts_dialog.result.isBool()) {
-    assert(false);
-    LOG(("ShortcutsDialog: Unexpected result type."));
-    RETURN_NORMAL();
-  }
 
+  assert(shortcuts_dialog.result.isBool());
   if (!shortcuts_dialog.result.asBool()) {
     RETURN_NORMAL();
   }
