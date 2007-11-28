@@ -100,7 +100,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           <img id="icon" src="icon_32x32.png" width="32" height="32">
         </td>
         <td width="100%" align="left" valign="middle">The website below
-          wants to use PRODUCT_FRIENDLY_NAME_UQ.This site will be able to
+          wants to use PRODUCT_FRIENDLY_NAME_UQ. This site will be able to
           store and access information on your computer.&nbsp;
           <a href="http://gears.google.com/?action=help"
              onclick="window.open(this.href); return false;">
@@ -144,6 +144,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         </tr>
       </table>
     </p>
+    <br>
   </div>
 
   <div id="foot">
