@@ -23,42 +23,63 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/factory/npapi/factory_wrapper.h"
+#ifndef GEARS_WORKERPOOL_NPAPI_WORKERPOOL_H__
+#define GEARS_WORKERPOOL_NPAPI_WORKERPOOL_H__
 
-#include "gears/base/npapi/module_wrapper.h"
-#include "gears/factory/npapi/factory.h"
+#include <vector>
+
+#include "gears/base/common/base_class.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-DECLARE_GEARS_BRIDGE(GearsFactory, GearsFactoryWrapper);
-
-// TODO(mpcomplete): The naming is temporary.  Right now we have:
-// - GearsFactoryWrapper: serves as the bridge between implementation and the
-// JavaScript engine.
-// - GearsFactory: the actual implementation of the factory module.
-//
-// We want to eventually rename GearsFactory -> GearsFactoryImpl, and
-// GearsFactoryWrapper -> GearsFactory.  But until we have this abstraction layer
-// for all browsers, we need to preserve the old naming scheme.
-
-// This class serves as the bridge between the GearsFactory implementation and
-// the browser binding layer.
-class GearsFactoryWrapper : public ModuleWrapper<GearsFactoryWrapper> {
+class GearsWorkerPool
+    : public ModuleImplBaseClass,
+      public JsEventHandlerInterface {
  public:
-  GearsFactoryWrapper(NPP instance)
-      : ModuleWrapper<GearsFactoryWrapper>(instance) {
-    impl_->InitBaseFromDOM(instance);
-  }
+  // Need a default constructor to instance objects from the Factory.
+  GearsWorkerPool();
+  ~GearsWorkerPool();
 
-  static void InitClass() {
-    RegisterProperty("version", &GearsFactory::GetVersion, NULL);
-    RegisterMethod("create", &GearsFactory::Create);
-    RegisterMethod("getBuildInfo", &GearsFactory::GetBuildInfo);
-  }
+  // IN: string full_script
+  // OUT: int retval
+  void CreateWorker();
+
+  // IN: string url
+  // OUT: int retval
+  void CreateWorkerFromUrl();
+
+  void AllowCrossOrigin();
+
+  // IN: string message
+  // IN: int dest_worker_id
+  void SendMessage();
+
+  // IN: function_ptr handler
+  void SetOnmessage();
+
+  // OUT: function_ptr handler
+  void GetOnmessage();
+
+  // IN: function_ptr handler
+  void SetOnerror();
+
+  // OUT: function_ptr handler
+  void GetOnerror();
+
+#ifdef DEBUG
+  void ForceGC();
+#endif
 
  private:
-  DISALLOW_EVIL_CONSTRUCTORS(GearsFactoryWrapper);
+  void Initialize(); // okay to call this multiple times
+
+  void HandleEvent(JsEventType event_type);
+
+  scoped_ptr<JsEventMonitor> unload_monitor_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(GearsWorkerPool);
 };
 
-NPObject* CreateGearsFactoryWrapper(JsContextPtr context) {
-  return NPN_CreateObject(context, GetNPClass<GearsFactoryWrapper>());
-}
+ModuleWrapperBaseClass *CreateGearsWorkerPool(ModuleImplBaseClass *sibling);
+
+#endif // GEARS_WORKERPOOL_NPAPI_WORKERPOOL_H__

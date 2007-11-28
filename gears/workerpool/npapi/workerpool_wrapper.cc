@@ -23,42 +23,36 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/factory/npapi/factory_wrapper.h"
-
+#include "gears/base/common/base_class.h"
 #include "gears/base/npapi/module_wrapper.h"
-#include "gears/factory/npapi/factory.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/workerpool/npapi/workerpool.h"
 
-DECLARE_GEARS_BRIDGE(GearsFactory, GearsFactoryWrapper);
+DECLARE_GEARS_BRIDGE(GearsWorkerPool, GearsWorkerPoolWrapper);
 
-// TODO(mpcomplete): The naming is temporary.  Right now we have:
-// - GearsFactoryWrapper: serves as the bridge between implementation and the
-// JavaScript engine.
-// - GearsFactory: the actual implementation of the factory module.
-//
-// We want to eventually rename GearsFactory -> GearsFactoryImpl, and
-// GearsFactoryWrapper -> GearsFactory.  But until we have this abstraction layer
-// for all browsers, we need to preserve the old naming scheme.
-
-// This class serves as the bridge between the GearsFactory implementation and
-// the browser binding layer.
-class GearsFactoryWrapper : public ModuleWrapper<GearsFactoryWrapper> {
+// This class serves as the bridge between the GearsWorkerPool implementation
+// and the browser binding layer.
+class GearsWorkerPoolWrapper : public ModuleWrapper<GearsWorkerPoolWrapper> {
  public:
-  GearsFactoryWrapper(NPP instance)
-      : ModuleWrapper<GearsFactoryWrapper>(instance) {
-    impl_->InitBaseFromDOM(instance);
+  GearsWorkerPoolWrapper(NPP instance)
+      : ModuleWrapper<GearsWorkerPoolWrapper>(instance) {
   }
 
   static void InitClass() {
-    RegisterProperty("version", &GearsFactory::GetVersion, NULL);
-    RegisterMethod("create", &GearsFactory::Create);
-    RegisterMethod("getBuildInfo", &GearsFactory::GetBuildInfo);
+    RegisterMethod("createWorker", &GearsWorkerPool::CreateWorker);
+    RegisterMethod("createWorkerFromUrl", &GearsWorkerPool::CreateWorkerFromUrl);
+    RegisterMethod("allowCrossOrigin", &GearsWorkerPool::AllowCrossOrigin);
+    RegisterMethod("sendMessage", &GearsWorkerPool::SendMessage);
+    RegisterMethod("forceGC", &GearsWorkerPool::ForceGC);
+    RegisterProperty("onmessage", &GearsWorkerPool::GetOnmessage,
+                     &GearsWorkerPool::SetOnmessage);
+    RegisterProperty("onerror", &GearsWorkerPool::GetOnerror,
+                     &GearsWorkerPool::SetOnerror);
   }
 
  private:
-  DISALLOW_EVIL_CONSTRUCTORS(GearsFactoryWrapper);
+  DISALLOW_EVIL_CONSTRUCTORS(GearsWorkerPoolWrapper);
 };
 
-NPObject* CreateGearsFactoryWrapper(JsContextPtr context) {
-  return NPN_CreateObject(context, GetNPClass<GearsFactoryWrapper>());
+ModuleWrapperBaseClass *CreateGearsWorkerPool(ModuleImplBaseClass *sibling) {
+  return GearsWorkerPoolWrapper::Create(sibling);
 }

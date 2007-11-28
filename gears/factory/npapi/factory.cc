@@ -33,6 +33,7 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/string16.h"
 #include "gears/database/npapi/database.h"
+#include "gears/workerpool/npapi/workerpool.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
@@ -55,7 +56,7 @@ void GearsFactory::Create() {
 #endif
 
   std::string16 class_name;
-  std::string16 version;
+  std::string16 version = STRING16(L"1.0");  // default for this optional param
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &class_name },
     { JSPARAM_OPTIONAL, JSPARAM_STRING16, &version },
@@ -63,8 +64,6 @@ void GearsFactory::Create() {
   int argc = js_runner->GetArguments(ARRAYSIZE(argv), argv);
   if (argc < 1)
     return;  // JsRunner sets an error message.
-  if (argc < 2)
-    version = STRING16(L"1.0");  // default value for this optional param
 
   // Check the version string.
   if (version != kAllowedClassVersion) {
@@ -80,6 +79,8 @@ void GearsFactory::Create() {
   ScopedModuleWrapper object(NULL);
   if (class_name == STRING16(L"beta.database")) {
     object.reset(CreateGearsDatabase(this));
+  } else if (class_name == STRING16(L"beta.workerpool")) {
+    object.reset(CreateGearsWorkerPool(this));
   } else {
     RETURN_EXCEPTION(STRING16(L"Unknown object."));
   }
