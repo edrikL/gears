@@ -24,7 +24,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # NOTES:
-# - Quotes around "mkdir" are required so Win32 cmd.exe uses mkdir.exe
+# - Quotes around "mkdir" are required so Windows cmd.exe uses mkdir.exe
 #     instead of built-in mkdir command.  (Running mkdir.exe without
 #     quotes creates a directory named '.exe'!!)
 # - For IEMOBILE and IE we want to share the IE_OUTDIR variable so that
@@ -156,8 +156,8 @@ FF_VPATH += $(FF_OUTDIR)/genfiles
 IE_VPATH += $(IE_OUTDIR)/genfiles
 IE_VPATH += $(IE_OUTDIR)
 
-# The usage of IE_OUTDIR for IEMOBILE is intentional. ARCH variable makes sure that IE_OUTDIR is different 
-# for IE MOBILE and IE desktop.
+# The use of IE_OUTDIR for IEMOBILE is intentional. The ARCH variable makes
+# IE_OUTDIR different for IE (ARCH=i386) and IEMOBILE (ARCH=arm).
 IEMOBILE_VPATH += $(IE_OUTDIR)/genfiles
 IEMOBILE_VPATH += $(IE_OUTDIR)
 
@@ -189,37 +189,64 @@ NPAPI_MODULE_DLL  = $(NPAPI_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 
 default::
 ifneq "$(BROWSER)" ""
-# build for just the selected browser
-	make prereqs BROWSER=$(BROWSER)
+  # build for just the selected browser
+	make prereqs    BROWSER=$(BROWSER)
 	make genheaders BROWSER=$(BROWSER)
-	make modules BROWSER=$(BROWSER)
-	make installer BROWSER=$(BROWSER)
+	make modules    BROWSER=$(BROWSER)
+	make installer  BROWSER=$(BROWSER)
 else
-    # build for all browsers valid on this OS
-ifneq ($(OS),osx)
-	make prereqs BROWSER=FF
+  # build for all browsers valid on this OS
+  ifeq ($(OS),linux)
+	make prereqs    BROWSER=FF
 	make genheaders BROWSER=FF
-	make modules BROWSER=FF
-else
-        # OSX needs to build for each supported architecture
-	make prereqs BROWSER=FF ARCH=i386
-	make prereqs BROWSER=FF ARCH=ppc
+	make modules    BROWSER=FF
+	make installer  BROWSER=FF
+
+  else
+  ifeq ($(OS),win32)
+	make prereqs    BROWSER=FF
+	make genheaders BROWSER=FF
+	make modules    BROWSER=FF
+	make installer  BROWSER=FF
+
+	make prereqs    BROWSER=IE
+	make genheaders BROWSER=IE
+	make modules    BROWSER=IE
+	make installer  BROWSER=IE
+
+	make prereqs    BROWSER=NPAPI
+	make genheaders BROWSER=NPAPI
+	make modules    BROWSER=NPAPI
+	make installer  BROWSER=NPAPI
+
+        # For win32, also build a cross-browser MSI.
+	make win32installer
+
+  else
+  ifeq ($(OS),wince)
+	make prereqs    BROWSER=IEMOBILE
+	make genheaders BROWSER=IEMOBILE
+	make modules    BROWSER=IEMOBILE
+	make installer  BROWSER=IEMOBILE
+
+  else
+  ifeq ($(OS),osx)
+        # For osx, build the non-installer targets for multiple architectures.
+	make prereqs    BROWSER=FF ARCH=i386
+	make prereqs    BROWSER=FF ARCH=ppc
 	make genheaders BROWSER=FF ARCH=i386
 	make genheaders BROWSER=FF ARCH=ppc
-	make modules BROWSER=FF ARCH=i386
-	make modules BROWSER=FF ARCH=ppc
-endif
-	make installer BROWSER=FF
-ifeq ($(OS),win32)
-	make prereqs BROWSER=IE
-	make genheaders BROWSER=IE
-	make modules BROWSER=IE
-	make installer BROWSER=IE
-	make windowsinstaller
-endif
+	make modules    BROWSER=FF ARCH=i386
+	make modules    BROWSER=FF ARCH=ppc
+	make installer  BROWSER=FF
+  endif
+  endif
+  endif
+  endif
 endif
 
-windowsinstaller:: $(WIN32_INSTALLER_MSI)
+
+win32installer:: $(WIN32_INSTALLER_MSI)
 
 prereqs:: $(COMMON_OUTDIR) $(SQLITE_OUTDIR) $(THIRD_PARTY_OUTDIR) $(COMMON_OUTDIR)/genfiles $(COMMON_OUTDIRS_I18N) $(INSTALLERS_OUTDIR)
 
@@ -259,10 +286,10 @@ else
 endif
 
 help::
-	@echo "Usage: make [BROWSER=FF|IE|IEMOBILE|NPAPI] [MODE=dbg|opt]"
+	@echo "Usage: make [MODE=dbg|opt] [BROWSER=FF|IE|IEMOBILE|NPAPI] [OS=wince]"
 	@echo
-	@echo "  MODE defaults to dbg."
-	@echo "  If BROWSER isn't specified, builds everything relevant for current OS."
+	@echo "  If you omit MODE, the default is dbg."
+	@echo "  If you omit BROWSER, all browsers available on the current OS are built."
 
 .PHONY: prereqs genheaders modules clean help
 
@@ -350,8 +377,8 @@ $(FF_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	@$(MKDEP)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(FF_CPPFLAGS) $(FF_CFLAGS) $<
 
-# The following two targets handle both IE and IEMOBILE by using 
-# the $(BROWSER) variable in the rule definitions.
+# These two targets handle both IE and IEMOBILE by using
+# "$(BROWSER)_" to choose the correct lists.
 $(IE_OUTDIR)/%$(OBJ_SUFFIX): %.cc
 	@$(MKDEP)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $($(BROWSER)_CPPFLAGS) $($(BROWSER)_CXXFLAGS) $<
@@ -392,34 +419,22 @@ $(NPAPI_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 
 # LINK TARGETS
 
-# This target handles both IE and IEMOBILE by using the $(BROWSER) variable in the
-# rule definitions. $(IE_SHLIBFLAGS) is shared by both browsers.
+# This target handles both IE and IEMOBILE by using
+# "$(BROWSER)_" to choose the correct lists.
 $(IE_MODULE_DLL): $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
-
-    #use SANITIZE_LINKER_FILE_LIST to keep things consistent with FF build.
-	
-	@echo $($(BROWSER)_OBJS) | $(SANITIZE_LINKER_FILE_LIST) > $(OUTDIR)/obj_file_list.txt
-	$(MKSHLIB) $(SHLIBFLAGS) $(IE_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_file_list.txt
-	rm $(OUTDIR)/obj_file_list.txt
+	@echo $($(BROWSER)_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(MKSHLIB) $(SHLIBFLAGS) $($(BROWSER)_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	rm $(OUTDIR)/obj_list.temp
 
 $(FF_MODULE_DLL): $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_OBJS) $(FF_LINK_EXTRAS)
-
-ifeq ($(OS),linux)
-
-  # Temp. workaround - Redhat linux's LD doesn't support @file directive.
-
-	$(MKSHLIB) $(SHLIBFLAGS) $(FF_SHLIBFLAGS) $(FF_OBJS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_LINK_EXTRAS) $(FF_LIBS)
-
-else
-  # ld on OS X requires filenames to be separated by a newline rather than
-  # a whitespace which is acceptable by other platforms.
-  # ESCAPE_LINKER_FILE_LIST translates ' ' to '\n' on OSs where it's 
-  # appropriate.
-
-	@echo $(FF_OBJS) | $(SANITIZE_LINKER_FILE_LIST) > $(OUTDIR)/obj_file_list.txt
-	$(MKSHLIB) $(SHLIBFLAGS) $(FF_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_LINK_EXTRAS) $(FF_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_file_list.txt
-	rm $(OUTDIR)/obj_file_list.txt
-endif
+  ifeq ($(OS),linux)
+        # TODO(playmobil): Find equivalent of "@args_file" for ld on Linux.
+	$(MKSHLIB) $(SHLIBFLAGS) $(FF_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_LINK_EXTRAS) $(FF_LIBS) $(FF_OBJS)
+  else
+	@echo $(FF_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(MKSHLIB) $(SHLIBFLAGS) $(FF_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_LINK_EXTRAS) $(FF_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	rm $(OUTDIR)/obj_list.temp
+  endif
 
 $(FF_MODULE_TYPELIB): $(FF_GEN_TYPELIBS)
 	$(GECKO_SDK)/bin/xpt_link $@ $^
@@ -448,7 +463,7 @@ ifneq ($(OS),osx)
 	cp $(FF_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 	cp $(FF_MODULE_TYPELIB) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 ifeq ($(MODE),dbg)
-ifeq ($(OS),win32)
+ifdef IS_WIN32_OR_WINCE
 	cp $(FF_OUTDIR)/$(MODULE).pdb $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 endif
 endif

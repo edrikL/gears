@@ -76,6 +76,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 m4_changequote(`^|',`|^')m4_dnl
 m4_ifelse(PRODUCT_OS,^|win32|^,^|m4_dnl
     <em:targetPlatform>WINNT_x86-msvc</em:targetPlatform>
+|^,PRODUCT_OS,^|wince|^,^|m4_dnl
+    <!-- WE DON'T CURRENTLY BUILD FOR WINCE FIREFOX. -->
 |^,PRODUCT_OS,^|linux|^,^|m4_dnl
     <em:targetPlatform>Linux_x86-gcc3</em:targetPlatform>
     <!-- Ubuntu Edgy Eft requires "linux-gnu" for the OS_TARGET prefix. -->
