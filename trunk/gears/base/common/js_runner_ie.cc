@@ -43,6 +43,7 @@
 #include "gears/base/common/js_runner.h"
 
 #include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/ie/atl_headers.h"
@@ -62,22 +63,29 @@ class JsRunnerBase : public JsRunnerInterface {
     return NULL;  // not used in IE
   }
 
-  JsRootedToken *NewObject(const char16 *optional_global_ctor_name) {
-    CComPtr<IDispatch> global_object = GetGlobalObject();
+  JsRootedToken *NewObject(const char16 *optional_global_ctor_name,
+                           bool dump_on_error = false) {
+    CComPtr<IDispatch> global_object = GetGlobalObject(dump_on_error);
     if (!global_object) {
       LOG(("Could not get global object from script engine."));
       return NULL;
     }
 
     CComQIPtr<IDispatchEx> global_dispex = global_object;
-    if (!global_dispex) { return NULL; }
+    if (!global_dispex) {
+      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+      return NULL;
+    }
 
     DISPID error_dispid;
     CComBSTR ctor_name(optional_global_ctor_name ? optional_global_ctor_name :
                        STRING16(L"Object"));
     HRESULT hr = global_dispex->GetDispID(ctor_name, fdexNameCaseSensitive,
                                           &error_dispid);
-    if (FAILED(hr)) { return NULL; }
+    if (FAILED(hr)) {
+      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+      return NULL;
+    }
 
     CComVariant result;
     DISPPARAMS no_args = {NULL, NULL, 0, 0};
@@ -88,6 +96,7 @@ class JsRunnerBase : public JsRunnerInterface {
                             NULL);  // pointer to "this" object (NULL okay)
     if (FAILED(hr)) {
       LOG(("Could not invoke object constructor."));
+      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
       return NULL;
     }
 
@@ -224,7 +233,8 @@ class JsRunnerBase : public JsRunnerInterface {
     }
   }
 
-  virtual IDispatch *GetGlobalObject() = 0;
+  // TODO(zork): Remove the argument when we find the error.
+  virtual IDispatch *GetGlobalObject(bool dump_on_error = false) = 0;
 
  private:
   bool SetProperty(JsToken object, const char16 *name, const VARIANT &value) {
@@ -285,12 +295,15 @@ class ATL_NO_VTABLE JsRunnerImpl
   ~JsRunnerImpl();
 
   // JsRunnerBase implementation
-  IDispatch *GetGlobalObject() {
+  IDispatch *GetGlobalObject(bool dump_on_error = false) {
     IDispatch *global_object;
     HRESULT hr = javascript_engine_->GetScriptDispatch(
                                          NULL,  // get global object
                                          &global_object);
-    if (FAILED(hr)) { return NULL; }
+    if (FAILED(hr)) {
+      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+      return NULL;
+    }
 
     return global_object;
   }
@@ -575,8 +588,8 @@ class JsRunner : public JsRunnerBase {
     }
   }
 
-  IDispatch *GetGlobalObject() {
-    return com_obj_->GetGlobalObject();
+  IDispatch *GetGlobalObject(bool dump_on_error = false) {
+    return com_obj_->GetGlobalObject(dump_on_error);
   }
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
     return com_obj_->AddGlobal(name, object, iface_id);
@@ -611,8 +624,8 @@ class DocumentJsRunner : public JsRunnerBase {
   virtual ~DocumentJsRunner() {
   }
 
-  IDispatch *GetGlobalObject() {
-    return ActiveXUtils::GetScriptDispatch(site_);
+  IDispatch *GetGlobalObject(bool dump_on_error = false) {
+    return ActiveXUtils::GetScriptDispatch(site_, dump_on_error);
   }
 
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
