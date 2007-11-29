@@ -129,15 +129,11 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
     hr = CComObject<GearsHttpRequest>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
-#ifdef WINCE
-  // TODO(steveblock): Implement localserver for WinCE.
-#else
   } else if (object_name == STRING16(L"beta.localserver")) {
     CComObject<GearsLocalServer> *obj;
     hr = CComObject<GearsLocalServer>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
-#endif
   } else if (object_name == STRING16(L"beta.test")) {
 #ifdef DEBUG
     CComObject<GearsTest> *obj;

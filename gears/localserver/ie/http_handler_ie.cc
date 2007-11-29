@@ -128,8 +128,12 @@ static HRESULT RegisterNoLock() {
     return hr;
   }
   BOOL bypass = FALSE;
+#ifdef WINCE
+  // SetSessionOption() returns E_NOIMPL on Windows Mobile.
+#else
   hr = session->SetSessionOption(kBypassIInternetProtocolInfoOption,
                                  &bypass, sizeof(BOOL), 0);
+#endif
   if (FAILED(hr)) {
     UnregisterNoLock();
     return hr;
