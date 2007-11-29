@@ -27,52 +27,45 @@
 # When adding new MODEs or BROWSERs you will also need to update this file.
 
 ifdef CMD_LINE_MODE
-  ifneq ($(MODE), dbg)
-  ifneq ($(MODE), opt)
-    
-    $(error MODE can only be dbg or opt, run 'make help' for more info.)
-    
+  ifneq ($(MODE),dbg)
+  ifneq ($(MODE),opt)
+    $(error MODE can only be one of dbg | opt)
   endif
   endif
 endif
 
 # Check that our browser target is relevant for current build OS.
 ifdef CMD_LINE_BROWSER
-  ifeq ($(OS), win32)
-    ifneq ($(BROWSER), IE)
-    ifneq ($(BROWSER), FF)
-    ifneq ($(BROWSER), IEMOBILE)
-    ifneq ($(BROWSER), NPAPI)
-        
-      $(error On Windows BROWSER can only be one of FF | IE | IEMOBILE | NPAPI)
-        
-    endif
+  ifeq ($(OS),win32)
+    ifneq ($(BROWSER),IE)
+    ifneq ($(BROWSER),FF)
+    ifneq ($(BROWSER),NPAPI)
+      $(error On Windows, BROWSER can only be one of: FF | IE | NPAPI)
     endif
     endif
     endif
   else
-  ifeq ($(OS), osx)
-    ifneq ($(BROWSER), FF)
-      
-      $(error On OS X BROWSER can only be FF)
-      
+  ifeq ($(OS),wince)
+    ifneq ($(BROWSER),IEMOBILE)
+      $(error On WinCE, BROWSER can only be one of: IEMOBILE)
     endif
   else
-  ifeq ($(OS), linux)
-    ifneq ($(BROWSER), FF)
-    ifneq ($(BROWSER), NPAPI)
-      
-      $(error On Linux BROWSER can only be one of FF | NPAPI)
-      
+  ifeq ($(OS),osx)
+    ifneq ($(BROWSER),FF)
+      $(error On OS X, BROWSER can only be one of: FF)
+    endif
+  else
+  ifeq ($(OS),linux)
+    ifneq ($(BROWSER),FF)
+    ifneq ($(BROWSER),NPAPI)
+      $(error On Linux, BROWSER can only be one of: FF | NPAPI)
     endif
     endif
   else
-  
-    # Shouldn't get here as the code in config.mk specifically sets
-    # OS to one of osx, win32 or linux.
+    # Shouldn't get here as config.mk should always set the OS.
     $(error Unrecognized OS)
-    
-  endif  # ifeq ($(OS), linux)
-  endif  # ifeq ($(OS), osx)
-  endif  # ifeq ($(OS), win32)
+  endif  # ifeq ($(OS),linux)
+  endif  # ifeq ($(OS),osx)
+  endif  # ifeq ($(OS),wince)
+  endif  # ifeq ($(OS),win32)
 endif
