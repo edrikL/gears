@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
@@ -97,7 +97,7 @@ bool CookieMap::HasLocalServerRequiredCookie(
                        ? !HasCookie(name) : HasSpecificCookie(name, value);
 }
 
-void ParseCookieNameAndValue(const std::string16 &name_and_value, 
+void ParseCookieNameAndValue(const std::string16 &name_and_value,
                              std::string16 *name,
                              std::string16 *value) {
   // Some observations about cookie names and values
@@ -179,9 +179,21 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
   while (true) {
     DWORD len = 0;
     if (!InternetGetCookieW(url, NULL, NULL, &len)) {
-      // FALSE is returned when the cookie string is empty, but this is
-      // not an error condition, return true and an empty string.
-      return GetLastError() == ERROR_NO_MORE_ITEMS;
+      DWORD last_error = GetLastError();
+      // FALSE is returned when the cookie string is empty (error code is
+      // ERROR_NO_MORE_ITEMS), but this is not an error condition. Return true
+      // and an empty string.
+      //
+      // On WinCE, FALSE is also returned when we pass NULL for the data string.
+      // The error code is ERROR_INSUFFICIENT_BUFFER, but the length parameter
+      // is set correctly. In this case, we continue getting the cookie.
+      //
+      // If the error is anything else, return false.
+      if (ERROR_NO_MORE_ITEMS == last_error) {
+        return true;
+      } else if (ERROR_INSUFFICIENT_BUFFER != last_error) {
+        return false;
+      }
     }
 
     if (len == last_len)
@@ -218,7 +230,7 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
 //------------------------------------------------------------------------------
 #elif BROWSER_FF
 #ifdef WIN32
-#include <windows.h> // must manually #include before nsIEventQueueService.h
+#include <windows.h>  // must manually #include before nsIEventQueueService.h
 #endif
 #include <nsIIOService.h>
 #include <nsIURI.h>
@@ -314,7 +326,7 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
     return true;
   }
 #endif
-  
+
   scoped_CFString url_cfstr(CFStringCreateWithString16(url));
   scoped_CFString cookie_cfstr(GetHTTPCookieString(url_cfstr.get()));
 
