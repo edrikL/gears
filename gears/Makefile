@@ -561,7 +561,7 @@ FF_CPPSRCS	+= \
 IE_VPATH	+= \
 		desktop \
 		$(NULL)
-		
+
 IEMOBILE_VPATH	+= \
 		desktop \
 		$(NULL)
@@ -587,7 +587,7 @@ NPAPI_IDLSRCS	+= \
 
 NPAPI_CPPSRCS   += \
                 $(NULL)
-                
+
 #-----------------------------------------------------------------------------
 # test
 
@@ -600,7 +600,7 @@ FF_VPATH	+= \
 FF_M4SRCS	+= \
 		test_ff.idl.m4 \
 		$(NULL)
-		
+
 FF_IDLSRCS	+= \
 		test_ff.idl \
 		$(NULL)
@@ -612,7 +612,7 @@ FF_CPPSRCS	+= \
 IE_VPATH	+= \
 		cctests \
 		$(NULL)
-		
+
 IE_IDLSRCS	+= \
 		test_ie.idl \
 		$(NULL)

@@ -43,7 +43,9 @@ class GearsDatabaseWrapper : public ModuleWrapper<GearsDatabaseWrapper> {
     RegisterMethod("execute", &GearsDatabase::Execute);
     RegisterMethod("close", &GearsDatabase::Close);
     RegisterMethod("getLastInsertRowId", &GearsDatabase::GetLastInsertRowId);
+#ifdef DEBUG
     RegisterMethod("getExecuteMsec", &GearsDatabase::GetExecuteMsec);
+#endif
   }
 
  private:
