@@ -603,95 +603,35 @@ class JsRunner : public JsRunnerBase {
 
 // This class is a stub that is used to present a uniform interface to
 // common functionality to both workers and the main thread.
-//
-// For desktop IE, this class is a wrapper around the main page's script engine.
-// For WinCE, we can not get a handle to the main page's script engine, because
-// IHTMLDocument::get_Script is not available. Instead, we use JsRunnerImpl to
-// instantiate a local script engine that is used to create the objects which
-// are passed as arguments to the callback functions. The callbacks themselves
-// are executed in the context of the main page's script engine.
-//
-// TODO(steveblock): A limitation with this approach is that the arguments
-// passed to callbacks do not support extensions to Object that are defined in
-// the context of the main page's script engine.
 class DocumentJsRunner : public JsRunnerBase {
  public:
   DocumentJsRunner(IGeneric *site) : site_(site) {
-#ifdef WINCE
-    HRESULT hr = CComObject<JsRunnerImpl>::CreateInstance(
-        &local_script_engine_);
-    if (local_script_engine_) {
-      // MSDN says call AddRef after CreateInstance
-      local_script_engine_->AddRef();
-    }
-#endif
-}
+  }
 
   virtual ~DocumentJsRunner() {
-#ifdef WINCE
-    if (local_script_engine_) {
-      local_script_engine_->Stop();
-      local_script_engine_->Release();
-    }
-#endif
   }
 
   IDispatch *GetGlobalObject() {
-#ifdef WINCE
-  return local_script_engine_->GetGlobalObject();
-#else
-    CComPtr<IHTMLDocument2> html_document2;
-    HRESULT hr = ActiveXUtils::GetHtmlDocument2(site_, &html_document2);
-    if (FAILED(hr) || !html_document2) {
-      LOG(("Could not get IHTMLDocument2 for current site."));
-      return NULL;
-    }
-
-    CComQIPtr<IHTMLDocument> html_document = html_document2;
-    assert(html_document);
-
-    CComPtr<IDispatch> script_dispatch;
-    hr = html_document->get_Script(&script_dispatch);
-    if (FAILED(hr) || !script_dispatch) {
-      LOG(("Could not get script engine for current site."));
-      return NULL;
-    }
-
-    return script_dispatch;
-#endif
+    return ActiveXUtils::GetScriptDispatch(site_);
   }
 
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
     // TODO(zork): Add this functionality to DocumentJsRunner.
-#ifdef WINCE
-    // TODO(steveblock): Determine why such a call would be required.
-    // Need to add the global to the page's script engine, not our local script
-    // engine.
-#endif
     return false;
   }
 
   bool Start(const std::string16 &full_script) {
-#ifdef WINCE
-    return local_script_engine_->Start(full_script);
-#else
     assert(false);  // Should not be called on the DocumentJsRunner.
     return false;
-#endif
   }
 
   bool Stop() {
-#ifdef WINCE
-    return local_script_engine_->Stop();
-#else
     assert(false);  // Should not be called on the DocumentJsRunner.
     return false;
-#endif
   }
 
   bool Eval(const std::string16 &script) {
 #ifdef WINCE
-    // Execute the script in the page's script engine, not our local engine.
     // IPIEHTMLWindow2 does not provide execScript.
     // TODO(steveblock): Implement this somehow.
     return false;
@@ -746,9 +686,6 @@ class DocumentJsRunner : public JsRunnerBase {
 
   scoped_ptr<HtmlEventMonitor> unload_monitor_;  // For 'onunload' notifications
   CComPtr<IUnknown> site_;
-#ifdef WINCE
-  CComObject<JsRunnerImpl> *local_script_engine_;
-#endif
 
   DISALLOW_EVIL_CONSTRUCTORS(DocumentJsRunner);
 };

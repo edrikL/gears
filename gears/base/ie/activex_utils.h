@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // A collection of static utility methods.
@@ -41,6 +41,7 @@ struct IPIEHTMLDocument2;
 struct IPIEHTMLWindow2;
 typedef IPIEHTMLDocument IHTMLDocument;
 typedef IPIEHTMLDocument2 IHTMLDocument2;
+// WinMo 5 SDK defines IHTMLWindow2, so we can't typedef IPIEHTMLWindow2.
 #endif
 
 class ActiveXUtils {
@@ -52,21 +53,24 @@ class ActiveXUtils {
   static bool GetPageLocation(IUnknown *site, std::string16 *page_location_url);
   static bool GetPageOrigin(IUnknown *site, SecurityOrigin *security_origin);
 
+#ifdef WINCE
+  // We're not able to get IWebBrowser2 on WinCE. Instead we obtain the window
+  // and document objects from the script engine's IDispatch pointer.
+#else
   // Returns the IWebBrowser2 interface corresponding to the given site.
   static HRESULT GetWebBrowser2(IUnknown *site,
                                 IWebBrowser2 **browser2);
+#endif
 
   // Returns the IHTMLDocument2 interface corresponding to the given site.
   static HRESULT GetHtmlDocument2(IUnknown *site,
                                   IHTMLDocument2 **document2);
 
-// Returns the IHTMLWindow2 interface corresponding to the given site.  
-#ifdef WINCE
-  static HRESULT GetHtmlWindow2(IUnknown *site,
-                                IPIEHTMLWindow2 **window2);
-#else
   // Returns the IHTMLWindow2 interface corresponding to the given site.
   static HRESULT GetHtmlWindow2(IUnknown *site,
+#ifdef WINCE
+                                IPIEHTMLWindow2 **window2);
+#else
                                 IHTMLWindow2 **window2);
 #endif
 
@@ -78,6 +82,9 @@ class ActiveXUtils {
   static HRESULT GetHtmlWindow3(IUnknown *site,
                                 IHTMLWindow3 **window3);
 #endif
+
+  // Returns the IDispatch interface for the script engine at the given site.
+  static IDispatch* GetScriptDispatch(IUnknown *site);
 
   // Returns the dispatch id of the named member.
   static HRESULT GetDispatchMemberId(IDispatch *dispatch, const WCHAR *name,
@@ -156,13 +163,7 @@ class ActiveXUtils {
   // Returns true if there the browser is in 'online' mode and the local
   // system is connected to a network.
   static bool IsOnline();
-
-#ifdef WINCE
-  static void SetWebBrowser2FromSite(IUnknown* site);
- private:
-  static CComPtr<IWebBrowser2> web_browser2_;
-#endif
 };
 
 
-#endif // GEARS_BASE_IE_ACTIVEX_UTILS_H__
+#endif  // GEARS_BASE_IE_ACTIVEX_UTILS_H__

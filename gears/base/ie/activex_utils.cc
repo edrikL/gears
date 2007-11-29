@@ -39,33 +39,27 @@
 
 const CComBSTR ActiveXUtils::kEmptyBSTR(STRING16(L""));
 
-#ifdef WINCE
-// There seems to be no way to get an instance of IWebBrowser2 object
-// from an ActiveX control. The site object passed to SetSite() 
-// should provide an instance of IServiceProvider, which could be queried
-// for IWebBrowser2 via QueryService. Unfortunately, QueryService 
-// always retuned E_NOINTERFACE. The only workaround we found
-// is to use the browser helper object to get the IWebBrowser2 pointer
-// and cache it here as a global variable, which is accessible by our ActiveX
-// object.
-CComPtr<IWebBrowser2> ActiveXUtils::web_browser2_;
-#endif
-
 bool ActiveXUtils::GetPageLocation(IUnknown *site,
                                    std::string16 *page_location_url) {
   assert(site);
   assert(page_location_url);
 
   HRESULT hr;
+  CComBSTR location;
 
+#ifdef WINCE
+  CComPtr<IHTMLDocument2> document2;
+  hr = GetHtmlDocument2(site, &document2);
+  if (FAILED(hr) || !document2) { return false; }
+  hr = document2->get_URL(&location);
+  if (FAILED(hr)) { return false; }
+#else
   CComPtr<IWebBrowser2> web_browser2;
   hr = GetWebBrowser2(site, &web_browser2);
   if (FAILED(hr) || !web_browser2) { return false; }
-
-  CComBSTR location;
   hr = web_browser2->get_LocationURL(&location);
   if (FAILED(hr)) { return false; }
-
+#endif
   *page_location_url = location.m_str;
   return true;
 }
@@ -80,34 +74,36 @@ bool ActiveXUtils::GetPageOrigin(IUnknown *site,
 }
 
 
-HRESULT ActiveXUtils::GetWebBrowser2(IUnknown *site, IWebBrowser2 **browser2) {
 #ifdef WINCE
-  HRESULT hr = E_FAIL;
-  if (web_browser2_) {
-    // We get here if SetSite was called in the context of an ActiveX
-    // and there has been a previous call to SetSite as a result of
-    // a BHO being initialized.
-    *browser2 = web_browser2_;
-    hr = S_OK;
-  }
-  return hr;
+// We can't get IWebBrowser2 for WinCE.
 #else
+HRESULT ActiveXUtils::GetWebBrowser2(IUnknown *site, IWebBrowser2 **browser2) {
   CComQIPtr<IServiceProvider> service_provider = site;
   if (!service_provider) { return E_FAIL; }
 
-  //CComPtr<IWebBrowser2> web_browser2;
   return service_provider->QueryService(SID_SWebBrowserApp,
                                         IID_IWebBrowser2,
                                         reinterpret_cast<void**>(browser2));
-  //return (SUCCEEDED(hr) && *browser2);
-#endif
 }
+#endif
 
 
 HRESULT ActiveXUtils::GetHtmlDocument2(IUnknown *site,
                                        IHTMLDocument2 **document2) {
   HRESULT hr;
 
+#ifdef WINCE
+  // Follow path Window2 -> Window -> Document -> Document2
+  CComPtr<IPIEHTMLWindow2> window2;
+  hr = GetHtmlWindow2(site, &window2);
+  if (FAILED(hr) || !window2) { return false; }
+  CComQIPtr<IPIEHTMLWindow> window = window2;
+  CComPtr<IHTMLDocument> document;
+  hr = window->get_document(&document);
+  if (FAILED(hr) || !document) { return E_FAIL; }
+  return document->QueryInterface(__uuidof(*document2),
+                                  reinterpret_cast<void**>(document2));
+#else
   CComPtr<IWebBrowser2> web_browser2;
   hr = GetWebBrowser2(site, &web_browser2);
   if (FAILED(hr) || !web_browser2) { return E_FAIL; }
@@ -117,16 +113,18 @@ HRESULT ActiveXUtils::GetHtmlDocument2(IUnknown *site,
   if (FAILED(hr) || !doc_dispatch) { return E_FAIL; }
 
   return doc_dispatch->QueryInterface(document2);
+#endif
 }
 
-#ifdef WINCE
 HRESULT ActiveXUtils::GetHtmlWindow2(IUnknown *site,
+#ifdef WINCE
                                      IPIEHTMLWindow2 **window2) {
-  CComPtr<IPIEHTMLDocument2> html_document2;
+  // site is javascript IDispatch pointer.
+  return site->QueryInterface(__uuidof(*window2),
+                              reinterpret_cast<void**>(window2));
 #else
-HRESULT ActiveXUtils::GetHtmlWindow2(IUnknown *site, IHTMLWindow2 **window2) {
+                                     IHTMLWindow2 **window2) {
   CComPtr<IHTMLDocument2> html_document2;
-#endif
   // To hook an event on a page's window object, follow the path
   // IWebBrowser2->document->parentWindow->IHTMLWindow2
 
@@ -134,6 +132,7 @@ HRESULT ActiveXUtils::GetHtmlWindow2(IUnknown *site, IHTMLWindow2 **window2) {
   if (FAILED(hr) || !html_document2) { return E_FAIL; }
 
   return html_document2->get_parentWindow(window2);
+#endif
 }
 
 #ifdef WINCE
@@ -147,6 +146,37 @@ HRESULT ActiveXUtils::GetHtmlWindow3(IUnknown *site, IHTMLWindow3 **window3) {
   return html_window2->QueryInterface(window3);
 }
 #endif
+
+
+IDispatch* ActiveXUtils::GetScriptDispatch(IUnknown *site) {
+  CComPtr<IDispatch> script_dispatch;
+#ifdef WINCE
+  // site is javascript IDispatch pointer.
+  HRESULT hr = site->QueryInterface(&script_dispatch);
+  if (FAILED(hr) || !script_dispatch) {
+    LOG(("Could not get script dispatch for current site."));
+    return NULL;
+  }
+#else
+  CComPtr<IHTMLDocument2> html_document2;
+  HRESULT hr = GetHtmlDocument2(site, &html_document2);
+  if (FAILED(hr) || !html_document2) {
+    LOG(("Could not get IHTMLDocument2 for current site."));
+    return NULL;
+  }
+
+  CComQIPtr<IHTMLDocument> html_document = html_document2;
+  assert(html_document);
+
+  hr = html_document->get_Script(&script_dispatch);
+  if (FAILED(hr) || !script_dispatch) {
+    LOG(("Could not get script engine for current site."));
+    return NULL;
+  }
+#endif
+  return script_dispatch;
+}
+
 
 HRESULT ActiveXUtils::GetDispatchProperty(IDispatch *dispatch,
                                           DISPID dispid,
@@ -231,14 +261,3 @@ bool ActiveXUtils::IsOnline() {
   return connected && alive &&
          ((connected_state_flags_out & INTERNET_CONNECTION_OFFLINE) == 0);
 }
-
-#ifdef WINCE
-void ActiveXUtils::SetWebBrowser2FromSite(IUnknown* site) {
-  if (site) {
-    site->QueryInterface(
-      IID_IWebBrowser2, reinterpret_cast<void**>(&web_browser2_));
-  } else {
-    web_browser2_.Release();
-  }
-}
-#endif

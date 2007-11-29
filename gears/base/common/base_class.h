@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // The C++ base class that all Gears objects should derive from.
@@ -29,9 +29,9 @@
 #define GEARS_BASE_COMMON_BASE_CLASS_H__
 
 #include "gears/base/common/security_model.h"
-#include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/scoped_token.h"
-#include "gears/base/common/string16.h" // for string16
+#include "gears/base/common/string16.h"  // for string16
 
 #include "gears/base/common/js_types.h"
 
@@ -61,7 +61,7 @@
 #elif BROWSER_IE
 #elif BROWSER_NPAPI
 #elif BROWSER_SAFARI
-#endif // BROWSER_xyz
+#endif  // BROWSER_xyz
 
 class ModuleWrapperBaseClass;
 class JsRunnerInterface;
@@ -126,6 +126,8 @@ class ModuleImplBaseClass {
 #if BROWSER_FF || BROWSER_NPAPI
   JsContextPtr  env_page_js_context_;
 #elif BROWSER_IE
+  // Pointer to the object that hosts this object. On Win32, this is the pointer
+  // passed to SetSite. On WinCE this is the JS IDispatch pointer.
   CComPtr<IUnknown> env_page_iunknown_site_;
 #endif
   SecurityOrigin env_page_origin_;
@@ -191,4 +193,4 @@ typedef scoped_token<ModuleWrapperBaseClass*, ReleaseWrapperFunctor>
     ScopedModuleWrapper;
 
 
-#endif // GEARS_BASE_COMMON_BASE_CLASS_H__
+#endif  // GEARS_BASE_COMMON_BASE_CLASS_H__
