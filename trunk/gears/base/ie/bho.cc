@@ -51,11 +51,7 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
   if (pUnkSite == NULL) {
     ATLTRACE(_T("SetSite(): pUnkSite is NULL\n"));
   } else {
-#ifdef WINCE
-    // TODO(andreip): implement localserver.
-#else
     HttpHandler::Register();
-#endif
   }
   return S_OK;
 }

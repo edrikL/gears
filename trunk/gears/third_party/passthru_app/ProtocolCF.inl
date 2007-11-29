@@ -117,8 +117,39 @@ inline HRESULT CComClassFactoryProtocol::SetTargetCLSID(REFCLSID clsid,
   DWORD clsContext)
 {
   CComPtr<IClassFactory> spTargetCF;
+#ifdef WINCE
+  // Gears - the normal way to create the class object is as follows:
+  // HRESULT hr = CoGetClassObject(clsid, clsContext, 0, IID_IClassFactory,
+  //  reinterpret_cast<void**>(&spTargetCF));
+  // However, this doesn't work on Windows Mobile 5 due to the relevant keys 
+  // missing from the registry. We therefore bypass the registry.
+  typedef HRESULT (*DllGetClassObjectPointer)(REFCLSID rclsid,
+                                              REFIID riid,
+                                              LPVOID * ppv);
+  HINSTANCE urlmon = CoLoadLibrary(L"urlmon.dll", FALSE);
+  ATLASSERT(urlmon);
+  if (!urlmon)
+  {
+    return HRESULT_FROM_WIN32(GetLastError());
+  }
+
+  DllGetClassObjectPointer dll_get_class_object =
+      reinterpret_cast<DllGetClassObjectPointer>(
+      GetProcAddress(urlmon, L"DllGetClassObject"));
+  ATLASSERT(dll_get_class_object);
+  if (!dll_get_class_object)
+  {
+    return HRESULT_FROM_WIN32(GetLastError());
+  }
+
+  HRESULT hr = dll_get_class_object(clsid,
+                                    IID_IClassFactory,
+                                    reinterpret_cast<void**>(&spTargetCF));
+  CoFreeLibrary(urlmon);
+#else
   HRESULT hr = CoGetClassObject(clsid, clsContext, 0, IID_IClassFactory,
     reinterpret_cast<void**>(&spTargetCF));
+#endif
   ATLASSERT(SUCCEEDED(hr) && spTargetCF != 0);
   if (SUCCEEDED(hr))
   {
