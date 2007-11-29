@@ -10,7 +10,7 @@ import stat
 DELETABLE = int('777', 8)
 
 # Amount of time script should sleep between checking for completed builds
-POLL_INTERVAL_SECONDS = 5
+POLL_INTERVAL_SECONDS = 10
 
 class Bootstrap:
   """ Set up test environment and handles test execution. """
@@ -57,6 +57,8 @@ class Bootstrap:
       os.chmod(Bootstrap.INSTALLER_DIR, DELETABLE)
       shutil.rmtree(Bootstrap.INSTALLER_DIR)
     shutil.copytree(self.__gears_binaries, Bootstrap.INSTALLER_DIR)
+    # Sleep another polling interval to give time to copy files locally
+    time.sleep(POLL_INTERVAL_SECONDS)
 
 
   def install(self):
