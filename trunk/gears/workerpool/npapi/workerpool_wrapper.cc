@@ -42,11 +42,13 @@ class GearsWorkerPoolWrapper : public ModuleWrapper<GearsWorkerPoolWrapper> {
     RegisterMethod("createWorkerFromUrl", &GearsWorkerPool::CreateWorkerFromUrl);
     RegisterMethod("allowCrossOrigin", &GearsWorkerPool::AllowCrossOrigin);
     RegisterMethod("sendMessage", &GearsWorkerPool::SendMessage);
-    RegisterMethod("forceGC", &GearsWorkerPool::ForceGC);
     RegisterProperty("onmessage", &GearsWorkerPool::GetOnmessage,
                      &GearsWorkerPool::SetOnmessage);
     RegisterProperty("onerror", &GearsWorkerPool::GetOnerror,
                      &GearsWorkerPool::SetOnerror);
+#ifdef DEBUG
+    RegisterMethod("forceGC", &GearsWorkerPool::ForceGC);
+#endif
   }
 
  private:
