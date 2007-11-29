@@ -68,7 +68,8 @@ class JsRunnerBase : public JsRunnerInterface {
     return js_engine_context_;
   }
 
-  JsRootedToken *NewObject(const char16 *optional_global_ctor_name) {
+  JsRootedToken *NewObject(const char16 *optional_global_ctor_name,
+                           bool dump_on_error = false) {
     if (!js_engine_context_) {
       LOG(("Could not get JavaScript engine context."));
       return NULL;

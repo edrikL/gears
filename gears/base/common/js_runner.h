@@ -146,7 +146,9 @@ class JsRunnerInterface {
   // constructor. If the constructor is NULL, it defaults to "Object". The
   // caller takes ownership of the returned value.
   virtual JsRootedToken *NewObject(
-                             const char16 *optional_global_ctor_name) = 0;
+                             const char16 *optional_global_ctor_name,
+                             // TODO(zork): Remove this when we find the error.
+                             bool dump_on_error = false) = 0;
 
   // SetProperty*() overwrites the existing named property or adds a new one if
   // none exists.

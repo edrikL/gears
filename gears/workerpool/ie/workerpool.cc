@@ -47,7 +47,6 @@
 #include "gears/workerpool/ie/workerpool.h"
 
 #include "gears/base/common/atomic_ops.h"
-#include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_runner_utils.h"
 #include "gears/base/common/permissions_db.h"
@@ -473,16 +472,15 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
   assert(wi);
   if (!wi->onerror_handler.get()) { return false; }
 
+  // TODO(zork): Remove this with dump_on_error.  It is declared as volatile to
+  // ensure that it exists on the stack even in opt builds.
+  volatile bool is_shutting_down = wi->threads_manager->is_shutting_down_;
+
   // Setup the onerror parameter (type: Error).
   assert(wi->js_runner);
   scoped_ptr<JsRootedToken> onerror_param(
-      wi->js_runner->NewObject(STRING16(L"Error")));
+      wi->js_runner->NewObject(STRING16(L"Error"), true));
   if (!onerror_param.get()) {
-#ifdef WINCE
-    // TODO(steveblock): Implement CaptureAndSendMinidump
-#else
-    ExceptionManager::CaptureAndSendMinidump();
-#endif
     return false;
   }
 
@@ -987,18 +985,18 @@ LRESULT CALLBACK PoolThreadsManager::ThreadWndProc(HWND hwnd, UINT message_type,
 void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
                                         const Message &msg) {
   assert(wi);
+
+  // TODO(zork): Remove this with dump_on_error.  It is declared as volatile to
+  // ensure that it exists on the stack even in opt builds.
+  volatile bool is_shutting_down = wi->threads_manager->is_shutting_down_;
+
   if (wi->onmessage_handler.get()) {
     // Setup the onmessage parameter (type: Object).
     assert(wi->js_runner);
     scoped_ptr<JsRootedToken> onmessage_param(
-        wi->js_runner->NewObject(NULL));
+        wi->js_runner->NewObject(NULL, true));
     if (!onmessage_param.get()) {
       // We hit this unexpected error in 0.2.4
-#ifdef WINCE
-      // TODO(steveblock): Implement CaptureAndSendMinidump
-#else
-      ExceptionManager::CaptureAndSendMinidump();
-#endif
       JsErrorInfo error_info = {
         0,
         STRING16(L"Internal error. (Could not create onmessage object.)")

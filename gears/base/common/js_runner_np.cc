@@ -69,7 +69,8 @@ class JsRunnerBase : public JsRunnerInterface {
     return global_object_;
   }
 
-  JsRootedToken *NewObject(const char16 *optional_global_ctor_name) {
+  JsRootedToken *NewObject(const char16 *optional_global_ctor_name,
+                           bool dump_on_fail = false) {
     NPObject *global_object = GetGlobalObject();
     if (!global_object) {
       LOG(("Could not get global object from script engine."));

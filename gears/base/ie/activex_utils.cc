@@ -34,6 +34,7 @@
 #include <shlguid.h>      // for SID_SWebBrowserApp (except on WINCE)
 #include <wininet.h>
 #include "gears/base/common/common.h"
+#include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/ie/activex_utils.h"
 
@@ -148,7 +149,7 @@ HRESULT ActiveXUtils::GetHtmlWindow3(IUnknown *site, IHTMLWindow3 **window3) {
 #endif
 
 
-IDispatch* ActiveXUtils::GetScriptDispatch(IUnknown *site) {
+IDispatch* ActiveXUtils::GetScriptDispatch(IUnknown *site, bool dump_on_error) {
   CComPtr<IDispatch> script_dispatch;
 #ifdef WINCE
   // site is javascript IDispatch pointer.
@@ -161,6 +162,7 @@ IDispatch* ActiveXUtils::GetScriptDispatch(IUnknown *site) {
   CComPtr<IHTMLDocument2> html_document2;
   HRESULT hr = GetHtmlDocument2(site, &html_document2);
   if (FAILED(hr) || !html_document2) {
+    if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
     LOG(("Could not get IHTMLDocument2 for current site."));
     return NULL;
   }
@@ -170,6 +172,7 @@ IDispatch* ActiveXUtils::GetScriptDispatch(IUnknown *site) {
 
   hr = html_document->get_Script(&script_dispatch);
   if (FAILED(hr) || !script_dispatch) {
+    if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
     LOG(("Could not get script engine for current site."));
     return NULL;
   }
