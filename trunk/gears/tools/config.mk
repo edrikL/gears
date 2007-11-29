@@ -1,5 +1,3 @@
-# vim:set ts=8 sw=8 sts=8 noet:
-
 # Copyright 2005, Google Inc.
 #
 # Redistribution and use in source and binary forms, with or without 
@@ -25,6 +23,15 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Store value of unmodified command line parameters.
+ifdef MODE
+  CMD_LINE_MODE = $MODE
+endif
+
+ifdef BROWSER
+  CMD_LINE_BROWSER = $BROWSER
+endif
+
 # Discover the OS
 ifeq ($(shell uname),Linux)
 OS = linux
@@ -36,16 +43,15 @@ OS = win32
 endif
 endif
 
-# Set default OS architecture
-#   OSX builds will override this.
-#   Other platforms just need a value defined.
-ARCH = i386
-
 # Set default build mode
 #   dbg = debug build
 #   opt = release build
 MODE = dbg
 
+# Set default OS architecture
+#   OSX builds will override this.
+#   Other platforms just need a value defined.
+ARCH = i386
 
 # $(shell ...) statements need to be different on Win32 (%% vs %).
 ifeq ($(OS),win32)

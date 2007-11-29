@@ -1,5 +1,3 @@
-# vim:set ts=8 sw=8 sts=8 noet:
-
 # Copyright 2005, Google Inc.
 #
 # Redistribution and use in source and binary forms, with or without 
@@ -27,6 +25,7 @@
 
 include tools/version.mk
 include tools/config.mk
+include tools/sanity.mk
 
 MODULE		= $(SHORT_NAME)
 

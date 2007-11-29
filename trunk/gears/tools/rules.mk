@@ -1,5 +1,3 @@
-# vim:set ts=8 sw=8 sts=8 noet:
-
 # Copyright 2005, Google Inc.
 #
 # Redistribution and use in source and binary forms, with or without 
@@ -253,9 +251,20 @@ modules:: $(NPAPI_MODULE_DLL)
 endif
 
 clean::
+ifdef CMD_LINE_MODE  # If MODE is specified on command line.
 	rm -rf $(OUTDIR)
+else
+	rm -rf bin-dbg
+	rm -rf bin-opt
+endif
 
-.PHONY: prereqs genheaders modules clean
+help::
+	@echo "Usage: make [BROWSER=FF|IE|IEMOBILE|NPAPI] [MODE=dbg|opt]"
+	@echo
+	@echo "  MODE defaults to dbg."
+	@echo "  If BROWSER isn't specified, builds everything relevant for current OS."
+
+.PHONY: prereqs genheaders modules clean help
 
 $(COMMON_OUTDIR):
 	"mkdir" -p $@
