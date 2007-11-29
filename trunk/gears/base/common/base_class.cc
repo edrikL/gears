@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,20 +13,20 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
 
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/security_model.h" // for kUnknownDomain
+#include "gears/base/common/security_model.h"  // for kUnknownDomain
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
@@ -75,18 +75,9 @@ bool ModuleImplBaseClass::InitBaseFromDOM(const char *url_str) {
   return succeeded && InitBaseManually(is_worker, cx, security_origin,
                                        NewDocumentJsRunner(NULL, cx));
 #elif BROWSER_IE
-  JsRunnerInterface *runner = NewDocumentJsRunner(site, NULL);
-#ifdef WINCE
-  // Start the local script engine. This engine is used simply to create objects
-  // which are passed as parameters to callbacks running in the page's script
-  // engine.
-  if (!runner->Start(L"")) {
-    return false;
-  }
-#endif
   bool succeeded = ActiveXUtils::GetPageOrigin(site, &security_origin);
   return succeeded && InitBaseManually(is_worker, site, security_origin,
-                                       runner);
+                                       NewDocumentJsRunner(site, NULL));
 #elif BROWSER_NPAPI
   bool succeeded = BrowserUtils::GetPageSecurityOrigin(instance,
                                                        &security_origin);
@@ -198,5 +189,5 @@ JsToken* ModuleImplBaseClass::JsWorkerGetArgv() const {
   return worker_js_argv_;
 }
 
-#endif // BROWSER_FF
+#endif  // BROWSER_FF
 //-----------------------------------------------------------------------------

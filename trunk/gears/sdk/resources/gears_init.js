@@ -24,6 +24,10 @@
     // IE
     try {
       factory = new ActiveXObject('Gears.Factory');
+      // privateSetGlobalObject is only required and supported on WinCE.
+      if (factory.getBuildInfo().indexOf('ie_mobile') != -1) {
+        factory.privateSetGlobalObject(this);
+      }
     } catch (e) {
       // Safari
       if (navigator.mimeTypes["application/x-googlegears"]) {

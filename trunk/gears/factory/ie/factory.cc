@@ -244,10 +244,20 @@ STDMETHODIMP GearsFactory::get_hasPermission(VARIANT_BOOL *retval) {
 // know when this happens, so we can do some one-time setup afterward.
 STDMETHODIMP GearsFactory::SetSite(IUnknown *site) {
   HRESULT hr = IObjectWithSiteImpl<GearsFactory>::SetSite(site);
+#ifdef WINCE
+  // We are unable to get IWebBrowser2 from this pointer. Instead, the user must
+  // call privateSetGlobalObject from JavaScript.
+#else
   InitBaseFromDOM(m_spUnkSite);
+#endif
   return hr;
 }
 
+#ifdef WINCE
+STDMETHODIMP GearsFactory::privateSetGlobalObject(IDispatch *js_dispatch) {
+  return InitBaseFromDOM(js_dispatch);
+}
+#endif
 
 // TODO(cprince): See if we can use Suspend/Resume with the opt-in dialog too,
 // rather than just the cross-origin worker case.  (Code re-use == good.)

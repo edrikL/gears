@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,26 +13,26 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_BASE_IE_FACTORY_H__
-#define GEARS_BASE_IE_FACTORY_H__
+#ifndef GEARS_FACTORY_IE_FACTORY_H__
+#define GEARS_FACTORY_IE_FACTORY_H__
 
-#include <objsafe.h> 
+#include <objsafe.h>
 #include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "ie/genfiles/interfaces.h"  // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/common.h"
-#include "gears/base/ie/resource.h" // for .rgs resource ids (IDR_*)
+#include "gears/base/ie/resource.h"  // for .rgs resource ids (IDR_*)
 
 
 // The factory class satisfies requests for Gears objects matching specific
@@ -80,9 +80,17 @@ class ATL_NO_VTABLE GearsFactory
   // readonly bool hasPermission
   STDMETHOD(get_hasPermission)(VARIANT_BOOL *retval);
 
-
   // Hook into SetSite() to do some init work that requires the site.
   STDMETHOD(SetSite)(IUnknown *site);
+
+#ifdef WINCE
+  // Set the page's script engine. This is only required for WinCE.
+  // TODO(steveblock): Ideally, we would avoid the need for this method and
+  // somehow pass this pointer to the GearsFactory constructor. This could
+  // either be through ActiveXObject() or through the OBJECT tag's parameters.
+  // However, it looks like neither approach is possible.
+  STDMETHOD(privateSetGlobalObject)(/* [in] */ IDispatch *js_dispatch);
+#endif
 
   // Non-scriptable methods
   void SuspendObjectCreation();
@@ -109,11 +117,11 @@ class ATL_NO_VTABLE GearsFactory
   // data around. Do that when we have a single instance of the info per page,
   // because multiple copies can get out of sync (permission data is mutable).
   bool is_permission_granted_;
-  bool is_permission_value_from_user_; // user prompt, or persisted DB value
+  bool is_permission_value_from_user_;  // user prompt, or persisted DB value
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsFactory);
 };
 
 OBJECT_ENTRY_AUTO(__uuidof(GearsFactory), GearsFactory)
 
-#endif  // GEARS_BASE_IE_FACTORY_H__
+#endif  // GEARS_FACTORY_IE_FACTORY_H__
