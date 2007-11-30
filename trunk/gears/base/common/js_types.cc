@@ -528,7 +528,7 @@ void JsSetException(const char16 *message) {
 //-----------------------------------------------------------------------------
 #if BROWSER_FF  // the rest of this file only applies to Firefox, for now
 
-JsParamFetcher::JsParamFetcher(ModuleImplBaseClass *obj) : gears_obj_(obj) {
+JsParamFetcher::JsParamFetcher(ModuleImplBaseClass *obj) {
   if (obj->EnvIsWorker()) {
     js_context_ = obj->EnvPageJsContext();
     js_argc_ = obj->JsWorkerGetArgc();
@@ -619,28 +619,6 @@ bool JsParamFetcher::GetAsNewRootedCallback(int i, JsRootedCallback **out) {
   *out = new JsRootedCallback(GetContextPtr(), js_argv_[i]);
   return true;
 }
-
-bool JsParamFetcher::SetReturnValueAsJsToken(JsToken val) {
-  if (!gears_obj_->EnvIsWorker()) {
-    if (!ncc_) { return false; }
-
-    jsval *retval = NULL;
-    nsresult nr = ncc_->GetRetValPtr(&retval);
-    assert(SUCCEEDED(nr));
-
-    // Docs say that this can be null if JS is not expecting a return value.
-    if (!retval) { return true; }
-
-    *retval = val;
-    nr = ncc_->SetReturnValueWasSet(PR_TRUE);
-    assert(SUCCEEDED(nr));
-  } else {
-    gears_obj_->JsWorkerSetRetVal(val);
-  }
-
-  return true;
-}
-
 
 JsNativeMethodRetval JsSetException(const ModuleImplBaseClass *obj,
                                     const char16 *message) {

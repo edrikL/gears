@@ -111,19 +111,6 @@ class JsRunnerBase : public JsRunnerInterface {
     return SetProperty(object, name, ScopedNPVariant(value));
   }
 
-  // TODO: Implement these
-  bool SetPropertyInt64(JsToken object, const char16 *name, int64 value) {
-    return false;
-  }
-
-  bool SetPropertyDouble(JsToken object, const char16 *name, double value) {
-    return false;
-  }
-
-  bool SetPropertyNull(JsToken object, const char16 *name) {
-    return false;
-  }
-
   bool InvokeCallback(const JsRootedCallback *callback,
                       int argc, JsParamToSend *argv,
                       JsRootedToken **optional_alloc_retval) {
