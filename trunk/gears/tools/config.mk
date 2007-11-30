@@ -95,14 +95,6 @@ SQLITE_CFLAGS += -DSQLITE_CORE -DSQLITE_ENABLE_FTS1 -DSQLITE_ENABLE_FTS2 \
   -DSQLITE_TRANSACTION_DEFAULT_IMMEDIATE=1 \
   -Ithird_party/sqlite_google/src -Ithird_party/sqlite_google/preprocessed
 
-# TODO(miket): we don't currently have a way to distinguish scheduled (nightly)
-# builds on the build server from manual builds. For now all builds produced by
-# the build server are considered official builds, even though this isn't
-# correct (only manual builds are official builds).
-ifdef BF_HOST
-OFFICIAL_BUILD=1
-endif
-
 ######################################################################
 # OS == linux
 ######################################################################
