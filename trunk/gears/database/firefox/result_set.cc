@@ -134,8 +134,10 @@ NS_IMETHODIMP GearsResultSet::Field(PRInt32 index, nsIVariant **retval) {
       sqlite_int64 i64 = sqlite3_column_int64(statement_, index);
       if ((i64 >= PR_INT32_MIN) && (i64 <= PR_INT32_MAX)) {
         nr = vObj->SetAsInt32(static_cast<PRInt32>(i64));
-      } else {
+      } else if ((i64 >= JS_INT_MIN) && (i64 <= JS_INT_MAX)) {
         nr = vObj->SetAsInt64(static_cast<PRInt64>(i64));
+      } else {
+        RETURN_EXCEPTION(STRING16(L"Integer value is out of range."));
       }
       break;
     }

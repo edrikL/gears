@@ -217,8 +217,12 @@ void GearsDatabase::Close() {
 
 void GearsDatabase::GetLastInsertRowId() {
   // TODO(mpcomplete): no way to do int64 in NPAPI.. is that a problem?
-  int retval = static_cast<int>(sqlite3_last_insert_rowid(db_));
-  GetJsRunner()->SetReturnValue(JSPARAM_INT, &retval);
+  sqlite_int64 rowid = sqlite3_last_insert_rowid(db_);
+  if ((rowid < JS_INT_MIN) || (rowid > JS_INT_MAX)) {
+    RETURN_EXCEPTION(STRING16(L"lastInsertRowId is out of range."));
+  }
+  double retval = static_cast<double>(rowid);
+  GetJsRunner()->SetReturnValue(JSPARAM_DOUBLE, &retval);
 
   RETURN_NORMAL();
 }

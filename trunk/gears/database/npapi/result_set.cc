@@ -115,9 +115,11 @@ void GearsResultSet::FieldImpl(int index) {
       if ((i64 >= INT_MIN) && (i64 <= INT_MAX)) {
         int retval = static_cast<int>(i64);
         success = GetJsRunner()->SetReturnValue(JSPARAM_INT, &retval);
-      } else {
+      } else if ((i64 >= JS_INT_MIN) && (i64 <= JS_INT_MAX)) {
         double retval = static_cast<double>(i64);
         success = GetJsRunner()->SetReturnValue(JSPARAM_DOUBLE, &retval);
+      } else {
+        RETURN_EXCEPTION(STRING16(L"Integer value is out of range."));
       }
       break;
     }
