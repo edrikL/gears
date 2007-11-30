@@ -105,7 +105,7 @@
 // are outside this interval. This restriction is enforced, 
 // for example, in GearsDatabase::get_lastInsertRowId() and
 // GearsResultSet::field().
-#define JS_INT_MAX (1i64 << DBL_MANT_DIG)  // 2^53
+#define JS_INT_MAX (GG_LONGLONG(1) << DBL_MANT_DIG)  // 2^53
 #define JS_INT_MIN (-JS_INT_MAX)  // -2^53
 
 // Defines private prototypes for copy constructor and assigment operator. Do
