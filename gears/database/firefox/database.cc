@@ -201,14 +201,6 @@ NS_IMETHODIMP GearsDatabase::Execute(//const nsAString &expr,
     // types being bound to parameters.
     JSType type = JS_TypeOfValue(cx, arg);
     switch (type) {
-      case JSTYPE_VOID: {
-        std::string16 exception(STRING16(L"SQL parameter "));
-        exception += IntegerToString16(i);
-        exception += STRING16(L" is undefined.");
-        RETURN_EXCEPTION(exception.c_str());
-      }
-
-
       case JSTYPE_NULL:
         LOG(("        Parameter %i: null", i));
         sql_status = sqlite3_bind_null(stmt.get(), sql_index);

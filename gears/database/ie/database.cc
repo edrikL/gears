@@ -135,12 +135,14 @@ HRESULT GearsDatabase::BindArg(const CComVariant &arg, int index,
   // string conversion so sqlite is aware of the actual types being
   // bound to parameters.
   switch (arg.vt) {
-    case VT_EMPTY: {
-        std::string16 exception(STRING16(L"SQL parameter "));
-        exception += IntegerToString16(index);
-        exception += STRING16(L" is undefined.");
-        RETURN_EXCEPTION(exception.c_str());
-      }
+    case VT_EMPTY:
+      // Insert the string "undefined" to match the firefox implementation.
+      // TODO(zork): This should throw an error in beta.database2.
+      err = sqlite3_bind_text16(stmt, index + 1,
+                                L"undefined", -1,
+                                SQLITE_TRANSIENT);
+      ATLTRACE(L"  Parameter: [VT_EMPTY]\n");
+      break;
 
     case VT_NULL:
       err = sqlite3_bind_null(stmt, index + 1);
