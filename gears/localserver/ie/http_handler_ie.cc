@@ -206,29 +206,35 @@ static const bool kAlertCacheMiss = false;
 //------------------------------------------------------------------------------
 
 STDMETHODIMP PassthruSink::ReportProgress(
-    /* [in] */ ULONG ulStatusCode,
-    /* [in] */ LPCWSTR szStatusText) {
+    /* [in] */ ULONG status_code,
+    /* [in] */ LPCWSTR status_text) {
   if (!http_handler_)
     return E_UNEXPECTED;
   if (!http_handler_->is_passingthru_)
     return E_FAIL;
 
-  if (ulStatusCode == BINDSTATUS_REDIRECTING) {
-    // szStatusText contains the redirect url in this case
+#ifdef DEBUG
+  ATLTRACE(_T("PassthruSink::ReportProgress( %s, %s )\n"),
+              GetBindStatusLabel(status_code),
+              status_text ? status_text : L"");
+#endif
+
+  if (status_code == BINDSTATUS_REDIRECTING) {
+    // status_text contains the redirect url in this case
     WebCacheDB* db = WebCacheDB::GetDB();
-    if (db && db->CanService(szStatusText)) {
+    if (db && db->CanService(status_text)) {
       // Here we detect 302s into our cache here and intervene to hijack
       // handling of the request. Reporting a result of INET_E_REDIRECT_FAILED
       // causes URMLON to abandon this handler instance an create a new one
       // to follow the redirect. When that new instance of our handler is
       // created, it will satisfy the request locally.
-      ATLTRACE(L"HttpHandler::ReportProgress - hijacking redirect");
+      ATLTRACE(L"PassthruSink::ReportProgress - hijacking redirect\n");
       return BaseClass::ReportResult(INET_E_REDIRECT_FAILED,
                                      HttpConstants::HTTP_FOUND,
-                                     szStatusText);
+                                     status_text);
     }
   }
-  return BaseClass::ReportProgress(ulStatusCode, szStatusText);
+  return BaseClass::ReportProgress(status_code, status_text);
 }
 
 
@@ -913,16 +919,6 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
   payload_.GetHeader(HttpConstants::kContentTypeHeader, &mimetype);
   if (!mimetype.empty()) {
     hr = CallReportProgress(BINDSTATUS_MIMETYPEAVAILABLE, mimetype.c_str());
-    if (FAILED(hr)) return hr;
-
-    // Strip the charset parameter (if any) appended to the Content-Type
-    // header when reporting the verified mime type
-    size_t semi_pos = mimetype.find(L';');
-    if (semi_pos != std::string16::npos) {
-      mimetype.resize(semi_pos);
-    }
-    hr = CallReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE,
-                            mimetype.c_str());
     if (FAILED(hr)) return hr;
   }
 

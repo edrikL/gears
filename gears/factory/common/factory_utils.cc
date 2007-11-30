@@ -71,6 +71,21 @@ void AppendBuildInfo(std::string16 *s) {
   s->append(STRING16(L";opt"));
 #endif
 
+#if defined(OS_MACOSX)
+  s->append(STRING16(L";osx"));
+#elif defined(LINUX)
+  s->append(STRING16(L";linux"));
+#elif defined(WIN32)
+#ifdef WINCE
+  s->append(STRING16(L";wince"));
+#else
+  s->append(STRING16(L";win32"));
+#endif
+#else
+  s->append(STRING16(L";unknown_os"));
+#endif
+
+
 #if BROWSER_IE
   s->append(STRING16(L";ie"));
 #ifdef WINCE
@@ -81,7 +96,7 @@ void AppendBuildInfo(std::string16 *s) {
 #elif BROWSER_SAFARI
   s->append(STRING16(L";safari"));
 #else
-  s->append(STRING16(L";unknown"));
+  s->append(STRING16(L";unknown_browser"));
 #endif
 }
 
