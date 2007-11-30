@@ -98,8 +98,8 @@ SQLITE_CSRCS	+= \
 #-----------------------------------------------------------------------------
 # third_party/libpng
 
-# TODO(andreip): fix errors in zlib before building this
-ifneq ($(BROWSER),IEMOBILE)
+# TODO(andreip): fix errors in zlib before building this for wince
+ifneq ($(OS),wince)
 THIRD_PARTY_VPATH	+= \
 		third_party/libpng \
 		$(NULL)
@@ -128,8 +128,8 @@ endif
 #-----------------------------------------------------------------------------
 # third_party/zlib
 
-# TODO(andreip): fix errors in gzio.c
-ifneq ($(BROWSER),IEMOBILE)
+# TODO(andreip): fix errors in gzio.c for wince
+ifneq ($(OS),wince)
 THIRD_PARTY_VPATH	+= \
 		third_party/zlib \
 		$(NULL)
@@ -167,7 +167,6 @@ THIRD_PARTY_CPPSRCS	+= \
 # third_party/breakpad
 
 ifeq ($(OS),win32)
-ifneq ($(BROWSER),IEMOBILE)
 THIRD_PARTY_VPATH	+= \
 		third_party/breakpad/src/client/windows/handler \
 		third_party/breakpad/src/client/windows/sender \
@@ -198,7 +197,6 @@ IE_VPATH	+= \
 IE_CPPSRCS	+= \
 		exception_handler_win32.cc \
 		$(NULL)
-endif
 endif
 
 #-----------------------------------------------------------------------------
