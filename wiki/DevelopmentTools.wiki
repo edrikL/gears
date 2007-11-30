@@ -22,7 +22,7 @@ It's hard to build Gears-enabled applications because we don't provide good deve
     * Show historical logging
     * Sort/filter by origin/page of source page
 
-In order to be really useful these tools should be available to every application automatically without any extra work, similar to how the JavaScript console and DOM inspector are available to every application. 
+In order to be really useful these tools should be available to every application automatically without any extra work, similar to how the !JavaScript console and DOM inspector are available to every application. 
 
 Also, it's likely that we will want to add to this tool suite over time, so the solution should be extensible.
 
