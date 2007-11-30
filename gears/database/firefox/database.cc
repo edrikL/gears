@@ -287,7 +287,11 @@ NS_IMETHODIMP GearsDatabase::GetLastInsertRowId(PRInt64 *retval) {
     RETURN_EXCEPTION(STRING16(L"Database handle was NULL."));
   }
 
-  *retval = sqlite3_last_insert_rowid(db_);
+  sqlite_int64 rowid = sqlite3_last_insert_rowid(db_);
+  if ((rowid < JS_INT_MIN) || (rowid > JS_INT_MAX)) {
+    RETURN_EXCEPTION(STRING16(L"lastInsertRowId is out of range."));
+  }
+  *retval = rowid;
   RETURN_NORMAL();
 }
 
