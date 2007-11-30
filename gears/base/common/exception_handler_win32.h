@@ -39,7 +39,7 @@
 #define GEARS_BASE_COMMON_EXCEPTION_HANDLER_WIN32_H__
 
 // TODO(michaeln): rename this file to exception_handler.h
-#ifdef WIN32
+#if defined(WIN32) && !defined(WINCE)
 
 namespace google_breakpad {
   class ExceptionHandler;
