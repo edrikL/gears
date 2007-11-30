@@ -1,0 +1,114 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+
+<!--
+Copyright 2007, Google Inc.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, 
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ 3. Neither the name of Google Inc. nor the names of its contributors may be
+    used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<html>
+  <head>
+    <title>Desktop API</title>
+    <link rel="stylesheet" type="text/css" href="gears.css" />
+  </head>
+
+<body>
+
+<h1>Desktop API  <span class="new">[New in
+  <a href="index.html#relnotes">0.3</a>]</span></h1>
+
+<div id="pagecontent">
+
+<p>The Desktop module provides an interface for accessing desktop related
+functionality, such as creating shortcuts.
+
+<h2 id="example">Example</h2>
+
+<pre><code>&lt;script type="text/javascript" src="<a href=
+  'tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
+&lt;script type="text/javascript"&gt;
+var desktop = google.gears.factory.create('beta.desktop');
+desktop.createShortcut("Test Application",
+                       "An application at http://www.test.com/index.html",
+                       "http://www.test.com/index.html",
+                       [{"16x16": "http://www.test.com/icon16x16.png",
+                         "32x32": "http://www.test.com/icon32x32.png",
+                         "48x48": "http://www.test.com/icon48x48.png",
+                         "128x128": "http://www.test.com/icon128x128.png"]});
+&lt;/script&gt;</code></pre>
+
+
+<h2 id="classes">Classes</h2>
+
+<pre><code><a href="#Desktop">Desktop class</a>
+    bool <b>createShortcut</b>(name, description, url, icons)
+</code></pre>
+<br>
+
+
+<br>
+<a name="Desktop"></a>
+<h2>Desktop class</h2>
+
+<h3>Methods</h3>
+
+<table>
+  <tr class="odd">
+    <th colspan="2"><div align="left">
+    <code>createShortcut(name, description, url, icons)</code></div></th>
+  </tr>
+  <tr class="odd">
+    <td>Parameters:</td>
+    <td class="odd"><code>name</code> is the name of the shortcut. It must be
+        under 50 characters, and cannot contain any of the characters below:
+        <pre>"\/:*?&lt;&gt;|</pre><br />
+      <code>description</code> is a text blurb that will be shown in the
+        confirmation dialog.<br />
+      <code>url</code> is the URL that will be launched when the user opens the
+        shortcut.<br />
+      <code>icons</code> is an object containing the URLs of up to four icons on
+        properties named: 16x16, 32x32, 48x48, 128x128.  The icons must be
+        .png files with dimensions matching the field they are associated with.
+        At least one of 16x16, 32x32, or 48x48 sizes must be specified.</td>
+  </tr>
+  <tr class="odd">
+    <td>Exceptions:</td>
+    <td class="" >Throws an exception if an error occurs. </td>
+  </tr>
+  <tr class="odd">
+    <td>Description:</td>
+    <td class="odd">
+      Attempts to create a desktop shortcut called 'name' that links to 'url'
+      with an icon built from the images listed in the 'icons' object.  A dialog
+      is presented to the user with the text of 'description' and the icon with
+      dimensions closest to 32x32. If the user confirms, a desktop shortcut is
+      created.
+    </td>
+  </tr>
+</table>
+
+
+</div>
+</body>
+</html>
