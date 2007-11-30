@@ -156,7 +156,7 @@ bool AsyncTask::Start() {
   if (thread_ == NULL) {
     return false;
   }
-  
+
   AddReference();  // reference is removed upon worker thread exit
 
   return true;
@@ -219,10 +219,13 @@ void AsyncTask::DeleteWhenDone() {
 //------------------------------------------------------------------------------
 void AsyncTask::ThreadEntry(void *task) {
   AsyncTask *self = reinterpret_cast<AsyncTask*>(task);
+  // Don't run until we're sure all state is initialized.
+  {
+    CritSecLock locker(self->lock_);
+    assert(self->IsTaskThread());
+  }
   self->Run();
-  CritSecLock locker(self->lock_);
   self->thread_ = NULL;
-  locker.Unlock();
   self->RemoveReference();  // remove the reference added by the Start
 }
 
