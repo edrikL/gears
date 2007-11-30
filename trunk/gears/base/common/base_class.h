@@ -102,9 +102,13 @@ class ModuleImplBaseClass {
 
 #if BROWSER_FF
   // JavaScript worker-thread parameter information
-  void JsWorkerSetParams(int argc, JsToken *argv);
-  int          JsWorkerGetArgc() const;
-  JsToken*     JsWorkerGetArgv() const;
+  void JsWorkerSetParams(int argc, JsToken *argv, JsToken *retval,
+                         bool retval_was_set);
+  int JsWorkerGetArgc() const;
+  JsToken *JsWorkerGetArgv() const;
+  JsToken *JsWorkerGetRetVal() const;
+  bool JsWorkerRetValWasSet() const;
+  void JsWorkerSetRetVal(JsToken val);
 #elif BROWSER_IE
   // These do not exist in IE yet.
 #endif
@@ -144,8 +148,10 @@ class ModuleImplBaseClass {
                         JsRunnerInterface *js_runner);
 
 #if BROWSER_FF
-  int           worker_js_argc_;
-  JsToken      *worker_js_argv_;
+  int worker_js_argc_;
+  JsToken *worker_js_argv_;
+  JsToken *worker_js_retval_;
+  bool worker_js_retval_was_set_;
 #elif BROWSER_IE
   // These do not exist in IE yet.
 #endif

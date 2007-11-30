@@ -148,7 +148,30 @@ class JsRunnerBase : public JsRunnerInterface {
   }
 
   bool SetPropertyInt(JsToken object, const char16 *name, int value) {
+    assert(INT_FITS_IN_JSVAL(value));
     return SetProperty(object, name, INT_TO_JSVAL(value));
+  }
+
+  bool SetPropertyInt64(JsToken object, const char16 *name, int64 value) {
+    if ((value >= INT_MIN) && (value <= INT_MAX)) {
+      return SetPropertyInt(object, name, static_cast<int>(value));
+    } else if (value >= JS_INT_MIN && value <= JS_INT_MAX) {
+      return SetPropertyDouble(object, name, static_cast<double>(value));
+    } else {
+      return false;
+    }
+  }
+
+  bool SetPropertyDouble(JsToken object, const char16 *name, double value) {
+    jsdouble *js_double = JS_NewDouble(js_engine_context_, value);
+    if (!js_double) {
+      return false;
+    }
+    return SetProperty(object, name, DOUBLE_TO_JSVAL(js_double));
+  }
+
+  bool SetPropertyNull(JsToken object, const char16 *name) {
+    return SetProperty(object, name, JSVAL_NULL);
   }
 
   virtual bool InvokeCallbackSpecialized(

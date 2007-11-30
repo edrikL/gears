@@ -27,9 +27,12 @@
 #define GEARS_DATABASE_IE_RESULT_SET_H__
 
 #include <atlcoll.h>
+#include <vector>
+
 #include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/string16.h"
 
 
 struct sqlite3_stmt;
@@ -60,6 +63,7 @@ class ATL_NO_VTABLE GearsResultSet
   STDMETHOD(close)();
   STDMETHOD(next)();
   STDMETHOD(isValidRow)(VARIANT_BOOL *retval);
+  STDMETHOD(get_currentRow)(VARIANT *retval);
 
  private:
   friend class GearsDatabase;
@@ -79,6 +83,8 @@ class ATL_NO_VTABLE GearsResultSet
   CAtlMap<CStringW, int> column_indexes_; // TODO(miket): switch to STL
   bool column_indexes_built_;
   bool is_valid_row_;
+  scoped_ptr<JsRootedToken> current_row_;
+  std::vector<std::string16> column_names_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsResultSet);
 };

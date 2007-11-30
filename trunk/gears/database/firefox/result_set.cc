@@ -23,14 +23,18 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <vector>
 #include <nsICategoryManager.h>
 #include <nsXPCOM.h>
 #include "gears/third_party/gecko_internal/nsIDOMClassInfo.h"
 #include "gears/third_party/gecko_internal/nsIVariant.h"
 #include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/stopwatch.h"
+#include "gears/base/common/string16.h"
 
+#include "gears/database/common/database_utils.h"
 #include "gears/database/firefox/database.h"
 #include "gears/database/firefox/result_set.h"
 
@@ -90,11 +94,13 @@ bool GearsResultSet::InitializeResultSet(sqlite3_stmt *statement,
     database_ = db;
     database_->AddRef();
     db->AddResultSet(this);
+    column_names_.clear();
   }
   return succeeded;
 }
 
 bool GearsResultSet::Finalize() {
+  current_row_.reset(NULL);
   if (statement_) {
     int sql_status = sqlite3_finalize(statement_);
     statement_ = NULL;
@@ -106,6 +112,41 @@ bool GearsResultSet::Finalize() {
     }
   }
   return true;
+}
+
+NS_IMETHODIMP GearsResultSet::GetCurrentRow(nsIVariant **retval) {
+  if (!statement_ || !is_valid_row_) {
+    *retval = NULL;
+    RETURN_NORMAL();
+  }
+
+  std::string16 error;
+  if (column_names_.size() == 0) {
+    if (!GetColumnNames(statement_, &column_names_, &error)) {
+      RETURN_EXCEPTION(error.c_str());
+    }
+  }
+
+  JsParamFetcher js_params(this);
+
+  if (current_row_.get() == NULL) {
+    current_row_.reset(GetJsRunner()->NewObject(NULL));
+    if (current_row_.get() == NULL) {
+      RETURN_EXCEPTION(GET_INTERNAL_ERROR_MESSAGE().c_str());
+    }
+
+    if (!PopulateJsObjectFromRow(GetJsRunner(), current_row_->token(),
+                                 statement_, &column_names_, &error)) {
+      current_row_.reset(NULL);
+      RETURN_EXCEPTION(error.c_str());
+    }
+  }
+
+  if (!js_params.SetReturnValueAsJsToken(current_row_->token())) {
+    RETURN_EXCEPTION(GET_INTERNAL_ERROR_MESSAGE().c_str());
+  }
+
+  RETURN_NORMAL();
 }
 
 NS_IMETHODIMP GearsResultSet::Field(PRInt32 index, nsIVariant **retval) {
@@ -252,19 +293,22 @@ bool GearsResultSet::NextImpl(std::string16 *error_message) {
 #endif // DEBUG
   assert(statement_);
   assert(error_message);
+
   int sql_status = sqlite3_step(statement_);
   LOG(("GearsResultSet::next() sqlite3_step returned %d", sql_status));
   switch (sql_status) {
     case SQLITE_ROW:
       is_valid_row_ = true;
+      current_row_.reset(NULL);
       break;
     case SQLITE_BUSY:
       // If there was a timeout (SQLITE_BUSY) the SQL row cursor did not
-      // advance, so we don't reset is_valid_row_. If it was valid prior to
-      // this call, it's still valid now.
+      // advance, so we don't reset is_valid_row_ or current_row_. If it was
+      // valid prior to this call, it's still valid now.
       break;
     default:
       is_valid_row_ = false;
+      current_row_.reset(NULL);
       break;
   }
   bool succeeded = (sql_status == SQLITE_ROW) ||

@@ -26,12 +26,14 @@
 #ifndef GEARS_DATABASE_FIREFOX_RESULT_SET_H__
 #define GEARS_DATABASE_FIREFOX_RESULT_SET_H__
 
+#include <vector>
 #include <nsComponentManagerUtils.h>
 #include "gears/third_party/gecko_internal/nsIVariant.h"
 
 #include "ff/genfiles/database.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/string16.h"
 
 
 // Object identifiers
@@ -59,6 +61,7 @@ class GearsResultSet
   NS_IMETHOD Close(void);
   NS_IMETHOD Next(void);
   NS_IMETHOD IsValidRow(PRBool *retval);
+  NS_IMETHOD GetCurrentRow(nsIVariant **retval);
 
  protected:
   ~GearsResultSet();
@@ -78,6 +81,8 @@ class GearsResultSet
   GearsDatabase *database_;
   sqlite3_stmt *statement_;
   bool is_valid_row_;
+  scoped_ptr<JsRootedToken> current_row_;
+  std::vector<std::string16> column_names_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsResultSet);
 };
