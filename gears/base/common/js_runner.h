@@ -156,6 +156,12 @@ class JsRunnerInterface {
                                  const char16 *val) = 0;
   virtual bool SetPropertyInt(JsToken object, const char16 *name,
                               int val) = 0;
+  virtual bool SetPropertyInt64(JsToken object, const char16 *name,
+                                int64 val) = 0;
+  virtual bool SetPropertyDouble(JsToken object, const char16 *name,
+                                 double val) = 0;
+  // Sets the property to the JavaScript value <null>.
+  virtual bool SetPropertyNull(JsToken object, const char16 *name) = 0;
   // TODO(aa): SetPropertyBool, SetPropertyObject (to build trees), etc...
   // TODO(aa): Support for building arrays?
 

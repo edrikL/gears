@@ -47,6 +47,8 @@ interface GearsResultSetInterface : IDispatch {
   HRESULT close();
   HRESULT next();
   HRESULT isValidRow([out, retval] VARIANT_BOOL *retval);
+
+  [propget] HRESULT currentRow([out, retval] VARIANT *retval);
 };
 
 

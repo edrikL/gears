@@ -57,4 +57,5 @@ interface GearsResultSetInterface : GearsBaseClassInterface {
   void close();
   void next();
   boolean isValidRow();
+  readonly attribute nsIVariant currentRow;
 };

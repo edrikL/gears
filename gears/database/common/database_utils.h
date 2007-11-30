@@ -26,6 +26,7 @@
 #ifndef GEARS_DATABASE_COMMON_DATABASE_UTILS_H__
 #define GEARS_DATABASE_COMMON_DATABASE_UTILS_H__
 
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/string16.h"
 #include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
 
@@ -39,5 +40,14 @@
 bool OpenSqliteDatabase(const char16 *name, const SecurityOrigin &origin,
                         sqlite3 **db);
 
+bool GetColumnNames(sqlite3_stmt *statement,
+                    std::vector<std::string16> *column_names,
+                    std::string16 *error);
+
+bool PopulateJsObjectFromRow(JsRunnerInterface *js_runner,
+                             JsToken js_object,
+                             sqlite3_stmt *statement,
+                             std::vector<std::string16> *column_names,
+                             std::string16 *error);
 
 #endif // GEARS_DATABASE_COMMON_DATABASE_UTILS_H__

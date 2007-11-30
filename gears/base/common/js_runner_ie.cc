@@ -112,6 +112,36 @@ class JsRunnerBase : public JsRunnerInterface {
     return SetProperty(object, name, CComVariant(value));
   }
 
+  bool SetPropertyInt64(JsToken object, const char16 *name, int64 value) {
+    if (value >= INT_MIN && value <= INT_MAX) {
+      return SetPropertyInt(object, name, static_cast<int>(value));
+    } else if (value >= 0 && value <= UINT_MAX) {
+      // Unlike Firefox, IE can represent uint precisely, so we can do the
+      // right thing in this case.
+      return SetProperty(object, name,
+                         CComVariant(static_cast<unsigned int>(value)));
+    } else if (value >= JS_INT_MIN && value <= JS_INT_MAX) {
+      CComVariant variant;
+      variant.llVal = value;
+      variant.vt = VT_I8;
+      HRESULT hr = variant.ChangeType(VT_DECIMAL);
+      if (FAILED(hr)) { return false; }
+      return SetProperty(object, name, variant);
+    } else {
+      return false;
+    }
+  }
+
+  bool SetPropertyDouble(JsToken object, const char16 *name, double value) {
+    return SetProperty(object, name, CComVariant(value));
+  }
+
+  bool SetPropertyNull(JsToken object, const char16 *name) {
+    CComVariant var;
+    var.vt = VT_NULL;
+    return SetProperty(object, name, var);
+  }
+
   bool InvokeCallback(const JsRootedCallback *callback,
                       int argc, JsParamToSend *argv,
                       JsRootedToken **optional_alloc_retval) {
