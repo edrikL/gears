@@ -76,7 +76,7 @@ IFrameHost.prototype.load = function(url) {
                '&test=' + encodeURIComponent(url);
 
   this.timerId_ = window.setTimeout(
-    partial(this.onTestsLoaded, false, 'Could not load iframe: ' + url),
+    partial(this.onTestsLoaded, false, 'Iframe not loaded after timeout: ' + url),
     IFrameHost.LOAD_TIMEOUT_MS);
 };
 
