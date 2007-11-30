@@ -42,6 +42,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           google.gears.factory.create("beta.localserver");
       }
 
+      function Now() {
+        return new Date().getTime();
+      }
+
       //----------------------------------------------------------
       // LocalServer tests
       //----------------------------------------------------------
@@ -111,6 +115,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       }
 
 
+      function CanServeLocally(url) {
+        try {
+          display_text(localServer.canServeLocally(url));
+        } catch (e) {
+          display_text(e.message);
+        }
+      }
+
       //----------------------------------------------------------
       // XmlHttpRequest tests
       //----------------------------------------------------------
@@ -131,13 +143,21 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         xmlhttp.onreadystatechange = function() {
           var state = xmlhttp.readyState;
           statesReached[state] += 1;
-          if (state == 4) {
+          if (state >= 3) {
             var responseText = "";
-            try { responseText = xmlhttp.responseText; }
-            catch (e) {}
+            var statusText = "";
+            var headers = "";
+            var status = 0;
+            try { 
+              headers = xmlhttp.getAllResponseHeaders();
+              status = xmlhttp.status;
+              statusText = xmlhttp.statusText;
+              responseText = xmlhttp.responseText;
+            } catch (e) {
+            }
             display_text(statesReached + "\n" +
-                         xmlhttp.status + " " + xmlhttp.statusText + "\n" +
-                         xmlhttp.getAllResponseHeaders() + 
+                         status + " " + statusText + "\n" +
+                         headers +
                          "----------------------------\n" +
                          responseText);
           }
@@ -161,7 +181,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         gearshttp.onreadystatechange = function() {
           var state = gearshttp.readyState;
           statesReached[state] += 1;
-          if (state == 4) {
+          if (state >= 3) {
             var responseText = "";
             try { responseText = gearshttp.responseText; }
             catch (e) {}
@@ -176,6 +196,18 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         gearshttp.send(data)
       }
 
+      //----------------------------------------------------------
+      // CopyMany
+      //----------------------------------------------------------
+
+      function CopyMany(capturedUrl, count) {
+        var startTime = Now();
+        for (var i = 0; i < count; ++i) {
+          store.copy(capturedUrl, capturedUrl + i);
+        }
+        var timeTaken = Now() - startTime;
+        display_text(count + " copies made in " + timeTaken + " msecs");
+      }
 
       //----------------------------------------------------------
       // GetMany
@@ -185,7 +217,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       var getmany_baseurl;
       var getmany_num_to_get;
       var getmany_num_got;
-     
+      var getmany_start_time;
+
       function DoXhrGetMany(urlbase, count) {
         DoGetMany(NewXHR(), urlbase, count);
       }
@@ -193,7 +226,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       function DoGearsGetMany(urlbase, count) {
         DoGetMany(NewGearsHR(), urlbase, count);
       }
-      
+
       function DoGetMany(request, urlbase, count) {
         if (getmany) {
           alert("Already getting many");
@@ -203,12 +236,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         getmany_baseurl = urlbase;
         getmany_num_to_get = count;
         getmany_num_got = 0;
+        getmany_start_time = Now();
         DoGetOne();
       }
-      
+
       function DoGetOne() {          
         if (getmany_num_got >= getmany_num_to_get) {
-          display_text("Got all");
+          display_text("Got all in " + (Now() - getmany_start_time) + " msecs");
           getmany = null;
           return;
         }  
@@ -218,13 +252,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           if (getmany.readyState==4) {
             display_text("Got " + getmany_num_got +
                          " of " + getmany_num_to_get);
-            setTimeout(DoGetOne, 1);
+            setTimeout(DoGetOne, 0);
           }
         }
         getmany.send(null);
       }
 
-      
+
       //----------------------------------------------------------
       // Output stuff to the results div
       //----------------------------------------------------------
@@ -266,7 +300,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <input type="button" value="OpenStore" onclick="OpenStore(); display_text(store != null)">
       <input type="button" value="RemoveStore" onclick="RemoveStore(); display_text('removed')">
       <br>
-      <input type="button" value="CanServeLocally(url)" onclick="display_text(localServer.canServeLocally( urlinput.value ))">
+      <input type="button" value="CanServeLocally(url)" onclick="CanServeLocally( urlinput.value )">
 
       <!-- ManagedResourceStore --><h5>ManagedResourceStore</h5>
       <input type="button" value="ShowInfo" onclick="ShowManagedStoreInfo()">
@@ -291,6 +325,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <br>
       <input type="button" value="rename(url, url2)" onclick="store.rename(urlinput.value, url2input.value)">
       <input type="button" value="copy(url, url2)" onclick="store.copy(urlinput.value, url2input.value)">
+      <input type="button" value="copyMany(url, url2AsNumber)" onclick="CopyMany(urlinput.value, url2input.value)">
       <br>
       <input type="button" value="getHeader(url, url2AsName)" onclick="display_text(store.getHeader( urlinput.value, url2input.value ))">
       <input type="button" value="getAllHeaders(url)" onclick="display_text(store.getAllHeaders( urlinput.value ))">

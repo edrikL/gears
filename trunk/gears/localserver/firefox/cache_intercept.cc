@@ -39,6 +39,7 @@
 #include "ff/genfiles/localserver.h" // from OUTDIR
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/factory/common/factory_utils.h"
 #include "gears/third_party/gecko_internal/nsICacheEntryDescriptor.h"
 #include "gears/third_party/gecko_internal/nsICacheListener.h"
 #include "gears/third_party/gecko_internal/nsICacheService.h"
@@ -629,6 +630,12 @@ void CacheIntercept::Init() {
   exception_manager.StartMonitoring();
 #endif
 #endif
+
+  std::string16 buildinfo;
+  AppendBuildInfo(&buildinfo);
+  std::string buildinfo_utf8;
+  String16ToUTF8(buildinfo.c_str(), &buildinfo_utf8);
+  LOG(("CacheIntercept::Init, Gears %s\n", buildinfo_utf8.c_str()));
 
   // We're initialized on the main ui thread of which there is exactly one
   // in firefox/mozila. Save this thread value so that we can easily
