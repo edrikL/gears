@@ -115,8 +115,6 @@ bool ModuleImplBaseClass::InitBaseManually(bool is_worker,
 #if BROWSER_FF
   worker_js_argc_ = 0;
   worker_js_argv_ = NULL;
-  worker_js_retval_ = NULL;
-  worker_js_retval_was_set_ = false;
 #elif BROWSER_IE
   // These do not exist in IE yet.
 #endif
@@ -173,14 +171,10 @@ void ModuleImplBaseClass::Release() {
 #if BROWSER_FF  // the rest of this file only applies to Firefox, for now
 
 
-void ModuleImplBaseClass::JsWorkerSetParams(int argc, JsToken *argv,
-                                            JsToken *retval,
-                                            bool retval_was_set) {
+void ModuleImplBaseClass::JsWorkerSetParams(int argc, JsToken *argv) {
   assert(is_initialized_);
   worker_js_argc_ = argc;
   worker_js_argv_ = argv;
-  worker_js_retval_ = retval;
-  worker_js_retval_was_set_ = retval_was_set;
 }
 
 int ModuleImplBaseClass::JsWorkerGetArgc() const {
@@ -189,34 +183,11 @@ int ModuleImplBaseClass::JsWorkerGetArgc() const {
   return worker_js_argc_;
 }
 
-JsToken *ModuleImplBaseClass::JsWorkerGetArgv() const {
+JsToken* ModuleImplBaseClass::JsWorkerGetArgv() const {
   assert(is_initialized_);
   assert(EnvIsWorker());
   return worker_js_argv_;
 }
 
-JsToken *ModuleImplBaseClass::JsWorkerGetRetVal() const {
-  assert(is_initialized_);
-  assert(EnvIsWorker());
-  return worker_js_retval_;
-}
-
-bool ModuleImplBaseClass::JsWorkerRetValWasSet() const {
-  assert(is_initialized_);
-  assert(EnvIsWorker());
-  return worker_js_retval_was_set_;
-}
-
-void ModuleImplBaseClass::JsWorkerSetRetVal(JsToken val) {
-  assert(is_initialized_);
-  assert(EnvIsWorker());
-  // I believe that worker_js_retval_ can sometimes be null if the js is not
-  // expecting a return value. I am basing this on the documentation for
-  // nsIXPCNativeCallContext, here, which is a wrapper around JSNative in
-  // Firefox: http://www.xulplanet.com/references/xpcomref/ifaces/nsIXPCNativeCallContext.html
-  if (!worker_js_retval_) { return; }
-  *worker_js_retval_ = val;
-  worker_js_retval_was_set_ = true;
-}
-
-#endif
+#endif  // BROWSER_FF
+//-----------------------------------------------------------------------------

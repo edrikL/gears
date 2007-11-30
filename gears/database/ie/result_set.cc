@@ -28,7 +28,6 @@
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/common/sqlite_wrapper.h"
-#include "gears/database/common/database_utils.h"
 #include "gears/database/ie/database.h"
 #include "gears/database/ie/result_set.h"
 #include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
@@ -71,13 +70,11 @@ bool GearsResultSet::InitializeResultSet(sqlite3_stmt *statement,
     database_ = db;
     database_->AddRef();
     db->AddResultSet(this);
-    column_names_.clear();
   }
   return succeeded;
 }
 
 bool GearsResultSet::Finalize() {
-  current_row_.reset(NULL);
   if (statement_) {
     int sql_status = sqlite3_finalize(statement_);
     statement_ = NULL;
@@ -89,44 +86,6 @@ bool GearsResultSet::Finalize() {
     }
   }
   return true;
-}
-
-STDMETHODIMP GearsResultSet::get_currentRow(VARIANT *retval) {
-  if (!statement_ || !is_valid_row_) {
-    HRESULT hr = VariantClear(retval);
-    if (!SUCCEEDED(hr)) {
-      RETURN_EXCEPTION(GET_INTERNAL_ERROR_MESSAGE().c_str());
-    }
-    retval->vt = VT_NULL;
-    RETURN_NORMAL();
-  }
-
-  std::string16 error;
-  if (column_names_.size() == 0) {
-    if (!GetColumnNames(statement_, &column_names_, &error)) {
-      RETURN_EXCEPTION(error.c_str());
-    }
-  }
-
-  if (current_row_.get() == NULL) {
-    current_row_.reset(GetJsRunner()->NewObject(NULL));
-    if (current_row_.get() == NULL) {
-      RETURN_EXCEPTION(GET_INTERNAL_ERROR_MESSAGE().c_str());
-    }
-
-    if (!PopulateJsObjectFromRow(GetJsRunner(), current_row_->token(),
-                                 statement_, &column_names_, &error)) {
-      current_row_.reset(NULL);
-      RETURN_EXCEPTION(error.c_str());
-    }
-  }
-
-  HRESULT hr = VariantCopy(retval, &current_row_->token());
-  if (!SUCCEEDED(hr)) {
-    RETURN_EXCEPTION(GET_INTERNAL_ERROR_MESSAGE().c_str());
-  }
-
-  RETURN_NORMAL();
 }
 
 STDMETHODIMP GearsResultSet::field(int index, VARIANT *retval) {
@@ -300,22 +259,19 @@ bool GearsResultSet::NextImpl(std::string16 *error_message) {
 #endif  // DEBUG
   assert(statement_);
   assert(error_message);
-
   int sql_status = sqlite3_step(statement_);
   ATLTRACE(_T("GearsResultSet::next() sqlite3_step returned %d\n"), sql_status);
   switch (sql_status) {
     case SQLITE_ROW:
       is_valid_row_ = true;
-      current_row_.reset(NULL);
       break;
     case SQLITE_BUSY:
       // If there was a timeout (SQLITE_BUSY) the SQL row cursor did not
-      // advance, so we don't reset is_valid_row_ or current_row_. If it was
-      // valid prior to this call, it's still valid now.
+      // advance, so we don't reset is_valid_row_. If it was valid prior to
+      // this call, it's still valid now.
       break;
     default:
       is_valid_row_ = false;
-      current_row_.reset(NULL);
       break;
   }
   bool succeeded = (sql_status == SQLITE_ROW) ||

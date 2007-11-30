@@ -480,32 +480,37 @@ bool JsContextWrapper::SetupInstanceObject(JSContext *cx,
 class ScopedJsArgSetter {
  public:
   // sets argc/argv/context on construction
-  ScopedJsArgSetter(ModuleImplBaseClass *gears_native, JSContext *cx,
-                    int argc, jsval *argv, jsval *retval)
-      : gears_native_(gears_native) {
-    // TODO(cprince): Remove the 'cx' argument after some bake time.
-    assert(cx == gears_native_->EnvPageJsContext());
-    prev_argc_ = gears_native_->JsWorkerGetArgc();
-    prev_argv_ = gears_native_->JsWorkerGetArgv();
-    prev_retval_ = gears_native_->JsWorkerGetRetVal();
-    prev_retval_was_set_ = gears_native_->JsWorkerRetValWasSet();
-    gears_native_->JsWorkerSetParams(argc, argv, retval, false);
+  ScopedJsArgSetter(nsISupports *isupports, JSContext *cx,
+                    int argc, jsval *argv) {
+    scour_native_ = NULL; // dtor only checks this
+    nsresult nr;
+    scour_idl_ = do_QueryInterface(isupports, &nr);
+    if (NS_SUCCEEDED(nr) && scour_idl_) {
+      scour_native_ = NULL;
+      scour_idl_->GetNativeBaseClass(&scour_native_);
+      if (scour_native_) {
+        // TODO(cprince): Remove the 'cx' argument after some bake time.
+        assert(cx == scour_native_->EnvPageJsContext());
+        prev_argc_    = scour_native_->JsWorkerGetArgc();
+        prev_argv_    = scour_native_->JsWorkerGetArgv();
+        scour_native_->JsWorkerSetParams(argc, argv);
+      }
+    }
   }
   // restores argc/argv/context on destruction
   ~ScopedJsArgSetter() {
-    gears_native_->JsWorkerSetParams(prev_argc_, prev_argv_, prev_retval_,
-                                     prev_retval_was_set_);
+    if (scour_native_) {
+      scour_native_->JsWorkerSetParams(prev_argc_, prev_argv_);
+    }
   }
  private:
-  ModuleImplBaseClass *gears_native_;
-
+  nsCOMPtr<GearsBaseClassInterface> scour_idl_;
+  ModuleImplBaseClass *scour_native_;
   // must save/restore any previous values to handle re-entrancy
   // (example: JS code calls foo.abort(), C++ abort() invokes a JS handler
   // for 'onabort', and the JS handler calls any C++ function)
-  int prev_argc_;
-  jsval *prev_argv_;
-  jsval *prev_retval_;
-  bool prev_retval_was_set_;
+  int        prev_argc_;
+  jsval     *prev_argv_;
 };
 
 
@@ -548,15 +553,7 @@ JSBool JsContextWrapper::JsWrapperCaller(JSContext *cx, JSObject *obj,
   assert(instance_data->header.type == INSTANCE_JSOBJECT);
 
   // Give the ModuleImplBaseClass direct access to JS params
-  nsCOMPtr<GearsBaseClassInterface> gears_idl(
-      do_QueryInterface(instance_data->isupports, &nr));
-  if (NS_FAILED(nr)) { return nr; }
-
-  ModuleImplBaseClass *gears_native = NULL;
-  gears_idl->GetNativeBaseClass(&gears_native);
-  if (!gears_native) { return NS_ERROR_FAILURE; }
-
-  ScopedJsArgSetter arg_setter(gears_native, cx, argc, argv, js_retval);
+  ScopedJsArgSetter arg_setter(instance_data->isupports, cx, argc, argv);
 
   // Get interface information about this function.
   const nsXPTMethodInfo *function_info = function_data->function_info;
@@ -1037,9 +1034,10 @@ JSBool JsContextWrapper::JsWrapperCaller(JSContext *cx, JSObject *obj,
       }
 
       if (param_info.IsRetval()) {
-        if (!gears_native->JsWorkerRetValWasSet()) {
-          *js_retval = v;
-        } // otherwise, it has already been set and we should not modify it.
+        //if (!cx.GetReturnValueWasSet()) { // I'M NOT SIMULATING THIS; I DON'T THINK I NEED TO BE
+        //  cx.SetRetVal(v);
+        //}
+        *js_retval = v; // CPRINCE REPLACEMENT
       } else {
         assert(false); // NOT YET IMPLEMENTED!
 /***

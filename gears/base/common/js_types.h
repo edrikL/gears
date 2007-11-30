@@ -291,13 +291,10 @@ class JsParamFetcher {
   bool GetAsObject(int i, JsObject *out);
   bool GetAsNewRootedCallback(int i, JsRootedCallback **out);
 
-  bool SetReturnValueAsJsToken(JsToken val);
-
  private:
   JsContextPtr  js_context_;
   int           js_argc_;
   JsToken      *js_argv_;
-  ModuleImplBaseClass *gears_obj_;
 
 #if BROWSER_FF
   nsCOMPtr<nsIXPConnect> xpc_;
@@ -305,6 +302,7 @@ class JsParamFetcher {
 #elif BROWSER_IE
 #endif
 };
+
 
 // Sets JavaScript exceptions, in a way that hides differences
 // between main-thread and worker-thread environments.
