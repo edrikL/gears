@@ -30,6 +30,7 @@
 #define GEARS_BASE_COMMON_JS_RUNNER_H__
 
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/js_types.h"
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
@@ -84,38 +85,6 @@ class JsEventHandlerInterface {
   virtual void HandleEvent(JsEventType event) = 0;
 };
 
-
-// The JsParam* types define values for sending and receiving JS parameters.
-enum JsParamType {
-  JSPARAM_BOOL,
-  JSPARAM_INT,
-  JSPARAM_DOUBLE,
-  JSPARAM_OBJECT_TOKEN,
-  JSPARAM_STRING16,
-  JSPARAM_NULL,
-};
-
-enum JsParamRequirement {
-  JSPARAM_OPTIONAL,
-  JSPARAM_REQUIRED,
-};
-
-struct JsParamToSend {
-  JsParamType type;
-  const void *value_ptr;
-};
-
-struct JsParamToRecv {
-  JsParamType type;
-  void *value_ptr;
-};
-
-struct JsArgument {
-  JsParamRequirement requirement;
-  JsParamType type;
-  void* value_ptr;
-};
-
 // Declares the platform-independent interface that Gears internals require
 // for running JavaScript code.
 class JsRunnerInterface {
@@ -130,17 +99,6 @@ class JsRunnerInterface {
   virtual JsContextPtr GetContext() = 0;
   virtual bool Eval(const std::string16 &script) = 0;
   virtual void SetErrorHandler(JsErrorHandlerInterface *error_handler) = 0;
-
-  // Temporary: npapi only.
-#if BROWSER_NPAPI
-  // Get the arguments for a JavaScript callback.  Returns the number of
-  // arguments successfully read (will bail at the first invalid argument).
-  virtual int GetArguments(int argc, JsArgument *argv) = 0;
-
-  // Sets the value to be returned to the calling JavaScript.  Returns true on
-  // success.
-  virtual bool SetReturnValue(JsParamType type, const void *value_ptr) = 0;
-#endif
 
   // Creates a new object in the JavaScript engine using the specified
   // constructor. If the constructor is NULL, it defaults to "Object". The

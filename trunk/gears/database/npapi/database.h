@@ -47,17 +47,17 @@ class GearsDatabase
   ~GearsDatabase();
 
   // OPTIONAL IN: string database_name
-  void Open();
+  void Open(JsCallContext *context);
 
   // IN: string expression
   // OPTIONAL IN: array args
   // OUT: GearsResultSet results
-  void Execute();
+  void Execute(JsCallContext *context);
 
-  void Close();
+  void Close(JsCallContext *context);
 
   // OUT: int last_insert_row_id
-  void GetLastInsertRowId();
+  void GetLastInsertRowId(JsCallContext *context);
 
   void HandleEvent(JsEventType event_type);
 
@@ -67,7 +67,7 @@ class GearsDatabase
 // now.
 #ifdef DEBUG
   // OUT: int execution_time_ms
-  void GetExecuteMsec();
+  void GetExecuteMsec(JsCallContext *context);
   static Stopwatch g_stopwatch_;
 #endif // DEBUG
 
@@ -78,7 +78,8 @@ class GearsDatabase
   void AddResultSet(GearsResultSet *rs);
   void RemoveResultSet(GearsResultSet *rs);
   bool CloseInternal();
-  bool BindArgsToStatement(const JsToken *arg_array, sqlite3_stmt *stmt);
+  bool BindArgsToStatement(JsCallContext *context,
+                           const JsToken *arg_array, sqlite3_stmt *stmt);
 
   sqlite3 *db_;
   std::set<GearsResultSet *> result_sets_;

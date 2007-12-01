@@ -205,10 +205,6 @@ class JsRootedToken {
   DISALLOW_EVIL_CONSTRUCTORS(JsRootedToken);
 };
 
-// Sets JavaScript exceptions, in a way that hides differences
-// between main-thread and worker-thread environments.
-void JsSetException(const char16 *message);
-
 #elif BROWSER_SAFARI
 
 // Just placeholder values for Safari since the created workers use a separate
@@ -263,6 +259,84 @@ class JsObject {
 };
 
 typedef JsRootedToken JsRootedCallback;
+
+// The JsParam* types define values for sending and receiving JS parameters.
+enum JsParamType {
+  JSPARAM_BOOL,
+  JSPARAM_INT,  // TODO(mpcomplete): deprecate in favor of double?
+  JSPARAM_DOUBLE,
+  // TODO(mpcomplete): split this next into OBJECT, ARRAY, FUNCTION, and TOKEN
+  JSPARAM_OBJECT_TOKEN,
+  JSPARAM_STRING16,
+  JSPARAM_NULL,
+};
+
+enum JsParamRequirement {
+  JSPARAM_OPTIONAL,
+  JSPARAM_REQUIRED,
+};
+
+struct JsParamToSend {
+  JsParamType type;
+  const void *value_ptr;
+};
+
+struct JsParamToRecv {
+  JsParamType type;
+  void *value_ptr;
+};
+
+struct JsArgument {
+  JsParamRequirement requirement;
+  JsParamType type;
+  void* value_ptr;
+};
+
+// Temporary: npapi only.
+#if BROWSER_NPAPI
+// This class provides an interface for a property or method access on a native
+// object from JavaScript.  It allows consumers to retrieve what arguments were
+// passed in, and return a value or exception back to the caller.  Any native
+// property or method handler should take an instance of this object as a
+// parameter.
+class JsCallContext {
+ public:
+  // Only browser-specific wrapper code should need to instantiate this object.
+  JsCallContext(JsContextPtr js_context, NPObject *object,
+                int argc, const JsToken *argv, JsToken *retval)
+      : js_context_(js_context), object_(object),
+        argc_(argc), argv_(argv), retval_(retval) {}
+
+  // Get the arguments a JavaScript caller has passed into a scriptable method
+  // of a native object.  Returns the number of arguments successfully read
+  // (will bail at the first invalid argument).
+  int GetArguments(int argc, JsArgument *argv);
+
+  // Sets the value to be returned to the calling JavaScript.
+  void SetReturnValue(JsParamType type, const void *value_ptr);
+
+  // Sets an exception to be thrown to the calling JavaScript.  Setting an
+  // exception overrides any previous exception and any return values.
+  void SetException(const std::string16 &message);
+
+  JsContextPtr js_context() { return js_context_; }
+
+ private:
+   JsContextPtr js_context_;
+   NPObject *object_;
+   int argc_;
+   const JsToken *argv_;
+   JsToken *retval_;
+};
+#endif
+
+// Temporary: npapi only.
+#if BROWSER_NPAPI
+// Given a JsParamToSend, extract it into a ScopedNPVariant.  Resulting
+// variant increases the reference count for objects.
+void ConvertJsParamToToken(const JsParamToSend &param,
+                           ScopedNPVariant *variant);
+#endif
 
 //-----------------------------------------------------------------------------
 #if BROWSER_FF  // the rest of this file only applies to Firefox, for now

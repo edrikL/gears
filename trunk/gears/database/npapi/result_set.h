@@ -41,25 +41,25 @@ class GearsResultSet
 
   // IN: int index
   // OUT: obj something
-  void Field();
+  void Field(JsCallContext *context);
 
   // IN: string field_name
   // OUT: obj something
-  void FieldByName();
+  void FieldByName(JsCallContext *context);
 
   // IN: int index
   // OUT: string field_name
-  void FieldName();
+  void FieldName(JsCallContext *context);
 
   // OUT: int field_count
-  void FieldCount();
+  void FieldCount(JsCallContext *context);
 
-  void Close();
+  void Close(JsCallContext *context);
 
-  void Next();
+  void Next(JsCallContext *context);
 
   // OUT: bool is_valid_row
-  void IsValidRow();
+  void IsValidRow(JsCallContext *context);
 
  private:
   friend class GearsDatabase;
@@ -74,7 +74,7 @@ class GearsResultSet
   void PageUnloading();
 
   // Helper shared by Field() and FieldByName()
-  void FieldImpl(int index);
+  void FieldImpl(JsCallContext *context, int index);
 
   // Helper shared by Next() and SetStatement()
   bool NextImpl(std::string16 *error_message);

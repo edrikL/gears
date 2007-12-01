@@ -39,38 +39,38 @@ class GearsLocalServer : public ModuleImplBaseClass {
 
   // IN: string url
   // OUT: bool retval
-  void CanServeLocally();
+  void CanServeLocally(JsCallContext *context);
 
   // IN: string name
   // OPTIONAL IN: required_cookie
   // OUT: GearsManagedResourceStore *retval
-  void CreateManagedStore();
+  void CreateManagedStore(JsCallContext *context);
 
   // IN: string name
   // OPTIONAL IN: required_cookie
   // OUT: GearsManagedResourceStore *retval
-  void OpenManagedStore();
+  void OpenManagedStore(JsCallContext *context);
 
   // IN: string name
   // OPTIONAL IN: required_cookie
-  void RemoveManagedStore();
-
-  // IN: string name
-  // OPTIONAL IN: required_cookie
-  // OUT: GearsResourceStore *retval
-  void CreateStore();
+  void RemoveManagedStore(JsCallContext *context);
 
   // IN: string name
   // OPTIONAL IN: required_cookie
   // OUT: GearsResourceStore *retval
-  void OpenStore();
+  void CreateStore(JsCallContext *context);
 
   // IN: string name
   // OPTIONAL IN: required_cookie
-  void RemoveStore();
+  // OUT: GearsResourceStore *retval
+  void OpenStore(JsCallContext *context);
+
+  // IN: string name
+  // OPTIONAL IN: required_cookie
+  void RemoveStore(JsCallContext *context);
 
  private:
-  bool GetAndCheckParameters(std::string16 *name,
+  bool GetAndCheckParameters(JsCallContext *context, std::string16 *name,
                              std::string16 *required_cookie);
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsLocalServer);

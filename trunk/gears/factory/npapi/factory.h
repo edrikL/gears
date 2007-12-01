@@ -45,13 +45,13 @@ class GearsFactory
   GearsFactory();
 
   // IN: string object, string version
-  void Create();
+  void Create(JsCallContext *context);
 
   // OUT: string build_info
-  void GetBuildInfo();
+  void GetBuildInfo(JsCallContext *context);
 
   // OUT: string version_string
-  void GetVersion();
+  void GetVersion(JsCallContext *context);
 
   // Non-scriptable methods
   void SuspendObjectCreation();

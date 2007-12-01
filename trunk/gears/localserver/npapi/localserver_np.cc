@@ -31,19 +31,19 @@
 //-----------------------------------------------------------------------------
 // CanServeLocally
 //-----------------------------------------------------------------------------
-void GearsLocalServer::CanServeLocally() {
+void GearsLocalServer::CanServeLocally(JsCallContext *context) {
   bool retval = false;
-  GetJsRunner()->SetReturnValue(JSPARAM_BOOL, &retval);
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+  context->SetReturnValue(JSPARAM_BOOL, &retval);
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //-----------------------------------------------------------------------------
 // CreateManagedStore
 //-----------------------------------------------------------------------------
-void GearsLocalServer::CreateManagedStore() {
+void GearsLocalServer::CreateManagedStore(JsCallContext *context) {
   std::string16 name;
   std::string16 required_cookie;
-  if (!GetAndCheckParameters(&name, &required_cookie))
+  if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
   ScopedModuleWrapper store_wrapper(CreateGearsManagedResourceStore(this));
@@ -51,42 +51,42 @@ void GearsLocalServer::CreateManagedStore() {
     return;  // Create function sets an error message.
 
   JsToken retval = store_wrapper.get()->GetWrapperToken();
-  GetJsRunner()->SetReturnValue(JSPARAM_OBJECT_TOKEN, &retval);
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+  context->SetReturnValue(JSPARAM_OBJECT_TOKEN, &retval);
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //-----------------------------------------------------------------------------
 // OpenManagedStore
 //-----------------------------------------------------------------------------
-void GearsLocalServer::OpenManagedStore() {
+void GearsLocalServer::OpenManagedStore(JsCallContext *context) {
   std::string16 name;
   std::string16 required_cookie;
-  if (!GetAndCheckParameters(&name, &required_cookie))
+  if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
-  GetJsRunner()->SetReturnValue(JSPARAM_NULL, NULL);
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+  context->SetReturnValue(JSPARAM_NULL, NULL);
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //-----------------------------------------------------------------------------
 // RemoveManagedStore
 //-----------------------------------------------------------------------------
-void GearsLocalServer::RemoveManagedStore() {
+void GearsLocalServer::RemoveManagedStore(JsCallContext *context) {
   std::string16 name;
   std::string16 required_cookie;
-  if (!GetAndCheckParameters(&name, &required_cookie))
+  if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //-----------------------------------------------------------------------------
 // CreateStore
 //-----------------------------------------------------------------------------
-void GearsLocalServer::CreateStore() {
+void GearsLocalServer::CreateStore(JsCallContext *context) {
   std::string16 name;
   std::string16 required_cookie;
-  if (!GetAndCheckParameters(&name, &required_cookie))
+  if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
   ScopedModuleWrapper store_wrapper(CreateGearsResourceStore(this));
@@ -94,51 +94,52 @@ void GearsLocalServer::CreateStore() {
     return;  // Create function sets an error message.
 
   JsToken retval = store_wrapper.get()->GetWrapperToken();
-  GetJsRunner()->SetReturnValue(JSPARAM_OBJECT_TOKEN, &retval);
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+  context->SetReturnValue(JSPARAM_OBJECT_TOKEN, &retval);
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //-----------------------------------------------------------------------------
 // OpenStore
 //-----------------------------------------------------------------------------
-void GearsLocalServer::OpenStore() {
+void GearsLocalServer::OpenStore(JsCallContext *context) {
   std::string16 name;
   std::string16 required_cookie;
-  if (!GetAndCheckParameters(&name, &required_cookie))
+  if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
-  GetJsRunner()->SetReturnValue(JSPARAM_NULL, NULL);
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+  context->SetReturnValue(JSPARAM_NULL, NULL);
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //-----------------------------------------------------------------------------
 // RemoveStore
 //-----------------------------------------------------------------------------
-void GearsLocalServer::RemoveStore() {
+void GearsLocalServer::RemoveStore(JsCallContext *context) {
   std::string16 name;
   std::string16 required_cookie;
-  if (!GetAndCheckParameters(&name, &required_cookie))
+  if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // GetAndCheckParameters
 //------------------------------------------------------------------------------
-bool GearsLocalServer::GetAndCheckParameters(std::string16 *name,
+bool GearsLocalServer::GetAndCheckParameters(JsCallContext *context,
+                                             std::string16 *name,
                                              std::string16 *required_cookie) {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, name },
     { JSPARAM_OPTIONAL, JSPARAM_STRING16, required_cookie },
   };
-  int argc = GetJsRunner()->GetArguments(ARRAYSIZE(argv), argv);
+  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
   if (argc < 1)
-    return false;  // JsRunner sets an error message.
+    return false;  // GetArguments sets an error message.
 
   // Validate parameters
   if (name->empty()) {
-    SET_EXCEPTION(STRING16(L"The name parameter is required."));
+    context->SetException(STRING16(L"The name parameter is required."));
     return false;
   }
 
@@ -147,7 +148,7 @@ bool GearsLocalServer::GetAndCheckParameters(std::string16 *name,
                                  L"characters: "));
     error += *name;
     error += STRING16(L".");
-    SET_EXCEPTION(error.c_str());
+    context->SetException(error.c_str());
     return false;
   }
 

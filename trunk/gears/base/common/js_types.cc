@@ -519,8 +519,144 @@ void ScopedNPVariant::Release() {
   VOID_TO_NPVARIANT(*this);
 }
 
-void JsSetException(const char16 *message) {
-  BrowserUtils::SetJsException(message);
+void ConvertJsParamToToken(const JsParamToSend &param,
+                           ScopedNPVariant *variant) {
+  switch (param.type) {
+    case JSPARAM_BOOL: {
+      const bool *value = static_cast<const bool *>(param.value_ptr);
+      variant->Reset(*value);
+      break;
+    }
+    case JSPARAM_INT: {
+      const int *value = static_cast<const int *>(param.value_ptr);
+      variant->Reset(*value);
+      break;
+    }
+    case JSPARAM_DOUBLE: {
+      const double *value = static_cast<const double *>(param.value_ptr);
+      variant->Reset(*value);
+      break;
+    }
+    case JSPARAM_OBJECT_TOKEN: {
+      const JsToken *value = static_cast<const JsToken *>(param.value_ptr);
+      variant->Reset(NPVARIANT_TO_OBJECT(*value));
+      break;
+    }
+    case JSPARAM_STRING16: {
+      const std::string16 *value = static_cast<const std::string16 *>(
+                                                   param.value_ptr);
+      variant->Reset(value->c_str());
+      break;
+    }
+    case JSPARAM_NULL: {
+      variant->Reset();  // makes it VOID (undefined).
+      NULL_TO_NPVARIANT(*variant);
+      break;
+    }
+    default:
+      assert(false);
+  }
+}
+
+// Given an NPVariant, extract it into a JsArgument.  Object pointers are
+// weak references (ref count is not increased).
+static bool ConvertTokenToArgument(JsCallContext *context,
+                                   const JsToken &variant,
+                                   JsArgument *param) {
+  switch (param->type) {
+    case JSPARAM_BOOL: {
+      bool *value = static_cast<bool *>(param->value_ptr);
+      if (!JsTokenToBool(variant, context->js_context(), value)) {
+        context->SetException(
+            STRING16(L"Invalid argument type: expected bool."));
+        return false;
+      }
+      break;
+    }
+    case JSPARAM_INT: {
+      int *value = static_cast<int *>(param->value_ptr);
+      if (!JsTokenToInt(variant, context->js_context(), value)) {
+        context->SetException(
+            STRING16(L"Invalid argument type: expected int."));
+        return false;
+      }
+      break;
+    }
+    case JSPARAM_OBJECT_TOKEN: {
+      JsToken *value = static_cast<JsToken *>(param->value_ptr);
+      if (!NPVARIANT_IS_OBJECT(variant)) {
+        // TODO(mpcomplete): should we accept null/void here?
+        context->SetException(
+            STRING16(L"Invalid argument type: expected object."));
+        return false;
+      }
+      *value = variant;
+      break;
+    }
+    case JSPARAM_STRING16: {
+      std::string16 *value = static_cast<std::string16 *>(param->value_ptr);
+      if (!JsTokenToString(variant, context->js_context(), value)) {
+        context->SetException(
+            STRING16(L"Invalid argument type: expected string."));
+        return false;
+      }
+      break;
+    }
+    default:
+      assert(false);
+      return false;
+  }
+
+  return true;
+}
+
+int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
+  bool has_optional = false;
+
+  for (int i = 0; i < output_argc; ++i) {
+    has_optional |= output_argv[i].requirement == JSPARAM_OPTIONAL;
+    if (output_argv[i].requirement == JSPARAM_REQUIRED)
+      assert(!has_optional);  // should not have required arg after optional
+
+    if (i >= argc_) {
+      // Out of arguments
+      if (output_argv[i].requirement == JSPARAM_REQUIRED) {
+        std::string16 msg;
+        msg += STRING16(L"Required argument ");
+        msg += IntegerToString16(i + 1);
+        msg += STRING16(L" is missing.");
+        SetException(msg.c_str());
+      }
+
+      return i;
+    }
+
+    if (!ConvertTokenToArgument(this, argv_[i], &output_argv[i]))
+      return i;
+  }
+
+  return output_argc;
+}
+
+void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
+  JsParamToSend retval = { type, value_ptr };
+  ScopedNPVariant np_retval;
+  ConvertJsParamToToken(retval, &np_retval);
+  *retval_ = np_retval;
+
+  // In NPAPI, return values from callbacks are released by the browser.
+  // Therefore, we give up ownership of this variant without releasing it.
+  np_retval.Release();
+}
+
+void JsCallContext::SetException(const std::string16 &message) {
+  LOG((message.c_str()));
+
+  std::string message_utf8;
+  if (!String16ToUTF8(message.data(), message.length(), &message_utf8))
+    message_utf8 = "Unknown Gears Error";  // better to throw *something*
+
+  NPN_SetException(object_, message_utf8.c_str());
 }
 
 #endif

@@ -28,6 +28,7 @@
 // angry recursion as it tries to follow the infinite include chain.
 
 #include "gears/base/npapi/browser_utils.h"
+#include "gears/base/common/js_types.h"
 
 // static
 template<class T>
@@ -60,7 +61,8 @@ template<class T>
 bool PluginBase<T>::Invoke(NPObject *npobj, NPIdentifier name,
                            const NPVariant *args, uint32_t num_args,
                            NPVariant *result) {
-  ImplClass *impl = static_cast<PluginClass *>(npobj)->GetImplObject();
+  PluginClass *plugin = static_cast<PluginClass *>(npobj);
+  ImplClass *impl = plugin->GetImplObject();
 
   const IDList &methods = GetMethodList();
   IDList::const_iterator method = methods.find(name);
@@ -68,8 +70,10 @@ bool PluginBase<T>::Invoke(NPObject *npobj, NPIdentifier name,
     return false;
   ImplCallback callback = method->second;
 
-  BrowserUtils::EnterScope(npobj, static_cast<int>(num_args), args, result);
-  (impl->*callback)();
+  JsCallContext context(plugin->instance_, npobj,
+                        static_cast<int>(num_args), args, result);
+  BrowserUtils::EnterScope(&context);
+  (impl->*callback)(&context);
   BrowserUtils::ExitScope();
   return true;
 }
@@ -85,7 +89,8 @@ bool PluginBase<T>::HasProperty(NPObject * npobj, NPIdentifier name) {
 template<class T>
 bool PluginBase<T>::GetProperty(NPObject *npobj, NPIdentifier name,
                                 NPVariant *result) {
-  ImplClass *impl = static_cast<PluginClass *>(npobj)->GetImplObject();
+  PluginClass *plugin = static_cast<PluginClass *>(npobj);
+  ImplClass *impl = plugin->GetImplObject();
 
   const IDList &properties = GetPropertyGetterList();
   IDList::const_iterator property = properties.find(name);
@@ -93,8 +98,9 @@ bool PluginBase<T>::GetProperty(NPObject *npobj, NPIdentifier name,
     return false;
   ImplCallback callback = property->second;
 
-  BrowserUtils::EnterScope(npobj, 0, NULL, result);
-  (impl->*callback)();
+  JsCallContext context(plugin->instance_, npobj, 0, NULL, result);
+  BrowserUtils::EnterScope(&context);
+  (impl->*callback)(&context);
   BrowserUtils::ExitScope();
   return true;
 }
@@ -103,7 +109,8 @@ bool PluginBase<T>::GetProperty(NPObject *npobj, NPIdentifier name,
 template<class T>
 bool PluginBase<T>::SetProperty(NPObject *npobj, NPIdentifier name,
                                 const NPVariant *value) {
-  ImplClass *impl = static_cast<PluginClass *>(npobj)->GetImplObject();
+  PluginClass *plugin = static_cast<PluginClass *>(npobj);
+  ImplClass *impl = plugin->GetImplObject();
 
   const IDList &properties = GetPropertySetterList();
   IDList::const_iterator property = properties.find(name);
@@ -111,8 +118,9 @@ bool PluginBase<T>::SetProperty(NPObject *npobj, NPIdentifier name,
     return false;
   ImplCallback callback = property->second;
 
-  BrowserUtils::EnterScope(npobj, 1, value, NULL);
-  (impl->*callback)();
+  JsCallContext context(plugin->instance_, npobj, 1, value, NULL);
+  BrowserUtils::EnterScope(&context);
+  (impl->*callback)(&context);
   BrowserUtils::ExitScope();
   return true;
 }

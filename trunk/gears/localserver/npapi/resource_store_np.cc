@@ -31,109 +31,110 @@
 //------------------------------------------------------------------------------
 // GetName
 //------------------------------------------------------------------------------
-void GearsResourceStore::GetName() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsResourceStore::GetName(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // GetRequiredCookie
 //------------------------------------------------------------------------------
-void GearsResourceStore::GetRequiredCookie() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsResourceStore::GetRequiredCookie(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // GetEnabled
 //------------------------------------------------------------------------------
-void GearsResourceStore::GetEnabled() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsResourceStore::GetEnabled(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // SetEnabled
 //------------------------------------------------------------------------------
-void GearsResourceStore::SetEnabled() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsResourceStore::SetEnabled(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // Capture
 //------------------------------------------------------------------------------
-void GearsResourceStore::Capture() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsResourceStore::Capture(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // AbortCapture
 //------------------------------------------------------------------------------
-void GearsResourceStore::AbortCapture() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsResourceStore::AbortCapture(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // IsCaptured
 //------------------------------------------------------------------------------
-void GearsResourceStore::IsCaptured() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsResourceStore::IsCaptured(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // Remove
 //------------------------------------------------------------------------------
-void GearsResourceStore::Remove() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsResourceStore::Remove(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // Rename
 //------------------------------------------------------------------------------
-void GearsResourceStore::Rename() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsResourceStore::Rename(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // Copy
 //------------------------------------------------------------------------------
-void GearsResourceStore::Copy() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsResourceStore::Copy(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 
 //------------------------------------------------------------------------------
 // CaptureFile
 //------------------------------------------------------------------------------
-void GearsResourceStore::CaptureFile() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsResourceStore::CaptureFile(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // GetCapturedFileName
 //------------------------------------------------------------------------------
-void GearsResourceStore::GetCapturedFileName() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsResourceStore::GetCapturedFileName(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // GetHeader
 //------------------------------------------------------------------------------
-void GearsResourceStore::GetHeader() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsResourceStore::GetHeader(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // GetAllHeaders
 //------------------------------------------------------------------------------
-void GearsResourceStore::GetAllHeaders() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsResourceStore::GetAllHeaders(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // CreateFileSubmitter
 //------------------------------------------------------------------------------
-void GearsResourceStore::CreateFileSubmitter() {
+void GearsResourceStore::CreateFileSubmitter(JsCallContext *context) {
   if (EnvIsWorker()) {
-    RETURN_EXCEPTION(
+    context->SetException(
         STRING16(L"createFileSubmitter cannot be called in a worker."));
+    return;
   }
 
   ScopedModuleWrapper submitter_wrapper(CreateGearsFileSubmitter(this));
@@ -141,8 +142,8 @@ void GearsResourceStore::CreateFileSubmitter() {
     return;  // Create function sets an error message.
 
   JsToken retval = submitter_wrapper.get()->GetWrapperToken();
-  GetJsRunner()->SetReturnValue(JSPARAM_OBJECT_TOKEN, &retval);
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+  context->SetReturnValue(JSPARAM_OBJECT_TOKEN, &retval);
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------

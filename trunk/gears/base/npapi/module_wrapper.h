@@ -42,12 +42,13 @@ class ModuleWrapper
         NPN_CreateObject(context, GetNPClass<PluginClass>()));
 
     if (!wrapper) {
-      SET_EXCEPTION(STRING16(L"Failed to create requested object."));
+      BrowserUtils::SetJsException(
+          STRING16(L"Failed to create requested object."));
       return NULL;
     }
 
     if (!wrapper->GetImplObject()->InitBaseFromSibling(sibling)) {
-      SET_EXCEPTION(STRING16(L"Error initializing base class."));
+      BrowserUtils::SetJsException(STRING16(L"Error initializing base class."));
       wrapper->Release();
       return NULL;
     }

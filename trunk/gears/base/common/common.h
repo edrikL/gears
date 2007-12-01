@@ -147,18 +147,6 @@
 
 #include "gears/base/common/common_np.h"
 
-#define RETURN_NORMAL()  return;
-#define SET_EXCEPTION(msg) \
-{ \
-    LOG(("Exception: %s", msg)); \
-    JsSetException(msg); \
-}
-#define RETURN_EXCEPTION(msg) \
-{ \
-    SET_EXCEPTION(msg); \
-    return; \
-}
-
 #elif BROWSER_SAFARI
 
 #include "gears/base/common/common_sf.h"

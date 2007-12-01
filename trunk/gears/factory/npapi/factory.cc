@@ -30,7 +30,6 @@
 
 #include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/js_runner.h"
 #include "gears/base/common/string16.h"
 #include "gears/database/npapi/database.h"
 #include "gears/workerpool/npapi/workerpool.h"
@@ -45,14 +44,13 @@ GearsFactory::GearsFactory()
   SetActiveUserFlag();
 }
 
-void GearsFactory::Create() {
-  JsRunnerInterface* js_runner = GetJsRunner();
-
+void GearsFactory::Create(JsCallContext *context) {
   // TODO(mpcomplete): implement HTMLDialog.
 #if 0
   if (!HasPermissionToUseGears(this, NULL, NULL, NULL)) {
-    RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
-                              PRODUCT_FRIENDLY_NAME L"."));
+    context->SetException(STRING16(L"Page does not have permission to use "
+                                   PRODUCT_FRIENDLY_NAME L"."));
+    return;
   }
 #endif
 
@@ -62,13 +60,14 @@ void GearsFactory::Create() {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &class_name },
     { JSPARAM_OPTIONAL, JSPARAM_STRING16, &version },
   };
-  int argc = js_runner->GetArguments(ARRAYSIZE(argv), argv);
+  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
   if (argc < 1)
-    return;  // JsRunner sets an error message.
+    return;  // GetArguments sets an error message.
 
   // Check the version string.
   if (version != kAllowedClassVersion) {
-    RETURN_EXCEPTION(STRING16(L"Invalid version string. Must be 1.0."));
+    context->SetException(STRING16(L"Invalid version string. Must be 1.0."));
+    return;
   }
 
   // TODO(mpcomplete): implement me.
@@ -85,7 +84,8 @@ void GearsFactory::Create() {
   } else if (class_name == STRING16(L"beta.workerpool")) {
     object.reset(CreateGearsWorkerPool(this));
   } else {
-    RETURN_EXCEPTION(STRING16(L"Unknown object."));
+    context->SetException(STRING16(L"Unknown object."));
+    return;
   }
 
   if (!object.get())
@@ -93,23 +93,18 @@ void GearsFactory::Create() {
 
   // Give up ownership of the object and return it.
   JsToken token = object.get()->GetWrapperToken();
-  js_runner->SetReturnValue(JSPARAM_OBJECT_TOKEN, &token);
-
-  RETURN_NORMAL();
+  context->SetReturnValue(JSPARAM_OBJECT_TOKEN, &token);
 }
 
-void GearsFactory::GetBuildInfo() {
+void GearsFactory::GetBuildInfo(JsCallContext *context) {
   std::string16 build_info;
   AppendBuildInfo(&build_info);
-  GetJsRunner()->SetReturnValue(JSPARAM_STRING16, &build_info);
-
-  RETURN_NORMAL();
+  context->SetReturnValue(JSPARAM_STRING16, &build_info);
 }
 
-void GearsFactory::GetVersion() {
+void GearsFactory::GetVersion(JsCallContext *context) {
   std::string16 version(PRODUCT_VERSION_STRING);
-  GetJsRunner()->SetReturnValue(JSPARAM_STRING16, &version);
-  RETURN_NORMAL();
+  context->SetReturnValue(JSPARAM_STRING16, &version);
 }
 
 // TODO(cprince): See if we can use Suspend/Resume with the opt-in dialog too,
