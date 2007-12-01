@@ -105,7 +105,7 @@ OBJ_SUFFIX = .o
 MKDEP = gcc -M -MF $(@D)/$*.pp -MT $@ $(CPPFLAGS) $(FF_CPPFLAGS) $<
 
 CPPFLAGS += -DLINUX
-SQLITE_CFLAGS += -Wno-uninitialized
+SQLITE_CFLAGS += -Wno-uninitialized -DHAVE_USLEEP=1
 
 COMPILE_FLAGS_dbg = -g -O0
 COMPILE_FLAGS_opt = -O2
@@ -141,6 +141,7 @@ MKDEP = gcc -M -MF $(@D)/$*.pp -MT $@ $(CPPFLAGS) $(FF_CPPFLAGS) $<
 
 CPPFLAGS += -DLINUX -DOS_MACOSX
 SQLITE_CFLAGS += -Wno-uninitialized -Wno-pointer-sign -isysroot $(OSX_SDK_ROOT)
+SQLITE_CFLAGS += -DHAVE_USLEEP=1
 
 COMPILE_FLAGS_dbg = -g -O0
 COMPILE_FLAGS_opt = -O2
