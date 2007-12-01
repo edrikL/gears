@@ -39,34 +39,34 @@ class GearsManagedResourceStore : public ModuleImplBaseClass {
   GearsManagedResourceStore() {}
 
   // IN: string name
-  void GetName();
+  void GetName(JsCallContext *context);
 
   // IN: string cookie
-  void GetRequiredCookie();
+  void GetRequiredCookie(JsCallContext *context);
 
   // OUT: bool enabled
-  void GetEnabled();
+  void GetEnabled(JsCallContext *context);
   // IN: bool enabled
-  void SetEnabled();
+  void SetEnabled(JsCallContext *context);
 
   // OUT: string url
-  void GetManifestUrl();
+  void GetManifestUrl(JsCallContext *context);
   // IN: string url
-  void SetManifestUrl();
+  void SetManifestUrl(JsCallContext *context);
 
   // OUT: int time
-  void GetLastUpdateCheckTime();
+  void GetLastUpdateCheckTime(JsCallContext *context);
 
   // OUT: int status
-  void GetUpdateStatus();
+  void GetUpdateStatus(JsCallContext *context);
 
   // OUT: string message
-  void GetLastErrorMessage();
+  void GetLastErrorMessage(JsCallContext *context);
 
-  void CheckForUpdate();
+  void CheckForUpdate(JsCallContext *context);
 
   // OUT: string version
-  void GetCurrentVersion();
+  void GetCurrentVersion(JsCallContext *context);
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(GearsManagedResourceStore);

@@ -30,76 +30,76 @@
 //------------------------------------------------------------------------------
 // GetName
 //------------------------------------------------------------------------------
-void GearsManagedResourceStore::GetName() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsManagedResourceStore::GetName(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // GetRequiredCookie
 //------------------------------------------------------------------------------
-void GearsManagedResourceStore::GetRequiredCookie() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsManagedResourceStore::GetRequiredCookie(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // GetEnabled
 //------------------------------------------------------------------------------
-void GearsManagedResourceStore::GetEnabled() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsManagedResourceStore::GetEnabled(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // SetEnabled
 //------------------------------------------------------------------------------
-void GearsManagedResourceStore::SetEnabled() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsManagedResourceStore::SetEnabled(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // GetManifestUrl
 //------------------------------------------------------------------------------
-void GearsManagedResourceStore::GetManifestUrl() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsManagedResourceStore::GetManifestUrl(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // SetManifestUrl
 //------------------------------------------------------------------------------
-void  GearsManagedResourceStore::SetManifestUrl() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void  GearsManagedResourceStore::SetManifestUrl(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // GetLastUpdateCheckTime
 //------------------------------------------------------------------------------
-void GearsManagedResourceStore::GetLastUpdateCheckTime() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsManagedResourceStore::GetLastUpdateCheckTime(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // GetUpdateStatus
 //------------------------------------------------------------------------------
-void GearsManagedResourceStore::GetUpdateStatus() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsManagedResourceStore::GetUpdateStatus(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // GetLastErrorMessage
 //------------------------------------------------------------------------------
-void GearsManagedResourceStore::GetLastErrorMessage() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsManagedResourceStore::GetLastErrorMessage(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // CheckForUpdate
 //------------------------------------------------------------------------------
-void GearsManagedResourceStore::CheckForUpdate() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsManagedResourceStore::CheckForUpdate(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //------------------------------------------------------------------------------
 // GetCurrentVersion
 //------------------------------------------------------------------------------
-void GearsManagedResourceStore::GetCurrentVersion() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsManagedResourceStore::GetCurrentVersion(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }

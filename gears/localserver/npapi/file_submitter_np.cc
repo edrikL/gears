@@ -28,6 +28,6 @@
 //------------------------------------------------------------------------------
 // SetFileInputElement
 //------------------------------------------------------------------------------
-void GearsFileSubmitter::SetFileInputElement() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsFileSubmitter::SetFileInputElement(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }

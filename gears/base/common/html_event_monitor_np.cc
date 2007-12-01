@@ -59,7 +59,7 @@ class HtmlEventMonitorHook : public PluginBase<HtmlEventMonitorHook> {
 
   HtmlEventMonitorHook *GetImplObject() { return this; }
 
-  void HandleEvent() {
+  void HandleEvent(JsCallContext *context) {
     function_(user_param_);  // invoke user callback
   }
 

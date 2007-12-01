@@ -63,7 +63,7 @@ bool GearsResultSet::InitializeResultSet(sqlite3_stmt *statement,
   if (!succeeded || sqlite3_column_count(statement_) == 0) {
     // Either an error occurred or this was a command that does
     // not return a row, so we can just close automatically
-    Close();
+    Finalize();
   } else {
     database_ = db;
     database_->AddRef();
@@ -95,82 +95,81 @@ bool GearsResultSet::Finalize() {
   return true;
 }
 
-void GearsResultSet::FieldImpl(int index) {
+void GearsResultSet::FieldImpl(JsCallContext *context, int index) {
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   if (statement_ == NULL) {
-    RETURN_EXCEPTION(STRING16(L"SQL statement is NULL."));
+    context->SetException(STRING16(L"SQL statement is NULL."));
+    return;
   }
   if ((index < 0) || (index >= sqlite3_column_count(statement_))) {
-    RETURN_EXCEPTION(STRING16(L"Invalid index."));
+    context->SetException(STRING16(L"Invalid index."));
+    return;
   }
 
   int column_type = sqlite3_column_type(statement_, index);
-  bool success = false;
   switch (column_type) {
     case SQLITE_INTEGER: {
       sqlite_int64 i64 = sqlite3_column_int64(statement_, index);
       if ((i64 >= INT_MIN) && (i64 <= INT_MAX)) {
         int retval = static_cast<int>(i64);
-        success = GetJsRunner()->SetReturnValue(JSPARAM_INT, &retval);
+        context->SetReturnValue(JSPARAM_INT, &retval);
       } else if ((i64 >= JS_INT_MIN) && (i64 <= JS_INT_MAX)) {
         double retval = static_cast<double>(i64);
-        success = GetJsRunner()->SetReturnValue(JSPARAM_DOUBLE, &retval);
+        context->SetReturnValue(JSPARAM_DOUBLE, &retval);
       } else {
-        RETURN_EXCEPTION(STRING16(L"Integer value is out of range."));
+        context->SetException(STRING16(L"Integer value is out of range."));
+        return;
       }
       break;
     }
     case SQLITE_FLOAT: {
       double retval = sqlite3_column_double(statement_, index);
-      success = GetJsRunner()->SetReturnValue(JSPARAM_DOUBLE, &retval);
+      context->SetReturnValue(JSPARAM_DOUBLE, &retval);
       break;
     }
     case SQLITE_TEXT: {
       const void *text = sqlite3_column_text16(statement_, index);
       std::string16 retval(static_cast<const char16 *>(text));
-      success = GetJsRunner()->SetReturnValue(JSPARAM_STRING16, &retval);
+      context->SetReturnValue(JSPARAM_STRING16, &retval);
       break;
     }
     case SQLITE_NULL:
-      success = GetJsRunner()->SetReturnValue(JSPARAM_NULL, NULL);
+      context->SetReturnValue(JSPARAM_NULL, NULL);
       break;
     case SQLITE_BLOB:
       // TODO(miket): figure out right way to pass around blobs in variants.
-      RETURN_EXCEPTION(STRING16(L"Data type not supported."));
+      context->SetException(STRING16(L"Data type not supported."));
+      return;
     default:
-      RETURN_EXCEPTION(STRING16(L"Data type not supported."));
+      context->SetException(STRING16(L"Data type not supported."));
+      return;
   }
-
-  if (!success) {
-    RETURN_EXCEPTION(STRING16(L"Setting variant failed."));
-  }
-
-  RETURN_NORMAL();
 }
 
-void GearsResultSet::Field() {
+void GearsResultSet::Field(JsCallContext *context) {
   // Get parameters.
   int index;
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_INT, &index },
   };
-  int argc = GetJsRunner()->GetArguments(ARRAYSIZE(argv), argv);
+  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
   if (argc < 1)
-    return;  // JsRunner sets an error message.
+    return;  // GetArguments sets an error message.
 
-  FieldImpl(index);  // sets the return value/error.
+  FieldImpl(context, index);  // sets the return value/error.
 }
 
-void GearsResultSet::FieldByName() {
+void GearsResultSet::FieldByName(JsCallContext *context) {
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   if (statement_ == NULL) {
-    RETURN_EXCEPTION(STRING16(L"SQL statement is NULL."));
+    context->SetException(STRING16(L"SQL statement is NULL."));
+    return;
   }
 
   // Get parameters.
@@ -178,9 +177,9 @@ void GearsResultSet::FieldByName() {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &field_name },
   };
-  int argc = GetJsRunner()->GetArguments(ARRAYSIZE(argv), argv);
+  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
   if (argc < 1)
-    return;  // JsRunner sets an error message.
+    return;  // GetArguments sets an error message.
 
   // TODO(miket): This is horrible O(n) code but we didn't have a hashtable
   // implementation handy. Fix this!
@@ -194,19 +193,21 @@ void GearsResultSet::FieldByName() {
     }
   }
   if (i >= n) {
-    RETURN_EXCEPTION(STRING16(L"Field name not found."));
+    context->SetException(STRING16(L"Field name not found."));
+    return;
   }
 
-  FieldImpl(i);  // sets the return value/error.
+  FieldImpl(context, i);  // sets the return value/error.
 }
 
-void GearsResultSet::FieldName() {
+void GearsResultSet::FieldName(JsCallContext *context) {
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   if (statement_ == NULL) {
-    RETURN_EXCEPTION(STRING16(L"SQL statement is NULL."));
+    context->SetException(STRING16(L"SQL statement is NULL."));
+    return;
   }
 
   // Get parameters.
@@ -214,53 +215,49 @@ void GearsResultSet::FieldName() {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_INT, &index },
   };
-  int argc = GetJsRunner()->GetArguments(ARRAYSIZE(argv), argv);
+  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
   if (argc < 1)
-    return;  // JsRunner sets an error message.
+    return;  // GetArguments sets an error message.
 
   if ((index < 0) || (index >= sqlite3_column_count(statement_))) {
-    RETURN_EXCEPTION(STRING16(L"Invalid index."));
+    context->SetException(STRING16(L"Invalid index."));
+    return;
   }
 
   const void *column_name = sqlite3_column_name16(statement_, index);
   std::string16 retval(static_cast<const char16 *>(column_name));
-  GetJsRunner()->SetReturnValue(JSPARAM_STRING16, &retval);
-  RETURN_NORMAL();
+  context->SetReturnValue(JSPARAM_STRING16, &retval);
 }
 
-void GearsResultSet::FieldCount() {
+void GearsResultSet::FieldCount(JsCallContext *context) {
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   // rs.fieldCount() should never throw. Return 0 if there is no statement.
   int retval = statement_ ? sqlite3_column_count(statement_) : 0;
-
-  GetJsRunner()->SetReturnValue(JSPARAM_INT, &retval);
-  RETURN_NORMAL();
+  context->SetReturnValue(JSPARAM_INT, &retval);
 }
 
-void GearsResultSet::Close() {
+void GearsResultSet::Close(JsCallContext *context) {
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   if (!Finalize()) {
-    RETURN_EXCEPTION(STRING16(L"SQLite finalize() failed."));
+    context->SetException(STRING16(L"SQLite finalize() failed."));
   }
-
-  RETURN_NORMAL();
 }
 
-void GearsResultSet::Next() {
+void GearsResultSet::Next(JsCallContext *context) {
   if (!statement_) {
-    RETURN_EXCEPTION(STRING16(L"Called Next() with NULL statement."));
+    context->SetException(STRING16(L"Called Next() with NULL statement."));
+    return;
   }
   std::string16 error_message;
   if (!NextImpl(&error_message)) {
-    RETURN_EXCEPTION(error_message.c_str());
+    context->SetException(error_message.c_str());
   }
-  RETURN_NORMAL();
 }
 
 bool GearsResultSet::NextImpl(std::string16 *error_message) {
@@ -295,13 +292,12 @@ bool GearsResultSet::NextImpl(std::string16 *error_message) {
   return succeeded;
 }
 
-void GearsResultSet::IsValidRow() {
+void GearsResultSet::IsValidRow(JsCallContext *context) {
   // rs.isValidRow() should never throw. Return false if there is no statement.
   bool valid = false;
   if (statement_ != NULL) {
     valid = is_valid_row_;
   }
 
-  GetJsRunner()->SetReturnValue(JSPARAM_BOOL, &valid);
-  RETURN_NORMAL();
+  context->SetReturnValue(JSPARAM_BOOL, &valid);
 }

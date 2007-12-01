@@ -50,9 +50,10 @@ GearsDatabase::~GearsDatabase() {
   }
 }
 
-void GearsDatabase::Open() {
+void GearsDatabase::Open(JsCallContext *context) {
   if (db_) {
-    RETURN_EXCEPTION(STRING16(L"A database is already open."));
+    context->SetException(STRING16(L"A database is already open."));
+    return;
   }
 
   // Create an event monitor to close remaining ResultSets when the page
@@ -67,7 +68,7 @@ void GearsDatabase::Open() {
   JsArgument argv[] = {
     { JSPARAM_OPTIONAL, JSPARAM_STRING16, &database_name },
   };
-  int argc = GetJsRunner()->GetArguments(ARRAYSIZE(argv), argv);
+  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
 
   // For now, callers cannot open DBs in other security origins.
   // To support that, parse an 'origin' argument here and call
@@ -76,21 +77,21 @@ void GearsDatabase::Open() {
   // Open the database.
   if (!OpenSqliteDatabase(database_name.c_str(), EnvPageSecurityOrigin(),
                           &db_)) {
-    RETURN_EXCEPTION(STRING16(L"Couldn't open SQLite database."));
+    context->SetException(STRING16(L"Couldn't open SQLite database."));
   }
-
-  RETURN_NORMAL();
 }
 
-void GearsDatabase::Execute() {
+void GearsDatabase::Execute(JsCallContext *context) {
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
 
   int sql_status;
 
-  if (!db_)
-    RETURN_EXCEPTION(STRING16(L"Database handle was NULL."));
+  if (!db_) {
+    context->SetException(STRING16(L"Database handle was NULL."));
+    return;
+  }
 
   // Get parameters.
   std::string16 expr;
@@ -99,9 +100,9 @@ void GearsDatabase::Execute() {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &expr },
     { JSPARAM_OPTIONAL, JSPARAM_OBJECT_TOKEN, &arg_array },
   };
-  int argc = GetJsRunner()->GetArguments(ARRAYSIZE(argv), argv);
+  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
   if (argc < 1)
-    return;  // JsRunner sets an error message.
+    return;  // GetArguments sets an error message.
 
   // Prepare a statement for execution.
 
@@ -120,12 +121,14 @@ void GearsDatabase::Execute() {
                            sql_status, db_, &msg);
     msg += STRING16(L" EXPRESSION: ");
     msg += expr;
-    RETURN_EXCEPTION(msg.c_str());
+    context->SetException(msg.c_str());
+    return;
   }
 
   // Bind parameters
-  if (!BindArgsToStatement((argc >= 2) ? &arg_array : NULL, stmt.get())) {
-    // BindArgsToStatement already called RETURN_EXCEPTION
+  if (!BindArgsToStatement(context, (argc >= 2) ? &arg_array : NULL,
+                           stmt.get())) {
+    // BindArgsToStatement already set an exception
     return;
   }
 
@@ -140,30 +143,30 @@ void GearsDatabase::Execute() {
   // Note the ResultSet takes ownership of the statement
   std::string16 error_message;
   if (!result_set->InitializeResultSet(stmt.release(), this, &error_message)) {
-    RETURN_EXCEPTION(error_message.c_str());
+    context->SetException(error_message.c_str());
+    return;
   }
 
   JsToken retval = rs_internal.get()->GetWrapperToken();
-  GetJsRunner()->SetReturnValue(JSPARAM_OBJECT_TOKEN, &retval);
-  RETURN_NORMAL();
+  context->SetReturnValue(JSPARAM_OBJECT_TOKEN, &retval);
 }
 
-bool GearsDatabase::BindArgsToStatement(const JsToken *arg_array,
+bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
+                                        const JsToken *arg_array,
                                         sqlite3_stmt *stmt) {
   int num_args_expected = sqlite3_bind_parameter_count(stmt);
   int num_args = 0;
 
-  JsContextPtr context = EnvPageJsContext();
   JsArray array;
 
-  if (arg_array && (!array.SetArray(*arg_array, context) ||
+  if (arg_array && (!array.SetArray(*arg_array, EnvPageJsContext()) ||
                     !array.GetLength(&num_args))) {
-    SET_EXCEPTION(STRING16(L"Invalid SQL parameters array."));
+    context->SetException(STRING16(L"Invalid SQL parameters array."));
     return false;
   }
 
   if (num_args_expected != num_args) {
-    SET_EXCEPTION(STRING16(L"Wrong number of SQL parameters."));
+    context->SetException(STRING16(L"Wrong number of SQL parameters."));
     return false;
   }
 
@@ -193,13 +196,13 @@ bool GearsDatabase::BindArgsToStatement(const JsToken *arg_array,
       // TODO(mpcomplete): figure out what else we need to support here.
       std::string16 error =
           STRING16(L"SQL parameter ") + IntegerToString16(i) +
-          STRING16(" has unknown type.");
-      SET_EXCEPTION(error.c_str());
+          STRING16(L" has unknown type.");
+      context->SetException(error.c_str());
       return false;
     }
 
     if (sql_status != SQLITE_OK) {
-      SET_EXCEPTION(STRING16(L"Could not bind arguments to expression."));
+      context->SetException(STRING16(L"Could not bind arguments to expression."));
       return false;
     }
   }
@@ -207,24 +210,20 @@ bool GearsDatabase::BindArgsToStatement(const JsToken *arg_array,
   return true;
 }
 
-void GearsDatabase::Close() {
+void GearsDatabase::Close(JsCallContext *context) {
   if (!CloseInternal()) {
-    RETURN_EXCEPTION(STRING16(L"SQLite close() failed."));
+    context->SetException(STRING16(L"SQLite close() failed."));
   }
-
-  RETURN_NORMAL();
 }
 
-void GearsDatabase::GetLastInsertRowId() {
-  // TODO(mpcomplete): no way to do int64 in NPAPI.. is that a problem?
+void GearsDatabase::GetLastInsertRowId(JsCallContext *context) {
   sqlite_int64 rowid = sqlite3_last_insert_rowid(db_);
   if ((rowid < JS_INT_MIN) || (rowid > JS_INT_MAX)) {
-    RETURN_EXCEPTION(STRING16(L"lastInsertRowId is out of range."));
+    context->SetException(STRING16(L"lastInsertRowId is out of range."));
+    return;
   }
   double retval = static_cast<double>(rowid);
-  GetJsRunner()->SetReturnValue(JSPARAM_DOUBLE, &retval);
-
-  RETURN_NORMAL();
+  context->SetReturnValue(JSPARAM_DOUBLE, &retval);
 }
 
 void GearsDatabase::AddResultSet(GearsResultSet *rs) {
@@ -273,9 +272,8 @@ void GearsDatabase::HandleEvent(JsEventType event_type) {
 }
 
 #ifdef DEBUG
-void GearsDatabase::GetExecuteMsec() {
+void GearsDatabase::GetExecuteMsec(JsCallContext *context) {
   int retval = GearsDatabase::g_stopwatch_.GetElapsed();
-  GetJsRunner()->SetReturnValue(JSPARAM_INT, &retval);
-  RETURN_NORMAL();
+  context->SetReturnValue(JSPARAM_INT, &retval);
 }
 #endif

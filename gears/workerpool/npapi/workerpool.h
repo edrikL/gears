@@ -42,32 +42,32 @@ class GearsWorkerPool
 
   // IN: string full_script
   // OUT: int retval
-  void CreateWorker();
+  void CreateWorker(JsCallContext *context);
 
   // IN: string url
   // OUT: int retval
-  void CreateWorkerFromUrl();
+  void CreateWorkerFromUrl(JsCallContext *context);
 
-  void AllowCrossOrigin();
+  void AllowCrossOrigin(JsCallContext *context);
 
   // IN: string message
   // IN: int dest_worker_id
-  void SendMessage();
+  void SendMessage(JsCallContext *context);
 
   // IN: function_ptr handler
-  void SetOnmessage();
+  void SetOnmessage(JsCallContext *context);
 
   // OUT: function_ptr handler
-  void GetOnmessage();
+  void GetOnmessage(JsCallContext *context);
 
   // IN: function_ptr handler
-  void SetOnerror();
+  void SetOnerror(JsCallContext *context);
 
   // OUT: function_ptr handler
-  void GetOnerror();
+  void GetOnerror(JsCallContext *context);
 
 #ifdef DEBUG
-  void ForceGC();
+  void ForceGC(JsCallContext *context);
 #endif
 
  private:

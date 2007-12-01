@@ -42,7 +42,7 @@ class GearsFileSubmitter : public ModuleImplBaseClass {
 
   // IN: HtmlElement file_input_element
   // IN: string captured_url_key
-  void SetFileInputElement();
+  void SetFileInputElement(JsCallContext *context);
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(GearsFileSubmitter);

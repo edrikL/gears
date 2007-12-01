@@ -28,54 +28,25 @@
 #include <stack>
 
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/js_types.h"
 #include "gears/base/npapi/scoped_npapi_handles.h"
-
-// Holds a collection of information about the calling JavaScript context.
-struct JsScope {
-  NPObject *object;
-  int argc;
-  const JsToken* argv;
-  JsToken* retval;
-};
 
 // TODO(mpcomplete): when we have workerpool support, these will probably need
 // to be thread-local variables.
-static std::stack<JsScope> scope_stack;
+static std::stack<JsCallContext*> call_stack;
 
-void BrowserUtils::EnterScope(NPObject *object,
-                              int argc, const JsToken *argv, JsToken *retval) {
-  if (retval) VOID_TO_NPVARIANT(*retval);
-  JsScope scope = { object, argc, argv, retval };
-  scope_stack.push(scope);
+void BrowserUtils::EnterScope(JsCallContext *context) {
+  call_stack.push(context);
 }
 
 void BrowserUtils::ExitScope() {
-  assert(!scope_stack.empty());
-  scope_stack.pop();
-}
-
-void BrowserUtils::GetJsArguments(int *argc, const JsToken **argv) {
-  assert(!scope_stack.empty());
-
-  *argc = scope_stack.top().argc;
-  *argv = scope_stack.top().argv;
-}
-
-void BrowserUtils::SetJsReturnValue(const JsToken& return_value) {
-  assert(!scope_stack.empty());
-  assert(scope_stack.top().retval);  // setters don't have retvals.
-
-  *scope_stack.top().retval = return_value;
+  assert(!call_stack.empty());
+  call_stack.pop();
 }
 
 void BrowserUtils::SetJsException(const std::string16& message) {
-  assert(!scope_stack.empty());
-
-  std::string message_utf8;
-  if (!String16ToUTF8(message.data(), message.length(), &message_utf8))
-    message_utf8 = "Unknown Gears Error";  // better to throw *something*
-
-  NPN_SetException(scope_stack.top().object, message_utf8.c_str());
+  assert(!call_stack.empty());
+  call_stack.top()->SetException(message);
 }
 
 bool BrowserUtils::GetPageLocationUrl(JsContextPtr context,

@@ -30,6 +30,8 @@
 
 #include "gears/base/common/base_class.h"
 
+class JsCallContext;
+
 // Associates a Gears class with its corresponding NPAPI bridge class.
 template<class Plugin> struct PluginTraits {};
 
@@ -51,8 +53,8 @@ class PluginBase : public NPObject {
   // bridge.
   typedef typename PluginTraits<T>::ImplClass ImplClass;
 
-  // Callback function used for property and method invokations.
-  typedef void (ImplClass::*ImplCallback)();
+  // Callback function used for property and method invocations.
+  typedef void (ImplClass::*ImplCallback)(JsCallContext *);
 
   // NPClass callbacks.  The browser calls these functions when JavaScript
   // interacts with a Gears object.

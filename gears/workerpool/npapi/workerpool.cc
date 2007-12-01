@@ -39,50 +39,50 @@ GearsWorkerPool::GearsWorkerPool() {
 GearsWorkerPool::~GearsWorkerPool() {
 }
 
-void GearsWorkerPool::SetOnmessage() {
+void GearsWorkerPool::SetOnmessage(JsCallContext *context) {
   // TODO(mpcomplete): implement for 1.0.
   Initialize();
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
-void GearsWorkerPool::GetOnmessage() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsWorkerPool::GetOnmessage(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
-void GearsWorkerPool::SetOnerror() {
+void GearsWorkerPool::SetOnerror(JsCallContext *context) {
   Initialize();
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
-void GearsWorkerPool::GetOnerror() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsWorkerPool::GetOnerror(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
-void GearsWorkerPool::CreateWorker() {
+void GearsWorkerPool::CreateWorker(JsCallContext *context) {
   // TODO(mpcomplete): implement for 1.0.
   Initialize();
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
-void GearsWorkerPool::CreateWorkerFromUrl() {
+void GearsWorkerPool::CreateWorkerFromUrl(JsCallContext *context) {
   Initialize();
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
-void GearsWorkerPool::AllowCrossOrigin() {
+void GearsWorkerPool::AllowCrossOrigin(JsCallContext *context) {
   Initialize();
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
-void GearsWorkerPool::SendMessage() {
+void GearsWorkerPool::SendMessage(JsCallContext *context) {
   // TODO(mpcomplete): implement for 1.0.
   Initialize();
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+  context->SetException(STRING16(L"Not Implemented"));
 }
 
 #ifdef DEBUG
-void GearsWorkerPool::ForceGC() {
-  RETURN_EXCEPTION(STRING16(L"Not Implemented"));
+void GearsWorkerPool::ForceGC(JsCallContext *context) {
+  context->SetException(STRING16(L"Not Implemented"));
 }
 #endif // DEBUG
 

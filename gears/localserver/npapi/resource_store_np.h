@@ -43,58 +43,58 @@ class GearsResourceStore
   GearsResourceStore() {}
 
   // OUT: string name
-  void GetName();
+  void GetName(JsCallContext *context);
 
   // OUT: string cookie
-  void GetRequiredCookie();
+  void GetRequiredCookie(JsCallContext *context);
 
   // OUT: bool enabled
-  void GetEnabled();
+  void GetEnabled(JsCallContext *context);
   // IN: bool enabled
-  void SetEnabled();
+  void SetEnabled(JsCallContext *context);
 
   // IN: string[] url_or_url_array
   // IN: function completion_callback
   // OUT: int capture_id
-  void Capture();
+  void Capture(JsCallContext *context);
 
   // IN: int capture_id
-  void AbortCapture();
+  void AbortCapture(JsCallContext *context);
 
   // IN: string url
   // OUT: bool is_captured
-  void IsCaptured();
+  void IsCaptured(JsCallContext *context);
 
   // IN: string url
-  void Remove();
+  void Remove(JsCallContext *context);
 
   // IN: string src_url
   // IN: string dst_url
-  void Rename();
+  void Rename(JsCallContext *context);
 
   // IN: string src_url
   // IN: string dst_url
-  void Copy();
+  void Copy(JsCallContext *context);
 
   // IN: string url
   // IN: string header_name
   // OUT: string header
-  void GetHeader();
+  void GetHeader(JsCallContext *context);
 
   // IN: string url
   // OUT: string headers
-  void GetAllHeaders();
+  void GetAllHeaders(JsCallContext *context);
 
   // IN: HtmlElement file_input_element
   // IN: string url
-  void CaptureFile();
+  void CaptureFile(JsCallContext *context);
 
   // IN: string url
   // OUT: string filename
-  void GetCapturedFileName();
+  void GetCapturedFileName(JsCallContext *context);
 
   // OUT: GearsFileSubmitter *retval
-  void CreateFileSubmitter();
+  void CreateFileSubmitter(JsCallContext *context);
 
   virtual void HandleEvent(JsEventType event_type);
 
