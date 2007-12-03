@@ -48,7 +48,7 @@ Follow either of the two links above to access the appropriate CLA and instructi
 
 == Choose a Bug ==
 
-Gears development is driven primarily from the issue tracker. Bugs that the team wants to resolve before the next release are marked as milestone [http://code.google.com/p/google-gears/issues/list?q=Milestone%3AM1 M1]. Bugs for the release after that are marked [http://code.google.com/p/google-gears/issues/list?q=Milestone%3AM2 M2]. All other bugs are marked [http://code.google.com/p/google-gears/issues/list?q=Milestone%3AM3 M3].
+Gears development is driven primarily from the issue tracker. Each issue has a version assigned to it, which is the version of Gears that we want to include the resolution to that issue in. Generally speaking, issues assigned to lower versions are more important, but sometimes larger issues are scheduled for further in the future.
 
 If the project you want to work on does not have a bug, please create one. If the project already has a bug, assign the bug to yourself. If the bug is already assigned to someone else, update the bug or send mail to that person to see how you can help.
 
@@ -72,9 +72,7 @@ More info on hacking the Gears codebase can be found [HackingGears here].
 
 == Test ==
 
-Unit tests are critical to keeping the quality of Gears high. Since Gears is primarily exposed as !JavaScript, our unit tests are implemented in a slightly unusual way: we have an HTML file (in `test/unit_test.html`) which we load into a browser with Gears installed which exercises all the APIs.
-
-You should add appropriate unit tests to `test/unit_test.js` for your changes.
+Unit tests are critical to keeping the quality of Gears high. Since Gears is primarily exposed as !JavaScript, our unit tests are also implemented in JavaScript. You can learn how to get started writing tests for Gears by reading gears/test2/README.txt.
 
 
 == Send Your Patch ==
