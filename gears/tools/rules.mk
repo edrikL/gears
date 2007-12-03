@@ -214,11 +214,10 @@ else
 	make modules    BROWSER=IE
 	make installer  BROWSER=IE
 
-# Temporarily remove NPAPI from the default build.
-#make prereqs    BROWSER=NPAPI
-#make genheaders BROWSER=NPAPI
-#make modules    BROWSER=NPAPI
-#make installer  BROWSER=NPAPI
+	make prereqs    BROWSER=NPAPI
+	make genheaders BROWSER=NPAPI
+	make modules    BROWSER=NPAPI
+	make installer  BROWSER=NPAPI
 
         # For win32, also build a cross-browser MSI.
 	make win32installer
