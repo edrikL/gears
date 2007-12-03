@@ -38,6 +38,10 @@ class ShortcutTable {
   // Creates the table if it doesn't already exist.
   bool MaybeCreateTable();
 
+  // Upgrade to version 3 schema (this table did not previously
+  // exist).
+  bool UpgradeToVersion3();
+
   // Upgrade version 3 schema to version 4.
   bool UpgradeFromVersion3ToVersion4();
 
