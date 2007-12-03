@@ -122,3 +122,29 @@ class FirefoxLinuxLauncher(BrowserLauncher):
     
   def type(self):
     return 'FirefoxLinux'
+
+
+  def kill(self):
+    """ Kill firefox-bin process.
+
+    Must first find the pid, then kill the process.
+    """
+    # Find firefox-bin process by running ps
+    command = ['ps', '-C', 'firefox-bin']
+    p = subprocess.Popen(command, stdout=subprocess.PIPE)
+    
+    # first line in ps output contains column descriptions
+    num_header_lines = 1
+
+    # Read pid's from stdout and kill them
+    ps_lines = p.stdout.readlines()
+    if len(ps_lines) > num_header_lines:
+      process_list = ps_lines[num_header_lines:]
+
+      # Loop in case there are multiple running
+      for process_line_text in process_list:
+        # Format the text in the process description into a list
+        # Depends on space separated columns, removes leading spaces
+        process_line = process_line_text.strip().split(' ')
+        pid = int(process_line[0])
+        os.kill(pid, signal.SIGINT)
