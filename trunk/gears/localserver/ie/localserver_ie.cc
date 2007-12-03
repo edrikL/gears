@@ -79,6 +79,12 @@ STDMETHODIMP GearsLocalServer::createManagedStore(
     return hr;
   }
 
+  // Check that this page uses a supported URL scheme.
+  if (!HttpRequest::IsSchemeSupported(
+                        EnvPageSecurityOrigin().scheme().c_str())) {
+    RETURN_EXCEPTION(STRING16(L"URL scheme not supported."));
+  }
+
   ATLTRACE(_T("LocalServer::createManagedStore( %s, %s )\n"),
            name, required_cookie_bstr.m_str);
 
@@ -213,6 +219,12 @@ STDMETHODIMP GearsLocalServer::createStore(
                                           required_cookie_bstr);
   if (FAILED(hr)) {
     return hr;
+  }
+
+  // Check that this page uses a supported URL scheme.
+  if (!HttpRequest::IsSchemeSupported(
+                        EnvPageSecurityOrigin().scheme().c_str())) {
+    RETURN_EXCEPTION(STRING16(L"URL scheme not supported."));
   }
 
   ATLTRACE(_T("LocalServer::createStore( %s, %s )\n"),
