@@ -1,5 +1,5 @@
 #summary Lets web apps register themselves as first-class applications.
-#labels DesignDoc
+#labels DesignDoc-Implemented,Deprecated
 
 =PROBLEM=
 
