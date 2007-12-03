@@ -359,7 +359,7 @@ bool PermissionsDB::UpgradeToVersion3() {
     return false;
   }
 
-  if (!shortcut_table_.MaybeCreateTable()) {
+  if (!shortcut_table_.UpgradeToVersion3()) {
     return false;
   }
 

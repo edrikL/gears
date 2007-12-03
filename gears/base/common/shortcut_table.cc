@@ -69,6 +69,20 @@ bool ShortcutTable::MaybeCreateTable() {
   return transaction.Commit();
 }
 
+bool ShortcutTable::UpgradeToVersion3() {
+  const char *sql = "CREATE TABLE IF NOT EXISTS Shortcut ("
+                    " Origin TEXT, Name TEXT, "
+                    " AppUrl TEXT, IcoUrl TEXT, Msg TEXT, "
+                    " PRIMARY KEY (Origin, Name)"
+                    ")";
+  if (SQLITE_OK != db_->Execute(sql)) {
+    LOG(("ShortcutTable::CreateTableVersion3 create Shortcut "
+         "unable to execute: %d", db_->GetErrorCode()));
+    return false;
+  }
+  return true;
+}
+
 // Shift the version-3 Shortcut table aside, create version-4 tables,
 // populate them from the old table, and drop the old table.
 bool ShortcutTable::UpgradeFromVersion3ToVersion4() {
