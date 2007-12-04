@@ -165,14 +165,10 @@ class IEHttpRequest
 
   // IServiceProvider
 
-#ifdef WINCE
-// TODO(steveblock): Implement this
-#else
   virtual HRESULT STDMETHODCALLTYPE QueryService(
       /* [in] */ REFGUID guidService,
       /* [in] */ REFIID riid,
       /* [out] */ void __RPC_FAR *__RPC_FAR *ppvObject);
-#endif
 
  private:
   bool SendImpl();

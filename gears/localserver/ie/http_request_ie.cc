@@ -340,9 +340,6 @@ void IEHttpRequest::SetReadyState(ReadyState state) {
   }
 }
 
-#ifdef WINCE
-// TODO(steveblock): Implement this for WinCE
-#else
 //------------------------------------------------------------------------------
 // IServiceProvider::QueryService
 // Implemented to return an interface pointer for IHttpNegotiate and
@@ -371,7 +368,6 @@ STDMETHODIMP IEHttpRequest::QueryService(REFGUID guidService, REFIID riid,
   return IServiceProviderImpl<IEHttpRequest>::QueryService(guidService, riid,
                                                            ppvObject);
 }
-#endif  // WINCE
 
 //------------------------------------------------------------------------------
 // IBindStatusCallback::OnStartBinding
