@@ -85,8 +85,9 @@ class ActiveXUtils {
 
   // Returns the IDispatch interface for the script engine at the given site.
   // TODO(zork): Remove dump_on_error.
-  static IDispatch* GetScriptDispatch(IUnknown *site,
-                                      bool dump_on_error = false);
+  static HRESULT GetScriptDispatch(IUnknown *site,
+                                   IDispatch **script_dispatch,
+                                   bool dump_on_error = false);
 
   // Returns the dispatch id of the named member.
   static HRESULT GetDispatchMemberId(IDispatch *dispatch, const WCHAR *name,

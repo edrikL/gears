@@ -304,7 +304,6 @@ class ATL_NO_VTABLE JsRunnerImpl
       if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
       return NULL;
     }
-
     return global_object;
   }
 
@@ -625,7 +624,14 @@ class DocumentJsRunner : public JsRunnerBase {
   }
 
   IDispatch *GetGlobalObject(bool dump_on_error = false) {
-    return ActiveXUtils::GetScriptDispatch(site_, dump_on_error);
+    IDispatch *global_object;
+    HRESULT hr = ActiveXUtils::GetScriptDispatch(site_, &global_object,
+                                                 dump_on_error);
+    if (FAILED(hr)) {
+      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+      return NULL;
+    }
+    return global_object;
   }
 
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {

@@ -149,35 +149,25 @@ HRESULT ActiveXUtils::GetHtmlWindow3(IUnknown *site, IHTMLWindow3 **window3) {
 #endif
 
 
-IDispatch* ActiveXUtils::GetScriptDispatch(IUnknown *site, bool dump_on_error) {
-  CComPtr<IDispatch> script_dispatch;
+HRESULT ActiveXUtils::GetScriptDispatch(IUnknown *site,
+                                        IDispatch **script_dispatch,
+                                        bool dump_on_error) {
 #ifdef WINCE
-  // site is javascript IDispatch pointer.
-  HRESULT hr = site->QueryInterface(&script_dispatch);
-  if (FAILED(hr) || !script_dispatch) {
-    LOG(("Could not get script dispatch for current site."));
-    return NULL;
-  }
+  // site is JavaScript IDispatch pointer.
+  return site->QueryInterface(script_dispatch);
 #else
   CComPtr<IHTMLDocument2> html_document2;
   HRESULT hr = GetHtmlDocument2(site, &html_document2);
   if (FAILED(hr) || !html_document2) {
     if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
-    LOG(("Could not get IHTMLDocument2 for current site."));
-    return NULL;
+    return E_FAIL;
   }
 
   CComQIPtr<IHTMLDocument> html_document = html_document2;
   assert(html_document);
 
-  hr = html_document->get_Script(&script_dispatch);
-  if (FAILED(hr) || !script_dispatch) {
-    if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
-    LOG(("Could not get script engine for current site."));
-    return NULL;
-  }
+  return html_document->get_Script(script_dispatch);
 #endif
-  return script_dispatch;
 }
 
 
