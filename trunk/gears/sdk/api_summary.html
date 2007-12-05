@@ -43,17 +43,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <!-- Gears API Summary Reference                             -->
 <!------------------------------------------------------------->
 
-<p>This is the complete Google Gears API. Click the class names to see the details. </p>
-<p>Google Gears is under active development. Be sure to view the <a href="relnotes.html">Release Notes</a> to keep track of updates and known issues.</p> 
+<p>This is the complete Google Gears API. Click the class names to see
+  the details.</p>
 
 <h3>Factory</h3>
 <p>Instantiates all other Gears objects. </p>
 <pre><code><a href="api_factory.html">Factory class</a>
    Object  <b>create</b>(className, classVersion)
    string  <b>getBuildInfo</b>()
-   boolean <b>getPermission</b>(siteName, imageUrl, extraMessage) <span class="new">[New in <a href="index.html#relnotes">0.2</a>]</span>
-   readonly attribute boolean <b>hasPermission</b> <span class="new">[New in <a href="index.html#relnotes">0.2</a>]</span>
-   readonly attribute string <b>version</b> <span class="new">[New in <a href="index.html#relnotes">0.2</a>]</span> </code></pre>
+   boolean <b>getPermission</b>(siteName, imageUrl, extraMessage)
+   readonly attribute boolean <b>hasPermission</b>
+   readonly attribute string <b>version</b></code></pre>
 
 <h3>Database module</h3>
 <p>Provides a SQL database for storing data on the local machine.</p>
@@ -72,12 +72,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    variant <b>fieldByName</b>(fieldName)
    void    <b>close</b>()</code></pre>
 
-<h3>Desktop module <span class="new">[New in <a href="index.html#relnotes">0.3</a>]</span> </h3>
+<h3>Desktop module</h3>
 <p>Provides an interface for accessing Desktop functionality.</p>
 <pre><code><a href="api_desktop.html">Desktop class</a>
    bool     <b>createShortcut</b>(name, description, url, icons)</code></pre>
 
-<h3>HttpRequest module <span class="new">[New in <a href="index.html#relnotes">0.2</a>]</span> </h3>
+<h3>HttpRequest module</h3>
 <p>Provides the ability to send HTTP requests in workers, as well as on the main page.</p>
 <pre><code><a href="api_httprequest.html">HttpRequest class</a>
    void     <b>open</b>(method, url)
@@ -133,7 +133,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <pre><code><a href="api_localserver.html#FileSubmitter">FileSubmitter class</a>
    void      <b>setFileInputElement</b>(htmlElement, url)</code></pre>
 
-<h3>Timer module <span class="new">[New in <a href="index.html#relnotes">0.2</a>]</span> </h3>
+<h3>Timer module</h3>
 <p>Provides a timer that can be used in workers, as well as on the main page.</p>
 <pre><code><a href="api_timer.html">Timer class</a>
    int      <b>setTimeout</b>(function, delay)
@@ -148,11 +148,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <pre><code><a href="api_workerpool.html">WorkerPool class</a>
    callback <b>onmessage</b>(messageText, senderId, [messageObject:{text,sender,origin}])
-   callback <b>onerror</b>(errorObject:{message}) <span class="new">[New in <a href="index.html#relnotes">0.2</a>]</span>
+   callback <b>onerror</b>(errorObject:{message})
    int  <b>createWorker</b>(scriptText)
-   int  <b>createWorkerFromUrl</b>(scriptUrl) <span class="new">[New in <a href="index.html#relnotes">0.2</a>]</span>
+   int  <b>createWorkerFromUrl</b>(scriptUrl)
    void <b>sendMessage</b>(messageText, destWorkerId)
-   void <b>allowCrossOrigin</b>() <span class="new">[New in <a href="index.html#relnotes">0.2</a>]</span> </code></pre>
+   void <b>allowCrossOrigin</b>()</code></pre>
 
 </div>
 </body>
