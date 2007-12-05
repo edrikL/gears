@@ -31,3 +31,8 @@ Gears changes:
 * Changed the way class objects for protocol handlers are created from 
   urlmon.dll. This was needed for Windows Mobile 5, where these class
   objects don't have ClSIDs in the registry.
+
+* Added call to _AtlInitialConstruct() to
+  CComPolyObjectSharedRef::FinalConstruct() in SinkPolicy.inl.
+  This was needed in order to correctly initialize the
+  critical section of CComPolyObjectSharedRef::m_content.
