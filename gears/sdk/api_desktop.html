@@ -52,10 +52,10 @@ var desktop = google.gears.factory.create('beta.desktop');
 desktop.createShortcut("Test Application",
                        "An application at http://www.test.com/index.html",
                        "http://www.test.com/index.html",
-                       [{"16x16": "http://www.test.com/icon16x16.png",
-                         "32x32": "http://www.test.com/icon32x32.png",
-                         "48x48": "http://www.test.com/icon48x48.png",
-                         "128x128": "http://www.test.com/icon128x128.png"]});
+                       {"16x16": "http://www.test.com/icon16x16.png",
+                        "32x32": "http://www.test.com/icon32x32.png",
+                        "48x48": "http://www.test.com/icon48x48.png",
+                        "128x128": "http://www.test.com/icon128x128.png"});
 &lt;/script&gt;</code></pre>
 
 
@@ -75,35 +75,49 @@ desktop.createShortcut("Test Application",
 
 <table>
   <tr class="odd">
-    <th colspan="2"><div align="left">
-    <code>createShortcut(name, description, url, icons)</code></div></th>
+    <th colspan="2"><code>createShortcut(name, description, url, icons)</code></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Summary:</td>
+    <td width="550" class="odd">
+      Creates a desktop shortcut for launching a web application.
+    </td>
   </tr>
   <tr class="odd">
     <td>Parameters:</td>
-    <td class="odd"><code>name</code> is the name of the shortcut. It must be
-        under 50 characters, and cannot contain any of the characters below:
-        <pre>"\/:*?&lt;&gt;|</pre><br />
-      <code>description</code> is a text blurb that will be shown in the
-        confirmation dialog.<br />
-      <code>url</code> is the URL that will be launched when the user opens the
-        shortcut.<br />
-      <code>icons</code> is an object containing the URLs of up to four icons on
-        properties named: 16x16, 32x32, 48x48, 128x128.  The icons must be
-        .png files with dimensions matching the field they are associated with.
-        At least one of 16x16, 32x32, or 48x48 sizes must be specified.</td>
-  </tr>
-  <tr class="odd">
-    <td>Exceptions:</td>
-    <td class="" >Throws an exception if an error occurs. </td>
-  </tr>
-  <tr class="odd">
-    <td>Description:</td>
     <td class="odd">
-      Attempts to create a desktop shortcut called 'name' that links to 'url'
-      with an icon built from the images listed in the 'icons' object.  A dialog
-      is presented to the user with the text of 'description' and the icon with
-      dimensions closest to 32x32. If the user confirms, a desktop shortcut is
-      created.
+      <code>name</code> - The user-visible name of the shortcut. It can be
+        at most 50 characters and cannot contain any of these characters:
+        <code>"\/:*?&lt;&gt;|</code>
+      <br>
+      <code>description</code> - Additional text to display in the
+        confirmation dialog.
+      <br>
+      <code>url</code> - The address to launch when the user opens the shortcut.
+      <br>
+      <code>icons</code> - An object containing one or more of these named
+        properties: <code>16x16</code>, <code>32x32</code>, <code>48x48</code>.
+        The value of each property must be the URL of a .png file, with
+        dimensions matching the property name.  Optionally, a
+        <code>128x128</code> icon can also be included.
+    </td>
+  </tr>
+  <tr class="odd">
+    <td>Details:</td>
+    <td class="odd">
+      The icon sizes were chosen to meet the needs of a variety of platforms.
+      If an application wants its icons to look as good as possible on all
+      platforms, it should provide all valid sizes.
+      <br><br>
+      Only one desktop shortcut can exist for any particular name.
+      <br><br>
+      The shortcut will launch the same web browser that created the shortcut.
+      <br><br>
+      The <code>url</code> and <code>icons</code> values can be relative or
+      absolute URLs.  Relative URLs are resolved using the caller's location.
+      <br><br>
+      Calling this API will trigger a confirmation dialog.  The dialog will
+      use the 32x32 icon if it exists, or else the closest size available.
     </td>
   </tr>
 </table>
