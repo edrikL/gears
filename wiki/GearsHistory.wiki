@@ -2,9 +2,11 @@
 
 A brief history of the Google Gears project.
 
-  * 2007/08/21 - [http://www.zoho.com/ Zoho] adds offline support to Zoho Writer. ([http://blogs.zoho.com/general/offline-support-comments-in-zoho-writer/ story])
+  * 2007/11/26 - [http://www.zoho.com/ Zoho] Writer supports offline editing. ([http://blogs.zoho.com/general/zoho-writer-supports-offline-editing/ story])
 
-  * 2007/06/05 - [http://www.rememberthemilk.com/ Remember The Milk] adds offline support. ([http://blog.rememberthemilk.com/2007/06/tasks-on-plane.html story])
+  * 2007/08/21 - [http://www.zoho.com/ Zoho] Writer supports offline reading. ([http://blogs.zoho.com/general/offline-support-comments-in-zoho-writer/ story])
 
-  * 2007/05/31 - [http://www.google.com/reader/ Google Reader] adds offline support. ([http://googlereader.blogspot.com/2007/05/oh-sam-i-am-can-i-read-it-on-tram.html story])
+  * 2007/06/05 - [http://www.rememberthemilk.com/ Remember The Milk] gets offline support. ([http://blog.rememberthemilk.com/2007/06/tasks-on-plane.html story])
+
+  * 2007/05/31 - [http://www.google.com/reader/ Google Reader] gets offline support. ([http://googlereader.blogspot.com/2007/05/oh-sam-i-am-can-i-read-it-on-tram.html story])
   * 2007/05/31 - Public launch of Google Gears.
