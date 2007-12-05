@@ -91,7 +91,7 @@ class JsRunnerBase : public JsRunnerInterface {
       ctor_name_utf8 = "Object";
     }
 
-    jsval val = 0;
+    jsval val = INT_TO_JSVAL(0);
     JSBool result = JS_GetProperty(js_engine_context_, global_object,
                                    ctor_name_utf8.c_str(), &val);
     if (!result) {
@@ -620,7 +620,7 @@ bool JsRunner::InvokeCallbackSpecialized(
                       JS_GetGlobalObject(callback->context()),
                       callback->token(), argc, argv, &retval);
   if (result == JS_FALSE) { return false; }
-  
+
   if (optional_alloc_retval) {
     // Note: A valid jsval is returned no matter what the javascript function
     // returns. If the javascript function returns nothing, or explicitly
@@ -729,7 +729,7 @@ bool DocumentJsRunner::Eval(const std::string16 &script) {
   stack->Pop(&cx);
 
   // Decrements ref count on jsprin (Was added in GetJSPrincipals()).
-  JSPRINCIPALS_DROP(js_engine_context_, jsprin);
+  (void)JSPRINCIPALS_DROP(js_engine_context_, jsprin);
   if (!js_ok) { return false; }
   return true;
 }
