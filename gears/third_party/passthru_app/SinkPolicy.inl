@@ -133,7 +133,16 @@ inline HRESULT CComPolyObjectSharedRef<Contained>::FinalConstruct()
   InternalAddRef();
   CComObjectRootEx<Contained::_ThreadModel::ThreadModelNoCS>::
     FinalConstruct();
-  HRESULT hr = m_contained.FinalConstruct();
+  HRESULT hr;
+#if _ATL_VER >= 0x800
+  hr = m_contained._AtlInitialConstruct();  // gears - added by andreip
+  if (SUCCEEDED(hr))
+#endif
+    hr = m_contained.FinalConstruct();
+#if _ATL_VER >= 0x800
+  if (SUCCEEDED(hr))
+    hr = m_contained._AtlFinalConstruct();  // gears - added by andreip
+#endif
   InternalRelease();
   return hr;
 }

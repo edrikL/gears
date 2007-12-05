@@ -59,13 +59,20 @@
 
 class HttpHandler;
 
+#ifdef WINCE
+  typedef CComMultiThreadModel HandlerThreadModel;
+#else
+  typedef CComSingleThreadModel HandlerThreadModel;
+#endif
+
 //------------------------------------------------------------------------------
 // PassthruSink
 // Defines a passthru framework required "Sink" object that forwards upward
 // flowing API calls from the default handler to our outer layer.
 //------------------------------------------------------------------------------
 class PassthruSink
-    : public PassthroughAPP::CInternetProtocolSinkWithSP<PassthruSink> {
+    : public PassthroughAPP::CInternetProtocolSinkWithSP<PassthruSink,
+        HandlerThreadModel> {
  public:
   PassthruSink() : http_handler_(NULL) {}
   void SetHttpHandler(HttpHandler *handler) { http_handler_ = handler; }
@@ -79,8 +86,8 @@ class PassthruSink
  private:
   // Calling BaseClass::Foo() passes an API call thru to the caller provided
   // sink
-  typedef PassthroughAPP::CInternetProtocolSinkWithSP<PassthruSink> BaseClass;
-
+  typedef PassthroughAPP::CInternetProtocolSinkWithSP<PassthruSink,
+      HandlerThreadModel> BaseClass;
   // A convenience pointer to our HttpHandler
   HttpHandler *http_handler_;
 };
@@ -96,8 +103,9 @@ typedef PassthroughAPP::CustomSinkStartPolicy<HttpHandler, PassthruSink>
 //  An Asynchronous Pluggable Protocol that we register as an http/https
 //  namespace handler to satisfy http requests with the contents or our cache.
 //------------------------------------------------------------------------------
-class HttpHandler 
-    : public PassthroughAPP::CInternetProtocol<PassthruStartPolicy> {
+class HttpHandler
+    : public PassthroughAPP::CInternetProtocol<PassthruStartPolicy,
+        HandlerThreadModel> {
  public:
   // Registers and unregisters our handler in the http/https namespace.
   static HRESULT Register();
@@ -250,7 +258,8 @@ class HttpHandler
 
  private:
   // Calling BaseClass::Foo() passes an API call thru to the default handler
-  typedef PassthroughAPP::CInternetProtocol<PassthruStartPolicy> BaseClass;
+  typedef PassthroughAPP::CInternetProtocol<PassthruStartPolicy,
+      HandlerThreadModel> BaseClass;
 
   friend PassthruSink;
 
