@@ -190,55 +190,55 @@ NPAPI_MODULE_DLL  = $(NPAPI_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 default::
 ifneq "$(BROWSER)" ""
   # build for just the selected browser
-	make prereqs    BROWSER=$(BROWSER)
-	make genheaders BROWSER=$(BROWSER)
-	make modules    BROWSER=$(BROWSER)
-	make installer  BROWSER=$(BROWSER)
+	$(MAKE) prereqs    BROWSER=$(BROWSER)
+	$(MAKE) genheaders BROWSER=$(BROWSER)
+	$(MAKE) modules    BROWSER=$(BROWSER)
+	$(MAKE) installer  BROWSER=$(BROWSER)
 else
   # build for all browsers valid on this OS
   ifeq ($(OS),linux)
-	make prereqs    BROWSER=FF
-	make genheaders BROWSER=FF
-	make modules    BROWSER=FF
-	make installer  BROWSER=FF
+	$(MAKE) prereqs    BROWSER=FF
+	$(MAKE) genheaders BROWSER=FF
+	$(MAKE) modules    BROWSER=FF
+	$(MAKE) installer  BROWSER=FF
 
   else
   ifeq ($(OS),win32)
-	make prereqs    BROWSER=FF
-	make genheaders BROWSER=FF
-	make modules    BROWSER=FF
-	make installer  BROWSER=FF
+	$(MAKE) prereqs    BROWSER=FF
+	$(MAKE) genheaders BROWSER=FF
+	$(MAKE) modules    BROWSER=FF
+	$(MAKE) installer  BROWSER=FF
 
-	make prereqs    BROWSER=IE
-	make genheaders BROWSER=IE
-	make modules    BROWSER=IE
-	make installer  BROWSER=IE
+	$(MAKE) prereqs    BROWSER=IE
+	$(MAKE) genheaders BROWSER=IE
+	$(MAKE) modules    BROWSER=IE
+	$(MAKE) installer  BROWSER=IE
 
-	make prereqs    BROWSER=NPAPI
-	make genheaders BROWSER=NPAPI
-	make modules    BROWSER=NPAPI
-	make installer  BROWSER=NPAPI
+	$(MAKE) prereqs    BROWSER=NPAPI
+	$(MAKE) genheaders BROWSER=NPAPI
+	$(MAKE) modules    BROWSER=NPAPI
+	$(MAKE) installer  BROWSER=NPAPI
 
         # For win32, also build a cross-browser MSI.
-	make win32installer
+	$(MAKE) win32installer
 
   else
   ifeq ($(OS),wince)
-	make prereqs    BROWSER=IEMOBILE
-	make genheaders BROWSER=IEMOBILE
-	make modules    BROWSER=IEMOBILE
-	make installer  BROWSER=IEMOBILE
+	$(MAKE) prereqs    BROWSER=IEMOBILE
+	$(MAKE) genheaders BROWSER=IEMOBILE
+	$(MAKE) modules    BROWSER=IEMOBILE
+	$(MAKE) installer  BROWSER=IEMOBILE
 
   else
   ifeq ($(OS),osx)
         # For osx, build the non-installer targets for multiple architectures.
-	make prereqs    BROWSER=FF ARCH=i386
-	make prereqs    BROWSER=FF ARCH=ppc
-	make genheaders BROWSER=FF ARCH=i386
-	make genheaders BROWSER=FF ARCH=ppc
-	make modules    BROWSER=FF ARCH=i386
-	make modules    BROWSER=FF ARCH=ppc
-	make installer  BROWSER=FF
+	$(MAKE) prereqs    BROWSER=FF ARCH=i386
+	$(MAKE) prereqs    BROWSER=FF ARCH=ppc
+	$(MAKE) genheaders BROWSER=FF ARCH=i386
+	$(MAKE) genheaders BROWSER=FF ARCH=ppc
+	$(MAKE) modules    BROWSER=FF ARCH=i386
+	$(MAKE) modules    BROWSER=FF ARCH=ppc
+	$(MAKE) installer  BROWSER=FF
   endif
   endif
   endif
@@ -440,7 +440,9 @@ $(FF_MODULE_TYPELIB): $(FF_GEN_TYPELIBS)
 	$(GECKO_SDK)/bin/xpt_link $@ $^
 
 $(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS)
-	$(MKSHLIB) $(SHLIBFLAGS) $(NPAPI_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS) $(NPAPI_LIBS)
+	@echo $(NPAPI_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(MKSHLIB) $(SHLIBFLAGS) $(NPAPI_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_LINK_EXTRAS) $(NPAPI_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	rm $(OUTDIR)/obj_list.temp
 
 # INSTALLER TARGETS
 
