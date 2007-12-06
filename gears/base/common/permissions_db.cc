@@ -32,7 +32,7 @@ static const char16 *kDatabaseName = STRING16(L"permissions.db");
 static const char16 *kVersionTableName = STRING16(L"VersionInfo");
 static const char16 *kVersionKeyName = STRING16(L"Version");
 static const char16 *kAccessTableName = STRING16(L"Access");
-static const int kCurrentVersion = 4;
+static const int kCurrentVersion = 2;
 static const int kOldestUpgradeableVersion = 1;
 
 
@@ -115,7 +115,7 @@ bool PermissionsDB::Init() {
       return false;
     }
   } else {
-    if (!UpgradeToVersion4()) {
+    if (!UpgradeToVersion2()) {
       return false;
     }
   }
@@ -292,8 +292,7 @@ bool PermissionsDB::CreateDatabase() {
   }
 
   if (!version_table_.MaybeCreateTable() ||
-      !access_table_.MaybeCreateTable() ||
-      !shortcut_table_.MaybeCreateTable()) {
+      !access_table_.MaybeCreateTable()) {
     return false;
   }
 
