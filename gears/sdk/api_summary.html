@@ -51,6 +51,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <pre><code><a href="api_factory.html">Factory class</a>
    Object  <b>create</b>(className, classVersion)
    string  <b>getBuildInfo</b>()
+   boolean <b>getPermission</b>(siteName, imageUrl, extraMessage)
+   readonly attribute boolean <b>hasPermission</b>
    readonly attribute string <b>version</b></code></pre>
 
 <h3>Database module</h3>
@@ -69,6 +71,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    variant <b>field</b>(fieldIndex)
    variant <b>fieldByName</b>(fieldName)
    void    <b>close</b>()</code></pre>
+
+<h3>Desktop module</h3>
+<p>Provides an interface for accessing Desktop functionality.</p>
+<pre><code><a href="api_desktop.html">Desktop class</a>
+   bool     <b>createShortcut</b>(name, description, url, icons)</code></pre>
 
 <h3>HttpRequest module</h3>
 <p>Provides the ability to send HTTP requests in workers, as well as on the main page.</p>

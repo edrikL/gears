@@ -119,6 +119,8 @@ NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
     isupports = do_QueryInterface(new GearsChannel(), &nr);
   } else if (object == STRING16(L"beta.database")) {
     isupports = do_QueryInterface(new GearsDatabase(), &nr);
+  } else if (object == STRING16(L"beta.desktop")) {
+    isupports = do_QueryInterface(new GearsDesktop(), &nr);
   } else if (object == STRING16(L"beta.httprequest")) {
     isupports = do_QueryInterface(new GearsHttpRequest(), &nr);
   } else if (object == STRING16(L"beta.localserver")) {

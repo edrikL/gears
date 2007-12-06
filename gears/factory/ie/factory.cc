@@ -115,6 +115,15 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
     hr = CComObject<GearsDatabase>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
+#ifdef WINCE
+  // TODO(steveblock): Implement desktop for WinCE.
+#else
+  } else if (object_name == STRING16(L"beta.desktop")) {
+    CComObject<GearsDesktop> *obj;
+    hr = CComObject<GearsDesktop>::CreateInstance(&obj);
+    base_class = obj;
+    idispatch = obj;
+#endif
   } else if (object_name == STRING16(L"beta.httprequest")) {
     CComObject<GearsHttpRequest> *obj;
     hr = CComObject<GearsHttpRequest>::CreateInstance(&obj);
