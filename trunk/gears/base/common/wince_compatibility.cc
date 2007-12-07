@@ -107,6 +107,37 @@ HRESULT SHGetFolderPath(HWND hwndOwner,
   return SHGetSpecialFolderPath(hwndOwner, pszPath, nFolder, false);
 }
 
+BOOL IsNetworkAlive(LPDWORD lpdwFlags) {
+  BOOL alive = false;
+  CONNMGR_CONNECTION_DETAILED_STATUS* status_buffer_ptr = NULL;
+  DWORD size = 0;
+  HRESULT hr = ConnMgrQueryDetailedStatus(status_buffer_ptr, &size);
+  if (hr == HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)) {
+    uint8* buffer = new uint8[size];
+    status_buffer_ptr = reinterpret_cast<CONNMGR_CONNECTION_DETAILED_STATUS*>
+        (buffer);
+    ZeroMemory(status_buffer_ptr, size);
+    hr = ConnMgrQueryDetailedStatus(status_buffer_ptr, &size);
+    if (SUCCEEDED(hr)) {
+      while (status_buffer_ptr) {
+        if (status_buffer_ptr->dwConnectionStatus == CONNMGR_STATUS_CONNECTED &&
+            (status_buffer_ptr->pIPAddr != NULL ||
+            status_buffer_ptr->dwType == CM_CONNTYPE_PROXY)) {
+          // We conclude that the network is alive if there is one
+          // connection in the CONNMGR_STATUS_CONNECTED state and
+          // the device has an IP address or it is connected in
+          // proxy mode (e.g. ActiveSync).
+          alive = true;
+          break;
+        }
+        status_buffer_ptr = status_buffer_ptr->pNext;
+      }
+    }
+    delete [] buffer;
+  }
+  return alive;
+}
+
 // Internal
 
 static bool IsSeparator(const char16 token) {
@@ -123,4 +154,5 @@ static void SkipTokens(const std::string16 &path,
     pos++;
   }
 }
+
 #endif  // WINCE

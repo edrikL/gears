@@ -37,6 +37,9 @@
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/ie/activex_utils.h"
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"
+#endif
 
 const CComBSTR ActiveXUtils::kEmptyBSTR(STRING16(L""));
 
@@ -117,6 +120,7 @@ HRESULT ActiveXUtils::GetHtmlDocument2(IUnknown *site,
 #endif
 }
 
+
 HRESULT ActiveXUtils::GetHtmlWindow2(IUnknown *site,
 #ifdef WINCE
                                      IPIEHTMLWindow2 **window2) {
@@ -135,6 +139,7 @@ HRESULT ActiveXUtils::GetHtmlWindow2(IUnknown *site,
   return html_document2->get_parentWindow(window2);
 #endif
 }
+
 
 #ifdef WINCE
   // TODO(andreip): no IHTMLWindow3 in Windows Mobile.
@@ -197,6 +202,7 @@ HRESULT ActiveXUtils::SetDispatchProperty(IDispatch *dispatch,
                           &dispparams, NULL, NULL, NULL);
 }
 
+
 #ifdef WINCE
 // TODO(andreip): Implement on Windows Mobile
 #else
@@ -240,17 +246,14 @@ HRESULT ActiveXUtils::GetHTMLElementAttributeValue(IHTMLElement *element,
   return attribute->get_nodeValue(value);
 }
 #endif
+
+
 bool ActiveXUtils::IsOnline() {
   // Note: InternetGetConnectedState detects IE's workoffline mode.
   DWORD connected_state_flags_out = 0;
   DWORD network_alive_flags_out = 0;
   BOOL connected = InternetGetConnectedState(&connected_state_flags_out, 0);
-#ifdef WINCE
-  // TODO(andreip): implement this using the ConnectionManager.
-  BOOL alive = true;
-#else
   BOOL alive = IsNetworkAlive(&network_alive_flags_out);
-#endif
   return connected && alive &&
          ((connected_state_flags_out & INTERNET_CONNECTION_OFFLINE) == 0);
 }
