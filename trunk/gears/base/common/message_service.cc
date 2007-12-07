@@ -26,7 +26,7 @@
 #include <assert.h>
 #include <set>
 #include "gears/base/common/message_queue.h"
-#include "gears/base/common/observer_service.h"
+#include "gears/base/common/message_service.h"
 
 // TODO(michaeln) When an OS thread dies, remove all observers associated with
 // that thread.
@@ -35,6 +35,7 @@ static const int kNotificationMessageCode = 1;
 
 typedef std::set<MessageObserverInterface*> ObserverSet;
 typedef std::map<ThreadId, ObserverSet> ThreadObserversMap;
+
 
 // Helper class used by MessageService. The MessageService creates
 // a collection for each unique topic. All observers registered for
