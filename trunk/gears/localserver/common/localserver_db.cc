@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,17 +13,21 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/localserver/common/localserver_db.h"
+
+#include <map>
+#include <string>
+#include <vector>
 
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/permissions_db.h"
@@ -100,7 +104,7 @@ static const struct {
         " StatusLine TEXT)" },
 
       { kResponseBodiesTable,
-        "(BodyID INTEGER PRIMARY KEY," // This is the same ID as the payloadID
+        "(BodyID INTEGER PRIMARY KEY,"  // This is the same ID as the payloadID
         " FilePath TEXT,"  // With USE_FILE_STORE, bodies are stored as
         " Data BLOB)" }    // discrete files, otherwise as blobs in the DB
     };
@@ -155,7 +159,7 @@ static const char16 *kCurrentBrowser = STRING16(L"safari");
 // constructor
 //------------------------------------------------------------------------------
 WebCacheDB::WebCacheDB()
-    : system_info_table_(&db_, kSystemInfoTableName), 
+    : system_info_table_(&db_, kSystemInfoTableName),
       response_bodies_store_(NULL) {
   // When parameter binding multiple parameters, we frequently use a scheme
   // of OR'ing return values together for testing for an error once after
@@ -542,15 +546,29 @@ bool WebCacheDB::Service(const char16 *url,
     return false;
   }
 
+  // If a fragment identifier is appended to the url, ignore it. The fragment
+  // identifier is not part of the url and specifies a position within the
+  // resource, rather than the resource itself. So we remove the fragment
+  // identifier for the purpose of searching the database. The fragment
+  // identifier is separated from the URL by '#' and may contain reserved
+  // characters including '?'.
+  size_t url_length = std::char_traits<char16>::length(url);
+  const char16 *fragment = std::char_traits<char16>::find(url, url_length, '#');
+  std::string16 url_without_fragment;
+  if (fragment) {
+    url_without_fragment.assign(url, fragment);
+    url = url_without_fragment.c_str();
+    url_length = url_without_fragment.length();
+  }
+
   // If the requested url contains query parameters, we have to do additional
   // work to respect the 'ignoreQuery' attribute which allows an entry to
   // be hit for a url plus arbitrary query parameters. We do an additional
   // search with the query parameters removed from the requested url.
-  size_t url_length = std::char_traits<char16>::length(url);
-  const char16 *hook = std::char_traits<char16>::find(url, url_length, '?');
+  const char16 *query = std::char_traits<char16>::find(url, url_length, '?');
   std::string16 url_without_query;
-  if (hook) {
-    url_without_query.assign(url, hook);
+  if (query) {
+    url_without_query.assign(url, query);
   }
 
   // Select possible matching entries for this url. Our select statement picks
@@ -568,7 +586,7 @@ bool WebCacheDB::Service(const char16 *url,
     L"      s.Enabled = 1"
 
   const char16* sql;
-  if (hook)
+  if (query)
     // look for a hit with and without the url query string
     sql = STRING16(
             SQL_PREFIX
@@ -588,7 +606,7 @@ bool WebCacheDB::Service(const char16 *url,
   }
   int param = 0;
   rv |= stmt.bind_text16(param++, url);
-  if (hook)
+  if (query)
     rv |= stmt.bind_text16(param++, url_without_query.c_str());
   rv |= stmt.bind_int(param++, VERSION_CURRENT);
   if (rv != SQLITE_OK) {
@@ -598,7 +616,7 @@ bool WebCacheDB::Service(const char16 *url,
   // Iterate looking for an entry with no cookie required or with the required
   // cookie present.
 
-  bool loaded_cookie_map = false; // we defer reading cookies until needed
+  bool loaded_cookie_map = false;  // we defer reading cookies until needed
   bool loaded_cookie_map_ok = false;
   CookieMap cookie_map;
 
@@ -611,7 +629,7 @@ bool WebCacheDB::Service(const char16 *url,
     const char16 *redirect = stmt.column_text16_safe(3);
     const bool ignore_query = (stmt.column_int(4) == 1);
     const int64 payload_id = stmt.column_int64(5);
-    
+
     std::string16 cookie_name;
     std::string16 cookie_value;
     bool is_cookie_required = !required_cookie.empty();
@@ -649,7 +667,7 @@ bool WebCacheDB::Service(const char16 *url,
     }
 
     if (is_cookie_required && redirect && redirect[0] &&
-        (cookie_value != kNegatedRequiredCookieValue) && 
+        (cookie_value != kNegatedRequiredCookieValue) &&
         !cookie_map.HasCookie(cookie_name)) {
       if (!possible_redirect.empty() && (possible_redirect != redirect)) {
         LOG(("WebCacheDB.Service conflicting possible redirects\n"));
@@ -983,7 +1001,7 @@ bool WebCacheDB::InsertServer(ServerInfo *server) {
 
   SecurityOrigin origin;
   PermissionsDB *permissions = PermissionsDB::GetDB();
-  if (!permissions || 
+  if (!permissions ||
       !origin.InitFromUrl(server->security_origin_url.c_str()) ||
       !permissions->IsOriginAllowed(origin)) {
     return false;
@@ -1279,7 +1297,7 @@ bool WebCacheDB::FindVersions(int64 server_id,
 //------------------------------------------------------------------------------
 // ReadServerInfo
 //------------------------------------------------------------------------------
-void WebCacheDB::ReadServerInfo(SQLStatement &stmt, ServerInfo *server){
+void WebCacheDB::ReadServerInfo(SQLStatement &stmt, ServerInfo *server) {
   ASSERT_SINGLE_THREAD();
   assert(server);
   int index = -1;
@@ -1398,7 +1416,7 @@ bool WebCacheDB::DeleteVersions(int64 server_id) {
   std::vector<VersionInfo> versions;
   if (FindVersions(server_id, &versions)) {
     std::vector<int64> version_ids;
-    for(unsigned int i = 0; i < versions.size(); ++i) {
+    for (unsigned int i = 0; i < versions.size(); ++i) {
       version_ids.push_back(versions[i].id);
     }
     DeleteVersions(&version_ids);
@@ -1468,6 +1486,7 @@ bool WebCacheDB::InsertEntry(EntryInfo *entry) {
   assert(entry);
   assert(!entry->url.empty());
   assert(!entry->ignore_query || (entry->url.find('?') == std::string16::npos));
+  assert(entry->url.find('#') == std::string16::npos);
 
   const char16* sql = STRING16(L"INSERT INTO Entries"
                                L" (VersionID, Url, Src, PayloadID,"
@@ -1653,8 +1672,7 @@ bool WebCacheDB::FindEntry(int64 version_id,
 // FindEntriesHavingNoResponse
 //------------------------------------------------------------------------------
 bool WebCacheDB::FindEntriesHavingNoResponse(int64 version_id,
-                                             std::vector<EntryInfo> *entries)
-{
+                                             std::vector<EntryInfo> *entries) {
   ASSERT_SINGLE_THREAD();
   assert(entries);
   assert(entries->empty());
@@ -2061,7 +2079,7 @@ void WebCacheDB::PayloadInfo::SynthesizeHtmlRedirect(const char16 *location,
   }
 }
 
-bool 
+bool
 WebCacheDB::PayloadInfo::CanonicalizeHttpRedirect(const char16 *base_url) {
   if (!IsHttpRedirect()) {
     return false;
@@ -2074,7 +2092,7 @@ WebCacheDB::PayloadInfo::CanonicalizeHttpRedirect(const char16 *base_url) {
   return SynthesizeHttpRedirect(base_url, location.c_str());
 }
 
-bool 
+bool
 WebCacheDB::PayloadInfo::SynthesizeHttpRedirect(const char16 *base_url,
                                                 const char16 *location) {
   std::string16 full_location;
