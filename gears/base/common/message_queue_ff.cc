@@ -57,8 +57,8 @@ struct MessageEvent {
   PLEvent e;
   ThreadId thread;
   int message_id;
-  std::string message_data_1;
-  std::string message_data_2;
+  std::string16 message_data_1;
+  std::string16 message_data_2;
 };
 
 void *OnReceiveMessageEvent(MessageEvent *event) {
@@ -86,8 +86,8 @@ static void OnDestroyMessageEvent(MessageEvent *event) {
 
 void ThreadMessageQueue::Send(ThreadId thread,
                               int message_id,
-                              const char *message_data_1,
-                              const char *message_data_2) {
+                              const char16 *message_data_1,
+                              const char16 *message_data_2) {
   nsresult nr;
 
   nsCOMPtr<nsIEventQueueService> event_queue_service =

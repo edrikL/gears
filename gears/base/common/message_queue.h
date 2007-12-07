@@ -32,6 +32,7 @@
 #if BROWSER_FF
 typedef PRThread (*ThreadId);
 #elif BROWSER_IE
+typedef DWORD ThreadId;
 #endif
 
 class ThreadMessageQueue {
@@ -39,8 +40,8 @@ class ThreadMessageQueue {
   // Handler callback used to process messages in the destination thread.
   // TODO(michaeln): would be real nice to handle 'serializable' messages here
   typedef void (*HandlerCallback)(int message_id,
-                                  const char *message_data_1,
-                                  const char *message_data_2);
+                                  const char16 *message_data_1,
+                                  const char16 *message_data_2);
 
   // Initializes the message queue for the current thread. If the
   // queue is already initialized, this is a no-op. Returns true
@@ -55,8 +56,8 @@ class ThreadMessageQueue {
   // Posts a message to the indicated thread.
   static void Send(ThreadId thread_handle,
                    int message_id,
-                   const char *message_data_1,
-                   const char *message_data_2);
+                   const char16 *message_data_1,
+                   const char16 *message_data_2);
  private:
   // This class only has static functions, so the constructor is declared
   // private to prohibit instantiation.
