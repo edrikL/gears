@@ -30,6 +30,8 @@
 #define GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
 
 #include <windows.h>
+#include <connmgr.h>
+#include <connmgr_status.h>
 #include <crtdefs.h>
 
 #define CSIDL_LOCAL_APPDATA CSIDL_APPDATA
@@ -68,6 +70,8 @@ HRESULT SHGetFolderPathW(HWND hwndOwner,
                         HANDLE hToken,
                         DWORD dwFlags,
                         LPTSTR pszPath);
+
+BOOL IsNetworkAlive(LPDWORD lpdwFlags);
 
 #endif  // GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
 #endif  // WINCE
