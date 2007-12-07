@@ -1,9 +1,9 @@
 // Copyright 2005, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <prtime.h>
@@ -36,7 +36,9 @@
 #include <nsIRequest.h>
 #include <nsIURI.h>
 #include <nsXPCOM.h>
-#include "ff/genfiles/localserver.h" // from OUTDIR
+#include <string>
+#include <vector>
+#include "ff/genfiles/localserver.h"  // from OUTDIR
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/factory/common/factory_utils.h"
@@ -109,7 +111,7 @@ class AbstractCacheMetaDataVisitor : public nsICacheMetaDataVisitor {
 // VisitSerializedCacheEntryMetaData
 //-----------------------------------------------------------------------------
 static void VisitSerializedCacheEntryMetaData(const nsCString &meta_data,
-                                              nsICacheMetaDataVisitor *visitor) {
+    nsICacheMetaDataVisitor *visitor) {
   // Names and values are separated by null bytes
 
   const char *start;
@@ -219,15 +221,15 @@ NS_IMETHODIMP ReplayInputStream::IsNonBlocking(PRBool *result) {
 // ReplayCacheEntry
 //-----------------------------------------------------------------------------
 class ReplayCacheEntry : public nsICacheEntryDescriptor {
-public:
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICACHEENTRYINFO
   NS_DECL_NSICACHEENTRYDESCRIPTOR
 
-protected:
+ protected:
   ~ReplayCacheEntry() { Close(); }
 
-private:
+ private:
   friend class CacheSession;
 
   ReplayCacheEntry(const nsACString &client_id, const nsACString &key)
@@ -398,7 +400,7 @@ NS_IMETHODIMP ReplayCacheEntry::SetCacheElement(nsISupports *value) {
   return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 ReplayCacheEntry::GetAccessGranted(nsCacheAccessMode *value) {
   *value = nsICache::ACCESS_READ;
   return NS_OK;
@@ -492,7 +494,7 @@ NS_IMETHODIMP ReplayCacheEntry::SetMetaDataElement(const char *name,
   return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 ReplayCacheEntry::VisitMetaData(nsICacheMetaDataVisitor *visitor) {
   VisitSerializedCacheEntryMetaData(meta_data_, visitor);
   return NS_OK;
@@ -525,7 +527,7 @@ NS_IMETHODIMP CacheSession::SetDoomEntriesIfExpired(PRBool value) {
   return inner_->SetDoomEntriesIfExpired(value);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 CacheSession::OpenCacheEntry(const nsACString &key,
                              nsCacheAccessMode access_req,
                              PRBool blockingMode,
@@ -626,7 +628,7 @@ void CacheIntercept::Init() {
 // Only send crash reports for offical builds.  Crashes on an engineer's machine
 // during internal development are confusing false alarms.
 #ifdef OFFICIAL_BUILD
-  static ExceptionManager exception_manager(false); // false == only our DLL
+  static ExceptionManager exception_manager(false);  // false == only our DLL
   exception_manager.StartMonitoring();
 #endif
 #endif
@@ -686,7 +688,7 @@ void CacheIntercept::Init() {
 
 void CacheIntercept::MaybeForceToCache(nsISupports *subject) {
   nsCOMPtr<nsIRequest> request(do_QueryInterface(subject));
-  if (!request) { 
+  if (!request) {
     LOG(("CacheIntercept: could not get request"));
     return;
   }
@@ -743,17 +745,6 @@ void CacheIntercept::MaybeForceToCache(nsISupports *subject) {
   nsCString spec;
   uri->GetSpec(spec);
 
-  // FF mac and linux (not windows) have a bug where at this point in the
-  // request lifecycle, these URIs contain their fragment identifiers, which
-  // trips up WebCacheDB.
-#if defined(LINUX) || defined(OS_MACOSX)
-  const char *start = spec.get();
-  const char *hash = strchr(start, '#');
-  if (hash) {
-    spec.SetLength(hash - start);
-  }
-#endif
-  
   // TODO(aa): It would be nice to not have to hit the database twice for these
   // requests. Perhaps cache the result of this query somewhere?
   if (db->CanService(NS_ConvertUTF8toUTF16(spec).get())) {
