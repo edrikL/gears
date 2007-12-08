@@ -72,7 +72,4 @@ class GearsManagedResourceStore : public ModuleImplBaseClass {
   DISALLOW_EVIL_CONSTRUCTORS(GearsManagedResourceStore);
 };
 
-ModuleWrapperBaseClass *CreateGearsManagedResourceStore(
-    ModuleImplBaseClass *sibling);
-
 #endif // GEARS_LOCALSERVER_NPAPI_MANAGED_RESOURCE_STORE_NP_H__

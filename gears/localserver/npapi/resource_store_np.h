@@ -104,6 +104,4 @@ class GearsResourceStore
   DISALLOW_EVIL_CONSTRUCTORS(GearsResourceStore);
 };
 
-ModuleWrapperBaseClass *CreateGearsResourceStore(ModuleImplBaseClass *sibling);
-
 #endif // GEARS_LOCALSERVER_NPAPI_RESOURCE_STORE_NP_H__

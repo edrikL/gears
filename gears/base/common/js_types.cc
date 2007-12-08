@@ -537,6 +537,12 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       variant->Reset(*value);
       break;
     }
+    case JSPARAM_MODULE: {
+      const ModuleImplBaseClass *value =
+          static_cast<const ModuleImplBaseClass *>(param.value_ptr);
+      variant->Reset(NPVARIANT_TO_OBJECT(value->GetWrapperToken()));
+      break;
+    }
     case JSPARAM_OBJECT_TOKEN: {
       const JsToken *value = static_cast<const JsToken *>(param.value_ptr);
       variant->Reset(NPVARIANT_TO_OBJECT(*value));
@@ -639,6 +645,8 @@ int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
 }
 
 void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
+  assert(value_ptr != NULL || type == JSPARAM_NULL);
+
   JsParamToSend retval = { type, value_ptr };
   ScopedNPVariant np_retval;
   ConvertJsParamToToken(retval, &np_retval);
@@ -647,6 +655,17 @@ void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
   // In NPAPI, return values from callbacks are released by the browser.
   // Therefore, we give up ownership of this variant without releasing it.
   np_retval.Release();
+}
+
+void JsCallContext::SetReturnValue(JsParamType type, int) {
+  assert(type == JSPARAM_NULL);
+  SetReturnValue(type, reinterpret_cast<const void*>(NULL));
+}
+
+void JsCallContext::SetReturnValue(JsParamType type,
+                                   const ModuleImplBaseClass *value_ptr) {
+  assert(type == JSPARAM_MODULE);
+  SetReturnValue(type, reinterpret_cast<const void*>(value_ptr));
 }
 
 void JsCallContext::SetException(const std::string16 &message) {

@@ -27,7 +27,7 @@
 #include "gears/base/npapi/module_wrapper.h"
 #include "gears/localserver/npapi/file_submitter_np.h"
 
-DECLARE_GEARS_BRIDGE(GearsFileSubmitter, GearsFileSubmitterWrapper);
+DECLARE_GEARS_WRAPPER(GearsFileSubmitter, GearsFileSubmitterWrapper);
 
 // This class serves as the bridge between the GearsFileSubmitter implementation
 // and the browser binding layer.
@@ -46,7 +46,3 @@ class GearsFileSubmitterWrapper
  private:
   DISALLOW_EVIL_CONSTRUCTORS(GearsFileSubmitterWrapper);
 };
-
-ModuleWrapperBaseClass *CreateGearsFileSubmitter(ModuleImplBaseClass *sibling) {
-  return GearsFileSubmitterWrapper::Create(sibling);
-}

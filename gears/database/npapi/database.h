@@ -88,6 +88,4 @@ class GearsDatabase
   DISALLOW_EVIL_CONSTRUCTORS(GearsDatabase);
 };
 
-ModuleWrapperBaseClass *CreateGearsDatabase(ModuleImplBaseClass *sibling);
-
 #endif // GEARS_DATABASE_NPAPI_DATABASE_H__

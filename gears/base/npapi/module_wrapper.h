@@ -36,8 +36,9 @@ class ModuleWrapper
     : public PluginBase<T>,
       public ModuleWrapperBaseClass {
  public:
-  static ModuleWrapperBaseClass *Create(ModuleImplBaseClass *sibling) {
-    JsContextPtr context = sibling->EnvPageJsContext();
+  // Creates an instance of the class and its wrapper.  Also initializes from
+  // the sibling class if non-NULL.
+  static ModuleImplBaseClass *Create(JsContextPtr context) {
     PluginClass *wrapper = static_cast<PluginClass *>(
         NPN_CreateObject(context, GetNPClass<PluginClass>()));
 
@@ -47,13 +48,7 @@ class ModuleWrapper
       return NULL;
     }
 
-    if (!wrapper->GetImplObject()->InitBaseFromSibling(sibling)) {
-      BrowserUtils::SetJsException(STRING16(L"Error initializing base class."));
-      wrapper->Release();
-      return NULL;
-    }
-
-    return wrapper;
+    return wrapper->GetImplObject();
   }
 
   ModuleWrapper(NPP instance) :
@@ -76,5 +71,16 @@ class ModuleWrapper
 
   DISALLOW_EVIL_CONSTRUCTORS(ModuleWrapper);
 };
+
+
+// Used to set up a Gears module's wrapper and associate it with the module
+// class itself.
+#define DECLARE_GEARS_WRAPPER(GearsClass, GearsWrapperClass) \
+DECLARE_GEARS_BRIDGE(GearsClass, GearsWrapperClass); \
+template<> \
+GearsClass *CreateModule<GearsClass>(JsContextPtr context) { \
+  return static_cast<GearsClass*>( \
+      ModuleWrapper<GearsWrapperClass>::Create(context)); \
+}
 
 #endif // GEARS_BASE_NPAPI_MODULE_WRAPPER_H__

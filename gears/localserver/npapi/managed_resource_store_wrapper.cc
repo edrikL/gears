@@ -27,8 +27,8 @@
 #include "gears/base/npapi/module_wrapper.h"
 #include "gears/localserver/npapi/managed_resource_store_np.h"
 
-DECLARE_GEARS_BRIDGE(GearsManagedResourceStore,
-                     GearsManagedResourceStoreWrapper);
+DECLARE_GEARS_WRAPPER(GearsManagedResourceStore,
+                      GearsManagedResourceStoreWrapper);
 
 // This class serves as the bridge between the GearsManagedResourceStore
 // implementation and the browser binding layer.
@@ -62,8 +62,3 @@ class GearsManagedResourceStoreWrapper
  private:
   DISALLOW_EVIL_CONSTRUCTORS(GearsManagedResourceStoreWrapper);
 };
-
-ModuleWrapperBaseClass *CreateGearsManagedResourceStore(
-      ModuleImplBaseClass *sibling) {
-  return GearsManagedResourceStoreWrapper::Create(sibling);
-}

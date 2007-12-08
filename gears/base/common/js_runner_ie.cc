@@ -148,6 +148,7 @@ class JsRunnerBase : public JsRunnerInterface {
         }
         case JSPARAM_DOUBLE:
         case JSPARAM_NULL:
+        case JSPARAM_MODULE:
           // TODO(mpcomplete): not used yet. implement me.
           assert(false);
           break;

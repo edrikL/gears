@@ -28,7 +28,7 @@
 #include "gears/database/npapi/database.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-DECLARE_GEARS_BRIDGE(GearsDatabase, GearsDatabaseWrapper);
+DECLARE_GEARS_WRAPPER(GearsDatabase, GearsDatabaseWrapper);
 
 // This class serves as the bridge between the GearsDatabase implementation and
 // the browser binding layer.
@@ -51,7 +51,3 @@ class GearsDatabaseWrapper : public ModuleWrapper<GearsDatabaseWrapper> {
  private:
   DISALLOW_EVIL_CONSTRUCTORS(GearsDatabaseWrapper);
 };
-
-ModuleWrapperBaseClass *CreateGearsDatabase(ModuleImplBaseClass *sibling) {
-  return GearsDatabaseWrapper::Create(sibling);
-}

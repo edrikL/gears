@@ -87,6 +87,4 @@ class GearsResultSet
   DISALLOW_EVIL_CONSTRUCTORS(GearsResultSet);
 };
 
-ModuleWrapperBaseClass *CreateGearsResultSet(ModuleImplBaseClass *sibling);
-
 #endif // GEARS_DATABASE_NPAPI_RESULT_SET_H__

@@ -46,12 +46,17 @@ void GearsLocalServer::CreateManagedStore(JsCallContext *context) {
   if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
-  ScopedModuleWrapper store_wrapper(CreateGearsManagedResourceStore(this));
-  if (!store_wrapper.get())
+  GComPtr<GearsManagedResourceStore> store(
+        CreateModule<GearsManagedResourceStore>(EnvPageJsContext()));
+  if (!store.get())
     return;  // Create function sets an error message.
 
-  JsToken retval = store_wrapper.get()->GetWrapperToken();
-  context->SetReturnValue(JSPARAM_OBJECT_TOKEN, &retval);
+  if (!store->InitBaseFromSibling(this)) {
+    context->SetException(STRING16(L"Error initializing base class."));
+    return;
+  }
+
+  context->SetReturnValue(JSPARAM_MODULE, store.get());
   context->SetException(STRING16(L"Not Implemented"));
 }
 
@@ -89,12 +94,17 @@ void GearsLocalServer::CreateStore(JsCallContext *context) {
   if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
-  ScopedModuleWrapper store_wrapper(CreateGearsResourceStore(this));
-  if (!store_wrapper.get())
+  GComPtr<GearsResourceStore> store(
+        CreateModule<GearsResourceStore>(EnvPageJsContext()));
+  if (!store.get())
     return;  // Create function sets an error message.
 
-  JsToken retval = store_wrapper.get()->GetWrapperToken();
-  context->SetReturnValue(JSPARAM_OBJECT_TOKEN, &retval);
+  if (!store->InitBaseFromSibling(this)) {
+    context->SetException(STRING16(L"Error initializing base class."));
+    return;
+  }
+
+  context->SetReturnValue(JSPARAM_MODULE, store.get());
   context->SetException(STRING16(L"Not Implemented"));
 }
 

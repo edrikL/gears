@@ -70,19 +70,17 @@ void GearsFactory::Create(JsCallContext *context) {
     return;
   }
 
-  // TODO(mpcomplete): implement me.
-
   // Create an instance of the object.
   //
   // Do case-sensitive comparisons, which are always better in APIs. They make
   // code consistent across callers, and they are easier to support over time.
-  ScopedModuleWrapper object(NULL);
+  GComPtr<ModuleImplBaseClass> object(NULL);
   if (class_name == STRING16(L"beta.database")) {
-    object.reset(CreateGearsDatabase(this));
+    object.reset(CreateModule<GearsDatabase>(EnvPageJsContext()));
   } else if (class_name == STRING16(L"beta.localserver")) {
-    object.reset(CreateGearsLocalServer(this));
+    object.reset(CreateModule<GearsLocalServer>(EnvPageJsContext()));
   } else if (class_name == STRING16(L"beta.workerpool")) {
-    object.reset(CreateGearsWorkerPool(this));
+    object.reset(CreateModule<GearsWorkerPool>(EnvPageJsContext()));
   } else {
     context->SetException(STRING16(L"Unknown object."));
     return;
@@ -91,9 +89,12 @@ void GearsFactory::Create(JsCallContext *context) {
   if (!object.get())
     return;  // Create function sets an error message.
 
-  // Give up ownership of the object and return it.
-  JsToken token = object.get()->GetWrapperToken();
-  context->SetReturnValue(JSPARAM_OBJECT_TOKEN, &token);
+  if (!object->InitBaseFromSibling(this)) {
+    context->SetException(STRING16(L"Error initializing base class."));
+    return;
+  }
+
+  context->SetReturnValue(JSPARAM_MODULE, object.get());
 }
 
 void GearsFactory::GetBuildInfo(JsCallContext *context) {
