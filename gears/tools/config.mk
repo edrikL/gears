@@ -289,7 +289,7 @@ GECKO_SDK = third_party/gecko_sdk/1.8/win32
 
 FF_LIBS = $(GECKO_SDK)/lib/xpcom.lib $(GECKO_SDK)/lib/xpcomglue_s.lib $(GECKO_SDK)/lib/nspr4.lib $(GECKO_SDK)/lib/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib
 IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib
-IEMOBILE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib
+IEMOBILE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib cellcore.lib
 NPAPI_LIBS = ole32.lib shell32.lib advapi32.lib wininet.lib
 
 # Other tools specific to win32/wince builds.
