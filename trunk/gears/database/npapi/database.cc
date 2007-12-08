@@ -133,12 +133,15 @@ void GearsDatabase::Execute(JsCallContext *context) {
   }
 
   // Wrap a GearsResultSet around the statement and execute it
-  ScopedModuleWrapper rs_internal(CreateGearsResultSet(this));
-  if (!rs_internal.get())
+  GComPtr<GearsResultSet> result_set(
+      CreateModule<GearsResultSet>(EnvPageJsContext()));
+  if (!result_set.get())
     return;  // Create function sets an error message.
 
-  GearsResultSet *result_set =
-      static_cast<GearsResultSet *>(rs_internal.get()->GetImplObject());
+  if (!result_set->InitBaseFromSibling(this)) {
+    context->SetException(STRING16(L"Error initializing base class."));
+    return;
+  }
 
   // Note the ResultSet takes ownership of the statement
   std::string16 error_message;
@@ -147,8 +150,7 @@ void GearsDatabase::Execute(JsCallContext *context) {
     return;
   }
 
-  JsToken retval = rs_internal.get()->GetWrapperToken();
-  context->SetReturnValue(JSPARAM_OBJECT_TOKEN, &retval);
+  context->SetReturnValue(JSPARAM_MODULE, result_set.get());
 }
 
 bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
@@ -249,7 +251,7 @@ bool GearsDatabase::CloseInternal() {
     db_ = NULL;
     if (sql_status != SQLITE_OK) {
       return false;
-  }
+    }
   }
   return true;
 }

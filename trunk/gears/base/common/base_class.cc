@@ -164,6 +164,10 @@ void ModuleImplBaseClass::AddRef() {
 void ModuleImplBaseClass::Release() {
   js_wrapper_->Release();
 }
+
+JsToken ModuleImplBaseClass::GetWrapperToken() const {
+  return js_wrapper_->GetWrapperToken();
+}
 #endif
 
 

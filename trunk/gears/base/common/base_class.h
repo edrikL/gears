@@ -66,7 +66,6 @@
 class ModuleWrapperBaseClass;
 class JsRunnerInterface;
 
-// TODO(mpcomplete): rename to ModuleImplBaseClass
 // Exposes the minimal set of information that Scour objects need to work
 // consistently across the main-thread and worker-thread JavaScript engines.
 class ModuleImplBaseClass {
@@ -114,6 +113,7 @@ class ModuleImplBaseClass {
   void SetJsWrapper(ModuleWrapperBaseClass *wrapper) { js_wrapper_ = wrapper; }
   void AddRef();
   void Release();
+  JsToken GetWrapperToken() const;
 #endif
 
  private:
@@ -160,6 +160,8 @@ class ModuleImplBaseClass {
   DISALLOW_EVIL_CONSTRUCTORS(ModuleImplBaseClass);
 };
 
+// TODO(mpcomplete): implement the rest of this for other platforms.
+
 // Interface for the wrapper class that binds the Gears object to the
 // JavaScript engine.
 class ModuleWrapperBaseClass {
@@ -171,26 +173,39 @@ class ModuleWrapperBaseClass {
   // JsRunnerInterface.
   virtual JsToken GetWrapperToken() const = 0;
 
-  // Adds a reference to the wraper class.
+  // Adds a reference to the wrapper class.
   virtual void AddRef() = 0;
 
-  // Releases a reference to the wraper class.
+  // Releases a reference to the wrapper class.
   virtual void Release() = 0;
  protected:
   // Don't allow direct deletion via this interface.
   virtual ~ModuleWrapperBaseClass() { }
 };
 
-// ScopedModuleWrapper: automatically call Release()
+#if BROWSER_NPAPI
+// GComPtr: automatically call Release()
 class ReleaseWrapperFunctor {
  public:
-  void operator()(ModuleWrapperBaseClass *x) const {
+  void operator()(ModuleImplBaseClass *x) const {
     if (x != NULL) { x->Release(); }
   }
 };
 
-typedef scoped_token<ModuleWrapperBaseClass*, ReleaseWrapperFunctor>
-    ScopedModuleWrapper;
+// TODO(cprince): Unify with CComPtr and nsCOMPtr.
+template<class Module>
+class GComPtr : public scoped_token<Module*, ReleaseWrapperFunctor> {
+ public:
+  explicit GComPtr(Module *v)
+      : scoped_token<Module*, ReleaseWrapperFunctor>(v) {}
+  Module* operator->() const { return get(); }
+};
 
+// Creates new Module of the given type.  Returns NULL on failure.
+// NOTE: Each module creation function is implemented as a template
+// specialization.
+template<class Module>
+Module *CreateModule(JsContextPtr context);
+#endif
 
 #endif  // GEARS_BASE_COMMON_BASE_CLASS_H__

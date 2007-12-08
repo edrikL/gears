@@ -80,6 +80,4 @@ class GearsWorkerPool
   DISALLOW_EVIL_CONSTRUCTORS(GearsWorkerPool);
 };
 
-ModuleWrapperBaseClass *CreateGearsWorkerPool(ModuleImplBaseClass *sibling);
-
 #endif // GEARS_WORKERPOOL_NPAPI_WORKERPOOL_H__

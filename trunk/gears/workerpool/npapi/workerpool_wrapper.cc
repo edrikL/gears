@@ -27,7 +27,7 @@
 #include "gears/base/npapi/module_wrapper.h"
 #include "gears/workerpool/npapi/workerpool.h"
 
-DECLARE_GEARS_BRIDGE(GearsWorkerPool, GearsWorkerPoolWrapper);
+DECLARE_GEARS_WRAPPER(GearsWorkerPool, GearsWorkerPoolWrapper);
 
 // This class serves as the bridge between the GearsWorkerPool implementation
 // and the browser binding layer.
@@ -54,7 +54,3 @@ class GearsWorkerPoolWrapper : public ModuleWrapper<GearsWorkerPoolWrapper> {
  private:
   DISALLOW_EVIL_CONSTRUCTORS(GearsWorkerPoolWrapper);
 };
-
-ModuleWrapperBaseClass *CreateGearsWorkerPool(ModuleImplBaseClass *sibling) {
-  return GearsWorkerPoolWrapper::Create(sibling);
-}

@@ -27,7 +27,7 @@
 #include "gears/base/npapi/module_wrapper.h"
 #include "gears/localserver/npapi/localserver_np.h"
 
-DECLARE_GEARS_BRIDGE(GearsLocalServer, GearsLocalServerWrapper);
+DECLARE_GEARS_WRAPPER(GearsLocalServer, GearsLocalServerWrapper);
 
 // This class serves as the bridge between the GearsLocalServer implementation
 // and the browser binding layer.
@@ -51,7 +51,3 @@ class GearsLocalServerWrapper
  private:
   DISALLOW_EVIL_CONSTRUCTORS(GearsLocalServerWrapper);
 };
-
-ModuleWrapperBaseClass *CreateGearsLocalServer(ModuleImplBaseClass *sibling) {
-  return GearsLocalServerWrapper::Create(sibling);
-}

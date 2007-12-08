@@ -29,7 +29,7 @@
 #include "gears/factory/npapi/factory.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-DECLARE_GEARS_BRIDGE(GearsFactory, GearsFactoryWrapper);
+DECLARE_GEARS_WRAPPER(GearsFactory, GearsFactoryWrapper);
 
 // TODO(mpcomplete): The naming is temporary.  Right now we have:
 // - GearsFactoryWrapper: serves as the bridge between implementation and the
@@ -46,7 +46,6 @@ class GearsFactoryWrapper : public ModuleWrapper<GearsFactoryWrapper> {
  public:
   GearsFactoryWrapper(NPP instance)
       : ModuleWrapper<GearsFactoryWrapper>(instance) {
-    impl_->InitBaseFromDOM(instance);
   }
 
   static void InitClass() {
@@ -60,5 +59,13 @@ class GearsFactoryWrapper : public ModuleWrapper<GearsFactoryWrapper> {
 };
 
 NPObject* CreateGearsFactoryWrapper(JsContextPtr context) {
-  return NPN_CreateObject(context, GetNPClass<GearsFactoryWrapper>());
+  GearsFactoryWrapper *factory_wrapper = static_cast<GearsFactoryWrapper*>(
+        NPN_CreateObject(context, GetNPClass<GearsFactoryWrapper>()));
+  if (factory_wrapper) {
+    GearsFactory *factory = static_cast<GearsFactory*>(
+          factory_wrapper->GetImplObject());
+    factory->InitBaseFromDOM(context);
+  }
+
+  return factory_wrapper;
 }

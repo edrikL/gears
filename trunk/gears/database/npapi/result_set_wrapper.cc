@@ -28,7 +28,7 @@
 #include "gears/database/npapi/result_set.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-DECLARE_GEARS_BRIDGE(GearsResultSet, GearsResultSetWrapper);
+DECLARE_GEARS_WRAPPER(GearsResultSet, GearsResultSetWrapper);
 
 // This class serves as the bridge between the GearsResultSet implementation and
 // the browser binding layer.
@@ -52,7 +52,3 @@ class GearsResultSetWrapper
  private:
   DISALLOW_EVIL_CONSTRUCTORS(GearsResultSetWrapper);
 };
-
-ModuleWrapperBaseClass *CreateGearsResultSet(ModuleImplBaseClass *sibling) {
-  return GearsResultSetWrapper::Create(sibling);
-}

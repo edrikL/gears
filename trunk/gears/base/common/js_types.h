@@ -268,6 +268,7 @@ enum JsParamType {
   // TODO(mpcomplete): split this next into OBJECT, ARRAY, FUNCTION, and TOKEN
   JSPARAM_OBJECT_TOKEN,
   JSPARAM_STRING16,
+  JSPARAM_MODULE,
   JSPARAM_NULL,
 };
 
@@ -294,6 +295,8 @@ struct JsArgument {
 
 // Temporary: npapi only.
 #if BROWSER_NPAPI
+class ModuleImplBaseClass;
+
 // This class provides an interface for a property or method access on a native
 // object from JavaScript.  It allows consumers to retrieve what arguments were
 // passed in, and return a value or exception back to the caller.  Any native
@@ -313,7 +316,17 @@ class JsCallContext {
   int GetArguments(int argc, JsArgument *argv);
 
   // Sets the value to be returned to the calling JavaScript.
+  //
+  // The ModuleImplBaseClass* version should only be used when returning a
+  // JSPARAM_MODULE.  It exists because passing a derived class through a void*
+  // and then casting to the base class is not safe - the compiler won't be able
+  // to correctly adjust the pointer offset.
+  //
+  // The int version is for use with JSPARAM_NULL, to avoid conflicting with the
+  // ModuleImplBaseClass version (works because NULL is defined as 0).
   void SetReturnValue(JsParamType type, const void *value_ptr);
+  void SetReturnValue(JsParamType type, const ModuleImplBaseClass *value_ptr);
+  void SetReturnValue(JsParamType type, int);
 
   // Sets an exception to be thrown to the calling JavaScript.  Setting an
   // exception overrides any previous exception and any return values.

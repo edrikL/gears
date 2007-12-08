@@ -137,12 +137,17 @@ void GearsResourceStore::CreateFileSubmitter(JsCallContext *context) {
     return;
   }
 
-  ScopedModuleWrapper submitter_wrapper(CreateGearsFileSubmitter(this));
-  if (!submitter_wrapper.get())
+  GComPtr<GearsFileSubmitter> submitter(
+        CreateModule<GearsFileSubmitter>(EnvPageJsContext()));
+  if (!submitter.get())
     return;  // Create function sets an error message.
 
-  JsToken retval = submitter_wrapper.get()->GetWrapperToken();
-  context->SetReturnValue(JSPARAM_OBJECT_TOKEN, &retval);
+  if (!submitter->InitBaseFromSibling(this)) {
+    context->SetException(STRING16(L"Error initializing base class."));
+    return;
+  }
+
+  context->SetReturnValue(JSPARAM_MODULE, submitter.get());
   context->SetException(STRING16(L"Not Implemented"));
 }
 

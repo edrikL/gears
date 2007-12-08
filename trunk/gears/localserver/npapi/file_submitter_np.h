@@ -48,6 +48,4 @@ class GearsFileSubmitter : public ModuleImplBaseClass {
   DISALLOW_EVIL_CONSTRUCTORS(GearsFileSubmitter);
 };
 
-ModuleWrapperBaseClass *CreateGearsFileSubmitter(ModuleImplBaseClass *sibling);
-
 #endif // GEARS_LOCALSERVER_NPAPI_FILE_SUBMITTER_NP_H__
