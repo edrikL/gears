@@ -72,7 +72,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
               <!-- Automatically enable control by adding to IE7's pre-approved list. See
                 http://msdn.microsoft.com/library/default.asp?url=/library/en-us/IETechCol/cols/dnexpie/activex_security.asp?frame=true -->
               <RegistryKey Root='HKLM' Action='createAndRemoveOnUninstall'
-                Key='Software\Microsoft\Windows\CurrentVersion\Ext\PreApproved\{283EAF47-8817-4c2b-A801-AD1FADFB7BAA}' />
+                Key='Software\Microsoft\Windows\CurrentVersion\Ext\PreApproved\{C93A7319-17B3-4504-87CD-03EFC6103E6E}' />
             </Component>
 
             <Component Id='OurFFRegistry' Guid='$(var.OurComponentGUID_FFRegistry)'>
