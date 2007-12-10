@@ -39,12 +39,14 @@
 // Main plugin entry point implementation
 //
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/thread_locals.h"
 
 #ifndef HIBYTE
 #define HIBYTE(x) ((((uint32)(x)) & 0xff00) >> 8)
 #endif
 
-NPNetscapeFuncs NPNFuncs;
+static NPNetscapeFuncs g_browser_funcs;
+const char *kNPNFuncsKey("base:NPNetscapeFuncs");
 
 NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* pFuncs)
 {
@@ -84,12 +86,32 @@ NPError OSCALL NP_Initialize(NPNetscapeFuncs* pFuncs)
   if (pFuncs->size < sizeof(NPNetscapeFuncs))
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
-  NPNFuncs = *pFuncs;
+  MyDllMain(0, DLL_PROCESS_ATTACH, 0);
+
+  g_browser_funcs = *pFuncs;
+  ThreadLocals::SetValue(kNPNFuncsKey, &g_browser_funcs, NULL);
 
   return NPERR_NO_ERROR;
 }
 
 NPError OSCALL NP_Shutdown()
 {
+  MyDllMain(0, DLL_PROCESS_DETACH, 0);
   return NPERR_NO_ERROR;
+}
+
+BOOL MyDllMain(HANDLE instance, DWORD reason, LPVOID reserved) {
+  switch (reason) {
+    case DLL_THREAD_DETACH:
+      ThreadLocals::HandleThreadDetached();
+      break;
+    case DLL_PROCESS_DETACH:
+      ThreadLocals::HandleProcessDetached();
+      break;
+    case DLL_PROCESS_ATTACH:
+      ThreadLocals::HandleProcessAttached();
+      break;
+  }
+
+  return TRUE;
 }

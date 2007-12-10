@@ -134,7 +134,7 @@ JsArray::JsArray() : js_context_(NULL) {
 
 bool JsArray::SetArray(JsToken value, JsContextPtr context) {
   // check that it's an array (can only test that it has a length property).
-  static NPIdentifier length_id = NPN_GetStringIdentifier("length");
+  NPIdentifier length_id = NPN_GetStringIdentifier("length");
   if (!NPVARIANT_IS_OBJECT(value) ||
       !NPN_HasProperty(context, NPVARIANT_TO_OBJECT(value), length_id)) {
     return false;
@@ -150,7 +150,7 @@ bool JsArray::GetLength(int *length) {
 
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
 
-  static NPIdentifier length_id = NPN_GetStringIdentifier("length");
+  NPIdentifier length_id = NPN_GetStringIdentifier("length");
   if (!NPN_HasProperty(js_context_, array, length_id)) return false;
 
   NPVariant np_length;

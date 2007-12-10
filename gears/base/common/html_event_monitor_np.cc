@@ -91,7 +91,7 @@ bool HtmlEventMonitor::Start(NPP context, NPObject *event_source) {
   // call window.addEventListener(event_name, event_hook, false)
   NPObject* window = event_source;
 
-  static NPIdentifier add_event_listener_id =
+  NPIdentifier add_event_listener_id =
       NPN_GetStringIdentifier("addEventListener");
 
   std::string event_name_utf8;
@@ -124,7 +124,7 @@ void HtmlEventMonitor::Stop() {
   // call window.removeEventListener(event_name, event_hook, false)
   NPObject* window = NPVARIANT_TO_OBJECT(event_source_);
 
-  static NPIdentifier remove_event_listener_id =
+  NPIdentifier remove_event_listener_id =
       NPN_GetStringIdentifier("removeEventListener");
 
   std::string event_name_utf8;

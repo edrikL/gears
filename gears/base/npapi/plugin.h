@@ -83,17 +83,25 @@ class PluginBase : public NPObject {
  private:
   typedef std::map<NPIdentifier, ImplCallback> IDList;
 
+  struct ThreadLocalVariables {
+    bool did_init_class;
+    IDList property_getters;
+    IDList property_setters;
+    IDList methods;
+    ThreadLocalVariables() : did_init_class(false) {}
+  };
+
+  static void DeleteThreadLocals(void *context);
+  static ThreadLocalVariables &GetThreadLocals();
+
   static IDList& GetPropertyGetterList() {
-    static IDList getters;
-    return getters;
+    return GetThreadLocals().property_getters;
   }
   static IDList& GetPropertySetterList() {
-    static IDList setters;
-    return setters;
+    return GetThreadLocals().property_setters;
   }
   static IDList& GetMethodList() {
-    static IDList methods;
-    return methods;
+    return GetThreadLocals().methods;
   }
 
   DISALLOW_EVIL_CONSTRUCTORS(PluginBase<T>);
@@ -125,7 +133,9 @@ class PluginClass; \
 template<> \
 struct PluginTraits<PluginClass> { \
   typedef ImplClassType ImplClass; \
-}
+  static const char *kThreadLocalsKey;\
+}; \
+const char *PluginTraits<PluginClass>::kThreadLocalsKey = "base:" #ImplClassType
 
 // Need to include .cc for template definitions.
 #include "gears/base/npapi/plugin.cc"

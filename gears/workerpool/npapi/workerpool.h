@@ -30,7 +30,15 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/mutex.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
+
+const UINT WM_WORKERPOOL_ONMESSAGE = (WM_USER + 0);
+const UINT WM_WORKERPOOL_ONERROR = (WM_USER + 1);
+
+class PoolThreadsManager;
+struct Message;
+struct JavaScriptWorkerInfo;
 
 class GearsWorkerPool
     : public ModuleImplBaseClass,
@@ -70,14 +78,91 @@ class GearsWorkerPool
   void ForceGC(JsCallContext *context);
 #endif
 
- private:
-  void Initialize(); // okay to call this multiple times
-
   void HandleEvent(JsEventType event_type);
 
+ private:
+  friend class PoolThreadsManager; // for SetThreadsManager
+
+  void Initialize(); // okay to call this multiple times
+  void SetThreadsManager(PoolThreadsManager *manager);
+
+  PoolThreadsManager *threads_manager_;
+  bool owns_threads_manager_;
   scoped_ptr<JsEventMonitor> unload_monitor_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsWorkerPool);
 };
+
+
+class PoolThreadsManager
+    : JsErrorHandlerInterface {
+ public:
+  PoolThreadsManager(const SecurityOrigin &page_security_origin,
+                     JsRunnerInterface *root_js_runner);
+
+  // We handle the lifetime of the PoolThreadsMananger using ref-counting. 
+  // When all references go away, the PoolThreadsManager deletes itself.
+  // NOTE: each worker will add (and release) multiple references.
+  void AddWorkerRef();
+  void ReleaseWorkerRef();
+
+  bool SetCurrentThreadMessageHandler(JsRootedCallback *handler);
+  bool SetCurrentThreadErrorHandler(JsRootedCallback *handler);
+  bool CreateThread(const std::string16 &url_or_full_script,
+                    bool is_param_script,
+                    int *worker_id);
+  void AllowCrossOrigin();
+  void HandleError(const JsErrorInfo &error_info);
+  bool PutPoolMessage(const char16 *text, int dest_worker_id,
+                      const SecurityOrigin &src_origin);
+
+  // Worker initialization that must be done from the worker's thread.
+  bool InitWorkerThread(JavaScriptWorkerInfo *wi);
+  void UninitWorkerThread();
+
+  void ShutDown();
+#ifdef DEBUG
+  void ForceGCCurrentThread();
+#endif
+
+  const SecurityOrigin& page_security_origin() { return page_security_origin_; }
+
+ private:
+  ~PoolThreadsManager();
+
+  // Gets the id of the worker associated with the current thread. Caller must
+  // acquire the mutex.
+  int GetCurrentPoolWorkerId();
+  bool GetPoolMessage(Message *msg);
+  bool InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
+                            const JsErrorInfo &error_info);
+
+  static unsigned __stdcall JavaScriptThreadEntry(void *args);
+  static bool SetupJsRunner(JsRunnerInterface *js_runner,
+                            JavaScriptWorkerInfo *wi);
+  static LRESULT CALLBACK ThreadWndProc(HWND hwnd, UINT message,
+                                        WPARAM wparam, LPARAM lparam);
+
+  // Helpers for processing events received from other workers.
+  void ProcessMessage(JavaScriptWorkerInfo *wi,
+                      const Message &msg);
+  void ProcessError(JavaScriptWorkerInfo *wi,
+                    const Message &msg);
+
+  int num_workers_;  // used by Add/ReleaseWorkerRef()
+  bool is_shutting_down_;
+
+  std::vector<DWORD> worker_id_to_os_thread_id_;  // TODO(mpcomplete): FIXME
+  // this _must_ be a vector of pointers, since each worker references its
+  // JavaScriptWorkerInfo, but STL vector realloc can move its elements.
+  std::vector<JavaScriptWorkerInfo*> worker_info_;
+
+  Mutex mutex_;  // for exclusive access to all class methods and data
+
+  SecurityOrigin page_security_origin_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(PoolThreadsManager);
+};
+
 
 #endif // GEARS_WORKERPOOL_NPAPI_WORKERPOOL_H__
