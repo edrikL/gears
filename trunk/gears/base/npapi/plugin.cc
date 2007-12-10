@@ -29,14 +29,15 @@
 
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/common/js_types.h"
+#include "gears/base/common/thread_locals.h"
 
 // static
 template<class T>
 NPObject* PluginBase<T>::Allocate(NPP npp, NPClass *npclass) {
   // Initialize property and method mappings for the derived class.
-  static bool did_init = false;
-  if (!did_init) {
-    did_init = true;
+  ThreadLocalVariables &locals = GetThreadLocals();
+  if (!locals.did_init_class) {
+    locals.did_init_class = true;
     PluginClass::InitClass();
   }
 
@@ -61,6 +62,8 @@ template<class T>
 bool PluginBase<T>::Invoke(NPObject *npobj, NPIdentifier name,
                            const NPVariant *args, uint32_t num_args,
                            NPVariant *result) {
+  VOID_TO_NPVARIANT(*result);
+
   PluginClass *plugin = static_cast<PluginClass *>(npobj);
   ImplClass *impl = plugin->GetImplObject();
 
@@ -89,6 +92,8 @@ bool PluginBase<T>::HasProperty(NPObject * npobj, NPIdentifier name) {
 template<class T>
 bool PluginBase<T>::GetProperty(NPObject *npobj, NPIdentifier name,
                                 NPVariant *result) {
+  VOID_TO_NPVARIANT(*result);
+
   PluginClass *plugin = static_cast<PluginClass *>(npobj);
   ImplClass *impl = plugin->GetImplObject();
 
@@ -140,4 +145,25 @@ template<class T>
 void PluginBase<T>::RegisterMethod(const char *name, ImplCallback callback) {
   NPIdentifier id = NPN_GetStringIdentifier(name);
   GetMethodList()[id] = callback;
+}
+
+// static
+template<class T>
+void PluginBase<T>::DeleteThreadLocals(void *context) {
+  ThreadLocalVariables *locals =
+      reinterpret_cast<ThreadLocalVariables*>(context);
+  delete locals;
+}
+
+// static
+template<class T>
+typename PluginBase<T>::ThreadLocalVariables &PluginBase<T>::GetThreadLocals() {
+  const char *key = PluginTraits<T>::kThreadLocalsKey;
+  ThreadLocalVariables *locals =
+      reinterpret_cast<ThreadLocalVariables*>(ThreadLocals::GetValue(key));
+  if (!locals) {
+    locals = new ThreadLocalVariables;
+    ThreadLocals::SetValue(key, locals, &DeleteThreadLocals);
+  }
+  return *locals;
 }
