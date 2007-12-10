@@ -27,6 +27,10 @@
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/ie/resource.h" // for .rgs resource ids (IDR_*)
 
+// This is defined in gears/base/common/message_queue_ie.h.  It should only be
+// called here.
+void ShutdownThreadMessageQueue();
+
 class DllModule : public CAtlDllModuleT< DllModule > {
  public:
   DECLARE_LIBID(LIBID_GearsTypelib)
@@ -42,6 +46,7 @@ int _charmax = 255;
 inline BOOL MyDllMain(HANDLE instance, DWORD reason, LPVOID reserved) {
   switch (reason) {
     case DLL_THREAD_DETACH:
+      ShutdownThreadMessageQueue();
       ThreadLocals::HandleThreadDetached();
       break;
     case DLL_PROCESS_DETACH:

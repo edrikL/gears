@@ -24,6 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
+#include <map>
 #include <nsCOMPtr.h>
 #include <nspr.h>  // for PR_*
 #ifdef WIN32
@@ -49,6 +50,17 @@ bool ThreadMessageQueue::RegisterHandler(int message_id,
   return true;
 }
 
+inline ThreadMessageQueue::HandlerCallback GetRegisteredHandler(int id) {
+  MutexLock lock(&callback_mutex_);
+  std::map<int, ThreadMessageQueue::HandlerCallback>::iterator handler_loc =
+      callbacks_.find(id);
+  if (handler_loc != callbacks_.end()) {
+    return handler_loc->second;
+  } else {
+    return NULL;
+  }
+}
+
 ThreadId ThreadMessageQueue::GetCurrentThreadId() {
   return PR_GetCurrentThread();
 }
@@ -66,15 +78,11 @@ void *OnReceiveMessageEvent(MessageEvent *event) {
   assert(event->thread == ThreadMessageQueue::GetCurrentThreadId());
 
   // Check that a callback has been registered for this event type.
-  std::map<int, ThreadMessageQueue::HandlerCallback>::iterator handler;
-  {
-    // We only need to lock during the find.
-    MutexLock lock(&callback_mutex_);
-    handler = callbacks_.find(event->message_id);
-  }
-  if (handler != callbacks_.end()) {
-    handler->second(event->message_id, event->message_data_1.c_str(),
-                    event->message_data_2.c_str());
+  ThreadMessageQueue::HandlerCallback handler =
+      GetRegisteredHandler(event->message_id);
+  if (handler) {
+    handler(event->message_id, event->message_data_1.c_str(),
+            event->message_data_2.c_str());
   }
 
   return NULL;
@@ -84,7 +92,7 @@ static void OnDestroyMessageEvent(MessageEvent *event) {
   delete event;
 }
 
-void ThreadMessageQueue::Send(ThreadId thread,
+bool ThreadMessageQueue::Send(ThreadId thread,
                               int message_id,
                               const char16 *message_data_1,
                               const char16 *message_data_2) {
@@ -93,7 +101,7 @@ void ThreadMessageQueue::Send(ThreadId thread,
   nsCOMPtr<nsIEventQueueService> event_queue_service =
       do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &nr);
   if (NS_FAILED(nr)) {
-    return;
+    return false;
   }
 
   // If there's no event queue on this thread, we can't do anything.
@@ -101,7 +109,7 @@ void ThreadMessageQueue::Send(ThreadId thread,
   nr = event_queue_service->GetThreadEventQueue(thread,
                                                 getter_AddRefs(event_queue));
   if (NS_FAILED(nr)) {
-    return;
+    return false;
   }
 
   MessageEvent *event = new MessageEvent;
@@ -115,13 +123,14 @@ void ThreadMessageQueue::Send(ThreadId thread,
       reinterpret_cast<PLHandleEventProc>(OnReceiveMessageEvent),
       reinterpret_cast<PLDestroyEventProc>(OnDestroyMessageEvent)))) {
     delete event;
-    return;
+    return false;
   }
   if (NS_FAILED(event_queue->PostEvent(&event->e))) {
     // Cleaning up the event at this point would requires access to private
     // functions, so just clear the strings so that we leak less.
     event->message_data_1.clear();
     event->message_data_2.clear();
-    return;
+    return false;
   }
+  return true;
 }

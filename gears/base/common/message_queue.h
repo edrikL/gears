@@ -26,7 +26,6 @@
 #ifndef GEARS_BASE_COMMON_MESSAGE_QUEUE_H__
 #define GEARS_BASE_COMMON_MESSAGE_QUEUE_H__
 
-#include <map>
 #include "gears/base/common/mutex.h"
 
 #if BROWSER_FF
@@ -53,8 +52,9 @@ class ThreadMessageQueue {
 
   static ThreadId GetCurrentThreadId();
 
-  // Posts a message to the indicated thread.
-  static void Send(ThreadId thread_handle,
+  // Posts a message to the indicated thread.  Returns true if the message is
+  // successfully queued.
+  static bool Send(ThreadId thread_handle,
                    int message_id,
                    const char16 *message_data_1,
                    const char16 *message_data_2);
