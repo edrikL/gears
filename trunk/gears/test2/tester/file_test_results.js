@@ -44,6 +44,11 @@ FileTestResults.prototype.testsStarted = 0;
 FileTestResults.prototype.testsComplete = 0;
 
 /**
+ * Time elapsed during tests in ms.
+ */
+FileTestResults.prototype.timeElapsed = 0;
+
+/**
  * The name of the test suite this resides in.
  */
 FileTestResults.prototype.suiteName = '';
@@ -65,6 +70,10 @@ FileTestResults.prototype.start = function(div, testData, suiteName) {
   this.pendingLookup_ = {};
   
   this.suiteName = suiteName;
+
+  // Store starting timestamp in timeElapsed to use later.
+  var date = new Date();
+  this.timeElapsed = date.getTime();
 
   var heading = document.createElement('h3');
   heading.appendChild(document.createTextNode(testData.relativePath));
@@ -114,7 +123,9 @@ FileTestResults.prototype.startWorkerTests_ = function() {
  * @param name
  */
 FileTestResults.prototype.handleBeforeSyncTestStart = function(name) {
-  this.testResults[name] = {status: "started"};
+  var date = new Date();
+  var timestamp = date.getTime();
+  this.testResults[name] = {status: "started", startTime: timestamp};
 };
 
 /**
@@ -122,7 +133,9 @@ FileTestResults.prototype.handleBeforeSyncTestStart = function(name) {
  * @param name
  */
 FileTestResults.prototype.handleBeforeAsyncTestStart = function(name) {
-  this.testResults[name + '_worker'] = {status: "started"};
+  var date = new Date();
+  var timestamp = date.getTime();
+  this.testResults[name + '_worker'] = {status: "started", startTime: timestamp};
 };
 
 /**
@@ -150,10 +163,21 @@ FileTestResults.prototype.handleTestsLoaded = function(isWorker, success,
  */
 FileTestResults.prototype.handleTestComplete = function(isWorker, name, success,
                                                         errorMessage) {
-
+  var date = new Date();
+  var timestamp = date.getTime();
   var statusKey = (isWorker) ? name + '_worker' : name;
-  var status = (success) ? "passed" : "failed";        
-  this.testResults[statusKey] = {status: status, message: errorMessage};
+  var status = (success) ? "passed" : "failed";
+
+  // Calculate the elapsed time for the test case
+  if (this.testResults && this.testResults[statusKey]) {
+    var elapsed = timestamp - this.testResults[statusKey]['startTime'];
+  } else {
+    var elapsed = -1;
+  }
+
+  this.testResults[statusKey] = {status: status, 
+                                 message: errorMessage, 
+                                 elapsed: elapsed};
   
   var pendingLookupKey = name + '_' + isWorker;
   var pendingRow = this.pendingLookup_[pendingLookupKey];
@@ -176,6 +200,12 @@ FileTestResults.prototype.handleTestComplete = function(isWorker, name, success,
  */
 FileTestResults.prototype.handleAsyncTestStart = function(isWorker, name) {
   this.testsStarted++;
+
+  var date = new Date();
+  var timestamp = date.getTime();
+  var statusKey = (isWorker) ? name + '_worker' : name;
+  this.testResults[statusKey] = {status: "started", startTime: timestamp};
+
   var pendingLookupKey = name + '_' + isWorker;
   var pendingRow = this.pendingLookup_[pendingLookupKey];
   if (!pendingRow) {
@@ -193,6 +223,9 @@ FileTestResults.prototype.handleAllTestsComplete = function(isWorker) {
   if (!isWorker && this.testData_.config.useWorker) {
     this.startWorkerTests_();
   } else {
+    // Store time since test set began.  Start time is stored in timeElapsed.
+    var date = new Date();
+    this.timeElapsed = date.getTime() - this.timeElapsed;
     this.onAllTestsComplete();
   }
 };
@@ -283,5 +316,6 @@ FileTestResults.prototype.updateResultCell_ = function(cell, success,
 FileTestResults.prototype.toJson = function() {
   return {suitename: this.suiteName, 
           filename: this.testData_.relativePath, 
-          results: this.testResults};
+          results: this.testResults,
+          elapsed: this.timeElapsed};
 };

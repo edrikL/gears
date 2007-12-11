@@ -62,9 +62,17 @@ class SuitesReport:
   def __appendSuiteInfo(self, store, test_data):
     store["suites"] = {}
     for file_result in test_data:
-      suite_name = file_result["suitename"]   
+      suite_name = file_result["suitename"]
       if (suite_name not in store["suites"]):
-        store["suites"][suite_name] = []
+        store["suites"][suite_name] = {"file_results": [], "elapsed": 0}
       
-      store["suites"][suite_name].append({"filename" : file_result["filename"],
-                                         "results" : file_result["results"]})
+      # Elapsed time for a suite is the sum of the elapsed times of the files
+      store["suites"][suite_name]["elapsed"] += int(file_result["elapsed"])
+
+      store["suites"][suite_name]["file_results"].append( \
+          {"filename" : file_result["filename"],
+           "results" : file_result["results"]})
+
+    # Leave value as string for consistency
+    store["suites"][suite_name]["elapsed"] = \
+        str(store["suites"][suite_name]["elapsed"])
