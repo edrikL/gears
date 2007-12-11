@@ -7,7 +7,7 @@ This is a module to give JavaScript a way to resize, crop and compose images tog
 
 = Details =
 
-The Image Manipulation module with add one object to JavaScript, the Image class.  This is created via the Gears Factory:
+The Image Manipulation module will add one object to JavaScript, the Image class.  This is created via the Gears Factory:
 {{{
 var image = google.gears.factory.create('beta.image', '1.0');
 }}}
