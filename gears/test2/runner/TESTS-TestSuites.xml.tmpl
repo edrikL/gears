@@ -11,9 +11,10 @@
         </testcase>
       </testsuite>
     #else
-      #for $suite, $suite_results in $browser_results["suites"].items()
+      #for $suite, $suite_properties in $browser_results["suites"].items()
         #set $id = $id + 1
-        <testsuite errors="0" failures="0" id="$id" name="$suite" package="$browser" tests="0" time="0">
+	#set $suite_results = $suite_properties['file_results']
+        <testsuite errors="0" failures="0" id="$id" name="$suite" package="$browser" tests="0" time="$suite_properties['elapsed']">
           <properties>
            <property name="url"  value="$browser_results['url']"></property>
            <property name="browser_info"  value="$browser_results['browser_info']"></property>
@@ -22,7 +23,7 @@
           
           #for $file_test_results in $suite_results
             #for $testcase_name, $test_results in $file_test_results['results'].items()
-              <testcase classname="$file_test_results['filename']" name="$testcase_name" time="0">
+              <testcase classname="$file_test_results['filename']" name="$testcase_name" time="$test_results['elapsed']">
                 #if $test_results["status"] == 'failed'
                  <failure message="test failure" type="">
                     #if $test_results.has_key("message")

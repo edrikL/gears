@@ -21,13 +21,14 @@ class SuitesReportTest(unittest.TestCase):
             'suitename': 'Factory',
             'results': 
               {
-                  'testCheckVersionProperty' : {'status': 'passed'},
+                  'testCheckVersionProperty' : {'status': 'passed', 'elapsed': '5'},
                   'testSomeFailure': 
                     {
                       'message': 'Expected: 1 (number), actual: 2 (number)', 
-                      'status': 'failed'
+                      'status': 'failed', 'elapsed': '4'
                     } 
-              }
+              },
+            'elapsed': '321'
             }
            ]
       }
@@ -46,7 +47,8 @@ class SuitesReportTest(unittest.TestCase):
           {
             'filename': '/filename1.js',
             'suitename': 'suite1',
-            'results': {'testOne' : {'status': 'passed'},}
+            'results': {'testOne' : {'status': 'passed', 'elapsed': '7'}},
+            'elapsed': '7777'
           }
           ]
       },
@@ -60,7 +62,8 @@ class SuitesReportTest(unittest.TestCase):
           {
             'filename': '/filename1.js',
             'suitename': 'suite1',
-            'results': {'testOne' : {'status': 'passed'},}
+            'results': {'testOne' : {'status': 'passed', 'elapsed': '1'},},
+            'elapsed': '111'
           }
           ]
       }      
@@ -81,17 +84,19 @@ class SuitesReportTest(unittest.TestCase):
             'suitename': 'suite1',
             'results': 
               {
-                  'testOne' : {'status': 'passed'}
-              }
+                  'testOne' : {'status': 'passed', 'elapsed': '21'}
+              },
+            'elapsed': '212'
           },
           {
             'filename': '/filename1.js',
             'suitename': 'suite2',
             'results': 
               {
-                  'testTwo' : {'status': 'failed'},
-                  'testThree' : {'status': 'passed'},
-              }
+                  'testTwo' : {'status': 'failed', 'elapsed': '233'},
+                  'testThree' : {'status': 'passed', 'elapsed': '445'},
+              },
+            'elapsed': '55543'
           }
           ]
       }
@@ -105,17 +110,21 @@ class SuitesReportTest(unittest.TestCase):
       {'url': 'http://localhost:8001/runner/gui.html', 
        'suites': 
         {'Factory': 
-         [
-          {'results': 
-           {
-            'testCheckVersionProperty': {'status': 'passed'}, 
-            'testSomeFailure': {'status': 'failed', 'message': 
-                                'Expected: 1 (number), actual: 2 (number)'}
-          }, 
-          'filename': '/testcases/factory_tests.js'
+          {'file_results':
+            [
+            {'results': 
+              {
+              'testCheckVersionProperty': {'status': 'passed', 'elapsed': '5'}, 
+              'testSomeFailure': {'status': 'failed', 'message': 
+                                  'Expected: 1 (number), actual: 2 (number)',
+                                  'elapsed': '4'}
+              }, 
+            'filename': '/testcases/factory_tests.js',
+            }
+            ],
+          'elapsed': '321'
           }
-         ]
-         }, 
+        }, 
         'browser_info': 
             'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; '
             'rv:1.8.1.7) Gecko/20070914', 
@@ -133,7 +142,7 @@ class SuitesReportTest(unittest.TestCase):
         SuitesReportTest.MULTIPLE_BROWSERS)
     expected = ['browser1', 'browser2']
     expected.sort()
-    self.assertEqual( expected, result.keys())
+    self.assertEqual(expected, result.keys())
 
   def testGroupsBySuites(self):
     result = self.suites_report.groupResultsBySuites(
@@ -155,7 +164,7 @@ class SuitesReportTest(unittest.TestCase):
         SuitesReportTest.SINGLE_FAILURE)
     suites_level_results = result['browser1']['suites']
     self.assertEqual(['Factory'], suites_level_results.keys())
-    actual_results = suites_level_results['Factory']
+    actual_results = suites_level_results['Factory']['file_results']
     self.assertTrue(1, len(actual_results))
     self.assertEqual('/testcases/factory_tests.js', 
                      actual_results[0]['filename'])
@@ -178,3 +187,7 @@ class SuitesReportTest(unittest.TestCase):
     # no assertions, XMLUnit would be handy
     output = StringIO.StringIO()
     self.suites_report.writeReport(SuitesReportTest.MULTIPLE_SUITES, output)
+
+if __name__ == "__main__":
+  unittest.main()    
+  

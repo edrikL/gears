@@ -213,6 +213,9 @@ Harness.prototype.runNextTest_ = function() {
   // test is executed.
   var testIndexBefore = this.currentTestIndex_;
 
+  // Let everyone know (call back) that a test is starting
+  this.onBeforeTestStart(this.currentTestName_);
+
   // This might throw, but that is OK -- handleGlobalError_ will get called and
   // we continue there. Doing that is better than try/catch here so that when
   // unit tests fail the default browser error UI gets invoked, which contains
