@@ -5,6 +5,8 @@
 
 This is a module to give JavaScript a way to resize, crop and compose images together on the client side.  This will allow, for example, images to be resized into a web-friendly format before being uploaded to a photo album.  Another use is for composition of images together as an efficient alternative to server-side composition or CSS layering.  Yet another use is for basic photo editing - a user can edit a photo with instantly applied changes before uploading it to the server.
 
+This module will be implemented as a wrapper around [http://www.libgd.org/ libGD].  This is the smallest of the popular image libraries which does all of the below.  If this turns out to still be too big, we can consider writing the image manipulation code ourselves, or using browser specific image libraries.
+
 = Details =
 
 The Image Manipulation module will add one object to JavaScript, the Image class.  This is created via the Gears Factory:
