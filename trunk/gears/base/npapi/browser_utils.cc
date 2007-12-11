@@ -29,24 +29,39 @@
 
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/js_types.h"
+#include "gears/base/common/thread_locals.h"
 #include "gears/base/npapi/scoped_npapi_handles.h"
 
-// TODO(mpcomplete): when we have workerpool support, these will probably need
-// to be thread-local variables.
-static std::stack<JsCallContext*> call_stack;
+typedef std::stack<JsCallContext*> JsCallStack;
+static const char *kJsCallStackKey = "base:JsCallStack";
+
+static void DeleteJsCallStack(void *context) {
+  JsCallStack *call_stack = reinterpret_cast<JsCallStack*>(context);
+  delete call_stack;
+}
+
+static JsCallStack &GetJsCallStack() {
+  JsCallStack *call_stack =
+      reinterpret_cast<JsCallStack*>(ThreadLocals::GetValue(kJsCallStackKey));
+  if (!call_stack) {
+    call_stack = new JsCallStack;
+    ThreadLocals::SetValue(kJsCallStackKey, call_stack, &DeleteJsCallStack);
+  }
+  return *call_stack;
+}
 
 void BrowserUtils::EnterScope(JsCallContext *context) {
-  call_stack.push(context);
+  GetJsCallStack().push(context);
 }
 
 void BrowserUtils::ExitScope() {
-  assert(!call_stack.empty());
-  call_stack.pop();
+  assert(!GetJsCallStack().empty());
+  GetJsCallStack().pop();
 }
 
 void BrowserUtils::SetJsException(const std::string16& message) {
-  assert(!call_stack.empty());
-  call_stack.top()->SetException(message);
+  assert(!GetJsCallStack().empty());
+  GetJsCallStack().top()->SetException(message);
 }
 
 bool BrowserUtils::GetPageLocationUrl(JsContextPtr context,
