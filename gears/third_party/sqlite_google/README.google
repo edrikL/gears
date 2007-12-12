@@ -63,3 +63,18 @@ conflicting changes, but will otherwise just merge things together.
 Basically, sqlite_vendor is a gateway between CVS and perforce.
 
 Scott Hess <shess@google.com>, April 9, 2007.
+
+--------------------------------------------
+
+How to run the SQLite tests for the Gears version of SQLite on Linux.
+
+cd .../googleclient/gears/third_part/sqlite_google/
+mkdir build
+cd build
+make -f ../Makefile.linux-gcc testfixture
+make -f ../Makefile.linux-gcc test > /tmp/test.log
+egrep -v 'Ok$' /tmp/test.log
+# When run on a locally-mounted disk, my output ends with:
+# 0 errors out of 57887 tests
+
+Scott Hess <shess@google.com>, December 11, 2007
