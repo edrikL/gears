@@ -17,12 +17,12 @@ var image = google.gears.factory.create('beta.image', '1.0');
 == Image class ==
 
 {{{
-  void openFromPNG(fileName)
-  void openFromJPEG(fileName)
-  void openFromGIF(fileName)
-  void saveToPNG(fileName)
-  void saveToJPEG(fileName)
-  void saveToGIF(fileName)
+  void openFromPNG(store, fileName)
+  void openFromJPEG(store, fileName)
+  void openFromGIF(store, fileName)
+  void saveToPNG(store, fileName)
+  void saveToJPEG(store, fileName)
+  void saveToGIF(store, fileName)
   void resize(width, height)
   void crop(x, y, width, height)
   int width()
