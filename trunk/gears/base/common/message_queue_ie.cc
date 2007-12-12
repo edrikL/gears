@@ -31,6 +31,24 @@
 #include "gears/base/common/message_queue.h"
 #include "gears/third_party/linked_ptr/linked_ptr.h"
 
+class ThreadMessageWindow;
+
+class IEThreadMessageQueue : public ThreadMessageQueue {
+ public:
+  virtual bool InitThreadMessageQueue();
+  virtual ThreadId GetCurrentThreadId();
+  virtual bool Send(ThreadId thread_handle,
+                    int message_id,
+                    const char16 *message_data_1,
+                    const char16 *message_data_2);
+
+ private:
+  friend class ThreadMessageWindow;
+  void HandleThreadMessage(int message_id,
+                           const char16 *message_data_1,
+                           const char16 *message_data_2);
+};
+
 const DWORD WM_THREAD_MESSAGE = WM_USER + 1;
 
 // Owns the window that has the message queue for a thread, and manages the
@@ -78,15 +96,17 @@ class ThreadMessageWindow : public CWindowImpl<ThreadMessageWindow> {
   std::deque<MessageEvent *> events_;
 };
 
-// Protects callbacks_ during inserts and finds.
-static Mutex callback_mutex_;
-static std::map<int, ThreadMessageQueue::HandlerCallback> callbacks_;
-
 // Protectes message_windows_.
 static Mutex window_mutex_;
 static std::map<ThreadId, linked_ptr<ThreadMessageWindow> > message_windows_;
+static IEThreadMessageQueue g_instance;
 
-bool ThreadMessageQueue::InitThreadMessageQueue() {
+// static
+ThreadMessageQueue *ThreadMessageQueue::GetInstance() {
+  return &g_instance;
+}
+
+bool IEThreadMessageQueue::InitThreadMessageQueue() {
   MutexLock lock(&window_mutex_);
   ThreadId thread_id = GetCurrentThreadId();
   if (message_windows_.find(thread_id) == message_windows_.end()) {
@@ -99,45 +119,33 @@ bool ThreadMessageQueue::InitThreadMessageQueue() {
 // This is only called in gears/base/ie/module.cc on thread detatch.
 void ShutdownThreadMessageQueue() {
   MutexLock lock(&window_mutex_);
-  message_windows_.erase(ThreadMessageQueue::GetCurrentThreadId());
+  message_windows_.erase(g_instance.GetCurrentThreadId());
 }
 
-bool ThreadMessageQueue::RegisterHandler(int message_id,
-                                         HandlerCallback message_handler) {
-  MutexLock lock(&callback_mutex_);
-  callbacks_[message_id] = message_handler;
-  return true;
-}
-
-ThreadId ThreadMessageQueue::GetCurrentThreadId() {
+ThreadId IEThreadMessageQueue::GetCurrentThreadId() {
   return ::GetCurrentThreadId();
 }
 
-bool ThreadMessageQueue::Send(ThreadId thread,
-                              int message_id,
-                              const char16 *message_data_1,
-                              const char16 *message_data_2) {
+bool IEThreadMessageQueue::Send(ThreadId thread,
+                                int message_id,
+                                const char16 *message_data_1,
+                                const char16 *message_data_2) {
   MutexLock lock(&window_mutex_);
   std::map<ThreadId, linked_ptr<ThreadMessageWindow> >::iterator window;
-
   window = message_windows_.find(thread);
-
   if (window == message_windows_.end()) {
     return false;
   }
-
   window->second->PostThreadMessage(message_id, message_data_1, message_data_2);
   return true;
 }
 
-inline ThreadMessageQueue::HandlerCallback GetRegisteredHandler(int id) {
-  MutexLock lock(&callback_mutex_);
-  std::map<int, ThreadMessageQueue::HandlerCallback>::iterator handler_loc;
-  handler_loc = callbacks_.find(id);
-  if (handler_loc != callbacks_.end()) {
-    return handler_loc->second;
-  } else {
-    return NULL;
+void IEThreadMessageQueue::HandleThreadMessage(int message_id,
+                                               const char16 *message_data_1,
+                                               const char16 *message_data_2) {
+  RegisteredHandler handler;
+  if (GetRegisteredHandler(message_id, &handler)) {
+    handler.Invoke(message_id, message_data_1, message_data_2);
   }
 }
 
@@ -154,12 +162,9 @@ LRESULT ThreadMessageWindow::OnThreadMessage(UINT msg, WPARAM unused_param_1,
     events_.pop_front();
   }
 
-  ThreadMessageQueue::HandlerCallback handler =
-                          GetRegisteredHandler(event->message_id);
-  if (handler) {
-    handler(event->message_id, event->message_data_1.c_str(),
-            event->message_data_2.c_str());
-  }
+  g_instance.HandleThreadMessage(event->message_id,
+                                 event->message_data_1.c_str(),
+                                 event->message_data_2.c_str());
   handled = TRUE;
   return 0;
 }

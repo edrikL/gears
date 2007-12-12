@@ -23,13 +23,15 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_OBSERVER_SERVICE_COMMON_OBSERVER_SERVICE_H__
-#define GEARS_OBSERVER_SERVICE_COMMON_OBSERVER_SERVICE_H__
+#ifndef GEARS_OBSERVER_SERVICE_COMMON_MESSAGE_SERVICE_H__
+#define GEARS_OBSERVER_SERVICE_COMMON_MESSAGE_SERVICE_H__
 
 #include <map>
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/message_queue.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string16.h"
+#include "gears/third_party/linked_ptr/linked_ptr.h"
 
 class MessageService;
 class ObserverCollection;
@@ -46,12 +48,13 @@ class MessageObserverInterface {
 };
 
 // The mediator in a publisher/subscriber model.
+//
 // TODO(michaeln): Perhaps add an optional SecurityOrigin* parameter
 // to AddObserver, RemoveObserver, and NotifyObservers. And build
 // a Gears module that surfaces this interface to script. Interanal
 // c++ callers would pass NULL for security origin to segregate script
 // based usage from our internal usage.
-class MessageService {
+class MessageService : public ThreadMessageQueue::HandlerInterface {
  public:
   // Returns a pointer to the MessageService singleton
   static MessageService *GetInstance();
@@ -75,25 +78,30 @@ class MessageService {
   void NotifyObservers(const char16 *topic, const char16 *data);
 
  private:
-  friend class ObserverCollection;
-  typedef std::map<std::string16, ObserverCollection*> TopicObserverMap;
-
-  // The intent is for this class to be a singleton
-  MessageService();
+  // The intent is for this class to be a singleton, but for testing
+  // purposes, the constructor and destructor are made available.
+  // (see message_service_test.cc).
+  MessageService(ThreadMessageQueue *message_queue);
   ~MessageService();
+  friend bool TestMessageService();
+
+  friend class ObserverCollection;
+  typedef std::map<std::string16, linked_ptr<ObserverCollection>>
+              TopicObserverMap;
 
   ObserverCollection *GetTopicObserverCollection(const char16 *topic,
                                                  bool create_if_needed);
   void DeleteTopicObserverCollection(const char16 *topic);
-  void NotifyCurrentThread(const char16 *topic, const char16 *data);
 
-  static void ThreadMessageQueueHandler(const int msg_code,
-                                        const char16 *msg_data_1,
-                                        const char16 *msg_data_2);
+  // HandlerInterface override
+  virtual void HandleThreadMessage(int msg_code,
+                                   const char16 *msg_data_1,
+                                   const char16 *msg_data_2);
 
   Mutex observer_collections_mutex_;
   TopicObserverMap observer_collections_;
+  ThreadMessageQueue *message_queue_;
   DISALLOW_EVIL_CONSTRUCTORS(MessageService);
 };
 
-#endif  // GEARS_OBSERVER_SERVICE_COMMON_OBSERVER_SERVICE_H__
+#endif  // GEARS_OBSERVER_SERVICE_COMMON_MESSAGE_SERVICE_H__

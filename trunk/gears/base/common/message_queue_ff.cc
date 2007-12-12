@@ -34,65 +34,64 @@
 #include "gears/base/common/message_queue.h"
 #include "gears/third_party/gecko_internal/nsIEventQueueService.h"
 
+struct MessageEvent;
 
-// Protects callbacks_ during inserts and finds.
-static Mutex callback_mutex_;
-static std::map<int, ThreadMessageQueue::HandlerCallback> callbacks_;
+// A concrete implementation that uses Firefox's nsIEventQueue
+class FFThreadMessageQueue : public ThreadMessageQueue {
+ public:
+  virtual bool InitThreadMessageQueue();
+  virtual ThreadId GetCurrentThreadId();
+  virtual bool Send(ThreadId thread_handle,
+                    int message_id,
+                    const char16 *message_data_1,
+                    const char16 *message_data_2);
 
-bool ThreadMessageQueue::InitThreadMessageQueue() {
+ private:
+  struct MessageEvent {
+    PLEvent e;
+    ThreadId thread;
+    int message_id;
+    std::string16 message_data_1;
+    std::string16 message_data_2;
+  };
+
+  static void *OnReceiveMessageEvent(MessageEvent *event);
+  static void OnDestroyMessageEvent(MessageEvent *event);
+};
+
+static FFThreadMessageQueue g_instance;
+
+// static
+ThreadMessageQueue *ThreadMessageQueue::GetInstance() {
+  return &g_instance;
+}
+
+bool FFThreadMessageQueue::InitThreadMessageQueue() {
   return true;
 }
 
-bool ThreadMessageQueue::RegisterHandler(int message_id,
-                                         HandlerCallback message_handler) {
-  MutexLock lock(&callback_mutex_);
-  callbacks_[message_id] = message_handler;
-  return true;
-}
-
-inline ThreadMessageQueue::HandlerCallback GetRegisteredHandler(int id) {
-  MutexLock lock(&callback_mutex_);
-  std::map<int, ThreadMessageQueue::HandlerCallback>::iterator handler_loc =
-      callbacks_.find(id);
-  if (handler_loc != callbacks_.end()) {
-    return handler_loc->second;
-  } else {
-    return NULL;
-  }
-}
-
-ThreadId ThreadMessageQueue::GetCurrentThreadId() {
+ThreadId FFThreadMessageQueue::GetCurrentThreadId() {
   return PR_GetCurrentThread();
 }
 
-struct MessageEvent {
-  PLEvent e;
-  ThreadId thread;
-  int message_id;
-  std::string16 message_data_1;
-  std::string16 message_data_2;
-};
-
-void *OnReceiveMessageEvent(MessageEvent *event) {
-  // Sanity check the thread.
-  assert(event->thread == ThreadMessageQueue::GetCurrentThreadId());
-
-  // Check that a callback has been registered for this event type.
-  ThreadMessageQueue::HandlerCallback handler =
-      GetRegisteredHandler(event->message_id);
-  if (handler) {
-    handler(event->message_id, event->message_data_1.c_str(),
-            event->message_data_2.c_str());
+// static
+void *FFThreadMessageQueue::OnReceiveMessageEvent(MessageEvent *event) {
+  assert(event->thread == g_instance.GetCurrentThreadId());
+  RegisteredHandler handler;
+  if (g_instance.GetRegisteredHandler(event->message_id, &handler)) {
+    handler.Invoke(event->message_id,
+                   event->message_data_1.c_str(),
+                   event->message_data_2.c_str());
   }
-
   return NULL;
 }
 
-static void OnDestroyMessageEvent(MessageEvent *event) {
+// static
+void FFThreadMessageQueue::OnDestroyMessageEvent(MessageEvent *event) {
   delete event;
 }
 
-bool ThreadMessageQueue::Send(ThreadId thread,
+bool FFThreadMessageQueue::Send(ThreadId thread,
                               int message_id,
                               const char16 *message_data_1,
                               const char16 *message_data_2) {
