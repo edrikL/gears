@@ -164,8 +164,7 @@ bool JsArray::GetElement(int index, JsScopedToken *out) {
 
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
 
-  std::string index_utf8 = IntegerToString(index);
-  NPIdentifier index_id = NPN_GetStringIdentifier(index_utf8.c_str());
+  NPIdentifier index_id = NPN_GetIntIdentifier(index);
   if (!NPN_HasProperty(js_context_, array, index_id)) return false;
 
   if (!NPN_GetProperty(js_context_, array, index_id, out)) return false;
