@@ -40,10 +40,12 @@ There are 2 ways to go about this:
 Paste the following into a batch file and run it from the gears/ directory after building:
 
 {{{
-regsvr32 /u /s bin-dbg/..../gears.dll
+regsvr32 /u /s bin-dbg/.../gears.dll
 regsvr32 /i /s bin-dbg/.../gears.dll
 start iexplore
 }}}
+
+(replace "..." with the actual path to gears.dll)
 
 === Method 2: ===
  * Add a right click "Register DLL" menu by saving the following in a .reg file and double clicking it:
