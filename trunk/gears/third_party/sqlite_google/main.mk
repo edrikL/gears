@@ -65,6 +65,15 @@ LIBOBJ+= alter.o analyze.o attach.o auth.o btree.o build.o \
          vdbe.o vdbeapi.o vdbeaux.o vdbeblob.o vdbefifo.o vdbemem.o \
          where.o utf.o legacy.o vtab.o
 
+LIBOBJ += fts1.o \
+	  fts1_hash.o \
+	  fts1_tokenizer1.o \
+	  fts1_porter.o
+LIBOBJ += fts2.o \
+	  fts2_hash.o \
+	  fts2_porter.o \
+	  fts2_tokenizer1.o
+
 # All of the source code files.
 #
 SRC = \
@@ -244,7 +253,7 @@ libsqlite3.a:	$(LIBOBJ)
 
 sqlite3$(EXE):	$(TOP)/src/shell.c libsqlite3.a sqlite3.h
 	$(TCCX) $(READLINE_FLAGS) -o sqlite3$(EXE) $(TOP)/src/shell.c \
-		libsqlite3.a $(LIBREADLINE) $(TLIBS) $(THREADLIB)
+		libsqlite3.a $(LIBREADLINE) $(TLIBS) $(THREADLIB) -ldl
 
 objects: $(LIBOBJ_ORIG)
 
@@ -438,6 +447,32 @@ vtab.o:	$(TOP)/src/vtab.c $(VDBEHDR) $(HDR)
 where.o:	$(TOP)/src/where.c $(HDR)
 	$(TCCX) -c $(TOP)/src/where.c
 
+
+
+fts1.o:	$(TOP)/ext/fts1/fts1.c $(HDR) $(EXTHDR)
+	$(TCCX) -DSQLITE_CORE -c $(TOP)/ext/fts1/fts1.c
+
+fts1_hash.o:	$(TOP)/ext/fts1/fts1_hash.c $(HDR) $(EXTHDR)
+	$(TCCX) -DSQLITE_CORE -c $(TOP)/ext/fts1/fts1_hash.c
+
+fts1_tokenizer1.o:	$(TOP)/ext/fts1/fts1_tokenizer1.c $(HDR) $(EXTHDR)
+	$(TCCX) -DSQLITE_CORE -c $(TOP)/ext/fts1/fts1_tokenizer1.c
+
+fts1_porter.o:	$(TOP)/ext/fts1/fts1_porter.c $(HDR) $(EXTHDR)
+	$(TCCX) -DSQLITE_CORE -c $(TOP)/ext/fts1/fts1_porter.c
+
+fts2.o:	$(TOP)/ext/fts2/fts2.c $(HDR) $(EXTHDR)
+	$(TCCX) -DSQLITE_CORE -c $(TOP)/ext/fts2/fts2.c
+
+fts2_hash.o:	$(TOP)/ext/fts2/fts2_hash.c $(HDR) $(EXTHDR)
+	$(TCCX) -DSQLITE_CORE -c $(TOP)/ext/fts2/fts2_hash.c
+
+fts2_porter.o:	$(TOP)/ext/fts2/fts2_porter.c $(HDR) $(EXTHDR)
+	$(TCCX) -DSQLITE_CORE -c $(TOP)/ext/fts2/fts2_porter.c
+
+fts2_tokenizer1.o:	$(TOP)/ext/fts2/fts2_tokenizer1.c $(HDR) $(EXTHDR)
+	$(TCCX) -DSQLITE_CORE -c $(TOP)/ext/fts2/fts2_tokenizer1.c
+
 # Rules for building test programs and for running tests
 #
 tclsqlite3:	$(TOP)/src/tclsqlite.c libsqlite3.a
@@ -458,6 +493,15 @@ soaktest:	testfixture$(EXE) sqlite3$(EXE)
 
 test:	testfixture$(EXE) sqlite3$(EXE)
 	./testfixture$(EXE) $(TOP)/test/quick.test
+
+ftstest:	testfixture$(EXE) sqlite3$(EXE)
+	./testfixture$(EXE) $(TOP)/test/fts.test
+
+fts1test:	testfixture$(EXE) sqlite3$(EXE)
+	./testfixture$(EXE) $(TOP)/test/fts1.test
+
+fts2test:	testfixture$(EXE) sqlite3$(EXE)
+	./testfixture$(EXE) $(TOP)/test/fts2.test
 
 sqlite3_analyzer$(EXE):	$(TOP)/src/tclsqlite.c libsqlite3.a $(TESTSRC) \
 			$(TOP)/tool/spaceanal.tcl
