@@ -87,7 +87,7 @@ void MockThreadMessageQueue::DeliverMockMessages() {
     const char16 *topic = pending_message_topics_[i].c_str();
     const char16 *data = pending_message_data_[i].c_str();
 
-    SetMockCurrentThreadId(pending_message_thread_ids_[i]);
+    SetMockCurrentThreadId(thread_id);
     RegisteredHandler handler;
     if (GetRegisteredHandler(message_id, &handler)) {
       handler.Invoke(message_id, topic, data);

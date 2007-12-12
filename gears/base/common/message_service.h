@@ -86,7 +86,7 @@ class MessageService : public ThreadMessageQueue::HandlerInterface {
   friend bool TestMessageService();
 
   friend class ObserverCollection;
-  typedef std::map<std::string16, linked_ptr<ObserverCollection>>
+  typedef std::map<std::string16, linked_ptr<ObserverCollection> >
               TopicObserverMap;
 
   ObserverCollection *GetTopicObserverCollection(const char16 *topic,
