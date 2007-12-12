@@ -204,8 +204,10 @@ class JsRunnerBase : public JsRunnerInterface {
 
 #ifdef DEBUG
   void ForceGC() {
-    // TODO(aa): There is probably a more clever way to do it, but this works.
-    Eval(STRING16(L"CollectGarbage();"));
+    // CollectGarbage is not available through COM, so we call through JS.
+    if (!Eval(STRING16(L"CollectGarbage();"))) {
+      assert(false);
+    }
   }
 #endif
 
@@ -651,21 +653,39 @@ class DocumentJsRunner : public JsRunnerBase {
   }
 
   bool Eval(const std::string16 &script) {
-#ifdef WINCE
-    // IPIEHTMLWindow2 does not provide execScript.
-    // TODO(steveblock): Implement this somehow.
-    return false;
-#else
-    CComPtr<IHTMLWindow2> window;
-    HRESULT hr = ActiveXUtils::GetHtmlWindow2(site_, &window);
-    if (FAILED(hr)) { return false; }
+    // There appears to be no way to execute script code directly on WinCE.
+    // - IPIEHTMLWindow2 does not provide execScript.
+    // - We have the script engine's IDispatch pointer but there's no way to get
+    //   back to the IActiveScript object to use
+    //   IActiveScriptParse::ParseScriptText.
+    // Instead, we pass the script as a parameter to JavaScript's 'eval'
+    // function. We use this approach on both Win32 and WinCE to prevent
+    // branching.
+    //
+    // TODO(steveblock): Test the cost of using GetDispatchMemberId vs
+    // execScript using Stopwatch.
 
-    CComVariant retval;
-    hr = window->execScript(BSTR(script.c_str()), NULL, &retval);
-    if (FAILED(hr)) { return false; }
-
-    return true;
-#endif
+    CComPtr<IDispatch> javascript_engine_dispatch = GetGlobalObject();
+    if (!javascript_engine_dispatch) { return false; }
+    DISPID function_iid;
+    if (FAILED(ActiveXUtils::GetDispatchMemberId(javascript_engine_dispatch,
+                                                 STRING16(L"eval"),
+                                                 &function_iid))) {
+      return false;
+    }
+    CComVariant script_variant(script.c_str());
+    DISPPARAMS parameters = {0};
+    parameters.cArgs = 1;
+    parameters.rgvarg = &script_variant;
+    return SUCCEEDED(javascript_engine_dispatch->Invoke(
+        function_iid,           // member to invoke
+        IID_NULL,               // reserved
+        LOCALE_SYSTEM_DEFAULT,  // TODO(cprince): should this be user default?
+        DISPATCH_METHOD,        // dispatch/invoke as...
+        &parameters,            // parameters
+        NULL,                   // receives result (NULL okay)
+        NULL,                   // receives exception (NULL okay)
+        NULL));                 // receives badarg index (NULL okay)
   }
 
   void SetErrorHandler(JsErrorHandlerInterface *handler) {
