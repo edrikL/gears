@@ -64,6 +64,11 @@ void BrowserUtils::SetJsException(const std::string16& message) {
   GetJsCallStack().top()->SetException(message);
 }
 
+JsCallContext *BrowserUtils::GetCurrentJsCallContext() {
+  assert(!GetJsCallStack().empty());
+  return GetJsCallStack().top();
+}
+
 bool BrowserUtils::GetPageLocationUrl(JsContextPtr context,
                                       std::string16 *location_url) {
   assert(location_url);
