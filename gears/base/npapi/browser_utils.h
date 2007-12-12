@@ -29,6 +29,8 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/string16.h"
 
+class JsCallContext;
+
 class BrowserUtils {
  public:
   // Called when JavaScript calls into a Gears class to access a property or
@@ -42,6 +44,10 @@ class BrowserUtils {
   // Sets a JavaScript exception to be thrown upon return from plugin entry
   // point.  It is an error to call this when not inside a plugin entry point.
   static void SetJsException(const std::string16& message);
+
+  // Returns the current JsCallContext.  It is an error to call this when not
+  // inside a plugin entry point.
+  static JsCallContext *GetCurrentJsCallContext();
 
   // Returns the page's location url (absolute)
   // Returns true on success
