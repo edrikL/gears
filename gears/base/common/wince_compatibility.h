@@ -30,9 +30,12 @@
 #define GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
 
 #include <windows.h>
+#include <atlsync.h>
 #include <connmgr.h>
 #include <connmgr_status.h>
 #include <crtdefs.h>
+
+#include "gears/localserver/common/critical_section.h"
 
 #define CSIDL_LOCAL_APPDATA CSIDL_APPDATA
 #define SHGFP_TYPE_CURRENT 0
@@ -72,6 +75,16 @@ HRESULT SHGetFolderPathW(HWND hwndOwner,
                         LPTSTR pszPath);
 
 BOOL IsNetworkAlive(LPDWORD lpdwFlags);
+
+class CMutexWince : public ATL::CMutex {
+ public:
+  // CMutex::Open() in atlsync.h is #ifdef-ed out presumably
+  // due to the (bizarre) lack of OpenMutex() win32 API in Windows Mobile.
+  BOOL Open(DWORD dwAccess, BOOL bInheritHandle, LPCTSTR pszName);
+ private:
+  static HANDLE global_mutex_;
+  static CriticalSection lock_;
+};
 
 #endif  // GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
 #endif  // WINCE

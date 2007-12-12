@@ -37,6 +37,11 @@
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
 
+HANDLE CMutexWince::global_mutex_ = NULL;
+CriticalSection CMutexWince::lock_;
+const char16* kGlobalMutexName =
+    STRING16(PRODUCT_SHORT_NAME L"GearsGlobalMutexWince");
+
 // Used by SHCreateDirectoryEx.
 static void SkipTokens(const std::string16 &path,
                        int &pos,
@@ -136,6 +141,49 @@ BOOL IsNetworkAlive(LPDWORD lpdwFlags) {
     delete [] buffer;
   }
   return alive;
+}
+
+BOOL CMutexWince::Open(DWORD dwAccess, BOOL bInheritHandle, LPCTSTR pszName) {  
+  // On Windows Mobile we are forced to implement CMutex::Open() using
+  // the CreateMutex() win32 API function. This will open an existing mutex
+  // or, if one doesn't exist already, will create a new mutex. However,
+  // given the semantics of ATL CMutex::Open(), the creation of a new mutex
+  // is an unwanted side-effect and we need to hide it from other processes
+  // that are simultaneously calling this method. We therefore need to
+  // serialize Open method calls using a global mutex. Furthermore,
+  // we also need to use a critical section to guard against
+  // concurrent initialization of this global mutex by different threads.
+  CritSecLock locker(lock_);
+  assert(m_h == NULL);
+  if (!global_mutex_) {
+    global_mutex_ = CreateMutex(NULL, FALSE, kGlobalMutexName);
+    if (!global_mutex_) return false;  // Returning early!
+  }
+  // We now have a handle to the global mutex. We may have created
+  // it or may have opened the existing one if another process had
+  // already created it. Although we cannot have multiple instances
+  // of IE mobile running at the same time, the browser control
+  // (together with Gears) may be embedded in some other application.
+  BOOL success = false;
+  DWORD result = WaitForSingleObject(global_mutex_, INFINITE);
+  if (result == WAIT_OBJECT_0) {
+    // We have ownership of global_mutex_.
+    m_h = CreateMutex(NULL, FALSE, pszName);
+    if (m_h) {
+      // If m_h is not NULL, GetLastError() can only return
+      // ERROR_ALREADY_EXISTS or success.
+      if (GetLastError() != ERROR_ALREADY_EXISTS) {
+        // We didn't mean to create a mutex here, so let's close it.
+        CloseHandle(m_h);
+        m_h = NULL;
+      } else {
+        success = true;
+      }
+    }
+    // Give up ownership of global_mutex_.
+    ReleaseMutex(global_mutex_);
+  }
+  return success;
 }
 
 // Internal

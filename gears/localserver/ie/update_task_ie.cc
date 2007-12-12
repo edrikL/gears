@@ -23,7 +23,16 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"
+#endif
 #include "gears/localserver/ie/update_task_ie.h"
+
+#ifdef WINCE
+typedef CMutexWince CATLMutex;
+#else
+typedef CMutex CATLMutex;
+#endif
 
 inline void GetUpdateTaskMutexName(int64 store_server_id,
                                    CStringW *mutex_name) {
@@ -36,7 +45,7 @@ void IEUpdateTask::Run() {
   // application executes at a time. Since there can be multiple IE
   // processes, this mutual exclusion needs to work across process
   // boundaries.
-  CMutex global_mutex;
+  CATLMutex global_mutex;
   CStringW mutex_name;
   GetUpdateTaskMutexName(store_.GetServerID(), &mutex_name);
   if (global_mutex.Create(NULL, FALSE, mutex_name)) {
@@ -58,18 +67,12 @@ void IEUpdateTask::Run() {
 // Returns true if an UpdateTask for the given store is running
 // Platform-specific implementation. See declaration in update_task.h.
 bool UpdateTask::IsUpdateTaskForStoreRunning(int64 store_server_id) {
-#ifdef WINCE
-  // WinMo doesn't provide CMutex::Open, so we need a different implementation
-  // TODO(steveblock): Implement this.
-  return false;
-#else
   // We consider the existence of a mutex having right name as proof
   // positive of a running update task
-  CMutex global_mutex;
+  CATLMutex global_mutex;
   CStringW mutex_name;
   GetUpdateTaskMutexName(store_server_id, &mutex_name);
   return global_mutex.Open(SYNCHRONIZE , FALSE, mutex_name) ? true : false;
-#endif
 }
 
 // Platform-specific implementation. See declaration in update_task.h.
