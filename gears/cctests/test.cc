@@ -84,6 +84,7 @@ const nsCID kGearsTestClassId = { 0xF2C21A3C, 0x09D2, 0x42ab, { 0xA4, 0x52,
 bool TestHttpCookies();
 bool TestHttpRequest();
 bool TestManifest();
+bool TestMessageService();  // from message_service_test.cc
 bool TestLocalServerDB();
 bool TestResourceStore();
 bool TestManagedResourceStore();
@@ -128,6 +129,7 @@ bool GearsTest::RunTestsImpl() {
   ok &= TestResourceStore();
   ok &= TestManifest();
   ok &= TestManagedResourceStore();
+  ok &= TestMessageService();
   // TODO(zork): Add this test back in once it doesn't crash the browser.
   //ok &= TestJsRootedTokenLifetime();
 

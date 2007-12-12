@@ -259,6 +259,10 @@ FF_CPPSRCS	+= \
 		js_runner_ff_marshaling.cc \
 		js_runner_utils.cc \
 		js_types.cc \
+		message_queue.cc \
+		message_queue_ff.cc \
+		message_service.cc \
+		message_service_test.cc \
 		module.cc \
 		mutex.cc \
 		name_value_table.cc \
@@ -318,6 +322,10 @@ IE_CPPSRCS	+= \
 		js_runner_ie.cc \
 		js_runner_utils.cc \
 		js_types.cc \
+		message_queue.cc \
+		message_queue_ie.cc \
+		message_service.cc \
+		message_service_test.cc \
 		module.cc \
 		mutex.cc \
 		name_value_table.cc \
@@ -377,6 +385,10 @@ IEMOBILE_CPPSRCS	+= \
 		js_runner_ie.cc \
 		js_runner_utils.cc \
 		js_types.cc \
+		message_queue.cc \
+		message_queue_ie.cc \
+		message_service.cc \
+		message_service_test.cc \
 		module.cc \
 		mutex.cc \
 		name_value_table.cc \

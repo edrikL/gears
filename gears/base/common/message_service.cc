@@ -66,32 +66,23 @@ class ObserverCollection {
 
 // static
 MessageService *MessageService::GetInstance() {
-  static MessageService g_service_;
+  static MessageService g_service_(ThreadMessageQueue::GetInstance());
   return &g_service_;
 }
 
 
-// static
-void MessageService::ThreadMessageQueueHandler(int msg_code,
-                                               const char16 *msg_data_1,
-                                               const char16 *msg_data_2) {
-  GetInstance()->NotifyCurrentThread(msg_data_1, msg_data_2);
-}
-
-
-MessageService::MessageService() {
-  ThreadMessageQueue::RegisterHandler(kNotificationMessageCode,
-                                      ThreadMessageQueueHandler);
+MessageService::MessageService(ThreadMessageQueue *message_queue)
+    : message_queue_(message_queue) {
+  message_queue_->RegisterHandler(kNotificationMessageCode, this);
 }
 
 
 MessageService::~MessageService() {
-  // TODO(michaeln): delete topic observer collections
 }
 
 
 bool MessageService::AddObserver(MessageObserverInterface *observer,
-                                  const char16 *topic) {
+                                 const char16 *topic) {
   MutexLock lock(&observer_collections_mutex_);
   ObserverCollection *topic_observers =
                           GetTopicObserverCollection(topic, true);
@@ -100,7 +91,7 @@ bool MessageService::AddObserver(MessageObserverInterface *observer,
 
 
 bool MessageService::RemoveObserver(MessageObserverInterface *observer,
-                                     const char16 *topic) {
+                                    const char16 *topic) {
   MutexLock lock(&observer_collections_mutex_);
   ObserverCollection *topic_observers =
                           GetTopicObserverCollection(topic, false);
@@ -116,7 +107,7 @@ bool MessageService::RemoveObserver(MessageObserverInterface *observer,
 
 
 void MessageService::NotifyObservers(const char16 *topic,
-                                      const char16 *data) {
+                                     const char16 *data) {
   MutexLock lock(&observer_collections_mutex_);
   ObserverCollection *topic_observers =
                           GetTopicObserverCollection(topic, false);
@@ -125,30 +116,31 @@ void MessageService::NotifyObservers(const char16 *topic,
 }
 
 
-void MessageService::NotifyCurrentThread(const char16 *topic,
-                                          const char16 *data) {
+void MessageService::HandleThreadMessage(int message_id,
+                                         const char16 *msg_data_1,
+                                         const char16 *msg_data_2) {
   MutexLock lock(&observer_collections_mutex_);
   ObserverCollection *topic_observers =
-                          GetTopicObserverCollection(topic, false);
+                          GetTopicObserverCollection(msg_data_1, false);
   if (!topic_observers) return;
-  topic_observers->ProcessThreadNotification(topic, data);
+  topic_observers->ProcessThreadNotification(msg_data_1, msg_data_2);
   return;
 }
 
 
 ObserverCollection *MessageService::GetTopicObserverCollection(
-                                         const char16 *topic,
-                                         bool create_if_needed) {
+                                        const char16 *topic,
+                                        bool create_if_needed) {
   // assert(mutex_.IsLockedByCurrentThread());
   std::string16 key(topic);
   TopicObserverMap::const_iterator found = observer_collections_.find(key);
   if (found != observer_collections_.end()) {
-    return found->second;
+    return found->second.get();
   } else if (!create_if_needed) {
     return NULL;
   } else {
     ObserverCollection *collection = new ObserverCollection(this);
-    observer_collections_[key] = collection;
+    observer_collections_[key] = linked_ptr<ObserverCollection>(collection);
     return collection;
   }
   // unreachable
@@ -160,7 +152,6 @@ void MessageService::DeleteTopicObserverCollection(const char16 *topic) {
   std::string16 key(topic);
   TopicObserverMap::iterator found = observer_collections_.find(key);
   if (found != observer_collections_.end()) {
-    delete found->second;
     observer_collections_.erase(found);    
   }
 }
@@ -168,7 +159,7 @@ void MessageService::DeleteTopicObserverCollection(const char16 *topic) {
 
 bool ObserverCollection::Add(MessageObserverInterface *observer) {
   // assert(serveice_->mutex_.IsLockedByCurrentThread());
-  ThreadId thread_id = ThreadMessageQueue::GetCurrentThreadId();
+  ThreadId thread_id = service_->message_queue_->GetCurrentThreadId();
   ObserverSet *set = GetThreadObserverSet(thread_id, true);
   if (set->find(observer) != set->end())
     return false;  // observer is already registered on this thread
@@ -179,7 +170,7 @@ bool ObserverCollection::Add(MessageObserverInterface *observer) {
 
 bool ObserverCollection::Remove(MessageObserverInterface *observer) {
   // assert(serveice_->mutex_.IsLockedByCurrentThread());
-  ThreadId thread_id = ThreadMessageQueue::GetCurrentThreadId();
+  ThreadId thread_id = service_->message_queue_->GetCurrentThreadId();
   ObserverSet *set = GetThreadObserverSet(thread_id, false);
   if (!set) return false;
   ObserverSet::iterator found = set->find(observer);
@@ -206,6 +197,7 @@ ObserverSet *ObserverCollection::GetThreadObserverSet(ThreadId thread_id,
   } else if (!create_if_needed) {
     return NULL;
   } else {
+    service_->message_queue_->InitThreadMessageQueue();
     observer_sets_[thread_id] = ObserverSet();
     return &observer_sets_[thread_id];
   }
@@ -219,8 +211,8 @@ void ObserverCollection::PostThreadNotifications(const char16 *topic,
   // Send one message for each thread containing observers of this topic
   ThreadObserversMap::iterator iter;
   for (iter = observer_sets_.begin(); iter != observer_sets_.end(); ++iter) {
-    ThreadMessageQueue::Send(iter->first, kNotificationMessageCode,
-                             topic, data);
+    service_->message_queue_->Send(iter->first, kNotificationMessageCode,
+                                   topic, data);
   }
 }
 
@@ -238,7 +230,7 @@ void ObserverCollection::ProcessThreadNotification(const char16 *topic,
   // or not the collection has been deleted or a particular observer has been
   // removed from the collection prior to calling OnNotify.
 
-  ThreadId thread_id = ThreadMessageQueue::GetCurrentThreadId();
+  ThreadId thread_id = service_->message_queue_->GetCurrentThreadId();
   ObserverSet *set = GetThreadObserverSet(thread_id, false);
   if (!set) return;
 
