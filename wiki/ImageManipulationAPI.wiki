@@ -91,6 +91,12 @@ _degrees_ (int): the number of degrees through which to rotate the image.
 
 *Note:* initially, this will only support orthogonal rotations.
 
+===void flipHorizontal()===
+Flips (gives the mirror image of) the image about a vertical axis drawn through the middle of the image.
+
+===void flipVertical()===
+Flips (gives the mirror image of) the image about a horizontal axis drawn through the middle of the image.
+.
 ===void drawImage(image, x, y)===
 Draws the given image on top of this image.
 
