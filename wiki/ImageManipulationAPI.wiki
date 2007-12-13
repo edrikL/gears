@@ -28,6 +28,8 @@ var image = google.gears.factory.create('beta.image', '1.0');
   int width()
   int height()
   void rotate(degrees)
+  void flipHorizontal()
+  void flipVertical()
   void drawImage(image, x, y)
   void close()
 }}}
@@ -94,8 +96,12 @@ _degrees_ (int): the number of degrees through which to rotate the image.
 ===void flipHorizontal()===
 Flips (gives the mirror image of) the image about a vertical axis drawn through the middle of the image.
 
+*Exceptions:* Throws an exception if the image has not been loaded.
+
 ===void flipVertical()===
 Flips (gives the mirror image of) the image about a horizontal axis drawn through the middle of the image.
+
+*Exceptions:* Throws an exception if the image has not been loaded.
 .
 ===void drawImage(image, x, y)===
 Draws the given image on top of this image.
