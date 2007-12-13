@@ -1,3 +1,4 @@
+#summary Provides means to fetch the location of a device running a Web browser with Gears.
 = Introduction =
 
 The purpose of this API is to provide means to fetch the location of a device running a Web browser with Gears.
