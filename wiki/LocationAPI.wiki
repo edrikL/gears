@@ -45,7 +45,7 @@ location.startLocationUpdates(); // async call, initiates fix (powers up GPS if 
 // Getting the last known location
 if (location.latitude != -1 &&
     location.timeUTC > threshold) {  // the location info is valid and not very old
-  Foo(location.latitude, location_request.longitude);
+  Foo(location.latitude, location.longitude);
 }
 
 // Cancel the request. This leads to the onlocationstatechanged event handler being called for
