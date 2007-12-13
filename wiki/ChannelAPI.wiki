@@ -1,4 +1,5 @@
 #summary Provide a way to communicate with native code from javascript.
+#labels Deprecated
 
 = Introduction =
 
