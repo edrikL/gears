@@ -158,7 +158,7 @@ void PluginBase<T>::DeleteThreadLocals(void *context) {
 // static
 template<class T>
 typename PluginBase<T>::ThreadLocalVariables &PluginBase<T>::GetThreadLocals() {
-  const char *key = PluginTraits<T>::kThreadLocalsKey;
+  const std::string &key = PluginTraits<T>::kThreadLocalsKey;
   ThreadLocalVariables *locals =
       reinterpret_cast<ThreadLocalVariables*>(ThreadLocals::GetValue(key));
   if (!locals) {
