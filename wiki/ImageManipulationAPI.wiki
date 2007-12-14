@@ -44,7 +44,7 @@ _blob_ (Blob): the blob representing the image data to load.
 Returns the blob representing the image data.
 
 _type_ (string): Either of "png", "jpeg", "jpg", or "gif".  The format (PNG,
-JPEG or GIF) to output the data is.
+JPEG or GIF) to output the data in.
 
 *Exceptions:* Throws an exception if _type_ is not one of the above.  Throws an exception if the image has not been loaded.
 
