@@ -14,15 +14,14 @@ The Image Manipulation module will add one object to Javascript, the Image class
 var image = google.gears.factory.create('beta.image', '1.0');
 }}}
 
+Note: the following refers to the Gears Blob object, which is proposed in
+GearsHttpRequestProposal.
+
 == Image class ==
 
 {{{
-  void openFromPNG(store, fileName)
-  void openFromJPEG(store, fileName)
-  void openFromGIF(store, fileName)
-  void saveToPNG(store, fileName)
-  void saveToJPEG(store, fileName)
-  void saveToGIF(store, fileName)
+  void open(blob)
+  Blob blob(type)
   void resize(width, height)
   void crop(x, y, width, height)
   int width()
@@ -34,23 +33,20 @@ var image = google.gears.factory.create('beta.image', '1.0');
   void close()
 }}}
 
-===void openFromPNG(store, fileName), void openFromJPEG(store, fileName), void openFromGIF(store, fileName)===
-Opens a file for editing from either PNG, JPEG or GIF format.
+===void open(blob)===
+Opens a file for editing, detecting the format from the data.   from either PNG, JPEG or GIF format.
 
-_store_ (string): the name of the ResourceStore to open the image from.
+_blob_ (Blob): the blob representing the image data to load.
 
-_fileName_ (string): the filename of the image to edit.  The image must be cached in a ResourceStore.  This string represents the path and name to the file, relative to the calling script.
+*Exceptions:* Throws an exception if the image cannot be opened (the image is not in a supported format).  Throws an exception if an image has already been opened for this image object.
 
-_Exceptions:_ Throws an exception if the image cannot be opened.  Throws an exception if a file has already been opened for this image object.
+===Blob blob(type)===
+Returns the blob representing the image data.
 
-===void saveToPNG(store, fileName), void saveToJPEG(store, fileName), void saveToGIF(store, fileName)===
-Saves an Image object to a file in either PNG, JPEG or GIF format.
+_type_ (string): Either of "png", "jpeg", "jpg", or "gif".  The format (PNG,
+JPEG or GIF) to output the data is.
 
-_store_ (string): the name of the ResourceStore to save the image to.
-
-_fileName_ (string): the filename to save the image to.  This string represents the path and name to the file, relative to the calling script.
-
-*Exceptions:* Throws an exception if the image cannot be saved to the given path.  Throws an exception if the image has not been loaded.
+*Exceptions:* Throws an exception if _type_ is not one of the above.  Throws an exception if the image has not been loaded.
 
 ===void resize(width, [height])===
 Resizes the image using a bilinear filter to the given width and height.
