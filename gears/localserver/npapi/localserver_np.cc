@@ -25,6 +25,7 @@
 
 #include "gears/localserver/npapi/localserver_np.h"
 
+#include "gears/base/common/paths.h"
 #include "gears/localserver/npapi/managed_resource_store_np.h"
 #include "gears/localserver/npapi/resource_store_np.h"
 
@@ -153,12 +154,9 @@ bool GearsLocalServer::GetAndCheckParameters(JsCallContext *context,
     return false;
   }
 
-  if (!IsStringValidPathComponent(name->c_str())) {
-    std::string16 error(STRING16(L"The name parameter contains invalid "
-                                 L"characters: "));
-    error += *name;
-    error += STRING16(L".");
-    context->SetException(error.c_str());
+  std::string16 error_message;
+  if (!IsUserInputValidAsPathComponent(*name, &error_message)) {
+    context->SetException(error_message.c_str());
     return false;
   }
 

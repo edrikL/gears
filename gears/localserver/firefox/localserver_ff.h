@@ -84,9 +84,10 @@ class GearsLocalServer
       );
 
  private:
-  nsresult GetAndCheckParameters(bool has_string_retval,
+  bool GetAndCheckParameters(bool has_string_retval,
                                  std::string16 *name,
-                                 std::string16 *required_cookie);
+                                 std::string16 *required_cookie,
+                                 std::string16 *error_message);
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsLocalServer);
 };

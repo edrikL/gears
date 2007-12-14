@@ -70,6 +70,12 @@ void GearsDatabase::Open(JsCallContext *context) {
   };
   int argc = context->GetArguments(ARRAYSIZE(argv), argv);
 
+  std::string16 error_message;
+  if (!IsUserInputValidAsPathComponent(database_name, &error_message)) {
+    context->SetException(error_message.c_str());
+    return;
+  }
+
   // For now, callers cannot open DBs in other security origins.
   // To support that, parse an 'origin' argument here and call
   // IsOriginAccessAllowed (yet to be written).

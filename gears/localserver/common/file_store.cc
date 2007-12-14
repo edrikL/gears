@@ -43,9 +43,9 @@ const int kMaxSubDirectoriesPerLevel = 100;
 
 static bool CreateUniqueFile(const char16* full_dirpath,
                              int unique_hint,
-                             std::string16 &filename,
-                             std::string16 &full_filepath);
-static void AppendBracketedNumber(int number, std::string16 &str);
+                             const std::string16 &filename_unsanitized,
+                             std::string16 *full_filepath);
+static void AppendBracketedNumber(int number, std::string16 *str);
 static bool GetFileNameFromUrl(const char16 *url, std::string16 *filename);
 
 //------------------------------------------------------------------------------
@@ -263,7 +263,7 @@ bool WebCacheFileStore::GetDirectoryPathForServer(int64 server_id,
     const char16 *kManagedSuffix = STRING16(L"_managed");
     server_dir_name += kManagedSuffix;
   }
-  AppendBracketedNumber(static_cast<int>(server_id), server_dir_name);
+  AppendBracketedNumber(static_cast<int>(server_id), &server_dir_name);
 
   // Stitch the two together, and append the "#localserver" suffix 
   return AppendDataName(server_dir_name.c_str(),
@@ -357,7 +357,7 @@ bool WebCacheFileStore::CreateAndWriteFile(int64 server_id,
   std::string16 full_filepath;
   if (!CreateUniqueFile(available_dir.c_str(),
                         static_cast<int>(payload->id),
-                        filename, full_filepath)) {
+                        filename, &full_filepath)) {
     return false;
   }
 
@@ -557,56 +557,72 @@ void WebCacheFileStore::GetCacheFileName(const char16 *url,
 //------------------------------------------------------------------------------
 static bool CreateUniqueFile(const char16* full_dirpath,
                              int unique_hint,
-                             std::string16 &filename,
-                             std::string16 &full_filepath) {
-  // Sanitize the filename
+                             const std::string16 &filename_unsanitized,
+                             std::string16 *full_filepath) {
+  // Sanitize the filename.
+  std::string16 filename = filename_unsanitized;
   EnsureStringValidPathComponent(filename);
 
-  // Split the name and extension
-  std::string16 name;
+  // Split the name and extension.
+  std::string16 new_name = filename;
   std::string16 extension = File::GetFileExtension(filename.c_str());
   if (extension.length() > 0) {
-    name = filename.substr(0, filename.find(extension));
-  } else {
-    name = filename;
+    new_name = filename.substr(0, filename.find(extension));
+  }
+
+  // Limit length of extension.
+  if (extension.length() > kFileExtensionMaxChars) {
+    extension = extension.substr(0, kFileExtensionMaxChars);
   }
 
   // We embed the unique_hint into the name to help with uniqueness. Since
   // this is the payload_id (SQLite rowid), this should be enough to make
   // it unique.
-  AppendBracketedNumber(unique_hint, name);
-  filename = name;
-  filename += extension;
+  std::string16 name_suffix;
+  AppendBracketedNumber(unique_hint, &name_suffix);
+  
+  // Shorten new_name to fit into kUserPathComponentMaxChars chars along
+  // with the unique & retry suffixes.
+  // The 3 refers to the length of the retry suffix which can be [0]-[9].
+  int extra_length = name_suffix.length() + 3 + extension.length();
+  if ((new_name.length() + extra_length) > kUserPathComponentMaxChars) {
+    int chars_to_keep = kUserPathComponentMaxChars - extra_length;
+    new_name = new_name.substr(0, chars_to_keep);
+  }
 
+  // Append unique hint.
+  new_name += name_suffix;
+
+  // Try to save the file, if this fails then append retry id string and re-try.
   const int kMaxAttempts = 10;
   int attempts = 0;
+  std::string16 attempts_suffix;
   while (attempts < kMaxAttempts) {
-    full_filepath = full_dirpath;
-    full_filepath += kPathSeparator;
-    full_filepath += filename;
+    *full_filepath = full_dirpath;
+    *full_filepath += kPathSeparator;
+    *full_filepath += new_name + attempts_suffix + extension;
 
     if (attempts > 0) {
       File::ClearLastFileError();
     }
 
     // Create a new file, if a file already exists this will fail
-    if (File::CreateNewFile(full_filepath.c_str())) {
+    if (File::CreateNewFile(full_filepath->c_str())) {
       return true;
     }
 
     // It's unlikely but possible that a file with this name already exists,
     // so we embellish the filename and re-try a few times. The filenames
     // we generate in this case are of the form name[hint][attempt].ext.
-    filename = name;
-    AppendBracketedNumber(++attempts, filename);
-    filename += extension;
+    attempts_suffix.clear();
+    AppendBracketedNumber(++attempts, &attempts_suffix);
   }
 
   // a folder full of files that shouldn't be there, something is wrong!
 #ifdef DEBUG
 #if BROWSER_IE
   ATLTRACE(_T("Failed: CreateUniqueFile( %s ) = %d\n"), 
-           full_filepath.c_str(), GetLastError());
+           full_filepath->c_str(), GetLastError());
 #endif
 #endif
   assert(false);
@@ -616,14 +632,14 @@ static bool CreateUniqueFile(const char16* full_dirpath,
 //------------------------------------------------------------------------------
 // AppendBracketedNumber
 //------------------------------------------------------------------------------
-static void AppendBracketedNumber(int number, std::string16 &str) {
-  str += STRING16(L"[");
-  str += IntegerToString16(number);
-  str += STRING16(L"]");
+static void AppendBracketedNumber(int number, std::string16 *str) {
+  *str += STRING16(L"[");
+  *str += IntegerToString16(number);
+  *str += STRING16(L"]");
 }
 
 //------------------------------------------------------------------------------
-// Attempts to extract a 'filename' from a url. Typcially, this is the last
+// Attempts to extract a 'filename' from a url. Typically, this is the last
 // path component. However given a URL without a path component, this function
 // will return the <prehost>@<host>:<port> substring. This is not undesireable
 // for our use case (come up with names for cached files).

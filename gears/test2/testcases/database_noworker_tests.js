@@ -30,3 +30,28 @@ function testSpecialEmptyString() {
     });
   });
 }
+
+function testLongDBNames() {
+  
+  var testDB = google.gears.factory.create('beta.database');
+  
+  // 65 chars
+  var extraLongDBName = 'aVeryLongDBNameThatShouldFailaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+  try {
+    testDB.open(extraLongDBName);
+    assert(false,'DB should have failed on long name');
+  } catch (error) {
+  }
+  
+  testDB.close();
+  
+  //64 chars
+  var maxLengthDBName = 'thisDBHasTheLongestValidNameThatCanBeCreatedByGearsaaaaaaaaaaaaa';
+  try {
+    testDB.open(maxLengthDBName);
+  } catch (error) {
+    assert(false,'DB should have succeeded in creating 64 char db name');
+  }
+  
+  testDB.close();
+}
