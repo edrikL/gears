@@ -505,14 +505,19 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
   assert(wi);
   if (wi->onmessage_handler.get() &&
       !wi->onmessage_handler->IsNullOrUndefined()) {
+
+    // TODO(zork): Remove this with dump_on_error.  It is declared as volatile
+    // to ensure that it exists on the stack even in opt builds.
+    volatile bool is_shutting_down = wi->threads_manager->is_shutting_down_;
+
     // Setup the onmessage parameter (type: Object).
     assert(wi->js_runner);
     scoped_ptr<JsRootedToken> onmessage_param(
-                                  wi->js_runner->NewObject(NULL));
+                                  wi->js_runner->NewObject(NULL, true));
+    // TODO(zork): Checking this return value is temporary, as callers are not
+    // supposed to have to worry about NewObject() failing.
     if (!onmessage_param.get()) {
-      // We hit this unexpected error in 0.2.4
-      ExceptionManager::CaptureAndSendMinidump();
-      JsErrorInfo error_info = { 
+      JsErrorInfo error_info = {
         0,
         STRING16(L"Internal error. (Could not create message object.)")
       };
@@ -693,12 +698,15 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
     return false;
   }
 
+  // TODO(zork): Remove this with dump_on_error.  It is declared as volatile to
+  // ensure that it exists on the stack even in opt builds.
+  volatile bool is_shutting_down = wi->threads_manager->is_shutting_down_;
+
   // Setup the onerror parameter (type: Error).
   assert(wi->js_runner);
   scoped_ptr<JsRootedToken> onerror_param(
-      wi->js_runner->NewObject(STRING16(L"Error")));
+      wi->js_runner->NewObject(STRING16(L"Error"), true));
   if (!onerror_param.get()) {
-    ExceptionManager::CaptureAndSendMinidump();
     return false;
   }
 
