@@ -87,9 +87,10 @@ class ATL_NO_VTABLE GearsLocalServer
       /* [optional][in] */ const VARIANT *required_cookie);
 
  private:
-  HRESULT CheckLocalServerParameters(const BSTR name,
+  bool CheckLocalServerParameters(const BSTR name,
                                      const VARIANT *required_cookie,
-                                     CComBSTR &required_cookie_bstr);
+                                     CComBSTR &required_cookie_bstr,
+                                     std::string16 *error_message);
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsLocalServer);
 };

@@ -27,6 +27,7 @@
 
 #include "gears/localserver/ie/localserver_ie.h"
 
+#include "gears/base/common/paths.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
@@ -73,10 +74,10 @@ STDMETHODIMP GearsLocalServer::createManagedStore(
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
   CComBSTR required_cookie_bstr(L"");
-  HRESULT hr = CheckLocalServerParameters(name, required_cookie,
-                                          required_cookie_bstr);
-  if (FAILED(hr)) {
-    return hr;
+  std::string16 error_message;
+  if (!CheckLocalServerParameters(name, required_cookie, required_cookie_bstr, 
+                                  &error_message)) {
+    RETURN_EXCEPTION(error_message.c_str());
   }
 
   // Check that this page uses a supported URL scheme.
@@ -89,7 +90,7 @@ STDMETHODIMP GearsLocalServer::createManagedStore(
            name, required_cookie_bstr.m_str);
 
   CComObject<GearsManagedResourceStore> *store;
-  hr = CComObject<GearsManagedResourceStore>::CreateInstance(&store);
+  HRESULT hr = CComObject<GearsManagedResourceStore>::CreateInstance(&store);
   if (FAILED(hr)) {
     RETURN_EXCEPTION(STRING16(L"Failed to CreateInstance."));
   }
@@ -125,10 +126,10 @@ STDMETHODIMP GearsLocalServer::openManagedStore(
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
   CComBSTR required_cookie_bstr(L"");
-  HRESULT hr = CheckLocalServerParameters(name, required_cookie,
-                                          required_cookie_bstr);
-  if (FAILED(hr)) {
-    return hr;
+  std::string16 error_message;
+  if (!CheckLocalServerParameters(name, required_cookie, required_cookie_bstr, 
+                                  &error_message)) {
+    RETURN_EXCEPTION(error_message.c_str());
   }
 
   ATLTRACE(_T("LocalServer::openManagedStore( %s, %s )\n"),
@@ -144,7 +145,7 @@ STDMETHODIMP GearsLocalServer::openManagedStore(
   }
 
   CComObject<GearsManagedResourceStore> *store;
-  hr = CComObject<GearsManagedResourceStore>::CreateInstance(&store);
+  HRESULT hr = CComObject<GearsManagedResourceStore>::CreateInstance(&store);
   if (FAILED(hr)) {
     RETURN_EXCEPTION(STRING16(L"Failed to CreateInstance."));
   }
@@ -175,10 +176,10 @@ STDMETHODIMP GearsLocalServer::removeManagedStore(
     /* [in] */ const BSTR name,
     /* [optional][in] */ const VARIANT *required_cookie) {
   CComBSTR required_cookie_bstr(L"");
-  HRESULT hr = CheckLocalServerParameters(name, required_cookie,
-                                          required_cookie_bstr);
-  if (FAILED(hr)) {
-    return hr;
+  std::string16 error_message;
+  if (!CheckLocalServerParameters(name, required_cookie, required_cookie_bstr, 
+                                  &error_message)) {
+    RETURN_EXCEPTION(error_message.c_str());
   }
 
   ATLTRACE(_T("LocalServer::removeManagedStore( %s, %s )\n"),
@@ -215,10 +216,10 @@ STDMETHODIMP GearsLocalServer::createStore(
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
   CComBSTR required_cookie_bstr(L"");
-  HRESULT hr = CheckLocalServerParameters(name, required_cookie,
-                                          required_cookie_bstr);
-  if (FAILED(hr)) {
-    return hr;
+  std::string16 error_message;
+  if (!CheckLocalServerParameters(name, required_cookie, required_cookie_bstr, 
+                                  &error_message)) {
+    RETURN_EXCEPTION(error_message.c_str());
   }
 
   // Check that this page uses a supported URL scheme.
@@ -231,7 +232,7 @@ STDMETHODIMP GearsLocalServer::createStore(
            name, required_cookie_bstr.m_str);
 
   CComObject<GearsResourceStore> *store;
-  hr = CComObject<GearsResourceStore>::CreateInstance(&store);
+  HRESULT hr = CComObject<GearsResourceStore>::CreateInstance(&store);
   if (FAILED(hr)) {
     RETURN_EXCEPTION(STRING16(L"Failed to CreateInstance."));
   }
@@ -268,10 +269,10 @@ STDMETHODIMP GearsLocalServer::openStore(
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
   CComBSTR required_cookie_bstr(L"");
-  HRESULT hr = CheckLocalServerParameters(name, required_cookie,
-                                          required_cookie_bstr);
-  if (FAILED(hr)) {
-    return hr;
+  std::string16 error_message;
+  if (!CheckLocalServerParameters(name, required_cookie, required_cookie_bstr, 
+                                  &error_message)) {
+    RETURN_EXCEPTION(error_message.c_str());
   }
 
   ATLTRACE(_T("LocalServer::openStore( %s, %s )\n"),
@@ -287,7 +288,7 @@ STDMETHODIMP GearsLocalServer::openStore(
   }
 
   CComObject<GearsResourceStore> *store;
-  hr = CComObject<GearsResourceStore>::CreateInstance(&store);
+  HRESULT hr = CComObject<GearsResourceStore>::CreateInstance(&store);
   if (FAILED(hr)) {
     RETURN_EXCEPTION(STRING16(L"Failed to CreateInstance."));
   }
@@ -319,10 +320,10 @@ STDMETHODIMP GearsLocalServer::removeStore(
     /* [in] */ const BSTR name,
     /* [optional][in] */ const VARIANT *required_cookie) {
   CComBSTR required_cookie_bstr(L"");
-  HRESULT hr = CheckLocalServerParameters(name, required_cookie,
-                                          required_cookie_bstr);
-  if (FAILED(hr)) {
-    return hr;
+  std::string16 error_message;
+  if (!CheckLocalServerParameters(name, required_cookie, required_cookie_bstr, 
+                                  &error_message)) {
+    RETURN_EXCEPTION(error_message.c_str());
   }
 
   ATLTRACE(_T("LocalServer::removeStore( %s, %s )\n"),
@@ -351,18 +352,21 @@ STDMETHODIMP GearsLocalServer::removeStore(
 //------------------------------------------------------------------------------
 // CheckLocalServerParameters
 //------------------------------------------------------------------------------
-HRESULT GearsLocalServer::CheckLocalServerParameters(
+bool GearsLocalServer::CheckLocalServerParameters(
                                             const BSTR name,
                                             const VARIANT *required_cookie,
-                                            CComBSTR &required_cookie_bstr) {
+                                            CComBSTR &required_cookie_bstr,
+                                            std::string16 *error_message) {
   if (!name || !name[0]) {
-    RETURN_EXCEPTION(STRING16(L"The name parameter is required."));
+    *error_message = STRING16(L"The name parameter is required.");
+    return false;
   }
 
   if (ActiveXUtils::OptionalVariantIsPresent(required_cookie)) {
     if (required_cookie->vt != VT_BSTR) {
-      RETURN_EXCEPTION(STRING16(L"The required_cookie parameter must be a "
-                                L"string."));
+      *error_message = STRING16(L"The required_cookie parameter must be a "
+                                L"string.");
+      return false;
     }
     // TODO(michaeln): validate this parameter value, parse the name & value,
     // name must not be empty, value must not contain ';' unless its the
@@ -370,14 +374,10 @@ HRESULT GearsLocalServer::CheckLocalServerParameters(
     required_cookie_bstr = required_cookie->bstrVal;
   }
 
-  if (!IsStringValidPathComponent(name)) {
-    std::string16 error(STRING16(L"The name parameter contains invalid "
-                                 L"characters:"));
-    error += static_cast<const char16 *>(name);
-    error += STRING16(L".");
-    RETURN_EXCEPTION(error.c_str());
+  if (!IsUserInputValidAsPathComponent(std::string16(name), error_message)) {
+    return false;
   }
 
-  RETURN_NORMAL();
+  return true;
 }
 

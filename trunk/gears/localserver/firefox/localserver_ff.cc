@@ -28,6 +28,7 @@
 
 #include "gears/localserver/firefox/localserver_ff.h"
 
+#include "gears/base/common/paths.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
@@ -100,9 +101,9 @@ NS_IMETHODIMP GearsLocalServer::CreateManagedStore(
                   GearsManagedResourceStoreInterface **retval) {
   std::string16 name;
   std::string16 required_cookie;
-  nsresult nr = GetAndCheckParameters(false, &name, &required_cookie);
-  if (NS_FAILED(nr)) {
-    return nr;
+  std::string16 error_message;
+  if (!GetAndCheckParameters(false, &name, &required_cookie, &error_message)) {
+    RETURN_EXCEPTION(error_message.c_str());
   }
 
   // Check that this page uses a supported URL scheme.
@@ -136,9 +137,9 @@ NS_IMETHODIMP GearsLocalServer::OpenManagedStore(
                   GearsManagedResourceStoreInterface **retval) {
   std::string16 name;
   std::string16 required_cookie;
-  nsresult nr = GetAndCheckParameters(false, &name, &required_cookie);
-  if (NS_FAILED(nr)) {
-    return nr;
+  std::string16 error_message;
+  if (!GetAndCheckParameters(false, &name, &required_cookie, &error_message)) {
+    RETURN_EXCEPTION(error_message.c_str());
   }
 
   //LOG(_T("LocalServer::OpenManagedStore( %s, %s )\n"),
@@ -174,9 +175,9 @@ NS_IMETHODIMP GearsLocalServer::RemoveManagedStore(
                   ) {
   std::string16 name;
   std::string16 required_cookie;
-  nsresult nr = GetAndCheckParameters(false, &name, &required_cookie);
-  if (NS_FAILED(nr)) {
-    return nr;
+  std::string16 error_message;
+  if (!GetAndCheckParameters(false, &name, &required_cookie, &error_message)) {
+    RETURN_EXCEPTION(error_message.c_str());
   }
 
   //LOG(_T("LocalServer::RemoveManagedStore( %s, %s )\n"),
@@ -211,9 +212,9 @@ NS_IMETHODIMP GearsLocalServer::CreateStore(
                   GearsResourceStoreInterface **retval) {
   std::string16 name;
   std::string16 required_cookie;
-  nsresult nr = GetAndCheckParameters(false, &name, &required_cookie);
-  if (NS_FAILED(nr)) {
-    return nr;
+  std::string16 error_message;
+  if (!GetAndCheckParameters(false, &name, &required_cookie, &error_message)) {
+    RETURN_EXCEPTION(error_message.c_str());
   }
 
   // Check that this page uses a supported URL scheme.
@@ -247,9 +248,9 @@ NS_IMETHODIMP GearsLocalServer::OpenStore(
                   GearsResourceStoreInterface **retval) {
   std::string16 name;
   std::string16 required_cookie;
-  nsresult nr = GetAndCheckParameters(false, &name, &required_cookie);
-  if (NS_FAILED(nr)) {
-    return nr;
+  std::string16 error_message;
+  if (!GetAndCheckParameters(false, &name, &required_cookie, &error_message)) {
+    RETURN_EXCEPTION(error_message.c_str());
   }
 
   //LOG(_T("LocalServer::OpenStore( %s, %s )\n"),
@@ -285,9 +286,9 @@ NS_IMETHODIMP GearsLocalServer::RemoveStore(
                   ) {
   std::string16 name;
   std::string16 required_cookie;
-  nsresult nr = GetAndCheckParameters(false, &name, &required_cookie);
-  if (NS_FAILED(nr)) {
-    return nr;
+  std::string16 error_message;
+  if (!GetAndCheckParameters(false, &name, &required_cookie, &error_message)) {
+    RETURN_EXCEPTION(error_message.c_str());
   }
 
   //LOG(_T("LocalServer::RemoveStore( %s, %s )\n"),
@@ -316,44 +317,45 @@ NS_IMETHODIMP GearsLocalServer::RemoveStore(
 //------------------------------------------------------------------------------
 // GetAndCheckParameters
 //------------------------------------------------------------------------------
-nsresult GearsLocalServer::GetAndCheckParameters(
+bool GearsLocalServer::GetAndCheckParameters(
                                          bool has_string_retval,
                                          std::string16 *name,
-                                         std::string16 *required_cookie) {
+                                         std::string16 *required_cookie,
+                                         std::string16 *error_message) {
   JsParamFetcher js_params(this);
   const int kNameParamIndex = 0;
   const int kRequiredCookieParamIndex = 1;
 
   if (js_params.GetCount(has_string_retval) < 1) {
-    RETURN_EXCEPTION(STRING16(L"The name parameter is required."));
+    *error_message = STRING16(L"The name parameter is required.");
+    return false;
   }
 
   // Get required parameters
   if (!js_params.GetAsString(kNameParamIndex, name)) {
-    RETURN_EXCEPTION(STRING16(L"The name parameter must be a string."));
+    *error_message = STRING16(L"The name parameter must be a string.");
+    return false;
   }
 
   // Get optional parameters
   if (js_params.IsOptionalParamPresent(kRequiredCookieParamIndex,
                                        has_string_retval)) {
     if (!js_params.GetAsString(kRequiredCookieParamIndex, required_cookie)) {
-      RETURN_EXCEPTION(STRING16(L"The required_cookie parameter must be a "
-                                L"string."));
+      *error_message = STRING16(L"The required_cookie parameter must be a "
+                                L"string.");
+      return false;
     }
   }
 
   // Validate parameters
   if (name->empty()) {
-    RETURN_EXCEPTION(STRING16(L"The name parameter is required."));
+    *error_message = STRING16(L"The name parameter is required.");
+    return false;
   }
 
-  if (!IsStringValidPathComponent(name->c_str())) {
-    std::string16 error(STRING16(L"The name parameter contains invalid "
-                                 L"characters: "));
-    error += *name;
-    error += STRING16(L".");
-    RETURN_EXCEPTION(error.c_str());
+  if (!IsUserInputValidAsPathComponent(*name, error_message)) {
+    return false;
   }
 
-  RETURN_NORMAL();
+  return true;
 }

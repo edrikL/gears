@@ -47,6 +47,16 @@ extern const char16 *kDataSuffixForDatabase;
 extern const char16 *kDataSuffixForDesktop;
 extern const char16 *kDataSuffixForLocalServer;
 
+// Longest filename we're prepared to create based on user input.
+extern const size_t kUserPathComponentMaxChars;
+
+// The maximum number of characters we allow in a file's extension *including*
+// the '.' delimiting the extension.
+extern const size_t kFileExtensionMaxChars;
+
+// Hard Limit on path component length, used for sanity checking.
+extern const size_t kGeneratedPathComponentMaxChars;
+
 
 // Determines the current user's Scour data directory, for the given origin,
 // and returns the full path in 'path'.  There is no trailing path separator.
@@ -77,6 +87,14 @@ bool GetBaseComponentsDirectory(std::string16 *path);
 //
 // Returns true if the function succeeds.  'path' is unmodified on failure.
 bool GetBaseDataDirectory(std::string16 *path);
+
+// Checks that an unsanitized string from the user is valid for use as part
+// of a path component. 'error_message' is optional and can be NULL.
+// 
+// Returns true if the function succeeds. 'error_message' is unmodified on 
+// success.
+bool IsUserInputValidAsPathComponent(const std::string16 &user_input,
+                                     std::string16 *error_message);
 
 
 #endif // GEARS_BASE_COMMON_PATHS_H__

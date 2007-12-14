@@ -32,6 +32,11 @@ const char16 *kDataSuffixForDatabase    = STRING16(L"#database");
 const char16 *kDataSuffixForDesktop     = STRING16(L"#desktop");
 const char16 *kDataSuffixForLocalServer = STRING16(L"#localserver");
 
+const size_t kUserPathComponentMaxChars  = 64;
+const size_t kFileExtensionMaxChars = 5;  // .html
+const size_t kModuleSuffixMaxChars = 14;  // includes "#" separator
+const size_t kGeneratedPathComponentMaxChars  = kUserPathComponentMaxChars +
+                                                kModuleSuffixMaxChars;
 
 bool GetDataDirectory(const SecurityOrigin &origin, std::string16 *path) {
 
@@ -63,10 +68,8 @@ bool GetDataDirectory(const SecurityOrigin &origin, std::string16 *path) {
 
 bool AppendDataName(const char16 *name, const char16 *module_suffix,
                     std::string16 *path) {
-
   // Validate parameters.
-
-  if (name == NULL || !IsStringValidPathComponent(name)) {
+  if (name == NULL || !IsUserInputValidAsPathComponent(name, NULL)) {
     return false; // invalid user-defined name
   }
   if (module_suffix == NULL || !IsStringValidPathComponent(module_suffix) ||
@@ -75,10 +78,33 @@ bool AppendDataName(const char16 *name, const char16 *module_suffix,
   }
 
   // The data name is a simple concatenation of the inputs.
-
   (*path) += kPathSeparator;
   (*path) += name;
   (*path) += module_suffix;
 
+  return true;
+}
+
+bool IsUserInputValidAsPathComponent(const std::string16 &user_input, 
+                                     std::string16 *error_message) {
+  // Note that zero length strings are legal, as Gears tags on it's own
+  // identifier after user input.
+  if (!IsStringValidPathComponent(user_input.c_str())) {
+    if (error_message) {
+      *error_message = STRING16(L"Name contains invalid characters: ")+
+                       user_input +
+                       STRING16(L".");;
+    }
+    return false;
+  } else if (user_input.length() > kUserPathComponentMaxChars) {
+    if (error_message) {
+      *error_message = STRING16(L"Name cannot exceed ") + 
+                       IntegerToString16(kUserPathComponentMaxChars) + 
+                       STRING16(L" characters: ") +
+                       user_input +
+                       STRING16(L".");
+    }
+    return false;
+  }
   return true;
 }

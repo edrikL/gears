@@ -75,6 +75,12 @@ HRESULT GearsDatabase::open(const VARIANT *database_name) {
 
   ATLTRACE(_T("GearsDatabase::open(%s)\n"), database_name_bstr);
 
+  std::string16 error_message;
+  if (!IsUserInputValidAsPathComponent(std::string16(database_name_bstr),
+                                       &error_message)) {
+    RETURN_EXCEPTION(error_message.c_str());
+  }
+
   // For now, callers cannot open DBs in other security origins.
   // To support that, parse an 'origin' argument here and call
   // IsOriginAccessAllowed (yet to be written).

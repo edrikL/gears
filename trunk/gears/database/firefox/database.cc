@@ -109,6 +109,11 @@ NS_IMETHODIMP GearsDatabase::Open(//OPTIONAL const nsAString &database_name
     }
   }
 
+  std::string16 error_message;
+  if (!IsUserInputValidAsPathComponent(database_name, &error_message)) {
+    RETURN_EXCEPTION(error_message.c_str());
+  }
+
   // For now, callers cannot open DBs in other security origins.
   // To support that, parse an 'origin' argument here and call
   // IsOriginAccessAllowed (yet to be written).
