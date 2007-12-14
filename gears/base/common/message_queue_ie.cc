@@ -30,74 +30,62 @@
 
 #include "gears/base/common/message_queue.h"
 #include "gears/third_party/linked_ptr/linked_ptr.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 class ThreadMessageWindow;
 
+// A concrete implementation that uses HWNDs and PostMessage
 class IEThreadMessageQueue : public ThreadMessageQueue {
  public:
   virtual bool InitThreadMessageQueue();
   virtual ThreadId GetCurrentThreadId();
   virtual bool Send(ThreadId thread_handle,
-                    int message_id,
-                    const char16 *message_data_1,
-                    const char16 *message_data_2);
-
+                    int message_type,
+                    MessageData *message);
  private:
   friend class ThreadMessageWindow;
-  void HandleThreadMessage(int message_id,
-                           const char16 *message_data_1,
-                           const char16 *message_data_2);
+  void HandleThreadMessage(int message_type, MessageData *message_data);
 };
-
-const DWORD WM_THREAD_MESSAGE = WM_USER + 1;
 
 // Owns the window that has the message queue for a thread, and manages the
 // transfer of messages across thread boundries.
 class ThreadMessageWindow : public CWindowImpl<ThreadMessageWindow> {
  public:
+  static const DWORD WM_THREAD_MESSAGE = WM_USER + 1;
   BEGIN_MSG_MAP(ThreadMessageWindow)
     MESSAGE_HANDLER(WM_THREAD_MESSAGE , OnThreadMessage)
   END_MSG_MAP()
 
   ThreadMessageWindow() {
     if (!Create(kMessageOnlyWindowParent,
-                NULL,
-                NULL,
+                NULL, NULL,
                 kMessageOnlyWindowStyle)) {
       assert(false);
     }
   }
+
   ~ThreadMessageWindow() {
     if (IsWindow()) {
       DestroyWindow();
     }
-    for (std::deque<MessageEvent *>::iterator event = events_.begin();
-         event != events_.end(); ++event) {
-      delete *event;
-    }
   }
 
-  LRESULT OnThreadMessage(UINT msg, WPARAM unused_param_1,
-                          LPARAM unused_param_2, BOOL& handled);
-
-  void PostThreadMessage(int message_id, const char16 *message_data_1,
-                         const char16 *message_data_2);
+  LRESULT OnThreadMessage(UINT msg, WPARAM unused_wparam,
+                          LPARAM unused_lparam, BOOL &handled);
+  void PostThreadMessage(int message_tyoe, MessageData *message_data);
  private:
   struct MessageEvent {
-    MessageEvent() : message_id(0) {}
-    MessageEvent(int id, const char16 *data_1, const char16 *data_2)
-      : message_id(id), message_data_1(data_1), message_data_2(data_2) {}
-
-    int message_id;
-    std::string16 message_data_1;
-    std::string16 message_data_2;
+    MessageEvent() {}
+    MessageEvent(int message_type, MessageData *message_data)
+        : message_type(message_type), message_data(message_data) {}
+    int message_type;
+    linked_ptr<MessageData> message_data;
   };
 
-  std::deque<MessageEvent *> events_;
+  std::deque<MessageEvent> events_;
 };
 
-// Protectes message_windows_.
-static Mutex window_mutex_;
+static Mutex window_mutex_;  // Protects the message_windows_ collection
 static std::map<ThreadId, linked_ptr<ThreadMessageWindow> > message_windows_;
 static IEThreadMessageQueue g_instance;
 
@@ -127,52 +115,45 @@ ThreadId IEThreadMessageQueue::GetCurrentThreadId() {
 }
 
 bool IEThreadMessageQueue::Send(ThreadId thread,
-                                int message_id,
-                                const char16 *message_data_1,
-                                const char16 *message_data_2) {
+                                int message_type,
+                                MessageData *message_data) {
   MutexLock lock(&window_mutex_);
   std::map<ThreadId, linked_ptr<ThreadMessageWindow> >::iterator window;
   window = message_windows_.find(thread);
   if (window == message_windows_.end()) {
+    delete message_data;
     return false;
   }
-  window->second->PostThreadMessage(message_id, message_data_1, message_data_2);
+  window->second->PostThreadMessage(message_type, message_data);
   return true;
 }
 
-void IEThreadMessageQueue::HandleThreadMessage(int message_id,
-                                               const char16 *message_data_1,
-                                               const char16 *message_data_2) {
+void IEThreadMessageQueue::HandleThreadMessage(int message_type,
+                                               MessageData *message_data) {
   RegisteredHandler handler;
-  if (GetRegisteredHandler(message_id, &handler)) {
-    handler.Invoke(message_id, message_data_1, message_data_2);
+  if (GetRegisteredHandler(message_type, &handler)) {
+    handler.Invoke(message_type, message_data);
   }
 }
 
-LRESULT ThreadMessageWindow::OnThreadMessage(UINT msg, WPARAM unused_param_1,
-                                             LPARAM unused_param_2,
-                                             BOOL& handled) {
+LRESULT ThreadMessageWindow::OnThreadMessage(UINT msg, WPARAM unused_wparam,
+                                             LPARAM unused_lparam,
+                                             BOOL &handled) {
   assert(msg == WM_THREAD_MESSAGE);
-
-  MessageEvent *event;
+  MessageEvent event;
   {
     MutexLock lock(&window_mutex_);
     assert(events_.size() > 0);
     event = events_.front();
     events_.pop_front();
   }
-
-  g_instance.HandleThreadMessage(event->message_id,
-                                 event->message_data_1.c_str(),
-                                 event->message_data_2.c_str());
+  g_instance.HandleThreadMessage(event.message_type, event.message_data.get());
   handled = TRUE;
   return 0;
 }
 
-void ThreadMessageWindow::PostThreadMessage(int message_id,
-                                            const char16 *message_data_1,
-                                            const char16 *message_data_2) {
-  events_.push_back(new MessageEvent(message_id, message_data_1,
-                                     message_data_2));
+void ThreadMessageWindow::PostThreadMessage(int message_type,
+                                            MessageData *message_data) {
+  events_.push_back(MessageEvent(message_type, message_data));
   PostMessage(WM_THREAD_MESSAGE, 0, 0);
 }

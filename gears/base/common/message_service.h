@@ -36,6 +36,9 @@
 class MessageService;
 class ObserverCollection;
 
+typedef SendableData NotificationData;
+
+
 // Clients implement this interface to receive notification
 // messages published for a topic.
 class MessageObserverInterface {
@@ -44,11 +47,11 @@ class MessageObserverInterface {
   // including 'this', from within the callback method.
   virtual void OnNotify(MessageService *service,
                         const char16 *topic,
-                        const char16 *data) = 0;
+                        const NotificationData *data) = 0;
 };
 
+
 // The mediator in a publisher/subscriber model.
-//
 // TODO(michaeln): Perhaps add an optional SecurityOrigin* parameter
 // to AddObserver, RemoveObserver, and NotifyObservers. And build
 // a Gears module that surfaces this interface to script. Interanal
@@ -71,11 +74,13 @@ class MessageService : public ThreadMessageQueue::HandlerInterface {
   // for this topic on the current thread.
   bool RemoveObserver(MessageObserverInterface *observer, const char16 *topic);
 
-  // Asyncronously delivers a notification to all observers for the
+  // Asynchronously delivers a notification to all observers for the
   // given topic. Each observer's OnNotify method will be invoked on
   // the thread on which it was added. For windows developers, you can
   // think of this thread as the observer's apartment thread.
-  void NotifyObservers(const char16 *topic, const char16 *data);
+  // Ownership of the data is transferred to the message service.
+  // Upon return from this method, callers should no longer touch data.
+  void NotifyObservers(const char16 *topic, NotificationData *data);
 
  private:
   // The intent is for this class to be a singleton, but for testing
@@ -93,10 +98,9 @@ class MessageService : public ThreadMessageQueue::HandlerInterface {
                                                  bool create_if_needed);
   void DeleteTopicObserverCollection(const char16 *topic);
 
-  // HandlerInterface override
-  virtual void HandleThreadMessage(int msg_code,
-                                   const char16 *msg_data_1,
-                                   const char16 *msg_data_2);
+  // ThreadMessageQueue::HandlerInterface override
+  virtual void HandleThreadMessage(int message_type,
+                                   MessageData *message_data);
 
   Mutex observer_collections_mutex_;
   TopicObserverMap observer_collections_;
