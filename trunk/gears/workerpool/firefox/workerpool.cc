@@ -509,6 +509,7 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
     // TODO(zork): Remove this with dump_on_error.  It is declared as volatile
     // to ensure that it exists on the stack even in opt builds.
     volatile bool is_shutting_down = wi->threads_manager->is_shutting_down_;
+    is_shutting_down;
 
     // Setup the onmessage parameter (type: Object).
     assert(wi->js_runner);
@@ -701,6 +702,7 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
   // TODO(zork): Remove this with dump_on_error.  It is declared as volatile to
   // ensure that it exists on the stack even in opt builds.
   volatile bool is_shutting_down = wi->threads_manager->is_shutting_down_;
+  is_shutting_down;
 
   // Setup the onerror parameter (type: Error).
   assert(wi->js_runner);
