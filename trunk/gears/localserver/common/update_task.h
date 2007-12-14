@@ -29,6 +29,7 @@
 #include <map>
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/message_service.h"
 #include "gears/base/common/security_model.h"
 #include "gears/localserver/common/async_task.h"
 #include "gears/localserver/common/managed_resource_store.h"
@@ -37,10 +38,71 @@
 // An UpdateTask checks for an update to a ManagedResourceStore, and if found
 // downloads the updated files and stores them locally in the WebCacheDB.
 // Upon completion of a successful update, the version that was downloaded
-// will be in the pending ready state.
+// will be in the VERSION_CURRENT ready state.
 //------------------------------------------------------------------------------
 class UpdateTask : public AsyncTask {
  public:
+  // UpdateTasks broadcast notifications via the MessageService as they go.
+  enum EventType {
+    PROGRESS_EVENT = 0,
+    COMPLETION_EVENT = 1,
+    ERROR_EVENT = 2
+  };
+
+  // Returns the topic string that should be used to observe update task
+  // notifications for a particular store. Each store uses a unique topic,
+  // notification of all EventTypes for a particular store use the same topic.
+  static std::string16 GetNotificationTopic(ManagedResourceStore *store);
+
+  class Event : public NotificationData {
+   public:
+    Event(EventType event_type) : event_type_(event_type) {}
+    EventType event_type() const { return event_type_; }
+   private:
+    const EventType event_type_;
+  };
+
+  // Raised once prior to downloading any files listed in the manifest.
+  // Then raised every time an entry if the manifest file is completes.
+  class ProgressEvent : public Event {
+   public:
+    ProgressEvent(int files_total, int files_complete)
+      : Event(PROGRESS_EVENT),
+        files_total_(files_total), files_complete_(files_complete) {}
+    int files_total() const { return files_total_; }
+    int files_complete() const { return files_complete_; }
+   private:
+    const int files_total_;
+    const int files_complete_;
+  };
+
+  // Raised on successful completion of an UpdateTask.
+  class CompletionEvent : public Event {
+   public:
+    CompletionEvent(const char16 *new_version_string)
+      : Event(COMPLETION_EVENT),
+        new_version_string_(new_version_string ? new_version_string 
+                                               : STRING16(L"")) {}
+
+    // Indicates if a new version has been swapped into use by this
+    // update task. May be empty.
+    const std::string16 &new_version_string() const {
+      return new_version_string_;
+    }
+   private:
+    const std::string16 new_version_string_;
+  };
+
+  // Raised on failed completion of an UpdateTask
+  class ErrorEvent : public Event {
+   public:
+    ErrorEvent(const char16 *error_message)
+      : Event(ERROR_EVENT), error_message_(error_message) {}
+    const std::string16 &error_message() const { return error_message_; }
+   private:
+    const std::string16 error_message_;
+  };
+
   enum {
     UPDATE_TASK_COMPLETE = 0
   };

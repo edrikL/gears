@@ -25,16 +25,80 @@
 
 #include <assert.h>
 #include <set>
+#include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/message_service.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 // TODO(michaeln) When an OS thread dies, remove all observers associated with
 // that thread.
 
-static const int kNotificationMessageCode = 1;
+static const int kNotificationMessageType = 1;
 
 typedef std::set<MessageObserverInterface*> ObserverSet;
 typedef std::map<ThreadId, ObserverSet> ThreadObserversMap;
+
+
+// When NotifyObservers is called, the message service needs to broadcast
+// the notification to observers on multiple threads. It uses the thread
+// message queue to do so. However instead of creating multiples copies of
+// the data our client wishes to broadcast, we send a message which contains
+// a shared reference to the callers original data to each thread. In this
+// way, we avoid making copies of the callers original data.
+// See NotificationMessage.
+class SharedNotificationData {
+ public:
+  SharedNotificationData(const char16 *topic, NotificationData *data)
+      : topic_(topic), data_(data), refcount_(1) {
+#ifdef DEBUG
+    AtomicIncrement(&g_instance_count_, 1);
+#endif  
+  }
+
+#ifdef DEBUG
+  ~SharedNotificationData() {
+    AtomicIncrement(&g_instance_count_, -1);
+  }
+#endif  
+
+  void AddReference() {
+    AtomicIncrement(&refcount_, 1);
+  }
+
+  void RemoveReference() {
+    if (AtomicIncrement(&refcount_, -1) == 0)
+      delete this;
+  }
+
+  std::string16 topic_;
+  scoped_ptr<NotificationData> data_;
+  int refcount_;
+#ifdef DEBUG
+  static int g_instance_count_;
+#endif
+};
+
+#ifdef DEBUG
+// Instrumentation to observe that object lifecycles are working as expected
+// TODO(michaeln): remove this instrumentation once comfortable that things
+// are working as they should be
+int SharedNotificationData::g_instance_count_ = 0;
+#endif
+
+
+class NotificationMessage : public MessageData {
+ public:
+  NotificationMessage(SharedNotificationData *shared)
+      : shared_(shared) {
+    shared_->AddReference();
+  }
+
+  ~NotificationMessage() {
+    shared_->RemoveReference();
+  }
+
+  SharedNotificationData *shared_;
+};
 
 
 // Helper class used by MessageService. The MessageService creates
@@ -49,8 +113,9 @@ class ObserverCollection {
   bool Remove(MessageObserverInterface *observer);
   bool IsEmpty() const;
 
-  void PostThreadNotifications(const char16 *topic, const char16 *data);
-  void ProcessThreadNotification(const char16 *topic, const char16 *data);
+  void PostThreadNotifications(const char16 *topic,
+                               NotificationData *data);
+  void ProcessThreadNotification(NotificationMessage *message);
 
  private:
   MessageService *service_;
@@ -73,7 +138,7 @@ MessageService *MessageService::GetInstance() {
 
 MessageService::MessageService(ThreadMessageQueue *message_queue)
     : message_queue_(message_queue) {
-  message_queue_->RegisterHandler(kNotificationMessageCode, this);
+  message_queue_->RegisterHandler(kNotificationMessageType, this);
 }
 
 
@@ -107,23 +172,29 @@ bool MessageService::RemoveObserver(MessageObserverInterface *observer,
 
 
 void MessageService::NotifyObservers(const char16 *topic,
-                                     const char16 *data) {
+                                     NotificationData *data) {
   MutexLock lock(&observer_collections_mutex_);
   ObserverCollection *topic_observers =
                           GetTopicObserverCollection(topic, false);
-  if (!topic_observers) return;
+  if (!topic_observers) { 
+    delete data; 
+    return;
+  }
   topic_observers->PostThreadNotifications(topic, data);
 }
 
 
-void MessageService::HandleThreadMessage(int message_id,
-                                         const char16 *msg_data_1,
-                                         const char16 *msg_data_2) {
+void MessageService::HandleThreadMessage(int message_type,
+                                         MessageData *message_data) {
   MutexLock lock(&observer_collections_mutex_);
+  assert(message_type == kNotificationMessageType);
+  NotificationMessage *notification =
+                          static_cast<NotificationMessage*>(message_data);
+  const char16 *topic = notification->shared_->topic_.c_str();
   ObserverCollection *topic_observers =
-                          GetTopicObserverCollection(msg_data_1, false);
+                          GetTopicObserverCollection(topic, false);
   if (!topic_observers) return;
-  topic_observers->ProcessThreadNotification(msg_data_1, msg_data_2);
+  topic_observers->ProcessThreadNotification(notification);
   return;
 }
 
@@ -205,21 +276,26 @@ ObserverSet *ObserverCollection::GetThreadObserverSet(ThreadId thread_id,
 
 
 void ObserverCollection::PostThreadNotifications(const char16 *topic,
-                                                 const char16 *data) {
+                                                 NotificationData *data) {
   // assert(serveice_->mutex_.IsLockedByCurrentThread());
+  SharedNotificationData *shared_data = new SharedNotificationData(topic,
+                                                                   data);
 
   // Send one message for each thread containing observers of this topic
   ThreadObserversMap::iterator iter;
   for (iter = observer_sets_.begin(); iter != observer_sets_.end(); ++iter) {
-    service_->message_queue_->Send(iter->first, kNotificationMessageCode,
-                                   topic, data);
+    service_->message_queue_->Send(iter->first, kNotificationMessageType,
+                                   new NotificationMessage(shared_data));
   }
+  shared_data->RemoveReference();
 }
 
 
-void ObserverCollection::ProcessThreadNotification(const char16 *topic,
-                                                   const char16 * data) {
+void ObserverCollection::ProcessThreadNotification(
+                             NotificationMessage *message) {
   // assert(serveice_->mutex_.IsLockedByCurrentThread());
+  const char16 *topic = message->shared_->topic_.c_str();
+  const NotificationData *data = message->shared_->data_.get();
 
   // Dispatch this notification to all topic observers in this thread.
   //

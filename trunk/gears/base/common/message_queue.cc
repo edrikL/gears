@@ -33,24 +33,17 @@
 // The subset of the actual ThreadMessageQueue implementation
 // common to all platforms, handler registration.
 
-void ThreadMessageQueue::RegisterHandler(int message_id,
+void ThreadMessageQueue::RegisterHandler(int message_type,
                                          HandlerInterface *instance) {
   MutexLock lock(&handler_mutex_);
-  handlers_[message_id] = RegisteredHandler(instance);
+  handlers_[message_type] = RegisteredHandler(instance);
 }
 
-void ThreadMessageQueue::RegisterStaticHandler(
-                             int message_id,
-                             HandlerStaticCallback callback) {
-  MutexLock lock(&handler_mutex_);
-  handlers_[message_id] = RegisteredHandler(callback);
-}
-
-bool ThreadMessageQueue::GetRegisteredHandler(int message_id,
+bool ThreadMessageQueue::GetRegisteredHandler(int message_type,
                                               RegisteredHandler *handler) {
   MutexLock lock(&handler_mutex_);
   std::map<int, RegisteredHandler>::iterator handler_loc;
-  handler_loc = handlers_.find(message_id);
+  handler_loc = handlers_.find(message_type);
   if (handler_loc == handlers_.end())
     return false;
   *handler = handler_loc->second;
@@ -62,42 +55,35 @@ bool ThreadMessageQueue::GetRegisteredHandler(int message_id,
 // The MockThreadMessageQueue implementation
 
 bool MockThreadMessageQueue::Send(ThreadId thread_id,
-                                  int message_id,
-                                  const char16 *message_data_1,
-                                  const char16 *message_data_2) {
+                                  int message_type,
+                                  MessageData *message_data) {
   if (initialized_threads_.find(thread_id) == 
-      initialized_threads_.end())
+      initialized_threads_.end()) {
+    delete message_data;
     return false;
+  }
   pending_message_thread_ids_.push_back(thread_id);
-  pending_message_ids_.push_back(message_id);
-  pending_message_topics_.push_back(std::string16(message_data_1));
-  pending_message_data_.push_back(std::string16(message_data_2));
+  pending_message_types_.push_back(message_type);
+  pending_messages_.push_back(linked_ptr<MessageData>(message_data));
   return true;
 }
 
 void MockThreadMessageQueue::DeliverMockMessages() {
   size_t count = pending_message_thread_ids_.size();
-  assert(count == pending_message_ids_.size());
-  assert(count == pending_message_topics_.size());
-  assert(count == pending_message_data_.size());
-  
+  assert(count == pending_messages_.size());
   for (size_t i = 0; i < count; ++i) {
     ThreadId thread_id = pending_message_thread_ids_[i];
-    int message_id = pending_message_ids_[i];
-    const char16 *topic = pending_message_topics_[i].c_str();
-    const char16 *data = pending_message_data_[i].c_str();
-
+    int message_type = pending_message_types_[i];
+    MessageData *message_data = pending_messages_[i].get();
     SetMockCurrentThreadId(thread_id);
     RegisteredHandler handler;
-    if (GetRegisteredHandler(message_id, &handler)) {
-      handler.Invoke(message_id, topic, data);
+    if (GetRegisteredHandler(message_type, &handler)) {
+      handler.Invoke(message_type, message_data);
     }
   }
-
   pending_message_thread_ids_.clear();
-  pending_message_ids_.clear();
-  pending_message_topics_.clear();
-  pending_message_data_.clear();
+  pending_message_types_.clear();
+  pending_messages_.clear();
 }
 
 #endif  // DEBUG

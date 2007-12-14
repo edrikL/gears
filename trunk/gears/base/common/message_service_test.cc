@@ -29,6 +29,11 @@
 #include "gears/base/common/message_service.h"
 #include "gears/base/common/string16.h"
 
+class TestNotification : public NotificationData {
+ public:
+  TestNotification(const char *s) : data_string_(s) {}
+  std::string data_string_;
+};
 
 class TestObserver : public MessageObserverInterface {
  public:
@@ -43,15 +48,17 @@ class TestObserver : public MessageObserverInterface {
   int total_received_;
   ThreadId last_thread_received_;
   std::string16 last_topic_received_;
-  std::string16 last_data_received_;
+  std::string last_data_received_;
 
   virtual void OnNotify(MessageService *service,
                         const char16 *topic,
-                        const char16 *data) {
+                        const NotificationData *data) {
+    const TestNotification *test_data =
+              static_cast<const TestNotification*>(data);
     ++total_received_;
     last_thread_received_ = message_queue_->GetCurrentThreadId();
     last_topic_received_ = topic;
-    last_data_received_ = data;
+    last_data_received_ = test_data->data_string_;
     if (remove_self_) {
       service->RemoveObserver(this, topic);
     }
@@ -94,7 +101,7 @@ bool TestMessageService() {
   // Should not be able to remove an observer that is not registered
   TEST_ASSERT(!message_service.RemoveObserver(&first_observer, kTopic1));
   // A removed observer should not receive notifications
-  message_service.NotifyObservers(kTopic1, STRING16(L"deaf ears"));
+  message_service.NotifyObservers(kTopic1, new TestNotification("deaf ears"));
   mock_message_queue.DeliverMockMessages();
   TEST_ASSERT(first_observer.total_received_ == 0);
 
@@ -123,13 +130,13 @@ bool TestMessageService() {
   TEST_ASSERT(message_service.AddObserver(&observer3c, kTopic3));
 
   // send some notifications
-  message_service.NotifyObservers(kTopic1, STRING16(L"1.1"));
-  message_service.NotifyObservers(kTopic2, STRING16(L"2.1"));
-  message_service.NotifyObservers(kTopic2, STRING16(L"2.2"));
-  message_service.NotifyObservers(kTopic3, STRING16(L"3.1"));
-  message_service.NotifyObservers(kTopic3, STRING16(L"3.2"));
-  message_service.NotifyObservers(kTopic3, STRING16(L"3.3"));
-  message_service.NotifyObservers(kTopic4, STRING16(L"deaf ears"));
+  message_service.NotifyObservers(kTopic1, new TestNotification("1.1"));
+  message_service.NotifyObservers(kTopic2, new TestNotification("2.1"));
+  message_service.NotifyObservers(kTopic2, new TestNotification("2.2"));
+  message_service.NotifyObservers(kTopic3, new TestNotification("3.1"));
+  message_service.NotifyObservers(kTopic3, new TestNotification("3.2"));
+  message_service.NotifyObservers(kTopic3, new TestNotification("3.3"));
+  message_service.NotifyObservers(kTopic4, new TestNotification("deaf ears"));
   mock_message_queue.DeliverMockMessages();
 
   // examine what was recieved on what thread
@@ -137,32 +144,32 @@ bool TestMessageService() {
   TEST_ASSERT(observer1.total_received_ == 1);
   TEST_ASSERT(observer1.last_thread_received_ == kThreadId1);
   TEST_ASSERT(observer1.last_topic_received_ == kTopic1);
-  TEST_ASSERT(observer1.last_data_received_ == STRING16(L"1.1"));
+  TEST_ASSERT(observer1.last_data_received_ == "1.1");
 
   TEST_ASSERT(observer2a.total_received_ == 2);
   TEST_ASSERT(observer2a.last_thread_received_ == kThreadId2);
   TEST_ASSERT(observer2a.last_topic_received_ == kTopic2);
-  TEST_ASSERT(observer2a.last_data_received_ == STRING16(L"2.2"));
+  TEST_ASSERT(observer2a.last_data_received_ == "2.2");
 
   TEST_ASSERT(observer2b.total_received_ == 1);
   TEST_ASSERT(observer2b.last_thread_received_ == kThreadId2);
   TEST_ASSERT(observer2b.last_topic_received_ == kTopic2);
-  TEST_ASSERT(observer2b.last_data_received_ == STRING16(L"2.1"));
+  TEST_ASSERT(observer2b.last_data_received_ == "2.1");
 
   TEST_ASSERT(observer3a.total_received_ == 3);
   TEST_ASSERT(observer3a.last_thread_received_ == kThreadId1);
   TEST_ASSERT(observer3a.last_topic_received_ == kTopic3);
-  TEST_ASSERT(observer3a.last_data_received_ == STRING16(L"3.3"));
+  TEST_ASSERT(observer3a.last_data_received_ == "3.3");
 
   TEST_ASSERT(observer3b.total_received_ == 3);
   TEST_ASSERT(observer3b.last_thread_received_ == kThreadId2);
   TEST_ASSERT(observer3b.last_topic_received_ == kTopic3);
-  TEST_ASSERT(observer3b.last_data_received_ == STRING16(L"3.3"));
+  TEST_ASSERT(observer3b.last_data_received_ == "3.3");
 
   TEST_ASSERT(observer3c.total_received_ == 3);
   TEST_ASSERT(observer3c.last_thread_received_ == kThreadId3);
   TEST_ASSERT(observer3c.last_topic_received_ == kTopic3);
-  TEST_ASSERT(observer3c.last_data_received_ == STRING16(L"3.3"));
+  TEST_ASSERT(observer3c.last_data_received_ == "3.3");
 
   return true;
 }

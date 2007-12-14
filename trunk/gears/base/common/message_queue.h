@@ -30,6 +30,7 @@
 #include <set>
 #include <vector>
 #include "gears/base/common/mutex.h"
+#include "gears/third_party/linked_ptr/linked_ptr.h"
 
 
 // TODO(michaeln): These should be defined by a threading abstraction
@@ -41,38 +42,40 @@ typedef DWORD ThreadId;
 #endif
 
 
-// A facility for sending and receiving messages asynchrously 
+// Base class for data that can be sent using ThreadMessageQueue
+// and MessageService. Contains only a virtual dtor, to invoke the
+// destructor of derived classes.
+// TODO(michaeln): Support Serializable to send messages across 
+// address space boundaries.
+class SendableData {
+ public:
+  virtual ~SendableData() {}
+};
+
+typedef SendableData MessageData;
+
+
+// A facility for sending and receiving messages asynchronously 
 // across thread boundaries. 
-// TODO(michaeln): would be real nice to handle message objects instead
-// the arbitrary two data strings currently supported.
 class ThreadMessageQueue {
  public:
   // Returns a pointer to the singleton
   static ThreadMessageQueue *GetInstance();
 
-  // An interface for use when registering an instance as a message handler.
+  // Message handlers implement this interface. All messages of a
+  // given message_type will be directed the registered handler
+  // for that message_type.
   class HandlerInterface {
    public:
-    virtual void HandleThreadMessage(int message_id,
-                                     const char16 *message_data_1,
-                                     const char16 *message_data_2) = 0;
+    virtual void HandleThreadMessage(int message_type,
+                                     MessageData *message_data) = 0;
   };
-
-  // A function definition for use when registering a static function as
-  // a message handler.
-  typedef void (*HandlerStaticCallback)(int message_id,
-                                        const char16 *message_data_1,
-                                        const char16 *message_data_2);
 
   // Registers an instance as a handler callback. There is
   // no means to unregister a handler, so this should only be used
-  // for singleton instances if handler class.
-  void RegisterHandler(int message_id,
+  // for singleton instances if message handler class.
+  void RegisterHandler(int message_type,
                        HandlerInterface *handler_instance);
-
-  // Registers a static method as a handler callback.
-  void RegisterStaticHandler(int message_id,
-                             HandlerStaticCallback handler_callback);
 
   // Initializes the message queue for the current thread. If the
   // queue is already initialized, this is a no-op. Returns true
@@ -83,38 +86,29 @@ class ThreadMessageQueue {
   virtual ThreadId GetCurrentThreadId() = 0;
 
   // Posts a message to the indicated thread.  Returns true if the
-  // message is successfully queued for delivery.
-  virtual bool Send(ThreadId thread_handle,
-                    int message_id,
-                    const char16 *message_data_1,
-                    const char16 *message_data_2) = 0;
+  // message is successfully queued for delivery. In all cases,
+  // ownership of the message data is transferred to the message queue.
+  // Upon return from this method, callers should no longer touch the
+  // message data.
+  virtual bool Send(ThreadId thread_id,
+                    int message_type,
+                    MessageData *message_data) = 0;
  protected:
   ThreadMessageQueue() {}
   virtual ~ThreadMessageQueue() {}
 
   struct RegisteredHandler {
-    RegisteredHandler()
-      : instance(NULL), static_callback(NULL) {}
-    RegisteredHandler(HandlerInterface *inst)
-      : instance(inst), static_callback(NULL) {}
-    RegisteredHandler(HandlerStaticCallback callback)
-      : instance(NULL), static_callback(callback) {}
-
+    RegisteredHandler() : instance(NULL) {}
+    RegisteredHandler(HandlerInterface *inst) : instance(inst) {}
     HandlerInterface *instance;
-    HandlerStaticCallback static_callback;
 
-    void Invoke(int message_id,
-                const char16 *message_data_1,
-                const char16 *message_data_2) {
+    void Invoke(int message_type, MessageData *message_data) {
       if (instance)
-        instance->HandleThreadMessage(message_id,
-                                      message_data_1, message_data_2);
-      else if (static_callback)
-        static_callback(message_id, message_data_1, message_data_2);
+        instance->HandleThreadMessage(message_type, message_data);
     }
   };
 
-  bool GetRegisteredHandler(int message_id, RegisteredHandler *handler);
+  bool GetRegisteredHandler(int message_type, RegisteredHandler *handler);
 
   // Protects handlers_ during inserts and finds.
   Mutex handler_mutex_;
@@ -141,10 +135,9 @@ class MockThreadMessageQueue : public ThreadMessageQueue {
     return current_thread_id_;
   }
 
-  virtual bool Send(ThreadId thread_handle,
-                    int message_id,
-                    const char16 *message_data_1,
-                    const char16 *message_data_2);
+  virtual bool Send(ThreadId thread_id,
+                    int message_type,
+                    MessageData *message_data);
 
   void SetMockCurrentThreadId(ThreadId thread_id) {
     current_thread_id_ = thread_id;
@@ -158,9 +151,8 @@ class MockThreadMessageQueue : public ThreadMessageQueue {
   ThreadId current_thread_id_;
   std::set<ThreadId> initialized_threads_;
   std::vector<ThreadId> pending_message_thread_ids_;
-  std::vector<int> pending_message_ids_;
-  std::vector<std::string16> pending_message_topics_;
-  std::vector<std::string16> pending_message_data_;
+  std::vector<int> pending_message_types_;
+  std::vector<linked_ptr<MessageData> > pending_messages_;
 
   DISALLOW_EVIL_CONSTRUCTORS(MockThreadMessageQueue);
 };

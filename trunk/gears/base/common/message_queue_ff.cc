@@ -33,6 +33,7 @@
 
 #include "gears/base/common/message_queue.h"
 #include "gears/third_party/gecko_internal/nsIEventQueueService.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 struct MessageEvent;
 
@@ -42,17 +43,15 @@ class FFThreadMessageQueue : public ThreadMessageQueue {
   virtual bool InitThreadMessageQueue();
   virtual ThreadId GetCurrentThreadId();
   virtual bool Send(ThreadId thread_handle,
-                    int message_id,
-                    const char16 *message_data_1,
-                    const char16 *message_data_2);
-
+                    int message_type,
+                    MessageData *message_data);
  private:
   struct MessageEvent {
-    PLEvent e;
-    ThreadId thread;
-    int message_id;
-    std::string16 message_data_1;
-    std::string16 message_data_2;
+    MessageEvent(int message_type, MessageData *message_data)
+        : message_type(message_type), message_data(message_data) {}
+    PLEvent pl_event;  // must be first in the struct
+    int message_type;
+    scoped_ptr<MessageData> message_data;
   };
 
   static void *OnReceiveMessageEvent(MessageEvent *event);
@@ -76,12 +75,9 @@ ThreadId FFThreadMessageQueue::GetCurrentThreadId() {
 
 // static
 void *FFThreadMessageQueue::OnReceiveMessageEvent(MessageEvent *event) {
-  assert(event->thread == g_instance.GetCurrentThreadId());
   RegisteredHandler handler;
-  if (g_instance.GetRegisteredHandler(event->message_id, &handler)) {
-    handler.Invoke(event->message_id,
-                   event->message_data_1.c_str(),
-                   event->message_data_2.c_str());
+  if (g_instance.GetRegisteredHandler(event->message_type, &handler)) {
+    handler.Invoke(event->message_type, event->message_data.get());
   }
   return NULL;
 }
@@ -92,43 +88,36 @@ void FFThreadMessageQueue::OnDestroyMessageEvent(MessageEvent *event) {
 }
 
 bool FFThreadMessageQueue::Send(ThreadId thread,
-                              int message_id,
-                              const char16 *message_data_1,
-                              const char16 *message_data_2) {
+                                int message_type,
+                                MessageData *message_data) {
   nsresult nr;
-
   nsCOMPtr<nsIEventQueueService> event_queue_service =
       do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &nr);
   if (NS_FAILED(nr)) {
+    delete message_data;
     return false;
   }
 
-  // If there's no event queue on this thread, we can't do anything.
   nsCOMPtr<nsIEventQueue> event_queue;
   nr = event_queue_service->GetThreadEventQueue(thread,
                                                 getter_AddRefs(event_queue));
   if (NS_FAILED(nr)) {
+    delete message_data;
     return false;
   }
 
-  MessageEvent *event = new MessageEvent;
-  event->thread = thread;
-  event->message_id = message_id;
-  event->message_data_1 = message_data_1;
-  event->message_data_2 = message_data_2;
-
+  MessageEvent *event = new MessageEvent(message_type, message_data);
   if (NS_FAILED(event_queue->InitEvent(
-      &event->e, nsnull,
-      reinterpret_cast<PLHandleEventProc>(OnReceiveMessageEvent),
-      reinterpret_cast<PLDestroyEventProc>(OnDestroyMessageEvent)))) {
+          &event->pl_event, nsnull,
+          reinterpret_cast<PLHandleEventProc>(OnReceiveMessageEvent),
+          reinterpret_cast<PLDestroyEventProc>(OnDestroyMessageEvent)))) {
     delete event;
     return false;
   }
-  if (NS_FAILED(event_queue->PostEvent(&event->e))) {
-    // Cleaning up the event at this point would requires access to private
-    // functions, so just clear the strings so that we leak less.
-    event->message_data_1.clear();
-    event->message_data_2.clear();
+  if (NS_FAILED(event_queue->PostEvent(&event->pl_event))) {
+    // Cleaning up the event at this point requires access to private
+    // functions, so just clear the message data to leak less.
+    event->message_data.reset(NULL);
     return false;
   }
   return true;
