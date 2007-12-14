@@ -38,6 +38,7 @@
 #include "gears/base/common/js_runner.h"
 
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/js_runner_ff_marshaling.h"
 #include "gears/base/common/scoped_token.h"
@@ -71,12 +72,14 @@ class JsRunnerBase : public JsRunnerInterface {
   JsRootedToken *NewObject(const char16 *optional_global_ctor_name,
                            bool dump_on_error = false) {
     if (!js_engine_context_) {
+      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
       LOG(("Could not get JavaScript engine context."));
       return NULL;
     }
 
     JSObject *global_object = JS_GetGlobalObject(js_engine_context_);
     if (!global_object) {
+      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
       LOG(("Could not get global object from script engine."));
       return NULL;
     }
@@ -84,6 +87,7 @@ class JsRunnerBase : public JsRunnerInterface {
     std::string ctor_name_utf8;
     if (optional_global_ctor_name) {
       if (!String16ToUTF8(optional_global_ctor_name, &ctor_name_utf8)) {
+        if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
         LOG(("Could not convert constructor name."));
         return NULL;
       }
@@ -95,12 +99,14 @@ class JsRunnerBase : public JsRunnerInterface {
     JSBool result = JS_GetProperty(js_engine_context_, global_object,
                                    ctor_name_utf8.c_str(), &val);
     if (!result) {
+      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
       LOG(("Could not get constructor property from global object."));
       return NULL;
     }
 
     JSFunction *ctor = JS_ValueToFunction(js_engine_context_, val);
     if (!ctor) {
+      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
       LOG(("Could not convert constructor property to function."));
       return NULL;
     }
@@ -122,6 +128,7 @@ class JsRunnerBase : public JsRunnerInterface {
     result = JS_CallFunction(js_engine_context_, global_object, ctor, 0, NULL,
                              &val);
     if (!result) {
+      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
       LOG(("Could not call constructor function."));
       return NULL;
     }
@@ -129,6 +136,7 @@ class JsRunnerBase : public JsRunnerInterface {
     if (JSVAL_IS_OBJECT(val)) {
       return new JsRootedToken(GetContext(), val);
     } else {
+      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
       LOG(("Constructor did not return an object"));
       return NULL;
     }
