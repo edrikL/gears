@@ -133,9 +133,10 @@ class PluginClass; \
 template<> \
 struct PluginTraits<PluginClass> { \
   typedef ImplClassType ImplClass; \
-  static const char *kThreadLocalsKey;\
+  static const std::string kThreadLocalsKey;\
 }; \
-const char *PluginTraits<PluginClass>::kThreadLocalsKey = "base:" #ImplClassType
+const std::string PluginTraits<PluginClass>::kThreadLocalsKey( \
+    "base:" #ImplClassType)
 
 // Need to include .cc for template definitions.
 #include "gears/base/npapi/plugin.cc"

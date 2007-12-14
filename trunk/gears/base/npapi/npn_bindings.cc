@@ -41,6 +41,7 @@
 //
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/thread_locals.h"
+#include "gears/base/npapi/module.h"
 
 #ifndef HIBYTE
 #define HIBYTE(x) ((((uint32)(x)) & 0xff00) >> 8)
@@ -49,8 +50,6 @@
 #ifndef LOBYTE
 #define LOBYTE(W) ((W) & 0xFF)
 #endif
-
-extern const char *kNPNFuncsKey;
 
 static const NPNetscapeFuncs &GetNPNFuncs() {
   NPNetscapeFuncs *npn_funcs =

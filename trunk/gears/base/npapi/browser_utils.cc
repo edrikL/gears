@@ -33,7 +33,7 @@
 #include "gears/base/npapi/scoped_npapi_handles.h"
 
 typedef std::stack<JsCallContext*> JsCallStack;
-static const char *kJsCallStackKey = "base:JsCallStack";
+static const std::string kJsCallStackKey("base:JsCallStack");
 
 static void DeleteJsCallStack(void *context) {
   JsCallStack *call_stack = reinterpret_cast<JsCallStack*>(context);

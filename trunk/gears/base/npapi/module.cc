@@ -38,6 +38,7 @@
 //
 // Main plugin entry point implementation
 //
+#include "gears/base/npapi/module.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/thread_locals.h"
 
@@ -45,50 +46,52 @@
 #define HIBYTE(x) ((((uint32)(x)) & 0xff00) >> 8)
 #endif
 
+// Store the browser functions in thread local storage to avoid calling the
+// functions on a different thread.
 static NPNetscapeFuncs g_browser_funcs;
-const char *kNPNFuncsKey("base:NPNetscapeFuncs");
+const std::string kNPNFuncsKey("base:NPNetscapeFuncs");
 
-NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* pFuncs)
+NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* funcs)
 {
-  if (pFuncs == NULL)
+  if (funcs == NULL)
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
-  if (pFuncs->size < sizeof(NPPluginFuncs))
+  if (funcs->size < sizeof(NPPluginFuncs))
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
-  pFuncs->version       = (NP_VERSION_MAJOR << 8) | NP_VERSION_MINOR;
-  pFuncs->newp          = NPP_New;
-  pFuncs->destroy       = NPP_Destroy;
-  pFuncs->setwindow     = NPP_SetWindow;
-  pFuncs->newstream     = NPP_NewStream;
-  pFuncs->destroystream = NPP_DestroyStream;
-  pFuncs->asfile        = NPP_StreamAsFile;
-  pFuncs->writeready    = NPP_WriteReady;
-  pFuncs->write         = NPP_Write;
-  pFuncs->print         = NPP_Print;
-  pFuncs->event         = NPP_HandleEvent;
-  pFuncs->urlnotify     = NPP_URLNotify;
-  pFuncs->getvalue      = NPP_GetValue;
-  pFuncs->setvalue      = NPP_SetValue;
-  pFuncs->javaClass     = NULL;
+  funcs->version       = (NP_VERSION_MAJOR << 8) | NP_VERSION_MINOR;
+  funcs->newp          = NPP_New;
+  funcs->destroy       = NPP_Destroy;
+  funcs->setwindow     = NPP_SetWindow;
+  funcs->newstream     = NPP_NewStream;
+  funcs->destroystream = NPP_DestroyStream;
+  funcs->asfile        = NPP_StreamAsFile;
+  funcs->writeready    = NPP_WriteReady;
+  funcs->write         = NPP_Write;
+  funcs->print         = NPP_Print;
+  funcs->event         = NPP_HandleEvent;
+  funcs->urlnotify     = NPP_URLNotify;
+  funcs->getvalue      = NPP_GetValue;
+  funcs->setvalue      = NPP_SetValue;
+  funcs->javaClass     = NULL;
 
   return NPERR_NO_ERROR;
 }
 
-NPError OSCALL NP_Initialize(NPNetscapeFuncs* pFuncs)
+NPError OSCALL NP_Initialize(NPNetscapeFuncs* funcs)
 {
-  if (pFuncs == NULL)
+  if (funcs == NULL)
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
-  if (HIBYTE(pFuncs->version) > NP_VERSION_MAJOR)
+  if (HIBYTE(funcs->version) > NP_VERSION_MAJOR)
     return NPERR_INCOMPATIBLE_VERSION_ERROR;
 
-  if (pFuncs->size < sizeof(NPNetscapeFuncs))
+  if (funcs->size < sizeof(NPNetscapeFuncs))
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
   MyDllMain(0, DLL_PROCESS_ATTACH, 0);
 
-  g_browser_funcs = *pFuncs;
+  g_browser_funcs = *funcs;
   ThreadLocals::SetValue(kNPNFuncsKey, &g_browser_funcs, NULL);
 
   return NPERR_NO_ERROR;
