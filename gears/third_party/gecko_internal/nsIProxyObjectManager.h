@@ -28,7 +28,7 @@ class nsIEventQueue; /* forward declaration */
  * See http://www.mozilla.org/projects/xpcom/Proxies.html
  */
 class NS_NO_VTABLE nsIProxyObjectManager : public nsISupports {
- public: 
+ public:
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPROXYOBJECTMANAGER_IID)
 
@@ -62,17 +62,17 @@ class NS_NO_VTABLE nsIProxyObjectManager : public nsISupports {
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIPROXYOBJECTMANAGER \
   NS_IMETHOD GetProxyForObject(nsIEventQueue *destQueue, const nsIID & iid, nsISupports *object, PRInt32 proxyType, void * *result); \
-  NS_IMETHOD GetProxy(nsIEventQueue *destQueue, const nsIID & cid, nsISupports *aOuter, const nsIID & iid, PRInt32 proxyType, void * *result); 
+  NS_IMETHOD GetProxy(nsIEventQueue *destQueue, const nsIID & cid, nsISupports *aOuter, const nsIID & iid, PRInt32 proxyType, void * *result);
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIPROXYOBJECTMANAGER(_to) \
   NS_IMETHOD GetProxyForObject(nsIEventQueue *destQueue, const nsIID & iid, nsISupports *object, PRInt32 proxyType, void * *result) { return _to GetProxyForObject(destQueue, iid, object, proxyType, result); } \
-  NS_IMETHOD GetProxy(nsIEventQueue *destQueue, const nsIID & cid, nsISupports *aOuter, const nsIID & iid, PRInt32 proxyType, void * *result) { return _to GetProxy(destQueue, cid, aOuter, iid, proxyType, result); } 
+  NS_IMETHOD GetProxy(nsIEventQueue *destQueue, const nsIID & cid, nsISupports *aOuter, const nsIID & iid, PRInt32 proxyType, void * *result) { return _to GetProxy(destQueue, cid, aOuter, iid, proxyType, result); }
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIPROXYOBJECTMANAGER(_to) \
   NS_IMETHOD GetProxyForObject(nsIEventQueue *destQueue, const nsIID & iid, nsISupports *object, PRInt32 proxyType, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetProxyForObject(destQueue, iid, object, proxyType, result); } \
-  NS_IMETHOD GetProxy(nsIEventQueue *destQueue, const nsIID & cid, nsISupports *aOuter, const nsIID & iid, PRInt32 proxyType, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetProxy(destQueue, cid, aOuter, iid, proxyType, result); } 
+  NS_IMETHOD GetProxy(nsIEventQueue *destQueue, const nsIID & cid, nsISupports *aOuter, const nsIID & iid, PRInt32 proxyType, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetProxy(destQueue, cid, aOuter, iid, proxyType, result); }
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -121,8 +121,8 @@ NS_IMETHODIMP nsProxyObjectManager::GetProxy(nsIEventQueue *destQueue, const nsI
 /* End of implementation class template. */
 #endif
 
-// scour - commented out by michaeln
-//#include "nsProxyEvent.h" 
+// gears - commented out by michaeln
+//#include "nsProxyEvent.h"
 
 #define NS_XPCOMPROXY_CONTRACTID "@mozilla.org/xpcomproxy;1"
 #define NS_XPCOMPROXY_CLASSNAME "XPCom Proxy"
@@ -131,7 +131,7 @@ NS_IMETHODIMP nsProxyObjectManager::GetProxy(nsIEventQueue *destQueue, const nsI
   0xb059, 										 \
   0x11d2,						                 \
  {0x91, 0x5e, 0xc1, 0x2b, 0x69, 0x6c, 0x93, 0x33}\
-} 
+}
 /**
  * Helper function for code that already has a link-time dependency on
  * libxpcom and needs to get proxies in a bunch of different places.
@@ -140,10 +140,10 @@ NS_IMETHODIMP nsProxyObjectManager::GetProxy(nsIEventQueue *destQueue, const nsI
  * readable.
  */
 extern NS_COM nsresult
-NS_GetProxyForObject(nsIEventQueue *destQueue, 
-                     REFNSIID aIID, 
-                     nsISupports* aObj, 
-                     PRInt32 proxyType, 
+NS_GetProxyForObject(nsIEventQueue *destQueue,
+                     REFNSIID aIID,
+                     nsISupports* aObj,
+                     PRInt32 proxyType,
                      void** aProxyObject);
 
 #endif /* __gen_nsIProxyObjectManager_h__ */

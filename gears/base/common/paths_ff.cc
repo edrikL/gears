@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <nsCOMPtr.h>
@@ -51,7 +51,7 @@ static const char16 *kComponentsSubdir = STRING16(L"Google\\"
                                                   PRODUCT_VERSION_STRING);
 
 bool GetBaseComponentsDirectory(std::string16 *path) {
-  // Get the subdir where Scour keeps associated components.
+  // Get the subdir where Gears keeps associated components.
   wchar_t dir[MAX_PATH];
 
   HRESULT hr = SHGetFolderPathW(NULL, CSIDL_PROGRAM_FILES,
@@ -71,7 +71,7 @@ bool GetBaseComponentsDirectory(std::string16 *path) {
 
 #else
 const char16 kPathSeparator = L'/';
-// The text between the slashes must match the Scour <em:id> tag in
+// The text between the slashes must match the Gears <em:id> tag in
 // install.rdf.m4.
 static const char16 *kComponentsSubdir =
     STRING16(L"extensions/{000a9d1c-beef-4f90-9363-039d445309b8}/components");
@@ -127,10 +127,10 @@ bool GetBaseDataDirectory(std::string16 *path) {
   path_long += kDataSubdir;
 
   // Create the directory prior to getting the name in short form on Windows.
-  // We do this to ensure the short name generated will actually map to our 
+  // We do this to ensure the short name generated will actually map to our
   // directory rather than another file system object created before ours.
   // Also, we do this for all OSes to behave consistently.
-  // TODO(michaeln): Document this behavior in the .h file and 
+  // TODO(michaeln): Document this behavior in the .h file and
   // update the callers of this function to no longer do this themselves.
   if (!File::RecursivelyCreateDir(path_long.c_str())) {
     return false;

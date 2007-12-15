@@ -24,12 +24,12 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //{{NO_DEPENDENCIES}}
-// Used by ScourIE.rc
+// Used by module.rc
 //
 // IMPORTANT: IDs >= 1000 are reserved for /ui/ie/ui_resources.h
 
 // Registry (.rgs) files
-#define IDR_SCOURIE                     100
+#define IDR_GEARSIE                     100
 #define IDR_BROWSERHELPEROBJECT         101
 #define IDR_GEARSFACTORY                102
 #define IDR_TOOLSMENUITEM               103

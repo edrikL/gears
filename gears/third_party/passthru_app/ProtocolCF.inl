@@ -19,10 +19,10 @@ namespace PassthroughAPP
 inline STDMETHODIMP CComClassFactoryProtocol::CreateInstance(
   IUnknown* punkOuter, REFIID riid, void** ppvObj)
 {
-  // scour - this is added to prevent tons of asserts below when Scour's
-  // handler is installed. Scour uses an undocumented method of getting URLMON 
+  // gears - this is added to prevent tons of asserts below when Gears'
+  // handler is installed. Gears uses an undocumented method of getting URLMON 
   // to use IInternetProtocolInfo for well known protocols.
-  // See \scour\webcache\ie\ie_http_handler.cc for more info.
+  // See \gears\localserver\ie\http_handler_ie.cc for more info.
   if (riid != IID_IUnknown) 
     return E_NOINTERFACE;
 

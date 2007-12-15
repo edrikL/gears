@@ -66,7 +66,7 @@
 class ModuleWrapperBaseClass;
 class JsRunnerInterface;
 
-// Exposes the minimal set of information that Scour objects need to work
+// Exposes the minimal set of information that Gears objects need to work
 // consistently across the main-thread and worker-thread JavaScript engines.
 class ModuleImplBaseClass {
  public:

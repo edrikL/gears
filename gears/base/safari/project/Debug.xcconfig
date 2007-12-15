@@ -26,5 +26,5 @@
 // Only compile for local machine
 ARCHS = $(NATIVE_ARCH)
 
-// Enable debugging for scour
+// Enable debugging for Gears
 OTHER_CFLAGS = $(OTHER_CFLAGS) -DDEBUG=1

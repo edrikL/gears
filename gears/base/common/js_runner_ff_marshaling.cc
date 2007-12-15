@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Handles interaction between JavaScript and C++ in Firefox.
@@ -28,8 +28,8 @@
 // as well as marshaling (converting) arguments and return values.
 //
 // In Firefox, the XPConnect layer (/js/src/xpconnect/src) does this work.
-// But XPConnect is not thread-safe, relies on the DOM, etc.  So for Scour
-// worker threads we need to implement our own layer.
+// But XPConnect is not thread-safe, relies on the DOM, etc.  So for worker
+// threads we need to implement our own layer.
 //
 // Architecture Summary:
 // * To add a class, we create a 'prototype' JSObject, then attach a 'function'
@@ -72,7 +72,7 @@
 // when the JSContext goes away.  Maybe can use things like Finalize properties?
 //
 // Similarly, where do we destroy:
-// * New objects returned by Scour classes (For example, the ResultSet objects
+// * New objects returned by Gears classes (For example, the ResultSet objects
 //   returned by Database::Execute.)
 // * JS_NewObject (and similar) return values, on Define*() failure
 //   (Or maybe rely on JSContext cleanup -- at a higher level -- to handle it.)
@@ -482,30 +482,30 @@ class ScopedJsArgSetter {
   // sets argc/argv/context on construction
   ScopedJsArgSetter(nsISupports *isupports, JSContext *cx,
                     int argc, jsval *argv) {
-    scour_native_ = NULL; // dtor only checks this
+    gears_native_ = NULL; // dtor only checks this
     nsresult nr;
-    scour_idl_ = do_QueryInterface(isupports, &nr);
-    if (NS_SUCCEEDED(nr) && scour_idl_) {
-      scour_native_ = NULL;
-      scour_idl_->GetNativeBaseClass(&scour_native_);
-      if (scour_native_) {
+    gears_idl_ = do_QueryInterface(isupports, &nr);
+    if (NS_SUCCEEDED(nr) && gears_idl_) {
+      gears_native_ = NULL;
+      gears_idl_->GetNativeBaseClass(&gears_native_);
+      if (gears_native_) {
         // TODO(cprince): Remove the 'cx' argument after some bake time.
-        assert(cx == scour_native_->EnvPageJsContext());
-        prev_argc_    = scour_native_->JsWorkerGetArgc();
-        prev_argv_    = scour_native_->JsWorkerGetArgv();
-        scour_native_->JsWorkerSetParams(argc, argv);
+        assert(cx == gears_native_->EnvPageJsContext());
+        prev_argc_    = gears_native_->JsWorkerGetArgc();
+        prev_argv_    = gears_native_->JsWorkerGetArgv();
+        gears_native_->JsWorkerSetParams(argc, argv);
       }
     }
   }
   // restores argc/argv/context on destruction
   ~ScopedJsArgSetter() {
-    if (scour_native_) {
-      scour_native_->JsWorkerSetParams(prev_argc_, prev_argv_);
+    if (gears_native_) {
+      gears_native_->JsWorkerSetParams(prev_argc_, prev_argv_);
     }
   }
  private:
-  nsCOMPtr<GearsBaseClassInterface> scour_idl_;
-  ModuleImplBaseClass *scour_native_;
+  nsCOMPtr<GearsBaseClassInterface> gears_idl_;
+  ModuleImplBaseClass *gears_native_;
   // must save/restore any previous values to handle re-entrancy
   // (example: JS code calls foo.abort(), C++ abort() invokes a JS handler
   // for 'onabort', and the JS handler calls any C++ function)
@@ -517,7 +517,7 @@ class ScopedJsArgSetter {
 // General-purpose wrapper to invoke any class function (method, or
 // property getter/setter).
 //
-// All calls to Scour C++ objects from a worker thread will go through
+// All calls to Gears C++ objects from a worker thread will go through
 // this function.
 //
 // [Reference: this is inspired by Mozilla's XPCWrappedNative::CallMethod() in
@@ -1921,8 +1921,8 @@ static JSBool NativeStringWithSize2JS(JSContext *cx,
             *dest = STRING_TO_JSVAL(str);
             break;
         }
-        case nsXPTType::T_ASTRING: // added by Scour
-        case nsXPTType::T_DOMSTRING: // added by Scour
+        case nsXPTType::T_ASTRING: // added by Gears
+        case nsXPTType::T_DOMSTRING: // added by Gears
         case nsXPTType::T_PWSTRING_SIZE_IS:
         {
             jschar* p = *((jschar**)src);

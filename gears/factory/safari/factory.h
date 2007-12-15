@@ -39,7 +39,7 @@ class GearsFactory;
 // Public
 //------------------------------------------------------------------------------
 // The |arguments| are the ones passed from WebKit to the plugin via the
-// plugInViewWithArguments: method.  See scour_plugin.h
+// plugInViewWithArguments: method.  See base/safari/plugin.h
 - (id)initWithArguments:(NSDictionary *)arguments;
 
 - (void)setArguments:(NSDictionary *)arguments;

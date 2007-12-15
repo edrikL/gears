@@ -29,9 +29,8 @@
 #include "gears/base/common/permissions_db.h"
 #include "gears/third_party/jsoncpp/json.h"
 
-// Scour's settings dialog. For now this is very simple and only gives a way to
-// revoke decisions made with the "remember me" checkbox on the capabilities
-// prompt.
+// For now this is very simple and only gives a way to revoke decisions made
+// with the "remember me" checkbox on the capabilities prompt.
 class SettingsDialog {
  public:
   // Show the settings dialog and apply any changes the user makes.

@@ -161,7 +161,7 @@ public:
     DWORD grfPI, HANDLE_PTR dwReserved,
     IInternetProtocol* pTargetProtocol) const;
 
-  // scour - added by jabdelmalek
+  // gears - added by jabdelmalek
   HRESULT OnStartEx(IUri *pUri,
     IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,
     DWORD grfPI, HANDLE_PTR dwReserved,

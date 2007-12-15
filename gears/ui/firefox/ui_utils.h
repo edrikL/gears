@@ -43,7 +43,7 @@ class GearsUiUtils : public GearsUiUtilsInterface {
   // Constructor
   GearsUiUtils(){}
 
-  // Shows the Scour settings dialog and applies any changes the user makes.
+  // Shows the settings dialog and applies any changes the user makes.
   NS_IMETHOD ShowSettingsDialog();
 
  private:
