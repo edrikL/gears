@@ -29,10 +29,11 @@
 #ifndef GEARS_BASE_COMMON_ATOMIC_OPS_OSX_H__
 #define GEARS_BASE_COMMON_ATOMIC_OPS_OSX_H__
 
+#include <stdint.h>
+#include <libkern/OSAtomic.h>
+
 typedef int32_t Atomic32;
 typedef intptr_t AtomicWord;
-
-#include <libkern/OSAtomic.h>
 
 #ifdef __LP64__   // Indicates 64-bit pointers under OS 
 #define OSAtomicCastIntPtr(p) \

@@ -29,6 +29,8 @@
 #ifndef GEARS_BASE_COMMON_ATOMIC_OPS_LINUX_H__
 #define GEARS_BASE_COMMON_ATOMIC_OPS_LINUX_H__
 
+#include <stdint.h>
+
 typedef intptr_t AtomicWord;
 typedef int32_t Atomic32;
 

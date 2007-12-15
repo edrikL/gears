@@ -26,10 +26,10 @@
 // Implementation of atomic operations for x86 on msvc.  This file should not
 // be included directly.  Clients should instead include "atomicops.h".
 
-#include <windows.h>
-
 #ifndef GEARS_BASE_COMMON_ATOMIC_OPS_WIN32_H__
 #define GEARS_BASE_COMMON_ATOMIC_OPS_WIN32_H__
+
+#include <windows.h>
 
 typedef intptr_t AtomicWord;
 #ifdef _WIN64
