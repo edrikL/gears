@@ -143,10 +143,10 @@ class SQLDatabase {
   static const char *kUnspecifiedTransactionLabel;
 
   // We set the busy timeout to 5 seconds. What we are basically saying here is
-  // that if a single Scour SQL operation ever takes longer than 5 seconds
-  // something very serious has gone wrong and it should be considered an
-  // error. It may be that there are legitimite reasons for this to be higher,
-  // but let's start out strict and loosen if necessary.
+  // that if a single SQL operation ever takes longer than 5 seconds something
+  // very serious has gone wrong and it should be considered an error. It may
+  // be that there are legitimite reasons for this to be higher, but let's start
+  // out strict and loosen if necessary.
   static const int kBusyTimeout = 5 * 1000;
 
  private:
@@ -166,8 +166,8 @@ class SQLDatabase {
   // Private helper called by CommmitTransaction and RollbackTransaction
   bool EndTransaction(const char *log_label);
 
-  // Creates (if necessary) the directory for the specified scour database 
-  // file, and stores the full path of this file in 'path'. Returns true if
+  // Creates (if necessary) the directory for the specified database file, 
+  // and stores the full path of this file in 'path'. Returns true if 
   // successful.
   static bool GetFullDatabaseFilePath(const char16 *filename, 
                                       std::string16 *path);

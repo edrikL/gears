@@ -34,7 +34,7 @@ void ShutdownThreadMessageQueue();
 class DllModule : public CAtlDllModuleT< DllModule > {
  public:
   DECLARE_LIBID(LIBID_GearsTypelib)
-  DECLARE_REGISTRY_APPID_RESOURCEID(IDR_SCOURIE, \
+  DECLARE_REGISTRY_APPID_RESOURCEID(IDR_GEARSIE, \
   "{B56936F7-0433-4E0B-921B-D095E7142B6D}")
 };
 

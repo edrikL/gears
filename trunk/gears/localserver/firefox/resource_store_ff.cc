@@ -777,7 +777,6 @@ bool GearsResourceStore::ResolveAndAppendUrl(const std::string16 &url,
 // - normalizes the resulting absolute url, ie. removes path navigation
 // - removes the fragment part of the url, ie. truncates at the '#' character
 // - ensures the the resulting url is from the same-origin
-// - rejects the URL to our canned scour.js file as input
 //------------------------------------------------------------------------------
 bool GearsResourceStore::ResolveUrl(const char16 *url,
                                     std::string16 *resolved_url) {

@@ -178,14 +178,14 @@ inline STDMETHODIMP IInternetProtocolImpl::SetTargetUnknown(
     return hr;
   }
 
-  ATLASSERT(m_spInternetProtocolEx == 0);  // scour - added by michaeln
+  ATLASSERT(m_spInternetProtocolEx == 0);  // gears - added by michaeln
   ATLASSERT(m_spInternetProtocolInfo == 0);
   ATLASSERT(m_spInternetPriority == 0);
   ATLASSERT(m_spInternetThreadSwitch == 0);
   ATLASSERT(m_spWinInetInfo == 0);
   ATLASSERT(m_spWinInetHttpInfo == 0);
-  ATLASSERT(m_spWinInetCacheHints == 0);   // scour - added by michaeln
-  ATLASSERT(m_spWinInetCacheHints2 == 0);  // scour - added by michaeln
+  ATLASSERT(m_spWinInetCacheHints == 0);   // gears - added by michaeln
+  ATLASSERT(m_spWinInetCacheHints2 == 0);  // gears - added by michaeln
 
   m_spInternetProtocolUnk = punkTarget;
   return S_OK;
@@ -195,17 +195,17 @@ inline void IInternetProtocolImpl::ReleaseAll()
 {
   m_spInternetProtocolUnk.Release();
   m_spInternetProtocol.Release();
-  m_spInternetProtocolEx.Release();  // scour - added by jabdelmalek
+  m_spInternetProtocolEx.Release();  // gears - added by jabdelmalek
   m_spInternetProtocolInfo.Release();
   m_spInternetPriority.Release();
   m_spInternetThreadSwitch.Release();
   m_spWinInetInfo.Release();
   m_spWinInetHttpInfo.Release();
-  m_spWinInetCacheHints.Release();  // scour - added by michaeln
-  m_spWinInetCacheHints2.Release();  // scour - added by michaeln
+  m_spWinInetCacheHints.Release();  // gears - added by michaeln
+  m_spWinInetCacheHints2.Release();  // gears - added by michaeln
 }
 
-// scour  - added by jabdelmalek
+// gears  - added by jabdelmalek
 // IInternetProtocolEx
 inline STDMETHODIMP IInternetProtocolImpl::StartEx(
     IUri *pUri,
@@ -443,7 +443,7 @@ inline STDMETHODIMP IInternetProtocolImpl::QueryInfo(
       E_UNEXPECTED;
 }
 
-// scour  - added by michaeln
+// gears  - added by michaeln
 // IWinInetCacheHints
 inline STDMETHODIMP IInternetProtocolImpl::SetCacheExtension(
         /* [in] */ LPCWSTR pwzExt,
@@ -459,7 +459,7 @@ inline STDMETHODIMP IInternetProtocolImpl::SetCacheExtension(
       pcbCacheFile, pdwWinInetError, pdwReserved);
 }
 
-// scour  - added by michaeln
+// gears  - added by michaeln
 // IWinInetCacheHints2
 inline STDMETHODIMP IInternetProtocolImpl::SetCacheExtension2(
         /* [in] */ LPCWSTR pwzExt,
@@ -507,7 +507,7 @@ inline HRESULT IInternetProtocolSinkImpl::OnStart(LPCWSTR szUrl,
   return S_OK;
 }
 
-// scour - added by jabdelmalek
+// gears - added by jabdelmalek
 inline HRESULT IInternetProtocolSinkImpl::OnStartEx(
     IUri *pUri,
     IInternetProtocolSink *pOIProtSink,
@@ -596,7 +596,7 @@ inline STDMETHODIMP IInternetProtocolSinkImpl::ReportData(
   /* [in] */ ULONG ulProgressMax)
 {
   ATLASSERT(m_spInternetProtocolSink != 0);
-  return m_spInternetProtocolSink ? 
+  return m_spInternetProtocolSink ?
     m_spInternetProtocolSink->ReportData(grfBSCF, ulProgress, ulProgressMax) :
     E_UNEXPECTED;
 }
@@ -670,7 +670,7 @@ inline HRESULT CInternetProtocolSinkWithSP<T, ThreadModel>::OnStart(
   return hr;
 }
 
-// scour - added by jabdelmalek
+// gears - added by jabdelmalek
 template <class T, class ThreadModel>
 inline HRESULT CInternetProtocolSinkWithSP<T, ThreadModel>::OnStartEx(
     IUri *pUri,
@@ -728,7 +728,7 @@ inline STDMETHODIMP CInternetProtocol<StartPolicy, ThreadModel>::Start(
     dwReserved, m_spInternetProtocol);
 }
 
-// scour - added by jabdelmalek
+// gears - added by jabdelmalek
 template <class StartPolicy, class ThreadModel>
 inline STDMETHODIMP CInternetProtocol<StartPolicy, ThreadModel>::StartEx(
     IUri *pUri,

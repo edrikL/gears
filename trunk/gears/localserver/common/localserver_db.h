@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef GEARS_LOCALSERVER_COMMON_LOCALSERVER_DB_H__
@@ -61,8 +61,8 @@ class SecurityOrigin;
 //------------------------------------------------------------------------------
 class WebCacheDB : SQLTransactionListener {
  public:
-  // Gets a thread-specific WebCacheDB instance. If an instance does not 
-  // yet exist for the current thread, one is created and registered with 
+  // Gets a thread-specific WebCacheDB instance. If an instance does not
+  // yet exist for the current thread, one is created and registered with
   // ThreadLocals.
   static WebCacheDB *GetDB();
 
@@ -345,7 +345,7 @@ class WebCacheDB : SQLTransactionListener {
                int64 *payload_id,
                std::string16 *redirect_url);
 
-  bool ServiceScourJsUrl(bool head_only,
+  bool ServiceGearsJsUrl(bool head_only,
                          PayloadInfo *payload);
 
   // Starts an update task for the specified managed store
@@ -382,7 +382,7 @@ class WebCacheDB : SQLTransactionListener {
   friend class WebCacheFileStore;
   class WebCacheFileStore *response_bodies_store_;
 
-  // Implementation of SQLTransactionListener used to inform the file store 
+  // Implementation of SQLTransactionListener used to inform the file store
   // of transactions
   virtual void OnBegin();
   virtual void OnCommit();

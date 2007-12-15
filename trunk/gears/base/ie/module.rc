@@ -73,7 +73,7 @@ END
 
 
 // Registry (.rgs) files
-IDR_SCOURIE                     REGISTRY  "ie/genfiles/module.rgs"
+IDR_GEARSIE                     REGISTRY  "ie/genfiles/module.rgs"
 IDR_BROWSERHELPEROBJECT         REGISTRY  "ie/genfiles/bho.rgs"
 IDR_GEARSFACTORY                REGISTRY  "ie/genfiles/factory.rgs"
 IDR_TOOLSMENUITEM               REGISTRY  "ie/genfiles/tools_menu_item.rgs"

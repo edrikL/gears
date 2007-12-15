@@ -49,7 +49,7 @@
 // the IElementBehaviorSubmit.GetSubmitInfo method is not called when the
 // hosting element is an <input> element.
 //
-// @see ScourFileSumitter
+// @see GearsFileSubmitter
 //------------------------------------------------------------------------------
 class ATL_NO_VTABLE SubmitFileBehavior
     : public CComObjectRootEx<CComMultiThreadModel>,

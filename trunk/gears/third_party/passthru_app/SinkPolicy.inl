@@ -24,7 +24,7 @@ inline HRESULT NoSinkStartPolicy::OnStart(LPCWSTR szUrl,
     grfPI, dwReserved);
 }
 
-// scour - added by jabdelmalek
+// gears - added by jabdelmalek
 inline HRESULT NoSinkStartPolicy::OnStartEx(IUri *pUri,
     IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,
     DWORD grfPI, HANDLE_PTR dwReserved,
@@ -389,7 +389,7 @@ inline HRESULT CustomSinkStartPolicy<Protocol, Sink>::OnStart(LPCWSTR szUrl,
   return hr;
 }
 
-// scour - added by jabdelmalek
+// gears - added by jabdelmalek
 template <class Protocol, class Sink>
 inline HRESULT CustomSinkStartPolicy<Protocol, Sink>::OnStartEx(IUri *pUri,
     IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,

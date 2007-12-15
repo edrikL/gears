@@ -39,12 +39,12 @@ bool DetectedVersionCollision() {
 }
 
 // We use two named mutex objects to determine if another version of 
-// scour is running.  The first indicates at least one instance of some
-// version of scour is running. The second indicates at least one instance
-// of our version of scour is running. The embedded GUID in the mutex names
+// Gears is running.  The first indicates at least one instance of some
+// version of Gears is running. The second indicates at least one instance
+// of our version of Gears is running. The embedded GUID in the mutex names
 // should not be changed across different versions.
 // TODO(michaeln): Ideally, these should be per user kernel objects rather
-// than per local session to detect when the same user is running scour in
+// than per local session to detect when the same user is running Gears in
 // another windows session. See //depot/googleclient/ci/common/synchronized.cpp
 // for some clues.
 static CMutex running_mutex;
@@ -56,9 +56,9 @@ static const wchar_t *kMutexName =
 static const wchar_t *kOurVersionMutexName =
     L"IsRunning{685E0F7D-005A-40a0-B9F8-168FBA824248}-" PRODUCT_VERSION_STRING;
 
-// Returns true if we detect that a different version of scour is running.
+// Returns true if we detect that a different version of Gears is running.
 // If no collision is detected, leaves mutex handles open to indicate that
-// our version is running.  If a collision is detected, this instance of scour
+// our version is running.  If a collision is detected, this instance of Gears
 // will be crippled, so we close all mutex handles so others don't see this
 // instance as 'running'. Should only be called once.
 static bool OneTimeDetectVersionCollision() {

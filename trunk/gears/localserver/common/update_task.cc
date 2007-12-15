@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
@@ -113,9 +113,9 @@ void UpdateTask::Run() {
                              NULL,
                              NULL);
       } else {
-        store_.SetUpdateInfo(WebCacheDB::UPDATE_FAILED, 
-                             GetCurrentTimeMillis(), 
-                             NULL, 
+        store_.SetUpdateInfo(WebCacheDB::UPDATE_FAILED,
+                             GetCurrentTimeMillis(),
+                             NULL,
                              !error_msg_.empty() ? error_msg_.c_str()
                                                  : kDefaultErrorMessage);
       }
@@ -155,7 +155,7 @@ bool UpdateTask::HttpGetUrl(const char16 *full_url,
   //
   // Our plan of record to detect these kinds of errors is to modify the
   // server side of the webApp to NOT issue 302s to a login page when the
-  // custom "X-Scour-Google" HTTP header is present.  That header indicates
+  // custom "X-Gears-Google" HTTP header is present.  That header indicates
   // a capture request. When that header is seen and the user is not
   // authenticated, the server will respond with an HTTP error instead. Can we
   // impose this requirement on developers?
@@ -222,7 +222,7 @@ bool UpdateTask::UpdateManifest() {
     return false;
   }
 
-  const char16 *actual_manifest_url = was_redirected 
+  const char16 *actual_manifest_url = was_redirected
                                         ? manifest_redirect_url.c_str()
                                         : server.manifest_url.c_str();
   if (was_redirected) {
@@ -301,7 +301,7 @@ bool UpdateTask::UpdateManifest() {
     if (current_version_str && ((*current_version_str) == manifest_version)) {
       // We already have this version as current, so we can delete any others
       LOG(("UpdateTask::UpdateManifest - already current manifest file\n"));
-      if (downloading_version_str && 
+      if (downloading_version_str &&
           !db->DeleteVersion(downloading_version_id)) {
         LOG(("UpdateTask::UpdateManifest - DeleteVersion failed\n"));
         return false;
@@ -412,7 +412,7 @@ bool UpdateTask::DownloadVersion() {
 //------------------------------------------------------------------------------
 // ProcessUrl
 //------------------------------------------------------------------------------
-bool UpdateTask::ProcessUrl(const std::string16 &url, 
+bool UpdateTask::ProcessUrl(const std::string16 &url,
                             WebCacheDB::VersionInfo *version,
                             int64 *payload_id_out) {
   WebCacheDB *db = WebCacheDB::GetDB();

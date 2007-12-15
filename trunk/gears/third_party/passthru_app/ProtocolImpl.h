@@ -100,13 +100,13 @@ HRESULT QueryServicePassthrough(REFGUID guidService,
 
 class ATL_NO_VTABLE IInternetProtocolImpl :
   public IPassthroughObject,
-  // public IInternetProtocol,  // scour -removed by jabdelmalek
-  public IInternetProtocolEx,  // scour - added by jabdelmalek
+  // public IInternetProtocol,  // gears -removed by jabdelmalek
+  public IInternetProtocolEx,  // gears - added by jabdelmalek
   public IInternetProtocolInfo,
   public IInternetPriority,
   public IInternetThreadSwitch,
   public IWinInetHttpInfo,
-  public IWinInetCacheHints2  // scour - added by michaeln
+  public IWinInetCacheHints2  // gears - added by michaeln
 {
 public:
   void ReleaseAll();
@@ -116,7 +116,7 @@ public:
   // IPassthroughObject
   STDMETHODIMP SetTargetUnknown(IUnknown* punkTarget);
 
-  // scour - added by jabdelmalek
+  // gears - added by jabdelmalek
   // IInternetProtocolEx
   STDMETHODIMP StartEx(IUri *pUri,
     IInternetProtocolSink *pOIProtSink,
@@ -222,7 +222,7 @@ public:
     /* [in, out] */ DWORD *pdwReserved);
 
     // IWinInetCacheHints
-    // scour - added by michaeln
+    // gears - added by michaeln
     virtual HRESULT STDMETHODCALLTYPE SetCacheExtension(
         /* [in] */ LPCWSTR pwzExt,
         /* [size_is][out][in] */ LPVOID pszCacheFile,
@@ -231,7 +231,7 @@ public:
         /* [out][in] */ DWORD *pdwReserved);
 
     // IWinInetCacheHints2
-    // scour - added by michaeln
+    // gears - added by michaeln
     virtual HRESULT STDMETHODCALLTYPE SetCacheExtension2(
         /* [in] */ LPCWSTR pwzExt,
         /* [size_is][out] */ WCHAR *pwzCacheFile,
@@ -242,14 +242,14 @@ public:
 public:
   CComPtr<IUnknown> m_spInternetProtocolUnk;
   CComPtr<IInternetProtocol> m_spInternetProtocol;
-  CComPtr<IInternetProtocolEx> m_spInternetProtocolEx;  // scour - added by jabdelmalek
+  CComPtr<IInternetProtocolEx> m_spInternetProtocolEx;  // gears - added by jabdelmalek
   CComPtr<IInternetProtocolInfo> m_spInternetProtocolInfo;
   CComPtr<IInternetPriority> m_spInternetPriority;
   CComPtr<IInternetThreadSwitch> m_spInternetThreadSwitch;
   CComPtr<IWinInetInfo> m_spWinInetInfo;
   CComPtr<IWinInetHttpInfo> m_spWinInetHttpInfo;
-  CComPtr<IWinInetCacheHints> m_spWinInetCacheHints;  // scour - added by michaeln
-  CComPtr<IWinInetCacheHints2> m_spWinInetCacheHints2;  // scour - added by michaeln
+  CComPtr<IWinInetCacheHints> m_spWinInetCacheHints;  // gears - added by michaeln
+  CComPtr<IWinInetCacheHints2> m_spWinInetCacheHints2;  // gears - added by michaeln
 };
 
 class ATL_NO_VTABLE IInternetProtocolSinkImpl :
@@ -262,7 +262,7 @@ public:
     IInternetBindInfo *pOIBindInfo, DWORD grfPI, HANDLE_PTR dwReserved,
     IInternetProtocol* pTargetProtocol);
 
-  // scour - added by jabdelmalek
+  // gears - added by jabdelmalek
   HRESULT OnStartEx(IUri *pUri, IInternetProtocolSink *pOIProtSink,
     IInternetBindInfo *pOIBindInfo, DWORD grfPI, HANDLE_PTR dwReserved,
     IInternetProtocolEx* pTargetProtocol);
@@ -357,7 +357,7 @@ public:
     IInternetBindInfo *pOIBindInfo, DWORD grfPI, HANDLE_PTR dwReserved,
     IInternetProtocol* pTargetProtocol);
 
-  // scour - added by jabdelmalek
+  // gears - added by jabdelmalek
   HRESULT OnStartEx(IUri *pUri, IInternetProtocolSink *pOIProtSink,
     IInternetBindInfo *pOIBindInfo, DWORD grfPI, HANDLE_PTR dwReserved,
     IInternetProtocolEx* pTargetProtocol);
@@ -391,7 +391,7 @@ public:
     COM_INTERFACE_ENTRY(IPassthroughObject)
     COM_INTERFACE_ENTRY(IInternetProtocolRoot)
     COM_INTERFACE_ENTRY(IInternetProtocol)
-    // scour - added by michaeln
+    // gears - added by michaeln
     COM_INTERFACE_ENTRY_PASSTHROUGH2(IInternetProtocolEx,
       m_spInternetProtocolEx.p, IInternetProtocol)
     COM_INTERFACE_ENTRY_PASSTHROUGH(IInternetProtocolInfo,
@@ -403,9 +403,9 @@ public:
     COM_INTERFACE_ENTRY_PASSTHROUGH(IWinInetInfo, m_spWinInetInfo.p)
     COM_INTERFACE_ENTRY_PASSTHROUGH2(IWinInetHttpInfo,
       m_spWinInetHttpInfo.p, IWinInetInfo)
-    // scour - added by michaeln
+    // gears - added by michaeln
     COM_INTERFACE_ENTRY_PASSTHROUGH(IWinInetCacheHints, m_spWinInetCacheHints.p)
-    // scour - added by michaeln
+    // gears - added by michaeln
     COM_INTERFACE_ENTRY_PASSTHROUGH2(IWinInetCacheHints2,
       m_spWinInetCacheHints2.p, IWinInetCacheHints)
     COM_INTERFACE_ENTRY_PASSTHROUGH_DEBUG()
@@ -415,7 +415,7 @@ public:
   STDMETHODIMP Start(LPCWSTR szUrl, IInternetProtocolSink *pOIProtSink,
     IInternetBindInfo *pOIBindInfo, DWORD grfPI, HANDLE_PTR dwReserved);
 
-  // scour - added by jabdelmalek
+  // gears - added by jabdelmalek
   // IInternetProtocolEx
   STDMETHODIMP StartEx(IUri *pUri, IInternetProtocolSink *pOIProtSink,
     IInternetBindInfo *pOIBindInfo, DWORD grfPI, HANDLE_PTR dwReserved);

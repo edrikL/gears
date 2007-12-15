@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,21 +13,21 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Code lifted from google3 to parse HTTP headers.
 // This file is branched from /google3/webutil/http/httputils.h
 //
 // Utilities that are useful for HTTP.  In particular, we
-// can parse http headers.  This includes the "firstline" 
+// can parse http headers.  This includes the "firstline"
 // ("HTTP/1.0") in addition to the "Key: value" lines.
 
 
@@ -261,7 +261,7 @@ class HTTPHeaders {
   // HTTP_ICY is for icecast/shoutcast (http://www.icecast.org/). A typical
   // response is "ICY 200 OK" followed by a bunch of icy-specific response
   // headers.
-  /* Scour deletions
+  /* Gears deletions
   enum HTTPVersion { HTTP_ERROR = 0, HTTP_OTHER = 1, HTTP_ICY = 8,
                      HTTP_09 = 9, HTTP_10 = 10, HTTP_11 = 11 };
   */
@@ -270,7 +270,7 @@ class HTTPHeaders {
   const char* http_version_str() const {
     switch (http_version_) {
       case HTTP_ERROR: return "";
-      /* Scour deletions
+      /* Gears deletions
       case HTTP_OTHER: return "H";       // compact response from google servers
       case HTTP_ICY: return "ICY";       // For icecast/shoutcast.
       case HTTP_09: return "";           // HTTP/0.9 predates version naming
@@ -290,7 +290,7 @@ class HTTPHeaders {
   const char* reason_phrase() const         { return reason_phrase_.c_str(); }
   void set_reason_phrase(const char* rp)     { reason_phrase_.assign(rp); }
 
-  bool IsUsingTooMuchMemory() const { return false; }  // Scour change
+  bool IsUsingTooMuchMemory() const { return false; }  // Gears change
 
   // --- CONVENIENCE MUTATORS -- let you set from a line or lines of text
 

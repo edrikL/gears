@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #import <WebKit/WebKit.h>
@@ -49,7 +49,7 @@
 // "create" function comes through here.
 - (id)createModule:(NSString *)name versionString:(NSString *)versionStr;
 
-// Return the info about this build.  Maps to the script visible "getBuildInfo" 
+// Return the info about this build.  Maps to the script visible "getBuildInfo"
 // function.
 - (NSString *)buildInfo;
 @end
@@ -62,13 +62,13 @@
 - (id)initWithArguments:(NSDictionary *)arguments {
   if ((self = [super init])) {
     arguments_ = [arguments retain];
-    
+
     if (![GearsLoader canLoadGears]) {
       [self release];
       self = nil;
       return self;
     }
-    
+
     factory_ = new GearsFactory();
     NSURL *baseURL = [arguments objectForKey:WebPlugInBaseURLKey];
 
@@ -78,7 +78,7 @@
       return self;
     }
   }
-  
+
   return self;
 }
 
@@ -102,13 +102,13 @@
 - (GearsWorkerSupervisor *)supervisor {
   if (!supervisor_)
     supervisor_ = [[GearsWorkerSupervisor alloc] init];
-  
+
   return supervisor_;
 }
 
 //------------------------------------------------------------------------------
 - (NSString *)resolveURLString:(NSString *)urlString {
-  return [GearsURLUtilities resolveURLString:urlString 
+  return [GearsURLUtilities resolveURLString:urlString
                              usingPluginArgs:arguments_];
 }
 
@@ -139,7 +139,7 @@
     return NO;
   else if (sel == @selector(buildInfo))
     return NO;
-  
+
   return YES;
 }
 
@@ -149,7 +149,7 @@
     return @"create";
   else if (sel == @selector(buildInfo))
     return @"getBuildInfo";
-  
+
   return nil;
 }
 
@@ -175,23 +175,23 @@
   if (HasTimebombExpired())
     ThrowExceptionKeyAndReturnNil(@"expired");
 #endif
-  
+
   std::string16 versionStr;
   if (![version string16:&versionStr])
     ThrowExceptionKeyAndReturnNil(@"invalidVersionFmt", version);
-  
-  if (!HasPermissionToUseScour(factory_)) 
+
+  if (!HasPermissionToUseGears(factory_))
     ThrowExceptionKeyAndReturnNil(@"permissionDenied");
 
   // Initialize to be the current version
   int major_version_desired;
   int minor_version_desired;
-  if (!ParseMajorMinorVersion(versionStr.c_str(), 
-                              &major_version_desired, 
+  if (!ParseMajorMinorVersion(versionStr.c_str(),
+                              &major_version_desired,
                               &minor_version_desired)) {
     ThrowExceptionKeyAndReturnNil(@"invalidVersionFmt", version);
   }
-  
+
   // Determine the class for this name/version
   Class moduleClass = nil;
   if ([name isEqualToString:@"beta.database"]) {
@@ -209,7 +209,7 @@
   } else {
     ThrowExceptionKeyAndReturnNil(@"invalidModuleNameFmt", name);
   }
-  
+
   if (!moduleClass)
     ThrowExceptionKeyAndReturnNil(@"unableToCreateComponentFmt",
                                   name, version);
