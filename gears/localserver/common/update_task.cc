@@ -46,7 +46,19 @@ const char16 *kRedirectErrorMessage =
                   STRING16(L"Illegal redirect to a different origin");
 const char16 *kEmptyManifestErrorMessage =
                   STRING16(L"No content returned");
+const char16 *kManifestKeepsChangingErrorMessage =
+                  STRING16(L"Manifest repeatedly changed during update.");
 
+
+// static
+std::string16 UpdateTask::GetNotificationTopic(ManagedResourceStore *store) {
+  std::string16 topic(STRING16(L"localserver:updatetask:event-"));
+  topic += store->GetSecurityOrigin().url();
+  topic += STRING16(L"-");
+  topic += IntegerToString16(static_cast<int>(store->GetServerID()));
+  // TODO(michaeln): Integer64ToString or hiword/loword yuck
+  return topic;
+}
 
 //------------------------------------------------------------------------------
 // Init
@@ -73,58 +85,96 @@ bool UpdateTask::Init(ManagedResourceStore *store) {
 // Run
 //------------------------------------------------------------------------------
 void UpdateTask::Run() {
-  LOG(("UpdateTask::Run - starting\n"));
+  const char *kLogVersionSwapping =
+      "UpdateTask - swapping new version in\n";
+  const char *kLogVersionSwappingFailed = 
+      "UpdateTask - SetDownloadingVersionAsCurrent failed\n";
+  const char *kLogManifestChanged_Retrying = 
+      "UpdateTask - manifest changed during update, retrying\n";
+  const char *kLogManifestChanged_Failing = 
+      "UpdateTask - manifest changed twice during update, failing\n";
+
+  LOG(("UpdateTask - starting\n"));
 
   bool success = false;
 
   if (is_initialized_ && !is_aborted_) {
     if (store_.SetUpdateInfo(WebCacheDB::UPDATE_CHECKING,
                              GetCurrentTimeMillis(),
-                             NULL,
-                             NULL)) {
+                             NULL, NULL)) {
       SetStartupSignal(true);
 
-      // If the manifest url changes sometime after we start, re-run the task.
-      // This can happen if a JavaScript client sets the ManifestUrl property
-      // while an update task is running.
-      std::string16 manifest_url_at_start;
-      std::string16 manifest_url_at_end;
-      do {
-        success = false;
+      std::string16 downloading_version;
+      std::string16 completed_version;
+      success = UpdateManifest(&downloading_version);
+      if (success && !downloading_version.empty()) {
+        // We have to download a new version
+        int attempt = 0;
+        while (true) {
+          success = DownloadVersion(&completed_version);
+          if (!success)
+            break;
+          assert(downloading_version == completed_version);
 
-        if (!store_.GetManifestUrl(&manifest_url_at_start)) {
-          success = false;
-          break;
-        }
+          // Prior to swapping the new version in, we check for an
+          // updated manifest, it may have changed after we started
+          // downloading the set of urls for the version we've completed.
+          downloading_version.clear();
+          success = UpdateManifest(&downloading_version);
+          if (!success)
+            break;
 
-        if (UpdateManifest()) {
-          success = DownloadVersion();
+          if (downloading_version == completed_version) {
+            // Manifest has not changed
+            LOG((kLogVersionSwapping));
+            if (!store_.SetDownloadingVersionAsCurrent()) {
+              LOG((kLogVersionSwappingFailed));
+              success = false;
+            }
+            break;
+          } else {
+            // Manifest changed
+            const int kMaxManifestChangedRetries = 1;
+            if (attempt >= kMaxManifestChangedRetries) {
+              LOG((kLogManifestChanged_Failing));
+              error_msg_ = kManifestKeepsChangingErrorMessage;
+              success = false;
+              break;
+            }
+            LOG((kLogManifestChanged_Retrying));
+            ++attempt;
+          }
         }
-
-        if (!store_.GetManifestUrl(&manifest_url_at_end)) {
-          success = false;
-          break;
-        }
-      } while(manifest_url_at_start != manifest_url_at_end);
+      }
 
       if (success) {
         store_.SetUpdateInfo(WebCacheDB::UPDATE_OK,
                              GetCurrentTimeMillis(),
-                             NULL,
-                             NULL);
+                             NULL, NULL);
+        NotifyObservers(new CompletionEvent(completed_version.c_str()));
       } else {
+        if (error_msg_.empty()) error_msg_ = kDefaultErrorMessage;
         store_.SetUpdateInfo(WebCacheDB::UPDATE_FAILED,
                              GetCurrentTimeMillis(),
-                             NULL,
-                             !error_msg_.empty() ? error_msg_.c_str()
-                                                 : kDefaultErrorMessage);
+                             NULL, error_msg_.c_str());
+        NotifyObservers(new ErrorEvent(error_msg_.c_str()));
       }
     }
   }
 
   NotifyTaskComplete(success);
-
   LOG(("UpdateTask::Run - finished\n"));
+}
+
+//------------------------------------------------------------------------------
+// NotifyObservers
+//------------------------------------------------------------------------------
+void UpdateTask::NotifyObservers(UpdateTask::Event *event) {
+  if (notification_topic_.empty()) {
+    notification_topic_ = GetNotificationTopic(&store_);
+  }
+  MessageService::GetInstance()->NotifyObservers(notification_topic_.c_str(),
+                                                 event);
 }
 
 //------------------------------------------------------------------------------
@@ -194,7 +244,9 @@ bool UpdateTask::HttpGetUrl(const char16 *full_url,
 //------------------------------------------------------------------------------
 // UpdateManifest
 //------------------------------------------------------------------------------
-bool UpdateTask::UpdateManifest() {
+bool UpdateTask::UpdateManifest(std::string16 *downloading_version) {
+  downloading_version->clear();
+
   WebCacheDB::ServerInfo server;
   if (!store_.GetServer(&server)) {
     return false;
@@ -239,6 +291,9 @@ bool UpdateTask::UpdateManifest() {
     LOG(("UpdateTask::UpdateManifest - received HTTP_NOT_MODIFIED\n"));
     store_.SetUpdateInfo(WebCacheDB::UPDATE_CHECKING,
                          GetCurrentTimeMillis(),  NULL, NULL);
+    store_.GetVersionString(WebCacheDB::VERSION_DOWNLOADING,
+                            downloading_version);
+    return true;
   } else if (manifest_payload.status_code == HttpConstants::HTTP_OK) {
     // Parse the manifest json data
     Manifest manifest;
@@ -306,10 +361,12 @@ bool UpdateTask::UpdateManifest() {
         LOG(("UpdateTask::UpdateManifest - DeleteVersion failed\n"));
         return false;
       }
+      downloading_version->clear();
     } else if (downloading_version_str &&
                ((*downloading_version_str) == manifest_version)) {
       // We're already downloading this version, no action required
       LOG(("UpdateTask::UpdateManifest - already downloading manifest file\n"));
+      *downloading_version = manifest_version;
     } else {
       // We don't know about this version, we need to add it to the DB
       // as the version we're downloading. If we already have a downloading
@@ -327,8 +384,9 @@ bool UpdateTask::UpdateManifest() {
                            GetCurrentTimeMillis(),
                            manifest_date.c_str(),
                            NULL);
+      *downloading_version = manifest_version;
     }
-
+    return true;
   } else {
     // We received a bad response
     LOG(("UpdateTask::UpdateManifest - received bad response %d\n",
@@ -337,16 +395,17 @@ bool UpdateTask::UpdateManifest() {
     SetHttpError(server.manifest_url.c_str(), &manifest_payload.status_code);
     return false;
   }
-
-  return true;
+  // unreachable
 }
 
 //------------------------------------------------------------------------------
 // DownloadVersion
 //------------------------------------------------------------------------------
-bool UpdateTask::DownloadVersion() {
+bool UpdateTask::DownloadVersion(std::string16 *completed_version) {
   typedef std::set<std::string16> String16Set;
   typedef std::vector<WebCacheDB::EntryInfo> EntryInfoVector;
+
+  completed_version->clear();
 
   WebCacheDB *db = WebCacheDB::GetDB();
   if (!db) {
@@ -378,12 +437,14 @@ bool UpdateTask::DownloadVersion() {
     entries.clear();
 
     store_.SetUpdateInfo(WebCacheDB::UPDATE_DOWNLOADING,
-                        GetCurrentTimeMillis(), NULL, NULL);
+                         GetCurrentTimeMillis(), NULL, NULL);
 
     LOG(("UpdateTask::DownloadVersion - %d urls to process\n", urls.size()));
+    NotifyObservers(new ProgressEvent(0, urls.size()));
 
     // Process each unique url, downloading only if needed, and update
     // all relevent entries to refer to the same payload
+    int urls_complete = 0;
     for (String16Set::iterator url = urls.begin(); url != urls.end(); ++url) {
       if (!store_.StillExistsInDB()) {
         LOG(("UpdateTask exitting, store no longer exists\n"));
@@ -395,16 +456,11 @@ bool UpdateTask::DownloadVersion() {
         LOG(("UpdateTask::DownloadVersion - ProcessUrl failed\n"));
         return false;
       }
+      NotifyObservers(new ProgressEvent(++urls_complete, urls.size()));
     }
   }
 
-  // Transition this version from downloading to current
-  if (!store_.SetDownloadingVersionAsCurrent()) {
-    LOG(("UpdateTask::DownloadVersion - "
-         "SetDownloadingVersionAsCurrent failed\n"));
-    return false;
-  }
-
+  *completed_version = version.version_string;
   return true;
 }
 
