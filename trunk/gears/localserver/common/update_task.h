@@ -79,10 +79,10 @@ class UpdateTask : public AsyncTask {
   // Raised on successful completion of an UpdateTask.
   class CompletionEvent : public Event {
    public:
+    CompletionEvent() : Event(COMPLETION_EVENT) {}
     CompletionEvent(const char16 *new_version_string)
       : Event(COMPLETION_EVENT),
-        new_version_string_(new_version_string ? new_version_string 
-                                               : STRING16(L"")) {}
+        new_version_string_(new_version_string) {}
 
     // Indicates if a new version has been swapped into use by this
     // update task. May be empty.
@@ -144,6 +144,8 @@ class UpdateTask : public AsyncTask {
   ManagedResourceStore store_;
 
  private:
+  std::string16 notification_topic_;
+
   // The error message that occurred during Run(). If not set, 
   // a generic error message will be used if the process fails.
   std::string16 error_msg_;
@@ -157,16 +159,18 @@ class UpdateTask : public AsyncTask {
     startup_signal_ = startup;
   }
 
+  void NotifyObservers(Event *event);
+
   // Checks for a new manifest file. If found, inserts the version
   // described in the new manifest into the WebCacheDB. The newly inserted
   // version will be in the downloading state. Any pre-existing version
   // in the downloading ready state is deleted.
-  bool UpdateManifest();
+  bool UpdateManifest(std::string16 *downloading_version);
 
   // If there is a version in the downloading ready state, downloads all
-  // entries that have not yet been downloaded and then transitions the
-  // version to the pending ready state.
-  bool DownloadVersion();
+  // entries that have not yet been downloaded. If a version is completely
+  // downloaded, upon return completed_version will contain the version string.
+  bool DownloadVersion(std::string16 *completed_version);
 
   bool HttpGetUrl(const char16 *full_url,
                   bool is_capturing,
