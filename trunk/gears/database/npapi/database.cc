@@ -69,6 +69,8 @@ void GearsDatabase::Open(JsCallContext *context) {
     { JSPARAM_OPTIONAL, JSPARAM_STRING16, &database_name },
   };
   int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set())
+    return;
 
   std::string16 error_message;
   if (!IsUserInputValidAsPathComponent(database_name, &error_message)) {
@@ -101,14 +103,14 @@ void GearsDatabase::Execute(JsCallContext *context) {
 
   // Get parameters.
   std::string16 expr;
-  JsToken arg_array;
+  JsArray arg_array;
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &expr },
-    { JSPARAM_OPTIONAL, JSPARAM_OBJECT_TOKEN, &arg_array },
+    { JSPARAM_OPTIONAL, JSPARAM_ARRAY, &arg_array },
   };
   int argc = context->GetArguments(ARRAYSIZE(argv), argv);
-  if (argc < 1)
-    return;  // GetArguments sets an error message.
+  if (context->is_exception_set())
+    return;
 
   // Prepare a statement for execution.
 
@@ -160,16 +162,13 @@ void GearsDatabase::Execute(JsCallContext *context) {
 }
 
 bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
-                                        const JsToken *arg_array,
+                                        const JsArray *arg_array,
                                         sqlite3_stmt *stmt) {
   int num_args_expected = sqlite3_bind_parameter_count(stmt);
   int num_args = 0;
 
-  JsArray array;
-
-  if (arg_array && (!array.SetArray(*arg_array, EnvPageJsContext()) ||
-                    !array.GetLength(&num_args))) {
-    context->SetException(STRING16(L"Invalid SQL parameters array."));
+  if (arg_array && !arg_array->GetLength(&num_args)) {
+    context->SetException(STRING16(L"Error finding array length."));
     return false;
   }
 
@@ -184,7 +183,7 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
     std::string16 arg_str;
     int arg_int;
     double arg_double;
-    if (array.GetElementAsString(i, &arg_str)) {
+    if (arg_array->GetElementAsString(i, &arg_str)) {
 // TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
 #ifdef DEBUG
       std::string str_utf8;
@@ -194,10 +193,10 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
       sql_status = sqlite3_bind_text16(
           stmt, sql_index, arg_str.c_str(), -1,
           SQLITE_TRANSIENT); // so SQLite copies string immediately
-    } else if (array.GetElementAsInt(i, &arg_int)) {
+    } else if (arg_array->GetElementAsInt(i, &arg_int)) {
       LOG(("        Parameter %i: %i", i, arg_int));
       sql_status = sqlite3_bind_int(stmt, sql_index, arg_int);
-    } else if (array.GetElementAsDouble(i, &arg_double)) {
+    } else if (arg_array->GetElementAsDouble(i, &arg_double)) {
       LOG(("        Parameter %i: %lf", i, arg_double));
       sql_status = sqlite3_bind_double(stmt, sql_index, arg_double);
     } else {

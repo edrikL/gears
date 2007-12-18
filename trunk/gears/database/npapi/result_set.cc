@@ -156,8 +156,8 @@ void GearsResultSet::Field(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_INT, &index },
   };
   int argc = context->GetArguments(ARRAYSIZE(argv), argv);
-  if (argc < 1)
-    return;  // GetArguments sets an error message.
+  if (context->is_exception_set())
+    return;
 
   FieldImpl(context, index);  // sets the return value/error.
 }
@@ -178,8 +178,8 @@ void GearsResultSet::FieldByName(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &field_name },
   };
   int argc = context->GetArguments(ARRAYSIZE(argv), argv);
-  if (argc < 1)
-    return;  // GetArguments sets an error message.
+  if (context->is_exception_set())
+    return;
 
   // TODO(miket): This is horrible O(n) code but we didn't have a hashtable
   // implementation handy. Fix this!
@@ -216,8 +216,8 @@ void GearsResultSet::FieldName(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_INT, &index },
   };
   int argc = context->GetArguments(ARRAYSIZE(argv), argv);
-  if (argc < 1)
-    return;  // GetArguments sets an error message.
+  if (context->is_exception_set())
+    return;
 
   if ((index < 0) || (index >= sqlite3_column_count(statement_))) {
     context->SetException(STRING16(L"Invalid index."));

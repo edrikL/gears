@@ -122,37 +122,7 @@ class JsRunnerBase : public JsRunnerInterface {
     scoped_array<CComVariant> js_engine_argv(new CComVariant[argc]);
     for (int i = 0; i < argc; ++i) {
       int dest = argc - 1 - i;  // args are expected in reverse order!!
-
-      switch (argv[i].type) {
-        case JSPARAM_BOOL: {
-          const bool *value = static_cast<const bool *>(argv[i].value_ptr);
-          js_engine_argv[dest] = *value;  // CComVariant understands 'bool'
-          break;
-        }
-        case JSPARAM_INT: {
-          const int *value = static_cast<const int *>(argv[i].value_ptr);
-          js_engine_argv[dest] = *value;  // CComVariant understands 'int'
-          break;
-        }
-        case JSPARAM_OBJECT_TOKEN: {
-          const JsRootedToken *value = static_cast<const JsRootedToken *>(
-                                                       argv[i].value_ptr);
-          js_engine_argv[dest] = value->token();  // understands 'IDispatch*'
-          break;
-        }
-        case JSPARAM_STRING16: {
-          const std::string16 *value = static_cast<const std::string16 *>(
-                                                       argv[i].value_ptr);
-          js_engine_argv[dest] = value->c_str();  // copies 'wchar*' for us
-          break;
-        }
-        case JSPARAM_DOUBLE:
-        case JSPARAM_NULL:
-        case JSPARAM_MODULE:
-          // TODO(mpcomplete): not used yet. implement me.
-          assert(false);
-          break;
-      }
+      ConvertJsParamToToken(argv[i], NULL, &js_engine_argv[dest]);
     }
 
     // Invoke the method.

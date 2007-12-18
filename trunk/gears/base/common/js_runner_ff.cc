@@ -172,42 +172,8 @@ class JsRunnerBase : public JsRunnerInterface {
 
     // Setup argument array.
     scoped_array<jsval> js_engine_argv(new jsval[argc]);
-    for (int i = 0; i < argc; ++i) {
-      switch (argv[i].type) {
-        case JSPARAM_BOOL: {
-          const bool *value = static_cast<const bool *>(argv[i].value_ptr);
-          js_engine_argv[i] = *value ? JSVAL_TRUE : JSVAL_FALSE;
-          break;
-        }
-        case JSPARAM_INT: {
-          const int *value = static_cast<const int *>(argv[i].value_ptr);
-          js_engine_argv[i] = INT_TO_JSVAL(*value);
-          break;
-        }
-        case JSPARAM_OBJECT_TOKEN: {
-          const JsRootedToken *value = static_cast<const JsRootedToken *>(
-                                                       argv[i].value_ptr);
-          js_engine_argv[i] = value->token();
-          break;
-        }
-        case JSPARAM_STRING16: {
-          const std::string16 *value = static_cast<const std::string16 *>(
-                                                       argv[i].value_ptr);
-          // TODO(cprince): Does this string copy get freed?
-          JSString *js_string = JS_NewUCStringCopyZ(
-              callback->context(),
-              reinterpret_cast<const jschar *>(value->c_str()));
-          js_engine_argv[i] = STRING_TO_JSVAL(js_string);
-          break;
-        }
-        case JSPARAM_DOUBLE:
-        case JSPARAM_NULL:
-        case JSPARAM_MODULE:
-          // TODO(mpcomplete): not used yet. implement me.
-          assert(false);
-          break;
-      }
-    }
+    for (int i = 0; i < argc; ++i)
+      ConvertJsParamToToken(argv[i], callback->context(), &js_engine_argv[i]);
 
     // Invoke the method.
     return InvokeCallbackSpecialized(callback, argc, js_engine_argv.get(),

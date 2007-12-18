@@ -145,8 +145,8 @@ bool GearsLocalServer::GetAndCheckParameters(JsCallContext *context,
     { JSPARAM_OPTIONAL, JSPARAM_STRING16, required_cookie },
   };
   int argc = context->GetArguments(ARRAYSIZE(argv), argv);
-  if (argc < 1)
-    return false;  // GetArguments sets an error message.
+  if (context->is_exception_set())
+    return false;
 
   // Validate parameters
   if (name->empty()) {

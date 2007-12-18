@@ -115,7 +115,7 @@ class JsRunnerBase : public JsRunnerInterface {
     // Setup argument array.
     scoped_array<ScopedNPVariant> js_engine_argv(new ScopedNPVariant[argc]);
     for (int i = 0; i < argc; ++i)
-      ConvertJsParamToToken(argv[i], &js_engine_argv[i]);
+      ConvertJsParamToToken(argv[i], GetContext(), &js_engine_argv[i]);
 
     // Invoke the method.
     NPVariant retval;

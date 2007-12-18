@@ -56,7 +56,7 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
   return true;
 }
 
-bool JsArray::GetLength(int *length) {
+bool JsArray::GetLength(int *length) const {
   jsuint array_length;
   if (JS_GetArrayLength(js_context_,
                         JSVAL_TO_OBJECT(array_), &array_length)) {
@@ -67,7 +67,7 @@ bool JsArray::GetLength(int *length) {
   return false;
 }
 
-bool JsArray::GetElement(int index, JsScopedToken *out) {
+bool JsArray::GetElement(int index, JsScopedToken *out) const {
   if (!array_) return false;
 
   return JS_GetElement(js_context_, JSVAL_TO_OBJECT(array_),
@@ -87,7 +87,7 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
   return true;
 }
 
-bool JsArray::GetLength(int *length) {
+bool JsArray::GetLength(int *length) const {
   if (array_.vt != VT_DISPATCH) return false;
 
   VARIANT out;
@@ -102,7 +102,7 @@ bool JsArray::GetLength(int *length) {
   return true;
 }
 
-bool JsArray::GetElement(int index, JsScopedToken *out) {
+bool JsArray::GetElement(int index, JsScopedToken *out) const {
   if (array_.vt != VT_DISPATCH) return false;
 
   std::string16 name = IntegerToString16(index);
@@ -145,7 +145,7 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
   return true;
 }
 
-bool JsArray::GetLength(int *length) {
+bool JsArray::GetLength(int *length) const {
   if (!NPVARIANT_IS_OBJECT(array_)) return false;
 
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
@@ -159,7 +159,7 @@ bool JsArray::GetLength(int *length) {
   return JsTokenToInt(np_length, js_context_, length);
 }
 
-bool JsArray::GetElement(int index, JsScopedToken *out) {
+bool JsArray::GetElement(int index, JsScopedToken *out) const {
   if (!NPVARIANT_IS_OBJECT(array_)) return false;
 
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
@@ -176,46 +176,53 @@ bool JsArray::GetElement(int index, JsScopedToken *out) {
 
 // Common JsArray functions
 
-bool JsArray::GetElementAsBool(int index, bool *out) {
+bool JsArray::GetElementAsBool(int index, bool *out) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return JsTokenToBool(token, js_context_, out);
 }
 
-bool JsArray::GetElementAsInt(int index, int *out) {
+bool JsArray::GetElementAsInt(int index, int *out) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return JsTokenToInt(token, js_context_, out);
 }
 
-bool JsArray::GetElementAsDouble(int index, double *out) {
+bool JsArray::GetElementAsDouble(int index, double *out) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return JsTokenToDouble(token, js_context_, out);
 }
 
-bool JsArray::GetElementAsString(int index, std::string16 *out) {
+bool JsArray::GetElementAsString(int index, std::string16 *out) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return JsTokenToString(token, js_context_, out);
 }
 
-bool JsArray::GetElementAsArray(int index, JsArray *out) {
+bool JsArray::GetElementAsArray(int index, JsArray *out) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return out->SetArray(token, js_context_);
 }
 
-bool JsArray::GetElementAsObject(int index, JsObject *out) {
+bool JsArray::GetElementAsObject(int index, JsObject *out) const {
   JsScopedToken token;
   if (!GetElement(index, &token)) return false;
 
   return out->SetObject(token, js_context_);
+}
+
+bool JsArray::GetElementAsFunction(int index, JsRootedCallback **out) const {
+  JsScopedToken token;
+  if (!GetElement(index, &token)) return false;
+
+  return JsTokenToNewCallback(token, js_context_, out);
 }
 
 // Browser specific JsObject functions.
@@ -234,7 +241,8 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
   return false;
 }
 
-bool JsObject::GetProperty(const std::string16 &name, JsScopedToken *out) {
+bool JsObject::GetProperty(const std::string16 &name,
+                           JsScopedToken *out) const {
   if (!js_object_) return false;
 
   return JS_GetUCProperty(js_context_, JSVAL_TO_OBJECT(js_object_),
@@ -255,7 +263,8 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
   return true;
 }
 
-bool JsObject::GetProperty(const std::string16 &name, JsScopedToken *out) {
+bool JsObject::GetProperty(const std::string16 &name,
+                           JsScopedToken *out) const {
   if (js_object_.vt != VT_DISPATCH) return false;
 
   return SUCCEEDED(ActiveXUtils::GetDispatchProperty(js_object_.pdispVal,
@@ -279,7 +288,8 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
   return false;
 }
 
-bool JsObject::GetProperty(const std::string16 &name, JsScopedToken *out) {
+bool JsObject::GetProperty(const std::string16 &name,
+                           JsScopedToken *out) const {
   if (!NPVARIANT_IS_OBJECT(js_object_)) return false;
 
   std::string name_utf8;
@@ -295,21 +305,22 @@ bool JsObject::GetProperty(const std::string16 &name, JsScopedToken *out) {
 
 // Common JsObject functions
 
-bool JsObject::GetPropertyAsBool(const std::string16 &name, bool *out) {
+bool JsObject::GetPropertyAsBool(const std::string16 &name, bool *out) const {
   JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
   return JsTokenToBool(token, js_context_, out);
 }
 
-bool JsObject::GetPropertyAsInt(const std::string16 &name, int *out) {
+bool JsObject::GetPropertyAsInt(const std::string16 &name, int *out) const {
   JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
   return JsTokenToInt(token, js_context_, out);
 }
 
-bool JsObject::GetPropertyAsDouble(const std::string16 &name, double *out) {
+bool JsObject::GetPropertyAsDouble(const std::string16 &name,
+                                   double *out) const {
   JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
@@ -317,25 +328,35 @@ bool JsObject::GetPropertyAsDouble(const std::string16 &name, double *out) {
 }
 
 bool JsObject::GetPropertyAsString(const std::string16 &name,
-                                   std::string16 *out) {
+                                   std::string16 *out) const {
   JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
   return JsTokenToString(token, js_context_, out);
 }
 
-bool JsObject::GetPropertyAsArray(const std::string16 &name, JsArray *out) {
+bool JsObject::GetPropertyAsArray(const std::string16 &name,
+                                  JsArray *out) const {
   JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
   return out->SetArray(token, js_context_);
 }
 
-bool JsObject::GetPropertyAsObject(const std::string16 &name, JsObject *out) {
+bool JsObject::GetPropertyAsObject(const std::string16 &name,
+                                   JsObject *out) const {
   JsScopedToken token;
   if (!GetProperty(name, &token)) return false;
 
   return out->SetObject(token, js_context_);
+}
+
+bool JsObject::GetPropertyAsFunction(const std::string16 &name,
+                                     JsRootedCallback **out) const {
+  JsScopedToken token;
+  if (!GetProperty(name, &token)) return false;
+
+  return JsTokenToNewCallback(token, js_context_, out);
 }
 
 #if BROWSER_FF
@@ -384,6 +405,17 @@ bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
   return true;
 }
 
+bool JsTokenToNewCallback(JsToken t, JsContextPtr cx, JsRootedCallback **out) {
+  // We allow null or undefined rooted callbacks but not non-function values.
+  if (!JsTokenIsNullOrUndefined(t)) {
+    JSObject *obj = JSVAL_TO_OBJECT(t);
+    if (!JS_ObjectIsFunction(cx, obj)) { return false; }
+  }
+
+  *out = new JsRootedCallback(cx, t);
+  return true;
+}
+
 bool JsTokenIsNullOrUndefined(JsToken t) {
   return JSVAL_IS_NULL(t) || JSVAL_IS_VOID(t); // null or undefined
 }
@@ -411,6 +443,16 @@ bool JsTokenToDouble(JsToken t, JsContextPtr cx, double *out) {
 bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
   if (t.vt != VT_BSTR) { return false; }
   out->assign(t.bstrVal);
+  return true;
+}
+
+bool JsTokenToNewCallback(JsToken t, JsContextPtr cx, JsRootedCallback **out) {
+  // We allow null or undefined rooted callbacks but not non-function values.
+  if (!JsTokenIsNullOrUndefined(t)) {
+    if (t.vt != VT_DISPATCH) { return false; }
+  }
+
+  *out = new JsRootedCallback(cx, t);
   return true;
 }
 
@@ -464,9 +506,22 @@ bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
   return UTF8ToString16(str.utf8characters, str.utf8length, out);
 }
 
+bool JsTokenToNewCallback(JsToken t, JsContextPtr cx, JsRootedCallback **out) {
+  // We allow null or undefined rooted callbacks but not non-function values.
+  if (!JsTokenIsNullOrUndefined(t)) {
+    // TODO(mpcomplete): is there any way to check if an object is a function?
+    if (!NPVARIANT_IS_OBJECT(t)) { return false; }
+  }
+
+  *out = new JsRootedCallback(cx, t);
+  return true;
+}
+
 bool JsTokenIsNullOrUndefined(JsToken t) {
   return NPVARIANT_IS_NULL(t) || NPVARIANT_IS_VOID(t);
 }
+
+// ScopedNPVariant functions.
 
 void ScopedNPVariant::Reset() {
   NPN_ReleaseVariantValue(this);
@@ -518,8 +573,147 @@ void ScopedNPVariant::Release() {
   VOID_TO_NPVARIANT(*this);
 }
 
+#endif
+
+// Browser-specific JsCallContext functions.
+#if BROWSER_FF
+
 void ConvertJsParamToToken(const JsParamToSend &param,
-                           ScopedNPVariant *variant) {
+                           JsContextPtr context, JsScopedToken *token) {
+  switch (param.type) {
+    case JSPARAM_BOOL: {
+      const bool *value = static_cast<const bool *>(param.value_ptr);
+      *token = *value ? JSVAL_TRUE : JSVAL_FALSE;
+      break;
+    }
+    case JSPARAM_INT: {
+      const int *value = static_cast<const int *>(param.value_ptr);
+      *token = INT_TO_JSVAL(*value);
+      break;
+    }
+    case JSPARAM_DOUBLE: {
+      const double *value = static_cast<const double *>(param.value_ptr);
+      *token = DOUBLE_TO_JSVAL(*value);
+      break;
+    }
+    case JSPARAM_TOKEN: {
+      const JsRootedToken *value = static_cast<const JsRootedToken *>(
+                                                   param.value_ptr);
+      *token = value->token();
+      break;
+    }
+    case JSPARAM_STRING16: {
+      const std::string16 *value = static_cast<const std::string16 *>(
+                                                   param.value_ptr);
+      // TODO(cprince): Does this string copy get freed?
+      JSString *js_string = JS_NewUCStringCopyZ(
+          context,
+          reinterpret_cast<const jschar *>(value->c_str()));
+      *token = STRING_TO_JSVAL(js_string);
+      break;
+    }
+    case JSPARAM_OBJECT: {
+      const JsObject *value = static_cast<const JsObject *>(param.value_ptr);
+      *token = value->js_object_;
+      break;
+    }
+    case JSPARAM_ARRAY: {
+      const JsArray *value = static_cast<const JsArray *>(param.value_ptr);
+      *token = value->array_;
+      break;
+    }
+    case JSPARAM_FUNCTION: {
+      const JsRootedCallback *value = static_cast<const JsRootedCallback *>(
+                                                   param.value_ptr);
+      *token = value->token();
+      break;
+    }
+    case JSPARAM_MODULE: {
+#if 0
+      const ModuleImplBaseClass *value =
+          static_cast<const ModuleImplBaseClass *>(param.value_ptr);
+      *token = value->GetWrapperToken();
+#endif
+      assert(false);  // TODO(mpcomplete): implement GetWrapperToken().
+      break;
+    }
+    case JSPARAM_NULL:
+      *token = JSVAL_NULL;
+      break;
+    default:
+      assert(false);
+  }
+}
+
+#elif BROWSER_IE
+
+void ConvertJsParamToToken(const JsParamToSend &param,
+                           JsContextPtr context, CComVariant *token) {
+  switch (param.type) {
+    case JSPARAM_BOOL: {
+      const bool *value = static_cast<const bool *>(param.value_ptr);
+      *token = *value;  // CComVariant understands 'bool'
+      break;
+    }
+    case JSPARAM_INT: {
+      const int *value = static_cast<const int *>(param.value_ptr);
+      *token = *value;  // CComVariant understands 'int'
+      break;
+    }
+    case JSPARAM_DOUBLE: {
+      const double *value = static_cast<const double *>(param.value_ptr);
+      *token = *value;  // CComVariant understands 'double'
+      break;
+    }
+    case JSPARAM_TOKEN: {
+      const JsRootedToken *value = static_cast<const JsRootedToken *>(
+                                                   param.value_ptr);
+      *token = value->token();  // understands 'IDispatch*'
+      break;
+    }
+    case JSPARAM_STRING16: {
+      const std::string16 *value = static_cast<const std::string16 *>(
+                                                   param.value_ptr);
+      *token = value->c_str();  // copies 'wchar*' for us
+      break;
+    }
+    case JSPARAM_OBJECT: {
+      const JsObject *value = static_cast<const JsObject *>(param.value_ptr);
+      *token = value->js_object_;
+      break;
+    }
+    case JSPARAM_ARRAY: {
+      const JsArray *value = static_cast<const JsArray *>(param.value_ptr);
+      *token = value->array_;
+      break;
+    }
+    case JSPARAM_FUNCTION: {
+      const JsRootedCallback *value = static_cast<const JsRootedCallback *>(
+                                                   param.value_ptr);
+      *token = value->token();
+      break;
+    }
+    case JSPARAM_MODULE: {
+#if 0
+      const ModuleImplBaseClass *value =
+          static_cast<const ModuleImplBaseClass *>(param.value_ptr);
+      *token = value->GetWrapperToken();
+#endif
+      assert(false);  // TODO(mpcomplete): implement GetWrapperToken().
+      break;
+    }
+    case JSPARAM_NULL:
+      *token = VT_NULL;
+      break;
+    default:
+      assert(false);
+  }
+}
+
+#elif BROWSER_NPAPI
+
+void ConvertJsParamToToken(const JsParamToSend &param,
+                           JsContextPtr context, JsScopedToken *variant) {
   switch (param.type) {
     case JSPARAM_BOOL: {
       const bool *value = static_cast<const bool *>(param.value_ptr);
@@ -542,7 +736,23 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       variant->Reset(NPVARIANT_TO_OBJECT(value->GetWrapperToken()));
       break;
     }
-    case JSPARAM_OBJECT_TOKEN: {
+    case JSPARAM_OBJECT: {
+      const JsObject *value = static_cast<const JsObject *>(param.value_ptr);
+      variant->Reset(NPVARIANT_TO_OBJECT(value->js_object_));
+      break;
+    }
+    case JSPARAM_ARRAY: {
+      const JsArray *value = static_cast<const JsArray *>(param.value_ptr);
+      variant->Reset(NPVARIANT_TO_OBJECT(value->array_));
+      break;
+    }
+    case JSPARAM_FUNCTION: {
+      const JsRootedCallback *value =
+          static_cast<const JsRootedCallback *>(param.value_ptr);
+      variant->Reset(NPVARIANT_TO_OBJECT(value->token()));
+      break;
+    }
+    case JSPARAM_TOKEN: {
       const JsToken *value = static_cast<const JsToken *>(param.value_ptr);
       variant->Reset(NPVARIANT_TO_OBJECT(*value));
       break;
@@ -587,7 +797,35 @@ static bool ConvertTokenToArgument(JsCallContext *context,
       }
       break;
     }
-    case JSPARAM_OBJECT_TOKEN: {
+    case JSPARAM_OBJECT: {
+      JsObject *value = static_cast<JsObject *>(param->value_ptr);
+      if (!value->SetObject(variant, context->js_context())) {
+        context->SetException(
+            STRING16(L"Invalid argument type: expected object."));
+        return false;
+      }
+      break;
+    }
+    case JSPARAM_ARRAY: {
+      JsArray *value = static_cast<JsArray *>(param->value_ptr);
+      if (!value->SetArray(variant, context->js_context())) {
+        context->SetException(
+            STRING16(L"Invalid argument type: expected array."));
+        return false;
+      }
+      break;
+    }
+    case JSPARAM_FUNCTION: {
+      JsRootedCallback **value =
+          static_cast<JsRootedCallback **>(param->value_ptr);
+      if (!JsTokenToNewCallback(variant, context->js_context(), value)) {
+        context->SetException(
+            STRING16(L"Invalid argument type: expected function."));
+        return false;
+      }
+      break;
+    }
+    case JSPARAM_TOKEN: {
       JsToken *value = static_cast<JsToken *>(param->value_ptr);
       if (!NPVARIANT_IS_OBJECT(variant)) {
         // TODO(mpcomplete): should we accept null/void here?
@@ -648,7 +886,7 @@ void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
 
   JsParamToSend retval = { type, value_ptr };
   ScopedNPVariant np_retval;
-  ConvertJsParamToToken(retval, &np_retval);
+  ConvertJsParamToToken(retval, js_context(), &np_retval);
   *retval_ = np_retval;
 
   // In NPAPI, return values from callbacks are released by the browser.
@@ -669,6 +907,8 @@ void JsCallContext::SetReturnValue(JsParamType type,
 
 void JsCallContext::SetException(const std::string16 &message) {
   LOG((message.c_str()));
+
+  is_exception_set_ = true;
 
   std::string message_utf8;
   if (!String16ToUTF8(message.data(), message.length(), &message_utf8))

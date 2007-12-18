@@ -64,6 +64,8 @@ typedef NPError JsNativeMethodRetval;
 
 #endif
 
+class JsRootedToken;
+typedef JsRootedToken JsRootedCallback;
 
 // Utility functions to convert JsToken to various primitives.
 // TODO(aa): Add coercion to these functions (since they include the word "to")
@@ -72,6 +74,7 @@ bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out);
 bool JsTokenToInt(JsToken t, JsContextPtr cx, int *out);
 bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out);
 bool JsTokenToDouble(JsToken t, JsContextPtr cx, double *out);
+bool JsTokenToNewCallback(JsToken t, JsContextPtr cx, JsRootedCallback **out);
 
 // Utility function to check for the JavaScript values null and undefined. We
 // usually treat these two identically to prevent confusion.
@@ -224,20 +227,27 @@ typedef void  JsNativeMethodRetval;
 // because Firefox only gives us a weak pointer to the value.
 
 class JsObject;
+struct JsParamToSend;
 
 class JsArray {
  public:
   JsArray();
-  bool GetElement(int index, JsScopedToken *out);
+  bool GetElement(int index, JsScopedToken *out) const;
   bool SetArray(JsToken value, JsContextPtr context);
-  bool GetElementAsBool(int index, bool *out);
-  bool GetElementAsInt(int index, int *out);
-  bool GetElementAsDouble(int index, double *out);
-  bool GetElementAsString(int index, std::string16 *out);
-  bool GetElementAsArray(int index, JsArray *out);
-  bool GetElementAsObject(int index, JsObject *out);
-  bool GetLength(int *length);
+  bool GetElementAsBool(int index, bool *out) const;
+  bool GetElementAsInt(int index, int *out) const;
+  bool GetElementAsDouble(int index, double *out) const;
+  bool GetElementAsString(int index, std::string16 *out) const;
+  bool GetElementAsArray(int index, JsArray *out) const;
+  bool GetElementAsObject(int index, JsObject *out) const;
+  bool GetElementAsFunction(int index, JsRootedCallback **out) const;
+  bool GetLength(int *length) const;
  private:
+  // Needs access to the raw JsToken.
+  friend void ConvertJsParamToToken(const JsParamToSend &param,
+                                    JsContextPtr context,
+                                    JsScopedToken *token);
+
   JsContextPtr js_context_;
   JsScopedToken array_;
 };
@@ -245,29 +255,37 @@ class JsArray {
 class JsObject {
  public:
   JsObject();
-  bool GetProperty(const std::string16 &name, JsScopedToken *value);
+  bool GetProperty(const std::string16 &name, JsScopedToken *value) const;
   bool SetObject(JsToken value, JsContextPtr context);
-  bool GetPropertyAsBool(const std::string16 &name, bool *out);
-  bool GetPropertyAsInt(const std::string16 &name, int *out);
-  bool GetPropertyAsString(const std::string16 &name, std::string16 *out);
-  bool GetPropertyAsArray(const std::string16 &name, JsArray *out);
-  bool GetPropertyAsObject(const std::string16 &name, JsObject *out);
-  bool GetPropertyAsDouble(const std::string16 &name, double *out);
+  bool GetPropertyAsBool(const std::string16 &name, bool *out) const;
+  bool GetPropertyAsInt(const std::string16 &name, int *out) const;
+  bool GetPropertyAsString(const std::string16 &name, std::string16 *out) const;
+  bool GetPropertyAsArray(const std::string16 &name, JsArray *out) const;
+  bool GetPropertyAsObject(const std::string16 &name, JsObject *out) const;
+  bool GetPropertyAsDouble(const std::string16 &name, double *out) const;
+  bool GetPropertyAsFunction(const std::string16 &name,
+                             JsRootedCallback **out) const;
  private:
+  // Needs access to the raw JsToken.
+  friend void ConvertJsParamToToken(const JsParamToSend &param,
+                                    JsContextPtr context,
+                                    JsScopedToken *token);
+
   JsContextPtr js_context_;
   JsScopedToken js_object_;
 };
-
-typedef JsRootedToken JsRootedCallback;
 
 // The JsParam* types define values for sending and receiving JS parameters.
 enum JsParamType {
   JSPARAM_BOOL,
   JSPARAM_INT,  // TODO(mpcomplete): deprecate in favor of double?
   JSPARAM_DOUBLE,
-  // TODO(mpcomplete): split this next into OBJECT, ARRAY, FUNCTION, and TOKEN
-  JSPARAM_OBJECT_TOKEN,
   JSPARAM_STRING16,
+  JSPARAM_OBJECT,
+  JSPARAM_ARRAY,
+  JSPARAM_FUNCTION,
+  // TODO(mpcomplete): make JsRunner::NewObject return a JsObject
+  JSPARAM_TOKEN,  // avoid if possible
   JSPARAM_MODULE,
   JSPARAM_NULL,
 };
@@ -308,7 +326,8 @@ class JsCallContext {
   JsCallContext(JsContextPtr js_context, NPObject *object,
                 int argc, const JsToken *argv, JsToken *retval)
       : js_context_(js_context), object_(object),
-        argc_(argc), argv_(argv), retval_(retval) {}
+        argc_(argc), argv_(argv), retval_(retval),
+        is_exception_set_(false) {}
 
   // Get the arguments a JavaScript caller has passed into a scriptable method
   // of a native object.  Returns the number of arguments successfully read
@@ -333,6 +352,7 @@ class JsCallContext {
   void SetException(const std::string16 &message);
 
   JsContextPtr js_context() { return js_context_; }
+  bool is_exception_set() { return is_exception_set_; }
 
  private:
    JsContextPtr js_context_;
@@ -340,16 +360,14 @@ class JsCallContext {
    int argc_;
    const JsToken *argv_;
    JsToken *retval_;
+   bool is_exception_set_;
 };
 #endif
 
-// Temporary: npapi only.
-#if BROWSER_NPAPI
-// Given a JsParamToSend, extract it into a ScopedNPVariant.  Resulting
-// variant increases the reference count for objects.
+// Given a JsParamToSend, extract it into a JsScopedToken.  Resulting token
+// increases the reference count for objects.
 void ConvertJsParamToToken(const JsParamToSend &param,
-                           ScopedNPVariant *variant);
-#endif
+                           JsContextPtr context, JsScopedToken *token);
 
 //-----------------------------------------------------------------------------
 #if BROWSER_FF  // the rest of this file only applies to Firefox, for now
