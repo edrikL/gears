@@ -3,9 +3,9 @@
 
 = Introduction =
 
-A blob is an object representing file data.  It is retrievable, for example, from a resource store or from a HttpRequest or some other source of file data.  It can be saved back to a resource store or to a POST request via HttpRequest.  Other modules, such as ImageManipulationAPI, can edit blobs.
+A blob is an object representing file data.  It is retrievable, for example, from a resource store or from a !HttpRequest or some other source of file data.  It can be saved back to a resource store or to a POST request via !HttpRequest.  Other modules, such as ImageManipulationAPI, can edit blobs.
 
-Blob data cannot be accessed from Javascript.  Only metadata can be read.  Blobs can only be created and modified by other modules.
+Blob data cannot be accessed from !JavaScript.  Only metadata can be read.  Blobs can only be created and modified by other modules.
 
 = Details =
 
@@ -37,18 +37,18 @@ Additionally, the implementation will expose methods for mutation and for
 access to the data pointer from within other modules within Gears (from C++)
 
 {{{
-  bool SetData(const std::vector<uint8> &data);
+  bool SetData(const std::vector<uint8> & data);
   const std::vector<uint8> &GetData();
 }}}
 
-=== bool SetData(const std::vector<uint8> &data) ===
+=== bool !SetData(const std::vector<uint8> &data) ===
 Makes a copy of the data referenced by _data_ into the blob.  Any previous data
 stored in the blob is destroyed and can no longer be referenced.
 
-=== const std::vector<uint8> &GetData() ===
+=== const std::vector<uint8> & !GetData() ===
 Returns a reference to the data wrapped inside the blob.  Note that this is a
 reference to internals of the blob!  This means the reference is only valid
-up until a SetData() is called, or the blob is destroyed.  For example,
+up until a !SetData() is called, or the blob is destroyed.  For example,
 {{{
   const std::vector<uint8> &eg1 = blob.GetData();  // use as a reference 
   const std::vector<uint8> *eg2 = &blob.GetData(); // pointer alternative
