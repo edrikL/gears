@@ -371,3 +371,118 @@ function testIllegalRedirectManifest() {
     }
   );
 }
+
+function testManagedResourceStoreCallbacks() {
+  startAsync();
+  var completed = false;
+  var progress = 0;
+  var FILES_TOTAL = 1;
+  var managedStore = getFreshManagedStore();
+  managedStore.manifestUrl = '/testcases/manifest-good.txt';
+
+  managedStore.onprogress = function(e) {
+    assert(e.filesTotal == FILES_TOTAL, 'Wrong filesTotal in onprogress.');
+    assert(e.filesComplete <= FILES_TOTAL,
+           'filesComplete out of range in onprogress');
+    progress += 1;
+  }
+  managedStore.oncomplete = function(e) {
+    assert(e.newVersion == '1', 'Incorrect version in oncomplete.');
+    completed = true;
+  }
+  managedStore.checkForUpdate();
+
+  // Wait for the update to complete
+  var timerId = timer.setTimeout(function() {
+    assert(completed, 'completed wasn\'t set.');
+    assert(progress == FILES_TOTAL + 1,
+           'onprogress called incorrect number of times.');
+    completeAsync();
+  }, 200);
+}
+
+function testManagedResourceStoreThreads() {
+  startAsync();
+  var completed = false;
+  var progress = 0;
+  var FILES_TOTAL = 1;
+  var managedStore = getFreshManagedStore();
+  managedStore.manifestUrl = '/testcases/manifest-good.txt';
+
+  managedStore.onprogress = function(e) {
+    assert(e.filesTotal == FILES_TOTAL, 'Wrong filesTotal in onprogress.');
+    assert(e.filesComplete <= FILES_TOTAL,
+           'filesComplete out of range in onprogress');
+    progress += 1;
+  }
+  managedStore.oncomplete = function(e) {
+    assert(e.newVersion == '1', 'Incorrect version in oncomplete.');
+    completed = true;
+  }
+
+  // Wait for the update to complete
+  var timerId = timer.setTimeout(function() {
+    assert(completed, 'completed wasn\'t set.');
+    assert(progress == FILES_TOTAL + 1,
+           'onprogress called incorrect number of times.');
+    completeAsync();
+  }, 200);
+
+  var workerpool = google.gears.factory.create('beta.workerpool');
+  var workerId = workerpool.createWorker(String(workerInit) +
+                                         String(workerOnMessage) +
+                                         'workerInit();');
+
+  workerpool.sendMessage(managedStore.name, workerId);
+
+  function workerInit() {
+    google.gears.workerPool.onmessage = workerOnMessage;
+  }
+
+  function workerOnMessage(text, sender, m) {
+    var localserver = google.gears.factory.create('beta.localserver');
+    var managedStore = localserver.openManagedStore(text);
+    managedStore.checkForUpdate();
+  }
+}
+
+function testManagedResourceStoreErrorCallback() {
+  startAsync();
+  var managedStore = getFreshManagedStore();
+  managedStore.manifestUrl = '/testcases/manifest-bad.txt';
+
+  managedStore.onerror = function(e) {
+    assert(e.message.startsWith('Download of'), 'Error string was incorrect.');
+    completeAsync();
+  }
+
+  managedStore.checkForUpdate();
+}
+
+function testManagedResourceStoreErrorThreads() {
+  startAsync();
+  var managedStore = getFreshManagedStore();
+  managedStore.manifestUrl = '/testcases/manifest-bad.txt';
+
+  managedStore.onerror = function(e) {
+    assert(e.message.startsWith('Download of'), 'Error string was incorrect.');
+    completeAsync();
+  }
+
+  var workerpool = google.gears.factory.create('beta.workerpool');
+  var workerId = workerpool.createWorker(String(workerInit) +
+                                         String(workerOnMessage) +
+                                         'workerInit();');
+
+  workerpool.sendMessage(managedStore.name, workerId);
+
+  function workerInit() {
+    google.gears.workerPool.onmessage = workerOnMessage;
+  }
+
+  function workerOnMessage(text, sender, m) {
+    var localserver = google.gears.factory.create('beta.localserver');
+    var managedStore = localserver.openManagedStore(text);
+    managedStore.checkForUpdate();
+  }
+}
