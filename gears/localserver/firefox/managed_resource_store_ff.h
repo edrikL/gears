@@ -29,6 +29,8 @@
 #include "ff/genfiles/localserver.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_runner.h"
+#include "gears/base/common/message_service.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/localserver/common/managed_resource_store.h"
 #include "gears/localserver/firefox/update_task_ff.h"
@@ -43,13 +45,19 @@ extern const nsCID kGearsManagedResourceStoreClassId;
 class GearsManagedResourceStore
     : public ModuleImplBaseClass,
       public GearsManagedResourceStoreInterface,
-      private AsyncTask::Listener {
+      private AsyncTask::Listener,
+      public MessageObserverInterface,
+      public JsEventHandlerInterface  {
  public:
   NS_DECL_ISUPPORTS
   GEARS_IMPL_BASECLASS
   // End boilerplate code. Begin interface.
 
   GearsManagedResourceStore() {}
+  void HandleEvent(JsEventType event_type);
+  virtual void OnNotify(MessageService *service,
+                        const char16 *topic,
+                        const NotificationData *data);
 
   NS_IMETHOD GetName(nsAString &name);
   NS_IMETHOD GetRequiredCookie(nsAString &cookie);
@@ -60,6 +68,12 @@ class GearsManagedResourceStore
   NS_IMETHOD GetLastUpdateCheckTime(PRInt32 *time);
   NS_IMETHOD GetUpdateStatus(PRInt32 *status);
   NS_IMETHOD GetLastErrorMessage(nsAString &error_message_out);
+  NS_IMETHOD SetOnerror(nsIVariant *in_handler);
+  NS_IMETHOD GetOnerror(nsIVariant **out_handler);
+  NS_IMETHOD SetOnprogress(nsIVariant *in_handler);
+  NS_IMETHOD GetOnprogress(nsIVariant **out_handler);
+  NS_IMETHOD SetOncomplete(nsIVariant *in_handler);
+  NS_IMETHOD GetOncomplete(nsIVariant **out_handler);
   NS_IMETHOD CheckForUpdate();
   NS_IMETHOD GetCurrentVersion(nsAString &ver);
 
@@ -70,9 +84,15 @@ class GearsManagedResourceStore
   virtual void HandleEvent(int code, int param, AsyncTask *source);
   void GetAppVersionString(WebCacheDB::VersionReadyState state,
                            nsAString &ver_out);
+  void InitUnloadMonitor();
 
   scoped_ptr<FFUpdateTask> update_task_;
   ManagedResourceStore store_;
+  scoped_ptr<JsRootedCallback> onerror_handler_;
+  scoped_ptr<JsRootedCallback> onprogress_handler_;
+  scoped_ptr<JsRootedCallback> oncomplete_handler_;
+  std::string16 observer_topic_;
+  scoped_ptr<JsEventMonitor> unload_monitor_;
 
   friend class GearsLocalServer;
 

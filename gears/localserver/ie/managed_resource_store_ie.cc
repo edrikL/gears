@@ -34,7 +34,6 @@
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
 
-
 //------------------------------------------------------------------------------
 // FinalConstruct
 //------------------------------------------------------------------------------
@@ -55,6 +54,9 @@ void GearsManagedResourceStore::FinalRelease() {
     update_task_->Abort();
     update_task_.release()->DeleteWhenDone();
   }
+
+  MessageService::GetInstance()->RemoveObserver(this,
+                                                observer_topic_.c_str());
 
   if (IsWindow()) {
     DestroyWindow();
@@ -209,6 +211,65 @@ STDMETHODIMP GearsManagedResourceStore::get_lastErrorMessage(
 }
 
 //------------------------------------------------------------------------------
+// put_onerror
+//------------------------------------------------------------------------------
+STDMETHODIMP GearsManagedResourceStore::put_onerror(const VARIANT *in_value) {
+  if (ActiveXUtils::VariantIsNullOrUndefined(in_value)) {
+    onerror_handler_.reset(NULL);
+  } else if (in_value->vt == VT_DISPATCH) {
+    InitUnloadMonitor();
+    observer_topic_ = UpdateTask::GetNotificationTopic(&store_);
+    onerror_handler_.reset(new JsRootedCallback(NULL, *in_value));
+    MessageService::GetInstance()->AddObserver(this,
+                                               observer_topic_.c_str());
+  } else {
+    RETURN_EXCEPTION(STRING16(L"The onerror callback must be a function."));
+  }
+
+  RETURN_NORMAL();
+}
+
+//------------------------------------------------------------------------------
+// put_onprogress
+//------------------------------------------------------------------------------
+STDMETHODIMP GearsManagedResourceStore::put_onprogress(
+                                            const VARIANT *in_value) {
+  if (ActiveXUtils::VariantIsNullOrUndefined(in_value)) {
+    onprogress_handler_.reset(NULL);
+  } else if (in_value->vt == VT_DISPATCH) {
+    InitUnloadMonitor();
+    observer_topic_ = UpdateTask::GetNotificationTopic(&store_);
+    onprogress_handler_.reset(new JsRootedCallback(NULL, *in_value));
+    MessageService::GetInstance()->AddObserver(this,
+                                               observer_topic_.c_str());
+  } else {
+    RETURN_EXCEPTION(STRING16(L"The onprogress callback must be a function."));
+  }
+
+  RETURN_NORMAL();
+}
+
+//------------------------------------------------------------------------------
+// put_oncomplete
+//------------------------------------------------------------------------------
+STDMETHODIMP GearsManagedResourceStore::put_oncomplete(
+                                            const VARIANT *in_value) {
+  if (ActiveXUtils::VariantIsNullOrUndefined(in_value)) {
+    oncomplete_handler_.reset(NULL);
+  } else if (in_value->vt == VT_DISPATCH) {
+    InitUnloadMonitor();
+    observer_topic_ = UpdateTask::GetNotificationTopic(&store_);
+    oncomplete_handler_.reset(new JsRootedCallback(NULL, *in_value));
+    MessageService::GetInstance()->AddObserver(this,
+                                               observer_topic_.c_str());
+  } else {
+    RETURN_EXCEPTION(STRING16(L"The oncomplete callback must be a function."));
+  }
+
+  RETURN_NORMAL();
+}
+
+//------------------------------------------------------------------------------
 // CreateWindowIfNeeded
 //------------------------------------------------------------------------------
 HRESULT GearsManagedResourceStore::CreateWindowIfNeeded() {
@@ -221,6 +282,102 @@ HRESULT GearsManagedResourceStore::CreateWindowIfNeeded() {
     }
   }
   RETURN_NORMAL();
+}
+
+//------------------------------------------------------------------------------
+// InitUnloadMonitor
+//------------------------------------------------------------------------------
+void GearsManagedResourceStore::InitUnloadMonitor() {
+  // Create an event monitor to alert us when the page unloads.
+  if (unload_monitor_ == NULL) {
+    unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
+                                             this));
+  }
+}
+
+//------------------------------------------------------------------------------
+// HandleEvent
+//------------------------------------------------------------------------------
+void GearsManagedResourceStore::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+
+  // Drop references, js context is going away.
+  onerror_handler_.reset();
+  onprogress_handler_.reset();
+  oncomplete_handler_.reset();
+  MessageService::GetInstance()->RemoveObserver(this,
+                                                observer_topic_.c_str());
+}
+
+//------------------------------------------------------------------------------
+// OnNotify
+//------------------------------------------------------------------------------
+void GearsManagedResourceStore::OnNotify(MessageService *service,
+                                         const char16 *topic,
+                                         const NotificationData *data) {
+  scoped_ptr<JsRootedToken> param;
+  JsRootedCallback *handler = 0;
+
+  const UpdateTask::Event *event = static_cast<const UpdateTask::Event *>(data);
+  switch(event->event_type()) {
+    case UpdateTask::ERROR_EVENT: {
+        if (!onerror_handler_.get()) return;
+        handler = onerror_handler_.get();
+
+        param.reset(GetJsRunner()->NewObject(NULL));
+        if (!param.get()) return;
+
+        const UpdateTask::ErrorEvent *error_event =
+            static_cast<const UpdateTask::ErrorEvent *>(data);
+        GetJsRunner()->SetPropertyString(param->token(),
+                                         STRING16(L"message"),
+                                         error_event->error_message().c_str());
+      }
+      break;
+
+    case UpdateTask::PROGRESS_EVENT: {
+        if (!onprogress_handler_.get()) return;
+        handler = onprogress_handler_.get();
+
+        param.reset(GetJsRunner()->NewObject(NULL));
+        if (!param.get()) return;
+
+        const UpdateTask::ProgressEvent *progress_event =
+            static_cast<const UpdateTask::ProgressEvent *>(data);
+        GetJsRunner()->SetPropertyInt(param->token(),
+                                      STRING16(L"filesTotal"),
+                                      progress_event->files_total());
+        GetJsRunner()->SetPropertyInt(param->token(),
+                                      STRING16(L"filesComplete"),
+                                      progress_event->files_complete());
+      }
+      break;
+
+    case UpdateTask::COMPLETION_EVENT: {
+        if (!oncomplete_handler_.get()) return;
+        handler = oncomplete_handler_.get();
+
+        param.reset(GetJsRunner()->NewObject(NULL));
+        if (!param.get()) return;
+
+        const UpdateTask::CompletionEvent *completion_event =
+            static_cast<const UpdateTask::CompletionEvent *>(data);
+        GetJsRunner()->SetPropertyString(
+                           param->token(),
+                           STRING16(L"newVersion"),
+                           completion_event->new_version_string().c_str());
+      }
+      break;
+
+    default:
+      return;
+  }
+
+  const int argc = 1;
+  JsParamToSend argv[argc] = {
+    { JSPARAM_OBJECT_TOKEN, param.get() }
+  };
+  GetJsRunner()->InvokeCallback(handler, argc, argv, NULL);
 }
 
 //------------------------------------------------------------------------------

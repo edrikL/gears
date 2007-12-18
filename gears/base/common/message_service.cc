@@ -148,6 +148,7 @@ MessageService::~MessageService() {
 
 bool MessageService::AddObserver(MessageObserverInterface *observer,
                                  const char16 *topic) {
+  if (!topic || !*topic) return false;
   MutexLock lock(&observer_collections_mutex_);
   ObserverCollection *topic_observers =
                           GetTopicObserverCollection(topic, true);
@@ -157,6 +158,7 @@ bool MessageService::AddObserver(MessageObserverInterface *observer,
 
 bool MessageService::RemoveObserver(MessageObserverInterface *observer,
                                     const char16 *topic) {
+  if (!topic || !*topic) return false;
   MutexLock lock(&observer_collections_mutex_);
   ObserverCollection *topic_observers =
                           GetTopicObserverCollection(topic, false);

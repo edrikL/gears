@@ -46,6 +46,11 @@ interface GearsManagedResourceStoreInterface : GearsBaseClassInterface {
   readonly attribute long updateStatus;
   readonly attribute AString lastErrorMessage;
 
+  // Callbacks for update events.
+  attribute nsIVariant onerror;
+  attribute nsIVariant onprogress;
+  attribute nsIVariant oncomplete;
+
   void checkForUpdate();
 
   // Version information
