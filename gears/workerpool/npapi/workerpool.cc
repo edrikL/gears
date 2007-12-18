@@ -129,26 +129,23 @@ void GearsWorkerPool::SetThreadsManager(PoolThreadsManager *manager) {
 }
 
 void GearsWorkerPool::SetOnmessage(JsCallContext *context) {
-  JsToken function_token;
+  JsRootedCallback *function = NULL;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_OBJECT_TOKEN, &function_token },
+    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &function },
   };
   int argc = context->GetArguments(ARRAYSIZE(argv), argv);
-  if (argc < 1)
-    return;  // JsRunner sets an error message.
+  scoped_ptr<JsRootedCallback> scoped_function(function);
+  if (context->is_exception_set())
+    return;
 
   Initialize();
 
-  JsRootedCallback *function =
-      new JsRootedCallback(EnvPageJsContext(), function_token);
-
   if (!threads_manager_->SetCurrentThreadMessageHandler(function)) {
-    // Currently, the only reason this can fail is because of this one
-    // particular error.
-    // TODO(aa): We need a system throughout Gears for being able to handle
-    // exceptions from deep inside the stack better.
     context->SetException(STRING16(L"Error setting onmessage handler"));
+    return;
   }
+
+  scoped_function.release();  // ownership was transferred on success
 }
 
 void GearsWorkerPool::GetOnmessage(JsCallContext *context) {
@@ -156,27 +153,25 @@ void GearsWorkerPool::GetOnmessage(JsCallContext *context) {
 }
 
 void GearsWorkerPool::SetOnerror(JsCallContext *context) {
-  JsToken function_token;
+  JsRootedCallback *function = NULL;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_OBJECT_TOKEN, &function_token },
+    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &function },
   };
   int argc = context->GetArguments(ARRAYSIZE(argv), argv);
-  if (argc < 1)
-    return;  // JsRunner sets an error message.
+  scoped_ptr<JsRootedCallback> scoped_function(function);
+  if (context->is_exception_set())
+    return;
 
   Initialize();
 
-  JsRootedCallback *function =
-      new JsRootedCallback(EnvPageJsContext(), function_token);
-
   if (!threads_manager_->SetCurrentThreadErrorHandler(function)) {
-    // Currently, the only reason this can fail is because of this one
-    // particular error.
-    // TODO(aa): We need a system throughout Gears for being able to handle
-    // exceptions from deep inside the stack better.
+    // TODO(mpcomplete): have the helper func set this exception.
     context->SetException(STRING16(L"The onerror property cannot be set on a "
                                    L"parent worker"));
+    return;
   }
+
+  scoped_function.release();  // ownership was transferred on success
 }
 
 void GearsWorkerPool::GetOnerror(JsCallContext *context) {
@@ -189,8 +184,8 @@ void GearsWorkerPool::CreateWorker(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &full_script },
   };
   int argc = context->GetArguments(ARRAYSIZE(argv), argv);
-  if (argc < 1)
-    return;  // JsRunner sets an error message.
+  if (context->is_exception_set())
+    return;
 
   Initialize();
 
@@ -232,8 +227,8 @@ void GearsWorkerPool::SendMessage(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_INT, &dest_worker_id },
   };
   int argc = context->GetArguments(ARRAYSIZE(argv), argv);
-  if (argc < 2)
-    return;  // JsRunner sets an error message.
+  if (context->is_exception_set())
+    return;
 
   bool succeeded = threads_manager_->PutPoolMessage(message.c_str(),
                                                     dest_worker_id,
@@ -419,7 +414,7 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
 
   const int argc = 1;
   JsParamToSend argv[argc] = {
-    { JSPARAM_OBJECT_TOKEN, onerror_param.get() }
+    { JSPARAM_TOKEN, onerror_param.get() }
   };
 
   JsRootedToken *alloc_js_retval = NULL;
@@ -859,7 +854,7 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
     JsParamToSend argv[argc] = {
       { JSPARAM_STRING16, &msg.text },
       { JSPARAM_INT, &msg.sender },
-      { JSPARAM_OBJECT_TOKEN, &onmessage_token }
+      { JSPARAM_TOKEN, &onmessage_token }
     };
     wi->js_runner->InvokeCallback(wi->onmessage_handler.get(), argc, argv,
                                   NULL);

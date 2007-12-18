@@ -79,7 +79,7 @@ class GearsDatabase
   void RemoveResultSet(GearsResultSet *rs);
   bool CloseInternal();
   bool BindArgsToStatement(JsCallContext *context,
-                           const JsToken *arg_array, sqlite3_stmt *stmt);
+                           const JsArray *arg_array, sqlite3_stmt *stmt);
 
   sqlite3 *db_;
   std::set<GearsResultSet *> result_sets_;

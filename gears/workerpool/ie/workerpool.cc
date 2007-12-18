@@ -495,7 +495,7 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
 
   const int argc = 1;
   JsParamToSend argv[argc] = {
-    { JSPARAM_OBJECT_TOKEN, onerror_param.get() }
+    { JSPARAM_TOKEN, onerror_param.get() }
   };
 
   JsRootedToken *alloc_js_retval = NULL;
@@ -1019,7 +1019,7 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
     JsParamToSend argv[argc] = {
       { JSPARAM_STRING16, &msg.text },
       { JSPARAM_INT, &msg.sender },
-      { JSPARAM_OBJECT_TOKEN, onmessage_param.get() }
+      { JSPARAM_TOKEN, onmessage_param.get() }
     };
     wi->js_runner->InvokeCallback(wi->onmessage_handler.get(), argc, argv,
                                   NULL);
