@@ -32,8 +32,8 @@
 #if BROWSER_FF
 
 #include <nsCOMPtr.h>  // for JsParamFetcher
-#include "gears/third_party/gecko_internal/nsIXPConnect.h" // for JsParamFetcher
-#include "gears/third_party/gecko_internal/jsapi.h"
+#include "gecko_internal/nsIXPConnect.h" // for JsParamFetcher
+#include "gecko_internal/jsapi.h"
 
 // Abstracted types for values used with JavaScript engines.
 typedef jsval      JsToken;

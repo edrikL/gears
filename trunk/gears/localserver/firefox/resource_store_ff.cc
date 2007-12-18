@@ -27,11 +27,11 @@
 #include <nsILocalFile.h>
 #include <nsMemory.h>
 #include <nsXPCOM.h>
-#include "gears/third_party/gecko_internal/nsIDOMClassInfo.h"
-#include "gears/third_party/gecko_internal/nsIFileProtocolHandler.h"
-#include "gears/third_party/gecko_internal/nsIFileStreams.h"
-#include "gears/third_party/gecko_internal/nsIMIMEService.h"
-#include "gears/third_party/gecko_internal/nsIVariant.h"
+#include "gecko_internal/nsIDOMClassInfo.h"
+#include "gecko_internal/nsIFileProtocolHandler.h"
+#include "gecko_internal/nsIFileStreams.h"
+#include "gecko_internal/nsIMIMEService.h"
+#include "gecko_internal/nsIVariant.h"
 
 #include "gears/localserver/firefox/resource_store_ff.h"
 

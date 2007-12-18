@@ -33,11 +33,11 @@
 #include <nsIIOService.h>
 #include <nsIUploadChannel.h>
 #include <nsIURI.h>
-#include "gears/third_party/gecko_internal/nsICachingChannel.h"
-#include "gears/third_party/gecko_internal/nsIEncodedChannel.h"
-#include "gears/third_party/gecko_internal/nsIEventQueueService.h"
-#include "gears/third_party/gecko_internal/nsIStringStream.h"
-#include "gears/third_party/gecko_internal/nsNetError.h"
+#include "gecko_internal/nsICachingChannel.h"
+#include "gecko_internal/nsIEncodedChannel.h"
+#include "gecko_internal/nsIEventQueueService.h"
+#include "gecko_internal/nsIStringStream.h"
+#include "gecko_internal/nsNetError.h"
 
 #include "gears/localserver/firefox/http_request_ff.h"
 

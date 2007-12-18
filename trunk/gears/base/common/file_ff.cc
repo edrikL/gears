@@ -40,8 +40,8 @@ class nsIFile;  // must declare this before including nsDirectoryServiceUtils.h
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
-#include "gears/third_party/gecko_internal/nsIFileProtocolHandler.h"
-#include "gears/third_party/gecko_internal/nsIFileStreams.h"
+#include "gecko_internal/nsIFileProtocolHandler.h"
+#include "gecko_internal/nsIFileStreams.h"
 #include "gears/base/firefox/ns_file_utils.h"
 
 

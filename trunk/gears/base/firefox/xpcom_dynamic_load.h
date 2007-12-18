@@ -29,7 +29,7 @@
 #ifndef GEARS_BASE_FIREFOX_XPCOM_DYNAMIC_LOAD_H__
 #define GEARS_BASE_FIREFOX_XPCOM_DYNAMIC_LOAD_H__
 
-#include "gears/third_party/gecko_internal/xptcall.h"
+#include "gecko_internal/xptcall.h"
 
 
 // global function pointers that get initialized at load time

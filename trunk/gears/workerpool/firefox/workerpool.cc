@@ -66,13 +66,13 @@
 #include <nsCOMPtr.h>
 #include <nspr.h> // for PR_*
 #include <nsServiceManagerUtils.h> // for NS_IMPL_* and NS_INTERFACE_*
-#include "gears/third_party/gecko_internal/jsapi.h"
+#include "gecko_internal/jsapi.h"
 struct JSContext; // must declare this before including nsIJSContextStack.h
-#include "gears/third_party/gecko_internal/nsIJSContextStack.h"
-#include "gears/third_party/gecko_internal/nsIJSRuntimeService.h"
-#include "gears/third_party/gecko_internal/nsIDOMClassInfo.h" // for *_DOM_CLASSINFO
-#include "gears/third_party/gecko_internal/nsIEventQueueService.h" // for event loop
-#include "gears/third_party/gecko_internal/nsIScriptContext.h"
+#include "gecko_internal/nsIJSContextStack.h"
+#include "gecko_internal/nsIJSRuntimeService.h"
+#include "gecko_internal/nsIDOMClassInfo.h" // for *_DOM_CLASSINFO
+#include "gecko_internal/nsIEventQueueService.h" // for event loop
+#include "gecko_internal/nsIScriptContext.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 #include "gears/workerpool/firefox/workerpool.h"

@@ -26,7 +26,7 @@
 #include <nsCOMPtr.h>
 #include <nsISupportsPrimitives.h>
 #include <nsIProperties.h>
-#include "gears/third_party/gecko_internal/nsIDOMWindowInternal.h"
+#include "gecko_internal/nsIDOMWindowInternal.h"
 
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"

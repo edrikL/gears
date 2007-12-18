@@ -28,7 +28,7 @@
 
 #include <nsIStreamListener.h>
 #include <nsIInterfaceRequestor.h>
-#include "gears/third_party/gecko_internal/nsIChannelEventSink.h"
+#include "gecko_internal/nsIChannelEventSink.h"
 #include "ff/genfiles/localserver.h" // from OUTDIR
 #include "gears/base/common/common.h"
 #include "gears/base/common/security_model.h"

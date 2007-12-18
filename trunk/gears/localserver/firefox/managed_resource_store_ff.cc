@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/third_party/gecko_internal/nsIDOMClassInfo.h"
-#include "gears/third_party/gecko_internal/nsIVariant.h"
+#include "gecko_internal/nsIDOMClassInfo.h"
+#include "gecko_internal/nsIVariant.h"
 
 #include "gears/localserver/firefox/managed_resource_store_ff.h"
 

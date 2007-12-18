@@ -29,7 +29,7 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/common/common_ff.h"
 struct JSContext; // must declare this before including nsIJSContextStack.h
-#include "gears/third_party/gecko_internal/nsIJSContextStack.h"
+#include "gecko_internal/nsIJSContextStack.h"
 
 class nsIDOMDocument;
 class nsIDOMEventTarget;

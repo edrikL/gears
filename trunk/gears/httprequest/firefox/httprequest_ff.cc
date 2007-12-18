@@ -26,8 +26,8 @@
 #ifdef WIN32
 #include <windows.h> // must manually #include before nsIEventQueueService.h
 #endif
-#include "gears/third_party/gecko_internal/nsIDOMClassInfo.h"
-#include "gears/third_party/gecko_internal/nsIEventQueueService.h"
+#include "gecko_internal/nsIDOMClassInfo.h"
+#include "gecko_internal/nsIEventQueueService.h"
 
 #include "gears/httprequest/firefox/httprequest_ff.h"
 

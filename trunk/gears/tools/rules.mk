@@ -347,11 +347,13 @@ $(NPAPI_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
 # Need /base/common in the include path to derive from GearsBaseClassInterface
 # (xpidl doesn't like slashes in #include "base_interface_ff.idl")
 
+# todo(cprince): see whether we can remove the third_party/ part after
+# the 1.9 inclusion is complete.
 $(FF_OUTDIR)/genfiles/%.h: %.idl
-	$(GECKO_SDK)/bin/xpidl -I base/common -I $(GECKO_SDK)/idl -m header -o $(FF_OUTDIR)/genfiles/$* $<
+	$(GECKO_SDK)/bin/xpidl -I base/common -I $(GECKO_SDK)/idl -I third_party/gecko_1.8 -m header -o $(FF_OUTDIR)/genfiles/$* $<
 
 $(FF_OUTDIR)/genfiles/%.xpt: %.idl
-	$(GECKO_SDK)/bin/xpidl -I base/common -I $(GECKO_SDK)/idl -m typelib -o $(FF_OUTDIR)/genfiles/$* $<
+	$(GECKO_SDK)/bin/xpidl -I base/common -I $(GECKO_SDK)/idl -I third_party/gecko_1.8 -m typelib -o $(FF_OUTDIR)/genfiles/$* $<
 
 $(IE_OUTDIR)/genfiles/%.h: %.idl
 	$(MIDL) $(MIDLFLAGS) $<

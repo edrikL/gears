@@ -31,8 +31,8 @@
 #include <nsCOMPtr.h>
 #include <nspr.h>  // for PR_*
 #include <nsServiceManagerUtils.h>  // for NS_IMPL_* and NS_INTERFACE_*
-#include "gears/third_party/gecko_internal/jsapi.h"
-#include "gears/third_party/gecko_internal/nsIDOMClassInfo.h"
+#include "gecko_internal/jsapi.h"
+#include "gecko_internal/nsIDOMClassInfo.h"
 #include "gears/desktop/desktop_ff.h"
 #elif BROWSER_IE
 #include <dispex.h>

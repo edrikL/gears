@@ -33,8 +33,8 @@
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/firefox/async_task_ff.h"
-#include "gears/third_party/gecko_internal/nsIEventQueue.h"
-#include "gears/third_party/gecko_internal/nsIEventQueueService.h"
+#include "gecko_internal/nsIEventQueue.h"
+#include "gecko_internal/nsIEventQueueService.h"
 
 const char16 *AsyncTask::kCookieRequiredErrorMessage =
                   STRING16(L"Required cookie is not present");
