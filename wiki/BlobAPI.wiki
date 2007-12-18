@@ -1,0 +1,63 @@
+#summary A manipulable handle to file data
+#labels DesignDoc
+
+= Introduction =
+
+A blob is an object representing file data.  It is retrievable, for example, from a resource store or from a HttpRequest or some other source of file data.  It can be saved back to a resource store or to a POST request via HttpRequest.  Other modules, such as ImageManipulationAPI, can edit blobs.
+
+Blob data cannot be accessed from Javascript.  Only metadata can be read.  Blobs can only be created and modified by other modules.
+
+= Details =
+
+== Blob class - External interface ==
+
+IDL definition:
+
+{{{
+interface Blob {
+  readonly attribute int size;
+  readonly attribute string type;
+}
+}}}
+
+=== size ===
+The size of the blob in bytes.
+
+=== type ===
+A string representing the type of the data, in Content-Type format (eg.
+"image/png". TODO: should this include the character encoding like the HTTP
+Content-Type field?
+
+For example, once a blob is created, its size and type can be accessed via
+b.size and b.type.
+
+== Blob class - Internal interface ==
+
+Additionally, the implementation will expose methods for mutation and for
+access to the data pointer from within other modules within Gears (from C++)
+
+{{{
+  bool SetData(const std::vector<uint8> &data);
+  const std::vector<uint8> &GetData();
+}}}
+
+=== bool SetData(const std::vector<uint8> &data) ===
+Makes a copy of the data referenced by _data_ into the blob.  Any previous data
+stored in the blob is destroyed and can no longer be referenced.
+
+=== const std::vector<uint8> &GetData() ===
+Returns a reference to the data wrapped inside the blob.  Note that this is a
+reference to internals of the blob!  This means the reference is only valid
+up until a SetData() is called, or the blob is destroyed.  For example,
+{{{
+  const std::vector<uint8> &eg1 = blob.GetData();  // use as a reference 
+  const std::vector<uint8> *eg2 = &blob.GetData(); // pointer alternative
+  // read stuff from eg1 or eg2
+  blob.SetData(otherdata);
+}}}
+
+A slower but safer alternative is to copy the returned data:
+{{{
+  const std::vector<uint8> eg3(blob.GetData()); // copy constructor
+  const std::vector<uint8> eg4 = blob.GetData(); // assignment alternative
+}}}
