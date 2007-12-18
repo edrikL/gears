@@ -27,7 +27,7 @@
 #define GEARS_DATABASE_FIREFOX_RESULT_SET_H__
 
 #include <nsComponentManagerUtils.h>
-#include "gears/third_party/gecko_internal/nsIVariant.h"
+#include "gecko_internal/nsIVariant.h"
 
 #include "ff/genfiles/database.h" // from OUTDIR
 #include "gears/base/common/base_class.h"

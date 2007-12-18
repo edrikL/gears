@@ -28,11 +28,11 @@ class nsIFile; // must declare this before including nsDirectoryServiceUtils.h
 #include <nsDirectoryServiceUtils.h>
 #include <nsIDOMHTMLInputElement.h>
 #include <nsXPCOM.h>
-#include "gears/third_party/gecko_internal/nsIDOMClassInfo.h"
-#include "gears/third_party/gecko_internal/nsIFileStreams.h"
+#include "gecko_internal/nsIDOMClassInfo.h"
+#include "gecko_internal/nsIFileStreams.h"
 struct JSContext; // must declare this before including nsIJSContextStack.h
-#include "gears/third_party/gecko_internal/nsIJSContextStack.h"
-#include "gears/third_party/gecko_internal/nsIVariant.h"
+#include "gecko_internal/nsIJSContextStack.h"
+#include "gecko_internal/nsIVariant.h"
 
 #include "gears/localserver/firefox/file_submitter_ff.h"
 

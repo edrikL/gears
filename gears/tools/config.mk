@@ -80,7 +80,7 @@ ifdef IS_WIN32_OR_WINCE
 CPPFLAGS += -Ithird_party/breakpad/src
 endif
 
-FF_CPPFLAGS = -DBROWSER_FF=1 -I$(GECKO_SDK)/include -DMOZILLA_STRICT_API
+FF_CPPFLAGS = -DBROWSER_FF=1 -I$(GECKO_SDK)/include -Ithird_party/gecko_1.8 -DMOZILLA_STRICT_API
 IE_CPPFLAGS = -DBROWSER_IE=1
 IEMOBILE_CPPFLAGS = -DBROWSER_IE=1
 NPAPI_CPPFLAGS = -DBROWSER_NPAPI=1 -I$(GECKO_SDK)/include
@@ -125,7 +125,7 @@ SHLIBFLAGS = -o $@ -shared -fPIC -Bsymbolic -Wl,--version-script -Wl,tools/xpcom
 #TRANSLATE_LINKER_FILE_LIST = cat -
 #EXT_LINKER_CMD_FLAG = -Xlinker @
 
-GECKO_SDK = third_party/gecko_sdk/1.8/linux
+GECKO_SDK = third_party/gecko_1.8/linux/gecko_sdk
 
 FF_LIBS = -L $(GECKO_SDK)/bin -L $(GECKO_SDK)/lib -lxpcom -lxpcomglue_s -lnspr4
 endif
@@ -162,7 +162,7 @@ SHLIBFLAGS = -o $@ -bundle -Wl,-dead_strip -Wl,-exported_symbols_list -Wl,tools/
 TRANSLATE_LINKER_FILE_LIST = tr " " "\n"
 EXT_LINKER_CMD_FLAG = -Xlinker -filelist -Xlinker 
 
-GECKO_SDK = third_party/gecko_sdk/1.8/osx
+GECKO_SDK = third_party/gecko_1.8/osx/gecko_sdk
 OSX_SDK_ROOT = /Developer/SDKs/MacOSX10.4u.sdk
 
 FF_LIBS = -L$(GECKO_SDK)/bin -L$(GECKO_SDK)/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4 -lxpcom_core
@@ -285,7 +285,7 @@ endif
 TRANSLATE_LINKER_FILE_LIST = cat -
 EXT_LINKER_CMD_FLAG = @
 
-GECKO_SDK = third_party/gecko_sdk/1.8/win32
+GECKO_SDK = third_party/gecko_1.8/win32/gecko_sdk
 
 FF_LIBS = $(GECKO_SDK)/lib/xpcom.lib $(GECKO_SDK)/lib/xpcomglue_s.lib $(GECKO_SDK)/lib/nspr4.lib $(GECKO_SDK)/lib/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib
 IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib

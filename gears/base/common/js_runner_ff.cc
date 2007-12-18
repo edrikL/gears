@@ -28,12 +28,12 @@
 #include <set>
 #include <nsCOMPtr.h>
 #include <nspr.h> // for PR_*
-#include "gears/third_party/gecko_internal/jsapi.h"
-#include "gears/third_party/gecko_internal/nsIJSContextStack.h"
-#include "gears/third_party/gecko_internal/nsIScriptContext.h"
-#include "gears/third_party/gecko_internal/nsIScriptGlobalObject.h"
-#include "gears/third_party/gecko_internal/nsIScriptObjectPrincipal.h"
-#include "gears/third_party/gecko_internal/nsIPrincipal.h"
+#include "gecko_internal/jsapi.h"
+#include "gecko_internal/nsIJSContextStack.h"
+#include "gecko_internal/nsIScriptContext.h"
+#include "gecko_internal/nsIScriptGlobalObject.h"
+#include "gecko_internal/nsIScriptObjectPrincipal.h"
+#include "gecko_internal/nsIPrincipal.h"
 
 #include "gears/base/common/js_runner.h"
 

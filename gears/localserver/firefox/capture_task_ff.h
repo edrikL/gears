@@ -28,7 +28,7 @@
 
 #include "ff/genfiles/localserver.h" // from OUTDIR
 #include "gears/base/common/base_class.h" // only for Js* types
-#include "gears/third_party/gecko_internal/nsIScriptContext.h"
+#include "gecko_internal/nsIScriptContext.h"
 #include "gears/localserver/common/capture_task.h"
 
 //------------------------------------------------------------------------------

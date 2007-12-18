@@ -29,7 +29,7 @@
 #include <nsIChannel.h>
 #include <nsIObserver.h>
 #include "gears/base/common/common_ff.h"
-#include "gears/third_party/gecko_internal/nsICacheService.h"
+#include "gecko_internal/nsICacheService.h"
 
 class FFHttpRequest;
 

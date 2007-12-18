@@ -38,7 +38,7 @@
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string16.h"
 #include "gears/localserver/common/http_request.h"
-#include "gears/third_party/gecko_internal/nsIEventQueue.h"
+#include "gecko_internal/nsIEventQueue.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 // Object identifiers

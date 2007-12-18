@@ -28,8 +28,8 @@
 #include <nsILocalFile.h>
 #include <nsMemory.h>
 #include <nsXPCOM.h>
-#include "gears/third_party/gecko_internal/nsIDOMClassInfo.h"
-#include "gears/third_party/gecko_internal/nsIScriptNameSpaceManager.h"
+#include "gecko_internal/nsIDOMClassInfo.h"
+#include "gecko_internal/nsIScriptNameSpaceManager.h"
 
 #include "gears/base/common/thread_locals.h"
 #include "gears/channel/firefox/channel.h"

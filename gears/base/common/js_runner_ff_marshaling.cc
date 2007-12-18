@@ -80,11 +80,11 @@
 
 #include "nsComponentManagerUtils.h"
 #include "nsMemory.h" // for use in JSData2Native
-#include "gears/third_party/gecko_internal/nsIInterfaceInfoManager.h"
-#include "gears/third_party/gecko_internal/nsITimerInternal.h"
-#include "gears/third_party/gecko_internal/nsIVariant.h" // for use in JSData2Native
+#include "gecko_internal/nsIInterfaceInfoManager.h"
+#include "gecko_internal/nsITimerInternal.h"
+#include "gecko_internal/nsIVariant.h" // for use in JSData2Native
 // TODO(cprince): see if we can remove nsIVariant.h/nsMemory.h after cleanup.
-#include "gears/third_party/gecko_internal/xptinfo.h"
+#include "gecko_internal/xptinfo.h"
 
 #include "ff/genfiles/base_interface_ff.h"
 #include "gears/base/common/base_class.h"

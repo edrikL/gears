@@ -32,16 +32,16 @@
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/common.h"
 #include "gears/base/firefox/dom_utils.h"
-#include "gears/third_party/gecko_internal/jsapi.h"
-#include "gears/third_party/gecko_internal/nsIDOM3Node.h"
-#include "gears/third_party/gecko_internal/nsIDOMWindowInternal.h"
-#include "gears/third_party/gecko_internal/nsIInterfaceInfoManager.h"
+#include "gecko_internal/jsapi.h"
+#include "gecko_internal/nsIDOM3Node.h"
+#include "gecko_internal/nsIDOMWindowInternal.h"
+#include "gecko_internal/nsIInterfaceInfoManager.h"
 struct JSContext; // must declare this before including nsIJSContextStack.h
-#include "gears/third_party/gecko_internal/nsIJSContextStack.h"
-#include "gears/third_party/gecko_internal/nsIScriptContext.h"
-#include "gears/third_party/gecko_internal/nsIScriptGlobalObject.h"
-#include "gears/third_party/gecko_internal/nsIScriptSecurityManager.h"
-#include "gears/third_party/gecko_internal/nsIXPConnect.h"
+#include "gecko_internal/nsIJSContextStack.h"
+#include "gecko_internal/nsIScriptContext.h"
+#include "gecko_internal/nsIScriptGlobalObject.h"
+#include "gecko_internal/nsIScriptSecurityManager.h"
+#include "gecko_internal/nsIXPConnect.h"
 
 
 // The IID for nsIContent in different versions of Firefox/Gecko

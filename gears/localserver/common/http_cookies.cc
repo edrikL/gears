@@ -235,9 +235,9 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
 #include <nsIIOService.h>
 #include <nsIURI.h>
 #include <nsMemory.h>
-#include "gears/third_party/gecko_internal/nsIEventQueueService.h"
-#include "gears/third_party/gecko_internal/nsIProxyObjectManager.h"
-#include "gears/third_party/gecko_internal/nsICookieService.h"
+#include "gecko_internal/nsIEventQueueService.h"
+#include "gecko_internal/nsIProxyObjectManager.h"
+#include "gecko_internal/nsICookieService.h"
 #include "gears/base/common/common.h"
 
 bool GetCookieString(const char16 *url, std::string16 *cookies_out) {

@@ -28,7 +28,7 @@
 
 #include <vector>
 #include <nsComponentManagerUtils.h>
-#include "gears/third_party/gecko_internal/nsIVariant.h"
+#include "gecko_internal/nsIVariant.h"
 
 #include "ff/genfiles/workerpool.h" // from OUTDIR
 #include "gears/base/common/base_class.h"

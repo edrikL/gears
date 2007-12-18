@@ -39,8 +39,8 @@
 #include <nsIInputStream.h>
 #include <nsIIOService.h>
 #include <nsILocalFile.h>
-#include "gears/third_party/gecko_internal/nsIFileProtocolHandler.h"
-#include "gears/third_party/gecko_internal/nsIFileStreams.h"
+#include "gecko_internal/nsIFileProtocolHandler.h"
+#include "gecko_internal/nsIFileStreams.h"
 #include "gears/base/firefox/ns_file_utils.h"
 
 #define NS_LOCALFILEINPUTSTREAM_CONTRACTID \

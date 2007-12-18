@@ -32,12 +32,12 @@
 #include <nsIURI.h>
 #include <nsServiceManagerUtils.h> // for NS_IMPL_* and NS_INTERFACE_*
 #include <nsXPCOM.h>
-#include "gears/third_party/gecko_internal/jsapi.h"
-#include "gears/third_party/gecko_internal/nsIDOMClassInfo.h" // for *_DOM_CLASSINFO
-#include "gears/third_party/gecko_internal/nsIPrincipal.h"
-#include "gears/third_party/gecko_internal/nsIScriptSecurityManager.h"
-#include "gears/third_party/gecko_internal/nsIScriptNameSpaceManager.h"
-#include "gears/third_party/gecko_internal/nsIXPConnect.h"
+#include "gecko_internal/jsapi.h"
+#include "gecko_internal/nsIDOMClassInfo.h" // for *_DOM_CLASSINFO
+#include "gecko_internal/nsIPrincipal.h"
+#include "gecko_internal/nsIScriptSecurityManager.h"
+#include "gecko_internal/nsIScriptNameSpaceManager.h"
+#include "gecko_internal/nsIXPConnect.h"
 
 #include "gears/base/common/paths.h"
 #include "gears/base/common/common.h"

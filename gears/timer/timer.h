@@ -30,7 +30,7 @@
 
 #if BROWSER_FF
 #include <nsComponentManagerUtils.h>
-#include "gears/third_party/gecko_internal/nsITimer.h"
+#include "gecko_internal/nsITimer.h"
 #endif
 
 #include <map>

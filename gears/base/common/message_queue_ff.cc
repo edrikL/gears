@@ -32,7 +32,7 @@
 #endif
 
 #include "gears/base/common/message_queue.h"
-#include "gears/third_party/gecko_internal/nsIEventQueueService.h"
+#include "gecko_internal/nsIEventQueueService.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 struct MessageEvent;
