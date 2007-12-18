@@ -375,7 +375,7 @@ void GearsManagedResourceStore::OnNotify(MessageService *service,
 
   const int argc = 1;
   JsParamToSend argv[argc] = {
-    { JSPARAM_OBJECT_TOKEN, param.get() }
+    { JSPARAM_TOKEN, param.get() }
   };
   GetJsRunner()->InvokeCallback(handler, argc, argv, NULL);
 }
