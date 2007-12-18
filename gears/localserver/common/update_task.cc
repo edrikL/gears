@@ -440,7 +440,7 @@ bool UpdateTask::DownloadVersion(std::string16 *completed_version) {
                          GetCurrentTimeMillis(), NULL, NULL);
 
     LOG(("UpdateTask::DownloadVersion - %d urls to process\n", urls.size()));
-    NotifyObservers(new ProgressEvent(0, urls.size()));
+    NotifyObservers(new ProgressEvent(urls.size(), 0));
 
     // Process each unique url, downloading only if needed, and update
     // all relevent entries to refer to the same payload
@@ -456,7 +456,7 @@ bool UpdateTask::DownloadVersion(std::string16 *completed_version) {
         LOG(("UpdateTask::DownloadVersion - ProcessUrl failed\n"));
         return false;
       }
-      NotifyObservers(new ProgressEvent(++urls_complete, urls.size()));
+      NotifyObservers(new ProgressEvent(urls.size(), ++urls_complete));
     }
   }
 
