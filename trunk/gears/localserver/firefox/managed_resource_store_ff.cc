@@ -28,6 +28,7 @@
 
 #include "gears/localserver/firefox/managed_resource_store_ff.h"
 
+//#include "gears/localserver/common/update_task.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/firefox/dom_utils.h"
 
@@ -48,7 +49,6 @@ const nsCID kGearsManagedResourceStoreClassId = {0x924e3de8, 0xa842, 0x4982, {0x
                                                  0x96, 0xfa, 0x77, 0x9f, 0xa9, 0x37}};
                                                  // {924E3DE8-A842-4982-B75B-96FA779FA937}
 
-
 //-----------------------------------------------------------------------------
 // Destructor
 //-----------------------------------------------------------------------------
@@ -58,6 +58,9 @@ GearsManagedResourceStore::~GearsManagedResourceStore() {
     update_task_->Abort();
     update_task_.release()->DeleteWhenDone();
   }
+
+  MessageService::GetInstance()->RemoveObserver(this,
+                                                observer_topic_.c_str());
 }
 
 //------------------------------------------------------------------------------
@@ -111,7 +114,7 @@ NS_IMETHODIMP GearsManagedResourceStore::GetManifestUrl(nsAString &url_out) {
 //------------------------------------------------------------------------------
 // SetManifestUrl
 //------------------------------------------------------------------------------
-NS_IMETHODIMP 
+NS_IMETHODIMP
 GearsManagedResourceStore::SetManifestUrl(const nsAString &url_abstract) {
   // Resetting the manifest url to an empty string is ok.
   if (url_abstract.Length() == 0) {
@@ -122,7 +125,7 @@ GearsManagedResourceStore::SetManifestUrl(const nsAString &url_abstract) {
   }
 
   nsString url(url_abstract); // nsAString doesn't have get()
-  std::string16 full_url;    
+  std::string16 full_url;
   if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), url.get(),
                            &full_url)) {
     RETURN_EXCEPTION(STRING16(L"Failed to resolve url."));
@@ -140,7 +143,7 @@ GearsManagedResourceStore::SetManifestUrl(const nsAString &url_abstract) {
 //------------------------------------------------------------------------------
 // GetLastUpdateCheckTime
 //------------------------------------------------------------------------------
-NS_IMETHODIMP 
+NS_IMETHODIMP
 GearsManagedResourceStore::GetLastUpdateCheckTime(PRInt32 *time) {
   if (!time) {
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
@@ -191,6 +194,201 @@ NS_IMETHODIMP GearsManagedResourceStore::GetLastErrorMessage(
     RETURN_EXCEPTION(STRING16(L"Failed to get last error message."));
   }
   RETURN_NORMAL();
+}
+
+//------------------------------------------------------------------------------
+// SetOnerror
+//------------------------------------------------------------------------------
+NS_IMETHODIMP GearsManagedResourceStore::SetOnerror(nsIVariant *in_value) {
+  InitUnloadMonitor();
+
+  JsParamFetcher js_params(this);
+
+  if (js_params.GetCount(false) < 1) {
+    RETURN_EXCEPTION(STRING16(L"Value is required."));
+  }
+
+  JsRootedCallback *callback = 0;
+  if (!js_params.GetAsNewRootedCallback(0, &callback)) {
+    RETURN_EXCEPTION(STRING16(L"Invalid value for onerror property."));
+  }
+  onerror_handler_.reset(callback);
+
+  if (callback) {
+    observer_topic_ = UpdateTask::GetNotificationTopic(&store_);
+    MessageService::GetInstance()->AddObserver(this, observer_topic_.c_str());
+  }
+  RETURN_NORMAL();
+}
+
+//------------------------------------------------------------------------------
+// GetOnerror
+//------------------------------------------------------------------------------
+NS_IMETHODIMP GearsManagedResourceStore::GetOnerror(nsIVariant **out_value) {
+  *out_value = NULL;
+  RETURN_EXCEPTION(STRING16(L"This property is write only."));
+}
+
+//------------------------------------------------------------------------------
+// SetOnprogress
+//------------------------------------------------------------------------------
+NS_IMETHODIMP GearsManagedResourceStore::SetOnprogress(nsIVariant *in_value) {
+  InitUnloadMonitor();
+
+  JsParamFetcher js_params(this);
+
+  if (js_params.GetCount(false) < 1) {
+    RETURN_EXCEPTION(STRING16(L"Value is required."));
+  }
+
+  JsRootedCallback *callback = 0;
+  if (!js_params.GetAsNewRootedCallback(0, &callback)) {
+    RETURN_EXCEPTION(STRING16(L"Invalid value for onprogress property."));
+  }
+  onprogress_handler_.reset(callback);
+
+  if (callback) {
+    observer_topic_ = UpdateTask::GetNotificationTopic(&store_);
+    MessageService::GetInstance()->AddObserver(this, observer_topic_.c_str());
+  }
+  RETURN_NORMAL();
+}
+
+//------------------------------------------------------------------------------
+// GetOnprogress
+//------------------------------------------------------------------------------
+NS_IMETHODIMP GearsManagedResourceStore::GetOnprogress(nsIVariant **out_value) {
+  *out_value = NULL;
+  RETURN_EXCEPTION(STRING16(L"This property is write only."));
+}
+
+//------------------------------------------------------------------------------
+// SetOncomplete
+//------------------------------------------------------------------------------
+NS_IMETHODIMP GearsManagedResourceStore::SetOncomplete(nsIVariant *in_value) {
+  InitUnloadMonitor();
+
+  JsParamFetcher js_params(this);
+
+  if (js_params.GetCount(false) < 1) {
+    RETURN_EXCEPTION(STRING16(L"Value is required."));
+  }
+
+  JsRootedCallback *callback = 0;
+  if (!js_params.GetAsNewRootedCallback(0, &callback)) {
+    RETURN_EXCEPTION(STRING16(L"Invalid value for oncomplete property."));
+  }
+  oncomplete_handler_.reset(callback);
+
+  if (callback) {
+    observer_topic_ = UpdateTask::GetNotificationTopic(&store_);
+    MessageService::GetInstance()->AddObserver(this, observer_topic_.c_str());
+  }
+  RETURN_NORMAL();
+}
+
+//------------------------------------------------------------------------------
+// GetOncomplete
+//------------------------------------------------------------------------------
+NS_IMETHODIMP GearsManagedResourceStore::GetOncomplete(nsIVariant **out_value) {
+  *out_value = NULL;
+  RETURN_EXCEPTION(STRING16(L"This property is write only."));
+}
+
+//------------------------------------------------------------------------------
+// InitUnloadMonitor
+//------------------------------------------------------------------------------
+void GearsManagedResourceStore::InitUnloadMonitor() {
+  // Create an event monitor to alert us when the page unloads.
+  if (unload_monitor_ == NULL) {
+    unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
+                                             this));
+  }
+}
+
+//------------------------------------------------------------------------------
+// HandleEvent
+//------------------------------------------------------------------------------
+void GearsManagedResourceStore::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+
+  // Drop references, js context is going away.
+  onerror_handler_.reset();
+  onprogress_handler_.reset();
+  oncomplete_handler_.reset();
+  MessageService::GetInstance()->RemoveObserver(this,
+                                                observer_topic_.c_str());
+}
+
+//------------------------------------------------------------------------------
+// OnNotify
+//------------------------------------------------------------------------------
+void GearsManagedResourceStore::OnNotify(MessageService *service,
+                                         const char16 *topic,
+                                         const NotificationData *data) {
+  scoped_ptr<JsRootedToken> param;
+  JsRootedCallback *handler = 0;
+
+  const UpdateTask::Event *event = static_cast<const UpdateTask::Event *>(data);
+  switch(event->event_type()) {
+    case UpdateTask::ERROR_EVENT: {
+        if (!onerror_handler_.get()) return;
+        handler = onerror_handler_.get();
+
+        param.reset(GetJsRunner()->NewObject(NULL));
+        if (!param.get()) return;
+
+        const UpdateTask::ErrorEvent *error_event =
+            static_cast<const UpdateTask::ErrorEvent *>(data);
+        GetJsRunner()->SetPropertyString(param->token(),
+                                         STRING16(L"message"),
+                                         error_event->error_message().c_str());
+      }
+      break;
+
+    case UpdateTask::PROGRESS_EVENT: {
+        if (!onprogress_handler_.get()) return;
+        handler = onprogress_handler_.get();
+
+        param.reset(GetJsRunner()->NewObject(NULL));
+        if (!param.get()) return;
+
+        const UpdateTask::ProgressEvent *progress_event =
+            static_cast<const UpdateTask::ProgressEvent *>(data);
+        GetJsRunner()->SetPropertyInt(param->token(),
+                                      STRING16(L"filesTotal"),
+                                      progress_event->files_total());
+        GetJsRunner()->SetPropertyInt(param->token(),
+                                      STRING16(L"filesComplete"),
+                                      progress_event->files_complete());
+      }
+      break;
+
+    case UpdateTask::COMPLETION_EVENT: {
+        if (!oncomplete_handler_.get()) return;
+        handler = oncomplete_handler_.get();
+
+        param.reset(GetJsRunner()->NewObject(NULL));
+        if (!param.get()) return;
+
+        const UpdateTask::CompletionEvent *completion_event =
+            static_cast<const UpdateTask::CompletionEvent *>(data);
+        GetJsRunner()->SetPropertyString(
+                           param->token(),
+                           STRING16(L"newVersion"),
+                           completion_event->new_version_string().c_str());
+      }
+      break;
+
+    default:
+      return;
+  }
+
+  const int argc = 1;
+  JsParamToSend argv[argc] = {
+    { JSPARAM_OBJECT_TOKEN, param.get() }
+  };
+  GetJsRunner()->InvokeCallback(handler, argc, argv, NULL);
 }
 
 //------------------------------------------------------------------------------

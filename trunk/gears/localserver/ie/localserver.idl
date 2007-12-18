@@ -54,6 +54,10 @@ interface GearsManagedResourceStoreInterface : IDispatch {
   [propget] HRESULT updateStatus([out, retval] int *status);
   [propget] HRESULT lastErrorMessage([out, retval] BSTR *last_error_message);
 
+  [propput] HRESULT onerror([in] const VARIANT *handler);
+  [propput] HRESULT onprogress([in] const VARIANT *handler);
+  [propput] HRESULT oncomplete([in] const VARIANT *handler);
+
   HRESULT checkForUpdate();
    
   // Version information 

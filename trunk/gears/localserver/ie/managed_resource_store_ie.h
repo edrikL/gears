@@ -29,6 +29,8 @@
 #include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_runner.h"
+#include "gears/base/common/message_service.h"
 #include "gears/localserver/common/managed_resource_store.h"
 #include "gears/localserver/ie/update_task_ie.h"
 
@@ -40,7 +42,9 @@ class ATL_NO_VTABLE GearsManagedResourceStore
       public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<GearsManagedResourceStore>,
       public CWindowImpl<GearsManagedResourceStore>,
-      public IDispatchImpl<GearsManagedResourceStoreInterface> {
+      public IDispatchImpl<GearsManagedResourceStoreInterface>,
+      public MessageObserverInterface,
+      public JsEventHandlerInterface {
  public:
   BEGIN_COM_MAP(GearsManagedResourceStore)
     COM_INTERFACE_ENTRY(GearsManagedResourceStoreInterface)
@@ -56,6 +60,11 @@ class ATL_NO_VTABLE GearsManagedResourceStore
 
   // need a default constructor to CreateInstance objects in IE
   GearsManagedResourceStore() {}
+
+  void HandleEvent(JsEventType event_type);
+  virtual void OnNotify(MessageService *service,
+                        const char16 *topic,
+                        const NotificationData *data);
 
   // GearsManagedResourceStoreInterface
   // This is the interface we expose to JavaScript.
@@ -87,6 +96,15 @@ class ATL_NO_VTABLE GearsManagedResourceStore
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_lastErrorMessage(
       /* [retval][out] */ BSTR *last_error_message);
 
+  virtual /* [propput] */ HRESULT STDMETHODCALLTYPE put_onerror(
+      /* [in] */ const VARIANT *in_value);
+
+  virtual /* [propput] */ HRESULT STDMETHODCALLTYPE put_onprogress(
+      /* [in] */ const VARIANT *in_value);
+
+  virtual /* [propput] */ HRESULT STDMETHODCALLTYPE put_oncomplete(
+      /* [in] */ const VARIANT *in_value);
+
   virtual HRESULT STDMETHODCALLTYPE checkForUpdate(void);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_currentVersion(
@@ -109,12 +127,18 @@ class ATL_NO_VTABLE GearsManagedResourceStore
                                BOOL &bHandled);
 
   HRESULT CreateWindowIfNeeded();
+  void InitUnloadMonitor();
 
   // other private data members
   HRESULT GetVersionString(WebCacheDB::VersionReadyState state, BSTR *ver_out);
 
   scoped_ptr<IEUpdateTask> update_task_;
   ManagedResourceStore store_;
+  scoped_ptr<JsRootedCallback> onerror_handler_;
+  scoped_ptr<JsRootedCallback> onprogress_handler_;
+  scoped_ptr<JsRootedCallback> oncomplete_handler_;
+  std::string16 observer_topic_;
+  scoped_ptr<JsEventMonitor> unload_monitor_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsManagedResourceStore);
 };
