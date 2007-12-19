@@ -312,7 +312,6 @@ IE_CPPSRCS	+= \
 		bho.cc \
 		detect_version_collision.cc \
 		file.cc \
-		file_ie.cc \
 		file_test.cc \
 		file_win32.cc \
 		html_event_monitor.cc \
@@ -377,7 +376,7 @@ IEMOBILE_CPPSRCS	+= \
 		bho.cc \
 		detect_version_collision.cc \
 		file.cc \
-		file_ie.cc \
+		file_wince.cc \
 		file_test.cc \
 		html_event_monitor.cc \
 		html_event_monitor_ie.cc \
@@ -435,7 +434,7 @@ NPAPI_CPPSRCS	+= \
 		base_class_test.cc \
 		browser_utils.cc \
 		file.cc \
-		file_ie.cc \
+		file_win32.cc \
 		file_test.cc \
 		html_event_monitor.cc \
 		html_event_monitor_np.cc \

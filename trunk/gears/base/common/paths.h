@@ -54,9 +54,6 @@ extern const size_t kUserPathComponentMaxChars;
 // the '.' delimiting the extension.
 extern const size_t kFileExtensionMaxChars;
 
-// Hard Limit on path component length, used for sanity checking.
-extern const size_t kGeneratedPathComponentMaxChars;
-
 // Determines the current user's Gears data directory, for the given origin,
 // and returns the full path in 'path'.  There is no trailing path separator.
 // Does not try to create the directory.
@@ -67,9 +64,9 @@ bool GetDataDirectory(const SecurityOrigin &origin, std::string16 *path);
 // Appends a module-specific name to 'path', suitable for a data file or dir.
 // There is no trailing path separator.
 //
-// The user-defined 'name' can be the empty string, but 'module_suffix' should
-// use one of our named constants.
-bool AppendDataName(const char16 *name, const char16 *module_suffix,
+// Both name & module_suffix are assumed to have been validated before
+// being passed into this function.
+void AppendDataName(const char16 *name, const char16 *module_suffix,
                     std::string16 *path);
 
 

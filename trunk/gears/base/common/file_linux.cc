@@ -49,15 +49,14 @@ static bool GetIconPath(const SecurityOrigin &origin,
     return false;
   }
 
-  if (!AppendDataName(STRING16(L"icons"), kDataSuffixForDesktop, icon_path)) {
-    *error = GET_INTERNAL_ERROR_MESSAGE();
-    return false;
-  }
-
+  AppendDataName(STRING16(L"icons"), kDataSuffixForDesktop, icon_path);
   *icon_path += kPathSeparator;
   *icon_path += link_name;
   *icon_path += STRING16(L"_linux");
   *icon_path += STRING16(L".png");
+
+  assert(kUserPathComponentMaxChars + strlen("_linux.png") <= 
+         File::kMaxPathComponentChars);
 
   return true;
 }

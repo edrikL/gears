@@ -145,21 +145,10 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
 #endif
 
   // Verify that the name is acceptable.
-  if (shortcut_info.app_name.length() >= 50) {
-    RETURN_EXCEPTION(STRING16(L"Application name must be less than 50 "
-                              L"characters."));
-  }
-
-  if (shortcut_info.app_name.find('\\', 0) != std::string16::npos ||
-      shortcut_info.app_name.find('/', 0) != std::string16::npos ||
-      shortcut_info.app_name.find(':', 0) != std::string16::npos ||
-      shortcut_info.app_name.find('*', 0) != std::string16::npos ||
-      shortcut_info.app_name.find('?', 0) != std::string16::npos ||
-      shortcut_info.app_name.find('\"', 0) != std::string16::npos ||
-      shortcut_info.app_name.find('<', 0) != std::string16::npos ||
-      shortcut_info.app_name.find('>', 0) != std::string16::npos ||
-      shortcut_info.app_name.find('|', 0) != std::string16::npos) {
-    RETURN_EXCEPTION(STRING16(L"Application name cannot contain: \"\\/:*?<>|"));
+  std::string16 error_message;
+  if (!IsUserInputValidAsPathComponent(shortcut_info.app_name, 
+                                       &error_message)) {
+    RETURN_EXCEPTION(error_message.c_str());
   }
 
   // Normalize and resolve, in case this is a relative URL.
@@ -247,9 +236,11 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
 
   // Ensure the directory we'll be storing the icons in exists.
   std::string16 icon_dir;
-  if (!GetDataDirectory(EnvPageSecurityOrigin(), &icon_dir) ||
-      !AppendDataName(STRING16(L"icons"), kDataSuffixForDesktop, &icon_dir) ||
-      !File::RecursivelyCreateDir(icon_dir.c_str())) {
+  if (!GetDataDirectory(EnvPageSecurityOrigin(), &icon_dir)) {
+    return false;
+  }
+  AppendDataName(STRING16(L"icons"), kDataSuffixForDesktop, &icon_dir);
+  if (!File::RecursivelyCreateDir(icon_dir.c_str())) {
     return false;
   }
 
@@ -402,11 +393,8 @@ bool GearsDesktop::GetControlPanelIconLocation(const SecurityOrigin &origin,
   if (!GetDataDirectory(origin, icon_loc)) {
     return false;
   }
-
-  if (!AppendDataName(STRING16(L"icons"), kDataSuffixForDesktop, icon_loc)) {
-    return false;
-  }
-
+  
+  AppendDataName(STRING16(L"icons"), kDataSuffixForDesktop, icon_loc);
   *icon_loc += kPathSeparator;
   *icon_loc += app_name;
   *icon_loc += STRING16(L"_cp");

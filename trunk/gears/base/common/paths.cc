@@ -33,15 +33,12 @@ const char16 *kDataSuffixForDesktop     = STRING16(L"#desktop");
 const char16 *kDataSuffixForLocalServer = STRING16(L"#localserver");
 
 const size_t kUserPathComponentMaxChars  = 64;
-const size_t kFileExtensionMaxChars = 5;  // .html
-const size_t kModuleSuffixMaxChars = 14;  // includes "#" separator
-const size_t kGeneratedPathComponentMaxChars  = kUserPathComponentMaxChars +
-                                                kModuleSuffixMaxChars;
+
+// Longest file extension we allow, including the preceding . e.g. '.extension'.
+const size_t kFileExtensionMaxChars = 10;
 
 bool GetDataDirectory(const SecurityOrigin &origin, std::string16 *path) {
-
   // Validate parameters.
-
   if (!IsStringValidPathComponent(origin.host().c_str()) ||
       !IsStringValidPathComponent(origin.scheme().c_str()) ||
       !IsStringValidPathComponent(origin.port_string().c_str())) {
@@ -51,7 +48,6 @@ bool GetDataDirectory(const SecurityOrigin &origin, std::string16 *path) {
   // Files for a given origin live under /host/scheme_port.
   // This makes it easy to find all "www.google.com" folders in a dir list,
   // regardless scheme (http/https) or port.
-
   if (!GetBaseDataDirectory(path)) { return false; }
 
   (*path) += kPathSeparator;
@@ -66,23 +62,19 @@ bool GetDataDirectory(const SecurityOrigin &origin, std::string16 *path) {
 }
 
 
-bool AppendDataName(const char16 *name, const char16 *module_suffix,
+void AppendDataName(const char16 *name, const char16 *module_suffix,
                     std::string16 *path) {
   // Validate parameters.
-  if (name == NULL || !IsUserInputValidAsPathComponent(name, NULL)) {
-    return false; // invalid user-defined name
-  }
-  if (module_suffix == NULL || !IsStringValidPathComponent(module_suffix) ||
-      module_suffix[0] == L'\0') {
-    return false; // invalid module suffix
-  }
+  assert(name);
+  assert(IsStringValidPathComponent(name));
+  assert(module_suffix);
+  assert(module_suffix[0] != L'\0');
+  assert(IsStringValidPathComponent(module_suffix));
 
   // The data name is a simple concatenation of the inputs.
   (*path) += kPathSeparator;
   (*path) += name;
   (*path) += module_suffix;
-
-  return true;
 }
 
 bool IsUserInputValidAsPathComponent(const std::string16 &user_input, 

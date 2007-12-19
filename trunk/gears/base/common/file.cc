@@ -33,6 +33,10 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
 
+// An arbitrary number that is a good limit on the filename length we should 
+// be creating internally.
+const size_t File::kMaxPathComponentChars = 128;
+
 const char16 *File::GetFileExtension(const char16 *filename) {
   assert(filename);
   size_t len = std::char_traits<char16>::length(filename);
@@ -49,6 +53,61 @@ const char16 *File::GetFileExtension(const char16 *filename) {
   return filename + len; // Return the address of the trailing NULL
 }
 
+bool File::GetBaseName(const std::string16 &path,  std::string16 *basename) {
+  assert(basename);
+
+  const std::string16 kPathSep(&kPathSeparator, 1);
+  const std::string16 kDoublePathSep = kPathSep + kPathSep;
+  std::string16 collapsed_path = path;
+
+  size_t collapsed_path_length = collapsed_path.length();
+
+  // Quick return for case of '', '\' & 'C:\'.
+  if (collapsed_path_length <= 1) {
+    *basename = collapsed_path;
+#ifdef WIN32
+  // Paths starting with \\\ are illegal on windows.
+  } else if (collapsed_path_length >= 3 &&
+             collapsed_path.find(kDoublePathSep + kPathSep) == 0) {
+      return false;
+#endif
+  // Extract basename.
+  } else {
+    // Remove all trailing slashes.
+    while (collapsed_path_length > 0 &&
+           collapsed_path[collapsed_path_length - 1] == kPathSeparator) {
+      collapsed_path.erase(collapsed_path_length - 1);
+      collapsed_path_length -= 1;
+    }
+
+    // If we got here we know that the string doesn't contain multiple \s
+    // isn't the root directory, and doesn't end with a \, so just do our stuff!
+    size_t idx = collapsed_path.rfind(kPathSep);
+
+    if (idx == std::string16::npos) {
+      // No path separator in string.
+      *basename = collapsed_path;
+    } else {
+      *basename = collapsed_path.substr(idx + 1);
+    }
+
+    // A corner case - if we got here it means that the input consisted entirely
+    // of path separators, so return a single path separator. Note that if we 
+    // get an empty string as input we want to return an empty string.
+    if (basename->empty() && path.length() > 0) {
+      *basename = kPathSep;
+    }
+  }
+  return true;
+}
+
+void File::SplitPath(const std::string16 &path, 
+                     PathComponents *exploded_path) {
+  assert(exploded_path);
+
+  const std::string16 path_sep(&kPathSeparator, 1);
+  Tokenize(path, path_sep, exploded_path);
+}
 
 // Support for storing and retrieving the last file error that occurred
 // on a given thread. This is used to report better error messages.
