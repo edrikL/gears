@@ -37,13 +37,13 @@ Additionally, the implementation will expose methods for mutation and for
 access to the data pointer from within other modules within Gears (from C++)
 
 {{{
-  void SetType(const std::string16 mimetype)
+  void SetContentType(const std::string16 mimetype)
   bool SetData(const std::vector<uint8> &data);
   const std::vector<uint8> &GetData();
 }}}
 
-=== void SetType(const std::string16 mimetype) ===
-Sets the mimetype of the blob to _mimetype_.
+=== void SetContentType(const std::string16 contenttype) ===
+Sets the content type of the blob to _contenttype_.
 
 === bool SetData(const std::vector<uint8> &data) ===
 Makes a copy of the data referenced by _data_ into the blob.  Any previous data
