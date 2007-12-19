@@ -218,7 +218,7 @@ var localServer = google.gears.factory.create('beta.localserver');
     <tr class="odd">
       <td>Parameters</td>
         <td><code>name</code>
-                - string identifying the store <br />
+                - string identifying the store, must not exceed 64 characters. <br />
             <code>requiredCookie</code> - optional.<br />
             The combination of name and requiredCookie (along with the domain) identify a unique store. <br />
           Expected cookie format is &quot;name=value&quot;. </td>
@@ -246,7 +246,7 @@ var localServer = google.gears.factory.create('beta.localserver');
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-        <td><code>name</code> - string identifying the store <br />
+        <td><code>name</code> - string identifying the store, must not exceed 64 characters. <br />
   <code>requiredCookie</code> - optional.<br />
 The combination of name and requiredCookie (along with the domain) identify a unique store. <br />
 Expected cookie format is &quot;name=value&quot;.</td>
@@ -270,7 +270,7 @@ Expected cookie format is &quot;name=value&quot;.</td>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-        <td><code>name</code> - string identifying the store <br>
+        <td><code>name</code> - string identifying the store, must not exceed 64 characters. <br>
           <code>requiredCookie</code> - optional.<br />
           The combination of name and requiredCookie (along with the domain) identify a unique store. <br />
       Expected cookie format is &quot;name=value&quot;.</td>
@@ -294,7 +294,7 @@ Expected cookie format is &quot;name=value&quot;.</td>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-        <td><code>name</code> - string identifying the store <br />
+        <td><code>name</code> - string identifying the store, must not exceed 64 characters.<br />
   <code>requiredCookie</code> - optional.<br />
   The combination of name and requiredCookie (along with the domain) identify a unique store. <br />
   Expected cookie format is &quot;name=value&quot;.</td>
@@ -318,7 +318,7 @@ Expected cookie format is &quot;name=value&quot;.</td>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-        <td><code>name</code>           - string identifying the store<br />
+        <td><code>name</code>           - string identifying the store, must not exceed 64 characters.<br />
 <code>requiredCookie</code> - optional.<br />
 The combination of name and requiredCookie (along with the domain) identify a unique store. <br />
 Expected cookie format is &quot;name=value&quot;.</td>
@@ -341,7 +341,7 @@ Expected cookie format is &quot;name=value&quot;.</td>
     </tr>
     <tr class="odd">
       <td>Parameters</td>
-        <td><code>name</code><br>
+        <td><code>name</code> - string identifying the store, must not exceed 64 characters.<br>
         <code>[requiredCookie]</code></td>
     </tr>
     <tr class="odd">
@@ -759,7 +759,7 @@ that this class provides.</p>
     <tr class="odd">
       <td>Parameters</td>
       <td><code>url</code><br/><br/>
-      <code>name</code></td>
+      <code>name</code> name of the header you want to retrieve, e.g. 'Content-Length'.</td>
     </tr>
     <tr class="odd">
       <td>Exceptions</td>
@@ -768,7 +768,7 @@ that this class provides.</p>
     </tr>
     <tr class="odd">
       <td>Description</td>
-      <td width="489">Returns an HTTP header associated with the captured URL. </td>
+      <td width="489">Returns a specific HTTP header associated with the captured URL. </td>
     </tr>
   </table>
   <table>
