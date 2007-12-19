@@ -23,9 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/paths.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_types.h"
+#include "gears/base/common/paths.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/string16.h"

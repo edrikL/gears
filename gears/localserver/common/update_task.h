@@ -27,9 +27,9 @@
 #define GEARS_LOCALSERVER_COMMON_UPDATE_TASK_H__
 
 #include <map>
-#include "gears/base/common/mutex.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/message_service.h"
+#include "gears/base/common/mutex.h"
 #include "gears/base/common/security_model.h"
 #include "gears/localserver/common/async_task.h"
 #include "gears/localserver/common/managed_resource_store.h"

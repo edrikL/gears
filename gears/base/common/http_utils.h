@@ -36,11 +36,11 @@
 
 #include <assert.h>
 #include <string.h>
-#include <string>
 #include <iterator>
+#include <string>
 #include <vector>
-#include "gears/base/common/int_types.h"
 #include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/int_types.h"
 
 class UnsafeArena;
 
@@ -351,4 +351,3 @@ class HTTPUtils {
 
 
 #endif /* GEARS_BASE_COMMON_HTTP_UTILS_H__ */
-

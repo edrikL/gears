@@ -28,12 +28,13 @@
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented
 #if defined(WIN32) && !defined(WINCE)
-#include <windows.h>
 #include <assert.h>
+#include <windows.h>
 #include <shlobj.h>
-#include <wininet.h>
 #include <shlwapi.h>
 #include <tchar.h>
+#include <wininet.h>
+
 #include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"

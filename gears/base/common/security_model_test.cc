@@ -26,8 +26,8 @@
 #ifdef DEBUG
 
 #include <string>
-#include "gears/base/common/security_model.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/security_model.h"
 
 // We don't use google3/testing/base/gunit because our tests depend of
 // browser specific code that needs to run in the context of the browser.

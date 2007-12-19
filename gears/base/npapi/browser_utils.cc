@@ -27,8 +27,8 @@
 
 #include <stack>
 
-#include "gears/base/common/string_utils.h"
 #include "gears/base/common/js_types.h"
+#include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/npapi/scoped_npapi_handles.h"
 

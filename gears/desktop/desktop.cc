@@ -28,11 +28,11 @@
 #endif
 
 #if BROWSER_FF
-#include <nsCOMPtr.h>
-#include <nspr.h>  // for PR_*
-#include <nsServiceManagerUtils.h>  // for NS_IMPL_* and NS_INTERFACE_*
-#include "gecko_internal/jsapi.h"
-#include "gecko_internal/nsIDOMClassInfo.h"
+#include <gecko_sdk/include/nspr.h>  // for PR_*
+#include <gecko_sdk/include/nsServiceManagerUtils.h>  // for NS_IMPL_* and NS_INTERFACE_*
+#include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_internal/jsapi.h>
+#include <gecko_internal/nsIDOMClassInfo.h>
 #include "gears/desktop/desktop_ff.h"
 #elif BROWSER_IE
 #include <dispex.h>
@@ -40,9 +40,9 @@
 #include "gears/desktop/desktop_ie.h"
 #endif
 
+#include "gears/base/common/http_utils.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/permissions_db.h"
-#include "gears/base/common/http_utils.h"
 #include "gears/base/common/png_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/localserver/common/http_constants.h"

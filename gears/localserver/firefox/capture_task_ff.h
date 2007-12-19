@@ -26,9 +26,9 @@
 #ifndef GEARS_LOCALSERVER_FIREFOX_CAPTURE_TASK_FF_H__
 #define GEARS_LOCALSERVER_FIREFOX_CAPTURE_TASK_FF_H__
 
+#include <gecko_internal/nsIScriptContext.h>
 #include "ff/genfiles/localserver.h" // from OUTDIR
 #include "gears/base/common/base_class.h" // only for Js* types
-#include "gecko_internal/nsIScriptContext.h"
 #include "gears/localserver/common/capture_task.h"
 
 //------------------------------------------------------------------------------

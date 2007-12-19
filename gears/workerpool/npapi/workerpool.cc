@@ -31,8 +31,8 @@
 #include "gears/base/common/mutex.h"
 #include "gears/factory/npapi/factory.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
-#include "gears/workerpool/npapi/workerpool.h"
 #include "gears/workerpool/common/workerpool_utils.h"
+#include "gears/workerpool/npapi/workerpool.h"
 
 #include "gears/base/common/scoped_win32_handles.h"
 

@@ -33,8 +33,8 @@
 
 #include "gears/base/common/string_utils.h"
 #include "gears/base/npapi/np_utils.h"
-#include "gears/base/npapi/scoped_npapi_handles.h"
 #include "gears/base/npapi/plugin.h"
+#include "gears/base/npapi/scoped_npapi_handles.h"
 
 // HtmlEventMonitorHook handles its own callbacks.
 DECLARE_GEARS_BRIDGE(HtmlEventMonitorHook, HtmlEventMonitorHook);

@@ -23,24 +23,24 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <nsCOMPtr.h>
-#include <nsDebug.h>
-#include <nsICategoryManager.h>
-#include <nsIFile.h>
-#include <nsIProperties.h>
-#include <nsIServiceManager.h>
-#include <nsIURI.h>
-#include <nsServiceManagerUtils.h> // for NS_IMPL_* and NS_INTERFACE_*
-#include <nsXPCOM.h>
-#include "gecko_internal/jsapi.h"
-#include "gecko_internal/nsIDOMClassInfo.h" // for *_DOM_CLASSINFO
-#include "gecko_internal/nsIPrincipal.h"
-#include "gecko_internal/nsIScriptSecurityManager.h"
-#include "gecko_internal/nsIScriptNameSpaceManager.h"
-#include "gecko_internal/nsIXPConnect.h"
+#include <gecko_sdk/include/nsXPCOM.h>
+#include <gecko_sdk/include/nsServiceManagerUtils.h> // for NS_IMPL_* and NS_INTERFACE_*
+#include <gecko_sdk/include/nsIURI.h>
+#include <gecko_sdk/include/nsIServiceManager.h>
+#include <gecko_sdk/include/nsIProperties.h>
+#include <gecko_sdk/include/nsIFile.h>
+#include <gecko_sdk/include/nsICategoryManager.h>
+#include <gecko_sdk/include/nsDebug.h>
+#include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_internal/jsapi.h>
+#include <gecko_internal/nsIDOMClassInfo.h> // for *_DOM_CLASSINFO
+#include <gecko_internal/nsIPrincipal.h>
+#include <gecko_internal/nsIScriptNameSpaceManager.h>
+#include <gecko_internal/nsIScriptSecurityManager.h>
+#include <gecko_internal/nsIXPConnect.h>
 
-#include "gears/base/common/paths.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/paths.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/string16.h"

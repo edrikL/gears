@@ -32,10 +32,10 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/string16.h"
 #include "gears/database/npapi/database.h"
-#include "gears/workerpool/npapi/workerpool.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/localserver/npapi/localserver_np.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/workerpool/npapi/workerpool.h"
 
 GearsFactory::GearsFactory()
     : is_creation_suspended_(false),

@@ -28,8 +28,8 @@
 
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-#include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
+#include "ie/genfiles/interfaces.h" // from OUTDIR
 
 class ATL_NO_VTABLE GearsChannel
     : public ModuleImplBaseClass,

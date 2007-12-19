@@ -28,8 +28,8 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/localserver/common/managed_resource_store.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 //-----------------------------------------------------------------------------
 // GearsManagedResourceStore

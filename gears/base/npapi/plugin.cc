@@ -27,9 +27,9 @@
 // included by the .h file.  If we do, mkdepend.py explodes in a whirlwind of
 // angry recursion as it tries to follow the infinite include chain.
 
-#include "gears/base/npapi/browser_utils.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/thread_locals.h"
+#include "gears/base/npapi/browser_utils.h"
 
 // static
 template<class T>

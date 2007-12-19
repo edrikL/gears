@@ -29,9 +29,9 @@
 #include "gears/base/common/wince_compatibility.h"
 #endif
 #include "gears/base/ie/activex_utils.h"
+#include "gears/localserver/common/critical_section.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_cookies.h"
-#include "gears/localserver/common/critical_section.h"
 
 const char16 *AsyncTask::kCookieRequiredErrorMessage =
                   STRING16(L"Required cookie is not present");

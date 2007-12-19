@@ -25,14 +25,14 @@
 
 #include <assert.h>
 #include <map>
-#include <nsCOMPtr.h>
-#include <nspr.h>  // for PR_*
 #ifdef WIN32
 #include <windows.h> // must manually #include before nsIEventQueueService.h
 #endif
 
+#include <gecko_sdk/include/nspr.h>  // for PR_*
+#include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_internal/nsIEventQueueService.h>
 #include "gears/base/common/message_queue.h"
-#include "gecko_internal/nsIEventQueueService.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 struct MessageEvent;

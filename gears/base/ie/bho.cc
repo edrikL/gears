@@ -26,8 +26,8 @@
 #include "gears/base/ie/activex_utils.h"
 #endif
 #include "gears/base/common/exception_handler_win32.h"
-#include "gears/base/ie/detect_version_collision.h"
 #include "gears/base/ie/bho.h"
+#include "gears/base/ie/detect_version_collision.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/localserver/ie/http_handler_ie.h"
 

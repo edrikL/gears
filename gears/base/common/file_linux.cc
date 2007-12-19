@@ -30,8 +30,8 @@
 #if defined(LINUX) && !defined(OS_MACOSX)
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
-#include "gears/base/common/paths.h"
 #include "gears/base/common/int_types.h"
+#include "gears/base/common/paths.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"

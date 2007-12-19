@@ -26,13 +26,13 @@
 #ifndef GEARS_LOCALSERVER_IE_MANAGED_RESOURCE_STORE_IE_H__
 #define GEARS_LOCALSERVER_IE_MANAGED_RESOURCE_STORE_IE_H__
 
-#include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/message_service.h"
 #include "gears/localserver/common/managed_resource_store.h"
 #include "gears/localserver/ie/update_task_ie.h"
+#include "ie/genfiles/interfaces.h" // from OUTDIR
 
 //------------------------------------------------------------------------------
 // GearsManagedResourceStore

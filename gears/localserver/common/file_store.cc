@@ -34,8 +34,8 @@
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
-#include "gears/localserver/common/localserver_db.h"
 #include "gears/localserver/common/file_store.h"
+#include "gears/localserver/common/localserver_db.h"
 
 const char16 *kGenericCacheFilename = STRING16(L"File");
 const int kMaxFilesPerDirectory = 500;

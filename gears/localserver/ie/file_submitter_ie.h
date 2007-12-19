@@ -26,10 +26,10 @@
 #ifndef GEARS_LOCALSERVER_IE_FILE_SUBMITTER_IE_H__
 #define GEARS_LOCALSERVER_IE_FILE_SUBMITTER_IE_H__
 
-#include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/localserver/common/resource_store.h"
+#include "ie/genfiles/interfaces.h" // from OUTDIR
 
 //------------------------------------------------------------------------------
 // GearsFileSubmitter

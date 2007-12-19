@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <nscore.h>
+#include <gecko_sdk/include/nscore.h>
 
 #include "gears/base/common/stopwatch.h"
 

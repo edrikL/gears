@@ -29,11 +29,11 @@
 #include <set>
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-#include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/stopwatch.h"
+#include "ie/genfiles/interfaces.h" // from OUTDIR
 
 struct sqlite3;
 struct sqlite3_stmt;

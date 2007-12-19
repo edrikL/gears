@@ -27,12 +27,12 @@
 #define GEARS_LOCALSERVER_COMMON_LOCALSERVER_DB_H__
 
 #include <vector>
-#include "gears/base/common/name_value_table.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/name_value_table.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/string16.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/localserver/common/http_constants.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 // IE and Firefox keep cached files in the file system. Safari does not
 // yet do so.

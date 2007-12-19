@@ -27,8 +27,8 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-#include <assert.h>
 #include <windows.h>
+#include <assert.h>
 #include <shellapi.h>
 #include <time.h>
 

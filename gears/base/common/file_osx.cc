@@ -33,15 +33,15 @@
 #include <sys/stat.h>
 
 #include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <CoreServices/CoreServices.h>
 
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/int_types.h"
 #include "gears/base/common/security_model.h"
-#include "gears/base/common/string_utils.h"
 #include "gears/base/common/string16.h"
+#include "gears/base/common/string_utils.h"
 #include "gears/base/safari/scoped_cf.h"
 
 // Creates the 'Info.plist' manifest file that osx looks for inside the package.

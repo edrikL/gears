@@ -27,7 +27,7 @@
 #if BROWSER_IE
 #include <windows.h>
 #elif BROWSER_FF
-#include <prlock.h>
+#include <gecko_sdk/include/prlock.h>
 #elif BROWSER_NPAPI
 // TODO(mpcomplete): do this right.
 #include <windows.h>

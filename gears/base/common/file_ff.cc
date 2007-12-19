@@ -31,19 +31,19 @@
 #if defined(BROWSER_FF) && !defined(WIN32)
 #include <assert.h>
 class nsIFile;  // must declare this before including nsDirectoryServiceUtils.h
-#include <nsDirectoryServiceUtils.h>
-#include <nsDirectoryServiceDefs.h>
-#include <nsIInputStream.h>
-#include <nsIIOService.h>
-#include <nsILocalFile.h>
-#include <nsISimpleEnumerator.h>
-#include <nsXPCOM.h>
+#include <gecko_sdk/include/nsXPCOM.h>
+#include <gecko_sdk/include/nsISimpleEnumerator.h>
+#include <gecko_sdk/include/nsILocalFile.h>
+#include <gecko_sdk/include/nsIIOService.h>
+#include <gecko_sdk/include/nsIInputStream.h>
+#include <gecko_sdk/include/nsDirectoryServiceDefs.h>
+#include <gecko_sdk/include/nsDirectoryServiceUtils.h>
+#include <gecko_internal/nsIFileProtocolHandler.h>
+#include <gecko_internal/nsIFileStreams.h>
 #include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
-#include "gecko_internal/nsIFileProtocolHandler.h"
-#include "gecko_internal/nsIFileStreams.h"
 #include "gears/base/firefox/ns_file_utils.h"
 
 

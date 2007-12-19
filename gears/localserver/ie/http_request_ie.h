@@ -29,8 +29,8 @@
 #include <string>
 #include <vector>
 
-#include "gears/base/ie/atl_headers.h"
 #include "gears/base/common/security_model.h"
+#include "gears/base/ie/atl_headers.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
 

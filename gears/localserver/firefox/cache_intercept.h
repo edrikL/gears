@@ -26,10 +26,10 @@
 #ifndef GEARS_LOCALSERVER_FIREFOX_CACHE_INTERCEPT_H__
 #define GEARS_LOCALSERVER_FIREFOX_CACHE_INTERCEPT_H__
 
-#include <nsIChannel.h>
-#include <nsIObserver.h>
+#include <gecko_sdk/include/nsIObserver.h>
+#include <gecko_sdk/include/nsIChannel.h>
+#include <gecko_internal/nsICacheService.h>
 #include "gears/base/common/common_ff.h"
-#include "gecko_internal/nsICacheService.h"
 
 class FFHttpRequest;
 

@@ -27,17 +27,17 @@
 // and min macros. This is because set indirectly includes atlcecert.h, which
 // sets NOMINMAX. windef.h (included from windows.h), defines the macros only if
 // NOMINMAX is not defined.
-#include <windows.h>
-#include <wininet.h>
 #include <set>
 #include <string>
 #include <vector>
-#include "gears/localserver/ie/http_handler_ie.h"
+#include <windows.h>
+#include <wininet.h>
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/ie_version.h"
 #include "gears/localserver/common/http_constants.h"
+#include "gears/localserver/ie/http_handler_ie.h"
 #include "gears/localserver/ie/urlmon_utils.h"
 
 // NOTE: Undocumented voodoo to kick IE into using IInternetProtocolInfo

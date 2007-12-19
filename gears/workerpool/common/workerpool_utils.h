@@ -26,8 +26,8 @@
 #ifndef GEARS_WORKERPOOL_COMMON_WORKERPOOL_UTILS_H__
 #define GEARS_WORKERPOOL_COMMON_WORKERPOOL_UTILS_H__
 
-#include "gears/base/common/string16.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/string16.h"
 
 extern const char16 *kWorkerInsertedFactoryName;
 extern const char16 *kWorkerInsertedWorkerPoolName;

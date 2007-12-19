@@ -27,11 +27,11 @@
 #define GEARS_LOCALSERVER_IE_RESOURCE_STORE_IE_H__
 
 #include <deque>
-#include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/localserver/common/resource_store.h"
 #include "gears/localserver/ie/capture_task_ie.h"
+#include "ie/genfiles/interfaces.h" // from OUTDIR
 
 //------------------------------------------------------------------------------
 // GearsResourceStore

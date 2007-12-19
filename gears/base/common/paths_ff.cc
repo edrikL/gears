@@ -23,18 +23,18 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <nsCOMPtr.h>
 class nsIFile; // must declare this before including nsDirectoryServiceUtils.h
-#include <nsDirectoryServiceUtils.h>
-#include <nsDirectoryServiceDefs.h>
-#include <nsILocalFile.h>
-#include <nsStringAPI.h>
-#include <nsXPCOM.h>
+#include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_sdk/include/nsXPCOM.h>
+#include <gecko_sdk/include/nsStringAPI.h>
+#include <gecko_sdk/include/nsILocalFile.h>
+#include <gecko_sdk/include/nsDirectoryServiceDefs.h>
+#include <gecko_sdk/include/nsDirectoryServiceUtils.h>
 
 #include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
-#include "gears/base/common/common.h"
 #include "gears/base/common/string16.h"
 
 #ifdef WIN32

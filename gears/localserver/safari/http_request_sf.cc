@@ -25,8 +25,8 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
-#include "gears/base/safari/browser_utils.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/base/safari/browser_utils.h"
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/base/safari/string_utils.h"
 #include "gears/localserver/common/http_constants.h"

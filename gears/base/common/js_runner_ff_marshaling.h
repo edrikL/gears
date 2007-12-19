@@ -35,9 +35,9 @@
 #include <map>
 #include <vector>
 
-#include <nsCOMPtr.h>
-#include "gecko_internal/jsapi.h"
-#include "gecko_internal/nsITimer.h"
+#include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_internal/jsapi.h>
+#include <gecko_internal/nsITimer.h>
 #include "gears/third_party/linked_ptr/linked_ptr.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 

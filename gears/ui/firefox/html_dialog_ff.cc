@@ -23,10 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <nsCOMPtr.h>
-#include <nsISupportsPrimitives.h>
-#include <nsIProperties.h>
-#include "gecko_internal/nsIDOMWindowInternal.h"
+#include <gecko_sdk/include/nsIProperties.h>
+#include <gecko_sdk/include/nsISupportsPrimitives.h>
+#include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_internal/nsIDOMWindowInternal.h>
 
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"

@@ -24,8 +24,8 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
-#include <map>
 #include <deque>
+#include <map>
 #include <windows.h>
 
 #include "gears/base/common/message_queue.h"

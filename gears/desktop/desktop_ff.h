@@ -26,7 +26,7 @@
 #ifndef GEARS_DESKTOP_DESKTOP_FF_H__
 #define GEARS_DESKTOP_DESKTOP_FF_H__
 
-#include <nsComponentManagerUtils.h>
+#include <gecko_sdk/include/nsComponentManagerUtils.h>
 
 #include "ff/genfiles/desktop_ff.h"  // from OUTDIR
 #include "gears/base/common/base_class.h"

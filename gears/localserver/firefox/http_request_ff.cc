@@ -27,17 +27,17 @@
 #include <windows.h>  // Needs to be included before nsIEventQueueService.h
 #endif
 
-#include <nsIHttpChannel.h>
-#include <nsIHttpHeaderVisitor.h>
-#include <nsIInputStream.h>
-#include <nsIIOService.h>
-#include <nsIUploadChannel.h>
-#include <nsIURI.h>
-#include "gecko_internal/nsICachingChannel.h"
-#include "gecko_internal/nsIEncodedChannel.h"
-#include "gecko_internal/nsIEventQueueService.h"
-#include "gecko_internal/nsIStringStream.h"
-#include "gecko_internal/nsNetError.h"
+#include <gecko_sdk/include/nsIURI.h>
+#include <gecko_sdk/include/nsIUploadChannel.h>
+#include <gecko_sdk/include/nsIIOService.h>
+#include <gecko_sdk/include/nsIInputStream.h>
+#include <gecko_sdk/include/nsIHttpHeaderVisitor.h>
+#include <gecko_sdk/include/nsIHttpChannel.h>
+#include <gecko_internal/nsICachingChannel.h>
+#include <gecko_internal/nsIEncodedChannel.h>
+#include <gecko_internal/nsIEventQueueService.h>
+#include <gecko_internal/nsIStringStream.h>
+#include <gecko_internal/nsNetError.h>
 
 #include "gears/localserver/firefox/http_request_ff.h"
 

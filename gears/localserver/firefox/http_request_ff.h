@@ -26,15 +26,15 @@
 #ifndef GEARS_LOCALSERVER_FIREFOX_HTTP_REQUEST_FF_H__
 #define GEARS_LOCALSERVER_FIREFOX_HTTP_REQUEST_FF_H__
 
-#include <nsIStreamListener.h>
-#include <nsIInterfaceRequestor.h>
-#include "gecko_internal/nsIChannelEventSink.h"
+#include <gecko_sdk/include/nsIInterfaceRequestor.h>
+#include <gecko_sdk/include/nsIStreamListener.h>
+#include <gecko_internal/nsIChannelEventSink.h>
 #include "ff/genfiles/localserver.h" // from OUTDIR
 #include "gears/base/common/common.h"
 #include "gears/base/common/security_model.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 class nsIChannel;
 class nsIHttpChannel;

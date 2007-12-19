@@ -23,16 +23,16 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <nsDirectoryServiceDefs.h>
-class nsIFile; // must declare this before including nsDirectoryServiceUtils.h
-#include <nsDirectoryServiceUtils.h>
-#include <nsIDOMHTMLInputElement.h>
-#include <nsXPCOM.h>
-#include "gecko_internal/nsIDOMClassInfo.h"
-#include "gecko_internal/nsIFileStreams.h"
 struct JSContext; // must declare this before including nsIJSContextStack.h
-#include "gecko_internal/nsIJSContextStack.h"
-#include "gecko_internal/nsIVariant.h"
+class nsIFile; // must declare this before including nsDirectoryServiceUtils.h
+#include <gecko_sdk/include/nsDirectoryServiceDefs.h>
+#include <gecko_sdk/include/nsDirectoryServiceUtils.h>
+#include <gecko_sdk/include/nsIDOMHTMLInputElement.h>
+#include <gecko_sdk/include/nsXPCOM.h>
+#include <gecko_internal/nsIDOMClassInfo.h>
+#include <gecko_internal/nsIFileStreams.h>
+#include <gecko_internal/nsIJSContextStack.h>
+#include <gecko_internal/nsIVariant.h>
 
 #include "gears/localserver/firefox/file_submitter_ff.h"
 
@@ -226,4 +226,3 @@ nsresult GearsFileSubmitter::CreateTempFile(const nsAString &desired_name,
   NS_ADDREF(*file);
   return NS_OK;
 }
-

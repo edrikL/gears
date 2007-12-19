@@ -27,12 +27,12 @@
 #ifdef WIN32
 #include <windows.h>  // must manually #include before nsIEventQueueService.h
 #endif
-#include <nsCOMPtr.h>
-#include <nspr.h>  // for PR_*
-#include <nsServiceManagerUtils.h>  // for NS_IMPL_* and NS_INTERFACE_*
-#include "gecko_internal/jsapi.h"
-#include "gecko_internal/nsITimerInternal.h"
-#include "gecko_internal/nsIDOMClassInfo.h"
+#include <gecko_sdk/include/nspr.h>  // for PR_*
+#include <gecko_sdk/include/nsServiceManagerUtils.h>  // for NS_IMPL_* and NS_INTERFACE_*
+#include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_internal/jsapi.h>
+#include <gecko_internal/nsIDOMClassInfo.h>
+#include <gecko_internal/nsITimerInternal.h>
 #elif BROWSER_IE
 #include <dispex.h>
 #include "gears/base/ie/activex_utils.h"

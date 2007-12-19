@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/capture_task.h"
+#include "gears/localserver/common/http_constants.h"
 
 
 //------------------------------------------------------------------------------

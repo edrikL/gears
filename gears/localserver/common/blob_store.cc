@@ -24,8 +24,8 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/common/string_utils.h"
-#include "gears/localserver/common/localserver_db.h"
 #include "gears/localserver/common/blob_store.h"
+#include "gears/localserver/common/localserver_db.h"
 
 
 //------------------------------------------------------------------------------

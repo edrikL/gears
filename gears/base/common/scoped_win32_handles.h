@@ -32,8 +32,8 @@
 #ifndef GEARS_BASE_COMMON_SCOPED_WIN32_HANDLES_H__
 #define GEARS_BASE_COMMON_SCOPED_WIN32_HANDLES_H__
 
-#include <windows.h>
 #include <wincrypt.h>
+#include <windows.h>
 #include <wininet.h>
 #include "gears/base/common/scoped_token.h"
 

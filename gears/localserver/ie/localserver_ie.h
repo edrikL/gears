@@ -26,9 +26,9 @@
 #ifndef GEARS_LOCALSERVER_IE_LOCALSERVER_IE_H__
 #define GEARS_LOCALSERVER_IE_LOCALSERVER_IE_H__
 
-#include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "ie/genfiles/interfaces.h" // from OUTDIR
 
 //------------------------------------------------------------------------------
 // GearsLocalServer

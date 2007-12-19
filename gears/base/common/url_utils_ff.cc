@@ -23,9 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <gecko_sdk/include/nsIURI.h>
+#include <gecko_sdk/include/nsIIOService.h>
 #include <assert.h>
-#include <nsIIOService.h>
-#include <nsIURI.h>
 
 #include "gears/base/common/url_utils.h"
 

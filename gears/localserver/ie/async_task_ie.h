@@ -26,10 +26,10 @@
 #ifndef GEARS_LOCALSERVER_IE_ASYNC_TASK_IE_H__
 #define GEARS_LOCALSERVER_IE_ASYNC_TASK_IE_H__
 
-#include "gears/base/ie/atl_headers.h" // include this before other ATL headers
 #include <atlsync.h>
 #include <vector>
 #include "gears/base/common/string16.h"
+#include "gears/base/ie/atl_headers.h" // include this before other ATL headers
 #include "gears/localserver/common/critical_section.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/resource_store.h"

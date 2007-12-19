@@ -26,8 +26,8 @@
 #include <assert.h>
 
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/security_model.h"  // for kUnknownDomain
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/security_model.h"  // for kUnknownDomain
 #include "gears/base/common/string_utils.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 

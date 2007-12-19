@@ -28,10 +28,10 @@
 
 #ifdef DEBUG
 
-#include "ie/genfiles/test_ie.h"  // from OUTDIR
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/js_runner.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_runner.h"
+#include "ie/genfiles/test_ie.h"  // from OUTDIR
 
 class GearsTest
     : public ModuleImplBaseClass,
