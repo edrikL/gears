@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <shlobj.h>
 #include <windows.h>
+#include <shlobj.h>
 #ifdef WINCE
 // No shlwapi.h on Windows Mobile.
 #else

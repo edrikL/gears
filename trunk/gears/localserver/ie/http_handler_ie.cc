@@ -27,10 +27,10 @@
 // and min macros. This is because set indirectly includes atlcecert.h, which
 // sets NOMINMAX. windef.h (included from windows.h), defines the macros only if
 // NOMINMAX is not defined.
+#include <windows.h>
 #include <set>
 #include <string>
 #include <vector>
-#include <windows.h>
 #include <wininet.h>
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string_utils.h"
