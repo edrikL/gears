@@ -290,8 +290,20 @@ def CreateTargets():
   common_ff_settings = DevEnvSettings(
       target_name=None, settings_objects_to_inherit_from=[common_settings])
   common_ff_settings.AddPreprocesorSymbol('BROWSER_FF')
+  common_ff_settings.AddPreprocesorSymbol('MOZILLA_STRICT_API')
   common_ff_settings.AppendIncludes(
-      [r'gears\third_party\gecko_sdk\1.8\win32\include'])
+      [r'gears\third_party\gecko_1.8\win32'
+       r'gears\third_party\gecko_1.8\win32\gecko_sdk\include',
+       r'gears\third_party\gecko_1.8'])
+      
+  # Settings Common to all NPAPI Targets
+  
+  common_npapi_settings = DevEnvSettings(
+      target_name=None, settings_objects_to_inherit_from=[common_settings])
+  common_npapi_settings.AddPreprocesorSymbol('BROWSER_NPAPI')
+  common_npapi_settings.AppendIncludes(
+      [r'gears\third_party\gecko_1.8\win32'
+       r'gears\third_party\gecko_1.8\win32\gecko_sdk\include'])
 
   # IE Targets
   
@@ -310,9 +322,20 @@ def CreateTargets():
   ff_debug_target = DevEnvSettings(
       target_name='FF Debug', 
       settings_objects_to_inherit_from=[common_ff_settings, debug_settings])
+      
+  # NPAPI Targets
+  
+  npapi_release_target = DevEnvSettings(
+      target_name='NPAPI Release', 
+      settings_objects_to_inherit_from=[common_npapi_settings, 
+                                        release_settings])
+  npapi_debug_target = DevEnvSettings(
+      target_name='NPAPI Debug', 
+      settings_objects_to_inherit_from=[common_npapi_settings, debug_settings])
   
   return [ie_release_target, ie_debug_target, 
-          ff_release_target, ff_debug_target]
+          ff_release_target, ff_debug_target,
+          npapi_release_target, npapi_debug_target]
   
   
 def LoadFolderContents(folder_path, templatizer):
