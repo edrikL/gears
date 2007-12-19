@@ -335,7 +335,7 @@ void GearsManagedResourceStore::OnNotify(MessageService *service,
         if (!onerror_handler_.get()) return;
         handler = onerror_handler_.get();
 
-        param.reset(GetJsRunner()->NewObject(NULL));
+        param.reset(GetJsRunner()->NewObject(STRING16(L"Error")));
         if (!param.get()) return;
 
         const UpdateTask::ErrorEvent *error_event =

@@ -112,6 +112,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    readonly  attribute int     <b>updateStatus</b>
    readonly  attribute string  <b>lastErrorMessage</b>
    readonly  attribute string  <b>currentVersion</b>
+   event void <b>oncomplete</b>(Object details)
+   event void <b>onerror</b>(Error error)
+   event void <b>onprogress</b>(Object details)
    void      <b>checkForUpdate</b>()</code></pre>
 
 <pre><code><a href="api_localserver.html#ResourceStore">ResourceStore class</a>
