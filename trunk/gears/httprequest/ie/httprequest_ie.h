@@ -26,12 +26,12 @@
 #ifndef GEARS_HTTPREQUEST_IE_HTTPREQUEST_IE_H__
 #define GEARS_HTTPREQUEST_IE_HTTPREQUEST_IE_H__
 
-#include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/localserver/common/http_request.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "ie/genfiles/interfaces.h" // from OUTDIR
 
 //------------------------------------------------------------------------------
 // GearsHttpRequest

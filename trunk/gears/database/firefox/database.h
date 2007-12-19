@@ -26,9 +26,9 @@
 #ifndef GEARS_DATABASE_FIREFOX_DATABASE_H__
 #define GEARS_DATABASE_FIREFOX_DATABASE_H__
 
+#include <gecko_sdk/include/nsComponentManagerUtils.h>
+#include <gecko_internal/nsIVariant.h>
 #include <set>
-#include <nsComponentManagerUtils.h>
-#include "gecko_internal/nsIVariant.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 #include "ff/genfiles/database.h" // from OUTDIR

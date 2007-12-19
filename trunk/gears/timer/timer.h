@@ -29,13 +29,13 @@
 #define GEARS_TIMER_TIMER_H__
 
 #if BROWSER_FF
-#include <nsComponentManagerUtils.h>
-#include "gecko_internal/nsITimer.h"
+#include <gecko_sdk/include/nsComponentManagerUtils.h>
+#include <gecko_internal/nsITimer.h>
 #endif
 
 #include <map>
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/third_party/linked_ptr/linked_ptr.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 #if BROWSER_FF
 #include "ff/genfiles/timer_ff.h"  // from OUTDIR

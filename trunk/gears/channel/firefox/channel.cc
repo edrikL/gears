@@ -24,9 +24,9 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-#include <nsCOMPtr.h>
-#include <nsServiceManagerUtils.h> // for NS_IMPL_* and NS_INTERFACE_*
-#include "gecko_internal/nsIDOMClassInfo.h"
+#include <gecko_sdk/include/nsServiceManagerUtils.h> // for NS_IMPL_* and NS_INTERFACE_*
+#include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_internal/nsIDOMClassInfo.h>
 
 #include "gears/channel/firefox/channel.h"
 

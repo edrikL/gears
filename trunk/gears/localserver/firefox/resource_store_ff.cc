@@ -23,15 +23,15 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <nsIDOMHTMLInputElement.h>
-#include <nsILocalFile.h>
-#include <nsMemory.h>
-#include <nsXPCOM.h>
-#include "gecko_internal/nsIDOMClassInfo.h"
-#include "gecko_internal/nsIFileProtocolHandler.h"
-#include "gecko_internal/nsIFileStreams.h"
-#include "gecko_internal/nsIMIMEService.h"
-#include "gecko_internal/nsIVariant.h"
+#include <gecko_sdk/include/nsXPCOM.h>
+#include <gecko_sdk/include/nsMemory.h>
+#include <gecko_sdk/include/nsILocalFile.h>
+#include <gecko_sdk/include/nsIDOMHTMLInputElement.h>
+#include <gecko_internal/nsIDOMClassInfo.h>
+#include <gecko_internal/nsIFileProtocolHandler.h>
+#include <gecko_internal/nsIFileStreams.h>
+#include <gecko_internal/nsIMIMEService.h>
+#include <gecko_internal/nsIVariant.h>
 
 #include "gears/localserver/firefox/resource_store_ff.h"
 

@@ -25,8 +25,8 @@
 
 #include <assert.h>
 #include <stdlib.h>
-#include <nsXPCOM.h>
-#include "gecko_internal/nsIDOMClassInfo.h"
+#include <gecko_sdk/include/nsXPCOM.h>
+#include <gecko_internal/nsIDOMClassInfo.h>
 
 #include "gears/factory/firefox/factory.h"
 

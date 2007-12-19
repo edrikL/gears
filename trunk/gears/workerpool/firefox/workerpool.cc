@@ -63,16 +63,18 @@
 #ifdef WIN32
 #include <windows.h> // must manually #include before nsIEventQueueService.h
 #endif
-#include <nsCOMPtr.h>
-#include <nspr.h> // for PR_*
-#include <nsServiceManagerUtils.h> // for NS_IMPL_* and NS_INTERFACE_*
-#include "gecko_internal/jsapi.h"
+
 struct JSContext; // must declare this before including nsIJSContextStack.h
-#include "gecko_internal/nsIJSContextStack.h"
-#include "gecko_internal/nsIJSRuntimeService.h"
-#include "gecko_internal/nsIDOMClassInfo.h" // for *_DOM_CLASSINFO
-#include "gecko_internal/nsIEventQueueService.h" // for event loop
-#include "gecko_internal/nsIScriptContext.h"
+#include <gecko_sdk/include/nspr.h> // for PR_*
+#include <gecko_sdk/include/nsServiceManagerUtils.h> // for NS_IMPL_*
+                                                     // and NS_INTERFACE_*
+#include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_internal/jsapi.h>
+#include <gecko_internal/nsIDOMClassInfo.h> // for *_DOM_CLASSINFO
+#include <gecko_internal/nsIEventQueueService.h> // for event loop
+#include <gecko_internal/nsIJSContextStack.h>
+#include <gecko_internal/nsIJSRuntimeService.h>
+#include <gecko_internal/nsIScriptContext.h>
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 #include "gears/workerpool/firefox/workerpool.h"

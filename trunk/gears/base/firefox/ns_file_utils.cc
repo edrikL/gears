@@ -36,11 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <nsIInputStream.h>
-#include <nsIIOService.h>
-#include <nsILocalFile.h>
-#include "gecko_internal/nsIFileProtocolHandler.h"
-#include "gecko_internal/nsIFileStreams.h"
+#include <gecko_sdk/include/nsILocalFile.h>
+#include <gecko_sdk/include/nsIIOService.h>
+#include <gecko_sdk/include/nsIInputStream.h>
+#include <gecko_internal/nsIFileProtocolHandler.h>
+#include <gecko_internal/nsIFileStreams.h>
 #include "gears/base/firefox/ns_file_utils.h"
 
 #define NS_LOCALFILEINPUTSTREAM_CONTRACTID \

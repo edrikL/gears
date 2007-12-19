@@ -38,9 +38,9 @@
 //
 // Main plugin entry point implementation
 //
-#include "gears/base/npapi/module.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/thread_locals.h"
+#include "gears/base/npapi/module.h"
 
 #ifndef HIBYTE
 #define HIBYTE(x) ((((uint32)(x)) & 0xff00) >> 8)

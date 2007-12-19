@@ -36,13 +36,13 @@
 
 
 #include <vector>
-#include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/mutex.h"
-#include "gears/base/common/common.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
+#include "ie/genfiles/interfaces.h" // from OUTDIR
 
 const UINT WM_WORKERPOOL_ONMESSAGE = (WM_USER + 0);
 const UINT WM_WORKERPOOL_ONERROR = (WM_USER + 1);

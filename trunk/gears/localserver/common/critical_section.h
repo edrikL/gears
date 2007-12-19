@@ -63,7 +63,7 @@ class CritSecLock : protected CCritSecLock {
 // BROWSER_FF
 //------------------------------------------------------------------------------
 #include <assert.h>
-#include <prmon.h>
+#include <gecko_sdk/include/prmon.h>
 
 class CriticalSection {
  public:

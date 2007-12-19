@@ -232,12 +232,12 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
 #ifdef WIN32
 #include <windows.h>  // must manually #include before nsIEventQueueService.h
 #endif
-#include <nsIIOService.h>
-#include <nsIURI.h>
-#include <nsMemory.h>
-#include "gecko_internal/nsIEventQueueService.h"
-#include "gecko_internal/nsIProxyObjectManager.h"
-#include "gecko_internal/nsICookieService.h"
+#include <gecko_sdk/include/nsMemory.h>
+#include <gecko_sdk/include/nsIURI.h>
+#include <gecko_sdk/include/nsIIOService.h>
+#include <gecko_internal/nsICookieService.h>
+#include <gecko_internal/nsIEventQueueService.h>
+#include <gecko_internal/nsIProxyObjectManager.h>
 #include "gears/base/common/common.h"
 
 bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
@@ -314,9 +314,9 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
 
 //------------------------------------------------------------------------------
 #elif BROWSER_SAFARI
-#include "gears/localserver/safari/http_cookies_sf.h"
-#include "gears/base/safari/string_utils.h"
 #include "gears/base/safari/scoped_cf.h"
+#include "gears/base/safari/string_utils.h"
+#include "gears/localserver/safari/http_cookies_sf.h"
 
 bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
   assert(url);

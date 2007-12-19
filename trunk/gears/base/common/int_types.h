@@ -31,7 +31,7 @@
 // BROWSER_FF
 //------------------------------------------------------------------------------
 // NSPR defines these integer types
-#include "prtypes.h"
+#include <gecko_sdk/include/prtypes.h>
 #else
 //------------------------------------------------------------------------------
 // BROWSER_IE and BROWSER_SAFARI

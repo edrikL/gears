@@ -28,12 +28,12 @@
 
 #ifdef DEBUG
 
-#include <nsComponentManagerUtils.h>
+#include <gecko_sdk/include/nsComponentManagerUtils.h>
 
 #include "ff/genfiles/test_ff.h"  // from OUTDIR
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/js_runner.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_runner.h"
 
 // Object identifiers
 extern const char *kGearsTestClassName;

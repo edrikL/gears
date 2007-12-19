@@ -25,9 +25,9 @@
 
 #include "gears/database/npapi/result_set.h"
 
-#include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/stopwatch.h"
+#include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
 
 #include "gears/database/npapi/database.h"
 

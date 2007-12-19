@@ -23,9 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/localserver/common/http_constants.h"
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/localserver/common/http_constants.h"
 
 const char16 *HttpConstants::kCacheControlHeader = STRING16(L"Cache-Control");
 const char16 *HttpConstants::kContentDispositionHeader

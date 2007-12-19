@@ -26,17 +26,24 @@
 #include <assert.h>
 #include <map>
 #include <set>
-#include <nsCOMPtr.h>
-#include <nspr.h> // for PR_*
-#include "gecko_internal/jsapi.h"
-#include "gecko_internal/nsIJSContextStack.h"
-#include "gecko_internal/nsIScriptContext.h"
-#include "gecko_internal/nsIScriptGlobalObject.h"
-#include "gecko_internal/nsIScriptObjectPrincipal.h"
-#include "gecko_internal/nsIPrincipal.h"
+#include <gecko_sdk/include/nspr.h> // for PR_*
+#include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_internal/jsapi.h>
+#include <gecko_internal/nsIJSContextStack.h>
+#include <gecko_internal/nsIPrincipal.h>
+#include <gecko_internal/nsIScriptContext.h>
+#include <gecko_internal/nsIScriptGlobalObject.h>
+#include <gecko_internal/nsIScriptObjectPrincipal.h>
 
 #include "gears/base/common/js_runner.h"
 
+#include "ff/genfiles/channel.h"
+#include "ff/genfiles/database.h"
+#include "ff/genfiles/desktop_ff.h"
+#include "ff/genfiles/httprequest.h"
+#include "ff/genfiles/localserver.h"
+#include "ff/genfiles/timer_ff.h"
+#include "ff/genfiles/workerpool.h"
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/html_event_monitor.h"
@@ -45,13 +52,6 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/factory/firefox/factory.h"
-#include "ff/genfiles/channel.h"
-#include "ff/genfiles/database.h"
-#include "ff/genfiles/desktop_ff.h"
-#include "ff/genfiles/httprequest.h"
-#include "ff/genfiles/localserver.h"
-#include "ff/genfiles/timer_ff.h"
-#include "ff/genfiles/workerpool.h"
 
 #ifdef DEBUG
 #include "ff/genfiles/test_ff.h"

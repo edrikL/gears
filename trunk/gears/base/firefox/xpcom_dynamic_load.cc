@@ -24,7 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
-#include "prlink.h"
+#include <gecko_sdk/include/prlink.h>
 
 #include "gears/base/firefox/xpcom_dynamic_load.h"
 

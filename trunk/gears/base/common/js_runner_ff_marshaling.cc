@@ -78,19 +78,19 @@
 //   (Or maybe rely on JSContext cleanup -- at a higher level -- to handle it.)
 
 
-#include "nsComponentManagerUtils.h"
-#include "nsMemory.h" // for use in JSData2Native
-#include "gecko_internal/nsIInterfaceInfoManager.h"
-#include "gecko_internal/nsITimerInternal.h"
-#include "gecko_internal/nsIVariant.h" // for use in JSData2Native
+#include <gecko_sdk/include/nsComponentManagerUtils.h>
+#include <gecko_sdk/include/nsMemory.h> // for use in JSData2Native
+#include <gecko_internal/nsIInterfaceInfoManager.h>
+#include <gecko_internal/nsITimerInternal.h>
+#include <gecko_internal/nsIVariant.h> // for use in JSData2Native
 // TODO(cprince): see if we can remove nsIVariant.h/nsMemory.h after cleanup.
-#include "gecko_internal/xptinfo.h"
+#include <gecko_internal/xptinfo.h>
 
 #include "ff/genfiles/base_interface_ff.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-#include "gears/base/firefox/xpcom_dynamic_load.h"
 #include "gears/base/common/js_runner_ff_marshaling.h"
+#include "gears/base/firefox/xpcom_dynamic_load.h"
 
 
 // The "reserved slot" in which we store our custom data for functions.

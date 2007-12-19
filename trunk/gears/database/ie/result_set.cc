@@ -24,10 +24,10 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/common/common.h"
+#include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
-#include "gears/base/common/sqlite_wrapper.h"
 #include "gears/database/ie/database.h"
 #include "gears/database/ie/result_set.h"
 #include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"

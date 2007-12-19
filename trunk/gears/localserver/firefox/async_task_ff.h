@@ -28,8 +28,8 @@
 
 #include <vector>
 #include "gears/base/common/common.h"
-#include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/critical_section.h"
+#include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
 
 class nsIEventQueue;

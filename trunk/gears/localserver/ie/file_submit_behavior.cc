@@ -26,8 +26,8 @@
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/scoped_win32_handles.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/localserver/ie/file_submit_behavior.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 static const wchar_t *kMissingFilename = L"Unknown";
 

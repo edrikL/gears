@@ -43,10 +43,10 @@
 #include <exdispid.h>
 #include <mshtmhst.h>  // for IHTMLOMWindowServices
 
-#include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/common.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/ui/ie/ui_resources.h"
+#include "ie/genfiles/interfaces.h" // from OUTDIR
 
 // HtmlDialogHost is a COM dialog which allows clients to display HTML
 // resources as modal dialogs. It provides the underlying implementation for

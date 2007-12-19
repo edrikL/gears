@@ -34,9 +34,9 @@
 #include "gears/factory/common/factory_utils.h"
 #include "gears/factory/ie/factory.h"
 #include "gears/httprequest/ie/httprequest_ie.h"
-#include "gears/workerpool/ie/workerpool.h"
 #include "gears/localserver/ie/localserver_ie.h"
 #include "gears/timer/timer.h"
+#include "gears/workerpool/ie/workerpool.h"
 
 #ifdef DEBUG
 #include "gears/cctests/test_ie.h"

@@ -24,17 +24,17 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
-#include <nspr.h> // for PR_*
 #ifdef WIN32
 #include <windows.h> // must manually #include before nsIEventQueueService.h
 #endif
+#include <gecko_sdk/include/nspr.h> // for PR_*
+#include <gecko_internal/nsIEventQueue.h>
+#include <gecko_internal/nsIEventQueueService.h>
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/firefox/async_task_ff.h"
-#include "gecko_internal/nsIEventQueue.h"
-#include "gecko_internal/nsIEventQueueService.h"
 
 const char16 *AsyncTask::kCookieRequiredErrorMessage =
                   STRING16(L"Required cookie is not present");

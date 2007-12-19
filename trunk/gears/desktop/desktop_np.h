@@ -29,8 +29,8 @@
 // TODO(mpcomplete): implement me
 
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/js_runner.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_runner.h"
 
 class GearsDesktop : public ModuleImplBaseClass {
  public:

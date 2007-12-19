@@ -29,8 +29,8 @@
 #ifndef GEARS_BASE_COMMON_ATOMIC_OPS_OSX_H__
 #define GEARS_BASE_COMMON_ATOMIC_OPS_OSX_H__
 
-#include <stdint.h>
 #include <libkern/OSAtomic.h>
+#include <stdint.h>
 
 typedef int32_t Atomic32;
 typedef intptr_t AtomicWord;

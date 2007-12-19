@@ -51,10 +51,10 @@
 #define GEARS_LOCALSERVER_IE_HTTP_HANDLER_IE_H__
 
 #include "gears/base/ie/atl_headers.h"
+#include "gears/localserver/common/localserver_db.h"
 #include "gears/third_party/passthru_app/ProtocolCF.h"
 #include "gears/third_party/passthru_app/ProtocolImpl.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
-#include "gears/localserver/common/localserver_db.h"
 
 
 class HttpHandler;

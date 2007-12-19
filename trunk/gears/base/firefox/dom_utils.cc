@@ -23,25 +23,25 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <nsIDOMDocument.h>
-#include <nsIDOMEventTarget.h>
-#include <nsIDOMHTMLInputElement.h>
-#include <nsIDOMWindow.h>
-#include <nsIIOService.h>
-#include <nsIURI.h>
-#include "gears/base/common/security_model.h"
-#include "gears/base/common/common.h"
-#include "gears/base/firefox/dom_utils.h"
-#include "gecko_internal/jsapi.h"
-#include "gecko_internal/nsIDOM3Node.h"
-#include "gecko_internal/nsIDOMWindowInternal.h"
-#include "gecko_internal/nsIInterfaceInfoManager.h"
 struct JSContext; // must declare this before including nsIJSContextStack.h
-#include "gecko_internal/nsIJSContextStack.h"
-#include "gecko_internal/nsIScriptContext.h"
-#include "gecko_internal/nsIScriptGlobalObject.h"
-#include "gecko_internal/nsIScriptSecurityManager.h"
-#include "gecko_internal/nsIXPConnect.h"
+#include <gecko_sdk/include/nsIURI.h>
+#include <gecko_sdk/include/nsIIOService.h>
+#include <gecko_sdk/include/nsIDOMWindow.h>
+#include <gecko_sdk/include/nsIDOMHTMLInputElement.h>
+#include <gecko_sdk/include/nsIDOMEventTarget.h>
+#include <gecko_sdk/include/nsIDOMDocument.h>
+#include <gecko_internal/jsapi.h>
+#include <gecko_internal/nsIDOM3Node.h>
+#include <gecko_internal/nsIDOMWindowInternal.h>
+#include <gecko_internal/nsIInterfaceInfoManager.h>
+#include <gecko_internal/nsIJSContextStack.h>
+#include <gecko_internal/nsIScriptContext.h>
+#include <gecko_internal/nsIScriptGlobalObject.h>
+#include <gecko_internal/nsIScriptSecurityManager.h>
+#include <gecko_internal/nsIXPConnect.h>
+#include "gears/base/common/common.h"
+#include "gears/base/common/security_model.h"
+#include "gears/base/firefox/dom_utils.h"
 
 
 // The IID for nsIContent in different versions of Firefox/Gecko

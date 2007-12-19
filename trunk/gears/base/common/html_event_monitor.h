@@ -27,8 +27,8 @@
 #define GEARS_BASE_COMMON_HTML_EVENT_MONITOR_H__
 
 #if BROWSER_FF
-#include <nsIDOMEventTarget.h>
-#include <nsXPCOM.h>
+#include <gecko_sdk/include/nsXPCOM.h>
+#include <gecko_sdk/include/nsIDOMEventTarget.h>
 #elif BROWSER_IE
 #ifdef WINCE
 #include <webvw.h>

@@ -26,14 +26,14 @@
 #ifndef GEARS_BASE_COMMON_JS_TYPES_H__
 #define GEARS_BASE_COMMON_JS_TYPES_H__
 
-#include "gears/base/common/string16.h"  // for string16
 #include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/string16.h"  // for string16
 
 #if BROWSER_FF
 
-#include <nsCOMPtr.h>  // for JsParamFetcher
-#include "gecko_internal/nsIXPConnect.h" // for JsParamFetcher
-#include "gecko_internal/jsapi.h"
+#include <gecko_sdk/include/nsCOMPtr.h>  // for JsParamFetcher
+#include <gecko_internal/jsapi.h>
+#include <gecko_internal/nsIXPConnect.h> // for JsParamFetcher
 
 // Abstracted types for values used with JavaScript engines.
 typedef jsval      JsToken;

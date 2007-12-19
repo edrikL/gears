@@ -31,12 +31,12 @@
 
 #define FORCE_PR_LOG
 
-#include <nsComponentManagerUtils.h>
-#include <nsCOMPtr.h>
-#include <nscore.h>
-#include <nsServiceManagerUtils.h>
-#include <nsStringAPI.h>
-#include <prlog.h>
+#include <gecko_sdk/include/prlog.h>
+#include <gecko_sdk/include/nsStringAPI.h>
+#include <gecko_sdk/include/nsServiceManagerUtils.h>
+#include <gecko_sdk/include/nscore.h>
+#include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_sdk/include/nsComponentManagerUtils.h>
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo *gLog;
@@ -49,7 +49,7 @@ extern PRLogModuleInfo *gLog;
 // single thread.  To use, add a DECL_SINGLE_THREAD to your class declaration.
 // Then, add ASSERT_SINGLE_THREAD() calls to the top of each class method.
 #ifdef DEBUG
-#include <prthread.h>
+#include <gecko_sdk/include/prthread.h>
 class CurrentThreadID {
  public:
   CurrentThreadID() {

@@ -23,9 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/ie/resource.h" // for .rgs resource ids (IDR_*)
+#include "ie/genfiles/interfaces.h" // from OUTDIR
 
 // This is defined in gears/base/common/message_queue_ie.h.  It should only be
 // called here.

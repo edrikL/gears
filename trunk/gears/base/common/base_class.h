@@ -28,9 +28,9 @@
 #ifndef GEARS_BASE_COMMON_BASE_CLASS_H__
 #define GEARS_BASE_COMMON_BASE_CLASS_H__
 
-#include "gears/base/common/security_model.h"
 #include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/scoped_token.h"
+#include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"  // for string16
 
 #include "gears/base/common/js_types.h"

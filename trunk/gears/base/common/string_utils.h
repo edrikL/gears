@@ -26,8 +26,8 @@
 #ifndef GEARS_BASE_COMMON_STRING_UTILS_H__
 #define GEARS_BASE_COMMON_STRING_UTILS_H__
 
-#include <assert.h>
 #include <algorithm>
+#include <assert.h>
 #include <cctype>
 #include <string>
 #include <vector>

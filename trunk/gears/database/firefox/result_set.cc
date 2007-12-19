@@ -23,13 +23,13 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <nsICategoryManager.h>
-#include <nsXPCOM.h>
-#include "gecko_internal/nsIDOMClassInfo.h"
-#include "gecko_internal/nsIVariant.h"
-#include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
+#include <gecko_sdk/include/nsXPCOM.h>
+#include <gecko_sdk/include/nsICategoryManager.h>
+#include <gecko_internal/nsIDOMClassInfo.h>
+#include <gecko_internal/nsIVariant.h>
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/stopwatch.h"
+#include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
 
 #include "gears/database/firefox/database.h"
 #include "gears/database/firefox/result_set.h"

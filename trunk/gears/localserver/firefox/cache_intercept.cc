@@ -23,30 +23,30 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <prtime.h>
-#include <nsICategoryManager.h>
-#include <nsIChannel.h>
-#include <nsIComponentRegistrar.h>
-#include <nsIHttpChannel.h>
-#include <nsIInputStream.h>
-#include <nsIInterfaceRequestor.h>
-#include <nsIObserver.h>
-#include <nsIObserverService.h>
-#include <nsIOutputStream.h>
-#include <nsIRequest.h>
-#include <nsIURI.h>
-#include <nsXPCOM.h>
 #include <string>
 #include <vector>
+#include <gecko_sdk/include/nsXPCOM.h>
+#include <gecko_sdk/include/nsIURI.h>
+#include <gecko_sdk/include/nsIRequest.h>
+#include <gecko_sdk/include/nsIOutputStream.h>
+#include <gecko_sdk/include/nsIObserverService.h>
+#include <gecko_sdk/include/nsIObserver.h>
+#include <gecko_sdk/include/nsIInterfaceRequestor.h>
+#include <gecko_sdk/include/nsIInputStream.h>
+#include <gecko_sdk/include/nsIHttpChannel.h>
+#include <gecko_sdk/include/nsIComponentRegistrar.h>
+#include <gecko_sdk/include/nsIChannel.h>
+#include <gecko_sdk/include/nsICategoryManager.h>
+#include <gecko_sdk/include/prtime.h>
+#include <gecko_internal/nsICacheEntryDescriptor.h>
+#include <gecko_internal/nsICacheListener.h>
+#include <gecko_internal/nsICacheService.h>
+#include <gecko_internal/nsICacheSession.h>
+#include <gecko_internal/nsICacheVisitor.h>
 #include "ff/genfiles/localserver.h"  // from OUTDIR
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/factory/common/factory_utils.h"
-#include "gecko_internal/nsICacheEntryDescriptor.h"
-#include "gecko_internal/nsICacheListener.h"
-#include "gecko_internal/nsICacheService.h"
-#include "gecko_internal/nsICacheSession.h"
-#include "gecko_internal/nsICacheVisitor.h"
 #include "gears/localserver/common/localserver_db.h"
 #include "gears/localserver/firefox/cache_intercept.h"
 #include "gears/localserver/firefox/http_request_ff.h"

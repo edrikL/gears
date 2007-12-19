@@ -26,9 +26,9 @@
 #ifndef GEARS_BASE_IE_BHO_H__
 #define GEARS_BASE_IE_BHO_H__
 
-#include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/resource.h" // for .rgs resource ids (IDR_*)
+#include "ie/genfiles/interfaces.h" // from OUTDIR
 
 class ATL_NO_VTABLE BrowserHelperObject
     : public CComObjectRootEx<CComMultiThreadModel>,

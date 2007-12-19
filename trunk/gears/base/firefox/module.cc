@@ -23,13 +23,13 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <nsICategoryManager.h>
-#include <nsIGenericFactory.h>
-#include <nsILocalFile.h>
-#include <nsMemory.h>
-#include <nsXPCOM.h>
-#include "gecko_internal/nsIDOMClassInfo.h"
-#include "gecko_internal/nsIScriptNameSpaceManager.h"
+#include <gecko_sdk/include/nsXPCOM.h>
+#include <gecko_sdk/include/nsMemory.h>
+#include <gecko_sdk/include/nsILocalFile.h>
+#include <gecko_sdk/include/nsIGenericFactory.h>
+#include <gecko_sdk/include/nsICategoryManager.h>
+#include <gecko_internal/nsIDOMClassInfo.h>
+#include <gecko_internal/nsIScriptNameSpaceManager.h>
 
 #include "gears/base/common/thread_locals.h"
 #include "gears/channel/firefox/channel.h"
@@ -39,10 +39,10 @@
 #include "gears/factory/firefox/factory.h"
 #include "gears/httprequest/firefox/httprequest_ff.h"
 #include "gears/localserver/firefox/cache_intercept.h"
+#include "gears/localserver/firefox/file_submitter_ff.h"
 #include "gears/localserver/firefox/localserver_ff.h"
 #include "gears/localserver/firefox/managed_resource_store_ff.h"
 #include "gears/localserver/firefox/resource_store_ff.h"
-#include "gears/localserver/firefox/file_submitter_ff.h"
 #include "gears/timer/timer.h"
 #include "gears/ui/firefox/ui_utils.h"
 #include "gears/workerpool/firefox/workerpool.h"

@@ -27,14 +27,14 @@
 #define GEARS_WORKERPOOL_FIREFOX_WORKERPOOL_H__
 
 #include <vector>
-#include <nsComponentManagerUtils.h>
-#include "gecko_internal/nsIVariant.h"
+#include <gecko_sdk/include/nsComponentManagerUtils.h>
+#include <gecko_internal/nsIVariant.h>
 
 #include "ff/genfiles/workerpool.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/mutex.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/mutex.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
 

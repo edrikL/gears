@@ -26,11 +26,11 @@
 #ifndef GEARS_DESKTOP_DESKTOP_IE_H__
 #define GEARS_DESKTOP_DESKTOP_IE_H__
 
-#include "ie/genfiles/desktop_ie.h"  // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/js_runner.h"
+#include "ie/genfiles/desktop_ie.h"  // from OUTDIR
 
 class GearsDesktop
     : public ModuleImplBaseClass,

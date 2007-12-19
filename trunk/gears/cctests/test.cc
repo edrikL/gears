@@ -30,27 +30,27 @@
 #endif
 
 #if BROWSER_FF
-#include <nsCOMPtr.h>
-#include <nspr.h>  // for PR_*
-#include <nsServiceManagerUtils.h>  // for NS_IMPL_* and NS_INTERFACE_*
-#include "gecko_internal/jsapi.h"
-#include "gecko_internal/nsIDOMClassInfo.h"
+#include <gecko_sdk/include/nspr.h>  // for PR_*
+#include <gecko_sdk/include/nsServiceManagerUtils.h>  // for NS_IMPL_* and NS_INTERFACE_*
+#include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_internal/jsapi.h>
+#include <gecko_internal/nsIDOMClassInfo.h>
 #include "gears/cctests/test_ff.h"
 #elif BROWSER_IE
 #include "gears/base/ie/activex_utils.h"
 #include "gears/cctests/test_ie.h"
 #endif
 
+#include "gears/base/common/name_value_table_test.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/permissions_db_test.h"
-#include "gears/base/common/string_utils.h"
-#include "gears/base/common/name_value_table_test.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
-#include "gears/localserver/common/managed_resource_store.h"
+#include "gears/base/common/string_utils.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/common/http_request.h"
-#include "gears/localserver/common/manifest.h"
 #include "gears/localserver/common/localserver_db.h"
+#include "gears/localserver/common/managed_resource_store.h"
+#include "gears/localserver/common/manifest.h"
 #include "gears/localserver/common/resource_store.h"
 
 // Constants for returning a boolean value - hopefully there should be a

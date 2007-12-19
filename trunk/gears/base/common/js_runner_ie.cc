@@ -46,8 +46,8 @@
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/scoped_token.h"
-#include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/activex_utils.h"
+#include "gears/base/ie/atl_headers.h"
 #include "gears/third_party/AtlActiveScriptSite.h"
 
 

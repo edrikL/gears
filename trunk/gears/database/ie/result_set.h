@@ -27,9 +27,9 @@
 #define GEARS_DATABASE_IE_RESULT_SET_H__
 
 #include <atlcoll.h>
-#include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "ie/genfiles/interfaces.h" // from OUTDIR
 
 
 struct sqlite3_stmt;

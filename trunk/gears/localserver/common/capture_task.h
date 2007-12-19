@@ -28,8 +28,8 @@
 
 #include <set>
 #include <vector>
-#include "gears/base/common/string16.h"
 #include "gears/base/common/security_model.h"
+#include "gears/base/common/string16.h"
 #include "gears/localserver/common/async_task.h"
 #include "gears/localserver/common/resource_store.h"
 

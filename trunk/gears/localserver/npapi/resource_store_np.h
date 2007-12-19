@@ -30,8 +30,8 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/string16.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/localserver/common/resource_store.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 //-----------------------------------------------------------------------------
 // GearsResourceStore

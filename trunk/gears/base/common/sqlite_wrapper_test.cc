@@ -24,10 +24,10 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef DEBUG
 
-#include "gears/base/common/string_utils.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
 #include "gears/base/common/stopwatch.h"
+#include "gears/base/common/string_utils.h"
 
 static bool TestSQLDatabaseTransactions();
 static bool TestSQLTransaction();

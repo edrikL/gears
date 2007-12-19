@@ -26,10 +26,11 @@
 #ifndef GEARS_BASE_FIREFOX_DOM_UTILS_H__
 #define GEARS_BASE_FIREFOX_DOM_UTILS_H__
 
-#include "gears/base/common/string16.h"
-#include "gears/base/common/common_ff.h"
 struct JSContext; // must declare this before including nsIJSContextStack.h
-#include "gecko_internal/nsIJSContextStack.h"
+#include <gecko_internal/nsIJSContextStack.h>
+
+#include "gears/base/common/common_ff.h"
+#include "gears/base/common/string16.h"
 
 class nsIDOMDocument;
 class nsIDOMEventTarget;
