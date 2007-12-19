@@ -23,10 +23,12 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// The methods of the File class implemented for use in Firefox.
+// The methods of the File class implemented for use in Firefox and NSPR builds 
+// on non-win32 platforms.
 // Some methods implementations are browser neutral and can be found
 // in file.cc.
 
+#if defined(BROWSER_FF) && !defined(WIN32)
 #include <assert.h>
 class nsIFile;  // must declare this before including nsDirectoryServiceUtils.h
 #include <nsDirectoryServiceUtils.h>
@@ -314,3 +316,4 @@ bool File::MoveDirectory(const char16 *src_path, const char16 *dest_path) {
 
   return NS_SUCCEEDED(src_dir->MoveTo(dest_parent, dest_name));
 }
+#endif  // defined(BROWSER_FF) && !defined(WIN32)

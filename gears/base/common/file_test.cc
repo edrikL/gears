@@ -36,6 +36,9 @@
 //------------------------------------------------------------------------------
 // TestFileUtils
 //------------------------------------------------------------------------------
+bool TestCollapsePathSeparators();  // friend of file.h
+static bool TestGetBaseName();
+static bool TestLongPaths();
 static bool CheckDirectoryCreation(const char16 *dir);
 
 bool TestFileUtils() {
@@ -47,6 +50,11 @@ bool TestFileUtils() {
     return false; \
   } \
 }
+
+  //Run tests for individual functions
+  TEST_ASSERT(TestGetBaseName());
+  TEST_ASSERT(TestSplitPath());
+  TEST_ASSERT(TestLongPaths());
 
   // Create a new empty directory work with
   std::string16 temp_dir;
@@ -147,16 +155,294 @@ bool TestFileUtils() {
       STRING16(L"?")
   };
 
-  for (int i = 0; i < ARRAYSIZE(kValidDirNames); i++) {
+  for (int i = 0; i < ARRAYSIZE(kValidDirNames); ++i) {
     TEST_ASSERT(CheckDirectoryCreation(kValidDirNames[i]));
     TEST_ASSERT(File::DeleteRecursively(kValidDirNames[i]));
   }
 
-  for (int i = 0; i < ARRAYSIZE(kInvalidDirNames); i++) {
+  for (int i = 0; i < ARRAYSIZE(kInvalidDirNames); ++i) {
     TEST_ASSERT(!(File::RecursivelyCreateDir(kInvalidDirNames[i])));
   }    
 #endif
   LOG(("TestFileUtils - passed\n"));
+  return true;
+}
+
+bool TestLongPaths() {
+// Only Win32 has issues with long pathnames, ignore WinCE for now.
+#if defined(WIN32) && !defined(WINCE)
+
+  // Constants
+  const std::string16 kDrv(STRING16(L"c:"));
+  const std::string16 kSep(&kPathSeparator, 1);
+  const std::string16 kFoo(STRING16(L"kFoo"));
+
+  // Create a new kEmpty directory to work with
+  std::string16 temp_dir;
+  TEST_ASSERT(File::CreateNewTempDirectory(&temp_dir));
+  TEST_ASSERT(File::DirectoryExists(temp_dir.c_str()));
+  TEST_ASSERT(File::GetDirectoryFileCount(temp_dir.c_str()) == 0);
+
+  std::string16 long_file_name;  // longest legal filename
+  for (size_t i = 0; i < File::kMaxPathComponentChars; ++i) {
+    long_file_name += L'A';
+  }
+
+  //------------ RecursivelyCreateDir ------------
+  // Creating c: & c:\ should succeed
+  TEST_ASSERT(File::RecursivelyCreateDir(kDrv.c_str()));
+
+  // The previous implementation of RecursivelyCreateDir fails this test, as 
+  // SHCreateDirectoryEx() returns an error when trying to create c:\. We
+  // do not emulate this behavior.
+  TEST_ASSERT(File::RecursivelyCreateDir((kDrv + kSep).c_str()));
+
+  // Check that creating a directory with the same name as a file fails.
+  {
+    std::string16 file_path = temp_dir + kSep + kFoo;
+    TEST_ASSERT(File::CreateNewFile(file_path.c_str()));
+    TEST_ASSERT(File::Exists(file_path.c_str()));
+    
+    TEST_ASSERT(!File::RecursivelyCreateDir(file_path.c_str()));
+
+    // Make sure file wasn't touched...
+    TEST_ASSERT(File::Exists(file_path.c_str()));
+    
+    // then delete is.
+    TEST_ASSERT(File::Delete(file_path.c_str()));
+    TEST_ASSERT(!File::Exists(file_path.c_str()));
+  }
+
+  // Check Reading & Writing data from a file with a long path
+  {
+    std::string16 parent_dir = temp_dir + kSep;
+
+    // Make sure that the directory this file is in is already longer than
+    // MAX_PATH.
+    while (parent_dir.length() < MAX_PATH) {
+      parent_dir += long_file_name + kSep;
+    }
+
+    //long filename
+    const std::string16 kFilenameSuffix = STRING16(L"_data_test.txt");
+    const std::string16 kFilePath  = parent_dir + 
+        long_file_name.substr(0, File::kMaxPathComponentChars - 
+                           kFilenameSuffix.length()) + 
+         kFilenameSuffix;
+
+    uint8 write_data = 0xAA;
+    std::vector<uint8> write_vector;
+    std::vector<uint8> read_data;
+    
+    TEST_ASSERT(!File::DirectoryExists(parent_dir.c_str()));
+    TEST_ASSERT(File::RecursivelyCreateDir(parent_dir.c_str()));
+    TEST_ASSERT(File::DirectoryExists(parent_dir.c_str()));
+
+    TEST_ASSERT(!File::Exists(kFilePath.c_str()));
+    TEST_ASSERT(!File::ReadFileToVector(kFilePath.c_str(), &read_data));
+
+    TEST_ASSERT(File::CreateNewFile(kFilePath.c_str()));
+    TEST_ASSERT(File::WriteBytesToFile(kFilePath.c_str(), &write_data, 1));
+    TEST_ASSERT(File::ReadFileToVector(kFilePath.c_str(), &read_data));
+    TEST_ASSERT(read_data.size() == 1 && read_data[0] == write_data);
+
+    TEST_ASSERT(File::Delete(kFilePath.c_str()));
+    TEST_ASSERT(!File::Exists(kFilePath.c_str()));
+
+    write_vector.push_back(write_data);
+    TEST_ASSERT(File::CreateNewFile(kFilePath.c_str()));
+    TEST_ASSERT(File::Exists(kFilePath.c_str()));
+    TEST_ASSERT(File::WriteVectorToFile(kFilePath.c_str(), &write_vector));
+    TEST_ASSERT(File::ReadFileToVector(kFilePath.c_str(), &read_data));
+    TEST_ASSERT(read_data.size() == 1 && read_data[0] == write_data);
+
+    TEST_ASSERT(File::Delete(kFilePath.c_str()));
+    TEST_ASSERT(!File::Exists(kFilePath.c_str()));
+
+    TEST_ASSERT(File::DeleteRecursively(parent_dir.c_str()));
+    TEST_ASSERT(!File::DirectoryExists(parent_dir.c_str()));
+  }
+
+  // Check that creating a long directory path works
+  // DeleteRecursively
+  {
+    const std::string16 kTopOfTestDir = temp_dir + kSep + long_file_name + kSep;
+    std::string16 file_path = kTopOfTestDir;
+
+    while (file_path.length() < MAX_PATH) {
+      file_path += long_file_name + kSep;
+    }
+
+    TEST_ASSERT(!File::DirectoryExists(file_path.c_str()));
+
+    TEST_ASSERT(File::RecursivelyCreateDir(file_path.c_str()));
+    TEST_ASSERT(File::RecursivelyCreateDir(file_path.c_str()));
+
+    TEST_ASSERT(File::DirectoryExists(file_path.c_str()));
+    TEST_ASSERT(File::DeleteRecursively(kTopOfTestDir.c_str()));
+    TEST_ASSERT(!File::DirectoryExists(kTopOfTestDir.c_str()));
+  }
+  
+  // DirectoryExists, Exists, CreateNewFile, Delete, GetDirectoryFileCount
+  {
+    std::string16 parent_dir = temp_dir + kSep;
+
+    // Make sure that the directory this file is in is already longer than
+    // MAX_PATH.
+    while (parent_dir.length() < MAX_PATH) {
+      parent_dir += long_file_name + kSep;
+    }
+
+    std::string16 file_path = parent_dir + long_file_name;
+    std::string16 other_file_path = parent_dir + STRING16(L"a.txt");
+
+
+    TEST_ASSERT(!File::DirectoryExists(file_path.c_str()));
+    TEST_ASSERT(!File::Exists(file_path.c_str()));
+    
+    TEST_ASSERT(File::RecursivelyCreateDir(parent_dir.c_str()));
+    TEST_ASSERT(File::CreateNewFile(file_path.c_str()));
+    TEST_ASSERT(File::Exists(file_path.c_str()));
+
+    TEST_ASSERT(!File::CreateNewFile(file_path.c_str()));
+    TEST_ASSERT(File::Exists(file_path.c_str()));
+
+    TEST_ASSERT(File::GetDirectoryFileCount(parent_dir.c_str()) == 1);
+
+    TEST_ASSERT(File::CreateNewFile(other_file_path.c_str()));
+    TEST_ASSERT(File::Exists(other_file_path.c_str()));
+
+    TEST_ASSERT(File::GetDirectoryFileCount(parent_dir.c_str()) == 2);
+    
+    TEST_ASSERT(File::Delete(file_path.c_str()));
+    TEST_ASSERT(!File::Delete(file_path.c_str()));
+
+    TEST_ASSERT(File::Delete(other_file_path.c_str()));
+
+    TEST_ASSERT(File::GetDirectoryFileCount(parent_dir.c_str()) == 0);
+
+    TEST_ASSERT(!File::DirectoryExists(file_path.c_str()));
+    TEST_ASSERT(!File::Exists(file_path.c_str()));
+
+    TEST_ASSERT(File::DeleteRecursively(parent_dir.c_str()));
+
+  }
+#endif  // defined(WIN32) && !defined(WINCE)
+  return true;
+}
+
+// friend of File class, so can't be static
+bool TestSplitPath() {
+  
+  const std::string16 kSep(&kPathSeparator, 1);
+  
+  const std::string16 kFoo(STRING16(L"foo"));
+  const std::string16 kBar(STRING16(L"bar"));
+  const std::string16 kEmpty;
+  File::PathComponents components;
+  
+  // '/foo' -> ['foo']
+  File::SplitPath(kSep + kFoo, &components);
+  TEST_ASSERT(components.size() == 1 && components[0] == kFoo);
+
+  // '/foo/bar/' -> ['foo', 'bar']
+  File::SplitPath(kSep + kFoo + kSep + kBar + kSep, &components);
+  TEST_ASSERT(components.size() == 2 && 
+      components[0] == kFoo &&
+      components[1] == kBar);
+
+#ifdef WIN32
+  const std::string16 kDrv(STRING16(L"c:"));
+
+  // 'c:/foo' -> ['c:\','foo']
+  File::SplitPath(kDrv + kSep + kFoo, &components);
+  TEST_ASSERT(components.size() == 2 && components[0] == kDrv &&
+      components[1] == kFoo);
+#endif  // WIN32
+
+  return true;
+
+}
+
+static bool TestGetBaseName() {
+  // GetBaseName
+  const std::string16 kSep(&kPathSeparator, 1);
+  const std::string16 kDrvSep(STRING16(L"c:"));
+  const std::string16 kA(STRING16(L"a"));
+  const std::string16 kADotTxt(STRING16(L"a.txt"));
+  const std::string16 kFoo(STRING16(L"foo"));
+  const std::string16 kEmpty;
+  std::string16 out;
+
+  // '' -> ''
+  File::GetBaseName(kEmpty, &out);
+  TEST_ASSERT(out == kEmpty);
+  
+  // 'a'->'a'
+  File::GetBaseName(kA, &out);
+  TEST_ASSERT(out == kA);
+
+  // 'a.txt'->'a.txt'
+  File::GetBaseName(kADotTxt, &out);
+  TEST_ASSERT(out == kADotTxt);
+
+  // '\a'->'a'
+  File::GetBaseName(kSep + kA, &out);
+  TEST_ASSERT(out == kA);
+
+  // '\\a'->'a'
+  File::GetBaseName(kSep + kSep + kA, &out);
+  TEST_ASSERT(out == kA);
+
+  // '\foo\a.txt'->'a.txt'
+  File::GetBaseName(kSep + kFoo + kSep + kADotTxt, &out);
+  TEST_ASSERT(out == kADotTxt);
+
+  // ------ Directories -------
+
+  // '\' -> '\'
+  File::GetBaseName(kSep, &out);
+  TEST_ASSERT(out == kSep);
+
+  // '\\' -> '\'
+  File::GetBaseName(kSep + kSep, &out);
+  TEST_ASSERT(out == kSep);
+
+  // '\a\' -> 'a'
+  File::GetBaseName(kSep + kA + kSep, &out);
+  TEST_ASSERT(out == kA);
+
+  // -------- Windows Only Tests -------
+#ifdef WIN32
+  // 'c:\a'->'a'
+  File::GetBaseName(kDrvSep + kSep + kA, &out);
+  TEST_ASSERT(out == kA);
+
+  // 'c:\foo\a.txt'->'a.txt'
+  File::GetBaseName(kDrvSep  + kSep + kFoo + kSep + kADotTxt, &out);
+  TEST_ASSERT(out == kADotTxt);
+
+  // 'c:\\foo\\a.txt'->'a.txt'
+  File::GetBaseName(kDrvSep + kSep + kSep+ kFoo + kSep + kSep + kADotTxt, &out);
+  TEST_ASSERT(out == kADotTxt);
+
+  // 'c:\' -> 'c:'
+  File::GetBaseName(kDrvSep + kSep, &out);
+  TEST_ASSERT(out == kDrvSep);
+
+  // 'c:\\' -> 'c:'
+  File::GetBaseName(kDrvSep + kSep + kSep, &out);
+  TEST_ASSERT(out == kDrvSep);
+
+  // Paths starting with '\\\' are illegal in win32.
+  TEST_ASSERT(!File::GetBaseName(kSep + kSep + kSep, &out));
+
+#else
+  // '\\\' -> '\'
+  File::GetBaseName(kSep + kSep + kSep, &out);
+  TEST_ASSERT(out == kSep);
+#endif  // WIN32
+
   return true;
 }
 

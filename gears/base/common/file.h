@@ -35,6 +35,9 @@ class SecurityOrigin;  // base/common/security_model.h
 
 class File {
  public:
+  // Hard Limit on path component length, used for sanity checking.
+  static const size_t kMaxPathComponentChars;
+
   // Creates a new file. If the file already exists, returns false.
   // Returns true if a new file has been created.
   static bool CreateNewFile(const char16 *full_filepath);
@@ -67,6 +70,17 @@ class File {
   // found, or a pointer to the trailing NULL otherwise.
   static const char16 *GetFileExtension(const char16 *filename);
 
+  // The basename (last path component) for the given path is returned in the 
+  // basename parameter.
+  //
+  // Example usage is splitting the filename off the end of a path for the
+  // purpose of sanity checking.
+  // Edge case: if a Windows \\share path is used, 'share' will be returned 
+  //  and not '\\share' as may be expected.
+  //
+  // Returns true if function succeeds.
+  static bool GetBaseName(const std::string16 &path,  std::string16 *basename);
+
   // Creates a unique file in the system temporary directory.  Returns the
   // full path of the new file in 'path'.
   // Returns true if the function succeeds.  'path' is unmodified on failure.
@@ -86,11 +100,12 @@ class File {
   static bool DeleteRecursively(const char16 *full_dirpath);
 
   // Writes raw data to a file.
+  // If file doesn't exist or an error occurs, false is returned.
   static bool WriteBytesToFile(const char16 *full_filepath, const uint8 *data,
                                int length);
 
 // TODO(aa): Implement this on other platforms as needed
-#if BROWSER_FF
+#if defined(BROWSER_FF) && !defined(WIN32)
   // Moves a directory to a new location. Returns true if the function succeeds.
   static bool MoveDirectory(const char16 *src_path, const char16 *dest_path);
 #endif
@@ -149,7 +164,27 @@ class File {
 
   static const char16 *kCreateFileFailedMessage;
 
+  // Used by SplitPath
+  typedef std::vector<std::string16> PathComponents;
+
+  // Splits a path into it's individual Components, on windows if a drive
+  // letter is part of the path, then this is the first item in the list e.g.
+  // 'c:\a.txt' -> ['c:', 'a.txt']
+  //
+  // This function doesn't handle file shares on Win32, caller must strip them 
+  // out before calling this function.
+  //
+  // Multiple consecutive path separators are expanded into empty strings, e.g.
+  // 'c:\\a.txt' -> ['c:', '', 'a.txt'] - '\\' becomes ''.
+  static void SplitPath(const std::string16 &path, 
+                        PathComponents *exploded_path);
+
+
   File() {}
+
+  // Test friends :)
+  friend bool TestCollapsePathSeparators();
+  friend bool TestSplitPath();
 
   // TODO(miket): someone fix common.h so that it doesn't require a browser
   // flag to be defined! Or better yet, someone shoot common.h in the head!

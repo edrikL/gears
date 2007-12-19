@@ -266,9 +266,9 @@ bool WebCacheFileStore::GetDirectoryPathForServer(int64 server_id,
   AppendBracketedNumber(static_cast<int>(server_id), &server_dir_name);
 
   // Stitch the two together, and append the "#localserver" suffix 
-  return AppendDataName(server_dir_name.c_str(),
-                        kDataSuffixForLocalServer,
-                        server_dir);
+  AppendDataName(server_dir_name.c_str(), kDataSuffixForLocalServer, 
+                 server_dir);
+  return true;
 }
 
 //------------------------------------------------------------------------------

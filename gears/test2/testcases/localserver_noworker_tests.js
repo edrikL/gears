@@ -41,9 +41,7 @@ function testCaptureFilenameString() {
 
 function testCaptureLongUrl() {
 
-  // TODO(playmobil): uncomment once new File class is checked in.
-  // var storeName = 'maximalUserSuppliedStoreNameWhichCanGetVeryLongAsYouSeeaaaaaaaaa';
-  var storeName = 'foo';
+  var storeName = 'maximalUserSuppliedStoreNameWhichCanGetVeryLongAsYouSeeaaaaaaaaa';
   var invalidStoreName = 'invalidResourceStoreNameWhichIsMuchLongerThanShouldBeAllowedByAnySelfRespectingComputerProgram';
   
   // test createStore

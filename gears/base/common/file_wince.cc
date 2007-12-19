@@ -23,11 +23,15 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// The methods of the File class implemented for use in IE.
+// The methods of the File class implemented for use in Windows CE.
+//
+// Note that this file completely ignores long pathnames, an alternate solution
+// for this needs to be found.
+//
 // Some methods implementations are browser neutral and can be found
 // in file.cc.
 
-
+#ifdef WINCE
 #include <assert.h>
 #include <windows.h>
 #include <shlobj.h>
@@ -36,9 +40,7 @@
 #include "gears/base/common/paths.h"
 #include "gears/base/common/scoped_win32_handles.h"
 #include "gears/base/common/string_utils.h"
-#ifdef WINCE
 #include "gears/base/common/wince_compatibility.h"
-#endif
 
 bool File::CreateNewFile(const char16 *full_filepath) {
   // Create a new file, if a file already exists this will fail
@@ -247,3 +249,4 @@ bool File::DeleteRecursively(const char16 *full_dirpath) {
 #endif
   return (SHFileOperationW(&fileop) == 0);
 }
+#endif  // WINCE

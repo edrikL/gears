@@ -56,9 +56,10 @@ bool OpenSqliteDatabase(const char16 *name, const SecurityOrigin &origin,
   if (!File::RecursivelyCreateDir(filename.c_str())) { return false; }
 
   // Open the SQLite database.
-  if (!AppendDataName(name, kDataSuffixForDatabase, &filename)) {
+  if (!IsUserInputValidAsPathComponent(name, NULL)) {
     return false;
   }
+  AppendDataName(name, kDataSuffixForDatabase, &filename);
 
   sqlite3 *temp_db = NULL;
   int sql_status = sqlite3_open16(filename.c_str(), &temp_db);
