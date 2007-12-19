@@ -16,14 +16,14 @@ IDL definition:
 {{{
 interface Blob {
   readonly attribute int size;
-  readonly attribute string type;
+  readonly attribute string contentType;
 }
 }}}
 
 === size ===
 The size of the blob in bytes.
 
-=== type ===
+=== contentType ===
 A string representing the type of the data, in Content-Type format (eg.
 "image/png". TODO: should this include the character encoding like the HTTP
 Content-Type field?
