@@ -79,7 +79,7 @@ interface Location {
 
   // methods
   void startLocationUpdates();
-  void startLocationUpdates(unsigned int minTimeUpdate);
+  void startLocationUpdates(unsigned int minTimeUpdate, unsigned int minDesiredAccuracy);
   void stopLocationUpdates();
 
   // data
@@ -99,7 +99,7 @@ interface Location {
 
 *void startLocationUpdates()*: initiates a location fix using any of the available providers. The preferred implementation is to initialize all available providers and to use the most accurate one at any given time.
 
-*void startLocationUpdates(unsigned int minTimeUpdate)*: initiates a location fix using any of the available providers. minTimeUpdate denotes the minimum number of seconds between the calls to the onlocationstatechanged callback.
+*  void startLocationUpdates(unsigned int minTimeUpdate, unsigned int minDesiredAccuracy)*: initiates a location fix using the provider that requires least system resources while producing location fixes that are at least as accurate as minDesiredAccuracy. minTimeUpdate denotes the minimum number of seconds between the calls to the onlocationstatechanged callback.
 
 *accuracy*: Horizontal accuracy in meters. 0 is interpreted as unknown.
 
