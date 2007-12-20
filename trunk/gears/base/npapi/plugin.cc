@@ -68,7 +68,7 @@ bool PluginBase<T>::Invoke(NPObject *npobj, NPIdentifier name,
   ImplClass *impl = plugin->GetImplObject();
 
   const IDList &methods = GetMethodList();
-  IDList::const_iterator method = methods.find(name);
+  typename IDList::const_iterator method = methods.find(name);
   if (method == methods.end())
     return false;
   ImplCallback callback = method->second;
@@ -98,7 +98,7 @@ bool PluginBase<T>::GetProperty(NPObject *npobj, NPIdentifier name,
   ImplClass *impl = plugin->GetImplObject();
 
   const IDList &properties = GetPropertyGetterList();
-  IDList::const_iterator property = properties.find(name);
+  typename IDList::const_iterator property = properties.find(name);
   if (property == properties.end())
     return false;
   ImplCallback callback = property->second;
@@ -118,7 +118,7 @@ bool PluginBase<T>::SetProperty(NPObject *npobj, NPIdentifier name,
   ImplClass *impl = plugin->GetImplObject();
 
   const IDList &properties = GetPropertySetterList();
-  IDList::const_iterator property = properties.find(name);
+  typename IDList::const_iterator property = properties.find(name);
   if (property == properties.end() || property->second == NULL)
     return false;
   ImplCallback callback = property->second;
