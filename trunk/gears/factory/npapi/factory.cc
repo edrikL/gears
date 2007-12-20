@@ -104,7 +104,7 @@ void GearsFactory::GetBuildInfo(JsCallContext *context) {
 }
 
 void GearsFactory::GetVersion(JsCallContext *context) {
-  std::string16 version(PRODUCT_VERSION_STRING);
+  std::string16 version(STRING16(PRODUCT_VERSION_STRING));
   context->SetReturnValue(JSPARAM_STRING16, &version);
 }
 
