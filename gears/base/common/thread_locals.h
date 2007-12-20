@@ -34,7 +34,7 @@
 #endif
 
 // TODO(mpcomplete): implement these.
-#if BROWSER_NPAPI
+#if BROWSER_NPAPI && defined(WIN32)
 #define BROWSER_IE 1
 #endif
 
