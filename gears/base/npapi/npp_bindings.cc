@@ -57,8 +57,6 @@ NPError NPP_New(NPMIMEType pluginType,
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  NPError rv = NPERR_NO_ERROR;
-
   NPObject* obj = CreateGearsFactoryWrapper(instance);
   instance->pdata = obj;
 

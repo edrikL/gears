@@ -198,7 +198,7 @@ class GComPtr : public scoped_token<Module*, ReleaseWrapperFunctor> {
  public:
   explicit GComPtr(Module *v)
       : scoped_token<Module*, ReleaseWrapperFunctor>(v) {}
-  Module* operator->() const { return get(); }
+  Module* operator->() const { return this->get(); }
 };
 
 // Creates new Module of the given type.  Returns NULL on failure.
