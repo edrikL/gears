@@ -315,7 +315,7 @@ void GearsManagedResourceStore::HandleEvent(JsEventType event_type) {
 void GearsManagedResourceStore::OnNotify(MessageService *service,
                                          const char16 *topic,
                                          const NotificationData *data) {
-  scoped_ptr<JsRootedToken> param;
+  scoped_ptr<JsObject> param;
   JsRootedCallback *handler = 0;
 
   const UpdateTask::Event *event = static_cast<const UpdateTask::Event *>(data);
@@ -329,7 +329,7 @@ void GearsManagedResourceStore::OnNotify(MessageService *service,
 
         const UpdateTask::ErrorEvent *error_event =
             static_cast<const UpdateTask::ErrorEvent *>(data);
-        GetJsRunner()->SetPropertyString(param->token(),
+        GetJsRunner()->SetPropertyString(param.get(),
                                          STRING16(L"message"),
                                          error_event->error_message().c_str());
       }
@@ -344,10 +344,10 @@ void GearsManagedResourceStore::OnNotify(MessageService *service,
 
         const UpdateTask::ProgressEvent *progress_event =
             static_cast<const UpdateTask::ProgressEvent *>(data);
-        GetJsRunner()->SetPropertyInt(param->token(),
+        GetJsRunner()->SetPropertyInt(param.get(),
                                       STRING16(L"filesTotal"),
                                       progress_event->files_total());
-        GetJsRunner()->SetPropertyInt(param->token(),
+        GetJsRunner()->SetPropertyInt(param.get(),
                                       STRING16(L"filesComplete"),
                                       progress_event->files_complete());
       }
@@ -363,7 +363,7 @@ void GearsManagedResourceStore::OnNotify(MessageService *service,
         const UpdateTask::CompletionEvent *completion_event =
             static_cast<const UpdateTask::CompletionEvent *>(data);
         GetJsRunner()->SetPropertyString(
-                           param->token(),
+                           param.get(),
                            STRING16(L"newVersion"),
                            completion_event->new_version_string().c_str());
       }
@@ -375,7 +375,7 @@ void GearsManagedResourceStore::OnNotify(MessageService *service,
 
   const int argc = 1;
   JsParamToSend argv[argc] = {
-    { JSPARAM_TOKEN, param.get() }
+    { JSPARAM_OBJECT, param.get() }
   };
   GetJsRunner()->InvokeCallback(handler, argc, argv, NULL);
 }

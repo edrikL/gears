@@ -515,8 +515,7 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
 
     // Setup the onmessage parameter (type: Object).
     assert(wi->js_runner);
-    scoped_ptr<JsRootedToken> onmessage_param(
-                                  wi->js_runner->NewObject(NULL, true));
+    scoped_ptr<JsObject> onmessage_param(wi->js_runner->NewObject(NULL, true));
     // TODO(zork): Checking this return value is temporary, as callers are not
     // supposed to have to worry about NewObject() failing.
     if (!onmessage_param.get()) {
@@ -528,13 +527,13 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
       return;
     }
 
-    wi->js_runner->SetPropertyString(onmessage_param->token(),
+    wi->js_runner->SetPropertyString(onmessage_param.get(),
                                      STRING16(L"text"),
                                      msg.text.c_str());
-    wi->js_runner->SetPropertyInt(onmessage_param->token(),
+    wi->js_runner->SetPropertyInt(onmessage_param.get(),
                                   STRING16(L"sender"),
                                   msg.sender);
-    wi->js_runner->SetPropertyString(onmessage_param->token(),
+    wi->js_runner->SetPropertyString(onmessage_param.get(),
                                      STRING16(L"origin"),
                                      msg.origin.url().c_str());
 
@@ -542,7 +541,7 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
     JsParamToSend argv[argc] = {
       { JSPARAM_STRING16, &msg.text },
       { JSPARAM_INT, &msg.sender },
-      { JSPARAM_TOKEN, onmessage_param.get() }
+      { JSPARAM_OBJECT, onmessage_param.get() }
     };
     wi->js_runner->InvokeCallback(wi->onmessage_handler.get(), argc, argv,
                                   NULL);
@@ -708,16 +707,16 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
 
   // Setup the onerror parameter (type: Error).
   assert(wi->js_runner);
-  scoped_ptr<JsRootedToken> onerror_param(
+  scoped_ptr<JsObject> onerror_param(
       wi->js_runner->NewObject(STRING16(L"Error"), true));
   if (!onerror_param.get()) {
     return false;
   }
 
-  wi->js_runner->SetPropertyString(onerror_param->token(),
+  wi->js_runner->SetPropertyString(onerror_param.get(),
                                    STRING16(L"message"),
                                    error_info.message.c_str());
-  wi->js_runner->SetPropertyInt(onerror_param->token(),
+  wi->js_runner->SetPropertyInt(onerror_param.get(),
                                 STRING16(L"lineNumber"),
                                 error_info.line);
   // TODO(aa): Additional information, like fragment of code where the error
@@ -725,7 +724,7 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
 
   const int argc = 1;
   JsParamToSend argv[argc] = {
-    { JSPARAM_TOKEN, onerror_param.get() }
+    { JSPARAM_OBJECT, onerror_param.get() }
   };
 
   JsRootedToken *alloc_js_retval = NULL;

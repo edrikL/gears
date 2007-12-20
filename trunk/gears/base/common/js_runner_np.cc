@@ -64,8 +64,8 @@ class JsRunnerBase : public JsRunnerInterface {
     return global_object_;
   }
 
-  JsRootedToken *NewObject(const char16 *optional_global_ctor_name,
-                           bool dump_on_fail = false) {
+  JsObject *NewObject(const char16 *optional_global_ctor_name,
+                      bool dump_on_fail = false) {
     NPObject *global_object = GetGlobalObject();
     if (!global_object) {
       LOG(("Could not get global object from script engine."));
@@ -85,25 +85,29 @@ class JsRunnerBase : public JsRunnerInterface {
 
     // Evaluate javascript code: 'ConstructorName()'
     NPString script = {ctor_name_utf8.c_str(), ctor_name_utf8.length()};
-    NPVariant object;
-    bool rv = NPN_Evaluate(np_instance_, global_object, &script, &object);
+    ScopedNPVariant object;
+    bool rv = NPN_Evaluate(GetContext(), global_object, &script, &object);
     if (!rv) {
       LOG(("Could not invoke object constructor."));
       return NULL;
     }
 
-    JsRootedToken *token = new JsRootedToken(np_instance_, object);
-    NPN_ReleaseVariantValue(&object);  // token has the only ref now.
-    return token;
+    scoped_ptr<JsObject> retval(new JsObject);
+    if (!retval->SetObject(object, GetContext())) {
+      LOG(("Could not assign to JsObject."));
+      return NULL;
+    }
+
+    return retval.release();
   }
 
-  bool SetPropertyString(JsToken object, const char16 *name,
+  bool SetPropertyString(JsObject *object, const char16 *name,
                          const char16 *value) {
-    return SetProperty(object, name, ScopedNPVariant(value));
+    return SetObjectProperty(object, name, ScopedNPVariant(value));
   }
 
-  bool SetPropertyInt(JsToken object, const char16 *name, int value) {
-    return SetProperty(object, name, ScopedNPVariant(value));
+  bool SetPropertyInt(JsObject *object, const char16 *name, int value) {
+    return SetObjectProperty(object, name, ScopedNPVariant(value));
   }
 
   bool InvokeCallback(const JsRootedCallback *callback,
@@ -193,6 +197,11 @@ class JsRunnerBase : public JsRunnerInterface {
   NPObject *global_object_;
 
  private:
+  bool SetObjectProperty(JsObject *object, const char16 *name,
+                         const NPVariant &value) {
+    return SetProperty(object->js_object_, name, value);
+  }
+
   bool SetProperty(JsToken object, const char16 *name, const NPVariant &value) {
     if (!NPVARIANT_IS_OBJECT(object)) { return false; }
 

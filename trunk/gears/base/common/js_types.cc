@@ -41,7 +41,13 @@
 
 // Browser specific JsArray functions.
 #if BROWSER_FF
+
 JsArray::JsArray() : js_context_(NULL), array_(0) {
+}
+
+JsArray::~JsArray() {
+  if (array_ && JSVAL_IS_GCTHING(array_))
+    JS_RemoveRoot(js_context_, &array_);
 }
 
 bool JsArray::SetArray(JsToken value, JsContextPtr context) {
@@ -51,8 +57,12 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
     return false;
   }
 
+  if (array_ && JSVAL_IS_GCTHING(array_))
+    JS_RemoveRoot(js_context_, &array_);
   array_ = value;
   js_context_ = context;
+  if (JSVAL_IS_GCTHING(array_))
+    JS_AddRoot(js_context_, &array_);
   return true;
 }
 
@@ -77,6 +87,9 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
 #elif BROWSER_IE
 
 JsArray::JsArray() : js_context_(NULL) {
+}
+
+JsArray::~JsArray() {
 }
 
 bool JsArray::SetArray(JsToken value, JsContextPtr context) {
@@ -130,6 +143,9 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
 
 JsArray::JsArray() : js_context_(NULL) {
   VOID_TO_NPVARIANT(array_);
+}
+
+JsArray::~JsArray() {
 }
 
 bool JsArray::SetArray(JsToken value, JsContextPtr context) {
@@ -231,10 +247,19 @@ bool JsArray::GetElementAsFunction(int index, JsRootedCallback **out) const {
 JsObject::JsObject() : js_context_(NULL), js_object_(0) {
 }
 
+JsObject::~JsObject() {
+  if (js_object_ && JSVAL_IS_GCTHING(js_object_))
+    JS_RemoveRoot(js_context_, &js_object_);
+}
+
 bool JsObject::SetObject(JsToken value, JsContextPtr context) {
   if (JSVAL_IS_OBJECT(value)) {
+    if (js_object_ && JSVAL_IS_GCTHING(js_object_))
+      JS_RemoveRoot(js_context_, &js_object_);
     js_object_ = value;
     js_context_ = context;
+    if (JSVAL_IS_GCTHING(js_object_))
+      JS_AddRoot(js_context_, &js_object_);
     return true;
   }
 
@@ -253,6 +278,9 @@ bool JsObject::GetProperty(const std::string16 &name,
 #elif BROWSER_IE
 
 JsObject::JsObject() : js_context_(NULL) {
+}
+
+JsObject::~JsObject() {
 }
 
 bool JsObject::SetObject(JsToken value, JsContextPtr context) {
@@ -276,6 +304,9 @@ bool JsObject::GetProperty(const std::string16 &name,
 
 JsObject::JsObject() : js_context_(NULL) {
   VOID_TO_NPVARIANT(js_object_);
+}
+
+JsObject::~JsObject() {
 }
 
 bool JsObject::SetObject(JsToken value, JsContextPtr context) {
@@ -596,12 +627,6 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       *token = DOUBLE_TO_JSVAL(*value);
       break;
     }
-    case JSPARAM_TOKEN: {
-      const JsRootedToken *value = static_cast<const JsRootedToken *>(
-                                                   param.value_ptr);
-      *token = value->token();
-      break;
-    }
     case JSPARAM_STRING16: {
       const std::string16 *value = static_cast<const std::string16 *>(
                                                    param.value_ptr);
@@ -663,12 +688,6 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     case JSPARAM_DOUBLE: {
       const double *value = static_cast<const double *>(param.value_ptr);
       *token = *value;  // CComVariant understands 'double'
-      break;
-    }
-    case JSPARAM_TOKEN: {
-      const JsRootedToken *value = static_cast<const JsRootedToken *>(
-                                                   param.value_ptr);
-      *token = value->token();  // understands 'IDispatch*'
       break;
     }
     case JSPARAM_STRING16: {
@@ -752,11 +771,6 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       variant->Reset(NPVARIANT_TO_OBJECT(value->token()));
       break;
     }
-    case JSPARAM_TOKEN: {
-      const JsToken *value = static_cast<const JsToken *>(param.value_ptr);
-      variant->Reset(NPVARIANT_TO_OBJECT(*value));
-      break;
-    }
     case JSPARAM_STRING16: {
       const std::string16 *value = static_cast<const std::string16 *>(
                                                    param.value_ptr);
@@ -823,17 +837,6 @@ static bool ConvertTokenToArgument(JsCallContext *context,
             STRING16(L"Invalid argument type: expected function."));
         return false;
       }
-      break;
-    }
-    case JSPARAM_TOKEN: {
-      JsToken *value = static_cast<JsToken *>(param->value_ptr);
-      if (!NPVARIANT_IS_OBJECT(variant)) {
-        // TODO(mpcomplete): should we accept null/void here?
-        context->SetException(
-            STRING16(L"Invalid argument type: expected object."));
-        return false;
-      }
-      *value = variant;
       break;
     }
     case JSPARAM_STRING16: {
@@ -1060,14 +1063,13 @@ JsNativeMethodRetval JsSetException(const ModuleImplBaseClass *obj,
   JsRunnerInterface *js_runner = obj->GetJsRunner();
   if (!js_runner) { return retval; }
 
-  scoped_ptr<JsRootedToken> error_object(
-                                js_runner->NewObject(STRING16(L"Error")));
+  scoped_ptr<JsObject> error_object(js_runner->NewObject(STRING16(L"Error")));
   if (!error_object.get()) { return retval; }
 
   // Note: need JS_SetPendingException to bubble 'catch' in workers.
-  JS_SetPendingException(cx, error_object->token());
+  JS_SetPendingException(cx, error_object->js_object_);
 
-  bool success = js_runner->SetPropertyString(error_object->token(),
+  bool success = js_runner->SetPropertyString(error_object.get(),
                                               STRING16(L"message"),
                                               message);
   if (!success) { return retval; }
