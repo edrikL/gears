@@ -228,10 +228,12 @@ typedef void  JsNativeMethodRetval;
 
 class JsObject;
 struct JsParamToSend;
+class ModuleImplBaseClass;
 
 class JsArray {
  public:
   JsArray();
+  ~JsArray();
   bool GetElement(int index, JsScopedToken *out) const;
   bool SetArray(JsToken value, JsContextPtr context);
   bool GetElementAsBool(int index, bool *out) const;
@@ -255,6 +257,7 @@ class JsArray {
 class JsObject {
  public:
   JsObject();
+  ~JsObject();
   bool GetProperty(const std::string16 &name, JsScopedToken *value) const;
   bool SetObject(JsToken value, JsContextPtr context);
   bool GetPropertyAsBool(const std::string16 &name, bool *out) const;
@@ -266,10 +269,13 @@ class JsObject {
   bool GetPropertyAsFunction(const std::string16 &name,
                              JsRootedCallback **out) const;
  private:
-  // Needs access to the raw JsToken.
+  // Need access to the raw JsToken.
+  friend class JsRunnerBase;
   friend void ConvertJsParamToToken(const JsParamToSend &param,
                                     JsContextPtr context,
                                     JsScopedToken *token);
+  friend JsNativeMethodRetval JsSetException(const ModuleImplBaseClass *obj,
+                                             const char16 *message);
 
   JsContextPtr js_context_;
   JsScopedToken js_object_;
@@ -285,7 +291,6 @@ enum JsParamType {
   JSPARAM_ARRAY,
   JSPARAM_FUNCTION,
   // TODO(mpcomplete): make JsRunner::NewObject return a JsObject
-  JSPARAM_TOKEN,  // avoid if possible
   JSPARAM_MODULE,
   JSPARAM_NULL,
 };

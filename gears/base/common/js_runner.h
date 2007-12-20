@@ -103,16 +103,16 @@ class JsRunnerInterface {
   // Creates a new object in the JavaScript engine using the specified
   // constructor. If the constructor is NULL, it defaults to "Object". The
   // caller takes ownership of the returned value.
-  virtual JsRootedToken *NewObject(
-                             const char16 *optional_global_ctor_name,
-                             // TODO(zork): Remove this when we find the error.
-                             bool dump_on_error = false) = 0;
+  virtual JsObject *NewObject(const char16 *optional_global_ctor_name,
+                              // TODO(zork): Remove this when we find the error.
+                              bool dump_on_error = false) = 0;
 
+  // TODO(mpcomplete): move these next 2 methods to JsObject.
   // SetProperty*() overwrites the existing named property or adds a new one if
   // none exists.
-  virtual bool SetPropertyString(JsToken object, const char16 *name,
+  virtual bool SetPropertyString(JsObject *object, const char16 *name,
                                  const char16 *val) = 0;
-  virtual bool SetPropertyInt(JsToken object, const char16 *name,
+  virtual bool SetPropertyInt(JsObject *object, const char16 *name,
                               int val) = 0;
   // TODO(aa): SetPropertyBool, SetPropertyObject (to build trees), etc...
   // TODO(aa): Support for building arrays?

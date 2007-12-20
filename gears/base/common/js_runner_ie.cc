@@ -63,8 +63,8 @@ class JsRunnerBase : public JsRunnerInterface {
     return NULL;  // not used in IE
   }
 
-  JsRootedToken *NewObject(const char16 *optional_global_ctor_name,
-                           bool dump_on_error = false) {
+  JsObject *NewObject(const char16 *optional_global_ctor_name,
+                      bool dump_on_error = false) {
     CComPtr<IDispatch> global_object = GetGlobalObject(dump_on_error);
     if (!global_object) {
       LOG(("Could not get global object from script engine."));
@@ -100,16 +100,22 @@ class JsRunnerBase : public JsRunnerInterface {
       return NULL;
     }
 
-    return new JsRootedToken(GetContext(), result);
+    scoped_ptr<JsObject> retval(new JsObject);
+    if (!retval->SetObject(result, GetContext())) {
+      LOG(("Could not assign to JsObject."));
+      return NULL;
+    }
+
+    return retval.release();
   }
 
-  bool SetPropertyString(JsToken object, const char16 *name,
+  bool SetPropertyString(JsObject *object, const char16 *name,
                          const char16 *value) {
-    return SetProperty(object, name, CComVariant(CComBSTR(value)));
+    return SetObjectProperty(object, name, CComVariant(CComBSTR(value)));
   }
 
-  bool SetPropertyInt(JsToken object, const char16 *name, int value) {
-    return SetProperty(object, name, CComVariant(value));
+  bool SetPropertyInt(JsObject *object, const char16 *name, int value) {
+    return SetObjectProperty(object, name, CComVariant(value));
   }
 
   bool InvokeCallback(const JsRootedCallback *callback,
@@ -210,6 +216,11 @@ class JsRunnerBase : public JsRunnerInterface {
   virtual IDispatch *GetGlobalObject(bool dump_on_error = false) = 0;
 
  private:
+  bool SetObjectProperty(JsObject *object, const char16 *name,
+                         const VARIANT &value) {
+    return SetProperty(object->js_object_, name, value);
+  }
+
   bool SetProperty(JsToken object, const char16 *name, const VARIANT &value) {
     if (object.vt != VT_DISPATCH) { return false; }
 

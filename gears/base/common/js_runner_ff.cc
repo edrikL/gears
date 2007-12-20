@@ -69,8 +69,8 @@ class JsRunnerBase : public JsRunnerInterface {
     return js_engine_context_;
   }
 
-  JsRootedToken *NewObject(const char16 *optional_global_ctor_name,
-                           bool dump_on_error = false) {
+  JsObject *NewObject(const char16 *optional_global_ctor_name,
+                      bool dump_on_error = false) {
     if (!js_engine_context_) {
       if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
       LOG(("Could not get JavaScript engine context."));
@@ -134,7 +134,14 @@ class JsRunnerBase : public JsRunnerInterface {
     }
 
     if (JSVAL_IS_OBJECT(val)) {
-      return new JsRootedToken(GetContext(), val);
+      scoped_ptr<JsObject> retval(new JsObject);
+
+      if (!retval->SetObject(val, GetContext())) {
+        if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+        LOG(("Could not assign to JsObject."));
+        return NULL;
+      }
+      return retval.release();
     } else {
       if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
       LOG(("Constructor did not return an object"));
@@ -142,21 +149,21 @@ class JsRunnerBase : public JsRunnerInterface {
     }
   }
 
-  bool SetPropertyString(JsToken object, const char16 *name,
+  bool SetPropertyString(JsObject *object, const char16 *name,
                          const char16 *value) {
     // TODO(aa): Figure out the lifetime of this string.
     JSString *jstr = JS_NewUCStringCopyZ(
                          js_engine_context_,
                          reinterpret_cast<const jschar *>(value));
     if (jstr) {
-      return SetProperty(object, name, STRING_TO_JSVAL(jstr));
+      return SetObjectProperty(object, name, STRING_TO_JSVAL(jstr));
     } else {
       return false;
     }
   }
 
-  bool SetPropertyInt(JsToken object, const char16 *name, int value) {
-    return SetProperty(object, name, INT_TO_JSVAL(value));
+  bool SetPropertyInt(JsObject *object, const char16 *name, int value) {
+    return SetObjectProperty(object, name, INT_TO_JSVAL(value));
   }
 
   virtual bool InvokeCallbackSpecialized(
@@ -235,6 +242,10 @@ class JsRunnerBase : public JsRunnerInterface {
   JSContext *js_engine_context_;
 
  private:
+  bool SetObjectProperty(JsObject *object, const char16 *name, jsval value) {
+    return SetProperty(object->js_object_, name, value);
+  }
+
   bool SetProperty(JsToken object, const char16 *name, jsval value) {
     if (!JSVAL_IS_OBJECT(object)) {
       LOG(("Specified token is not an object."));
