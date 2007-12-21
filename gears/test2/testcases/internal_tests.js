@@ -23,15 +23,34 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-//can't start name with "test" because Unit test engine tries to run this.
-
-if (isDebug ) {
+if (isDebug) {
   var internalTests = google.gears.factory.create('beta.test');
-}
 
-function testInternal() {
-  if (isDebug) {
+  function testInternal() {
     assert(internalTests.RunTests(),
            'Internal tests failed.');
+  }
+
+  // TODO(aa): Remove check when JsCallContext is implemented for Firefox.
+  if (typeof internalTests.testParamTypes != "undefined") {
+    function testParamTypes() {
+      internalTests.testParamTypes(true, 42, 88.8, {}, "foo");
+
+      // We actually want to test that we got the right error message so that
+      // we don't accept any other unrelated error as a pass. If this gets too
+      // brittle we can reconsider.
+      assertError(function() {
+        internalTests.testParamTypes(false, 42, 88.8, {}, "foo");
+      }, 'Expected first parameter to be true.');
+
+      assertError(function() {
+        internalTests.testParamTypes(true, 42, 88.8, {});
+      }, 'Required argument 5 is missing.');
+    }
+
+    function testProperty() {
+      internalTests.testPropertyInt = 42;
+      assertEqual(42, internalTests.testPropertyInt);
+    }
   }
 }

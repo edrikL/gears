@@ -26,6 +26,7 @@
 #ifndef GEARS_BASE_COMMON_JS_TYPES_H__
 #define GEARS_BASE_COMMON_JS_TYPES_H__
 
+#include <assert.h>
 #include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/string16.h"  // for string16
 
@@ -79,6 +80,12 @@ bool JsTokenToNewCallback(JsToken t, JsContextPtr cx, JsRootedCallback **out);
 // Utility function to check for the JavaScript values null and undefined. We
 // usually treat these two identically to prevent confusion.
 bool JsTokenIsNullOrUndefined(JsToken t);
+
+// Utility function to tell if a given token is a JavaScript object. This
+// function returns true for all JavaScript objects, including things like
+// functions and Date objects. It returns false for all primitive values
+// including null and undefined.
+bool JsTokenIsObject(JsToken t);
 
 #if BROWSER_FF
 
@@ -316,8 +323,7 @@ struct JsArgument {
   void* value_ptr;
 };
 
-// Temporary: npapi only.
-#if BROWSER_NPAPI
+
 class ModuleImplBaseClass;
 
 // This class provides an interface for a property or method access on a native
@@ -328,11 +334,20 @@ class ModuleImplBaseClass;
 class JsCallContext {
  public:
   // Only browser-specific wrapper code should need to instantiate this object.
+#if BROWSER_NPAPI
   JsCallContext(JsContextPtr js_context, NPObject *object,
                 int argc, const JsToken *argv, JsToken *retval)
       : js_context_(js_context), object_(object),
         argc_(argc), argv_(argv), retval_(retval),
         is_exception_set_(false) {}
+#elif BROWSER_IE
+  JsCallContext(DISPPARAMS FAR *disp_params, VARIANT FAR *retval,
+                EXCEPINFO FAR *excep_info)
+      : disp_params_(disp_params), retval_(retval), exception_info_(excep_info),
+        is_exception_set_(false) {}
+#else
+ // TODO: browser_xyz
+#endif
 
   // Get the arguments a JavaScript caller has passed into a scriptable method
   // of a native object.  Returns the number of arguments successfully read
@@ -349,8 +364,14 @@ class JsCallContext {
   // The int version is for use with JSPARAM_NULL, to avoid conflicting with the
   // ModuleImplBaseClass version (works because NULL is defined as 0).
   void SetReturnValue(JsParamType type, const void *value_ptr);
-  void SetReturnValue(JsParamType type, const ModuleImplBaseClass *value_ptr);
-  void SetReturnValue(JsParamType type, int);
+  void SetReturnValue(JsParamType type, const ModuleImplBaseClass *value_ptr) {
+    assert(type == JSPARAM_MODULE);
+    SetReturnValue(type, reinterpret_cast<const void*>(value_ptr));
+  }
+  void SetReturnValue(JsParamType type, int) {
+    assert(type == JSPARAM_NULL);
+    SetReturnValue(type, reinterpret_cast<const void*>(NULL));
+  }
 
   // Sets an exception to be thrown to the calling JavaScript.  Setting an
   // exception overrides any previous exception and any return values.
@@ -360,14 +381,22 @@ class JsCallContext {
   bool is_exception_set() { return is_exception_set_; }
 
  private:
-   JsContextPtr js_context_;
-   NPObject *object_;
-   int argc_;
-   const JsToken *argv_;
-   JsToken *retval_;
-   bool is_exception_set_;
-};
+  JsContextPtr js_context_;
+  bool is_exception_set_;
+#if BROWSER_NPAPI
+  NPObject *object_;
+  int argc_;
+  const JsToken *argv_;
+  JsToken *retval_;
+#elif BROWSER_IE
+  DISPPARAMS FAR *disp_params_;
+  VARIANT FAR *retval_;
+  EXCEPINFO FAR *exception_info_;
+#else
+  // TODO: browser_xyz
 #endif
+};
+
 
 // Given a JsParamToSend, extract it into a JsScopedToken.  Resulting token
 // increases the reference count for objects.
@@ -376,8 +405,6 @@ void ConvertJsParamToToken(const JsParamToSend &param,
 
 //-----------------------------------------------------------------------------
 #if BROWSER_FF  // the rest of this file only applies to Firefox, for now
-
-class ModuleImplBaseClass;
 
 // Helper class to extract JavaScript parameters (including optional params
 // and varargs), in a way that hides differences between main-thread and

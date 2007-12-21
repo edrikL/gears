@@ -94,7 +94,22 @@ library GearsTypelib
   {
     [default] interface IUnknown;
   };
+  
+  [
+    uuid(09371E80-6AB5-4341-81E8-BFF3FB8CC749)
+  ]
+  coclass ModuleWrapper
+  {
+    [default] interface IDispatch;
+  };
 
+  // TODO(aa): We should be able to remove most of this COM goop once we
+  // implement our own dynamic dispatch in ModuleImplBaseClass. We should test
+  // that really carefully though, on a clean machine.
+  // NOTE: We might need to keep GearsFactory a little longer than the others to
+  // maintain compatibility with existing gears_init.js scripts, which call
+  // new ActiveXObject("Gears.Factory"). Later, when we inject gears objects
+  // without gears_init.js, we can remove that too.
   [
     uuid(C93A7319-17B3-4504-87CD-03EFC6103E6E)
   ]
@@ -110,7 +125,7 @@ library GearsTypelib
   {
     [default] interface GearsDatabaseInterface;
   };
-
+  
   [
     uuid(6761C0EC-BB5C-40fe-92B2-D41686A0CF7E)
   ]
