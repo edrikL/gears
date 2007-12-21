@@ -24,10 +24,12 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
+
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/detect_version_collision.h"
+#include "gears/base/ie/module_wrapper.h"
 #include "gears/channel/ie/channel.h"
 #include "gears/database/ie/database.h"
 #include "gears/desktop/desktop_ie.h"
@@ -136,10 +138,21 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
     idispatch = obj;
   } else if (object_name == STRING16(L"beta.test")) {
 #ifdef DEBUG
-    CComObject<GearsTest> *obj;
-    hr = CComObject<GearsTest>::CreateInstance(&obj);
-    base_class = obj;
-    idispatch = obj;
+    // TODO(aa): Initialization of the wrapper can be factored out when more
+    // modules use ModuleWrapper.
+    CComObject<ModuleWrapper> *wrapper;
+    hr = CComObject<ModuleWrapper>::CreateInstance(&wrapper);
+    idispatch = wrapper;
+
+    // TODO(aa): Simplify this when Gears objects in IE are no longer COM
+    // objects.
+    CComObject<GearsTest> *gears_object;
+    hr = CComObject<GearsTest>::CreateInstance(&gears_object);
+    base_class = gears_object;
+
+    IDispatch *gears_object_dispatch;
+    hr = gears_object->QueryInterface(&gears_object_dispatch);
+    wrapper->Init(gears_object_dispatch);
 #else
     RETURN_EXCEPTION(STRING16(L"Object is only available in debug build."));
 #endif

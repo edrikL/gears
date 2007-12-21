@@ -390,6 +390,91 @@ bool JsObject::GetPropertyAsFunction(const std::string16 &name,
   return JsTokenToNewCallback(token, js_context_, out);
 }
 
+
+#if defined(BROWSER_NPAPI) || defined(BROWSER_IE)
+
+// Given a JsToken, extract it into a JsArgument.  Object pointers are weak
+// references (ref count is not increased).
+static bool ConvertTokenToArgument(JsCallContext *context,
+                                   const JsToken &variant,
+                                   JsArgument *param) {
+  switch (param->type) {
+    case JSPARAM_BOOL: {
+      bool *value = static_cast<bool *>(param->value_ptr);
+      if (!JsTokenToBool(variant, context->js_context(), value)) {
+        // TODO(aa): These errors should indicate which argument index had the
+        // wrong type.
+        context->SetException(
+            STRING16(L"Invalid argument type: expected bool."));
+        return false;
+      }
+      break;
+    }
+    case JSPARAM_INT: {
+      int *value = static_cast<int *>(param->value_ptr);
+      if (!JsTokenToInt(variant, context->js_context(), value)) {
+        context->SetException(
+            STRING16(L"Invalid argument type: expected int."));
+        return false;
+      }
+      break;
+    }
+    case JSPARAM_DOUBLE: {
+      double *value = static_cast<double *>(param->value_ptr);
+      if (!JsTokenToDouble(variant, context->js_context(), value)) {
+        context->SetException(
+            STRING16(L"Invalid argument type: expected double."));
+        return false;
+      }
+      break;
+    }
+    case JSPARAM_OBJECT: {
+      JsObject *value = static_cast<JsObject *>(param->value_ptr);
+      if (!value->SetObject(variant, context->js_context())) {
+        context->SetException(
+            STRING16(L"Invalid argument type: expected object."));
+        return false;
+      }
+      break;
+    }
+    case JSPARAM_ARRAY: {
+      JsArray *value = static_cast<JsArray *>(param->value_ptr);
+      if (!value->SetArray(variant, context->js_context())) {
+        context->SetException(
+            STRING16(L"Invalid argument type: expected array."));
+        return false;
+      }
+      break;
+    }
+    case JSPARAM_FUNCTION: {
+      JsRootedCallback **value =
+          static_cast<JsRootedCallback **>(param->value_ptr);
+      if (!JsTokenToNewCallback(variant, context->js_context(), value)) {
+        context->SetException(
+            STRING16(L"Invalid argument type: expected function."));
+        return false;
+      }
+      break;
+    }
+    case JSPARAM_STRING16: {
+      std::string16 *value = static_cast<std::string16 *>(param->value_ptr);
+      if (!JsTokenToString(variant, context->js_context(), value)) {
+        context->SetException(
+            STRING16(L"Invalid argument type: expected string."));
+        return false;
+      }
+      break;
+    }
+    default:
+      assert(false);
+      return false;
+  }
+
+  return true;
+}
+
+#endif
+
 #if BROWSER_FF
 
 bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out) {
@@ -451,6 +536,11 @@ bool JsTokenIsNullOrUndefined(JsToken t) {
   return JSVAL_IS_NULL(t) || JSVAL_IS_VOID(t); // null or undefined
 }
 
+bool JsTokenIsObject(JsToken t) {
+  return JSVAL_IS_OBJECT(t) && !JSVAL_IS_NULL(t); // JSVAL_IS_OBJECT returns
+                                                  // true for <null>.
+}
+
 #elif BROWSER_IE
 
 bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out) {
@@ -489,6 +579,10 @@ bool JsTokenToNewCallback(JsToken t, JsContextPtr cx, JsRootedCallback **out) {
 
 bool JsTokenIsNullOrUndefined(JsToken t) {
   return t.vt == VT_NULL || t.vt == VT_EMPTY; // null or undefined
+}
+
+bool JsTokenIsObject(JsToken t) {
+  return t.vt == VT_DISPATCH;
 }
 
 #elif BROWSER_NPAPI
@@ -552,8 +646,12 @@ bool JsTokenIsNullOrUndefined(JsToken t) {
   return NPVARIANT_IS_NULL(t) || NPVARIANT_IS_VOID(t);
 }
 
-// ScopedNPVariant functions.
+bool JsTokenIsObject(JsToken t) {
+  return NPVARIANT_IS_OBJECT(t);
+}
 
+
+// ScopedNPVariant functions.
 void ScopedNPVariant::Reset() {
   NPN_ReleaseVariantValue(this);
   VOID_TO_NPVARIANT(*this);
@@ -729,6 +827,74 @@ void ConvertJsParamToToken(const JsParamToSend &param,
   }
 }
 
+int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
+  bool has_optional = false;
+
+  for (int i = 0; i < output_argc; ++i) {
+    has_optional |= output_argv[i].requirement == JSPARAM_OPTIONAL;
+    if (output_argv[i].requirement == JSPARAM_REQUIRED)
+      assert(!has_optional);  // should not have required arg after optional
+
+    if (i >= static_cast<int>(disp_params_->cArgs)) {
+      // Out of arguments
+      if (output_argv[i].requirement == JSPARAM_REQUIRED) {
+        std::string16 msg;
+        msg += STRING16(L"Required argument ");
+        msg += IntegerToString16(i + 1);
+        msg += STRING16(L" is missing.");
+        SetException(msg.c_str());
+      }
+
+      // If failed on index [N], then N args succeeded
+      return i;
+    }
+
+    // args in input array are in reverse order
+    int input_arg_index = disp_params_->cArgs - i - 1;
+    if (!ConvertTokenToArgument(this, disp_params_->rgvarg[input_arg_index],
+                                &output_argv[i]))
+      return i;
+  }
+
+  return output_argc;
+}
+
+void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
+  // There is only a valid retval_ if the javascript caller is expecting a
+  // return value.
+  if (retval_) {
+    JsParamToSend retval = { type, value_ptr };
+    JsScopedToken scoped_retval;
+    ConvertJsParamToToken(retval, js_context(), &scoped_retval);
+
+    // In COM, return values are released by the caller.
+    scoped_retval.Detach(retval_);
+  }
+}
+
+void JsCallContext::SetException(const std::string16 &message) {
+  if (!exception_info_) {
+#if DEBUG
+    // MSDN says exception_info_ can be null, which seems very unfortunate.
+    // Asserting to see if we can find out under what conditions that's true.
+    assert(false);
+#endif
+    return;
+  }
+
+  exception_info_->wCode = 1001; // Not used, MSDN says must be > 1000.
+  exception_info_->wReserved = 0;
+  exception_info_->bstrSource = SysAllocString(PRODUCT_FRIENDLY_NAME);
+  exception_info_->bstrDescription = SysAllocString(message.c_str());
+  exception_info_->bstrHelpFile = NULL;
+  exception_info_->dwHelpContext = 0;
+  exception_info_->pvReserved = NULL;
+  exception_info_->pfnDeferredFillIn = NULL;
+  exception_info_->scode = 0;
+
+  is_exception_set_ = true;
+}
+
 #elif BROWSER_NPAPI
 
 void ConvertJsParamToToken(const JsParamToSend &param,
@@ -787,75 +953,6 @@ void ConvertJsParamToToken(const JsParamToSend &param,
   }
 }
 
-// Given an NPVariant, extract it into a JsArgument.  Object pointers are
-// weak references (ref count is not increased).
-static bool ConvertTokenToArgument(JsCallContext *context,
-                                   const JsToken &variant,
-                                   JsArgument *param) {
-  switch (param->type) {
-    case JSPARAM_BOOL: {
-      bool *value = static_cast<bool *>(param->value_ptr);
-      if (!JsTokenToBool(variant, context->js_context(), value)) {
-        context->SetException(
-            STRING16(L"Invalid argument type: expected bool."));
-        return false;
-      }
-      break;
-    }
-    case JSPARAM_INT: {
-      int *value = static_cast<int *>(param->value_ptr);
-      if (!JsTokenToInt(variant, context->js_context(), value)) {
-        context->SetException(
-            STRING16(L"Invalid argument type: expected int."));
-        return false;
-      }
-      break;
-    }
-    case JSPARAM_OBJECT: {
-      JsObject *value = static_cast<JsObject *>(param->value_ptr);
-      if (!value->SetObject(variant, context->js_context())) {
-        context->SetException(
-            STRING16(L"Invalid argument type: expected object."));
-        return false;
-      }
-      break;
-    }
-    case JSPARAM_ARRAY: {
-      JsArray *value = static_cast<JsArray *>(param->value_ptr);
-      if (!value->SetArray(variant, context->js_context())) {
-        context->SetException(
-            STRING16(L"Invalid argument type: expected array."));
-        return false;
-      }
-      break;
-    }
-    case JSPARAM_FUNCTION: {
-      JsRootedCallback **value =
-          static_cast<JsRootedCallback **>(param->value_ptr);
-      if (!JsTokenToNewCallback(variant, context->js_context(), value)) {
-        context->SetException(
-            STRING16(L"Invalid argument type: expected function."));
-        return false;
-      }
-      break;
-    }
-    case JSPARAM_STRING16: {
-      std::string16 *value = static_cast<std::string16 *>(param->value_ptr);
-      if (!JsTokenToString(variant, context->js_context(), value)) {
-        context->SetException(
-            STRING16(L"Invalid argument type: expected string."));
-        return false;
-      }
-      break;
-    }
-    default:
-      assert(false);
-      return false;
-  }
-
-  return true;
-}
-
 int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
   bool has_optional = false;
 
@@ -874,6 +971,7 @@ int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
         SetException(msg.c_str());
       }
 
+      // If failed on index [N], then N args succeeded
       return i;
     }
 
@@ -895,17 +993,6 @@ void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
   // In NPAPI, return values from callbacks are released by the browser.
   // Therefore, we give up ownership of this variant without releasing it.
   np_retval.Release();
-}
-
-void JsCallContext::SetReturnValue(JsParamType type, int) {
-  assert(type == JSPARAM_NULL);
-  SetReturnValue(type, reinterpret_cast<const void*>(NULL));
-}
-
-void JsCallContext::SetReturnValue(JsParamType type,
-                                   const ModuleImplBaseClass *value_ptr) {
-  assert(type == JSPARAM_MODULE);
-  SetReturnValue(type, reinterpret_cast<const void*>(value_ptr));
 }
 
 void JsCallContext::SetException(const std::string16 &message) {

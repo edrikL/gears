@@ -40,7 +40,10 @@ import "ocidl.idl";
   pointer_default(unique)
 ]
 interface GearsTestInterface : IDispatch {
-  HRESULT RunTests([out, retval] VARIANT_BOOL *can);
+  HRESULT RunTests();
+  HRESULT testParamTypes();
+  [propput] HRESULT testPropertyInt([in] VARIANT *val);
+  [propget] HRESULT testPropertyInt([out, retval] VARIANT *val);
 };
 
 #endif DEBUG

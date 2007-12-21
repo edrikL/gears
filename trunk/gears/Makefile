@@ -326,6 +326,7 @@ IE_CPPSRCS	+= \
 		message_service.cc \
 		message_service_test.cc \
 		module.cc \
+		module_wrapper.cc \
 		mutex.cc \
 		name_value_table.cc \
 		paths.cc \
