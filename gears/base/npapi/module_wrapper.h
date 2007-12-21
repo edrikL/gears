@@ -27,60 +27,65 @@
 #define GEARS_BASE_NPAPI_MODULE_WRAPPER_H__
 
 #include "gears/base/common/base_class.h"
+#include "gears/base/npapi/browser_utils.h"
 #include "gears/base/npapi/plugin.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-// Base class that implements common functionality to module wrappers.
-template<class T>
+// Represents the bridge between the JavaScript engine and a Gears module. A
+// ModuleWrapper wraps each Gears module instance and exposes its methods to
+// JavaScript. The wrapper has ownership of the module, so that when the
+// JavaScript engine decides to destroy the wrapper, the module itself is
+// destroyed.
 class ModuleWrapper
-    : public PluginBase<T>,
+    : public PluginBase,
       public ModuleWrapperBaseClass {
  public:
-  // Creates an instance of the class and its wrapper.  Also initializes from
-  // the sibling class if non-NULL.
-  static ModuleImplBaseClass *Create(JsContextPtr context) {
-    PluginClass *wrapper = static_cast<PluginClass *>(
-        NPN_CreateObject(context, GetNPClass<PluginClass>()));
-
-    if (!wrapper) {
-      BrowserUtils::SetJsException(
-          STRING16(L"Failed to create requested object."));
-      return NULL;
-    }
-
-    return wrapper->GetImplObject();
+  ModuleWrapper(NPP instance) : PluginBase(instance) {
   }
 
-  ModuleWrapper(NPP instance) :
-       PluginBase<T>(instance),
-       impl_(new ImplClass) {
+  void Init(ModuleImplBaseClass *impl, DispatcherInterface *dispatcher) {
+    PluginBase::Init(dispatcher);
+    impl_.reset(impl);
     impl_->SetJsWrapper(this);
+    dispatcher_.reset(dispatcher);
   }
 
-  virtual ImplClass *GetImplObject() const { return impl_.get(); }
   virtual JsToken GetWrapperToken() const {
     NPVariant token;
-    OBJECT_TO_NPVARIANT(const_cast<ModuleWrapper<T> *>(this), token);
+    OBJECT_TO_NPVARIANT(const_cast<ModuleWrapper *>(this), token);
     return token;
   }
   virtual void AddRef() { NPN_RetainObject(this); }
   virtual void Release() { NPN_ReleaseObject(this); }
 
  protected:
-  scoped_ptr<ImplClass> impl_;
+  scoped_ptr<ModuleImplBaseClass> impl_;
+  scoped_ptr<DispatcherInterface> dispatcher_;
 
+ private:
   DISALLOW_EVIL_CONSTRUCTORS(ModuleWrapper);
 };
 
 
-// Used to set up a Gears module's wrapper and associate it with the module
-// class itself.
-#define DECLARE_GEARS_WRAPPER(GearsClass, GearsWrapperClass) \
-DECLARE_GEARS_BRIDGE(GearsClass, GearsWrapperClass); \
-template<> \
-GearsClass *CreateModule<GearsClass>(JsContextPtr context) { \
-  return static_cast<GearsClass*>( \
-      ModuleWrapper<GearsWrapperClass>::Create(context)); \
+// Creates an instance of the class and its wrapper.
+template<class GearsClass>
+GearsClass *CreateModule<GearsClass>(JsContextPtr context) {
+  ModuleWrapper *wrapper = static_cast<ModuleWrapper *>(
+      NPN_CreateObject(context, GetNPClass<ModuleWrapper>()));
+
+  if (!wrapper) {
+    BrowserUtils::SetJsException(
+        STRING16(L"Failed to create requested object."));
+    return NULL;
+  }
+
+  GearsClass *impl = new GearsClass;
+  wrapper->Init(impl, new Dispatcher<GearsClass>(impl));
+  return impl;
 }
+
+// Used to set up a Gears module's wrapper.
+#define DECLARE_GEARS_WRAPPER(GearsClass) \
+DECLARE_DISPATCHER(GearsClass)
 
 #endif // GEARS_BASE_NPAPI_MODULE_WRAPPER_H__

@@ -25,8 +25,33 @@
 
 #include "gears/localserver/npapi/resource_store_np.h"
 
+#include "gears/base/npapi/module_wrapper.h"
 #include "gears/localserver/npapi/file_submitter_np.h"
 
+DECLARE_GEARS_WRAPPER(GearsResourceStore);
+
+// static
+void Dispatcher<GearsResourceStore>::Init() {
+  RegisterProperty("name", &GearsResourceStore::GetName, NULL);
+  RegisterProperty("requiredCookie", &GearsResourceStore::GetRequiredCookie,
+                   NULL);
+  RegisterProperty("enabled", &GearsResourceStore::GetEnabled,
+                   &GearsResourceStore::SetEnabled);
+
+  RegisterMethod("capture", &GearsResourceStore::Capture);
+  RegisterMethod("abortCapture", &GearsResourceStore::AbortCapture);
+  RegisterMethod("isCaptured", &GearsResourceStore::IsCaptured);
+  RegisterMethod("remove", &GearsResourceStore::Remove);
+  RegisterMethod("rename", &GearsResourceStore::Rename);
+  RegisterMethod("copy", &GearsResourceStore::Copy);
+  RegisterMethod("getHeader", &GearsResourceStore::GetHeader);
+  RegisterMethod("getAllHeaders", &GearsResourceStore::GetAllHeaders);
+  RegisterMethod("captureFile", &GearsResourceStore::CaptureFile);
+  RegisterMethod("getCapturedFileName",
+                 &GearsResourceStore::GetCapturedFileName);
+  RegisterMethod("createFileSubmitter",
+                 &GearsResourceStore::CreateFileSubmitter);
+}
 
 //------------------------------------------------------------------------------
 // GetName

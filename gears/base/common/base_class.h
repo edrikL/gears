@@ -166,9 +166,6 @@ class ModuleImplBaseClass {
 // JavaScript engine.
 class ModuleWrapperBaseClass {
  public:
-  // Returns the object that implements the Gears functionality.
-  virtual ModuleImplBaseClass *GetImplObject() const = 0;
-
   // Returns a token for this wrapper class that can be returned via the
   // JsRunnerInterface.
   virtual JsToken GetWrapperToken() const = 0;
@@ -202,8 +199,6 @@ class GComPtr : public scoped_token<Module*, ReleaseWrapperFunctor> {
 };
 
 // Creates new Module of the given type.  Returns NULL on failure.
-// NOTE: Each module creation function is implemented as a template
-// specialization.
 template<class Module>
 Module *CreateModule(JsContextPtr context);
 #endif

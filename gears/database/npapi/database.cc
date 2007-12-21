@@ -30,6 +30,7 @@
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/base/npapi/module_wrapper.h"
 #include "gears/database/common/database_utils.h"
 #include "gears/database/npapi/database.h"
 #include "gears/database/npapi/result_set.h"
@@ -37,6 +38,20 @@
 #ifdef DEBUG
 Stopwatch GearsDatabase::g_stopwatch_;
 #endif // DEBUG
+
+DECLARE_GEARS_WRAPPER(GearsDatabase);
+
+// static
+void Dispatcher<GearsDatabase>::Init() {
+  typedef GearsDatabase T;
+  RegisterMethod("open", &GearsDatabase::Open);
+  RegisterMethod("execute", &GearsDatabase::Execute);
+  RegisterMethod("close", &GearsDatabase::Close);
+  RegisterMethod("getLastInsertRowId", &GearsDatabase::GetLastInsertRowId);
+#ifdef DEBUG
+  RegisterMethod("getExecuteMsec", &GearsDatabase::GetExecuteMsec);
+#endif
+}
 
 GearsDatabase::GearsDatabase() : db_(NULL) {
 }

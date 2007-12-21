@@ -452,6 +452,7 @@ NPAPI_CPPSRCS	+= \
 		paths.cc \
 		paths_ie.cc \
 		permissions_db.cc \
+		plugin.cc \
 		png_utils.cc \
 		security_model.cc \
 		security_model_test.cc \
@@ -547,10 +548,8 @@ NPAPI_IDLSRCS	+= \
 
 NPAPI_CPPSRCS	+= \
 		database.cc \
-		database_wrapper.cc \
 		database_utils.cc \
 		result_set.cc \
-		result_set_wrapper.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -841,7 +840,6 @@ NPAPI_VPATH	+= \
 
 NPAPI_CPPSRCS	+= \
 		workerpool.cc \
-		workerpool_wrapper.cc \
 		workerpool_utils.cc \
 		$(NULL)
 
@@ -1061,13 +1059,9 @@ NPAPI_CPPSRCS	+= \
 # localserver/npapi
 NPAPI_CPPSRCS	+= \
 		file_submitter_np.cc \
-		file_submitter_wrapper.cc \
 		localserver_np.cc \
-		localserver_wrapper.cc \
 		managed_resource_store_np.cc \
-		managed_resource_store_wrapper.cc \
 		resource_store_np.cc \
-		resource_store_wrapper.cc \
 		$(NULL)		
 
 #-----------------------------------------------------------------------------

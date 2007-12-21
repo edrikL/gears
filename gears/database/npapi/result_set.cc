@@ -27,9 +27,23 @@
 
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/stopwatch.h"
+#include "gears/base/npapi/module_wrapper.h"
 #include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
 
 #include "gears/database/npapi/database.h"
+
+DECLARE_GEARS_WRAPPER(GearsResultSet);
+
+// static 
+void Dispatcher<GearsResultSet>::Init() {
+  RegisterMethod("field", &GearsResultSet::Field);
+  RegisterMethod("fieldByName", &GearsResultSet::FieldByName);
+  RegisterMethod("fieldName", &GearsResultSet::FieldName);
+  RegisterMethod("fieldCount", &GearsResultSet::FieldCount);
+  RegisterMethod("close", &GearsResultSet::Close);
+  RegisterMethod("next", &GearsResultSet::Next);
+  RegisterMethod("isValidRow", &GearsResultSet::IsValidRow);
+}
 
 GearsResultSet::GearsResultSet() :
     database_(NULL),

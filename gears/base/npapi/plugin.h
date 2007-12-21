@@ -26,85 +26,46 @@
 #ifndef GEARS_BASE_NPAPI_PLUGIN_H__
 #define GEARS_BASE_NPAPI_PLUGIN_H__
 
-#include <map>
-
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/dispatcher.h"
 
 class JsCallContext;
 
-// Associates a Gears class with its corresponding NPAPI bridge class.
-template<class Plugin> struct PluginTraits {};
-
 // This is a base class for the bridge between the JavaScript engine and the
-// Gears class implementations.  See GearsFactoryBridge for an example.
-//
-// Note: This class assumes its template parameter has the following methods:
-// // Called once per class type to initialize properties and methods.
-// static void InitClass();
-// // Returns a pointer to the class that handles the property/method callbacks.
-// ImplClass *GetImplObject();
-template<class T>
+// Gears class implementations.  See ModuleWrapper for an example.
 class PluginBase : public NPObject {
  public:
-  // The NPAPI scriptable plugin interface class.
-  typedef T PluginClass;
-
-  // The corresponding ImplClass that implements the functionality for our
-  // bridge.
-  typedef typename PluginTraits<T>::ImplClass ImplClass;
-
-  // Callback function used for property and method invocations.
-  typedef void (ImplClass::*ImplCallback)(JsCallContext *);
-
   // NPClass callbacks.  The browser calls these functions when JavaScript
   // interacts with a Gears object.
-  static NPObject* Allocate(NPP npp, NPClass *npclass);
+  template<class PluginClass>
+  static NPObject* Allocate(NPP npp, NPClass *npclass) {
+    return new PluginClass(npp);
+  }
   static void Deallocate(NPObject *npobj);
   static bool HasMethod(NPObject *npobj, NPIdentifier name);
   static bool Invoke(NPObject *npobj, NPIdentifier name,
                      const NPVariant *args, uint32_t num_args,
                      NPVariant *result);
-  static bool HasProperty(NPObject * npobj, NPIdentifier name);
+  static bool HasProperty(NPObject *npobj, NPIdentifier name);
   static bool GetProperty(NPObject *npobj, NPIdentifier name,
                           NPVariant *result);
   static bool SetProperty(NPObject *npobj, NPIdentifier name,
                           const NPVariant *value);
-  PluginBase(NPP instance) : instance_(instance) {}
+  PluginBase(NPP instance) : instance_(instance), dispatcher_(NULL) {}
+  virtual ~PluginBase() {}
+
+  // Secondary init function that requires more information than we have
+  // at object creation time.
+  void Init(DispatcherInterface *dispatcher) {
+    dispatcher_ = dispatcher;
+  }
 
  protected:
-  // Register JavaScript property/methods.
-  // Note: setter may be NULL, but getter may not.
-  static void RegisterProperty(const char *name,
-                               ImplCallback getter, ImplCallback setter);
-  static void RegisterMethod(const char *name, ImplCallback callback);
-
   NPP instance_;
+  DispatcherInterface *dispatcher_;
 
  private:
-  typedef std::map<NPIdentifier, ImplCallback> IDList;
-
-  struct ThreadLocalVariables {
-    bool did_init_class;
-    IDList property_getters;
-    IDList property_setters;
-    IDList methods;
-    ThreadLocalVariables() : did_init_class(false) {}
-  };
-
-  static void DeleteThreadLocals(void *context);
-  static ThreadLocalVariables &GetThreadLocals();
-
-  static IDList& GetPropertyGetterList() {
-    return GetThreadLocals().property_getters;
-  }
-  static IDList& GetPropertySetterList() {
-    return GetThreadLocals().property_setters;
-  }
-  static IDList& GetMethodList() {
-    return GetThreadLocals().methods;
-  }
-
-  DISALLOW_EVIL_CONSTRUCTORS(PluginBase<T>);
+  DISALLOW_EVIL_CONSTRUCTORS(PluginBase);
 };
 
 // Get the NPClass for a Plugin type (the type must derive from PluginBase).
@@ -112,33 +73,19 @@ template<class Plugin>
 NPClass* GetNPClass() {
   static NPClass plugin_class = {
     NP_CLASS_STRUCT_VERSION,
-    Plugin::Allocate,
-    Plugin::Deallocate,
-    NULL,  // Plugin::Invalidate,
-    Plugin::HasMethod,
-    Plugin::Invoke,
-    NULL,  // Plugin::InvokeDefault,
-    Plugin::HasProperty,
-    Plugin::GetProperty,
-    Plugin::SetProperty,
-    NULL,  // Plugin::RemoveProperty,
+    PluginBase::Allocate<Plugin>,
+    PluginBase::Deallocate,
+    NULL,  // PluginBase::Invalidate,
+    PluginBase::HasMethod,
+    PluginBase::Invoke,
+    NULL,  // PluginBase::InvokeDefault,
+    PluginBase::HasProperty,
+    PluginBase::GetProperty,
+    PluginBase::SetProperty,
+    NULL,  // PluginBase::RemoveProperty,
   };
 
   return &plugin_class;
 }
-
-// Used to define the association between a Gears class and its NPAPI bridge.
-#define DECLARE_GEARS_BRIDGE(ImplClassType, PluginClass) \
-class PluginClass; \
-template<> \
-struct PluginTraits<PluginClass> { \
-  typedef ImplClassType ImplClass; \
-  static const std::string kThreadLocalsKey;\
-}; \
-const std::string PluginTraits<PluginClass>::kThreadLocalsKey( \
-    "base:" #ImplClassType)
-
-// Need to include .cc for template definitions.
-#include "gears/base/npapi/plugin.cc"
 
 #endif // GEARS_BASE_NPAPI_PLUGIN_H__
