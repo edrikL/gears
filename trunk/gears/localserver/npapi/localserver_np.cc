@@ -26,8 +26,22 @@
 #include "gears/localserver/npapi/localserver_np.h"
 
 #include "gears/base/common/paths.h"
+#include "gears/base/npapi/module_wrapper.h"
 #include "gears/localserver/npapi/managed_resource_store_np.h"
 #include "gears/localserver/npapi/resource_store_np.h"
+
+DECLARE_GEARS_WRAPPER(GearsLocalServer);
+
+// static
+void Dispatcher<GearsLocalServer>::Init() {
+  RegisterMethod("canServeLocally", &GearsLocalServer::CanServeLocally);
+  RegisterMethod("createManagedStore", &GearsLocalServer::CreateManagedStore);
+  RegisterMethod("openManagedStore", &GearsLocalServer::OpenManagedStore);
+  RegisterMethod("removeManagedStore", &GearsLocalServer::RemoveManagedStore);
+  RegisterMethod("createStore", &GearsLocalServer::CreateStore);
+  RegisterMethod("openStore", &GearsLocalServer::OpenStore);
+  RegisterMethod("removeStore", &GearsLocalServer::RemoveStore);
+}
 
 //-----------------------------------------------------------------------------
 // CanServeLocally

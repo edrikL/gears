@@ -31,33 +31,25 @@
 
 #include <assert.h>
 
+#include "gears/base/common/dispatcher.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/npapi/np_utils.h"
 #include "gears/base/npapi/plugin.h"
 #include "gears/base/npapi/scoped_npapi_handles.h"
 
-// HtmlEventMonitorHook handles its own callbacks.
-DECLARE_GEARS_BRIDGE(HtmlEventMonitorHook, HtmlEventMonitorHook);
+DECLARE_DISPATCHER(HtmlEventMonitorHook);
 
-class HtmlEventMonitorHook : public PluginBase<HtmlEventMonitorHook> {
+class HtmlEventMonitorHook : public PluginBase {
  public:
-  static void InitClass() {
-    // Safari treats "handleEvent" as a method, while Firefox treats it as a
-    // property.  Go figure.
-    RegisterMethod("handleEvent", &HtmlEventMonitorHook::HandleEvent);
-    RegisterProperty("handleEvent", &HtmlEventMonitorHook::HandleEvent, NULL);
-  }
-
-  HtmlEventMonitorHook(NPP instance) :
-      PluginBase<HtmlEventMonitorHook>(instance) {
+  HtmlEventMonitorHook(NPP instance)
+      : PluginBase(instance), dispatcher_(this) {
+    PluginBase::Init(&dispatcher_);
   }
 
   void Init(HtmlEventMonitor::HtmlEventCallback function, void *user_param) {
     function_ = function;
     user_param_ = user_param;
   }
-
-  HtmlEventMonitorHook *GetImplObject() { return this; }
 
   void HandleEvent(JsCallContext *context) {
     function_(user_param_);  // invoke user callback
@@ -67,8 +59,18 @@ class HtmlEventMonitorHook : public PluginBase<HtmlEventMonitorHook> {
   HtmlEventMonitor::HtmlEventCallback function_;
   void *user_param_;
 
+  Dispatcher<HtmlEventMonitorHook> dispatcher_;
+
   DISALLOW_EVIL_CONSTRUCTORS(HtmlEventMonitorHook);
 };
+
+// static
+void Dispatcher<HtmlEventMonitorHook>::Init() {
+  // Safari treats "handleEvent" as a method, while Firefox treats it as a
+  // property.  Go figure.
+  RegisterMethod("handleEvent", &HtmlEventMonitorHook::HandleEvent);
+  RegisterProperty("handleEvent", &HtmlEventMonitorHook::HandleEvent, NULL);
+}
 
 HtmlEventMonitorHook* CreateHtmlEventMonitorHook(JsContextPtr context) {
   return static_cast<HtmlEventMonitorHook *>(

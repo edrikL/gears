@@ -31,11 +31,19 @@
 #include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/string16.h"
+#include "gears/base/npapi/module_wrapper.h"
 #include "gears/database/npapi/database.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/localserver/npapi/localserver_np.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/workerpool/npapi/workerpool.h"
+
+// static 
+void Dispatcher<GearsFactory>::Init() {
+  RegisterProperty("version", &GearsFactory::GetVersion, NULL);
+  RegisterMethod("create", &GearsFactory::Create);
+  RegisterMethod("getBuildInfo", &GearsFactory::GetBuildInfo);
+}
 
 GearsFactory::GearsFactory()
     : is_creation_suspended_(false),

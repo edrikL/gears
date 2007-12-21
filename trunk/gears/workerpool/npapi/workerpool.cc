@@ -29,6 +29,7 @@
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/js_runner_utils.h"
 #include "gears/base/common/mutex.h"
+#include "gears/base/npapi/module_wrapper.h"
 #include "gears/factory/npapi/factory.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/workerpool/common/workerpool_utils.h"
@@ -101,6 +102,23 @@ struct JavaScriptWorkerInfo {
 //
 // GearsWorkerPool -- handles the browser glue.
 //
+
+DECLARE_GEARS_WRAPPER(GearsWorkerPool);
+
+// static
+void Dispatcher<GearsWorkerPool>::Init() {
+  RegisterMethod("createWorker", &GearsWorkerPool::CreateWorker);
+  RegisterMethod("createWorkerFromUrl", &GearsWorkerPool::CreateWorkerFromUrl);
+  RegisterMethod("allowCrossOrigin", &GearsWorkerPool::AllowCrossOrigin);
+  RegisterMethod("sendMessage", &GearsWorkerPool::SendMessage);
+  RegisterProperty("onmessage", &GearsWorkerPool::GetOnmessage,
+                   &GearsWorkerPool::SetOnmessage);
+  RegisterProperty("onerror", &GearsWorkerPool::GetOnerror,
+                   &GearsWorkerPool::SetOnerror);
+#ifdef DEBUG
+  RegisterMethod("forceGC", &GearsWorkerPool::ForceGC);
+#endif
+}
 
 GearsWorkerPool::GearsWorkerPool()
     : threads_manager_(NULL),

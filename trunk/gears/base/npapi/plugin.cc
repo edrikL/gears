@@ -23,147 +23,71 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// Don't actually include plugin.h, since this is a template file and will be
-// included by the .h file.  If we do, mkdepend.py explodes in a whirlwind of
-// angry recursion as it tries to follow the infinite include chain.
+#include "gears/base/npapi/plugin.h"
 
 #include "gears/base/common/js_types.h"
-#include "gears/base/common/thread_locals.h"
 #include "gears/base/npapi/browser_utils.h"
 
 // static
-template<class T>
-NPObject* PluginBase<T>::Allocate(NPP npp, NPClass *npclass) {
-  // Initialize property and method mappings for the derived class.
-  ThreadLocalVariables &locals = GetThreadLocals();
-  if (!locals.did_init_class) {
-    locals.did_init_class = true;
-    PluginClass::InitClass();
-  }
-
-  return new PluginClass(npp);
+void PluginBase::Deallocate(NPObject *npobj) {
+  delete static_cast<PluginBase *>(npobj);
 }
 
 // static
-template<class T>
-void PluginBase<T>::Deallocate(NPObject *npobj) {
-  delete static_cast<PluginClass *>(npobj);
+bool PluginBase::HasMethod(NPObject *npobj, NPIdentifier name) {
+  PluginBase *plugin = static_cast<PluginBase *>(npobj);
+  assert(plugin->dispatcher_);
+  return plugin->dispatcher_->HasMethod(name);
 }
 
 // static
-template<class T>
-bool PluginBase<T>::HasMethod(NPObject *npobj, NPIdentifier name) {
-  const IDList &methods = GetMethodList();
-  return methods.find(name) != methods.end();
-}
-
-// static
-template<class T>
-bool PluginBase<T>::Invoke(NPObject *npobj, NPIdentifier name,
+bool PluginBase::Invoke(NPObject *npobj, NPIdentifier name,
                            const NPVariant *args, uint32_t num_args,
                            NPVariant *result) {
   VOID_TO_NPVARIANT(*result);
 
-  PluginClass *plugin = static_cast<PluginClass *>(npobj);
-  ImplClass *impl = plugin->GetImplObject();
-
-  const IDList &methods = GetMethodList();
-  typename IDList::const_iterator method = methods.find(name);
-  if (method == methods.end())
-    return false;
-  ImplCallback callback = method->second;
+  PluginBase *plugin = static_cast<PluginBase *>(npobj);
+  assert(plugin->dispatcher_);
 
   JsCallContext context(plugin->instance_, npobj,
                         static_cast<int>(num_args), args, result);
   BrowserUtils::EnterScope(&context);
-  (impl->*callback)(&context);
+  bool retval = plugin->dispatcher_->CallMethod(name, &context);
   BrowserUtils::ExitScope();
-  return true;
+  return retval;
 }
 
 // static
-template<class T>
-bool PluginBase<T>::HasProperty(NPObject * npobj, NPIdentifier name) {
-  const IDList &properties = GetPropertyGetterList();
-  return properties.find(name) != properties.end();
+bool PluginBase::HasProperty(NPObject *npobj, NPIdentifier name) {
+  PluginBase *plugin = static_cast<PluginBase *>(npobj);
+  assert(plugin->dispatcher_);
+  return plugin->dispatcher_->HasProperty(name);
 }
 
 // static
-template<class T>
-bool PluginBase<T>::GetProperty(NPObject *npobj, NPIdentifier name,
+bool PluginBase::GetProperty(NPObject *npobj, NPIdentifier name,
                                 NPVariant *result) {
   VOID_TO_NPVARIANT(*result);
 
-  PluginClass *plugin = static_cast<PluginClass *>(npobj);
-  ImplClass *impl = plugin->GetImplObject();
-
-  const IDList &properties = GetPropertyGetterList();
-  typename IDList::const_iterator property = properties.find(name);
-  if (property == properties.end())
-    return false;
-  ImplCallback callback = property->second;
+  PluginBase *plugin = static_cast<PluginBase *>(npobj);
+  assert(plugin->dispatcher_);
 
   JsCallContext context(plugin->instance_, npobj, 0, NULL, result);
   BrowserUtils::EnterScope(&context);
-  (impl->*callback)(&context);
+  bool retval = plugin->dispatcher_->GetProperty(name, &context);
   BrowserUtils::ExitScope();
-  return true;
+  return retval;
 }
 
 // static
-template<class T>
-bool PluginBase<T>::SetProperty(NPObject *npobj, NPIdentifier name,
+bool PluginBase::SetProperty(NPObject *npobj, NPIdentifier name,
                                 const NPVariant *value) {
-  PluginClass *plugin = static_cast<PluginClass *>(npobj);
-  ImplClass *impl = plugin->GetImplObject();
-
-  const IDList &properties = GetPropertySetterList();
-  typename IDList::const_iterator property = properties.find(name);
-  if (property == properties.end() || property->second == NULL)
-    return false;
-  ImplCallback callback = property->second;
+  PluginBase *plugin = static_cast<PluginBase *>(npobj);
+  assert(plugin->dispatcher_);
 
   JsCallContext context(plugin->instance_, npobj, 1, value, NULL);
   BrowserUtils::EnterScope(&context);
-  (impl->*callback)(&context);
+  bool retval = plugin->dispatcher_->SetProperty(name, &context);
   BrowserUtils::ExitScope();
-  return true;
-}
-
-// static
-template<class T>
-void PluginBase<T>::RegisterProperty(const char *name,
-                                     ImplCallback getter, ImplCallback setter) {
-  assert(getter);
-  NPIdentifier id = NPN_GetStringIdentifier(name);
-  GetPropertyGetterList()[id] = getter;
-  GetPropertySetterList()[id] = setter;
-}
-
-// static
-template<class T>
-void PluginBase<T>::RegisterMethod(const char *name, ImplCallback callback) {
-  NPIdentifier id = NPN_GetStringIdentifier(name);
-  GetMethodList()[id] = callback;
-}
-
-// static
-template<class T>
-void PluginBase<T>::DeleteThreadLocals(void *context) {
-  ThreadLocalVariables *locals =
-      reinterpret_cast<ThreadLocalVariables*>(context);
-  delete locals;
-}
-
-// static
-template<class T>
-typename PluginBase<T>::ThreadLocalVariables &PluginBase<T>::GetThreadLocals() {
-  const std::string &key = PluginTraits<T>::kThreadLocalsKey;
-  ThreadLocalVariables *locals =
-      reinterpret_cast<ThreadLocalVariables*>(ThreadLocals::GetValue(key));
-  if (!locals) {
-    locals = new ThreadLocalVariables;
-    ThreadLocals::SetValue(key, locals, &DeleteThreadLocals);
-  }
-  return *locals;
+  return retval;
 }

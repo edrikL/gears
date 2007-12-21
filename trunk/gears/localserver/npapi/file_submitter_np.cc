@@ -25,6 +25,16 @@
 
 #include "gears/localserver/npapi/file_submitter_np.h"
 
+#include "gears/base/npapi/module_wrapper.h"
+
+DECLARE_GEARS_WRAPPER(GearsFileSubmitter);
+
+// static
+void Dispatcher<GearsFileSubmitter>::Init() {
+  RegisterMethod("setFileInputElement",
+                 &GearsFileSubmitter::SetFileInputElement);
+}
+
 //------------------------------------------------------------------------------
 // SetFileInputElement
 //------------------------------------------------------------------------------

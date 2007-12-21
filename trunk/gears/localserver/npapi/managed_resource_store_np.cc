@@ -26,6 +26,30 @@
 #include "gears/localserver/npapi/managed_resource_store_np.h"
 
 #include "gears/base/common/url_utils.h"
+#include "gears/base/npapi/module_wrapper.h"
+
+DECLARE_GEARS_WRAPPER(GearsManagedResourceStore);
+
+// static
+void Dispatcher<GearsManagedResourceStore>::Init() {
+  RegisterProperty("name", &GearsManagedResourceStore::GetName, NULL);
+  RegisterProperty("requiredCookie",
+                   &GearsManagedResourceStore::GetRequiredCookie, NULL);
+  RegisterProperty("enabled", &GearsManagedResourceStore::GetEnabled,
+                   &GearsManagedResourceStore::SetEnabled);
+  RegisterProperty("manifestUrl", &GearsManagedResourceStore::GetManifestUrl,
+                   &GearsManagedResourceStore::SetManifestUrl);
+  RegisterProperty("lastUpdateCheckTime",
+                   &GearsManagedResourceStore::GetLastUpdateCheckTime, NULL);
+  RegisterProperty("updateStatus",
+                   &GearsManagedResourceStore::GetUpdateStatus, NULL);
+  RegisterProperty("lastErrorMessage",
+                   &GearsManagedResourceStore::GetLastErrorMessage, NULL);
+  RegisterProperty("currentVersion",
+                   &GearsManagedResourceStore::GetCurrentVersion, NULL);
+  RegisterMethod("checkForUpdate",
+                 &GearsManagedResourceStore::CheckForUpdate);
+}
 
 //------------------------------------------------------------------------------
 // GetName

@@ -27,45 +27,18 @@
 
 #include "gears/base/npapi/module_wrapper.h"
 #include "gears/factory/npapi/factory.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-DECLARE_GEARS_WRAPPER(GearsFactory, GearsFactoryWrapper);
-
-// TODO(mpcomplete): The naming is temporary.  Right now we have:
-// - GearsFactoryWrapper: serves as the bridge between implementation and the
-// JavaScript engine.
-// - GearsFactory: the actual implementation of the factory module.
-//
-// We want to eventually rename GearsFactory -> GearsFactoryImpl, and
-// GearsFactoryWrapper -> GearsFactory.  But until we have this abstraction layer
-// for all browsers, we need to preserve the old naming scheme.
-
-// This class serves as the bridge between the GearsFactory implementation and
-// the browser binding layer.
-class GearsFactoryWrapper : public ModuleWrapper<GearsFactoryWrapper> {
- public:
-  GearsFactoryWrapper(NPP instance)
-      : ModuleWrapper<GearsFactoryWrapper>(instance) {
-  }
-
-  static void InitClass() {
-    RegisterProperty("version", &GearsFactory::GetVersion, NULL);
-    RegisterMethod("create", &GearsFactory::Create);
-    RegisterMethod("getBuildInfo", &GearsFactory::GetBuildInfo);
-  }
-
- private:
-  DISALLOW_EVIL_CONSTRUCTORS(GearsFactoryWrapper);
-};
+DECLARE_GEARS_WRAPPER(GearsFactory);
 
 NPObject* CreateGearsFactoryWrapper(JsContextPtr context) {
-  GearsFactoryWrapper *factory_wrapper = static_cast<GearsFactoryWrapper*>(
-        NPN_CreateObject(context, GetNPClass<GearsFactoryWrapper>()));
-  if (factory_wrapper) {
-    GearsFactory *factory = static_cast<GearsFactory*>(
-          factory_wrapper->GetImplObject());
-    factory->InitBaseFromDOM(context);
+  scoped_ptr<ModuleWrapper> factory_wrapper(static_cast<ModuleWrapper*>(
+        NPN_CreateObject(context, GetNPClass<ModuleWrapper>())));
+  if (factory_wrapper.get()) {
+    GearsFactory *factory = new GearsFactory;
+    factory_wrapper->Init(factory, new Dispatcher<GearsFactory>(factory));
+    if (!factory->InitBaseFromDOM(context))
+      return NULL;
   }
 
-  return factory_wrapper;
+  return factory_wrapper.release();
 }
