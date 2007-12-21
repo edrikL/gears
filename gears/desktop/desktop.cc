@@ -167,10 +167,10 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
   // Validate that we got at least one that we can use on all platforms
   if (shortcut_info.icon16x16.url.empty() &&
       shortcut_info.icon32x32.url.empty() &&
-      shortcut_info.icon48x48.url.empty()) {
+      shortcut_info.icon48x48.url.empty() &&
+      shortcut_info.icon128x128.url.empty()) {
     RETURN_EXCEPTION(STRING16(L"Invalid value for icon parameter. At least one "
-                              L"of the 16x16, 32x32, or 48x48 sizes must be "
-                              L"specified."));
+                              L"icon must be specified."));
   }
   
   // Resolve the icon urls

@@ -478,3 +478,88 @@ bool PngUtils::Decode(const unsigned char* input, size_t input_size,
   *h = state.height;
   return true;
 }
+
+// Divides a length of X units into Y spans.  The numbers need not be evenly
+// divisible.  The class will return spans of length floor(X/Y) and ceil(X/Y),
+// chosen to distribute any error evenly along the length.
+//
+// The computation is efficient, requiring only one division at initialization
+// and no divisions per span.  This makes it suitable for things like
+// drawing lines using Bresenham, or shrinking images with a box filter.
+class IntegralSplit {
+ public:
+  // 'length' is the total distance to split into spans.
+  IntegralSplit(int length, int num_spans)
+      : length_(length), num_spans_(num_spans) {
+        small_span_ = length / num_spans;  // integer division
+        step_error_ = length % num_spans;
+        total_error_ = num_spans >> 1;  // init to spans/2 to 'center' any error
+      }
+
+  // Returns the length of the next span.
+  int NextSpan() {
+    total_error_ += step_error_;
+    if (total_error_ >= num_spans_) {
+      total_error_ -= num_spans_;
+      return small_span_ + 1;
+    } else {
+      return small_span_;
+    }
+  }
+
+ private:
+  int length_;  // total distance to split
+  int num_spans_;
+
+  int total_error_;
+  int step_error_;  // amount to add at each step
+  int small_span_;  // spans are always (small) or (small + 1)
+};
+
+void PngUtils::ShrinkImage(const unsigned char *input, int width, int height,
+                          int new_width, int new_height,
+                          std::vector<unsigned char> *output) {
+  assert(new_width <= width);
+  assert(new_height <= height);
+
+  output->reserve(new_width * new_height * 4);
+
+  IntegralSplit height_splitter(height, new_height);
+  int base_y = 0;
+  for (int i = 0; i < new_height; ++i) {
+    IntegralSplit width_splitter(width, new_width);
+    int local_height = height_splitter.NextSpan();
+    int base_x = 0;
+    for (int j = 0; j < new_width; ++j) {
+      int local_width = width_splitter.NextSpan();
+      unsigned int red = 0;
+      unsigned int green = 0;
+      unsigned int blue = 0;
+      unsigned int alpha = 0;
+
+      // A box of pixels with colours c1...cN and alpha a1...aN is averaged as
+      // colour (c1a1+...+cNaN)/N and alpha (a1+...+aN)/N.
+      for (int y = base_y; y < base_y + local_height; ++y) {
+        for (int x = base_x; x < base_x + local_width; ++x) {
+          int offset = ((y * width) + x) * 4;
+
+          // Colour values are scaled by the alpha, so that translucent pixels
+          // don't impact the final colour more than they should.
+          red += input[offset] * input[offset + 3];
+          green += input[offset + 1] * input[offset + 3];
+          blue += input[offset + 2] * input[offset + 3];
+
+          // Alpha is just the average value from the input area.
+          alpha += input[offset + 3];
+        }
+      }
+      output->push_back(red / (local_height * local_width * 0xFF));
+      output->push_back(green / (local_height * local_width * 0xFF));
+      output->push_back(blue / (local_height * local_width * 0xFF));
+      output->push_back(alpha / (local_height * local_width));
+
+      base_x += local_width;
+    }
+    base_y += local_height;
+  }
+}

@@ -75,6 +75,13 @@ class PngUtils {
                      ColorFormat format, std::vector<unsigned char>* output,
                      int* w, int* h);
 
+  // Downscales an image from width x height to new_width x new_height.  The
+  // new dimensions must both be smaller than the original ones.  This
+  // function assumes 4 bytes per pixel, with the last byte being the alpha
+  // channel.
+  static void ShrinkImage(const unsigned char *input, int width, int height,
+                          int new_width, int new_height,
+                          std::vector<unsigned char> *output);
 private:
   DISALLOW_EVIL_CONSTRUCTORS(PngUtils);
 };

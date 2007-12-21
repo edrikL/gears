@@ -40,6 +40,7 @@
 #include "gears/base/common/file.h"
 #include "gears/base/common/int_types.h"
 #include "gears/base/common/paths.h"
+#include "gears/base/common/png_utils.h"
 #include "gears/base/common/scoped_win32_handles.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
@@ -534,62 +535,83 @@ static bool CreateIcoFile(const std::string16 &icons_path,
     uint32 offset;
   };
 
-  // Initialize to the size of the header.
-  int data_size = sizeof(IcoHeader);
-
   std::vector<const File::IconData *> icons_to_write;
+  File::IconData scaled_icons[3];
+  const File::IconData *next_largest_provided = NULL;
 
-  if (!shortcut.icon16x16.raw_data.empty()) {
-    icons_to_write.push_back(&shortcut.icon16x16);
+  // For each icon size, we use the provided one if available.  If not, and we
+  // have a larger version, we scale the closest image to fit because our
+  // box-filter minify looks better than the Windows automatic minify.
 
-    // Increase data_size by size of the icon data.
-    data_size += sizeof(BITMAPINFOHEADER);
-
-    // 32 bits per pixel for the image data.
-    data_size += 4 * shortcut.icon16x16.width * shortcut.icon16x16.height;
-
-    // 2 bits per pixel for the AND mask.
-    data_size += shortcut.icon16x16.height * shortcut.icon16x16.height / 4;
-
-    // Increase data_size by size of directory entry.
-    data_size += sizeof(IcoDirectory);
-  }
-
-  if (!shortcut.icon32x32.raw_data.empty()) {
-    icons_to_write.push_back(&shortcut.icon32x32);
-
-    // Increase data_size by size of the icon data.
-    data_size += sizeof(BITMAPINFOHEADER);
-
-    // 32 bits per pixel for the image data.
-    data_size += 4 * shortcut.icon32x32.width * shortcut.icon32x32.height;
-
-    // 2 bits per pixel for the AND mask.
-    data_size += shortcut.icon32x32.height * shortcut.icon32x32.height / 4;
-
-    // Increase data_size by size of directory entry.
-    data_size += sizeof(IcoDirectory);
+  if (!shortcut.icon128x128.raw_data.empty()) {
+    // We don't add this one to the icon file, because windows doesn't support
+    // this size.
+    next_largest_provided = &shortcut.icon128x128;
   }
 
   if (!shortcut.icon48x48.raw_data.empty()) {
     icons_to_write.push_back(&shortcut.icon48x48);
+    next_largest_provided = &shortcut.icon48x48;
+  } else if(next_largest_provided) {
+    scaled_icons[0].width = 48;
+    scaled_icons[0].height = 48;
+    PngUtils::ShrinkImage(&next_largest_provided->raw_data.at(0),
+                          next_largest_provided->width,
+                          next_largest_provided->height, 48, 48,
+                          &scaled_icons[0].raw_data);
 
-    // Increase data_size by size of the icon data.
-    data_size += sizeof(BITMAPINFOHEADER);
-
-    // 32 bits per pixel for the image data.
-    data_size += 4 * shortcut.icon48x48.width * shortcut.icon48x48.height;
-
-    // 2 bits per pixel for the AND mask.
-    data_size += shortcut.icon48x48.height * shortcut.icon48x48.height / 4;
-
-    // Increase data_size by size of directory entry.
-    data_size += sizeof(IcoDirectory);
+    icons_to_write.push_back(&scaled_icons[0]);
   }
+
+  if (!shortcut.icon32x32.raw_data.empty()) {
+    icons_to_write.push_back(&shortcut.icon32x32);
+    next_largest_provided = &shortcut.icon32x32;
+  } else if(next_largest_provided) {
+    scaled_icons[1].width = 32;
+    scaled_icons[1].height = 32;
+    PngUtils::ShrinkImage(&next_largest_provided->raw_data.at(0),
+                          next_largest_provided->width,
+                          next_largest_provided->height, 32, 32,
+                          &scaled_icons[1].raw_data);
+
+    icons_to_write.push_back(&scaled_icons[1]);
+  }
+
+
+  if (!shortcut.icon16x16.raw_data.empty()) {
+    icons_to_write.push_back(&shortcut.icon16x16);
+  } else if(next_largest_provided) {
+    scaled_icons[2].width = 16;
+    scaled_icons[2].height = 16;
+    PngUtils::ShrinkImage(&next_largest_provided->raw_data.at(0),
+                          next_largest_provided->width,
+                          next_largest_provided->height, 16, 16,
+                          &scaled_icons[2].raw_data);
+
+    icons_to_write.push_back(&scaled_icons[2]);
+  }
+
 
   // Make sure we have at least one icon.
   if (icons_to_write.empty()) {
     return false;
+  }
+
+  // Initialize to the size of the header.
+  int data_size = sizeof(IcoHeader);
+
+  for (size_t i = 0; i < icons_to_write.size(); ++i) {
+    // Increase data_size by size of the icon data.
+    data_size += sizeof(BITMAPINFOHEADER);
+
+    // 32 bits per pixel for the image data.
+    data_size += 4 * icons_to_write[i]->width * icons_to_write[i]->height;
+
+    // 2 bits per pixel for the AND mask.
+    data_size += icons_to_write[i]->height * icons_to_write[i]->height / 4;
+
+    // Increase data_size by size of directory entry.
+    data_size += sizeof(IcoDirectory);
   }
 
   File::CreateNewFile(icons_path.c_str());
@@ -606,7 +628,7 @@ static bool CreateIcoFile(const std::string16 &icons_path,
   // Icon image data starts past the header and the directory.
   int base_offset = sizeof(IcoHeader) +
       icons_to_write.size() * sizeof(IcoDirectory);
-  for (unsigned int i = 0; i < icons_to_write.size(); ++i) {
+  for (size_t i = 0; i < icons_to_write.size(); ++i) {
     IcoDirectory directory;
     directory.width = icons_to_write[i]->width;
     directory.height = icons_to_write[i]->height;
