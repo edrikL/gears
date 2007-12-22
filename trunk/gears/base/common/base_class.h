@@ -71,6 +71,7 @@ class JsRunnerInterface;
 class ModuleImplBaseClass {
  public:
   ModuleImplBaseClass() : is_initialized_(false) {}
+  virtual ~ModuleImplBaseClass() {}
 
   // Initialization functions
   //
