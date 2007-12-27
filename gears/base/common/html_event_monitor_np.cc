@@ -65,6 +65,7 @@ class HtmlEventMonitorHook : public PluginBase {
 };
 
 // static
+template <>
 void Dispatcher<HtmlEventMonitorHook>::Init() {
   // Safari treats "handleEvent" as a method, while Firefox treats it as a
   // property.  Go figure.

@@ -69,7 +69,7 @@ class ModuleWrapper
 
 // Creates an instance of the class and its wrapper.
 template<class GearsClass>
-GearsClass *CreateModule<GearsClass>(JsContextPtr context) {
+GearsClass *CreateModule(JsContextPtr context) {
   ModuleWrapper *wrapper = static_cast<ModuleWrapper *>(
       NPN_CreateObject(context, GetNPClass<ModuleWrapper>()));
 
