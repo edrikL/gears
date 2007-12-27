@@ -120,6 +120,7 @@ class Dispatcher : public DispatcherInterface {
 // Used to set up the Dispatcher for the given class.
 #define DECLARE_DISPATCHER(ImplClass) \
 class ImplClass; \
+template <> \
 const std::string Dispatcher<ImplClass>::kThreadLocalsKey("base:" #ImplClass)
 
 // Need to include .cc for template definitions.

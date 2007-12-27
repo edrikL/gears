@@ -996,7 +996,12 @@ void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
 }
 
 void JsCallContext::SetException(const std::string16 &message) {
-  LOG((message.c_str()));
+  // TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
+#ifdef DEBUG
+  std::string message_ascii;
+  String16ToUTF8(message.c_str(), message.length(), &message_ascii);
+  LOG((message_ascii.c_str()));
+#endif
 
   is_exception_set_ = true;
 

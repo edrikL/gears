@@ -46,6 +46,22 @@
 #define HIBYTE(x) ((((uint32)(x)) & 0xff00) >> 8)
 #endif
 
+// Export NPAPI entry points on OS X.
+#ifdef OSX
+#pragma export on
+extern "C" {
+  // Mach-o entry points
+  NPError OSCALL NP_Initialize(NPNetscapeFuncs *browserFuncs);
+  NPError OSCALL NP_GetEntryPoints(NPPluginFuncs *pluginFuncs);
+  NPError OSCALL NP_Shutdown(void);
+  // For compatibility with NPAPI in Opera & FF on the Mac, we need to implement
+  // this.
+  // int main(NPNetscapeFuncs *browserFuncs, NPPluginFuncs *pluginFuncs, 
+  //         void *shutdown);
+}
+#pragma export off
+#endif  // OSX
+
 // Store the browser functions in thread local storage to avoid calling the
 // functions on a different thread.
 static NPNetscapeFuncs g_browser_funcs;
@@ -56,8 +72,22 @@ NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* funcs)
   if (funcs == NULL)
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
+  // On FF & Safari on win32, funcs->size is a parameter we need to check on
+  // input in order to make sure we're being passed a structure of the right 
+  // size.
+  //
+  // Webkit under OSX on the other hand, passes 0 in funcs->size.
+  // Apple's sample code (NetscapeMoviePlugIn) treats this as an output 
+  // parameter.
+  //
+  // We play it safe by being consistent with Apple's example code under OSX &
+  // keeping with the standard behavior otherwise.
+#ifdef OSX
+  funcs->size          = sizeof(NPPluginFuncs);
+#else
   if (funcs->size < sizeof(NPPluginFuncs))
     return NPERR_INVALID_FUNCTABLE_ERROR;
+#endif
 
   funcs->version       = (NP_VERSION_MAJOR << 8) | NP_VERSION_MINOR;
   funcs->newp          = NPP_New;
