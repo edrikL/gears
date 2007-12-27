@@ -32,6 +32,20 @@
 
 
 #ifdef WINCE
+// WinCE does not support the Appartment threading model (the use of multiple
+// Single Threaded Apartments). Instead, we must use the Free threading model
+// and run all threads in the Multi Threaded Appartment. To do this, we define
+// the preprocessor symbol _ATL_FREE_THREADED and initialise new threads with
+// COINIT_MULTITHREADED.
+#define GEARS_COINIT_THREAD_MODEL COINIT_MULTITHREADED
+#else
+// For Win32 we use the Apartment threading model. To do this, we define the
+// preprocessor symbol _ATL_APARTMENT_THREADED and initialise new threads with
+// COINIT_APARTMENTTHREADED.
+#define GEARS_COINIT_THREAD_MODEL COINIT_APARTMENTTHREADED
+#endif
+
+#ifdef WINCE
 // WinCE doesn't allow message-only windows (HWND_MESSAGE). Instead, create a
 // pop-up window (doesn't require a parent) and don't make visible (default).
 const HWND  kMessageOnlyWindowParent = NULL;

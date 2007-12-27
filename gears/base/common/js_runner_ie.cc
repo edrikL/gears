@@ -368,11 +368,8 @@ bool JsRunnerImpl::AddGlobal(const std::string16 &name,
 bool JsRunnerImpl::Start(const std::string16 &full_script) {
   HRESULT hr;
 
-#ifdef WINCE
-  coinit_succeeded_ = SUCCEEDED(CoInitializeEx(NULL, COINIT_MULTITHREADED));
-#else
-  coinit_succeeded_ = SUCCEEDED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED));
-#endif
+  coinit_succeeded_ = SUCCEEDED(CoInitializeEx(NULL,
+                                               GEARS_COINIT_THREAD_MODEL));
   if (!coinit_succeeded_) { return false; }
   // CoUninitialize is handled in dtor
 

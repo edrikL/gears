@@ -146,7 +146,14 @@ void AsyncTask::DeleteWhenDone() {
 // ThreadMain
 //------------------------------------------------------------------------------
 unsigned int __stdcall AsyncTask::ThreadMain(void *task) {
-  CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+  // If initialization fails, don't return immediately. Let the thread continue
+  // to run to let signaling around startup/shutdown performed by clients work
+  // properly. Down the road, COM objects will fail to be created or function
+  // and the thread will unwind normally.
+  if (FAILED(CoInitializeEx(NULL, GEARS_COINIT_THREAD_MODEL))) {
+    LOG(("AsyncTask::ThreadMain - failed to initialize new thread.\n"));
+  }
+
   AsyncTask *self = reinterpret_cast<AsyncTask*>(task);
 
   self->Run();

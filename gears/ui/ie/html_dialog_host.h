@@ -46,7 +46,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/ui/ie/ui_resources.h"
-#include "ie/genfiles/interfaces.h" // from OUTDIR
+#include "ie/genfiles/interfaces.h"  // from OUTDIR
 
 // HtmlDialogHost is a COM dialog which allows clients to display HTML
 // resources as modal dialogs. It provides the underlying implementation for
@@ -57,7 +57,7 @@
 // the dialog through the window.external object.
 class HtmlDialogHost
     : public CAxDialogImpl<HtmlDialogHost>,
-      public CComObjectRootEx<CComSingleThreadModel>,
+      public CComObjectRootEx<CComMultiThreadModel>,
       public IDispatchImpl<HtmlDialogHostInterface>,
       public IDispEventImpl<0, HtmlDialogHost, &DIID_DWebBrowserEvents2,
                             &LIBID_SHDocVw, 0xFFFF, 0xFFFF>,
