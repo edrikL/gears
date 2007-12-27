@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // The Asyncronous Pluggable Protocol handler used to intercept
@@ -59,12 +59,6 @@
 
 class HttpHandler;
 
-#ifdef WINCE
-  typedef CComMultiThreadModel HandlerThreadModel;
-#else
-  typedef CComSingleThreadModel HandlerThreadModel;
-#endif
-
 //------------------------------------------------------------------------------
 // PassthruSink
 // Defines a passthru framework required "Sink" object that forwards upward
@@ -72,7 +66,7 @@ class HttpHandler;
 //------------------------------------------------------------------------------
 class PassthruSink
     : public PassthroughAPP::CInternetProtocolSinkWithSP<PassthruSink,
-        HandlerThreadModel> {
+        CComMultiThreadModel> {
  public:
   PassthruSink() : http_handler_(NULL) {}
   void SetHttpHandler(HttpHandler *handler) { http_handler_ = handler; }
@@ -87,14 +81,14 @@ class PassthruSink
   // Calling BaseClass::Foo() passes an API call thru to the caller provided
   // sink
   typedef PassthroughAPP::CInternetProtocolSinkWithSP<PassthruSink,
-      HandlerThreadModel> BaseClass;
+      CComMultiThreadModel> BaseClass;
   // A convenience pointer to our HttpHandler
   HttpHandler *http_handler_;
 };
 
 
 // A "StartPolicy" to satisfy the CInternetProtocol<> template
-typedef PassthroughAPP::CustomSinkStartPolicy<HttpHandler, PassthruSink>  
+typedef PassthroughAPP::CustomSinkStartPolicy<HttpHandler, PassthruSink>
     PassthruStartPolicy;
 
 
@@ -105,7 +99,7 @@ typedef PassthroughAPP::CustomSinkStartPolicy<HttpHandler, PassthruSink>
 //------------------------------------------------------------------------------
 class HttpHandler
     : public PassthroughAPP::CInternetProtocol<PassthruStartPolicy,
-        HandlerThreadModel> {
+        CComMultiThreadModel> {
  public:
   // Registers and unregisters our handler in the http/https namespace.
   static HRESULT Register();
@@ -259,7 +253,7 @@ class HttpHandler
  private:
   // Calling BaseClass::Foo() passes an API call thru to the default handler
   typedef PassthroughAPP::CInternetProtocol<PassthruStartPolicy,
-      HandlerThreadModel> BaseClass;
+      CComMultiThreadModel> BaseClass;
 
   friend PassthruSink;
 
@@ -288,10 +282,10 @@ class HttpHandler
     /* [in, out] */ DWORD *pdwReserved);
 
   // Helpers to call thru to our sink. These wrappers gaurd against calling
-  // thru after we've been terminated or aborted. They are only used where 
+  // thru after we've been terminated or aborted. They are only used where
   // we're handling a request as opposed to passing thru to the default handler.
   HRESULT CallReportProgress(ULONG status_code, LPCWSTR status_text);
-  HRESULT CallReportData(DWORD flags,ULONG progress, ULONG progress_max);
+  HRESULT CallReportData(DWORD flags, ULONG progress, ULONG progress_max);
   HRESULT CallReportResult(HRESULT result, DWORD error, LPCWSTR result_text);
   HRESULT CallBeginningTransaction(LPCWSTR url,
                                    LPCWSTR headers,
@@ -351,8 +345,8 @@ class HttpHandlerFactory
  public:
   BEGIN_COM_MAP(HttpHandlerFactory)
     COM_INTERFACE_ENTRY(IInternetProtocolInfo)
-    COM_INTERFACE_ENTRY_CHAIN(PassthroughAPP::CComClassFactoryProtocol)  
-  END_COM_MAP() 
+    COM_INTERFACE_ENTRY_CHAIN(PassthroughAPP::CComClassFactoryProtocol)
+  END_COM_MAP()
 
   // IInternetProtocolInfo methods
   STDMETHODIMP ParseUrl(LPCWSTR pwzUrl,
