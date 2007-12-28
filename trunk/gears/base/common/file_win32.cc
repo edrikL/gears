@@ -536,61 +536,20 @@ static bool CreateIcoFile(const std::string16 &icons_path,
   };
 
   std::vector<const File::IconData *> icons_to_write;
-  File::IconData scaled_icons[3];
-  const File::IconData *next_largest_provided = NULL;
 
-  // For each icon size, we use the provided one if available.  If not, and we
-  // have a larger version, we scale the closest image to fit because our
-  // box-filter minify looks better than the Windows automatic minify.
-
-  if (!shortcut.icon128x128.raw_data.empty()) {
-    // We don't add this one to the icon file, because windows doesn't support
-    // this size.
-    next_largest_provided = &shortcut.icon128x128;
-  }
-
+  // Add each icon size that has been provided to the icon list.  We ignore
+  // 128x128 because it isn't supported by Windows.
   if (!shortcut.icon48x48.raw_data.empty()) {
     icons_to_write.push_back(&shortcut.icon48x48);
-    next_largest_provided = &shortcut.icon48x48;
-  } else if(next_largest_provided) {
-    scaled_icons[0].width = 48;
-    scaled_icons[0].height = 48;
-    PngUtils::ShrinkImage(&next_largest_provided->raw_data.at(0),
-                          next_largest_provided->width,
-                          next_largest_provided->height, 48, 48,
-                          &scaled_icons[0].raw_data);
-
-    icons_to_write.push_back(&scaled_icons[0]);
   }
 
   if (!shortcut.icon32x32.raw_data.empty()) {
     icons_to_write.push_back(&shortcut.icon32x32);
-    next_largest_provided = &shortcut.icon32x32;
-  } else if(next_largest_provided) {
-    scaled_icons[1].width = 32;
-    scaled_icons[1].height = 32;
-    PngUtils::ShrinkImage(&next_largest_provided->raw_data.at(0),
-                          next_largest_provided->width,
-                          next_largest_provided->height, 32, 32,
-                          &scaled_icons[1].raw_data);
-
-    icons_to_write.push_back(&scaled_icons[1]);
   }
-
 
   if (!shortcut.icon16x16.raw_data.empty()) {
     icons_to_write.push_back(&shortcut.icon16x16);
-  } else if(next_largest_provided) {
-    scaled_icons[2].width = 16;
-    scaled_icons[2].height = 16;
-    PngUtils::ShrinkImage(&next_largest_provided->raw_data.at(0),
-                          next_largest_provided->width,
-                          next_largest_provided->height, 16, 16,
-                          &scaled_icons[2].raw_data);
-
-    icons_to_write.push_back(&scaled_icons[2]);
   }
-
 
   // Make sure we have at least one icon.
   if (icons_to_write.empty()) {

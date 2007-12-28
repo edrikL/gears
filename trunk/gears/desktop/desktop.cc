@@ -274,6 +274,55 @@ bool GearsDesktop::SetShortcut(File::ShortcutInfo *shortcut,
     return false;
   }
 
+#if defined(WIN32) || defined(OS_MACOSX)
+  const File::IconData *next_largest_provided = NULL;
+
+  // For each icon size, we use the provided one if available.  If not, and we
+  // have a larger version, we scale the closest image to fit because our
+  // box-filter minify looks better than the automatic minify done by the OS.
+
+  if (!shortcut->icon128x128.raw_data.empty()) {
+    next_largest_provided = &shortcut->icon128x128;
+  }
+
+  if (shortcut->icon48x48.raw_data.empty()) {
+    if (next_largest_provided) {
+      shortcut->icon48x48.width = 48;
+      shortcut->icon48x48.height = 48;
+      PngUtils::ShrinkImage(&next_largest_provided->raw_data.at(0),
+                            next_largest_provided->width,
+                            next_largest_provided->height, 48, 48,
+                            &shortcut->icon48x48.raw_data);
+    }
+  } else {
+    next_largest_provided = &shortcut->icon48x48;
+  }
+
+  if (shortcut->icon32x32.raw_data.empty()) {
+    if (next_largest_provided) {
+      shortcut->icon32x32.width = 32;
+      shortcut->icon32x32.height = 32;
+      PngUtils::ShrinkImage(&next_largest_provided->raw_data.at(0),
+                            next_largest_provided->width,
+                            next_largest_provided->height, 32, 32,
+                            &shortcut->icon32x32.raw_data);
+    }
+  } else {
+    next_largest_provided = &shortcut->icon32x32;
+  }
+
+  if (shortcut->icon16x16.raw_data.empty()) {
+    if (next_largest_provided) {
+      shortcut->icon16x16.width = 16;
+      shortcut->icon16x16.height = 16;
+      PngUtils::ShrinkImage(&next_largest_provided->raw_data.at(0),
+                            next_largest_provided->width,
+                            next_largest_provided->height, 16, 16,
+                            &shortcut->icon16x16.raw_data);
+    }
+  }
+#endif
+
   // Create the desktop shortcut using platform-specific code
   if (!File::CreateDesktopShortcut(EnvPageSecurityOrigin(), *shortcut, error)) {
     return false;
