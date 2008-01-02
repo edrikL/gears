@@ -88,23 +88,33 @@ bool TestMessageService() {
   MockThreadMessageQueue mock_message_queue;
   MessageService message_service(&mock_message_queue);
 
-  TestObserver first_observer(&mock_message_queue);
+  TestObserver observer(&mock_message_queue);
   mock_message_queue.SetMockCurrentThreadId(kThreadId1);
   // We should only be able to add the same observer once per topic per thread
-  TEST_ASSERT(message_service.AddObserver(&first_observer, kTopic1));
-  TEST_ASSERT(!message_service.AddObserver(&first_observer, kTopic1));
+  TEST_ASSERT(message_service.AddObserver(&observer, kTopic1));
+  TEST_ASSERT(!message_service.AddObserver(&observer, kTopic1));
   // We should only be able to remove from the same thread
   mock_message_queue.SetMockCurrentThreadId(kThreadId2);
-  TEST_ASSERT(!message_service.RemoveObserver(&first_observer, kTopic1));
+  TEST_ASSERT(!message_service.RemoveObserver(&observer, kTopic1));
   mock_message_queue.SetMockCurrentThreadId(kThreadId1);
-  TEST_ASSERT(message_service.RemoveObserver(&first_observer, kTopic1));
+  TEST_ASSERT(message_service.RemoveObserver(&observer, kTopic1));
   // Should not be able to remove an observer that is not registered
-  TEST_ASSERT(!message_service.RemoveObserver(&first_observer, kTopic1));
+  TEST_ASSERT(!message_service.RemoveObserver(&observer, kTopic1));
   // A removed observer should not receive notifications
   message_service.NotifyObservers(kTopic1, new TestNotification("deaf ears"));
   mock_message_queue.DeliverMockMessages();
-  TEST_ASSERT(first_observer.total_received_ == 0);
+  TEST_ASSERT(observer.total_received_ == 0);
 
+  // Test RemoveObserversForThread
+  mock_message_queue.SetMockCurrentThreadId(kThreadId2);
+  TEST_ASSERT(message_service.AddObserver(&observer, kTopic1));
+  message_service.RemoveObserversForThread(kThreadId1);
+  message_service.RemoveObserversForThread(kThreadId2);
+  message_service.RemoveObserversForThread(kThreadId3);
+  message_service.NotifyObservers(kTopic1, new TestNotification("deaf ears"));
+  mock_message_queue.DeliverMockMessages();
+  TEST_ASSERT(observer.total_received_ == 0);
+  
   // Add a single observer for topic1 on thread1
   TestObserver observer1(&mock_message_queue);
   mock_message_queue.SetMockCurrentThreadId(kThreadId1);

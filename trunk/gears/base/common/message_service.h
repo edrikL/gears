@@ -98,9 +98,14 @@ class MessageService : public ThreadMessageQueue::HandlerInterface {
                                                  bool create_if_needed);
   void DeleteTopicObserverCollection(const char16 *topic);
 
+  void RemoveObserversForThread(ThreadId id);
+
   // ThreadMessageQueue::HandlerInterface override
   virtual void HandleThreadMessage(int message_type,
                                    MessageData *message_data);
+
+  static void ThreadEndHook(void* value);
+  void InitThreadEndHook();
 
   Mutex observer_collections_mutex_;
   TopicObserverMap observer_collections_;
