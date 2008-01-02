@@ -71,7 +71,15 @@ class JsRunnerInterface;
 class ModuleImplBaseClass {
  public:
   ModuleImplBaseClass() : is_initialized_(false) {}
+  
+#ifdef BROWSER_NPAPI
+  // ModuleWrapper in NPAPI has a member scoped_ptr<ModuleImplBaseClass> so
+  // this destructor needs to be virtual. However, this causes a crash in
+  // Firefox in nsCOMPtr. For now, just removing it from non-NPAPI. In the
+  // future, Firefox modules won't be XPCOM classes, so we can remove this
+  // check.
   virtual ~ModuleImplBaseClass() {}
+#endif
 
   // Initialization functions
   //
