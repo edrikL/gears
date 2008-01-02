@@ -28,10 +28,9 @@
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/message_service.h"
+#include "gears/base/common/thread_locals.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-// TODO(michaeln) When an OS thread dies, remove all observers associated with
-// that thread.
 
 static const int kNotificationMessageType = 1;
 
@@ -111,6 +110,7 @@ class ObserverCollection {
 
   bool Add(MessageObserverInterface *observer);
   bool Remove(MessageObserverInterface *observer);
+  void RemoveObserversForThread(ThreadId thread_id);
   bool IsEmpty() const;
 
   void PostThreadNotifications(const char16 *topic,
@@ -123,7 +123,12 @@ class ObserverCollection {
   // This class organizes all observers for a topic into distinct sets, with
   // one set containing all of the observers for a particular thread.
   ThreadObserversMap observer_sets_;
+
   ObserverSet *GetThreadObserverSet(ThreadId thread_id, bool create_if_needed);
+  ObserverSet *GetCurrentThreadObserverSet(bool create_if_needed) {
+    return GetThreadObserverSet(service_->message_queue_->GetCurrentThreadId(),
+                                create_if_needed);
+  }
 
   DISALLOW_EVIL_CONSTRUCTORS(ObserverCollection);
 };
@@ -223,17 +228,58 @@ ObserverCollection *MessageService::GetTopicObserverCollection(
 void MessageService::DeleteTopicObserverCollection(const char16 *topic) {
   // assert(mutex_.IsLockedByCurrentThread());
   std::string16 key(topic);
-  TopicObserverMap::iterator found = observer_collections_.find(key);
-  if (found != observer_collections_.end()) {
-    observer_collections_.erase(found);    
+  observer_collections_.erase(key);
+}
+
+
+void MessageService::RemoveObserversForThread(ThreadId thread_id) {
+  MutexLock lock(&observer_collections_mutex_);
+  TopicObserverMap::iterator iter = observer_collections_.begin();
+  while (iter != observer_collections_.end()) {
+    iter->second.get()->RemoveObserversForThread(thread_id);
+    TopicObserverMap::iterator prev = iter++;
+    if (prev->second.get()->IsEmpty()) {
+      observer_collections_.erase(prev);
+    }
+  }
+}
+
+
+// static
+void MessageService::ThreadEndHook(void* value) {
+  ThreadId *id = reinterpret_cast<ThreadId*>(value);
+  if (id) {
+    GetInstance()->RemoveObserversForThread(*id);
+    delete id;
+  }
+}
+
+
+void MessageService::InitThreadEndHook() {
+  // We use a ThreadLocal to get called when an OS thread terminates
+  // and use that opportunity to remove all observers that remain
+  // registered on that thread.
+  //
+  // We store the thread id in the ThreadLocal variable because on some
+  // OSes (linux), the destructor proc is called from a different thread,
+  // and on others (windows), the destructor proc is called from the
+  // terminating thread.
+  //
+  // Also, we only do this for the actual singleton instance of the
+  // MessageService class as opposed to instances created for unit testing.
+  if (GetInstance() == this) {
+    const std::string kThreadLocalKey("base:MessageService.ThreadEndHook");
+    if (!ThreadLocals::HasValue(kThreadLocalKey)) {
+      ThreadId *id = new ThreadId(message_queue_->GetCurrentThreadId());
+      ThreadLocals::SetValue(kThreadLocalKey, id, &ThreadEndHook);
+    }
   }
 }
 
 
 bool ObserverCollection::Add(MessageObserverInterface *observer) {
   // assert(serveice_->mutex_.IsLockedByCurrentThread());
-  ThreadId thread_id = service_->message_queue_->GetCurrentThreadId();
-  ObserverSet *set = GetThreadObserverSet(thread_id, true);
+  ObserverSet *set = GetCurrentThreadObserverSet(true);
   if (set->find(observer) != set->end())
     return false;  // observer is already registered on this thread
   set->insert(observer);
@@ -270,10 +316,18 @@ ObserverSet *ObserverCollection::GetThreadObserverSet(ThreadId thread_id,
   } else if (!create_if_needed) {
     return NULL;
   } else {
+    assert(service_->message_queue_->GetCurrentThreadId() == thread_id);
+    service_->InitThreadEndHook();
     service_->message_queue_->InitThreadMessageQueue();
     observer_sets_[thread_id] = ObserverSet();
     return &observer_sets_[thread_id];
   }
+}
+
+
+void ObserverCollection::RemoveObserversForThread(ThreadId thread_id) {
+  // assert(service_->observer_collections_mutex_.IsLockedByCurrentThread());
+  observer_sets_.erase(thread_id);
 }
 
 
@@ -308,8 +362,7 @@ void ObserverCollection::ProcessThreadNotification(
   // or not the collection has been deleted or a particular observer has been
   // removed from the collection prior to calling OnNotify.
 
-  ThreadId thread_id = service_->message_queue_->GetCurrentThreadId();
-  ObserverSet *set = GetThreadObserverSet(thread_id, false);
+  ObserverSet *set = GetCurrentThreadObserverSet(false);
   if (!set) return;
 
   MessageService *service = service_;
@@ -325,7 +378,7 @@ void ObserverCollection::ProcessThreadNotification(
     if (should_be_us != this) {
       return;
     }
-    ObserverSet *should_be_same_set = GetThreadObserverSet(thread_id, false);
+    ObserverSet *should_be_same_set = GetCurrentThreadObserverSet(false);
     if (should_be_same_set != set) {
       return;
     }
