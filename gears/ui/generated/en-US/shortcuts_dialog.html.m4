@@ -95,11 +95,18 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           <img id="icon" src="icon_32x32.png" width="32" height="32">
         </td>
         <td width="100%" align="left" valign="middle">
-          <span id="header-singular">This website wants to create a shortcut
-          on your desktop. Do you want to allow this?</span>
-          <span id="header-plural">This website wants
-          to create the shortcuts listed below on your desktop. Do you want to
-          allow this?</span>
+          <span id="header-singular">
+          <?cs #TC_MSG_BREAK desc: Tells the user that the application wants to create one shortcut. ?>
+          This website wants to create a shortcut
+          on your desktop. Do you want to allow this?
+          <?cs #TC_MSG_BREAK ?>
+          </span>
+          <span id="header-plural">
+          <?cs #TC_MSG_BREAK desc: Tells the user that the application wants to create multiple shortcuts. ?>
+          This website wants to create the shortcuts listed below on your
+          desktop. Do you want to allow this?
+          <?cs #TC_MSG_BREAK ?>
+          </span>
         </td>
       </tr>
     </table>
@@ -150,7 +157,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><span class="accesskey">A</span>llow</div></div></a>
+                  ><?cs #TC_MSG_BREAK desc: Button user can press to allow Gears to create a shortcut ?><span class="accesskey">A</span>llow<?cs #TC_MSG_BREAK ?></div></div></a>
             <!--
             Note: There must be whitespace here or Firefox messes up the
             rendering.
@@ -163,7 +170,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                        ><span class="accesskey">C</span>ancel</div></div></a>
+                  ><?cs #TC_MSG_BREAK desc: Button user can press to disallow Gears from creating a shortcut. ?><span class="accesskey">C</span>ancel<?cs #TC_MSG_BREAK ?></div></div></a>
           </td>
         </tr>
       </table>

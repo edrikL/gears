@@ -107,13 +107,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </table>
   </div>
   <div id="content">
+    <?cs #TC_MSG_BREAK desc: Header for allowed sites. ?>
     <h2>Allowed Sites</h2>
+    <?cs #TC_MSG_BREAK ?>
+    <?cs #TC_MSG_BREAK desc: Description of allowed sites. ?>
     <p>These sites are always allowed to access PRODUCT_FRIENDLY_NAME_UQ.</p>
+    <?cs #TC_MSG_BREAK ?>
     <div>
       <table>
         <tbody id="allowed-list">
           <tr>
-            <td class="left"><em>No allowed sites.</em></td>
+            <td class="left"><?cs #TC_MSG_BREAK desc: States that there are no allowed sites. ?><em>No allowed sites.</em><?cs #TC_MSG_BREAK ?></td>
             <td></td>
           </tr>
         </tbody>
@@ -121,13 +125,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </div>
     <br>
     <br>
+    <?cs #TC_MSG_BREAK desc: Header for denied sites. ?>
     <h2>Denied Sites</h2>
+    <?cs #TC_MSG_BREAK ?>
+    <?cs #TC_MSG_BREAK desc: Description of denied sites. ?>
     <p>These sites are never allowed to access PRODUCT_FRIENDLY_NAME_UQ.</p>
+    <?cs #TC_MSG_BREAK ?>
     <div>
       <table>
         <tbody id="denied-list">
           <tr>
-            <td class="left"><em>No denied sites.</em></td>
+            <td class="left"><?cs #TC_MSG_BREAK desc: States that there are no denied sites. ?><em>No denied sites.</em><?cs #TC_MSG_BREAK ?></td>
             <td></td>
           </tr>
         </tbody>
@@ -136,7 +144,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <br>
     <br>
     <div id="version">
+      <?cs #TC_MSG_BREAK desc: Version string. ?>
       PRODUCT_FRIENDLY_NAME_UQ version PRODUCT_VERSION
+      <?cs #TC_MSG_BREAK ?>
     </div>
   </div>
   <div id="foot">
@@ -157,7 +167,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><span class="accesskey">S</span>ave</div></div></a>
+                  ><?cs #TC_MSG_BREAK desc: Button user can press to save changes. ?><span class="accesskey">S</span>ave</div><?cs #TC_MSG_BREAK ?></div></a>
             <!--
             Note: There must be whitespace here or Firefox messes up the
             rendering.
@@ -170,7 +180,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><span class="accesskey">C</span>ancel</div></div></a>
+                  ><?cs #TC_MSG_BREAK desc: Button user can press to discard changes. ?><span class="accesskey">C</span>ancel</div><?cs #TC_MSG_BREAK ?></div></a>
           </td>
         </tr>
       </table>
