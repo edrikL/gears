@@ -31,8 +31,18 @@ console.log('error', 'An error occurred! Some variables: %s, %s.', {1, 'Hello Wo
  => (Error): 'An error occurred! Some variables: 1, Hello World.'
 }}}
 
-= Log Messages =
+= Log Items =
 
+Individual log items can be encapsulated by a LogItem class, which will record a variety of information about the log event.
+
+{{{
+class LogItem {
+  String message;  // Already interpolated with _args_
+  String type;     // 'debug', 'info', 'warn', 'error'
+  String source;   // URL of page/script the log message came from
+  int timestamp;   // Time of log item
+}
+}}}
 
 = Logging Backends =
 
