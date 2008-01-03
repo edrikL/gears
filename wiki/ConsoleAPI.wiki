@@ -74,3 +74,13 @@ The Log Viewer is a HTML/CSS/JS-based developer tool that displays log messages 
 It would ideally be packaged with Gears so that all developers would have access to it easily, but as with other developer tools it could be disabled by default (perhaps with a checkbox "Enable developer tools" in the Google Gears Settings dialog). The log viewer could be accessed by either browser chrome (a "Gears Developer Tools" sub-menu that appears in the browser's Tools menu when developer tools are enabled) or via a special URL (e.g. http://localhost/__gears__/log_viewer.html).
 
 A prototype version of the log viewer will be available shortly (as soon as I can find a somewhere on the public wiki to put it).
+
+= Security =
+
+The Gears Console follows a same-origin security policy.
+
+The observer topic for each log stream has the security origin (scheme/host/port) embedded in it, and each console object is restricted to logging to the stream (and hence security origin) that it originated from.
+
+Whilst there is nothing stopping a Logging Backend from registering to receive messages from any arbitrary log stream, the fact that Logging Backends are compiled C++ shipped with Gears somewhat negates the problem.
+
+The MessageObserver system does not yet expose an interface to JavaScript, so it is not currently possible to arbitrarily register observers with console topics, however if/when this interface _is_ implemented, it should ensure that the same-origin policy for observers is maintained.
