@@ -6,7 +6,7 @@
     { "url": "p10n.js" },
     { "url": "p10n.html", "ignoreQuery": true },
     { "url": "p10n.css" },
-    { "url": "gears_init.js" },
+    { "url": "../../gears_init.js" },
     { "url": "jquery.js" },
     { "url": "database.txt" },
     { "url": "logo.png" },

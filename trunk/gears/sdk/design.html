@@ -66,10 +66,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <p><a name="detecting" id="detecting"></a></p>
 <h1>Nuts and Bolts: Detecting and Installing Google Gears </h1>
   <p>Your web application needs to detect whether or not Google Gears is installed on a user's machine before calling the APIs, and also to determine when to display an installation prompt to the user.</p>
-  <p>Always initialize Google Gears using <code><a href="resources/gears_init.js">gears_init.js</a></code> . If Gears is installed, then <code>google.gears</code> will be defined. If Gears isn't installed, you can direct the user to a customized installation page, as shown below.
+  <p>Always initialize Google Gears using <code><a href="tools.html#gears_init">gears_init.js</a></code> . If Gears is installed, then <code>google.gears</code> will be defined. If Gears isn't installed, you can direct the user to a customized installation page, as shown below.
   <p><b>Note:</b> Always use gears_init.js to access Gears. Other uses may not be supported in the future.
 
-<pre><code>&lt;script src="<a href="tools/gears_init.js">gears_init.js</a>"&gt;&lt;/script&gt;
+<pre><code>&lt;script src="<a href="tools.html#gears_init">gears_init.js</a>"&gt;&lt;/script&gt;
 &lt;script&gt;
   if (!window.google || !google.gears) {
     location.href = "http://gears.google.com/?action=install&amp;message=&lt;your welcome message&gt;" +<br>                    "&amp;return=&lt;your website url&gt;";

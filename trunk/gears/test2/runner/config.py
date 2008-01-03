@@ -9,7 +9,7 @@ class Config:
   approach instead of copying files and keeping them in sync manually.
   """
   SPECIAL_URL_TO_FILE_MAPPINGS = {
-    "gears_init.js": "../sdk/resources/gears_init.js",
+    "gears_init.js": "../sdk/gears_init.js",
     "json_noeval.js": "../third_party/jsonjs/json_noeval.js"
   }
   
