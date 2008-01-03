@@ -4,6 +4,6 @@
   "entries": [
       { "url": "go_offline.html"},
       { "url": "go_offline.js"},
-      { "url": "gears_init.js"}
+      { "url": "../gears_init.js"}
     ]
 }

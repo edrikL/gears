@@ -9,5 +9,5 @@
     { "url": "managed_store_demo_utils.js" },
     { "url": "sample.css", "src": "../sample.css" },
     { "url": "sample.js", "src": "../sample.js" },
-    { "url": "gears_init.js", "src": "../gears_init.js" } ]
+    { "url": "gears_init.js", "src": "../../gears_init.js" } ]
 }
