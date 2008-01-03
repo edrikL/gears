@@ -99,12 +99,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <td align="left" valign="top">
           <img id="icon" src="icon_32x32.png" width="32" height="32">
         </td>
-        <td width="100%" align="left" valign="middle">The website below
-          wants to use PRODUCT_FRIENDLY_NAME_UQ. This site will be able to
-          store and access information on your computer.&nbsp;
+        <td width="100%" align="left" valign="middle">
+          <?cs #TC_MSG_BREAK desc: Asks the user if they want to let the site use gears ?>
+          The website below wants to use PRODUCT_FRIENDLY_NAME_UQ. This site
+          will be able to store and access information on your computer.&nbsp;
+          <?cs #TC_MSG_BREAK ?>
           <a href="http://gears.google.com/?action=help"
              onclick="window.open(this.href); return false;">
-          What is this?</a>
+          <?cs #TC_MSG_BREAK desc: Help link displayed in the installation dialog. ?>
+          What is this?
+          <?cs #TC_MSG_BREAK ?>
+          </a>
         </td>
       </tr>
     </table>
@@ -137,8 +142,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           </td>
           <td valign="middle">
             <label for="unlock">
+          <?cs #TC_MSG_BREAK desc: Indicates the user lets the site use Gears ?>
               &nbsp;I <span class="accesskey">t</span>rust this site. Allow
               it to use PRODUCT_FRIENDLY_NAME_UQ.
+          <?cs #TC_MSG_BREAK ?>
             </label>
           </td>
         </tr>
@@ -163,26 +170,26 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             Note: Outer element is <a> because we want it to focusable and
             behave like an anchor. Inner elements should theoretically be able
             to be <span>, but IE renders incorrectly in this case.
+
+            Note: The whitespace in this section is very delicate.  The lack of
+            space between the tags and the space between the buttons both
+            are important to ensure proper rendering.
+            TODO(aa): This results in inconsistent spacing in IE vs Firefox
+            between the buttons, but I am reluctant to hack things even further
+            to fix that.
             -->
             <a href="#" accesskey="A" id="allow-button" 
                 onclick="allowAccess(); return false;"
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><span class="accesskey">A</span>llow</div></div></a>
-            <!--
-            Note: There must be whitespace here or Firefox messes up the
-            rendering.
-            TODO(aa): This results in inconsistent spacing in IE vs Firefox
-            between the buttons, but I am reluctant to hack things even further
-            to fix that.
-            -->
+                  ><?cs #TC_MSG_BREAK desc: Button user can press to allow the use of gears ?><span class="accesskey">A</span>llow<?cs #TC_MSG_BREAK ?></div></div></a>
             <a href="#" accesskey="C" id="deny-button"
                 onclick="denyAccess(); return false;"
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><span class="accesskey">C</span>ancel</div></div></a>
+                  ><?cs #TC_MSG_BREAK desc: Button user can press to disallow the use of gears ?><span class="accesskey">C</span>ancel<?cs #TC_MSG_BREAK ?></div></div></a>
           </td>
         </tr>
       </table>
