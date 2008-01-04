@@ -159,8 +159,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td width="100%" align="left" valign="middle">
-            <a href="#" onclick="denyAccessPermanently(); return false;">Never
-            allow this site</a>
+            <a href="#" onclick="denyAccessPermanently(); return false;">
+            <?cs #TC_MSG_BREAK desc: Link that disallows Gears on this site. ?>
+              Never allow this site
+            <?cs #TC_MSG_BREAK ?>
+            </a>
           </td>
           <td nowrap="true" align="right" valign="middle">
             <!--

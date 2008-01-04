@@ -107,12 +107,16 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </table>
   </div>
   <div id="content">
-    <?cs #TC_MSG_BREAK desc: Header for allowed sites. ?>
-    <h2>Allowed Sites</h2>
-    <?cs #TC_MSG_BREAK ?>
-    <?cs #TC_MSG_BREAK desc: Description of allowed sites. ?>
-    <p>These sites are always allowed to access PRODUCT_FRIENDLY_NAME_UQ.</p>
-    <?cs #TC_MSG_BREAK ?>
+    <h2>
+      <?cs #TC_MSG_BREAK desc: Header for allowed sites. ?>
+      Allowed Sites
+      <?cs #TC_MSG_BREAK ?>
+    </h2>
+    <p>
+      <?cs #TC_MSG_BREAK desc: Description of allowed sites. ?>
+      These sites are always allowed to access PRODUCT_FRIENDLY_NAME_UQ.
+      <?cs #TC_MSG_BREAK ?>
+    </p>
     <div>
       <table>
         <tbody id="allowed-list">
@@ -125,12 +129,16 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </div>
     <br>
     <br>
-    <?cs #TC_MSG_BREAK desc: Header for denied sites. ?>
-    <h2>Denied Sites</h2>
-    <?cs #TC_MSG_BREAK ?>
-    <?cs #TC_MSG_BREAK desc: Description of denied sites. ?>
-    <p>These sites are never allowed to access PRODUCT_FRIENDLY_NAME_UQ.</p>
-    <?cs #TC_MSG_BREAK ?>
+    <h2>
+      <?cs #TC_MSG_BREAK desc: Header for denied sites. ?>
+      Denied Sites
+      <?cs #TC_MSG_BREAK ?>
+    </h2>
+    <p>
+      <?cs #TC_MSG_BREAK desc: Description of denied sites. ?>
+      These sites are never allowed to access PRODUCT_FRIENDLY_NAME_UQ.
+      <?cs #TC_MSG_BREAK ?>
+    </p>
     <div>
       <table>
         <tbody id="denied-list">
