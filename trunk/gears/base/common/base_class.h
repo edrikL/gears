@@ -74,10 +74,11 @@ class ModuleImplBaseClass {
   
 #ifdef BROWSER_NPAPI
   // ModuleWrapper in NPAPI has a member scoped_ptr<ModuleImplBaseClass> so
-  // this destructor needs to be virtual. However, this causes a crash in
-  // Firefox in nsCOMPtr. For now, just removing it from non-NPAPI. In the
-  // future, Firefox modules won't be XPCOM classes, so we can remove this
-  // check.
+  // this destructor needs to be virtual. However, adding a virtual destructor
+  // causes a crash in Firefox because nsCOMPtr expects (nsISupports *)ptr ==
+  // (ModuleImplBaseClass *)ptr. Don't add any virtual members to
+  // ModuleImplBaseClass on Firefox unless Gears modules are no longer XPCOM
+  // classes.
   virtual ~ModuleImplBaseClass() {}
 #endif
 
