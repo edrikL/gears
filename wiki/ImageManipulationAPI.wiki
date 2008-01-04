@@ -11,10 +11,11 @@ to server-side composition or CSS layering.  Yet another use is for basic photo
 editing - a user can edit a photo with instantly applied changes before
 uploading it to the server.
 
-This module will be implemented as a wrapper around [http://www.libgd.org/
-libGD].  This is the smallest of the popular image libraries which does all of
-the below.  If this turns out to still be too big, we can consider writing the
-image manipulation code ourselves, or using browser specific image libraries.
+This module will be implemented as a wrapper around
+[http://www.libgd.org/ libGD].  This is the smallest of the popular image
+libraries which does all of the below.  If this turns out to still be too big,
+we can consider writing the image manipulation code ourselves, or using browser
+specific image libraries.
 
 = Details =
 
@@ -39,12 +40,12 @@ var newBlob = image.blob();
   Blob blobAsType()
   void resize(width, height)
   void crop(x, y, width, height)
-  int width()
-  int height()
   void rotate(degrees)
   void flipHorizontal()
   void flipVertical()
   void drawImage(image, x, y)
+  int width
+  int height
 }}}
 
 ===Blob blob()===
@@ -89,12 +90,6 @@ bounding box is not completely within the original image (x or y are negative,
 or x+width is greater than the original width, or y+height is greater than the
 original height).
 
-===int width()===
-*Returns* the width of the image, in pixels.
-
-===int height()===
-*Returns* the height of the image, in pixels.
-
 ===void rotate(degrees)===
 Rotates the image anti-clockwise about the given angle.  The center of rotation
 is the center of the image, and the image's dimensions are changed such that
@@ -125,3 +120,9 @@ _y_ (int): the vertical displacement to draw the image from the top edge of
 this image.
 
 *Note:* x and y may be negative, and they may be such that nothing gets drawn.
+
+===int width===
+*Attribute* (readonly) the width of the image, in pixels.
+
+===int height===
+*Attribute* (readonly) the height of the image, in pixels.
