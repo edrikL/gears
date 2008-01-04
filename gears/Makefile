@@ -247,7 +247,7 @@ FF_CPPSRCS	+= \
 		base_class_test.cc \
 		dom_utils.cc \
 		file.cc \
-		file_ff.cc \
+		file_posix.cc \
 		file_linux.cc \
 		file_osx.cc \
 		file_test.cc \
