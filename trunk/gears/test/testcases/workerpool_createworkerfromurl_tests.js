@@ -29,7 +29,6 @@ var sameOriginPath =
   currentUrl.substring(0, 1 + currentUrl.lastIndexOf('/'));
 var sameOriginWorkerFile = '../testcases/workerpool_same_origin.js';
 
-// TODO(aa): Change this to test2 when the code is mirrored to SVN.
 var crossOriginPath =
   'http://google-gears.googlecode.com/svn/trunk/gears/test/';
 var crossOriginWorkerFile = 'unit_tests_worker_cross_origin.js';
