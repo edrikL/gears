@@ -3,25 +3,40 @@
 
 = Introduction =
 
-This is a module to give Javascript a way to resize, crop and compose images together on the client side.  This will allow, for example, images to be resized into a web-friendly format before being uploaded to a photo album.  Another use is for composition of images together as an efficient alternative to server-side composition or CSS layering.  Yet another use is for basic photo editing - a user can edit a photo with instantly applied changes before uploading it to the server.
+This is a module to give Javascript a way to resize, crop and compose images
+together on the client side.  This will allow, for example, images to be
+resized into a web-friendly format before being uploaded to a photo album.
+Another use is for composition of images together as an efficient alternative
+to server-side composition or CSS layering.  Yet another use is for basic photo
+editing - a user can edit a photo with instantly applied changes before
+uploading it to the server.
 
-This module will be implemented as a wrapper around [http://www.libgd.org/ libGD].  This is the smallest of the popular image libraries which does all of the below.  If this turns out to still be too big, we can consider writing the image manipulation code ourselves, or using browser specific image libraries.
+This module will be implemented as a wrapper around [http://www.libgd.org/
+libGD].  This is the smallest of the popular image libraries which does all of
+the below.  If this turns out to still be too big, we can consider writing the
+image manipulation code ourselves, or using browser specific image libraries.
 
 = Details =
 
-The Image Manipulation module will add one object to Javascript, the Image class.  This is created via the Gears Factory:
-{{{
-var image = google.gears.factory.create('beta.image', '1.0');
-}}}
-
 Note: the following refers to the Gears Blob object, which is proposed in
-GearsHttpRequestProposal.
+BlobAPI.
+
+The Image Manipulation module will add one object to Javascript, the Image
+class.  This is created from a Blob.  An example of basic usage is:
+
+{{{
+// suppose blob has already been created with the data for an image in PNG, GIF
+// or JPEG format
+var image = blob.openAsImage();
+image.resize(100, 150); // etc.
+var newBlob = image.blob();
+}}}
 
 == Image class ==
 
 {{{
-  void open(blob)
-  Blob blob(type)
+  Blob blob()
+  Blob blobAsType()
   void resize(width, height)
   void crop(x, y, width, height)
   int width()
@@ -30,35 +45,35 @@ GearsHttpRequestProposal.
   void flipHorizontal()
   void flipVertical()
   void drawImage(image, x, y)
-  void close()
 }}}
 
-===void open(blob)===
-Opens a file for editing, detecting the format from the data.   from either PNG, JPEG or GIF format.
+===Blob blob()===
+Returns the blob representing the image data.  The file format of the blob is
+the same as that in which the image was originally opened.
 
-_blob_ (Blob): the blob representing the image data to load.
-
-*Exceptions:* Throws an exception if the image cannot be opened (the image is not in a supported format).  Throws an exception if an image has already been opened for this image object.
-
-===Blob blob(type)===
+===Blob blobAsType(type)===
 Returns the blob representing the image data.
 
-_type_ (string): Either of "png", "jpeg", "jpg", or "gif".  The format (PNG,
-JPEG or GIF) to output the data in.
+_type_ (string): Either of "png", "jpeg" or "gif".  The format (PNG, JPEG or
+GIF) to output the data in.
 
-*Exceptions:* Throws an exception if _type_ is not one of the above.  Throws an exception if the image has not been loaded.
+*Exceptions:* Throws an exception if _type_ is not one of the above.
 
 ===void resize(width, [height])===
 Resizes the image using a bilinear filter to the given width and height.
 
 _width_ (int): the width to resize to (in pixels).
 
-_height_ (int) - OPTIONAL: the height to resize to (int pixels).  If not given, the image will be resized such that it retains its original aspect ratio.
+_height_ (int) - OPTIONAL: the height to resize to (int pixels).  If not given,
+the image will be resized such that it retains its original aspect ratio.
 
-*Exceptions:* Throws an exception if width or height are not positive or greater than MAX_IMAGE_SIZE (TODO: define this).  Throws an exception if the image has not been loaded.
+*Exceptions:* Throws an exception if width or height are not positive or
+greater than MAX_IMAGE_SIZE (TODO: define this).
 
 ===void crop(x, y, width, height)===
-Crops the image - reduces its width and height such that a rectangular region of the original image is retained and the rest is lost.  The rectangular region is referred to as the "bounding box".  Returns an exception if the image has not been loaded.
+Crops the image - reduces its width and height such that a rectangular region
+of the original image is retained and the rest is lost.  The rectangular region
+is referred to as the "bounding box".
 
 _x_ (int): the displacement of the bounding box from the left edge (in pixels).
 
@@ -68,51 +83,45 @@ _width_ (int): the width of the bounding box (in pixels).
 
 _height_ (int): the height of the bounding box (in pixels).
 
-*Exceptions:* Throws an exception if width or height are not positive or greater than MAX_IMAGE_SIZE (TODO: define this).  Throws an exception if the bounding box is not completely within the original image (x or y are negative, or x+width is greater than the original width, or y+height is greater than the original height).  Throws an exception if the image has not been loaded.
+*Exceptions:* Throws an exception if width or height are not positive or
+greater than MAX_IMAGE_SIZE (TODO: define this).  Throws an exception if the
+bounding box is not completely within the original image (x or y are negative,
+or x+width is greater than the original width, or y+height is greater than the
+original height).
 
 ===int width()===
 *Returns* the width of the image, in pixels.
 
-*Exceptions:* Throws an exception if the image has not been loaded.
-
 ===int height()===
 *Returns* the height of the image, in pixels.
 
-*Exceptions:* Throws an exception if the image has not been loaded.
-
 ===void rotate(degrees)===
-Rotates the image anti-clockwise about the given angle.  The center of rotation is the center of the image, and the image's dimensions are changed such that they are as small as possible whilst still fitting in the entire image.  The background uncovered by the image is transparent black.
+Rotates the image anti-clockwise about the given angle.  The center of rotation
+is the center of the image, and the image's dimensions are changed such that
+they are as small as possible whilst still fitting in the entire image.  The
+background uncovered by the image is transparent black.
 
 _degrees_ (int): the number of degrees through which to rotate the image.
-
-*Exceptions:* Throws an exception if the image has not been loaded.
 
 *Note:* initially, this will only support orthogonal rotations.
 
 ===void flipHorizontal()===
-Flips (gives the mirror image of) the image about a vertical axis drawn through the middle of the image.
-
-*Exceptions:* Throws an exception if the image has not been loaded.
+Flips (gives the mirror image of) the image about a vertical axis drawn through
+the middle of the image.
 
 ===void flipVertical()===
-Flips (gives the mirror image of) the image about a horizontal axis drawn through the middle of the image.
+Flips (gives the mirror image of) the image about a horizontal axis drawn
+through the middle of the image.
 
-*Exceptions:* Throws an exception if the image has not been loaded.
-.
 ===void drawImage(image, x, y)===
 Draws the given image on top of this image.
 
 _image_ (Image): the Image object representing the image to draw
 
-_x_ (int): the horizontal displacement to draw the image from the left edge of this image.
+_x_ (int): the horizontal displacement to draw the image from the left edge of
+this image.
 
-_y_ (int): the vertical displacement to draw the image from the top edge of this image.
-
-*Exceptions:* Throws an exception if the image has not been loaded.
+_y_ (int): the vertical displacement to draw the image from the top edge of
+this image.
 
 *Note:* x and y may be negative, and they may be such that nothing gets drawn.
-
-
-===void close()===
-
-Destroys the image object and releases the memory used by it.  This is automatically called when the user leaves the page.
