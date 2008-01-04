@@ -66,66 +66,22 @@ TARGET_SECTION = r"""<Configuration
 	Name="%(TARGET_NAME)s"
 	OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 	IntermediateDirectory="$(ConfigurationName)"
-	ConfigurationType="1"
-	InheritedPropertySheets=
-	"$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+	ConfigurationType="0"
+	BuildLogFile="$(SolutionDir)\..\logs\%(MODE)s-%(BROWSER)s-vs-build-log.html"
 	>
-	<Tool
-		Name="VCPreBuildEventTool"
-	/>
-	<Tool
-		Name="VCCustomBuildTool"
-	/>
-	<Tool
-		Name="VCXMLDataGeneratorTool"
-	/>
-	<Tool
-		Name="VCWebServiceProxyGeneratorTool"
-	/>
-	<Tool
-		Name="VCMIDLTool"
-	/>
-	<Tool
-		Name="VCCLCompilerTool"
-		AdditionalIncludeDirectories="%(INCLUDE_DIRECTORIES)s"
-		PreprocessorDefinitions="%(PREPROCESSOR_DEFINES)s"
-	/>
-	<Tool
-		Name="VCManagedResourceCompilerTool"
-	/>
-	<Tool
-		Name="VCResourceCompilerTool"
-	/>
-	<Tool
-		Name="VCPreLinkEventTool"
-	/>
-	<Tool
-		Name="VCLinkerTool"
-	/>
-	<Tool
-		Name="VCALinkTool"
-	/>
-	<Tool
-		Name="VCManifestTool"
-	/>
-	<Tool
-		Name="VCXDCMakeTool"
-	/>
-	<Tool
-		Name="VCBscMakeTool"
-	/>
-	<Tool
-		Name="VCFxCopTool"
-	/>
-	<Tool
-		Name="VCAppVerifierTool"
-	/>
-	<Tool
-		Name="VCWebDeploymentTool"
-	/>
-	<Tool
-		Name="VCPostBuildEventTool"
-	/>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="$(SolutionDir)\scripts\build BROWSER=%(BROWSER)s MODE=%(MODE)s"
+				ReBuildCommandLine="$(SolutionDir)\scripts\rebuild BROWSER=%(BROWSER)s MODE=%(MODE)s"
+				CleanCommandLine="$(SolutionDir)\scripts\clean"
+				Output=""
+				PreprocessorDefinitions="%(PREPROCESSOR_DEFINES)s"
+				IncludeSearchPath="%(INCLUDE_DIRECTORIES)s"
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
 </Configuration>"""
 
 MAIN_VS_PROJECT_SKELETON = r"""<?xml version="1.0" encoding="Windows-1252"?>

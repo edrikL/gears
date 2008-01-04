@@ -42,6 +42,8 @@ VS_PROJECT_TEMPLATE_NAME = 'vs_project_template.py'
 
 TARGET_SECTION_TEMPLATE = 'TARGET_SECTION'
 TARGET_NAME_TAG = 'TARGET_NAME'
+BROWSER = 'BROWSER'
+MODE = 'MODE'
 INCLUDE_DIRS_TAG = 'INCLUDE_DIRECTORIES'
 PREPROCESSOR_DEFINES_TAG = 'PREPROCESSOR_DEFINES'
 
@@ -166,12 +168,14 @@ class DevEnvSettings(object):
   will inherit from it.
   """
   
-  def __init__(self, target_name=None, settings_objects_to_inherit_from=None):
+  def __init__(self, target_name=None, browser=None, mode=None, settings_objects_to_inherit_from=None):
     """Create an object with a given name composed of 0 or more other targets.
     
     Args:
       target_name: String representing the name for this target, None is useful
         when we are just creating an anonymous target for use in composition.
+      browser: String representing the targeted browser (IE|FF)
+      mode: String, targeted mode (opt|dbg)
       settings_objects_to_inherit_from: List of zero or more DevEnvSettings 
         objects to compose this object from. Composition is performed by
         copying the contents of the include dirs & preprocessor defines from
@@ -179,12 +183,14 @@ class DevEnvSettings(object):
     """
     
     self.target_name = target_name
+    self.browser = browser
+    self.mode = mode
     self.includes = []
     self.preprocessor_symbols = []
-		
+
     if settings_objects_to_inherit_from:
       self._CopyFrom(settings_objects_to_inherit_from)
-		  
+
   def _CopyFrom(self, settings_objects_to_inherit_from):
     """Implement inheritance by copying values from sibling objects.
     
@@ -282,13 +288,15 @@ def CreateTargets():
   # Settings Common to all IE Targets
   
   common_ie_settings = DevEnvSettings(
-      target_name=None, settings_objects_to_inherit_from=[common_settings])
+      target_name=None,
+      settings_objects_to_inherit_from=[common_settings])
   common_ie_settings.AddPreprocesorSymbol('BROWSER_IE')
 
   # Settings Common to all FF Targets
   
   common_ff_settings = DevEnvSettings(
-      target_name=None, settings_objects_to_inherit_from=[common_settings])
+      target_name=None,
+      settings_objects_to_inherit_from=[common_settings])
   common_ff_settings.AddPreprocesorSymbol('BROWSER_FF')
   common_ff_settings.AddPreprocesorSymbol('MOZILLA_STRICT_API')
   common_ff_settings.AppendIncludes(
@@ -308,29 +316,41 @@ def CreateTargets():
   # IE Targets
   
   ie_release_target = DevEnvSettings(
-      target_name='IE Release', 
+      target_name='IE Release',
+      browser='IE',
+      mode='opt',
       settings_objects_to_inherit_from=[common_ie_settings, release_settings])
   ie_debug_target = DevEnvSettings(
-      target_name='IE Debug', 
+      target_name='IE Debug',
+      browser='IE',
+      mode='dbg',
       settings_objects_to_inherit_from=[common_ie_settings, debug_settings])
 
   # FF Targets
   
   ff_release_target = DevEnvSettings(
-      target_name='FF Release', 
+      target_name='FF Release',
+      browser='FF',
+      mode='opt',
       settings_objects_to_inherit_from=[common_ff_settings, release_settings])
   ff_debug_target = DevEnvSettings(
-      target_name='FF Debug', 
+      target_name='FF Debug',
+      browser='FF',
+      mode='dbg',
       settings_objects_to_inherit_from=[common_ff_settings, debug_settings])
       
   # NPAPI Targets
   
   npapi_release_target = DevEnvSettings(
-      target_name='NPAPI Release', 
+      target_name='NPAPI Release',
+      browser='NPAPI',
+      mode='opt',
       settings_objects_to_inherit_from=[common_npapi_settings, 
                                         release_settings])
   npapi_debug_target = DevEnvSettings(
-      target_name='NPAPI Debug', 
+      target_name='NPAPI Debug',
+      browser='NPAPI',
+      mode='dbg',
       settings_objects_to_inherit_from=[common_npapi_settings, debug_settings])
   
   return [ie_release_target, ie_debug_target, 
@@ -417,6 +437,8 @@ def CreateConfigurationXML(target_objects):
   for target in target_objects:
     template_params = {
         TARGET_NAME_TAG: target.target_name + '|Win32',
+        BROWSER: target.browser,
+        MODE: target.mode,
         INCLUDE_DIRS_TAG: target.GetFlattenedIncludeDirs(),
         PREPROCESSOR_DEFINES_TAG: target.GetFlattenedPreprocessorDefines()}
     
