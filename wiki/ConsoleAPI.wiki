@@ -24,23 +24,23 @@ The benefit of this approach is that logging levels can be changed and added wit
 Console objects can be created via the factory whenever logging capabilities are needed (including inside WorkerPool processes).
 
 {{{
-var console = google.gears.factory.create('beta.console', '1.0');
-console.log('error', 'An error occurred! Some variables: %s, %s.', {1, 'Hello World'});
+var console = google.gears.factory.create('beta.console');
+console.log('error', 'An error occurred! Some variables: %s, %s.', [1, 'Hello World']);
 
 // In log viewer tool
  => (Error): 'An error occurred! Some variables: 1, Hello World.'
 }}}
 
-= Log Items =
+= Log Events =
 
-Individual log items can be encapsulated by a LogItem class, which will record a variety of information about the log event.
+Individual log events can be encapsulated by a LogEvent class, which will record a variety of information about the event.
 
 {{{
-class LogItem {
-  String message;  // Already interpolated with _args_
-  String type;     // 'debug', 'info', 'warn', 'error'
-  String source;   // URL of page/script the log message came from
-  int timestamp;   // Time of log item
+class LogEvent {
+  String message;    // Already interpolated with _args_
+  String type;       // 'debug', 'info', 'warn', 'error'
+  String sourceUrl;  // URL of page/script the log message came from
+  int timestamp;     // Time of log item
 }
 }}}
 
@@ -56,11 +56,11 @@ Each console object provides access to a single logging backend by default - a J
 
 {{{
 class GearsConsole {
-  callback onlog(LogItem log_item);
+  callback onlog(LogEvent log_event);
 }
 
 // JavaScript
-console.onlog = function(log_item) { alert(log_item.message); };
+console.onlog = function(log_event) { alert(log_event.message); };
 }}}
 
 Other logging backends can easily be created in future, for a variety of purposes including:
