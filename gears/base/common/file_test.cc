@@ -126,18 +126,7 @@ bool TestFileUtils() {
   sub_dir += STRING16(L"sub");
   TEST_ASSERT(!File::DirectoryExists(sub_dir.c_str()));
   TEST_ASSERT(File::GetDirectoryFileCount(sub_dir.c_str()) == 0);
-  
-  // Check that moving a non existent directory fails.
-  std::string16 sub_dir_moved(sub_dir);
-  sub_dir_moved += STRING16(L"_moved");
-  TEST_ASSERT(!File::DirectoryExists(sub_dir_moved.c_str()));
-  TEST_ASSERT(!File::MoveDirectory(sub_dir.c_str(), sub_dir_moved.c_str()));
-  
-  // Create subdir and move it.
   TEST_ASSERT(CheckDirectoryCreation(sub_dir.c_str()));
-  TEST_ASSERT(File::GetDirectoryFileCount(temp_dir.c_str()) == 1);
-  TEST_ASSERT(File::MoveDirectory(sub_dir.c_str(), sub_dir_moved.c_str()));
-  TEST_ASSERT(File::DirectoryExists(sub_dir_moved.c_str()));
   TEST_ASSERT(File::GetDirectoryFileCount(temp_dir.c_str()) == 1);
 
   // Remove the entire tmp_dir incuding the sub-dir it contains
