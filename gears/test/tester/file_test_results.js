@@ -44,7 +44,7 @@ FileTestResults.prototype.testsStarted = 0;
 FileTestResults.prototype.testsComplete = 0;
 
 /**
- * Time elapsed during tests in ms.
+ * Time elapsed during tests in seconds.
  */
 FileTestResults.prototype.timeElapsed = 0;
 
@@ -72,8 +72,7 @@ FileTestResults.prototype.start = function(div, testData, suiteName) {
   this.suiteName = suiteName;
 
   // Store starting timestamp in timeElapsed to use later.
-  var date = new Date();
-  this.timeElapsed = date.getTime();
+  this.timeElapsed = getTimeSeconds();
 
   var heading = document.createElement('h3');
   heading.appendChild(document.createTextNode(testData.relativePath));
@@ -123,8 +122,7 @@ FileTestResults.prototype.startWorkerTests_ = function() {
  * @param name
  */
 FileTestResults.prototype.handleBeforeSyncTestStart = function(name) {
-  var date = new Date();
-  var timestamp = date.getTime();
+  var timestamp = getTimeSeconds();
   this.testResults[name] = {status: "started", startTime: timestamp};
 };
 
@@ -133,8 +131,7 @@ FileTestResults.prototype.handleBeforeSyncTestStart = function(name) {
  * @param name
  */
 FileTestResults.prototype.handleBeforeAsyncTestStart = function(name) {
-  var date = new Date();
-  var timestamp = date.getTime();
+  var timestamp = getTimeSeconds();
   this.testResults[name + '_worker'] = {status: "started", startTime: timestamp};
 };
 
@@ -163,8 +160,7 @@ FileTestResults.prototype.handleTestsLoaded = function(isWorker, success,
  */
 FileTestResults.prototype.handleTestComplete = function(isWorker, name, success,
                                                         errorMessage) {
-  var date = new Date();
-  var timestamp = date.getTime();
+  var timestamp = getTimeSeconds();
   var statusKey = (isWorker) ? name + '_worker' : name;
   var status = (success) ? "passed" : "failed";
 
@@ -201,8 +197,7 @@ FileTestResults.prototype.handleTestComplete = function(isWorker, name, success,
 FileTestResults.prototype.handleAsyncTestStart = function(isWorker, name) {
   this.testsStarted++;
 
-  var date = new Date();
-  var timestamp = date.getTime();
+  var timestamp = getTimeSeconds();
   var statusKey = (isWorker) ? name + '_worker' : name;
   this.testResults[statusKey] = {status: "started", startTime: timestamp};
 
@@ -224,8 +219,7 @@ FileTestResults.prototype.handleAllTestsComplete = function(isWorker) {
     this.startWorkerTests_();
   } else {
     // Store time since test set began.  Start time is stored in timeElapsed.
-    var date = new Date();
-    this.timeElapsed = date.getTime() - this.timeElapsed;
+    this.timeElapsed = getTimeSeconds() - this.timeElapsed;
     this.onAllTestsComplete();
   }
 };

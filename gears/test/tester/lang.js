@@ -153,6 +153,15 @@ function removeHashCode(obj) {
 
 
 /**
+ * Returns the current absolute time, in seconds.
+ */
+function getTimeSeconds() {
+  var timeMs = new Date().getTime();
+  return timeMs / 1000;
+}
+
+
+/**
  * Checks if a string starts with another string.
  */
 String.prototype.startsWith = function(prefix) {

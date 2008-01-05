@@ -67,7 +67,7 @@ class SuitesReport:
         store["suites"][suite_name] = {"file_results": [], "elapsed": 0}
       
       # Elapsed time for a suite is the sum of the elapsed times of the files
-      store["suites"][suite_name]["elapsed"] += int(file_result["elapsed"])
+      store["suites"][suite_name]["elapsed"] += float(file_result["elapsed"])
 
       store["suites"][suite_name]["file_results"].append( \
           {"filename" : file_result["filename"],
