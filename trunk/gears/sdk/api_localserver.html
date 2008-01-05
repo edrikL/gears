@@ -108,17 +108,21 @@ resources locally, without a network connection.</p>
 
 <pre><code>&lt;script type="text/javascript" src="<a href='tools.html#gears_init'>gears_init.js</a>"&gt;&lt;/script&gt;
 &lt;script type="text/javascript"&gt;
-var filesToCapture = [
-  location.pathname,
-  'gears_init.js'
-];
 var localServer = google.gears.factory.create('beta.localserver');
-var store = localServer.createStore('test-store');
-function captureCallback(url, success, captureId) {
-  alert(url + 'captured: ' + success ? 'success' : 'failure');
-}
+var store = localServer.createManagedStore('test-store');
+store.manifestUrl = 'site-manifest.txt';
+store.checkForUpdate();
 &lt;/script&gt;</code></pre>
 
+<pre><code>// site-manifest.txt
+{
+  "betaManifestVersion": 1,
+  "version": "site_version_string",
+  "entries": [
+    { "url": "site.html" },
+    { "url": "gears_init.js" }
+  ]
+}</code></pre>
 
 <h3 id="classes">Classes</h3>
   <pre><code><a href="#LocalServer" class="section">LocalServer class</a>
