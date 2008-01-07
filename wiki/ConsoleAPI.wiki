@@ -40,7 +40,7 @@ class LogEvent {
   String message;    // Already interpolated with _args_
   String type;       // 'debug', 'info', 'warn', 'error'
   String sourceUrl;  // URL of page/script the log message came from
-  int timestamp;     // Time of log item
+  Date date;         // Time/date of log item
 }
 }}}
 
