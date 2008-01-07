@@ -48,7 +48,7 @@ class Bootstrap:
 
     then copies them to local directory. 
     """
-    exists = False
+    exists = os.path.exists(self.__gears_binaries)
     while not exists:
       exists = os.path.exists(self.__gears_binaries)
       time.sleep(POLL_INTERVAL_SECONDS)
@@ -57,8 +57,6 @@ class Bootstrap:
       os.chmod(Bootstrap.INSTALLER_DIR, DELETABLE)
       shutil.rmtree(Bootstrap.INSTALLER_DIR)
     shutil.copytree(self.__gears_binaries, Bootstrap.INSTALLER_DIR)
-    # Sleep another polling interval to give time to copy files locally
-    time.sleep(POLL_INTERVAL_SECONDS)
 
 
   def install(self):

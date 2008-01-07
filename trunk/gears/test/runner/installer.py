@@ -5,6 +5,9 @@ import browser_launchers
 import zipfile
 import time
 
+if os.name == 'nt':
+  import win32file
+
 # Workaround permission, stat.I_WRITE not allowing delete on some systems
 DELETABLE = int('777', 8)
 
@@ -22,7 +25,7 @@ class Installer:
       target_path = profile[:profile.find('.')]
       if os.path.exists(target_path):
         os.chmod(target_path, DELETABLE)
-        shutil.rmtree(target_path)
+        shutil.rmtree(target_path, onerror=self.handleRmError)
       profile_zip = open(profile_path, 'rb')
       self.unzip(profile_zip, target_path)
       profile_zip.close()
@@ -35,7 +38,7 @@ class Installer:
       build: local filename for the build
     """
     if os.path.exists('xpi'):
-      shutil.rmtree('xpi')
+      shutil.rmtree('xpi', onerror=self.handleRmError)
     xpi = open(build, 'rb')
     self.unzip(xpi, 'xpi')
     xpi.close()
@@ -56,7 +59,7 @@ class Installer:
       print 'failed to find profile folder'
       return
 
-    shutil.rmtree(profile_folder)
+    shutil.rmtree(profile_folder, onerror=self.handleRmError)
     self.copyAndChmod(self.ffprofile, profile_folder)
     ext = os.path.join(profile_folder, 'extensions')
     if not os.path.exists(ext):
@@ -127,7 +130,24 @@ class Installer:
   def copyAndChmod(self, src, targ):
     shutil.copytree(src, targ)
     os.chmod(targ, DELETABLE)
+  
 
+  def handleRmError(self, func, path, exc_info):
+    """ Handle errors removing files with long names on nt systems.
+
+    Args:
+      func: function call that caused exception
+      path: path to function call argument
+      exc_info: string info about the exception
+    """
+    # On nt, try using win32file to delete if os.remove fails
+    if os.name == 'nt':
+      unicode_path = '\\\\?\\' + path
+      # Throws an exception on error
+      win32file.DeleteFileW(unicode_path)
+    else:
+      raise StandardError(exc_info)
+    
 
   def unzip(self, file, target):
     """ Unzip file to target dir.
@@ -202,7 +222,7 @@ class Win32Installer(Installer):
       os.mkdir(google_path)
     if os.path.exists(ieprofile_path):
       os.chmod(ieprofile_path, DELETABLE)
-      shutil.rmtree(ieprofile_path)
+      shutil.rmtree(ieprofile_path, onerror=self.handleRmError)
     self.copyAndChmod(self.ieprofile, ieprofile_path)
 
 
@@ -293,7 +313,7 @@ class MacInstaller(Installer):
     # Empty cache and replace only with gears folder
     gears_folder = os.path.join(profile_folder, 'Google Gears for Firefox')
     ffprofile_cache = 'ffprofile-mac/Google Gears for Firefox'
-    shutil.rmtree(profile_folder)
+    shutil.rmtree(profile_folder, onerror=self.handleRmError)
     os.mkdir(profile_folder)
     self.copyAndChmod(ffprofile_cache, gears_folder)
 
