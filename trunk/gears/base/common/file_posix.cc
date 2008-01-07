@@ -118,9 +118,8 @@ bool File::CreateNewFile(const char16 *path) {
   std::string path_utf8;
   String16ToUTF8(path, &path_utf8);
   
-  // Create new file with permission 0700, fail if the file already exists.
-  int fd = open(path_utf8.c_str(), O_CREAT | O_EXCL, 
-                S_IRUSR | S_IWUSR | S_IXUSR);
+  // Create new file with permission 0600, fail if the file already exists.
+  int fd = open(path_utf8.c_str(), O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
   if (fd < 0) {
     return false;
   }
