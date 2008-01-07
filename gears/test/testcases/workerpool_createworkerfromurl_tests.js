@@ -30,9 +30,9 @@ var sameOriginPath =
 var sameOriginWorkerFile = '../testcases/workerpool_same_origin.js';
 
 var crossOriginPath =
-  'http://google-gears.googlecode.com/svn/trunk/gears/test/';
-var crossOriginWorkerFile = 'unit_tests_worker_cross_origin.js';
-var crossOriginWorkerFileNoPerms = 'unit_tests_worker_same_origin.js';
+  'http://google-gears.googlecode.com/svn/trunk/gears/test/testcases/';
+var crossOriginWorkerFile = 'workerpool_cross_origin.js';
+var crossOriginWorkerFileNoPerms = 'workerpool_same_origin.js';
 
 function testCreateWorkerFromUrl1() {
   startAsync();
