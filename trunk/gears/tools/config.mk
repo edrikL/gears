@@ -211,6 +211,7 @@ else
 #   C defines:  _WIN32_WCE=0x0501
 #               _UNDER_CE=0x0501
 CPPFLAGS += /D_WIN32_WCE=0x501 \
+	    /DWINVER=_WIN32_WCE \
 	    /DUNDER_CE=0x501 \
 	    /DWINCE \
 	    /DWIN32_PLATFORM_PSPC \
