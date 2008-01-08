@@ -26,7 +26,20 @@
 #ifndef GEARS_BASE_COMMON_INT_TYPES_H__
 #define GEARS_BASE_COMMON_INT_TYPES_H__
 
-#if BROWSER_FF || BROWSER_NPAPI
+#if BROWSER_WEBKIT
+//------------------------------------------------------------------------------
+// WebKit on OSX
+//------------------------------------------------------------------------------
+#include <WebKit/npapi.h>
+typedef signed char         int8;
+typedef short               int16;
+typedef long long           int64;
+
+// Unsigned integer types
+typedef unsigned char      uint8;
+typedef unsigned short     uint16;
+typedef unsigned long long uint64;
+#elif BROWSER_FF || BROWSER_NPAPI
 //------------------------------------------------------------------------------
 // BROWSER_FF
 //------------------------------------------------------------------------------
@@ -34,7 +47,7 @@
 #include <gecko_sdk/include/prtypes.h>
 #else
 //------------------------------------------------------------------------------
-// BROWSER_IE and BROWSER_SAFARI
+// BROWSER_IE
 //------------------------------------------------------------------------------
 // Signed integer types
 typedef signed char         int8;

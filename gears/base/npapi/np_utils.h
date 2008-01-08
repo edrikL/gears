@@ -35,11 +35,26 @@ NPString NPN_StringDup(const char *value, int length);
 NPString NPN_StringDup(const char16 *value, int length);
 NPString NPN_StringDup(const NPString &str);
 
+// Wrapper functions to abstract-out differences between WebKit & Gecko NPAPI.
+#ifdef BROWSER_WEBKIT
+  #define NPSTRING_UTF8_CHARACTERS(npstr) ((npstr).UTF8Characters)
+#else
+  #define NPSTRING_UTF8_CHARACTERS(npstr) ((npstr).utf8characters)
+#endif
+
+#ifdef BROWSER_WEBKIT
+  #define NPSTRING_UTF8_LENGTH(npstr) ((npstr).UTF8Length)
+#else
+  #define NPSTRING_UTF8_LENGTH(npstr) ((npstr).utf8length)
+#endif
+
+
 // Convenience wrappers to make an NPVariant from various string types.
 #define STDSTRING_TO_NPVARIANT(str, var) \
   STRINGN_TO_NPVARIANT(str.data(), str.length(), var)
 
 #define NPSTRING_TO_NPVARIANT(npstr, var) \
-  STRINGN_TO_NPVARIANT(npstr.utf8characters, npstr.utf8length, var)
+  STRINGN_TO_NPVARIANT(NPSTRING_UTF8_CHARACTERS(npstr), \
+                       NPSTRING_UTF8_LENGTH(npstr), var)
 
 #endif  // GEARS_BASE_NPAPI_NP_UTILS_H__

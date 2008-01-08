@@ -42,5 +42,6 @@ NPString NPN_StringDup(const char16 *value, int length) {
 }
 
 NPString NPN_StringDup(const NPString &str) {
-  return NPN_StringDup(str.utf8characters, str.utf8length);
+  return NPN_StringDup(NPSTRING_UTF8_CHARACTERS(str), 
+                       NPSTRING_UTF8_LENGTH(str));
 }

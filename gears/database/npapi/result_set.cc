@@ -34,7 +34,8 @@
 
 DECLARE_GEARS_WRAPPER(GearsResultSet);
 
-// static 
+// static
+template<>
 void Dispatcher<GearsResultSet>::Init() {
   RegisterMethod("field", &GearsResultSet::Field);
   RegisterMethod("fieldByName", &GearsResultSet::FieldByName);
