@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // TODO(andreip): remove platform-specific #ifdef guards when OS-specific
@@ -29,6 +29,7 @@
 #ifndef GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
 #define GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
 
+#include <atlbase.h>
 #include <atlsync.h>
 #include <connmgr.h>
 #include <connmgr_status.h>
@@ -36,6 +37,23 @@
 #include <windows.h>
 
 #include "gears/localserver/common/critical_section.h"
+
+// The Win32 code uses ::PathFindXXXW. These are defined in shlwapi.h, but the
+// WinCE SDK does not provide shlwapi.lib. Instead it provides
+// ATL::PathFindXXX, which are defined in atlosapice.h (included from
+// atlbase.h). However, ATL::PathFindXXX is not provided by the Win32 SDK.
+// Therefore we use ATL::PathFindXXX for WinCE only and use a 'using'
+// declaration to keep the code identical for the two platforms.
+//
+// Note that atlosapice.h provides a define from PathFindExtension to
+// PathFindExtensionW, but not for PathFindFileNameW. shlwapi.h provides defines
+// for both functions, but inclduing this file introduces ambiguity between the
+// ATL::PathFindXXXW and ::PathFindXXXW functions.
+namespace ATL {
+#define PathFindFileNameW PathFindFileName
+}
+using ATL::PathFindExtensionW;
+using ATL::PathFindFileName;
 
 #define CSIDL_LOCAL_APPDATA CSIDL_APPDATA
 #define SHGFP_TYPE_CURRENT 0
