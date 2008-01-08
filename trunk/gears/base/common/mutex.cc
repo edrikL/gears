@@ -30,10 +30,10 @@
 #include <gecko_sdk/include/prlock.h>
 #elif BROWSER_WEBKIT
 #include <pthread.h>
+#include <sched.h>
 #elif BROWSER_NPAPI
 // TODO(mpcomplete): do this right.
 #include <windows.h>
-#include <sched.h>
 #else
 #error "BROWSER_xyz not defined."  // centralized check for undefined BROWSER
 #endif
