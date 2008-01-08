@@ -142,6 +142,9 @@ class Installer:
     """
     # On nt, try using win32file to delete if os.remove fails
     if os.name == 'nt':
+      # Create a unicode path, must be an absolute path
+      if not os.path.isabs(path):
+        path = os.path.join(os.getcwd(), path)
       unicode_path = '\\\\?\\' + path
       # Throws an exception on error
       win32file.DeleteFileW(unicode_path)
