@@ -265,10 +265,15 @@ NPUTF8 *NPN_UTF8FromIdentifier(NPIdentifier identifier)
   return GetNPNFuncs().utf8fromidentifier(identifier);
 }
 
-int32_t NPN_IntFromIdentifier(NPIdentifier identifier)
-{
-  return GetNPNFuncs().intfromidentifier(identifier);
-}
+// On WebKit under OSX, the intfromidentifier field of the structure isn't
+// filled in (see WebNetscapePluginPackage.m#526 in WebKit source tree).
+// At this time this function isn't called from our code, so for now comment it
+// out.
+//
+// int32_t NPN_IntFromIdentifier(NPIdentifier identifier)
+// {
+//  return GetNPNFuncs().intfromidentifier(identifier);
+// }
 
 NPObject *NPN_CreateObject(NPP npp, NPClass *aClass)
 {
@@ -320,15 +325,23 @@ bool NPN_RemoveProperty(NPP npp, NPObject* obj, NPIdentifier propertyName)
   return GetNPNFuncs().removeproperty(npp, obj, propertyName);
 }
 
+#ifdef BROWSER_WEBKIT
+// This field of NPN functions isn't filled in by WebKit on OSX.
+#else
 bool NPN_HasProperty(NPP npp, NPObject* obj, NPIdentifier propertyName)
 {
   return GetNPNFuncs().hasproperty(npp, obj, propertyName);
 }
+#endif
 
+#ifdef BROWSER_WEBKIT
+// This field of NPN functions isn't filled in by WebKit on OSX.
+#else
 bool NPN_HasMethod(NPP npp, NPObject* obj, NPIdentifier methodName)
 {
   return GetNPNFuncs().hasmethod(npp, obj, methodName);
 }
+#endif
 
 void NPN_ReleaseVariantValue(NPVariant *variant)
 {

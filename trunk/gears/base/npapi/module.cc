@@ -13,7 +13,7 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
@@ -21,7 +21,7 @@
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -47,20 +47,23 @@
 #endif
 
 // Export NPAPI entry points on OS X.
-#ifdef OSX
+#ifdef BROWSER_WEBKIT
+// Define this to keep prototypes consistent between NPAPI implementations.
+#define OSCALL
+
 #pragma export on
 extern "C" {
   // Mach-o entry points
-  NPError OSCALL NP_Initialize(NPNetscapeFuncs *browserFuncs);
-  NPError OSCALL NP_GetEntryPoints(NPPluginFuncs *pluginFuncs);
-  NPError OSCALL NP_Shutdown(void);
+  NPError NP_Initialize(NPNetscapeFuncs *browserFuncs);
+  NPError NP_GetEntryPoints(NPPluginFuncs *pluginFuncs);
+  void NP_Shutdown(void);
   // For compatibility with NPAPI in Opera & FF on the Mac, we need to implement
   // this.
-  // int main(NPNetscapeFuncs *browserFuncs, NPPluginFuncs *pluginFuncs, 
+  // int main(NPNetscapeFuncs *browserFuncs, NPPluginFuncs *pluginFuncs,
   //         void *shutdown);
 }
 #pragma export off
-#endif  // OSX
+#endif  // BROWSER_WEBKIT
 
 // Store the browser functions in thread local storage to avoid calling the
 // functions on a different thread.
@@ -73,22 +76,21 @@ NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* funcs)
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
   // On FF & Safari on win32, funcs->size is a parameter we need to check on
-  // input in order to make sure we're being passed a structure of the right 
+  // input in order to make sure we're being passed a structure of the right
   // size.
   //
   // Webkit under OSX on the other hand, passes 0 in funcs->size.
-  // Apple's sample code (NetscapeMoviePlugIn) treats this as an output 
+  // Apple's sample code (NetscapeMoviePlugIn) treats this as an output
   // parameter.
   //
   // We play it safe by being consistent with Apple's example code under OSX &
   // keeping with the standard behavior otherwise.
-#ifdef OSX
+#ifdef BROWSER_WEBKIT
   funcs->size          = sizeof(NPPluginFuncs);
 #else
   if (funcs->size < sizeof(NPPluginFuncs))
     return NPERR_INVALID_FUNCTABLE_ERROR;
 #endif
-
   funcs->version       = (NP_VERSION_MAJOR << 8) | NP_VERSION_MINOR;
   funcs->newp          = NPP_New;
   funcs->destroy       = NPP_Destroy;
@@ -97,7 +99,11 @@ NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* funcs)
   funcs->destroystream = NPP_DestroyStream;
   funcs->asfile        = NPP_StreamAsFile;
   funcs->writeready    = NPP_WriteReady;
+#ifdef BROWSER_WEBKIT
+  funcs->write         = reinterpret_cast<NPP_WriteProcPtr>(NPP_Write);
+#else
   funcs->write         = NPP_Write;
+#endif
   funcs->print         = NPP_Print;
   funcs->event         = NPP_HandleEvent;
   funcs->urlnotify     = NPP_URLNotify;
@@ -119,7 +125,9 @@ NPError OSCALL NP_Initialize(NPNetscapeFuncs* funcs)
   if (funcs->size < sizeof(NPNetscapeFuncs))
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
+#ifdef WIN32
   MyDllMain(0, DLL_PROCESS_ATTACH, 0);
+#endif
 
   g_browser_funcs = *funcs;
   ThreadLocals::SetValue(kNPNFuncsKey, &g_browser_funcs, NULL);
@@ -127,12 +135,28 @@ NPError OSCALL NP_Initialize(NPNetscapeFuncs* funcs)
   return NPERR_NO_ERROR;
 }
 
+
+// Apple's NetscapeMoviePlugin Example defines NP_Shutdown this as returning a
+// void.
+// Gecko defines this differently.
+#ifdef BROWSER_WEBKIT
+void OSCALL NP_Shutdown()
+#else
 NPError OSCALL NP_Shutdown()
+#endif
 {
+#ifdef WIN32
   MyDllMain(0, DLL_PROCESS_DETACH, 0);
+#endif
+
+#ifdef BROWSER_WEBKIT
+// void return type in Webkit.
+#else
   return NPERR_NO_ERROR;
+#endif
 }
 
+#ifdef WIN32
 BOOL MyDllMain(HANDLE instance, DWORD reason, LPVOID reserved) {
   switch (reason) {
     case DLL_THREAD_DETACH:
@@ -148,3 +172,4 @@ BOOL MyDllMain(HANDLE instance, DWORD reason, LPVOID reserved) {
 
   return TRUE;
 }
+#endif

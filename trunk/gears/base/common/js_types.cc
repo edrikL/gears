@@ -151,8 +151,10 @@ JsArray::~JsArray() {
 bool JsArray::SetArray(JsToken value, JsContextPtr context) {
   // check that it's an array (can only test that it has a length property).
   NPIdentifier length_id = NPN_GetStringIdentifier("length");
+  NPVariant np_length;
   if (!NPVARIANT_IS_OBJECT(value) ||
-      !NPN_HasProperty(context, NPVARIANT_TO_OBJECT(value), length_id)) {
+      !NPN_GetProperty(context, NPVARIANT_TO_OBJECT(value), length_id, 
+                       &np_length)) {
     return false;
   }
 
@@ -167,7 +169,6 @@ bool JsArray::GetLength(int *length) const {
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
 
   NPIdentifier length_id = NPN_GetStringIdentifier("length");
-  if (!NPN_HasProperty(js_context_, array, length_id)) return false;
 
   NPVariant np_length;
   if (!NPN_GetProperty(js_context_, array, length_id, &np_length)) return false;
@@ -181,7 +182,6 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
 
   NPIdentifier index_id = NPN_GetIntIdentifier(index);
-  if (!NPN_HasProperty(js_context_, array, index_id)) return false;
 
   if (!NPN_GetProperty(js_context_, array, index_id, out)) return false;
 
@@ -622,13 +622,14 @@ bool JsTokenToDouble(JsToken t, JsContextPtr cx, double *out) {
 bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
   if (!NPVARIANT_IS_STRING(t)) { return false; }
   NPString str = NPVARIANT_TO_STRING(t);
-  if (str.utf8length == 0) {
+  if (NPSTRING_UTF8_LENGTH(str) == 0) {
     // TODO(mpcomplete): find out if UTF8ToString16 can be changed to return
     // true in this case.
     out->clear();
     return true;
   }
-  return UTF8ToString16(str.utf8characters, str.utf8length, out);
+  return UTF8ToString16(NPSTRING_UTF8_CHARACTERS(str), 
+                        NPSTRING_UTF8_LENGTH(str), out);
 }
 
 bool JsTokenToNewCallback(JsToken t, JsContextPtr cx, JsRootedCallback **out) {

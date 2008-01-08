@@ -42,6 +42,7 @@ Stopwatch GearsDatabase::g_stopwatch_;
 DECLARE_GEARS_WRAPPER(GearsDatabase);
 
 // static
+template<>
 void Dispatcher<GearsDatabase>::Init() {
   typedef GearsDatabase T;
   RegisterMethod("open", &GearsDatabase::Open);

@@ -53,17 +53,26 @@ typedef CComVariant JsScopedToken;
 typedef void* JsContextPtr; // unused in IE
 typedef HRESULT JsNativeMethodRetval;
 
+#elif BROWSER_WEBKIT
+
+#include <WebKit/npapi.h>
+#include <WebKit/npfunctions.h>
+#include <WebKit/npruntime.h>
+
 #elif BROWSER_NPAPI
 
-#include "npapi.h"
-#include "npupp.h"
+#include "gecko_sdk/include/npapi.h"
+#include "gecko_sdk/include/npupp.h"
 
+#endif
+
+#if BROWSER_NPAPI || BROWSER_WEBKIT
 // Abstracted types for values used with JavaScript engines.
 typedef NPVariant JsToken;
 typedef NPP JsContextPtr;
 typedef NPError JsNativeMethodRetval;
 
-#endif
+#endif  // BROWSER_NPAPI || BROWSER_WEBKIT
 
 class JsRootedToken;
 typedef JsRootedToken JsRootedCallback;

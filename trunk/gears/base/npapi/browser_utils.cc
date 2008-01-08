@@ -30,6 +30,7 @@
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
+#include "gears/base/npapi/np_utils.h"
 #include "gears/base/npapi/scoped_npapi_handles.h"
 
 typedef std::stack<JsCallContext*> JsCallStack;
@@ -95,8 +96,8 @@ bool BrowserUtils::GetPageLocationUrl(JsContextPtr context,
   assert(NPVARIANT_IS_STRING(np_href));
   NPString np_str = NPVARIANT_TO_STRING(np_href);
 
-  return (UTF8ToString16(np_str.utf8characters,
-                         np_str.utf8length,
+  return (UTF8ToString16(NPSTRING_UTF8_CHARACTERS(np_str),
+                         NPSTRING_UTF8_LENGTH(np_str),
                          location_url));
 }
 
