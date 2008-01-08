@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef GEARS_LOCALSERVER_IE_RESOURCE_STORE_IE_H__
@@ -31,7 +31,7 @@
 #include "gears/base/common/common.h"
 #include "gears/localserver/common/resource_store.h"
 #include "gears/localserver/ie/capture_task_ie.h"
-#include "ie/genfiles/interfaces.h" // from OUTDIR
+#include "ie/genfiles/interfaces.h"  // from OUTDIR
 
 //------------------------------------------------------------------------------
 // GearsResourceStore
@@ -113,8 +113,15 @@ class ATL_NO_VTABLE GearsResourceStore
       /* [in] */ const BSTR url,
       /* [retval][out] */ BSTR *file_name);
 
+#ifdef WINCE
+  // It looks like it will be difficult/impossible to implement FileSubmitter
+  // for WinCE. This API will likely be deprecated once we have binary POST
+  // functionality for HttpRequest, so we won't implement it for WinCE, at least
+  // for now.
+#else
   virtual HRESULT STDMETHODCALLTYPE createFileSubmitter(
       /* [retval][out] */ GearsFileSubmitterInterface **file_submitter);
+#endif
 
  private:
   // CWindowImpl related members to receive messages from our CaptureTasks

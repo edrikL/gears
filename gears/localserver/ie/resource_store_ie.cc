@@ -25,6 +25,9 @@
 
 #include <assert.h>
 #include <dispex.h>
+#ifdef WINCE
+#include <webvw.h>  // For IPIEHTMLInputTextElement
+#endif
 
 #include <deque>
 #include <vector>
@@ -37,10 +40,13 @@
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/url_utils.h"
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"
+#endif
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #ifdef WINCE
-// TODO(steveblock): Implement file submitter.
+// FileSubmitter is not implemented for WinCE.
 #else
 #include "gears/localserver/ie/file_submitter_ie.h"
 #endif
@@ -470,10 +476,6 @@ STDMETHODIMP GearsResourceStore::copy(
 STDMETHODIMP GearsResourceStore::captureFile(
       /* [in] */ IDispatch *file_input_element,
       /* [in] */ const BSTR url) {
-#ifdef WINCE
-  // TODO(steveblock): Implement GearsResourceStore::captureFile.
-  RETURN_EXCEPTION(STRING16(L"captureFile not yet implemented for WinCE."));
-#else
   if (EnvIsWorker()) {
     RETURN_EXCEPTION(STRING16(L"captureFile cannot be called in a worker."));
   }
@@ -484,9 +486,20 @@ STDMETHODIMP GearsResourceStore::captureFile(
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
 
-  // Verify that fileInputElement is actually a fileInput form element.
+  // Verify that file_input_element is actually a form of type
+  // <input type=file>
+#ifdef WINCE
+  // If it implements the IPIEHTMLInputTextElement interface, and has type
+  // 'file', then accept it.
+  CComQIPtr<IPIEHTMLInputTextElement> input(file_input_element);
+  CComBSTR type;
+  if (FAILED(input->get_type(&type)) || type != L"file") {
+    input.Release();
+  }
+#else
   // If it implements the IHTMLInputFileElemement interface, then accept it.
   CComQIPtr<IHTMLInputFileElement> input(file_input_element);
+#endif
   if (!input) {
     RETURN_EXCEPTION(STRING16(L"Invalid file input parameter."));
   }
@@ -556,7 +569,6 @@ STDMETHODIMP GearsResourceStore::captureFile(
   }
 
   RETURN_NORMAL();
-#endif
 }
 
 
@@ -646,16 +658,14 @@ STDMETHODIMP GearsResourceStore::getAllHeaders(
   RETURN_NORMAL();
 }
 
+#ifdef WINCE
+// FileSubmitter is not implemented for WinCE.
+#else
 //------------------------------------------------------------------------------
 // createFileSubmitter
 //------------------------------------------------------------------------------
 STDMETHODIMP GearsResourceStore::createFileSubmitter(
       /* [retval][out] */ GearsFileSubmitterInterface **file_submitter) {
-#ifdef WINCE
-  // TODO(steveblock): Implement GearsResourceStore::createFileSubmitter.
-  RETURN_EXCEPTION(
-        STRING16(L"createFileSubmitter not yet implemented for WinCE."));
-#else
   if (EnvIsWorker()) {
     RETURN_EXCEPTION(
         STRING16(L"createFileSubmitter cannot be called in a worker."));
@@ -683,8 +693,8 @@ STDMETHODIMP GearsResourceStore::createFileSubmitter(
   }
 
   RETURN_NORMAL();
-#endif
 }
+#endif
 
 //------------------------------------------------------------------------------
 // CreateWindowIfNeeded

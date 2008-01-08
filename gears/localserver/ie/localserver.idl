@@ -65,6 +65,9 @@ interface GearsManagedResourceStoreInterface : IDispatch {
 };
 
 
+#ifdef WINCE
+  // FileSubmitter is not implemented for WinCE.
+#else
 //
 // GearsFileSubmitterInterface
 // Facilitates the inclusion of resources into form submissions
@@ -83,7 +86,7 @@ interface GearsFileSubmitterInterface : IDispatch {
       [in] IDispatch *file_input_element,
       [in] const BSTR resource_url);
 };
-
+#endif
 
 //
 // GearsResourceStoreInterface
@@ -145,8 +148,12 @@ interface GearsResourceStoreInterface : IDispatch {
       [in] const BSTR url,
       [out, retval] BSTR *file_name);
 
+#ifdef WINCE
+  // FileSubmitter is not implemented for WinCE.
+#else
   HRESULT createFileSubmitter(
       [out, retval] GearsFileSubmitterInterface **file_submitter);
+#endif
 };
 
 
