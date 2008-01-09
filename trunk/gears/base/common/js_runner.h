@@ -107,16 +107,6 @@ class JsRunnerInterface {
                               // TODO(zork): Remove this when we find the error.
                               bool dump_on_error = false) = 0;
 
-  // TODO(mpcomplete): move these next 2 methods to JsObject.
-  // SetProperty*() overwrites the existing named property or adds a new one if
-  // none exists.
-  virtual bool SetPropertyString(JsObject *object, const char16 *name,
-                                 const char16 *val) = 0;
-  virtual bool SetPropertyInt(JsObject *object, const char16 *name,
-                              int val) = 0;
-  // TODO(aa): SetPropertyBool, SetPropertyObject (to build trees), etc...
-  // TODO(aa): Support for building arrays?
-
   // Invokes a callback. If optional_alloc_retval is specified, this method will
   // create a new JsRootedToken that the caller is responsible for deleting.
   virtual bool InvokeCallback(const JsRootedCallback *callback,

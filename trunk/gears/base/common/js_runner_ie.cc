@@ -109,15 +109,6 @@ class JsRunnerBase : public JsRunnerInterface {
     return retval.release();
   }
 
-  bool SetPropertyString(JsObject *object, const char16 *name,
-                         const char16 *value) {
-    return SetObjectProperty(object, name, CComVariant(CComBSTR(value)));
-  }
-
-  bool SetPropertyInt(JsObject *object, const char16 *name, int value) {
-    return SetObjectProperty(object, name, CComVariant(value));
-  }
-
   bool InvokeCallback(const JsRootedCallback *callback,
                       int argc, JsParamToSend *argv,
                       JsRootedToken **optional_alloc_retval) {
@@ -216,36 +207,6 @@ class JsRunnerBase : public JsRunnerInterface {
   virtual IDispatch *GetGlobalObject(bool dump_on_error = false) = 0;
 
  private:
-  bool SetObjectProperty(JsObject *object, const char16 *name,
-                         const VARIANT &value) {
-    return SetProperty(object->js_object_, name, value);
-  }
-
-  bool SetProperty(JsToken object, const char16 *name, const VARIANT &value) {
-    if (object.vt != VT_DISPATCH) { return false; }
-
-    CComQIPtr<IDispatchEx> dispatchex = object.pdispVal;
-    if (!dispatchex) { return false; }
-
-    DISPID dispid;
-    HRESULT hr = dispatchex->GetDispID(CComBSTR(name),
-                                       fdexNameCaseSensitive | fdexNameEnsure,
-                                       &dispid);
-    if (FAILED(hr)) { return false; }
-
-    DISPPARAMS params = {NULL, NULL, 1, 1};
-    params.rgvarg = const_cast<VARIANT *>(&value);
-    DISPID dispid_put = DISPID_PROPERTYPUT;
-    params.rgdispidNamedArgs = &dispid_put;
-
-    hr = object.pdispVal->Invoke(dispid, IID_NULL,
-                                 LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT,
-                                 &params, NULL, NULL, NULL);
-    if (FAILED(hr)) { return false; }
-
-    return true;
-  }
-
   std::set<JsEventHandlerInterface *> event_handlers_[MAX_JSEVENTS];
 
   DISALLOW_EVIL_CONSTRUCTORS(JsRunnerBase);

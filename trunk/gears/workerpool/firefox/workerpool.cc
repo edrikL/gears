@@ -527,15 +527,9 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
       return;
     }
 
-    wi->js_runner->SetPropertyString(onmessage_param.get(),
-                                     STRING16(L"text"),
-                                     msg.text.c_str());
-    wi->js_runner->SetPropertyInt(onmessage_param.get(),
-                                  STRING16(L"sender"),
-                                  msg.sender);
-    wi->js_runner->SetPropertyString(onmessage_param.get(),
-                                     STRING16(L"origin"),
-                                     msg.origin.url().c_str());
+    onmessage_param->SetPropertyString(STRING16(L"text"), msg.text);
+    onmessage_param->SetPropertyInt(STRING16(L"sender"), msg.sender);
+    onmessage_param->SetPropertyString(STRING16(L"origin"), msg.origin.url());
 
     const int argc = 3;
     JsParamToSend argv[argc] = {
@@ -713,12 +707,8 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
     return false;
   }
 
-  wi->js_runner->SetPropertyString(onerror_param.get(),
-                                   STRING16(L"message"),
-                                   error_info.message.c_str());
-  wi->js_runner->SetPropertyInt(onerror_param.get(),
-                                STRING16(L"lineNumber"),
-                                error_info.line);
+  onerror_param->SetPropertyString(STRING16(L"message"), error_info.message);
+  onerror_param->SetPropertyInt(STRING16(L"lineNumber"), error_info.line);
   // TODO(aa): Additional information, like fragment of code where the error
   // occurred, stack?
 

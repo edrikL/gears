@@ -178,7 +178,7 @@ class ScopedNPVariant : public NPVariant {
  public:
   ScopedNPVariant() { VOID_TO_NPVARIANT(*this); }
   template<class T>
-  explicit ScopedNPVariant(T value) { Reset(value); }
+  explicit ScopedNPVariant(T value) { VOID_TO_NPVARIANT(*this); Reset(value); }
 
   ~ScopedNPVariant() { Reset(); }
 
@@ -284,6 +284,14 @@ class JsObject {
   bool GetPropertyAsDouble(const std::string16 &name, double *out) const;
   bool GetPropertyAsFunction(const std::string16 &name,
                              JsRootedCallback **out) const;
+
+  // SetProperty*() overwrites the existing named property or adds a new one if
+  // none exists.
+  bool SetPropertyString(const std::string16 &name, const std::string16 &value);
+  bool SetPropertyInt(const std::string16 &name, int value);
+  // TODO(aa): SetPropertyBool, SetPropertyObject (to build trees), etc...
+  // TODO(aa): Support for building arrays?
+
  private:
   // Need access to the raw JsToken.
   friend class JsRunnerBase;
@@ -292,6 +300,8 @@ class JsObject {
                                     JsScopedToken *token);
   friend JsNativeMethodRetval JsSetException(const ModuleImplBaseClass *obj,
                                              const char16 *message);
+
+  bool SetProperty(const std::string16 &name, const JsToken &value);
 
   JsContextPtr js_context_;
   JsScopedToken js_object_;
@@ -306,7 +316,6 @@ enum JsParamType {
   JSPARAM_OBJECT,
   JSPARAM_ARRAY,
   JSPARAM_FUNCTION,
-  // TODO(mpcomplete): make JsRunner::NewObject return a JsObject
   JSPARAM_MODULE,
   JSPARAM_NULL,
 };

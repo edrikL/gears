@@ -101,15 +101,6 @@ class JsRunnerBase : public JsRunnerInterface {
     return retval.release();
   }
 
-  bool SetPropertyString(JsObject *object, const char16 *name,
-                         const char16 *value) {
-    return SetObjectProperty(object, name, ScopedNPVariant(value));
-  }
-
-  bool SetPropertyInt(JsObject *object, const char16 *name, int value) {
-    return SetObjectProperty(object, name, ScopedNPVariant(value));
-  }
-
   bool InvokeCallback(const JsRootedCallback *callback,
                       int argc, JsParamToSend *argv,
                       JsRootedToken **optional_alloc_retval) {
@@ -197,22 +188,6 @@ class JsRunnerBase : public JsRunnerInterface {
   NPObject *global_object_;
 
  private:
-  bool SetObjectProperty(JsObject *object, const char16 *name,
-                         const NPVariant &value) {
-    return SetProperty(object->js_object_, name, value);
-  }
-
-  bool SetProperty(JsToken object, const char16 *name, const NPVariant &value) {
-    if (!NPVARIANT_IS_OBJECT(object)) { return false; }
-
-    std::string name_utf8;
-    if (!String16ToUTF8(name, &name_utf8)) { return false; }
-
-    NPObject *np_object = NPVARIANT_TO_OBJECT(object);
-    NPIdentifier np_name = NPN_GetStringIdentifier(name_utf8.c_str());
-    return NPN_SetProperty(np_instance_, np_object, np_name, &value);
-  }
-
   std::set<JsEventHandlerInterface *> event_handlers_[MAX_JSEVENTS];
 
   DISALLOW_EVIL_CONSTRUCTORS(JsRunnerBase);

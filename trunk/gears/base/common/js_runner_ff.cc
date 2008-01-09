@@ -149,23 +149,6 @@ class JsRunnerBase : public JsRunnerInterface {
     }
   }
 
-  bool SetPropertyString(JsObject *object, const char16 *name,
-                         const char16 *value) {
-    // TODO(aa): Figure out the lifetime of this string.
-    JSString *jstr = JS_NewUCStringCopyZ(
-                         js_engine_context_,
-                         reinterpret_cast<const jschar *>(value));
-    if (jstr) {
-      return SetObjectProperty(object, name, STRING_TO_JSVAL(jstr));
-    } else {
-      return false;
-    }
-  }
-
-  bool SetPropertyInt(JsObject *object, const char16 *name, int value) {
-    return SetObjectProperty(object, name, INT_TO_JSVAL(value));
-  }
-
   virtual bool InvokeCallbackSpecialized(
                    const JsRootedCallback *callback, int argc, jsval *argv,
                    JsRootedToken **optional_alloc_retval) = 0;
@@ -242,35 +225,6 @@ class JsRunnerBase : public JsRunnerInterface {
   JSContext *js_engine_context_;
 
  private:
-  bool SetObjectProperty(JsObject *object, const char16 *name, jsval value) {
-    return SetProperty(object->js_object_, name, value);
-  }
-
-  bool SetProperty(JsToken object, const char16 *name, jsval value) {
-    if (!JSVAL_IS_OBJECT(object)) {
-      LOG(("Specified token is not an object."));
-      return false;
-    }
-
-    std::string name_utf8;
-    if (!String16ToUTF8(name, &name_utf8)) {
-      LOG(("Could not convert property name to utf8."));
-      return false;
-    }
-
-    JSBool result = JS_DefineProperty(js_engine_context_,
-                                      JSVAL_TO_OBJECT(object),
-                                      name_utf8.c_str(), value,
-                                      nsnull, nsnull, // getter, setter
-                                      JSPROP_ENUMERATE);
-    if (!result) {
-      LOG(("Could not define property."));
-      return false;
-    }
-
-    return true;
-  }
-
   std::set<JsEventHandlerInterface *> event_handlers_[MAX_JSEVENTS];
 
   DISALLOW_EVIL_CONSTRUCTORS(JsRunnerBase);
