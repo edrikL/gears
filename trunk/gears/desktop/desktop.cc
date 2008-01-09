@@ -146,7 +146,14 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
 
   // Verify that the name is acceptable.
   std::string16 error_message;
-  if (!IsUserInputValidAsPathComponent(shortcut_info.app_name, 
+  
+  // Gears doesn't allow spaces in path names, but desktop shortcuts are the 
+  // exception, so instead of rewriting our path validation code, patch a
+  // temporary string.
+  std::string16 name_without_spaces = shortcut_info.app_name;
+  ReplaceAll(name_without_spaces, std::string16(STRING16(L" ")), 
+             std::string16(STRING16(L"_")));
+  if (!IsUserInputValidAsPathComponent(name_without_spaces, 
                                        &error_message)) {
     RETURN_EXCEPTION(error_message.c_str());
   }
