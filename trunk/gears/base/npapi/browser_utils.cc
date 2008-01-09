@@ -96,8 +96,8 @@ bool BrowserUtils::GetPageLocationUrl(JsContextPtr context,
   assert(NPVARIANT_IS_STRING(np_href));
   NPString np_str = NPVARIANT_TO_STRING(np_href);
 
-  return (UTF8ToString16(NPSTRING_UTF8_CHARACTERS(np_str),
-                         NPSTRING_UTF8_LENGTH(np_str),
+  return (UTF8ToString16(GetNPStringUTF8Characters(np_str),
+                         GetNPStringUTF8Length(np_str),
                          location_url));
 }
 

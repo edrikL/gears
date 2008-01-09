@@ -622,14 +622,14 @@ bool JsTokenToDouble(JsToken t, JsContextPtr cx, double *out) {
 bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
   if (!NPVARIANT_IS_STRING(t)) { return false; }
   NPString str = NPVARIANT_TO_STRING(t);
-  if (NPSTRING_UTF8_LENGTH(str) == 0) {
+  if (GetNPStringUTF8Characters(str) == 0) {
     // TODO(mpcomplete): find out if UTF8ToString16 can be changed to return
     // true in this case.
     out->clear();
     return true;
   }
-  return UTF8ToString16(NPSTRING_UTF8_CHARACTERS(str), 
-                        NPSTRING_UTF8_LENGTH(str), out);
+  return UTF8ToString16(GetNPStringUTF8Characters(str), 
+                        GetNPStringUTF8Length(str), out);
 }
 
 bool JsTokenToNewCallback(JsToken t, JsContextPtr cx, JsRootedCallback **out) {
