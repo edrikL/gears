@@ -118,14 +118,20 @@ static bool CreateShellScript(const std::string16 &script_path,
   }
 
   std::string contents("#!/bin/sh\n");
-  contents += "open -a ";
+  contents += "open -a '";
   contents += reinterpret_cast<const char *>(process_path);
-  contents += " ";
+  contents += "' '";
   contents += launch_url_utf8;
-  contents += "\n";
+  contents += "'\n";
 
   // Write to file
   if (!File::CreateNewFile(script_path.c_str()))
+    return false;
+    
+  // Make file executable (CreateNewFile defaults to 0600).
+  std::string script_path_utf8;
+  String16ToUTF8(script_path.c_str(), &script_path_utf8);
+  if (chmod(script_path_utf8.c_str(), S_IRWXU) != 0)
     return false;
 
   return File::WriteBytesToFile(
