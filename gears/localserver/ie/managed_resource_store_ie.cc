@@ -329,9 +329,8 @@ void GearsManagedResourceStore::OnNotify(MessageService *service,
 
         const UpdateTask::ErrorEvent *error_event =
             static_cast<const UpdateTask::ErrorEvent *>(data);
-        GetJsRunner()->SetPropertyString(param.get(),
-                                         STRING16(L"message"),
-                                         error_event->error_message().c_str());
+        param->SetPropertyString(STRING16(L"message"),
+                                 error_event->error_message());
       }
       break;
 
@@ -344,12 +343,10 @@ void GearsManagedResourceStore::OnNotify(MessageService *service,
 
         const UpdateTask::ProgressEvent *progress_event =
             static_cast<const UpdateTask::ProgressEvent *>(data);
-        GetJsRunner()->SetPropertyInt(param.get(),
-                                      STRING16(L"filesTotal"),
-                                      progress_event->files_total());
-        GetJsRunner()->SetPropertyInt(param.get(),
-                                      STRING16(L"filesComplete"),
-                                      progress_event->files_complete());
+        param->SetPropertyInt(STRING16(L"filesTotal"),
+                              progress_event->files_total());
+        param->SetPropertyInt(STRING16(L"filesComplete"),
+                              progress_event->files_complete());
       }
       break;
 
@@ -362,10 +359,8 @@ void GearsManagedResourceStore::OnNotify(MessageService *service,
 
         const UpdateTask::CompletionEvent *completion_event =
             static_cast<const UpdateTask::CompletionEvent *>(data);
-        GetJsRunner()->SetPropertyString(
-                           param.get(),
-                           STRING16(L"newVersion"),
-                           completion_event->new_version_string().c_str());
+        param->SetPropertyString(STRING16(L"newVersion"),
+                                 completion_event->new_version_string());
       }
       break;
 

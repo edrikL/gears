@@ -31,7 +31,9 @@
 #if BROWSER_FF
 #include "gears/base/firefox/dom_utils.h"
 #elif BROWSER_IE
+#include <dispex.h>
 #include "gears/base/ie/activex_utils.h"
+#include "gears/base/ie/atl_headers.h"
 #elif BROWSER_NPAPI
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/npapi/np_utils.h"
@@ -275,6 +277,48 @@ bool JsObject::GetProperty(const std::string16 &name,
                           name.length(), out) == JS_TRUE;
 }
 
+bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
+  if (!js_object_) {
+    LOG(("Specified object is not initialized."));
+    return false;
+  }
+
+  std::string name_utf8;
+  if (!String16ToUTF8(name.c_str(), &name_utf8)) {
+    LOG(("Could not convert property name to utf8."));
+    return false;
+  }
+
+  JSBool result = JS_DefineProperty(js_context_,
+                                    JSVAL_TO_OBJECT(js_object_),
+                                    name_utf8.c_str(), value,
+                                    nsnull, nsnull, // getter, setter
+                                    JSPROP_ENUMERATE);
+  if (!result) {
+    LOG(("Could not define property."));
+    return false;
+  }
+
+  return true;
+}
+
+bool JsObject::SetPropertyString(const std::string16 &name,
+                                 const std::string16 &value) {
+  // TODO(aa): Figure out the lifetime of this string.
+  JSString *jstr = JS_NewUCStringCopyZ(
+                       js_context_,
+                       reinterpret_cast<const jschar *>(value.c_str()));
+  if (jstr) {
+    return SetProperty(name, STRING_TO_JSVAL(jstr));
+  } else {
+    return false;
+  }
+}
+
+bool JsObject::SetPropertyInt(const std::string16 &name, int value) {
+  return SetProperty(name, INT_TO_JSVAL(value));
+}
+
 #elif BROWSER_IE
 
 JsObject::JsObject() : js_context_(NULL) {
@@ -298,6 +342,32 @@ bool JsObject::GetProperty(const std::string16 &name,
   return SUCCEEDED(ActiveXUtils::GetDispatchProperty(js_object_.pdispVal,
                                                      name.c_str(),
                                                      out));
+}
+
+bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
+  if (js_object_.vt != VT_DISPATCH) { return false; }
+
+  CComQIPtr<IDispatchEx> dispatchex = js_object_.pdispVal;
+  if (!dispatchex) { return false; }
+
+  DISPID dispid;
+  HRESULT hr = dispatchex->GetDispID(CComBSTR(name.c_str()),
+                                     fdexNameCaseSensitive | fdexNameEnsure,
+                                     &dispid);
+  if (FAILED(hr)) { return false; }
+
+  return SUCCEEDED(ActiveXUtils::SetDispatchProperty(js_object_.pdispVal,
+                                                     dispid,
+                                                     &value));
+}
+
+bool JsObject::SetPropertyString(const std::string16 &name,
+                                 const std::string16 &value) {
+  return SetProperty(name, CComVariant(value.c_str()));
+}
+
+bool JsObject::SetPropertyInt(const std::string16 &name, int value) {
+  return SetProperty(name, CComVariant(value));
 }
 
 #elif BROWSER_NPAPI
@@ -330,6 +400,26 @@ bool JsObject::GetProperty(const std::string16 &name,
   NPIdentifier name_id = NPN_GetStringIdentifier(name_utf8.c_str());
 
   return NPN_GetProperty(js_context_, object, name_id, out);
+}
+
+bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
+  if (!NPVARIANT_IS_OBJECT(js_object_)) { return false; }
+
+  std::string name_utf8;
+  if (!String16ToUTF8(name.c_str(), &name_utf8)) { return false; }
+
+  NPObject *np_object = NPVARIANT_TO_OBJECT(js_object_);
+  NPIdentifier np_name = NPN_GetStringIdentifier(name_utf8.c_str());
+  return NPN_SetProperty(js_context_, np_object, np_name, &value);
+}
+
+bool JsObject::SetPropertyString(const std::string16 &name,
+                                 const std::string16 &value) {
+  return SetProperty(name, ScopedNPVariant(value.c_str()));
+}
+
+bool JsObject::SetPropertyInt(const std::string16 &name, int value) {
+  return SetProperty(name, ScopedNPVariant(value));
 }
 
 #endif
@@ -1162,9 +1252,7 @@ JsNativeMethodRetval JsSetException(const ModuleImplBaseClass *obj,
   // Note: need JS_SetPendingException to bubble 'catch' in workers.
   JS_SetPendingException(cx, error_object->js_object_);
 
-  bool success = js_runner->SetPropertyString(error_object.get(),
-                                              STRING16(L"message"),
-                                              message);
+  bool success = error_object->SetPropertyString(STRING16(L"message"), message);
   if (!success) { return retval; }
 
   return retval;
