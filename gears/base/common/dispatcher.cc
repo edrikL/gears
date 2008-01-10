@@ -36,6 +36,8 @@ inline DispatchId GetStringIdentifier(const char *str) {
 #if BROWSER_NPAPI
   return reinterpret_cast<DispatchId>(NPN_GetStringIdentifier(str));
 #else
+  // TODO(mpcomplete): Figure out what we need for other ports.
+  // This only works if str is a static string.
   return reinterpret_cast<DispatchId>(str);
 #endif
 }

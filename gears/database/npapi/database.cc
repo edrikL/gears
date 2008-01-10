@@ -44,7 +44,6 @@ DECLARE_GEARS_WRAPPER(GearsDatabase);
 // static
 template<>
 void Dispatcher<GearsDatabase>::Init() {
-  typedef GearsDatabase T;
   RegisterMethod("open", &GearsDatabase::Open);
   RegisterMethod("execute", &GearsDatabase::Execute);
   RegisterMethod("close", &GearsDatabase::Close);
