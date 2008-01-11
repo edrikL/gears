@@ -14,7 +14,7 @@ DELETABLE = int('777', 8)
 class Installer:
   """ Handle extension installation and browser profile adjustments. """
   GUID = '{000a9d1c-beef-4f90-9363-039d445309b8}'
-  INSTALL_TIMEOUT = 10
+  FIREFOX_QUITTING_BUFFER = 10
 
   def prepareProfiles(self):
     """ Unzip profiles. """
@@ -107,24 +107,13 @@ class Installer:
   def completeInstall(self, profile_path):
     """ Launch and quit firefox, wait for it to close before returning.
 
-    If a lockfile is available, wait for it to be removed and throw an 
-    error after timeout.  Otherwise wait 5 seconds.
-
     Args:
       profile_path: path to current firefox profile
     """
     url = 'chrome://quit/content/quit.html'
     self.launcher.launch(url)
-    time.sleep(2)
-    if self.lockname:
-      timer = 0
-      while self.isFirefoxLocked(profile_path):
-        time.sleep(1)
-        timer = timer + 1
-        if timer > Installer.INSTALL_TIMEOUT:
-          raise StandardError('Browser restart timed out.  Failed to complete install.')
-    else:
-      time.sleep(3)
+    # Wait a significant amount of time for firefox to close completely
+    time.sleep(Installer.FIREFOX_QUITTING_BUFFER)
 
 
   def copyAndChmod(self, src, targ):
@@ -142,7 +131,7 @@ class Installer:
     """
     # On nt, try using win32file to delete if os.remove fails
     if os.name == 'nt':
-      # Create a unicode path, must be an absolute path
+      # DeleteFileW can only operate on an absolute path
       if not os.path.isabs(path):
         path = os.path.join(os.getcwd(), path)
       unicode_path = '\\\\?\\' + path
@@ -203,19 +192,6 @@ class Win32Installer(Installer):
     self.completeInstall(self.profile)
 
   
-  def isFirefoxLocked(self, profile_path):
-    """ Checks if a firefox profile is open.
-
-    Looks for parent lock file in firefox profile.  If file exists, profile
-    is open.
-
-    Args:
-      profile_path: path to profile folder
-    """
-    lock = os.path.join(profile_path, self.lockname)
-    return os.path.exists(lock)
-
-  
   def __copyProfile(self):
     """ Copy IE profile to correct location. """
     google_path = os.path.join(self.appdata_path, 'Google')
@@ -239,7 +215,6 @@ class WinXpInstaller(Win32Installer):
     self.appdata_path = os.path.join(home, 'Local Settings\\Application Data')
     self.ieprofile = 'ieprofile'
     self.launcher = browser_launchers.FirefoxWin32Launcher(self.profile)
-    self.lockname = 'parent.lock'
 
 
   def buildPath(self):
@@ -259,7 +234,6 @@ class WinVistaInstaller(Win32Installer):
     self.appdata_path = os.path.join(home, 'AppData\\LocalLow')
     self.ieprofile = 'ieprofile'
     self.launcher = browser_launchers.FirefoxWin32Launcher(self.profile)
-    self.lockname = 'parent.lock'
 
 
   def buildPath(self):
@@ -285,7 +259,6 @@ class MacInstaller(Installer):
     self.ffprofile = 'ffprofile-mac'
     self.profile_arg = '-CreateProfile %s' % self.profile
     self.launcher = browser_launchers.FirefoxMacLauncher(self.profile)
-    self.lockname = False
   
   
   def buildPath(self):
@@ -333,7 +306,6 @@ class LinuxInstaller(Installer):
     self.ffprofile = 'ffprofile-linux'
     self.profile_arg = '-CreateProfile %s' % self.profile
     self.launcher = browser_launchers.FirefoxLinuxLauncher(self.profile)
-    self.lockname = 'lock'
 
 
   def buildPath(self):
@@ -348,16 +320,3 @@ class LinuxInstaller(Installer):
     """ Do installation. """
     os.system('%s %s' % (self.firefox, self.profile_arg))
     self.installExtension(self.buildPath())
-
-
-  def isFirefoxLocked(self, profile_path):
-    """ Checks if a firefox profile is open.
-
-    Looks for lock file in firefox profile.  If file exists, profile
-    is open.
-
-    Args:
-      profile_path: path to profile folder
-    """
-    lock = os.path.join(profile_path, self.lockname)
-    return os.path.islink(lock)
