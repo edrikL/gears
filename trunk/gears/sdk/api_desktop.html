@@ -49,12 +49,12 @@ functionality, such as creating shortcuts.
 &lt;script type="text/javascript"&gt;
 var desktop = google.gears.factory.create('beta.desktop');
 desktop.createShortcut("Test Application",
-                       "An application at http://www.test.com/index.html",
-                       "http://www.test.com/index.html",
-                       {"16x16": "http://www.test.com/icon16x16.png",
-                        "32x32": "http://www.test.com/icon32x32.png",
-                        "48x48": "http://www.test.com/icon48x48.png",
-                        "128x128": "http://www.test.com/icon128x128.png"});
+                       "An application at http://example.com/index.html",
+                       "http://example.com/index.html",
+                       {"128x128": "http://example.com/icon128x128.png",
+                        "48x48": "http://example.com/icon48x48.png",
+                        "32x32": "http://example.com/icon32x32.png",
+                        "16x16": "http://example.com/icon16x16.png"});
 &lt;/script&gt;</code></pre>
 
 
@@ -94,10 +94,9 @@ desktop.createShortcut("Test Application",
       <code>url</code> - The address to launch when the user opens the shortcut.
       <br>
       <code>icons</code> - An object containing one or more of these named
-        properties: <code>16x16</code>, <code>32x32</code>, <code>48x48</code>,
-        <code>128x128</code>.
-        The value of each property must be the URL of a .png file, with
-        dimensions matching the property name.
+        properties: <code>128x128</code>, <code>48x48</code>,
+        <code>32x32</code>, <code>16x16</code>.  The value of each property must
+        be the URL of a .png file, with dimensions matching the property name.
       </td>
   </tr>
   <tr class="odd">
