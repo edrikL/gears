@@ -49,7 +49,7 @@ HttpRequest *HttpRequest::Create() {
   CComObject<IEHttpRequest> *request;
   HRESULT hr = CComObject<IEHttpRequest>::CreateInstance(&request);
   if (FAILED(hr)) {
-    ATLTRACE(_T("HttpRequest::Create - CreateInstance failed - %d\n"), hr);
+    LOG16((L"HttpRequest::Create - CreateInstance failed - %d\n", hr));
     return NULL;
   }
   request->AddReference();
@@ -377,7 +377,7 @@ STDMETHODIMP IEHttpRequest::QueryService(REFGUID guidService, REFIID riid,
 // return E_FAIL to cancel the bind process
 //------------------------------------------------------------------------------
 STDMETHODIMP IEHttpRequest::OnStartBinding(DWORD reserved, IBinding *binding) {
-  ATLTRACE(_T("IEHttpRequest::OnStartBinding\n"));
+  LOG16((L"IEHttpRequest::OnStartBinding\n"));
   if (!binding) {
     return E_POINTER;
   }
@@ -407,9 +407,9 @@ STDMETHODIMP IEHttpRequest::OnLowResource(DWORD reserved) {
 STDMETHODIMP IEHttpRequest::OnProgress(ULONG progress, ULONG progress_max,
                                        ULONG status_code, LPCWSTR status_text) {
 #ifdef DEBUG
-  ATLTRACE(_T("IEHttpRequest::OnProgress(%s (%d), %s)\n"),
-           GetBindStatusLabel(status_code), status_code,
-           status_text ? status_text : L"NULL");
+  LOG16((L"IEHttpRequest::OnProgress(%s (%d), %s)\n",
+         GetBindStatusLabel(status_code), status_code,
+         status_text ? status_text : L"NULL"));
 #endif
   if (status_code == BINDSTATUS_REDIRECTING) {
     return OnRedirect(status_text);
@@ -424,7 +424,7 @@ STDMETHODIMP IEHttpRequest::OnProgress(ULONG progress, ULONG progress_max,
 // of the redirect and allows it to continue.
 //------------------------------------------------------------------------------
 HRESULT IEHttpRequest::OnRedirect(const char16 *redirect_url) {
-  ATLTRACE(_T("IEHttpRequest::OnRedirect( %s )\n"), redirect_url);
+  LOG16((L"IEHttpRequest::OnRedirect( %s )\n", redirect_url));
 
   bool follow = false;
   switch (redirect_behavior_) {
@@ -466,7 +466,7 @@ HRESULT IEHttpRequest::OnRedirect(const char16 *redirect_url) {
 // This is called once per bind operation in both success and failure cases.
 //------------------------------------------------------------------------------
 STDMETHODIMP IEHttpRequest::OnStopBinding(HRESULT hresult, LPCWSTR error_text) {
-  ATLTRACE(_T("IEHttpRequest::OnStopBinding\n"));
+  LOG16((L"IEHttpRequest::OnStopBinding\n"));
   binding_.Release();
   bind_ctx_.Release();
   url_moniker_.Release();
@@ -479,7 +479,7 @@ STDMETHODIMP IEHttpRequest::OnStopBinding(HRESULT hresult, LPCWSTR error_text) {
 // Called by URLMON to determine how the 'bind' should be conducted
 //------------------------------------------------------------------------------
 STDMETHODIMP IEHttpRequest::GetBindInfo(DWORD *flags, BINDINFO *info) {
-  ATLTRACE(_T("IEHttpRequest::GetBindInfo\n"));
+  LOG16((L"IEHttpRequest::GetBindInfo\n"));
   if (!info || !flags)
     return E_POINTER;
   if (!info->cbSize)
@@ -551,8 +551,8 @@ STDMETHODIMP IEHttpRequest::OnDataAvailable(
     DWORD unreliable_stream_size,  // With IE6, this value is not reliable
     FORMATETC *formatetc,
     STGMEDIUM *stgmed) {
-  ATLTRACE(_T("IEHttpRequest::OnDataAvailable( 0x%x, %d )\n"),
-           flags, unreliable_stream_size);
+  LOG16((L"IEHttpRequest::OnDataAvailable( 0x%x, %d )\n",
+         flags, unreliable_stream_size));
   HRESULT hr = S_OK;
 
   if (!stgmed || !formatetc) {
@@ -644,7 +644,7 @@ STDMETHODIMP IEHttpRequest::BeginningTransaction(LPCWSTR url,
                                                  LPCWSTR headers,
                                                  DWORD reserved,
                                                  LPWSTR *additional_headers) {
-  ATLTRACE(_T("IEHttpRequest::BeginningTransaction\n"));
+  LOG16((L"IEHttpRequest::BeginningTransaction\n"));
   // In the case of a POST with a body which results in a redirect, this
   // method is called more than once. We don't set the additional headers
   // in this case. Those headers include content-length and all user specified
@@ -672,7 +672,7 @@ STDMETHODIMP IEHttpRequest::OnResponse(DWORD status_code,
                                        LPCWSTR response_headers,
                                        LPCWSTR request_headers,
                                        LPWSTR *additional_request_headers) {
-  ATLTRACE(_T("IEHttpRequest::OnResponse (%d)\n"), status_code);
+  LOG16((L"IEHttpRequest::OnResponse (%d)\n", status_code));
   // Be careful not to overwrite a redirect response synthesized in OnRedirect
   if (has_synthesized_response_payload_) {
     return E_ABORT;

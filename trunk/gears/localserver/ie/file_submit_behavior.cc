@@ -58,8 +58,8 @@ HRESULT SubmitFileBehavior::Init(IElementBehaviorSite *behavior_site) {
   }
   CComQIPtr<IHTMLInputElement> input(element);
   if (input) {
-    ATLTRACE(L"SubmitFileBehavior::Init"
-             L" - cannot attach to an <input> element\n");
+    LOG16((L"SubmitFileBehavior::Init"
+           L" - cannot attach to an <input> element\n"));
     return E_FAIL;
   }
 
@@ -135,7 +135,7 @@ HRESULT SubmitFileBehavior::Reset(void) {
 // IElementBehaviorSubmit::GetSubmitInfo
 //------------------------------------------------------------------------------
 HRESULT SubmitFileBehavior::GetSubmitInfo(IHTMLSubmitData *submit_data) {
-  ATLTRACE(_T("SubmitFileBehavior::GetSubmitInfo\n"));
+  LOG16((L"SubmitFileBehavior::GetSubmitInfo\n"));
   if (!name_ || temp_file_.empty()) {
     return S_OK;
   }

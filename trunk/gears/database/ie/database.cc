@@ -46,7 +46,7 @@ GearsDatabase::~GearsDatabase() {
   assert(result_sets_.empty());
 
   if (db_ != NULL) {
-    ATLTRACE(_T("~GearsDatabase - client did not call Close() \n"));
+    LOG16((L"~GearsDatabase - client did not call Close() \n"));
     sqlite3_close(db_);
     db_ = NULL;
   }
@@ -73,7 +73,7 @@ HRESULT GearsDatabase::open(const VARIANT *database_name) {
     database_name_bstr = database_name->bstrVal;
   }
 
-  ATLTRACE(_T("GearsDatabase::open(%s)\n"), database_name_bstr);
+  LOG16((L"GearsDatabase::open(%s)\n", database_name_bstr));
 
   std::string16 error_message;
   if (!IsUserInputValidAsPathComponent(std::string16(database_name_bstr),
@@ -147,12 +147,12 @@ HRESULT GearsDatabase::BindArg(const CComVariant &arg, int index,
       err = sqlite3_bind_text16(stmt, index + 1,
                                 L"undefined", -1,
                                 SQLITE_TRANSIENT);
-      ATLTRACE(L"  Parameter: [VT_EMPTY]\n");
+      LOG16((L"  Parameter: [VT_EMPTY]\n"));
       break;
 
     case VT_NULL:
       err = sqlite3_bind_null(stmt, index + 1);
-      ATLTRACE(L"  Parameter: [VT_NULL]\n");
+      LOG16((L"  Parameter: [VT_NULL]\n"));
       break;
 
     case VT_BSTR:
@@ -160,22 +160,22 @@ HRESULT GearsDatabase::BindArg(const CComVariant &arg, int index,
       err = sqlite3_bind_text16(stmt, index + 1,
                                 arg.bstrVal ? arg.bstrVal : L"", -1,
                                 SQLITE_TRANSIENT);
-      ATLTRACE(L"  Parameter: [VT_BSTR] %s\n", arg.bstrVal ? arg.bstrVal : L"");
+      LOG16((L"  Parameter: [VT_BSTR] %s\n", arg.bstrVal ? arg.bstrVal : L""));
       break;
 
     default:
       // Convert to a string representation if we need to
       CComVariant arg_copy(arg);
       if (FAILED(arg_copy.ChangeType(VT_BSTR))) {
-        ATLTRACE(_T("CComVariant::ChangeType failed\n"));
+        LOG16((L"CComVariant::ChangeType failed\n"));
         return E_INVALIDARG;
       }
       // A null bstr value means empty string
       err = sqlite3_bind_text16(stmt, index + 1,
                                 arg_copy.bstrVal ? arg_copy.bstrVal : L"", -1,
                                 SQLITE_TRANSIENT);
-      ATLTRACE(L"  Parameter: [other] %s\n", arg_copy.bstrVal ? arg_copy.bstrVal
-                                             : L"");
+      LOG16((L"  Parameter: [other] %s\n",
+             arg_copy.bstrVal ? arg_copy.bstrVal : L""));
       break;
   }
 
@@ -191,7 +191,7 @@ STDMETHODIMP GearsDatabase::execute(const BSTR expression_in,
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif  // DEBUG
 
-  ATLTRACE(_T("GearsDatabase::execute(%s)\n"), expression);
+  LOG16((L"GearsDatabase::execute(%s)\n", expression));
 
   HRESULT hr;
   *rs_retval = NULL;  // set retval in case we exit early
@@ -244,7 +244,7 @@ STDMETHODIMP GearsDatabase::execute(const BSTR expression_in,
   // Note the ResultSet takes ownership of the statement
   std::string16 error_message;
   if (!rs_internal->InitializeResultSet(stmt.release(), this, &error_message)) {
-    ATLTRACE(error_message.c_str());
+    LOG16((error_message.c_str()));
     RETURN_EXCEPTION(error_message.c_str());
   }
 
@@ -256,7 +256,7 @@ STDMETHODIMP GearsDatabase::execute(const BSTR expression_in,
 }
 
 STDMETHODIMP GearsDatabase::close() {
-  ATLTRACE(_T("GearsDatabase::close()\n"));
+  LOG16((L"GearsDatabase::close()\n"));
   if (!CloseInternal()) {
     RETURN_EXCEPTION(STRING16(L"SQLite close() failed."));
   }
@@ -265,7 +265,7 @@ STDMETHODIMP GearsDatabase::close() {
 }
 
 STDMETHODIMP GearsDatabase::get_lastInsertRowId(VARIANT *retval) {
-  ATLTRACE(_T("GearsDatabase::lastInsertRowId()\n"));
+  LOG16((L"GearsDatabase::lastInsertRowId()\n"));
   if (db_ != NULL) {
     VariantClear(retval);    
     sqlite_int64 rowid = sqlite3_last_insert_rowid(db_);
@@ -315,7 +315,7 @@ void GearsDatabase::HandleEvent(JsEventType event_type) {
 
 #ifdef DEBUG
 STDMETHODIMP GearsDatabase::get_executeMsec(int *retval) {
-  ATLTRACE(_T("GearsDatabase::executeMSec()\n"));
+  LOG16((L"GearsDatabase::executeMSec()\n"));
   *retval = GearsDatabase::g_stopwatch_.GetElapsed();
   RETURN_NORMAL();
 }

@@ -55,11 +55,10 @@ void IEUpdateTask::Run() {
       ReleaseMutex(global_mutex.m_h);
       return;  // Note: early return
     } else {
-      ATLTRACE(
-          _T("IEUpdateTask - not running, another task is already running\n"));
+      LOG16((L"IEUpdateTask - not running, another task is already running\n"));
     }
   } else {
-    ATLTRACE(_T("IEUpdateTask - failed to start, unable to created mutex\n"));
+    LOG16((L"IEUpdateTask - failed to start, unable to created mutex\n"));
   }
   NotifyTaskComplete(false);
 }

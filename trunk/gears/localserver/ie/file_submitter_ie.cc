@@ -36,7 +36,7 @@
 STDMETHODIMP GearsFileSubmitter::setFileInputElement(
     IDispatch *file_input_element,
     const BSTR captured_url_key) {
-  ATLTRACE(_T("GearsFileSubmitter::setFileInputElement\n"));
+  LOG16((L"GearsFileSubmitter::setFileInputElement\n"));
 
   // The SubmitFileBehavior expects a full url so we do the resolution and
   // test for same-origin here. Also, we want to return reasonble error messages

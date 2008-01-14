@@ -621,8 +621,8 @@ static bool CreateUniqueFile(const char16* full_dirpath,
   // a folder full of files that shouldn't be there, something is wrong!
 #ifdef DEBUG
 #if BROWSER_IE
-  ATLTRACE(_T("Failed: CreateUniqueFile( %s ) = %d\n"), 
-           full_filepath->c_str(), GetLastError());
+  LOG16((L"Failed: CreateUniqueFile( %s ) = %d\n", 
+         full_filepath->c_str(), GetLastError()));
 #endif
 #endif
   assert(false);

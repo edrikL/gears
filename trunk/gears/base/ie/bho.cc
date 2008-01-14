@@ -45,7 +45,7 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
     return S_OK;
 
   if (pUnkSite == NULL) {
-    ATLTRACE(_T("SetSite(): pUnkSite is NULL\n"));
+    LOG16((L"SetSite(): pUnkSite is NULL\n"));
   } else {
     HttpHandler::Register();
   }
