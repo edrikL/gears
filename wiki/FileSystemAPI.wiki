@@ -1,0 +1,107 @@
+=Gears FileSystem API=
+
+The purpose of this module is to provide secure access to files on the client machine.
+
+==Features==
+
+  * Multiple files can be provided by the user.
+    * The API then provides access to these files. 
+  * Once the files are available, potential processing options are:
+    * Compress files.
+    * Send files to a server.
+    * Capture files to the local ResourceStore.
+
+
+==Security==
+
+  * Access to the user's file system can only be granted by the user.
+    * The permission is granted via the use of a file picker dialog. 
+  * A malicious application will NOT be able to access arbitrary files on the user's system.
+    * Do not allow random access to the user's file system.
+      * filesystem.open('/etc/shadow'); 
+    * Do not allow access above the specified location in the user's file system.
+      * filesystem.changedir('../../etc/shadow');
+
+
+==Use cases==
+
+Name: input files
+Description: a user provides details of files to make available for further processing
+Author: Chris De Vries
+Date: 11/01/2008
+
+Steps:
+# The user indicates files they wish to make available to the system.
+# The files are made available for iteration via the API.
+
+
+==Interfaces==
+
+{{{
+// This file handle does not keep the underlying file open.
+// The file is opened when needed by an operation.
+interface File {
+    // The full name of the file.
+    readonly attribute string name;
+
+    // Return: a Blob representing the contents of this file.
+    Blob toBlob();
+}
+
+interface FileSystem {
+    // Open multiple files. Displays a file picker dialog to user.
+    // Return: an array of File OR null if the user canceled the selection.
+    // Parameters:
+    //     filters [optional] - An array consisting of pairs of strings. The length must be a factor of two.
+    //        The first string is a description of the filter.
+    //        The second string is a semi-colon separated list of filters.
+    //        Example. ['Image Files (*.gif, *.jpg, *.png)', '*.gif;*.jpg;*.png',
+    //                  'Video Files (*.avi, *.mpg, *.mov)', '*.avi;*.mpg;*.mov',
+    //                  'All Files (*.*)', '*.*']
+    Array openFileDialog([in string array filters]);
+}
+}}}
+
+
+==Code Example==
+
+{{{
+// HTML
+function insertRow(message) {
+  var row = document.getElementById('output').insertRow(-1);
+  row.insertCell(0).innerHTML = message;  // insertCell arg is column position
+}
+
+
+// FileSystem
+function task(fn) {
+  if (fn()) {
+    setTimeout(function() { task(fn); }, 0);
+  }
+}
+
+function createPrintFunction(files) {
+  var fileArray = files;
+  int index = 0;
+  return (function() {
+    if (index < files.length) {
+      var file = fileArray[index];
+      insertRow(file.name + '<br>' + '<img src="file://' + file.name + '"></img> <br>');
+      return true;
+    }
+    return false;
+  });
+}
+
+function openDialog() {
+  try {
+    var filesystem = google.gears.factory.create('beta.filesystem', '1.0');
+    var files = filesystem.openFileDialog(['Images', '*.jpg;*.gif', 'All files', '*.*']);
+    if (files) {
+      task(createPrintFunction(files));
+    }
+  } catch(ex) {
+    alert(String(ex));
+  }
+}
+}}}
