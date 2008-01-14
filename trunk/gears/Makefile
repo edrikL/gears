@@ -1137,6 +1137,42 @@ IEMOBILE_IDLSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# blob
+
+FF_VPATH	+= \
+		blob \
+		$(NULL)
+
+FF_IDLSRCS	+= \
+		$(NULL)
+
+FF_CPPSRCS	+= \
+		buffer_blob.cc \
+		$(NULL)
+
+IE_VPATH	+= \
+		blob \
+		$(NULL)
+
+IE_IDLSRCS	+= \
+		$(NULL)
+
+IE_CPPSRCS	+= \
+		buffer_blob.cc \
+		$(NULL)
+
+IEMOBILE_VPATH	+= \
+		blob \
+		$(NULL)
+
+IEMOBILE_IDLSRCS	+= \
+		$(NULL)
+
+IEMOBILE_CPPSRCS	+= \
+		buffer_blob.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # factory/ff
 
 FF_VPATH	+= \
