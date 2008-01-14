@@ -29,10 +29,13 @@ The purpose of this module is to provide secure access to files on the client ma
 
 ==Use cases==
 
-Name: input files\\
-Description: a user provides details of files to make available for further processing\\
-Author: Chris De Vries\\
-Date: 11/01/2008\\
+Name: input files
+
+Description: a user provides details of files to make available for further processing
+
+Author: Chris De Vries
+
+Date: 11/01/2008
 
 Steps:
   # The user indicates files they wish to make available to the system.
