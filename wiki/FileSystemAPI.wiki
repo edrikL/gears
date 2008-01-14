@@ -1,6 +1,9 @@
-=Gears File System API=
+_secure client file access_
+
+==Gears File System API==
 
 The purpose of this module is to provide secure access to files on the client machine.
+
 
 ==Features==
 
@@ -9,7 +12,7 @@ The purpose of this module is to provide secure access to files on the client ma
   * Once the files are available, potential processing options are:
     * Compress files.
     * Send files to a server.
-    * Capture files to the local ResourceStore.
+    * Capture files to the local resource store.
 
 
 ==Security==
