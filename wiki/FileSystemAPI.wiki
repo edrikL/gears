@@ -89,11 +89,12 @@ function task(fn) {
 
 function createPrintFunction(files) {
   var fileArray = files;
-  int index = 0;
+  var index = 0;
   return (function() {
     if (index < files.length) {
       var file = fileArray[index];
-      insertRow(file.name + '<br>' + '<img src="file://' + file.name + '"></img> <br>');
+      var name = file.name;
+      insertRow(name + '<br>' + '<img src="file://' + name + '"></img> <br>');
       index++;
       return true;
     }
@@ -101,10 +102,10 @@ function createPrintFunction(files) {
   });
 }
 
-function openDialog() {
+function openDialog(isDirectory) {
   try {
-    var filesystem = google.gears.factory.create('beta.filesystem', '1.0');
-    var files = filesystem.openFileDialog(['Images', '*.jpg;*.gif', 'All files', '*.*']);
+    var fs = google.gears.factory.create('beta.filesystem');
+    var files = fs.openFileDialog(['Images (*.jpg, *.gif)', '*.jpg;*.gif', 'All files (*.*)', '*.*']);
     if (files) {
       task(createPrintFunction(files));
     }
