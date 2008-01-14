@@ -374,6 +374,9 @@ class WebCacheDB : SQLTransactionListener {
   bool ExecuteSqlCommandsInTransaction(const char *commands[], int count);
   bool ExecuteSqlCommands(const char *commands[], int count);
 
+  bool MaybeDeletePayload(int64 payload_id);
+  bool DeletePayload(int64 payload_id);
+
   SQLDatabase db_;
   NameValueTable system_info_table_;
 
@@ -399,8 +402,8 @@ class WebCacheDB : SQLTransactionListener {
 
   static void DestroyDB(void* pvoid);
 
-  DISALLOW_EVIL_CONSTRUCTORS(WebCacheDB);
   DECL_SINGLE_THREAD
+  DISALLOW_EVIL_CONSTRUCTORS(WebCacheDB);
 };
 
 #endif  // GEARS_LOCALSERVER_COMMON_LOCALSERVER_DB_H__

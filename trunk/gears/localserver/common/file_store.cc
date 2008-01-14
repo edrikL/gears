@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef DEBUG
@@ -29,12 +29,12 @@
 #endif
 #endif
 
-#include <algorithm>
+#include "gears/localserver/common/file_store.h"
 #include <time.h>
+#include <algorithm>
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
-#include "gears/localserver/common/file_store.h"
 #include "gears/localserver/common/localserver_db.h"
 
 const char16 *kGenericCacheFilename = STRING16(L"File");
@@ -83,7 +83,7 @@ bool WebCacheFileStore::InsertBody(int64 server_id,
 
   // Put a file on disk, the relative file path is returned in
   // payload.cached_filepath. If the current transaction rollsback,
-  // the newly created file will be deleted. 
+  // the newly created file will be deleted.
   if (!CreateAndWriteFile(server_id, url, payload)) {
     return false;
   }
@@ -119,7 +119,7 @@ bool WebCacheFileStore::ReadBody(WebCacheDB::PayloadInfo *payload,
                                  bool info_only) {
   ASSERT_SINGLE_THREAD();
   assert(db_);
-  
+
   // For info only queries or bodyless responses, we don't hit the DB at all
   if (info_only || (payload->status_code != HttpConstants::HTTP_OK)) {
     payload->cached_filepath.clear();
@@ -153,20 +153,18 @@ bool WebCacheFileStore::DeleteBody(int64 payload_id) {
   assert(began_);
   if (!began_) return false;
 
-  // Read the filepath from the ResponseBodies table
+  // Read the filepath from the ResponseBodies table.
   std::string16 filepath;
-  if (!GetFilePath(payload_id, &filepath)) {
-    return false;
+  if (GetFilePath(payload_id, &filepath)) {
+    // Delete the file on disk. Note the file is not really deleted until
+    // the current transaction commits.
+    DeleteFile(filepath.c_str());
   }
 
-  // Delete the file on disk. Note the file is not really deleted until
-  // the current transaction commits.
-  DeleteFile(filepath.c_str());
-
-  // Delete the row from the response bodies table
+  // Delete the row from the response bodies table.
   return WebCacheBlobStore::DeleteBody(payload_id);
 }
-  
+
 //------------------------------------------------------------------------------
 // DeleteUnreferencedBodies
 //------------------------------------------------------------------------------
@@ -233,7 +231,7 @@ void WebCacheFileStore::DeleteDirectoryForServer(int64 server_id) {
   std::string16 server_dir;
   if (!GetDirectoryPathForServer(server_id, &server_dir)) {
     return;
-  }  
+  }
   delete_directories_on_commit_.push_back(server_dir);
 }
 
@@ -265,8 +263,8 @@ bool WebCacheFileStore::GetDirectoryPathForServer(int64 server_id,
   }
   AppendBracketedNumber(static_cast<int>(server_id), &server_dir_name);
 
-  // Stitch the two together, and append the "#localserver" suffix 
-  AppendDataName(server_dir_name.c_str(), kDataSuffixForLocalServer, 
+  // Stitch the two together, and append the "#localserver" suffix
+  AppendDataName(server_dir_name.c_str(), kDataSuffixForLocalServer,
                  server_dir);
   return true;
 }
@@ -290,7 +288,7 @@ bool WebCacheFileStore::GetFilePath(int64 payload_id, std::string16 *filepath) {
   if (stmt.step() != SQLITE_ROW) {
     return false;
   }
-  *filepath = stmt.column_text16(0);
+  *filepath = stmt.column_text16_safe(0);
   return true;
 }
 
@@ -315,7 +313,7 @@ bool WebCacheFileStore::ReadFile(WebCacheDB::PayloadInfo *payload) {
 // Creates and writes a new cached file on disk. The filename is determined
 // by first examining the payload.headers for a filename. If that fails,
 // the filename is based on the url.  The file is created in the directory for
-// the given server_id. The relative filepath is returned in 
+// the given server_id. The relative filepath is returned in
 // payload.cached_filepath. The contents of the file are determined by
 // payload.data. If Rollback() is called prior to Commit(), the newly
 // created file will be deleted.
@@ -476,7 +474,7 @@ void
 WebCacheFileStore::FindDirectoryWithSpaceAvailable(const char16 *parent,
                                                    std::string16 *available) {
   std::string16 dir(parent);
-  while (File::GetDirectoryFileCount(dir.c_str()) > 
+  while (File::GetDirectoryFileCount(dir.c_str()) >
          kMaxFilesPerDirectory) {
     // There are too many files in this dir, use a subdirectory.
     // We create up to kMaxSubDirectoriesPerLevel and randomly place
@@ -493,7 +491,7 @@ WebCacheFileStore::FindDirectoryWithSpaceAvailable(const char16 *parent,
 // GetCacheFileName
 // Determines the preferred file name based on response headers and the url.
 //------------------------------------------------------------------------------
-void WebCacheFileStore::GetCacheFileName(const char16 *url, 
+void WebCacheFileStore::GetCacheFileName(const char16 *url,
                                          WebCacheDB::PayloadInfo *payload,
                                          std::string16 *filename) {
   filename->clear();
@@ -513,7 +511,7 @@ void WebCacheFileStore::GetCacheFileName(const char16 *url,
   // '//depot/google3/java/com/google/httputil/ContentDisposition.java'
   // '//depot/google3/java/com/google/parser/Parser.java'
   std::string16 content_disposition;
-  payload->GetHeader(HttpConstants::kContentDispositionHeader, 
+  payload->GetHeader(HttpConstants::kContentDispositionHeader,
                      &content_disposition);
   size_t pos = content_disposition.find(STRING16(L"attachment"));
   if (pos != std::string16::npos) {
@@ -580,7 +578,7 @@ static bool CreateUniqueFile(const char16* full_dirpath,
   // it unique.
   std::string16 name_suffix;
   AppendBracketedNumber(unique_hint, &name_suffix);
-  
+
   // Shorten new_name to fit into kUserPathComponentMaxChars chars along
   // with the unique & retry suffixes.
   // The 3 refers to the length of the retry suffix which can be [0]-[9].
@@ -621,7 +619,7 @@ static bool CreateUniqueFile(const char16* full_dirpath,
   // a folder full of files that shouldn't be there, something is wrong!
 #ifdef DEBUG
 #if BROWSER_IE
-  LOG16((L"Failed: CreateUniqueFile( %s ) = %d\n", 
+  LOG16((L"Failed: CreateUniqueFile( %s ) = %d\n",
          full_filepath->c_str(), GetLastError()));
 #endif
 #endif
@@ -658,7 +656,7 @@ static bool GetFileNameFromUrl(const char16 *url, std::string16 *filename) {
   size_t pos = url_str.find_first_of(STRING16(L"?#"));
   if (pos != std::string16::npos)
     url_str.resize(pos);
-  
+
   if (url_str.empty())
     return false;
 

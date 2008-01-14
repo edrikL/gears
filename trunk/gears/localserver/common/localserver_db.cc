@@ -29,6 +29,7 @@
 #include <string>
 #include <vector>
 
+#include "gears/base/common/exception_handler_win32.h"  // For ExceptionManager
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/security_model.h"
@@ -1542,30 +1543,51 @@ bool WebCacheDB::DeleteEntry(int64 id) {
     return false;
   }
 
-  // Delete a single entry from the Entries table
-
-  const char16 *sql = STRING16(L"DELETE FROM Entries WHERE EntryID=?");
-  SQLStatement stmt;
-  int rv = stmt.prepare16(&db_, sql);
-  if (rv != SQLITE_OK) {
+  // Get the payload ID for this entry.
+  const char16 *payload_sql = STRING16(L"Select PayloadID FROM Entries "
+                                       L"WHERE EntryID=?");
+  SQLStatement payload_stmt;
+  int rv = payload_stmt.prepare16(&db_, payload_sql);
+  rv |= payload_stmt.bind_int64(0, id);
+  if (SQLITE_OK != rv) {
     LOG(("WebCacheDB.DeleteEntry failed\n"));
     return false;
   }
-  rv |= stmt.bind_int64(0, id);
-  if (rv != SQLITE_OK) {
+
+  // If there's no match, commit the database transaction and return.
+  int step_status = payload_stmt.step();
+  if (SQLITE_DONE == step_status ) {
+    return transaction.Commit();
+  } else if (SQLITE_ROW != step_status ) {
+    LOG(("WebCacheDB.DeleteEntry failed\n"));
+    return false;
+  }
+  int64 payload_id = payload_stmt.column_int64(0);
+
+  // Delete the entry.
+  const char16* delete_sql = STRING16(L"DELETE FROM Entries "
+                                      L"WHERE EntryID=?");
+  SQLStatement delete_stmt;
+  rv = delete_stmt.prepare16(&db_, delete_sql);
+  rv |= delete_stmt.bind_int64(0, id);
+  if (SQLITE_OK != rv) {
+    LOG(("WebCacheDB.DeleteEntry failed\n"));
+    return false;
+  }
+  if (SQLITE_DONE != delete_stmt.step()) {
+    LOG(("WebCacheDB.DeleteEntry failed\n"));
     return false;
   }
 
-  if (stmt.step() != SQLITE_DONE) {
-    return false;
+  // The payload_id may be NULL if the payload has not yet been inserted.
+  if (kInvalidID == payload_id) {
+    LOG(("WebCacheDB.DeleteEntry - payload_id is NULL\n"));
+    return transaction.Commit();
   }
 
-  // Now delete all unreferenced payloads
-
-  // TODO(michaeln): probably faster to see if the payload for just this
-  // entry is now unferenced? perhaps cleanup unreferernced payloads lazily
-  // in the background?
-  if (!DeleteUnreferencedPayloads()) {
+  // Delete the payload if it is orphaned.
+  if (!MaybeDeletePayload(payload_id)) {
+    LOG(("WebCacheDB.DeleteEntry failed\n"));
     return false;
   }
 
@@ -1726,29 +1748,40 @@ bool WebCacheDB::DeleteEntry(int64 version_id, const char16 *url) {
     return false;
   }
 
-  // Delete a single entry from the Entries table
-
-  const char16 *sql = STRING16(L"DELETE FROM Entries "
+  // Get the entry ID for the requested URL and version.
+  const char16* sql = STRING16(L"SELECT EntryID FROM Entries "
                                L"WHERE VersionID=? AND Url=?");
   SQLStatement stmt;
   int rv = stmt.prepare16(&db_, sql);
-  if (rv != SQLITE_OK) {
+  rv |= stmt.bind_int64(0, version_id);
+  rv |= stmt.bind_text16(1, url);
+  if (SQLITE_OK != rv) {
     LOG(("WebCacheDB.DeleteEntry failed\n"));
     return false;
   }
-  rv |= stmt.bind_int64(0, version_id);
-  rv |= stmt.bind_text16(1, url);
-  if (rv != SQLITE_OK) {
+
+  // There should be at most one match. If there are multiple matches, we still
+  // delete the entries, but send a crash report.
+  int num_matches = 0;
+  int step_result;
+  while (true) {
+    step_result = stmt.step();
+    if (SQLITE_ROW != step_result) {
+      break;
+    }
+    ++num_matches;
+    if (!DeleteEntry(stmt.column_int64(0))) {
+      LOG(("WebCacheDB.DeleteEntry failed\n"));
+      return false;
+    }
+  }
+  if (SQLITE_DONE != step_result) {
     return false;
   }
-
-  if (stmt.step() != SQLITE_DONE) {
-    return false;
+  if (num_matches > 1) {
+    LOG(("WebCacheDB.DeleteEntry - multiple matches for requested URL\n"));
+    ExceptionManager::CaptureAndSendMinidump();
   }
-
-  // Now delete all unreferenced payloads
-
-  DeleteUnreferencedPayloads();
 
   return transaction.Commit();
 }
@@ -1765,7 +1798,7 @@ bool WebCacheDB::CountEntries(int64 version_id, int64 *count) {
   SQLStatement stmt;
   int rv = stmt.prepare16(&db_, sql);
   if (rv != SQLITE_OK) {
-    LOG(("WebCacheDB.DeleteEntry failed\n"));
+    LOG(("WebCacheDB.CountEntries failed\n"));
     return false;
   }
   rv |= stmt.bind_int64(0, version_id);
@@ -1927,6 +1960,72 @@ bool WebCacheDB::DeleteUnreferencedPayloads() {
   return transaction.Commit();
 }
 
+//------------------------------------------------------------------------------
+// MaybeDeletePayload
+//------------------------------------------------------------------------------
+bool WebCacheDB::MaybeDeletePayload(int64 payload_id) {
+  ASSERT_SINGLE_THREAD();
+
+  SQLTransaction transaction(&db_, "MaybeDeletePayload");
+  if (!transaction.Begin()) {
+    return false;
+  }
+
+  const char16* count_sql = STRING16(L"SELECT COUNT(*) FROM Entries "
+                                     L"WHERE PayloadID=?");
+  SQLStatement count_stmt;
+  int rv = count_stmt.prepare16(&db_, count_sql);
+  rv |= count_stmt.bind_int64(0, payload_id);
+  if (SQLITE_OK != rv) {
+    LOG(("WebCacheDB.MaybeDeletePayload failed\n"));
+    return false;
+  }
+  if (SQLITE_ROW != count_stmt.step()) {
+    LOG(("WebCacheDB.MaybeDeletePayload failed\n"));
+    return false;
+  }
+
+  if (count_stmt.column_int64(0) == 0) {
+    if (!DeletePayload(payload_id)) {
+      return false;
+    }
+  }
+
+  return transaction.Commit();
+}
+
+//------------------------------------------------------------------------------
+// DeletePayload
+//------------------------------------------------------------------------------
+bool WebCacheDB::DeletePayload(int64 payload_id) {
+  ASSERT_SINGLE_THREAD();
+
+  SQLTransaction transaction(&db_, "DeletePayload");
+  if (!transaction.Begin()) {
+    return false;
+  }
+
+  const char16 *sql = STRING16(L"DELETE FROM Payloads "
+                               L"WHERE PayloadID=?");
+  SQLStatement delete_stmt;
+  int rv = delete_stmt.prepare16(&db_, sql);
+  rv |= delete_stmt.bind_int64(0, payload_id);
+  if (SQLITE_OK != rv) {
+    LOG(("WebCacheDB.DeletePayload failed\n"));
+    return false;
+  }
+  if (SQLITE_DONE != delete_stmt.step()) {
+    LOG(("WebCacheDB.DeletePayload failed\n"));
+    return false;
+  }
+
+  // Delete the response body.
+  if (!response_bodies_store_->DeleteBody(payload_id)) {
+    return false;
+  }
+
+  return transaction.Commit();
+}
 
 #ifdef USE_FILE_STORE
 //------------------------------------------------------------------------------
