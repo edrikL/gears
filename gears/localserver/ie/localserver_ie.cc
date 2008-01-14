@@ -58,8 +58,8 @@ STDMETHODIMP GearsLocalServer::canServeLocally(
 
   *can = LocalServer::CanServeLocally(full_url.c_str())
             ? VARIANT_TRUE : VARIANT_FALSE;
-  ATLTRACE(_T("LocalServer::CanServeLocally( %s ) %s\n"),
-           url, *can ? L"TRUE" : L"FALSE");
+  LOG16((L"LocalServer::CanServeLocally( %s ) %s\n",
+         url, *can ? L"TRUE" : L"FALSE"));
   RETURN_NORMAL();
 }
 
@@ -86,8 +86,8 @@ STDMETHODIMP GearsLocalServer::createManagedStore(
     RETURN_EXCEPTION(STRING16(L"URL scheme not supported."));
   }
 
-  ATLTRACE(_T("LocalServer::createManagedStore( %s, %s )\n"),
-           name, required_cookie_bstr.m_str);
+  LOG16((L"LocalServer::createManagedStore( %s, %s )\n",
+         name, required_cookie_bstr.m_str));
 
   CComObject<GearsManagedResourceStore> *store;
   HRESULT hr = CComObject<GearsManagedResourceStore>::CreateInstance(&store);
@@ -132,8 +132,8 @@ STDMETHODIMP GearsLocalServer::openManagedStore(
     RETURN_EXCEPTION(error_message.c_str());
   }
 
-  ATLTRACE(_T("LocalServer::openManagedStore( %s, %s )\n"),
-           name, required_cookie_bstr.m_str);
+  LOG16((L"LocalServer::openManagedStore( %s, %s )\n",
+         name, required_cookie_bstr.m_str));
 
   int64 existing_store_id = WebCacheDB::kInvalidID;
   if (!ManagedResourceStore::ExistsInDB(EnvPageSecurityOrigin(),
@@ -182,8 +182,8 @@ STDMETHODIMP GearsLocalServer::removeManagedStore(
     RETURN_EXCEPTION(error_message.c_str());
   }
 
-  ATLTRACE(_T("LocalServer::removeManagedStore( %s, %s )\n"),
-           name, required_cookie_bstr.m_str);
+  LOG16((L"LocalServer::removeManagedStore( %s, %s )\n",
+         name, required_cookie_bstr.m_str));
 
   int64 existing_store_id = WebCacheDB::kInvalidID;
   if (!ManagedResourceStore::ExistsInDB(EnvPageSecurityOrigin(),
@@ -228,8 +228,8 @@ STDMETHODIMP GearsLocalServer::createStore(
     RETURN_EXCEPTION(STRING16(L"URL scheme not supported."));
   }
 
-  ATLTRACE(_T("LocalServer::createStore( %s, %s )\n"),
-           name, required_cookie_bstr.m_str);
+  LOG16((L"LocalServer::createStore( %s, %s )\n",
+         name, required_cookie_bstr.m_str));
 
   CComObject<GearsResourceStore> *store;
   HRESULT hr = CComObject<GearsResourceStore>::CreateInstance(&store);
@@ -275,8 +275,8 @@ STDMETHODIMP GearsLocalServer::openStore(
     RETURN_EXCEPTION(error_message.c_str());
   }
 
-  ATLTRACE(_T("LocalServer::openStore( %s, %s )\n"),
-           name, required_cookie_bstr.m_str);
+  LOG16((L"LocalServer::openStore( %s, %s )\n",
+         name, required_cookie_bstr.m_str));
 
   int64 existing_store_id = WebCacheDB::kInvalidID;
   if (!ResourceStore::ExistsInDB(EnvPageSecurityOrigin(),
@@ -326,8 +326,8 @@ STDMETHODIMP GearsLocalServer::removeStore(
     RETURN_EXCEPTION(error_message.c_str());
   }
 
-  ATLTRACE(_T("LocalServer::removeStore( %s, %s )\n"),
-           name, required_cookie_bstr.m_str);
+  LOG16((L"LocalServer::removeStore( %s, %s )\n",
+         name, required_cookie_bstr.m_str));
 
   int64 existing_store_id = WebCacheDB::kInvalidID;
   if (!ResourceStore::ExistsInDB(EnvPageSecurityOrigin(),

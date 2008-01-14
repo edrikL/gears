@@ -138,7 +138,7 @@ static HRESULT RegisterNoLock() {
     UnregisterNoLock();
     return hr;
   }
-  ATLTRACE(_T("HttpHandler::Registered\n"));
+  LOG16((L"HttpHandler::Registered\n"));
   return hr;
 }
 
@@ -166,7 +166,7 @@ static HRESULT UnregisterNoLock() {
   BOOL bypass = TRUE;
   session->SetSessionOption(kBypassIInternetProtocolInfoOption,
                             &bypass, sizeof(BOOL), 0);
-  ATLTRACE(_T("HttpHandler::Unregistered\n"));
+  LOG16((L"HttpHandler::Unregistered\n"));
   return S_OK;
 }
 
@@ -214,9 +214,9 @@ STDMETHODIMP PassthruSink::ReportProgress(
     return E_FAIL;
 
 #ifdef DEBUG
-  ATLTRACE(_T("PassthruSink::ReportProgress( %s, %s )\n"),
-              GetBindStatusLabel(status_code),
-              status_text ? status_text : L"");
+  LOG16((L"PassthruSink::ReportProgress( %s, %s )\n",
+         GetBindStatusLabel(status_code),
+         status_text ? status_text : L""));
 #endif
 
   if (status_code == BINDSTATUS_REDIRECTING) {
@@ -228,7 +228,7 @@ STDMETHODIMP PassthruSink::ReportProgress(
       // causes URMLON to abandon this handler instance an create a new one
       // to follow the redirect. When that new instance of our handler is
       // created, it will satisfy the request locally.
-      ATLTRACE(L"PassthruSink::ReportProgress - hijacking redirect\n");
+      LOG16((L"PassthruSink::ReportProgress - hijacking redirect\n"));
       return BaseClass::ReportResult(INET_E_REDIRECT_FAILED,
                                      HttpConstants::HTTP_FOUND,
                                      status_text);
@@ -326,7 +326,7 @@ HttpHandler::HttpHandler()
 }
 
 HttpHandler::~HttpHandler() {
-  ATLTRACE(_T("~HttpHandler\n"));
+  LOG16((L"~HttpHandler\n"));
   g_active_handlers.Remove(this);   // okay to Remove() multiple times from set
 }
 
@@ -348,7 +348,7 @@ STDMETHODIMP HttpHandler::StartEx(
   if (FAILED(rv)) {
     return rv;
   }
-  ATLTRACE(L"HttpHandler::StartEx( %s )\n", uri_bstr.m_str);
+  LOG16((L"HttpHandler::StartEx( %s )\n", uri_bstr.m_str));
   rv = StartImpl(uri_bstr.m_str, protocol_sink, bind_info, flags, reserved);
   if (rv == INET_E_USE_DEFAULT_PROTOCOLHANDLER) {
     protocol_sink_.Release();
@@ -370,7 +370,7 @@ STDMETHODIMP HttpHandler::Start(
     /* [in] */ IInternetBindInfo *bind_info,
     /* [in] */ DWORD flags,
     /* [in] */ HANDLE_PTR reserved) {
-  ATLTRACE(L"HttpHandler::Start( %s )\n", url);
+  LOG16((L"HttpHandler::Start( %s )\n", url));
   HRESULT rv = StartImpl(url, protocol_sink, bind_info, flags, reserved);
   if (rv == INET_E_USE_DEFAULT_PROTOCOLHANDLER) {
     protocol_sink_.Release();
@@ -387,7 +387,7 @@ STDMETHODIMP HttpHandler::Start(
 
 STDMETHODIMP HttpHandler::Continue(
     /* [in] */ PROTOCOLDATA *data) {
-  ATLTRACE(_T("HttpHandler::Continue(data)\n"));
+  LOG16((L"HttpHandler::Continue(data)\n"));
   if (is_passingthru_)
     return BaseClass::Continue(data);
   else if (is_handling_)
@@ -399,7 +399,7 @@ STDMETHODIMP HttpHandler::Continue(
 STDMETHODIMP HttpHandler::Abort(
     /* [in] */ HRESULT reason,
     /* [in] */ DWORD options) {
-  ATLTRACE(_T("HttpHandler::Abort()\n"));
+  LOG16((L"HttpHandler::Abort()\n"));
   if (is_passingthru_) {
     return BaseClass::Abort(reason, options);
   } else if (is_handling_) {
@@ -415,7 +415,7 @@ STDMETHODIMP HttpHandler::Abort(
 
 STDMETHODIMP HttpHandler::Terminate(
     /* [in] */ DWORD options) {
-  ATLTRACE(_T("HttpHandler::Terminate()\n"));
+  LOG16((L"HttpHandler::Terminate()\n"));
   protocol_sink_.Release();
   http_negotiate_.Release();
   g_active_handlers.Remove(this);
@@ -430,7 +430,7 @@ STDMETHODIMP HttpHandler::Terminate(
 }
 
 STDMETHODIMP HttpHandler::Suspend() {
-  ATLTRACE(_T("HttpHandler::Suspend()\n"));
+  LOG16((L"HttpHandler::Suspend()\n"));
   if (is_passingthru_)
     return BaseClass::Suspend();
   else if (is_handling_)
@@ -440,7 +440,7 @@ STDMETHODIMP HttpHandler::Suspend() {
 }
 
 STDMETHODIMP HttpHandler::Resume() {
-  ATLTRACE(_T("HttpHandler::Resume()\n"));
+  LOG16((L"HttpHandler::Resume()\n"));
   if (is_passingthru_)
     return BaseClass::Resume();
   else if (is_handling_)
@@ -456,12 +456,12 @@ STDMETHODIMP HttpHandler::Read(
     /* [out] */ ULONG *pcbRead) {
   if (is_passingthru_) {
     HRESULT hr = BaseClass::Read(pv, cb, pcbRead);
-    ATLTRACE(_T("HttpHandler::Read() - passing thru, %d bytes\n"), *pcbRead);
+    LOG16((L"HttpHandler::Read() - passing thru, %d bytes\n", *pcbRead));
     return hr;
   } else if (is_handling_) {
     return ReadImpl(pv, cb, pcbRead);
   } else {
-    ATLTRACE(_T("HttpHandler::Read() - unexpected\n"));
+    LOG16((L"HttpHandler::Read() - unexpected\n"));
     return E_UNEXPECTED;
   }
 }
@@ -470,7 +470,7 @@ STDMETHODIMP HttpHandler::Seek(
     /* [in] */ LARGE_INTEGER dlibMove,
     /* [in] */ DWORD dwOrigin,
     /* [out] */ ULARGE_INTEGER *plibNewPosition) {
-  ATLTRACE(_T("HttpHandler::Seek()\n"));
+  LOG16((L"HttpHandler::Seek()\n"));
   if (is_passingthru_)
     return BaseClass::Seek(dlibMove, dwOrigin, plibNewPosition);
   else if (is_handling_)
@@ -481,7 +481,7 @@ STDMETHODIMP HttpHandler::Seek(
 
 STDMETHODIMP HttpHandler::LockRequest(
     /* [in] */ DWORD dwOptions) {
-  ATLTRACE(_T("HttpHandler::LockRequest()\n"));
+  LOG16((L"HttpHandler::LockRequest()\n"));
   if (is_passingthru_)
     return BaseClass::LockRequest(dwOptions);
   else if (is_handling_)
@@ -491,7 +491,7 @@ STDMETHODIMP HttpHandler::LockRequest(
 }
 
 STDMETHODIMP HttpHandler::UnlockRequest() {
-  ATLTRACE(_T("HttpHandler::UnlockRequest()\n"));
+  LOG16((L"HttpHandler::UnlockRequest()\n"));
   if (is_passingthru_)
     return BaseClass::UnlockRequest();
   else if (is_handling_)
@@ -511,7 +511,7 @@ STDMETHODIMP HttpHandler::ParseUrl(
     /* [in] */ DWORD cchResult,
     /* [out] */ DWORD *pcchResult,
     /* [in] */ DWORD dwReserved) {
-  ATLTRACE(_T("HttpHandler::ParseUrl()\n"));
+  LOG16((L"HttpHandler::ParseUrl()\n"));
   if (is_passingthru_)
     return BaseClass::ParseUrl(pwzUrl, ParseAction, dwParseFlags,
                                pwzResult, cchResult, pcchResult,
@@ -530,7 +530,7 @@ STDMETHODIMP HttpHandler::CombineUrl(
     /* [in] */ DWORD cchResult,
     /* [out] */ DWORD *pcchResult,
     /* [in] */ DWORD dwReserved) {
-  ATLTRACE(_T("HttpHandler::CombineUrl()\n"));
+  LOG16((L"HttpHandler::CombineUrl()\n"));
   if (is_passingthru_)
     return BaseClass::CombineUrl(pwzBaseUrl, pwzRelativeUrl,
                                  dwCombineFlags, pwzResult,
@@ -545,7 +545,7 @@ STDMETHODIMP HttpHandler::CompareUrl(
     /* [in] */ LPCWSTR pwzUrl1,
     /* [in] */ LPCWSTR pwzUrl2,
     /* [in] */ DWORD dwCompareFlags) {
-  ATLTRACE(_T("HttpHandler::CompareUrl()\n"));
+  LOG16((L"HttpHandler::CompareUrl()\n"));
   if (is_passingthru_)
     return BaseClass::CompareUrl(pwzUrl1, pwzUrl2, dwCompareFlags);
   else
@@ -560,7 +560,7 @@ STDMETHODIMP HttpHandler::QueryInfo(
     /* [in] */ DWORD cbBuffer,
     /* [in, out] */ DWORD *pcbBuf,
     /* [in] */ DWORD dwReserved) {
-  ATLTRACE(_T("HttpHandler::QueryInfo()\n"));
+  LOG16((L"HttpHandler::QueryInfo()\n"));
   if (is_passingthru_)
     return BaseClass::QueryInfo(pwzUrl, QueryOption, dwQueryFlags,
                                 pBuffer, cbBuffer, pcbBuf,
@@ -578,13 +578,13 @@ STDMETHODIMP HttpHandler::QueryInfo(
 // will return the value expected by the caller.
 STDMETHODIMP HttpHandler::SetPriority(
     /* [in] */ LONG nPriority) {
-  ATLTRACE(_T("HttpHandler::SetPriority()\n"));
+  LOG16((L"HttpHandler::SetPriority()\n"));
   return BaseClass::SetPriority(nPriority);
 }
 
 STDMETHODIMP HttpHandler::GetPriority(
     /* [out] */ LONG *pnPriority) {
-  ATLTRACE(_T("HttpHandler::GetPriority()\n"));
+  LOG16((L"HttpHandler::GetPriority()\n"));
   return BaseClass::GetPriority(pnPriority);
 }
 
@@ -592,7 +592,7 @@ STDMETHODIMP HttpHandler::GetPriority(
 // TODO(michaeln): our handler implements this interface for the purpose
 // of passing thru only, when not in passthru mode what should we do?
 STDMETHODIMP HttpHandler::Prepare() {
-  ATLTRACE(_T("HttpHandler::Prepare()\n"));
+  LOG16((L"HttpHandler::Prepare()\n"));
   if (is_passingthru_)
     return BaseClass::Prepare();
   else if (is_handling_)
@@ -602,7 +602,7 @@ STDMETHODIMP HttpHandler::Prepare() {
 }
 
 STDMETHODIMP HttpHandler::Continue() {
-  ATLTRACE(_T("HttpHandler::Continue()\n"));
+  LOG16((L"HttpHandler::Continue()\n"));
   if (is_passingthru_)
     return BaseClass::Continue();
   else if (is_handling_)
@@ -616,7 +616,7 @@ STDMETHODIMP HttpHandler::QueryOption(
     /* [in] */ DWORD option,
     /* [in, out] */ LPVOID buffer,
     /* [in, out] */ DWORD *len) {
-  ATLTRACE(_T("HttpHandler::QueryOption(%d)\n"), option);
+  LOG16((L"HttpHandler::QueryOption(%d)\n", option));
   if (is_passingthru_)
     return BaseClass::QueryOption(option, buffer, len);
   else if (is_handling_)
@@ -632,7 +632,7 @@ STDMETHODIMP HttpHandler::QueryInfo(
     /* [in, out] */ DWORD *len,
     /* [in, out] */ DWORD *flags,
     /* [in, out] */ DWORD *reserved) {
-  ATLTRACE(_T("HttpHandler::QueryInfo(%d)\n"), option);
+  LOG16((L"HttpHandler::QueryInfo(%d)\n", option));
   if (is_passingthru_)
     return BaseClass::QueryInfo(option, buffer, len, flags, reserved);
   else if (is_handling_)
@@ -650,7 +650,7 @@ STDMETHODIMP HttpHandler::SetCacheExtension(
     /* [out][in] */ DWORD *pcbCacheFile,
     /* [out][in] */ DWORD *pdwWinInetError,
     /* [out][in] */ DWORD *pdwReserved) {
-  ATLTRACE(_T("HttpHandler::SetCacheExtension()\n"));
+  LOG16((L"HttpHandler::SetCacheExtension()\n"));
   if (is_passingthru_)
     return BaseClass::SetCacheExtension(pwzExt, pszCacheFile, pcbCacheFile,
                                         pdwWinInetError, pdwReserved);
@@ -669,7 +669,7 @@ STDMETHODIMP HttpHandler::SetCacheExtension2(
     /* [out][in] */ DWORD *pcchCacheFile,
     /* [out] */ DWORD *pdwWinInetError,
     /* [out] */ DWORD *pdwReserved) {
-  ATLTRACE(_T("HttpHandler::SetCacheExtension2()\n"));
+  LOG16((L"HttpHandler::SetCacheExtension2()\n"));
   if (is_passingthru_)
     return BaseClass::SetCacheExtension2(pwzExt, pwzCacheFile, pcchCacheFile,
                                          pdwWinInetError, pdwReserved);
@@ -688,13 +688,12 @@ HRESULT HttpHandler::CallReportProgress(ULONG status_code,
   if (was_terminated_ || was_aborted_ || !protocol_sink_)
     return E_UNEXPECTED;
 #ifdef DEBUG
-  ATLTRACE(_T("Calling ReportProgress( %s, %s )\n"),
-              GetBindStatusLabel(status_code),
-              status_text ? status_text : L"");
+  LOG16((L"Calling ReportProgress( %s, %s )\n", GetBindStatusLabel(status_code),
+         status_text ? status_text : L""));
 #endif
   HRESULT hr = protocol_sink_->ReportProgress(status_code, status_text);
   if (FAILED(hr))
-    ATLTRACE(_T("  protocol_sink->ReportProgress error = %d\n"), hr);
+    LOG16((L"  protocol_sink->ReportProgress error = %d\n", hr));
   return hr;
 }
 
@@ -704,7 +703,7 @@ HRESULT HttpHandler::CallReportData(DWORD flags, ULONG progress,
     return E_UNEXPECTED;
   HRESULT hr = protocol_sink_->ReportData(flags, progress, progress_max);
   if (FAILED(hr))
-    ATLTRACE(_T("  protocol_sink->ReportData error = %d\n"), hr);
+    LOG16((L"  protocol_sink->ReportData error = %d\n", hr));
   return hr;
 }
 
@@ -716,7 +715,7 @@ HRESULT HttpHandler::CallReportResult(HRESULT result,
   has_reported_result_ = true;
   HRESULT hr = protocol_sink_->ReportResult(result, error, result_text);
   if (FAILED(hr))
-    ATLTRACE(_T("  protocol_sink->ReportResult error = %d\n"), hr);
+    LOG16((L"  protocol_sink->ReportResult error = %d\n", hr));
   return hr;
 }
 
@@ -729,7 +728,7 @@ HRESULT HttpHandler::CallBeginningTransaction(LPCWSTR url,
   HRESULT hr = http_negotiate_->BeginningTransaction(url, headers, reserved,
                                                      additional_headers);
   if (FAILED(hr))
-    ATLTRACE(_T("  http_negotiate->BeginningTransaction error = %d\n"), hr);
+    LOG16((L"  http_negotiate->BeginningTransaction error = %d\n", hr));
   return hr;
 }
 
@@ -743,7 +742,7 @@ HRESULT HttpHandler::CallOnResponse(DWORD status_code,
                                            request_headers,
                                            additional_request_headers);
   if (FAILED(hr))
-    ATLTRACE(_T("  http_negotiate->OnResponse error = %d\n"), hr);
+    LOG16((L"  http_negotiate->OnResponse error = %d\n", hr));
   return hr;
 }
 
@@ -784,7 +783,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
   bindinfo.cbSize = sizeof(bindinfo);
   HRESULT hr = bind_info->GetBindInfo(&bindinfoflags, &bindinfo);
   if (FAILED(hr)) {
-    ATLTRACE(_T("GetBindInfo failed, error = %d\n"), hr);
+    LOG16((L"GetBindInfo failed, error = %d\n", hr));
     return hr;
   }
 
@@ -794,9 +793,9 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
   // IWinInetHttpInfo::QueryInfo return when invoked from within the caller's
   // implementation of IHttpNegotiate::BeginningTransaction?
 
-  ATLTRACE(_T("HttpHandler::StartImpl( %s ) ")
-           _T("flags=0x%x, bindinfoflags=0x%x, dwOptions=0x%x\n"),
-           url, flags, bindinfoflags, bindinfo.dwOptions);
+  LOG16((L"HttpHandler::StartImpl( %s ) "
+         L"flags=0x%x, bindinfoflags=0x%x, dwOptions=0x%x\n",
+         url, flags, bindinfoflags, bindinfo.dwOptions));
 #ifdef DEBUG
   TraceBindFlags(bindinfoflags);
 #endif
@@ -808,11 +807,11 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
   if (bindinfo.dwBindVerb != BINDVERB_GET) {
     if ((bindinfo.dwBindVerb == BINDVERB_CUSTOM) &&
         (wcscmp(HttpConstants::kHttpHEAD, bindinfo.szCustomVerb) == 0)) {
-      ATLTRACE(_T(" HEAD request"));
+      LOG16((L" HEAD request"));
       is_head_request_ = true;
     } else {
-      ATLTRACE(L"  not a GET or HEAD request - "
-               L"passing thru to default handler\n");
+      LOG16((L"  not a GET or HEAD request - "
+             L"passing thru to default handler\n"));
       is_passingthru_ = true;
       return INET_E_USE_DEFAULT_PROTOCOLHANDLER;
     }
@@ -828,7 +827,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
                                    IID_QueryBypassCache,
                                    reinterpret_cast<void**>(&not_used));
     if (bypass_cache) {
-      ATLTRACE(_T("  by passing cache - using default protocol handler\n"));
+      LOG16((L"  by passing cache - using default protocol handler\n"));
       return INET_E_USE_DEFAULT_PROTOCOLHANDLER;
     }
   }
@@ -841,7 +840,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
   bool is_captured = db->Service(url, is_head_request_, &payload_);
 
   if (!is_captured) {
-    ATLTRACE(_T("  cache miss - passing thru to default protocol handler\n"));
+    LOG16((L"  cache miss - passing thru to default protocol handler\n"));
     if (kAlertCacheMiss && !ActiveXUtils::IsOnline()) {
       MessageBoxW(NULL, url, L"WebCapture cache miss",
                   MB_OK | MB_SETFOREGROUND | MB_TOPMOST);
@@ -857,7 +856,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
     // location for which we have a cache entry
     while (payload_.IsHttpRedirect()) {
       if (!payload_.GetHeader(HttpConstants::kLocationHeader, &redirect_url)) {
-        ATLTRACE(_T("  redirect with no location - using default handler\n"));
+        LOG16((L"  redirect with no location - using default handler\n"));
         is_passingthru_ = true;
         return INET_E_USE_DEFAULT_PROTOCOLHANDLER;
       }
@@ -866,17 +865,17 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
         // We don't have a response for redirect_url. So report
         // INET_E_REDIRECT_FAILED which causes the aggregating outer
         // object (URLMON) to create a new inner APP and release us.
-        ATLTRACE(_T("  cache hit, almost - redirect out of cache ( %s )\n"),
-                 redirect_url.c_str());
+        LOG16((L"  cache hit, almost - redirect out of cache ( %s )\n",
+               redirect_url.c_str()));
         is_handling_ = true;  // set to true so we respond to QueryInfo calls
         return CallReportResult(INET_E_REDIRECT_FAILED,
                                 HttpConstants::HTTP_FOUND,
                                 redirect_url.c_str());
       }
     }
-    ATLTRACE(_T("  cache hit - redirect ( %s )\n"), redirect_url.c_str());
+    LOG16((L"  cache hit - redirect ( %s )\n", redirect_url.c_str()));
   } else {
-    ATLTRACE(_T("  cache hit\n"));
+    LOG16((L"  cache hit\n"));
   }
 
   // Ok, we're going to satisfy this request from our cache
@@ -967,7 +966,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
   hr = CallReportResult(S_OK, payload_.status_code, status_text.c_str());
   if (FAILED(hr)) return hr;
 
-  ATLTRACE(_T("HttpHandler::StartImpl( %s, %d ): YES\n"), url, response_size);
+  LOG16((L"HttpHandler::StartImpl( %s, %d ): YES\n", url, response_size));
   return S_OK;
 }
 
@@ -978,7 +977,7 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
 HRESULT HttpHandler::ReadImpl(void *buffer,
                               ULONG byte_count,
                               ULONG *bytes_read) {
-  ATLTRACE(_T("HttpHandler::ReadImpl(%d)\n"), byte_count);
+  LOG16((L"HttpHandler::ReadImpl(%d)\n", byte_count));
   if (is_handling_) {
     std::vector<uint8> *data = payload_.data.get();
     size_t bytes_available = data ? (data->size() - read_pointer_) : 0;
@@ -994,13 +993,13 @@ HRESULT HttpHandler::ReadImpl(void *buffer,
     }
 
     if (bytes_available - bytes_to_copy == 0) {
-      ATLTRACE(_T("----> HttpHandler::ReadImpl() complete\n"));
+      LOG16((L"----> HttpHandler::ReadImpl() complete\n"));
       return S_FALSE;
     } else {
       return S_OK;
     }
   } else {
-    ATLTRACE(_T("----> HttpHandler::ReadImpl() E_UNEXPECTED\n"));
+    LOG16((L"----> HttpHandler::ReadImpl() E_UNEXPECTED\n"));
     assert(false);
     return E_UNEXPECTED;
   }
@@ -1015,8 +1014,8 @@ HRESULT HttpHandler::QueryOptionImpl(/* [in] */ DWORD dwOption,
                                      /* [in, out] */ LPVOID pBuffer,
                                      /* [in, out] */ DWORD *pcbBuf) {
 #ifdef DEBUG
-  ATLTRACE(_T("HttpHandler::QueryOption(%s (%d))\n"),
-           GetWinInetInfoLabel(dwOption), dwOption);
+  LOG16((L"HttpHandler::QueryOption(%s (%d))\n",
+         GetWinInetInfoLabel(dwOption), dwOption));
 #endif
 
   if (!is_handling_) {
@@ -1066,10 +1065,10 @@ HRESULT HttpHandler::QueryInfoImpl(/* [in] */ DWORD dwOption,
   bool flag_coalesce = (flags & HTTP_QUERY_FLAG_COALESCE) != 0;
 
 #ifdef DEBUG
-  ATLTRACE(_T("HttpHandler::QueryInfo(%s (%d), %d)\n"),
-           GetWinInetHttpInfoLabel(dwOption),
-           dwOption,
-           pdwFlags ? *pdwFlags : -1);
+  LOG16((L"HttpHandler::QueryInfo(%s (%d), %d)\n",
+         GetWinInetHttpInfoLabel(dwOption),
+         dwOption,
+         pdwFlags ? *pdwFlags : -1));
 #endif
 
   if (!is_handling_) {
@@ -1312,8 +1311,8 @@ STDMETHODIMP HttpHandlerFactory::QueryInfo(LPCWSTR pwzUrl,
   }
 
 #ifdef DEBUG
-  ATLTRACE(L"HttpHandler::IInternetProtocolInfo::QueryInfo(%s (%d), %s)\n",
-           GetProtocolInfoLabel(queryOption), queryOption, pwzUrl);
+  LOG16((L"HttpHandler::IInternetProtocolInfo::QueryInfo(%s (%d), %s)\n",
+         GetProtocolInfoLabel(queryOption), queryOption, pwzUrl));
 #endif
 
   return ReturnBoolean(result, pBuffer, cbBuffer, pcbBuf);

@@ -55,7 +55,7 @@
 // FinalConstruct
 //------------------------------------------------------------------------------
 HRESULT GearsResourceStore::FinalConstruct() {
-  ATLTRACE(_T("ResourceStore::FinalConstruct\n"));
+  LOG16((L"ResourceStore::FinalConstruct\n"));
   next_capture_id_ = 0;
   return S_OK;
 }
@@ -65,7 +65,7 @@ HRESULT GearsResourceStore::FinalConstruct() {
 // FinalRelease
 //------------------------------------------------------------------------------
 void GearsResourceStore::FinalRelease() {
-  ATLTRACE(_T("ResourceStore::FinalRelease\n"));
+  LOG16((L"ResourceStore::FinalRelease\n"));
 
   if (capture_task_.get()) {
     capture_task_->SetListenerWindow(NULL, 0);
@@ -146,7 +146,7 @@ STDMETHODIMP GearsResourceStore::capture(
 
   *capture_id = next_capture_id_++;
 
-  ATLTRACE(_T("ResourceStore::capture - id = %d\n"), *capture_id);
+  LOG16((L"ResourceStore::capture - id = %d\n", *capture_id));
 
   scoped_ptr<IECaptureRequest> request(new IECaptureRequest);
   request->id = *capture_id;
@@ -200,7 +200,7 @@ HRESULT GearsResourceStore::ResolveAndAppendUrl(const char16 *url,
       RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
     }
 
-    ATLTRACE(_T("  %s\n"), url);
+    LOG16((L"  %s\n", url));
 
     std::string16 full_url;
     HRESULT hr = ResolveUrl(url, &full_url);
@@ -295,10 +295,10 @@ LRESULT GearsResourceStore::OnCaptureUrlComplete(UINT uMsg,
     if (current_request_.get()) {
       int index = wParam;
       bool success = (uMsg == WM_CAPTURE_URL_SUCCEEDED);
-      ATLTRACE(_T("ResourceStore::OnCaptureUrlComplete( %s, %s %d)\n"),
-               current_request_->urls[index].c_str(),
-               success ? L"SUCCESS" : L"FAILED",
-               current_request_->id);
+      LOG16((L"ResourceStore::OnCaptureUrlComplete( %s, %s %d)\n",
+             current_request_->urls[index].c_str(),
+             success ? L"SUCCESS" : L"FAILED",
+             current_request_->id));
       FireEvent(current_request_->completion_callback,
                 current_request_->urls[index].c_str(),
                 success, current_request_->id);
@@ -331,7 +331,7 @@ LRESULT GearsResourceStore::OnCaptureTaskComplete(UINT uMsg,
 //------------------------------------------------------------------------------
 STDMETHODIMP GearsResourceStore::abortCapture(
       /* [in] */ long capture_id)  {
-  ATLTRACE(_T("ResourceStore::abortCapture( %d )\n"), capture_id);
+  LOG16((L"ResourceStore::abortCapture( %d )\n", capture_id));
 
   if (current_request_.get() && (current_request_->id == capture_id)) {
     // The caller is aborting the task that we're running
@@ -379,8 +379,8 @@ STDMETHODIMP GearsResourceStore::isCaptured(
     return hr;
   }
   *retval = store_.IsCaptured(full_url.c_str()) ? VARIANT_TRUE : VARIANT_FALSE;
-  ATLTRACE(_T("ResourceStore::isCaptured( %s ) = %s\n"),
-           url, *retval ? L"TRUE" : L"FALSE");
+  LOG16((L"ResourceStore::isCaptured( %s ) = %s\n",
+         url, *retval ? L"TRUE" : L"FALSE"));
   RETURN_NORMAL();
 }
 
@@ -402,7 +402,7 @@ STDMETHODIMP GearsResourceStore::remove(
     RETURN_EXCEPTION(STRING16(L"Failure removing url."));
   }
 
-  ATLTRACE(_T("ResourceStore::remove( %s )\n"), url);
+  LOG16((L"ResourceStore::remove( %s )\n", url));
 
   RETURN_NORMAL();
 }
@@ -419,7 +419,7 @@ STDMETHODIMP GearsResourceStore::rename(
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
 
-  ATLTRACE(_T("ResourceStore::rename( %s, %s )\n"), src_url, dst_url);
+  LOG16((L"ResourceStore::rename( %s, %s )\n", src_url, dst_url));
 
   std::string16 full_src_url;
   HRESULT hr = ResolveUrl(src_url, &full_src_url);
@@ -451,7 +451,7 @@ STDMETHODIMP GearsResourceStore::copy(
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
 
-  ATLTRACE(_T("ResourceStore::copy( %s, %s )\n"), src_url, dst_url);
+  LOG16((L"ResourceStore::copy( %s, %s )\n", src_url, dst_url));
 
   std::string16 full_src_url;
   HRESULT hr = ResolveUrl(src_url, &full_src_url);
@@ -511,7 +511,7 @@ STDMETHODIMP GearsResourceStore::captureFile(
     RETURN_EXCEPTION(STRING16(L"File path is empty."));
   }
 
-  ATLTRACE(_T("ResourceStore::captureFile( %s, %s )\n"), filepath.m_str, url);
+  LOG16((L"ResourceStore::captureFile( %s, %s )\n", filepath.m_str, url));
 
   // Resolve the url this file is to be registered under.
   std::string16 full_url;

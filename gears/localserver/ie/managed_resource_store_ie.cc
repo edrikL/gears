@@ -38,7 +38,7 @@
 // FinalConstruct
 //------------------------------------------------------------------------------
 HRESULT GearsManagedResourceStore::FinalConstruct() {
-  ATLTRACE(_T("GearsManagedResourceStore::FinalConstruct\n"));
+  LOG16((L"GearsManagedResourceStore::FinalConstruct\n"));
   return S_OK;
 }
 
@@ -47,7 +47,7 @@ HRESULT GearsManagedResourceStore::FinalConstruct() {
 // FinalRelease
 //------------------------------------------------------------------------------
 void GearsManagedResourceStore::FinalRelease() {
-  ATLTRACE(_T("GearsManagedResourceStore::FinalRelease\n"));
+  LOG16((L"GearsManagedResourceStore::FinalRelease\n"));
 
   if (update_task_.get()) {
     update_task_->SetListenerWindow(NULL, 0);
@@ -128,7 +128,7 @@ GearsManagedResourceStore::put_manifestUrl(const BSTR manifest_url) {
     RETURN_NORMAL();
   }
 
-  ATLTRACE(_T("ManagedResourceStore::put_manifestUrl( %s )\n"), manifest_url);
+  LOG16((L"ManagedResourceStore::put_manifestUrl( %s )\n", manifest_url));
 
   std::string16 full_manifest_url;
   if (!ResolveAndNormalize(this->EnvPageLocationUrl().c_str(), manifest_url,

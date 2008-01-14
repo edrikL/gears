@@ -31,7 +31,7 @@
 
 #ifdef DEBUG
 // Given a set of flags returned from GetBindInfo, dumps a comma delimited
-// string to the debugger console (via ATLTRACE) showing which flags are set
+// string to the debugger console (via LOG) showing which flags are set
 void TraceBindFlags(DWORD flags);
 
 // Given a bind status code reported to IBindStatusCallback::OnProgress, 

@@ -41,7 +41,7 @@ GearsResultSet::GearsResultSet() :
 
 GearsResultSet::~GearsResultSet() {
   if (statement_) {
-    ATLTRACE(_T("~GearsResultSet - was NOT closed by caller\n"));
+    LOG16((L"~GearsResultSet - was NOT closed by caller\n"));
   }
 
   Finalize();
@@ -79,7 +79,7 @@ bool GearsResultSet::Finalize() {
     int sql_status = sqlite3_finalize(statement_);
     statement_ = NULL;
 
-    ATLTRACE(_T("DB ResultSet Close: %d"), sql_status);
+    LOG16((L"DB ResultSet Close: %d", sql_status));
 
     if (sql_status != SQLITE_OK) {
       return false;
@@ -89,7 +89,7 @@ bool GearsResultSet::Finalize() {
 }
 
 STDMETHODIMP GearsResultSet::field(int index, VARIANT *retval) {
-  ATLTRACE(_T("GearsResultSet::field(%d)\n"), index);
+  LOG16((L"GearsResultSet::field(%d)\n", index));
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif  // DEBUG
@@ -156,7 +156,7 @@ STDMETHODIMP GearsResultSet::fieldByName(const BSTR field_name_in,
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif  // DEBUG
 
-  ATLTRACE(_T("GearsResultSet::fieldByName\n"));
+  LOG16((L"GearsResultSet::fieldByName\n"));
   if (statement_ == NULL) {
     RETURN_EXCEPTION(STRING16(L"SQL statement is NULL."));
   }
@@ -189,7 +189,7 @@ STDMETHODIMP GearsResultSet::fieldByName(const BSTR field_name_in,
 }
 
 STDMETHODIMP GearsResultSet::fieldName(int index, VARIANT *retval) {
-  ATLTRACE(_T("GearsResultSet::fieldName(%d)\n"), index);
+  LOG16((L"GearsResultSet::fieldName(%d)\n", index));
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif  // DEBUG
@@ -214,7 +214,7 @@ STDMETHODIMP GearsResultSet::fieldName(int index, VARIANT *retval) {
 }
 
 STDMETHODIMP GearsResultSet::fieldCount(int *retval) {
-  ATLTRACE(_T("GearsResultSet::fieldCount()\n"));
+  LOG16((L"GearsResultSet::fieldCount()\n"));
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif  // DEBUG
@@ -229,7 +229,7 @@ STDMETHODIMP GearsResultSet::fieldCount(int *retval) {
 }
 
 STDMETHODIMP GearsResultSet::close() {
-  ATLTRACE(_T("GearsResultSet::close()\n"));
+  LOG16((L"GearsResultSet::close()\n"));
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif  // DEBUG
@@ -247,7 +247,7 @@ STDMETHODIMP GearsResultSet::next() {
   }
   std::string16 error_message;
   if (!NextImpl(&error_message)) {
-    ATLTRACE(error_message.c_str());
+    LOG16((error_message.c_str()));
     RETURN_EXCEPTION(error_message.c_str());
   }
   RETURN_NORMAL();
@@ -260,7 +260,7 @@ bool GearsResultSet::NextImpl(std::string16 *error_message) {
   assert(statement_);
   assert(error_message);
   int sql_status = sqlite3_step(statement_);
-  ATLTRACE(_T("GearsResultSet::next() sqlite3_step returned %d\n"), sql_status);
+  LOG16((L"GearsResultSet::next() sqlite3_step returned %d\n", sql_status));
   switch (sql_status) {
     case SQLITE_ROW:
       is_valid_row_ = true;
@@ -286,7 +286,7 @@ bool GearsResultSet::NextImpl(std::string16 *error_message) {
 }
 
 STDMETHODIMP GearsResultSet::isValidRow(VARIANT_BOOL *retval) {
-  ATLTRACE(_T("GearsResultSet::isValidRow()\n"));
+  LOG16((L"GearsResultSet::isValidRow()\n"));
 
   // rs.isValidRow() should never throw. Return false if there is no statement.
   bool valid = false;

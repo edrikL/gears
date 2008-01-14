@@ -114,7 +114,7 @@ bool AsyncTask::Start() {
 void AsyncTask::Abort() {
   CritSecLock locker(lock_);
   if (thread_ && !is_aborted_) {
-    ATLTRACE(_T("AsyncTask::Abort\n"));
+    LOG16((L"AsyncTask::Abort\n"));
     is_aborted_ = true;
     abort_event_.Set();
   }
@@ -127,7 +127,7 @@ void AsyncTask::DeleteWhenDone() {
   CritSecLock locker(lock_);
   assert(!delete_when_done_);
   if (!delete_when_done_) {
-    ATLTRACE(_T("AsyncTask::DeleteWhenDone\n"));
+    LOG16((L"AsyncTask::DeleteWhenDone\n"));
     SetListenerWindow(NULL, 0);
     if (!thread_) {
       // In this particular code path, we have to call unlock prior to delete
@@ -314,12 +314,12 @@ bool AsyncTask::HttpGet(const char16 *full_url,
           }
         }
       } else {
-        ATLTRACE(_T("AsyncTask - getReadyState failed, aborting request\n"));
+        LOG16((L"AsyncTask - getReadyState failed, aborting request\n"));
         http_request->Abort();
         done = true;
       }
     } else if (rv == kAbortEvent) {
-      ATLTRACE(_T("AsyncTask - abort event signalled, aborting request\n"));
+      LOG16((L"AsyncTask - abort event signalled, aborting request\n"));
       // We abort the request but continue the loop waiting for it to complete
       // TODO(michaeln): paranoia, what if it never does complete, timer?
       http_request->Abort();

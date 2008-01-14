@@ -309,8 +309,8 @@ STDMETHODIMP GearsHttpRequest::get_responseText(
   if (!request_->GetResponseBodyAsText(&body_str))
     RETURN_EXCEPTION(kInternalError);
 
-  ATLTRACE(L"GearsHttpRequest::get_responseText - %d chars\n",
-           body_str.length());
+  LOG16((L"GearsHttpRequest::get_responseText - %d chars\n",
+         body_str.length()));
 
   CComBSTR body_bstr(body_str.c_str());
   *body = body_bstr.Detach();
@@ -355,7 +355,7 @@ STDMETHODIMP GearsHttpRequest::get_statusText(
 
 void GearsHttpRequest::DataAvailable(HttpRequest *source) {
   assert(source == request_);
-  ATLTRACE(L"GearsHttpRequest::DataAvailable\n");
+  LOG16((L"GearsHttpRequest::DataAvailable\n"));
   ReadyStateChanged(source);
 }
 

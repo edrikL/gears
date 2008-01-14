@@ -60,7 +60,7 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
 
   const BSTR object_name_bstr = ActiveXUtils::SafeBSTR(object_name_bstr_in);
 
-  ATLTRACE(_T("GearsFactory::create(%s)\n"), object_name_bstr);
+  LOG16((L"GearsFactory::create(%s)\n", object_name_bstr));
 
   if (DetectedVersionCollision()) {
     if (!EnvIsWorker()) {
@@ -200,7 +200,7 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
 
 
 STDMETHODIMP GearsFactory::getBuildInfo(BSTR *retval) {
-  ATLTRACE(_T("GearsFactory::getBuildInfo()\n"));
+  LOG16((L"GearsFactory::getBuildInfo()\n"));
   std::string16 build_info;
   AppendBuildInfo(&build_info);
   if (DetectedVersionCollision()) {
