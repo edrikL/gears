@@ -1,4 +1,4 @@
-#summary secure client file access
+#summary Secure client file access
 #labels DesignDoc
 
 ==Introduction==
