@@ -15,7 +15,7 @@ The Location API is an abstraction for the various LBS APIs that currently exist
 var location = google.gears.factory.create( "beta.location", "1.0" );
 
 // Setting up a callback to handle "location changed" events
-var locationChangedCallback = function() {
+location.onlocationstatechanged = function() {
    switch (this.state) {
      case 1:
          SetStatusText("Connecting");
@@ -35,14 +35,10 @@ var locationChangedCallback = function() {
    }
 }
 
-// Get a one-time fix. This will power up the location providers and power them down after the fix is obtained.
-// The callback function will be invoked exactly once for each of the "connecting" and "acquiring" and "locked" states.
-location.getLocation(locationChangedCallback, false, false); // async call, initiates a one-time fix using the lightest provider in terms of power consumption.
-
-// Initiate a location monitor. This leads to the callback function being invoked exactly once for each
+// Initiate a fix. This leads to the onlocationstatechanged event handler being called exactly once for each
 // of the "connecting" and "acquiring" states and one or more times for the "locked" state (for the initial
 // fix and every time the location changes, after that).
-location.getLocation(locationChangedCallback, false, true ); // async call, initiates a sequence of location fixes using the lightest provider in terms of power consumption.
+location.startLocationUpdates(); // async call, initiates fix (powers up GPS if needed, etc)
 
 ...
 
@@ -52,16 +48,18 @@ if (location.latitude != -1 &&
   Foo(location.latitude, location.longitude);
 }
 
-// Cancel the request. This leads to the callback function being invoked for
+// Cancel the request. This leads to the onlocationstatechanged event handler being called for
 // the "canceled" state. This call will power down the GPS HW / close HTTP connection
 // (depending on the location providers that were in use).
-location.stopLocationUpdates(); 
+location.stopLocationUpdates();
 }}}
 
 = Detailed API specification =
 
 {{{
 interface Location {
+  // event handler
+  callback onlocationstatechanged
 
   // state codes
   const unsigned short STATUS_IDLE = 0;
@@ -80,7 +78,8 @@ interface Location {
   const short ERROR_NOT_IN_RANGE = -5;
 
   // methods
-  void getLocation(callback locationCallback, boolean highAccuracy, boolean repeatedUpdates);
+  void startLocationUpdates();
+  void startLocationUpdates(unsigned int minTimeUpdate, unsigned int minDesiredAccuracy);
   void stopLocationUpdates();
 
   // data
@@ -96,7 +95,11 @@ interface Location {
 
 == LocationRequest ==
 
-* void getLocation(callback locationCallback, boolean highAccuracy, boolean repeatedUpdates)*: initiates a location fix using either the provider that requires least system resources (when highAccuracy is false) or the most accurate provider (highAccuracy is true). locationCallback is a function that is called repeatedly at every state change during the location acquisition phase. If the repeatedUpdates flag is true, locationCallback will be called repeatedly for the LOCKED state, once every time the location has changed.
+*onlocationstatechanged*: an event handler that is called repeatedly at every state change during the location acquisition phase. Note that it can be called repeatedly for the LOCKED state, once every time the location has changed.
+
+*void startLocationUpdates()*: initiates a location fix using any of the available providers. The preferred implementation is to initialize all available providers and to use the most accurate one at any given time.
+
+*void startLocationUpdates(unsigned int minTimeUpdate, unsigned int minDesiredAccuracy)*: initiates a location fix using the provider that requires least system resources while producing location fixes that are at least as accurate as minDesiredAccuracy. minTimeUpdate denotes the minimum number of seconds between the calls to the onlocationstatechanged callback. 
 
 *void stopLocationUpdates()*: stops the location updates, powers down the location providers and invokes locationCallback one last time for the CANCELED state.
 
