@@ -1,9 +1,9 @@
-_secure client file access_
+#summary secure client file access
+#labels DesignDoc
 
-==Gears File System API==
+==Introduction==
 
 The purpose of this module is to provide secure access to files on the client machine.
-
 
 ==Features==
 
