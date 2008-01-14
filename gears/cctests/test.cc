@@ -48,12 +48,14 @@
 #include "gears/base/common/permissions_db_test.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/blob/buffer_blob.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
 #include "gears/localserver/common/managed_resource_store.h"
 #include "gears/localserver/common/manifest.h"
 #include "gears/localserver/common/resource_store.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 #if BROWSER_FF
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
@@ -86,6 +88,7 @@ bool TestFileUtils();  // from file_test.cc
 bool TestUrlUtils();  // from url_utils_test.cc
 bool TestJsRootedTokenLifetime();  // from base_class_test.cc
 bool TestStringUtils();  // from string_utils_test.cc
+bool TestBufferBlob();
 
 
 #if BROWSER_FF
@@ -196,6 +199,7 @@ bool GearsTest::RunTestsImpl() {
   ok &= TestManifest();
   ok &= TestManagedResourceStore();
   ok &= TestMessageService();
+  ok &= TestBufferBlob();
   // TODO(zork): Add this test back in once it doesn't crash the browser.
   //ok &= TestJsRootedTokenLifetime();
 
@@ -789,6 +793,56 @@ bool TestHttpRequest() {
   TEST_ASSERT(ok);
   ok = request->Send();
   TEST_ASSERT(ok);
+  return true;
+}
+
+//------------------------------------------------------------------------------
+// TestBufferBlob
+//------------------------------------------------------------------------------
+bool TestBufferBlob() {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    printf("TestBufferBlob - failed (%d)\n", __LINE__); \
+    return false; \
+  } \
+}
+
+  scoped_ptr<BlobInterface> blob(NewBufferBlob("hello", 5));
+  TEST_ASSERT(blob->Length() == 5);
+  uint8 buffer[64];
+  for (int i = 0; i < static_cast<int>(sizeof(buffer)); i++) {
+    buffer[i] = 0;
+  }
+  TEST_ASSERT(buffer[0] == '\0');
+
+  int32 bytes_read = blob->Read(buffer, 3, 1);
+  TEST_ASSERT(bytes_read == 3);
+  TEST_ASSERT(buffer[0] == 'e');
+  TEST_ASSERT(buffer[1] == 'l');
+  TEST_ASSERT(buffer[2] == 'l');
+
+  // This null char was set in the for loop above.
+  TEST_ASSERT(buffer[5] == '\0');
+  buffer[5] = '!';
+
+  bytes_read = blob->Read(buffer, 32, 0);
+  TEST_ASSERT(bytes_read == 5);
+  TEST_ASSERT(buffer[0] == 'h');
+  TEST_ASSERT(buffer[1] == 'e');
+  TEST_ASSERT(buffer[2] == 'l');
+  TEST_ASSERT(buffer[3] == 'l');
+  TEST_ASSERT(buffer[4] == 'o');
+
+  // Test that Blobs don't automatically append a null char.
+  TEST_ASSERT(buffer[5] == '!');
+
+  bytes_read = blob->Read(buffer, 32, 99);
+  TEST_ASSERT(bytes_read == 0);
+  bytes_read = blob->Read(buffer, -4, 20);
+  TEST_ASSERT(bytes_read == 0);
+
   return true;
 }
 
