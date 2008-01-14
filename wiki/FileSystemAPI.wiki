@@ -94,7 +94,7 @@ function createPrintFunction(files) {
     if (index < files.length) {
       var file = fileArray[index];
       var name = file.name;
-      insertRow(name + '<br>' + '<img src="file://' + name + '"></img> <br>');
+      insertRow(name + '<br>' + '<img src="' + name + '"></img> <br>');
       index++;
       return true;
     }
