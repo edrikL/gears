@@ -5,6 +5,7 @@
 
 The purpose of this module is to provide secure access to files on the client machine.
 
+
 ==Features==
 
   * Multiple files can be provided by the user.
