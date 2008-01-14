@@ -31,8 +31,8 @@ Author: Chris De Vries
 Date: 11/01/2008
 
 Steps:
-# The user indicates files they wish to make available to the system.
-# The files are made available for iteration via the API.
+  # The user indicates files they wish to make available to the system.
+  # The files are made available for iteration via the API.
 
 
 ==Interfaces==
