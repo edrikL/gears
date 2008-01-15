@@ -45,17 +45,14 @@ void JsCallbackLoggingBackend::OnNotify(MessageService *service,
   callback_params.reset(js_runner_->NewObject(NULL));
   if (!callback_params.get()) return;
 
-  js_runner_->SetPropertyString(callback_params.get(),
-                                STRING16(L"message"),
+  callback_params.get()->SetPropertyString(STRING16(L"message"),
                                 log_event->message().c_str());
-  js_runner_->SetPropertyString(callback_params.get(),
-                                STRING16(L"type"),
+  callback_params.get()->SetPropertyString(STRING16(L"type"),
                                 log_event->type().c_str());
-  js_runner_->SetPropertyString(callback_params.get(),
-                                STRING16(L"sourceUrl"),
+  callback_params.get()->SetPropertyString(STRING16(L"sourceUrl"),
                                 log_event->sourceUrl().c_str());
   // TODO(oshlack): Implement log_event->date. Requires
-  // JsRunner::SetPropertyObject() among other things.
+  // JsObject::SetPropertyObject() among other things.
   
   const int argc = 1;
   JsParamToSend argv[argc] = {
