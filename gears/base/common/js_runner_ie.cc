@@ -458,7 +458,8 @@ STDMETHODIMP JsRunnerImpl::HandleScriptError(EXCEPINFO *ei, ULONG line,
 
   const JsErrorInfo error_info = {
     line + 1,  // Reported lines start at zero.
-    static_cast<char16 *>(ei->bstrDescription)
+    ei->bstrDescription ? static_cast<char16*>(ei->bstrDescription)
+                        : STRING16(L"")
   };
 
   error_handler_->HandleError(error_info);
