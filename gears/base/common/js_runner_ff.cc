@@ -38,6 +38,7 @@
 #include "gears/base/common/js_runner.h"
 
 #include "ff/genfiles/channel.h"
+#include "ff/genfiles/console.h"
 #include "ff/genfiles/database.h"
 #include "ff/genfiles/desktop_ff.h"
 #include "ff/genfiles/httprequest.h"
@@ -459,7 +460,9 @@ bool JsRunner::InitJavaScriptEngine() {
     // httprequest
     {GEARSHTTPREQUESTINTERFACE_IID, NULL},
     // channel
-    {GEARSCHANNELINTERFACE_IID, NULL}
+    {GEARSCHANNELINTERFACE_IID, NULL},
+    // console
+    {GEARSCONSOLEINTERFACE_IID, NULL}
   };
   const int num_classes = sizeof(classes) / sizeof(classes[0]);
 

@@ -35,6 +35,7 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/channel/firefox/channel.h"
+#include "gears/console/firefox/console_ff.h"
 #include "gears/database/firefox/database.h"
 #include "gears/desktop/desktop_ff.h"
 #include "gears/factory/common/factory_utils.h"
@@ -117,6 +118,8 @@ NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
   nr = NS_ERROR_FAILURE;
   if (object == STRING16(L"beta.channel")) {
     isupports = do_QueryInterface(new GearsChannel(), &nr);
+  } else if (object == STRING16(L"beta.console")) {
+    isupports = do_QueryInterface(new GearsConsole(), &nr);
   } else if (object == STRING16(L"beta.database")) {
     isupports = do_QueryInterface(new GearsDatabase(), &nr);
   } else if (object == STRING16(L"beta.desktop")) {

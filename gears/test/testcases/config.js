@@ -54,6 +54,11 @@ TestSuite.prototype.addFile = function(relativePath, config) {
 var TEST_TIMEOUT_SECONDS = 90 * 1000;
 var suites = [];
 
+var consoleSuite = new TestSuite('Console');
+consoleSuite.addFile('../testcases/console_tests.js',
+                      {useWorker: true, useIFrame: true});
+suites.push(consoleSuite);
+
 var databaseSuite = new TestSuite('Database');
 databaseSuite.addFile('../testcases/database_tests.js',
                       {useWorker: true, useIFrame: true});
