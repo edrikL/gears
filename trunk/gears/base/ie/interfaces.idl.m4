@@ -48,6 +48,7 @@ import "ocidl.idl";
 import "ui/ie/html_dialog_host.idl";
 
 import "channel/ie/channel.idl";
+import "console/ie/console.idl";
 import "database/ie/database.idl";
 import "desktop/desktop_ie.idl";
 import "factory/ie/factory.idl";
@@ -116,6 +117,14 @@ library GearsTypelib
   coclass GearsFactory
   {
     [default] interface GearsFactoryInterface;
+  };
+
+  [
+    uuid(51C2DE73-6A33-4975-8D7D-C521064F8A83)
+  ]
+  coclass GearsConsole
+  {
+    [default] interface GearsConsoleInterface;
   };
 
   [

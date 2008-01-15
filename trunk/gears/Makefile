@@ -479,6 +479,56 @@ NPAPI_LINK_EXTRAS  += \
 endif
 
 #-----------------------------------------------------------------------------
+# console/firefox
+
+FF_VPATH	+= \
+		console/common \
+		console/firefox \
+		$(NULL)
+
+FF_M4SRCS	+= \
+		console.idl.m4 \
+		$(NULL)
+
+FF_IDLSRCS	+= \
+		console.idl \
+		$(NULL)
+
+# console/common
+FF_CPPSRCS	+= \
+		console.cc \
+		js_callback_logging_backend.cc \
+		$(NULL)
+
+# console/firefox
+FF_CPPSRCS	+= \
+		console_ff.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# console/ie
+
+IE_VPATH	+= \
+		console/common \
+		console/ie \
+		$(NULL)
+
+IE_IDLSRCS	+= \
+		console.idl \
+		$(NULL)
+
+# console/common
+IE_CPPSRCS	+= \
+		console.cc \
+		js_callback_logging_backend.cc \
+		$(NULL)
+
+# console/ie
+IE_CPPSRCS	+= \
+		console_ie.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # database/firefox
 
 FF_VPATH	+= \

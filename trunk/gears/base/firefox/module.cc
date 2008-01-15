@@ -33,6 +33,7 @@
 
 #include "gears/base/common/thread_locals.h"
 #include "gears/channel/firefox/channel.h"
+#include "gears/console/firefox/console_ff.h"
 #include "gears/database/firefox/database.h"
 #include "gears/database/firefox/result_set.h"
 #include "gears/desktop/desktop_ff.h"
@@ -186,6 +187,12 @@ NS_DOMCI_EXTENSION(Scour)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsChannel, PR_TRUE,
                                              &kGearsChannelClassId)
 
+  // console
+  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsConsole)
+    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsConsoleInterface)
+  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsConsole, PR_TRUE,
+                                             &kGearsConsoleClassId)
+
 NS_DOMCI_EXTENSION_END
 
 static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
@@ -251,7 +258,10 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
       GEARSTIMERINTERFACE_IID_STR },
     // channel
     { kGearsChannelClassName, "GearsChannelInterface",
-      GEARSCHANNELINTERFACE_IID_STR }
+      GEARSCHANNELINTERFACE_IID_STR },
+    // console
+    { kGearsConsoleClassName, "GearsConsoleInterface",
+      GEARSDATABASEINTERFACE_IID_STR }
   };
 
   for (size_t i = 0; i < NS_ARRAY_LENGTH(jsDOMClasses); ++i) {
@@ -304,6 +314,8 @@ NS_DECL_DOM_CLASSINFO(GearsTest)
 NS_DECL_DOM_CLASSINFO(GearsTimer)
 // channel
 NS_DECL_DOM_CLASSINFO(GearsChannel)
+// console
+NS_DECL_DOM_CLASSINFO(GearsConsole)
 
 nsresult PR_CALLBACK ScourModuleConstructor(nsIModule *self) {
   return ThreadLocals::HandleModuleConstructed();
@@ -339,6 +351,8 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsTimer));
   // channel
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsChannel));
+  // console
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsConsole));
 #ifdef DEBUG
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsFileSubmitter));
 #endif

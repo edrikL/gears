@@ -31,6 +31,7 @@
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/base/ie/module_wrapper.h"
 #include "gears/channel/ie/channel.h"
+#include "gears/console/ie/console_ie.h"
 #include "gears/database/ie/database.h"
 #include "gears/desktop/desktop_ie.h"
 #include "gears/factory/common/factory_utils.h"
@@ -112,7 +113,16 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
     base_class = obj;
     idispatch = obj;
 #endif
-  } else if (object_name == STRING16(L"beta.database")) {
+#ifdef WINCE
+  // TODO(oshlack): Implement console for WinCE.
+#else
+  } else if (object_name == STRING16(L"beta.console")) {
+    CComObject<GearsConsole> *obj;
+    hr = CComObject<GearsConsole>::CreateInstance(&obj);
+    base_class = obj;
+    idispatch = obj;
+#endif
+ } else if (object_name == STRING16(L"beta.database")) {
     CComObject<GearsDatabase> *obj;
     hr = CComObject<GearsDatabase>::CreateInstance(&obj);
     base_class = obj;
