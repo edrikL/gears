@@ -1,70 +1,55 @@
-#summary A manipulable handle to file data
+#summary An opaque handle to binary data
 #labels DesignDoc
 
 = Introduction =
 
-A blob is an object representing file data.  It is retrievable, for example, from a resource store or from a HttpRequest or some other source of file data.  It can be saved back to a resource store or to a POST request via HttpRequest.  Other modules, such as ImageManipulationAPI, can edit blobs.
+A Blob represents an arbitrary chunk of (binary) data.  Examples include an image file on disk, a resource from a LocalServer, an entry in a Database, or something computed client-side to be uploaded over HTTP to a server.  The JavaScript interface is minimal and does not expose its constituent data - it is merely a handle, allowing JavaScript code to nominate the inputs into, and represent the outputs from, other Gears APIs, such as the ImageManipulationAPI.
 
-Blob data cannot be accessed from Javascript.  Only metadata can be read.  Blobs can only be created and modified by other modules.
+The C++ interface is essentially a random-access input stream of bytes.  Blobs are read-only and immutable, a la Strings in the Java language.  For C++ Gears modules, there will be an analog of Java's StringBuffer class for creating mutable in-memory Blobs.
 
 = Details =
 
-== Blob class - External interface ==
+== JS Interface ==
 
 IDL definition:
 
 {{{
 interface Blob {
-  readonly attribute int size;
-  readonly attribute string contentType;
+  readonly attribute int64 length;
 }
 }}}
 
-=== size ===
-The size of the blob in bytes.
+=== length ===
 
-=== contentType ===
-A string representing the type of the data, in Content-Type format (eg.
-"image/png". TODO: should this include the character encoding like the HTTP
-Content-Type field?
+The length of the Blob, in bytes.  For example, length could be used to estimate the time taken to upload the Blob.  Note that a Blob's length may be volatile, such as for a Blob representing a file on disk, since that file could be concurrently modified elsewhere.
 
-For example, once a blob is created, its size and type can be accessed via
-b.size and b.type.
-
-== Blob class - Internal interface ==
-
-Additionally, the implementation will expose methods for mutation and for
-access to the data pointer from within other modules within Gears (from C++)
+== C++ Interface ==
 
 {{{
-  void SetContentType(const std::string16 mimetype)
-  bool SetData(const std::vector<uint8> &data);
-  const std::vector<uint8> &GetData();
+class BlobInterface {
+  int const Read(uint8 *destination, int max_bytes, int64 position);
+  int64 const Length();
+}
 }}}
 
-=== void SetContentType(const std::string16 contenttype) ===
-Sets the content type of the blob to _contenttype_.
+=== int const Read(uint8 `*`destination, int max_bytes, int64 position) ===
 
-=== bool SetData(const std::vector<uint8> &data) ===
-Makes a copy of the data referenced by _data_ into the blob.  Any previous data
-stored in the blob is destroyed and can no longer be referenced.
+Fills the _destination_ buffer with data from this Blob, starting at _position_, up to _max_bytes_ bytes.  This returns the number of bytes actually read, or zero on error.
 
-Note that the data is represented as a vector of bytes.
+=== int64 const Length() ===
 
-=== const std::vector<uint8> &GetData() ===
-Returns a reference to the data wrapped inside the blob.  Note that this is a
-reference to internals of the blob!  This means the reference is only valid
-up until a SetData() is called, or the blob is destroyed.  For example,
-{{{
-  const std::vector<uint8> &eg1 = blob.GetData();  // use as a reference 
-  const std::vector<uint8> *eg2 = &(blob.GetData()); // pointer alternative
-  // read stuff from eg1 or eg2
-  blob.SetData(otherdata);
-  // reading stuff from eg1 or eg2 now would cause undefined behaviour!
-}}}
+This is as per the JS interface.
 
-A slower but safer alternative is to copy the returned data:
-{{{
-  const std::vector<uint8> eg3(blob.GetData()); // copy constructor
-  const std::vector<uint8> eg4 = blob.GetData(); // assignment alternative
-}}}
+= Discussion =
+
+== Content Type ==
+
+Previous design iterations had a Blob also exposing (in its JavaScript interface) its content type, such as "image/png", but this was deemed unnecessary for now.  If a future use case would benefit from that, we could resurrect this idea.
+
+== Serialization ==
+
+The intention is to be able to serve a Blob's contents via the LocalServer (e.g. by binding a URL to a Blob).  For example, you could construct an <img> object and point its src to that URL.  Additionally, you should be able to upload a Blob's contents via a HTTP request, or save it to a Database.
+
+== Worker Interaction ==
+
+Workers communicate by passing String messages.  One proposal for Workers to pass Blobs to each other is to have a global BlobRepository where Blobs can be checked in (in exchange for a String ticket ID) by one Worker (called A) to be collected only by another, nominated worker (called B), A would then pass this ticket ID to B via sendMessage, and B would ask the BlobRepository to exchange that ticket ID for the Blob object.
