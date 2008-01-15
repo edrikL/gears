@@ -529,6 +529,29 @@ IE_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# console/iemobile
+
+IEMOBILE_VPATH  += \
+		console\common \
+		console\ie \
+		$(NULL)
+
+IEMOBILE_IDLSRCS += \
+	 	console.idl \
+		$(NULL)
+
+# console/common
+IEMOBILE_CPPSRCS += \
+		console.cc \
+		js_callback_logging_backend.cc \
+		$(NULL)
+
+# console/ie
+IEMOBILE_CPPSRCS += \
+		console_ie.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # database/firefox
 
 FF_VPATH	+= \
