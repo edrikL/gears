@@ -19,8 +19,11 @@ Asynchronous tests that don't call completeAsync() are eventually timed out and
 marked failed. For an example of asynchronous tests, see
 testcases/timer_tests.js.
 
+The test webserver binds itself to all bound IP addresses on the machine;
+it is visible on 127.0.0.1 (localhost) as well as any other connected 
+interfaces.
 
 How to run tests:
 
 Run python test/runner/testwebserver.py
-Then go to http://localhost:8001/tester/gui.html
+Then go to http://hostname:8001/tester/gui.html

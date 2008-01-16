@@ -363,7 +363,7 @@ class TestWebserver(asyncore.dispatcher):
   """
   RESULTS_POSTBACK_FILE_PATTERN = 'gui.html'
 
-  def __init__ (self, server_root_dir, port=8001, ip='127.0.0.1',
+  def __init__ (self, server_root_dir, port=8001, ip='0.0.0.0',
                 handler=RequestHandler):
     self.ip = ip
     self.port = port
