@@ -24,10 +24,38 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /**
+ * Creates globals to simplify browser checking
+ */
+
+var isIE = false;
+var isPIE = false;
+var isFF = false;
+
+if (pie_dialog) {
+  isPIE = true;
+} else {
+  isIE = Boolean(window.external);
+  isFF = Boolean(window.arguments);
+}
+
+/**
  * Initialize the base functionality of the dialog.
  */
 function initDialog() {
-  addEvent(document, "keyup", handleKeyUp);
+  if (!isPIE) {
+    addEvent(document, "keyup", handleKeyUp);
+  }
+}
+
+/**
+ * Provides a cross-browser way of getting an element by its id
+ */
+function getElementById(id) {
+  if (document.getElementById) {
+    return document.getElementById(id);
+  } else {
+    return document.all[id];
+  }
 }
 
 /**
@@ -72,11 +100,13 @@ function initCustomLayout(layoutFunction) {
  */
 function getArguments() {
   var argsString;
-  if (window.external &&
-      typeof window.external.GetDialogArguments != "undefined") {
+  if (isIE) {
     // IE
     argsString = window.external.GetDialogArguments();
-  } else if (window.arguments && window.arguments[0]) {
+  } else if (isPIE) {
+    // PIE
+    argsString = pie_dialog.GetDialogArguments();
+  } else if (isFF) {
     // Firefox
     argsString = getFirefoxArguments(window.arguments[0]);
   }
@@ -105,11 +135,13 @@ function getFirefoxArguments(windowArguments) {
  */
 function saveAndClose(resultObject) {
   var resultString = JSON.stringify(resultObject);
-  if (window.external &&
-      typeof window.external.CloseDialog != "undefined") {
+  if (isIE) {
     // IE
     window.external.CloseDialog(resultString);
-  } else if (window.arguments && window.arguments[0]) {
+  } else if (isPIE) {
+    // PIE
+    pie_dialog.CloseDialog(resultString);
+  } else if (isFF) {
     // Firefox
     saveFirefoxResults(resultString);
     window.close();
@@ -135,8 +167,8 @@ function saveFirefoxResults(resultString) {
  * Returns the height of the content area of the dialog.
  */
 function getContentHeight() {
-  var head = document.getElementById("head");
-  var foot = document.getElementById("foot");
+  var head = getElementById("head");
+  var foot = getElementById("foot");
   return getWindowInnerHeight() - head.offsetHeight - foot.offsetHeight;
 }
 
@@ -183,26 +215,36 @@ function addEvent(element, eventName, handler) {
  * Disables one of our fancy custom buttons.
  */
 function disableButton(buttonElm) {
-  var classes = buttonElm.className.split(" ");
-  for (var i = 0, className; className = classes[i]; i++) {
-    if (className == "custom-button-disabled") {
-      // already disabled
-      return;
+  if (isPIE) {
+    buttonElm.style.textDecoration = "none";
+    buttonElm.style.color = "gray";
+  } else {
+    var classes = buttonElm.className.split(" ");
+    for (var i = 0, className; className = classes[i]; i++) {
+      if (className == "custom-button-disabled") {
+        // already disabled
+        return;
+      }
     }
+    buttonElm.className += " custom-button-disabled";
   }
-  buttonElm.className += " custom-button-disabled";
 }
 
 /**
  * Enables one of our fancy custom buttons.
  */
 function enableButton(buttonElm) {
-  var classes = buttonElm.className.split(" ");
-  for (var i = 0, className; className = classes[i]; i++) {
-    if (className == "custom-button-disabled") {
-      classes.splice(i, 1);
-      buttonElm.className = classes.join(" ");
-      return;
+  if (isPIE) {
+    buttonElm.style.textDecoration = "underline";
+    buttonElm.style.color = "blue";
+  } else {
+    var classes = buttonElm.className.split(" ");
+    for (var i = 0, className; className = classes[i]; i++) {
+      if (className == "custom-button-disabled") {
+        classes.splice(i, 1);
+        buttonElm.className = classes.join(" ");
+        return;
+      }
     }
   }
 }

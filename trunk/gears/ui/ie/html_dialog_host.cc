@@ -530,3 +530,9 @@ HRESULT HtmlDialogHost::CloseDialog(const BSTR result_string) {
   dialog_result_ = result_string;
   return EndDialog(IDCANCEL);
 }
+
+
+HRESULT HtmlDialogHost::IsPocketIE(VARIANT_BOOL *retval) {
+  *retval = VARIANT_FALSE;
+  return S_OK;
+}

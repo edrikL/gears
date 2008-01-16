@@ -47,6 +47,10 @@ import "ocidl.idl";
 
 import "ui/ie/html_dialog_host.idl";
 
+#ifdef WINCE
+import "ui/ie/html_dialog_bridge_iemobile.idl";
+#endif
+
 import "channel/ie/channel.idl";
 import "console/ie/console.idl";
 import "database/ie/database.idl";
@@ -88,6 +92,16 @@ library GearsTypelib
     [default] interface HtmlDialogHostInterface;
   };
 
+#ifdef WINCE
+  [
+    uuid(134AB400-1A81-4fc8-85DD-29CD51E9D6DE)
+  ]
+  coclass PIEDialogBridge
+  {
+    [default] interface PIEDialogBridgeInterface;
+  };
+#endif
+
   [
     uuid(0B4350D1-055F-47A3-B112-5F2F2B0D6F08)
   ]
@@ -95,7 +109,7 @@ library GearsTypelib
   {
     [default] interface IUnknown;
   };
-  
+
   [
     uuid(09371E80-6AB5-4341-81E8-BFF3FB8CC749)
   ]
@@ -142,7 +156,7 @@ library GearsTypelib
   {
     [default] interface GearsDesktopInterface;
   };
-  
+
 #ifdef DEBUG
   [
     uuid(F98360E4-ECE5-4177-971F-639A0A6D353E)

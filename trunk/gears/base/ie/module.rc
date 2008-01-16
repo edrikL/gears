@@ -77,6 +77,9 @@ IDR_GEARSIE                     REGISTRY  "ie/genfiles/module.rgs"
 IDR_BROWSERHELPEROBJECT         REGISTRY  "ie/genfiles/bho.rgs"
 IDR_GEARSFACTORY                REGISTRY  "ie/genfiles/factory.rgs"
 IDR_TOOLSMENUITEM               REGISTRY  "ie/genfiles/tools_menu_item.rgs"
+#ifdef WINCE
+IDR_PIEDIALOGBRIDGE             REGISTRY  "ie/genfiles/html_dialog_bridge_iemobile.rgs"
+#endif
 
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////

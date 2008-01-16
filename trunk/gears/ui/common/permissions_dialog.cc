@@ -100,8 +100,13 @@ bool PermissionsDialog::Prompt(const SecurityOrigin &origin,
     return false;
   }
 
+#ifdef WINCE
+  const int kDialogWidth = 230;
+  const int kDialogHeight = 240;
+#else
   const int kDialogWidth = 360;
   const int kDialogHeight = 215;
+#endif
   const char16 *kDialogFile = STRING16(L"permissions_dialog.html");
 
   dialog.DoModal(kDialogFile, kDialogWidth, kDialogHeight);
@@ -121,6 +126,8 @@ bool PermissionsDialog::Prompt(const SecurityOrigin &origin,
   bool allow = dialog.result["allow"].asBool();
 
   // Store this result in the DB
+  // TODO(steveblock): surely this code shouldn't be in the PermissionsDialog
+  // class?!
   PermissionsDB *permissions = PermissionsDB::GetDB();
   if (!permissions) { return false; }
   PermissionsDB::PermissionValue value = 
