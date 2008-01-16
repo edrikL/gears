@@ -80,6 +80,13 @@ class File {
   //
   // Returns true if function succeeds.
   static bool GetBaseName(const std::string16 &path,  std::string16 *basename);
+  
+  // Gets the parent directory for a path.
+  // Corner cases:
+  // * 'path' parameter may not be empty.
+  // * Fails if path doesn't specify a parent directory e.g. 'filename'.
+  static bool GetParentDirectory(const std::string16 &path, 
+                                 std::string16 *parent);
 
   // Creates a unique file in the system temporary directory.  Returns the
   // full path of the new file in 'path'.
@@ -103,12 +110,6 @@ class File {
   // If file doesn't exist or an error occurs, false is returned.
   static bool WriteBytesToFile(const char16 *full_filepath, const uint8 *data,
                                int length);
-
-// TODO(aa): Implement this on other platforms as needed
-#if defined(BROWSER_FF) && !defined(WIN32)
-  // Moves a directory to a new location. Returns true if the function succeeds.
-  static bool MoveDirectory(const char16 *src_path, const char16 *dest_path);
-#endif
 
   // Clears the last file error for the current thread
   static void ClearLastFileError();

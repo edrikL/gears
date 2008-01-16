@@ -318,6 +318,113 @@ static bool GetApplicationPath(const std::string16 &app_name,
   return true;
 }
 
+static bool MoveDirectory(const std::string16 &src_path, 
+                          const std::string16 &dest_path) {
+  std::string src_path_utf8;
+  String16ToUTF8(src_path.c_str(), &src_path_utf8);
+  
+  // Get base name of destination.
+  std::string16 dest_basename_utf16;
+  if (!File::GetBaseName(dest_path, &dest_basename_utf16)) {
+    return false;
+  }
+  
+  // Get parent directory of dest path.
+  std::string16 dest_parent_path_utf16;
+  if (!File::GetParentDirectory(dest_path, &dest_parent_path_utf16)) {
+    return false;
+  }
+  
+  // Convert parameters to UTF8.
+  std::string dest_parent_path_utf8;
+  String16ToUTF8(dest_parent_path_utf16.c_str(), &dest_parent_path_utf8);
+  std::string dest_base_name_utf8;
+  String16ToUTF8(dest_basename_utf16.c_str(), &dest_base_name_utf8);
+  
+  FSRef src;
+  if (FSPathMakeRef(reinterpret_cast<const UInt8*>(src_path_utf8.c_str()), 
+                    &src, NULL) != noErr) {
+    return false;
+  }
+  
+  FSRef dest;
+  if (FSPathMakeRef(
+          reinterpret_cast<const UInt8*>(dest_parent_path_utf8.c_str()), 
+          &dest, NULL) != noErr) {
+    return false;
+  }
+  
+  
+  scoped_CFString dest_file_name_CF(
+      CFStringCreateWithBytes(
+          NULL, 
+          reinterpret_cast<const UInt8*>(dest_base_name_utf8.c_str()), 
+          dest_base_name_utf8.length(), kCFStringEncodingUTF8, false));
+ 
+  if (FSMoveObjectSync(&src, &dest, dest_file_name_CF.get(), NULL,
+                       kFSFileOperationOverwrite) != noErr) {
+    return false;
+  }
+  return true;
+}
+
+
+// Compile and Run an Applescript, based on Apple Technical Q&A QA1026.
+static bool RunAppleScript(const std::string16 &applescript) {
+  std::string applescript_utf8;
+  String16ToUTF8(applescript.c_str(), &applescript_utf8);
+  
+  AEDesc script_text_desc;
+  AECreateDesc(typeNull, NULL, 0, &script_text_desc);
+  scoped_AEDesc scoped_script_text_desc(script_text_desc);
+
+  // Open the scripting component.
+  ComponentInstance the_component = OpenDefaultComponent(kOSAComponentType, 
+                                                         typeAppleScript);
+  if (the_component == NULL) { 
+    return false;
+  }
+  scoped_ComponentInstance scoped_component(the_component);
+  
+  // Make the script an aedesc.
+  if (AECreateDesc(typeChar, applescript_utf8.c_str(), 
+                  applescript_utf8.length(), &script_text_desc) != noErr) {
+    return false;  
+  }
+
+  // Compile the script.
+  OSAID scriptID = kOSANullScript;
+  if (OSACompile(the_component, &script_text_desc, kOSAModeNull, 
+                 &scriptID) != noErr) {
+    if (scriptID != kOSANullScript) {
+      OSADispose(the_component, scriptID);
+    }
+    return false;
+  }
+
+  // Run the script.
+  OSAID resultID = kOSANullScript;
+  if (OSAExecute(the_component, scriptID, kOSANullScript,
+                kOSAModeNull, &resultID) != noErr) {
+    if (scriptID != kOSANullScript) {
+      OSADispose(the_component, scriptID);
+    }
+    if (resultID != kOSANullScript) {
+      OSADispose(the_component, resultID);
+    }
+    return false;
+  }
+  return true;
+}
+
+// Force the finder to refresh the desktop icons.
+static bool ForceDesktopIconUpdate() {
+  std::string16 update_desktop_script(STRING16(L"tell application \"Finder\" to"
+                    " tell Desktop to update every item with necessity"));
+  
+  return RunAppleScript(update_desktop_script);
+}
+
 
 // Implements creation of desktop shortcuts to a web application on mac. On mac,
 // shortcuts aren't used the same way they are on pc, so this does something
@@ -379,9 +486,14 @@ bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
     *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
-  File::DeleteRecursively(application_path.c_str());
-  if (!File::MoveDirectory(temp_path.c_str(), application_path.c_str())) {
+  
+  // Move Directory will overwrite the destination.
+  if (!MoveDirectory(temp_path.c_str(), application_path.c_str())) {
     *error = GET_INTERNAL_ERROR_MESSAGE();
+    return false;
+  }
+  
+  if (!ForceDesktopIconUpdate()) {
     return false;
   }
 

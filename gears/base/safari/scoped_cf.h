@@ -28,6 +28,7 @@
 #ifndef GEARS_BASE_SAFARI_SCOPED_CF_H__
 #define GEARS_BASE_SAFARI_SCOPED_CF_H__
 
+#include <ApplicationServices/ApplicationServices.h>
 #include <CoreFoundation/CoreFoundation.h>
 #define kInvalidID 0
 #include <CoreServices/CoreServices.h>
@@ -55,6 +56,20 @@ class ReleaseHandleFunctor {
  public:
   void operator()(Handle x) const {
     if (x != NULL) { DisposeHandle(x); }
+  }
+};
+
+class ReleaseComponentFunctor {
+ public:
+  void operator()(ComponentInstance x) const {
+    if (x != NULL) { CloseComponent(x); }
+  }
+};
+
+class ReleaseAEDescFunctor {
+ public:
+  void operator()(AEDesc x) const {
+    AEDisposeDesc(&x);
   }
 };
 
@@ -100,5 +115,12 @@ typedef scoped_token<CFURLRef, ReleaseCFTypeFunctor> scoped_CFURL;
 
 // CFUUIDRef
 typedef scoped_token<CFUUIDRef, ReleaseCFTypeFunctor> scoped_CFUUID;
+
+// ComponentInstance
+typedef scoped_token<ComponentInstance, ReleaseComponentFunctor> 
+            scoped_ComponentInstance;
+            
+// AEDesc
+typedef scoped_token<AEDesc, ReleaseAEDescFunctor> scoped_AEDesc;
 
 #endif  // GEARS_BASE_SAFARI_SCOPED_CF_H__
