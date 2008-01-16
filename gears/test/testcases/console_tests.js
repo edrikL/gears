@@ -41,14 +41,6 @@ function testOneParameter() {
   assertError(function() { console.log('test'); }, null,
       'Calling console.log with only one parameter should fail');
 }
-function testTypeNotString() {
-  assertError(function() { console.log(3, 'test'); }, null,
-      'Calling console.log with a type that is not a string should fail');
-}
-function testMessageNotString() {
-  assertError(function() { console.log('test', 3); }, null,
-      'Calling console.log with a message that is not a string should fail');
-}
 function testTypeNull() {
   assertError(function() { console.log(null, 'test'); }, null,
       'Calling console.log with type null should fail');
