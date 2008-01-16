@@ -105,10 +105,6 @@ bool HasPermissionToUseGears(GearsFactory *factory,
                              const char16 *custom_icon_url,
                              const char16 *custom_name,
                              const char16 *custom_message) {
-#ifdef WINCE
-  // TODO (andreip): implement for IE Mobile.
-  return true;
-#else
   // First check is_creation_suspended, because the factory can be suspended
   // even when is_permission_granted.
   if (factory->is_creation_suspended_) {
@@ -169,13 +165,9 @@ bool HasPermissionToUseGears(GearsFactory *factory,
 
   // Return the decision.
   return allow_origin;
-#endif
 }
 
 #ifndef BROWSER_SAFARI
-#ifdef WINCE
-  // TODO(andreip): implement permissions dialog for IE Mobile.
-#else
 bool ShowPermissionsPrompt(const SecurityOrigin &origin,
                            const char16 *custom_icon_url,
                            const char16 *custom_name,
@@ -185,7 +177,6 @@ bool ShowPermissionsPrompt(const SecurityOrigin &origin,
                                    custom_name,
                                    custom_message);
 }
-#endif
 #endif
 
 void SetActiveUserFlag() {

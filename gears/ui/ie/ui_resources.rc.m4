@@ -23,7 +23,11 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "WinResrc.h"
+#ifdef WINCE
+  #include "afxres.h"
+#else
+  #include "WinResrc.h"
+#endif
 #include "ui/ie/ui_resources.h"
 
 //-----------------------------------------------------------------------------
@@ -47,6 +51,15 @@ json_noeval.js             HTML  "third_party/jsonjs/json_noeval.js"
 // Dialogs
 //-----------------------------------------------------------------------------
 
+#ifdef WINCE
+IDD_GENERIC_HTML DIALOG -5000, -5000, 500, 500
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
+    WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+#else
 IDD_GENERIC_HTML DIALOGEX -5000, -5000, 500, 500
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
     WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
@@ -57,6 +70,7 @@ BEGIN
     // http://msdn2.microsoft.com/en-us/library/aa752040.aspx
     CONTROL         "",IDC_GENERIC_HTML,"{8856F961-340A-11D0-A96B-00C04FD705A2}",WS_TABSTOP,7,7,486,486
 END
+#endif
 
 //-----------------------------------------------------------------------------
 // Strings

@@ -45,4 +45,7 @@ interface HtmlDialogHostInterface : IDispatch {
 
   // Called by script inside the dialog to close and send back result.
   HRESULT CloseDialog([in] const BSTR result_string);
+
+  // Called by script to check if we are in Pocket IE or Desktop IE
+  HRESULT IsPocketIE([out, retval] VARIANT_BOOL *retval);
 };

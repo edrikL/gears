@@ -90,9 +90,42 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     #yellowbox p {
       padding:0 1em;
     }
+
+    #permissions-help {
+      margin:4px;
+      display:none;
+    }
   </style>
 </head>
 <body>
+
+  <!--
+   PIE only works with one window, and we are in a modal dialog.
+   Using window.open(this.href) replaces the content of the current dialog,
+   which is annoying when no back button is displayed...
+   The workaround is to embed directly a short explanation text, and
+   hide/show the div container for the help and the settings dialog.
+  -->
+
+  <div id="permissions-help">
+   <h2>Information</h2>
+   <p>
+     PRODUCT_FRIENDLY_NAME_UQ is an open source browser extension that enables
+     web applications to provide offline functionality using the following
+     JavaScript APIs:
+   </p>
+   <ul>
+     <li>Store and serve application resources locally</li>
+     <li>Store data locally in a fully-searchable relational database</li>
+     <li>Run asynchronous Javascript to improve application responsiveness</li>
+   </ul>
+   <a href="#" onclick="showHelp(false); return false;">Go back</a>
+  </div>
+
+m4_changequote(`^',`^')m4_dnl
+m4_ifelse(^PRODUCT_OS^,^wince^,m4_define(^WINCE^))
+m4_ifdef(^WINCE^,m4_dnl
+^ <div id="permissions-settings">^)
   <div id="head">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
@@ -101,11 +134,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         </td>
         <td width="100%" align="left" valign="middle">
           <?cs #TC_MSG_BREAK desc: Asks the user if they want to let the site use gears ?>
-          The website below wants to use PRODUCT_FRIENDLY_NAME_UQ. This site
+          The website below wants to use PRODUCT_FRIENDLY_NAME_UQ. This site 
           will be able to store and access information on your computer.&nbsp;
           <?cs #TC_MSG_BREAK ?>
-          <a href="http://gears.google.com/?action=help"
-             onclick="window.open(this.href); return false;">
+          <a href="#" onclick="showHelp(true); return false;">
           <?cs #TC_MSG_BREAK desc: Help link displayed in the installation dialog. ?>
           What is this?
           <?cs #TC_MSG_BREAK ?>
@@ -138,7 +170,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <table cellspacing="0" cellpadding="0" border="0">
         <tr>
           <td valign="middle">
-            <input type="checkbox" id="unlock" accesskey="T">
+            <input type="checkbox" id="unlock" accesskey="T"
+                   onclick="updateAllowButtonEnabledState()">
           </td>
           <td valign="middle">
             <label for="unlock">
@@ -165,7 +198,20 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             <?cs #TC_MSG_BREAK ?>
             </a>
           </td>
-          <td nowrap="true" align="right" valign="middle">
+m4_ifdef(^WINCE^,m4_dnl
+^          <!-- 
+           We use simple links instead of buttons as PIE does not support them
+           -->
+
+           <td width="100%" align="right" valign="middle">
+            <a href="#" accesskey="A" id="allow-button"
+              onclick="allowAccess(); return true;">
+              <?cs #TC_MSG_BREAK desc: Button user can press to allow the use of gears ?><span class="accesskey">A</span>llow<?cs #TC_MSG_BREAK ?></a>
+            <a href="#" accesskey="C" id="deny-button"
+              onclick="denyAccess(); return false;">
+              <?cs #TC_MSG_BREAK desc: Button user can press to disallow the use of gears ?><span class="accesskey">C</span>ancel<?cs #TC_MSG_BREAK ?></a>
+          </tr>^,m4_dnl
+^          <td nowrap="true" align="right" valign="middle">
             <!--
             Fancy buttons
             Note: Weird line breaks are on purpose to avoid extra space between
@@ -173,7 +219,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             Note: Outer element is <a> because we want it to focusable and
             behave like an anchor. Inner elements should theoretically be able
             to be <span>, but IE renders incorrectly in this case.
-
+             
             Note: The whitespace in this section is very delicate.  The lack of
             space between the tags and the space between the buttons both
             are important to ensure proper rendering.
@@ -192,20 +238,57 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><?cs #TC_MSG_BREAK desc: Button user can press to disallow the use of gears ?><span class="accesskey">C</span>ancel<?cs #TC_MSG_BREAK ?></div></div></a>
+                  ><?cs #TC_MSG_BREAK desc: Button user can press to disallow the use of gears ?><span class="accesskey">C</span>ancel<?cs #TC_MSG_BREAK ?></div></div></a>^)
           </td>
         </tr>
       </table>
     </div>
   </div>
+m4_ifdef(^WINCE^,m4_dnl
+^ </div>^)
+m4_ifdef(^WINCE^,m4_dnl
+^<object classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">^m4_dnl
+^</object>^)
 </body>
-<script src="json_noeval.js"></script>
-<script src="html_dialog.js"></script>
+<!--
+ We include all files through m4 as the HTML dialog implementation
+ on PocketIE does not support callbacks for loading external javascript files
+ TODO: find a better way to include scripts for PIE
+-->
+<script>
+m4_include(third_party\jsonjs\json_noeval.js)
+m4_include(ui\common\html_dialog.js)
+</script>
+
 <script>
   initDialog();
   initWarning();
 
   var disabled = true;
+
+  function setTextContent(elem, content) {
+    if (document.createTextNode) {
+      elem.appendChild(document.createTextNode(content)); 
+    } else {
+      elem.innerText = content;
+    }
+  }
+
+  function showHelp(show) {
+    if (isPIE) {
+      var elemSettings = getElementById("permissions-settings"); 
+      var elemHelp = getElementById("permissions-help"); 
+      if (show) {
+        elemSettings.style.display = 'none';
+        elemHelp.style.display = 'block';
+      } else {
+        elemSettings.style.display = 'block';
+        elemHelp.style.display = 'none';
+      }
+    } else {
+      window.open('http://gears.google.com/?action=help');
+    }
+  }
 
   function initWarning() {
     // The arguments to this dialog are a single string, see PermissionsDialog
@@ -219,17 +302,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     var elem;
 
     if (!customIcon && !customName && !customMessage) {
-       elem = document.getElementById("origin-only");
+       elem = getElementById("origin-only");
        elem.style.display = "block";
-       elem.appendChild(document.createTextNode(origin));
+       setTextContent(elem, origin);
     } else {
-       elem = document.getElementById("origin");
+       elem = getElementById("origin");
        elem.style.display = "block";
-       elem.appendChild(document.createTextNode(origin));
+       setTextContent(elem, origin);
     }
 
     if (customIcon) {
-      elem = document.getElementById("custom-icon");
+      elem = getElementById("custom-icon");
       elem.style.display = "inline";
       elem.src = customIcon;
       elem.height = 32;
@@ -237,38 +320,44 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     }
 
     if (customName) {
-      elem = document.getElementById("custom-name");
+      elem = getElementById("custom-name");
       elem.style.display = "block";
-      elem.appendChild(document.createTextNode(customName));
+      setTextContent(elem, customName);
     }
 
     if (customMessage) {
-      elem = document.getElementById("custom-message");
+      elem = getElementById("custom-message");
       elem.style.display = "block";
-      elem.appendChild(document.createTextNode(customMessage));
+      setTextContent(elem, customMessage);
     }
 
     // Focus deny by default
-    document.getElementById("deny-button").focus();
+    getElementById("deny-button").focus();
 
-    // Set up the checkbox to toggle the enabledness of the Allow button.
-    document.getElementById("unlock").onclick = updateAllowButtonEnabledState;
+    // This does not work on PIE...
+    if (!isPIE) {
+      // Set up the checkbox to toggle the enabledness of the Allow button.
+      getElementById("unlock").onclick = updateAllowButtonEnabledState;
+    }
     updateAllowButtonEnabledState();
 
-    // Resize the window to fit
-    var contentDiv = document.getElementById("content");
-    var contentHeightProvided = getContentHeight();
-    var contentHeightDesired = contentDiv.offsetHeight;
-    if (contentHeightDesired != contentHeightProvided) {
-      var dy = contentHeightDesired - contentHeightProvided;
-      window.resizeBy(0, dy);
-    }
+    // This does not work on PIE (no height measurement)
+    if (!isPIE) {
+      // Resize the window to fit
+      var contentDiv = getElementById("content");
+      var contentHeightProvided = getContentHeight();
+      var contentHeightDesired = contentDiv.offsetHeight;
+      if (contentHeightDesired != contentHeightProvided) {
+        var dy = contentHeightDesired - contentHeightProvided;
+        window.resizeBy(0, dy);
+      }
+    }  
   }
 
 
   function updateAllowButtonEnabledState() {
-    var allowButton = document.getElementById("allow-button");
-    var checkbox = document.getElementById("unlock");
+    var allowButton = getElementById("allow-button");
+    var checkbox = getElementById("unlock");
 
     disabled = !checkbox.checked;
 

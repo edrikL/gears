@@ -175,6 +175,9 @@ class HtmlDialogHost
   // Called by script inside the dialog to close and send back result.
   STDMETHODIMP CloseDialog(const BSTR result_string);
 
+  // Called by script to check if we are in Pocket IE or Desktop IE
+  STDMETHODIMP IsPocketIE(VARIANT_BOOL *retval);
+
  protected:
   // Handles the DocumentComplete web browser control event.
   virtual void _stdcall OnDocumentComplete(IDispatch* disp, VARIANT* url);

@@ -826,11 +826,26 @@ IEMOBILE_VPATH	+= \
 
 IEMOBILE_M4SRCS	+= \
 		ui_resources.rc.m4 \
+		html_dialog_bridge_iemobile.rgs.m4 \
 		tools_menu_item.rgs.m4 \
 		$(NULL)
 
 IEMOBILE_IDLSRCS	+= \
 		html_dialog_host.idl \
+		html_dialog_bridge_iemobile.idl \
+		$(NULL)
+
+IEMOBILE_CPPSRCS	+= \
+		html_dialog.cc \
+		html_dialog_host_iemobile.cc \
+		permissions_dialog.cc \
+		html_dialog_bridge_iemobile.cc \
+		settings_dialog.cc \
+		tools_menu_item.cc \
+		$(NULL)
+
+IEMOBILE_LINK_EXTRAS	+= \
+		$(IE_OUTDIR)/ui_resources.res \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
