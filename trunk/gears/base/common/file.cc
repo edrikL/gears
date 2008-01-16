@@ -101,6 +101,31 @@ bool File::GetBaseName(const std::string16 &path,  std::string16 *basename) {
   return true;
 }
 
+bool File::GetParentDirectory(const std::string16 &path, 
+                              std::string16 *parent) {
+  assert(parent);
+  
+  if (path.empty()) {
+    return false;
+  }
+  
+  std::string16 base_name;
+  if (!GetBaseName(path, &base_name)) {
+    return false;
+  }
+  
+  // Return false if no parent specified in path.
+  int parent_length = path.length() - base_name.length() - 1;
+  if (parent_length < 1) {
+    return false;
+  }
+  
+  *parent = path.substr(0, parent_length);
+  return true;
+  
+  
+}
+
 void File::SplitPath(const std::string16 &path, 
                      PathComponents *exploded_path) {
   assert(exploded_path);

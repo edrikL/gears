@@ -367,13 +367,4 @@ bool File::DeleteRecursively(const char16 *full_dirpath) {
   return DeleteRecursiveImp(dir_to_delete);
 }
 
-bool File::MoveDirectory(const char16 *src_path, const char16 *dest_path) {
-  std::string src_path_utf8;
-  std::string dest_path_utf8;
-  String16ToUTF8(src_path, &src_path_utf8);
-  String16ToUTF8(dest_path, &dest_path_utf8);
-  
-  return rename(src_path_utf8.c_str(), dest_path_utf8.c_str()) == 0;
-}
-
 #endif  // !WIN32
