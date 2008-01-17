@@ -184,10 +184,11 @@ class Win32Installer(Installer):
   """ Installer for Win32 machines, extends Installer. """
   def install(self):
     """ Do installation.  """
-    # try to install first. Covers the case with a new MSI version.
-    os.system('msiexec /i %s'  %self.buildPath())
-    # Next, try to reinstall. Covers the case with an existing MSI version.
-    os.system('msiexec /fa %s' %self.buildPath())
+    print 'Installing build %s' % self.buildPath()
+    # Try to uninstall first to clean up current installation (if any).
+    os.system('msiexec /quiet /uninstall %s' % self.buildPath())
+    # Install new msi.
+    os.system('msiexec /quiet /i %s' % self.buildPath())
     self.__copyProfile()
     self.completeInstall(self.profile)
 
