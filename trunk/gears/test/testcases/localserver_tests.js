@@ -374,7 +374,6 @@ function testIllegalRedirectManifest() {
 
 function testManagedResourceStoreCallbacks() {
   startAsync();
-  var completed = false;
   var progress = 0;
   var FILES_TOTAL = 1;
   var managedStore = getFreshManagedStore();
@@ -385,25 +384,20 @@ function testManagedResourceStoreCallbacks() {
     assert(e.filesComplete <= FILES_TOTAL,
            'filesComplete out of range in onprogress');
     progress += 1;
-  }
+  };
+  
   managedStore.oncomplete = function(e) {
     assert(e.newVersion == '1', 'Incorrect version in oncomplete.');
-    completed = true;
-  }
-  managedStore.checkForUpdate();
-
-  // Wait for the update to complete
-  var timerId = timer.setTimeout(function() {
-    assert(completed, 'completed wasn\'t set.');
     assert(progress == FILES_TOTAL + 1,
            'onprogress called incorrect number of times.');
     completeAsync();
-  }, 200);
+  };
+
+  managedStore.checkForUpdate();
 }
 
 function testManagedResourceStoreThreads() {
   startAsync();
-  var completed = false;
   var progress = 0;
   var FILES_TOTAL = 1;
   var managedStore = getFreshManagedStore();
@@ -414,19 +408,14 @@ function testManagedResourceStoreThreads() {
     assert(e.filesComplete <= FILES_TOTAL,
            'filesComplete out of range in onprogress');
     progress += 1;
-  }
+  };
+
   managedStore.oncomplete = function(e) {
     assert(e.newVersion == '1', 'Incorrect version in oncomplete.');
-    completed = true;
-  }
-
-  // Wait for the update to complete
-  var timerId = timer.setTimeout(function() {
-    assert(completed, 'completed wasn\'t set.');
     assert(progress == FILES_TOTAL + 1,
            'onprogress called incorrect number of times.');
     completeAsync();
-  }, 200);
+  };
 
   var workerpool = google.gears.factory.create('beta.workerpool');
   var workerId = workerpool.createWorker(String(workerInit) +
