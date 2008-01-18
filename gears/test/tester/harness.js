@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /**
@@ -52,7 +52,7 @@ Harness.inherits(RunnerBase);
 /**
  * Length of time to wait before giving up on async tests.
  */
-Harness.ASYNC_TIMEOUT_MSEC = 10000; // 10 seconds
+Harness.ASYNC_TIMEOUT_MSEC = 60000; // 60 seconds
 
 /**
  * The current harness active in this context.
@@ -150,13 +150,7 @@ Harness.prototype.handleRequestReadyStateChange_ = function() {
  */
 Harness.prototype.handleTestsLoaded_ = function(content) {
   this.onTestsLoaded(true);
-  this.runTests_();
-};
 
-/**
- * Runs all the tests found in the current context.
- */
-Harness.prototype.runTests_ = function() {
   // IE has a bug where you can't iterate the objects in the global scope, but
   // it luckily has this hack you can use to get around it.
   this.globalScope_ = global.RuntimeObject ? global.RuntimeObject('test*')
@@ -177,8 +171,28 @@ Harness.prototype.runTests_ = function() {
     window.onerror = this.handleGlobalError_;
   }
 
-  this.runNextTest_();
+  // Run the first test directly; no need to schedule.
+  this.runTests_();
 };
+
+/**
+ * Perform the tests contained within the current context.
+ * As well as being called by handleTestsLoaded to initiate test execution,
+ * it is also called by callbacks to continue processing of tests after
+ * an asynchronous test prematurely terminates the test execution loop
+ * pending test completion.
+ *
+ * All roads lead to Rome.
+ */
+Harness.prototype.runTests_ = function() {
+  while (++this.currentTestIndex_ <= this.testNames_.length) {
+    this.runNextTest_();
+    if (this.asyncTimerId_ || this.globalErrorTimerId_) {
+      // break out of the loop if we started an async test.
+      return;
+    }
+  }
+}
 
 /**
  * Starts the next test, or ends the test run if there are no more tests.
@@ -194,8 +208,6 @@ Harness.prototype.runNextTest_ = function() {
     timer.clearTimeout(this.globalErrorTimerId_);
     this.globalErrorTimerId_ = null;
   }
-
-  this.currentTestIndex_++;
 
   if (this.currentTestIndex_ == this.testNames_.length) {
     // We're done!
@@ -231,7 +243,6 @@ Harness.prototype.runNextTest_ = function() {
   // If the test wasn't asynchronous, it is done, so finish up and move on.
   if (!this.asyncTimerId_ && !this.globalErrorTimerId_) {
     this.onTestComplete(this.currentTestName_, true);
-    this.runNextTest_();
   }
 };
 
@@ -261,7 +272,7 @@ Harness.prototype.handleAsyncTimeout_ = function() {
                       'Asynchronous test timed out. Call completeAsync() to ' +
                       'mark an asynchronous test successful.');
 
-  this.runNextTest_();
+  this.runTests_();
 };
 
 /**
@@ -274,7 +285,7 @@ Harness.prototype.completeAsync = function() {
   }
 
   this.onTestComplete(this.currentTestName_, true);
-  this.runNextTest_();
+  this.runTests_();
 };
 
 /**
@@ -324,7 +335,7 @@ Harness.prototype.handleGlobalError_ = function(message) {
     if (!this.expectedErrors_.length) {
       // No more expected errors, mark test succeeded and continue.
       this.onTestComplete(this.currentTestName_, true);
-      this.runNextTest_();
+      this.runTests_();
     } // else, wait for the next error
 
     return true; // swallow the error, don't show the browser default error UI.
@@ -341,7 +352,7 @@ Harness.prototype.handleGlobalError_ = function(message) {
     this.onTestComplete(this.currentTestName_, false, message);
   }
 
-  this.runNextTest_();
+  this.runTests_();
   return false; // show the browser default error UI.
 };
 
@@ -354,5 +365,5 @@ Harness.prototype.handleGlobalErrorTimeout_ = function() {
   this.onTestComplete(
     this.currentTestName_, false,
     'Expected errors did not occur: ' + this.expectedErrors_.join(','));
-  this.runNextTest_();
+  this.runTests_();
 };
