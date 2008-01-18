@@ -40,6 +40,8 @@
 #define USE_FILE_STORE defined
 #elif BROWSER_FF
 #define USE_FILE_STORE defined
+#elif BROWSER_NPAPI
+#define USE_FILE_STORE defined
 #elif BROWSER_SAFARI
 #define USE_FILE_STORE defined
 #else

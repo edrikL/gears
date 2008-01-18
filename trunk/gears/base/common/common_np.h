@@ -31,7 +31,23 @@
 #include <windows.h>  // for DWORD
 #include "gears/base/ie/atl_headers.h" // TODO(cprince): change ATLASSERT to DCHECK
 
+// TODO(mpcomplete): remove when possible.
+// For Win32 we use the Apartment threading model. To do this, we define the
+// preprocessor symbol _ATL_APARTMENT_THREADED and initialise new threads with
+// COINIT_APARTMENTTHREADED.
+#define GEARS_COINIT_THREAD_MODEL COINIT_APARTMENTTHREADED
+
+const HWND  kMessageOnlyWindowParent = HWND_MESSAGE;
+const DWORD kMessageOnlyWindowStyle  = NULL;
+
+#if defined(DEBUG) && defined(ENABLE_LOGGING)
+// ATLTRACE for Win32 can take either a wide or narrow string.
 #define LOG(args) ATLTRACE args
+#define LOG16(args) ATLTRACE args
+#else  // defined(DEBUG) && defined(ENABLE_LOGGING)
+#define LOG(args) __noop
+#define LOG16(args) __noop
+#endif  // defined(DEBUG) && defined(ENABLE_LOGGING)
 
 // Debug only code to help us assert that class methods are restricted to a
 // single thread.  To use, add a DECL_SINGLE_THREAD to your class declaration.

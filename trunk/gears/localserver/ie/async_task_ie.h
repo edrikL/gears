@@ -26,6 +26,12 @@
 #ifndef GEARS_LOCALSERVER_IE_ASYNC_TASK_IE_H__
 #define GEARS_LOCALSERVER_IE_ASYNC_TASK_IE_H__
 
+#if BROWSER_NPAPI
+// This is a hack because something in the ATL headers prevents the gecko SDK
+// from defining int32, so we include it first.
+#include "gears/base/common/int_types.h"
+#endif
+
 #include <atlsync.h>
 #include <vector>
 #include "gears/base/common/string16.h"

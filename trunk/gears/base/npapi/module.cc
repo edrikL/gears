@@ -65,6 +65,15 @@ extern "C" {
 #pragma export off
 #endif  // BROWSER_WEBKIT
 
+#ifdef WIN32
+#include "gears/base/ie/atl_headers.h"
+// Initialize ATL.
+// TODO(mpcomplete): remove when no longer needed.  This is used by HttpRequest
+// for now.
+CComModule g_module;
+#endif;
+
+
 // Store the browser functions in thread local storage to avoid calling the
 // functions on a different thread.
 static NPNetscapeFuncs g_browser_funcs;

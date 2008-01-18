@@ -29,8 +29,12 @@
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/js_runner_utils.h"
 #include "gears/base/common/mutex.h"
+#include "gears/base/common/permissions_db.h"
+#include "gears/base/common/url_utils.h"
 #include "gears/base/npapi/module_wrapper.h"
 #include "gears/factory/npapi/factory.h"
+#include "gears/localserver/common/http_constants.h"
+#include "gears/localserver/common/http_request.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/workerpool/common/workerpool_utils.h"
 #include "gears/workerpool/npapi/workerpool.h"
@@ -62,7 +66,7 @@ struct JavaScriptWorkerInfo {
       : threads_manager(NULL), js_runner(NULL), message_hwnd(0),
         is_invoking_error_handler(false),
         thread_init_signalled(false), thread_init_ok(false),
-        script_signalled(false), script_ok(false),
+        script_signalled(false), script_ok(false), http_request(NULL),
         is_factory_suspended(false), factory_ref(NULL),
         thread_handle(INVALID_HANDLE_VALUE) {}
 
@@ -92,6 +96,8 @@ struct JavaScriptWorkerInfo {
   std::string16 script_text;  // Owner: parent before signal, immutable after
   SecurityOrigin script_origin;  // Owner: parent before signal, immutable after
 
+  ScopedHttpRequestPtr http_request;  // For createWorkerFromUrl()
+  scoped_ptr<HttpRequest::ReadyStateListener> http_request_listener;
   GComPtr<GearsFactory> factory_ref;
   bool is_factory_suspended;
 
@@ -220,8 +226,75 @@ void GearsWorkerPool::CreateWorker(JsCallContext *context) {
 }
 
 void GearsWorkerPool::CreateWorkerFromUrl(JsCallContext *context) {
+  std::string16 url;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &url },
+  };
+  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set())
+    return;
+
   Initialize();
-  context->SetException(STRING16(L"Not Implemented"));
+
+  // Make sure URLs are only fetched from the main thread.
+  // TODO(michaeln): Remove this limitation of Firefox HttpRequest someday.
+  if (EnvIsWorker()) {
+    context->SetException(
+        STRING16(L"createWorkerFromUrl() cannot be called from a worker."));
+    return;
+  }
+
+  std::string16 absolute_url;
+  ResolveAndNormalize(EnvPageLocationUrl().c_str(), url.c_str(), &absolute_url);
+
+  SecurityOrigin script_origin;
+  if (!script_origin.InitFromUrl(absolute_url.c_str())) {
+    context->SetException(STRING16(L"Internal error."));
+    return;
+  }
+
+  // We do not currently support file:// URLs. See bug:
+  // http://code.google.com/p/google-gears/issues/detail?id=239.
+  if (!HttpRequest::IsSchemeSupported(script_origin.scheme().c_str())) {
+    std::string16 message(STRING16(L"URL scheme '"));
+    message += script_origin.scheme();
+    message += STRING16(L"' is not supported.");
+    context->SetException(message.c_str());
+    return;
+  }
+
+  // Enable the worker's origin for gears access if it isn't explicitly
+  // disabled.
+  // NOTE: It is OK to do this here, even though there is a race with starting
+  // the background thread. Even if permission is revoked before after this
+  // happens that is no different than what happens if permission is revoked
+  // after the thread starts.
+  if (!script_origin.IsSameOrigin(EnvPageSecurityOrigin())) {
+    PermissionsDB *db = PermissionsDB::GetDB();
+    if (!db) {
+      context->SetException(STRING16(L"Internal error."));
+      return;
+    }
+
+    if (!db->EnableGearsForWorker(script_origin)) {
+      std::string16 message(STRING16(L"Gears access is denied for url: "));
+      message += absolute_url;
+      message += STRING16(L".");
+      context->SetException(message.c_str());
+      return;
+    }
+  }
+
+  int worker_id;
+  bool succeeded = threads_manager_->CreateThread(absolute_url,
+                                                  false,  // is_param_script
+                                                  &worker_id);
+  if (!succeeded) {
+    context->SetException(STRING16(L"Internal error."));
+    return;
+  }
+
+  context->SetReturnValue(JSPARAM_INT, &worker_id);
 }
 
 void GearsWorkerPool::AllowCrossOrigin(JsCallContext *context) {
@@ -583,6 +656,58 @@ bool PoolThreadsManager::SetCurrentThreadErrorHandler(
   return true;
 }
 
+class CreateWorkerUrlFetchListener : public HttpRequest::ReadyStateListener {
+ public:
+  explicit CreateWorkerUrlFetchListener(JavaScriptWorkerInfo *wi) : wi_(wi) {}
+
+  virtual void ReadyStateChanged(HttpRequest *source) {
+    HttpRequest::ReadyState ready_state = HttpRequest::UNINITIALIZED;
+    source->GetReadyState(&ready_state);
+    if (ready_state == HttpRequest::COMPLETE) {
+      // Fetch completed.  First, unregister this listener.
+      source->SetOnReadyStateChange(NULL);
+
+      int status_code;
+      std::string16 body;
+      std::string16 final_url;
+      if (source->GetStatus(&status_code) &&
+          status_code == HttpConstants::HTTP_OK &&
+          source->GetResponseBodyAsText(&body) &&
+          source->GetFinalUrl(&final_url)) {
+        // These are purposely set before locking mutex, because they are still
+        // owned by the parent thread at this point.
+        wi_->script_ok = true;
+        wi_->script_text += body;
+        // Must use security origin of final url, in case there were redirects.
+        wi_->script_origin.InitFromUrl(final_url.c_str());
+      } else {
+        // Throw an error, but don't return!  Continue and set script_signalled
+        // so the worker doesn't spin forever in Mutex::Await().
+        std::string16 message(STRING16(L"Failed to load script."));
+        std::string16 status_line;
+        if (source->GetStatusLine(&status_line)) {
+          message += STRING16(L" Status: ");
+          message += status_line;
+        }
+        std::string16 requested_url;
+        if (source->GetInitialUrl(&requested_url)) {
+          message += STRING16(L" URL: ");
+          message += requested_url;
+        }
+        JsErrorInfo error_info = { 0, message };  // line, message
+        wi_->threads_manager->HandleError(error_info);
+      }
+
+      wi_->script_mutex.Lock();
+      assert(!wi_->script_signalled);
+      wi_->script_signalled = true;
+      wi_->script_mutex.Unlock();
+    }
+  }
+ private:
+  JavaScriptWorkerInfo *wi_;
+};
+
 bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
                                       bool is_param_script,
                                       int *worker_id) {
@@ -620,8 +745,32 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
     wi->script_signalled = true;
     wi->script_mutex.Unlock();
   } else {
-    // TODO(mpcomplete): implement me.
-    return false;
+    // For URL params we start an async fetch here.  The created thread will
+    // setup an incoming message queue, then Mutex::Await for the script to be
+    // fetched, before finally pumping messages.
+
+    wi->http_request.reset(HttpRequest::Create());
+    if (!wi->http_request.get()) { return false; }
+
+    wi->http_request_listener.reset(new CreateWorkerUrlFetchListener(wi));
+    if (!wi->http_request_listener.get()) { return false; }
+
+    HttpRequest *request = wi->http_request.get();  // shorthand
+
+    request->SetOnReadyStateChange(wi->http_request_listener.get());
+    request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
+    request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
+
+    bool is_async = true;
+    if (!request->Open(HttpConstants::kHttpGET, url_or_full_script.c_str(),
+                       is_async) ||
+        !request->Send()) {
+      request->SetOnReadyStateChange(NULL);
+      request->Abort();
+      return false;
+    }
+
+    // 'script_signalled' will be set when async fetch completes.
   }
 
   // Setup notifier to know when thread init has finished.
@@ -912,7 +1061,7 @@ void PoolThreadsManager::ShutDown() {
 
   for (size_t i = 0; i < worker_info_.size(); ++i) {
     JavaScriptWorkerInfo *wi = worker_info_[i];
-#if 0
+
     // Cancel any createWorkerFromUrl() network requests that might be pending.
     HttpRequest *request = wi->http_request.get();
     if (request) {
@@ -921,7 +1070,7 @@ void PoolThreadsManager::ShutDown() {
       // Reset on creation thread for consistency with Firefox implementation.
       wi->http_request.reset(NULL);
     }
-#endif
+
     // If the worker is a created thread...
     if (wi->thread_handle != INVALID_HANDLE_VALUE) {
       // Ensure the thread isn't waiting on 'script_signalled'.

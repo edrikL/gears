@@ -46,6 +46,9 @@
 #include "gears/localserver/ie/async_task_ie.h"
 #elif BROWSER_FF
 #include "gears/localserver/firefox/async_task_ff.h"
+#elif BROWSER_NPAPI
+// TODO(mpcomplete): make this not windows-specific
+#include "gears/localserver/ie/async_task_ie.h"
 #elif BROWSER_SAFARI
 #include "gears/localserver/safari/async_task_sf.h"
 #endif

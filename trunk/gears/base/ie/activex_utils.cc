@@ -157,7 +157,11 @@ HRESULT ActiveXUtils::GetHtmlWindow3(IUnknown *site, IHTMLWindow3 **window3) {
 HRESULT ActiveXUtils::GetScriptDispatch(IUnknown *site,
                                         IDispatch **script_dispatch,
                                         bool dump_on_error) {
-#ifdef WINCE
+#if BROWSER_NPAPI
+  // not used in NPAPI.
+  // TODO(mpcomplete): clean this up.
+  return E_FAIL;
+#elif WINCE
   // site is JavaScript IDispatch pointer.
   return site->QueryInterface(script_dispatch);
 #else

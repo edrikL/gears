@@ -313,6 +313,13 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
 }
 
 //------------------------------------------------------------------------------
+#elif BROWSER_NPAPI
+
+bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
+  // TODO(mpcomplete): Uh oh... how do we get cookies in NPAPI?
+  return false;
+}
+
 #elif BROWSER_SAFARI
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/base/safari/string_utils.h"
