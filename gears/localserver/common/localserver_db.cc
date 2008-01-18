@@ -149,6 +149,8 @@ const int kCurrentVersion = 11;
 static const char16 *kCurrentBrowser = STRING16(L"ie");
 #elif BROWSER_FF
 static const char16 *kCurrentBrowser = STRING16(L"firefox");
+#elif BROWSER_NPAPI
+static const char16 *kCurrentBrowser = STRING16(L"npapi");
 #elif BROWSER_SAFARI
 static const char16 *kCurrentBrowser = STRING16(L"safari");
 #else

@@ -197,6 +197,15 @@ IE_VPATH	+= \
 IE_CPPSRCS	+= \
 		exception_handler_win32.cc \
 		$(NULL)
+
+
+NPAPI_VPATH	+= \
+		base/common \
+		$(NULL)
+
+NPAPI_CPPSRCS	+= \
+		exception_handler_win32.cc \
+		$(NULL)
 endif
 
 #-----------------------------------------------------------------------------
@@ -423,6 +432,7 @@ IEMOBILE_LINK_EXTRAS	+= \
 NPAPI_VPATH	+= \
 		base/common \
 		base/npapi \
+		base/ie \
 		$(NULL)
 
 NPAPI_M4SRCS	+= \
@@ -432,6 +442,7 @@ NPAPI_IDLSRCS	+= \
 		$(NULL)
 
 NPAPI_CPPSRCS	+= \
+		activex_utils.cc \
 		base_class.cc \
 		base_class_test.cc \
 		browser_utils.cc \
@@ -441,9 +452,14 @@ NPAPI_CPPSRCS	+= \
 		html_event_monitor.cc \
 		html_event_monitor_np.cc \
 		http_utils.cc \
+		ie_version.cc \
 		js_runner_np.cc \
 		js_runner_utils.cc \
 		js_types.cc \
+		message_queue.cc \
+		message_queue_ie.cc \
+		message_service.cc \
+		message_service_test.cc \
 		module.cc \
 		mutex.cc \
 		name_value_table.cc \
@@ -1128,6 +1144,7 @@ NPAPI_VPATH	+= \
 		base/common \
 		localserver/common \
 		localserver/npapi \
+		localserver/ie \
 		$(NULL)
 
 NPAPI_M4SRCS	+= \
@@ -1141,15 +1158,32 @@ NPAPI_CPPSRCS	+= \
 
 # localserver/common
 NPAPI_CPPSRCS	+= \
+		blob_store.cc \
+		capture_task.cc \
+		file_store.cc \
 		http_constants.cc \
-		localserver_db_stub.cc \
+		http_cookies.cc \
+		localserver.cc \
+		localserver_db.cc \
+		managed_resource_store.cc \
+		manifest.cc \
+		name_value_table_test.cc \
+		permissions_db_test.cc \
+		resource_store.cc \
+		sqlite_wrapper_test.cc \
+		update_task.cc \
 		$(NULL)
 
 # localserver/npapi
 NPAPI_CPPSRCS	+= \
+		async_task_ie.cc \
 		file_submitter_np.cc \
+		http_handler_ie.cc \
+		http_request_ie.cc \
 		localserver_np.cc \
 		managed_resource_store_np.cc \
+		update_task_ie.cc \
+		urlmon_utils.cc \
 		resource_store_np.cc \
 		$(NULL)		
 

@@ -35,6 +35,11 @@
 #ifndef GEARS_LOCALSERVER_COMMON_CRITICAL_SECTION_H__
 #define GEARS_LOCALSERVER_COMMON_CRITICAL_SECTION_H__
 
+// TODO(mpcomplete): implement these.
+#if BROWSER_NPAPI && defined(WIN32)
+#define BROWSER_IE 1
+#endif
+
 #if BROWSER_IE
 //------------------------------------------------------------------------------
 // BROWSER_IE
@@ -124,6 +129,11 @@ class CritSecLock {
   CriticalSection &cs_;
   bool locked_;
 };
+#endif
+
+// TODO(mpcomplete): remove
+#if BROWSER_NPAPI
+#undef BROWSER_IE
 #endif
 
 #endif // GEARS_LOCALSERVER_COMMON_CRITICAL_SECTION_H__
