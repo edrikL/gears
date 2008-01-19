@@ -1,3 +1,4 @@
+m4_changequote(`^',`^')m4_dnl
 <!DOCTYPE html>
 
 <!--
@@ -122,9 +123,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    <a href="#" onclick="showHelp(false); return false;">Go back</a>
   </div>
 
-m4_changequote(`^',`^')m4_dnl
-m4_ifelse(^PRODUCT_OS^,^wince^,m4_define(^WINCE^))
-m4_ifdef(^WINCE^,m4_dnl
+m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
 ^ <div id="permissions-settings">^)
   <div id="head">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -198,7 +197,7 @@ m4_ifdef(^WINCE^,m4_dnl
             <?cs #TC_MSG_BREAK ?>
             </a>
           </td>
-m4_ifdef(^WINCE^,m4_dnl
+m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
 ^          <!-- 
            We use simple links instead of buttons as PIE does not support them
            -->
@@ -244,11 +243,11 @@ m4_ifdef(^WINCE^,m4_dnl
       </table>
     </div>
   </div>
-m4_ifdef(^WINCE^,m4_dnl
+m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
 ^ </div>^)
-m4_ifdef(^WINCE^,m4_dnl
-^<object classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">^m4_dnl
-^</object>^)
+m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
+^<object classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">
+</object>^)
 </body>
 <!--
  We include all files through m4 as the HTML dialog implementation

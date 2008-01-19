@@ -31,10 +31,11 @@ var isIE = false;
 var isPIE = false;
 var isFF = false;
 
-if (pie_dialog) {
+if (document.pie_dialog) {
   isPIE = true;
 } else {
-  isIE = Boolean(window.external);
+  isIE = Boolean(window.external &&
+                 typeof window.external.GetDialogArguments != "undefined");
   isFF = Boolean(window.arguments);
 }
 
