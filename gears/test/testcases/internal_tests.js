@@ -23,17 +23,20 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-if (isDebug) {
-  var internalTests = google.gears.factory.create('beta.test');
 
-  function testInternal() {
+function testInternal() {
+  if (isDebug) {
+    var internalTests = google.gears.factory.create('beta.test');
     assert(internalTests.RunTests(),
            'Internal tests failed.');
   }
+}
 
-  // TODO(aa): Remove check when JsCallContext is implemented for Firefox.
-  if (typeof internalTests.testParamTypes != "undefined") {
-    function testParamTypes() {
+function testParamTypes() {
+  if (isDebug) {
+    var internalTests = google.gears.factory.create('beta.test');
+    // TODO(aa): Remove check when JsCallContext is implemented for Firefox.
+    if (typeof internalTests.testParamTypes != "undefined") {
       internalTests.testParamTypes(true, 42, 88.8, {}, "foo");
 
       // We actually want to test that we got the right error message so that
@@ -47,10 +50,13 @@ if (isDebug) {
         internalTests.testParamTypes(true, 42, 88.8, {});
       }, 'Required argument 5 is missing.');
     }
+  }
+}
 
-    function testProperty() {
-      internalTests.testPropertyInt = 42;
-      assertEqual(42, internalTests.testPropertyInt);
-    }
+function testProperty() {
+  if (isDebug) {
+    var internalTests = google.gears.factory.create('beta.test');
+    internalTests.testPropertyInt = 42;
+    assertEqual(42, internalTests.testPropertyInt);
   }
 }
