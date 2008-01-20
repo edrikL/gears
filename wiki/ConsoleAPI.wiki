@@ -9,17 +9,17 @@ The Console API will be implemented on top of the existing MessageObserver syste
 
 = Proposed API =
 
-Whilst it is good to stick to established conventions, the current proposed API for the LoggingModule seems to have redundant public API methods. Perhaps a cleaner approach would be:
-
 {{{
 class GearsConsole {
-  // _type_ can be one of 'debug', 'info', 'warn', 'error'.
+  // Default _types_ are 'debug', 'info', 'warn', 'error', however a custom
+  // type string can used to denote log events for developers extending the
+  // GearsConsole.
   // _args_ are interpolated into _message_, replacing occurrences of _%s_.
   log(String type, String message, Object[] args);
 }
 }}}
 
-The benefit of this approach is that logging levels can be changed and added without needing to modify the API. It also makes implementation a lot cleaner.
+The benefit of consolidating individual logging methods such as Debug(), Error(), etc. into a single Log() method is that the log type can be specified arbitrarily which leaves the option open for developers to extend and build upon the GearsConsole.
 
 Console objects can be created via the factory whenever logging capabilities are needed (including inside WorkerPool processes).
 
@@ -72,8 +72,6 @@ Other logging backends can easily be created in future, for a variety of purpose
 The Log Viewer is a HTML/CSS/JS-based developer tool that displays log events for the current security origin in real-time.
 
 It would ideally be packaged with Gears so that all developers would have access to it easily, but as with other developer tools it could be disabled by default (perhaps with a checkbox "Enable developer tools" in the Google Gears Settings dialog). The log viewer could be accessed by either browser chrome (a "Gears Developer Tools" sub-menu that appears in the browser's Tools menu when developer tools are enabled) or via a special URL (e.g. http://localhost/__gears__/log_viewer.html).
-
-A prototype version of the log viewer will be available shortly (as soon as I can find a somewhere on the public wiki to put it).
 
 = Security =
 
