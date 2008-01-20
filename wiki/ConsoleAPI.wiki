@@ -19,7 +19,7 @@ class GearsConsole {
 }
 }}}
 
-The benefit of consolidating individual logging methods such as Debug(), Error(), etc. into a single Log() method is that the log type can be specified arbitrarily which leaves the option open for developers to extend and build upon the GearsConsole.
+The benefit of consolidating individual logging methods such as Debug(), Error(), etc. into a single Log() method is that the log type can be specified arbitrarily which leaves the option open for developers to extend and build upon the GearsConsole using custom event types.
 
 Console objects can be created via the factory whenever logging capabilities are needed (including inside WorkerPool processes).
 
