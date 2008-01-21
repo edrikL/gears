@@ -183,7 +183,9 @@ WIXSRC = $(COMMON_OUTDIR)/genfiles/win32_msi.wxs
 
 NPAPI_MODULE_DLL  = $(NPAPI_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 
-# TODO(andreip): create installer target for Windows Mobile
+IEMOBILE_INSTALLER_CAB = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).cab
+INFSRC_BASE_NAME = wince_cab
+INFSRC = $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).inf
 
 # BUILD TARGETS
 
@@ -269,6 +271,7 @@ ifeq ($(BROWSER),IEMOBILE)
 prereqs:: $(IE_OUTDIR)/genfiles $(IE_OUTDIRS_I18N) $(COMMON_M4FILES) $(COMMON_M4FILES_I18N) $(IEMOBILE_M4FILES) $(IEMOBILE_M4FILES_I18N)
 genheaders:: $(IEMOBILE_GEN_HEADERS)
 modules:: $(IE_MODULE_DLL)
+installer:: $(IEMOBILE_INSTALLER_CAB)
 endif
 
 ifeq ($(BROWSER),NPAPI)
@@ -536,3 +539,9 @@ $(WIXOBJ): $(WIXSRC)
 # Here, we include the generated dependency information, which silently fails
 # if the files do not exist.
 -include $(DEPS)
+
+ifeq ($(OS),wince)
+$(IEMOBILE_INSTALLER_CAB): $(INFSRC) $(IE_MODULE_DLL)
+	cabwiz.exe $(INFSRC) /err cabwiz.log
+	mv -f $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).cab $(IEMOBILE_INSTALLER_CAB)
+endif
