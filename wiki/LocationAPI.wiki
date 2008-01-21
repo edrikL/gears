@@ -78,7 +78,7 @@ interface LocationOptions {
 };
 
 interface WatchLocationOptions : LocationOptions {
-  bool minDesiredRate;
+  bool minDesiredUpdate;
 };
 
 void LocationCallback(LocationResult event);
