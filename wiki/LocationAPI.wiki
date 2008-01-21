@@ -8,68 +8,55 @@ The purpose of this API is to provide means to fetch the location of a device ru
 
 The Location API is an abstraction for the various LBS APIs that currently exist on mobile platforms (GPS-based, network/cellid-based). The API consists of the Location class, which encapsulates various location attributes (latitude, longitude, etc), and also provides the means to query the platform for a location fix. This API also adds a new event type that is fired every time the location changes. Location implementations can be straightforward mappings to native LBS APIs (e.g the [http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-96C272CA-2BED-4352-AE7C-E692B193EC06/html/Location_Acquisition_APIIndexPage.html S60 Location Acquisition API]) or have a more complex design that combines several location providers (e.g a GPS-based provider and a cell id-based provider) and returns the location from the most accurate provider at any given time.
 
-= Example = 
+= API Goals =
+
+  * One-shot location requests (eg, for recommendations sites -- "where am I right now?")
+  * Repeated location updates (eg, for getting guided tours), where the API controls the minimum update rate
+  * Ability to get last-known position before doing an expensive new request
+  * Compatibility with future use as a singleton (for example window.geoLocation in browsers).
+
+= Examples = 
 
 {{{
-// Getting the object
+// Get the current location
 var location = google.gears.factory.create( "beta.location", "1.0" );
+location.get(function(result) {
+  if (!result.errorCode) {
+    updateMap(result.latitude, result.longitude);
+  }
+});
+}}}
 
-// Setting up a callback to handle "location changed" events
-location.onlocationstatechanged = function() {
-   switch (this.state) {
-     case 1:
-         SetStatusText("Connecting");
-         break;
-     case 2:
-         SetStatusText("Acquiring");
-         break;
-      case 3:
-          SetStatusText("Location accuracy:", this.accuracy);
-          MoveMap(this.latitude, this.longitude);
-          break;
-      case 5:
-          HandleError(this.error);
-          break;
-      default:
-         alert("Unknown state!");
-   }
+{{{
+// Watch the location over time, and request highest accuracy and rare updates
+var options = {
+  highAccuracyDesired: true,
+  minDesiredUpdate: 30000 // 30 seconds
+};
+
+var location = google.gears.factory.create( "beta.location", "1.0" );
+location.watch(function(result) {
+  updateMap(result.latitude, result.longitude, result.accuracy);
+}, options);
+}}}
+
+{{{
+// Only get the location if the last known location is more than a minute old
+var now = new Date().getTime();
+if (location.lastKnownLocation && (now - location.lastKnownLocation.date.getTime()) <= 60000) {
+  updateMap(location.lastKnownLocation);
+} else {
+  location.get(function(result) {
+    updateMap(result);
+  });
 }
-
-// Initiate a fix. This leads to the onlocationstatechanged event handler being called exactly once for each
-// of the "connecting" and "acquiring" states and one or more times for the "locked" state (for the initial
-// fix and every time the location changes, after that).
-location.startLocationUpdates(); // async call, initiates fix (powers up GPS if needed, etc)
-
-...
-
-// Getting the last known location
-if (location.latitude != -1 &&
-    location.timeUTC > threshold) {  // the location info is valid and not very old
-  Foo(location.latitude, location.longitude);
-}
-
-// Cancel the request. This leads to the onlocationstatechanged event handler being called for
-// the "canceled" state. This call will power down the GPS HW / close HTTP connection
-// (depending on the location providers that were in use).
-location.stopLocationUpdates();
 }}}
 
 = Detailed API specification =
 
 {{{
-interface Location {
-  // event handler
-  callback onlocationstatechanged
-
-  // state codes
-  const unsigned short STATUS_IDLE = 0;
-  const unsigned short STATUS_CONNECTING = 1;
-  const unsigned short STATUS_ACQUIRING = 2;
-  const unsigned short STATUS_LOCKED = 3;
-  const unsigned short STATUS_CANCELED = 4;
-  const unsigned short STATUS_ERROR = 5;
-
-  // error codes
+interface GearsLocation {
+  // error constants
   const short ERROR_NONE = 0;
   const short ERROR_UNKNOWN = -1;
   const short ERROR_NO_PROVIDER_AVAILABLE = -2;
@@ -77,47 +64,37 @@ interface Location {
   const short ERROR_SECURITY = -4;
   const short ERROR_NOT_IN_RANGE = -5;
 
-  // methods
-  void startLocationUpdates();
-  void startLocationUpdates(unsigned int minTimeUpdate, unsigned int minDesiredAccuracy);
-  void stopLocationUpdates();
+  // last-known data
+  readonly LocationResult lastKnownLocation; // null if no last known position
 
-  // data
-  readonly attribute unsigned int accuracy;
-  readonly attribute unsigned short error;
-  readonly attribute double latitude;
-  readonly attribute double longitude;
-  readonly attribute string providerName;
-  readonly attribute unsigned short state;
-  readonly attribute int timeUTC;
+  // methods
+  void get(LocationCallback callback, optional LocationOptions);
+  int watch(LocationCallback callback, optional LocationOptions);
+  void clearWatch(int watchId);
+};
+
+interface LocationOptions {
+  bool highAccuracyDesired;
+};
+
+interface WatchLocationOptions : LocationOptions {
+  bool minDesiredRate;
+};
+
+void LocationCallback(LocationResult event);
+
+interface Location {
+  readonly decimal latitude;
+  readonly decimal longitude;
+  readonly string provider;
+  readonly Date timestamp;
+  readonly int accuracy;
+};
+
+interface LocationResult : Location {
+  readonly int errorCode;
+  readonly string errorMessage; // human readable, suitable for logs
 };
 }}}
 
-== LocationRequest ==
-
-*onlocationstatechanged*: an event handler that is called repeatedly at every state change during the location acquisition phase. Note that it can be called repeatedly for the LOCKED state, once every time the location has changed.
-
-*void startLocationUpdates()*: initiates a location fix using any of the available providers. The preferred implementation is to initialize all available providers and to use the most accurate one at any given time.
-
-*void startLocationUpdates(unsigned int minTimeUpdate, unsigned int minDesiredAccuracy)*: initiates a location fix using the provider that requires least system resources while producing location fixes that are at least as accurate as minDesiredAccuracy. minTimeUpdate denotes the minimum number of seconds between the calls to the onlocationstatechanged callback. 
-
-*void stopLocationUpdates()*: stops the location updates, powers down the location providers and invokes locationCallback one last time for the CANCELED state.
-
-*accuracy*: Horizontal accuracy in meters. 0 is interpreted as unknown.
-
-*error*: If the location acquisition fails, this attribute will contain the reason for failure (one of the above error codes)
-
-*latitude, longitude*: the coordinates set by the last successful fix. They are set to -1 if there hasn't yet been any fix.
-
-*provider name*: the name of the provider used for the last fix.
-
-*state*: the current state of the location acquisition:
-
-    * CONNECTING: connecting to the underlying provider (GPS HW, SUPL server, etc)
-    * ACQUIRING: acquiring location data
-    * LOCKED: a fix has been obtained
-    * CANCELED: the location updates have been canceled
-    * ERROR: general error
-
-
-*timeUTC*: the UTC time of the last succesfull fix (seconds since January 1st, 1970).
+TODO: detailed notes on apis.
