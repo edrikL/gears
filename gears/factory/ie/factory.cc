@@ -234,6 +234,9 @@ STDMETHODIMP GearsFactory::get_version(BSTR *retval) {
 }
 
 
+#ifdef WINCE
+// Hold WinCE feature set at version 0.2 for now.
+#else
 STDMETHODIMP GearsFactory::getPermission(const BSTR site_name_in,
                                          const BSTR image_url_in,
                                          const BSTR extra_message_in,
@@ -261,6 +264,7 @@ STDMETHODIMP GearsFactory::get_hasPermission(VARIANT_BOOL *retval) {
   *retval = is_permission_granted_ ? VARIANT_TRUE : VARIANT_FALSE;
   RETURN_NORMAL();
 }
+#endif
 
 
 // InitBaseFromDOM needs the object to be sited.  We override SetSite just to

@@ -72,6 +72,9 @@ class ATL_NO_VTABLE GearsFactory
   STDMETHOD(getBuildInfo)(BSTR *retval);
   STDMETHOD(get_version)(BSTR *retval);
 
+#ifdef WINCE
+  // Hold WinCE feature set at version 0.2 for now.
+#else
   // bool getPermission(string siteName, string imageUrl, string extraMessage)
   STDMETHOD(getPermission)(const BSTR site_name,
                            const BSTR image_url,
@@ -79,6 +82,7 @@ class ATL_NO_VTABLE GearsFactory
                            VARIANT_BOOL *retval);
   // readonly bool hasPermission
   STDMETHOD(get_hasPermission)(VARIANT_BOOL *retval);
+#endif
 
   // Hook into SetSite() to do some init work that requires the site.
   STDMETHOD(SetSite)(IUnknown *site);
