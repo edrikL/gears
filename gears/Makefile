@@ -220,6 +220,7 @@ COMMON_M4SRCS	+= \
 		product_constants.h.m4 \
 		product_version.rc.m4 \
 		win32_msi.wxs.m4 \
+		wince_cab.inf.m4 \
 		$(NULL)
 
 COMMON_CPPSRCS	+= \
