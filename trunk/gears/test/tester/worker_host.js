@@ -28,8 +28,9 @@
  * the caller.
  * @constructor
  */
-function WorkerHost() {
+function WorkerHost(ifc) {
   bindMethods(this);
+  this.ifc_ = ifc;
 }
 
 WorkerHost.inherits(RunnerBase);
@@ -38,7 +39,7 @@ WorkerHost.inherits(RunnerBase);
  * How long to wait for the worker to wait for the worker to load and report
  * back before giving up with an error.
  */
-WorkerHost.LOAD_TIMEOUT_MS = 5000;
+WorkerHost.LOAD_TIMEOUT_MS = 60000;
 
 /**
  * Id of the timer waiting for load timeout.
@@ -60,10 +61,13 @@ WorkerHost.prototype.workerPool_ = null;
  * @param url The url of a file containing the tests to run.
  */
 WorkerHost.prototype.load = function(url) {
+  this.ifc_.log("Creating worker pool.");
   this.workerPool_ = google.gears.factory.create('beta.workerpool');
   this.workerPool_.onmessage = this.handleMessage_;
 
+  this.ifc_.log("Creating worker.");
   this.workerId_ = this.workerPool_.createWorkerFromUrl('worker_context.js');
+  this.ifc_.log("Loading " + url + " into worker.");
   this.workerPool_.sendMessage(url, this.workerId_);
 
   this.timerId_ = window.setTimeout(
@@ -78,10 +82,7 @@ WorkerHost.prototype.load = function(url) {
  */
 WorkerHost.prototype.handleMessage_ = function(message, senderId) {
   if (/^DEBUG/.test(message)) {
-    document.body.insertBefore(document.createElement("br"),
-                               document.body.firstChild);
-    document.body.insertBefore(document.createTextNode(message),
-                               document.body.firstChild);
+    this.ifc_.log('Worker: ' + message);
     return;
   }
 
