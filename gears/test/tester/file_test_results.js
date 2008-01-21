@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,25 +13,38 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /**
- * This class runs a test file and displays the results.
+ * This class runs a test file and displays the results.  Execution is
+ * handled by calling the inter-frame communication object, which makes sure
+ * that tests are executed in the right place.
+ * @param the InterFrameCommunication object to use when executing tests
  * @constructor
  */
-function FileTestResults() {
+function FileTestResults(ifc) {
   bindMethods(this);
   // Holds the persistent state of all run tests.
-  this.testResults = {};  
+  this.testResults = {};
+  if (!ifc || !ifc.isInstalled) {
+    window.alert("Cannot locate inter-frame communication object.");
+  }
+  this.ifc_ = ifc;
+  this.instanceId_ = ++FileTestResults.lastInstanceId_;
 }
+
+/**
+ * Track the last instance ID that was created.
+ */
+FileTestResults.lastInstanceId_ = 0;
 
 /**
  * The number of tests that have been started.
@@ -59,66 +72,50 @@ FileTestResults.prototype.suiteName = '';
 FileTestResults.prototype.onAllTestsComplete = function() {};
 
 /**
+ * InterFrameCommunication object
+ */
+FileTestResults.prototype.ifc_ = null;
+
+/**
+ * Result ID, uniquely identifying this set of results.
+ */
+FileTestResults.prototype.instanceId_ = -1;
+
+/**
  * Starts the tests.
  * @param div The element to populate with the results.
  * @param testData The test file to run.
  */
-FileTestResults.prototype.start = function(div, testData, suiteName) {
-  this.div_ = div;
+FileTestResults.prototype.start = function(divName, testData, suiteName) {
+  this.divName = divName;
+  this.resultSetName = 'rs' + this.instanceId_;
+  this.errorName = 'e' + this.instanceId_;
   this.testData_ = testData;
+  this.nextRowIndex = 0;
   this.rowLookup_ = {};
   this.pendingLookup_ = {};
-  
+
   this.suiteName = suiteName;
 
   // Store starting timestamp in timeElapsed to use later.
   this.timeElapsed = getTimeSeconds();
 
-  var heading = document.createElement('h3');
-  heading.appendChild(document.createTextNode(testData.relativePath));
-  this.div_.appendChild(heading);
+  // Append a div to stick errors from this test set into.
+  appendSimpleElement(this.divName, 'div', this.errorName, '');
 
-  var table = document.createElement('table');
-  this.tbody_ = document.createElement('tbody');
-  table.appendChild(this.tbody_);
-  this.div_.appendChild(table);
+  // Add the results block.
+  appendSimpleElement(this.divName, 'div', this.resultSetName, '');
 
+  // Execute tests using the inter-frame communication object.
   if (this.testData_.config.useIFrame) {
-    this.startIFrameTests_();
+    this.ifc_.startFrameTests(this);
   } else if (this.testData_.config.useWorker) {
-    this.startWorkerTests_();
+    this.ifc_.startWorkerTests(this);
   }
 };
 
 /**
- * Helper to start the iframe tests.
- */
-FileTestResults.prototype.startIFrameTests_ = function() {
-  var iframeHost = new IFrameHost();
-  iframeHost.onTestsLoaded = partial(this.handleTestsLoaded, false);
-  iframeHost.onTestComplete = partial(this.handleTestComplete, false);
-  iframeHost.onAsyncTestStart = partial(this.handleAsyncTestStart, false);
-  iframeHost.onAllTestsComplete = partial(this.handleAllTestsComplete, false);
-  iframeHost.onBeforeTestStart = this.handleBeforeSyncTestStart;
-                        
-  iframeHost.load(this.testData_.relativePath);
-};
-
-/**
- * Helper to start the worker tests.
- */
-FileTestResults.prototype.startWorkerTests_ = function() {
-  var workerHost = new WorkerHost();
-  workerHost.onTestsLoaded = partial(this.handleTestsLoaded, true);
-  workerHost.onTestComplete = partial(this.handleTestComplete, true);
-  workerHost.onAsyncTestStart = partial(this.handleAsyncTestStart, true);
-  workerHost.onAllTestsComplete = partial(this.handleAllTestsComplete, true);
-  workerHost.onBeforeTestStart = this.handleBeforeAsyncTestStart;
-  workerHost.load(this.testData_.relativePath);
-};
-
-/**
- * Records synchronous test case with results object.  
+ * Records synchronous test case with results object.
  * @param name
  */
 FileTestResults.prototype.handleBeforeSyncTestStart = function(name) {
@@ -132,7 +129,8 @@ FileTestResults.prototype.handleBeforeSyncTestStart = function(name) {
  */
 FileTestResults.prototype.handleBeforeAsyncTestStart = function(name) {
   var timestamp = getTimeSeconds();
-  this.testResults[name + '_worker'] = {status: "started", startTime: timestamp};
+  this.testResults[name + '_worker'] =
+      {status: "started", startTime: timestamp};
 };
 
 /**
@@ -144,10 +142,7 @@ FileTestResults.prototype.handleBeforeAsyncTestStart = function(name) {
 FileTestResults.prototype.handleTestsLoaded = function(isWorker, success,
                                                        errorMessage) {
   if (!success) {
-    var elm = document.createElement('div');
-    elm.className = 'load-error';
-    elm.appendChild(document.createTextNode(errorMessage));
-    this.div_.insertBefore(elm, this.div_.firstChild);
+    appendSimpleElement(this.errorName, 'load-error', null, errorMessage);
   }
 };
 
@@ -171,19 +166,18 @@ FileTestResults.prototype.handleTestComplete = function(isWorker, name, success,
     var elapsed = -1;
   }
 
-  this.testResults[statusKey] = {status: status, 
-                                 message: errorMessage, 
+  this.testResults[statusKey] = {status: status,
+                                 message: errorMessage,
                                  elapsed: elapsed};
-  
   var pendingLookupKey = name + '_' + isWorker;
-  var pendingRow = this.pendingLookup_[pendingLookupKey];
+  var pendingCellId = this.pendingLookup_[pendingLookupKey];
 
-  if (!pendingRow) {
-    this.addRow_(name, this.createResultRow_(isWorker, name, success,
-                                             errorMessage));
+  if (!pendingCellId) {
+    var cellId = this.createResultRow_(isWorker, name, success, errorMessage);
+    this.pendingLookup_[pendingLookupKey] = cellId;
     this.testsStarted++;
   } else {
-    this.updateRow_(pendingRow, success, errorMessage);
+    this.updateResultCell_(pendingCellId, success, errorMessage);
   }
 
   this.testsComplete++;
@@ -202,11 +196,10 @@ FileTestResults.prototype.handleAsyncTestStart = function(isWorker, name) {
   this.testResults[statusKey] = {status: "started", startTime: timestamp};
 
   var pendingLookupKey = name + '_' + isWorker;
-  var pendingRow = this.pendingLookup_[pendingLookupKey];
-  if (!pendingRow) {
-    var row = this.createResultRow_(isWorker, name);
-    this.pendingLookup_[pendingLookupKey] = row;
-    this.addRow_(name, row);
+  var pendingCellId = this.pendingLookup_[pendingLookupKey];
+  if (!pendingCellId) {
+    var cellId = this.createResultRow_(isWorker, name, null, null);
+    this.pendingLookup_[pendingLookupKey] = cellId;
   }
 };
 
@@ -216,27 +209,11 @@ FileTestResults.prototype.handleAsyncTestStart = function(isWorker, name) {
  */
 FileTestResults.prototype.handleAllTestsComplete = function(isWorker) {
   if (!isWorker && this.testData_.config.useWorker) {
-    this.startWorkerTests_();
+    this.ifc_.startWorkerTests(this);
   } else {
     // Store time since test set began.  Start time is stored in timeElapsed.
     this.timeElapsed = getTimeSeconds() - this.timeElapsed;
     this.onAllTestsComplete();
-  }
-};
-
-/**
- * Adds a result to the UI.
- * @param name The name of the test to add a row for.
- * @param row The TR element to add.
- */
-FileTestResults.prototype.addRow_ = function(name, row) {
-  var previous = this.rowLookup_[name];
-
-  if (!previous) {
-    this.tbody_.appendChild(row);
-    this.rowLookup_[name] = row;
-  } else {
-    this.tbody_.insertBefore(row, previous.nextSibling);
   }
 };
 
@@ -252,39 +229,32 @@ FileTestResults.prototype.addRow_ = function(name, row) {
 FileTestResults.prototype.createResultRow_ = function(isWorker, name,
                                                       opt_success,
                                                       opt_errorMessage) {
-  var row = document.createElement('tr');
-  var nameCell = document.createElement('td');
-  var resultCell = document.createElement('td');
+  // Inc the row counter. (we start at 0 + 1).
+  var rowId = this.resultSetName + '-r' + (++this.nextRowIndex);
+  var resultCellId = rowId + 't';
+
+  // Append the row.  Assign it the rowId as the ID for later updates.
+  appendSimpleElement(this.resultSetName, 'div', rowId, '');
 
   if (isWorker) {
     name += ' (worker)';
   }
 
-  nameCell.appendChild(document.createTextNode(name));
+  // Append the name cell to the contents of the new row.
+  appendSimpleElement(rowId, 'span', null, name);
 
-  if (opt_success == null) {
-    resultCell.className = 'pending';
-    resultCell.appendChild(document.createTextNode('pending...'));
+  // Append the results cell.  If at all possible, do so in its final state.
+  if (!opt_success || opt_success == null) {
+    // Append a 'pending' result cell.
+    appendSimpleElement(rowId, 'span', resultCellId, 'pending...');
+    setDOMNodeClass(resultCellId, 'pending');
   } else {
-    this.updateResultCell_(resultCell, opt_success, opt_errorMessage);
+    // We have results - so write the result block directly.
+    appendSimpleElement(rowId, 'span', resultCellId,
+                        (opt_success) ? ' OK ' : opt_errorMessage);
+    setDOMNodeClass(resultCellId, (opt_success) ? 'success' : 'failure');
   }
-
-  row.appendChild(nameCell);
-  row.appendChild(resultCell);
-
-  return row;
-};
-
-/**
- * Updates a pending row in the UI to give it a final status.
- * @param row The TR element representing the test to update.
- * @param success Whether the test was successful.
- * @param errorMessage If the test failed, the error message to display.
- */
-FileTestResults.prototype.updateRow_ = function(row, success, errorMessage) {
-  var resultCell = row.childNodes[1];
-  resultCell.removeChild(resultCell.firstChild);
-  this.updateResultCell_(resultCell, success, errorMessage);
+  return resultCellId;
 };
 
 /**
@@ -293,14 +263,14 @@ FileTestResults.prototype.updateRow_ = function(row, success, errorMessage) {
  * @param success Whether the test passed.
  * @param errorMessage If the test failed, th error message to display.
  */
-FileTestResults.prototype.updateResultCell_ = function(cell, success,
+FileTestResults.prototype.updateResultCell_ = function(cellId, success,
                                                        errorMessage) {
   if (success) {
-    cell.className = 'success';
-    cell.appendChild(document.createTextNode('OK'));
+    setDOMNodeClass(cellId, 'success');
+    setDOMNodeText(cellId, ' OK ');
   } else {
-    cell.className = 'failure';
-    cell.appendChild(document.createTextNode(errorMessage));
+    setDOMNodeClass(cellId, ' failure ');
+    setDOMNodeText(cellId, ' ' + errorMessage + ' ');
   }
 };
 
@@ -308,8 +278,8 @@ FileTestResults.prototype.updateResultCell_ = function(cell, success,
  * Creates a JSON friendly representation of test results.
  */
 FileTestResults.prototype.toJson = function() {
-  return {suitename: this.suiteName, 
-          filename: this.testData_.relativePath, 
+  return {suitename: this.suiteName,
+          filename: this.testData_.relativePath,
           results: this.testResults,
           elapsed: this.timeElapsed};
 };

@@ -3,8 +3,9 @@
  * to the server when testing is done.
  * @constructor
  */
-function ResultsPublisher() {
+function ResultsPublisher(ifc) {
   bindMethods(this);
+  this.ifc_ = ifc;
 }
 
 /**
@@ -13,11 +14,16 @@ function ResultsPublisher() {
 ResultsPublisher.prototype.fileTestResults = [];
 
 /**
+ * The inter-frame communication object to use when logging.
+ */
+ResultsPublisher.prototype.ifc_ = null;
+
+/**
  * Called if testing has timed out.
  */
 ResultsPublisher.prototype.postbackTestResultsOnTimeout = function() {
-	this.allAvailableTestsStarted = false;
-	this.postbackTestResults();	
+  this.allAvailableTestsStarted = false;
+  this.postbackTestResults();
 };
 
 /**
@@ -27,19 +33,21 @@ ResultsPublisher.prototype.postbackTestResultsOnTimeout = function() {
  * @param parameters post data
  */
 ResultsPublisher.prototype.publish = function(url, parameters) {
+  this.ifc_.log('Publishing results.');
   var http_request = google.gears.factory.create('beta.httprequest');
   if (!http_request) {
-    alert('Cannot create Gears HTTP Request Obj');
+    this.ifc_.log('Publish failed; could not create beta.httprequest.');
     return false;
   }
-  
+
   http_request.open('POST', url);
-  http_request.setRequestHeader("Content-type", 
+  http_request.setRequestHeader("Content-type",
                                 "application/x-www-form-urlencoded");
   http_request.send(parameters);
+  this.ifc_.log('Results published.');
   return true;
 };
-   
+
 /**
  * Encode all test results using json, then post them back to
  * the test server.
@@ -47,13 +55,13 @@ ResultsPublisher.prototype.publish = function(url, parameters) {
  * to post back results to server
  */
 ResultsPublisher.prototype.postbackTestResults = function() {
-  testResults = [];  
+  testResults = [];
   for (var i = 0, fileTest; i < this.fileTestResults.length; i++) {
     fileTest = this.fileTestResults[i];
     testResults.push(fileTest.toJson());
   }
-  
-  var postbackHash = { 
+
+  var postbackHash = {
       gears_info: google.gears.factory.getBuildInfo(),
       browser_info: navigator.userAgent,
       url: location.href,

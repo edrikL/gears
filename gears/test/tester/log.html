@@ -25,47 +25,20 @@ OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
 WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 -->
 
 <html>
 <head>
-<script src='../../sdk/gears_init.js'></script>
-<script src='lang.js'></script>
-<script src='assert.js'></script>
-<script src='runner_base.js'></script>
-<script src='harness.js'></script>
-</head>
-<body>
+<title>Execution log</title>
+<script src="xplat.js"></script>
 <script>
-/**
- * This file runs inside a frame and communicates with IFC to run a
- * test file inside an iframe.
- */
-
-// Use an anonymous function to avoid polluting the global scope.
-(function() {
-  var match = location.search.match(/id=(.+?)&test=(.+)/);
-  var hostId = match[1];
-  var test = match[2];
-  var ifc = top.ifc;
-
-  ifc.log("Initializing " + test + "... ");
-  var host = ifc.getCurrentFrameHost();
-
-  if (host.getId() != hostId) {
-    ifc.log("ERROR: Expected frame host " + hostId + " to be current; was "+
-            host.getId());
-  }
-
-  var harness = new Harness();
-  harness.onTestsLoaded = host.handleTestsLoaded;
-  harness.onTestComplete = host.onTestComplete;
-  harness.onAsyncTestStart = host.onAsyncTestStart;
-  harness.onAllTestsComplete = host.onAllTestsComplete;
-  harness.onBeforeTestStart = host.onBeforeTestStart;
-  harness.load(test + '?r=' + new Date().getTime());
-  ifc.log("Done!");
-})();
+function log(message) {
+  appendSimpleElement('console', 'div', null, message);
+  scrollToBottom();
+}
 </script>
+</head>
+<body id="console" onload="log('Console loaded.')">
 </body>
 </html>
