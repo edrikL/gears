@@ -96,6 +96,9 @@ class ATL_NO_VTABLE GearsManagedResourceStore
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_lastErrorMessage(
       /* [retval][out] */ BSTR *last_error_message);
 
+#ifdef WINCE
+  // Hold WinCE feature set at version 0.2 for now.
+#else
   virtual /* [propput] */ HRESULT STDMETHODCALLTYPE put_onerror(
       /* [in] */ const VARIANT *in_value);
 
@@ -104,6 +107,7 @@ class ATL_NO_VTABLE GearsManagedResourceStore
 
   virtual /* [propput] */ HRESULT STDMETHODCALLTYPE put_oncomplete(
       /* [in] */ const VARIANT *in_value);
+#endif
 
   virtual HRESULT STDMETHODCALLTYPE checkForUpdate(void);
 
