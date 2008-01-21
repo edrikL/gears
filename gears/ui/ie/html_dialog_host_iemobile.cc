@@ -135,12 +135,20 @@ void HtmlDialogHost::InitBrowserView() {
   int menu_height = GetSystemMetrics(SM_CYMENU);
   int desired_width = desired_size_.cx;
   int desired_height = desired_size_.cy;
-  if (screen_width - desired_width > (screen_width/10)) {
-    desired_width = static_cast<int> (screen_width * 0.9);
+
+  // Contrary to desktop gears, we deal with rather small screen
+  // resolutions; one size does not fit all... given some default size,
+  // we need to accomodate it depending on the actual screen size.
+
+  int border = menu_height/2;
+  
+  if (desired_width + border > screen_width) {
+    desired_width = screen_width - border;
   }
-  if (screen_height - desired_height > (screen_height/10)) {
-    desired_height = static_cast<int> (screen_height * 0.9);
+  if (desired_height + border > screen_height) {
+    desired_height = screen_height - border;
   }
+ 
   int pos_x = (screen_width - desired_width) / 2;
   int pos_y = (screen_height - desired_height) / 2;
   pos_y += menu_height;
@@ -170,7 +178,30 @@ HRESULT HtmlDialogHost::LoadFromResource(CString rsc, void** resource,
   if (rscInfo) {
     HGLOBAL rscData = LoadResource(hmodule, rscInfo);
     *resource = LockResource(rscData);
-    *len = SizeofResource(hmodule, rscInfo);
+    int size = SizeofResource(hmodule, rscInfo);
+
+    if ((size == 0) && rscData) {
+      // FIXME: ugly workaround for windows mobile 6 standard devices 
+      // (ex-smartphones) where for some reason SizeofResource does not work (!)
+      // We use strlen to find the length of the text files, and we use a
+      // RC_DATA resource called 'icon_size' in ui_resources.rc.m4 to indicate
+      // the size of the png file we load. If/when the file is modified, you
+      // have to change the size too.
+      // TODO: parse the PNG data to find the IEND chunk and get the size
+      // directly instead of using that specified size.
+      if (rsc.Compare(L"icon_32x32.png") == 0) {
+        HRSRC imgSizeRscInfo = FindResource(hmodule, L"icon_size", RT_RCDATA);
+        if (imgSizeRscInfo) {
+          HGLOBAL imgSizeData = LoadResource(hmodule, imgSizeRscInfo);
+          int* imgSize = static_cast<int*> (LockResource(imgSizeData));
+          size = *imgSize;
+        }
+      } else {
+        char* c = static_cast<char*> (*resource);
+        size = strlen(c);        
+      }
+    }
+    *len = size;
     return S_OK;
   }
   return E_FAIL;

@@ -43,6 +43,7 @@ button_bg.gif              HTML  "ui/common/button_bg.gif"
 html_dialog.css            HTML  "ui/common/html_dialog.css"
 html_dialog.js             HTML  "ui/common/html_dialog.js"
 icon_32x32.png             HTML  "ui/common/icon_32x32.png"
+icon_size                  RCDATA { 2421 }
 json_noeval.js             HTML  "third_party/jsonjs/json_noeval.js"
 
 #include "ie/genfiles/ui_html.rc"
