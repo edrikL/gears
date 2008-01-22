@@ -50,7 +50,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   </p>
 
   <p id='suite-choices'>
-    <a href='guiframes.html' target='_top'>All Tests</a>
+    <a href='gui.html' target='_top'>All Tests</a>
   </p>
 
   <div id='results'></div>
@@ -114,7 +114,7 @@ function displayLoadError(message) {
  */
 function initSuiteChoices() {
   for (var i = 0, suite; suite = suites[i]; i++) {
-    var href = 'guiframes.html?' + suite.name;
+    var href = 'gui.html?' + suite.name;
     appendAnchor('suite-choices', href, "_top", suite.name);
   }
 }
