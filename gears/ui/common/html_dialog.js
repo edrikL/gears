@@ -31,7 +31,7 @@ var isIE = false;
 var isPIE = false;
 var isFF = false;
 
-if (document.pie_dialog) {
+if (window.pie_dialog) {
   isPIE = true;
 } else {
   isIE = Boolean(window.external &&
