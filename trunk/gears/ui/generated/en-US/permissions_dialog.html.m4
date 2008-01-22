@@ -255,8 +255,8 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
  TODO: find a better way to include scripts for PIE
 -->
 <script>
-m4_include(third_party\jsonjs\json_noeval.js)
-m4_include(ui\common\html_dialog.js)
+m4_include(third_party/jsonjs/json_noeval.js)
+m4_include(ui/common/html_dialog.js)
 </script>
 
 <script>
