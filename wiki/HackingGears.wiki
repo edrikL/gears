@@ -74,3 +74,10 @@ where {PATH_TO_GEARS_SVN} is the full path to your local copy of the gears sourc
 
 == Running Unit Tests ==
 For detailed information on running the unit tests, refer to the *gears/test2/README.txt* file.
+
+== Debugging ==
+To turn on debug logging in FF, you need to set the following environmental variables:
+{{{
+NSPR_LOG_MODULES = gears:5
+NSPR_LOG_FILE = <filepath where you want the logfile written>
+}}}
