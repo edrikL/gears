@@ -11,9 +11,9 @@ The Location API is an abstraction for the various LBS APIs that currently exist
 = API Goals =
 
   * One-shot location requests (eg, for recommendations sites -- "where am I right now?")
-  * Repeated location updates (eg, for getting guided tours), where the API controls the minimum update rate
+  * Repeated location updates (eg, for getting guided tours)
   * Ability to get last-known position before doing an expensive new request
-  * Compatibility with future use as a singleton (for example window.geoLocation in browsers).
+  * Compatibility with future use as a singleton in the standard DOM (eg window.geoLocation).
 
 = Examples = 
 
