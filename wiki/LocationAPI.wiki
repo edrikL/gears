@@ -28,22 +28,21 @@ location.get(function(result) {
 }}}
 
 {{{
-// Watch the location over time, and request highest accuracy and rare updates
-var options = {
-  highAccuracyDesired: true,
-  minDesiredUpdate: 30000 // 30 seconds
-};
-
+// Watch the location over time
 var location = google.gears.factory.create( "beta.location", "1.0" );
-location.watch(function(result) {
+var watchId = location.watch(function(result) {
   updateMap(result.latitude, result.longitude, result.accuracy);
-}, options);
+});
+
+location.clearWatch(watchId);
 }}}
 
 {{{
 // Only get the location if the last known location is more than a minute old
 var now = new Date().getTime();
-if (location.lastKnownLocation && (now - location.lastKnownLocation.date.getTime()) <= 60000) {
+var threshold = now - 60000;
+
+if (location.lastKnownLocation && location.lastKnownLocation.date > threshold) {
   updateMap(location.lastKnownLocation);
 } else {
   location.get(function(result) {
