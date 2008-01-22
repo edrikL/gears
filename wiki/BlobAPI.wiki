@@ -3,7 +3,7 @@
 
 = Introduction =
 
-A Blob represents an arbitrary chunk of (binary) data.  Examples include an image file on disk, a resource from a LocalServer, an entry in a Database, or something computed client-side to be uploaded via HTTP to a server.  The JavaScript interface is minimal and does not expose its constituent data - it is merely a handle, allowing JavaScript code to nominate the inputs into, and represent the outputs from, other Gears APIs, such as the ImageManipulationAPI.
+A Blob represents an arbitrary chunk of (binary) data.  Examples include an image file on disk, a resource from a LocalServer, an entry in a Database, or something computed client-side to be uploaded via HTTP to a server.  The JavaScript interface is minimal and does not expose its constituent data - it is merely a handle, allowing JavaScript code to nominate the inputs into, and represent the outputs from, other Gears APIs, such as the [ImageManipulationAPI].
 
 The C++ interface is essentially a random-access input stream of bytes.  Blobs are read-only and immutable, a la Strings in the Java language.  For C++ Gears modules, there will be an analog of Java's StringBuffer class for creating mutable in-memory Blobs.
 
