@@ -23,32 +23,29 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import "oaidl.idl";
-import "ocidl.idl";
-import "blob_ie.idl";
+#include "nsISupports.idl"
+#include "base_interface_ff.idl" // XPIDL doesn't like slashes in #includes
+#include "blob_ff.idl"
 
 //
 // GearsDesktopInterface
 //
+[scriptable, function, uuid(0273640F-FE6D-4a26-95C7-455DE83C6049)]
+interface GearsDesktopInterface : GearsBaseClassInterface {
 
-[
-  object,
-  uuid(09220A29-372D-4382-8942-FFCED26581E7),
-  dual,
-  nonextensible,
-  pointer_default(unique)
-]
-interface GearsDesktopInterface : IDispatch {
   // icons parameter is expected to be a javascript object with properties for
   // each available icon size. Valid property names are currently "16x16",
   // "32x32", "48x48", and "128x128". 
-  HRESULT createShortcut(BSTR name, BSTR description, BSTR url, VARIANT icons);
+  void createShortcut(//in string name,
+                      //in string description,
+                      //in string url,
+                      //in object icons
+                      );
 
-#ifdef DEBUG
+m4_changequote(`^',`^')m4_dnl
+m4_ifdef(^DEBUG^,^m4_dnl
   // This is a quick way to make a blob for now, if you want to play with
   // binary data in your module.
-  HRESULT newFileBlob([in] const BSTR filename,
-                      [out, retval] GearsBlobInterface **retval);
-#endif
+  GearsBlobInterface newFileBlob(in AString filename);
+^)
 };
-

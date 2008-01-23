@@ -54,6 +54,10 @@ class GearsDesktop
   STDMETHOD(createShortcut)(BSTR name, BSTR description, BSTR url,
                             VARIANT icons);
 
+#ifdef DEBUG
+  STDMETHOD(newFileBlob)(const BSTR filename, GearsBlobInterface **retval);
+#endif
+
   static bool GetControlPanelIconLocation(const SecurityOrigin &origin,
                                           const std::string16 &app_name,
                                           std::string16 *icon_loc);

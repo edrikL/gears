@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+// Copyright 2008, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -23,32 +23,20 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import "oaidl.idl";
-import "ocidl.idl";
-import "blob_ie.idl";
+#include "gears/base/common/security_model.h"
+#include "gears/base/common/string16.h"
+#include "gears/base/ie/activex_utils.h"
+#include "gears/base/ie/atl_headers.h"
 
-//
-// GearsDesktopInterface
-//
+#include "gears/blob/blob_ie.h"
 
-[
-  object,
-  uuid(09220A29-372D-4382-8942-FFCED26581E7),
-  dual,
-  nonextensible,
-  pointer_default(unique)
-]
-interface GearsDesktopInterface : IDispatch {
-  // icons parameter is expected to be a javascript object with properties for
-  // each available icon size. Valid property names are currently "16x16",
-  // "32x32", "48x48", and "128x128". 
-  HRESULT createShortcut(BSTR name, BSTR description, BSTR url, VARIANT icons);
 
-#ifdef DEBUG
-  // This is a quick way to make a blob for now, if you want to play with
-  // binary data in your module.
-  HRESULT newFileBlob([in] const BSTR filename,
-                      [out, retval] GearsBlobInterface **retval);
-#endif
-};
-
+STDMETHODIMP GearsBlob::get_length(VARIANT *retval) {
+  // A GearsBlob should never be let out in the JS world unless it has been
+  // Initialize()d with valid contents_.
+  assert(contents_.get());
+  int64 length = contents_->Length();
+  retval->vt = VT_I8;
+  retval->lVal = static_cast<LONG>(length);
+  RETURN_NORMAL();
+}

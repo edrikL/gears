@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+// Copyright 2008, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -23,21 +23,41 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "nsISupports.idl"
-#include "base_interface_ff.idl" // XPIDL doesn't like slashes in #includes
+#ifndef GEARS_BLOB_BLOB_FF_H__
+#define GEARS_BLOB_BLOB_FF_H__
 
-//
-// GearsDesktopInterface
-//
-[scriptable, function, uuid(0273640F-FE6D-4a26-95C7-455DE83C6049)]
-interface GearsDesktopInterface : GearsBaseClassInterface {
+#include "ff/genfiles/blob_ff.h"
+#include "gears/base/common/base_class.h"
+#include "gears/blob/blob_interface.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-  // icons parameter is expected to be a javascript object with properties for
-  // each available icon size. Valid property names are currently "16x16",
-  // "32x32", "48x48", and "128x128". 
-  void createShortcut(//in string name,
-                      //in string description,
-                      //in string url,
-                      //in object icons
-                      );
+extern const char *kGearsBlobClassName;
+extern const nsCID kGearsBlobClassId;
+
+class GearsBlob
+    : public ModuleImplBaseClass,
+      public GearsBlobInterface {
+ public:
+  NS_DECL_ISUPPORTS
+  GEARS_IMPL_BASECLASS
+
+  GearsBlob() : contents_(NULL) {}
+  ~GearsBlob() {}
+
+  NS_IMETHOD GetLength(PRInt64 *retval);
+
+  void Initialize(BlobInterface *blob) {
+    contents_.reset(blob);
+  }
+
+  BlobInterface *contents() {
+    return contents_.get();
+  }
+
+ private:
+  scoped_ptr<BlobInterface> contents_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(GearsBlob);
 };
+
+#endif  // GEARS_BLOB_BLOB_FF_H__

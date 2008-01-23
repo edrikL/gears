@@ -33,10 +33,12 @@
 #include <gecko_sdk/include/nsCOMPtr.h>
 #include <gecko_internal/jsapi.h>
 #include <gecko_internal/nsIDOMClassInfo.h>
+#include "gears/blob/blob_ff.h"
 #include "gears/desktop/desktop_ff.h"
 #elif BROWSER_IE
 #include <dispex.h>
 #include "gears/base/ie/activex_utils.h"
+#include "gears/blob/blob_ie.h"
 #include "gears/desktop/desktop_ie.h"
 #endif
 
@@ -45,6 +47,7 @@
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/png_utils.h"
 #include "gears/base/common/url_utils.h"
+#include "gears/blob/file_blob.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/ui/common/html_dialog.h"
@@ -257,6 +260,51 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
     RETURN_NORMAL();
   }
 }
+
+#ifdef DEBUG
+#if BROWSER_IE
+
+STDMETHODIMP GearsDesktop::newFileBlob(const BSTR filename,
+                                       GearsBlobInterface **retval) {
+  CComObject<GearsBlob> *blob = NULL;
+  HRESULT hr = CComObject<GearsBlob>::CreateInstance(&blob);
+  if (FAILED(hr)) {
+    RETURN_EXCEPTION(STRING16(L"Could not create GearsBlob."));
+  }
+
+  if (!filename || !filename[0]) {
+    blob->Initialize(::NewFileBlob(L""));
+  } else {
+    blob->Initialize(::NewFileBlob(std::string16(filename).c_str()));
+  }
+
+  CComQIPtr<GearsBlobInterface> blob_external = blob;
+  if (!blob_external) {
+    RETURN_EXCEPTION(STRING16(L"Could not get GearsBlob interface."));
+  }
+
+  if (!blob->InitBaseFromSibling(this)) {
+    RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
+  }
+  *retval = blob_external.Detach();
+  RETURN_NORMAL();
+}
+
+#elif BROWSER_FF
+
+NS_IMETHODIMP GearsDesktop::NewFileBlob(const nsAString &filename,
+                                        GearsBlobInterface **retval) {
+  nsCOMPtr<GearsBlob> blob(new GearsBlob());
+  blob->Initialize(::NewFileBlob(nsString(filename).get()));
+  if (!blob->InitBaseFromSibling(this)) {
+    RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
+  }
+  NS_ADDREF(*retval = blob);
+  RETURN_NORMAL();
+}
+
+#endif // BROWSER_FF
+#endif // DEBUG
 
 // Handle all the icon creation and creation call required to actually install
 // a shortcut.

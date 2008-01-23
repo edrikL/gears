@@ -658,6 +658,10 @@ FF_VPATH	+= \
 		desktop \
 		$(NULL)
 
+FF_M4SRCS	+= \
+		desktop_ff.idl.m4 \
+		$(NULL)
+
 FF_IDLSRCS	+= \
 		desktop_ff.idl \
 		$(NULL)
@@ -1275,11 +1279,14 @@ FF_VPATH	+= \
 		$(NULL)
 
 FF_IDLSRCS	+= \
+		blob_ff.idl \
 		$(NULL)
 
 FF_CPPSRCS	+= \
                 blob_builder.cc \
+		blob_ff.cc \
 		buffer_blob.cc \
+		file_blob.cc \
 		$(NULL)
 
 IE_VPATH	+= \
@@ -1287,11 +1294,14 @@ IE_VPATH	+= \
 		$(NULL)
 
 IE_IDLSRCS	+= \
+		blob_ie.idl \
 		$(NULL)
 
 IE_CPPSRCS	+= \
                 blob_builder.cc \
+		blob_ie.cc \
 		buffer_blob.cc \
+		file_blob.cc \
 		$(NULL)
 
 IEMOBILE_VPATH	+= \
@@ -1299,11 +1309,14 @@ IEMOBILE_VPATH	+= \
 		$(NULL)
 
 IEMOBILE_IDLSRCS	+= \
+		blob_ie.idl \
 		$(NULL)
 
 IEMOBILE_CPPSRCS	+= \
                 blob_builder.cc \
+		blob_ie.cc \
 		buffer_blob.cc \
+		file_blob.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------

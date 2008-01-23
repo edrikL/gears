@@ -164,6 +164,44 @@ bool File::DirectoryExists(const char16 *full_dirpath) {
 }
 
 
+int64 File::GetFileSize(const char16 *full_filepath) {
+  struct stat stat_data;
+  if (!StatFile(full_filepath, &stat_data)) {
+    return 0;
+  }
+  return static_cast<int64>(stat_data.st_size);
+}
+
+
+int File::ReadFileSegmentToBuffer(const char16 *full_filepath,
+                                  uint8* destination,
+                                  int max_bytes,
+                                  int64 position) {
+  if (max_bytes <= 0 || position < 0) {
+    return 0;
+  }
+
+  std::string file_path_utf8;
+  String16ToUTF8(full_filepath, &file_path_utf8);
+  ScopedFile scoped_file(fopen(file_path_utf8.c_str(), "rb"));
+  if (scoped_file.get() == NULL) {
+    return 0;
+  }
+
+  if (position != 0 && fseek(scoped_file.get(), position, SEEK_SET) != 0) {
+    return 0;
+  }
+  
+  size_t bytes_read = fread(destination, 1, max_bytes, scoped_file.get());
+  
+  if (ferror(scoped_file.get()) || fclose(scoped_file.release()) != 0) {
+    return 0;
+  }
+  
+  return bytes_read;
+}
+
+
 bool File::ReadFileToVector(const char16 *full_filepath,
                             std::vector<uint8> *data) {                      
   // Get file size.
