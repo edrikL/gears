@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+// Copyright 2008, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -23,32 +23,32 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import "oaidl.idl";
-import "ocidl.idl";
-import "blob_ie.idl";
+#ifndef GEARS_DESKTOP_FILE_BLOB_H__
+#define GEARS_DESKTOP_FILE_BLOB_H__
 
-//
-// GearsDesktopInterface
-//
+#include "gears/blob/blob_interface.h"
+#include "gears/base/common/string16.h"
 
-[
-  object,
-  uuid(09220A29-372D-4382-8942-FFCED26581E7),
-  dual,
-  nonextensible,
-  pointer_default(unique)
-]
-interface GearsDesktopInterface : IDispatch {
-  // icons parameter is expected to be a javascript object with properties for
-  // each available icon size. Valid property names are currently "16x16",
-  // "32x32", "48x48", and "128x128". 
-  HRESULT createShortcut(BSTR name, BSTR description, BSTR url, VARIANT icons);
+// Returns NULL on failure.
+// The filename should be an absolute path, not a relative one.
+BlobInterface *NewFileBlob(const char16 *filename);
 
-#ifdef DEBUG
-  // This is a quick way to make a blob for now, if you want to play with
-  // binary data in your module.
-  HRESULT newFileBlob([in] const BSTR filename,
-                      [out, retval] GearsBlobInterface **retval);
-#endif
+class FileBlob : public BlobInterface {
+ public:
+  ~FileBlob() {}
+
+  int Read(uint8* destination, int max_bytes, int64 offset) const;
+
+  int64 Length() const;
+
+ private:
+  friend BlobInterface *NewFileBlob(const char16 *filename);
+
+  FileBlob(const char16 *filename);
+
+  std::string16 filename_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(FileBlob);
 };
 
+#endif  // GEARS_DESKTOP_FILE_BLOB_H__

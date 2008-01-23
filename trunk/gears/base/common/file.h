@@ -52,6 +52,17 @@ class File {
   // Returns true if the directory exists.
   static bool DirectoryExists(const char16 *full_dirpath);
 
+  // Returns the size of the file. If the file does not exist, or is otherwise
+  // unreadable, returns 0.
+  static int64 GetFileSize(const char16 *full_filepath);
+
+  // Reads part of the contents of the file into memory. Returns the number of
+  // bytes read (or zero on failure).
+  static int ReadFileSegmentToBuffer(const char16 *full_filepath,
+                                     uint8* destination,
+                                     int max_bytes,
+                                     int64 position);
+
   // Reads the contents of the file into memory. If the file does not exist,
   // returns false. Returns true on success
   static bool ReadFileToVector(const char16 *full_filepath,

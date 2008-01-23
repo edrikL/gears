@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+// Copyright 2008, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -23,32 +23,34 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import "oaidl.idl";
-import "ocidl.idl";
-import "blob_ie.idl";
+#include <gecko_sdk/include/nspr.h>  // for PR_*
+#include <gecko_sdk/include/nsServiceManagerUtils.h>  // for NS_IMPL_* and NS_INTERFACE_*
+#include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_internal/jsapi.h>
+#include <gecko_internal/nsIDOMClassInfo.h>
 
-//
-// GearsDesktopInterface
-//
+#include "gears/blob/blob_interface.h"
+#include "gears/blob/blob_ff.h"
 
-[
-  object,
-  uuid(09220A29-372D-4382-8942-FFCED26581E7),
-  dual,
-  nonextensible,
-  pointer_default(unique)
-]
-interface GearsDesktopInterface : IDispatch {
-  // icons parameter is expected to be a javascript object with properties for
-  // each available icon size. Valid property names are currently "16x16",
-  // "32x32", "48x48", and "128x128". 
-  HRESULT createShortcut(BSTR name, BSTR description, BSTR url, VARIANT icons);
+NS_IMPL_THREADSAFE_ADDREF(GearsBlob)
+NS_IMPL_THREADSAFE_RELEASE(GearsBlob)
+NS_INTERFACE_MAP_BEGIN(GearsBlob)
+  NS_INTERFACE_MAP_ENTRY(GearsBaseClassInterface)
+  NS_INTERFACE_MAP_ENTRY(GearsBlobInterface)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, GearsBlobInterface)
+  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(GearsBlob)
+NS_INTERFACE_MAP_END
 
-#ifdef DEBUG
-  // This is a quick way to make a blob for now, if you want to play with
-  // binary data in your module.
-  HRESULT newFileBlob([in] const BSTR filename,
-                      [out, retval] GearsBlobInterface **retval);
-#endif
-};
+const char *kGearsBlobClassName = "GearsBlob";
+const nsCID kGearsBlobClassId = {0x3d32d95c, 0xac6d, 0x11dc, {0x83, 0x14,
+                                 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66}};
+                                 // {3D32D95C-AC6D-11DC-8314-0800200C9A66}
 
+
+NS_IMETHODIMP GearsBlob::GetLength(PRInt64 *retval) {
+  // A GearsBlob should never be let out in the JS world unless it has been
+  // Initialize()d with valid contents_.
+  assert(contents_.get());
+  *retval = contents_->Length();
+  return NS_OK;
+}

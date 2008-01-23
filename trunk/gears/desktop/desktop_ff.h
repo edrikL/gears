@@ -55,6 +55,11 @@ class GearsDesktop
   //                               object icons)
   NS_IMETHOD CreateShortcut();
 
+#ifdef DEBUG
+  NS_IMETHOD NewFileBlob(const nsAString &filename,
+                         GearsBlobInterface **retval);
+#endif
+
   static bool GetControlPanelIconLocation(const SecurityOrigin &origin,
                                           const std::string16 &app_name,
                                           std::string16 *icon_loc);

@@ -37,6 +37,7 @@
 
 #include "gears/base/common/js_runner.h"
 
+#include "ff/genfiles/blob_ff.h"
 #include "ff/genfiles/channel.h"
 #include "ff/genfiles/console.h"
 #include "ff/genfiles/database.h"
@@ -471,6 +472,8 @@ bool JsRunner::InitJavaScriptEngine() {
     // test
     {GEARSTESTINTERFACE_IID, NULL},
 #endif
+    // blob
+    {GEARSBLOBINTERFACE_IID, NULL},
     // timer
     {GEARSTIMERINTERFACE_IID, NULL},
     // httprequest

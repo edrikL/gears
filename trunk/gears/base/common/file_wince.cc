@@ -80,6 +80,64 @@ bool File::DirectoryExists(const char16 *full_dirpath) {
 }
 
 
+int64 File::GetFileSize(const char16 *full_filepath) {
+  return 0;  // Stubbed out for now
+  // TODO: Implement this function (check the following code).
+#if 0
+  SAFE_HANDLE safe_file_handle(::CreateFileW(full_filepath,
+                                             GENERIC_READ,
+                                             FILE_SHARE_READ,
+                                             NULL,
+                                             OPEN_EXISTING,
+                                             FILE_ATTRIBUTE_NORMAL,
+                                             NULL));
+  if (safe_file_handle.get() == INVALID_HANDLE_VALUE) {
+    return 0;
+  }
+  return static_cast<int64>(::GetFileSize(safe_file_handle.get(), NULL));
+#endif
+}
+
+
+int File::ReadFileSegmentToBuffer(const char16 *full_filepath,
+                                  uint8* destination,
+                                  int max_bytes,
+                                  int64 position) {
+  return 0;  // Stubbed out for now
+  // TODO: Implement this function (check the following code).
+#if 0
+  if (max_bytes <= 0 || position < 0) {
+    return 0;
+  }
+
+  SAFE_HANDLE safe_file_handle(::CreateFileW(full_filepath,
+                                             GENERIC_READ,
+                                             FILE_SHARE_READ,
+                                             NULL,
+                                             OPEN_EXISTING,
+                                             FILE_ATTRIBUTE_NORMAL,
+                                             NULL));
+  if (safe_file_handle.get() == INVALID_HANDLE_VALUE) {
+    return 0;
+  }
+
+  if (::SetFilePointer(safe_file_handle.get(), static_cast<LONG>(position),
+                       NULL, FILE_BEGIN) == 0xFFFFFFFF) {
+    return 0;
+  }
+
+  // Read its contents into memory.
+  DWORD bytes_read;
+  if (!::ReadFile(safe_file_handle.get(), destination,
+                  max_bytes, &bytes_read, NULL)) {
+    return 0;
+  }
+
+  return static_cast<int>(bytes_read);
+#endif
+}
+
+
 bool File::ReadFileToVector(const char16 *full_filepath,
                             std::vector<uint8> *data) {
   // Open the file for reading.
@@ -95,7 +153,7 @@ bool File::ReadFileToVector(const char16 *full_filepath,
   }
   // Resize our buffer to fit the size of the file.
   // TODO(michaeln): support large files here, where len > maxInt
-  DWORD file_size = GetFileSize(safe_file_handle.get(), NULL);
+  DWORD file_size = ::GetFileSize(safe_file_handle.get(), NULL);
   if (file_size == INVALID_FILE_SIZE) {
     return false;
   }
