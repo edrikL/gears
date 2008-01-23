@@ -62,8 +62,8 @@ class Bootstrap:
   def install(self):
     for installer in self.__installers:
       installer.install()
-
   
+
   def startTesting(self):
     self.test_results = self.__testrunner.runTests()
     
