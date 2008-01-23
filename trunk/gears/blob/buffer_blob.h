@@ -37,8 +37,8 @@ class BufferBlob : public BlobInterface {
  public:
   ~BufferBlob();
 
-  int const Read(uint8 *destination, int max_bytes, int64 position);
-  int64 const Length();
+  int Read(uint8 *destination, int max_bytes, int64 position) const;
+  int64 Length() const;
 
  private:
   friend BlobInterface *NewBufferBlob(const void *buffer, int64 size);
