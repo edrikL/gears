@@ -98,6 +98,7 @@ notification.register({
 });
 
 // periodically call pollEmails with setTimeout or in the worker poolfunction pollEmails() {
+function pollEmails() {
   if (!notification.isEnabled("New mail")) {
     // execute poll
     while (var mail = receiveNextMail()) {
