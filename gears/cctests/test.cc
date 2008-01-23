@@ -48,6 +48,7 @@
 #include "gears/base/common/permissions_db_test.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/blob/blob_builder.h"
 #include "gears/blob/buffer_blob.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/common/http_request.h"
@@ -90,6 +91,7 @@ bool TestJsRootedTokenLifetime();  // from base_class_test.cc
 bool TestStringUtils();  // from string_utils_test.cc
 bool TestBufferBlob();
 bool TestSerialization();  // from serialization_test.cc
+bool TestBlobBuilder();
 
 
 #if BROWSER_FF
@@ -202,6 +204,7 @@ bool GearsTest::RunTestsImpl() {
   ok &= TestMessageService();
   ok &= TestBufferBlob();
   ok &= TestSerialization();
+  ok &= TestBlobBuilder();
   // TODO(zork): Add this test back in once it doesn't crash the browser.
   //ok &= TestJsRootedTokenLifetime();
 
@@ -844,6 +847,69 @@ bool TestBufferBlob() {
   TEST_ASSERT(bytes_read == 0);
   bytes_read = blob->Read(buffer, -4, 20);
   TEST_ASSERT(bytes_read == 0);
+
+  return true;
+}
+
+bool TestBlobBuilder() {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    printf("TestBlobBuilder - failed (%d)\n", __LINE__); \
+    return false; \
+  } \
+}
+  uint8 buffer[2048];
+
+  // Make an empty blob:
+  BlobBuilder blob_builder1;
+  scoped_ptr<BlobInterface> blob(blob_builder1.ToBlob());
+  TEST_ASSERT(blob->Length() == 0);
+  TEST_ASSERT(blob->Read(buffer, 64, 0) == 0);
+  blob.reset(NULL);
+
+  // Make a typical blob
+  BlobBuilder blob_builder2;
+  blob_builder2.Append("abc", 3);
+  blob.reset(blob_builder2.ToBlob());
+  TEST_ASSERT(blob->Length() == 3);
+  blob->Read(buffer, 3, 0);
+  TEST_ASSERT(buffer[0] == 'a');
+  TEST_ASSERT(buffer[1] == 'b');
+  TEST_ASSERT(buffer[2] == 'c');
+  blob.reset(NULL);
+
+  // Extending the blob is illegal
+  TEST_ASSERT(blob_builder2.Append("de", 2) == 0);
+
+  // Making another blob from the same builder is also illegal
+  TEST_ASSERT(blob_builder2.ToBlob() == NULL);
+
+  // Test a BlobBuilder with more than kInitialCapacity bytes
+
+  // If this assert fails, you simply need to allocate a bigger buffer above:
+  assert(sizeof(buffer) >= size_t(BlobBuilder::kInitialCapacity + 1));
+
+  int l = BlobBuilder::kInitialCapacity + 1;
+  BlobBuilder blob_builder4;
+  for (int i = 0; i < l; i++) {
+    blob_builder4.Append("a", 1);
+  }
+  blob.reset(blob_builder4.ToBlob());
+  blob->Read(buffer, l, 0);
+  TEST_ASSERT(blob->Length() == l);
+  TEST_ASSERT(buffer[0] == 'a');
+  TEST_ASSERT(buffer[1] == 'a');
+  TEST_ASSERT(buffer[2] == 'a');
+  TEST_ASSERT(buffer[l - 3] == 'a');
+  TEST_ASSERT(buffer[l - 2] == 'a');
+  TEST_ASSERT(buffer[l - 1] == 'a');
+  blob.reset(NULL);
+
+  // Exceptional cases
+  BlobBuilder blob_builder5;
+  TEST_ASSERT(blob_builder5.Append("abc", -3) == 0);
 
   return true;
 }
