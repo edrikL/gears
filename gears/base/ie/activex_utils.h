@@ -148,6 +148,21 @@ class ActiveXUtils {
   static HRESULT SetDispatchProperty(IDispatch *dispatch, DISPID dispid,
                                      const VARIANT *value);
 
+  // Adds a new property to object.
+  // If the property already exists then it is returned.
+  // Parameters:
+  //  dispatch - in - the properties are added to this object
+  //  name - in - the case sensitive name of the property
+  //  dispid - out - the identifier for the property
+  static HRESULT AddDispatchProperty(IDispatch* dispatch, const char16* name,
+                                     DISPID* dispid);
+
+  // Convenience function for calling AddDispatchProperty
+  // and then SetDispathProperty.
+  static HRESULT AddAndSetDispatchProperty(IDispatch* dispatch,
+                                           const char16* name,
+                                           const VARIANT* value);
+
 #ifdef WINCE
   // TODO(andreip): implement on Windows Mobile.
 #else

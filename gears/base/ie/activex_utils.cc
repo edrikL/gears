@@ -37,6 +37,7 @@
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/ie/activex_utils.h"
+#include <dispex.h>  // for IDispatchEx
 #ifdef WINCE
 #include "gears/base/common/wince_compatibility.h"
 #endif
@@ -201,11 +202,35 @@ HRESULT ActiveXUtils::SetDispatchProperty(IDispatch *dispatch,
   dispparams.rgvarg = const_cast<VARIANT*>(value);
   DISPID dispidPut = DISPID_PROPERTYPUT;
   dispparams.rgdispidNamedArgs = &dispidPut;
+  WORD flags = (value->vt == VT_DISPATCH)
+    ? DISPATCH_PROPERTYPUTREF
+    : DISPATCH_PROPERTYPUT;
   return dispatch->Invoke(dispid, IID_NULL,
-                          LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT,
+                          LOCALE_USER_DEFAULT, flags,
                           &dispparams, NULL, NULL, NULL);
 }
 
+HRESULT ActiveXUtils::AddDispatchProperty(IDispatch* dispatch,
+                                            const char16* name,
+                                            DISPID* dispid) {
+  CComQIPtr<IDispatchEx> dispatchex = dispatch;
+  if (!dispatchex)
+    return E_NOINTERFACE;
+
+  return dispatchex->GetDispID(
+    CComBSTR(name), fdexNameCaseSensitive | fdexNameEnsure, dispid);
+}
+
+HRESULT ActiveXUtils::AddAndSetDispatchProperty(IDispatch* dispatch,
+                                                const char16* name,
+                                                const VARIANT *value) {
+  DISPID dispid;
+  HRESULT hr = AddDispatchProperty(dispatch, name, &dispid);
+  if (FAILED(hr))
+    return hr;
+
+  return SetDispatchProperty(dispatch, dispid, value);
+}
 
 #ifdef WINCE
 // TODO(andreip): Implement on Windows Mobile

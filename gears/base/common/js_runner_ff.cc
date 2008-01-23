@@ -150,6 +150,22 @@ class JsRunnerBase : public JsRunnerInterface {
     }
   }
 
+  JsArray* NewArray() {
+    JSObject* array_object = JS_NewArrayObject(GetContext(), 0, NULL);
+    if (!array_object)
+      return NULL;
+
+    scoped_ptr<JsArray> js_array(new JsArray());
+    if (!js_array.get())
+      return NULL;
+
+    jsval array = OBJECT_TO_JSVAL(array_object);
+    if (!js_array->SetArray(array, GetContext()))
+      return NULL;
+
+    return js_array.release();
+  }
+
   virtual bool InvokeCallbackSpecialized(
                    const JsRootedCallback *callback, int argc, jsval *argv,
                    JsRootedToken **optional_alloc_retval) = 0;
