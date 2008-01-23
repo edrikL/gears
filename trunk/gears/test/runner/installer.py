@@ -4,6 +4,7 @@ import stat
 import browser_launchers
 import zipfile
 import time
+import subprocess
 
 if os.name == 'nt':
   import win32file
@@ -15,6 +16,7 @@ class Installer:
   """ Handle extension installation and browser profile adjustments. """
   GUID = '{000a9d1c-beef-4f90-9363-039d445309b8}'
   FIREFOX_QUITTING_BUFFER = 10
+  BUILDS = 'output/installers'
 
   def prepareProfiles(self):
     """ Unzip profiles. """
@@ -85,20 +87,19 @@ class Installer:
         return profile_folder
     return False
 
-  def findBuildPath(self, type):
+  def findBuildPath(self, type, directory):
     """ Find the path to the build of the given type.
   
     Args:
-      type: os string 'win32' 'osx' or 'linux'
+      type: os string eg 'win32' 'osx' or 'linux'
     
     Returns:
       String path to correct build for the type, else throw
     """
-    search_dir = 'output/installers'
-    dir_list = os.listdir(search_dir)
+    dir_list = os.listdir(directory)
     for item in dir_list:
       if item.find(type) > -1:
-        build = os.path.join(search_dir, item)
+        build = os.path.join(directory, item)
         build = build.replace('/', os.sep).replace('\\', os.sep)
         return build
     raise "Can't locate build of type: %s" % type
@@ -114,6 +115,13 @@ class Installer:
     self.launcher.launch(url)
     # Wait a significant amount of time for firefox to close completely
     time.sleep(Installer.FIREFOX_QUITTING_BUFFER)
+  
+
+  def saveInstalledBuild(self):
+    """ Copies given build to the "current build" location. """
+    if os.path.exists(self.current_build):
+      shutil.rmtree(self.current_build, onerror=self.handleRmError)
+    shutil.copytree(Installer.BUILDS, self.current_build)
 
 
   def copyAndChmod(self, src, targ):
@@ -184,15 +192,27 @@ class Win32Installer(Installer):
   """ Installer for Win32 machines, extends Installer. """
   def install(self):
     """ Do installation.  """
-    print 'Installing build %s' % self.buildPath()
-    # Try to uninstall first to clean up current installation (if any).
-    os.system('msiexec /quiet /uninstall %s' % self.buildPath())
-    # Install new msi.
-    os.system('msiexec /quiet /i %s' % self.buildPath())
+    # First, uninstall current installed build, if any exists
+    if os.path.exists(self.current_build):
+      build_path = self.buildPath(self.current_build)
+      print 'Uninstalling build %s' % build_path
+      c = ['msiexec', '/passive', '/uninstall', build_path]
+      p = subprocess.Popen(c)
+      p.wait()
+
+    # Now install new build
+    build_path = self.buildPath(Installer.BUILDS)
+    print 'Installing build %s' % build_path
+    c = ['msiexec', '/passive', '/i', build_path]
+    p = subprocess.Popen(c)
+    p.wait()
     self.__copyProfile()
     self.completeInstall(self.profile)
 
+    # Save new build as current installed build
+    self.saveInstalledBuild()
   
+
   def __copyProfile(self):
     """ Copy IE profile to correct location. """
     google_path = os.path.join(self.appdata_path, 'Google')
@@ -213,13 +233,14 @@ class WinXpInstaller(Win32Installer):
     self.profile = profile_name
     self.prepareProfiles()
     home = os.getenv('USERPROFILE')
+    self.current_build = os.path.join(home, 'current_gears_build')
     self.appdata_path = os.path.join(home, 'Local Settings\\Application Data')
     self.ieprofile = 'ieprofile'
     self.launcher = browser_launchers.FirefoxWin32Launcher(self.profile)
 
 
-  def buildPath(self):
-    return self.findBuildPath('msi')
+  def buildPath(self, directory):
+    return self.findBuildPath('msi', directory)
 
 
   def type(self):
@@ -232,13 +253,14 @@ class WinVistaInstaller(Win32Installer):
     self.profile = profile_name
     self.prepareProfiles()
     home = os.getenv('USERPROFILE')
+    self.current_build = os.path.join(home, 'current_gears_build')
     self.appdata_path = os.path.join(home, 'AppData\\LocalLow')
     self.ieprofile = 'ieprofile'
     self.launcher = browser_launchers.FirefoxWin32Launcher(self.profile)
 
 
-  def buildPath(self):
-    return self.findBuildPath('msi')
+  def buildPath(self, directory):
+    return self.findBuildPath('msi', directory)
 
   
   def type(self):
@@ -254,6 +276,7 @@ class MacInstaller(Installer):
     home = os.getenv('HOME')
     ffprofile = 'Library/Application Support/Firefox/Profiles'
     ffcache = 'Library/Caches/Firefox/Profiles'
+    self.current_build = os.path.join(home, 'current_gears_build')
     self.firefox = '/Applications/Firefox.app/Contents/MacOS/firefox-bin'
     self.ffprofile_path = os.path.join(home, ffprofile)
     self.ffcache_path = os.path.join(home, ffcache)
@@ -262,8 +285,8 @@ class MacInstaller(Installer):
     self.launcher = browser_launchers.FirefoxMacLauncher(self.profile)
   
   
-  def buildPath(self):
-    return self.findBuildPath('xpi')
+  def buildPath(self, directory):
+    return self.findBuildPath('xpi', directory)
 
   
   def type(self):
@@ -272,10 +295,12 @@ class MacInstaller(Installer):
 
   def install(self):
     """ Do installation. """
+    print 'Creating test profile and inserting extension'
+    build_path = self.buildPath(Installer.BUILDS)
     os.system('%s %s' % (self.firefox, self.profile_arg))
-    self.installExtension(self.buildPath())
+    self.installExtension(build_path)
     self.__copyProfileCacheMac()
-
+    self.saveInstalledBuild()
 
   def __copyProfileCacheMac(self):
     """ Copy cache portion of profile on mac. """
@@ -302,6 +327,7 @@ class LinuxInstaller(Installer):
     self.profile = profile_name
     self.prepareProfiles()
     home = os.getenv('HOME')
+    self.current_build = os.path.join(home, 'current_gears_build')
     self.ffprofile_path = os.path.join(home, '.mozilla/firefox')
     self.firefox = 'firefox'
     self.ffprofile = 'ffprofile-linux'
@@ -309,8 +335,8 @@ class LinuxInstaller(Installer):
     self.launcher = browser_launchers.FirefoxLinuxLauncher(self.profile)
 
 
-  def buildPath(self):
-    return self.findBuildPath('xpi')
+  def buildPath(self, directory):
+    return self.findBuildPath('xpi', directory)
 
 
   def type(self):
@@ -319,5 +345,8 @@ class LinuxInstaller(Installer):
 
   def install(self):
     """ Do installation. """
+    print 'Creating test profile and inserting extension'
+    build_path = self.buildPath(Installer.BUILDS)
     os.system('%s %s' % (self.firefox, self.profile_arg))
-    self.installExtension(self.buildPath())
+    self.installExtension(build_path)
+    self.saveInstalledBuild()
