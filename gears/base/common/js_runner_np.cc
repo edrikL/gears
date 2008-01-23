@@ -101,6 +101,12 @@ class JsRunnerBase : public JsRunnerInterface {
     return retval.release();
   }
 
+  JsArray* NewArray() {
+    // TODO: Implement
+    assert(false);
+    return NULL;
+  }
+
   bool InvokeCallback(const JsRootedCallback *callback,
                       int argc, JsParamToSend *argv,
                       JsRootedToken **optional_alloc_retval) {
