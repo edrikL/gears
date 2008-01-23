@@ -34,12 +34,11 @@ class BlobInterface {
   // to the beginning of the blob contents, and is not related to previous
   // reads.  Reads of max_bytes < 0 will be ignored (and return 0), and
   // similarly for position < 0.
-  virtual int const Read(uint8 *destination, int max_bytes,
-                         int64 position) = 0;
+  virtual int Read(uint8 *destination, int max_bytes, int64 position) const = 0;
 
   // Note that Length can be volatile, e.g. a file-backed Blob can have that
   // file's size change underneath it.
-  virtual int64 const Length() = 0;
+  virtual int64 Length() const = 0;
 
 
   virtual ~BlobInterface() {}

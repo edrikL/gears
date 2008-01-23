@@ -59,10 +59,10 @@ BufferBlob::~BufferBlob() {
 }
 
 
-int const BufferBlob::Read(
+int BufferBlob::Read(
     uint8 *destination,
     int max_bytes,
-    int64 position) {
+    int64 position) const {
   if (position >= length_ || position < 0 || max_bytes < 0) {
     return 0;
   }
@@ -77,6 +77,6 @@ int const BufferBlob::Read(
 }
 
 
-int64 const BufferBlob::Length() {
+int64 BufferBlob::Length() const {
   return length_;
 }
