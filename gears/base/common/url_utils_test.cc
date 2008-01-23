@@ -142,7 +142,71 @@ bool TestUrlUtils() {
       NULL,
       STRING16(L"http://server/directory/foo#bar"),
       STRING16(L"http://server/directory/foo")
-    }
+    },
+// TODO(playmobil): make IE behave the same as other browsers in this case.
+#ifdef BROWSER_IE
+    {  // IE doesn't escape chars in base & url.
+      STRING16(L"http://server/a b/"),
+      STRING16(L"c d"),
+      STRING16(L"http://server/a b/c d")
+    },
+#else
+    {  // Check that we escape base and url.
+      STRING16(L"http://server/a b/"),
+      STRING16(L"c d"),
+      STRING16(L"http://server/a%20b/c%20d")
+    },
+#endif
+    {  // Lowercase scheme & host but don't touch path.
+      STRING16(L"HTTp://SErver/"),
+      STRING16(L"foo"),
+      STRING16(L"http://server/foo")
+    },
+    {  // Add trailing slash to domain.
+      STRING16(L"http://server"),
+      STRING16(L""),
+      STRING16(L"http://server/")
+    },
+    {  // Make sure we don't try to remove directory index.
+      base_dir,
+      STRING16(L"index.html"),
+      STRING16(L"http://server/directory/index.html")
+    },
+    {  // Preserve capitalization of escape sequences.
+       // Some normalizers will output: http://server/directory/a%C2%B1b
+      base_dir,
+      STRING16(L"a%c2%B1b"),
+      STRING16(L"http://server/directory/a%c2%B1b")
+    },
+    {  // Remove default port.
+      STRING16(L"http://server:80/directory/"),
+      STRING16(L""),
+      STRING16(L"http://server/directory/")
+    },
+    {  // Collapse URL Fragments.
+      STRING16(L"http://server/../a/b/../c/"),
+      STRING16(L"./d.html"),
+      STRING16(L"http://server/a/c/d.html")
+    },
+    {  // Leave www intact.
+       // Some normalizesr will output: http://foo.com/
+      STRING16(L"http://www.foo.com/"),
+      STRING16(L""),
+      STRING16(L"http://www.foo.com/")
+    },
+    {  // Don't sort page variables.
+       // Some normalizers will output: http://server/directory/foo.html?a=b&b=c
+      base_dir,
+      STRING16(L"foo.html?b=c&a=b"),
+      STRING16(L"http://server/directory/foo.html?b=c&a=b")
+    },
+    {  // Remove empty query string.
+      //  Some normalizers will remove the trailing '?'
+      base_dir,
+      STRING16(L"foo.html?"),
+      STRING16(L"http://server/directory/foo.html?")
+    },
+
   };
 
   for (size_t i = 0; i < ARRAYSIZE(kCases); ++i) {
