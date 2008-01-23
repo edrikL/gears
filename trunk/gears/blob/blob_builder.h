@@ -23,34 +23,38 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_BLOB_BUFFER_BLOB_H__
-#define GEARS_BLOB_BUFFER_BLOB_H__
+#ifndef GEARS_BLOB_BLOB_BUILDER_H__
+#define GEARS_BLOB_BLOB_BUILDER_H__
 
 #include "gears/blob/blob_interface.h"
 
-// NewBufferBlob does not assume ownership of buffer's memory, as it will make
-// a private copy of the given buffer.  Returns NULL on failure.
-// The result is suitable to place inside a scoped_ptr<BlobInterface>.
-BlobInterface *NewBufferBlob(const void *buffer, int64 size);
-
-class BufferBlob : public BlobInterface {
+class BlobBuilder {
  public:
-  ~BufferBlob();
+  BlobBuilder();
 
-  int Read(uint8 *destination, int max_bytes, int64 position) const;
-  int64 Length() const;
+  // Attempts to append num_bytes of source to the BlobBuilder.  Returns the
+  // number of bytes actually written.
+  int Append(const void *source, int num_bytes);
+
+  // Initializes a new BufferBlob with the data so far written to this, and
+  // relinquishes ownership of buffer_ to it (further Append()s or ToBlob()s
+  // will return 0 and NULL.
+  BlobInterface *ToBlob();
+
+  ~BlobBuilder();
+
+  static const int kInitialCapacity;
 
  private:
-  friend BlobInterface *NewBufferBlob(const void *buffer, int64 size);
-  friend class BlobBuilder;
+  uint8 *buffer_;
 
-  // The BufferBlob will assume ownership of buffer's memory.
-  BufferBlob(const uint8 *buffer, int64 length);
+  // The size of the buffer allocated.
+  int capacity_;
 
-  const uint8 *buffer_;
-  const int64 length_;
+  // The amount of the allocated buffer filled (offset for the next write).
+  int length_;
 
-  DISALLOW_EVIL_CONSTRUCTORS(BufferBlob);
+  DISALLOW_EVIL_CONSTRUCTORS(BlobBuilder);
 };
 
-#endif  // GEARS_BLOB_BUFFER_BLOB_H__
+#endif  // GEARS_BLOB_BLOB_BUILDER_H__
