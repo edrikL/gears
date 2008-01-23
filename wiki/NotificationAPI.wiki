@@ -1,5 +1,5 @@
 #labels DesignDoc
-= Very much a draft so far, just storing this here for backup. =
+= Very much a draft so far. =
 
 = User Interface =
 
