@@ -47,18 +47,22 @@ const nsCID kGearsConsoleClassId = {0xd1df4fba, 0x0ad0, 0x4270, {0x89, 0x1d,
                                      0x4e, 0xbf, 0x33, 0xaf, 0xd8, 0x3b}};
                                     // {d1df4fba-0ad0-4270-891d-4ebf33afd83b}
 
-GearsConsole::GearsConsole() { }
-GearsConsole::~GearsConsole() { }
 
 NS_IMETHODIMP GearsConsole::Log(// const nsAString &type,
                                 // const nsAString &message
+                                // OPTIONAL string array args
                                 ) {
   Initialize();
   std::string16 type;
   std::string16 message;
   JsParamFetcher js_params(this);
+
+  // Get required type and message parameters
   if (js_params.GetCount(false) < 2) {
     RETURN_EXCEPTION(STRING16(L"Type and message parameters required."));
+  }
+  if (js_params.GetCount(false) > 3) {
+    RETURN_EXCEPTION(STRING16(L"Too many parameters."));
   }
   if (!js_params.GetAsString(0, &type)) {
     RETURN_EXCEPTION(STRING16(L"Type parameter must be a string."));
@@ -72,7 +76,17 @@ NS_IMETHODIMP GearsConsole::Log(// const nsAString &type,
   if (!message[0]) {
     RETURN_EXCEPTION(STRING16(L"Message is required."));
   }
-  console_.get()->Log(type, message, EnvPageLocationUrl());
+
+  // Check for optional args array
+  if (!js_params.IsOptionalParamPresent(2, false)) {
+    console_.get()->Log(type, message, NULL, EnvPageLocationUrl());
+  } else {
+    JsArray args;
+    if (!js_params.GetAsArray(2, &args)) {
+      RETURN_EXCEPTION(STRING16(L"Args parameter must be an array."));
+    }
+    console_.get()->Log(type, message, &args, EnvPageLocationUrl());
+  }
   RETURN_NORMAL();
 }
 

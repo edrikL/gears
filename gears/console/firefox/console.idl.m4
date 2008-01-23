@@ -30,7 +30,7 @@ interface nsIVariant;
 
 [scriptable, uuid(3aab5045-e312-4386-92d7-744bf981c379)]
 interface GearsConsoleInterface : GearsBaseClassInterface {
-  void log(//in AString type, in AString message
+  void log(//in AString type, in AString message, in variant array args
           );
   attribute nsIVariant onlog;
 };
