@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef GEARS_BASE_COMMON_JS_TYPES_H__
@@ -42,6 +42,9 @@ typedef jsval      JsScopedToken;  // unneeded in FF, see comment on JsArray
 typedef JSContext* JsContextPtr;
 typedef nsresult   JsNativeMethodRetval;
 
+// interface required for COM objects exposed in JS
+typedef nsISupports IScriptable;
+
 #elif BROWSER_IE
 
 #include <windows.h>
@@ -52,6 +55,9 @@ typedef VARIANT JsToken;
 typedef CComVariant JsScopedToken;
 typedef void* JsContextPtr; // unused in IE
 typedef HRESULT JsNativeMethodRetval;
+
+// interface required for COM objects exposed in JS
+typedef IDispatch IScriptable;
 
 #elif BROWSER_WEBKIT
 
@@ -71,6 +77,9 @@ typedef HRESULT JsNativeMethodRetval;
 typedef NPVariant JsToken;
 typedef NPP JsContextPtr;
 typedef NPError JsNativeMethodRetval;
+
+// Not used in NPAPI or WEBKIT at the moment
+typedef void* IScriptable;
 
 #endif  // BROWSER_NPAPI || BROWSER_WEBKIT
 
@@ -208,7 +217,7 @@ typedef ScopedNPVariant JsScopedToken;
 // A JsToken that won't get GC'd out from under you.
 class JsRootedToken {
  public:
-  JsRootedToken(JsContextPtr context, JsToken token) 
+  JsRootedToken(JsContextPtr context, JsToken token)
        : context_(context), token_(token) { }
 
   const JsToken& token() const { return token_; }
@@ -250,8 +259,15 @@ class JsArray {
  public:
   JsArray();
   ~JsArray();
-  bool GetElement(int index, JsScopedToken *out) const;
+
   bool SetArray(JsToken value, JsContextPtr context);
+
+  bool GetLength(int *length) const;
+
+  // use the same syntax as JsRootedToken
+  const JsScopedToken& token() const;
+
+  bool GetElement(int index, JsScopedToken *out) const;
   bool GetElementAsBool(int index, bool *out) const;
   bool GetElementAsInt(int index, int *out) const;
   bool GetElementAsDouble(int index, double *out) const;
@@ -259,13 +275,22 @@ class JsArray {
   bool GetElementAsArray(int index, JsArray *out) const;
   bool GetElementAsObject(int index, JsObject *out) const;
   bool GetElementAsFunction(int index, JsRootedCallback **out) const;
-  bool GetLength(int *length) const;
- private:
+
+  bool SetElement(int index, const JsScopedToken& value);
+  bool SetElementBool(int index, bool value);
+  bool SetElementInt(int index, int value);
+  bool SetElementDouble(int index, double value);
+  bool SetElementString(int index, const std::string16& value);
+  bool SetElementArray(int index, JsArray* value);
+  bool SetElementObject(int index, JsObject* value);
+  bool SetElementFunction(int index, JsRootedCallback* value);
+  bool SetElementModule(int index, IScriptable* value);
+
+private:
   // Needs access to the raw JsToken.
   friend void ConvertJsParamToToken(const JsParamToSend &param,
                                     JsContextPtr context,
                                     JsScopedToken *token);
-
   JsContextPtr js_context_;
   JsScopedToken array_;
 };
@@ -278,23 +303,28 @@ class JsObject {
   bool SetObject(JsToken value, JsContextPtr context);
   bool GetPropertyAsBool(const std::string16 &name, bool *out) const;
   bool GetPropertyAsInt(const std::string16 &name, int *out) const;
+  bool GetPropertyAsDouble(const std::string16 &name, double *out) const;
   bool GetPropertyAsString(const std::string16 &name, std::string16 *out) const;
   bool GetPropertyAsArray(const std::string16 &name, JsArray *out) const;
   bool GetPropertyAsObject(const std::string16 &name, JsObject *out) const;
-  bool GetPropertyAsDouble(const std::string16 &name, double *out) const;
   bool GetPropertyAsFunction(const std::string16 &name,
                              JsRootedCallback **out) const;
 
   // SetProperty*() overwrites the existing named property or adds a new one if
   // none exists.
-  bool SetPropertyString(const std::string16 &name, const std::string16 &value);
+  bool SetPropertyBool(const std::string16& name, bool value);
   bool SetPropertyInt(const std::string16 &name, int value);
-  // TODO(aa): SetPropertyBool, SetPropertyObject (to build trees), etc...
-  // TODO(aa): Support for building arrays?
+  bool SetPropertyDouble(const std::string16& name, double value);
+  bool SetPropertyString(const std::string16 &name, const std::string16 &value);
+  bool SetPropertyArray(const std::string16& name, JsArray* value);
+  bool SetPropertyObject(const std::string16& name, JsObject* value);
+  bool SetPropertyFunction(const std::string16& name, JsRootedCallback* value);
+  bool SetPropertyModule(const std::string16& name, IScriptable* value);
 
  private:
   // Need access to the raw JsToken.
   friend class JsRunnerBase;
+  friend class JsArray;
   friend void ConvertJsParamToToken(const JsParamToSend &param,
                                     JsContextPtr context,
                                     JsScopedToken *token);
@@ -363,6 +393,8 @@ class JsCallContext {
                 EXCEPINFO FAR *excep_info)
       : disp_params_(disp_params), retval_(retval), exception_info_(excep_info),
         is_exception_set_(false) {}
+#elif BROWSER_FF
+  explicit JsCallContext(ModuleImplBaseClass* obj);
 #else
  // TODO: browser_xyz
 #endif
@@ -410,6 +442,12 @@ class JsCallContext {
   DISPPARAMS FAR *disp_params_;
   VARIANT FAR *retval_;
   EXCEPINFO FAR *exception_info_;
+#elif BROWSER_FF
+  int argc_;
+  JsToken* argv_;
+  nsCOMPtr<nsIXPConnect> xpc_;
+  nsCOMPtr<nsIXPCNativeCallContext> ncc_;
+  ModuleImplBaseClass* obj_;
 #else
   // TODO: browser_xyz
 #endif

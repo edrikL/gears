@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/common/base_class.h"
@@ -39,6 +39,53 @@
 #include "gears/base/npapi/np_utils.h"
 #elif BROWSER_SAFARI
 #include "gears/base/safari/browser_utils.h"
+#endif
+
+// Special conversion functions for FireFox
+#if BROWSER_FF
+
+static bool StringToToken(JsContextPtr context,
+                          const std::string16& in,
+                          JsToken* out) {
+  JSString *jstr = JS_NewUCStringCopyZ(
+                       context,
+                       reinterpret_cast<const jschar *>(in.c_str()));
+  if (jstr) {
+    *out = STRING_TO_JSVAL(jstr);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+static bool ModuleToToken(JsContextPtr context, IScriptable* in, JsToken* out) {
+  nsresult nr;
+  nsCOMPtr<nsIXPConnect> xpc;
+  xpc = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
+  if (NS_FAILED(nr))
+    return false;
+
+  // Retrieves a scope object for the current script or function.
+  // http://developer.mozilla.org/en/docs/JS_GetScopeChain
+  JSObject* scope = JS_GetScopeChain(context);
+
+  // convert a nsISupports into a JSObject, so it can be put in a jsval
+  nsCOMPtr<nsIXPConnectJSObjectHolder> object_holder;
+  nsIID iid = NS_GET_IID(IScriptable);
+  nr = xpc->WrapNative(context, scope, in, iid,
+                       getter_AddRefs(object_holder));
+  if (NS_FAILED(nr))
+    return false;
+
+  JSObject* object = NULL;
+  nr = object_holder->GetJSObject(&object);
+  if (NS_FAILED(nr))
+    return false;
+
+  *out = OBJECT_TO_JSVAL(object);
+  return true;
+}
+
 #endif
 
 // Browser specific JsArray functions.
@@ -79,12 +126,65 @@ bool JsArray::GetLength(int *length) const {
   return false;
 }
 
+const JsScopedToken& JsArray::token() const {
+  return array_;
+}
+
+
 bool JsArray::GetElement(int index, JsScopedToken *out) const {
   if (!array_) return false;
 
   return JS_GetElement(js_context_, JSVAL_TO_OBJECT(array_),
                        index, out) == JS_TRUE;
 }
+
+bool JsArray::SetElement(int index, const JsToken &value) {
+  if (!array_)
+    return false;
+
+  JSBool result = JS_DefineElement(js_context_,
+                                   JSVAL_TO_OBJECT(array_),
+                                   index, value,
+                                   nsnull, nsnull, // getter, setter
+                                   JSPROP_ENUMERATE);
+
+  // stops warning C4800 from VC (BOOL to bool performance warning)
+  return result == JS_TRUE;
+}
+
+bool JsArray::SetElementBool(int index, bool value) {
+  return SetElement(index, BOOLEAN_TO_JSVAL(value));
+}
+
+bool JsArray::SetElementInt(int index, int value) {
+  return SetElement(index, INT_TO_JSVAL(value));
+}
+
+bool JsArray::SetElementDouble(int index, double value) {
+  return SetElement(index, DOUBLE_TO_JSVAL(value));
+}
+
+bool JsArray::SetElementString(int index, const std::string16& value) {
+  JsToken token;
+  if (StringToToken(js_context_, value, &token)) {
+    return SetElement(index, token);
+  } else {
+    return false;
+  }
+}
+
+bool JsArray::SetElementModule(int index, IScriptable* value) {
+  if (!array_)
+    return false;
+
+  JsToken token;
+  if (ModuleToToken(js_context_, value, &token)) {
+    return SetElement(index, token);
+  } else {
+    return false;
+  }
+}
+
 
 #elif BROWSER_IE
 
@@ -105,8 +205,9 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
 bool JsArray::GetLength(int *length) const {
   if (array_.vt != VT_DISPATCH) return false;
 
-  VARIANT out;
-  if (FAILED(ActiveXUtils::GetDispatchProperty(array_.pdispVal, L"length",
+  CComVariant out;
+  if (FAILED(ActiveXUtils::GetDispatchProperty(array_.pdispVal,
+                                               STRING16(L"length"),
                                                &out))) {
     return false;
   }
@@ -141,6 +242,40 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
   return false;
 }
 
+bool JsArray::SetElement(int index, const JsScopedToken& in) {
+  if (array_.vt != VT_DISPATCH)
+    return false;
+
+  std::string16 name(IntegerToString16(index));
+  HRESULT hr = ActiveXUtils::AddAndSetDispatchProperty(
+    array_.pdispVal, name.c_str(), &in);
+  return SUCCEEDED(hr);
+}
+
+bool JsArray::SetElementBool(int index, bool value) {
+  return SetElement(index, CComVariant(value));
+}
+
+bool JsArray::SetElementInt(int index, int value) {
+  return SetElement(index, CComVariant(value));
+}
+
+bool JsArray::SetElementDouble(int index, double value) {
+  return SetElement(index, CComVariant(value));
+}
+
+bool JsArray::SetElementString(int index, const std::string16& value) {
+  return SetElement(index, CComVariant(value.c_str()));
+}
+
+bool JsArray::SetElementModule(int index, IScriptable* value) {
+  return SetElement(index, CComVariant(value));
+}
+
+const JsScopedToken& JsArray::token() const {
+  return array_;
+}
+
 #elif BROWSER_NPAPI
 
 JsArray::JsArray() : js_context_(NULL) {
@@ -155,7 +290,7 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
   NPIdentifier length_id = NPN_GetStringIdentifier("length");
   NPVariant np_length;
   if (!NPVARIANT_IS_OBJECT(value) ||
-      !NPN_GetProperty(context, NPVARIANT_TO_OBJECT(value), length_id, 
+      !NPN_GetProperty(context, NPVARIANT_TO_OBJECT(value), length_id,
                        &np_length)) {
     return false;
   }
@@ -243,6 +378,23 @@ bool JsArray::GetElementAsFunction(int index, JsRootedCallback **out) const {
   return JsTokenToNewCallback(token, js_context_, out);
 }
 
+// SetElement is only available on FF and IE
+#if defined(BROWSER_FF) || defined(BROWSER_IE)
+
+bool JsArray::SetElementArray(int index, JsArray* value) {
+  return SetElement(index, value->array_);
+}
+
+bool JsArray::SetElementObject(int index, JsObject* value) {
+  return SetElement(index, value->js_object_);
+}
+
+bool JsArray::SetElementFunction(int index, JsRootedCallback* value) {
+  return SetElement(index, value->token());
+}
+
+#endif
+
 // Browser specific JsObject functions.
 #if BROWSER_FF
 
@@ -302,21 +454,36 @@ bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
   return true;
 }
 
+bool JsObject::SetPropertyBool(const std::string16& name, bool value) {
+  return SetProperty(name, BOOLEAN_TO_JSVAL(value));
+}
+
+bool JsObject::SetPropertyInt(const std::string16 &name, int value) {
+  return SetProperty(name, INT_TO_JSVAL(value));
+}
+
+bool JsObject::SetPropertyDouble(const std::string16& name, double value) {
+  return SetProperty(name, DOUBLE_TO_JSVAL(value));
+}
+
 bool JsObject::SetPropertyString(const std::string16 &name,
                                  const std::string16 &value) {
-  // TODO(aa): Figure out the lifetime of this string.
-  JSString *jstr = JS_NewUCStringCopyZ(
-                       js_context_,
-                       reinterpret_cast<const jschar *>(value.c_str()));
-  if (jstr) {
-    return SetProperty(name, STRING_TO_JSVAL(jstr));
+  JsToken token;
+  if (StringToToken(js_context_, value, &token)) {
+    return SetProperty(name, token);
   } else {
     return false;
   }
 }
 
-bool JsObject::SetPropertyInt(const std::string16 &name, int value) {
-  return SetProperty(name, INT_TO_JSVAL(value));
+bool JsObject::SetPropertyModule(const std::string16& name,
+                                 IScriptable* value) {
+  JsToken token;
+  if (ModuleToToken(js_context_, value, &token)) {
+    return SetProperty(name, token);
+  } else {
+    return false;
+  }
 }
 
 #elif BROWSER_IE
@@ -347,18 +514,21 @@ bool JsObject::GetProperty(const std::string16 &name,
 bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
   if (js_object_.vt != VT_DISPATCH) { return false; }
 
-  CComQIPtr<IDispatchEx> dispatchex = js_object_.pdispVal;
-  if (!dispatchex) { return false; }
+  HRESULT hr = ActiveXUtils::AddAndSetDispatchProperty(
+    js_object_.pdispVal, name.c_str(), &value);
+  return SUCCEEDED(hr);
+}
 
-  DISPID dispid;
-  HRESULT hr = dispatchex->GetDispID(CComBSTR(name.c_str()),
-                                     fdexNameCaseSensitive | fdexNameEnsure,
-                                     &dispid);
-  if (FAILED(hr)) { return false; }
+bool JsObject::SetPropertyBool(const std::string16& name, bool value) {
+  return SetProperty(name, CComVariant(value));
+}
 
-  return SUCCEEDED(ActiveXUtils::SetDispatchProperty(js_object_.pdispVal,
-                                                     dispid,
-                                                     &value));
+bool JsObject::SetPropertyInt(const std::string16 &name, int value) {
+  return SetProperty(name, CComVariant(value));
+}
+
+bool JsObject::SetPropertyDouble(const std::string16& name, double value) {
+  return SetProperty(name, CComVariant(value));
 }
 
 bool JsObject::SetPropertyString(const std::string16 &name,
@@ -366,7 +536,8 @@ bool JsObject::SetPropertyString(const std::string16 &name,
   return SetProperty(name, CComVariant(value.c_str()));
 }
 
-bool JsObject::SetPropertyInt(const std::string16 &name, int value) {
+bool JsObject::SetPropertyModule(const std::string16& name,
+                                 IScriptable* value) {
   return SetProperty(name, CComVariant(value));
 }
 
@@ -480,8 +651,25 @@ bool JsObject::GetPropertyAsFunction(const std::string16 &name,
   return JsTokenToNewCallback(token, js_context_, out);
 }
 
+// SetProperty is only available on FF and IE
+#if defined(BROWSER_FF) || defined(BROWSER_IE)
 
-#if defined(BROWSER_NPAPI) || defined(BROWSER_IE)
+bool JsObject::SetPropertyArray(const std::string16& name, JsArray* value) {
+  return SetProperty(name, value->token());
+}
+
+bool JsObject::SetPropertyObject(const std::string16& name, JsObject* value) {
+  return SetProperty(name, value->js_object_);
+}
+
+bool JsObject::SetPropertyFunction(const std::string16& name,
+                                   JsRootedCallback* value) {
+  return SetProperty(name, value->token());
+}
+
+#endif
+
+#if defined(BROWSER_NPAPI) || defined(BROWSER_IE) || defined(BROWSER_FF)
 
 // Given a JsToken, extract it into a JsArgument.  Object pointers are weak
 // references (ref count is not increased).
@@ -708,6 +896,7 @@ bool JsTokenIsObject(JsToken t) {
   return t.vt == VT_DISPATCH;
 }
 
+
 #elif BROWSER_NPAPI
 
 bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out) {
@@ -751,7 +940,7 @@ bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
     out->clear();
     return true;
   }
-  return UTF8ToString16(GetNPStringUTF8Characters(str), 
+  return UTF8ToString16(GetNPStringUTF8Characters(str),
                         GetNPStringUTF8Length(str), out);
 }
 
@@ -890,6 +1079,60 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     default:
       assert(false);
   }
+}
+
+// This code is shared between JsCallContext and JsParamFetcher for FF.
+// It initialises all the parameters which are members of the respective
+// classes, execept obj which is an input parameter.
+static void GetContextAndArgs(ModuleImplBaseClass* obj,
+                              JsContextPtr* js_context,
+                              int* js_argc,
+                              JsToken** js_argv,
+                              nsCOMPtr<nsIXPConnect>* xpc,
+                              nsCOMPtr<nsIXPCNativeCallContext>* ncc) {
+  if (obj->EnvIsWorker()) {
+    *js_context = obj->EnvPageJsContext();
+    *js_argc = obj->JsWorkerGetArgc();
+    *js_argv = obj->JsWorkerGetArgv();
+  } else {
+    // In the main thread use the caller's current JS context, NOT the context
+    // where 'obj' was created.  These can be different!  Each frame has its
+    // own JS context, and code can reference 'top.OtherFrame.FooObject'.
+    nsresult nr;
+    *xpc = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
+    if (*xpc && NS_SUCCEEDED(nr)) {
+      nr = (*xpc)->GetCurrentNativeCallContext(getter_AddRefs(*ncc));
+      if (*ncc && NS_SUCCEEDED(nr)) {
+        (*ncc)->GetJSContext(js_context);
+        PRUint32 argc;
+        (*ncc)->GetArgc(&argc);
+        *js_argc = static_cast<int>(argc);
+        (*ncc)->GetArgvPtr(js_argv);
+      }
+    }
+  }
+}
+
+JsCallContext::JsCallContext(ModuleImplBaseClass* obj) :
+  js_context_(NULL), is_exception_set_(false), argc_(0), argv_(NULL),
+  xpc_(NULL), ncc_(NULL), obj_(obj) {
+  GetContextAndArgs(obj, &js_context_, &argc_, &argv_, &xpc_, &ncc_);
+}
+
+void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
+  JsToken* js_engine_retval = NULL;
+  nsresult nr = ncc_->GetRetValPtr(&js_engine_retval);
+
+  // There is only a valid retval_ if the javascript caller is expecting a
+  // return value.
+  if (!NS_FAILED(nr) && js_engine_retval) {
+    JsParamToSend retval = { type, value_ptr };
+    ConvertJsParamToToken(retval, js_context(), js_engine_retval);
+  }
+}
+
+void JsCallContext::SetException(const std::string16 &message) {
+  JsSetException(obj_, message.c_str());
 }
 
 #elif BROWSER_IE
@@ -1076,36 +1319,6 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       assert(false);
   }
 }
-
-int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
-  bool has_optional = false;
-
-  for (int i = 0; i < output_argc; ++i) {
-    has_optional |= output_argv[i].requirement == JSPARAM_OPTIONAL;
-    if (output_argv[i].requirement == JSPARAM_REQUIRED)
-      assert(!has_optional);  // should not have required arg after optional
-
-    if (i >= argc_) {
-      // Out of arguments
-      if (output_argv[i].requirement == JSPARAM_REQUIRED) {
-        std::string16 msg;
-        msg += STRING16(L"Required argument ");
-        msg += IntegerToString16(i + 1);
-        msg += STRING16(L" is missing.");
-        SetException(msg.c_str());
-      }
-
-      // If failed on index [N], then N args succeeded
-      return i;
-    }
-
-    if (!ConvertTokenToArgument(this, argv_[i], &output_argv[i]))
-      return i;
-  }
-
-  return output_argc;
-}
-
 void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
   assert(value_ptr != NULL || type == JSPARAM_NULL);
 
@@ -1138,31 +1351,43 @@ void JsCallContext::SetException(const std::string16 &message) {
 
 #endif
 
+#if defined(BROWSER_FF) || defined(BROWSER_NPAPI)
+int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
+  bool has_optional = false;
+
+  for (int i = 0; i < output_argc; ++i) {
+    has_optional |= output_argv[i].requirement == JSPARAM_OPTIONAL;
+    if (output_argv[i].requirement == JSPARAM_REQUIRED)
+      assert(!has_optional);  // should not have required arg after optional
+
+    if (i >= argc_) {
+      // Out of arguments
+      if (output_argv[i].requirement == JSPARAM_REQUIRED) {
+        std::string16 msg;
+        msg += STRING16(L"Required argument ");
+        msg += IntegerToString16(i + 1);
+        msg += STRING16(L" is missing.");
+        SetException(msg.c_str());
+      }
+
+      // If failed on index [N], then N args succeeded
+      return i;
+    }
+
+    if (!ConvertTokenToArgument(this, argv_[i], &output_argv[i]))
+      return i;
+  }
+
+  return output_argc;
+}
+#endif
+
+
 //-----------------------------------------------------------------------------
 #if BROWSER_FF  // the rest of this file only applies to Firefox, for now
 
 JsParamFetcher::JsParamFetcher(ModuleImplBaseClass *obj) {
-  if (obj->EnvIsWorker()) {
-    js_context_ = obj->EnvPageJsContext();
-    js_argc_ = obj->JsWorkerGetArgc();
-    js_argv_ = obj->JsWorkerGetArgv();
-  } else {
-    // In the main thread use the caller's current JS context, NOT the context
-    // where 'obj' was created.  These can be different!  Each frame has its
-    // own JS context, and code can reference 'top.OtherFrame.FooObject'.
-    nsresult nr;
-    xpc_ = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
-    if (xpc_ && NS_SUCCEEDED(nr)) {
-      nr = xpc_->GetCurrentNativeCallContext(getter_AddRefs(ncc_));
-      if (ncc_ && NS_SUCCEEDED(nr)) {
-        ncc_->GetJSContext(&js_context_);
-        PRUint32 argc;
-        ncc_->GetArgc(&argc);
-        js_argc_ = static_cast<int>(argc);
-        ncc_->GetArgvPtr(&js_argv_);
-      }
-    }
-  }
+  GetContextAndArgs(obj, &js_context_, &js_argc_, &js_argv_, &xpc_, &ncc_);
 }
 
 

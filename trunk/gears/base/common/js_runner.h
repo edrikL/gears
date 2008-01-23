@@ -106,6 +106,10 @@ class JsRunnerInterface {
   virtual JsObject *NewObject(const char16 *optional_global_ctor_name,
                               // TODO(zork): Remove this when we find the error.
                               bool dump_on_error = false) = 0;
+  
+  // Creates a new Array object in JavaScript engine. 
+  // The caller takes ownership of the returned value.
+  virtual JsArray* NewArray() = 0;
 
   // Invokes a callback. If optional_alloc_retval is specified, this method will
   // create a new JsRootedToken that the caller is responsible for deleting.
