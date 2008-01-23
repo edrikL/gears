@@ -283,6 +283,8 @@ FF_CPPSRCS	+= \
 		png_utils.cc \
 		security_model.cc \
 		security_model_test.cc \
+		serialization.cc \
+		serialization_test.cc \
 		shortcut_table.cc \
 		sqlite_wrapper.cc \
 		stopwatch.cc \
@@ -345,6 +347,8 @@ IE_CPPSRCS	+= \
 		png_utils.cc \
 		security_model.cc \
 		security_model_test.cc \
+		serialization.cc \
+		serialization_test.cc \
 		shortcut_table.cc \
 		sqlite_wrapper.cc \
 		stopwatch.cc \
@@ -474,6 +478,8 @@ NPAPI_CPPSRCS	+= \
 		png_utils.cc \
 		security_model.cc \
 		security_model_test.cc \
+		serialization.cc \
+		serialization_test.cc \
 		shortcut_table.cc \
 		sqlite_wrapper.cc \
 		stopwatch.cc \

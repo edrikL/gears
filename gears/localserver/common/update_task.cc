@@ -606,3 +606,78 @@ bool UpdateTask::SetHttpError(const char16 *url, const int *http_status) {
 
   return true;
 }
+
+//------------------------------------------------------------------------------
+// UpdateTask::RegisterEventClasses
+// Register the classes used by UpdateTask
+//------------------------------------------------------------------------------
+void UpdateTask::RegisterEventClasses() {
+  Serializable::RegisterClass(SERIALIZABLE_UPDATE_TASK_ERROR_EVENT,
+                              ErrorEvent::SerializableFactoryMethod);
+  Serializable::RegisterClass(SERIALIZABLE_UPDATE_TASK_PROGRESS_EVENT,
+                              ProgressEvent::SerializableFactoryMethod);
+  Serializable::RegisterClass(SERIALIZABLE_UPDATE_TASK_COMPLETION_EVENT,
+                              CompletionEvent::SerializableFactoryMethod);
+}
+
+//------------------------------------------------------------------------------
+// UpdateTask::ProgressEvent::Deserialize
+// Creates a progress event out of the serialized buffer.
+//------------------------------------------------------------------------------
+bool UpdateTask::ProgressEvent::Deserialize(Deserializer *in) {
+  if (!in->ReadInt(&files_total_)) return false;
+  if (!in->ReadInt(&files_complete_)) return false;
+
+  return true;
+}
+
+//------------------------------------------------------------------------------
+// UpdateTask::ProgressEvent::Serialize
+// Serializes a progress event into a byte stream.
+//------------------------------------------------------------------------------
+bool UpdateTask::ProgressEvent::Serialize(Serializer *out) {
+  out->WriteInt(files_total_);
+  out->WriteInt(files_complete_);
+
+  return true;
+}
+
+//------------------------------------------------------------------------------
+// UpdateTask::ErrorEvent::Deserialize
+// Creates an error event out of the serialized buffer.
+//------------------------------------------------------------------------------
+bool UpdateTask::ErrorEvent::Deserialize(Deserializer *in) {
+  if (!in->ReadString(&error_message_)) return false;
+
+  return true;
+}
+
+//------------------------------------------------------------------------------
+// UpdateTask::ErrorEvent::Serialize
+// Serializes an error event into a byte stream.
+//------------------------------------------------------------------------------
+bool UpdateTask::ErrorEvent::Serialize(Serializer *out) {
+  out->WriteString(error_message_.c_str());
+
+  return true;
+}
+
+//------------------------------------------------------------------------------
+// UpdateTask::CompletionEvent::Deserialize
+// Creates a completion event out of the serialized buffer.
+//------------------------------------------------------------------------------
+bool UpdateTask::CompletionEvent::Deserialize(Deserializer *in) {
+  if (!in->ReadString(&new_version_string_)) return false;
+
+  return true;
+}
+
+//------------------------------------------------------------------------------
+// UpdateTask::CompletionEvent::Serialize
+// Serializes a completion event into a byte stream.
+//------------------------------------------------------------------------------
+bool UpdateTask::CompletionEvent::Serialize(Serializer *out) {
+  out->WriteString(new_version_string_.c_str());
+
+  return true;
+}
