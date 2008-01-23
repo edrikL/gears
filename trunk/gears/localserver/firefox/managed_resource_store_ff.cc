@@ -28,7 +28,7 @@
 
 #include "gears/localserver/firefox/managed_resource_store_ff.h"
 
-//#include "gears/localserver/common/update_task.h"
+#include "gears/base/common/serialization.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/firefox/dom_utils.h"
 
@@ -303,6 +303,9 @@ void GearsManagedResourceStore::InitUnloadMonitor() {
   if (unload_monitor_ == NULL) {
     unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
                                              this));
+
+    // Add the callbacks to handle deserializing messages.
+    UpdateTask::RegisterEventClasses();
   }
 }
 

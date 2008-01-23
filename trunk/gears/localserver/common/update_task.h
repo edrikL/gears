@@ -31,6 +31,7 @@
 #include "gears/base/common/message_service.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/security_model.h"
+#include "gears/base/common/serialization.h"
 #include "gears/localserver/common/async_task.h"
 #include "gears/localserver/common/managed_resource_store.h"
 
@@ -53,8 +54,9 @@ class UpdateTask : public AsyncTask {
   // notifications for a particular store. Each store uses a unique topic,
   // notification of all EventTypes for a particular store use the same topic.
   static std::string16 GetNotificationTopic(ManagedResourceStore *store);
+  static void RegisterEventClasses();
 
-  class Event : public NotificationData {
+  class Event : public NotificationData, public Serializable {
    public:
     Event(EventType event_type) : event_type_(event_type) {}
     EventType event_type() const { return event_type_; }
@@ -66,14 +68,27 @@ class UpdateTask : public AsyncTask {
   // Then raised every time an entry if the manifest file is completes.
   class ProgressEvent : public Event {
    public:
+    ProgressEvent()
+      : Event(PROGRESS_EVENT),
+        files_total_(0), files_complete_(0) {}
     ProgressEvent(int files_total, int files_complete)
       : Event(PROGRESS_EVENT),
         files_total_(files_total), files_complete_(files_complete) {}
     int files_total() const { return files_total_; }
     int files_complete() const { return files_complete_; }
+
+    virtual SerializableClassId GetSerializableClassId() {
+      return SERIALIZABLE_UPDATE_TASK_PROGRESS_EVENT;
+    }
+    virtual bool Serialize(Serializer *out);
+    virtual bool Deserialize(Deserializer *in);
+
+    static Serializable *SerializableFactoryMethod() {
+      return new ProgressEvent;
+    }
    private:
-    const int files_total_;
-    const int files_complete_;
+    int files_total_;
+    int files_complete_;
   };
 
   // Raised on successful completion of an UpdateTask.
@@ -89,18 +104,40 @@ class UpdateTask : public AsyncTask {
     const std::string16 &new_version_string() const {
       return new_version_string_;
     }
+
+    virtual SerializableClassId GetSerializableClassId() {
+      return SERIALIZABLE_UPDATE_TASK_COMPLETION_EVENT;
+    }
+    virtual bool Serialize(Serializer *out);
+    virtual bool Deserialize(Deserializer *in);
+
+    static Serializable *SerializableFactoryMethod() {
+      return new CompletionEvent;
+    }
    private:
-    const std::string16 new_version_string_;
+    std::string16 new_version_string_;
   };
 
   // Raised on failed completion of an UpdateTask
   class ErrorEvent : public Event {
    public:
+    ErrorEvent()
+      : Event(ERROR_EVENT) {}
     ErrorEvent(const char16 *error_message)
       : Event(ERROR_EVENT), error_message_(error_message) {}
     const std::string16 &error_message() const { return error_message_; }
+
+    virtual SerializableClassId GetSerializableClassId() {
+      return SERIALIZABLE_UPDATE_TASK_ERROR_EVENT;
+    }
+    virtual bool Serialize(Serializer *out);
+    virtual bool Deserialize(Deserializer *in);
+
+    static Serializable *SerializableFactoryMethod() {
+      return new ErrorEvent;
+    }
    private:
-    const std::string16 error_message_;
+    std::string16 error_message_;
   };
 
   enum {

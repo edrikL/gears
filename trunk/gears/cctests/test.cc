@@ -89,6 +89,7 @@ bool TestUrlUtils();  // from url_utils_test.cc
 bool TestJsRootedTokenLifetime();  // from base_class_test.cc
 bool TestStringUtils();  // from string_utils_test.cc
 bool TestBufferBlob();
+bool TestSerialization();  // from serialization_test.cc
 
 
 #if BROWSER_FF
@@ -200,6 +201,7 @@ bool GearsTest::RunTestsImpl() {
   ok &= TestManagedResourceStore();
   ok &= TestMessageService();
   ok &= TestBufferBlob();
+  ok &= TestSerialization();
   // TODO(zork): Add this test back in once it doesn't crash the browser.
   //ok &= TestJsRootedTokenLifetime();
 

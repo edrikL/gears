@@ -29,6 +29,7 @@
 
 #include "gears/base/common/common.h"
 #include "gears/base/common/security_model.h"
+#include "gears/base/common/serialization.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/ie/activex_utils.h"
@@ -296,6 +297,9 @@ void GearsManagedResourceStore::InitUnloadMonitor() {
   if (unload_monitor_ == NULL) {
     unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
                                              this));
+
+    // Add the callbacks to handle deserializing messages.
+    UpdateTask::RegisterEventClasses();
   }
 }
 
