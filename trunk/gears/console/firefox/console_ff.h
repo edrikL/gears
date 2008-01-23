@@ -48,13 +48,13 @@ class GearsConsole
   // End boilerplate code. Begin interface.
 
   // Need a default constructor to instance objects from the Factory
-  GearsConsole();
-  ~GearsConsole();
+  GearsConsole() {}
+  ~GearsConsole() {}
 
   NS_IMETHOD Log(// const nsAString &type,
                  // const nsAString &message
+                 // optional object array args
                 );
-  
   NS_IMETHOD SetOnlog(nsIVariant *in_handler);
   NS_IMETHOD GetOnlog(nsIVariant **out_handler);
   

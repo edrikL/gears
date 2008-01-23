@@ -35,17 +35,19 @@
 class Console {
  public:
   Console(const std::string16 &security_origin, JsRunnerInterface* js_runner);
-  ~Console();
+  ~Console() {}
 
   void Log(const std::string16 &type,
            const std::string16 &message,
+           const JsArray *args,
            const std::string16 &sourceUrl);
   void SetOnlog(JsRootedCallback* callback);
   void ClearOnlog();
 
  private:
-  void Initialize();
-  
+  // Replaces instances of _%s_ in message with elements from _args[]_
+  void InterpolateArgs(std::string16 *message, const JsArray *args);
+
   std::string16 security_origin_;
   std::string16 observer_topic_;
   JsRunnerInterface* js_runner_;

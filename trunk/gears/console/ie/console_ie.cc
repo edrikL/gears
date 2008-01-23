@@ -31,18 +31,27 @@
 #include "gears/console/ie/console_ie.h"
 
 
-GearsConsole::GearsConsole() { }
-GearsConsole::~GearsConsole() { }
-
-STDMETHODIMP GearsConsole::log(BSTR type, BSTR message) {
+STDMETHODIMP GearsConsole::log(BSTR type, BSTR message, VARIANT args) {
   Initialize();
+
+  // Get required type and message parameters
   if (!type || !type[0]) {
     RETURN_EXCEPTION(STRING16(L"Type is required."));
   }
   if (!message || !message[0]) {
     RETURN_EXCEPTION(STRING16(L"Message is required."));
   }
-  console_.get()->Log(type, message, EnvPageLocationUrl());
+
+  // Check for optional args array
+  if (!ActiveXUtils::OptionalVariantIsPresent(&args)) {
+    console_.get()->Log(type, message, NULL, EnvPageLocationUrl());
+  } else {
+    JsArray args_array;
+    if (!args_array.SetArray(args, NULL)) {
+      RETURN_EXCEPTION(STRING16(L"Args parameter must be an array."));
+    }
+    console_.get()->Log(type, message, &args_array, EnvPageLocationUrl());
+  }
   RETURN_NORMAL();
 }
 

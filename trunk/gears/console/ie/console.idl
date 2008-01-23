@@ -39,7 +39,7 @@ import "ocidl.idl";
   pointer_default(unique)
 ]
 interface GearsConsoleInterface : IDispatch {
-  HRESULT log([in] BSTR type, [in] BSTR message);
+  HRESULT log([in] BSTR type, [in] BSTR message, [in, optional] VARIANT args);
   [propput] HRESULT onlog([in] const VARIANT *in_value);
 };
 

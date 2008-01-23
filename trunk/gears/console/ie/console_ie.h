@@ -51,10 +51,12 @@ class ATL_NO_VTABLE GearsConsole
   // End boilerplate code. Begin interface.
 
   // Need a default constructor to CreateInstance objects in IE
-  GearsConsole();
-  ~GearsConsole();
+  GearsConsole() {}
+  ~GearsConsole() {}
 
-  virtual HRESULT STDMETHODCALLTYPE log(BSTR type, BSTR message);
+  virtual HRESULT STDMETHODCALLTYPE log(BSTR type,
+                                        BSTR message,
+                                        VARIANT args);
   virtual HRESULT STDMETHODCALLTYPE put_onlog(const VARIANT *in_value);
   
   void HandleEvent(JsEventType event_type);

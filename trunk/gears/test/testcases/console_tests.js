@@ -27,9 +27,11 @@ var console = google.gears.factory.create('beta.console');
 console.onlog = handleEvent;
 
 // Determine if we are in a WorkerPool process or not (see handleEvent)
-var inWorker = false;
+var in_worker = false;
+var from_worker = 'Worker:false';
 if (google.gears.workerPool) {
-  inWorker = true;
+  in_worker = true;
+  from_worker = 'Worker:true';
 }
 
 // Argument validation tests
@@ -37,25 +39,118 @@ function testNoParameters() {
   assertError(function() { console.log() }, null,
       'Calling console.log with no parameters should fail');
 }
-function testOneParameter() {
+function testTooFewParameters() {
   assertError(function() { console.log('test'); }, null,
       'Calling console.log with only one parameter should fail');
 }
-function testTypeNull() {
+function testTooManyParameters() {
+  assertError(function() { console.log('test', 't', ['t'], 't'); }, null,
+      'Calling console.log with more than three parameters should fail');
+}
+function testTypeParameterNull() {
   assertError(function() { console.log(null, 'test'); }, null,
       'Calling console.log with type null should fail');
 }
-function testMessageNull() {
-  assertError(function() { console.log('test', null); }, null,
-      'Calling console.log with message null should fail');
+function testTypeParameterUndefined() {
+  assertError(function() { console.log(undefined, 'test'); }, null,
+      'Calling console.log with type undefined should fail');
 }
-function testTypeEmptyString() {
+function testTypeParameterEmpty() {
   assertError(function() { console.log('', 'test'); }, null,
       'Calling console.log with type as empty string should fail');
 }
-function testMessageEmptyString() {
+function testMessageParameterNull() {
+  assertError(function() { console.log('test', null); }, null,
+      'Calling console.log with message null should fail');
+}
+function testMessageParameterUndefined() {
+  assertError(function() { console.log('test', undefined); }, null,
+      'Calling console.log with message undefined should fail');
+}
+function testMessageParameterEmpty() {
   assertError(function() { console.log('test', ''); }, null,
       'Calling console.log with message as empty string should fail');
+}
+function testArgsParameterNull() {
+  startAsync();
+  console.log(from_worker + '#testArgsParameterNull',
+      'This%sShould%sNot%sBe%sChanged', null);
+}
+function testArgsParameterUndefined() {
+  startAsync();
+  console.log(from_worker + '#testArgsParameterUndefined',
+      'This%sShould%sNot%sBe%sChanged', undefined);
+}
+function testArgsParameterEmpty() {
+  startAsync();
+  console.log(from_worker + '#testArgsParameterEmpty',
+      'This%sShould%sNot%sBe%sChanged', []);
+}
+
+// Test argument interpolation
+function testArgsInterpolationOne() {
+  startAsync();
+  console.log(from_worker + '#testArgsInterpolationOne',
+      '%s', ['one']);
+}
+function testArgsInterpolationTooMany() {
+  startAsync();
+  console.log(from_worker + '#testArgsInterpolationTooMany',
+      '%s%s%s', ['one', 'two', 'three', 'four', 'five']);
+}
+function testArgsInterpolationTooFew() {
+  startAsync();
+  console.log(from_worker + '#testArgsInterpolationTooFew',
+      '%s%s%s%s%s', ['one', 'two', 'three']);
+}
+
+// Test type coercion
+// TODO(oshlack): should this return 'onetwo%s' or 'onetwo'?
+// i.e. does 'null' occupy a '%s' as if it were an empty string?
+// Currently it returns 'onetwo'.
+function testArgsInterpolationNull() {
+  startAsync();
+  console.log(from_worker + '#testArgsInterpolationNull',
+      '%s%s%s', ['one', null, 'two']);
+}
+// TODO(oshlack): similarly for 'undefined'.
+function testArgsInterpolationUndefined() {
+  startAsync();
+  console.log(from_worker + '#testArgsInterpolationUndefined',
+      '%s%s%s', ['one', undefined, 'two']);
+}
+function testArgsInterpolationInt() {
+  startAsync();
+  console.log(from_worker + '#testArgsInterpolationInt',
+      '%s%s%s', [1, 0, -3]);
+}
+function testArgsInterpolationDouble() {
+  startAsync();
+  console.log(from_worker + '#testArgsInterpolationDouble',
+      '%s%s%s', [-1.1, 0.0, 3.14159]);
+}
+function testArgsInterpolationBool() {
+  startAsync();
+  console.log(from_worker + '#testArgsInterpolationBool',
+      '%s%s', [true, false]);
+}
+function testArgsInterpolationArray() {
+  startAsync();
+  console.log(from_worker + '#testArgsInterpolationArray',
+      '%s', [['one', 'two', 'three']]);
+}
+function testArgsInterpolationObject() {
+  startAsync();
+  console.log(from_worker + '#testArgsInterpolationObject',
+      '%s', [{ data: 123, toString:
+      function() { return 'Object data: ' + this.data; }}]);
+}
+
+// Test recursive interpolation
+function testArgsInterpolationRecursive() {
+  startAsync();
+  console.log(from_worker + '#testArgsInterpolationRecursive',
+      '%s%s', ['%sone%s', '%stwo%s', 'three', 'four', 'five', 'six']);
 }
 
 // Test logging across Worker boundary by logging from a worker and
@@ -65,10 +160,10 @@ function testMessageEmptyString() {
 // worker test runs since it will always return success straight away
 // for the main page.
 function testCrossBoundaryLog() {
-  if (inWorker) {
+  if (in_worker) {
     startAsync();
     // Will only be caught by the handler in the main page
-    console.log('Worker:false', 'testCrossBoundaryLog');
+    console.log('Worker:false#testCrossBoundaryLog', 'Logged from a worker!');
   }
 }
 
@@ -79,27 +174,108 @@ function handleEvent(log_event) {
   // once in the main page). Console log events, however, cross worker
   // boundaries, so *both* handlers will be called whenever a message is
   // logged in a script. For most cases we want to ignore these duplicate
-  // messages. We acheive this by using a custom event type - 'Worker:true'
-  // for log events originating from the WorkerPool process and
-  // 'Worker:false' otherwise. By setting the log type to 'Worker:ignore',
-  // both handlers will be invoked for each log event.
-  if (log_event.type == 'Worker:ignore') {
+  // messages. We acheive this by using a custom event type:
+  // 'Worker:true#testName'   - log event generated by testName, originating
+  //                            from a worker process
+  // 'Worker:false#testName'  - log event generated by testName, originating
+  //                            from the main script
+  // 'Worker:ignore#testName' - log event generated by testName, to be
+  //                            handled by *both* event handlers
+
+  // Determine the name of the test and where the test came from
+  var type_parts = log_event.type.split('#');
+  var log_origin = type_parts[0];
+  var test_name = type_parts[1];
+  
+  if (log_origin == 'Worker:ignore') {
     // Called twice!
 
-  } else if (inWorker && log_event.type == 'Worker:true' ||
-            !inWorker && log_event.type == 'Worker:false') {
+  } else if (from_worker == log_origin) {
     // Only called for local log events
+    
+    // Test argument validation
+    if (test_name == 'testArgsParameterNull') {
+      assertEqual('This%sShould%sNot%sBe%sChanged', log_event.message);
+      completeAsync();
+    }
+    else if (test_name == 'testArgsParameterUndefined') {
+      assertEqual('This%sShould%sNot%sBe%sChanged', log_event.message);
+      completeAsync();
+    }
+    else if (test_name == 'testArgsParameterEmpty') {
+      assertEqual('This%sShould%sNot%sBe%sChanged', log_event.message);
+      completeAsync();
+    }
 
-    // testCrossBoundaryLog
-    if (log_event.message == 'testCrossBoundaryLog') {
-      if (!inWorker) {
+    // Test argument interpolation
+    else if (test_name == 'testArgsInterpolationOne') {
+      assertEqual('one', log_event.message);
+      completeAsync();
+    }
+    else if (test_name == 'testArgsInterpolationTooMany') {
+      assertEqual('onetwothree', log_event.message);
+      completeAsync();
+    }
+    else if (test_name == 'testArgsInterpolationTooFew') {
+      assertEqual('onetwothree%s%s', log_event.message);
+      completeAsync();
+    }
+
+    // Test type coercion
+    else if (test_name == 'testArgsInterpolationNull') {
+      assertEqual('onetwo', log_event.message);
+      completeAsync();
+    }
+    else if (test_name == 'testArgsInterpolationUndefined') {
+      assertEqual('onetwo', log_event.message);
+      completeAsync();
+    }
+    else if (test_name == 'testArgsInterpolationInt') {
+      assertEqual('10-3', log_event.message);
+      completeAsync();
+    }
+    else if (test_name == 'testArgsInterpolationDouble') {
+      assertEqual('-1.103.14159', log_event.message);
+      completeAsync();
+    }
+    else if (test_name == 'testArgsInterpolationBool') {
+      assertEqual('truefalse', log_event.message);
+      completeAsync();
+    }
+    else if (test_name == 'testArgsInterpolationArray') {
+      assertEqual('one,two,three', log_event.message);
+      completeAsync();
+    }
+    else if (test_name == 'testArgsInterpolationObject') {
+      assertEqual('Object data: 123', log_event.message);
+      completeAsync();
+    }
+
+    // Test recursive interpolation
+    else if (test_name == 'testArgsInterpolationRecursive') {
+      assertEqual('%sone%s%stwo%s', log_event.message);
+      completeAsync();
+    }
+    
+    // Test cross boundary logging
+    else if (test_name == 'testCrossBoundaryLog') {
+      if (!in_worker) {
         // Got a log message from workerPool process, send one back to
         // complete test
-        console.log('Worker:true', 'testCrossBoundaryLog');
+        assertEqual('Logged from a worker!', log_event.message);
+        console.log('Worker:true#testCrossBoundaryLog',
+            'Logged from the main script!');
       } else {
         // Received a log back from main script, done!
+        assertEqual('Logged from the main script!', log_event.message);
         completeAsync();
       }
+    }
+
+    // Bad test name
+    else {
+      assert(false, 'No handler for test');
+      completeAsync();
     }
   }
 }
