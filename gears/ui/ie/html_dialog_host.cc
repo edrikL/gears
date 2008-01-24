@@ -23,6 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/ui/ie/html_dialog_host.h"
 
 #include <assert.h>
 #include <oleidl.h>
@@ -33,7 +34,6 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/ie/atl_headers.h"
-#include "gears/ui/ie/html_dialog_host.h"
 
 
 // The timer associated with making sure navigation errors don't cause a
@@ -70,7 +70,7 @@ while(0);
 }
 
 
-const std::string kThreadLocalKey("htmldialoghost::instance");
+const char kThreadLocalKey[] = "htmldialoghost::instance";
 
 
 static LRESULT CALLBACK MessageProcStatic(int code, WPARAM wparam,
@@ -415,9 +415,9 @@ bool HtmlDialogHost::ShowDialog(const char16 *resource_file_name,
                                 BSTR *dialog_result) {
   dialog_arguments_ = dialog_arguments;
 
-  if (!SetUp(resource_file_name, size)) {
+  if (!SetUp(resource_file_name, size)) 
     return false;
-  }
+  
   DoModal();
 
   if (dialog_result_ == NULL) {
@@ -452,7 +452,7 @@ void HtmlDialogHost::TearDown() {
       ThreadLocals::GetValue(kThreadLocalKey));
 
   if (current_instance != this) {
-    // sanity check that we are the current (only) instance on this thread.
+    // Sanity check that we are the current (only) instance on this thread.
     assert(false);
     LOG(("HtmlDialogHost::TearDown: Unexpected current_instance for thread"));
   }
@@ -470,7 +470,7 @@ HRESULT HtmlDialogHost::UpdateDocPointers() {
   CComPtr<IDispatch> disp_doc;
   CHK(browser_->get_Document(&disp_doc));
 
-  // Query for the IHTMLDocument2
+  // Query for the IHTMLDocument2.
   document_ = 0;
   CHK(disp_doc->QueryInterface(&document_));
 
