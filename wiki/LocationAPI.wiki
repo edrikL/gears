@@ -6,13 +6,16 @@ The purpose of this API is to provide means to fetch the location of a device ru
 
 = Description =
 
-The Location API is an abstraction for the various LBS APIs that currently exist on mobile platforms (GPS-based, network/cellid-based). The API consists of the Location class, which encapsulates various location attributes (latitude, longitude, etc), and also provides the means to query the platform for a location fix. This API also adds a new event type that is fired every time the location changes. Location implementations can be straightforward mappings to native LBS APIs (e.g the [http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-96C272CA-2BED-4352-AE7C-E692B193EC06/html/Location_Acquisition_APIIndexPage.html S60 Location Acquisition API]) or have a more complex design that combines several location providers (e.g a GPS-based provider and a cell id-based provider) and returns the location from the most accurate provider at any given time.
+The Location API is an abstraction for the various location APIs that currently exist on mobile platforms (GPS-based, network/cellid-based). The API consists of the Location class, which encapsulates various location attributes (latitude, longitude, etc), and also provides the means to query the platform for a fresh location fix, or the last known fix. This API also provides a way to watch the location as it changes over time.
+
+Location implementations can be straightforward mappings to native APIs (e.g the [http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-96C272CA-2BED-4352-AE7C-E692B193EC06/html/Location_Acquisition_APIIndexPage.html S60 Location Acquisition API]) or have a more complex design that combines several location providers (e.g a GPS-based provider and a cell id-based provider) and returns the location from the most accurate provider at any given time.
+
 
 = API Goals =
 
   * One-shot location requests (eg, for recommendations sites -- "where am I right now?")
-  * Repeated location updates (eg, for getting guided tours)
-  * Ability to get last-known position before doing an expensive new request
+  * Repeated location updates (eg, for providing guided tours)
+  * Ability to get the last-known position cheaply before doing an expensive new request
   * Compatibility with future use as a singleton in the standard DOM (eg window.geoLocation).
 
 = Examples = 
@@ -42,7 +45,8 @@ location.clearWatch(watchId);
 var now = new Date().getTime();
 var threshold = now - 60000;
 
-if (location.lastKnownLocation && location.lastKnownLocation.date > threshold) {
+if (location.lastKnownLocation &&
+    location.lastKnownLocation.timestamp.getTime() > threshold) {
   updateMap(location.lastKnownLocation);
 } else {
   location.get(function(result) {
@@ -63,21 +67,31 @@ interface GearsLocation {
   const short ERROR_SECURITY = -4;
   const short ERROR_NOT_IN_RANGE = -5;
 
-  // last-known data
-  readonly LocationResult lastKnownLocation; // null if no last known position
+  // last-known position - null if there is no last known position
+  readonly LocationResult lastKnownLocation;
 
-  // methods
+  // Get the current location
   void get(LocationCallback callback, optional LocationOptions);
+
+  // Watch the current location over time
   int watch(LocationCallback callback, optional LocationOptions);
+
+  // Stop watching the current location
   void clearWatch(int watchId);
 };
 
 interface LocationOptions {
+  // Instructs the implementation to provide the highest accuracy it can, regardless of
+  // battery, cost, etc. This might mean, for example, to use the GPS radio instead of
+  // cell id lookups. If not specified, the default value is false. 
   bool highAccuracyDesired;
 };
 
 interface WatchLocationOptions : LocationOptions {
-  bool minDesiredUpdate;
+  // The frequency that the application desires updates on the position. The
+  // implementation will do its best to honor this rate, but may provide fewer updates
+  // to conserve battery, or if it cannot get fixes.
+  bool desiredUpdateRate;
 };
 
 void LocationCallback(LocationResult event);
@@ -95,5 +109,3 @@ interface LocationResult : Location {
   readonly string errorMessage; // human readable, suitable for logs
 };
 }}}
-
-TODO: detailed notes on apis.
