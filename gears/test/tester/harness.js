@@ -52,7 +52,7 @@ Harness.inherits(RunnerBase);
 /**
  * Length of time to wait before giving up on async tests.
  */
-Harness.ASYNC_TIMEOUT_MSEC = 60000; // 60 seconds
+Harness.ASYNC_TIMEOUT_MSEC = 10000; // 10 seconds
 
 /**
  * The current harness active in this context.

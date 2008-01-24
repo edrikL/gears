@@ -108,7 +108,7 @@ function testCreateWorkerFromUrl3() {
 }
 
 function testCreateWorkerFromUrl4() {
-  var workerUrl = 'http://example.com/non-existent-file.js';
+  var workerUrl = '/non-existent-file.js';
 
   waitForGlobalErrors([workerUrl]);
 
