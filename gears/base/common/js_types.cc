@@ -784,10 +784,12 @@ bool JsTokenToDouble(JsToken t, JsContextPtr cx, double *out) {
 
 bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
   // for optional args, we want JS null to act like the default _typed_ value
-  if (JSVAL_IS_NULL(t) || JSVAL_IS_VOID(t)) {
+  if (JSVAL_IS_NULL(t)) {
     out->clear();
     return true;
   }
+
+  if (!JSVAL_IS_STRING(t)) { return false; }
 
   JSString *js_str = JS_ValueToString(cx, t);
   if (!js_str) { return false; }
@@ -838,44 +840,9 @@ bool JsTokenToDouble(JsToken t, JsContextPtr cx, double *out) {
 }
 
 bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
-  // For optional args, we want JS null to act like the default _typed_ value
-  if (JsTokenIsNullOrUndefined(t)) {
-    out->clear();
-    return true;
-  }
-
-  // JsToken is a string
-  if (t.vt == VT_BSTR) {
-    out->assign(t.bstrVal);
-    return true;
-  // Try to coerce the JsToken to a string
-  } else {
-    // Convert booleans into "true" or "false".
-    if (t.vt == VT_BOOL) {
-      // Note the default conversion routine in IE converts booleans to
-      // "1" and "0", or "True" and "False" if VARIANT_ALPHABOOL is specified.
-      // "true" and "false" is the correct JavaScript conversion, however.
-      if (t.boolVal == VARIANT_TRUE) {
-        out->assign(STRING16(L"true"));
-      } else {
-        out->assign(STRING16(L"false"));
-      }
-      return true;
-    // Try to convert other types
-    } else {
-      CComVariant variant;
-      HRESULT hr;
-      hr = VariantChangeType(&variant, &t, 0, VT_BSTR);
-      if (hr == S_OK) {
-        out->assign(variant.bstrVal);
-        // We are responsible for calling VariantClear() on the variant we
-        // created if it contains a BSTR
-        VariantClear(&variant);
-        return true;
-      }
-    }
-  }
-  return false;
+  if (t.vt != VT_BSTR) { return false; }
+  out->assign(t.bstrVal);
+  return true;
 }
 
 bool JsTokenToNewCallback(JsToken t, JsContextPtr cx, JsRootedCallback **out) {
