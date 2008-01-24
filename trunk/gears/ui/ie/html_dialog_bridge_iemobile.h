@@ -33,7 +33,7 @@
 #include "gears/base/ie/resource.h"  // for .rgs resource ids (IDR_*)
 #include "gears/ui/ie/html_dialog_host_iemobile.h" 
 
-#include "ie/genfiles/interfaces.h" // from OUTDIR
+#include "ie/genfiles/interfaces.h"  // from OUTDIR
 #include "gears/base/common/common.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/ui/ie/ui_resources.h"
@@ -77,7 +77,7 @@ class ATL_NO_VTABLE PIEDialogBridge
 
  private:
 
-  // set the dialog object in the activex by traversing the dom
+  // Set the dialog object in ActiveX by traversing the DOM.
   STDMETHODIMP AccessPermissionsDialog();
 
   CComQIPtr<HtmlDialogHostInterface> dialog_;

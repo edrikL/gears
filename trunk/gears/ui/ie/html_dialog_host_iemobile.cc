@@ -54,14 +54,13 @@ while(0);
 
 #define HTML MAKEINTRESOURCE(23)
 
-// HtmlDialogHost
-// The static variable we use to access the dialog from the ActiveX object
+// The static variable we use to access the dialog from the ActiveX object.
 HtmlDialogHost* HtmlDialogHost::html_permissions_dialog_;
 
 bool HtmlDialogHost::ShowDialog(const char16 *resource_file_name,
-                                   const CSize& size,
-                                   const BSTR dialog_arguments,
-                                   BSTR *dialog_result) {
+                                const CSize& size,
+                                const BSTR dialog_arguments,
+                                BSTR *dialog_result) {
   dialog_arguments_ = dialog_arguments;
   desired_size_ = size;
   url_ = resource_file_name;
@@ -79,7 +78,7 @@ bool HtmlDialogHost::ShowDialog(const char16 *resource_file_name,
 }
 
 LRESULT HtmlDialogHost::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
-                                        BOOL& bHandled) {
+                                     BOOL& bHandled) {
   InitBrowserView();
   HtmlDialogHost::html_permissions_dialog_ = this;
   SendMessage(browser_view_, DTM_CLEAR, 0, 0);
@@ -90,20 +89,21 @@ LRESULT HtmlDialogHost::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
   if SUCCEEDED(LoadFromResource(url_, &html_file, &html_size)) {
     char* content = new char[html_size];
     memcpy(content, html_file, html_size);
-    CHK(SendMessage(browser_view_, DTM_ADDTEXT, FALSE, (LPARAM)content));
+    CHK(SendMessage(browser_view_, DTM_ADDTEXT, FALSE, 
+                    reinterpret_cast<LPARAM> (content)));
     delete [] content;
     CHK(SendMessage(browser_view_, DTM_ENDOFSOURCE, 0, 0));
   }
   return true;
 }
 
-// The OnNotify() function is called upon WM_NOTIFY
-// we just process the NM_INLINE_IMAGE and NM_INLINE_STYLE notifications to
+// The OnNotify() function is called upon WM_NOTIFY.
+// We just process the NM_INLINE_IMAGE and NM_INLINE_STYLE notifications to
 // load images or css includes manually from the dll, as by default the HTML
 // control will not load anything automatically unless we use the navigate
 // message. Of course this does not work on res:// url, so..
 LRESULT HtmlDialogHost::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam,
-                                    BOOL& bHandled) {
+                                 BOOL& bHandled) {
   NM_HTMLVIEW* html_view = reinterpret_cast<NM_HTMLVIEW*> (lParam);
   switch (html_view->hdr.code) {
     case NM_INLINE_IMAGE:
@@ -124,7 +124,7 @@ LRESULT HtmlDialogHost::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam,
 }
 
 LRESULT HtmlDialogHost::OnClose(UINT message, WPARAM w, LPARAM l,
-                                   BOOL& handled) {
+                                BOOL& handled) {
   HtmlDialogHost::html_permissions_dialog_ = NULL;
   return EndDialog(IDCANCEL);
 }
@@ -166,20 +166,21 @@ void HtmlDialogHost::InitBrowserView() {
                                m_hWnd, NULL,  module_instance, NULL);
 
   SendMessage(browser_view_, DTM_ENABLESCRIPTING, 0, TRUE);
-  SendMessage(browser_view_, DTM_DOCUMENTDISPATCH, 0, (LPARAM) &document_);
+  SendMessage(browser_view_, DTM_DOCUMENTDISPATCH, 0, 
+              reinterpret_cast<LPARAM> (&document_));
 }
 
 // This function returns a pointer to a resource contained in the dll
 // NOTE: LockResource() does not do anything on Winmo...
-HRESULT HtmlDialogHost::LoadFromResource(CString rsc, void** resource,
-                                            int* len) {
+HRESULT HtmlDialogHost::LoadFromResource(CString rsc, void** resource, 
+                                         int* len) {
   HMODULE hmodule = _AtlBaseModule.GetModuleInstance();
   HRSRC rscInfo = FindResource(hmodule, rsc, HTML);
   if (rscInfo) {
     HGLOBAL rscData = LoadResource(hmodule, rscInfo);
     *resource = LockResource(rscData);
     int size = SizeofResource(hmodule, rscInfo);
-
+  
     if ((size == 0) && rscData) {
       // FIXME: ugly workaround for windows mobile 6 standard devices 
       // (ex-smartphones) where for some reason SizeofResource does not work (!)
@@ -214,7 +215,8 @@ HRESULT HtmlDialogHost::LoadCSS(CString rsc) {
   if SUCCEEDED(LoadFromResource(rsc, &css_file, &css_size)) {
     char* content = new char[css_size];
     memcpy(content, css_file, css_size);
-    HRESULT hr = SendMessage(browser_view_, DTM_ADDSTYLE, 0, (LPARAM)content);
+    HRESULT hr = SendMessage(browser_view_, DTM_ADDSTYLE, 0, 
+                             reinterpret_cast<LPARAM> (content));
     delete [] content;
     return hr;
   } else {
@@ -253,7 +255,7 @@ HRESULT HtmlDialogHost::LoadImage(CString rsc, DWORD cookie) {
     HDC dc = GetDC();
     HDC bitmap_dc = CreateCompatibleDC(dc);
 
-    // We need to convert our pImage to a HBITMAP
+    // We need to convert our pImage to a HBITMAP.
     HBITMAP bitmap = CreateCompatibleBitmap(dc, image_info.Width,
                                             image_info.Height);
 
@@ -275,11 +277,11 @@ HRESULT HtmlDialogHost::LoadImage(CString rsc, DWORD cookie) {
     inline_image_info.iOrigHeight = image_info.Height;
     inline_image_info.iOrigWidth = image_info.Width;
     inline_image_info.hbm = bitmap;
-    // the bitmap will be destructed when
-    // the page is closed
+    // The bitmap will be destructed when the page is closed.
     inline_image_info.bOwnBitmap = TRUE;
 
-    SendMessage(browser_view_, DTM_SETIMAGE, FALSE, (LPARAM)&inline_image_info);
+    SendMessage(browser_view_, DTM_SETIMAGE, FALSE, 
+                reinterpret_cast<LPARAM>(&inline_image_info));
     DeleteDC(bitmap_dc);
   }
 

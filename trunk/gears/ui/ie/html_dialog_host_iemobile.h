@@ -114,25 +114,25 @@ class HtmlDialogHost : public CDialogImpl<HtmlDialogHost>,
   // Called by script inside the dialog to close and send back result.
   STDMETHODIMP CloseDialog(const BSTR result_string);
 
-  // Called by script to check if we are in Pocket IE or Desktop IE
+  // Called by script to check if we are in Pocket IE or Desktop IE.
   STDMETHODIMP IsPocketIE(VARIANT_BOOL *retval);
 
   // Initialize the Win32 HTML control and set the document variable.
   void InitBrowserView();
 
-  // Returns a pointer to a resource contained in the dll
+  // Returns a pointer to a resource contained in the dll.
   HRESULT LoadFromResource(CString rsc, void** resource, int* len);
 
-  // Loads the css file from the dll and informs the html control
+  // Loads the css file from the dll and informs the html control.
   HRESULT LoadCSS(CString rsc);
 
   // Loads an image, decompress it and send it to the Web control.
   HRESULT LoadImage(CString rsc, DWORD cookie);
 
-  // The window handler to the Win32 HTML Control
+  // The window handler to the Win32 HTML Control.
   HWND browser_view_;
 
-  // Our html document (used by the PIEDialogBridge)
+  // Our html document (used by the PIEDialogBridge).
   CComQIPtr<IPIEHTMLDocument2> document_;
 
   // The res:// URL representing the folder where our HTML, images, etc are.
@@ -155,7 +155,7 @@ class HtmlDialogHost : public CDialogImpl<HtmlDialogHost>,
   static HtmlDialogHost* html_permissions_dialog_;
 
   // We declare PIEDialogBridge as friend so that it can access
-  // the html_permissions_dialog_ global variable
+  // the html_permissions_dialog_ global variable.
   friend class PIEDialogBridge;
 
   DISALLOW_EVIL_CONSTRUCTORS(HtmlDialogHost);

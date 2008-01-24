@@ -70,7 +70,10 @@ class HtmlDialogHost
 
   // constructor
   HtmlDialogHost()
-    : browser_(NULL), document_(NULL), is_position_set_(false), hook_(NULL) {}
+      : browser_(NULL), 
+        document_(NULL), 
+        is_position_set_(false), 
+        hook_(NULL) {}
 
   DECLARE_PROTECT_FINAL_CONSTRUCT();
   DECLARE_NOT_AGGREGATABLE(HtmlDialogHost)

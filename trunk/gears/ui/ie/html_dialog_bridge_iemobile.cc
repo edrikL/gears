@@ -23,6 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/ui/ie/html_dialog_bridge_iemobile.h"
+
 #include <assert.h>
 #include <oleidl.h>
 #include <piedocvw.h>
@@ -35,10 +37,9 @@
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
-#include "gears/ui/ie/html_dialog_bridge_iemobile.h"
 #include "gears/third_party/AtlActiveScriptSite.h"
 
-// Set the permissions dialog object
+// Set the permissions dialog object.
 // window.external does not work on PIE, so we use this instead...
 // basically we get the browser object used by the permissions dialog
 // and traverse the dom to find a PIEDialogBridge instance. If there is one,
@@ -49,7 +50,7 @@ HRESULT PIEDialogBridge::AccessPermissionsDialog() {
   // (permissions dialog is modal)
 
   CComQIPtr<HtmlDialogHostInterface> permissions_dialog(
-    HtmlDialogHost::html_permissions_dialog_);
+      HtmlDialogHost::html_permissions_dialog_);
 
   if (!permissions_dialog)
     return S_FALSE;
@@ -59,13 +60,15 @@ HRESULT PIEDialogBridge::AccessPermissionsDialog() {
 
   if (!document) return S_FALSE;
 
-  // then we retrieve all the elements in the document, and we look for us
+  // Then we retrieve all the elements in the document, and we look for us.
   CComPtr<IPIEHTMLElementCollection> html_collection;
   HRESULT hr = document->get_all(&html_collection);
   ASSERT(html_collection);
 
-  long len = 0;
-  hr = html_collection->get_length(&len);
+  long l_len = 0;
+  hr = html_collection->get_length(&l_len);
+  int len = static_cast<int> (l_len);
+
   if (hr != S_OK)
     return S_FALSE;
 
@@ -73,16 +76,16 @@ HRESULT PIEDialogBridge::AccessPermissionsDialog() {
     VARIANT index;
     VariantInit(&index);
     index.vt = VT_I4;
-    index.intVal = static_cast<int>(i);
+    index.intVal = i;
 
     CComPtr<IDispatch> disp;
     hr = html_collection->item(index, index, &disp);
 
     if (disp) {
-      // get the current element
+      // Get the current element.
       CComQIPtr<IPIEHTMLObjectElement> elem(disp);
 
-      // if we have an object element, we check that it's a
+      // If we have an object element, we check that it's a
       // PIEDialogBridge object; we only set one object per document.
       if (elem) {
         CComQIPtr<PIEDialogBridgeInterface> bridge_pointer;
