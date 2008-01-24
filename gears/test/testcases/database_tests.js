@@ -442,23 +442,6 @@ function testAttachFnShouldNotWork() {
   });
 }
 
-// Test if "BEGIN" works like "BEGIN IMMEDIATE" or "BEGIN DEFERRED".
-function testBeginIsImmediate() {
-  var db1 = google.gears.factory.create('beta.database');
-  db1.open('foo');
-
-  var db2 = google.gears.factory.create('beta.database');
-  db2.open('foo');
-
-  db1.execute("BEGIN");
-  assertError(function() {
-    db2.execute("BEGIN");
-  });
-
-  db1.close();
-  db2.close();
-}
-
 function testOpenDatabaseWithIds() {
   function setupDB(id) {
     var db1 = google.gears.factory.create('beta.database');
