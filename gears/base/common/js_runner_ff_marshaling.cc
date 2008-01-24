@@ -195,6 +195,7 @@ void JsContextWrapper::GarbageCollectionCallback(nsITimer *timer,
 
 void JsContextWrapper::CleanupRoots() {
   // Stop garbage collection now.
+  gc_timer_->Cancel();
   gc_timer_ = NULL;
 
   // Remove the roots associated with the protos we've created.  We need to
