@@ -81,16 +81,19 @@ interface GearsLocation {
 };
 
 interface LocationOptions {
-  // Instructs the implementation to provide the highest accuracy it can, regardless of
+  // If set, the application would prefer the highest accuracy possible, regardless of
   // battery, cost, etc. This might mean, for example, to use the GPS radio instead of
-  // cell id lookups. If not specified, the default value is false. 
+  // cell id lookups. If not specified, the default value is false. The implementation
+  // always has the last word on which mechanism to use, this is just a way for an
+  // application to express a preference.
   bool highAccuracyDesired;
 };
 
 interface WatchLocationOptions : LocationOptions {
-  // The frequency that the application desires updates on the position. The
-  // implementation will do its best to honor this rate, but may provide fewer updates
-  // to conserve battery, or if it cannot get fixes.
+  // The frequency that the application desires updates on the position, in milliseconds.
+  // The implementation will attempt to provide this rate, but may provide slower
+  // updates to conserve battery, if it cannot get fixes, or if the user rejects use of the
+  // required hardware.
   bool desiredUpdateRate;
 };
 
