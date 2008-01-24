@@ -91,7 +91,7 @@ function init() {
 
   // Enable or disable UI elements
 
-  var inputs = document.getElementsByTagName('input');
+  var inputs = document.forms[0].elements;
   for (var i = 0, el; el = inputs[i]; i++) {
     el.disabled = !success;
   }
@@ -103,7 +103,7 @@ function handleSubmit() {
     return;
   }
 
-  var elm = document.getElementById('submitValue');
+  var elm = getElementById('submitValue');
   var phrase = elm.value;
   var currTime = new Date().getTime();
 
@@ -134,12 +134,13 @@ function displayRecentPhrases() {
   }
   rs.close();
 
-  var status = document.getElementById('status');
+  var status = getElementById('status');
   status.innerHTML = '';
   for (var i = 0; i < recentPhrases.length; ++i) {
+    var id = 'phrase' + i;
+    status.innerHTML += '<span id="' + id + '"></span><br>';
     var bullet = '(' + (i + 1) + ') ';
-    status.appendChild(document.createTextNode(bullet + recentPhrases[i]));
-    status.appendChild(document.createElement('br'));
+    setTextContent(getElementById(id), bullet + recentPhrases[i]);
   }
 }
 

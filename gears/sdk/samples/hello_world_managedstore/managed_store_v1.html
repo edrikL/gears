@@ -46,10 +46,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   </head>
   <body>
     <h1>Google Gears ManagedResourceStore Demo (v1)</h1><br>
-    <p><button onclick='if (canDemo()) updateManagedStore()'>
-      UpdateManagedStore
-    </button>
-    <span id='textOut'></span><p>
+    <form>
+      <input type='button' onclick='if (canDemo()) updateManagedStore()'
+             value='Update Managed Store'>
+      <span id='textOut'></span>
+    </form>
     <p>Notice the same URLs now result in different content.
     Press the 'UpdateManagedStore' button to execute the
     script shown below. The script initiates an update and

@@ -35,10 +35,11 @@ function updateManagedStore() {
   store.manifestUrl = 'manifest_v2.json';
   store.checkForUpdate();
 
-  var timerId = window.setInterval(function() {
+  var timer = google.gears.factory.create('beta.timer');
+  var timerId = timer.setInterval(function() {
     // There is an open bug to surface this state change as an event.
     if (store.currentVersion != 'v1') {
-      window.clearInterval(timerId);
+      timer.clearInterval(timerId);
       textOut('Complete, press reload to load version ' + store.currentVersion);
     }
   }, 500);

@@ -35,12 +35,13 @@ function createManagedStore() {
   store.manifestUrl = 'manifest_v1.json';
   store.checkForUpdate();
 
-  var timerId = window.setInterval(function() {
+  var timer = google.gears.factory.create('beta.timer');
+  var timerId = timer.setInterval(function() {
     // When the currentVersion property has a value, all of the resources
     // listed in the manifest file for that version are captured. There is
     // an open bug to surface this state change as an event.
     if (store.currentVersion) {
-      window.clearInterval(timerId);
+      timer.clearInterval(timerId);
       textOut('Complete, press reload to see the locally served version ' +
               store.currentVersion);
     }

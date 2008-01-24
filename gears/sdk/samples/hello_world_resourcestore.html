@@ -37,11 +37,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <h1>Google Gears ResourceStore Demo</h1>
 <div id="view-source">&nbsp;</div>
 
-<button onclick="createStore()">CreateStore</button>
-<button onclick="capture()">Capture</button>
-<button onclick="uncapture()">Uncapture</button>
-<button onclick="removeStore()">RemoveStore</button>
-<br>
+<form>
+<input type="button" value="Create Store" onclick="createStore();">
+<input type="button" value="Capture" onclick="capture();">
+<input type="button" value="Uncapture" onclick="uncapture();">
+<input type="button" value="Remove Store" onclick="removeStore();">
+</form>
 <p id="status">
 <p id="status-1"></p>
 <hr>
@@ -63,7 +64,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <!-- ====================================== -->
 <!-- End HTML code.  Begin JavaScript code. -->
 
-<script type="text/javascript"  src="../gears_init.js"></script>
+<script type="text/javascript" src="../gears_init.js"></script>
 <script type="text/javascript" src="sample.js"></script>
 <script>
 var STORE_NAME = 'helloworld-store'
@@ -89,7 +90,7 @@ function init() {
     localServer =
         google.gears.factory.create('beta.localserver');
   } catch (ex) {
-    var buttons = document.getElementsByTagName('button');
+    var buttons = document.forms[0].elements;
     for (var i = 0, el; el = buttons[i]; i++) {
       el.disabled = true;
     }

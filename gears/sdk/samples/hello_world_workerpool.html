@@ -33,14 +33,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <link rel="stylesheet" type="text/css" href="sample.css">
 <style>
 
-th {
-  text-align: left;
+p.results {
+  margin: 4px;
 }
 
 </style>
 </head>
 
-<body onload="init()">
+<body onload="init()" id="theBody">
 <h1>Google Gears WorkerPool Demo</h1>
 <div id="view-source">&nbsp;</div>
 
@@ -58,28 +58,28 @@ th {
 <td valign=top>Run expensive computation:</td>
 <td>
     <input type="button" id="syncButton"
-           value="Synchronous" onclick="syncComputation();"><br>
+           value="Synchronous" onclick="syncComputation();">
+</td>
+<td><i>Note the synchronous computation blocks UI interaction.</i>
+</td>
+</tr>
+<tr>
+<td>
+</td>
+<td>
     <input type="button" id="asyncButton"
            value="Asynchronous" onclick="asyncComputation();">
 </td>
-<td><i>Note the synchronous computation blocks UI interaction.</i>
-    <br>
+<td>
     <i>But you can still interact while the asynchronous computation
        runs in a JavaScript worker.</i>
 </td>
 </tr>
 </table>
 
-<p>
-<table id="myTable">
-  <thead>
-    <tr>
-      <th>Results
-    </tr>
-  </thead>
-  <tbody>
-  </tbody>
-</table>
+<div id="results" style="font-size: 120%";>
+<p style="font-weight: bold;" class="results">Results
+</div>
 
 <!-- ====================================== -->
 <!-- End HTML code.  Begin JavaScript code. -->
@@ -94,8 +94,10 @@ function init() {
 }
 
 function insertRow(message) {
-  var row = document.getElementById('myTable').insertRow(-1);
-  row.insertCell(0).innerHTML = message;  // insertCell arg is column position
+  var results = getElementById('results');
+  var id = 'message' + (childNodes(results).length + 1);
+  results.innerHTML += '<p class="results" id="' + id + '">';
+  setTextContent(getElementById(id), message);
 }
 
 //
@@ -192,10 +194,10 @@ function childHandler(msg, sender) {
 var uiToggleState = 0;
 function interact() {
   if (uiToggleState) {
-    document.body.style.background = '#FFFFFF';
+    getElementById('theBody').style.backgroundColor = '#FFFFFF';
     uiToggleState = 0;
   } else {
-    document.body.style.background = '#CCCCCC';
+    getElementById('theBody').style.backgroundColor = '#CCCCCC';
     uiToggleState = 1;
   }
 }

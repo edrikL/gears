@@ -45,9 +45,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1>Google Gears ManagedResourceStore Demo (online)</h1><br>
     <p id=status></p>
 
-    <p><button onclick="createManagedStore()" id="create-button">
-        CreateManagedStore</button>
-    <span id="textOut"></span></p>
+    <form>
+      <input type='button' onclick='createManagedStore()'
+             value='Create Managed Store'>
+      <span id='textOut'></span>
+    </form>
 
     <p>Press the 'CreateManagedStore' button to execute the
     script shown below. The script initiates the capture of the resources
@@ -69,7 +71,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     showSourceFileInline('managed_store.js', 'managedStoreJsSourceDisplay');
     showSourceFileInline('manifest_v1.json', 'manifestFileSourceDisplay');
     if (!canDemo()) {
-      document.getElementById('create-button').disabled = true;
+      getElementById('create-button').disabled = true;
     }
     </script>
   </body>

@@ -23,10 +23,34 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+function childNodes(element) {
+  if (element.childNodes)
+    return element.childNodes;
+  else
+    return element.children;
+}
+
+function getElementById(element_name) {
+  if (document.getElementById)
+    return document.getElementById(element_name);
+  else
+    return document.all[element_name];
+}
+
+function setTextContent(elem, content) {
+  if (typeof elem.innerText != 'undefined') {
+    elem.innerText = content; 
+  } else {
+    elem.textContent = content;
+  }
+}
+
 function setupSample() {
   // Make sure we have Gears. If not, tell the user.
   if (!window.google || !google.gears) {
     if (confirm("This demo requires Gears to be installed. Install now?")) {
+      // TODO(steveblock): Need to modify the install page to support mobile
+      // devices before this version of the page goes 'live'.
       var spliceStart = location.href.indexOf("/samples");
       location.href =
         location.href.substring(0, spliceStart) + "/install.html";
@@ -34,7 +58,7 @@ function setupSample() {
     }
   }
 
-  var viewSourceElem = document.getElementById("view-source");
+  var viewSourceElem = getElementById("view-source");
   if (!viewSourceElem) {
     return;
   }
@@ -42,16 +66,17 @@ function setupSample() {
   if (navigator.product == "Gecko") {
     // If we're gecko, we can show the source of the application with the
     // view-source protocol.
-    elm = document.createElement("a");
-    elm.href = "view-source:" + location.href;
-    elm.innerHTML = "View Demo Source";
+    elm = "<a href='view-source:" + location.href + "'>" +
+          "View Demo Source" +
+          "</a>";
   } else {
     // Otherwise, just tell users how to do it manually.
-    elm = document.createElement("em");
-    elm.innerHTML = "To see how this works, use the <strong>view "+
-      "source</strong> feature of your browser";
+    elm = "<em>" +
+          "To see how this works, use the <strong>view " +
+          "source</strong> feature of your browser" +
+          "</em>";
   }
-  viewSourceElem.appendChild(elm);
+  viewSourceElem.innerHTML += elm;
 }
 
 function checkProtocol() {
@@ -63,25 +88,22 @@ function checkProtocol() {
   }
 }
 
-function addStatus(s, opt_class) {
-  var elm = document.getElementById('status');
+function addStatus(message, opt_class) {
+  var elm = getElementById('status');
+  var id = 'statusEntry' + (childNodes(elm).length + 1);
   if (!elm) return;
-  var node = document.createTextNode(s);
   if (opt_class) {
-    var span = document.createElement('span');
-    span.className = opt_class;
-    span.appendChild(node);
-    node = span;
+    elm.innerHTML += '<span id="' + id + '" class="' + opt_class + '"></span>';
+  } else {
+    elm.innerHTML += '<span id="' + id + '"></span>';
   }
-  elm.appendChild(node);
-  elm.appendChild(document.createElement('br'));
+  elm.innerHTML += '<br>';
+  setTextContent(getElementById(id), message);
 }
 
 function clearStatus() {
-  var elm = document.getElementById('status');
-  while (elm && elm.firstChild) {
-    elm.removeChild(elm.firstChild);
-  }
+  var elm = getElementById('status');
+  elm.innerHTML = '';
 }
 
 function setError(s) {

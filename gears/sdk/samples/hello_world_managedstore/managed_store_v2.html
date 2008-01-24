@@ -46,10 +46,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   </head>
   <body>
     <h1>Google Gears ManagedResourceStore Demo (v2)</h1><br>
-    <p><button onclick='if (canDemo()) removeManagedStore()'>
-      RemoveManagedStore
-    </button>
-    <span id='textOut'></span></p>
+    <form>
+      <input type='button' onclick='if (canDemo()) removeManagedStore()'
+             value='Remove Managed Store'>
+      <span id='textOut'></span>
+    </form>
     <p>Press the 'RemoveManagedStore' button to cleanup.</p>
     <hr>
     <p>The file 'managed_store.js' for the offline version 'v2' in use now.</p>
