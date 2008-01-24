@@ -112,3 +112,9 @@ interface LocationResult : Location {
   readonly string errorMessage; // human readable, suitable for logs
 };
 }}}
+
+= Privacy =
+
+It must be clear to users when an application is using the Location API. The dialog that currently enables Gears general access should not also enable access to the location API. It would be too easy for users to forget that they allowed access to Gears, or to fail to realize that enabling Gears also also enables location access. At a minimum, there should be a separate dialog from the Gears access dialog to enable Location API access.  
+
+It would also be interesting, though, to have some persistent UI that indicates that the location API is being used. For example, there could be a rotating globe or an icon of a map overlayed on the content area. Perhaps this UI should be 'active' somehow, indicating that something is happening, so that the user cannot forget that it is being used.
