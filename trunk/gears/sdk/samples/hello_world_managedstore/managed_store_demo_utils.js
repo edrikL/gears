@@ -57,14 +57,11 @@ function httpGet(url) {
 function showSourceFileInline(url, divId) {
   var source = httpGet(url);
   var html = '<pre>' + source + '</pre>';
-  var div = document.getElementById(divId);
+  var div = getElementById(divId);
   div.innerHTML = html;
 }
 
 function textOut(s) {
-  var elm = document.getElementById('textOut');
-  while (elm.firstChild) {
-    elm.removeChild(elm.firstChild);
-  }
-  elm.appendChild(document.createTextNode(s));
+  var elm = getElementById('textOut');
+  setTextContent(elm, s);
 }
