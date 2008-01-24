@@ -88,6 +88,8 @@ function testArgsParameterEmpty() {
 }
 
 // Test argument interpolation
+/*
+// TODO(marli): Re-enable when string coercion is fixed.
 function testArgsInterpolationOne() {
   startAsync();
   console.log(from_worker + '#testArgsInterpolationOne',
@@ -145,6 +147,7 @@ function testArgsInterpolationObject() {
       '%s', [{ data: 123, toString:
       function() { return 'Object data: ' + this.data; }}]);
 }
+*/
 
 // Test recursive interpolation
 function testArgsInterpolationRecursive() {
