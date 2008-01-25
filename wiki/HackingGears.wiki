@@ -73,7 +73,7 @@ where {PATH_TO_GEARS_SVN} is the full path to your local copy of the gears sourc
  * Reopen Firefox and make sure Gears appears in the Add-ons window.  If it doesn't check that the path you specified at the end of the previous command exists and contains the build output.
 
 == Running Unit Tests ==
-For detailed information on running the unit tests, refer to the *gears/test2/README.txt* file.
+For detailed information on running the unit tests, refer to the *gears/test/README.txt* file.
 
 == Debugging ==
 To turn on debug logging in FF, you need to set the following environmental variables:
