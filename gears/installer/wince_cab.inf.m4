@@ -4,8 +4,8 @@ Provider="Google"
 CESignature="$Windows CE$"
 
 [CEStrings]
-AppName="Gears"
-InstallDir=%CE1%\%AppName%
+AppName="PRODUCT_FRIENDLY_NAME_UQ"
+InstallDir="%CE1%\PRODUCT_FRIENDLY_NAME_UQ"
 
 [Strings]
 Manufacturer="Google"
@@ -17,7 +17,7 @@ BuildMax=0xE0000000
 
 [DefaultInstall]
 CopyFiles=Files.Common1
-CESelfRegister=gears.dll
+CESelfRegister=PRODUCT_SHORT_NAME_UQ.dll
 
 [SourceDisksNames]
 m4_changequote(`^',`^')m4_dnl
@@ -32,8 +32,7 @@ m4_ifelse(DEBUG,^1^,^m4_dnl
 
 [DestinationDirs]
 Shortcuts=0,%CE2%\Start Menu
-Files.Common1=0,"%CE1%\Gears"
+Files.Common1=0,"%CE1%\PRODUCT_FRIENDLY_NAME_UQ"
 
 [Files.Common1]
-"gears.dll","gears.dll",,0
-
+"PRODUCT_SHORT_NAME_UQ.dll","PRODUCT_SHORT_NAME_UQ.dll",,0
