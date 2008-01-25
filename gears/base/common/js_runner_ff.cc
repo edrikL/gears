@@ -409,7 +409,11 @@ bool JsRunner::InitJavaScriptEngine() {
   // runtime, strange things break (like eval).
   const int kRuntimeMaxBytes = 64 * 1024 * 1024; // mozilla/.../js.c uses 64 MB
   js_runtime_ = JS_NewRuntime(kRuntimeMaxBytes);
-  if (!js_runtime_) { return false; }
+  if (!js_runtime_) {
+    ExceptionManager::CaptureAndSendMinidump();
+    LOG(("Maximum thread count reached."));
+    return false;
+  }
 
   const int kContextStackChunkSize = 1024; // Firefox often uses 1024;
                                            // also see js/src/readme.html
