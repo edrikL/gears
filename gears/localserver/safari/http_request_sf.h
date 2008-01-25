@@ -31,42 +31,45 @@
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/localserver/common/http_request.h"
 
+// TODO(playmobil): Make httprequest use the browser's cache & cookies?
+
 class SFHttpRequest : public HttpRequest {
  public:
   // Gears's HttpRequest interface
-
   virtual int AddReference();
   virtual int ReleaseReference();
+  
+  virtual CachingBehavior GetCachingBehavior();
+  virtual bool SetCachingBehavior(CachingBehavior behavior);
+  virtual RedirectBehavior GetRedirectBehavior();
+  virtual bool SetRedirectBehavior(RedirectBehavior behavior);
 
   // properties
-  virtual bool GetReadyState(long *state);
+  virtual bool GetReadyState(ReadyState *state);
+  virtual bool GetResponseBodyAsText(std::string16 *text);
   virtual bool GetResponseBody(std::vector<uint8> *body);
   virtual std::vector<uint8> *GetResponseBody();
-  virtual bool GetStatus(long *status);
+  virtual bool GetStatus(int *status);
   virtual bool GetStatusText(std::string16 *status_text);
   virtual bool GetStatusLine(std::string16 *status_line);
 
-  // Set whether or not to follow HTTP redirection, the default is to
-  // follow redirects. To disable redirection, call this method after open
-  // has been called and prior to calling send.
-  virtual bool SetFollowRedirects(bool follow);
-
   // Whether or not this request has followed a redirect
   virtual bool WasRedirected();
-
-  // Returns true and the full url to the final location if this request
-  // has followed any redirects
-  virtual bool GetRedirectUrl(std::string16 *full_redirect_url);
+  
+  virtual bool GetFinalUrl(std::string16 *full_url);
+  virtual bool GetInitialUrl(std::string16 *full_url);
 
   // methods
   virtual bool Open(const char16 *method, const char16* url, bool async);
   virtual bool SetRequestHeader(const char16* name, const char16* value);
   virtual bool Send();
+  virtual bool SendString(const char16 *name);
   virtual bool GetAllResponseHeaders(std::string16 *headers);
   virtual bool GetResponseHeader(const char16* name, std::string16 *header);
   virtual bool Abort();
 
   // events
+  // TODO(playmobil): check that SENT and INTERACTIVE states are used.
   virtual bool SetOnReadyStateChange(ReadyStateListener *listener);
 
  private:
@@ -81,20 +84,32 @@ class SFHttpRequest : public HttpRequest {
   static void StreamReaderFunc(CFReadStreamRef stream,
                                CFStreamEventType type,
                                void *clientCallBackInfo);
-  void SetReadyState(long ready_state);
+  void SetReadyState(ReadyState ready_state);
+  
+  bool IsUninitialized() { return ready_state_ == HttpRequest::UNINITIALIZED; }
+  bool IsOpen() { return ready_state_ == HttpRequest::OPEN; }
+  bool IsSent() { return ready_state_ == HttpRequest::SENT; }
+  bool IsInteractive() { return ready_state_ == HttpRequest::INTERACTIVE; }
+  bool IsComplete() { return ready_state_ == HttpRequest::COMPLETE; }
+  bool IsInteractiveOrComplete() { return IsInteractive() || IsComplete(); }
+  
   void TerminateStreamReader();
   void Reset();
   void CopyHeadersIfAvailable();
 
   ReadyStateListener *listener_;
   int ref_count_;
-  long ready_state_;
+  ReadyState ready_state_;
   bool follow_redirect_;
   scoped_CFHTTPMessage request_;
   scoped_CFReadStream read_stream_;
   scoped_CFHTTPMessage response_;
   scoped_CFDictionary response_header_;
   scoped_CFMutableData body_;
+  std::string16 url_;
+  
+  // Whether this request was aborted
+  bool was_aborted_;
 };
 
 #endif  // GEARS_LOCALSERVER_SAFARI_HTTP_REQUEST_SF_H__

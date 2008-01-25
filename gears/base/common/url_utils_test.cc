@@ -26,6 +26,7 @@
 #include "gears/base/common/url_utils.h"
 
 #include "gears/base/common/common.h"  // only for LOG()
+#include "gears/base/common/string_utils.h"
 
 
 bool TestUrlUtils() {
@@ -143,31 +144,33 @@ bool TestUrlUtils() {
       STRING16(L"http://server/directory/foo#bar"),
       STRING16(L"http://server/directory/foo")
     },
-// TODO(playmobil): make IE behave the same as other browsers in this case.
 #ifdef BROWSER_IE
-    /*
-    NOTE: Looks like the result of normalizing this is different if IE7 than
-    IE6. IE6 on XP passes functional tests, but IE7 on vista doesn't. When I
-    try IE7 on my XP workstation it also fails, because the normalized URL
-    comes out as: http://server/a%20b/c%20d - with %20 replacing the spaces.
-    {  // IE doesn't escape chars in base & url.
-      STRING16(L"http://server/a b/"),
-      STRING16(L"c d"),
-      STRING16(L"http://server/a b/c d")
-    },
-    */
+    // TODO(playmobil): escape URLs on IE6.
+    // Behavior for this case is inconsistent between IE6 and IE7.
+    // IE6 doesn't escape the URL and return 'http://server/a b/c d'.
+    // IE7 behaves the same as Firefox.
 #else
     {  // Check that we escape base and url.
       STRING16(L"http://server/a b/"),
       STRING16(L"c d"),
       STRING16(L"http://server/a%20b/c%20d")
     },
+    {  // Check partially escaped URLs
+      STRING16(L"http://server/a b/c%20 d/"),
+      STRING16(L"e%20 f"),
+      STRING16(L"http://server/a%20b/c%20%20d/e%20%20f")
+    },
+    {  // Escape correctly if base not specified
+      NULL,
+      STRING16(L"http://server/a b/c%20 d/"),
+      STRING16(L"http://server/a%20b/c%20%20d/")
+    },
 #endif
     {  // Lowercase scheme & host but don't touch path.
-      STRING16(L"HTTp://SErver/"),
-      STRING16(L"foo"),
-      STRING16(L"http://server/foo")
-    },
+      STRING16(L"HTTp://fOo:bAbA@SErver:8080/"),
+      STRING16(L"fOo.hTml?a=bB"),
+      STRING16(L"http://fOo:bAbA@server:8080/fOo.hTml?a=bB")
+     },
     {  // Add trailing slash to domain.
       STRING16(L"http://server"),
       STRING16(L""),
@@ -184,13 +187,18 @@ bool TestUrlUtils() {
       STRING16(L"a%c2%B1b"),
       STRING16(L"http://server/directory/a%c2%B1b")
     },
-    {  // Remove default port.
+    {  // Remove default port for http.
       STRING16(L"http://server:80/directory/"),
       STRING16(L""),
       STRING16(L"http://server/directory/")
     },
+    {  // Remove default port for https.
+      STRING16(L"https://server:443/directory/"),
+      STRING16(L""),
+      STRING16(L"https://server/directory/")
+    },
     {  // Collapse URL Fragments.
-      STRING16(L"http://server/../a/b/../c/"),
+      STRING16(L"http://server/.././../a/b/../c/"),
       STRING16(L"./d.html"),
       STRING16(L"http://server/a/c/d.html")
     },
@@ -218,7 +226,15 @@ bool TestUrlUtils() {
   for (size_t i = 0; i < ARRAYSIZE(kCases); ++i) {
     std::string16 resolved;
     TEST_ASSERT(ResolveAndNormalize(kCases[i].base, kCases[i].url, &resolved));
-    TEST_ASSERT(resolved == kCases[i].resolved);
+    if (resolved != kCases[i].resolved) {
+      std::string expected_utf8;
+      String16ToUTF8(kCases[i].resolved, &expected_utf8);
+      std::string resolved_utf8;
+      String16ToUTF8(resolved.c_str(), &resolved_utf8);
+      LOG(("URL Resolution failed, expected(%s) got (%s)\n", 
+            expected_utf8.c_str(), resolved_utf8.c_str()));
+      return false;
+    }
   }
 
   LOG(("TestUrlUtilsAll - passed\n"));

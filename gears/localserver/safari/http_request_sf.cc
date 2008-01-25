@@ -25,11 +25,13 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
+#include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/safari/browser_utils.h"
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/base/safari/string_utils.h"
 #include "gears/localserver/common/http_constants.h"
+#include "gears/localserver/safari/http_cookies_sf.h"
 #include "gears/localserver/safari/http_request_sf.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
@@ -48,39 +50,49 @@ HttpRequest *HttpRequest::Create() {
 // AddReference
 //------------------------------------------------------------------------------
 int SFHttpRequest::AddReference() {
-  return ++ref_count_;
+  return AtomicIncrement(&ref_count_, 1);
 }
 
 //------------------------------------------------------------------------------
 // ReleaseReference
 //------------------------------------------------------------------------------
 int SFHttpRequest::ReleaseReference() {
-  --ref_count_;
+  int cnt = AtomicIncrement(&ref_count_, -1);
   
-  if (ref_count_ < 1)
+  if (cnt < 1)
     delete this;
   
-  return ref_count_;
+  return cnt;
+}
+
+HttpRequest::CachingBehavior SFHttpRequest::GetCachingBehavior() {
+  // TODO(playmobil): implement.
+  assert(false);
+  return USE_ALL_CACHES;
+}
+
+bool SFHttpRequest::SetCachingBehavior(CachingBehavior behavior) {
+  // TODO(playmobil): implement.
+  return true;
+}
+
+HttpRequest::RedirectBehavior SFHttpRequest::GetRedirectBehavior() {
+  // TODO(playmobil): implement.
+  assert(false);
+  return FOLLOW_NONE;
+}
+
+bool SFHttpRequest::SetRedirectBehavior(RedirectBehavior behavior) {
+  // TODO(playmobil): implement.
+  return true;
 }
 
 //------------------------------------------------------------------------------
 // GetReadyState
 //------------------------------------------------------------------------------
-bool SFHttpRequest::GetReadyState(long *state) {
+bool SFHttpRequest::GetReadyState(ReadyState *state) {
   *state = ready_state_;
   return true;
-}
-
-//------------------------------------------------------------------------------
-// GetResponseBody
-//------------------------------------------------------------------------------
-std::vector<uint8> *SFHttpRequest::GetResponseBody() {
-  scoped_ptr< std::vector<uint8> > body(new std::vector<uint8>);
-  if (!GetResponseBody(body.get())) {
-    return NULL;
-  } else {
-    return body.release();
-  }
 }
 
 //------------------------------------------------------------------------------
@@ -101,10 +113,34 @@ bool SFHttpRequest::GetResponseBody(std::vector<uint8> *body) {
   return true;
 }
 
+bool SFHttpRequest::GetResponseBodyAsText(std::string16 *text) {
+  assert(text);
+  
+  scoped_ptr< std::vector<uint8> > body(new std::vector<uint8>);
+  if (!GetResponseBody(body.get())) {
+    return false;
+  }
+
+  return UTF8ToString16(reinterpret_cast<const char*>(&(*body.get())[0]),
+                        body.get()->size(), text);
+}
+
+//------------------------------------------------------------------------------
+// GetResponseBody
+//------------------------------------------------------------------------------
+std::vector<uint8> *SFHttpRequest::GetResponseBody() {
+  scoped_ptr< std::vector<uint8> > body(new std::vector<uint8>);
+  if (!GetResponseBody(body.get())) {
+    return NULL;
+  } else {
+    return body.release();
+  }
+}
+
 //------------------------------------------------------------------------------
 // GetStatus
 //------------------------------------------------------------------------------
-bool SFHttpRequest::GetStatus(long *status) {
+bool SFHttpRequest::GetStatus(int *status) {
   if (!response_.get())
     return false;
 
@@ -157,14 +193,32 @@ bool SFHttpRequest::GetStatusLine(std::string16 *status_line) {
 bool SFHttpRequest::Open(const char16 *method, const char16* url, bool async) {
   Reset();
   
+  url_ = std::string16(url);
+  
   scoped_CFString method_str(CFStringCreateWithString16(method));  
   scoped_CFURL url_ref(CFURLCreateWithString16(url));
   
   request_.reset(CFHTTPMessageCreateRequest(kCFAllocatorDefault, 
                                             method_str.get(),
                                             url_ref.get(), kCFHTTPVersion1_1));
-  ready_state_ = 0; // Uninitialized
-  return (request_.get() != NULL);
+  if (request_.get() == NULL) {
+    return false;
+  }
+  
+  ready_state_ = OPEN;
+  
+  // TODO(playmobil): Set Cookies correctly for request.
+  // Set default cookies for domain.
+  // CFStringRef url_str = CFURLGetString(url_ref.get()); 
+  // scoped_CFString cookie_header_str(GetHTTPCookieString(url_str));
+  
+  // std::string16 cookie_header_name(STRING16(L"Cookie"));
+  // scoped_CFString name_ref(CFStringCreateWithString16( 
+  //                              cookie_header_name.c_str()));
+  // CFHTTPMessageSetHeaderFieldValue(request_.get(), name_ref.get(),
+  //                                 cookie_header_str.get());
+  
+  return true;
 }
 
 //------------------------------------------------------------------------------
@@ -178,14 +232,6 @@ bool SFHttpRequest::SetRequestHeader(const char16* name, const char16* value) {
   scoped_CFString value_ref(CFStringCreateWithString16(value));
   CFHTTPMessageSetHeaderFieldValue(request_.get(), name_ref.get(),
                                    value_ref.get());
-  return true;
-}
-
-//------------------------------------------------------------------------------
-// SetFollowRedirects
-//------------------------------------------------------------------------------
-bool SFHttpRequest::SetFollowRedirects(bool follow) {
-  follow_redirect_ = follow;
   return true;
 }
 
@@ -206,18 +252,24 @@ bool SFHttpRequest::WasRedirected() {
   return result;
 }
 
-bool SFHttpRequest::GetRedirectUrl(std::string16 *full_redirect_url) {
-  if (!response_.get() || !follow_redirect_)
+bool SFHttpRequest::GetFinalUrl(std::string16 *full_redirect_url) {
+  if (!IsInteractiveOrComplete() || was_aborted_)
+    return false;
+
+  if (!response_.get())
     return false;
   
-  if (!WasRedirected())
-    return false;
-  
+  // TODO(playmobil): check that this does the right thing in the case of a
+  // redirect.
   scoped_CFURL final_url(CFHTTPMessageCopyRequestURL(response_.get()));
-  
   return CFURLRefToString16(final_url.get(), full_redirect_url);
 }
 
+bool SFHttpRequest::GetInitialUrl(std::string16 *full_url) {
+  assert(full_url);
+  *full_url = url_;  // may be empty if request has not occurred
+  return true;
+}
 
 //------------------------------------------------------------------------------
 // Send
@@ -255,6 +307,12 @@ bool SFHttpRequest::Send() {
     read_stream_.reset(NULL);
 
   return result;
+}
+
+bool SFHttpRequest::SendString(const char16 *name) {
+  // TODO(playmobil): implement!
+  assert(false);
+  return false;
 }
 
 //------------------------------------------------------------------------------
@@ -310,7 +368,8 @@ bool SFHttpRequest::GetResponseHeader(const char16* name,
 //------------------------------------------------------------------------------
 bool SFHttpRequest::Abort() {
   if (read_stream_.get()) {
-    SetReadyState(4); // Complete
+    was_aborted_ = true;
+    SetReadyState(COMPLETE);
     TerminateStreamReader();
     return true;
   }
@@ -329,7 +388,7 @@ bool SFHttpRequest::SetOnReadyStateChange(ReadyStateListener *listener) {
 //------------------------------------------------------------------------------
 // SetReadyState
 //------------------------------------------------------------------------------
-void SFHttpRequest::SetReadyState(long ready_state) {
+void SFHttpRequest::SetReadyState(ReadyState ready_state) {
   if (ready_state != ready_state_) {
     ready_state_ = ready_state;
     if (listener_)
@@ -343,13 +402,15 @@ void SFHttpRequest::SetReadyState(long ready_state) {
 SFHttpRequest::SFHttpRequest()
   : listener_(NULL),
     ref_count_(0),
-    ready_state_(0),
+    ready_state_(UNINITIALIZED),
     follow_redirect_(true),
     request_(NULL),
     read_stream_(NULL),
     response_(NULL),
     response_header_(NULL),
-    body_(NULL) {
+    body_(NULL),
+    url_(),
+    was_aborted_(false) {
 }
 
 //------------------------------------------------------------------------------
@@ -383,7 +444,7 @@ void SFHttpRequest::StreamReaderFunc(CFReadStreamRef stream,
   switch (type) {
     case kCFStreamEventOpenCompleted:
       self->body_.reset(CFDataCreateMutable(kCFAllocatorDefault, 0));
-      self->SetReadyState(1); // Loading
+      self->SetReadyState(OPEN);
       break;
 
     case kCFStreamEventHasBytesAvailable: {
@@ -404,7 +465,7 @@ void SFHttpRequest::StreamReaderFunc(CFReadStreamRef stream,
           // Check for failure of appending the data
           if (current_length + bytes_read > new_length) {
             self->body_.reset(NULL);
-            self->SetReadyState(4);
+            self->SetReadyState(COMPLETE);
             self->TerminateStreamReader();
             return;
           }
@@ -417,13 +478,13 @@ void SFHttpRequest::StreamReaderFunc(CFReadStreamRef stream,
     }
 
     case kCFStreamEventEndEncountered: {
-      self->SetReadyState(4); // Complete
+      self->SetReadyState(COMPLETE);
       self->TerminateStreamReader();
       break;
     }
 
     case kCFStreamEventErrorOccurred: {
-      self->SetReadyState(4); // Complete
+      self->SetReadyState(COMPLETE);
       self->TerminateStreamReader();
       break;
     }

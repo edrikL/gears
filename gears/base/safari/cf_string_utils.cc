@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+// Copyright 2008, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,17 +23,34 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_BASE_COMMON_URL_UTILS_H__
-#define GEARS_BASE_COMMON_URL_UTILS_H__
+#include <CoreFoundation/CoreFoundation.h>
+#include "gears/base/common/string_utils.h"
+#include "gears/base/safari/cf_string_utils.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-#include "gears/base/common/string16.h" // for string16
+bool CFStringRefToString16(CFStringRef str, std::string16 *out16) {
+  if (!str || !out16)
+    return false;
+  
+  unsigned long length = CFStringGetLength(str);
+  const UniChar *outStr = CFStringGetCharactersPtr(str);
 
-bool IsRelativeUrl(const char16 *url);
+  if (!outStr) {
+    scoped_array<UniChar> buffer(new UniChar[length + 1]);
+    CFStringGetCharacters(str, CFRangeMake(0, length), buffer.get());
+    buffer[length] = 0;
+    out16->assign(buffer.get());
+  } else {
+    out16->assign(outStr, length);
+  }
+  
+  return true;
+}
 
-// Returns a resolved, normalized URL in 'out'.
-// Note that that any  fragment identifier present in the input is removed.
-// 'url' can be relative or absolute.  'base' can be NULL for absolute URLs.
-bool ResolveAndNormalize(const char16 *base, const char16 *url,
-                         std::string16 *out);
-
-#endif // GEARS_BASE_COMMON_URL_UTILS_H__
+CFStringRef CFStringCreateWithString16(const char16 *str) {
+  if (!str)
+    return CFSTR("");
+  
+  return CFStringCreateWithCharacters(NULL, str, 
+                                      std::char_traits<char16>::length(str));
+}
