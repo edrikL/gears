@@ -22,7 +22,7 @@ Location implementations can be straightforward mappings to native APIs (e.g the
 
 {{{
 // Get the current location
-var location = google.gears.factory.create( "beta.location", "1.0" );
+var location = google.gears.factory.create( "beta.location");
 location.get(function(result) {
   if (!result.errorCode) {
     updateMap(result.latitude, result.longitude);
@@ -32,7 +32,7 @@ location.get(function(result) {
 
 {{{
 // Watch the location over time
-var location = google.gears.factory.create( "beta.location", "1.0" );
+var location = google.gears.factory.create( "beta.location");
 var watchId = location.watch(function(result) {
   updateMap(result.latitude, result.longitude, result.accuracy);
 });
