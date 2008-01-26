@@ -29,6 +29,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include "gears/base/common/deletable.h"
 #include "gears/base/common/mutex.h"
 #include "gears/third_party/linked_ptr/linked_ptr.h"
 
@@ -46,18 +47,15 @@ typedef DWORD ThreadId;
 #endif
 
 
-// Base class for data that can be sent using ThreadMessageQueue
-// and MessageService. Contains only a virtual dtor, to invoke the
-// destructor of derived classes.
-// TODO(michaeln): Support Serializable to send messages across 
-// address space boundaries.
-class SendableData {
- public:
-  virtual ~SendableData() {}
+// Base class for data that can be sent using ThreadMessageQueue.
+// Contains only a virtual dtor, to invoke the destructor of derived classes.
+typedef Deletable MessageData;
+
+// Message type identifiers are listed here to avoid collisions
+enum ThreadMessageTypes {
+  kMessageService_Notify = 1,
+  kIpcMessageQueue_Send,
 };
-
-typedef SendableData MessageData;
-
 
 // A facility for sending and receiving messages asynchronously 
 // across thread boundaries. 

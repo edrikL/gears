@@ -63,6 +63,10 @@ void Serializer::WriteInt(const int data) {
   WriteBytes(&data, sizeof(int));
 }
 
+void Serializer::WriteInt64(const int64 data) {
+  WriteBytes(&data, sizeof(int64));
+}
+
 void Serializer::WriteString(const char16 *data) {
   std::string utf8_string;
   if (!String16ToUTF8(data, &utf8_string)) {
@@ -85,10 +89,15 @@ bool Serializer::WriteObject(Serializable *obj) {
     return true;
   }
 
+  SerializableClassId class_id = obj->GetSerializableClassId();
+  if (class_id == SERIALIZABLE_NULL) {
+    return false;
+  }
+
   // Store the state in case we need to rewind.
   size_t save_beginning = buffer_->size();
 
-  WriteInt(obj->GetSerializableClassId());
+  WriteInt(class_id);
 
   // Store the position of the size and insert a placeholder.
   size_t size_position = buffer_->size();
@@ -102,8 +111,8 @@ bool Serializer::WriteObject(Serializable *obj) {
   }
 
   // Store the size of the data in the serialized buffer.
-  size_t size = buffer_->size() - obj_data_position;
-  *(reinterpret_cast<uint32 *>(&buffer_->at(size_position))) = size;
+  int size = static_cast<int>(buffer_->size() - obj_data_position);
+  *(reinterpret_cast<int*>(&buffer_->at(size_position))) = size;
 
   return true;
 }
@@ -156,6 +165,10 @@ bool Deserializer::ReadBool(bool *output) {
 
 bool Deserializer::ReadInt(int *output) {
   return ReadBytes(output, sizeof(int));
+}
+
+bool Deserializer::ReadInt64(int64 *output) {
+  return ReadBytes(output, sizeof(int64));
 }
 
 bool Deserializer::ReadString(std::string16 *output) {
