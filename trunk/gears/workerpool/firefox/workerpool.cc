@@ -506,7 +506,7 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
                                         const Message &msg) {
   assert(wi);
   if (wi->onmessage_handler.get() &&
-      !wi->onmessage_handler->IsNullOrUndefined()) {
+      !JsTokenIsNullOrUndefined(wi->onmessage_handler->token())) {
 
     // TODO(zork): Remove this with dump_on_error.  It is declared as volatile
     // to ensure that it exists on the stack even in opt builds.
@@ -690,7 +690,8 @@ void PoolThreadsManager::HandleError(const JsErrorInfo &error_info) {
 bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
                                               const JsErrorInfo &error_info) {
   assert(wi);
-  if (!wi->onerror_handler.get() || wi->onerror_handler->IsNullOrUndefined()) {
+  if (!wi->onerror_handler.get() || 
+      JsTokenIsNullOrUndefined(wi->onerror_handler->token())) {
     return false;
   }
 
