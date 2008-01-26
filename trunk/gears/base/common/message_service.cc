@@ -32,8 +32,6 @@
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 
-static const int kNotificationMessageType = 1;
-
 typedef std::set<MessageObserverInterface*> ObserverSet;
 typedef std::map<ThreadId, ObserverSet> ThreadObserversMap;
 
@@ -51,14 +49,14 @@ class SharedNotificationData {
       : topic_(topic), data_(data), refcount_(1) {
 #ifdef DEBUG
     AtomicIncrement(&g_instance_count_, 1);
-#endif  
+#endif
   }
 
 #ifdef DEBUG
   ~SharedNotificationData() {
     AtomicIncrement(&g_instance_count_, -1);
   }
-#endif  
+#endif 
 
   void AddReference() {
     AtomicIncrement(&refcount_, 1);
@@ -136,14 +134,22 @@ class ObserverCollection {
 
 // static
 MessageService *MessageService::GetInstance() {
-  static MessageService g_service_(ThreadMessageQueue::GetInstance());
+  static MessageService g_service_(ThreadMessageQueue::GetInstance(),
+                                   IpcMessageQueue::GetInstance());
   return &g_service_;
 }
 
 
-MessageService::MessageService(ThreadMessageQueue *message_queue)
-    : message_queue_(message_queue) {
-  message_queue_->RegisterHandler(kNotificationMessageType, this);
+MessageService::MessageService(ThreadMessageQueue *message_queue,
+                               IpcMessageQueue *ipc_message_queue)
+    : message_queue_(message_queue),
+      ipc_message_queue_(ipc_message_queue) {
+  message_queue_->RegisterHandler(kMessageService_Notify, this);
+  if (ipc_message_queue_) {
+    //Serializable::RegisterClass(IpcNotificationData::kSerializableId,
+    //                            IpcNotificationsData::Factory);
+    ipc_message_queue_->RegisterHandler(kMessageService_IpcNotify, this);
+  }
 }
 
 
@@ -178,8 +184,10 @@ bool MessageService::RemoveObserver(MessageObserverInterface *observer,
 }
 
 
-void MessageService::NotifyObservers(const char16 *topic,
-                                     NotificationData *data) {
+void MessageService::NotifyObserversImpl(const char16 *topic,
+                                         NotificationData *data,
+                                         bool send_ipc) {
+  // TODO(michaeln): use IpcMessageQueue to notify observers in other processes
   MutexLock lock(&observer_collections_mutex_);
   ObserverCollection *topic_observers =
                           GetTopicObserverCollection(topic, false);
@@ -191,10 +199,18 @@ void MessageService::NotifyObservers(const char16 *topic,
 }
 
 
+void MessageService::HandleIpcMessage(IpcProcessId source_process_id,
+                                      int message_type,
+                                      const IpcMessageData *message_data) {
+  // TODO(michaeln): use IpcMessageQueue to recieve notifcations from other
+  // processes
+}
+
+
 void MessageService::HandleThreadMessage(int message_type,
                                          MessageData *message_data) {
   MutexLock lock(&observer_collections_mutex_);
-  assert(message_type == kNotificationMessageType);
+  assert(message_type == kMessageService_Notify);
   NotificationMessage *notification =
                           static_cast<NotificationMessage*>(message_data);
   const char16 *topic = notification->shared_->topic_.c_str();
@@ -340,7 +356,7 @@ void ObserverCollection::PostThreadNotifications(const char16 *topic,
   // Send one message for each thread containing observers of this topic
   ThreadObserversMap::iterator iter;
   for (iter = observer_sets_.begin(); iter != observer_sets_.end(); ++iter) {
-    service_->message_queue_->Send(iter->first, kNotificationMessageType,
+    service_->message_queue_->Send(iter->first, kMessageService_Notify,
                                    new NotificationMessage(shared_data));
   }
   shared_data->RemoveReference();

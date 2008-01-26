@@ -56,7 +56,7 @@ class UpdateTask : public AsyncTask {
   static std::string16 GetNotificationTopic(ManagedResourceStore *store);
   static void RegisterEventClasses();
 
-  class Event : public NotificationData, public Serializable {
+  class Event : public NotificationData {
    public:
     Event(EventType event_type) : event_type_(event_type) {}
     EventType event_type() const { return event_type_; }

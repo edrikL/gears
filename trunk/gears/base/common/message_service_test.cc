@@ -33,6 +33,18 @@ class TestNotification : public NotificationData {
  public:
   TestNotification(const char *s) : data_string_(s) {}
   std::string data_string_;
+
+  virtual SerializableClassId GetSerializableClassId() {
+    return SERIALIZABLE_NULL;
+  }
+
+  virtual bool Serialize(Serializer *out) {
+    return false;
+  }
+
+  virtual bool Deserialize(Deserializer *in) {
+    return false;
+  }
 };
 
 class TestObserver : public MessageObserverInterface {
@@ -86,7 +98,7 @@ bool TestMessageService() {
   const ThreadId kThreadId3((ThreadId)3);
 
   MockThreadMessageQueue mock_message_queue;
-  MessageService message_service(&mock_message_queue);
+  MessageService message_service(&mock_message_queue, NULL);
 
   TestObserver observer(&mock_message_queue);
   mock_message_queue.SetMockCurrentThreadId(kThreadId1);

@@ -47,11 +47,36 @@ class LogEvent : public NotificationData {
   const std::string16& sourceUrl() const { return source_url_; }
   const int64& date() const { return date_; }
 
+  virtual SerializableClassId GetSerializableClassId() {
+    return SERIALIZABLE_CONSOLE_LOG_EVENT;
+  }
+  virtual bool Serialize(Serializer *out) {
+    out->WriteString(message_.c_str());
+    out->WriteString(type_.c_str());
+    out->WriteString(source_url_.c_str());
+    out->WriteInt64(date_);
+    return true;
+  }
+  virtual bool Deserialize(Deserializer *in) {
+    return in->ReadString(&message_) &&
+           in->ReadString(&type_) &&
+           in->ReadString(&source_url_) &&
+           in->ReadInt64(&date_);
+  }
+  static void RegisterLogEventClass() {
+    Serializable::RegisterClass(SERIALIZABLE_CONSOLE_LOG_EVENT, New);
+  }  
  private:
-  const std::string16 message_;
-  const std::string16 type_;        // 'debug', 'info', 'warn', 'error'
-  const std::string16 source_url_;  
-  const int64 date_;                // Time in milliseconds since 1/1/1970 UTC
+  std::string16 message_;
+  std::string16 type_;        // 'debug', 'info', 'warn', 'error'
+  std::string16 source_url_;  
+  int64 date_;                // Time in milliseconds since 1/1/1970 UTC
+
+  LogEvent() : date_(0) {}
+
+  static Serializable *New() {
+    return new LogEvent;
+  }
 };
 
 #endif // GEARS_CONSOLE_COMMON_LOG_EVENT_H__

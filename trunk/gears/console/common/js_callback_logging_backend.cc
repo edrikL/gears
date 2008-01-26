@@ -28,6 +28,7 @@
 
 JsCallbackLoggingBackend::JsCallbackLoggingBackend(const std::string16 &topic)
     : observer_topic_(topic), js_runner_(NULL) {
+  LogEvent::RegisterLogEventClass();
 }
 
 JsCallbackLoggingBackend::~JsCallbackLoggingBackend() {

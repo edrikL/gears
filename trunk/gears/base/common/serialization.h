@@ -28,7 +28,7 @@
 
 #include <map>
 #include <vector>
-
+#include "gears/base/common/deletable.h"
 #include "gears/base/common/int_types.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string16.h"
@@ -36,9 +36,11 @@
 enum SerializableClassId {
   SERIALIZABLE_NULL,
   SERIALIZABLE_TEST,
+  SERIALIZABLE_STRING16,
   SERIALIZABLE_UPDATE_TASK_ERROR_EVENT,
   SERIALIZABLE_UPDATE_TASK_PROGRESS_EVENT,
   SERIALIZABLE_UPDATE_TASK_COMPLETION_EVENT,
+  SERIALIZABLE_CONSOLE_LOG_EVENT,
 };
 
 class Serializable;
@@ -48,13 +50,11 @@ class Deserializer;
 typedef Serializable *(*SerializableFactoryMethod)(void);
 
 // Interface for serializeable objects.
-class Serializable {
+class Serializable: public Deletable {
  public:
   static void RegisterClass(SerializableClassId class_id,
                             SerializableFactoryMethod factory);
   static Serializable *CreateClass(SerializableClassId class_id);
-
-  virtual ~Serializable() {};
 
   // Returns the class id.
   virtual SerializableClassId GetSerializableClassId() = 0;
@@ -81,6 +81,7 @@ class Serializer {
   bool WriteObject(Serializable *obj);
 
   void WriteInt(const int data);
+  void WriteInt64(const int64 data);
   void WriteBool(const bool data);
   void WriteString(const char16 *data);
   void WriteBytes(const void *data, size_t length);
@@ -102,6 +103,7 @@ class Deserializer {
   bool CreateAndReadObject(Serializable **out);
 
   bool ReadInt(int *output);
+  bool ReadInt64(int64 *data);
   bool ReadBool(bool *output);
   bool ReadString(std::string16 *output);
   bool ReadBytes(void *output, size_t length);
@@ -110,6 +112,32 @@ class Deserializer {
   uint8 *buffer_;
   size_t length_;
   size_t read_pos_;
+};
+
+// A serializable string class
+class SerializableString16 : public Serializable {
+ public:
+  SerializableString16() {}
+  SerializableString16(const char16 *str) : string_(str) {}
+
+  std::string16 string_;
+
+  virtual SerializableClassId GetSerializableClassId() {
+    return SERIALIZABLE_STRING16;
+  }
+  virtual bool Serialize(Serializer *out) {
+    out->WriteString(string_.c_str());
+    return true;
+  }
+  virtual bool Deserialize(Deserializer *in) {
+    return in->ReadString(&string_);
+  }
+  static Serializable *New() {
+    return new SerializableString16;
+  }
+  static void RegisterSerializableString16() {
+    Serializable::RegisterClass(SERIALIZABLE_STRING16, New);
+  }  
 };
 
 #endif  // GEARS_BASE_COMMON_SERIALIZATION_H__

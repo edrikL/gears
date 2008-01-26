@@ -86,7 +86,7 @@ class ThreadMessageWindow : public CWindowImpl<ThreadMessageWindow> {
 };
 
 static Mutex window_mutex_;  // Protects the message_windows_ collection
-static std::map<ThreadId, linked_ptr<ThreadMessageWindow> > message_windows_;
+static std::map<ThreadId, linked_ptr<ThreadMessageWindow> > *message_windows_;
 static IEThreadMessageQueue g_instance;
 
 // static
@@ -96,9 +96,13 @@ ThreadMessageQueue *ThreadMessageQueue::GetInstance() {
 
 bool IEThreadMessageQueue::InitThreadMessageQueue() {
   MutexLock lock(&window_mutex_);
+  if (!message_windows_) {
+    message_windows_ = new std::map<ThreadId,
+                                    linked_ptr<ThreadMessageWindow> >;
+  }
   ThreadId thread_id = GetCurrentThreadId();
-  if (message_windows_.find(thread_id) == message_windows_.end()) {
-    message_windows_[thread_id] =
+  if (message_windows_->find(thread_id) == message_windows_->end()) {
+    (*message_windows_)[thread_id] =
         linked_ptr<ThreadMessageWindow>(new ThreadMessageWindow);
   }
   return true;
@@ -107,7 +111,8 @@ bool IEThreadMessageQueue::InitThreadMessageQueue() {
 // This is only called in gears/base/ie/module.cc on thread detatch.
 void ShutdownThreadMessageQueue() {
   MutexLock lock(&window_mutex_);
-  message_windows_.erase(g_instance.GetCurrentThreadId());
+  if (message_windows_)
+    message_windows_->erase(g_instance.GetCurrentThreadId());
 }
 
 ThreadId IEThreadMessageQueue::GetCurrentThreadId() {
@@ -118,9 +123,13 @@ bool IEThreadMessageQueue::Send(ThreadId thread,
                                 int message_type,
                                 MessageData *message_data) {
   MutexLock lock(&window_mutex_);
+  if (!message_windows_) {
+    delete message_data;
+    return false;
+  }
   std::map<ThreadId, linked_ptr<ThreadMessageWindow> >::iterator window;
-  window = message_windows_.find(thread);
-  if (window == message_windows_.end()) {
+  window = message_windows_->find(thread);
+  if (window == message_windows_->end()) {
     delete message_data;
     return false;
   }
