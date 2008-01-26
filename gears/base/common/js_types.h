@@ -130,10 +130,6 @@ class JsRootedToken {
     return JsTokenToBool(token_, context_, out);
   }
 
-  bool IsNullOrUndefined() const {
-    return JsTokenIsNullOrUndefined(token_);
-  }
-
   // TODO(aa): GetAsString(), etc. But needs restructuring first. See note below
   // above IE implementation.
 
