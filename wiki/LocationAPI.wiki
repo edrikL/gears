@@ -23,8 +23,8 @@ Location implementations can be straightforward mappings to native APIs (e.g the
 
 {{{
 // Get the current location
-var location = google.gears.factory.create( "beta.location");
-location.get(function(result) {
+var loc = google.gears.factory.create( "beta.location");
+loc.get(function(result) {
   if (!result.errorCode) {
     updateMap(result.latitude, result.longitude);
   }
@@ -33,12 +33,12 @@ location.get(function(result) {
 
 {{{
 // Watch the location over time
-var location = google.gears.factory.create( "beta.location");
-var watchId = location.watch(function(result) {
+var loc = google.gears.factory.create( "beta.location");
+var watchId = loc.watch(function(result) {
   updateMap(result.latitude, result.longitude, result.accuracy);
 });
 
-location.clearWatch(watchId);
+loc.clearWatch(watchId);
 }}}
 
 {{{
@@ -46,11 +46,11 @@ location.clearWatch(watchId);
 var now = new Date().getTime();
 var threshold = now - 60000;
 
-if (location.lastKnownLocation &&
-    location.lastKnownLocation.timestamp.getTime() > threshold) {
-  updateMap(location.lastKnownLocation);
+if (loc.lastKnownLocation &&
+    loc.lastKnownLocation.timestamp.getTime() > threshold) {
+  updateMap(loc.lastKnownLocation);
 } else {
-  location.get(function(result) {
+  loc.get(function(result) {
     updateMap(result);
   });
 }
