@@ -28,7 +28,7 @@ m4_ifelse(DEBUG,^1^,^m4_dnl
 ^)
 
 [SourceDisksFiles]
-"gears.dll"=1
+"PRODUCT_SHORT_NAME_UQ.dll"=1
 
 [DestinationDirs]
 Shortcuts=0,%CE2%\Start Menu
