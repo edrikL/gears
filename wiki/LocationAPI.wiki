@@ -16,7 +16,8 @@ Location implementations can be straightforward mappings to native APIs (e.g the
   * One-shot location requests (eg, for recommendations sites -- "where am I right now?")
   * Repeated location updates (eg, for providing guided tours)
   * Ability to get the last-known position cheaply before doing an expensive new request
-  * Compatibility with future use as a singleton in the standard DOM (eg window.geoLocation).
+  * Compatibility with future use as a singleton in the standard DOM (eg window.geoLocation)
+  * Ability to use alternative location service providers
 
 = Examples = 
 
@@ -86,6 +87,13 @@ interface LocationOptions {
   // always has the last word on which mechanism to use, this is just a way for an
   // application to express a preference.
   bool highAccuracyDesired;
+
+  // If set, specifies the URL to contact to convert location signals into a location. This
+  // defaults to a Google service, but can be overridden to point elsewhere. If set to
+  // null, no service will be used and a location will only be provided if the device has
+  // native access to location data (eg GPS).
+  // TODO: Document the request and response format.
+  string locationProviderUrl;
 };
 
 interface WatchLocationOptions : LocationOptions {
