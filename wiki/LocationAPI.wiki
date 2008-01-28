@@ -107,10 +107,10 @@ interface WatchLocationOptions : LocationOptions {
 void LocationCallback(LocationResult event);
 
 interface Location {
-  readonly decimal latitude; // latitude in degrees
-  readonly decimal longitude; // longitude in degrees
+  readonly decimal latitude; // latitude in microdegrees
+  readonly decimal longitude; // longitude in microdegrees
   readonly Date timestamp;
-  readonly int accuracy;
+  readonly int accuracy; // accuracy in meters
 };
 
 interface LocationResult : Location {
