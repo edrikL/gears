@@ -119,7 +119,11 @@ interface Location {
   readonly decimal latitude; // latitude in degrees
   readonly decimal longitude; // longitude in degrees
   readonly Date timestamp;
-  readonly int accuracy; // accuracy in meters
+  // Horizontal accuracy in meters representing 
+  // the readius of the circular Earth surface with 
+  // the center at (latitude, longitude). The actual user
+  // location could be anywhere in this area.
+  readonly int horizontalAccuracy;
 };
 
 interface LocationResult : Location {
