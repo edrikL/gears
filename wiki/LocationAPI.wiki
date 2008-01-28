@@ -60,12 +60,21 @@ if (location.lastKnownLocation &&
 
 {{{
 interface GearsLocation {
-  // error constants
-  const short ERROR_UNKNOWN = 1;
-  const short ERROR_NO_PROVIDER_AVAILABLE = 2;
-  const short ERROR_NO_SIGNAL = 3;
-  const short ERROR_SECURITY = 4;
-  const short ERROR_NOT_IN_RANGE = 5;
+  // No location providers were available to serve this request. This might happen
+  // if locationProviderUrl is set to null and the device does not have access to
+  // any other type of providers (e.g. GPS).
+  const short ERROR_NO_PROVIDER_AVAILABLE = 1;
+
+  // A provider error has occured. This could be a hardware error with a GPS provider
+  // or a protocol error with a network provider.
+  const short ERROR_PROVIDER_FAILURE = 2
+
+  // The user is in an area where a location fix cannot be provided.
+  // This might happen, for example, if a WiFi-based provider is
+  // in use and there are no WiFi networks around. It might also 
+  // happen if a Cell-ID based provider cannot map the user's
+  // network tower identifier to a location.
+  const short ERROR_NOT_IN_RANGE = 3;
 
   // last-known position - null if there is no last known position
   readonly LocationResult lastKnownLocation;
