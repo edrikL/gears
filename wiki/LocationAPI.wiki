@@ -60,12 +60,11 @@ if (location.lastKnownLocation &&
 {{{
 interface GearsLocation {
   // error constants
-  const short ERROR_NONE = 0;
-  const short ERROR_UNKNOWN = -1;
-  const short ERROR_NO_PROVIDER_AVAILABLE = -2;
-  const short ERROR_NO_SIGNAL = -3;
-  const short ERROR_SECURITY = -4;
-  const short ERROR_NOT_IN_RANGE = -5;
+  const short ERROR_UNKNOWN = 1;
+  const short ERROR_NO_PROVIDER_AVAILABLE = 2;
+  const short ERROR_NO_SIGNAL = 3;
+  const short ERROR_SECURITY = 4;
+  const short ERROR_NOT_IN_RANGE = 5;
 
   // last-known position - null if there is no last known position
   readonly LocationResult lastKnownLocation;
@@ -100,9 +99,8 @@ interface WatchLocationOptions : LocationOptions {
 void LocationCallback(LocationResult event);
 
 interface Location {
-  readonly decimal latitude;
-  readonly decimal longitude;
-  readonly string provider;
+  readonly decimal latitude; // latitude in degrees
+  readonly decimal longitude; // longitude in degrees
   readonly Date timestamp;
   readonly int accuracy;
 };
