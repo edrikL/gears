@@ -30,7 +30,6 @@
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/base/ie/module_wrapper.h"
-#include "gears/channel/ie/channel.h"
 #include "gears/console/ie/console_ie.h"
 #include "gears/database/ie/database.h"
 #include "gears/desktop/desktop_ie.h"
@@ -103,16 +102,7 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
   CComQIPtr<IDispatch> idispatch;
 
   hr = E_FAIL;
-#ifdef WINCE
-  // TODO(steveblock): Implement channel for WinCE.
-  if (false) {
-#else
-  if (object_name == STRING16(L"beta.channel")) {
-    CComObject<GearsChannel> *obj;
-    hr = CComObject<GearsChannel>::CreateInstance(&obj);
-    base_class = obj;
-    idispatch = obj;
-#endif
+  if (0) {  // dummy statement to support mixed "#ifdef" and "else if" below
 #ifdef WINCE
   // TODO(oshlack): Implement console for WinCE.
 #else

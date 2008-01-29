@@ -38,7 +38,6 @@
 #include "gears/base/common/js_runner.h"
 
 #include "ff/genfiles/blob_ff.h"
-#include "ff/genfiles/channel.h"
 #include "ff/genfiles/console.h"
 #include "ff/genfiles/database.h"
 #include "ff/genfiles/desktop_ff.h"
@@ -482,8 +481,6 @@ bool JsRunner::InitJavaScriptEngine() {
     {GEARSTIMERINTERFACE_IID, NULL},
     // httprequest
     {GEARSHTTPREQUESTINTERFACE_IID, NULL},
-    // channel
-    {GEARSCHANNELINTERFACE_IID, NULL},
     // console
     {GEARSCONSOLEINTERFACE_IID, NULL}
   };
