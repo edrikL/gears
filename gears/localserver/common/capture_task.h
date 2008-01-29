@@ -28,6 +28,7 @@
 
 #include <set>
 #include <vector>
+#include "gears/base/common/js_types.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
 #include "gears/localserver/common/async_task.h"
@@ -48,6 +49,9 @@ struct CaptureRequest {
 
   // list of resolved urls in the same order as urls
   std::vector<std::string16> full_urls;
+
+  // JavaScript function to call when the request is complete
+  scoped_ptr<JsRootedCallback> callback;
 
   CaptureRequest() : id(0) {}
 };

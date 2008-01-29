@@ -26,7 +26,9 @@
 #include "gears/localserver/npapi/localserver_np.h"
 
 #include "gears/base/common/paths.h"
+#include "gears/base/common/url_utils.h"
 #include "gears/base/npapi/module_wrapper.h"
+#include "gears/localserver/common/http_request.h"
 #include "gears/localserver/npapi/managed_resource_store_np.h"
 #include "gears/localserver/npapi/resource_store_np.h"
 
@@ -47,9 +49,29 @@ void Dispatcher<GearsLocalServer>::Init() {
 // CanServeLocally
 //-----------------------------------------------------------------------------
 void GearsLocalServer::CanServeLocally(JsCallContext *context) {
-  bool retval = false;
-  context->SetReturnValue(JSPARAM_BOOL, &retval);
-  context->SetException(STRING16(L"Not Implemented"));
+  std::string16 url;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &url },
+  };
+  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set())
+    return;
+
+  std::string16 full_url;
+  if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), url.c_str(),
+                           &full_url)) {
+    context->SetException(STRING16(L"Failed to resolve url."));
+    return;
+  }
+  if (!EnvPageSecurityOrigin().IsSameOriginAsUrl(full_url.c_str())) {
+    context->SetException(STRING16(L"Url is not from the same origin"));
+    return;
+  }
+
+  bool can = LocalServer::CanServeLocally(full_url.c_str());
+  LOG16((L"LocalServer::CanServeLocally( %s ) %s\n",
+         url.c_str(), can ? STRING16(L"TRUE") : STRING16(L"FALSE")));
+  context->SetReturnValue(JSPARAM_BOOL, &can);
 }
 
 //-----------------------------------------------------------------------------
@@ -61,6 +83,16 @@ void GearsLocalServer::CreateManagedStore(JsCallContext *context) {
   if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
+  // Check that this page uses a supported URL scheme.
+  if (!HttpRequest::IsSchemeSupported(
+                        EnvPageSecurityOrigin().scheme().c_str())) {
+    context->SetException(STRING16(L"URL scheme not supported."));
+    return;
+  }
+
+  LOG16((L"LocalServer::CreateManagedStore( %s, %s )\n",
+         name.c_str(), required_cookie.c_str()));
+
   GComPtr<GearsManagedResourceStore> store(
         CreateModule<GearsManagedResourceStore>(EnvPageJsContext()));
   if (!store.get())
@@ -71,8 +103,14 @@ void GearsLocalServer::CreateManagedStore(JsCallContext *context) {
     return;
   }
 
+  if (!store->store_.CreateOrOpen(EnvPageSecurityOrigin(),
+                                  name.c_str(), required_cookie.c_str())) {
+    context->SetException(
+        STRING16(L"Error initializing ManagedResourceStore."));
+    return;
+  }
+
   context->SetReturnValue(JSPARAM_MODULE, store.get());
-  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //-----------------------------------------------------------------------------
@@ -84,8 +122,35 @@ void GearsLocalServer::OpenManagedStore(JsCallContext *context) {
   if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
-  context->SetReturnValue(JSPARAM_NULL, NULL);
-  context->SetException(STRING16(L"Not Implemented"));
+  LOG16((L"LocalServer::OpenManagedStore( %s, %s )\n",
+         name.c_str(), required_cookie.c_str()));
+
+  int64 existing_store_id = WebCacheDB::kInvalidID;
+  if (!ManagedResourceStore::ExistsInDB(EnvPageSecurityOrigin(),
+                                        name.c_str(),
+                                        required_cookie.c_str(),
+                                        &existing_store_id)) {
+    context->SetReturnValue(JSPARAM_NULL, NULL);
+    return;
+  }
+
+  GComPtr<GearsManagedResourceStore> store(
+        CreateModule<GearsManagedResourceStore>(EnvPageJsContext()));
+  if (!store.get())
+    return;  // Create function sets an error message.
+
+  if (!store->InitBaseFromSibling(this)) {
+    context->SetException(STRING16(L"Error initializing base class."));
+    return;
+  }
+
+  if (!store->store_.Open(existing_store_id)) {
+    context->SetException(
+        STRING16(L"Error initializing ManagedResourceStore."));
+    return;
+  }
+
+  context->SetReturnValue(JSPARAM_MODULE, store.get());
 }
 
 //-----------------------------------------------------------------------------
@@ -97,7 +162,29 @@ void GearsLocalServer::RemoveManagedStore(JsCallContext *context) {
   if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
-  context->SetException(STRING16(L"Not Implemented"));
+  LOG16((L"LocalServer::RemoveManagedStore( %s, %s )\n",
+         name.c_str(), required_cookie.c_str()));
+  
+  int64 existing_store_id = WebCacheDB::kInvalidID;
+  if (!ManagedResourceStore::ExistsInDB(EnvPageSecurityOrigin(),
+                                        name.c_str(),
+                                        required_cookie.c_str(),
+                                        &existing_store_id)) {
+    context->SetReturnValue(JSPARAM_NULL, NULL);
+    return;
+  }
+
+  ManagedResourceStore store;
+  if (!store.Open(existing_store_id)) {
+    context->SetException(
+        STRING16(L"Error initializing ManagedResourceStore."));
+    return;
+  }
+
+  if (!store.Remove()) {
+    context->SetException(STRING16(L"Error removing ManagedResourceStore."));
+    return;
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -109,6 +196,16 @@ void GearsLocalServer::CreateStore(JsCallContext *context) {
   if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
+  // Check that this page uses a supported URL scheme.
+  if (!HttpRequest::IsSchemeSupported(
+                        EnvPageSecurityOrigin().scheme().c_str())) {
+    context->SetException(STRING16(L"URL scheme not supported."));
+    return;
+  }
+
+  LOG16((L"LocalServer::CreateStore( %s, %s )\n",
+         name.c_str(), required_cookie.c_str()));
+
   GComPtr<GearsResourceStore> store(
         CreateModule<GearsResourceStore>(EnvPageJsContext()));
   if (!store.get())
@@ -119,8 +216,13 @@ void GearsLocalServer::CreateStore(JsCallContext *context) {
     return;
   }
 
+  if (!store->store_.CreateOrOpen(EnvPageSecurityOrigin(),
+                                  name.c_str(), required_cookie.c_str())) {
+    context->SetException(STRING16(L"Error initializing ResourceStore."));
+    return;
+  }
+
   context->SetReturnValue(JSPARAM_MODULE, store.get());
-  context->SetException(STRING16(L"Not Implemented"));
 }
 
 //-----------------------------------------------------------------------------
@@ -132,8 +234,34 @@ void GearsLocalServer::OpenStore(JsCallContext *context) {
   if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
-  context->SetReturnValue(JSPARAM_NULL, NULL);
-  context->SetException(STRING16(L"Not Implemented"));
+  LOG16((L"LocalServer::OpenStore( %s, %s )\n",
+         name.c_str(), required_cookie.c_str()));
+
+  int64 existing_store_id = WebCacheDB::kInvalidID;
+  if (!ResourceStore::ExistsInDB(EnvPageSecurityOrigin(),
+                                 name.c_str(),
+                                 required_cookie.c_str(),
+                                 &existing_store_id)) {
+    context->SetReturnValue(JSPARAM_NULL, NULL);
+    return;
+  }
+
+  GComPtr<GearsResourceStore> store(
+        CreateModule<GearsResourceStore>(EnvPageJsContext()));
+  if (!store.get())
+    return;  // Create function sets an error message.
+
+  if (!store->InitBaseFromSibling(this)) {
+    context->SetException(STRING16(L"Error initializing base class."));
+    return;
+  }
+
+  if (!store->store_.Open(existing_store_id)) {
+    context->SetException(STRING16(L"Error initializing ResourceStore."));
+    return;
+  }
+
+  context->SetReturnValue(JSPARAM_MODULE, store.get());
 }
 
 //-----------------------------------------------------------------------------
@@ -145,7 +273,27 @@ void GearsLocalServer::RemoveStore(JsCallContext *context) {
   if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
-  context->SetException(STRING16(L"Not Implemented"));
+  LOG16((L"LocalServer::RemoveStore( %s, %s )\n",
+         name.c_str(), required_cookie.c_str()));
+
+  int64 existing_store_id = WebCacheDB::kInvalidID;
+  if (!ResourceStore::ExistsInDB(EnvPageSecurityOrigin(),
+                                 name.c_str(),
+                                 required_cookie.c_str(),
+                                 &existing_store_id)) {
+    return;
+  }
+
+  ResourceStore store;
+  if (!store.Open(existing_store_id)) {
+    context->SetException(STRING16(L"Error initializing ResourceStore."));
+    return;
+  }
+
+  if (!store.Remove()) {
+    context->SetException(STRING16(L"Error removing ResourceStore."));
+    return;
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -168,6 +316,9 @@ bool GearsLocalServer::GetAndCheckParameters(JsCallContext *context,
     return false;
   }
 
+  // TODO(michaeln): validate the required_cookie parameter value, parse the
+  // name & value, name must not be empty, value must not contain ';' unless
+  // it's the kNegatedRequiredCookieValue.
   std::string16 error_message;
   if (!IsUserInputValidAsPathComponent(*name, &error_message)) {
     context->SetException(error_message.c_str());

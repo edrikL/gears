@@ -478,7 +478,7 @@ NPAPI_CPPSRCS	+= \
 		npn_bindings.cc \
 		npp_bindings.cc \
 		paths.cc \
-		paths_ie.cc \
+		paths_np.cc \
 		permissions_db.cc \
 		plugin.cc \
 		png_utils.cc \
@@ -1193,13 +1193,13 @@ NPAPI_CPPSRCS	+= \
 
 # localserver/npapi
 NPAPI_CPPSRCS	+= \
-		async_task_ie.cc \
+		async_task_np.cc \
 		file_submitter_np.cc \
 		http_handler_ie.cc \
 		http_request_ie.cc \
 		localserver_np.cc \
 		managed_resource_store_np.cc \
-		update_task_ie.cc \
+		update_task_np.cc \
 		urlmon_utils.cc \
 		resource_store_np.cc \
 		$(NULL)		

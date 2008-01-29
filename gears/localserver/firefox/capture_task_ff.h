@@ -35,7 +35,7 @@
 // FFCaptureRequest
 //------------------------------------------------------------------------------
 struct FFCaptureRequest : public CaptureRequest {
-  scoped_ptr<JsRootedCallback> callback;
+  // TODO(mpcomplete): remove once I get IECaptureRequest fixed up.
 };
 
 #endif  // GEARS_LOCALSERVER_FIREFOX_CAPTURE_TASK_FF_H__

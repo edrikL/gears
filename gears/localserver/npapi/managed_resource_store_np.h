@@ -28,13 +28,18 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_runner.h"
+#include "gears/base/common/message_service.h"
 #include "gears/localserver/common/managed_resource_store.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 //-----------------------------------------------------------------------------
 // GearsManagedResourceStore
 //-----------------------------------------------------------------------------
-class GearsManagedResourceStore : public ModuleImplBaseClass {
+class GearsManagedResourceStore
+    : public ModuleImplBaseClass,
+      public MessageObserverInterface,
+      public JsEventHandlerInterface {
  public:
   GearsManagedResourceStore() {}
 
@@ -68,7 +73,45 @@ class GearsManagedResourceStore : public ModuleImplBaseClass {
   // OUT: string version
   void GetCurrentVersion(JsCallContext *context);
 
+  // OUT: function onerror
+  void GetOnerror(JsCallContext *context);
+  // IN: function onerror
+  void SetOnerror(JsCallContext *context);
+
+  // OUT: function onprogress
+  void GetOnprogress(JsCallContext *context);
+  // IN: function onprogress
+  void SetOnprogress(JsCallContext *context);
+
+  // OUT: function oncomplete
+  void GetOncomplete(JsCallContext *context);
+  // IN: function oncomplete
+  void SetOncomplete(JsCallContext *context);
+
+ protected:
+  ~GearsManagedResourceStore();
+
  private:
+  // JsEventHandlerInterface
+  virtual void HandleEvent(JsEventType event_type);
+  // MessageObserverInterface
+  virtual void OnNotify(MessageService *service,
+                        const char16 *topic,
+                        const NotificationData *data);
+
+  // Common helper for SetOn* methods
+  void SetEventHandler(JsCallContext *context,
+                       scoped_ptr<JsRootedCallback> *handler);
+
+  ManagedResourceStore store_;
+  scoped_ptr<JsRootedCallback> onerror_handler_;
+  scoped_ptr<JsRootedCallback> onprogress_handler_;
+  scoped_ptr<JsRootedCallback> oncomplete_handler_;
+  scoped_ptr<JsEventMonitor> unload_monitor_;
+  std::string16 observer_topic_;
+
+  friend class GearsLocalServer;
+
   DISALLOW_EVIL_CONSTRUCTORS(GearsManagedResourceStore);
 };
 
