@@ -1235,47 +1235,6 @@ IEMOBILE_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
-# channel/ff
-
-FF_VPATH	+= \
-		channel/firefox \
-		$(NULL)
-
-FF_IDLSRCS	+= \
-		channel.idl \
-		$(NULL)
-
-FF_CPPSRCS	+= \
-		channel.cc \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
-# channel/ie
-
-IE_VPATH	+= \
-		channel/ie \
-		$(NULL)
-
-IE_IDLSRCS	+= \
-		channel.idl \
-		$(NULL)
-
-IE_CPPSRCS	+= \
-		channel.cc \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
-# channel/iemobile
-
-IEMOBILE_VPATH	+= \
-		channel/ie \
-		$(NULL)
-
-IEMOBILE_IDLSRCS	+= \
-		channel.idl \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
 # blob
 
 FF_VPATH	+= \

@@ -52,7 +52,6 @@ import "ui/ie/html_dialog_bridge_iemobile.idl";
 #endif
 
 import "blob/blob_ie.idl";
-import "channel/ie/channel.idl";
 import "console/ie/console.idl";
 import "database/ie/database.idl";
 import "desktop/desktop_ie.idl";
@@ -206,14 +205,6 @@ library GearsTypelib
   coclass GearsHttpRequest
   {
     [default] interface GearsHttpRequestInterface;
-  };
-
-  [
-    uuid(3DE5BB83-50C4-4F73-AA69-6DE89C65C1AE)
-  ]
-  coclass GearsChannel
-  {
-    [default] interface GearsChannelInterface;
   };
 
 };
