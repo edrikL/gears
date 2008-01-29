@@ -539,6 +539,6 @@ $(WIXOBJ): $(WIXSRC)
 
 ifeq ($(OS),wince)
 $(IEMOBILE_INSTALLER_CAB): $(INFSRC) $(IE_MODULE_DLL)
-	cabwiz.exe $(INFSRC) /err cabwiz.log
+	cabwiz.exe $(INFSRC) /err cabwiz.log /compress
 	mv -f $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).cab $(IEMOBILE_INSTALLER_CAB)
 endif
