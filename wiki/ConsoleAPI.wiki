@@ -11,9 +11,8 @@ The Console API will be implemented on top of the existing MessageObserver syste
 
 {{{
 class GearsConsole {
-  // Default _types_ are 'debug', 'info', 'warn', 'error', however a custom
-  // type string can used to denote log events for developers extending the
-  // GearsConsole.
+  // Default _types_ are 'debug', 'info', 'warn', 'error', however any arbitrary
+  // string can used for _type_ by developers extending the GearsConsole.
   // _args_ are interpolated into _message_, replacing occurrences of _%s_.
   log(String type, String message, Object[] args);
 }
