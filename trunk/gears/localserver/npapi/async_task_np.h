@@ -1,4 +1,4 @@
-// Copyright 2006, Google Inc.
+// Copyright 2007, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -26,14 +26,21 @@
 #ifndef GEARS_LOCALSERVER_IE_ASYNC_TASK_IE_H__
 #define GEARS_LOCALSERVER_IE_ASYNC_TASK_IE_H__
 
+// This is a hack because something in the ATL headers prevents the gecko SDK
+// from defining int32, so we include it first.
+#include "gears/base/common/int_types.h"
+
 #include <atlsync.h>
 #include <vector>
+#include "gears/base/common/message_queue.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/atl_headers.h" // include this before other ATL headers
 #include "gears/localserver/common/critical_section.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/resource_store.h"
 
+// TODO(mpcomplete): this should use a cross-platform thread abstraction, when
+// we have it.
 
 //------------------------------------------------------------------------------
 // AsyncTask
@@ -49,9 +56,17 @@ class AsyncTask : protected HttpRequest::ReadyStateListener {
   // Instructs the AsyncTask to delete itself when the worker thread terminates
   void DeleteWhenDone();
 
-  // IE specific API
-  // Sets where notification messages will be sent.
-  void SetListenerWindow(HWND listener_window, int listener_message_base);
+  // NPAPI specific API
+  // Sets where notification messages will be sent. Notifications will be
+  // delivered on thread of control that the AsyncTask is initialized on.
+  // Firefox specific API utilized by clients of derived classes
+  class Listener {
+   public:
+    virtual void HandleEvent(int msg_code,
+                             int msg_param,
+                             AsyncTask *source) = 0;
+  };
+  void SetListener(Listener* listener);
 
  protected:
   // Members that derived classes in common code depend on
@@ -59,13 +74,15 @@ class AsyncTask : protected HttpRequest::ReadyStateListener {
 
   static const char16 *kCookieRequiredErrorMessage;
 
+  static const int kAbortMessageCode = -1;
+
   AsyncTask();
   virtual ~AsyncTask();
 
   bool Init();
   virtual void Run() = 0;
 
-  // Posts a message to our listener_window
+  // Posts a message to our listener
   void NotifyListener(int code, int param);
 
   // Synchronously fetches a url on the worker thread.  This should only
@@ -107,17 +124,39 @@ class AsyncTask : protected HttpRequest::ReadyStateListener {
   bool is_initialized_;
 
  private:
+  friend struct AsyncTaskMessage;
+  friend class AsyncTaskMessageRouter;
+
   // An HttpRequest listener callback
   void ReadyStateChanged(HttpRequest *source);
 
   static unsigned int _stdcall ThreadMain(void *self);
+  void CallAsync(ThreadId thread_id, int code, int param);
+  void HandleAsync(int code, int param);
 
+  // Returns true if the currently executing thread is our listener thread
+  bool IsListenerThread() { 
+    return listener_thread_id_ ==
+      ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
+  }
+
+  // Returns true if the currently executing thread is our task thread
+  bool IsTaskThread() {
+    return task_thread_id_ ==
+      ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
+  }
+
+  void AddReference();
+  void RemoveReference();
+
+  int refcount_;
   bool delete_when_done_;
-  HWND listener_window_;
-  int listener_message_base_;
+  Listener *listener_;
   HANDLE thread_;
-  CEvent abort_event_;
-  CEvent ready_state_changed_event_;
+  bool ready_state_changed_signalled_;
+  bool abort_signalled_;
+  ThreadId listener_thread_id_;
+  ThreadId task_thread_id_;
 };
 
 #endif  // GEARS_LOCALSERVER_IE_ASYNC_TASK_IE_H__

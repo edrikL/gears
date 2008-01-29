@@ -1,4 +1,4 @@
-// Copyright 2006, Google Inc.
+// Copyright 2007, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,33 +23,17 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_LOCALSERVER_COMMON_ASYNC_TASK_H__
-#define GEARS_LOCALSERVER_COMMON_ASYNC_TASK_H__
+#ifndef GEARS_LOCALSERVER_NPAPI_CAPTURE_TASK_NP_H__
+#define GEARS_LOCALSERVER_NPAPI_CAPTURE_TASK_NP_H__
+
+#include "gears/base/common/base_class.h" // only for Js* types
+#include "gears/localserver/common/capture_task.h"
 
 //------------------------------------------------------------------------------
-// AsyncTask is a base class for two types of asynchronous tasks in the
-// webcache system. The base class provides:
-//
-// * framing to execute the Run() method of derived classes in a worker thread
-// * a method to perform HTTP requests which appear synchronous to the calling
-//   code in the worker thread
-// * a means to send notification messages to a listener
-// * a means to gracefully abort a running task
-//
-// The implementation is browser specific.
-// 
-// See ie_async_task.h, ff_async_task.h (browser specific implementations)
-// See update_task.h, web_capture_task.h (derived classes)
+// NPCaptureRequest
 //------------------------------------------------------------------------------
+struct NPCaptureRequest : public CaptureRequest {
+  // TODO(mpcomplete): remove once I get IECaptureRequest fixed up.
+};
 
-#if BROWSER_IE
-#include "gears/localserver/ie/async_task_ie.h"
-#elif BROWSER_FF
-#include "gears/localserver/firefox/async_task_ff.h"
-#elif BROWSER_NPAPI
-#include "gears/localserver/npapi/async_task_np.h"
-#elif BROWSER_SAFARI
-#include "gears/localserver/safari/async_task_sf.h"
-#endif
-
-#endif  // GEARS_LOCALSERVER_COMMON_ASYNC_TASK_H__
+#endif  // GEARS_LOCALSERVER_NPAPI_CAPTURE_TASK_NP_H__

@@ -105,7 +105,7 @@ class ManagedResourceStore : public LocalServer {
 #elif BROWSER_FF
   friend class FFUpdateTask;
 #elif BROWSER_NPAPI
-  friend class IEUpdateTask;
+  friend class NPUpdateTask;
 #elif BROWSER_SAFARI
   friend class SFUpdateTask;
 #endif

@@ -26,11 +26,13 @@
 #ifndef GEARS_LOCALSERVER_NPAPI_RESOURCE_STORE_NP_H__
 #define GEARS_LOCALSERVER_NPAPI_RESOURCE_STORE_NP_H__
 
+#include <deque>
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/string16.h"
 #include "gears/localserver/common/resource_store.h"
+#include "gears/localserver/npapi/capture_task_np.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 //-----------------------------------------------------------------------------
@@ -38,9 +40,10 @@
 //-----------------------------------------------------------------------------
 class GearsResourceStore
     : public ModuleImplBaseClass,
+      public AsyncTask::Listener,
       public JsEventHandlerInterface {
  public:
-  GearsResourceStore() {}
+  GearsResourceStore() : next_capture_id_(0), page_is_unloaded_(false) {}
 
   // OUT: string name
   void GetName(JsCallContext *context);
@@ -53,7 +56,7 @@ class GearsResourceStore
   // IN: bool enabled
   void SetEnabled(JsCallContext *context);
 
-  // IN: string[] url_or_url_array
+  // IN: string url | string[] url_array
   // IN: function completion_callback
   // OUT: int capture_id
   void Capture(JsCallContext *context);
@@ -96,10 +99,37 @@ class GearsResourceStore
   // OUT: GearsFileSubmitter *retval
   void CreateFileSubmitter(JsCallContext *context);
 
-  virtual void HandleEvent(JsEventType event_type);
+ protected:
+  ~GearsResourceStore();
 
  private:
+  bool ResolveAndAppendUrl(const std::string16 &url, NPCaptureRequest *request);
+  bool ResolveUrl(const std::string16 &url, std::string16 *resolved_url);
+  bool StartCaptureTaskIfNeeded(bool fire_events_on_failure);
+  void FireFailedEvents(NPCaptureRequest *request);
+  void InvokeCompletionCallback(NPCaptureRequest *request,
+                                const std::string16 &capture_url,
+                                int capture_id,
+                                bool succeeded);
+  // JsEventHandlerInterface
+  virtual void HandleEvent(JsEventType event_type);
+  // AsyncTask::Listener
+  virtual void HandleEvent(int code, int param, AsyncTask *source);
+  void OnCaptureUrlComplete(int index, bool success);
+  void OnCaptureTaskComplete();
+
+  void AbortAllRequests();
+
   scoped_ptr<JsEventMonitor> unload_monitor_;
+  int next_capture_id_;
+  std::deque<NPCaptureRequest*> pending_requests_;
+  scoped_ptr<NPCaptureRequest> current_request_;
+  scoped_ptr<CaptureTask> capture_task_;
+  bool page_is_unloaded_;
+  std::string16 exception_message_;
+  ResourceStore store_;
+
+  friend class GearsLocalServer;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsResourceStore);
 };

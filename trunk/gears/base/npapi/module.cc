@@ -71,6 +71,11 @@ extern "C" {
 // TODO(mpcomplete): remove when no longer needed.  This is used by HttpRequest
 // for now.
 CComModule g_module;
+
+// TODO(mpcomplete): remove IE dependency.
+// This is defined in gears/base/common/message_queue_ie.h.  It should only be
+// called here.
+void ShutdownThreadMessageQueue();
 #endif;
 
 
@@ -134,10 +139,6 @@ NPError OSCALL NP_Initialize(NPNetscapeFuncs* funcs)
   if (funcs->size < sizeof(NPNetscapeFuncs))
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
-#ifdef WIN32
-  MyDllMain(0, DLL_PROCESS_ATTACH, 0);
-#endif
-
   g_browser_funcs = *funcs;
   ThreadLocals::SetValue(kNPNFuncsKey, &g_browser_funcs, NULL);
 
@@ -155,7 +156,9 @@ NPError OSCALL NP_Shutdown()
 #endif
 {
 #ifdef WIN32
-  MyDllMain(0, DLL_PROCESS_DETACH, 0);
+  // We're being unloaded, but the thread isn't necessarily detached.  Force the
+  // thread shutdown handling anyway.
+  MyDllMain(0, DLL_THREAD_DETACH, 0);
 #endif
 
 #ifdef BROWSER_WEBKIT
@@ -169,6 +172,7 @@ NPError OSCALL NP_Shutdown()
 BOOL MyDllMain(HANDLE instance, DWORD reason, LPVOID reserved) {
   switch (reason) {
     case DLL_THREAD_DETACH:
+      ShutdownThreadMessageQueue();
       ThreadLocals::HandleThreadDetached();
       break;
     case DLL_PROCESS_DETACH:
@@ -180,5 +184,10 @@ BOOL MyDllMain(HANDLE instance, DWORD reason, LPVOID reserved) {
   }
 
   return TRUE;
+}
+
+extern "C"
+BOOL WINAPI DllMain(HANDLE instance, DWORD reason, LPVOID reserved) {
+ return MyDllMain(instance, reason, reserved);
 }
 #endif
