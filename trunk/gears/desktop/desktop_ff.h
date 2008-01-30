@@ -31,8 +31,8 @@
 #include "ff/genfiles/desktop_ff.h"  // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-#include "gears/base/common/file.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/desktop/desktop_utils.h"
 
 // Object identifiers
 extern const char *kGearsDesktopClassName;
@@ -65,10 +65,12 @@ class GearsDesktop
                                           std::string16 *icon_loc);
 
  private:
-  bool SetShortcut(File::ShortcutInfo *shortcut, std::string16 *error);
+  bool SetShortcut(DesktopUtils::ShortcutInfo *shortcut, 
+                   std::string16 *error);
 
-  bool WriteControlPanelIcon(const File::ShortcutInfo &shortcut);
-  bool FetchIcon(File::IconData *icon, int expected_size, std::string16 *error);
+  bool WriteControlPanelIcon(const DesktopUtils::ShortcutInfo &shortcut);
+  bool FetchIcon(DesktopUtils::IconData *icon, int expected_size, 
+                 std::string16 *error);
   bool ResolveUrl(std::string16 *url, std::string16 *error);
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsDesktop);
