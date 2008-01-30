@@ -109,6 +109,13 @@ interface GearsResourceStoreInterface : GearsBaseClassInterface {
 
   AString getAllHeaders(in AString url);
 
+m4_changequote(`^',`^')m4_dnl
+m4_ifdef(^OFFICIAL_BUILD^,m4_dnl
+  ^^, m4_dnl Do not declare anything for OFFICIAL_BUILDs - Blobs are not ready
+  ^m4_dnl Else:
+  void captureBlob(in nsISupports blob, in AString url);
+^)
+
   void captureFile(in nsISupports file_input_element, in AString url);
 
   AString getCapturedFileName(in AString url);

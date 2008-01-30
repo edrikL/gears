@@ -23,8 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <vector>
+#include "gears/base/common/string16.h"
 #include "gears/localserver/common/resource_store.h"
-
 
 //------------------------------------------------------------------------------
 // ExistsInDB
@@ -51,6 +52,59 @@ bool ResourceStore::FindServer(const SecurityOrigin &security_origin,
                                  WebCacheDB::RESOURCE_STORE,
                                  server);
 }
+
+//-----------------------------------------------------------------------------
+// AppendHeader
+//-----------------------------------------------------------------------------
+static void AppendHeader(std::string16 &headers,
+                         const char16 *name,
+                         const char16 *value) {
+  const char16 *kDelimiter = STRING16(L": ");
+  headers.append(name);
+  headers.append(kDelimiter);
+  headers.append(value);
+  headers.append(HttpConstants::kCrLf);
+}
+
+//------------------------------------------------------------------------------
+// BlobToItem
+//------------------------------------------------------------------------------
+// static
+bool ResourceStore::BlobToItem(const BlobInterface *blob,
+                               const char16 *full_url,
+                               Item *item) {
+  int64 file_size = blob->Length();
+  // We don't support very large files yet.
+  if (file_size > kint32max) {
+    return false;
+  }
+  int data_len = static_cast<int>(file_size);
+
+  item->entry.url = full_url;
+  item->payload.status_code = HttpConstants::HTTP_OK;
+  item->payload.status_line = HttpConstants::kOKStatusLine;
+
+  // Copy the blob data into the Item
+  item->payload.data.reset(new std::vector<uint8>);
+  if (data_len > 0) {
+    item->payload.data->resize(data_len);
+    if (item->payload.data->size() != static_cast<uint32>(file_size)) {
+      return false;
+    }
+    blob->Read(reinterpret_cast<uint8*>(&(item->payload.data->at(0))),
+               data_len, 0);
+  }
+
+  // Synthesize the http headers we'll store with this item
+  const char16 *kContentLengthHeader = STRING16(L"Content-Length");
+  std::string16 headers;
+  std::string16 data_len_str = IntegerToString16(data_len);
+  AppendHeader(headers, kContentLengthHeader, data_len_str.c_str());
+  headers.append(HttpConstants::kCrLf);  // Terminiate with a blank line
+  item->payload.headers = headers;
+  return true;
+}
+
 
 //------------------------------------------------------------------------------
 // Constructor

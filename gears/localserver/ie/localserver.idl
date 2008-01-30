@@ -25,6 +25,7 @@
 
 import "oaidl.idl";
 import "ocidl.idl";
+import "blob_ie.idl";
 
 
 //
@@ -143,6 +144,14 @@ interface GearsResourceStoreInterface : IDispatch {
   HRESULT getAllHeaders(
       [in] const BSTR url,
       [out, retval] BSTR *all_headers);
+  
+#ifdef OFFICIAL_BUILD
+  // Blob support is not ready for prime time yet
+#else
+  HRESULT captureBlob(
+      [in] IUnknown *blob,
+      [in] const BSTR url);
+#endif  // OFFICIAL_BUILD
   
   HRESULT captureFile(
       [in] IDispatch *file_input_element,

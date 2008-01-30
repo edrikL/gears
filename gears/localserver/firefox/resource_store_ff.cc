@@ -40,6 +40,7 @@
 #include "gears/base/common/url_utils.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/base/firefox/ns_file_utils.h"
+#include "gears/blob/blob_ff.h"
 #include "gears/localserver/firefox/file_submitter_ff.h"
 
 
@@ -325,6 +326,50 @@ NS_IMETHODIMP GearsResourceStore::Copy(const nsAString &src_url,
   }
   RETURN_NORMAL();
 }
+
+#ifdef OFFICIAL_BUILD
+  // Blob support is not ready for prime time yet
+#else
+//------------------------------------------------------------------------------
+// CaptureBlob
+//------------------------------------------------------------------------------
+NS_IMETHODIMP GearsResourceStore::CaptureBlob(nsISupports *blob,
+                                              const nsAString &url_astring) {
+  // Get the blob
+  nsresult nr;
+  nsCOMPtr<GearsBlobPvtInterface> blob_pvt = do_QueryInterface(blob, &nr);
+  if (NS_FAILED(nr) || !blob_pvt) {
+    RETURN_EXCEPTION(STRING16(L"Error converting to native class."));
+  }
+  BlobInterface *blob_contents;
+  nr = blob_pvt->GetContents(&blob_contents);
+  if (NS_FAILED(nr) || !blob_contents) {
+    RETURN_EXCEPTION(STRING16(L"Error getting blob contents."));
+  }
+
+  // Resolve the URL this file is to be registered under.
+  JsParamFetcher js_params(this);
+  std::string16 url;
+  if (!js_params.GetAsString(1, &url)) {
+    RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
+  }
+  std::string16 full_url;
+  if (!ResolveUrl(url.c_str(), &full_url)) {
+    RETURN_EXCEPTION(exception_message_.c_str());
+  }
+
+  // Make the Item and put it in the ResourceStore
+  ResourceStore::Item item;
+  if (!ResourceStore::BlobToItem(blob_contents, full_url.c_str(), &item)) {
+    RETURN_EXCEPTION(STRING16(L"The blob could not be captured"));
+  }
+  if (!store_.PutItem(&item)) {
+    RETURN_EXCEPTION(STRING16(L"The blob could not be captured."));
+  }
+
+  return NS_OK;
+}
+#endif  // OFFICIAL_BUILD
 
 
 //------------------------------------------------------------------------------

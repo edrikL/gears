@@ -105,6 +105,14 @@ class ATL_NO_VTABLE GearsResourceStore
       /* [in] */ const BSTR url,
       /* [retval][out] */ BSTR *all_headers);
 
+#ifdef OFFICIAL_BUILD
+  // Blob support is not ready for prime time yet
+#else
+  virtual HRESULT STDMETHODCALLTYPE captureBlob(
+      /* [in] */ IUnknown *blob,
+      /* [in] */ const BSTR url);
+#endif  // OFFICIAL_BUILD
+
   virtual HRESULT STDMETHODCALLTYPE captureFile(
       /* [in] */ IDispatch *file_input_element,
       /* [in] */ const BSTR url);

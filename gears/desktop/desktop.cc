@@ -99,25 +99,25 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
   if (js_params.GetCount(false) != 4) {
     RETURN_EXCEPTION(STRING16(L"Incorrect number of arguments."));
   }
-  
+
   if (!js_params.GetAsString(0, &shortcut_info.app_name) ||
       shortcut_info.app_name.empty()) {
     RETURN_EXCEPTION(STRING16(L"First parameter is required and must be a "
                               L"string."));
   }
-  
+
   if (!js_params.GetAsString(1, &shortcut_info.app_description) ||
       shortcut_info.app_description.empty()) {
     RETURN_EXCEPTION(STRING16(L"Second parameter is required and must be a "
                               L"string."));
   }
-  
+
   if (!js_params.GetAsString(2, &shortcut_info.app_url) ||
       shortcut_info.app_url.empty()) {
     RETURN_EXCEPTION(STRING16(L"Third parameter is required and must be a "
                               L"string."));
   }
-  
+
   if (!js_params.GetAsObject(3, &icons)) {
     RETURN_EXCEPTION(STRING16(L"Fourth parameter is required and must be an "
                               L"object."));
@@ -128,19 +128,19 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
   } else {
     RETURN_EXCEPTION(STRING16(L"First parameter is required."));
   }
-  
+
   if (description && description[0]) {
     shortcut_info.app_description = description;
   } else {
     RETURN_EXCEPTION(STRING16(L"Second parameter is required."));
   }
-  
+
   if (url && url[0]) {
     shortcut_info.app_url = url;
   } else {
     RETURN_EXCEPTION(STRING16(L"Third parameter is required."));
   }
-  
+
   // Verify that we were passed an object for the icons parameter.
   if (!(var_icons.vt & VT_DISPATCH) || !icons.SetObject(var_icons, NULL)) {
     RETURN_EXCEPTION(STRING16(L"Fourth parameter is requied and must be an "
@@ -150,14 +150,14 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
 
   // Verify that the name is acceptable.
   std::string16 error_message;
-  
-  // Gears doesn't allow spaces in path names, but desktop shortcuts are the 
+
+  // Gears doesn't allow spaces in path names, but desktop shortcuts are the
   // exception, so instead of rewriting our path validation code, patch a
   // temporary string.
   std::string16 name_without_spaces = shortcut_info.app_name;
-  ReplaceAll(name_without_spaces, std::string16(STRING16(L" ")), 
+  ReplaceAll(name_without_spaces, std::string16(STRING16(L" ")),
              std::string16(STRING16(L"_")));
-  if (!IsUserInputValidAsPathComponent(name_without_spaces, 
+  if (!IsUserInputValidAsPathComponent(name_without_spaces,
                                        &error_message)) {
     RETURN_EXCEPTION(error_message.c_str());
   }
@@ -183,7 +183,7 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
     RETURN_EXCEPTION(STRING16(L"Invalid value for icon parameter. At least one "
                               L"icon must be specified."));
   }
-  
+
   // Resolve the icon urls
   if (!shortcut_info.icon16x16.url.empty() &&
       !ResolveUrl(&shortcut_info.icon16x16.url, &error) ||
@@ -199,7 +199,7 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
   // Set up the shortcuts dialog
   HtmlDialog shortcuts_dialog;
   shortcuts_dialog.arguments = Json::Value(Json::objectValue);
-  
+
   // Json needs utf8.
   std::string app_url_utf8;
   std::string app_name_utf8;
@@ -262,12 +262,15 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
   }
 }
 
+#ifdef OFFICIAL_BUILD
+  // Blob support is not ready for prime time yet
+#else
 #ifdef DEBUG
 #if BROWSER_IE
 
 STDMETHODIMP GearsDesktop::newFileBlob(const BSTR filename,
                                        GearsBlobInterface **retval) {
-  CComObject<GearsBlob> *blob = NULL;
+  CComPtr<CComObject<GearsBlob> > blob = NULL;
   HRESULT hr = CComObject<GearsBlob>::CreateInstance(&blob);
   if (FAILED(hr)) {
     RETURN_EXCEPTION(STRING16(L"Could not create GearsBlob."));
@@ -276,16 +279,16 @@ STDMETHODIMP GearsDesktop::newFileBlob(const BSTR filename,
   if (!filename || !filename[0]) {
     blob->Initialize(::NewFileBlob(L""));
   } else {
-    blob->Initialize(::NewFileBlob(std::string16(filename).c_str()));
+    blob->Initialize(::NewFileBlob(filename));
+  }
+
+  if (!blob->InitBaseFromSibling(this)) {
+    RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
   }
 
   CComQIPtr<GearsBlobInterface> blob_external = blob;
   if (!blob_external) {
     RETURN_EXCEPTION(STRING16(L"Could not get GearsBlob interface."));
-  }
-
-  if (!blob->InitBaseFromSibling(this)) {
-    RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
   }
   *retval = blob_external.Detach();
   RETURN_NORMAL();
@@ -295,17 +298,19 @@ STDMETHODIMP GearsDesktop::newFileBlob(const BSTR filename,
 
 NS_IMETHODIMP GearsDesktop::NewFileBlob(const nsAString &filename,
                                         GearsBlobInterface **retval) {
-  nsCOMPtr<GearsBlob> blob(new GearsBlob());
-  blob->Initialize(::NewFileBlob(nsString(filename).get()));
-  if (!blob->InitBaseFromSibling(this)) {
+  GearsBlob *blob_contents = new GearsBlob();
+  nsCOMPtr<GearsBlobInterface> blob = blob_contents;
+  blob_contents->Initialize(::NewFileBlob(nsString(filename).get()));
+  if (!blob_contents->InitBaseFromSibling(this)) {
     RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
   }
   NS_ADDREF(*retval = blob);
   RETURN_NORMAL();
 }
 
-#endif // BROWSER_FF
-#endif // DEBUG
+#endif  // BROWSER_FF
+#endif  // DEBUG
+#endif  // OFFICIAL_BUILD
 
 // Handle all the icon creation and creation call required to actually install
 // a shortcut.
@@ -409,7 +414,7 @@ bool GearsDesktop::SetShortcut(DesktopUtils::ShortcutInfo *shortcut,
 bool GearsDesktop::WriteControlPanelIcon(
                        const DesktopUtils::ShortcutInfo &shortcut) {
   const DesktopUtils::IconData *chosen_icon = NULL;
-  
+
   // Pick the best icon we can for the control panel
   if (!shortcut.icon16x16.png_data.empty()) {
     chosen_icon = &shortcut.icon16x16;
@@ -478,7 +483,7 @@ bool GearsDesktop::FetchIcon(DesktopUtils::IconData *icon, int expected_size,
     *error += STRING16(L".");
     return false;
   }
-  
+
   if (icon->width != expected_size || icon->height != expected_size) {
     *error = STRING16(L"Icon ");
     *error += icon->url;
@@ -500,7 +505,7 @@ bool GearsDesktop::GetControlPanelIconLocation(const SecurityOrigin &origin,
   if (!GetDataDirectory(origin, icon_loc)) {
     return false;
   }
-  
+
   AppendDataName(STRING16(L"icons"), kDataSuffixForDesktop, icon_loc);
   *icon_loc += kPathSeparator;
   *icon_loc += app_name;

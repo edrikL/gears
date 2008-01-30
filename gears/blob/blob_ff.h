@@ -36,7 +36,8 @@ extern const nsCID kGearsBlobClassId;
 
 class GearsBlob
     : public ModuleImplBaseClass,
-      public GearsBlobInterface {
+      public GearsBlobInterface,
+      public GearsBlobPvtInterface {
  public:
   NS_DECL_ISUPPORTS
   GEARS_IMPL_BASECLASS
@@ -46,12 +47,10 @@ class GearsBlob
 
   NS_IMETHOD GetLength(PRInt64 *retval);
 
+  NS_IMETHOD GetContents(BlobInterface** retval);
+
   void Initialize(BlobInterface *blob) {
     contents_.reset(blob);
-  }
-
-  BlobInterface *contents() {
-    return contents_.get();
   }
 
  private:

@@ -29,6 +29,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/string16.h"
+#include "gears/blob/blob_interface.h"
 #include "gears/localserver/common/localserver.h"
 #include "gears/localserver/common/localserver_db.h"
 
@@ -50,14 +51,19 @@ class ResourceStore : public LocalServer {
     WebCacheDB::PayloadInfo payload;
   };
 
+  // Converts a Blob to an Item that could be served by ResourceStore
+  static bool BlobToItem(const BlobInterface *blob,
+                         const char16 *full_url,
+                         Item *out);
+
   // Constructor
   ResourceStore();
 
   // Initializes an instance and inserts rows in the Servers and Versions
   // table of the DB if needed
   virtual bool CreateOrOpen(const SecurityOrigin &security_origin,
-                    const char16 *name,
-                    const char16 *required_cookie);
+                            const char16 *name,
+                            const char16 *required_cookie);
 
   // Initializes an instance from its server_id. Will not insert rows into
   // the Servers or Versions table of the DB. If the expected rows are not

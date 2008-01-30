@@ -29,3 +29,11 @@
 interface GearsBlobInterface : GearsBaseClassInterface {
   readonly attribute PRInt64 length;
 };
+
+interface BlobInterface; // defined in C++
+[ptr] native BlobInterfacePtr(BlobInterface);
+
+[/*NOT scriptable*/ uuid(F124EFB4-7CC9-4B92-8139-BE8AAE840F72)]
+interface GearsBlobPvtInterface : nsISupports {
+  [noscript] readonly attribute BlobInterfacePtr contents;
+};
