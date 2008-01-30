@@ -45,7 +45,7 @@
 #elif BROWSER_SAFARI
 #include "gears/base/safari/browser_utils.h"
 #include "gears/base/safari/scoped_cf.h"
-#include "gears/base/safari/string_utils.h"
+#include "gears/base/safari/cf_string_utils.h"
 #endif
 
 
