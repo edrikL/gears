@@ -31,32 +31,3 @@ function testInternal() {
            'Internal tests failed.');
   }
 }
-
-function testParamTypes() {
-  if (isDebug) {
-    var internalTests = google.gears.factory.create('beta.test');
-    // TODO(aa): Remove check when JsCallContext is implemented for Firefox.
-    if (typeof internalTests.testParamTypes != "undefined") {
-      internalTests.testParamTypes(true, 42, 88.8, {}, "foo");
-
-      // We actually want to test that we got the right error message so that
-      // we don't accept any other unrelated error as a pass. If this gets too
-      // brittle we can reconsider.
-      assertError(function() {
-        internalTests.testParamTypes(false, 42, 88.8, {}, "foo");
-      }, 'Expected first parameter to be true.');
-
-      assertError(function() {
-        internalTests.testParamTypes(true, 42, 88.8, {});
-      }, 'Required argument 5 is missing.');
-    }
-  }
-}
-
-function testProperty() {
-  if (isDebug) {
-    var internalTests = google.gears.factory.create('beta.test');
-    internalTests.testPropertyInt = 42;
-    assertEqual(42, internalTests.testPropertyInt);
-  }
-}
