@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// The methods of the File class with a Linux-specific implementation.
+// Linux-specific implementation of desktop shortcut creation.
 
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. LINUX_CPPSRCS) are implemented
@@ -36,6 +36,7 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
+#include "gears/desktop/desktop_utils.h"
 #include "gears/desktop/desktop_ff.h"
 #include "gears/localserver/common/http_constants.h"
 
@@ -55,16 +56,13 @@ static bool GetIconPath(const SecurityOrigin &origin,
   *icon_path += STRING16(L"_linux");
   *icon_path += STRING16(L".png");
 
-  assert(kUserPathComponentMaxChars + strlen("_linux.png") <= 
-         File::kMaxPathComponentChars);
-
   return true;
 }
 
-static bool WriteIconFile(const File::ShortcutInfo &shortcut,
+static bool WriteIconFile(const DesktopUtils::ShortcutInfo &shortcut,
                           const std::string16 &icon_path,
                           std::string16 *error) {
-  const File::IconData *chosen_icon = NULL;
+  const DesktopUtils::IconData *chosen_icon = NULL;
 
   // Try to pick the best icon size of the available choices.
   if (!shortcut.icon48x48.png_data.empty()) { // 48 is default size for gnome
@@ -90,9 +88,10 @@ static bool WriteIconFile(const File::ShortcutInfo &shortcut,
   return true;
 }
 
-bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
-                                 const File::ShortcutInfo &shortcut,
-                                 std::string16 *error) {
+bool DesktopUtils::CreateDesktopShortcut(
+                       const SecurityOrigin &origin,
+                       const DesktopUtils::ShortcutInfo &shortcut,
+                       std::string16 *error) {
   // Note: We assume that link_name has already been validated by the caller to
   // have only legal filename characters and that launch_url has already been
   // resolved to an absolute URL.

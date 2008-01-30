@@ -131,44 +131,6 @@ class File {
   // at this time.
   static bool GetLastFileError(std::string16 *error_out);
 
-  struct IconData {
-    IconData() : width(0), height(0) {}
-    int width;
-    int height;
-    std::string16 url;
-    std::vector<uint8> png_data;
-    std::vector<uint8> raw_data;
-    DISALLOW_EVIL_CONSTRUCTORS(IconData);
-  };
-
-  struct ShortcutInfo {
-    ShortcutInfo(){}
-    std::string16 app_name;
-    std::string16 app_url;
-    std::string16 app_description;
-    IconData icon16x16;
-    IconData icon32x32;
-    IconData icon48x48;
-    IconData icon128x128;
-    DISALLOW_EVIL_CONSTRUCTORS(ShortcutInfo);
-  };
-
-  // Creates a shortcut that opens a URL in a specific browser.
-  //
-  // link_name is a string that will be used to create the user-visible
-  // shortcut name. Do not append ".lnk" or pass a path.
-  //
-  // launch_url is a relative URL that the browser should open when the user
-  // invokes the shortcut.
-  //
-  // icons is a list of icons of different sizes to be used to generate the
-  // desktop shortcut.
-  //
-  // error is filled with an error string if the function fails.
-  static bool CreateDesktopShortcut(const SecurityOrigin &origin,
-                                    const ShortcutInfo &shortcut,
-                                    std::string16 *error);
-
  private:
   static void SetLastFileError(const char16 *message,
                                const char16 *filepath,

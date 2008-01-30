@@ -47,6 +47,7 @@
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/png_utils.h"
 #include "gears/base/common/url_utils.h"
+#include "gears/base/common/file.h"
 #include "gears/blob/file_blob.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
@@ -88,7 +89,7 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
     RETURN_EXCEPTION(STRING16(L"createShortcut is not supported in workers."));
   }
 
-  File::ShortcutInfo shortcut_info;
+  DesktopUtils::ShortcutInfo shortcut_info;
   JsObject icons;
 
 #if BROWSER_FF
@@ -308,7 +309,7 @@ NS_IMETHODIMP GearsDesktop::NewFileBlob(const nsAString &filename,
 
 // Handle all the icon creation and creation call required to actually install
 // a shortcut.
-bool GearsDesktop::SetShortcut(File::ShortcutInfo *shortcut,
+bool GearsDesktop::SetShortcut(DesktopUtils::ShortcutInfo *shortcut,
                                std::string16 *error) {
   PermissionsDB *capabilities = PermissionsDB::GetDB();
   if (!capabilities) {
@@ -330,7 +331,7 @@ bool GearsDesktop::SetShortcut(File::ShortcutInfo *shortcut,
   }
 
 #if defined(WIN32) || defined(OS_MACOSX)
-  const File::IconData *next_largest_provided = NULL;
+  const DesktopUtils::IconData *next_largest_provided = NULL;
 
   // For each icon size, we use the provided one if available.  If not, and we
   // have a larger version, we scale the closest image to fit because our
@@ -379,7 +380,8 @@ bool GearsDesktop::SetShortcut(File::ShortcutInfo *shortcut,
 #endif
 
   // Create the desktop shortcut using platform-specific code
-  if (!File::CreateDesktopShortcut(EnvPageSecurityOrigin(), *shortcut, error)) {
+  if (!DesktopUtils::CreateDesktopShortcut(EnvPageSecurityOrigin(), 
+                                           *shortcut, error)) {
     return false;
   }
 
@@ -404,8 +406,9 @@ bool GearsDesktop::SetShortcut(File::ShortcutInfo *shortcut,
   return true;
 }
 
-bool GearsDesktop::WriteControlPanelIcon(const File::ShortcutInfo &shortcut) {
-  const File::IconData *chosen_icon = NULL;
+bool GearsDesktop::WriteControlPanelIcon(
+                       const DesktopUtils::ShortcutInfo &shortcut) {
+  const DesktopUtils::IconData *chosen_icon = NULL;
   
   // Pick the best icon we can for the control panel
   if (!shortcut.icon16x16.png_data.empty()) {
@@ -432,7 +435,7 @@ bool GearsDesktop::WriteControlPanelIcon(const File::ShortcutInfo &shortcut) {
   return File::WriteVectorToFile(icon_loc.c_str(), &chosen_icon->png_data);
 }
 
-bool GearsDesktop::FetchIcon(File::IconData *icon, int expected_size,
+bool GearsDesktop::FetchIcon(DesktopUtils::IconData *icon, int expected_size,
                              std::string16 *error) {
   // Icons are optional. Only try to fetch if one was provided.
   if (icon->url.empty()) {

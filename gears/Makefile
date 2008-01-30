@@ -258,8 +258,6 @@ FF_CPPSRCS	+= \
 		dom_utils.cc \
 		file.cc \
 		file_posix.cc \
-		file_linux.cc \
-		file_osx.cc \
 		file_test.cc \
 		file_win32.cc \
 		html_event_monitor.cc \
@@ -672,6 +670,9 @@ FF_IDLSRCS	+= \
 
 FF_CPPSRCS	+= \
 		desktop.cc \
+		desktop_utils_linux.cc \
+		desktop_utils_osx.cc \
+		desktop_utils_win32.cc \
 		$(NULL)
 
 IE_VPATH	+= \
@@ -692,6 +693,7 @@ IEMOBILE_IDLSRCS += \
 
 IE_CPPSRCS	+= \
 		desktop.cc \
+		desktop_utils_win32.cc \
 		$(NULL)
 
 NPAPI_VPATH     += \

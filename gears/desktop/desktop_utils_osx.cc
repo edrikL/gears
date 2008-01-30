@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// The methods of the File class with an OSX-specific implementation.
+// OS X-specific implementation of desktop shortcut creation.
 
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. OSX_CPPSRCS) are implemented
@@ -43,6 +43,9 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/safari/scoped_cf.h"
+#include "gears/desktop/common/desktop_utils.h"
+
+const std::string16 kLaunchScriptFilename(STRING16(L"launch.sh"));
 
 // Creates the 'Info.plist' manifest file that osx looks for inside the package.
 static bool CreateInfoPlist(const std::string16 &contents_path,
@@ -143,7 +146,8 @@ static bool CreateShellScript(const std::string16 &script_path,
 
 // Defines the visible icon for a given icon size
 static bool SetIconData(IconFamilyHandle family_handle,
-                        const File::IconData *icon_data, OSType icon_type) {
+                        const DesktopUtils::IconData *icon_data, 
+                        OSType icon_type) {
   scoped_Handle data_handle(NewHandle(icon_data->raw_data.size()));
   if (!data_handle.get()) return false;
 
@@ -168,7 +172,7 @@ static bool SetIconData(IconFamilyHandle family_handle,
 
 // Defines the alpha for a given icon size
 static bool SetIconAlphaMask(IconFamilyHandle family_handle,
-                             const File::IconData *icon_data,
+                             const DesktopUtils::IconData *icon_data,
                              OSType icon_type) {
   scoped_Handle alpha_handle(NewHandle(icon_data->width * icon_data->height));
   if (!alpha_handle.get()) return false;
@@ -191,7 +195,8 @@ static bool SetIconAlphaMask(IconFamilyHandle family_handle,
 
 // Defines the clickable area for a given icon size
 static bool SetIconHitMask(IconFamilyHandle family_handle,
-                           const File::IconData *icon_data, OSType icon_type) {
+                           const DesktopUtils::IconData *icon_data, 
+                           OSType icon_type) {
   // NOTE: It would seem that you only need w * h / 8 bytes for this hit mask,
   // but that doesn't work. I don't understand why, but OSX actually wants twice
   // that much data. I figured this out by looking closely at what the
@@ -241,7 +246,7 @@ static bool SetIconHitMask(IconFamilyHandle family_handle,
 
 // Creates the icon file which contains the various different sized icons.
 static bool CreateIcnsFile(const std::string16 &icons_path,
-                           const File::ShortcutInfo &shortcut) {
+                           const DesktopUtils::ShortcutInfo &shortcut) {
   scoped_Handle handle(NewHandle(0));
   if (!handle.get()) { return false; }
 
@@ -417,22 +422,65 @@ static bool RunAppleScript(const std::string16 &applescript) {
   return true;
 }
 
+// Check that the shortcut we want to create doesn't overwrite an existing
+// file/directory.
+// If it's creation will overwrite an existing entity, allow it only if the 
+// entity in question is a shortcut we ourselves crearted.
+static bool CheckIllegalFileOverwrite(
+                const DesktopUtils::ShortcutInfo &shortcut) {
+  
+  // Get the destination path.
+  std::string16 application_path;
+  if (!GetApplicationPath(shortcut.app_name, &application_path)) {
+    return false;
+  }
+  
+  // An application bundle is a directory, so if a file with the same name
+  // exists then fail.
+  if (File::Exists(application_path.c_str())) {
+    return false;
+  }
+  
+  if (File::DirectoryExists(application_path.c_str())) {
+    // Check for the existance of a launch.sh file inside the application bundle
+    // If this exists, we assume that the shortcut was created by Gears.
+    std::string16 launch_script_path = application_path;
+    launch_script_path += STRING16(L"/Contents/MacOS/") + kLaunchScriptFilename;
+    
+    if (File::Exists(launch_script_path.c_str())) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
+  return true;
+}
+
 // Force the finder to refresh the desktop icons.
-static bool ForceDesktopIconUpdate() {
+static bool ForceDesktopIconUpdate(const std::string16 &item_name) {
   std::string16 update_desktop_script(STRING16(L"tell application \"Finder\" to"
-                    " tell Desktop to update every item with necessity"));
+                    L" tell Desktop to update file \""));
+  update_desktop_script += item_name;                  
+  update_desktop_script += std::string16(STRING16(L"\" with necessity"));
   
   return RunAppleScript(update_desktop_script);
 }
-
 
 // Implements creation of desktop shortcuts to a web application on mac. On mac,
 // shortcuts aren't used the same way they are on pc, so this does something
 // more appropriate: creates an application package containing a shell script to
 // open the browser to the correct URL.
-bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
-                                 const File::ShortcutInfo &shortcut,
-                                 std::string16 *error) {
+bool DesktopUtils::CreateDesktopShortcut(
+                       const SecurityOrigin &origin,
+                       const DesktopUtils::ShortcutInfo &shortcut,
+                       std::string16 *error) {
+  // Before doing anything, check that we can create the shortcut legally.
+  if (!CheckIllegalFileOverwrite(shortcut)) {
+    *error = GET_INTERNAL_ERROR_MESSAGE();
+    return false;
+  }
+  
   // Build the bundle in the temp folder so that if something goes wrong we
   // don't leave a partially built bundle on the desktop.
   std::string16 temp_path;
@@ -460,13 +508,13 @@ bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
   // as the icon file in the plist. The executable (in our case the shell
   // script) is different because it could be any format.
   std::string16 icons_file(STRING16(L"icons"));
-  std::string16 script_file(STRING16(L"launch.sh"));
 
   std::string16 icons_path(resources_path + STRING16(L"/") + icons_file +
                            STRING16(L".icns"));
-  std::string16 script_path(mac_os_path + STRING16(L"/") + script_file);
+  std::string16 script_path(mac_os_path + STRING16(L"/") + 
+                            kLaunchScriptFilename);
 
-  if (!CreateInfoPlist(contents_path, icons_file, script_file,
+  if (!CreateInfoPlist(contents_path, icons_file, kLaunchScriptFilename,
                        shortcut.app_name)) {
     *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
@@ -492,8 +540,15 @@ bool File::CreateDesktopShortcut(const SecurityOrigin &origin,
     *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
+   
+  // The name of the application bundle we actually create, e.g. MyShortcut.app
+  std::string16 application_bundle_name;
   
-  if (!ForceDesktopIconUpdate()) {
+  if (!File::GetBaseName(application_path, &application_bundle_name)) {
+    return false;
+  }
+  
+  if (!ForceDesktopIconUpdate(application_bundle_name)) {
     return false;
   }
 
