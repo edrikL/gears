@@ -1,9 +1,8 @@
 #summary Secure client file access
-#labels DesignDoc
 
 ==Introduction==
 
-The purpose of this module is to provide secure access to files on the client machine.
+The purpose of this module is to provide secure access to files on the client machine. The  FileSystem module has now been merged with the Desktop module. Therefore this document describes the FileSystem functionality in the Desktop module.
 
 
 ==Features==
@@ -25,6 +24,7 @@ The purpose of this module is to provide secure access to files on the client ma
       * filesystem.open('/etc/shadow'); 
     * Do not allow access above the specified location in the user's file system.
       * filesystem.changedir('../../etc/shadow');
+  * Do not allow a malicious application to display a dialog when the browser window or tab is inactive. A window is considered active when it has foreground focus (the window or tab is currently selected).
 
 
 ==Use cases==
@@ -42,30 +42,71 @@ Steps:
   # The files are made available for iteration via the API.
 
 
-==Interfaces==
+==JavaScript Interfaces==
 
 {{{
-// This file handle does not keep the underlying file open.
-// The file is opened when needed by an operation.
+// A simple file handle
 interface File {
-    // The full name of the file.
-    readonly attribute string name;
+  // The full name of the file.
+  readonly attribute string name;
 
-    // Return: a Blob representing the contents of this file.
-    Blob toBlob();
+  // A blob representing the contents of this file.
+  readonly attribute Blob blob;
 }
 
-interface FileSystem {
-    // Open multiple files. Displays a file picker dialog to user.
-    // Return: an array of File OR null if the user canceled the selection.
-    // Parameters:
-    //     filters [optional] - An array consisting of pairs of strings. The length must be a factor of two.
-    //        The first string is a description of the filter.
-    //        The second string is a semi-colon separated list of filters.
-    //        Example. ['Image Files (*.gif, *.jpg, *.png)', '*.gif;*.jpg;*.png',
-    //                  'Video Files (*.avi, *.mpg, *.mov)', '*.avi;*.mpg;*.mov',
-    //                  'All Files (*.*)', '*.*']
-    Array openFileDialog([in string array filters]);
+interface Desktop {
+  // Other Desktop functions here...
+
+
+  // Open multiple files. Displays a file picker dialog to user.
+  // Returns: an array of File OR an empty array if the user canceled the selection.
+  // Parameters:
+  //     filters [optional] - An array consisting of pairs of strings. The length must be a factor of two.
+  //        The first string is a description of the filter.
+  //        The second string is a semi-colon separated list of filters.
+  //        Example. ['Image Files (*.gif, *.jpg, *.png)', '*.gif;*.jpg;*.png',
+  //                  'Video Files (*.avi, *.mpg, *.mov)', '*.avi;*.mpg;*.mov',
+  //                  'All Files (*.*)', '*.*']
+  //
+  Array openDialog([in string Array filters]);
+}
+}}}
+
+
+==C++ Internal Interfaces==
+
+{{{
+// This enum will allow for different dialogs in the future.
+// An example would be FILES_AND_DIRECTORIES.
+enum FileDialogMode {
+  FILE_DIALOG_MULTIPLE_FILES  // one or more files
+};
+
+// Constructs a file dialog according to mode.
+// Client is responsible for freeing the returned memory.
+// Returns: null pointer on failure
+// Parameters:
+//   mode - in - the type of dialog to construct
+FileDialog* NewFileDialog(FileDialogMode mode);
+
+// This interface will be implemented for every supported operating system.
+class FileDialog {
+  // Opens a dialog in a given mode.
+  // Returns: false on invalid input or failure
+  // Parameters:
+  //   filter - in, optional - An array consisting of pairs of strings.
+  //     Every first string is a description of a filter.
+  //     Every second string is a semi-colon separated list of filters.
+  //     Example "Images" and "*.jpg;*.gif;*.png".
+  //
+  //   files - out - An array of files selected by the user.
+  //     If the user canceled the dialog this will be an empty array.
+  //
+  //   error - out - The error message if the function returned false.
+  //
+  virtual bool OpenDialog(const JsArray& filters,
+                          JsArray** files,
+                          std::string16* error) = 0;
 }
 }}}
 
@@ -102,10 +143,10 @@ function createPrintFunction(files) {
   });
 }
 
-function openDialog(isDirectory) {
+function openDialog() {
   try {
-    var fs = google.gears.factory.create('beta.filesystem');
-    var files = fs.openFileDialog(['Images (*.jpg, *.gif)', '*.jpg;*.gif', 'All files (*.*)', '*.*']);
+    var desktop = google.gears.factory.create('beta.desktop');
+    var files = desktop.openFileDialog(['Images (*.jpg, *.gif)', '*.jpg;*.gif', 'All files (*.*)', '*.*']);
     if (files) {
       task(createPrintFunction(files));
     }
