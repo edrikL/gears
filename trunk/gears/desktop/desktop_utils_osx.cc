@@ -43,7 +43,7 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/safari/scoped_cf.h"
-#include "gears/desktop/common/desktop_utils.h"
+#include "gears/desktop/desktop_utils.h"
 
 const std::string16 kLaunchScriptFilename(STRING16(L"launch.sh"));
 
