@@ -262,7 +262,7 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
       GEARSTIMERINTERFACE_IID_STR },
     // console
     { kGearsConsoleClassName, "GearsConsoleInterface",
-      GEARSDATABASEINTERFACE_IID_STR }
+      GEARSCONSOLEINTERFACE_IID_STR }
   };
 
   for (size_t i = 0; i < NS_ARRAY_LENGTH(jsDOMClasses); ++i) {
