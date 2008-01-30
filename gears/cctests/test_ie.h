@@ -49,20 +49,16 @@ class GearsTest
   // End boilerplate code. Begin interface.
 
   // need a default constructor to instance objects from the Factory
-  GearsTest() : test_property_value_(0) {}
+  GearsTest() {}
   ~GearsTest() {}
 
-  STDMETHOD(RunTests)();
-  STDMETHOD(testParamTypes)();
-  STDMETHOD(put_testPropertyInt)(VARIANT *val);
-  STDMETHOD(get_testPropertyInt)(VARIANT *val);
+  // JS function is runTests().
+  STDMETHOD(RunTests)(
+          /* [retval][out] */ VARIANT_BOOL *retval);
 
-  
  private:
   // Generic Cross-Browser function to actually run the tests.
   bool RunTestsImpl();
-
-  int test_property_value_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsTest);
 };
