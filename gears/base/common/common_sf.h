@@ -32,7 +32,7 @@
 
 #include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/int_types.h"
-#include "gears/base/safari/string_utils.h"
+#include "gears/base/safari/cf_string_utils.h"
 
 // Stupid MacTypes defines this as 0
 #undef kInvalidID

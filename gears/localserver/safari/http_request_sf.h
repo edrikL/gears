@@ -31,7 +31,20 @@
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/localserver/common/http_request.h"
 
+// TODO(playmobil): Convert this class to use Cocoa NSURL functions rather than
+// CFHttpRequest.
+// Semantics of this object dictate that we make use of the browser's cache
+// and cookies when making requests.  Apparently the only way to achieve this
+// on OS X is via NSURL, CFHttpRequest provides no public functionality for 
+// this;
+// 
 // TODO(playmobil): Make httprequest use the browser's cache & cookies?
+// To retreive UA:
+// const char *user_agent_utf8 = NPN_UserAgent(context->js_context());
+// std::string16 user_agent;
+// UTF8ToString16(user_agent_utf8, &user_agent);
+// const char16 *user_agent_header_name = STRING16(L"User-Agent");
+// request_->SetRequestHeader(user_agent_header_name, user_agent.c_str());
 
 class SFHttpRequest : public HttpRequest {
  public:

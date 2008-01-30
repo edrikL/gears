@@ -122,13 +122,13 @@ STDMETHODIMP GearsHttpRequest::open(
     unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
                                              this));
   }
+  
+  content_type_header_was_set_ = false;
+  has_fired_completion_event_ = false;
 
   if (!request_->Open(method, full_url.c_str(), true)) {
     RETURN_EXCEPTION(kInternalError);
   }
-
-  content_type_header_was_set_ = false;
-  has_fired_completion_event_ = false;
 
   RETURN_NORMAL();
 }

@@ -29,7 +29,7 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/safari/browser_utils.h"
 #include "gears/base/safari/scoped_cf.h"
-#include "gears/base/safari/string_utils.h"
+#include "gears/base/safari/cf_string_utils.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/safari/http_cookies_sf.h"
 #include "gears/localserver/safari/http_request_sf.h"
