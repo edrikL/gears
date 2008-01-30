@@ -55,10 +55,14 @@ class GearsDesktop
   //                               object icons)
   NS_IMETHOD CreateShortcut();
 
+#ifdef OFFICIAL_BUILD
+  // Blob support is not ready for prime time yet
+#else
 #ifdef DEBUG
   NS_IMETHOD NewFileBlob(const nsAString &filename,
                          GearsBlobInterface **retval);
-#endif
+#endif  // DEBUG
+#endif  // OFFICIAL_BUILD
 
   static bool GetControlPanelIconLocation(const SecurityOrigin &origin,
                                           const std::string16 &app_name,

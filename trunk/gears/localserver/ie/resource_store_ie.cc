@@ -48,6 +48,7 @@
 #ifdef WINCE
 // FileSubmitter is not implemented for WinCE.
 #else
+#include "gears/blob/blob_ie.h"
 #include "gears/localserver/ie/file_submitter_ie.h"
 #endif
 
@@ -469,6 +470,47 @@ STDMETHODIMP GearsResourceStore::copy(
   }
   RETURN_NORMAL();
 }
+
+#ifdef OFFICIAL_BUILD
+  // Blob support is not ready for prime time yet
+#else
+//------------------------------------------------------------------------------
+// captureBlob
+//------------------------------------------------------------------------------
+STDMETHODIMP GearsResourceStore::captureBlob(
+      /* [in] */ IUnknown *blob,
+      /* [in] */ const BSTR url) {
+  // Get the blob
+  CComQIPtr<GearsBlobPvtInterface> blob_pvt(blob);
+  if (!blob_pvt) {
+    RETURN_EXCEPTION(STRING16(L"Error converting to native class."));
+  }
+  VARIANT var;
+  HRESULT hr = blob_pvt->get_contents(&var);
+  if (FAILED(hr)) {
+    RETURN_EXCEPTION(STRING16(L"Error getting blob contents."));
+  }
+  BlobInterface *blob_contents = reinterpret_cast<BlobInterface*>(var.lVal);
+
+  // Resolve the URL this file is to be registered under.
+  std::string16 full_url;
+  hr = ResolveUrl(url, &full_url);
+  if (FAILED(hr)) {
+    return hr;
+  }
+  ResourceStore::Item item;
+
+  // Make the Item and put it in the ResourceStore
+  if (!ResourceStore::BlobToItem(blob_contents, full_url.c_str(), &item)) {
+    RETURN_EXCEPTION(STRING16(L"The blob could not be captured"));
+  }
+  if (!store_.PutItem(&item)) {
+    RETURN_EXCEPTION(STRING16(L"PutItem failed."));
+  }
+
+  RETURN_NORMAL();
+}
+#endif  // OFFICIAL_BUILD
 
 //------------------------------------------------------------------------------
 // captureFile

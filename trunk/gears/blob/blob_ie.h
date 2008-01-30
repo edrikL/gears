@@ -37,10 +37,12 @@ class ATL_NO_VTABLE GearsBlob
     : public ModuleImplBaseClass,
       public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<GearsBlob>,
+      public GearsBlobPvtInterface,
       public IDispatchImpl<GearsBlobInterface> {
  public:
   BEGIN_COM_MAP(GearsBlob)
     COM_INTERFACE_ENTRY(GearsBlobInterface)
+    COM_INTERFACE_ENTRY(GearsBlobPvtInterface)
     COM_INTERFACE_ENTRY(IDispatch)
   END_COM_MAP()
 
@@ -56,12 +58,10 @@ class ATL_NO_VTABLE GearsBlob
 
   STDMETHOD(get_length)(VARIANT *retval);
 
+  STDMETHOD(get_contents)(VARIANT *retval);
+
   void Initialize(BlobInterface *blob) {
     contents_.reset(blob);
-  }
-
-  BlobInterface *contents() {
-    return contents_.get();
   }
 
  private:

@@ -37,6 +37,7 @@ NS_IMPL_THREADSAFE_RELEASE(GearsBlob)
 NS_INTERFACE_MAP_BEGIN(GearsBlob)
   NS_INTERFACE_MAP_ENTRY(GearsBaseClassInterface)
   NS_INTERFACE_MAP_ENTRY(GearsBlobInterface)
+  NS_INTERFACE_MAP_ENTRY(GearsBlobPvtInterface)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, GearsBlobInterface)
   NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(GearsBlob)
 NS_INTERFACE_MAP_END
@@ -52,5 +53,11 @@ NS_IMETHODIMP GearsBlob::GetLength(PRInt64 *retval) {
   // Initialize()d with valid contents_.
   assert(contents_.get());
   *retval = contents_->Length();
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP GearsBlob::GetContents(BlobInterface** retval) {
+  *retval = contents_.get();
   return NS_OK;
 }

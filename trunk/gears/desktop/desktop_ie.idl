@@ -44,11 +44,15 @@ interface GearsDesktopInterface : IDispatch {
   // "32x32", "48x48", and "128x128". 
   HRESULT createShortcut(BSTR name, BSTR description, BSTR url, VARIANT icons);
 
+#ifdef OFFICIAL_BUILD
+  // Blob support is not ready for prime time yet
+#else
 #ifdef DEBUG
   // This is a quick way to make a blob for now, if you want to play with
   // binary data in your module.
   HRESULT newFileBlob([in] const BSTR filename,
                       [out, retval] GearsBlobInterface **retval);
-#endif
+#endif  // DEBUG
+#endif  // OFFICIAL_BUILD
 };
 

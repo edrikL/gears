@@ -36,3 +36,13 @@ import "ocidl.idl";
 interface GearsBlobInterface : IDispatch {
   [propget] HRESULT length([out, retval] VARIANT *retval);
 };
+
+[
+  object,
+  uuid(fea7e692-4fbc-4416-86a9-29f1de2ae8c7),
+  nonextensible,
+  pointer_default(unique)
+]
+interface GearsBlobPvtInterface : IUnknown {
+  [propget] HRESULT contents([out, retval] VARIANT *retval);
+};

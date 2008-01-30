@@ -40,3 +40,10 @@ STDMETHODIMP GearsBlob::get_length(VARIANT *retval) {
   retval->lVal = static_cast<LONG>(length);
   RETURN_NORMAL();
 }
+
+
+STDMETHODIMP GearsBlob::get_contents(VARIANT *retval) {
+  retval->vt = VT_PTR;
+  retval->lVal = reinterpret_cast<LONG>(contents_.get());
+  RETURN_NORMAL();
+}

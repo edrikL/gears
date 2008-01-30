@@ -43,9 +43,12 @@ interface GearsDesktopInterface : GearsBaseClassInterface {
                       );
 
 m4_changequote(`^',`^')m4_dnl
+m4_ifdef(^OFFICIAL_BUILD^,m4_dnl
+  ^^, m4_dnl Do not declare anything for OFFICIAL_BUILDs - Blobs are not ready
+  m4_dnl Else:
 m4_ifdef(^DEBUG^,^m4_dnl
-  // This is a quick way to make a blob for now, if you want to play with
+  // This is a quick way to make a blob for now if you want to play with
   // binary data in your module.
   GearsBlobInterface newFileBlob(in AString filename);
-^)
+^))
 };
