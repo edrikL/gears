@@ -149,7 +149,7 @@ function createPrintFunction(files) {
 function openDialog() {
   try {
     var desktop = google.gears.factory.create('beta.desktop');
-    var files = desktop.openFileDialog(['Images (*.jpg, *.gif)', '*.jpg;*.gif', 'All files (*.*)', '*.*']);
+    var files = desktop.openDialog(['Images (*.jpg, *.gif)', '*.jpg;*.gif', 'All files (*.*)', '*.*']);
     if (files) {
       task(createPrintFunction(files));
     }
