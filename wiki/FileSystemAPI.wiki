@@ -60,7 +60,7 @@ interface Desktop {
 
 
   // Open multiple files. Displays a file picker dialog to user.
-  // Returns: an array of File OR an empty array if the user canceled the selection.
+  // Returns: an Array of File OR an empty Array if the user canceled the selection
   // Parameters:
   //     filters [optional] - An array consisting of pairs of strings. The length must be a factor of two.
   //        The first string is a description of the filter.
