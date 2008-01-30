@@ -84,7 +84,7 @@ enum FileDialogMode {
 };
 
 // Constructs a file dialog according to mode.
-// Client is responsible for freeing the returned memory.
+// Caller is responsible for freeing the returned memory.
 // Returns: null pointer on failure
 // Parameters:
 //   mode - in - the type of dialog to construct
@@ -102,10 +102,12 @@ class FileDialog {
   //
   //   files - out - An array of files selected by the user.
   //     If the user canceled the dialog this will be an empty array.
+  //     A new array is constructed and placed here.
+  //     Caller is responsible for freeing returned memory.
   //
   //   error - out - The error message if the function returned false.
   //
-  virtual bool OpenDialog(const JsArray& filters,
+  virtual bool OpenDialog(const JsArray* filters,
                           JsArray** files,
                           std::string16* error) = 0;
 }
