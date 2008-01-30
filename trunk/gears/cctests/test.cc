@@ -38,12 +38,10 @@
 #include "gears/cctests/test_ff.h"
 #elif BROWSER_IE
 #include "gears/base/ie/activex_utils.h"
-#include "gears/base/ie/module_wrapper.h"
 #include "gears/cctests/test_ie.h"
 #endif
 
 #include "gears/base/common/name_value_table_test.h"
-#include "gears/base/common/js_types.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/permissions_db_test.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
@@ -57,6 +55,16 @@
 #include "gears/localserver/common/manifest.h"
 #include "gears/localserver/common/resource_store.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
+
+// Constants for returning a boolean value - hopefully there should be a
+// standard way to do this one day.
+#if BROWSER_FF
+  const PRBool BROWSER_TRUE  = PR_TRUE;
+  const PRBool BROWSER_FALSE = PR_FALSE;
+#elif BROWSER_IE
+  const VARIANT_BOOL BROWSER_TRUE  = VARIANT_TRUE;
+  const VARIANT_BOOL BROWSER_FALSE = VARIANT_FALSE;
+#endif
 
 #if BROWSER_FF
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
@@ -96,86 +104,12 @@ bool TestBlobBuilder();
 
 #if BROWSER_FF
 NS_IMETHODIMP GearsTest::RunTests(PRBool *retval) {
-  *retval = RunTestsImpl() ? PR_TRUE : PR_FALSE;
-  RETURN_NORMAL();
-}
 #elif BROWSER_IE
-STDMETHODIMP GearsTest::RunTests() {
-  JsCallContext *js_call_context = ModuleWrapper::PeekJsCallContext();
-  bool result = RunTestsImpl();
-  js_call_context->SetReturnValue(JSPARAM_BOOL, &result);
-  RETURN_NORMAL();
-}
-
-// Following methods only implemented for IE so far
-STDMETHODIMP GearsTest::testParamTypes() {
-  JsCallContext *js_call_context = ModuleWrapper::PeekJsCallContext();
-
-  bool bool_param;
-  int int_param;
-  double double_param;
-  JsObject object_param;
-  std::string16 string_param;
-
-  JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_BOOL, &bool_param },
-    { JSPARAM_REQUIRED, JSPARAM_INT, &int_param },
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &double_param },
-    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &object_param },
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &string_param }
-  };
-  int argc = js_call_context->GetArguments(ARRAYSIZE(argv), argv);
-  if (argc < ARRAYSIZE(argv)) RETURN_NORMAL();
-
-  if (bool_param != true) {
-    js_call_context->SetException(
-        STRING16(L"Expected first parameter to be true."));
-    RETURN_NORMAL();
-  }
-
-  if (int_param != 42) {
-    js_call_context->SetException(
-        STRING16(L"Expected second parameter to be 42."));
-    RETURN_NORMAL();
-  }
-
-  if (double_param != 88.8) {
-    js_call_context->SetException(
-        STRING16(L"Expected third parameter to be 88.8"));
-    RETURN_NORMAL();
-  }
-
-  if (string_param != STRING16(L"foo")) {
-    js_call_context->SetException(
-        STRING16(L"Expected fifth parameter to be 'foo'."));
-    RETURN_NORMAL();
-  }
-
-  RETURN_NORMAL();
-}
-
-STDMETHODIMP GearsTest::put_testPropertyInt(VARIANT *val) {
-  JsCallContext *js_call_context = ModuleWrapper::PeekJsCallContext();
-
-  int int_param;
-  JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_INT, &int_param }
-  };
-  int argc = ARRAYSIZE(argv);
-  if (js_call_context->GetArguments(argc, argv) < argc)
-    RETURN_NORMAL();
-
-  test_property_value_ = int_param;
-  RETURN_NORMAL();
-}
-
-STDMETHODIMP GearsTest::get_testPropertyInt(VARIANT *val) {
-  JsCallContext *js_call_context = ModuleWrapper::PeekJsCallContext();
-  js_call_context->SetReturnValue(JSPARAM_INT, &test_property_value_);
-  RETURN_NORMAL();
-}
-
+STDMETHODIMP GearsTest::RunTests(VARIANT_BOOL *retval) {
 #endif
+  *retval = RunTestsImpl() ? BROWSER_TRUE : BROWSER_FALSE;
+  RETURN_NORMAL();
+}
 
 bool GearsTest::RunTestsImpl() {
   // We need permissions to use the localserver.
