@@ -298,13 +298,13 @@ STDMETHODIMP GearsDesktop::newFileBlob(const BSTR filename,
 
 NS_IMETHODIMP GearsDesktop::NewFileBlob(const nsAString &filename,
                                         GearsBlobInterface **retval) {
-  GearsBlob *blob_contents = new GearsBlob();
-  nsCOMPtr<GearsBlobInterface> blob = blob_contents;
-  blob_contents->Initialize(::NewFileBlob(nsString(filename).get()));
-  if (!blob_contents->InitBaseFromSibling(this)) {
+  GearsBlob *blob = new GearsBlob();
+  nsCOMPtr<GearsBlobInterface> blob_external = blob;
+  blob->Initialize(::NewFileBlob(nsString(filename).get()));
+  if (!blob->InitBaseFromSibling(this)) {
     RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
   }
-  NS_ADDREF(*retval = blob);
+  NS_ADDREF(*retval = blob_external);
   RETURN_NORMAL();
 }
 
