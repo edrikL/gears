@@ -15,12 +15,12 @@ class TestRunner:
   TEST_URL = "http://localhost:8001/tester/gui.html"
   TIMEOUT = 90
     
-  def __init__(self, browser_launchers, test_server):
+  def __init__(self, browser_launchers, web_servers):
     if not browser_launchers or len(browser_launchers) < 1:
       raise ValueError("Please provide browser launchers")
     self.__verifyBrowserLauncherTypesUnique(browser_launchers)
     self.browser_lauchers = browser_launchers
-    self.test_server = test_server
+    self.web_servers = web_servers
 
 
   def runTests(self, automated=True):
@@ -30,30 +30,39 @@ class TestRunner:
       results object keyed by browser.
     """
     test_results = {}
-    self.test_server.startServing()
+
+    # Only one instance of TestWebserver must call startServing.
+    # Expect postback results from the first server on the list.
+    test_server = self.web_servers[0]
+    test_server.startServing()
+
     try:
       for browser_launcher in self.browser_lauchers:
-        self.test_server.startTest(TestRunner.TIMEOUT)
+        test_server.startTest(TestRunner.TIMEOUT)
         try:
           browser_launcher.launch(TestRunner.TEST_URL)
         except:
           self.__handleBrowserTestCompletion(browser_launcher, 
-                                           test_results, automated)
+                                             test_results, automated)
           print "Error launching browser ", sys.exc_info()[0]
         else: 
           # There is not try/catch/finally available to us so
-          # we will go with code duplication
+          # we will go with code duplication.
           self.__handleBrowserTestCompletion(browser_launcher, 
-                                           test_results, automated)
+                                             test_results, automated)
     finally:
-      self.test_server.shutdown()
+      # Shutdown each instance of TestWebserver after testing is complete
+      # to unbind sockets.
+      for server in self.web_servers:
+        server.shutdown()
       return test_results
 
 
   def __handleBrowserTestCompletion(self, browser_launcher, test_results, 
                                     automated):
-    """ Extract results and kill the browser"""
-    test_results[browser_launcher.type()] = self.test_server.testResults()
+    """ Extract results and kill the browser. """
+    test_server = self.web_servers[0]
+    test_results[browser_launcher.type()] = test_server.testResults()
     if automated:
       try:
         browser_launcher.kill()
@@ -93,7 +102,10 @@ if __name__ == '__main__':
   def server_root_dir():
       return os.path.join(os.path.dirname(__file__), '../')
 
-  test_server = TestWebserver(server_root_dir())
+  web_servers = []
+  web_servers.append(TestWebserver(server_root_dir(), port=8001))
+  web_servers.append(TestWebserver(server_root_dir(), port=8002))
+
   installers = []
 
   if osutils.osIsWin():
@@ -109,5 +121,5 @@ if __name__ == '__main__':
     else: #is linux
       launchers = [launcher.FirefoxLinuxLauncher('gears', automated=False)]
 
-  testrunner = TestRunner(launchers, test_server)
+  testrunner = TestRunner(launchers, web_servers)
   testrunner.runTests(automated=False)
