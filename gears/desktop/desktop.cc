@@ -270,11 +270,12 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
 
 STDMETHODIMP GearsDesktop::newFileBlob(const BSTR filename,
                                        GearsBlobInterface **retval) {
-  CComPtr<CComObject<GearsBlob> > blob = NULL;
+  CComObject<GearsBlob> *blob = NULL;
   HRESULT hr = CComObject<GearsBlob>::CreateInstance(&blob);
   if (FAILED(hr)) {
     RETURN_EXCEPTION(STRING16(L"Could not create GearsBlob."));
   }
+  CComPtr<CComObject<GearsBlob> > blob_ptr(blob);
 
   if (!filename || !filename[0]) {
     blob->Initialize(::NewFileBlob(L""));
