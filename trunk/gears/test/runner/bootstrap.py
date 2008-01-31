@@ -6,16 +6,16 @@ import shutil
 import time
 import stat
 
-# Workaround file permission, stat.I_WRITE not allowing delete on all systems
+# Workaround file permission, stat.I_WRITE not allowing delete on all systems.
 DELETABLE = int('777', 8)
 
-# Amount of time script should sleep between checking for completed builds
+# Amount of time script should sleep between checking for completed builds.
 POLL_INTERVAL_SECONDS = 10
 
 class Bootstrap:
   """ Set up test environment and handles test execution. """
 
-  # output and temp directory
+  # Output and temp directory.
   OUTPUT_DIR = 'output'
   INSTALLER_DIR = os.path.join(OUTPUT_DIR, 'installers')
   
@@ -109,10 +109,14 @@ def server_root_dir():
                     
 if __name__ == '__main__':
   profile_name = 'gears'
-  test_server = TestWebserver(server_root_dir())
   suites_report = SuitesReport('TESTS-TestSuites.xml.tmpl')
+  test_servers = []
   installers = []
   launchers = []
+  
+  # Adding second webserver for cross domain tests.
+  test_servers.append(TestWebserver(server_root_dir(), port=8001))
+  test_servers.append(TestWebserver(server_root_dir(), port=8002))
   
   if osutils.osIsWin():
     launchers.append(IExploreWin32Launcher())
@@ -130,6 +134,6 @@ if __name__ == '__main__':
       installers.append(LinuxInstaller(profile_name))
       
   gears_binaries = sys.argv[1]
-  testrunner = TestRunner(launchers, test_server)
+  testrunner = TestRunner(launchers, test_servers)
   bootstrap = Bootstrap(gears_binaries, installers, testrunner, suites_report)
   bootstrap.invoke()

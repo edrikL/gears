@@ -29,8 +29,16 @@ var sameOriginPath =
   currentUrl.substring(0, 1 + currentUrl.lastIndexOf('/'));
 var sameOriginWorkerFile = '../testcases/workerpool_same_origin.js';
 
-var crossOriginPath =
-  'http://google-gears.googlecode.com/svn/trunk/gears/test/testcases/';
+// The cross origin path has the same host as currentUrl 
+// with the port number incremented.
+var currentPort = currentUrl.substring(currentUrl.lastIndexOf(':') + 1, 
+                                       currentUrl.length);
+currentPort = currentPort.substring(0, currentPort.indexOf('/'));
+crossOriginPort = parseInt(currentPort) + 1;
+
+var crossOriginPath = 
+  currentUrl.substring(0, 1 + currentUrl.lastIndexOf(':')) +
+  crossOriginPort + '/testcases/';
 var crossOriginWorkerFile = 'workerpool_cross_origin.js';
 var crossOriginWorkerFileNoPerms = 'workerpool_same_origin.js';
 

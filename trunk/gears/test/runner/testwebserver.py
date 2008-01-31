@@ -214,7 +214,7 @@ class RequestHandler(asynchat.async_chat,
     self.raw_requestline = self.rfile.readline()
     self.parse_request()
 
-    # Call the method requested, if supported
+    # Call the method requested, if supported.
     if self.command in ['GET','HEAD']:
       method = 'do_' + self.command
       if hasattr(self, method):
@@ -244,7 +244,7 @@ class RequestHandler(asynchat.async_chat,
       return
 
     # Look for the next actual (nonzero) piece of data in outgoing
-    # and meanwhile remove any non-data found
+    # and meanwhile remove any non-data found.
     outBuff = self.outgoing
     while len(outBuff):
       data = outBuff.popleft()
@@ -254,11 +254,11 @@ class RequestHandler(asynchat.async_chat,
         self.close()
         return
 
-      # If we're writing a file, get next chunk for sending
+      # If we're writing a file, get next chunk for sending.
       elif hasattr(data, 'read'):
         outgoing_file = data
         first_block = outgoing_file.read(self.blocksize)
-        # File contains no more data, don't send
+        # File contains no more data, don't send.
         if not first_block:
           del outgoing_file
           continue
@@ -267,12 +267,12 @@ class RequestHandler(asynchat.async_chat,
           data = first_block
           break
 
-      # If string data, send it
+      # If string data, send it.
       elif len(data):
         break
 
     # Send this data string, if it fails or fails partially, re-append
-    # unsent data to outgoing
+    # unsent data to outgoing.
     try:
       num_sent = self.send(data)
       if num_sent < len(data):
@@ -350,7 +350,7 @@ class RequestHandler(asynchat.async_chat,
 
 
 class TestWebserver(asyncore.dispatcher):
-  """ Webserver implementation that allows controlling it's lifecycle.
+  """ Webserver implementation that allows controlling its lifecycle.
   
   Used together with Gears JavaScript tests.
    
@@ -443,8 +443,8 @@ class TestWebserver(asyncore.dispatcher):
     This is an overloaded method and represents:
     1. Querying test results; and
     2. Asking testcases to terminate after 'test_timout' value specified
-      in startTest() method parameter if the test haven't been completed 
-      between calling startTest() and invoking this method;
+      in startTest() method parameter if the tests haven't been completed 
+      between calling startTest() and invoking this method.
     """
     if not self.test_instance_is_running:
       raise StandardError('None of the tests were started')
@@ -500,4 +500,6 @@ if __name__ == '__main__':
   else:
     port_number = 8001
 
-  TestWebserver(server_root_dir(), port=port_number).startServing()
+  # Instantiating second server for cross domain tests.
+  TestWebserver(server_root_dir(), port=port_number)
+  TestWebserver(server_root_dir(), port=(port_number + 1)).startServing()
