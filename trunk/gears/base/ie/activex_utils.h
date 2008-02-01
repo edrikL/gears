@@ -75,7 +75,7 @@ class ActiveXUtils {
 #endif
 
 #ifdef WINCE
-  // TODO(andreip): no IHTMLWindow3 in Windows Mobile.
+  // WinCE does not provide I(PIE)HTMLWindow3, but we do not need it.
 #else
   // Returns the IHTMLWindow3 interface corresponding to the given site.
   // Can be used with our HtmlEventMonitor.

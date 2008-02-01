@@ -143,7 +143,7 @@ HRESULT ActiveXUtils::GetHtmlWindow2(IUnknown *site,
 
 
 #ifdef WINCE
-  // TODO(andreip): no IHTMLWindow3 in Windows Mobile.
+// WinCE does not provide I(PIE)HTMLWindow3, but we do not need it.
 #else
 HRESULT ActiveXUtils::GetHtmlWindow3(IUnknown *site, IHTMLWindow3 **window3) {
   CComPtr<IHTMLWindow2> html_window2;

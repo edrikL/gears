@@ -72,9 +72,6 @@ _ATL_FUNC_INFO HtmlEventMonitorHook::EventInfo = {
 // HtmlEventMonitor
 //
 
-#ifdef WINCE
-  // TODO(andreip): implement event monitoring
-#else
 bool HtmlEventMonitor::Start(IHTMLWindow3 *event_source) {
   assert(!event_hook_);
   assert(!event_source_);
@@ -97,12 +94,8 @@ bool HtmlEventMonitor::Start(IHTMLWindow3 *event_source) {
   event_source_ = event_source;
   return true;
 }
-#endif
 
 void HtmlEventMonitor::Stop() {
-#ifdef WINCE
-  // TODO(andreip): implement event monitoring.
-#else
   assert(event_source_);
   assert(event_hook_);
 
@@ -115,5 +108,4 @@ void HtmlEventMonitor::Stop() {
   // destroy the event hook
   event_hook_->Release();
   event_hook_ = NULL;
-#endif
 }

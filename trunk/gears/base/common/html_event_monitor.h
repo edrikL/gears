@@ -30,11 +30,7 @@
 #include <gecko_sdk/include/nsXPCOM.h>
 #include <gecko_sdk/include/nsIDOMEventTarget.h>
 #elif BROWSER_IE
-#ifdef WINCE
-#include <webvw.h>
-#else
 #include <mshtml.h>
-#endif
 #include "gears/base/ie/atl_headers.h"
 #endif
 
@@ -63,11 +59,7 @@ class HtmlEventMonitor {
 #if BROWSER_FF
   bool Start(nsIDOMEventTarget *event_source);
 #elif BROWSER_IE
-#ifdef WINCE
-  bool Start(IPIEHTMLWindow2 *event_source);
-#else
   bool Start(IHTMLWindow3 *event_source);
-#endif
 #elif BROWSER_NPAPI
   bool Start(NPP context, NPObject *event_source);
 #endif
@@ -83,11 +75,7 @@ class HtmlEventMonitor {
 #if BROWSER_FF
   nsCOMPtr<nsIDOMEventTarget> event_source_;
 #elif BROWSER_IE
-#ifdef WINCE
-  CComPtr<IPIEHTMLWindow2> event_source_;
-#else
   CComPtr<IHTMLWindow3> event_source_;
-#endif
 #elif BROWSER_NPAPI
   NPP event_context_;
   ScopedNPVariant event_source_;
