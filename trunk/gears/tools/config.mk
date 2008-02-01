@@ -257,15 +257,19 @@ MKSHLIB	= link
 # We want both these flags in all build modes, despite their names.
 SHLIBFLAGS_dbg =
 SHLIBFLAGS_opt = /INCREMENTAL:NO /OPT:REF /OPT:ICF
-SHLIBFLAGS = /NOLOGO /OUT:$@ /DLL /DEBUG /PDB:"$(@D)/$(MODULE).pdb" /RELEASE
+SHLIBFLAGS_NOPDB = /NOLOGO /OUT:$@ /DLL /DEBUG /RELEASE
 ifeq ($(OS),win32)
-SHLIBFLAGS += /SUBSYSTEM:WINDOWS \
+SHLIBFLAGS_NOPDB += /SUBSYSTEM:WINDOWS \
               $(SHLIBFLAGS_$(MODE))
 else
-SHLIBFLAGS += /SUBSYSTEM:WINDOWSCE,5.01 \
+SHLIBFLAGS_NOPDB += /SUBSYSTEM:WINDOWSCE,5.01 \
               /NODEFAULTLIB:secchk.lib \
+              /MACHINE:THUMB \
               $(SHLIBFLAGS_$(MODE))
 endif
+# We need SHLIBFLAGS_NOPDB for generating other targets than gears.dll
+# (e.g. setup.dll for Windows Mobile)
+SHLIBFLAGS = $(SHLIBFLAGS_NOPDB) /PDB:"$(@D)/$(MODULE).pdb"
 
 ifeq ($(OS),win32)
 FF_SHLIBFLAGS_dbg = /NODEFAULTLIB:MSVCRT
@@ -292,7 +296,7 @@ GECKO_SDK = third_party/gecko_1.8/win32
 
 FF_LIBS = $(GECKO_SDK)/gecko_sdk/lib/xpcom.lib $(GECKO_SDK)/gecko_sdk/lib/xpcomglue_s.lib $(GECKO_SDK)/gecko_sdk/lib/nspr4.lib $(GECKO_SDK)/gecko_sdk/lib/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib
 IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib
-IEMOBILE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib cellcore.lib htmlview.lib imaging.lib 
+IEMOBILE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib cellcore.lib htmlview.lib imaging.lib toolhelp.lib
 NPAPI_LIBS = sensapi.lib ole32.lib shell32.lib advapi32.lib wininet.lib
 
 # Other tools specific to win32/wince builds.
@@ -304,7 +308,7 @@ RCFLAGS_dbg = /DDEBUG=1
 RCFLAGS_opt = /DNDEBUG=1
 RCFLAGS = $(RCFLAGS_$(MODE)) /d "_UNICODE" /d "UNICODE" /i $(OUTDIR)/$(OS)-$(ARCH) /l 0x409 /fo"$(@D)/$*.res"
 ifeq ($(OS),wince)
-RCFLAGS += /d "WINCE" /d "_WIN32" /d "_WIN32_WCE" /d "UNDER_CE"
+RCFLAGS += /d "WINCE" /d "_WIN32" /d "_WIN32_WCE" /d "UNDER_CE" /n
 endif
 
 GGUIDGEN = tools/gguidgen.exe

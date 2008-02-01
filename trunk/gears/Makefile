@@ -1358,4 +1358,25 @@ NPAPI_CPPSRCS	+= \
 		factory_utils.cc \
 		$(NULL)
 
+#-----------------------------------------------------------------------------
+# installer/iemobile
+
+IEMOBILE_VPATH	+= \
+		installer/iemobile \
+		base/common \
+		$(NULL)
+
+IEMOBILE_M4SRCS	+= \
+		setup.rc.m4 \
+		$(NULL)
+
+IEMOBILE_SETUP_CPPSRCS += \
+		process_restarter.cc \
+		setup.cc \
+		$(NULL)
+
+IEMOBILE_SETUP_LINK_EXTRAS += \
+		$(IE_OUTDIR)/setup.res \
+		$(NULL)
+
 include tools/rules.mk
