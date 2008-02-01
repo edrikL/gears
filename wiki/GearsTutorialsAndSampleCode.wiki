@@ -14,10 +14,12 @@ Contributions in new environments are welcome!
 == GWT ==
   * [http://wiki.apexdevnet.com/index.php/Building_Offline_Salesforce_Applications_with_Google_Gears_and_Google_Web_Toolkit Building Offline Salesforce Applications with Google Gears and Google Web Toolkit]. 
 
+== .NET ==
+* [http://glazkov.com/blog/gears-asp-net-tutorial/ .NET on Gears: A Tutorial] - A time-sheet application in ASP.NET by Dimitri Glazkov.  Makes use of the new features in the 0.2 release.
+
 == MS Silverlight ==
   * [http://nerddawg.blogspot.com/2007/06/google-gears-and-silverlight.html Google Gears and Silverlight].
 
 Anyone up to writing a tutorial or example for these:
 == Ruby On Rails ==
-== .NET ==
 == Django ==
