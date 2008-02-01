@@ -363,7 +363,7 @@ void GearsWorkerPool::Initialize() {
 PoolThreadsManager::PoolThreadsManager(
                         const SecurityOrigin &page_security_origin,
                         JsRunnerInterface *root_js_runner)
-    : num_workers_(0),
+    : ref_count_(0),
       is_shutting_down_(false),
       page_security_origin_(page_security_origin) {
 
@@ -1105,11 +1105,11 @@ void PoolThreadsManager::ForceGCCurrentThread() {
 
 
 void PoolThreadsManager::AddWorkerRef() {
-  AtomicIncrement(&num_workers_, 1);
+  AtomicIncrement(&ref_count_, 1);
 }
 
 void PoolThreadsManager::ReleaseWorkerRef() {
-  if (AtomicIncrement(&num_workers_, -1) == 0) {
+  if (AtomicIncrement(&ref_count_, -1) == 0) {
     delete this;
   }
 }

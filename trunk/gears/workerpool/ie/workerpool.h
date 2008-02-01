@@ -170,7 +170,10 @@ class PoolThreadsManager
   void ProcessError(JavaScriptWorkerInfo *wi,
                     const Message &msg);
 
-  int num_workers_; // used by Add/ReleaseWorkerRef()
+  // This is used by Add/ReleaseWorkerRef(). Note that it is not equal to the
+  // total number of threads, as each worker thread (not the main thread)
+  // increments the count twice.
+  int ref_count_;
   bool is_shutting_down_;
 
   std::vector<DWORD> worker_id_to_os_thread_id_;
