@@ -134,14 +134,6 @@ library GearsTypelib
   };
 
   [
-    uuid(B4F3B2E2-6200-4796-B49D-471BD24F18F5)
-  ]
-  coclass GearsBlob
-  {
-    [default] interface GearsBlobInterface;
-  };
-
-  [
     uuid(51C2DE73-6A33-4975-8D7D-C521064F8A83)
   ]
   coclass GearsConsole

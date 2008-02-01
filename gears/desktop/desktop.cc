@@ -269,7 +269,7 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
 #if BROWSER_IE
 
 STDMETHODIMP GearsDesktop::newFileBlob(const BSTR filename,
-                                       GearsBlobInterface **retval) {
+                                       IUnknown **retval) {
   CComObject<GearsBlob> *blob = NULL;
   HRESULT hr = CComObject<GearsBlob>::CreateInstance(&blob);
   if (FAILED(hr)) {
@@ -278,9 +278,9 @@ STDMETHODIMP GearsDesktop::newFileBlob(const BSTR filename,
   CComPtr<CComObject<GearsBlob> > blob_ptr(blob);
 
   if (!filename || !filename[0]) {
-    blob->Initialize(::NewFileBlob(L""));
+    blob->Init(::NewFileBlob(L""));
   } else {
-    blob->Initialize(::NewFileBlob(filename));
+    blob->Init(::NewFileBlob(filename));
   }
 
   if (!blob->InitBaseFromSibling(this)) {
@@ -298,10 +298,10 @@ STDMETHODIMP GearsDesktop::newFileBlob(const BSTR filename,
 #elif BROWSER_FF
 
 NS_IMETHODIMP GearsDesktop::NewFileBlob(const nsAString &filename,
-                                        GearsBlobInterface **retval) {
+                                        nsISupports **retval) {
   GearsBlob *blob = new GearsBlob();
   nsCOMPtr<GearsBlobInterface> blob_external = blob;
-  blob->Initialize(::NewFileBlob(nsString(filename).get()));
+  blob->Init(::NewFileBlob(nsString(filename).get()));
   if (!blob->InitBaseFromSibling(this)) {
     RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
   }

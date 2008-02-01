@@ -60,7 +60,7 @@ class GearsDesktop
 #else
 #ifdef DEBUG
   NS_IMETHOD NewFileBlob(const nsAString &filename,
-                         GearsBlobInterface **retval);
+                         nsISupports **retval);
 #endif  // DEBUG
 #endif  // OFFICIAL_BUILD
 

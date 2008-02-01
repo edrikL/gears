@@ -353,10 +353,10 @@ $(NPAPI_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
 # todo(cprince): see whether we can remove the third_party/ part after
 # the 1.9 inclusion is complete.
 $(FF_OUTDIR)/genfiles/%.h: %.idl
-	$(GECKO_SDK)/gecko_sdk/bin/xpidl -I base/common -I blob -I $(GECKO_SDK)/gecko_sdk/idl -I third_party/gecko_1.8 -m header -o $(FF_OUTDIR)/genfiles/$* $<
+	$(GECKO_SDK)/gecko_sdk/bin/xpidl -I base/common -I $(GECKO_SDK)/gecko_sdk/idl -I third_party/gecko_1.8 -m header -o $(FF_OUTDIR)/genfiles/$* $<
 
 $(FF_OUTDIR)/genfiles/%.xpt: %.idl
-	$(GECKO_SDK)/gecko_sdk/bin/xpidl -I base/common -I blob -I $(GECKO_SDK)/gecko_sdk/idl -I third_party/gecko_1.8 -m typelib -o $(FF_OUTDIR)/genfiles/$* $<
+	$(GECKO_SDK)/gecko_sdk/bin/xpidl -I base/common -I $(GECKO_SDK)/gecko_sdk/idl -I third_party/gecko_1.8 -m typelib -o $(FF_OUTDIR)/genfiles/$* $<
 
 $(IE_OUTDIR)/genfiles/%.h: %.idl
 	$(MIDL) $(MIDLFLAGS) $<

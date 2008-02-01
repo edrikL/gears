@@ -49,7 +49,7 @@ class GearsBlob
 
   NS_IMETHOD GetContents(BlobInterface** retval);
 
-  void Initialize(BlobInterface *blob) {
+  void Init(BlobInterface *blob) {
     contents_.reset(blob);
   }
 

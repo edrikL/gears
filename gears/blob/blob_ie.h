@@ -60,7 +60,7 @@ class ATL_NO_VTABLE GearsBlob
 
   STDMETHOD(get_contents)(VARIANT *retval);
 
-  void Initialize(BlobInterface *blob) {
+  void Init(BlobInterface *blob) {
     contents_.reset(blob);
   }
 

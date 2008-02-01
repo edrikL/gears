@@ -58,7 +58,7 @@ class GearsDesktop
   // Blob support is not ready for prime time yet
 #else
 #ifdef DEBUG
-  STDMETHOD(newFileBlob)(const BSTR filename, GearsBlobInterface **retval);
+  STDMETHOD(newFileBlob)(const BSTR filename, IUnknown **retval);
 #endif  // DEBUG
 #endif  // OFFICIAL_BUILD
 
