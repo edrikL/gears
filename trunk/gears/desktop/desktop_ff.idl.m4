@@ -25,7 +25,6 @@
 
 #include "nsISupports.idl"
 #include "base_interface_ff.idl" // XPIDL doesn't like slashes in #includes
-#include "blob_ff.idl"
 
 //
 // GearsDesktopInterface
@@ -42,6 +41,8 @@ interface GearsDesktopInterface : GearsBaseClassInterface {
                       //in object icons
                       );
 
+// TODO(kevinww): Remove all NewFileBlob references when we have
+// other ways to open and create blobs.
 m4_changequote(`^',`^')m4_dnl
 m4_ifdef(^OFFICIAL_BUILD^,m4_dnl
   ^^, m4_dnl Do not declare anything for OFFICIAL_BUILDs - Blobs are not ready
@@ -49,6 +50,6 @@ m4_ifdef(^OFFICIAL_BUILD^,m4_dnl
 m4_ifdef(^DEBUG^,^m4_dnl
   // This is a quick way to make a blob for now if you want to play with
   // binary data in your module.
-  GearsBlobInterface newFileBlob(in AString filename);
+  nsISupports newFileBlob(in AString filename);
 ^))
 };

@@ -25,7 +25,6 @@
 
 import "oaidl.idl";
 import "ocidl.idl";
-import "blob_ie.idl";
 
 
 //

@@ -297,7 +297,7 @@ NPAPI_LIBS = sensapi.lib ole32.lib shell32.lib advapi32.lib wininet.lib
 
 # Other tools specific to win32/wince builds.
 MIDL = midl
-MIDLFLAGS = $(CPPFLAGS) -env win32 -Oicf -tlb "$(@D)/$*.tlb" -h "$(@D)/$*.h" -iid "$(IE_OUTDIR)/$*_i.c" -proxy "$(IE_OUTDIR)/$*_p.c" -dlldata "$(IE_OUTDIR)/$*_d.c" -I "blob"
+MIDLFLAGS = $(CPPFLAGS) -env win32 -Oicf -tlb "$(@D)/$*.tlb" -h "$(@D)/$*.h" -iid "$(IE_OUTDIR)/$*_i.c" -proxy "$(IE_OUTDIR)/$*_p.c" -dlldata "$(IE_OUTDIR)/$*_d.c"
 
 RC = rc
 RCFLAGS_dbg = /DDEBUG=1
