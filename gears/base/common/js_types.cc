@@ -126,11 +126,6 @@ bool JsArray::GetLength(int *length) const {
   return false;
 }
 
-const JsScopedToken& JsArray::token() const {
-  return array_;
-}
-
-
 bool JsArray::GetElement(int index, JsScopedToken *out) const {
   if (!array_) return false;
 
@@ -272,10 +267,6 @@ bool JsArray::SetElementModule(int index, IScriptable* value) {
   return SetElement(index, CComVariant(value));
 }
 
-const JsScopedToken& JsArray::token() const {
-  return array_;
-}
-
 #elif BROWSER_NPAPI
 
 JsArray::JsArray() : js_context_(NULL) {
@@ -386,7 +377,7 @@ bool JsArray::SetElementArray(int index, JsArray* value) {
 }
 
 bool JsArray::SetElementObject(int index, JsObject* value) {
-  return SetElement(index, value->js_object_);
+  return SetElement(index, value->token());
 }
 
 bool JsArray::SetElementFunction(int index, JsRootedCallback* value) {
@@ -659,7 +650,7 @@ bool JsObject::SetPropertyArray(const std::string16& name, JsArray* value) {
 }
 
 bool JsObject::SetPropertyObject(const std::string16& name, JsObject* value) {
-  return SetProperty(name, value->js_object_);
+  return SetProperty(name, value->token());
 }
 
 bool JsObject::SetPropertyFunction(const std::string16& name,
@@ -1017,12 +1008,12 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     }
     case JSPARAM_OBJECT: {
       const JsObject *value = static_cast<const JsObject *>(param.value_ptr);
-      *token = value->js_object_;
+      *token = value->token();
       break;
     }
     case JSPARAM_ARRAY: {
       const JsArray *value = static_cast<const JsArray *>(param.value_ptr);
-      *token = value->array_;
+      *token = value->token();
       break;
     }
     case JSPARAM_FUNCTION: {
@@ -1051,12 +1042,12 @@ void ConvertJsParamToToken(const JsParamToSend &param,
 // This code is shared between JsCallContext and JsParamFetcher for FF.
 // It initialises all the parameters which are members of the respective
 // classes, execept obj which is an input parameter.
-static void GetContextAndArgs(ModuleImplBaseClass* obj,
-                              JsContextPtr* js_context,
-                              int* js_argc,
-                              JsToken** js_argv,
-                              nsCOMPtr<nsIXPConnect>* xpc,
-                              nsCOMPtr<nsIXPCNativeCallContext>* ncc) {
+static void GetContextAndArgs(ModuleImplBaseClass *obj,
+                              JsContextPtr *js_context,
+                              int *js_argc,
+                              JsToken **js_argv,
+                              nsCOMPtr<nsIXPConnect> *xpc,
+                              nsCOMPtr<nsIXPCNativeCallContext> *ncc) {
   if (obj->EnvIsWorker()) {
     *js_context = obj->EnvPageJsContext();
     *js_argc = obj->JsWorkerGetArgc();
@@ -1080,26 +1071,35 @@ static void GetContextAndArgs(ModuleImplBaseClass* obj,
   }
 }
 
-JsCallContext::JsCallContext(ModuleImplBaseClass* obj) :
-  js_context_(NULL), is_exception_set_(false), argc_(0), argv_(NULL),
-  xpc_(NULL), ncc_(NULL), obj_(obj) {
+
+JsCallContext::JsCallContext(ModuleImplBaseClass* obj)
+    : js_context_(NULL), is_exception_set_(false),
+      argc_(0), argv_(NULL), retval_(NULL),
+      js_runner_(obj->GetJsRunner()),
+      xpc_(NULL), ncc_(NULL) {
   GetContextAndArgs(obj, &js_context_, &argc_, &argv_, &xpc_, &ncc_);
 }
 
-void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
-  JsToken* js_engine_retval = NULL;
-  nsresult nr = ncc_->GetRetValPtr(&js_engine_retval);
 
-  // There is only a valid retval_ if the javascript caller is expecting a
-  // return value.
-  if (!NS_FAILED(nr) && js_engine_retval) {
+JsCallContext::JsCallContext(JsContextPtr cx, JsRunnerInterface *js_runner,
+                             int argc, JsToken *argv, JsToken *retval)
+    : js_context_(cx), is_exception_set_(false),
+      argc_(argc), argv_(argv), retval_(retval),
+      js_runner_(js_runner),
+      xpc_(NULL), ncc_(NULL) {}
+
+
+void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
+  // There is only a valid retval_ if the JS caller is expecting a return value.
+  if (retval_) {
     JsParamToSend retval = { type, value_ptr };
-    ConvertJsParamToToken(retval, js_context(), js_engine_retval);
+    ConvertJsParamToToken(retval, js_context(), retval_);
   }
 }
 
 void JsCallContext::SetException(const std::string16 &message) {
-  JsSetException(obj_, message.c_str());
+  JsSetException(js_context_, js_runner_, message.c_str(),
+                 ncc_ != NULL ? true : false); // notify_native_call_context
 }
 
 #elif BROWSER_IE
@@ -1130,12 +1130,12 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     }
     case JSPARAM_OBJECT: {
       const JsObject *value = static_cast<const JsObject *>(param.value_ptr);
-      *token = value->js_object_;
+      *token = value->token();
       break;
     }
     case JSPARAM_ARRAY: {
       const JsArray *value = static_cast<const JsArray *>(param.value_ptr);
-      *token = value->array_;
+      *token = value->token();
       break;
     }
     case JSPARAM_FUNCTION: {
@@ -1257,12 +1257,12 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     }
     case JSPARAM_OBJECT: {
       const JsObject *value = static_cast<const JsObject *>(param.value_ptr);
-      variant->Reset(NPVARIANT_TO_OBJECT(value->js_object_));
+      variant->Reset(NPVARIANT_TO_OBJECT(value->token()));
       break;
     }
     case JSPARAM_ARRAY: {
       const JsArray *value = static_cast<const JsArray *>(param.value_ptr);
-      variant->Reset(NPVARIANT_TO_OBJECT(value->array_));
+      variant->Reset(NPVARIANT_TO_OBJECT(value->token()));
       break;
     }
     case JSPARAM_FUNCTION: {
@@ -1425,15 +1425,16 @@ bool JsParamFetcher::GetAsNewRootedCallback(int i, JsRootedCallback **out) {
   return true;
 }
 
-JsNativeMethodRetval JsSetException(const ModuleImplBaseClass *obj,
-                                    const char16 *message) {
-  JsContextPtr cx = NULL;
+JsNativeMethodRetval JsSetException(JsContextPtr cx,
+                                    JsRunnerInterface *js_runner,
+                                    const char16 *message,
+                                    bool notify_native_call_context) {
   JsNativeMethodRetval retval = NS_ERROR_FAILURE;
 
-  if (obj->EnvIsWorker()) {
-    cx = obj->EnvPageJsContext();
-    if (!cx) { return retval; }
-  } else {
+  // When Gears is running under XPConnect, we need to tell it that we threw an
+  // exception.
+  // TODO_REMOVE_NSISUPPORTS: Remove notify_native_call_context and this branch.
+  if (notify_native_call_context) {
     nsresult nr;
     nsCOMPtr<nsIXPConnect> xpc;
     xpc = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
@@ -1442,9 +1443,6 @@ JsNativeMethodRetval JsSetException(const ModuleImplBaseClass *obj,
     nsCOMPtr<nsIXPCNativeCallContext> ncc;
     nr = xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
     if (!ncc || NS_FAILED(nr)) { return retval; }
-
-    ncc->GetJSContext(&cx);
-    if (!cx) { return retval; }
 
     // To make XPConnect display a user-defined exception message, we must
     // call SetExceptionWasThrown AND ALSO return a _success_ error code
@@ -1468,14 +1466,11 @@ JsNativeMethodRetval JsSetException(const ModuleImplBaseClass *obj,
   // Note: JS_ThrowReportedError and JS_ReportError look promising, but they
   // don't quite do what we need.
 
-  JsRunnerInterface *js_runner = obj->GetJsRunner();
-  if (!js_runner) { return retval; }
-
   scoped_ptr<JsObject> error_object(js_runner->NewObject(STRING16(L"Error")));
   if (!error_object.get()) { return retval; }
 
   // Note: need JS_SetPendingException to bubble 'catch' in workers.
-  JS_SetPendingException(cx, error_object->js_object_);
+  JS_SetPendingException(cx, error_object->token());
 
   bool success = error_object->SetPropertyString(STRING16(L"message"), message);
   if (!success) { return retval; }

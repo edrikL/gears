@@ -36,11 +36,14 @@
 #include <gecko_internal/jsapi.h>
 #include <gecko_internal/nsIXPConnect.h> // for JsParamFetcher
 
+class JsContextWrapper;
+
 // Abstracted types for values used with JavaScript engines.
-typedef jsval      JsToken;
-typedef jsval      JsScopedToken;  // unneeded in FF, see comment on JsArray
+typedef jsval JsToken;
+typedef jsval JsScopedToken;  // unneeded in FF, see comment on JsArray
 typedef JSContext* JsContextPtr;
-typedef nsresult   JsNativeMethodRetval;
+typedef JsContextWrapper* JsContextWrapperPtr;
+typedef nsresult JsNativeMethodRetval;
 
 // interface required for COM objects exposed in JS
 typedef nsISupports IScriptable;
@@ -53,7 +56,8 @@ typedef nsISupports IScriptable;
 // Abstracted types for values used with JavaScript engines.
 typedef VARIANT JsToken;
 typedef CComVariant JsScopedToken;
-typedef void* JsContextPtr; // unused in IE
+typedef void* JsContextPtr;  // unused in IE
+typedef void* JsContextWrapperPtr;  // unused in IE
 typedef HRESULT JsNativeMethodRetval;
 
 // interface required for COM objects exposed in JS
@@ -76,6 +80,7 @@ typedef IDispatch IScriptable;
 // Abstracted types for values used with JavaScript engines.
 typedef NPVariant JsToken;
 typedef NPP JsContextPtr;
+typedef void* JsContextWrapperPtr; // unused in NPAPI
 typedef NPError JsNativeMethodRetval;
 
 // Not used in NPAPI or WEBKIT at the moment
@@ -249,6 +254,7 @@ typedef void  JsNativeMethodRetval;
 
 class JsObject;
 struct JsParamToSend;
+class JsRunnerInterface;
 class ModuleImplBaseClass;
 
 class JsArray {
@@ -261,7 +267,9 @@ class JsArray {
   bool GetLength(int *length) const;
 
   // use the same syntax as JsRootedToken
-  const JsScopedToken& token() const;
+  const JsScopedToken &token() const { return array_; }
+  const JsContextPtr &context() const { return js_context_; }
+
 
   bool GetElement(int index, JsScopedToken *out) const;
   bool GetElementAsBool(int index, bool *out) const;
@@ -283,10 +291,6 @@ class JsArray {
   bool SetElementModule(int index, IScriptable* value);
 
 private:
-  // Needs access to the raw JsToken.
-  friend void ConvertJsParamToToken(const JsParamToSend &param,
-                                    JsContextPtr context,
-                                    JsScopedToken *token);
   JsContextPtr js_context_;
   JsScopedToken array_;
 };
@@ -317,16 +321,10 @@ class JsObject {
   bool SetPropertyFunction(const std::string16& name, JsRootedCallback* value);
   bool SetPropertyModule(const std::string16& name, IScriptable* value);
 
- private:
-  // Need access to the raw JsToken.
-  friend class JsRunnerBase;
-  friend class JsArray;
-  friend void ConvertJsParamToToken(const JsParamToSend &param,
-                                    JsContextPtr context,
-                                    JsScopedToken *token);
-  friend JsNativeMethodRetval JsSetException(const ModuleImplBaseClass *obj,
-                                             const char16 *message);
+  const JsScopedToken &token() const { return js_object_; }
+  const JsContextPtr &context() const { return js_context_; }
 
+ private:
   bool SetProperty(const std::string16 &name, const JsToken &value);
 
   JsContextPtr js_context_;
@@ -369,6 +367,7 @@ struct JsArgument {
 
 
 class ModuleImplBaseClass;
+class JsRunnerInterface;
 
 // This class provides an interface for a property or method access on a native
 // object from JavaScript.  It allows consumers to retrieve what arguments were
@@ -390,7 +389,9 @@ class JsCallContext {
       : disp_params_(disp_params), retval_(retval), exception_info_(excep_info),
         is_exception_set_(false) {}
 #elif BROWSER_FF
-  explicit JsCallContext(ModuleImplBaseClass* obj);
+  explicit JsCallContext(ModuleImplBaseClass *obj);
+  JsCallContext(JsContextPtr cx, JsRunnerInterface *js_runner,
+                int argc, JsToken *argv, JsToken *retval);
 #else
  // TODO: browser_xyz
 #endif
@@ -440,10 +441,11 @@ class JsCallContext {
   EXCEPINFO FAR *exception_info_;
 #elif BROWSER_FF
   int argc_;
-  JsToken* argv_;
+  JsToken *argv_;
+  JsToken *retval_;
+  JsRunnerInterface *js_runner_;
   nsCOMPtr<nsIXPConnect> xpc_;
   nsCOMPtr<nsIXPCNativeCallContext> ncc_;
-  ModuleImplBaseClass* obj_;
 #else
   // TODO: browser_xyz
 #endif
@@ -485,19 +487,18 @@ class JsParamFetcher {
   int           js_argc_;
   JsToken      *js_argv_;
 
-#if BROWSER_FF
   nsCOMPtr<nsIXPConnect> xpc_;
   nsCOMPtr<nsIXPCNativeCallContext> ncc_;
-#elif BROWSER_IE
-#endif
 };
 
 
 // Sets JavaScript exceptions, in a way that hides differences
 // between main-thread and worker-thread environments.
 // Returns the value the caller should return to the JavaScript host engine.
-JsNativeMethodRetval JsSetException(const ModuleImplBaseClass *obj,
-                                    const char16 *message);
+JsNativeMethodRetval JsSetException(JsContextPtr cx,
+                                    JsRunnerInterface *js_runner,
+                                    const char16 *message,
+                                    bool notify_native_call_context);
 
 // Garbage collection helper functions
 bool RootJsToken(JsContextPtr cx, JsToken t);

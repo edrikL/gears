@@ -39,7 +39,7 @@
 // GearsResourceStore
 //-----------------------------------------------------------------------------
 class GearsResourceStore
-    : public ModuleImplBaseClass,
+    : public ModuleImplBaseClassVirtual,
       public AsyncTask::Listener,
       public JsEventHandlerInterface {
  public:

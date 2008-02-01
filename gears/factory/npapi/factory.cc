@@ -84,11 +84,11 @@ void GearsFactory::Create(JsCallContext *context) {
   // code consistent across callers, and they are easier to support over time.
   GComPtr<ModuleImplBaseClass> object(NULL);
   if (class_name == STRING16(L"beta.database")) {
-    object.reset(CreateModule<GearsDatabase>(EnvPageJsContext()));
+    object.reset(CreateModule<GearsDatabase>(GetJsRunner()));
   } else if (class_name == STRING16(L"beta.localserver")) {
-    object.reset(CreateModule<GearsLocalServer>(EnvPageJsContext()));
+    object.reset(CreateModule<GearsLocalServer>(GetJsRunner()));
   } else if (class_name == STRING16(L"beta.workerpool")) {
-    object.reset(CreateModule<GearsWorkerPool>(EnvPageJsContext()));
+    object.reset(CreateModule<GearsWorkerPool>(GetJsRunner()));
   } else {
     context->SetException(STRING16(L"Unknown object."));
     return;

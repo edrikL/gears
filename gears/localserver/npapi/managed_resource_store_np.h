@@ -37,7 +37,7 @@
 // GearsManagedResourceStore
 //-----------------------------------------------------------------------------
 class GearsManagedResourceStore
-    : public ModuleImplBaseClass,
+    : public ModuleImplBaseClassVirtual,
       public MessageObserverInterface,
       public JsEventHandlerInterface {
  public:

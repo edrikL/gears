@@ -34,6 +34,8 @@
 #include <gecko_internal/nsIScriptContext.h>
 #include <gecko_internal/nsIScriptGlobalObject.h>
 #include <gecko_internal/nsIScriptObjectPrincipal.h>
+#include <gecko_internal/nsITimer.h>
+#include <gecko_internal/nsITimerInternal.h>
 
 #include "gears/base/common/js_runner.h"
 
@@ -58,16 +60,23 @@
 #include "ff/genfiles/test_ff.h"
 #endif
 
+static const int kGarbageCollectionIntervalMsec = 2000;
+
 // Internal base class used to share some code between DocumentJsRunner and
 // JsRunner. Do not override these methods from JsRunner or DocumentJsRunner.
 // Either share the code here, or move it to those two classes if it's
 // different.
 class JsRunnerBase : public JsRunnerInterface {
  public:
-  JsRunnerBase() : js_engine_context_(NULL) {}
+  JsRunnerBase() : alloc_js_wrapper_(NULL), js_engine_context_(NULL) {}
 
   JsContextPtr GetContext() {
     return js_engine_context_;
+  }
+
+  JsContextWrapperPtr GetContextWrapper() {
+    assert(alloc_js_wrapper_);
+    return alloc_js_wrapper_;
   }
 
   JsObject *NewObject(const char16 *optional_global_ctor_name,
@@ -239,8 +248,12 @@ class JsRunnerBase : public JsRunnerInterface {
     }
   }
 
+  // Not using scoped_ptr even though it is possible because the cleanup code
+  // for JsRunner is tricky and would rather be explicit about the order things
+  // get torn down.
+  JsContextWrapper *alloc_js_wrapper_;
   JSContext *js_engine_context_;
-
+  
  private:
   std::set<JsEventHandlerInterface *> event_handlers_[MAX_JSEVENTS];
 
@@ -250,11 +263,33 @@ class JsRunnerBase : public JsRunnerInterface {
 
 class JsRunner : public JsRunnerBase {
  public:
-  JsRunner() : alloc_js_wrapper_(NULL),
-               error_handler_(NULL), global_obj_(NULL), js_runtime_(NULL),
+  JsRunner() : error_handler_(NULL), global_obj_(NULL), js_runtime_(NULL),
                js_script_(NULL) {
-    InitJavaScriptEngine();
+    // TODO(aa): Consider moving initialization of JsRunners out since there is
+    // no way to detect errors in ctors.
+    if (!InitJavaScriptEngine())
+      return;
+
+    // This creates a timer to run the garbage collector on a repeating
+    // interval, which is what Firefox does in
+    // source/dom/src/base/nsJSEnvironment.cpp.
+    nsresult result;
+    gc_timer_ = do_CreateInstance("@mozilla.org/timer;1", &result);
+
+    if (NS_SUCCEEDED(result)) {
+      // Turning off idle causes the callback to be invoked in this thread,
+      // instead of in the Timer idle thread.
+      nsCOMPtr<nsITimerInternal> timer_internal(do_QueryInterface(gc_timer_));
+      timer_internal->SetIdle(false);
+
+      // Start the timer
+      gc_timer_->InitWithFuncCallback(GarbageCollectionCallback,
+                                      js_engine_context_,
+                                      kGarbageCollectionIntervalMsec,
+                                      nsITimer::TYPE_REPEATING_SLACK);
+    }
   }
+
   ~JsRunner();
 
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id);
@@ -270,12 +305,12 @@ class JsRunner : public JsRunnerBase {
 
  private:
   bool InitJavaScriptEngine();
-
   bool GetProtoFromIID(const nsIID iface_id, JSObject **proto);
+
+  static void GarbageCollectionCallback(nsITimer *timer, void *context);
   static void JS_DLL_CALLBACK JsErrorHandler(JSContext *cx, const char *message,
                                              JSErrorReport *report);
 
-  JsContextWrapper *alloc_js_wrapper_; // (created in thread)
   JsErrorHandlerInterface *error_handler_;
   JSObject *global_obj_;
   IIDToProtoMap proto_interfaces_;
@@ -283,9 +318,16 @@ class JsRunner : public JsRunnerBase {
   JSRuntime *js_runtime_;
   JSScript *js_script_;
   scoped_ptr<JsRootedToken> js_script_root_;
+  nsCOMPtr<nsITimer> gc_timer_;
 
   DISALLOW_EVIL_CONSTRUCTORS(JsRunner);
 };
+
+void JsRunner::GarbageCollectionCallback(nsITimer *timer,
+                                                 void *context) {
+  JSContext *cx = reinterpret_cast<JSContext *>(context);
+  JS_GC(cx);
+}
 
 void JS_DLL_CALLBACK JsRunner::JsErrorHandler(JSContext *cx,
                                               const char *message,
@@ -319,6 +361,10 @@ void JS_DLL_CALLBACK JsRunner::JsErrorHandler(JSContext *cx,
 JsRunner::~JsRunner() {
   // Alert modules that the engine is unloading.
   SendEvent(JSEVENT_UNLOAD);
+
+  // Stop garbage collection now.
+  gc_timer_->Cancel();
+  gc_timer_ = NULL;
 
   // We need to remove the roots now, because they will be referencing an
   // invalid context if we wait for the destructor.
@@ -603,9 +649,13 @@ class DocumentJsRunner : public JsRunnerBase {
  public:
   DocumentJsRunner(IGeneric *base, JsContextPtr context) {
     js_engine_context_ = context;
+    alloc_js_wrapper_ = new JsContextWrapper(context,
+                                             JS_GetGlobalObject(context));
   }
 
   ~DocumentJsRunner() {
+    if (alloc_js_wrapper_)
+      delete alloc_js_wrapper_;
   }
 
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {

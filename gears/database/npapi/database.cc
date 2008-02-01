@@ -24,13 +24,13 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/common/common.h"
+#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
-#include "gears/base/npapi/module_wrapper.h"
 #include "gears/database/common/database_utils.h"
 #include "gears/database/npapi/database.h"
 #include "gears/database/npapi/result_set.h"
@@ -157,7 +157,7 @@ void GearsDatabase::Execute(JsCallContext *context) {
 
   // Wrap a GearsResultSet around the statement and execute it
   GComPtr<GearsResultSet> result_set(
-      CreateModule<GearsResultSet>(EnvPageJsContext()));
+      CreateModule<GearsResultSet>(GetJsRunner()));
   if (!result_set.get())
     return;  // Create function sets an error message.
 

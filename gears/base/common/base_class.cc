@@ -156,7 +156,7 @@ JsRunnerInterface *ModuleImplBaseClass::GetJsRunner() const {
   return js_runner_;
 }
 
-#if BROWSER_NPAPI
+#if BROWSER_NPAPI || BROWSER_FF
 void ModuleImplBaseClass::AddRef() {
   js_wrapper_->AddRef();
 }

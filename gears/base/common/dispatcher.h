@@ -35,6 +35,8 @@ class JsCallContext;
 // An opaque type used to uniquely identify a method or property.
 typedef void* DispatchId;
 
+typedef std::map<std::string, DispatchId> DispatcherNameList;
+
 // Interface to a dynamic dispatch class.  This class is responsible for
 // taking a method or property identifier (from the JavaScript bindings), and
 // calling the corresponding native method on a C++ class.
@@ -46,10 +48,12 @@ class DispatcherInterface {
  public:
   virtual ~DispatcherInterface() {}
   virtual bool HasMethod(DispatchId method_id) = 0;
-  virtual bool HasProperty(DispatchId property_id) = 0;
+  virtual bool HasPropertyGetter(DispatchId property_id) = 0;
+  virtual bool HasPropertySetter(DispatchId property_id) = 0;
   virtual bool CallMethod(DispatchId method_id, JsCallContext *context) = 0;
   virtual bool GetProperty(DispatchId property_id, JsCallContext *context) = 0;
   virtual bool SetProperty(DispatchId property_id, JsCallContext *context) = 0;
+  virtual const DispatcherNameList &GetMemberNames() = 0;
 };
 
 // The implementation of the DispatcherInterface.  Each dispatch target class
@@ -74,10 +78,12 @@ class Dispatcher : public DispatcherInterface {
 
   // DispatcherInterface:
   virtual bool HasMethod(DispatchId method_id);
-  virtual bool HasProperty(DispatchId property_id);
+  virtual bool HasPropertyGetter(DispatchId property_id);
+  virtual bool HasPropertySetter(DispatchId property_id);
   virtual bool CallMethod(DispatchId method_id, JsCallContext *context);
   virtual bool GetProperty(DispatchId property_id, JsCallContext *context);
   virtual bool SetProperty(DispatchId property_id, JsCallContext *context);
+  virtual const DispatcherNameList &GetMemberNames();
 
  protected:
   // Register JavaScript property/methods.
@@ -94,6 +100,7 @@ class Dispatcher : public DispatcherInterface {
     IDList property_getters;
     IDList property_setters;
     IDList methods;
+    DispatcherNameList members;
     ThreadLocalVariables() : did_init_class(false) {}
   };
 

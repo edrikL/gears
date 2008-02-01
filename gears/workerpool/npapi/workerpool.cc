@@ -28,10 +28,10 @@
 
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/js_runner_utils.h"
+#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/url_utils.h"
-#include "gears/base/npapi/module_wrapper.h"
 #include "gears/factory/npapi/factory.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
@@ -883,11 +883,10 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   //
   // js_runner manages the lifetime of these allocated objects.
 
-  JsContextPtr js_context = js_runner->GetContext();
-
-  GComPtr<GearsFactory> factory(CreateModule<GearsFactory>(js_context));
+  GComPtr<GearsFactory> factory(CreateModule<GearsFactory>(js_runner));
   if (!factory.get()) { return false; }
 
+  JsContextPtr js_context = js_runner->GetContext();
   if (!factory->InitBaseManually(true,  // is_worker
                                  js_context,
                                  wi->script_origin,
@@ -896,7 +895,7 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   }
 
   GComPtr<GearsWorkerPool> workerpool(
-        CreateModule<GearsWorkerPool>(js_context));
+        CreateModule<GearsWorkerPool>(js_runner));
   if (!workerpool.get()) { return false; }
 
   if (!workerpool->InitBaseManually(true,  // is_worker

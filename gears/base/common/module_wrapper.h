@@ -1,4 +1,4 @@
-// Copyright 2006, Google Inc.
+// Copyright 2008, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,22 +23,19 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/localserver/npapi/file_submitter_np.h"
+#ifndef GEARS_BASE_COMMON_MODULE_WRAPPER_H__
+#define GEARS_BASE_COMMON_MODULE_WRAPPER_H__
 
-#include "gears/base/common/module_wrapper.h"
+#ifdef BROWSER_NPAPI
+#include "gears/base/npapi/module_wrapper.h"
+#elif BROWSER_FF
+#include "gears/base/firefox/module_wrapper.h"
+#else
+// TODO: Add more browser support here.
+#endif
 
-DECLARE_GEARS_WRAPPER(GearsFileSubmitter);
+// Used to set up a Gears module's wrapper.
+#define DECLARE_GEARS_WRAPPER(GearsClass) \
+DECLARE_DISPATCHER(GearsClass)
 
-// static
-template<>
-void Dispatcher<GearsFileSubmitter>::Init() {
-  RegisterMethod("setFileInputElement",
-                 &GearsFileSubmitter::SetFileInputElement);
-}
-
-//------------------------------------------------------------------------------
-// SetFileInputElement
-//------------------------------------------------------------------------------
-void GearsFileSubmitter::SetFileInputElement(JsCallContext *context) {
-  context->SetException(STRING16(L"Not Implemented"));
-}
+#endif // GEARS_BASE_COMMON_MODULE_WRAPPER_H__

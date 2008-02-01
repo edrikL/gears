@@ -38,7 +38,7 @@ inline DispatchId GetStringIdentifier(const char *str) {
 #else
   // TODO(mpcomplete): Figure out what we need for other ports.
   // This only works if str is a static string.
-  return reinterpret_cast<DispatchId>(str);
+  return reinterpret_cast<DispatchId>(const_cast<char *>(str));
 #endif
 }
 
@@ -59,8 +59,14 @@ bool Dispatcher<T>::HasMethod(DispatchId method_id) {
 }
 
 template<class T>
-bool Dispatcher<T>::HasProperty(DispatchId property_id) {
+bool Dispatcher<T>::HasPropertyGetter(DispatchId property_id) {
   const IDList &properties = GetPropertyGetterList();
+  return properties.find(property_id) != properties.end();
+}
+
+template<class T>
+bool Dispatcher<T>::HasPropertySetter(DispatchId property_id) {
+  const IDList &properties = GetPropertySetterList();
   return properties.find(property_id) != properties.end();
 }
 
@@ -102,6 +108,11 @@ bool Dispatcher<T>::SetProperty(DispatchId property_id,
   return true;
 }
 
+template<class T>
+const DispatcherNameList &Dispatcher<T>::GetMemberNames() {
+  return GetThreadLocals().members;
+}
+
 // static
 template<class T>
 void Dispatcher<T>::RegisterProperty(const char *name,
@@ -110,6 +121,7 @@ void Dispatcher<T>::RegisterProperty(const char *name,
   DispatchId id = GetStringIdentifier(name);
   GetPropertyGetterList()[id] = getter;
   GetPropertySetterList()[id] = setter;
+  GetThreadLocals().members[name] = id;
 }
 
 // static
@@ -117,6 +129,7 @@ template<class T>
 void Dispatcher<T>::RegisterMethod(const char *name, ImplCallback callback) {
   DispatchId id = GetStringIdentifier(name);
   GetMethodList()[id] = callback;
+  GetThreadLocals().members[name] = id;
 }
 
 // static

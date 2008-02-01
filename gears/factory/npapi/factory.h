@@ -40,7 +40,7 @@ class JsRunnerInterface;
 // instantiate.
 
 class GearsFactory
-    : public ModuleImplBaseClass {
+    : public ModuleImplBaseClassVirtual {
  public:
   GearsFactory();
 

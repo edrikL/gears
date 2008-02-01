@@ -61,7 +61,8 @@ bool PluginBase::Invoke(NPObject *npobj, NPIdentifier name,
 bool PluginBase::HasProperty(NPObject *npobj, NPIdentifier name) {
   PluginBase *plugin = static_cast<PluginBase *>(npobj);
   assert(plugin->dispatcher_);
-  return plugin->dispatcher_->HasProperty(name);
+  return plugin->dispatcher_->HasPropertyGetter(name) ||
+      plugin->dispatcher_->HasPropertySetter(name);
 }
 
 // static
