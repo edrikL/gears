@@ -34,7 +34,7 @@ class GearsDatabase;
 class ModuleWrapperBaseClass;
 
 class GearsResultSet
-    : public ModuleImplBaseClass {
+    : public ModuleImplBaseClassVirtual {
  public:
   GearsResultSet();
   ~GearsResultSet();

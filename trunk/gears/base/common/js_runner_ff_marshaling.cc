@@ -81,7 +81,6 @@
 #include <gecko_sdk/include/nsComponentManagerUtils.h>
 #include <gecko_sdk/include/nsMemory.h> // for use in JSData2Native
 #include <gecko_internal/nsIInterfaceInfoManager.h>
-#include <gecko_internal/nsITimerInternal.h>
 #include <gecko_internal/nsIVariant.h> // for use in JSData2Native
 // TODO(cprince): see if we can remove nsIVariant.h/nsMemory.h after cleanup.
 #include <gecko_internal/xptinfo.h>
@@ -90,6 +89,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner_ff_marshaling.h"
+#include "gears/base/firefox/module_wrapper.h"
 #include "gears/base/firefox/xpcom_dynamic_load.h"
 
 
@@ -100,8 +100,6 @@ static const int kFunctionDataReservedSlotIndex = 0;
 // Magic constants the JavaScript engine uses with the argv array.
 static const int kArgvFunctionIndex = -2; // negative indices [sic]
 static const int kArgvInstanceIndex = -1;
-
-static const int kGarbageCollectionIntervalMsec = 2000;
 
 //
 // Forward declarations of local functions defined below.
@@ -156,6 +154,13 @@ void FinalizeNative(JSContext *cx, JSObject *obj) {
       {
         JsWrapperDataForInstance *instance =
             static_cast<JsWrapperDataForInstance *>(p);
+            
+        if (instance->module) {
+          ModuleWrapper *module_wrapper =
+              static_cast<ModuleWrapper *>(instance->module->GetWrapper());
+          module_wrapper->Destroy();
+        }
+
         instance->js_wrapper->instance_wrappers_.erase(instance);
       }
       break;
@@ -168,36 +173,9 @@ void FinalizeNative(JSContext *cx, JSObject *obj) {
 
 JsContextWrapper::JsContextWrapper(JSContext *cx, JSObject *global_obj)
     : cx_(cx), global_obj_(global_obj) {
-  // This creates a timer to run the garbage collector on a repeating interval,
-  // which is what Firefox does in source/dom/src/base/nsJSEnvironment.cpp.
-  nsresult result;
-  gc_timer_ = do_CreateInstance("@mozilla.org/timer;1", &result);
-
-  if (NS_SUCCEEDED(result)) {
-    // Turning off idle causes the callback to be invoked in this thread,
-    // instead of in the Timer idle thread.
-    nsCOMPtr<nsITimerInternal> timer_internal(do_QueryInterface(gc_timer_));
-    timer_internal->SetIdle(false);
-
-    // Start the timer
-    gc_timer_->InitWithFuncCallback(GarbageCollectionCallback,
-                                    cx_,
-                                    kGarbageCollectionIntervalMsec,
-                                    nsITimer::TYPE_REPEATING_SLACK);
-  }
-}
-
-void JsContextWrapper::GarbageCollectionCallback(nsITimer *timer,
-                                                 void *context) {
-  JSContext *cx = reinterpret_cast<JSContext *>(context);
-  JS_GC(cx);
 }
 
 void JsContextWrapper::CleanupRoots() {
-  // Stop garbage collection now.
-  gc_timer_->Cancel();
-  gc_timer_ = NULL;
-
   // Remove the roots associated with the protos we've created.  We need to
   // keep the rest of the structure around until the JS engine has been shut
   // down.
@@ -213,6 +191,58 @@ void JsContextWrapper::CleanupRoots() {
   global_roots_.clear();
 }
 
+bool JsContextWrapper::CreateModuleJsObject(ModuleImplBaseClass *module,
+                                            JsToken *object_out) {
+  // We require the name property to be set since we use it as the key for
+  // caching created prototype objects.
+  const char *module_name = module->get_module_name();
+  assert(module_name);
+
+  JSObject *proto = NULL;
+  JsWrapperDataForProto *proto_data = NULL;
+
+  // Get the JSClass for this type of Module, or else create one if we've
+  // never seen this class before.
+  NameToProtoMap::iterator iter = name_to_proto_map_.find(module_name);
+  if (iter != name_to_proto_map_.end()) {
+    proto = iter->second;
+    proto_data = static_cast<JsWrapperDataForProto*>(JS_GetPrivate(cx_, proto));
+  } else {
+    scoped_ptr<JsWrapperDataForProto> proto_data_alloc(
+        new JsWrapperDataForProto);
+
+    if (!InitClass(module_name, proto_data_alloc.get(), NULL, NULL, &proto))
+      return false;
+
+    proto_data = proto_data_alloc.release();
+
+    if (!AddAllFunctionsToPrototype(proto,
+                                    module->GetWrapper()->GetDispatcher())) {
+      return false;
+    }
+
+    // save values
+    name_to_proto_map_[module_name] = proto;
+    proto_wrappers_.push_back(linked_ptr<JsWrapperDataForProto>(proto_data));
+
+    // succeeded; save the pointer
+    JS_SetPrivate(cx_, proto, proto_data);
+  }
+
+  JSObject *instance_obj = JS_NewObject(cx_,
+                                        proto_data->alloc_jsclass.get(),
+                                        proto,
+                                        global_obj_); // parent
+  if (!instance_obj) return false;
+
+  if (!SetupInstanceObject(instance_obj, module, NULL))
+    return false;
+
+  *object_out = OBJECT_TO_JSVAL(instance_obj);
+  return true;
+}
+
+
 bool JsContextWrapper::DefineClass(const nsIID *iface_id,
                                    const nsCID *class_id,
                                    const char *class_name,
@@ -223,50 +253,12 @@ bool JsContextWrapper::DefineClass(const nsIID *iface_id,
   // These values should be defined iff "new CLASSNAME" should work.
   assert((class_name && class_id) || (!class_name && !class_id));
 
-  // allocate heap memory for variable that will be held by JS
-  const char *name_for_alloc = "";                  // this is to avoid
-  if (class_name) { name_for_alloc = class_name; }  // heap alloc/free/alloc
-  scoped_ptr<std::string> class_name_copy(new std::string(name_for_alloc));
-
-  // always use the same JSClass, except for the name field
-  JSClass js_wrapper_class = {
-    class_name_copy->c_str(), JSCLASS_NEW_RESOLVE | // TODO(cprince): need flag?
-                              JSCLASS_HAS_PRIVATE, // name, flags
-    JS_PropertyStub, JS_PropertyStub,  // defineProperty, deleteProperty
-    JS_PropertyStub, JS_PropertyStub, // getProperty, setProperty
-    JS_EnumerateStub, JS_ResolveStub, // enum, resolve
-    JS_ConvertStub, FinalizeNative, // convert, finalize
-    JSCLASS_NO_OPTIONAL_MEMBERS
-  };
-  scoped_ptr<JSClass> alloc_jsclass(new JSClass(js_wrapper_class));
-
-  // add the class to the JSContext
-  JSObject *proto_obj = JS_InitClass(cx_, global_obj_,
-                                     NULL, // parent_proto
-                                     alloc_jsclass.get(), // JSClass *
-                                     JsContextWrapper::JsWrapperConstructor,
-                                     0, // ctor_num_args
-                                     NULL, NULL,  //   prototype   props/funcs
-                                     NULL, NULL); // "constructor" props/funcs
-  if (!proto_obj) { return false; }
-
-  // setup the JsWrapperDataForProto struct
   scoped_ptr<JsWrapperDataForProto> proto_data(new JsWrapperDataForProto);
+  JSObject *proto_obj;
 
-  proto_data->jsobject = proto_obj;
-  proto_data->iface_id = *iface_id;
-  proto_data->js_wrapper = this;
-  proto_data->alloc_name.swap(class_name_copy); // take ownership
-  proto_data->alloc_jsclass.swap(alloc_jsclass); // take ownership
-  proto_data->proto_root.reset(new JsRootedToken(cx_,
-                                                 OBJECT_TO_JSVAL(proto_obj)));
-
-  // nsIFactory for this class lets us create instances later
-  if (!class_id) {
-    proto_data->factory = NULL;
-  } else {
-    proto_data->factory = do_GetClassObject(*class_id);
-    if (!proto_data->factory) { return false; }
+  if (!InitClass(class_name ? class_name : "", proto_data.get(), iface_id,
+                 class_id, &proto_obj)) {
+      return false;
   }
 
   // nsIInterfaceInfo for this IID lets us lookup properties later
@@ -278,7 +270,7 @@ bool JsContextWrapper::DefineClass(const nsIID *iface_id,
                                          getter_AddRefs(proto_data->iface_info));
   if (NS_FAILED(nr)) { return false; }
 
-  bool succeeded = AddFunctionsToPrototype(proto_obj, proto_data.get());
+  bool succeeded = AddAllFunctionsToPrototype(proto_obj, proto_data.get());
   if (!succeeded) { return false; }
 
   // save values
@@ -318,7 +310,7 @@ bool JsContextWrapper::DefineGlobal(JSObject *proto_obj,
                             new JsRootedToken(cx_,
                                               OBJECT_TO_JSVAL(instance_obj))));
 
-  bool succeeded = SetupInstanceObject(cx_, instance_obj, instance_isupports);
+  bool succeeded = SetupInstanceObject(instance_obj, NULL, instance_isupports);
   if (!succeeded) { return false; }
 
   // To define a global instance, add the name as a property of the
@@ -340,16 +332,114 @@ bool JsContextWrapper::DefineGlobal(JSObject *proto_obj,
 }
 
 
+bool JsContextWrapper::InitClass(const char *class_name,
+                                 JsWrapperDataForProto *proto_data,
+                                 const nsIID *iface_id, const nsIID *class_id,
+                                 JSObject **proto_obj) {
+  assert(class_name);
+  scoped_ptr<std::string> class_name_copy(new std::string(class_name));
+
+  // always use the same JSClass, except for the name field
+  JSClass js_wrapper_class = {
+    class_name_copy->c_str(), JSCLASS_NEW_RESOLVE | // TODO(cprince): need flag?
+                              JSCLASS_HAS_PRIVATE, // name, flags
+    JS_PropertyStub, JS_PropertyStub,  // defineProperty, deleteProperty
+    JS_PropertyStub, JS_PropertyStub, // getProperty, setProperty
+    JS_EnumerateStub, JS_ResolveStub, // enum, resolve
+    JS_ConvertStub, FinalizeNative, // convert, finalize
+    JSCLASS_NO_OPTIONAL_MEMBERS
+  };
+  scoped_ptr<JSClass> alloc_jsclass(new JSClass(js_wrapper_class));
+
+  // add the class to the JSContext
+  *proto_obj = JS_InitClass(cx_, global_obj_,
+                            NULL, // parent_proto
+                            alloc_jsclass.get(), // JSClass *
+                            JsContextWrapper::JsWrapperConstructor,
+                            0, // ctor_num_args
+                            NULL, NULL,  //   prototype   props/funcs
+                            NULL, NULL); // "constructor" props/funcs
+  if (!*proto_obj) { return false; }
+
+  // setup the JsWrapperDataForProto struct
+  proto_data->jsobject = *proto_obj;
+  proto_data->js_wrapper = this;
+  proto_data->alloc_name.swap(class_name_copy); // take ownership
+  proto_data->alloc_jsclass.swap(alloc_jsclass); // take ownership
+  proto_data->proto_root.reset(new JsRootedToken(cx_,
+                                                 OBJECT_TO_JSVAL(*proto_obj)));
+
+  if (iface_id) {
+    proto_data->iface_id = *iface_id;
+  }
+
+  // nsIFactory for this class lets us create instances later
+  if (!class_id) {
+    proto_data->factory = NULL;
+  } else {
+    proto_data->factory = do_GetClassObject(*class_id);
+    if (!proto_data->factory) { return false; }
+  }
+
+  return true;
+}
+
+
+bool JsContextWrapper::AddAllFunctionsToPrototype(
+                           JSObject *proto_obj,
+                           DispatcherInterface *dispatcher) {
+  DispatcherNameList::const_iterator members =
+      dispatcher->GetMemberNames().begin();
+  for (; members != dispatcher->GetMemberNames().end(); ++members) {
+    DispatchId dispatch_id = members->second;
+    bool has_getter = dispatcher->HasPropertyGetter(dispatch_id);
+    bool has_setter = dispatcher->HasPropertySetter(dispatch_id);
+
+    if (has_getter) {
+      if (!AddFunctionToPrototype(proto_obj,
+                                  members->first.c_str(), // member name
+                                  true, false, // is_getter, is_setter
+                                  dispatch_id,
+                                  // remaining params not used
+                                  NULL, NULL, NULL, 0, 0))
+        return false;
+    }
+
+    if (has_setter) {
+      if (!AddFunctionToPrototype(proto_obj,
+                                  members->first.c_str(), // member name
+                                  false, true, // is_getter, is_setter
+                                  dispatch_id,
+                                  // remaining params not used
+                                  NULL, NULL, NULL, 0, 0))
+        return false;
+    }
+
+    // If there is no getter or setter, this member must be a method.
+    if (!has_getter && !has_setter) {
+      if (!AddFunctionToPrototype(proto_obj,
+                                  members->first.c_str(), // member name
+                                  false, false, // is_getter, is_setter
+                                  dispatch_id,
+                                  // remaining params not used
+                                  NULL, NULL, NULL, 0, 0))
+        return false;
+    }
+  }
+
+  return true;
+}
+
+
 // Helper function for enumerating methods and property getters/setters of a
 // XPCOM object, and exposing those functions to the JavaScript engine.
 //
 // [Reference: this is inspired by Mozilla's DefinePropertyIfFound() in
 // /xpconnect/src/xpcwrappednativejsops.cpp.]
-bool JsContextWrapper::AddFunctionsToPrototype(JSObject *proto_obj,
-                                               JsWrapperDataForProto *proto_data) {
+bool JsContextWrapper::AddAllFunctionsToPrototype(
+                           JSObject *proto_obj,
+                           JsWrapperDataForProto *proto_data) {
   nsresult nr;
-  JSBool js_ok;
-
   nsIInterfaceInfo *iface_info = proto_data->iface_info;
 
   PRUint16 num_methods;
@@ -364,7 +454,6 @@ bool JsContextWrapper::AddFunctionsToPrototype(JSObject *proto_obj,
   // TODO(cprince): could assert [0..2] are QueryInterface, AddRef, Release
 
   for (int i = kFirstReflectedMethod; i < num_methods; ++i) { // vtable_index
-
     const nsXPTMethodInfo *function_info;
     nr = iface_info->GetMethodInfo(i, &function_info);
     if (NS_FAILED(nr)) { return false; }
@@ -374,88 +463,113 @@ bool JsContextWrapper::AddFunctionsToPrototype(JSObject *proto_obj,
       continue; // don't expose to JS engine
     }
 
-    const char *function_name = function_info->GetName(); // does NOT alloc
-
-    // Create a JSFunction object for the property getter/setter or method.
-    int newfunction_flags = (function_info->IsGetter() ? JSFUN_GETTER : 0) |
-                            (function_info->IsSetter() ? JSFUN_SETTER : 0);
-    JSFunction *function = JS_NewFunction(cx_,
-                                          JsContextWrapper::JsWrapperCaller,
-                                          function_info->GetParamCount(),
-                                          newfunction_flags,
-                                          proto_obj, // parent
-                                          function_name);
-    // TODO(cprince): do we need to manually cleanup all JS_NewFunction values
-    // if this loop fails at some point? (Probably handled as JSContext cleanup
-    // outside this function.)
-    JSObject *function_obj = JS_GetFunctionObject(function);
-
-    // Save info about the function.
-    scoped_ptr<JsWrapperDataForFunction> function_data(
-                                             new JsWrapperDataForFunction);
-    function_data->name = function_name;
-    function_data->function_info = function_info;
-    function_data->iface_info = iface_info;
-    function_data->vtable_index = i;
-    function_data->proto_data = proto_data;
-    function_data->function_root.reset(new JsRootedToken(
-                                               cx_,
-                                               OBJECT_TO_JSVAL(function_obj)));
-
-    // Assume function is a method, and revise if it's a getter or setter.
-    // FYI: xptinfo reports getters/setters separately (but with same name).
-    JSPropertyOp getter = NULL;
-    JSPropertyOp setter = NULL;
-    jsval        method = OBJECT_TO_JSVAL(function_obj);
-    uintN        function_flags = 0;
-
-    if (function_info->IsGetter()) {
-      getter = (JSPropertyOp) function_obj;
-      method = OBJECT_TO_JSVAL(NULL);
-      function_flags |= (JSPROP_GETTER | JSPROP_SHARED);
-      // TODO(cprince): need JSPROP_READONLY for no-setter attributes?
+    if (!AddFunctionToPrototype(proto_obj, function_info->GetName(),
+                                function_info->IsGetter() == PR_TRUE,
+                                function_info->IsSetter() == PR_TRUE,
+                                NULL, // dispatch_id, not used for isupports
+                                proto_data,  function_info, iface_info,
+                                i, // vtable_index
+                                function_info->GetParamCount())) {
+      return false;
     }
-    if (function_info->IsSetter()) {
-      setter = (JSPropertyOp) function_obj;
-      method = OBJECT_TO_JSVAL(NULL);
-      function_flags |= (JSPROP_SETTER | JSPROP_SHARED);
-    }
-
-    // Note: JS_DefineProperty is written to handle adding a setter to a
-    // previously defined getter with the same name.
-    js_ok = JS_DefineProperty(cx_, proto_obj, function_name,
-                              method, // method
-                              getter, setter, // getter, setter
-                              function_flags);
-    if (!js_ok) { return false; }
-
-    // succeeded; prevent scoped cleanup of allocations, and save the pointer
-    //
-    // We cannot use JS_SetPrivate() here because a function JSObject stores
-    // its JSFunction pointer there (see js_LinkFunctionObject in jsfun.c).
-    //
-    // Instead, use reserved slots, which we DO have.  From js_FunctionClass in
-    // jsfun.c: "Reserve two slots in all function objects for XPConnect."
-    //
-    // We must use PRIVATE_TO_JSVAL (only works on pointers!) to prevent the
-    // garbage collector from touching any private data stored in JS 'slots'.
-    assert(0 == (0x01 & reinterpret_cast<int>(function_data.get())));
-    function_wrappers_.push_back(
-        linked_ptr<JsWrapperDataForFunction>(function_data.get()));
-    jsval pointer_jsval = PRIVATE_TO_JSVAL((jsval)function_data.release());
-    assert(!JSVAL_IS_GCTHING(pointer_jsval));
-    JS_SetReservedSlot(cx_, function_obj, kFunctionDataReservedSlotIndex,
-                       pointer_jsval);
   }
 
   return true;
 }
 
 
-bool JsContextWrapper::SetupInstanceObject(JSContext *cx,
-                                           JSObject *instance_obj,
+bool JsContextWrapper::AddFunctionToPrototype(
+                           JSObject *proto_obj, const char *name,
+                           bool is_getter, bool is_setter,
+                           DispatchId dispatch_id,
+                           JsWrapperDataForProto *proto_data,
+                           const nsXPTMethodInfo *function_info,
+                           nsIInterfaceInfo *iface_info,
+                           int vtable_index, int param_count) {
+  // Create a JSFunction object for the property getter/setter or method.
+  int newfunction_flags = 0;
+  if (is_getter) {
+    newfunction_flags = JSFUN_GETTER;
+  } else if (is_setter) {
+    newfunction_flags = JSFUN_SETTER;
+  }
+  
+  JSFunction *function = JS_NewFunction(cx_,
+                                        JsContextWrapper::JsWrapperCaller,
+                                        param_count,
+                                        newfunction_flags,
+                                        proto_obj, // parent
+                                        name);
+  JSObject *function_obj = JS_GetFunctionObject(function);
+
+  // Save info about the function.
+  scoped_ptr<JsWrapperDataForFunction> function_data(
+                                           new JsWrapperDataForFunction);
+  function_data->dispatch_id = dispatch_id;
+  function_data->flags = newfunction_flags;
+  function_data->name = name; // copy
+  function_data->function_info = function_info;
+  function_data->iface_info = iface_info;
+  function_data->vtable_index = vtable_index;
+  function_data->proto_data = proto_data;
+  function_data->function_root.reset(new JsRootedToken(
+                                             cx_,
+                                             OBJECT_TO_JSVAL(function_obj)));
+
+  // Assume function is a method, and revise if it's a getter or setter.
+  // FYI: xptinfo reports getters/setters separately (but with same name).
+  JSPropertyOp getter = NULL;
+  JSPropertyOp setter = NULL;
+  jsval        method = OBJECT_TO_JSVAL(function_obj);
+  uintN        function_flags = 0;
+
+  if (is_getter) {
+    getter = (JSPropertyOp) function_obj;
+    method = OBJECT_TO_JSVAL(NULL);
+    function_flags = (JSPROP_GETTER | JSPROP_SHARED);
+    // TODO(cprince): need JSPROP_READONLY for no-setter attributes?
+  } else if (is_setter) {
+    setter = (JSPropertyOp) function_obj;
+    method = OBJECT_TO_JSVAL(NULL);
+    function_flags = (JSPROP_SETTER | JSPROP_SHARED);
+  }
+
+  // Note: JS_DefineProperty is written to handle adding a setter to a
+  // previously defined getter with the same name.
+  JSBool js_ok = JS_DefineProperty(cx_, proto_obj, name,
+                                   method, // method
+                                   getter, setter, // getter, setter
+                                   function_flags);
+  if (!js_ok) { return false; }
+
+  // succeeded; prevent scoped cleanup of allocations, and save the pointer
+  //
+  // We cannot use JS_SetPrivate() here because a function JSObject stores
+  // its JSFunction pointer there (see js_LinkFunctionObject in jsfun.c).
+  //
+  // Instead, use reserved slots, which we DO have.  From js_FunctionClass in
+  // jsfun.c: "Reserve two slots in all function objects for XPConnect."
+  //
+  // We must use PRIVATE_TO_JSVAL (only works on pointers!) to prevent the
+  // garbage collector from touching any private data stored in JS 'slots'.
+  assert(0 == (0x01 & reinterpret_cast<int>(function_data.get())));
+  function_wrappers_.push_back(
+      linked_ptr<JsWrapperDataForFunction>(function_data.get()));
+  jsval pointer_jsval = PRIVATE_TO_JSVAL((jsval)function_data.release());
+  assert(!JSVAL_IS_GCTHING(pointer_jsval));
+  JS_SetReservedSlot(cx_, function_obj, kFunctionDataReservedSlotIndex,
+                     pointer_jsval);
+
+  return true;
+}
+
+
+
+bool JsContextWrapper::SetupInstanceObject(JSObject *instance_obj,
+                                           ModuleImplBaseClass *module,
                                            nsISupports *isupports) {
-  assert(isupports);
+  assert(isupports || module);
+  assert(!(isupports && module)); // where art thou xor?
 
   // setup the JsWrapperDataForInstance struct
   scoped_ptr<JsWrapperDataForInstance> instance_data(
@@ -465,13 +579,14 @@ bool JsContextWrapper::SetupInstanceObject(JSContext *cx,
   // static finalize function.
   instance_data->js_wrapper = this;
   instance_data->jsobject = instance_obj;
+  instance_data->module = module;
   instance_data->isupports = isupports;
 
   instance_wrappers_[instance_data.get()] =
       linked_ptr<JsWrapperDataForInstance>(instance_data.get());
 
   // succeeded; prevent scoped cleanup of allocations, and save the pointer
-  JS_SetPrivate(cx, instance_obj, instance_data.release());
+  JS_SetPrivate(cx_, instance_obj, instance_data.release());
   return true;
 }
 
@@ -528,8 +643,7 @@ JSBool JsContextWrapper::JsWrapperCaller(JSContext *cx, JSObject *obj,
                                          jsval *js_retval) {
   nsresult nr;
   JSBool retval = JS_FALSE;  // JS_FALSE tells JS engine an exception occurred
-  JSBool js_ok;
-
+  
   // Gather data regarding the function and instance being called.
   JSObject *function_obj = JSVAL_TO_OBJECT(argv[kArgvFunctionIndex]);
   assert(function_obj);
@@ -540,9 +654,9 @@ JSBool JsContextWrapper::JsWrapperCaller(JSContext *cx, JSObject *obj,
 
   JsWrapperDataForFunction *function_data;
   jsval function_data_jsval;
-  js_ok = JS_GetReservedSlot(cx, function_obj,
-                             kFunctionDataReservedSlotIndex,
-                             &function_data_jsval);
+  JSBool js_ok = JS_GetReservedSlot(cx, function_obj,
+                                    kFunctionDataReservedSlotIndex,
+                                    &function_data_jsval);
   function_data = static_cast<JsWrapperDataForFunction *>(
                       JSVAL_TO_PRIVATE(function_data_jsval));
   assert(function_data);
@@ -552,6 +666,38 @@ JSBool JsContextWrapper::JsWrapperCaller(JSContext *cx, JSObject *obj,
       static_cast<JsWrapperDataForInstance*>(JS_GetPrivate(cx, instance_obj));
   assert(instance_data);
   assert(instance_data->header.type == INSTANCE_JSOBJECT);
+
+  // The presence of dispatch_id indicates this is a method call on a
+  // dispatcher-based module.
+  if (function_data->dispatch_id) {
+    assert(instance_data->module);
+
+    ModuleWrapperBaseClass *module_wrapper =
+        instance_data->module->GetWrapper();
+    JsCallContext call_context(cx, instance_data->module->GetJsRunner(),
+                               argc, argv, js_retval);
+    bool success;
+
+    if (function_data->flags == JSFUN_GETTER) {
+      success = module_wrapper->GetDispatcher()->GetProperty(
+                                    function_data->dispatch_id,
+                                    &call_context);
+    } else if (function_data->flags == JSFUN_SETTER) {
+      success = module_wrapper->GetDispatcher()->SetProperty(
+                                    function_data->dispatch_id,
+                                    &call_context);
+    } else {
+      success = module_wrapper->GetDispatcher()->CallMethod(
+                                    function_data->dispatch_id,
+                                    &call_context);
+    }
+
+    return success ? JS_TRUE : JS_FALSE;
+  }
+
+  // Otherwise, this is a method call on an isupports-based module.
+  // TODO_REMOVE_NSISUPPORTS: the rest of this method and all the related
+  // conversion code.
 
   // Give the ModuleImplBaseClass direct access to JS params
   ScopedJsArgSetter arg_setter(instance_data->isupports, cx, argc, argv);
@@ -1861,8 +2007,8 @@ JSBool NativeData2JS(JSContext *cx, JSObject *scope_obj,
 
               // TODO: cleanup JSObject if code BELOW fails?
 
-              bool succeeded = js_wrapper->SetupInstanceObject(
-                                               cx, out_instance_obj, isupports);
+              bool succeeded = js_wrapper->SetupInstanceObject(out_instance_obj,
+                                                               NULL, isupports);
               if (!succeeded) {
                 assert(false); // NOT YET IMPLEMENTED??
                 //return <FAILURE>

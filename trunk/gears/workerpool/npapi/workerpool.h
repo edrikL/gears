@@ -41,7 +41,7 @@ struct Message;
 struct JavaScriptWorkerInfo;
 
 class GearsWorkerPool
-    : public ModuleImplBaseClass,
+    : public ModuleImplBaseClassVirtual,
       public JsEventHandlerInterface {
  public:
   // Need a default constructor to instance objects from the Factory.

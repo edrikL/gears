@@ -25,9 +25,9 @@
 
 #include "gears/localserver/npapi/localserver_np.h"
 
+#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/url_utils.h"
-#include "gears/base/npapi/module_wrapper.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/npapi/managed_resource_store_np.h"
 #include "gears/localserver/npapi/resource_store_np.h"
@@ -95,7 +95,7 @@ void GearsLocalServer::CreateManagedStore(JsCallContext *context) {
          name.c_str(), required_cookie.c_str()));
 
   GComPtr<GearsManagedResourceStore> store(
-        CreateModule<GearsManagedResourceStore>(EnvPageJsContext()));
+        CreateModule<GearsManagedResourceStore>(GetJsRunner()));
   if (!store.get())
     return;  // Create function sets an error message.
 
@@ -136,7 +136,7 @@ void GearsLocalServer::OpenManagedStore(JsCallContext *context) {
   }
 
   GComPtr<GearsManagedResourceStore> store(
-        CreateModule<GearsManagedResourceStore>(EnvPageJsContext()));
+      CreateModule<GearsManagedResourceStore>(GetJsRunner()));
   if (!store.get())
     return;  // Create function sets an error message.
 
@@ -208,7 +208,7 @@ void GearsLocalServer::CreateStore(JsCallContext *context) {
          name.c_str(), required_cookie.c_str()));
 
   GComPtr<GearsResourceStore> store(
-        CreateModule<GearsResourceStore>(EnvPageJsContext()));
+        CreateModule<GearsResourceStore>(GetJsRunner()));
   if (!store.get())
     return;  // Create function sets an error message.
 
@@ -248,7 +248,7 @@ void GearsLocalServer::OpenStore(JsCallContext *context) {
   }
 
   GComPtr<GearsResourceStore> store(
-        CreateModule<GearsResourceStore>(EnvPageJsContext()));
+        CreateModule<GearsResourceStore>(GetJsRunner()));
   if (!store.get())
     return;  // Create function sets an error message.
 

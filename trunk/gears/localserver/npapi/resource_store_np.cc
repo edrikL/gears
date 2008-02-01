@@ -25,8 +25,8 @@
 
 #include "gears/localserver/npapi/resource_store_np.h"
 
+#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/url_utils.h"
-#include "gears/base/npapi/module_wrapper.h"
 #include "gears/localserver/npapi/file_submitter_np.h"
 
 DECLARE_GEARS_WRAPPER(GearsResourceStore);
@@ -399,7 +399,7 @@ void GearsResourceStore::CreateFileSubmitter(JsCallContext *context) {
   }
 
   GComPtr<GearsFileSubmitter> submitter(
-        CreateModule<GearsFileSubmitter>(EnvPageJsContext()));
+        CreateModule<GearsFileSubmitter>(GetJsRunner()));
   if (!submitter.get())
     return;  // Create function sets an error message.
 

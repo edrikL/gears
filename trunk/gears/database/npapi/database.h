@@ -40,7 +40,7 @@ class GearsResultSet;
 class ModuleWrapperBaseClass;
 
 class GearsDatabase
-    : public ModuleImplBaseClass,
+    : public ModuleImplBaseClassVirtual,
       public JsEventHandlerInterface {
  public:
   GearsDatabase();

@@ -140,7 +140,8 @@
 #define RETURN_EXCEPTION(msg) \
   { \
     LOG(("Exception: %s", msg)); \
-    return JsSetException(this, msg); \
+    return JsSetException(this->EnvPageJsContext(), this->GetJsRunner(), \
+                          msg, !this->EnvIsWorker()); \
   }
 
 #elif BROWSER_NPAPI

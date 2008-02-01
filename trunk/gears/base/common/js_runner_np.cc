@@ -59,7 +59,7 @@ class JsRunnerBase : public JsRunnerInterface {
   JsContextPtr GetContext() {
     return np_instance_;
   }
-  
+
   NPObject *GetGlobalObject() {
     return global_object_;
   }

@@ -32,7 +32,7 @@
 //-----------------------------------------------------------------------------
 // GearsLocalServer
 //-----------------------------------------------------------------------------
-class GearsLocalServer : public ModuleImplBaseClass {
+class GearsLocalServer : public ModuleImplBaseClassVirtual {
  public:
   // need a default constructor to instance objects from the Factory
   GearsLocalServer() {}

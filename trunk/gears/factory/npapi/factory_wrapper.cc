@@ -25,7 +25,7 @@
 
 #include "gears/factory/npapi/factory_wrapper.h"
 
-#include "gears/base/npapi/module_wrapper.h"
+#include "gears/base/common/module_wrapper.h"
 #include "gears/factory/npapi/factory.h"
 
 DECLARE_GEARS_WRAPPER(GearsFactory);

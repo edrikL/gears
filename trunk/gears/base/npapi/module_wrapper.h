@@ -43,7 +43,7 @@ class ModuleWrapper
   ModuleWrapper(NPP instance) : PluginBase(instance) {
   }
 
-  void Init(ModuleImplBaseClass *impl, DispatcherInterface *dispatcher) {
+  void Init(ModuleImplBaseClassVirtual *impl, DispatcherInterface *dispatcher) {
     PluginBase::Init(dispatcher);
     impl_.reset(impl);
     impl_->SetJsWrapper(this);
@@ -55,11 +55,17 @@ class ModuleWrapper
     OBJECT_TO_NPVARIANT(const_cast<ModuleWrapper *>(this), token);
     return token;
   }
+
+  virtual DispatcherInterface *GetDispatcher() const {
+    assert(dispatcher_.get());
+    return dispatcher_.get();
+  }
+
   virtual void AddRef() { NPN_RetainObject(this); }
   virtual void Release() { NPN_ReleaseObject(this); }
 
  protected:
-  scoped_ptr<ModuleImplBaseClass> impl_;
+  scoped_ptr<ModuleImplBaseClassVirtual> impl_;
   scoped_ptr<DispatcherInterface> dispatcher_;
 
  private:
@@ -69,9 +75,9 @@ class ModuleWrapper
 
 // Creates an instance of the class and its wrapper.
 template<class GearsClass>
-GearsClass *CreateModule(JsContextPtr context) {
+GearsClass *CreateModule(JsRunnerInterface *js_runner) {
   ModuleWrapper *wrapper = static_cast<ModuleWrapper *>(
-      NPN_CreateObject(context, GetNPClass<ModuleWrapper>()));
+      NPN_CreateObject(js_runner->GetContext(), GetNPClass<ModuleWrapper>()));
 
   if (!wrapper) {
     BrowserUtils::SetJsException(
@@ -83,9 +89,5 @@ GearsClass *CreateModule(JsContextPtr context) {
   wrapper->Init(impl, new Dispatcher<GearsClass>(impl));
   return impl;
 }
-
-// Used to set up a Gears module's wrapper.
-#define DECLARE_GEARS_WRAPPER(GearsClass) \
-DECLARE_DISPATCHER(GearsClass)
 
 #endif // GEARS_BASE_NPAPI_MODULE_WRAPPER_H__

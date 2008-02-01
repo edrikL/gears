@@ -36,7 +36,7 @@
 // manipulating <input type=file> elements to refer to local files that were
 // previously captured via store.CaptureFile().
 //------------------------------------------------------------------------------
-class GearsFileSubmitter : public ModuleImplBaseClass {
+class GearsFileSubmitter : public ModuleImplBaseClassVirtual {
  public:
   GearsFileSubmitter() {}
 

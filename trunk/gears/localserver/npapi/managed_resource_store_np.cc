@@ -25,8 +25,8 @@
 
 #include "gears/localserver/npapi/managed_resource_store_np.h"
 
+#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/url_utils.h"
-#include "gears/base/npapi/module_wrapper.h"
 #include "gears/localserver/npapi/update_task_np.h"
 
 DECLARE_GEARS_WRAPPER(GearsManagedResourceStore);

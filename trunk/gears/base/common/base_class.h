@@ -70,17 +70,16 @@ class JsRunnerInterface;
 // consistently across the main-thread and worker-thread JavaScript engines.
 class ModuleImplBaseClass {
  public:
-  ModuleImplBaseClass() : is_initialized_(false) {}
-  
-#ifdef BROWSER_NPAPI
-  // ModuleWrapper in NPAPI has a member scoped_ptr<ModuleImplBaseClass> so
-  // this destructor needs to be virtual. However, adding a virtual destructor
-  // causes a crash in Firefox because nsCOMPtr expects (nsISupports *)ptr ==
-  // (ModuleImplBaseClass *)ptr. Don't add any virtual members to
-  // ModuleImplBaseClass on Firefox unless Gears modules are no longer XPCOM
-  // classes.
-  virtual ~ModuleImplBaseClass() {}
-#endif
+  // TODO_REMOVE_NSISUPPORTS: this constructor only used for isupports-based
+  // modules.
+  ModuleImplBaseClass()
+      : module_name_(NULL), is_initialized_(false) {}
+  explicit ModuleImplBaseClass(const char *name)
+      : module_name_(name), is_initialized_(false) {}
+
+  const char *get_module_name() const {
+    return module_name_;
+  }
 
   // Initialization functions
   //
@@ -118,9 +117,13 @@ class ModuleImplBaseClass {
   // These do not exist in IE yet.
 #endif
 
-#if BROWSER_NPAPI
+#if BROWSER_NPAPI || BROWSER_FF
   // Methods for dealing with the JavaScript wrapper interface.
   void SetJsWrapper(ModuleWrapperBaseClass *wrapper) { js_wrapper_ = wrapper; }
+  ModuleWrapperBaseClass *GetWrapper() const { 
+    assert(js_wrapper_);
+    return js_wrapper_;
+  }
   void AddRef();
   void Release();
   JsToken GetWrapperToken() const;
@@ -131,6 +134,7 @@ class ModuleImplBaseClass {
   // Instead of making a copy for every object (ModuleImplBaseClass), we could
   // keep a reference to one shared class per tuple.
   // (Recall idea for PageSharedState + PageThreadSharedState classes.)
+  const char *module_name_;
   bool is_initialized_;
   bool env_is_worker_;
 #if BROWSER_FF || BROWSER_NPAPI
@@ -162,13 +166,34 @@ class ModuleImplBaseClass {
 
   JsRunnerInterface *js_runner_;
 
-#if BROWSER_NPAPI
+#if BROWSER_NPAPI || BROWSER_FF
   // Weak pointer to our JavaScript wrapper.
   ModuleWrapperBaseClass *js_wrapper_;
 #endif
 
   DISALLOW_EVIL_CONSTRUCTORS(ModuleImplBaseClass);
 };
+
+
+// ModuleWrapper has a member scoped_ptr<ModuleImplBaseClass>, so this
+// destructor needs to be virtual. However, adding a virtual destructor
+// causes a crash in Firefox because nsCOMPtr expects (nsISupports *)ptr ==
+// (ModuleImplBaseClass *)ptr. Therefore, until we convert all the old XPCOM-
+// based firefox modules to be Dispatcher-based, we need this separate base
+// class.
+// TODO_REMOVE_NSISUPPORTS: Remove this class and make ~ModuleImplBaseClass
+// virtual when this is the only ModuleImplBaseClass.
+class ModuleImplBaseClassVirtual : public ModuleImplBaseClass {
+ public:
+  ModuleImplBaseClassVirtual() : ModuleImplBaseClass() {}
+  ModuleImplBaseClassVirtual(const char *name) : ModuleImplBaseClass(name) {}
+  virtual ~ModuleImplBaseClassVirtual(){}
+
+ private:
+  DISALLOW_EVIL_CONSTRUCTORS(ModuleImplBaseClassVirtual);
+};
+
+class DispatcherInterface;
 
 // TODO(mpcomplete): implement the rest of this for other platforms.
 
@@ -185,12 +210,16 @@ class ModuleWrapperBaseClass {
 
   // Releases a reference to the wrapper class.
   virtual void Release() = 0;
+
+  // Gets the Dispatcher for this module.
+  virtual DispatcherInterface *GetDispatcher() const = 0;
+
  protected:
   // Don't allow direct deletion via this interface.
   virtual ~ModuleWrapperBaseClass() { }
 };
 
-#if BROWSER_NPAPI
+#if BROWSER_NPAPI || BROWSER_FF
 // GComPtr: automatically call Release()
 class ReleaseWrapperFunctor {
  public:
@@ -199,18 +228,22 @@ class ReleaseWrapperFunctor {
   }
 };
 
-// TODO(cprince): Unify with CComPtr and nsCOMPtr.
 template<class Module>
 class GComPtr : public scoped_token<Module*, ReleaseWrapperFunctor> {
  public:
   explicit GComPtr(Module *v)
-      : scoped_token<Module*, ReleaseWrapperFunctor>(v) {}
+      : scoped_token<Module*, ReleaseWrapperFunctor>(v) {
+    if (v) {
+      v->AddRef();
+    }
+  }
+
   Module* operator->() const { return this->get(); }
 };
 
 // Creates new Module of the given type.  Returns NULL on failure.
 template<class Module>
-Module *CreateModule(JsContextPtr context);
+Module *CreateModule(JsRunnerInterface *js_runner);
 #endif
 
 #endif  // GEARS_BASE_COMMON_BASE_CLASS_H__

@@ -122,7 +122,7 @@ class JsRunnerBase : public JsRunnerInterface {
     if (!js_array.get())
       return NULL;
 
-    if (!js_array->SetArray(js_object->js_object_, js_object->js_context_))
+    if (!js_array->SetArray(js_object->token(), js_object->context()))
       return NULL;
 
     return js_array.release();

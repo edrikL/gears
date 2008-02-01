@@ -97,6 +97,11 @@ class JsRunnerInterface {
   virtual bool Start(const std::string16 &full_script) = 0;
   virtual bool Stop() = 0;
   virtual JsContextPtr GetContext() = 0;
+  // Only used by Firefox. Gets the JsContextWrapper instance associated with
+  // the current JsContext.
+  // TODO(aa): Once we no longer need the XPCOM support in JsContextWrapper,
+  // maybe roll back into JsRunner so that this isn't needed?
+  virtual JsContextWrapperPtr GetContextWrapper() { return NULL; }
   virtual bool Eval(const std::string16 &script) = 0;
   virtual void SetErrorHandler(JsErrorHandlerInterface *error_handler) = 0;
 
