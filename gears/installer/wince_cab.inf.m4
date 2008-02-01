@@ -18,6 +18,7 @@ BuildMax=0xE0000000
 [DefaultInstall]
 CopyFiles=Files.Common1
 CESelfRegister=PRODUCT_SHORT_NAME_UQ.dll
+CESetupDLL=setup.dll
 
 [SourceDisksNames]
 m4_changequote(`^',`^')m4_dnl
@@ -29,6 +30,7 @@ m4_ifelse(DEBUG,^1^,^m4_dnl
 
 [SourceDisksFiles]
 "PRODUCT_SHORT_NAME_UQ.dll"=1
+"setup.dll"=1
 
 [DestinationDirs]
 Shortcuts=0,%CE2%\Start Menu
