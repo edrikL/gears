@@ -32,6 +32,7 @@
 DECLARE_GEARS_WRAPPER(GearsResourceStore);
 
 // static
+template<>
 void Dispatcher<GearsResourceStore>::Init() {
   RegisterProperty("name", &GearsResourceStore::GetName, NULL);
   RegisterProperty("requiredCookie", &GearsResourceStore::GetRequiredCookie,
@@ -90,7 +91,7 @@ void GearsResourceStore::SetEnabled(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_BOOL, &enabled },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
@@ -111,7 +112,7 @@ void GearsResourceStore::Capture(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_ARRAY, &url_array },
     { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &callback },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   scoped_ptr<JsRootedCallback> scoped_callback(callback);
   if (context->is_exception_set())
     return;
@@ -161,7 +162,7 @@ void GearsResourceStore::AbortCapture(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_INT, &capture_id },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
@@ -200,7 +201,7 @@ void GearsResourceStore::IsCaptured(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &url },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
@@ -221,7 +222,7 @@ void GearsResourceStore::Remove(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &url },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
@@ -247,7 +248,7 @@ void GearsResourceStore::Rename(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &src_url },
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &dest_url },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
@@ -279,7 +280,7 @@ void GearsResourceStore::Copy(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &src_url },
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &dest_url },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
@@ -316,7 +317,7 @@ void GearsResourceStore::GetCapturedFileName(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &url },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
@@ -345,7 +346,7 @@ void GearsResourceStore::GetHeader(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &url },
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &name },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
@@ -368,7 +369,7 @@ void GearsResourceStore::GetAllHeaders(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &url },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
