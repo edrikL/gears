@@ -170,7 +170,7 @@ void GearsResultSet::Field(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_INT, &index },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
@@ -192,7 +192,7 @@ void GearsResultSet::FieldByName(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &field_name },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
@@ -230,7 +230,7 @@ void GearsResultSet::FieldName(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_INT, &index },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 

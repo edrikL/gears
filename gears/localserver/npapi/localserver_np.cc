@@ -35,6 +35,7 @@
 DECLARE_GEARS_WRAPPER(GearsLocalServer);
 
 // static
+template<>
 void Dispatcher<GearsLocalServer>::Init() {
   RegisterMethod("canServeLocally", &GearsLocalServer::CanServeLocally);
   RegisterMethod("createManagedStore", &GearsLocalServer::CreateManagedStore);
@@ -53,7 +54,7 @@ void GearsLocalServer::CanServeLocally(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &url },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
@@ -306,7 +307,7 @@ bool GearsLocalServer::GetAndCheckParameters(JsCallContext *context,
     { JSPARAM_REQUIRED, JSPARAM_STRING16, name },
     { JSPARAM_OPTIONAL, JSPARAM_STRING16, required_cookie },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return false;
 

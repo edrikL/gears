@@ -83,7 +83,7 @@ void GearsDatabase::Open(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_OPTIONAL, JSPARAM_STRING16, &database_name },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 

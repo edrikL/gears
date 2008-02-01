@@ -30,6 +30,7 @@
 DECLARE_GEARS_WRAPPER(GearsFileSubmitter);
 
 // static
+template<>
 void Dispatcher<GearsFileSubmitter>::Init() {
   RegisterMethod("setFileInputElement",
                  &GearsFileSubmitter::SetFileInputElement);

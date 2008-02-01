@@ -32,6 +32,7 @@
 DECLARE_GEARS_WRAPPER(GearsManagedResourceStore);
 
 // static
+template<>
 void Dispatcher<GearsManagedResourceStore>::Init() {
   RegisterProperty("name", &GearsManagedResourceStore::GetName, NULL);
   RegisterProperty("requiredCookie",
@@ -95,7 +96,7 @@ void GearsManagedResourceStore::SetEnabled(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_BOOL, &enabled },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
@@ -125,7 +126,7 @@ void GearsManagedResourceStore::SetManifestUrl(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &url },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
@@ -273,7 +274,7 @@ void GearsManagedResourceStore::SetEventHandler(
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &function },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   scoped_ptr<JsRootedCallback> scoped_function(function);
   if (context->is_exception_set())
     return;
