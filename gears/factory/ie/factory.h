@@ -30,7 +30,6 @@
 #include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-#include "gears/base/common/html_event_monitor.h"
 #include "gears/base/ie/resource.h"  // for .rgs resource ids (IDR_*)
 #include "ie/genfiles/interfaces.h"  // from OUTDIR
 

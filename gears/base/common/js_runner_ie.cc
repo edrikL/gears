@@ -44,7 +44,11 @@
 
 #include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/exception_handler_win32.h"
+#ifdef WINCE
+// WinCE does not use HtmlEventMonitor to monitor page unloading.
+#else
 #include "gears/base/common/html_event_monitor.h"
+#endif
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
@@ -650,24 +654,21 @@ class DocumentJsRunner : public JsRunnerBase {
   bool AddEventHandler(JsEventType event_type,
                        JsEventHandlerInterface *handler) {
     if (event_type == JSEVENT_UNLOAD) {
+#ifdef WINCE
+      // WinCE does not use HtmlEventMonitor to monitor page unloading.
+#else
       // Create an HTML event monitor to send the unload event when the page
       // goes away.
       if (unload_monitor_ == NULL) {
         unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
                                                    HandleEventUnload, this));
-#ifdef WINCE
-        // TODO(steveblock): Investigate whether IPIEHTMLWindow2 will meet our
-        // needs here.
-        return false;
-#else
         CComPtr<IHTMLWindow3> event_source;
         if (FAILED(ActiveXUtils::GetHtmlWindow3(site_, &event_source))) {
           return false;
         }
-
         unload_monitor_->Start(event_source);
-#endif
       }
+#endif
     }
 
     return JsRunnerBase::AddEventHandler(event_type, handler);
@@ -679,7 +680,11 @@ class DocumentJsRunner : public JsRunnerBase {
     static_cast<DocumentJsRunner*>(user_param)->SendEvent(JSEVENT_UNLOAD);
   }
 
+#ifdef WINCE
+  // WinCE does not use HtmlEventMonitor to monitor page unloading.
+#else
   scoped_ptr<HtmlEventMonitor> unload_monitor_;  // For 'onunload' notifications
+#endif
   CComPtr<IUnknown> site_;
 
   DISALLOW_EVIL_CONSTRUCTORS(DocumentJsRunner);

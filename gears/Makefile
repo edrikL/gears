@@ -393,8 +393,6 @@ IEMOBILE_CPPSRCS	+= \
 		file.cc \
 		file_wince.cc \
 		file_test.cc \
-		html_event_monitor.cc \
-		html_event_monitor_ie.cc \
 		ipc_message_queue_null.cc \
 		http_utils.cc \
 		js_runner_ie.cc \
