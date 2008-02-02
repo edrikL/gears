@@ -88,6 +88,7 @@
 #include "ff/genfiles/base_interface_ff.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_runner_ff_marshaling.h"
 #include "gears/base/firefox/module_wrapper.h"
 #include "gears/base/firefox/xpcom_dynamic_load.h"
