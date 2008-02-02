@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+
+<!--
+Copyright 2007, Google Inc.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, 
+    this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ 3. Neither the name of Google Inc. nor the names of its contributors may be
+    used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<html>
+  <head>
+    <title>API History</title>
+    <link rel="stylesheet" type="text/css" href="gears.css" />
+  </head>
+
+<body>
+
+<h1>API History</h1>
+
+<div id="pagecontent">
+
+<h3 id="0.3">New in 0.3 <em>- Coming sometime after 0.2</em></h3>
+
+<ul>
+  <li>Added initial <a href="api_desktop.html">Desktop</a> module.
+  <li><a href="api_factory.html">Factory</a> changes:
+    <ul>
+      <li>Added the <code>hasPermission</code> property.
+      <li>Added the <code>getPermission()</code> method.
+    </ul>
+  <li><a href="api_localserver.html">LocalServer</a> changes:
+    <ul>
+      <li>Added the <code>oncomplete</code>, <code>onerror</code>, and
+        <code>onprogress</code> events to the
+        <code>ManagedResourceStore</code> class.
+    </ul>
+</ul>
+
+<br>
+
+<h3 id="0.2">New in 0.2 <em>- Coming real soon now</em></h3>
+
+<ul>
+  <li>Added initial <a href="api_httprequest.html">HttpRequest</a> module.
+  <li>Added initial <a href="api_timer.html">Timer</a> module.
+  <li><a href="api_workerpool.html">WorkerPool</a> changes:
+    <ul>
+      <li>Added the <code>onerror</code> callback.
+      <li>Added the <code>createWorkerFromUrl()</code> method.
+      <li>Added the <code>allowCrossOrigin()</code> method.
+      <li>Added the <code>messageObject</code> parameter to the
+        <code>onmessage</code> callback.
+    </ul>
+  <li><a href="api_localserver.html">LocalServer</a> changes:
+    <ul>
+      <li>The <code>requiredCookie</code> parameter to the
+        <code>openManagedStore()</code> and <code>createManagedStore()</code>
+        methods now recognizes the special cookie value <code>;NONE;</code>.
+    </ul>
+  <li><a href="api_factory.html">Factory</a> changes:
+    <ul>
+      <li>Added the <code>version</code> property.
+    </ul>
+</ul>
+
+<br>
+
+<h3 id="0.1">New in 0.1 <em>- Current version</em></h3>
+<ul>
+  <li>Initial Gears release, including first versions of:
+    <ul>
+      <li><a href="api_database.html">Database</a> module
+      <li><a href="api_localserver.html">LocalServer</a> module
+      <li><a href="api_workerpool.html">WorkerPool</a> module
+    </ul>
+  </li>
+</ul>
+
+</div>
+</body>
+</html>
