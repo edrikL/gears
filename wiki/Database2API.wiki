@@ -1,0 +1,65 @@
+#summary A proposal to add native HTML5 SQL API to Gears
+#labels DesignDoc,WorkInProgress
+
+Work in progress
+----
+
+= Introduction =
+
+This proposal aims to implement a Gears module based on the existing specification, [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html HTML5 Storage API]. This specification is currently implemented in the [http://trac.webkit.org/projects/webkit/browser/trunk/WebCore/storage WebKit trunk]. There is also an incomplete [http://attic.glazkov.com/player/ player] implementation, written in Javascript as a Gears worker.
+
+=Goals=
+
+The goals of the proposal are:
+ * provide a standards-based way to access and manipulate Gears databases
+ * implement native asynchronous database API
+ * provide a complementing synchronous cousin to the API, specified in HTML5
+
+Also, bonus goals:
+ * implement a thread pool abstraction that can be used in other modules for asynchronous operations
+ * build a new module from scratch using the new Dispatcher model.
+
+=Concept=
+
+TODO: General API Concept
+
+
+=Javascript Interface=
+
+The interface is defined in [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html HTML 5 specification].
+
+=Code Example=
+
+TODO: pick a more intuitive example
+
+{{{
+console.log('1');
+openDatabase('test').transaction(function(tx) {
+	console.log('2');
+	tx.executeSql('CREATE TABLE IF NOT EXISTS Pages(title TEXT, lastUpdated INTEGER)', 
+		[]);
+	console.log('3');
+	tx.executeSql('INSERT INTO Pages VALUES(?, ?)', 
+		[ 'some title', new Date().getTime() ]);
+	console.log('4');
+	tx.executeSql('SELECT count(*) FROM Pages;', 
+		[],
+		function(tx, rs) {
+			console.info('5');
+		});
+	console.log('6');
+	tx.executeSql('SELECT * FROM Pages;', 
+		[],
+		function(tx, rs) {
+			console.info('7');
+		});
+	console.log('8');
+	tx.executeSql('SELECT title FROM Pages ORDER BY lastUpdated DESC;', 
+		[],
+		function(tx, rs) {
+			console.info('9');
+		});
+	console.log('10');
+});
+console.log('11');
+}}}
