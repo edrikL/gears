@@ -69,7 +69,7 @@ interface Desktop {
   //                  'Video Files (*.avi, *.mpg, *.mov)', '*.avi;*.mpg;*.mov',
   //                  'All Files (*.*)', '*.*']
   //
-  Array openDialog([in string Array filters]);
+  Array openFileDialog([in string Array filters]);
 }
 }}}
 
