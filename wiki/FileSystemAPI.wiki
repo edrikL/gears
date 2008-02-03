@@ -92,7 +92,7 @@ FileDialog* NewFileDialog(FileDialogMode mode);
 
 // This interface will be implemented for every supported operating system.
 class FileDialog {
-  // Opens a dialog file dialog.
+  // Displays a file dialog.
   // Returns: false on invalid input or failure
   // Parameters:
   //   filter - in, optional - An array consisting of pairs of strings.
