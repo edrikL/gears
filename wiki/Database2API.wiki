@@ -12,21 +12,29 @@ This proposal aims to implement a Gears module based on the existing specificati
 
 The goals of the proposal are:
  * provide a standards-based way to access and manipulate Gears databases
- * implement native asynchronous database API
+ * implement native asynchronous, transactional database API
  * provide a complementing synchronous cousin to the API, specified in HTML5
 
-Also, bonus goals:
+Minor/bonus goals:
  * implement a thread pool abstraction that can be used in other modules for asynchronous operations
  * build a new module from scratch using the new Dispatcher model.
-
-=Concept=
-
-TODO: General API Concept
-
+ * provide implementation feedback for HTML5 specification
 
 =Javascript Interface=
 
 The interface is defined in [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html HTML 5 specification].
+
+=Differences=
+
+The API approach differs significantly from Gears Database module by introducing explicit [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#sqltransaction SQLTransaction] interface. In fact, creating single, transactionless statements is not possible using this API. As a benefit, the management of transactions is completely abstracted out (BEGIN, COMMIT, ROLLBACK, etc. are prohibited in statements).
+
+The API is completely asynchronous. The transaction callback is invoked asynchronously (though on the same thread), and tx.executeSql(...) statements don't actually execute any SQL. Instead, the API is essentially an abstraction around a queueing worker, with the transaction callback being a way to _sequence_ the queue items, and tx.executeSql providing the queue items themselves. 
+
+Because the API is asynchronous, the [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#sqlresultset SQLResultSet] is an offline dataset, unlike the one in Database. The user accesses row data using an Object, with each field is mapped is a property (see [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#sqlresultsetrowlist SQLResultSetRowList]).
+
+Additionally, the API includes explicit database version management features in the form of [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#changeversion changeVersion] and an [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#opendatabase openDatabase] version parameter.
+
+There are error two types of error callbacks specified, one for transaction, and one for statement. Essentially, the statement error callbacks are used to detect statement sanitizing/execution failures, and the transaction error callbacks are responsible for handling versioning, transaction, and general statement failures.
 
 =Code Example=
 
@@ -63,3 +71,7 @@ openDatabase('test').transaction(function(tx) {
 });
 console.log('11');
 }}}
+
+=Discussion=
+
+TODO: preparing a statement, version management, transactions step processing model
