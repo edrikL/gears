@@ -215,18 +215,42 @@ STDMETHODIMP GearsFactory::get_version(BSTR *retval) {
 #ifdef WINCE
 // Hold WinCE feature set at version 0.2 for now.
 #else
-STDMETHODIMP GearsFactory::getPermission(const BSTR site_name_in,
-                                         const BSTR image_url_in,
-                                         const BSTR extra_message_in,
+STDMETHODIMP GearsFactory::getPermission(const VARIANT *site_name_in,
+                                         const VARIANT *image_url_in,
+                                         const VARIANT *extra_message_in,
                                          VARIANT_BOOL *retval) {
   // Guard against NULL BSTRs.
   // TODO(cprince): Do this automatically in JsParamFetcher for IE.
-  const BSTR site_name = ActiveXUtils::SafeBSTR(site_name_in);
-  const BSTR image_url = ActiveXUtils::SafeBSTR(image_url_in);
-  const BSTR extra_message = ActiveXUtils::SafeBSTR(extra_message_in);
+  std::string16 site_name;
+  std::string16 image_url;
+  std::string16 extra_message;
 
-  if (HasPermissionToUseGears(this, image_url,
-                              site_name, extra_message)) {
+  if (ActiveXUtils::OptionalVariantIsPresent(site_name_in)) {
+    if (site_name_in->vt == VT_BSTR) {
+      site_name.assign(site_name_in->bstrVal);
+    } else {
+      RETURN_EXCEPTION(STRING16(L"siteName must be a string."));
+    }
+  }
+
+  if (ActiveXUtils::OptionalVariantIsPresent(image_url_in)) {
+    if (image_url_in->vt == VT_BSTR) {
+      image_url.assign(image_url_in->bstrVal);
+    } else {
+      RETURN_EXCEPTION(STRING16(L"imageUrl must be a string."));
+    }
+  }
+
+  if (ActiveXUtils::OptionalVariantIsPresent(extra_message_in)) {
+    if (extra_message_in->vt == VT_BSTR) {
+      extra_message.assign(extra_message_in->bstrVal);
+    } else {
+      RETURN_EXCEPTION(STRING16(L"extraMessage must be a string."));
+    }
+  }
+
+  if (HasPermissionToUseGears(this, image_url.c_str(), site_name.c_str(),
+                              extra_message.c_str())) {
     *retval = VARIANT_TRUE;
   } else {
     *retval = VARIANT_FALSE;

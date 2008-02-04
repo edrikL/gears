@@ -145,7 +145,7 @@ bool HasPermissionToUseGears(GearsFactory *factory,
   }
 
   std::string16 full_icon_url;
-  if (custom_icon_url) {
+  if (custom_icon_url && custom_icon_url[0]) {
     if (ResolveAndNormalize(factory->EnvPageLocationUrl().c_str(),
                             custom_icon_url,
                             &full_icon_url)) {
