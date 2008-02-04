@@ -75,9 +75,9 @@ class ATL_NO_VTABLE GearsFactory
   // Hold WinCE feature set at version 0.2 for now.
 #else
   // bool getPermission(string siteName, string imageUrl, string extraMessage)
-  STDMETHOD(getPermission)(const BSTR site_name,
-                           const BSTR image_url,
-                           const BSTR extra_message,
+  STDMETHOD(getPermission)(const VARIANT *site_name,
+                           const VARIANT *image_url,
+                           const VARIANT *extra_message,
                            VARIANT_BOOL *retval);
   // readonly bool hasPermission
   STDMETHOD(get_hasPermission)(VARIANT_BOOL *retval);

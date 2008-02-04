@@ -191,14 +191,19 @@ NS_IMETHODIMP GearsFactory::GetPermission(PRBool *retval) {
   std::string16 image_url;
   std::string16 extra_message;
 
-  if (js_params.GetCount(false) != 3) {
-    RETURN_EXCEPTION(STRING16(L"getPermission() requires 3 parameters."));
-  } else if (!js_params.GetAsString(0, &site_name)) {
-    RETURN_EXCEPTION(STRING16(L"siteName must be a string."));
-  } else if (!js_params.GetAsString(1, &image_url)) {
-    RETURN_EXCEPTION(STRING16(L"imageUrl must be a string."));
-  } else if (!js_params.GetAsString(2, &extra_message)) {
-    RETURN_EXCEPTION(STRING16(L"extraMessage must be a string."));
+  if (js_params.IsOptionalParamPresent(0, false)) {
+    if (!js_params.GetAsString(0, &site_name))
+      RETURN_EXCEPTION(STRING16(L"siteName must be a string."));
+  }
+
+  if (js_params.IsOptionalParamPresent(1, false)) {
+    if (!js_params.GetAsString(1, &image_url))
+      RETURN_EXCEPTION(STRING16(L"imageUrl must be a string."));
+  }
+
+  if (js_params.IsOptionalParamPresent(2, false)) {
+    if (!js_params.GetAsString(2, &extra_message))
+      RETURN_EXCEPTION(STRING16(L"extraMessage must be a string."));
   }
 
   if (HasPermissionToUseGears(this, image_url.c_str(),

@@ -38,6 +38,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       margin:0 1em;
     }
 
+    #yellowbox-right {
+      padding-left:1em;
+      padding-right:1em;
+    }
+
     #checkbox-row {
       margin-top:1em;
     }
@@ -47,9 +52,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     }
 
     #custom-icon {
-      margin-right:1em;
-      margin-left:1em;
       display:none;
+      margin-left:1em;
     }
 
     #custom-name {
@@ -151,14 +155,14 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
       <div id="yellowbox-inner">
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
           <tr>
-            <td align="left" valign="top">
+            <td id="yellowbox-left" align="left" valign="top">
               <img id="custom-icon" width="0" height="0">
             </td>
-            <td width="100%" align="left" valign="middle">
+            <td id="yellowbox-right" width="100%" align="left" valign="middle">
               <div id="custom-name"></div>
               <div id="origin"></div>
+              <div id="origin-only"></div>
               <div id="custom-message"></div>
-              <div id="origin-only" align="center"></div>
             </td>
           </tr>
         </table>
@@ -300,10 +304,17 @@ m4_include(ui/common/html_dialog.js)
 
     var elem;
 
-    if (!customIcon && !customName && !customMessage) {
+    if (!customName) {
        elem = getElementById("origin-only");
        elem.style.display = "block";
        setTextContent(elem, origin);
+
+    // When all we have is the origin, we lay it out centered because that
+    // looks nicer. This is also what the original dialog did, which did not
+    // support the extra name, icon, or message.
+    if (!customIcon && !customMessage) {
+      elem.setAttribute("align", "center");
+    }
     } else {
        elem = getElementById("origin");
        elem.style.display = "block";
