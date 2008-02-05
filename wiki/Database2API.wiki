@@ -32,7 +32,11 @@ The standard interface is defined in [http://www.whatwg.org/specs/web-apps/curre
 
 == !DatabaseManager ==
 
-The database manager is the top-level entrypoint to the database2 API in Gears. Callers create instance of it using `google.gears.factory.create('beta.databasemanager')`.
+The database manager is the top-level entrypoint to the database2 API in Gears. Callers create instance of it using:
+
+{{{
+  google.gears.factory.create('beta.databasemanager');
+}}}
 
 !DatabaseManager the place of `window.openDatabase()` in the HTML5 spec. Using a different top-level entrypoint allows us to coexist with native browser implementations of the HTML5 database API.
 
@@ -87,8 +91,8 @@ Unlike the Database module, the spec prescribes limiting available storage for e
 =Code Example=
 
 {{{
-var html5db = goolge.gears.factory.create('beta.database2');
-var db = html5db.open('pages', '0.0.1.0',
+var dbman = goolge.gears.factory.create('beta.databasemanager');
+var db = dbman.open('pages', '0.0.1.0',
   'Collection of crawled pages', 3000000);
 
 function renderPageRow(row) {
