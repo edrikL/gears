@@ -93,7 +93,7 @@ function insertPage(text, lastUpdated) {
 }
 }}}
 
-There is also a [http://webkit.org/misc/DatabaseExample.html working example] (requires WebKit nightly) on webkit.org
+There is also a [http://webkit.org/misc/DatabaseExample.html working example] (requires [http://nightly.webkit.org/ WebKit nightly]) on webkit.org
 
 =Implementation=
 
