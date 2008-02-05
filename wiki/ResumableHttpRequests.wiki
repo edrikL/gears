@@ -1,0 +1,107 @@
+#summary A proposal for supporting resumable non-idempotent HTTP requests.
+#labels DesignDoc
+
+= Introduction =
+
+Current web standards provide no reliable mechanism to facilitate the HTTP upload of large files. As a result, file uploads at Google and other sites have traditionally been limited to moderate sizes (e.g. 100 MB), with browser-external clients being required to upload larger files. Several such clients have been created for Google Video, !YouTube, and Google Books, all using HTTP to upload large files by POSTing one segment (a.k.a. chunk) at a time, with chunk sizes on the order of 1 MB; this facilitates recovery from transient errors that occur during upload, by providing well-defined points at which the upload could be resumed (i.e. chunk boundaries). We propose a related set of straight-forward, consistent extensions to HTTP/1.1 which provide native support for resuming non-idempotent HTTP requests, whose adoption would obviate the need for custom clients to reliably perform large non-idempotent operations, such as uploading large files. These extensions work completely transparently to the uploading web application, allowing deployment solely via browser and server updates, retrofitting all existing web applications and forms, and thereby improving the quality of upload across the entire web. Further, these extensions could be implemented by proxies, independent of support on either the client or server.
+Proposal
+
+If an HTTP connection is closed prior to the client receiving a response from the server, the client has no way of knowing how much of the content was successfully received by the server, or whether the operation completed. When this occurs, idempotent operations can be automatically retried, but in the case of non-idempotent operations HTTP/1.1 section 8.1.4 explicitly forbids the client from retrying the operation without user interaction. In order to reattempt the operation without concern for introducing unintended side effects, the server and client require a mechanism for uniquely identifying the operation across multiple requests. We propose a new informational status code, 103 (Checkpoint), coupled with an "Expect: 103-checkpoint" header, for this purpose. The 103 status indicates the server's capability and willingness to continue an operation over multiple resumed requests. The "103-checkpoint" expectation indicates a client's desire to resume an operation. In the case of an operation that involves upload of a content body, the server may also use this mechanism to acknowledge the byte ranges which have been received by the server, allowing the client to omit them in future resumed requests. These extensions are designed to be self-discoverable, and fall back gracefully to standard HTTP/1.1 behavior in the face of clients, servers, or proxies which don't understand the extensions.
+
+When a non-idempotent HTTP _request_ is resumed, the initial request combined with all subsequent resume requests together constitute a single logical _operation_. As such, we use the terms request and operation, respectively, to distinguish between individual HTTP requests and the combined unit of requests (the original request plus any retries) that are logically associated with each other.
+
+= Status Code: 103 Checkpoint =
+
+When a server supporting resumable operations is receiving content from a client (e.g. via POST or PUT) or must otherwise delay the server response, it may elect to make the operation resumable in the face of network failure. The decision about which operations should qualify for resumability is completely server defined, but likely criteria include the upload of large content bodies (e.g. over 100 MB), the upload of content over slow or unreliable connections, and/or operations in which extended server processing may delay the server response. If a particular request qualifies, the server SHOULD periodically (e.g. every 1MB received, or every 1 minute elapsed) send a 103 (Checkpoint) response to the client until the final response is transmitted.
+
+103 (Checkpoint) responses MUST contain an ETag header as defined in HTTP/1.1 section 14.19, assigning an entity tag to the operation being performed (as opposed to the URL or object being operated on), which will allow future resume requests to be properly associated with the operation. The entity tag SHOULD unambiguously identify the operation indefinitely, or over the reasonable period of time during which a client might attempt to resume the operation.
+
+103 (Checkpoint) responses MAY include a Range header as defined in HTTP/1.1 section 14.35. The presence of a Range header in this context indicates the byte ranges of the content body which the server has stored for this operation. In future resume requests, the client SHOULD use this information to minimize the amount of data that needs to be retransmitted. This header overrides the value of any previous Range headers, even if the new Range is not a superset of previous ranges (which allows for the possibility of the server losing or discarding data). In addition, the server MAY specify disjoint byte ranges but SHOULD represent the ranges in canonical form. In the absence of any such Range header over the course of the operation, the client should assume that the server has no stored bytes. We define the `RESUME-RANGE` to be the most recent Range header received, or the empty range if no Range header has been received.
+
+103 (Checkpoint) responses MAY include a Location header as defined in HTTP/1.1 section 14.30. The presence of a Location header in this context specifies the URI to which future resumable requests should be sent for this operation. The header overrides the value of any previous Location headers. In the absence of any such Location header over the course of the operation, the client should send resume requests to the original Request-URI. We define the `RESUME-URI` to be the most recent Location header received, or the Request-URI if no Location header has been received.
+
+103 (Checkpoint) responses SHOULD include an Expires header as defined in HTTP/1.1 section 14.21. The expiration field indicates the date/time after which the specified ETag is considered stale. The server SHOULD maintain the data associated with an incomplete operation, or the response code of a complete operation, until the expiration time in order to allow the client time to recover from an error, reconnect, and resume the operation. This time period MAY be decreased if the server is under resource strain, with the realization that a client which cannot resume is likely to start over at the beginning, and thereby consume even more resources. If the server includes an Expires header in a 103 (Checkpoint) response, it MUST also include a "Cache-Control: no-cache" header.
+
+= Expect: 103-checkpoint =
+
+The "Expect: 103-checkpoint" header MUST be sent by clients on all resume requests. The "103-checkpoint" expectation has two optional parameters: bytes and resume.
+
+{{{
+expect-resume = "Expect" ":" "103-checkpoint" [ ";" expect-range-spec ] [ ";" "resume" "=" entity-tag ]
+expect-range-spec = bytes-expect-range-spec
+bytes-expect-range-spec = bytes-unit "=" byte-range-spec "/" ( instance-length | "*" )
+}}}
+
+When including a body in an "Expect: 103-checkpoint" request, clients MUST include an expect-range-spec indicating which bytes are being transferred with respect to all bytes in the operation. Note that this may be different than the byte range specified in any Content-Range header (if present). Clients MUST specify first-byte-pos as it identifies where in the context of the operation the bytes belong. Clients MAY omit last-byte-pos in cases where the length of the range being transferred is unknown or difficult to determine. Clients SHOULD specify instance-length, unless it is unknown or difficult to determine (in which case "`*`" should be used). In cases where the instance-length is "`*`", the client MUST either use chunked transfer coding or specify the instance-length in the final chunk transferred.
+
+When resuming an incomplete operation, the client MUST send a "103-checkpoint" expectation with the resume parameter set to the entity tag corresponding to the resumed operation. Note that the presence of the resume parameter distinguishes resume operations from new operations (i.e. new operations do not use the resume parameter, while resume operations require it). The semantics of the resume argument to the 103-checkpoint expectation are analogous to the If-Match header, in that the server MUST NOT process the request unless it can locate the resumable operation referred to by the entity tag.
+
+The client MAY send an "Expect: 103-checkpoint" with neither an expect-range-spec nor a resume parameter in order to obtain an ETag prior to commencing an operation. A client MAY send an "Expect: 103-checkpoint" with a resume parameter but no expect-range-spec in order to poll the server to determine which byte ranges it already possesses for the specified entity tag. A client MAY send an "Expect: 103-checkpoint" with an expect-range-spec but no resume parameter in order to optimistically begin a resumable operation prior to receiving a 103 (Checkpoint) from the server.
+
+Upon receiving any "Expect: 103-checkpoint", the server MUST immediately respond with a 103 (Checkpoint) or a final status code. If the server receives a request with a 103-checkpoint expectation, and is not able to locate the operation identified by the entity tag or is otherwise prevented from continuing the operation, the server SHOULD respond with a 417 (Expectation Failed) status code. A server that doesn't support resumability MUST respond to any 103-checkpoint expectation with a 417 (Expectation Failed).
+
+Note that section 14.20 of HTTP/1.1 indicates that "an HTTP/1.1 proxy MUST return a 417 (Expectation Failed) status if it receives a request with an expectation that it cannot meet". We expect that fully compliant proxies ignore Expect pragmas which they don't understand (as opposed to understand but cannot meet), but this remains to be verified in the wild.
+
+= Status Code: 418 Resume Incomplete =
+
+Upon receiving the content body of a resume request, the server may still be unable to complete the operation without further action from the client. In such cases, the server SHOULD return status code 418 (Resume Incomplete). A 418 (Resume Incomplete) response MAY include Range, Location, and/or Expires headers, which have identical semantics to those described in the section on status code 103 (Checkpoint). If the server includes an Expires header in a 418 (Resume Incomplete) response, it MUST also include a "Cache-Control: no-cache" header. A 418 (Resume Incomplete) MAY include a Retry-After header as defined in HTTP/1.1 section 14.37. A client which receives a Retry-After SHOULD delay further resume operations for the specified time period. If the delay is not feasible, the client MUST fail the operation. The server MAY send a 418 (Resume Incomplete) before receiving the entire request body, but as specified in section 8.2.3 of HTTP/1.1 the server SHOULD NOT close the transport connection until it has read the entire request, or until the client closes the connection.
+
+= Resuming Operations =
+
+If the client receives a 418 (Resume Incomplete), or the client receives a 103 (checkpoint) and then the connection closes before a final response code is received, then the client SHOULD attempt to resume the operation until the expiration time of the entity tag associated with the operation. In accordance with section 8.2.4 of HTTP/1.1, the client MAY use binary exponential backoff prior to retrying, and the backoff timer MAY be reset when a 103 (Checkpoint) is received from the server. After an operation's entity tag has expired, the client MAY issue a polling request to determine if the operation is still resumable. Otherwise, the client MUST fail the operation. A resume request may be over a different server connection than the one on which the 103 or 418 was received, if the `RESUME-URI` has changed. The client SHOULD NOT retry a resume request if the `RESUME-URI` and `RESUME-RANGE` values have not changed since the last retry, and the Retry-After header is absent. Such a condition is likely to indicate an error with the server, and could cause the client to waste resources. If the client is unwilling or unable to resume an operation, it MUST fail the operation as though the initial request were non-resumable and became disconnected.
+
+When resuming an operation, the client SHOULD attempt to efficiently fill any gaps that exist in the byte ranges acknowledged by the server, attempting to minimize not only the the number of duplicate bytes transferred, but also the number of distinct resume requests (e.g. the client should send the smallest number of distinct resumable requests possible while keeping the number of duplicate bytes transferred a small constant fraction of all bytes transferred). When the server is missing multiple, non-contiguous byte ranges, multiple resume requests MAY be used to efficiently fill the missing byte ranges; in such cases a 418 (Resume Incomplete) would be expected from all but the last resume request. Regardless of which bytes the client selects for transmission, it MUST send a range which overlaps with at least one missing region.
+
+It is possible that resumed transfers will retransmit byte ranges which have already been partially received by the server. Clients MUST transmit identical bytes over any retransmitted content range (if new content must be transferred, a new operation can be commenced). The server SHOULD ignore byte ranges which it has already received. Clients MUST retransmit identical headers for each resume request in a single operation, with the sole exception of the Content-Length and "Expect: 103-checkpoint" headers, whose parameters will vary depending on the bytes being transferred. When reconstituting an operation consisting of multiple resume requests (e.g. to pass to a CGI application), the server MUST replace the Content-Length with the instance-length of all transmitted bytes.
+
+The server SHOULD process the data from a resumable operation in the same way it would have processed a single request with the entire content. In particular, the server may need to cache the partial data from an operation, and only process it (e.g. pass it to a CGI application) once the data is complete. Servers which support a streaming mode of processing may do so for a resumable operation as long as the streaming can be resumed normally when the client sends more data in a future resume request.
+
+If the client sends a resume request which refers to an operation that has already completed, the server MUST NOT re-process the data, and SHOULD return the same or equivalent response to the client as was returned from the original processing. If the server cannot compose an equivalent response, it MAY return 202 or some other response to indicate that the operation was processed with unknown results, keeping in mind that this response might be confusing when resuming requests occur transparently to the user. Regardless of this possibility, any sequence of resume requests with respect to the same entity tag are guaranteed idempotent, and may be retried without user interaction, despite the considerations of section 8.1.4 of HTTP/1.1.
+
+= Use Cases =
+
+The use of 103 (Checkpoint) status codes, ETags, and "Expect: 103-checkpoint" headers allows the construction of a non-chunked, resumable transfer protocol. The client would begin by sending a single POST/PUT containing the entire (potentially large) body, and then if the connection were prematurely terminated it could use the last received checkpoint to determine at which byte range to recommence, at which point all remaining bytes would again be sent in a single POST/PUT. This process would repeat until the last byte was successfully transferred and a response was received from the server. This mechanism is both discoverable and backwards compatible, allowing it to be performed transparently by browsers and proxies.
+
+Alternatively, a custom client could dynamically or deterministically break a large POST/PUT into multiple pieces, sending each one separately with an appropriate "Expect: 103-checkpoint" header. A key difference from the standard use case of starting with a single POST/PUT is that this requires a server supporting resumability from the beginning, and thus can not be used in a discoverable, backwards compatible way. As such, this use case would primarily be viable for custom clients, though even with a custom client the non-chunked approach should be preferred unless there is a compelling need to deviate from that model.
+
+It is also valid for a server to support resume without caching any received bytes. While this wouldn't reduce dupliate byte transmission, it would still allow a client to automatically retry an operation that would have otherwise required user interaction prior to retry.
+
+= Gears Modifications =
+
+While our proposal could ultimately be pushed into web browsers and even proxies, Google is still in need of an intermediate deployment solution until that happens. Specifically, we would like to replace existing upload clients with a lightweight module implementing the resumability primitives outlined in this document in a manner that is transparent to the web developer. To accomplish this, we propose augmenting `Gears.HttpRequest` to support the semantics described in this document. Thus, any web developer that utilizes `Gears.HttpRequest` to POST/PUT large content to a compatible server will automatically gain the benefit of resumability.
+
+Since much of the resumable functionality is facilitated by the server, we intend to create an Apache module (mod_resume) which implements these semantics as a reference implementation.
+
+= Related Work =
+
+== RFC 2616: HTTP/1.1 ==
+
+http://www.w3.org/Protocols/rfc2616/rfc2616.html
+
+|| 3.6.1 || Protocol Parameters: Chunked Transfer Coding ||
+|| 8.1.4 || Connections: Practical Considerations ||
+|| 8.2.3 || Connections: Use of the 100 (Continue) Status ||
+|| 8.2.4 || Connections: Client Behavior if Server Prematurely Closes Connection ||
+|| 9.5 || Method: POST ||
+|| 9.6 || Method: PUT ||
+|| 10.1 || Status Code: Informational 1xx ||
+|| 10.4.18 || Status Code: 417 Expectation Failed ||
+|| 14.16 || Header Field: Content-Range ||
+|| 14.19 || Header Field: ETag ||
+|| 14.20 || Header Field: Expect ||
+|| 14.21 || Header Field: Expires ||
+|| 14.24 || Header Field: If-Match ||
+|| 14.27 || Header Field: If-Range ||
+|| 14.30 || Header Field: Location ||
+|| 14.32 || Header Field: Pragma ||
+|| 14.35 || Header Field: Range ||
+|| 14.41 || Header Field: Transfer-Encoding ||
+|| 19.2 || Appendix: Internet Media Type multipart/byteranges ||
+
+== XMLHttpRequest ==
+
+http://www.w3.org/TR/XMLHttpRequest/
+
+== Related Google Gears APIs ==
+GearsHttpRequestProposal
+[BlobAPI]
