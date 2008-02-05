@@ -12,34 +12,63 @@ This proposal aims to implement a Gears module based on the existing specificati
 
 The goals of the proposal are:
  * provide a standards-based way to access and manipulate Gears databases
- * implement native asynchronous, transactional database API
- * provide a complementing synchronous cousin to the API, specified in HTML5
+ * implement an asynchronous database API that can be called from the UI thread without freezing the UI
+ * implement a synchronous API to simplify usage inside workers
 
 Minor/bonus goals:
  * implement a thread pool abstraction that can be used in other modules for asynchronous operations
  * build a new module from scratch using the new Dispatcher model.
  * provide implementation feedback for HTML5 specification
 
+Non-goals:
+  * Allow current gears databases to work with database2
+  * Allow access to database2 from the DOM window object (callers will access database2 through the Gears factory, just like any other Gears object).
+
+
 =Javascript Interface=
 
-The interface is defined in [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html HTML 5 specification].
+The standard interface is defined in [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html HTML 5 specification].
 
-While the `openDatabase` method is a member of DOM window object, the Database2 module will be a standalone interface:
+Gears makes some alterations for compatibility with native implementations and to add synchronous DB access.
+
+
+== DatabaseManager ==
+
+The database manager is the top-level entrypoint to the database2 API in Gears. Callers create instance of it using `google.gears.factory.create('beta.databasemanager')`.
+
+DatabaseManager the place of `window.openDatabase()` in the HTML5 spec. Using a different top-level entrypoint allows us to coexist with native browser implementations of the HTML5 database API.
 
 {{{
-interface Database2 {
-  // creates a new Database object instance
-  // name -- name of the database
-  // version -- expected version of the database
-  // displayName -- friendly name of the database
-  // estimatedSize -- estimated size (in bytes) of the database
-  Database openDatabase(in DOMString name, in DOMString version, 
-    in DOMString displayName, in unsigned long estimatedSize);
+interface DatabaseManager {
+  Database2 openDatabase(in DOMString name, in DOMString version, 
+                         in DOMString displayName, in unsigned long estimatedSize);
+  // Future: add removeDatabase(), listDatabases()
 }
 }}}
 
 
-=Differences=
+== Database2 ==
+
+Instances of Database2 are returned by `DatabaseManager.openDatabase()`. They implement the Database interface, as defined in [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#database0 HTML5]. It also implements the following extensions, which allow synchronous Database access:
+
+{{{
+interface Database {
+  void synchronousTransaction(SQLSynchronousTransactionCallback callback) throws SQLError;
+}
+
+interface SQLSynchronousTransactionCallback {
+  void handleEvent(in SQLSynchronousTransaction transaction);
+}
+
+interface SQLSynchronousTransaction {
+  SQLResultSet executeSql(in DOMString sqlStatement, in ObjectArray arguments) throws SQLError;
+}
+}}}
+
+*TODO:* Figure out how synchronous and asynchronous transactions interact.
+
+
+=Differences from the existing Gears database module=
 
 The API approach differs significantly from the Gears Database module by introducing an explicit [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#sqltransaction SQLTransaction] interface. In fact, creating single, transactionless statements is not possible using this API. As a benefit, the management of transactions is completely abstracted out (`BEGIN`, `COMMIT`, `ROLLBACK`, etc. are prohibited in statements).
 
@@ -95,6 +124,7 @@ function insertPage(text, lastUpdated) {
 
 There is also a [http://webkit.org/misc/DatabaseExample.html working example] (requires [http://nightly.webkit.org/ WebKit nightly]) on webkit.org
 
+
 =Implementation=
 
 Currently, a SQLite statement is prepared, bound, and executed in one method. The HTML5 API suggests that the statement is prepared and bound by the `executeSql` method and then queued up for asynchronous execution. Presumably, any additional sanitizing should occur at that point, as well.
@@ -103,14 +133,16 @@ Versions are changed as part of specifically defined pre-flight and post-flight 
 
 _TODO_: transactions step processing/queue model
 
+
 =Discussion=
 
-It would be great to provide a complementary `removeDatabase` method and address [http://code.google.com/p/google-gears/issues/detail?id=76&colspec=Version%20Owner%20ID%20Summary%20Component Issue 76]. The proposed module interface would be as follows:
+It would be great to provide complementary `[http://code.google.com/p/google-gears/issues/detail?id=76 removeDatabase]`, and `[http://code.google.com/p/google-gears/issues/detail?id=49 listDatabases]` methods and address. The proposed module interface would be as follows:
 
 {{{
-interface Database2 {
+interface DatabaseManager {
   Database openDatabase(in DOMString name, in DOMString version, 
     in DOMString displayName, in unsigned long estimatedSize);
   void removeDatabase(in DOMString name);
+  String[] listDatabases();
 }
 }}}
