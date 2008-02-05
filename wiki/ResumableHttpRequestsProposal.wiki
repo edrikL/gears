@@ -1,4 +1,4 @@
-#summary A proposal for supporting resumable non-idempotent HTTP requests.
+﻿#summary A proposal for supporting resumable non-idempotent HTTP requests.
 #labels DesignDoc
 
 = Introduction =
@@ -103,5 +103,6 @@ http://www.w3.org/Protocols/rfc2616/rfc2616.html
 http://www.w3.org/TR/XMLHttpRequest/
 
 == Related Google Gears APIs ==
+
 GearsHttpRequestProposal
 [BlobAPI]
