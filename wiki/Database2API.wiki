@@ -53,7 +53,7 @@ interface DatabaseManager {
 
 == Database2 ==
 
-Instances of Database2 are returned by `DatabaseManager.openDatabase()`. They implement the Database interface, as defined in [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#database0 HTML5]. It also implements the following extensions, which allow synchronous Database access:
+Instances of Database2 are returned by `DatabaseManager.openDatabase()`. Database2 implements the Database interface, as defined in [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#database0 HTML5]. It also implements the following extensions, which allow synchronous Database access:
 
 {{{
 interface Database {
