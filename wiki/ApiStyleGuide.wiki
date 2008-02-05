@@ -1,4 +1,5 @@
 #summary Guide to producing stylish Gears APIs
+#labels Deprecated
 
 = Introduction =
 
