@@ -38,7 +38,7 @@ The database manager is the top-level entrypoint to the database2 API in Gears. 
   google.gears.factory.create('beta.databasemanager');
 }}}
 
-!DatabaseManager the place of `window.openDatabase()` in the HTML5 spec. Using a different top-level entrypoint allows us to coexist with native browser implementations of the HTML5 database API.
+!DatabaseManager takes the place of `window.openDatabase()` in the HTML5 spec. Using a different top-level entrypoint allows us to coexist with native browser implementations of the HTML5 database API.
 
 {{{
 interface DatabaseManager {
