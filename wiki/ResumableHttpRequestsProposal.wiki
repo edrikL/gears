@@ -104,5 +104,5 @@ http://www.w3.org/TR/XMLHttpRequest/
 
 == Related Google Gears APIs ==
 
-GearsHttpRequestProposal
-[BlobAPI]
+  * GearsHttpRequestProposal
+  * [BlobAPI]
