@@ -138,7 +138,7 @@ _TODO_: transactions step processing/queue model
 
 =Discussion=
 
-It would be great to provide complementary [http://code.google.com/p/google-gears/issues/detail?id=76 removeDatabase], and [http://code.google.com/p/google-gears/issues/detail?id=49 listDatabases] methods and address. The proposed module interface would be as follows:
+It would be great to provide complementary [http://code.google.com/p/google-gears/issues/detail?id=76 removeDatabase], and [http://code.google.com/p/google-gears/issues/detail?id=49 listDatabases] methods. The proposed module interface would be as follows:
 
 {{{
 interface DatabaseManager {
