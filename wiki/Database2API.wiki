@@ -41,7 +41,7 @@ interface Database2 {
 
 =Differences=
 
-The API approach differs significantly from the Gears Database module by introducing an explicit [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#sqltransaction SQLTransaction] interface. In fact, creating single, transactionless statements is not possible using this API. As a benefit, the management of transactions is completely abstracted out (BEGIN, COMMIT, ROLLBACK, etc. are prohibited in statements).
+The API approach differs significantly from the Gears Database module by introducing an explicit [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#sqltransaction SQLTransaction] interface. In fact, creating single, transactionless statements is not possible using this API. As a benefit, the management of transactions is completely abstracted out (`BEGIN`, `COMMIT`, `ROLLBACK`, etc. are prohibited in statements).
 
 The API is completely asynchronous. The transaction callback is invoked asynchronously (though on the same thread), and tx.executeSql(...) statements don't actually execute any SQL. Instead, the API is essentially an abstraction around a queueing worker, with the transaction callback being a way to _sequence_ the queue items, and tx.executeSql providing the queue items themselves. 
 
@@ -55,39 +55,45 @@ Unlike the Database module, the spec prescribes limiting available storage for e
 
 =Code Example=
 
-_TODO_: pick a more intuitive example
-
 {{{
-console.log('1');
-openDatabase('test').transaction(function(tx) {
-	console.log('2');
-	tx.executeSql('CREATE TABLE IF NOT EXISTS Pages(title TEXT, lastUpdated INTEGER)', 
-		[]);
-	console.log('3');
-	tx.executeSql('INSERT INTO Pages VALUES(?, ?)', 
-		[ 'some title', new Date().getTime() ]);
-	console.log('4');
-	tx.executeSql('SELECT count(*) FROM Pages;', 
-		[],
-		function(tx, rs) {
-			console.info('5');
-		});
-	console.log('6');
-	tx.executeSql('SELECT * FROM Pages;', 
-		[],
-		function(tx, rs) {
-			console.info('7');
-		});
-	console.log('8');
-	tx.executeSql('SELECT title FROM Pages ORDER BY lastUpdated DESC;', 
-		[],
-		function(tx, rs) {
-			console.info('9');
-		});
-	console.log('10');
-});
-console.log('11');
+var html5db = goolge.gears.factory.create('beta.database2');
+var db = html5db.open('pages', '0.0.1.0',
+  'Collection of crawled pages', 3000000);
+
+function renderPageRow(row) {
+  // insert page row into a table
+}
+
+function reportError(source, message) {
+  // report an error
+}
+
+function renderPages() {
+  db.transaction(function(tx) {
+    tx.executeSql('CREATE TABLE IF NOT EXISTS Pages(title TEXT, lastUpdated INTEGER)', 
+      []);
+    tx.executeSql('SELECT * FROM Pages', [], function(rs) {
+      for(var i = 0; i < rs.rows.length; i++) {
+        renderPageRow(rs.rows.item(i));
+      }
+    })
+  })  
+}
+
+function insertPage(text, lastUpdated) {
+  db.transaction(function(tx) {
+    tx.executeSql('INSERT INTO Pages VALUES(?, ?)', [ text, lastUpdated ],
+      function() {
+        // no result returned, stub success callback
+      },
+      function(tx, error) {
+        reportError('sql', error.message);
+      });
+  })
+}
 }}}
+
+There is also a [http://webkit.org/misc/DatabaseExample.html working example] (requires WebKit nightly) on webkit.org
 
 =Implementation=
 
