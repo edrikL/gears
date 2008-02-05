@@ -26,7 +26,7 @@ The interface is defined in [http://www.whatwg.org/specs/web-apps/current-work/m
 
 =Differences=
 
-The API approach differs significantly from Gears Database module by introducing explicit [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#sqltransaction SQLTransaction] interface. In fact, creating single, transactionless statements is not possible using this API. As a benefit, the management of transactions is completely abstracted out (BEGIN, COMMIT, ROLLBACK, etc. are prohibited in statements).
+The API approach differs significantly from the Gears Database module by introducing an explicit [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#sqltransaction SQLTransaction] interface. In fact, creating single, transactionless statements is not possible using this API. As a benefit, the management of transactions is completely abstracted out (BEGIN, COMMIT, ROLLBACK, etc. are prohibited in statements).
 
 The API is completely asynchronous. The transaction callback is invoked asynchronously (though on the same thread), and tx.executeSql(...) statements don't actually execute any SQL. Instead, the API is essentially an abstraction around a queueing worker, with the transaction callback being a way to _sequence_ the queue items, and tx.executeSql providing the queue items themselves. 
 
@@ -35,6 +35,8 @@ Because the API is asynchronous, the [http://www.whatwg.org/specs/web-apps/curre
 Additionally, the API includes explicit database version management features in the form of [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#changeversion changeVersion] and an [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#opendatabase openDatabase] version parameter.
 
 There are error two types of error callbacks specified, one for transaction, and one for statement. Essentially, the statement error callbacks are used to detect statement sanitizing/execution failures, and the transaction error callbacks are responsible for handling versioning, transaction, and general statement failures.
+
+Unlike the Database module, the spec prescribes limiting available storage for each database
 
 =Code Example=
 
@@ -72,6 +74,22 @@ openDatabase('test').transaction(function(tx) {
 console.log('11');
 }}}
 
+=Implementation=
+
+Currently, a SQLite statement is prepared, bound, and executed in one method. The HTML5 API suggests that the statement is prepared and bound by the `executeSql` method and then queued up for asynchronous execution. Presumably, any additional sanitizing should occur at that point, as well.
+
+Versions are changed as part of specifically defined pre-flight and post-flight operations, and they appear to be just specialized items in the work queue. Version management is accomplished by storing current database versions in a user-inaccessible database table.
+
+TODO: transactions step processing/queue model
+
 =Discussion=
 
-TODO: preparing a statement, version management, transactions step processing model
+It would be great to provide a complementary `removeDatabase` method and address [http://code.google.com/p/google-gears/issues/detail?id=76&colspec=Version%20Owner%20ID%20Summary%20Component Issue 76]. The proposed module interface would be as follows:
+
+{{{
+interface Database2 {
+  Database openDatabase(in DOMString name, in DOMString version, 
+    in DOMString displayName, in unsigned long estimatedSize)
+  void removeDatabase(in DOMString name);
+}
+}}}
