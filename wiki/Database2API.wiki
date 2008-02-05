@@ -32,7 +32,7 @@ The standard interface is defined in [http://www.whatwg.org/specs/web-apps/curre
 
 == !DatabaseManager ==
 
-The database manager is the top-level entrypoint to the database2 API in Gears. Callers create instance of it using:
+The database manager is the top-level entrypoint to the database2 API in Gears. Callers create instances of it using:
 
 {{{
   google.gears.factory.create('beta.databasemanager');
