@@ -32,7 +32,7 @@ The standard interface is defined in [http://www.whatwg.org/specs/web-apps/curre
 Gears makes some alterations for compatibility with native implementations and to add synchronous DB access.
 
 
-== DatabaseManager ==
+== !DatabaseManager ==
 
 The database manager is the top-level entrypoint to the database2 API in Gears. Callers create instance of it using `google.gears.factory.create('beta.databasemanager')`.
 
@@ -40,8 +40,10 @@ DatabaseManager the place of `window.openDatabase()` in the HTML5 spec. Using a 
 
 {{{
 interface DatabaseManager {
-  Database2 openDatabase(in DOMString name, in DOMString version, 
-                         in DOMString displayName, in unsigned long estimatedSize);
+  Database2 openDatabase(in DOMString name,
+                         in DOMString version, 
+                         in DOMString displayName,
+                         in unsigned long estimatedSize);
   // Future: add removeDatabase(), listDatabases()
 }
 }}}
@@ -53,7 +55,8 @@ Instances of Database2 are returned by `DatabaseManager.openDatabase()`. They im
 
 {{{
 interface Database {
-  void synchronousTransaction(SQLSynchronousTransactionCallback callback) throws SQLError;
+  void synchronousTransaction(SQLSynchronousTransactionCallback callback)
+      throws SQLError;
 }
 
 interface SQLSynchronousTransactionCallback {
@@ -61,7 +64,8 @@ interface SQLSynchronousTransactionCallback {
 }
 
 interface SQLSynchronousTransaction {
-  SQLResultSet executeSql(in DOMString sqlStatement, in ObjectArray arguments) throws SQLError;
+  SQLResultSet executeSql(in DOMString sqlStatement, in ObjectArray arguments)
+      throws SQLError;
 }
 }}}
 
