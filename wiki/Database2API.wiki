@@ -133,12 +133,17 @@ There is also a [http://webkit.org/misc/DatabaseExample.html working example] (r
 
 =Implementation=
 
-Currently, a SQLite statement is prepared, bound, and executed in one method. The HTML5 API suggests that the statement is prepared and bound by the `executeSql` method and then queued up for asynchronous execution. Presumably, any additional sanitizing should occur at that point, as well.
+== Asynchronous Transactions ==
 
-Versions are changed as part of specifically defined pre-flight and post-flight operations, and they appear to be just specialized items in the work queue. Version management is accomplished by storing current database versions in a user-inaccessible database table.
+The proposed asynchronous API allows multiple sql statements to be queued up and processed in order in the background. Each statement can have associated callbacks. When those statements are executed, the callbacks should also be fired in order in the foreground. The transaction completes when there are no more statements to process and no more callbacks to fire.
 
-_TODO_: transactions step processing/queue model
+This implies a design where a foreground and background thread share two queues: a `pending_messages` queue and a `processed_messages` queue. Each time `executeSql()` is called, the foreground thread adds information about the statement to be processed to the `pending_messages` queue. 
 
+The background thread executes each statement in the `pending_messages` queue in order. If a statement has callbacks, the statement is moved to the `processed_messages` queue, where the foreground thread will find it and fire its callbacks.
+
+After each statement is executed, and after each statement's callback is fired, both queue's lengths are checked. If they are both zero, the transaction is complete and is closed.
+
+== Synchronous Transactions ==
 
 The `synchronousTransaction` method follows these steps:
  # start new transaction
@@ -148,6 +153,15 @@ The `synchronousTransaction` method follows these steps:
  # commit transaction
  # if the transaction couldn't have been committed, throw a `SQLError` exception
  # end
+
+== Lifetime Management ==
+
+Like all other Gears modules that have asynchronous behavior, GearsSQLTransaction should live until all asynchronous operations are complete. Each queued statement and callback should increment the reference count of the corresponding GearsSQLTransaction instance.
+
+== Versioning ==
+
+_TODO:_ Research how to implement this.
+
 
 =Discussion=
 
