@@ -140,6 +140,15 @@ Versions are changed as part of specifically defined pre-flight and post-flight 
 _TODO_: transactions step processing/queue model
 
 
+The `synchronousTransaction` method follows these steps:
+ # start new transaction
+ # if an error occurred in creating transaction, throw a `SQLError` exception
+ # execute `SQLSynchronousTransactionCallback`
+ # if the callback throws an exception or couldn't be called, throw a `SQLError` exception
+ # commit transaction
+ # if the transaction couldn't have been committed, throw a `SQLError` exception
+ # end
+
 =Discussion=
 
 It would be great to provide complementary [http://code.google.com/p/google-gears/issues/detail?id=76 removeDatabase], and [http://code.google.com/p/google-gears/issues/detail?id=49 listDatabases] methods. The proposed module interface would be as follows:
@@ -152,3 +161,19 @@ interface DatabaseManager {
   String[] listDatabases();
 }
 }}}
+
+The synchronous transaction is more susceptible to deadlocks:
+
+{{{
+db.synchronousTransaction(function(tx) {
+  var rs = tx.executeSql('SELECT * FROM Pages', []);
+    db.synchronousTransaction(function(tx) {
+      // deadlock!
+    });
+    // ..
+})  
+}}}
+
+As possible solutions, we can count transaction nesting level and:
+ * deny the ability to create nested transactions
+ * fake joining transaction (nesting transactions, not supported by SQLite)
