@@ -72,8 +72,6 @@ interface SQLSynchronousTransaction {
 }
 }}}
 
-*TODO:* Figure out how synchronous and asynchronous transactions interact.
-
 
 =Differences from the existing Gears database module=
 
@@ -85,9 +83,10 @@ Because the API is asynchronous, the [http://www.whatwg.org/specs/web-apps/curre
 
 Additionally, the API includes explicit database version management features in the form of [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#changeversion changeVersion] and an [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#opendatabase openDatabase] version parameter.
 
-There are error two types of error callbacks specified, one for transaction, and one for statement. Essentially, the statement error callbacks are used to detect statement sanitizing/execution failures, and the transaction error callbacks are responsible for handling versioning, transaction, and general statement failures.
+There are two types of error callbacks specified, one for transaction, and one for statement. Essentially, the statement error callbacks are used to detect statement sanitizing/execution failures, and the transaction error callbacks are responsible for handling versioning, transaction, and general statement failures.
 
 Unlike the Database module, the spec prescribes limiting available storage for each database.
+
 
 =Code Example=
 
