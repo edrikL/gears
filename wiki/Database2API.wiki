@@ -156,7 +156,7 @@ The `synchronousTransaction` method follows these steps:
 
 == Lifetime Management ==
 
-Like all other Gears modules that have asynchronous behavior, GearsSQLTransaction should live until all asynchronous operations are complete. Each queued statement and callback should increment the reference count of the corresponding GearsSQLTransaction instance.
+Like all other Gears modules that have asynchronous behavior, GearsSQLTransaction should live until all asynchronous operations are complete, even if there are no !JavaScript references to the GearsSQLTransaction instance. Each queued statement and callback should increment the reference count of the corresponding GearsSQLTransaction instance.
 
 == Versioning ==
 
