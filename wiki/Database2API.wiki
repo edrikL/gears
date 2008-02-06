@@ -11,14 +11,15 @@ This proposal aims to implement a Gears module based on the existing specificati
 =Goals=
 
 The goals of the proposal are:
- * provide a standards-based way to access and manipulate Gears databases
- * implement an asynchronous database API that can be called from the UI thread without freezing the UI
- * implement a synchronous API to simplify usage inside workers
+ * Enable !JavaScript developers to easily write code that works with both Gears and browser database APIs.
+ * Reduce developer "mind-print" by implementing the same API that is available in browsers.
+ * Support the proposed HTML5 database standard with an implementation available for all browsers that Gears supports.
+ * Implement an asynchronous API that can be called from the UI thread without freezing the UI.
+ * Implement a synchronous API to simplify usage inside workers.
 
 Minor/bonus goals:
  * implement a thread pool abstraction that can be used in other modules for asynchronous operations
  * build a new module from scratch using the new Dispatcher model.
- * provide implementation feedback for HTML5 specification
 
 Non-goals:
   * Allow current gears databases to work with database2
