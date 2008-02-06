@@ -143,7 +143,7 @@ The background thread executes each statement in the `pending_messages` queue in
 
 After each statement is executed, and after each statement's callback is fired, both queue's lengths are checked. If they are both zero, the transaction is complete and is closed.
 
-We can reuse the existing `!ThreadMessageQueue` implementation in `base/common/thread_message_queue.h` to send events between the two threads.
+We can reuse the existing `ThreadMessageQueue` implementation in `base/common/thread_message_queue.h` to send events between the two threads.
 
 We don't yet have cross-platform `CreateThread()`, or `ThreadPool` abstractions. It might be useful to create one or more of those at this time.
 
