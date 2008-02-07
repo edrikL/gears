@@ -1,5 +1,8 @@
 #summary Building Google Gears for Safari
 
+= Current Status =
+The current Gears trunk does not compile for Safari.  We are working on a new version of Gears for Safari and will update this page with build instructions when it's ready.
+
 = Introduction =
 
 If you've already snagged a recent !WebKit nightly [http://nightly.webkit.org build] (522 or later), then you can proceed to build Google Gears for Safari.
@@ -28,6 +31,4 @@ Otherwise, you can install the components manually:
 
 = Testing =
 After installing, you should restart !WebKit.  Go to the Google Gears API [http://code.google.com/apis/gears/ page].  At the lower left corner, it should indicate the build of Google Gears that is active.  You should be able to try out the demos or create your own.
-
-
 
