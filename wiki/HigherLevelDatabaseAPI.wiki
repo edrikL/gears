@@ -1,4 +1,5 @@
 #summary Proposal for two new higher-level database APIs
+#labels Deprecated
 
 = Problem =
 
