@@ -6,6 +6,9 @@ Here are some links to tutorials and sample code to give you a jump start on usi
 In addition to these examples, you'll probably want to take a look at the [http://code.google.com/apis/gears/ Developer Site] and [http://code.google.com/support/bin/topic.py?topic=11628 FAQ].
 
 Contributions in new environments are welcome!
+== Flash ==
+  * [http://ajaxian.com/archives/aflax-and-google-gears Aflax and Google Gears]
+
 == PHP ==
   * [http://code.google.com/apis/gears/GoogleGears_SamplesAndTools.zip Gearpad] - A web-based notepad with offline support. The sample can be found in the `samples/gearpad` directory inside the zip file.
   * [http://www.onlamp.com/pub/a/onlamp/2007/06/28/the-power-of-google-gears-part-1.html The Power Of Google Gears] - A tutorial by Jack Herrington posted on O'Reilly.
