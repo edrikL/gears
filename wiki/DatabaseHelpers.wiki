@@ -1,4 +1,5 @@
-#summary A suggested set of helpers for the Database API.
+#labels Deprecated
+d#summary A suggested set of helpers for the Database API.
 
 = Introduction =
 
