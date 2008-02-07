@@ -75,9 +75,7 @@ interface SQLSynchronousTransaction {
 
 =Differences from the existing Gears database module=
 
-The API approach differs significantly from the Gears Database module by introducing an explicit [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#sqltransaction SQLTransaction] interface. In fact, creating single, transactionless statements is not possible using this API. As a benefit, the management of transactions is completely abstracted out (`BEGIN`, `COMMIT`, `ROLLBACK`, etc. are prohibited in statements).
-
-The API is completely asynchronous. The transaction callback is invoked asynchronously (though on the same thread), and tx.executeSql(...) statements don't actually execute any SQL. Instead, the API is essentially an abstraction around a queueing worker, with the transaction callback being a way to _sequence_ the queue items, and tx.executeSql providing the queue items themselves. 
+The API approach differs significantly from the current Gears Database module by introducing an explicit [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#sqltransaction SQLTransaction] interface. In fact, creating single, transactionless statements is not possible using this API. As a benefit, the management of transactions is completely abstracted out (`BEGIN`, `COMMIT`, `ROLLBACK`, etc. are prohibited in statements).
 
 Because the API is asynchronous, the [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#sqlresultset SQLResultSet] is an offline dataset, unlike the one in Database. The user accesses row data using an Object, with each field is mapped is a property (see [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-sql.html#sqlresultsetrowlist SQLResultSetRowList]).
 
