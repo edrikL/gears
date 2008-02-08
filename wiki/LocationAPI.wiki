@@ -114,10 +114,10 @@ interface WatchLocationOptions : LocationOptions {
 
 void LocationCallback(LocationResult event);
 
+// TODO: Consider adding altitude, heading, etc.
 interface Location {
   readonly decimal latitude; // latitude in degrees
   readonly decimal longitude; // longitude in degrees
-  // TODO: Consider adding altitude, heading, etc.
   readonly Date timestamp;
   // Horizontal accuracy in meters representing 
   // the readius of the circular Earth surface with 
