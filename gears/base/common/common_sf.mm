@@ -72,34 +72,7 @@ void ThrowExceptionKey(NSString *key, ...) {
 }
 
 //------------------------------------------------------------------------------
-bool ResolveRelativeUrl(const char16 *base, const char16 *url,
-                        std::string16 *resolved) {
-  assert(base);
-  assert(url);
-  assert(resolved);
-  
-  std::string baseUTF8;
-  if (!String16ToUTF8(base, &baseUTF8))
-    return false;
-  
-  std::string urlUTF8;
-  if (!String16ToUTF8(url, &urlUTF8))
-    return false;
-  
-  NSString *baseStr = [NSString stringWithUTF8String:baseUTF8.c_str()];
-  NSString *urlStr = [NSString stringWithUTF8String:urlUTF8.c_str()];
-  NSString *resolvedStr = [GearsURLUtilities resolveURLString:urlStr
-                                                   baseURLStr:baseStr];
-
-  if (UTF8ToString16([resolvedStr UTF8String], resolved))
-    return true;
-  
-  return false;
-}
-
-//------------------------------------------------------------------------------
-int64 GetCurrentTimeMillis() {
-  // Return millisecond time based on 1970 epoch
-  return (CFAbsoluteTimeGetCurrent() + 
-          kCFAbsoluteTimeIntervalSince1970) * 1000.0;
+void ThrowWebKitException(const std::string16 &message) {
+  NSString *msg = [NSString stringWithString16:message.c_str()];
+  [WebScriptObject throwException:msg];
 }
