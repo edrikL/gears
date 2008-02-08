@@ -243,7 +243,7 @@ The response format is also JSON. An example response is:
 || accuracy || The accuracy of the fix, in meters. || Yes || double ||
 || address || The address of the fix. May not be available from some providers. || No || string ||
 
-The usual HTTP responses also apply. In particular, 200: location found, 400 bad reques, and 404 location not found.
+The usual HTTP responses also apply. In particular, 200: location found, 400 bad request, and 404 location not found.
 
 = Alternatives =
 
