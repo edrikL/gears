@@ -195,6 +195,8 @@ db.synchronousTransaction(function(tx) {
 })  
 }}}
 
+A similar problem would also occur if a synchronous transaction is started in either asynchronous transaction or statement callbacks.
+
 As possible solutions, we can count transaction nesting level and:
- * deny the ability to create nested transactions
- * fake joining transaction (nesting transactions, not supported by SQLite)
+ * deny the ability to create nested transactions. This would be a runtime exception, which in turn would cause the outer transaction to rollback.
+ * fake joining transaction (nesting transactions, [http://www.sqlite.org/lang_transaction.html not supported] by SQLite). This would result in a misleading behavior (i.e. throwing an exception inside of the nested callback won't roll back just the nested transaction) and probably isn't a good option. 
