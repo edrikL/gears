@@ -27,6 +27,7 @@
 #define GEARS_BASE_NPAPI_MODULE_WRAPPER_H__
 
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/npapi/plugin.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
@@ -86,7 +87,8 @@ GearsClass *CreateModule(JsRunnerInterface *js_runner) {
   }
 
   GearsClass *impl = new GearsClass;
-  wrapper->Init(impl, new Dispatcher<GearsClass>(impl));
+  wrapper->Init(static_cast<ModuleImplBaseClassVirtual *>(impl),
+                new Dispatcher<GearsClass>(impl));
   return impl;
 }
 
