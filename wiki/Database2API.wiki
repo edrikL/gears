@@ -152,13 +152,12 @@ The `synchronousTransaction` method follows these steps:
  # start new transaction
  # if an error occurred in creating transaction, throw a `SQLError` exception
  # execute `SQLSynchronousTransactionCallback`
- # if the callback throws an exception or couldn't be called, throw a `SQLError` exception
+ # if the callback throws an exception or couldn't be called, roll back the transaction and throw a `SQLError` exception
  # commit transaction
- # if the transaction couldn't have been committed, throw a `SQLError` exception
+ # if the transaction couldn't have been committed, roll back the transaction and throw a `SQLError` exception
  # end
 
 _TODO:_ Dimitri had the idea of a synchronous event queue to decrease differences between the two modes. Flesh that out.
-
 
 == Lifetime Management ==
 
