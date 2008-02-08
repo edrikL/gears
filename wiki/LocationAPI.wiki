@@ -1,8 +1,5 @@
-#summary Provides means to fetch the location of a device running a Web browser with Gears.
-= Introduction =
-
-The purpose of this API is to provide means to fetch the location of a device running a Web browser with Gears.
-
+#summary Provides the geolocation of a device running a Gears-enabled web browser.
+#labels DesignDoc
 
 = Description =
 
@@ -13,17 +10,17 @@ Location implementations can be straightforward mappings to native APIs (e.g the
 
 = API Goals =
 
-  * One-shot location requests (eg, for recommendations sites -- "where am I right now?")
-  * Repeated location updates (eg, for providing guided tours)
+  * One-shot location requests (e.g. for recommendations sites -- "where am I right now?")
+  * Repeated location updates (e.g. for providing guided tours)
   * Ability to get the last-known position cheaply before doing an expensive new request
-  * Compatibility with future use as a singleton in the standard DOM (eg window.geoLocation)
+  * Compatibility with future use as a singleton in the standard DOM (e.g. window.geolocation)
   * Ability to use alternative location service providers
 
 = Examples = 
 
 {{{
 // Get the current location
-var loc = google.gears.factory.create( "beta.location");
+var loc = google.gears.factory.create('beta.location');
 loc.get(function(result) {
   if (!result.errorCode) {
     updateMap(result.latitude, result.longitude);
@@ -33,7 +30,7 @@ loc.get(function(result) {
 
 {{{
 // Watch the location over time
-var loc = google.gears.factory.create( "beta.location");
+var loc = google.gears.factory.create('beta.location');
 var watchId = loc.watch(function(result) {
   updateMap(result.latitude, result.longitude, result.accuracy);
 });
@@ -60,20 +57,19 @@ if (loc.lastKnownLocation &&
 
 {{{
 interface Geolocation {
-  // No location providers were available to serve this request. This might happen
-  // if locationProviderUrl is set to null and the device does not have access to
-  // any other type of providers (e.g. GPS).
+  // No location providers were available to serve this request. This might
+  // happen if locationProviderUrl is set to null and the device does not have
+  // access to any other type of providers (e.g. GPS).
   const short ERROR_NO_PROVIDER_AVAILABLE = 1;
 
-  // A provider error has occured. This could be a hardware error with a GPS provider
-  // or a protocol error with a network provider.
+  // A provider error has occured. This could be a hardware error with a GPS
+  // provider or a protocol error with a network provider.
   const short ERROR_PROVIDER_FAILURE = 2
 
-  // The user is in an area where a location fix cannot be provided.
-  // This might happen, for example, if a WiFi-based provider is
-  // in use and there are no WiFi networks around. It might also 
-  // happen if a Cell-ID based provider cannot map the user's
-  // network tower identifier to a location.
+  // The user is in an area where a location fix cannot be provided. This might
+  // happen, for example, if a WiFi-based provider is in use and there are no
+  // WiFi networks around. It might also happen if a Cell-ID based provider
+  // cannot map the user's network tower identifier to a location.
   const short ERROR_NOT_IN_RANGE = 3;
 
   // last-known position - null if there is no last known position
@@ -90,26 +86,28 @@ interface Geolocation {
 };
 
 interface PositionOptions {
-  // If set, the application would prefer the highest accuracy possible, regardless of
-  // battery, cost, etc. This might mean, for example, to use the GPS radio instead of
-  // cell id lookups. If not specified, the default value is false. The implementation
-  // always has the last word on which mechanism to use, this is just a way for an
-  // application to express a preference.
+  // If set, the application would prefer the highest accuracy possible,
+  // regardless of battery, cost, etc. This might mean, for example, to use
+  // the GPS radio instead of cell id lookups. If not specified, the default
+  // value is false. The implementation always has the last word on which
+  // mechanism to use, this is just a way for an application to express a
+  // preference.
   bool highAccuracyDesired;
 
-  // If set, specifies the URL to contact to convert location signals into a location. This
-  // defaults to a Google service, but can be overridden to point elsewhere. If set to
-  // null, no service will be used and a location will only be provided if the device has
-  // native access to location data (eg GPS).
+  // If set, specifies the URL to contact to convert location signals into a
+  // location. This defaults to a Google service, but can be overridden to
+  // point elsewhere. If set to null, no service will be used and a location
+  // will only be provided if the device has native access to location data
+  // (e.g. GPS).
   string locationProviderUrl;
 };
 
 interface WatchPositionOptions : PositionOptions {
-  // The frequency that the application desires updates on the position, in milliseconds.
-  // The implementation will attempt to provide this rate, but may provide slower
-  // updates to conserve battery, if it cannot get fixes, or if the user rejects use of the
-  // required hardware.
-  bool desiredUpdateRate;
+  // The frequency that the application desires updates on the position.
+  // The implementation will attempt to provide this rate, but may provide
+  // slower updates to conserve battery, if it cannot get fixes, or if the
+  // user rejects use of the required hardware.
+  int desiredUpdateRateMsec;
 };
 
 void PositionCallback(Position position);
