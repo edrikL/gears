@@ -1,20 +1,15 @@
 #summary Provides the geolocation of a device running a Gears-enabled web browser.
 #labels DesignDoc
 
-= Description =
+= Summary =
 
-The Location API is an abstraction for the various location APIs that currently exist on mobile platforms (GPS-based, network/cellid-based). The API consists of the Location class, which encapsulates various location attributes (latitude, longitude, etc), and also provides the means to query the platform for a fresh location fix, or the last known fix. This API also provides a way to watch the location as it changes over time.
-
-Location implementations can be straightforward mappings to native APIs (e.g the [http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-96C272CA-2BED-4352-AE7C-E692B193EC06/html/Location_Acquisition_APIIndexPage.html S60 Location Acquisition API]) or have a more complex design that combines several location providers (e.g a GPS-based provider and a cell id-based provider) and returns the location from the most accurate provider at any given time.
-
-
-= API Goals =
+The Geolocation API allows web apps to retrieve the user's current position.  The API should provide the following features:
 
   * One-shot location requests (e.g. for recommendations sites -- "where am I right now?")
-  * Repeated location updates (e.g. for providing guided tours)
+  * Repeated location updates (e.g. for updating one's position on a map)
   * Ability to get the last-known position cheaply before doing an expensive new request
   * Compatibility with future use as a singleton in the standard DOM (e.g. window.geolocation)
-  * Ability to use alternative location service providers
+  * Support for alternative location service providers
 
 = API Proposal =
 
@@ -100,11 +95,27 @@ if (loc.lastKnownLocation &&
 }
 }}}
 
-= Location Provider Protocol =
+= Implementation Details =
 
-Many devices do not have native access to GPS or other location data. Additionally, GPS can take a long time to start up, drains battery, and does not work indoors. Because of these problems, the location API also has the ability to send various signals that the devices has access to (nearby cell sites, wifi nodes, etc) to a third-party _location service provider_, who can resolve the signals into a location estimate.
+The Geolocation API is an abstraction for various location APIs that currently exist on mobile platforms (GPS-based, network/cellid-based). Location implementations could be straightforward mappings to native APIs (e.g the [http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-96C272CA-2BED-4352-AE7C-E692B193EC06/html/Location_Acquisition_APIIndexPage.html S60 Location Acquisition API]) or have a more complex design that combines several location providers (e.g. a GPS-based provider and a cell id-based provider) and returns the location from the most accurate provider at any given time.
+
+_TODO: Need more detail about how results will be combined._
+
+= Alternatives =
+
+An alternative to the locationProviderUrl property is to add more elements to the Location interface with all the signals required by location providers. For example, we could add an arrays of !CellTower and !WifiTower objects to the location object. A !JavaScript author could then tie all this information together with a location provider, creating a unified API.
+
+= Privacy =
+
+It must be clear to users when an application is using the Location API. The dialog that currently enables Gears general access should not also enable access to the location API. It would be too easy for users to forget that they allowed access to Gears, or to fail to realize that enabling Gears also also enables location access. At a minimum, there should be a separate dialog from the Gears access dialog to enable Location API access.  
+
+It would also be interesting, though, to have some persistent UI that indicates that the location API is being used. For example, there could be a rotating globe or an icon of a map overlayed on the content area. Perhaps this UI should be 'active' somehow, indicating that something is happening, so that the user cannot forget that it is being used.
 
 The protocol between the device and the location service provider is HTTP POST, and the format is JSON. The client supports persistent HTTP cookies, but the cookie are *not* shared with the browser's cookie jar for privacy reasons.
+
+= Appendix: Location Provider Protocol =
+
+Many devices do not have native access to GPS or other location data. Additionally, GPS can take a long time to start up, drains battery, and does not work indoors. Because of these problems, the location API also has the ability to send various signals that the devices has access to (nearby cell sites, wifi nodes, etc) to a third-party _location service provider_, who can resolve the signals into a location estimate.
 
 == Request Format ==
 
@@ -214,14 +225,3 @@ _TODO: Wooo!  I didn't know we had access to the address. Should we expose this 
 || address || The address of the fix. May not be available from some providers. || No || string ||
 
 The usual HTTP responses also apply. In particular, 200: location found, 400 bad request, and 404 location not found.
-
-= Alternatives =
-
-An alternative to the locationProviderUrl property is to add more elements to the Location interface with all the signals required by location providers. For example, we could add an arrays of !CellTower and !WifiTower objects to the location object. A !JavaScript author could then tie all this information together with a location provider, creating a unified API.
-
-
-= Privacy =
-
-It must be clear to users when an application is using the Location API. The dialog that currently enables Gears general access should not also enable access to the location API. It would be too easy for users to forget that they allowed access to Gears, or to fail to realize that enabling Gears also also enables location access. At a minimum, there should be a separate dialog from the Gears access dialog to enable Location API access.  
-
-It would also be interesting, though, to have some persistent UI that indicates that the location API is being used. For example, there could be a rotating globe or an icon of a map overlayed on the content area. Perhaps this UI should be 'active' somehow, indicating that something is happening, so that the user cannot forget that it is being used.
