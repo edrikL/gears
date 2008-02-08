@@ -171,7 +171,7 @@ The request uses an HTTP POST method with JSON contents.
 
 = Alternatives =
 
-An alternative to the locationProviderUrl property is to add more elements to the Location interface with all the signals required by location providers. For example, we could add an arrays of CellTower and WifiTower objects to the location object. A JavaScript author could then tie all this information together with a location provider, creating a unified API.
+An alternative to the locationProviderUrl property is to add more elements to the Location interface with all the signals required by location providers. For example, we could add an arrays of !CellTower and !WifiTower objects to the location object. A !JavaScript author could then tie all this information together with a location provider, creating a unified API.
 
 
 = Privacy =
