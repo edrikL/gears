@@ -139,7 +139,59 @@ The protocol between the device and the location service provider is HTTP POST, 
 
 == Request Format ==
 
-The request uses an HTTP POST method with JSON contents.
+The request uses an HTTP POST method with JSON contents. An example request is:
+
+{{{
+{
+  version: "1.0",
+  host: "maps.google.com",
+  device_id: "0220d4df7d8d48dcbb3f3ff433a8044a",
+  home_network_code: _TODO_,
+  home_country_code: _TODO_,
+  radio_type: "gsm",
+  cell_towers: [
+    {
+      cell_id: 42,
+      area_code: 2023,
+      network_code: 3333,
+      country_code: 4444,
+      age: 0,
+      signal_strength: 3,
+      timing_advance: 5555
+    },
+    {
+      cell_id: 88,
+      area_code: 2027,
+      network_code: 3333,
+      country_code: 4444,
+      age: 36000,
+      signal_strength: 2,
+      timing_advance: 7777
+    },
+    {
+      cell_id: 23,
+      area_code: 2017,
+      network_code: 3333,
+      country_code: 4444,
+      age: 92000,
+      signal_strength: 1,
+      timing_advance: 9999
+    }
+  ],
+  wifi_towers: [
+    {
+      mac_address: "01-23-45-67-89-ab",
+      signal_strength: 8
+    },
+    {
+      mac_address: "01-23-45-67-89-ac",
+      signal_strength: 4
+    }
+  ]
+}
+}}}
+
+=== Request field details ===
 
 || *Name* || *Description* || *Required* || *Type" ||
 || version || The protocol version. Currently, this is "1.0". || Yes || string ||
@@ -168,6 +220,30 @@ The request uses an HTTP POST method with JSON contents.
 || mac_address || The mac address of the wifi node. || Yes || string ||
 || signal_strength || Current signal strength. _TODO: What are the units?_ || No || int ||
 
+== Response Format ==
+
+The response format is also JSON. An example response is:
+
+{{{
+{
+  confidence:95
+  latitude:1234123,
+  longitude:-2132362,
+  accuracy:1200,
+  address:"mountain view, california"
+}
+}}}
+
+=== Response format details ===
+
+|| *Name* || *Description* || *Required* || *Type" ||
+|| confidence || The server's confidence of the response being correct (0-100): _TODO: This doesn't really seem concrete enough for the client to do something with. Can we remove it?_ || Yes || int ||
+|| latitude || Latitude of the fix, in degrees. || Yes || double ||
+|| longitude || Longitude of the fix, in degrees. || Yes || double ||
+|| accuracy || The accuracy of the fix, in meters. || Yes || double ||
+|| address || The address of the fix. May not be available from some providers. || No || string ||
+
+The usual HTTP responses also apply. In particular, 200: location found, 400 bad reques, and 404 location not found.
 
 = Alternatives =
 
