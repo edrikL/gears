@@ -59,7 +59,7 @@ if (loc.lastKnownLocation &&
 = Detailed API specification =
 
 {{{
-interface GearsLocation {
+interface GearsGeolocation {
   // No location providers were available to serve this request. This might happen
   // if locationProviderUrl is set to null and the device does not have access to
   // any other type of providers (e.g. GPS).
@@ -77,19 +77,19 @@ interface GearsLocation {
   const short ERROR_NOT_IN_RANGE = 3;
 
   // last-known position - null if there is no last known position
-  readonly LocationResult lastKnownLocation;
+  readonly Position lastKnownPosition;
 
   // Get the current location
-  void get(LocationCallback callback, optional LocationOptions);
+  void getCurrentPosition(PositionCallback callback, optional PositionOptions);
 
   // Watch the current location over time
-  int watch(LocationCallback callback, optional LocationOptions);
+  int watchPosition(PositionCallback callback, optional PositionOptions);
 
   // Stop watching the current location
   void clearWatch(int watchId);
 };
 
-interface LocationOptions {
+interface PositionOptions {
   // If set, the application would prefer the highest accuracy possible, regardless of
   // battery, cost, etc. This might mean, for example, to use the GPS radio instead of
   // cell id lookups. If not specified, the default value is false. The implementation
@@ -104,7 +104,7 @@ interface LocationOptions {
   string locationProviderUrl;
 };
 
-interface WatchLocationOptions : LocationOptions {
+interface WatchPositionOptions : PositionOptions {
   // The frequency that the application desires updates on the position, in milliseconds.
   // The implementation will attempt to provide this rate, but may provide slower
   // updates to conserve battery, if it cannot get fixes, or if the user rejects use of the
@@ -112,21 +112,14 @@ interface WatchLocationOptions : LocationOptions {
   bool desiredUpdateRate;
 };
 
-void LocationCallback(LocationResult event);
+void PositionCallback(Position position);
 
 // TODO: Consider adding altitude, heading, etc.
-interface Location {
+interface Position {
   readonly decimal latitude; // latitude in degrees
   readonly decimal longitude; // longitude in degrees
   readonly Date timestamp;
-  // Horizontal accuracy in meters representing 
-  // the readius of the circular Earth surface with 
-  // the center at (latitude, longitude). The actual user
-  // location could be anywhere in this area.
-  readonly int horizontalAccuracy;
-};
-
-interface LocationResult : Location {
+  readonly int accuracy; // Horizontal accuracy in meters
   readonly int errorCode;
   readonly string errorMessage; // human readable, suitable for logs
 };
