@@ -6,7 +6,7 @@
 The Geolocation API allows web apps to retrieve the user's current position.  The API should provide the following features:
 
   * One-shot location requests (e.g. for recommendations sites -- "where am I right now?")
-  * Repeated location updates (e.g. for updating one's position on a map)
+  * Repeated location updates (e.g. for continuously updating one's position on a map)
   * Ability to get the last-known position cheaply before doing an expensive new request
   * Compatibility with future use as a singleton in the standard DOM (e.g. window.geolocation)
   * Support for alternative location service providers
@@ -61,36 +61,30 @@ interface PositionOptions {
 = Examples = 
 
 {{{
+var geo = google.gears.factory.create('beta.geolocation');
+
 // Get the current location
-var loc = google.gears.factory.create('beta.location');
-loc.get(function(result) {
-  if (!result.errorCode) {
-    updateMap(result.latitude, result.longitude);
-  }
+geo.getCurrentPosition(function(position) {
+  updateMap(position.latitude, position.longitude);
 });
-}}}
 
-{{{
 // Watch the location over time
-var loc = google.gears.factory.create('beta.location');
-var watchId = loc.watch(function(result) {
-  updateMap(result.latitude, result.longitude, result.accuracy);
+var watchId = geo.watchPosition(function(position) {
+  updateMap(position.latitude, position.longitude, position.accuracy);
 });
 
-loc.clearWatch(watchId);
-}}}
+geo.clearWatch(watchId);
 
-{{{
 // Only get the location if the last known location is more than a minute old
 var now = new Date().getTime();
 var threshold = now - 60000;
 
-if (loc.lastKnownLocation &&
-    loc.lastKnownLocation.timestamp.getTime() > threshold) {
-  updateMap(loc.lastKnownLocation);
+if (geo.lastPosition &&
+    geo.lastPosition.timestamp.getTime() > threshold) {
+  updateMap2(geo.lastPosition);
 } else {
-  loc.get(function(result) {
-    updateMap(result);
+  loc.getCurrentPosition(function(position) {
+    updateMap2(position);
   });
 }
 }}}
