@@ -348,7 +348,12 @@ void NPN_ReleaseVariantValue(NPVariant *variant)
   GetNPNFuncs().releasevariantvalue(variant);
 }
 
+#ifdef BROWSER_WEBKIT
+// This function is buggy in WebKit, see 
+// http://bugs.webkit.org/show_bug.cgi?id=16829
+#else
 void NPN_SetException(NPObject* obj, const NPUTF8 *message)
 {
   GetNPNFuncs().setexception(obj, message);
 }
+#endif

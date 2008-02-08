@@ -1098,6 +1098,7 @@ void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
 }
 
 void JsCallContext::SetException(const std::string16 &message) {
+  assert(!message.empty());
   JsSetException(js_context_, js_runner_, message.c_str(),
                  ncc_ != NULL ? true : false); // notify_native_call_context
 }
@@ -1207,6 +1208,7 @@ void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
 }
 
 void JsCallContext::SetException(const std::string16 &message) {
+  assert(!message.empty());
   if (!exception_info_) {
 #if DEBUG
     // MSDN says exception_info_ can be null, which seems very unfortunate.
@@ -1300,6 +1302,7 @@ void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
 }
 
 void JsCallContext::SetException(const std::string16 &message) {
+  assert(!message.empty());
   // TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
 #ifdef DEBUG
   std::string message_ascii;
@@ -1308,12 +1311,16 @@ void JsCallContext::SetException(const std::string16 &message) {
 #endif
 
   is_exception_set_ = true;
-
+  
+#ifdef BROWSER_WEBKIT
+  ThrowWebKitException(message);
+#else
   std::string message_utf8;
   if (!String16ToUTF8(message.data(), message.length(), &message_utf8))
     message_utf8 = "Unknown Gears Error";  // better to throw *something*
 
   NPN_SetException(object_, message_utf8.c_str());
+#endif
 }
 
 #endif

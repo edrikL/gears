@@ -93,6 +93,10 @@ class CurrentThreadID {
   pthread_t id_;
 };
 
+// Throw exception via WebKit's WebScriptObject interface.
+// We need this to work around http://bugs.webkit.org/show_bug.cgi?id=16829
+void ThrowWebKitException(const std::string16 &message);
+
 #define DECL_SINGLE_THREAD \
   CurrentThreadID current_thread_id_;
 
