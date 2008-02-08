@@ -117,6 +117,7 @@ void LocationCallback(LocationResult event);
 interface Location {
   readonly decimal latitude; // latitude in degrees
   readonly decimal longitude; // longitude in degrees
+  // TODO: Consider adding altitude, heading, etc.
   readonly Date timestamp;
   // Horizontal accuracy in meters representing 
   // the readius of the circular Earth surface with 
@@ -233,6 +234,7 @@ The response format is also JSON. An example response is:
   address:"mountain view, california"
 }
 }}}
+_TODO: Wooo!  I didn't know we had access to the address. Should we expose this in the API?_
 
 === Response format details ===
 
