@@ -119,7 +119,7 @@ interface Position {
   readonly decimal latitude; // latitude in degrees
   readonly decimal longitude; // longitude in degrees
   readonly Date timestamp;
-  readonly int accuracy; // Horizontal accuracy in meters
+  readonly int accuracy; // accuracy in meters
   readonly int errorCode;
   readonly string errorMessage; // human readable, suitable for logs
 };
