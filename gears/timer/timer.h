@@ -161,20 +161,20 @@ class GearsTimer
 
   // Creates a timer that has a function callback with the specified timeout.
   // repeat determines if this is an interval or timeout.  Returns the id of
-  // the new timer, or -1 on failure.
+  // the new timer, or 0 on failure.
   int CreateFunctionTimer(JsRootedCallback *timer_callback,
                           int timeout,
                           bool repeat);
 
   // Creates a timer that has a string to eval() with the specified timeout.
   // repeat determines if this is an interval or timeout.  Returns the id of
-  // the new timer, or -1 on failure.
+  // the new timer, or 0 on failure.
   int CreateStringTimer(const char16 *full_script,
                         int timeout,
                         bool repeat);
 
   // Called by Create*Timer() to actually create the timer.  Returns the id of
-  // the new timer, or -1 on failure.
+  // the new timer, or 0 on failure.
   int CreateTimerCommon(const TimerInfo &timer_info, int timeout);
   void HandleTimer(TimerInfo *timer_info);
 
