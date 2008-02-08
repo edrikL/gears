@@ -158,7 +158,7 @@ The request uses an HTTP POST method with JSON contents.
 || area_code || _TODO: explanation required_ || Yes || int ||
 || network_code || _TODO: explanation required_ || No || int ||
 || country_code || _TODO: explanation required_ || No || int ||
-|| age || Last measured time this cell was primary. || No || int ||
+|| age || Number of milliseconds since this cell was primary. If zero, this cell is primary currently. || No || int ||
 || signal_strength || Radio signal strength measured age seconds ago.  _TODO: What is the unit? Please tell me it is "bars", as in the cingular commercial :-)_. || No || int ||
 || timing_advance || Timing advance measured age seconds ago. _TODO: More explanation would be nice._ || No || int ||
 
@@ -167,6 +167,11 @@ The request uses an HTTP POST method with JSON contents.
 || *Name* || *Description* || *Required* || *Type" ||
 || mac_address || The mac address of the wifi node. || Yes || string ||
 || signal_strength || Current signal strength. _TODO: What are the units?_ || No || int ||
+
+
+= Alternatives =
+
+An alternative to the locationProviderUrl property is to add more elements to the Location interface with all the signals required by location providers. For example, we could add an arrays of CellTower and WifiTower objects to the location object. A JavaScript author could then tie all this information together with a location provider, creating a unified API.
 
 
 = Privacy =
