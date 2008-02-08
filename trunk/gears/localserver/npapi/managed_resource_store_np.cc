@@ -27,7 +27,7 @@
 
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/url_utils.h"
-#include "gears/localserver/npapi/update_task_np.h"
+#include "gears/localserver/common/update_task.h"
 
 DECLARE_GEARS_WRAPPER(GearsManagedResourceStore);
 
@@ -196,7 +196,7 @@ void GearsManagedResourceStore::GetLastErrorMessage(JsCallContext *context) {
 // CheckForUpdate
 //------------------------------------------------------------------------------
 void GearsManagedResourceStore::CheckForUpdate(JsCallContext *context) {
-  scoped_ptr<NPUpdateTask> update_task(new NPUpdateTask());
+  scoped_ptr<UpdateTask> update_task(UpdateTask::CreateUpdateTask());
   if (!update_task->Init(&store_)) {
     context->SetException(STRING16(L"Failed to initialize update task."));
     return;
