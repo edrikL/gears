@@ -59,7 +59,7 @@ if (loc.lastKnownLocation &&
 = Detailed API specification =
 
 {{{
-interface GearsGeolocation {
+interface Geolocation {
   // No location providers were available to serve this request. This might happen
   // if locationProviderUrl is set to null and the device does not have access to
   // any other type of providers (e.g. GPS).
