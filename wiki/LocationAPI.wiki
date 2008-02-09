@@ -24,14 +24,15 @@ interface Geolocation {
   void getCurrentPosition(PositionCallback callback, optional PositionOptions);
 
   // Watch the current position over time.
-  int watchPosition(PositionCallback callback, optional PositionOptions,
-                    int desiredIntervalMsec);
+  int watchPosition(PositionCallback callback, optional PositionOptions);
 
   // Stop watching the current position.
   void clearWatch(int watchId);
 };
 
+
 void PositionCallback(Position position);
+
 
 interface Position {
   readonly double latitude;  // latitude in degrees
@@ -46,17 +47,16 @@ interface Position {
 
 interface PositionOptions {
   // If set, specifies the URL to contact to convert geolocation signals into a
-  // position. Otherwise, no service will be used and a position will only be
-  // provided if the device has native access to position data (e.g. GPS).
+  // position.  Otherwise, only local position sources will be used (e.g. GPS).
   string locationProviderUrl;
 
-  // If set, the application would prefer the highest accuracy possible,
-  // regardless of battery, cost, etc. This might mean, for example, to use
-  // the GPS radio instead of cell id lookups. If not specified, the default
-  // value is false. The implementation always has the last word on which
-  // mechanism to use, this is just a way for an application to express a
-  // preference.
-  bool highAccuracyDesired;
+  // Set to 'true' to attempt to use signals that require battery / money / etc.
+  // This may result in higher accuracy, or may not.  The default is 'false'.
+  bool useExpensiveSignals;
+
+  // Hints at how often watchPosition() should be updated.  The actual rate may
+  // be faster or slower.  Has no effect on getCurrentPosition().
+  int desiredIntervalMsec;
 };
 }}}
 
