@@ -115,14 +115,16 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <div id="permissions-help">
    <h2>Information</h2>
    <p>
+     <TRANS_BLOCK desc="Header for basic help section.">
      PRODUCT_FRIENDLY_NAME_UQ is an open source browser extension that enables
      web applications to provide offline functionality using the following
      JavaScript APIs:
+     </TRANS_BLOCK>
    </p>
    <ul>
-     <li>Store and serve application resources locally</li>
-     <li>Store data locally in a fully-searchable relational database</li>
-     <li>Run asynchronous Javascript to improve application responsiveness</li>
+     <li><TRANS_BLOCK desc="Short explanation of localserver">Store and serve application resources locally</TRANS_BLOCK></li>
+     <li><TRANS_BLOCK desc="Short explanation of database">Store data locally in a fully-searchable relational database</TRANS_BLOCK></li>
+     <li><TRANS_BLOCK desc="Short explanation of workerpool">Run asynchronous JavaScript to improve application responsiveness</TRANS_BLOCK></li>
    </ul>
    <a href="#" onclick="showHelp(false); return false;">Go back</a>
   </div>
@@ -136,14 +138,14 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
           <img id="icon" src="icon_32x32.png" width="32" height="32">
         </td>
         <td width="100%" align="left" valign="middle">
-          <?cs #TC_MSG_BREAK desc: Asks the user if they want to let the site use gears ?>
+          <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears">
           The website below wants to use PRODUCT_FRIENDLY_NAME_UQ. This site 
           will be able to store and access information on your computer.&nbsp;
-          <?cs #TC_MSG_BREAK ?>
+          </TRANS_BLOCK>
           <a href="#" onclick="showHelp(true); return false;">
-          <?cs #TC_MSG_BREAK desc: Help link displayed in the installation dialog. ?>
+          <TRANS_BLOCK desc="Help link displayed in the installation dialog.">
           What is this?
-          <?cs #TC_MSG_BREAK ?>
+          </TRANS_BLOCK>
           </a>
         </td>
       </tr>
@@ -178,10 +180,10 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
           </td>
           <td valign="middle">
             <label for="unlock">
-          <?cs #TC_MSG_BREAK desc: Indicates the user lets the site use Gears ?>
+          <TRANS_BLOCK desc="Indicates the user lets the site use Gears">
               &nbsp;I <span class="accesskey">t</span>rust this site. Allow
               it to use PRODUCT_FRIENDLY_NAME_UQ.
-          <?cs #TC_MSG_BREAK ?>
+          </TRANS_BLOCK>
             </label>
           </td>
         </tr>
@@ -196,9 +198,9 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
         <tr>
           <td width="100%" align="left" valign="middle">
             <a href="#" onclick="denyAccessPermanently(); return false;">
-            <?cs #TC_MSG_BREAK desc: Link that disallows Gears on this site. ?>
+            <TRANS_BLOCK desc="Link that disallows Gears on this site.">
               Never allow this site
-            <?cs #TC_MSG_BREAK ?>
+            </TRANS_BLOCK>
             </a>
           </td>
 m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
@@ -209,10 +211,10 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
            <td width="100%" align="right" valign="middle">
             <a href="#" accesskey="A" id="allow-button"
               onclick="allowAccess(); return true;">
-              <?cs #TC_MSG_BREAK desc: Button user can press to allow the use of gears ?><span class="accesskey">A</span>llow<?cs #TC_MSG_BREAK ?></a>
+              <TRANS_BLOCK desc="Button user can press to allow the use of Gears"><span class="accesskey">A</span>llow</TRANS_BLOCK></a>
             <a href="#" accesskey="C" id="deny-button"
               onclick="denyAccess(); return false;">
-              <?cs #TC_MSG_BREAK desc: Button user can press to disallow the use of gears ?><span class="accesskey">C</span>ancel<?cs #TC_MSG_BREAK ?></a>
+              <TRANS_BLOCK desc="Button user can press to disallow the use of Gears."><span class="accesskey">C</span>ancel</TRANS_BLOCK></a>
           </tr>^,m4_dnl
 ^          <td nowrap="true" align="right" valign="middle">
             <!--
@@ -235,13 +237,13 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><?cs #TC_MSG_BREAK desc: Button user can press to allow the use of gears ?><span class="accesskey">A</span>llow<?cs #TC_MSG_BREAK ?></div></div></a>
+                  ><TRANS_BLOCK desc="Button user can press to allow the use of Gears"><span class="accesskey">A</span>llow</TRANS_BLOCK></div></div></a>
             <a href="#" accesskey="C" id="deny-button"
                 onclick="denyAccess(); return false;"
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><?cs #TC_MSG_BREAK desc: Button user can press to disallow the use of gears ?><span class="accesskey">C</span>ancel<?cs #TC_MSG_BREAK ?></div></div></a>^)
+                  ><TRANS_BLOCK desc="Button user can press to disallow the use of Gears"><span class="accesskey">C</span>ancel</TRANS_BLOCK></div></div></a>^)
           </td>
         </tr>
       </table>

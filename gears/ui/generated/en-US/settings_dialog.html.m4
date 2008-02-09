@@ -108,20 +108,20 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   </div>
   <div id="content">
     <h2>
-      <?cs #TC_MSG_BREAK desc: Header for allowed sites. ?>
+      <TRANS_BLOCK desc="Header for allowed sites.">
       Allowed Sites
-      <?cs #TC_MSG_BREAK ?>
+      </TRANS_BLOCK>
     </h2>
     <p>
-      <?cs #TC_MSG_BREAK desc: Description of allowed sites. ?>
+      <TRANS_BLOCK desc="Description of allowed sites.">
       These sites are always allowed to access PRODUCT_FRIENDLY_NAME_UQ.
-      <?cs #TC_MSG_BREAK ?>
+      </TRANS_BLOCK>
     </p>
     <div>
       <table>
         <tbody id="allowed-list">
           <tr>
-            <td class="left"><?cs #TC_MSG_BREAK desc: States that there are no allowed sites. ?><em>No allowed sites.</em><?cs #TC_MSG_BREAK ?></td>
+            <td class="left"><em><TRANS_BLOCK desc="States that there are no allowed sites.">No allowed sites.</TRANS_BLOCK></em></td>
             <td></td>
           </tr>
         </tbody>
@@ -130,20 +130,20 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <br>
     <br>
     <h2>
-      <?cs #TC_MSG_BREAK desc: Header for denied sites. ?>
+      <TRANS_BLOCK desc="Header for denied sites.">
       Denied Sites
-      <?cs #TC_MSG_BREAK ?>
+      </TRANS_BLOCK>
     </h2>
     <p>
-      <?cs #TC_MSG_BREAK desc: Description of denied sites. ?>
+      <TRANS_BLOCK desc="Description of denied sites.">
       These sites are never allowed to access PRODUCT_FRIENDLY_NAME_UQ.
-      <?cs #TC_MSG_BREAK ?>
+      </TRANS_BLOCK>
     </p>
     <div>
       <table>
         <tbody id="denied-list">
           <tr>
-            <td class="left"><?cs #TC_MSG_BREAK desc: States that there are no denied sites. ?><em>No denied sites.</em><?cs #TC_MSG_BREAK ?></td>
+            <td class="left"><em><TRANS_BLOCK desc="States that there are no denied sites.">No denied sites.</TRANS_BLOCK></em></td>
             <td></td>
           </tr>
         </tbody>
@@ -152,9 +152,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <br>
     <br>
     <div id="version">
-      <?cs #TC_MSG_BREAK desc: Version string. ?>
+      <TRANS_BLOCK desc="Version string.">
       PRODUCT_FRIENDLY_NAME_UQ version PRODUCT_VERSION
-      <?cs #TC_MSG_BREAK ?>
+      </TRANS_BLOCK>
     </div>
   </div>
   <div id="foot">
@@ -175,7 +175,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><?cs #TC_MSG_BREAK desc: Button user can press to save changes. ?><span class="accesskey">S</span>ave</div><?cs #TC_MSG_BREAK ?></div></a>
+                  ><TRANS_BLOCK desc="Button user can press to save changes."><span class="accesskey">S</span>ave</div></TRANS_BLOCK></div></a>
             <!--
             Note: There must be whitespace here or Firefox messes up the
             rendering.
@@ -188,7 +188,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><?cs #TC_MSG_BREAK desc: Button user can press to discard changes. ?><span class="accesskey">C</span>ancel</div><?cs #TC_MSG_BREAK ?></div></a>
+                  ><TRANS_BLOCK desc="Button user can press to discard changes."><span class="accesskey">C</span>ancel</div></TRANS_BLOCK></div></a>
           </td>
         </tr>
       </table>
