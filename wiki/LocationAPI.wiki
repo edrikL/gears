@@ -17,7 +17,7 @@ The Geolocation API allows web apps to retrieve the user's current position.  Th
 
 {{{
 interface Geolocation {
-  // Last known position, or 'null' if there is no last known position.
+  // Last known position, or null if there is no last known position.
   readonly Position lastPosition;
 
   // Get the current position.
