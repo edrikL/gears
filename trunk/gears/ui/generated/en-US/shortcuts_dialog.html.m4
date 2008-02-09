@@ -96,16 +96,16 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         </td>
         <td width="100%" align="left" valign="middle">
           <span id="header-singular">
-          <?cs #TC_MSG_BREAK desc: Tells the user that the application wants to create one shortcut. ?>
+          <TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut.">
           This website wants to create a shortcut
           on your desktop. Do you want to allow this?
-          <?cs #TC_MSG_BREAK ?>
+          </TRANS_BLOCK>
           </span>
           <span id="header-plural">
-          <?cs #TC_MSG_BREAK desc: Tells the user that the application wants to create multiple shortcuts. ?>
+          <TRANS_BLOCK desc="Tells the user that the application wants to create multiple shortcuts.">
           This website wants to create the shortcuts listed below on your
           desktop. Do you want to allow this?
-          <?cs #TC_MSG_BREAK ?>
+          </TRANS_BLOCK>
           </span>
         </td>
       </tr>
@@ -157,7 +157,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><?cs #TC_MSG_BREAK desc: Button user can press to allow Gears to create a shortcut ?><span class="accesskey">A</span>llow<?cs #TC_MSG_BREAK ?></div></div></a>
+                  ><TRANS_BLOCK desc="Button user can press to allow Gears to create a shortcut"><span class="accesskey">A</span>llow</TRANS_BLOCK></div></div></a>
             <!--
             Note: There must be whitespace here or Firefox messes up the
             rendering.
@@ -170,7 +170,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><?cs #TC_MSG_BREAK desc: Button user can press to disallow Gears from creating a shortcut. ?><span class="accesskey">C</span>ancel<?cs #TC_MSG_BREAK ?></div></div></a>
+                  ><TRANS_BLOCK desc="Button user can press to disallow Gears from creating a shortcut."><span class="accesskey">C</span>ancel</TRANS_BLOCK></div></div></a>
           </td>
         </tr>
       </table>
