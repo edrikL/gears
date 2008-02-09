@@ -1,15 +1,17 @@
 #summary Provides the geolocation of a device running a Gears-enabled web browser.
 #labels DesignDoc
 
+
 = Summary =
 
 The Geolocation API allows web apps to retrieve the user's current position.  The API should provide the following features:
 
-  * One-shot location requests (e.g. for recommendations sites -- "where am I right now?")
-  * Repeated location updates (e.g. for continuously updating one's position on a map)
+  * One-shot position requests (e.g. for recommendations sites -- "where am I right now?")
+  * Repeated position updates (e.g. for continuously updating one's location on a map)
   * Ability to get the last-known position cheaply before doing an expensive new request
   * Compatibility with future use as a singleton in the standard DOM (e.g. window.geolocation)
   * Support for alternative location service providers
+
 
 = API Proposal =
 
@@ -40,7 +42,14 @@ interface Position {
   // TODO: Consider adding altitude, heading, etc.
 };
 
+
+
 interface PositionOptions {
+  // If set, specifies the URL to contact to convert geolocation signals into a
+  // position. Otherwise, no service will be used and a position will only be
+  // provided if the device has native access to position data (e.g. GPS).
+  string locationProviderUrl;
+
   // If set, the application would prefer the highest accuracy possible,
   // regardless of battery, cost, etc. This might mean, for example, to use
   // the GPS radio instead of cell id lookups. If not specified, the default
@@ -48,34 +57,28 @@ interface PositionOptions {
   // mechanism to use, this is just a way for an application to express a
   // preference.
   bool highAccuracyDesired;
-
-  // If set, specifies the URL to contact to convert location signals into a
-  // location. This defaults to a Google service, but can be overridden to
-  // point elsewhere. If set to null, no service will be used and a location
-  // will only be provided if the device has native access to location data
-  // (e.g. GPS).
-  string locationProviderUrl;
 };
 }}}
+
 
 = Examples = 
 
 {{{
 var geo = google.gears.factory.create('beta.geolocation');
 
-// Get the current location
+// Get the position.
 geo.getCurrentPosition(function(position) {
   updateMap(position.latitude, position.longitude);
 });
 
-// Watch the location over time
+// Watch the position over time.
 var watchId = geo.watchPosition(function(position) {
   updateMap(position.latitude, position.longitude, position.accuracy);
 });
 
 geo.clearWatch(watchId);
 
-// Only get the location if the last known location is more than a minute old
+// Only get the position if the last known position is more than a minute old.
 var now = new Date().getTime();
 var threshold = now - 60000;
 
@@ -89,41 +92,45 @@ if (geo.lastPosition &&
 }
 }}}
 
+
 = Implementation Details =
 
-The Geolocation API is an abstraction for various location APIs that currently exist on mobile platforms (GPS-based, network/cellid-based). Location implementations could be straightforward mappings to native APIs (e.g the [http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-96C272CA-2BED-4352-AE7C-E692B193EC06/html/Location_Acquisition_APIIndexPage.html S60 Location Acquisition API]) or have a more complex design that combines several location providers (e.g. a GPS-based provider and a cell id-based provider) and returns the location from the most accurate provider at any given time.
+The Geolocation API is an abstraction for various location APIs that currently exist on mobile platforms (GPS-based, network/cellid-based). Geolocation implementations could be straightforward mappings to native APIs (e.g the [http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-96C272CA-2BED-4352-AE7C-E692B193EC06/html/Location_Acquisition_APIIndexPage.html S60 Location Acquisition API]) or have a more complex design that combines several location providers (e.g. a GPS-based provider and a cell id-based provider) and returns the location from the most accurate provider at any given time.
 
 _TODO: Need more detail about how results will be combined._
 
-= Alternatives =
-
-An alternative to the locationProviderUrl property is to add more elements to the Location interface with all the signals required by location providers. For example, we could add an arrays of !CellTower and !WifiTower objects to the location object. A !JavaScript author could then tie all this information together with a location provider, creating a unified API.
 
 = Privacy =
 
-It must be clear to users when an application is using the Location API. The dialog that currently enables Gears general access should not also enable access to the location API. It would be too easy for users to forget that they allowed access to Gears, or to fail to realize that enabling Gears also also enables location access. At a minimum, there should be a separate dialog from the Gears access dialog to enable Location API access.  
+It must be clear to users when an application is using the Geolocation API.  We could implement one or both of the following UI elements:
 
-It would also be interesting, though, to have some persistent UI that indicates that the location API is being used. For example, there could be a rotating globe or an icon of a map overlayed on the content area. Perhaps this UI should be 'active' somehow, indicating that something is happening, so that the user cannot forget that it is being used.
+  1. *A separate dialog from the Gears security dialog to enable the Geolocation API.* If the general-purpose dialog gave access to position data, it would be easy for users to forget they allowed access to Gears, or to fail to realize enabling Gears also exposes their position data.
+  1. *Some persistent UI that indicates the Geolocation API is being used.* For example, there could be a rotating globe or an icon of a map overlayed on the content area. Perhaps this UI should be 'active' somehow, indicating that something is happening, so that the user cannot forget it is being used.
 
-The protocol between the device and the location service provider is HTTP POST, and the format is JSON. The client supports persistent HTTP cookies, but the cookie are *not* shared with the browser's cookie jar for privacy reasons.
+Communication with the `locationProviderUrl` should use a cookie jar separate from the browser's cookie jar.  Web apps will generally live on a different security origin than third-party location providers.  By using separate cookie jars, a third-party provider cannot correlate location requests with non-location-based visits to that origin.
 
-= Appendix: Location Provider Protocol =
+
+= Appendix A: Alternate API =
+
+An alternative to the `locationProviderUrl` property is to add more elements to the Location interface with all the signals required by location providers. For example, we could add an arrays of !CellTower and !WifiTower objects to the location object. A !JavaScript author could then tie all this information together with a location provider, creating a unified API.
+
+= Appendix B: Location Provider Protocol =
 
 Many devices do not have native access to GPS or other location data. Additionally, GPS can take a long time to start up, drains battery, and does not work indoors. Because of these problems, the location API also has the ability to send various signals that the devices has access to (nearby cell sites, wifi nodes, etc) to a third-party _location service provider_, who can resolve the signals into a location estimate.
 
-== Request Format ==
+The protocol between the device and the location service provider is HTTP POST. The request and response are both formatted as JSON.
 
-The request uses an HTTP POST method with JSON contents. An example request is:
+== Request Format ==
 
 {{{
 {
   version: "1.0",
   host: "maps.google.com",
   device_id: "0220d4df7d8d48dcbb3f3ff433a8044a",
-  home_network_code: _TODO_,
-  home_country_code: _TODO_,
+  home_network_code: (TODO: example)
+  home_country_code: (TODO: example) (TODO: Is 'home' correct??)
   radio_type: "gsm",
-  cell_towers: [
+  cell_towers: [  (TODO: Is 'cell' a US term? Is 'mobile' more appropriate?)
     {
       cell_id: 42,
       area_code: 2023,
