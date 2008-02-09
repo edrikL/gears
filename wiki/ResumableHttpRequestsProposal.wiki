@@ -27,7 +27,7 @@ When a server supporting resumable operations is receiving content from a client
 The "Expect: 103-checkpoint" header MUST be sent by clients on all resume requests. The "103-checkpoint" expectation has two optional parameters: bytes and resume.
 
 {{{
-expect-resume = "Expect" ":" "103-checkpoint" [ ";" expect-range-spec ] [ ";" "resume" "=" entity-tag ]
+expect-resume = "Expect" ":" "103-checkpoint" [ ";" "resume" "=" entity-tag ] [ ";" expect-range-spec ]
 expect-range-spec = bytes-expect-range-spec
 bytes-expect-range-spec = bytes-unit "=" byte-range-spec "/" ( instance-length | "*" )
 }}}
