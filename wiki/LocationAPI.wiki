@@ -112,7 +112,20 @@ Communication with the `locationProviderUrl` should use a cookie jar separate fr
 
 = Appendix A: Alternate API =
 
-An alternative to the `locationProviderUrl` property is to add more elements to the Location interface with all the signals required by location providers. For example, we could add an arrays of !CellTower and !WifiTower objects to the location object. A !JavaScript author could then tie all this information together with a location provider, creating a unified API.
+Instead of the Geolocation API described above, Gears could expose only the underlying location signals.  (See "Location Provider Protocol - Request Format" below for the list of signals.)
+
+In many ways the approaches are equivalent.  The signals must be sent _somewhere_ in order to be useful, and that destination can be set as the `locationProviderUrl`.
+
+Still, a lower-level API would be different in several ways:
+
+  * *Consistency* - A low-level API is not directly useful to web app developers, so location providers would be tasked with designing the interface used by web apps.  This gives location providers more flexibility.  At the same time, it hinders web app developers slightly: it becomes more work to integrate geolocation data into an app, and it could become hard to switch between location providers that expose different interfaces.
+
+  * *Privacy* - With a low-level API, there is no need for a separate geolocation cookie jar.  It's also unclear whether separate Gears and Geolocation security dialogs would be useful.  (It would still make sense to indicate when position data is being tracked.)
+
+  * *Surface Area* - The low-level API would be a subset of the proposed spec, which can be seen as an advantage or disadvantage.  There are obvious differences, like removing all the methods described earlier.  There are also less obvious simplifications, like returning only the current signals, rather than any historical data.
+
+  * *Logic* - With a high-level API, it's more obvious how Gears can make decisions like whether to turn on the GPS radio in response to a request.  With a low-level signals-based API, it's unclear whether we can do much more than rate-limiting.
+
 
 = Appendix B: Location Provider Protocol =
 
@@ -146,7 +159,7 @@ The protocol between the device and the location service provider is HTTP POST. 
       network_code: 3333,
       country_code: 4444,
       age: 36000,
-      signal_strength: 2,
+      signal_strength: 2,  (TODO: Is this @age, or now? If @age, triangulation uses stale data?)
       timing_advance: 7777
     },
     {
