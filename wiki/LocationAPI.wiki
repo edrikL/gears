@@ -24,7 +24,7 @@ interface Geolocation {
   void getCurrentPosition(PositionCallback callback, optional PositionOptions);
 
   // Watch the current position over time.
-  int watchPosition(PositionCallback callback, optional PositionOptions);
+  int watchPosition(PositionCallback callback, optional WatchPositionOptions);
 
   // Stop watching the current position.
   void clearWatch(int watchId);
@@ -53,9 +53,13 @@ interface PositionOptions {
   // Set to 'true' to attempt to use signals that require battery / money / etc.
   // This may result in higher accuracy, or may not.  The default is 'false'.
   bool useExpensiveSignals;
+};
 
-  // Hints at how often watchPosition() should be updated.  The actual rate may
-  // be faster or slower.  Has no effect on getCurrentPosition().
+
+
+interface WatchPositionOptions : PositionOptions {
+  // Hints at how often watchPosition() should be updated. The actual rate may
+  // be faster or slower.
   int desiredIntervalMsec;
 };
 }}}
