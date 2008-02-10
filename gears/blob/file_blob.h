@@ -29,12 +29,12 @@
 #include "gears/blob/blob_interface.h"
 #include "gears/base/common/string16.h"
 
-// Returns NULL on failure.
-// The filename should be an absolute path, not a relative one.
-BlobInterface *NewFileBlob(const char16 *filename);
-
 class FileBlob : public BlobInterface {
  public:
+  // The filename should be an absolute path, not a relative one.
+  // If it is not valid, Read() and Length() will return 0.
+  FileBlob(const char16 *filename);
+
   ~FileBlob() {}
 
   int Read(uint8* destination, int max_bytes, int64 offset) const;
@@ -42,10 +42,6 @@ class FileBlob : public BlobInterface {
   int64 Length() const;
 
  private:
-  friend BlobInterface *NewFileBlob(const char16 *filename);
-
-  FileBlob(const char16 *filename);
-
   std::string16 filename_;
 
   DISALLOW_EVIL_CONSTRUCTORS(FileBlob);

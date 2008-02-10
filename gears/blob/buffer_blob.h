@@ -26,29 +26,43 @@
 #ifndef GEARS_BLOB_BUFFER_BLOB_H__
 #define GEARS_BLOB_BUFFER_BLOB_H__
 
+#include <vector>
+#include "gears/base/common/mutex.h"
 #include "gears/blob/blob_interface.h"
 
-// NewBufferBlob does not assume ownership of buffer's memory, as it will make
-// a private copy of the given buffer.  Returns NULL on failure.
-// The result is suitable to place inside a scoped_ptr<BlobInterface>.
-BlobInterface *NewBufferBlob(const void *buffer, int64 size);
-
+// Because BufferBlobs store their contents in a vector, they are restricted in
+// size by the maximum value of int.
 class BufferBlob : public BlobInterface {
  public:
-  ~BufferBlob();
+  // Initializes an empty, write-only BufferBlob.
+  BufferBlob() : buffer_(), writable_(true) {}
+  ~BufferBlob() {}
 
+  // Returns 0 and does nothing if this is read-only.  Otherwise, attempts to
+  // write num_bytes of source to the end of this and returns the number of
+  // bytes actually written.
+  int Append(const void *source, int num_bytes);
+
+  // Indicates the blob's contents will not change further (makes it
+  // read-only).  Must be called once after all updates are complete, before
+  // any reads are attempted.
+  void Finalize();
+
+  // Returns 0 if this is write-only.  Otherwise, copies up to max_bytes at
+  // offset position to destination.  Returns the number of bytes actually
+  // read.
   int Read(uint8 *destination, int max_bytes, int64 position) const;
+
   int64 Length() const;
 
  private:
-  friend BlobInterface *NewBufferBlob(const void *buffer, int64 size);
-  friend class BlobBuilder;
+  std::vector<uint8> buffer_;
 
-  // The BufferBlob will assume ownership of buffer's memory.
-  BufferBlob(const uint8 *buffer, int64 length);
+  // true means write-only, false means read-only.  BufferBlobs are initialized
+  // as write-only, and once set read-only, stay read-only forever.
+  bool writable_;
 
-  const uint8 *buffer_;
-  const int64 length_;
+  mutable Mutex mutex_;
 
   DISALLOW_EVIL_CONSTRUCTORS(BufferBlob);
 };

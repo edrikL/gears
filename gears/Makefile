@@ -1344,7 +1344,6 @@ FF_IDLSRCS	+= \
 		$(NULL)
 
 FF_CPPSRCS	+= \
-                blob_builder.cc \
 		blob_ff.cc \
 		buffer_blob.cc \
 		file_blob.cc \
@@ -1359,7 +1358,6 @@ IE_IDLSRCS	+= \
 		$(NULL)
 
 IE_CPPSRCS	+= \
-                blob_builder.cc \
 		blob_ie.cc \
 		buffer_blob.cc \
 		file_blob.cc \
@@ -1374,7 +1372,6 @@ IEMOBILE_IDLSRCS	+= \
 		$(NULL)
 
 IEMOBILE_CPPSRCS	+= \
-                blob_builder.cc \
 		blob_ie.cc \
 		buffer_blob.cc \
 		file_blob.cc \

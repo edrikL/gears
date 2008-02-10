@@ -27,56 +27,50 @@
 #include "gears/blob/buffer_blob.h"
 
 
-BlobInterface *NewBufferBlob(const void *buffer, int64 size) {
-  // Although Blobs generally can have sizes of over 2GB (think files on
-  // disk), let's not try to allocate an in-memory buffer of that size.
-  if (size > kint32max || size < 0) {
-    return NULL;
-  }
-  int size_as_int = static_cast<int>(size);
-
-  // Make a copy of the buffer's contents, to simplify memory ownership issues.
-  uint8* copied_buffer = new uint8[size_as_int];
-  if (!copied_buffer) {
-    return NULL;
-  }
-  memcpy(copied_buffer, buffer, size_as_int);
-
-  return new BufferBlob(copied_buffer, size_as_int);
-}
-
-
-BufferBlob::BufferBlob(const uint8 *buffer, int64 length)
-    : BlobInterface(),
-      buffer_(buffer),
-      length_(length) {
-  assert(length >= 0);
-}
-
-
-BufferBlob::~BufferBlob() {
-  delete buffer_;
-}
-
-
-int BufferBlob::Read(
-    uint8 *destination,
-    int max_bytes,
-    int64 position) const {
-  if (position >= length_ || position < 0 || max_bytes < 0) {
+int BufferBlob::Append(const void *source, int num_bytes) {
+  MutexLock lock(&mutex_);
+  if (!writable_ ||
+      num_bytes < 0 ||
+      buffer_.size() + num_bytes < 0) {  // Overflow
     return 0;
   }
-  int64 actual = length_ - position;
+  int original_size = buffer_.size();
+  const uint8* bytes = static_cast<const uint8*>(source);
+  buffer_.insert(buffer_.end(), bytes, bytes + num_bytes);
+  return buffer_.size() - original_size;
+}
+
+
+void BufferBlob::Finalize() {
+  MutexLock lock(&mutex_);
+  writable_ = false;
+}
+
+
+int BufferBlob::Read(uint8 *destination, int max_bytes, int64 position) const {
+  {
+    MutexLock lock(&mutex_);
+    if (writable_) {
+      return 0;
+    }
+    // By this point, we've established that the blob will not change so we
+    // don't need the mutex lock any more.
+  }
+  if (position >= buffer_.size() ||
+      position < 0 ||
+      max_bytes < 0) {
+    return 0;
+  }
+  int actual = buffer_.size() - static_cast<int>(position);
   if (actual > max_bytes) {
     actual = max_bytes;
   }
-  assert(actual >= 0);
-  int actual_as_int = static_cast<int>(actual);
-  memcpy(destination, buffer_ + position, actual_as_int);
-  return actual_as_int;
+  memcpy(destination, &(buffer_[position]), actual);
+  return actual;
 }
 
 
 int64 BufferBlob::Length() const {
-  return length_;
+  MutexLock lock(&mutex_);
+  return buffer_.size();
 }

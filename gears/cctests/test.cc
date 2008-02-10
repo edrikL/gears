@@ -46,7 +46,6 @@
 #include "gears/base/common/permissions_db_test.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
 #include "gears/base/common/string_utils.h"
-#include "gears/blob/blob_builder.h"
 #include "gears/blob/buffer_blob.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/common/http_request.h"
@@ -97,9 +96,8 @@ bool TestFileUtils();  // from file_test.cc
 bool TestUrlUtils();  // from url_utils_test.cc
 bool TestJsRootedTokenLifetime();  // from base_class_test.cc
 bool TestStringUtils();  // from string_utils_test.cc
-bool TestBufferBlob();
 bool TestSerialization();  // from serialization_test.cc
-bool TestBlobBuilder();
+bool TestBufferBlob();
 
 
 #if BROWSER_FF
@@ -136,9 +134,8 @@ bool GearsTest::RunTestsImpl() {
   ok &= TestManifest();
   ok &= TestManagedResourceStore();
   ok &= TestMessageService();
-  ok &= TestBufferBlob();
   ok &= TestSerialization();
-  ok &= TestBlobBuilder();
+  ok &= TestBufferBlob();
   // TODO(zork): Add this test back in once it doesn't crash the browser.
   //ok &= TestJsRootedTokenLifetime();
 
@@ -735,9 +732,6 @@ bool TestHttpRequest() {
   return true;
 }
 
-//------------------------------------------------------------------------------
-// TestBufferBlob
-//------------------------------------------------------------------------------
 bool TestBufferBlob() {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
@@ -747,104 +741,54 @@ bool TestBufferBlob() {
     return false; \
   } \
 }
+  int num_bytes = 0;
+  uint8 buffer[64] = {0};
 
-  scoped_ptr<BlobInterface> blob(NewBufferBlob("hello", 5));
-  TEST_ASSERT(blob->Length() == 5);
-  uint8 buffer[64];
-  for (int i = 0; i < static_cast<int>(sizeof(buffer)); i++) {
-    buffer[i] = 0;
-  }
-  TEST_ASSERT(buffer[0] == '\0');
+  // Empty blob tests
+  BufferBlob blob1;
+  TEST_ASSERT(blob1.Length() == 0);
+  num_bytes = blob1.Read(buffer, 64, 0);
+  TEST_ASSERT(num_bytes == 0);  // a non-finalized blob is not readable
+  blob1.Finalize();
+  TEST_ASSERT(blob1.Length() == 0);
+  num_bytes = blob1.Read(buffer, 64, 0);
+  TEST_ASSERT(num_bytes == 0);  // because it's actually empty
+  num_bytes = blob1.Append("abc", 3);
+  TEST_ASSERT(num_bytes == 0);  // a finalized blob is not writable
 
-  int32 bytes_read = blob->Read(buffer, 3, 1);
-  TEST_ASSERT(bytes_read == 3);
-  TEST_ASSERT(buffer[0] == 'e');
-  TEST_ASSERT(buffer[1] == 'l');
-  TEST_ASSERT(buffer[2] == 'l');
+  memset(buffer, 0, sizeof(buffer));
 
-  // This null char was set in the for loop above.
-  TEST_ASSERT(buffer[5] == '\0');
-  buffer[5] = '!';
-
-  bytes_read = blob->Read(buffer, 32, 0);
-  TEST_ASSERT(bytes_read == 5);
-  TEST_ASSERT(buffer[0] == 'h');
-  TEST_ASSERT(buffer[1] == 'e');
-  TEST_ASSERT(buffer[2] == 'l');
-  TEST_ASSERT(buffer[3] == 'l');
-  TEST_ASSERT(buffer[4] == 'o');
-
-  // Test that Blobs don't automatically append a null char.
-  TEST_ASSERT(buffer[5] == '!');
-
-  bytes_read = blob->Read(buffer, 32, 99);
-  TEST_ASSERT(bytes_read == 0);
-  bytes_read = blob->Read(buffer, -4, 20);
-  TEST_ASSERT(bytes_read == 0);
-
-  return true;
-}
-
-bool TestBlobBuilder() {
-#undef TEST_ASSERT
-#define TEST_ASSERT(b) \
-{ \
-  if (!(b)) { \
-    printf("TestBlobBuilder - failed (%d)\n", __LINE__); \
-    return false; \
-  } \
-}
-  uint8 buffer[2048];
-
-  // Make an empty blob:
-  BlobBuilder blob_builder1;
-  scoped_ptr<BlobInterface> blob(blob_builder1.ToBlob());
-  TEST_ASSERT(blob->Length() == 0);
-  TEST_ASSERT(blob->Read(buffer, 64, 0) == 0);
-  blob.reset(NULL);
-
-  // Make a typical blob
-  BlobBuilder blob_builder2;
-  blob_builder2.Append("abc", 3);
-  blob.reset(blob_builder2.ToBlob());
-  TEST_ASSERT(blob->Length() == 3);
-  blob->Read(buffer, 3, 0);
+  // Typical blob operation
+  BufferBlob blob2;
+  num_bytes = blob2.Append("abc", 3);
+  TEST_ASSERT(num_bytes == 3);
+  TEST_ASSERT(blob2.Length() == 3);
+  num_bytes = blob2.Append("de", 2);
+  TEST_ASSERT(num_bytes == 2);
+  TEST_ASSERT(blob2.Length() == 5);
+  num_bytes = blob2.Read(buffer, 64, 0);
+  TEST_ASSERT(num_bytes == 0);  // a non-finalized blob is not readable
+  blob2.Finalize();
+  TEST_ASSERT(blob2.Length() == 5);
+  num_bytes = blob2.Read(buffer, 64, 0);
+  TEST_ASSERT(num_bytes == 5);
+  num_bytes = blob2.Append("fgh", 3);
+  TEST_ASSERT(num_bytes == 0);  // a finalized blob is not writable
   TEST_ASSERT(buffer[0] == 'a');
   TEST_ASSERT(buffer[1] == 'b');
   TEST_ASSERT(buffer[2] == 'c');
-  blob.reset(NULL);
+  TEST_ASSERT(buffer[3] == 'd');
+  TEST_ASSERT(buffer[4] == 'e');
+  TEST_ASSERT(buffer[5] == '\0');
 
-  // Extending the blob is illegal
-  TEST_ASSERT(blob_builder2.Append("de", 2) == 0);
-
-  // Making another blob from the same builder is also illegal
-  TEST_ASSERT(blob_builder2.ToBlob() == NULL);
-
-  // Test a BlobBuilder with more than kInitialCapacity bytes
-
-  // If this assert fails, you simply need to allocate a bigger buffer above:
-  assert(sizeof(buffer) >= size_t(BlobBuilder::kInitialCapacity + 1));
-
-  int l = BlobBuilder::kInitialCapacity + 1;
-  BlobBuilder blob_builder4;
-  for (int i = 0; i < l; i++) {
-    blob_builder4.Append("a", 1);
-  }
-  blob.reset(blob_builder4.ToBlob());
-  blob->Read(buffer, l, 0);
-  TEST_ASSERT(blob->Length() == l);
-  TEST_ASSERT(buffer[0] == 'a');
-  TEST_ASSERT(buffer[1] == 'a');
-  TEST_ASSERT(buffer[2] == 'a');
-  TEST_ASSERT(buffer[l - 3] == 'a');
-  TEST_ASSERT(buffer[l - 2] == 'a');
-  TEST_ASSERT(buffer[l - 1] == 'a');
-  blob.reset(NULL);
-
-  // Exceptional cases
-  BlobBuilder blob_builder5;
-  TEST_ASSERT(blob_builder5.Append("abc", -3) == 0);
-
+  // overwrite the first three bytes of buffer, but don't touch the rest
+  num_bytes = blob2.Read(buffer, 3, 2);
+  TEST_ASSERT(num_bytes == 3);
+  TEST_ASSERT(buffer[0] == 'c');
+  TEST_ASSERT(buffer[1] == 'd');
+  TEST_ASSERT(buffer[2] == 'e');
+  TEST_ASSERT(buffer[3] == 'd');
+  TEST_ASSERT(buffer[4] == 'e');
   return true;
 }
 
