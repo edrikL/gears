@@ -97,6 +97,11 @@ SQLITE_CFLAGS += -DSQLITE_CORE -DSQLITE_ENABLE_FTS1 -DSQLITE_ENABLE_FTS2 \
   -DSQLITE_TRANSACTION_DEFAULT_IMMEDIATE=1 \
   -Ithird_party/sqlite_google/src -Ithird_party/sqlite_google/preprocessed
 
+LIBGD_CFLAGS += -Ithird_party/libjpeg -Ithird_party/libpng -DHAVE_CONFIG_H
+
+# libGD assumes it is in the include path
+CPPFLAGS += -Ithird_party/libgd
+
 ######################################################################
 # OS == linux
 ######################################################################
@@ -107,7 +112,10 @@ OBJ_SUFFIX = .o
 MKDEP = gcc -M -MF $(@D)/$*.pp -MT $@ $(CPPFLAGS) $(FF_CPPFLAGS) $<
 
 CPPFLAGS += -DLINUX
+LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
 SQLITE_CFLAGS += -Wno-uninitialized -DHAVE_USLEEP=1
+# for libjpeg:
+THIRD_PARTY_CFLAGS = -Wno-main
 
 COMPILE_FLAGS_dbg = -g -O0
 COMPILE_FLAGS_opt = -O2
@@ -142,8 +150,11 @@ OBJ_SUFFIX = .o
 MKDEP = gcc -M -MF $(@D)/$*.pp -MT $@ $(CPPFLAGS) $(FF_CPPFLAGS) $<
 
 CPPFLAGS += -DLINUX -DOS_MACOSX
+LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
 SQLITE_CFLAGS += -Wno-uninitialized -Wno-pointer-sign -isysroot $(OSX_SDK_ROOT)
 SQLITE_CFLAGS += -DHAVE_USLEEP=1
+# for libjpeg:
+THIRD_PARTY_CFLAGS = -Wno-main
 
 COMPILE_FLAGS_dbg = -g -O0
 COMPILE_FLAGS_opt = -O2
@@ -228,6 +239,8 @@ SQLITE_CFLAGS += /wd4018 /wd4244
 ifeq ($(OS),wince)
 SQLITE_CFLAGS += /wd4146
 endif
+
+LIBGD_CFLAGS += /DBGDWIN32 /wd4244 /wd4996 /wd4005 /wd4142 /wd4018 /wd4133 /wd4102
 
 COMPILE_FLAGS_dbg = /MTd /Zi
 COMPILE_FLAGS_opt = /MT  /Zi /Ox
