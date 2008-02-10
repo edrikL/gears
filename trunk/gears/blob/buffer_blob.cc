@@ -31,7 +31,8 @@ int BufferBlob::Append(const void *source, int num_bytes) {
   MutexLock lock(&mutex_);
   if (!writable_ ||
       num_bytes < 0 ||
-      buffer_.size() + num_bytes < 0) {  // Overflow
+      // Don't try to support BufferBlobs over 2GB:
+      static_cast<int64>(buffer_.size()) + num_bytes > kint32max) {
     return 0;
   }
   int original_size = buffer_.size();
@@ -56,16 +57,18 @@ int BufferBlob::Read(uint8 *destination, int max_bytes, int64 position) const {
     // By this point, we've established that the blob will not change so we
     // don't need the mutex lock any more.
   }
+  assert(position <= kint32max);  // Enforced by Append()
   if (position >= buffer_.size() ||
       position < 0 ||
       max_bytes < 0) {
     return 0;
   }
-  int actual = buffer_.size() - static_cast<int>(position);
+  int position_as_int = static_cast<int>(position);
+  int actual = buffer_.size() - position_as_int;
   if (actual > max_bytes) {
     actual = max_bytes;
   }
-  memcpy(destination, &(buffer_[position]), actual);
+  memcpy(destination, &(buffer_[position_as_int]), actual);
   return actual;
 }
 
