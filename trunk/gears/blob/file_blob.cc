@@ -27,11 +27,6 @@
 #include "gears/blob/file_blob.h"
 
 
-BlobInterface *NewFileBlob(const char16 *filename) {
-  return new FileBlob(filename);
-}
-
-
 FileBlob::FileBlob(const char16 *filename)
     : BlobInterface(),
       filename_(filename) {

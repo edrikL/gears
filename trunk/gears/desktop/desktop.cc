@@ -278,9 +278,9 @@ STDMETHODIMP GearsDesktop::newFileBlob(const BSTR filename,
   CComPtr<CComObject<GearsBlob> > blob_ptr(blob);
 
   if (!filename || !filename[0]) {
-    blob->Init(::NewFileBlob(L""));
+    blob->Init(new FileBlob(L""));
   } else {
-    blob->Init(::NewFileBlob(filename));
+    blob->Init(new FileBlob(filename));
   }
 
   if (!blob->InitBaseFromSibling(this)) {
@@ -301,7 +301,7 @@ NS_IMETHODIMP GearsDesktop::NewFileBlob(const nsAString &filename,
                                         nsISupports **retval) {
   GearsBlob *blob = new GearsBlob();
   nsCOMPtr<GearsBlobInterface> blob_external = blob;
-  blob->Init(::NewFileBlob(nsString(filename).get()));
+  blob->Init(new FileBlob(nsString(filename).get()));
   if (!blob->InitBaseFromSibling(this)) {
     RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
   }
