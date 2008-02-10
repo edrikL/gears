@@ -35,15 +35,20 @@ STDMETHODIMP GearsBlob::get_length(VARIANT *retval) {
   // A GearsBlob should never be let out in the JS world unless it has been
   // Initialize()d with valid contents_.
   assert(contents_.get());
+
   int64 length = contents_->Length();
-  retval->vt = VT_I8;
-  retval->lVal = static_cast<LONG>(length);
+  if ((length < JS_INT_MIN) || (length > JS_INT_MAX)) {
+    RETURN_EXCEPTION(STRING16(L"length is out of range."));
+  }
+  retval->vt = VT_R8;
+  retval->dblVal = static_cast<DOUBLE>(length);
   RETURN_NORMAL();
 }
 
 
 STDMETHODIMP GearsBlob::get_contents(VARIANT *retval) {
-  retval->vt = VT_PTR;
-  retval->lVal = reinterpret_cast<LONG>(contents_.get());
+  // We pack the pointer into the byref field of a VARIANT.
+  retval->vt = VT_BYREF;
+  retval->byref = contents_.get();
   RETURN_NORMAL();
 }

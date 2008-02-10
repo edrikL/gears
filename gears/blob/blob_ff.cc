@@ -52,7 +52,12 @@ NS_IMETHODIMP GearsBlob::GetLength(PRInt64 *retval) {
   // A GearsBlob should never be let out in the JS world unless it has been
   // Initialize()d with valid contents_.
   assert(contents_.get());
-  *retval = contents_->Length();
+
+  int64 length = contents_->Length();
+  if ((length < JS_INT_MIN) || (length > JS_INT_MAX)) {
+    RETURN_EXCEPTION(STRING16(L"length is out of range."));
+  }
+  *retval = length;
   return NS_OK;
 }
 
