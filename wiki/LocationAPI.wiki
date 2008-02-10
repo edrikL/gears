@@ -41,6 +41,7 @@ interface Position {
   readonly int accuracy;  // accuracy in meters
   readonly string errorMessage; // human readable, suitable for logs
   // TODO: Consider adding altitude, heading, etc.
+  // TODO: Consider adding address
 };
 
 
@@ -50,9 +51,9 @@ interface PositionOptions {
   // position.  Otherwise, only local position sources will be used (e.g. GPS).
   string locationProviderUrl;
 
-  // Set to 'true' to attempt to use signals that require battery / money / etc.
-  // This may result in higher accuracy, or may not.  The default is 'false'.
-  bool useExpensiveSignals;
+  // Set to 'true' to attempt to request use of higher power (and battery
+  // consumption). This may result in higher accuracy. The default is false.
+  bool useHighPower;
 };
 
 
@@ -101,7 +102,7 @@ if (geo.lastPosition &&
 
 The Geolocation API is an abstraction for various location APIs that currently exist on mobile platforms (GPS-based, network/cellid-based). Geolocation implementations could be straightforward mappings to native APIs (e.g the [http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-96C272CA-2BED-4352-AE7C-E692B193EC06/html/Location_Acquisition_APIIndexPage.html S60 Location Acquisition API]) or have a more complex design that combines several location providers (e.g. a GPS-based provider and a cell id-based provider) and returns the location from the most accurate provider at any given time.
 
-_TODO: Need more detail about how results will be combined._
+The Gears implementation chooses the location provider to invoke subject to the criteria specified with `PositionOptions` and `WatchPositionOptions`. When location data is requested, the first result that satisfies the criteria is returned via the `PostionCallback` function. Subsequent invocations will always use the most accurate location data available. This caters for the common case where a less accurate fix from a network-based location provider can be obtained quickly followed by a more accurate GPS fix later.
 
 
 = Privacy =
@@ -109,7 +110,7 @@ _TODO: Need more detail about how results will be combined._
 It must be clear to users when an application is using the Geolocation API.  We could implement one or both of the following UI elements:
 
   1. *A separate dialog from the Gears security dialog to enable the Geolocation API.* If the general-purpose dialog gave access to position data, it would be easy for users to forget they allowed access to Gears, or to fail to realize enabling Gears also exposes their position data.
-  1. *Some persistent UI that indicates the Geolocation API is being used.* For example, there could be a rotating globe or an icon of a map overlayed on the content area. Perhaps this UI should be 'active' somehow, indicating that something is happening, so that the user cannot forget it is being used.
+  1. *Some persistent UI that indicates the Geolocation API is being used.* For example, there could be a bar across the bottom of the browser with an icon of a globe or map. Perhaps this UI should be 'active' somehow, indicating that something is happening, so that the user cannot forget it is being used.
 
 Communication with the `locationProviderUrl` should use a cookie jar separate from the browser's cookie jar.  Web apps will generally live on a different security origin than third-party location providers.  By using separate cookie jars, a third-party provider cannot correlate location requests with non-location-based visits to that origin.
 
@@ -133,7 +134,7 @@ Still, a lower-level API would be different in several ways:
 
 = Appendix B: Location Provider Protocol =
 
-Many devices do not have native access to GPS or other location data. Additionally, GPS can take a long time to start up, drains battery, and does not work indoors. Because of these problems, the location API also has the ability to send various signals that the devices has access to (nearby cell sites, wifi nodes, etc) to a third-party _location service provider_, who can resolve the signals into a location estimate.
+Many devices do not have native access to GPS or other location data. Additionally, GPS can take a long time to get an accurate location fix, drains battery, and does not work indoors. Because of these problems, the location API also has the ability to send various signals that the devices has access to (nearby cell sites, wifi nodes, etc) to a third-party _location service provider_, who can resolve the signals into a location estimate.
 
 The protocol between the device and the location service provider is HTTP POST. The request and response are both formatted as JSON.
 
@@ -143,37 +144,27 @@ The protocol between the device and the location service provider is HTTP POST. 
 {
   version: "1.0",
   host: "maps.google.com",
-  device_id: "0220d4df7d8d48dcbb3f3ff433a8044a",
-  home_network_code: (TODO: example)
-  home_country_code: (TODO: example) (TODO: Is 'home' correct??)
+  home_mobile_country_code: 310,
+  home_mobile_network_code: 410,
   radio_type: "gsm",
-  cell_towers: [  (TODO: Is 'cell' a US term? Is 'mobile' more appropriate?)
+  cell_towers: [
     {
       cell_id: 42,
-      area_code: 2023,
-      network_code: 3333,
-      country_code: 4444,
+      area_code: 415,
+      mobile_country_code: 310,
+      mobile_network_code: 410,
       age: 0,
       signal_strength: 3,
       timing_advance: 5555
     },
     {
       cell_id: 88,
-      area_code: 2027,
-      network_code: 3333,
-      country_code: 4444,
+      area_code: 415,
+      mobile_country_code: 310,
+      mobile_network_code: 580,
       age: 36000,
       signal_strength: 2,  (TODO: Is this @age, or now? If @age, triangulation uses stale data?)
       timing_advance: 7777
-    },
-    {
-      cell_id: 23,
-      area_code: 2017,
-      network_code: 3333,
-      country_code: 4444,
-      age: 92000,
-      signal_strength: 1,
-      timing_advance: 9999
     }
   ],
   wifi_towers: [
@@ -194,9 +185,8 @@ The protocol between the device and the location service provider is HTTP POST. 
 || *Name* || *Description* || *Required* || *Type" ||
 || version || The protocol version. Currently, this is "1.0". || Yes || string ||
 || host || The host of the web page that is requesting the location. || Yes || string ||
-|| device_id || Globally unique device ID, generated by Gears. _TODO: Do we need this? Would a cookie suffice?_ || Yes || string ||
-|| home_network_code || Home mobile network code. _TODO: Can somebody explain what this is better?_ || No || int32 ||
-|| home_country_code || Home mobile country code. _TODO: Can somebody explain what this is better?_ || No || int32 ||
+|| home_mobile_country_code || The mobile country code for the device's home network || No || int32 ||
+|| home_mobile_network_code || The mobile network code for the device's home network || No || int32 ||
 || radio_type || Mobile radio type. _TODO: Can somebody expand on why this is necessary/useful?_ || No || string (gsm|cdma|wcdma) ||
 || cell_towers || Array of cell-id data objects. See description of cell-id below. || If wifi_data not present || array ||
 || wifi_towers || Array of wifi-id data objects. See description of wifi-id below. || If cellid_data not present || array ||
@@ -206,17 +196,17 @@ The protocol between the device and the location service provider is HTTP POST. 
 || *Name* || *Description* || *Required* || *Type" ||
 || cell_id || Unique identifier of the cell. || Yes || string ||
 || area_code || _TODO: explanation required_ || Yes || int16 ||
-|| network_code || _TODO: explanation required_ || No || int16 ||
-|| country_code || _TODO: explanation required_ || No || int16 ||
+|| mobile_country_code || Mobile country code for cell || No || int16 ||
+|| mobile_network_code || Mobile network code for cell || No || int16 ||
 || age || Number of milliseconds since this cell was primary. If zero, this cell is primary currently. || No || int16 ||
-|| signal_strength || Radio signal strength measured age seconds ago.  _TODO: What is the unit? Please tell me it is "bars", as in the cingular commercial :-)_. || No || int16 ||
-|| timing_advance || Timing advance measured age seconds ago. _TODO: More explanation would be nice._ || No || int8 ||
+|| signal_strength || Radio signal strength measured in dBm. || No || int16 ||
+|| timing_advance || Represents the distance from the cell tower. Each unit is roughly 550 meters. || No || int8 ||
 
 === Wifi-Id data elements ===
 
 || *Name* || *Description* || *Required* || *Type" ||
 || mac_address || The mac address of the wifi node. || Yes || string ||
-|| signal_strength || Current signal strength. _TODO: What are the units?_ || No || int16 ||
+|| signal_strength || Current signal strength measured in dBm. || No || int16 ||
 
 == Response Format ==
 
@@ -228,10 +218,9 @@ The response format is also JSON. An example response is:
   latitude:1234123,
   longitude:-2132362,
   accuracy:1200,
-  address:"mountain view, california"
+  address:"mountain view, california" [ TODO: Remove if not used in API? ]
 }
 }}}
-_TODO: Wooo!  I didn't know we had access to the address. Should we expose this in the API?_
 
 === Response format details ===
 
