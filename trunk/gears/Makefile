@@ -151,6 +151,104 @@ THIRD_PARTY_CSRCS	+= \
 endif
 
 #-----------------------------------------------------------------------------
+# third_party/libjpeg
+
+ifneq ($(OS),wince)
+THIRD_PARTY_VPATH	+= \
+		third_party/libjpeg \
+		$(NULL)
+
+THIRD_PARTY_CSRCS	+= \
+		jcapimin.c \
+		jcapistd.c \
+		jccoefct.c \
+		jccolor.c \
+		jcdctmgr.c \
+		jchuff.c \
+		jcinit.c \
+		jcmainct.c \
+		jcmarker.c \
+		jcmaster.c \
+		jcomapi.c \
+		jcparam.c \
+		jcphuff.c \
+		jcprepct.c \
+		jcsample.c \
+		jctrans.c \
+		jdapimin.c \
+		jdapistd.c \
+		jdatadst.c \
+		jdatasrc.c \
+		jdcoefct.c \
+		jdcolor.c \
+		jddctmgr.c \
+		jdhuff.c \
+		jdinput.c \
+		jdmainct.c \
+		jdmarker.c \
+		jdmaster.c \
+		jdmerge.c \
+		jdphuff.c \
+		jdpostct.c \
+		jdsample.c \
+		jdtrans.c \
+		jerror.c \
+		jfdctflt.c \
+		jfdctfst.c \
+		jfdctint.c \
+		jidctflt.c \
+		jidctfst.c \
+		jidctint.c \
+		jidctred.c \
+		jquant1.c \
+		jquant2.c \
+		jutils.c \
+		jmemmgr.c \
+		jmemnobs.c \
+		$(NULL)
+endif
+
+#-----------------------------------------------------------------------------
+# third_party/libgd
+
+ifneq ($(OS),wince)
+THIRD_PARTY_VPATH	+= \
+		third_party/libgd \
+		$(NULL)
+
+LIBGD_CSRCS	+= \
+		gd.c \
+		gdfx.c \
+		gd_security.c \
+		gd_gd.c \
+		gd_gd2.c \
+		gd_io.c \
+		gd_io_dp.c \
+		gd_gif_in.c \
+		gd_gif_out.c \
+		gd_io_file.c \
+		gd_io_ss.c \
+		gd_jpeg.c \
+		gd_png.c \
+		gd_ss.c \
+		gd_topal.c \
+		gd_wbmp.c \
+		gdcache.c \
+		gdfontg.c \
+		gdfontl.c \
+		gdfontmb.c \
+		gdfonts.c \
+		gdfontt.c \
+		gdft.c \
+		gdhelpers.c \
+		gdkanji.c \
+		gdtables.c \
+		gdxpm.c \
+		wbmp.c \
+		$(NULL)
+endif
+
+#-----------------------------------------------------------------------------
 # third_party/jsoncpp
 
 THIRD_PARTY_VPATH	+= \

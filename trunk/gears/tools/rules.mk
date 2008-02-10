@@ -35,9 +35,9 @@
 
 OUTDIR = bin-$(MODE)
 
-# SQLITE_OUTDIR and THIRD_PARTY_OUTDIR are separate from COMMON_OUTDIR
-# because we want different build flags for them, and flags are set per
-# output directory.
+# LIBGD_OUTDIR, SQLITE_OUTDIR and THIRD_PARTY_OUTDIR are separate from
+# COMMON_OUTDIR because we want different build flags for them, and flags are
+# set per output directory.
 #
 # INSTALLERS_OUTDIR doesn't include $(ARCH) because OSes that support
 # multiple CPU architectures (namely, OSX) have merged install packages.
@@ -45,6 +45,7 @@ COMMON_OUTDIR           = $(OUTDIR)/$(OS)-$(ARCH)/common
 FF_OUTDIR               = $(OUTDIR)/$(OS)-$(ARCH)/ff
 IE_OUTDIR               = $(OUTDIR)/$(OS)-$(ARCH)/ie
 NPAPI_OUTDIR            = $(OUTDIR)/$(OS)-$(ARCH)/npapi
+LIBGD_OUTDIR            = $(COMMON_OUTDIR)/gd
 SQLITE_OUTDIR           = $(COMMON_OUTDIR)/sqlite
 THIRD_PARTY_OUTDIR      = $(COMMON_OUTDIR)/third_party
 INSTALLERS_OUTDIR       = $(OUTDIR)/installers
@@ -77,6 +78,8 @@ IEMOBILE_SETUP_OBJS = \
 NPAPI_OBJS = \
 	$(patsubst %.cc,$(NPAPI_OUTDIR)/%$(OBJ_SUFFIX),$(NPAPI_CPPSRCS)) \
 	$(patsubst %.c,$(NPAPI_OUTDIR)/%$(OBJ_SUFFIX),$(NPAPI_CSRCS))
+LIBGD_OBJS = \
+	$(patsubst %.c,$(LIBGD_OUTDIR)/%$(OBJ_SUFFIX),$(LIBGD_CSRCS))
 SQLITE_OBJS = \
 	$(patsubst %.c,$(SQLITE_OUTDIR)/%$(OBJ_SUFFIX),$(SQLITE_CSRCS))
 THIRD_PARTY_OBJS = \
@@ -108,6 +111,7 @@ DEPS = \
 	$(IE_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(IEMOBILE_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(NPAPI_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(LIBGD_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(SQLITE_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(THIRD_PARTY_OBJS:$(OBJ_SUFFIX)=.pp)
 
@@ -253,7 +257,7 @@ endif
 
 win32installer:: $(WIN32_INSTALLER_MSI)
 
-prereqs:: $(COMMON_OUTDIR) $(SQLITE_OUTDIR) $(THIRD_PARTY_OUTDIR) $(COMMON_OUTDIR)/genfiles $(COMMON_OUTDIRS_I18N) $(INSTALLERS_OUTDIR)
+prereqs:: $(COMMON_OUTDIR) $(LIBGD_OUTDIR) $(SQLITE_OUTDIR) $(THIRD_PARTY_OUTDIR) $(COMMON_OUTDIR)/genfiles $(COMMON_OUTDIRS_I18N) $(INSTALLERS_OUTDIR)
 
 genheaders::
 
@@ -300,6 +304,8 @@ help::
 .PHONY: prereqs genheaders modules clean help
 
 $(COMMON_OUTDIR):
+	"mkdir" -p $@
+$(LIBGD_OUTDIR):
 	"mkdir" -p $@
 $(SQLITE_OUTDIR):
 	"mkdir" -p $@
@@ -403,9 +409,12 @@ $(NPAPI_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	$(MKDEP)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(NPAPI_CPPFLAGS) $(NPAPI_CFLAGS) $<
 
-# Omit @$(MKDEP) in this case because sqlite files include files which
-# aren't in the same directory, but doesn't use explicit paths.  All
-# necessary -I flags are in SQLITE_CFLAGS.
+# Omit @$(MKDEP) for libgd and sqlite because they include files which aren't
+# in the same directory, but don't use explicit paths.  All necessary -I
+# flags are in LIBGD_CFLAGS and SQLITE_CFLAGS respectively.
+$(LIBGD_OUTDIR)/%$(OBJ_SUFFIX): %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LIBGD_CFLAGS) $<
+
 $(SQLITE_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(SQLITE_CPPFLAGS) $(SQLITE_CFLAGS) $<
 
@@ -429,31 +438,31 @@ $(NPAPI_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 
 # This target handles both IE and IEMOBILE by using
 # "$(BROWSER)_" to choose the correct lists.
-$(IE_MODULE_DLL): $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
+$(IE_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
 	@echo $($(BROWSER)_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	$(MKSHLIB) $(SHLIBFLAGS) $($(BROWSER)_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	$(MKSHLIB) $(SHLIBFLAGS) $($(BROWSER)_SHLIBFLAGS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp 	
 
 # Note the use of SHLIBFLAGS_NOPDB instead of SHLIBFLAGS here.
 $(IEMOBILE_SETUP_DLL): $(IEMOBILE_SETUP_OBJS) $(IEMOBILE_SETUP_LINK_EXTRAS)
 	$(MKSHLIB) $(SHLIBFLAGS_NOPDB) $(IEMOBILE_SETUP_LINK_EXTRAS) $($(BROWSER)_LIBS) $(IEMOBILE_SETUP_OBJS)	
 
-$(FF_MODULE_DLL): $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_OBJS) $(FF_LINK_EXTRAS)
+$(FF_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_OBJS) $(FF_LINK_EXTRAS)
   ifeq ($(OS),linux)
         # TODO(playmobil): Find equivalent of "@args_file" for ld on Linux.
-	$(MKSHLIB) $(SHLIBFLAGS) $(FF_SHLIBFLAGS) $(FF_OBJS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_LINK_EXTRAS) $(FF_LIBS)
+	$(MKSHLIB) $(SHLIBFLAGS) $(FF_SHLIBFLAGS) $(FF_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_LINK_EXTRAS) $(FF_LIBS)
   else
 	@echo $(FF_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	$(MKSHLIB) $(SHLIBFLAGS) $(FF_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_LINK_EXTRAS) $(FF_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	$(MKSHLIB) $(SHLIBFLAGS) $(FF_SHLIBFLAGS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_LINK_EXTRAS) $(FF_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
   endif
 
 $(FF_MODULE_TYPELIB): $(FF_GEN_TYPELIBS)
 	$(GECKO_SDK)/gecko_sdk/bin/xpt_link $@ $^
 
-$(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS)
+$(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS)
 	@echo $(NPAPI_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	$(MKSHLIB) $(SHLIBFLAGS) $(NPAPI_SHLIBFLAGS) $(COMMON_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_LINK_EXTRAS) $(NPAPI_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	$(MKSHLIB) $(SHLIBFLAGS) $(NPAPI_SHLIBFLAGS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_LINK_EXTRAS) $(NPAPI_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
 
 # INSTALLER TARGETS
