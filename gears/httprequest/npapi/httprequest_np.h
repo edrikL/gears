@@ -35,7 +35,7 @@
 class HttpRequest;
 
 class GearsHttpRequest
-    : public ModuleImplBaseClass,
+    : public ModuleImplBaseClassVirtual,
       public JsEventHandlerInterface,
       public HttpRequest::ReadyStateListener {
  public:

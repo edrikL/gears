@@ -87,8 +87,7 @@ GearsClass *CreateModule(JsRunnerInterface *js_runner) {
   }
 
   GearsClass *impl = new GearsClass;
-  wrapper->Init(static_cast<ModuleImplBaseClassVirtual *>(impl),
-                new Dispatcher<GearsClass>(impl));
+  wrapper->Init(impl, new Dispatcher<GearsClass>(impl));
   return impl;
 }
 
