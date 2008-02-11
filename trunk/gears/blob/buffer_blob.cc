@@ -57,12 +57,13 @@ int BufferBlob::Read(uint8 *destination, int max_bytes, int64 position) const {
     // By this point, we've established that the blob will not change so we
     // don't need the mutex lock any more.
   }
-  assert(position <= kint32max);  // Enforced by Append()
   if (position >= buffer_.size() ||
       position < 0 ||
       max_bytes < 0) {
     return 0;
   }
+  assert(position <= kint32max);  // Enforced by Append()
+
   int position_as_int = static_cast<int>(position);
   int actual = buffer_.size() - position_as_int;
   if (actual > max_bytes) {
