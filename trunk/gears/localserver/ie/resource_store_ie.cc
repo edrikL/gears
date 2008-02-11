@@ -490,7 +490,8 @@ STDMETHODIMP GearsResourceStore::captureBlob(
   if (FAILED(hr)) {
     RETURN_EXCEPTION(STRING16(L"Error getting blob contents."));
   }
-  BlobInterface *blob_contents = reinterpret_cast<BlobInterface*>(var.byref);
+  const BlobInterface *blob_contents =
+      reinterpret_cast<const BlobInterface*>(var.byref);
 
   // Resolve the URL this file is to be registered under.
   std::string16 full_url;

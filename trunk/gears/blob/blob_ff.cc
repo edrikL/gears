@@ -62,7 +62,7 @@ NS_IMETHODIMP GearsBlob::GetLength(PRInt64 *retval) {
 }
 
 
-NS_IMETHODIMP GearsBlob::GetContents(BlobInterface** retval) {
+NS_IMETHODIMP GearsBlob::GetContents(const BlobInterface** retval) {
   *retval = contents_.get();
   return NS_OK;
 }
