@@ -117,44 +117,11 @@ class FileDialog {
 ==Code Example==
 
 {{{
-// HTML
-function insertRow(message) {
-  var row = document.getElementById('output').insertRow(-1);
-  row.insertCell(0).innerHTML = message;  // insertCell arg is column position
-}
-
-
-// FileSystem
-function task(fn) {
-  if (fn()) {
-    setTimeout(function() { task(fn); }, 0);
-  }
-}
-
-function createPrintFunction(files) {
-  var fileArray = files;
-  var index = 0;
-  return (function() {
-    if (index < files.length) {
-      var file = fileArray[index];
-      var name = file.name;
-      insertRow(name + '<br>' + '<img src="' + name + '"></img> <br>');
-      index++;
-      return true;
-    }
-    return false;
-  });
-}
-
-function openDialog() {
-  try {
-    var desktop = google.gears.factory.create('beta.desktop');
-    var files = desktop.openFileDialog(['Images (*.jpg, *.gif)', '*.jpg;*.gif', 'All files (*.*)', '*.*']);
-    if (files) {
-      task(createPrintFunction(files));
-    }
-  } catch(ex) {
-    alert(String(ex));
-  }
+var desktop = google.gears.factory.create('beta.desktop');
+var files = desktop.openFileDialog(['Images (*.jpg, *.gif)', '*.jpg;*.gif', 'All files (*.*)', '*.*']);
+for (var i = 0; i < files.length; ++i) {
+  var img = document.createElement("img");
+  img.src = files[i];
+  document.body.appendChild(img);
 }
 }}}
