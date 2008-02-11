@@ -49,6 +49,7 @@ STDMETHODIMP GearsBlob::get_length(VARIANT *retval) {
 STDMETHODIMP GearsBlob::get_contents(VARIANT *retval) {
   // We pack the pointer into the byref field of a VARIANT.
   retval->vt = VT_BYREF;
-  retval->byref = contents_.get();
+  retval->byref =
+      const_cast<void*>(reinterpret_cast<const void*>(contents_.get()));
   RETURN_NORMAL();
 }

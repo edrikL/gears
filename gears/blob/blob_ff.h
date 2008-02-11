@@ -47,14 +47,14 @@ class GearsBlob
 
   NS_IMETHOD GetLength(PRInt64 *retval);
 
-  NS_IMETHOD GetContents(BlobInterface** retval);
+  NS_IMETHOD GetContents(const BlobInterface** retval);
 
-  void Init(BlobInterface *blob) {
+  void Init(const BlobInterface *blob) {
     contents_.reset(blob);
   }
 
  private:
-  scoped_ptr<BlobInterface> contents_;
+  scoped_ptr<const BlobInterface> contents_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsBlob);
 };

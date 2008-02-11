@@ -341,7 +341,7 @@ NS_IMETHODIMP GearsResourceStore::CaptureBlob(nsISupports *blob,
   if (NS_FAILED(nr) || !blob_pvt) {
     RETURN_EXCEPTION(STRING16(L"Error converting to native class."));
   }
-  BlobInterface *blob_contents;
+  const BlobInterface *blob_contents;
   nr = blob_pvt->GetContents(&blob_contents);
   if (NS_FAILED(nr) || !blob_contents) {
     RETURN_EXCEPTION(STRING16(L"Error getting blob contents."));
