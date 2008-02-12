@@ -37,8 +37,8 @@ void PositionCallback(Position position);
 interface Position {
   readonly double latitude;  // latitude in degrees
   readonly double longitude;  // longitude in degrees
+  readonly double accuracy;  // accuracy in meters
   readonly Date timestamp;
-  readonly int accuracy;  // accuracy in meters
   readonly string errorMessage; // human readable, suitable for logs
   // TODO: Consider adding altitude, heading, etc.
   // TODO: Consider adding address
