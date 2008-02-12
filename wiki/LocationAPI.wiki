@@ -24,7 +24,7 @@ interface Geolocation {
   void getCurrentPosition(PositionCallback callback, optional PositionOptions);
 
   // Watch the current position over time.
-  int watchPosition(PositionCallback callback, optional WatchPositionOptions);
+  int watchPosition(PositionCallback callback, optional PositionOptions);
 
   // Stop watching the current position.
   void clearWatch(int watchId);
@@ -54,14 +54,6 @@ interface PositionOptions {
   // Set to 'true' to attempt to request use of higher power (and battery
   // consumption). This may result in higher accuracy. The default is false.
   bool useHighPower;
-};
-
-
-
-interface WatchPositionOptions : PositionOptions {
-  // Hints at how often watchPosition() should be updated. The actual rate may
-  // be faster or slower.
-  int desiredIntervalMsec;
 };
 }}}
 
