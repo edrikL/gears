@@ -93,7 +93,7 @@ if (geo.lastPosition &&
 
 The Geolocation API is an abstraction for various location APIs that currently exist on mobile platforms (GPS-based, network/cellid-based). Geolocation implementations could be straightforward mappings to native APIs (e.g the [http://www.forum.nokia.com/document/Cpp_Developers_Library/GUID-96C272CA-2BED-4352-AE7C-E692B193EC06/html/Location_Acquisition_APIIndexPage.html S60 Location Acquisition API]) or have a more complex design that combines several location providers (e.g. a GPS-based provider and a cell id-based provider) and returns the location from the most accurate provider at any given time.
 
-The Gears implementation chooses the location provider to invoke subject to the criteria specified with `PositionOptions` and `WatchPositionOptions`. When location data is requested, the first result that satisfies the criteria is returned via the `PostionCallback` function. Subsequent invocations will always use the most accurate location data available. This caters for the common case where a less accurate fix from a network-based location provider can be obtained quickly followed by a more accurate GPS fix later.
+The Gears implementation chooses the location provider to invoke subject to the criteria specified with `PositionOptions`. When location data is requested, the first result that satisfies the criteria is returned via the `PostionCallback` function. Subsequent invocations will always use the most accurate location data available. This caters for the common case where a less accurate fix from a network-based location provider can be obtained quickly followed by a more accurate GPS fix later.
 
 
 = Privacy =
