@@ -51,11 +51,18 @@ start iexplore
  * Add a right click "Register DLL" menu by saving the following in a .reg file and double clicking it:
 
 {{{
-REGEDIT4
+Windows Registry Editor Version 5.00
+
 [HKEY_CLASSES_ROOT\dllfile\shell\Register DLL\command]
-@="%WINDIR%\\system32\\regsvr32.exe %1"
+@=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,00,\
+  73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,72,00,65,00,67,00,73,00,76,00,72,\
+  00,33,00,32,00,2e,00,65,00,78,00,65,00,20,00,25,00,31,00,00,00
+
 [HKEY_CLASSES_ROOT\dllfile\shell\Unregister DLL\command]
-@="%WINDIR%\\system32\\regsvr32.exe /u %1"
+@=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,00,\
+  73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,72,00,65,00,67,00,73,00,76,00,72,\
+  00,33,00,32,00,2e,00,65,00,78,00,65,00,20,00,2f,00,75,00,20,00,25,00,31,00,\
+  00,00
 }}}
 
  * Right click on *gears\bin-{MODE}\win32-i386\ie\gears.dll* and select the Register DLL item you just installed.
