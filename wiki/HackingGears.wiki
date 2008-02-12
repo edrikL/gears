@@ -51,6 +51,7 @@ start iexplore
  * Add a right click "Register DLL" menu by saving the following in a .reg file and double clicking it:
 
 {{{
+REGEDIT4
 [HKEY_CLASSES_ROOT\dllfile\shell\Register DLL\command]
 @="%WINDIR%\\system32\\regsvr32.exe %1"
 [HKEY_CLASSES_ROOT\dllfile\shell\Unregister DLL\command]
