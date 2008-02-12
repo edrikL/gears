@@ -7,7 +7,7 @@ Proposal to add Gears-like workers to HTML5. Gears workers have two main benefit
  * They simplify the programming model of complex applications by allowing computation and synchronous IO to be performed on a background thread.
  * They allow controlled cross-origin access, similar to !PostMessage, but with higher performance due to the lack of a full rendering context.
 
-This document proposes bringing these benefits to !HTML5, with a few minor changes from the Gears API based on our experience.
+This document proposes bringing these benefits toHTML5, with a few minor changes from the Gears API based on our experience.
 
 
 = Proposed API =
