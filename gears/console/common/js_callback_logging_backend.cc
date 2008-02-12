@@ -47,13 +47,21 @@ void JsCallbackLoggingBackend::OnNotify(MessageService *service,
   if (!callback_params.get()) return;
 
   callback_params.get()->SetPropertyString(STRING16(L"message"),
-                                log_event->message().c_str());
+                                           log_event->message().c_str());
   callback_params.get()->SetPropertyString(STRING16(L"type"),
-                                log_event->type().c_str());
+                                           log_event->type().c_str());
   callback_params.get()->SetPropertyString(STRING16(L"sourceUrl"),
-                                log_event->sourceUrl().c_str());
-  // TODO(oshlack): Implement log_event->date. Requires
-  // JsObject::SetPropertyObject() among other things.
+                                           log_event->sourceUrl().c_str());
+  // TODO(aa): date property here should be a JavaScript Date object that has
+  // been set to the number of ms as returned by log_event->date(), however
+  // JsRunner::NewObject(STRING16(L"Date")) returns null which makes it
+  // impossible to construct a Date object to pass back. For now, we just
+  // return the raw number of ms.
+  // (Note that this cast is technically not safe, but with 2^53 bits in a JS
+  // Number (i.e. double), it won't wrap until long after the year 142,000.)
+  callback_params.get()->SetPropertyDouble(STRING16(L"date"),
+                                           static_cast<const double>(
+                                               log_event->date()));
   
   const int argc = 1;
   JsParamToSend argv[argc] = {
