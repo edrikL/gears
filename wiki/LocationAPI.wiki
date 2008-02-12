@@ -45,7 +45,6 @@ interface Position {
 };
 
 
-
 interface PositionOptions {
   // If set, specifies the URL to contact to convert geolocation signals into a
   // position.  Otherwise, only local position sources will be used (e.g. GPS).
