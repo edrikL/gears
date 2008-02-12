@@ -50,8 +50,8 @@ interface PositionOptions {
   // position.  Otherwise, only local position sources will be used (e.g. GPS).
   string locationProviderUrl;
 
-  // Set to 'true' to attempt to request use of higher power (and battery
-  // consumption). This may result in higher accuracy. The default is false.
+  // Set to 'true' to request use of higher power (and battery consumption).
+  // This may result in higher accuracy. The default is false.
   bool useHighPower;
 };
 }}}
