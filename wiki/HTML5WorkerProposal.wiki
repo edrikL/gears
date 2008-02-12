@@ -85,7 +85,7 @@ workerContext.addEventListener("worker-message", function(e) {
     workerContext.parent.sendMessage(results);
   }
 }, false);
-}}}
+
 
 = Appendix A: APIs available inside workers =
 
@@ -102,8 +102,7 @@ should also be available inside workers.
 Additionally, the proprietary Console object that many browsers make
 available should be standardized and made available inside workers.
 
-// TODO: What object should these APIs go on? I can buy WorkerContext for most
-// of them, except XMLHttpRequest and Console for some reason.
+_TODO: What object should these APIs go on? I can buy WorkerContext for most of them, except XMLHttpRequest and Console for some reason._
 
 
 = Appendix B: Worker Lifetime =
