@@ -13,20 +13,30 @@ This document proposes bringing these benefits toHTML5, with a few minor changes
 = Proposed API =
 
 {{{
-interface WorkerManager { // implemented by Window
+// Allows the creation, and maybe someday enumeration and destruction of workers.
+// Implemented by Window as well as by WorkerContext (for creation of nested workers).
+interface WorkerManager {
   Worker createWorker(string url);
   // TODO: listWorkers()?
 };
 
-interface Worker : EventTarget {
-  // Send a message to the worker. Can send any of the 'JSON types' as args:
-  // boolean, number, string, array, and object.
-  void sendMessage(object args);
+// The external interface to a worker.
+// See: http://www.w3.org/TR/DOM-Level-2-Events/events.html#Events-EventTarget
+interface Worker : WorkerPort, EventTarget {
 };
 
+// Represents a port to send messages in to or out of a worker.
+interface WorkerPort {
+  // Sends a message. Can send any of the 'JSON types' as arguments: boolean,
+  // number, string, array, and object.
+  void sendMessage(object arguments);
+};
+
+
+// Exposed as a singleton inside workers.
 interface WorkerContext : WorkerManager, EventTarget {
-  // The worker's parent. Used to send messages to the creator of the worker.
-  readonly attribute Worker parent;
+  // Used to send messages to the creator of the worker.
+  readonly attribute WorkerPort parent;
 
   // Synchronously fetch and include a JavaScript file.
   void include(string url);
@@ -36,6 +46,7 @@ interface WorkerContext : WorkerManager, EventTarget {
   // be written naively without having to worry about every message.
   void allowCrossOrigin();
 };
+
 
 interface WorkerEvent : Event {
   readonly attribute object data;
