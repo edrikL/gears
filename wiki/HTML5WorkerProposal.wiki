@@ -125,11 +125,11 @@ Workers must live at least as long as code inside them is executing, including a
 
 = Appendix C: Worker Objects instead of Worker IDs =
 
-The current Gears !WorkerPool deals in _Worker IDs_, not _Worker_ objects. The benefit of this design is that any worker can talk to any other worker in the same pool knowing only its ID. The downside is that the common case of creating a child process having a conversation with it becomes more complex:
- * Creating a worker requires two variables (one for the ID and for the pool)
+The current Gears !WorkerPool deals in _Worker IDs_, not _Worker_ objects. The benefit of this design is that any worker can talk to any other worker in the same pool knowing only its ID. The downside is that the common case of a child worker becomes more complex:
+ * The parent must maintain two variables (one for the ID and for the pool)
  * Responding to messages from the child worker requires extra work to save the parent ID from the first received message
  * Children workers cannot send the first message because they don't know their parent worker's ID until the first received message
 
-This proposal shifts this balance a little bit. Performing direct communication between child workers is now impossible, but you _can_ arrange simulations with trees of workers if necessary. On the other hand, the common case of creating a worker and holding a long conversation with it requires only one variable -- the reference to the worker. Sending messages from child to parent is trivial and can be done without waiting for a message from the parent. As a bonus, the API also becomes more idiomatic !JavaScript.
+This proposal shifts this balance a little bit. Performing direct communication between child workers is now impossible, but you _can_ arrange simulations with trees of workers if necessary. On the other hand, the common case of creating a child worker requires only one variables -- the reference to the worker. Sending messages from child to parent is trivial and can be done without waiting for a message from the parent. As a bonus, the API also becomes more idiomatic !JavaScript.
 
 Finally, having separate Worker objects has another benefit: it defines a lifetime for the worker threads. Worker threads can be shut down when they are done running code and when there are no longer any references to them. You can do the same thing with !WorkerPool objects in the current Gears design, but one long-running worker prevents the entire pool from getting cleaned up.
