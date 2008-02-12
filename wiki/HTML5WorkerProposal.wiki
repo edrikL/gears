@@ -48,6 +48,7 @@ interface WorkerContext : WorkerManager, EventTarget {
 };
 
 
+// The argument type for worker-message events.
 interface WorkerEvent : Event {
   readonly attribute object data;
   readonly attribute string domain;
