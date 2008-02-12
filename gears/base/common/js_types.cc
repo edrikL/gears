@@ -86,6 +86,15 @@ static bool ModuleToToken(JsContextPtr context, IScriptable* in, JsToken* out) {
   return true;
 }
 
+static bool DoubleToToken(JsContextPtr context, double value, JsToken* out) {
+  jsdouble* dp = JS_NewDouble(context, value);
+  if (!dp)
+    return false;
+
+  *out = DOUBLE_TO_JSVAL(dp);
+  return true;
+}
+
 #endif
 
 // Browser specific JsArray functions.
@@ -156,7 +165,12 @@ bool JsArray::SetElementInt(int index, int value) {
 }
 
 bool JsArray::SetElementDouble(int index, double value) {
-  return SetElement(index, DOUBLE_TO_JSVAL(value));
+  JsToken jsval;
+  if (DoubleToToken(js_context_, value, &jsval)) {
+    return SetElement(index, jsval);
+  } else {
+    return false;
+  }
 }
 
 bool JsArray::SetElementString(int index, const std::string16& value) {
@@ -454,7 +468,12 @@ bool JsObject::SetPropertyInt(const std::string16 &name, int value) {
 }
 
 bool JsObject::SetPropertyDouble(const std::string16& name, double value) {
-  return SetProperty(name, DOUBLE_TO_JSVAL(value));
+  JsToken jsval;
+  if (DoubleToToken(js_context_, value, &jsval)) {
+    return SetProperty(name, jsval);	
+  } else {
+    return false;
+  }
 }
 
 bool JsObject::SetPropertyString(const std::string16 &name,
