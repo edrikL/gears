@@ -25,7 +25,7 @@ interface WorkerManager {
 interface Worker : WorkerPort, EventTarget {
 };
 
-// Represents a port to send messages in to or out of a worker.
+// Represents a port to send messages into or out of a worker.
 interface WorkerPort {
   // Sends a message. Can send any of the 'JSON types' as arguments: boolean,
   // number, string, array, and object.
