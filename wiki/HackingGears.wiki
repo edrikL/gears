@@ -89,3 +89,11 @@ To turn on debug logging in FF, you need to set the following environmental vari
 NSPR_LOG_MODULES = gears:5
 NSPR_LOG_FILE = <filepath where you want the logfile written>
 }}}
+
+On Windows, you can debug javascript exceptions using Visual Studio.  To turn this on in IE:
+
+ * {{{Tools -> Internet Options -> Advanced -> Browsing -> Disable script debugging (uncheck)}}}
+
+You can also attach to the process.  In Visual Studio:
+
+ * {{{Tools -> Attach to Process... -> iexplore.exe -> Script Debugging}}}
