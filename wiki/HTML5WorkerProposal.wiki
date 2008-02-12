@@ -85,6 +85,7 @@ workerContext.addEventListener("worker-message", function(e) {
     workerContext.parent.sendMessage(results);
   }
 }, false);
+}}}
 
 
 = Appendix A: APIs available inside workers =
