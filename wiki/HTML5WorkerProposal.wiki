@@ -1,0 +1,116 @@
+#summary A proposal to add workers to HTML5
+
+= Introduction =
+
+Proposal to add Gears-like workers to HTML5. Gears workers have two main benefits:
+
+ * They simplify the programming model of complex applications by allowing computation and synchronous IO to be performed on a background thread.
+ * They allow controlled cross-origin access, similar to !PostMessage, but with higher performance due to the lack of a full rendering context.
+
+This document proposes bringing these benefits to !HTML5, with a few minor changes from the Gears API based on our experience.
+
+
+= Proposed API =
+
+{{{
+interface WorkerManager { // implemented by Window
+  Worker createWorker(string url);
+  // TODO: listWorkers()?
+};
+
+interface Worker : EventTarget {
+  // Send a message to the worker. Can send any of the 'JSON types' as args:
+  // boolean, number, string, array, and object.
+  void sendMessage(object args);
+};
+
+interface WorkerContext : WorkerManager, EventTarget {
+  // The worker's parent. Used to send messages to the creator of the worker.
+  readonly attribute Worker parent;
+
+  // Synchronously fetch and include a JavaScript file.
+  void include(string url);
+
+  // Allows this worker to receive messages from other origins. This is
+  // necessary so that workers which don't intend to be used across origins can
+  // be written naively without having to worry about every message.
+  void allowCrossOrigin();
+};
+
+interface WorkerEvent : Event {
+  readonly attribute object data;
+  readonly attribute string domain;
+};
+}}}
+
+= Example =
+
+`example.html:`
+{{{
+var worker = window.createWorker("worker.js");
+worker.addEventListener("worker-message", function(e) {
+  e.arguments.results.forEach(function(obj) {
+    console.log("weather in " + obj.city + ": " + obj.weather);
+  });
+}, false);
+
+worker.sendMessage({
+  operation: "lookupWeather",
+  cities: [
+    "New York, NY",
+    "Paris, France",
+    "Tokyo, Japan"
+  ]
+});
+}}}
+
+`worker.js:`
+{{{
+workerContext.addEventListener("worker-message", function(e) {
+  if (e.arguments.operation == "lookupWeather") {
+    var results = [];
+
+    e.arguments.cities.forEach(function(cityName) {
+      var req = new XMLHttpRequest();
+      req.open("GET", "http://weatherlookup.com/?city=" + cityName,
+               false); // synchronous
+      req.send(null);
+
+      results.push({
+        city: cityName,
+        weather: req.responseText
+      });
+    });
+
+    workerContext.parent.sendMessage(results);
+  }
+}, false);
+
+
+= Appendix A: APIs available inside workers =
+
+The following existing APIs from the DOM Window and Document interfaces
+should also be available inside workers.
+
+ * XMLHttpRequest
+ * Database
+ * document.cookie
+ * window.location (doesn't necessarily need to be writable though)
+ * ApplicationCache // TODO: make sure this makes sense inside a worker
+ * WindowTimers
+
+Additionally, the proprietary Console object that many browsers make
+available should be standardized and made available inside workers.
+
+// TODO: What object should these APIs go on? I can buy WorkerContext for most
+// of them, except XMLHttpRequest and Console for some reason.
+
+
+= Appendix B: Worker Lifetime =
+
+Workers should live as long as code inside them is executing, including
+asynchronous code. As soon as there is no longer any code running, workers
+should be reference-counted. A worker should be killed when there is no
+document or worker which has a reference to it.
+
+Workers should also be destroyed when unloading their owning document.
