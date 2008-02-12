@@ -180,7 +180,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
           </td>
           <td valign="middle">
             <label for="unlock">
-          <TRANS_BLOCK desc="Indicates the user lets the site use Gears">
+          <TRANS_BLOCK desc="Indicates the user lets the site use Gears.">
               &nbsp;I <span class="accesskey">t</span>rust this site. Allow
               it to use PRODUCT_FRIENDLY_NAME_UQ.
           </TRANS_BLOCK>
@@ -211,7 +211,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
            <td width="100%" align="right" valign="middle">
             <a href="#" accesskey="A" id="allow-button"
               onclick="allowAccess(); return true;">
-              <TRANS_BLOCK desc="Button user can press to allow the use of Gears"><span class="accesskey">A</span>llow</TRANS_BLOCK></a>
+              <TRANS_BLOCK desc="Button user can press to allow the use of Gears."><span class="accesskey">A</span>llow</TRANS_BLOCK></a>
             <a href="#" accesskey="C" id="deny-button"
               onclick="denyAccess(); return false;">
               <TRANS_BLOCK desc="Button user can press to disallow the use of Gears."><span class="accesskey">C</span>ancel</TRANS_BLOCK></a>
@@ -237,13 +237,13 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><TRANS_BLOCK desc="Button user can press to allow the use of Gears"><span class="accesskey">A</span>llow</TRANS_BLOCK></div></div></a>
+                  ><TRANS_BLOCK desc="Button user can press to allow the use of Gears."><span class="accesskey">A</span>llow</TRANS_BLOCK></div></div></a>
             <a href="#" accesskey="C" id="deny-button"
                 onclick="denyAccess(); return false;"
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><TRANS_BLOCK desc="Button user can press to disallow the use of Gears"><span class="accesskey">C</span>ancel</TRANS_BLOCK></div></div></a>^)
+                  ><TRANS_BLOCK desc="Button user can press to disallow the use of Gears."><span class="accesskey">C</span>ancel</TRANS_BLOCK></div></div></a>^)
           </td>
         </tr>
       </table>
