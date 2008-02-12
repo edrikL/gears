@@ -84,7 +84,7 @@ workerContext.addEventListener("worker-message", function(e) {
 
     e.arguments.cities.forEach(function(cityName) {
       var req = new XMLHttpRequest();
-      req.open("GET", "http://weatherlookup.com/?city=" + cityName,
+      req.open("GET", "lookupWeather?city=" + cityName,
                false); // synchronous
       req.send(null);
 
