@@ -61,10 +61,6 @@ import "localserver/ie/localserver.idl";
 import "timer/timer_ie.idl";
 import "workerpool/ie/workerpool.idl";
 
-#ifdef DEBUG
-import "cctests/test_ie.idl";
-#endif DEBUG
-
 //------------------------------------------------------------------------------
 // GearsTypelib
 //------------------------------------------------------------------------------
@@ -164,16 +160,6 @@ library GearsTypelib
   {
     [default] interface GearsDesktopInterface;
   };
-
-#ifdef DEBUG
-  [
-    uuid(F98360E4-ECE5-4177-971F-639A0A6D353E)
-  ]
-  coclass GearsTest
-  {
-    [default] interface GearsTestInterface;
-  };
-#endif DEBUG
 
   [
     uuid(B76AFB62-9BA2-43e8-B27F-9F1CAC8148B7)

@@ -62,8 +62,8 @@ class ModuleWrapper
     return dispatcher_.get();
   }
 
-  virtual void AddRef() { NPN_RetainObject(this); }
-  virtual void Release() { NPN_ReleaseObject(this); }
+  virtual void AddReference() { NPN_RetainObject(this); }
+  virtual void RemoveReference() { NPN_ReleaseObject(this); }
 
  protected:
   scoped_ptr<ModuleImplBaseClassVirtual> impl_;

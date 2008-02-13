@@ -110,24 +110,25 @@ class ModuleImplBaseClass {
 
 #if BROWSER_FF
   // JavaScript worker-thread parameter information
-  void JsWorkerSetParams(int argc, JsToken *argv);
+  void JsWorkerSetParams(int argc, JsToken *argv, JsToken *retval);
   int          JsWorkerGetArgc() const;
   JsToken*     JsWorkerGetArgv() const;
+  JsToken*     JsWorkerGetRetVal() const;
 #elif BROWSER_IE
   // These do not exist in IE yet.
 #endif
 
-#if BROWSER_NPAPI || BROWSER_FF
   // Methods for dealing with the JavaScript wrapper interface.
   void SetJsWrapper(ModuleWrapperBaseClass *wrapper) { js_wrapper_ = wrapper; }
   ModuleWrapperBaseClass *GetWrapper() const { 
     assert(js_wrapper_);
     return js_wrapper_;
   }
-  void AddRef();
-  void Release();
+  void AddReference();
+  void RemoveReference();
+
+  // TODO(aa): Remove and replace call sites with GetWrapper()->GetToken().
   JsToken GetWrapperToken() const;
-#endif
 
  private:
   // TODO(cprince): This state should be constant per (thread,page) tuple.
@@ -138,6 +139,9 @@ class ModuleImplBaseClass {
   bool is_initialized_;
   bool env_is_worker_;
 #if BROWSER_FF || BROWSER_NPAPI
+  // TODO_REMOVE_NSISUPPORTS: Remove this member once all modules are based on
+  // Dispatcher. env_page_js_context_ is only really used to initialize
+  // JsParamFetcher, which isn't needed with Dispatcher.
   JsContextPtr  env_page_js_context_;
 #elif BROWSER_IE
   // Pointer to the object that hosts this object. On Win32, this is the pointer
@@ -160,16 +164,14 @@ class ModuleImplBaseClass {
 #if BROWSER_FF
   int           worker_js_argc_;
   JsToken      *worker_js_argv_;
+  JsToken      *worker_js_retval_;
 #elif BROWSER_IE
   // These do not exist in IE yet.
 #endif
 
   JsRunnerInterface *js_runner_;
-
-#if BROWSER_NPAPI || BROWSER_FF
   // Weak pointer to our JavaScript wrapper.
   ModuleWrapperBaseClass *js_wrapper_;
-#endif
 
   DISALLOW_EVIL_CONSTRUCTORS(ModuleImplBaseClass);
 };
@@ -195,8 +197,6 @@ class ModuleImplBaseClassVirtual : public ModuleImplBaseClass {
 
 class DispatcherInterface;
 
-// TODO(mpcomplete): implement the rest of this for other platforms.
-
 // Interface for the wrapper class that binds the Gears object to the
 // JavaScript engine.
 class ModuleWrapperBaseClass {
@@ -205,26 +205,25 @@ class ModuleWrapperBaseClass {
   // JsRunnerInterface.
   virtual JsToken GetWrapperToken() const = 0;
 
-  // Adds a reference to the wrapper class.
-  virtual void AddRef() = 0;
-
-  // Releases a reference to the wrapper class.
-  virtual void Release() = 0;
-
   // Gets the Dispatcher for this module.
   virtual DispatcherInterface *GetDispatcher() const = 0;
+
+  // Adds a reference to the wrapper class.
+  virtual void AddReference() = 0;
+
+  // Removes a reference to the wrapper class.
+  virtual void RemoveReference() = 0;
 
  protected:
   // Don't allow direct deletion via this interface.
   virtual ~ModuleWrapperBaseClass() { }
 };
 
-#if BROWSER_NPAPI || BROWSER_FF
 // GComPtr: automatically call Release()
 class ReleaseWrapperFunctor {
  public:
   void operator()(ModuleImplBaseClass *x) const {
-    if (x != NULL) { x->Release(); }
+    if (x != NULL) { x->RemoveReference(); }
   }
 };
 
@@ -232,18 +231,29 @@ template<class Module>
 class GComPtr : public scoped_token<Module*, ReleaseWrapperFunctor> {
  public:
   explicit GComPtr(Module *v)
-      : scoped_token<Module*, ReleaseWrapperFunctor>(v) {
-    if (v) {
-      v->AddRef();
-    }
-  }
+      : scoped_token<Module*, ReleaseWrapperFunctor>(v) {}
 
-  Module* operator->() const { return this->get(); }
+  Module *operator->() const { return this->get(); }
+
+  // IE expects that when you return an object to script, it has already been
+  // AddRef()'d. NPAPI and Firefox do not do this. Gears modules should call
+  // this method after returning a newly created object to script to do the
+  // right thing.
+  void ReleaseNewObjectToScript() {
+#ifdef BROWSER_IE
+    // Leave the object AddRef()'d for IE
+#else
+    get()->RemoveReference();
+#endif
+    release();
+  }
 };
 
-// Creates new Module of the given type.  Returns NULL on failure.
+// Creates new Module of the given type.  Returns NULL on failure. The new
+// module's ref count is initialized to 1. Callers should use GComPtr and
+// ReleaseNewObjectToScript() with the result of this function to ensure
+// consistent behavior across platforms.
 template<class Module>
 Module *CreateModule(JsRunnerInterface *js_runner);
-#endif
 
 #endif  // GEARS_BASE_COMMON_BASE_CLASS_H__

@@ -54,6 +54,7 @@ class DispatcherInterface {
   virtual bool GetProperty(DispatchId property_id, JsCallContext *context) = 0;
   virtual bool SetProperty(DispatchId property_id, JsCallContext *context) = 0;
   virtual const DispatcherNameList &GetMemberNames() = 0;
+  virtual DispatchId GetDispatchId(const std::string &member_name) = 0;
 };
 
 // The implementation of the DispatcherInterface.  Each dispatch target class
@@ -84,6 +85,7 @@ class Dispatcher : public DispatcherInterface {
   virtual bool GetProperty(DispatchId property_id, JsCallContext *context);
   virtual bool SetProperty(DispatchId property_id, JsCallContext *context);
   virtual const DispatcherNameList &GetMemberNames();
+  virtual DispatchId GetDispatchId(const std::string &member_name);
 
  protected:
   // Register JavaScript property/methods.

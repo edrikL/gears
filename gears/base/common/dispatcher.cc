@@ -113,6 +113,17 @@ const DispatcherNameList &Dispatcher<T>::GetMemberNames() {
   return GetThreadLocals().members;
 }
 
+template<class T>
+DispatchId Dispatcher<T>::GetDispatchId(const std::string &member_name) {
+  DispatcherNameList member_names = GetMemberNames();
+  DispatcherNameList::iterator result = member_names.find(member_name);
+  if (result != member_names.end()) {
+    return result->second;
+  } else {
+    return NULL;
+  }
+}
+
 // static
 template<class T>
 void Dispatcher<T>::RegisterProperty(const char *name,

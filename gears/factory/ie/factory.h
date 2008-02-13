@@ -107,6 +107,15 @@ class ATL_NO_VTABLE GearsFactory
                                       const char16 *custom_name,
                                       const char16 *custom_message);
 
+  // Helper methods used by Create() which create either a dispatcher-based or
+  // COM-based module. Returns true if the module was created successfully.
+  // Returns false and an empty error message if the module is unknown. Returns
+  // false and an error message for other errors.
+  bool CreateDispatcherModule(const std::string16 &object_name,
+                              IDispatch **retval, std::string16 *error);
+  bool CreateComModule(const std::string16 &object_name, IDispatch **retval,
+                       std::string16 *error);
+
   // A factory starts out operational, but it can be put in a "suspended" state,
   // unable to create objects.  This is important for some use cases, like
   // cross-origin workers.
