@@ -66,18 +66,22 @@ COMMON_OBJS = \
 	$(patsubst %.c,$(COMMON_OUTDIR)/%$(OBJ_SUFFIX),$(COMMON_CSRCS))
 FF_OBJS = \
 	$(patsubst %.cc,$(FF_OUTDIR)/%$(OBJ_SUFFIX),$(FF_CPPSRCS)) \
-	$(patsubst %.c,$(FF_OUTDIR)/%$(OBJ_SUFFIX),$(FF_CSRCS))
+	$(patsubst %.c,$(FF_OUTDIR)/%$(OBJ_SUFFIX),$(FF_CSRCS)) \
+	$(patsubst %.cc,$(FF_OUTDIR)/%$(OBJ_SUFFIX),$(SHARED_CPPSRCS))
 IE_OBJS = \
 	$(patsubst %.cc,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IE_CPPSRCS)) \
-	$(patsubst %.c,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IE_CSRCS))
+	$(patsubst %.c,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IE_CSRCS)) \
+	$(patsubst %.cc,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(SHARED_CPPSRCS))
 IEMOBILE_OBJS = \
 	$(patsubst %.cc,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IEMOBILE_CPPSRCS)) \
-	$(patsubst %.c,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IEMOBILE_CSRCS))
+	$(patsubst %.c,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IEMOBILE_CSRCS)) \
+	$(patsubst %.cc,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(SHARED_CPPSRCS))
 IEMOBILE_SETUP_OBJS = \
 	$(patsubst %.cc,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IEMOBILE_SETUP_CPPSRCS))
 NPAPI_OBJS = \
 	$(patsubst %.cc,$(NPAPI_OUTDIR)/%$(OBJ_SUFFIX),$(NPAPI_CPPSRCS)) \
-	$(patsubst %.c,$(NPAPI_OUTDIR)/%$(OBJ_SUFFIX),$(NPAPI_CSRCS))
+	$(patsubst %.c,$(NPAPI_OUTDIR)/%$(OBJ_SUFFIX),$(NPAPI_CSRCS)) \
+	$(patsubst %.cc,$(NPAPI_OUTDIR)/%$(OBJ_SUFFIX),$(SHARED_CPPSRCS))
 LIBGD_OBJS = \
 	$(patsubst %.c,$(LIBGD_OUTDIR)/%$(OBJ_SUFFIX),$(LIBGD_CSRCS))
 SQLITE_OBJS = \
@@ -170,7 +174,7 @@ IEMOBILE_VPATH += $(IE_OUTDIR)
 NPAPI_VPATH += $(NPAPI_OUTDIR)/genfiles
 
 # Make VPATH search our paths before third-party paths.
-VPATH += $(COMMON_VPATH) $($(BROWSER)_VPATH) $(THIRD_PARTY_VPATH)
+VPATH += $(COMMON_VPATH) $($(BROWSER)_VPATH) $(SHARED_VPATH) $(THIRD_PARTY_VPATH)
 
 #-----------------------------------------------------------------------------
 # OUTPUT FILENAMES

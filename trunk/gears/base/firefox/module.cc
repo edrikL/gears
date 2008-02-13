@@ -48,10 +48,6 @@
 #include "gears/ui/firefox/ui_utils.h"
 #include "gears/workerpool/firefox/workerpool.h"
 
-#ifdef DEBUG
-#include "gears/cctests/test_ff.h"
-#endif
-
 //-----------------------------------------------------------------------------
 
 // TODO(cprince): can remove this when switch to google3 logging
@@ -167,14 +163,6 @@ NS_DOMCI_EXTENSION(Scour)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsFileSubmitter, PR_TRUE,
                                              &kGearsFileSubmitterClassId)
 
-#ifdef DEBUG
-  // test
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsTest)
-    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsTestInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsTest, PR_TRUE,
-                                             &kGearsTestClassId)
-#endif
-
   // blob
   NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsBlob)
     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsBlobInterface)
@@ -247,13 +235,6 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
       GEARSRESOURCESTOREINTERFACE_IID_STR },
     { kGearsFileSubmitterClassName, "GearsFileSubmitterInterface",
       GEARSFILESUBMITTERINTERFACE_IID_STR },
-
-#ifdef DEBUG
-    // test
-    { kGearsTestClassName, "GearsTestInterface",
-      GEARSTESTINTERFACE_IID_STR },
-#endif
-
     // blob
     { kGearsBlobClassName, "GearsBlobInterface",
       GEARSBLOBINTERFACE_IID_STR },
@@ -306,11 +287,6 @@ NS_DECL_DOM_CLASSINFO(GearsManagedResourceStore)
 NS_DECL_DOM_CLASSINFO(GearsResourceStore)
 NS_DECL_DOM_CLASSINFO(GearsFileSubmitter)
 
-#ifdef DEBUG
-// test
-NS_DECL_DOM_CLASSINFO(GearsTest)
-#endif
-
 // blob
 NS_DECL_DOM_CLASSINFO(GearsBlob)
 // timer
@@ -342,12 +318,6 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsLocalServer));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsManagedResourceStore));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsResourceStore));
-
-#ifdef DEBUG
-  // test
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsTest));
-#endif
-
   // blob
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsBlob));
   // timer

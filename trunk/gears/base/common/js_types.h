@@ -389,7 +389,6 @@ class JsCallContext {
       : disp_params_(disp_params), retval_(retval), exception_info_(excep_info),
         is_exception_set_(false) {}
 #elif BROWSER_FF
-  explicit JsCallContext(ModuleImplBaseClass *obj);
   JsCallContext(JsContextPtr cx, JsRunnerInterface *js_runner,
                 int argc, JsToken *argv, JsToken *retval);
 #else
@@ -482,10 +481,13 @@ class JsParamFetcher {
   bool GetAsObject(int i, JsObject *out);
   bool GetAsNewRootedCallback(int i, JsRootedCallback **out);
 
+  void SetReturnValue(JsToken retval);
+
  private:
   JsContextPtr  js_context_;
   int           js_argc_;
   JsToken      *js_argv_;
+  JsToken      *js_retval_;
 
   nsCOMPtr<nsIXPConnect> xpc_;
   nsCOMPtr<nsIXPCNativeCallContext> ncc_;

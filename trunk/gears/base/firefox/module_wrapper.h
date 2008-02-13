@@ -46,20 +46,18 @@ class ModuleWrapper : public ModuleWrapperBaseClass {
  public:
   ModuleWrapper(ModuleImplBaseClassVirtual *impl,
                 DispatcherInterface *dispatcher)
-      : token_(0), ref_count_(0) {
+      : token_(0), js_context_(NULL), ref_count_(0) {
     impl_.reset(impl);
     dispatcher_.reset(dispatcher);
   }
 
-  void SetJsObject(JsToken token) {
+  void SetJsObject(JsToken token, JsContextPtr js_context) {
     assert(token_ == 0);
     assert(token);
+    assert(!js_context_);
+    assert(js_context);
     token_ = token;
-  }
-
-  virtual DispatcherInterface *GetDispatcher() const {
-    assert(dispatcher_.get());
-    return dispatcher_.get();
+    js_context_ = js_context;
   }
 
   virtual JsToken GetWrapperToken() const {
@@ -67,19 +65,24 @@ class ModuleWrapper : public ModuleWrapperBaseClass {
     return token_;
   }
 
-  virtual void AddRef() {
+  virtual DispatcherInterface *GetDispatcher() const {
+    assert(dispatcher_.get());
+    return dispatcher_.get();
+  }
+
+  virtual void AddReference() {
     assert(JSVAL_IS_GCTHING(token_));
     if (1 == AtomicIncrement(&ref_count_, 1)) {
-      JS_AddRoot(impl_->EnvPageJsContext(), &token_);
+      JS_AddRoot(js_context_, &token_);
     }
   }
 
-  virtual void Release() {
+  virtual void RemoveReference() {
     assert(JSVAL_IS_GCTHING(token_));
     AtomicWord new_ref_count = AtomicIncrement(&ref_count_, -1);
     assert(new_ref_count >= 0);
     if (new_ref_count == 0) {
-      JS_RemoveRoot(impl_->EnvPageJsContext(), &token_);
+      JS_RemoveRoot(js_context_, &token_);
     }
   }
 
@@ -100,6 +103,7 @@ class ModuleWrapper : public ModuleWrapperBaseClass {
   scoped_ptr<DispatcherInterface> dispatcher_;
 
   JsToken token_;
+  JsContextPtr js_context_;
   AtomicWord ref_count_;
 
   DISALLOW_EVIL_CONSTRUCTORS(ModuleWrapper);
@@ -123,8 +127,10 @@ GearsClass *CreateModule(JsRunnerInterface *js_runner) {
     return NULL;
   }
 
-  module_wrapper->SetJsObject(js_object);
+  module_wrapper->SetJsObject(js_object, js_runner->GetContext());
   module_wrapper.release();
+
+  impl->AddReference();
   return impl;
 }
 
