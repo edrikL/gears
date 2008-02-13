@@ -32,12 +32,10 @@
 
 #include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/common.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/console/firefox/console_ff.h"
 #include "gears/database/firefox/database.h"
-#include "gears/database2/database_manager.h"
 #include "gears/desktop/desktop_ff.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/httprequest/firefox/httprequest_ff.h"
@@ -46,7 +44,7 @@
 #include "gears/workerpool/firefox/workerpool.h"
 
 #ifdef DEBUG
-#include "gears/cctests/test.h"
+#include "gears/cctests/test_ff.h"
 #endif
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
@@ -78,6 +76,8 @@ GearsFactory::GearsFactory()
 NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
                                    //const nsAString &version
                                    nsISupports **retval) {
+  nsresult nr;
+
   // Make sure the user gives this site permission to use Gears.
 
   if (!HasPermissionToUseGears(this, NULL, NULL, NULL)) {
@@ -112,117 +112,62 @@ NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
 
-  // First try to create a dispatcher-based module.
-  std::string16 error;
-  bool success = CreateDispatcherModule(object, &js_params, &error);
-
-  if (success) {
-    RETURN_NORMAL();
-  } else if (error.length() > 0) {
-    RETURN_EXCEPTION(error.c_str());
-  }
-
-  // There was no dispatcher-based implementation of this object. Try to create
-  // an isupports module.
-  success = CreateISupportsModule(object, retval, &error);
-  if (success) {
-    RETURN_NORMAL();
-  } else if (error.length() > 0) {
-    RETURN_EXCEPTION(error.c_str());
-  } else {
-    RETURN_EXCEPTION(STRING16(L"Unknown object."));
-  }
-}
-
-bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
-                                          JsParamFetcher *js_params,
-                                          std::string16 *error) {
-  GComPtr<ModuleImplBaseClass> object(NULL);
-
-  if (object_name == STRING16(L"beta.test")) {
-#ifdef DEBUG
-    object.reset(CreateModule<GearsTest>(GetJsRunner()));
-#else
-    *error = STRING16(L"Object is only available in debug build.");
-    return false;
-#endif
-  } else {
-    // Don't return an error here. Caller handles reporting unknown modules.
-    error->clear();
-    return false;
-  }
-
-  if (!object.get()) {
-    *error = STRING16(L"Failed to create requested object.");
-    return false;
-  }
-
-  if (!object->InitBaseFromSibling(this)) {
-    *error = STRING16(L"Error initializing base class.");
-    return false;
-  }
-
-  js_params->SetReturnValue(object->GetWrapperToken());
-  object.ReleaseNewObjectToScript();
-  return true;
-}
-
-bool GearsFactory::CreateISupportsModule(const std::string16 &object_name,
-                                         nsISupports **retval,
-                                         std::string16 *error) {
   nsCOMPtr<nsISupports> isupports = NULL;
-  ModuleImplBaseClass *native_base = NULL;
 
-  nsresult nr = NS_ERROR_FAILURE;
-  if (object_name == STRING16(L"beta.console")) {
+  nr = NS_ERROR_FAILURE;
+  if (object == STRING16(L"beta.console")) {
     isupports = do_QueryInterface(new GearsConsole(), &nr);
-  } else if (object_name == STRING16(L"beta.database")) {
+  } else if (object == STRING16(L"beta.database")) {
     isupports = do_QueryInterface(new GearsDatabase(), &nr);
-  } else if (object_name == STRING16(L"beta.desktop")) {
+  } else if (object == STRING16(L"beta.desktop")) {
     isupports = do_QueryInterface(new GearsDesktop(), &nr);
-  } else if (object_name == STRING16(L"beta.httprequest")) {
+  } else if (object == STRING16(L"beta.httprequest")) {
     isupports = do_QueryInterface(new GearsHttpRequest(), &nr);
-  } else if (object_name == STRING16(L"beta.localserver")) {
+  } else if (object == STRING16(L"beta.localserver")) {
     isupports = do_QueryInterface(new GearsLocalServer(), &nr);
-  } else if (object_name == STRING16(L"beta.timer")) {
+  } else if (object == STRING16(L"beta.test")) {
+#ifdef DEBUG
+    isupports = do_QueryInterface(new GearsTest(), &nr);
+#else
+    RETURN_EXCEPTION(STRING16(L"Object is only available in debug build."));
+#endif
+  } else if (object == STRING16(L"beta.timer")) {
     isupports = do_QueryInterface(new GearsTimer(), &nr);
-  } else if (object_name == STRING16(L"beta.workerpool")) {
+  } else if (object == STRING16(L"beta.workerpool")) {
     isupports = do_QueryInterface(new GearsWorkerPool(), &nr);
   }  else {
-    // Don't return an error here. Caller handles reporting unknown modules.
-    error->clear();
-    return false;
-  }
-
-  if (NS_FAILED(nr) || !isupports) {
-    *error = STRING16(L"Failed to create requested object.");
-    return false;
+    RETURN_EXCEPTION(STRING16(L"Unknown object."));
   }
 
   // setup the ModuleImplBaseClass (copy settings from this factory)
-  bool base_init_succeeded = false;
-  nsCOMPtr<GearsBaseClassInterface> idl_base =
-      do_QueryInterface(isupports, &nr);
-  if (NS_SUCCEEDED(nr) && idl_base) {
-    ModuleImplBaseClass *native_base = NULL;
-    idl_base->GetNativeBaseClass(&native_base);
-    if (native_base) {
-      if (native_base->InitBaseFromSibling(this)) {
-        base_init_succeeded = true;
+  if (NS_SUCCEEDED(nr) && isupports) {
+    bool base_init_succeeded = false;
+
+    nsCOMPtr<GearsBaseClassInterface> idl_base =
+        do_QueryInterface(isupports, &nr);
+    if (NS_SUCCEEDED(nr) && idl_base) {
+      ModuleImplBaseClass *native_base = NULL;
+      idl_base->GetNativeBaseClass(&native_base);
+      if (native_base) {
+        if (native_base->InitBaseFromSibling(this)) {
+          base_init_succeeded = true;
+        }
       }
+    }
+    if (!base_init_succeeded) {
+      RETURN_EXCEPTION(STRING16(L"Error initializing base class."));
     }
   }
 
-  if (!base_init_succeeded) {
-    *error = STRING16(L"Error initializing base class.");
-    return false;
+  if (NS_FAILED(nr) || !isupports) {
+    RETURN_EXCEPTION(STRING16(L"Failed to create requested object."));
   }
 
   *retval = isupports.get();
   (*retval)->AddRef(); // ~nsCOMPtr will Release, so must AddRef here
-  assert((*retval)->AddRef() == 4 &&
-         (*retval)->Release() == 3);
-  return true;
+  assert((*retval)->AddRef() == 3 &&
+         (*retval)->Release() == 2);
+  RETURN_NORMAL();
 }
 
 

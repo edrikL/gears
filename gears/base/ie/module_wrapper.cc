@@ -24,61 +24,122 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/common/common.h"
-#include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_types.h"
-#include "gears/base/common/string_utils.h"
+#include "gears/base/common/thread_locals.h"
 #include "gears/base/ie/module_wrapper.h"
+
+const static std::string kCallContextThreadLocalKey("base:modulewrapper");
+
+ModuleWrapper::ModuleWrapper() : impl_(NULL) {}
+
+ModuleWrapper::~ModuleWrapper() {}
+
+HRESULT ModuleWrapper::GetTypeInfoCount(unsigned int FAR* retval) {
+  // JavaScript does not call this
+  assert(false);
+  return E_NOTIMPL;
+}
+
+HRESULT ModuleWrapper::GetTypeInfo(unsigned int index, LCID lcid,
+                                   ITypeInfo FAR* FAR* retval) {
+  // JavaScript does not call this
+  assert(false);
+  return E_NOTIMPL;
+};
 
 HRESULT ModuleWrapper::GetIDsOfNames(REFIID iid, OLECHAR FAR* FAR* names,
                                      unsigned int num_names, LCID lcid, 
                                      DISPID FAR* retval) {
-  // JavaScript does not have named parameters
-  assert(num_names == 1);
-
-  std::string member_name_utf8;
-  if (!String16ToUTF8(static_cast<char16 *>(*names), &member_name_utf8)) {
-    assert(false);
-    return DISP_E_UNKNOWNNAME;
-  }
-
-  DispatchId dispatch_id = dispatcher_->GetDispatchId(member_name_utf8);
-  if (dispatch_id == NULL) {
-    *retval = DISPID_UNKNOWN;
-    return DISP_E_UNKNOWNNAME;
-  } else {
-    *retval = reinterpret_cast<DISPID>(dispatch_id);
-    return S_OK;
-  }
+  // TODO(aa): Get this information from the class itself using something like
+  // the NPAPI port's RegisterMethod().
+  assert(impl_);
+  return impl_->GetIDsOfNames(iid, names, num_names, lcid, retval);
 }
 
 HRESULT ModuleWrapper::Invoke(DISPID member_id, REFIID iid, LCID lcid,
                               WORD flags, DISPPARAMS FAR* params,
                               VARIANT FAR* retval, EXCEPINFO FAR* exception,
                               unsigned int FAR* arg_error_index) {
-  assert(dispatcher_.get());
+  assert(impl_);
+
+  // Our Gears objects do not ever expect any arguments via IDispatch, so we
+  // create a new params object reflecting that. However JScript does use
+  // "named args" to indicate when a property is being read or written. So
+  // copy those values from what the browser specified.
+  CComVariant variant_arg;
+  DISPPARAMS wrapped_params;
+  wrapped_params.cNamedArgs = params->cNamedArgs;
+  wrapped_params.rgdispidNamedArgs = params->rgdispidNamedArgs;
+  wrapped_params.rgvarg = &variant_arg;
+
+  if (flags & DISPATCH_PROPERTYPUT) {
+    // We have to tell COM we are passing a parameter, even though we don't use
+    // it, otherwise the call is rejected.
+    wrapped_params.cArgs = 1;
+  } else {
+    wrapped_params.cArgs = 0;
+  }
+
   JsCallContext js_call_context(params, retval, exception);
 
-  DispatchId dispatch_id = reinterpret_cast<DispatchId>(member_id);
+  // IDispatch getters do not accept any input params so there is no way to pass
+  // this JsCallContext to our implementation methods on the stack. Instead, we
+  // stuff them to the side in this thread-local stack.
+  // In the future, we will be changing our Gears classes so that they are not
+  // COM objects and do not implement IDispatch, but instead have their own
+  // dynamic dispatch implementation. Once that is done, we can get rid of this.
+  PushJsCallContext(&js_call_context);
+  
+  HRESULT hr = impl_->Invoke(member_id, iid, lcid, flags, &wrapped_params,
+                             NULL, NULL, NULL); // result, exception info, bad
+                                                // arg index. We use
+                                                // JsCallContext for these
+                                                // things instead.
+  PopJsCallContext();
 
-  if (flags & DISPATCH_METHOD) {
-    if (!dispatcher_->CallMethod(dispatch_id, &js_call_context)) {
-      return DISP_E_MEMBERNOTFOUND;
-    }
-  } else if (flags & DISPATCH_PROPERTYGET) {
-    if (!dispatcher_->GetProperty(dispatch_id, &js_call_context)) {
-      return DISP_E_MEMBERNOTFOUND;
-    }
-  } else if (flags & DISPATCH_PROPERTYPUT) {
-    if (!dispatcher_->SetProperty(dispatch_id, &js_call_context)) {
-      return DISP_E_MEMBERNOTFOUND;
-    }
-  } else {
-    return DISP_E_MEMBERNOTFOUND;
-  }
 
   if (js_call_context.is_exception_set()) {
     return DISP_E_EXCEPTION;
+  } else if (FAILED(hr)) {
+    // Handle generic failures where the Gears module did not specify exception
+    // details (bad module!).
+    js_call_context.SetException(GET_INTERNAL_ERROR_MESSAGE());
+    return DISP_E_EXCEPTION;
   } else {
     return S_OK;
+  }
+}
+
+void ModuleWrapper::PushJsCallContext(JsCallContext *js_call_context) {
+  JsCallContextStack *context_stack = reinterpret_cast<JsCallContextStack *>(
+      ThreadLocals::GetValue(kCallContextThreadLocalKey));
+  if (!context_stack) {
+    context_stack = new JsCallContextStack();
+    ThreadLocals::SetValue(kCallContextThreadLocalKey, context_stack,
+                           &DestroyJsCallContextStack);
+
+  }
+  context_stack->push(js_call_context);
+}
+
+void ModuleWrapper::PopJsCallContext() {
+  JsCallContextStack *context_stack = reinterpret_cast<JsCallContextStack *>(
+    ThreadLocals::GetValue(kCallContextThreadLocalKey));
+  assert(context_stack);
+  assert(context_stack->size() > 0);
+  context_stack->pop();
+}
+
+JsCallContext *ModuleWrapper::PeekJsCallContext() {
+  JsCallContextStack *context_stack = reinterpret_cast<JsCallContextStack *>(
+    ThreadLocals::GetValue(kCallContextThreadLocalKey));
+  assert(context_stack);
+  assert(context_stack->size() > 0);
+  return context_stack->top();
+}
+
+void ModuleWrapper::DestroyJsCallContextStack(void *context_stack) {
+  if (context_stack) {
+    delete reinterpret_cast<JsCallContextStack *>(context_stack);
   }
 }

@@ -598,7 +598,7 @@ class ScopedJsArgSetter {
  public:
   // sets argc/argv/context on construction
   ScopedJsArgSetter(nsISupports *isupports, JSContext *cx,
-                    int argc, jsval *argv, jsval *retval) {
+                    int argc, jsval *argv) {
     gears_native_ = NULL; // dtor only checks this
     nsresult nr;
     gears_idl_ = do_QueryInterface(isupports, &nr);
@@ -610,15 +610,14 @@ class ScopedJsArgSetter {
         assert(cx == gears_native_->EnvPageJsContext());
         prev_argc_    = gears_native_->JsWorkerGetArgc();
         prev_argv_    = gears_native_->JsWorkerGetArgv();
-        prev_retval_  = gears_native_->JsWorkerGetRetVal();
-        gears_native_->JsWorkerSetParams(argc, argv, retval);
+        gears_native_->JsWorkerSetParams(argc, argv);
       }
     }
   }
   // restores argc/argv/context on destruction
   ~ScopedJsArgSetter() {
     if (gears_native_) {
-      gears_native_->JsWorkerSetParams(prev_argc_, prev_argv_, prev_retval_);
+      gears_native_->JsWorkerSetParams(prev_argc_, prev_argv_);
     }
   }
  private:
@@ -629,7 +628,6 @@ class ScopedJsArgSetter {
   // for 'onabort', and the JS handler calls any C++ function)
   int        prev_argc_;
   jsval     *prev_argv_;
-  jsval     *prev_retval_;
 };
 
 
@@ -695,7 +693,6 @@ JSBool JsContextWrapper::JsWrapperCaller(JSContext *cx, JSObject *obj,
                                     &call_context);
     }
 
-    // NOTE: early return for dispatcher-based modules.
     return success ? JS_TRUE : JS_FALSE;
   }
 
@@ -704,8 +701,7 @@ JSBool JsContextWrapper::JsWrapperCaller(JSContext *cx, JSObject *obj,
   // conversion code.
 
   // Give the ModuleImplBaseClass direct access to JS params
-  ScopedJsArgSetter arg_setter(instance_data->isupports, cx, argc, argv,
-                               js_retval);
+  ScopedJsArgSetter arg_setter(instance_data->isupports, cx, argc, argv);
 
   // Get interface information about this function.
   const nsXPTMethodInfo *function_info = function_data->function_info;
@@ -1186,9 +1182,10 @@ JSBool JsContextWrapper::JsWrapperCaller(JSContext *cx, JSObject *obj,
       }
 
       if (param_info.IsRetval()) {
-        if (JSVAL_IS_VOID(*js_retval)) // Check to make sure that the js return
-                                       // value hasn't been set directly.
-          *js_retval = v;
+        //if (!cx.GetReturnValueWasSet()) { // I'M NOT SIMULATING THIS; I DON'T THINK I NEED TO BE
+        //  cx.SetRetVal(v);
+        //}
+        *js_retval = v; // CPRINCE REPLACEMENT
       } else {
         assert(false); // NOT YET IMPLEMENTED!
 /***
