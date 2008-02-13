@@ -26,6 +26,62 @@
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/ui/common/settings_dialog.h"
 #include "gears/ui/ie/tools_menu_item.h"
+#include "common/genfiles/product_constants.h"  // from OUTDIR
+
+#ifdef WINCE
+
+STDMETHODIMP ToolsMenuItem::QueryContextMenu(HMENU hmenu, 
+                                             UINT index_menu,
+                                             UINT id_cmd_first, 
+                                             UINT id_cmd_last,
+                                             UINT flags) {
+  if (flags == CMF_DEFAULTONLY) {
+    return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, 0);
+  }
+
+  command_first_ = id_cmd_first;
+
+  InsertMenu(hmenu, index_menu, MF_BYPOSITION, command_first_,
+    TEXT(PRODUCT_FRIENDLY_NAME_ASCII) L" Settings");
+
+  return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, 1);
+}
+
+STDMETHODIMP ToolsMenuItem::GetCommandString(UINT id_cmd, 
+                                             UINT flags,
+                                             UINT *reserved, 
+                                             LPSTR command_name,
+                                             UINT command_name_len) {
+  if (command_first_ != id_cmd)
+    return E_INVALIDARG;
+
+  switch (flags) {
+    case GCS_VERB:
+    case GCS_HELPTEXT: {
+      strncpy(command_name, PRODUCT_FRIENDLY_NAME_ASCII " Settings", 
+        command_name_len);
+    } break;
+    case GCS_VALIDATE:
+      break;
+    default:
+      return E_INVALIDARG;
+  }
+
+  return S_OK;
+}
+
+STDMETHODIMP ToolsMenuItem::InvokeCommand(LPCMINVOKECOMMANDINFO command_info) {
+  if (DetectedVersionCollision()) {
+    NotifyUserOfVersionCollision();
+    return S_OK;
+  }
+
+  SettingsDialog::Run();
+
+  return S_OK;
+}
+
+#else
 
 STDAPI ToolsMenuItem::QueryStatus(const GUID *command_group_id,
                                   ULONG num_commands, OLECMD *commands,
@@ -49,3 +105,5 @@ STDAPI ToolsMenuItem::Exec(const GUID *command_group_id, DWORD command_id,
   SettingsDialog::Run();
   return S_OK;
 }
+
+#endif
