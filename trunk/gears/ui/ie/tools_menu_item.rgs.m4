@@ -18,7 +18,12 @@ HKCR
       ForceRemove 'Programmable'
       InprocServer32 = s '%MODULE%'
       {
+m4_changequote(`^',`^')m4_dnl
+m4_ifelse(PRODUCT_OS,^win32^,^m4_dnl
         val ThreadingModel = s 'Apartment'
+^,PRODUCT_OS,^wince^,^m4_dnl
+        val ThreadingModel = s 'Free'
+^)
       }
       val AppID = s '%APPID%'
       'TypeLib' = s '{7708913A-B86C-4D91-B325-657DD5363433}'
@@ -32,6 +37,7 @@ HKLM
   {
     NoRemove Microsoft
     {
+m4_ifelse(PRODUCT_OS,^win32^,^m4_dnl
       NoRemove 'Internet Explorer'
       {
         NoRemove Extensions
@@ -45,6 +51,25 @@ HKLM
           }
         }
       }
+^,PRODUCT_OS,^wince^,^m4_dnl
+      NoRemove Shell
+      {
+        NoRemove Extensions
+        {
+          NoRemove ContextMenus
+          {
+            NoRemove 'Pocket Internet Explorer'
+            {
+              NoRemove Tools
+              {
+                {0B4350D1-055F-47A3-B112-5F2F2B0D6F08} = s 'PRODUCT_FRIENDLY_NAME_UQ Settings'
+                {
+                }
+              }
+            }
+          }
+        }
+      }^)
     }
   }
 }
