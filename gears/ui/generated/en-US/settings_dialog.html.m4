@@ -175,7 +175,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><TRANS_BLOCK desc="Button user can press to save changes."><span class="accesskey">S</span>ave</div></TRANS_BLOCK></div></a>
+                  ><TRANS_BLOCK desc="Button user can press to save changes."><span class="accesskey">S</span>ave</TRANS_BLOCK></div></div></a>
             <!--
             Note: There must be whitespace here or Firefox messes up the
             rendering.
@@ -188,7 +188,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><TRANS_BLOCK desc="Button user can press to discard changes."><span class="accesskey">C</span>ancel</div></TRANS_BLOCK></div></a>
+                  ><TRANS_BLOCK desc="Button user can press to discard changes."><span class="accesskey">C</span>ancel</TRANS_BLOCK></div></div></a>
           </td>
         </tr>
       </table>
