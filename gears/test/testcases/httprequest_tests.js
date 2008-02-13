@@ -23,13 +23,12 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-var currentUrl = location.href;
 
-// Find currentPort and crossOriginPort
-var currentPort = currentUrl.substring(currentUrl.lastIndexOf(':') + 1, 
-                                       currentUrl.length);
-currentPort = currentPort.substring(0, currentPort.indexOf('/'));
-crossOriginPort = parseInt(currentPort) + 1;
+// TODO(aa): There needs to be a way to get the cross-origin URL from inside a
+// test. Or, more generally, there needs to be some test configuration that gets
+// setup in the main frame, and passed into both iframe and worker contexts.
+var crossOriginUrl = 'http://localhost:8002';
+crossOriginUrl += '/testcases/test_file_1024.txt';
 
 function testGet200() {
   startAsync();
@@ -80,16 +79,14 @@ function testGet302_404() {
 
 function testGetNoCrossOrigin() {
   assertError(function() {
-    doRequest('http://www.google.com/', 'GET', null, null, 0, null, null);
+    doRequest(crossOriginUrl, 'GET', null, null, 0, null, null);
   });
 }
 
 function testGet302NoCrossOrigin() {
   startAsync();
-  var headers = [["location", "http://localhost:" + crossOriginPort +
-                              "/testcases/test_file_1024.txt"]];
-  doRequest('testcases/cgi/server_redirect.py?location=http://localhost:' +
-            crossOriginPort + '/testcases/test_file_1024.txt',
+  var headers = [['location', crossOriginUrl]];
+  doRequest('testcases/cgi/server_redirect.py?location=' + crossOriginUrl,
             'GET', null, null, 302, "", headers);
 }
 
