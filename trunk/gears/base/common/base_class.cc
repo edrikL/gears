@@ -27,7 +27,6 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/js_runner.h"
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/security_model.h"  // for kUnknownDomain
 #include "gears/base/common/string_utils.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
@@ -116,7 +115,6 @@ bool ModuleImplBaseClass::InitBaseManually(bool is_worker,
 #if BROWSER_FF
   worker_js_argc_ = 0;
   worker_js_argv_ = NULL;
-  worker_js_retval_ = NULL;
 #elif BROWSER_IE
   // These do not exist in IE yet.
 #endif
@@ -158,31 +156,29 @@ JsRunnerInterface *ModuleImplBaseClass::GetJsRunner() const {
   return js_runner_;
 }
 
-void ModuleImplBaseClass::AddReference() {
-  assert(js_wrapper_);
-  js_wrapper_->AddReference();
+#if BROWSER_NPAPI || BROWSER_FF
+void ModuleImplBaseClass::AddRef() {
+  js_wrapper_->AddRef();
 }
 
-void ModuleImplBaseClass::RemoveReference() {
-  assert(js_wrapper_);
-  js_wrapper_->RemoveReference();
+void ModuleImplBaseClass::Release() {
+  js_wrapper_->Release();
 }
 
 JsToken ModuleImplBaseClass::GetWrapperToken() const {
   return js_wrapper_->GetWrapperToken();
 }
+#endif
 
 
 //-----------------------------------------------------------------------------
 #if BROWSER_FF  // the rest of this file only applies to Firefox, for now
 
 
-void ModuleImplBaseClass::JsWorkerSetParams(int argc, JsToken *argv,
-                                            JsToken *retval) {
+void ModuleImplBaseClass::JsWorkerSetParams(int argc, JsToken *argv) {
   assert(is_initialized_);
   worker_js_argc_ = argc;
   worker_js_argv_ = argv;
-  worker_js_retval_ = retval;
 }
 
 int ModuleImplBaseClass::JsWorkerGetArgc() const {
@@ -195,12 +191,6 @@ JsToken* ModuleImplBaseClass::JsWorkerGetArgv() const {
   assert(is_initialized_);
   assert(EnvIsWorker());
   return worker_js_argv_;
-}
-
-JsToken *ModuleImplBaseClass::JsWorkerGetRetVal() const {
-  assert(is_initialized_);
-  assert(EnvIsWorker());
-  return worker_js_retval_;
 }
 
 #endif  // BROWSER_FF

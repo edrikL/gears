@@ -1012,13 +1012,13 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     }
     case JSPARAM_DOUBLE: {
       const double *value = static_cast<const double *>(param.value_ptr);
-      jsdouble *js_double = JS_NewDouble(context, *value);
-      *token = DOUBLE_TO_JSVAL(js_double);
+      *token = DOUBLE_TO_JSVAL(*value);
       break;
     }
     case JSPARAM_STRING16: {
       const std::string16 *value = static_cast<const std::string16 *>(
                                                    param.value_ptr);
+      // TODO(cprince): Does this string copy get freed?
       JSString *js_string = JS_NewUCStringCopyZ(
           context,
           reinterpret_cast<const jschar *>(value->c_str()));
@@ -1057,6 +1057,48 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       assert(false);
   }
 }
+
+// This code is shared between JsCallContext and JsParamFetcher for FF.
+// It initialises all the parameters which are members of the respective
+// classes, execept obj which is an input parameter.
+static void GetContextAndArgs(ModuleImplBaseClass *obj,
+                              JsContextPtr *js_context,
+                              int *js_argc,
+                              JsToken **js_argv,
+                              nsCOMPtr<nsIXPConnect> *xpc,
+                              nsCOMPtr<nsIXPCNativeCallContext> *ncc) {
+  if (obj->EnvIsWorker()) {
+    *js_context = obj->EnvPageJsContext();
+    *js_argc = obj->JsWorkerGetArgc();
+    *js_argv = obj->JsWorkerGetArgv();
+  } else {
+    // In the main thread use the caller's current JS context, NOT the context
+    // where 'obj' was created.  These can be different!  Each frame has its
+    // own JS context, and code can reference 'top.OtherFrame.FooObject'.
+    nsresult nr;
+    *xpc = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
+    if (*xpc && NS_SUCCEEDED(nr)) {
+      nr = (*xpc)->GetCurrentNativeCallContext(getter_AddRefs(*ncc));
+      if (*ncc && NS_SUCCEEDED(nr)) {
+        (*ncc)->GetJSContext(js_context);
+        PRUint32 argc;
+        (*ncc)->GetArgc(&argc);
+        *js_argc = static_cast<int>(argc);
+        (*ncc)->GetArgvPtr(js_argv);
+      }
+    }
+  }
+}
+
+
+JsCallContext::JsCallContext(ModuleImplBaseClass* obj)
+    : js_context_(NULL), is_exception_set_(false),
+      argc_(0), argv_(NULL), retval_(NULL),
+      js_runner_(obj->GetJsRunner()),
+      xpc_(NULL), ncc_(NULL) {
+  GetContextAndArgs(obj, &js_context_, &argc_, &argv_, &xpc_, &ncc_);
+}
+
 
 JsCallContext::JsCallContext(JsContextPtr cx, JsRunnerInterface *js_runner,
                              int argc, JsToken *argv, JsToken *retval)
@@ -1338,29 +1380,7 @@ int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
 #if BROWSER_FF  // the rest of this file only applies to Firefox, for now
 
 JsParamFetcher::JsParamFetcher(ModuleImplBaseClass *obj) {
-  if (obj->EnvIsWorker()) {
-    js_context_ = obj->EnvPageJsContext();
-    js_argc_ = obj->JsWorkerGetArgc();
-    js_argv_ = obj->JsWorkerGetArgv();
-    js_retval_ = obj->JsWorkerGetRetVal();
-  } else {
-    // In the main thread use the caller's current JS context, NOT the context
-    // where 'obj' was created.  These can be different!  Each frame has its
-    // own JS context, and code can reference 'top.OtherFrame.FooObject'.
-    nsresult nr;
-    xpc_ = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
-    if (xpc_ && NS_SUCCEEDED(nr)) {
-      nr = xpc_->GetCurrentNativeCallContext(getter_AddRefs(ncc_));
-      if (ncc_ && NS_SUCCEEDED(nr)) {
-        ncc_->GetJSContext(&js_context_);
-        PRUint32 argc;
-        ncc_->GetArgc(&argc);
-        js_argc_ = static_cast<int>(argc);
-        ncc_->GetArgvPtr(&js_argv_);
-        ncc_->GetRetValPtr(&js_retval_);
-      }
-    }
-  }
+  GetContextAndArgs(obj, &js_context_, &js_argc_, &js_argv_, &xpc_, &ncc_);
 }
 
 
@@ -1429,16 +1449,6 @@ bool JsParamFetcher::GetAsNewRootedCallback(int i, JsRootedCallback **out) {
 
   *out = new JsRootedCallback(GetContextPtr(), js_argv_[i]);
   return true;
-}
-
-void JsParamFetcher::SetReturnValue(JsToken retval) {
-  if (js_retval_) {
-    *js_retval_ = retval;
-
-    if (ncc_ != NULL) {
-      ncc_->SetReturnValueWasSet(PR_TRUE);
-    }
-  }
 }
 
 JsNativeMethodRetval JsSetException(JsContextPtr cx,

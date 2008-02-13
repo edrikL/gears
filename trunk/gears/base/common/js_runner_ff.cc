@@ -56,6 +56,10 @@
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/factory/firefox/factory.h"
 
+#ifdef DEBUG
+#include "ff/genfiles/test_ff.h"
+#endif
+
 static const int kGarbageCollectionIntervalMsec = 2000;
 
 // Internal base class used to share some code between DocumentJsRunner and
@@ -513,6 +517,10 @@ bool JsRunner::InitJavaScriptEngine() {
     {GEARSMANAGEDRESOURCESTOREINTERFACE_IID, NULL},
     {GEARSRESOURCESTOREINTERFACE_IID, NULL},
     // GEARSFILESUBMITTERINTERFACE_IID can never be created in a child worker
+#ifdef DEBUG
+    // test
+    {GEARSTESTINTERFACE_IID, NULL},
+#endif
     // blob
     {GEARSBLOBINTERFACE_IID, NULL},
     // timer

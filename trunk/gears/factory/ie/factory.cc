@@ -25,14 +25,12 @@
 
 #include <assert.h>
 
-#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/console/ie/console_ie.h"
 #include "gears/database/ie/database.h"
-#include "gears/database2/database_manager.h"
 #include "gears/desktop/desktop_ie.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/factory/ie/factory.h"
@@ -42,7 +40,7 @@
 #include "gears/workerpool/ie/workerpool.h"
 
 #ifdef DEBUG
-#include "gears/cctests/test.h"
+#include "gears/cctests/test_ie.h"
 #endif
 
 
@@ -57,6 +55,8 @@ GearsFactory::GearsFactory()
 STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
                                   const VARIANT *version_variant,
                                   IDispatch **retval) {
+  HRESULT hr;
+
   const BSTR object_name_bstr = ActiveXUtils::SafeBSTR(object_name_bstr_in);
 
   LOG16((L"GearsFactory::create(%s)\n", object_name_bstr));
@@ -97,62 +97,10 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
   // code consistent across callers, and they are easier to support over time.
 
   std::string16 object_name(object_name_bstr);
-  std::string16 error;
-  bool success = false;
-
-  // Try creating a dispatcher-based module first.
-  success = CreateDispatcherModule(object_name, retval, &error);
-  if (success) {
-    RETURN_NORMAL();
-  } else if (error.length() > 0) {
-    RETURN_EXCEPTION(error.c_str());
-  }
-
-  success = CreateComModule(object_name, retval, &error);
-  if (success) {
-    RETURN_NORMAL();
-  } else if (error.length() > 0) {
-    RETURN_EXCEPTION(error.c_str());
-  } else {
-    RETURN_EXCEPTION(STRING16(L"Unknown object."));
-  }
-}
-
-bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
-                                          IDispatch **retval,
-                                          std::string16 *error) {
-  GComPtr<ModuleImplBaseClass> object(NULL);
-
-  if (object_name == STRING16(L"beta.test")) {
-#ifdef DEBUG
-    object.reset(CreateModule<GearsTest>(GetJsRunner()));
-#else
-    *error = STRING16(L"Object is only available in debug build.");
-    return false;
-#endif
-  } else {
-    // Don't return an error here. Caller handles reporting unknown modules.
-    error->clear();
-    return false;
-  }
-
-  // setup the ModuleImplBaseClass (copy settings from this factory)
-  if (!object->InitBaseFromSibling(this)) {
-    *error = STRING16(L"Error initializing base class.");
-    return false;
-  }
-
-  *retval = object->GetWrapperToken().pdispVal;
-  object.ReleaseNewObjectToScript();
-  return true;
-}
-
-bool GearsFactory::CreateComModule(const std::string16 &object_name,
-                                   IDispatch **retval, std::string16 *error) {
   ModuleImplBaseClass *base_class = NULL;
   CComQIPtr<IDispatch> idispatch;
 
-  HRESULT hr = E_FAIL;
+  hr = E_FAIL;
   if (0) {  // dummy statement to support mixed "#ifdef" and "else if" below
 #ifdef WINCE
   // TODO(oshlack): Implement console for WinCE.
@@ -163,7 +111,7 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
     base_class = obj;
     idispatch = obj;
 #endif
-  } else if (object_name == STRING16(L"beta.database")) {
+ } else if (object_name == STRING16(L"beta.database")) {
     CComObject<GearsDatabase> *obj;
     hr = CComObject<GearsDatabase>::CreateInstance(&obj);
     base_class = obj;
@@ -187,6 +135,15 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
     hr = CComObject<GearsLocalServer>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
+  } else if (object_name == STRING16(L"beta.test")) {
+#ifdef DEBUG
+    CComObject<GearsTest> *obj;
+    hr = CComObject<GearsTest>::CreateInstance(&obj);
+    base_class = obj;
+    idispatch = obj;
+#else
+    RETURN_EXCEPTION(STRING16(L"Object is only available in debug build."));
+#endif
   } else if (object_name == STRING16(L"beta.timer")) {
     CComObject<GearsTimer> *obj;
     hr = CComObject<GearsTimer>::CreateInstance(&obj);
@@ -198,20 +155,16 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
     base_class = obj;
     idispatch = obj;
   } else {
-    // Don't return an error here. Caller handles reporting unknown modules.
-    error->clear();
-    return false;
+    RETURN_EXCEPTION(STRING16(L"Unknown object."));
   }
 
   if (FAILED(hr) || !base_class || !idispatch) {
-    *error = STRING16(L"Failed to create requested object.");
-    return false;
+    RETURN_EXCEPTION(STRING16(L"Failed to create requested object."));
   }
 
   // setup the ModuleImplBaseClass (copy settings from this factory)
   if (!base_class->InitBaseFromSibling(this)) {
-    *error = STRING16(L"Error initializing base class.");
-    return false;
+    RETURN_EXCEPTION(STRING16(L"Error initializing base class."));
   }
 
   // Our factory-created Gears objects no longer need to be sited, since we get
@@ -230,7 +183,7 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
   (*retval)->AddRef();  // ~CComQIPtr will Release, so must AddRef here
   assert((*retval)->AddRef() == 3 &&
          (*retval)->Release() == 2);
-  return true;
+  RETURN_NORMAL();
 }
 
 
