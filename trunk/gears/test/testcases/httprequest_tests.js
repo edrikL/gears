@@ -78,7 +78,7 @@ function testGetNoCrossOrigin() {
 
 function testGet302NoCrossOrigin() {
   startAsync();
-  var headers = [["location", "http://www.google.com/"]];
+  var headers = [["location", "http://www.google.com/ncr"]];
   // "www.google.com/ncr" means "no country redirect"
   doRequest('testcases/cgi/server_redirect.py?location=http://www.google.com/ncr',
             'GET', null, null, 302, "", headers);
