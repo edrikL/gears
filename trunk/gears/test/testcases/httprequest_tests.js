@@ -23,6 +23,14 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+var currentUrl = location.href;
+
+// Find currentPort and crossOriginPort
+var currentPort = currentUrl.substring(currentUrl.lastIndexOf(':') + 1, 
+                                       currentUrl.length);
+currentPort = currentPort.substring(0, currentPort.indexOf('/'));
+crossOriginPort = parseInt(currentPort) + 1;
+
 function testGet200() {
   startAsync();
   doRequest(
@@ -78,9 +86,10 @@ function testGetNoCrossOrigin() {
 
 function testGet302NoCrossOrigin() {
   startAsync();
-  var headers = [["location", "http://www.google.com/ncr"]];
-  // "www.google.com/ncr" means "no country redirect"
-  doRequest('testcases/cgi/server_redirect.py?location=http://www.google.com/ncr',
+  var headers = [["location", "http://localhost:" + crossOriginPort +
+                              "/testcases/test_file_1024.txt"]];
+  doRequest('testcases/cgi/server_redirect.py?location=http://localhost:' +
+            crossOriginPort + '/testcases/test_file_1024.txt',
             'GET', null, null, 302, "", headers);
 }
 
