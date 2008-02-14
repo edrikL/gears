@@ -77,21 +77,32 @@ interface Desktop {
 ==C++ Internal Interfaces==
 
 {{{
-// This enum will allow for different dialogs in the future.
-// An example would be FILES_AND_DIRECTORIES.
-enum FileDialogMode {
-  FILE_DIALOG_MULTIPLE_FILES  // one or more files
-};
-
 // Constructs a file dialog according to mode.
 // Caller is responsible for freeing the returned memory.
 // Returns: null pointer on failure
 // Parameters:
 //   mode - in - the type of dialog to construct
-FileDialog* NewFileDialog(FileDialogMode mode);
+FileDialog* NewFileDialog(const FileDialog::Mode mode,
+                          const ModuleImplBaseClass& module);
 
 // This interface will be implemented for every supported operating system.
 class FileDialog {
+  // Used for constructing dialogs.
+  // This is intended to allow for different types of file pickers in future.
+  // For example, FILES_AND_DIRECTORIES, for a custom dialog that allows the
+  // user to select files and directories at the same time.
+  enum Mode {
+    MULTIPLE_FILES  // one or more files
+  };
+
+  struct Filter {
+    // The text the user sees. For example "Images".
+    std::string16 description;
+
+    // A semi-colon separated list of filters. For example "*.jpg;*.gif;*.png".
+    std::string16 filter;
+  };
+
   // Displays a file dialog.
   // Returns: false on invalid input or failure
   // Parameters:
@@ -107,8 +118,8 @@ class FileDialog {
   //
   //   error - out - The error message if the function returned false.
   //
-  virtual bool OpenDialog(const JsArray* filters,
-                          JsArray** files,
+  virtual bool OpenDialog(const std::vector<Filter>& filters,
+                          std::vector<std::string16>* selected_files,
                           std::string16* error) = 0;
 }
 }}}
