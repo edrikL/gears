@@ -35,7 +35,7 @@ if (window.pie_dialog) {
   isPIE = true;
 } else {
   isIE = Boolean(window.external &&
-                 typeof window.external.GetDialogArguments != "undefined");
+                 typeof window.external.GetDialogArguments != 'undefined');
   isFF = Boolean(window.arguments);
 }
 
@@ -43,16 +43,46 @@ if (window.pie_dialog) {
  * Initialize the base functionality of the dialog.
  */
 function initDialog() {
+  var buttonRowElem = null;
   if (!isPIE) {
+    buttonRowElem = getElementById("button-row");
     addEvent(document, "keyup", handleKeyUp);
+  } else {
+    if (window.pie_dialog.IsSmartPhone()) {
+      buttonRowElem = getElementById("button-row-smartphone");
+    } else {
+      buttonRowElem = getElementById("button-row");
+    }
+  }
+  if (buttonRowElem) {
+    buttonRowElem.style.display = 'block';
+  }
+  if (isPIE) {
+    window.pie_dialog.SetScriptContext(window);
+    window.pie_dialog.ResizeDialog();
   }
 }
 
 /**
+ * Check that the type is not undefined (we do it here as on
+ * some devices typeof returns unknown instead of undefined...).
+ * We have to pass the evaluation of (typeof elem) (i.e., a string)
+ * to the function rather than simply (element) -- passing an 
+ * undefined object would make the function crash on PIE.
+ */
+function isDefined(type) {
+  if ((type != 'undefined') && (type != 'unknown')) {
+    return true;
+  } else {
+    return false;
+  }
+}
+  
+/**
  * Provides a cross-browser way of getting an element by its id
  */
 function getElementById(id) {
-  if (document.getElementById) {
+  if (isDefined(typeof document.getElementById)) {
     return document.getElementById(id);
   } else {
     return document.all[id];
@@ -106,7 +136,7 @@ function getArguments() {
     argsString = window.external.GetDialogArguments();
   } else if (isPIE) {
     // PIE
-    argsString = pie_dialog.GetDialogArguments();
+    argsString = window.pie_dialog.GetDialogArguments();
   } else if (isFF) {
     // Firefox
     argsString = getFirefoxArguments(window.arguments[0]);
@@ -141,7 +171,7 @@ function saveAndClose(resultObject) {
     window.external.CloseDialog(resultString);
   } else if (isPIE) {
     // PIE
-    pie_dialog.CloseDialog(resultString);
+    window.pie_dialog.CloseDialog(resultString);
   } else if (isFF) {
     // Firefox
     saveFirefoxResults(resultString);
@@ -177,9 +207,9 @@ function getContentHeight() {
  * Returns the height of the inside of the window.
  */
 function getWindowInnerHeight() {
-  if (typeof window.innerHeight != 'undefined') { // Firefox
+  if (isDefined(typeof window.innerHeight)) { // Firefox
     return window.innerHeight;
-  } else if (typeof document.body.offsetHeight != 'undefined') { // IE
+  } else if (isDefined(typeof document.body.offsetHeight)) { // IE
     return document.body.offsetHeight;
   }
 
@@ -217,8 +247,9 @@ function addEvent(element, eventName, handler) {
  */
 function disableButton(buttonElm) {
   if (isPIE) {
-    buttonElm.style.textDecoration = "none";
+    buttonElm.disabled = true;
     buttonElm.style.color = "gray";
+    window.pie_dialog.SetButtonEnabled(false);
   } else {
     var classes = buttonElm.className.split(" ");
     for (var i = 0, className; className = classes[i]; i++) {
@@ -236,8 +267,9 @@ function disableButton(buttonElm) {
  */
 function enableButton(buttonElm) {
   if (isPIE) {
-    buttonElm.style.textDecoration = "underline";
-    buttonElm.style.color = "blue";
+    buttonElm.disabled = false;
+    buttonElm.style.color = "black";
+    window.pie_dialog.SetButtonEnabled(true);
   } else {
     var classes = buttonElm.className.split(" ");
     for (var i = 0, className; className = classes[i]; i++) {
@@ -248,4 +280,25 @@ function enableButton(buttonElm) {
       }
     }
   }
+}
+
+/**
+ * Returns a wrapped string (useful for small screens dialogs, 
+ * e.g. windows mobile devices)
+ */
+function wrapString(str) {
+  if (isPIE) {
+    var max = 25;
+    var content = "";
+    var pos = 0;
+    while (pos < str.length) {
+      if (pos > 0) {
+        content += "<br>";
+      }
+      content += str.substring(pos, pos + max);
+      pos += max;
+    }
+    return content;
+  }
+  return str;
 }

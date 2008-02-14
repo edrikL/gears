@@ -50,6 +50,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/ui/ie/ui_resources.h"
+#include "gears/base/ie/activex_utils.h"
 
 // HtmlDialogHost is a COM dialog which allows clients to display HTML
 // resources as modal dialogs. It provides the underlying implementation for
@@ -76,7 +77,7 @@
 // on the screen (PocketIE only has a single window, and we use a modal dialog).
 
 class HtmlDialogHost : public CDialogImpl<HtmlDialogHost>,
-                          public IDispatchImpl<HtmlDialogHostInterface>,
+                          public IDispatchImpl<PIEDialogHostInterface>,
                           public CComObjectRootEx<CComMultiThreadModel> {
  public:
 
@@ -96,6 +97,10 @@ class HtmlDialogHost : public CDialogImpl<HtmlDialogHost>,
     MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
     MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
     MESSAGE_HANDLER(WM_CLOSE, OnClose)
+    MESSAGE_HANDLER(WM_SIZE, OnResize)
+    MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChange)
+    MESSAGE_HANDLER(WM_COMMAND, OnCommand)
+    MESSAGE_HANDLER(WM_HOTKEY, OnHotKey)
   END_MSG_MAP()
 
   bool ShowDialog(const char16 *resource_file_name,
@@ -104,7 +109,13 @@ class HtmlDialogHost : public CDialogImpl<HtmlDialogHost>,
 
  private:
 
+  // Event handlers.
   LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+  LRESULT OnResize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+  LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                          BOOL& bHandled);
+  LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+  LRESULT OnHotKey(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
   LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
   LRESULT OnClose(UINT message, WPARAM w, LPARAM l, BOOL& handled);
 
@@ -116,6 +127,31 @@ class HtmlDialogHost : public CDialogImpl<HtmlDialogHost>,
 
   // Called by script to check if we are in Pocket IE or Desktop IE.
   STDMETHODIMP IsPocketIE(VARIANT_BOOL *retval);
+
+  // Called by script to check if we are on a Smartphone.
+  STDMETHODIMP IsSmartPhone(VARIANT_BOOL *retval);
+
+  // Called by script to resize the dialog on Pocket IE.
+  STDMETHODIMP ResizeDialog();
+
+  // Used by javascript to provide an execution context for
+  // the softkey "callback" scripts.
+  STDMETHODIMP SetScriptContext(IDispatch *val);
+
+  // Used by javascript to set an action on the Right softkey button.
+  STDMETHODIMP SetButton(const BSTR label, const BSTR script);
+
+  // Used by javascript to enable/disable the Right softkey button.
+  STDMETHODIMP SetButtonEnabled(VARIANT_BOOL *val);
+
+  // Used by javascript to set the cancel button label.
+  STDMETHODIMP SetCancelButton(const BSTR label);
+
+  // Utility function returning true if we are on a Smartphone.
+  bool CheckIsSmartPhone();
+
+  // Utility function executing a script in the provided context.
+  HRESULT ExecScript(const BSTR script);
 
   // Initialize the Win32 HTML control and set the document variable.
   void InitBrowserView();
@@ -129,11 +165,25 @@ class HtmlDialogHost : public CDialogImpl<HtmlDialogHost>,
   // Loads an image, decompress it and send it to the Web control.
   HRESULT LoadImage(CString rsc, DWORD cookie);
 
+  // Computes and set the window size depending on the available screen area
+  HRESULT ResizeWindow();
+
   // The window handler to the Win32 HTML Control.
   HWND browser_view_;
 
   // Our html document (used by the PIEDialogBridge).
   CComQIPtr<IPIEHTMLDocument2> document_;
+
+  // The html window.
+  CComQIPtr<IPIEHTMLWindow2> html_window_;
+
+  CComBSTR allow_action_;
+
+  // Execute the script provided by SetButton().
+  HRESULT RightButtonAction();
+
+  // Track if the right softkey button is enabled.
+  bool right_button_enabled_;
 
   // The res:// URL representing the folder where our HTML, images, etc are.
   CString base_url_;
@@ -149,6 +199,12 @@ class HtmlDialogHost : public CDialogImpl<HtmlDialogHost>,
 
   // The desired window size.
   CSize desired_size_;
+
+  // Boolean storing the smartphone test.
+  bool is_smartphone_;
+
+  // Guard variable to prevent resizing.
+  bool resizing_;
 
   // The global variable allowing the activex bridge PIEDialogBridge to
   // access the dialog.

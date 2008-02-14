@@ -25,7 +25,7 @@
 
 import "oaidl.idl";
 import "ocidl.idl";
-import "ui/ie/html_dialog_host.idl";
+import "ui/ie/html_dialog_host_iemobile.idl";
 
 [
   object,
@@ -34,6 +34,6 @@ import "ui/ie/html_dialog_host.idl";
   nonextensible,
   pointer_default(unique)
 ]
-interface PIEDialogBridgeInterface : HtmlDialogHostInterface {
-  HRESULT SetDialog([in] IDispatch* val); 
+interface PIEDialogBridgeInterface : PIEDialogHostInterface {
+  HRESULT SetDialog([in] PIEDialogHostInterface* val); 
 };

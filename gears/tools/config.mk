@@ -309,7 +309,7 @@ GECKO_SDK = third_party/gecko_1.8/win32
 
 FF_LIBS = $(GECKO_SDK)/gecko_sdk/lib/xpcom.lib $(GECKO_SDK)/gecko_sdk/lib/xpcomglue_s.lib $(GECKO_SDK)/gecko_sdk/lib/nspr4.lib $(GECKO_SDK)/gecko_sdk/lib/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib
 IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib
-IEMOBILE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib cellcore.lib htmlview.lib imaging.lib toolhelp.lib
+IEMOBILE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib cellcore.lib htmlview.lib imaging.lib toolhelp.lib aygshell.lib
 NPAPI_LIBS = sensapi.lib ole32.lib shell32.lib advapi32.lib wininet.lib
 
 # Other tools specific to win32/wince builds.
@@ -321,7 +321,7 @@ RCFLAGS_dbg = /DDEBUG=1
 RCFLAGS_opt = /DNDEBUG=1
 RCFLAGS = $(RCFLAGS_$(MODE)) /d "_UNICODE" /d "UNICODE" /i $(OUTDIR)/$(OS)-$(ARCH) /l 0x409 /fo"$(@D)/$*.res"
 ifeq ($(OS),wince)
-RCFLAGS += /d "WINCE" /d "_WIN32" /d "_WIN32_WCE" /d "UNDER_CE" /n
+RCFLAGS += /d "WINCE" /d "_WIN32" /d "_WIN32_WCE" /d "UNDER_CE" /n /i ../
 endif
 
 GGUIDGEN = tools/gguidgen.exe

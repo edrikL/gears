@@ -64,10 +64,13 @@ class ATL_NO_VTABLE PIEDialogBridge
   PIEDialogBridge() {}
 
   // Called by the bridge to set the dialog object in the activex
-  STDMETHODIMP SetDialog(IDispatch *val);
+  STDMETHODIMP SetDialog(PIEDialogHostInterface *val);
 
   // Called by script to check if we are in Pocket IE or Desktop IE
   STDMETHODIMP IsPocketIE(VARIANT_BOOL *retval);
+
+  // Called by script to check if we are on a Smartphone.
+  STDMETHODIMP IsSmartPhone(VARIANT_BOOL *retval);
 
   // Called by script to get dialog arguments.
   STDMETHODIMP GetDialogArguments(BSTR *args_string);
@@ -75,12 +78,26 @@ class ATL_NO_VTABLE PIEDialogBridge
   // Called by script inside the dialog to close and send back result.
   STDMETHODIMP CloseDialog(const BSTR result_string);
 
+  // Used by the script to resize the dialog on Pocket IE
+  STDMETHODIMP ResizeDialog();
+
+  STDMETHODIMP SetScriptContext(IDispatch* val);
+
+  // Used by the script to set an action on the Allow button
+  STDMETHODIMP SetButton(const BSTR label, const BSTR script);
+
+  // Used by the script to enable/disable the Allow button
+  STDMETHODIMP SetButtonEnabled(VARIANT_BOOL *val);
+
+  // Used by javascript to set the cancel button label.
+  STDMETHODIMP SetCancelButton(const BSTR label);
+
  private:
 
   // Set the dialog object in ActiveX by traversing the DOM.
   STDMETHODIMP AccessPermissionsDialog();
 
-  CComQIPtr<HtmlDialogHostInterface> dialog_;
+  CComQIPtr<PIEDialogHostInterface> dialog_;
 
   DISALLOW_EVIL_CONSTRUCTORS(PIEDialogBridge);
 };

@@ -43,8 +43,32 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       padding-right:1em;
     }
 
+m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
+^
+    /* 
+     * On Windows Mobile, we hide the div containing the buttons
+     * by default, to only show the correct one (ie smartphone or not)
+     */
+
+    #button-row {
+      display:none;
+    }
+
+    #button-row-smartphone {
+      margin-left:2em;
+      display:none;
+    }
+^,^^)
+
     #checkbox-row {
       margin-top:1em;
+m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
+^
+      margin-bottom:0.5em;
+^,
+^
+      margin-bottom:1em;
+^)
     }
 
     #icon {
@@ -67,7 +91,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     }
 
     #custom-message {
+m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
+^
+      margin-top:2px; 
+^,
+^
       margin-top:6px;
+^)
       display:none;
     }
 
@@ -89,11 +119,20 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       margin:0 -1px;
       border:solid #f1cc1d;
       border-width:0 1px;
+m4_ifelse(PRODUCT_OS,^wince^,^^,m4_dnl
+^
       padding:1em 0;
+^)
     }
 
     #yellowbox p {
+m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
+^
+      padding:0 0;
+^,
+^
       padding:0 1em;
+^)
     }
 
     #permissions-help {
@@ -189,13 +228,67 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
         </tr>
       </table>
     </p>
-    <br>
+    m4_ifelse(PRODUCT_OS,^wince^,^^,^<br>^)
   </div>
 
   <div id="foot">
+    <div id="text-buttons" style="display:none">
+      <TRANS_BLOCK desc="Link that disallows Gears on this site.">
+        <div id="text-never-allow">Never allow it</div>
+      </TRANS_BLOCK>
+      <TRANS_BLOCK desc="Button user can press to allow the use of Gears.">
+        <div id="text-allow">Allow</div>
+      </TRANS_BLOCK>
+      <TRANS_BLOCK desc="Button user can press to disallow the use of Gears.">
+        <div id="text-deny">Deny</div>
+      </TRANS_BLOCK>
+      <TRANS_BLOCK desc="Button user can press to cancel the dialog.">
+        <div id="text-cancel">Cancel</div>
+      </TRANS_BLOCK>
+    </div>
+m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
+^
+    <!--
+    On Windows Mobile, we use the softkey bar in addition to HTML buttons.
+    On Windows Mobile smartphone, we only display this div and hide the
+    button-row containing the HTML buttons (as screen estate is expensive
+    and we already have the buttons through the softkey bar)
+    -->
+
+    <div id="button-row-smartphone">
+      <table cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td align="left" valign="middle">
+          <a href="#" onclick="denyAccessPermanently(); return false;">
+            <TRANS_BLOCK desc="Link that disallows Gears on this site.">
+              Never allow this site
+            </TRANS_BLOCK>
+          </a>
+        </td>
+      </tr>
+      </table>
+    </div>
+^,^^)
     <div id="button-row">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
+m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
+^          <!-- 
+          We use form input buttons instead of buttons elements 
+          as PIE does not support them
+          -->
+
+          <td width="50%" align="left" valign="middle">
+            <input type="BUTTON" id="never-allow-button" onclick="denyAccessPermanently(); return false;"></input>
+          </td>
+
+          <div id="div-buttons">
+            <td width="50%" align="right" valign="middle">
+              <input disabled type="BUTTON" id="allow-button" onclick="allowAccess();"></input>
+              <input type="BUTTON" id="deny-button" onclick="denyAccess(); return false;"></input>
+            </td>
+          </div>^,m4_dnl
+^           
           <td width="100%" align="left" valign="middle">
             <a href="#" onclick="denyAccessPermanently(); return false;">
             <TRANS_BLOCK desc="Link that disallows Gears on this site.">
@@ -203,20 +296,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
             </TRANS_BLOCK>
             </a>
           </td>
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^          <!-- 
-           We use simple links instead of buttons as PIE does not support them
-           -->
-
-           <td width="100%" align="right" valign="middle">
-            <a href="#" accesskey="A" id="allow-button"
-              onclick="allowAccess(); return true;">
-              <TRANS_BLOCK desc="Button user can press to allow the use of Gears."><span class="accesskey">A</span>llow</TRANS_BLOCK></a>
-            <a href="#" accesskey="C" id="deny-button"
-              onclick="denyAccess(); return false;">
-              <TRANS_BLOCK desc="Button user can press to disallow the use of Gears."><span class="accesskey">C</span>ancel</TRANS_BLOCK></a>
-          </tr>^,m4_dnl
-^          <td nowrap="true" align="right" valign="middle">
+          <td nowrap="true" align="right" valign="middle">
             <!--
             Fancy buttons
             Note: Weird line breaks are on purpose to avoid extra space between
@@ -243,8 +323,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><TRANS_BLOCK desc="Button user can press to disallow the use of Gears."><span class="accesskey">C</span>ancel</TRANS_BLOCK></div></div></a>^)
-          </td>
+                  ><TRANS_BLOCK desc="Button user can press to disallow the use of Gears."><span class="accesskey">C</span>ancel</TRANS_BLOCK></div></div></a></td>^)
         </tr>
       </table>
     </div>
@@ -252,7 +331,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
 m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
 ^ </div>^)
 m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^<object classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">
+^<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">
 </object>^)
 </body>
 <!--
@@ -267,12 +346,34 @@ m4_include(ui/common/html_dialog.js)
 
 <script>
   initDialog();
+  if (isPIE) {
+    setText("text-never-allow", "never-allow-button");
+    setText("text-allow", "allow-button");
+    setText("text-deny", "deny-button");
+    var allowText = getElementById("text-allow");
+    if (allowText) {
+      window.pie_dialog.SetButton(allowText.innerText, "allowAccess();");
+    }
+    var cancelText = getElementById("text-cancel");
+    if (cancelText) {
+      window.pie_dialog.SetCancelButton(cancelText.innerText);
+    }
+    updateAllowButtonEnabledState();
+  }
   initWarning();
 
   var disabled = true;
 
+  function setText(textID, elemID) {
+    var textElem = getElementById(textID);
+    var buttonElem = getElementById(elemID);
+    if (textElem && buttonElem) {
+      buttonElem.value = textElem.innerText;
+    }
+  }
+
   function setTextContent(elem, content) {
-    if (document.createTextNode) {
+    if (isDefined(typeof document.createTextNode)) {
       elem.appendChild(document.createTextNode(content)); 
     } else {
       elem.innerText = content;
@@ -286,10 +387,15 @@ m4_include(ui/common/html_dialog.js)
       if (show) {
         elemSettings.style.display = 'none';
         elemHelp.style.display = 'block';
+        window.pie_dialog.SetButton("Back", "showHelp(false);");
+        window.pie_dialog.SetButtonEnabled(true);
       } else {
         elemSettings.style.display = 'block';
         elemHelp.style.display = 'none';
+        window.pie_dialog.SetButton("Allow", "allowAccess();");
+        updateAllowButtonEnabledState();
       }
+      window.pie_dialog.ResizeDialog();
     } else {
       window.open('http://gears.google.com/?action=help');
     }

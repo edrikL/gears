@@ -963,6 +963,7 @@ IEMOBILE_M4SRCS	+= \
 
 IEMOBILE_IDLSRCS	+= \
 		html_dialog_host.idl \
+		html_dialog_host_iemobile.idl \
 		html_dialog_bridge_iemobile.idl \
 		$(NULL)
 
