@@ -109,8 +109,9 @@ should also be available inside workers.
  * Database
  * document.cookie
  * window.location (doesn't necessarily need to be writable though)
- * ApplicationCache // TODO: make sure this makes sense inside a worker
- * WindowTimers
+ * window.navigator
+ * !ApplicationCache // TODO: make sure this makes sense inside a worker
+ * !WindowTimers (setTimeout, setInterval, etc)
 
 Additionally, the proprietary Console object that many browsers make
 available should be standardized and made available inside workers.
