@@ -26,7 +26,7 @@ A malicious application will NOT be able to access arbitrary files on the user's
   * Do not allow access above the specified location in the user's file system.
     * filesystem.changedir('../../etc/shadow');
 Do not allow a malicious application to display a file open dialog in the wrong context.
-  * The minimum behavior required is that of alert() in JavaScript. If the tab is inactive when it displays a new window it must switch to be the active tab. Firefox exhibits this behavior but IE7 acts differently. In IE7 the inactive tab flashes and when the tab is selected, then the window is displayed.
+  * The minimum behavior required is that of alert() in JavaScript. If the tab is inactive when it displays a new window it must switch to be the active tab. Firefox exhibits this behavior but IE7 acts differently. In IE7 the inactive tab flashes and when the tab is selected then the window is displayed.
 
 
 ==Trade-offs==
