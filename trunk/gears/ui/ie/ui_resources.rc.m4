@@ -25,6 +25,8 @@
 
 #ifdef WINCE
   #include "afxres.h"
+  #include "aygshell.h"
+  #include "common/genfiles/product_constants.h"
 #else
   #include "WinResrc.h"
 #endif
@@ -39,12 +41,17 @@
 //-----------------------------------------------------------------------------
 
 button.css                 HTML  "ui/common/button.css"
+button.css.end             HTML  {"\0END\0"}
 button_bg.gif              HTML  "ui/common/button_bg.gif"
+button_bg.gif.end          HTML  {"\0END\0"}
 html_dialog.css            HTML  "ui/common/html_dialog.css"
+html_dialog.css.end        HTML  {"\0END\0"}
 html_dialog.js             HTML  "ui/common/html_dialog.js"
+html_dialog.js.end         HTML  {"\0END\0"}
 icon_32x32.png             HTML  "ui/common/icon_32x32.png"
-icon_size                  RCDATA { 2421 }
+icon_32x32.png.end         HTML  {"\0END\0"}
 json_noeval.js             HTML  "third_party/jsonjs/json_noeval.js"
+json_noeval.js.end         HTML  {"\0END\0"}
 
 #include "ie/genfiles/ui_html.rc"
 
@@ -53,14 +60,48 @@ json_noeval.js             HTML  "third_party/jsonjs/json_noeval.js"
 //-----------------------------------------------------------------------------
 
 #ifdef WINCE
+
+// NOTE: Resources files aren't run through the translation
+// console, so we can't localize the strings here.
+// The js bridge used with the HTML dialog define two methods
+// SetButton() and SetCancelButton() which we use to set the
+// buttons labels; the translation is thus done in the HTML files.
+
+IDR_HTML_DIALOG_MENU MENU
+BEGIN
+  POPUP ""
+  BEGIN
+    MENUITEM "Cancel" ID_CANCEL
+    MENUITEM "Save" ID_ALLOW
+  END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_CANCEL "Cancel"
+  IDS_ALLOW "Save"
+END
+
+IDR_HTML_DIALOG_MENUBAR RCDATA
+BEGIN
+  IDR_HTML_DIALOG_MENU,
+  2,
+  I_IMAGENONE, ID_CANCEL, TBSTATE_ENABLED, TBSTYLE_BUTTON | TBSTYLE_AUTOSIZE,
+  IDS_CANCEL, 0, NOMENU,
+  I_IMAGENONE, ID_ALLOW, TBSTATE_ENABLED, TBSTYLE_BUTTON | TBSTYLE_AUTOSIZE,
+  IDS_ALLOW, 0, NOMENU,
+END
+
 IDD_GENERIC_HTML DIALOG -5000, -5000, 500, 500
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
-    WS_CAPTION | WS_SYSMENU
-CAPTION ""
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
+      WS_DLGFRAME | WS_CAPTION | WS_NONAVDONEBUTTON 
+CAPTION PRODUCT_FRIENDLY_NAME_ASCII
 FONT 8, "MS Sans Serif"
 BEGIN
 END
+
 #else
+
 IDD_GENERIC_HTML DIALOGEX -5000, -5000, 500, 500
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
     WS_CAPTION | WS_SYSMENU | WS_THICKFRAME

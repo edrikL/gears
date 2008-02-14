@@ -22,17 +22,33 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// IMPORTANT: IDs under 1000 are reserved for /base/ie/resource.h
 
-// Strings
+import "oaidl.idl";
+import "ocidl.idl";
+import "ui/ie/html_dialog_host.idl";
 
-// Generic HTML Dialog
-#define IDD_GENERIC_HTML 11000
-#define IDC_GENERIC_HTML 11001
-#define IDR_HTML_DIALOG_MENUBAR 11002
-#define IDR_HTML_DIALOG_MENU 11003
-#define ID_CANCEL 11004
-#define IDS_CANCEL 11005
-#define ID_ALLOW 11006
-#define IDS_ALLOW 11007
+// {41C48CA8-404A-42d3-9191-FE8EE5D8AD53}
+//static const GUID <<name>> = 
+//{ 0x41c48ca8, 0x404a, 0x42d3, { 0x91, 0x91, 0xfe, 0x8e, 0xe5, 0xd8, 0xad, 0x53 } };
+
+[
+  object,
+  uuid(41C48CA8-404A-42d3-9191-FE8EE5D8AD53),
+  dual,
+  nonextensible,
+  pointer_default(unique)
+]
+interface PIEDialogHostInterface : HtmlDialogHostInterface {
+
+  HRESULT IsSmartPhone([out, retval] VARIANT_BOOL *retval);
+
+  // Allow the dialog to resize (used for Pocket IE).
+  HRESULT ResizeDialog();
+
+  HRESULT SetScriptContext([in] IDispatch* val);
+  HRESULT SetButton([in] const BSTR label, [in] const BSTR script);
+
+  HRESULT SetButtonEnabled([in] VARIANT_BOOL *val);
+
+  HRESULT SetCancelButton([in] const BSTR label);
+};

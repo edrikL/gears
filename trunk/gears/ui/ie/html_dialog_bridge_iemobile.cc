@@ -49,7 +49,7 @@ HRESULT PIEDialogBridge::AccessPermissionsDialog() {
   // First we get the global permissions dialog object...
   // (permissions dialog is modal)
 
-  CComQIPtr<HtmlDialogHostInterface> permissions_dialog(
+  CComQIPtr<PIEDialogHostInterface> permissions_dialog(
       HtmlDialogHost::html_permissions_dialog_);
 
   if (!permissions_dialog)
@@ -102,7 +102,7 @@ HRESULT PIEDialogBridge::AccessPermissionsDialog() {
   return S_FALSE;
 }
 
-HRESULT PIEDialogBridge::SetDialog(IDispatch* dialog) {
+HRESULT PIEDialogBridge::SetDialog(PIEDialogHostInterface* dialog) {
   if (!dialog_) {
     dialog_ = dialog;
     if (dialog_) {
@@ -124,6 +124,16 @@ HRESULT PIEDialogBridge::IsPocketIE(VARIANT_BOOL *retval) {
   return S_FALSE;
 }
 
+HRESULT PIEDialogBridge::IsSmartPhone(VARIANT_BOOL *retval) {
+  if (!dialog_) {
+    AccessPermissionsDialog();
+  }
+  if (dialog_) {
+    return dialog_->IsSmartPhone(retval);
+  }
+  return S_FALSE;
+}
+
 HRESULT PIEDialogBridge::GetDialogArguments(BSTR *args_string) {
   if (!dialog_) {
     AccessPermissionsDialog();
@@ -141,6 +151,57 @@ HRESULT PIEDialogBridge::CloseDialog(const BSTR result_string) {
   }
   if (dialog_) {
     return dialog_->CloseDialog(result_string);
+  }
+  return S_FALSE;
+}
+
+HRESULT PIEDialogBridge::ResizeDialog() {
+  if (!dialog_) {
+    AccessPermissionsDialog();
+  }
+  if (dialog_) {
+    HRESULT hr = dialog_->ResizeDialog();
+    return hr;
+  }
+  return S_FALSE;
+}
+
+HRESULT PIEDialogBridge::SetScriptContext(IDispatch *val) {
+  if (!dialog_) {
+    AccessPermissionsDialog();
+  }
+  if (dialog_) {
+    return dialog_->SetScriptContext(val);
+  }
+  return S_FALSE;
+}
+
+HRESULT PIEDialogBridge::SetButton(const BSTR label, const BSTR script) {
+  if (!dialog_) {
+    AccessPermissionsDialog();
+  }
+  if (dialog_) {
+    return dialog_->SetButton(label, script);
+  }
+  return S_FALSE;
+}
+
+HRESULT PIEDialogBridge::SetButtonEnabled(VARIANT_BOOL *val) {
+  if (!dialog_) {
+    AccessPermissionsDialog();
+  }
+  if (dialog_) {
+    return dialog_->SetButtonEnabled(val);
+  }
+  return S_FALSE;
+}
+
+HRESULT PIEDialogBridge::SetCancelButton(const BSTR label) {
+  if (!dialog_) {
+    AccessPermissionsDialog();
+  }
+  if (dialog_) {
+    return dialog_->SetCancelButton(label);
   }
   return S_FALSE;
 }

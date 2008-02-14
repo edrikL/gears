@@ -49,6 +49,7 @@ import "ui/ie/html_dialog_host.idl";
 
 #ifdef WINCE
 import "ui/ie/html_dialog_bridge_iemobile.idl";
+import "ui/ie/html_dialog_host_iemobile.idl";
 #endif
 
 import "blob/blob_ie.idl";
@@ -100,6 +101,15 @@ library GearsTypelib
   {
     [default] interface PIEDialogBridgeInterface;
   };
+  
+  [
+    uuid(F5CE1289-2B44-4628-89DC-F440542AFE99)
+  ]
+  coclass PIEDialogHost
+  {
+    [default] interface PIEDialogHostInterface;
+  };
+  
 #endif
 
   [
