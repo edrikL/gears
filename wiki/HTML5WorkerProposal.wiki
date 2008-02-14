@@ -116,7 +116,7 @@ should also be available inside workers.
 Additionally, the proprietary Console object that many browsers make
 available should be standardized and made available inside workers.
 
-_TODO: What object should these APIs go on? I can buy WorkerContext for most of them, except XMLHttpRequest and Console for some reason._
+_TODO: What object should these APIs go on? I can buy !WorkerContext for most of them, except XMLHttpRequest and Console for some reason._
 
 
 = Appendix B: Worker Lifetime =
