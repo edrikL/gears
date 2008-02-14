@@ -477,7 +477,7 @@ bool DesktopUtils::CreateDesktopShortcut(
                        std::string16 *error) {
   // Before doing anything, check that we can create the shortcut legally.
   if (!CheckIllegalFileOverwrite(shortcut)) {
-    *error = GET_INTERNAL_ERROR_MESSAGE();
+    *error = STRING16(L"Could not create desktop icon.");
     return false;
   }
   
