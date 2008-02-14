@@ -50,10 +50,50 @@
 #include "gears/localserver/common/http_constants.h"
 
 
+static bool GetLongFilename(const char16 *filename, std::string16 *output) {
+  WIN32_FIND_DATA find_data;
+  HANDLE find_handle = FindFirstFile(filename, &find_data);
+  if (find_handle == INVALID_HANDLE_VALUE) {
+    return false;
+  }
 
-static bool CreateShellLink(const char16 *object_path,
-                            const char16 *link_path,
+  *output = find_data.cFileName;
+  FindClose(find_handle);
+
+  return true;
+}
+
+// Expand an 8.3 filename to its full name.  *output is set on return, so it's
+// safe to pass the same std::string16 in for both parameters.
+static bool GetLongPath(const char16 *path, std::string16 *output) {
+  std::string16 input(path);
+  std::string16 long_path;
+
+  // Windows paths can be delimited by either type of slash.
+  int last_slash = input.find_last_of('/');
+  int last_backslash = input.find_last_of('\\');
+  int slash_pos = last_slash > last_backslash ? last_slash : last_backslash;
+
+  while (input != L"\\" && input != L"/" && slash_pos != std::string16::npos) {
+    std::string16 current_path;
+    if (!GetLongFilename(input.c_str(), &current_path)) {
+      return false;
+    }
+    long_path = L"\\" + current_path + long_path;
+    input.erase(slash_pos, input.length() - slash_pos);
+
+    int last_slash = input.find_last_of('/');
+    int last_backslash = input.find_last_of('\\');
+    slash_pos = last_slash > last_backslash ? last_slash : last_backslash;
+  }
+
+  *output = input + long_path;
+  return true;
+}
+
+static bool CreateShellLink(const char16 *link_path,
                             const char16 *icon_path,
+                            const char16 *object_path,
                             const char16 *arguments) {
   HRESULT result;
   IShellLink* shell_link;
@@ -71,6 +111,54 @@ static bool CreateShellLink(const char16 *object_path,
 
     if (SUCCEEDED(result)) {
       result = persist_file->Save(link_path, TRUE);
+      persist_file->Release();
+    }
+    shell_link->Release();
+  }
+  return SUCCEEDED(result);
+}
+
+static bool ReadShellLink(const char16 *link_path,
+                          std::string16 *icon_path,
+                          std::string16 *object_path,
+                          std::string16 *arguments) {
+  HRESULT result;
+  IShellLink* shell_link;
+
+  result = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+                            IID_IShellLink, (LPVOID*)&shell_link);
+  if (SUCCEEDED(result)) {
+    IPersistFile* persist_file;
+    result = shell_link->QueryInterface(
+                             IID_IPersistFile,
+                             reinterpret_cast<void**>(&persist_file));
+
+    if (SUCCEEDED(result)) {
+      result = persist_file->Load(link_path, TRUE);
+
+      char16 icon_buffer[MAX_PATH];
+      if (SUCCEEDED(result) && icon_path) {
+        int icon_id;
+        result = shell_link->GetIconLocation(icon_buffer, MAX_PATH, &icon_id);
+      }
+      char16 object_buffer[MAX_PATH];
+      if (SUCCEEDED(result) && object_path) {
+        result = shell_link->GetPath(object_buffer, MAX_PATH, NULL, 0);
+      }
+      char16 arg_buffer[MAX_PATH];
+      if (SUCCEEDED(result) && arguments) {
+        result = shell_link->GetArguments(arg_buffer, MAX_PATH);
+      }
+
+      if (SUCCEEDED(result)) {
+        // Only set the return values when the function succeeded.
+        if (icon_path)
+          *icon_path = icon_buffer;
+        if (object_path)
+          *object_path = object_buffer;
+        if (arguments)
+          *arguments = arg_buffer;
+      }
       persist_file->Release();
     }
     shell_link->Release();
@@ -264,6 +352,7 @@ static bool CreateIcoFile(const std::string16 &icons_path,
 bool DesktopUtils::CreateDesktopShortcut(const SecurityOrigin &origin,
                                          const ShortcutInfo &shortcut,
                                          std::string16 *error) {
+  const char16 *kCreationError = STRING16(L"Could not create desktop icon.");
   bool creation_result = false;
   char16 process_name[MAX_PATH] = {0};
 
@@ -285,7 +374,7 @@ bool DesktopUtils::CreateDesktopShortcut(const SecurityOrigin &origin,
 
 
   if (!CreateIcoFile(icons_path, shortcut)) {
-    *error = STRING16(L"Could not create desktop icon.");
+    *error = kCreationError;
     return false;
   }
 
@@ -300,8 +389,17 @@ bool DesktopUtils::CreateDesktopShortcut(const SecurityOrigin &origin,
     }
     link_path += shortcut.app_name;
     link_path += STRING16(L".lnk");
-    creation_result = CreateShellLink(process_name, link_path.c_str(),
-                                      icons_path.c_str(),
+
+    std::string16 old_icon;
+    if (ReadShellLink(link_path.c_str(), &old_icon, NULL, NULL)) {
+      if (!GetLongPath(old_icon.c_str(), &old_icon) ||
+          old_icon.find(STRING16(L"Google Gears for")) == std::string16::npos) {
+        *error = kCreationError;
+        return false;
+      }
+    }
+    creation_result = CreateShellLink(link_path.c_str(),
+                                      icons_path.c_str(), process_name,
                                       shortcut.app_url.c_str());
   }
 
