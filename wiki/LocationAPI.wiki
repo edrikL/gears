@@ -205,21 +205,25 @@ The response format is also JSON. An example response is:
 
 {{{
 {
-  confidence:95
-  latitude:1234123,
-  longitude:-2132362,
-  accuracy:1200,
-  address:"mountain view, california" [ TODO: Remove if not used in API? ]
+  location: {
+    latitude:1234123,
+    longitude:-2132362,
+    accuracy:1200,
+    address:"mountain view, california" [ TODO: Remove if not used in API? ]
+  }
 }
 }}}
 
 === Response format details ===
 
+If the request format is invalid, the server responds with HTTP status 400. The details of the error should be plain text in the response.
+
+_TODO: These errors need to be surface to JS somehow._
+
+Otherwise, the server replies with HTTP status 200. If the location was successfully resolved, the location object is populated with the details. Otherwise, it is null.
+
 || *Name* || *Description* || *Required* || *Type" ||
-|| confidence || The server's confidence of the response being correct (0-100): _TODO: This doesn't really seem concrete enough for the client to do something with. Can we remove it?_ || Yes || int ||
 || latitude || Latitude of the fix, in degrees. || Yes || double ||
 || longitude || Longitude of the fix, in degrees. || Yes || double ||
 || accuracy || The accuracy of the fix, in meters. || Yes || double ||
 || address || The address of the fix. May not be available from some providers. || No || string ||
-
-The usual HTTP responses also apply. In particular, 200: location found, 400 bad request, and 404 location not found.
