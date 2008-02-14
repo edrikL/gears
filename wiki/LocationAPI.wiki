@@ -216,11 +216,9 @@ The response format is also JSON. An example response is:
 
 === Response format details ===
 
-If the request format is invalid, the server responds with HTTP status 400. The details of the error should be plain text in the response.
+If the request format is invalid, the server responds with HTTP status 400. The details of the error should be plain text in the response. The API returns this error text in the Position object's `errorMessage` property. 
 
-_TODO: These errors need to be surface to JS somehow._
-
-Otherwise, the server replies with HTTP status 200. If the location was successfully resolved, the location object is populated with the details. Otherwise, it is null.
+If the request format is valid, the server replies with HTTP status 200. If the location was successfully resolved, the location object is populated with the details. Otherwise, it is null.
 
 || *Name* || *Description* || *Required* || *Type" ||
 || latitude || Latitude of the fix, in degrees. || Yes || double ||
