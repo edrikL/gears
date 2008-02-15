@@ -25,20 +25,21 @@
 
 #ifdef DEBUG
 
+#include "gears/cctests/test.h"
+
+#include "gears/base/common/dispatcher.h"
+#include "gears/base/common/js_types.h"
+#include "gears/base/common/module_wrapper.h"
+
+DECLARE_GEARS_WRAPPER(GearsTest);
+
+template<>
+void Dispatcher<GearsTest>::Init() {
+  RegisterMethod("runTests", &GearsTest::RunTests);
+}
+
 #ifdef WIN32
 #include <windows.h>  // must manually #include before nsIEventQueueService.h
-#endif
-
-#if BROWSER_FF
-#include <gecko_sdk/include/nspr.h>  // for PR_*
-#include <gecko_sdk/include/nsServiceManagerUtils.h>  // for NS_IMPL_* and NS_INTERFACE_*
-#include <gecko_sdk/include/nsCOMPtr.h>
-#include <gecko_internal/jsapi.h>
-#include <gecko_internal/nsIDOMClassInfo.h>
-#include "gears/cctests/test_ff.h"
-#elif BROWSER_IE
-#include "gears/base/ie/activex_utils.h"
-#include "gears/cctests/test_ie.h"
 #endif
 
 #include "gears/base/common/name_value_table_test.h"
@@ -54,34 +55,6 @@
 #include "gears/localserver/common/manifest.h"
 #include "gears/localserver/common/resource_store.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
-
-// Constants for returning a boolean value - hopefully there should be a
-// standard way to do this one day.
-#if BROWSER_FF
-  const PRBool BROWSER_TRUE  = PR_TRUE;
-  const PRBool BROWSER_FALSE = PR_FALSE;
-#elif BROWSER_IE
-  const VARIANT_BOOL BROWSER_TRUE  = VARIANT_TRUE;
-  const VARIANT_BOOL BROWSER_FALSE = VARIANT_FALSE;
-#endif
-
-#if BROWSER_FF
-// Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
-NS_IMPL_ADDREF(GearsTest)
-NS_IMPL_RELEASE(GearsTest)
-NS_INTERFACE_MAP_BEGIN(GearsTest)
-  NS_INTERFACE_MAP_ENTRY(GearsBaseClassInterface)
-  NS_INTERFACE_MAP_ENTRY(GearsTestInterface)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, GearsTestInterface)
-  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(GearsTest)
-NS_INTERFACE_MAP_END
-
-// Object identifiers
-const char *kGearsTestClassName = "GearsTest";
-const nsCID kGearsTestClassId = { 0xF2C21A3C, 0x09D2, 0x42ab, { 0xA4, 0x52,
-                                     0xB5, 0xE3, 0x63, 0xF3, 0x71, 0x09 } };
-                                  // {F2C21A3C-09D2-42ab-A452-B5E363F37109}
-#endif
 
 bool TestHttpCookies();
 bool TestHttpRequest();
@@ -100,21 +73,16 @@ bool TestSerialization();  // from serialization_test.cc
 bool TestBufferBlob();
 
 
-#if BROWSER_FF
-NS_IMETHODIMP GearsTest::RunTests(PRBool *retval) {
-#elif BROWSER_IE
-STDMETHODIMP GearsTest::RunTests(VARIANT_BOOL *retval) {
-#endif
-  *retval = RunTestsImpl() ? BROWSER_TRUE : BROWSER_FALSE;
-  RETURN_NORMAL();
-}
-
-bool GearsTest::RunTestsImpl() {
+void GearsTest::RunTests(JsCallContext *context) {
   // We need permissions to use the localserver.
   SecurityOrigin cc_tests_origin;
   cc_tests_origin.InitFromUrl(STRING16(L"http://cc_tests/"));
   PermissionsDB *permissions = PermissionsDB::GetDB();
-  if (!permissions) return false;
+  if (!permissions) {
+    context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+    return;
+  }
+
   permissions->SetCanAccessGears(cc_tests_origin,
                                  PermissionsDB::PERMISSION_ALLOWED);
 
@@ -144,8 +112,8 @@ bool GearsTest::RunTestsImpl() {
   permissions = PermissionsDB::GetDB();
   permissions->SetCanAccessGears(cc_tests_origin,
                                  PermissionsDB::PERMISSION_DEFAULT);
-  
-  return ok;
+
+  context->SetReturnValue(JSPARAM_BOOL, &ok);
 }
 
 //------------------------------------------------------------------------------
@@ -741,6 +709,7 @@ bool TestBufferBlob() {
     return false; \
   } \
 }
+#if BROWSER_FF || BROWSER_IE // blobs not implemented for npapi yet
   int num_bytes = 0;
   uint8 buffer[64] = {0};
 
@@ -789,6 +758,8 @@ bool TestBufferBlob() {
   TEST_ASSERT(buffer[2] == 'e');
   TEST_ASSERT(buffer[3] == 'd');
   TEST_ASSERT(buffer[4] == 'e');
+#endif
+
   return true;
 }
 

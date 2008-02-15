@@ -807,43 +807,11 @@ NPAPI_CPPSRCS   += \
 
 ifeq ($(MODE),dbg)
 
-FF_VPATH	+= \
+SHARED_VPATH += \
 		cctests \
 		$(NULL)
 
-FF_M4SRCS	+= \
-		test_ff.idl.m4 \
-		$(NULL)
-
-FF_IDLSRCS	+= \
-		test_ff.idl \
-		$(NULL)
-
-FF_CPPSRCS	+= \
-		test.cc \
-		$(NULL)
-
-IE_VPATH	+= \
-		cctests \
-		$(NULL)
-
-IE_IDLSRCS	+= \
-		test_ie.idl \
-		$(NULL)
-
-IE_CPPSRCS	+= \
-		test.cc \
-		$(NULL)
-
-IEMOBILE_VPATH += \
-		cctests \
-		$(NULL)
-
-IEMOBILE_IDLSRCS += \
-		test_ie.idl \
-		$(NULL)
-
-IEMOBILE_CPPSRCS += \
+SHARED_CPPSRCS += \
 		test.cc \
 		$(NULL)
 

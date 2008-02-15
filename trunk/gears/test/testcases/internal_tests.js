@@ -27,7 +27,7 @@
 function testInternal() {
   if (isDebug) {
     var internalTests = google.gears.factory.create('beta.test');
-    assert(internalTests.RunTests(),
+    assert(internalTests.runTests(),
            'Internal tests failed.');
   }
 }

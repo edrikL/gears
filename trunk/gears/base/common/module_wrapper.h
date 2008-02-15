@@ -30,6 +30,8 @@
 #include "gears/base/npapi/module_wrapper.h"
 #elif BROWSER_FF
 #include "gears/base/firefox/module_wrapper.h"
+#elif BROWSER_IE
+#include "gears/base/ie/module_wrapper.h"
 #else
 // TODO: Add more browser support here.
 #endif
