@@ -139,7 +139,7 @@ class FileDialog {
 
 {{{
 var desktop = google.gears.factory.create('beta.desktop');
-var files = desktop.getLocalFiles(['Images (*.jpg, *.gif)', '*.jpg;*.gif', 'All files (*.*)', '*.*']);
+var files = desktop.getLocalFiles(['Images (*.jpg, *.gif)', '*.jpg;*.gif', 'All files', '*']);
 for (var i = 0; i < files.length; ++i) {
   var img = document.createElement("img");
   img.src = files[i];
