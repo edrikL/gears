@@ -1107,6 +1107,7 @@ void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
 
 void JsCallContext::SetException(const std::string16 &message) {
   assert(!message.empty());
+  is_exception_set_ = true;
   JsSetException(js_context_, js_runner_, message.c_str(),
                  ncc_ != NULL ? true : false); // notify_native_call_context
 }
