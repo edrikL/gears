@@ -347,9 +347,9 @@ m4_include(ui/common/html_dialog.js)
 <script>
   initDialog();
   if (isPIE) {
-    setText("text-never-allow", "never-allow-button");
-    setText("text-allow", "allow-button");
-    setText("text-deny", "deny-button");
+    setButtonLabel("text-never-allow", "never-allow-button");
+    setButtonLabel("text-allow", "allow-button");
+    setButtonLabel("text-deny", "deny-button");
     var allowText = getElementById("text-allow");
     if (allowText) {
       window.pie_dialog.SetButton(allowText.innerText, "allowAccess();");
@@ -363,14 +363,6 @@ m4_include(ui/common/html_dialog.js)
   initWarning();
 
   var disabled = true;
-
-  function setText(textID, elemID) {
-    var textElem = getElementById(textID);
-    var buttonElem = getElementById(elemID);
-    if (textElem && buttonElem) {
-      buttonElem.value = textElem.innerText;
-    }
-  }
 
   function setTextContent(elem, content) {
     if (isDefined(typeof document.createTextNode)) {

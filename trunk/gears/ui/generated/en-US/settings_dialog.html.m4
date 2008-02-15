@@ -163,6 +163,14 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
     </div>
   </div>
   <div id="foot">
+    <div id="text-buttons" style="display:none">
+      <TRANS_BLOCK desc="Button user can press to cancel the dialog.">
+        <div id="text-cancel">Cancel</div>
+      </TRANS_BLOCK>
+      <TRANS_BLOCK desc="Button user can press to save changes.">
+        <div id="text-save">Save</div>
+      </TRANS_BLOCK>
+    </div>
     <div id="button-row-smartphone">
     </div>
     <div id="button-row">
@@ -173,13 +181,11 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
           <div id="div-buttons">
             <td width="50%" align="left" valign="middle">
               <input type="BUTTON" id="cancel-button"
-               onclick="saveAndClose(null); return false;" 
-               value="Cancel"></input>
+               onclick="saveAndClose(null); return false;"></input>
             </td>
             <td width="50%" align="right" valign="middle">
               <input type="BUTTON" id="confirm-button"
-               onclick="saveAndClose(g_dialogResult); return false;" 
-               value="Save"></input>
+               onclick="saveAndClose(g_dialogResult); return false;"></input>
             </td>
           </div>
 ^,m4_dnl
@@ -239,7 +245,17 @@ m4_include(ui\common\html_dialog.js)
   if (!isPIE) {
     initCustomLayout(layoutSettings);
   } else {
-    window.pie_dialog.SetButton("Save", "saveAndClose(g_dialogResult);");
+    setButtonLabel("text-cancel", "cancel-button");
+    setButtonLabel("text-save", "confirm-button");
+    var saveText = getElementById("text-save");
+    if (saveText) {
+      window.pie_dialog.SetButton(saveText.innerText, 
+        "saveAndClose(g_dialogResult);");
+    }
+    var cancelText = getElementById("text-cancel");
+    if (cancelText) {
+      window.pie_dialog.SetCancelButton(cancelText.innerText);
+    }
     window.pie_dialog.SetButtonEnabled(true);
   }
   initSettings();
