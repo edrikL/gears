@@ -679,24 +679,35 @@ JSBool JsContextWrapper::JsWrapperCaller(JSContext *cx, JSObject *obj,
         instance_data->module->GetWrapper();
     JsCallContext call_context(cx, instance_data->module->GetJsRunner(),
                                argc, argv, js_retval);
-    bool success;
 
     if (function_data->flags == JSFUN_GETTER) {
-      success = module_wrapper->GetDispatcher()->GetProperty(
+      if (!module_wrapper->GetDispatcher()->GetProperty(
                                     function_data->dispatch_id,
-                                    &call_context);
+                                    &call_context)) {
+        call_context.SetException(
+            STRING16(L"Property not found or not getter."));
+        return JS_FALSE;
+      }
     } else if (function_data->flags == JSFUN_SETTER) {
-      success = module_wrapper->GetDispatcher()->SetProperty(
+      if (!module_wrapper->GetDispatcher()->SetProperty(
                                     function_data->dispatch_id,
-                                    &call_context);
+                                    &call_context)) {
+        call_context.SetException(
+            STRING16(L"Property not found or not setter."));
+        return JS_FALSE;
+      }
     } else {
-      success = module_wrapper->GetDispatcher()->CallMethod(
+      if (!module_wrapper->GetDispatcher()->CallMethod(
                                     function_data->dispatch_id,
-                                    &call_context);
+                                    &call_context)) {
+        call_context.SetException(
+            STRING16(L"Method not found."));
+        return JS_FALSE;
+      }
     }
-
+ 
     // NOTE: early return for dispatcher-based modules.
-    return success ? JS_TRUE : JS_FALSE;
+    return !call_context.is_exception_set() ? JS_TRUE : JS_FALSE;
   }
 
   // Otherwise, this is a method call on an isupports-based module.
