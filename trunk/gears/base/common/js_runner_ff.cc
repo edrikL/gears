@@ -358,9 +358,11 @@ JsRunner::~JsRunner() {
   // Alert modules that the engine is unloading.
   SendEvent(JSEVENT_UNLOAD);
 
-  // Stop garbage collection now.
-  gc_timer_->Cancel();
-  gc_timer_ = NULL;
+  if (gc_timer_) {
+    // Stop garbage collection now.
+    gc_timer_->Cancel();
+    gc_timer_ = NULL;
+  }
 
   // We need to remove the roots now, because they will be referencing an
   // invalid context if we wait for the destructor.
