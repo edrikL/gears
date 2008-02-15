@@ -96,6 +96,36 @@ static bool DoubleToToken(JsContextPtr context, double value, JsToken* out) {
   return true;
 }
 
+static bool JsTokenToModule(JsContextPtr context, JsToken in,
+                            IScriptable** out) {
+  // TODO(kevinww): make this work in a worker pool
+  nsresult nr;
+  nsCOMPtr<nsIXPConnect> xpc;
+  xpc = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
+  if (NS_FAILED(nr))
+    return false;
+
+  nsCOMPtr<nsIXPCNativeCallContext> ncc;
+  nr = xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  if (NS_FAILED(nr))
+    return false;
+
+  JSObject *obj = JSVAL_TO_OBJECT(in);
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+  nr = xpc->GetWrappedNativeOfJSObject(context, obj, getter_AddRefs(wrapper));
+  if (NS_FAILED(nr))
+    return false;
+
+  nsCOMPtr<nsISupports> isupports = NULL;
+  nr = wrapper->GetNative(getter_AddRefs(isupports));
+  if (NS_FAILED(nr))
+    return false;
+
+  *out = isupports.get();
+  (*out)->AddRef();
+  return true;
+}
+
 #endif
 
 // Browser specific JsArray functions.
@@ -1417,6 +1447,16 @@ bool JsParamFetcher::GetAsObject(int i, JsObject *out) {
   if (i >= js_argc_) return false;  // see comment above, in GetAsInt()
 
   return out->SetObject(js_argv_[i], js_context_);
+}
+
+bool JsParamFetcher::GetAsModule(int i, nsISupports **out) {
+  if (i >= js_argc_) return false;  // see comment above, in GetAsInt()
+  if (!JSVAL_IS_OBJECT(js_argv_[i])) return false;
+
+  if (!JsTokenToModule(js_context_, js_argv_[i], out))
+    return false;
+
+  return true;
 }
 
 bool JsParamFetcher::GetAsNewRootedCallback(int i, JsRootedCallback **out) {
