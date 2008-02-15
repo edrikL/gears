@@ -1,3 +1,4 @@
+m4_changequote(`^',`^')m4_dnl
 <!DOCTYPE html>
 
 <!--
@@ -51,7 +52,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     #content {
       overflow-x:hidden;
       overflow-y:auto;
+m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
+^
+      margin:0 4px;
+^,
+^
       margin:0 1em;
+^)
     }
 
     #content table {
@@ -67,7 +74,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     #content td {
       border:1px #ccc;
       border-style:solid none;
-      padding:0.5em;
+m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
+^
+      padding:4px;
+^,
+^
+      padding:0.5em; 
+^)
     }
 
     #version {
@@ -89,6 +102,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     .app-origin {
       width: 70px;
+    }
+
+    #button-row {
+      display:none;
+    }
+
+    #button-row-smartphone {
+      display:none;
     }
 
   </style>
@@ -117,15 +138,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       These sites are always allowed to access PRODUCT_FRIENDLY_NAME_UQ.
       </TRANS_BLOCK>
     </p>
-    <div>
-      <table>
-        <tbody id="allowed-list">
-          <tr>
-            <td class="left"><em><TRANS_BLOCK desc="States that there are no allowed sites.">No allowed sites.</TRANS_BLOCK></em></td>
-            <td></td>
-          </tr>
-        </tbody>
-      </table>
+    <div id='div-allowed'>
     </div>
     <br>
     <br>
@@ -139,15 +152,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       These sites are never allowed to access PRODUCT_FRIENDLY_NAME_UQ.
       </TRANS_BLOCK>
     </p>
-    <div>
-      <table>
-        <tbody id="denied-list">
-          <tr>
-            <td class="left"><em><TRANS_BLOCK desc="States that there are no denied sites.">No denied sites.</TRANS_BLOCK></em></td>
-            <td></td>
-          </tr>
-        </tbody>
-      </table>
+    <div id='div-denied'>
     </div>
     <br>
     <br>
@@ -158,9 +163,27 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </div>
   </div>
   <div id="foot">
+    <div id="button-row-smartphone">
+    </div>
     <div id="button-row">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
+m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
+^
+          <div id="div-buttons">
+            <td width="50%" align="left" valign="middle">
+              <input type="BUTTON" id="cancel-button"
+               onclick="saveAndClose(null); return false;" 
+               value="Cancel"></input>
+            </td>
+            <td width="50%" align="right" valign="middle">
+              <input type="BUTTON" id="confirm-button"
+               onclick="saveAndClose(g_dialogResult); return false;" 
+               value="Save"></input>
+            </td>
+          </div>
+^,m4_dnl
+^
           <td nowrap="true" align="right" valign="middle">
             <!--
             Fancy buttons
@@ -175,7 +198,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><TRANS_BLOCK desc="Button user can press to save changes."><span class="accesskey">S</span>ave</TRANS_BLOCK></div></div></a>
+                  ><TRANS_BLOCK desc="Button user can press to save changes."><span class="accesskey">S</span>ave</div></TRANS_BLOCK></div></a>
             <!--
             Note: There must be whitespace here or Firefox messes up the
             rendering.
@@ -188,8 +211,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><TRANS_BLOCK desc="Button user can press to discard changes."><span class="accesskey">C</span>ancel</TRANS_BLOCK></div></div></a>
+                  ><TRANS_BLOCK desc="Button user can press to discard changes."><span class="accesskey">C</span>ancel</div></TRANS_BLOCK></div></a>
           </td>
+^)
         </tr>
       </table>
     </div>
@@ -197,83 +221,101 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 </body>
-<script src="json_noeval.js"></script>
-<script src="html_dialog.js"></script>
+m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
+^<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">^m4_dnl
+^</object>^)
+<script>
+m4_include(third_party\jsonjs\json_noeval.js)
+m4_include(ui\common\html_dialog.js)
+</script>
 <script>
   var g_dialogResult = {"removeSites": []};
+  var allowedSites;
+  var deniedSites;
+  var ALLOWED = 1;
+  var DENIED = 2;
 
   initDialog();
-  initCustomLayout(layoutSettings);
+  if (!isPIE) {
+    initCustomLayout(layoutSettings);
+  } else {
+    window.pie_dialog.SetButton("Save", "saveAndClose(g_dialogResult);");
+    window.pie_dialog.SetButtonEnabled(true);
+  }
   initSettings();
+
+  function cancelButton() {
+    saveAndClose(null);
+  }
+
+  function confirmButton() {
+    saveAndClose(g_dialogResult);
+  }
 
   function initSettings() {
     var args = getArguments();
-    initList("allowed-list", args.allowed);
-    initList("denied-list", args.denied);
+    allowedSites = args.allowed;
+    deniedSites = args.denied;
+    initList("div-allowed", args.allowed, ALLOWED);
+    initList("div-denied", args.denied, DENIED);
   }
 
-  function initList(tableId, sites) {
-    var table = document.getElementById(tableId);
+  function initList(tableId, sites, kind) {
+    var table = getElementById(tableId);
+
+    var content = "";
     if (!sites.length) {
-      return;
-    }
-
-    // Hide the empty message
-    table.rows[0].style.display = "none";
-
-    // Add rows for each child
-    for (var site, i = 0; site = sites[i]; i++) {
-      initSite(table, site);
-    }
+      content = "<tr><td class=\"left\"><em>";
+      if (kind == ALLOWED) {
+        content += "<TRANS_BLOCK desc=\"States that there are no allowed sites.\">No allowed sites.</TRANS_BLOCK>";
+      } else if (kind == DENIED) {
+        content += "<TRANS_BLOCK desc=\"States that there are no denied sites.\">No denied sites.</TRANS_BLOCK>";
+      }
+      content += "</em></td></tr>";
+    } else {
+      for (var site, i = 0; site = sites[i]; i++) {
+        var cont = initSite(table, site, i, kind);
+        content += cont; 
+      }
+    } 
+    table.innerHTML = "<table><tbody>" + content + "</tbody></table>";
   }
 
-  function initSite(table, siteName) {
-    var row = document.createElement("TR");
-    var left = document.createElement("TD");
-    var right = document.createElement("TD");
-    var link = document.createElement("A");
-    left.className = "left";
-    right.className = "right";
-    left.appendChild(document.createTextNode(siteName));
-    link.appendChild(document.createTextNode("Remove"));
-    link.onclick = handleRemoveClick;
-    link.row = row;
-    link.siteName = siteName;
-    link.href = "#";
-    row.origin = siteName;
-    right.appendChild(link);
-    row.appendChild(left);
-    row.appendChild(right);
-    table.appendChild(row);
+  function initSite(table, siteName, rowNumber, kind) {
+    var content = "<tr><td>";
+    content += wrapString(siteName);
+    content += "</td>";
+    content += "<td><a href='#' onclick='handleRemoveClick(";
+    content += rowNumber;
+    content += ",\"" + siteName + "\"," + kind + ");'>";
+    content += "<TRANS_BLOCK desc=\"Button user can press to remove a site from the list.\">Remove</TRANS_BLOCK>";
+    content += "</a></td></tr>";
+    return content;
   }
 
-  function handleRemoveClick() {
-    removeOrigin(this.row, this.siteName);
+  function handleRemoveClick(rowNumber, origin, kind) {
+    removeOrigin(rowNumber, origin, kind);
 
     // Return false to prevent the default link action (scrolling up to top of
     // page in this case).
     return false;
   }
 
-  function removeOrigin(row, origin) {
+  function removeOrigin(row, origin, kind) {
     // Add to the list of things to be removed from database.
     g_dialogResult.removeSites.push(origin);
 
-    // Remove the row visually.
-    var table = row.parentNode;
-    table.removeChild(row);
-
-    // If we have removed all the rows, show the empty message again.
-    if (table.rows.length == 1) {
-      table.rows[0].style.display = "";
+    if (kind == ALLOWED) {
+      allowedSites = removeRow(row, allowedSites);
+      initList("div-allowed", allowedSites, kind);
+    } else if (kind == DENIED) {
+      deniedSites = removeRow(row, deniedSites);
+      initList("div-denied", deniedSites, kind);
     }
-
-    // Enable the save button since we have now made a change.
-    document.getElementById("confirm-button").disabled = false;
   }
 
   function layoutSettings(contentHeight) {
-    var content = document.getElementById("content");
+    var content = getElementById("content");
 
     content.style.height = Math.max(contentHeight, 0) + "px";
 
@@ -287,5 +329,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       content.style.paddingRight = "";
     }
   }
+
+  function removeRow(row, array) {
+    var head = array.slice(0, row);
+    var tail = array.slice(row + 1, array.length);
+    return new Array().concat(head, tail);
+  }
+
 </script>
 </html>
