@@ -24,8 +24,8 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef WINCE
-  #include "afxres.h"
   #include "aygshell.h"
+  #include "afxres.h"
   #include "common/genfiles/product_constants.h"
 #else
   #include "WinResrc.h"
