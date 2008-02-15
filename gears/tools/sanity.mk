@@ -62,7 +62,7 @@ ifdef CMD_LINE_BROWSER
     endif
     endif
   else
-    # Shouldn't get here as config.mk should always set the OS.
+    # Shouldn't get here, as config.mk should always set OS if the user doesn't.
     $(error Unrecognized OS)
   endif  # ifeq ($(OS),linux)
   endif  # ifeq ($(OS),osx)

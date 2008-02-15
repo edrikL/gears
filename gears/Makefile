@@ -489,8 +489,8 @@ IEMOBILE_CPPSRCS	+= \
 		bho.cc \
 		detect_version_collision.cc \
 		file.cc \
-		file_wince.cc \
 		file_test.cc \
+		file_wince.cc \
 		ipc_message_queue_null.cc \
 		http_utils.cc \
 		js_runner_ie.cc \
@@ -1207,21 +1207,6 @@ IEMOBILE_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
-# httprequest/ff
-
-FF_VPATH	+= \
-		httprequest/firefox \
-		$(NULL)
-
-FF_IDLSRCS	+= \
-		httprequest.idl \
-		$(NULL)
-
-FF_CPPSRCS	+= \
-		httprequest_ff.cc \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
 # localserver/npapi
 
 NPAPI_VPATH	+= \
@@ -1270,6 +1255,21 @@ NPAPI_CPPSRCS	+= \
 		urlmon_utils.cc \
 		resource_store_np.cc \
 		$(NULL)		
+
+#-----------------------------------------------------------------------------
+# httprequest/ff
+
+FF_VPATH	+= \
+		httprequest/firefox \
+		$(NULL)
+
+FF_IDLSRCS	+= \
+		httprequest.idl \
+		$(NULL)
+
+FF_CPPSRCS	+= \
+		httprequest_ff.cc \
+		$(NULL)
 
 #-----------------------------------------------------------------------------
 # httprequest/ie

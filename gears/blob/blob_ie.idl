@@ -34,7 +34,7 @@ import "ocidl.idl";
   pointer_default(unique)
 ]
 interface GearsBlobInterface : IDispatch {
-  // retval contains an integral value, stored in a double's mantissa for range
+  // retval contains an integral value, stored in a double's mantissa, for range
   [propget] HRESULT length([out, retval] VARIANT *retval);
 };
 
