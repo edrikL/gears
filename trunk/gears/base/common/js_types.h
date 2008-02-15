@@ -479,6 +479,11 @@ class JsParamFetcher {
   bool GetAsString(int i, std::string16 *out);
   bool GetAsArray(int i, JsArray *out);
   bool GetAsObject(int i, JsObject *out);
+
+  // TODO(kevinww): Currently doesn't work in a worker thread because it uses
+  // XPConnect
+  bool GetAsModule(int i, nsISupports **out);
+
   bool GetAsNewRootedCallback(int i, JsRootedCallback **out);
 
   void SetReturnValue(JsToken retval);
