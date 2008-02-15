@@ -90,6 +90,18 @@ function getElementById(id) {
 }
 
 /**
+ * Set the label of input button elements using the content
+ * of another element
+ */
+function setButtonLabel(textID, elemID) {
+  var textElem = getElementById(textID);
+  var buttonElem = getElementById(elemID);
+  if (textElem && buttonElem) {
+    buttonElem.value = textElem.innerText;
+  }
+}
+
+/**
  * Allows a dialog to do custom layout when the window changes sizes. The
  * provided function will be called with the height of the content area when the
  * dialog should relayout.
