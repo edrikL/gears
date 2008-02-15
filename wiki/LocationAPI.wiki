@@ -40,7 +40,7 @@ interface Position {
   readonly double altitude;  // height in meters above the WGS 84 reference
                              // ellipsoid, or null if unsupported by device.
   readonly double horizontalAccuracy;  // in meters
-  readonly double verticalAccuracy;  // in meters
+  readonly double verticalAccuracy;  // in meters, or null if unsupported
   readonly Date timestamp;
   readonly string errorMessage; // human readable, suitable for logs
   // TODO: Consider adding heading
