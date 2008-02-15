@@ -61,7 +61,7 @@ GearsResultSet::~GearsResultSet() {
 
   if (database_ != NULL) {
     database_->RemoveResultSet(this);
-    database_->Release();
+    database_->RemoveReference();
     database_ = NULL;
   }
 }
@@ -81,7 +81,7 @@ bool GearsResultSet::InitializeResultSet(sqlite3_stmt *statement,
     Finalize();
   } else {
     database_ = db;
-    database_->AddRef();
+    database_->AddReference();
     db->AddResultSet(this);
   }
   return succeeded;
@@ -91,7 +91,7 @@ void GearsResultSet::PageUnloading() {
   if (database_ != NULL) {
     // Don't remove ourselves from the result set, since database_ is going away
     // soon anyway.
-    database_->Release();
+    database_->RemoveReference();
     database_ = NULL;
   }
 }

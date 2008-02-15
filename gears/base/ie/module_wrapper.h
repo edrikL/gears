@@ -27,12 +27,20 @@
 #define GEARS_BASE_IE_MODULE_WRAPPER_H__
 
 #include <assert.h>
-#include <stack>
+#include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_types.h"
+#include "gears/base/ie/atl_headers.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-class ATL_NO_VTABLE ModuleWrapper 
-    : public IDispatch,
+// Represents the bridge between the JavaScript engine and a Gears module. A
+// ModuleWrapper wraps each Gears module instance and exposes its methods to
+// JavaScript. The wrapper is ref-counted and has ownership of the module so
+// that when all references are released, the module is destroyed.
+class ATL_NO_VTABLE ModuleWrapper
+    : public ModuleWrapperBaseClass,
+      public IDispatch,
       public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<ModuleWrapper> {      
  public:
@@ -43,15 +51,30 @@ class ATL_NO_VTABLE ModuleWrapper
   DECLARE_NOT_AGGREGATABLE(ModuleWrapper)
   DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-  ModuleWrapper();
-  ~ModuleWrapper();
+  ModuleWrapper() {
+    VariantInit(&token_);
+    token_.vt = VT_DISPATCH;
+    token_.pdispVal = const_cast<ModuleWrapper *>(this);
+  }
+
+  ~ModuleWrapper() {}
 
   static JsCallContext *PeekJsCallContext();
 
   // IDispatch
-  STDMETHOD(GetTypeInfoCount)(unsigned int FAR* retval);
+  STDMETHOD(GetTypeInfoCount)(unsigned int FAR* retval) {
+    // JavaScript does not call this
+    assert(false);
+    return E_NOTIMPL;
+  }
+
   STDMETHOD(GetTypeInfo)(unsigned int index, LCID lcid,
-                         ITypeInfo FAR* FAR* retval);
+                         ITypeInfo FAR* FAR* retval) {
+    // JavaScript does not call this
+    assert(false);
+    return E_NOTIMPL;
+  }
+
   STDMETHOD(GetIDsOfNames)(REFIID iid, OLECHAR FAR* FAR* names,
                            unsigned int num_names, LCID lcid, 
                            DISPID FAR* retval);
@@ -60,22 +83,62 @@ class ATL_NO_VTABLE ModuleWrapper
                     EXCEPINFO FAR* exception,
                     unsigned int FAR* arg_error_index);
 
-  void Init(IDispatch *impl) {
-    assert(!impl_);
+  // ModuleWrapperBaseClass
+  // Returns a token for this wrapper class that can be returned via the
+  // JsRunnerInterface.
+  virtual JsToken GetWrapperToken() const {
+    return token_;
+  }
+
+  // Gets the Dispatcher for this module.
+  virtual DispatcherInterface *GetDispatcher() const {
+    assert(dispatcher_.get());
+    return dispatcher_.get();
+  }
+
+  virtual void AddReference() {
+    AddRef();
+  }
+
+  virtual void RemoveReference() {
+    Release();
+  }
+
+  void Init(ModuleImplBaseClassVirtual *impl, DispatcherInterface *dispatcher) {
+    assert(!impl_.get());
     assert(impl);
-    impl_ = impl;
+    impl_.reset(impl);
+
+    assert(!dispatcher_.get());
+    assert(dispatcher);
+    dispatcher_.reset(dispatcher);
   }
 
  private:
-  typedef std::stack<JsCallContext *> JsCallContextStack;
-
-  static void PushJsCallContext(JsCallContext *call_context);
-  static void PopJsCallContext();
-  static void DestroyJsCallContextStack(void *call_context);
-
-  CComPtr<IDispatch> impl_;
+  scoped_ptr<ModuleImplBaseClassVirtual> impl_;
+  scoped_ptr<DispatcherInterface> dispatcher_;
+  VARIANT token_;
 
   DISALLOW_EVIL_CONSTRUCTORS(ModuleWrapper);
 };
+
+
+
+// Creates an instance of the class and its wrapper.
+template<class GearsClass>
+GearsClass *CreateModule(JsRunnerInterface *js_runner) {
+  CComObject<ModuleWrapper> *module_wrapper;
+  HRESULT hr = CComObject<ModuleWrapper>::CreateInstance(&module_wrapper);
+  if (FAILED(hr)) return NULL;
+
+  GearsClass *impl = new GearsClass(); 
+  Dispatcher<GearsClass> *dispatcher = new Dispatcher<GearsClass>(impl);
+
+  module_wrapper->Init(impl, dispatcher);
+  impl->SetJsWrapper(module_wrapper);
+  impl->AddReference();
+
+  return impl;
+}
 
 #endif  //  GEARS_BASE_IE_MODULE_WRAPPER_H__
