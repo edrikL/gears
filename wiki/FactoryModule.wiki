@@ -11,7 +11,7 @@ Use [GearsInitJS gears_init.js] in your application to initialize Gears and get 
 = Example =
 
 {{{
-// gears_init.js defines google.gears.factory.
+<!-- gears_init.js defines google.gears.factory. -->
 <script type='text/javascript' src='gears_init.js'></script>
 <script type='text/javascript'>
 // Check whether Google Gears is installed.
