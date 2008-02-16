@@ -3,7 +3,7 @@
 
 = Signature =
 
-`Object Factory.create(string className, string classVersion)`
+`Object GearsFactory.create(string className, string classVersion)`
 
 = Summary =
 
