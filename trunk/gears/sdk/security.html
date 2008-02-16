@@ -43,7 +43,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   discusses what developers can do to build secure applications.
 
 
-<h3>Contents</h3>
+<h1>Contents</h1>
 <div>
   <ol class="toc">
   <li><a href="#model">Basic Security Model</a></li>
@@ -56,7 +56,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 <a name="model" id="model"></a>
-<h2>Basic Security Model</h2>
+<h1>Basic Security Model</h1>
 
 <p>Google Gears uses the
   <a href="http://en.wikipedia.org/wiki/Same_origin_policy">same origin
@@ -77,22 +77,25 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 <a name="permissions" id="permissions"></a>
-<h2>Permissions Dialog</h2>
+<h1>Permissions Dialog</h1>
 
 <p>To protect users, Google Gears shows a warning dialog when a site
   first attempts to use the Google Gears API. User opt-in is important
   because Google Gears allows applications to store data on the user's
   hard disk.
 
-<p>Users can grant or deny access for each security origin.  Users can also
-  choose to have Google Gears remember their decision for each origin.
-  Remembered decisions can later be changed using the Google Gears Settings
+<p>Users can grant or deny access for each security origin.  When a
+  user grants access to Gears for a particular origin, Gears remembers
+  this decision for future visits. Denying access to Gears is only
+  remembered until the page is reloaded. Users can also choose to
+  never allow a particular site to access Gears. Remembered
+  decisions can later be changed using the Google Gears Settings
   dialog, located in the browser's Tools menu.
 
 
 
 <a name="enduserdata" id="enduserdata"></a>
-<h2>Security of End-User Data</h2>
+<h1>Security of End-User Data</h1>
 
 <p>Google Gears data files are protected with the user's operating system
   login credentials. Users with separate login names cannot access each other's
@@ -105,10 +108,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 <a name="bestpractices" id="bestpractices"></a>
-<h2>Best Practices</h2>
+<h1>Best Practices</h1>
 
 
-<h3>Database Security</h3>
+<h2>Database Security</h2>
 &nbsp;
 
   <p class="caution"><strong>Best Practice:</strong>:

@@ -49,7 +49,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	<li>implementing data synchronization</li>
 </ul>
 
-<h2>Isolating the Data Layer</h2>
+<h1>Isolating the Data Layer</h1>
 
 <p> In most web applications today there is no real data layer. </p>
 <p>
@@ -60,7 +60,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </p>
 
 <p>AJAX calls originate throughout the code, without any single clean communication layer. This is usually fine for AJAX applications because there is only one data source: the server. In effect, the API that the server exposes to AJAX acts as a data layer. </p>
-<h3>Architecture with a data layer</h3>
+<h2>Architecture with a data layer</h2>
 <p><b><i>In general, isolating the data layer is a good first step.</i></b></p>
 
 <p>When you add a local datastore to your application,  you will have a single place through which all data storage and retrieval requests  pass.</p>
@@ -94,10 +94,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	</center>
 </p>
 
-<h3>Architecture without a data layer</h3>
+<h2>Architecture without a data layer</h2>
 <p>If the application is not structured with a data layer and adding a data layer is not an option, it is still possible to isolate the data layer by intercepting all the calls to the web server just before they are sent. For example, you could intercept a form submit (listen to the submit event) and decide if the application should use the local data store or the data on the server. </p>
 <p>Implementing this approach   involves finding all functions and methods that send requests to the server, and rerouting them. The challenge is that this method requires a lot of extra work, like parsing URLs, iterating over forms as well as generating the same result as the server would. In practice you end up reimplementing large parts of the web server on the client side. Regardless, this can be a viable option for existing AJAX applications that can't be otherwise rearchitected.</p>
-<h2>  Feature Availability Offline </h2>
+<h1>Feature Availability Offline</h1>
 <p>For practical reasons, every feature of an application may not become a feature that's available offline. You need to  choose which features you want to support locally and implement the logic that decides when to use the local store and when to connect to the server. We call this the &quot;connection strategy.&quot; </p>
 <p>You might think that you would always want to use the local store since it is faster. However,  there are many practical reasons why you may  want or need to  access the data on server instead. For instance: </p>
 <ul><li>Data may be so transient in nature that it makes no sense to cache it. <br />
@@ -111,13 +111,13 @@ For example, if the user can set a preference that changes the language of the a
 </ul>
 <p>Typically, the optimal solution is to use the local store as much as possible, since it's usually  faster than a remote connection. However, the more work an application does locally, the more  code you need to write to implement the feature locally and  to synchronize the corresponding data. There is a cost/benefit tradeoff to consider, and some features may not be worthwhile to support locally.</p>
 
-<h2>Modality</h2>
+<h1>Modality</h1>
 <p>One fundamental question that all offline-enabled applications must answer early is that of &quot;modality&quot;.</p>
 <ul>
   <li> Modal  applications have distinct offline versus online modes, usually indicated through some change in the user interface. The user is made aware of the state and  participates in switching states in some manner. </li>
   <li>Modeless applications  attempt to  transition seamlessly between online and offline states, without significant UI changes. The user does not need to participate in switching states, which the application does automatically. </li>
   </ul>
-<h3>Modal</h3>
+<h2>Modal</h2>
 <p>In a modal application, when the application is online it communicates with the server. When it's offline, it uses the local store. Data must be synchronized  when the app switches between modes. </p>
 <p>The advantage of making a modal application is that it's relatively simple to implement and therefore a reasonable way to bootstrap the application to function offline. </p>
 <p>The disadvantages are:</p>
@@ -126,7 +126,7 @@ For example, if the user can set a preference that changes the language of the a
   <li>If the network connection is intermittent, the user will either need to choose one of the settings or will have to constantly switch between modes as the connection comes and goes. </li>
   <li>Since the local store is not always up-to-date, it can't be used to improve the application's responsiveness when connected to the server.</li>
   </ul>
-<h3>Modeless</h3>
+<h2>Modeless</h2>
 <p>In a modeless application, the application  works with an assumption that it is  offline, or that it can lose the network connection at any time. The app  uses the local store as much as possible, and does continuous, small data syncs in the background when the server is available. Data synchronization is also done when coming back online.</p>
 <p>The advantages of  modeless applications are:</p>
 <ul>
@@ -143,7 +143,7 @@ For example, if the user can set a preference that changes the language of the a
 <p>&nbsp;</p>
 <p>The sample application <a href="sample.html">Gearpad</a> is an example of a modeless offline application. It always writes to the local database, and then independently synchronizes the changes with the server. </p>
 <p>Google Reader is currently an example of a modal application. It has a distinct offline mode that a user must explicitly enable. In Reader's case, implementing a modal state was a pragmatic choice, as it was faster to implement and made it possible to release an early version of Google Reader with Gears. </p>
-<h2>Data Synchronization</h2>
+<h1>Data Synchronization</h1>
 <p>No matter which connection and modality strategy you use, the data in the local database will get out of sync with the server data. For example, local data and server data get out of sync when:</p>
 <ul>
   <li>The user makes changes while offline</li>
@@ -154,7 +154,7 @@ For example, if the user can set a preference that changes the language of the a
 
 <p>Below are some general synchronization strategies.</p>
 
-<h3>Manual Sync</h3>
+<h1>Manual Sync</h1>
 <p>The simplest solution to synchronization is what we call &quot;manual sync&quot;. It's manual because the user decides when to synchronize. It can be implemented simply by uploading all the old local data to the server, and then downloading a fresh copy from the server before going offline. </p>
 <p>Manual sync  requires that: </p>
 <ul>
@@ -167,7 +167,7 @@ For example, if the user can set a preference that changes the language of the a
   <li>Users may forget to synchronize before going offline.</li>
   </ul>
 <p>Manual sync can be a good way to get started as it is relatively easy to implement. However, it requires the user to have awareness and involvement in the synching process. </p>
-<h3>Background Sync</h3>
+<h1>Background Sync</h1>
 <p>In a  &quot;background sync&quot;, the application continuously synchronizes the data between the local data store and the server. This can be implemented by pinging the server every once in a while or better yet, letting the server push or stream data to the client (this is called Comet in the Ajax lingo). </p>
 <p>The benefits of background synching are:</p>
 <ul>
@@ -182,7 +182,7 @@ For example, if the user can set a preference that changes the language of the a
 	</center>
 </p>
 
-<h2>Conclusion</h2>
+<h1>Conclusion</h1>
 <p>There are many design choices to be made along the way to enabling an application to work offline. This document reviewed a few of the possible choices for the common design issues that arise. The decisions made for an application will need to reflect the user experience you want to achieve as well as the application's limitations and goals. </p>
 </div>
 
