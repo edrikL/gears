@@ -1,4 +1,5 @@
 #summary The Factory module is used to create all other Gears modules
+#labels ExperimentalDocs
 
 = Factory Module =
 
