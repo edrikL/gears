@@ -33,5 +33,6 @@ if (window.google && google.gears) {
 
 == Properties ==
 
- * [FactoryHasPermissionProperty hasPermission]
- * [FactoryVersionProperty version]
+|| Property || Type || Description ||
+|| `version` || readonly string || Returns the version of Gears installed, as a string of the form Major.Minor.Build.Patch (e.g., `'0.10.2.0'`). ||
+|| `hasPermission` || readonly boolean || Returns true if the site already has permission to use Gears. ||
