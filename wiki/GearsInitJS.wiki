@@ -7,7 +7,7 @@ The [http://google-gears.googlecode.com/svn/trunk/gears/sdk/gears_init.js gears_
 
 *[http://google-gears.googlecode.com/svn/trunk/gears/sdk/gears_init.js Download gears_init.js]*
 
-To use it, copy the file into your web application and then add a reference to it in each page you want to use Gears on. Then access gears through the `google.gears.factory`.
+To use it, copy the file into your web application and then add a reference to it in each page you want to use Gears on. Then, access Gears through the `google.gears.factory` object.
 
 {{{
 <script language="gears_init.js"></script>
