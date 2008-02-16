@@ -1,0 +1,36 @@
+#summary The Factory module is used to create all other Gears modules
+
+= Factory Module =
+
+The Factory module is used to instantiate all other Google Gears objects. 
+
+Use [GearsInitJS gears_init.js] in your application to initialize Gears and get access to a Factory object.
+
+
+= Example =
+
+{{{
+// gears_init.js defines google.gears.factory.
+<script type='text/javascript' src='gears_init.js'></script>
+<script type='text/javascript'>
+// Check whether Google Gears is installed.
+if (window.google && google.gears) {
+  // Instantiate Gears objects
+  var db = google.gears.factory.create('beta.database');
+  db.open();
+}
+</script>
+}}}
+
+= Factory Class =
+
+== Methods ==
+
+ * [FactoryCreateMethod create()]
+ * [FactoryGetBuildInfoMethod getBuildInfo()]
+ * [FactoryGetPermissionMethod getPermission()]
+
+== Properties ==
+
+ * [FactoryHasPermissionProperty hasPermission]
+ * [FactoryVersionProperty version]
