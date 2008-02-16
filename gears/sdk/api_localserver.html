@@ -144,9 +144,6 @@ store.checkForUpdate();
    readonly  attribute int     <b>updateStatus</b>
    readonly  attribute string  <b>lastErrorMessage</b>
    readonly  attribute string  <b>currentVersion</b>
-   event void <b>oncomplete</b>(Object details)
-   event void <b>onerror</b>(Error error)
-   event void <b>onprogress</b>(Object details)
    void <b>checkForUpdate</b>()</code></pre>
 
   <pre><code><a href="#ResourceStore">ResourceStore class</a>
@@ -463,86 +460,6 @@ Expected cookie format is &quot;name=value&quot;.</td>
         <td class="odd">The version of the set of resources that is currently being served locally, or empty string if no version is
               currently in use. This value reflects the <code>version</code> attribute from the manifest file only after all resources listed in the
         manifest file have been cached locally.</td>
-    </tr>
-  </table>
-
-
-  <h3>Events</h3>
-  <table>
-    <tr class="odd">
-      <th colspan="2"><code><strong>event void oncomplete(Object
-        details)</strong></code></th>
-    </tr>
-    <tr class="odd">
-      <td>Parameters</td>
-      <td>
-        <code>details</code> An object containing information about the update.
-        Contains one property:
-        <br>&nbsp; &nbsp; &bull; <code>String newVersion</code> - The new
-        version of the ManagedResourceStore if the version changed. Otherwise,
-        an empty string.
-      </td>
-    </tr>
-    <tr class="odd">
-      <td>Description</td>
-      <td>
-        <p>This event is fired when a ManagedResourceStore completes an
-      update. Note that updates can be either started explicitly, by calling
-      <code>checkForUpdate()</code>, or implicitly, when resources are
-      served from the store.
-        <p>An update may or may not result in a new version of the store. If
-        a new version results, the <code>newVersion</code> property of the
-        <code>details</code> object will contain the store's new version string.
-      </td>
-    </tr>
-  </table>
-
-  <table>
-    <tr class="odd">
-      <th colspan="2"><code><strong>event void onerror(Error
-        error)</strong></code></th>
-    </tr>
-    <tr class="odd">
-      <td>Parameters</td>
-      <td>
-        <code>error</code> Contains details about the error that occured.
-        Contains one property:
-        <br>&nbsp; &nbsp; &bull; <code>String message</code> - The error
-        message.
-      </td>
-    </tr>
-    <tr class="odd">
-      <td>Description</td>
-      <td>This event is fired when a ManagedResourceStore update fails. Note
-      that update failure may occur normally when an application is running
-      offline, or if the server is down.</td>
-    </tr>
-  </table>
-
-  <table>
-    <tr class="odd">
-      <th colspan="2"><code><strong>event void onprogress(Object
-        details)</strong></code></th>
-    </tr>
-    <tr class="odd">
-      <td>Parameters</td>
-      <td>
-        <code>details</code> Contains information about the progress of a
-        ManagedResourceStore update. Contains the following properties:
-        <br>&nbsp; &nbsp; &bull; <code>Number filesComplete</code> - The number
-        of files that have been captured so far in the current update.
-        <br>&nbsp; &nbsp; &bull; <code>Number filesTotal</code> - The total
-        number of files that need to be captured in the current update.
-      </td>
-    </tr>
-    <tr class="odd">
-      <td>Description</td>
-      <td>This event is fired periodically during a ManagedResourceStore update.
-      The <code>filesTotal</code> property contains the total number of files
-      found in the manifest that need to be fetched. The
-      <code>filesComplete</code> property contains the number of files that have
-      been fetched so far. You can use this information to show progress
-      information to the user.</td>
     </tr>
   </table>
 
