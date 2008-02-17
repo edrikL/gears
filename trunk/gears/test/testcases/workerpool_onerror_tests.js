@@ -36,14 +36,13 @@ function testBubble1() {
   workerPoolBubbleTest('bubble 1', 'return false;', true, null);
 }
 
-// TODO(aa): When coercion is implemented these next two should *not* bubble
-// because they would get coerced to <true>.
+// These next two should *not* bubble because they get coerced to <true>.
 function testBubble2() {
-  workerPoolBubbleTest('bubble 2', 'return 42;', true, null);
+  workerPoolBubbleTest('bubble 2', 'return 42;', false, null);
 }
 
 function testBubble3() {
-  workerPoolBubbleTest('bubble 3', 'return {};', true, null);
+  workerPoolBubbleTest('bubble 3', 'return {};', false, null);
 }
 
 function testBubble4() {

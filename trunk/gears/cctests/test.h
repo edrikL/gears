@@ -39,7 +39,26 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   // OUT: bool
   void RunTests(JsCallContext *context);
 
+  // Coercion tests
+
+  // IN: variant value, bool expected_value
+  // OUT: bool
+  void TestCoerceBool(JsCallContext *context);
+  // IN: variant value, int expected_value
+  // OUT: bool
+  void TestCoerceInt(JsCallContext *context);
+  // IN: variant value, double expected_value
+  // OUT: bool
+  void TestCoerceDouble(JsCallContext *context);
+  // IN: variant value, string expected_value
+  // OUT: bool
+  void TestCoerceString(JsCallContext *context);
+  // IN: string type, variant value
+  // OUT: bool
+  void TestGetType(JsCallContext *context);
+ 
  private:
+
   DISALLOW_EVIL_CONSTRUCTORS(GearsTest);
 };
 
