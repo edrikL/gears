@@ -36,6 +36,11 @@ DECLARE_GEARS_WRAPPER(GearsTest);
 template<>
 void Dispatcher<GearsTest>::Init() {
   RegisterMethod("runTests", &GearsTest::RunTests);
+  RegisterMethod("testCoerceBool", &GearsTest::TestCoerceBool);
+  RegisterMethod("testCoerceInt", &GearsTest::TestCoerceInt);
+  RegisterMethod("testCoerceDouble", &GearsTest::TestCoerceDouble);
+  RegisterMethod("testCoerceString", &GearsTest::TestCoerceString);
+  RegisterMethod("testGetType", &GearsTest::TestGetType);
 }
 
 #ifdef WIN32
@@ -113,6 +118,106 @@ void GearsTest::RunTests(JsCallContext *context) {
   permissions->SetCanAccessGears(cc_tests_origin,
                                  PermissionsDB::PERMISSION_DEFAULT);
 
+  context->SetReturnValue(JSPARAM_BOOL, &ok);
+}
+
+//------------------------------------------------------------------------------
+// Coercion Tests
+//------------------------------------------------------------------------------
+// Coerces the first parameter to a bool and ensures the coerced value is equal
+// to the expected value.
+void GearsTest::TestCoerceBool(JsCallContext *context) {
+  bool value;
+  bool expected_value;
+  const int argc = 2;
+  JsArgument argv[argc] = {
+    { JSPARAM_REQUIRED, JSPARAM_BOOL, &value },
+    { JSPARAM_REQUIRED, JSPARAM_BOOL, &expected_value }
+  };
+  context->GetArguments(argc, argv);
+  if (context->is_exception_set()) return;
+
+  bool ok = (value == expected_value);
+  context->SetReturnValue(JSPARAM_BOOL, &ok);
+}
+
+// Coerces the first parameter to an int and ensures the coerced value is equal
+// to the expected value.
+void GearsTest::TestCoerceInt(JsCallContext *context) {
+  int value;
+  int expected_value;
+  const int argc = 2;
+  JsArgument argv[argc] = {
+    { JSPARAM_REQUIRED, JSPARAM_INT, &value },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &expected_value },
+  };
+  context->GetArguments(argc, argv);
+  if (context->is_exception_set()) return;
+
+  bool ok = (value == expected_value);
+  context->SetReturnValue(JSPARAM_BOOL, &ok);
+}
+
+// Coerces the first parameter to a double and ensures the coerced value is
+// equal to the expected value.
+void GearsTest::TestCoerceDouble(JsCallContext *context) {
+  double value;
+  double expected_value;
+  const int argc = 2;
+  JsArgument argv[argc] = {
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &value },
+    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &expected_value },
+  };
+  context->GetArguments(argc, argv);
+  if (context->is_exception_set()) return;
+
+  bool ok = (value == expected_value);
+  context->SetReturnValue(JSPARAM_BOOL, &ok);
+}
+
+// Coerces the first parameter to a string and ensures the coerced value is
+// equal to the expected value.
+void GearsTest::TestCoerceString(JsCallContext *context) {
+  std::string16 value;
+  std::string16 expected_value;
+  const int argc = 2;
+  JsArgument argv[argc] = {
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &value },
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &expected_value },
+  };
+  context->GetArguments(argc, argv);
+  if (context->is_exception_set()) return;
+
+  bool ok = (value == expected_value);
+  context->SetReturnValue(JSPARAM_BOOL, &ok);
+}
+
+// Checks that the second parameter is of the type specified by the first
+// parameter using GetType(). First parameter should be one of "bool", "int",
+// "double", "string", "null", "undefined", "array", "function", "object".
+void GearsTest::TestGetType(JsCallContext *context) {
+  std::string16 type;
+  const int argc = 1;
+  // Don't really care about the actual value of the second parameter
+  JsArgument argv[argc] = {
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &type },
+  };
+  context->GetArguments(argc, argv);
+  if (context->is_exception_set()) return;
+  
+  bool ok = false;
+  JsParamType t = context->GetArgumentType(1);
+  if (type == STRING16(L"bool") && t == JSPARAM_BOOL ||
+      type == STRING16(L"int") && t == JSPARAM_INT ||
+      type == STRING16(L"double") && t == JSPARAM_DOUBLE ||
+      type == STRING16(L"string") && t == JSPARAM_STRING16 ||
+      type == STRING16(L"null") && t == JSPARAM_NULL ||
+      type == STRING16(L"undefined") && t == JSPARAM_UNDEFINED ||
+      type == STRING16(L"array") && t == JSPARAM_ARRAY ||
+      type == STRING16(L"function") && t == JSPARAM_FUNCTION ||
+      type == STRING16(L"object") && t == JSPARAM_OBJECT) {
+    ok = true;
+  }
   context->SetReturnValue(JSPARAM_BOOL, &ok);
 }
 

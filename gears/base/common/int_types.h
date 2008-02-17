@@ -26,6 +26,13 @@
 #ifndef GEARS_BASE_COMMON_INT_TYPES_H__
 #define GEARS_BASE_COMMON_INT_TYPES_H__
 
+#ifdef _MSC_VER
+#include <float.h>  // for _isnan() on VC++
+#define isnan(x) _isnan(x)  // VC++ uses _isnan() instead of isnan()
+#else
+#include <math.h>  // for isnan() everywhere else
+#endif
+
 #if BROWSER_WEBKIT
 //------------------------------------------------------------------------------
 // WebKit on OSX

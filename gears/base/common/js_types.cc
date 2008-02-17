@@ -24,6 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/int_types.h"  // for isnan
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
@@ -414,6 +415,13 @@ bool JsArray::GetElementAsFunction(int index, JsRootedCallback **out) const {
   return JsTokenToNewCallback(token, js_context_, out);
 }
 
+JsParamType JsArray::GetElementType(int index) const {
+  JsScopedToken token;
+  if (!GetElement(index, &token)) return JSPARAM_UNKNOWN;
+
+  return JsTokenGetType(token, js_context_);
+}
+
 // SetElement is only available on FF and IE
 #if defined(BROWSER_FF) || defined(BROWSER_IE)
 
@@ -692,6 +700,13 @@ bool JsObject::GetPropertyAsFunction(const std::string16 &name,
   return JsTokenToNewCallback(token, js_context_, out);
 }
 
+JsParamType JsObject::GetPropertyType(const std::string16 &name) const {
+  JsScopedToken token;
+  if (!GetProperty(name, &token)) return JSPARAM_UNKNOWN;
+
+  return JsTokenGetType(token, js_context_);
+}
+
 // SetProperty is only available on FF and IE
 #if defined(BROWSER_FF) || defined(BROWSER_IE)
 
@@ -797,8 +812,8 @@ static bool ConvertTokenToArgument(JsCallContext *context,
 #if BROWSER_FF
 
 bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out) {
-  if (!JSVAL_IS_BOOLEAN(t)) { return false; }
-
+  if (JsTokenIsNullOrUndefined(t)) { return false; }
+ 
   JSBool bool_value;
   if (!JS_ValueToBoolean(cx, t, &bool_value)) { return false; }
   *out = (bool_value == JS_TRUE);
@@ -806,35 +821,47 @@ bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out) {
 }
 
 bool JsTokenToInt(JsToken t, JsContextPtr cx, int *out) {
-  if (!JSVAL_IS_INT(t)) { return false; }
-
-  int32 i32_value;
-  if (!JS_ValueToECMAInt32(cx, t, &i32_value)) { return false; }
-  *out = i32_value;
+  if (JsTokenIsNullOrUndefined(t)) { return false; }
+  
+  // JS_ValueToECMAInt32 has edge-cases with non-numeric types, for example
+  // non-numeric strings, NaN and {} are coerced to 0 rather than returning
+  // failure. Compare this behaviour to JS_ValueToNumber (in JsTokenToDouble)
+  // which returns failure for these cases. It seems best to be consistent in
+  // our handling of numbers. Coercing non-numbers to 0 could make Gears
+  // applications harder to debug, e.g. a user passes a non-numeric type into
+  // a Gears API call that expects an integer and rather than being notified
+  // of the problem (as they would be for calls that expect a double) Gears
+  // instead treats it as 0 and carries on its way.
+  // Because of this we use JS_ValueToNumber to coerce to a double and cast
+  // to an int, which bypasses these problems. To avoid code duplication,
+  // we just call JsTokenToDouble and cast the result.
+  // Note also that in IE we have to do a double coercion and an int cast too
+  // due to the way VariantChangeType() handles integer coercions (rounding
+  // instead of truncating).
+  double output;
+  if (!JsTokenToDouble(t, cx, &output)) { return false; }
+  // Make sure the double will fit into an int
+  if (output < kint32min || output > kint32max) { return false; }
+  *out = static_cast<int>(output);
   return true;
 }
 
 bool JsTokenToDouble(JsToken t, JsContextPtr cx, double *out) {
-  if (!JSVAL_IS_DOUBLE(t)) { return false; }
-
+  if (JsTokenIsNullOrUndefined(t)) { return false; }
+  
   jsdouble dbl_value;
   if (!JS_ValueToNumber(cx, t, &dbl_value)) { return false; }
+  // Edge-case: NaN should return failure
+  if (isnan(dbl_value)) { return false; }
   *out = dbl_value;
   return true;
 }
 
 bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
-  // for optional args, we want JS null to act like the default _typed_ value
-  if (JSVAL_IS_NULL(t)) {
-    out->clear();
-    return true;
-  }
-
-  if (!JSVAL_IS_STRING(t)) { return false; }
-
+  if (JsTokenIsNullOrUndefined(t)) { return false; }
+  
   JSString *js_str = JS_ValueToString(cx, t);
   if (!js_str) { return false; }
-
   out->assign(reinterpret_cast<const char16 *>(JS_GetStringChars(js_str)),
               JS_GetStringLength(js_str));
   return true;
@@ -842,17 +869,44 @@ bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
 
 bool JsTokenToNewCallback(JsToken t, JsContextPtr cx, JsRootedCallback **out) {
   // We allow null or undefined rooted callbacks but not non-function values.
-  if (!JsTokenIsNullOrUndefined(t)) {
-    JSObject *obj = JSVAL_TO_OBJECT(t);
-    if (!JS_ObjectIsFunction(cx, obj)) { return false; }
+  if (!JsTokenIsNullOrUndefined(t) && !JsTokenIsCallback(t, cx)) {
+    return false;
   }
-
+  
   *out = new JsRootedCallback(cx, t);
   return true;
 }
 
-bool JsTokenIsNullOrUndefined(JsToken t) {
-  return JSVAL_IS_NULL(t) || JSVAL_IS_VOID(t); // null or undefined
+JsParamType JsTokenGetType(JsToken t, JsContextPtr cx) {
+  if (JSVAL_IS_BOOLEAN(t)) {
+    return JSPARAM_BOOL;
+  } else if (JSVAL_IS_INT(t)) {
+    return JSPARAM_INT;
+  } else if (JSVAL_IS_DOUBLE(t)) {
+    return JSPARAM_DOUBLE;
+  } else if (JSVAL_IS_STRING(t)) {
+    return JSPARAM_STRING16;
+  } else if (JSVAL_IS_NULL(t)) {
+    return JSPARAM_NULL;
+  } else if (JSVAL_IS_VOID(t)) {
+    return JSPARAM_UNDEFINED;
+  } else if (JsTokenIsArray(t, cx)) {
+    return JSPARAM_ARRAY;
+  } else if (JsTokenIsCallback(t, cx)) {
+    return JSPARAM_FUNCTION;
+  } else if (JsTokenIsObject(t)) {
+    return JSPARAM_OBJECT;
+  } else {
+    return JSPARAM_UNKNOWN;  // Unsupported type
+  }
+}
+
+bool JsTokenIsCallback(JsToken t, JsContextPtr cx) {
+  return JsTokenIsObject(t) && JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(t));
+}
+
+bool JsTokenIsArray(JsToken t, JsContextPtr cx) {
+  return JsTokenIsObject(t) && JS_IsArrayObject(cx, JSVAL_TO_OBJECT(t));
 }
 
 bool JsTokenIsObject(JsToken t) {
@@ -860,50 +914,209 @@ bool JsTokenIsObject(JsToken t) {
                                                   // true for <null>.
 }
 
+bool JsTokenIsNullOrUndefined(JsToken t) {
+  return JSVAL_IS_NULL(t) || JSVAL_IS_VOID(t); // null or undefined
+}
+
 #elif BROWSER_IE
 
 bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out) {
-  if (t.vt != VT_BOOL) { return false; }
-  *out = (t.boolVal == VARIANT_TRUE);
+  if (JsTokenIsNullOrUndefined(t)) { return false; }
+
+  // JsToken is a bool
+  if (t.vt == VT_BOOL) {
+    *out = (t.boolVal == VARIANT_TRUE);
+  // Try to coerce the JsToken to a bool
+  // There are many edge-cases with to-boolean coercions in IE using
+  // VariantChangeType() (NaN is true, {} is false, "test" is false, etc.)
+  // so we may as well do this coercion manually. The only values that should
+  // be treated as false in JavaScript are false, null, NaN, 0, undefined and
+  // an empty string. false is already covered by the case above, and Gears
+  // never coerces null and undefined.
+  } else if (t.vt == VT_R8 && isnan(t.dblVal) ||  // NaN
+             t.vt == VT_I4 && t.lVal == 0 ||      // 0
+             t.vt == VT_BSTR && !t.bstrVal[0]) {  // empty string
+    *out = false;
+  } else {
+    *out = true;  // Anything else is true
+  }
   return true;
 }
 
 bool JsTokenToInt(JsToken t, JsContextPtr cx, int *out) {
-  if (t.vt != VT_I4) { return false; }
-  *out = t.lVal;
+  if (JsTokenIsNullOrUndefined(t)) { return false; }
+  
+  // JsToken is an int
+  if (t.vt == VT_I4) {
+    *out = t.lVal;
+  // Try to coerce the JsToken to an int.
+  } else {
+    // Note that doubles are rounded to ints by VariantChangeType() when they
+    // should be truncated, so we must force it to truncate by converting to
+    // a double and then casting to an int manually.
+    double output;
+    if (!JsTokenToDouble(t, cx, &output)) { return false; }
+    // Make sure the double will fit into an int
+    if (output < kint32min || output > kint32max) {
+      return false;
+    }
+    *out = static_cast<int>(output);
+  }
   return true;
 }
 
 bool JsTokenToDouble(JsToken t, JsContextPtr cx, double *out) {
-  if (t.vt != VT_R8) { return false; }
-  *out = t.dblVal;
+  if (JsTokenIsNullOrUndefined(t)) { return false; }
+  
+  // This coercion is very tricky to get just-right. See test cases in
+  // test/testcases/internal_tests.js before making any changes. The expected
+  // outputs are based on the result of doing a Number(testval) in JavaScript.
+  // JsToken is a double
+  if (t.vt == VT_R8) {
+    // Edge-case: NaN should return failure
+    if (isnan(t.dblVal)) { return false; }
+    *out = t.dblVal;
+  // Edge-case: boolean true should coerce to 1, not -1.
+  } else if (t.vt == VT_BOOL) {
+    *out = (t.boolVal == VARIANT_TRUE) ? 1 : 0;
+  // Edge-case: null should coerce to 0
+  } else if (t.vt == VT_NULL) {
+    *out = 0;
+  // Edge-case: undefined should return failure
+  // Note: this case must come _after_ the previous case because VT_NULL is
+  // also VT_EMPTY, but the converse is not true.
+  } else if (t.vt == VT_EMPTY) {
+    return false;
+  // All other coercions
+  } else {
+    CComVariant variant;
+    HRESULT hr;
+    hr = VariantChangeType(&variant, &t, 0, VT_R8);
+    if (hr != S_OK) {
+      // Edge-case: empty strings should coerce to 0
+      if (t.vt == VT_BSTR && !t.bstrVal[0]) {
+        *out = 0;
+        return true;
+      } else {
+        return false;
+      }
+    }
+    // Edge-case: NaN should return failure
+    if (isnan(variant.dblVal)) { return false; }
+    *out = variant.dblVal;
+  }
   return true;
 }
 
 bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
-  if (t.vt != VT_BSTR) { return false; }
-  out->assign(t.bstrVal);
+  if (JsTokenIsNullOrUndefined(t)) { return false; }
+  
+  // JsToken is a string
+  if (t.vt == VT_BSTR) {
+    out->assign(t.bstrVal);
+  // Edge-case: booleans should coerce to "true" and "false".
+  // Note that VariantChangeType() converts booleans to "1" and "0",
+  // or "True" and "False" (if VARIANT_ALPHABOOL is specified).
+  } else if (t.vt == VT_BOOL) {
+    if (t.boolVal == VARIANT_TRUE) {
+      out->assign(STRING16(L"true"));
+    } else {
+      out->assign(STRING16(L"false"));
+    }
+  // Edge-case: null should coerce to "null"
+  } else if (t.vt == VT_NULL) {
+    out->assign(STRING16(L"null"));
+  // Edge-case: undefined should coerce to "undefined"
+  // Note: see comment in JsTokenToDouble.
+  } else if (t.vt == VT_EMPTY) {
+    out->assign(STRING16(L"undefined"));
+  // Edge-case: NaN should coerce to "NaN"
+  } else if (t.vt == VT_R8 && isnan(t.dblVal)) {
+    out->assign(STRING16(L"NaN"));
+  // All other coercions
+  } else {
+    CComVariant variant;
+    HRESULT hr;
+    hr = VariantChangeType(&variant, &t, 0, VT_BSTR);
+    if (hr != S_OK) { return false; }
+    out->assign(variant.bstrVal);
+    // We are responsible for calling VariantClear() on the variant we
+    // created if it contains a BSTR
+    VariantClear(&variant);
+  }
   return true;
 }
 
 bool JsTokenToNewCallback(JsToken t, JsContextPtr cx, JsRootedCallback **out) {
   // We allow null or undefined rooted callbacks but not non-function values.
-  if (!JsTokenIsNullOrUndefined(t)) {
-    if (t.vt != VT_DISPATCH) { return false; }
+  if (!JsTokenIsNullOrUndefined(t) && !JsTokenIsCallback(t, cx)) {
+    return false;
   }
-
+  
   *out = new JsRootedCallback(cx, t);
   return true;
 }
 
-bool JsTokenIsNullOrUndefined(JsToken t) {
-  return t.vt == VT_NULL || t.vt == VT_EMPTY; // null or undefined
+JsParamType JsTokenGetType(JsToken t, JsContextPtr cx) {
+  if (t.vt == VT_BOOL) {
+    return JSPARAM_BOOL;
+  } else if (t.vt == VT_I4) {
+    return JSPARAM_INT;
+  } else if (t.vt == VT_R8) {
+    return JSPARAM_DOUBLE;
+  } else if (t.vt == VT_BSTR) {
+    return JSPARAM_STRING16;
+  } else if (t.vt == VT_NULL) {
+    return JSPARAM_NULL;
+  } else if (t.vt == VT_EMPTY) {  // Must come after the previous test
+    return JSPARAM_UNDEFINED;
+  } else if (JsTokenIsArray(t, cx)) { 
+    return JSPARAM_ARRAY;
+  } else if (JsTokenIsCallback(t, cx)) {
+    return JSPARAM_FUNCTION;
+  } else if (JsTokenIsObject(t)) {
+    return JSPARAM_OBJECT;
+  } else {
+    return JSPARAM_UNKNOWN;  // Unsupported type
+  }
+}
+
+bool JsTokenIsCallback(JsToken t, JsContextPtr cx) {
+  if (t.vt != VT_DISPATCH) return false; 
+  // Check for call() method which all Function objects have.
+  // Note: User defined objects that have a call() method will be incorrectly
+  // flagged as callbacks but this check is better than nothing and probably
+  // the best we are going to get.
+  CComVariant out;
+  if (FAILED(ActiveXUtils::GetDispatchProperty(t.pdispVal,
+                                               STRING16(L"call"),
+                                               &out))) {
+    return false;
+  }
+  return true;
+}
+
+bool JsTokenIsArray(JsToken t, JsContextPtr cx) {
+  if (t.vt != VT_DISPATCH) return false;
+  // Check for join() method which all Array objects have.
+  // Note: Function objects also have a length property so it's not safe
+  // to assume that an object with a length property is an Array!
+  CComVariant out;
+  if (FAILED(ActiveXUtils::GetDispatchProperty(t.pdispVal,
+                                               STRING16(L"join"),
+                                               &out))) {
+    return false;
+  }
+  return true;
 }
 
 bool JsTokenIsObject(JsToken t) {
   return t.vt == VT_DISPATCH;
 }
 
+bool JsTokenIsNullOrUndefined(JsToken t) {
+  return t.vt == VT_NULL || t.vt == VT_EMPTY;  // null or undefined
+}
 
 #elif BROWSER_NPAPI
 
@@ -954,23 +1167,57 @@ bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out) {
 
 bool JsTokenToNewCallback(JsToken t, JsContextPtr cx, JsRootedCallback **out) {
   // We allow null or undefined rooted callbacks but not non-function values.
-  if (!JsTokenIsNullOrUndefined(t)) {
-    // TODO(mpcomplete): is there any way to check if an object is a function?
-    if (!NPVARIANT_IS_OBJECT(t)) { return false; }
+  if (!JsTokenIsNullOrUndefined(t) && !JsTokenIsCallback(t, cx)) {
+    return false;
   }
-
+  
   *out = new JsRootedCallback(cx, t);
   return true;
 }
 
-bool JsTokenIsNullOrUndefined(JsToken t) {
-  return NPVARIANT_IS_NULL(t) || NPVARIANT_IS_VOID(t);
+JsParamType JsTokenGetType(JsToken t, JsContextPtr cx) {
+  if (NPVARIANT_IS_BOOLEAN(t)) {
+    return JSPARAM_BOOL;
+  } else if (NPVARIANT_IS_INT32(t)) {
+    return JSPARAM_INT;
+  } else if (NPVARIANT_IS_DOUBLE(t)) {
+    return JSPARAM_DOUBLE;
+  } else if (NPVARIANT_IS_STRING(t)) {
+    return JSPARAM_STRING16;
+  } else if (NPVARIANT_IS_NULL(t)) {
+    return JSPARAM_NULL;
+  } else if (NPVARIANT_IS_VOID(t)) {
+    return JSPARAM_UNDEFINED;
+  } else if (JsTokenIsArray(t, cx)) {
+    return JSPARAM_ARRAY;
+  } else if (JsTokenIsCallback(t, cx)) {
+    return JSPARAM_FUNCTION;
+  } else if (JsTokenIsObject(t)) {
+    return JSPARAM_OBJECT;
+  } else {
+    return JSPARAM_UNKNOWN;  // Unsupported type
+  }
+}
+
+bool JsTokenIsCallback(JsToken t, JsContextPtr cx) {
+  return NPVARIANT_IS_OBJECT(t);  // TODO(mpcomplete): Can we check if this is
+                                  // actually a function? See JsTokenIsCallback
+                                  // for IE.
+}
+
+bool JsTokenIsArray(JsToken t, JsContextPtr cx) {
+  return NPVARIANT_IS_OBJECT(t);  // TODO(mpcomplete): Can we check if this is
+                                  // actually an array? See JsTokenIsArray for
+                                  // IE.
 }
 
 bool JsTokenIsObject(JsToken t) {
   return NPVARIANT_IS_OBJECT(t);
 }
 
+bool JsTokenIsNullOrUndefined(JsToken t) {
+  return NPVARIANT_IS_NULL(t) || NPVARIANT_IS_VOID(t);
+}
 
 // ScopedNPVariant functions.
 void ScopedNPVariant::Reset() {
@@ -1203,6 +1450,12 @@ int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
   return output_argc;
 }
 
+JsParamType JsCallContext::GetArgumentType(int i) {
+  if (i >= static_cast<int>(disp_params_->cArgs)) return JSPARAM_UNKNOWN;
+  int index = disp_params_->cArgs - i - 1;
+  return JsTokenGetType(disp_params_->rgvarg[index], js_context());
+}
+
 void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
   // There is only a valid retval_ if the javascript caller is expecting a
   // return value.
@@ -1363,6 +1616,11 @@ int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
 
   return output_argc;
 }
+
+JsParamType JsCallContext::GetArgumentType(int i) {
+  if (i >= argc_) return JSPARAM_UNKNOWN;
+  return JsTokenGetType(argv_[i], js_context());
+}
 #endif
 
 
@@ -1438,6 +1696,18 @@ bool JsParamFetcher::GetAsString(int i, std::string16 *out) {
   return JsTokenToString(t, js_context_, out);
 }
 
+bool JsParamFetcher::GetAsBool(int i, bool *out) {
+  if (i >= js_argc_) return false;  // see comment above, in GetAsInt()
+  JsToken t = js_argv_[i];
+  return JsTokenToBool(t, js_context_, out);
+}
+
+bool JsParamFetcher::GetAsDouble(int i, double *out) {
+  if (i >= js_argc_) return false;  // see comment above, in GetAsInt()
+  JsToken t = js_argv_[i];
+  return JsTokenToDouble(t, js_context_, out);
+}
+
 bool JsParamFetcher::GetAsArray(int i, JsArray *out) {
   if (i >= js_argc_) return false;  // see comment above, in GetAsInt()
 
@@ -1463,14 +1733,12 @@ bool JsParamFetcher::GetAsModule(int i, nsISupports **out) {
 bool JsParamFetcher::GetAsNewRootedCallback(int i, JsRootedCallback **out) {
   if (i >= js_argc_) return false;  // see comment above, in GetAsInt()
 
-  // We allow null or undefined rooted callbacks but not non-function values.
-  if (!JsTokenIsNullOrUndefined(js_argv_[i])) {
-    JSObject *obj = JSVAL_TO_OBJECT(js_argv_[i]);
-    if (!JS_ObjectIsFunction(GetContextPtr(), obj)) { return false; }
-  }
+  return JsTokenToNewCallback(js_argv_[i], js_context_, out);
+}
 
-  *out = new JsRootedCallback(GetContextPtr(), js_argv_[i]);
-  return true;
+JsParamType JsParamFetcher::GetType(int i) {
+  if (i >= js_argc_) return JSPARAM_UNKNOWN;  // see comment above, in GetAsInt()
+  return JsTokenGetType(js_argv_[i], js_context_);
 }
 
 void JsParamFetcher::SetReturnValue(JsToken retval) {

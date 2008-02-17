@@ -91,24 +91,71 @@ typedef void* IScriptable;
 class JsRootedToken;
 typedef JsRootedToken JsRootedCallback;
 
-// Utility functions to convert JsToken to various primitives.
-// TODO(aa): Add coercion to these functions (since they include the word "to")
-// and add new functions to determine what the token really is.
+// The JsParam* types define values for sending and receiving JS parameters.
+enum JsParamType {
+  JSPARAM_BOOL,
+  JSPARAM_INT,
+  JSPARAM_DOUBLE,
+  JSPARAM_STRING16,
+  JSPARAM_OBJECT,
+  JSPARAM_ARRAY,
+  JSPARAM_FUNCTION,
+  JSPARAM_MODULE,
+  JSPARAM_NULL,
+  JSPARAM_UNDEFINED,
+  JSPARAM_UNKNOWN,
+};
+
+enum JsParamRequirement {
+  JSPARAM_OPTIONAL,
+  JSPARAM_REQUIRED,
+};
+
+struct JsParamToSend {
+  JsParamType type;
+  const void *value_ptr;
+};
+
+struct JsParamToRecv {
+  JsParamType type;
+  void *value_ptr;
+};
+
+struct JsArgument {
+  JsParamRequirement requirement;
+  JsParamType type;
+  void* value_ptr;
+};
+
+// Utility functions to convert JsToken to various primitives. These
+// functions will try to coerce the JsToken to the required type. null or
+// undefined are never coerced and these functions will return false in
+// that case.
+// TODO(oshlack): implement coercion for NPAPI.
 bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out);
 bool JsTokenToInt(JsToken t, JsContextPtr cx, int *out);
 bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out);
 bool JsTokenToDouble(JsToken t, JsContextPtr cx, double *out);
 bool JsTokenToNewCallback(JsToken t, JsContextPtr cx, JsRootedCallback **out);
 
-// Utility function to check for the JavaScript values null and undefined. We
-// usually treat these two identically to prevent confusion.
-bool JsTokenIsNullOrUndefined(JsToken t);
+// Utility function to determine the type of a JsToken.
+JsParamType JsTokenGetType(JsToken t, JsContextPtr cx);
+
+// Utility function to tell if a given token is a JavaScript function.
+bool JsTokenIsCallback(JsToken t, JsContextPtr cx);
+
+// Utility function to tell if a given token is a JavaScript array.
+bool JsTokenIsArray(JsToken t, JsContextPtr cx);
 
 // Utility function to tell if a given token is a JavaScript object. This
 // function returns true for all JavaScript objects, including things like
 // functions and Date objects. It returns false for all primitive values
 // including null and undefined.
 bool JsTokenIsObject(JsToken t);
+
+// Utility function to check for the JavaScript values null and undefined. We
+// usually treat these two identically to prevent confusion.
+bool JsTokenIsNullOrUndefined(JsToken t);
 
 #if BROWSER_FF
 
@@ -272,6 +319,8 @@ class JsArray {
 
 
   bool GetElement(int index, JsScopedToken *out) const;
+  
+  // These functions coerce values using the JsTokenTo*() functions.
   bool GetElementAsBool(int index, bool *out) const;
   bool GetElementAsInt(int index, int *out) const;
   bool GetElementAsDouble(int index, double *out) const;
@@ -279,6 +328,9 @@ class JsArray {
   bool GetElementAsArray(int index, JsArray *out) const;
   bool GetElementAsObject(int index, JsObject *out) const;
   bool GetElementAsFunction(int index, JsRootedCallback **out) const;
+
+  // Method to get the type of an element
+  JsParamType GetElementType(int index) const;
 
   bool SetElement(int index, const JsScopedToken& value);
   bool SetElementBool(int index, bool value);
@@ -301,6 +353,8 @@ class JsObject {
   ~JsObject();
   bool GetProperty(const std::string16 &name, JsScopedToken *value) const;
   bool SetObject(JsToken value, JsContextPtr context);
+
+  // These functions coerce values using the JsTokenTo*() functions.
   bool GetPropertyAsBool(const std::string16 &name, bool *out) const;
   bool GetPropertyAsInt(const std::string16 &name, int *out) const;
   bool GetPropertyAsDouble(const std::string16 &name, double *out) const;
@@ -310,6 +364,9 @@ class JsObject {
   bool GetPropertyAsFunction(const std::string16 &name,
                              JsRootedCallback **out) const;
 
+  // Method to get the type of a property
+  JsParamType GetPropertyType(const std::string16 &name) const;
+  
   // SetProperty*() overwrites the existing named property or adds a new one if
   // none exists.
   bool SetPropertyBool(const std::string16& name, bool value);
@@ -330,41 +387,6 @@ class JsObject {
   JsContextPtr js_context_;
   JsScopedToken js_object_;
 };
-
-// The JsParam* types define values for sending and receiving JS parameters.
-enum JsParamType {
-  JSPARAM_BOOL,
-  JSPARAM_INT,  // TODO(mpcomplete): deprecate in favor of double?
-  JSPARAM_DOUBLE,
-  JSPARAM_STRING16,
-  JSPARAM_OBJECT,
-  JSPARAM_ARRAY,
-  JSPARAM_FUNCTION,
-  JSPARAM_MODULE,
-  JSPARAM_NULL,
-};
-
-enum JsParamRequirement {
-  JSPARAM_OPTIONAL,
-  JSPARAM_REQUIRED,
-};
-
-struct JsParamToSend {
-  JsParamType type;
-  const void *value_ptr;
-};
-
-struct JsParamToRecv {
-  JsParamType type;
-  void *value_ptr;
-};
-
-struct JsArgument {
-  JsParamRequirement requirement;
-  JsParamType type;
-  void* value_ptr;
-};
-
 
 class ModuleImplBaseClass;
 class JsRunnerInterface;
@@ -399,6 +421,9 @@ class JsCallContext {
   // of a native object.  Returns the number of arguments successfully read
   // (will bail at the first invalid argument).
   int GetArguments(int argc, JsArgument *argv);
+
+  // Get the type of an argument that was passed in.
+  JsParamType GetArgumentType(int i);
 
   // Sets the value to be returned to the calling JavaScript.
   //
@@ -472,11 +497,12 @@ class JsParamFetcher {
   }
   // In Firefox, set has_string_retval iff method has a string return value.
   bool IsOptionalParamPresent(int i, bool has_string_retval);
-
-  // All functions check the type of the requested value, and they will return
-  // false on a mismatch.
+  
+  // These functions coerce values using the JsTokenTo*() functions.
   bool GetAsInt(int i, int *out);
   bool GetAsString(int i, std::string16 *out);
+  bool GetAsBool(int i, bool *out);
+  bool GetAsDouble(int i, double *out);
   bool GetAsArray(int i, JsArray *out);
   bool GetAsObject(int i, JsObject *out);
 
@@ -485,6 +511,9 @@ class JsParamFetcher {
   bool GetAsModule(int i, nsISupports **out);
 
   bool GetAsNewRootedCallback(int i, JsRootedCallback **out);
+  
+  // Method to get the type of a parameter
+  JsParamType GetType(int i);
 
   void SetReturnValue(JsToken retval);
 

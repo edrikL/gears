@@ -88,6 +88,8 @@ suites.push(localServerSuite);
 var internalTestSuite = new TestSuite('Internal_Tests');
 internalTestSuite.addFile('../testcases/internal_tests.js', 
                           {useWorker: true, useIFrame: true});
+internalTestSuite.addFile('../testcases/coercion_tests.js', 
+                          {useWorker: true, useIFrame: true});
 suites.push(internalTestSuite);
 
 var timerSuite = new TestSuite('Timer');

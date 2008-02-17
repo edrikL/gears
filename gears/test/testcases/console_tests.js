@@ -88,8 +88,6 @@ function testArgsParameterEmpty() {
 }
 
 // Test argument interpolation
-/*
-// TODO(marli): Re-enable when string coercion is fixed.
 function testArgsInterpolationOne() {
   startAsync();
   console.log(from_worker + '#testArgsInterpolationOne',
@@ -107,15 +105,11 @@ function testArgsInterpolationTooFew() {
 }
 
 // Test type coercion
-// TODO(oshlack): should this return 'onetwo%s' or 'onetwo'?
-// i.e. does 'null' occupy a '%s' as if it were an empty string?
-// Currently it returns 'onetwo'.
 function testArgsInterpolationNull() {
   startAsync();
   console.log(from_worker + '#testArgsInterpolationNull',
       '%s%s%s', ['one', null, 'two']);
 }
-// TODO(oshlack): similarly for 'undefined'.
 function testArgsInterpolationUndefined() {
   startAsync();
   console.log(from_worker + '#testArgsInterpolationUndefined',
@@ -147,7 +141,11 @@ function testArgsInterpolationObject() {
       '%s', [{ data: 123, toString:
       function() { return 'Object data: ' + this.data; }}]);
 }
-*/
+function testArgsInterpolationString() {
+  startAsync();
+  console.log(from_worker + '#testArgsInterpolationString',
+      '%s', [new String('one')]);
+}
 
 // Test recursive interpolation
 function testArgsInterpolationRecursive() {
@@ -226,11 +224,11 @@ function handleEvent(log_event) {
 
     // Test type coercion
     else if (test_name == 'testArgsInterpolationNull') {
-      assertEqual('onetwo', log_event.message);
+      assertEqual('onenulltwo', log_event.message);
       completeAsync();
     }
     else if (test_name == 'testArgsInterpolationUndefined') {
-      assertEqual('onetwo', log_event.message);
+      assertEqual('oneundefinedtwo', log_event.message);
       completeAsync();
     }
     else if (test_name == 'testArgsInterpolationInt') {
@@ -251,6 +249,10 @@ function handleEvent(log_event) {
     }
     else if (test_name == 'testArgsInterpolationObject') {
       assertEqual('Object data: 123', log_event.message);
+      completeAsync();
+    }
+    else if (test_name == 'testArgsInterpolationString') {
+      assertEqual('one', log_event.message);
       completeAsync();
     }
 

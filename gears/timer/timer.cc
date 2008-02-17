@@ -108,11 +108,11 @@ STDMETHODIMP GearsTimer::setTimeout(VARIANT in_value,
     RETURN_EXCEPTION(STRING16(L"Second parameter must be an integer."));
   }
 
-  if (!js_params.GetAsString(0, &script)) {
-    if (!js_params.GetAsNewRootedCallback(0, &timer_callback)) {
-      RETURN_EXCEPTION(
-          STRING16(L"First parameter must be a function or string."));
-    }
+  if ((js_params.GetType(0) == JSPARAM_FUNCTION &&
+      !js_params.GetAsNewRootedCallback(0, &timer_callback)) ||
+      !js_params.GetAsString(0, &script)) {
+    RETURN_EXCEPTION(
+        STRING16(L"First parameter must be a function or string."));
   }
 #elif BROWSER_IE
   if (in_value.vt == VT_BSTR) {
@@ -184,11 +184,11 @@ STDMETHODIMP GearsTimer::setInterval(VARIANT in_value,
     RETURN_EXCEPTION(STRING16(L"Second parameter must be an integer."));
   }
 
-  if (!js_params.GetAsString(0, &script)) {
-    if (!js_params.GetAsNewRootedCallback(0, &timer_callback)) {
-      RETURN_EXCEPTION(
-          STRING16(L"First parameter must be a function or string."));
-    }
+  if ((js_params.GetType(0) == JSPARAM_FUNCTION &&
+      !js_params.GetAsNewRootedCallback(0, &timer_callback)) ||
+      !js_params.GetAsString(0, &script)) {
+    RETURN_EXCEPTION(
+        STRING16(L"First parameter must be a function or string."));
   }
 #elif BROWSER_IE
   if (in_value.vt == VT_BSTR) {

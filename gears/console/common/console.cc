@@ -71,9 +71,23 @@ void Console::InterpolateArgs(std::string16 *message, const JsArray *args) {
   if (!args->GetLength(&args_length)) return;
 
   for (int i = 0; i < args_length; i++) {
+    // Find the _next_ occurance of %s
     location = message->find(STRING16(L"%s"), location);
     if (location == std::string16::npos) break;
-    args->GetElementAsString(i, &arg);
+    JsParamType t;
+    t = args->GetElementType(i);
+    // We want unknown parameters to occupy a spot with _something_
+    if (t == JSPARAM_UNKNOWN) {
+      arg = STRING16(L"<Error converting to string>");
+    // null and undefined are special cases
+    } else if (t == JSPARAM_NULL) {
+      arg = STRING16(L"null");
+    } else if (t == JSPARAM_UNDEFINED) {
+      arg = STRING16(L"undefined");
+    // Get the argument as a string
+    } else if (!args->GetElementAsString(i, &arg)) {
+      arg = STRING16(L"<Error converting to string>");
+    }
     message->replace(location, 2, arg);
     location += arg.size();
   }

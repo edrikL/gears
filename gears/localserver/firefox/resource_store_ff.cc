@@ -166,13 +166,8 @@ NS_IMETHODIMP GearsResourceStore::Capture(
   JsArray array;
   int array_length;
 
-  if (js_params.GetAsString(0, &url)) {
-    // 'urls' was a string
-    if (!ResolveAndAppendUrl(url.c_str(), request.get())) {
-      RETURN_EXCEPTION(exception_message_.c_str());
-    }
-
-  } else if (js_params.GetAsArray(0, &array)) {
+  if (js_params.GetType(0) == JSPARAM_ARRAY &&
+      js_params.GetAsArray(0, &array)) {
     // 'urls' was an array of strings
     if (!array.GetLength(&array_length)) {
       RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
@@ -186,6 +181,12 @@ NS_IMETHODIMP GearsResourceStore::Capture(
       if (!ResolveAndAppendUrl(url.c_str(), request.get())) {
         RETURN_EXCEPTION(exception_message_.c_str());
       }
+    }
+
+  } else if (js_params.GetAsString(0, &url)) {
+    // 'urls' was a string
+    if (!ResolveAndAppendUrl(url.c_str(), request.get())) {
+      RETURN_EXCEPTION(exception_message_.c_str());
     }
 
   } else {
