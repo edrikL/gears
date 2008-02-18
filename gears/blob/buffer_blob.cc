@@ -26,6 +26,12 @@
 #include <assert.h>
 #include "gears/blob/buffer_blob.h"
 
+BufferBlob::BufferBlob(std::vector<uint8> *buffer) {
+  buffer_.swap(*buffer);
+  delete buffer;
+  writable_ = false;
+}
+
 
 int BufferBlob::Append(const void *source, int num_bytes) {
   MutexLock lock(&mutex_);

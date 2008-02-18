@@ -40,7 +40,6 @@ class BlobInterface {
   // file's size change underneath it.
   virtual int64 Length() const = 0;
 
-
   virtual ~BlobInterface() {}
 
  protected:
@@ -48,6 +47,22 @@ class BlobInterface {
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(BlobInterface);
+};
+
+class EmptyBlob : public BlobInterface {
+ public:
+  EmptyBlob() {}
+
+  int Read(uint8 *destination, int max_bytes, int64 position) const {
+    return 0;
+  }
+
+  int64 Length() const {
+    return 0;
+  }
+
+ private:
+  DISALLOW_EVIL_CONSTRUCTORS(EmptyBlob);
 };
 
 #endif  // GEARS_BLOB_BLOB_INTERFACE_H__

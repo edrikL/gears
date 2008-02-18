@@ -42,14 +42,15 @@ class GearsBlob
   NS_DECL_ISUPPORTS
   GEARS_IMPL_BASECLASS
 
-  GearsBlob() : contents_(NULL) {}
+  // Initializes an empty GearsBlob
+  GearsBlob() : contents_(new EmptyBlob()) {}
   ~GearsBlob() {}
 
   NS_IMETHOD GetLength(PRInt64 *retval);
 
   NS_IMETHOD GetContents(const BlobInterface** retval);
 
-  void Init(const BlobInterface *blob) {
+  void Reset(const BlobInterface *blob) {
     contents_.reset(blob);
   }
 

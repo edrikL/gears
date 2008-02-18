@@ -36,6 +36,11 @@ class BufferBlob : public BlobInterface {
  public:
   // Initializes an empty, write-only BufferBlob.
   BufferBlob() : buffer_(), writable_(true) {}
+
+  // Takes ownership of buffer and initializes a read-only BufferBlob with its
+  // contents.  buffer must have been created on the heap with new.
+  BufferBlob(std::vector<uint8> *buffer);
+
   ~BufferBlob() {}
 
   // Returns 0 and does nothing if this is read-only.  Otherwise, attempts to

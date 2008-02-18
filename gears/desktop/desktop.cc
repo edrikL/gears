@@ -262,6 +262,7 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
   }
 }
 
+// TODO(kevinww): Remove this when HttpRequest.responseBlob lands
 #ifdef OFFICIAL_BUILD
   // Blob support is not ready for prime time yet
 #else
@@ -278,9 +279,9 @@ STDMETHODIMP GearsDesktop::newFileBlob(const BSTR filename,
   CComPtr<CComObject<GearsBlob> > blob_ptr(blob);
 
   if (!filename || !filename[0]) {
-    blob->Init(new FileBlob(L""));
+    blob->Reset(new FileBlob(L""));
   } else {
-    blob->Init(new FileBlob(filename));
+    blob->Reset(new FileBlob(filename));
   }
 
   if (!blob->InitBaseFromSibling(this)) {
@@ -301,7 +302,7 @@ NS_IMETHODIMP GearsDesktop::NewFileBlob(const nsAString &filename,
                                         nsISupports **retval) {
   GearsBlob *blob = new GearsBlob();
   nsCOMPtr<GearsBlobInterface> blob_external = blob;
-  blob->Init(new FileBlob(nsString(filename).get()));
+  blob->Reset(new FileBlob(nsString(filename).get()));
   if (!blob->InitBaseFromSibling(this)) {
     RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
   }
