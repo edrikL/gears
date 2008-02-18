@@ -58,6 +58,13 @@ interface GearsHttpRequestInterface : IDispatch {
   HRESULT getResponseHeader([in] const BSTR headerName,
                             [out, retval] BSTR *headerValues);
   [propget] HRESULT responseText([out, retval] BSTR *body);
+
+#ifdef OFFICIAL_BUILD
+  // Blob support is not ready for prime time yet
+#else
+  [propget] HRESULT responseBlob([out, retval] IUnknown **body);
+#endif
+
   [propget] HRESULT status([out, retval] int *statusCode);
   [propget] HRESULT statusText([out, retval] BSTR *statusText);
 };

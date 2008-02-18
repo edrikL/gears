@@ -66,6 +66,14 @@ interface GearsHttpRequestInterface : GearsBaseClassInterface {
     // [in] AString headerName
     );
   readonly attribute AString responseText;
+
+m4_changequote(`^',`^')m4_dnl
+m4_ifdef(^OFFICIAL_BUILD^,m4_dnl
+  ^^, m4_dnl Do not declare anything for OFFICIAL_BUILDs - Blobs are not ready
+  ^m4_dnl Else:
+  readonly attribute nsISupports responseBlob;
+^)
+
   readonly attribute long status;
   readonly attribute AString statusText;
 };

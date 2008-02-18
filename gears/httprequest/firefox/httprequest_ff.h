@@ -38,6 +38,7 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string16.h"
+#include "gears/blob/blob_ff.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
@@ -87,7 +88,18 @@ class GearsHttpRequest
     std::string16 status_text;
     std::string16 headers;
     scoped_ptr<HTTPHeaders> parsed_headers;
+
+    // valid when IsInteractive or IsComplete
     std::string16 response_text;
+
+    // only valid when IsComplete and prior to having transfered ownership to
+    // response_blob
+    scoped_ptr< std::vector<uint8> > response_body;
+
+    // only valid when IsComplete and after ownership of the body has been
+    // transfered
+    nsCOMPtr<GearsBlobInterface> response_blob;
+
     ResponseInfo() : pending_ready_state(HttpRequest::UNINITIALIZED),
                      ready_state(HttpRequest::UNINITIALIZED), status(0) {}
   };

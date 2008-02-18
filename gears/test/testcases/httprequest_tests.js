@@ -34,7 +34,7 @@ function testGet200() {
   startAsync();
   doRequest(
       '/testcases/test_file_1.txt', 'GET', null, null, // url, method, data, reqHeaders[]
-      200, '1', null);  // expected status, responseText, responseHeaders[]
+      200, '1', null, 1);  // expected status, responseText, responseHeaders[], responseLength
 }
 
 function testPost200() {
@@ -46,7 +46,7 @@ function testPost200() {
   var expectedHeaders = getExpectedEchoHeaders(headers);
 
   doRequest('testcases/cgi/echo_request.py', 'POST', data, headers, 200, data,
-            expectedHeaders); 
+            expectedHeaders, data.length); 
 }
 
 function testPost302_200() {
@@ -57,7 +57,7 @@ function testPost302_200() {
   var expectedHeaders = [["echo-Method", "GET"]];
 
   doRequest('/testcases/cgi/server_redirect.py?location=/testcases/cgi/echo_request.py', 'POST', data,
-            null, 200, null, expectedHeaders); 
+            null, 200, null, expectedHeaders, null); 
 }
 
 function testGet404() {
@@ -68,32 +68,32 @@ function testGet404() {
 function testGet302_200() {
   startAsync();
   doRequest('testcases/cgi/server_redirect.py?location=/testcases/test_file_1.txt', 'GET', null,
-            null, 200, '1', null);
+            null, 200, '1', null, 1);
 }
 
 function testGet302_404() {
   startAsync();
   doRequest('testcases/cgi/server_redirect.py?location=nosuchfile___', 'GET', null, null,
-            404, null, null);
+            404, null, null, null);
 }  
 
 function testGetNoCrossOrigin() {
   assertError(function() {
-    doRequest(crossOriginUrl, 'GET', null, null, 0, null, null);
+    doRequest(crossOriginUrl, 'GET', null, null, 0, null, null, null);
   });
 }
 
 function testGet302NoCrossOrigin() {
   startAsync();
-  var headers = [['location', crossOriginUrl]];
+  var headers = [["location", crossOriginUrl]];
   doRequest('testcases/cgi/server_redirect.py?location=' + crossOriginUrl,
-            'GET', null, null, 302, "", headers);
+            'GET', null, null, 302, "", headers, 0);
 }
 
 function testRequestDisallowedHeaders() {
   var headers = [["Referer", "http://somewhere.else.com/"]];
   assertError(function() {
-    doRequest('should_fail', 'GET', null, headers, null, null, null);
+    doRequest('should_fail', 'GET', null, headers, null, null, null, null);
   });
 }
 
@@ -139,7 +139,7 @@ function testGetCapturedResource() {
 
   myStore.capture(url, function(url, success, id) {
     assert(success, 'Expected captured to succeed');
-    doRequest(url, 'GET', null, null, 200, null, null);
+    doRequest(url, 'GET', null, null, 200, null, null, null);
   });
 }
 
@@ -173,7 +173,7 @@ function getExpectedEchoHeaders(requestHeaders) {
 
 // A helper that initiates a request and examines the response.
 function doRequest(url, method, data, requestHeaders, expectedStatus,
-                   expectedResponse, expectedHeaders) {
+                   expectedResponse, expectedHeaders, expectedResponseLength) {
   var request = google.gears.factory.create('beta.httprequest');
 
   request.onreadystatechange = handleReadyStateChange;
@@ -210,6 +210,8 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
            'Should be able to call getAllResponseHeaders() after request');
     assert(isString(request.responseText),
            'Should be able to get responseText after request');
+    assert(isObject(request.responseBlob),
+           'Should be able to get responseBlob after request');
 
     // see if we got what we expected to get
     if (expectedStatus != null) {
@@ -229,6 +231,21 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
 
     if (expectedResponse != null) {
       assertEqual(expectedResponse, request.responseText, 'Wrong responseText');
+    }
+
+    if (expectedResponseLength != null) {
+      assertEqual(expectedResponseLength, request.responseBlob.length,
+          'Wrong expectedResponseLength');
+    }
+
+    if (expectedResponse != null) {
+      assert(isString(request.responseText),
+             'Should be able to get responseText repeatedly');
+    }
+
+    if (expectedResponseLength != null) {
+      assert(isObject(request.responseBlob),
+             'Should be able to get responseBlob repeatedly');
     }
 
     completeAsync();
