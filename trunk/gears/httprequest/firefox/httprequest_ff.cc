@@ -35,6 +35,8 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/firefox/dom_utils.h"
+#include "gears/blob/blob_ff.h"
+#include "gears/blob/buffer_blob.h"
 #include "gears/localserver/common/http_constants.h"
 
 // Returns true if the currently executing thread is the main UI thread,
@@ -155,6 +157,7 @@ NS_IMETHODIMP GearsHttpRequest::Open() {
     response_info_.reset(new ResponseInfo());
     response_info_->pending_ready_state = HttpRequest::OPEN;
     response_info_->ready_state = HttpRequest::UNINITIALIZED;
+    response_info_->response_blob = NULL;
   }
 
   OnReadyStateChangedCall();
@@ -341,7 +344,7 @@ bool GearsHttpRequest::CallAbortOnUiThread() {
 void GearsHttpRequest::OnAbortCall() {
   assert(IsUiThread());
   nsCOMPtr<GearsHttpRequest> reference(this);
-  { 
+  {
     // The extra scope is to ensure we unlock prior to reference.Release
     MutexLock locker(&lock_);
     if (request_) {
@@ -465,6 +468,43 @@ NS_IMETHODIMP GearsHttpRequest::GetResponseText(nsAString &retval) {
   RETURN_NORMAL();
 }
 
+#ifdef OFFICIAL_BUILD
+// Blob support is not ready for prime time yet
+#else
+//------------------------------------------------------------------------------
+// readonly attribute Blob responseBlob
+//------------------------------------------------------------------------------
+NS_IMETHODIMP GearsHttpRequest::GetResponseBlob(nsISupports **retval) {
+  assert(IsApartmentThread());
+  MutexLock locker(&lock_);
+  if (!IsComplete()) {
+    RETURN_EXCEPTION(STRING16(L"responseBlob is not supported before request "
+                              L"is complete"));
+  }
+
+  if (response_info_->response_blob == NULL) {
+    // Not already cached - make a new blob and copy the contents in
+    scoped_ptr<GearsBlob> blob(new GearsBlob());
+    if (IsValidResponse()) {
+      std::vector<uint8> *body = response_info_->response_body.release();
+      if (body) {
+        blob->Reset(new BufferBlob(body));
+      }
+    }
+    // else blob stays empty
+
+    if (!blob->InitBaseFromSibling(this)) {
+      RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
+    }
+    response_info_->response_blob = blob.release();
+  }
+
+  *retval = response_info_->response_blob;
+  (*retval)->AddRef();
+  RETURN_NORMAL();
+}
+#endif  // not OFFICIAL_BUILD
+
 
 //------------------------------------------------------------------------------
 // readonly attribute long status
@@ -551,6 +591,7 @@ void GearsHttpRequest::ReadyStateChanged(HttpRequest *source) {
       }
       if (state == HttpRequest::COMPLETE) {
         source->GetResponseBodyAsText(&response_info_->response_text);
+        response_info_->response_body.reset(source->GetResponseBody());
         RemoveRequest();
       }
       CallReadyStateChangedOnApartmentThread();

@@ -94,15 +94,25 @@ class ATL_NO_VTABLE GearsHttpRequest
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_responseText( 
       /* [retval][out] */ BSTR *body);
   
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_responseBlob( 
+      /* [retval][out] */ IUnknown **blob);
+  
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_status( 
       /* [retval][out] */ int *statusCode);
-  
-  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_statusText( 
+
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_statusText(
       /* [retval][out] */ BSTR *statusText);
 
  private:
   CComPtr<IDispatch> onreadystatechangehandler_;
   HttpRequest *request_;
+
+  // Null if response_text_ has not yet been cached
+  scoped_ptr<std::string16> response_text_;
+
+  // Valid only after a successful get_responseBlob()
+  CComPtr<GearsBlobInterface> response_blob_;
+
   bool content_type_header_was_set_;
   bool has_fired_completion_event_;
   scoped_ptr<JsEventMonitor> unload_monitor_;

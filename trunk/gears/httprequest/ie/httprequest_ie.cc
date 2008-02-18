@@ -25,6 +25,7 @@
 
 #include <assert.h>
 #include <dispex.h>
+#include <vector>
 
 #include "gears/httprequest/ie/httprequest_ie.h"
 
@@ -32,6 +33,8 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/ie/activex_utils.h"
+#include "gears/blob/blob_ie.h"
+#include "gears/blob/buffer_blob.h"
 #include "gears/localserver/common/http_constants.h"
 
 
@@ -305,17 +308,73 @@ STDMETHODIMP GearsHttpRequest::get_responseText(
     RETURN_NORMAL();
   }
 
-  std::string16 body_str;
-  if (!request_->GetResponseBodyAsText(&body_str))
-    RETURN_EXCEPTION(kInternalError);
+  if (!IsComplete()) {
+    // Don't cache incomplete bodies
+    std::string16 body_str;
+    request_->GetResponseBodyAsText(&body_str);
+    CComBSTR body_bstr(body_str.c_str());
+    *body = body_bstr.Detach();
+    RETURN_NORMAL();
+  }
+
+  if (response_text_ == NULL) {
+    // Cache the body
+    response_text_.reset(new std::string16);
+    request_->GetResponseBodyAsText(response_text_.get());
+  }
 
   LOG16((L"GearsHttpRequest::get_responseText - %d chars\n",
-         body_str.length()));
+         response_text_->length()));
 
-  CComBSTR body_bstr(body_str.c_str());
+  // Return the cached body
+  CComBSTR body_bstr(response_text_->c_str());
   *body = body_bstr.Detach();
   RETURN_NORMAL();
 }
+
+
+#ifdef OFFICIAL_BUILD
+  // Blob support is not ready for prime time yet
+#else
+STDMETHODIMP GearsHttpRequest::get_responseBlob( 
+      /* [retval][out] */ IUnknown **blob) {
+  if (!IsComplete())
+    RETURN_EXCEPTION(STRING16(L"responseBlob is not supported before request "
+                              L"is complete"));
+
+  if (response_blob_ == NULL) {
+    // Not already cached - make a new blob and copy the contents in
+    CComObject<GearsBlob> *blob_com;
+    HRESULT hr = CComObject<GearsBlob>::CreateInstance(&blob_com);
+    if (FAILED(hr)) {
+      RETURN_EXCEPTION(STRING16(L"Could not create GearsBlob."));
+    }
+    scoped_ptr<CComObject<GearsBlob> > blob_ptr(blob_com);
+    if (IsValidResponse()) {
+      // GetResponseBody() destroys the data, so get a copy for response_text_
+      if (response_text_ == NULL) {
+        response_text_.reset(new std::string16);
+        request_->GetResponseBodyAsText(response_text_.get());
+      }
+
+      std::vector<uint8> *body = request_->GetResponseBody();
+      if (body) {
+        blob_ptr->Reset(new BufferBlob(body));
+      }
+    }
+    // else blob_ptr stays empty
+
+    if (!blob_ptr->InitBaseFromSibling(this)) {
+      RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
+    }
+    response_blob_ = blob_ptr.release();
+  }
+
+  *blob = response_blob_;
+  (*blob)->AddRef();
+  RETURN_NORMAL();
+}
+#endif  // not OFFICIAL_BUILD
 
 
 STDMETHODIMP GearsHttpRequest::get_status( 
@@ -335,7 +394,7 @@ STDMETHODIMP GearsHttpRequest::get_status(
 }
 
 
-STDMETHODIMP GearsHttpRequest::get_statusText( 
+STDMETHODIMP GearsHttpRequest::get_statusText(
       /* [retval][out] */ BSTR *status_text) {
   if (!status_text) return E_POINTER;
 
@@ -436,6 +495,8 @@ void GearsHttpRequest::ReleaseRequest() {
     request_->SetOnReadyStateChange(NULL);
     request_->ReleaseReference();
     request_ = NULL;
+    response_text_.reset(NULL);
+    response_blob_ = NULL;
   }
 }
 

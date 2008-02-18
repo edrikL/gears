@@ -1263,6 +1263,10 @@ FF_VPATH	+= \
 		httprequest/firefox \
 		$(NULL)
 
+FF_M4SRCS	+= \
+		httprequest.idl.m4 \
+		$(NULL)
+
 FF_IDLSRCS	+= \
 		httprequest.idl \
 		$(NULL)
