@@ -50,17 +50,15 @@ class ATL_NO_VTABLE GearsBlob
   DECLARE_PROTECT_FINAL_CONSTRUCT()
   // End boilerplate code. Begin interface.
 
-  // Need a default constructor to CreateInstance objects in IE.  Initialize()
-  // must be immediately called after construction; otherwise Contents() will
-  // return NULL.
-  GearsBlob() : contents_(NULL) {}
+  // Initializes an empty GearsBlob
+  GearsBlob() : contents_(new EmptyBlob()) {}
   ~GearsBlob() {}
 
   STDMETHOD(get_length)(VARIANT *retval);
 
   STDMETHOD(get_contents)(VARIANT *retval);
 
-  void Init(BlobInterface *blob) {
+  void Reset(BlobInterface *blob) {
     contents_.reset(blob);
   }
 

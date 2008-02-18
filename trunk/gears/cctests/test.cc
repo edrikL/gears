@@ -855,7 +855,7 @@ bool TestBufferBlob() {
   TEST_ASSERT(buffer[4] == 'e');
   TEST_ASSERT(buffer[5] == '\0');
 
-  // overwrite the first three bytes of buffer, but don't touch the rest
+  // Overwrite the first three bytes of buffer, but don't touch the rest
   num_bytes = blob2.Read(buffer, 3, 2);
   TEST_ASSERT(num_bytes == 3);
   TEST_ASSERT(buffer[0] == 'c');
@@ -863,8 +863,30 @@ bool TestBufferBlob() {
   TEST_ASSERT(buffer[2] == 'e');
   TEST_ASSERT(buffer[3] == 'd');
   TEST_ASSERT(buffer[4] == 'e');
-#endif
 
+  // Initialize a blob with an empty vector
+  std::vector<uint8> *vec3 = new std::vector<uint8>;
+  BufferBlob blob3(vec3);
+  TEST_ASSERT(blob1.Length() == 0);
+  num_bytes = blob1.Read(buffer, 64, 0);
+  TEST_ASSERT(num_bytes == 0);
+
+  memset(buffer, 0, sizeof(buffer));
+
+  // Initialize a blob with a typical vector
+  std::vector<uint8> *vec4 = new std::vector<uint8>;
+  vec4->push_back('a');
+  vec4->push_back('b');
+  vec4->push_back('c');
+  BufferBlob blob4(vec4);
+  TEST_ASSERT(blob4.Length() == 3);
+  num_bytes = blob4.Read(buffer, 64, 0);
+  TEST_ASSERT(num_bytes == 3);
+  TEST_ASSERT(buffer[0] == 'a');
+  TEST_ASSERT(buffer[1] == 'b');
+  TEST_ASSERT(buffer[2] == 'c');
+#endif
+  
   return true;
 }
 
