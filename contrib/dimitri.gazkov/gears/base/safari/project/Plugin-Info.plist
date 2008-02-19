@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>${EXECUTABLE_NAME}</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.google.Gears</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>${PRODUCT_NAME}</string>
+	<key>CFBundlePackageType</key>
+	<string>WBPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>${MAJOR}.${MINOR}.${BUILD}.${PATCH}</string>
+	<key>CFBundleSignature</key>
+	<string>GGer</string>
+	<key>CFBundleVersion</key>
+	<string>1.0</string>
+	<key>NSPrincipalClass</key>
+	<string>GearsPlugin</string>
+	<key>WebPluginDescription</key>
+	<string>Google Gears for Safari</string>
+	<key>WebPluginMIMETypes</key>
+	<dict>
+		<key>application/x-googlegears</key>
+		<dict>
+			<key>WebPluginExtensions</key>
+			<array/>
+			<key>WebPluginTypeDescription</key>
+			<string>Google Gears</string>
+		</dict>
+	</dict>
+	<key>WebPluginName</key>
+	<string>Google Gears</string>
+</dict>
+</plist>
