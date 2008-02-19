@@ -36,10 +36,14 @@
 #include "gears/factory/common/factory_utils.h"
 #include "gears/factory/ie/factory.h"
 #include "gears/httprequest/ie/httprequest_ie.h"
+#ifdef WINCE
+// The Image API is not yet available for WinCE.
+#else
 #ifdef OFFICIAL_BUILD
 // The Image API has not been finalized for official builds
 #else
 #include "gears/image/ie/image_loader_ie.h"
+#endif
 #endif
 #include "gears/localserver/ie/localserver_ie.h"
 #include "gears/timer/timer.h"
@@ -186,6 +190,9 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
     hr = CComObject<GearsHttpRequest>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
+#ifdef WINCE
+// The Image API is not yet available for WinCE.
+#else
 #ifdef OFFICIAL_BUILD
 // The Image API has not been finalized for official builds
 #else
@@ -194,6 +201,7 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
     hr = CComObject<GearsImageLoader>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
+#endif
 #endif
   } else if (object_name == STRING16(L"beta.localserver")) {
     CComObject<GearsLocalServer> *obj;
