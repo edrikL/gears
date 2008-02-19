@@ -37,9 +37,16 @@ private:
 		StatementQueueItem(GearsDatabase2* database, 
 											 GearsSQLTransaction* tx,
 											 Statement* statement)
-			: MessageData(), database_(database), tx_(tx), statement_(statement){}
+			: MessageData(), database_(database), tx_(tx), statement_(statement),
+          processed_(false) {}
+
+    bool IsProcessed() { return processed_; }
+
+    void ProcessStatement();
+    void ProcessCallback();
 
 	private:
+    bool processed_;
 		GearsDatabase2 *database_;
 		GearsSQLTransaction *tx_;
 		Statement *statement_;

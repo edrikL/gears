@@ -98,9 +98,8 @@ void TransactionPipeline::RunSteps(GearsSQLTransaction *tx) {
 }
 
 bool TransactionPipeline::StatementQueueHandler::initialized_ = false;
-TransactionPipeline::StatementQueueHandler TransactionPipeline::StatementQueueHandler::instance_;
-
-
+TransactionPipeline::StatementQueueHandler 
+  TransactionPipeline::StatementQueueHandler::instance_;
 
 void TransactionPipeline::StatementQueueHandler::Init() {
   if (!initialized_) {
@@ -115,6 +114,24 @@ void TransactionPipeline::
 																					      MessageData *message_data) {
 	assert(message_type == kStatementQueueMessageType);
 	// do something
+  TransactionPipeline::StatementQueueItem *item =
+    static_cast<TransactionPipeline::StatementQueueItem *>(message_data);
+
+  if (!item->IsProcessed()) {
+    item->ProcessStatement();
+  }
+  else {
+    item->ProcessCallback();
+  }
 }
 
+void TransactionPipeline::StatementQueueItem::ProcessStatement() {
+  // TODO(dglazkov): execute SQL
+  processed_ = true;
+}
 
+void TransactionPipeline::StatementQueueItem::ProcessCallback() {
+  if (processed_) {
+    // TODO(dglazkov): invoke callback
+  }
+}
