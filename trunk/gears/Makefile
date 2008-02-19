@@ -153,6 +153,7 @@ endif
 #-----------------------------------------------------------------------------
 # third_party/libjpeg
 
+ifneq ($(OFFICIAL_BUILD),1)
 ifneq ($(OS),wince)
 THIRD_PARTY_VPATH	+= \
 		third_party/libjpeg \
@@ -206,11 +207,13 @@ THIRD_PARTY_CSRCS	+= \
 		jmemmgr.c \
 		jmemnobs.c \
 		$(NULL)
-endif
+endif # not wince
+endif # not OFFICIAL_BUILD
 
 #-----------------------------------------------------------------------------
 # third_party/libgd
 
+ifneq ($(OFFICIAL_BUILD),1)
 ifneq ($(OS),wince)
 THIRD_PARTY_VPATH	+= \
 		third_party/libgd \
@@ -246,7 +249,8 @@ LIBGD_CSRCS	+= \
 		gdxpm.c \
 		wbmp.c \
 		$(NULL)
-endif
+endif # not wince
+endif # not OFFICIAL_BUILD
 
 #-----------------------------------------------------------------------------
 # third_party/jsoncpp
@@ -1349,6 +1353,45 @@ IEMOBILE_CPPSRCS	+= \
 		buffer_blob.cc \
 		file_blob.cc \
 		$(NULL)
+
+#-----------------------------------------------------------------------------
+# image/ff
+
+ifneq ($(OFFICIAL_BUILD),1)
+FF_VPATH	+= \
+		image/common \
+		image/firefox \
+		$(NULL)
+
+FF_M4SRCS	+= \
+		image.idl.m4 \
+		$(NULL)
+
+FF_IDLSRCS	+= \
+		image.idl \
+		$(NULL)
+
+FF_CPPSRCS	+= \
+		image.cc \
+		image_ff.cc \
+		image_loader_ff.cc \
+		$(NULL)
+
+IE_VPATH	+= \
+		image/common \
+		image/ie \
+		$(NULL)
+
+IE_IDLSRCS	+= \
+		image.idl \
+		$(NULL)
+
+IE_CPPSRCS	+= \
+		image.cc \
+		image_ie.cc \
+		image_loader_ie.cc \
+		$(NULL)
+endif
 
 #-----------------------------------------------------------------------------
 # factory/ff

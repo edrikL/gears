@@ -39,6 +39,14 @@
 #include "gears/desktop/desktop_ff.h"
 #include "gears/factory/firefox/factory.h"
 #include "gears/httprequest/firefox/httprequest_ff.h"
+
+#ifdef OFFICIAL_BUILD
+// The Image API has not been finalized for official builds
+#else
+#include "gears/image/firefox/image_ff.h"
+#include "gears/image/firefox/image_loader_ff.h"
+#endif
+
 #include "gears/localserver/firefox/cache_intercept.h"
 #include "gears/localserver/firefox/file_submitter_ff.h"
 #include "gears/localserver/firefox/localserver_ff.h"
@@ -181,6 +189,20 @@ NS_DOMCI_EXTENSION(Scour)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsConsole, PR_TRUE,
                                              &kGearsConsoleClassId)
 
+#ifdef OFFICIAL_BUILD
+// The Image API has not been finalized for official builds
+#else
+  // image
+  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsImage)
+    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsImageInterface)
+  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsImage, PR_TRUE,
+                                             &kGearsImageClassId)
+  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsImageLoader)
+    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsImageLoaderInterface)
+  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsImageLoader, PR_TRUE,
+                                             &kGearsImageLoaderClassId)
+#endif
+
 NS_DOMCI_EXTENSION_END
 
 static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
@@ -241,6 +263,15 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
     // timer
     { kGearsTimerClassName, "GearsTimerInterface",
       GEARSTIMERINTERFACE_IID_STR },
+#ifdef OFFICIAL_BUILD
+// The Image API has not been finalized for official builds
+#else
+    // image
+    { kGearsImageClassName, "GearsImageInterface",
+      GEARSIMAGEINTERFACE_IID_STR },
+    { kGearsImageLoaderClassName, "GearsImageLoaderInterface",
+      GEARSIMAGELOADERINTERFACE_IID_STR },
+#endif
     // console
     { kGearsConsoleClassName, "GearsConsoleInterface",
       GEARSCONSOLEINTERFACE_IID_STR }
@@ -294,6 +325,14 @@ NS_DECL_DOM_CLASSINFO(GearsTimer)
 // console
 NS_DECL_DOM_CLASSINFO(GearsConsole)
 
+#ifdef OFFICIAL_BUILD
+// The Image API has not been finalized for official builds
+#else
+// image
+NS_DECL_DOM_CLASSINFO(GearsImage)
+NS_DECL_DOM_CLASSINFO(GearsImageLoader)
+#endif
+
 nsresult PR_CALLBACK ScourModuleConstructor(nsIModule *self) {
   return ThreadLocals::HandleModuleConstructed();
 }
@@ -324,6 +363,15 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsTimer));
   // console
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsConsole));
+
+#ifdef OFFICIAL_BUILD
+// The Image API has not been finalized for official builds
+#else
+  // image
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsImage));
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsImageLoader));
+#endif
+
 #ifdef DEBUG
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsFileSubmitter));
 #endif

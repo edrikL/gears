@@ -40,6 +40,13 @@
 #include "gears/desktop/desktop_ff.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/httprequest/firefox/httprequest_ff.h"
+
+#ifdef OFFICIAL_BUILD
+// The Image API has not been finalized for official builds
+#else
+#include "gears/image/firefox/image_loader_ff.h"
+#endif
+
 #include "gears/localserver/firefox/localserver_ff.h"
 #include "gears/timer/timer.h"
 #include "gears/workerpool/firefox/workerpool.h"
@@ -180,6 +187,12 @@ bool GearsFactory::CreateISupportsModule(const std::string16 &object_name,
     isupports = do_QueryInterface(new GearsDesktop(), &nr);
   } else if (object_name == STRING16(L"beta.httprequest")) {
     isupports = do_QueryInterface(new GearsHttpRequest(), &nr);
+#ifdef OFFICIAL_BUILD
+// The Image API has not been finalized for official builds
+#else
+  } else if (object_name == STRING16(L"beta.imageloader")) {
+    isupports = do_QueryInterface(new GearsImageLoader(), &nr);
+#endif
   } else if (object_name == STRING16(L"beta.localserver")) {
     isupports = do_QueryInterface(new GearsLocalServer(), &nr);
   } else if (object_name == STRING16(L"beta.timer")) {

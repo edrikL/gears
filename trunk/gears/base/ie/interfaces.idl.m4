@@ -58,6 +58,13 @@ import "database/ie/database.idl";
 import "desktop/desktop_ie.idl";
 import "factory/ie/factory.idl";
 import "httprequest/ie/httprequest.idl";
+
+#ifdef OFFICIAL_BUILD
+// The Image API has not been finalized for official builds
+#else
+import "image/ie/image.idl";
+#endif
+
 import "localserver/ie/localserver.idl";
 import "timer/timer_ie.idl";
 import "workerpool/ie/workerpool.idl";
@@ -202,5 +209,17 @@ library GearsTypelib
   {
     [default] interface GearsHttpRequestInterface;
   };
+
+#ifdef OFFICIAL_BUILD
+// The Image API has not been finalized for official builds
+#else
+  [
+    uuid(D946AEB2-263E-4448-8F29-FC714A86E9A1)
+  ]
+  coclass GearsImageLoader
+  {
+    [default] interface GearsImageLoaderInterface;
+  };
+#endif
 
 };

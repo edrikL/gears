@@ -36,6 +36,11 @@
 #include "gears/factory/common/factory_utils.h"
 #include "gears/factory/ie/factory.h"
 #include "gears/httprequest/ie/httprequest_ie.h"
+#ifdef OFFICIAL_BUILD
+// The Image API has not been finalized for official builds
+#else
+#include "gears/image/ie/image_loader_ie.h"
+#endif
 #include "gears/localserver/ie/localserver_ie.h"
 #include "gears/timer/timer.h"
 #include "gears/workerpool/ie/workerpool.h"
@@ -181,6 +186,15 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
     hr = CComObject<GearsHttpRequest>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
+#ifdef OFFICIAL_BUILD
+// The Image API has not been finalized for official builds
+#else
+  } else if (object_name == STRING16(L"beta.imageloader")) {
+    CComObject<GearsImageLoader> *obj;
+    hr = CComObject<GearsImageLoader>::CreateInstance(&obj);
+    base_class = obj;
+    idispatch = obj;
+#endif
   } else if (object_name == STRING16(L"beta.localserver")) {
     CComObject<GearsLocalServer> *obj;
     hr = CComObject<GearsLocalServer>::CreateInstance(&obj);

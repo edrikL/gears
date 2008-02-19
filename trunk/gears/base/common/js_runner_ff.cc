@@ -44,6 +44,13 @@
 #include "ff/genfiles/database.h"
 #include "ff/genfiles/desktop_ff.h"
 #include "ff/genfiles/httprequest.h"
+
+#ifdef OFFICIAL_BUILD
+// The Image API has not been finalized for official builds
+#else
+#include "ff/genfiles/image.h"
+#endif
+
 #include "ff/genfiles/localserver.h"
 #include "ff/genfiles/timer_ff.h"
 #include "ff/genfiles/workerpool.h"
@@ -521,6 +528,12 @@ bool JsRunner::InitJavaScriptEngine() {
     {GEARSTIMERINTERFACE_IID, NULL},
     // httprequest
     {GEARSHTTPREQUESTINTERFACE_IID, NULL},
+#ifdef OFFICIAL_BUILD
+// The Image API has not been finalized for official builds
+#else
+    // image
+    {GEARSIMAGEINTERFACE_IID, NULL},
+#endif
     // console
     {GEARSCONSOLEINTERFACE_IID, NULL}
   };
