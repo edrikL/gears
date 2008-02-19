@@ -754,6 +754,21 @@ NPAPI_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# database2
+SHARED_VPATH += \
+		database2 \
+		$(NULL)
+
+SHARED_CPPSRCS += \
+		database_manager.cc \
+		database2.cc \
+		transaction.cc \
+		statement.cc \
+		error.cc \
+		transaction_pipeline.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # desktop
 
 FF_VPATH	+= \

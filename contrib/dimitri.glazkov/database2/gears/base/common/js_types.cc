@@ -1320,12 +1320,9 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       break;
     }
     case JSPARAM_MODULE: {
-#if 0
       const ModuleImplBaseClass *value =
           static_cast<const ModuleImplBaseClass *>(param.value_ptr);
       *token = value->GetWrapperToken();
-#endif
-      assert(false);  // TODO(mpcomplete): implement GetWrapperToken().
       break;
     }
     case JSPARAM_NULL:
@@ -1402,12 +1399,9 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       break;
     }
     case JSPARAM_MODULE: {
-#if 0
       const ModuleImplBaseClass *value =
           static_cast<const ModuleImplBaseClass *>(param.value_ptr);
       *token = value->GetWrapperToken();
-#endif
-      assert(false);  // TODO(mpcomplete): implement GetWrapperToken().
       break;
     }
     case JSPARAM_NULL:

@@ -32,6 +32,7 @@
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/console/ie/console_ie.h"
 #include "gears/database/ie/database.h"
+#include "gears/database2/database_manager.h"
 #include "gears/desktop/desktop_ie.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/factory/ie/factory.h"
@@ -48,7 +49,6 @@
 #ifdef DEBUG
 #include "gears/cctests/test.h"
 #endif
-
 
 GearsFactory::GearsFactory()
     : is_creation_suspended_(false),
@@ -134,6 +134,8 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
     *error = STRING16(L"Object is only available in debug build.");
     return false;
 #endif
+	} else if (object_name == STRING16(L"beta.database2")) {
+		object.reset(CreateModule<GearsDatabaseManager>(GetJsRunner()));
   } else {
     // Don't return an error here. Caller handles reporting unknown modules.
     error->clear();
