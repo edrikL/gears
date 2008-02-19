@@ -126,12 +126,17 @@ void TransactionPipeline::
 }
 
 void TransactionPipeline::StatementQueueItem::ProcessStatement() {
-  // TODO(dglazkov): execute SQL
+  statement_->Execute(database_);
+  // TODO(dglazkov): figure out how to pass the thread id
+  //ThreadMessageQueue::GetInstance()->Send(?, kStatementQueueMessageType,
+  //  this);
   processed_ = true;
 }
 
 void TransactionPipeline::StatementQueueItem::ProcessCallback() {
   if (processed_) {
-    // TODO(dglazkov): invoke callback
+    statement_->InvokeCallback(transaction_);
+    // TODO(dglazkov): this also needs to involve error callback
+    //   and provide a way to abort steps if error callback returns false
   }
 }
