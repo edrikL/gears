@@ -1,0 +1,23 @@
+Linux-i386 prerelease version of Gecko 1.9 SDK. This was downloaded from here on 20 December 2007:
+
+       http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9b3pre.en-US.linux-i686.sdk.tar.bz2
+
+       Then...
+
+       1. It was unzipped.
+       2. For sdk/ contents, regular-file contents of /include moved down to root of /include (because the way we set up 1.8 didn't allow for relative paths in #includes). Contents of bin/lib/idl moved appropriately.
+       3. For remaining stuff in non-SDK portion, attempted to build project about 1,000 times using the following script magic:
+
+       make FF_MOD=experimental_19 2>&1 | grep -o "[a-zA-Z0-9_-]\+\.h" | xargs -n 1 find /tmp/xulrunner-sdk/ -name | sort -u | xargs -n 1 cp -t /home/miket/src/gears/googleclient/gears/third_party/gecko_1.9/gecko_internal/ && make FF_MOD=experimental_19
+
+       which, in English, builds Gears using the experimental_19 flag, checks the output for missing header files, copies those header files into the gecko_internal directory, and tries to build again. I then set up dunking birds to alternate pressing the up-arrow and Enter keys on my keyboard, and when I got back from lunch, Gears built successfully on 1.9. The purpose of doing this, by the way, was to have the minimum of the internals of Gecko's SDK added to our project. Ideally, we wouldn't need any of gecko_internal at all.
+
+       With this CL, we can build on Linux-i386 with "make FF_MOD=experimental_19" to create a version of Gears that does not yet work (it's untested and is known to have some necessary code commented out). Next steps:
+       1. Submit this CL. This will unblock our Nokia friends, who will then be able to add the maemo-ARM version of the SDK in a way that's compatible with our new 1.8/1.9 side-by-side layout, and hopefully fix the 1.9-specific issues that they find in the process.
+       2. We continue working on the experimental_19 build and get Gears working for Linux Firefox 3.0.
+       3. We add the win32/osx versions of the Gecko 1.9 SDK, and confirm that they build and work, too.
+       4. We update all versions of the Gecko SDKs (1.8/1.9 for all platforms) to the final released versions.
+
+TODO(cprince): update this README as the more imminent issues described herein are resolved.
+
+-- Mike Tsao <miket@google.com>, 21 Dec 2007
