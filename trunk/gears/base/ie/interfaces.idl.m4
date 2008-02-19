@@ -59,10 +59,14 @@ import "desktop/desktop_ie.idl";
 import "factory/ie/factory.idl";
 import "httprequest/ie/httprequest.idl";
 
+#ifdef WINCE
+// The Image API is not yet available for WinCE.
+#else
 #ifdef OFFICIAL_BUILD
 // The Image API has not been finalized for official builds
 #else
 import "image/ie/image.idl";
+#endif
 #endif
 
 import "localserver/ie/localserver.idl";
@@ -210,6 +214,9 @@ library GearsTypelib
     [default] interface GearsHttpRequestInterface;
   };
 
+#ifdef WINCE
+// The Image API is not yet available for WinCE.
+#else
 #ifdef OFFICIAL_BUILD
 // The Image API has not been finalized for official builds
 #else
@@ -220,6 +227,7 @@ library GearsTypelib
   {
     [default] interface GearsImageLoaderInterface;
   };
+#endif
 #endif
 
 };
