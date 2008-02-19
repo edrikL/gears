@@ -33,12 +33,10 @@
 #include <gecko_sdk/include/nsCOMPtr.h>
 #include <gecko_internal/jsapi.h>
 #include <gecko_internal/nsIDOMClassInfo.h>
-#include "gears/blob/blob_ff.h"
 #include "gears/desktop/desktop_ff.h"
 #elif BROWSER_IE
 #include <dispex.h>
 #include "gears/base/ie/activex_utils.h"
-#include "gears/blob/blob_ie.h"
 #include "gears/desktop/desktop_ie.h"
 #endif
 
@@ -48,7 +46,6 @@
 #include "gears/base/common/png_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/common/file.h"
-#include "gears/blob/file_blob.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/ui/common/html_dialog.h"
@@ -261,58 +258,6 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
     RETURN_NORMAL();
   }
 }
-
-// TODO(kevinww): Remove this when HttpRequest.responseBlob lands
-#ifdef OFFICIAL_BUILD
-  // Blob support is not ready for prime time yet
-#else
-#ifdef DEBUG
-#if BROWSER_IE
-
-STDMETHODIMP GearsDesktop::newFileBlob(const BSTR filename,
-                                       IUnknown **retval) {
-  CComObject<GearsBlob> *blob = NULL;
-  HRESULT hr = CComObject<GearsBlob>::CreateInstance(&blob);
-  if (FAILED(hr)) {
-    RETURN_EXCEPTION(STRING16(L"Could not create GearsBlob."));
-  }
-  CComPtr<CComObject<GearsBlob> > blob_ptr(blob);
-
-  if (!filename || !filename[0]) {
-    blob->Reset(new FileBlob(L""));
-  } else {
-    blob->Reset(new FileBlob(filename));
-  }
-
-  if (!blob->InitBaseFromSibling(this)) {
-    RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
-  }
-
-  CComQIPtr<GearsBlobInterface> blob_external = blob;
-  if (!blob_external) {
-    RETURN_EXCEPTION(STRING16(L"Could not get GearsBlob interface."));
-  }
-  *retval = blob_external.Detach();
-  RETURN_NORMAL();
-}
-
-#elif BROWSER_FF
-
-NS_IMETHODIMP GearsDesktop::NewFileBlob(const nsAString &filename,
-                                        nsISupports **retval) {
-  GearsBlob *blob = new GearsBlob();
-  nsCOMPtr<GearsBlobInterface> blob_external = blob;
-  blob->Reset(new FileBlob(nsString(filename).get()));
-  if (!blob->InitBaseFromSibling(this)) {
-    RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
-  }
-  NS_ADDREF(*retval = blob_external);
-  RETURN_NORMAL();
-}
-
-#endif  // BROWSER_FF
-#endif  // DEBUG
-#endif  // OFFICIAL_BUILD
 
 // Handle all the icon creation and creation call required to actually install
 // a shortcut.
