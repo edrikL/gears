@@ -94,8 +94,12 @@ class ATL_NO_VTABLE GearsHttpRequest
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_responseText( 
       /* [retval][out] */ BSTR *body);
   
+#ifdef OFFICIAL_BUILD
+  // Blob support is not ready for prime time yet
+#else
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_responseBlob( 
       /* [retval][out] */ IUnknown **blob);
+#endif
   
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_status( 
       /* [retval][out] */ int *statusCode);
