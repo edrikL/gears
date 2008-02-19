@@ -42,18 +42,5 @@ interface GearsDesktopInterface : IDispatch {
   // each available icon size. Valid property names are currently "16x16",
   // "32x32", "48x48", and "128x128". 
   HRESULT createShortcut(BSTR name, BSTR description, BSTR url, VARIANT icons);
-
-// TODO(kevinww): Remove all newFileBlob references when we have
-// other ways to open and create blobs.
-#ifdef OFFICIAL_BUILD
-  // Blob support is not ready for prime time yet
-#else
-#ifdef DEBUG
-  // This is a quick way to make a blob for now, if you want to play with
-  // binary data in your module.
-  HRESULT newFileBlob([in] const BSTR filename,
-                      [out, retval] IUnknown **retval);
-#endif  // DEBUG
-#endif  // OFFICIAL_BUILD
 };
 

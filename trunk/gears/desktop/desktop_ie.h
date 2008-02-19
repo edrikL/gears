@@ -54,14 +54,6 @@ class GearsDesktop
   STDMETHOD(createShortcut)(BSTR name, BSTR description, BSTR url,
                             VARIANT icons);
 
-#ifdef OFFICIAL_BUILD
-  // Blob support is not ready for prime time yet
-#else
-#ifdef DEBUG
-  STDMETHOD(newFileBlob)(const BSTR filename, IUnknown **retval);
-#endif  // DEBUG
-#endif  // OFFICIAL_BUILD
-
   static bool GetControlPanelIconLocation(const SecurityOrigin &origin,
                                           const std::string16 &app_name,
                                           std::string16 *icon_loc);
