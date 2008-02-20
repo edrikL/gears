@@ -117,6 +117,10 @@ SQLITE_CFLAGS += -Wno-uninitialized -DHAVE_USLEEP=1
 # for libjpeg:
 THIRD_PARTY_CFLAGS = -Wno-main
 
+# all the GTK headers using includes relative to this directory
+GTK_CFLAGS = -Ithird_party/gtk/include/gtk-2.0 -Ithird_party/gtk/include/atk-1.0 -Ithird_party/gtk/include/glib-2.0 -Ithird_party/gtk/include/pango-1.0 -Ithird_party/gtk/include/cairo -Ithird_party/gtk/lib/gtk-2.0/include -Ithird_party/gtk/lib/glib-2.0/include 
+CPPFLAGS += $(GTK_CFLAGS)
+
 COMPILE_FLAGS_dbg = -g -O0
 COMPILE_FLAGS_opt = -O2
 COMPILE_FLAGS = -c -o $@ -fPIC -fmessage-length=0 -Wall -Werror $(COMPILE_FLAGS_$(MODE))
@@ -307,8 +311,8 @@ EXT_LINKER_CMD_FLAG = @
 
 GECKO_SDK = third_party/gecko_1.8/win32
 
-FF_LIBS = $(GECKO_SDK)/gecko_sdk/lib/xpcom.lib $(GECKO_SDK)/gecko_sdk/lib/xpcomglue_s.lib $(GECKO_SDK)/gecko_sdk/lib/nspr4.lib $(GECKO_SDK)/gecko_sdk/lib/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib
-IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib
+FF_LIBS = $(GECKO_SDK)/gecko_sdk/lib/xpcom.lib $(GECKO_SDK)/gecko_sdk/lib/xpcomglue_s.lib $(GECKO_SDK)/gecko_sdk/lib/nspr4.lib $(GECKO_SDK)/gecko_sdk/lib/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib comdlg32.lib
+IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib comdlg32.lib
 IEMOBILE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib cellcore.lib htmlview.lib imaging.lib toolhelp.lib aygshell.lib
 NPAPI_LIBS = sensapi.lib ole32.lib shell32.lib advapi32.lib wininet.lib
 

@@ -55,16 +55,20 @@ class GearsDesktop
   //                               object icons)
   NS_IMETHOD CreateShortcut();
 
+  NS_IMETHOD GetLocalFiles(// OPTIONAL string array filters,
+                           // file array retval
+                           );
+
   static bool GetControlPanelIconLocation(const SecurityOrigin &origin,
                                           const std::string16 &app_name,
                                           std::string16 *icon_loc);
 
  private:
-  bool SetShortcut(DesktopUtils::ShortcutInfo *shortcut, 
+  bool SetShortcut(DesktopUtils::ShortcutInfo *shortcut,
                    std::string16 *error);
 
   bool WriteControlPanelIcon(const DesktopUtils::ShortcutInfo &shortcut);
-  bool FetchIcon(DesktopUtils::IconData *icon, int expected_size, 
+  bool FetchIcon(DesktopUtils::IconData *icon, int expected_size,
                  std::string16 *error);
   bool ResolveUrl(std::string16 *url, std::string16 *error);
 
@@ -72,3 +76,5 @@ class GearsDesktop
 };
 
 #endif // GEARS_DESKTOP_DESKTOP_FF_H__
+
+

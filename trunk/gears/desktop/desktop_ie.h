@@ -54,6 +54,8 @@ class GearsDesktop
   STDMETHOD(createShortcut)(BSTR name, BSTR description, BSTR url,
                             VARIANT icons);
 
+  STDMETHOD(getLocalFiles)(VARIANT variant_filters, VARIANT* retval);
+
   static bool GetControlPanelIconLocation(const SecurityOrigin &origin,
                                           const std::string16 &app_name,
                                           std::string16 *icon_loc);
@@ -62,7 +64,7 @@ class GearsDesktop
   bool SetShortcut(DesktopUtils::ShortcutInfo *shortcut, std::string16 *error);
 
   bool WriteControlPanelIcon(const DesktopUtils::ShortcutInfo &shortcut);
-  bool FetchIcon(DesktopUtils::IconData *icon, int expected_size, 
+  bool FetchIcon(DesktopUtils::IconData *icon, int expected_size,
                  std::string16 *error);
   bool ResolveUrl(std::string16 *url, std::string16 *error);
 
@@ -70,3 +72,5 @@ class GearsDesktop
 };
 
 #endif // GEARS_DESKTOP_DESKTOP_IE_H__
+
+

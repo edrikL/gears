@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+// Copyright 2008, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -23,29 +23,35 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import "oaidl.idl";
-import "ocidl.idl";
+#ifndef GEARS_DESKTOP_FILE_DIALOG_WIN32_H__
+#define GEARS_DESKTOP_FILE_DIALOG_WIN32_H__
 
-//
-// GearsDesktopInterface
-//
+#ifdef WIN32
 
-[
-  object,
-  uuid(09220A29-372D-4382-8942-FFCED26581E7),
-  dual,
-  nonextensible,
-  pointer_default(unique)
-]
-interface GearsDesktopInterface : IDispatch {
-  // icons parameter is expected to be a javascript object with properties for
-  // each available icon size. Valid property names are currently "16x16",
-  // "32x32", "48x48", and "128x128".
-  HRESULT createShortcut(BSTR name, BSTR description, BSTR url, VARIANT icons);
+#include "gears/desktop/file_dialog.h"
 
-  HRESULT getLocalFiles([in] VARIANT variant_filters,
-                        [out, retval] VARIANT* retval);
+#include <windows.h>
+
+
+class JsRunnerInterface;
+
+class FileDialogWin32 : public FileDialog {
+ public:
+  // Parameters:
+  //  parent - The parent window. May be NULL.
+  FileDialogWin32(HWND parent);
+  virtual ~FileDialogWin32();
+
+  virtual bool OpenDialog(const std::vector<Filter>& filters,
+                          std::vector<std::string16>* selected_files,
+                          std::string16* error);
+
+ private:
+  HWND parent_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(FileDialogWin32);
 };
 
+#endif  // WIN32
 
-
+#endif  // GEARS_DESKTOP_FILE_DIALOG_WIN32_H__
