@@ -99,7 +99,7 @@ function addStatus(msg) {
 }
 
 function onlogHandler(log_event) {
-  // TODO(oshlack): We could just call addStatus here to avoid duplication,
+  // TODO(aa): We could just call addStatus here to avoid duplication,
   // but the handler throws an exception about addStatus not being
   // defined if we log events too early for some reason. The exception stops
   // being thrown after a few seconds. Need to investigate the cause, but

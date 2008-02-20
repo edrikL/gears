@@ -163,7 +163,7 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
   HRESULT hr = E_FAIL;
   if (0) {  // dummy statement to support mixed "#ifdef" and "else if" below
 #ifdef WINCE
-  // TODO(oshlack): Implement console for WinCE.
+  // TODO(aa): Implement console for WinCE.
 #else
   } else if (object_name == STRING16(L"beta.console")) {
     CComObject<GearsConsole> *obj;

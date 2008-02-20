@@ -131,7 +131,7 @@ struct JsArgument {
 // functions will try to coerce the JsToken to the required type. null or
 // undefined are never coerced and these functions will return false in
 // that case.
-// TODO(oshlack): implement coercion for NPAPI.
+// TODO(mpcomplete): implement coercion for NPAPI.
 bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out);
 bool JsTokenToInt(JsToken t, JsContextPtr cx, int *out);
 bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out);
