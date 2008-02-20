@@ -179,12 +179,10 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
         <td width="100%" align="left" valign="middle">
           <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears">
           The website below wants to use PRODUCT_FRIENDLY_NAME_UQ. This site 
-          will be able to store and access information on your computer.&nbsp;
+          will be able to store and access information on your computer.
           </TRANS_BLOCK>
           <a href="#" onclick="showHelp(true); return false;">
-          <TRANS_BLOCK desc="Help link displayed in the installation dialog.">
-          What is this?
-          </TRANS_BLOCK>
+          <TRANS_BLOCK desc="Help link displayed in the installation dialog.">What&nbsp;is&nbsp;this?</TRANS_BLOCK>
           </a>
         </td>
       </tr>
@@ -409,12 +407,12 @@ m4_include(ui/common/html_dialog.js)
        elem.style.display = "block";
        setTextContent(elem, origin);
 
-    // When all we have is the origin, we lay it out centered because that
-    // looks nicer. This is also what the original dialog did, which did not
-    // support the extra name, icon, or message.
-    if (!customIcon && !customMessage) {
-      elem.setAttribute("align", "center");
-    }
+      // When all we have is the origin, we lay it out centered because that
+      // looks nicer. This is also what the original dialog did, which did not
+      // support the extra name, icon, or message.
+      if (!isPIE && !customIcon && !customMessage) {
+        elem.setAttribute("align", "center");
+      }
     } else {
        elem = getElementById("origin");
        elem.style.display = "block";
