@@ -33,11 +33,15 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/ie/activex_utils.h"
+#ifdef WINCE
+// No BLOB support on WINCE yet
+#else
 #ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
 #include "gears/blob/blob_ie.h"
 #include "gears/blob/buffer_blob.h"
 #endif  // not OFFICIAL_BUILD
+#endif  // WINCE
 #include "gears/localserver/common/http_constants.h"
 
 
@@ -335,9 +339,11 @@ STDMETHODIMP GearsHttpRequest::get_responseText(
   RETURN_NORMAL();
 }
 
-
+#ifdef WINCE
+// No BLOB support on WINCE yet
+#else
 #ifdef OFFICIAL_BUILD
-  // Blob support is not ready for prime time yet
+// Blob support is not ready for prime time yet
 #else
 STDMETHODIMP GearsHttpRequest::get_responseBlob( 
       /* [retval][out] */ IUnknown **blob) {
@@ -378,6 +384,7 @@ STDMETHODIMP GearsHttpRequest::get_responseBlob(
   RETURN_NORMAL();
 }
 #endif  // not OFFICIAL_BUILD
+#endif  // WINCE
 
 
 STDMETHODIMP GearsHttpRequest::get_status( 
@@ -499,10 +506,14 @@ void GearsHttpRequest::ReleaseRequest() {
     request_->ReleaseReference();
     request_ = NULL;
     response_text_.reset(NULL);
+#ifdef WINCE
+    // No BLOB support on WINCE yet
+#else
 #ifndef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
+    // The blob API has not been finalized for official builds
     response_blob_ = NULL;
 #endif  // not OFFICIAL_BUILD
+#endif
   }
 }
 

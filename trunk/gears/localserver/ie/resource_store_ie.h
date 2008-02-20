@@ -105,6 +105,9 @@ class ATL_NO_VTABLE GearsResourceStore
       /* [in] */ const BSTR url,
       /* [retval][out] */ BSTR *all_headers);
 
+#ifdef WINCE
+  // No BLOB support on WINCE yet
+#else
 #ifdef OFFICIAL_BUILD
   // Blob support is not ready for prime time yet
 #else
@@ -112,6 +115,7 @@ class ATL_NO_VTABLE GearsResourceStore
       /* [in] */ IUnknown *blob,
       /* [in] */ const BSTR url);
 #endif  // OFFICIAL_BUILD
+#endif  // WINCE
 
   virtual HRESULT STDMETHODCALLTYPE captureFile(
       /* [in] */ IDispatch *file_input_element,
