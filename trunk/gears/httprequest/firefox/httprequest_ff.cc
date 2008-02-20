@@ -35,8 +35,11 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/firefox/dom_utils.h"
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
 #include "gears/blob/blob_ff.h"
 #include "gears/blob/buffer_blob.h"
+#endif
 #include "gears/localserver/common/http_constants.h"
 
 // Returns true if the currently executing thread is the main UI thread,
@@ -157,7 +160,10 @@ NS_IMETHODIMP GearsHttpRequest::Open() {
     response_info_.reset(new ResponseInfo());
     response_info_->pending_ready_state = HttpRequest::OPEN;
     response_info_->ready_state = HttpRequest::UNINITIALIZED;
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
     response_info_->response_blob = NULL;
+#endif
   }
 
   OnReadyStateChangedCall();

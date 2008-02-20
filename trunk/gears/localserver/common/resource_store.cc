@@ -66,6 +66,8 @@ static void AppendHeader(std::string16 &headers,
   headers.append(HttpConstants::kCrLf);
 }
 
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
 //------------------------------------------------------------------------------
 // BlobToItem
 //------------------------------------------------------------------------------
@@ -104,6 +106,7 @@ bool ResourceStore::BlobToItem(const BlobInterface *blob,
   item->payload.headers = headers;
   return true;
 }
+#endif
 
 
 //------------------------------------------------------------------------------

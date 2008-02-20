@@ -26,6 +26,10 @@
 #ifndef GEARS_BLOB_BLOB_IE_H__
 #define GEARS_BLOB_BLOB_IE_H__
 
+#ifdef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+#else
+
 #include "ie/genfiles/interfaces.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
@@ -68,5 +72,6 @@ class ATL_NO_VTABLE GearsBlob
   DISALLOW_EVIL_CONSTRUCTORS(GearsBlob);
 };
 
+#endif  // not OFFICIAL_BUILD
 
 #endif  // GEARS_BLOB_BLOB_IE_H__

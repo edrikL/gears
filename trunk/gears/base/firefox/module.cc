@@ -32,7 +32,6 @@
 #include <gecko_internal/nsIScriptNameSpaceManager.h>
 
 #include "gears/base/common/thread_locals.h"
-#include "gears/blob/blob_ff.h"
 #include "gears/console/firefox/console_ff.h"
 #include "gears/database/firefox/database.h"
 #include "gears/database/firefox/result_set.h"
@@ -41,8 +40,9 @@
 #include "gears/httprequest/firefox/httprequest_ff.h"
 
 #ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
+// The Image and Blob APIs have not been finalized for official builds
 #else
+#include "gears/blob/blob_ff.h"
 #include "gears/image/firefox/image_ff.h"
 #include "gears/image/firefox/image_loader_ff.h"
 #endif
@@ -171,12 +171,6 @@ NS_DOMCI_EXTENSION(Scour)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsFileSubmitter, PR_TRUE,
                                              &kGearsFileSubmitterClassId)
 
-  // blob
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsBlob)
-    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsBlobInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsBlob, PR_TRUE,
-                                             &kGearsBlobClassId)
-
   // timer
   NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsTimer)
     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsTimerInterface)
@@ -190,8 +184,14 @@ NS_DOMCI_EXTENSION(Scour)
                                              &kGearsConsoleClassId)
 
 #ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
+// The Image and blob APIs have not been finalized for official builds
 #else
+  // blob
+  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsBlob)
+    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsBlobInterface)
+  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsBlob, PR_TRUE,
+                                             &kGearsBlobClassId)
+
   // image
   NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsImage)
     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsImageInterface)
@@ -257,15 +257,15 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
       GEARSRESOURCESTOREINTERFACE_IID_STR },
     { kGearsFileSubmitterClassName, "GearsFileSubmitterInterface",
       GEARSFILESUBMITTERINTERFACE_IID_STR },
-    // blob
-    { kGearsBlobClassName, "GearsBlobInterface",
-      GEARSBLOBINTERFACE_IID_STR },
     // timer
     { kGearsTimerClassName, "GearsTimerInterface",
       GEARSTIMERINTERFACE_IID_STR },
 #ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
+// The Image and blob APIs have not been finalized for official builds
 #else
+    // blob
+    { kGearsBlobClassName, "GearsBlobInterface",
+      GEARSBLOBINTERFACE_IID_STR },
     // image
     { kGearsImageClassName, "GearsImageInterface",
       GEARSIMAGEINTERFACE_IID_STR },
@@ -318,16 +318,16 @@ NS_DECL_DOM_CLASSINFO(GearsManagedResourceStore)
 NS_DECL_DOM_CLASSINFO(GearsResourceStore)
 NS_DECL_DOM_CLASSINFO(GearsFileSubmitter)
 
-// blob
-NS_DECL_DOM_CLASSINFO(GearsBlob)
 // timer
 NS_DECL_DOM_CLASSINFO(GearsTimer)
 // console
 NS_DECL_DOM_CLASSINFO(GearsConsole)
 
 #ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
+// The Image and blob APIs have not been finalized for official builds
 #else
+// blob
+NS_DECL_DOM_CLASSINFO(GearsBlob)
 // image
 NS_DECL_DOM_CLASSINFO(GearsImage)
 NS_DECL_DOM_CLASSINFO(GearsImageLoader)
@@ -357,16 +357,16 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsLocalServer));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsManagedResourceStore));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsResourceStore));
-  // blob
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsBlob));
   // timer
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsTimer));
   // console
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsConsole));
 
 #ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
+// The Image and blob APIs have not been finalized for official builds
 #else
+  // blob
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsBlob));
   // image
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsImage));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsImageLoader));

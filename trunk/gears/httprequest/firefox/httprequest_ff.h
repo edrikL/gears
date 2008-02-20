@@ -38,7 +38,10 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string16.h"
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
 #include "gears/blob/blob_ff.h"
+#endif
 #include "gears/localserver/common/http_request.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
@@ -96,9 +99,12 @@ class GearsHttpRequest
     // response_blob
     scoped_ptr< std::vector<uint8> > response_body;
 
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
     // only valid when IsComplete and after ownership of the body has been
     // transfered
     nsCOMPtr<GearsBlobInterface> response_blob;
+#endif
 
     ResponseInfo() : pending_ready_state(HttpRequest::UNINITIALIZED),
                      ready_state(HttpRequest::UNINITIALIZED), status(0) {}

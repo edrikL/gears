@@ -26,6 +26,10 @@
 #ifndef GEARS_BLOB_BLOB_FF_H__
 #define GEARS_BLOB_BLOB_FF_H__
 
+#ifdef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+#else
+
 #include "ff/genfiles/blob_ff.h"
 #include "gears/base/common/base_class.h"
 #include "gears/blob/blob_interface.h"
@@ -59,5 +63,7 @@ class GearsBlob
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsBlob);
 };
+
+#endif  // not OFFICIAL_BUILD
 
 #endif  // GEARS_BLOB_BLOB_FF_H__

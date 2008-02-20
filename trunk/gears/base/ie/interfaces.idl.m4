@@ -52,7 +52,6 @@ import "ui/ie/html_dialog_bridge_iemobile.idl";
 import "ui/ie/html_dialog_host_iemobile.idl";
 #endif
 
-import "blob/blob_ie.idl";
 import "console/ie/console.idl";
 import "database/ie/database.idl";
 import "desktop/desktop_ie.idl";
@@ -63,8 +62,9 @@ import "httprequest/ie/httprequest.idl";
 // The Image API is not yet available for WinCE.
 #else
 #ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
+// The Image and blob APIs have not been finalized for official builds
 #else
+import "blob/blob_ie.idl";
 import "image/ie/image.idl";
 #endif
 #endif
@@ -151,14 +151,6 @@ library GearsTypelib
   };
 
   [
-    uuid(B4F3B2E2-6200-4796-B49D-471BD24F18F5)
-  ]
-  coclass GearsBlob
-  {
-    [default] interface GearsBlobInterface;
-  };
-
-  [
     uuid(51C2DE73-6A33-4975-8D7D-C521064F8A83)
   ]
   coclass GearsConsole
@@ -218,8 +210,16 @@ library GearsTypelib
 // The Image API is not yet available for WinCE.
 #else
 #ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
+// The Image and blob APIs have not been finalized for official builds
 #else
+  [
+    uuid(B4F3B2E2-6200-4796-B49D-471BD24F18F5)
+  ]
+  coclass GearsBlob
+  {
+    [default] interface GearsBlobInterface;
+  };
+
   [
     uuid(D946AEB2-263E-4448-8F29-FC714A86E9A1)
   ]

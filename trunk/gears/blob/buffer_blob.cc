@@ -23,6 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+#else
+
 #include <assert.h>
 #include "gears/blob/buffer_blob.h"
 
@@ -84,3 +88,5 @@ int64 BufferBlob::Length() const {
   MutexLock lock(&mutex_);
   return buffer_.size();
 }
+
+#endif  // not OFFICIAL_BUILD
