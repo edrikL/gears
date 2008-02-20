@@ -226,7 +226,7 @@ function testCoerceToString() {
         'Number(3.4) should coerce to "3.4".');
     assert(internalTests.testCoerceString(String("test"), "test"),
         'String("test") should coerce to "test".');
-    // TODO(oshlack): This test passes in both IE and FF, but the actual
+    // TODO(aa): This test passes in both IE and FF, but the actual
     // output is browser dependent (with respect to whitespace) so it's
     // difficult to write a test case for it. As it is written, the test
     // passes in FF. One can verify that it also passes in IE by replacing
