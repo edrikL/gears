@@ -46,7 +46,8 @@ interface Position {
   // TODO: Consider adding heading
   // TODO: Consider adding address
   // TODO: Consider adding speed
-  // TODO: Consider adding address (maybe requires flag in PositionOptions, since it is relatively expensive)
+  // TODO: Consider adding address (maybe requires flag in PositionOptions,
+  // since it is relatively expensive)
 };
 
 
