@@ -45,6 +45,8 @@ interface Position {
   readonly string errorMessage; // human readable, suitable for logs
   // TODO: Consider adding heading
   // TODO: Consider adding address
+  // TODO: Consider adding speed
+  // TODO: Consider adding address (maybe requires option in PositionOptions, since it is relatively expensive)
 };
 
 
