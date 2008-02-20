@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <sys/param.h>
 #include <sys/stat.h>
+#include <sys/xattr.h>
 
 #include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
@@ -467,6 +468,20 @@ static bool ForceDesktopIconUpdate(const std::string16 &item_name) {
   return RunAppleScript(update_desktop_script);
 }
 
+// 10.5 tags shortcuts with a qurantine bit, which causes the finder to display
+// a confirmation dialog the first time they are opened.
+static void ClearQuarantineBit(const std::string16 &file_path) {
+  const char *kQuarantineAttrName = "com.apple.quarantine";
+  std::string file_path_utf8;
+  
+  String16ToUTF8(file_path.c_str(), &file_path_utf8);
+  
+  // Will return an error code if the quarantine attribute doesn't exist
+  // but we can safely ignore this and other errors.  In the worst case
+  // the user will get the quarantine dialog when opening the shortcut.
+  removexattr(file_path_utf8.c_str(), kQuarantineAttrName, XATTR_NOFOLLOW);
+}
+
 // Implements creation of desktop shortcuts to a web application on mac. On mac,
 // shortcuts aren't used the same way they are on pc, so this does something
 // more appropriate: creates an application package containing a shell script to
@@ -551,6 +566,8 @@ bool DesktopUtils::CreateDesktopShortcut(
   if (!ForceDesktopIconUpdate(application_bundle_name)) {
     return false;
   }
+  
+  ClearQuarantineBit(application_path);
 
   return true;
 }
