@@ -347,6 +347,8 @@ class WebCacheDB : SQLTransactionListener {
                int64 *payload_id,
                std::string16 *redirect_url);
 
+  bool ServiceGearsInspectorUrl(const char16 *url, PayloadInfo *payload);
+
   bool ServiceGearsJsUrl(bool head_only,
                          PayloadInfo *payload);
 
