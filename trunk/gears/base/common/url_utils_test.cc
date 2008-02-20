@@ -216,7 +216,7 @@ bool TestUrlUtils() {
       STRING16(L"http://server/a/c/d.html")
     },
     {  // Leave www intact.
-       // Some normalizesr will output: http://foo.com/
+       // Some normalizers will output: http://foo.com/
       STRING16(L"http://www.foo.com/"),
       STRING16(L""),
       STRING16(L"http://www.foo.com/")
@@ -232,6 +232,14 @@ bool TestUrlUtils() {
       base_dir,
       STRING16(L"foo.html?"),
       STRING16(L"http://server/directory/foo.html?")
+    },
+
+    // Negative test cases - documenting unwanted current behavior.
+    {  // %2F should be unescaped to '/'.s
+      base_dir,
+      STRING16(L"..%2Fbar%2Ffoo.html?"),
+      STRING16(L"http://server/directory/..%2Fbar%2Ffoo.html?")
+      // Desired: "http://server/bar/foo.html?"
     },
 
   };
