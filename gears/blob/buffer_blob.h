@@ -26,6 +26,10 @@
 #ifndef GEARS_BLOB_BUFFER_BLOB_H__
 #define GEARS_BLOB_BUFFER_BLOB_H__
 
+#ifdef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+#else
+
 #include <vector>
 #include "gears/base/common/mutex.h"
 #include "gears/blob/blob_interface.h"
@@ -71,5 +75,7 @@ class BufferBlob : public BlobInterface {
 
   DISALLOW_EVIL_CONSTRUCTORS(BufferBlob);
 };
+
+#endif  // not OFFICIAL_BUILD
 
 #endif  // GEARS_BLOB_BUFFER_BLOB_H__

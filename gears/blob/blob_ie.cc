@@ -23,6 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+#else
+
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/activex_utils.h"
@@ -53,3 +57,5 @@ STDMETHODIMP GearsBlob::get_contents(VARIANT *retval) {
       const_cast<void*>(reinterpret_cast<const void*>(contents_.get()));
   RETURN_NORMAL();
 }
+
+#endif  // not OFFICIAL_BUILD

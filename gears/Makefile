@@ -1312,6 +1312,7 @@ IEMOBILE_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # blob
 
+ifneq ($(OFFICIAL_BUILD),1)
 FF_VPATH	+= \
 		blob \
 		$(NULL)
@@ -1353,6 +1354,7 @@ IEMOBILE_CPPSRCS	+= \
 		buffer_blob.cc \
 		file_blob.cc \
 		$(NULL)
+endif
 
 #-----------------------------------------------------------------------------
 # image/ff

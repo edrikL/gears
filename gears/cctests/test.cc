@@ -52,7 +52,10 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/base/common/permissions_db_test.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
 #include "gears/base/common/string_utils.h"
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
 #include "gears/blob/buffer_blob.h"
+#endif
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
@@ -75,7 +78,10 @@ bool TestUrlUtils();  // from url_utils_test.cc
 bool TestJsRootedTokenLifetime();  // from base_class_test.cc
 bool TestStringUtils();  // from string_utils_test.cc
 bool TestSerialization();  // from serialization_test.cc
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
 bool TestBufferBlob();
+#endif  // not OFFICIAL_BUILD
 
 
 void GearsTest::RunTests(JsCallContext *context) {
@@ -108,7 +114,10 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestManagedResourceStore();
   ok &= TestMessageService();
   ok &= TestSerialization();
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
   ok &= TestBufferBlob();
+#endif  // not OFFICIAL_BUILD
   // TODO(zork): Add this test back in once it doesn't crash the browser.
   //ok &= TestJsRootedTokenLifetime();
 
@@ -805,6 +814,8 @@ bool TestHttpRequest() {
   return true;
 }
 
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
 bool TestBufferBlob() {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
@@ -889,5 +900,7 @@ bool TestBufferBlob() {
   
   return true;
 }
+
+#endif  // not OFFICIAL_BUILD
 
 #endif  // DEBUG

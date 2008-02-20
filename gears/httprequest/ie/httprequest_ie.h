@@ -94,12 +94,11 @@ class ATL_NO_VTABLE GearsHttpRequest
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_responseText( 
       /* [retval][out] */ BSTR *body);
   
-#ifdef OFFICIAL_BUILD
-  // Blob support is not ready for prime time yet
-#else
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_responseBlob( 
       /* [retval][out] */ IUnknown **blob);
-#endif
+#endif  // not OFFICIAL_BUILD
   
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_status( 
       /* [retval][out] */ int *statusCode);
@@ -114,8 +113,11 @@ class ATL_NO_VTABLE GearsHttpRequest
   // Null if response_text_ has not yet been cached
   scoped_ptr<std::string16> response_text_;
 
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
   // Valid only after a successful get_responseBlob()
   CComPtr<GearsBlobInterface> response_blob_;
+#endif  // not OFFICIAL_BUILD
 
   bool content_type_header_was_set_;
   bool has_fired_completion_event_;

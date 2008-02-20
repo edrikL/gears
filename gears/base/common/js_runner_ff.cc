@@ -39,15 +39,15 @@
 
 #include "gears/base/common/js_runner.h"
 
-#include "ff/genfiles/blob_ff.h"
 #include "ff/genfiles/console.h"
 #include "ff/genfiles/database.h"
 #include "ff/genfiles/desktop_ff.h"
 #include "ff/genfiles/httprequest.h"
 
 #ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
+// The Image and Blgo APIs have not been finalized for official builds
 #else
+#include "ff/genfiles/blob_ff.h"
 #include "ff/genfiles/image.h"
 #endif
 
@@ -522,15 +522,15 @@ bool JsRunner::InitJavaScriptEngine() {
     {GEARSMANAGEDRESOURCESTOREINTERFACE_IID, NULL},
     {GEARSRESOURCESTOREINTERFACE_IID, NULL},
     // GEARSFILESUBMITTERINTERFACE_IID can never be created in a child worker
-    // blob
-    {GEARSBLOBINTERFACE_IID, NULL},
     // timer
     {GEARSTIMERINTERFACE_IID, NULL},
     // httprequest
     {GEARSHTTPREQUESTINTERFACE_IID, NULL},
 #ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
+// The Image and Blog APIs have not been finalized for official builds
 #else
+    // blob
+    {GEARSBLOBINTERFACE_IID, NULL},
     // image
     {GEARSIMAGEINTERFACE_IID, NULL},
 #endif

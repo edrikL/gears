@@ -26,6 +26,10 @@
 #ifndef GEARS_DESKTOP_FILE_BLOB_H__
 #define GEARS_DESKTOP_FILE_BLOB_H__
 
+#ifdef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+#else
+
 #include "gears/blob/blob_interface.h"
 #include "gears/base/common/string16.h"
 
@@ -46,5 +50,7 @@ class FileBlob : public BlobInterface {
 
   DISALLOW_EVIL_CONSTRUCTORS(FileBlob);
 };
+
+#endif  // not OFFICIAL_BUILD
 
 #endif  // GEARS_DESKTOP_FILE_BLOB_H__

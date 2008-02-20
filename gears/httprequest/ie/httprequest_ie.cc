@@ -33,8 +33,11 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/ie/activex_utils.h"
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
 #include "gears/blob/blob_ie.h"
 #include "gears/blob/buffer_blob.h"
+#endif  // not OFFICIAL_BUILD
 #include "gears/localserver/common/http_constants.h"
 
 
@@ -496,7 +499,10 @@ void GearsHttpRequest::ReleaseRequest() {
     request_->ReleaseReference();
     request_ = NULL;
     response_text_.reset(NULL);
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
     response_blob_ = NULL;
+#endif  // not OFFICIAL_BUILD
   }
 }
 
