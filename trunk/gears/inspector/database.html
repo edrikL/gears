@@ -1,3 +1,6 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
 <!--
 Copyright 2007, Google Inc.
 
@@ -25,130 +28,47 @@ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<!DOCTYPE html>
 <html>
-<head>
-<title>Database Query Tool</title>
-<style>
+  <head>
+    <title>Database - Gears Inspector</title>
+    <link rel="stylesheet" type="text/css" href="common/styles.css" />
+    <!--[if lte IE 6]>
+      <link rel="stylesheet" type="text/css" href="common/ie6hacks.css" />
+    <![endif]-->
+    <style type="text/css">
+      #heading {
+        background-image: url(common/database.gif);
+      }
 
-html {
-  overflow: auto;
-  font: icon;
-}
+      table {
+        border: 1px solid ThreeDShadow;
+      }
 
+      td, th {
+        font: icon;
+        padding: 2px 5px;
+      }
 
-body {
-  margin-top: 2em;
-}
+      thead {
+        background-color: ThreeDFace;
+      }
 
-table {
-  border: 1px solid ThreeDShadow;
-}
+      th {
+        border: 1px solid;
+        border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
+      }
 
-td, th {
-  font: icon;
-  padding: 2px 5px;
-}
+      td.even {
+        background-color: #f5f5f5;
+      }
 
-thead {
-  background-color: ThreeDFace;
-}
+      #content {
+        margin-left: 15px;
+        margin-right: 15px;
+      }
+    </style>
 
-th {
-  border: 1px solid;
-  border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
-}
-
-td.even {
-  background-color: #f5f5f5;
-}
-
-#command-area {
-  width: 100%;
-}
-
-#command-area, h3 {
-  border: 0;
-  margin: 5px 0;
-}
-
-#command-area td {
-  vertical-align: top;
-  padding: 0;
-  white-space: nowrap;
-}
-
-h3, textarea, input, label {
-  font: icon;
-  font-size: 15pt !important;
-  border: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
-/* work around IE rendering bug */
-:root textarea {
-  width: 100%;
-}
-
-#ta.label {
-  color: GrayText;
-}
-
-button {
-  font: icon;
-  font-size: 15pt !important;
-}
-
-#active {
-  display: none;
-}
-
-label {
-  display: block;
-  margin-bottom: 0.5em;
-}
-
-input {
-  width: 13em;
-}
-
-#login-form {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-}
-
-#status-bar {
-  position: absolute;
-  top: 0;
-  right: 0;
-  padding: 0.5em;
-  display: none;
-  cursor: pointer;
-}
-
-#status-bar a {
-  color: blue;
-}
-
-form {
-  float:left;
-  position: relative;
-  top: -50%;
-  left: -50%;
-  height: 100%;
-  text-align: right;
-}
-
-form button {
-  padding-left: 1em;
-  padding-right: 1em;
-}
-
-</style>
-<script src="../gears_init.js"></script>
-<script>
+<script type="text/javascript">
 
 /**
  * Global reference to the database. Set in init.
@@ -213,7 +133,8 @@ function executeAndPrintResult(db, sql) {
   }
   sb.push('</tbody></table>');
   var output = document.createElement('div');
-  document.getElementById('output').appendChild(output);
+  document.getElementById('output').insertBefore(output,
+      document.getElementById('output').firstChild);
   output.innerHTML = sb.join('');
 }
 
@@ -239,7 +160,6 @@ function init(opt_databaseName) {
   var dbNameInput = document.getElementById('database-name');
   dbNameInput.blur();
   hideLoginForm();
-  hideInstallMessage();
 
   try {
     db = google.gears.factory.create('beta.database');
@@ -380,8 +300,6 @@ function execute() {
   if (val != '') {
     add(val);
     executeSql(val);
-    var commandDiv = document.getElementById('command-area');
-    document.body.appendChild(commandDiv);
     ta.value = '';
     ta.rows = 2;
     taFocus();
@@ -446,14 +364,8 @@ function add(val) {
  * Clears the previous outputted results
  */
 function clearOutput() {
-  var ca = document.getElementById('command-area');
-  var ta = document.getElementById('ta');
-  if (ta) {
-    document.body.removeChild(ca);
-    document.getElementById('output').innerHTML = '';
-    document.body.appendChild(ca);
-    taFocus();
-  }
+  document.getElementById('output').innerHTML = '';
+  taFocus();
 }
 
 
@@ -472,23 +384,15 @@ function taFocus() {
 
 function hideLoginForm() {
   document.getElementById('login-form').style.display = 'none';
-  document.getElementById('active').style.display = 'block';
-  document.getElementById('status-bar').style.display = 'block';
-  document.getElementById('command-area').style.display = '';
-  document.getElementById('output').style.display = '';
+  document.getElementById('status-bar').style.display = 'inline';
 }
 
-
 function showLoginForm() {
-  document.getElementById('login-form').style.display = '';
-  document.getElementById('active').style.display = '';
-  document.getElementById('status-bar').style.display = '';
-  document.getElementById('command-area').style.display = 'none';
-  document.getElementById('output').style.display = 'none';
+  document.getElementById('login-form').style.display = 'inline';
+  document.getElementById('status-bar').style.display = 'none';
   document.getElementById('database-name').focus();
   document.getElementById('database-name').select();
 }
-
 
 /**
  * Checks the cookie to see if we have a 'dbinfo' stored and returns
@@ -523,49 +427,50 @@ function setCookieInfo(databaseName) {
 }
 
 </script>
-</head>
-<body>
 
-<div id=status-bar
-     onclick="showLoginForm(); return false">DB Name: <a href=#>&nbsp;</a>
-</div>
+    <script type="text/javascript" src="common/gears_init.js"></script>
+  </head>
+  <body>
 
-<div id=login-form>
-  <form onsubmit="init(); return false">
-    <label title="This is the ID used for opening the database">Database Name:
-      <input id=database-name></label>
-    <button type=submit>OK</button>
-  </form>
-</div>
+    <script type="text/javascript" src="common/inspector_links.js"></script>
 
-<div id=active>
-  <table id=command-area cellspacing=0 style="display:none">
-    <tr>
-      <td>
-        <textarea id=ta cols=80 rows=2 spellcheck=false></textarea>
-      <td style="text-align: right">
-        <button onclick="execute()">Execute</button>
-        <button onclick="clearOutput()">Clear</button>
-  </table>
+    <div id="heading">
+      <div class="controls">
+        <span onclick="showLoginForm(); return false;"
+          style="margin-right: 15px;">
+          Database Name:
+          <span id="status-bar"><a href=#>&nbsp;</a></span>
+          <span id="login-form">
+            <form onsubmit="init(); return false;" style="display: inline;">
+              <input id="database-name" onblur="hideLoginForm();" />
+            </form>
+          </span>
+        </span>
+        <button onclick="clearOutput();" style="font-weight: bold;">
+          Clear
+        </button>
+      </div>
+      <h1 class="heading-text">Database</h1>
+    </div>
 
-  <div id=install-message>
-    <h2>Gears is not installed</h2>
-  </div>
-</div>
+    <div id="content">
 
-<div id=output></div>
+      <div id="command-area">
+        <textarea id="ta" cols="80" rows="2" spellcheck="false"></textarea>
+        <br /><button onclick="execute()">Execute</button>
+      </div>
 
-<script>
+      <div id=output></div>
 
-var dbInfo = getQueryInfo() || getCookieInfo();
-if (!dbInfo) {
-  populateLoginForm();
-  showLoginForm();
-} else {
-  init(dbInfo);
-}
-
-</script>
-
-</body>
+      <script type="text/javascript">
+        var dbInfo = getQueryInfo() || getCookieInfo();
+        if (!dbInfo) {
+          populateLoginForm();
+          showLoginForm();
+        } else {
+          init(dbInfo);
+        }
+      </script>
+    </div>
+  </body>
 </html>
