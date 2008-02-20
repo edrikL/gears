@@ -133,8 +133,14 @@ class linked_ptr {
   // Release ownership of the pointed object and returns it.
   // Sole ownership by this linked_ptr object is required.
   T* release() {
+    // GCC emits a warning for not using last in a opt build.
+    // Warnings are treated as errors.
+#ifdef DEBUG
     bool last = link_.depart();
     assert(last);
+#else
+    link_.depart();
+#endif
     T* v = value_;
     value_ = NULL;
     return v;
