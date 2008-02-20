@@ -61,9 +61,6 @@ var tools = [
     } else {
       link = document.createElement('a');
       link.href = tools[i][1];
-      if (current_page != '') {
-        link.target = '_blank';
-      }
     }
     link.innerHTML = tools[i][0];
     links.appendChild(link);
