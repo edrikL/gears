@@ -773,6 +773,10 @@ FF_CPPSRCS	+= \
 		desktop_utils_linux.cc \
 		desktop_utils_osx.cc \
 		desktop_utils_win32.cc \
+		file_dialog.cc \
+		file_dialog_gtk.cc \
+		file_dialog_utils.cc \
+		file_dialog_win32.cc \
 		$(NULL)
 
 IE_VPATH	+= \
@@ -794,6 +798,9 @@ IEMOBILE_IDLSRCS += \
 IE_CPPSRCS	+= \
 		desktop.cc \
 		desktop_utils_win32.cc \
+		file_dialog.cc \
+		file_dialog_utils.cc \
+		file_dialog_win32.cc \
 		$(NULL)
 
 NPAPI_VPATH     += \

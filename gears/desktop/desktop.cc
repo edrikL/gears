@@ -31,12 +31,15 @@
 #include <gecko_sdk/include/nspr.h>  // for PR_*
 #include <gecko_sdk/include/nsServiceManagerUtils.h>  // for NS_IMPL_* and NS_INTERFACE_*
 #include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_sdk/include/nsIDOMWindowCollection.h>
 #include <gecko_internal/jsapi.h>
 #include <gecko_internal/nsIDOMClassInfo.h>
+#include "gears/blob/blob_ff.h"
 #include "gears/desktop/desktop_ff.h"
 #elif BROWSER_IE
 #include <dispex.h>
 #include "gears/base/ie/activex_utils.h"
+#include "gears/blob/blob_ie.h"
 #include "gears/desktop/desktop_ie.h"
 #endif
 
@@ -46,9 +49,15 @@
 #include "gears/base/common/png_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/common/file.h"
+
+#include "gears/blob/file_blob.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/desktop/file_dialog_utils.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/ui/common/html_dialog.h"
+
 
 #if BROWSER_FF
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
@@ -259,6 +268,101 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
   }
 }
 
+// Display an open file dialog returning the selected files.
+// Parameters:
+//  filters - in, optional - An array of strings containing an even number
+//    of strings.
+//  module - in - used to create javascript objects and arrays
+//  files - out - the array of javascript file objects is placed in here
+//  error - out - the error message is placed in here
+static bool DisplayFileDialog(const JsArray* filters,
+                              const ModuleImplBaseClass& module,
+                              scoped_ptr<JsArray>* files,
+                              std::string16* error) {
+  // convert filter parameters
+  std::vector<FileDialog::Filter> vec_filters;
+  if (!FileDialogUtils::FiltersToVector(filters, &vec_filters, error))
+    return false;
+
+  // create and display dialog
+  scoped_ptr<FileDialog> dialog(NewFileDialog(FileDialog::MULTIPLE_FILES,
+                                              module));
+  if (!dialog.get()) {
+    *error = STRING16(L"Failed to create dialog.");
+    return false;
+  }
+  std::vector<std::string16> selected_files;
+  if (!dialog->OpenDialog(vec_filters, &selected_files, error))
+    return false;
+
+  // convert selection
+  JsRunnerInterface* js_runner = module.GetJsRunner();
+  files->reset(js_runner->NewArray());
+  if (!files->get()) {
+    *error = STRING16("Failed to create file array.");
+    return false;
+  }
+  if (!FileDialogUtils::FilesToJsObjectArray(selected_files, module,
+                                             files->get(), error))
+    return false;
+
+  return true;
+}
+
+#if BROWSER_FF
+
+NS_IMETHODIMP GearsDesktop::GetLocalFiles(// OPTIONAL string array filters,
+                                          // file array retval
+                                          ) {
+  JsParamFetcher js_params(this);
+  scoped_ptr<JsArray> filters(NULL);
+  if (js_params.IsOptionalParamPresent(0, false)) {
+    filters.reset(new JsArray());
+    if (!filters.get())
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    if (!js_params.GetAsArray(0, filters.get()))
+      RETURN_EXCEPTION(STRING16(L"First parameter is not able to be retrieved "
+                                L"as an array."));
+  }
+
+  // TODO(cdevries): set focus to tab where this function was called
+
+  scoped_ptr<JsArray> files(NULL);
+  std::string16 error;
+  if (!DisplayFileDialog(filters.get(), *this, &files, &error))
+    RETURN_EXCEPTION(error.c_str());
+
+  js_params.SetReturnValue(files->token());
+  RETURN_NORMAL();
+}
+
+#elif BROWSER_IE
+
+STDMETHODIMP GearsDesktop::getLocalFiles(VARIANT variant_filters,
+                                         VARIANT* retval) {
+  scoped_ptr<JsArray> filters(NULL);
+  if (ActiveXUtils::OptionalVariantIsPresent(&variant_filters)) {
+    filters.reset(new JsArray());
+    if (!filters.get())
+      return E_OUTOFMEMORY;
+
+    if (!filters->SetArray(variant_filters, NULL))
+      RETURN_EXCEPTION(STRING16(L"First parameter is not able to be retrieved "
+                                L"as an array."));
+  }
+
+  scoped_ptr<JsArray> files(NULL);
+  std::string16 error;
+  if (!DisplayFileDialog(filters.get(), *this, &files, &error))
+    RETURN_EXCEPTION(error.c_str());
+
+  *retval = files->token();
+  RETURN_NORMAL();
+}
+
+#endif  // BROWER_xyz
+
 // Handle all the icon creation and creation call required to actually install
 // a shortcut.
 bool GearsDesktop::SetShortcut(DesktopUtils::ShortcutInfo *shortcut,
@@ -332,7 +436,7 @@ bool GearsDesktop::SetShortcut(DesktopUtils::ShortcutInfo *shortcut,
 #endif
 
   // Create the desktop shortcut using platform-specific code
-  if (!DesktopUtils::CreateDesktopShortcut(EnvPageSecurityOrigin(), 
+  if (!DesktopUtils::CreateDesktopShortcut(EnvPageSecurityOrigin(),
                                            *shortcut, error)) {
     return false;
   }
@@ -474,3 +578,4 @@ bool GearsDesktop::ResolveUrl(std::string16 *url, std::string16 *error) {
   *url = full_url;
   return true;
 }
+

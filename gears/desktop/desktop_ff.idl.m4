@@ -34,10 +34,16 @@ interface GearsDesktopInterface : GearsBaseClassInterface {
 
   // icons parameter is expected to be a javascript object with properties for
   // each available icon size. Valid property names are currently "16x16",
-  // "32x32", "48x48", and "128x128". 
+  // "32x32", "48x48", and "128x128".
   void createShortcut(//in string name,
                       //in string description,
                       //in string url,
                       //in object icons
                       );
+
+  void getLocalFiles(//optional in string array filters
+                     //file array retval
+                     );
 };
+
+
