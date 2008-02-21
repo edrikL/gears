@@ -30,10 +30,30 @@
 #include "gears/installer/iemobile/resource.h"  // for restart dialog strings
 
 static const char16* kInternetExplorer = L"iexplore.exe";
-static const char16* kGearsSite = L"http://gears.google.com";
+static const char16* kGearsSite = L"http://gears.google.com/done.html";
 
 HINSTANCE module_instance;
 int _charmax = 255;
+
+// KernelIoControl should be in <pkfuncs.h> according to MSDN
+// but such a header doesn't exist. We declare it here instead and link
+// against coredll.lib.
+extern "C" __declspec(dllimport) BOOL KernelIoControl(DWORD code,
+                                                      LPVOID input_buffer,
+                                                      DWORD input_buffer_size,
+                                                      LPVOID output_buffer,
+                                                      DWORD output_buffer_size,
+                                                      LPDWORD bytes_returned);
+
+// See http://msdn2.microsoft.com/en-us/library/ms172519(vs.80).aspx
+	
+// for how to reboot the device.
+	
+void Reboot() {
+  int control_code = CTL_CODE(
+      FILE_DEVICE_HAL, 15, METHOD_BUFFERED, FILE_ANY_ACCESS);
+  KernelIoControl(control_code, NULL, 0, NULL, 0, NULL);
+}
 
 extern "C" {
 BOOL WINAPI DllMain(HANDLE instance, DWORD reason, LPVOID reserved) {
@@ -64,57 +84,20 @@ __declspec(dllexport) InstallerActions Install_Init(
   // We only handle the first call.
   if (!is_first_call) return kContinue;
   // Find out if IE Mobile is running.
-  ProcessRestarter restarter(kInternetExplorer);
+  ProcessRestarter restarter(kInternetExplorer);  
   if (restarter.IsProcessRunning()) {
-    LPCTSTR message = reinterpret_cast<LPCTSTR>(LoadString(
-        module_instance,
-        IDS_RESTART_QUESTION,
-        NULL,
-        0));
-    LPCTSTR title = reinterpret_cast<LPCTSTR>(LoadString(
-        module_instance,
-        IDS_RESTART_DIALOG_TITLE,
-        NULL,
-        0));
-    // Can't communicate with the user. Something is terribly wrong. Abort.
-    if (!message || !title) return kCancel;
-
-    // Ask the user if she wants to proceed.
-    int please_restart_iemobile = MessageBox(parent_window,
-                                             message,
-                                             title,
-                                             MB_YESNO | MB_ICONQUESTION);
-    if (please_restart_iemobile == IDYES) {
-      // Try killing the process.
-      if (FAILED(restarter.KillTheProcess(
-              10,
-              ProcessRestarter::KILL_METHOD_1_WINDOW_MESSAGE |
-              ProcessRestarter::KILL_METHOD_3_TERMINATE_PROCESS,
-              NULL))) {
-        // Unfortunately we failed, so inform the user and abort.
-        LPCTSTR fail_message = reinterpret_cast<LPCTSTR>(LoadString(
-            module_instance,
-            IDS_STOP_FAILURE_MESSAGE,
-            NULL,
-            0));
-
-        if (!fail_message) return kCancel;
-
-        MessageBox(parent_window, fail_message, title, MB_OK);
-        return kCancel;
-      }
-      return kContinue;
-    } else {
-      // The user chose to cancel the installation.
-      return kCancel;
-    }
+    restarter.KillTheProcess(
+        1000,
+        ProcessRestarter::KILL_METHOD_1_WINDOW_MESSAGE |
+        ProcessRestarter::KILL_METHOD_3_TERMINATE_PROCESS,
+        NULL);      
   }
   // IE Mobile wasn't running.
   return kContinue;
 }
 
 // This is called after installation completed. We start Internet Explorer
-// and point it to http://gears.google.com.
+// and point it to the Gears site.
 __declspec(dllexport) InstallerActions Install_Exit(
     HWND    parent_window,
     LPCTSTR final_install_dir,
@@ -124,8 +107,12 @@ __declspec(dllexport) InstallerActions Install_Exit(
     WORD    failed_registry_values,
     WORD    failed_shortcuts) {
   ProcessRestarter restarter(kInternetExplorer);
-  if (FAILED(restarter.StartTheProcess(kGearsSite))) {
-    // Unfortunately we failed, so inform the user.
+  if (restarter.IsProcessRunning()) {
+    // We could not kill IE. Tell the user he needs to reboot.
+    // This is because Gears may appear to be working (creations of Gears
+    // objects will succeed) but the HttpHandler and the Settings menu entry
+    // will not be registered with IE. This leaves Gears in an inconsistent
+    // state until IE is restarted.
     LPCTSTR title = reinterpret_cast<LPCTSTR>(LoadString(
         module_instance,
         IDS_RESTART_DIALOG_TITLE,
@@ -133,13 +120,37 @@ __declspec(dllexport) InstallerActions Install_Exit(
         0));
     LPCTSTR fail_message = reinterpret_cast<LPCTSTR>(LoadString(
         module_instance,
-        IDS_START_FAILURE_MESSAGE,
+        IDS_REBOOT_MESSAGE,
         NULL,
         0));
 
     if (!fail_message || !title) return kContinue;
 
-    MessageBox(parent_window, fail_message, title, MB_OK);
+    int please_restart = MessageBox(parent_window,
+                                    fail_message,
+                                    title,
+                                    MB_YESNO | MB_ICONQUESTION);
+    if (please_restart == IDYES) {
+      Reboot();
+    }
+  } else {
+    if (FAILED(restarter.StartTheProcess(kGearsSite))) {
+      // Unfortunately we failed, so inform the user.
+      LPCTSTR title = reinterpret_cast<LPCTSTR>(LoadString(
+          module_instance,
+          IDS_RESTART_DIALOG_TITLE,
+          NULL,
+          0));
+      LPCTSTR fail_message = reinterpret_cast<LPCTSTR>(LoadString(
+          module_instance,
+          IDS_START_FAILURE_MESSAGE,
+          NULL,
+          0));
+
+      if (!fail_message || !title) return kContinue;
+
+      MessageBox(parent_window, fail_message, title, MB_OK);
+    }
   }
   return kContinue;
 }
