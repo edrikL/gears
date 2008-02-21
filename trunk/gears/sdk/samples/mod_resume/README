@@ -1,0 +1,6 @@
+This is an Apache module implementing the resumable HTTP request proposal
+specified in:
+
+   http://code.google.com/p/google-gears/wiki/ResumableHttpRequestsProposal
+
+TODO(fry)
