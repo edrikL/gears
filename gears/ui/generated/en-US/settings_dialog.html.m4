@@ -287,7 +287,7 @@ m4_include(ui\common\html_dialog.js)
       } else if (kind == DENIED) {
         content += "<TRANS_BLOCK desc=\"States that there are no denied sites.\">No denied sites.</TRANS_BLOCK>";
       }
-      content += "</em></td></tr>";
+      content += "</em></td><td></td></tr>";
     } else {
       for (var site, i = 0; site = sites[i]; i++) {
         var cont = initSite(table, site, i, kind);
@@ -298,10 +298,10 @@ m4_include(ui\common\html_dialog.js)
   }
 
   function initSite(table, siteName, rowNumber, kind) {
-    var content = "<tr><td>";
+    var content = "<tr><td class=\"left\">";
     content += wrapString(siteName);
     content += "</td>";
-    content += "<td><a href='#' onclick='handleRemoveClick(";
+    content += "<td class=\"right\"><a href='#' onclick='handleRemoveClick(";
     content += rowNumber;
     content += ",\"" + siteName + "\"," + kind + ");'>";
     content += "<TRANS_BLOCK desc=\"Button user can press to remove a site from the list.\">Remove</TRANS_BLOCK>";
