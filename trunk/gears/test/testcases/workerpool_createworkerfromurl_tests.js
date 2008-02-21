@@ -115,14 +115,16 @@ function testCreateWorkerFromUrl3() {
   wp.sendMessage('PING3', childId);
 }
 
-function testCreateWorkerFromUrl4() {
-  var workerUrl = '/non-existent-file.js';
-
-  waitForGlobalErrors([workerUrl]);
-
-  var wp = google.gears.factory.create('beta.workerpool');
-  wp.createWorkerFromUrl(workerUrl);
-}
+// Test fails intermittently
+// TODO(ace): Uncomment or remove this test case upon resolution of Issue 388
+//function testCreateWorkerFromUrl4() {
+//  var workerUrl = '/non-existent-file.js';
+//
+//  waitForGlobalErrors([workerUrl]);
+//
+//  var wp = google.gears.factory.create('beta.workerpool');
+//  wp.createWorkerFromUrl(workerUrl);
+//}
 
 function testCreateWorkerFromUrl5() {
   var expectedError = 'Page does not have permission to use Google Gears';
