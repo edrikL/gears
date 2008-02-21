@@ -43,8 +43,12 @@ interface GearsDesktopInterface : IDispatch {
   // "32x32", "48x48", and "128x128".
   HRESULT createShortcut(BSTR name, BSTR description, BSTR url, VARIANT icons);
 
+#ifdef OFFICIAL_BUILD
+  // File picker is not ready for official builds
+#else
   HRESULT getLocalFiles([in] VARIANT variant_filters,
                         [out, retval] VARIANT* retval);
+#endif
 };
 
 
