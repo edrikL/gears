@@ -34,6 +34,7 @@
 #include <shellapi.h>
 
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
 
@@ -184,6 +185,73 @@ BOOL CMutexWince::Open(DWORD dwAccess, BOOL bInheritHandle, LPCTSTR pszName) {
     ReleaseMutex(global_mutex_);
   }
   return success;
+}
+
+// The function below is declared in js_runner_utils.h and its purpose is to 
+// report an error to the JsRunner's global scope. Equivalent to the
+// following JavaScript: eval("throw new Error('hello')");
+// On WinCE, however, throwing a JavaScript exception from C++ doesn't trigger
+// the default JS exception handler. Instead, Invoke returns DISP_E_EXCEPTION
+// (or the undocumented 0x800A139E if we don't pass an EXCEPTIONINFO
+// pointer; see http://asp3wiki.wrox.com/wiki/show/G.2.2-+Runtime+Errors
+// for a description of 0x800A139E).
+// We try to call window.onerror if it's set. If it isn't, we
+// show an alert instead, but only if script debugging is
+// turned on in the registry.
+void ThrowGlobalError(JsRunnerInterface *js_runner,
+                      const std::string16 &message) {
+  if (!js_runner) { return; }
+
+  std::string16 string_to_eval(message);
+
+  ReplaceAll(string_to_eval, std::string16(STRING16(L"'")),
+            std::string16(STRING16(L"\\'")));
+  ReplaceAll(string_to_eval, std::string16(STRING16(L"\r")),
+            std::string16(STRING16(L"\\r")));
+  ReplaceAll(string_to_eval, std::string16(STRING16(L"\n")),
+            std::string16(STRING16(L"\\n")));
+  
+  const std::string16 kEndBracket(STRING16(L"')"));
+  std::string16 throw_string(STRING16(L"throw new Error('"));
+  throw_string.append(string_to_eval);
+  throw_string.append(kEndBracket);
+  
+  // Maybe one day "throw new Error" will work, so we try anyway.
+  if (js_runner->Eval(throw_string.c_str()) == true) {    
+    return;
+  }
+  // Try window.onerror first.
+  std::string16 onerror_string(L"window.onerror('");
+  onerror_string.append(string_to_eval);
+  onerror_string.append(kEndBracket);
+  if (js_runner->Eval(onerror_string.c_str()) == true) {
+    return;
+  }
+  // Calling window.onerror failed. Try to read the registry setting
+  // that determines whether JS errors are shown to the user or not.
+  CRegKey key;
+  if (key.Open(HKEY_CURRENT_USER,
+               L"Software\\Microsoft\\Internet Explorer\\Main",
+               KEY_READ) != ERROR_SUCCESS) {
+    // This key should always exist. Failure to open it signals an error.
+    return;
+  }
+  DWORD show_script_errors = 0;
+  if (key.QueryDWORDValue(L"ShowScriptErrors", show_script_errors) !=
+      ERROR_SUCCESS) {
+    // The key is not set, so we don't need to do anything.
+    return;
+  }
+  if (show_script_errors == 1) {
+    std::string16 alert_string(L"alert('");
+    alert_string.append(string_to_eval);
+    alert_string.append(kEndBracket);
+    js_runner->Eval(alert_string.c_str());
+  } else {
+    // The key was set to 0 (or some other value than 1), so we
+    // don't need to do anything.
+    return;
+  }
 }
 
 // Internal

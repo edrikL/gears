@@ -22,7 +22,9 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+#ifdef WINCE
+// This function is implemented in wince_compatibility.cc!
+#else
 #include "gears/base/common/js_runner_utils.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
@@ -45,3 +47,4 @@ void ThrowGlobalError(JsRunnerInterface *js_runner,
 
   js_runner->Eval(string_to_eval.c_str());
 }
+#endif  // WINCE
