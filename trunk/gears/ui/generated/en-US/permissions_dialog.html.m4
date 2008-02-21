@@ -403,9 +403,13 @@ m4_include(ui/common/html_dialog.js)
     var elem;
 
     if (!customName) {
-       elem = getElementById("origin-only");
-       elem.style.display = "block";
-       setTextContent(elem, origin);
+      elem = getElementById("origin-only");
+      elem.style.display = "block";
+      if (isPIE) {
+        elem.innerHTML = wrapString(origin);
+      } else {
+        setTextContent(elem, origin);
+      }
 
       // When all we have is the origin, we lay it out centered because that
       // looks nicer. This is also what the original dialog did, which did not
@@ -414,9 +418,9 @@ m4_include(ui/common/html_dialog.js)
         elem.setAttribute("align", "center");
       }
     } else {
-       elem = getElementById("origin");
-       elem.style.display = "block";
-       setTextContent(elem, origin);
+      elem = getElementById("origin");
+      elem.style.display = "block";
+      setTextContent(elem, origin);
     }
 
     if (customIcon) {
@@ -459,7 +463,9 @@ m4_include(ui/common/html_dialog.js)
         var dy = contentHeightDesired - contentHeightProvided;
         window.resizeBy(0, dy);
       }
-    }  
+    } else { 
+      window.pie_dialog.ResizeDialog();
+    } 
   }
 
 
