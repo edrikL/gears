@@ -62,6 +62,8 @@ interface PositionOptions {
   // device may not be able to provide more accurate results than in the
   // flag wasn't specified.
   bool enableHighAccuracy;
+
+  // TODO: Consider adding distanceThreshold (for use with watch())
 };
 }}}
 
