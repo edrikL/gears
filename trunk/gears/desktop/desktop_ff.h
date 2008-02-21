@@ -55,9 +55,13 @@ class GearsDesktop
   //                               object icons)
   NS_IMETHOD CreateShortcut();
 
+#ifdef OFFICIAL_BUILD
+// File picker is not ready for official builds
+#else
   NS_IMETHOD GetLocalFiles(// OPTIONAL string array filters,
                            // file array retval
                            );
+#endif  // OFFICIAL_BUILD
 
   static bool GetControlPanelIconLocation(const SecurityOrigin &origin,
                                           const std::string16 &app_name,

@@ -54,7 +54,11 @@ class GearsDesktop
   STDMETHOD(createShortcut)(BSTR name, BSTR description, BSTR url,
                             VARIANT icons);
 
+#ifdef OFFICIAL_BUILD
+// File picker is not ready for official builds
+#else
   STDMETHOD(getLocalFiles)(VARIANT variant_filters, VARIANT* retval);
+#endif  // OFFICIAL_BUILD
 
   static bool GetControlPanelIconLocation(const SecurityOrigin &origin,
                                           const std::string16 &app_name,

@@ -23,6 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OFFICIAL_BUILD
+// File picker is not ready for official builds
+#else
+
 #if defined(LINUX) && !defined(OS_MACOSX)
 
 #include "gears/desktop/file_dialog_gtk.h"
@@ -146,3 +150,5 @@ bool FileDialogGtk::OpenDialog(const std::vector<Filter>& filters,
 }
 
 #endif  // defined(LINUX) && !defined(OS_MACOSX)
+
+#endif  // OFFICIAL_BUILD

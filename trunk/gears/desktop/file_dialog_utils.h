@@ -23,6 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OFFICIAL_BUILD
+// File picker is not ready for official builds
+#else
+
 #ifndef GEARS_DESKTOP_FILE_DIALOG_UTILS_H__
 #define GEARS_DESKTOP_FILE_DIALOG_UTILS_H__
 
@@ -61,3 +65,5 @@ namespace FileDialogUtils {
 }  // namespace FileDialogUtils
 
 #endif  // GEARS_DESKTOP_FILE_DIALOG_UTILS_H__
+
+#endif  // OFFICIAL_BUILD
