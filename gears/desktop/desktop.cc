@@ -268,6 +268,10 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
   }
 }
 
+#ifdef OFFICIAL_BUILD
+// File picker is not ready for official builds
+#else
+
 // Display an open file dialog returning the selected files.
 // Parameters:
 //  filters - in, optional - An array of strings containing an even number
@@ -362,6 +366,8 @@ STDMETHODIMP GearsDesktop::getLocalFiles(VARIANT variant_filters,
 }
 
 #endif  // BROWER_xyz
+
+#endif  // OFFICIAL_BUILD
 
 // Handle all the icon creation and creation call required to actually install
 // a shortcut.

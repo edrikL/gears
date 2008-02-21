@@ -41,9 +41,14 @@ interface GearsDesktopInterface : GearsBaseClassInterface {
                       //in object icons
                       );
 
+m4_changequote(`^',`^')m4_dnl
+m4_ifdef(^OFFICIAL_BUILD^,m4_dnl
+  ^^, m4_dnl File pickers are not ready for OFFICIAL_BUILD
+  ^m4_dnl Else:
   void getLocalFiles(//optional in string array filters
                      //file array retval
                      );
+^)
 };
 
 
