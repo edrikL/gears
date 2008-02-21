@@ -53,7 +53,8 @@
       }
     } catch (e) {
       // Safari
-      if (navigator.mimeTypes["application/x-googlegears"]) {
+      if ((typeof navigator.mimeTypes != 'undefined')
+           && navigator.mimeTypes["application/x-googlegears"]) {
         factory = document.createElement("object");
         factory.style.display = "none";
         factory.width = 0;
