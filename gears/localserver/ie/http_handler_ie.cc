@@ -244,7 +244,8 @@ STDMETHODIMP PassthruSink::ReportProgress(
 // This class is here to workaround a crash in IE6SP2 when the browser process
 // is exiting. In some circumstances, HttpHandlers are not terminated as they
 // should be. Some time after our DLL is unloaded during shutdown, IE
-// invokes methods on these orphaned handlers resulting in a crash.
+// invokes methods on these orphaned handlers resulting in a crash. Note that
+// WinCE does not suffer from this problem.
 // See http://code.google.com/p/google-gears/issues/detail?id=182
 //
 // To avoid this problem, we maintain a collection of the active HttpHandlers
@@ -254,6 +255,13 @@ STDMETHODIMP PassthruSink::ReportProgress(
 // remove this workaround code.
 //------------------------------------------------------------------------------
 
+#ifdef WINCE
+class ActiveHandlers {
+ public:
+  void Add(HttpHandler *handler) {}
+  void Remove(HttpHandler *handler) {}
+};
+#else
 class ActiveHandlers : public std::set<HttpHandler*> {
  public:
   ActiveHandlers()
@@ -293,24 +301,19 @@ class ActiveHandlers : public std::set<HttpHandler*> {
   }
 
   bool IsIEAtLeastVersion7() {
-#ifdef WINCE
-    // TODO(steveblock): Once LocalServer is working, test to see whether or not
-    // WinCE is subject to this bug.
-    return true;
-#else
     if (!has_determined_ie_version_) {
       MutexLock lock(&mutex_);
       is_at_least_version_7_ = IsIEAtLeastVersion(7, 0, 0, 0);
       has_determined_ie_version_ = true;
     }
     return is_at_least_version_7_;
-#endif
   }
 
   Mutex mutex_;
   bool has_determined_ie_version_;
   bool is_at_least_version_7_;
 };
+#endif
 
 static ActiveHandlers g_active_handlers;
 
