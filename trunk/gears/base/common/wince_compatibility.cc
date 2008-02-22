@@ -133,6 +133,13 @@ BOOL IsNetworkAlive(LPDWORD lpdwFlags) {
           // connection in the CONNMGR_STATUS_CONNECTED state and
           // the device has an IP address or it is connected in
           // proxy mode (e.g. ActiveSync).
+          //
+          // Testing shows that on (some?) Windows Mobile 6 Standard devices,
+          // the connection entry for an ActiveSync connection erroneously
+          // shows a connection status of CONNMGR_STATUS_DISCONNECTED when
+          // ActiveSync is in fact connected. As a result, this method will
+          // return false when such a device is connected only through
+          // ActiveSync. There seems to be now way to get around this problem.
           alive = true;
           break;
         }
