@@ -133,6 +133,7 @@ class linked_ptr {
   // Release ownership of the pointed object and returns it.
   // Sole ownership by this linked_ptr object is required.
   T* release() {
+    // !! GOOGLE Gears specific modification !!
     // GCC emits a warning for not using last in a opt build.
     // Warnings are treated as errors.
 #ifdef DEBUG
