@@ -166,8 +166,16 @@ Like all other Gears modules that have asynchronous behavior, GearsSQLTransactio
 
 == Versioning ==
 
-_TODO:_ Research how to implement this.
+Version information will be stored in a special table, access or changes to are prohibited by the API. WebKit uses `__WebKitDatabaseInfoTable__`. Perhaps name it along the same lines, like `__HTML5DatabaseInfoTable__`.
 
+To keep up with the version changes across multiple browser windows or workers, either of the following has to be done:
+
+ * the actual version read and compared with the expected at each transaction preflight. If the versions are different, all statements in transaction are marked bogus.
+ * make all instances of database object aware of version changes by managing a static map of versions.
+
+The latter approach is what WebKit team chose, but it may not be possible to implement across all browsers.
+
+_TODO(dglazkov):_ I don't believe we can ensure that in IE? need to research/confirm.
 
 =Discussion=
 
