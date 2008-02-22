@@ -69,7 +69,7 @@ typedef struct {
     int expecting_103;
     const char *etag;
     apr_off_t offset;
-    apr_off_t expected_length;          /* UNKNOWN_OFFSET if not specified */
+    apr_off_t expected_length; /* UNKNOWN_OFFSET if not specified */
     apr_off_t instance_length; /* UNKNOWN_OFFSET if '*' */
 
     char *filename;
@@ -144,6 +144,7 @@ static int parse_expect(request_rec *r, resume_ctx *ctx, resume_config *conf) {
         return 1;
     }
     ctx->expecting_103 = 1;
+    ctx->expected_length = 0;
 
     while (*expect++ == ';') {
         /* Parameters ... */
@@ -183,7 +184,7 @@ static int parse_expect(request_rec *r, resume_ctx *ctx, resume_config *conf) {
         if (!strcmp(parm, "resume")) {
             if (!validate_etag(cp)) {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                             "resume: Invalid etag %s", ctx->etag);
+                             "resume: Invalid etag \"%s\"", ctx->etag);
                 return 0;
             }
             ctx->etag = cp;
@@ -197,7 +198,7 @@ static int parse_expect(request_rec *r, resume_ctx *ctx, resume_config *conf) {
                 || ctx->offset < 0)
             {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                             "resume: Invalid first_byte_pos %s", cp);
+                             "resume: Invalid first_byte_pos \"%s\"", cp);
                 return 0;
             }
             cp = end + 1;
@@ -208,7 +209,7 @@ static int parse_expect(request_rec *r, resume_ctx *ctx, resume_config *conf) {
                 if (!r->read_chunked) {
                     ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                                  "resume: Content-Length specified "
-                                 "without last_byte_pos %s", cp);
+                                 "without last_byte_pos \"%s\"", cp);
                     return 0;
                 }
             }
@@ -218,13 +219,13 @@ static int parse_expect(request_rec *r, resume_ctx *ctx, resume_config *conf) {
                 || last_byte_pos >= conf->max_filesize)
             {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                             "resume: Invalid last_byte_pos %s", cp);
+                             "resume: Invalid last_byte_pos \"%s\"", cp);
                 return 0;
             }
             else if (r->read_chunked) {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                              "resume: last_byte_pos specified "
-                             "without Content-Length %s", cp);
+                             "without Content-Length \"%s\"", cp);
                 return 0;
             }
             else { /* valid last_byte_pos */
@@ -246,7 +247,7 @@ static int parse_expect(request_rec *r, resume_ctx *ctx, resume_config *conf) {
                              ctx->instance_length))
             {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                             "resume: Invalid instance_length %s", cp);
+                             "resume: Invalid instance_length \"%s\"", cp);
                 return 0;
             }
             else { /* valid instance_length */
@@ -313,7 +314,7 @@ apr_status_t resume_filter(ap_filter_t *f, apr_bucket_brigade *bb,
         ctx->expecting_103 = 0;
         ctx->etag = NULL;
         ctx->offset = 0;
-        ctx->expected_length = 0;
+        ctx->expected_length = UNKNOWN_OFFSET;
         ctx->instance_length = UNKNOWN_OFFSET;
         ctx->max_filesize = conf->max_filesize;
         ctx->received_length = 0;
@@ -326,7 +327,7 @@ apr_status_t resume_filter(ap_filter_t *f, apr_bucket_brigade *bb,
         rv = ap_setup_client_block(f->r, REQUEST_CHUNKED_DECHUNK);
         if (rv != APR_SUCCESS) {
             ap_log_error(APLOG_MARK, APLOG_ERR, 0, f->r->server,
-                         "resume: Error reading length and encoding %s",
+                         "resume: Error reading length and encoding \"%s\"",
                          ctx->filename);
             return rv;
         }
@@ -341,11 +342,11 @@ apr_status_t resume_filter(ap_filter_t *f, apr_bucket_brigade *bb,
             ctx->filename = apr_pstrcat(f->r->pool, conf->cache_root,
                                         "/mod_resume.", ctx->etag, NULL);
             rv = apr_file_open(&ctx->fd, ctx->filename,
-                               APR_READ | APR_WRITE | APR_BINARY |
-                               APR_BUFFERED, 0, f->r->pool);
+                               APR_READ | APR_WRITE | APR_APPEND
+                               | APR_BINARY | APR_BUFFERED, 0, f->r->pool);
             if (rv != APR_SUCCESS) {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, f->r->server,
-                             "resume: Error creating byte archive %s",
+                             "resume: Error creating byte archive \"%s\"",
                              ctx->filename);
                 return rv;
             }
@@ -354,7 +355,7 @@ apr_status_t resume_filter(ap_filter_t *f, apr_bucket_brigade *bb,
                                    ctx->fd);
             if (rv != APR_SUCCESS) {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, f->r->server,
-                             "resume: Error stating byte archive %s",
+                             "resume: Error stating byte archive \"%s\"",
                              ctx->filename);
                 return rv;
             }
@@ -362,7 +363,7 @@ apr_status_t resume_filter(ap_filter_t *f, apr_bucket_brigade *bb,
             ctx->file_size = finfo.size;
             if (ctx->offset > ctx->file_size) {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, f->r->server,
-                             "resume: Non-contiguous first_byte_pos %s",
+                             "resume: Non-contiguous first_byte_pos \"%s\"",
                              ctx->filename);
                 return APR_EGENERAL;
             }
@@ -386,34 +387,33 @@ apr_status_t resume_filter(ap_filter_t *f, apr_bucket_brigade *bb,
             }
             else if (ctx->offset > 0) {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, f->r->server,
-                             "resume: Non-contiguous first_byte_pos %s",
+                             "resume: Non-contiguous first_byte_pos \"%s\"",
                              ctx->filename);
                 return APR_EGENERAL;
             }
 
-            /* Create cache file.
-             */
-
+            /* Create cache file. */
             ctx->filename = apr_pstrcat(f->r->pool, conf->cache_root,
                                         "/mod_resume.XXXXXX", NULL);
             ctx->file_size = 0;
             ctx->mtime = apr_time_now();
             rv = apr_file_mktemp(&ctx->fd, ctx->filename,
-                                 APR_CREATE | APR_WRITE | APR_BINARY |
-                                 APR_BUFFERED | APR_EXCL, f->r->pool);
+                                 APR_CREATE | APR_EXCL
+                                 | APR_READ | APR_WRITE | APR_APPEND
+                                 | APR_BINARY | APR_BUFFERED,
+                                 f->r->pool);
             if (rv != APR_SUCCESS) {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, f->r->server,
-                             "resume: Error creating byte archive %s",
+                             "resume: Error creating byte archive \"%s\"",
                              ctx->filename);
                 return rv;
             }
-             /* ETag is XXXXXX from filename.
-             */
+            /* ETag is XXXXXX from filename. */
             /* TODO(fry): longer etag please! */
             ctx->etag = ap_strrchr(ctx->filename, '.');
             if (!ctx->etag++ || !validate_etag(ctx->etag)) {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, f->r->server,
-                             "resume: Invalid etag %s", ctx->etag);
+                             "resume: Invalid etag \"%s\"", ctx->etag);
                 return 0;
             }
         }
@@ -470,7 +470,7 @@ apr_status_t resume_filter(ap_filter_t *f, apr_bucket_brigade *bb,
             rv = apr_bucket_read(bucket, &str, &length, APR_BLOCK_READ);
             if (rv != APR_SUCCESS) {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, f->r->server,
-                             "resume: Error reading bytes %s",
+                             "resume: Error reading bytes for \"%s\"",
                              ctx->etag);
                 return rv;
             }
@@ -482,8 +482,8 @@ apr_status_t resume_filter(ap_filter_t *f, apr_bucket_brigade *bb,
                 apr_file_close(ctx->fd);
                 apr_file_remove(ctx->filename, f->r->pool);
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, f->r->server,
-                             "resume: Received incorrect number of bytes %s",
-                             ctx->etag);
+                             "resume: Received incorrect number of bytes for "
+                             "\"%s\"", ctx->etag);
                 return APR_EGENERAL;
             }
 
@@ -502,7 +502,7 @@ apr_status_t resume_filter(ap_filter_t *f, apr_bucket_brigade *bb,
             rv = apr_file_write_full(ctx->fd, str, length, NULL);
             if (rv != APR_SUCCESS) {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, f->r->server,
-                             "resume: Error archiving bytes %s",
+                             "resume: Error archiving bytes for \"%s\"",
                              ctx->etag);
                 return rv;
             }
@@ -514,7 +514,7 @@ apr_status_t resume_filter(ap_filter_t *f, apr_bucket_brigade *bb,
                 apr_file_close(ctx->fd);
                 apr_file_remove(ctx->filename, f->r->pool);
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, f->r->server,
-                             "resume: Received too many bytes %s",
+                             "resume: Received too many bytes for \"%s\"",
                              ctx->etag);
                 return APR_EGENERAL;
             }
@@ -533,17 +533,20 @@ apr_status_t resume_filter(ap_filter_t *f, apr_bucket_brigade *bb,
         send_103(ctx, f->r, conf);
     }
     apr_file_flush(ctx->fd);
-    if (ctx->received_length != ctx->expected_length
+    if ((ctx->expected_length != UNKNOWN_OFFSET
+         && ctx->received_length != ctx->expected_length)
         || (ctx->instance_length != UNKNOWN_OFFSET
             && ctx->file_size < ctx->instance_length)) {
         /* TODO(fry): 418 */
         ap_log_error(APLOG_MARK, APLOG_ERR, 0, f->r->server,
-                     "resume: Received insufficient bytes %s",
+                     "resume: Received insufficient bytes for \"%s\"",
                      ctx->etag);
         return APR_EGENERAL;
     }
     /* Already checked above for ctx->file_size > ctx->instance_length */
     if (ctx->mode == CACHE) {
+        apr_off_t offset = 0;
+        apr_file_seek(ctx->fd, APR_SET, &offset);
         apr_brigade_cleanup(bb);
         bucket = apr_bucket_file_create(ctx->fd, 0,
                                         (apr_size_t) ctx->file_size,
