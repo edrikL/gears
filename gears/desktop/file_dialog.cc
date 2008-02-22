@@ -30,6 +30,7 @@
 #include "gears/desktop/file_dialog.h"
 
 #include "gears/desktop/file_dialog_gtk.h"
+#include "gears/desktop/file_dialog_osx.h"
 #include "gears/desktop/file_dialog_win32.h"
 
 #if BROWSER_FF
@@ -112,6 +113,24 @@ static FileDialog* NewFileDialogWin32(const FileDialog::Mode mode,
   return dialog;
 }
 
+#elif defined(OS_MACOSX)
+
+static FileDialog* NewFileDialogCarbon(const FileDialog::Mode mode) {
+  FileDialog* dialog = NULL;
+
+  switch (mode) {
+    case FileDialog::MULTIPLE_FILES:
+      dialog = new FileDialogCarbon();
+      break;
+
+    default:
+      dialog = NULL;
+      break;
+  }
+
+  return dialog;
+}
+
 #endif  // PLATFORM_xyz
 
 FileDialog* NewFileDialog(const FileDialog::Mode mode,
@@ -120,6 +139,8 @@ FileDialog* NewFileDialog(const FileDialog::Mode mode,
   return NewFileDialogGtk(mode);
 #elif defined(WIN32)
   return NewFileDialogWin32(mode, module);
+#elif defined(OS_MACOSX)
+  return NewFileDialogCarbon(mode);
 #else
   return NULL;
 #endif  // PLATFORM_xyz
@@ -132,3 +153,4 @@ FileDialog::~FileDialog() {
 }
 
 #endif  // OFFICIAL_BUILD
+
