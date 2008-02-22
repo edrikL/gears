@@ -1491,6 +1491,14 @@ IEMOBILE_M4SRCS	+= \
 		setup.rc.m4 \
 		$(NULL)
 
+IEMOBILE_CPPSRCS += \
+		cab_updater.cc \
+		$(NULL)
+
+IEMOBILE_LINK_EXTRAS += \
+		$(IE_OUTDIR)/setup.res \
+		$(NULL)
+
 IEMOBILE_SETUP_CPPSRCS += \
 		process_restarter.cc \
 		setup.cc \
@@ -1501,4 +1509,3 @@ IEMOBILE_SETUP_LINK_EXTRAS += \
 		$(NULL)
 
 include tools/rules.mk
-
