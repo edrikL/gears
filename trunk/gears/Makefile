@@ -775,6 +775,7 @@ FF_CPPSRCS	+= \
 		desktop_utils_win32.cc \
 		file_dialog.cc \
 		file_dialog_gtk.cc \
+		file_dialog_osx.cc \
 		file_dialog_utils.cc \
 		file_dialog_win32.cc \
 		$(NULL)
@@ -1500,3 +1501,4 @@ IEMOBILE_SETUP_LINK_EXTRAS += \
 		$(NULL)
 
 include tools/rules.mk
+
