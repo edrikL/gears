@@ -26,11 +26,11 @@
 #ifndef GEARS_BASE_COMMON_FACTORY_UTILS_H__
 #define GEARS_BASE_COMMON_FACTORY_UTILS_H__
 
+#include "gears/base/common/permissions_db.h"
 #include "gears/base/common/string16.h"
 
 class SecurityOrigin;
 class GearsFactory;
-enum PermissionState;
 
 
 // The 'classVersion' parameter to factory.create() is reserved / deprecated.
