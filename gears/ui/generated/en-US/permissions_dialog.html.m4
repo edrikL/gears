@@ -282,8 +282,8 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
 
           <div id="div-buttons">
             <td width="50%" align="right" valign="middle">
-              <input disabled type="BUTTON" id="allow-button" onclick="allowAccess();"></input>
-              <input type="BUTTON" id="deny-button" onclick="denyAccess(); return false;"></input>
+              <input disabled type="BUTTON" id="allow-button" onclick="allowAccessPermanently();"></input>
+              <input type="BUTTON" id="deny-button" onclick="denyAccessTemporarily(); return false;"></input>
             </td>
           </div>^,m4_dnl
 ^           
@@ -311,13 +311,13 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
             to fix that.
             -->
             <a href="#" accesskey="A" id="allow-button" 
-                onclick="allowAccess(); return false;"
+                onclick="allowAccessPermanently(); return false;"
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
                   ><TRANS_BLOCK desc="Button user can press to allow the use of Gears."><span class="accesskey">A</span>llow</TRANS_BLOCK></div></div></a>
             <a href="#" accesskey="C" id="deny-button"
-                onclick="denyAccess(); return false;"
+                onclick="denyAccessTemporarily(); return false;"
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
@@ -350,7 +350,7 @@ m4_include(ui/common/html_dialog.js)
     setButtonLabel("text-deny", "deny-button");
     var allowText = getElementById("text-allow");
     if (allowText) {
-      window.pie_dialog.SetButton(allowText.innerText, "allowAccess();");
+      window.pie_dialog.SetButton(allowText.innerText, "allowAccessPermanently();");
     }
     var cancelText = getElementById("text-cancel");
     if (cancelText) {
@@ -360,7 +360,7 @@ m4_include(ui/common/html_dialog.js)
   }
   initWarning();
 
-  var disabled = true;
+  var allowButtonUnlocked = false;
 
   function setTextContent(elem, content) {
     if (isDefined(typeof document.createTextNode)) {
@@ -382,7 +382,7 @@ m4_include(ui/common/html_dialog.js)
       } else {
         elemSettings.style.display = 'block';
         elemHelp.style.display = 'none';
-        window.pie_dialog.SetButton("Allow", "allowAccess();");
+        window.pie_dialog.SetButton("Allow", "allowAccessPermanently();");
         updateAllowButtonEnabledState();
       }
       window.pie_dialog.ResizeDialog();
@@ -471,35 +471,31 @@ m4_include(ui/common/html_dialog.js)
 
   function updateAllowButtonEnabledState() {
     var allowButton = getElementById("allow-button");
-    var checkbox = getElementById("unlock");
+    var unlockCheckbox = getElementById("unlock");
 
-    disabled = !checkbox.checked;
+    allowButtonUnlocked = unlockCheckbox.checked;
 
-    if (disabled) {
-      disableButton(allowButton);
-    } else {
+    if (allowButtonUnlocked) {
       enableButton(allowButton);
+    } else {
+      disableButton(allowButton);
     }
   }
 
-  // Note: The structure that the following functions pass are coupled to the
+  // Note: The structure that the following functions pass is coupled to the
   // code in PermissionsDialog that processes it.
-  function allowAccess() {
-    if (!disabled) {
-      saveAndClose({
-        allow: true
-      });
+  function allowAccessPermanently() {
+    if (allowButtonUnlocked) {
+      saveAndClose({"allow": true, "permanently": true});
     }
   }
 
-  function denyAccess() {
-    saveAndClose(null); // default behavior is to deny temporarily
+  function denyAccessTemporarily() {
+    saveAndClose({"allow": false, "permanently": false});
   }
 
   function denyAccessPermanently() {
-    saveAndClose({
-      allow: false
-    });
+    saveAndClose({"allow": false, "permanently": true });
   }
 </script>
 </html>

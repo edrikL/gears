@@ -132,7 +132,7 @@ bool PermissionsDB::Init() {
 
 PermissionsDB::PermissionValue PermissionsDB::GetCanAccessGears(
                                    const SecurityOrigin &origin) {
-  int retval_int = PERMISSION_DEFAULT;
+  int retval_int = PERMISSION_NOT_SET;
   access_table_.GetInt(origin.url().c_str(), &retval_int);
   return static_cast<PermissionsDB::PermissionValue>(retval_int);
 }
@@ -145,7 +145,7 @@ void PermissionsDB::SetCanAccessGears(const SecurityOrigin &origin,
     return;
   }
 
-  if (value == PERMISSION_DEFAULT) {
+  if (value == PERMISSION_NOT_SET) {
     access_table_.Clear(origin.url().c_str());
   } else if (value == PERMISSION_ALLOWED || value == PERMISSION_DENIED) {
     access_table_.SetInt(origin.url().c_str(), value);
@@ -154,7 +154,7 @@ void PermissionsDB::SetCanAccessGears(const SecurityOrigin &origin,
     assert(false);
   }
 
-  if (value == PERMISSION_DENIED || value == PERMISSION_DEFAULT) {
+  if (value == PERMISSION_DENIED || value == PERMISSION_NOT_SET) {
     WebCacheDB *webcacheDB = WebCacheDB::GetDB();
     if (webcacheDB) {
       webcacheDB->DeleteServersForOrigin(origin);
@@ -217,7 +217,7 @@ bool PermissionsDB::EnableGearsForWorker(const SecurityOrigin &origin) {
       return true;
     case PERMISSION_DENIED:
       return false;
-    case PERMISSION_DEFAULT:
+    case PERMISSION_NOT_SET:
       if (!access_table_.SetInt(origin.url().c_str(), PERMISSION_ALLOWED)) {
         return false;
       }

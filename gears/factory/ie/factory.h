@@ -30,6 +30,7 @@
 #include "common/genfiles/product_constants.h"  // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/permissions_db.h"
 #include "gears/base/ie/resource.h"  // for .rgs resource ids (IDR_*)
 #include "ie/genfiles/interfaces.h"  // from OUTDIR
 
@@ -100,9 +101,10 @@ class ATL_NO_VTABLE GearsFactory
   void ResumeObjectCreationAndUpdatePermissions();
 
  private:
-  // friends for exposing 'is_permission_*' fields
+  // friends for exposing 'permission_state_'
   friend class PoolThreadsManager;
   friend bool HasPermissionToUseGears(GearsFactory *factory,
+                                      bool use_temporary_permissions,
                                       const char16 *custom_icon_url,
                                       const char16 *custom_name,
                                       const char16 *custom_message);
@@ -128,8 +130,7 @@ class ATL_NO_VTABLE GearsFactory
   // TODO(cprince): move this into ModuleImplBaseClass to auto-pass permission
   // data around. Do that when we have a single instance of the info per page,
   // because multiple copies can get out of sync (permission data is mutable).
-  bool is_permission_granted_;
-  bool is_permission_value_from_user_;  // user prompt, or persisted DB value
+  PermissionState permission_state_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsFactory);
 };

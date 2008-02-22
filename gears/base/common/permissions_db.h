@@ -32,6 +32,15 @@
 #include "gears/base/common/shortcut_table.h"
 #include "gears/base/common/sqlite_wrapper.h"
 
+// TODO(cprince): Consider merging this with PermissionsDB::PermissionValue.
+// But note the _TEMPORARY values hae no meaning to PermissionsDB.
+enum PermissionState {
+  NOT_SET,
+  ALLOWED_PERMANENTLY,
+  ALLOWED_TEMPORARILY,
+  DENIED_PERMANENTLY,
+  DENIED_TEMPORARILY
+};
 
 // This class provides an API to manage the capabilities of pages within
 // Gears. Right now, it is a baby API and only manages a single capability:
@@ -41,11 +50,14 @@
 //
 // TODO(aa): Think about factoring some of the commonalities between this class
 // and WebCacheDB into a common base class.
+//
+// TODO(cprince): Should rename this class and file to SettingsDB, as we store
+// shortcut info here too. (But be careful to preserve the on-disk filename.)
 class PermissionsDB {
  public:
   // The allowable values of a permission.
   enum PermissionValue {
-    PERMISSION_DEFAULT = 0,
+    PERMISSION_NOT_SET = 0,  // origin has no persisted value
     PERMISSION_ALLOWED = 1,
     PERMISSION_DENIED = 2
   };
@@ -64,7 +76,7 @@ class PermissionsDB {
     return GetCanAccessGears(origin) == PERMISSION_ALLOWED;
   }
 
-  // Get all the origins with a specific value.
+  // Gets all the origins with a specific value.
   bool GetOriginsByValue(PermissionValue value,
                          std::vector<SecurityOrigin> *result);
 
@@ -74,30 +86,30 @@ class PermissionsDB {
   // The key used to cache instances of PermissionsDB in ThreadLocals.
   static const std::string kThreadLocalKey;
 
-  // Add (or overwrite) a shortcut for origin/name, with appUrl,
+  // Adds (or overwrites) a shortcut for origin/name, with appUrl,
   // icoUrl, and msg as data.
   bool SetShortcut(const SecurityOrigin &origin, const char16 *name,
                    const char16 *app_url,
                    const std::vector<std::string16> &icon_urls,
                    const char16 *msg);
 
-  // Get the set of origins which have shortcuts.
+  // Gets the set of origins which have shortcuts.
   bool GetOriginsWithShortcuts(std::vector<SecurityOrigin> *result);
 
-  // Get the set of named shortcuts for a specific origin.
+  // Gets the set of named shortcuts for a specific origin.
   bool GetOriginShortcuts(const SecurityOrigin &origin,
                           std::vector<std::string16> *names);
 
-  // Get the data for a specific shortcut.
+  // Gets the data for a specific shortcut.
   bool GetShortcut(const SecurityOrigin &origin, const char16 *name,
                    std::string16 *app_url,
                    std::vector<std::string16> *icon_urls,
                    std::string16 *msg);
 
-  // Delete a specific shortcut.
+  // Deletes a specific shortcut.
   bool DeleteShortcut(const SecurityOrigin &origin, const char16 *name);
 
-  // Delete all shortcuts for an origin.
+  // Deletes all shortcuts for an origin.
   bool DeleteShortcuts(const SecurityOrigin &origin);
 
  private:

@@ -57,19 +57,20 @@ const char16 *kGoogleUpdateDidRunValue = STRING16(L"dr");
 void AppendBuildInfo(std::string16 *s) {
   s->append(STRING16(PRODUCT_VERSION_STRING));
 
-  // TODO(miket): when we have a need to come up with a schema for this
-  // string, do so. This is sufficient for current (nonexistent) purposes.
+
 #ifdef OFFICIAL_BUILD
   s->append(STRING16(L";official"));
 #else
   s->append(STRING16(L";developer"));
 #endif
 
+
 #ifdef DEBUG
   s->append(STRING16(L";dbg"));
 #else
   s->append(STRING16(L";opt"));
 #endif
+
 
 #if defined(OS_MACOSX)
   s->append(STRING16(L";osx"));
@@ -102,20 +103,26 @@ void AppendBuildInfo(std::string16 *s) {
 
 
 bool HasPermissionToUseGears(GearsFactory *factory,
+                             bool use_temporary_permissions,
                              const char16 *custom_icon_url,
                              const char16 *custom_name,
                              const char16 *custom_message) {
   // First check is_creation_suspended, because the factory can be suspended
-  // even when is_permission_granted.
+  // even when permission_state_ is an ALLOWED_* value.
   if (factory->is_creation_suspended_) {
     return false;
   }
 
   // Check for a cached value.
-  if (factory->is_permission_granted_) {
+  if (factory->permission_state_ == ALLOWED_PERMANENTLY) {
     return true;
-  } else if (factory->is_permission_value_from_user_) {
-    // and !factory->is_permission_granted_
+  } else if (factory->permission_state_ == DENIED_PERMANENTLY) {
+    return false;
+  } else if (factory->permission_state_ == ALLOWED_TEMPORARILY &&
+             use_temporary_permissions) {
+    return true;
+  } else if (factory->permission_state_ == DENIED_TEMPORARILY &&
+             use_temporary_permissions) {
     return false;
   }
 
@@ -128,16 +135,14 @@ bool HasPermissionToUseGears(GearsFactory *factory,
   switch (permissions->GetCanAccessGears(origin)) {
     // Origin was found in database. Save choice for page lifetime,
     // so things continue working even if underlying database changes.
-    case PermissionsDB::PERMISSION_DENIED:
-      factory->is_permission_granted_ = false;
-      factory->is_permission_value_from_user_ = true;
-      return factory->is_permission_granted_;
     case PermissionsDB::PERMISSION_ALLOWED:
-      factory->is_permission_granted_ = true;
-      factory->is_permission_value_from_user_ = true;
-      return factory->is_permission_granted_;
+      factory->permission_state_ = ALLOWED_PERMANENTLY;
+      return true;
+    case PermissionsDB::PERMISSION_DENIED:
+      factory->permission_state_ = DENIED_PERMANENTLY;
+      return false;
     // Origin was not found in database.
-    case PermissionsDB::PERMISSION_DEFAULT:
+    case PermissionsDB::PERMISSION_NOT_SET:
       break;
     // All other values are unexpected.
     default:
@@ -155,23 +160,26 @@ bool HasPermissionToUseGears(GearsFactory *factory,
 
   // Display the modal dialog. Should not happen in a faceless worker.
   assert(!factory->EnvIsWorker());
-  bool allow_origin = ShowPermissionsPrompt(origin,
-                                            custom_icon_url,
-                                            custom_name,
-                                            custom_message);
+  factory->permission_state_ = ShowPermissionsPrompt(origin,
+                                                     custom_icon_url,
+                                                     custom_name,
+                                                     custom_message);
 
-  factory->is_permission_granted_ = allow_origin;
-  factory->is_permission_value_from_user_ = true;
-
-  // Return the decision.
-  return allow_origin;
+  // Return the boolean decision.
+  if (factory->permission_state_ == ALLOWED_PERMANENTLY ||
+      factory->permission_state_ == ALLOWED_TEMPORARILY) {
+    return true;
+  }
+  return false;
 }
 
-#ifndef BROWSER_SAFARI
-bool ShowPermissionsPrompt(const SecurityOrigin &origin,
-                           const char16 *custom_icon_url,
-                           const char16 *custom_name,
-                           const char16 *custom_message) {
+#ifdef BROWSER_SAFARI
+// See factory_utils.mm for (temporary) Safari version.
+#else
+PermissionState ShowPermissionsPrompt(const SecurityOrigin &origin,
+                                      const char16 *custom_icon_url,
+                                      const char16 *custom_name,
+                                      const char16 *custom_message) {
   return PermissionsDialog::Prompt(origin,
                                    custom_icon_url,
                                    custom_name,

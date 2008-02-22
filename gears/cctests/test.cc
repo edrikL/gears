@@ -125,7 +125,7 @@ void GearsTest::RunTests(JsCallContext *context) {
   // the previous instance.
   permissions = PermissionsDB::GetDB();
   permissions->SetCanAccessGears(cc_tests_origin,
-                                 PermissionsDB::PERMISSION_DEFAULT);
+                                 PermissionsDB::PERMISSION_NOT_SET);
 
   context->SetReturnValue(JSPARAM_BOOL, &ok);
 }

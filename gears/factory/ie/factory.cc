@@ -56,8 +56,7 @@
 
 GearsFactory::GearsFactory()
     : is_creation_suspended_(false),
-      is_permission_granted_(false),
-      is_permission_value_from_user_(false) {
+      permission_state_(NOT_SET) {
   SetActiveUserFlag();
 }
 
@@ -78,7 +77,9 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
 
   // Make sure the user gives this origin permission to use Gears.
 
-  if (!HasPermissionToUseGears(this, NULL, NULL, NULL)) {
+  bool use_temporary_permissions = true;
+  if (!HasPermissionToUseGears(this, use_temporary_permissions,
+                               NULL, NULL, NULL)) {
     RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
                               PRODUCT_FRIENDLY_NAME L"."));
   }
@@ -317,7 +318,9 @@ STDMETHODIMP GearsFactory::getPermission(const VARIANT *site_name_in,
     }
   }
 
-  if (HasPermissionToUseGears(this, image_url.c_str(), site_name.c_str(),
+  bool use_temporary_permissions = false;
+  if (HasPermissionToUseGears(this, use_temporary_permissions,
+                              image_url.c_str(), site_name.c_str(),
                               extra_message.c_str())) {
     *retval = VARIANT_TRUE;
   } else {
@@ -331,7 +334,24 @@ STDMETHODIMP GearsFactory::getPermission(const VARIANT *site_name_in,
 // indicates whether USER opt-in is still required, not whether DEVELOPER
 // methods have been called correctly (e.g. allowCrossOrigin).
 STDMETHODIMP GearsFactory::get_hasPermission(VARIANT_BOOL *retval) {
-  *retval = is_permission_granted_ ? VARIANT_TRUE : VARIANT_FALSE;
+  switch (permission_state_) {
+    case ALLOWED_PERMANENTLY:
+    case ALLOWED_TEMPORARILY:
+      *retval = VARIANT_TRUE;
+      break;
+    case DENIED_PERMANENTLY:
+    case DENIED_TEMPORARILY:
+      *retval = VARIANT_FALSE;
+      break;
+    case NOT_SET:
+      // TODO(cprince): Look in the PermissionsDB instead. If a persisted value
+      // exists, use it and update permission_state_. Otherwise, *don't* prompt
+      // the user, and *don't* set permission_state_, only set retval.
+      *retval = VARIANT_FALSE;
+      break;
+    default:
+      RETURN_EXCEPTION(STRING16(L"Internal error."));
+  }
   RETURN_NORMAL();
 }
 #endif
