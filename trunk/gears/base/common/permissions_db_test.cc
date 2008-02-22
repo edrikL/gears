@@ -96,15 +96,15 @@ bool TestPermissionsDBAll() {
   TEST_ASSERT(permissions->GetCanAccessGears(bar) ==
       PermissionsDB::PERMISSION_DENIED);
 
-  // Try searching by default value (should not be allowed).
+  // Try searching for PERMISSION_NOT_SET (should not be allowed).
   std::vector<SecurityOrigin> list;
   TEST_ASSERT(!permissions->GetOriginsByValue(
-      PermissionsDB::PERMISSION_DEFAULT, &list));
+      PermissionsDB::PERMISSION_NOT_SET, &list));
 
   // Now try resetting
-  permissions->SetCanAccessGears(bar, PermissionsDB::PERMISSION_DEFAULT);
+  permissions->SetCanAccessGears(bar, PermissionsDB::PERMISSION_NOT_SET);
   TEST_ASSERT(permissions->GetCanAccessGears(bar) ==
-      PermissionsDB::PERMISSION_DEFAULT);
+      PermissionsDB::PERMISSION_NOT_SET);
 
   // TODO(shess) Constants for later comparison.
   const std::string16 kFooTest1(STRING16(L"Test"));

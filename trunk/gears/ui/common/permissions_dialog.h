@@ -28,20 +28,22 @@
 
 #include "gears/base/common/security_model.h"
 
+enum PermissionState;
+
 class PermissionsDialog {
  public:
-  // Displays a modal dialog prompting the user to allow the given
-  // origin access to use Gears. The PermissionDB is updated with the
-  // results. Returns true if access is granted. 
+  // Displays a modal dialog asking the user whether to let the given origin
+  // use Gears.  Updates the PermissionsDB if the user's choice is permanent.
+  // Returns a PermissionState value indicating the user's choice.
   //
   // The custom icon, name, and message parameters are optional and may be NULL.
   // If NULL, a default icon and message will be shown. The 'custome_icon_url'
   // should be a full url to a 32x32 image suitable for use in an HTML image
   // tag, and 'custom_message' should not contain HTML markup.
-  static bool Prompt(const SecurityOrigin &origin,
-                     const char16 *custom_icon_url,
-                     const char16 *custom_name,
-                     const char16 *custom_message);
+  static PermissionState Prompt(const SecurityOrigin &origin,
+                                const char16 *custom_icon_url,
+                                const char16 *custom_name,
+                                const char16 *custom_message);
  private:
   // Private constructor. Use static Prompt() methods instead.
   PermissionsDialog() {}

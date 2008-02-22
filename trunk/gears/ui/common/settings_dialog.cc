@@ -139,6 +139,6 @@ void SettingsDialog::ProcessResult(Json::Value *dialog_result) {
     }
 
     capabilities->SetCanAccessGears(origin,
-                                    PermissionsDB::PERMISSION_DEFAULT);
+                                    PermissionsDB::PERMISSION_NOT_SET);
   }
 }

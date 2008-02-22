@@ -75,8 +75,7 @@ const nsCID kGearsFactoryClassId = {0x93b2e433, 0x35ab, 0x46e7, {0xa9, 0x50,
 
 GearsFactory::GearsFactory()
     : is_creation_suspended_(false),
-      is_permission_granted_(false),
-      is_permission_value_from_user_(false) {
+      permission_state_(NOT_SET) {
   SetActiveUserFlag();
 }
 
@@ -86,7 +85,9 @@ NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
                                    nsISupports **retval) {
   // Make sure the user gives this site permission to use Gears.
 
-  if (!HasPermissionToUseGears(this, NULL, NULL, NULL)) {
+  bool use_temporary_permissions = true;
+  if (!HasPermissionToUseGears(this, use_temporary_permissions,
+                               NULL, NULL, NULL)) {
     RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
                               PRODUCT_FRIENDLY_NAME L"."));
   }
@@ -272,8 +273,10 @@ NS_IMETHODIMP GearsFactory::GetPermission(PRBool *retval) {
       RETURN_EXCEPTION(STRING16(L"extraMessage must be a string."));
   }
 
-  if (HasPermissionToUseGears(this, image_url.c_str(),
-                              site_name.c_str(), extra_message.c_str())) {
+  bool use_temporary_permissions = false;
+  if (HasPermissionToUseGears(this, use_temporary_permissions,
+                              image_url.c_str(), site_name.c_str(),
+                              extra_message.c_str())) {
     *retval = PR_TRUE;
   } else {
     *retval = PR_FALSE;
@@ -286,7 +289,24 @@ NS_IMETHODIMP GearsFactory::GetPermission(PRBool *retval) {
 // indicates whether USER opt-in is still required, not whether DEVELOPER
 // methods have been called correctly (e.g. allowCrossOrigin).
 NS_IMETHODIMP GearsFactory::GetHasPermission(PRBool *retval) {
-  *retval = is_permission_granted_ ? PR_TRUE : PR_FALSE;
+  switch (permission_state_) {
+    case ALLOWED_PERMANENTLY:
+    case ALLOWED_TEMPORARILY:
+      *retval = PR_TRUE;
+      break;
+    case DENIED_PERMANENTLY:
+    case DENIED_TEMPORARILY:
+      *retval = PR_FALSE;
+      break;
+    case NOT_SET:
+      // TODO(cprince): Look in the PermissionsDB instead. If a persisted value
+      // exists, use it and update permission_state_. Otherwise, *don't* prompt
+      // the user, and *don't* set permission_state_, only set retval.
+      *retval = PR_FALSE;
+      break;
+    default:
+      RETURN_EXCEPTION(STRING16(L"Internal error."));
+  }
   RETURN_NORMAL();
 }
 

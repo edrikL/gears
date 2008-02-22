@@ -47,15 +47,16 @@ void Dispatcher<GearsFactory>::Init() {
 
 GearsFactory::GearsFactory()
     : is_creation_suspended_(false),
-      is_permission_granted_(false),
-      is_permission_value_from_user_(false) {
+      permission_state_(NOT_SET) {
   SetActiveUserFlag();
 }
 
 void GearsFactory::Create(JsCallContext *context) {
   // TODO(mpcomplete): implement HTMLDialog.
 #if 0
-  if (!HasPermissionToUseGears(this, NULL, NULL, NULL)) {
+  bool use_temporary_permissions = true;
+  if (!HasPermissionToUseGears(this, use_temporary_permissions,
+                               NULL, NULL, NULL)) {
     context->SetException(STRING16(L"Page does not have permission to use "
                                    PRODUCT_FRIENDLY_NAME L"."));
     return;

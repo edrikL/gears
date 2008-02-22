@@ -88,16 +88,16 @@ static bool PopulateArguments(const SecurityOrigin &origin,
 }
 
 
-bool PermissionsDialog::Prompt(const SecurityOrigin &origin,
-                               const char16 *custom_icon,
-                               const char16 *custom_name,
-                               const char16 *custom_message) {
-  // Note: Arguments and results are coupled to the values that 
+PermissionState PermissionsDialog::Prompt(const SecurityOrigin &origin,
+                                          const char16 *custom_icon,
+                                          const char16 *custom_name,
+                                          const char16 *custom_message) {
+  // Note: Arguments and results are coupled to the values that
   // permissions_dialog.html.m4 is expecting.
   HtmlDialog dialog;
   if (!PopulateArguments(origin, custom_icon, custom_name, custom_message,
                          &dialog.arguments)) {
-    return false;
+    return NOT_SET;
   }
 
 #ifdef WINCE
@@ -111,29 +111,44 @@ bool PermissionsDialog::Prompt(const SecurityOrigin &origin,
 
   dialog.DoModal(kDialogFile, kDialogWidth, kDialogHeight);
 
-  // A null value is OK. The user closed the dialog without allowing or
-  // denying. We interpret that as deny, but do not save that value.
+  // Extract the dialog results.
+  bool allow;
+  bool permanently;
+
   if (dialog.result == Json::Value::null) {
-    return false;
+    // A null dialog.result is okay; it means the user closed the dialog
+    // instead of pressing any button.
+    allow = false;
+    permanently = false;
+  } else {
+    if (!dialog.result["allow"].isBool() ||
+        !dialog.result["permanently"].isBool()) {
+      assert(false);
+      LOG(("PermissionsDialog::Prompt() - Unexpected result."));
+      return NOT_SET;
+    }
+
+    allow = dialog.result["allow"].asBool();
+    permanently = dialog.result["permanently"].asBool();
   }
 
-  if (!dialog.result["allow"].isBool()) {
-    assert(false);
-    LOG(("ShowPermissionPrompt: Unexpected result"));
-    return false;
+  // Store permanent results in the DB.
+  if (permanently) {
+    PermissionsDB::PermissionValue value = 
+                       allow ? PermissionsDB::PERMISSION_ALLOWED
+                             : PermissionsDB::PERMISSION_DENIED;
+    PermissionsDB *permissions = PermissionsDB::GetDB();
+    if (permissions) {
+      permissions->SetCanAccessGears(origin, value);
+    }
   }
 
-  bool allow = dialog.result["allow"].asBool();
-
-  // Store this result in the DB
-  // TODO(steveblock): surely this code shouldn't be in the PermissionsDialog
-  // class?!
-  PermissionsDB *permissions = PermissionsDB::GetDB();
-  if (!permissions) { return false; }
-  PermissionsDB::PermissionValue value = 
-                     allow ? PermissionsDB::PERMISSION_ALLOWED
-                           : PermissionsDB::PERMISSION_DENIED;
-  permissions->SetCanAccessGears(origin, value);
-
-  return allow;
+  // Convert the results to a PermissionState value.
+  if (allow) {
+    if (permanently) return ALLOWED_PERMANENTLY;
+    else return ALLOWED_TEMPORARILY;
+  } else {
+    if (permanently) return DENIED_PERMANENTLY;
+    else return DENIED_TEMPORARILY;
+  }
 }

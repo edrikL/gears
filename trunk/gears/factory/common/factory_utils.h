@@ -30,6 +30,7 @@
 
 class SecurityOrigin;
 class GearsFactory;
+enum PermissionState;
 
 
 // The 'classVersion' parameter to factory.create() is reserved / deprecated.
@@ -42,23 +43,21 @@ void AppendBuildInfo(std::string16 *s);
 
 // Returns true if the calling security origin has been granted
 // access by the user. Will prompt the user for permission only if
-// needed. The custom_<<>> parameters are optional and may be NULL.
-//
-// TODO(cprince): PromptUser doesn't really need to be a member of
-// GearsFactory. If we move it out of there, we can remove the parameter
-// here, which makes the flow of control cleaner.
+// needed. The 'custom_*' parameters are optional and may be NULL.
 bool HasPermissionToUseGears(GearsFactory *factory,
+                             bool use_temporary_permissions,
                              const char16 *custom_icon_url,
                              const char16 *custom_name,
                              const char16 *custom_message);
 
-// Shows a warning prompt asking a user if origin should be allowed, and
-// saves the result in the PermissionsDB. Returns true if access is allowed.
-// The custom_<<>> parameters are optional and may be NULL.
-bool ShowPermissionsPrompt(const SecurityOrigin &origin,
-                           const char16 *custom_icon_url,
-                           const char16 *custom_name,
-                           const char16 *custom_message);
+// Displays a prompt asking if the origin should be allowed to use Gears.
+// Updates the PermissionsDB if the user's choice is permanent.  Returns a
+// PermissionState value indicating the user's choice.  The 'custom_*'
+// parameters are optional and may be NULL.
+PermissionState ShowPermissionsPrompt(const SecurityOrigin &origin,
+                                      const char16 *custom_icon_url,
+                                      const char16 *custom_name,
+                                      const char16 *custom_message);
 
 // Sets a usage-tracking bit once per instantiation of Gears module. On
 // machines that have the Google Update Service available, this bit is
