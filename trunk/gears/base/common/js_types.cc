@@ -362,6 +362,42 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
   return true;
 }
 
+bool JsArray::SetElement(int index, const JsScopedToken& in) {
+  // TODO(cdevries): implement this
+  assert(false);
+  return false;
+}
+
+bool JsArray::SetElementBool(int index, bool value) {
+  // TODO(cdevries): implement this
+  assert(false);
+  return false;
+}
+
+bool JsArray::SetElementInt(int index, int value) {
+  // TODO(cdevries): implement this
+  assert(false);
+  return false;
+}
+
+bool JsArray::SetElementDouble(int index, double value) {
+  // TODO(cdevries): implement this
+  assert(false);
+  return false;
+}
+
+bool JsArray::SetElementString(int index, const std::string16& value) {
+  // TODO(cdevries): implement this
+  assert(false);
+  return false;
+}
+
+bool JsArray::SetElementModule(int index, IScriptable* value) {
+  // TODO(cdevries): implement this
+  assert(false);
+  return false;
+}
+
 #endif
 
 // Common JsArray functions
@@ -422,9 +458,6 @@ JsParamType JsArray::GetElementType(int index) const {
   return JsTokenGetType(token, js_context_);
 }
 
-// SetElement is only available on FF and IE
-#if defined(BROWSER_FF) || defined(BROWSER_IE)
-
 bool JsArray::SetElementArray(int index, JsArray* value) {
   return SetElement(index, value->array_);
 }
@@ -436,8 +469,6 @@ bool JsArray::SetElementObject(int index, JsObject* value) {
 bool JsArray::SetElementFunction(int index, JsRootedCallback* value) {
   return SetElement(index, value->token());
 }
-
-#endif
 
 // Browser specific JsObject functions.
 #if BROWSER_FF
@@ -642,6 +673,18 @@ bool JsObject::SetPropertyInt(const std::string16 &name, int value) {
   return SetProperty(name, ScopedNPVariant(value));
 }
 
+bool JsObject::SetPropertyBool(const std::string16 &name, bool value) {
+  // TODO(cdevries): implement this
+  assert(false);
+  return false;
+}
+
+bool JsObject::SetPropertyDouble(const std::string16 &name, double value) {
+  // TODO(cdevries): implement this
+  assert(false);
+  return false;
+}
+
 #endif
 
 // Common JsObject functions
@@ -707,9 +750,6 @@ JsParamType JsObject::GetPropertyType(const std::string16 &name) const {
   return JsTokenGetType(token, js_context_);
 }
 
-// SetProperty is only available on FF and IE
-#if defined(BROWSER_FF) || defined(BROWSER_IE)
-
 bool JsObject::SetPropertyArray(const std::string16& name, JsArray* value) {
   return SetProperty(name, value->token());
 }
@@ -722,8 +762,6 @@ bool JsObject::SetPropertyFunction(const std::string16& name,
                                    JsRootedCallback* value) {
   return SetProperty(name, value->token());
 }
-
-#endif
 
 #if defined(BROWSER_NPAPI) || defined(BROWSER_IE) || defined(BROWSER_FF)
 

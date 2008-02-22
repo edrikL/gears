@@ -268,7 +268,7 @@ class JsRootedToken {
   JsRootedToken(JsContextPtr context, JsToken token)
        : context_(context), token_(token) { }
 
-  const JsToken& token() const { return token_; }
+  const JsScopedToken& token() const { return token_; }
   JsContextPtr context() const { return context_; }
 
   bool GetAsBool(bool *out) const {
