@@ -71,6 +71,13 @@ bool HtmlDialog::SetResult(const char16 *value) {
 #include "gears/ui/firefox/html_dialog_ff.cc"
 #elif BROWSER_IE
 #include "gears/ui/ie/html_dialog_ie.cc"
+#elif BROWSER_NPAPI
+bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
+                             const char16 *arguments_string) {
+  // TODO(mpcomplete): implement me.
+  SetResult(STRING16(L"{\"allow\": true, \"permanently\": true}"));
+  return true;
+}
 #else
 bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
                              const char16 *arguments_string) {

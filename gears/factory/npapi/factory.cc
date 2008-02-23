@@ -52,8 +52,6 @@ GearsFactory::GearsFactory()
 }
 
 void GearsFactory::Create(JsCallContext *context) {
-  // TODO(mpcomplete): implement HTMLDialog.
-#if 0
   bool use_temporary_permissions = true;
   if (!HasPermissionToUseGears(this, use_temporary_permissions,
                                NULL, NULL, NULL)) {
@@ -61,7 +59,6 @@ void GearsFactory::Create(JsCallContext *context) {
                                    PRODUCT_FRIENDLY_NAME L"."));
     return;
   }
-#endif
 
   std::string16 class_name;
   std::string16 version = STRING16(L"1.0");  // default for this optional param
