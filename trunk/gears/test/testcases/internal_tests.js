@@ -23,7 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-var internalTests = google.gears.factory.create('beta.test');
+if (isDebug) {
+  var internalTests = google.gears.factory.create('beta.test');
+}
 
 function testInternal() {
   if (isDebug) {
