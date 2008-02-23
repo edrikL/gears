@@ -75,7 +75,7 @@ const nsCID kGearsFactoryClassId = {0x93b2e433, 0x35ab, 0x46e7, {0xa9, 0x50,
 
 GearsFactory::GearsFactory()
     : is_creation_suspended_(false),
-      permission_state_(NOT_SET) {
+      permission_state_(NOT_SET) {  // can't check DB because no origin yet
   SetActiveUserFlag();
 }
 
@@ -298,12 +298,28 @@ NS_IMETHODIMP GearsFactory::GetHasPermission(PRBool *retval) {
     case DENIED_TEMPORARILY:
       *retval = PR_FALSE;
       break;
-    case NOT_SET:
-      // TODO(cprince): Look in the PermissionsDB instead. If a persisted value
-      // exists, use it and update permission_state_. Otherwise, *don't* prompt
-      // the user, and *don't* set permission_state_, only set retval.
-      *retval = PR_FALSE;
+    case NOT_SET: {
+      // If the state is unknown, look in the PermissionsDB. If a persisted
+      // value exists, update permission_state_.  Otherwise do NOT modify
+      // permission_state_; it would affect subsequent factory.create() calls.
+      *retval = PR_FALSE;  // default value; covers errors too
+      PermissionsDB *permissions_db = PermissionsDB::GetDB();
+      if (permissions_db) {
+        switch (permissions_db->GetCanAccessGears(EnvPageSecurityOrigin())) {
+          case PermissionsDB::PERMISSION_ALLOWED:
+            permission_state_ = ALLOWED_PERMANENTLY;
+            *retval = PR_TRUE;
+            break;
+          case PermissionsDB::PERMISSION_DENIED:
+            permission_state_ = DENIED_PERMANENTLY;
+            *retval = PR_FALSE;
+            break;
+          default:
+            break;  // use the default retval already set
+        }
+      }
       break;
+    }
     default:
       RETURN_EXCEPTION(STRING16(L"Internal error."));
   }
