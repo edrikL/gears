@@ -27,7 +27,6 @@
 #include <windows.h>
 #endif
 #include "common/genfiles/product_constants.h"  // from OUTDIR
-#include "gears/base/common/permissions_db.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/factory/common/factory_utils.h"
