@@ -560,10 +560,12 @@ bool DesktopUtils::CreateDesktopShortcut(
   std::string16 application_bundle_name;
   
   if (!File::GetBaseName(application_path, &application_bundle_name)) {
+    *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
   
   if (!ForceDesktopIconUpdate(application_bundle_name)) {
+    *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
   

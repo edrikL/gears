@@ -32,7 +32,7 @@
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/console/ie/console_ie.h"
 #include "gears/database/ie/database.h"
-#include "gears/desktop/desktop_ie.h"
+#include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/factory/ie/factory.h"
 #include "gears/httprequest/ie/httprequest_ie.h"
@@ -139,6 +139,12 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
     *error = STRING16(L"Object is only available in debug build.");
     return false;
 #endif
+#ifdef WINCE
+  // TODO(steveblock): Implement desktop for WinCE.
+#else
+  } else if (object_name == STRING16(L"beta.desktop")) {
+    object.reset(CreateModule<GearsDesktop>(GetJsRunner()));
+#endif
   } else {
     // Don't return an error here. Caller handles reporting unknown modules.
     error->clear();
@@ -177,15 +183,6 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
     hr = CComObject<GearsDatabase>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
-#ifdef WINCE
-  // TODO(steveblock): Implement desktop for WinCE.
-#else
-  } else if (object_name == STRING16(L"beta.desktop")) {
-    CComObject<GearsDesktop> *obj;
-    hr = CComObject<GearsDesktop>::CreateInstance(&obj);
-    base_class = obj;
-    idispatch = obj;
-#endif
   } else if (object_name == STRING16(L"beta.httprequest")) {
     CComObject<GearsHttpRequest> *obj;
     hr = CComObject<GearsHttpRequest>::CreateInstance(&obj);

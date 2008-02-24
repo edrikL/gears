@@ -54,7 +54,6 @@ import "ui/ie/html_dialog_host_iemobile.idl";
 
 import "console/ie/console.idl";
 import "database/ie/database.idl";
-import "desktop/desktop_ie.idl";
 import "factory/ie/factory.idl";
 import "httprequest/ie/httprequest.idl";
 
@@ -166,14 +165,6 @@ library GearsTypelib
     [default] interface GearsDatabaseInterface;
   };
   
-  [
-    uuid(6761C0EC-BB5C-40fe-92B2-D41686A0CF7E)
-  ]
-  coclass GearsDesktop
-  {
-    [default] interface GearsDesktopInterface;
-  };
-
   [
     uuid(B76AFB62-9BA2-43e8-B27F-9F1CAC8148B7)
   ]

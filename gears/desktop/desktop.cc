@@ -23,59 +23,40 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef WIN32
-#include <windows.h>  // must manually #include before nsIEventQueueService.h
-#endif
+#include "gears/desktop/desktop.h"
 
-#if BROWSER_FF
-#include <gecko_sdk/include/nspr.h>  // for PR_*
-#include <gecko_sdk/include/nsServiceManagerUtils.h>  // for NS_IMPL_* and NS_INTERFACE_*
-#include <gecko_sdk/include/nsCOMPtr.h>
-#include <gecko_sdk/include/nsIDOMWindowCollection.h>
-#include <gecko_internal/jsapi.h>
-#include <gecko_internal/nsIDOMClassInfo.h>
-#include "gears/blob/blob_ff.h"
-#include "gears/desktop/desktop_ff.h"
-#elif BROWSER_IE
-#include <dispex.h>
-#include "gears/base/ie/activex_utils.h"
-#include "gears/blob/blob_ie.h"
-#include "gears/desktop/desktop_ie.h"
-#endif
-
+#include "gears/base/common/dispatcher.h"
+#include "gears/base/common/file.h"
 #include "gears/base/common/http_utils.h"
+#include "gears/base/common/js_runner.h"
+#include "gears/base/common/js_types.h"
+#include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/png_utils.h"
 #include "gears/base/common/url_utils.h"
-#include "gears/base/common/file.h"
-
 #include "gears/blob/file_blob.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/desktop/desktop_utils.h"
 #include "gears/desktop/file_dialog_utils.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/ui/common/html_dialog.h"
 
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-#if BROWSER_FF
-// Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
-NS_IMPL_ADDREF(GearsDesktop)
-NS_IMPL_RELEASE(GearsDesktop)
-NS_INTERFACE_MAP_BEGIN(GearsDesktop)
-  NS_INTERFACE_MAP_ENTRY(GearsBaseClassInterface)
-  NS_INTERFACE_MAP_ENTRY(GearsDesktopInterface)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, GearsDesktopInterface)
-  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(GearsDesktop)
-NS_INTERFACE_MAP_END
 
-// Object identifiers
-const char *kGearsDesktopClassName = "GearsDesktop";
-const nsCID kGearsDesktopClassId = { 0x273640f, 0xfe6d, 0x4a26, { 0x95, 0xc7,
-                                     0x45, 0x5d, 0xe8, 0x3c, 0x60, 0x49 } };
-                                  // {0273640F-FE6D-4a26-95C7-455DE83C6049}
+DECLARE_GEARS_WRAPPER(GearsDesktop);
+
+template<>
+void Dispatcher<GearsDesktop>::Init() {
+  RegisterMethod("createShortcut", &GearsDesktop::CreateShortcut);
+#ifdef OFFICIAL_BUILD
+  // file API not finalized for official builds yet
+#else
+  RegisterMethod("getLocalFiles", &GearsDesktop::GetLocalFiles);
 #endif
+}
+
 
 static const int kControlPanelIconDimensions = 16;
 #ifdef WIN32
@@ -85,77 +66,37 @@ static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_RGBA;
 #endif
 
 
-#if BROWSER_FF
-NS_IMETHODIMP GearsDesktop::CreateShortcut() {
-#elif BROWSER_IE
-STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
-                                          VARIANT var_icons) {
-#endif
+void GearsDesktop::CreateShortcut(JsCallContext *context) {
   if (EnvIsWorker()) {
-    RETURN_EXCEPTION(STRING16(L"createShortcut is not supported in workers."));
+    context->SetException(
+                 STRING16(L"createShortcut is not supported in workers."));
+    return;
   }
 
   DesktopUtils::ShortcutInfo shortcut_info;
   JsObject icons;
 
-#if BROWSER_FF
-  // Create a param fetcher so we can also retrieve the context.
-  JsParamFetcher js_params(this);
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &shortcut_info.app_name },
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &shortcut_info.app_url },
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &icons },
+    { JSPARAM_OPTIONAL, JSPARAM_STRING16, &shortcut_info.app_description },
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
 
-  if (js_params.GetCount(false) != 4) {
-    RETURN_EXCEPTION(STRING16(L"Incorrect number of arguments."));
-  }
-
-  if (!js_params.GetAsString(0, &shortcut_info.app_name) ||
-      shortcut_info.app_name.empty()) {
-    RETURN_EXCEPTION(STRING16(L"First parameter is required and must be a "
-                              L"string."));
-  }
-
-  if (!js_params.GetAsString(1, &shortcut_info.app_description) ||
-      shortcut_info.app_description.empty()) {
-    RETURN_EXCEPTION(STRING16(L"Second parameter is required and must be a "
-                              L"string."));
+  if (shortcut_info.app_name.empty()) {
+    context->SetException(STRING16(L"Required argument 1 is missing."));
+    return;
   }
 
-  if (!js_params.GetAsString(2, &shortcut_info.app_url) ||
-      shortcut_info.app_url.empty()) {
-    RETURN_EXCEPTION(STRING16(L"Third parameter is required and must be a "
-                              L"string."));
+  if (shortcut_info.app_url.empty()) {
+    context->SetException(STRING16(L"Required argument 2 is missing."));
+    return;
   }
-
-  if (!js_params.GetAsObject(3, &icons)) {
-    RETURN_EXCEPTION(STRING16(L"Fourth parameter is required and must be an "
-                              L"object."));
-  }
-#elif BROWSER_IE
-  if (name && name[0]) {
-    shortcut_info.app_name = name;
-  } else {
-    RETURN_EXCEPTION(STRING16(L"First parameter is required."));
-  }
-
-  if (description && description[0]) {
-    shortcut_info.app_description = description;
-  } else {
-    RETURN_EXCEPTION(STRING16(L"Second parameter is required."));
-  }
-
-  if (url && url[0]) {
-    shortcut_info.app_url = url;
-  } else {
-    RETURN_EXCEPTION(STRING16(L"Third parameter is required."));
-  }
-
-  // Verify that we were passed an object for the icons parameter.
-  if (!(var_icons.vt & VT_DISPATCH) || !icons.SetObject(var_icons, NULL)) {
-    RETURN_EXCEPTION(STRING16(L"Fourth parameter is requied and must be an "
-                              L"object."));
-  }
-#endif
 
   // Verify that the name is acceptable.
-  std::string16 error_message;
+  std::string16 error;
 
   // Gears doesn't allow spaces in path names, but desktop shortcuts are the
   // exception, so instead of rewriting our path validation code, patch a
@@ -163,15 +104,15 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
   std::string16 name_without_spaces = shortcut_info.app_name;
   ReplaceAll(name_without_spaces, std::string16(STRING16(L" ")),
              std::string16(STRING16(L"_")));
-  if (!IsUserInputValidAsPathComponent(name_without_spaces,
-                                       &error_message)) {
-    RETURN_EXCEPTION(error_message.c_str());
+  if (!IsUserInputValidAsPathComponent(name_without_spaces, &error)) {
+    context->SetException(error);
+    return;
   }
 
   // Normalize and resolve, in case this is a relative URL.
-  std::string16 error;
   if (!ResolveUrl(&shortcut_info.app_url, &error)) {
-    RETURN_EXCEPTION(error.c_str());
+    context->SetException(error);
+    return;
   }
 
   // Get the icons the user specified
@@ -186,8 +127,9 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
       shortcut_info.icon32x32.url.empty() &&
       shortcut_info.icon48x48.url.empty() &&
       shortcut_info.icon128x128.url.empty()) {
-    RETURN_EXCEPTION(STRING16(L"Invalid value for icon parameter. At least one "
-                              L"icon must be specified."));
+    context->SetException(STRING16(L"Invalid value for icon parameter. At "
+                                   L"least one icon must be specified."));
+    return;
   }
 
   // Resolve the icon urls
@@ -199,7 +141,8 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
       !ResolveUrl(&shortcut_info.icon48x48.url, &error) ||
       !shortcut_info.icon128x128.url.empty() &&
       !ResolveUrl(&shortcut_info.icon128x128.url, &error)) {
-    RETURN_EXCEPTION(error.c_str());
+    context->SetException(error);
+    return;
   }
 
   // Set up the shortcuts dialog
@@ -223,7 +166,8 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
       !String16ToUTF8(shortcut_info.icon48x48.url.c_str(), &icon48_url_utf8) ||
       !String16ToUTF8(shortcut_info.icon128x128.url.c_str(),
                       &icon128_url_utf8)) {
-    RETURN_EXCEPTION(GET_INTERNAL_ERROR_MESSAGE().c_str());
+    context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+    return;
   }
 
   // Populate the JSON object we're passing to the dialog.
@@ -243,28 +187,28 @@ STDMETHODIMP GearsDesktop::createShortcut(BSTR name, BSTR description, BSTR url,
 
   // A null value is ok.  We interpret this as denying the shortcut.
   if (shortcuts_dialog.result == Json::Value::null) {
-    RETURN_NORMAL();
+    return;
   }
 
   assert(shortcuts_dialog.result.isBool());
   if (!shortcuts_dialog.result.asBool()) {
-    RETURN_NORMAL();
+    return;
   }
 
   // Ensure the directory we'll be storing the icons in exists.
   std::string16 icon_dir;
   if (!GetDataDirectory(EnvPageSecurityOrigin(), &icon_dir)) {
-    return false;
+    context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+    return;
   }
   AppendDataName(STRING16(L"icons"), kDataSuffixForDesktop, &icon_dir);
   if (!File::RecursivelyCreateDir(icon_dir.c_str())) {
-    return false;
+    context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+    return;
   }
 
   if (!SetShortcut(&shortcut_info, &error)) {
-    RETURN_EXCEPTION(error.c_str());
-  } else {
-    RETURN_NORMAL();
+    context->SetException(error);
   }
 }
 
@@ -313,59 +257,26 @@ static bool DisplayFileDialog(const JsArray* filters,
   return true;
 }
 
-#if BROWSER_FF
+void GearsDesktop::GetLocalFiles(JsCallContext *context) {
+  scoped_ptr<JsArray> filters(new JsArray());
 
-NS_IMETHODIMP GearsDesktop::GetLocalFiles(// OPTIONAL string array filters,
-                                          // file array retval
-                                          ) {
-  JsParamFetcher js_params(this);
-  scoped_ptr<JsArray> filters(NULL);
-  if (js_params.IsOptionalParamPresent(0, false)) {
-    filters.reset(new JsArray());
-    if (!filters.get())
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    if (!js_params.GetAsArray(0, filters.get()))
-      RETURN_EXCEPTION(STRING16(L"First parameter is not able to be retrieved "
-                                L"as an array."));
-  }
+  JsArgument argv[] = {
+    { JSPARAM_OPTIONAL, JSPARAM_ARRAY, filters.get() },
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
 
   // TODO(cdevries): set focus to tab where this function was called
 
   scoped_ptr<JsArray> files(NULL);
   std::string16 error;
-  if (!DisplayFileDialog(filters.get(), *this, &files, &error))
-    RETURN_EXCEPTION(error.c_str());
-
-  js_params.SetReturnValue(files->token());
-  RETURN_NORMAL();
-}
-
-#elif BROWSER_IE
-
-STDMETHODIMP GearsDesktop::getLocalFiles(VARIANT variant_filters,
-                                         VARIANT* retval) {
-  scoped_ptr<JsArray> filters(NULL);
-  if (ActiveXUtils::OptionalVariantIsPresent(&variant_filters)) {
-    filters.reset(new JsArray());
-    if (!filters.get())
-      return E_OUTOFMEMORY;
-
-    if (!filters->SetArray(variant_filters, NULL))
-      RETURN_EXCEPTION(STRING16(L"First parameter is not able to be retrieved "
-                                L"as an array."));
+  if (!DisplayFileDialog(filters.get(), *this, &files, &error)) {
+    context->SetException(error);
+    return;
   }
 
-  scoped_ptr<JsArray> files(NULL);
-  std::string16 error;
-  if (!DisplayFileDialog(filters.get(), *this, &files, &error))
-    RETURN_EXCEPTION(error.c_str());
-
-  *retval = files->token();
-  RETURN_NORMAL();
+  context->SetReturnValue(JSPARAM_ARRAY, files.get());
 }
-
-#endif  // BROWER_xyz
 
 #endif  // OFFICIAL_BUILD
 

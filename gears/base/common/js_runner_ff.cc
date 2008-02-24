@@ -41,7 +41,6 @@
 
 #include "ff/genfiles/console.h"
 #include "ff/genfiles/database.h"
-#include "ff/genfiles/desktop_ff.h"
 #include "ff/genfiles/httprequest.h"
 
 #ifdef OFFICIAL_BUILD
@@ -515,8 +514,6 @@ bool JsRunner::InitJavaScriptEngine() {
     // database
     {GEARSDATABASEINTERFACE_IID, NULL},
     {GEARSRESULTSETINTERFACE_IID, NULL},
-    // desktop
-    {GEARSDESKTOPINTERFACE_IID, NULL},
     // localserver
     {GEARSLOCALSERVERINTERFACE_IID, NULL},
     {GEARSMANAGEDRESOURCESTOREINTERFACE_IID, NULL},
