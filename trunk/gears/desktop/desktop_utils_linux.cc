@@ -28,6 +28,8 @@
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. LINUX_CPPSRCS) are implemented
 #if defined(LINUX) && !defined(OS_MACOSX)
+#include "gears/desktop/desktop_utils.h"
+
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/int_types.h"
@@ -36,8 +38,7 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
-#include "gears/desktop/desktop_utils.h"
-#include "gears/desktop/desktop_ff.h"
+#include "gears/desktop/desktop.h"
 #include "gears/localserver/common/http_constants.h"
 
 

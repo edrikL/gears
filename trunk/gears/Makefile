@@ -756,19 +756,14 @@ NPAPI_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # desktop
 
-FF_VPATH	+= \
+# TODO: Implement desktop for NPAPI
+ifneq ($(BROWSER),NPAPI)
+
+SHARED_VPATH	  += \
 		desktop \
 		$(NULL)
 
-FF_M4SRCS	+= \
-		desktop_ff.idl.m4 \
-		$(NULL)
-
-FF_IDLSRCS	+= \
-		desktop_ff.idl \
-		$(NULL)
-
-FF_CPPSRCS	+= \
+SHARED_CPPSRCS	+= \
 		desktop.cc \
 		desktop_utils_linux.cc \
 		desktop_utils_osx.cc \
@@ -780,39 +775,7 @@ FF_CPPSRCS	+= \
 		file_dialog_win32.cc \
 		$(NULL)
 
-IE_VPATH	+= \
-		desktop \
-		$(NULL)
-
-IEMOBILE_VPATH	+= \
-		desktop \
-		$(NULL)
-
-IE_IDLSRCS	+= \
-		desktop_ie.idl \
-		$(NULL)
-
-IEMOBILE_IDLSRCS += \
-		desktop_ie.idl \
-		$(NULL)
-
-IE_CPPSRCS	+= \
-		desktop.cc \
-		desktop_utils_win32.cc \
-		file_dialog.cc \
-		file_dialog_utils.cc \
-		file_dialog_win32.cc \
-		$(NULL)
-
-NPAPI_VPATH     += \
-                desktop \
-                $(NULL)
-
-NPAPI_IDLSRCS	+= \
-		$(NULL)
-
-NPAPI_CPPSRCS   += \
-                $(NULL)
+endif
 
 #-----------------------------------------------------------------------------
 # test

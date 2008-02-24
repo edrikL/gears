@@ -28,6 +28,10 @@
 #ifndef GEARS_DESKTOP_COMMON_DESKTOP_UTILS_H__
 #define GEARS_DESKTOP_COMMON_DESKTOP_UTILS_H__
 
+#include <vector>
+#include "gears/base/common/common.h"
+#include "gears/base/common/security_model.h"
+
 class DesktopUtils {
  public:
   struct IconData {

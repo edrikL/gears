@@ -123,9 +123,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                   onclick="resetDisabledState()">
               </td>
               <td valign="top"><img width="32" height="32"></td>
-              <td align="left" width="100%" valign="top">
-                <b><a target="_blank"></a></b><br>
-                <span></span>
+              <td align="left" width="100%" valign="middle">
+                <div><b><a target="_blank"></a></b></div>
+                <div></div>
               </td>
             </tr>
           </table>
@@ -245,7 +245,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     var checkbox = shortcutRow.getElementsByTagName("input")[0];
     var link = shortcutRow.getElementsByTagName("a")[0];
     var icon = shortcutRow.getElementsByTagName("img")[0];
-    var span = shortcutRow.getElementsByTagName("span")[0];
+    var description = shortcutRow.getElementsByTagName("div")[1];
 
     // If we are showing checkboxes, position the checkbox so that it is
     // vertically centered with the icon to it's right. Otherwise, hide it.
@@ -260,7 +260,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     icon.src = pickIconToRender(shortcutData);
     icon.height = iconHeight;
     icon.width = iconWidth;
-    span.appendChild(document.createTextNode(shortcutData.description));
+
+    if (shortcutData.description) {
+      description.appendChild(
+          document.createTextNode(shortcutData.description));
+    } else {
+      description.style.display = "none"; // to prevent it from taking up space.
+    }
 
     return shortcutRow;
   }

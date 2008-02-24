@@ -1460,6 +1460,8 @@ int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
   bool has_optional = false;
 
   for (int i = 0; i < output_argc; ++i) {
+    assert(output_argv[i].value_ptr);
+
     has_optional |= output_argv[i].requirement == JSPARAM_OPTIONAL;
     if (output_argv[i].requirement == JSPARAM_REQUIRED)
       assert(!has_optional);  // should not have required arg after optional

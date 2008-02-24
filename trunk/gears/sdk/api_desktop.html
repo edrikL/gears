@@ -49,19 +49,19 @@ functionality, such as creating shortcuts.
 &lt;script type="text/javascript"&gt;
 var desktop = google.gears.factory.create('beta.desktop');
 desktop.createShortcut("Test Application",
-                       "An application at http://example.com/index.html",
                        "http://example.com/index.html",
                        {"128x128": "http://example.com/icon128x128.png",
                         "48x48": "http://example.com/icon48x48.png",
                         "32x32": "http://example.com/icon32x32.png",
-                        "16x16": "http://example.com/icon16x16.png"});
+                        "16x16": "http://example.com/icon16x16.png"},
+                        "An application at http://example.com/index.html");
 &lt;/script&gt;</code></pre>
 
 
 <h2 id="classes">Classes</h2>
 
 <pre><code><a href="#Desktop">Desktop class</a>
-    bool <b>createShortcut</b>(name, description, url, icons)
+    bool <b>createShortcut</b>(name, url, icons, [description])
 </code></pre>
 <br>
 
@@ -74,7 +74,8 @@ desktop.createShortcut("Test Application",
 
 <table>
   <tr class="odd">
-    <th colspan="2"><code>createShortcut(name, description, url, icons)</code></th>
+    <th colspan="2"><code>createShortcut(name, url, icons,
+      [description])</code></th>
   </tr>
   <tr class="odd">
     <td width="113">Summary:</td>
@@ -88,15 +89,15 @@ desktop.createShortcut("Test Application",
       <code>name</code> - The user-visible name of the shortcut. It cannot contain any of these characters:
         <code>"\/:*?&lt;&gt;|</code>
       <br>
-      <code>description</code> - Additional text to display in the
-        confirmation dialog.
-      <br>
       <code>url</code> - The address to launch when the user opens the shortcut.
       <br>
       <code>icons</code> - An object containing one or more of these named
         properties: <code>128x128</code>, <code>48x48</code>,
         <code>32x32</code>, <code>16x16</code>.  The value of each property must
         be the URL of a .png file, with dimensions matching the property name.
+      <br>
+      <code>description</code> - Optional. Additional text to display in the
+        confirmation dialog.
       </td>
   </tr>
   <tr class="odd">
