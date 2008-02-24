@@ -4,7 +4,11 @@
 
 *Highlights:*
 
-  * Desktop API
+  * Add [http://code.google.com/apis/gears/upcoming/api_desktop.html Desktop API]
+
+  * Progress events for the managed resource store ([http://code.google.com/p/google-gears/issues/detail?id=30 tracking bug])
+
+  * Add `getPermission()` method and `hasPermission` property to the Factory object to enable finer grained control for applications requesting access to Gears.
 
   * i18n for Gears UI ([http://code.google.com/p/google-gears/issues/detail?id=138 tracking bug])
 
