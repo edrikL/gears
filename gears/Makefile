@@ -756,8 +756,9 @@ NPAPI_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # desktop
 
-# TODO: Implement desktop for NPAPI
+# TODO: Implement desktop for NPAPI and WINCE
 ifneq ($(BROWSER),NPAPI)
+ifneq ($(OS),wince)
 
 SHARED_VPATH	  += \
 		desktop \
@@ -775,6 +776,7 @@ SHARED_CPPSRCS	+= \
 		file_dialog_win32.cc \
 		$(NULL)
 
+endif
 endif
 
 #-----------------------------------------------------------------------------
