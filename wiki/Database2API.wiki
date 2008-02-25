@@ -131,37 +131,48 @@ There is also a [http://webkit.org/misc/DatabaseExample.html working example] (r
 
 =Implementation=
 
-== Asynchronous Transactions ==
+== General Structure ==
 
-The proposed asynchronous API allows multiple sql statements to be queued up and processed in order in the background. Each statement can have associated callbacks. When those statements are executed, the callbacks should also be fired in order in the foreground. The transaction completes when there are no more statements to process and no more callbacks to fire.
+All transactions are serialized. With the previous Database module, we found that allowing concurrent transactions led to hard to understand bugs and began recommending the `BEGIN IMMEDIATE` statement for most users, which forces serialized transactions. In Database2 this will be enforced.
 
-This implies a design where a foreground and background thread share two queues: a `pending_messages` queue and a `processed_messages` queue. Each time `executeSql()` is called, the foreground thread adds information about the statement to be processed to the `pending_messages` queue. 
+There is a single `TransactionQueue` per physical database which executes each queued transaction in order. It also manages a single background thread for executing the asynchronous transactions.
 
-The background thread executes each statement in the `pending_messages` queue in order. If a statement has callbacks, the statement is moved to the `processed_messages` queue, where the foreground thread will find it and fire its callbacks.
-
-After each statement is executed, and after each statement's callback is fired, both queue's lengths are checked. If they are both zero, the transaction is complete and is closed.
-
-We can reuse the existing `ThreadMessageQueue` implementation in `base/common/thread_message_queue.h` to send events between the two threads.
-
-We don't yet have cross-platform `CreateThread()`, or `ThreadPool` abstractions. It might be useful to create one or more of those at this time.
+The background and foreground threads communicate via message passing using [http://code.google.com/p/google-gears/source/browse/trunk/gears/base/common/message_queue.h ThreadMessageQueue].
 
 
-== Synchronous Transactions ==
+== Nested Transactions ==
 
-The `synchronousTransaction` method follows these steps:
- # start new transaction
- # if an error occurred in creating transaction, throw a `SQLError` exception
- # execute `SQLSynchronousTransactionCallback`
- # if the callback throws an exception or couldn't be called, roll back the transaction and throw a `SQLError` exception
- # commit transaction
- # if the transaction couldn't have been committed, roll back the transaction and throw a `SQLError` exception
- # end
+The spec has no concept of nested transactions. Since all transactions are asynchronous, they are just queued naturally by the locking behavior of the database. This is fine for asynchronous transactions. For synchronous transactions, though, it leads to deadlock:
 
-_TODO:_ Dimitri had the idea of a synchronous event queue to decrease differences between the two modes. Flesh that out.
+{{{
+db.synchronousTransaction(function(tx) {
+  db.synchronousTransaction(function(tx) {
+  });
+});
+}}}
 
-== Lifetime Management ==
+Neither transaction will ever complete because they are both waiting on each other. Note that this occurs even if the parent transaction is asynchronous. For this reason, synchronousTransaction() throws if any other transaction is currently running or pending.
 
-Like all other Gears modules that have asynchronous behavior, GearsSQLTransaction should live until all asynchronous operations are complete, even if there are no !JavaScript references to the GearsSQLTransaction instance. Each queued statement and callback should increment the reference count of the corresponding GearsSQLTransaction instance.
+
+== Connection State ==
+
+Many database implementations have per-connection state that should be shared between all statements executing against the connection. For example, SQLite has the last_insert_rowid() function. Connection state should be shared between all transactions created from the same !GearsDatabase2 object.
+
+
+== Lifecycle/Ownership ==
+
+The diagram below shows the ownership model for Database2:
+
+[http://google-gears.googlecode.com/svn/contrib/aa1/docs/database2_ownership.png]
+
+  # When a Database object is created, it creates and references the !DatabaseConnection object
+  # The first time a transaction is started for a database, a !TransactionQueue is created for that database
+  # When a transaction is started, two objects are created: A JS-facing object that represents the transaction and is subject to GC, and an internal object which is where the real work happens. We separate the two so that we can reuse the concept of ref-counting for a transaction's lifetime without the JS engine's GC keeping transactions open arbitrarily long.
+  # Each transaction that is created holds a reference to its !TransactionQueue.
+  # Each statement that is added to a transaction holds a reference to its transaction.
+  # Once a statement is processed, it is deleted and drops its reference.
+  # Once all statements for a transaction have been processed, the transaction itself is deleted and drops its reference to its !TransactionQueue.
+  # Once all transactions are completed, the !TransactionQueue itself is deleted.
 
 
 == Versioning ==
