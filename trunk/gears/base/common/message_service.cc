@@ -45,6 +45,12 @@ typedef std::map<ThreadId, ObserverSet> ThreadObserversMap;
 // See NotificationMessage.
 class SharedNotificationData {
  public:
+  SharedNotificationData() : refcount_(1) {
+#ifdef DEBUG
+    AtomicIncrement(&g_instance_count_, 1);
+#endif
+  }
+
   SharedNotificationData(const char16 *topic, NotificationData *data)
       : topic_(topic), data_(data), refcount_(1) {
 #ifdef DEBUG
@@ -83,10 +89,10 @@ int SharedNotificationData::g_instance_count_ = 0;
 #endif
 
 
-class NotificationMessage : public MessageData {
+class NotificationMessage : public Serializable {
  public:
-  NotificationMessage(SharedNotificationData *shared)
-      : shared_(shared) {
+  NotificationMessage() : shared_(new SharedNotificationData) {}
+  NotificationMessage(SharedNotificationData *shared) : shared_(shared) {
     shared_->AddReference();
   }
 
@@ -95,6 +101,34 @@ class NotificationMessage : public MessageData {
   }
 
   SharedNotificationData *shared_;
+
+  virtual SerializableClassId GetSerializableClassId() {
+    return SERIALIZABLE_NOTIFICATION;
+  }
+
+  virtual bool Serialize(Serializer *out) {
+    if (!shared_) return false;
+    out->WriteString(shared_->topic_.c_str());
+    return out->WriteObject(shared_->data_.get());
+  }
+
+  virtual bool Deserialize(Deserializer *in) {
+    NotificationData *data = NULL;
+    if (!in->ReadString(&shared_->topic_) ||
+        !in->CreateAndReadObject(&data)) {
+      return false;
+    }
+    shared_->data_.reset(data);
+    return true;
+  }
+
+  static Serializable *New() {
+    return new NotificationMessage;
+  }
+
+  static void RegisterAsSerializable() {
+    Serializable::RegisterClass(SERIALIZABLE_NOTIFICATION, New);
+  }  
 };
 
 
@@ -111,9 +145,8 @@ class ObserverCollection {
   void RemoveObserversForThread(ThreadId thread_id);
   bool IsEmpty() const;
 
-  void PostThreadNotifications(const char16 *topic,
-                               NotificationData *data);
-  void ProcessThreadNotification(NotificationMessage *message);
+  void PostThreadNotifications(SharedNotificationData *shared_data);
+  void ProcessThreadNotification(NotificationMessage *notification);
 
  private:
   MessageService *service_;
@@ -146,8 +179,7 @@ MessageService::MessageService(ThreadMessageQueue *message_queue,
       ipc_message_queue_(ipc_message_queue) {
   message_queue_->RegisterHandler(kMessageService_Notify, this);
   if (ipc_message_queue_) {
-    //Serializable::RegisterClass(IpcNotificationData::kSerializableId,
-    //                            IpcNotificationsData::Factory);
+    NotificationMessage::RegisterAsSerializable();
     ipc_message_queue_->RegisterHandler(kMessageService_IpcNotify, this);
   }
 }
@@ -184,26 +216,41 @@ bool MessageService::RemoveObserver(MessageObserverInterface *observer,
 }
 
 
-void MessageService::NotifyObserversImpl(const char16 *topic,
-                                         NotificationData *data,
+void MessageService::NotifyObservers(const char16 *topic,
+                                     NotificationData *data) {
+  SharedNotificationData *shared_data = new SharedNotificationData(topic,
+                                                                   data);
+  NotifyObserversImpl(shared_data, true);
+  shared_data->RemoveReference();  
+}
+
+
+void MessageService::NotifyObserversImpl(SharedNotificationData *shared_data,
                                          bool send_ipc) {
-  // TODO(michaeln): use IpcMessageQueue to notify observers in other processes
+  if (send_ipc && ipc_message_queue_) {
+    ipc_message_queue_->SendToAll(kMessageService_IpcNotify,
+                                  new NotificationMessage(shared_data),
+                                  false);
+  }
+
   MutexLock lock(&observer_collections_mutex_);
   ObserverCollection *topic_observers =
-                          GetTopicObserverCollection(topic, false);
+      GetTopicObserverCollection(shared_data->topic_.c_str(), false);
   if (!topic_observers) { 
-    delete data; 
     return;
   }
-  topic_observers->PostThreadNotifications(topic, data);
+  topic_observers->PostThreadNotifications(shared_data);
 }
 
 
 void MessageService::HandleIpcMessage(IpcProcessId source_process_id,
                                       int message_type,
                                       const IpcMessageData *message_data) {
-  // TODO(michaeln): use IpcMessageQueue to recieve notifcations from other
-  // processes
+  assert(message_type == kMessageService_IpcNotify);
+  assert(source_process_id != ipc_message_queue_->GetCurrentIpcProcessId());
+  const NotificationMessage *notification =
+                          static_cast<const NotificationMessage*>(message_data);
+  NotifyObserversImpl(notification->shared_, false);
 }
 
 
@@ -347,27 +394,23 @@ void ObserverCollection::RemoveObserversForThread(ThreadId thread_id) {
 }
 
 
-void ObserverCollection::PostThreadNotifications(const char16 *topic,
-                                                 NotificationData *data) {
+void ObserverCollection::PostThreadNotifications(
+                             SharedNotificationData *shared_data) {
   // assert(serveice_->mutex_.IsLockedByCurrentThread());
-  SharedNotificationData *shared_data = new SharedNotificationData(topic,
-                                                                   data);
-
   // Send one message for each thread containing observers of this topic
   ThreadObserversMap::iterator iter;
   for (iter = observer_sets_.begin(); iter != observer_sets_.end(); ++iter) {
     service_->message_queue_->Send(iter->first, kMessageService_Notify,
                                    new NotificationMessage(shared_data));
   }
-  shared_data->RemoveReference();
 }
 
 
 void ObserverCollection::ProcessThreadNotification(
-                             NotificationMessage *message) {
+                             NotificationMessage *notification) {
   // assert(serveice_->mutex_.IsLockedByCurrentThread());
-  const char16 *topic = message->shared_->topic_.c_str();
-  const NotificationData *data = message->shared_->data_.get();
+  const char16 *topic = notification->shared_->topic_.c_str();
+  const NotificationData *data = notification->shared_->data_.get();
 
   // Dispatch this notification to all topic observers in this thread.
   //

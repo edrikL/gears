@@ -73,6 +73,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 http://msdn.microsoft.com/library/default.asp?url=/library/en-us/IETechCol/cols/dnexpie/activex_security.asp?frame=true -->
               <RegistryKey Root='HKLM' Action='createAndRemoveOnUninstall'
                 Key='Software\Microsoft\Windows\CurrentVersion\Ext\PreApproved\{C93A7319-17B3-4504-87CD-03EFC6103E6E}' />
+              <!-- For vista, a setting that allows us to silently load the our dll with low integrity using rundll32.exe. 
+                See http://msdn2.microsoft.com/en-us/library/bb250462.aspx -->
+              <RegistryKey Root='HKLM' Action='createAndRemoveOnUninstall'
+                Key='Software\Microsoft\Internet Explorer\Low Rights\RunDll32Policy\PRODUCT_SHORT_NAME_UQ.dll' />
             </Component>
 
             <Component Id='OurFFRegistry' Guid='$(var.OurComponentGUID_FFRegistry)'>

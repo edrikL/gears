@@ -357,6 +357,7 @@ FF_IDLSRCS	+= \
 FF_CPPSRCS	+= \
 		base_class.cc \
 		base_class_test.cc \
+		circular_buffer_test.cc \
 		dom_utils.cc \
 		file.cc \
 		file_posix.cc \
@@ -423,6 +424,7 @@ IE_CPPSRCS	+= \
 		base_class.cc \
 		base_class_test.cc \
 		bho.cc \
+		circular_buffer_test.cc \
 		detect_version_collision.cc \
 		file.cc \
 		file_test.cc \
@@ -430,6 +432,7 @@ IE_CPPSRCS	+= \
 		html_event_monitor.cc \
 		html_event_monitor_ie.cc \
 		ipc_message_queue_win32.cc \
+		ipc_message_queue_win32_test.cc \
 		http_utils.cc \
 		ie_version.cc \
 		js_runner_ie.cc \

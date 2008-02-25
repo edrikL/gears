@@ -37,6 +37,7 @@
 
 class MessageService;
 class ObserverCollection;
+class SharedNotificationData;
 
 typedef Serializable NotificationData;
 
@@ -82,9 +83,7 @@ class MessageService : public ThreadMessageQueue::HandlerInterface,
   // think of this thread as the observer's apartment thread.
   // Ownership of the data is transferred to the message service.
   // Upon return from this method, callers should no longer touch data.
-  void NotifyObservers(const char16 *topic, NotificationData *data) {
-     NotifyObserversImpl(topic, data, true);
-  }
+  void NotifyObservers(const char16 *topic, NotificationData *data);
 
  private:
   // The intent is for this class to be a singleton, but for testing
@@ -99,7 +98,7 @@ class MessageService : public ThreadMessageQueue::HandlerInterface,
   typedef std::map<std::string16, linked_ptr<ObserverCollection> >
               TopicObserverMap;
 
-  void NotifyObserversImpl(const char16 *topic, NotificationData *data,
+  void NotifyObserversImpl(SharedNotificationData *shared_data,
                            bool send_ipc);
 
   ObserverCollection *GetTopicObserverCollection(const char16 *topic,

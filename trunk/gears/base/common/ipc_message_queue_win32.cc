@@ -32,94 +32,21 @@
 #include <windows.h>
 #include <deque>
 #include "gears/base/common/atomic_ops.h"
+#include "gears/base/common/circular_buffer.h"
 #include "gears/base/common/ipc_message_queue.h"
 #include "gears/base/common/message_queue.h"
+#include "gears/base/common/stopwatch.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/factory/common/factory_utils.h"  // for AppendBuildInfo
 #include "gears/third_party/linked_ptr/linked_ptr.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
+#ifdef DEBUG
+// For testing
+static Mutex g_counters_mutex;
+static IpcMessageQueueCounters g_counters = {0};
+#endif
 
-//-----------------------------------------------------------------------------
-// A primitive circular buffer class
-// TODO(michaeln): should this be moved to a seperate circular_buffer.h file?
-//-----------------------------------------------------------------------------
-class CircularBuffer {
- public:
-  CircularBuffer() : head_(0), tail_(0), capacity_(0), buffer_(NULL) {}
-
-  size_t head() { return head_; }
-  size_t tail() { return tail_; }
-  size_t capacity() { return capacity_; }
-  void *buffer() { return buffer_; }
-
-  void set_head(size_t head) { head_ = head; }
-  void set_tail(size_t tail) { tail_ = tail; }
-  void set_capacity(size_t capacity) { capacity_ = capacity; }
-  void set_buffer(void *buffer) { buffer_ = buffer; }
-  
-  void *head_ptr() { return reinterpret_cast<uint8*>(buffer_) + head_; }
-  void *tail_ptr() { return reinterpret_cast<uint8*>(buffer_) + tail_; }
-
-  size_t data_available() {
-    if (tail_ >= head_ ) 
-      return tail_ - head_;
-    else
-      return (capacity_ - head_) + tail_;
-  }
-
-  size_t space_available() {
-    return capacity_ - data_available();
-  }
-
-  size_t contiguous_data_available() {
-    if (tail_ >= head_ ) 
-      return tail_ - head_;
-    else 
-      return capacity_ - head_;
-  }
-
-  size_t contiguous_space_available() {
-    if (tail_ >= head_)
-      return capacity_ - tail_;
-    else 
-      return head_ - tail_;
-  }
-
-  void read(void *data, size_t size) {
-    assert(size <= data_available());
-    while (size > 0) {
-      void *read_pos = head_ptr();
-      size_t read_amount = min(size, contiguous_data_available());
-      assert(read_amount != 0);
-      memcpy(data, read_pos, read_amount);
-      head_ += read_amount;
-      head_ %= capacity_;
-      size -= read_amount;
-      data = reinterpret_cast<uint8*>(data) + read_amount;
-    }
-  }
-
-  void write(const void *data, size_t size) {
-    assert(size <= space_available());
-    while (size > 0) {
-      void *write_pos = tail_ptr();
-      size_t write_amount = min(size, contiguous_space_available());
-      assert(write_amount != 0);
-      memcpy(write_pos, data, write_amount);
-      tail_ += write_amount;
-      tail_ %= capacity_;
-      size -= write_amount;
-      data = reinterpret_cast<const uint8*>(data) + write_amount;
-    }
-  }
-
- private:
-  size_t head_;
-  size_t tail_;
-  size_t capacity_;
-  void *buffer_;
-};
 
 //-----------------------------------------------------------------------------
 // SharedMemory
@@ -206,6 +133,11 @@ void SharedMemory::MappedView::CloseView() {
 
 //-----------------------------------------------------------------------------
 // Kernel objects
+// TODO(michaeln): On vista, low-integrity and medium-integrity processes
+// cannot communicate using this mechanism. The low-integrity processes cannot
+// access objects created by processes with elevated rights. The todo is to
+// either create the kernel objects such that they only require low-rights
+// in all cases, or to have separate low/med/high ipc registries.
 //-----------------------------------------------------------------------------
 static const char16 *kRegistryMutex = L"RegistryMutex";
 static const char16 *kRegistryMemory = L"RegistryMemory";
@@ -215,9 +147,9 @@ static const char16 *kQueueSpaceAvailableEvent = L"QSpaceAvailableEvent";
 static const char16 *kQueueIoBuffer = L"QIoBuffer";
 
 
-inline void GetKernelObjectName(const char16 *object_type,
-                                IpcProcessId process_id,
-                                CStringW *name) {
+void GetKernelObjectName(const char16 *object_type,
+                         IpcProcessId process_id,
+                         CStringW *name) {
   const char16 *kObjectNameFormat = STRING16(L"GearsIpc:%d:%s:%s");
   std::string16 buildinfo;
   AppendBuildInfo(&buildinfo);
@@ -225,24 +157,71 @@ inline void GetKernelObjectName(const char16 *object_type,
 }
 
 
-class IpcQueueMutex : public ATL::CMutex {
+class IpcMutex : public ATL::CMutex {
  public:
-  bool Create(IpcProcessId process_id) {
+  bool Create(const char16 *mutex_type, IpcProcessId process_id) {
     CStringW name;
-    GetKernelObjectName(kQueueWriteMutex, process_id, &name);
+    GetKernelObjectName(mutex_type, process_id, &name);
     return ATL::CMutex::Create(NULL, FALSE, name) ? true : false;
   }
 
-  bool Open(IpcProcessId process_id) {
+  bool Open(const char16 *mutex_type, IpcProcessId process_id) {
     CStringW name;
-    GetKernelObjectName(kQueueWriteMutex, process_id, &name);
+    GetKernelObjectName(mutex_type, process_id, &name);
     return ATL::CMutex::Open(SYNCHRONIZE | MUTEX_MODIFY_STATE,
                              FALSE, name) ? true : false;
   }
 };
 
+// A replacement for ATL::CMutexLock with the addition of WasAbandoned
+class IpcMutexLock {
+public:
+  IpcMutexLock(ATL::CMutex *mutex);
+  ~IpcMutexLock();
 
-class IpcQueueEvent : public ATL::CEvent {
+  void Lock();
+  void Unlock();
+  
+  // Returns true if the mutex was abandoned by the previous owner.
+  // Only valid if the caller is the current owner of the mutex.
+  bool WasAbandoned() { 
+    assert(locked_);
+    return was_abandoned_;
+  }
+
+ private:
+  ATL::CMutex *mutex_;
+  bool locked_;
+  bool was_abandoned_;
+  DISALLOW_EVIL_CONSTRUCTORS(IpcMutexLock);
+};
+
+inline IpcMutexLock::IpcMutexLock(ATL::CMutex *mutex)
+    : mutex_(mutex), locked_(false), was_abandoned_(false) {
+  Lock();
+}
+
+inline IpcMutexLock::~IpcMutexLock() {
+  if (locked_) {
+    Unlock();
+  }
+}
+
+inline void IpcMutexLock::Lock() {
+  assert(!locked_);
+  DWORD rc = ::WaitForSingleObject(mutex_->m_h, INFINITE);
+  was_abandoned_ = (rc == WAIT_ABANDONED);
+  locked_ = true;
+}
+
+inline void IpcMutexLock::Unlock() {
+  assert(locked_);
+  mutex_->Release();
+  locked_ = false;
+}
+
+
+class IpcEvent : public ATL::CEvent {
  public:
   // Creates a manual-reset event handle in the unsignalled state
   bool Create(const char16 *event_type, IpcProcessId process_id) {
@@ -260,20 +239,21 @@ class IpcQueueEvent : public ATL::CEvent {
 };
 
 
-class IpcQueueBuffer {
+class IpcBuffer {
  public:
-  static const int kCapacity = 32 * 1024;  // 32 Kbytes
+  // We allocate an 8K bytes block of shared memory. The capacity
+  // is slightly less due to overhead in our circular buffer,
+  // an extra data element and storage for head and tail positions.
+  static const int kCapacity = (8 * 1024) - sizeof(uint8) - (sizeof(int) * 2);
 
-  // TODO(michaeln): should this be split into two blocks of shared memory?
-  // One for the head position, and another for the tail and data array.
-  // WriteTransaction would open a readonly view on the former and rw view
-  // on the latter, ReadTransaction vice versa.
+  // The structure stored in our shared memory, a cicular buffer.
   struct BufferFormat {
-    int head;  // offset to the first unread byte
-    int tail;  // offset to the last written byte
-    uint8 data[kCapacity];
+    int head;
+    int tail;
+    uint8 data[kCapacity + 1];  // must be one bigger than capacity
   };
   SharedMemory shared_memory_;
+  SharedMemory::MappedViewOf<BufferFormat> mapped_buffer_;
 
   bool Create(IpcProcessId process_id) {
     CStringW name;
@@ -281,13 +261,12 @@ class IpcQueueBuffer {
     if (!shared_memory_.Create(name, sizeof(BufferFormat)))
       return false;
 
-    SharedMemory::MappedViewOf<BufferFormat> mapped_buffer;
-    if (!mapped_buffer.OpenView(&shared_memory_, true)) {
+    if (!mapped_buffer_.OpenView(&shared_memory_, true)) {
       shared_memory_.Close();
       return false; 
     }
-    mapped_buffer->head = 0;
-    mapped_buffer->tail = 0;
+    mapped_buffer_->head = 0;
+    mapped_buffer_->tail = 0;
     return true;
   }
 
@@ -297,38 +276,58 @@ class IpcQueueBuffer {
     return shared_memory_.Open(name);
   }
 
+  BufferFormat *LazyOpenView() {
+    if (!mapped_buffer_.get()) {
+      mapped_buffer_.OpenView(&shared_memory_, true);
+    }
+    return mapped_buffer_.get();
+  }
+
   // The 'head' position stored in shared memory is updated when
   // the transaction goes out of scope.
   class ReadTransaction {
    public:
-    ReadTransaction() : was_read_(false) {}
+    ReadTransaction(): was_read_(false), mapped_buffer_(NULL),
+                       space_available_event_(NULL) {}
 
     ~ReadTransaction() {
-      if (was_read_) {
-        mapped_buffer_->head = circular_buffer_.head();
+      if (mapped_buffer_) {
+        if (was_read_) {
+          mapped_buffer_->head = circular_buffer_.head();
+        }
+        if (space_available()) {
+          space_available_event_->Set();
+        }
       }
     }
 
-    bool Start(IpcQueueBuffer *io_buffer) {
-      if (!mapped_buffer_.OpenView(&io_buffer->shared_memory_, true)) {
-        return false; 
+    bool Start(IpcBuffer *io_buffer, IpcEvent *space_available_event) {
+      mapped_buffer_ = io_buffer->LazyOpenView();
+      if (!mapped_buffer_)
+        return false;
+      circular_buffer_.set_buffer(mapped_buffer_->data, kCapacity + 1);
+      if (!circular_buffer_.set_head(mapped_buffer_->head) ||
+          !circular_buffer_.set_tail(mapped_buffer_->tail)) {
+        assert(false);  // we have garbage in our shared memory block
+        mapped_buffer_ = NULL; 
+        return false;
       }
-      circular_buffer_.set_buffer(mapped_buffer_->data);
-      circular_buffer_.set_capacity(kCapacity);
-      circular_buffer_.set_head(mapped_buffer_->head);
-      circular_buffer_.set_tail(mapped_buffer_->tail);
+      space_available_event_ = space_available_event;
       return true;
     }
 
     size_t data_available() {
+      assert(mapped_buffer_);
       return circular_buffer_.data_available();
     }
 
     size_t space_available() {
+      assert(mapped_buffer_);
       return circular_buffer_.space_available();
     }
   
     void Read(void *data, size_t size) {
+      assert(mapped_buffer_);
       assert(size <= data_available());
       if (size > 0) {
         circular_buffer_.read(data, size);
@@ -339,41 +338,55 @@ class IpcQueueBuffer {
    private:
     bool was_read_;
     CircularBuffer circular_buffer_;
-    SharedMemory::MappedViewOf<BufferFormat> mapped_buffer_;
+    BufferFormat *mapped_buffer_;
+    IpcEvent *space_available_event_;
   };
 
   // The 'tail' position stored in shared memory is updated when
   // the transaction goes out of scope.
   class WriteTransaction {
    public:
-    WriteTransaction() : was_written_(false) {}
+    WriteTransaction(): was_written_(false), mapped_buffer_(NULL),
+                        data_available_event_(NULL) {}
 
     ~WriteTransaction() {
-      if (was_written_) {
-        mapped_buffer_->tail = circular_buffer_.tail();
+      if (mapped_buffer_) {
+        if (was_written_) {
+          mapped_buffer_->tail = circular_buffer_.tail();
+        }
+        if (data_available()) {
+          data_available_event_->Set();
+        }
       }
     }
 
-    bool Start(IpcQueueBuffer *io_buffer) {
-      if (!mapped_buffer_.OpenView(&io_buffer->shared_memory_, true)) {
-        return false; 
+    bool Start(IpcBuffer *io_buffer, IpcEvent *data_available_event) {
+      mapped_buffer_ = io_buffer->LazyOpenView();
+      if (!mapped_buffer_)
+        return false;
+      circular_buffer_.set_buffer(mapped_buffer_->data, kCapacity + 1);
+      if (!circular_buffer_.set_head(mapped_buffer_->head) ||
+          !circular_buffer_.set_tail(mapped_buffer_->tail)) {
+        assert(false);  // we have garbage in our shared memory block
+        mapped_buffer_ = NULL; 
+        return false;
       }
-      circular_buffer_.set_buffer(mapped_buffer_->data);
-      circular_buffer_.set_capacity(kCapacity);
-      circular_buffer_.set_head(mapped_buffer_->head);
-      circular_buffer_.set_tail(mapped_buffer_->tail);
+      data_available_event_ = data_available_event;
       return true;
     }
 
     size_t data_available() {
+      assert(mapped_buffer_);
       return circular_buffer_.data_available();
     }
 
     size_t space_available() {
+      assert(mapped_buffer_);
       return circular_buffer_.space_available();
     }
   
     void Write(const void *data, size_t size) {
+      assert(mapped_buffer_);
       assert(size <= space_available());
       if (size > 0) {
         circular_buffer_.write(data, size);
@@ -381,65 +394,91 @@ class IpcQueueBuffer {
       }
     }
 
+#ifdef DEBUG
+    // For testing
+    void CommitWithoutSignalling() {
+      if (was_written_) {
+        mapped_buffer_->tail = circular_buffer_.tail();
+      }
+    }
+#endif
+
    private:
     bool was_written_;
     CircularBuffer circular_buffer_;
-    SharedMemory::MappedViewOf<BufferFormat> mapped_buffer_;
+    BufferFormat *mapped_buffer_;
+    IpcEvent *data_available_event_;
   };
 };
 
 
 //-----------------------------------------------------------------------------
 // IpcProcessRegistry
-// TODO(michaeln)
-// a Perhaps cache the array and notice when it changes and only lock to
-//   pick up the changes (keep a revision number in the shared block).
-// b Perhaps grow and shrink as needed or alloc new shared blocks as needed?
-// c Either a or SingleWriterMultipleReader type of locking might be nice
-// d Recover from zombie processes that hold locks
-//   registry_mutex or an outbound queue's write_mutex
 //-----------------------------------------------------------------------------
 class IpcProcessRegistry {
  public:
-  bool Init();
+  bool Open();
   bool Add(IpcProcessId id);
   bool Remove(IpcProcessId id);
   void GetAll(std::vector<IpcProcessId> *list);
 
  private:
   static const IpcProcessId kInvalidProcessId = 0;
-  static const int kMaxProcesses = 100;
-  // The structure store in our shared memory
+  static const int kMaxProcesses = 31;
+
+  void Repair();
+
+  // The structure stored in our shared memory
   struct Registry {
+    int revision;
     IpcProcessId processes[kMaxProcesses];
   };
-  ATL::CMutex mutex_;
+
+  IpcMutex mutex_;
   SharedMemory shared_memory_;
+  SharedMemory::MappedViewOf<Registry> mapped_registry_;
+  Registry cached_registry_;
+
+#ifdef DEBUG
+  bool Verify(bool check_for_current_process);
+ public:
+  // For testing
+  void DieWhileHoldingRegistryLock();
+  void SleepWhileHoldingRegistryLock();
+#endif
 };
 
 
-bool IpcProcessRegistry::Init() {
-  CStringW mutex_name;
-  CStringW shared_memory_name;
-  GetKernelObjectName(kRegistryMutex, 0, &mutex_name);
-  GetKernelObjectName(kRegistryMemory, 0, &shared_memory_name);
-
-  if (!mutex_.Create(NULL, FALSE, mutex_name))
+bool IpcProcessRegistry::Open() {
+  if (!mutex_.Create(kRegistryMutex, 0))
     return false;
 
-  ATL::CMutexLock lock(mutex_);
-  if (!shared_memory_.Open(shared_memory_name)) {
+  IpcMutexLock lock(&mutex_);
+  CStringW shared_memory_name;
+  GetKernelObjectName(kRegistryMemory, 0, &shared_memory_name);
+  if (shared_memory_.Open(shared_memory_name)) {
+    if (!mapped_registry_.OpenView(&shared_memory_, true))
+      return false;
+
+    if (lock.WasAbandoned()) {
+      Repair();
+    }
+    cached_registry_ = *mapped_registry_.get();
+  } else {
     if (!shared_memory_.Create(shared_memory_name, sizeof(Registry))) {
       return false;
     }
-    SharedMemory::MappedViewOf<Registry> registry;
-    if (!registry.OpenView(&shared_memory_, true)) {
+    if (!mapped_registry_.OpenView(&shared_memory_, true)) {
       return false;
     }
-    for (int i = 0; i < kMaxProcesses; ++i) {
-      registry->processes[i] = kInvalidProcessId;
-    }
+    cached_registry_ = *mapped_registry_.get();
+
+    assert(mapped_registry_->revision == 0);
+    assert(mapped_registry_->processes[0] == 0);
   }
+#ifdef DEBUG
+  Verify(false);
+#endif
   return true;
 }
 
@@ -447,53 +486,170 @@ bool IpcProcessRegistry::Init() {
 bool IpcProcessRegistry::Add(IpcProcessId id) {
   assert(id != 0);
   assert(!Remove(id));
-  ATL::CMutexLock lock(mutex_);
-  SharedMemory::MappedViewOf<Registry> registry;
-  if (!registry.OpenView(&shared_memory_, true)) {
+
+  if (!mapped_registry_.get())
     return false;
+
+  IpcMutexLock lock(&mutex_);
+  if (lock.WasAbandoned()) {
+    Repair();
   }
+
+  // Put this id in the first emtpy slot
   for (int i = 0; i < kMaxProcesses; ++i) {
-    if (registry->processes[i] == kInvalidProcessId) {
-      registry->processes[i] = id;
+    if (mapped_registry_->processes[i] == kInvalidProcessId) {
+      mapped_registry_->revision += 1;
+      mapped_registry_->processes[i] = id;
       return true;
     }
-  }  
-  // TODO(michaeln): prune dead processes and try again, grow shared memory?
-  assert(false);  // apparently we need a bigger array
+  }
+
+  // No empty slots available, look for a dead process and replace
+  // it with this id.
+  for (int i = 0; i < kMaxProcesses; ++i) {
+    ATL::CHandle process_handle;
+    process_handle.Attach(::OpenProcess(SYNCHRONIZE, FALSE,
+                                        mapped_registry_->processes[i]));
+    if (!process_handle) {
+      mapped_registry_->revision += 1;  // bump the revision number first
+      mapped_registry_->processes[i] = id;
+      return true;     
+    }
+  }
+
+  // The array is full, we cannot add this process id
+  assert(false);
   return false;
 }
 
 
 bool IpcProcessRegistry::Remove(IpcProcessId id) {
   assert(id != 0);
-  ATL::CMutexLock lock(mutex_);
-  SharedMemory::MappedViewOf<Registry> registry;
-  if (!registry.OpenView(&shared_memory_, true)) {
+
+  if (!mapped_registry_.get())
     return false;
+
+  IpcMutexLock lock(&mutex_);
+  if (lock.WasAbandoned()) {
+    Repair();
   }
+
+  // Find our index
+  int our_index = -1;
   for (int i = 0; i < kMaxProcesses; ++i) {
-    if (registry->processes[i] == id) {
-      registry->processes[i] = kInvalidProcessId;
-      return true;
+    if (mapped_registry_->processes[i] == id) {
+      our_index = i;
+      break;
     }
-  }  
-  return false;
+  }
+  if (our_index == -1)
+    return false;
+
+  // Find the last valid index
+  int last_valid_index = our_index;
+  for (int i = our_index + 1; i < kMaxProcesses; ++i) {
+    if (mapped_registry_->processes[i] == kInvalidProcessId)
+      break;
+    last_valid_index = i;
+  }
+
+  // Replace the value at our index with that of the last and shorten
+  mapped_registry_->revision += 1;  // bump the revision number first
+  if (last_valid_index != our_index) {
+    mapped_registry_->processes[our_index] =
+                          mapped_registry_->processes[last_valid_index];
+    mapped_registry_->processes[last_valid_index] = kInvalidProcessId;
+  } else {
+    mapped_registry_->processes[our_index] = kInvalidProcessId;
+  }
+
+  return true;
 }
 
 
 void IpcProcessRegistry::GetAll(std::vector<IpcProcessId> *out) {
   out->clear();
-  ATL::CMutexLock lock(mutex_);
-  SharedMemory::MappedViewOf<Registry> registry;
-  if (!registry.OpenView(&shared_memory_, false)) {
+
+  if (!mapped_registry_.get())
     return;
-  }
-  for (int i = 0; i < kMaxProcesses; ++i) {
-    if (registry->processes[i] != kInvalidProcessId) {
-      out->push_back(registry->processes[i]);
+
+  if (cached_registry_.revision != mapped_registry_->revision) {
+    IpcMutexLock lock(&mutex_);
+    if (lock.WasAbandoned()) {
+      Repair();
     }
+    cached_registry_ = *mapped_registry_.get();
+#ifdef DEBUG
+    Verify(true);
+#endif
+  }
+
+  for (int i = 0; i < kMaxProcesses; ++i) {
+    if (cached_registry_.processes[i] == kInvalidProcessId)
+      break;
+    out->push_back(cached_registry_.processes[i]);
   }  
 }
+
+
+void IpcProcessRegistry::Repair() {
+  int last_valid = -1;
+  for (int i = 0; i < kMaxProcesses; ++i) {
+    if (mapped_registry_->processes[i] == kInvalidProcessId)
+      break;
+    last_valid = i;
+  }
+  if (last_valid == -1)
+    return;  // its empty
+
+  // The Remove method can leave a duplicate entry at the last valid position
+  // if the process terminates at just the wrong time.
+  IpcProcessId possible_dup = mapped_registry_->processes[last_valid];
+  for (int i = 0; i < last_valid; ++i) {
+    if (mapped_registry_->processes[i] == possible_dup) {
+      LOG(("IpcProcessRegistry::Repair - removing duplicate entry"));
+      mapped_registry_->revision += 1;
+      mapped_registry_->processes[last_valid] = kInvalidProcessId;
+      return;
+    }
+  }
+}
+
+#ifdef DEBUG
+bool IpcProcessRegistry::Verify(bool check_for_current_process) {
+  IpcProcessId current_process_id = ::GetCurrentProcessId();
+  std::set<IpcProcessId> unique;
+  bool contains_current_process = false;
+  int num_valid = 0;
+  int i = 0;
+  for (; i < kMaxProcesses; ++i) {
+    if (cached_registry_.processes[i] == current_process_id)
+      contains_current_process = true;
+    if (cached_registry_.processes[i] == kInvalidProcessId)
+      break;
+    ++num_valid;
+    unique.insert(cached_registry_.processes[i]);
+  }
+  for (++i; i < kMaxProcesses; ++i) {
+    if (cached_registry_.processes[i] != kInvalidProcessId) {
+      LOG(("IpcProcessRegistry::Verify failed, holes found"));
+      assert(false);
+      return false;
+    }
+  }
+  if (unique.size() != num_valid) {
+    LOG(("IpcProcessRegistry::Verify failed, duplicates found"));
+    assert(false);
+    return false;
+  }
+  if (check_for_current_process && !contains_current_process) {
+    LOG(("IpcProcessRegistry::Verify failed, missing current process"));
+    assert(false);
+    return false;
+  }
+  return true;
+}
+#endif
 
 
 //-----------------------------------------------------------------------------
@@ -579,25 +735,34 @@ class IpcThreadMessageEnvelope : public MessageData {
 
 class Win32IpcMessageQueue;
 
+static const int kTimeoutMs = 60000;
+
 class QueueBase {
  protected:
   QueueBase(Win32IpcMessageQueue *owner) : owner_(owner) {}
 
   Win32IpcMessageQueue *owner_;
-  IpcQueueMutex write_mutex_;
-  IpcQueueEvent data_available_event_;
-  IpcQueueEvent space_available_event_;
-  IpcQueueBuffer io_buffer_;
 
-  // The 'wire format' used to represent messages in our io buffer
-  struct MessageHeader {
+  // The set of kernel objects that comprise a queue
+  IpcMutex write_mutex_;
+  IpcEvent data_available_event_;
+  IpcEvent space_available_event_;
+  IpcBuffer io_buffer_;  // shared memory
+
+  // The 'wire format' used to represent message packets in our io buffer
+  struct MessagePacketHeader {
     IpcProcessId msg_source;
     int msg_type;
-    int msg_size;
+    int sequence_number;
+    bool last_packet;
+    int packet_size;
 
-    MessageHeader() : msg_source(0), msg_type(0), msg_size(0) {}
-    MessageHeader(IpcProcessId source, int type, int size)
-        : msg_source(source), msg_type(type), msg_size(size) {}
+    MessagePacketHeader()
+        : msg_source(0), msg_type(0), sequence_number(0),
+          last_packet(true), packet_size(0) {}
+    MessagePacketHeader(IpcProcessId source, int type, int size)
+        : msg_source(source), msg_type(type), sequence_number(0),
+          last_packet(true), packet_size(size) {}
   };
 };
 
@@ -609,14 +774,19 @@ class OutboundQueue : public QueueBase {
       process_id_(0),
       has_write_mutex_(false),
       is_waiting_for_write_mutex_(false),
-      is_waiting_for_space_available_(false) {}
+      is_waiting_for_space_available_(false),
+      wait_start_time_(0),
+      last_active_time_(0),
+      in_progress_message_(NULL),
+      in_progress_written_(0),
+      in_progress_sequence_(0) {}
 
   ~OutboundQueue();
 
   bool Open(IpcProcessId process_id);
   void AddMessageToQueue(ShareableIpcMessage *message);
   void WaitComplete(HANDLE handle, bool abandoned);
-  bool empty() { return pending_.empty(); }
+  bool AddWaitHandles(int64 now, std::vector<HANDLE> *handles);
   IpcProcessId process_id() { return process_id_; }
 
  private:
@@ -626,13 +796,25 @@ class OutboundQueue : public QueueBase {
   bool has_write_mutex_;
   bool is_waiting_for_write_mutex_;
   bool is_waiting_for_space_available_;
+  int64 wait_start_time_;
+  int64 last_active_time_;
+  ShareableIpcMessage* in_progress_message_;
+  size_t in_progress_written_;
+  int in_progress_sequence_;
 
   void WritePendingMessages();
-  bool WriteOneMessage(ShareableIpcMessage *message);
-  void ClearPendingMessages();
+  bool WriteOneMessage(ShareableIpcMessage *message, bool allow_large_message);
+  bool WriteOnePacket(MessagePacketHeader *header,
+                      const uint8 *msg_data,
+                      bool allow_large_message);
   void MaybeWaitForWriteMutex();
-  void MaybeReleaseWriteMutex();
   void WaitForSpaceAvailable();
+
+#ifdef DEBUG
+ public:
+  // For testing
+  void DieWhileHoldingWriteLock();
+#endif
 };
 
 class InboundQueue : public QueueBase {
@@ -640,12 +822,17 @@ class InboundQueue : public QueueBase {
   InboundQueue(Win32IpcMessageQueue *owner) : QueueBase(owner) {}
 
   bool Create(IpcProcessId process_id);
+  void AddWaitHandles(int64 now, std::vector<HANDLE> *handles);
   void WaitComplete(HANDLE handle, bool abandoned);
 
  private:
+  MessagePacketHeader last_packet_header_;
+  std::vector<uint8> message_data_buffer_;
+
   void ReadAndDispatchMessages();
   bool ReadOneMessage(IpcProcessId *source, int *message_type,
                       IpcMessageData **message);
+  bool ReadOnePacket(MessagePacketHeader *header);
 };
 
 
@@ -656,9 +843,8 @@ class Win32IpcMessageQueue : public IpcMessageQueue,
                              public ThreadMessageQueue::HandlerInterface {
  public:
   Win32IpcMessageQueue()
-    : current_process_id_(0), thread_id_(0), thread_message_queue_(NULL) {} 
-
-  ~Win32IpcMessageQueue();
+    : die_(false), current_process_id_(::GetCurrentProcessId()),
+      thread_id_(0), thread_message_queue_(NULL) {} 
 
   bool Init();
 
@@ -677,8 +863,7 @@ class Win32IpcMessageQueue : public IpcMessageQueue,
   void RunMessageLoop();
 
   // Wait completion handling
-  void WaitComplete(int index, bool abandoned);
-  void AddWaitHandleForQueue(HANDLE wait_handle, OutboundQueue *outbound_queue);
+  void WaitComplete(HANDLE handle, OutboundQueue *queue, bool abandoned);
 
   // ThreadMessage handling
   virtual void HandleThreadMessage(int message_type,
@@ -690,13 +875,14 @@ class Win32IpcMessageQueue : public IpcMessageQueue,
   OutboundQueue *GetOutboundQueue(IpcProcessId process_id);
   void RemoveOutboundQueue(OutboundQueue *queue);
 
+  friend class InboundQueue;
+
+  bool die_;
   IpcProcessRegistry process_registry_;
   IpcProcessId current_process_id_;
   ThreadMessageQueue *thread_message_queue_;
   ATL::CHandle thread_;
   ThreadId thread_id_;
-  std::vector<HANDLE> wait_handles_;
-  std::vector<OutboundQueue*> waiting_outbound_queues_;
   scoped_ptr<InboundQueue> inbound_queue_;
   std::map<IpcProcessId, linked_ptr<OutboundQueue> > outbound_queues_;
 };
@@ -708,41 +894,35 @@ class Win32IpcMessageQueue : public IpcMessageQueue,
 //-----------------------------------------------------------------------------
 
 OutboundQueue::~OutboundQueue() {
-  ClearPendingMessages();
-  MaybeReleaseWriteMutex();
-}
-
-
-void OutboundQueue::ClearPendingMessages() {
   while (!pending_.empty()) {
     ShareableIpcMessage *message = pending_.front();
     pending_.pop_front();
     message->RemoveReference();
   }  
+  if (has_write_mutex_) {
+    LOG(("OutboundQueue - releasing write_mutex_\n"));
+    BOOL ok = ::ReleaseMutex(write_mutex_.m_h);
+    assert(ok);
+  }
+  LOG(("OutboundQueue::~OutboundQueue %d\n", process_id_));
 }
 
 
 void OutboundQueue::MaybeWaitForWriteMutex() {
   if (!has_write_mutex_ && !is_waiting_for_write_mutex_) {
+    LOG(("OutboundQueue::StartWaiting - write_mutex_\n"));
     is_waiting_for_write_mutex_ = true;
-    owner_->AddWaitHandleForQueue(write_mutex_.m_h, this);
-  }
-}
-
-
-void OutboundQueue::MaybeReleaseWriteMutex() {
-  if (has_write_mutex_) {
-    ::ReleaseMutex(write_mutex_.m_h);
-    has_write_mutex_ = false;
+    wait_start_time_ = ::GetCurrentTimeMillis();
   }
 }
 
 
 void OutboundQueue::WaitForSpaceAvailable() {
+  LOG(("OutboundQueue::StartWaiting - space_available_event_\n"));
   assert(has_write_mutex_);
   assert(!is_waiting_for_space_available_);
   is_waiting_for_space_available_ = true;
-  owner_->AddWaitHandleForQueue(space_available_event_.m_h, this);
+  wait_start_time_ = ::GetCurrentTimeMillis();
 }
 
 
@@ -750,15 +930,13 @@ bool OutboundQueue::Open(IpcProcessId process_id) {
   process_id_ = process_id;
   process_handle_.Attach(::OpenProcess(SYNCHRONIZE, FALSE, process_id));
   if (!process_handle_ ||
-      !write_mutex_.Open(process_id) ||
+      !write_mutex_.Open(kQueueWriteMutex, process_id) ||
       !io_buffer_.Open(process_id) ||
       !data_available_event_.Open(kQueueDataAvailableEvent, process_id) ||
       !space_available_event_.Open(kQueueSpaceAvailableEvent, process_id)) {
     return false;
   }
-
-  // We wait on the process handle to get notified if it terminates
-  owner_->AddWaitHandleForQueue(process_handle_.m_h, this);
+  LOG(("OutboundQueue::Open %d\n", process_id_));
   return true;
 }
 
@@ -767,91 +945,175 @@ void OutboundQueue::AddMessageToQueue(ShareableIpcMessage *message) {
   message->AddReference();
   pending_.push_back(message);
   MaybeWaitForWriteMutex();
+
+#ifdef DEBUG
+  // For testing
+  MutexLock lock(&g_counters_mutex);
+  ++(g_counters.queued_outbound);
+#endif
 }
 
 
-void OutboundQueue::WaitComplete(HANDLE wait_handle, bool abandoned) {
-  if (wait_handle == write_mutex_.m_h) {
+void OutboundQueue::WaitComplete(HANDLE handle, bool abandoned) {
+  assert(process_handle_.m_h);
+  last_active_time_ = ::GetCurrentTimeMillis();
+  if (handle == write_mutex_.m_h) {
+    LOG(("OutboundQueue::WaitComplete - write_mutex_ %s\n",
+         abandoned ? "abandoned" : ""));
     is_waiting_for_write_mutex_ = false;
     has_write_mutex_ = true;
     WritePendingMessages();
-  } else if (wait_handle == space_available_event_.m_h) {
+  } else if (handle == space_available_event_.m_h) {
+    LOG(("OutboundQueue::WaitComplete - space_available_event_ %s\n",
+         abandoned ? "abandoned" : ""));
     assert(has_write_mutex_);
     space_available_event_.Reset();
     is_waiting_for_space_available_ = false;
     WritePendingMessages();
-  } else if (wait_handle == process_handle_.m_h) {
-    ClearPendingMessages();
-    MaybeReleaseWriteMutex();
+  } else if (handle == process_handle_.m_h) {
+    LOG(("OutboundQueue::WaitComplete - process_handle_ %s\n",
+         abandoned ? "abandoned" : ""));
+    process_handle_.Close();
+    owner_->process_registry_.Remove(process_id_);
   } else {
     assert(false);
+    process_handle_.Close();
   }
+}
+
+
+bool OutboundQueue::AddWaitHandles(int64 now, std::vector<HANDLE> *handles) {
+  if (!process_handle_.m_h)
+    return false;
+
+  if (!pending_.empty()) {
+    assert(is_waiting_for_space_available_ ^ is_waiting_for_write_mutex_);
+    if ((now - wait_start_time_) > kTimeoutMs)
+      return false;
+
+    if (is_waiting_for_space_available_)
+      handles->push_back(space_available_event_.m_h);
+    else if (is_waiting_for_write_mutex_)
+      handles->push_back(write_mutex_.m_h);
+  } else {
+    if ((now - last_active_time_) > kTimeoutMs)
+      return false;
+  }
+  handles->push_back(process_handle_.m_h);
+  return true;
 }
 
 
 void OutboundQueue::WritePendingMessages() {
   assert(has_write_mutex_);
 
-  // write as many pending messages will fit the io buffers available space
+  // Write as many pending messages that will fit the available space
+  int num_written = 0;
+  bool allow_large_message = true;
   while (!pending_.empty()) {
     ShareableIpcMessage *message = pending_.front();
-    if (!WriteOneMessage(message)) {
+    if (!WriteOneMessage(message, allow_large_message)) {
       break;
     }
     pending_.pop_front();
     message->RemoveReference();
+    ++num_written;
+    allow_large_message = false;
   }
 
-  assert(pending_.empty() || is_waiting_for_space_available_);
-
-  if (pending_.empty()) {
-    ::ReleaseMutex(write_mutex_.m_h);
+  if (!num_written && !pending_.empty()) {
+    // Continue holding the write lock until we've written at least one message
+    WaitForSpaceAvailable();
+  } else {
+    assert(!in_progress_message_);
+    LOG(("OutboundQueue - releasing write_mutex_\n"));
+    BOOL ok = ::ReleaseMutex(write_mutex_.m_h);
+    assert(ok);
     has_write_mutex_ = false;
+
+    if (!pending_.empty()) {
+      // We release then reacquire the lock to avoid monopolizing a queue
+      LOG(("OutboundQueue::StartWaiting - write_mutex_\n"));
+      is_waiting_for_write_mutex_ = true;
+      wait_start_time_ = ::GetCurrentTimeMillis();
+    }
   }
 }
 
 
-bool OutboundQueue::WriteOneMessage(ShareableIpcMessage *message) {
+bool OutboundQueue::WriteOneMessage(ShareableIpcMessage *message,
+                                    bool allow_large_message) {
   assert(has_write_mutex_);
   assert(message);
   assert(message->serialized_message_data());
-  {
-    IpcQueueBuffer::WriteTransaction writer;
-    if (!writer.Start(&io_buffer_)) {
-      ClearPendingMessages();
-      return false;
-    }
 
-    if (writer.data_available() > 0) {
-      // If the buffer is not empty, signal the data_available_event_
-      // to recover from a previous process that managed to commit to the
-      // buffer, but failed to signal the event (ie. crashed)
-      data_available_event_.Set();
-    }
+  // Form the packet we would like to send, the complete message
+  MessagePacketHeader header(
+      owner_->current_process_id_, message->ipc_message_type(),
+      static_cast<int>(message->serialized_message_data()->size()));
+  uint8 *msg_data = &message->serialized_message_data()->at(0);
 
-    std::vector<uint8> *msg_data = message->serialized_message_data();
-    MessageHeader header(owner_->current_process_id_,
-                         message->ipc_message_type(),
-                         static_cast<int>(msg_data->size()));
-    const size_t space_needed = sizeof(header) + header.msg_size;
-    if (space_needed > writer.space_available()) {
-      if (space_needed > IpcQueueBuffer::kCapacity) {
-        // TODO(michaeln): This message is too big to be sent thru this
-        // ipc mechanism. We silently drop it on the floor for now. The
-        // todo is to support sending messages larger than our io buffer
-        // size (at which time we could decrease the size of our io buffer).
-        assert(false);
-        return true;
-      }
-      WaitForSpaceAvailable();
-      return false;
-    }
-
-    writer.Write(&header, sizeof(header));
-    if (header.msg_size > 0)
-      writer.Write(&((*msg_data)[0]), header.msg_size);
+  // If this message is already in progress, account for data we've already
+  // sent in previous packets
+  if (in_progress_message_) {
+    assert(allow_large_message);
+    assert(in_progress_message_ == message);
+    msg_data += in_progress_written_;
+    header.packet_size -= in_progress_written_;
+    header.sequence_number = in_progress_sequence_ + 1;
   }
-  data_available_event_.Set();
+
+  if (!WriteOnePacket(&header, msg_data, allow_large_message))
+    return false;
+
+  if (header.last_packet) {
+    in_progress_message_ = NULL;
+    in_progress_written_ = 0;
+    in_progress_sequence_ = 0;
+  } else {
+    // We could not send everything this time through
+    assert(!in_progress_message_ || (message == in_progress_message_));
+    in_progress_message_ = message;
+    in_progress_written_ += header.packet_size;
+    in_progress_sequence_ = header.sequence_number;
+    return false;
+  }
+
+#ifdef DEBUG
+    // For testing
+    MutexLock lock(&g_counters_mutex);
+    ++(g_counters.sent_outbound);
+#endif
+
+  LOG(("OutboundQueue - sent message to %d\n", process_id_));
+  return true;
+}
+
+bool OutboundQueue::WriteOnePacket(MessagePacketHeader *header,
+                                   const uint8 *msg_data,
+                                   bool allow_large_message) {
+  IpcBuffer::WriteTransaction writer;
+  if (!writer.Start(&io_buffer_, &data_available_event_)) {
+    process_handle_.Close();
+    return false;
+  }
+
+  size_t space_needed = sizeof(MessagePacketHeader) + header->packet_size;
+  if (space_needed > IpcBuffer::kCapacity) {
+    if (!allow_large_message)
+      return false;
+    space_needed = IpcBuffer::kCapacity;
+    header->packet_size = IpcBuffer::kCapacity - sizeof(MessagePacketHeader);
+    header->last_packet = false;
+  }
+
+  if (space_needed > writer.space_available()) {
+    return false;
+  }
+  
+  writer.Write(header, sizeof(MessagePacketHeader));
+  if (header->packet_size > 0)
+    writer.Write(msg_data, header->packet_size);
   return true;
 }
 
@@ -861,21 +1123,24 @@ bool OutboundQueue::WriteOneMessage(ShareableIpcMessage *message) {
 //-----------------------------------------------------------------------------
 
 bool InboundQueue::Create(IpcProcessId process_id) {
-  if (!write_mutex_.Create(process_id) ||
+  if (!write_mutex_.Create(kQueueWriteMutex, process_id) ||
       !io_buffer_.Create(process_id) ||
       !data_available_event_.Create(kQueueDataAvailableEvent, process_id) ||
       !space_available_event_.Create(kQueueSpaceAvailableEvent, process_id)) {
     return false;
   }
-
-  // We perpetually wait for new data being dropped into our queue
-  owner_->AddWaitHandleForQueue(data_available_event_.m_h, NULL);
   return true;
 }
 
+void InboundQueue::AddWaitHandles(int64 now, std::vector<HANDLE> *handles) {
+  // We perpetually wait for new data being dropped into our queue
+  handles->push_back(data_available_event_.m_h);
+}
 
-void InboundQueue::WaitComplete(HANDLE wait_handle, bool abandoned) {
-  assert(wait_handle == data_available_event_.m_h);
+void InboundQueue::WaitComplete(HANDLE handle, bool abandoned) {
+  LOG(("InboundQueue::WaitComplete - data_available_event_ %s\n",
+       abandoned ? "abandoned" : ""));
+  assert(handle == data_available_event_.m_h);
   assert(!abandoned);
   data_available_event_.Reset();
   ReadAndDispatchMessages();
@@ -887,14 +1152,22 @@ void InboundQueue::ReadAndDispatchMessages() {
   int message_type;
   IpcMessageData *message;
   while (ReadOneMessage(&source_process_id, &message_type, &message)) {
-    Sleep(1);
+#ifdef DEBUG
+    {
+      // For testing
+      MutexLock lock(&g_counters_mutex);
+      ++(g_counters.read_inbound);
+      if (message)
+        ++(g_counters.dispatched_inbound);
+    }
+#endif
     if (message) {
-      // TODO(michaeln): For now we echo the message back to the sender
-      // for testing purposes. The real impl is the two lines commented
-      // out below.
-      owner_->Send(source_process_id, message_type, message);
-      //CallRegisteredHandler(source_process_id, message_type, message);
-      //delete message_data;
+      LOG(("InboundQueue - received msg from %d\n", source_process_id));
+      owner_->CallRegisteredHandler(source_process_id, message_type, message);
+      delete message;
+    } else {
+      LOG(("InboundQueue - unable to deserialize message_type %d from %d\n",
+           message_type, source_process_id));
     }
   } 
 }
@@ -907,36 +1180,67 @@ bool InboundQueue::ReadOneMessage(IpcProcessId *source_process_id,
   *message_type = 0;
   *message = NULL;
 
-  MessageHeader header;
-  std::vector<uint8> msg_data;
-  { 
-    IpcQueueBuffer::ReadTransaction reader;
-    if (!reader.Start(&io_buffer_)) {
-      // TODO(michaeln): Send a crash report, unwind this ipc thread, and
-      // start ignore Send and SendToAll method calls.
-      assert(false);
-      return false;
-    }
-    if (!reader.data_available()) {
-      return false;
+  MessagePacketHeader header;
+  while (ReadOnePacket(&header)) {
+    if (!header.last_packet) {
+      continue;
     }
 
-    assert(reader.data_available() >= sizeof(header));
-    reader.Read(&header, sizeof(header));
-    if (header.msg_size > 0) {
-      assert(reader.data_available() >= static_cast<size_t>(header.msg_size));
-      msg_data.resize(header.msg_size);
-      reader.Read(&msg_data[0], header.msg_size);
+    if (message_data_buffer_.size() > 0) {
+      Deserializer deserializer(&message_data_buffer_[0],
+                                message_data_buffer_.size());
+      deserializer.CreateAndReadObject(message);
+      message_data_buffer_.clear();
     }
+    *source_process_id = header.msg_source;
+    *message_type = header.msg_type;
+    return true;
   }
-  space_available_event_.Set();
+  return false;
+}
 
-  if (msg_data.size() > 0) {
-    Deserializer deserializer(&msg_data[0], msg_data.size());
-    deserializer.CreateAndReadObject(message);
+bool InboundQueue::ReadOnePacket(MessagePacketHeader *header) {
+  assert(header);
+  IpcBuffer::ReadTransaction reader;
+  if (!reader.Start(&io_buffer_, &space_available_event_)) {
+    // Should not occur since we have already opened the file mapping view
+    assert(false);
+    owner_->die_ = true;
+    return false;
   }
-  *source_process_id = header.msg_source;
-  *message_type = header.msg_type;
+  if (!reader.data_available()) {
+    return false;
+  }
+
+  // Read the packet header from the buffer
+  assert(reader.data_available() >= sizeof(MessagePacketHeader));
+  reader.Read(header, sizeof(MessagePacketHeader));
+
+  if (header->sequence_number == 0) {
+    // Start of a new message
+    message_data_buffer_.clear();
+  } else {
+    // The next packet in a long message, append to our existing message data
+    assert(!last_packet_header_.last_packet);
+    assert(header->msg_source == last_packet_header_.msg_source);
+    assert(header->msg_type == last_packet_header_.msg_type);
+    assert(header->sequence_number == last_packet_header_.sequence_number + 1);
+  }
+
+  // Read the packet data
+  if (header->packet_size > 0) {
+    if (reader.data_available() < static_cast<size_t>(header->packet_size)) {
+      assert(false); // We have garbage in our shared memory block
+      owner_->die_ = true;
+      return false;
+    }
+    size_t current_size = message_data_buffer_.size();
+    message_data_buffer_.resize(current_size + header->packet_size);
+    reader.Read(&message_data_buffer_[current_size], header->packet_size);
+  }
+
+  last_packet_header_ = *header;
+
   return true;
 }
 
@@ -946,32 +1250,24 @@ bool InboundQueue::ReadOneMessage(IpcProcessId *source_process_id,
 //-----------------------------------------------------------------------------
 
 static Mutex g_instance_lock;
-static scoped_ptr<Win32IpcMessageQueue> g_instance(NULL);
+static Win32IpcMessageQueue *g_instance = NULL;
 
 // static
 IpcMessageQueue *IpcMessageQueue::GetInstance() {
-  // TODO(michaeln): temporarily prevent this class from being used until 
-  // some more testing is done
-  return NULL;
-  /*
-  if (!g_instance.get()) {
+  if (!g_instance) {
     MutexLock locker(&g_instance_lock);
-    if (!g_instance.get()) {
+    if (!g_instance) {
       Win32IpcMessageQueue *instance = new Win32IpcMessageQueue;
-      if (!instance->Init())
-        delete instance;
-      else
-        g_instance.reset(instance);
+      if (!instance->Init()) {
+        LOG(("IpcMessageQueue initialization failed.\n"));
+        instance->die_ = true;
+      }
+      g_instance = instance;
     }
   }
-  return g_instance.get();
-  */
+  return g_instance;
 };
 
-
-Win32IpcMessageQueue::~Win32IpcMessageQueue() {
-  process_registry_.Remove(GetCurrentIpcProcessId());
-}
 
 
 IpcProcessId Win32IpcMessageQueue::GetCurrentIpcProcessId() {
@@ -982,6 +1278,10 @@ IpcProcessId Win32IpcMessageQueue::GetCurrentIpcProcessId() {
 void Win32IpcMessageQueue::SendToAll(int ipc_message_type,
                                      IpcMessageData *ipc_message_data,
                                      bool including_self) {
+  if (die_) {
+    delete ipc_message_data;
+    return;
+  }
   IpcThreadMessageEnvelope *envelope = new IpcThreadMessageEnvelope(
                                                ipc_message_type,
                                                ipc_message_data,
@@ -989,12 +1289,21 @@ void Win32IpcMessageQueue::SendToAll(int ipc_message_type,
   thread_message_queue_->Send(thread_id_,
                               kIpcMessageQueue_Send,
                               envelope);
+#ifdef DEBUG
+  // For testing
+  MutexLock lock(&g_counters_mutex);
+  ++(g_counters.send_to_all);
+#endif
 }
 
 
 void Win32IpcMessageQueue::Send(IpcProcessId dest_process_id,
                                 int ipc_message_type,
                                 IpcMessageData *ipc_message_data) {
+  if (die_) {
+    delete ipc_message_data;
+    return;
+  }
   IpcThreadMessageEnvelope *envelope = new IpcThreadMessageEnvelope(
                                                ipc_message_type,
                                                ipc_message_data,
@@ -1002,6 +1311,11 @@ void Win32IpcMessageQueue::Send(IpcProcessId dest_process_id,
   thread_message_queue_->Send(thread_id_,
                               kIpcMessageQueue_Send,
                               envelope);
+#ifdef DEBUG
+  // For testing
+  MutexLock lock(&g_counters_mutex);
+  ++(g_counters.send_to_one);
+#endif
 }
 
 
@@ -1018,6 +1332,7 @@ struct ThreadStartData {
 
 
 bool Win32IpcMessageQueue::Init() {
+  assert(!die_);
   ThreadStartData start_data(this);
   unsigned int not_used;
   thread_.Attach(reinterpret_cast<HANDLE>(_beginthreadex(
@@ -1028,13 +1343,6 @@ bool Win32IpcMessageQueue::Init() {
   }
   MutexLock locker(&start_data.started_mutex_);
   start_data.started_mutex_.Await(Condition(&start_data.started_signal_));
-
-  // TODO(michaeln): test code, remove me when this class goes live
-  if (start_data.started_successfully_) {
-    SerializableString16::RegisterSerializableString16();
-    SendToAll(1, new SerializableString16(STRING16(L"See spot run")), true);
-  }
-
   return start_data.started_successfully_;
 }
 
@@ -1055,13 +1363,12 @@ unsigned int __stdcall Win32IpcMessageQueue::StaticThreadProc(void *param) {
 void Win32IpcMessageQueue::InstanceThreadProc(ThreadStartData *start_data) {
   {
     MutexLock locker(&start_data->started_mutex_);
-    current_process_id_ = ::GetCurrentProcessId();
     inbound_queue_.reset(new InboundQueue(this));
     thread_message_queue_ = ThreadMessageQueue::GetInstance();
     if (!thread_message_queue_ ||
         !thread_message_queue_->InitThreadMessageQueue() ||
         !inbound_queue_->Create(current_process_id_) ||
-        !process_registry_.Init() ||
+        !process_registry_.Open() ||
         !process_registry_.Add(current_process_id_)) {
       start_data->started_signal_ = true;
       start_data->started_successfully_ = false;
@@ -1075,32 +1382,70 @@ void Win32IpcMessageQueue::InstanceThreadProc(ThreadStartData *start_data) {
 
   RunMessageLoop();
 
-  wait_handles_.clear();
-  waiting_outbound_queues_.clear();
   outbound_queues_.clear();
   inbound_queue_.reset(NULL);
+  process_registry_.Remove(current_process_id_);
 }
 
 
 void Win32IpcMessageQueue::RunMessageLoop() {
-  // TODO(michaeln): run a timer in this loop and kill stalled OutboundQueues
-  bool done = false;
-  while (!done) {
-    // TODO(michaeln): What is the practical limit to how many handles
-    // can be waited on?
-    const DWORD kMaxWaitHandles = 64;
-    DWORD num_wait_handles = wait_handles_.size();
+  std::vector<HANDLE> wait_handles;
+  std::vector<OutboundQueue*> waiting_queues;
+
+  while (!die_) {
+    // Build up the array of handles we need to wait on
+    wait_handles.clear();
+    waiting_queues.clear();
+    int64 now = ::GetCurrentTimeMillis();
+
+    // The inbound queue perpetually waits for data available.
+    inbound_queue_->AddWaitHandles(now, &wait_handles);
+    assert(wait_handles.size() == 1);
+    waiting_queues.push_back(NULL);  // NULL indicates the inbound queue
+
+    // Each outbound queue perpetually waits on the process handle, and
+    // when messages are pending, either the write mutex or space available.
+    std::map<IpcProcessId, linked_ptr<OutboundQueue> >::iterator iter;
+    iter = outbound_queues_.begin();
+    while(iter != outbound_queues_.end()) {
+      OutboundQueue *queue = iter->second.get();
+      ++iter;  // advance the iterator prior to removal from the set
+      if (queue->AddWaitHandles(now, &wait_handles)) {
+        while (waiting_queues.size() < wait_handles.size()) {
+          waiting_queues.push_back(queue);
+        }
+      } else {
+        // Remove any handles added above, then remove the queue
+        wait_handles.resize(waiting_queues.size());
+        RemoveOutboundQueue(queue);
+      }
+    }
+
+    const DWORD kMaxWaitHandles = MAXIMUM_WAIT_OBJECTS - 1;
+    assert(kMaxWaitHandles == 63);
+    DWORD num_wait_handles = wait_handles.size();
     if (num_wait_handles > kMaxWaitHandles)
       num_wait_handles = kMaxWaitHandles;
 
+    LOG(("MsgWaitForMultipleObjectsEx %d handles\n", num_wait_handles));
     DWORD rv = MsgWaitForMultipleObjectsEx(
-                   num_wait_handles, &wait_handles_[0],
-                   INFINITE, QS_ALLINPUT, MWMO_INPUTAVAILABLE | MWMO_ALERTABLE);
-    if ((rv >= WAIT_OBJECT_0) && (rv < num_wait_handles)) {
-      WaitComplete(rv - WAIT_OBJECT_0, false);
-    } else if ((rv >= WAIT_ABANDONED_0) && (rv < num_wait_handles)) {
-      WaitComplete(rv - WAIT_ABANDONED_0, true);
-    } else if (rv != WAIT_FAILED) {
+                   num_wait_handles, &wait_handles[0],
+                   kTimeoutMs, QS_ALLINPUT,
+                   MWMO_INPUTAVAILABLE | MWMO_ALERTABLE);
+
+    if ((rv >= WAIT_OBJECT_0) &&
+        (rv < WAIT_OBJECT_0 + num_wait_handles)) {
+      int index = rv - WAIT_OBJECT_0;
+      WaitComplete(wait_handles[index], 
+                   waiting_queues[index],
+                   false);
+    } else if ((rv >= WAIT_ABANDONED_0) && 
+               (rv < WAIT_ABANDONED_0 + num_wait_handles)) {
+      int index = rv - WAIT_ABANDONED_0;
+      WaitComplete(wait_handles[index], 
+                   waiting_queues[index],
+                   true);
+    } else if (rv == WAIT_OBJECT_0 + num_wait_handles) {
       // We have message queue input to pump. We pump the queue dry
       // prior to looping and calling MsgWaitForMultipleObjects
       MSG msg;
@@ -1108,35 +1453,33 @@ void Win32IpcMessageQueue::RunMessageLoop() {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
       }
+    } else if (rv == WAIT_TIMEOUT) {
+      LOG(("WAIT_TIMEOUT\n"));
+    } else if (rv == WAIT_IO_COMPLETION) {
+      LOG(("WAIT_IO_COMPLETION\n"));
+    } else if (rv == WAIT_FAILED) {
+      LOG(("WAIT_FAILED\n", rv));
+      die_ = true;
     } else {
-      done = true;
+      LOG(("Wait finished with unknown return value, %d\n", rv));
+      die_ = true;
     }
   }
+  LOG(("Win32IpcMessageQueue dying\n"));
 }
 
 
-void Win32IpcMessageQueue::AddWaitHandleForQueue(HANDLE wait_handle,
-                                                 OutboundQueue *queue) {
-  wait_handles_.push_back(wait_handle);
-  waiting_outbound_queues_.push_back(queue);
-}
-
-
-void Win32IpcMessageQueue::WaitComplete(int index, bool abandoned) {
-  assert(index >= 0 && index < static_cast<int>(wait_handles_.size()));
-  HANDLE wait_handle = wait_handles_[index];
-  OutboundQueue *queue = waiting_outbound_queues_[index];
-
+void Win32IpcMessageQueue::WaitComplete(HANDLE handle,
+                                        OutboundQueue *queue,
+                                        bool abandoned) {
+  LOG(("WaitComplete %d , %d %s\n", handle,
+                                    queue ? queue->process_id() : 0,
+                                    abandoned ? "abandoned" : ""));
   if (!queue) {
-    // A null queue indicates this handle is for our InboundQueue.
-    inbound_queue_->WaitComplete(wait_handle, abandoned);
+    // NULL indicates the inbound queue
+    inbound_queue_->WaitComplete(handle, abandoned);
   } else {
-    wait_handles_.erase(wait_handles_.begin() + index);
-    waiting_outbound_queues_.erase(waiting_outbound_queues_.begin() + index);
-    queue->WaitComplete(wait_handle, abandoned);
-    if (queue->empty()) {
-      RemoveOutboundQueue(queue);
-    }
+    queue->WaitComplete(handle, abandoned);
   }
 }
 
@@ -1158,27 +1501,42 @@ void Win32IpcMessageQueue::HandleThreadMessage(int message_type,
 
 void Win32IpcMessageQueue::HandleSendToAll(
                                IpcThreadMessageEnvelope *envelope) {
+  LOG(("HandleSendToAll\n"));
   std::vector<IpcProcessId> processes;
   process_registry_.GetAll(&processes);
   for (std::vector<IpcProcessId>::iterator iter = processes.begin();
        iter != processes.end(); iter++) {
     if (envelope->include_self_ || *iter != current_process_id_) {
       OutboundQueue *outbound_queue = GetOutboundQueue(*iter);
-      if (outbound_queue)
+      if (outbound_queue) {
         outbound_queue->AddMessageToQueue(envelope->shareable_message_);
-      else if (current_process_id_ != *iter)
+      } else if (current_process_id_ != *iter) {
         process_registry_.Remove(*iter);
+        LOG(("Removing dead processes from registry, %d\n", *iter));
+      }
     } 
-  }  
+  }
+#ifdef DEBUG
+  // For testing
+  MutexLock lock(&g_counters_mutex);
+  ++(g_counters.handle_send_to_all);
+#endif
 }
 
 
 void Win32IpcMessageQueue::HandleSendToOne(
                                IpcThreadMessageEnvelope *envelope) {
+  LOG(("HandleSendToOne\n"));
   OutboundQueue *outbound_queue =
       GetOutboundQueue(envelope->destination_process_id_);
   if (outbound_queue)
     outbound_queue->AddMessageToQueue(envelope->shareable_message_);
+
+#ifdef DEBUG
+  // For testing
+  MutexLock lock(&g_counters_mutex);
+  ++(g_counters.handle_send_to_one);
+#endif
 }
 
 
@@ -1191,6 +1549,7 @@ OutboundQueue *Win32IpcMessageQueue::GetOutboundQueue(
   }
   OutboundQueue *queue = new OutboundQueue(this);
   if (!queue->Open(process_id)) {
+    LOG(("OutboundQueue::Open failed for process %d\n", process_id));
     delete queue;
     return NULL;
   }
@@ -1200,12 +1559,81 @@ OutboundQueue *Win32IpcMessageQueue::GetOutboundQueue(
 
 
 void Win32IpcMessageQueue::RemoveOutboundQueue(OutboundQueue *queue) {
-  // TODO(michaeln): avoid this linear search?
-  for (int i = waiting_outbound_queues_.size() - 1; i >= 0; --i) {
-    if (waiting_outbound_queues_[i] == queue) {
-      waiting_outbound_queues_.erase(waiting_outbound_queues_.begin() + i);
-      wait_handles_.erase(wait_handles_.begin() + i);
-    }
-  }
   outbound_queues_.erase(queue->process_id());
 }
+
+
+
+#ifdef DEBUG
+
+void TestingIpcMessageQueueWin32_GetAllProcesses(
+                                     std::vector<IpcProcessId> *processes) {
+  assert(g_instance);
+  IpcProcessRegistry registry;
+  assert(registry.Open());
+  registry.GetAll(processes);
+}
+
+void TestingIpcMessageQueueWin32_SleepWhileHoldingRegistryLock() {
+  assert(g_instance);
+  assert(::GetCurrentThreadId() == g_instance->thread_id_);
+  g_instance->process_registry_.SleepWhileHoldingRegistryLock();
+}
+
+void IpcProcessRegistry::SleepWhileHoldingRegistryLock() {
+  IpcMutexLock lock(&mutex_);
+  Sleep(INFINITE);
+}
+
+void TestingIpcMessageQueueWin32_DieWhileHoldingRegistryLock() {
+  assert(g_instance);
+  assert(::GetCurrentThreadId() == g_instance->thread_id_);
+  g_instance->process_registry_.DieWhileHoldingRegistryLock();
+}
+
+
+void IpcProcessRegistry::DieWhileHoldingRegistryLock() {
+  IpcMutexLock lock(&mutex_);
+  TerminateProcess(GetCurrentProcess(), 3);
+}
+
+
+void TestingIpcMessageQueueWin32_DieWhileHoldingWriteLock(IpcProcessId id) {
+  assert(g_instance);
+  assert(::GetCurrentThreadId() == g_instance->thread_id_);
+  OutboundQueue *queue = g_instance->GetOutboundQueue(id);
+  assert(queue);
+  queue->DieWhileHoldingWriteLock();
+}
+
+
+void OutboundQueue::DieWhileHoldingWriteLock() {
+  IpcMutexLock lock(&write_mutex_);
+  IpcBuffer::WriteTransaction writer;
+  if (!writer.Start(&io_buffer_, &data_available_event_) ||
+      writer.space_available() < sizeof(MessagePacketHeader)) {
+    TerminateProcess(GetCurrentProcess(), 3);
+  }
+
+  // We leave a message packet with last_packet set to false
+  // in the queue in this case as well
+  MessagePacketHeader header(
+      owner_->current_process_id_, kIpcQueue_TestMessage, 0);
+  header.last_packet = false;
+  writer.Write(&header, sizeof(header));
+  writer.CommitWithoutSignalling();
+
+  TerminateProcess(GetCurrentProcess(), 3);
+}
+
+
+void TestingIpcMessageQueueWin32_GetCounters(IpcMessageQueueCounters *counters,
+                                             bool reset) {
+  MutexLock lock(&g_counters_mutex);
+  if (counters)
+    *counters = g_counters;
+  if (reset)
+    memset(&g_counters, 0, sizeof(g_counters));
+}
+
+#endif

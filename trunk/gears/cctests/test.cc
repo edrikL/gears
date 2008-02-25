@@ -89,10 +89,15 @@ bool TestUrlUtils();  // from url_utils_test.cc
 bool TestJsRootedTokenLifetime();  // from base_class_test.cc
 bool TestStringUtils();  // from string_utils_test.cc
 bool TestSerialization();  // from serialization_test.cc
+bool TestCircularBuffer();  // from circular_buffer_test.cc
 #ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
 bool TestBufferBlob();
 #endif  // not OFFICIAL_BUILD
+
+#if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
+bool TestIpcMessageQueue();  // from ipc_message_queue_win32_test.cc
+#endif
 
 void CreateObjectBool(JsCallContext* context,
                       JsRunnerInterface* js_runner,
@@ -164,6 +169,11 @@ void GearsTest::RunTests(JsCallContext *context) {
 #endif  // not OFFICIAL_BUILD
   // TODO(zork): Add this test back in once it doesn't crash the browser.
   //ok &= TestJsRootedTokenLifetime();
+
+  ok &= TestCircularBuffer();
+#if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
+  ok &= TestIpcMessageQueue();
+#endif
 
   // We have to call GetDB again since TestCapabilitiesDBAll deletes
   // the previous instance.
