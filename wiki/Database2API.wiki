@@ -171,7 +171,7 @@ The diagram below shows the ownership model for Database2:
   # Each transaction that is created holds a reference to its !TransactionQueue.
   # Each statement that is added to a transaction holds a reference to its transaction.
   # Once a statement is processed, it is deleted and drops its reference.
-  # Once all statements for a transaction have been processed, the transaction itself is deleted and drops its reference to its !TransactionQueue.
+  # Once all statements for a transaction have been processed, the transaction commits itself, deletes itself, and drops its reference to its !TransactionQueue.
   # Once all transactions are completed, the !TransactionQueue itself is deleted.
 
 
