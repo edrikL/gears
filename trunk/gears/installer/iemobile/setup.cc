@@ -35,26 +35,6 @@ static const char16* kGearsSite = L"http://gears.google.com/done.html";
 HINSTANCE module_instance;
 int _charmax = 255;
 
-// KernelIoControl should be in <pkfuncs.h> according to MSDN
-// but such a header doesn't exist. We declare it here instead and link
-// against coredll.lib.
-extern "C" __declspec(dllimport) BOOL KernelIoControl(DWORD code,
-                                                      LPVOID input_buffer,
-                                                      DWORD input_buffer_size,
-                                                      LPVOID output_buffer,
-                                                      DWORD output_buffer_size,
-                                                      LPDWORD bytes_returned);
-
-// See http://msdn2.microsoft.com/en-us/library/ms172519(vs.80).aspx
-	
-// for how to reboot the device.
-	
-void Reboot() {
-  int control_code = CTL_CODE(
-      FILE_DEVICE_HAL, 15, METHOD_BUFFERED, FILE_ANY_ACCESS);
-  KernelIoControl(control_code, NULL, 0, NULL, 0, NULL);
-}
-
 extern "C" {
 BOOL WINAPI DllMain(HANDLE instance, DWORD reason, LPVOID reserved) {
   module_instance = static_cast<HINSTANCE>(instance);
@@ -126,13 +106,7 @@ __declspec(dllexport) InstallerActions Install_Exit(
 
     if (!fail_message || !title) return kContinue;
 
-    int please_restart = MessageBox(parent_window,
-                                    fail_message,
-                                    title,
-                                    MB_YESNO | MB_ICONQUESTION);
-    if (please_restart == IDYES) {
-      Reboot();
-    }
+    MessageBox(parent_window, fail_message, title, MB_OK | MB_ICONEXCLAMATION);
   } else {
     if (FAILED(restarter.StartTheProcess(kGearsSite))) {
       // Unfortunately we failed, so inform the user.
