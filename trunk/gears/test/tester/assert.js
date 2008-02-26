@@ -31,6 +31,11 @@
 var isDebug = google.gears.factory.getBuildInfo().indexOf("dbg") > -1;
 
 /**
+ * Whether the installed Gears extension is an official build.
+ */
+var isOfficial = google.gears.factory.getBuildInfo().indexOf("official") > -1;
+
+/**
  * A shared timer tests can use.
  */
 var timer = google.gears.factory.create('beta.timer');

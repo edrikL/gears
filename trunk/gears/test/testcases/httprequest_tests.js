@@ -210,8 +210,12 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
            'Should be able to call getAllResponseHeaders() after request');
     assert(isString(request.responseText),
            'Should be able to get responseText after request');
-    assert(isObject(request.responseBlob),
-           'Should be able to get responseBlob after request');
+
+    // blob not in non-official builds yet
+    if (!isOfficial) {
+      assert(isObject(request.responseBlob),
+             'Should be able to get responseBlob after request');
+    }
 
     // see if we got what we expected to get
     if (expectedStatus != null) {
@@ -234,8 +238,11 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
     }
 
     if (expectedResponseLength != null) {
-      assertEqual(expectedResponseLength, request.responseBlob.length,
-          'Wrong expectedResponseLength');
+      // blob not in non-official builds yet
+      if (!isOfficial) {
+        assertEqual(expectedResponseLength, request.responseBlob.length,
+                    'Wrong expectedResponseLength');
+      }
     }
 
     if (expectedResponse != null) {
@@ -244,8 +251,11 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
     }
 
     if (expectedResponseLength != null) {
-      assert(isObject(request.responseBlob),
-             'Should be able to get responseBlob repeatedly');
+      // blob not in non-official builds yet
+      if (!isOfficial) {
+        assert(isObject(request.responseBlob),
+               'Should be able to get responseBlob repeatedly');
+      }
     }
 
     completeAsync();
