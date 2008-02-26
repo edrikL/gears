@@ -2,6 +2,8 @@
 
 A brief history of the Google Gears project.
 
+  * 2008/02/14 - Public launch of [http://code.google.com/apis/gears/upcoming/history.html Google Gears 0.2]!
+
   * 2007/11/26 - [http://www.zoho.com/ Zoho] Writer supports offline editing. ([http://blogs.zoho.com/general/zoho-writer-supports-offline-editing/ story])
 
   * 2007/08/21 - [http://www.zoho.com/ Zoho] Writer supports offline reading. ([http://blogs.zoho.com/general/offline-support-comments-in-zoho-writer/ story])
