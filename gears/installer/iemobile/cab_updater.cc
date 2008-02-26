@@ -270,7 +270,10 @@ void VersionFetchTask::Run() {
                          &url,
                          &error_msg)) {
     std::string16 xml;
-    if (UTF8ToString16(reinterpret_cast<const char*>(&(*payload.data)[0]),
+    // payload.data can be empty in case of a 30x response.
+    // The update server does not redirect, so we treat this as an error.
+    if (payload.data->size() &&
+        UTF8ToString16(reinterpret_cast<const char*>(&(*payload.data)[0]),
                        payload.data->size(),
                        &xml)) {
       if (ExtractVersionAndDownloadUrl(xml)) {
