@@ -558,6 +558,7 @@ NPAPI_CPPSRCS	+= \
 		base_class.cc \
 		base_class_test.cc \
 		browser_utils.cc \
+		circular_buffer_test.cc \
 		file.cc \
 		file_win32.cc \
 		file_test.cc \

@@ -39,13 +39,13 @@ bool TestCircularBuffer() {
 }
 
   CircularBuffer circular;
-  const int kCapacity = 4;
-  const int kBufSize = kCapacity + 1;
+  const size_t kCapacity = 4;
+  const size_t kBufSize = kCapacity + 1;
   char buf_in[kCapacity];
   char buf_out[kCapacity];
   char buf_working[kBufSize];
  
-  for (int i = 0; i < kCapacity; ++i) {
+  for (size_t i = 0; i < kCapacity; ++i) {
     buf_in[i] = static_cast<char>(i);
   }
 
@@ -69,7 +69,7 @@ bool TestCircularBuffer() {
   TEST_ASSERT(circular.space_available() == kCapacity);
   TEST_ASSERT(memcmp(buf_in, buf_out, kCapacity) == 0);
 
-  for (int position = 0; position < kBufSize; ++position) {
+  for (size_t position = 0; position < kBufSize; ++position) {
     // Reset to an empty buffer with head and tail at this position
     memset(buf_working, 0, sizeof(buf_working));
     memset(buf_out, 0xff, sizeof(buf_out));
@@ -105,7 +105,7 @@ bool TestCircularBuffer() {
 
     // Write one byte at a time
     TEST_ASSERT(circular.write(&buf_in[0], 1) == 1);
-    for (int i = 1; i < kCapacity; ++i) {
+    for (size_t i = 1; i < kCapacity; ++i) {
       TEST_ASSERT(!circular.is_empty());
       TEST_ASSERT(circular.data_available() == i);
       TEST_ASSERT(circular.space_available() == kCapacity - i);
@@ -118,7 +118,7 @@ bool TestCircularBuffer() {
 
     // Read one byte at a time
     TEST_ASSERT(circular.read(&buf_out[0], 1) == 1);
-    for (int i = 1; i < kCapacity; ++i) {
+    for (size_t i = 1; i < kCapacity; ++i) {
       TEST_ASSERT(!circular.is_full());
       TEST_ASSERT(circular.data_available() == kCapacity - i);
       TEST_ASSERT(circular.space_available() == i);
