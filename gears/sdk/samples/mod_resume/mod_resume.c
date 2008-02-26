@@ -100,6 +100,10 @@ static ap_filter_rec_t *resume_input_filter_handle;
 static ap_filter_rec_t *resume_save_filter_handle;
 static ap_filter_rec_t *resume_out_filter_handle;
 
+/********************************************************************************
+ * Shared methods
+ *******************************************************************************/
+
 static int validate_etag(const char *etag)
 {
     int i;
@@ -113,6 +117,10 @@ static int validate_etag(const char *etag)
     }
     return (etag[ETAG_LENGTH] == '\0');
 }
+
+/********************************************************************************
+ * Handler methods
+ *******************************************************************************/
 
 static int parse_expect(request_rec *r, resume_request_rec *ctx,
                         resume_config *conf)
@@ -192,16 +200,12 @@ static int parse_expect(request_rec *r, resume_request_rec *ctx,
 
             /* may have last_byte_pos (which is inclusive) */
             if (*cp == '/') {
-                ctx->expected_length = UNKNOWN_OFFSET;
+                last_byte_pos = UNKNOWN_OFFSET;
             }
             else if (apr_strtoff(&last_byte_pos, cp, &end, 10) || *end != '/') {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                              "resume: Invalid last_byte_pos \"%s\"", cp);
                 return 0;
-            }
-            else {
-                /* convert from last_byte_pos to expected_length */
-                ctx->expected_length = last_byte_pos - ctx->offset + 1;
             }
             cp = end + 1;
 
@@ -215,7 +219,7 @@ static int parse_expect(request_rec *r, resume_request_rec *ctx,
                 return 0;
             }
 
-            /* Syntactic checks of byte ranges*/
+            /* syntactic checks of byte ranges */
 
             /* ctx->offset */
             if (ctx->offset < 0) {
@@ -225,7 +229,8 @@ static int parse_expect(request_rec *r, resume_request_rec *ctx,
             }
 
             /* ctx->expected_length */
-            if (ctx->expected_length == UNKNOWN_OFFSET) {
+            if (last_byte_pos == UNKNOWN_OFFSET) {
+                ctx->expected_length = UNKNOWN_OFFSET;
                 if (!r->read_chunked) {
                     ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                                  "resume: Content-Length specified "
@@ -245,224 +250,90 @@ static int parse_expect(request_rec *r, resume_request_rec *ctx,
                              "without Content-Length \"%s\"", cp);
                 return 0;
             }
+            else {
+                /* convert from last_byte_pos to expected_length */
+                ctx->expected_length = last_byte_pos - ctx->offset + 1;
+            }
 
             /* ctx->instance_length */
-            if (ctx->instance_length != UNKNOWN_OFFSET) {
-                if (ctx->expected_length == UNKNOWN_OFFSET) {
-                    ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                                 "resume: instance_length specified "
-                                 "without last_byte_pos \"%s\"", cp);
-                    return 0;
-                }
-                else if (ctx->instance_length > conf->max_filesize ||
-                         ctx->offset + ctx->expected_length > ctx->instance_length)
-                {
-                    ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                                 "resume: Invalid instance_length \"%s\"", cp);
-                    return 0;
-                }
-                else {
-                    ctx->max_filesize = ctx->instance_length;
-                }
+            if (ctx->instance_length == UNKNOWN_OFFSET) {
+                /* this space intentionally left blank */
+            }
+            else if (ctx->expected_length == UNKNOWN_OFFSET) {
+                ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
+                             "resume: instance_length specified "
+                             "without last_byte_pos \"%s\"", cp);
+                return 0;
+            }
+            else if (ctx->instance_length > conf->max_filesize ||
+                     ctx->offset + ctx->expected_length > ctx->instance_length)
+            {
+                ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
+                             "resume: Invalid instance_length \"%s\"", cp);
+                return 0;
+            }
+            else {
+                ctx->max_filesize = ctx->instance_length;
             }
         }
     }
+
+    /* cross-parameter validation */
+    if (!ctx->etag && ctx->offset > 0) { /* implicit && ctx->expecting_103 */
+        ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
+                     "resume: Non-contiguous first_byte_pos \"%s\"",
+                     ctx->filename);
+        return 0;
+    }
+
     return 1;
 }
 
-/* This is the resume handler, in charge of installing all filters necessary
- * for this request.
- *
- * Note that this is very similar to mod_cache, and we only avoid conflicting
- * with them because mod_cache operates on GET commands, and we operate on
- * POST/PUT commands.
- */
-static int resume_handler(request_rec *r)
+static int send_cached_response(request_rec *r)
 {
-    resume_config *conf;
-    resume_request_rec *ctx;
-    apr_status_t rv;
     apr_bucket_brigade *bb;
-    int seen_eos;
+    apr_status_t rv;
 
-    /* Delay initialization until we know we are handling a POST/PUT */
-    if (r->method_number != M_POST && r->method_number != M_PUT) {
-        return DECLINED;
+    /* from mod_cache */
+    ap_filter_t *next;
+
+    /* Remove all filters that are before the resume_out filter. This
+     * ensures that we kick off the filter stack with our resume_out
+     * filter being the first in the chain. This make sense because we
+     * want to restore things in the same manner as we saved them.
+     * There may be filters before our resume_out filter, because:
+     *     1. We call ap_set_content_type during cache_select. This
+     *        causes Content-Type specific filters to be added.
+     *     2. We call the insert_filter hook. This causes filters like
+     *        the ones set with SetOutputFilter to be added.
+     */
+    next = r->output_filters;
+    while (next && (next->frec != resume_out_filter_handle)) {
+        ap_remove_output_filter(next);
+        next = next->next;
     }
 
-    conf = ap_get_module_config(r->server->module_config,
-                                &resume_module);
-    ctx = ap_get_module_config(r->request_config, &resume_module);
-    if (!ctx) {
-        ctx = apr_pcalloc(r->pool, sizeof(resume_request_rec));
-    }
-
-    ctx->input_initialized = 0;
-    ctx->expecting_103 = 0;
-    ctx->etag = NULL;
-    ctx->offset = 0;
-    ctx->expected_length = UNKNOWN_OFFSET;
-    ctx->instance_length = UNKNOWN_OFFSET;
-    ctx->max_filesize = conf->max_filesize;
-    ctx->received_length = 0;
-    ctx->skip = 0;
-    ctx->unacked = 0;
-    ctx->mode = conf->initial_mode;
-    ctx->bb = NULL; /* delay instantiation */
-
-    /* read Content-Length and Transfer-Encoding, but don't trust them
-     * populates r->remaining, r->read_chunked */
-    rv = ap_setup_client_block(r, REQUEST_CHUNKED_DECHUNK);
-    if (rv != OK) {
-        ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                     "resume: Error reading length and encoding \"%s\"",
-                     ctx->filename);
+    /* kick off the filter stack */
+    bb = apr_brigade_create(r->pool, r->connection->bucket_alloc);
+    rv = ap_pass_brigade(r->output_filters, bb);
+    if (rv != APR_SUCCESS) {
+        if (rv != AP_FILTER_ERROR) {
+            ap_log_error(APLOG_MARK, APLOG_ERR, rv, r->server,
+                         "resume: error returned while trying to "
+                         "return %s cached data", "TODO");
+                         /* TODO(fry): cache->provider_name); */
+        }
         return rv;
     }
-    if (!parse_expect(r, ctx, conf)) {
-        return HTTP_BAD_REQUEST;
-    }
 
-    if (ctx->etag) {
-        apr_finfo_t finfo;
+    return OK;
+}
 
-        /* If a final response was already generated, return it again. */
-        if (0 /* we have a cached response */) {
-            /* from mod_cache */
-            ap_filter_t *next;
-
-            ap_add_output_filter_handle(resume_out_filter_handle, NULL, r,
-                                        r->connection);
-
-            /* Remove all filters that are before the resume_out filter. This
-             * ensures that we kick off the filter stack with our resume_out
-             * filter being the first in the chain. This make sense because we
-             * want to restore things in the same manner as we saved them.
-             * There may be filters before our resume_out filter, because:
-             *     1. We call ap_set_content_type during cache_select. This
-             *        causes Content-Type specific filters to be added.
-             *     2. We call the insert_filter hook. This causes filters like
-             *        the ones set with SetOutputFilter to be added.
-             */
-            next = r->output_filters;
-            while (next && (next->frec != resume_out_filter_handle)) {
-                ap_remove_output_filter(next);
-                next = next->next;
-            }
-
-            /* kick off the filter stack */
-            bb = apr_brigade_create(r->pool, r->connection->bucket_alloc);
-            rv = ap_pass_brigade(r->output_filters, bb);
-            if (rv != APR_SUCCESS) {
-                if (rv != AP_FILTER_ERROR) {
-                    ap_log_error(APLOG_MARK, APLOG_ERR, rv, r->server,
-                                 "resume: error returned while trying to "
-                                 "return %s cached data", "TODO");
-                                 /* TODO(fry): cache->provider_name); */
-                }
-                return rv;
-            }
-
-            return OK;
-        }
-
-        ctx->filename = apr_pstrcat(r->pool, conf->cache_root,
-                                    "/mod_resume.", ctx->etag, NULL);
-        rv = apr_file_open(&ctx->fd, ctx->filename,
-                           APR_READ | APR_WRITE | APR_APPEND
-                           | APR_BINARY | APR_BUFFERED, 0, r->pool);
-        if (rv != APR_SUCCESS) {
-            ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                         "resume: Error creating byte archive \"%s\"",
-                         ctx->filename);
-            return HTTP_INTERNAL_SERVER_ERROR;
-        }
-
-        rv = apr_file_info_get(&finfo, APR_FINFO_MTIME | APR_FINFO_SIZE,
-                               ctx->fd);
-        if (rv != APR_SUCCESS) {
-            ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                         "resume: Error stating byte archive \"%s\"",
-                         ctx->filename);
-            return HTTP_INTERNAL_SERVER_ERROR;
-        }
-        ctx->mtime = finfo.mtime;
-        ctx->file_size = finfo.size;
-        if (ctx->offset > ctx->file_size) {
-            ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                         "resume: Non-contiguous first_byte_pos \"%s\"",
-                         ctx->filename);
-            return HTTP_BAD_REQUEST;
-        }
-        /* skip re-transmitted bytes */
-        ctx->skip = ctx->file_size - ctx->offset;
-    }
-    else {
-        if (!ctx->expecting_103) {
-            /* look for excuses not to enable resumability */
-            if (!r->read_chunked &&
-                (r->remaining < conf->min_filesize ||
-                 r->remaining > conf->max_filesize))
-            {
-                /* Note that this is an optimistic decision made based on
-                 * Content-Length, which may be incorrect. See:
-                 * http://mail-archives.apache.org/mod_mbox/httpd-modules-dev/200802.mbox/%3c003701c86ff6$4f2b39d0$6501a8c0@T60%3e
-                 */
-                return DECLINED;
-            }
-        }
-        else if (ctx->offset > 0) {
-            ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                         "resume: Non-contiguous first_byte_pos \"%s\"",
-                         ctx->filename);
-            return HTTP_BAD_REQUEST;
-        }
-
-        /* Create cache file. */
-        ctx->filename = apr_pstrcat(r->pool, conf->cache_root,
-                                    "/mod_resume.XXXXXX", NULL);
-        ctx->file_size = 0;
-        ctx->mtime = apr_time_now();
-        rv = apr_file_mktemp(&ctx->fd, ctx->filename,
-                             APR_CREATE | APR_EXCL
-                             | APR_READ | APR_WRITE | APR_APPEND
-                             | APR_BINARY | APR_BUFFERED,
-                             r->pool);
-        if (rv != APR_SUCCESS) {
-            ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                         "resume: Error creating byte archive \"%s\"",
-                         ctx->filename);
-            return HTTP_INTERNAL_SERVER_ERROR;
-        }
-        /* ETag is XXXXXX from filename. */
-        /* TODO(fry): longer etag please!
-         *            also cryptographically random?
-         *            use etag_uint64_to_hex and http_etag
-         */
-        ctx->etag = ap_strrchr(ctx->filename, '.');
-        if (!ctx->etag++ || !validate_etag(ctx->etag)) {
-            ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                         "resume: Invalid etag \"%s\"", ctx->etag);
-            return HTTP_BAD_REQUEST;
-        }
-    }
-
-    /* TODO(fry): could use ap_set_module_config instead of passing ctx directly
-     *       into handler if we wanted users to be able to use input filter
-     *       without the handler.
-     */
-    ap_add_input_filter_handle(resume_input_filter_handle, ctx, r,
-                               r->connection);
-    if (!ctx->expecting_103
-        || ctx->skip + ctx->expected_length == ctx->instance_length
-        || (ctx->expected_length == UNKNOWN_OFFSET
-            && ctx->instance_length == UNKNOWN_OFFSET)) {
-        /* All bytes are present, no 418 required. We expect a final response,
-         * and so install the save output filter. */
-        ap_add_output_filter_handle(resume_save_filter_handle, NULL, r,
-                                    r->connection);
-        return DECLINED;
-    }
+static int send_418(request_rec *r)
+{
+    apr_bucket_brigade *bb;
+    apr_status_t rv;
+    int seen_eos;
 
     /* Partial request, necessitating a 418.
      *
@@ -472,8 +343,6 @@ static int resume_handler(request_rec *r)
      * them.
      */
 
-    /* no reason to stream as we aren't reading bytes */
-    ctx->mode = HOLD_AND_FORWARD;
     /* from mod_cgi */
     bb = apr_brigade_create(r->pool, r->connection->bucket_alloc);
     seen_eos = 0;
@@ -503,6 +372,188 @@ static int resume_handler(request_rec *r)
     return 418;
 }
 
+static int create_cache_file(request_rec *r, resume_config *conf,
+                             resume_request_rec *ctx)
+{
+    apr_status_t rv;
+
+    ctx->filename = apr_pstrcat(r->pool, conf->cache_root,
+                                "/mod_resume.XXXXXX", NULL);
+    ctx->file_size = 0;
+    ctx->mtime = apr_time_now();
+    rv = apr_file_mktemp(&ctx->fd, ctx->filename,
+                         APR_CREATE | APR_EXCL
+                         | APR_READ | APR_WRITE | APR_APPEND
+                         | APR_BINARY | APR_BUFFERED,
+                         r->pool);
+    if (rv != APR_SUCCESS) {
+        ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
+                     "resume: Error creating byte archive \"%s\"",
+                     ctx->filename);
+        return HTTP_INTERNAL_SERVER_ERROR;
+    }
+    /* ETag is XXXXXX from filename. */
+    /* TODO(fry): longer etag please!
+     *            also cryptographically random?
+     *            use etag_uint64_to_hex and http_etag
+     */
+    ctx->etag = ap_strrchr(ctx->filename, '.');
+    if (!ctx->etag++ || !validate_etag(ctx->etag)) {
+        ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
+                     "resume: Invalid etag \"%s\"", ctx->etag);
+        return HTTP_BAD_REQUEST;
+    }
+    return OK;
+}
+
+static int open_cache_file(request_rec *r, resume_config *conf,
+                           resume_request_rec *ctx)
+{
+    apr_status_t rv;
+    apr_finfo_t finfo;
+
+    ctx->filename = apr_pstrcat(r->pool, conf->cache_root, "/mod_resume.",
+                                ctx->etag, NULL);
+    rv = apr_file_open(&ctx->fd, ctx->filename,
+                       APR_READ | APR_WRITE | APR_APPEND
+                       | APR_BINARY | APR_BUFFERED, 0, r->pool);
+    if (rv != APR_SUCCESS) {
+        ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
+                     "resume: Error creating byte archive \"%s\"",
+                     ctx->filename);
+        return HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    rv = apr_file_info_get(&finfo, APR_FINFO_MTIME | APR_FINFO_SIZE, ctx->fd);
+    if (rv != APR_SUCCESS) {
+        ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
+                     "resume: Error stating byte archive \"%s\"",
+                     ctx->filename);
+        return HTTP_INTERNAL_SERVER_ERROR;
+    }
+    ctx->mtime = finfo.mtime;
+    ctx->file_size = finfo.size;
+    if (ctx->offset > ctx->file_size) {
+        ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
+                     "resume: Non-contiguous first_byte_pos \"%s\"",
+                     ctx->filename);
+        return HTTP_BAD_REQUEST;
+    }
+    /* skip re-transmitted bytes */
+    ctx->skip = ctx->file_size - ctx->offset;
+    return OK;
+}
+
+/* This is the resume handler, in charge of installing all filters necessary
+ * for this request.
+ *
+ * Note that this is very similar to mod_cache, and we only avoid conflicting
+ * with them because mod_cache operates on GET commands, and we operate on
+ * POST/PUT commands.
+ */
+static int resume_handler(request_rec *r)
+{
+    resume_config *conf;
+    resume_request_rec *ctx;
+    apr_status_t rv;
+
+    /* Delay initialization until we know we are handling a POST/PUT */
+    if (r->method_number != M_POST && r->method_number != M_PUT) {
+        return DECLINED;
+    }
+
+    conf = ap_get_module_config(r->server->module_config, &resume_module);
+    ctx = ap_get_module_config(r->request_config, &resume_module);
+    if (!ctx) { /* TODO(fry): is this ever already set? */
+        ctx = apr_pcalloc(r->pool, sizeof(resume_request_rec));
+        ap_set_module_config(r->request_config, &resume_module, ctx);
+    }
+
+    ctx->input_initialized = 0;
+    ctx->expecting_103 = 0;
+    ctx->etag = NULL;
+    ctx->offset = 0;
+    ctx->expected_length = UNKNOWN_OFFSET;
+    ctx->instance_length = UNKNOWN_OFFSET;
+    ctx->max_filesize = conf->max_filesize;
+    ctx->received_length = 0;
+    ctx->skip = 0;
+    ctx->unacked = 0;
+    ctx->mode = conf->initial_mode;
+    ctx->bb = NULL; /* delay instantiation */
+
+    /* read Content-Length and Transfer-Encoding, but don't trust them
+     * populates r->remaining, r->read_chunked */
+    rv = ap_setup_client_block(r, REQUEST_CHUNKED_DECHUNK);
+    if (rv != OK) {
+        ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
+                     "resume: Error reading length and encoding \"%s\"",
+                     ctx->filename);
+        return rv;
+    }
+    if (!parse_expect(r, ctx, conf)) {
+        return HTTP_BAD_REQUEST;
+    }
+
+    if (ctx->etag) {
+        /* If a final response was already generated, return it again. */
+        if (0 /* TODO(fry): we have a cached response */) {
+            ap_add_output_filter_handle(resume_out_filter_handle, NULL, r,
+                                        r->connection);
+            return send_cached_response(r);
+        }
+
+        rv = open_cache_file(r, conf, ctx);
+        if (rv != OK) {
+            return rv;
+        }
+    }
+    else {
+        /* look for excuses not to enable resumability */
+        if (!ctx->expecting_103 && !r->read_chunked
+            && (r->remaining < conf->min_filesize ||
+                r->remaining > conf->max_filesize))
+        {
+            /* Note that this is an optimistic decision made based on
+             * Content-Length, which may be incorrect. See:
+             * http://mail-archives.apache.org/mod_mbox/httpd-modules-dev/200802.mbox/%3c003701c86ff6$4f2b39d0$6501a8c0@T60%3e
+             */
+            return DECLINED;
+        }
+
+        rv = create_cache_file(r, conf, ctx);
+        if (rv != OK) {
+            return rv;
+        }
+    }
+
+    /* TODO(fry): could use ap_set_module_config instead of passing ctx directly
+     *       into handler if we wanted users to be able to use input filter
+     *       without the handler.
+     */
+    ap_add_input_filter_handle(resume_input_filter_handle, ctx, r,
+                               r->connection);
+    if (!ctx->expecting_103
+        || ctx->skip + ctx->expected_length == ctx->instance_length
+        || (ctx->expected_length == UNKNOWN_OFFSET
+            && ctx->instance_length == UNKNOWN_OFFSET)) {
+        /* All bytes are present, no 418 required.
+         * We expect a final response, so install the save output filter.
+         */
+        ap_add_output_filter_handle(resume_save_filter_handle, NULL, r,
+                                    r->connection);
+        return DECLINED;
+    }
+
+    /* no reason to stream as we aren't reading bytes */
+    ctx->mode = HOLD_AND_FORWARD;
+    return send_418(r);
+}
+
+/********************************************************************************
+ * Input Filter methods
+ *******************************************************************************/
+
 /* TODO use this to generate etags */
 /* from http_etag */
 /* Generate the human-readable hex representation of an apr_uint64_t
@@ -530,8 +581,8 @@ static char *etag_uint64_to_hex(char *next, apr_uint64_t u)
 }
 
 /* send 103 (Checkpoint) */
-static void send_103(resume_request_rec *ctx, request_rec *r,
-                     resume_config *conf)
+static void send_103(request_rec *r, resume_config *conf,
+                     resume_request_rec *ctx)
 {
     apr_bucket_brigade *bb = ctx->bb;
     ap_filter_t *of = r->connection->output_filters;
@@ -559,22 +610,102 @@ static void send_103(resume_request_rec *ctx, request_rec *r,
     ctx->unacked = 0;
 }
 
+static apr_status_t read_bytes(request_rec *r, apr_bucket_brigade *bb ,
+                               resume_config *conf, resume_request_rec *ctx,
+                               int *seen_eos)
+{
+    apr_bucket *bucket;
+    apr_status_t rv;
+
+    for (bucket = APR_BRIGADE_FIRST(bb);
+         bucket != APR_BRIGADE_SENTINEL(bb);
+         bucket = APR_BUCKET_NEXT(bucket))
+    {
+        const char *str;
+        apr_size_t length;
+
+        if (APR_BUCKET_IS_EOS(bucket)) {
+            *seen_eos = 1;
+            return APR_SUCCESS;
+        }
+        if (APR_BUCKET_IS_FLUSH(bucket)) {
+            continue;
+        }
+
+        rv = apr_bucket_read(bucket, &str, &length, APR_BLOCK_READ);
+        if (rv != APR_SUCCESS) {
+            ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
+                         "resume: Error reading bytes for \"%s\"",
+                         ctx->etag);
+            return rv;
+        }
+        /* received_length includes skipped bytes */
+        ctx->received_length += length;
+        if (ctx->expected_length != UNKNOWN_OFFSET
+            && ctx->received_length > ctx->expected_length)
+        {
+            apr_file_close(ctx->fd);
+            apr_file_remove(ctx->filename, r->pool);
+            ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
+                         "resume: Received incorrect number of bytes for "
+                         "\"%s\"", ctx->etag);
+            return APR_EGENERAL;
+        }
+
+        if (ctx->skip > 0) {
+            /* skip bytes we've already received */
+            if (ctx->skip >= length) {
+                ctx->skip -= length;
+                continue;
+            }
+
+            str += ctx->skip;
+            length -= ctx->skip;
+            ctx->skip = 0;
+        }
+        ctx->mtime = apr_time_now();
+        rv = apr_file_write_full(ctx->fd, str, length, NULL);
+        if (rv != APR_SUCCESS) {
+            ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
+                         "resume: Error archiving bytes for \"%s\"",
+                         ctx->etag);
+            return rv;
+        }
+        ctx->unacked += length;
+        ctx->file_size += length;
+        if (ctx->file_size > ctx->max_filesize) {
+            /* This is just too many bytes. We'd have noticed it earlier in
+             * non-chunked mode, but now that we know we must disapprove. */
+            apr_file_close(ctx->fd);
+            apr_file_remove(ctx->filename, r->pool);
+            ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
+                         "resume: Received too many bytes for \"%s\"",
+                         ctx->etag);
+            return APR_EGENERAL;
+        }
+        if (ctx->unacked >= conf->min_checkpoint) {
+            send_103(r, conf, ctx);
+        }
+    }
+    return APR_SUCCESS;
+}
+
 /* This is the resume filter, whose responsibilities are to:
  *  1) periodically send 100 (Continue) responses to the client
  *  2) persist the incoming byte stream in case of failure
  *  3) intercept resumes, injecting previous data
  */
-apr_status_t resume_input_filter(ap_filter_t *f, apr_bucket_brigade *bb,
-                           ap_input_mode_t mode, apr_read_type_e block,
-                           apr_off_t readbytes)
+static apr_status_t resume_input_filter(ap_filter_t *f,
+                                        apr_bucket_brigade *bb,
+                                        ap_input_mode_t mode,
+                                        apr_read_type_e block,
+                                        apr_off_t readbytes)
 {
     resume_config *conf = ap_get_module_config(f->r->server->module_config,
                                                &resume_module);
     resume_request_rec *ctx = f->ctx;
     request_rec *r = f->r;
     apr_status_t rv;
-    apr_bucket *bucket;
-    int i;
     int seen_eos;
 
     /* just get out of the way of things we don't want. */
@@ -595,10 +726,11 @@ apr_status_t resume_input_filter(ap_filter_t *f, apr_bucket_brigade *bb,
         /* Always send a 103 as soon as we're committed to supporting
          * resumability.
          */
-        send_103(ctx, r, conf);
+        send_103(r, conf, ctx);
 
         if (ctx->mode == STREAM && ctx->file_size > 0) {
             /* Stream any previous bytes in streaming mode */
+            apr_bucket *bucket;
             bucket = apr_bucket_file_create(ctx->fd, 0,
                                             ctx->file_size,
                                             r->pool,
@@ -625,75 +757,9 @@ apr_status_t resume_input_filter(ap_filter_t *f, apr_bucket_brigade *bb,
             return rv;
         }
 
-        for (bucket = APR_BRIGADE_FIRST(bb);
-             bucket != APR_BRIGADE_SENTINEL(bb);
-             bucket = APR_BUCKET_NEXT(bucket))
-        {
-            const char *str;
-            apr_size_t length;
-
-            if (APR_BUCKET_IS_EOS(bucket)) {
-                seen_eos = 1;
-                break;
-            }
-            if (APR_BUCKET_IS_FLUSH(bucket)) {
-                continue;
-            }
-
-            rv = apr_bucket_read(bucket, &str, &length, APR_BLOCK_READ);
-            if (rv != APR_SUCCESS) {
-                ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                             "resume: Error reading bytes for \"%s\"",
-                             ctx->etag);
-                return rv;
-            }
-            /* received_length includes skipped bytes */
-            ctx->received_length += length;
-            if (ctx->expected_length != UNKNOWN_OFFSET
-                && ctx->received_length > ctx->expected_length)
-            {
-                apr_file_close(ctx->fd);
-                apr_file_remove(ctx->filename, r->pool);
-                ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                             "resume: Received incorrect number of bytes for "
-                             "\"%s\"", ctx->etag);
-                return APR_EGENERAL;
-            }
-
-            if (ctx->skip > 0) {
-                /* skip bytes we've already received */
-                if (ctx->skip >= length) {
-                    ctx->skip -= length;
-                    continue;
-                }
-
-                str += ctx->skip;
-                length -= ctx->skip;
-                ctx->skip = 0;
-            }
-            ctx->mtime = apr_time_now();
-            rv = apr_file_write_full(ctx->fd, str, length, NULL);
-            if (rv != APR_SUCCESS) {
-                ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                             "resume: Error archiving bytes for \"%s\"",
-                             ctx->etag);
-                return rv;
-            }
-            ctx->unacked += length;
-            ctx->file_size += length;
-            if (ctx->file_size > ctx->max_filesize) {
-                /* This is just too many bytes. We'd have noticed it earlier in
-                 * non-chunked mode, but now that we know we must disapprove. */
-                apr_file_close(ctx->fd);
-                apr_file_remove(ctx->filename, r->pool);
-                ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                             "resume: Received too many bytes for \"%s\"",
-                             ctx->etag);
-                return APR_EGENERAL;
-            }
-            if (ctx->unacked >= conf->min_checkpoint) {
-                send_103(ctx, r, conf);
-            }
+        rv = read_bytes(r, bb, conf, ctx, &seen_eos);
+        if (rv != APR_SUCCESS) {
+            return rv;
         }
 
         if (ctx->mode == HOLD_AND_FORWARD) {
@@ -707,7 +773,7 @@ apr_status_t resume_input_filter(ap_filter_t *f, apr_bucket_brigade *bb,
     /* eos */
     if (ctx->unacked > 0) {
         /* ack any remaining bytes as the response might be slow in coming */
-        send_103(ctx, r, conf);
+        send_103(r, conf, ctx);
     }
 
     if ((ctx->expected_length != UNKNOWN_OFFSET
@@ -723,6 +789,7 @@ apr_status_t resume_input_filter(ap_filter_t *f, apr_bucket_brigade *bb,
     }
 
     if (ctx->mode == HOLD_AND_FORWARD) {
+        apr_bucket *bucket;
         apr_off_t offset = 0;
         apr_file_seek(ctx->fd, APR_SET, &offset);
         /* bb was just cleaned above */
@@ -735,6 +802,10 @@ apr_status_t resume_input_filter(ap_filter_t *f, apr_bucket_brigade *bb,
     }
     return APR_SUCCESS;
 }
+
+/********************************************************************************
+ * Output Filter methods
+ *******************************************************************************/
 
 /* from mod_cache */
 /* Cache server response. */
@@ -749,8 +820,13 @@ static int resume_save_filter(ap_filter_t *f, apr_bucket_brigade *in)
 static int resume_out_filter(ap_filter_t *f, apr_bucket_brigade *bb)
 {
     /* TODO(fry): import relevant bits from cache_out_filter */
+    /* TODO(fry): ensure that bb is empty */
     return ap_pass_brigade(f->next, bb);
 }
+
+/********************************************************************************
+ * Configuration methods
+ *******************************************************************************/
 
 static int resume_post_config(apr_pool_t *p, apr_pool_t *plog,
                               apr_pool_t *ptemp, server_rec *s)
