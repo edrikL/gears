@@ -90,7 +90,8 @@ int64 BufferBlob::Length() const {
 
 BlobInterface *BufferBlob::Clone() const {
   scoped_ptr<BufferBlob> blob(new BufferBlob);
-  if (buffer_.size() != blob->Append(&buffer_[0], buffer_.size())) {
+  if (buffer_.size() != 
+      static_cast<size_t>(blob->Append(&buffer_[0], buffer_.size()))) {
     return NULL;
   }
   blob->Finalize();
