@@ -29,6 +29,7 @@
 #define GEARS_TIMER_TIMER_H__
 
 #if BROWSER_FF
+#include <gecko_sdk/include/nsComponentManagerUtils.h>
 #include <gecko_internal/nsITimer.h>
 #endif
 
@@ -36,73 +37,97 @@
 #include "gears/third_party/linked_ptr/linked_ptr.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
+#if BROWSER_FF
+#include "ff/genfiles/timer_ff.h"  // from OUTDIR
+#elif BROWSER_IE
+#include "ie/genfiles/timer_ie.h"  // from OUTDIR
+#endif
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
 
-// As an implementation detail, on IE we have a single WindowsPlatformTimer
-// per GearsTimer.  This is basically a Window (in the HWND sense) that
-// registers for WM_TIMER messages.  We re-use the same WindowsPlatformTimer
-// for all timeouts and intervals set on a single GearsTimer object (the
-// result of a factory.create('beta.timer') call in JavaScript).
-//
-// For Firefox, we use multiple "@mozilla.org/timer;1" XPCOM timers per
-// GearsTimer objects, one for each setTimeout or setInterval call.
-#if BROWSER_IE
-class GearsTimer;
+#if BROWSER_FF
+// Object identifiers
+extern const char *kGearsTimerClassName;
+extern const nsCID kGearsTimerClassId;
+#endif
 
-class WindowsPlatformTimer
-    : public CWindowImpl<WindowsPlatformTimer> {
+// Provides a COM interface for creating and destroying timers in Javascript.
+// Sample usage:
+//   var timer = google.gears.factory.create('beta.timer', '1.0');
+//   timer.setTimeout('alert(\'Hello!\');', 1000);
+class GearsTimer
+    : public ModuleImplBaseClass,
+#if BROWSER_FF
+      public GearsTimerInterface,
+#elif BROWSER_IE
+      public CComObjectRootEx<CComMultiThreadModel>,
+      public CComCoClass<GearsTimer>,
+      public CWindowImpl<GearsTimer>,
+      public IDispatchImpl<GearsTimerInterface>,
+#endif
+      public JsEventHandlerInterface {
  public:
-  BEGIN_MSG_MAP(WindowsPlatformTimer)
+#if BROWSER_FF
+  NS_DECL_ISUPPORTS
+  GEARS_IMPL_BASECLASS
+#elif BROWSER_IE
+  BEGIN_COM_MAP(GearsTimer)
+    COM_INTERFACE_ENTRY(GearsTimerInterface)
+    COM_INTERFACE_ENTRY(IDispatch)
+  END_COM_MAP()
+
+  DECLARE_NOT_AGGREGATABLE(GearsTimer)
+  DECLARE_PROTECT_FINAL_CONSTRUCT()
+
+  void FinalRelease();
+
+  BEGIN_MSG_MAP(GearsTimer)
     MESSAGE_HANDLER(WM_TIMER, OnTimer)
   END_MSG_MAP()
-
-  WindowsPlatformTimer(GearsTimer *gears_timer);
-  ~WindowsPlatformTimer();
-
-  void Initialize();
-  void CancelGearsTimer(int timer_id);
-
- private:
-  LRESULT OnTimer(UINT msg, WPARAM timer_id,
-                  LPARAM unused_param, BOOL& handled);
-
-  GearsTimer *gears_timer_;
-  bool in_handler_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(WindowsPlatformTimer);
-};
 #endif
+  // End boilerplate code. Begin interface.
 
-
-
-class GearsTimer
-    : public ModuleImplBaseClassVirtual
-    , public JsEventHandlerInterface {
- public:
-  GearsTimer()
-      : ModuleImplBaseClassVirtual("GearsTimer"),
+  GearsTimer() :
 #if BROWSER_IE
-        platform_timer_(new WindowsPlatformTimer(this)),
+    in_handler_(false), release_on_final_message_(false),
 #endif
-        next_timer_id_(1) {}
+    next_timer_id_(1)  {}
+  ~GearsTimer() {}
 
-  // IN: variant timer_code, long timeout
-  // OUT: long
-  void SetTimeout(JsCallContext *context);
+  // Creates a timeout that executes handler after timeout ms.  handler can
+  // be a string to eval(), or a function to call.  The id of this timeout is
+  // returned in timer_id.
+  // JS function is setTimeout(variant handler, int timeout).
+#if BROWSER_FF
+  NS_IMETHOD SetTimeout(PRInt32 *retval);
+#elif BROWSER_IE
+  STDMETHOD(setTimeout)(VARIANT in_value, int timeout, int *timer_id);
+#endif
 
-  // IN: long timer_id
-  // OUT: nothing
-  void ClearTimeout(JsCallContext *context);
+  // Clears the timeout with the specified id.
+#if BROWSER_FF
+  NS_IMETHOD ClearTimeout(PRInt32 timer_id);
+#elif BROWSER_IE
+  STDMETHOD(clearTimeout)(int timer_id);
+#endif
 
-  // IN: variant timer_code, long timeout
-  // OUT: long
-  void SetInterval(JsCallContext *context);
+  // Creates an interval that executes handler every timeout ms.  handler can
+  // be a string to eval(), or a function to call.  The id of this interval is
+  // returned in timer_id.
+  // JS function is setInterval(variant handler, int timeout).
+#if BROWSER_FF
+  NS_IMETHOD SetInterval(PRInt32 *retval);
+#elif BROWSER_IE
+  STDMETHOD(setInterval)(VARIANT in_value, int timeout, int *timer_id);
+#endif
 
-  // IN: long timer_id
-  // OUT: nothing
-  void ClearInterval(JsCallContext *context);
+  // Clears the interval with the specified id.
+#if BROWSER_FF
+  NS_IMETHOD ClearInterval(PRInt32 timer_id);
+#elif BROWSER_IE
+  STDMETHOD(clearInterval)(int timer_id);
+#endif
 
   // This is the callback used to handle the 'JSEVENT_UNLOAD' event.
   void HandleEvent(JsEventType event_type);
@@ -117,7 +142,7 @@ class GearsTimer
 
     void SetOwner(GearsTimer *new_owner) {
       owner = new_owner;
-      owner->AddReference();
+      owner->AddRef();
     }
 
     linked_ptr<JsRootedCallback> callback;
@@ -126,32 +151,31 @@ class GearsTimer
     int timer_id;
     GearsTimer *owner;
 #if BROWSER_FF
-    nsCOMPtr<nsITimer> platform_timer;
+    nsCOMPtr<nsITimer> timer;
 #endif
   };
-
-#if BROWSER_IE
-  scoped_ptr<WindowsPlatformTimer> platform_timer_;
-  friend class WindowsPlatformTimer;
-#endif
-
-  // SetTimeout and SetInterval are very similar - the only difference being
-  // that the first one is a one-off and the second one repeats.  This function
-  // is the common implementation.
-  void SetTimeoutOrInterval(JsCallContext *context, bool repeat);
-
-  // Similarly, ClearTimeout and ClearInterval are just two names for the same
-  // thing.
-  void ClearTimeoutOrInterval(JsCallContext *context);
 
   // Sets up any structures that aren't needed until the interface is used.
   // It's ok to call this multiple times.
   void Initialize();
 
-  // Creates the timer.  Returns the id of the new timer, or 0 on failure.
-  int CreateTimer(const TimerInfo &timer_info, int timeout);
+  // Creates a timer that has a function callback with the specified timeout.
+  // repeat determines if this is an interval or timeout.  Returns the id of
+  // the new timer, or 0 on failure.
+  int CreateFunctionTimer(JsRootedCallback *timer_callback,
+                          int timeout,
+                          bool repeat);
 
-  // Callback for when the timer fires.
+  // Creates a timer that has a string to eval() with the specified timeout.
+  // repeat determines if this is an interval or timeout.  Returns the id of
+  // the new timer, or 0 on failure.
+  int CreateStringTimer(const char16 *full_script,
+                        int timeout,
+                        bool repeat);
+
+  // Called by Create*Timer() to actually create the timer.  Returns the id of
+  // the new timer, or 0 on failure.
+  int CreateTimerCommon(const TimerInfo &timer_info, int timeout);
   void HandleTimer(TimerInfo *timer_info);
 
   std::map<int, TimerInfo> timers_;
@@ -160,6 +184,13 @@ class GearsTimer
 
 #if BROWSER_FF
   static void TimerCallback(nsITimer *timer, void *closure);
+#elif BROWSER_IE
+  LRESULT OnTimer(UINT msg, WPARAM timer_id,
+                  LPARAM unused_param, BOOL& handled);
+  void OnFinalMessage();
+
+  bool in_handler_;
+  bool release_on_final_message_;
 #endif
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsTimer);

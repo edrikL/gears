@@ -51,6 +51,7 @@
 #endif
 
 #include "ff/genfiles/localserver.h"
+#include "ff/genfiles/timer_ff.h"
 #include "ff/genfiles/workerpool.h"
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/exception_handler_win32.h"
@@ -518,6 +519,8 @@ bool JsRunner::InitJavaScriptEngine() {
     {GEARSMANAGEDRESOURCESTOREINTERFACE_IID, NULL},
     {GEARSRESOURCESTOREINTERFACE_IID, NULL},
     // GEARSFILESUBMITTERINTERFACE_IID can never be created in a child worker
+    // timer
+    {GEARSTIMERINTERFACE_IID, NULL},
     // httprequest
     {GEARSHTTPREQUESTINTERFACE_IID, NULL},
 #ifdef OFFICIAL_BUILD

@@ -1017,11 +1017,39 @@ NPAPI_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # timer
 
-SHARED_VPATH += \
+FF_VPATH	+= \
+		timer\
+		$(NULL)
+
+FF_IDLSRCS	+= \
+		timer_ff.idl \
+		$(NULL)
+
+FF_CPPSRCS	+= \
+		timer.cc \
+		$(NULL)
+
+IE_VPATH	+= \
 		timer \
 		$(NULL)
 
-SHARED_CPPSRCS += \
+IE_IDLSRCS	+= \
+		timer_ie.idl \
+		$(NULL)
+
+IE_CPPSRCS	+= \
+		timer.cc \
+		$(NULL)
+
+IEMOBILE_VPATH	+= \
+		timer \
+		$(NULL)
+
+IEMOBILE_IDLSRCS	+= \
+		timer_ie.idl \
+		$(NULL)
+
+IEMOBILE_CPPSRCS	+= \
 		timer.cc \
 		$(NULL)
 
