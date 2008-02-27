@@ -69,7 +69,6 @@ import "image/ie/image.idl";
 #endif
 
 import "localserver/ie/localserver.idl";
-import "timer/timer_ie.idl";
 import "workerpool/ie/workerpool.idl";
 
 //------------------------------------------------------------------------------
@@ -179,14 +178,6 @@ library GearsTypelib
   coclass GearsLocalServer
   {
     [default] interface GearsLocalServerInterface;
-  };
-
-  [
-    uuid(D056D8FA-05D8-4575-903F-180C85D2C318)
-  ]
-  coclass GearsTimer
-  {
-    [default] interface GearsTimerInterface;
   };
 
   [

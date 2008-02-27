@@ -145,6 +145,8 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   } else if (object_name == STRING16(L"beta.desktop")) {
     object.reset(CreateModule<GearsDesktop>(GetJsRunner()));
 #endif
+  } else if (object_name == STRING16(L"beta.timer")) {
+    object.reset(CreateModule<GearsTimer>(GetJsRunner()));
   } else {
     // Don't return an error here. Caller handles reporting unknown modules.
     error->clear();
@@ -204,11 +206,6 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
   } else if (object_name == STRING16(L"beta.localserver")) {
     CComObject<GearsLocalServer> *obj;
     hr = CComObject<GearsLocalServer>::CreateInstance(&obj);
-    base_class = obj;
-    idispatch = obj;
-  } else if (object_name == STRING16(L"beta.timer")) {
-    CComObject<GearsTimer> *obj;
-    hr = CComObject<GearsTimer>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
   } else if (object_name == STRING16(L"beta.workerpool")) {
