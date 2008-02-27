@@ -28,6 +28,8 @@
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. LINUX_CPPSRCS) are implemented
 #if defined(LINUX) && !defined(OS_MACOSX)
+#include <errno.h>
+
 #include "gears/desktop/desktop_utils.h"
 
 #include "gears/base/common/common.h"
@@ -89,10 +91,71 @@ static bool WriteIconFile(const DesktopUtils::ShortcutInfo &shortcut,
   return true;
 }
 
+// Check that the shortcut we want to create doesn't overwrite an existing
+// file/directory.
+// If it's creation will overwrite an existing entity, allow it only if the 
+// entity in question is a shortcut we ourselves crearted.
+static bool CheckIllegalFileOverwrite(
+                const DesktopUtils::ShortcutInfo &shortcut) {
+  // Check if Shortcut file exists.
+  std::string link_name_utf8;
+  if (!String16ToUTF8(shortcut.app_name.c_str(), shortcut.app_name.length(),
+                      &link_name_utf8)) {
+   return false;
+  }
+
+  std::string shortcut_path = getenv("HOME");
+  shortcut_path += "/Desktop/";
+  shortcut_path += link_name_utf8;
+  shortcut_path += ".desktop";
+
+  // One filepath + one command line + name + misc boilerplate will be less
+  // than 4kb.
+  const int kDataSize = 4096;
+  char data[kDataSize];
+  FILE *input = fopen(shortcut_path.c_str(), "r");
+  if (!input) {
+    // If there's no file, we're fine.  Otherwise, it's not ours.
+    return errno == ENOENT;
+  }
+
+  int bytes_read = fread(data, 1, kDataSize - 1, input);
+  fclose(input);
+
+  if (!bytes_read || bytes_read >= kDataSize - 1) {
+    // If the file is empty, or larger than our buffer, we didn't create it.
+    return false;
+  }
+
+  // Ensure we have a null terminator.
+  data[bytes_read] = '\0';
+
+  char *line = strstr(data, "Icon=");
+  if (!line) {
+    // If there's no icon line, we didn't create it.
+    return false;
+  }
+  char *gears_dir = strstr(line, "Google Gears for");
+  char *newline = strchr(line, '\n');
+  if (!gears_dir || !newline || newline < gears_dir) {
+    // The icon's path should have "Google Gears for" in it, or we didn't
+    // create it.
+    return false;
+  }
+
+  return true;
+}
+
 bool DesktopUtils::CreateDesktopShortcut(
                        const SecurityOrigin &origin,
                        const DesktopUtils::ShortcutInfo &shortcut,
                        std::string16 *error) {
+  // Before doing anything, check that we can create the shortcut legally.
+  if (!CheckIllegalFileOverwrite(shortcut)) {
+    *error = STRING16(L"Could not create desktop icon.");
+    return false;
+  }
+
   // Note: We assume that link_name has already been validated by the caller to
   // have only legal filename characters and that launch_url has already been
   // resolved to an absolute URL.
@@ -176,4 +239,3 @@ bool DesktopUtils::CreateDesktopShortcut(
 }
  
 #endif  // #if defined(LINUX) && !defined(OS_MACOSX)
-
