@@ -36,21 +36,24 @@ class ShortcutTable {
   ShortcutTable(SQLDatabase *db);
 
   // Creates the table if it doesn't already exist.
-  bool MaybeCreateTable();
+  bool MaybeCreateTableVersion4();
+  bool MaybeCreateTableLatestVersion();
 
   // Upgrade to version 3 schema (this table did not previously
   // exist).
   bool UpgradeToVersion3();
 
-  // Upgrade version 3 schema to version 4.
+  // Upgrade methods.
   bool UpgradeFromVersion3ToVersion4();
+  bool UpgradeFromVersion4ToVersion5();
 
   // Add (or overwrite) a shortcut for origin/name, with app_url,
-  // icon_urls, and msg as data.
+  // icon_urls, msg as data, and whether to allow shortcut creation.
   bool SetShortcut(const char16 *origin, const char16 *name,
                    const char16 *app_url,
                    const std::vector<std::string16> &icon_urls,
-                   const char16 *msg);
+                   const char16 *msg,
+                   const bool allow);
 
   // Get the set of origins which have shortcuts.
   bool GetOriginsWithShortcuts(std::vector<std::string16> *result);
@@ -63,7 +66,8 @@ class ShortcutTable {
   bool GetShortcut(const char16 *origin, const char16 *name,
                    std::string16 *app_url,
                    std::vector<std::string16> *icon_urls,
-                   std::string16 *msg);
+                   std::string16 *msg,
+                   bool *allow);
 
   // Delete a specific shortcut.
   bool DeleteShortcut(const char16 *origin, const char16 *name);

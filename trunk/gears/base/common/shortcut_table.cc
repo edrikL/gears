@@ -29,8 +29,8 @@ ShortcutTable::ShortcutTable(SQLDatabase *db)
     : db_(db) {
 }
 
-bool ShortcutTable::MaybeCreateTable() {
-  SQLTransaction transaction(db_, "ShortcutTable::MaybeCreateTable");
+bool ShortcutTable::MaybeCreateTableVersion4() {
+  SQLTransaction transaction(db_, "ShortcutTable::MaybeCreateTableVersion4");
   if (!transaction.Begin()) {
     return false;
   }
@@ -40,7 +40,47 @@ bool ShortcutTable::MaybeCreateTable() {
   // exist, if the version indicates that it doesn't exist, then we
   // have a schema error somewhere, and what exists may not be
   // trustworthy.  But I'm too frightened to fix it, because it's
-  // possible that other code depends on this behaviour.  Should do a
+  // possible that other code depends on this behavior.  Should do a
+  // thorough review of this.
+
+  // The set of shortcuts, one per Origin/Name.
+  const char *sql = "CREATE TABLE IF NOT EXISTS Shortcut ("
+    " ShortcutID INTEGER PRIMARY KEY, "
+    " Origin TEXT NOT NULL, Name TEXT NOT NULL, "
+    " AppUrl TEXT NOT NULL, Msg TEXT NOT NULL, "
+    " UNIQUE (Origin, Name)"
+    ")";
+  if (SQLITE_OK != db_->Execute(sql)) {
+    LOG(("ShortcutTable::MaybeCreateTableVersion4 create Shortcut "
+      "unable to execute: %d", db_->GetErrorCode()));
+    return false;
+  }
+
+  // A set of icon urls for each shortcut.
+  sql = "CREATE TABLE IF NOT EXISTS ShortcutIcon "
+    "(ShortcutID INTEGER NOT NULL, IconUrl TEXT NOT NULL,"
+    " PRIMARY KEY (ShortcutID, IconUrl))";
+  if (SQLITE_OK != db_->Execute(sql)) {
+    LOG(("ShortcutTable::MaybeCreateTableVersion4 create ShortcutIcon "
+      "unable to execute: %d", db_->GetErrorCode()));
+    return false;
+  }
+
+  return transaction.Commit();
+}
+
+bool ShortcutTable::MaybeCreateTableLatestVersion() {
+  SQLTransaction transaction(db_, "ShortcutTable::MaybeCreateTableVersion5");
+  if (!transaction.Begin()) {
+    return false;
+  }
+
+  // TODO(shess) I don't think "IF NOT EXISTS" is warranted below.  If
+  // the version indicates that the table should exist, it should
+  // exist, if the version indicates that it doesn't exist, then we
+  // have a schema error somewhere, and what exists may not be
+  // trustworthy.  But I'm too frightened to fix it, because it's
+  // possible that other code depends on this behavior.  Should do a
   // thorough review of this.
 
   // The set of shortcuts, one per Origin/Name.
@@ -48,10 +88,11 @@ bool ShortcutTable::MaybeCreateTable() {
                     " ShortcutID INTEGER PRIMARY KEY, "
                     " Origin TEXT NOT NULL, Name TEXT NOT NULL, "
                     " AppUrl TEXT NOT NULL, Msg TEXT NOT NULL, "
+                    " Allow INTEGER NOT NULL, "
                     " UNIQUE (Origin, Name)"
                     ")";
   if (SQLITE_OK != db_->Execute(sql)) {
-    LOG(("ShortcutTable::MaybeCreateTable create Shortcut "
+    LOG(("ShortcutTable::MaybeCreateTableVersion5 create Shortcut "
          "unable to execute: %d", db_->GetErrorCode()));
     return false;
   }
@@ -61,7 +102,7 @@ bool ShortcutTable::MaybeCreateTable() {
         "(ShortcutID INTEGER NOT NULL, IconUrl TEXT NOT NULL,"
         " PRIMARY KEY (ShortcutID, IconUrl))";
   if (SQLITE_OK != db_->Execute(sql)) {
-    LOG(("ShortcutTable::MaybeCreateTable create ShortcutIcon "
+    LOG(("ShortcutTable::MaybeCreateTableVersion5 create ShortcutIcon "
          "unable to execute: %d", db_->GetErrorCode()));
     return false;
   }
@@ -99,10 +140,7 @@ bool ShortcutTable::UpgradeFromVersion3ToVersion4() {
     return false;
   }
 
-  // NOTE(shess) If this schema changes again, the version-4 create
-  // statements will need to be inlined here.  Not doing so at this
-  // time because code duplication is bad.
-  if (!MaybeCreateTable()) {
+  if (!MaybeCreateTableVersion4()) {
     LOG(("ShortcutTable::UpgradeFromVersion3ToVersion4 create failed"));
     return false;
   }
@@ -136,10 +174,53 @@ bool ShortcutTable::UpgradeFromVersion3ToVersion4() {
   return transaction.Commit();
 }
 
+// Shift the version-4 Shortcut table aside, create version-5 tables,
+// populate them from the old table, and drop the old table.
+bool ShortcutTable::UpgradeFromVersion4ToVersion5() {
+  SQLTransaction transaction(db_,
+    "ShortcutTable::UpgradeFromVersion4ToVersion5");
+  if (!transaction.Begin()) {
+    return false;
+  }
+
+  const char *sql = "ALTER TABLE Shortcut RENAME TO ShortcutOld";
+  if (SQLITE_OK != db_->Execute(sql)) {
+    LOG(("ShortcutTable::UpgradeFromVersion4ToVersion5 rename "
+         "unable to execute: %d", db_->GetErrorCode()));
+    return false;
+  }
+
+  if (!MaybeCreateTableLatestVersion()) {
+    LOG(("ShortcutTable::UpgradeFromVersion4ToVersion5create failed"));
+    return false;
+  }
+
+  // Use the existing rowid as ShortcutID for consistency when
+  // populating the new tables.
+  sql = "INSERT INTO Shortcut "
+    "SELECT rowid AS ShortcutID, Origin, Name, "
+    "       AppUrl, Msg, 1 as Allow FROM ShortcutOld";
+  if (SQLITE_OK != db_->Execute(sql)) {
+    LOG(("ShortcutTable::UpgradeFromVersion4ToVersion5 populate Shortcut "
+      "unable to execute: %d", db_->GetErrorCode()));
+    return false;
+  }
+
+  sql = "DROP TABLE ShortcutOld";
+  if (SQLITE_OK != db_->Execute(sql)) {
+    LOG(("ShortcutTable::UpgradeFromVersion4ToVersion5 drop old "
+      "unable to execute: %d", db_->GetErrorCode()));
+    return false;
+  }
+
+  return transaction.Commit();
+}
+
 bool ShortcutTable::SetShortcut(const char16 *origin, const char16 *name,
                                 const char16 *app_url,
                                 const std::vector<std::string16> &icon_urls,
-                                const char16 *msg) {
+                                const char16 *msg,
+                                const bool allow) {
   SQLTransaction transaction(db_, "ShortcutTable::SetShortcut");
   if (!transaction.Begin()) {
     return false;
@@ -154,8 +235,8 @@ bool ShortcutTable::SetShortcut(const char16 *origin, const char16 *name,
   sqlite_int64 shortcut_id;
   {
     const char16 *sql = STRING16(L"INSERT INTO Shortcut "
-                                 L"(Origin, Name, AppUrl, Msg) "
-                                 L"VALUES (?, ?, ?, ?)");
+                                 L"(Origin, Name, AppUrl, Msg, Allow) "
+                                 L"VALUES (?, ?, ?, ?, ?)");
 
     SQLStatement statement;
     if (SQLITE_OK != statement.prepare16(db_, sql)) {
@@ -185,6 +266,12 @@ bool ShortcutTable::SetShortcut(const char16 *origin, const char16 *name,
     if (SQLITE_OK != statement.bind_text16(3, msg)) {
       LOG(("ShortcutTable::SetShortcut unable to bind msg: %d\n",
            db_->GetErrorCode()));
+      return false;
+    }
+
+    if (SQLITE_OK != statement.bind_int(4, allow ? 1 : 0)) {
+      LOG(("ShortcutTable::SetShortcut unable to bind Allow: %d\n",
+        db_->GetErrorCode()));
       return false;
     }
 
@@ -305,13 +392,14 @@ bool ShortcutTable::GetOriginShortcuts(const char16 *origin,
 bool ShortcutTable::GetShortcut(const char16 *origin, const char16 *name,
                                 std::string16 *app_url,
                                 std::vector<std::string16> *icon_urls,
-                                std::string16 *msg) {
+                                std::string16 *msg,
+                                bool *allow) {
   // This query is a little convoluted in the interests of avoiding an
   // explicit transaction.  There will be one row for every associated
   // ShortcutIcon, with the LEFT JOIN forcing there to always be at
   // least one row if there is a matching Origin/Name.  The AppUrl and
   // Msg will be the same for every row.
-  const char16 *sql = STRING16(L"SELECT AppUrl, Msg, IconUrl "
+  const char16 *sql = STRING16(L"SELECT AppUrl, Msg, IconUrl, Allow "
                                L"FROM Shortcut LEFT JOIN ShortcutIcon "
                                L"  USING (ShortcutID) "
                                L"WHERE Origin = ? AND Name = ? ");
@@ -347,6 +435,7 @@ bool ShortcutTable::GetShortcut(const char16 *origin, const char16 *name,
   // Get these from the first row, they're always the same.
   *app_url = statement.column_text16_safe(0);
   *msg = statement.column_text16_safe(1);
+  *allow = (statement.column_int(3) == 1);
 
   // If NULL, there were no icons.
   if (!statement.column_text16(2)) {

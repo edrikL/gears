@@ -145,6 +145,17 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
     return;
   }
 
+  // Check if we should display UI.
+  bool allow_create_shortcut;
+  if (!AllowCreateShortcut(shortcut_info, &allow_create_shortcut)) {
+    context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+    return;
+  }
+
+  if (!allow_create_shortcut) {
+    return;
+  }
+
   // Set up the shortcuts dialog
   HtmlDialog shortcuts_dialog;
   shortcuts_dialog.arguments = Json::Value(Json::objectValue);
@@ -185,31 +196,99 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
   shortcuts_dialog.DoModal(STRING16(L"shortcuts_dialog.html"),
                            kShortcutsDialogWidth, kShortcutsDialogHeight);
 
-  // A null value is ok.  We interpret this as denying the shortcut.
+  bool allow = false;
+  bool permanently = false;
+
   if (shortcuts_dialog.result == Json::Value::null) {
+    // A null value is ok.  We interpret it as denying the shortcut temporarily.
+    allow = false;
+  } else if(shortcuts_dialog.result["allow"].isBool()) {
+    allow = shortcuts_dialog.result["allow"].asBool();
+    
+    // We interpret an explicit false as permanently denying shortcut creation.
+    if (!allow) {
+      permanently = true;
+    }
+  } else {
+    assert(false);
+    LOG(("CreateShortcut: Unexpected result"));
     return;
   }
 
-  assert(shortcuts_dialog.result.isBool());
-  if (!shortcuts_dialog.result.asBool()) {
-    return;
+  if (allow) {
+    // Ensure the directory we'll be storing the icons in exists.
+    std::string16 icon_dir;
+    if (!GetDataDirectory(EnvPageSecurityOrigin(), &icon_dir)) {
+      context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+      return;
+    }
+    AppendDataName(STRING16(L"icons"), kDataSuffixForDesktop, &icon_dir);
+    if (!File::RecursivelyCreateDir(icon_dir.c_str())) {
+      context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+      return;
+    }
   }
 
-  // Ensure the directory we'll be storing the icons in exists.
-  std::string16 icon_dir;
-  if (!GetDataDirectory(EnvPageSecurityOrigin(), &icon_dir)) {
-    context->SetException(GET_INTERNAL_ERROR_MESSAGE());
-    return;
-  }
-  AppendDataName(STRING16(L"icons"), kDataSuffixForDesktop, &icon_dir);
-  if (!File::RecursivelyCreateDir(icon_dir.c_str())) {
-    context->SetException(GET_INTERNAL_ERROR_MESSAGE());
-    return;
-  }
-
-  if (!SetShortcut(&shortcut_info, &error)) {
+  if (!SetShortcut(&shortcut_info, allow, permanently, &error)) {
     context->SetException(error);
   }
+}
+
+// Check whether or not to create shortcut and display UI.
+// Reasons for not displaying UI:
+// * The shortcut already exists and is identical to the current one.
+// * The "never allow bit" is set for that shortcut.
+bool GearsDesktop::AllowCreateShortcut(
+                       const DesktopUtils::ShortcutInfo &shortcut_info,
+                       bool *allow) {
+  PermissionsDB *capabilities = PermissionsDB::GetDB();
+  if (!capabilities) {
+   return false;
+  }
+
+  std::string16 app_url;
+  std::vector<std::string16> icon_urls;
+  std::string16 msg;
+  bool allow_shortcut_creation;
+  if (!capabilities->GetShortcut(EnvPageSecurityOrigin(), 
+                                 shortcut_info.app_name.c_str(),
+                                 &app_url,
+                                 &icon_urls,
+                                 &msg,
+                                 &allow_shortcut_creation)) {
+    // If shortcut doesn't exist in DB then it's OK to create it.
+    *allow = true;
+    return true;
+  }
+
+  // If user has elected not to display shortcut UI, then forbid creation.
+  if (!allow_shortcut_creation) {
+    *allow = false;
+    return true;
+  }
+
+  // Check that input parameters exactly match those stored in the table.
+  // Note that we do not take the description parameter into consideration when 
+  // doing so!
+  if (app_url != shortcut_info.app_url) {
+    *allow = true;
+    return true;
+  }
+
+  // Compare icons urls.
+  for (std::vector<std::string16>::const_iterator it = icon_urls.begin();
+   it != icon_urls.end();  ++it) {
+    if(*it != shortcut_info.icon16x16.url && 
+       *it != shortcut_info.icon32x32.url &&
+       *it != shortcut_info.icon48x48.url &&
+       *it != shortcut_info.icon128x128.url) {
+       *allow = true;
+       return true;
+     }
+  }
+
+  *allow = false;
+  return true;
 }
 
 #ifdef OFFICIAL_BUILD
@@ -283,11 +362,49 @@ void GearsDesktop::GetLocalFiles(JsCallContext *context) {
 // Handle all the icon creation and creation call required to actually install
 // a shortcut.
 bool GearsDesktop::SetShortcut(DesktopUtils::ShortcutInfo *shortcut,
+                               const bool allow,
+                               const bool permanently,
                                std::string16 *error) {
   PermissionsDB *capabilities = PermissionsDB::GetDB();
   if (!capabilities) {
     *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
+  }
+
+  // Create the database entry.
+  // TODO(aa): Perhaps we want to change how we store these in permissions db
+  // now that we have them in a more structured way?
+  std::vector<std::string16> icon_urls;
+  if (!shortcut->icon16x16.url.empty()) {
+    icon_urls.push_back(shortcut->icon16x16.url);
+  }
+  if (!shortcut->icon32x32.url.empty()) {
+    icon_urls.push_back(shortcut->icon32x32.url);
+  }
+  if (!shortcut->icon48x48.url.empty()) {
+    icon_urls.push_back(shortcut->icon48x48.url);
+  }
+  if (!shortcut->icon128x128.url.empty()) {
+    icon_urls.push_back(shortcut->icon128x128.url);
+  }
+
+  // If the user wants to deny shortcut creation permanently then write to the
+  // db & return.
+  if (!allow && permanently) {
+    capabilities->SetShortcut(EnvPageSecurityOrigin(),
+                              shortcut->app_name.c_str(),
+                              shortcut->app_url.c_str(),
+                              icon_urls,
+                              shortcut->app_description.c_str(),
+                              allow);
+
+    return true;
+  }
+
+  // If the user denies shortcut creation temporarily, this is where we bail
+  // from the creation logic.
+  if (!allow) {
+    return true;
   }
 
   if (!FetchIcon(&shortcut->icon16x16, 16, error) ||
@@ -353,29 +470,18 @@ bool GearsDesktop::SetShortcut(DesktopUtils::ShortcutInfo *shortcut,
 #endif
 
   // Create the desktop shortcut using platform-specific code
+  assert(allow);
   if (!DesktopUtils::CreateDesktopShortcut(EnvPageSecurityOrigin(),
                                            *shortcut, error)) {
     return false;
   }
 
-  // Create the database entry.
-  // TODO(aa): Perhaps we want to change how we store these in permissions db
-  // now that we have them in a more structured way?
-  std::vector<std::string16> icon_urls;
-  if (!shortcut->icon16x16.url.empty())
-    icon_urls.push_back(shortcut->icon16x16.url);
-  if (!shortcut->icon32x32.url.empty())
-    icon_urls.push_back(shortcut->icon32x32.url);
-  if (!shortcut->icon48x48.url.empty())
-    icon_urls.push_back(shortcut->icon48x48.url);
-  if (!shortcut->icon128x128.url.empty())
-    icon_urls.push_back(shortcut->icon128x128.url);
-
   capabilities->SetShortcut(EnvPageSecurityOrigin(),
                             shortcut->app_name.c_str(),
                             shortcut->app_url.c_str(),
                             icon_urls,
-                            shortcut->app_description.c_str());
+                            shortcut->app_description.c_str(),
+                            allow);
   return true;
 }
 
