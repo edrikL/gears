@@ -23,6 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef WINCE
+// No BLOB support on WINCE yet
+#else
 #ifdef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
 #else
@@ -205,3 +208,4 @@ bool TestSliceBlob() {
 #endif  // DEBUG
 #endif  // BROWSER_FF || BROWSER_IE
 #endif  // not OFFICIAL_BUILD
+#endif  // WINCE
