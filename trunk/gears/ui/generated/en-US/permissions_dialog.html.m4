@@ -108,7 +108,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
     }
 
     #yellowbox {
-      margin:0 1px;
+      margin:4px 0 4px 0;
       border:solid #f1cc1d;
       border-width:1px 0;
       background:#faefb8;
@@ -406,7 +406,7 @@ m4_include(ui/common/html_dialog.js)
       elem = getElementById("origin-only");
       elem.style.display = "block";
       if (isPIE) {
-        elem.innerHTML = wrapString(origin);
+        elem.innerHTML = wrapDomain(origin);
       } else {
         setTextContent(elem, origin);
       }

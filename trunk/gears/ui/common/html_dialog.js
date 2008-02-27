@@ -295,22 +295,48 @@ function enableButton(buttonElm) {
 }
 
 /**
- * Returns a wrapped string (useful for small screens dialogs, 
+ * Returns a wrapped domain (useful for small screens dialogs, 
  * e.g. windows mobile devices)
  */
-function wrapString(str) {
+function wrapDomain(str) {
   if (isPIE) {
-    var max = 25;
-    var content = "";
-    var pos = 0;
-    while (pos < str.length) {
-      if (pos > 0) {
-        content += "<br>";
-      }
-      content += str.substring(pos, pos + max);
-      pos += max;
+    var max = 20;
+    var url;
+    var scheme_start = str.indexOf("://");
+    var scheme = "";
+
+    if (scheme_start != -1) {
+      scheme = str.substring(0, scheme_start);
+      scheme += "://";
+      // there's automatically an hyphenation
+      // point used by the browser after http://
+      // so we only have to hyphenate the
+      // rest of the string
+      url = str.substring(scheme.length);
+    } else {
+      url = str;
     }
-    return content;
+
+    // We hyphenate the string on every dot
+    var components = url.split(".");
+    if (components.length < 1) {
+      return str;
+    }
+
+    var content = components[0];
+    var len = content.length;
+    for (var i=1; i < components.length; i++) {
+      var elem = components[i];
+      content += ".";
+      len++;
+      if (len + elem.length > max) {
+        content += "<br>";
+        len = 0;
+      }
+      content += elem;
+      len += elem.length;
+    }
+    return scheme + content;
   }
   return str;
 }

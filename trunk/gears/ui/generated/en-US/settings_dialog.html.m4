@@ -299,7 +299,7 @@ m4_include(ui\common\html_dialog.js)
 
   function initSite(table, siteName, rowNumber, kind) {
     var content = "<tr><td class=\"left\">";
-    content += wrapString(siteName);
+    content += wrapDomain(siteName);
     content += "</td>";
     content += "<td class=\"right\"><a href='#' onclick='handleRemoveClick(";
     content += rowNumber;
