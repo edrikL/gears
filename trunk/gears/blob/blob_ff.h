@@ -54,6 +54,10 @@ class GearsBlob
 
   NS_IMETHOD GetContents(const BlobInterface** retval);
 
+  NS_IMETHOD Slice(//PRInt64 offset
+                   //OPTIONAL PRInt64 length
+                   GearsBlobInterface **retval);
+
   void Reset(const BlobInterface *blob) {
     contents_.reset(blob);
   }

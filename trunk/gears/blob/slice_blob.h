@@ -23,61 +23,37 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_BLOB_BUFFER_BLOB_H__
-#define GEARS_BLOB_BUFFER_BLOB_H__
+#ifndef GEARS_BLOB_SLICE_BLOB_H__
+#define GEARS_BLOB_SLICE_BLOB_H__
 
+#ifdef WINCE
+// No BLOB support on WINCE yet
+#else
 #ifdef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
 #else
 
-#include <vector>
-#include "gears/base/common/mutex.h"
 #include "gears/blob/blob_interface.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-// Because BufferBlobs store their contents in a vector, they are restricted in
-// size by the maximum value of int.
-class BufferBlob : public BlobInterface {
+// SliceBlob exposes a subset of an existing blob.
+
+class SliceBlob : public BlobInterface {
  public:
-  // Initializes an empty, write-only BufferBlob.
-  BufferBlob() : buffer_(), writable_(true) {}
+  // SliceBlob always returns the provided length as its own length, even if
+  // the underlying blob length is less.
+  SliceBlob(BlobInterface *source, int64 offset, int64 length);
 
-  // Takes ownership of buffer and initializes a read-only BufferBlob with its
-  // contents.  buffer must have been created on the heap with new.
-  BufferBlob(std::vector<uint8> *buffer);
-
-  ~BufferBlob() {}
-
-  // Returns 0 and does nothing if this is read-only.  Otherwise, attempts to
-  // write num_bytes of source to the end of this and returns the number of
-  // bytes actually written.
-  int Append(const void *source, int num_bytes);
-
-  // Indicates the blob's contents will not change further (makes it
-  // read-only).  Must be called once after all updates are complete, before
-  // any reads are attempted.
-  void Finalize();
-
-  // Returns 0 if this is write-only.  Otherwise, copies up to max_bytes at
-  // offset position to destination.  Returns the number of bytes actually
-  // read.
-  int Read(uint8 *destination, int64 offset, int max_bytes) const;
-
-  int64 Length() const;
-
-  BlobInterface *Clone() const;
+  virtual int Read(uint8 *destination, int64 offset, int max_bytes) const;
+  virtual int64 Length() const;
+  virtual BlobInterface *Clone() const;
 
  private:
-  std::vector<uint8> buffer_;
-
-  // true means write-only, false means read-only.  BufferBlobs are initialized
-  // as write-only, and once set read-only, stay read-only forever.
-  bool writable_;
-
-  mutable Mutex mutex_;
-
-  DISALLOW_EVIL_CONSTRUCTORS(BufferBlob);
+  scoped_ptr<BlobInterface> blob_;
+  int64 offset_, length_;
+  DISALLOW_EVIL_CONSTRUCTORS(SliceBlob);
 };
 
 #endif  // not OFFICIAL_BUILD
-
-#endif  // GEARS_BLOB_BUFFER_BLOB_H__
+#endif  // WINCE
+#endif  // GEARS_BLOB_SLICE_BLOB_H__

@@ -34,20 +34,24 @@
 #include "gears/blob/file_blob.h"
 
 
-FileBlob::FileBlob(const char16 *filename)
+FileBlob::FileBlob(const std::string16& filename)
     : BlobInterface(),
       filename_(filename) {
 }
 
 
-int FileBlob::Read(uint8* destination, int max_bytes, int64 offset) const {
+int FileBlob::Read(uint8 *destination, int64 offset, int max_bytes) const {
   return File::ReadFileSegmentToBuffer(
-      filename_.c_str(), destination, max_bytes, offset);
+      filename_.c_str(), destination, offset, max_bytes);
 }
 
 
 int64 FileBlob::Length() const {
   return File::GetFileSize(filename_.c_str());
+}
+
+BlobInterface *FileBlob::Clone() const {
+  return new FileBlob(filename_);
 }
 
 #endif  // not OFFICIAL_BUILD

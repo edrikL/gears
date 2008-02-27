@@ -62,6 +62,9 @@ class ATL_NO_VTABLE GearsBlob
 
   STDMETHOD(get_contents)(VARIANT *retval);
 
+  STDMETHOD(slice)(VARIANT offset, const VARIANT *length,
+                   GearsBlobInterface **retval);
+
   void Reset(BlobInterface *blob) {
     contents_.reset(blob);
   }

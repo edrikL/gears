@@ -63,10 +63,6 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/base/common/permissions_db_test.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
 #include "gears/base/common/string_utils.h"
-#ifndef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
-#include "gears/blob/buffer_blob.h"
-#endif
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
@@ -92,7 +88,8 @@ bool TestSerialization();  // from serialization_test.cc
 bool TestCircularBuffer();  // from circular_buffer_test.cc
 #ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
-bool TestBufferBlob();
+bool TestBufferBlob();  // from blob_test.cc
+bool TestSliceBlob();  // from blob_test.cc
 #endif  // not OFFICIAL_BUILD
 
 #if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
@@ -165,7 +162,10 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestSerialization();
 #ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
+#if BROWSER_FF || BROWSER_IE // blobs not implemented for npapi yet
   ok &= TestBufferBlob();
+  ok &= TestSliceBlob();
+#endif  // BROWSER_FF || BROWSER_IE
 #endif  // not OFFICIAL_BUILD
   // TODO(zork): Add this test back in once it doesn't crash the browser.
   //ok &= TestJsRootedTokenLifetime();
@@ -936,94 +936,6 @@ bool TestHttpRequest() {
   TEST_ASSERT(ok);
   return true;
 }
-
-#ifndef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
-bool TestBufferBlob() {
-#undef TEST_ASSERT
-#define TEST_ASSERT(b) \
-{ \
-  if (!(b)) { \
-    printf("TestBufferBlob - failed (%d)\n", __LINE__); \
-    return false; \
-  } \
-}
-#if BROWSER_FF || BROWSER_IE // blobs not implemented for npapi yet
-  int num_bytes = 0;
-  uint8 buffer[64] = {0};
-
-  // Empty blob tests
-  BufferBlob blob1;
-  TEST_ASSERT(blob1.Length() == 0);
-  num_bytes = blob1.Read(buffer, 64, 0);
-  TEST_ASSERT(num_bytes == 0);  // a non-finalized blob is not readable
-  blob1.Finalize();
-  TEST_ASSERT(blob1.Length() == 0);
-  num_bytes = blob1.Read(buffer, 64, 0);
-  TEST_ASSERT(num_bytes == 0);  // because it's actually empty
-  num_bytes = blob1.Append("abc", 3);
-  TEST_ASSERT(num_bytes == 0);  // a finalized blob is not writable
-
-  memset(buffer, 0, sizeof(buffer));
-
-  // Typical blob operation
-  BufferBlob blob2;
-  num_bytes = blob2.Append("abc", 3);
-  TEST_ASSERT(num_bytes == 3);
-  TEST_ASSERT(blob2.Length() == 3);
-  num_bytes = blob2.Append("de", 2);
-  TEST_ASSERT(num_bytes == 2);
-  TEST_ASSERT(blob2.Length() == 5);
-  num_bytes = blob2.Read(buffer, 64, 0);
-  TEST_ASSERT(num_bytes == 0);  // a non-finalized blob is not readable
-  blob2.Finalize();
-  TEST_ASSERT(blob2.Length() == 5);
-  num_bytes = blob2.Read(buffer, 64, 0);
-  TEST_ASSERT(num_bytes == 5);
-  num_bytes = blob2.Append("fgh", 3);
-  TEST_ASSERT(num_bytes == 0);  // a finalized blob is not writable
-  TEST_ASSERT(buffer[0] == 'a');
-  TEST_ASSERT(buffer[1] == 'b');
-  TEST_ASSERT(buffer[2] == 'c');
-  TEST_ASSERT(buffer[3] == 'd');
-  TEST_ASSERT(buffer[4] == 'e');
-  TEST_ASSERT(buffer[5] == '\0');
-
-  // Overwrite the first three bytes of buffer, but don't touch the rest
-  num_bytes = blob2.Read(buffer, 3, 2);
-  TEST_ASSERT(num_bytes == 3);
-  TEST_ASSERT(buffer[0] == 'c');
-  TEST_ASSERT(buffer[1] == 'd');
-  TEST_ASSERT(buffer[2] == 'e');
-  TEST_ASSERT(buffer[3] == 'd');
-  TEST_ASSERT(buffer[4] == 'e');
-
-  // Initialize a blob with an empty vector
-  std::vector<uint8> *vec3 = new std::vector<uint8>;
-  BufferBlob blob3(vec3);
-  TEST_ASSERT(blob1.Length() == 0);
-  num_bytes = blob1.Read(buffer, 64, 0);
-  TEST_ASSERT(num_bytes == 0);
-
-  memset(buffer, 0, sizeof(buffer));
-
-  // Initialize a blob with a typical vector
-  std::vector<uint8> *vec4 = new std::vector<uint8>;
-  vec4->push_back('a');
-  vec4->push_back('b');
-  vec4->push_back('c');
-  BufferBlob blob4(vec4);
-  TEST_ASSERT(blob4.Length() == 3);
-  num_bytes = blob4.Read(buffer, 64, 0);
-  TEST_ASSERT(num_bytes == 3);
-  TEST_ASSERT(buffer[0] == 'a');
-  TEST_ASSERT(buffer[1] == 'b');
-  TEST_ASSERT(buffer[2] == 'c');
-#endif
-
-  return true;
-}
-#endif  // not OFFICIAL_BUILD
 
 // JsObject test functions
 

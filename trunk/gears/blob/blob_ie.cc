@@ -35,7 +35,10 @@
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
 
+#include <comutil.h>
+
 #include "gears/blob/blob_ie.h"
+#include "gears/blob/slice_blob.h"
 
 
 STDMETHODIMP GearsBlob::get_length(VARIANT *retval) {
@@ -58,6 +61,62 @@ STDMETHODIMP GearsBlob::get_contents(VARIANT *retval) {
   retval->vt = VT_BYREF;
   retval->byref =
       const_cast<void*>(reinterpret_cast<const void*>(contents_.get()));
+  RETURN_NORMAL();
+}
+
+STDMETHODIMP GearsBlob::slice(VARIANT var_offset, const VARIANT *var_length,
+                              GearsBlobInterface **retval) {
+  *retval = NULL;  // set retval in case we exit early
+
+  // Validate arguments.
+  double temp;
+  if (!JsTokenToDouble(var_offset, NULL, &temp) || (temp < 0)
+      || (temp > JS_INT_MAX)) {
+    RETURN_EXCEPTION(STRING16(L"Offset must be a non-negative integer."));
+  }
+  int64 offset = static_cast<int64>(temp);
+
+  int64 length;
+  if (ActiveXUtils::OptionalVariantIsPresent(var_length)) {
+    if (!JsTokenToDouble(*var_length, NULL, &temp) || (temp < 0)
+        || (temp > JS_INT_MAX)) {
+      RETURN_EXCEPTION(STRING16(L"Length must be a non-negative integer."));
+    }
+    length = static_cast<int64>(temp);
+  } else {
+    int64 blob_size = contents_->Length();
+    length = (blob_size > offset) ? blob_size - offset : 0;
+  }
+
+  // Clone the blob and slice it.
+  scoped_ptr<BlobInterface> cloned(contents_->Clone());
+  if (!cloned.get()) {
+    RETURN_EXCEPTION(STRING16(L"Blob cloning failed."));
+  }
+  cloned.reset(new SliceBlob(cloned.release(), offset, length));
+
+  // Expose the object to JavaScript via COM.
+  CComObject<GearsBlob> *blob_internal = NULL;
+  HRESULT hr = CComObject<GearsBlob>::CreateInstance(&blob_internal);
+  if (FAILED(hr)) {
+    RETURN_EXCEPTION(STRING16(L"Could not create GearsBlob."));
+  }
+
+  // Note: blob_external maintains our ref count.
+  CComQIPtr<GearsBlobInterface> blob_external = blob_internal;
+  if (!blob_external) {
+    RETURN_EXCEPTION(STRING16(L"Could not get GearsBlobInterface interface."));
+  }
+
+  if (!blob_internal->InitBaseFromSibling(this)) {
+    RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
+  }
+
+  blob_internal->Reset(cloned.release());
+
+  *retval = blob_external.Detach();
+  assert((*retval)->AddRef() == 2 &&
+         (*retval)->Release() == 1);  // CComObject* does not Release
   RETURN_NORMAL();
 }
 
