@@ -1,14 +1,14 @@
 [Version]
 Signature="$Windows NT$"
-Provider="Google"
+Provider="Google"  ;[naming]
 CESignature="$Windows CE$"
 
 [CEStrings]
-AppName="PRODUCT_FRIENDLY_NAME_UQ"
+AppName="Gears"  ;[naming]
 InstallDir="%CE1%\PRODUCT_FRIENDLY_NAME_UQ"
 
 [Strings]
-Manufacturer="Google"
+Manufacturer="Google"  ;[naming]
 
 [CEDevice]
 VersionMin=4.0
