@@ -24,6 +24,7 @@ Minor/bonus goals:
 Non-goals:
   * Allow current gears databases to work with database2
   * Allow access to database2 from the DOM window object (callers will access database2 through the Gears factory, just like any other Gears object).
+  * Allow access to any native browser implementation of HTML5 databases
 
 
 =Javascript Interface=
