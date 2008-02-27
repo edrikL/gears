@@ -32,7 +32,7 @@ static const char16 *kDatabaseName = STRING16(L"permissions.db");
 static const char16 *kVersionTableName = STRING16(L"VersionInfo");
 static const char16 *kVersionKeyName = STRING16(L"Version");
 static const char16 *kAccessTableName = STRING16(L"Access");
-static const int kCurrentVersion = 4;
+static const int kCurrentVersion = 5;
 static const int kOldestUpgradeableVersion = 1;
 
 
@@ -115,7 +115,7 @@ bool PermissionsDB::Init() {
       return false;
     }
   } else {
-    if (!UpgradeToVersion4()) {
+    if (!UpgradeToVersion5()) {
       return false;
     }
   }
@@ -146,6 +146,7 @@ void PermissionsDB::SetCanAccessGears(const SecurityOrigin &origin,
   }
 
   if (value == PERMISSION_NOT_SET) {
+    shortcut_table_.DeleteShortcuts(origin.url().c_str());
     access_table_.Clear(origin.url().c_str());
   } else if (value == PERMISSION_ALLOWED || value == PERMISSION_DENIED) {
     access_table_.SetInt(origin.url().c_str(), value);
@@ -231,9 +232,10 @@ bool PermissionsDB::EnableGearsForWorker(const SecurityOrigin &origin) {
 bool PermissionsDB::SetShortcut(const SecurityOrigin &origin,
                                 const char16 *name, const char16 *app_url,
                                 const std::vector<std::string16> &icon_urls,
-                                const char16 *msg) {
+                                const char16 *msg,
+                                const bool allow) {
   return shortcut_table_.SetShortcut(origin.url().c_str(), name,
-                                     app_url, icon_urls, msg);
+                                     app_url, icon_urls, msg, allow);
 }
 
 bool PermissionsDB::GetOriginsWithShortcuts(
@@ -265,9 +267,10 @@ bool PermissionsDB::GetOriginShortcuts(const SecurityOrigin &origin,
 bool PermissionsDB::GetShortcut(const SecurityOrigin &origin,
                                 const char16 *name, std::string16 *app_url,
                                 std::vector<std::string16> *icon_urls,
-                                std::string16 *msg) {
+                                std::string16 *msg,
+                                bool *allow) {
   return shortcut_table_.GetShortcut(origin.url().c_str(), name,
-                                     app_url, icon_urls, msg);
+                                     app_url, icon_urls, msg, allow);
 }
 
 bool PermissionsDB::DeleteShortcut(const SecurityOrigin &origin,
@@ -293,7 +296,7 @@ bool PermissionsDB::CreateDatabase() {
 
   if (!version_table_.MaybeCreateTable() ||
       !access_table_.MaybeCreateTable() ||
-      !shortcut_table_.MaybeCreateTable()) {
+      !shortcut_table_.MaybeCreateTableLatestVersion()) {
     return false;
   }
 
@@ -396,6 +399,38 @@ bool PermissionsDB::UpgradeToVersion4() {
   }
 
   if (!version_table_.SetInt(kVersionKeyName, 4)) {
+    return false;
+  }
+
+  return transaction.Commit();
+}
+
+bool PermissionsDB::UpgradeToVersion5() {
+  SQLTransaction transaction(&db_, "PermissionsDB::UpgradeToVersion5");
+  if (!transaction.Begin()) {
+    return false;
+  }
+
+  int version = 0;
+  version_table_.GetInt(kVersionKeyName, &version);
+
+  if (version < 4) {
+    if (!UpgradeToVersion4()) {
+      return false;
+    }
+    version_table_.GetInt(kVersionKeyName, &version);
+  }
+
+  if (version != 4) {
+    LOG(("PermissionsDB::UpgradeToVersion5 unexpected version: %d", version));
+    return false;
+  }
+
+  if (!shortcut_table_.UpgradeFromVersion4ToVersion5()) {
+    return false;
+  }
+
+  if (!version_table_.SetInt(kVersionKeyName, 5)) {
     return false;
   }
 

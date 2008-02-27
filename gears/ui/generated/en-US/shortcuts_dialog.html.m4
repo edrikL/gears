@@ -143,6 +143,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <div id="button-row">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
+          <td width="100%" align="left" valign="middle">
+            <a href="#" onclick="denyShortcutPermanently(); return false;">
+            <TRANS_BLOCK desc="Link that disallows Gears from creating this shortcut.">
+              Never allow this shortcut.
+            </TRANS_BLOCK>
+            </a>
+          </td>
           <td nowrap="true" align="right" valign="middle">
             <!--
             Fancy buttons
@@ -153,11 +160,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             to be <span>, but IE renders incorrectly in this case.
             -->
             <a href="#" accesskey="A" id="allow-button" 
-                onclick="allowShortcuts(); return false;"
+                onclick="allowShortcutsTemporarily(); return false;"
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><TRANS_BLOCK desc="Button user can press to allow Gears to create a shortcut"><span class="accesskey">A</span>llow</TRANS_BLOCK></div></div></a>
+                  ><TRANS_BLOCK desc="Button user can press to allow Gears to create a shortcut"><span class="accesskey">Y</span>es</TRANS_BLOCK></div></div></a>
             <!--
             Note: There must be whitespace here or Firefox messes up the
             rendering.
@@ -166,11 +173,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             to fix that.
             -->
             <a href="#" accesskey="C" id="deny-button"
-                onclick="denyShortcuts(); return false;"
+                onclick="denyShortcutsTemporarily(); return false;"
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><TRANS_BLOCK desc="Button user can press to disallow Gears from creating a shortcut."><span class="accesskey">C</span>ancel</TRANS_BLOCK></div></div></a>
+                  ><TRANS_BLOCK desc="Button user can press to disallow Gears from creating a shortcut."><span class="accesskey">N</span>o</TRANS_BLOCK></div></div></a>
           </td>
         </tr>
       </table>
@@ -358,7 +365,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   /**
    * Called when the user clicks the allow button.
    */
-  function allowShortcuts() {
+  function allowShortcutsTemporarily() {
     if (!disabled) {
       var checkboxen = document.getElementsByTagName("input");
       var result = [];
@@ -369,15 +376,26 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
       // NOTE: Caller only expects a single result right now, but leaving in
       // support for multiple in case we want it later.
-      saveAndClose(result[0]);
-    }
+      saveAndClose({
+        allow: result[0]
+      });
+      }
   }
 
   /**
-   * Called when the user clicks the cancel button.
+   * Called when the user clicks the no button.
    */
-  function denyShortcuts() {
+  function denyShortcutsTemporarily() {
     saveAndClose(null); // default behavior is to deny all
+  }
+  
+  /**
+   * Called when the user clicks the "Never allow this shortcut." link.
+   */
+  function denyShortcutPermanently() {
+    saveAndClose({
+      allow: false
+    });
   }
 </script>
 </html>

@@ -87,11 +87,13 @@ class PermissionsDB {
   static const std::string kThreadLocalKey;
 
   // Adds (or overwrites) a shortcut for origin/name, with appUrl,
-  // icoUrl, and msg as data.
+  // iconUrl, msg as data, and whether or not to allow creation of this
+  // shortcut.
   bool SetShortcut(const SecurityOrigin &origin, const char16 *name,
                    const char16 *app_url,
                    const std::vector<std::string16> &icon_urls,
-                   const char16 *msg);
+                   const char16 *msg,
+                   const bool allow);
 
   // Gets the set of origins which have shortcuts.
   bool GetOriginsWithShortcuts(std::vector<SecurityOrigin> *result);
@@ -104,7 +106,8 @@ class PermissionsDB {
   bool GetShortcut(const SecurityOrigin &origin, const char16 *name,
                    std::string16 *app_url,
                    std::vector<std::string16> *icon_urls,
-                   std::string16 *msg);
+                   std::string16 *msg,
+                   bool *allow);
 
   // Deletes a specific shortcut.
   bool DeleteShortcut(const SecurityOrigin &origin, const char16 *name);
@@ -127,6 +130,7 @@ class PermissionsDB {
 
   // Schema upgrade functions.  Higher-numbered functions call
   // lower-numbered functions as appropriate.
+  bool UpgradeToVersion5();
   bool UpgradeToVersion4();
   bool UpgradeToVersion3();
   bool UpgradeToVersion2();

@@ -28,6 +28,7 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/permissions_db.h"
 #include "gears/desktop/desktop_utils.h"
 
 class GearsDesktop : public ModuleImplBaseClassVirtual {
@@ -43,7 +44,13 @@ class GearsDesktop : public ModuleImplBaseClassVirtual {
   void GetLocalFiles(JsCallContext *context);
 
  private:
-  bool SetShortcut(DesktopUtils::ShortcutInfo *shortcut, std::string16 *error);
+  bool SetShortcut(DesktopUtils::ShortcutInfo *shortcut, 
+                   const bool allow,
+                   const bool permanently,
+                   std::string16 *error);
+
+  bool AllowCreateShortcut(const DesktopUtils::ShortcutInfo &shortcut_info,
+                           bool *allow);
   bool WriteControlPanelIcon(const DesktopUtils::ShortcutInfo &shortcut);
   bool FetchIcon(DesktopUtils::IconData *icon, int expected_size,
                  std::string16 *error);

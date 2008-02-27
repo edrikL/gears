@@ -158,15 +158,15 @@ bool TestPermissionsDBAll() {
   // Load up some shortcuts.
   TEST_ASSERT(
       permissions->SetShortcut(foo, kFooTest1.c_str(), kFooTest1Url.c_str(),
-                               kFooTest1IconUrls, kFooTest1Msg.c_str()));
+                               kFooTest1IconUrls, kFooTest1Msg.c_str(), true));
 
   TEST_ASSERT(
       permissions->SetShortcut(foo, kFooTest2.c_str(), kFooTest2Url.c_str(),
-                               kFooTest2IconUrls, kFooTest2Msg.c_str()));
+                               kFooTest2IconUrls, kFooTest2Msg.c_str(), false));
 
   TEST_ASSERT(
       permissions->SetShortcut(bar, kBarTest.c_str(), kBarTestUrl.c_str(),
-                               kBarTestIconUrls, kBarTestMsg.c_str()));
+                               kBarTestIconUrls, kBarTestMsg.c_str(), false));
 
   // Expect 2 additional origins with shortcuts.
   std::vector<SecurityOrigin> all_origins(other_origins);
@@ -182,17 +182,33 @@ bool TestPermissionsDBAll() {
   TEST_ASSERT(names[0] == kFooTest2);
   TEST_ASSERT(names[1] == kFooTest1);
 
-  // Test a specific shortcut to see if the data comes back right.
-  std::string16 app_url, ico_url, msg;
-  std::vector<std::string16> icon_urls;
-  TEST_ASSERT(permissions->GetShortcut(foo, kFooTest2.c_str(),
-                                       &app_url, &icon_urls, &msg));
-  TEST_ASSERT(app_url == kFooTest2Url);
-  TEST_ASSERT(msg == kFooTest2Msg);
-  TEST_ASSERT(icon_urls.size() == 2);
-  std::sort(icon_urls.begin(), icon_urls.end());
-  TEST_ASSERT(icon_urls[0] == kFooTest2IcoUrl1);
-  TEST_ASSERT(icon_urls[1] == kFooTest2IcoUrl2);
+  // Test shortcut 2 to see if the data comes back right.
+  {
+    std::string16 app_url, ico_url, msg;
+    std::vector<std::string16> icon_urls;
+    bool allow_shortcut;
+    TEST_ASSERT(permissions->GetShortcut(foo, kFooTest2.c_str(),
+                                         &app_url, &icon_urls, &msg, 
+                                         &allow_shortcut));
+    TEST_ASSERT(app_url == kFooTest2Url);
+    TEST_ASSERT(msg == kFooTest2Msg);
+    TEST_ASSERT(icon_urls.size() == 2);
+    std::sort(icon_urls.begin(), icon_urls.end());
+    TEST_ASSERT(icon_urls[0] == kFooTest2IcoUrl1);
+    TEST_ASSERT(icon_urls[1] == kFooTest2IcoUrl2);
+    TEST_ASSERT(allow_shortcut == false);
+  }
+
+  // Test that value of true is correctly saved for allow_shortcut.
+  {
+    std::string16 app_url, ico_url, msg;
+    std::vector<std::string16> icon_urls;
+    bool allow_shortcut;
+    TEST_ASSERT(permissions->GetShortcut(foo, kFooTest1.c_str(),
+                                         &app_url, &icon_urls, &msg, 
+                                         &allow_shortcut));
+    TEST_ASSERT(allow_shortcut == true);
+  }
 
   // Test that deleting a specific shortcut doesn't impact other
   // shortcuts for that origin.
