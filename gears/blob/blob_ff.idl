@@ -28,6 +28,13 @@
 [scriptable, uuid(3D32D95C-AC6D-11DC-8314-0800200C9A66)]
 interface GearsBlobInterface : GearsBaseClassInterface {
   readonly attribute PRInt64 length;
+
+  // Returns a blob that represents a subset of the current blob, beginning
+  // at offset, and continuing for length bytes.  If length is omitted, the
+  // slice continues to the end of the original blob.
+  GearsBlobInterface slice(// in PRInt64 offset
+                           // OPTIONAL in PRInt64 length
+                           );
 };
 
 interface BlobInterface; // defined in C++

@@ -33,8 +33,10 @@
 #include <gecko_internal/jsapi.h>
 #include <gecko_internal/nsIDOMClassInfo.h>
 
+#include "gears/base/common/js_types.h"
 #include "gears/blob/blob_interface.h"
 #include "gears/blob/blob_ff.h"
+#include "gears/blob/slice_blob.h"
 
 NS_IMPL_THREADSAFE_ADDREF(GearsBlob)
 NS_IMPL_THREADSAFE_RELEASE(GearsBlob)
@@ -69,6 +71,60 @@ NS_IMETHODIMP GearsBlob::GetLength(PRInt64 *retval) {
 NS_IMETHODIMP GearsBlob::GetContents(const BlobInterface** retval) {
   *retval = contents_.get();
   return NS_OK;
+}
+
+NS_IMETHODIMP GearsBlob::Slice(//PRInt64 offset
+                               //OPTIONAL PRInt64 length
+                               GearsBlobInterface **retval) {
+  *retval = NULL;  // set retval in case we exit early
+
+  // Validate arguments
+  JsParamFetcher js_params(this);
+  if (js_params.GetCount(false) < 1) {
+    RETURN_EXCEPTION(STRING16(L"Offset is required."));
+  }
+  if (js_params.GetCount(false) > 2) {
+    RETURN_EXCEPTION(STRING16(L"Too many parameters."));
+  }
+
+  double temp;
+  if (!js_params.GetAsDouble(0, &temp) || (temp < 0) || (temp > JS_INT_MAX)) {
+    RETURN_EXCEPTION(STRING16(L"Offset must be a non-negative integer."));
+  }
+  int64 offset = static_cast<int64>(temp);
+
+  int64 length;
+  if (js_params.IsOptionalParamPresent(1, false)) {
+    if (!js_params.GetAsDouble(1, &temp) || (temp < 0) || (temp > JS_INT_MAX)) {
+      RETURN_EXCEPTION(STRING16(L"Length must be a non-negative integer."));
+    }
+    length = static_cast<int64>(temp);
+  } else {
+    int64 blob_size = contents_->Length();
+    length = (blob_size > offset) ? blob_size - offset : 0;
+  }
+
+  // Clone the blob and slice it.
+  scoped_ptr<BlobInterface> cloned(contents_->Clone());
+  if (!cloned.get()) {
+    RETURN_EXCEPTION(STRING16(L"Blob cloning failed."));
+  }
+  cloned.reset(new SliceBlob(cloned.release(), offset, length));
+
+  // Expose the object to JavaScript via nsCOM.
+  GearsBlob* blob_internal = new GearsBlob;
+
+  // Note: blob_external maintains our ref count.
+  nsCOMPtr<GearsBlobInterface> blob_external(blob_internal);
+
+  if (!blob_internal->InitBaseFromSibling(this)) {
+    RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
+  }
+
+  blob_internal->Reset(cloned.release());
+
+  NS_ADDREF(*retval = blob_external);
+  RETURN_NORMAL();
 }
 
 #endif  // not OFFICIAL_BUILD

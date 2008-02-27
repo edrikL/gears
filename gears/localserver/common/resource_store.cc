@@ -95,7 +95,7 @@ bool ResourceStore::BlobToItem(const BlobInterface *blob,
       return false;
     }
     blob->Read(reinterpret_cast<uint8*>(&(item->payload.data->at(0))),
-               data_len, 0);
+               0, data_len);
   }
 
   // Synthesize the http headers we'll store with this item

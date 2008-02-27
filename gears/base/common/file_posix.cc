@@ -194,8 +194,8 @@ int64 File::GetFileSize(const char16 *full_filepath) {
 
 int File::ReadFileSegmentToBuffer(const char16 *full_filepath,
                                   uint8* destination,
-                                  int max_bytes,
-                                  int64 position) {
+                                  int64 position,
+                                  int max_bytes) {
   if (max_bytes <= 0 || position < 0) {
     return 0;
   }

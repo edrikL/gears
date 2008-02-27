@@ -113,15 +113,15 @@ int blobGetC(gdIOCtx *ctx) {
     return EOF;
   }
   uint8 c;
-  blob_reader->blob->Read(&c, 1, blob_reader->pos++);
+  blob_reader->blob->Read(&c, blob_reader->pos++, 1);
   return c;
 }
 
 int blobGetBuf(gdIOCtx *ctx, void *dest, int wanted) {
   BlobReader *blob_reader = reinterpret_cast<BlobReader*>(ctx);
   int bytes_read = blob_reader->blob->Read(reinterpret_cast<uint8*>(dest),
-                                           wanted,
-                                           blob_reader->pos);
+                                           blob_reader->pos,
+                                           wanted);
   blob_reader->pos += bytes_read;
   return bytes_read;
 }
@@ -154,7 +154,7 @@ bool Image::Init(const BlobInterface *blob, std::string16 *error) {
 
   // Sniff the first four bytes and load the image
   uint8 header[kHeaderSize];
-  if (blob->Read(&header[0], kHeaderSize, 0) < 4) {
+  if (blob->Read(header, 0, kHeaderSize) < kHeaderSize) {
     *error = STRING16(L"The blob is not an image");
     return false;
   }

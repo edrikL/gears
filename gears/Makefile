@@ -1301,8 +1301,10 @@ FF_IDLSRCS	+= \
 
 FF_CPPSRCS	+= \
 		blob_ff.cc \
+		blob_test.cc \
 		buffer_blob.cc \
 		file_blob.cc \
+		slice_blob.cc \
 		$(NULL)
 
 IE_VPATH	+= \
@@ -1315,8 +1317,21 @@ IE_IDLSRCS	+= \
 
 IE_CPPSRCS	+= \
 		blob_ie.cc \
+		blob_test.cc \
 		buffer_blob.cc \
 		file_blob.cc \
+		slice_blob.cc \
+		$(NULL)
+
+NPAPI_VPATH	+= \
+		blob \
+		$(NULL)
+
+NPAPI_CPPSRCS	+= \
+		blob_test.cc \
+		buffer_blob.cc \
+		file_blob.cc \
+		slice_blob.cc \
 		$(NULL)
 
 IEMOBILE_VPATH	+= \
@@ -1329,8 +1344,10 @@ IEMOBILE_IDLSRCS	+= \
 
 IEMOBILE_CPPSRCS	+= \
 		blob_ie.cc \
+		blob_test.cc \
 		buffer_blob.cc \
 		file_blob.cc \
+		slice_blob.cc \
 		$(NULL)
 endif
 

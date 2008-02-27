@@ -23,60 +23,47 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_BLOB_BLOB_INTERFACE_H__
-#define GEARS_BLOB_BLOB_INTERFACE_H__
-
+#ifdef WINCE
+// No BLOB support on WINCE yet
+#else
 #ifdef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
 #else
 
-#include "gears/base/common/common.h"
+#include <assert.h>
 
-class BlobInterface {
- public:
-  // Returns the number of bytes successfully read.  The offset is relative
-  // to the beginning of the blob contents, and is not related to previous
-  // reads.  Reads of offset < 0 will be ignored (and return 0), and
-  // similarly for max_bytes < 0.
-  virtual int Read(uint8 *destination, int64 offset, int max_bytes) const = 0;
+#include "gears/blob/slice_blob.h"
 
-  // Note that Length can be volatile, e.g. a file-backed Blob can have that
-  // file's size change underneath it.
-  virtual int64 Length() const = 0;
+SliceBlob::SliceBlob(BlobInterface *source, int64 offset, int64 length)
+    : blob_(source), offset_(offset), length_(length) {
+  // We explicitly allow offset and length to indicate a slice that extends
+  // beyond the end of the source blob, although Read will return no data for
+  // that portion.
+  assert(offset_ > 0);
+  assert(length_ > 0);
+}
 
-  // Returns a new object that is an independent copy of the current Blob, or
-  // NULL if the Blob cannot be cloned.
-  virtual BlobInterface *Clone() const = 0;
-
-  virtual ~BlobInterface() {}
-
- protected:
-  BlobInterface() {}
-
- private:
-  DISALLOW_EVIL_CONSTRUCTORS(BlobInterface);
-};
-
-class EmptyBlob : public BlobInterface {
- public:
-  EmptyBlob() {}
-
-  int Read(uint8 *destination, int64 offset, int max_bytes) const {
+int SliceBlob::Read(uint8 *destination, int64 offset, int max_bytes) const {
+  if (offset < 0) {
     return 0;
   }
-
-  int64 Length() const {
-    return 0;
+  int64 remaining = (offset < length_) ? length_ - offset : 0;
+  if (remaining < max_bytes) {
+    max_bytes = static_cast<int>(remaining);
   }
+  return blob_->Read(destination, offset_ + offset, max_bytes);
+}
 
-  BlobInterface *Clone() const {
-    return new EmptyBlob;
+int64 SliceBlob::Length() const {
+  return length_;
+}
+
+BlobInterface *SliceBlob::Clone() const {
+  if (BlobInterface *cloned = blob_->Clone()) {
+    return new SliceBlob(cloned, offset_, length_);
   }
-
- private:
-  DISALLOW_EVIL_CONSTRUCTORS(EmptyBlob);
-};
+  return NULL;
+}
 
 #endif  // not OFFICIAL_BUILD
-
-#endif  // GEARS_BLOB_BLOB_INTERFACE_H__
+#endif  // WINCE

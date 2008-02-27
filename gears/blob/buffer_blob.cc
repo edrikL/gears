@@ -29,6 +29,7 @@
 
 #include <assert.h>
 #include "gears/blob/buffer_blob.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 BufferBlob::BufferBlob(std::vector<uint8> *buffer) {
   buffer_.swap(*buffer);
@@ -58,7 +59,7 @@ void BufferBlob::Finalize() {
 }
 
 
-int BufferBlob::Read(uint8 *destination, int max_bytes, int64 position) const {
+int BufferBlob::Read(uint8 *destination, int64 offset, int max_bytes) const {
   {
     MutexLock lock(&mutex_);
     if (writable_) {
@@ -67,19 +68,17 @@ int BufferBlob::Read(uint8 *destination, int max_bytes, int64 position) const {
     // By this point, we've established that the blob will not change so we
     // don't need the mutex lock any more.
   }
-  if (position >= buffer_.size() ||
-      position < 0 ||
-      max_bytes < 0) {
+  if (offset >= buffer_.size() || offset < 0 || max_bytes < 0) {
     return 0;
   }
-  assert(position <= kint32max);  // Enforced by Append()
+  assert(offset <= kint32max);  // Enforced by Append()
 
-  int position_as_int = static_cast<int>(position);
-  int actual = buffer_.size() - position_as_int;
+  int offset_as_int = static_cast<int>(offset);
+  int actual = buffer_.size() - offset_as_int;
   if (actual > max_bytes) {
     actual = max_bytes;
   }
-  memcpy(destination, &(buffer_[position_as_int]), actual);
+  memcpy(destination, &(buffer_[offset_as_int]), actual);
   return actual;
 }
 
@@ -87,6 +86,15 @@ int BufferBlob::Read(uint8 *destination, int max_bytes, int64 position) const {
 int64 BufferBlob::Length() const {
   MutexLock lock(&mutex_);
   return buffer_.size();
+}
+
+BlobInterface *BufferBlob::Clone() const {
+  scoped_ptr<BufferBlob> blob(new BufferBlob);
+  if (buffer_.size() != blob->Append(&buffer_[0], buffer_.size())) {
+    return NULL;
+  }
+  blob->Finalize();
+  return blob.release();
 }
 
 #endif  // not OFFICIAL_BUILD
