@@ -28,10 +28,8 @@
 #include <assert.h>
 #include "gears/base/common/png_utils.h"
 
-extern "C" {
-#include "gears/third_party/libpng/png.h"
-}
 
+#if defined(PNG_gAMA_SUPPORTED) && defined(PNG_READ_GAMMA_SUPPORTED)
 // Gamma correction constants. Everyone uses these two constants -- 2.2 and
 // 1/2.2 because that is what IE did back in the day and they want to be
 // compatible. For the whole sad story, see:
@@ -41,6 +39,7 @@ static const double kMaxGamma = 21474.83;  // Maximum gamma accepted by png
                                            // library.
 static const double kDefaultGamma = 2.2;
 static const double kInverseGamma = 1.0 / kDefaultGamma;
+#endif
 
 // Maximum pixel dimension we'll try to decode.
 static const png_uint_32 kMaxSize = 4096;
@@ -105,7 +104,10 @@ static void ConvertRGBtoBGRA(const unsigned char* rgb, int pixel_width,
 }
 
 
+#if defined(PNG_WRITE_SUPPORTED)
 // Encoder
+// TODO(cprince): Add additional PNG_WRITE_* checks inside this block (as we
+// have in the Decoder) if/when we want to support minimal-code PNG writing.
 
 // Passed around as the io_ptr in the png structs so our callbacks know where
 // to write data.
@@ -241,9 +243,12 @@ bool PngUtils::Encode(const unsigned char* input, ColorFormat format,
   png_write_end(png_ptr, info_ptr);
   return true;
 }
+#endif  // defined(PNG_WRITE_SUPPORTED)
 
 
+#if defined(PNG_READ_SUPPORTED)
 // Decoder
+
 class PngDecodeState {
  public:
   PngDecodeState(PngUtils::ColorFormat ofmt, std::vector<unsigned char>* o)
@@ -297,21 +302,36 @@ static void DecodeInfoCallback(png_struct* png_ptr, png_info* info_ptr) {
   // Expand to ensure we use 24-bit for RGB and 32-bit for RGBA.
   if (color_type == PNG_COLOR_TYPE_PALETTE ||
       (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8))
+#ifdef PNG_READ_EXPAND_SUPPORTED
     png_set_expand(png_ptr);
+#else
+    return;
+#endif
 
   // Transparency for paletted images.
+#if defined(PNG_tRNS_SUPPORTED) && defined(PNG_READ_EXPAND_SUPPORTED)
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
     png_set_expand(png_ptr);
+#endif
 
   // Convert 16-bit to 8-bit.
   if (bit_depth == 16)
+#ifdef PNG_READ_16_TO_8_SUPPORTED
     png_set_strip_16(png_ptr);
+#else
+    return;
+#endif
 
   // Expand grayscale to RGB.
   if (color_type == PNG_COLOR_TYPE_GRAY ||
       color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+#ifdef PNG_READ_GRAY_TO_RGB_SUPPORTED
     png_set_gray_to_rgb(png_ptr);
+#else
+    return;
+#endif
 
+#if defined(PNG_gAMA_SUPPORTED) && defined(PNG_READ_GAMMA_SUPPORTED)
   // Deal with gamma and keep it under our control.
   double gamma;
   if (png_get_gAMA(png_ptr, info_ptr, &gamma)) {
@@ -323,10 +343,15 @@ static void DecodeInfoCallback(png_struct* png_ptr, png_info* info_ptr) {
   } else {
     png_set_gamma(png_ptr, kDefaultGamma, kInverseGamma);
   }
+#endif
 
   // Tell libpng to send us rows for interlaced pngs.
   if (interlace_type == PNG_INTERLACE_ADAM7)
+#if defined(PNG_READ_INTERLACING_SUPPORTED)
     png_set_interlace_handling(png_ptr);
+#else
+    return;
+#endif
 
   // Update our info now
   png_read_update_info(png_ptr, info_ptr);
@@ -478,6 +503,8 @@ bool PngUtils::Decode(const unsigned char* input, size_t input_size,
   *h = state.height;
   return true;
 }
+#endif  // defined(PNG_READ_SUPPORTED)
+
 
 // Divides a length of X units into Y spans.  The numbers need not be evenly
 // divisible.  The class will return spans of length floor(X/Y) and ceil(X/Y),

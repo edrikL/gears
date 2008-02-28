@@ -104,26 +104,37 @@ THIRD_PARTY_VPATH	+= \
 		third_party/libpng \
 		$(NULL)
 
+# Common Files
 THIRD_PARTY_CSRCS	+= \
 		png.c \
 		pngerror.c \
-		pnggccrd.c \
 		pngget.c \
 		pngmem.c \
+		pngset.c \
+		pngtrans.c \
+		$(NULL)
+# Reading PNGs
+THIRD_PARTY_CSRCS	+= \
 		pngpread.c \
 		pngread.c \
 		pngrio.c \
 		pngrtran.c \
 		pngrutil.c \
-		pngset.c \
-		pngtrans.c \
-		pngvcrd.c \
+		$(NULL)
+
+ifeq ($(OFFICIAL_BUILD),1)
+  # The following files are not yet needed; exclude them to save size.
+else
+# Writing PNGs
+THIRD_PARTY_CSRCS	+= \
 		pngwio.c \
 		pngwrite.c \
 		pngwtran.c \
 		pngwutil.c \
 		$(NULL)
 endif
+
+endif # not wince
 
 #-----------------------------------------------------------------------------
 # third_party/zlib
@@ -134,21 +145,36 @@ THIRD_PARTY_VPATH	+= \
 		third_party/zlib \
 		$(NULL)
 
+# Common Files
 THIRD_PARTY_CSRCS	+= \
 		adler32.c \
-		compress.c \
-		crc32.c \
-		deflate.c \
-		gzio.c \
-		infback.c \
-		inffast.c \
-		inflate.c \
-		inftrees.c \
-		trees.c \
-		uncompr.c \
 		zutil.c \
 		$(NULL)
+# Inflate Algorithm (use inflate or infback, but not both)
+THIRD_PARTY_CSRCS	+= \
+		inflate.c \
+		inffast.c \
+		inftrees.c \
+		$(NULL)
+
+ifeq ($(OFFICIAL_BUILD),1)
+  # The following files are not yet needed; exclude them to save size.
+else
+# Other Algorithms
+THIRD_PARTY_CSRCS	+= \
+		compress.c \
+		deflate.c \
+		uncompr.c \
+		$(NULL)
+# Other Common Files
+THIRD_PARTY_CSRCS	+= \
+		crc32.c \
+		gzio.c \
+		trees.c \
+		$(NULL)
 endif
+
+endif # not wince
 
 #-----------------------------------------------------------------------------
 # third_party/libjpeg
