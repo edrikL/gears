@@ -272,7 +272,9 @@ def CreateTargets():
        r'gears\third_party\breakpad\src'])
                             
   common_settings.preprocessor_symbols = ['PNG_USER_CONFIG',
-                                          'GEARS_PNG_WRITE_SUPPORT',
+                                          'NO_GZIP',
+                                          'NO_GZCOMPRESS',
+                                          'deflateParams\(a,b,c\)=Z_OK',
                                           'WIN32',
                                           'UNICODE', 
                                           'BREAKPAD_AVOID_STREAMS']

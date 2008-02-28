@@ -71,9 +71,10 @@ MAKEFLAGS = --no-print-directory
 
 CPPFLAGS = -I.. -I$(OUTDIR)/$(OS)-$(ARCH)
 
-LIBPNG_CFLAGS = -DPNG_USER_CONFIG -DGEARS_PNG_WRITE_SUPPORT -Ithird_party/zlib
-CFLAGS += $(LIBPNG_CFLAGS)
-CPPFLAGS += $(LIBPNG_CFLAGS)
+LIBPNG_CFLAGS = -DPNG_USER_CONFIG -Ithird_party/zlib
+ZLIB_CFLAGS = -DNO_GZIP -DNO_GZCOMPRESS -DdeflateParams\(a,b,c\)=Z_OK
+CFLAGS += $(LIBPNG_CFLAGS) $(ZLIB_CFLAGS)
+CPPFLAGS += $(LIBPNG_CFLAGS) $(ZLIB_CFLAGS)
 
 ifdef IS_WIN32_OR_WINCE
 # Breakpad assumes it is in the include path
