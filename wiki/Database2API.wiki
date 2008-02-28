@@ -360,9 +360,11 @@ class Database2Transaction : ModuleImplBaseClassVirtual {
  private:
   static AtomicWord num_transactions_pending_;
 
-  scoped_ptr<JsRootedCallback> start_callback;
-  scoped_ptr<JsRootedCallback> success_callback;
-  scoped_ptr<JsRootedCallback> failure_callback;
+  scoped_ptr<JsRootedCallback> start_callback_;
+  scoped_ptr<JsRootedCallback> success_callback_;
+  scoped_ptr<JsRootedCallback> failure_callback_;
+
+  scoped_refptr<Database2Connection> connection_;
 
   bool is_open_;
   bool is_async_;
