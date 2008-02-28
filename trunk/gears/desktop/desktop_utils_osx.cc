@@ -40,6 +40,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/int_types.h"
+#include "gears/base/common/paths.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
@@ -122,7 +123,7 @@ static bool CreateShellScript(const std::string16 &script_path,
   }
 
   std::string contents("#!/bin/sh\n");
-  contents += "open -a '";
+  contents += "\"`dirname \"$0\"`/launch_url_with_browser\" '";
   contents += reinterpret_cast<const char *>(process_path);
   contents += "' '";
   contents += launch_url_utf8;
@@ -482,6 +483,42 @@ static void ClearQuarantineBit(const std::string16 &file_path) {
   removexattr(file_path_utf8.c_str(), kQuarantineAttrName, XATTR_NOFOLLOW);
 }
 
+static bool CopyLaunchURLHelper(const std::string16 &mac_os_path) {
+  std::string16 resources_dir;
+  if (!GetBaseResourcesDirectory(&resources_dir)) {
+    return false;
+  }
+  
+  static const std::string16 kLaunchURLHelper = 
+      std::string16(STRING16(L"launch_url_with_browser"));
+      
+  std::string16 src = resources_dir + kPathSeparator;
+  src += kLaunchURLHelper;
+  
+  std::string source_utf8;
+  String16ToUTF8(src.c_str(), src.size(), &source_utf8);
+  
+  FSRef source_fsref;
+  if (FSPathMakeRef(reinterpret_cast<const UInt8*>(source_utf8.c_str()), 
+                    &source_fsref, NULL) != noErr) {
+    return false;
+  }
+  
+  std::string dest_dir_utf8;
+  String16ToUTF8(mac_os_path.c_str(), mac_os_path.size(), &dest_dir_utf8);
+  FSRef dest_dir_fsref;
+  if (FSPathMakeRef(reinterpret_cast<const UInt8*>(dest_dir_utf8.c_str()), 
+                    &dest_dir_fsref, NULL) != noErr) {
+    return false;
+  }
+  
+  return (FSCopyObjectSync(&source_fsref,
+                               &dest_dir_fsref,
+                               NULL,
+                               NULL,
+                               kFSFileOperationDefaultOptions) == noErr);
+}
+
 // Implements creation of desktop shortcuts to a web application on mac. On mac,
 // shortcuts aren't used the same way they are on pc, so this does something
 // more appropriate: creates an application package containing a shell script to
@@ -539,6 +576,10 @@ bool DesktopUtils::CreateDesktopShortcut(
     return false;
   }
   if (!CreateIcnsFile(icons_path, shortcut)) {
+    *error = GET_INTERNAL_ERROR_MESSAGE();
+    return false;
+  }
+  if (!CopyLaunchURLHelper(mac_os_path)) {
     *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
