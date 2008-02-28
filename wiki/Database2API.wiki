@@ -130,16 +130,262 @@ function insertPage(text, lastUpdated) {
 There is also a [http://webkit.org/misc/DatabaseExample.html working example] (requires [http://nightly.webkit.org/ WebKit nightly]) on webkit.org
 
 
-=Implementation=
+=Technical Design=
 
-== General Structure ==
+== Class Sketch ==
 
-All transactions are serialized. With the previous Database module, we found that allowing concurrent transactions led to hard to understand bugs and began recommending the `BEGIN IMMEDIATE` statement for most users, which forces serialized transactions. In Database2 this will be enforced.
+{{{
+// Encapsulates a sqlite3 handle so that it can be initialized lazily and
+// refcounted.
+class Database2Connection : RefCounted {
+ public:
+  ~Database2Connection() {
+    // free handle
+  }
 
-There is a single `TransactionQueue` per physical database which executes each queued transaction in order. It also manages a single background thread for executing the asynchronous transactions.
+  bool Init() {
+    // init handle if not already
+  }
 
-The background and foreground threads communicate via message passing using [http://code.google.com/p/google-gears/source/browse/trunk/gears/base/common/message_queue.h ThreadMessageQueue].
+  sqlite3 *handle() const;
 
+ private:
+  sqlite3 *handle_;
+};
+
+
+// Very simple class that allows creation of databases. In the future, this
+// could also expose Remove() and List().
+class Database2Manager : ModuleImplBaseClassVirtual {
+ public:
+  // IN: string name, string version, string displayName, int estimatedSize)
+  // OUT: Database2
+  void OpenDatabase(JsCallContext *cx) {
+  // create a Database2 instance and pass name and version into it
+  // displayName and estimatedSize not used by Gears
+  }
+};
+
+
+// Relatively simple class used to start transactions. This guy also holds a
+// reference to a Database2Connection which is shared with all transactions it
+// creates.
+class Database2 : ModuleImplBaseClassVirtual {
+ public:
+  // IN: function start_callback, function success_callback, function failure_callback)
+  // OUT: void
+  void Transaction(JsCallContext *cx) {
+    Database2Transaction *tx = CreateModule<Database2Transaction>();
+    tx->StartAsync(connection);
+  }
+  
+  // IN: function start_callback
+  // OUT: void
+  void SynchronousTransaction(JsCallContext *cx) {
+    Database2Transaction *tx = CreateModule<Database2Transaction>();
+  
+    if (!tx->StartSync(connection)) {
+      // could be because:
+      // - there was already a transaction open
+      // - opening the transaction failed
+      // - any of the statements failed
+      // - any of the callback threw an exception
+      // - the commit failed
+      // if there isn't already an exception set (cx->is_exception_set()), create
+      // one using the error.
+    }
+  
+    // IN: string old version, string new version, optional function callback,
+    //     optional function success, optional function failure
+    // OUT: void
+    void ChangeVersion(JsCallContext *cx) {
+      // TODO(dimitri)
+    }
+  }
+  
+ private:
+  // Shared reference to the connection used by all transactions from this
+  // database instance. This is initialized during the first transaction.
+  scoped_refptr<DatabaseConnection> connection;
+};
+
+
+
+// Here be the meat. Transaction contains the majority of the code for actually
+// executing a transaction.
+//
+// The general idea for async transactions is that there is a background and
+// foreground thread. The foreground thread is the thread of execution when
+// StartAsync() is called. We handwave and say we will somehow obtain a
+// background thread, but the exact policy is left to some other component
+// (it could be that there is just one thread per origin, or there could be some
+// limit, or it could be a fancier pool where threads are reused).
+//
+// Messages are posted from the foreground thread to the background thread to
+// begin a transaction and for each statement. The background thread receives
+// the message and does any appropriate processing, then posts a message back
+// to the foreground thread to invoke js callbacks. The background thread then
+// blocks and waits for the js callbacks to complete, then handles the results
+// from the callback. It's important to block while waiting for js callbacks
+// because the spec allows for statement failure callbacks to cancel a ROLLBACK
+// and let the next statement proceed (by returning false).
+//
+// We also handwave over the HandlerInterface implementation for
+// ThreadMessageQueue. At current, it looks like there can only be one instance
+// registered per message type across all threads, which is inconvenient for
+// Database2. Worst case, we can just have a singleton helper class which
+// receives messages and immediately delegates to the appropraite tx methods.
+//
+// To support synchronous transactions, we just break the methods that execute
+// on the background thread in async mode into the part that does the work
+// (names end in *Impl()) and the part that sends messages back to the
+// foreground thread.
+//
+// To avoid deadlock between async and sync transactions, we keep a static
+// counter of the number of open transactions, and only allow a sync transaction
+// to be started if it is zero.
+
+class Database2Transaction : ModuleImplBaseClassVirtual {
+ public:
+  bool StartAsync(Database2Connection *connection) {
+    // Increment num_transactions_pending_
+    // Call OpenAsync() on some background thread
+  }
+  
+  bool StartSync(Database2Connection *connection) {
+    // If num_transactions_pending_ > 0, throw
+    // Else call BeginImpl, ExecuteSqlImpl, etc directly.
+  }
+  
+  void OpenAsync() {
+    // ThreadMessageQueue::InitThreadMessageQueue()
+    // OpenImpl()
+    // call OpenCallback on foreground thread
+    // wait for result
+    // if there was an exception: RollbackAsync()
+  }
+  
+  void OpenImpl() {
+    // Initialize connection if not already
+    // execute BEGIN
+    // open question: deferred or immediate transactions?
+    // store any error
+  }
+  
+  void OpenCallback(Database2MessageData *message) {
+    // if there was a sql error, invoke tx->on_failure
+    // otherwise:
+    // - invoke start_callback
+    // - if callback threw: mark closed, save exception message
+  }
+  
+  // IN: string sql, optional object[] arguments, optional function on_success,
+  //     optional function on_failure
+  // OUT: Database2ResultSet
+  void ExecuteSql(JsCallContext *cx) {
+    if (!is_open) {
+      // throw exception saying the transaction is closed
+    }
+  
+    // create Database2Statement with sql, arguments, and callbacks
+    // if async, call ExecuteAsync(stmt) on background thread
+    // otherwise:
+    //   create resultset
+    //   call ExecuteImpl()
+    //   functor will populate resultset directly
+    //   if success, return resultset
+    //   else, throw error
+  }
+  
+  void ExecuteAsync(Database2Statement *stmt) {
+    // call ExecuteImpl()
+    // functor will populate rows property on stmt (if stmt has sucess callback)
+    // add any error to stmt
+    // if the appropriate callback exists, call Executecallback(stmt) on foreground thread
+    // wait for result
+    // if statement succeeded and callback failed: Rollback()
+    // else if statement failed and there is no callback, or callback did not return false: Rollback()
+    
+    // decrement num_statements_pending_;
+    // if no more pending statements: CommitAsync();
+  }
+  
+  void ExecuteImpl(Database2Statement *stmt, Functor handle_row_data) {
+    // bind args
+    // for each row, call handle_row_data
+    // close
+  }
+  
+  void ExecuteCallback(Database2Statement *stmt) {
+    // if success:
+    // - create resultset
+    // - populate rows object with intermediate results from stmt
+    // - invoke stmt->success_callback;
+    // else, call stmt->failure_callback;
+  }
+  
+  void RollbackAsync() {
+    // RollbackImpl()
+    // Call RollbackCallback() on foreground thread
+  }
+  
+  void RollbackImpl() {
+    // execute ROLLBACK
+    // mark tx closed
+    // decrement num_transactions_pending_
+  }
+  
+  void RollbackCallback() {
+    // invoke failure_clalback
+  }
+  
+  void CommitAsync() {
+    // CommitImpl()
+    // If an appropriate callback exists, call CommitCallback() on foreground thread
+  }
+  
+  void CommitImpl() {
+    // execute COMMIT
+    // mark tx closed
+    // decrement num_transactions_pending_
+  }
+  
+  void CommitCallback() {
+    // call appropriate callback
+  }
+
+  int last_sql_error_code() const;
+  std::string16 &last_error_message() const;
+
+ private:
+  static AtomicWord num_transactions_pending_;
+
+  scoped_ptr<JsRootedCallback> start_callback;
+  scoped_ptr<JsRootedCallback> success_callback;
+  scoped_ptr<JsRootedCallback> failure_callback;
+
+  bool is_open_;
+  bool is_async_;
+  Atomicword num_statements_pending_;
+
+  int last_sql_error_code_;
+  std::string16 last_error_message_;
+};
+
+
+class Database2MessageData : MessageData {
+ public:
+  // necessary gunk to wait on this message
+};
+
+
+class Database2Statement : Database2MessageData {
+ public:
+  scoped_ptr<JsRootedCallback> success_callback;
+  scoped_ptr<JsRootedcallback> failure_callback;
+  JsParamToSend *rows;
+};
+}}}
 
 == Nested Transactions ==
 
@@ -160,22 +406,6 @@ Neither transaction will ever complete because they are both waiting on each oth
 Many database implementations have per-connection state that should be shared between all statements executing against the connection. For example, SQLite has the last_insert_rowid() function. Connection state should be shared between all transactions created from the same !GearsDatabase2 object.
 
 
-== Lifecycle/Ownership ==
-
-The diagram below shows the ownership model for Database2:
-
-[http://google-gears.googlecode.com/svn/contrib/aa1/docs/database2_ownership.png]
-
-  # When a Database object is created, it creates and references the !DatabaseConnection object
-  # The first time a transaction is started for a database, a !TransactionQueue is created for that database
-  # When a transaction is started, two objects are created: A JS-facing object that represents the transaction and is subject to GC, and an internal object which is where the real work happens. We separate the two so that we can reuse the concept of ref-counting for a transaction's lifetime without the JS engine's GC keeping transactions open arbitrarily long.
-  # Each transaction that is created holds a reference to its !TransactionQueue.
-  # Each statement that is added to a transaction holds a reference to its transaction.
-  # Once a statement is processed, it is deleted and drops its reference.
-  # Once all statements for a transaction have been processed, the transaction commits itself, deletes itself, and drops its reference to its !TransactionQueue.
-  # Once all transactions are completed, the !TransactionQueue itself is deleted.
-
-
 == Versioning ==
 
 Version information will be stored in a special table, access or changes to are prohibited by the API. !WebKit uses `__WebKitDatabaseInfoTable__`. Perhaps name it along the same lines, like `__HTML5DatabaseInfoTable__`.
@@ -188,36 +418,3 @@ To keep up with the version changes across multiple browser windows or workers, 
 The latter approach is what !WebKit team chose, but it may not be possible to implement across all browsers.
 
 _TODO(dglazkov):_ I don't believe we can ensure that in IE? need to research/confirm.
-
-=Discussion=
-
-It would be great to provide complementary [http://code.google.com/p/google-gears/issues/detail?id=76 removeDatabase], and [http://code.google.com/p/google-gears/issues/detail?id=49 listDatabases] methods. The proposed module interface would be as follows:
-
-{{{
-interface DatabaseManager {
-  Database openDatabase(in DOMString name, in DOMString version, 
-    in DOMString displayName, in unsigned long estimatedSize);
-  void removeDatabase(in DOMString name);
-  String[] listDatabases();
-}
-}}}
-
-The synchronous transaction is more susceptible to deadlocks:
-
-{{{
-db.synchronousTransaction(function(tx) {
-  var rs = tx.executeSql('SELECT * FROM Pages', []);
-    db.synchronousTransaction(function(tx) {
-      // deadlock!
-    });
-    // ..
-})  
-}}}
-
-A similar problem would also occur if a synchronous transaction is started in either asynchronous transaction or statement callbacks.
-
-As possible solutions, we can count transaction nesting level and:
- * deny the ability to create nested transactions. This would be a runtime exception, which in turn would cause the outer transaction to rollback.
- * fake joining transaction (nesting transactions, [http://www.sqlite.org/lang_transaction.html not supported] by SQLite). This would result in a misleading behavior (i.e. throwing an exception inside of the nested callback won't roll back just the nested transaction) and probably isn't a good option. 
-
-Low priority: Let's also see if we can support the event handler object syntax (an object with `handleEvent` method as a callback argument, rather than a function).
