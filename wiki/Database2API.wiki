@@ -194,13 +194,13 @@ class Database2 : ModuleImplBaseClassVirtual {
       // if there isn't already an exception set (cx->is_exception_set()), create
       // one using the error.
     }
+  }
   
-    // IN: string old version, string new version, optional function callback,
-    //     optional function success, optional function failure
-    // OUT: void
-    void ChangeVersion(JsCallContext *cx) {
-      // TODO(dimitri)
-    }
+  // IN: string old version, string new version, optional function callback,
+  //     optional function success, optional function failure
+  // OUT: void
+  void ChangeVersion(JsCallContext *cx) {
+    // TODO(dimitri)
   }
   
  private:
