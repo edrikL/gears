@@ -172,4 +172,8 @@ class CurrentThreadID {
 #define ASSERT_SINGLE_THREAD()
 #endif
 
+#ifdef DEBUG
+std::string16 GetLastErrorString();
+#endif
+
 #endif  // GEARS_BASE_COMMON_COMMON_IE_H__

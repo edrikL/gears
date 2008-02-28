@@ -26,12 +26,16 @@
 #include <assert.h>
 #include <math.h>
 #include <set>
+#include <vector>
 
 #include "gears/localserver/common/update_task.h"
 
 #include "gears/base/common/file.h"
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/common/string_utils.h"
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"  // For BrowserCache
+#endif
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/manifest.h"
 
@@ -87,11 +91,11 @@ bool UpdateTask::Init(ManagedResourceStore *store) {
 void UpdateTask::Run() {
   const char *kLogVersionSwapping =
       "UpdateTask - swapping new version in\n";
-  const char *kLogVersionSwappingFailed = 
+  const char *kLogVersionSwappingFailed =
       "UpdateTask - SetDownloadingVersionAsCurrent failed\n";
-  const char *kLogManifestChanged_Retrying = 
+  const char *kLogManifestChanged_Retrying =
       "UpdateTask - manifest changed during update, retrying\n";
-  const char *kLogManifestChanged_Failing = 
+  const char *kLogManifestChanged_Failing =
       "UpdateTask - manifest changed twice during update, failing\n";
 
   LOG(("UpdateTask - starting\n"));
@@ -127,10 +131,25 @@ void UpdateTask::Run() {
           if (downloading_version == completed_version) {
             // Manifest has not changed
             LOG((kLogVersionSwapping));
+#ifdef WINCE
+            // Before we swap in the new version, get the list of URLs for the
+            // old version.
+            std::vector<std::string16> old_urls;
+            store_.GetCurrentVersionUrls(&old_urls);
+#endif
             if (!store_.SetDownloadingVersionAsCurrent()) {
               LOG((kLogVersionSwappingFailed));
               success = false;
             }
+#ifdef WINCE
+            // If the version swap succeeded, remove browser cache entries for
+            // the previous version.
+            if (success) {
+              for (int i = 0; i < static_cast<int>(old_urls.size()); ++i) {
+                BrowserCache::RemoveBogusEntry(old_urls[i].c_str());
+              }
+            }
+#endif
             break;
           } else {
             // Manifest changed
@@ -146,7 +165,9 @@ void UpdateTask::Run() {
           }
         }
       }
-
+#ifdef WINCE
+      store_.InsertBogusBrowserCacheEntries();
+#endif
       if (success) {
         store_.SetUpdateInfo(WebCacheDB::UPDATE_OK,
                              GetCurrentTimeMillis(),
@@ -332,7 +353,7 @@ bool UpdateTask::UpdateManifest(std::string16 *downloading_version) {
     int64 current_version_id = WebCacheDB::kInvalidID;
     int64 downloading_version_id = WebCacheDB::kInvalidID;
     for (int i = 0; i < static_cast<int>(versions.size()); i++) {
-      switch(versions[i].ready_state) {
+      switch (versions[i].ready_state) {
         case WebCacheDB::VERSION_CURRENT:
           assert(!current_version_str);
           current_version_str = &(versions[i].version_string);
