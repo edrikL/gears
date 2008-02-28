@@ -280,7 +280,7 @@ ifeq ($(OS),osx)
 launchurlhelper:: $(FF_OUTDIR)/genfiles/$(LAUNCHURL) 
 
 $(FF_OUTDIR)/genfiles/$(LAUNCHURL):: $(FF_OUTDIR)/genfiles $(LAUNCHURLHELPER_CPPSRC)
-	 g++ $(COMMON_COMPILE_FLAGS) $(CPPFLAGS) -x c++ -arch ppc -arch i386 -framework CoreFoundation -framework ApplicationServices -lstdc++ $(LAUNCHURLHELPER_CPPSRC) -o $(FF_OUTDIR)/genfiles/$(LAUNCHURL)
+	 g++ $(COMMON_COMPILE_FLAGS) $(CPPFLAGS) -x c++ -mmacosx-version-min=10.2 -arch ppc -arch i386 -framework CoreFoundation -framework ApplicationServices -lstdc++ $(LAUNCHURLHELPER_CPPSRC) -o $(FF_OUTDIR)/genfiles/$(LAUNCHURL)
 endif
 
 endif
