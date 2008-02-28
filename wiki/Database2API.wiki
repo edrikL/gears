@@ -154,8 +154,8 @@ class Database2Connection : RefCounted {
 };
 
 
-// Very simple class that allows creation of databases. In the future, this
-// could also expose Remove() and List().
+// Allows JavaScript to create database objects. Could be extended
+/ in the future with removeDatabase() and listDatabases().
 class Database2Manager : ModuleImplBaseClassVirtual {
  public:
   // IN: string name, string version, string displayName, int estimatedSize)
@@ -167,9 +167,11 @@ class Database2Manager : ModuleImplBaseClassVirtual {
 };
 
 
-// Relatively simple class used to start transactions. This guy also holds a
-// reference to a Database2Connection which is shared with all transactions it
-// creates.
+// Implements the HTML5 database interface, which allows the creation
+// of transactions. We also have our own proprietary
+// synchronousTransaction() method. This class also has a reference
+// to a DatabaseConnection object which it shares with all transactions
+// it creates.
 class Database2 : ModuleImplBaseClassVirtual {
  public:
   // IN: function start_callback, function success_callback, function failure_callback)
@@ -211,8 +213,8 @@ class Database2 : ModuleImplBaseClassVirtual {
 
 
 
-// Here be the meat. Transaction contains the majority of the code for actually
-// executing a transaction.
+// Here be the meat. Transaction implements the HTML5 SQLTransaction
+// interface and contains the code to actually execute a transaction.
 //
 // The general idea for async transactions is that there is a background and
 // foreground thread. The foreground thread is the thread of execution when
@@ -377,12 +379,16 @@ class Database2Transaction : ModuleImplBaseClassVirtual {
 };
 
 
+// Base class used for messages passed between threads in
+// Transaction.
 class Database2MessageData : MessageData {
  public:
   // necessary gunk to wait on this message
 };
 
 
+// Represents a statement queued for execution by a call to
+// executeSql().
 class Database2Statement : Database2MessageData {
  public:
   std::string16 sql;
