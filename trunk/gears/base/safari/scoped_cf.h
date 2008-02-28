@@ -30,6 +30,7 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <Carbon/Carbon.h>
 #define kInvalidID 0
 #include <CoreServices/CoreServices.h>
 #undef kInvalidID
