@@ -352,7 +352,6 @@ bool TestIpcMessageQueue() {
 { \
   if (!(b)) { \
     LOG(("TestIpcMessageQueue - failed (%d)\n", __LINE__)); \
-    ::MessageBoxW(NULL, IntegerToString16(__LINE__).c_str(), NULL, MB_OK); \
     g_master_handler.SetSaveMessages(false); \
     g_master_handler.ClearSavedMessages(); \
     if (ipc_message_queue) \
@@ -375,7 +374,7 @@ bool TestIpcMessageQueue() {
   ipc_message_queue->SendToAll(kIpcQueue_TestMessage,
                                new IpcTestMessage(kQuit),
                                false);
-  WaitForRegisteredProcesses(1, 2000);
+  TEST_ASSERT(WaitForRegisteredProcesses(1, 2000));
 
   g_master_handler.SetSaveMessages(true);
   g_master_handler.ClearSavedMessages();

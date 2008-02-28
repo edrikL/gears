@@ -23,7 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/localserver/ie/http_handler_ie.h"
 
 // On WinCE, windows.h must be included before set to allow us to use the max
 // and min macros. This is because set indirectly includes atlcecert.h, which
@@ -35,6 +34,7 @@
 #include <vector>
 #include <wininet.h>
 
+#include "gears/localserver/ie/http_handler_ie.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string_utils.h"
 #ifdef WINCE
