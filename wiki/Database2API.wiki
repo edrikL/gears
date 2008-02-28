@@ -384,6 +384,8 @@ class Database2MessageData : MessageData {
 
 class Database2Statement : Database2MessageData {
  public:
+  std::string16 sql;
+  JsParamToSend *args;
   scoped_ptr<JsRootedCallback> success_callback;
   scoped_ptr<JsRootedcallback> failure_callback;
   JsParamToSend *rows;
