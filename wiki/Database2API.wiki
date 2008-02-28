@@ -270,6 +270,7 @@ class Database2Transaction : ModuleImplBaseClassVirtual {
     // Initialize connection if not already
     // execute BEGIN
     // open question: deferred or immediate transactions?
+    //  note: deferred synchronous transactions lead to deadlock without further precautions :(
     // store any error
   }
   
