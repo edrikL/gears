@@ -236,10 +236,11 @@ class Database2 : ModuleImplBaseClassVirtual {
 // Database2. Worst case, we can just have a singleton helper class which
 // receives messages and immediately delegates to the appropraite tx methods.
 //
-// To support synchronous transactions, we just break the methods that execute
-// on the background thread in async mode into the part that does the work
-// (names end in *Impl()) and the part that sends messages back to the
-// foreground thread.
+// To support synchronous transactions, we break the methods that execute on
+// the background thread in async mode into the part that does the work (names
+// end in *Impl()) and the part that sends messages back to the foreground thread.
+// Then we can just call the *Impl() methods directly from
+// SynchronousTransaction().
 //
 // To avoid deadlock between async and sync transactions, we keep a static
 // counter of the number of open transactions, and only allow a sync transaction
