@@ -198,6 +198,9 @@ IEMOBILE_INSTALLER_CAB = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).cab
 INFSRC_BASE_NAME = wince_cab
 INFSRC = $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).inf
 
+# Launch URL binary for OS X.
+LAUNCHURL = launch_url_with_browser
+
 # BUILD TARGETS
 
 default::
@@ -251,6 +254,8 @@ else
 	$(MAKE) genheaders BROWSER=FF ARCH=ppc
 	$(MAKE) modules    BROWSER=FF ARCH=i386
 	$(MAKE) modules    BROWSER=FF ARCH=ppc
+        # launchurlhelper builds for both i386 & ppc.
+	$(MAKE) launchurlhelper  BROWSER=FF
 	$(MAKE) installer  BROWSER=FF
   endif
   endif
@@ -270,6 +275,14 @@ prereqs:: $(FF_OUTDIR)/genfiles $(FF_OUTDIRS_I18N) $(COMMON_M4FILES) $(COMMON_M4
 genheaders:: $(FF_GEN_HEADERS)
 modules:: $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB)
 installer:: $(FF_INSTALLER_XPI)
+
+ifeq ($(OS),osx)
+launchurlhelper:: $(FF_OUTDIR)/genfiles/$(LAUNCHURL) 
+
+$(FF_OUTDIR)/genfiles/$(LAUNCHURL):: $(FF_OUTDIR)/genfiles $(LAUNCHURLHELPER_CPPSRC)
+	 g++ $(COMMON_COMPILE_FLAGS) $(CPPFLAGS) -x c++ -arch ppc -arch i386 -framework CoreFoundation -framework ApplicationServices -lstdc++ $(LAUNCHURLHELPER_CPPSRC) -o $(FF_OUTDIR)/genfiles/$(LAUNCHURL)
+endif
+
 endif
 
 ifeq ($(BROWSER),IE)
@@ -475,17 +488,18 @@ $(FF_INSTALLER_XPI): $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB) $(COMMON_RESOURCES) $
 	rm -rf $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
+	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib
 	cp base/firefox/static_files/components/bootstrap.js $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 	cp base/firefox/static_files/lib/updater.js $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib
 	cp $(FF_OUTDIR)/genfiles/install.rdf $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/install.rdf
 	cp $(FF_OUTDIR)/genfiles/chrome.manifest $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome.manifest
 ifneq ($(OS),win32)
-	# Inspector is not located in extension directory on win32
-	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/inspector
-	cp -R inspector/* $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/inspector
-	cp sdk/gears_init.js $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/inspector/common
-	cp sdk/samples/sample.js $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/inspector/common
+  # TODO(playmobil): Inspector should be located in extensions dir on win32.
+	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/inspector
+	cp -R inspector/* $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/inspector
+	cp sdk/gears_init.js $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/inspector/common
+	cp sdk/samples/sample.js $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/inspector/common
 endif
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
@@ -502,6 +516,7 @@ ifdef IS_WIN32_OR_WINCE
 endif
 endif
 else
+	cp $(FF_OUTDIR)/genfiles/$(LAUNCHURL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources
     # For OSX, create a universal binary by combining the ppc and i386 versions
 	/usr/bin/lipo -output $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(notdir $(FF_MODULE_DLL)) -create \
 		$(OUTDIR)/$(OS)-i386/ff/$(notdir $(FF_MODULE_DLL)) \

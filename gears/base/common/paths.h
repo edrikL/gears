@@ -76,6 +76,14 @@ void AppendDataName(const char16 *name, const char16 *module_suffix,
 // Returns true if the function succeeds.  'path' is unmodified on failure.
 bool GetBaseComponentsDirectory(std::string16 *path);
 
+#if BROWSER_FF && OS_MACOSX
+// Determines the base directory for Gears resource files
+// and returns the full path in 'path'.  There is no trailing path separator.
+//
+// Returns true if the function succeeds.  'path' is unmodified on failure.
+bool GetBaseResourcesDirectory(std::string16 *path);
+#endif
+
 // [NOTE: Prefer GetDataDirectory() over this function.]
 // Determines the base directory for all Gears user data for the current user,
 // and returns the full path in 'path'.  There is no trailing path separator.

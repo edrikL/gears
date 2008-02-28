@@ -162,7 +162,8 @@ THIRD_PARTY_CFLAGS = -Wno-main
 
 COMPILE_FLAGS_dbg = -g -O0
 COMPILE_FLAGS_opt = -O2
-COMPILE_FLAGS = -c -o $@ -fPIC -fmessage-length=0 -Wall -Werror $(COMPILE_FLAGS_$(MODE)) -isysroot $(OSX_SDK_ROOT)
+COMMON_COMPILE_FLAGS = -fmessage-length=0 -Wall -Werror $(COMPILE_FLAGS_$(MODE)) -isysroot $(OSX_SDK_ROOT)
+COMPILE_FLAGS = -c -o $@ -fPIC $(COMMON_COMPILE_FLAGS)
 # NS_LITERAL_STRING does not work properly without this compiler option
 COMPILE_FLAGS += -fshort-wchar
 

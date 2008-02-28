@@ -1468,6 +1468,10 @@ NPAPI_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# launchurl/os x
+LAUNCHURLHELPER_CPPSRC = base/safari/launch_url_in_browser.cc
+
+#-----------------------------------------------------------------------------
 # installer/iemobile
 
 IEMOBILE_VPATH	+= \

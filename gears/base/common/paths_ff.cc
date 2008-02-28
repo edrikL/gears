@@ -73,10 +73,10 @@ bool GetBaseComponentsDirectory(std::string16 *path) {
 const char16 kPathSeparator = L'/';
 // The text between the slashes must match the Gears <em:id> tag in
 // install.rdf.m4.
-static const char16 *kComponentsSubdir =
-    STRING16(L"extensions/{000a9d1c-beef-4f90-9363-039d445309b8}/components");
+static const char16 *kGearsDir =
+    STRING16(L"extensions/{000a9d1c-beef-4f90-9363-039d445309b8}");
 
-bool GetBaseComponentsDirectory(std::string16 *path) {
+static bool GetBaseGearsDirectory(std::string16 *path) {
   // Get the "regular" profile directory (not the "local").
   nsresult nr;
   nsCOMPtr<nsIFile> profile_path;
@@ -93,11 +93,39 @@ bool GetBaseComponentsDirectory(std::string16 *path) {
 
   (*path) = ns_path.get();
   (*path) += kPathSeparator;
-  (*path) += kComponentsSubdir;
+  (*path) += kGearsDir;
+  
+  return true;
+}
+
+bool GetBaseComponentsDirectory(std::string16 *path) {
+  std::string16 tmp_path;
+  
+  if (!GetBaseGearsDirectory(&tmp_path)) {
+    return false;
+  }
+  
+  (*path) = tmp_path + kPathSeparator;
+  (*path) += STRING16(L"components");
 
   return true;
 }
 
+#endif
+
+#ifdef OS_MACOSX
+bool GetBaseResourcesDirectory(std::string16 *path) {
+  std::string16 tmp_path;
+  
+  if (!GetBaseGearsDirectory(&tmp_path)) {
+    return false;
+  }
+  
+  (*path) = tmp_path + kPathSeparator;
+  (*path) += STRING16(L"resources");
+
+  return true;
+}
 #endif
 
 // Append "for Firefox" to be consistent with IE naming scheme.
