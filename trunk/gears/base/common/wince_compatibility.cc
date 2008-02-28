@@ -32,11 +32,15 @@
 #include "gears/base/common/wince_compatibility.h"
 
 #include <shellapi.h>
+#include <wininet.h>  // For CreateUrlCacheEntry etc.
 
 #include "gears/base/common/common.h"
+#include "gears/base/common/file.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/localserver/common/http_constants.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 HANDLE CMutexWince::global_mutex_ = NULL;
 CriticalSection CMutexWince::lock_;
@@ -47,6 +51,17 @@ const char16* kGlobalMutexName =
 static void SkipTokens(const std::string16 &path,
                        int &pos,
                        bool skip_separators);
+
+// Used by BrowserCache methods.
+static void IncrementFiletime(FILETIME *file_time,
+                              const int64 &hundreds_of_nanoseconds);
+static bool IsFiletimeGreater(const FILETIME &left_hand,
+                              const FILETIME &right_hand);
+// Returns a pointer to a newly allocated INTERNET_CACHE_ENTRY_INFO structure,
+// or NULL on failure.
+static INTERNET_CACHE_ENTRY_INFO* GetEntryInfo(const char16 *url);
+// Determines if a cache entry is a bogus Gears entry.
+static bool IsEntryBogus(INTERNET_CACHE_ENTRY_INFO *info);
 
 // GetSystemTimeAsFileTime does not exist on Windows Mobile,
 // so we implement it here by getting the system time and
@@ -261,6 +276,153 @@ void ThrowGlobalError(JsRunnerInterface *js_runner,
   }
 }
 
+// BrowserCache
+
+// A cache entry inserted with NORMAL_CACHE_ENTRY is used whenever the
+// LocalServer can not serve the resource it represents, even if the device is
+// online and the resource is available. This means that we have stale
+// empty cache entries still present for resources that are no longer in the
+// LocalServer, they will be served in preference to the real resource when
+// online.
+//
+// A cache entry inserted with EDITED_CACHE_ENTRY does not suffer from this
+// problem. The presence of the cache entry prevents the device from showing
+// the 'Cannot connect' popup when the resource is served by the LocalServer,
+// but when LocalServer can not serve the resource, the cache entry is not
+// used. This means that stale cache entries for resources no longer in the
+// LocalServer do not cause a problem.
+static const DWORD kGearsBogusEntryType = EDITED_CACHE_ENTRY;
+static const char16 *kGearsBogusEntryHeader = L"GearsBogusEntry: 1\r\n";
+static const char16 *kGearsBogusEntryFileExtension = L"nul";
+
+// static
+bool BrowserCache::EnsureBogusEntry(const char16 *url) {
+  // Prepare the expire time. This is used in multiple cases below.
+  const __int64 kHundredsOfNanosecondsPerYear = 315360000000000;
+  FILETIME current_time;
+  GetSystemTimeAsFileTime(&current_time);
+  FILETIME expire_time = current_time;
+  IncrementFiletime(&expire_time, kHundredsOfNanosecondsPerYear);
+#ifdef DEBUG
+  SYSTEMTIME check_time;
+  FileTimeToSystemTime(&expire_time, &check_time);
+  LOG16((L"BrowserCache: Using cache expire time: %d/%d/%d\n",
+         check_time.wMonth, check_time.wDay, check_time.wYear));
+#endif
+  // This will only fail if there's no cache entry.
+  scoped_array<INTERNET_CACHE_ENTRY_INFO> info(GetEntryInfo(url));
+  if (info.get()) {
+    // If the existing entry is a bogus Gears entry, we update the expire time.
+    // Note that a bogus cache entry should always have an expire time set, but
+    // it's possible that the entry was modified by another application.
+    if (IsEntryBogus(info.get())) {
+      INTERNET_CACHE_ENTRY_INFO new_info;
+      new_info.ExpireTime = expire_time;
+      if (SetUrlCacheEntryInfo(url, &new_info, CACHE_ENTRY_EXPTIME_FC) ==
+          FALSE) {
+        LOG16((L"Failed to update bogus cache entry for %s : %s.\n",
+               url,
+               GetLastErrorString().c_str()));
+        return false;
+      }
+      LOG16((L"BrowserCache: Updated bogus cache entry for %s.\n", url));
+      return true;
+    }
+    // If the cache entry is not a bogus Gears entry, the expire time may not be
+    // valid. Such a cache entry will not prevent the 'Cannot Connect' popup
+    // when using LocalServer. In this case, rather than extend the validity of
+    // such an entry, we create a new bogus entry. Otherwise, we leave existing
+    // non-bogus entries untouched.
+    if (IsFiletimeGreater(info.get()->ExpireTime, current_time)) {
+      LOG16((L"BrowserCache: Non-bogus cache entry with valid expire time "
+             L"already exists for %s.\n", url));
+      return true;
+    }
+    LOG16((L"BrowserCache: Non-bogus cache entry exists but has invalid expire "
+           L"time for %s.\n", url));
+  }
+  // If there's no entry, or a non-bogus entry without an expire time, we
+  // create a new entry. First we get the local file name that will be used to
+  // store this cache entry.
+  char16 local_file[MAX_PATH + 1];
+  if (FALSE == CreateUrlCacheEntry(
+                   url,             // URL
+                   0,               // Expected file size (0 for unknown)
+                   kGearsBogusEntryFileExtension,  // Local file name extension
+                   local_file,      // File name
+                   0)) {            // Reserved
+    LOG16((L"Failed to create bogus cache entry for %s : %s\n",
+           url,
+           GetLastErrorString().c_str()));
+    return false;
+  }
+  // This header value is required for the cache entry to be used correctly. See
+  // http://msdn2.microsoft.com/en-us/library/aa383943(VS.85).aspx.
+  std::string16 cache_header = L"HTTP/1.0 200 OK\r\n";
+  cache_header += kGearsBogusEntryHeader;
+  cache_header += HttpConstants::kCrLf;
+  FILETIME zero = {0};
+  // Add the entry to the cache.
+  // TODO(steveblock): Investigate why this occasionally fails.
+  if (CommitUrlCacheEntry(
+         url,                            // URL
+         local_file,                     // Local file
+         expire_time,                    // Expire time (zero for unknown)
+         zero,                           // Last modified time (zero OK)
+         kGearsBogusEntryType,           // Cache entry type
+         const_cast<char16*>(cache_header.c_str()),  // Header
+         cache_header.size(),            // Header size
+         kGearsBogusEntryFileExtension,  // Local file name extension
+         0) == FALSE) {                  // Reserved
+    LOG16((L"Failed to insert bogus cache entry for %s : %s\n",
+           url,
+           GetLastErrorString().c_str()));
+    return false;
+  }
+  LOG16((L"BrowserCache: Inserted bogus cache entry for %s.\n", url));
+  return true;
+}
+
+// static
+bool BrowserCache::RemoveBogusEntry(const char16 *url) {
+  scoped_array<INTERNET_CACHE_ENTRY_INFO> info(GetEntryInfo(url));
+  if (info.get()) {
+    if (IsEntryBogus(info.get())) {
+      // This entry is bogus, so we can remove it.
+      std::string16 file_name = info.get()->lpszLocalFileName;
+      // It seems that for files which we have created ourselves, the local file
+      // name is reported incorrectly. A file name \Windows\path\filename.nul
+      // gets corrupted to \Windows\path\\Windows\path\filename.nul.
+      // TODO(steveblock): Add a unit test to confirm that this work-around is
+      // always successful and investigate whether the behaviour is the same on
+      // all versions of Windows Mobile.
+      const char16 *corrected_file_name = file_name.c_str();
+      unsigned pos = file_name.find(L"\\\\");
+      if (std::string16::npos != pos) {
+        corrected_file_name += pos + 1;
+      }
+      bool success = true;
+      if (!File::Delete(corrected_file_name)) {
+        LOG16((L"BrowserCache: Failed to delete local file %s for %s.\n",
+               corrected_file_name,
+               url));
+        success = false;
+      }
+      // Remove the cache entry.
+      if (DeleteUrlCacheEntry(url) == FALSE) {
+        LOG16((L"BrowserCache: Failed to remove cache entry for : %s\n",
+               url,
+               GetLastErrorString().c_str()));
+        success = false;
+      }
+      LOG16((L"BrowserCache: Removed bogus cache entry for %s.\n", url));
+      return success;
+    }
+  }
+  LOG16((L"BrowserCache: No bogus cache entry for %s, not removing.\n", url));
+  return true;
+}
+
 // Internal
 
 static bool IsSeparator(const char16 token) {
@@ -276,6 +438,66 @@ static void SkipTokens(const std::string16 &path,
         (IsSeparator(path[pos]) == skip_separators)) {
     pos++;
   }
+}
+
+static void IncrementFiletime(FILETIME *file_time,
+                              const int64 &hundreds_of_nanoseconds) {
+  int64 file_time_integer = static_cast<int64>(file_time->dwHighDateTime) << 32;
+  file_time_integer += file_time->dwLowDateTime;
+  file_time_integer += hundreds_of_nanoseconds;
+  file_time->dwLowDateTime  = static_cast<DWORD>(file_time_integer);
+  file_time->dwHighDateTime = static_cast<DWORD>(file_time_integer >> 32);
+}
+
+static bool IsFiletimeGreater(const FILETIME &left_hand,
+                              const FILETIME &right_hand) {
+  if (left_hand.dwHighDateTime > right_hand.dwHighDateTime) {
+    return true;
+  } else if (left_hand.dwHighDateTime == right_hand.dwHighDateTime) {
+    return left_hand.dwLowDateTime > right_hand.dwLowDateTime;
+  } else {
+    return false;
+  }
+}
+
+static INTERNET_CACHE_ENTRY_INFO* GetEntryInfo(const char16 *url) {
+  DWORD info_size = 0;
+  // This call should always fail because we pass NULL for the pointer to the
+  // info structure. If the URL is present in the cache, GetLastError() will
+  // return ERROR_INSUFFICIENT_BUFFER, whereas if the URL is not present,
+  // GetLastError() will return ERROR_FILE_NOT_FOUND.
+  BOOL ret = GetUrlCacheEntryInfo(url, NULL, &info_size);
+  assert(FALSE == ret);
+  if (GetLastError() == ERROR_FILE_NOT_FOUND) {
+    return NULL;
+  }
+  INTERNET_CACHE_ENTRY_INFO *info =
+      reinterpret_cast<INTERNET_CACHE_ENTRY_INFO*>(new char16[info_size]);
+  info->dwStructSize = info_size;
+  // This may fail if the cache entry has been deleted since we called
+  // GetUrlCacheEntryInfo above.
+  if (GetUrlCacheEntryInfo(url, info, &info_size) == FALSE) {
+    delete[] info;
+    return NULL;
+  }
+  return info;
+}
+
+static bool IsEntryBogus(INTERNET_CACHE_ENTRY_INFO *info) {
+  assert(info);
+  int64 size = static_cast<int64>(info->dwSizeHigh) << 32;
+  size += static_cast<int64>(info->dwSizeLow);
+  std::string16 header_info = info->lpHeaderInfo;
+
+  // We test for ...
+  // - size == 0
+  // - CacheEntryType includes the correct flag
+  // - lpHeaderInfo constains special Gears bogus entry string
+  // - lpszFileExtension is the Gears bogus entry file extension
+  return 0 == size &&
+         info->CacheEntryType & kGearsBogusEntryType &&
+         header_info.find(kGearsBogusEntryHeader) != -1 &&
+         wcscmp(info->lpszFileExtension, kGearsBogusEntryFileExtension) == 0;
 }
 
 #endif  // WINCE

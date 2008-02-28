@@ -495,6 +495,7 @@ IEMOBILE_CPPSRCS	+= \
 		base_class.cc \
 		bho.cc \
 		circular_buffer_test.cc \
+		common_ie.cc \
 		detect_version_collision.cc \
 		file.cc \
 		file_test.cc \

@@ -39,6 +39,9 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/common/url_utils.h"
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"  // For BrowserCache
+#endif
 #include "gears/localserver/common/blob_store.h"
 #ifdef USE_FILE_STORE
 #include "gears/localserver/common/file_store.h"
@@ -1276,6 +1279,14 @@ bool WebCacheDB::DeleteServer(int64 id) {
   response_bodies_store_->DeleteDirectoryForServer(id);
 #endif
 
+#ifdef WINCE
+  std::vector<EntryInfo> entries;
+  VersionInfo version;
+  if (FindVersion(id, VERSION_CURRENT, &version)) {
+    FindEntries(version.id, &entries);
+  }
+#endif
+
   // Delete all versions, entries, no longer referenced payloads
   // related to this server
 
@@ -1302,7 +1313,15 @@ bool WebCacheDB::DeleteServer(int64 id) {
     return false;
   }
 
-  return transaction.Commit();
+  bool committed = transaction.Commit();
+#ifdef WINCE
+  if (committed) {
+    for (int i = 0; i < static_cast<int>(entries.size()); ++i) {
+      BrowserCache::RemoveBogusEntry(entries[i].url.c_str());
+    }
+  }
+#endif
+  return committed;
 }
 
 
@@ -1801,6 +1820,59 @@ bool WebCacheDB::FindEntry(int64 version_id,
   return true;
 }
 
+//------------------------------------------------------------------------------
+// FindEntries
+//------------------------------------------------------------------------------
+bool WebCacheDB::FindEntries(int64 version_id,
+                             std::vector<EntryInfo> *entries) {
+  ASSERT_SINGLE_THREAD();
+  std::vector<int64> version_ids;
+  version_ids.push_back(version_id);
+  return FindEntries(&version_ids, entries);
+}
+
+//------------------------------------------------------------------------------
+// FindEntries
+//------------------------------------------------------------------------------
+bool WebCacheDB::FindEntries(std::vector<int64> *version_ids,
+                             std::vector<EntryInfo> *entries) {
+  ASSERT_SINGLE_THREAD();
+  assert(version_ids);
+  assert(entries);
+  assert(entries->empty());
+  if (version_ids->size() == 0) {
+    return true;
+  }
+
+  std::string16 sql(STRING16(L"SELECT * FROM Entries WHERE VersionId IN ("));
+  for (unsigned int i = 0; i < version_ids->size(); ++i) {
+    if (i == version_ids->size() - 1)
+      sql += STRING16(L"?");
+    else
+      sql += STRING16(L"?, ");
+  }
+  sql += STRING16(L")");
+
+  SQLStatement stmt;
+  int rv = stmt.prepare16(&db_, sql.c_str());
+  if (rv != SQLITE_OK) {
+    LOG(("WebCacheDB.FindEntries failed\n"));
+    return false;
+  }
+  for (unsigned int i = 0; i < version_ids->size(); ++i) {
+    rv |= stmt.bind_int64(i, (*version_ids)[i]);
+  }
+  if (rv != SQLITE_OK) {
+    return false;
+  }
+
+  while (stmt.step() == SQLITE_ROW) {
+    entries->push_back(EntryInfo());
+    ReadEntryInfo(stmt, &entries->back());
+  }
+
+  return true;
+}
 
 //------------------------------------------------------------------------------
 // FindEntriesHavingNoResponse
