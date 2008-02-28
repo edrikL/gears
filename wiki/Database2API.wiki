@@ -275,7 +275,7 @@ class Database2Transaction : ModuleImplBaseClassVirtual {
   }
   
   void OpenCallback(Database2MessageData *message) {
-    // if there was a sql error, invoke tx->on_failure
+    // if there was a sql error, invoke failure_callback
     // otherwise:
     // - invoke start_callback
     // - if callback threw: mark closed, save exception message
