@@ -155,7 +155,7 @@ class Database2Connection : RefCounted {
 
 
 // Allows JavaScript to create database objects. Could be extended
-/ in the future with removeDatabase() and listDatabases().
+// in the future with removeDatabase() and listDatabases().
 class Database2Manager : ModuleImplBaseClassVirtual {
  public:
   // IN: string name, string version, string displayName, int estimatedSize)
