@@ -80,6 +80,7 @@ static void ConvertRGBtoRGBA(const unsigned char* rgb, int pixel_width,
   }
 }
 
+#if defined(PNG_WRITE_SUPPORTED)
 static void ConvertBGRAtoRGB(const unsigned char* bgra, int pixel_width,
                              unsigned char* rgb) {
   for (int x = 0; x < pixel_width; x++) {
@@ -90,6 +91,7 @@ static void ConvertBGRAtoRGB(const unsigned char* bgra, int pixel_width,
     pixel_out[2] = pixel_in[0];
   }
 }
+#endif
 
 static void ConvertRGBtoBGRA(const unsigned char* rgb, int pixel_width,
                              unsigned char* bgra) {
