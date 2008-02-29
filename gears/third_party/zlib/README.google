@@ -7,4 +7,5 @@ Description:
 General purpose compression library
 
 Local Modifications:
-None
+A few minor changes, all marked with "Google":
+- Added #ifdefs to avoid compile warnings when NO_GZCOMPRESS is defined.

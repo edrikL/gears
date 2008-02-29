@@ -48,11 +48,12 @@
 #define PNG_NO_EASY_ACCESS
 #define PNG_NO_WARN_UNINITIALIZED_ROW
 #define PNG_NO_WARNINGS
-#define png_warning(s1,s2) ""
-#define png_chunk_warning(s1,s2) ""
+#define png_warning(s1,s2) (void)""
+#define png_chunk_warning(s1,s2) (void)""
 #define PNG_NO_ERROR_TEXT
 #define png_error(s1,s2) png_err(s1)
 #define png_chunk_error(s1,s2) png_err(s1)
+#define deflateParams(a,b,c) Z_OK
 
 
 //
