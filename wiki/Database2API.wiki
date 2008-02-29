@@ -208,7 +208,7 @@ class Database2 : ModuleImplBaseClassVirtual {
  private:
   // Shared reference to the connection used by all transactions from this
   // database instance. This is initialized during the first transaction.
-  scoped_refptr<DatabaseConnection> connection;
+  scoped_refptr<Database2Connection> connection;
 };
 
 
