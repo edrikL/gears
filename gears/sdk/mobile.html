@@ -220,14 +220,31 @@ in the global scope. It is then accessible with the notation
 <code>window.myObject</code>, for example:</p>
 
 <pre><code>myObject = new Array();
-alert(window.myObject):        // OK!</code></pre>
+alert(window.myObject);       // OK!
+</code></pre>
 
 <p>Checking whether a method exists before calling it does not work if 
 <code>myObject</code> is an ActiveX object. For example, the following 
 will silently crash:</p>
 
-<pre><code>if (myObject.askQuestion) myObject.askQuestion(42);</code></pre>
+<pre><code>if (myObject.askQuestion) {
+  myObject.askQuestion(42);
+}
+</code></pre>
 
+<p> Instead, a safe way to do the same check is:</p>
+
+<pre><code>if (isDefined(typeof myObject.askQuestion)) {
+  myObject.askQuestion(42);
+}
+</code></pre>
+
+<p>where the "isDefined" function is</p>
+
+<pre><code>function isDefined(type) {
+ return type != 'undefined' && type != 'unknown';
+}
+</code></pre>
 
 <a name="recursion" id="recursion"></a>
 <h2>Recursion</h2>
