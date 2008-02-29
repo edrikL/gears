@@ -274,7 +274,6 @@ def CreateTargets():
   common_settings.preprocessor_symbols = ['PNG_USER_CONFIG',
                                           'NO_GZIP',
                                           'NO_GZCOMPRESS',
-                                          'deflateParams\(a,b,c\)=Z_OK',
                                           'WIN32',
                                           'UNICODE', 
                                           'BREAKPAD_AVOID_STREAMS']
