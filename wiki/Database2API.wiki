@@ -455,7 +455,7 @@ After transaction begins, read `actual_version` using:
 PRAGMA user_version
 }}}
 
-if the not the same as 'expected_version', set `bogus_version` flag. This will cause all statements to fail with error code 2.
+if the not the same as `expected_version`, set `bogus_version` flag. This will cause all statements to fail with error code 2.
 
 ===changeVersion===
 
