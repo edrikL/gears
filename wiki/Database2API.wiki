@@ -420,13 +420,53 @@ Many database implementations have per-connection state that should be shared be
 
 == Versioning ==
 
-Version information will be stored in a special table, access or changes to are prohibited by the API. !WebKit uses `__WebKitDatabaseInfoTable__`. Perhaps name it along the same lines, like `__HTML5DatabaseInfoTable__`.
+Version information is tracked using the [http://www.sqlite.org/pragma.html#version user_version] pragma, retrieval of which is a cheap and safe operation across threads or processes.
 
-To keep up with the version changes across multiple browser windows or workers, either of the following has to be done:
+The actual version values are stored in a central table in _Permissions.db_:
+{{{
+CREATE TABLE DatabaseVersions(
+  name TEXT,
+  origin TEXT,
+  version TEXT,
+  PRIMARY KEY(name, origin)
+)
+}}}
 
- * the actual version read and compared with the expected at each transaction preflight. If the versions are different, all statements in transaction are marked bogus.
- * make all instances of database object aware of version changes by managing a static map of versions.
+===openDatabase===
 
-The latter approach is what !WebKit team chose, but it may not be possible to implement across all browsers.
+After database is opened and if `databaseVersion` is specified, read `expected_version`:
+{{{
+PRAGMA user_version
+}}}
 
-_TODO(dglazkov):_ I don't believe we can ensure that in IE? need to research/confirm.
+Then, read `version` from _Permissions.db_
+{{{
+SELECT version from DatabaseVersions WHERE name = ? 
+  AND origin = ?
+}}}
+
+If `databaseVersion` and `version` don't match, raise an INVALID_STATE_ERR
+exception.
+
+===transaction===
+
+After transaction begins, read `actual_version` using:
+{{{
+PRAGMA user_version
+}}}
+
+if the not the same as 'expected_version', set `bogus_version` flag. This will cause all statements to fail with error code 2.
+
+===changeVersion===
+
+In _preflight_, if `bogus_version` flag is set, fail transaction.
+
+In _postflight_, update _Permissions.db_:
+{{{
+REPLACE INTO DatabaseVersions(name, origin, version) VALUES(?,?,?)
+}}}
+
+Then, bump `expected_version` by 1 and update pragma accordingly:
+{{{
+PRAGMA user_version = ?
+}}}
