@@ -35,7 +35,9 @@
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/png_utils.h"
 #include "gears/base/common/url_utils.h"
+#if BROWSER_IE
 #include "gears/base/common/vista_utils.h"  // remove when createShortcut works
+#endif
 #include "gears/blob/file_blob.h"
 #include "gears/desktop/desktop_utils.h"
 #include "gears/desktop/file_dialog_utils.h"
