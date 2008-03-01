@@ -35,6 +35,7 @@
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/png_utils.h"
 #include "gears/base/common/url_utils.h"
+#include "gears/base/common/vista_utils.h"  // remove when createShortcut works
 #include "gears/blob/file_blob.h"
 #include "gears/desktop/desktop_utils.h"
 #include "gears/desktop/file_dialog_utils.h"
@@ -72,6 +73,15 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
                  STRING16(L"createShortcut is not supported in workers."));
     return;
   }
+
+#if BROWSER_IE
+  // Temporary check: return immediately if running IE on Windows Vista.  If
+  // this build goes live, it's better for the prompt not to appear, than for
+  // the API to be broken.  (Remove vista_utils.h when this check goes away.)
+  if (VistaUtils::IsRunningOnVista()) {
+    return;
+  }
+#endif
 
   DesktopUtils::ShortcutInfo shortcut_info;
   JsObject icons;
