@@ -37,6 +37,8 @@ class ShortcutTable {
 
   // Creates the table if it doesn't already exist.
   bool MaybeCreateTableVersion4();
+  bool MaybeCreateTableVersion5();
+  bool MaybeCreateTableVersion6();
   bool MaybeCreateTableLatestVersion();
 
   // Upgrade to version 3 schema (this table did not previously
@@ -46,12 +48,16 @@ class ShortcutTable {
   // Upgrade methods.
   bool UpgradeFromVersion3ToVersion4();
   bool UpgradeFromVersion4ToVersion5();
+  bool UpgradeFromVersion5ToVersion6();
 
   // Add (or overwrite) a shortcut for origin/name, with app_url,
   // icon_urls, msg as data, and whether to allow shortcut creation.
   bool SetShortcut(const char16 *origin, const char16 *name,
                    const char16 *app_url,
-                   const std::vector<std::string16> &icon_urls,
+                   const char16 *icon16x16_url,
+                   const char16 *icon32x32_url,
+                   const char16 *icon48x48_url,
+                   const char16 *icon128x128_url,
                    const char16 *msg,
                    const bool allow);
 
@@ -65,7 +71,10 @@ class ShortcutTable {
   // Get the data for a specific shortcut.
   bool GetShortcut(const char16 *origin, const char16 *name,
                    std::string16 *app_url,
-                   std::vector<std::string16> *icon_urls,
+                   std::string16 *icon16x16_url,
+                   std::string16 *icon32x32_url,
+                   std::string16 *icon48x48_url,
+                   std::string16 *icon128x128_url,
                    std::string16 *msg,
                    bool *allow);
 

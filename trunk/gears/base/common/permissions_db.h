@@ -91,7 +91,10 @@ class PermissionsDB {
   // shortcut.
   bool SetShortcut(const SecurityOrigin &origin, const char16 *name,
                    const char16 *app_url,
-                   const std::vector<std::string16> &icon_urls,
+                   const char16 *icon16x16_url,
+                   const char16 *icon32x32_url,
+                   const char16 *icon48x48_url,
+                   const char16 *icon128x128_url,
                    const char16 *msg,
                    const bool allow);
 
@@ -105,7 +108,10 @@ class PermissionsDB {
   // Gets the data for a specific shortcut.
   bool GetShortcut(const SecurityOrigin &origin, const char16 *name,
                    std::string16 *app_url,
-                   std::vector<std::string16> *icon_urls,
+                   std::string16 *icon16x16_url,
+                   std::string16 *icon32x32_url,
+                   std::string16 *icon48x48_url,
+                   std::string16 *icon128x128_url,
                    std::string16 *msg,
                    bool *allow);
 
@@ -130,6 +136,7 @@ class PermissionsDB {
 
   // Schema upgrade functions.  Higher-numbered functions call
   // lower-numbered functions as appropriate.
+  bool UpgradeToVersion6();
   bool UpgradeToVersion5();
   bool UpgradeToVersion4();
   bool UpgradeToVersion3();

@@ -259,13 +259,19 @@ bool GearsDesktop::AllowCreateShortcut(
   }
 
   std::string16 app_url;
-  std::vector<std::string16> icon_urls;
+  std::string16 icon16x16_url;
+  std::string16 icon32x32_url;
+  std::string16 icon48x48_url;
+  std::string16 icon128x128_url;
   std::string16 msg;
   bool allow_shortcut_creation;
   if (!capabilities->GetShortcut(EnvPageSecurityOrigin(), 
                                  shortcut_info.app_name.c_str(),
                                  &app_url,
-                                 &icon_urls,
+                                 &icon16x16_url,
+                                 &icon32x32_url,
+                                 &icon48x48_url,
+                                 &icon128x128_url,
                                  &msg,
                                  &allow_shortcut_creation)) {
     // If shortcut doesn't exist in DB then it's OK to create it.
@@ -288,16 +294,13 @@ bool GearsDesktop::AllowCreateShortcut(
   }
 
   // Compare icons urls.
-  for (std::vector<std::string16>::const_iterator it = icon_urls.begin();
-   it != icon_urls.end();  ++it) {
-    if(*it != shortcut_info.icon16x16.url && 
-       *it != shortcut_info.icon32x32.url &&
-       *it != shortcut_info.icon48x48.url &&
-       *it != shortcut_info.icon128x128.url) {
-       *allow = true;
-       return true;
-     }
-  }
+  if(icon16x16_url != shortcut_info.icon16x16.url ||
+     icon32x32_url != shortcut_info.icon32x32.url ||
+     icon48x48_url != shortcut_info.icon48x48.url ||
+     icon128x128_url != shortcut_info.icon128x128.url) {
+     *allow = true;
+     return true;
+   }
 
   *allow = false;
   return true;
@@ -384,21 +387,6 @@ bool GearsDesktop::SetShortcut(DesktopUtils::ShortcutInfo *shortcut,
   }
 
   // Create the database entry.
-  // TODO(aa): Perhaps we want to change how we store these in permissions db
-  // now that we have them in a more structured way?
-  std::vector<std::string16> icon_urls;
-  if (!shortcut->icon16x16.url.empty()) {
-    icon_urls.push_back(shortcut->icon16x16.url);
-  }
-  if (!shortcut->icon32x32.url.empty()) {
-    icon_urls.push_back(shortcut->icon32x32.url);
-  }
-  if (!shortcut->icon48x48.url.empty()) {
-    icon_urls.push_back(shortcut->icon48x48.url);
-  }
-  if (!shortcut->icon128x128.url.empty()) {
-    icon_urls.push_back(shortcut->icon128x128.url);
-  }
 
   // If the user wants to deny shortcut creation permanently then write to the
   // db & return.
@@ -406,7 +394,10 @@ bool GearsDesktop::SetShortcut(DesktopUtils::ShortcutInfo *shortcut,
     capabilities->SetShortcut(EnvPageSecurityOrigin(),
                               shortcut->app_name.c_str(),
                               shortcut->app_url.c_str(),
-                              icon_urls,
+                              shortcut->icon16x16.url.c_str(),
+                              shortcut->icon32x32.url.c_str(),
+                              shortcut->icon48x48.url.c_str(),
+                              shortcut->icon128x128.url.c_str(),
                               shortcut->app_description.c_str(),
                               allow);
 
@@ -491,7 +482,10 @@ bool GearsDesktop::SetShortcut(DesktopUtils::ShortcutInfo *shortcut,
   capabilities->SetShortcut(EnvPageSecurityOrigin(),
                             shortcut->app_name.c_str(),
                             shortcut->app_url.c_str(),
-                            icon_urls,
+                            shortcut->icon16x16.url.c_str(),
+                            shortcut->icon32x32.url.c_str(),
+                            shortcut->icon48x48.url.c_str(),
+                            shortcut->icon128x128.url.c_str(),
                             shortcut->app_description.c_str(),
                             allow);
   return true;
@@ -613,4 +607,3 @@ bool GearsDesktop::ResolveUrl(std::string16 *url, std::string16 *error) {
   *url = full_url;
   return true;
 }
-
