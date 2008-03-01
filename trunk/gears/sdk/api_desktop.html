@@ -116,11 +116,10 @@ desktop.createShortcut("Test Application",
       <br><br>
       Calling this API will trigger a confirmation dialog.  The dialog will
       use the 32x32 icon if it exists, or else the closest size available.
-    <br><br>
-    The dialog will not be redisplayed if a shortcut was previously created
-    with exactly the same name, url & icons as where passed in, or if the user 
-    hs previously selected the <code>"Never allow this shortcut"</code> option in 
-    the dialog..
+      <br><br>
+      However, the dialog will not be displayed if an earlier call had exactly
+      the same <code>name</code>, <code>url</code>, and <code>icons</code>
+      parameters, and the user created the shortcut or chose never to create it.
     </td>
   </tr>
 </table>
