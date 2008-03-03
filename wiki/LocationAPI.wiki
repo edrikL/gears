@@ -234,5 +234,5 @@ If the request format is valid, the server replies with HTTP status 200. If the 
 || *Name* || *Description* || *Required* || *Type" ||
 || latitude || Latitude of the fix, in degrees. || Yes || double ||
 || longitude || Longitude of the fix, in degrees. || Yes || double ||
-|| accuracy || The accuracy of the fix, in meters. || Yes || double ||
+|| accuracy || The accuracy of the fix, in meters at a 95% confidence level. || Yes || double ||
 || address || The address of the fix. May not be available from some providers. || No || string ||
