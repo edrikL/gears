@@ -59,9 +59,14 @@ interface PositionOptions {
   // Provides a hint that the application would like to receive the best
   // possible results. This may result in slower response times or increased
   // battery consumption. The user may also deny this capability, or the
-  // device may not be able to provide more accurate results than in the
+  // device may not be able to provide more accurate results than if the
   // flag wasn't specified.
   bool enableHighAccuracy;
+
+  // Requests reverse geocoded address information as part of the 
+  // position data. Reverse geocoding is not performed if this
+  // flag is not specified or set to false.
+  bool requestAddress;
 
   // TODO: Consider adding distanceThreshold (for use with watch())
 };
