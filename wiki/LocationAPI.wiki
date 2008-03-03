@@ -156,7 +156,7 @@ The protocol between the device and the location service provider is HTTP POST. 
       mobile_country_code: 310,
       mobile_network_code: 410,
       age: 0,
-      signal_strength: 3,
+      signal_strength: -60,
       timing_advance: 5555
     },
     {
@@ -165,7 +165,7 @@ The protocol between the device and the location service provider is HTTP POST. 
       mobile_country_code: 310,
       mobile_network_code: 580,
       age: 36000,
-      signal_strength: 2,  (TODO: Is this @age, or now? If @age, triangulation uses stale data?)
+      signal_strength: -70,  (TODO: Is this @age, or now? If @age, triangulation uses stale data?)
       timing_advance: 7777
     }
   ],
