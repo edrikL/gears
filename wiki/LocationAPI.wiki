@@ -169,19 +169,21 @@ The protocol between the device and the location service provider is HTTP POST. 
       area_code: 415,
       mobile_country_code: 310,
       mobile_network_code: 580,
-      age: 36000,
-      signal_strength: -70,  (TODO: Is this @age, or now? If @age, triangulation uses stale data?)
+      age: 0,
+      signal_strength: -70,
       timing_advance: 7777
     }
   ],
   wifi_towers: [
     {
       mac_address: "01-23-45-67-89-ab",
-      signal_strength: 8
+      signal_strength: 8,
+      age: 0
     },
     {
       mac_address: "01-23-45-67-89-ac",
-      signal_strength: 4
+      signal_strength: 4,
+      age: 0
     }
   ]
 }
@@ -205,7 +207,7 @@ The protocol between the device and the location service provider is HTTP POST. 
 || area_code || _TODO: explanation required_ || Yes || int16 ||
 || mobile_country_code || Mobile country code for cell || No || int16 ||
 || mobile_network_code || Mobile network code for cell || No || int16 ||
-|| age || Number of milliseconds since this cell was primary. If zero, this cell is primary currently. || No || int16 ||
+|| age || The number of milliseconds since this cell was primary. If age is 0, the cell_id represents a current measurement.  || No || int16 ||
 || signal_strength || Radio signal strength measured in dBm. || No || int16 ||
 || timing_advance || Represents the distance from the cell tower. Each unit is roughly 550 meters. || No || int8 ||
 
@@ -214,6 +216,7 @@ The protocol between the device and the location service provider is HTTP POST. 
 || *Name* || *Description* || *Required* || *Type" ||
 || mac_address || The mac address of the wifi node. || Yes || string ||
 || signal_strength || Current signal strength measured in dBm. || No || int16 ||
+|| age || The number of milliseconds since this access point was detected. If age is 0, the mac_address represents a current measurement. || No || int16 ||
 
 == Response Format ==
 
