@@ -78,7 +78,8 @@ interface PositionOptions {
   // returned. If unset, the  defaults to a single Google-implemented service.
   // The array can also be cleared, or set to null, so that no location
   // providers will be used.
-  // For more information on the location provider protocol, see Appendix B.
+  // For more information on the protocol that Gears uses to communicate with
+  // location providers, see Appendix B.
   string[] _gearsLocationProviderUrls;
 
   // TODO: Consider adding distanceThreshold (for use with watch())
