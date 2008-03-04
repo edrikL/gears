@@ -72,9 +72,9 @@ interface PositionOptions {
   // or set to false.
   bool requestAddress;
 
-  // Optional. This is a Gears-specific extension that specifies one or more
-  // URLs to contact to convert geolocation signals into positions. Each URL
-  // is queried and the one that returns the highest accuracy position is
+  // Optional. This is a Gears extension that specifies one or more URLs to
+  // contact to convert geolocation signals into positions. Each URL is
+  // queried and the one that returns the highest accuracy position is
   // returned. If unset, the  defaults to a single Google-implemented service.
   // The array can also be cleared, or set to null, so that no location
   // providers will be used.
