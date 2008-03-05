@@ -1,5 +1,5 @@
 #summary The Factory.create() method is used to create all Gears modules
-#labels ExperimentalDocs
+#labels ExperimentalDocs,Deprecated
 
 = Signature =
 
