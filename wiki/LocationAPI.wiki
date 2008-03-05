@@ -10,7 +10,6 @@ The Geolocation API allows web apps to retrieve the user's current position.  Th
   * Repeated position updates (e.g. for continuously updating one's location on a map)
   * Ability to get the last-known position cheaply before doing an expensive new request
   * Compatibility with future use as a singleton in the standard DOM (e.g. window.geolocation)
-  * Support for alternative location service providers
 
 
 = API Proposal =
