@@ -37,11 +37,13 @@
 /*
  * secport.h - portability interfaces for security libraries
  *
- * $Id: secport.h,v 1.13 2006/08/15 23:56:01 wtchang%redhat.com Exp $
+ * $Id: secport.h,v 1.15 2008/02/14 18:41:38 wtc%google.com Exp $
  */
 
 #ifndef _SECPORT_H_
 #define _SECPORT_H_
+
+#include "utilrename.h"
 
 /*
  * define XP_MAC, XP_WIN, XP_BEOS, or XP_UNIX, in case they are not defined
@@ -141,9 +143,7 @@ extern void PORT_ArenaZRelease(PLArenaPool *arena, void *mark);
 extern void PORT_ArenaUnmark(PLArenaPool *arena, void *mark);
 extern char *PORT_ArenaStrdup(PLArenaPool *arena, const char *str);
 
-#ifdef __cplusplus
-}
-#endif
+SEC_END_PROTOS
 
 #define PORT_Assert PR_ASSERT
 #define PORT_ZNew(type) (type*)PORT_ZAlloc(sizeof(type))
@@ -201,9 +201,7 @@ typedef PRBool (PR_CALLBACK * PORTCharConversionFunc) (PRBool toUnicode,
 			unsigned char *outBuf, unsigned int maxOutBufLen,
 			unsigned int *outBufLen);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+SEC_BEGIN_PROTOS
 
 void PORT_SetUCS4_UTF8ConversionFunction(PORTCharConversionFunc convFunc);
 void PORT_SetUCS2_ASCIIConversionFunction(PORTCharConversionWSwapFunc convFunc);

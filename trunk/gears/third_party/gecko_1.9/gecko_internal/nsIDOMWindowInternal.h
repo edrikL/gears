@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/dom/public/idl/base/nsIDOMWindowInternal.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM e:/builds/tinderbox/XR-Trunk/WINNT_5.2_Depend/mozilla/dom/public/idl/base/nsIDOMWindowInternal.idl
  */
 
 #ifndef __gen_nsIDOMWindowInternal_h__
@@ -24,11 +24,11 @@ class nsIVariant; /* forward declaration */
 
 
 /* starting interface:    nsIDOMWindowInternal */
-#define NS_IDOMWINDOWINTERNAL_IID_STR "0d12a345-3fe2-491e-af0d-bcfd5c4baa03"
+#define NS_IDOMWINDOWINTERNAL_IID_STR "86f7b733-aff9-469a-9e8c-2996f7db2720"
 
 #define NS_IDOMWINDOWINTERNAL_IID \
-  {0x0d12a345, 0x3fe2, 0x491e, \
-    { 0xaf, 0x0d, 0xbc, 0xfd, 0x5c, 0x4b, 0xaa, 0x03 }}
+  {0x86f7b733, 0xaff9, 0x469a, \
+    { 0x9e, 0x8c, 0x29, 0x96, 0xf7, 0xdb, 0x27, 0x20 }}
 
 class NS_NO_VTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
  public: 
@@ -223,6 +223,22 @@ class NS_NO_VTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
   /* nsIVariant showModalDialog (in DOMString aURI, [optional] in nsIVariant aArgs, [optional] in DOMString aOptions); */
   NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval) = 0;
 
+  /**
+   * Implements a safe message-passing system which can cross same-origin
+   * boundaries.
+   *
+   * This method, when called, causes a MessageEvent to be dispatched at the
+   * primary document for the window upon which this method is called.  (Note
+   * that the postMessage property on windows is allAccess and thus is readable
+   * cross-origin.)  The dispatched event will have message as its data, the
+   * calling context's window as its source, and a domain and URI determined by
+   * the calling context's main document URI.
+   * 
+   * See the WHATWG HTML5 specification, section 6.4, for more details.
+   */
+  /* [binaryname (PostMessageMoz)] void postMessage (in DOMString message); */
+  NS_IMETHOD PostMessageMoz(const nsAString & message) = 0;
+
 };
 
   NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMWindowInternal, NS_IDOMWINDOWINTERNAL_IID)
@@ -295,7 +311,8 @@ class NS_NO_VTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
   NS_IMETHOD Atob(const nsAString & aAsciiString, nsAString & _retval); \
   NS_IMETHOD Btoa(const nsAString & aBase64Data, nsAString & _retval); \
   NS_IMETHOD GetFrameElement(nsIDOMElement * *aFrameElement); \
-  NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval); 
+  NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval); \
+  NS_IMETHOD PostMessageMoz(const nsAString & message); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMWINDOWINTERNAL(_to) \
@@ -365,7 +382,8 @@ class NS_NO_VTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
   NS_IMETHOD Atob(const nsAString & aAsciiString, nsAString & _retval) { return _to Atob(aAsciiString, _retval); } \
   NS_IMETHOD Btoa(const nsAString & aBase64Data, nsAString & _retval) { return _to Btoa(aBase64Data, _retval); } \
   NS_IMETHOD GetFrameElement(nsIDOMElement * *aFrameElement) { return _to GetFrameElement(aFrameElement); } \
-  NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval) { return _to ShowModalDialog(aURI, aArgs, aOptions, _retval); } 
+  NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval) { return _to ShowModalDialog(aURI, aArgs, aOptions, _retval); } \
+  NS_IMETHOD PostMessageMoz(const nsAString & message) { return _to PostMessageMoz(message); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMWINDOWINTERNAL(_to) \
@@ -435,7 +453,8 @@ class NS_NO_VTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
   NS_IMETHOD Atob(const nsAString & aAsciiString, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Atob(aAsciiString, _retval); } \
   NS_IMETHOD Btoa(const nsAString & aBase64Data, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Btoa(aBase64Data, _retval); } \
   NS_IMETHOD GetFrameElement(nsIDOMElement * *aFrameElement) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFrameElement(aFrameElement); } \
-  NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ShowModalDialog(aURI, aArgs, aOptions, _retval); } 
+  NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ShowModalDialog(aURI, aArgs, aOptions, _retval); } \
+  NS_IMETHOD PostMessageMoz(const nsAString & message) { return !_to ? NS_ERROR_NULL_POINTER : _to->PostMessageMoz(message); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -847,6 +866,12 @@ NS_IMETHODIMP nsDOMWindowInternal::GetFrameElement(nsIDOMElement * *aFrameElemen
 
 /* nsIVariant showModalDialog (in DOMString aURI, [optional] in nsIVariant aArgs, [optional] in DOMString aOptions); */
 NS_IMETHODIMP nsDOMWindowInternal::ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* [binaryname (PostMessageMoz)] void postMessage (in DOMString message); */
+NS_IMETHODIMP nsDOMWindowInternal::PostMessageMoz(const nsAString & message)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

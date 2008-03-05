@@ -37,12 +37,13 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.61 2007/09/25 23:48:02 rrelyea%redhat.com Exp $
+ * $Id: cert.h,v 1.64 2008/02/16 01:17:43 julien.pierre.boogz%sun.com Exp $
  */
 
 #ifndef _CERT_H_
 #define _CERT_H_
 
+#include "utilrename.h"
 #include "plarena.h"
 #include "plhash.h"
 #include "prlong.h"
@@ -394,6 +395,16 @@ extern SECStatus CERT_OpenCertDBFilename(CERTCertDBHandle *handle,
 ** can be used when the permanent database can not be opened or created.
 */
 extern SECStatus CERT_OpenVolatileCertDB(CERTCertDBHandle *handle);
+
+/*
+** Extract the list of host names, host name patters, IP address strings
+** this cert is valid for.
+** This function does NOT return nicknames.
+** Type CERTCertNicknames is being used because it's a convenient 
+** data structure to carry a list of strings and its count.
+*/
+extern CERTCertNicknames *
+  CERT_GetValidDNSPatternsFromCert(CERTCertificate *cert);
 
 /*
 ** Check the hostname to make sure that it matches the shexp that
@@ -1246,10 +1257,6 @@ CERT_CheckForEvilCert(CERTCertificate *cert);
 
 CERTGeneralName *
 CERT_GetCertificateNames(CERTCertificate *cert, PRArenaPool *arena);
-
-
-SECStatus 
-CERT_EncodeSubjectKeyID(PRArenaPool *arena, char *value, int len, SECItem *encodedValue);
 
 char *
 CERT_GetNickName(CERTCertificate   *cert, CERTCertDBHandle *handle, PRArenaPool *nicknameArena);
