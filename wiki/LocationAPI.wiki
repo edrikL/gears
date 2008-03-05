@@ -171,7 +171,7 @@ The protocol between the device and the location service provider is HTTP POST. 
   cell_towers: [
     {
       cell_id: 42,
-      area_code: 415,
+      location_area_code: 415,
       mobile_country_code: 310,
       mobile_network_code: 410,
       age: 0,
@@ -180,7 +180,7 @@ The protocol between the device and the location service provider is HTTP POST. 
     },
     {
       cell_id: 88,
-      area_code: 415,
+      location_area_code: 415,
       mobile_country_code: 310,
       mobile_network_code: 580,
       age: 0,
@@ -218,9 +218,9 @@ The protocol between the device and the location service provider is HTTP POST. 
 
 || *Name* || *Description* || *Required* || *Type" ||
 || cell_id || Unique identifier of the cell. || Yes || string ||
-|| area_code || _TODO: explanation required_ || Yes || int16 ||
-|| mobile_country_code || Mobile country code for cell || No || int16 ||
-|| mobile_network_code || Mobile network code for cell || No || int16 ||
+|| location_area_code || Location Area Code (LAC) assigned to the current location area || Yes || int16 ||
+|| mobile_country_code || Mobile Country Code (MCC) for cell || No || int16 ||
+|| mobile_network_code || Mobile Network Code (MNC) for cell || No || int16 ||
 || age || The number of milliseconds since this cell was primary. If age is 0, the cell_id represents a current measurement.  || No || int16 ||
 || signal_strength || Radio signal strength measured in dBm. || No || int16 ||
 || timing_advance || Represents the distance from the cell tower. Each unit is roughly 550 meters. || No || int8 ||
