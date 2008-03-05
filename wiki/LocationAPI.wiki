@@ -67,9 +67,9 @@ interface PositionOptions {
   // the flag wasn't specified.
   bool enableHighAccuracy;
 
-  // Requests reverse geocoded address information as part of the position
-  // data. Reverse geocoding is not performed if this flag is not specified
-  // or set to false.
+  // Optional. Requests reverse geocoded address information as part of
+  // the position data. Reverse geocoding is not performed if this flag is not
+  // specified or set to false.
   bool requestAddress;
 
   // Optional. This is a Gears extension that specifies one or more URLs to
