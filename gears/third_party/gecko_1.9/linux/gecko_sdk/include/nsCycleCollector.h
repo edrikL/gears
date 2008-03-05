@@ -60,8 +60,9 @@ struct nsCycleCollectionLanguageRuntime
 };
 
 nsresult nsCycleCollector_startup();
-// Returns PR_TRUE if some nodes were collected.
-NS_COM PRBool nsCycleCollector_collect();
+// Returns the number of collected nodes.
+NS_COM PRUint32 nsCycleCollector_collect();
+NS_COM PRUint32 nsCycleCollector_suspectedCount();
 void nsCycleCollector_shutdown();
 
 // The JS runtime is special, it needs to call cycle collection during its GC.
@@ -72,13 +73,16 @@ void nsCycleCollector_shutdown();
 struct nsCycleCollectionJSRuntime : public nsCycleCollectionLanguageRuntime
 {
     /**
-     * Runs cycle collection and returns the number of collections that have
-     * collected nodes.
+     * Runs cycle collection and returns whether cycle collection collected
+     * anything.
      */
-    virtual PRUint32 Collect() = 0;
+    virtual PRBool Collect() = 0;
 };
-// Returns PR_TRUE if some nodes were collected.
-NS_COM PRBool nsCycleCollector_doCollect();
+// Returns PR_TRUE if cycle collection was started.
+NS_COM PRBool nsCycleCollector_beginCollection();
+// Returns PR_TRUE if some nodes were collected. Should only be called after
+// nsCycleCollector_beginCollection() returned PR_TRUE.
+NS_COM PRBool nsCycleCollector_finishCollection();
 
 #ifdef DEBUG
 NS_COM void nsCycleCollector_DEBUG_shouldBeFreed(nsISupports *n);

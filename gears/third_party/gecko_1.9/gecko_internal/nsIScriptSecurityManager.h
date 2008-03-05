@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/caps/idl/nsIScriptSecurityManager.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM e:/builds/tinderbox/XR-Trunk/WINNT_5.2_Depend/mozilla/caps/idl/nsIScriptSecurityManager.idl
  */
 
 #ifndef __gen_nsIScriptSecurityManager_h__
@@ -28,11 +28,11 @@ class nsIChannel; /* forward declaration */
 
 
 /* starting interface:    nsIScriptSecurityManager */
-#define NS_ISCRIPTSECURITYMANAGER_IID_STR "0b8a9b32-713f-4c39-bea0-6cacec46f385"
+#define NS_ISCRIPTSECURITYMANAGER_IID_STR "ce216cf7-3bcb-48ab-9ff8-d03a24f19ca5"
 
 #define NS_ISCRIPTSECURITYMANAGER_IID \
-  {0x0b8a9b32, 0x713f, 0x4c39, \
-    { 0xbe, 0xa0, 0x6c, 0xac, 0xec, 0x46, 0xf3, 0x85 }}
+  {0xce216cf7, 0x3bcb, 0x48ab, \
+    { 0x9f, 0xf8, 0xd0, 0x3a, 0x24, 0xf1, 0x9c, 0xa5 }}
 
 class NS_NO_VTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
  public: 
@@ -281,6 +281,15 @@ class NS_NO_VTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
   /* boolean isSystemPrincipal (in nsIPrincipal aPrincipal); */
   NS_IMETHOD IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval) = 0;
 
+  /**
+     * Same as getSubjectPrincipal(), only faster. cx must *never* be
+     * passed null, and it must be the context on the top of the
+     * context stack. Does *not* reference count the returned
+     * principal.
+     */
+  /* [noscript, notxpcom] nsIPrincipal getCxSubjectPrincipal (in JSContextPtr cx); */
+  NS_IMETHOD_(nsIPrincipal *) GetCxSubjectPrincipal(JSContext * cx) = 0;
+
 };
 
   NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptSecurityManager, NS_ISCRIPTSECURITYMANAGER_IID)
@@ -313,7 +322,8 @@ class NS_NO_VTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
   NS_IMETHOD CheckSameOriginPrincipal(nsIPrincipal *aSourcePrincipal, nsIPrincipal *aTargetPrincipal); \
   NS_IMETHOD GetPrincipalFromContext(JSContext * cx, nsIPrincipal **_retval); \
   NS_IMETHOD GetChannelPrincipal(nsIChannel *aChannel, nsIPrincipal **_retval); \
-  NS_IMETHOD IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval); 
+  NS_IMETHOD IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval); \
+  NS_IMETHOD_(nsIPrincipal *) GetCxSubjectPrincipal(JSContext * cx); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSISCRIPTSECURITYMANAGER(_to) \
@@ -343,7 +353,8 @@ class NS_NO_VTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
   NS_IMETHOD CheckSameOriginPrincipal(nsIPrincipal *aSourcePrincipal, nsIPrincipal *aTargetPrincipal) { return _to CheckSameOriginPrincipal(aSourcePrincipal, aTargetPrincipal); } \
   NS_IMETHOD GetPrincipalFromContext(JSContext * cx, nsIPrincipal **_retval) { return _to GetPrincipalFromContext(cx, _retval); } \
   NS_IMETHOD GetChannelPrincipal(nsIChannel *aChannel, nsIPrincipal **_retval) { return _to GetChannelPrincipal(aChannel, _retval); } \
-  NS_IMETHOD IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval) { return _to IsSystemPrincipal(aPrincipal, _retval); } 
+  NS_IMETHOD IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval) { return _to IsSystemPrincipal(aPrincipal, _retval); } \
+  NS_IMETHOD_(nsIPrincipal *) GetCxSubjectPrincipal(JSContext * cx) { return _to GetCxSubjectPrincipal(cx); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSISCRIPTSECURITYMANAGER(_to) \
@@ -373,7 +384,8 @@ class NS_NO_VTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
   NS_IMETHOD CheckSameOriginPrincipal(nsIPrincipal *aSourcePrincipal, nsIPrincipal *aTargetPrincipal) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckSameOriginPrincipal(aSourcePrincipal, aTargetPrincipal); } \
   NS_IMETHOD GetPrincipalFromContext(JSContext * cx, nsIPrincipal **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrincipalFromContext(cx, _retval); } \
   NS_IMETHOD GetChannelPrincipal(nsIChannel *aChannel, nsIPrincipal **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChannelPrincipal(aChannel, _retval); } \
-  NS_IMETHOD IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsSystemPrincipal(aPrincipal, _retval); } 
+  NS_IMETHOD IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsSystemPrincipal(aPrincipal, _retval); } \
+  NS_IMETHOD_(nsIPrincipal *) GetCxSubjectPrincipal(JSContext * cx) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCxSubjectPrincipal(cx); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -565,6 +577,12 @@ NS_IMETHODIMP nsScriptSecurityManager::GetChannelPrincipal(nsIChannel *aChannel,
 
 /* boolean isSystemPrincipal (in nsIPrincipal aPrincipal); */
 NS_IMETHODIMP nsScriptSecurityManager::IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* [noscript, notxpcom] nsIPrincipal getCxSubjectPrincipal (in JSContextPtr cx); */
+NS_IMETHODIMP_(nsIPrincipal *) nsScriptSecurityManager::GetCxSubjectPrincipal(JSContext * cx)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

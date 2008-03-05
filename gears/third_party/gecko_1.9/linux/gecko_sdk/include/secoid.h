@@ -36,10 +36,13 @@
 
 #ifndef _SECOID_H_
 #define _SECOID_H_
+
+#include "utilrename.h"
+
 /*
  * secoid.h - public data structures and prototypes for ASN.1 OID functions
  *
- * $Id: secoid.h,v 1.7 2007/07/11 23:28:31 nelson%bolyard.com Exp $
+ * $Id: secoid.h,v 1.9 2008/02/16 04:38:09 julien.pierre.boogz%sun.com Exp $
  */
 
 #include "plarena.h"
@@ -117,6 +120,11 @@ extern const char *SECOID_FindOIDTagDescription(SECOidTag tagnum);
 ** Returns SEC_OID_INVALID if failed to add for some reason.
 */
 extern SECOidTag SECOID_AddEntry(const SECOidData * src);
+
+/*
+ * initialize the oid data structures.
+ */
+extern SECStatus SECOID_Init(void);
 
 /*
  * free up the oid data structures.

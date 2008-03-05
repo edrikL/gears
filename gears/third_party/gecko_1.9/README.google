@@ -1,6 +1,6 @@
-Linux-i386 prerelease version of Gecko 1.9 SDK. This was downloaded from here on 20 December 2007:
+Win32, Linux-i386 and OSX prerelease version of Gecko 1.9 SDK. This was downloaded from here on 4 March 2008:
 
-       http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9b3pre.en-US.linux-i686.sdk.tar.bz2
+       http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9b5pre.en-US.*.sdk.*
 
        Then...
 

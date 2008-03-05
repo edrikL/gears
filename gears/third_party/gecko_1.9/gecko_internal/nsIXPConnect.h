@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/js/src/xpconnect/idl/nsIXPConnect.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM e:/builds/tinderbox/XR-Trunk/WINNT_5.2_Depend/mozilla/js/src/xpconnect/idl/nsIXPConnect.idl
  */
 
 #ifndef __gen_nsIXPConnect_h__
@@ -48,6 +48,7 @@
 #endif
 #include "jspubtd.h"
 #include "xptinfo.h"
+#include "nsAXPCNativeCallContext.h"
 /***************************************************************************/
 #define GENERATE_XPC_FAILURE(x) \
             (NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCONNECT,x))
@@ -503,236 +504,6 @@ NS_IMETHODIMP nsXPConnectWrappedJS::AggregatedQueryInterface(const nsIID & uuid,
 #endif
 
 
-/* starting interface:    nsIXPCNativeCallContext */
-#define NS_IXPCNATIVECALLCONTEXT_IID_STR "0fa68a60-8289-11d3-bb1a-00805f8a5dd7"
-
-#define NS_IXPCNATIVECALLCONTEXT_IID \
-  {0x0fa68a60, 0x8289, 0x11d3, \
-    { 0xbb, 0x1a, 0x00, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 }}
-
-/***************************************************************************/
-/**
-* This is a somewhat special interface. It is available from the global
-* nsIXPConnect object when native methods have been called. It is only relevant
-* to the currently called native method on the given JSContext/thread. Holding
-* a reference past that time (or while other native methods are being called)
-* will not assure access to this data.
-*/
-class NS_NO_VTABLE nsIXPCNativeCallContext : public nsISupports {
- public: 
-
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPCNATIVECALLCONTEXT_IID)
-
-  /* readonly attribute nsISupports Callee; */
-  NS_IMETHOD GetCallee(nsISupports * *aCallee) = 0;
-
-  /* readonly attribute PRUint16 CalleeMethodIndex; */
-  NS_IMETHOD GetCalleeMethodIndex(PRUint16 *aCalleeMethodIndex) = 0;
-
-  /* readonly attribute nsIXPConnectWrappedNative CalleeWrapper; */
-  NS_IMETHOD GetCalleeWrapper(nsIXPConnectWrappedNative * *aCalleeWrapper) = 0;
-
-  /* readonly attribute JSContextPtr JSContext; */
-  NS_IMETHOD GetJSContext(JSContext * *aJSContext) = 0;
-
-  /* readonly attribute PRUint32 Argc; */
-  NS_IMETHOD GetArgc(PRUint32 *aArgc) = 0;
-
-  /* readonly attribute JSValPtr ArgvPtr; */
-  NS_IMETHOD GetArgvPtr(jsval * *aArgvPtr) = 0;
-
-  /**
-    * This may be NULL if the JS caller is ignoring the result of the call.
-    */
-  /* readonly attribute JSValPtr RetValPtr; */
-  NS_IMETHOD GetRetValPtr(jsval * *aRetValPtr) = 0;
-
-  /**
-    * Set this if JS_SetPendingException has been called. Return NS_OK or
-    * else this will be ignored and the native method's nsresult will be
-    * converted into an exception and thrown into JS as is the normal case.
-    */
-  /* attribute PRBool ExceptionWasThrown; */
-  NS_IMETHOD GetExceptionWasThrown(PRBool *aExceptionWasThrown) = 0;
-  NS_IMETHOD SetExceptionWasThrown(PRBool aExceptionWasThrown) = 0;
-
-  /**
-    * Set this to indicate that the callee has directly set the return value
-    * (using RetValPtr and the JSAPI). If set then xpconnect will not attempt
-    * to overwrite it with the converted retval from the C++ callee.
-    */
-  /* attribute PRBool ReturnValueWasSet; */
-  NS_IMETHOD GetReturnValueWasSet(PRBool *aReturnValueWasSet) = 0;
-  NS_IMETHOD SetReturnValueWasSet(PRBool aReturnValueWasSet) = 0;
-
-  /* readonly attribute nsIInterfaceInfo CalleeInterface; */
-  NS_IMETHOD GetCalleeInterface(nsIInterfaceInfo * *aCalleeInterface) = 0;
-
-  /* readonly attribute nsIClassInfo CalleeClassInfo; */
-  NS_IMETHOD GetCalleeClassInfo(nsIClassInfo * *aCalleeClassInfo) = 0;
-
-};
-
-  NS_DEFINE_STATIC_IID_ACCESSOR(nsIXPCNativeCallContext, NS_IXPCNATIVECALLCONTEXT_IID)
-
-/* Use this macro when declaring classes that implement this interface. */
-#define NS_DECL_NSIXPCNATIVECALLCONTEXT \
-  NS_IMETHOD GetCallee(nsISupports * *aCallee); \
-  NS_IMETHOD GetCalleeMethodIndex(PRUint16 *aCalleeMethodIndex); \
-  NS_IMETHOD GetCalleeWrapper(nsIXPConnectWrappedNative * *aCalleeWrapper); \
-  NS_IMETHOD GetJSContext(JSContext * *aJSContext); \
-  NS_IMETHOD GetArgc(PRUint32 *aArgc); \
-  NS_IMETHOD GetArgvPtr(jsval * *aArgvPtr); \
-  NS_IMETHOD GetRetValPtr(jsval * *aRetValPtr); \
-  NS_IMETHOD GetExceptionWasThrown(PRBool *aExceptionWasThrown); \
-  NS_IMETHOD SetExceptionWasThrown(PRBool aExceptionWasThrown); \
-  NS_IMETHOD GetReturnValueWasSet(PRBool *aReturnValueWasSet); \
-  NS_IMETHOD SetReturnValueWasSet(PRBool aReturnValueWasSet); \
-  NS_IMETHOD GetCalleeInterface(nsIInterfaceInfo * *aCalleeInterface); \
-  NS_IMETHOD GetCalleeClassInfo(nsIClassInfo * *aCalleeClassInfo); 
-
-/* Use this macro to declare functions that forward the behavior of this interface to another object. */
-#define NS_FORWARD_NSIXPCNATIVECALLCONTEXT(_to) \
-  NS_IMETHOD GetCallee(nsISupports * *aCallee) { return _to GetCallee(aCallee); } \
-  NS_IMETHOD GetCalleeMethodIndex(PRUint16 *aCalleeMethodIndex) { return _to GetCalleeMethodIndex(aCalleeMethodIndex); } \
-  NS_IMETHOD GetCalleeWrapper(nsIXPConnectWrappedNative * *aCalleeWrapper) { return _to GetCalleeWrapper(aCalleeWrapper); } \
-  NS_IMETHOD GetJSContext(JSContext * *aJSContext) { return _to GetJSContext(aJSContext); } \
-  NS_IMETHOD GetArgc(PRUint32 *aArgc) { return _to GetArgc(aArgc); } \
-  NS_IMETHOD GetArgvPtr(jsval * *aArgvPtr) { return _to GetArgvPtr(aArgvPtr); } \
-  NS_IMETHOD GetRetValPtr(jsval * *aRetValPtr) { return _to GetRetValPtr(aRetValPtr); } \
-  NS_IMETHOD GetExceptionWasThrown(PRBool *aExceptionWasThrown) { return _to GetExceptionWasThrown(aExceptionWasThrown); } \
-  NS_IMETHOD SetExceptionWasThrown(PRBool aExceptionWasThrown) { return _to SetExceptionWasThrown(aExceptionWasThrown); } \
-  NS_IMETHOD GetReturnValueWasSet(PRBool *aReturnValueWasSet) { return _to GetReturnValueWasSet(aReturnValueWasSet); } \
-  NS_IMETHOD SetReturnValueWasSet(PRBool aReturnValueWasSet) { return _to SetReturnValueWasSet(aReturnValueWasSet); } \
-  NS_IMETHOD GetCalleeInterface(nsIInterfaceInfo * *aCalleeInterface) { return _to GetCalleeInterface(aCalleeInterface); } \
-  NS_IMETHOD GetCalleeClassInfo(nsIClassInfo * *aCalleeClassInfo) { return _to GetCalleeClassInfo(aCalleeClassInfo); } 
-
-/* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
-#define NS_FORWARD_SAFE_NSIXPCNATIVECALLCONTEXT(_to) \
-  NS_IMETHOD GetCallee(nsISupports * *aCallee) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCallee(aCallee); } \
-  NS_IMETHOD GetCalleeMethodIndex(PRUint16 *aCalleeMethodIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCalleeMethodIndex(aCalleeMethodIndex); } \
-  NS_IMETHOD GetCalleeWrapper(nsIXPConnectWrappedNative * *aCalleeWrapper) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCalleeWrapper(aCalleeWrapper); } \
-  NS_IMETHOD GetJSContext(JSContext * *aJSContext) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetJSContext(aJSContext); } \
-  NS_IMETHOD GetArgc(PRUint32 *aArgc) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetArgc(aArgc); } \
-  NS_IMETHOD GetArgvPtr(jsval * *aArgvPtr) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetArgvPtr(aArgvPtr); } \
-  NS_IMETHOD GetRetValPtr(jsval * *aRetValPtr) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRetValPtr(aRetValPtr); } \
-  NS_IMETHOD GetExceptionWasThrown(PRBool *aExceptionWasThrown) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetExceptionWasThrown(aExceptionWasThrown); } \
-  NS_IMETHOD SetExceptionWasThrown(PRBool aExceptionWasThrown) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetExceptionWasThrown(aExceptionWasThrown); } \
-  NS_IMETHOD GetReturnValueWasSet(PRBool *aReturnValueWasSet) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetReturnValueWasSet(aReturnValueWasSet); } \
-  NS_IMETHOD SetReturnValueWasSet(PRBool aReturnValueWasSet) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetReturnValueWasSet(aReturnValueWasSet); } \
-  NS_IMETHOD GetCalleeInterface(nsIInterfaceInfo * *aCalleeInterface) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCalleeInterface(aCalleeInterface); } \
-  NS_IMETHOD GetCalleeClassInfo(nsIClassInfo * *aCalleeClassInfo) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCalleeClassInfo(aCalleeClassInfo); } 
-
-#if 0
-/* Use the code below as a template for the implementation class for this interface. */
-
-/* Header file */
-class nsXPCNativeCallContext : public nsIXPCNativeCallContext
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXPCNATIVECALLCONTEXT
-
-  nsXPCNativeCallContext();
-
-private:
-  ~nsXPCNativeCallContext();
-
-protected:
-  /* additional members */
-};
-
-/* Implementation file */
-NS_IMPL_ISUPPORTS1(nsXPCNativeCallContext, nsIXPCNativeCallContext)
-
-nsXPCNativeCallContext::nsXPCNativeCallContext()
-{
-  /* member initializers and constructor code */
-}
-
-nsXPCNativeCallContext::~nsXPCNativeCallContext()
-{
-  /* destructor code */
-}
-
-/* readonly attribute nsISupports Callee; */
-NS_IMETHODIMP nsXPCNativeCallContext::GetCallee(nsISupports * *aCallee)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute PRUint16 CalleeMethodIndex; */
-NS_IMETHODIMP nsXPCNativeCallContext::GetCalleeMethodIndex(PRUint16 *aCalleeMethodIndex)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute nsIXPConnectWrappedNative CalleeWrapper; */
-NS_IMETHODIMP nsXPCNativeCallContext::GetCalleeWrapper(nsIXPConnectWrappedNative * *aCalleeWrapper)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute JSContextPtr JSContext; */
-NS_IMETHODIMP nsXPCNativeCallContext::GetJSContext(JSContext * *aJSContext)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute PRUint32 Argc; */
-NS_IMETHODIMP nsXPCNativeCallContext::GetArgc(PRUint32 *aArgc)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute JSValPtr ArgvPtr; */
-NS_IMETHODIMP nsXPCNativeCallContext::GetArgvPtr(jsval * *aArgvPtr)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute JSValPtr RetValPtr; */
-NS_IMETHODIMP nsXPCNativeCallContext::GetRetValPtr(jsval * *aRetValPtr)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute PRBool ExceptionWasThrown; */
-NS_IMETHODIMP nsXPCNativeCallContext::GetExceptionWasThrown(PRBool *aExceptionWasThrown)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsXPCNativeCallContext::SetExceptionWasThrown(PRBool aExceptionWasThrown)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute PRBool ReturnValueWasSet; */
-NS_IMETHODIMP nsXPCNativeCallContext::GetReturnValueWasSet(PRBool *aReturnValueWasSet)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsXPCNativeCallContext::SetReturnValueWasSet(PRBool aReturnValueWasSet)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute nsIInterfaceInfo CalleeInterface; */
-NS_IMETHODIMP nsXPCNativeCallContext::GetCalleeInterface(nsIInterfaceInfo * *aCalleeInterface)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute nsIClassInfo CalleeClassInfo; */
-NS_IMETHODIMP nsXPCNativeCallContext::GetCalleeClassInfo(nsIClassInfo * *aCalleeClassInfo)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* End of implementation class template. */
-#endif
-
-
 /* starting interface:    nsIXPCWrappedJSObjectGetter */
 #define NS_IXPCWRAPPEDJSOBJECTGETTER_IID_STR "254bb2e0-6439-11d4-8fe0-0010a4e73d9a"
 
@@ -957,11 +728,11 @@ NS_IMETHODIMP nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialTh
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 
 /* starting interface:    nsIXPConnect */
-#define NS_IXPCONNECT_IID_STR "2d7f1bd7-ef8b-4f62-b2bb-1a8b0801edc3"
+#define NS_IXPCONNECT_IID_STR "20df9082-5b83-416d-ba80-0422af516d57"
 
 #define NS_IXPCONNECT_IID \
-  {0x2d7f1bd7, 0xef8b, 0x4f62, \
-    { 0xb2, 0xbb, 0x1a, 0x8b, 0x08, 0x01, 0xed, 0xc3 }}
+  {0x20df9082, 0x5b83, 0x416d, \
+    { 0xba, 0x80, 0x04, 0x22, 0xaf, 0x51, 0x6d, 0x57 }}
 
 class nsIXPConnect : public nsISupports {
  public: 
@@ -1083,8 +854,8 @@ class nsIXPConnect : public nsISupports {
   /* readonly attribute nsIStackFrame CurrentJSStack; */
   NS_IMETHOD GetCurrentJSStack(nsIStackFrame * *aCurrentJSStack) = 0;
 
-  /* readonly attribute nsIXPCNativeCallContext CurrentNativeCallContext; */
-  NS_IMETHOD GetCurrentNativeCallContext(nsIXPCNativeCallContext * *aCurrentNativeCallContext) = 0;
+  /* readonly attribute nsAXPCNativeCallContextPtr CurrentNativeCallContext; */
+  NS_IMETHOD GetCurrentNativeCallContext(nsAXPCNativeCallContext * *aCurrentNativeCallContext) = 0;
 
   /* attribute nsIException PendingException; */
   NS_IMETHOD GetPendingException(nsIException * *aPendingException) = 0;
@@ -1153,14 +924,6 @@ class nsIXPConnect : public nsISupports {
 
   /* nsIXPConnectJSObjectHolder getWrappedNativePrototype (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsIClassInfo aClassInfo); */
   NS_IMETHOD GetWrappedNativePrototype(JSContext * aJSContext, JSObject * aScope, nsIClassInfo *aClassInfo, nsIXPConnectJSObjectHolder **_retval) = 0;
-
-  /* attribute PRBool collectGarbageOnMainThreadOnly; */
-  NS_IMETHOD GetCollectGarbageOnMainThreadOnly(PRBool *aCollectGarbageOnMainThreadOnly) = 0;
-  NS_IMETHOD SetCollectGarbageOnMainThreadOnly(PRBool aCollectGarbageOnMainThreadOnly) = 0;
-
-  /* attribute PRBool deferReleasesUntilAfterGarbageCollection; */
-  NS_IMETHOD GetDeferReleasesUntilAfterGarbageCollection(PRBool *aDeferReleasesUntilAfterGarbageCollection) = 0;
-  NS_IMETHOD SetDeferReleasesUntilAfterGarbageCollection(PRBool aDeferReleasesUntilAfterGarbageCollection) = 0;
 
   /* void releaseJSContext (in JSContextPtr aJSContext, in PRBool noGC); */
   NS_IMETHOD ReleaseJSContext(JSContext * aJSContext, PRBool noGC) = 0;
@@ -1233,8 +996,24 @@ class nsIXPConnect : public nsISupports {
      * @param aParent The parent to create the wrapper with.
      * @param aWrappedObj The object to wrap.
      */
-  /* [noscript] JSVal getCrossOriginWrapperForObject (in JSContextPtr aJSContext, in JSObjectPtr aParent, in JSObjectPtr aWrappedObj); */
-  NS_IMETHOD GetCrossOriginWrapperForObject(JSContext * aJSContext, JSObject * aParent, JSObject * aWrappedObj, jsval *_retval) = 0;
+  /* [noscript] JSVal getXOWForObject (in JSContextPtr aJSContext, in JSObjectPtr aParent, in JSObjectPtr aWrappedObj); */
+  NS_IMETHOD GetXOWForObject(JSContext * aJSContext, JSObject * aParent, JSObject * aWrappedObj, jsval *_retval) = 0;
+
+  /**
+     * Tells updateXOWs to clear the scope of all of the XOWs it finds.
+     */
+  enum { XPC_XOW_CLEARSCOPE = 1U };
+
+  /**
+     * Performs an operation over all of |object|'s XOWs such as clearing
+     * their scopes or updating their concept of the current principal.
+     *
+     * @param aJSContext A context to use to perform JS operations.
+     * @param aObject Which XPCWrappedNative we should find the XOWs for.
+     * @param aWay What operation to perform.
+     */
+  /* [noscript] void updateXOWs (in JSContextPtr aJSContext, in nsIXPConnectWrappedNative aObject, in PRUint32 aWay); */
+  NS_IMETHOD UpdateXOWs(JSContext * aJSContext, nsIXPConnectWrappedNative *aObject, PRUint32 aWay) = 0;
 
   /**
      * Root JS objects held by aHolder.
@@ -1286,7 +1065,7 @@ class nsIXPConnect : public nsISupports {
   NS_IMETHOD CreateStackFrameLocation(PRUint32 aLanguage, const char *aFilename, const char *aFunctionName, PRInt32 aLineNumber, nsIStackFrame *aCaller, nsIStackFrame **_retval); \
   NS_IMETHOD SyncJSContexts(void); \
   NS_IMETHOD GetCurrentJSStack(nsIStackFrame * *aCurrentJSStack); \
-  NS_IMETHOD GetCurrentNativeCallContext(nsIXPCNativeCallContext * *aCurrentNativeCallContext); \
+  NS_IMETHOD GetCurrentNativeCallContext(nsAXPCNativeCallContext * *aCurrentNativeCallContext); \
   NS_IMETHOD GetPendingException(nsIException * *aPendingException); \
   NS_IMETHOD SetPendingException(nsIException * aPendingException); \
   NS_IMETHOD DebugDump(PRInt16 depth); \
@@ -1302,10 +1081,6 @@ class nsIXPConnect : public nsISupports {
   NS_IMETHOD ReparentScopeAwareWrappers(JSContext * aJSContext, JSObject * aOldScope, JSObject * aNewScope); \
   NS_IMETHOD ClearAllWrappedNativeSecurityPolicies(void); \
   NS_IMETHOD GetWrappedNativePrototype(JSContext * aJSContext, JSObject * aScope, nsIClassInfo *aClassInfo, nsIXPConnectJSObjectHolder **_retval); \
-  NS_IMETHOD GetCollectGarbageOnMainThreadOnly(PRBool *aCollectGarbageOnMainThreadOnly); \
-  NS_IMETHOD SetCollectGarbageOnMainThreadOnly(PRBool aCollectGarbageOnMainThreadOnly); \
-  NS_IMETHOD GetDeferReleasesUntilAfterGarbageCollection(PRBool *aDeferReleasesUntilAfterGarbageCollection); \
-  NS_IMETHOD SetDeferReleasesUntilAfterGarbageCollection(PRBool aDeferReleasesUntilAfterGarbageCollection); \
   NS_IMETHOD ReleaseJSContext(JSContext * aJSContext, PRBool noGC); \
   NS_IMETHOD VariantToJS(JSContext * ctx, JSObject * scope, nsIVariant *value, jsval *_retval); \
   NS_IMETHOD JSToVariant(JSContext * ctx, jsval value, nsIVariant **_retval); \
@@ -1313,7 +1088,8 @@ class nsIXPConnect : public nsISupports {
   NS_IMETHOD RestoreWrappedNativePrototype(JSContext * aJSContext, JSObject * aScope, nsIClassInfo *aClassInfo, nsIXPConnectJSObjectHolder *aPrototype); \
   NS_IMETHOD CreateSandbox(JSContext * cx, nsIPrincipal *principal, nsIXPConnectJSObjectHolder **_retval); \
   NS_IMETHOD EvalInSandboxObject(const nsAString & source, JSContext * cx, nsIXPConnectJSObjectHolder *sandbox, PRBool returnStringOnly, jsval *_retval); \
-  NS_IMETHOD GetCrossOriginWrapperForObject(JSContext * aJSContext, JSObject * aParent, JSObject * aWrappedObj, jsval *_retval); \
+  NS_IMETHOD GetXOWForObject(JSContext * aJSContext, JSObject * aParent, JSObject * aWrappedObj, jsval *_retval); \
+  NS_IMETHOD UpdateXOWs(JSContext * aJSContext, nsIXPConnectWrappedNative *aObject, PRUint32 aWay); \
   NS_IMETHOD AddJSHolder(void * aHolder, nsScriptObjectTracer * aTracer); \
   NS_IMETHOD RemoveJSHolder(void * aHolder); \
   NS_IMETHOD_(void) NoteJSContext(JSContext * aJSContext, nsCycleCollectionTraversalCallback & aCb); \
@@ -1333,7 +1109,7 @@ class nsIXPConnect : public nsISupports {
   NS_IMETHOD CreateStackFrameLocation(PRUint32 aLanguage, const char *aFilename, const char *aFunctionName, PRInt32 aLineNumber, nsIStackFrame *aCaller, nsIStackFrame **_retval) { return _to CreateStackFrameLocation(aLanguage, aFilename, aFunctionName, aLineNumber, aCaller, _retval); } \
   NS_IMETHOD SyncJSContexts(void) { return _to SyncJSContexts(); } \
   NS_IMETHOD GetCurrentJSStack(nsIStackFrame * *aCurrentJSStack) { return _to GetCurrentJSStack(aCurrentJSStack); } \
-  NS_IMETHOD GetCurrentNativeCallContext(nsIXPCNativeCallContext * *aCurrentNativeCallContext) { return _to GetCurrentNativeCallContext(aCurrentNativeCallContext); } \
+  NS_IMETHOD GetCurrentNativeCallContext(nsAXPCNativeCallContext * *aCurrentNativeCallContext) { return _to GetCurrentNativeCallContext(aCurrentNativeCallContext); } \
   NS_IMETHOD GetPendingException(nsIException * *aPendingException) { return _to GetPendingException(aPendingException); } \
   NS_IMETHOD SetPendingException(nsIException * aPendingException) { return _to SetPendingException(aPendingException); } \
   NS_IMETHOD DebugDump(PRInt16 depth) { return _to DebugDump(depth); } \
@@ -1349,10 +1125,6 @@ class nsIXPConnect : public nsISupports {
   NS_IMETHOD ReparentScopeAwareWrappers(JSContext * aJSContext, JSObject * aOldScope, JSObject * aNewScope) { return _to ReparentScopeAwareWrappers(aJSContext, aOldScope, aNewScope); } \
   NS_IMETHOD ClearAllWrappedNativeSecurityPolicies(void) { return _to ClearAllWrappedNativeSecurityPolicies(); } \
   NS_IMETHOD GetWrappedNativePrototype(JSContext * aJSContext, JSObject * aScope, nsIClassInfo *aClassInfo, nsIXPConnectJSObjectHolder **_retval) { return _to GetWrappedNativePrototype(aJSContext, aScope, aClassInfo, _retval); } \
-  NS_IMETHOD GetCollectGarbageOnMainThreadOnly(PRBool *aCollectGarbageOnMainThreadOnly) { return _to GetCollectGarbageOnMainThreadOnly(aCollectGarbageOnMainThreadOnly); } \
-  NS_IMETHOD SetCollectGarbageOnMainThreadOnly(PRBool aCollectGarbageOnMainThreadOnly) { return _to SetCollectGarbageOnMainThreadOnly(aCollectGarbageOnMainThreadOnly); } \
-  NS_IMETHOD GetDeferReleasesUntilAfterGarbageCollection(PRBool *aDeferReleasesUntilAfterGarbageCollection) { return _to GetDeferReleasesUntilAfterGarbageCollection(aDeferReleasesUntilAfterGarbageCollection); } \
-  NS_IMETHOD SetDeferReleasesUntilAfterGarbageCollection(PRBool aDeferReleasesUntilAfterGarbageCollection) { return _to SetDeferReleasesUntilAfterGarbageCollection(aDeferReleasesUntilAfterGarbageCollection); } \
   NS_IMETHOD ReleaseJSContext(JSContext * aJSContext, PRBool noGC) { return _to ReleaseJSContext(aJSContext, noGC); } \
   NS_IMETHOD VariantToJS(JSContext * ctx, JSObject * scope, nsIVariant *value, jsval *_retval) { return _to VariantToJS(ctx, scope, value, _retval); } \
   NS_IMETHOD JSToVariant(JSContext * ctx, jsval value, nsIVariant **_retval) { return _to JSToVariant(ctx, value, _retval); } \
@@ -1360,7 +1132,8 @@ class nsIXPConnect : public nsISupports {
   NS_IMETHOD RestoreWrappedNativePrototype(JSContext * aJSContext, JSObject * aScope, nsIClassInfo *aClassInfo, nsIXPConnectJSObjectHolder *aPrototype) { return _to RestoreWrappedNativePrototype(aJSContext, aScope, aClassInfo, aPrototype); } \
   NS_IMETHOD CreateSandbox(JSContext * cx, nsIPrincipal *principal, nsIXPConnectJSObjectHolder **_retval) { return _to CreateSandbox(cx, principal, _retval); } \
   NS_IMETHOD EvalInSandboxObject(const nsAString & source, JSContext * cx, nsIXPConnectJSObjectHolder *sandbox, PRBool returnStringOnly, jsval *_retval) { return _to EvalInSandboxObject(source, cx, sandbox, returnStringOnly, _retval); } \
-  NS_IMETHOD GetCrossOriginWrapperForObject(JSContext * aJSContext, JSObject * aParent, JSObject * aWrappedObj, jsval *_retval) { return _to GetCrossOriginWrapperForObject(aJSContext, aParent, aWrappedObj, _retval); } \
+  NS_IMETHOD GetXOWForObject(JSContext * aJSContext, JSObject * aParent, JSObject * aWrappedObj, jsval *_retval) { return _to GetXOWForObject(aJSContext, aParent, aWrappedObj, _retval); } \
+  NS_IMETHOD UpdateXOWs(JSContext * aJSContext, nsIXPConnectWrappedNative *aObject, PRUint32 aWay) { return _to UpdateXOWs(aJSContext, aObject, aWay); } \
   NS_IMETHOD AddJSHolder(void * aHolder, nsScriptObjectTracer * aTracer) { return _to AddJSHolder(aHolder, aTracer); } \
   NS_IMETHOD RemoveJSHolder(void * aHolder) { return _to RemoveJSHolder(aHolder); } \
   NS_IMETHOD_(void) NoteJSContext(JSContext * aJSContext, nsCycleCollectionTraversalCallback & aCb) { return _to NoteJSContext(aJSContext, aCb); } \
@@ -1380,7 +1153,7 @@ class nsIXPConnect : public nsISupports {
   NS_IMETHOD CreateStackFrameLocation(PRUint32 aLanguage, const char *aFilename, const char *aFunctionName, PRInt32 aLineNumber, nsIStackFrame *aCaller, nsIStackFrame **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateStackFrameLocation(aLanguage, aFilename, aFunctionName, aLineNumber, aCaller, _retval); } \
   NS_IMETHOD SyncJSContexts(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SyncJSContexts(); } \
   NS_IMETHOD GetCurrentJSStack(nsIStackFrame * *aCurrentJSStack) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentJSStack(aCurrentJSStack); } \
-  NS_IMETHOD GetCurrentNativeCallContext(nsIXPCNativeCallContext * *aCurrentNativeCallContext) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentNativeCallContext(aCurrentNativeCallContext); } \
+  NS_IMETHOD GetCurrentNativeCallContext(nsAXPCNativeCallContext * *aCurrentNativeCallContext) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentNativeCallContext(aCurrentNativeCallContext); } \
   NS_IMETHOD GetPendingException(nsIException * *aPendingException) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPendingException(aPendingException); } \
   NS_IMETHOD SetPendingException(nsIException * aPendingException) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPendingException(aPendingException); } \
   NS_IMETHOD DebugDump(PRInt16 depth) { return !_to ? NS_ERROR_NULL_POINTER : _to->DebugDump(depth); } \
@@ -1396,10 +1169,6 @@ class nsIXPConnect : public nsISupports {
   NS_IMETHOD ReparentScopeAwareWrappers(JSContext * aJSContext, JSObject * aOldScope, JSObject * aNewScope) { return !_to ? NS_ERROR_NULL_POINTER : _to->ReparentScopeAwareWrappers(aJSContext, aOldScope, aNewScope); } \
   NS_IMETHOD ClearAllWrappedNativeSecurityPolicies(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ClearAllWrappedNativeSecurityPolicies(); } \
   NS_IMETHOD GetWrappedNativePrototype(JSContext * aJSContext, JSObject * aScope, nsIClassInfo *aClassInfo, nsIXPConnectJSObjectHolder **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWrappedNativePrototype(aJSContext, aScope, aClassInfo, _retval); } \
-  NS_IMETHOD GetCollectGarbageOnMainThreadOnly(PRBool *aCollectGarbageOnMainThreadOnly) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCollectGarbageOnMainThreadOnly(aCollectGarbageOnMainThreadOnly); } \
-  NS_IMETHOD SetCollectGarbageOnMainThreadOnly(PRBool aCollectGarbageOnMainThreadOnly) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCollectGarbageOnMainThreadOnly(aCollectGarbageOnMainThreadOnly); } \
-  NS_IMETHOD GetDeferReleasesUntilAfterGarbageCollection(PRBool *aDeferReleasesUntilAfterGarbageCollection) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDeferReleasesUntilAfterGarbageCollection(aDeferReleasesUntilAfterGarbageCollection); } \
-  NS_IMETHOD SetDeferReleasesUntilAfterGarbageCollection(PRBool aDeferReleasesUntilAfterGarbageCollection) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDeferReleasesUntilAfterGarbageCollection(aDeferReleasesUntilAfterGarbageCollection); } \
   NS_IMETHOD ReleaseJSContext(JSContext * aJSContext, PRBool noGC) { return !_to ? NS_ERROR_NULL_POINTER : _to->ReleaseJSContext(aJSContext, noGC); } \
   NS_IMETHOD VariantToJS(JSContext * ctx, JSObject * scope, nsIVariant *value, jsval *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->VariantToJS(ctx, scope, value, _retval); } \
   NS_IMETHOD JSToVariant(JSContext * ctx, jsval value, nsIVariant **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->JSToVariant(ctx, value, _retval); } \
@@ -1407,7 +1176,8 @@ class nsIXPConnect : public nsISupports {
   NS_IMETHOD RestoreWrappedNativePrototype(JSContext * aJSContext, JSObject * aScope, nsIClassInfo *aClassInfo, nsIXPConnectJSObjectHolder *aPrototype) { return !_to ? NS_ERROR_NULL_POINTER : _to->RestoreWrappedNativePrototype(aJSContext, aScope, aClassInfo, aPrototype); } \
   NS_IMETHOD CreateSandbox(JSContext * cx, nsIPrincipal *principal, nsIXPConnectJSObjectHolder **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateSandbox(cx, principal, _retval); } \
   NS_IMETHOD EvalInSandboxObject(const nsAString & source, JSContext * cx, nsIXPConnectJSObjectHolder *sandbox, PRBool returnStringOnly, jsval *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->EvalInSandboxObject(source, cx, sandbox, returnStringOnly, _retval); } \
-  NS_IMETHOD GetCrossOriginWrapperForObject(JSContext * aJSContext, JSObject * aParent, JSObject * aWrappedObj, jsval *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCrossOriginWrapperForObject(aJSContext, aParent, aWrappedObj, _retval); } \
+  NS_IMETHOD GetXOWForObject(JSContext * aJSContext, JSObject * aParent, JSObject * aWrappedObj, jsval *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetXOWForObject(aJSContext, aParent, aWrappedObj, _retval); } \
+  NS_IMETHOD UpdateXOWs(JSContext * aJSContext, nsIXPConnectWrappedNative *aObject, PRUint32 aWay) { return !_to ? NS_ERROR_NULL_POINTER : _to->UpdateXOWs(aJSContext, aObject, aWay); } \
   NS_IMETHOD AddJSHolder(void * aHolder, nsScriptObjectTracer * aTracer) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddJSHolder(aHolder, aTracer); } \
   NS_IMETHOD RemoveJSHolder(void * aHolder) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveJSHolder(aHolder); } \
   NS_IMETHOD_(void) NoteJSContext(JSContext * aJSContext, nsCycleCollectionTraversalCallback & aCb) { return !_to ? NS_ERROR_NULL_POINTER : _to->NoteJSContext(aJSContext, aCb); } \
@@ -1517,8 +1287,8 @@ NS_IMETHODIMP nsXPConnect::GetCurrentJSStack(nsIStackFrame * *aCurrentJSStack)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* readonly attribute nsIXPCNativeCallContext CurrentNativeCallContext; */
-NS_IMETHODIMP nsXPConnect::GetCurrentNativeCallContext(nsIXPCNativeCallContext * *aCurrentNativeCallContext)
+/* readonly attribute nsAXPCNativeCallContextPtr CurrentNativeCallContext; */
+NS_IMETHODIMP nsXPConnect::GetCurrentNativeCallContext(nsAXPCNativeCallContext * *aCurrentNativeCallContext)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1611,26 +1381,6 @@ NS_IMETHODIMP nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext, JSO
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* attribute PRBool collectGarbageOnMainThreadOnly; */
-NS_IMETHODIMP nsXPConnect::GetCollectGarbageOnMainThreadOnly(PRBool *aCollectGarbageOnMainThreadOnly)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsXPConnect::SetCollectGarbageOnMainThreadOnly(PRBool aCollectGarbageOnMainThreadOnly)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute PRBool deferReleasesUntilAfterGarbageCollection; */
-NS_IMETHODIMP nsXPConnect::GetDeferReleasesUntilAfterGarbageCollection(PRBool *aDeferReleasesUntilAfterGarbageCollection)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsXPConnect::SetDeferReleasesUntilAfterGarbageCollection(PRBool aDeferReleasesUntilAfterGarbageCollection)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* void releaseJSContext (in JSContextPtr aJSContext, in PRBool noGC); */
 NS_IMETHODIMP nsXPConnect::ReleaseJSContext(JSContext * aJSContext, PRBool noGC)
 {
@@ -1673,8 +1423,14 @@ NS_IMETHODIMP nsXPConnect::EvalInSandboxObject(const nsAString & source, JSConte
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* [noscript] JSVal getCrossOriginWrapperForObject (in JSContextPtr aJSContext, in JSObjectPtr aParent, in JSObjectPtr aWrappedObj); */
-NS_IMETHODIMP nsXPConnect::GetCrossOriginWrapperForObject(JSContext * aJSContext, JSObject * aParent, JSObject * aWrappedObj, jsval *_retval)
+/* [noscript] JSVal getXOWForObject (in JSContextPtr aJSContext, in JSObjectPtr aParent, in JSObjectPtr aWrappedObj); */
+NS_IMETHODIMP nsXPConnect::GetXOWForObject(JSContext * aJSContext, JSObject * aParent, JSObject * aWrappedObj, jsval *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* [noscript] void updateXOWs (in JSContextPtr aJSContext, in nsIXPConnectWrappedNative aObject, in PRUint32 aWay); */
+NS_IMETHODIMP nsXPConnect::UpdateXOWs(JSContext * aJSContext, nsIXPConnectWrappedNative *aObject, PRUint32 aWay)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
