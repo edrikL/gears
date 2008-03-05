@@ -1,5 +1,5 @@
 #summary The gears_init.js file initializes Gears in the right way for each supported browser
-#labels ExperimentalDocs
+#labels ExperimentalDocs,Deprecated
 
 = gears_init.js =
 
