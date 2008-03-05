@@ -26,16 +26,20 @@
 
 #include "httpd.h"
 #include "http_config.h"
+#include "http_connection.h"
 #include "http_core.h"
 #include "http_log.h"
 #include "http_main.h"
 #include "http_protocol.h"
 #include "http_request.h"
 #include "util_script.h"
-#include "http_connection.h"
 
+#include "apr_date.h"
 #include "apr_lib.h"
 #include "apr_strings.h"
+
+/* TODO(fry): figure out the right way to import this */
+#include "../cache/mod_cache.h"
 
 #include <stdio.h>
 
@@ -48,7 +52,7 @@ typedef enum {
 
 /* from mod_disk_cache */
 typedef struct {
-    const char* cache_root;
+    const char* input_cache_root;
 
     apr_time_t expiration;
     apr_size_t min_checkpoint;
@@ -66,32 +70,75 @@ typedef struct {
 #define DEFAULT_RESUME_MODE HOLD_AND_FORWARD
 
 typedef struct {
-    int input_initialized; /* has input initialization happened yet? */
-    int expecting_103; /* was an Expect: 103-continue header received? */
-    const char *etag; /* the resume ETag in the Expect header */
+    int input_initialized;           /* has input initialization happened? */
 
-    /* derived from the bytes parameter in the Expect header */
+    /* derived from Expect header parameters */
+    int expecting_103;               /* was an Expect: 103-continue received? */
+    const char *etag;                /* the resume ETag in the Expect header */
     apr_off_t offset;
-    apr_off_t expected_length; /* UNKNOWN_OFFSET if not specified */
-    apr_off_t instance_length; /* UNKNOWN_OFFSET if '*' */
+    apr_off_t expected_length;       /* UNKNOWN_OFFSET if not specified */
+    apr_off_t instance_length;       /* UNKNOWN_OFFSET if '*' */
 
-    /* info about the cache file we are writing */
+    /* info about the input cache file we are writing */
     char *filename;
     apr_file_t *fd;
     apr_time_t mtime;
     apr_off_t file_size;
+    apr_off_t max_filesize;          /* instance_length or conf->max_filesize */
+    apr_off_t received_length;       /* number of bytes actually received */
+    apr_off_t skip;                  /* redundant incoming bytes to skip */
+    apr_off_t unacked;               /* number of bytes we haven't acked yet */
+    streaming_mode mode;             /* HOLD_AND_FORWARD or STREAM mode */
+    apr_bucket_brigade *bb;          /* only use for checkpoints */
 
-    apr_off_t max_filesize; /* instance_length or conf->max_filesize */
-    apr_off_t received_length; /* number of bytes actually received */
-    apr_off_t skip; /* redundant bytes in the incoming stream to be skipped */
-    apr_off_t unacked; /* number of bytes we haven't acked yet */
-
-    streaming_mode mode; /* HOLD_AND_FORWARD or STREAM mode */
-    apr_bucket_brigade *bb; /* only use for checkpoints */
+    /* for use in caching the reqeust's output */
+    cache_provider_list *providers;  /* potential cache providers */
+    const cache_provider *provider;  /* current cache provider */
+    const char *provider_name;       /* current cache provider name */
+    cache_handle_t *handle;          /* cache handle for saving output */
+    char *key;                       /* the cache key */
 } resume_request_rec;
 
 #define ETAG_LENGTH 6
 const apr_off_t UNKNOWN_OFFSET = (apr_off_t)-1;
+
+static resume_request_rec *generate_request_rec(request_rec *r,
+                                               resume_config *conf)
+{
+    resume_request_rec *ctx;
+    ctx = ap_get_module_config(r->request_config, &resume_module);
+    if (!ctx) {
+        ctx = apr_pcalloc(r->pool, sizeof(resume_request_rec));
+        ap_set_module_config(r->request_config, &resume_module, ctx);
+    }
+
+    ctx->input_initialized = 0;
+
+    ctx->expecting_103 = 0;
+    ctx->etag = NULL;
+    ctx->offset = 0;
+    ctx->expected_length = UNKNOWN_OFFSET;
+    ctx->instance_length = UNKNOWN_OFFSET;
+
+    ctx->filename = NULL;
+    ctx->fd = NULL;
+    ctx->mtime = 0;
+    ctx->file_size = 0;
+    ctx->max_filesize = conf->max_filesize;
+    ctx->received_length = 0;
+    ctx->skip = 0;
+    ctx->unacked = 0;
+    ctx->mode = conf->initial_mode;
+    ctx->bb = NULL; /* delay instantiation */
+
+    ctx->providers = NULL;
+    ctx->provider = NULL;
+    ctx->provider_name = NULL;
+    ctx->handle = NULL;
+    ctx->key = NULL;
+
+    return ctx;
+}
 
 /* Handles for resume filters, resolved at startup to eliminate a
  * name-to-function mapping on each request.
@@ -100,9 +147,9 @@ static ap_filter_rec_t *resume_input_filter_handle;
 static ap_filter_rec_t *resume_save_filter_handle;
 static ap_filter_rec_t *resume_out_filter_handle;
 
-/********************************************************************************
- * Shared methods
- *******************************************************************************/
+/*******************************************************************************
+ * Shared methods                                                              *
+ ******************************************************************************/
 
 static int validate_etag(const char *etag)
 {
@@ -118,12 +165,29 @@ static int validate_etag(const char *etag)
     return (etag[ETAG_LENGTH] == '\0');
 }
 
-/********************************************************************************
- * Handler methods
- *******************************************************************************/
+/*******************************************************************************
+ * Handler methods                                                             *
+ ******************************************************************************/
 
-static int parse_expect(request_rec *r, resume_request_rec *ctx,
-                        resume_config *conf)
+/* from cache_util */
+static cache_provider_list *get_providers(request_rec *r, resume_config *conf,
+                                          apr_uri_t uri)
+{
+    /* TODO(fry): use ap_cache_get_providers? */
+    cache_provider_list *providers = NULL;
+    /* TODO(fry): use mem also? */
+    cache_provider *provider = (cache_provider *)
+            ap_lookup_provider(CACHE_PROVIDER_GROUP, "disk", "0");
+    if (provider) {
+        providers = apr_pcalloc(r->pool, sizeof(cache_provider_list));
+        providers->provider = provider;
+        providers->provider_name = "disk";
+    }
+    return providers;
+}
+
+static int parse_expect(request_rec *r, resume_config *conf,
+                        resume_request_rec *ctx)
 {
     /* TODO(fry):
      * const char *expect = apr_table_get(r->headers_in, "Expect");
@@ -289,7 +353,7 @@ static int parse_expect(request_rec *r, resume_request_rec *ctx,
     return 1;
 }
 
-static int send_cached_response(request_rec *r)
+static int send_cached_response(request_rec *r, resume_request_rec *ctx)
 {
     apr_bucket_brigade *bb;
     apr_status_t rv;
@@ -320,8 +384,7 @@ static int send_cached_response(request_rec *r)
         if (rv != AP_FILTER_ERROR) {
             ap_log_error(APLOG_MARK, APLOG_ERR, rv, r->server,
                          "resume: error returned while trying to "
-                         "return %s cached data", "TODO");
-                         /* TODO(fry): cache->provider_name); */
+                         "return %s cached data", ctx->provider_name);
         }
         return rv;
     }
@@ -372,12 +435,12 @@ static int send_418(request_rec *r)
     return 418;
 }
 
-static int create_cache_file(request_rec *r, resume_config *conf,
+static int create_input_file(request_rec *r, resume_config *conf,
                              resume_request_rec *ctx)
 {
     apr_status_t rv;
 
-    ctx->filename = apr_pstrcat(r->pool, conf->cache_root,
+    ctx->filename = apr_pstrcat(r->pool, conf->input_cache_root,
                                 "/mod_resume.XXXXXX", NULL);
     ctx->file_size = 0;
     ctx->mtime = apr_time_now();
@@ -406,13 +469,13 @@ static int create_cache_file(request_rec *r, resume_config *conf,
     return OK;
 }
 
-static int open_cache_file(request_rec *r, resume_config *conf,
+static int open_input_file(request_rec *r, resume_config *conf,
                            resume_request_rec *ctx)
 {
     apr_status_t rv;
     apr_finfo_t finfo;
 
-    ctx->filename = apr_pstrcat(r->pool, conf->cache_root, "/mod_resume.",
+    ctx->filename = apr_pstrcat(r->pool, conf->input_cache_root, "/mod_resume.",
                                 ctx->etag, NULL);
     rv = apr_file_open(&ctx->fd, ctx->filename,
                        APR_READ | APR_WRITE | APR_APPEND
@@ -463,24 +526,13 @@ static int resume_handler(request_rec *r)
     }
 
     conf = ap_get_module_config(r->server->module_config, &resume_module);
-    ctx = ap_get_module_config(r->request_config, &resume_module);
-    if (!ctx) { /* TODO(fry): is this ever already set? */
-        ctx = apr_pcalloc(r->pool, sizeof(resume_request_rec));
-        ap_set_module_config(r->request_config, &resume_module, ctx);
-    }
 
-    ctx->input_initialized = 0;
-    ctx->expecting_103 = 0;
-    ctx->etag = NULL;
-    ctx->offset = 0;
-    ctx->expected_length = UNKNOWN_OFFSET;
-    ctx->instance_length = UNKNOWN_OFFSET;
-    ctx->max_filesize = conf->max_filesize;
-    ctx->received_length = 0;
-    ctx->skip = 0;
-    ctx->unacked = 0;
-    ctx->mode = conf->initial_mode;
-    ctx->bb = NULL; /* delay instantiation */
+    ctx = generate_request_rec(r, conf);
+    ctx->providers = get_providers(r, conf, r->parsed_uri);
+    if (!ctx->providers) {
+        /* TODO(fry): is cache absence reason enough to bail out now? */
+        return DECLINED;
+    }
 
     /* read Content-Length and Transfer-Encoding, but don't trust them
      * populates r->remaining, r->read_chunked */
@@ -491,19 +543,24 @@ static int resume_handler(request_rec *r)
                      ctx->filename);
         return rv;
     }
-    if (!parse_expect(r, ctx, conf)) {
+    if (!parse_expect(r, conf, ctx)) {
         return HTTP_BAD_REQUEST;
     }
 
     if (ctx->etag) {
         /* If a final response was already generated, return it again. */
-        if (0 /* TODO(fry): we have a cached response */) {
-            ap_add_output_filter_handle(resume_out_filter_handle, NULL, r,
+        rv = resume_cache_select(r, ctx);
+        if (rv == OK) {
+            /* resend the cached response */
+            ap_add_output_filter_handle(resume_out_filter_handle, ctx, r,
                                         r->connection);
-            return send_cached_response(r);
+            return send_cached_response(r, ctx);
         }
+        /* TODO(fry): what if we know we sent a response,
+         *            but it has since disappeared from the cache?
+         */
 
-        rv = open_cache_file(r, conf, ctx);
+        rv = open_input_file(r, conf, ctx);
         if (rv != OK) {
             return rv;
         }
@@ -521,16 +578,12 @@ static int resume_handler(request_rec *r)
             return DECLINED;
         }
 
-        rv = create_cache_file(r, conf, ctx);
+        rv = create_input_file(r, conf, ctx);
         if (rv != OK) {
             return rv;
         }
     }
 
-    /* TODO(fry): could use ap_set_module_config instead of passing ctx directly
-     *       into handler if we wanted users to be able to use input filter
-     *       without the handler.
-     */
     ap_add_input_filter_handle(resume_input_filter_handle, ctx, r,
                                r->connection);
     if (!ctx->expecting_103
@@ -540,7 +593,7 @@ static int resume_handler(request_rec *r)
         /* All bytes are present, no 418 required.
          * We expect a final response, so install the save output filter.
          */
-        ap_add_output_filter_handle(resume_save_filter_handle, NULL, r,
+        ap_add_output_filter_handle(resume_save_filter_handle, ctx, r,
                                     r->connection);
         return DECLINED;
     }
@@ -550,9 +603,9 @@ static int resume_handler(request_rec *r)
     return send_418(r);
 }
 
-/********************************************************************************
- * Input Filter methods
- *******************************************************************************/
+/*******************************************************************************
+ * Input Filter methods                                                        *
+ ******************************************************************************/
 
 /* TODO use this to generate etags */
 /* from http_etag */
@@ -803,30 +856,294 @@ static apr_status_t resume_input_filter(ap_filter_t *f,
     return APR_SUCCESS;
 }
 
-/********************************************************************************
- * Output Filter methods
- *******************************************************************************/
+/*******************************************************************************
+ * Output Filter methods                                                       *
+ ******************************************************************************/
+
+/* from mod_cache */
+/* Get the content length if known. */
+static apr_off_t get_size(request_rec *r, apr_bucket_brigade *in)
+{
+    apr_off_t size;
+    const char *cl = apr_table_get(r->err_headers_out, "Content-Length");
+    if (!cl) {
+        cl = apr_table_get(r->headers_out, "Content-Length");
+    }
+
+    if (cl) {
+        char *errp;
+        if (apr_strtoff(&size, cl, &errp, 10) || *errp || size < 0) {
+            cl = NULL; /* parse error, see next 'if' block */
+        }
+    }
+
+    if (!cl) {
+        /* if we don't get the content-length, see if we have all the
+         * buckets and use their length to calculate the size
+         */
+        apr_bucket *e;
+        int all_buckets_here = 0;
+        size = 0;
+        for (e = APR_BRIGADE_FIRST(in);
+             e != APR_BRIGADE_SENTINEL(in);
+             e = APR_BUCKET_NEXT(e))
+        {
+            if (APR_BUCKET_IS_EOS(e)) {
+                all_buckets_here = 1;
+                break;
+            }
+            if (APR_BUCKET_IS_FLUSH(e)) {
+                continue;
+            }
+            if (e->length == (apr_size_t)-1) {
+                break;
+            }
+            size += e->length;
+        }
+        if (!all_buckets_here) {
+            size = -1;
+        }
+    }
+
+    return size;
+}
+
+/* from mod_cache */
+/* Read the date. Generate one if one is not supplied */
+static apr_off_t get_date(request_rec *r)
+{
+    apr_time_t date;
+    const char *dates = apr_table_get(r->err_headers_out, "Date");
+    if (!dates) {
+        dates = apr_table_get(r->headers_out, "Date");
+    }
+
+    if (dates) {
+        date = apr_date_parse_http(dates);
+    }
+    else {
+        date = APR_DATE_BAD;
+    }
+
+    return date;
+}
+
+/* standin for cache_generate_key */
+static apr_status_t resume_generate_key(request_rec *r, resume_request_rec *ctx,
+                                        char **key)
+{
+    if (!ctx->key) {
+        /* generate a key that won't conflict with mod_cache URI keys */
+        ctx->key = apr_pstrcat(r->pool, "mod_resume://", ctx->etag, NULL);
+    }
+    *key = ctx->key;
+    return APR_SUCCESS;
+}
+
+/* from cache_storage */
+static int resume_cache_create_entity(request_rec *r, resume_request_rec *ctx,
+                                      apr_off_t size)
+{
+    char *key;
+    cache_handle_t *h;
+    cache_provider_list *providers;
+    apr_status_t rv;
+
+    rv = resume_generate_key(r, ctx, &key);
+    if (rv != APR_SUCCESS) {
+        return rv;
+    }
+    h = apr_pcalloc(r->pool, sizeof(cache_handle_t));
+
+    for (providers = ctx->providers; providers; providers = providers->next) {
+        rv = providers->provider->create_entity(h, r, key, size);
+        switch(rv) {
+            case OK: {
+                ctx->handle = h;
+                ctx->provider = providers->provider;
+                ctx->provider_name = providers->provider_name;
+                return OK;
+            }
+            case DECLINED: {
+                continue;
+            }
+            default: {
+                return rv;
+            }
+        }
+    }
+    return DECLINED;
+}
 
 /* from mod_cache */
 /* Cache server response. */
 static int resume_save_filter(ap_filter_t *f, apr_bucket_brigade *in)
 {
-    /* TODO(fry): import relevant bits from cache_save_filter */
+    resume_config *conf = ap_get_module_config(f->r->server->module_config,
+                                               &resume_module);
+    resume_request_rec *ctx = f->ctx;
+    request_rec *r = f->r;
+    int rv;
+    apr_off_t size;
+    cache_info *info = apr_pcalloc(r->pool, sizeof(cache_info));
+
+    /* from mod_cache */
+    /* We only set info->status upon the initial creation. */
+    info->status = r->status;
+
+    if (!ctx) {
+        ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, r->server,
+                     "resume: RESUME_SAVE output filter enabled unexpectedly");
+        ap_remove_output_filter(f);
+        return ap_pass_brigade(f->next, in);
+    }
+
+    size = get_size(r, in);
+
+    /* from mod_cache */
+    /* no cache handle, create a new entity */
+    rv = resume_cache_create_entity(r, ctx, size);
+    if (rv != OK) {
+        /* Caching layer declined the opportunity to cache the response */
+        /* TODO(fry): at least remember response code class (202)? */
+        ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, r->server,
+                     "resume: no cache providers for \"%s\"", ctx->etag);
+        ap_remove_output_filter(f);
+        return ap_pass_brigade(f->next, in);
+    }
+
+    ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, r->server,
+                 "resume: Saving response to: %s", r->unparsed_uri);
+
+    apr_time_t now = apr_time_now();
+    info->date = get_date(r);
+    if (info->date == APR_DATE_BAD) {
+        /* no date header (or bad header)! */
+        info->date = now;
+    }
+
+    /* from mod_cache */
+    /* set response_time for HTTP/1.1 age calculations */
+    info->response_time = now;
+    /* get the request time */
+    info->request_time = r->request_time;
+
+    /* be sure the cache expires _after_ any Expires header previously sent */
+    info->expire = now + conf->expiration;
+
+    /* from mod_cache */
+    rv = ctx->provider->store_headers(ctx->handle, r, info);
+    if(rv != APR_SUCCESS) {
+        ap_log_error(APLOG_MARK, APLOG_DEBUG, rv, r->server,
+                     "resume: store_headers failed");
+        ap_remove_output_filter(f);
+
+        return ap_pass_brigade(f->next, in);
+    }
+
+    /* from mod_cache */
+    rv = ctx->provider->store_body(ctx->handle, r, in);
+    if (rv != APR_SUCCESS) {
+        ap_log_error(APLOG_MARK, APLOG_DEBUG, rv, r->server,
+                     "resume: store_body failed");
+        ap_remove_output_filter(f);
+    }
+
     return ap_pass_brigade(f->next, in);
+}
+
+/* from cache_storage */
+int resume_cache_select(request_rec *r, resume_request_rec *ctx)
+{
+    char *key;
+    cache_handle_t *h;
+    cache_provider_list *providers;
+    apr_status_t rv;
+
+    rv = resume_generate_key(r, ctx, &key);
+    if (rv != APR_SUCCESS) {
+        return rv;
+    }
+    h = apr_palloc(r->pool, sizeof(cache_handle_t));
+
+    for (providers = ctx->providers; providers; providers = providers->next) {
+        rv = providers->provider->open_entity(h, r, key);
+        switch(rv) {
+            case OK: {
+                if (providers->provider->recall_headers(h, r) != APR_SUCCESS) {
+                    ap_log_error(APLOG_MARK, APLOG_DEBUG, rv, r->server,
+                            "resume: recall_headers from %s failed",
+                            providers->provider_name);
+                    return DECLINED;
+                }
+
+                ctx->handle = h;
+                ctx->provider = providers->provider;
+                ctx->provider_name = providers->provider_name;
+                return OK;
+            }
+            case DECLINED: {
+                continue;
+            }
+            default: {
+                return rv;
+            }
+        }
+    }
+    return DECLINED;
 }
 
 /* from mod_cache */
 /* Deliver cached responses up the stack. */
 static int resume_out_filter(ap_filter_t *f, apr_bucket_brigade *bb)
 {
-    /* TODO(fry): import relevant bits from cache_out_filter */
-    /* TODO(fry): ensure that bb is empty */
+    resume_config *conf = ap_get_module_config(f->r->server->module_config,
+                                               &resume_module);
+    resume_request_rec *ctx = f->ctx;
+    request_rec *r = f->r;
+
+    if (!ctx) {
+        ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, r->server,
+                     "resume: RESUME_OUT output filter enabled unexpectedly");
+        ap_remove_output_filter(f);
+        return ap_pass_brigade(f->next, bb);
+    }
+    if (!APR_BRIGADE_EMPTY(bb)) {
+        ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, r->server,
+                     "resume: RESUME_OUT received unexpected input bytes");
+        ap_remove_output_filter(f);
+        return ap_pass_brigade(f->next, bb);
+    }
+
+    ap_log_error(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r->server,
+                 "resume: running RESUME_OUT filter");
+
+    /* from mod_cache */
+    /* restore status of cached response */
+    /* This exposes a bug in mem_cache, since it does not
+     * restore the status into it's handle. */
+    r->status = ctx->handle->cache_obj->info.status;
+
+    /* from mod_cache */
+    /* recall_headers() was called in resume_cache_select() */
+    ctx->provider->recall_body(ctx->handle, r->pool, bb);
+
+    /* from mod_cache */
+    /* This filter is done once it has served up its content */
+    ap_remove_output_filter(f);
+    ap_log_error(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r->server,
+                 "resume: serving %s", r->uri);
     return ap_pass_brigade(f->next, bb);
+
+    /* TODO(fry): deal with handling lost response
+     *            202 or 418
+     *            202 configurable
+     */
 }
 
-/********************************************************************************
- * Configuration methods
- *******************************************************************************/
+/*******************************************************************************
+ * Configuration methods                                                       *
+ ******************************************************************************/
 
 static int resume_post_config(apr_pool_t *p, apr_pool_t *plog,
                               apr_pool_t *ptemp, server_rec *s)
@@ -834,6 +1151,8 @@ static int resume_post_config(apr_pool_t *p, apr_pool_t *plog,
     /* TODO(fry): initial garbage collection of file and etag
      *            also perform regular cleanup
      */
+
+    /* TODO(fry): log warning if no providers */
     return OK;
 }
 
@@ -842,7 +1161,7 @@ static void *create_resume_config(apr_pool_t *p, server_rec *s)
     resume_config *conf = apr_pcalloc(p, sizeof(resume_config));
 
     /* set default values */
-    conf->cache_root = NULL;
+    conf->input_cache_root = NULL;
     conf->min_checkpoint = DEFAULT_MIN_CHECKPOINT;
     conf->min_filesize = DEFAULT_MIN_CHECKPOINT;
     conf->max_filesize = DEFAULT_MAX_FILESIZE;
@@ -853,13 +1172,13 @@ static void *create_resume_config(apr_pool_t *p, server_rec *s)
     return conf;
 }
 
-static const char *set_cache_root(cmd_parms *parms, void *in_struct_ptr,
-                                  const char *root)
+static const char *set_input_cache_root(cmd_parms *parms, void *in_struct_ptr,
+                                        const char *root)
 {
     resume_config *c = ap_get_module_config(parms->server->module_config,
                                              &resume_module);
     /* TODO(fry): check existence of root */
-    c->cache_root = root;
+    c->input_cache_root = root;
     return NULL;
 }
 
@@ -947,7 +1266,8 @@ static const char *set_streaming(cmd_parms *parms, void *in_struct_ptr,
 
 static const command_rec resume_cmds[] =
 {
-    AP_INIT_TAKE1("ResumeCacheRoot", set_cache_root, NULL, RSRC_CONF,
+    /* TODO(fry): create custom mod_cache config, to manage output cache root */
+    AP_INIT_TAKE1("ResumeInputCacheRoot", set_input_cache_root, NULL, RSRC_CONF,
                   "The directory to store resume cache files"),
     AP_INIT_TAKE1("ResumeCheckpointBytes", set_min_checkpoint, NULL, RSRC_CONF,
                   "The minimum number of bytes to read between checkpoints."),
@@ -972,12 +1292,11 @@ static void resume_register_hooks(apr_pool_t *p)
 {
     /* from mod_cache */
 
-    /* TODO(fry): should we use quick_handler like mod_cache?
-     *            see http_config.h for quick_handler overview
-     *            I don't currently think so since it optimizes for the
-     *            uncommon case (all bytes transfered, but response not
-     *            received), and adds complexity of needing to deal with an
-     *            incomplete handler environment (e.g. no output filters set)
+    /* NOTE: we could have used quick_handler like mod_cache (see http_config.h
+     * for quick_handler overview). We are not doing so currently because it
+     * optimizes for the uncommon case (all bytes transfered, but no response
+     * received), and adds the complexity of needing to deal with an incomplete
+     * handler environment (e.g. no output filters set).
      */
     ap_hook_handler(resume_handler, NULL, NULL, APR_HOOK_FIRST);
 
