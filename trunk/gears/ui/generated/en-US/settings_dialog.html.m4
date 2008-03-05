@@ -231,8 +231,8 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
 ^<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">^m4_dnl
 ^</object>^)
 <script>
-m4_include(third_party\jsonjs\json_noeval.js)
-m4_include(ui\common\html_dialog.js)
+m4_include(third_party/jsonjs/json_noeval.js)
+m4_include(ui/common/html_dialog.js)
 </script>
 <script>
   var g_dialogResult = {"removeSites": []};
