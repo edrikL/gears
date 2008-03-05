@@ -185,16 +185,10 @@ class Database2 : ModuleImplBaseClassVirtual {
     Database2Transaction *tx = CreateModule<Database2SyncTransaction>();
   
     // sync transaction never enters the queue, there's no need for it
-    if (!(tx_queue_->IsEmpty() && tx->Start(connection))) {
-      // could be because:
-      // - there was already a transaction open
-      // - opening the transaction failed
-      // - any of the statements failed
-      // - any of the callback threw an exception
-      // - the commit failed
-      // if there isn't already an exception set 
-    // (tx->is_exception_set()), create
-      // one using the error.
+    // but it still checks for pending transactions in the queue
+    // to prevent deadlocks
+    if (tx_queue_->IsEmpty()) {
+      tx->Start(connection_);
     }
   }
   
@@ -212,7 +206,7 @@ class Database2 : ModuleImplBaseClassVirtual {
  private:
   // Shared reference to the connection used by all transactions from this
   // database instance. This is initialized during the first transaction.
-  scoped_refptr<Database2Connection> connection;
+  scoped_refptr<Database2Connection> connection_;
   scoped_refptr<Database2Thread> thread_;
   ThreadSafeQueue<Database2Transaction> tx_queue_;
 };
