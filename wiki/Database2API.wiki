@@ -11,7 +11,7 @@ This proposal aims to implement a Gears module based on the existing specificati
 =Goals=
 
 The goals of the proposal are:
- * Enable !JavaScript developers to easily write code that works with both Gears and browser database APIs.
+ * Enable Javascript developers to easily write code that works with both Gears and browser database APIs.
  * Reduce developer "mind-print" by implementing the same API that is available in browsers.
  * Support the proposed HTML5 database standard with an implementation available for all browsers that Gears supports.
  * Implement an asynchronous API that can be called from the UI thread without freezing the UI.
@@ -123,7 +123,7 @@ function insertPage(text, lastUpdated) {
       function(tx, error) {
         reportError('sql', error.message);
       });
-  })
+  });
 }
 }}}
 
@@ -132,27 +132,9 @@ There is also a [http://webkit.org/misc/DatabaseExample.html working example] (r
 
 =Technical Design=
 
-== Class Sketch ==
+All Javascript interfaces are implemented as `ModuleImplBaseClassVirtual` sub-classes and handle retrieving JS arguments, passing return parameters, and invoking callbacks:
 
 {{{
-// Encapsulates a sqlite3 handle so that it can be initialized lazily and
-// refcounted.
-class Database2Connection : RefCounted {
- public:
-  ~Database2Connection() {
-    // free handle
-  }
-
-  bool Init() {
-    // init handle if not already
-  }
-
-  sqlite3 *handle() const;
-
- private:
-  sqlite3 *handle_;
-};
-
 
 // Allows JavaScript to create database objects. Could be extended
 // in the future with removeDatabase() and listDatabases().
@@ -166,11 +148,16 @@ class Database2Manager : ModuleImplBaseClassVirtual {
   }
 };
 
+}}}
+
+The database interface holds a queue of transactions and a reference to a thread abstraction:
+
+{{{
 
 // Implements the HTML5 database interface, which allows the creation
 // of transactions. We also have our own proprietary
 // synchronousTransaction() method. This class also has a reference
-// to a DatabaseConnection object which it shares with all transactions
+// to a Database2Connection object which it shares with all transactions
 // it creates.
 class Database2 : ModuleImplBaseClassVirtual {
  public:
@@ -178,22 +165,35 @@ class Database2 : ModuleImplBaseClassVirtual {
   // OUT: void
   void Transaction(JsCallContext *cx) {
     Database2Transaction *tx = CreateModule<Database2Transaction>();
-    tx->StartAsync(connection);
+    // populate callbacks
+    // ...
+    QueueTransaction(tx);
   }
-  
+
+  void QueueTransaction(Database2Transaction *tx) {
+    bool first = tx_queue_->IsEmpty();
+    // add to transaction queue
+    tx_queue_->Push(tx);
+    if (first) {
+      tx->Start();
+      }
+  }
+
   // IN: function start_callback
   // OUT: void
   void SynchronousTransaction(JsCallContext *cx) {
-    Database2Transaction *tx = CreateModule<Database2Transaction>();
+    Database2Transaction *tx = CreateModule<Database2SyncTransaction>();
   
-    if (!tx->StartSync(connection)) {
+    // sync transaction never enters the queue, there's no need for it
+    if (!(tx_queue_->IsEmpty() && tx->Start(connection))) {
       // could be because:
       // - there was already a transaction open
       // - opening the transaction failed
       // - any of the statements failed
       // - any of the callback threw an exception
       // - the commit failed
-      // if there isn't already an exception set (cx->is_exception_set()), create
+      // if there isn't already an exception set 
+    // (tx->is_exception_set()), create
       // one using the error.
     }
   }
@@ -202,86 +202,128 @@ class Database2 : ModuleImplBaseClassVirtual {
   //     optional function success, optional function failure
   // OUT: void
   void ChangeVersion(JsCallContext *cx) {
-    // TODO(dimitri)
+    Database2Transaction *tx = CreateModule<Database2Transaction>();
+    // populate callbacks
+    // + populate version
+    // ...
+    QueueTransaction(tx);
   }
   
  private:
   // Shared reference to the connection used by all transactions from this
   // database instance. This is initialized during the first transaction.
   scoped_refptr<Database2Connection> connection;
+  scoped_refptr<Database2Thread> thread_;
+  ThreadSafeQueue<Database2Transaction> tx_queue_;
 };
 
+}}}
 
+With the exception of opening a database, which has to occur on the main thread,  all database operations follow the same pattern: a database statement is executed on a separate thread, then an optional action on the main thread follows. This pattern is encapsulated by `Database2Thread`, which acts as a simple interpreter, accepting a `ThreadedOperationInterface` and executing it.
 
-// Here be the meat. Transaction implements the HTML5 SQLTransaction
-// interface and contains the code to actually execute a transaction.
-//
-// The general idea for async transactions is that there is a background and
-// foreground thread. The foreground thread is the thread of execution when
-// StartAsync() is called. We handwave and say we will somehow obtain a
-// background thread, but the exact policy is left to some other component
-// (it could be that there is just one thread per origin, or there could be some
-// limit, or it could be a fancier pool where threads are reused).
-//
-// Messages are posted from the foreground thread to the background thread to
-// begin a transaction and for each statement. The background thread receives
-// the message and does any appropriate processing, then posts a message back
-// to the foreground thread to invoke js callbacks. The background thread then
-// blocks and waits for the js callbacks to complete, then handles the results
-// from the callback. It's important to block while waiting for js callbacks
-// because the spec allows for statement failure callbacks to cancel a ROLLBACK
-// and let the next statement proceed (by returning false).
-//
-// We also handwave over the HandlerInterface implementation for
-// ThreadMessageQueue. At current, it looks like there can only be one instance
-// registered per message type across all threads, which is inconvenient for
-// Database2. Worst case, we can just have a singleton helper class which
-// receives messages and immediately delegates to the appropraite tx methods.
-//
-// To support synchronous transactions, we break the methods that execute on
-// the background thread in async mode into the part that does the work (names
-// end in *Impl()) and the part that sends messages back to the foreground thread.
-// Then we can just call the *Impl() methods directly from
-// SynchronousTransaction().
-//
-// To avoid deadlock between async and sync transactions, we keep a static
-// counter of the number of open transactions, and only allow a sync transaction
-// to be started if it is zero.
+The execution first invokes `InBackground` method of the interface on a separate thread, then, when the method completes and returns `true`, invokes `OnForeground` method back on the main thread. This is accomplished by passing messages using a `ThreadMessageQueue`:
+
+{{{
+// lazily creates a background thread
+// could be a thread pool
+class Database2Thread : RefCounted {
+ private:
+  void ThreadEntryPoint() {
+   // pump, pump, pump
+  }
+ public:
+  ~Database2Thread() {
+   // shut down thread, if started
+  }
+ 
+  void QueueOperation(ThreadedOperationInterface* item) {
+   // get ThreadMessageQueue instance
+   // post item message
+   // on the background thread, invoke InBackground, then
+   // if returned true,
+   // post item back to the foreground thread,
+   // when the message is received, invoke OnForeground
+  }
+};
+
+class ThreadedOperationInterface : MessageData {
+ // return false, if no need to report results
+ virtual bool InBackground() = 0;
+ virtual void OnForeground() = 0;
+};
+
+}}}
+
+It is important to note that `QueueOperation` method should be callable from any thread with the same result: main thread is the one in which `Database2Thread` was instantiated.
+
+Each concrete implementation of `ThreadedOperationInterface` acts as operation context, holding refs to all work objects and results. There are several implementations of `ThreadedOperationInterface`, each for one database operation and each handling the corresponding fallback/error cases:
+
+ * `BeginTransactionOperation`
+ * `ExecuteSqlOperation`
+ * `CommitTransactionOperation`
+ * `RollbackTransactionOperation`
+ 
+Here's the rough sketch of an `ExecuteSqlOperation`:
+ 
+{{{
+
+class ExecuteSqlOperation : ThreadedOperationInterface {
+ public:
+  ExecuteSqlOperation(Database2Transacton *tx,
+                      Database2Connection *conn,
+                      Database2Statement *stmt) : tx_(tx), stmt_(stmt),
+                       conn_(conn) {}
+  
+  bool InBackground() {
+   // this operation is also the functor for retrieving rows
+   conn_->Execute(stmt, this);
+    // functor will populate rows property on stmt (if stmt has success   
+    // callback)
+    // store error, if any
+    // if success and no success callback:
+     tx->ExecuteNextStatement();
+     return false;
+    // otherwise, delegate to foreground thread
+    return true;
+  }
+  
+  void OnForeground() {
+    stmt_->InvokeCallback(/* collected rows */);
+    // if statement succeeded and callback failed, queue rollback op
+    // else if statement failed and there is no callback, or callback did
+    // not return false, queue rollback op
+  }
+  
+  // I am the glorious el Functoro
+  void operator()(/* args go here */) {
+   // collect a row
+  }
+  
+ private:
+  int sql_error_code_;
+  std::string16 last_error_message_;
+
+  Database2Transaction *tx_;
+  Database2Connection *conn_;
+  Database2Statement *stmt_;
+};
+
+}}}
+
+The implementation of the `SQLTransaction` interface holds a queue of statements and provides facilities to invoke transaction callbacks:
+
+{{{
 
 class Database2Transaction : ModuleImplBaseClassVirtual {
  public:
-  bool StartAsync(Database2Connection *connection) {
-    // Increment num_transactions_pending_
-    // Call OpenAsync() on some background thread
+  void Start() {
+    // queue operation to begin transaction
+    thread()->QueueOperation(new BeginTransationOperation(this, database()));
   }
-  
-  bool StartSync(Database2Connection *connection) {
-    // If num_transactions_pending_ > 0, throw
-    // Else call BeginImpl, ExecuteSqlImpl, etc directly.
-  }
-  
-  void OpenAsync() {
-    // ThreadMessageQueue::InitThreadMessageQueue()
-    // OpenImpl()
-    // call OpenCallback on foreground thread
-    // wait for result
-    // if there was an exception: RollbackAsync()
-  }
-  
-  void OpenImpl() {
-    // Initialize connection if not already
-    // execute BEGIN
-    // open question: deferred or immediate transactions?
-    //  note: deferred synchronous transactions lead to deadlock without further precautions :(
-    // store any error
-  }
-  
-  void OpenCallback(Database2MessageData *message) {
-    // if there was a sql error, invoke failure_callback
-    // otherwise:
-    // - invoke start_callback
-    // - if callback threw: mark closed, save exception message
-  }
+
+  void InvokeCallback();
+
+  void InvokeErrorCallback();
   
   // IN: string sql, optional object[] arguments, optional function on_success,
   //     optional function on_failure
@@ -290,114 +332,159 @@ class Database2Transaction : ModuleImplBaseClassVirtual {
     if (!is_open) {
       // throw exception saying the transaction is closed
     }
-  
     // create Database2Statement with sql, arguments, and callbacks
-    // if async, call ExecuteAsync(stmt) on background thread
-    // otherwise:
-    //   create resultset
-    //   call ExecuteImpl()
-    //   functor will populate resultset directly
-    //   if success, return resultset
-    //   else, throw error
-  }
-  
-  void ExecuteAsync(Database2Statement *stmt) {
-    // call ExecuteImpl()
-    // functor will populate rows property on stmt (if stmt has sucess callback)
-    // add any error to stmt
-    // if the appropriate callback exists, call Executecallback(stmt) on foreground thread
-    // wait for result
-    // if statement succeeded and callback failed: Rollback()
-    // else if statement failed and there is no callback, or callback did not return false: Rollback()
+    // add to statement queue
+    // if first item in the queue, invoke ExecuteNextStatement
     
-    // decrement num_statements_pending_;
-    // if no more pending statements: CommitAsync();
-  }
-  
-  void ExecuteImpl(Database2Statement *stmt, Functor handle_row_data) {
-    // bind args
-    // for each row, call handle_row_data
-    // close
-  }
-  
-  void ExecuteCallback(Database2Statement *stmt) {
-    // if success:
-    // - create resultset
-    // - populate rows object with intermediate results from stmt
-    // - invoke stmt->success_callback;
-    // else, call stmt->failure_callback;
-  }
-  
-  void RollbackAsync() {
-    // RollbackImpl()
-    // Call RollbackCallback() on foreground thread
-  }
-  
-  void RollbackImpl() {
-    // execute ROLLBACK
-    // mark tx closed
-    // decrement num_transactions_pending_
-  }
-  
-  void RollbackCallback() {
-    // invoke failure_clalback
-  }
-  
-  void CommitAsync() {
-    // CommitImpl()
-    // If an appropriate callback exists, call CommitCallback() on foreground thread
-  }
-  
-  void CommitImpl() {
-    // execute COMMIT
-    // mark tx closed
-    // decrement num_transactions_pending_
-  }
-  
-  void CommitCallback() {
-    // call appropriate callback
+    // ideally, if the queue is empty prior to this call, this should be done
+    // without pushing/popping the statement
   }
 
-  int last_sql_error_code() const;
-  std::string16 &last_error_message() const;
+  void ExecuteNextStatement(JsCallContext *cx) {
+    // pop statement from the end of the queue
+    // if no more statements,
+    thread()->QueueOperation(new CommitTransactionOperation(this));
+    // otherwise
+    thread()->QueueOperation(CreateExecuteOperation(stmt, cx));
+  }
 
+  Database2Connection database() const;
+ 
+ protected:
+  
+  virtual Database2Thread thread();
+  virtual ThreadedOperationInterface 
+    CreateExecuteOperation(Database2Statement* stmt,
+                           JsCallContext* cx) const;
+  virtual ThreadedOperationInterface
+    CreateBeginTransactionOperation() const;
+  
  private:
-  static AtomicWord num_transactions_pending_;
+  std:string16 old_version_;
+  std:string16 new_version_;
 
   scoped_ptr<JsRootedCallback> start_callback_;
   scoped_ptr<JsRootedCallback> success_callback_;
   scoped_ptr<JsRootedCallback> failure_callback_;
 
   scoped_refptr<Database2Connection> connection_;
+  scoped_refptr<Database2Thread> thread_;
+  
+  ThreadSafeQueue<Database2Statement> statement_queue_;
 
   bool is_open_;
-  bool is_async_;
-  Atomicword num_statements_pending_;
-
-  int last_sql_error_code_;
-  std::string16 last_error_message_;
 };
 
-
-// Base class used for messages passed between threads in
-// Transaction.
-class Database2MessageData : MessageData {
- public:
-  // necessary gunk to wait on this message
-};
-
-
-// Represents a statement queued for execution by a call to
-// executeSql().
-class Database2Statement : Database2MessageData {
- public:
-  std::string16 sql;
-  JsParamToSend *args;
-  scoped_ptr<JsRootedCallback> success_callback;
-  scoped_ptr<JsRootedcallback> failure_callback;
-  JsParamToSend *rows;
-};
 }}}
+
+Thus, there are two explicit, thread-safe queues: a transaction queue and a statement queue. Each `Database2Transaction` has a statement queue. The queues are concrete implementations of a `ThreadSafeQueue` template:
+
+{{{
+
+// thread-safe queue, used to queue up both transactions and statements
+template <class T>
+class ThreadSafeQueue {
+ public:
+  Push(T *t) {
+   // lock
+   // add t to internal queue
+   // unlock
+  }
+  
+  // remove from queue
+  T *Pop();
+  
+  // returns true if the internal queue is empty
+  bool IsEmpty();
+};
+
+}}}
+
+Database work is encapsulated in the `Database2Connection`. Here is a very rough sketch:
+
+{{{
+// Encapsulates database operations, opens and closes database connection
+class Database2Connection : RefCounted {
+ public:
+  // lazily initialized
+  Database2Connection(std:string16 name) : name_(name) {}
+  
+  ~Database2Connection() {
+    // close connection
+  }
+  
+  bool VerifyVersion(std:string16 version) {
+    // read and store expected version
+    // return true, if argument matches actual version
+  }
+  
+  void Execute((*row_data_callback)(...), (*error_callback)(int, std:string)) {
+    if (bogus_version_) {
+     // call error_callback, version mismatch
+    }
+    // prepare
+    // step, for each row, call row_data_callback
+     // if error, call error_callback with code and message 
+  }
+ 
+  bool Open(void (*error_callback)(int, std:string)) {
+    // execute BEGIN    
+    // if error, call error_callback with code and message
+    // read actual_version
+  }
+ 
+  void Rollback() {
+    // execute ROLLBACK
+  }
+
+  bool Commit(void (*error_callback)()) {
+    // execute COMMIT
+    // if error, call error_callback
+  }
+
+ private:
+  bool GetHandle() {
+    // opend database if not already open,
+    // used by all operations to obtain the handle
+  }
+  
+  bool bogus_version_;
+  int expected_version_;
+
+  sqlite3 *handle_;
+  std:string16 name_;
+};
+
+}}}
+
+In order to handle synchronous transactions, a sub-class of `Database2Transaction` overrides `thread` and `CreateExecuteOperation` methods as follows:
+
+ * `thread` now returns a sub-class (super-class?) of `Database2Thread` that simply invokes `InBackground` and then `InForeground`, without any threading.
+ * `CreateExecuteOperation` instantiates a `SyncExecuteOperation`, which stuffs the result set into the passed `JsCallContext` and returns.  
+
+A statement in transaction is represented by `Database2Statement`:
+
+{{{
+
+class Database2Statement {
+ private:
+  std::string16 sql_;
+  JsParamToSend *args_;
+  scoped_ptr<JsRootedCallback> success_callback_;
+  scoped_ptr<JsRootedcallback> failure_callback_;
+  JsParamToSend *rows_;
+
+ public:
+  InvokeSuccessCallback();
+  InvokeFailureCallback();
+};
+
+}}}
+
+Version values are part of `Database2Transaction`, and remain uninitialized when `Database2::Transaction` method is invoked. If they are initialized (this occurs when `Database2::ChangeVersion` is called):
+
+ * `BeginTransactionOperation::InBackground` checks for `bogus_version_` and fails, if the flag is set
+ * `CommitTransactionOperation::InBackground` updates version values after successful commit 
 
 == Nested Transactions ==
 
