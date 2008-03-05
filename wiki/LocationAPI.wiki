@@ -49,12 +49,12 @@ interface Position {
 
 interface Address {
   readonly string street;       // street address
-  readonly string postal_code;  // postal code
+  readonly string postalCode;  // postal code
   readonly string city;         // city name
   readonly string county;       // county name
   readonly string region;       // region, e.g. a state in the US
   readonly string country;      // country
-  readonly string country_code; // country code (ISO 3166-1)
+  readonly string countryCode; // country code (ISO 3166-1)
   // TODO: Internationalize this structure further
 }
 
