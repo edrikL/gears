@@ -1,5 +1,5 @@
 #summary The Factory module is used to create all other Gears modules
-#labels ExperimentalDocs
+#labels ExperimentalDocs,Deprecated
 
 = Factory Module =
 
