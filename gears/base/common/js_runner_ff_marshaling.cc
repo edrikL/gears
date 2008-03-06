@@ -2351,8 +2351,11 @@ static JSBool JSData2Native(JSContext *cx, void* d, jsval s,
                 }
                 else if(JSVAL_IS_NULL(s))
                 {
-                  assert(false); // NOT YET IMPLEMENTED! (missing XPCReadableJSStringWrapper, and more)
-                  return JS_FALSE;
+                  // Convert to an empty string.
+                  nsDependentString *wrapper = new nsDependentString(L"", 0);
+                  if(!wrapper)
+                    return JS_FALSE;
+                  *((const nsAString**)d) = wrapper;
 /***
                     XPCReadableJSStringWrapper *wrapper =
                         new XPCReadableJSStringWrapper();
@@ -2368,8 +2371,12 @@ static JSBool JSData2Native(JSContext *cx, void* d, jsval s,
                 }
                 else
                 {
-                  assert(false); // NOT YET IMPLEMENTED! (commented this out b/c cleanup code casts void* to invoke nsDependentString dtor. Note: cannot access nsAString_external dtor.)
-                  return JS_FALSE;
+                  // Convert to an empty string.
+                  // TODO(zork): Properly convert argument to a string.
+                  nsDependentString *wrapper = new nsDependentString(L"", 0);
+                  if(!wrapper)
+                    return JS_FALSE;
+                  *((const nsAString**)d) = wrapper;
 /***
                     // use nsString to encourage sharing
                     const nsAString *rs = new nsString(chars, length);
