@@ -88,12 +88,8 @@ bool TestSerialization();  // from serialization_test.cc
 bool TestCircularBuffer();  // from circular_buffer_test.cc
 #ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
-#ifdef WINCE
-// Blobs not yet implemented for WinCE.
-#else
 bool TestBufferBlob();  // from blob_test.cc
 bool TestSliceBlob();  // from blob_test.cc
-#endif  // WINCE
 #endif  // not OFFICIAL_BUILD
 
 #if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
@@ -166,12 +162,12 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestSerialization();
 #ifndef OFFICIAL_BUILD
   // The blob API has not been finalized for official builds
-#if BROWSER_FF || (BROWSER_IE && !defined(WINCE))
+#if BROWSER_FF || BROWSER_IE
   ok &= TestBufferBlob();
   ok &= TestSliceBlob();
 #else
-  // Blobs not yet implemented for NPAPI or WinCE.
-#endif  // BROWSER_FF || (BROWSER_IE && !defined(WINCE))
+  // Blobs not yet implemented for NPAPI.
+#endif  // BROWSER_FF || BROWSER_IE
 #endif  // not OFFICIAL_BUILD
   // TODO(zork): Add this test back in once it doesn't crash the browser.
   //ok &= TestJsRootedTokenLifetime();

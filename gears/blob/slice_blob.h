@@ -26,9 +26,6 @@
 #ifndef GEARS_BLOB_SLICE_BLOB_H__
 #define GEARS_BLOB_SLICE_BLOB_H__
 
-#ifdef WINCE
-// No BLOB support on WINCE yet
-#else
 #ifdef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
 #else
@@ -55,5 +52,4 @@ class SliceBlob : public BlobInterface {
 };
 
 #endif  // not OFFICIAL_BUILD
-#endif  // WINCE
 #endif  // GEARS_BLOB_SLICE_BLOB_H__

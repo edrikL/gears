@@ -61,11 +61,16 @@ import "httprequest/ie/httprequest.idl";
 // The Image API is not yet available for WinCE.
 #else
 #ifdef OFFICIAL_BUILD
-// The Image and blob APIs have not been finalized for official builds
+// The Image API has not been finalized for official builds.
 #else
-import "blob/blob_ie.idl";
 import "image/ie/image.idl";
 #endif
+#endif
+
+#ifdef OFFICIAL_BUILD
+// The Blob API has not been finalized for official builds.
+#else
+import "blob/blob_ie.idl";
 #endif
 
 import "localserver/ie/localserver.idl";
@@ -197,11 +202,8 @@ library GearsTypelib
     [default] interface GearsHttpRequestInterface;
   };
 
-#ifdef WINCE
-// The Image API is not yet available for WinCE.
-#else
 #ifdef OFFICIAL_BUILD
-// The Image and blob APIs have not been finalized for official builds
+  // The Blob API has not been finalized for official builds.
 #else
   [
     uuid(B4F3B2E2-6200-4796-B49D-471BD24F18F5)
@@ -210,7 +212,14 @@ library GearsTypelib
   {
     [default] interface GearsBlobInterface;
   };
+#endif
 
+#ifdef WINCE
+  // The Image API is not yet available for WinCE.
+#else
+#ifdef OFFICIAL_BUILD
+  // The Image API has not been finalized for official builds.
+#else
   [
     uuid(D946AEB2-263E-4448-8F29-FC714A86E9A1)
   ]
