@@ -98,8 +98,6 @@ SQLITE_CSRCS	+= \
 #-----------------------------------------------------------------------------
 # third_party/libpng
 
-# TODO(andreip): fix errors in zlib before building this for wince
-ifneq ($(OS),wince)
 THIRD_PARTY_VPATH	+= \
 		third_party/libpng \
 		$(NULL)
@@ -134,13 +132,9 @@ THIRD_PARTY_CSRCS	+= \
 		$(NULL)
 endif
 
-endif # not wince
-
 #-----------------------------------------------------------------------------
 # third_party/zlib
 
-# TODO(andreip): fix errors in gzio.c for wince
-ifneq ($(OS),wince)
 THIRD_PARTY_VPATH	+= \
 		third_party/zlib \
 		$(NULL)
@@ -173,8 +167,6 @@ THIRD_PARTY_CSRCS	+= \
 		trees.c \
 		$(NULL)
 endif
-
-endif # not wince
 
 #-----------------------------------------------------------------------------
 # third_party/libjpeg
@@ -542,6 +534,7 @@ IEMOBILE_CPPSRCS	+= \
 		paths.cc \
 		paths_ie.cc \
 		permissions_db.cc \
+		png_utils.cc \
 		security_model.cc \
 		security_model_test.cc \
 		serialization.cc \
@@ -788,9 +781,8 @@ NPAPI_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # desktop
 
-# TODO: Implement desktop for NPAPI and WINCE
+# TODO: Implement desktop for NPAPI
 ifneq ($(BROWSER),NPAPI)
-ifneq ($(OS),wince)
 
 SHARED_VPATH	  += \
 		desktop \
@@ -801,14 +793,18 @@ SHARED_CPPSRCS	+= \
 		desktop_utils_linux.cc \
 		desktop_utils_osx.cc \
 		desktop_utils_win32.cc \
+
+# TODO(steveblock): Implement File dialog for WinCE.
+ifneq ($(OS),wince)
+SHARED_CPPSRCS	+= \
 		file_dialog.cc \
 		file_dialog_gtk.cc \
 		file_dialog_osx.cc \
 		file_dialog_utils.cc \
 		file_dialog_win32.cc \
 		$(NULL)
-
 endif
+
 endif
 
 #-----------------------------------------------------------------------------
