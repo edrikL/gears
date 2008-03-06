@@ -45,6 +45,16 @@
 
 module AP_MODULE_DECLARE_DATA resume_module;
 
+/* should be consistent with httpd.h */
+#define HTTP_CHECKPOINT                    103
+#define HTTP_RESUME_INCOMPLETE             418
+
+/* additions to status_lines in http_protocol */
+#define HTTP_CHECKPOINT_STATUS_LINE        "103 Checkpoint"
+#define HTTP_RESUME_INCOMPLETE_STATUS_LINE "418 Resume Incomplete"
+
+#define EXPECT_CHECKPOINT                  "103-checkpoint"
+
 typedef enum {
     STREAM,
     HOLD_AND_FORWARD
@@ -52,6 +62,11 @@ typedef enum {
 
 /* from mod_disk_cache */
 typedef struct {
+    /* fabricated cache_conf to hijack methods from mod_cache */
+    cache_server_conf *cache_conf;
+
+    apr_array_header_t *resume_enable;
+    apr_array_header_t *resume_disable;
     const char* input_cache_root;
 
     apr_time_t expiration;
@@ -73,7 +88,7 @@ typedef struct {
     int input_initialized;           /* has input initialization happened? */
 
     /* derived from Expect header parameters */
-    int expecting_103;               /* was an Expect: 103-continue received? */
+    int expecting_checkpoint;        /* was an Expect: 103-continue received? */
     const char *etag;                /* the resume ETag in the Expect header */
     apr_off_t offset;
     apr_off_t expected_length;       /* UNKNOWN_OFFSET if not specified */
@@ -114,7 +129,7 @@ static resume_request_rec *generate_request_rec(request_rec *r,
 
     ctx->input_initialized = 0;
 
-    ctx->expecting_103 = 0;
+    ctx->expecting_checkpoint = 0;
     ctx->etag = NULL;
     ctx->offset = 0;
     ctx->expected_length = UNKNOWN_OFFSET;
@@ -165,47 +180,57 @@ static int validate_etag(const char *etag)
     return (etag[ETAG_LENGTH] == '\0');
 }
 
+/* Sets headers that are common between 103 and 418 responses, ensuring
+ * consistent implementations in both cases.
+ */
+static void set_shared_resume_headers(request_rec *r, resume_request_rec *ctx,
+                                      apr_table_t *headers)
+{
+    if (ctx->file_size > 0) {
+        apr_table_setn(r->err_headers_out, "Range",
+                       apr_psprintf(r->pool, "0-%d", ctx->file_size - 1));
+    }
+}
+
 /*******************************************************************************
  * Handler methods                                                             *
  ******************************************************************************/
 
-/* from cache_util */
-static cache_provider_list *get_providers(request_rec *r, resume_config *conf,
-                                          apr_uri_t uri)
+static cache_provider_list *resume_get_providers(request_rec *r,
+                                                 resume_config *conf,
+                                                 apr_uri_t uri)
 {
-    /* TODO(fry): use ap_cache_get_providers? */
-    cache_provider_list *providers = NULL;
-    /* TODO(fry): use mem also? */
-    cache_provider *provider = (cache_provider *)
-            ap_lookup_provider(CACHE_PROVIDER_GROUP, "disk", "0");
-    if (provider) {
-        providers = apr_pcalloc(r->pool, sizeof(cache_provider_list));
-        providers->provider = provider;
-        providers->provider_name = "disk";
-    }
-    return providers;
+    return ap_cache_get_providers(r, conf->cache_conf, uri);
+}
+
+static int return_incomplete(request_rec *r, resume_config *conf,
+                             resume_request_rec *ctx)
+{
+    /* manual status_line specification since we're not in http_protocol */
+    r->status_line = HTTP_RESUME_INCOMPLETE_STATUS_LINE;
+    set_shared_resume_headers(r, ctx, r->err_headers_out);
+    return HTTP_RESUME_INCOMPLETE;
 }
 
 static int parse_expect(request_rec *r, resume_config *conf,
                         resume_request_rec *ctx)
 {
-    /* TODO(fry):
-     * const char *expect = apr_table_get(r->headers_in, "Expect");
-     */
-    const char *expect = apr_table_get(r->headers_in, "Pragma");
+    const char *expect = apr_table_get(r->headers_in,
+                                       /* TODO(fry): "Expect"); */
+                                       "Pragma");
 
     if (!expect || !*expect) {
         /* Ignore absense of expect header */
-        return 1;
+        return OK;
     }
 
     /* from mod_negotiation */
     const char *name = ap_get_token(r->pool, &expect, 0);
-    if (!name || strcasecmp(name, "103-checkpoint")) {
+    if (!name || strcasecmp(name, EXPECT_CHECKPOINT)) {
         /* Ignore expects that aren't for us */
-        return 1;
+        return OK;
     }
-    ctx->expecting_103 = 1;
+    ctx->expecting_checkpoint = 1;
     ctx->expected_length = 0;
 
     while (*expect++ == ';') {
@@ -247,7 +272,7 @@ static int parse_expect(request_rec *r, resume_config *conf,
             if (!validate_etag(cp)) {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                              "resume: Invalid etag \"%s\"", ctx->etag);
-                return 0;
+                return HTTP_BAD_REQUEST;
             }
             ctx->etag = cp;
         }
@@ -258,7 +283,7 @@ static int parse_expect(request_rec *r, resume_config *conf,
             if (apr_strtoff(&ctx->offset, cp, &end, 10) || *end != '-') {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                              "resume: Invalid first_byte_pos \"%s\"", cp);
-                return 0;
+                return HTTP_BAD_REQUEST;
             }
             cp = end + 1;
 
@@ -269,7 +294,7 @@ static int parse_expect(request_rec *r, resume_config *conf,
             else if (apr_strtoff(&last_byte_pos, cp, &end, 10) || *end != '/') {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                              "resume: Invalid last_byte_pos \"%s\"", cp);
-                return 0;
+                return HTTP_BAD_REQUEST;
             }
             cp = end + 1;
 
@@ -280,7 +305,7 @@ static int parse_expect(request_rec *r, resume_config *conf,
             else if (apr_strtoff(&ctx->instance_length, cp, &end, 10) || *end) {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                              "resume: Invalid instance_length \"%s\"", cp);
-                return 0;
+                return HTTP_BAD_REQUEST;
             }
 
             /* syntactic checks of byte ranges */
@@ -289,7 +314,7 @@ static int parse_expect(request_rec *r, resume_config *conf,
             if (ctx->offset < 0) {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                              "resume: Invalid first_byte_pos \"%s\"", cp);
-                return 0;
+                return HTTP_BAD_REQUEST;
             }
 
             /* ctx->expected_length */
@@ -299,20 +324,20 @@ static int parse_expect(request_rec *r, resume_config *conf,
                     ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                                  "resume: Content-Length specified "
                                  "without last_byte_pos \"%s\"", cp);
-                    return 0;
+                    return HTTP_BAD_REQUEST;
                 }
             }
             else if (ctx->offset > last_byte_pos
                      || last_byte_pos >= conf->max_filesize) {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                              "resume: Invalid last_byte_pos \"%s\"", cp);
-                return 0;
+                return HTTP_BAD_REQUEST;
             }
             else if (r->read_chunked) {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                              "resume: last_byte_pos specified "
                              "without Content-Length \"%s\"", cp);
-                return 0;
+                return HTTP_BAD_REQUEST;
             }
             else {
                 /* convert from last_byte_pos to expected_length */
@@ -327,14 +352,14 @@ static int parse_expect(request_rec *r, resume_config *conf,
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                              "resume: instance_length specified "
                              "without last_byte_pos \"%s\"", cp);
-                return 0;
+                return HTTP_BAD_REQUEST;
             }
             else if (ctx->instance_length > conf->max_filesize ||
                      ctx->offset + ctx->expected_length > ctx->instance_length)
             {
                 ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                              "resume: Invalid instance_length \"%s\"", cp);
-                return 0;
+                return HTTP_BAD_REQUEST;
             }
             else {
                 ctx->max_filesize = ctx->instance_length;
@@ -343,14 +368,15 @@ static int parse_expect(request_rec *r, resume_config *conf,
     }
 
     /* cross-parameter validation */
-    if (!ctx->etag && ctx->offset > 0) { /* implicit && ctx->expecting_103 */
+    if (!ctx->etag && ctx->offset > 0) {
         ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                     "resume: Non-contiguous first_byte_pos \"%s\"",
-                     ctx->filename);
-        return 0;
+                     "resume: Non-zero initial first_byte_pos \"%d\"",
+                     ctx->offset);
+        /* client can retry with contiguous range */
+        return return_incomplete(r, conf, ctx);
     }
 
-    return 1;
+    return OK;
 }
 
 static int send_cached_response(request_rec *r, resume_request_rec *ctx)
@@ -383,8 +409,8 @@ static int send_cached_response(request_rec *r, resume_request_rec *ctx)
     if (rv != APR_SUCCESS) {
         if (rv != AP_FILTER_ERROR) {
             ap_log_error(APLOG_MARK, APLOG_ERR, rv, r->server,
-                         "resume: error returned while trying to "
-                         "return %s cached data", ctx->provider_name);
+                         "resume: Error returning %s cached data",
+                         ctx->provider_name);
         }
         return rv;
     }
@@ -392,7 +418,7 @@ static int send_cached_response(request_rec *r, resume_request_rec *ctx)
     return OK;
 }
 
-static int send_418(request_rec *r)
+static int read_input_filters(request_rec *r)
 {
     apr_bucket_brigade *bb;
     apr_status_t rv;
@@ -431,12 +457,11 @@ static int send_418(request_rec *r)
         }
         apr_brigade_cleanup(bb);
     } while (!seen_eos);
-
-    return 418;
+    return OK;
 }
 
-static int create_input_file(request_rec *r, resume_config *conf,
-                             resume_request_rec *ctx)
+static int create_input_buffer(request_rec *r, resume_config *conf,
+                               resume_request_rec *ctx)
 {
     apr_status_t rv;
 
@@ -463,20 +488,29 @@ static int create_input_file(request_rec *r, resume_config *conf,
     ctx->etag = ap_strrchr(ctx->filename, '.');
     if (!ctx->etag++ || !validate_etag(ctx->etag)) {
         ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
-                     "resume: Invalid etag \"%s\"", ctx->etag);
-        return HTTP_BAD_REQUEST;
+                     "resume: Invalid etag generated \"%s\"", ctx->etag);
+        return HTTP_INTERNAL_SERVER_ERROR;
     }
     return OK;
 }
 
-static int open_input_file(request_rec *r, resume_config *conf,
-                           resume_request_rec *ctx)
+static int open_input_buffer(request_rec *r, resume_config *conf,
+                             resume_request_rec *ctx)
 {
     apr_status_t rv;
     apr_finfo_t finfo;
 
     ctx->filename = apr_pstrcat(r->pool, conf->input_cache_root, "/mod_resume.",
                                 ctx->etag, NULL);
+
+    rv = apr_stat(&finfo, ctx->filename, 0, r->pool);
+    if (rv != APR_SUCCESS) {
+        ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
+                     "resume: ETag \"%s\" not found", ctx->etag);
+        /* client can not retry with this invalid etag */
+        return HTTP_EXPECTATION_FAILED;
+    }
+
     rv = apr_file_open(&ctx->fd, ctx->filename,
                        APR_READ | APR_WRITE | APR_APPEND
                        | APR_BINARY | APR_BUFFERED, 0, r->pool);
@@ -494,14 +528,17 @@ static int open_input_file(request_rec *r, resume_config *conf,
                      ctx->filename);
         return HTTP_INTERNAL_SERVER_ERROR;
     }
+
     ctx->mtime = finfo.mtime;
     ctx->file_size = finfo.size;
     if (ctx->offset > ctx->file_size) {
         ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                      "resume: Non-contiguous first_byte_pos \"%s\"",
                      ctx->filename);
-        return HTTP_BAD_REQUEST;
+        /* client can retry with contiguous range */
+        return return_incomplete(r, conf, ctx);
     }
+
     /* skip re-transmitted bytes */
     ctx->skip = ctx->file_size - ctx->offset;
     return OK;
@@ -528,11 +565,14 @@ static int resume_handler(request_rec *r)
     conf = ap_get_module_config(r->server->module_config, &resume_module);
 
     ctx = generate_request_rec(r, conf);
-    ctx->providers = get_providers(r, conf, r->parsed_uri);
+    ctx->providers = resume_get_providers(r, conf, r->parsed_uri);
     if (!ctx->providers) {
-        /* TODO(fry): is cache absence reason enough to bail out now? */
-        return DECLINED;
+        ap_log_error(APLOG_MARK, APLOG_WARNING, 0, r->server,
+                     "resume: No cache provider enabled for output caching");
+        /* we continue, as we can still do input buffering */
     }
+    /* TODO(fry): check whether or not resume is enabled for this request */
+    /* TODO(fry): can we use conf->cache_conf to manage output cache root? */
 
     /* read Content-Length and Transfer-Encoding, but don't trust them
      * populates r->remaining, r->read_chunked */
@@ -543,8 +583,10 @@ static int resume_handler(request_rec *r)
                      ctx->filename);
         return rv;
     }
-    if (!parse_expect(r, conf, ctx)) {
-        return HTTP_BAD_REQUEST;
+
+    rv = parse_expect(r, conf, ctx);
+    if (rv != OK) {
+        return rv;
     }
 
     if (ctx->etag) {
@@ -556,29 +598,37 @@ static int resume_handler(request_rec *r)
                                         r->connection);
             return send_cached_response(r, ctx);
         }
-        /* TODO(fry): what if we know we sent a response,
-         *            but it has since disappeared from the cache?
-         */
 
-        rv = open_input_file(r, conf, ctx);
+        rv = open_input_buffer(r, conf, ctx);
         if (rv != OK) {
+            /* invalid etag or error opening file */
             return rv;
         }
     }
     else {
-        /* look for excuses not to enable resumability */
-        if (!ctx->expecting_103 && !r->read_chunked
-            && (r->remaining < conf->min_filesize ||
-                r->remaining > conf->max_filesize))
+        /* Look for reasons not to enable resumability, testing conditions one
+         * by one to be clear and unambiguous. */
+        if (ctx->expecting_checkpoint) {
+            /* always enable resumability if an Expect Checkpoint is received */
+        }
+        else if (r->proto_num < 1001) {
+            /* don't send interim response to HTTP/1.0 Clients
+             * (they are ignored by ap_send_interim_response anyway)
+             */
+            return DECLINED;
+        }
+        else if (!r->read_chunked
+                 && (r->remaining < conf->min_filesize
+                     || r->remaining > conf->max_filesize))
         {
-            /* Note that this is an optimistic decision made based on
-             * Content-Length, which may be incorrect. See:
+            /* For non-chunked transfers, make an optimistic decision based on
+             * Content-Length, even though it may be slightly off. See:
              * http://mail-archives.apache.org/mod_mbox/httpd-modules-dev/200802.mbox/%3c003701c86ff6$4f2b39d0$6501a8c0@T60%3e
              */
             return DECLINED;
         }
 
-        rv = create_input_file(r, conf, ctx);
+        rv = create_input_buffer(r, conf, ctx);
         if (rv != OK) {
             return rv;
         }
@@ -586,7 +636,7 @@ static int resume_handler(request_rec *r)
 
     ap_add_input_filter_handle(resume_input_filter_handle, ctx, r,
                                r->connection);
-    if (!ctx->expecting_103
+    if (!ctx->expecting_checkpoint
         || ctx->skip + ctx->expected_length == ctx->instance_length
         || (ctx->expected_length == UNKNOWN_OFFSET
             && ctx->instance_length == UNKNOWN_OFFSET)) {
@@ -600,7 +650,12 @@ static int resume_handler(request_rec *r)
 
     /* no reason to stream as we aren't reading bytes */
     ctx->mode = HOLD_AND_FORWARD;
-    return send_418(r);
+    /* read and buffer input bytes */
+    rv = read_input_filters(r);
+    if (rv != OK) {
+        return rv;
+    }
+    return return_incomplete(r, conf, ctx);
 }
 
 /*******************************************************************************
@@ -634,33 +689,35 @@ static char *etag_uint64_to_hex(char *next, apr_uint64_t u)
 }
 
 /* send 103 (Checkpoint) */
-static void send_103(request_rec *r, resume_config *conf,
-                     resume_request_rec *ctx)
+static void send_checkpoint(request_rec *r, resume_config *conf,
+                            resume_request_rec *ctx)
 {
     apr_bucket_brigade *bb = ctx->bb;
     ap_filter_t *of = r->connection->output_filters;
+    int old_status;
+    const char *old_status_line;
 
     /* flush the bytes which we will now ack */
     apr_file_flush(ctx->fd);
 
-    /* Copied from ap_send_interim_response to avoid saving status. */
-    ap_fputstrs(of, bb, AP_SERVER_PROTOCOL, " ", "103 Checkpoint", CRLF, NULL);
-    ap_fputstrs(of, bb, "ETag: \"", ctx->etag, "\"", CRLF, NULL);
+    old_status = r->status;
+    old_status_line = r->status_line;
+    r->status = HTTP_CHECKPOINT;
+    r->status_line = HTTP_CHECKPOINT_STATUS_LINE;
 
-    if (ctx->file_size > 0) {
-        ap_fprintf(of, bb, "Range: 0-%d", ctx->file_size - 1);
-        ap_fputs(of, bb, CRLF);
-    }
+    set_shared_resume_headers(r, ctx, r->headers_out);
+    apr_table_setn(r->headers_out, "ETag", ctx->etag);
     if (conf->expiration > 0) {
         apr_time_t expires = ctx->mtime + conf->expiration;
         char *timestr = apr_palloc(r->pool, APR_RFC822_DATE_LEN);
         apr_rfc822_date(timestr, expires);
-        ap_fputstrs(of, bb, "Expires: ", timestr, CRLF, NULL);
+        apr_table_setn(r->headers_out, "Expires", timestr);
     }
 
-    ap_fputs(of, bb, CRLF);
-    ap_fflush(of, bb);
+    ap_send_interim_response(r, 1);
     ctx->unacked = 0;
+    r->status = old_status;
+    r->status_line = old_status_line;
 }
 
 static apr_status_t read_bytes(request_rec *r, apr_bucket_brigade *bb ,
@@ -737,7 +794,7 @@ static apr_status_t read_bytes(request_rec *r, apr_bucket_brigade *bb ,
             return APR_EGENERAL;
         }
         if (ctx->unacked >= conf->min_checkpoint) {
-            send_103(r, conf, ctx);
+            send_checkpoint(r, conf, ctx);
         }
     }
     return APR_SUCCESS;
@@ -747,6 +804,9 @@ static apr_status_t read_bytes(request_rec *r, apr_bucket_brigade *bb ,
  *  1) periodically send 100 (Continue) responses to the client
  *  2) persist the incoming byte stream in case of failure
  *  3) intercept resumes, injecting previous data
+ *
+ * We can't use a mod_cache provider since they require all bytes to be
+ * written from a single request.
  */
 static apr_status_t resume_input_filter(ap_filter_t *f,
                                         apr_bucket_brigade *bb,
@@ -776,10 +836,10 @@ static apr_status_t resume_input_filter(ap_filter_t *f,
         ctx->input_initialized = 1;
         ctx->bb = apr_brigade_create(r->pool, f->c->bucket_alloc);
 
-        /* Always send a 103 as soon as we're committed to supporting
+        /* Always send a checkpoint as soon as we're committed to supporting
          * resumability.
          */
-        send_103(r, conf, ctx);
+        send_checkpoint(r, conf, ctx);
 
         if (ctx->mode == STREAM && ctx->file_size > 0) {
             /* Stream any previous bytes in streaming mode */
@@ -794,18 +854,12 @@ static apr_status_t resume_input_filter(ap_filter_t *f,
         }
     }
 
+    if (ctx->mode == HOLD_AND_FORWARD) {
+        /* we don't return until EOS, so we might as well block while reading */
+        block = APR_BLOCK_READ;
+    }
     do {
-        /* TODO(fry): get non-blocking
-         *  if no data then 103 and get blocking
-         *
-         *  if not blocking then count bytes, otherwise always ack before
-         *  blocking
-         */
-
-        /* Might read less than requested in order to ack progressively. */
-        rv = ap_get_brigade(f->next, bb, mode, block,
-                            (readbytes < conf->min_checkpoint ?
-                             readbytes : conf->min_checkpoint));
+        rv = ap_get_brigade(f->next, bb, mode, block, readbytes);
         if (rv != APR_SUCCESS) {
             return rv;
         }
@@ -824,9 +878,10 @@ static apr_status_t resume_input_filter(ap_filter_t *f,
     } while (!seen_eos);
 
     /* eos */
+
     if (ctx->unacked > 0) {
         /* ack any remaining bytes as the response might be slow in coming */
-        send_103(r, conf, ctx);
+        send_checkpoint(r, conf, ctx);
     }
 
     if ((ctx->expected_length != UNKNOWN_OFFSET
@@ -842,6 +897,9 @@ static apr_status_t resume_input_filter(ap_filter_t *f,
     }
 
     if (ctx->mode == HOLD_AND_FORWARD) {
+        /* TODO(fry): rename file during processing, cleanup afterwords or on
+         *            server crash
+         */
         apr_bucket *bucket;
         apr_off_t offset = 0;
         apr_file_seek(ctx->fd, APR_SET, &offset);
@@ -853,6 +911,21 @@ static apr_status_t resume_input_filter(ap_filter_t *f,
         bucket = apr_bucket_eos_create(f->c->bucket_alloc);
         APR_BRIGADE_INSERT_TAIL(bb, bucket);
     }
+    else if (ctx->filename) {
+        /* TODO(fry): why does EOS logic happen multiple times? */
+        /* we won't need the file again, so blow it away now */
+        apr_file_close(ctx->fd);
+        rv = apr_file_remove(ctx->filename, r->pool);
+        if (rv == APR_SUCCESS) {
+            ctx->filename = NULL;
+        }
+        else {
+            ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
+                         "resume: Error removing input cache file %s",
+                         ctx->filename);
+        }
+    }
+
     return APR_SUCCESS;
 }
 
@@ -1005,9 +1078,8 @@ static int resume_save_filter(ap_filter_t *f, apr_bucket_brigade *in)
     rv = resume_cache_create_entity(r, ctx, size);
     if (rv != OK) {
         /* Caching layer declined the opportunity to cache the response */
-        /* TODO(fry): at least remember response code class (202)? */
         ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, r->server,
-                     "resume: no cache providers for \"%s\"", ctx->etag);
+                     "resume: No cache providers for \"%s\"", ctx->etag);
         ap_remove_output_filter(f);
         return ap_pass_brigade(f->next, in);
     }
@@ -1034,7 +1106,7 @@ static int resume_save_filter(ap_filter_t *f, apr_bucket_brigade *in)
     /* from mod_cache */
     rv = ctx->provider->store_headers(ctx->handle, r, info);
     if(rv != APR_SUCCESS) {
-        ap_log_error(APLOG_MARK, APLOG_DEBUG, rv, r->server,
+        ap_log_error(APLOG_MARK, APLOG_ERR, rv, r->server,
                      "resume: store_headers failed");
         ap_remove_output_filter(f);
 
@@ -1044,9 +1116,26 @@ static int resume_save_filter(ap_filter_t *f, apr_bucket_brigade *in)
     /* from mod_cache */
     rv = ctx->provider->store_body(ctx->handle, r, in);
     if (rv != APR_SUCCESS) {
-        ap_log_error(APLOG_MARK, APLOG_DEBUG, rv, r->server,
+        ap_log_error(APLOG_MARK, APLOG_ERR, rv, r->server,
                      "resume: store_body failed");
         ap_remove_output_filter(f);
+    }
+
+    if (ctx->filename && APR_BUCKET_IS_EOS(APR_BRIGADE_LAST(in))) {
+        /* Delete the input cache file once it has been consumed. We can't be
+         * certain this has happened until the last byte of output is
+         * sent.
+         */
+        apr_file_close(ctx->fd);
+        rv = apr_file_remove(ctx->filename, r->pool);
+        if (rv == OK) {
+            ctx->filename = NULL;
+        }
+        else {
+            ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
+                         "resume: Error removing input cache file %s",
+                         ctx->filename);
+        }
     }
 
     return ap_pass_brigade(f->next, in);
@@ -1071,7 +1160,7 @@ int resume_cache_select(request_rec *r, resume_request_rec *ctx)
         switch(rv) {
             case OK: {
                 if (providers->provider->recall_headers(h, r) != APR_SUCCESS) {
-                    ap_log_error(APLOG_MARK, APLOG_DEBUG, rv, r->server,
+                    ap_log_error(APLOG_MARK, APLOG_ERR, rv, r->server,
                             "resume: recall_headers from %s failed",
                             providers->provider_name);
                     return DECLINED;
@@ -1109,7 +1198,7 @@ static int resume_out_filter(ap_filter_t *f, apr_bucket_brigade *bb)
         return ap_pass_brigade(f->next, bb);
     }
     if (!APR_BRIGADE_EMPTY(bb)) {
-        ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, r->server,
+        ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                      "resume: RESUME_OUT received unexpected input bytes");
         ap_remove_output_filter(f);
         return ap_pass_brigade(f->next, bb);
@@ -1134,11 +1223,6 @@ static int resume_out_filter(ap_filter_t *f, apr_bucket_brigade *bb)
     ap_log_error(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r->server,
                  "resume: serving %s", r->uri);
     return ap_pass_brigade(f->next, bb);
-
-    /* TODO(fry): deal with handling lost response
-     *            202 or 418
-     *            202 configurable
-     */
 }
 
 /*******************************************************************************
@@ -1151,8 +1235,6 @@ static int resume_post_config(apr_pool_t *p, apr_pool_t *plog,
     /* TODO(fry): initial garbage collection of file and etag
      *            also perform regular cleanup
      */
-
-    /* TODO(fry): log warning if no providers */
     return OK;
 }
 
@@ -1161,6 +1243,19 @@ static void *create_resume_config(apr_pool_t *p, server_rec *s)
     resume_config *conf = apr_pcalloc(p, sizeof(resume_config));
 
     /* set default values */
+
+    conf->resume_enable = apr_array_make(p, 10, sizeof(struct cache_enable));
+    conf->resume_disable = apr_array_make(p, 10, sizeof(struct cache_disable));
+
+    /* TODO(fry): is there any way for us to access cache_module? */
+    /* Currently we share ResumeEnable with cache_conf for use in output
+     * caching
+     */
+    conf->cache_conf = apr_pcalloc(p, sizeof(cache_server_conf));
+    memset(conf->cache_conf, 0, sizeof(cache_server_conf));
+    conf->cache_conf->cacheenable = conf->resume_enable;
+    conf->cache_conf->cachedisable = conf->resume_disable;
+
     conf->input_cache_root = NULL;
     conf->min_checkpoint = DEFAULT_MIN_CHECKPOINT;
     conf->min_filesize = DEFAULT_MIN_CHECKPOINT;
@@ -1172,12 +1267,61 @@ static void *create_resume_config(apr_pool_t *p, server_rec *s)
     return conf;
 }
 
+/* from mod_cache */
+static const char *add_resume_enable(cmd_parms *parms, void *dummy,
+                                     const char *type,
+                                     const char *url)
+{
+    resume_config *conf = ap_get_module_config(parms->server->module_config,
+                                               &resume_module);
+    struct cache_enable *enable;
+
+    if (*type == '/') {
+        return apr_psprintf(parms->pool,
+          "provider (%s) starts with a '/'.  Are url and provider switched?",
+          type);
+    }
+
+    enable = apr_array_push(conf->resume_enable);
+    enable->type = type;
+    if (apr_uri_parse(parms->pool, url, &(enable->url))) {
+        return NULL;
+    }
+    if (enable->url.path) {
+        enable->pathlen = strlen(enable->url.path);
+    } else {
+        enable->pathlen = 1;
+        enable->url.path = "/";
+    }
+    return NULL;
+}
+
+/* from mod_cache */
+static const char *add_resume_disable(cmd_parms *parms, void *dummy,
+                                      const char *url)
+{
+    resume_config *conf = ap_get_module_config(parms->server->module_config,
+                                               &resume_module);
+    struct cache_disable *disable;
+
+    disable = apr_array_push(conf->resume_disable);
+    if (apr_uri_parse(parms->pool, url, &(disable->url))) {
+        return NULL;
+    }
+    if (disable->url.path) {
+        disable->pathlen = strlen(disable->url.path);
+    } else {
+        disable->pathlen = 1;
+        disable->url.path = "/";
+    }
+    return NULL;
+}
+
 static const char *set_input_cache_root(cmd_parms *parms, void *in_struct_ptr,
                                         const char *root)
 {
     resume_config *c = ap_get_module_config(parms->server->module_config,
                                              &resume_module);
-    /* TODO(fry): check existence of root */
     c->input_cache_root = root;
     return NULL;
 }
@@ -1187,7 +1331,7 @@ static const char *set_min_checkpoint(cmd_parms *parms, void *in_struct_ptr,
                                   const char *min)
 {
     resume_config *conf = ap_get_module_config(parms->server->module_config,
-                                             &resume_module);
+                                               &resume_module);
     int n = atoi(min);
     if (n <= 0) {
         return "ResumeCheckpointBytes must be positive";
@@ -1200,7 +1344,7 @@ static const char *set_min_filesize(cmd_parms *parms, void *in_struct_ptr,
                                     const char *min)
 {
     resume_config *conf = ap_get_module_config(parms->server->module_config,
-                                             &resume_module);
+                                               &resume_module);
     int n = atoi(min);
     if (n <= 0) {
         return "ResumeMinBytes must be positive";
@@ -1213,7 +1357,7 @@ static const char *set_max_filesize(cmd_parms *parms, void *in_struct_ptr,
                                     const char *max)
 {
     resume_config *conf = ap_get_module_config(parms->server->module_config,
-                                             &resume_module);
+                                               &resume_module);
     int n = atoi(max);
     if (n <= 0) {
         return "ResumeMaxBytes must be positive";
@@ -1226,7 +1370,7 @@ static const char *set_expiration(cmd_parms *parms, void *in_struct_ptr,
                                   const char *expiration)
 {
     resume_config *conf = ap_get_module_config(parms->server->module_config,
-                                             &resume_module);
+                                               &resume_module);
     int n = atoi(expiration);
     conf->expiration = apr_time_from_sec(n);
     return NULL;
@@ -1249,7 +1393,7 @@ static const char *set_streaming(cmd_parms *parms, void *in_struct_ptr,
                                   const char *initial, const char *resume)
 {
     resume_config *conf = ap_get_module_config(parms->server->module_config,
-                                             &resume_module);
+                                               &resume_module);
 
     if (!get_mode(initial, &conf->initial_mode)) {
         return "Invalid ResumeStreamingMode; must be one of: "
@@ -1266,7 +1410,11 @@ static const char *set_streaming(cmd_parms *parms, void *in_struct_ptr,
 
 static const command_rec resume_cmds[] =
 {
-    /* TODO(fry): create custom mod_cache config, to manage output cache root */
+    AP_INIT_TAKE2("ResumeEnable", add_resume_enable, NULL, RSRC_CONF,
+                  "A cache type and partial URL prefix below which "
+                  "resumability is enabled"),
+    AP_INIT_TAKE1("ResumeDisable", add_resume_disable, NULL, RSRC_CONF,
+                  "A partial URL prefix below which resumability is disabled"),
     AP_INIT_TAKE1("ResumeInputCacheRoot", set_input_cache_root, NULL, RSRC_CONF,
                   "The directory to store resume cache files"),
     AP_INIT_TAKE1("ResumeCheckpointBytes", set_min_checkpoint, NULL, RSRC_CONF,
@@ -1292,12 +1440,6 @@ static void resume_register_hooks(apr_pool_t *p)
 {
     /* from mod_cache */
 
-    /* NOTE: we could have used quick_handler like mod_cache (see http_config.h
-     * for quick_handler overview). We are not doing so currently because it
-     * optimizes for the uncommon case (all bytes transfered, but no response
-     * received), and adds the complexity of needing to deal with an incomplete
-     * handler environment (e.g. no output filters set).
-     */
     ap_hook_handler(resume_handler, NULL, NULL, APR_HOOK_FIRST);
 
     /*
@@ -1324,18 +1466,17 @@ static void resume_register_hooks(apr_pool_t *p)
             ap_register_input_filter("RESUME", resume_input_filter, NULL,
                                      AP_FTYPE_CONTENT_SET-1);
 
-    /* TODO(fry): Once our mod_cache dependencies are understood, it may be
-     * necessary to use AP_FTYPE_CONTENT_SET+1, and the following comment:
-     * RESUME_SAVE must go into the filter chain after a possible DEFLATE
-     * filter to ensure that already compressed cache objects do not
-     * get compressed again. In other words, we want our save output filter to
-     * save bytes that have already run through mod_deflate's output filter if
-     * it is in the chain.
-     * Incrementing filter type by 1 ensures this happens.
+    /* Because we re-use mod_cache's providers, we inherit their filter
+     * constraints. Specifically, RESUME_SAVE must go into the filter chain
+     * after a possible DEFLATE filter to ensure that already compressed cache
+     * objects do not get compressed again. In other words, we want our save
+     * output filter to save bytes that have already run through mod_deflate's
+     * output filter if it is in the chain. Incrementing filter type by 1
+     * ensures this happens.
      */
     resume_save_filter_handle =
             ap_register_output_filter("RESUME_SAVE", resume_save_filter, NULL,
-                                      AP_FTYPE_CONTENT_SET);
+                                      AP_FTYPE_CONTENT_SET+1);
 
     /* RESUME_OUT must be at the same priority in the filter chain as
      * RESUME_SAVE in order to ensure that the replayed output is the identical
@@ -1343,7 +1484,7 @@ static void resume_register_hooks(apr_pool_t *p)
      */
     resume_out_filter_handle =
             ap_register_output_filter("RESUME_OUT", resume_out_filter, NULL,
-                                      AP_FTYPE_CONTENT_SET);
+                                      AP_FTYPE_CONTENT_SET+1);
 
     ap_hook_post_config(resume_post_config, NULL, NULL, APR_HOOK_MIDDLE);
 }
