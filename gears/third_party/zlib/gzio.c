@@ -977,7 +977,8 @@ int ZEXPORT gzclose (file)
     return destroy((gz_stream*)file);
 }
 
-#ifdef STDC
+// Google Gears modification: strerror is not present on WinCE.
+#if defined(STDC) && !defined(_WIN32_WCE)
 #  define zstrerror(errnum) strerror(errnum)
 #else
 #  define zstrerror(errnum) ""
