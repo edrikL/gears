@@ -31,12 +31,14 @@ var isIE = false;
 var isPIE = false;
 var isFF = false;
 
-if (window.pie_dialog) {
+if (isDefined(typeof window.pie_dialog)) {
   isPIE = true;
 } else {
-  isIE = Boolean(window.external &&
-                 typeof window.external.GetDialogArguments != 'undefined');
-  isFF = Boolean(window.arguments);
+  // Note that we can't use isDefined() here because
+  // window.external.GetDialogArguments has type 'unknown' on IE!
+  isIE = isDefined(typeof window.external) &&
+         typeof window.external.GetDialogArguments != 'undefined';
+  isFF = isDefined(typeof window.arguments);
 }
 
 /**
@@ -84,9 +86,10 @@ function isDefined(type) {
 function getElementById(id) {
   if (isDefined(typeof document.getElementById)) {
     return document.getElementById(id);
-  } else {
+  } else if (isDefined(typeof document.all)) {
     return document.all[id];
   }
+  throw new Error("Failed to get element by ID.");
 }
 
 /**
@@ -96,7 +99,7 @@ function getElementById(id) {
 function setButtonLabel(textID, elemID) {
   var textElem = getElementById(textID);
   var buttonElem = getElementById(elemID);
-  if (textElem && buttonElem) {
+  if (isDefined(typeof textElem) && isDefined(typeof buttonElem)) {
     buttonElem.value = textElem.innerText;
   }
 }
@@ -245,12 +248,14 @@ function handleKeyUp(e) {
  * Utility to add an event listener cross-browser.
  */
 function addEvent(element, eventName, handler) {
-  if (element.addEventListener) {
+  if (isDefined(typeof element.addEventListener)) {
     // Standards-compatible browsers
     element.addEventListener(eventName, handler, false);
-  } else {
+  } else if (isDefined(typeof element.attachEvent)) {
     // IE
     element.attachEvent("on" + eventName, handler);
+  } else {
+    throw new Error('Failed to attach event.');
   }
 }
 
