@@ -37,6 +37,9 @@
 #include "gears/base/firefox/dom_utils.h"
 #elif BROWSER_IE
 #include "gears/base/ie/activex_utils.h"
+#ifdef WINCE
+#include "gears/base/ie/bho.h"
+#endif
 #include "gears/base/common/base_class.h"
 #endif
 
@@ -82,6 +85,13 @@ static FileDialog* NewFileDialogWin32(const FileDialog::Mode mode,
 
 #elif BROWSER_IE
 
+#ifdef WINCE
+  // On WinCE, only the BHO has an IWebBrowser2 pointer to the browser.
+  parent = BrowserHelperObject::GetBrowserWindow();
+  if (NULL == parent) {
+    return NULL;
+  }
+#else
   IWebBrowser2* web_browser = NULL;
   HRESULT hr = ActiveXUtils::GetWebBrowser2(module.EnvPageIUnknownSite(),
                                             &web_browser);
@@ -95,6 +105,7 @@ static FileDialog* NewFileDialogWin32(const FileDialog::Mode mode,
   }
 
   web_browser->Release();
+#endif
 
 #endif  // BROWSER_xyz
 

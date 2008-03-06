@@ -34,6 +34,10 @@
 #endif
 #include "gears/localserver/ie/http_handler_ie.h"
 
+#ifdef WINCE
+HWND BrowserHelperObject::browser_window_ = NULL;
+#endif
+
 STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
 #ifdef WIN32
 // Only send crash reports for offical builds.  Crashes on an engineer's machine
@@ -59,8 +63,17 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
     static CabUpdater updater;
     CComQIPtr<IWebBrowser2> site = pUnkSite;
     ASSERT(site);
-    updater.SetSiteAndStart(site);    
+    updater.SetSiteAndStart(site);   
+    assert(NULL == browser_window_);
+    site->get_HWND(reinterpret_cast<long*>(&browser_window_));
 #endif
   }
   return S_OK;
 }
+
+#ifdef WINCE
+// static
+HWND BrowserHelperObject::GetBrowserWindow() {
+  return browser_window_;
+}
+#endif
