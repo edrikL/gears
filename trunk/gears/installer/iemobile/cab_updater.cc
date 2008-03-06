@@ -31,6 +31,7 @@
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/common/wince_compatibility.h"
 #include "gears/base/ie/activex_utils.h"
+#include "gears/base/ie/bho.h"
 #include "gears/installer/iemobile/resource.h"
 
 const char16* kUpgradeUrl =
@@ -193,9 +194,8 @@ void CabUpdater::OnNotify(MessageService *service,
   // Only show the update dialog if the browser isn't in the middle of a
   // download or showing some other notification to the user.
   if (!is_busy && state == READYSTATE_COMPLETE) {
-    long browser_window;
-    if (SUCCEEDED(browser_->get_HWND(&browser_window)) &&
-        ShowUpdateDialog(reinterpret_cast<HWND>(browser_window))) {
+    HWND browser_window = BrowserHelperObject::GetBrowserWindow();
+    if (browser_window && ShowUpdateDialog(browser_window)) {
         // Convert the URL to the format expected by the browser object.
         CComBSTR url(update_event->string_.c_str());
         browser_->Navigate(url, NULL, NULL, NULL, NULL);

@@ -793,17 +793,12 @@ SHARED_CPPSRCS	+= \
 		desktop_utils_linux.cc \
 		desktop_utils_osx.cc \
 		desktop_utils_win32.cc \
-
-# TODO(steveblock): Implement File dialog for WinCE.
-ifneq ($(OS),wince)
-SHARED_CPPSRCS	+= \
 		file_dialog.cc \
 		file_dialog_gtk.cc \
 		file_dialog_osx.cc \
 		file_dialog_utils.cc \
 		file_dialog_win32.cc \
 		$(NULL)
-endif
 
 endif
 

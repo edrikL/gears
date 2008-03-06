@@ -59,8 +59,13 @@ static void InitDialog(HWND parent,
   ofn->lpstrFileTitle = NULL;
   ofn->nMaxFileTitle = 0;
   ofn->lpstrInitialDir = NULL;
-  ofn->Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT
-              | OFN_EXPLORER;
+  ofn->Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST |
+#ifdef WINCE
+               // The native WinCE file picker does not support multi-select.
+#else
+               OFN_ALLOWMULTISELECT |
+#endif
+               OFN_EXPLORER;
 
 }
 

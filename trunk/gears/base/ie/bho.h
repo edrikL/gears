@@ -44,6 +44,11 @@ class ATL_NO_VTABLE BrowserHelperObject
   END_COM_MAP()
 
   STDMETHOD(SetSite)(IUnknown *pUnkSite);
+#ifdef WINCE
+  static HWND GetBrowserWindow();
+ private:
+  static HWND browser_window_;
+#endif
 };
 OBJECT_ENTRY_AUTO(__uuidof(BrowserHelperObject), BrowserHelperObject)
 

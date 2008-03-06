@@ -38,7 +38,6 @@
 #if BROWSER_IE
 #include "gears/base/common/vista_utils.h"  // remove when createShortcut works
 #endif
-#include "gears/blob/file_blob.h"
 #include "gears/desktop/desktop_utils.h"
 #include "gears/desktop/file_dialog_utils.h"
 #include "gears/localserver/common/http_constants.h"
@@ -53,15 +52,11 @@ DECLARE_GEARS_WRAPPER(GearsDesktop);
 template<>
 void Dispatcher<GearsDesktop>::Init() {
   RegisterMethod("createShortcut", &GearsDesktop::CreateShortcut);
-#ifdef WINCE
-  // File picker is not yet implemented on WinCE.
-#else
 #ifdef OFFICIAL_BUILD
   // File picker is not ready for official builds
 #else
   RegisterMethod("getLocalFiles", &GearsDesktop::GetLocalFiles);
 #endif  // OFFICIAL_BUILD
-#endif  // WINCE
 }
 
 
@@ -310,9 +305,6 @@ bool GearsDesktop::AllowCreateShortcut(
   return true;
 }
 
-#ifdef WINCE
-// File picker is not yet implemented on WinCE.
-#else
 #ifdef OFFICIAL_BUILD
 // File picker is not ready for official builds
 #else
@@ -380,7 +372,6 @@ void GearsDesktop::GetLocalFiles(JsCallContext *context) {
 }
 
 #endif  // OFFICIAL_BUILD
-#endif  // WINCE
 
 // Handle all the icon creation and creation call required to actually install
 // a shortcut.
