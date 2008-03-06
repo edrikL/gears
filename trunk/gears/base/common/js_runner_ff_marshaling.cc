@@ -2352,7 +2352,8 @@ static JSBool JSData2Native(JSContext *cx, void* d, jsval s,
                 else if(JSVAL_IS_NULL(s))
                 {
                   // Convert to an empty string.
-                  nsDependentString *wrapper = new nsDependentString(L"", 0);
+                  nsDependentString *wrapper =
+                      new nsDependentString(STRING16(L""), 0);
                   if(!wrapper)
                     return JS_FALSE;
                   *((const nsAString**)d) = wrapper;
@@ -2373,7 +2374,8 @@ static JSBool JSData2Native(JSContext *cx, void* d, jsval s,
                 {
                   // Convert to an empty string.
                   // TODO(zork): Properly convert argument to a string.
-                  nsDependentString *wrapper = new nsDependentString(L"", 0);
+                  nsDependentString *wrapper =
+                      new nsDependentString(STRING16(L""), 0);
                   if(!wrapper)
                     return JS_FALSE;
                   *((const nsAString**)d) = wrapper;
