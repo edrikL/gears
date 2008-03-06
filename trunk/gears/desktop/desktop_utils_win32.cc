@@ -283,11 +283,21 @@ static bool CreateIcoFile(const std::string16 &icons_path,
     // Increase data_size by size of the icon data.
     data_size += sizeof(BITMAPINFOHEADER);
 
-    // 32 bits per pixel for the image data.
-    data_size += 4 * icons_to_write[i]->width * icons_to_write[i]->height;
+    // Increase data_size by size of the image and mask data.
 
-    // 2 bits per pixel for the AND mask.
-    data_size += icons_to_write[i]->height * icons_to_write[i]->height / 4;
+    // Note: in the .ico format, each *row* of image and mask data must be
+    // a multiple of 4 bytes.  Pad if necessary.
+    int row_bytes;
+
+    // 32 bits per pixel for the image data.
+    row_bytes = icons_to_write[i]->width * 4;  // already a multiple of 4
+    data_size += row_bytes * icons_to_write[i]->height;
+
+    // 1 bit per pixel for the XOR mask, then 1 bit per pixel for the AND mask.
+    row_bytes = icons_to_write[i]->width / 8;
+    row_bytes = ((row_bytes + 3) / 4) * 4;  // round up to multiple of 4
+    data_size += row_bytes * icons_to_write[i]->height;  // XOR mask
+    data_size += row_bytes * icons_to_write[i]->height;  // AND mask
 
     // Increase data_size by size of directory entry.
     data_size += sizeof(IcoDirectory);
@@ -305,7 +315,8 @@ static bool CreateIcoFile(const std::string16 &icons_path,
   icon_header->count = icons_to_write.size();
 
   // Icon image data starts past the header and the directory.
-  int base_offset = sizeof(IcoHeader) +
+  int dest_offset =
+      sizeof(IcoHeader) +
       icons_to_write.size() * sizeof(IcoDirectory);
   for (size_t i = 0; i < icons_to_write.size(); ++i) {
     IcoDirectory directory;
@@ -322,13 +333,13 @@ static bool CreateIcoFile(const std::string16 &icons_path,
         4 * icons_to_write[i]->width * icons_to_write[i]->height +
         icons_to_write[i]->width * icons_to_write[i]->height / 4;
 
-    directory.offset = base_offset;
+    directory.offset = dest_offset;
 
     BITMAPINFOHEADER bmp_header;
     memset(&bmp_header, 0, sizeof(bmp_header));
     bmp_header.biSize = sizeof(bmp_header);
     bmp_header.biWidth = icons_to_write[i]->width;
-    // Windows expects the height to be doubled for the AND mask(unused).
+    // 'biHeight' is the combined height of the XOR and AND masks.
     bmp_header.biHeight = icons_to_write[i]->height * 2;
     bmp_header.biPlanes = 1;
     bmp_header.biBitCount = 32;
@@ -339,33 +350,53 @@ static bool CreateIcoFile(const std::string16 &icons_path,
            sizeof(IcoDirectory));
 
     // Write the bitmap header to the data segment.
-    memcpy(&data[base_offset],
+    memcpy(&data[dest_offset],
            reinterpret_cast<uint8 *>(&bmp_header),
            sizeof(BITMAPINFOHEADER));
 
-    // Move the offset past the header
-    base_offset += sizeof(BITMAPINFOHEADER);
+    // Move the offset past the header.
+    dest_offset += sizeof(BITMAPINFOHEADER);
 
-    // Iterate across the rows and reverse them.  Icons are stored upside down.
-    int row_offset = (icons_to_write[i]->height - 1) *
-        4 * icons_to_write[i]->width;
-    for (int row = 0; row < icons_to_write[i]->height; ++row) {
+    // Write the color data.
+    // Note that icon rows are stored bottom to top, so we flip the row order.
+    for (int row = (icons_to_write[i]->height - 1); row >= 0; --row) {
+      int src_row_offset = row * icons_to_write[i]->width * 4;
+
       // Copy a single row.
-      memcpy(&data[base_offset],
+      memcpy(&data[dest_offset],
              reinterpret_cast<const uint8*>(
-                 &icons_to_write[i]->raw_data.at(row_offset)),
+                 &icons_to_write[i]->raw_data.at(src_row_offset)),
              4 * icons_to_write[i]->width);
 
       // Move the write offset forward one row.
-      base_offset += 4 * icons_to_write[i]->width;
-
-      // Move the read offset back one row.
-      row_offset -= 4 * icons_to_write[i]->width;
+      dest_offset += 4 * icons_to_write[i]->width;
     }
 
-    // Move the write offset past the AND mask.  The AND mask is unused for
-    // icons with 32 bits per pixel; the alpha channel is used instead.
-    base_offset += icons_to_write[i]->width * icons_to_write[i]->height / 4;
+    // Compute mask information.
+    int mask_row_bytes = icons_to_write[i]->width / 8;
+    mask_row_bytes = ((mask_row_bytes + 3) / 4) * 4;  // round up, multiple of 4
+
+    // Write the XOR mask.
+    for (int row = (icons_to_write[i]->height - 1); row >= 0; --row) {
+      // 'stripe' is an 8-column segment, for grouping 1bpp data into bytes
+      for (int stripe = 0; stripe < (icons_to_write[i]->width / 8); ++stripe) {
+        int xor_mask_value = 0;
+        for (int bit = 0; bit < 8; ++bit) {
+          // If alpha is 0x00, make bit transparent (1), else leave opaque (0).
+          int raw_pixel_offset =
+              (((row * icons_to_write[i]->width) + (stripe * 8) + bit) * 4);
+          if (0 == icons_to_write[i]->raw_data.at(raw_pixel_offset + 3)) {
+            xor_mask_value |= (0x80 >> bit);
+          }
+        }
+        data[dest_offset + stripe] = static_cast<uint8>(xor_mask_value);
+      }
+      // Update offset *after* finishing mask row, as it may include padding.
+      dest_offset += mask_row_bytes;
+    }
+
+    // Move the write offset past the AND mask (unused in WinXP and later).
+    dest_offset += mask_row_bytes * icons_to_write[i]->height;
   }
 
   bool success = File::WriteBytesToFile(icons_path.c_str(),
