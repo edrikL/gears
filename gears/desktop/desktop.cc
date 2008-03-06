@@ -53,11 +53,15 @@ DECLARE_GEARS_WRAPPER(GearsDesktop);
 template<>
 void Dispatcher<GearsDesktop>::Init() {
   RegisterMethod("createShortcut", &GearsDesktop::CreateShortcut);
+#ifdef WINCE
+  // File picker is not yet implemented on WinCE.
+#else
 #ifdef OFFICIAL_BUILD
-  // file API not finalized for official builds yet
+  // File picker is not ready for official builds
 #else
   RegisterMethod("getLocalFiles", &GearsDesktop::GetLocalFiles);
-#endif
+#endif  // OFFICIAL_BUILD
+#endif  // WINCE
 }
 
 
@@ -306,6 +310,9 @@ bool GearsDesktop::AllowCreateShortcut(
   return true;
 }
 
+#ifdef WINCE
+// File picker is not yet implemented on WinCE.
+#else
 #ifdef OFFICIAL_BUILD
 // File picker is not ready for official builds
 #else
@@ -373,6 +380,7 @@ void GearsDesktop::GetLocalFiles(JsCallContext *context) {
 }
 
 #endif  // OFFICIAL_BUILD
+#endif  // WINCE
 
 // Handle all the icon creation and creation call required to actually install
 // a shortcut.
@@ -410,6 +418,10 @@ bool GearsDesktop::SetShortcut(DesktopUtils::ShortcutInfo *shortcut,
     return true;
   }
 
+#ifdef WINCE
+  // TODO(steveblock): Do we need WriteControlPanelIcon for WinCE?
+  // If not, we currently have no need for icon manipulation.
+#else
   if (!FetchIcon(&shortcut->icon16x16, 16, error) ||
       !FetchIcon(&shortcut->icon32x32, 32, error) ||
       !FetchIcon(&shortcut->icon48x48, 48, error) ||
@@ -422,8 +434,11 @@ bool GearsDesktop::SetShortcut(DesktopUtils::ShortcutInfo *shortcut,
     *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
+#endif
 
-#if defined(WIN32) || defined(OS_MACOSX)
+  // TODO(steveblock): Do we want to introduce this optimization for WinCE?
+#if (defined(WIN32) && !defined(WINCE)) || defined(OS_MACOSX)
+
   const DesktopUtils::IconData *next_largest_provided = NULL;
 
   // For each icon size, we use the provided one if available.  If not, and we

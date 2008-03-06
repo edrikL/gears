@@ -27,7 +27,7 @@
 
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
 // sources (e.g. WIN32_CPPSRCS) are implemented
-#if defined(WIN32) && !defined(WINCE)
+#ifdef WIN32
 #include <assert.h>
 #include <windows.h>
 #include <shlobj.h>
@@ -95,6 +95,13 @@ static bool CreateShellLink(const char16 *link_path,
                             const char16 *icon_path,
                             const char16 *object_path,
                             const char16 *arguments) {
+#ifdef WINCE
+  // For now we simply create a shortcut in the Start Menu.
+  // TODO(steveblock): Set the shortcut icon.
+  // TODO(steveblock): Look at adding an entry to the home / today screen.
+  return SHCreateShortcut(const_cast<char16*>(link_path),
+                          const_cast<char16*>(arguments)) == TRUE;
+#else
   HRESULT result;
   IShellLink* shell_link;
 
@@ -116,12 +123,21 @@ static bool CreateShellLink(const char16 *link_path,
     shell_link->Release();
   }
   return SUCCEEDED(result);
+#endif
 }
 
 static bool ReadShellLink(const char16 *link_path,
                           std::string16 *icon_path,
                           std::string16 *object_path,
                           std::string16 *arguments) {
+#ifdef WINCE
+  char16 target[CHAR_MAX];
+  bool ret = SHGetShortcutTarget(link_path, target, CHAR_MAX) == TRUE;
+  if (object_path) {
+    *object_path = target;
+  }
+  return ret;
+#else
   HRESULT result;
   IShellLink* shell_link;
 
@@ -164,8 +180,12 @@ static bool ReadShellLink(const char16 *link_path,
     shell_link->Release();
   }
   return SUCCEEDED(result);
+#endif
 }
 
+#ifdef WINCE
+// TODO(steveblock): Implement GetAppPath for WinCE when needed.
+#else
 static bool GetAppPath(const char16 *process_name, std::string16 *app_path) {
   bool query_result = false;
   LONG result;
@@ -191,17 +211,25 @@ static bool GetAppPath(const char16 *process_name, std::string16 *app_path) {
   }
   return query_result;
 }
+#endif
 
-static bool GetDesktopPath(std::string16 *desktop_path) {
+static bool GetShortcutLocationPath(std::string16 *shortcut_location_path) {
+  assert(shortcut_location_path);
   bool succeeded = false;
   char16 path_buf[MAX_PATH];
 
   // We use the old version of this function because the new version apparently
   // won't tell you the Desktop folder path.
   BOOL result = SHGetSpecialFolderPath(NULL, path_buf,
-                                       CSIDL_DESKTOPDIRECTORY, TRUE);
+#ifdef WINCE
+                                       CSIDL_STARTMENU,
+#else
+                                       CSIDL_DESKTOPDIRECTORY,
+#endif
+                                       TRUE);
+
   if (result) {
-    *desktop_path = path_buf;
+    *shortcut_location_path = path_buf;
     succeeded = true;
   }
   return succeeded;
@@ -373,17 +401,25 @@ bool DesktopUtils::CreateDesktopShortcut(const SecurityOrigin &origin,
   icons_path += STRING16(L".ico");
 
 
+#ifdef WINCE
+  // We don't yet use the icons in the shortcut.
+  // Note that CreateIcoFile requires at least one size of icon to be provided,
+  // excluding 128x128. Currently we don't rescale to provide missing icon sizes
+  // for WinCE, so it's possible that none of the required sizes will be
+  // present.
+#else
   if (!CreateIcoFile(icons_path, shortcut)) {
     *error = kCreationError;
     return false;
   }
+#endif
 
   // Note: We assume that shortcut.app_name has been validated as a valid
   // filename and that the shortuct.app_url has been converted to absolute URL
   // by the caller.
   std::string16 link_path;
 
-  if (GetDesktopPath(&link_path)) {
+  if (GetShortcutLocationPath(&link_path)) {
     if (link_path[link_path.size()] != L'\\') {
       link_path += STRING16(L"\\");
     }
@@ -409,4 +445,4 @@ bool DesktopUtils::CreateDesktopShortcut(const SecurityOrigin &origin,
 
   return creation_result;
 }
-#endif  // #if defined(WIN32) && !defined(WINCE)
+#endif  // WIN32

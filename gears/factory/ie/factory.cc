@@ -139,12 +139,8 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
     *error = STRING16(L"Object is only available in debug build.");
     return false;
 #endif
-#ifdef WINCE
-  // TODO(steveblock): Implement desktop for WinCE.
-#else
   } else if (object_name == STRING16(L"beta.desktop")) {
     object.reset(CreateModule<GearsDesktop>(GetJsRunner()));
-#endif
   } else {
     // Don't return an error here. Caller handles reporting unknown modules.
     error->clear();
