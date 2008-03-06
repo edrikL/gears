@@ -37,6 +37,7 @@
 // TestFileUtils
 //------------------------------------------------------------------------------
 bool TestCollapsePathSeparators();  // friend of file.h
+bool TestSplitPath(); //friend of file.h
 static bool TestGetBaseName();
 static bool TestGetParentDirectory();
 static bool TestLongPaths();
