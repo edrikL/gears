@@ -45,19 +45,18 @@ if (isDefined(typeof window.pie_dialog)) {
  * Initialize the base functionality of the dialog.
  */
 function initDialog() {
-  var buttonRowElem = null;
   if (!isPIE) {
-    buttonRowElem = getElementById("button-row");
     addEvent(document, "keyup", handleKeyUp);
   } else {
+    var buttonRowElem = null;
     if (window.pie_dialog.IsSmartPhone()) {
       buttonRowElem = getElementById("button-row-smartphone");
     } else {
       buttonRowElem = getElementById("button-row");
     }
-  }
-  if (buttonRowElem) {
-    buttonRowElem.style.display = 'block';
+    if (buttonRowElem) {
+      buttonRowElem.style.display = 'block';
+    }
   }
   if (isPIE) {
     window.pie_dialog.SetScriptContext(window);
