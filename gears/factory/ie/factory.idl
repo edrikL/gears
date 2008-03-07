@@ -45,15 +45,11 @@ interface GearsFactoryInterface : IDispatch {
   HRESULT getBuildInfo([out, retval] BSTR *retval);
   [propget] HRESULT version([out, retval] BSTR *retval);
 
-#ifdef WINCE
-  // Hold WinCE feature set at version 0.2 for now.
-#else
   HRESULT getPermission([in, optional] const VARIANT *site_name,
                         [in, optional] const VARIANT *image_url,
                         [in, optional] const VARIANT *extra_message,
                         [out, retval] VARIANT_BOOL *retval);
   [propget] HRESULT hasPermission([out, retval] VARIANT_BOOL *retval);
-#endif
 #ifdef WINCE
   HRESULT privateSetGlobalObject([in] IDispatch *js_dispatch);
 #endif
