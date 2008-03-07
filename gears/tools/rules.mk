@@ -41,18 +41,19 @@ OUTDIR = bin-$(MODE)
 #
 # INSTALLERS_OUTDIR doesn't include $(ARCH) because OSes that support
 # multiple CPU architectures (namely, OSX) have merged install packages.
-COMMON_OUTDIR           = $(OUTDIR)/$(OS)-$(ARCH)/common
-FF_OUTDIR               = $(OUTDIR)/$(OS)-$(ARCH)/ff
-IE_OUTDIR               = $(OUTDIR)/$(OS)-$(ARCH)/ie
-NPAPI_OUTDIR            = $(OUTDIR)/$(OS)-$(ARCH)/npapi
-LIBGD_OUTDIR            = $(COMMON_OUTDIR)/gd
-SQLITE_OUTDIR           = $(COMMON_OUTDIR)/sqlite
-THIRD_PARTY_OUTDIR      = $(COMMON_OUTDIR)/third_party
-INSTALLERS_OUTDIR       = $(OUTDIR)/installers
-COMMON_OUTDIRS_I18N     = $(foreach lang,$(I18N_LANGS),$(COMMON_OUTDIR)/genfiles/i18n/$(lang))
-FF_OUTDIRS_I18N         = $(foreach lang,$(I18N_LANGS),$(FF_OUTDIR)/genfiles/i18n/$(lang))
-IE_OUTDIRS_I18N         = $(foreach lang,$(I18N_LANGS),$(IE_OUTDIR)/genfiles/i18n/$(lang))
-NPAPI_OUTDIRS_I18N      = $(foreach lang,$(I18N_LANGS),$(NPAPI_OUTDIR)/genfiles/i18n/$(lang))
+COMMON_OUTDIR       = $(OUTDIR)/$(OS)-$(ARCH)/common
+FF_OUTDIR           = $(OUTDIR)/$(OS)-$(ARCH)/ff
+IE_OUTDIR           = $(OUTDIR)/$(OS)-$(ARCH)/ie
+NPAPI_OUTDIR        = $(OUTDIR)/$(OS)-$(ARCH)/npapi
+LIBGD_OUTDIR        = $(COMMON_OUTDIR)/gd
+SQLITE_OUTDIR       = $(COMMON_OUTDIR)/sqlite
+THIRD_PARTY_OUTDIR  = $(COMMON_OUTDIR)/third_party
+INSTALLERS_OUTDIR   = $(OUTDIR)/installers
+VISTA_BROKER_OUTDIR = $(OUTDIR)/$(OS)-$(ARCH)/vista_broker
+COMMON_OUTDIRS_I18N = $(foreach lang,$(I18N_LANGS),$(COMMON_OUTDIR)/genfiles/i18n/$(lang))
+FF_OUTDIRS_I18N     = $(foreach lang,$(I18N_LANGS),$(FF_OUTDIR)/genfiles/i18n/$(lang))
+IE_OUTDIRS_I18N     = $(foreach lang,$(I18N_LANGS),$(IE_OUTDIR)/genfiles/i18n/$(lang))
+NPAPI_OUTDIRS_I18N  = $(foreach lang,$(I18N_LANGS),$(NPAPI_OUTDIR)/genfiles/i18n/$(lang))
 # TODO(cprince): unify the Firefox directory name across the output dirs
 # (where it is 'ff') and the source dirs (where it is 'firefox').  Changing
 # the output dirs would require changing #includes that reference genfiles.
@@ -72,6 +73,8 @@ IE_OBJS = \
 	$(patsubst %.cc,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IE_CPPSRCS)) \
 	$(patsubst %.c,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IE_CSRCS)) \
 	$(patsubst %.cc,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(SHARED_CPPSRCS))
+VISTA_BROKER_OBJS = \
+	$(patsubst %.cc,$(VISTA_BROKER_OUTDIR)/%$(OBJ_SUFFIX),$(VISTA_BROKER_CPPSRCS))
 IEMOBILE_OBJS = \
 	$(patsubst %.cc,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IEMOBILE_CPPSRCS)) \
 	$(patsubst %.c,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IEMOBILE_CSRCS)) \
@@ -113,6 +116,7 @@ DEPS = \
 	$(COMMON_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(FF_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(IE_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(VISTA_BROKER_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(IEMOBILE_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(NPAPI_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(LIBGD_OBJS:$(OBJ_SUFFIX)=.pp) \
@@ -165,6 +169,7 @@ FF_VPATH += $(FF_OUTDIR)/genfiles
 
 IE_VPATH += $(IE_OUTDIR)/genfiles
 IE_VPATH += $(IE_OUTDIR)
+IE_VPATH += $(VISTA_BROKER_OUTDIR)
 
 # The use of IE_OUTDIR for IEMOBILE is intentional. The ARCH variable makes
 # IE_OUTDIR different for IE (ARCH=i386) and IEMOBILE (ARCH=arm).
@@ -182,11 +187,14 @@ VPATH += $(COMMON_VPATH) $($(BROWSER)_VPATH) $(SHARED_VPATH) $(THIRD_PARTY_VPATH
 # no ARCH in TARGET_BASE_NAME because we created merged installers
 INSTALLER_BASE_NAME = $(MODULE)-$(OS)-$(MODE)-$(VERSION)
 
-FF_MODULE_DLL     = $(FF_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
+FF_MODULE_DLL = $(FF_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 FF_MODULE_TYPELIB = $(FF_OUTDIR)/$(MODULE).xpt
 FF_INSTALLER_XPI = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).xpi
 
-IE_MODULE_DLL     = $(IE_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
+IE_MODULE_DLL = $(IE_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
+# Note: We use IE_OUTDIR so that relative path from gears.dll is same in
+# development environment as deployment environment.
+VISTA_BROKER_EXE = $(IE_OUTDIR)/vista_broker.exe
 WIN32_INSTALLER_MSI = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).msi
 WIXOBJ = $(COMMON_OUTDIR)/win32_msi.wxiobj
 WIXSRC = $(COMMON_OUTDIR)/genfiles/win32_msi.wxs
@@ -286,8 +294,8 @@ endif
 endif
 
 ifeq ($(BROWSER),IE)
-prereqs:: $(IE_OUTDIR)/genfiles $(IE_OUTDIRS_I18N) $(COMMON_M4FILES) $(COMMON_M4FILES_I18N) $(IE_M4FILES) $(IE_M4FILES_I18N)
-genheaders:: $(IE_GEN_HEADERS)
+prereqs:: $(IE_OUTDIR)/genfiles $(VISTA_BROKER_OUTDIR) $(IE_OUTDIRS_I18N) $(COMMON_M4FILES) $(COMMON_M4FILES_I18N) $(IE_M4FILES) $(IE_M4FILES_I18N)
+genheaders:: $(IE_GEN_HEADERS) $(VISTA_BROKER_EXE)
 modules:: $(IE_MODULE_DLL)
 endif
 
@@ -337,6 +345,8 @@ $(FF_OUTDIR)/genfiles:
 $(FF_OUTDIRS_I18N):
 	"mkdir" -p $@
 $(IE_OUTDIR)/genfiles:
+	"mkdir" -p $@
+$(VISTA_BROKER_OUTDIR):
 	"mkdir" -p $@
 $(IE_OUTDIRS_I18N):
 	"mkdir" -p $@
@@ -418,6 +428,10 @@ $(IE_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	@$(MKDEP)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $($(BROWSER)_CPPFLAGS) $($(BROWSER)_CFLAGS) $<
 
+$(VISTA_BROKER_OUTDIR)/%$(OBJ_SUFFIX): %.cc
+	@$(MKDEP)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $($(BROWSER)_CPPFLAGS) $($(BROWSER)_CXXFLAGS) $<
+
 $(NPAPI_OUTDIR)/%$(OBJ_SUFFIX): %.cc
 	$(MKDEP)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(NPAPI_CPPFLAGS) $(NPAPI_CXXFLAGS) $<
@@ -448,6 +462,9 @@ $(THIRD_PARTY_OUTDIR)/%$(OBJ_SUFFIX): %.c
 $(IE_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 	$(RC) $(RCFLAGS) $<
 
+$(VISTA_BROKER_OUTDIR)/%.res: %.rc
+	$(RC) $(RCFLAGS) $<
+
 $(NPAPI_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 	$(RC) $(RCFLAGS) /DBROWSER_NPAPI=1 $<
 
@@ -463,6 +480,11 @@ $(IE_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS
 # Note the use of SHLIBFLAGS_NOPDB instead of SHLIBFLAGS here.
 $(IEMOBILE_SETUP_DLL): $(IEMOBILE_SETUP_OBJS) $(IEMOBILE_SETUP_LINK_EXTRAS)
 	$(MKSHLIB) $(SHLIBFLAGS_NOPDB) $(IEMOBILE_SETUP_LINK_EXTRAS) $($(BROWSER)_LIBS) $(IEMOBILE_SETUP_OBJS)	
+
+$(VISTA_BROKER_EXE): $(VISTA_BROKER_OBJS) $(VISTA_BROKER_OUTDIR)/vista_broker.res
+	@echo $(VISTA_BROKER_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(MKEXE) $(LINKFLAGS) /PDB:"$(@D)/vista_broker.pdb" $(VISTA_BROKER_OUTDIR)/vista_broker.res $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	rm $(OUTDIR)/obj_list.temp
 
 $(FF_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_OBJS) $(FF_LINK_EXTRAS)
   ifeq ($(OS),linux)

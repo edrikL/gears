@@ -35,10 +35,6 @@
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/png_utils.h"
 #include "gears/base/common/url_utils.h"
-#if BROWSER_IE
-#include "gears/base/common/vista_utils.h"  // remove when createShortcut works
-#endif
-#include "gears/desktop/desktop_utils.h"
 #include "gears/desktop/file_dialog_utils.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
@@ -75,16 +71,7 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
     return;
   }
 
-#if BROWSER_IE
-  // Temporary check: return immediately if running IE on Windows Vista.  If
-  // this build goes live, it's better for the prompt not to appear, than for
-  // the API to be broken.  (Remove vista_utils.h when this check goes away.)
-  if (VistaUtils::IsRunningOnVista()) {
-    return;
-  }
-#endif
-
-  DesktopUtils::ShortcutInfo shortcut_info;
+  GearsDesktop::ShortcutInfo shortcut_info;
   JsObject icons;
 
   JsArgument argv[] = {
@@ -250,7 +237,7 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
 // * The shortcut already exists and is identical to the current one.
 // * The "never allow bit" is set for that shortcut.
 bool GearsDesktop::AllowCreateShortcut(
-                       const DesktopUtils::ShortcutInfo &shortcut_info,
+                       const GearsDesktop::ShortcutInfo &shortcut_info,
                        bool *allow) {
   PermissionsDB *capabilities = PermissionsDB::GetDB();
   if (!capabilities) {
@@ -375,7 +362,7 @@ void GearsDesktop::GetLocalFiles(JsCallContext *context) {
 
 // Handle all the icon creation and creation call required to actually install
 // a shortcut.
-bool GearsDesktop::SetShortcut(DesktopUtils::ShortcutInfo *shortcut,
+bool GearsDesktop::SetShortcut(GearsDesktop::ShortcutInfo *shortcut,
                                const bool allow,
                                const bool permanently,
                                std::string16 *error) {
@@ -429,8 +416,7 @@ bool GearsDesktop::SetShortcut(DesktopUtils::ShortcutInfo *shortcut,
 
   // TODO(steveblock): Do we want to introduce this optimization for WinCE?
 #if (defined(WIN32) && !defined(WINCE)) || defined(OS_MACOSX)
-
-  const DesktopUtils::IconData *next_largest_provided = NULL;
+  const GearsDesktop::IconData *next_largest_provided = NULL;
 
   // For each icon size, we use the provided one if available.  If not, and we
   // have a larger version, we scale the closest image to fit because our
@@ -480,8 +466,7 @@ bool GearsDesktop::SetShortcut(DesktopUtils::ShortcutInfo *shortcut,
 
   // Create the desktop shortcut using platform-specific code
   assert(allow);
-  if (!DesktopUtils::CreateDesktopShortcut(EnvPageSecurityOrigin(),
-                                           *shortcut, error)) {
+  if (!CreateShortcutPlatformImpl(EnvPageSecurityOrigin(), *shortcut, error)) {
     return false;
   }
 
@@ -498,8 +483,8 @@ bool GearsDesktop::SetShortcut(DesktopUtils::ShortcutInfo *shortcut,
 }
 
 bool GearsDesktop::WriteControlPanelIcon(
-                       const DesktopUtils::ShortcutInfo &shortcut) {
-  const DesktopUtils::IconData *chosen_icon = NULL;
+                       const GearsDesktop::ShortcutInfo &shortcut) {
+  const GearsDesktop::IconData *chosen_icon = NULL;
 
   // Pick the best icon we can for the control panel
   if (!shortcut.icon16x16.png_data.empty()) {
@@ -526,7 +511,7 @@ bool GearsDesktop::WriteControlPanelIcon(
   return File::WriteVectorToFile(icon_loc.c_str(), &chosen_icon->png_data);
 }
 
-bool GearsDesktop::FetchIcon(DesktopUtils::IconData *icon, int expected_size,
+bool GearsDesktop::FetchIcon(GearsDesktop::IconData *icon, int expected_size,
                              std::string16 *error) {
   // Icons are optional. Only try to fetch if one was provided.
   if (icon->url.empty()) {

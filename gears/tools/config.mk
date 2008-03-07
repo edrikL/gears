@@ -274,23 +274,25 @@ DLL_PREFIX =
 endif
 DLL_SUFFIX = .dll
 MKSHLIB	= link
+MKEXE = link
 # /RELEASE adds a checksum to the PE header to aid symbol loading.
 # /DEBUG causes PDB files to be produced.
 # We want both these flags in all build modes, despite their names.
-SHLIBFLAGS_dbg =
-SHLIBFLAGS_opt = /INCREMENTAL:NO /OPT:REF /OPT:ICF
-SHLIBFLAGS_NOPDB = /NOLOGO /OUT:$@ /DLL /DEBUG /RELEASE
+LINKFLAGS_dbg =
+LINKFLAGS_opt = /INCREMENTAL:NO /OPT:REF /OPT:ICF
+LINKFLAGS = /NOLOGO /OUT:$@ /DEBUG /RELEASE
 ifeq ($(OS),win32)
-SHLIBFLAGS_NOPDB += /SUBSYSTEM:WINDOWS \
-              $(SHLIBFLAGS_$(MODE))
+LINKFLAGS += /SUBSYSTEM:WINDOWS \
+              $(LINKFLAGS_$(MODE))
 else
-SHLIBFLAGS_NOPDB += /SUBSYSTEM:WINDOWSCE,5.01 \
+LINKFLAGS += /SUBSYSTEM:WINDOWSCE,5.01 \
               /NODEFAULTLIB:secchk.lib \
               /MACHINE:THUMB \
-              $(SHLIBFLAGS_$(MODE))
+              $(LINKFLAGS_$(MODE))
 endif
 # We need SHLIBFLAGS_NOPDB for generating other targets than gears.dll
 # (e.g. setup.dll for Windows Mobile)
+SHLIBFLAGS_NOPDB = $(LINKFLAGS) /DLL
 SHLIBFLAGS = $(SHLIBFLAGS_NOPDB) /PDB:"$(@D)/$(MODULE).pdb"
 
 ifeq ($(OS),win32)

@@ -26,13 +26,37 @@
 #ifndef GEARS_DESKTOP_DESKTOP_H__
 #define GEARS_DESKTOP_DESKTOP_H__
 
+#include <vector>
+
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/permissions_db.h"
-#include "gears/desktop/desktop_utils.h"
+#include "gears/base/common/security_model.h"
 
 class GearsDesktop : public ModuleImplBaseClassVirtual {
  public:
+  struct IconData {
+    IconData() : width(0), height(0) {}
+    int width;
+    int height;
+    std::string16 url;
+    std::vector<uint8> png_data;
+    std::vector<uint8> raw_data;
+    DISALLOW_EVIL_CONSTRUCTORS(IconData);
+  };
+
+  struct ShortcutInfo {
+    ShortcutInfo(){}
+    std::string16 app_name;
+    std::string16 app_url;
+    std::string16 app_description;
+    IconData icon16x16;
+    IconData icon32x32;
+    IconData icon48x48;
+    IconData icon128x128;
+    DISALLOW_EVIL_CONSTRUCTORS(ShortcutInfo);
+  };
+
   GearsDesktop() : ModuleImplBaseClassVirtual("GearsDesktop") {}
 
   // IN: string name, string url, object icons, optional string description
@@ -44,15 +68,20 @@ class GearsDesktop : public ModuleImplBaseClassVirtual {
   void GetLocalFiles(JsCallContext *context);
 
  private:
-  bool SetShortcut(DesktopUtils::ShortcutInfo *shortcut, 
+  // NOTE: This method is implemented in desktop_<platform>.cc
+  bool CreateShortcutPlatformImpl(const SecurityOrigin &origin,
+                                  const GearsDesktop::ShortcutInfo &shortcut,
+                                  std::string16 *error);
+
+  bool SetShortcut(GearsDesktop::ShortcutInfo *shortcut, 
                    const bool allow,
                    const bool permanently,
                    std::string16 *error);
 
-  bool AllowCreateShortcut(const DesktopUtils::ShortcutInfo &shortcut_info,
+  bool AllowCreateShortcut(const GearsDesktop::ShortcutInfo &shortcut_info,
                            bool *allow);
-  bool WriteControlPanelIcon(const DesktopUtils::ShortcutInfo &shortcut);
-  bool FetchIcon(DesktopUtils::IconData *icon, int expected_size,
+  bool WriteControlPanelIcon(const GearsDesktop::ShortcutInfo &shortcut);
+  bool FetchIcon(GearsDesktop::IconData *icon, int expected_size,
                  std::string16 *error);
   bool GetControlPanelIconLocation(const SecurityOrigin &origin,
                                    const std::string16 &app_name,

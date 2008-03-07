@@ -631,6 +631,20 @@ NPAPI_LINK_EXTRAS  += \
 endif
 
 #-----------------------------------------------------------------------------
+# vista_broker
+
+IE_VPATH += \
+		vista_broker \
+		$(NULL)
+
+VISTA_BROKER_CPPSRCS += \
+		shortcut_utils_win32.cc \
+		string16.cc \
+		string_utils.cc \
+		vista_broker.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # console/firefox
 
 FF_VPATH	+= \
@@ -790,14 +804,15 @@ SHARED_VPATH	  += \
 
 SHARED_CPPSRCS	+= \
 		desktop.cc \
-		desktop_utils_linux.cc \
-		desktop_utils_osx.cc \
-		desktop_utils_win32.cc \
+		desktop_linux.cc \
+		desktop_osx.cc \
+		desktop_win32.cc \
 		file_dialog.cc \
 		file_dialog_gtk.cc \
 		file_dialog_osx.cc \
 		file_dialog_utils.cc \
 		file_dialog_win32.cc \
+		shortcut_utils_win32.cc \
 		$(NULL)
 
 endif
