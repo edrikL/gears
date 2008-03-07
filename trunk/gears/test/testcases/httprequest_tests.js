@@ -125,6 +125,41 @@ function testRequestReuse() {
   }
 }
 
+function testAbortSimple() {
+  var request = google.gears.factory.create('beta.httprequest');
+  request.abort();
+}
+
+function testAbortAfterOpen() {
+  var urlbase = '/testcases/cgi/send_response_of_size.py?size=';
+  var request = google.gears.factory.create('beta.httprequest');
+  request.open('GET', urlbase + 1, true);
+  request.abort();
+}
+
+function testAbortAfterSend() {
+  var urlbase = '/testcases/cgi/send_response_of_size.py?size=';
+  var request = google.gears.factory.create('beta.httprequest');
+  request.open('GET', urlbase + 2, true);
+  request.send();
+  request.abort();
+}
+
+function testAbortAfterInteractive() {
+  startAsync();
+  var urlbase = '/testcases/cgi/send_response_of_size.py?size=';
+  var request = google.gears.factory.create('beta.httprequest');
+  request.open('GET', urlbase + 32000, true);
+  request.onreadystatechange = function() {
+    if (request.readyState >= 3) {
+      assertEqual(3, request.readyState);  // we dont want it to be complete yet
+      request.abort();
+      completeAsync();
+    }
+  }
+  request.send();
+}
+
 function testGetCapturedResource() {
   startAsync();
 
