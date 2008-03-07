@@ -284,11 +284,16 @@ bool GearsHttpRequest::CallSendOnUiThread() {
 
 void GearsHttpRequest::OnSendCall() {
   assert(IsUiThread());
-  assert(!request_);
-  assert(request_info_.get());
-  assert(response_info_.get());
 
   MutexLock locker(&lock_);
+
+  // TODO(michaeln): this is a quick-fix for a crashing bug,
+  // Overwrite with CL6372979 when the tree re-opens for development
+  if (!request_info_.get() || !response_info_.get()) {
+    return;
+  }
+  // end quick-fix
+
   CreateRequest();
   bool ok = request_->Open(request_info_->method.c_str(),
                            request_info_->full_url.c_str(),
@@ -353,9 +358,12 @@ void GearsHttpRequest::OnAbortCall() {
   {
     // The extra scope is to ensure we unlock prior to reference.Release
     MutexLock locker(&lock_);
+    // TODO(michaeln): this is a quick-fix for a crashing bug,
+    // Overwrite with CL6372979 when the tree re-opens for development
+    request_info_.reset(NULL);
+    response_info_.reset(NULL);
+    // end quick-fix
     if (request_) {
-      request_info_.reset(NULL);
-      response_info_.reset(NULL);
       request_->SetOnReadyStateChange(NULL);
       request_->Abort();
       RemoveRequest();
@@ -611,10 +619,18 @@ bool GearsHttpRequest::CallReadyStateChangedOnApartmentThread() {
 
 void GearsHttpRequest::OnReadyStateChangedCall() {
   assert(IsApartmentThread());
-  lock_.Lock();
-  response_info_->ready_state = response_info_->pending_ready_state;
-  bool is_complete = IsComplete();
-  lock_.Unlock();
+  bool is_complete;
+  {
+    MutexLock locker(&lock_);
+    // TODO(michaeln): this is a quick fix for a crashing bug,
+    // Overwrite with CL6372979 when the tree re-opens for development
+    if (!response_info_.get()) {
+      return;
+    }
+    // end quick-fix
+    response_info_->ready_state = response_info_->pending_ready_state;
+    is_complete = IsComplete();
+  }
 
   // To remove cyclic dependencies we drop our reference to the
   // callback when the request is complete.
