@@ -211,9 +211,6 @@ STDMETHODIMP GearsManagedResourceStore::get_lastErrorMessage(
   RETURN_NORMAL();
 }
 
-#ifdef WINCE
-// Hold WinCE feature set at version 0.2 for now.
-#else
 //------------------------------------------------------------------------------
 // put_onerror
 //------------------------------------------------------------------------------
@@ -272,7 +269,6 @@ STDMETHODIMP GearsManagedResourceStore::put_oncomplete(
 
   RETURN_NORMAL();
 }
-#endif
 
 //------------------------------------------------------------------------------
 // CreateWindowIfNeeded

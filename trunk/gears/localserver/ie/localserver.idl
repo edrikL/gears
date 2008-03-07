@@ -54,13 +54,9 @@ interface GearsManagedResourceStoreInterface : IDispatch {
   [propget] HRESULT updateStatus([out, retval] int *status);
   [propget] HRESULT lastErrorMessage([out, retval] BSTR *last_error_message);
 
-#ifdef WINCE
-  // Hold WinCE feature set at version 0.2 for now.
-#else
   [propput] HRESULT onerror([in] const VARIANT *handler);
   [propput] HRESULT onprogress([in] const VARIANT *handler);
   [propput] HRESULT oncomplete([in] const VARIANT *handler);
-#endif
 
   HRESULT checkForUpdate();
    
