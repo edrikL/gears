@@ -104,6 +104,12 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
       width: 70px;
     }
 
+m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
+^
+    /* 
+     * On Windows Mobile, we hide the div containing the buttons
+     * by default, to only show the correct one (ie smartphone or not)
+     */
     #button-row {
       display:none;
     }
@@ -111,6 +117,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
     #button-row-smartphone {
       display:none;
     }
+^,^^)
 
   </style>
 </head>
@@ -171,8 +178,13 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
         <div id="text-save">Save</div>
       </TRANS_BLOCK>
     </div>
+m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
+^
+    <!-- On SmartPhone, we don't use the regular buttons. We just use this link,
+    and softkeys for the other buttons. -->
     <div id="button-row-smartphone">
     </div>
+^,^^)
     <div id="button-row">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>

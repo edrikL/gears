@@ -92,6 +92,13 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
     }
 ^)
 
+m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
+^
+    /* 
+     * On Windows Mobile, we hide the div containing the buttons
+     * by default, to only show the correct one (ie smartphone or not)
+     */
+
     #button-row {
       display:none;
     }
@@ -99,6 +106,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
     #button-row-smartphone {
       display:none;
     }
+^,^^)
   </style>
 </head>
 <body>
