@@ -2,6 +2,9 @@
 
 A brief history of the Google Gears project.
 
+  * 2008/03/03 - Gears adds support for [http://gearsblog.blogspot.com/2008/03/google-gears-in-your-pocket.html Windows Mobile] devices.
+  * 2008/03/03 - [http://www.buxfer.com/blog/2008/03/04/offline-access-from-your-windows-mobile-device Buxfer] and [http://blogs.zoho.com/writer/zoho-writer-extends-mobile-support-adds-offline-capability-for-windows-mobile-using-google-gears/ Zoho] launch Gears-enabled mobile applications.
+
   * 2008/02/14 - Public launch of [http://code.google.com/apis/gears/upcoming/history.html Google Gears 0.2]!
 
   * 2007/11/26 - [http://www.zoho.com/ Zoho] Writer supports offline editing. ([http://blogs.zoho.com/general/zoho-writer-supports-offline-editing/ story])
