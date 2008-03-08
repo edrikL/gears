@@ -144,11 +144,11 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
 <body>
 
   <!--
-   PIE only works with one window, and we are in a modal dialog.
-   Using window.open(this.href) replaces the content of the current dialog,
-   which is annoying when no back button is displayed...
-   The workaround is to embed directly a short explanation text, and
-   hide/show the div container for the help and the settings dialog.
+  PIE only works with one window, and we are in a modal dialog.
+  Using window.open(this.href) replaces the content of the current dialog,
+  which is annoying when no back button is displayed...
+  The workaround is to embed directly a short explanation text, and
+  hide/show the div container for the help and the settings dialog.
   -->
 
   <div id="permissions-help">
@@ -279,9 +279,9 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
 m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^          <!-- 
-          We use form input buttons instead of buttons elements 
-          as PIE does not support them
+^         <!-- 
+          We use form input buttons instead of buttons elements as PIE
+          does not support them.
           -->
 
           <td width="50%" align="left" valign="middle">
@@ -293,8 +293,8 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
               <input disabled type="BUTTON" id="allow-button" onclick="allowAccessPermanently();"></input>
               <input type="BUTTON" id="deny-button" onclick="denyAccessTemporarily(); return false;"></input>
             </td>
-          </div>^,m4_dnl
-^           
+          </div>
+^,^           
           <td width="100%" align="left" valign="middle">
             <a href="#" onclick="denyAccessPermanently(); return false;">
             <TRANS_BLOCK desc="Link that disallows Gears on this site.">
@@ -341,9 +341,9 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
 </object>^)
 </body>
 <!--
- We include all files through m4 as the HTML dialog implementation
- on PocketIE does not support callbacks for loading external javascript files
- TODO: find a better way to include scripts for PIE
+We include all files through m4 as the HTML dialog implementation on
+PocketIE does not support callbacks for loading external JavaScript files.
+TODO: find a better way to include scripts for PIE
 -->
 <script>
 m4_include(third_party/jsonjs/json_noeval.js)

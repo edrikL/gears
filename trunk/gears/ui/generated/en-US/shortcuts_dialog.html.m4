@@ -192,11 +192,14 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
 ^,^^)
 
     <div id="button-row">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <table cellpadding="0" cellspacing="0" border="0">
         <tr>
 m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
-          <!-- PIE does not support button elements, so we use forms. -->
+^         <!-- 
+          We use form input buttons instead of buttons elements as PIE
+          does not support them.
+          -->
+
           <td width="50%" align="left" valign="middle">
             <input type="BUTTON" id="deny-permanently-button" onclick="denyShortcutPermanently(); return false;"></input>
           </td>
@@ -219,39 +222,39 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
             Note: Outer element is <a> because we want it to focusable and
             behave like an anchor. Inner elements should theoretically be able
             to be <span>, but IE renders incorrectly in this case.
+             
+            Note: The whitespace in this section is very delicate.  The lack of
+            space between the tags and the space between the buttons both
+            are important to ensure proper rendering.
+            TODO(aa): This results in inconsistent spacing in IE vs Firefox
+            between the buttons, but I am reluctant to hack things even further
+            to fix that.
             -->
             <a href="#" accesskey="Y" id="allow-button" 
                 onclick="allowShortcutsTemporarily(); return false;"
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
-                <div class="inline-block custom-button-inner-box" id="allow-button-contents"><TRANS_BLOCK desc="Button the user can press to allow Gears to create a shortcut"><span class="accesskey">Y</span>es</TRANS_BLOCK></div></div></a>
-            <!--
-            Note: There must be whitespace here or Firefox messes up the
-            rendering.
-            TODO(aa): This results in inconsistent spacing in IE vs Firefox
-            between the buttons, but I am reluctant to hack things even further
-            to fix that.
-            -->
+                <div class="inline-block custom-button-inner-box" id="allow-button-contents"
+                  ><TRANS_BLOCK desc="Button the user can press to allow Gears to create a shortcut"><span class="accesskey">Y</span>es</TRANS_BLOCK></div></div></a>
             <a href="#" accesskey="N" id="deny-button"
                 onclick="denyShortcutsTemporarily(); return false;"
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
-                <div class="inline-block custom-button-inner-box" id="deny-button-contents"><TRANS_BLOCK desc="Button the user can press to disallow Gears from creating a shortcut."><span class="accesskey">N</span>o</TRANS_BLOCK></div></div></a></td>
-^)
+                <div class="inline-block custom-button-inner-box" id="deny-button-contents"
+                  ><TRANS_BLOCK desc="Button the user can press to disallow Gears from creating a shortcut."><span class="accesskey">N</span>o</TRANS_BLOCK></div></div></a></td>^)
         </tr>
       </table>
+    </div>
   </div>
-
 m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
-<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">
-</object>
-^,^^)
-
+^<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">
+</object>^)
 </body>
-
-<!-- We include all files through m4 as the HTML dialog implementation on
-PocketIE does not support callbacks for loading external JavaScript files. -->
+<!--
+We include all files through m4 as the HTML dialog implementation on
+PocketIE does not support callbacks for loading external JavaScript files.
+TODO: find a better way to include scripts for PIE
+-->
 <script>
 m4_include(third_party/jsonjs/json_noeval.js)
 m4_include(ui/common/html_dialog.js)
