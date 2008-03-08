@@ -152,31 +152,15 @@ class Database2Manager : ModuleImplBaseClassVirtual {
 
 This implementation uses a thread-safe static map to make sure that only _one transaction queue_ exists per database for a given origin. In the next iterations of development, an IE-only solution will be added to ensure the same across multiple processes. Having one transaction queue per database allows us to use the DEFERRED transaction mode and avoiding conflicts, caused by transaction overlaps. 
 
-The map, each owning a transaction queue and a `Database2Connection`:
+The transaction queue map is a static member of `Database2` and is managed by static methods exposed by that class.
 
-{{{
-
-typedef ThreadSafeQueue<Database2Transaction> Database2TransactionQueue;
-  
-class Database2TransactionQueueMap {
- public:
-   static Database2TransactionQueue *Get(std:string16 name, 
-                                         std:string16 origin) {       
-    // scope mutex
-    // find and return queue
-    // if not found, create new queue
-    // insert new queue
-    // return it
-  }
-};
-
-}}}
-
-Transaction queue's life time is the same as the static object that holds it: once it is created, it sticks around.
+Transaction queue's life time is the same as the static member that holds it: once it is created, it sticks around.
 
 When the `Database2` methods that create a transaction are invoked, they acquire the appropriate queue:
 
 {{{
+
+typedef ThreadSafeQueue<Database2Transaction> Database2TransactionQueue;
 
 // Implements the HTML5 database interface, which allows the creation
 // of transactions. We also have our own proprietary
@@ -197,7 +181,8 @@ class Database2 : ModuleImplBaseClassVirtual {
     QueueTransaction(tx);
   }
 
-  void QueueTransaction(Database2Transaction *tx) {      
+  void QueueTransaction(Database2Transaction *tx) {
+    Database2TransactionQueue queue = GetQueue(/* name, origin */);  
     // returns true, if first iterm in queue
     bool first = queue_->empty();
     // sketch only, consider making a single method to prevent race conditions
@@ -229,9 +214,16 @@ class Database2 : ModuleImplBaseClassVirtual {
     // sync transaction never enters the queue, there's no need for it
     // but it still checks for pending transactions in the queue
     // to prevent deadlocks
-    if (queue_->empty()) {
+    if (GetQueue(/* name, origin */)->empty()) {
       tx->Start();
     }
+  }
+  
+  static Database2TransactionQueue *GetQueue(/* name, origin */) {
+    // combine name, origin into one string
+    static std:map<std:string16, Database2TransactionQueue*> map;
+    // if map doesn't contain the queue, create the queue and insert into map
+    // return queue
   }  
 
  private:
@@ -242,9 +234,6 @@ class Database2 : ModuleImplBaseClassVirtual {
   
   Database2Interpreter interpreter_;
   scoped_refptr<Database2ThreadedInterpreter> threaded_interpreter_;
-    
-  // lazily initialized, always returns the queue for current origin/name
-  Database2TransactionQueue *queue_;
 
 };
 
@@ -274,6 +263,7 @@ class Database2Interpreter : RefCounted {
       if (command) {
         if (command->InBackground()) {
           command->OnForeground();
+          // delete command when we're done
         }
       }
     }
@@ -298,6 +288,7 @@ class Database2ThreadedInterpreter : Database2Interpreter {
    // if returned true,
    // post item back to the foreground thread,
    // when the message is received, invoke OnForeground
+   // delete command when we're done
   }
 };
 
@@ -443,7 +434,7 @@ class Database2Transaction : ModuleImplBaseClassVirtual {
   scoped_ptr<JsRootedCallback> failure_callback_;
 
   scoped_refptr<Database2Connection> connection_;
-  scoped_refptr<Database2Interpreter> thread_;
+  scoped_refptr<Database2Interpreter> interpreter_;
   
   ThreadSafeQueue<Database2Statement> statement_queue_;
 
