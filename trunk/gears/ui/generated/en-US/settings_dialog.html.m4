@@ -171,12 +171,31 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
   </div>
   <div id="foot">
     <div id="text-buttons" style="display:none">
-      <TRANS_BLOCK desc="Button user can press to cancel the dialog.">
-        <div id="text-cancel">Cancel</div>
-      </TRANS_BLOCK>
-      <TRANS_BLOCK desc="Button user can press to save changes.">
-        <div id="text-save">Save</div>
-      </TRANS_BLOCK>
+      <div id="text-cancel">
+        <TRANS_BLOCK desc="Button user can press to cancel the dialog.">
+        Cancel
+        </TRANS_BLOCK>
+      </div>
+      <div id="text-save">
+        <TRANS_BLOCK desc="Button user can press to save changes.">
+        Save
+        </TRANS_BLOCK>
+      </div>
+      <div id="text-remove">
+        <TRANS_BLOCK desc="Button user can press to remove a site from the list.">
+        Remove
+        </TRANS_BLOCK>
+      </div>
+      <div id="text-noallowed">
+        <TRANS_BLOCK desc="States that there are no allowed sites.">
+        No allowed sites.
+        </TRANS_BLOCK>
+      </div>
+      <div id="text-nodenied">
+        <TRANS_BLOCK desc="States that there are no denied sites.">
+        No denied sites.
+        </TRANS_BLOCK>
+      </div>
     </div>
 m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
 ^
@@ -295,9 +314,15 @@ m4_include(ui/common/html_dialog.js)
     if (!sites.length) {
       content = "<tr><td class=\"left\"><em>";
       if (kind == ALLOWED) {
-        content += "<TRANS_BLOCK desc=\"States that there are no allowed sites.\">No allowed sites.</TRANS_BLOCK>";
+        var allowedText = getElementById("text-noallowed");
+        if (allowedText) {
+          content += allowedText.innerText;
+        }
       } else if (kind == DENIED) {
-        content += "<TRANS_BLOCK desc=\"States that there are no denied sites.\">No denied sites.</TRANS_BLOCK>";
+        var deniedText = getElementById("text-nodenied");
+        if (deniedText) {
+          content += deniedText.innerText;
+        }
       }
       content += "</em></td><td></td></tr>";
     } else {
@@ -316,7 +341,10 @@ m4_include(ui/common/html_dialog.js)
     content += "<td class=\"right\"><a href='#' onclick='handleRemoveClick(";
     content += rowNumber;
     content += ",\"" + siteName + "\"," + kind + ");'>";
-    content += "<TRANS_BLOCK desc=\"Button user can press to remove a site from the list.\">Remove</TRANS_BLOCK>";
+    var removeText = getElementById("text-remove");
+    if (removeText) {
+      content += removeText.innerText;
+    }
     content += "</a></td></tr>";
     return content;
   }

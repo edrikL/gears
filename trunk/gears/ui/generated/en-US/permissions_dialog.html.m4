@@ -231,18 +231,26 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
 
   <div id="foot">
     <div id="text-buttons" style="display:none">
-      <TRANS_BLOCK desc="Link that disallows Gears on this site.">
-        <div id="text-never-allow">Never allow it</div>
-      </TRANS_BLOCK>
-      <TRANS_BLOCK desc="Button user can press to allow the use of Gears.">
-        <div id="text-allow">Allow</div>
-      </TRANS_BLOCK>
-      <TRANS_BLOCK desc="Button user can press to disallow the use of Gears.">
-        <div id="text-deny">Deny</div>
-      </TRANS_BLOCK>
-      <TRANS_BLOCK desc="Button user can press to cancel the dialog.">
-        <div id="text-cancel">Cancel</div>
-      </TRANS_BLOCK>
+      <div id="text-never-allow">
+        <TRANS_BLOCK desc="Link that disallows Gears on this site.">
+        Never allow it
+        </TRANS_BLOCK>
+      </div>
+      <div id="text-allow">
+        <TRANS_BLOCK desc="Button user can press to allow the use of Gears.">
+        Allow
+        </TRANS_BLOCK>
+      </div>
+      <div id="text-deny">
+        <TRANS_BLOCK desc="Button user can press to disallow the use of Gears.">
+        Deny
+        </TRANS_BLOCK>
+      </div>
+      <div id="text-cancel">
+        <TRANS_BLOCK desc="Button user can press to cancel the dialog.">
+        Cancel
+        </TRANS_BLOCK>
+      </div>
     </div>
 m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
 ^

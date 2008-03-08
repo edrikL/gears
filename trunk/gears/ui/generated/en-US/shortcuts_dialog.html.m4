@@ -154,18 +154,26 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
     <!-- We use these divs to store the text for our buttons in a way that can
     be translated. We copy the text to the buttons in JavaScript. -->
     <div style="display:none">
-      <TRANS_BLOCK desc="Button the user can press to allow Gears to create a shortcut">
-        <div id="allow-text"><span class="accesskey">Y</span>es</div>
-      </TRANS_BLOCK>
-      <TRANS_BLOCK desc="Button the user can press to disallow Gears from creating a shortcut.">
-        <div id="deny-text"><span class="accesskey">N</span>o</div>
-      </TRANS_BLOCK>
-      <TRANS_BLOCK desc="Button the user can press to permanently disallow Gears from creating this shortcut.">
-        <div id="deny-permanently-text">Never allow this shortcut.</div>
-      </TRANS_BLOCK>
-      <TRANS_BLOCK desc="Button or link the user can press to permanently disallow Gears from creating this shortcut, short version.">
-        <div id="deny-permanently-text-short">Never allow</div>
-      </TRANS_BLOCK>
+      <div id="allow-text">
+        <TRANS_BLOCK desc="Button the user can press to allow Gears to create a shortcut">
+        <span class="accesskey">Y</span>es
+        </TRANS_BLOCK>
+      </div>
+      <div id="deny-text">
+        <TRANS_BLOCK desc="Button the user can press to disallow Gears from creating a shortcut.">
+        <span class="accesskey">N</span>o
+        </TRANS_BLOCK>
+      </div>
+      <div id="deny-permanently-text">
+        <TRANS_BLOCK desc="Button the user can press to permanently disallow Gears from creating this shortcut.">
+        Never allow this shortcut.
+        </TRANS_BLOCK>
+      </div>
+      <div id="deny-permanently-text-short">
+        <TRANS_BLOCK desc="Button or link the user can press to permanently disallow Gears from creating this shortcut, short version.">
+        Never allow
+        </TRANS_BLOCK>
+      </div>
     </div>
 
 m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
@@ -216,7 +224,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
                 onclick="allowShortcutsTemporarily(); return false;"
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
-                <div class="inline-block custom-button-inner-box" id="allow-button-contents"></div></div></a>
+                <div class="inline-block custom-button-inner-box" id="allow-button-contents"><TRANS_BLOCK desc="Button the user can press to allow Gears to create a shortcut"><span class="accesskey">Y</span>es</TRANS_BLOCK></div></div></a>
             <!--
             Note: There must be whitespace here or Firefox messes up the
             rendering.
@@ -228,9 +236,8 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
                 onclick="denyShortcutsTemporarily(); return false;"
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
-                <div class="inline-block custom-button-inner-box" id="deny-button-contents"></div></div></a>
+                <div class="inline-block custom-button-inner-box" id="deny-button-contents"><TRANS_BLOCK desc="Button the user can press to disallow Gears from creating a shortcut."><span class="accesskey">N</span>o</TRANS_BLOCK></div></div></a></td>
 ^)
-          </td>
         </tr>
       </table>
   </div>
@@ -272,8 +279,6 @@ m4_include(ui/common/html_dialog.js)
     window.pie_dialog.SetCancelButton(getElementById("deny-text").innerText);
     setElementContents("deny-permanently-text-short", "deny-permanently-link");
   } else {
-    setElementContents("allow-text", "allow-button-contents");
-    setElementContents("deny-text", "deny-button-contents");
     setElementContents("deny-permanently-text", "deny-permanently-link");
   }
 
