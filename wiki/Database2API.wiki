@@ -291,7 +291,7 @@ class Database2ThreadedInterpreter : Database2Interpreter {
    // shut down thread, if started
   }
    
-  void QueueOperation(Database2Command* item) {
+  void RunCommand(Database2Command* item) {
    // get ThreadMessageQueue instance
    // post item message
    // on the background thread, invoke InBackground, then
@@ -559,8 +559,8 @@ class Database2Statement {
 
 Version values are part of `Database2Transaction`, and remain uninitialized when `Database2::Transaction` method is invoked. If they are initialized (this occurs when `Database2::ChangeVersion` is called):
 
- * `BeginTransactionOperation::InBackground` checks for `bogus_version_` and fails, if the flag is set
- * `CommitTransactionOperation::InBackground` updates version values after successful commit 
+ * `Database2BeginCommand::InBackground` checks for `bogus_version_` and fails, if the flag is set
+ * `Database2CommitCommand::InBackground` updates version values after successful commit 
 
 == Nested Transactions ==
 
