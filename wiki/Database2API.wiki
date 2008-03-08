@@ -250,7 +250,7 @@ class Database2 : ModuleImplBaseClassVirtual {
 
 }}}
 
-With the exception of opening a database, which has to occur on the main thread,  all database operations follow the same pattern: a database statement is executed on a separate thread, then an optional action on the main thread follows. This pattern is encapsulated by a command/intepreter pattern.
+With the exception of opening a database, which has to occur on the main thread,  all database operations follow the same pattern: a database statement is executed on a separate thread, then an optional action on the main thread follows. This pattern is encapsulated by a command/interpreter pattern.
 
 There are two variants of the interpreter: `Database2ThreadedInterpreter` and `Database2Interpreter`.
 
@@ -443,7 +443,7 @@ class Database2Transaction : ModuleImplBaseClassVirtual {
   scoped_ptr<JsRootedCallback> failure_callback_;
 
   scoped_refptr<Database2Connection> connection_;
-  scoped_refptr<Database2InterpreterInterface> thread_;
+  scoped_refptr<Database2Interpreter> thread_;
   
   ThreadSafeQueue<Database2Statement> statement_queue_;
 
