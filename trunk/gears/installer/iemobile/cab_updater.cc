@@ -34,11 +34,20 @@
 #include "gears/base/ie/bho.h"
 #include "gears/installer/iemobile/resource.h"
 
-const char16* kUpgradeUrl =
-    STRING16(L"http://tools.google.com/service/update2/ff?guid="
-             L"%7Bc3fc95dBb-cd75-4f3d-a586-bcb7D004784c%7D&version=0.1.2.3&"
-             L"application=%7Bc3fc95dBb-cd75-4f3d-a586-bcb7D004784c%7D&"
-             L"appversion=1.0&os=wince&dist=google");
+const char16* kUpgradeUrl = reinterpret_cast<const char16*>(  // STRING16()
+    // TODO(andreip): When updating the Gears 'guid' field, consider switching
+    // 'application' to a GUID that means Pocket IE (to match Firefox pings).
+    // Also remind cprince to update the stats logic when 'guid' changes.
+    L"http://tools.google.com/service/update2/ff?"
+    L"guid=%7Bc3fc95dBb-cd75-4f3d-a586-bcb7D004784c%7D"
+    L"&version=" PRODUCT_VERSION_STRING
+    L"&application=%7Bc3fc95dBb-cd75-4f3d-a586-bcb7D004784c%7D"
+    L"&appversion=1.0"
+#ifdef OFFICIAL_BUILD
+    L"&os=wince&dist=google");
+#else
+    L"&os=wince&dist=google&dev=1");
+#endif
 // The topic for the message system.
 const char16* kTopic = STRING16(L"Cab Update Event");
 // The key for ThreadLocals.
