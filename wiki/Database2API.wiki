@@ -239,7 +239,7 @@ class Database2 : ModuleImplBaseClassVirtual {
 
 }}}
 
-With the exception of opening a database, which has to occur on the main thread,  all database operations follow the same pattern: a database statement is executed on a separate thread, then an optional action on the main thread follows. This pattern is encapsulated by a [http://en.wikipedia.org/wiki/Command_pattern command]/[http://en.wikipedia.org/wiki/Interpreter_pattern interpreter] pattern.
+With the exception of opening a database, which has to occur on the main thread,  all database operations follow the same pattern: a database statement is executed on a separate thread, then an optional action on the main thread follows. This behavior is encapsulated by a [http://en.wikipedia.org/wiki/Command_pattern command]/[http://en.wikipedia.org/wiki/Interpreter_pattern interpreter] pattern.
 
 There are two variants of the interpreter: `Database2ThreadedInterpreter` and `Database2Interpreter`.
 
