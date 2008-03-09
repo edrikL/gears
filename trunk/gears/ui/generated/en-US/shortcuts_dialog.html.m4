@@ -155,7 +155,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
     be translated. We copy the text to the buttons in JavaScript. -->
     <div style="display:none">
       <div id="allow-text">
-        <TRANS_BLOCK desc="Button the user can press to allow Gears to create a shortcut">
+        <TRANS_BLOCK desc="Button the user can press to allow Gears to create a shortcut.">
         <span class="accesskey">Y</span>es
         </TRANS_BLOCK>
       </div>
@@ -166,7 +166,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
       </div>
       <div id="deny-permanently-text">
         <TRANS_BLOCK desc="Button the user can press to permanently disallow Gears from creating this shortcut.">
-        Never allow this shortcut.
+        Never allow this shortcut
         </TRANS_BLOCK>
       </div>
       <div id="deny-permanently-text-short">
@@ -235,13 +235,13 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box" id="allow-button-contents"
-                  ><TRANS_BLOCK desc="Button the user can press to allow Gears to create a shortcut"><span class="accesskey">Y</span>es</TRANS_BLOCK></div></div></a>
+                  ><TRANS_BLOCK desc="Button the user can press to allow Gears to create a shortcut">&nbsp;&nbsp;<span class="accesskey">Y</span>es</TRANS_BLOCK>&nbsp;&nbsp;</div></div></a>
             <a href="#" accesskey="N" id="deny-button"
                 onclick="denyShortcutsTemporarily(); return false;"
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box" id="deny-button-contents"
-                  ><TRANS_BLOCK desc="Button the user can press to disallow Gears from creating a shortcut."><span class="accesskey">N</span>o</TRANS_BLOCK></div></div></a></td>^)
+                  ><TRANS_BLOCK desc="Button the user can press to disallow Gears from creating a shortcut.">&nbsp;&nbsp;&nbsp;<span class="accesskey">N</span>o&nbsp;&nbsp;&nbsp;</TRANS_BLOCK></div></div></a></td>^)
         </tr>
       </table>
     </div>
@@ -499,7 +499,7 @@ m4_include(ui/common/html_dialog.js)
   }
   
   /**
-   * Called when the user clicks the "Never allow this shortcut." link.
+   * Called when the user clicks the "Never allow this shortcut" link.
    */
   function denyShortcutPermanently() {
     saveAndClose({
