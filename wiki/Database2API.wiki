@@ -482,34 +482,48 @@ class Database2Connection : RefCounted {
     // close connection
   }
   
-  bool VerifyVersion(std:string16 version) {
-    // read and store expected version
-    // return true, if argument matches actual version
+  bool OpenAndVerifyVersion(std:string16 databaseVersion) {
+    // read expected_version (user_version value)
+    // read version from Permissions.db
+    // if databaseVersion is not an empty value or null,
+      // if databaseVersion matches version
+        // return true
+      // otherwise,
+        // set error to INVALID_STATE_ERR exception value
+    // return true
   }
   
-  void Execute((*row_data_callback)(...), (*error_callback)(int, std:string)) {
+  bool Execute(Database2RowHandlerInterface *row_handler) {
     if (bogus_version_) {
-     // call error_callback, version mismatch
+     // set error code to "version mismatch" (error code 2)
     }
     // prepare
-    // step, for each row, call row_data_callback
-     // if error, call error_callback with code and message 
+    // step, for each row, call row_handler->HandleRow(..);
+     // if error, set error code and message, return false;
+    // return true upon success
   }
  
-  bool Open(void (*error_callback)(int, std:string)) {
+  bool Begin() {
     // execute BEGIN    
-    // if error, call error_callback with code and message
-    // read actual_version
+    // if error, set error code and message, return false
+    // read actual_version, if doesn't match expected_version_, 
+      // set bogus_version_ flag
+    // return true upon success
   }
  
   void Rollback() {
     // execute ROLLBACK
+    // don't remember or handle errors
   }
 
-  bool Commit(void (*error_callback)()) {
+  bool Commit() {
     // execute COMMIT
-    // if error, call error_callback
+    // if error, set error code and message, return false
+    // return true upon success
   }
+  
+  int error_code();
+  std:string16 error_message();
 
  private:
   bool GetHandle() {
@@ -523,6 +537,11 @@ class Database2Connection : RefCounted {
   sqlite3 *handle_;
   std:string16 name_;
 };
+
+class Database2RowHandlerInterface {
+  public:
+    virtual void HandleRow(/* row */) = 0;
+}
 
 }}}
 
