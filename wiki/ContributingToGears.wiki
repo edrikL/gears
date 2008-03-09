@@ -62,6 +62,9 @@ Once you decide to start work on a bug, please communicate your plans early and 
 
 Gears can be checked out anonymously using any SVN client. See the [http://code.google.com/p/google-gears/source instructions] for more information.
 
+== Edit ==
+
+Before making changes to the Gears codebase it may benefit you to read up on the [GearsCodingGuidelines conventions used in our code].
 
 == Compile ==
 
