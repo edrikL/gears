@@ -150,7 +150,7 @@ class Database2Manager : ModuleImplBaseClassVirtual {
 
 }}}
 
-This implementation uses a thread-safe static map to make sure that only _one transaction queue_ exists per database for a given origin. In the next iterations of development, an IE-only solution will be added to ensure the same across multiple processes. Having one transaction queue per database allows us to use the DEFERRED transaction mode and avoiding conflicts, caused by transaction overlaps. 
+This implementation uses a thread-safe static map to make sure that only _one transaction queue_ exists per database for a given origin. In the next iterations of development, an IE-only solution will be added to ensure the same across multiple processes. Having one transaction queue per database allows us to make sure that all transactions on a single database are serialized without having to use the expensive BEGIN IMMEDIATE transaction type.
 
 The transaction queue map is a static member of `Database2` and is managed by static methods exposed by that class.
 
