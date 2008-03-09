@@ -150,7 +150,7 @@ class Database2Manager : ModuleImplBaseClassVirtual {
 
 }}}
 
-This implementation uses a thread-safe static map to make sure that only _one transaction queue_ exists per database for a given origin. In the next iterations of development, an IE-only solution will be added to ensure the same across multiple processes. Having one transaction queue per database allows us to make sure that all transactions on a single database are serialized without having to use the expensive BEGIN IMMEDIATE transaction type. 
+This implementation uses a thread-safe static map to make sure that only _one transaction queue_ exists per database for a given origin. In the next iterations of development, an IE-only solution will be added to ensure the same across multiple processes. Having one transaction queue per database allows us to use the DEFERRED transaction mode and avoiding conflicts, caused by transaction overlaps. 
 
 The transaction queue map is a static member of `Database2` and is managed by static methods exposed by that class.
 
@@ -239,7 +239,7 @@ class Database2 : ModuleImplBaseClassVirtual {
 
 }}}
 
-With the exception of opening a database, which has to occur on the main thread,  all database operations follow the same pattern: a database statement is executed on a separate thread, then an optional action on the main thread follows. This pattern is encapsulated by a command/interpreter pattern.
+With the exception of opening a database, which has to occur on the main thread,  all database operations follow the same pattern: a database statement is executed on a separate thread, then an optional action on the main thread follows. This pattern is encapsulated by a [http://en.wikipedia.org/wiki/Command_pattern command]/[http://en.wikipedia.org/wiki/Interpreter_pattern interpreter] pattern.
 
 There are two variants of the interpreter: `Database2ThreadedInterpreter` and `Database2Interpreter`.
 
@@ -251,7 +251,7 @@ The `Database2Interpreter` does not use threading: it simply invokes `InBackgrou
 
 class Database2Command : MessageData {
  // return false, if no need to report results
- virtual bool InBackground() = 0;
+ virtual void InBackground(bool *needsForeground) = 0;
  virtual void OnForeground() = 0;
 };
 
@@ -261,7 +261,9 @@ class Database2Interpreter : RefCounted {
 
     virtual void RunCommand(Database2Command* command) {
       if (command) {
-        if (command->InBackground()) {
+        bool needsForeground = true;
+        command->InBackground(&needsForeground);
+        if (needsForeground)
           command->OnForeground();
           // delete command when we're done
         }
@@ -315,7 +317,7 @@ class Database2AsyncExecuteCommand : Database2Command {
                                Database2Statement *stmt) : tx_(tx), stmt_(stmt),
                                  conn_(conn) {}
   
-  bool InBackground() {
+  void InBackground(bool *needsForeground) {
     // this operation is also the functor for retrieving rows
     conn_->Execute(stmt, this);
     // functor will populate rows property on stmt (if stmt has success   
@@ -323,9 +325,9 @@ class Database2AsyncExecuteCommand : Database2Command {
     // store error, if any
     // if success and no success callback:
       tx->ExecuteNextStatement();
-      return false;
-    // otherwise, delegate to foreground thread
-    return true;
+      *needsForeground = false;
+      // return
+    // otherwise, delegate to foreground thread (by default)
   }
   
   void OnForeground() {
@@ -343,7 +345,7 @@ class Database2AsyncExecuteCommand : Database2Command {
   
  private:
   int sql_error_code_;
-  std::string16 last_error_message_;
+  std::string16 error_message_;
 
   Database2Transaction *tx_;
   Database2Connection *conn_;
@@ -354,7 +356,7 @@ class Database2SyncExecuteCommand : Database2Command {
   public:
     Database2SyncExecuteCommand(JsContext* cx /* whatever else is necessary */);
   
-    bool InBackground() {
+    void InBackground(bool *needsForeground) {
       conn_->Execute(stmt, this);
     }
     
@@ -439,7 +441,7 @@ class Database2Transaction : ModuleImplBaseClassVirtual {
   ThreadSafeQueue<Database2Statement> statement_queue_;
 
   bool is_open_;
-  bool async_
+  bool async_;
 };
 
 }}}
