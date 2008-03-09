@@ -1,4 +1,4 @@
-#Conventions & Caveats for the Gears codebase
+# Conventions & Caveats for the Gears codebase
 
 = Introduction =
 
