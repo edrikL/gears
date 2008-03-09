@@ -93,6 +93,15 @@ known limitatations and workarounds.</p>
     everything is working.</li>
   <li>Modify your app to work within the limitations of Windows Mobile 
     devices.</li>
+  <li><b>If you are porting an existing Web application to Windows Mobile, 
+    make sure you update the
+    <a href="http://code.google.com/apis/gears/gears_init.js">gears_init.js</a>
+    file included in your application.</b> The Windows Mobile version of Gears
+    needs to be initialized in a slightly different way than all other versions 
+    of Gears, so you need to include the latest version of 
+    <a href="http://code.google.com/apis/gears/gears_init.js">gears_init.js</a>
+    to guarantee that your application works correctly across all platforms.
+  </li>
 </ul>
 
 <p>That's it!</p>
@@ -239,7 +248,7 @@ will silently crash:</p>
 }
 </code></pre>
 
-<p>where the "isDefined" function is</p>
+<p>where the <code>isDefined</code> function is</p>
 
 <pre><code>function isDefined(type) {
  return type != 'undefined' && type != 'unknown';
