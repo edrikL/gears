@@ -41,6 +41,35 @@ BOOL WINAPI DllMain(HANDLE instance, DWORD reason, LPVOID reserved) {
   return TRUE;
 }
 
+// On Smartphones the registry keys don't get properly updated on subsequent
+// installs, including autoupdates. They point to
+// '\Windows\FilesToBeDeleted\TMPxxxx.tmp' instead of the Gears DLL.
+// We rewrite them to the correct values.
+// NOTE: this fix should be left in place even if the problem does not affect
+// the current generation of Windows Mobile phones. There may still be old
+// devices in use!
+// 1. The Bho key comes from base\ie\bho.rgs.
+static const char16* kBhoKey =
+    STRING16(L"CLSID\\{E0FEFE40-FBF9-42AE-BA58-794CA7E3FB53}\\InprocServer32");
+// 2. The Factory ActiveX key comes from factory\ie\factory.rgs.
+static const char16* kFactoryActiveXKey =
+    STRING16(L"CLSID\\{C93A7319-17B3-4504-87CD-03EFC6103E6E}\\InprocServer32");
+// 3. The Html dialog key comes from ui\ie\html_dialog_bridge_iemobile.rgs.
+static const char16* kHtmlDialogActiveXKey =
+    STRING16(L"CLSID\\{134AB400-1A81-4fc8-85DD-29CD51E9D6DE}\\InprocServer32");
+// 4. The tools menu key comes from ui\ie\tools_menu_item.rgs.
+static const char16* kToolsMenuKey =
+    STRING16(L"CLSID\\{0B4350D1-055F-47A3-B112-5F2F2B0D6F08}\\InprocServer32");
+// 5. The TypeLib key comes from base\ie\interfaces.idl.
+static const char16* kTypeLibKey =
+    STRING16(L"TypeLib\\{7708913A-B86C-4D91-B325-657DD5363433}\\1.0\\0\\win32");
+// Note that the wince_cab.inf file specifies Program Files as the installation
+// directory (%CE1%).
+static const char16* kCorrectValue =
+    STRING16(L"\\Program Files\\" PRODUCT_FRIENDLY_NAME
+             L"\\" PRODUCT_SHORT_NAME L".dll");
+static void CheckRegistryKeys();
+
 // The functions below are called during the Gears installation process.
 
 // TODO(andreip): remove this solution if we ever figure out a way to make
@@ -126,6 +155,7 @@ __declspec(dllexport) InstallerActions Install_Exit(
       MessageBox(parent_window, fail_message, title, MB_OK);
     }
   }
+  CheckRegistryKeys();
   return kContinue;
 }
 
@@ -141,5 +171,50 @@ __declspec(dllexport) InstallerActions Uninstall_Exit(HWND parent_window) {
   // Not interested.
   return kContinue;
 }
+
+static char16* ReadValue(CRegKey* key) {  
+  ULONG size = 0;
+  if (key->QueryStringValue(L"", NULL, &size) != ERROR_SUCCESS) return NULL;
+  char16* buffer = new char16[size+1];
+  ZeroMemory(buffer, size + 1);
+  if (key->QueryStringValue(L"", buffer, &size) != ERROR_SUCCESS) {
+    delete [] buffer;
+    return NULL;
+  }
+  return buffer;
+}
+
+static void ProcessKey(const char16* keyString) {
+  CRegKey key;
+  if (key.Open(HKEY_CLASSES_ROOT, keyString, KEY_READ) != ERROR_SUCCESS) {
+    // If the key doesn't exist at all, something else may have gone wrong.
+    // We don't attempt any modification in such cases and just return.
+    return;
+  }
+  char16* value = ReadValue(&key);
+  // If the value exists but doesn't contain the word "gears", we rewrite it.
+  if (value != NULL && wcsstr(value, PRODUCT_SHORT_NAME) == NULL) {
+    key.SetStringValue(NULL, kCorrectValue);
+  }
+  delete [] value;
+  key.Close();
+}
+
+static void CheckRegistryKeys() {
+  // We open each of the five keys and look at their default string values.
+  // If they are not what they should be (e.g. they point to FilesToBeDeleted),
+  // we rewrite them programatically.
+  // 1: The BHO
+  ProcessKey(kBhoKey);
+  // 2: The Factory ActiveX
+  ProcessKey(kFactoryActiveXKey);
+  // 3: The html dialog ActiveX
+  ProcessKey(kHtmlDialogActiveXKey);
+  // 4: The Tools menu entry
+  ProcessKey(kToolsMenuKey);
+  // 5: The TypeLib key
+  ProcessKey(kTypeLibKey);
+}
+
 };  // extern "C"
 #endif  // #ifdef WINCE
