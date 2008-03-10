@@ -95,6 +95,10 @@ SQLITE_CSRCS	+= \
 		fts2_tokenizer1.c \
 		$(NULL)
 
+ifeq ($(OS),wince)
+# WinCE does not yet use icons, so does not need libpng or zlib
+else
+
 #-----------------------------------------------------------------------------
 # third_party/libpng
 
@@ -167,6 +171,8 @@ THIRD_PARTY_CSRCS	+= \
 		trees.c \
 		$(NULL)
 endif
+
+endif  # wince
 
 #-----------------------------------------------------------------------------
 # third_party/libjpeg
@@ -534,7 +540,6 @@ IEMOBILE_CPPSRCS	+= \
 		paths.cc \
 		paths_ie.cc \
 		permissions_db.cc \
-		png_utils.cc \
 		security_model.cc \
 		security_model_test.cc \
 		serialization.cc \

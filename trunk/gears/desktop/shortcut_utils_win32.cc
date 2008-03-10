@@ -47,11 +47,17 @@ static bool CreateShellLink(const char16 *link_path,
                             const char16 *object_path,
                             const char16 *arguments) {
 #ifdef WINCE
-  // For now we simply create a shortcut in the Start Menu.
-  // TODO(steveblock): Set the shortcut icon.
-  // TODO(steveblock): Look at adding an entry to the home / today screen.
+  // On WinCE we can't create simple shortcuts on the home screen, so instead we
+  // add them to the Start Menu. Also, IShellLink does not exist on WinCE.
+  // Instead, we use SHCreateShortcut and SHGetShortcutTarget, but these do not
+  // allow us to set a custom icon.
+  // TODO(steveblock): Use plugin to add shortcuts to the home screen with
+  // custom icons.
+  std::string16 target = object_path;
+  target += L" -";
+  target += arguments;
   return SHCreateShortcut(const_cast<char16*>(link_path),
-                          const_cast<char16*>(arguments)) == TRUE;
+                          const_cast<char16*>(target.c_str())) == TRUE;
 #else
   HRESULT result;
   IShellLink* shell_link;
@@ -83,11 +89,7 @@ static bool ReadShellLink(const char16 *link_path,
                           std::string16 *arguments) {
 #ifdef WINCE
   char16 target[CHAR_MAX];
-  bool ret = SHGetShortcutTarget(link_path, target, CHAR_MAX) == TRUE;
-  if (object_path) {
-    *object_path = target;
-  }
-  return ret;
+  return SHGetShortcutTarget(link_path, target, CHAR_MAX) == TRUE;
 #else
   HRESULT result;
   IShellLink* shell_link;
@@ -174,17 +176,19 @@ bool CreateShortcutFileWin32(const std::string16 &name,
   link_path += name;
   link_path += STRING16(L".lnk");
 
+#ifdef WINCE
+  // On WinCE we can't use the icon path to determine whether this shortcut was
+  // created by Gears. We stay safe and fail if the shortcut already exists.
+  if (ReadShellLink(link_path.c_str(), NULL, NULL, NULL)) {
+    return false;
+  }
+#else
   std::string16 old_icon;
   if (ReadShellLink(link_path.c_str(), &old_icon, NULL, NULL)) {
-#ifdef WINCE
-    // TODO(aa): Does this need to be done for WinCE? GetLongPathNameW() does
-    // not exist for that platform, so need some workaround.
-#else
     int old_icon_length = GetLongPathNameW(old_icon.c_str(), NULL, 0);
     scoped_array<char16> old_icon_buf(new char16[old_icon_length]);
     GetLongPathNameW(old_icon.c_str(), old_icon_buf.get(), old_icon_length);
     old_icon.assign(old_icon_buf.get());
-#endif
 
     // [naming] -- we hardcode the name of the path that Gears shortcut icons
     // are stored in here because we want to be able to overwrite shortcuts no
@@ -198,6 +202,7 @@ bool CreateShortcutFileWin32(const std::string16 &name,
       return false;
     }
   }
+#endif
 
   if (!CreateShellLink(link_path.c_str(), icons_path.c_str(),
                        browser_path.c_str(), url.c_str())) {
