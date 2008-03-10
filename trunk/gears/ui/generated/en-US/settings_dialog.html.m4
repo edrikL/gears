@@ -316,12 +316,20 @@ m4_include(ui/common/html_dialog.js)
       if (kind == ALLOWED) {
         var allowedText = getElementById("text-noallowed");
         if (allowedText) {
-          content += allowedText.innerText;
+          if (isDefined(typeof allowedText.innerText)) {
+            content += allowedText.innerText;
+          } else {
+            content += allowedText.textContent;
+          }
         }
       } else if (kind == DENIED) {
         var deniedText = getElementById("text-nodenied");
         if (deniedText) {
-          content += deniedText.innerText;
+          if (isDefined(typeof deniedText.innerText)) {
+            content += deniedText.innerText;
+          } else {
+            content += deniedText.textContent;
+          }
         }
       }
       content += "</em></td><td></td></tr>";
@@ -343,7 +351,11 @@ m4_include(ui/common/html_dialog.js)
     content += ",\"" + siteName + "\"," + kind + ");'>";
     var removeText = getElementById("text-remove");
     if (removeText) {
-      content += removeText.innerText;
+      if (isDefined(typeof removeText.innerText)) {
+        content += removeText.innerText;
+      } else {
+        content += removeText.textContent;
+      }
     }
     content += "</a></td></tr>";
     return content;
