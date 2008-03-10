@@ -189,8 +189,11 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
   shortcuts_dialog.arguments["icon128x128"] = Json::Value(icon128_url_utf8);
 
   // Show the dialog.
+  // TODO(cprince): Consider moving this code to /ui/common/shortcut_dialog.cc
+  // to keep it alongside the permission and settings dialog code.  And consider
+  // sharing these constants to keep similar dialogs the same size.
   const int kShortcutsDialogWidth = 360;
-  const int kShortcutsDialogHeight = 200;
+  const int kShortcutsDialogHeight = 220;
   shortcuts_dialog.DoModal(STRING16(L"shortcuts_dialog.html"),
                            kShortcutsDialogWidth, kShortcutsDialogHeight);
 
