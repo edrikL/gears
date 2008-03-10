@@ -28,6 +28,7 @@
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/stopwatch.h"
+#include "gears/database/common/database_utils.h"
 #include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
 
 #include "gears/database/npapi/database.h"
@@ -98,7 +99,9 @@ void GearsResultSet::PageUnloading() {
 
 bool GearsResultSet::Finalize() {
   if (statement_) {
+    sqlite3 *db = sqlite3_db_handle(statement_);
     int sql_status = sqlite3_finalize(statement_);
+    sql_status = SqlitePoisonIfCorrupt(db, sql_status);
     statement_ = NULL;
 
     LOG(("DB ResultSet Close: %d", sql_status));
@@ -282,6 +285,8 @@ bool GearsResultSet::NextImpl(std::string16 *error_message) {
   assert(statement_);
   assert(error_message);
   int sql_status = sqlite3_step(statement_);
+  sql_status = SqlitePoisonIfCorrupt(sqlite3_db_handle(statement_),
+                                     sql_status);
   LOG(("GearsResultSet::next() sqlite3_step returned %d", sql_status));
   switch (sql_status) {
     case SQLITE_ROW:

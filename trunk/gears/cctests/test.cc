@@ -63,6 +63,7 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/base/common/permissions_db_test.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/database/common/database_utils_test.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
@@ -154,6 +155,7 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestSqliteUtilsAll();
   ok &= TestNameValueTableAll();
   ok &= TestPermissionsDBAll();
+  ok &= TestDatabaseUtilsAll();
   ok &= TestLocalServerDB();
   ok &= TestResourceStore();
   ok &= TestManifest();

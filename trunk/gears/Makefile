@@ -382,6 +382,7 @@ FF_CPPSRCS	+= \
 		base_class.cc \
 		base_class_test.cc \
 		circular_buffer_test.cc \
+		database_name_table.cc \
 		dom_utils.cc \
 		file.cc \
 		file_posix.cc \
@@ -449,6 +450,7 @@ IE_CPPSRCS	+= \
 		base_class_test.cc \
 		bho.cc \
 		circular_buffer_test.cc \
+		database_name_table.cc \
 		detect_version_collision.cc \
 		file.cc \
 		file_test.cc \
@@ -520,6 +522,7 @@ IEMOBILE_CPPSRCS	+= \
 		bho.cc \
 		circular_buffer_test.cc \
 		common_ie.cc \
+		database_name_table.cc \
 		detect_version_collision.cc \
 		file.cc \
 		file_test.cc \
@@ -584,6 +587,7 @@ NPAPI_CPPSRCS	+= \
 		base_class_test.cc \
 		browser_utils.cc \
 		circular_buffer_test.cc \
+		database_name_table.cc \
 		file.cc \
 		file_win32.cc \
 		file_test.cc \
@@ -741,6 +745,7 @@ FF_IDLSRCS	+= \
 FF_CPPSRCS	+= \
 		database.cc \
 		database_utils.cc \
+		database_utils_test.cc \
 		result_set.cc \
 		$(NULL)
 
@@ -759,6 +764,7 @@ IE_IDLSRCS	+= \
 IE_CPPSRCS	+= \
 		database.cc \
 		database_utils.cc \
+		database_utils_test.cc \
 		result_set.cc \
 		$(NULL)
 
@@ -777,6 +783,7 @@ IEMOBILE_IDLSRCS += \
 IEMOBILE_CPPSRCS += \
 		database.cc \
 		database_utils.cc \
+		database_utils_test.cc \
 		result_set.cc \
 		$(NULL)
 
@@ -794,6 +801,7 @@ NPAPI_IDLSRCS	+= \
 NPAPI_CPPSRCS	+= \
 		database.cc \
 		database_utils.cc \
+		database_utils_test.cc \
 		result_set.cc \
 		$(NULL)
 
