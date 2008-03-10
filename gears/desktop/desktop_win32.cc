@@ -55,7 +55,9 @@
 #include "gears/localserver/common/http_constants.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-
+#ifdef WINCE
+// WinCE does not currently use icons.
+#else
 // Creates the icon file which contains the various different sized icons.	
 static bool CreateIcoFile(const std::string16 &icons_path,
                           const GearsDesktop::ShortcutInfo &shortcut) {
@@ -228,6 +230,7 @@ static bool CreateIcoFile(const std::string16 &icons_path,
 
   return success;
 }
+#endif  // WINCE
 
 bool GearsDesktop::CreateShortcutPlatformImpl(const SecurityOrigin &origin,
                                               const ShortcutInfo &shortcut,
