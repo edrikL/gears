@@ -68,6 +68,19 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
 
   LOG16((L"GearsFactory::create(%s)\n", object_name_bstr));
 
+#ifdef WINCE
+  // If privateSetGlobalObject has not been called from JavaScript (the call is
+  // made from gears_init.js), then the factory won't be sited. In this case,
+  // we should not create any Gears objects.
+  if (!IsFactoryInitialized(this)) {
+    LOG16((L"GearsFactory::create: Failed - factory has not been sited.\n"));
+    RETURN_EXCEPTION(STRING16(PRODUCT_FRIENDLY_NAME
+                              L" has not been initialized correctly. "
+                              L"Please ensure that you are using the most "
+                              L"recent version of gears_init.js."));
+  }
+#endif
+
   if (DetectedVersionCollision()) {
     if (!EnvIsWorker()) {
       MaybeNotifyUserOfVersionCollision();  // only notifies once per process
@@ -377,7 +390,14 @@ STDMETHODIMP GearsFactory::SetSite(IUnknown *site) {
 
 #ifdef WINCE
 STDMETHODIMP GearsFactory::privateSetGlobalObject(IDispatch *js_dispatch) {
-  return InitBaseFromDOM(js_dispatch);
+  if (!IsFactoryInitialized(this)) {
+    if (!InitBaseFromDOM(js_dispatch)) {
+      RETURN_EXCEPTION(STRING16(L"Failed to initialize "
+                                PRODUCT_FRIENDLY_NAME
+                                L"."));
+    }
+  }
+  RETURN_NORMAL();
 }
 #endif
 
@@ -392,3 +412,13 @@ void GearsFactory::ResumeObjectCreationAndUpdatePermissions() {
   // propagate cross-origin opt-in to the permissions DB.
   is_creation_suspended_ = false;
 }
+
+#ifdef WINCE
+// On WinCE we initialize the Factory with a call from JavaScript. Since we
+// can't guarantee that this call will be made, we need a method to determine
+// whether or not an object has been successfully initialized. This method is
+// a friend of ModuleImplBaseClass for this purpose.
+static bool IsFactoryInitialized(GearsFactory *factory) {
+  return factory->is_initialized_;
+}
+#endif

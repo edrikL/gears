@@ -66,6 +66,10 @@
 class ModuleWrapperBaseClass;
 class JsRunnerInterface;
 
+#ifdef WINCE
+class GearsFactory;
+#endif
+
 // Exposes the minimal set of information that Gears objects need to work
 // consistently across the main-thread and worker-thread JavaScript engines.
 class ModuleImplBaseClass {
@@ -172,6 +176,12 @@ class ModuleImplBaseClass {
   JsRunnerInterface *js_runner_;
   // Weak pointer to our JavaScript wrapper.
   ModuleWrapperBaseClass *js_wrapper_;
+
+#ifdef WINCE
+  // This method is defined in desktop/ie/factory.cc. It lets us verify that
+  // privateSetGlobalObject() has been called from JavaScript on WinCE.
+  friend bool IsFactoryInitialized(GearsFactory *factory);
+#endif
 
   DISALLOW_EVIL_CONSTRUCTORS(ModuleImplBaseClass);
 };
