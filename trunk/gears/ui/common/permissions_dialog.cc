@@ -105,7 +105,7 @@ PermissionState PermissionsDialog::Prompt(const SecurityOrigin &origin,
   const int kDialogHeight = 240;
 #else
   const int kDialogWidth = 360;
-  const int kDialogHeight = 215;
+  const int kDialogHeight = 220;
 #endif
   const char16 *kDialogFile = STRING16(L"permissions_dialog.html");
 
