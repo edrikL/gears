@@ -52,10 +52,21 @@ const char16* kUpgradeUrl = reinterpret_cast<const char16*>(  // STRING16()
 const char16* kTopic = STRING16(L"Cab Update Event");
 // The key for ThreadLocals.
 const std::string kThreadLocalKey("cabupdater");
-// The version element.
-const char16* kVersion = STRING16(L"em:version");
-// The update link element.
-const char16* kUpdateLink = STRING16(L"em:updateLink");
+// String constants for XML parsing
+// Query language
+const char16* kQueryLanguage = STRING16(L"XPath");
+const char16* kQueryLanguageProperty = STRING16(L"SelectionLanguage");
+// The document namespaces (space delimited)
+const char16* kNamespace =
+    STRING16(L"xmlns:RDF='http://www.w3.org/1999/02/22-rdf-syntax-ns#' "
+             L"xmlns:em='http://www.mozilla.org/2004/em-rdf#'");
+const char16* kNamespaceProperty = STRING16(L"SelectionNamespaces");
+// The query for version elements: select the first em:version descendant
+// of the root element.
+const char16* kVersionQuery = STRING16(L"//em:version[1]");
+// The query for update link elements: select the first em:updateLink descendant
+// of the root element.
+const char16* kUpdateLinkQuery = STRING16(L"//em:updateLink[1]");
 // The delay before the first update.
 const int32 kFirstUpdatePeriod = (1000 * 60 * 2);  // 2 minutes
 // The time interval between the rest of the update checks.
@@ -309,12 +320,32 @@ bool VersionFetchTask::ExtractVersionAndDownloadUrl(const std::string16& xml) {
       success == VARIANT_FALSE) {
     return false;
   }
-  IXMLDOMNodeList* node_list;
-  if (FAILED(document->getElementsByTagName(
-      const_cast<BSTR>(kVersion), &node_list))) {
+  // Set the query language and namespace
+  VARIANT  var = {0};
+  CComBSTR bstr(kNamespace);
+  bstr.CopyTo(&var);
+  HRESULT hr = document->setProperty(const_cast<BSTR>(kNamespaceProperty), var);
+  VariantClear(&var);
+  if (FAILED(hr)) return false;
+
+  bstr = kQueryLanguage;  // this frees the old string stored by bstr.
+  bstr.CopyTo(&var);
+  hr = document->setProperty(const_cast<BSTR>(kQueryLanguageProperty), var);
+  VariantClear(&var);
+  if (FAILED(hr)) return false;
+
+  // Run the version query
+  IXMLDOMNodeList* node_list = NULL;
+  long number_of_nodes = 0;  // get_length() needs a ptr to long
+  if (FAILED(document->selectNodes(const_cast<BSTR>(kVersionQuery),
+                                   &node_list)) || 
+      FAILED(node_list->get_length(&number_of_nodes))) {
     return false;
   }
-  // We should have at most one element.
+  // We expect 0 or 1 element, depending on whether an update is available.
+  // We return early if we get 0 elements (no updates available).
+  if (number_of_nodes == 0) return false;
+  ASSERT(number_of_nodes == 1);
   IXMLDOMNode* node;
   if (FAILED(node_list->get_item(0, &node))) {
     return false;
@@ -325,11 +356,16 @@ bool VersionFetchTask::ExtractVersionAndDownloadUrl(const std::string16& xml) {
   }
   latest_version_ = version_text;
   // Hurray, done with the version. Now the update link.
-  if (FAILED(document->getElementsByTagName(
-      const_cast<BSTR>(kUpdateLink), &node_list))) {
+  number_of_nodes = 0;
+  if (FAILED(document->selectNodes(const_cast<BSTR>(kUpdateLinkQuery),
+                                   &node_list)) ||
+      FAILED(node_list->get_length(&number_of_nodes))) {
     return false;
   }
-  // We should have at most one element.
+  // We expect 0 or 1 element, depending on whether an update is available.
+  // We return early if we get 0 elements (no updates available).
+  if (number_of_nodes == 0) return false;
+  ASSERT(number_of_nodes == 1);
   if (FAILED(node_list->get_item(0, &node))) {
     return false;
   }
