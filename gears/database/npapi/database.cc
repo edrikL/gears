@@ -139,6 +139,8 @@ void GearsDatabase::Execute(JsCallContext *context) {
   scoped_sqlite3_stmt_ptr stmt;
   sql_status = sqlite3_prepare16_v2(db_, expr.c_str(), -1, &stmt, NULL);
   if ((sql_status != SQLITE_OK) || (stmt.get() == NULL)) {
+    sql_status = SqlitePoisonIfCorrupt(db_, sql_status);
+
     std::string16 msg;
     BuildSqliteErrorString(STRING16(L"SQLite prepare() failed."),
                            sql_status, db_, &msg);
@@ -224,6 +226,7 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
     }
 
     if (sql_status != SQLITE_OK) {
+      sql_status = SqlitePoisonIfCorrupt(db_, sql_status);
       context->SetException(STRING16(L"Could not bind arguments to expression."));
       return false;
     }

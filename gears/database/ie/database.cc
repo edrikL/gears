@@ -179,6 +179,7 @@ HRESULT GearsDatabase::BindArg(const CComVariant &arg, int index,
       break;
   }
 
+  err = SqlitePoisonIfCorrupt(sqlite3_db_handle(stmt), err);
   return (err == SQLITE_OK) ? S_OK :  E_FAIL;
 }
 
@@ -205,6 +206,8 @@ STDMETHODIMP GearsDatabase::execute(const BSTR expression_in,
   scoped_sqlite3_stmt_ptr stmt;
   int sql_status = sqlite3_prepare16_v2(db_, expression, -1, &stmt, NULL);
   if ((sql_status != SQLITE_OK) || (stmt.get() == NULL)) {
+    sql_status = SqlitePoisonIfCorrupt(db_, sql_status);
+
     std::string16 msg;
     BuildSqliteErrorString(STRING16(L"SQLite prepare() failed."),
                            sql_status, db_, &msg);

@@ -27,6 +27,7 @@
 #define GEARS_BASE_COMMON_PERMISSIONS_DB_H__
 
 #include <map>
+#include "gears/base/common/database_name_table.h"
 #include "gears/base/common/name_value_table.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/shortcut_table.h"
@@ -121,6 +122,21 @@ class PermissionsDB {
   // Deletes all shortcuts for an origin.
   bool DeleteShortcuts(const SecurityOrigin &origin);
 
+  // For a given database_name, fill basename with the name of the
+  // file to use in origin's directory, and returns true if
+  // successful.
+  bool GetDatabaseBasename(const SecurityOrigin &origin,
+                           const char16 *database_name,
+                           std::string16 *basename);
+
+  // Mark the given database basename corrupt so that future calls to
+  // GetDatabaseBasename will no longer return it.  The basename is
+  // required because another thread of control could have already
+  // invalidated the database for the origin.
+  bool MarkDatabaseCorrupt(const SecurityOrigin &origin,
+                           const char16 *database_name,
+                           const char16 *basename);
+
  private:
   // Private constructor, callers must use GetDB().
   PermissionsDB();
@@ -136,6 +152,7 @@ class PermissionsDB {
 
   // Schema upgrade functions.  Higher-numbered functions call
   // lower-numbered functions as appropriate.
+  bool UpgradeToVersion7();
   bool UpgradeToVersion6();
   bool UpgradeToVersion5();
   bool UpgradeToVersion4();
@@ -157,6 +174,8 @@ class PermissionsDB {
 
   // Shortcuts origins have defined.
   ShortcutTable shortcut_table_;
+
+  DatabaseNameTable database_name_table_;
 
   DISALLOW_EVIL_CONSTRUCTORS(PermissionsDB);
   DECL_SINGLE_THREAD

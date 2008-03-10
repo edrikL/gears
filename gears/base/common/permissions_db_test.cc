@@ -244,6 +244,24 @@ bool TestPermissionsDBAll() {
   TEST_ASSERT(permissions->DeleteShortcuts(bar));
   TEST_ASSERT(VerifyOrigins(permissions, other_origins));
 
+  // Test that we can get a database name, and that when we mark a
+  // database corrupt we get a new name.
+  const char16 *kFooDatabaseName = STRING16(L"corruption_test");
+  std::string16 basename;
+  TEST_ASSERT(permissions->GetDatabaseBasename(foo, kFooDatabaseName,
+                                               &basename));
+
+  TEST_ASSERT(permissions->MarkDatabaseCorrupt(foo, kFooDatabaseName,
+                                               basename.c_str()));
+
+  std::string16 new_basename;
+  TEST_ASSERT(permissions->GetDatabaseBasename(foo, kFooDatabaseName,
+                                               &new_basename));
+  TEST_ASSERT(basename != new_basename);
+
+  // TODO(shess): Consider whether to poke into permissions.db and
+  // clear the database entries to prevent cruft from accumulating.
+
   LOG(("TestPermissionsDBAll - passed\n"));
   return true;
 }
