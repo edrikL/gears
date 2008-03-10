@@ -188,7 +188,7 @@ static int validate_etag_filename(const char *etag)
         return 0;
     }
     for (i = 0; etag[i] && i < MAX_ETAG_FILENAME_LENGTH; i++) {
-        if (!apr_isalnum(etag[i])) {
+        if (!apr_isalnum(etag[i]) && etag[i] != '-') {
             return 0;
         }
     }
@@ -230,14 +230,9 @@ static int return_incomplete(request_rec *r, resume_config *conf,
 static int parse_expect(request_rec *r, resume_config *conf,
                         resume_request_rec *ctx)
 {
-    /* TODO(fry): Really use the Expect header instead of Pragma.
-     * Since we don't really have an Expect header, the current 417 error
-     * segfaults, so we fabricate an Expect header for now.
-     */
-    apr_table_setn(r->headers_in, "Expect",
-                   apr_table_get(r->headers_in, "Pragma"));
-
-    const char *expect = apr_table_get(r->headers_in, "Expect");
+    const char *expect = apr_table_get(r->headers_in,
+                                       /* TODO(fry): "Expect"); */
+                                       "Pragma");
 
     if (!expect || !*expect) {
         /* Ignore absense of expect header */
@@ -554,8 +549,15 @@ static int open_input_buffer(request_rec *r, resume_config *conf,
     if (rv != APR_SUCCESS) {
         ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                      "resume: ETag \"%s\" not found", ctx->etag);
-        /* client can not retry with this invalid etag */
+        /* TODO(fry): Really use the Expect header instead of Pragma.
+         * Since we don't really have an Expect header, the current 417 error
+         * segfaults, so we fabricate an Expect header for now.
+         */
+        apr_table_setn(r->headers_in, "Expect",
+                       apr_table_get(r->headers_in, "Pragma"));
+
         /* TODO(fry): fix the incorrect body returned by http_protocol */
+        /* client can not retry with this invalid etag */
         return HTTP_EXPECTATION_FAILED;
     }
 
@@ -581,6 +583,13 @@ static int open_input_buffer(request_rec *r, resume_config *conf,
     if (ctx->etag_inode != finfo.inode) {
         ap_log_error(APLOG_MARK, APLOG_ERR, 0, r->server,
                      "resume: ETag \"%s\" contains invalid inode", ctx->etag);
+        /* TODO(fry): Really use the Expect header instead of Pragma.
+         * Since we don't really have an Expect header, the current 417 error
+         * segfaults, so we fabricate an Expect header for now.
+         */
+        apr_table_setn(r->headers_in, "Expect",
+                       apr_table_get(r->headers_in, "Pragma"));
+
         /* client can not retry with this invalid etag */
         return HTTP_EXPECTATION_FAILED;
     }
