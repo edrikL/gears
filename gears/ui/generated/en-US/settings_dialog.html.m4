@@ -1,4 +1,4 @@
-m4_changequote(`^',`^')m4_dnl
+m4_changequote(`~',`~')m4_dnl
 <!DOCTYPE html>
 
 <!--
@@ -52,13 +52,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     #content {
       overflow-x:hidden;
       overflow-y:auto;
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
       margin:0 4px;
-^,
-^
+~,
+~
       margin:0 1em;
-^)
+~)
     }
 
     #content table {
@@ -74,13 +74,13 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
     #content td {
       border:1px #ccc;
       border-style:solid none;
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
       padding:4px;
-^,
-^
+~,
+~
       padding:0.5em; 
-^)
+~)
     }
 
     #version {
@@ -104,8 +104,8 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
       width: 70px;
     }
 
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
     /* 
      * On Windows Mobile, we hide the div containing the buttons
      * by default, to only show the correct one (ie smartphone or not)
@@ -117,7 +117,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
     #button-row-smartphone {
       display:none;
     }
-^,^^)
+~,~~)
 
   </style>
 </head>
@@ -197,18 +197,18 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
         </TRANS_BLOCK>
       </div>
     </div>
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
     <!-- On SmartPhone, we don't use the regular buttons. We just use this link,
     and softkeys for the other buttons. -->
     <div id="button-row-smartphone">
     </div>
-^,^^)
+~,~~)
     <div id="button-row">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
           <div id="div-buttons">
             <td width="50%" align="left" valign="middle">
               <input type="BUTTON" id="cancel-button"
@@ -219,8 +219,8 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
                onclick="saveAndClose(g_dialogResult); return false;"></input>
             </td>
           </div>
-^,m4_dnl
-^
+~,m4_dnl
+~
           <td nowrap="true" align="right" valign="middle">
             <!--
             Fancy buttons
@@ -250,7 +250,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
                 <div class="inline-block custom-button-inner-box"
                   ><TRANS_BLOCK desc="Button user can press to discard changes."><span class="accesskey">C</span>ancel</div></TRANS_BLOCK></div></a>
           </td>
-^)
+~)
         </tr>
       </table>
     </div>
@@ -258,9 +258,9 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
 
 
 </body>
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">^m4_dnl
-^</object>^)
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">~m4_dnl
+~</object>~)
 <script>
 m4_include(third_party/jsonjs/json_noeval.js)
 m4_include(ui/common/html_dialog.js)

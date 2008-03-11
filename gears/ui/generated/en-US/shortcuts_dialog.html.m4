@@ -1,4 +1,4 @@
-m4_changequote(`^',`^')m4_dnl
+m4_changequote(`~',`~')m4_dnl
 <!DOCTYPE html>
 
 <!--
@@ -82,18 +82,18 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       padding:1em;
     }
 
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
     /* WinCE does not support absolute positioning. */
-^,^
+~,~
     #measure-checkbox {
       /* So that we don't affect any of our other layout */
       position:absolute;
     }
-^)
+~)
 
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
     /* 
      * On Windows Mobile, we hide the div containing the buttons
      * by default, to only show the correct one (ie smartphone or not)
@@ -106,7 +106,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
     #button-row-smartphone {
       display:none;
     }
-^,^^)
+~,~~)
   </style>
 </head>
 <body>
@@ -176,8 +176,8 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
       </div>
     </div>
 
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
     <!-- On SmartPhone, we don't use the regular buttons. We just use this link,
     and softkeys for the other buttons. -->
     <div id="button-row-smartphone">
@@ -189,13 +189,13 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
       </tr>
       </table>
     </div>
-^,^^)
+~,~~)
 
     <div id="button-row">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^         <!-- 
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~         <!-- 
           We use form input buttons instead of buttons elements as PIE
           does not support them.
           -->
@@ -210,7 +210,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
               <input type="BUTTON" id="deny-button" onclick="denyShortcutsTemporarily(); return false;"></input>
             </td>
           </div>
-^,^
+~,~
           <td width="100%" align="left" valign="middle">
             <a href="#" onclick="denyShortcutPermanently(); return false;" id="deny-permanently-link"></a>
           </td>
@@ -241,14 +241,14 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box" id="deny-button-contents"
-                  ><TRANS_BLOCK desc="Button the user can press to disallow Gears from creating a shortcut.">&nbsp;&nbsp;&nbsp;<span class="accesskey">N</span>o&nbsp;&nbsp;&nbsp;</TRANS_BLOCK></div></div></a></td>^)
+                  ><TRANS_BLOCK desc="Button the user can press to disallow Gears from creating a shortcut.">&nbsp;&nbsp;&nbsp;<span class="accesskey">N</span>o&nbsp;&nbsp;&nbsp;</TRANS_BLOCK></div></div></a></td>~)
         </tr>
       </table>
     </div>
   </div>
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">
-</object>^)
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">
+</object>~)
 </body>
 <!--
 We include all files through m4 as the HTML dialog implementation on

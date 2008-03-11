@@ -92,6 +92,13 @@ function getElementById(id) {
 }
 
 /**
+ * Add trim method to String.
+ */
+String.prototype.trim = function() {
+  return this.replace(/^\s+/, "").replace(/\s+$/, "");
+}
+
+/**
  * Set the label of input button elements using the content
  * of another element
  */
@@ -99,7 +106,7 @@ function setButtonLabel(textID, elemID) {
   var textElem = getElementById(textID);
   var buttonElem = getElementById(elemID);
   if (isDefined(typeof textElem) && isDefined(typeof buttonElem)) {
-    buttonElem.value = textElem.innerText;
+    buttonElem.value = textElem.innerText.trim();
   }
 }
 
