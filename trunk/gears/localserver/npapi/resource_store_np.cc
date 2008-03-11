@@ -211,7 +211,7 @@ void GearsResourceStore::IsCaptured(JsCallContext *context) {
     return;
   }
   bool is_captured = store_.IsCaptured(full_url.c_str());
-  context->SetReturnValue(JSPARAM_BOOL, is_captured);
+  context->SetReturnValue(JSPARAM_BOOL, &is_captured);
 }
 
 //------------------------------------------------------------------------------
