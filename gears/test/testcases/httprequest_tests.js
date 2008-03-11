@@ -149,7 +149,7 @@ function testAbortAfterInteractive() {
   startAsync();
   var urlbase = '/testcases/cgi/send_response_of_size.py?size=';
   var request = google.gears.factory.create('beta.httprequest');
-  request.open('GET', urlbase + 32000, true);
+  request.open('GET', urlbase + 32000 + '&slowly=true', true);
   request.onreadystatechange = function() {
     if (request.readyState >= 3) {
       assertEqual(3, request.readyState);  // we dont want it to be complete yet
