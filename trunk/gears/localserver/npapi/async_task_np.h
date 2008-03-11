@@ -124,8 +124,7 @@ class AsyncTask : protected HttpRequest::ReadyStateListener {
   bool is_initialized_;
 
  private:
-  friend struct AsyncTaskMessage;
-  friend class AsyncTaskMessageRouter;
+  friend struct AsyncTaskFunctor;
 
   // An HttpRequest listener callback
   void ReadyStateChanged(HttpRequest *source);
