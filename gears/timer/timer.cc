@@ -23,214 +23,62 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if BROWSER_FF
-#ifdef WIN32
-#include <windows.h>  // must manually #include before nsIEventQueueService.h
-#endif
-#include <gecko_sdk/include/nspr.h>  // for PR_*
-#include <gecko_sdk/include/nsServiceManagerUtils.h>  // for NS_IMPL_* and NS_INTERFACE_*
-#include <gecko_sdk/include/nsCOMPtr.h>
-#include <gecko_internal/jsapi.h>
-#include <gecko_internal/nsIDOMClassInfo.h>
-#include <gecko_internal/nsITimerInternal.h>
-#elif BROWSER_IE
-#include <dispex.h>
-#include "gears/base/ie/activex_utils.h"
-#endif
-
 #include "gears/timer/timer.h"
 
 #if BROWSER_FF
-// Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
-NS_IMPL_ADDREF(GearsTimer)
-NS_IMPL_RELEASE(GearsTimer)
-NS_INTERFACE_MAP_BEGIN(GearsTimer)
-  NS_INTERFACE_MAP_ENTRY(GearsBaseClassInterface)
-  NS_INTERFACE_MAP_ENTRY(GearsTimerInterface)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, GearsTimerInterface)
-  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(GearsTimer)
-NS_INTERFACE_MAP_END
-
-// Object identifiers
-const char *kGearsTimerClassName = "GearsTimer";
-const nsCID kGearsTimerClassId = {0x8ba11b96, 0x1431, 0x4796, {0xa4, 0xd3,
-                                  0x19, 0xbd, 0xb2, 0xb0, 0xeb, 0x8}};
-                                  // {8BA11B96-1431-4796-A4D3-19BDB2B0EB08}
+#include <gecko_internal/nsITimerInternal.h>
 #endif
 
-// Disables the timer when the TimerInfo is deleted.
-GearsTimer::TimerInfo::~TimerInfo() {
-#if BROWSER_FF
-  if (timer) {
-    timer->Cancel();
-  }
-#endif
-  if (owner) {
+#include "gears/base/common/dispatcher.h"
+#include "gears/base/common/js_types.h"
+#include "gears/base/common/module_wrapper.h"
+
+
+
 #if BROWSER_IE
-    if (owner->IsWindow() && timer_id != 0) {
-      owner->KillTimer(timer_id);
-    }
-#endif
-    owner->Release();
-  }
+WindowsPlatformTimer::WindowsPlatformTimer(GearsTimer *gears_timer)
+    : gears_timer_(gears_timer),
+      in_handler_(false) {
 }
 
-// Creates a timeout.  This is done by determining the type of the handler
-// passed in, then calling the associated helper function.
-// JS function is setTimeout(variant, int).
-#if BROWSER_FF
-NS_IMETHODIMP GearsTimer::SetTimeout(//variant *timer_code,
-                                     //PRInt32 timeout,
-                                     PRInt32 *timer_id) {
-#elif BROWSER_IE
-STDMETHODIMP GearsTimer::setTimeout(VARIANT in_value,
-                                    int timeout,
-                                    int *timer_id) {
-#endif
-  // Protect against modifying output param on failure.
-  int timer_id_temp;
-  std::string16 script;
+WindowsPlatformTimer::~WindowsPlatformTimer() {
+}
 
-  // Once we aquire the callback, we're responsible for its lifetime until it's
-  // passed into CreateFunctionTimer.
-  JsRootedCallback *timer_callback = 0;
+void WindowsPlatformTimer::OnFinalMessage(HWND hwnd) {
+  delete this;
+}
 
-  // Determine which type of timer to create based on the in_value type.
-#if BROWSER_FF
-  JsParamFetcher js_params(this);
-  int timeout;
+LRESULT WindowsPlatformTimer::OnTimer(UINT msg,
+                                      WPARAM timer_id,
+                                      LPARAM unused_param,
+                                      BOOL& handled) {
+  handled = TRUE;
 
-  if (js_params.GetCount(false) != 2) {
-    RETURN_EXCEPTION(STRING16(L"Requires two parameters."));
+  // Prevent re-entry.
+  if (in_handler_) {
+    return 0;
   }
+  in_handler_ = true;
+  // We Add/RemoveReference to protect against a delete while running the timer
+  // handler.
+  gears_timer_->AddReference();
 
-  if (!js_params.GetAsInt(1, &timeout)) {
-    RETURN_EXCEPTION(STRING16(L"Second parameter must be an integer."));
-  }
-
-  if ((js_params.GetType(0) == JSPARAM_FUNCTION &&
-      !js_params.GetAsNewRootedCallback(0, &timer_callback)) ||
-      !js_params.GetAsString(0, &script)) {
-    RETURN_EXCEPTION(
-        STRING16(L"First parameter must be a function or string."));
-  }
-#elif BROWSER_IE
-  if (in_value.vt == VT_BSTR) {
-    script = in_value.bstrVal;
-  } else if (in_value.vt == VT_DISPATCH) {
-    timer_callback = new JsRootedToken(NULL, in_value);
+  std::map<int, GearsTimer::TimerInfo>::iterator timer =
+      gears_timer_->timers_.find(timer_id);
+  if (timer == gears_timer_->timers_.end()) {
+    // This can happen if the event has already been posted, but the timer was
+    // deleted.
+    KillTimer(timer_id);
   } else {
-    RETURN_EXCEPTION(
-        STRING16(L"First parameter must be a function or string."));
-  }
-#endif
-
-  // If a string was passed in, create as a string timer.  Otherwise it's
-  // a function.
-  if (timer_callback) {
-    timer_id_temp = CreateFunctionTimer(timer_callback, timeout, false);
-  } else {
-    timer_id_temp = CreateStringTimer(script.c_str(), timeout, false);
+    gears_timer_->HandleTimer(&(timer->second));
   }
 
-  if (timer_id_temp == 0) {
-    RETURN_EXCEPTION(STRING16(L"Timer creation failed."));
-  }
-
-  *timer_id = timer_id_temp;
-  RETURN_NORMAL();
+  gears_timer_->RemoveReference();
+  in_handler_ = false;
+  return 0;
 }
 
-// Removes the timeout with the specified id.
-#if BROWSER_FF
-NS_IMETHODIMP GearsTimer::ClearTimeout(PRInt32 timer_id) {
-#elif BROWSER_IE
-STDMETHODIMP GearsTimer::clearTimeout(int timer_id) {
-#endif
-  timers_.erase(timer_id);
-  RETURN_NORMAL();
-}
-
-// Creates an interval.  This is done by determining the type of the handler
-// passed in, then calling the associated helper function.
-// JS function is setInterval(variant handler, int timeout).
-#if BROWSER_FF
-NS_IMETHODIMP GearsTimer::SetInterval(//variant *timer_code,
-                                      //PRInt32 timeout,
-                                      PRInt32 *timer_id) {
-#elif BROWSER_IE
-STDMETHODIMP GearsTimer::setInterval(VARIANT in_value,
-                                    int timeout,
-                                    int *timer_id) {
-#endif
-  // Protect against modifying output param on failure.
-  int timer_id_temp;
-  std::string16 script;
-
-  // Once we aquire the callback, we're responsible for its lifetime until it's
-  // passed into CreateFunctionTimer.
-  JsRootedCallback *timer_callback = 0;
-
-  // Determine which type of timer to create based on the in_value type.
-#if BROWSER_FF
-  JsParamFetcher js_params(this);
-  int timeout;
-
-  if (js_params.GetCount(false) != 2) {
-    RETURN_EXCEPTION(STRING16(L"Requires two parameters."));
-  }
-
-  if (!js_params.GetAsInt(1, &timeout)) {
-    RETURN_EXCEPTION(STRING16(L"Second parameter must be an integer."));
-  }
-
-  if ((js_params.GetType(0) == JSPARAM_FUNCTION &&
-      !js_params.GetAsNewRootedCallback(0, &timer_callback)) ||
-      !js_params.GetAsString(0, &script)) {
-    RETURN_EXCEPTION(
-        STRING16(L"First parameter must be a function or string."));
-  }
-#elif BROWSER_IE
-  if (in_value.vt == VT_BSTR) {
-    script = in_value.bstrVal;
-  } else if (in_value.vt == VT_DISPATCH) {
-    timer_callback = new JsRootedToken(NULL, in_value);
-  } else {
-    RETURN_EXCEPTION(
-        STRING16(L"First parameter must be a function or string."));
-  }
-#endif
-
-  // If a string was passed in, create as a string timer.  Otherwise it's
-  // a function.
-  if (timer_callback) {
-    timer_id_temp = CreateFunctionTimer(timer_callback, timeout, true);
-  } else {
-    timer_id_temp = CreateStringTimer(script.c_str(), timeout, true);
-  }
-
-  if (timer_id_temp == 0) {
-    RETURN_EXCEPTION(STRING16(L"Timer creation failed."));
-  }
-
-  *timer_id = timer_id_temp;
-  RETURN_NORMAL();
-}
-
-// Removes the interval with the specified id.
-#if BROWSER_FF
-NS_IMETHODIMP GearsTimer::ClearInterval(PRInt32 timer_id) {
-#elif BROWSER_IE
-STDMETHODIMP GearsTimer::clearInterval(int timer_id) {
-#endif
-  timers_.erase(timer_id);
-  RETURN_NORMAL();
-}
-
-// Makes sure the object's structures are initialized.  We need to set up the
-// unload monitor for the web page.
-void GearsTimer::Initialize() {
-#if BROWSER_IE
+void WindowsPlatformTimer::Initialize() {
   // Make sure we have an HWND
   if (!IsWindow()) {
     if (!Create(kMessageOnlyWindowParent,    // parent
@@ -240,6 +88,124 @@ void GearsTimer::Initialize() {
       assert(false);
     }
   }
+}
+
+void WindowsPlatformTimer::CancelGearsTimer(int timer_id) {
+  if (IsWindow() && timer_id != 0) {
+    KillTimer(timer_id);
+  }
+}
+#endif
+
+
+
+// Disables the timer when the TimerInfo is deleted.
+GearsTimer::TimerInfo::~TimerInfo() {
+#if BROWSER_FF
+  if (platform_timer) {
+    platform_timer->Cancel();
+  }
+#endif
+  if (owner) {
+#if BROWSER_IE
+    owner->platform_timer_->CancelGearsTimer(timer_id);
+#endif
+    owner->RemoveReference();
+  }
+}
+
+
+
+DECLARE_GEARS_WRAPPER(GearsTimer);
+
+template<>
+void Dispatcher<GearsTimer>::Init() {
+  RegisterMethod("clearInterval", &GearsTimer::ClearInterval);
+  RegisterMethod("clearTimeout", &GearsTimer::ClearTimeout);
+  RegisterMethod("setInterval", &GearsTimer::SetInterval);
+  RegisterMethod("setTimeout", &GearsTimer::SetTimeout);
+}
+
+void GearsTimer::SetTimeout(JsCallContext *context) {
+  SetTimeoutOrInterval(context, false);
+}
+
+void GearsTimer::ClearTimeout(JsCallContext *context) {
+  ClearTimeoutOrInterval(context);
+}
+
+void GearsTimer::SetInterval(JsCallContext *context) {
+  SetTimeoutOrInterval(context, true);
+}
+
+void GearsTimer::ClearInterval(JsCallContext *context) {
+  ClearTimeoutOrInterval(context);
+}
+
+void GearsTimer::SetTimeoutOrInterval(JsCallContext *context, bool repeat) {
+  int timeout;
+
+  std::string16 script;
+  JsRootedCallback *timer_callback = NULL;
+
+  const int argc = 2;
+  JsArgument argv[argc] = {
+    { JSPARAM_REQUIRED, JSPARAM_UNKNOWN, NULL },
+    { JSPARAM_REQUIRED, JSPARAM_INT, &timeout },
+  };
+
+  int timer_code_type = context->GetArgumentType(0);
+  if (timer_code_type == JSPARAM_FUNCTION) {
+    argv[0].type = JSPARAM_FUNCTION;
+    argv[0].value_ptr = &timer_callback;
+  } else if (timer_code_type == JSPARAM_STRING16) {
+    argv[0].type = JSPARAM_STRING16;
+    argv[0].value_ptr = &script;
+  } else {
+    context->SetException(
+        STRING16(L"First parameter must be a function or string."));
+    return;
+  }
+
+  context->GetArguments(argc, argv);
+  if (context->is_exception_set()) return;
+
+  TimerInfo timer_info;
+  timer_info.repeat = repeat;
+  if (timer_callback) {
+    timer_info.callback.reset(timer_callback);
+  } else {
+    timer_info.script = script;
+  }
+
+  int result = CreateTimer(timer_info, timeout);
+  if (result == 0) {
+    context->SetException(STRING16(L"Timer creation failed."));
+    return;
+  }
+
+  context->SetReturnValue(JSPARAM_INT, &result);
+}
+
+void GearsTimer::ClearTimeoutOrInterval(JsCallContext *context) {
+  int timer_id;
+
+  const int argc = 1;
+  JsArgument argv[argc] = {
+    { JSPARAM_REQUIRED, JSPARAM_INT, &timer_id },
+  };
+
+  context->GetArguments(argc, argv);
+  if (context->is_exception_set()) return;
+
+  timers_.erase(timer_id);
+}
+
+// Makes sure the object's structures are initialized.  We need to set up the
+// unload monitor for the web page.
+void GearsTimer::Initialize() {
+#if BROWSER_IE
+  platform_timer_->Initialize();
 #endif
 
   // Create an event monitor to remove remaining timers when the page
@@ -250,33 +216,9 @@ void GearsTimer::Initialize() {
   }
 }
 
-// Initializes the TimerInfo structure, and pass it to the common creation
-// function.
-int GearsTimer::CreateFunctionTimer(JsRootedCallback *timer_callback,
-                                    int timeout,
-                                    bool repeat) {
-  TimerInfo timer_info;
-  timer_info.callback.reset(timer_callback);
-  timer_info.repeat = repeat;
-
-  return CreateTimerCommon(timer_info, timeout);
-}
-
-// Initializes the TimerInfo structure, and pass it to the common creation
-// function.
-int GearsTimer::CreateStringTimer(const char16 *full_script,
-                                  int timeout,
-                                  bool repeat) {
-  TimerInfo timer_info;
-  timer_info.script = full_script;
-  timer_info.repeat = repeat;
-
-  return CreateTimerCommon(timer_info, timeout);
-}
-
 // Creates the platform's timer object, perform all common initialization of the
 // TimerInfo structure, and store the TimerInfo in the map.
-int GearsTimer::CreateTimerCommon(const TimerInfo &timer_info, int timeout) {
+int GearsTimer::CreateTimer(const TimerInfo &timer_info, int timeout) {
   Initialize();
 
   // Store the timer info
@@ -290,7 +232,8 @@ int GearsTimer::CreateTimerCommon(const TimerInfo &timer_info, int timeout) {
   // Create the actual timer.
 #if BROWSER_FF
   nsresult result;
-  timers_[timer_id].timer = do_CreateInstance("@mozilla.org/timer;1", &result);
+  timers_[timer_id].platform_timer =
+      do_CreateInstance("@mozilla.org/timer;1", &result);
 
   if (NS_FAILED(result)) {
     timers_.erase(timer_id);
@@ -299,8 +242,8 @@ int GearsTimer::CreateTimerCommon(const TimerInfo &timer_info, int timeout) {
 
   // Turning off idle causes the callback to be invoked in this thread,
   // instead of in the Timer idle thread.
-  nsCOMPtr<nsITimerInternal> timer_internal(do_QueryInterface(
-                                                timers_[timer_id].timer));
+  nsCOMPtr<nsITimerInternal> timer_internal(
+      do_QueryInterface(timers_[timer_id].platform_timer));
   timer_internal->SetIdle(false);
 
   // Cast because the two constants are defined in different anonymous
@@ -311,11 +254,10 @@ int GearsTimer::CreateTimerCommon(const TimerInfo &timer_info, int timeout) {
       : static_cast<PRUint32>(nsITimer::TYPE_ONE_SHOT);
 
   // Start the timer
-  timers_[timer_id].timer->InitWithFuncCallback(TimerCallback,
-                                                &timers_[timer_id],
-                                                timeout, type);
+  timers_[timer_id].platform_timer->InitWithFuncCallback(
+      TimerCallback, &timers_[timer_id], timeout, type);
 #elif BROWSER_IE
-  if (0 == SetTimer(timer_id, timeout, NULL)) {
+  if (0 == platform_timer_->SetTimer(timer_id, timeout, NULL)) {
     timers_.erase(timer_id);
     return 0;
   }
@@ -328,16 +270,13 @@ int GearsTimer::CreateTimerCommon(const TimerInfo &timer_info, int timeout) {
 void GearsTimer::HandleEvent(JsEventType event_type) {
   assert(event_type == JSEVENT_UNLOAD);
 
-  // Use a ComPtr to AddRef the Timer object to keep it from getting deleted
+  // AddReference this Timer object to keep it from getting deleted
   // while we iterate through the map
-#if BROWSER_FF
-  nsCOMPtr<GearsTimer> gears_timer(this);
-#elif BROWSER_IE
-  CComPtr<GearsTimer> gears_timer(this);
-#endif
-
+  AddReference();
   timers_.clear();
+  RemoveReference();
 }
+
 
 // Perform the non-platform specific work that occurs when a timer fires.
 void GearsTimer::HandleTimer(TimerInfo *timer_info) {
@@ -365,63 +304,11 @@ void GearsTimer::HandleTimer(TimerInfo *timer_info) {
 void GearsTimer::TimerCallback(nsITimer *timer, void *closure) {
   TimerInfo *timer_info = reinterpret_cast<TimerInfo *>(closure);
 
-  // Protect against a delete while running the timer handler.
-  nsCOMPtr<GearsTimer> owner = timer_info->owner;
-
+  // AddReference this Timer object to keep it from getting deleted
+  // while running the timer handler.
+  GearsTimer *owner = timer_info->owner;
+  owner->AddReference();
   owner->HandleTimer(timer_info);
-}
-#elif BROWSER_IE
-LRESULT GearsTimer::OnTimer(UINT msg,
-                            WPARAM timer_id,
-                            LPARAM unused_param,
-                            BOOL& handled) {
-  // Protect against a delete while running the timer handler.
-  CComPtr<GearsTimer> gears_timer = this;
-  handled = TRUE;
-
-  // Prevent re-entry.
-  if (in_handler_) {
-    return 0;
-  }
-  in_handler_ = true;
-
-  std::map<int, TimerInfo>::iterator timer = timers_.find(timer_id);
-
-  if (timer == timers_.end()) {
-    // This can happen if the event has already been posted, but the timer was
-    // deleted.
-    KillTimer(timer_id);
-  } else {
-    HandleTimer(&(timer->second));
-  }
-
-  // If we would delete ourself here, we need to defer the release until we're
-  // out of the message handler.
-  if (gears_timer->m_dwRef == 1) {
-    release_on_final_message_ = true;
-    AddRef();
-    PostMessage(WM_DESTROY, 0, 0);
-  }
-
-  // Turn off re-entry prevention.
-  in_handler_ = false;
-
-  return 0;
-}
-
-// After the last instance is released, we destroy the window we created to
-// capture timer events.
-void GearsTimer::FinalRelease() {
-  if (IsWindow()) {
-    DestroyWindow();
-  }
-}
-
-// If we're deleted in the message loop, we defer the final release to here.
-void GearsTimer::OnFinalMessage() {
-  // Release the last reference to this, and cause a delete.
-  if (release_on_final_message_) {
-    this->Release();
-  }
+  owner->RemoveReference();
 }
 #endif
