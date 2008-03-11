@@ -1,4 +1,4 @@
-m4_changequote(`^',`^')m4_dnl
+m4_changequote(`~',`~')m4_dnl
 <!DOCTYPE html>
 
 <!--
@@ -43,8 +43,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       padding-right:1em;
     }
 
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
     /* 
      * On Windows Mobile, we hide the div containing the buttons
      * by default, to only show the correct one (ie smartphone or not)
@@ -58,17 +58,17 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
       margin-left:2em;
       display:none;
     }
-^,^^)
+~,~~)
 
     #checkbox-row {
       margin-top:1em;
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
       margin-bottom:0.5em;
-^,
-^
+~,
+~
       margin-bottom:1em;
-^)
+~)
     }
 
     #icon {
@@ -91,13 +91,13 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
     }
 
     #custom-message {
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
       margin-top:2px; 
-^,
-^
+~,
+~
       margin-top:6px;
-^)
+~)
       display:none;
     }
 
@@ -119,20 +119,20 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
       margin:0 -1px;
       border:solid #f1cc1d;
       border-width:0 1px;
-m4_ifelse(PRODUCT_OS,^wince^,^^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,~~,m4_dnl
+~
       padding:1em 0;
-^)
+~)
     }
 
     #yellowbox p {
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
       padding:0 0;
-^,
-^
+~,
+~
       padding:0 1em;
-^)
+~)
     }
 
     #permissions-help {
@@ -168,8 +168,8 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
    <a href="#" onclick="showHelp(false); return false;">Go back</a>
   </div>
 
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^ <div id="permissions-settings">^)
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~ <div id="permissions-settings">~)
   <div id="head">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
@@ -226,7 +226,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
         </tr>
       </table>
     </p>
-    m4_ifelse(PRODUCT_OS,^wince^,^^,^<br>^)
+    m4_ifelse(PRODUCT_OS,~wince~,~~,~<br>~)
   </div>
 
   <div id="foot">
@@ -252,8 +252,8 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
         </TRANS_BLOCK>
       </div>
     </div>
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
     <!--
     On Windows Mobile, we use the softkey bar in addition to HTML buttons.
     On Windows Mobile smartphone, we only display this div and hide the
@@ -274,12 +274,12 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
       </tr>
       </table>
     </div>
-^,^^)
+~,~~)
     <div id="button-row">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^         <!-- 
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~         <!-- 
           We use form input buttons instead of buttons elements as PIE
           does not support them.
           -->
@@ -294,7 +294,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
               <input type="BUTTON" id="deny-button" onclick="denyAccessTemporarily(); return false;"></input>
             </td>
           </div>
-^,^           
+~,~           
           <td width="100%" align="left" valign="middle">
             <a href="#" onclick="denyAccessPermanently(); return false;">
             <TRANS_BLOCK desc="Link that disallows Gears on this site.">
@@ -329,16 +329,16 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><TRANS_BLOCK desc="Button user can press to disallow the use of Gears."><span class="accesskey">C</span>ancel</TRANS_BLOCK></div></div></a></td>^)
+                  ><TRANS_BLOCK desc="Button user can press to disallow the use of Gears."><span class="accesskey">C</span>ancel</TRANS_BLOCK></div></div></a></td>~)
         </tr>
       </table>
     </div>
   </div>
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^ </div>^)
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">
-</object>^)
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~ </div>~)
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">
+</object>~)
 </body>
 <!--
 We include all files through m4 as the HTML dialog implementation on
