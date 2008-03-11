@@ -318,11 +318,7 @@ class Database2AsyncExecuteCommand : Database2Command {
                                  conn_(conn) {}
   
   void InBackground(bool *needsForeground) {
-    // this operation is also the functor for retrieving rows
     conn_->Execute(stmt, this);
-    // functor will populate rows property on stmt (if stmt has success   
-    // callback)
-    // store error, if any
     // if success and no success callback:
       tx->ExecuteNextStatement();
       *needsForeground = false;
@@ -338,9 +334,8 @@ class Database2AsyncExecuteCommand : Database2Command {
     // not return false, queue rollback op
   }
   
-  // functor
-  void operator()(/* args go here */) {
-   // collect a row
+  virtual void HandleRow(/* row data here */) {
+   // collect the row into Database2Statement
   }
   
  private:
