@@ -51,7 +51,6 @@
 #include "gears/localserver/firefox/localserver_ff.h"
 #include "gears/localserver/firefox/managed_resource_store_ff.h"
 #include "gears/localserver/firefox/resource_store_ff.h"
-#include "gears/timer/timer.h"
 #include "gears/ui/firefox/ui_utils.h"
 #include "gears/workerpool/firefox/workerpool.h"
 
@@ -164,12 +163,6 @@ NS_DOMCI_EXTENSION(Scour)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsFileSubmitter, PR_TRUE,
                                              &kGearsFileSubmitterClassId)
 
-  // timer
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsTimer)
-    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsTimerInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsTimer, PR_TRUE,
-                                             &kGearsTimerClassId)
-
   // console
   NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsConsole)
     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsConsoleInterface)
@@ -247,9 +240,6 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
       GEARSRESOURCESTOREINTERFACE_IID_STR },
     { kGearsFileSubmitterClassName, "GearsFileSubmitterInterface",
       GEARSFILESUBMITTERINTERFACE_IID_STR },
-    // timer
-    { kGearsTimerClassName, "GearsTimerInterface",
-      GEARSTIMERINTERFACE_IID_STR },
 #ifdef OFFICIAL_BUILD
 // The Image and blob APIs have not been finalized for official builds
 #else
@@ -306,8 +296,6 @@ NS_DECL_DOM_CLASSINFO(GearsManagedResourceStore)
 NS_DECL_DOM_CLASSINFO(GearsResourceStore)
 NS_DECL_DOM_CLASSINFO(GearsFileSubmitter)
 
-// timer
-NS_DECL_DOM_CLASSINFO(GearsTimer)
 // console
 NS_DECL_DOM_CLASSINFO(GearsConsole)
 
@@ -343,8 +331,6 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsLocalServer));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsManagedResourceStore));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsResourceStore));
-  // timer
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsTimer));
   // console
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsConsole));
 
