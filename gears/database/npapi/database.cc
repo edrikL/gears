@@ -200,7 +200,21 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
     std::string16 arg_str;
     int arg_int;
     double arg_double;
-    if (arg_array->GetElementAsString(i, &arg_str)) {
+    bool arg_bool;
+    // TODO(mpcomplete): the other ports coerce all values to string, and store
+    // them that way.  Maybe NPAPI should do the same (or verify that it's OK
+    // to do it this way).
+    if (arg_array->GetElementType(i) == JSPARAM_NULL) {
+      LOG(("        Parameter %i: null", i));
+      sql_status = sqlite3_bind_null(stmt, sql_index);
+    } else if (arg_array->GetElementType(i) == JSPARAM_UNDEFINED) {
+      // Insert the string "undefined" to match the firefox implementation.
+      // TODO(zork): This should throw an error in beta.database2.
+      LOG(("        Parameter %i: undefined", i));
+      sql_status = sqlite3_bind_text16(
+          stmt, sql_index, STRING16(L"undefined"), -1,
+          SQLITE_TRANSIENT); // so SQLite copies string immediately
+    } else if (arg_array->GetElementAsString(i, &arg_str)) {
 // TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
 #ifdef DEBUG
       std::string str_utf8;
@@ -216,6 +230,12 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
     } else if (arg_array->GetElementAsDouble(i, &arg_double)) {
       LOG(("        Parameter %i: %lf", i, arg_double));
       sql_status = sqlite3_bind_double(stmt, sql_index, arg_double);
+    } else if (arg_array->GetElementAsBool(i, &arg_bool)) {
+      arg_str = arg_bool ? STRING16(L"true") : STRING16(L"false");
+      LOG(("        Parameter %i: %s", i, arg_str));
+      sql_status = sqlite3_bind_text16(
+          stmt, sql_index, arg_str.c_str(), -1,
+          SQLITE_TRANSIENT); // so SQLite copies string immediately
     } else {
       // TODO(mpcomplete): figure out what else we need to support here.
       std::string16 error =
