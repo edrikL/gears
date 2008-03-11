@@ -323,15 +323,7 @@ JsArray::~JsArray() {
 }
 
 bool JsArray::SetArray(JsToken value, JsContextPtr context) {
-  // check that it's an array (can only test that it has a length property).
-  NPIdentifier length_id = NPN_GetStringIdentifier("length");
-  NPVariant np_length;
-  if (!NPVARIANT_IS_OBJECT(value) ||
-      !NPN_GetProperty(context, NPVARIANT_TO_OBJECT(value), length_id,
-                       &np_length) ||
-      NPVARIANT_IS_VOID(np_length)) {
-    return false;
-  }
+  if (!JsTokenIsArray(value, context)) return false;
 
   array_ = value;
   js_context_ = context;
@@ -1239,15 +1231,36 @@ JsParamType JsTokenGetType(JsToken t, JsContextPtr cx) {
 }
 
 bool JsTokenIsCallback(JsToken t, JsContextPtr cx) {
-  return NPVARIANT_IS_OBJECT(t);  // TODO(mpcomplete): Can we check if this is
-                                  // actually a function? See JsTokenIsCallback
-                                  // for IE.
+  if (!NPVARIANT_IS_OBJECT(t))
+    return false;
+
+  // Check for call() method which all Function objects have.
+  // Note: User defined objects that have a call() method will be incorrectly
+  // flagged as callbacks but this check is better than nothing and probably
+  // the best we are going to get.
+  NPIdentifier call_id = NPN_GetStringIdentifier("call");
+  ScopedNPVariant out;
+  if (!NPN_GetProperty(cx, NPVARIANT_TO_OBJECT(t), call_id, &out) ||
+      NPVARIANT_IS_VOID(out)) {
+    return false;
+  }
+  return true;
 }
 
 bool JsTokenIsArray(JsToken t, JsContextPtr cx) {
-  return NPVARIANT_IS_OBJECT(t);  // TODO(mpcomplete): Can we check if this is
-                                  // actually an array? See JsTokenIsArray for
-                                  // IE.
+  if (!NPVARIANT_IS_OBJECT(t))
+    return false;
+
+  // Check for join() method which all Array objects have.
+  // Note: Function objects also have a length property so it's not safe
+  // to assume that an object with a length property is an Array!
+  NPIdentifier join_id = NPN_GetStringIdentifier("join");
+  ScopedNPVariant out;
+  if (!NPN_GetProperty(cx, NPVARIANT_TO_OBJECT(t), join_id, &out) ||
+      NPVARIANT_IS_VOID(out)) {
+    return false;
+  }
+  return true;
 }
 
 bool JsTokenIsObject(JsToken t) {
