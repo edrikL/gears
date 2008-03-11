@@ -295,8 +295,8 @@ endif
 
 ifeq ($(BROWSER),IE)
 prereqs:: $(IE_OUTDIR)/genfiles $(VISTA_BROKER_OUTDIR) $(IE_OUTDIRS_I18N) $(COMMON_M4FILES) $(COMMON_M4FILES_I18N) $(IE_M4FILES) $(IE_M4FILES_I18N)
-genheaders:: $(IE_GEN_HEADERS) $(VISTA_BROKER_EXE)
-modules:: $(IE_MODULE_DLL)
+genheaders:: $(IE_GEN_HEADERS)
+modules:: $(IE_MODULE_DLL) $(VISTA_BROKER_EXE)
 endif
 
 ifeq ($(BROWSER),IEMOBILE)
