@@ -328,7 +328,8 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
   NPVariant np_length;
   if (!NPVARIANT_IS_OBJECT(value) ||
       !NPN_GetProperty(context, NPVARIANT_TO_OBJECT(value), length_id,
-                       &np_length)) {
+                       &np_length) ||
+      NPVARIANT_IS_VOID(np_length)) {
     return false;
   }
 
@@ -1466,7 +1467,9 @@ int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
     if (output_argv[i].requirement == JSPARAM_REQUIRED)
       assert(!has_optional);  // should not have required arg after optional
 
-    if (i >= static_cast<int>(disp_params_->cArgs)) {
+    if (i >= static_cast<int>(disp_params_->cArgs) ||
+        GetArgumentType(i) == JSPARAM_NULL || 
+        GetArgumentType(i) == JSPARAM_UNDEFINED) {
       // Out of arguments
       if (output_argv[i].requirement == JSPARAM_REQUIRED) {
         std::string16 msg;
@@ -1621,7 +1624,9 @@ void JsCallContext::SetException(const std::string16 &message) {
   if (!String16ToUTF8(message.data(), message.length(), &message_utf8))
     message_utf8 = "Unknown Gears Error";  // better to throw *something*
 
-  NPN_SetException(object_, message_utf8.c_str());
+  NPObject *global;
+  NPN_GetValue(js_context(), NPNVWindowNPObject, &global);
+  NPN_SetException(global, message_utf8.c_str());
 #endif
 }
 
@@ -1636,7 +1641,12 @@ int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
     if (output_argv[i].requirement == JSPARAM_REQUIRED)
       assert(!has_optional);  // should not have required arg after optional
 
-    if (i >= argc_) {
+    // TODO(mpcomplete): We need to handle this more generally.  We should
+    // continue processing arguments for the case where a developer does
+    // something like 'method(null, foo)' if the first argument is optional.
+    if (i >= argc_ ||
+        GetArgumentType(i) == JSPARAM_NULL || 
+        GetArgumentType(i) == JSPARAM_UNDEFINED) {
       // Out of arguments
       if (output_argv[i].requirement == JSPARAM_REQUIRED) {
         std::string16 msg;
