@@ -379,6 +379,7 @@ FF_IDLSRCS	+= \
 		$(NULL)
 
 FF_CPPSRCS	+= \
+		async_router.cc \
 		base_class.cc \
 		base_class_test.cc \
 		circular_buffer_test.cc \
@@ -446,6 +447,7 @@ IE_IDLSRCS	+= \
 
 IE_CPPSRCS	+= \
 		activex_utils.cc \
+		async_router.cc \
 		base_class.cc \
 		base_class_test.cc \
 		bho.cc \
@@ -518,6 +520,7 @@ IEMOBILE_IDLSRCS	+= \
 
 IEMOBILE_CPPSRCS	+= \
 		activex_utils.cc \
+		async_router.cc \
 		base_class.cc \
 		bho.cc \
 		circular_buffer_test.cc \
@@ -583,6 +586,7 @@ NPAPI_IDLSRCS	+= \
 
 NPAPI_CPPSRCS	+= \
 		activex_utils.cc \
+		async_router.cc \
 		base_class.cc \
 		base_class_test.cc \
 		browser_utils.cc \

@@ -25,8 +25,9 @@
 
 #include "gears/localserver/npapi/async_task_np.h"
 
+#include "gears/base/common/async_router.h"
 #include "gears/base/common/atomic_ops.h"
-// TODO(mpcomplete): remove these next 2 dependencies
+// TODO(mpcomplete): remove this next dependency
 #include "gears/base/ie/activex_utils.h"
 #include "gears/localserver/common/critical_section.h"
 #include "gears/localserver/common/http_constants.h"
@@ -37,56 +38,6 @@ const char16 *AsyncTask::kCookieRequiredErrorMessage =
 
 const char16 *kIsOfflineErrorMessage =
                   STRING16(L"The browser is offline");
-
-static const int kAsyncTaskMessageType = 2;
-
-//------------------------------------------------------------------------------
-// AsyncTaskMessage
-//------------------------------------------------------------------------------
-struct AsyncTaskMessage : public MessageData {
- public:
-  AsyncTaskMessage(int code, int param, AsyncTask *target)
-      : code(code), param(param), target(target) {
-    target->AddReference();
-  }
-  ~AsyncTaskMessage() {
-    target->RemoveReference();
-  }
-
-  int code;
-  int param;
-  AsyncTask *target;
-};
-
-//------------------------------------------------------------------------------
-// AsyncTaskMessageRouter
-// This class receives messages from the ThreadMessageQueue and routes them
-// to the target AsyncTask.
-//------------------------------------------------------------------------------
-class AsyncTaskMessageRouter : public ThreadMessageQueue::HandlerInterface {
- public:
-  static void Init();
-  virtual void HandleThreadMessage(int message_type, MessageData *message_data);
-};
-
-void AsyncTaskMessageRouter::Init() {
-  static AsyncTaskMessageRouter instance;
-  static bool initialized = false;
-  if (!initialized) {
-    initialized = true;
-    ThreadMessageQueue::GetInstance()->RegisterHandler(kAsyncTaskMessageType,
-                                                       &instance);
-  }
-}
-
-void AsyncTaskMessageRouter::HandleThreadMessage(int message_type,
-                                                 MessageData *message_data) {
-  assert(message_type == kAsyncTaskMessageType);
-
-  AsyncTaskMessage *message = static_cast<AsyncTaskMessage*>(message_data);
-  message->target->HandleAsync(message->code, message->param);
-}
-
 
 //------------------------------------------------------------------------------
 // AsyncTask
@@ -132,7 +83,6 @@ bool AsyncTask::Init() {
     return false;
   }
 
-  AsyncTaskMessageRouter::Init();
   ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
 
   is_aborted_ = false;
@@ -240,11 +190,32 @@ unsigned int __stdcall AsyncTask::ThreadMain(void *task) {
   return 0;
 }
 
+//------------------------------------------------------------------------------
+// AsyncTaskFunctor
+//------------------------------------------------------------------------------
+
+struct AsyncTaskFunctor : public AsyncFunctor {
+public:
+  AsyncTaskFunctor(int code, int param, AsyncTask *target)
+      : code(code), param(param), target(target) {
+    target->AddReference();
+  }
+  ~AsyncTaskFunctor() {
+    target->RemoveReference();
+  }
+
+  virtual void Run() {
+    target->HandleAsync(code, param);
+  }
+
+  int code;
+  int param;
+  AsyncTask *target;
+};
+
 void AsyncTask::CallAsync(ThreadId thread_id, int code, int param) {
-  ThreadMessageQueue::GetInstance()->Send(
-      thread_id,
-      kAsyncTaskMessageType,
-      new AsyncTaskMessage(code, param, this));
+  AsyncRouter::GetInstance()->CallAsync(
+      thread_id, new AsyncTaskFunctor(code, param, this));
 }
 
 void AsyncTask::HandleAsync(int code, int param) {
