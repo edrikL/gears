@@ -40,6 +40,11 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
 
+// TODO(mpcomplete): remove when we have a cross-platform timer abstraction
+#if BROWSER_NPAPI && defined(WIN32)
+#define BROWSER_IE 1
+#endif
+
 // As an implementation detail, on IE we have a single WindowsPlatformTimer
 // per GearsTimer.  This is basically a Window (in the HWND sense) that
 // registers for WM_TIMER messages.  We re-use the same WindowsPlatformTimer
@@ -174,5 +179,10 @@ class GearsTimer
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsTimer);
 };
+
+// TODO(mpcomplete): remove when we have a cross-platform timer abstraction
+#if BROWSER_NPAPI && defined(WIN32)
+#undef BROWSER_IE
+#endif
 
 #endif  // GEARS_TIMER_TIMER_H__

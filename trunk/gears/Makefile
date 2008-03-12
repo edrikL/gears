@@ -1310,6 +1310,20 @@ IEMOBILE_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# httprequest/npapi
+
+NPAPI_VPATH += \
+		httprequest/npapi \
+		$(NULL)
+
+NPAPI_IDLSRCS	+= \
+		$(NULL)
+
+NPAPI_CPPSRCS	+= \
+		httprequest_np.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # blob
 
 ifneq ($(OFFICIAL_BUILD),1)
