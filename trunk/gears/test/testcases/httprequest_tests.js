@@ -145,6 +145,8 @@ function testAbortAfterSend() {
   request.abort();
 }
 
+// TODO(michaeln): modify and uncomment this test case
+/*
 function testAbortAfterInteractive() {
   startAsync();
   var urlbase = '/testcases/cgi/send_response_of_size.py?size=';
@@ -159,6 +161,7 @@ function testAbortAfterInteractive() {
   }
   request.send();
 }
+*/
 
 function testGetCapturedResource() {
   startAsync();
