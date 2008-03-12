@@ -34,8 +34,10 @@
 #include "gears/base/npapi/module_wrapper.h"
 #include "gears/database/npapi/database.h"
 #include "gears/factory/common/factory_utils.h"
+#include "gears/httprequest/npapi/httprequest_np.h"
 #include "gears/localserver/npapi/localserver_np.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/timer/timer.h"
 #include "gears/workerpool/npapi/workerpool.h"
 
 // static 
@@ -87,6 +89,10 @@ void GearsFactory::Create(JsCallContext *context) {
     object.reset(CreateModule<GearsLocalServer>(GetJsRunner()));
   } else if (class_name == STRING16(L"beta.workerpool")) {
     object.reset(CreateModule<GearsWorkerPool>(GetJsRunner()));
+  } else if (class_name == STRING16(L"beta.httprequest")) {
+    object.reset(CreateModule<GearsHttpRequest>(GetJsRunner()));
+  } else if (class_name == STRING16(L"beta.timer")) {
+    object.reset(CreateModule<GearsTimer>(GetJsRunner()));
   } else {
     context->SetException(STRING16(L"Unknown object."));
     return;

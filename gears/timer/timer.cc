@@ -33,7 +33,10 @@
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/module_wrapper.h"
 
-
+// TODO(mpcomplete): remove when we have a cross-platform timer abstraction
+#if BROWSER_NPAPI && defined(WIN32)
+#define BROWSER_IE 1
+#endif
 
 #if BROWSER_IE
 WindowsPlatformTimer::WindowsPlatformTimer(GearsTimer *gears_timer)
