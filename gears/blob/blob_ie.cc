@@ -56,8 +56,8 @@ STDMETHODIMP GearsBlob::get_length(VARIANT *retval) {
 STDMETHODIMP GearsBlob::get_contents(VARIANT *retval) {
   // We pack the pointer into the byref field of a VARIANT.
   retval->vt = VT_BYREF;
-  retval->byref =
-      const_cast<void*>(reinterpret_cast<const void*>(contents_.get()));
+  retval->byref = reinterpret_cast<void*>(contents_.get());
+  contents_->Ref();
   RETURN_NORMAL();
 }
 
@@ -85,12 +85,9 @@ STDMETHODIMP GearsBlob::slice(VARIANT var_offset, const VARIANT *var_length,
     length = (blob_size > offset) ? blob_size - offset : 0;
   }
 
-  // Clone the blob and slice it.
-  scoped_ptr<BlobInterface> cloned(contents_->Clone());
-  if (!cloned.get()) {
-    RETURN_EXCEPTION(STRING16(L"Blob cloning failed."));
-  }
-  cloned.reset(new SliceBlob(cloned.release(), offset, length));
+  // Slice the blob.
+  scoped_refptr<BlobInterface> sliced(new SliceBlob(contents_.get(), offset,
+                                                    length));
 
   // Expose the object to JavaScript via COM.
   CComObject<GearsBlob> *blob_internal = NULL;
@@ -109,7 +106,7 @@ STDMETHODIMP GearsBlob::slice(VARIANT var_offset, const VARIANT *var_length,
     RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
   }
 
-  blob_internal->Reset(cloned.release());
+  blob_internal->Reset(sliced.get());
 
   *retval = blob_external.Detach();
   assert((*retval)->AddRef() == 2 &&

@@ -342,9 +342,9 @@ NS_IMETHODIMP GearsResourceStore::CaptureBlob(nsISupports *blob,
   if (NS_FAILED(nr) || !blob_pvt) {
     RETURN_EXCEPTION(STRING16(L"Error converting to native class."));
   }
-  const BlobInterface *blob_contents;
-  nr = blob_pvt->GetContents(&blob_contents);
-  if (NS_FAILED(nr) || !blob_contents) {
+  scoped_refptr<BlobInterface> blob_contents;
+  nr = blob_pvt->GetContents(as_out_parameter(blob_contents));
+  if (NS_FAILED(nr) || !blob_contents.get()) {
     RETURN_EXCEPTION(STRING16(L"Error getting blob contents."));
   }
 
@@ -361,7 +361,8 @@ NS_IMETHODIMP GearsResourceStore::CaptureBlob(nsISupports *blob,
 
   // Make the Item and put it in the ResourceStore
   ResourceStore::Item item;
-  if (!ResourceStore::BlobToItem(blob_contents, full_url.c_str(), &item)) {
+  if (!ResourceStore::BlobToItem(blob_contents.get(), full_url.c_str(),
+                                 &item)) {
     RETURN_EXCEPTION(STRING16(L"The blob could not be captured"));
   }
   if (!store_.PutItem(&item)) {

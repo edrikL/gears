@@ -33,7 +33,6 @@
 #include "ff/genfiles/blob_ff.h"
 #include "gears/base/common/base_class.h"
 #include "gears/blob/blob_interface.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 extern const char *kGearsBlobClassName;
 extern const nsCID kGearsBlobClassId;
@@ -52,18 +51,18 @@ class GearsBlob
 
   NS_IMETHOD GetLength(PRInt64 *retval);
 
-  NS_IMETHOD GetContents(const BlobInterface** retval);
+  NS_IMETHOD GetContents(BlobInterface **retval);
 
   NS_IMETHOD Slice(//PRInt64 offset
                    //OPTIONAL PRInt64 length
                    GearsBlobInterface **retval);
 
-  void Reset(const BlobInterface *blob) {
+  void Reset(BlobInterface *blob) {
     contents_.reset(blob);
   }
 
  private:
-  scoped_ptr<const BlobInterface> contents_;
+  scoped_refptr<BlobInterface> contents_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsBlob);
 };

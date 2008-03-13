@@ -70,7 +70,7 @@ class ATL_NO_VTABLE GearsBlob
   }
 
  private:
-  scoped_ptr<const BlobInterface> contents_;
+  scoped_refptr<BlobInterface> contents_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsBlob);
 };

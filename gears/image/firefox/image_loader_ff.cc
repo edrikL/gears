@@ -78,9 +78,9 @@ GearsImageLoader::CreateImageFromBlob(nsISupports *blob,
   if (NS_FAILED(nr) || !blob_pvt) {
     RETURN_EXCEPTION(STRING16(L"Error converting to native class."));
   }
-  const BlobInterface *blob_contents;
-  nr = blob_pvt->GetContents(&blob_contents);
-  if (NS_FAILED(nr) || !blob_contents) {
+  scoped_refptr<BlobInterface> blob_contents;
+  nr = blob_pvt->GetContents(as_out_parameter(blob_contents));
+  if (NS_FAILED(nr) || !blob_contents.get()) {
     RETURN_EXCEPTION(STRING16(L"Error getting blob contents."));
   }
 
@@ -90,7 +90,7 @@ GearsImageLoader::CreateImageFromBlob(nsISupports *blob,
   nsCOMPtr<GearsImageInterface> image_external = image;
   image->Init(img);
   std::string16 error;
-  if (!img->Init(blob_contents, &error)) {
+  if (!img->Init(blob_contents.get(), &error)) {
     RETURN_EXCEPTION(error.c_str());
   }
   if (!image->InitBaseFromSibling(this)) {

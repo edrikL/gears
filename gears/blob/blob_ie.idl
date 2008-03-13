@@ -52,6 +52,7 @@ interface GearsBlobInterface : IDispatch {
   pointer_default(unique)
 ]
 interface GearsBlobPvtInterface : IUnknown {
-  // retval->byref is assigned the pointer to the C++ BlobInterface object.
+  // retval->byref is assigned a pointer to the C++ BlobInterface object, and
+  // its reference count is incremented.
   [propget] HRESULT contents([out, retval] VARIANT *retval);
 };

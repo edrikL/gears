@@ -57,7 +57,7 @@ class ResourceStore : public LocalServer {
 #ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
   // Converts a Blob to an Item that could be served by ResourceStore
-  static bool BlobToItem(const BlobInterface *blob,
+  static bool BlobToItem(BlobInterface *blob,
                          const char16 *full_url,
                          Item *out);
 #endif

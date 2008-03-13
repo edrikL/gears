@@ -47,8 +47,4 @@ int64 FileBlob::Length() const {
   return File::GetFileSize(filename_.c_str());
 }
 
-BlobInterface *FileBlob::Clone() const {
-  return new FileBlob(filename_);
-}
-
 #endif  // not OFFICIAL_BUILD

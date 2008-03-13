@@ -48,39 +48,39 @@ bool TestBufferBlob() {
   uint8 buffer[64] = { 0 };
 
   // Empty blob tests
-  BufferBlob blob1;
-  TEST_ASSERT(blob1.Length() == 0);
+  scoped_refptr<BufferBlob> blob(new BufferBlob);
+  TEST_ASSERT(blob->Length() == 0);
   // A non-finalized blob is not readable.
-  num_bytes = blob1.Read(buffer, 0, 64);
+  num_bytes = blob->Read(buffer, 0, 64);
   TEST_ASSERT(num_bytes == 0);
-  blob1.Finalize();
-  TEST_ASSERT(blob1.Length() == 0);
+  blob->Finalize();
+  TEST_ASSERT(blob->Length() == 0);
   // An empty blob returns no bytes.
-  num_bytes = blob1.Read(buffer, 0, 64);
+  num_bytes = blob->Read(buffer, 0, 64);
   TEST_ASSERT(num_bytes == 0);
   // A finalized blob is not writable.
-  num_bytes = blob1.Append("abc", 3);
+  num_bytes = blob->Append("abc", 3);
   TEST_ASSERT(num_bytes == 0);
 
   memset(buffer, 0, sizeof(buffer));
 
   // Typical blob operation
-  BufferBlob blob2;
-  num_bytes = blob2.Append("abc", 3);
+  blob.reset(new BufferBlob);
+  num_bytes = blob->Append("abc", 3);
   TEST_ASSERT(num_bytes == 3);
-  TEST_ASSERT(blob2.Length() == 3);
-  num_bytes = blob2.Append("de", 2);
+  TEST_ASSERT(blob->Length() == 3);
+  num_bytes = blob->Append("de", 2);
   TEST_ASSERT(num_bytes == 2);
-  TEST_ASSERT(blob2.Length() == 5);
+  TEST_ASSERT(blob->Length() == 5);
   // A non-finalized blob is not readable.
-  num_bytes = blob2.Read(buffer, 0, 64);
+  num_bytes = blob->Read(buffer, 0, 64);
   TEST_ASSERT(num_bytes == 0);
-  blob2.Finalize();
-  TEST_ASSERT(blob2.Length() == 5);
-  num_bytes = blob2.Read(buffer, 0, 64);
+  blob->Finalize();
+  TEST_ASSERT(blob->Length() == 5);
+  num_bytes = blob->Read(buffer, 0, 64);
   TEST_ASSERT(num_bytes == 5);
   // A finalized blob is not writable.
-  num_bytes = blob2.Append("fgh", 3);
+  num_bytes = blob->Append("fgh", 3);
   TEST_ASSERT(num_bytes == 0);
   TEST_ASSERT(buffer[0] == 'a');
   TEST_ASSERT(buffer[1] == 'b');
@@ -90,7 +90,7 @@ bool TestBufferBlob() {
   TEST_ASSERT(buffer[5] == '\0');
 
   // Ensure that Read obeys the max_length parameter.
-  num_bytes = blob2.Read(buffer, 2, 3);
+  num_bytes = blob->Read(buffer, 2, 3);
   TEST_ASSERT(num_bytes == 3);
   TEST_ASSERT(buffer[0] == 'c');
   TEST_ASSERT(buffer[1] == 'd');
@@ -100,9 +100,9 @@ bool TestBufferBlob() {
 
   // Initialize a blob with an empty vector.
   std::vector<uint8> *vec3 = new std::vector<uint8>;
-  BufferBlob blob3(vec3);
-  TEST_ASSERT(blob1.Length() == 0);
-  num_bytes = blob1.Read(buffer, 0, 64);
+  blob.reset(new BufferBlob(vec3));
+  TEST_ASSERT(blob->Length() == 0);
+  num_bytes = blob->Read(buffer, 0, 64);
   TEST_ASSERT(num_bytes == 0);
 
   memset(buffer, 0, sizeof(buffer));
@@ -112,9 +112,9 @@ bool TestBufferBlob() {
   vec4->push_back('a');
   vec4->push_back('b');
   vec4->push_back('c');
-  BufferBlob blob4(vec4);
-  TEST_ASSERT(blob4.Length() == 3);
-  num_bytes = blob4.Read(buffer, 0, 64);
+  blob.reset(new BufferBlob(vec4));
+  TEST_ASSERT(blob->Length() == 3);
+  num_bytes = blob->Read(buffer, 0, 64);
   TEST_ASSERT(num_bytes == 3);
   TEST_ASSERT(buffer[0] == 'a');
   TEST_ASSERT(buffer[1] == 'b');
@@ -137,20 +137,21 @@ bool TestSliceBlob() {
 
   uint8 buffer[64];
 
-  BufferBlob blob_buffer;
-  TEST_ASSERT(6 == blob_buffer.Append("abcdef", 6));
-  blob_buffer.Finalize();
+  // Create a BufferBlob and verify it's contents.
+  scoped_refptr<BufferBlob> blob_buffer(new BufferBlob);
+  TEST_ASSERT(1 == blob_buffer->GetRef());
+  TEST_ASSERT(6 == blob_buffer->Append("abcdef", 6));
+  blob_buffer->Finalize();
 
-  // Clone the BufferBlob and verify it's contents.
-  scoped_ptr<BlobInterface> blob1(blob_buffer.Clone());
-  TEST_ASSERT(blob1.get());
-  TEST_ASSERT(blob1->Length() == 6);
+  TEST_ASSERT(blob_buffer->Length() == 6);
   memset(buffer, 0, sizeof(buffer));
-  TEST_ASSERT(6 == blob1->Read(buffer, 0, sizeof(buffer)));
+  TEST_ASSERT(6 == blob_buffer->Read(buffer, 0, sizeof(buffer)));
   TEST_ASSERT(memcmp(buffer, "abcdef", 7) == 0);
 
-  // Slice the BufferBlob and verify the slice.
-  blob1.reset(new SliceBlob(blob1.release(), 2, 3));  // abcdef -> cde
+  // Slice the BufferBlob and verify the slice.  abcdef -> cde
+  scoped_refptr<BlobInterface> blob1(new SliceBlob(blob_buffer.get(), 2, 3));
+  TEST_ASSERT(2 == blob_buffer->GetRef());
+  TEST_ASSERT(1 == blob1->GetRef());
   TEST_ASSERT(blob1->Length() == 3);
   memset(buffer, 0, sizeof(buffer));
   TEST_ASSERT(3 == blob1->Read(buffer, 0, sizeof(buffer)));
@@ -171,10 +172,11 @@ bool TestSliceBlob() {
   TEST_ASSERT(0 == blob1->Read(buffer, 4, sizeof(buffer)));
   TEST_ASSERT(memcmp(buffer, "", 1) == 0);
 
-  // Clone the slice and re-slice it.
-  scoped_ptr<BlobInterface> blob2(blob1->Clone());
-  TEST_ASSERT(blob2.get());
-  blob2.reset(new SliceBlob(blob2.release(), 1, 1));  // cde -> d
+  // Slice the existing slice.  cde -> d
+  scoped_refptr<BlobInterface> blob2(new SliceBlob(blob1.get(), 1, 1));
+  TEST_ASSERT(2 == blob_buffer->GetRef());
+  TEST_ASSERT(2 == blob1->GetRef());
+  TEST_ASSERT(1 == blob2->GetRef());
   TEST_ASSERT(blob2->Length() == 1);
   memset(buffer, 0, sizeof(buffer));
   TEST_ASSERT(1 == blob2->Read(buffer, 0, sizeof(buffer)));
@@ -187,8 +189,8 @@ bool TestSliceBlob() {
 
   // The caller is responsible for ensuring that offset and length are
   // non-negative.
-  // blob1.reset(new SliceBlob(blob_buffer.Clone(), -1, 1));
-  // blob1.reset(new SliceBlob(blob_buffer.Clone(), 1, -1));
+  // blob1 = new SliceBlob(blob_buffer, -1, 1));
+  // blob1 = new SliceBlob(blob_buffer, 1, -1));
 
   return true;
 }

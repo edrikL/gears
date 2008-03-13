@@ -43,10 +43,9 @@ class SliceBlob : public BlobInterface {
 
   virtual int Read(uint8 *destination, int64 offset, int max_bytes) const;
   virtual int64 Length() const;
-  virtual BlobInterface *Clone() const;
 
  private:
-  scoped_ptr<BlobInterface> blob_;
+  scoped_refptr<BlobInterface> blob_;
   int64 offset_, length_;
   DISALLOW_EVIL_CONSTRUCTORS(SliceBlob);
 };
