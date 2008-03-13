@@ -91,10 +91,10 @@ static bool WriteIconFile(const GearsDesktop::ShortcutInfo &shortcut,
   return true;
 }
 
-// Check that the shortcut we want to create doesn't overwrite an existing
-// file/directory.
-// If it's creation will overwrite an existing entity, allow it only if the 
-// entity in question is a shortcut we ourselves crearted.
+// Check whether there is an existing shortcut, and whether it was created by
+// us.  We only allow overwriting shortcuts we created, but it's okay if they
+// were written by another browser.  (This is best for users, and also helpful
+// during development, where we often create a shortcut in multiple browsers.)
 static bool CheckIllegalFileOverwrite(
                 const GearsDesktop::ShortcutInfo &shortcut) {
   // Check if Shortcut file exists.
@@ -135,11 +135,11 @@ static bool CheckIllegalFileOverwrite(
     // If there's no icon line, we didn't create it.
     return false;
   }
-  char *gears_dir = strstr(line, "Google Gears for");
+  // Look for the path where we store shortcut icons. (See paths*.cc.)
+  char *gears_dir = strstr(line, PRODUCT_FRIENDLY_NAME_ASCII " for ");
   char *newline = strchr(line, '\n');
   if (!gears_dir || !newline || newline < gears_dir) {
-    // The icon's path should have "Google Gears for" in it, or we didn't
-    // create it.
+    // If the icon's path doesn't match, we didn't create it.
     return false;
   }
 
