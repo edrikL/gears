@@ -176,6 +176,10 @@ bool CreateShortcutFileWin32(const std::string16 &name,
   link_path += name;
   link_path += STRING16(L".lnk");
 
+  // Check whether there is an existing shortcut, and whether it was created by
+  // us.  We only allow overwriting shortcuts we created, but it's okay if they
+  // were written by another browser.  (This is best for users, and also helpful
+  // during development, where we often create a shortcut in multiple browsers.)
 #ifdef WINCE
   // On WinCE we can't use the icon path to determine whether this shortcut was
   // created by Gears. We stay safe and fail if the shortcut already exists.
@@ -190,12 +194,9 @@ bool CreateShortcutFileWin32(const std::string16 &name,
     GetLongPathNameW(old_icon.c_str(), old_icon_buf.get(), old_icon_length);
     old_icon.assign(old_icon_buf.get());
 
-    // [naming] -- we hardcode the name of the path that Gears shortcut icons
-    // are stored in here because we want to be able to overwrite shortcuts no
-    // matter which browser wrote them. This is particularly important during
-    // testing, where a developer would frequently create the same shortcut with
-    // multiple browsers.
-    if (old_icon.find(STRING16(L"Google Gears for ")) == old_icon.npos) {
+    // Look for the path where we store shortcut icons. (See paths*.cc.)
+    if (old_icon.find(STRING16(PRODUCT_FRIENDLY_NAME L" for "))
+        == old_icon.npos) {
       *error = STRING16(L"Cannot overwrite shortcut not created by ");
       *error += PRODUCT_FRIENDLY_NAME;
       *error += STRING16(L".");

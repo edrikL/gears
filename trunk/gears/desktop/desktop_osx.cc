@@ -425,10 +425,10 @@ static bool RunAppleScript(const std::string16 &applescript) {
   return true;
 }
 
-// Check that the shortcut we want to create doesn't overwrite an existing
-// file/directory.
-// If it's creation will overwrite an existing entity, allow it only if the 
-// entity in question is a shortcut we ourselves crearted.
+// Check whether there is an existing shortcut, and whether it was created by
+// us.  We only allow overwriting shortcuts we created, but it's okay if they
+// were written by another browser.  (This is best for users, and also helpful
+// during development, where we often create a shortcut in multiple browsers.)
 static bool CheckIllegalFileOverwrite(
                 const GearsDesktop::ShortcutInfo &shortcut) {
   
@@ -443,10 +443,12 @@ static bool CheckIllegalFileOverwrite(
   if (File::Exists(application_path.c_str())) {
     return false;
   }
-  
+
+  // TODO(playmobil): Can we look for (PRODUCT_FRIENDLY_NAME " for "), as we do
+  // on other platforms?
   if (File::DirectoryExists(application_path.c_str())) {
-    // Check for the existance of a launch.sh file inside the application bundle
-    // If this exists, we assume that the shortcut was created by Gears.
+    // Check for the existence of a launch.sh file inside the application bundle
+    // If this exists, we assume the shortcut was created by Gears.
     std::string16 launch_script_path = application_path;
     launch_script_path += STRING16(L"/Contents/MacOS/") + kLaunchScriptFilename;
     
