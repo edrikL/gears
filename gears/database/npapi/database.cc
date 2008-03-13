@@ -232,7 +232,12 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
       sql_status = sqlite3_bind_double(stmt, sql_index, arg_double);
     } else if (arg_array->GetElementAsBool(i, &arg_bool)) {
       arg_str = arg_bool ? STRING16(L"true") : STRING16(L"false");
-      LOG(("        Parameter %i: %s", i, arg_str));
+// TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
+#ifdef DEBUG
+      std::string str_utf8;
+      String16ToUTF8(arg_str.c_str(), arg_str.length(), &str_utf8);
+      LOG(("        Parameter %i: %s", i, str_utf8.c_str()));
+#endif
       sql_status = sqlite3_bind_text16(
           stmt, sql_index, arg_str.c_str(), -1,
           SQLITE_TRANSIENT); // so SQLite copies string immediately
