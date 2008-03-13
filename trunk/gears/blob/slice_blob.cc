@@ -55,11 +55,4 @@ int64 SliceBlob::Length() const {
   return length_;
 }
 
-BlobInterface *SliceBlob::Clone() const {
-  if (BlobInterface *cloned = blob_->Clone()) {
-    return new SliceBlob(cloned, offset_, length_);
-  }
-  return NULL;
-}
-
 #endif  // not OFFICIAL_BUILD

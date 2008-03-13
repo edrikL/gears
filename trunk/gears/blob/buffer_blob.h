@@ -45,8 +45,6 @@ class BufferBlob : public BlobInterface {
   // contents.  buffer must have been created on the heap with new.
   BufferBlob(std::vector<uint8> *buffer);
 
-  ~BufferBlob() {}
-
   // Returns 0 and does nothing if this is read-only.  Otherwise, attempts to
   // write num_bytes of source to the end of this and returns the number of
   // bytes actually written.
@@ -63,8 +61,6 @@ class BufferBlob : public BlobInterface {
   int Read(uint8 *destination, int64 offset, int max_bytes) const;
 
   int64 Length() const;
-
-  BlobInterface *Clone() const;
 
  private:
   std::vector<uint8> buffer_;

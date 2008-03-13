@@ -68,8 +68,9 @@ NS_IMETHODIMP GearsBlob::GetLength(PRInt64 *retval) {
 }
 
 
-NS_IMETHODIMP GearsBlob::GetContents(const BlobInterface** retval) {
+NS_IMETHODIMP GearsBlob::GetContents(BlobInterface **retval) {
   *retval = contents_.get();
+  contents_->Ref();
   return NS_OK;
 }
 
@@ -104,12 +105,9 @@ NS_IMETHODIMP GearsBlob::Slice(//PRInt64 offset
     length = (blob_size > offset) ? blob_size - offset : 0;
   }
 
-  // Clone the blob and slice it.
-  scoped_ptr<BlobInterface> cloned(contents_->Clone());
-  if (!cloned.get()) {
-    RETURN_EXCEPTION(STRING16(L"Blob cloning failed."));
-  }
-  cloned.reset(new SliceBlob(cloned.release(), offset, length));
+  // Slice the blob.
+  scoped_refptr<BlobInterface> sliced(new SliceBlob(contents_.get(), offset,
+                                                    length));
 
   // Expose the object to JavaScript via nsCOM.
   GearsBlob* blob_internal = new GearsBlob;
@@ -121,7 +119,7 @@ NS_IMETHODIMP GearsBlob::Slice(//PRInt64 offset
     RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
   }
 
-  blob_internal->Reset(cloned.release());
+  blob_internal->Reset(sliced.get());
 
   NS_ADDREF(*retval = blob_external);
   RETURN_NORMAL();

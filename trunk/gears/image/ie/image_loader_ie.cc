@@ -48,8 +48,9 @@ HRESULT GearsImageLoader::createImageFromBlob(IUnknown *blob,
   if (FAILED(hr)) {
     RETURN_EXCEPTION(STRING16(L"Error getting blob contents."));
   }
-  const BlobInterface *blob_contents =
-      reinterpret_cast<const BlobInterface*>(var.byref);
+  scoped_refptr<BlobInterface> blob_contents(
+      reinterpret_cast<BlobInterface*>(var.byref));
+  blob_contents->Unref();
 
   // Create the image
   CComObject<GearsImage> *image = NULL;
@@ -61,7 +62,7 @@ HRESULT GearsImageLoader::createImageFromBlob(IUnknown *blob,
   Image *image_contents = new Image();
   image->Init(image_contents);
   std::string16 error;
-  if (!image_contents->Init(blob_contents, &error)) {
+  if (!image_contents->Init(blob_contents.get(), &error)) {
     RETURN_EXCEPTION(error.c_str());
   }
   if (!image->InitBaseFromSibling(this)) {

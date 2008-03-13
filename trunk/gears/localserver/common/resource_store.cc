@@ -76,7 +76,7 @@ static void AppendHeader(std::string16 &headers,
 // BlobToItem
 //------------------------------------------------------------------------------
 // static
-bool ResourceStore::BlobToItem(const BlobInterface *blob,
+bool ResourceStore::BlobToItem(BlobInterface *blob,
                                const char16 *full_url,
                                Item *item) {
   int64 file_size = blob->Length();

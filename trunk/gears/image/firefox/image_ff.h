@@ -36,10 +36,9 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
-
 #include "gears/blob/blob_ff.h"
 #include "gears/image/common/image.h"
-
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 // Object identifiers
 extern const char *kGearsImageClassName;

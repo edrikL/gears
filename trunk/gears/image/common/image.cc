@@ -36,18 +36,18 @@
 
 struct BlobReader {
   gdIOCtx io_ctx;
-  const BlobInterface *blob;
+  scoped_refptr<BlobInterface> blob;
   int64 pos;
 };
 
 struct BlobWriter {
   gdIOCtx io_ctx;
-  scoped_ptr<BufferBlob> blob;
+  scoped_refptr<BufferBlob> blob;
 };
 
 // The resultant BlobReader satisfies libGD's gdIOCtx structure for reading
 // from blob.
-static BlobReader *NewBlobReader(const BlobInterface *blob);
+static BlobReader *NewBlobReader(BlobInterface *blob);
 
 // The resultant BlobWriter satisfies libGD's gdIOCtx structure for writing.
 static BlobWriter *NewBlobWriter();
@@ -74,7 +74,7 @@ void blobPutC(gdIOCtx *ctx, int byte);
 // the number of bytes actually written.
 int blobPutBuf(gdIOCtx *ctx, const void *src, int wanted);
 
-BlobReader *NewBlobReader(const BlobInterface *blob) {
+BlobReader *NewBlobReader(BlobInterface *blob) {
   assert(blob);
   BlobReader *reader = new BlobReader;
   reinterpret_cast<gdIOCtx*>(reader)->getC = blobGetC;
@@ -98,13 +98,14 @@ BlobWriter *NewBlobWriter() {
   reinterpret_cast<gdIOCtx*>(writer)->seek = NULL;
   reinterpret_cast<gdIOCtx*>(writer)->tell = NULL;
   reinterpret_cast<gdIOCtx*>(writer)->gd_free = NULL;
-  writer->blob.reset(new BufferBlob());
+  writer->blob = new BufferBlob;
   return writer;
 }
 
 BlobInterface *BlobWriterToBlob(BlobWriter *blob_writer) {
   blob_writer->blob->Finalize();
-  return blob_writer->blob.release();
+  blob_writer->blob->Ref();
+  return blob_writer->blob.get();
 }
 
 int blobGetC(gdIOCtx *ctx) {
@@ -141,7 +142,7 @@ int blobPutBuf(gdIOCtx *ctx, const void *src, int wanted) {
 Image::Image() : img_ptr_(NULL) {
 }
 
-bool Image::Init(const BlobInterface *blob, std::string16 *error) {
+bool Image::Init(BlobInterface *blob, std::string16 *error) {
   const int kHeaderSize = 4;  // At least the length of the longest header below
   const char *kPngHeader = "\x89PNG";
   const char *kGifHeader = "GIF8";

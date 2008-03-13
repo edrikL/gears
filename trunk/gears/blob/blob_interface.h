@@ -31,8 +31,9 @@
 #else
 
 #include "gears/base/common/common.h"
+#include "gears/base/common/scoped_refptr.h"
 
-class BlobInterface {
+class BlobInterface : public RefCounted {
  public:
   // Returns the number of bytes successfully read.  The offset is relative
   // to the beginning of the blob contents, and is not related to previous
@@ -44,14 +45,9 @@ class BlobInterface {
   // file's size change underneath it.
   virtual int64 Length() const = 0;
 
-  // Returns a new object that is an independent copy of the current Blob, or
-  // NULL if the Blob cannot be cloned.
-  virtual BlobInterface *Clone() const = 0;
-
-  virtual ~BlobInterface() {}
-
  protected:
   BlobInterface() {}
+  virtual ~BlobInterface() {}
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(BlobInterface);
@@ -67,10 +63,6 @@ class EmptyBlob : public BlobInterface {
 
   int64 Length() const {
     return 0;
-  }
-
-  BlobInterface *Clone() const {
-    return new EmptyBlob;
   }
 
  private:

@@ -39,13 +39,9 @@ class FileBlob : public BlobInterface {
   // If it is not valid, Read() and Length() will return 0.
   FileBlob(const std::string16& filename);
 
-  ~FileBlob() {}
-
   int Read(uint8 *destination, int64 offset, int max_bytes) const;
 
   int64 Length() const;
-
-  BlobInterface *Clone() const;
 
  private:
   std::string16 filename_;

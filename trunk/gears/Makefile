@@ -409,6 +409,7 @@ FF_CPPSRCS	+= \
 		paths_ff.cc \
 		permissions_db.cc \
 		png_utils.cc \
+		scoped_refptr_test.cc \
 		security_model.cc \
 		security_model_test.cc \
 		serialization.cc \
@@ -478,6 +479,7 @@ IE_CPPSRCS	+= \
 		paths_ie.cc \
 		permissions_db.cc \
 		png_utils.cc \
+		scoped_refptr_test.cc \
 		security_model.cc \
 		security_model_test.cc \
 		serialization.cc \
@@ -546,6 +548,7 @@ IEMOBILE_CPPSRCS	+= \
 		paths.cc \
 		paths_ie.cc \
 		permissions_db.cc \
+		scoped_refptr_test.cc \
 		security_model.cc \
 		security_model_test.cc \
 		serialization.cc \
@@ -618,6 +621,7 @@ NPAPI_CPPSRCS	+= \
 		permissions_db.cc \
 		plugin.cc \
 		png_utils.cc \
+		scoped_refptr_test.cc \
 		security_model.cc \
 		security_model_test.cc \
 		serialization.cc \

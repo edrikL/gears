@@ -56,7 +56,7 @@ class Image {
 
   // Initializes this with the contents of blob and returns true, or returns
   // false on failure.
-  bool Init(const BlobInterface *blob, std::string16 *error);
+  bool Init(BlobInterface *blob, std::string16 *error);
 
   // Resizes the image, or returns false if width or height are negative, or if
   // width or height are larger than kMaxImageDimension.

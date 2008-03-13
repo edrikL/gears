@@ -83,11 +83,11 @@ bool FileDialogUtils::FiltersToVector(const JsArray* filters,
 // Returns: false on failure
 // Parameters:
 //  module - in - used for constructing objects
-//  blob_internal - in - this linked_ptr is released, base takes ownership
+//  blob_internal - in - base acquires a reference to this blob
 //  base - out - addrefed interface placed in here
 //  error - out - error message is placed here
 static bool CreateBlob(const ModuleImplBaseClass& module,
-                       linked_ptr<BlobInterface>* blob_internal,
+                       BlobInterface* blob_internal,
                        GearsBlobInterface** base,
                        std::string16* error) {
 #if BROWSER_FF
@@ -103,9 +103,7 @@ static bool CreateBlob(const ModuleImplBaseClass& module,
       return false;
     }
 
-    // Blob pointers need to be released as they are COM objects rather than
-    // javascript tokens. GearsBlob takes ownership.
-    gears_blob->Reset(blob_internal->release());
+    gears_blob->Reset(blob_internal);
 
     // disambiguate nsISupports
     *base = gears_blob.release();
@@ -127,9 +125,7 @@ static bool CreateBlob(const ModuleImplBaseClass& module,
       return false;
     }
 
-    // Blob pointers need to be released as they are COM objects rather than
-    // javascript tokens. GearsBlob takes ownership.
-    gears_blob->Reset(blob_internal->release());
+    gears_blob->Reset(blob_internal);
 
     // disambiguate IUnknown
     CComQIPtr<GearsBlobInterface> blob_external = gears_blob;
@@ -160,17 +156,16 @@ bool FileDialogUtils::FilesToJsObjectArray(
   const int size = selected_files.size();
   std::vector<std::string16> base_names;
   base_names.reserve(size);
-  std::vector< linked_ptr<BlobInterface> > blobs;
+  std::vector< scoped_refptr<BlobInterface> > blobs;
   blobs.reserve(size);
 
   // create all blobs and base names
   for (std::vector<std::string16>::const_iterator it = selected_files.begin();
       it != selected_files.end(); ++it) {
     std::string16 base_name;
-    linked_ptr<BlobInterface> blob(new FileBlob(it->c_str()));
-    if (blob.get() && File::GetBaseName(*it, &base_name)) {
+    if (File::GetBaseName(*it, &base_name)) {
       base_names.push_back(base_name);
-      blobs.push_back(blob);
+      blobs.push_back(scoped_refptr<BlobInterface>(new FileBlob(it->c_str())));
     } else {
       *error = STRING16(L"Failed to create blob.");
       return false;
@@ -199,7 +194,7 @@ bool FileDialogUtils::FilesToJsObjectArray(
   // Blob support is not ready for prime time yet
 #else
     GearsBlobInterface* base = NULL;
-    if (!CreateBlob(module, &blobs[i], &base, error))
+    if (!CreateBlob(module, blobs[i].get(), &base, error))
       return false;
 
 #if BROWSER_IE
