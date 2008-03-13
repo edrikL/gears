@@ -36,7 +36,7 @@
 #if BROWSER_IE
 #include "gears/base/ie/atl_headers.h"
 #elif BROWSER_SAFARI
-#include <CoreFoundation/CoreFoundation.h>
+#include "gears/base/safari/cf_string_utils.h"
 #endif
 
 //------------------------------------------------------------------------------
@@ -132,7 +132,6 @@ const char16 *memmatch(const char16 *haystack, size_t haylen,
                 ::memmatch(haystack, haylen, needle, neelen);
 }
 
-
 //------------------------------------------------------------------------------
 // UTF8ToString16
 //------------------------------------------------------------------------------
@@ -165,28 +164,7 @@ bool UTF8ToString16(const char *in, int len, std::string16 *out16) {
   out16->assign(ns_out.get());
   return true;
 #elif BROWSER_SAFARI
-  CFStringRef inStr = CFStringCreateWithBytes(NULL, (const UInt8 *)in, len, 
-                                              kCFStringEncodingUTF8, false);
-  const UniChar *outStr = CFStringGetCharactersPtr(inStr);
-  CFIndex length = CFStringGetLength(inStr);
-  
-  if (!length) {
-    CFRelease(inStr);
-    return false;
-  }
-  
-  // If the outStr is empty, we'll have to convert in a slower way
-  if (!outStr) {
-    scoped_array<UniChar> buffer(new UniChar[length + 1]);
-    CFStringGetCharacters(inStr, CFRangeMake(0, length), buffer.get());
-    buffer[length] = 0;
-    out16->assign(buffer.get());
-  } else {
-    out16->assign(outStr);
-  }
-  
-  CFRelease(inStr);
-  return true;
+  return ConvertToString16UsingEncoding(in, len, kCFStringEncodingUTF8, out16);
 #endif
 }
 
