@@ -25,6 +25,7 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 #include "gears/base/common/string_utils.h"
+#include "gears/base/safari/scoped_cf.h"
 #include "gears/base/safari/cf_string_utils.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
@@ -53,4 +54,36 @@ CFStringRef CFStringCreateWithString16(const char16 *str) {
   
   return CFStringCreateWithCharacters(NULL, str, 
                                       std::char_traits<char16>::length(str));
+}
+
+bool ConvertToString16UsingEncoding(const char *in, int len, 
+                                    CFStringEncoding encoding, 
+                                    std::string16 *out16) {
+  scoped_cftype<CFStringRef> in_str(CFStringCreateWithBytes(NULL, 
+                                                            (const UInt8 *)in, 
+                                                            len, 
+                                                            encoding, 
+                                                            false));
+  if (!in_str.get()) {
+    return false;
+  }
+  
+  const UniChar *out_str = CFStringGetCharactersPtr(in_str.get());
+  CFIndex length = CFStringGetLength(in_str.get());
+  
+  if (!length) {
+    return false;
+  }
+  
+  // If the outStr is empty, we'll have to convert in a slower way
+  if (!out_str) {
+    scoped_array<UniChar> buffer(new UniChar[length + 1]);
+    CFStringGetCharacters(in_str.get(), CFRangeMake(0, length), buffer.get());
+    buffer[length] = 0;
+    out16->assign(buffer.get());
+  } else {
+    out16->assign(out_str);
+  }
+  
+  return true;
 }

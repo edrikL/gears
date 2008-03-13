@@ -63,6 +63,11 @@ bool CFStringRefToString16(CFStringRef str, std::string16 *out16);
 // CFStringRef.
 CFStringRef CFStringCreateWithString16(const char16 *str);
 
+// Convert an input buffer with the specified encoding into a std::string16.
+bool ConvertToString16UsingEncoding(const char *in, int len,
+                                    CFStringEncoding encoding,
+                                    std::string16 *out16);
+
 #endif  // C++
 
 #endif  // GEARS_BASE_SAFARI_STRING_UTILS_H__
