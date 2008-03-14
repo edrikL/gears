@@ -1,0 +1,376 @@
+#summary Audio in the browser
+#labels DesignDoc,Featured
+
+= Introduction =
+The purpose of this module is to provide an effective (and simple) Audio API through Gears. 
+
+= Requirements =
+   1 Playback & Recording (Basic)
+   1 Multiple channels and mixing (Basic)
+   1 Editing (Adv)
+   1 3D positioned audio (Adv)
+
+= Scope =
+The scope of this document is limited to items (1) and (2) above. Items (3) and (4) are briefly discussed.
+
+= High level Design =
+The Audio API is designed similar to the *HTML5 HTMLAudioElement* (http://www.whatwg.org/specs/web-apps/current-work/#audio). The audio playback, transform, mixing and recording all happen in the CPU (since CPUs today are fast and basic audio mixing/processing takes very little usage).
+
+   * *_Libraries:_* For the actual platform dependent audio play and record capabilities, we will build on top of the open source PortAudio project (http://www.portaudio.com). To know the stack portaudio is supported on, look at http://www.portaudio.com/status.html. SDL seems another possible candidate.
+
+   * *_Formats:_*
+      * _WAV_: As proposed by the HTML5 spec, the WAVE format will be supported with audio encoded using the PCM format.
+      * _OGG_: The opensource libOGG project will be used, pending discussion about patent and license issues. The _Tremor_ variant needs to be used for integer-only encoding.
+      * _MP3_: The opensource LAME project will be used, pending discussion about patent and license issues.
+     Both MP3 and OGG audio formats will be supported (for both import and export). However, integer-only encoding needs to be supported so that this can work on mobiles (where FP emulation is way slower than realtime and very memory intensive). The only open/free codec known with integer-only encoding seems to be _speex_. If royalty and license issues cause trouble with other codecs, speex can be the fallback since most audio recorded will be human speech.
+
+   * *_Blobs:_* The Blob is used as a data structure to hold audio data during playback and recording. Streaming in and out capabilities need to be added to such blobs, i.e. get callbacks from blobs as the data is being received from a url, and the ability to give data in chunks to a blob (as it becomes available) when it sends out to a remote url.
+      * Blobs can be either in-memory or backed by a file or a stream.
+      * For a given URL, the LocalServer can stream data into it and expose a handle to the blob to the programmer, if needed.
+      * The LocalServer can also expose contents of a blob (initiated by other means) via HTTP through an URL.
+
+   * *_Classes:_* _Audio_ and _AudioRecorder_ classes are defined separately to handle playback and recording respectively. The _Audio_ class is designed in line with the HTML5 _HTMLAudioElement_.
+
+   * *_Mixing:_* The _audio.play()_ methods need to be asynchronous, so that, multiple channels/audio files can be played at the same time. It is assumed that the underlying library/drivers will handle the mixing. If large number of channels could not be mixed at the same time by the OS audio interface, a software mixer which works under the hood and does the mixing of all played audio into a single stream for the platform audio interface, will need to be added.
+
+   * *_Security considerations:_*
+      * Get permission from the user before recording, to avoid snooping into conversations happening at the user end. Also, provide the user a visible/audible indication whenever recording is triggered on.
+      * Streaming content onto player - interactive files could be malicious.
+
+= JS interface =
+
+*_Media_ class (borrowed from HTML5 spec):*
+We model the API based on _HTMLAudioElement_ in the HTML5 spec. Look at http://www.whatwg.org/specs/web-apps/current-work/#media5 for an explanation of the members of this class. We include an additional method to get a handle to the MediaBlob, and an additional metadata field.
+{{{
+Media class
+{  
+  // error state
+  readonly attribute MediaError error;
+
+  // network state
+           attribute DOMString src;
+  readonly attribute DOMString currentSrc;
+  const unsigned short EMPTY = 0;
+  const unsigned short LOADING = 1;
+  const unsigned short LOADED_METADATA = 2;
+  const unsigned short LOADED_FIRST_FRAME = 3;
+  const unsigned short LOADED = 4;
+  readonly attribute unsigned short networkState;
+  readonly attribute float bufferingRate;
+  readonly attribute TimeRanges buffered;
+  void load();
+
+  // ready state
+  const unsigned short DATA_UNAVAILABLE = 0;
+  const unsigned short CAN_SHOW_CURRENT_FRAME = 1;
+  const unsigned short CAN_PLAY = 2;
+  const unsigned short CAN_PLAY_THROUGH = 3;
+  readonly attribute unsigned short readyState;
+  readonly attribute boolean seeking;
+
+  // playback state
+           attribute float currentTime;
+  readonly attribute float duration;
+  readonly attribute boolean paused;
+           attribute float defaultPlaybackRate;
+           attribute float playbackRate;
+  readonly attribute TimeRanges played;
+  readonly attribute TimeRanges seekable;
+  readonly attribute boolean ended;
+           attribute boolean autoplay;
+  void play();
+  void pause();
+
+  // looping
+           attribute float start;
+           attribute float end;
+           attribute float loopStart;
+           attribute float loopEnd;
+           attribute unsigned long playCount;
+           attribute unsigned long currentLoop;
+
+  // cue ranges
+  void addCueRange(in DOMString className, in float start, 
+        in float end, in boolean pauseOnExit, 
+        in VoidCallback enterCallback, 
+        in VoidCallback exitCallback);
+  void removeCueRanges(in DOMString className);
+
+  // controls
+           attribute boolean controls;
+           attribute float volume;
+           attribute boolean muted;
+
+  // access blob
+  MediaBlob getMediaBlob();
+
+  // metadata
+           attribute map metadata;
+};
+}}}
+
+*_Events from Media class:_*
+The media class also fires the following events (HTML5 does not exactly define some of these events and the handling framework yet). Section _'3.2.9.12 - Event summary'_ in http://www.whatwg.org/specs/web-apps/current-work/ helps understand what these events are, and when they are fired. Handlers of these events can decide what to do on event notifications:
+_begin, progress, loadedmetadata, loadedfirstframe, load, abort, error, emptied, stalled, play, pause, waiting, timeupdate, ended, dataunavailable, canshowcurrentframe, canplay, canplaythrough, ratechange, durationchange, volumechange_
+
+*_Audio class : Media_*
+
+The additional properties below are sound channel specific properties.
+{{{
+Audio class : Media
+{
+  // Channel type
+  const unsigned short MONO = 1;
+  const unsigned short STEREO = 2;
+  readonly attribute short channelType;
+
+  // current amplitude of left channel [0 to 1]
+  readonly attribute float leftPeak;
+
+  // current amplitude of right channel [0 to 1]
+  readonly attribute float rightPeak;
+
+  // tranform array attributes follow:
+  // how much of left input goes to the left output
+  const unsigned short LEFT_TO_LEFT = 1;
+  // how much of left input goes to the right output
+  const unsigned short LEFT_TO_RIGHT = 2;
+  // how much of right input goes to the left output
+  const unsigned short RIGHT_TO_LEFT = 3;
+  // how much of right input goes to the right output
+  const unsigned short RIGHT_TO_RIGHT = 4;
+  // bass control [1-10]
+  const unsigned short BASS = 5;
+  // treble control [1-10]
+  const unsigned short TREBLE = 6;
+  // An array specifying the transform to be applied on
+  // channels in this audio. Array has a list of 
+  // attribute:numeric value pairs.
+         attribute Array transform;
+ 
+  // an object can be got from 
+  // - google.gears.factory.create('beta.audio')
+};
+}}}
+
+*_MediaRecorder class_*
+{{{
+MediaRecorder class
+{
+  // ------ error state ------
+  readonly attribute MediaError error;
+ 
+  // ----- recording state ------
+  readonly attribute boolean recording;
+           attribute int bitRate;
+           attribute int format; 
+           attribute int bitsPerSample;
+  // the amount of sound detected by the microphone 
+  // - [0 - 100]
+  readonly attribute int activityLevel;
+           // specifies if blob is streamed as 
+           // and when it is written to, or not.
+           attribute boolean autoStream;
+
+  // ------- controls ---------
+           attribute float volume;
+  readonly attribute float position;
+           attribute boolean muted;
+           attribute boolean paused;
+
+  // -------- events --------
+  void addCueRange(in DOMString className, 
+                  in float start, in float end, 
+                  in boolean pauseOnExit,
+                  in VoidCallback enterCallback, 
+                  in VoidCallback exitCallback);
+  void removeCueRanges(in DOMString className);
+
+  // -------- record functionality --------
+         // the HTTP post URL to send the recorded data to  
+         attribute DOMString destination;
+  void record();
+  void pause();
+  void stop();
+
+  // -------- access blob -------
+  MediaBlob getMediaBlob();
+};     
+}}}
+
+*_Events from MediaRecorder class:_*
+
+The MediaRecorder class throws the following events:
+   * _canstream_ - Some data was just made available for streaming now.
+   * _pause_ - Paused.
+   * _record_ - Recording starts.
+   * _ended_ - Finished recording.
+
+*_AudioRecorder class : MediaRecorder_*
+{{{
+AudioRecorder class : MediaRecorder
+{
+  // the amount of sound required to activate 
+  // the microphone - same units as activityLevel - [0-100] 
+  attribute int silenceLevel;
+ 
+  // an object of this class can be got from 
+  // google.gears.factory.create('beta.audiorecorder')
+};
+}}}
+We want to be able to support the following use-cases w.r.t. recording:
+   * Send the recorded audio to a HTTP post URL/webservice (upload) - The destination attribute can be used to set the post URL to which the recorded data need to be streamed to.
+   * Save the recorded audio to a local file (after compressing to some format specified) - One can get a handle to the blob and export it to a local file (using the export method in the blob class below).
+   * Add the recorded audio as an attachment in a mail - The mail application should be able to access the blob data in chunks through XHR calls that invoke the slice() method (after it is compressed and uuencoded). 
+
+*_MediaBlob class :  Blob_*
+{{{
+MediaBlob class : Blob
+{  
+  // ---- properties
+  // The type attribute gives the type of the media 
+  // resource to help the user agent determine if it
+  // can play this resource before downloading it. 
+  // The format is same as what is recommended in 
+  // HTML5 - eg., "audio/ogg; codecs=speex"
+  readonly attribute String type;
+           attribute map metadata;
+
+  void exportToFile(in String fileName, 
+                    in int encodeFormat); 
+};
+}}}
+
+*_AudioBlob class : MediaBlob_*
+{{{
+AudioBlob class : MediaBlob
+{
+   // no new members
+};
+}}}
+
+*_Others (borrowed from HTML5 spec):_*
+
+{{{
+interface TimeRanges {
+  readonly attribute unsigned long length;
+  float start(in unsigned long index);
+  float end(in unsigned long index);
+};
+
+
+interface VoidCallback {
+  void handleEvent();
+};
+}}}
+
+= Deviations from HTML5 =
+   * an additional metadata field in Media class
+   * additional channel properties specified in the Audio class
+   * separate class for MediaRecorder
+
+= Sample code =
+
+*_Simple example - playback flow_*:
+{{{
+var audio = google.gears.factory.create('beta.audio');
+audio.src = 'http://blahblahblob.com/sampleaudio.wav';
+audio.load();
+audio.play();
+
+//a handle to the blob can be got by invoking, if needed.
+var blob = audio.getMediaBlob();
+}}}
+
+*_Simple example - record flow_*:
+{{{
+var recorder = google.gears.factory.create('beta.audiorecorder');
+recorder.destination = <http post url>
+recorder.autoStream = true;
+recorder.record(); //asynchronous call
+}}}
+
+= Advanced topics =
+== Thoughts on 3D positioned audio ==
+   For 3D, we would like to take advantage of hardware, and also provide a more sophisticated abstraction as compared to that of regular audio.
+    * DirectSound3D was quite useful in the past, it was available on all latest windows versions. But with Windows Vista, there have been changes in the audio driver model and DS3D audio is not fully supported now. There have been talks that MS is looking to bring in XAudio2 (xbox audio engine) to the PC soon and it may replace DirectSound, so uncertain at the moment. Plus this is Windows only. (http://en.wikipedia.org/wiki/DirectSound3D)
+    * OpenAL is specifically designed for 3D positioned audio, has implementations available for the popular OSes. However these are binary distributions which are drivers installed by the user, and software which come along with the hardware bought from sound device manufacturers such as Creative. There is an SDK available which we can use to code for this API. (See http://en.wikipedia.org/wiki/Open_Al, http://www.openal.org/platforms.html)
+
+For supporting 3D audio, we can provide a minimal JS wrapper on top of the OpenAL 1.1 API (http://www.openal.org/openal_webstf/specs/OpenAL11Specification.pdf). We could add 3D position and velocity information to the *Audio* class, and make it similar to an OpenAL source. This should be an easy extension of the above API.
+
+*_3DAudio class : Audio_*
+
+A _3DAudio_ object is similar to the notion of an openAL source. The current model assumes the AL_SOURCE_RELATIVE model where all positions and velocities of sources are with respect to the listener. This API needs to be extended to an absolute model too (This is what would be very useful in most games).
+{{{
+3DAudio class : Audio
+{
+   // position of the source
+   attribute float xposition;
+   attribute float yposition;
+   attribute float zposition;
+
+   // velocity of the source
+   attribute float xspeed;
+   attribute float yspeed;
+   attribute float zspeed;
+};
+}}}
+
+*_Simple example  - 3D sound play (Bill versus Mike)_*
+
+{{{
+// Bill is on the left, moving towards Mike
+var audio1 = google.gears.factory.create('beta.3Daudio');
+audio1.src = 'http://blahblahblob.com/Bill.wav';
+audio1.xposition = -50;
+audio1.yposition = 10;
+audio1.xvelocity = 20;
+audio1.load();
+
+// Mike is on the right, moving towards Bill
+var audio2 = google.gears.factory.create('beta.3Daudio');
+audio2.src = 'http://blahblahblob.com/Mike.wav';
+audio2.load();
+audio2.xposition = 50;
+audio2.yposition = 10;
+audio2.xvelocity = -25;
+
+// mixing automatically happens when play (being asynchronous) is invoked - One can play these audio sources in separate event handlers.
+audio1.play();
+audio2.play();
+}}}
+
+== Editing ==
+An utility class is added, to expose features like editing.
+
+{{{
+interface MediaUtils
+{
+  // methods supported only on raw uncompressed blobs. 
+  // can be used for cutting and editing media.
+  void insert(in MediaBlob sourceBlob,
+              in MediaBlob destBlob, 
+              in int insertTime,
+              in int copyStartTime, 
+              in int copyEndTime);
+
+  void delete(in MediaBlob sourceBlob,
+              in int startTime,
+              in int endTime); 
+
+  // when passed a list of audioObjects, can queue up play
+  // requests and fire them in one go - to avoid phasing
+  // effects and synchronize play of all these objects.
+  void play(in Array mediaObjects);
+
+  // returns currently active/playing media objects.
+  Array getActiveMedia();
+};
+
+
+interface AudioUtils : MediaUtils
+
+{
+    // no new members
+};
+}}}
