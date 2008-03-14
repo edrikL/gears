@@ -58,8 +58,6 @@ function setupSample() {
   // Make sure we have Gears. If not, tell the user.
   if (!window.google || !google.gears) {
     if (confirm("This demo requires Gears to be installed. Install now?")) {
-      // TODO(steveblock): Need to modify the install page to support mobile
-      // devices before this version of the page goes 'live'.
       var spliceStart = location.href.indexOf("/samples");
       location.href =
         location.href.substring(0, spliceStart) + "/install.html";
