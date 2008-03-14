@@ -16,7 +16,7 @@ The scope of this document is limited to items (1) and (2) above. Items (3) and 
 = High level Design =
 The Audio API is designed similar to the [http://www.whatwg.org/specs/web-apps/current-work/#audio HTMLAudioElement] in the HTML5 specification. The audio playback, transform, mixing and recording all happen in the CPU (since CPUs today are fast and basic audio mixing/processing takes very little usage).
 
-  * *_Libraries:_* For the actual platform dependent audio play and record capabilities, we will build on top of the open source [http://www.portaudio.com PortAudio] project. To know the stack portaudio is supported on, look at http://www.portaudio.com/status.html. SDL seems another possible candidate.
+  * *_Libraries:_* For the actual platform dependent audio play and record capabilities, we will build on top of the open source [http://www.portaudio.com PortAudio] project. To know the stack portaudio is supported on, look at http://www.portaudio.com/status.html. SDL seems to be another possible candidate.
 
   * *_Formats:_*
     * _WAV_: As proposed by the HTML5 spec, the WAVE format will be supported with audio encoded using the PCM format.
@@ -29,9 +29,9 @@ The Audio API is designed similar to the [http://www.whatwg.org/specs/web-apps/c
     * For a given URL, the LocalServer can stream data into it and expose a handle to the blob to the programmer, if needed.
     * The LocalServer can also expose contents of a blob (initiated by other means) via HTTP through an URL.
 
-  * *_Classes:_* _Audio_ and _AudioRecorder_ classes are defined separately to handle playback and recording respectively. The _Audio_ class is designed in line with the HTML5 _HTMLAudioElement_.
+  * *_Classes:_* 'Audio' and AudioRecorder' classes are defined separately to handle playback and recording respectively. The 'Audio' class is designed in line with the HTML5 _HTMLAudioElement_.
 
-  * *_Mixing:_* The _audio.play()_ methods need to be asynchronous, so that, multiple channels/audio files can be played at the same time. It is assumed that the underlying library/drivers will handle the mixing. If large number of channels could not be mixed at the same time by the OS audio interface, a software mixer which works under the hood and does the mixing of all played audio into a single stream for the platform audio interface, will need to be added.
+  * *_Mixing:_* The 'audio.play()' methods need to be asynchronous, so that, multiple channels/audio files can be played at the same time. It is assumed that the underlying library/drivers will handle the mixing. If large number of channels could not be mixed at the same time by the OS audio interface, a software mixer which works under the hood and does the mixing of all played audio into a single stream for the platform audio interface, will need to be added.
 
   * *_Security considerations:_*
     * Get permission from the user before recording, to avoid snooping into conversations happening at the user end. Also, provide the user a visible/audible indication whenever recording is triggered on.
@@ -90,10 +90,9 @@ Media class
            attribute unsigned long currentLoop;
 
   // cue ranges
-  void addCueRange(in DOMString className, in float start, 
-        in float end, in boolean pauseOnExit, 
-        in VoidCallback enterCallback, 
-        in VoidCallback exitCallback);
+  void addCueRange(in DOMString className, in float start, in float end, 
+        in boolean pauseOnExit, 
+        in VoidCallback enterCallback, in VoidCallback exitCallback);
   void removeCueRanges(in DOMString className);
 
   // controls
@@ -102,6 +101,7 @@ Media class
            attribute boolean muted;
 
   // access blob
+  // Returns: the handle to the media blob object containing the media data
   MediaBlob getMediaBlob();
 
   // metadata
@@ -117,6 +117,9 @@ _begin, progress, loadedmetadata, loadedfirstframe, load, abort, error, emptied,
 
 The additional properties below are sound channel specific properties.
 {{{
+
+// an object can be got from 
+// - google.gears.factory.create('beta.audio')
 Audio class : Media
 {
   // Channel type
@@ -143,13 +146,10 @@ Audio class : Media
   const unsigned short BASS = 5;
   // treble control [1-10]
   const unsigned short TREBLE = 6;
-  // An array specifying the transform to be applied on
-  // channels in this audio. Array has a list of 
-  // attribute:numeric value pairs.
+  // An array specifying the transform to be applied to this audio. 
+  // Array has a list of 'attribute:numeric' value pairs.
+  //     Example. [RIGHT_TO_RIGHT:12, BASS:15]
          attribute Array transform;
- 
-  // an object can be got from 
-  // - google.gears.factory.create('beta.audio')
 };
 }}}
 
@@ -158,49 +158,55 @@ Audio class : Media
 MediaRecorder class
 {
   // ------ error state ------
+  // same possible values as that of error in Media class
   readonly attribute MediaError error;
  
   // ----- recording state ------
+  // specifies says whether recorder is currently recording or not
   readonly attribute boolean recording;
+  // bit rate for the recording
            attribute int bitRate;
+  // format is an int. Possible values need to be defined.
            attribute int format; 
+  // The number of bits per sample.
            attribute int bitsPerSample;
-  // the amount of sound detected by the microphone 
-  // - [0 - 100]
+  // the amount of sound detected by the microphone - [0 - 100]
   readonly attribute int activityLevel;
-           // specifies if blob is streamed as 
-           // and when it is written to, or not.
+  // specifies if blob is streamed as and when it is written to, or not.
            attribute boolean autoStream;
 
   // ------- controls ---------
+  // self explanatory
            attribute float volume;
   readonly attribute float position;
            attribute boolean muted;
            attribute boolean paused;
 
   // -------- events --------
-  void addCueRange(in DOMString className, 
-                  in float start, in float end, 
+  // Provides ability to set callbacks at specific points in playback time.
+  // similar to API in Audio class. Look at HTML5 spec for explanation.
+  void addCueRange(in DOMString className, in float start, in float end, 
                   in boolean pauseOnExit,
-                  in VoidCallback enterCallback, 
-                  in VoidCallback exitCallback);
+                  in VoidCallback enterCallback, in VoidCallback exitCallback);
   void removeCueRanges(in DOMString className);
 
   // -------- record functionality --------
-         // the HTTP post URL to send the recorded data to  
+  // holds the HTTP post URL to send the recorded data to  
          attribute DOMString destination;
+
+  // below methods are self explanatory
   void record();
   void pause();
   void stop();
 
   // -------- access blob -------
+  // Returns: the handle to the media blob object containing the media data
   MediaBlob getMediaBlob();
 };     
 }}}
 
 *_Events from MediaRecorder class:_*
-
-The MediaRecorder class throws the following events:
+The MediaRecorder class throws the following events, under the stated preconditions:
    * _canstream_ - Some data was just made available for streaming now.
    * _pause_ - Paused.
    * _record_ - Recording starts.
@@ -208,14 +214,12 @@ The MediaRecorder class throws the following events:
 
 *_AudioRecorder class : MediaRecorder_*
 {{{
+// an object of this class can be got from 
+// google.gears.factory.create('beta.audiorecorder')
 AudioRecorder class : MediaRecorder
 {
-  // the amount of sound required to activate 
-  // the microphone - same units as activityLevel - [0-100] 
+  // the amount of sound required to activate the microphone - [0-100] 
   attribute int silenceLevel;
- 
-  // an object of this class can be got from 
-  // google.gears.factory.create('beta.audiorecorder')
 };
 }}}
 We want to be able to support the following use-cases w.r.t. recording:
@@ -228,16 +232,16 @@ We want to be able to support the following use-cases w.r.t. recording:
 MediaBlob class : Blob
 {  
   // ---- properties
-  // The type attribute gives the type of the media 
-  // resource to help the user agent determine if it
-  // can play this resource before downloading it. 
-  // The format is same as what is recommended in 
-  // HTML5 - eg., "audio/ogg; codecs=speex"
+  // The type attribute gives the type of the media resource to help the user agent 
+  // determine if it can play this resource before downloading it. The format is same as 
+  // what is recommended in HTML5 - eg., "audio/ogg; codecs=speex"
   readonly attribute String type;
+  // Holds a map of name value pairs, name and value being String types.
            attribute map metadata;
 
-  void exportToFile(in String fileName, 
-                    in int encodeFormat); 
+  // Exports the blob to the passed fileName, and encodes it to the mentioned format. 
+  // Supported formats to be added here.
+  void exportToFile(in String fileName, in int encodeFormat); 
 };
 }}}
 
@@ -271,7 +275,7 @@ interface VoidCallback {
 
 = Sample code =
 
-*_Simple example - playback flow_*:
+*_Simple example - 2D playback flow_*:
 {{{
 var audio = google.gears.factory.create('beta.audio');
 audio.src = 'http://blahblahblob.com/sampleaudio.wav';
@@ -282,7 +286,7 @@ audio.play();
 var blob = audio.getMediaBlob();
 }}}
 
-*_Simple example - record flow_*:
+*_Simple example - 2D record flow_*:
 {{{
 var recorder = google.gears.factory.create('beta.audiorecorder');
 recorder.destination = <http post url>
@@ -292,24 +296,26 @@ recorder.record(); //asynchronous call
 
 = Advanced topics =
 == Thoughts on 3D positioned audio ==
-   For 3D, we would like to take advantage of hardware, and also provide a more sophisticated abstraction as compared to that of regular audio.
-    * DirectSound3D was quite useful in the past, it was available on all latest windows versions. But with Windows Vista, there have been changes in the audio driver model and DS3D audio is not fully supported now. There have been talks that MS is looking to bring in XAudio2 (xbox audio engine) to the PC soon and it may replace DirectSound, so uncertain at the moment. Plus this is Windows only. (http://en.wikipedia.org/wiki/DirectSound3D)
-    * OpenAL is specifically designed for 3D positioned audio, has implementations available for the popular OSes. However these are binary distributions which are drivers installed by the user, and software which come along with the hardware bought from sound device manufacturers such as Creative. There is an SDK available which we can use to code for this API. (See http://en.wikipedia.org/wiki/Open_Al, http://www.openal.org/platforms.html)
+   For 3D, it is essential to take advantage of hardware, and also provide a more sophisticated abstraction as compared to that of regular audio.
+    * [http://en.wikipedia.org/wiki/DirectSound3D DirectSound3D] was quite useful in the past, it was available on all latest windows versions. But with Windows Vista, there have been changes in the audio driver model and DS3D audio is not fully supported now. There have been talks that MS is looking to bring in XAudio2 (xbox audio engine) to the PC soon and it may replace DirectSound, so uncertain at the moment. Also, this is Windows only.
+    * [http://en.wikipedia.org/wiki/Open_Al OpenAL] is specifically designed for 3D positioned audio, has implementations available for the popular OSes. However these are binary distributions which are drivers installed by the user, and software which come along with the hardware bought from sound device manufacturers such as Creative. There is an SDK available which we can use to code for this API. (See http://www.openal.org/platforms.html)
 
-For supporting 3D audio, we can provide a minimal JS wrapper on top of the OpenAL 1.1 API (http://www.openal.org/openal_webstf/specs/OpenAL11Specification.pdf). We could add 3D position and velocity information to the *Audio* class, and make it similar to an OpenAL source. This should be an easy extension of the above API.
+For supporting 3D audio, we can provide a minimal JS wrapper on top of the [http://www.openal.org/openal_webstf/specs/OpenAL11Specification.pdf OpenAL 1.1 API]. We could add 3D position and velocity information to the *Audio* class, and make it similar to an OpenAL source. This should be an easy extension of the above API.
 
-*_3DAudio class : Audio_*
+*_Audio3D class : Audio_*
 
-A _3DAudio_ object is similar to the notion of an openAL source. The current model assumes the AL_SOURCE_RELATIVE model where all positions and velocities of sources are with respect to the listener. This API needs to be extended to an absolute model too (This is what would be very useful in most games).
+A _Audio3D_ object is similar to the notion of an openAL source. The current model assumes the *AL_SOURCE_RELATIVE* model where all positions and velocities of sources are with respect to the listener. This API needs to be extended to an absolute model too (This is what would be very useful in most games).
 {{{
-3DAudio class : Audio
+// an object can be got from 
+// - google.gears.factory.create('beta.audio3D')
+Audio3D class : Audio
 {
-   // position of the source
+   // position of the source - in 3D space
    attribute float xposition;
    attribute float yposition;
    attribute float zposition;
 
-   // velocity of the source
+   // velocity of the source - in 3D space
    attribute float xspeed;
    attribute float yspeed;
    attribute float zspeed;
@@ -320,7 +326,7 @@ A _3DAudio_ object is similar to the notion of an openAL source. The current mod
 
 {{{
 // Bill is on the left, moving towards Mike
-var audio1 = google.gears.factory.create('beta.3Daudio');
+var audio1 = google.gears.factory.create('beta.audio3D');
 audio1.src = 'http://blahblahblob.com/Bill.wav';
 audio1.xposition = -50;
 audio1.yposition = 10;
@@ -328,7 +334,7 @@ audio1.xvelocity = 20;
 audio1.load();
 
 // Mike is on the right, moving towards Bill
-var audio2 = google.gears.factory.create('beta.3Daudio');
+var audio2 = google.gears.factory.create('beta.audio3D');
 audio2.src = 'http://blahblahblob.com/Mike.wav';
 audio2.load();
 audio2.xposition = 50;
@@ -346,30 +352,31 @@ An utility class is added, to expose features like editing.
 {{{
 interface MediaUtils
 {
-  // methods supported only on raw uncompressed blobs. 
-  // can be used for cutting and editing media.
+  // extracts segment @copyStartTime to @copyEndTime of the @sourceBlob
+  // and inserts that into @insertTime of @destBlob
+  // supported only on raw uncompressed media
   void insert(in MediaBlob sourceBlob,
               in MediaBlob destBlob, 
               in int insertTime,
               in int copyStartTime, 
               in int copyEndTime);
 
+  // deletes segment @startTime to @endTime in the @sourceBlob
+  // supported only on raw uncompressed media
   void delete(in MediaBlob sourceBlob,
               in int startTime,
               in int endTime); 
 
-  // when passed a list of audioObjects, can queue up play
-  // requests and fire them in one go - to avoid phasing
-  // effects and synchronize play of all these objects.
+  // when passed a list of audioObjects, this method queues up play requests and 
+  // fires them in one go - to avoid phasing effects.
+  // This method can be used to synchronize play of multiple objects.
   void play(in Array mediaObjects);
 
   // returns currently active/playing media objects.
   Array getActiveMedia();
 };
 
-
 interface AudioUtils : MediaUtils
-
 {
     // no new members
 };
