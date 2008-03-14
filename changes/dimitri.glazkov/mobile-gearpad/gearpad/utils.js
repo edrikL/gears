@@ -27,18 +27,15 @@ function Gears() {
   this.initFactory_();
 
   this.hasGears = Boolean(this.factory_);
-
   if (!this.hasGears) {
     return;
   }
 
   this.db_ = this.factory_.create('beta.database');
-
   this.localServer_ = 
       this.factory_.create('beta.localserver');
 
   this.db_.open();
-
   try {
     this.db_.execute('select * from user');
     this.hasDb = true;
@@ -47,13 +44,10 @@ function Gears() {
   }
 
   this.app_ = this.localServer_.openManagedStore('gearpad');
-
   this.isCaptured = this.app_ && this.app_.currentVersion;
-  console.log('isCaptured', !!this.isCaptured);
   this.canGoLocal = this.hasGears && this.hasDb && this.isCaptured;
 
   this.upgradeDatabase_();
-
 }
 
 Gears.NOBODY_USER_ID = -1;
@@ -76,40 +70,23 @@ Gears.prototype.capture = function() {
   this.app_.manifestUrl = 'manifest.php';
   this.app_.checkForUpdate();
 
-  if (DOM.is_pie) {
-	// ugly^2, but necessary, because PIE doesn't support
-	// setInterval or function argument for setTimeout
-	Gears.app = this.app_;
-	console.log('starting check for update');
-	Gears.checkForUpdate = function() {
-	    console.log('update status: ' + Gears.app.updateStatus);
+  // ugly^2, but necessary, because Pocket IE doesn't support
+  // setInterval or function argument for setTimeout
+  Gears.app = this.app_;
+  console.log('starting check for update');
+  Gears.checkForUpdate = function() {
+    console.log('update status: ' + Gears.app.updateStatus);
 
-	    if (Gears.app.updateStatus == 3) { // error
-	      console.warn('update failed: ' + Gears.app.lastErrorMessage);
-	    } else  if (Gears.app.updateStatus == 0) { // ok
-	      location.reload();
-	    }
-	    else {
-		  window.setTimeout('Gears.checkForUpdate();', 500);
-	    }
-	}
-	window.setTimeout('Gears.checkForUpdate();', 500);
+    if (Gears.app.updateStatus == 3) { // error
+      console.warn('update failed: ' + Gears.app.lastErrorMessage);
+    } else  if (Gears.app.updateStatus == 0) { // ok
+      location.reload();
+    }
+    else {
+      window.setTimeout('Gears.checkForUpdate();', 500);
+    }
   }
-  else {
-	  var self = this;
-	  var timerId = window.setInterval(function() {
-	    console.log('update status: ' + self.app_.updateStatus);
-
-	    if (self.app_.updateStatus == 3) { // error
-	      window.clearInterval(timerId);
-	      console.warn('update failed: ' + self.app_.lastErrorMessage);
-	    }
-
-	    if (self.app_.updateStatus == 0) { // ok
-	      location.reload();
-	    }
-	  }, 500);
-  }
+  window.setTimeout('Gears.checkForUpdate();', 500);
 };
 
 Gears.prototype.createDatabase = function() {
@@ -190,16 +167,16 @@ Gears.prototype.executeToObjects = function(sql, args) {
       var cols = rs.fieldCount();
       var colNames = [];
       for (var i = 0; i < cols; i++) {
-	colNames.push(rs.fieldName(i));
+        colNames.push(rs.fieldName(i));
       }
 
       while (rs.isValidRow()) {
-	var h = {};
-	for (i = 0; i < cols; i++) {
-	  h[colNames[i]] = rs.field(i);
-	}
-	rv.push(h);
-	rs.next();
+        var h = {};
+        for (i = 0; i < cols; i++) {
+          h[colNames[i]] = rs.field(i);
+        }
+        rv.push(h);
+        rs.next();
       }
     }
   } catch (e) {
@@ -224,16 +201,17 @@ Gears.prototype.initFactory_ = function() {
   // Firefox
   if (typeof GearsFactory != 'undefined') {
     this.factory_ = new GearsFactory();
+    return;
   }
 
   try {
-	var factory = new ActiveXObject("Gears.Factory");
-    // privateSetGlobalObject is only required and supported on WinCE.
-    if (factory.getBuildInfo().indexOf('ie_mobile') != -1) {
-      factory.privateSetGlobalObject(window);
-    }
-	this.factory_ = factory;
+    var factory = new ActiveXObject("Gears.Factory");
+      // privateSetGlobalObject is only required and supported on WinCE.
+      if (factory.getBuildInfo().indexOf('ie_mobile') != -1) {
+        factory.privateSetGlobalObject(window);
+      }
+    this.factory_ = factory;
   } catch (e) {
-	// no Safari for now
+  // no Safari for now
   }
 };

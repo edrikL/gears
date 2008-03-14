@@ -70,23 +70,23 @@ if ($mode) {
   if (!$message) {
     if ($mode == 'create') {
       if (!($userid = createAccount($email, $password))) {
-	$message = '<span class="error">That email is already taken.</span>';
+        $message = '<span class="error">That email is already taken.</span>';
       }
     } else if ($mode == 'login') {
       $rslt = login($email, $password);
 
       if ($rslt == 'email') {
-	$message = '<span class="error">No user with that email address.</span>';
+        $message = '<span class="error">No user with that email address.</span>';
       } else if ($rslt == 'password') {
-	$message = '<span class="error">Wrong password.</span>';
+        $message = '<span class="error">Wrong password.</span>';
       } else {
-	$userid = $rslt;
+        $userid = $rslt;
       }
     } else if ($mode == 'forgot') {
       if (!mailPassword($email)) {
-	$message = '<span class="error">No user with that email address.</span>';
+        $message = '<span class="error">No user with that email address.</span>';
       } else {
-	$message = '<span class="ok">OK! Go check your email now.</span>';
+        $message = '<span class="ok">OK! Go check your email now.</span>';
       }
     }
   }
@@ -182,7 +182,6 @@ a {
   var navLinks;
   var form;
   var mode;
-
   var gears = new Gears();
 
   if (!gears.canGoLocal) {
@@ -200,10 +199,10 @@ a {
       window.clearTimeout(timerId);
     }
 
-    DOM.gel("offline-login").style.display = "block";
+    DOM.getElementById("offline-login").style.display = "block";
 
     var users = gears.executeToObjects('select cookie from user');
-    var select = DOM.gel("users");
+    var select = DOM.getElementById("users");
 
     for (var i = 0, user; user = users[i]; i++) {
       var opt = document.createElement('option');
@@ -215,7 +214,7 @@ a {
   }
 
   function offlineUserChosen() {
-    var select = DOM.gel("users");
+    var select = DOM.getElementById("users");
     var option = select.options[select.selectedIndex];
 
     createCookie('c', option.value, 30);
@@ -227,16 +226,12 @@ a {
       window.clearTimeout(timerId);
     }
 
-    DOM.gel("online-login").style.display = "block";
-
-    clip = DOM.gel("clip");
+    DOM.getElementById("online-login").style.display = "block";
+    clip = DOM.getElementById("clip");
     fields = DOM.getElementsByTagName(clip, "input");
-
-    head = DOM.gel("head");
-
-	form = DOM.getElementsByTagName(document, 'form')[0];
+    head = DOM.getElementById("head");
+    form = DOM.getElementsByTagName(document, 'form')[0];
     navLinks = DOM.getElementsByTagName(form, 'a');
-
     mode = "<?= $mode ?>" || "login";
 
     setupLabels(fields);
@@ -252,16 +247,16 @@ a {
 
   function presubmit() {
     try {
-      form.email.value = DOM.gel("email").value;
+      form.email.value = DOM.getElementById("email").value;
 
       if (form.mode.value == "login") {
-	form.password.value = DOM.gel("password").value;
-	form.password2.value = "";
+        form.password.value = DOM.getElementById("password").value;
+        form.password2.value = "";
       }
 
       if (form.mode.value == "create") {
-	form.password.value = DOM.gel("password").value;
-	form.password2.value = DOM.gel("password2").value;
+        form.password.value = DOM.getElementById("password").value;
+        form.password2.value = DOM.getElementById("password2").value;
       }
 
       return true;
@@ -291,7 +286,7 @@ a {
     navLinks[2].style.display = "";
 
     changeMode(2, fast);
- }
+  }
 
   function forgotMode(fast) {
     head.innerHTML = "<b>Forgot your password?</b>:";
@@ -307,16 +302,16 @@ a {
   function changeMode(elmIdx, fast) {
     for (var i = 0; i < fields.length; i++) {
       if (i <= elmIdx) {
-	fields[i].style.display = "";
+        fields[i].style.display = "";
       } else {
-	fields[i].style.display = "none";
+        fields[i].style.display = "none";
       }
     }
 
     var elm = fields[elmIdx];
     var h = elm.offsetTop + elm.offsetHeight;
 
-    if (fast || DOM.is_pie) {
+    if (fast || DOM.is_pocket_ie) {
       clip.style.height = h + "px";
     } else {
       var a = new Accelimation(clip.style, "height", h, 150, 2, "px");

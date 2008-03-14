@@ -40,22 +40,20 @@ function init() {
   gears = new Gears();
   store = new DataStore(onsync);
 
-  DOM.gel("login-bar").style.display = "";
-  DOM.gel("logged-in-as").innerHTML = store.email;
+  DOM.getElementById("login-bar").style.display = "";
+  DOM.getElementById("logged-in-as").innerHTML = store.email;
 
-  if (DOM.is_pie) {
-	var pad = DOM.gel('pad');
-	pad.style.height = (screen.availHeight - 140) + 'px';
-	// can't set the width of a textarea in PIE :(
+  if (DOM.is_pocket_ie) {
+    t.style.height = (screen.availHeight - 140) + 'px';
+    // can't set the width of a textarea in Pocket IE :(
   }
 
   if (store.localMode) {
-    DOM.gel("setup-offline").style.display = "none";
+    DOM.getElementById("setup-offline").style.display = "none";
   }
 
   DOM.listen(t, "keyup", keypress);
   DOM.listen(t, "keypress", keypress);
-  //DOM.listen(window, "focus", focused);
 
   sync();
 }
@@ -122,7 +120,7 @@ function onsync(newContent) {
 }
 
 function setStatus(msg, color) {
-  var elm = DOM.gel("status")
+  var elm = DOM.getElementById("status")
   elm.className = color;
   elm.innerHTML = msg;
 }

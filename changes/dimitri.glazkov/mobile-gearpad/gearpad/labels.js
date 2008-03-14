@@ -26,17 +26,17 @@
 // Functions for putting the labels of input boxes in the boxes themselves.
 
 function setupLabels(fields) {
-
-
   for (var i = 0, elm; elm = fields[i]; i++) {
     if (elm.type == "text" || elm.type == "password") {
-	if (elm.value == "") {
-	  elm._type = elm.type;
-	  setDynamicLabel(elm);
-	}
-
-	DOM.listen(elm, "focus", focusDynamicLabel);
-	DOM.listen(elm, "blur", blurDynamicLabel);
+      if (elm.value == "") {
+        elm._type = elm.type;
+        setDynamicLabel(elm);
+      }
+      
+      if (!DOM.is_pocket_ie) {
+        DOM.listen(elm, "focus", focusDynamicLabel);
+        DOM.listen(elm, "blur", blurDynamicLabel);
+      }
     }
   }
 }
@@ -44,9 +44,9 @@ function setupLabels(fields) {
 function resetLabels(fields) {
   for (var i = 0, elm; elm = fields[i]; i++) {
     if (elm.type == "text" || elm.type == "password") {
-	if (elm.value == elm.getAttribute("label")) {
-	  elm.value = "";
-	}
+      if (elm.value == elm.getAttribute("label")) {
+        elm.value = "";
+      }
     }
   }
 }
@@ -55,16 +55,15 @@ function focusDynamicLabel(event) {
   var elm = getEventSrc(event);
   if (elm.value == elm.getAttribute("label")) {
     if (elm._type == "password") {
-	elm = setInputType(elm, "password", true);
+      elm = setInputType(elm, "password", true);
     }
-
     elm.value = "";
   }
 }
 
 function blurDynamicLabel(event) {
   // wierd... sometimes, it seems like the blur gets fired after unload, so 
-  // this fucntion is gone.
+  // this function is gone.
   if (typeof window.getEventSrc == "undefined") {
     return;
   }
@@ -76,7 +75,7 @@ function blurDynamicLabel(event) {
 function setDynamicLabel(elm) {
   if ("" == elm.value) {
     if (elm.type == "password") {
-	elm = setInputType(elm, "text", false);
+      elm = setInputType(elm, "text", false);
     }
 
     elm.value = elm.getAttribute("label");
@@ -93,15 +92,16 @@ function getEventSrc(e) {
 }
 
 function setInputType(el, type, focus) {
-  if (DOM.is_pie) {
-	// sorry, Charlie
-	return el;
+  if (DOM.is_pocket_ie) {
+    // I could not get Pocket IE to respond to focus/blur events,
+    // so this manipulation is not necessary for that platform
+    return el;
   }
   if (DOM.is_ie) {
     var span = document.createElement("SPAN");
     span.innerHTML = 
-	'<input id="' + el.id + '" type="' + type + '" class="' + 
-	el.className + '" label="' + el.getAttribute("label") + '">';
+      '<input id="' + el.id + '" type="' + type + '" class="' + 
+      el.className + '" label="' + el.getAttribute("label") + '">';
 
     var newEl = span.firstChild;
     el.parentNode.replaceChild(newEl, el);
@@ -109,7 +109,7 @@ function setInputType(el, type, focus) {
     newEl._type = el._type;
 
     if (focus) {
-	window.setTimeout(function() { newEl.focus(); }, 0);
+      window.setTimeout(function() { newEl.focus(); }, 0);
     }
 
     DOM.listen(newEl, "focus", focusDynamicLabel);
@@ -121,6 +121,3 @@ function setInputType(el, type, focus) {
     return el;
   }
 }
-
-
-
