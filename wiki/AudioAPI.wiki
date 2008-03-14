@@ -1,22 +1,22 @@
 #summary Audio in the browser
-#labels DesignDoc,Featured
+#labels DesignDoc,Featured,Audio
 
 = Introduction =
 The purpose of this module is to provide an effective (and simple) Audio API through Gears. 
 
 = Requirements =
-  1 Playback & Recording (Basic)
-  1 Multiple channels and mixing (Basic)
-  1 Editing (Adv)
-  1 3D positioned audio (Adv)
+  # Playback & Recording (Basic)
+  # Multiple channels and mixing (Basic)
+  # Editing (Adv)
+  # 3D positioned audio (Adv)
 
 = Scope =
 The scope of this document is limited to items (1) and (2) above. Items (3) and (4) are briefly discussed.
 
 = High level Design =
-The Audio API is designed similar to the *HTML5 HTMLAudioElement* (http://www.whatwg.org/specs/web-apps/current-work/#audio). The audio playback, transform, mixing and recording all happen in the CPU (since CPUs today are fast and basic audio mixing/processing takes very little usage).
+The Audio API is designed similar to the [http://www.whatwg.org/specs/web-apps/current-work/#audio HTMLAudioElement] in the HTML5 specification. The audio playback, transform, mixing and recording all happen in the CPU (since CPUs today are fast and basic audio mixing/processing takes very little usage).
 
-  * *_Libraries:_* For the actual platform dependent audio play and record capabilities, we will build on top of the open source PortAudio project (http://www.portaudio.com). To know the stack portaudio is supported on, look at http://www.portaudio.com/status.html. SDL seems another possible candidate.
+  * *_Libraries:_* For the actual platform dependent audio play and record capabilities, we will build on top of the open source [http://www.portaudio.com PortAudio] project. To know the stack portaudio is supported on, look at http://www.portaudio.com/status.html. SDL seems another possible candidate.
 
   * *_Formats:_*
     * _WAV_: As proposed by the HTML5 spec, the WAVE format will be supported with audio encoded using the PCM format.
