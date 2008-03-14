@@ -107,11 +107,28 @@ void GearsResourceStore::SetEnabled(JsCallContext *context) {
 void GearsResourceStore::Capture(JsCallContext *context) {
   std::string16 url;
   JsArray url_array;
-  JsRootedCallback *callback;
+  JsRootedCallback *callback = NULL;
+
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_ARRAY, &url_array },
+    { JSPARAM_REQUIRED, JSPARAM_UNKNOWN, NULL },
     { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &callback },
   };
+
+  // TODO(aa): Consider coercing anything except array to string. This would
+  // make it consistent with XMLHttpRequest and window.setTimeout.
+  int url_arg_type = context->GetArgumentType(0);
+  if (url_arg_type == JSPARAM_ARRAY) {
+    argv[0].type = JSPARAM_ARRAY;
+    argv[0].value_ptr = &url_array;
+  } else if (url_arg_type == JSPARAM_STRING16) {
+    argv[0].type = JSPARAM_STRING16;
+    argv[0].value_ptr = &url;
+  } else {
+    context->SetException(
+      STRING16(L"First parameter must be an array or string."));
+    return;
+  }
+
   context->GetArguments(ARRAYSIZE(argv), argv);
   scoped_ptr<JsRootedCallback> scoped_callback(callback);
   if (context->is_exception_set())
@@ -124,20 +141,27 @@ void GearsResourceStore::Capture(JsCallContext *context) {
   request->id = capture_id;
   request->callback.swap(scoped_callback);  // transfer ownership
 
-  // TODO(mpcomplete): handle single url.
-  // 'urls' was an array of strings
-  int array_length;
-  if (!url_array.GetLength(&array_length)) {
-    context->SetException(STRING16(L"Error finding array length."));
-    return;
-  }
-
-  for (int i = 0; i < array_length; ++i) {
-    if (!url_array.GetElementAsString(i, &url)) {
-      context->SetException(STRING16(L"Invalid parameter."));
+  if (url_arg_type == JSPARAM_ARRAY) {
+    // 'urls' was an array of strings
+    int array_length;
+    if (!url_array.GetLength(&array_length)) {
+      context->SetException(GET_INTERNAL_ERROR_MESSAGE());
       return;
     }
 
+    for (int i = 0; i < array_length; ++i) {
+      if (!url_array.GetElementAsString(i, &url)) {
+        context->SetException(STRING16(L"Invalid parameter."));
+        return;
+      }
+
+      if (!ResolveAndAppendUrl(url.c_str(), request.get())) {
+        context->SetException(exception_message_.c_str());
+        return;
+      }
+    }
+  } else {
+    // 'urls' was a string
     if (!ResolveAndAppendUrl(url.c_str(), request.get())) {
       context->SetException(exception_message_.c_str());
       return;

@@ -171,12 +171,13 @@ void GearsTimer::SetTimeoutOrInterval(JsCallContext *context, bool repeat) {
   }
 
   context->GetArguments(argc, argv);
+  scoped_ptr<JsRootedCallback> scoped_callback(timer_callback);
   if (context->is_exception_set()) return;
 
   TimerInfo timer_info;
   timer_info.repeat = repeat;
   if (timer_callback) {
-    timer_info.callback.reset(timer_callback);
+    timer_info.callback.reset(scoped_callback.release());  // transfer ownership
   } else {
     timer_info.script = script;
   }
