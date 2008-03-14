@@ -1,5 +1,5 @@
 #summary Audio in the browser
-#labels DesignDoc,Featured,Audio
+#labels DesignDoc,Featured,Audio,AudioAPI,Media
 
 = Introduction =
 The purpose of this module is to provide an effective (and simple) Audio API through Gears. 
