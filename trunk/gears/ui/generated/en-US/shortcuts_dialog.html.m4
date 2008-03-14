@@ -117,16 +117,28 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
           <img id="icon" src="icon_32x32.png" width="32" height="32">
         </td>
         <td width="100%" align="left" valign="middle">
-          <span id="header-singular">
-          <TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut.">
+          <span id="header-singular-desktop" style="display:none">
+          <TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut on the desktop.">
           This website wants to create a shortcut
           on your desktop. Do you want to allow this?
           </TRANS_BLOCK>
           </span>
-          <span id="header-plural">
-          <TRANS_BLOCK desc="Tells the user that the application wants to create multiple shortcuts.">
+          <span id="header-plural-desktop" style="display:none">
+          <TRANS_BLOCK desc="Tells the user that the application wants to create multiple shortcuts on the desktop.">
           This website wants to create the shortcuts listed below on your
           desktop. Do you want to allow this?
+          </TRANS_BLOCK>
+          </span>
+          <span id="header-singular-wince" style="display:none">
+          <TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut under 'Start'.">
+          This website wants to create a shortcut in your list of programs.
+          Do you want to allow this?
+          </TRANS_BLOCK>
+          </span>
+          <span id="header-plural-wince" style="display:none">
+          <TRANS_BLOCK desc="Tells the user that the application wants to create multiple shortcuts under 'Start'.">
+          This website wants to create the shortcuts listed below in your
+          list of programs. Do you want to allow this?
           </TRANS_BLOCK>
           </span>
         </td>
@@ -318,16 +330,21 @@ m4_include(ui/common/html_dialog.js)
 
     // Show the right heading, depending on whether we are showing multiple
     // shortcuts.
-    var headerSingular = getElementById("header-singular");
-    var headerPlural = getElementById("header-plural");
+    var headerSingular;
+    var headerPlural;
+    if (isPIE) {
+      var headerSingular = getElementById("header-singular-wince");
+      var headerPlural = getElementById("header-plural-wince");
+    } else {
+      var headerSingular = getElementById("header-singular-desktop");
+      var headerPlural = getElementById("header-plural-desktop");
+    }
 
     if (showingMultiple) {
-      headerSingular.style.display = "none";
       headerPlural.style.display = "block";
       resetDisabledState();
     } else {
       headerSingular.style.display = "block";
-      headerPlural.style.display = "none";
       // On PIE, the allow button is disabled by default.
       if (isPIE) {
         enableButton(getElementById("allow-button"));
