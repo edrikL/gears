@@ -30,6 +30,7 @@
 
 #include "gears/localserver/common/update_task.h"
 
+#include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/common/string_utils.h"
@@ -256,6 +257,15 @@ bool UpdateTask::HttpGetUrl(const char16 *full_url,
     LOG(("UpdateTask::HttpGetUrl - failed to get url\n"));
     if (error_msg_.empty())
       SetHttpError(full_url, NULL);
+    return false;  // TODO(michaeln): retry?
+  }
+
+  if (!payload->PassesValidationTests()) {
+    LOG(("UpdateTask::HttpGetUrl - received invalid payload\n"));
+    // Explicitly overwrite error_msg_, not passing the validation tests is
+    // the reason for overall task failure.
+    SetHttpError(full_url, NULL);
+    ExceptionManager::CaptureAndSendMinidump();
     return false;  // TODO(michaeln): retry?
   }
 

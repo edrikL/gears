@@ -24,6 +24,8 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/localserver/common/capture_task.h"
+
+#include "gears/base/common/exception_handler_win32.h"
 #ifdef WINCE
 #include "gears/base/common/wince_compatibility.h"  // For BrowserCache
 #endif
@@ -124,6 +126,12 @@ bool CaptureTask::HttpGetUrl(const char16 *full_url,
                           payload,
                           NULL, NULL, NULL)) {
     LOG(("CaptureTask::HttpGetUrl - failed to get url\n"));
+    return false;  // TODO(michaeln): retry?
+  }
+
+  if (!payload->PassesValidationTests()) {
+    LOG(("CaptureTask::HttpGetUrl - received invalid payload\n"));
+    ExceptionManager::CaptureAndSendMinidump();
     return false;  // TODO(michaeln): retry?
   }
 
