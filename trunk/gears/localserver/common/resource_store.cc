@@ -102,10 +102,12 @@ bool ResourceStore::BlobToItem(BlobInterface *blob,
   }
 
   // Synthesize the http headers we'll store with this item
-  const char16 *kContentLengthHeader = STRING16(L"Content-Length");
   std::string16 headers;
   std::string16 data_len_str = IntegerToString16(data_len);
-  AppendHeader(headers, kContentLengthHeader, data_len_str.c_str());
+  AppendHeader(headers, HttpConstants::kContentLengthHeader,
+               data_len_str.c_str());
+  AppendHeader(headers, HttpConstants::kContentTypeHeader,
+               STRING16(L"application/octet-stream"));
   headers.append(HttpConstants::kCrLf);  // Terminiate with a blank line
   item->payload.headers = headers;
   return true;

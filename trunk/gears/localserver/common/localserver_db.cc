@@ -835,7 +835,7 @@ void WebCacheDB::MaybeInitiateUpdateTask(int64 server_id) {
     last_auto_update_map[server_id] = now;
   }
 
-  LOG(("Automatically initiating update for managed store"));
+  LOG(("Automatically initiating update for managed store\n"));
 
   ManagedResourceStore store;
   if (!store.Open(server_id)) {
@@ -2424,6 +2424,26 @@ bool WebCacheDB::PayloadInfo::PassesValidationTests() {
   const char *body = headers_ascii.c_str();
   uint32 body_len = headers_ascii.length();
   HTTPHeaders parsed_headers;
-  return HTTPUtils::ParseHTTPHeaders(&body, &body_len, &parsed_headers,
-                                     true /* allow_const_cast */);
+  if (!HTTPUtils::ParseHTTPHeaders(&body, &body_len, &parsed_headers,
+                                   true /* allow_const_cast */)) {
+    return false;
+  }
+
+  // This is to defend against inserting degenerate responses that we
+  // occasionally capture in Firefox. In that case we get a valid status
+  // line saying OK, and a no other headers except the content-length
+  // header that we synthesized (rather than actually received). To be
+  // consistent across platforms, we'll reject this form of response
+  // in all cases, even if this is actually what the server sent us.
+  // TODO(michaeln): If and when we get a handle on the source of that
+  // problem, revisit this part of the validity test.
+  if (status_code == HttpConstants::HTTP_OK && 
+      parsed_headers.HeaderIs(HTTPHeaders::CONTENT_LENGTH, "0")) {
+    parsed_headers.ClearHeader(HTTPHeaders::CONTENT_LENGTH);
+    if (parsed_headers.IsEmpty()) {
+      return false;
+    }
+  }
+
+  return true;
 }
