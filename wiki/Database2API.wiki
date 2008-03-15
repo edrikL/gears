@@ -217,6 +217,9 @@ class Database2 : ModuleImplBaseClassVirtual {
     if (GetQueue(/* name, origin */)->empty()) {
       tx->Start();
     }
+    else {
+      // set exception INVALID_STATE_ERR
+    }
   }
   
   static Database2TransactionQueue *GetQueue(/* name, origin */) {
