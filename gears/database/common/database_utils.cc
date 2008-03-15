@@ -23,6 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/paths.h"
@@ -180,6 +181,7 @@ static bool OpenAndCheckDatabase(const SecurityOrigin &origin,
     sql_status = SqlitePoisonIfCorrupt(temp_db, sql_status);
     if (sql_status == SQLITE_CORRUPT) {
       pdb->MarkDatabaseCorrupt(origin, dbname.c_str(), basename.c_str());
+      ExceptionManager::CaptureAndSendMinidump();
     }
 
     sqlite3_close(temp_db);
