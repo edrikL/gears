@@ -490,7 +490,7 @@ class Database2Connection : RefCounted {
         // return true
       // otherwise,
         // set error to INVALID_STATE_ERR exception value
-    // return true
+    // return false
   }
   
   bool Execute(Database2RowHandlerInterface *row_handler) {
