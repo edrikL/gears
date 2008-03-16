@@ -214,10 +214,21 @@ LAUNCHURL = launch_url_with_browser
 default::
 ifneq "$(BROWSER)" ""
   # build for just the selected browser
+  ifeq ($(OS),osx)
+        # For osx, build the non-installer targets for multiple architectures.
+	$(MAKE) prereqs    BROWSER=$(BROWSER) ARCH=i386
+	$(MAKE) prereqs    BROWSER=$(BROWSER) ARCH=ppc
+	$(MAKE) genheaders BROWSER=$(BROWSER) ARCH=i386
+	$(MAKE) genheaders BROWSER=$(BROWSER) ARCH=ppc
+	$(MAKE) modules    BROWSER=$(BROWSER) ARCH=i386
+	$(MAKE) modules    BROWSER=$(BROWSER) ARCH=ppc
+	$(MAKE) installer  BROWSER=FF
+  else
 	$(MAKE) prereqs    BROWSER=$(BROWSER)
 	$(MAKE) genheaders BROWSER=$(BROWSER)
 	$(MAKE) modules    BROWSER=$(BROWSER)
 	$(MAKE) installer  BROWSER=$(BROWSER)
+  endif
 else
   # build for all browsers valid on this OS
   ifeq ($(OS),linux)
@@ -262,8 +273,6 @@ else
 	$(MAKE) genheaders BROWSER=FF ARCH=ppc
 	$(MAKE) modules    BROWSER=FF ARCH=i386
 	$(MAKE) modules    BROWSER=FF ARCH=ppc
-        # launchurlhelper builds for both i386 & ppc.
-	$(MAKE) launchurlhelper  BROWSER=FF
 	$(MAKE) installer  BROWSER=FF
   endif
   endif
@@ -281,7 +290,6 @@ genheaders::
 ifeq ($(BROWSER),FF)
 prereqs:: $(FF_OUTDIR)/genfiles $(FF_OUTDIRS_I18N) $(COMMON_M4FILES) $(COMMON_M4FILES_I18N) $(FF_M4FILES) $(FF_M4FILES_I18N)
 genheaders:: $(FF_GEN_HEADERS)
-modules:: $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB)
 installer:: $(FF_INSTALLER_XPI)
 
 ifeq ($(OS),osx)
@@ -289,6 +297,10 @@ launchurlhelper:: $(FF_OUTDIR)/genfiles/$(LAUNCHURL)
 
 $(FF_OUTDIR)/genfiles/$(LAUNCHURL):: $(FF_OUTDIR)/genfiles $(LAUNCHURLHELPER_CPPSRC)
 	 g++ $(COMMON_COMPILE_FLAGS) $(CPPFLAGS) -x c++ -mmacosx-version-min=10.2 -arch ppc -arch i386 -framework CoreFoundation -framework ApplicationServices -lstdc++ $(LAUNCHURLHELPER_CPPSRC) -o $(FF_OUTDIR)/genfiles/$(LAUNCHURL)
+
+modules:: $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB) launchurlhelper
+else
+modules:: $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB)
 endif
 
 endif
