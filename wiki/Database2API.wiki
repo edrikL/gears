@@ -268,7 +268,7 @@ class Database2Interpreter : RefCounted {
       if (command) {
         bool needsForeground = true;
         command->InBackground(&needsForeground);
-        if (needsForeground)
+        if (needsForeground) {
           command->OnForeground();
           // delete command when we're done
         }
