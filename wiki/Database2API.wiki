@@ -184,9 +184,9 @@ class Database2 : ModuleImplBaseClassVirtual {
   void QueueTransaction(Database2Transaction *tx) {
     Database2TransactionQueue queue = GetQueue(/* name, origin */);  
     // returns true, if first iterm in queue
-    bool first = queue_->empty();
+    bool first = queue->empty();
     // sketch only, consider making a single method to prevent race conditions
-    queue_->Push(tx);
+    queue->Push(tx);
     if (first) {
       // start executing transaction, if first
       tx->Start();
@@ -226,7 +226,7 @@ class Database2 : ModuleImplBaseClassVirtual {
   
   static Database2TransactionQueue *GetQueue(/* name, origin */) {
     // combine name, origin into one string
-    static std:map<std:string16, Database2TransactionQueue*> map;
+    static std::map<std::string16, Database2TransactionQueue*> map;
     // if map doesn't contain the queue, create the queue and insert into map
     // return queue
   }  
@@ -428,8 +428,8 @@ class Database2Transaction : ModuleImplBaseClassVirtual {
   Database2Interpreter interpreter();
     
  private:
-  std:string16 old_version_;
-  std:string16 new_version_;
+  std::string16 old_version_;
+  std::string16 new_version_;
 
   scoped_ptr<JsRootedCallback> start_callback_;
   scoped_ptr<JsRootedCallback> success_callback_;
@@ -454,7 +454,7 @@ Thus, there are two explicit, thread-safe queues: a transaction queue and a stat
 template <class T>
 class ThreadSafeQueue {
  public:
-  Push(T *t) {
+  void Push(T *t) {
    // lock
    // add t to internal queue
    // unlock
@@ -476,13 +476,13 @@ Database work is encapsulated in the `Database2Connection`. Here is a very rough
 class Database2Connection : RefCounted {
  public:
   // lazily initialized
-  Database2Connection(std:string16 name) : name_(name) {}
+  Database2Connection(std::string16 name) : name_(name) {}
   
   ~Database2Connection() {
     // close connection
   }
   
-  bool OpenAndVerifyVersion(std:string16 databaseVersion) {
+  bool OpenAndVerifyVersion(std::string16 databaseVersion) {
     // read expected_version (user_version value)
     // read version from Permissions.db
     // if databaseVersion is not an empty value or null,
@@ -523,7 +523,7 @@ class Database2Connection : RefCounted {
   }
   
   int error_code();
-  std:string16 error_message();
+  std::string16 error_message();
 
  private:
   bool GetHandle() {
@@ -535,7 +535,7 @@ class Database2Connection : RefCounted {
   int expected_version_;
 
   sqlite3 *handle_;
-  std:string16 name_;
+  std::string16 name_;
 };
 
 class Database2RowHandlerInterface {
