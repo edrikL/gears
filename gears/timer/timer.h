@@ -79,8 +79,17 @@ class WindowsPlatformTimer
 
   DISALLOW_EVIL_CONSTRUCTORS(WindowsPlatformTimer);
 };
+#elif BROWSER_WEBKIT
+class ReleaseCFTimerFunctor {
+ public:
+  void operator()(CFRunLoopTimerRef x) const {
+    if (x != NULL) { 
+      CFRunLoopTimerInvalidate(x);
+      CFRelease(x);
+    }
+  }
+};
 #endif
-
 
 
 class GearsTimer
@@ -140,7 +149,14 @@ class GearsTimer
     bool repeat;
     int timer_id;
     GearsTimer *owner;
-#if BROWSER_FF
+#if BROWSER_WEBKIT
+    // TimerInfo is stored in an STL container, so we need a linked_ptr to
+    // act as an intermediary.
+    // scoped_timer ensures that timer is released properly by OS when
+    // deleted.
+    typedef scoped_token<CFRunLoopTimerRef, ReleaseCFTimerFunctor> scoped_timer;
+    linked_ptr<scoped_timer> platform_timer;
+#elif BROWSER_FF
     nsCOMPtr<nsITimer> platform_timer;
 #endif
   };
@@ -173,7 +189,9 @@ class GearsTimer
   int next_timer_id_;
   scoped_ptr<JsEventMonitor> unload_monitor_;
 
-#if BROWSER_FF
+#ifdef BROWSER_WEBKIT
+  friend void TimerCallback(CFRunLoopTimerRef ref, void* closure);
+#elif BROWSER_FF
   static void TimerCallback(nsITimer *timer, void *closure);
 #endif
 

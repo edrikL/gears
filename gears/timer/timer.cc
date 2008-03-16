@@ -100,8 +100,6 @@ void WindowsPlatformTimer::CancelGearsTimer(int timer_id) {
 }
 #endif
 
-
-
 // Disables the timer when the TimerInfo is deleted.
 GearsTimer::TimerInfo::~TimerInfo() {
 #if BROWSER_FF
@@ -230,13 +228,40 @@ int GearsTimer::CreateTimer(const TimerInfo &timer_info, int timeout) {
 
   // Add the timer to the map.
   timers_[timer_id] = timer_info;
-  timers_[timer_id].timer_id = timer_id;
-  timers_[timer_id].SetOwner(this);
+  TimerInfo *timer = &timers_[timer_id];
+  timer->timer_id = timer_id;
+  timer->SetOwner(this);
 
   // Create the actual timer.
-#if BROWSER_FF
+#if BROWSER_WEBKIT
+  // Create the actual timer.
+  CFRunLoopTimerContext context;
+  memset(&context, 0, sizeof(CFRunLoopTimerContext));
+  context.info = static_cast<void *>(timer);
+  
+  CFAbsoluteTime fireDate = CFAbsoluteTimeGetCurrent() + (1.0e-3 * timeout);
+  CFTimeInterval interval = 0;
+  
+  if (timer_info.repeat) {
+    interval = 1.0e-3 * timeout;
+  }
+  
+  CFRunLoopTimerRef tmp_timer = CFRunLoopTimerCreate(0, fireDate,
+                                                     interval, 0, 0, 
+                                                     TimerCallback, 
+                                                     &context);
+  if (!tmp_timer) {
+    timers_.erase(timer_id);
+    return 0;
+  }
+  
+  CFRunLoopAddTimer(CFRunLoopGetCurrent(), tmp_timer,
+                    kCFRunLoopCommonModes);
+  
+  timer->platform_timer.reset(new TimerInfo::scoped_timer(tmp_timer));
+#elif BROWSER_FF
   nsresult result;
-  timers_[timer_id].platform_timer =
+  timer->platform_timer =
       do_CreateInstance("@mozilla.org/timer;1", &result);
 
   if (NS_FAILED(result)) {
@@ -247,19 +272,19 @@ int GearsTimer::CreateTimer(const TimerInfo &timer_info, int timeout) {
   // Turning off idle causes the callback to be invoked in this thread,
   // instead of in the Timer idle thread.
   nsCOMPtr<nsITimerInternal> timer_internal(
-      do_QueryInterface(timers_[timer_id].platform_timer));
+      do_QueryInterface(timer->platform_timer));
   timer_internal->SetIdle(false);
 
   // Cast because the two constants are defined in different anonymous
   // enums, so they aren't literally of the same type, which throws a
   // warning on gcc.
-  PRUint32 type = timers_[timer_id].repeat
+  PRUint32 type = timer->repeat
       ? static_cast<PRUint32>(nsITimer::TYPE_REPEATING_SLACK)
       : static_cast<PRUint32>(nsITimer::TYPE_ONE_SHOT);
 
   // Start the timer
-  timers_[timer_id].platform_timer->InitWithFuncCallback(
-      TimerCallback, &timers_[timer_id], timeout, type);
+  timer->platform_timer->InitWithFuncCallback(
+      TimerCallback, timer, timeout, type);
 #elif BROWSER_IE
   if (0 == platform_timer_->SetTimer(timer_id, timeout, NULL)) {
     timers_.erase(timer_id);
@@ -304,7 +329,20 @@ void GearsTimer::HandleTimer(TimerInfo *timer_info) {
 }
 
 // Perform the platform specific work when a timer fires.
-#if BROWSER_FF
+#ifdef BROWSER_WEBKIT
+void TimerCallback(CFRunLoopTimerRef ref, void* closure)
+{
+  GearsTimer::TimerInfo *timer_info = 
+                             static_cast<GearsTimer::TimerInfo *>(closure);
+  
+  // AddReference this Timer object to keep it from getting deleted
+  // while running the timer handler.
+  GearsTimer *owner = timer_info->owner;
+  owner->AddReference();
+  owner->HandleTimer(timer_info);
+  owner->RemoveReference();
+}
+#elif BROWSER_FF
 void GearsTimer::TimerCallback(nsITimer *timer, void *closure) {
   TimerInfo *timer_info = reinterpret_cast<TimerInfo *>(closure);
 
