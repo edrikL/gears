@@ -1,5 +1,5 @@
 #summary A proposal to add native HTML5 SQL API to Gears
-#labels DesignDoc,WorkInProgress
+#labels DesignDoc
 
 Work in progress
 ----
@@ -218,6 +218,8 @@ class Database2 : ModuleImplBaseClassVirtual {
       tx->Start();
     }
     else {
+      // explicitly disallow nested transactions, thus one can't
+      // start a synchronous transaction while another transaction is still open
       // set exception INVALID_STATE_ERR
     }
   }
