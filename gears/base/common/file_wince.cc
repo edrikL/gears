@@ -167,7 +167,7 @@ bool File::ReadFileToVector(const char16 *full_filepath,
     DWORD bytes_read;
     if (!::ReadFile(safe_file_handle.get(), &(*data)[0],
                     file_size, &bytes_read, NULL)
-        || (bytes_read != bytes_read)) {
+        || (bytes_read != file_size)) {
       data->clear();
       return false;
     }
