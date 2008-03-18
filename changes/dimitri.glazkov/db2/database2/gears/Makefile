@@ -760,12 +760,20 @@ SHARED_VPATH += \
 		$(NULL)
 
 SHARED_CPPSRCS += \
-		database_manager.cc \
+		manager.cc \
 		database2.cc \
+		interpreter.cc \
+		threaded_interpreter.cc \
+		begin_command.cc \
+		async_execute_command.cc \
+		sync_execute_command.cc \
+		commit_command.cc \
+		rollback_command.cc \
 		transaction.cc \
+		connection.cc \
 		statement.cc \
 		error.cc \
-		transaction_pipeline.cc \
+		result_set2.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
