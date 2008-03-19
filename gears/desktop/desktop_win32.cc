@@ -51,41 +51,191 @@
 #if BROWSER_IE
 #include "gears/base/common/vista_utils.h"
 #endif
+#ifdef WINCE
+#include "gears/desktop/dll_data_wince.h"
+#endif
 #include "gears/desktop/shortcut_utils_win32.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
+struct IcoHeader {
+  uint16 reserved;
+  uint16 type;
+  uint16 count;
+};
+
+struct IcoDirectory {
+  uint8 width;
+  uint8 height;
+  uint8 color_count;
+  uint8 reserved;
+  uint16 planes;
+  uint16 bpp;
+  uint32 data_size;
+  uint32 offset;
+};
+
 #ifdef WINCE
-// WinCE does not currently use icons.
-#else
-// Creates the icon file which contains the various different sized icons.	
+bool WriteIconAsDLL(const char16 *file_path,
+                    const uint8 *icon_data,
+                    const int data_size) {
+  // On WinCE, a shortcut can only make use of an icon embedded in a module as
+  // a resource. There seems to be no documentation on the internal structure of
+  // a WinCE EXE or DLL, so we can't create one from scratch on the fly. Instead
+  // we use 'prototype' DLLs which contains no code, only a single icon. We
+  // take a copy of that DLL and replace the icon with the required icon.
+  //
+  // There seems to be no documentation on the format used to represent an icon
+  // when embedded in a module. Testing shows that it is not the same as on
+  // Win32 (see http://msdn2.microsoft.com/en-us/library/ms997538.aspx). First,
+  // the ICONIMAGE structure does not contain the AND mask (BITMAPINFOHEADER,
+  // color table and XOR mask only). The data for each image is followed by a
+  // footer in place of the AND mask. Also, the headers at the start of the
+  // resource differ and the presence of the icon affects other areas of the
+  // DLL. For these reasons, we use a separate prototype DLL for each of the two
+  // sets of image sizes we support.
+
+  // Read the icon header data, storing size information for each image. After
+  // this, icon_data points to the start of the bitmap data for the first image.
+  const IcoHeader *header = reinterpret_cast<const IcoHeader*>(icon_data);
+  icon_data += sizeof(IcoHeader);
+  struct IconImageData {
+    int image_size;  // BITMAPINFOHEADER, color table, XOR mask and AND mask.
+    int and_mask_size;
+    const uint8 *footer;
+    int footer_size;
+  };
+  std::vector<IconImageData> icon_image_data;
+  for (int i = 0; i < header->count; ++i) {
+    const IcoDirectory* directory =
+        reinterpret_cast<const IcoDirectory*>(icon_data);
+    icon_data += sizeof(IcoDirectory);
+    int width = directory->width;
+    int height = directory->height;
+    // We only support square images.
+    assert(width == height);
+    IconImageData data;
+    int mask_row_bytes = width / 8;
+    mask_row_bytes = ((mask_row_bytes + 3) / 4) * 4;  // round up, multiple of 4
+    data.and_mask_size = height * mask_row_bytes;
+    data.image_size = sizeof(BITMAPINFOHEADER) +
+                      4 * height * width +       // Color data
+                      height * mask_row_bytes +  // XOR mask
+                      data.and_mask_size;        // AND mask
+    icon_image_data.push_back(data);
+  }
+
+  // For now, we only support two cases ...
+  // - a single 16x16 image
+  // - a 32x32 followed by a 16x16 image
+  // Note that CreateIcoFile ensures that icon images are present in the icon
+  // data in order of decreasing size.
+  const int kImageSize16 =
+      sizeof(BITMAPINFOHEADER) + 4 * 16 * 16 + 16 * 4 + 16 * 4;
+  const int kImageSize32 =
+      sizeof(BITMAPINFOHEADER) + 4 * 32 * 32 + 32 * 4 + 32 * 4;
+  const uint8 *icon_dll_begin;
+  const uint8 *icon_dll_header;
+  const uint8 *icon_dll_end;
+  int icon_dll_begin_size;
+  int icon_dll_header_size;
+  int icon_dll_end_size;
+  if (icon_image_data.size() == 1) {
+    assert(icon_image_data[0].image_size == kImageSize16);
+    icon_dll_begin = reinterpret_cast<const uint8*>(kIcon16DllBegin);
+    icon_dll_begin_size = kIcon16DllBeginSize;
+    icon_dll_header = reinterpret_cast<const uint8*>(kIcon16DllHeader);
+    icon_dll_header_size = kIcon16DllHeaderSize;
+    icon_image_data[0].footer =
+        reinterpret_cast<const uint8*>(kIcon16Image16Footer);
+    icon_image_data[0].footer_size = kIcon16Image16FooterSize;
+    icon_dll_end = reinterpret_cast<const uint8*>(kIcon16DllEnd);
+    icon_dll_end_size = kIcon16DllEndSize;
+  } else if (icon_image_data.size() == 2) {
+    assert(icon_image_data[0].image_size == kImageSize32 &&
+           icon_image_data[1].image_size == kImageSize16);
+    icon_dll_begin = reinterpret_cast<const uint8*>(kIcon32and16DllBegin);
+    icon_dll_begin_size = kIcon32and16DllBeginSize;
+    icon_dll_header = reinterpret_cast<const uint8*>(kIcon32and16DllHeader);
+    icon_dll_header_size = kIcon32and16DllHeaderSize;
+    icon_image_data[0].footer =
+        reinterpret_cast<const uint8*>(kIcon32and16Image32Footer);
+    icon_image_data[0].footer_size = kIcon32and16Image32FooterSize;
+    icon_image_data[1].footer =
+        reinterpret_cast<const uint8*>(kIcon32and16Image16Footer);
+    icon_image_data[1].footer_size = kIcon32and16Image16FooterSize;
+    icon_dll_end = reinterpret_cast<const uint8*>(kIcon32and16DllEnd);
+    icon_dll_end_size = kIcon32and16DllEndSize;
+  } else {
+    assert(false);
+    return false;
+  }
+
+  // Calculate the file size.
+  int file_size = icon_dll_begin_size +
+                  icon_dll_header_size +
+                  icon_dll_end_size;
+  for (int i = 0; i < static_cast<int>(icon_image_data.size()); ++i) {
+    file_size += icon_image_data[i].image_size -
+                 icon_image_data[i].and_mask_size +
+                 icon_image_data[i].footer_size;
+
+  }
+  uint8 *data = new uint8[file_size];
+  if (NULL == data) {
+    return false;
+  }
+  int data_index = 0;
+
+  // Write the start of the DLL.
+  memcpy(&data[data_index], icon_dll_begin, icon_dll_begin_size);
+  data_index += icon_dll_begin_size;
+
+  // Write the icon header.
+  memcpy(&data[data_index], icon_dll_header, icon_dll_header_size);
+  data_index += icon_dll_header_size;
+
+  // Write the icon data.
+  for (int i = 0; i < static_cast<int>(icon_image_data.size()); ++i) {
+    memcpy(&data[data_index],
+           icon_data,
+           icon_image_data[i].image_size - icon_image_data[i].and_mask_size);
+    data_index += icon_image_data[i].image_size -
+                  icon_image_data[i].and_mask_size;
+    memcpy(&data[data_index],
+           icon_image_data[i].footer,
+           icon_image_data[i].footer_size);
+    data_index += icon_image_data[i].footer_size;
+    icon_data += icon_image_data[i].image_size;
+  }
+
+  // Write the end of the DLL.
+  memcpy(&data[data_index], icon_dll_end, icon_dll_end_size);
+
+  // Write the data to file.
+  // If the file already exists, CreateNewFile will fail, but that's OK.
+  File::CreateNewFile(file_path);
+  if (!File::WriteBytesToFile(file_path, data, file_size)) {
+    return false;
+  }
+  return true;
+}
+#endif // WINCE
+
+// Creates the icon file which contains the various different sized icons.
 static bool CreateIcoFile(const std::string16 &icons_path,
                           const GearsDesktop::ShortcutInfo &shortcut) {
-  struct IcoHeader {
-    uint16 reserved;
-    uint16 type;
-    uint16 count;
-  };
-
-  struct IcoDirectory {
-    uint8 width;
-    uint8 height;
-    uint8 color_count;
-    uint8 reserved;
-    uint16 planes;
-    uint16 bpp;
-    uint32 data_size;
-    uint32 offset;
-  };
-
   std::vector<const GearsDesktop::IconData *> icons_to_write;
 
-  // Add each icon size that has been provided to the icon list.  We ignore
-  // 128x128 because it isn't supported by Windows.
+  // Add each icon size that has been provided to the icon list.
+#ifdef WINCE
+  // We don't use 128x128 or 48x48 on WinCE.
+#else
+  // We ignore 128x128 because it isn't supported by Windows.
   if (!shortcut.icon48x48.raw_data.empty()) {
     icons_to_write.push_back(&shortcut.icon48x48);
   }
-
+#endif
   if (!shortcut.icon32x32.raw_data.empty()) {
     icons_to_write.push_back(&shortcut.icon32x32);
   }
@@ -126,8 +276,6 @@ static bool CreateIcoFile(const std::string16 &icons_path,
     data_size += sizeof(IcoDirectory);
   }
 
-  File::CreateNewFile(icons_path.c_str());
-
   // Allocate the space for the icon.
   uint8 *data = new uint8[data_size];
   memset(data, 0, data_size);
@@ -150,7 +298,8 @@ static bool CreateIcoFile(const std::string16 &icons_path,
     directory.planes = 1;
     directory.bpp = 32;
 
-    // Size of the header + size of the pixels + size of the hitmask.
+    // Size of the header + size of the pixels + size of the bitmask.
+    // TODO: Is this correct? Should it account for rounding to multiples of 4?
     directory.data_size =
         sizeof(BITMAPINFOHEADER) +
         4 * icons_to_write[i]->width * icons_to_write[i]->height +
@@ -222,15 +371,18 @@ static bool CreateIcoFile(const std::string16 &icons_path,
     dest_offset += mask_row_bytes * icons_to_write[i]->height;
   }
 
-  bool success = File::WriteBytesToFile(icons_path.c_str(),
-                                        data,
-                                        data_size);
+#ifdef WINCE
+  // On WinCE, we don't write the icon directly, but embed it in a DLL.
+  bool success = WriteIconAsDLL(icons_path.c_str(), data, data_size);
+#else
+  File::CreateNewFile(icons_path.c_str());
+  bool success = File::WriteBytesToFile(icons_path.c_str(), data, data_size);
+#endif
 
   delete[] data;
 
   return success;
 }
-#endif  // WINCE
 
 bool GearsDesktop::CreateShortcutPlatformImpl(const SecurityOrigin &origin,
                                               const ShortcutInfo &shortcut,
@@ -251,21 +403,19 @@ bool GearsDesktop::CreateShortcutPlatformImpl(const SecurityOrigin &origin,
   AppendDataName(STRING16(L"icons"), kDataSuffixForDesktop, &icons_path);
   icons_path += kPathSeparator;
   icons_path += shortcut.app_name;
-  icons_path += STRING16(L".ico");
-
-
 #ifdef WINCE
-  // We don't yet use the icons in the shortcut.
-  // Note that CreateIcoFile requires at least one size of icon to be provided,
-  // excluding 128x128. Currently we don't rescale to provide missing icon sizes
-  // for WinCE, so it's possible that none of the required sizes will be
-  // present.
+  // On WinCE, we don't write the icon directly, but embed it in a DLL. We don't
+  // use extension '.dll' because this casues some devices to warn the user that
+  // they are running an untrusted application when the icon is used.
+  icons_path += STRING16(L".icon");
 #else
+  icons_path += STRING16(L".ico");
+#endif
+
   if (!CreateIcoFile(icons_path, shortcut)) {
     *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
-#endif
 
 #if BROWSER_IE
   if (VistaUtils::IsRunningOnVista()) {

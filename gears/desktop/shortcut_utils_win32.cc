@@ -35,10 +35,16 @@
 #include "gears/desktop/shortcut_utils_win32.h"
 
 #include "gears/base/common/common.h"
+#ifdef WINCE
+#include "gears/base/common/file.h"
+#endif
 #include "gears/base/common/int_types.h"
 #include "gears/base/common/png_utils.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
+#ifdef WINCE
+#include "gears/desktop/dll_data_wince.h"  // For kDllIconId
+#endif
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 
@@ -47,17 +53,47 @@ static bool CreateShellLink(const char16 *link_path,
                             const char16 *object_path,
                             const char16 *arguments) {
 #ifdef WINCE
-  // On WinCE we can't create simple shortcuts on the home screen, so instead we
-  // add them to the Start Menu. Also, IShellLink does not exist on WinCE.
-  // Instead, we use SHCreateShortcut and SHGetShortcutTarget, but these do not
-  // allow us to set a custom icon.
-  // TODO(steveblock): Use plugin to add shortcuts to the home screen with
-  // custom icons.
-  std::string16 target = object_path;
-  target += L" -";
-  target += arguments;
-  return SHCreateShortcut(const_cast<char16*>(link_path),
-                          const_cast<char16*>(target.c_str())) == TRUE;
+  // IShellLink does not exist on WinCE and the alternative (SHCreateShortcut)
+  // does not allow us to set a custom icon. So we write the shortcut by hand.
+  // The format is ...
+  // <n>#"<target>" [[-]<argument>][?<module>,<icon index>]
+  // where ...
+  // <> = variable
+  // [] = optional
+  // n = number of characters after the hash, up to and including the last comma
+  // eg. 63#\Windows\iexplore.exe -http://www.google.com?\Windows\test.exe,101
+  if (!object_path) {
+    return false;
+  }
+  std::string16 shortcut = STRING16(L"\"");
+  shortcut += object_path;
+  shortcut += STRING16(L"\"");
+  if (arguments) {
+    shortcut += STRING16(L" ");
+    shortcut += arguments;
+  }
+  if (icon_path) {
+    shortcut += STRING16(L"?");
+    shortcut += icon_path;
+    shortcut += STRING16(L",");
+  }
+  shortcut = IntegerToString16(shortcut.size()) + STRING16(L"#") + shortcut;
+  if (icon_path) {
+    shortcut += IntegerToString16(kDllIconId);
+  }
+  std::string shortcut_utf8;
+  if (!String16ToUTF8(shortcut.c_str(), &shortcut_utf8)) {
+    return false;
+  }
+  // If the file already exists, this will fail, but that's OK.
+  File::CreateNewFile(link_path);
+  if (!File::WriteBytesToFile(
+           link_path,
+           reinterpret_cast<const uint8*>(shortcut_utf8.c_str()),
+           shortcut_utf8.size())) {
+    return false;
+  }
+  return true;
 #else
   HRESULT result;
   IShellLink* shell_link;
@@ -89,7 +125,32 @@ static bool ReadShellLink(const char16 *link_path,
                           std::string16 *arguments) {
 #ifdef WINCE
   char16 target[CHAR_MAX];
-  return SHGetShortcutTarget(link_path, target, CHAR_MAX) == TRUE;
+  if (SHGetShortcutTarget(link_path, target, CHAR_MAX) == FALSE) {
+    return false;
+  }
+  if (icon_path) {
+    std::vector<uint8> data;
+    if (!File::ReadFileToVector(link_path, &data)) {
+      return false;
+    }
+    std::string16 shortcut;
+    if (!UTF8ToString16(reinterpret_cast<char*>(&data[0]), &shortcut)) {
+      return false;
+    }
+    // If an icon is specified, its module file must be preceeded by "?" and
+    // followed by ",".
+    int start_index = shortcut.find(STRING16(L"?"));
+    int end_index = shortcut.find(STRING16(L","));
+    if (std::string16::npos != start_index &&
+        std::string16::npos != end_index &&
+        start_index < end_index) {
+      *icon_path = shortcut.substr(start_index + 1,
+                                   end_index - start_index - 1);
+    } else {
+      *icon_path = STRING16(L"");
+    }
+  }
+  return true;
 #else
   HRESULT result;
   IShellLink* shell_link;
@@ -143,13 +204,17 @@ static bool GetShortcutLocationPath(std::string16 *shortcut_location_path) {
 
   // We use the old version of this function because the new version apparently
   // won't tell you the Desktop folder path.
-  BOOL result = SHGetSpecialFolderPath(NULL, path_buf,
 #ifdef WINCE
-                                       CSIDL_STARTMENU,
+  // On Pocket PC, we'd like to add to 'Start -> Programs'. On SmartPhone, this
+  // location doesn't exist, so we'd like to add to 'Start'. Rather than brittle
+  // phone detection, just try the former location and if it fails, try the
+  // second.
+  BOOL result = SHGetSpecialFolderPath(NULL, path_buf, CSIDL_PROGRAMS, FALSE) ||
+                SHGetSpecialFolderPath(NULL, path_buf, CSIDL_STARTMENU, TRUE);
 #else
-                                       CSIDL_DESKTOPDIRECTORY,
-#endif
+  BOOL result = SHGetSpecialFolderPath(NULL, path_buf, CSIDL_DESKTOPDIRECTORY,
                                        TRUE);
+#endif
 
   if (result) {
     *shortcut_location_path = path_buf;
@@ -180,19 +245,16 @@ bool CreateShortcutFileWin32(const std::string16 &name,
   // us.  We only allow overwriting shortcuts we created, but it's okay if they
   // were written by another browser.  (This is best for users, and also helpful
   // during development, where we often create a shortcut in multiple browsers.)
-#ifdef WINCE
-  // On WinCE we can't use the icon path to determine whether this shortcut was
-  // created by Gears. We stay safe and fail if the shortcut already exists.
-  if (ReadShellLink(link_path.c_str(), NULL, NULL, NULL)) {
-    return false;
-  }
-#else
   std::string16 old_icon;
   if (ReadShellLink(link_path.c_str(), &old_icon, NULL, NULL)) {
+#ifdef WINCE
+    // We don't need to convert from short to long path on WinCE.
+#else
     int old_icon_length = GetLongPathNameW(old_icon.c_str(), NULL, 0);
     scoped_array<char16> old_icon_buf(new char16[old_icon_length]);
     GetLongPathNameW(old_icon.c_str(), old_icon_buf.get(), old_icon_length);
     old_icon.assign(old_icon_buf.get());
+#endif
 
     // Look for the path where we store shortcut icons. (See paths*.cc.)
     if (old_icon.find(STRING16(PRODUCT_FRIENDLY_NAME L" for "))
@@ -203,7 +265,6 @@ bool CreateShortcutFileWin32(const std::string16 &name,
       return false;
     }
   }
-#endif
 
   if (!CreateShellLink(link_path.c_str(), icons_path.c_str(),
                        browser_path.c_str(), url.c_str())) {
