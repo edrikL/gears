@@ -29,7 +29,9 @@
 #include "gears/installer/iemobile/process_restarter.h"
 #include "gears/installer/iemobile/resource.h"  // for restart dialog strings
 
-static const char16* kInternetExplorer = L"iexplore.exe";
+static const char16* kInternetExplorerExe = L"iexplore.exe";
+// Note that this string does not appear to be localized by Microsoft.
+static const char16* kInternetExplorerWindow = L"Internet Explorer";
 static const char16* kGearsSite = L"http://gears.google.com/done.html";
 
 HINSTANCE module_instance;
@@ -92,16 +94,12 @@ __declspec(dllexport) InstallerActions Install_Init(
     LPCTSTR installation_directory) {
   // We only handle the first call.
   if (!is_first_call) return kContinue;
-  // Find out if IE Mobile is running.
-  ProcessRestarter restarter(kInternetExplorer);  
-  if (restarter.IsProcessRunning()) {
-    restarter.KillTheProcess(
-        1000,
-        ProcessRestarter::KILL_METHOD_1_WINDOW_MESSAGE |
-        ProcessRestarter::KILL_METHOD_3_TERMINATE_PROCESS,
-        NULL);      
-  }
-  // IE Mobile wasn't running.
+  ProcessRestarter restarter(kInternetExplorerExe, kInternetExplorerWindow);
+  restarter.KillTheProcess(
+      1000,
+      ProcessRestarter::KILL_METHOD_1_WINDOW_MESSAGE |
+      ProcessRestarter::KILL_METHOD_3_TERMINATE_PROCESS,
+      NULL);  
   return kContinue;
 }
 
@@ -115,13 +113,15 @@ __declspec(dllexport) InstallerActions Install_Exit(
     WORD    failed_registry_keys,
     WORD    failed_registry_values,
     WORD    failed_shortcuts) {
-  ProcessRestarter restarter(kInternetExplorer);
-  if (restarter.IsProcessRunning()) {
-    // We could not kill IE. Tell the user he needs to reboot.
-    // This is because Gears may appear to be working (creations of Gears
-    // objects will succeed) but the HttpHandler and the Settings menu entry
-    // will not be registered with IE. This leaves Gears in an inconsistent
-    // state until IE is restarted.
+  ProcessRestarter restarter(kInternetExplorerExe, kInternetExplorerWindow);
+  bool is_running = false;
+  HRESULT result = restarter.IsProcessRunning(&is_running);
+  if ((SUCCEEDED(result) && is_running) || FAILED(result)) {
+    // We could not kill IE or we could not even tell if it was running.
+    // Tell the user he needs to reboot. This is because Gears may appear to be
+    // working (creations of Gears objects will succeed) but the HttpHandler
+    // and the Settings menu entry will not be registered with IE.
+    // This leaves Gears in an inconsistent state until IE is restarted.
     LPCTSTR title = reinterpret_cast<LPCTSTR>(LoadString(
         module_instance,
         IDS_RESTART_DIALOG_TITLE,
