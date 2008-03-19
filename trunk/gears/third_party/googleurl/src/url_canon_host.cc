@@ -230,7 +230,12 @@ bool DoSimpleHost(const CHAR* host, int host_len, CanonOutput* output) {
 // Canonicalizes a host that requires IDN conversion. Returns true on success.
 bool DoIDNHost(const UTF16Char* src, int src_len, CanonOutput* output) {
   StackBufferW wide_output;
+#if 0  // Google Gears removed this:
   if (!IDNToASCII(src, src_len, &wide_output)) {
+#else  // Google Gears added this:
+  // Stubbed out since we don't build with the necessary ICU files.
+  if (true) {
+#endif
     // Some error, give up. This will write some reasonable looking
     // representation of the string to the output.
     AppendInvalidNarrowString(src, 0, src_len, output);
