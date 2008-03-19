@@ -170,8 +170,6 @@ MediaRecorder class
            attribute int format; 
   // The number of bits per sample.
            attribute int bitsPerSample;
-  // the amount of sound detected by the microphone - [0 - 100]
-  readonly attribute int activityLevel;
   // specifies if blob is streamed as and when it is written to, or not.
            attribute boolean autoStream;
 
@@ -212,12 +210,14 @@ The MediaRecorder class throws the following events, under the stated preconditi
    * _record_ - Recording starts.
    * _ended_ - Finished recording.
 
-*_AudioRecorder class : MediaRecorder_*
+*_AudioRecorder class : MediaRecorder _*
 {{{
 // an object of this class can be got from 
 // google.gears.factory.create('beta.audiorecorder')
 AudioRecorder class : MediaRecorder
 {
+  // the amount of sound detected by the microphone - [0 - 100]
+  readonly attribute int activityLevel;
   // the amount of sound required to activate the microphone - [0-100] 
   attribute int silenceLevel;
 };
@@ -239,13 +239,13 @@ MediaBlob class : Blob
   // Holds a map of name value pairs, name and value being String types.
            attribute map metadata;
 
-  // Exports the blob to the passed fileName, and encodes it to the mentioned format. 
-  // Supported formats to be added here.
-  void exportToFile(in String fileName, in int encodeFormat); 
+  // Encodes the blob in the mentioned format, and returns a new blob. 
+  // Supported formats to be added here in an enum.
+  MediaBlob exportToFile(in int encodeFormat); 
 };
 }}}
 
-*_AudioBlob class : MediaBlob_*
+*_AudioBlob class : MediaBlob _*
 {{{
 AudioBlob class : MediaBlob
 {
