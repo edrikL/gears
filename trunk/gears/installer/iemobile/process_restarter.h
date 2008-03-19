@@ -40,8 +40,15 @@ class ProcessRestarter {
   static const int KILL_METHOD_2_THREAD_MESSAGE = 0x02;
   static const int KILL_METHOD_3_TERMINATE_PROCESS = 0x04;
 
-  // Creates the object given the process name to kill.
-  explicit ProcessRestarter(const std::string16& process_name);
+  // Creates the object given the process_name to kill.
+  explicit ProcessRestarter(const char16* process_name);
+  // Creates the object given the process_name to kill.
+  // The window_name parameter denotes the name of the main window created
+  // by the process. If not NULL or empty, this string will be used as a
+  // fallback mechanism for finding the process handle when finding by
+  // process name failed due to a win32 API error.
+  ProcessRestarter(const char16* process_name,
+                   const char16* window_name);
   virtual ~ProcessRestarter();
 
   // Go through process list try to find the required one to kill,
@@ -60,11 +67,21 @@ class ProcessRestarter {
   HRESULT StartTheProcess(const std::string16& args);
 
   // Tests if the process is currently running.
-  bool IsProcessRunning();
+  // The is_running parameter is only set if the return value denotes success.
+  HRESULT IsProcessRunning(bool* is_running);
 
  private:
   // Finds all instances of the process.
-  bool FindProcessInstances();
+  // The found parameter is only set if the return value denotes success.
+  HRESULT FindProcessInstances(bool* found);
+
+  // Finds all instances of the process using ::CreateToolhelp32Snapshot
+  // The found parameter is only set if the return value denotes success.
+  HRESULT FindProcessInstancesUsingSnapshot(bool* found);
+
+  // Finds all instances of the process using ::FindWindow
+  // The found parameter is only set if the return value denotes success.
+  HRESULT FindProcessInstancesUsingFindWindow(bool* found);
 
   // Will try to open handle to each instance.
   // Leaves process handles open (in member process_handles_).
@@ -114,7 +131,8 @@ class ProcessRestarter {
   bool KillProcessViaTerminate(int timeout_msec);
 
   // Private member variables:
-  std::string16 process_name_;
+  const char16* process_name_;
+  const char16* window_name_;
   // One process can have several instances
   // running. This array will keep handles to all
   // instances of the process.

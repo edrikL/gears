@@ -36,12 +36,18 @@
 // class ProcessRestarter
 //------------------------------------------------------------------------------
 
-ProcessRestarter::ProcessRestarter(const std::string16& process_name)
-    : recursion_level_(0),
-      process_name_(process_name) {
+ProcessRestarter::ProcessRestarter(const char16* process_name) {
+  ProcessRestarter(process_name, NULL);
 }
 
-// Cclean up if we've left the process handle open
+ProcessRestarter::ProcessRestarter(const char16* process_name,
+                                   const char16* window_name)
+    : recursion_level_(0),
+      process_name_(process_name),
+      window_name_(window_name) {
+}
+
+// Clean up if we've left the process handle open
 ProcessRestarter::~ProcessRestarter() {
   CloseAllHandles();
 }
@@ -51,22 +57,22 @@ ProcessRestarter::~ProcessRestarter() {
 // method_mask specifies what killing methods to try.
 // was_found is optional and can be NULL.
 // Returns S_OK if all instances were killed, S_FALSE if process wasn't running,
-// and E_FAIL if one or more instances weren't killed.
-// Always sets was_found correctly, regardless of return value.
+// and E_FAIL if one or more instances weren't killed or finding the process
+// failed at any step.
+// The was_found parameter is only set if the return value is either S_OK or
+// S_FALSE.
 HRESULT ProcessRestarter::KillTheProcess(int timeout_msec,
                                          uint32 method_mask, bool* was_found) {
   LOG16(_T("KillTheProcess"));
 
-  if (!FindProcessInstances()) {
+  bool found;
+  HRESULT result = FindProcessInstances(&found);
+  if (FAILED(result)) return E_FAIL;
+  if (!found) {
     if (was_found != NULL) {
       *was_found = false;
     }
     return S_FALSE;  // process is not running, so don't return a FAILED hr
-  }
-
-  // If got here, found at least one process to kill
-  if (was_found != NULL) {
-    *was_found = true;
   }
 
   // Try the nicest, cleanest method of closing a process: window messages.
@@ -76,7 +82,11 @@ HRESULT ProcessRestarter::KillTheProcess(int timeout_msec,
     }
 
     // Are any instances of the process still running?
-    if (!FindProcessInstances()) {
+    result = FindProcessInstances(&found);
+    if (FAILED(result)) return E_FAIL;
+    if (!found) {
+      // Success. Set was_found and return.
+      if (was_found != NULL) *was_found = true;
       return S_OK;  // killed them all
     }
   }
@@ -87,7 +97,11 @@ HRESULT ProcessRestarter::KillTheProcess(int timeout_msec,
       KillProcessViaThreadMessages(timeout_msec);
     }
     // Are any instances of the process still running?
-    if (!FindProcessInstances()) {
+    result = FindProcessInstances(&found);
+    if (FAILED(result)) return E_FAIL;
+    if (!found) {
+      // Success. Set was_found and return.
+      if (was_found != NULL) *was_found = true;
       return S_OK;  // killed them all
     }
   }
@@ -98,7 +112,11 @@ HRESULT ProcessRestarter::KillTheProcess(int timeout_msec,
       KillProcessViaTerminate(timeout_msec);
     }
     // Are any instances of the process still running?
-    if (!FindProcessInstances()) {
+    result = FindProcessInstances(&found);
+    if (FAILED(result)) return E_FAIL;
+    if (!found) {
+      // Success. Set was_found and return.
+      if (was_found != NULL) *was_found = true;
       return S_OK;  // killed them all
     }
 
@@ -111,10 +129,13 @@ HRESULT ProcessRestarter::KillTheProcess(int timeout_msec,
 
 HRESULT ProcessRestarter::WaitForAllToDie(int timeout_msec) {
   LOG16(_T("WaitForAllToDie"));
-  if (!FindProcessInstances()) {
+  bool found = false;
+  HRESULT result = FindProcessInstances(&found);
+  if (FAILED(result)) return result;
+  if (!found) {
     return S_OK;
   }
-
+  // There are still some instances
   if (PrepareToKill(KILL_METHOD_1_WINDOW_MESSAGE)) {
     return WaitForProcessInstancesToDie(timeout_msec) ?
         S_OK : HRESULT_FROM_WIN32(WAIT_TIMEOUT);
@@ -124,7 +145,10 @@ HRESULT ProcessRestarter::WaitForAllToDie(int timeout_msec) {
 }
 
 HRESULT ProcessRestarter::StartTheProcess(const std::string16& args) {
-  if (FindProcessInstances()) {
+  bool found = false;
+  HRESULT result = FindProcessInstances(&found);
+  if (FAILED(result)) return result;
+  if (found) {
     // Process is already running. Bail out.
     return S_FALSE;
   }
@@ -132,15 +156,15 @@ HRESULT ProcessRestarter::StartTheProcess(const std::string16& args) {
   ZeroMemory(&info, sizeof(SHELLEXECUTEINFO));
   info.cbSize = sizeof(SHELLEXECUTEINFO);
   info.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_NOCLOSEPROCESS;
-  info.lpFile = process_name_.c_str();
+  info.lpFile = process_name_;
   info.lpParameters = args.c_str();
   info.nShow = SW_SHOWNORMAL;
   if (::ShellExecuteEx(&info) == TRUE) return S_OK;
   return HRESULT_FROM_WIN32(::GetLastError());
 }
 
-bool ProcessRestarter::IsProcessRunning() {
-  return FindProcessInstances();
+HRESULT ProcessRestarter::IsProcessRunning(bool* is_running) {
+  return FindProcessInstances(is_running);
 }
 
 //------------------------------------------------------------------------------
@@ -148,14 +172,27 @@ bool ProcessRestarter::IsProcessRunning() {
 //------------------------------------------------------------------------------
 
 // Finds all instances of the process.
+HRESULT ProcessRestarter::FindProcessInstances(bool* is_running) {
+  if (SUCCEEDED(FindProcessInstancesUsingSnapshot(is_running))) {
+    return S_OK;
+  }
+  return FindProcessInstancesUsingFindWindow(is_running);
+}
+
 // See http://msdn2.microsoft.com/en-us/library/aa446560.aspx for details
 // on how to enumerate processes on Windows Mobile.
-bool ProcessRestarter::FindProcessInstances() {
+HRESULT ProcessRestarter::FindProcessInstancesUsingSnapshot(bool* found) {
+  ASSERT(found);
   // Clear the process_ids_.
   process_ids_.clear();
-  // Create a snapshot of the processes running in the system
+  // Create a snapshot of the processes running in the system.
+  // According to http://www.themssforum.com/PocketPCDev/CreateToolhelpSnapshot/
+  // CreateToolhelp32Snapshot always allocates 1MB of virtual memory, which can
+  // sometimes fail (e.g. high system memory usage, or fragmentation).
   HANDLE handle = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-  if (handle == INVALID_HANDLE_VALUE) return false;
+  if (handle == INVALID_HANDLE_VALUE) {
+    return HRESULT_FROM_WIN32(::GetLastError());
+  }
 
   // Create a new process entry structure
   PROCESSENTRY32 current_process_entry;
@@ -166,7 +203,7 @@ bool ProcessRestarter::FindProcessInstances() {
   BOOL success = ::Process32First(handle, &current_process_entry);
   while (success) {
     // Save the process id if the exe file name matches
-    if (wcscmp(current_process_entry.szExeFile, process_name_.c_str()) == 0) {
+    if (wcscmp(current_process_entry.szExeFile, process_name_) == 0) {
       process_ids_.push_back(current_process_entry.th32ProcessID);
     }
     // We need to reset this after each call to Process32Next
@@ -175,8 +212,39 @@ bool ProcessRestarter::FindProcessInstances() {
   }
 
   // Done, so close the handle, free the process structure and return
-  ::CloseToolhelp32Snapshot(handle);
-  return !process_ids_.empty();
+  ::CloseToolhelp32Snapshot(handle);  // we ignore this function's return code
+  *found = !process_ids_.empty();
+  return S_OK;
+}
+
+HRESULT ProcessRestarter::FindProcessInstancesUsingFindWindow(bool* found) {
+  ASSERT(found);
+  
+  // We fail fast if the window_name is NULL or the empty string.
+  if (window_name_ == NULL || wcslen(window_name_) == 0) {
+    return E_FAIL;
+  }
+
+  HRESULT result;
+  HWND handle = FindWindow(NULL, window_name_);
+  if (handle == NULL) {
+    // We didn't find the window. Is this because there is no such window
+    // or because FindWindow failed for a different reason?
+    result = HRESULT_FROM_WIN32(::GetLastError());
+    if (SUCCEEDED(result)) {
+      // There is no such window.
+      *found = false;
+    }
+    return result;
+  }
+
+  // Found a window, get the PID.  
+  uint32 process_id = 0;
+  uint32 thread_id =
+      ::GetWindowThreadProcessId(handle, reinterpret_cast<DWORD*>(&process_id));  
+  process_ids_.push_back(process_id);
+  *found = true;
+  return S_OK; 
 }
 
 // Given the process_ids_ array, this method will try to
@@ -231,8 +299,10 @@ bool ProcessRestarter::PrepareToKill(uint32 method_mask) {
 
     // We have a disbalance here. This means that Some of the processes died
     // already so we need to take another snapshot.
-    if (!FindProcessInstances()) {
-      // they are all dead.
+    // Are any instances of the process still running?
+    bool found = false;
+    if(FAILED(FindProcessInstances(&found)) || !found) {
+      // they are all dead or we can't tell.
       recursion_level_ = 0;
       return false;
     }
