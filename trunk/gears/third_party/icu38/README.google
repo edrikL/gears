@@ -1,0 +1,9 @@
+This directory contains a small subset of the source code of ICU 3.8 for
+C/C++.  Only some UTF support is included.
+
+  - It was obtained with the following:
+
+     svn export --native-eol LF http://source.icu-project.org/repos/icu/icu/branches/jchye/trie icu38
+
+  - Removed everything except 'source/common/utf_impl.cc' and
+    'public/common/unicode/*.h'
