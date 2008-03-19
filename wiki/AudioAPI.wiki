@@ -241,7 +241,7 @@ MediaBlob class : Blob
 
   // Encodes the blob in the mentioned format, and returns a new blob. 
   // Supported formats to be added here in an enum.
-  MediaBlob exportToFile(in int encodeFormat); 
+  MediaBlob encodeToFormat(in int encodeFormat); 
 };
 }}}
 
