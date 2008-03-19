@@ -216,9 +216,6 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
     return;
   }
 
-#ifdef WINCE
-  // WinCE does not currently use icons.
-#else
   if (allow) {
     // Ensure the directory we'll be storing the icons in exists.
     std::string16 icon_dir;
@@ -232,7 +229,6 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
       return;
     }
   }
-#endif
 
   if (!SetShortcut(&shortcut_info, allow, permanently, &error)) {
     context->SetException(error);
@@ -403,9 +399,6 @@ bool GearsDesktop::SetShortcut(GearsDesktop::ShortcutInfo *shortcut,
     return true;
   }
 
-#ifdef WINCE
-  // WinCE does not currently use icons.
-#else
   if (!FetchIcon(&shortcut->icon16x16, 16, error) ||
       !FetchIcon(&shortcut->icon32x32, 32, error) ||
       !FetchIcon(&shortcut->icon48x48, 48, error) ||
@@ -419,7 +412,6 @@ bool GearsDesktop::SetShortcut(GearsDesktop::ShortcutInfo *shortcut,
     return false;
   }
 
-  // TODO(steveblock): Do we want to introduce this optimization for WinCE?
 #if defined(WIN32) || defined(OS_MACOSX)
   const GearsDesktop::IconData *next_largest_provided = NULL;
 
@@ -468,7 +460,6 @@ bool GearsDesktop::SetShortcut(GearsDesktop::ShortcutInfo *shortcut,
     }
   }
 #endif
-#endif  // WINCE
 
   // Create the desktop shortcut using platform-specific code
   assert(allow);
@@ -488,9 +479,6 @@ bool GearsDesktop::SetShortcut(GearsDesktop::ShortcutInfo *shortcut,
   return true;
 }
 
-#ifdef WINCE
-// WinCE does not currently use icons.
-#else
 bool GearsDesktop::WriteControlPanelIcon(
                        const GearsDesktop::ShortcutInfo &shortcut) {
   const GearsDesktop::IconData *chosen_icon = NULL;
@@ -594,7 +582,6 @@ bool GearsDesktop::GetControlPanelIconLocation(const SecurityOrigin &origin,
 
   return true;
 }
-#endif  // WINCE
 
 bool GearsDesktop::ResolveUrl(std::string16 *url, std::string16 *error) {
   std::string16 full_url;
