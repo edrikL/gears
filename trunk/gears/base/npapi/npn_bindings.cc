@@ -311,7 +311,23 @@ bool NPN_Evaluate(NPP npp, NPObject* obj, NPString *script,
 bool NPN_GetProperty(NPP npp, NPObject* obj, NPIdentifier propertyName,
                      NPVariant *result)
 {
+// Workaround for bug in WebKit: GetProperty() fails when attempting to
+// read a null value from an array, however it fills in the variant structure
+// correctly.
+// The workaround is to chek if GetProprety() touches the variant structure,
+// if so, we assume it succeeded.
+#ifdef BROWSER_WEBKIT
+  result->type = static_cast<NPVariantType>(-1);
+  
+  bool ret = GetNPNFuncs().getproperty(npp, obj, propertyName, result);
+  
+  if (result->type != -1 && !ret) {
+    ret = true;
+  }
+  return ret;
+#else
   return GetNPNFuncs().getproperty(npp, obj, propertyName, result);
+#endif
 }
 
 bool NPN_SetProperty(NPP npp, NPObject* obj, NPIdentifier propertyName,
