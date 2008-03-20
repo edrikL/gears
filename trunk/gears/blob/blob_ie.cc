@@ -66,20 +66,16 @@ STDMETHODIMP GearsBlob::slice(VARIANT var_offset, const VARIANT *var_length,
   *retval = NULL;  // set retval in case we exit early
 
   // Validate arguments.
-  double temp;
-  if (!JsTokenToDouble(var_offset, NULL, &temp) || (temp < 0)
-      || (temp > JS_INT_MAX)) {
+  int64 offset;
+  if (!JsTokenToInt64_NoCoerce(var_offset, NULL, &offset) || (offset < 0)) {
     RETURN_EXCEPTION(STRING16(L"Offset must be a non-negative integer."));
   }
-  int64 offset = static_cast<int64>(temp);
 
   int64 length;
   if (ActiveXUtils::OptionalVariantIsPresent(var_length)) {
-    if (!JsTokenToDouble(*var_length, NULL, &temp) || (temp < 0)
-        || (temp > JS_INT_MAX)) {
+    if (!JsTokenToInt64_NoCoerce(*var_length, NULL, &length) || (length < 0)) {
       RETURN_EXCEPTION(STRING16(L"Length must be a non-negative integer."));
     }
-    length = static_cast<int64>(temp);
   } else {
     int64 blob_size = contents_->Length();
     length = (blob_size > offset) ? blob_size - offset : 0;

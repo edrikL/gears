@@ -95,6 +95,7 @@ typedef JsRootedToken JsRootedCallback;
 enum JsParamType {
   JSPARAM_BOOL,
   JSPARAM_INT,
+  JSPARAM_INT64,
   JSPARAM_DOUBLE,
   JSPARAM_STRING16,
   JSPARAM_OBJECT,
@@ -104,6 +105,7 @@ enum JsParamType {
   JSPARAM_NULL,
   JSPARAM_UNDEFINED,
   JSPARAM_UNKNOWN,
+  JSPARAM_TOKEN
 };
 
 enum JsParamRequirement {
@@ -127,16 +129,25 @@ struct JsArgument {
   void* value_ptr;
 };
 
-// Utility functions to convert JsToken to various primitives. These
-// functions will try to coerce the JsToken to the required type. null or
-// undefined are never coerced and these functions will return false in
-// that case.
-// TODO(mpcomplete): implement coercion for NPAPI.
-bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out);
-bool JsTokenToInt(JsToken t, JsContextPtr cx, int *out);
-bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out);
-bool JsTokenToDouble(JsToken t, JsContextPtr cx, double *out);
-bool JsTokenToNewCallback(JsToken t, JsContextPtr cx, JsRootedCallback **out);
+// Utility functions to convert JsToken to various C++ types without coercion.
+// If the type of the underlying JavaScript variable does not exactly match the
+// requested type, these functions return false.
+bool JsTokenToBool_NoCoerce(JsToken t, JsContextPtr cx, bool *out);
+bool JsTokenToInt_NoCoerce(JsToken t, JsContextPtr cx, int *out);
+bool JsTokenToInt64_NoCoerce(JsToken t, JsContextPtr cx, int64 *out);
+bool JsTokenToDouble_NoCoerce(JsToken t, JsContextPtr cx, double *out);
+bool JsTokenToString_NoCoerce(JsToken t, JsContextPtr cx, std::string16 *out);
+bool JsTokenToNewCallback_NoCoerce(JsToken t, JsContextPtr cx,
+                                   JsRootedCallback **out);
+
+// Utility functions to coerce JsTokens to various C++ types. These functions
+// implement coercion as defined by ECMA 262-3 Section 9:
+// http://bclary.com/2004/11/07/#a-9
+// They return false if the coercion could not be performed.
+bool JsTokenToBool_Coerce(JsToken t, JsContextPtr cx, bool *out);
+bool JsTokenToInt_Coerce(JsToken t, JsContextPtr cx, int *out);
+bool JsTokenToString_Coerce(JsToken t, JsContextPtr cx, std::string16 *out);
+bool JsTokenToDouble_Coerce(JsToken t, JsContextPtr cx, double *out);
 
 // Utility function to determine the type of a JsToken.
 JsParamType JsTokenGetType(JsToken t, JsContextPtr cx);
@@ -178,13 +189,6 @@ class JsRootedToken {
   JsToken token() const { return token_; }
   JsContextPtr context() const { return context_; }
 
-  bool GetAsBool(bool *out) const {
-    return JsTokenToBool(token_, context_, out);
-  }
-
-  // TODO(aa): GetAsString(), etc. But needs restructuring first. See note below
-  // above IE implementation.
-
  private:
   JsContextPtr context_;
   JsToken token_;
@@ -214,10 +218,6 @@ class JsRootedToken {
 
   JsToken token() const { return token_; }
   JsContextPtr context() const { return NULL; }
-
-  bool GetAsBool(bool *out) const {
-    return JsTokenToBool(token_, NULL, out);
-  }
 
  private:
   JsToken token_;
@@ -271,10 +271,6 @@ class JsRootedToken {
   const JsScopedToken& token() const { return token_; }
   JsContextPtr context() const { return context_; }
 
-  bool GetAsBool(bool *out) const {
-    return JsTokenToBool(token_, context_, out);
-  }
-
  private:
   JsContextPtr context_;  // TODO(mpcomplete): figure out if this is necessary
   JsScopedToken token_;
@@ -320,7 +316,6 @@ class JsArray {
 
   bool GetElement(int index, JsScopedToken *out) const;
   
-  // These functions coerce values using the JsTokenTo*() functions.
   bool GetElementAsBool(int index, bool *out) const;
   bool GetElementAsInt(int index, int *out) const;
   bool GetElementAsDouble(int index, double *out) const;
@@ -354,7 +349,6 @@ class JsObject {
   bool GetProperty(const std::string16 &name, JsScopedToken *value) const;
   bool SetObject(JsToken value, JsContextPtr context);
 
-  // These functions coerce values using the JsTokenTo*() functions.
   bool GetPropertyAsBool(const std::string16 &name, bool *out) const;
   bool GetPropertyAsInt(const std::string16 &name, int *out) const;
   bool GetPropertyAsDouble(const std::string16 &name, double *out) const;
@@ -487,6 +481,8 @@ void ConvertJsParamToToken(const JsParamToSend &param,
 // Helper class to extract JavaScript parameters (including optional params
 // and varargs), in a way that hides differences between main-thread and
 // worker-thread environments.
+// NOTE: Use of this class is deprecated in new Gears modules. Use Dispatcher
+// and JsCallContext instead.
 class JsParamFetcher {
  public:
   explicit JsParamFetcher(ModuleImplBaseClass *obj);
@@ -498,7 +494,6 @@ class JsParamFetcher {
   // In Firefox, set has_string_retval iff method has a string return value.
   bool IsOptionalParamPresent(int i, bool has_string_retval);
   
-  // These functions coerce values using the JsTokenTo*() functions.
   bool GetAsInt(int i, int *out);
   bool GetAsString(int i, std::string16 *out);
   bool GetAsBool(int i, bool *out);
@@ -510,6 +505,12 @@ class JsParamFetcher {
   // XPConnect
   bool GetAsModule(int i, nsISupports **out);
 
+  // NOTE: This method returns true if the argument at position i is null or
+  // undefined. The JsRootedCallback at that point will be valid, but its
+  // token() will be null or undefined. This is weird, but it is the expected
+  // behavior by several older Gears modules. Since JsParamFetcher is
+  // deprecated, this method keeps its old, weird behavior. JsCallContext, which
+  // new code should use, does not share this quirk.
   bool GetAsNewRootedCallback(int i, JsRootedCallback **out);
   
   // Method to get the type of a parameter
