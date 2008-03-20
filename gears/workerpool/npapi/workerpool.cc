@@ -509,7 +509,12 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
 
   if (wi->js_runner->InvokeCallback(wi->onerror_handler.get(), argc, argv,
                                     &alloc_js_retval)) {
-    alloc_js_retval->GetAsBool(&js_retval);
+    // Coerce the return value to bool. We typically don't coerce interfaces,
+    // but if the return type of a callback is the wrong type, there is no
+    // convenient place to report that, and it seems better to fail on this
+    // side than rejecting a value without any explanation.
+    JsTokenToBool_Coerce(alloc_js_retval->token(), alloc_js_retval->context(),
+                         &js_retval);
     delete alloc_js_retval;
   }
 

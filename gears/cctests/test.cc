@@ -37,6 +37,9 @@ DECLARE_GEARS_WRAPPER(GearsTest);
 template<>
 void Dispatcher<GearsTest>::Init() {
   RegisterMethod("runTests", &GearsTest::RunTests);
+  RegisterMethod("testPassArguments", &GearsTest::TestPassArguments);
+  RegisterMethod("testPassArgumentsOptional",
+                 &GearsTest::TestPassArgumentsOptional);
   RegisterMethod("testPassObject", &GearsTest::TestPassObject);
   RegisterMethod("testCreateObject", &GearsTest::TestCreateObject);
   RegisterMethod("testCoerceBool", &GearsTest::TestCoerceBool);
@@ -188,9 +191,63 @@ void GearsTest::RunTests(JsCallContext *context) {
   context->SetReturnValue(JSPARAM_BOOL, &ok);
 }
 
+void GearsTest::TestPassArguments(JsCallContext *context) {
+  bool bool_value = false;
+  int int_value = 0;
+  int64 int64_value = 0;
+  double double_value = 0.0;
+  std::string16 string_value;
+
+  JsArgument argv[] = {
+    {JSPARAM_REQUIRED, JSPARAM_BOOL, &bool_value},
+    {JSPARAM_REQUIRED, JSPARAM_INT, &int_value},
+    {JSPARAM_REQUIRED, JSPARAM_INT64, &int64_value},
+    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &double_value},
+    {JSPARAM_REQUIRED, JSPARAM_STRING16, &string_value}
+  };
+
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
+  if (!bool_value) {
+    context->SetException(STRING16(L"Incorrect value for parameter 1"));
+  } else if (int_value != 42) {
+    context->SetException(STRING16(L"Incorrect value for parameter 2"));
+  } else if (int64_value != (GG_LONGLONG(1) << 42)) {
+    context->SetException(STRING16(L"Incorrect value for parameter 3"));
+  } else if (double_value != 88.8) {
+    context->SetException(STRING16(L"Incorrect value for parameter 4"));
+  } else if (string_value != STRING16(L"hotdog")) {
+    context->SetException(STRING16(L"Incorrect value for parameter 5"));
+  }
+}
+
+void GearsTest::TestPassArgumentsOptional(JsCallContext *context) {
+  int int_values[3] = {};
+
+  JsArgument argv[] = {
+    {JSPARAM_REQUIRED, JSPARAM_INT, &(int_values[0])},
+    {JSPARAM_OPTIONAL, JSPARAM_INT, &(int_values[1])},
+    {JSPARAM_OPTIONAL, JSPARAM_INT, &(int_values[2])}
+  };
+
+  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
+  for (int i = 0; i < argc; ++i) {
+    if (int_values[i] != 42) {
+      std::string16 error(STRING16(L"Incorrect value for parameter "));
+      error += IntegerToString16(i + 1);
+      error += STRING16(L".");
+      context->SetException(error);
+      return;
+    }
+  }
+}
+
 // An object is passed in from JavaScript with properties set to test all the
 // JsObject::Get* functions.
-void GearsTest::TestPassObject(JsCallContext* context) {
+void GearsTest::TestPassObject(JsCallContext *context) {
   const int argc = 1;
   JsObject obj;
   JsArgument argv[argc] = { { JSPARAM_REQUIRED, JSPARAM_OBJECT, &obj } };
@@ -259,72 +316,99 @@ void GearsTest::TestCreateObject(JsCallContext* context) {
 
 //------------------------------------------------------------------------------
 // Coercion Tests
+// TODO(aa): There is no real need to pass the values to coerce from JavaScript.
+// Implement BoolToJsToken(), IntToJsToken(), etc and use to create tokens and
+// test coercion directly in C++.
 //------------------------------------------------------------------------------
 // Coerces the first parameter to a bool and ensures the coerced value is equal
 // to the expected value.
 void GearsTest::TestCoerceBool(JsCallContext *context) {
-  bool value;
+  JsToken value;
   bool expected_value;
   const int argc = 2;
   JsArgument argv[argc] = {
-    { JSPARAM_REQUIRED, JSPARAM_BOOL, &value },
+    { JSPARAM_REQUIRED, JSPARAM_TOKEN, &value },
     { JSPARAM_REQUIRED, JSPARAM_BOOL, &expected_value }
   };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
 
-  bool ok = (value == expected_value);
+  bool coerced_value;
+  if (!JsTokenToBool_Coerce(value, context->js_context(), &coerced_value)) {
+    context->SetException(STRING16(L"Could not coerce argument to bool."));
+    return;
+  }
+
+  bool ok = (coerced_value == expected_value);
   context->SetReturnValue(JSPARAM_BOOL, &ok);
 }
 
 // Coerces the first parameter to an int and ensures the coerced value is equal
 // to the expected value.
 void GearsTest::TestCoerceInt(JsCallContext *context) {
-  int value;
+  JsToken value;
   int expected_value;
   const int argc = 2;
   JsArgument argv[argc] = {
-    { JSPARAM_REQUIRED, JSPARAM_INT, &value },
+    { JSPARAM_REQUIRED, JSPARAM_TOKEN, &value },
     { JSPARAM_REQUIRED, JSPARAM_INT, &expected_value },
   };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
 
-  bool ok = (value == expected_value);
+  int coerced_value;
+  if (!JsTokenToInt_Coerce(value, context->js_context(), &coerced_value)) {
+    context->SetException(STRING16(L"Could not coerce argument to int."));
+    return;
+  }
+
+  bool ok = (coerced_value == expected_value);
   context->SetReturnValue(JSPARAM_BOOL, &ok);
 }
 
 // Coerces the first parameter to a double and ensures the coerced value is
 // equal to the expected value.
 void GearsTest::TestCoerceDouble(JsCallContext *context) {
-  double value;
+  JsToken value;
   double expected_value;
   const int argc = 2;
   JsArgument argv[argc] = {
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &value },
+    { JSPARAM_REQUIRED, JSPARAM_TOKEN, &value },
     { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &expected_value },
   };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
 
-  bool ok = (value == expected_value);
+  double coerced_value;
+  if (!JsTokenToDouble_Coerce(value, context->js_context(), &coerced_value)) {
+    context->SetException(STRING16(L"Could not coerce argument to double."));
+    return;
+  }
+
+  bool ok = (coerced_value == expected_value);
   context->SetReturnValue(JSPARAM_BOOL, &ok);
 }
 
 // Coerces the first parameter to a string and ensures the coerced value is
 // equal to the expected value.
 void GearsTest::TestCoerceString(JsCallContext *context) {
-  std::string16 value;
+  JsToken value;
   std::string16 expected_value;
   const int argc = 2;
   JsArgument argv[argc] = {
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &value },
+    { JSPARAM_REQUIRED, JSPARAM_TOKEN, &value },
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &expected_value },
   };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
 
-  bool ok = (value == expected_value);
+  std::string16 coerced_value;
+  if (!JsTokenToString_Coerce(value, context->js_context(), &coerced_value)) {
+    context->SetException(STRING16(L"Could not coerce argument to string."));
+    return;
+  }
+
+  bool ok = (coerced_value == expected_value);
   context->SetReturnValue(JSPARAM_BOOL, &ok);
 }
 
@@ -1226,7 +1310,8 @@ void TestObjectArray(JsCallContext* context,
 #ifdef BROWSER_FF
   js_context = base.EnvPageJsContext();
 #endif
-  TEST_ASSERT(JsTokenToString(retval->token(), js_context, &string_retval));
+  TEST_ASSERT(JsTokenToString_NoCoerce(retval->token(), js_context,
+                                       &string_retval));
   TEST_ASSERT(string_retval == STRING16(L"i am a function"));
 }
 
@@ -1268,7 +1353,8 @@ void TestObjectFunction(JsCallContext* context,
 #ifdef BROWSER_FF
   js_context = base.EnvPageJsContext();
 #endif
-  TEST_ASSERT(JsTokenToString(retval->token(), js_context, &string_retval));
+  TEST_ASSERT(JsTokenToString_NoCoerce(retval->token(), js_context,
+                                       &string_retval));
   TEST_ASSERT(string_retval == STRING16(L"i am a function"));
 }
 

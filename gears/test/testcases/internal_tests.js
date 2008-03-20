@@ -35,6 +35,107 @@ function testInternal() {
 }
 
 
+// test functions for passing arguments
+function testPassArguments() {
+  if (isDebug) {
+    // Have to do this because Gears methods don't support apply() in IE.
+    function callTest(args) {
+      internalTests.testPassArguments(args[0], args[1], args[2], args[3],
+                                      args[4]);
+    }
+    
+    var good_bool = true;
+    var good_int = 42;
+    var good_int64 = Math.pow(2, 42);
+    var good_double = 88.8;
+    var good_string = "hotdog";
+    
+    var bad_bool = false;
+    var bad_int = 43;
+    var bad_int64 = Math.pow(2, 43);
+    var bad_double = 88.9;
+    var bad_string = "hotdof";
+    
+    // Test a good one
+    var good_vals = [good_bool, good_int, good_int64, good_double, good_string];
+    callTest(good_vals);
+    
+    // Test passing wrong values
+    var bad_vals = [bad_bool, bad_int, bad_int64, bad_double, bad_string];
+    for (var i = 0; i < good_vals.length; i++) {
+      var test_vals = [].concat(good_vals);
+      test_vals[i] = bad_vals[i];
+      assertError(function() { callTest(test_vals) },
+                  "Incorrect value for parameter " + (i + 1));
+    }
+
+    // Test not passing required args
+    var required_argument_error = "Required argument 5 is missing.";
+    assertError(function() {
+      internalTests.testPassArguments(good_bool, good_int, good_int64,
+                                      good_double, null); },
+      required_argument_error);
+    assertError(function() {
+      internalTests.testPassArguments(good_bool, good_int, good_int64,
+                                      good_double, undefined); },
+      required_argument_error);
+    assertError(function() {
+      internalTests.testPassArguments(good_bool, good_int, good_int64,
+                                      good_double); },
+      required_argument_error);
+
+    // Test passing wrong type
+    for (var i = 0; i < good_vals.length; i++) {
+      for (var j = 0; j < good_vals.length; j++) {
+        if (i == j) continue;
+
+        var expect_conversion_allowed = true;
+
+        // We implicitly convert int to int64, so we don't expect errors in
+        // that case.
+        if (good_vals[i] == good_int64 && good_vals[j] == good_int) {
+          expect_conversion_allowed = false;
+        }
+        
+        // Same for converting int and int64 to double.
+        if (good_vals[i] == good_double) {
+          if (good_vals[j] == good_int || good_vals[j] == good_int64) {
+            expect_conversion_allowed = false;
+          }
+        }
+        
+        var test_vals = [].concat(good_vals);
+        test_vals[i] = test_vals[j];
+
+        var expected_error = expect_conversion_allowed ?
+            "Argument " + (i + 1) + " has invalid type or is outside allowed " +
+            "range" :
+            "Incorrect value for parameter " + (i + 1);
+        
+        assertError(function() { callTest(test_vals); }, expected_error);
+      }
+    }
+  }
+}
+
+function testPassArgumentsOptional() {
+  if (isDebug) {
+    internalTests.testPassArgumentsOptional(42, 42, 42);
+    internalTests.testPassArgumentsOptional(42, 42);
+    internalTests.testPassArgumentsOptional(42);
+    
+    assertError(
+      function() { internalTests.testPassArgumentsOptional(42, "hello"); },
+      "Argument 2 has invalid type or is outside allowed range");
+      
+    assertError(
+      function() { internalTests.testPassArgumentsOptional(42, 43); },
+      "Incorrect value for parameter 2");
+  }
+}
+
+
+
 // JsObject test functions
 
 // Test passing an object with different types of properties to C++.
