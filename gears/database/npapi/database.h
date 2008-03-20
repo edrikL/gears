@@ -59,6 +59,9 @@ class GearsDatabase
   // OUT: int last_insert_row_id
   void GetLastInsertRowId(JsCallContext *context);
 
+  // OUT: int rows_affected
+  void GetRowsAffected(JsCallContext *context);
+
   void HandleEvent(JsEventType event_type);
 
 // Right now this is just used for testing perf. If we ever want to make it a

@@ -533,3 +533,20 @@ function testLastInsertRowId() {
                 'Didn\'t find expected last insert rowid');
   }
 }
+
+function testRowsAffected() {
+  db.execute('delete from simple');
+  db.execute('insert into simple values (?, ?, ?, ?)',
+             ['potato', 10, 3.14, 2.72]);
+  db.execute('insert into simple values (?, ?, ?, ?)',
+             ['tomato', 10, 1.0, 1.1]);
+  assertEqual(1, db.rowsAffected);
+  db.execute('update simple set myint = 20 where myint = 10');
+  assertEqual(2, db.rowsAffected);
+  db.execute('begin');
+  db.execute('delete from simple');
+  assertEqual(0, db.rowsAffected);
+  db.execute('rollback');
+  db.execute('delete from simple where 1');
+  assertEqual(2, db.rowsAffected);
+}

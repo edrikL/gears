@@ -64,6 +64,7 @@ class ATL_NO_VTABLE GearsDatabase
   STDMETHOD(close)();
 
   STDMETHOD(get_lastInsertRowId)(VARIANT *retval);
+  STDMETHOD(get_rowsAffected)(VARIANT *retval);
 
   void HandleEvent(JsEventType event_type);
 

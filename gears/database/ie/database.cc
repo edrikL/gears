@@ -283,6 +283,19 @@ STDMETHODIMP GearsDatabase::get_lastInsertRowId(VARIANT *retval) {
   }
 }
 
+STDMETHODIMP GearsDatabase::get_rowsAffected(VARIANT *retval) {
+  LOG16((L"GearsDatabase::rowsAffected()\n"));
+  if (db_ != NULL) {
+    VariantClear(retval);
+    int rowsAffected = sqlite3_changes(db_);
+    retval->intVal = rowsAffected;
+    retval->vt = VT_INT;
+    RETURN_NORMAL();
+  } else {
+    RETURN_EXCEPTION(STRING16(L"Database handle was NULL."));
+  }
+}
+
 void GearsDatabase::AddResultSet(GearsResultSet *rs) {
   result_sets_.insert(rs);
 }

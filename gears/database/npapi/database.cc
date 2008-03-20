@@ -48,6 +48,7 @@ void Dispatcher<GearsDatabase>::Init() {
   RegisterMethod("execute", &GearsDatabase::Execute);
   RegisterMethod("close", &GearsDatabase::Close);
   RegisterMethod("getLastInsertRowId", &GearsDatabase::GetLastInsertRowId);
+  RegisterMethod("getRowsAffected", &GearsDatabase::GetRowsAffected);
 #ifdef DEBUG
   RegisterMethod("getExecuteMsec", &GearsDatabase::GetExecuteMsec);
 #endif
@@ -274,6 +275,11 @@ void GearsDatabase::GetLastInsertRowId(JsCallContext *context) {
   }
   double retval = static_cast<double>(rowid);
   context->SetReturnValue(JSPARAM_DOUBLE, &retval);
+}
+
+void GearsDatabase::GetRowsAffected(JsCallContext *context) {
+  int retval = sqlite3_changes(db_);
+  context->SetReturnValue(JSPARAM_INT, &retval);
 }
 
 void GearsDatabase::AddResultSet(GearsResultSet *rs) {

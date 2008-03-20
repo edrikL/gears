@@ -40,6 +40,7 @@ interface GearsDatabaseInterface : GearsBaseClassInterface {
   void close();
 
   readonly attribute PRInt64 lastInsertRowId;
+  readonly attribute long rowsAffected;
 
 m4_changequote(`^',`^')m4_dnl
 m4_ifdef(^DEBUG^,^m4_dnl

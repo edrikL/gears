@@ -71,6 +71,8 @@ interface GearsDatabaseInterface : IDispatch {
   // retval contains an integral value, stored in a double's mantissa, for range
   [propget] HRESULT lastInsertRowId([out, retval] VARIANT *retval);
 
+  [propget] HRESULT rowsAffected([out, retval] VARIANT *retval);
+
 #ifdef DEBUG
   [propget] HRESULT executeMsec([out, retval] int *retval);
 #endif // DEBUG

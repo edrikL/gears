@@ -303,6 +303,15 @@ NS_IMETHODIMP GearsDatabase::GetLastInsertRowId(PRInt64 *retval) {
   RETURN_NORMAL();
 }
 
+NS_IMETHODIMP GearsDatabase::GetRowsAffected(PRInt32 *retval) {
+  if (!db_) {
+    RETURN_EXCEPTION(STRING16(L"Database handle was NULL."));
+  }
+
+  *retval = sqlite3_changes(db_);
+  RETURN_NORMAL();
+}
+
 void GearsDatabase::AddResultSet(GearsResultSet *rs) {
   result_sets_.insert(rs);
 }

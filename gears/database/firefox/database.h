@@ -65,6 +65,7 @@ class GearsDatabase
                      GearsResultSetInterface **retval);
   NS_IMETHOD Close();
   NS_IMETHOD GetLastInsertRowId(PRInt64 *retval);
+  NS_IMETHOD GetRowsAffected(PRInt32 *retval);
 
   void HandleEvent(JsEventType event_type);
 
