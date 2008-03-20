@@ -105,5 +105,5 @@ var DOM = new function() {
       descendant = one === el;
     }
     return descendant;
-  } 
+  }
 };

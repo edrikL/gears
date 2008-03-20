@@ -79,10 +79,9 @@ Gears.prototype.capture = function() {
 
     if (Gears.app.updateStatus == 3) { // error
       console.warn('update failed: ' + Gears.app.lastErrorMessage);
-    } else  if (Gears.app.updateStatus == 0) { // ok
+    } else if (Gears.app.updateStatus == 0) { // ok
       location.reload();
-    }
-    else {
+    } else {
       window.setTimeout('Gears.checkForUpdate();', 500);
     }
   }
