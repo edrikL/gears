@@ -226,6 +226,7 @@ class Database2 : ModuleImplBaseClassVirtual {
   
   static Database2TransactionQueue *GetQueue(/* name, origin */) {
     // combine name, origin into one string
+    // COMMENT(shess): Use pair<std::string16,std::string16> instead.
     static std::map<std::string16, Database2TransactionQueue*> map;
     // if map doesn't contain the queue, create the queue and insert into map
     // return queue
