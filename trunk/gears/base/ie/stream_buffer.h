@@ -28,6 +28,7 @@
 
 #include <assert.h>
 #include <atlcom.h>
+#include <algorithm>
 #include <string>
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
@@ -67,7 +68,7 @@ END_COM_MAP()
     HRESULT hr = S_OK;
 
     if (pos_ < end_) {
-      ULONG can_read = min(cb, static_cast<ULONG>(end_ - pos_));
+      ULONG can_read = std::min<ULONG>(cb, static_cast<ULONG>(end_ - pos_));
 
       memcpy(pv, pos_, can_read);
       pos_ += can_read;
