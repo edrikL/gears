@@ -30,11 +30,6 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/localserver/common/http_constants.h"
 
-// TODO(mpcomplete): implement these.
-#if BROWSER_NPAPI && defined(WIN32)
-#define BROWSER_IE 1
-#endif
-
 #if BROWSER_IE
 #include <windows.h>
 #include <wininet.h>
@@ -46,6 +41,8 @@
 #include "gears/base/safari/browser_utils.h"
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/base/safari/cf_string_utils.h"
+#elif BROWSER_NPAPI
+#include "gears/third_party/googleurl/src/url_parse.h"
 #endif
 
 
@@ -98,7 +95,7 @@ bool SecurityOrigin::InitFromUrl(const char16 *full_url) {
     return false;
   }
 
-  // Expcilitly disallow urls with embedded username:passwords. These
+  // Disallow urls with embedded username:passwords. These
   // are disabled by default in IE such that InternetCrackUrl fails.
   // To have consistent behavior, do the same for all browsers.
   if (components.lpszUserName && components.dwUserNameLength) {
@@ -125,7 +122,7 @@ bool SecurityOrigin::InitFromUrl(const char16 *full_url) {
   if (!DOMUtils::NewAbsoluteURI(full_url, getter_AddRefs(url_obj)))
     return false;
 
-  // Expcilitly disallow urls with embedded username:passwords. These
+  // Disallow urls with embedded username:passwords. These
   // are disabled by default in IE such that InternetCrackUrl fails.
   // To have consistent behavior, do the same for all browsers.
   nsCString user_name;
@@ -186,7 +183,7 @@ bool SecurityOrigin::InitFromUrl(const char16 *full_url) {
   if (!url.get())
     return false;
 
-  // Expcilitly disallow urls with embedded username:passwords.
+  // Disallow urls with embedded username:passwords.
   // To have consistent behavior, do the same for all browsers.
   // CFURLCopyUserName() will return NULL if there is no user name.
   scoped_CFString user_name(CFURLCopyUserName(url.get()));
@@ -220,6 +217,37 @@ bool SecurityOrigin::InitFromUrl(const char16 *full_url) {
 
     return Init(full_url, scheme.c_str(), host.c_str(), port);
   } else if (scheme == HttpConstants::kFileScheme) {
+    return Init(full_url, HttpConstants::kFileScheme, kUnknownDomain, 0);
+  }
+#elif BROWSER_NPAPI
+  int url_len = wcslen(full_url);
+
+  url_parse::Component scheme_comp;
+  if (!url_parse::ExtractScheme(full_url, url_len, &scheme_comp)) {
+    return false;
+  }
+
+  std::wstring scheme(full_url + scheme_comp.begin, scheme_comp.len);
+  LowerString(scheme);
+  if (scheme == STRING16(L"http") || scheme == STRING16(L"https")) {
+    url_parse::Parsed parsed;
+    url_parse::ParseStandardURL(full_url, url_len, &parsed);
+
+    // Disallow urls with embedded username:passwords. These are disabled by
+    // default in IE such that InternetCrackUrl fails. To have consistent
+    // behavior, do the same for all browsers.
+    if (parsed.username.len != -1 || parsed.password.len != -1) {
+      return false;
+    }
+
+    int port = 80;
+    if (parsed.port.len > 0) {
+      std::string16 port_str(full_url + parsed.port.begin, parsed.port.len);
+      port = ParseLeadingInteger(port_str.c_str(), NULL);
+    }
+    std::string16 host(full_url + parsed.host.begin, parsed.host.len);
+    return Init(full_url, scheme.c_str(), host.c_str(), port);
+  } else if (scheme == STRING16("file")) {
     return Init(full_url, HttpConstants::kFileScheme, kUnknownDomain, 0);
   }
 #endif

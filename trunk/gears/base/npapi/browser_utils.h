@@ -58,6 +58,10 @@ class BrowserUtils {
   // Returns true on success.
   static bool GetPageSecurityOrigin(JsContextPtr context,
                                     SecurityOrigin *security_origin);
+
+  // Returns true if the browser is not in "offline" mode and there is access
+  // to the network.
+  static bool IsOnline();
 };
 
 #endif  // GEARS_BASE_NPAPI_BROWSER_UTILS_H__

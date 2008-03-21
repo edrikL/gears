@@ -89,7 +89,7 @@ endif
 FF_CPPFLAGS = -DBROWSER_FF=1 -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -Ithird_party/gecko_1.8 -DMOZILLA_STRICT_API
 IE_CPPFLAGS = -DBROWSER_IE=1
 IEMOBILE_CPPFLAGS = -DBROWSER_IE=1
-NPAPI_CPPFLAGS = -DBROWSER_NPAPI=1 -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include
+NPAPI_CPPFLAGS = -DBROWSER_NPAPI=1 -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -Ithird_party -Ithird_party/googleurl -Ithird_party/icu38/public/common
 
 # When adding or removing SQLITE_OMIT_* options, also update and
 # re-run ../third_party/sqlite_google/google_generate_preprocessed.sh.
@@ -322,7 +322,7 @@ GECKO_SDK = third_party/gecko_1.8/win32
 FF_LIBS = $(GECKO_SDK)/gecko_sdk/lib/xpcom.lib $(GECKO_SDK)/gecko_sdk/lib/xpcomglue_s.lib $(GECKO_SDK)/gecko_sdk/lib/nspr4.lib $(GECKO_SDK)/gecko_sdk/lib/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib comdlg32.lib
 IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib comdlg32.lib
 IEMOBILE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib cellcore.lib htmlview.lib imaging.lib toolhelp.lib aygshell.lib
-NPAPI_LIBS = sensapi.lib ole32.lib shell32.lib advapi32.lib wininet.lib
+NPAPI_LIBS = 
 
 # Other tools specific to win32/wince builds.
 MIDL = midl

@@ -108,3 +108,8 @@ bool BrowserUtils::GetPageSecurityOrigin(JsContextPtr context,
     return false;
   return security_origin->InitFromUrl(location.c_str());
 }
+
+bool BrowserUtils::IsOnline() {
+  // TODO(mpcomplete): implement me.
+  return true;
+}
