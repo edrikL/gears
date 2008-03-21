@@ -24,15 +24,12 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-// On WinCE, windows.h must be included before set to allow us to use the max
-// and min macros. This is because set indirectly includes atlcecert.h, which
-// sets NOMINMAX. windef.h (included from windows.h), defines the macros only if
-// NOMINMAX is not defined.
 #include <windows.h>
+#include <wininet.h>
+#include <algorithm>
 #include <set>
 #include <string>
 #include <vector>
-#include <wininet.h>
 
 #include "gears/localserver/ie/http_handler_ie.h"
 #include "gears/base/common/mutex.h"
@@ -1031,7 +1028,7 @@ HRESULT HttpHandler::ReadImpl(void *buffer,
   if (is_handling_) {
     std::vector<uint8> *data = payload_.data.get();
     size_t bytes_available = data ? (data->size() - read_pointer_) : 0;
-    size_t bytes_to_copy = min(byte_count, bytes_available);
+    size_t bytes_to_copy = std::min<size_t>(byte_count, bytes_available);
 
     if (bytes_to_copy != 0) {
       memcpy(buffer, &(*data)[read_pointer_], bytes_to_copy);

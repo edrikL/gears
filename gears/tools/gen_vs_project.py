@@ -275,7 +275,8 @@ def CreateTargets():
                                           'NO_GZIP',
                                           'NO_GZCOMPRESS',
                                           'WIN32',
-                                          'UNICODE', 
+                                          'UNICODE',
+                                          'NOMINMAX' 
                                           'BREAKPAD_AVOID_STREAMS']
 
   # Settings For Debug & Release Builds

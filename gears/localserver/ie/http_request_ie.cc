@@ -24,6 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <msxml2.h>
+#include <algorithm>
 #include <vector>
 
 #include "gears/localserver/ie/http_request_ie.h"
@@ -596,8 +597,8 @@ STDMETHODIMP IEHttpRequest::OnDataAvailable(
   // http://msdn2.microsoft.com/en-us/library/aa380034.aspx
   do {
     // Read in big gulps to spin as little as possible
-    DWORD amount_to_read = max(data->size() - actual_data_size_,
-                               kReadAheadAmount);
+    DWORD amount_to_read = std::max<DWORD>(data->size() - actual_data_size_,
+                                           kReadAheadAmount);
 
     // Ensure our data buffer is large enough
     size_t needed_size = actual_data_size_ + amount_to_read;

@@ -204,7 +204,7 @@ MKDEP = python tools/mkdepend.py $< $@ > $(@D)/$*.pp
 CPPFLAGS_dbg = /D_DEBUG=1
 CPPFLAGS_opt =
 CPPFLAGS += /nologo /DSTRICT /D_UNICODE /DUNICODE /D_USRDLL /DWIN32 /D_WINDLL \
-            /D_CRT_SECURE_NO_DEPRECATE
+            /D_CRT_SECURE_NO_DEPRECATE /DNOMINMAX
 
 ifeq ($(OS),win32)
 # We require APPVER=5.0 for things like HWND_MESSAGE.
@@ -239,6 +239,7 @@ CPPFLAGS += /D_WIN32_WCE=0x501 \
 	    /D_ARM_ \
 	    /DPOCKETPC2003_UI_MODEL \
 	    /D_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA \
+	    /D_CE_CRT_ALLOW_WIN_MINMAX \
 	    $(CPPFLAGS_$(MODE))
 endif
 
