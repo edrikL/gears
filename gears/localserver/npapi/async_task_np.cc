@@ -27,8 +27,7 @@
 
 #include "gears/base/common/async_router.h"
 #include "gears/base/common/atomic_ops.h"
-// TODO(mpcomplete): remove this next dependency
-#include "gears/base/ie/activex_utils.h"
+#include "gears/base/npapi/browser_utils.h"
 #include "gears/localserver/common/critical_section.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_cookies.h"
@@ -261,7 +260,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
     error_message->clear();
   }
 
-  if (!ActiveXUtils::IsOnline()) {
+  if (!BrowserUtils::IsOnline()) {
     if (error_message) {
       *error_message = kIsOfflineErrorMessage;
     }

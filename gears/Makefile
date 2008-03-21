@@ -329,6 +329,34 @@ NPAPI_CPPSRCS	+= \
 endif
 
 #-----------------------------------------------------------------------------
+# third_party/googleurl
+# Only NPAPI needs this right now.  When the other builds want it, change
+# NPAPI_* to THIRD_PARTY_*.
+
+NPAPI_VPATH	+= \
+		third_party/googleurl/src \
+		third_party/icu38/source/common \
+		$(NULL)
+
+NPAPI_CPPSRCS	+= \
+		gurl.cc \
+		url_canon_etc.cc \
+		url_canon_fileurl.cc \
+		url_canon_host.cc \
+		url_canon_internal.cc \
+		url_canon_ip.cc \
+		url_canon_path.cc \
+		url_canon_pathurl.cc \
+		url_canon_query.cc \
+		url_canon_relative.cc \
+		url_canon_stdurl.cc \
+		url_parse.cc \
+		url_parse_file.cc \
+		url_util.cc \
+		utf_impl.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # base/common
 
 COMMON_VPATH	+= \
@@ -583,7 +611,6 @@ NPAPI_IDLSRCS	+= \
 		$(NULL)
 
 NPAPI_CPPSRCS	+= \
-		activex_utils.cc \
 		async_router.cc \
 		base_class.cc \
 		base_class_test.cc \
@@ -630,7 +657,7 @@ NPAPI_CPPSRCS	+= \
 		string_utils_test.cc \
 		thread_locals.cc \
 		url_utils.cc \
-		url_utils_ie.cc \
+		url_utils_np.cc \
 		url_utils_test.cc \
 		vista_utils.cc \
 		$(NULL)
