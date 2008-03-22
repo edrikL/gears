@@ -144,7 +144,7 @@ class UpdateTask : public AsyncTask {
     UPDATE_TASK_COMPLETE = 0
   };
 
-  UpdateTask() : startup_signal_(false) {}
+  UpdateTask() : startup_signal_(false), task_503_failure_(false) {}
 
   // Initializes an update task for the store
   bool Init(ManagedResourceStore *store);
@@ -190,6 +190,8 @@ class UpdateTask : public AsyncTask {
   Mutex startup_signal_lock_;
   bool startup_signal_;
 
+  bool task_503_failure_;
+
   // Sets our startup signal. Setting to true will unblock AwaitStartup callers
   void SetStartupSignal(bool startup) {
     MutexLock locker(&startup_signal_lock_);
@@ -201,8 +203,13 @@ class UpdateTask : public AsyncTask {
   // Checks for a new manifest file. If found, inserts the version
   // described in the new manifest into the WebCacheDB. The newly inserted
   // version will be in the downloading state. Any pre-existing version
-  // in the downloading ready state is deleted.
-  bool UpdateManifest(std::string16 *downloading_version);
+  // in the downloading ready state is deleted. An update task fetches the
+  // manifest two times, once prior to downloading listed resources, and
+  // again after having downloaded everything. The task succeeds only if
+  // the manifest file from the start and end match. The 'validate_manifest'
+  // argument indicates where we are in this process.
+  bool UpdateManifest(std::string16 *downloading_version,
+                      bool validate_manifest);
 
   // If there is a version in the downloading ready state, downloads all
   // entries that have not yet been downloaded. If a version is completely
@@ -211,6 +218,7 @@ class UpdateTask : public AsyncTask {
 
   bool HttpGetUrl(const char16 *full_url,
                   bool is_capturing,
+                  const char16 *reason_header_value,
                   const char16 *if_mod_since_date,
                   WebCacheDB::PayloadInfo *payload,
                   bool *was_redirected,
