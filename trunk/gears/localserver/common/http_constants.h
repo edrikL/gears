@@ -36,7 +36,9 @@ class HttpConstants {
     HTTP_OK = 200,
     HTTP_NOT_MODIFIED = 304,
     HTTP_MOVED = 301,
-    HTTP_FOUND = 302
+    HTTP_FOUND = 302,
+    HTTP_INTERNAL_ERROR = 500,
+    HTTP_SERVICE_UNAVAILABLE = 503
   };
 
   static const int kHttpStatusCodeMaxDigits = 3;
@@ -69,8 +71,11 @@ class HttpConstants {
   static const char16 *kNoCache;
   static const char16 *kOKStatusLine;
   static const char16 *kPragmaHeader;
+  static const char16 *kRetryAfterHeader;
   static const char16 *kUriHeader;
   static const char16 *kXCapturedFilenameHeader;
+  static const char16 *kXGearsReasonHeader;
+  static const char16 *kXGearsReason_ValidateManifest;
   static const char16 *kXGoogleGearsHeader;
 };
 

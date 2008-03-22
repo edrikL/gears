@@ -193,6 +193,7 @@ void AsyncTask::NotifyListener(int code, int param) {
 //------------------------------------------------------------------------------
 bool AsyncTask::HttpGet(const char16 *full_url,
                         bool is_capturing,
+                        const char16 *reason_header_value,
                         const char16 *if_mod_since_date,
                         const char16 *required_cookie,
                         WebCacheDB::PayloadInfo *payload,
@@ -248,6 +249,13 @@ bool AsyncTask::HttpGet(const char16 *full_url,
     http_request->SetRedirectBehavior(HttpRequest::FOLLOW_NONE);
     if (!http_request->SetRequestHeader(HttpConstants::kXGoogleGearsHeader,
                                         STRING16(L"1"))) {
+      return false;
+    }
+  }
+
+  if (reason_header_value && reason_header_value[0]) {
+    if (!http_request->SetRequestHeader(HttpConstants::kXGearsReasonHeader,
+                                        reason_header_value)) {
       return false;
     }
   }

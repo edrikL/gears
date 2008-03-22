@@ -121,6 +121,7 @@ bool CaptureTask::HttpGetUrl(const char16 *full_url,
   // Fetch the url from a server
   if (!AsyncTask::HttpGet(full_url,
                           true,  // is_capturing
+                          NULL,  // X-Gears-Reason header value
                           if_mod_since_date,
                           store_.GetRequiredCookie(),
                           payload,
