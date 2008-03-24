@@ -1257,21 +1257,73 @@ bool JsTokenToString_NoCoerce(JsToken t, JsContextPtr cx, std::string16 *out) {
 // coercion this will have to be done manually in terms of C++ types. It might
 // be worth considering reusing that code across all browsers, for consistency.
 bool JsTokenToBool_Coerce(JsToken t, JsContextPtr cx, bool *out) {
-  assert(false);
-  return false;
+  // JsToken is a bool
+  if (JsTokenGetType(t, cx) == JSPARAM_BOOL) {
+    return JsTokenToBool_NoCoerce(t, cx, out);
+  // Try to coerce the JsToken to a bool
+  // The only values that should be treated as false in JavaScript are false,
+  // null, NaN, 0, undefined and an empty string. false is already covered by
+  // the case above.
+  } else if (JsTokenIsNullOrUndefined(t) ||  // null, undefined
+             NPVARIANT_IS_DOUBLE(t) && isnan(NPVARIANT_TO_DOUBLE(t)) ||  // NaN
+             NPVARIANT_IS_INT32(t) && NPVARIANT_TO_INT32(t) == 0 ||  // 0
+             NPVARIANT_IS_STRING(t) &&  // empty string
+                 GetNPStringUTF8Length(NPVARIANT_TO_STRING(t)) == 0) {
+    *out = false;
+  } else {
+    *out = true;  // Anything else is true
+  }
+  return true;
 }
 
 bool JsTokenToInt_Coerce(JsToken t, JsContextPtr cx, int *out) {
-  assert(false);
-  return false;
-}
-
-bool JsTokenToString_Coerce(JsToken t, JsContextPtr cx, std::string16 *out) {
-  assert(false);
-  return false;
+  if (JsTokenGetType(t, cx) == JSPARAM_INT) {
+    return JsTokenToInt_NoCoerce(t, cx, out);
+  // Try to coerce the JsToken to an int.
+  } else {
+    double output;
+    if (!JsTokenToDouble_Coerce(t, cx, &output)) { return false; }
+    // Make sure the double will fit into an int
+    if (output < kint32min || output > kint32max) {
+      return false;
+    }
+    *out = static_cast<int>(output);
+  }
+  return true;
 }
 
 bool JsTokenToDouble_Coerce(JsToken t, JsContextPtr cx, double *out) {
+  // This coercion is very tricky to get just-right. See test cases in
+  // test/testcases/internal_tests.js before making any changes. The expected
+  // outputs are based on the result of doing a Number(testval) in JavaScript.
+  // JsToken is a double
+  if (JsTokenGetType(t, cx) == JSPARAM_DOUBLE) {
+    // Edge-case: NaN should return failure
+    if (isnan(NPVARIANT_TO_DOUBLE(t))) { return false; }
+    *out = NPVARIANT_TO_DOUBLE(t);
+  // Edge-case: boolean true should coerce to 1, not -1.
+  } else if (JsTokenGetType(t, cx) == JSPARAM_BOOL) {
+    *out = NPVARIANT_TO_BOOLEAN(t) ? 1 : 0;
+  // Edge-case: null should coerce to 0
+  } else if (NPVARIANT_IS_NULL(t)) {
+    *out = 0;
+  // Edge-case: undefined should return failure
+  } else if (NPVARIANT_IS_VOID(t)) {
+    return false;
+  // All other coercions
+  } else {
+    // TODO(mpcomplete): implement me
+    assert(false);
+    return false;
+  }
+  return true;
+}
+
+bool JsTokenToString_Coerce(JsToken t, JsContextPtr cx, std::string16 *out) {
+  if (JsTokenGetType(t, cx) == JSPARAM_STRING16)
+    return JsTokenToString_NoCoerce(t, cx, out);
+
+  // TODO(mpcomplete): implement me
   assert(false);
   return false;
 }
