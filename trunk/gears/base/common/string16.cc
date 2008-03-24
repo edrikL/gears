@@ -58,18 +58,20 @@ int ParseLeadingInteger(const char *str, const char **endptr) {
 
 // This is based on FastInt32ToBuffer from google3.
 // The only difference is that we changed 'char' to template type 'CharT'
-// allowing us to use this with char or char16.
+// allowing us to use this with char or char16, and 'int' to 'IntT' in order
+// to support separate 32 and 64-bit implementations. (int64 is correct but
+// slower for 32-bit integers on 32-bit platforms).
 
-// Offset into buffer where FastInt32ToBuffer places the end of string
-// null character.  Also used by FastInt32ToBufferLeft
-static const int kFastInt32ToBufferOffset = 11;
+// Offset into buffer where FastIntToBuffer places the end of string
+// null character.  Also used by FastIntToBufferLeft
+static const int kFastIntToBufferOffset = 21;
 
-template<class CharT>
-inline CharT *FastInt32ToBuffer(int32 i, CharT* buffer) {
+template<typename IntT, typename CharT>
+inline CharT *FastIntToBuffer(IntT i, CharT* buffer) {
   // We could collapse the positive and negative sections, but that
   // would be slightly slower for positive numbers...
   // 12 bytes is enough to store -2**32, -4294967296.
-  CharT* p = buffer + kFastInt32ToBufferOffset;
+  CharT* p = buffer + kFastIntToBufferOffset;
   *p-- = '\0';
   if (i >= 0) {
     do {
@@ -107,21 +109,33 @@ inline CharT *FastInt32ToBuffer(int32 i, CharT* buffer) {
 #pragma warning(pop)
 #endif
 
-template<class StringT>
-inline void IntegerToStringT(int i, StringT *result) {
+template<typename IntT, typename StringT>
+inline void IntegerToStringT(IntT i, StringT *result) {
   assert(result);
-  typename StringT::value_type buffer[kFastInt32ToBufferOffset + 1];
-  typename StringT::value_type *start = FastInt32ToBuffer(i, buffer);
+  typename StringT::value_type buffer[kFastIntToBufferOffset + 1];
+  typename StringT::value_type *start = FastIntToBuffer(i, buffer);
   result->assign(start); 
 }
 
-std::string IntegerToString(int i) {
+std::string IntegerToString(int32 i) {
   std::string result;
   IntegerToStringT(i, &result);
   return result;
 }
 
-std::string16 IntegerToString16(int i) {
+std::string16 IntegerToString16(int32 i) {
+  std::string16 result;
+  IntegerToStringT(i, &result);
+  return result;
+}
+
+std::string Integer64ToString(int64 i) {
+  std::string result;
+  IntegerToStringT(i, &result);
+  return result;
+}
+
+std::string16 Integer64ToString16(int64 i) {
   std::string16 result;
   IntegerToStringT(i, &result);
   return result;

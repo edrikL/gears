@@ -44,7 +44,7 @@ bool TestBufferBlob() {
     return false; \
   } \
 }
-  int num_bytes = 0;
+  int64 num_bytes = 0;
   uint8 buffer[64] = { 0 };
 
   // Empty blob tests
@@ -52,7 +52,7 @@ bool TestBufferBlob() {
   TEST_ASSERT(blob->Length() == 0);
   // A non-finalized blob is not readable.
   num_bytes = blob->Read(buffer, 0, 64);
-  TEST_ASSERT(num_bytes == 0);
+  TEST_ASSERT(num_bytes == -1);
   blob->Finalize();
   TEST_ASSERT(blob->Length() == 0);
   // An empty blob returns no bytes.
@@ -60,7 +60,7 @@ bool TestBufferBlob() {
   TEST_ASSERT(num_bytes == 0);
   // A finalized blob is not writable.
   num_bytes = blob->Append("abc", 3);
-  TEST_ASSERT(num_bytes == 0);
+  TEST_ASSERT(num_bytes == -1);
 
   memset(buffer, 0, sizeof(buffer));
 
@@ -74,14 +74,14 @@ bool TestBufferBlob() {
   TEST_ASSERT(blob->Length() == 5);
   // A non-finalized blob is not readable.
   num_bytes = blob->Read(buffer, 0, 64);
-  TEST_ASSERT(num_bytes == 0);
+  TEST_ASSERT(num_bytes == -1);
   blob->Finalize();
   TEST_ASSERT(blob->Length() == 5);
   num_bytes = blob->Read(buffer, 0, 64);
   TEST_ASSERT(num_bytes == 5);
   // A finalized blob is not writable.
   num_bytes = blob->Append("fgh", 3);
-  TEST_ASSERT(num_bytes == 0);
+  TEST_ASSERT(num_bytes == -1);
   TEST_ASSERT(buffer[0] == 'a');
   TEST_ASSERT(buffer[1] == 'b');
   TEST_ASSERT(buffer[2] == 'c');
@@ -164,7 +164,7 @@ bool TestSliceBlob() {
 
   // A negative offset fails (even though the combined offsets are valid).
   memset(buffer, 0, sizeof(buffer));
-  TEST_ASSERT(0 == blob1->Read(buffer, -1, sizeof(buffer)));
+  TEST_ASSERT(-1 == blob1->Read(buffer, -1, sizeof(buffer)));
   TEST_ASSERT(memcmp(buffer, "", 1) == 0);
 
   // A too-large offset returns no bytes.

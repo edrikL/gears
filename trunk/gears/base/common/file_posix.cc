@@ -39,6 +39,7 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
+#include <limits>
 #include <string>
 #include <vector>
 #include "gears/base/common/file.h"
@@ -192,31 +193,39 @@ int64 File::GetFileSize(const char16 *full_filepath) {
   return static_cast<int64>(stat_data.st_size);
 }
 
-int File::ReadFileSegmentToBuffer(const char16 *full_filepath,
-                                  uint8* destination,
-                                  int64 position,
-                                  int max_bytes) {
-  if (max_bytes <= 0 || position < 0) {
-    return 0;
+int64 File::ReadFileSegmentToBuffer(const char16 *full_filepath,
+                                    uint8* destination,
+                                    int64 position,
+                                    int64 max_bytes) {
+  if (max_bytes < 0 || position < 0) {
+    return -1;
   }
 
   std::string file_path_utf8;
   if (!String16ToUTF8(full_filepath, &file_path_utf8)) {
-    return 0;
+    return -1;
   }
   ScopedFile scoped_file(fopen(file_path_utf8.c_str(), "rb"));
   if (scoped_file.get() == NULL) {
-    return 0;
+    return -1;
   }
 
-  if (position != 0 && fseek(scoped_file.get(), position, SEEK_SET) != 0) {
-    return 0;
+  if (position > std::numeric_limits<long>::max()) {  // fseek limit
+    return -1;
+  }
+  if (position != 0
+      && fseek(scoped_file.get(), static_cast<long>(position), SEEK_SET) != 0) {
+    return -1;
   }
   
-  size_t bytes_read = fread(destination, 1, max_bytes, scoped_file.get());
+  if (max_bytes > std::numeric_limits<size_t>::max()) {  // fread limit
+    max_bytes = std::numeric_limits<size_t>::max();
+  }
+  size_t bytes_read = fread(destination, 1, static_cast<size_t>(max_bytes),
+                            scoped_file.get());
   
   if (ferror(scoped_file.get()) || fclose(scoped_file.release()) != 0) {
-    return 0;
+    return -1;
   }
   
   return bytes_read;

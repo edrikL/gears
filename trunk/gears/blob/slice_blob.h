@@ -41,7 +41,7 @@ class SliceBlob : public BlobInterface {
   // the underlying blob length is less.
   SliceBlob(BlobInterface *source, int64 offset, int64 length);
 
-  virtual int Read(uint8 *destination, int64 offset, int max_bytes) const;
+  virtual int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const;
   virtual int64 Length() const;
 
  private:

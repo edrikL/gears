@@ -45,25 +45,27 @@ class BufferBlob : public BlobInterface {
   // contents.  buffer must have been created on the heap with new.
   BufferBlob(std::vector<uint8> *buffer);
 
-  // Returns 0 and does nothing if this is read-only.  Otherwise, attempts to
+  // Returns -1 and does nothing if this is read-only.  Otherwise, attempts to
   // write num_bytes of source to the end of this and returns the number of
   // bytes actually written.
-  int Append(const void *source, int num_bytes);
+  int64 Append(const void *source, int64 num_bytes);
 
   // Indicates the blob's contents will not change further (makes it
   // read-only).  Must be called once after all updates are complete, before
   // any reads are attempted.
   void Finalize();
 
-  // Returns 0 if this is write-only.  Otherwise, copies up to max_bytes at
+  // Returns -1 if this is write-only.  Otherwise, copies up to max_bytes at
   // offset position to destination.  Returns the number of bytes actually
   // read.
-  int Read(uint8 *destination, int64 offset, int max_bytes) const;
+  int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const;
 
   int64 Length() const;
 
  private:
-  std::vector<uint8> buffer_;
+  typedef std::vector<uint8> BufferType;
+  typedef BufferType::size_type size_type;
+  BufferType buffer_;
 
   // true means write-only, false means read-only.  BufferBlobs are initialized
   // as write-only, and once set read-only, stay read-only forever.

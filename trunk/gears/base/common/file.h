@@ -57,11 +57,11 @@ class File {
   static int64 GetFileSize(const char16 *full_filepath);
 
   // Reads part of the contents of the file into memory. Returns the number of
-  // bytes read (or zero on failure).
-  static int ReadFileSegmentToBuffer(const char16 *full_filepath,
-                                     uint8* destination,
-                                     int64 position,
-                                     int max_bytes);
+  // bytes read (or -1 on failure).
+  static int64 ReadFileSegmentToBuffer(const char16 *full_filepath,
+                                       uint8* destination,
+                                       int64 position,
+                                       int64 max_bytes);
 
   // Reads the contents of the file into memory. If the file does not exist,
   // returns false. Returns true on success
