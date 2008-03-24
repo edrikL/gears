@@ -249,11 +249,6 @@ else
 	$(MAKE) modules    BROWSER=IE
 	$(MAKE) installer  BROWSER=IE
 
-	$(MAKE) prereqs    BROWSER=NPAPI
-	$(MAKE) genheaders BROWSER=NPAPI
-	$(MAKE) modules    BROWSER=NPAPI
-	$(MAKE) installer  BROWSER=NPAPI
-
         # For win32, also build a cross-browser MSI.
 	$(MAKE) win32installer
 
@@ -472,13 +467,13 @@ $(THIRD_PARTY_OUTDIR)/%$(OBJ_SUFFIX): %.c
 # RESOURCE TARGETS
 
 $(IE_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
-	$(RC) $(RCFLAGS) $<
-
-$(VISTA_BROKER_OUTDIR)/%.res: %.rc
-	$(RC) $(RCFLAGS) $<
+	$(RC) $(RCFLAGS) /DBROWSER_IE=1 $<
 
 $(NPAPI_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
 	$(RC) $(RCFLAGS) /DBROWSER_NPAPI=1 $<
+
+$(VISTA_BROKER_OUTDIR)/%.res: %.rc
+	$(RC) $(RCFLAGS) $<
 
 # LINK TARGETS
 
