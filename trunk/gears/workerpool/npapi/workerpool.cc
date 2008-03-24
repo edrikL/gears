@@ -155,7 +155,7 @@ void GearsWorkerPool::SetThreadsManager(PoolThreadsManager *manager) {
 void GearsWorkerPool::SetOnmessage(JsCallContext *context) {
   JsRootedCallback *function = NULL;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &function },
+    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &function },
   };
   int argc = context->GetArguments(ARRAYSIZE(argv), argv);
   scoped_ptr<JsRootedCallback> scoped_function(function);
@@ -179,7 +179,7 @@ void GearsWorkerPool::GetOnmessage(JsCallContext *context) {
 void GearsWorkerPool::SetOnerror(JsCallContext *context) {
   JsRootedCallback *function = NULL;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &function },
+    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &function },
   };
   int argc = context->GetArguments(ARRAYSIZE(argv), argv);
   scoped_ptr<JsRootedCallback> scoped_function(function);
@@ -334,7 +334,7 @@ void GearsWorkerPool::SendMessage(JsCallContext *context) {
 
 #ifdef DEBUG
 void GearsWorkerPool::ForceGC(JsCallContext *context) {
-  context->SetException(STRING16(L"Not Implemented"));
+  threads_manager_->ForceGCCurrentThread();
 }
 #endif // DEBUG
 

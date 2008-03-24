@@ -272,7 +272,7 @@ void GearsManagedResourceStore::SetEventHandler(
     JsCallContext *context, scoped_ptr<JsRootedCallback> *handler) {
   JsRootedCallback *function = NULL;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &function },
+    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &function },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   scoped_ptr<JsRootedCallback> scoped_function(function);
@@ -288,7 +288,7 @@ void GearsManagedResourceStore::SetEventHandler(
     UpdateTask::RegisterEventClasses();
   }
 
-  handler->reset(scoped_function.release());
+  handler->swap(scoped_function);  // transfer ownership
   if (function) {
     observer_topic_ = UpdateTask::GetNotificationTopic(&store_);
     MessageService::GetInstance()->AddObserver(this, observer_topic_.c_str());

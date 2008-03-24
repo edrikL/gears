@@ -302,22 +302,17 @@ void GearsHttpRequest::SetOnReadyStateChange(JsCallContext *context) {
   // Get & sanitize parameters.
   JsRootedCallback *function = NULL;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &function },
+    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &function },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   scoped_ptr<JsRootedCallback> scoped_function(function);
   
   if (context->is_exception_set())
     return;
-  
-  // Transfer ownership of callback to ourselves.
-  if (JsTokenIsNullOrUndefined(function->token())) {
-    onreadystatechangehandler_.release();
-  } else {
-    // release onreadystatechangehandler_ at end of scope
-    // and retain contents of scoped_function.
-    onreadystatechangehandler_.swap(scoped_function);
-  }
+
+  // release onreadystatechangehandler_ at end of scope
+  // and retain contents of scoped_function.
+  onreadystatechangehandler_.swap(scoped_function);
 }
 
 void GearsHttpRequest::GetReadyState(JsCallContext *context) {
