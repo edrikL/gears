@@ -285,6 +285,7 @@ void VersionFetchTask::Run() {
                          true,
                          NULL,
                          NULL,
+                         NULL,
                          &payload,
                          &was_redirected,
                          &url,
