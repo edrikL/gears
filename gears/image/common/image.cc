@@ -120,11 +120,11 @@ int blobGetC(gdIOCtx *ctx) {
 
 int blobGetBuf(gdIOCtx *ctx, void *dest, int wanted) {
   BlobReader *blob_reader = reinterpret_cast<BlobReader*>(ctx);
-  int bytes_read = blob_reader->blob->Read(reinterpret_cast<uint8*>(dest),
-                                           blob_reader->pos,
-                                           wanted);
+  int64 bytes_read = blob_reader->blob->Read(reinterpret_cast<uint8*>(dest),
+                                             blob_reader->pos,
+                                             wanted);
   blob_reader->pos += bytes_read;
-  return bytes_read;
+  return static_cast<int>(bytes_read);
 }
 
 void blobPutC(gdIOCtx *ctx, int byte) {
@@ -134,7 +134,7 @@ void blobPutC(gdIOCtx *ctx, int byte) {
 
 int blobPutBuf(gdIOCtx *ctx, const void *src, int wanted) {
   BlobWriter *blob_writer = reinterpret_cast<BlobWriter*>(ctx);
-  return blob_writer->blob->Append(src, wanted);
+  return static_cast<int>(blob_writer->blob->Append(src, wanted));
 }
 
 // Start Image class implementation
@@ -155,7 +155,7 @@ bool Image::Init(BlobInterface *blob, std::string16 *error) {
 
   // Sniff the first four bytes and load the image
   uint8 header[kHeaderSize];
-  if (blob->Read(header, 0, kHeaderSize) < kHeaderSize) {
+  if (blob->Read(header, 0, kHeaderSize) != kHeaderSize) {
     *error = STRING16(L"The blob is not an image");
     return false;
   }

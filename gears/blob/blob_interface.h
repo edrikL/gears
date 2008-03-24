@@ -35,11 +35,14 @@
 
 class BlobInterface : public RefCounted {
  public:
-  // Returns the number of bytes successfully read.  The offset is relative
-  // to the beginning of the blob contents, and is not related to previous
-  // reads.  Reads of offset < 0 will be ignored (and return 0), and
-  // similarly for max_bytes < 0.
-  virtual int Read(uint8 *destination, int64 offset, int max_bytes) const = 0;
+  // Reads up to max_bytes from the blob beginning at the absolute position
+  // indicated by offset, and writes the data into destination.  Multiple Reads
+  // are unrelated.  Returns the number of bytes successfully read, or -1 on
+  // error.  A null destination or negative offset or max_bytes will result in
+  // an error.  An offset beyond the end of the stream will succeed and return 0
+  // bytes.
+  virtual int64 Read(uint8 *destination, int64 offset,
+                     int64 max_bytes) const = 0;
 
   // Note that Length can be volatile, e.g. a file-backed Blob can have that
   // file's size change underneath it.
@@ -57,7 +60,9 @@ class EmptyBlob : public BlobInterface {
  public:
   EmptyBlob() {}
 
-  int Read(uint8 *destination, int64 offset, int max_bytes) const {
+  int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const {
+    if (!destination || (offset < 0) || (max_bytes < 0))
+      return -1;
     return 0;
   }
 

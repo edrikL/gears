@@ -46,6 +46,7 @@
 #define GEARS_BASE_COMMON_STRING16_H__
 
 #include <string>
+#include "gears/base/common/int_types.h"
 
 // Need to cast literals (Linux, OSX) and SQLite void* retvals (all platforms)
 #define STRING16(x)  reinterpret_cast<const char16*>(x)
@@ -208,7 +209,9 @@ int ParseLeadingInteger(const char *str, const char **endptr);
 
 // Converting to decimal strings is also important.
 // This version does support negative values.
-std::string IntegerToString(int i);
-std::string16 IntegerToString16(int i);
+std::string IntegerToString(int32 i);
+std::string16 IntegerToString16(int32 i);
+std::string Integer64ToString(int64 i);
+std::string16 Integer64ToString16(int64 i);
 
 #endif // GEARS_BASE_COMMON_STRING16_H__

@@ -27,7 +27,7 @@
 // The blob API has not been finalized for official builds
 #else
 
-#include <assert.h>
+#include <limits>
 #include "gears/blob/buffer_blob.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
@@ -38,15 +38,15 @@ BufferBlob::BufferBlob(std::vector<uint8> *buffer) {
 }
 
 
-int BufferBlob::Append(const void *source, int num_bytes) {
+int64 BufferBlob::Append(const void *source, int64 num_bytes) {
   MutexLock lock(&mutex_);
-  if (!writable_ ||
-      num_bytes < 0 ||
-      // Don't try to support BufferBlobs over 2GB:
-      static_cast<int64>(buffer_.size()) + num_bytes > kint32max) {
-    return 0;
+  if (!writable_ || num_bytes < 0) {
+    return -1;
   }
-  int original_size = buffer_.size();
+  if (buffer_.size() + num_bytes > std::numeric_limits<size_type>::max()) {
+    num_bytes = std::numeric_limits<size_type>::max() - buffer_.size();
+  }
+  int64 original_size = buffer_.size();
   const uint8* bytes = static_cast<const uint8*>(source);
   buffer_.insert(buffer_.end(), bytes, bytes + num_bytes);
   return buffer_.size() - original_size;
@@ -59,27 +59,31 @@ void BufferBlob::Finalize() {
 }
 
 
-int BufferBlob::Read(uint8 *destination, int64 offset, int max_bytes) const {
+int64 BufferBlob::Read(uint8 *destination, int64 offset,
+                       int64 max_bytes) const {
+  if (offset < 0 || max_bytes < 0) {
+    return -1;
+  }
   {
     MutexLock lock(&mutex_);
     if (writable_) {
-      return 0;
+      return -1;
     }
     // By this point, we've established that the blob will not change so we
     // don't need the mutex lock any more.
   }
-  if (offset >= buffer_.size() || offset < 0 || max_bytes < 0) {
+  if (offset >= buffer_.size()) {
     return 0;
   }
-  assert(offset <= kint32max);  // Enforced by Append()
-
-  int offset_as_int = static_cast<int>(offset);
-  int actual = buffer_.size() - offset_as_int;
-  if (actual > max_bytes) {
-    actual = max_bytes;
+  // postcondition: 0 <= offset <= std::numeric_limits<size_type>::max()
+  int64 available = buffer_.size() - offset;
+  if (available > max_bytes) {
+    available = max_bytes;
   }
-  memcpy(destination, &(buffer_[offset_as_int]), actual);
-  return actual;
+  // postcondition: 0 <= available <= std::numeric_limits<size_type>::max()
+  memcpy(destination, &(buffer_[static_cast<size_type>(offset)]),
+         static_cast<size_type>(available));
+  return available;
 }
 
 

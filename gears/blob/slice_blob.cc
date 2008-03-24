@@ -36,19 +36,22 @@ SliceBlob::SliceBlob(BlobInterface *source, int64 offset, int64 length)
   // We explicitly allow offset and length to indicate a slice that extends
   // beyond the end of the source blob, although Read will return no data for
   // that portion.
-  assert(offset_ > 0);
-  assert(length_ > 0);
+  assert(offset_ >= 0);
+  assert(length_ >= 0);
 }
 
-int SliceBlob::Read(uint8 *destination, int64 offset, int max_bytes) const {
-  if (offset < 0) {
+int64 SliceBlob::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
+  if (offset < 0 || max_bytes < 0) {
+    return -1;
+  }
+  if (offset >= length_) {
     return 0;
   }
-  int64 remaining = (offset < length_) ? length_ - offset : 0;
-  if (remaining < max_bytes) {
-    max_bytes = static_cast<int>(remaining);
+  int64 available = length_ - offset;
+  if (available > max_bytes) {
+    available = max_bytes;
   }
-  return blob_->Read(destination, offset_ + offset, max_bytes);
+  return blob_->Read(destination, offset_ + offset, available);
 }
 
 int64 SliceBlob::Length() const {

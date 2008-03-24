@@ -37,7 +37,7 @@ FileBlob::FileBlob(const std::string16& filename)
 }
 
 
-int FileBlob::Read(uint8 *destination, int64 offset, int max_bytes) const {
+int64 FileBlob::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
   return File::ReadFileSegmentToBuffer(
       filename_.c_str(), destination, offset, max_bytes);
 }
