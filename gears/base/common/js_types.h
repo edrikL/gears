@@ -248,6 +248,7 @@ class ScopedNPVariant : public NPVariant {
   // Frees the old value and replaces it with the new value.  Strings are
   // copied, and objects are retained.
   void Reset();
+  void Reset(bool value);
   void Reset(int value);
   void Reset(double value);
   void Reset(const char *value);

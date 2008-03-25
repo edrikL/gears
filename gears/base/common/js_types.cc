@@ -1335,6 +1335,12 @@ JsParamType JsTokenGetType(JsToken t, JsContextPtr cx) {
   } else if (NPVARIANT_IS_INT32(t)) {
     return JSPARAM_INT;
   } else if (NPVARIANT_IS_DOUBLE(t)) {
+    // Patch for WebKit, which reports both ints and doubles as both being of
+    // type JSPARAM_DOUBLE.
+    double double_val = NPVARIANT_TO_DOUBLE(t);
+    if (DoubleIsIntegral(double_val)) {
+      return JSPARAM_INT;
+    }
     return JSPARAM_DOUBLE;
   } else if (NPVARIANT_IS_STRING(t)) {
     return JSPARAM_STRING16;
@@ -1403,6 +1409,11 @@ void ScopedNPVariant::Reset() {
 void ScopedNPVariant::Reset(int value) {
   Reset();
   INT32_TO_NPVARIANT(value, *this);
+}
+
+void ScopedNPVariant::Reset(bool value) {
+  Reset();
+  BOOLEAN_TO_NPVARIANT(value, *this);
 }
 
 void ScopedNPVariant::Reset(double value) {

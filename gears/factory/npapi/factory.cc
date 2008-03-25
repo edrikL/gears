@@ -38,13 +38,19 @@
 #include "gears/localserver/npapi/localserver_np.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/timer/timer.h"
+#ifdef BROWSER_WEBKIT
+// TODO(playmobil): Add support for worker pools in Safari build.
+#else
 #include "gears/workerpool/npapi/workerpool.h"
+#endif
 
-// static 
+// static
+template <>
 void Dispatcher<GearsFactory>::Init() {
   RegisterProperty("version", &GearsFactory::GetVersion, NULL);
   RegisterMethod("create", &GearsFactory::Create);
   RegisterMethod("getBuildInfo", &GearsFactory::GetBuildInfo);
+  RegisterMethod("getPermission", &GearsFactory::GetPermission);
 }
 
 GearsFactory::GearsFactory()
@@ -68,7 +74,7 @@ void GearsFactory::Create(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &class_name },
     { JSPARAM_OPTIONAL, JSPARAM_STRING16, &version },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
@@ -87,8 +93,12 @@ void GearsFactory::Create(JsCallContext *context) {
     object.reset(CreateModule<GearsDatabase>(GetJsRunner()));
   } else if (class_name == STRING16(L"beta.localserver")) {
     object.reset(CreateModule<GearsLocalServer>(GetJsRunner()));
+#ifdef BROWSER_WEBKIT
+// TODO(playmobil): Add support for worker pools in Safari build.
+#else
   } else if (class_name == STRING16(L"beta.workerpool")) {
     object.reset(CreateModule<GearsWorkerPool>(GetJsRunner()));
+#endif
   } else if (class_name == STRING16(L"beta.httprequest")) {
     object.reset(CreateModule<GearsHttpRequest>(GetJsRunner()));
   } else if (class_name == STRING16(L"beta.timer")) {
@@ -113,6 +123,32 @@ void GearsFactory::GetBuildInfo(JsCallContext *context) {
   std::string16 build_info;
   AppendBuildInfo(&build_info);
   context->SetReturnValue(JSPARAM_STRING16, &build_info);
+}
+
+void GearsFactory::GetPermission(JsCallContext *context) {
+  std::string16 site_name;
+  std::string16 image_url;
+  std::string16 extra_message;
+  
+  JsArgument argv[] = {
+    { JSPARAM_OPTIONAL, JSPARAM_STRING16, &site_name },
+    { JSPARAM_OPTIONAL, JSPARAM_STRING16, &image_url },
+    { JSPARAM_OPTIONAL, JSPARAM_STRING16, &extra_message },
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  
+  if (context->is_exception_set())
+    return;
+  
+  bool use_temporary_permissions = false;
+  bool has_permission = false;
+  if (HasPermissionToUseGears(this, use_temporary_permissions,
+                              image_url.c_str(), site_name.c_str(),
+                              extra_message.c_str())) {
+    has_permission = true;
+  }
+  
+  context->SetReturnValue(JSPARAM_BOOL, &has_permission);
 }
 
 void GearsFactory::GetVersion(JsCallContext *context) {
