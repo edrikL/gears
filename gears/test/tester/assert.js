@@ -28,12 +28,17 @@
 /**
  * Whether the installed Gears extension is a debug build.
  */
-var isDebug = google.gears.factory.getBuildInfo().indexOf("dbg") > -1;
+var isDebug = google.gears.factory.getBuildInfo().indexOf('dbg') > -1;
 
 /**
  * Whether the installed Gears extension is an official build.
  */
-var isOfficial = google.gears.factory.getBuildInfo().indexOf("official") > -1;
+var isOfficial = google.gears.factory.getBuildInfo().indexOf('official') > -1;
+
+/**
+ * Whether the installed Gears extension is for Windows Mobile
+ */
+var isWince = google.gears.factory.getBuildInfo().indexOf('wince') > -1;
 
 /**
  * A shared timer tests can use.
