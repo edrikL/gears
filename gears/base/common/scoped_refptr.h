@@ -58,13 +58,29 @@ class scoped_refptr {
  public:
   typedef T element_type;
 
-  explicit scoped_refptr(T* p = NULL) : ptr_(p) {
+  // The 'explicit' keyword is omitted on these constructors to allow intuitive
+  // raw pointer interoperability such as the following:
+  //   Foo* f;
+  //   void Func(const scoped_refptr<Foo>& foo);
+  //   std::vector< scoped_refptr<Foo> > vec;
+  //   Func(f);
+  //   vec.push_back(f);
+  // Instead of:
+  //   Func(scoped_refptr<Foo>(f));
+  //   vec.push_back(scoped_refptr<Foo>(f));
+
+  scoped_refptr(T* p = NULL) : ptr_(p) {
+    if (ptr_)
+      ptr_->Ref();
+  }
+
+  scoped_refptr(const scoped_refptr& b) : ptr_(b.get()) {
     if (ptr_)
       ptr_->Ref();
   }
 
   template <typename U>
-  explicit scoped_refptr(const scoped_refptr<U>& b) : ptr_(b.get()) {
+  scoped_refptr(const scoped_refptr<U>& b) : ptr_(b.get()) {
     if (ptr_)
       ptr_->Ref();
   }
