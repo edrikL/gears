@@ -90,6 +90,7 @@ bool TestJsRootedTokenLifetime();  // from base_class_test.cc
 bool TestStringUtils();  // from string_utils_test.cc
 bool TestSerialization();  // from serialization_test.cc
 bool TestCircularBuffer();  // from circular_buffer_test.cc
+bool TestRefCount(); // from scoped_refptr_test.cc
 #ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
 bool TestBufferBlob();  // from blob_test.cc
@@ -165,6 +166,8 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestManagedResourceStore();
   ok &= TestMessageService();
   ok &= TestSerialization();
+  ok &= TestCircularBuffer();
+  ok &= TestRefCount();
 #ifndef OFFICIAL_BUILD
   // The blob API has not been finalized for official builds
 #if BROWSER_FF || BROWSER_IE
@@ -177,7 +180,6 @@ void GearsTest::RunTests(JsCallContext *context) {
   // TODO(zork): Add this test back in once it doesn't crash the browser.
   //ok &= TestJsRootedTokenLifetime();
 
-  ok &= TestCircularBuffer();
 #if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
   ok &= TestIpcMessageQueue();
 #endif

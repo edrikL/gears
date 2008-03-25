@@ -25,7 +25,9 @@
 
 #ifdef DEBUG
 
+#include <vector>
 #include "gears/base/common/scoped_refptr.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 class A : virtual public RefCounted { };
 class B : virtual public RefCounted { };
@@ -74,9 +76,13 @@ bool TestRefCount() {
     scoped_refptr<A> a_p(ab);
     TEST_ASSERT(!dead && 2 == ab->GetRef());
     {
+      // Construction from scoped_refptr
+      scoped_refptr<AB> ab2_p(ab_p);
+      TEST_ASSERT(!dead && 3 == ab->GetRef());
+
       // Construction from related scoped_refptr
       scoped_refptr<A> a2_p(ab_p);  
-      TEST_ASSERT(!dead && 3 == ab->GetRef());
+      TEST_ASSERT(!dead && 4 == ab->GetRef());
     }
     TEST_ASSERT(!dead && 2 == ab->GetRef());
     // Self-assignment
@@ -134,6 +140,21 @@ bool TestRefCount() {
   }
   TEST_ASSERT(dead);
   TEST_ASSERT(dead2);
+
+  // scoped_refptr in an STL container
+  ab = new AB(&dead);
+  TEST_ASSERT(!dead && 0 == ab->GetRef());
+  {
+    std::vector<scoped_refptr<A> > avec;
+    avec.push_back(ab);
+    TEST_ASSERT(!dead && 1 == ab->GetRef());
+    TEST_ASSERT(ab == avec[0]);
+    avec.insert(avec.begin(), scoped_refptr<A>());
+    TEST_ASSERT(!dead && 1 == ab->GetRef());
+    TEST_ASSERT(NULL == avec[0].get());
+    TEST_ASSERT(ab == avec[1]);
+  }
+  TEST_ASSERT(dead);
 
   return true;
 }

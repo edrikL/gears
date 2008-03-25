@@ -165,7 +165,7 @@ bool FileDialogUtils::FilesToJsObjectArray(
     std::string16 base_name;
     if (File::GetBaseName(*it, &base_name)) {
       base_names.push_back(base_name);
-      blobs.push_back(scoped_refptr<BlobInterface>(new FileBlob(it->c_str())));
+      blobs.push_back(new FileBlob(it->c_str()));
     } else {
       *error = STRING16(L"Failed to create blob.");
       return false;
