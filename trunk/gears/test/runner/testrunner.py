@@ -12,15 +12,15 @@ class TestRunner:
     test_server: instance of testwebserver
   """
   
-  TEST_URL = "http://localhost:8001/tester/gui.html"
-  TIMEOUT = 90
+  TIMEOUT = 20 * 60 #seconds
     
-  def __init__(self, browser_launchers, web_servers):
+  def __init__(self, browser_launchers, web_servers, test_url):
     if not browser_launchers or len(browser_launchers) < 1:
       raise ValueError("Please provide browser launchers")
     self.__verifyBrowserLauncherTypesUnique(browser_launchers)
     self.browser_lauchers = browser_launchers
     self.web_servers = web_servers
+    self.test_url = test_url
 
 
   def runTests(self, automated=True):
@@ -40,7 +40,7 @@ class TestRunner:
       for browser_launcher in self.browser_lauchers:
         test_server.startTest(TestRunner.TIMEOUT)
         try:
-          browser_launcher.launch(TestRunner.TEST_URL)
+          browser_launcher.launch(self.test_url)
         except:
           self.__handleBrowserTestCompletion(browser_launcher, 
                                              test_results, automated)

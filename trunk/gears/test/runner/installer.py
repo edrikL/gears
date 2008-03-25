@@ -87,6 +87,7 @@ class Installer:
         return profile_folder
     return False
 
+
   def findBuildPath(self, type, directory):
     """ Find the path to the build of the given type.
   
@@ -267,6 +268,76 @@ class WinVistaInstaller(Win32Installer):
     return 'WinVistaInstaller'
 
 
+class WinCeInstaller(Installer):
+  """ Installer for WinCE, extends Installer. """
+  def __init__(self, host):
+    self.ieprofile = 'ieprofile'
+    self.host = host
+  
+  
+  def buildPath(self, directory):
+    return self.findBuildPath('cab', directory)
+
+  
+  def type(self):
+    return 'WinCeInstaller'
+  
+  
+  def install(self):
+    """ Do installation. """
+    print 'Installing and copying permissions.'
+    self.installCab()
+    self.copyPermissions()
+  
+  
+  def installCab(self):
+    """ Copy installer to device and install.  """
+    build_path = self.buildPath(Installer.BUILDS)
+    
+    # Requires cecopy.exe in path.
+    copy_cmd = ['cecopy.exe', build_path, 'dev:\\windows\\gears.cab']
+    p = subprocess.Popen(copy_cmd)
+    p.wait()
+
+    # Requires rapistart.exe in path.  Option /noui for silent install.
+    install_cmd = ['rapistart.exe', '\\windows\\wceload.exe', '/noui', 
+                   '\\windows\\gears.cab']
+
+    # TODO(ace): Find a more robust solution than waiting a set timeout
+    # for installation to finish.
+    gears_installer_timeout = 45 #seconds
+    subprocess.Popen(install_cmd)
+    time.sleep(gears_installer_timeout)
+
+    # Requires pkill.exe in path.
+    kill_cmd = ['pkill.exe', 'iexplore.exe']
+    p = subprocess.Popen(kill_cmd)
+    p.wait()
+  
+
+  def copyPermissions(self):
+    """ Modify permissions file to include host address and copy to device. """
+    perm_path = os.path.join(self.ieprofile, 'permissions.db')
+    perm_path.replace('/', '\\')
+
+    # Requires sqlite3.exe in path to modify permissions db file.
+    modify_cmd = ['sqlite3', perm_path]
+    p = subprocess.Popen(modify_cmd, stdin=subprocess.PIPE)
+
+    # Sql command to add gears permissions to the address of the host server.
+    sql_cmd = 'INSERT INTO "Access" VALUES(\'http://%s:8001\',1);' % self.host
+    p.stdin.write(sql_cmd)
+    p.stdin.close()
+    p.wait()
+
+    # Requires cecopy.exe in path to copy permissions to device.
+    copy_cmd = ['cecopy.exe', self.ieprofile, 
+                'dev:\\application data\\google\\'
+                'Google Gears for Internet Explorer']
+    p = subprocess.Popen(copy_cmd)
+    p.wait()
+
+
 class MacInstaller(Installer):
   """ Installer for Mac, extends Installer. """
   def __init__(self, profile_name):
@@ -301,6 +372,7 @@ class MacInstaller(Installer):
     self.installExtension(build_path)
     self.__copyProfileCacheMac()
     self.saveInstalledBuild()
+
 
   def __copyProfileCacheMac(self):
     """ Copy cache portion of profile on mac. """

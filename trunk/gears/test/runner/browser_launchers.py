@@ -93,6 +93,30 @@ class IExploreWin32Launcher(Win32Launcher):
     return 'IExploreWin32'
 
 
+class IExploreWinCeLauncher(BrowserLauncher):
+  """ Launcher for pocket ie on Windows Mobile. """
+  def __init__(self, automated=True):
+    pass
+  
+  
+  def type(self):
+    return 'IExploreWinCE'
+  
+  
+  def launch(self, url):
+    """ Do launch. """
+    # Requires rapistart.exe in path.
+    launch_cmd = ['rapistart.exe', '\windows\iexplore.exe', url]
+    subprocess.Popen(launch_cmd)
+  
+
+  def kill(self):
+    """ Kill browser. """
+    # Requires pkill.exe in path.
+    kill_cmd = ['pkill.exe', 'iexplore.exe']
+    subprocess.Popen(kill_cmd)
+
+
 class FirefoxMacLauncher(BrowserLauncher):
   """ Launcher for firefox on OSX. """
   def __init__(self, profile, automated=True):

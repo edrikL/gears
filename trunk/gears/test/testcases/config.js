@@ -51,13 +51,15 @@ TestSuite.prototype.addFile = function(relativePath, config) {
 
 // Lists test configuration below...
 
-var TEST_TIMEOUT_SECONDS = 90 * 1000;
+var TEST_TIMEOUT_SECONDS = 15 * 60 * 1000;
 var suites = [];
 
-var consoleSuite = new TestSuite('Console');
-consoleSuite.addFile('../testcases/console_tests.js',
-                      {useWorker: true, useIFrame: true});
-suites.push(consoleSuite);
+if (!isWince) {
+  var consoleSuite = new TestSuite('Console');
+  consoleSuite.addFile('../testcases/console_tests.js',
+                        {useWorker: true, useIFrame: true});
+  suites.push(consoleSuite);
+}
 
 var databaseSuite = new TestSuite('Database');
 databaseSuite.addFile('../testcases/database_tests.js',
