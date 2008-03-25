@@ -43,6 +43,8 @@
 #include "gears/base/npapi/plugin.h"
 #include "gears/factory/npapi/factory_wrapper.h"
 
+std::string16 g_user_agent;  // Access externally via BrowserUtils class.
+
 // here the plugin creates an instance of our NPObject object which 
 // will be associated with this newly created plugin instance and 
 // will do all the neccessary job
@@ -59,6 +61,12 @@ NPError NPP_New(NPMIMEType pluginType,
 
   NPObject* obj = CreateGearsFactoryWrapper(instance);
   instance->pdata = obj;
+
+  // Keep a copy of the user agent string.
+  if (g_user_agent.empty()) {
+    const char *user_agent_utf8 = NPN_UserAgent(instance);
+    UTF8ToString16(user_agent_utf8, &g_user_agent);
+  }
 
   // Make this a windowless plugin.
   return NPN_SetValue(instance, NPPVpluginWindowBool, NULL);
