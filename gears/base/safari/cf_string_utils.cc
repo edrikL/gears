@@ -82,7 +82,7 @@ bool ConvertToString16UsingEncoding(const char *in, int len,
     buffer[length] = 0;
     out16->assign(buffer.get());
   } else {
-    out16->assign(out_str);
+    out16->assign(out_str, length);
   }
   
   return true;
