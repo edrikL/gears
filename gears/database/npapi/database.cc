@@ -300,6 +300,11 @@ void GearsDatabase::Close(JsCallContext *context) {
 }
 
 void GearsDatabase::GetLastInsertRowId(JsCallContext *context) {
+  if (!db_) {
+    context->SetException(STRING16(L"Database handle was NULL."));
+    return;
+  }
+
   sqlite_int64 rowid = sqlite3_last_insert_rowid(db_);
   if ((rowid < JS_INT_MIN) || (rowid > JS_INT_MAX)) {
     context->SetException(STRING16(L"lastInsertRowId is out of range."));
@@ -310,6 +315,11 @@ void GearsDatabase::GetLastInsertRowId(JsCallContext *context) {
 }
 
 void GearsDatabase::GetRowsAffected(JsCallContext *context) {
+  if (!db_) {
+    context->SetException(STRING16(L"Database handle was NULL."));
+    return;
+  }
+
   int retval = sqlite3_changes(db_);
   context->SetReturnValue(JSPARAM_INT, &retval);
 }
