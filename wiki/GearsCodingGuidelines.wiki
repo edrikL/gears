@@ -11,3 +11,43 @@ The *TRANS_BLOCK* tag is used inside the HTML files used for the Gears UI to mar
 
   * Please try not to change the text in these blocks if not absolutely necessary as this requires sending them for retranslation.
   * Do not put HTML tags inside of <TRANS_BLOCK> tags if it can be avoided.  This adds clutter to our strings, and adds a point of failure for the UIs in localized versions of Gears.
+
+= Reference Counted Classes =
+
+Gears code utilizes intrusive reference counting on some objects via Ref() and Unref().  An external reference-counting mechanism like shared_ptr is not feasible because we must occasionally pass raw pointers via COM or other API boundaries.  To keep things consistent and minimize the number of bugs, the following guidelines should be used:
+
+  * Use scoped_refptr<Foo> to pass reference-counted objects whenever possible.
+{{{
+   void Func(const scoped_refptr<Foo>& in_param, scoped_refptr<Foo>* out_param);
+}}}
+
+  * Do not pass scoped_refptr by value, as it causes unnecessary increments and decrements.  The only possible exception would be as a return value from a function, but an out parameter should be preferred.
+
+  * If scoped_refptr is not an option:
+    * *Do not* Ref() before calling a function, since you will hold the reference for the lifetime of that function call.
+{{{
+   void UseFoo(Foo* f);
+   scoped_refptr<Foo> local(new Foo);
+   UseFoo(local.get());
+}}}
+    * *Do* Ref() the out-parameters of a function before returning them.
+{{{
+   void GetFoo(Foo** f) {
+      *f = new Foo;
+      f->Ref();
+   }
+}}}
+    * *Do* Unref() the out-parameters received from a function after securing a local reference via scoped_refptr.
+{{{
+   void GetFoo(Foo** f);
+   Foo* local_raw;
+   GetFoo(&local);
+   scoped_refptr<Foo> local(local_raw);
+   local_raw->Unref();
+}}}
+    Since this is so ugly, consider using the as_out_parameter idiom:
+{{{
+   void GetFoo(Foo** f);
+   scoped_refptr<Foo> local;
+   GetFoo(as_out_parameter(local));
+}}}
