@@ -33,15 +33,11 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/ie/activex_utils.h"
-#ifdef WINCE
-// No BLOB support on WINCE yet
-#else
 #ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
 #include "gears/blob/blob_ie.h"
 #include "gears/blob/buffer_blob.h"
 #endif  // not OFFICIAL_BUILD
-#endif  // WINCE
 #include "gears/localserver/common/http_constants.h"
 
 
@@ -204,12 +200,26 @@ STDMETHODIMP GearsHttpRequest::send(
     RETURN_EXCEPTION(kNotOpenError);
 
   const char16 *post_data_str = NULL;
+#ifdef OFFICIAL_BUILD
   if (ActiveXUtils::OptionalVariantIsPresent(data)) {
     if (data->vt != VT_BSTR) {
       RETURN_EXCEPTION(STRING16(L"Data parameter must be a string."));
     }
     post_data_str = data->bstrVal;
   }
+#else  // !OFFICIAL_BUILD
+  CComQIPtr<GearsBlobPvtInterface> post_data_blob;
+  if (ActiveXUtils::OptionalVariantIsPresent(data)) {
+    if (data->vt == VT_BSTR) {
+      post_data_str = data->bstrVal;
+    } else if (data->vt == VT_DISPATCH) {
+      post_data_blob = data->pdispVal;
+    }
+    if (!post_data_str && !post_data_blob) {
+      RETURN_EXCEPTION(STRING16(L"Data parameter must be a string or blob."));
+    }
+  }
+#endif  // !OFFICIAL_BUILD
 
   HttpRequest *request_being_sent = request_;
 
@@ -220,6 +230,24 @@ STDMETHODIMP GearsHttpRequest::send(
                                  HttpConstants::kMimeTextPlain);
     }
     ok = request_->SendString(post_data_str);
+#ifndef OFFICIAL_BUILD
+  } else if (post_data_blob != NULL) {
+    // TODO(bpm): Change get_contents to return BlobInterface* so we can use
+    // the more natural as_out_parameter() idiom with scoped_refptr.
+    VARIANT var;
+    HRESULT hr = post_data_blob->get_contents(&var);
+    if (FAILED(hr)) {
+      RETURN_EXCEPTION(STRING16(L"Error getting blob contents."));
+    }
+    scoped_refptr<BlobInterface> blob_contents(
+        reinterpret_cast<BlobInterface*>(var.byref));
+    blob_contents->Unref();
+    if (!content_type_header_was_set_) {
+      request_->SetRequestHeader(HttpConstants::kContentTypeHeader,
+                                 HttpConstants::kMimeApplicationOctetStream);
+    }
+    ok = request_->SendBlob(blob_contents.get());
+#endif  // !OFFICIAL_BUILD
   } else {
     ok = request_->Send();
   }
@@ -339,9 +367,6 @@ STDMETHODIMP GearsHttpRequest::get_responseText(
   RETURN_NORMAL();
 }
 
-#ifdef WINCE
-// No BLOB support on WINCE yet
-#else
 #ifdef OFFICIAL_BUILD
 // Blob support is not ready for prime time yet
 #else
@@ -384,7 +409,6 @@ STDMETHODIMP GearsHttpRequest::get_responseBlob(
   RETURN_NORMAL();
 }
 #endif  // not OFFICIAL_BUILD
-#endif  // WINCE
 
 
 STDMETHODIMP GearsHttpRequest::get_status( 
@@ -506,14 +530,10 @@ void GearsHttpRequest::ReleaseRequest() {
     request_->ReleaseReference();
     request_ = NULL;
     response_text_.reset(NULL);
-#ifdef WINCE
-    // No BLOB support on WINCE yet
-#else
 #ifndef OFFICIAL_BUILD
     // The blob API has not been finalized for official builds
     response_blob_ = NULL;
 #endif  // not OFFICIAL_BUILD
-#endif
   }
 }
 

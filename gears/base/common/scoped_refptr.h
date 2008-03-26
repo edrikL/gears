@@ -70,25 +70,21 @@ class scoped_refptr {
   //   vec.push_back(scoped_refptr<Foo>(f));
 
   scoped_refptr(T* p = NULL) : ptr_(p) {
-    if (ptr_)
-      ptr_->Ref();
+    DoRef(ptr_);
   }
 
   scoped_refptr(const scoped_refptr& b) : ptr_(b.get()) {
-    if (ptr_)
-      ptr_->Ref();
+    DoRef(ptr_);
   }
 
   template <typename U>
   scoped_refptr(const scoped_refptr<U>& b) : ptr_(b.get()) {
-    if (ptr_)
-      ptr_->Ref();
+    DoRef(ptr_);
   }
 
   ~scoped_refptr() {
     typedef char type_must_be_complete[sizeof(T)];
-    if (ptr_)
-      ptr_->Unref();
+    DoUnref(ptr_);
   }
 
   T* get() const {
@@ -99,10 +95,8 @@ class scoped_refptr {
     typedef char type_must_be_complete[sizeof(T)];
     T* tmp = ptr_;
     ptr_ = p;
-    if (ptr_)
-      ptr_->Ref();
-    if (tmp)
-      tmp->Unref();
+    DoRef(ptr_);
+    DoUnref(tmp);
   }
 
   // Note: release() is explicitly unsupported, because:
@@ -169,6 +163,20 @@ class scoped_refptr {
 
  private:
   friend T** as_out_parameter<>(scoped_refptr<T>&);
+
+  // DoRef and DoUnref provide convenient points for instrumentation or debug
+  // breakpoints.
+  inline void DoRef(T* p) {
+    if (p) {
+      p->Ref();
+    }
+  }
+
+  inline void DoUnref(T* p) {
+    if (p) {
+      p->Unref();
+    }
+  }
 
   T* ptr_;
 };

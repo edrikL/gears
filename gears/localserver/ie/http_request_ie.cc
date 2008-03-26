@@ -32,7 +32,12 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/ie/atl_headers.h"
+#ifdef OFFICIAL_BUILD
 #include "gears/base/ie/stream_buffer.h"
+#else  // !OFFICIAL_BUILD
+#include "gears/blob/blob_stream_ie.h"
+#include "gears/blob/buffer_blob.h"
+#endif  // !OFFICIAL_BUILD
 #include "gears/localserver/ie/http_handler_ie.h"
 #include "gears/localserver/ie/urlmon_utils.h"
 
@@ -252,6 +257,7 @@ bool IEHttpRequest::GetInitialUrl(std::string16 *full_url) {
 // Send, SendString, SendImp
 //------------------------------------------------------------------------------
 
+#ifdef OFFICIAL_BUILD
 bool IEHttpRequest::Send() {
   if (IsPostOrPut()) {
     return SendString(L"");
@@ -259,7 +265,6 @@ bool IEHttpRequest::Send() {
     return SendImpl();
   }
 }
-
 
 bool IEHttpRequest::SendString(const char16 *data) {
   if (!IsOpen() || !data) return false;
@@ -272,12 +277,55 @@ bool IEHttpRequest::SendString(const char16 *data) {
   // on the size of our stream?
   std::string16 size_str = IntegerToString16(post_data_string_.size());
   SetRequestHeader(HttpConstants::kContentLengthHeader, size_str.c_str());
-
   return SendImpl();
 }
+#else  // !OFFICIAL_BUILD
+bool IEHttpRequest::Send() {
+  if (!IsOpen())
+    return false;
 
+  if (!IsPostOrPut())
+    return SendImpl(NULL);
 
+  scoped_refptr<BlobInterface> blob(new EmptyBlob);
+  return SendImpl(blob.get());
+}
+
+bool IEHttpRequest::SendString(const char16 *data) {
+  if (!IsOpen() || !IsPostOrPut() || !data)
+    return false;
+
+  std::string data8;
+  String16ToUTF8(data, &data8);
+  scoped_refptr<BufferBlob> blob(new BufferBlob);
+  blob->Append(data8.data(), data8.size());
+  blob->Finalize();
+
+  return SendImpl(blob.get());
+}
+
+bool IEHttpRequest::SendBlob(BlobInterface *data) {
+  if (!IsOpen() || !IsPostOrPut() || !data)
+    return false;
+
+  return SendImpl(data);
+}
+#endif  // !OFFICIAL_BUILD
+
+#ifdef OFFICIAL_BUILD
 bool IEHttpRequest::SendImpl() {
+#else  // !OFFICIAL_BUILD
+bool IEHttpRequest::SendImpl(BlobInterface *data) {
+  if (data) {
+    post_data_ = data;
+
+    // TODO(bpm): do we have to set this or will URLMON do so based
+    // on the size of our stream?
+    std::string16 size_str = Integer64ToString16(post_data_->Length());
+    SetRequestHeader(HttpConstants::kContentLengthHeader, size_str.c_str());
+  }
+#endif  // !OFFICIAL_BUILD
+
   // The request can complete prior to Send returning depending on whether
   // the response is retrieved from the cache. We guard against a caller's
   // listener removing the last reference prior to return by adding our own
@@ -525,20 +573,31 @@ STDMETHODIMP IEHttpRequest::GetBindInfo(DWORD *flags, BINDINFO *info) {
     wcscpy(info->szCustomVerb, method_.c_str());
   }
 
+#ifdef OFFICIAL_BUILD
   if (is_post_or_put && !post_data_string_.empty()) {
     CComObject<StreamBuffer> *buf = NULL;
     HRESULT hr = CComObject<StreamBuffer>::CreateInstance(&buf);
     if (FAILED(hr))
       return hr;
-    CComQIPtr<IStream> buf_stream(buf->GetUnknown());
     buf->Initialize(post_data_string_.data(), post_data_string_.size());
     info->stgmedData.tymed = TYMED_ISTREAM;
-    info->stgmedData.pstm = buf_stream.Detach();  // we want URLMON to ownership
-    // TODO(michaeln): Our StreamBuffer is not being freed, how is this
-    // stgmedData supposed to work? Currently we're giving URLMON a reference
-    // to an object with a refcount of 1, the count goes up and back down, but
-    // never down to zero.
+    info->stgmedData.pstm = static_cast<IStream*>(buf);
+    // buf has a 0 reference count at this point.  The caller of GetBindInfo
+    // will immediately do an AddRef on buf.
   }
+#else  // !OFFICIAL_BUILD
+  if (is_post_or_put && post_data_.get()) {
+    CComObject<BlobStream> *stream = NULL;
+    HRESULT hr = CComObject<BlobStream>::CreateInstance(&stream);
+    if (FAILED(hr))
+      return hr;
+    stream->Initialize(post_data_.get(), 0);
+    info->stgmedData.tymed = TYMED_ISTREAM;
+    info->stgmedData.pstm = static_cast<IStream*>(stream);
+    // stream has a 0 reference count at this point.  The caller of GetBindInfo
+    // will immediately do an AddRef on stream.
+  }
+#endif  // !OFFICIAL_BUILD
 
   return S_OK;
 }

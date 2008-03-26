@@ -41,6 +41,12 @@ var isOfficial = google.gears.factory.getBuildInfo().indexOf('official') > -1;
 var isWince = google.gears.factory.getBuildInfo().indexOf('wince') > -1;
 
 /**
+ * Whether the installed Gears extension is for a particular browser.
+ */
+var isIE = google.gears.factory.getBuildInfo().indexOf(';ie') > -1;
+var isFirefox = google.gears.factory.getBuildInfo().indexOf(';firefox') > -1;
+
+/**
  * A shared timer tests can use.
  */
 var timer = google.gears.factory.create('beta.timer');
@@ -305,14 +311,19 @@ function handleResult(rs, fn) {
  * @param url The url to fetch
  * @param method The http method (ie. 'GET' or 'POST')
  * @param data The data to send, may be null
- * @param callback Will be called with contents of URL, or null if the request
- * was unsuccessful.
+ * @param callback The function which will be called upon completion of the
+ * request.  If cb_request is true, the callback receives the request object.
+ * Otherwise, the callback receives the contents on a 200 response and null on
+ * any other response.
+ * @param cb_request Controls the argument to callback.
  */
-function sendHttpRequest(url, method, data, callback) {
+function sendHttpRequest(url, method, data, callback, cb_request) {
   var req = google.gears.factory.create('beta.httprequest');
   req.onreadystatechange = function() {
     if (req.readyState == 4) {
-      if (req.status == 200) {
+      if (cb_request) {
+        callback(req);
+      } else if (req.status == 200) {
         callback(req.responseText);
       } else {
         callback(null);
@@ -331,7 +342,16 @@ function sendHttpRequest(url, method, data, callback) {
  * was unsuccessful.
  */
 function httpGet(url, callback) {
-  sendHttpRequest(url, 'GET', null, callback);
+  sendHttpRequest(url, 'GET', null, callback, false);
+}
+
+/**
+ * Utility to asynchronously get a URL and return the request object.
+ * @param url The url to fetch
+ * @param callback Will be called with request object.
+ */
+function httpGetAsRequest(url, callback) {
+  sendHttpRequest(url, 'GET', null, callback, true);
 }
 
 /**
@@ -342,5 +362,16 @@ function httpGet(url, callback) {
  * was unsuccessful.
  */
 function httpPost(url, data, callback) {
-  sendHttpRequest(url, 'POST', data, callback);
+  sendHttpRequest(url, 'POST', data, callback, false);
 }
+
+/**
+ * Utility to asynchronously POST to a URL and return the request object.
+ * @param url The url to fetch
+ * @param data The data to post
+ * @param callback Will be called with request object.
+ */
+function httpPostAsRequest(url, callback) {
+  sendHttpRequest(url, 'POST', data, callback, true);
+}
+

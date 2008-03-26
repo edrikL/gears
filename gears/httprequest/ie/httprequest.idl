@@ -59,15 +59,11 @@ interface GearsHttpRequestInterface : IDispatch {
                             [out, retval] BSTR *headerValues);
   [propget] HRESULT responseText([out, retval] BSTR *body);
 
-#ifdef WINCE
-  // No BLOB support on WINCE yet
-#else
 #ifdef OFFICIAL_BUILD
   // Blob support is not ready for prime time yet
 #else
   [propget] HRESULT responseBlob([out, retval] IUnknown **body);
 #endif  // OFFICIAL_BUILD
-#endif  // WINCE
 
   [propget] HRESULT status([out, retval] int *statusCode);
   [propget] HRESULT statusText([out, retval] BSTR *statusText);
