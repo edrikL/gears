@@ -111,7 +111,7 @@ void GearsResourceStore::Capture(JsCallContext *context) {
 
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_UNKNOWN, NULL },
-    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &callback },
+    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &callback },
   };
 
   // TODO(aa): Consider coercing anything except array to string. This would
