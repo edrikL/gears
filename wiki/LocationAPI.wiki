@@ -132,8 +132,6 @@ It must be clear to users when an application is using the Geolocation API.  We 
   1. *A separate dialog from the Gears security dialog to enable the Geolocation API.* If the general-purpose dialog gave access to position data, it would be easy for users to forget they allowed access to Gears, or to fail to realize enabling Gears also exposes their position data.
   1. *Some persistent UI that indicates the Geolocation API is being used.* For example, there could be a bar across the bottom of the browser with an icon of a globe or map. Perhaps this UI should be 'active' somehow, indicating that something is happening, so that the user cannot forget it is being used.
 
-Communication with the `locationProviderUrl` should use a cookie jar separate from the browser's cookie jar.  Web apps will generally live on a different security origin than third-party location providers.  By using separate cookie jars, a third-party provider cannot correlate location requests with non-location-based visits to that origin.
-
 
 = Appendix A: Alternate API =
 
