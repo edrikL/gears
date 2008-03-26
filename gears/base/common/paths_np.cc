@@ -66,6 +66,12 @@ bool GetBaseComponentsDirectory(std::string16 *path) {
 }
 
 
+bool GetBaseResourcesDirectory(std::string16 *path) {
+  // TODO(nigeltao): implement.
+  return false;
+}
+
+
 bool GetBaseDataDirectory(std::string16 *path) {
   std::string16 path_long;
 
