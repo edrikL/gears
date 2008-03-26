@@ -384,8 +384,8 @@ function testInvalidDatabaseNameType() {
 
   function tryOpen(notAString) {
     assertError(function() {
-      db.open(notAString);
-      db.close();
+      db1.open(notAString);
+      db1.close();
     });
   }  
   
