@@ -113,8 +113,8 @@ bool GetBaseComponentsDirectory(std::string16 *path) {
 
 #endif
 
-#ifdef OS_MACOSX
 bool GetBaseResourcesDirectory(std::string16 *path) {
+#if defined(OS_MACOSX) || defined(LINUX)
   std::string16 tmp_path;
   
   if (!GetBaseGearsDirectory(&tmp_path)) {
@@ -125,8 +125,11 @@ bool GetBaseResourcesDirectory(std::string16 *path) {
   (*path) += STRING16(L"resources");
 
   return true;
-}
+#else
+  // TODO(nigeltao): implement on Windows.
+  return false;
 #endif
+}
 
 // Append "for Firefox" to be consistent with IE naming scheme.
 static const char16 *kDataSubdir = STRING16(PRODUCT_FRIENDLY_NAME

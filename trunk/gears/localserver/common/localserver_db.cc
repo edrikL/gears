@@ -776,7 +776,7 @@ bool WebCacheDB::ServiceGearsInspectorUrl(const char16 *url,
      
       // Build path to actual local file
       std::string16 local_file;
-      if (!GetBaseComponentsDirectory(&local_file)) {
+      if (!GetBaseResourcesDirectory(&local_file)) {
         return false;
       }
       // TODO(aa): Not sure if this is completely safe. Investigate a better
