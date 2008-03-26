@@ -143,7 +143,7 @@ Still, a lower-level API would be different in several ways:
 
   * *Consistency* - A low-level API is not directly useful to web app developers, so location providers would be tasked with designing the interface used by web apps.  This gives location providers more flexibility.  At the same time, it hinders web app developers slightly: it becomes more work to integrate geolocation data into an app, and it could become hard to switch between location providers that expose different interfaces.
 
-  * *Privacy* - With a low-level API, there is no need for a separate geolocation cookie jar.  It's also unclear whether separate Gears and Geolocation security dialogs would be useful.  (It would still make sense to indicate when position data is being tracked.)
+  * *Privacy* - With a low-level API, it's unclear whether separate Gears and Geolocation security dialogs would be useful.  (It would still make sense to indicate when position data is being tracked.)
 
   * *Surface Area* - The low-level API would be a subset of the proposed spec, which can be seen as an advantage or disadvantage.  There are obvious differences, like removing all the methods described earlier.  There are also less obvious simplifications, like returning only the current signals, rather than any historical data.
 
