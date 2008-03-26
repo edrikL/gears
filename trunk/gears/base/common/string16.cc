@@ -70,7 +70,7 @@ template<typename IntT, typename CharT>
 inline CharT *FastIntToBuffer(IntT i, CharT* buffer) {
   // We could collapse the positive and negative sections, but that
   // would be slightly slower for positive numbers...
-  // 12 bytes is enough to store -2**32, -4294967296.
+  // 22 chars is enough to store -2**64, -18446744073709551616.
   CharT* p = buffer + kFastIntToBufferOffset;
   *p-- = '\0';
   if (i >= 0) {

@@ -31,9 +31,11 @@
 
 #include "gears/base/common/security_model.h"
 #include "gears/base/ie/atl_headers.h"
+#ifndef OFFICIAL_BUILD
+#include "gears/blob/blob_interface.h"
+#endif  // !OFFICIAL_BUILD
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
-
 
 class IEHttpRequest
     : public CComObjectRootEx<CComMultiThreadModel::ThreadModelNoCS>,
@@ -90,6 +92,9 @@ class IEHttpRequest
   virtual bool SetRequestHeader(const char16* name, const char16* value);
   virtual bool Send();
   virtual bool SendString(const char16 *data);
+#ifndef OFFICIAL_BUILD
+  virtual bool SendBlob(BlobInterface *data);
+#endif  // !OFFICIAL_BUILD
   virtual bool GetAllResponseHeaders(std::string16 *headers);
   virtual bool GetResponseHeader(const char16* name, std::string16 *header);
   virtual bool Abort();
@@ -171,7 +176,11 @@ class IEHttpRequest
       /* [out] */ void __RPC_FAR *__RPC_FAR *ppvObject);
 
  private:
+#ifdef OFFICIAL_BUILD
   bool SendImpl();
+#else  // !OFFICIAL_BUILD
+  bool SendImpl(BlobInterface *data);
+#endif  // !OFFICIAL_BUILD
   HRESULT OnRedirect(const char16 *redirect_url);
   void SetReadyState(ReadyState state);
   bool IsUninitialized() { return ready_state_ == HttpRequest::UNINITIALIZED; }
@@ -203,7 +212,11 @@ class IEHttpRequest
   int bind_verb_;
 
   // The POST data
+#ifdef OFFICIAL_BUILD
   std::string post_data_string_;
+#else  // !OFFICIAL_BUILD
+  scoped_refptr<BlobInterface> post_data_;
+#endif  // !OFFICIAL_BUILD
 
   // Additional request headers we've been asked to send with the request
   std::string16 additional_headers_;

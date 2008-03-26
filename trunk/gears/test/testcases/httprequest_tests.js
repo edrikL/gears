@@ -49,6 +49,28 @@ function testPost200() {
             expectedHeaders, data.length); 
 }
 
+if (!isOfficial && isIE) {
+function testPostBlob200() {
+    startAsync();
+    
+    var data = 'This is not a valid manifest!\n';
+    var headers = [["Name1", "Value1"],
+                   ["Name2", "Value2"]];
+    var expectedHeaders = getExpectedEchoHeaders(headers);
+
+    // Obtain a blob so that we can upload it.
+    httpGetAsRequest('/testcases/manifest-ugly.txt', function(request) {
+      assertEqual(200, request.status, 'Failed to locate test blob');
+      assert(isObject(request.responseBlob), 'Failed to download test blob');
+      assertEqual(data.length, request.responseBlob.length,
+                  'Unexpected length of test blob');
+            
+      doRequest('testcases/cgi/echo_request.py', 'POST', request.responseBlob,
+                headers, 200, data, expectedHeaders, data.length); 
+    });
+}
+}
+
 function testPost302_200() {
   // A POST that gets redirected should GET the new location
   startAsync();

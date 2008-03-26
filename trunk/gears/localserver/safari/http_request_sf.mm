@@ -256,7 +256,7 @@ bool SFHttpRequest::GetInitialUrl(std::string16 *full_url) {
 }
 
 //------------------------------------------------------------------------------
-// Send, SendString, SendImpl
+// Send, SendString, SendBlob, SendImpl
 //------------------------------------------------------------------------------
 
 bool SFHttpRequest::Send() {
@@ -277,6 +277,15 @@ bool SFHttpRequest::SendString(const char16 *data) {
   String16ToUTF8(data, &post_data);
   return SendImpl(post_data);
 }
+
+
+#ifndef OFFICIAL_BUILD
+bool SFHttpRequest::SendBlob(BlobInterface *data) {
+  // TODO(bpm): implement!
+  assert(false);
+  return false;
+}
+#endif  // !OFFICIAL_BUILD
 
 
 bool SFHttpRequest::SendImpl(const std::string &post_data) {

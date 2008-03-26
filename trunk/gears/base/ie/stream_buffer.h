@@ -203,22 +203,15 @@ END_COM_MAP()
     if (pstatstg == NULL)
       return E_POINTER;
 
-    ZeroMemory(pstatstg, sizeof(STATSTG));
-    if ((grfStatFlag & STATFLAG_NONAME) == 0) {
-      const wchar_t *kStreamBuffer = L"StreamBuffer";
-      int buffer_len = sizeof(kStreamBuffer);
-      int wchar_len = buffer_len / sizeof(wchar_t);
-      pstatstg->pwcsName = reinterpret_cast<wchar_t*>(
-        ::CoTaskMemAlloc(buffer_len));
-      assert(pstatstg->pwcsName != NULL);
-      if (pstatstg->pwcsName == NULL)
-        return E_OUTOFMEMORY;
-
-      lstrcpynW(pstatstg->pwcsName, kStreamBuffer, wchar_len);
+    memset(pstatstg, 0, sizeof(STATSTG));
+    if (0 == (grfStatFlag & STATFLAG_NONAME)) {
+      const wchar_t kStreamBuffer[] = L"StreamBuffer";
+      pstatstg->pwcsName =
+          static_cast<wchar_t*>(::CoTaskMemAlloc(sizeof(kStreamBuffer)));
+      wcscpy(pstatstg->pwcsName, kStreamBuffer);
     }
-
+    pstatstg->type = STGTY_STREAM;
     pstatstg->cbSize.QuadPart = (end_ - buffer_);
-
     return S_OK;
   }
 

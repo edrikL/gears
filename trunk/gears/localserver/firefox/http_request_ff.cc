@@ -339,6 +339,13 @@ bool FFHttpRequest::SendString(const char16 *data) {
   return SendImpl(post_data_stream);
 }
 
+#ifndef OFFICIAL_BUILD
+bool FFHttpRequest::SendBlob(BlobInterface *data) {
+  // TODO(bgarcia): implement!
+  assert(false);
+  return false;
+}
+#endif  // !OFFICIAL_BUILD
 
 bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
   NS_ENSURE_TRUE(channel_ && !was_sent_, false);
