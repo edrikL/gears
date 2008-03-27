@@ -46,7 +46,7 @@ typedef long long           int64;
 typedef unsigned char      uint8;
 typedef unsigned short     uint16;
 typedef unsigned long long uint64;
-#elif BROWSER_FF || BROWSER_NPAPI
+#elif BROWSER_FF
 //------------------------------------------------------------------------------
 // BROWSER_FF
 //------------------------------------------------------------------------------
@@ -54,7 +54,7 @@ typedef unsigned long long uint64;
 #include <gecko_sdk/include/prtypes.h>
 #else
 //------------------------------------------------------------------------------
-// BROWSER_IE
+// BROWSER_IE and BROWSER_NPAPI
 //------------------------------------------------------------------------------
 // Signed integer types
 typedef signed char         int8;

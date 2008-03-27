@@ -89,7 +89,7 @@ endif
 FF_CPPFLAGS = -DBROWSER_FF=1 -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -Ithird_party/gecko_1.8 -DMOZILLA_STRICT_API
 IE_CPPFLAGS = -DBROWSER_IE=1
 IEMOBILE_CPPFLAGS = -DBROWSER_IE=1
-NPAPI_CPPFLAGS = -DBROWSER_NPAPI=1 -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -Ithird_party -Ithird_party/googleurl -Ithird_party/icu38/public/common
+NPAPI_CPPFLAGS = -DBROWSER_NPAPI=1 -Ithird_party/npapi -Ithird_party -Ithird_party/googleurl -Ithird_party/icu38/public/common
 
 # When adding or removing SQLITE_OMIT_* options, also update and
 # re-run ../third_party/sqlite_google/google_generate_preprocessed.sh.
