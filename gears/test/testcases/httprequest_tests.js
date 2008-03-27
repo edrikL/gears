@@ -49,8 +49,8 @@ function testPost200() {
             expectedHeaders, data.length); 
 }
 
-if (!isOfficial && isIE) {
 function testPostBlob200() {
+  if (!isOfficial && isIE) {
     startAsync();
     
     var data = 'This is not a valid manifest!\n';
@@ -68,7 +68,7 @@ function testPostBlob200() {
       doRequest('testcases/cgi/echo_request.py', 'POST', request.responseBlob,
                 headers, 200, data, expectedHeaders, data.length); 
     });
-}
+  }
 }
 
 function testPost302_200() {
