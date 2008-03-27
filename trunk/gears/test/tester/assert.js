@@ -45,11 +45,24 @@ var isWince = google.gears.factory.getBuildInfo().indexOf('wince') > -1;
  */
 var isIE = google.gears.factory.getBuildInfo().indexOf(';ie') > -1;
 var isFirefox = google.gears.factory.getBuildInfo().indexOf(';firefox') > -1;
+var isSafari = google.gears.factory.getBuildInfo().indexOf(';safari') > -1;
 
 /**
  * A shared timer tests can use.
  */
 var timer = google.gears.factory.create('beta.timer');
+
+/** 
+ * Does the browser support window.onerror.
+ */
+function hasWindowOnerror() {
+  if (google.gears.workerPool) {
+    return true;
+  } else {
+    // Webkit doesn't support window.onerror.
+    return !isSafari;
+  }
+}
 
 /**
  * Assert that something is true and throw an error if not.

@@ -186,7 +186,16 @@ Harness.prototype.handleTestsLoaded_ = function(content) {
  */
 Harness.prototype.runTests_ = function() {
   while (++this.currentTestIndex_ <= this.testNames_.length) {
-    this.runNextTest_();
+    try {
+      this.runNextTest_();
+    } catch(e) {
+      if (hasWindowOnerror()) {
+        throw e;  // Rethrow so browser calls window.onerror.
+      } else {
+        window.onerror(e);
+        return;
+      }
+    }
     if (this.asyncTimerId_ || this.globalErrorTimerId_) {
       // break out of the loop if we started an async test.
       return;
