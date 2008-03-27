@@ -37,19 +37,11 @@ NPString NPN_StringDup(const NPString &str);
 
 // Wrapper functions to abstract-out differences between WebKit & Gecko NPAPI.
 inline const NPUTF8 *GetNPStringUTF8Characters(const NPString &npstr) {
-#ifdef BROWSER_WEBKIT
   return npstr.UTF8Characters;
-#else
-  return npstr.utf8characters;
-#endif
 }
 
 inline uint32 GetNPStringUTF8Length(const NPString &npstr) {
-#ifdef BROWSER_WEBKIT
   return npstr.UTF8Length;
-#else
-  return npstr.utf8length;
-#endif
 }
 
 // Convenience wrappers to make an NPVariant from various string types.

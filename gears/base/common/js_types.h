@@ -71,8 +71,7 @@ typedef IDispatch IScriptable;
 
 #elif BROWSER_NPAPI
 
-#include "gecko_sdk/include/npapi.h"
-#include "gecko_sdk/include/npupp.h"
+#include "gears/third_party/npapi/nphostapi.h"
 
 #endif
 
