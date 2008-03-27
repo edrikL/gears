@@ -93,6 +93,19 @@ IFC.prototype.getUserAgent = function() {
 }
 
 /**
+ * Does this browser support workers?
+ * Temporary workaround for Safari.
+ */
+// TODO(playmobil): remove once workers are added to Safari.
+IFC.prototype.browserSupportsWorkers = function() {
+  if (google.gears.workerPool) {
+    return true;
+  } else {
+    return navigator.userAgent.indexOf('Safari') == -1;
+  }
+}
+
+/**
  * Returns true if gears is installed.
  */
 IFC.prototype.isInstalled = function() {

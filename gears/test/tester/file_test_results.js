@@ -107,7 +107,7 @@ FileTestResults.prototype.start = function(divName, testData, suiteName) {
   appendSimpleElement(this.divName, 'div', this.resultSetName, '');
 
   // Execute tests using the inter-frame communication object.
-  if (this.testData_.config.useIFrame) {
+  if (this.testData_.config.useIFrame || !ifc.browserSupportsWorkers()) {
     this.ifc_.startFrameTests(this);
   } else if (this.testData_.config.useWorker) {
     this.ifc_.startWorkerTests(this);
@@ -208,7 +208,8 @@ FileTestResults.prototype.handleAsyncTestStart = function(isWorker, name) {
  * @param isWorker Whether the tests were run in a worker.
  */
 FileTestResults.prototype.handleAllTestsComplete = function(isWorker) {
-  if (!isWorker && this.testData_.config.useWorker) {
+  if (!isWorker && this.testData_.config.useWorker && 
+      this.ifc_.browserSupportsWorkers()) {
     this.ifc_.startWorkerTests(this);
   } else {
     // Store time since test set began.  Start time is stored in timeElapsed.
@@ -244,15 +245,15 @@ FileTestResults.prototype.createResultRow_ = function(isWorker, name,
   appendSimpleElement(rowId, 'span', null, name);
 
   // Append the results cell.  If at all possible, do so in its final state.
-  if (!opt_success || opt_success == null) {
-    // Append a 'pending' result cell.
-    appendSimpleElement(rowId, 'span', resultCellId, 'pending...');
-    setDOMNodeClass(resultCellId, 'pending');
-  } else {
+  if (typeof(opt_success) == 'boolean') {
     // We have results - so write the result block directly.
     appendSimpleElement(rowId, 'span', resultCellId,
                         (opt_success) ? ' OK ' : opt_errorMessage);
     setDOMNodeClass(resultCellId, (opt_success) ? 'success' : 'failure');
+  } else {
+    // Append a 'pending' result cell.
+    appendSimpleElement(rowId, 'span', resultCellId, 'pending...');
+    setDOMNodeClass(resultCellId, 'pending');
   }
   return resultCellId;
 };
