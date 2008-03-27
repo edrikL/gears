@@ -40,6 +40,7 @@
 // browser calls to talk to the plugin. Most are just empty stubs for this
 // particular plugin.
 //
+#include "gears/base/common/string_utils.h"
 #include "gears/base/npapi/plugin.h"
 #include "gears/factory/npapi/factory_wrapper.h"
 
