@@ -44,6 +44,10 @@
 #include "gears/workerpool/npapi/workerpool.h"
 #endif
 
+#ifdef DEBUG
+#include "gears/cctests/test.h"
+#endif
+
 // static
 template <>
 void Dispatcher<GearsFactory>::Init() {
@@ -103,6 +107,13 @@ void GearsFactory::Create(JsCallContext *context) {
     object.reset(CreateModule<GearsHttpRequest>(GetJsRunner()));
   } else if (class_name == STRING16(L"beta.timer")) {
     object.reset(CreateModule<GearsTimer>(GetJsRunner()));
+  } else if (class_name == STRING16(L"beta.test")) {
+#ifdef DEBUG
+    object.reset(CreateModule<GearsTest>(GetJsRunner()));
+#else
+    context->SetException(L"Object is only available in debug build.");
+    return;
+#endif
   } else {
     context->SetException(STRING16(L"Unknown object."));
     return;

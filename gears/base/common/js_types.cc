@@ -45,9 +45,14 @@
 #include "gears/base/safari/browser_utils.h"
 #endif
 
-static inline bool DoubleIsIntegral(double val) {
-  return floor(val) == val;
+static inline bool DoubleIsInt64(double val) {
+  return val >= kint64min && val <= kint64max && floor(val) == val;
 }
+
+static inline bool DoubleIsInt32(double val) {
+  return val >= kint32min && val <= kint32max && floor(val) == val;
+}
+
 
 // Special conversion functions for FireFox
 #if BROWSER_FF
@@ -362,33 +367,27 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
 }
 
 bool JsArray::SetElement(int index, const JsScopedToken& in) {
-  // TODO(cdevries): implement this
-  assert(false);
-  return false;
+  if (!NPVARIANT_IS_OBJECT(array_)) { return false; }
+
+  NPObject *array = NPVARIANT_TO_OBJECT(array_);
+  NPIdentifier index_id = NPN_GetIntIdentifier(index);
+  return NPN_SetProperty(js_context_, array, index_id, &in);
 }
 
 bool JsArray::SetElementBool(int index, bool value) {
-  // TODO(cdevries): implement this
-  assert(false);
-  return false;
+  return SetElement(index, JsScopedToken(value));
 }
 
 bool JsArray::SetElementInt(int index, int value) {
-  // TODO(cdevries): implement this
-  assert(false);
-  return false;
+  return SetElement(index, JsScopedToken(value));
 }
 
 bool JsArray::SetElementDouble(int index, double value) {
-  // TODO(cdevries): implement this
-  assert(false);
-  return false;
+  return SetElement(index, JsScopedToken(value));
 }
 
 bool JsArray::SetElementString(int index, const std::string16& value) {
-  // TODO(cdevries): implement this
-  assert(false);
-  return false;
+  return SetElement(index, JsScopedToken(value.c_str()));
 }
 
 bool JsArray::SetElementModule(int index, IScriptable* value) {
@@ -673,15 +672,11 @@ bool JsObject::SetPropertyInt(const std::string16 &name, int value) {
 }
 
 bool JsObject::SetPropertyBool(const std::string16 &name, bool value) {
-  // TODO(cdevries): implement this
-  assert(false);
-  return false;
+  return SetProperty(name, ScopedNPVariant(value));
 }
 
 bool JsObject::SetPropertyDouble(const std::string16 &name, double value) {
-  // TODO(cdevries): implement this
-  assert(false);
-  return false;
+  return SetProperty(name, ScopedNPVariant(value));
 }
 
 #endif
@@ -852,7 +847,7 @@ bool JsTokenToInt64_NoCoerce(JsToken t, JsContextPtr cx, int64 *out) {
   double dbl;
   if (!JsTokenToDouble_NoCoerce(t, cx, &dbl)) { return false; }
   if (dbl < JS_INT_MIN || dbl > JS_INT_MAX) { return false; }
-  if (!DoubleIsIntegral(dbl)) { return false; }
+  if (!DoubleIsInt64(dbl)) { return false; }
   *out = static_cast<int64>(dbl);
   return true;
 }
@@ -1219,7 +1214,7 @@ bool JsTokenToInt_NoCoerce(JsToken t, JsContextPtr cx, int *out) {
     return true;
   } else if (NPVARIANT_IS_DOUBLE(t)) {
     double d = NPVARIANT_TO_DOUBLE(t);
-    if (d >= kint32min && d <= kint32max && DoubleIsIntegral(d)) {
+    if (DoubleIsInt32(d)) {
       *out = static_cast<int>(d);
       return true;
     }
@@ -1338,7 +1333,7 @@ JsParamType JsTokenGetType(JsToken t, JsContextPtr cx) {
     // Patch for WebKit, which reports both ints and doubles as both being of
     // type JSPARAM_DOUBLE.
     double double_val = NPVARIANT_TO_DOUBLE(t);
-    if (DoubleIsIntegral(double_val)) {
+    if (DoubleIsInt32(double_val)) {
       return JSPARAM_INT;
     }
     return JSPARAM_DOUBLE;
@@ -1764,7 +1759,7 @@ void JsCallContext::SetException(const std::string16 &message) {
 #ifdef DEBUG
   std::string message_ascii;
   String16ToUTF8(message.c_str(), message.length(), &message_ascii);
-  LOG((message_ascii.c_str()));
+  LOG(("SetException: %s", message_ascii.c_str()));
 #endif
 
   is_exception_set_ = true;
