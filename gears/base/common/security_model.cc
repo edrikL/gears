@@ -240,14 +240,23 @@ bool SecurityOrigin::InitFromUrl(const char16 *full_url) {
       return false;
     }
 
-    int port = 80;
+    if (parsed.host.len == -1) {
+      return false;
+    }
+
+    int port;
     if (parsed.port.len > 0) {
       std::string16 port_str(full_url + parsed.port.begin, parsed.port.len);
       port = ParseLeadingInteger(port_str.c_str(), NULL);
+    } else if (scheme == HttpConstants::kHttpsScheme) {
+      port = HttpConstants::kHttpsDefaultPort;
+    } else {
+      port = HttpConstants::kHttpDefaultPort;
     }
+
     std::string16 host(full_url + parsed.host.begin, parsed.host.len);
     return Init(full_url, scheme.c_str(), host.c_str(), port);
-  } else if (scheme == STRING16("file")) {
+  } else if (scheme == STRING16(L"file")) {
     return Init(full_url, HttpConstants::kFileScheme, kUnknownDomain, 0);
   }
 #endif
