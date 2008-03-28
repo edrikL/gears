@@ -673,6 +673,8 @@ endif
 # vista_broker
 
 IE_VPATH += \
+		base/common \
+		desktop \
 		vista_broker \
 		$(NULL)
 
@@ -681,6 +683,19 @@ VISTA_BROKER_CPPSRCS += \
 		string16.cc \
 		string_utils.cc \
 		vista_broker.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# launch_url_with_browser
+
+# TODO(cprince): Break all ties between OSX_LAUNCHURL and FF_VPATH when we
+# support a non-Firefox browser on Mac.
+FF_VPATH += \
+		base/safari \
+		$(NULL)
+
+OSX_LAUNCHURL_CPPSRCS += \
+		launch_url_in_browser.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -1528,10 +1543,6 @@ NPAPI_CPPSRCS	+= \
 		factory_wrapper.cc \
 		factory_utils.cc \
 		$(NULL)
-
-#-----------------------------------------------------------------------------
-# launchurl/os x
-LAUNCHURLHELPER_CPPSRC = base/safari/launch_url_in_browser.cc
 
 #-----------------------------------------------------------------------------
 # installer/iemobile

@@ -73,6 +73,10 @@ IE_OBJS = \
 	$(patsubst %.cc,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IE_CPPSRCS)) \
 	$(patsubst %.c,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(IE_CSRCS)) \
 	$(patsubst %.cc,$(IE_OUTDIR)/%$(OBJ_SUFFIX),$(SHARED_CPPSRCS))
+# TODO(cprince): Break all ties between OSX_LAUNCHURL and FF_OUTDIR when we
+# support a non-Firefox browser on Mac.
+OSX_LAUNCHURL_OBJS = \
+	$(patsubst %.cc,$(FF_OUTDIR)/%$(OBJ_SUFFIX),$(OSX_LAUNCHURL_CPPSRCS))
 VISTA_BROKER_OBJS = \
 	$(patsubst %.cc,$(VISTA_BROKER_OUTDIR)/%$(OBJ_SUFFIX),$(VISTA_BROKER_CPPSRCS))
 IEMOBILE_OBJS = \
@@ -190,6 +194,7 @@ INSTALLER_BASE_NAME = $(MODULE)-$(OS)-$(MODE)-$(VERSION)
 FF_MODULE_DLL = $(FF_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 FF_MODULE_TYPELIB = $(FF_OUTDIR)/$(MODULE).xpt
 FF_INSTALLER_XPI = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).xpi
+OSX_LAUNCHURL_EXE = $(FF_OUTDIR)/launch_url_with_browser
 
 IE_MODULE_DLL = $(IE_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 # Note: We use IE_OUTDIR so that relative path from gears.dll is same in
@@ -206,8 +211,6 @@ IEMOBILE_INSTALLER_CAB = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).cab
 INFSRC_BASE_NAME = wince_cab
 INFSRC = $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).inf
 
-# Launch URL binary for OS X.
-LAUNCHURL = launch_url_with_browser
 
 # BUILD TARGETS
 
@@ -278,26 +281,21 @@ endif
 
 win32installer:: $(WIN32_INSTALLER_MSI)
 
+# Cross-browser targets.
 prereqs:: $(COMMON_OUTDIR) $(LIBGD_OUTDIR) $(SQLITE_OUTDIR) $(THIRD_PARTY_OUTDIR) $(COMMON_OUTDIR)/genfiles $(COMMON_OUTDIRS_I18N) $(INSTALLERS_OUTDIR)
-
+modules::
 genheaders::
+installer::
 
+# Browser-specific targets.
 ifeq ($(BROWSER),FF)
 prereqs:: $(FF_OUTDIR)/genfiles $(FF_OUTDIRS_I18N) $(COMMON_M4FILES) $(COMMON_M4FILES_I18N) $(FF_M4FILES) $(FF_M4FILES_I18N)
 genheaders:: $(FF_GEN_HEADERS)
-installer:: $(FF_INSTALLER_XPI)
-
-ifeq ($(OS),osx)
-launchurlhelper:: $(FF_OUTDIR)/genfiles/$(LAUNCHURL) 
-
-$(FF_OUTDIR)/genfiles/$(LAUNCHURL):: $(FF_OUTDIR)/genfiles $(LAUNCHURLHELPER_CPPSRC)
-	 g++ $(COMMON_COMPILE_FLAGS) $(CPPFLAGS) -x c++ -mmacosx-version-min=10.2 -arch ppc -arch i386 -framework CoreFoundation -framework ApplicationServices -lstdc++ $(LAUNCHURLHELPER_CPPSRC) -o $(FF_OUTDIR)/genfiles/$(LAUNCHURL)
-
-modules:: $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB) launchurlhelper
-else
 modules:: $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB)
+ifeq ($(OS),osx)
+modules:: $(OSX_LAUNCHURL_EXE)
 endif
-
+installer:: $(FF_INSTALLER_XPI)
 endif
 
 ifeq ($(BROWSER),IE)
@@ -511,9 +509,18 @@ $(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_O
 	$(MKSHLIB) $(SHLIBFLAGS) $(NPAPI_SHLIBFLAGS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_LINK_EXTRAS) $(NPAPI_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
 
+# TODO(cprince): Remove hard-coded build flags here.  Switch to using
+# MKEXE + EXEFLAGS when those are added for all platforms.
+$(OSX_LAUNCHURL_EXE): $(OSX_LAUNCHURL_OBJS)
+	 $(CXX) -o $@ -mmacosx-version-min=10.2 -framework CoreFoundation -framework ApplicationServices -lstdc++ $(OSX_LAUNCHURL_OBJS)
+
 # INSTALLER TARGETS
 
-$(FF_INSTALLER_XPI): $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB) $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(FF_RESOURCES) $(FF_M4FILES_I18N) $(FF_OUTDIR)/genfiles/chrome.manifest	
+ifeq ($(OS),osx)
+$(FF_INSTALLER_XPI): $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB) $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(FF_RESOURCES) $(FF_M4FILES_I18N) $(FF_OUTDIR)/genfiles/chrome.manifest $(OSX_LAUNCHURL_EXE)
+else
+$(FF_INSTALLER_XPI): $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB) $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(FF_RESOURCES) $(FF_M4FILES_I18N) $(FF_OUTDIR)/genfiles/chrome.manifest
+endif
 	rm -rf $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
@@ -545,13 +552,16 @@ ifdef IS_WIN32_OR_WINCE
 endif
 endif
 else
-	cp $(FF_OUTDIR)/genfiles/$(LAUNCHURL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources
-    # For OSX, create a universal binary by combining the ppc and i386 versions
+    # For OSX, create a universal binary by combining the ppc and i386 versions.
 	/usr/bin/lipo -output $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(notdir $(FF_MODULE_DLL)) -create \
 		$(OUTDIR)/$(OS)-i386/ff/$(notdir $(FF_MODULE_DLL)) \
 		$(OUTDIR)/$(OS)-ppc/ff/$(notdir $(FF_MODULE_DLL))
     # And copy any xpt file to the output dir. (The i386 and ppc xpt files are identical.)
 	cp $(OUTDIR)/$(OS)-i386/ff/$(notdir $(FF_MODULE_TYPELIB)) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
+    # Also create a universal binary for OSX_LAUNCHURL_EXE.
+	/usr/bin/lipo -output $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/$(notdir $(OSX_LAUNCHURL_EXE)) -create \
+		$(OUTDIR)/$(OS)-i386/ff/$(notdir $(OSX_LAUNCHURL_EXE)) \
+		$(OUTDIR)/$(OS)-ppc/ff/$(notdir $(OSX_LAUNCHURL_EXE))
 endif
     # Mark files writeable to allow .xpi rebuilds
 	chmod -R 777 $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/*
