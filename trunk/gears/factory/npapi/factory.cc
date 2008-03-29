@@ -33,6 +33,7 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/npapi/module_wrapper.h"
 #include "gears/database/npapi/database.h"
+#include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/httprequest/npapi/httprequest_np.h"
 #include "gears/localserver/npapi/localserver_np.h"
@@ -95,6 +96,8 @@ void GearsFactory::Create(JsCallContext *context) {
   GComPtr<ModuleImplBaseClass> object(NULL);
   if (class_name == STRING16(L"beta.database")) {
     object.reset(CreateModule<GearsDatabase>(GetJsRunner()));
+  } else if (class_name == STRING16(L"beta.desktop")) {
+    object.reset(CreateModule<GearsDesktop>(GetJsRunner()));
   } else if (class_name == STRING16(L"beta.localserver")) {
     object.reset(CreateModule<GearsLocalServer>(GetJsRunner()));
 #ifdef BROWSER_WEBKIT
