@@ -1,5 +1,9 @@
+<head>
+  <script src='../../../sdk/gears_init.js'></script>
+</head>
+<body>
 <script>
-var f = window.GearsFactory ? new GearsFactory() : new ActiveXObject("Gears.Factory");
+var f = google.gears.factory;
 var d = f.create("beta.desktop");
 var icons = {
   "16x16": "16.png",
@@ -107,3 +111,4 @@ desktop.<br />
 </ol>
 
 </p>
+</body>

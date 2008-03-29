@@ -853,9 +853,6 @@ NPAPI_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # desktop
 
-# TODO: Implement desktop for NPAPI
-ifneq ($(BROWSER),NPAPI)
-
 SHARED_VPATH	  += \
 		desktop \
 		$(NULL)
@@ -866,14 +863,18 @@ SHARED_CPPSRCS	+= \
 		desktop_osx.cc \
 		desktop_win32.cc \
 		dll_data_wince.cc \
+		shortcut_utils_win32.cc \
+		$(NULL)
+
+# TODO: Implement file dialogs for NPAPI
+ifneq ($(BROWSER),NPAPI)
+SHARED_CPPSRCS	+= \
 		file_dialog.cc \
 		file_dialog_gtk.cc \
 		file_dialog_osx.cc \
 		file_dialog_utils.cc \
 		file_dialog_win32.cc \
-		shortcut_utils_win32.cc \
 		$(NULL)
-
 endif
 
 #-----------------------------------------------------------------------------

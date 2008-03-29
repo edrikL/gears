@@ -42,17 +42,21 @@
 
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-
+#if defined(OFFICIAL_BUILD) || BROWSER_NPAPI
+#define USE_FILE_PICKER 0
+#else
+#define USE_FILE_PICKER 1
+#endif
 DECLARE_GEARS_WRAPPER(GearsDesktop);
 
 template<>
 void Dispatcher<GearsDesktop>::Init() {
   RegisterMethod("createShortcut", &GearsDesktop::CreateShortcut);
-#ifdef OFFICIAL_BUILD
-  // File picker is not ready for official builds
-#else
+#if USE_FILE_PICKER
   RegisterMethod("getLocalFiles", &GearsDesktop::GetLocalFiles);
-#endif  // OFFICIAL_BUILD
+#else
+  // File picker is not ready for this build
+#endif  // USE_FILE_PICKER
 }
 
 
@@ -295,9 +299,7 @@ bool GearsDesktop::AllowCreateShortcut(
   return true;
 }
 
-#ifdef OFFICIAL_BUILD
-// File picker is not ready for official builds
-#else
+#if USE_FILE_PICKER
 
 // Display an open file dialog returning the selected files.
 // Parameters:
@@ -361,7 +363,9 @@ void GearsDesktop::GetLocalFiles(JsCallContext *context) {
   context->SetReturnValue(JSPARAM_ARRAY, files.get());
 }
 
-#endif  // OFFICIAL_BUILD
+#else
+// File picker is not ready for this build
+#endif  // USE_FILE_PICKER
 
 // Handle all the icon creation and creation call required to actually install
 // a shortcut.
