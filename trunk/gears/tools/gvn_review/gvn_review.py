@@ -36,9 +36,9 @@ def CheckSVNVersion():
   assert match, "Unexpected output from svn version command."
   
   digits = [int(s) for s in match.group(1).split('.')]
-  if (digits[0] < 1 or digits[1] < 4 or digits[2] < 6):
-		print "gvn_review requires at least svn version 1.4.6"
-		sys.exit(1)
+  if (digits[0] < 1 or (digits[0] == 1 and digits[1] < 4)):
+    print "gvn_review requires at least svn version 1.4"
+    sys.exit(1)
 
 
 def FindBranchSource(change_path):
