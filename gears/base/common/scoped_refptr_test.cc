@@ -72,10 +72,12 @@ bool TestRefCount() {
     // Construction from a pointer
     scoped_refptr<AB> ab_p(ab);
     TEST_ASSERT(!dead && 1 == ab->GetRef());
-    // Construction from related pointer
-    scoped_refptr<A> a_p(ab);
-    TEST_ASSERT(!dead && 2 == ab->GetRef());
+
     {
+      // Construction from related pointer
+      scoped_refptr<A> a_p(ab);
+      TEST_ASSERT(!dead && 2 == ab->GetRef());
+
       // Construction from scoped_refptr
       scoped_refptr<AB> ab2_p(ab_p);
       TEST_ASSERT(!dead && 3 == ab->GetRef());
@@ -84,16 +86,41 @@ bool TestRefCount() {
       scoped_refptr<A> a2_p(ab_p);  
       TEST_ASSERT(!dead && 4 == ab->GetRef());
     }
-    TEST_ASSERT(!dead && 2 == ab->GetRef());
+    TEST_ASSERT(!dead && 1 == ab->GetRef());
+
+    {
+      // Assignment from a pointer
+      scoped_refptr<AB> ab2_p;
+      ab2_p = ab;
+      TEST_ASSERT(!dead && 2 == ab->GetRef());
+
+      scoped_refptr<A> a_p;
+      a_p = ab;
+      TEST_ASSERT(!dead && 3 == ab->GetRef());
+
+      // Assignment from scoped_refptr
+      scoped_refptr<AB> ab3_p;
+      ab3_p = ab_p;
+      TEST_ASSERT(!dead && 4 == ab->GetRef());
+
+      // Assignment from related scoped_refptr
+      scoped_refptr<A> a2_p;
+      a2_p = ab_p;
+      TEST_ASSERT(!dead && 5 == ab->GetRef());
+    }
+    TEST_ASSERT(!dead && 1 == ab->GetRef());
+
     // Self-assignment
-    a_p = a_p;
-    TEST_ASSERT(!dead && 2 == ab->GetRef());
+    ab_p = ab_p;
+    TEST_ASSERT(!dead && 1 == ab->GetRef());
+
     // Self-assignment from pointer
-    a_p = ab;
-    TEST_ASSERT(!dead && 2 == ab->GetRef());
+    ab_p = ab;
+    TEST_ASSERT(!dead && 1 == ab->GetRef());
+
     // Self-assignment from pointer via reset
-    a_p.reset(ab);
-    TEST_ASSERT(!dead && 2 == ab->GetRef());
+    ab_p.reset(ab);
+    TEST_ASSERT(!dead && 1 == ab->GetRef());
   }
   TEST_ASSERT(dead);
 
@@ -156,6 +183,25 @@ bool TestRefCount() {
   }
   TEST_ASSERT(dead);
 
+  // boolean conditions
+  {
+    scoped_refptr<A> a1(new A), a2(new A), a3;
+    TEST_ASSERT(a1);
+    TEST_ASSERT(a2);
+    TEST_ASSERT(!a3);
+    TEST_ASSERT(a1 != a2);
+    TEST_ASSERT(a1 != a3);
+    a2 = a1;
+    TEST_ASSERT(a2 == a1);
+    a2 = NULL;
+    TEST_ASSERT(a2 == a3);
+
+    // The following lines fail to compile, by design.
+    //scoped_refptr<B> b;
+    //TEST_ASSERT(a3 == b);
+    //bool c = false;
+    //TEST_ASSERT(a3 == c);
+  }
   return true;
 }
 
