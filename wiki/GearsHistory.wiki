@@ -2,6 +2,8 @@
 
 A brief history of the Google Gears project.
 
+  * 2008/03/31 - Google Docs adds offline support and desktop integration. ([http://googledocs.blogspot.com/2008/03/bringing-cloud-with-you.html story])
+
   * 2008/03/03 - Gears adds support for [http://gearsblog.blogspot.com/2008/03/google-gears-in-your-pocket.html Windows Mobile] devices.
   * 2008/03/03 - [http://www.buxfer.com/blog/2008/03/04/offline-access-from-your-windows-mobile-device Buxfer] and [http://blogs.zoho.com/writer/zoho-writer-extends-mobile-support-adds-offline-capability-for-windows-mobile-using-google-gears/ Zoho] launch Gears-enabled mobile applications.
 
