@@ -46,11 +46,15 @@ class Database2Statement {
       sql_arguments_(sql_arguments), callback_(callback), 
       error_callback_(error_callback) {}
 
+  // TODO(dglazkov): remove JsTokenIsNullOrUndefined check after merging with
+  // trunk
   bool HasCallback() const { 
     return callback_.get() != NULL
       && !JsTokenIsNullOrUndefined(callback_->token()); 
   }
 
+  // TODO(dglazkov): remove JsTokenIsNullOrUndefined check after merging with
+  // trunk
   bool HasErrorCallback() const { 
     return error_callback_.get() != NULL
       && !JsTokenIsNullOrUndefined(error_callback_->token());

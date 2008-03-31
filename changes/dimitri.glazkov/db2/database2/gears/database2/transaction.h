@@ -54,11 +54,15 @@ class Database2Transaction : public ModuleImplBaseClassVirtual {
 
   void ExecuteNextStatement(JsCallContext *context);
 
+  // TODO(dglazkov): remove JsTokenIsNullOrUndefined check after merging with
+  // trunk
   bool HasErrorCallback() const { 
     return error_callback_.get() != NULL
       && !JsTokenIsNullOrUndefined(error_callback_->token()); 
   }
 
+  // TODO(dglazkov): remove JsTokenIsNullOrUndefined check after merging with
+  // trunk
   bool HasSuccessCallback() const {
     return success_callback_.get() != NULL
       && !JsTokenIsNullOrUndefined(success_callback_->token());
