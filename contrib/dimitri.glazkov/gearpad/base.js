@@ -25,14 +25,6 @@
 
 // probably more stuff like bind() should go in here, but meh.
 
-function listen(elm, ev, fn) {
-  if (elm.addEventListener) {
-    elm.addEventListener(ev, fn, false);
-  } else {
-    elm.attachEvent('on' + ev, fn);
-  }
-}
-
 if (typeof console == 'undefined') {
   var console = {
     log: function() {},
@@ -40,3 +32,78 @@ if (typeof console == 'undefined') {
   };
  }
 
+// standard DOM manipulation
+var DOM = new function() {
+  if (document.getElementById) {
+    this.getElementById = function(id) {
+      return document.getElementById(id);
+    }
+  }
+  else {
+    this.getElementById = function(id) {
+      return document.all[id];
+    }
+  }
+  
+  if (document.getElementsByTagName) {
+    this.getElementsByTagName = function(el, tagName) {
+      if (el.getElementsByTagName) {
+        return el.getElementsByTagName(tagName);
+      }
+      var matches = [];
+      var candidates = document.getElementsByTagName(tagName);
+      for(var i = 0; i < candidates.length; i++) {
+        var one = candidates[i];
+        traverseUp(el, one) && matches.push(one);
+      }
+      return matches;
+    }
+  }
+  else {
+    this.getElementsByTagName = function(el, tagName) {
+      // nasty one-by-one traversal
+      var all = document.all;
+      var matches = [];
+      for(var i = 0; i < all.length; i++) {
+        var one = all[i];
+        one.nodeName == tagName && traverseUp(el, one) && matches.push(one);
+      }
+      return matches;
+    }
+  }
+
+  this.listen = function(elm, ev, fn) {
+    if (elm.addEventListener) {
+      elm.addEventListener(ev, fn, false);
+    } else {
+      if (elm.attachEvent) {
+          elm.attachEvent('on' + ev, fn);
+      }
+      else {
+        var name = 'on' + ev;
+        var old = elm[name];
+        if (old) {
+          elm[name] = function() {
+            return old.apply(this, arguments) && fn.apply(this, arguments);
+          }
+        }
+        else {
+          elm[name] = fn;
+        }
+      }
+    }
+  }
+  
+  this.is_pocket_ie = navigator.appName.indexOf('Mobile') >= 0;
+  
+  this.is_ie = navigator.appName == 'Microsoft Internet Explorer';
+
+  function traverseUp(el, one) {
+    var descendant = one === el;
+    // it's parentElement, rather than W3C's parentNode
+    while((one = one.parentElement) && !descendant) {
+      descendant = one === el;
+    }
+    return descendant;
+  }
+};

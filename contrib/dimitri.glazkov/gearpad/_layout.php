@@ -31,13 +31,13 @@ function masthead($subtitle = '') { ?>
     <b>Gearpad</b>
     <? if ($subtitle) print "/ <b>$subtitle</b>"; ?>
   </td>
-  <td id="login-bar" align="right" style="display:none">
+  <td align="right"><span id="login-bar" style="display:none">
     Logged in as <b id="logged-in-as"></b> 
-    | <a href="#" onclick="logout();">logout</a></span> 
+    | <a href="#" onclick="logout();">logout</a> 
     <span id="setup-offline">| 
-        <a href="#" onclick="setupOffline(event); return false;">
+        <a href="#" onclick="setupOffline(); return false;">
             Set Up Offline Access!</a></span>
-  </td>
+   </span></td>
 </tr>
 </table>
 <? } ?>

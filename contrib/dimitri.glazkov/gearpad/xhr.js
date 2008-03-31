@@ -87,25 +87,25 @@ function doRequest(method, url, opt_params, handler, opt_body) {
 
     try {
       if (req.readyState == 4) {
-	var status, statusText, responseText;
+        var status, statusText, responseText;
 
-	try {
-	  var status = req.status;
-	  var statusText = req.statusText;
-	  var responseText = req.responseText;
-	} catch (e) {
-	  // We cannot get properties while the window is closing.
-	}
+        try {
+          var status = req.status;
+          var statusText = req.statusText;
+          var responseText = req.responseText;
+        } catch (e) {
+          // We cannot get properties while the window is closing.
+        }
 
-	req = null;
-	window.clearTimeout(timerId);
-	handler(status, statusText, responseText);
+        req = null;
+        window.clearTimeout(timerId);
+        handler(status, statusText, responseText);
       }
     } catch (e) {
       if (console.error) {
-	console.error(e);
+        console.error(e);
       } else {
-	throw e;
+        throw e;
       }
     }
   };
@@ -135,9 +135,9 @@ function createRequest() {
       return new ActiveXObject("Msxml2.XMLHTTP");
     } catch (e2) {
       try {
-	return new ActiveXObject("Microsoft.XMLHTTP");
+  return new ActiveXObject("Microsoft.XMLHTTP");
       } catch (e3) {
-	// poo
+  // poo
       }
     }
   }
