@@ -27,8 +27,7 @@
 #define GEARS_DATABASE2_STATEMENT_H__
 
 #include "gears/base/common/common.h"
-#include "gears/base/common/js_types.h"
-
+#include "gears/base/common/js_types.h" // for JsCallContext
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 // forward declarations
@@ -43,17 +42,17 @@ class Database2Statement {
                      const JsArray &sql_arguments,
                      JsRootedCallback *callback,
                      JsRootedCallback *error_callback) :
-                            sql_statement_(sql_statement), 
-                            sql_arguments_(sql_arguments), callback_(callback), 
-                            error_callback_(error_callback) {}
+      sql_statement_(sql_statement), 
+      sql_arguments_(sql_arguments), callback_(callback), 
+      error_callback_(error_callback) {}
 
   bool HasCallback() const { 
-    return callback_ != NULL
+    return callback_.get() != NULL
       && !JsTokenIsNullOrUndefined(callback_->token()); 
   }
 
   bool HasErrorCallback() const { 
-    return error_callback_ != NULL
+    return error_callback_.get() != NULL
       && !JsTokenIsNullOrUndefined(error_callback_->token());
   }
 

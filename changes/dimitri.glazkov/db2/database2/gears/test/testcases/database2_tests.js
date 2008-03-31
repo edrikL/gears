@@ -30,28 +30,24 @@ function testDatabaseManagerCreation() {
 }
 
 function testDatabaseManagerApiSig() {
-  if (db_manager) {
-    var method = 'DatabaseManager.openDatabase()';
-    assert(db_manager.openDatabase, method + ' should be present');
-    assertError(function() {
-      db_manager.openDatabase();
-    }, null, method + ' has required parameters');
-    assertError(function() {
-      db_manager.openDatabase('unit_test_db');
-    }, null, method + ' requires a version parameter');
-  }
+  var method = 'DatabaseManager.openDatabase()';
+  assert(db_manager.openDatabase, method + ' should be present');
+  assertError(function() {
+    db_manager.openDatabase();
+  }, null, method + ' has required parameters');
+  assertError(function() {
+    db_manager.openDatabase('unit_test_db');
+  }, null, method + ' requires a version parameter');
 }
 
 function testDatabaseOpening() {
-  if (db_manager) {
-    var db = db_manager.openDatabase('unit_test_db', '', 'ignored_description', 
-      'ignored_estimated_size');
-    assert(db, 'Database should be a value');
-  }
+  var db = db_manager.openDatabase('unit_test_db', '', 'ignored_description', 
+    'ignored_estimated_size');
+  assert(db, 'Database should be a value');
 }
 
 function testDatabaseApiSig() {
-  utils.withDb(function(db) {
+  withDb(function(db) {
     var method = 'Database2.transaction()';
     assert(db.transaction, method + ' should be present');
     assertError(function() {
@@ -67,16 +63,22 @@ function testDatabaseApiSig() {
 }
 
 function testDatabaseTransaction() {
-  utils.withDb(function(db) {
+  withDb(function(db) {
     var method = 'Database2.transaction()';
     var inFlight;
+    var outOfOrder = 0;
     // this tests the fact that the transaction callback is called 
-    // asynchronously
+    // asynchronously and whether the callback is invoked in a proper sequence
     // if startAsync times out, the callback is not invoked at all
     db.transaction(function(tx) {
       inFlight = true;
+      outOfOrder--;
+      if (outOfOrder) {
+        assert(false, method + 'invokes callback out of sequence');
+      }
       completeAsync();
     });
+    outOfOrder++;
     if (inFlight) {
       assert(false, method + 'is not called asynchronously');
     }
@@ -85,7 +87,7 @@ function testDatabaseTransaction() {
 }
 
 function testSQLTransactionApiSig() {
-  utils.withDb(function(db) {
+  withDb(function(db) {
     var method = 'SQLTransaction.executeSql';
     db.transaction(function(tx) {
       assert(tx.executeSQL, method + ' should be present');
@@ -93,9 +95,7 @@ function testSQLTransactionApiSig() {
   });
 }
 
-var utils = {
-  withDb: function(fn, version) {
-    db_manager && fn && fn.call(
-      this, db_manager.openDatabase('unit_test_db', version || ''));
-  }
+function withDb(fn, version) {
+  db_manager && fn && fn.call(
+    this, db_manager.openDatabase('unit_test_db', version || ''));
 }

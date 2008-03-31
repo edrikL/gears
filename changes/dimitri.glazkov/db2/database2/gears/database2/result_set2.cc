@@ -26,12 +26,13 @@
 #include "gears/database2/result_set2.h"
 
 #include "gears/base/common/dispatcher.h"
-#include "gears/base/common/js_types.h"
+#include "gears/base/common/js_types.h" // for JsCallContext
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/module_wrapper.h"
 
 DECLARE_GEARS_WRAPPER(Database2ResultSet);
 
+template<>
 void Dispatcher<Database2ResultSet>::Init() {
   RegisterProperty("insertId", &Database2ResultSet::GetInsertId, NULL);
   RegisterProperty("rowsAffected", &Database2ResultSet::GetRowsAffected, NULL);
@@ -56,7 +57,7 @@ void Database2ResultSet::GetRows(JsCallContext *context) {
 bool Database2ResultSet::Create(const ModuleImplBaseClass *sibling,
                                 Database2ResultSet **instance) {
   Database2ResultSet *result_set = 
-   CreateModule<Database2ResultSet>(sibling->GetJsRunner());
+     CreateModule<Database2ResultSet>(sibling->GetJsRunner());
   if (result_set && result_set->InitBaseFromSibling(sibling)) {
     *instance = result_set;
     return true;

@@ -31,6 +31,7 @@
 // forward class declarations
 class Database2Command;
 
+// simple (non-threaded) command interpreter
 class Database2Interpreter {
  public:
   Database2Interpreter() {};
@@ -39,6 +40,19 @@ class Database2Interpreter {
   virtual void Run(Database2Command *command);
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2Interpreter);
+};
+
+// threaded interpreter
+class Database2ThreadedInterpreter : public Database2Interpreter {
+ public:
+  Database2ThreadedInterpreter() {}
+  ~Database2ThreadedInterpreter() {
+    // shut down thread, if started
+  }
+
+  void Run(Database2Command *command);
+
+  DISALLOW_EVIL_CONSTRUCTORS(Database2ThreadedInterpreter);
 };
 
 #endif // GEARS_DATABASE2_INTERPRETER_H__

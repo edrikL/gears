@@ -27,17 +27,68 @@
 #define GEARS_DATABASE2_COMMAND_H__
 
 #include "gears/base/common/common.h"
-
 #include "gears/base/common/message_queue.h" 
 
+// base command, represents a typical execution pattern
 class Database2Command : public MessageData {
  public:
-  virtual void Execute(bool *needsForeground) = 0;
+  // executes a command and sets has_results to true, if there are any results
+  // to process
+  virtual void Execute(bool *has_results) = 0;
+  // processes the results. This should be only called if has_results was set to
+  // true
   virtual void HandleResults() = 0;
 
  private:
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2Command);
+};
+
+// and now, in the order of execution:
+
+// begins a transaction
+class Database2BeginCommand : public Database2Command {
+public:
+  virtual void Execute(bool *has_results);
+  virtual void HandleResults();
+
+  DISALLOW_EVIL_CONSTRUCTORS(Database2BeginCommand);
+};
+
+// asynchronously executes a SQL statement
+class Database2AsyncExecuteCommand : public Database2Command {
+public:
+  virtual void Execute(bool *has_results);
+  virtual void HandleResults();
+
+  DISALLOW_EVIL_CONSTRUCTORS(Database2AsyncExecuteCommand);
+};
+
+// synchronously executes a SQL statement
+class Database2SyncExecuteCommand : public Database2Command {
+public:
+  virtual void Execute(bool *has_results);
+  virtual void HandleResults();
+
+  DISALLOW_EVIL_CONSTRUCTORS(Database2SyncExecuteCommand);
+};
+
+// commits a transaction
+class Database2CommitCommand : public Database2Command {
+public:
+  virtual void Execute(bool *has_results);
+  virtual void HandleResults();
+
+  DISALLOW_EVIL_CONSTRUCTORS(Database2CommitCommand);
+};
+
+// rolls back a transaction
+class Database2RollbackCommand : public Database2Command {
+ public:
+  virtual void Execute(bool *has_results);
+  virtual void HandleResults();
+
+  DISALLOW_EVIL_CONSTRUCTORS(Database2RollbackCommand);
 };
 
 #endif // GEARS_DATABASE2_COMMAND_H__

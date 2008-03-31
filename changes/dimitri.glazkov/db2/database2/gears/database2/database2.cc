@@ -23,15 +23,16 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/database2/database2.h"
+
+#include "gears/base/common/base_class.h"
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/module_wrapper.h"
-#include "gears/base/common/base_class.h"
-
-#include "gears/database2/database2.h"
 #include "gears/database2/transaction.h"
 
 DECLARE_GEARS_WRAPPER(Database2);
 
+template<>
 void Dispatcher<Database2>::Init() {
   RegisterMethod("transaction", &Database2::Transaction);
   RegisterMethod("synchronousTransaction", &Database2::SynchronousTransaction);
@@ -39,9 +40,6 @@ void Dispatcher<Database2>::Init() {
 }
 
 void Database2::Transaction(JsCallContext *context) {
-  // IN: SQLTransactionCallback callback, 
-  //     optional SQLTransactionErrorCallback errorCallback, 
-  //     optional VoidCallback successCallback
   JsRootedCallback *callback = NULL;
   JsRootedCallback *error_callback = NULL;
   JsRootedCallback *success_callback = NULL;
@@ -59,11 +57,9 @@ void Database2::Transaction(JsCallContext *context) {
   // populate with threaded interpreter
 
   // QueueTransaction(tx);
-  // OUT: void
 }
 
 void Database2::SynchronousTransaction(JsCallContext *context) {
-  // IN: SQLSynchronousTransactionCallback
   JsRootedCallback *callback = NULL;
 
   JsArgument argv[] = {
@@ -78,7 +74,7 @@ void Database2::SynchronousTransaction(JsCallContext *context) {
   // sync transaction never enters the queue, there's no need for it
   // but it still checks for pending transactions in the queue
   // to prevent deadlocks
-  //if (GetQueue(/* name, origin */)->empty()) {
+  //if (GetQueue(name, origin)->empty()) {
   //  tx->Start();
   //}
   //else {
@@ -86,14 +82,9 @@ void Database2::SynchronousTransaction(JsCallContext *context) {
   // start a synchronous transaction while another transaction is still open
   // set exception INVALID_STATE_ERR
   //}
-  // OUT: void
 }
 
 void Database2::ChangeVersion(JsCallContext *context) {
-  // IN: in DOMString oldVersion, in DOMString newVersion, 
-  //  in SQLTransactionCallback callback, 
-  //  in SQLTransactionErrorCallback errorCallback, 
-  //  optional in VoidCallback successCallback
   std::string16 oldVersion;
   std::string16 newVersion;
   JsRootedCallback *callback = NULL;
@@ -104,7 +95,7 @@ void Database2::ChangeVersion(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &oldVersion },
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &newVersion },
     { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &callback },
-    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &errorCallback },
+    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &errorCallback },
     { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &successCallback }
   };
 
@@ -115,12 +106,10 @@ void Database2::ChangeVersion(JsCallContext *context) {
   // populate with threaded interpreter
   // + populate version
   // ...
-
-  // OUT: void
 }
 
 void Database2::QueueTransaction(Database2Transaction *transaction) {
-  // Database2TransactionQueue queue = GetQueue(/* name, origin */);  
+  // Database2TransactionQueue queue = GetQueue(name, origin);
   // returns true, if first iterm in queue
   // bool first = queue->empty();
   // sketch only, consider making a single method to prevent race conditions
@@ -143,6 +132,15 @@ bool Database2::Create(const ModuleImplBaseClass *sibling,
   return false;
 }
 
-Database2TransactionQueue *Database2::GetQueue(/* name, origin */) {
+bool Database2::CreateError(const ModuleImplBaseClass *sibling,
+                            int code,
+                            std::string16 message,
+                            JsObject **instance) {
+  // TODO(dimitri.glazkov): create an instance of the error object
+  return false;
+}
+
+// TODO(dimitri.glazkov): Add name, origin parameters
+Database2TransactionQueue *Database2::GetQueue() {
   return NULL;
 }

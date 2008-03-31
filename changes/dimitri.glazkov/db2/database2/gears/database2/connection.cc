@@ -24,13 +24,12 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/database2/connection.h"
-#include "gears/database2/row_handler_interface.h"
 
-bool Database2Connection::OpenAndVerifyVersion(std::string16 databaseVersion) {
+bool Database2Connection::OpenAndVerifyVersion(std::string16 database_version) {
   // read expected_version (user_version value)
   // read version from Permissions.db
-  // if databaseVersion is not an empty value or null,
-    // if databaseVersion matches version
+  // if database_version is not an empty value or null,
+    // if database_version matches version
       // return true
     // otherwise,
       // set error to INVALID_STATE_ERR exception value
@@ -71,7 +70,7 @@ bool Database2Connection::Commit() {
   return false;
 }
 
-sqlite3 *Database2Connection::GetHandle() {
+sqlite3 *Database2Connection::handle() {
   // opend database if not already open,
   // used by all operations to obtain the handle
   return NULL;

@@ -23,9 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/database2/transaction.h"
-#include "gears/database2/error.h"
 #include "gears/database2/statement.h"
+
+#include "gears/database2/transaction.h"
 
 void Database2Statement::InvokeCallback(Database2Transaction* tx) {
   // for now, just return the Database2Statement
@@ -34,8 +34,8 @@ void Database2Statement::InvokeCallback(Database2Transaction* tx) {
   };
 
   if (HasCallback()) {
-    tx->GetJsRunner()->
-      InvokeCallback(callback_.get(), ARRAYSIZE(send_argv), send_argv, NULL);
+    tx->GetJsRunner()->InvokeCallback(callback_.get(), ARRAYSIZE(send_argv),
+                                      send_argv, NULL);
   }
 }
 

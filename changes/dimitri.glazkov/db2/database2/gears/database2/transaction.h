@@ -28,13 +28,11 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-#include "gears/base/common/string16.h"  // for string16
+#include "gears/base/common/string16.h"
 #include "gears/base/common/js_types.h" // for JsCallContext
 #include "gears/base/common/js_runner.h"
-
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
-
 #include "gears/database2/thread_safe_queue.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 // forward declarations
 class Database2;
@@ -45,8 +43,8 @@ class Database2Transaction : public ModuleImplBaseClassVirtual {
   Database2Transaction::Database2Transaction() : 
     ModuleImplBaseClassVirtual("Database2Transaction") {}
 
-  // IN: in DOMString sqlDatabase2Statement, 
-  //     in ObjectArray arguments, 
+  // IN: in string sqlDatabase2Statement, 
+  //     in object[] arguments, 
   //     in SQLDatabase2StatementCallback callback, 
   //     in SQLDatabase2StatementErrorCallback errorCallback
   // OUT: void
@@ -56,18 +54,13 @@ class Database2Transaction : public ModuleImplBaseClassVirtual {
 
   void ExecuteNextStatement(JsCallContext *context);
 
-  bool HasCallback() const { 
-    return callback_ != NULL 
-      && !JsTokenIsNullOrUndefined(callback_->token());
-  }
-
   bool HasErrorCallback() const { 
-    return error_callback_ != NULL
+    return error_callback_.get() != NULL
       && !JsTokenIsNullOrUndefined(error_callback_->token()); 
   }
 
   bool HasSuccessCallback() const {
-    return success_callback_ != NULL
+    return success_callback_.get() != NULL
       && !JsTokenIsNullOrUndefined(success_callback_->token());
   }
 

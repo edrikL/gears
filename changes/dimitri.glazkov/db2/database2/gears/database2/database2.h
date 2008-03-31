@@ -28,24 +28,21 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-#include "gears/base/common/string16.h"  // for string16
 #include "gears/base/common/js_types.h" // for JsCallContext
-
+#include "gears/base/common/string16.h"
 #include "gears/database2/interpreter.h"
-#include "gears/database2/threaded_interpreter.h"
 #include "gears/database2/thread_safe_queue.h"
 
 // forward declarations
 class Database2Transaction;
 
 typedef Database2ThreadSafeQueue<Database2Transaction> 
-Database2TransactionQueue;
+    Database2TransactionQueue;
 
-// Implements the HTML5 database interface, which allows the creation
-// of transactions. We also have our own proprietary
-// synchronousTransaction() method. This class also has a reference
-// to a Database2Connection object which it shares with all transactions
-// it creates.
+ //Implements the HTML5 database interface, which allows the creation of 
+ //transactions. We also have our own proprietary synchronousTransaction() 
+ //method. This class also has a reference to a Database2Connection object which
+ //it shares with all transactions it creates.
 class Database2 : public ModuleImplBaseClassVirtual {
 public:
   Database2()
@@ -69,19 +66,26 @@ public:
   // OUT: void
   void ChangeVersion(JsCallContext *context);
 
-  static Database2TransactionQueue *GetQueue(/* name, origin */);
+  // TODO(dimitri.glazkov): Add name, origin parameters
+  static Database2TransactionQueue *GetQueue();
 
   static bool Create(const ModuleImplBaseClass *sibling, 
                      const std::string16 &name,
                      const std::string16 &version,
                      Database2 **instance);
 
+  // creates an instance of a SQLError object, using a Javascript object
+  static bool CreateError(const ModuleImplBaseClass *sibling, 
+                          int code, 
+                          std::string16 message,
+                          JsObject **instance);
+
 private:
   std::string16 name_;
   std::string16 origin_;
   std::string16 version_;
 
-  // TODO(dglazkov) merge RefCounted & scoped_refptr into this branch
+  // TODO(dimitri.glazkov) merge RefCounted & scoped_refptr into this branch
 
   // Shared reference to the connection used by all transactions from this
   // database instance. This is initialized during the first transaction.

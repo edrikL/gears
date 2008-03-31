@@ -27,14 +27,25 @@
 #define GEARS_DATABASE2_CONNECTION_H__
 
 #include "gears/base/common/common.h"
-#include "gears/base/common/string16.h"  // for string16
-
+#include "gears/base/common/string16.h"
 #include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
 
-#include "gears/database2/row_handler_interface.h"
+class Database2RowHandlerInterface {
+public:
+  Database2RowHandlerInterface() {};
+  ~Database2RowHandlerInterface() {};
+
+  virtual void Begin() = 0;
+  // TODO(dimitri.glazkov): Add row data parameter(s)
+  virtual void HandleRow() = 0;
+  virtual void End() = 0;
+
+  DISALLOW_EVIL_CONSTRUCTORS(Database2RowHandlerInterface);
+};
 
 // Encapsulates database operations, opens and closes database connection
-class Database2Connection /* : RefCounted */ {
+// TODO(dimitri.glazkov): inherit RefCounted
+class Database2Connection {
  public:
   // lazily initialized
   Database2Connection(std::string16 name) : name_(name) {}
@@ -43,21 +54,17 @@ class Database2Connection /* : RefCounted */ {
     // close connection
   }
 
-  bool OpenAndVerifyVersion(std::string16 databaseVersion);
-
+  bool OpenAndVerifyVersion(std::string16 database_version);
   bool Execute(Database2RowHandlerInterface *row_handler);
- 
   bool Begin();
-
   bool Rollback();
-
   bool Commit();
-  
+
   int error_code() const { return error_code_; }
   std::string16 error_message() const { return error_message_; }
 
  private:
-  sqlite3 *GetHandle();
+  sqlite3 *handle();
   
   bool bogus_version_;
   int expected_version_;

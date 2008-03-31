@@ -35,17 +35,19 @@ class Database2ResultSet : public ModuleImplBaseClassVirtual {
  public:
   Database2ResultSet() : ModuleImplBaseClassVirtual("Database2ResultSet") {}
 
-  // readonly attribute int insertId;
+  // OUT: int
   void GetInsertId(JsCallContext *context);
-  // readonly attribute int rowsAffected;
+  // OUT: int
   void GetRowsAffected(JsCallContext *context);
-  // readonly attribute SQLResultSetRowList rows;
   // we return a JS array full of result objects
+  // OUT: SQLResultSetRowList
   void GetRows(JsCallContext *context);
 
   // creates an instance, returns true if successful
+  // TODO(dimitri.glazkov): Add more parameters
+  // TODO(dimitri.glazkov): Once scoped_refptr merged with this branch, change 
+  //   "instance" to be scoped_refptr<Database2ResultSet> *instance
   static bool Create(const ModuleImplBaseClass *sibling,
-                     /* more args */
                      Database2ResultSet **instance);
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2ResultSet);

@@ -30,8 +30,8 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_types.h" // for JsCallContext
 
-// Allows JavaScript to create database objects. Could be extended
-// in the future with removeDatabase() and listDatabases().
+// Allows JavaScript to create database objects. Could be extended in the future
+// with removeDatabase() and listDatabases().
 class Database2Manager : public ModuleImplBaseClassVirtual {
  public:
   Database2Manager() : ModuleImplBaseClassVirtual("Database2Manager") {}

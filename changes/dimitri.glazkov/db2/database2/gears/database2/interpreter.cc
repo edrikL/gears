@@ -24,15 +24,25 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/database2/interpreter.h"
+
 #include "gears/database2/command.h"
 
 void Database2Interpreter::Run(Database2Command *command) {
-  if (command) {
-    bool needsForeground = true;
-    command->Execute(&needsForeground);
-    if (needsForeground) {
-      command->HandleResults();
-      delete command;
-    }
+  assert(command);
+  bool has_results = true;
+  command->Execute(&has_results);
+  if (has_results) {
+    command->HandleResults();
+    delete command;
   }
+}
+
+void Database2ThreadedInterpreter::Run(Database2Command *command) {
+  // get ThreadMessageQueue instance
+  // post item message
+  // on the background thread, invoke Execute, then
+  // if returned true,
+  // post item back to the foreground thread,
+  // when the message is received, invoke HandleResults
+  // delete command when we're done
 }

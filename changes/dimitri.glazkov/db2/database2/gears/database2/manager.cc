@@ -23,25 +23,24 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/database2/manager.h"
+
 #include "gears/base/common/dispatcher.h"
-#include "gears/base/common/js_types.h"
+#include "gears/base/common/js_types.h" // for JsCallContext
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/module_wrapper.h"
-
 #include "gears/database2/database2.h"
-#include "gears/database2/manager.h"
 
 DECLARE_GEARS_WRAPPER(Database2Manager);
 
+template<>
 void Dispatcher<Database2Manager>::Init() {
   RegisterMethod("openDatabase", &Database2Manager::OpenDatabase);
 }
 
 void Database2Manager::OpenDatabase(JsCallContext *context) {
-  // IN: string name, string version, string display_name, int estimated_size
   std::string16 name;
   std::string16 version;
-  // display_name and estimated_size are not used by Gears
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &name },
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &version }
@@ -54,8 +53,7 @@ void Database2Manager::OpenDatabase(JsCallContext *context) {
   Database2 *database;
   if (Database2::Create(this, name, version, &database)) {
     context->SetReturnValue(JSPARAM_MODULE, database);
-  }
-  else {
+  } else {
     // set exception
   }
 }

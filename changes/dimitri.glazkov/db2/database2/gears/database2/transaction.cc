@@ -24,27 +24,23 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/database2/transaction.h"
-#include "gears/database2/statement.h"
-#include "gears/database2/database2.h"
 
 #include "gears/base/common/dispatcher.h"
-#include "gears/base/common/js_types.h"
+#include "gears/base/common/js_types.h" // for JsCallContext
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/module_wrapper.h"
-
+#include "gears/database2/database2.h"
+#include "gears/database2/statement.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 DECLARE_GEARS_WRAPPER(Database2Transaction);
 
+template<>
 void Dispatcher<Database2Transaction>::Init() {
   RegisterMethod("executeSql", &Database2Transaction::ExecuteSql);
 }
 
 void Database2Transaction::ExecuteSql(JsCallContext *context) {
-  // IN: in DOMString sqlDatabase2Statement, 
-  //     in ObjectArray arguments, 
-  //     in SQLDatabase2StatementCallback callback, 
-  //     in SQLDatabase2StatementErrorCallback errorCallback
   std::string16 sql_Database2Statement;
   JsArray sql_arguments;
   JsRootedCallback *callback = NULL;
@@ -68,8 +64,6 @@ void Database2Transaction::ExecuteSql(JsCallContext *context) {
 
   // ideally, if the queue is empty prior to this call, this should be done
   // without pushing/popping the statement
-
-  // OUT: void
 }
 
 void Database2Transaction::Start() {
@@ -97,8 +91,8 @@ void Database2Transaction::InvokeCallback() {
     { JSPARAM_MODULE, static_cast<ModuleImplBaseClass *>(this) }
   };
 
-  GetJsRunner()->
-    InvokeCallback(callback_.get(), ARRAYSIZE(send_argv), send_argv, NULL);
+  GetJsRunner()->InvokeCallback(callback_.get(), ARRAYSIZE(send_argv),
+                                 send_argv, NULL);
 }
 
 void Database2Transaction::InvokeErrorCallback() {
@@ -114,7 +108,7 @@ bool Database2Transaction::Create(const Database2* database,
                                   JsRootedCallback* success_callback,
                                   Database2Transaction** instance) {
   Database2Transaction *tx = 
-   CreateModule<Database2Transaction>(database->GetJsRunner());
+     CreateModule<Database2Transaction>(database->GetJsRunner());
   if (tx && tx->InitBaseFromSibling(database)) {
     tx->async_ = async;
     // set callbacks
