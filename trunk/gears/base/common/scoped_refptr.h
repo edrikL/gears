@@ -126,6 +126,10 @@ class scoped_refptr {
     return *this;
   }
 
+  scoped_refptr& operator=(const scoped_refptr& b) {
+    return this->operator=(b.get());
+  }
+
   template <typename U>
   scoped_refptr& operator=(const scoped_refptr<U>& b) {
     return this->operator=(b.get());
@@ -150,6 +154,16 @@ class scoped_refptr {
   bool operator!=(T* p) const {
     return ptr_ != p;
   }
+
+  // Allows evaluation in a boolean context, without the dangers of
+  // operator bool().  AsBoolean is undefined and unrelated to any other type,
+  // so implicit conversions or comparisons will not occur.
+  // Example:
+  //   scoped_refptr<Foo> f;
+  //   if (f) {}
+  //   if (!f) {}
+  struct AsBoolean;
+  operator AsBoolean*() const { return reinterpret_cast<AsBoolean*>(ptr_); }
 
   template <typename U>
   bool operator==(const scoped_refptr<U>& b) const {
