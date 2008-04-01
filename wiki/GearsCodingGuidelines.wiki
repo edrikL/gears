@@ -14,38 +14,27 @@ The *TRANS_BLOCK* tag is used inside the HTML files used for the Gears UI to mar
 
 = Reference Counted Classes =
 
-Gears code utilizes intrusive reference counting on some objects via Ref() and Unref().  An external reference-counting mechanism like shared_ptr is not feasible because we must occasionally pass raw pointers via COM or other API boundaries.  To keep things consistent and minimize the number of bugs, the following guidelines should be used:
+Gears code utilizes intrusive reference counting on some objects via `Ref()` and `Unref()`.  An external reference-counting mechanism like shared_ptr is not feasible because we must occasionally pass raw pointers via COM or other API boundaries.  To keep things consistent and minimize the number of bugs, the following guidelines should be used:
 
-  * Use scoped_refptr<Foo> to pass reference-counted objects whenever possible.
+  * Use `T*` for in parameters and `scoped_refptr<T>*` for out parameters:
 {{{
-   void Func(const scoped_refptr<Foo>& in_param, scoped_refptr<Foo>* out_param);
+   void Func(Foo *in_param, scoped_refptr<Foo>* out_param);
 }}}
 
   * Do not pass scoped_refptr by value, as it causes unnecessary increments and decrements.  The only possible exception would be as a return value from a function, but an out parameter should be preferred.
 
-  * If scoped_refptr is not an option:
-    * *Do not* Ref() before calling a function, since you will hold the reference for the lifetime of that function call.
-{{{
-   void UseFoo(Foo* f);
-   scoped_refptr<Foo> local(new Foo);
-   UseFoo(local.get());
-}}}
-    * *Do* Ref() the out-parameters of a function before returning them.
+  * If scoped_refptr cannot be used for an out parameters, `Ref()` the pointer before returning it, and remember to `Unref()` the returned pointer after you're done with it:
 {{{
    void GetFoo(Foo** f) {
       *f = new Foo;
       f->Ref();
    }
-}}}
-    * *Do* Unref() the out-parameters received from a function after securing a local reference via scoped_refptr.
-{{{
-   void GetFoo(Foo** f);
    Foo* local_raw;
    GetFoo(&local);
    scoped_refptr<Foo> local(local_raw);
    local_raw->Unref();
 }}}
-    Since this is so ugly, consider using the as_out_parameter idiom:
+  Since this is so ugly, consider using the as_out_parameter idiom:
 {{{
    void GetFoo(Foo** f);
    scoped_refptr<Foo> local;
