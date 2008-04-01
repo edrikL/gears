@@ -235,20 +235,12 @@ bool TestUrlUtils() {
     },
 
     // Negative test cases - documenting unwanted current behavior.
-    #ifdef BROWSER_WEBKIT
-    {  // Webkit port handles this case correctly.
-      base_dir,
-      STRING16(L"..%2Fbar%2Ffoo.html?%2F"),
-      STRING16(L"http://server/bar/foo.html?%2F")
-    },
-    #else
     {  // %2F should be unescaped to '/'.s
       base_dir,
       STRING16(L"..%2Fbar%2Ffoo.html?%2F"),
       STRING16(L"http://server/directory/..%2Fbar%2Ffoo.html?%2F")
       // Desired: "http://server/bar/foo.html?%2F"
     },
-    #endif
 
   };
 
