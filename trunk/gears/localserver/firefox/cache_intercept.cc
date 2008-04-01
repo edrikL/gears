@@ -43,6 +43,9 @@
 #include <gecko_internal/nsICacheService.h>
 #include <gecko_internal/nsICacheSession.h>
 #include <gecko_internal/nsICacheVisitor.h>
+#if defined(GECKO_19)
+#include <gecko_internal/nsThreadUtils.h>
+#endif
 #include "ff/genfiles/localserver.h"  // from OUTDIR
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/string_utils.h"
@@ -595,6 +598,16 @@ NS_IMETHODIMP CacheIntercept::CreateSession(const char *client_id,
   return NS_OK;
 }
 
+#if defined(GECKO_19)
+NS_IMETHODIMP CacheIntercept::CreateTemporaryClientID(
+                                  nsCacheStoragePolicy policy,
+                                  nsACString &retval) {
+  LOG(("CacheIntercept::CreateTemporaryClientID\n"));
+  NS_ENSURE_TRUE(default_cache_, NS_ERROR_NOT_INITIALIZED);
+  return default_cache_->CreateTemporaryClientID(policy, retval);
+}
+#endif
+
 NS_IMETHODIMP CacheIntercept::VisitEntries(nsICacheVisitor *visitor) {
   LOG(("CacheIntercept::VisitEntries\n"));
   NS_ENSURE_TRUE(default_cache_, NS_ERROR_NOT_INITIALIZED);
@@ -670,8 +683,9 @@ void CacheIntercept::Init() {
                                      kCacheInterceptClassName,
                                      NS_CACHESERVICE_CONTRACTID,
                                      factory);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     LOG(("CacheIntercept: failed to register factory\n"));
+  }
 
   nsCOMPtr<nsIObserverService> observer_service(
       do_GetService(kObserverServiceContractId));
@@ -769,6 +783,11 @@ FFHttpRequest *CacheIntercept::GetGearsHttpRequest(nsIChannel *channel) {
   FFHttpRequest *http_request = NULL;
   gears_request->GetNativeHttpRequest(&http_request);
   return http_request;
+}
+
+PRThread* GetUiThread() {
+  assert(g_ui_thread);
+  return g_ui_thread;
 }
 
 bool IsUiThread() {

@@ -35,8 +35,16 @@
 #include <gecko_internal/nsIScriptGlobalObject.h>
 #include <gecko_internal/nsIScriptObjectPrincipal.h>
 #include <gecko_internal/nsITimer.h>
-#include <gecko_internal/nsITimerInternal.h>
 
+#if defined(GECKO_19)
+#include <gecko_sdk/include/nsIArray.h>
+#include <gecko_sdk/include/nsIMutableArray.h>
+#include <gecko_internal/nsIXPConnect.h>
+#include <gecko_internal/nsDOMJSUtils.h>
+#include <gecko_internal/nsIJSContextStack.h>
+#else
+#include <gecko_internal/nsITimerInternal.h>
+#endif
 #include "gears/base/common/js_runner.h"
 
 #include "ff/genfiles/console.h"
@@ -278,10 +286,12 @@ class JsRunner : public JsRunnerBase {
     gc_timer_ = do_CreateInstance("@mozilla.org/timer;1", &result);
 
     if (NS_SUCCEEDED(result)) {
+#if !defined(GECKO_19)
       // Turning off idle causes the callback to be invoked in this thread,
       // instead of in the Timer idle thread.
       nsCOMPtr<nsITimerInternal> timer_internal(do_QueryInterface(gc_timer_));
       timer_internal->SetIdle(false);
+#endif
 
       // Start the timer
       gc_timer_->InitWithFuncCallback(GarbageCollectionCallback,
@@ -787,11 +797,57 @@ bool DocumentJsRunner::InvokeCallbackSpecialized(
   sc = GetScriptContextFromJSContext(callback->context());
   if (!sc) { return false; }
 
-  jsval retval;
-  nsresult result = sc->CallEventHandler(
-                            JS_GetGlobalObject(callback->context()),
-                            JSVAL_TO_OBJECT(callback->token()),
-                            argc, argv, &retval);
+  nsresult result = NS_OK;
+  jsval retval = 0;
+
+#if defined(GECKO_19)
+  JSContext* cx = reinterpret_cast<JSContext*>(sc->GetNativeContext());
+
+  nsCOMPtr<nsIXPConnect> xpc = do_GetService("@mozilla.org/js/xpc/XPConnect;1",
+                                             &result);
+  if (NS_FAILED(result)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIMutableArray> argarray = do_CreateInstance("@mozilla.org/array;1",
+                                                         &result);
+  if (NS_FAILED(result)) {
+    return false;
+  }
+
+  for (int i = 0; i < argc; ++i) {
+    nsCOMPtr<nsIVariant> arg;
+    if (NS_FAILED(xpc->JSToVariant(cx, argv[i], getter_AddRefs(arg)))) {
+      return false;
+    }
+    argarray->AppendElement(arg, false);
+  }
+
+  JSObject* globalObject = JS_GetGlobalObject(callback->context());
+  nsCOMPtr<nsIVariant> target;
+  result = xpc->JSToVariant(cx, OBJECT_TO_JSVAL(globalObject),
+                            getter_AddRefs(target));
+  if (NS_FAILED(result)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIVariant> var_retval;
+  result = sc->CallEventHandler(target,
+                                globalObject, // scope
+                                JSVAL_TO_OBJECT(callback->token()), // function
+                                argarray,
+                                getter_AddRefs(var_retval));
+
+  if (NS_FAILED(result)) { return false; }
+
+  result = xpc->VariantToJS(cx, globalObject, var_retval, &retval);
+
+#else
+  result = sc->CallEventHandler(JS_GetGlobalObject(callback->context()),
+                                JSVAL_TO_OBJECT(callback->token()),
+                                argc, argv, &retval);
+#endif
+
   if (NS_FAILED(result)) { return false; }
 
   if (optional_alloc_retval) {

@@ -394,10 +394,10 @@ $(NPAPI_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
 # todo(cprince): see whether we can remove the third_party/ part after
 # the 1.9 inclusion is complete.
 $(FF_OUTDIR)/genfiles/%.h: %.idl
-	$(GECKO_SDK)/gecko_sdk/bin/xpidl -I base/common -I $(GECKO_SDK)/gecko_sdk/idl -I third_party/gecko_1.8 -m header -o $(FF_OUTDIR)/genfiles/$* $<
+	$(GECKO_BIN)/xpidl -I base/common -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m header -o $(FF_OUTDIR)/genfiles/$* $<
 
 $(FF_OUTDIR)/genfiles/%.xpt: %.idl
-	$(GECKO_SDK)/gecko_sdk/bin/xpidl -I base/common -I $(GECKO_SDK)/gecko_sdk/idl -I third_party/gecko_1.8 -m typelib -o $(FF_OUTDIR)/genfiles/$* $<
+	$(GECKO_BIN)/xpidl -I base/common -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m typelib -o $(FF_OUTDIR)/genfiles/$* $<
 
 $(IE_OUTDIR)/genfiles/%.h: %.idl
 	$(MIDL) $(MIDLFLAGS) $<
@@ -502,7 +502,7 @@ $(FF_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS
   endif
 
 $(FF_MODULE_TYPELIB): $(FF_GEN_TYPELIBS)
-	$(GECKO_SDK)/gecko_sdk/bin/xpt_link $@ $^
+	$(GECKO_BIN)/xpt_link $@ $^
 
 $(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS)
 	@echo $(NPAPI_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp

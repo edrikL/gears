@@ -35,7 +35,12 @@
 #include <gecko_sdk/include/nsIHttpChannel.h>
 #include <gecko_internal/nsICachingChannel.h>
 #include <gecko_internal/nsIEncodedChannel.h>
+#if defined(GECKO_19)
+#include <gecko_internal/nsIThread.h>
+#include <gecko_internal/nsThreadUtils.h>
+#else
 #include <gecko_internal/nsIEventQueueService.h>
+#endif
 #include <gecko_internal/nsIStringStream.h>
 #include <gecko_internal/nsNetError.h>
 
@@ -214,7 +219,6 @@ bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async) {
     return false;
 
   NS_ENSURE_TRUE(IsUninitialized(), false);
-
   async_ = async;
 
   url_ = url;
@@ -385,6 +389,7 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
     http_channel->SetRequestMethod(method);
   }
 
+#if !defined(GECKO_19)
   nsCOMPtr<nsIEventQueueService> event_queue_service;
   nsCOMPtr<nsIEventQueue> modal_event_queue;
 
@@ -398,18 +403,32 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
       return false;
     }
   }
+#endif
 
   channel_->SetNotificationCallbacks(this);
   rv = channel_->AsyncOpen(this, nsnull);
 
   if (NS_FAILED(rv)) {
+#if !defined(GECKO_19)
     if (!async_) {
       event_queue_service->PopThreadEventQueue(modal_event_queue);
     }
+#endif
     return false;
   }
 
   if (!async_) {
+#if defined(GECKO_19)
+    nsCOMPtr<nsIThread> thread;
+    if (NS_FAILED(NS_GetCurrentThread(getter_AddRefs(thread)))) {
+      return false;
+    }
+    while (ready_state_ != HttpRequest::COMPLETE && !was_aborted_) {
+      if (!NS_ProcessNextEvent(thread)) {
+        return false;
+      }
+    }
+#else
     while (ready_state_ != HttpRequest::COMPLETE && !was_aborted_) {
       modal_event_queue->ProcessPendingEvents();
 
@@ -419,6 +438,7 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
     }
 
     event_queue_service->PopThreadEventQueue(modal_event_queue);
+#endif
   }
 
   return true;

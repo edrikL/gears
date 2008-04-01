@@ -64,6 +64,7 @@ const nsCID kGearsResourceStoreClassId = {0x600bf055, 0x4061, 0x4a77, {0x9e, 0xe
 //-----------------------------------------------------------------------------
 // StringBeginsWith - from nsReadableUtils
 //-----------------------------------------------------------------------------
+#if !defined(GECKO_19)
 static PRBool StringBeginsWith(const nsAString &source,
                                const nsAString &substring) {
   nsAString::size_type src_len = source.Length();
@@ -72,6 +73,7 @@ static PRBool StringBeginsWith(const nsAString &source,
     return PR_FALSE;
   return Substring(source, 0, sub_len).Equals(substring);
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // AppendHeader

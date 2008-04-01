@@ -32,7 +32,14 @@
 void ThrowGlobalError(JsRunnerInterface *js_runner,
                       const std::string16 &message) {
   if (!js_runner) { return; }
-
+#if defined(GECKO_19)
+  JS_SetPendingException(
+      js_runner->GetContext(),
+      STRING_TO_JSVAL(JS_NewUCStringCopyZ(
+          js_runner->GetContext(),
+          reinterpret_cast<const jschar *>(message.c_str()))));
+  JS_ReportPendingException(js_runner->GetContext());
+#else
   std::string16 string_to_eval(message);
 
   ReplaceAll(string_to_eval, std::string16(STRING16(L"'")),
@@ -46,5 +53,6 @@ void ThrowGlobalError(JsRunnerInterface *js_runner,
   string_to_eval.append(std::string16(STRING16(L"')")));
 
   js_runner->Eval(string_to_eval.c_str());
+#endif
 }
 #endif  // WINCE

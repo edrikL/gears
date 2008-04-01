@@ -96,6 +96,9 @@ class GearsWorkerPool
 
 class PoolThreadsManager
     : JsErrorHandlerInterface {
+//#if defined(GECKO_19)
+  friend struct ThreadsEvent; // for OnReceiveThreadsEvent
+//#endif
  public:
   PoolThreadsManager(const SecurityOrigin &page_security_origin,
                      JsRunnerInterface *root_js_runner);

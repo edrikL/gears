@@ -22,7 +22,14 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+#if defined(GECKO_19)
+// This needs to be here because of following: common_ff.h defines
+// FORCE_PR_LOG and includes prlog.h, which defines PR_LOGGING however,
+// appearently with gecko 1.9 some other header includes prlog.h before
+// #includes below include common_ff.h. this causes PR_LOGGING to be not
+// defined and gLog to become not defined symbol in opt builds
+#include "gears/base/common/common_ff.h"
+#endif
 #include <gecko_sdk/include/nsXPCOM.h>
 #include <gecko_sdk/include/nsMemory.h>
 #include <gecko_sdk/include/nsILocalFile.h>
@@ -32,6 +39,7 @@
 #include <gecko_internal/nsIScriptNameSpaceManager.h>
 
 #include "gears/base/common/thread_locals.h"
+#include "gears/base/firefox/xpcom_dynamic_load.h"
 #include "gears/console/firefox/console_ff.h"
 #include "gears/database/firefox/database.h"
 #include "gears/database/firefox/result_set.h"
@@ -53,6 +61,10 @@
 #include "gears/localserver/firefox/resource_store_ff.h"
 #include "gears/ui/firefox/ui_utils.h"
 #include "gears/workerpool/firefox/workerpool.h"
+
+#if !defined(GECKO_19)
+#include <gecko_internal/nsIEventQueueService.h> // for event loop
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -395,6 +407,24 @@ static const nsModuleComponentInfo components[] = {
 };
 
 
-NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(gears_module, components,
-                                   ScourModuleConstructor,
-                                   ScourModuleDestructor)
+static nsModuleInfo const kModuleInfo = {
+  NS_MODULEINFO_VERSION,
+  ("gears_module"),
+  (components),
+  (sizeof(components) / sizeof(components[0])),
+  (ScourModuleConstructor),
+  (ScourModuleDestructor)
+};
+NSGETMODULE_ENTRY_POINT(gears_module) (nsIComponentManager *servMgr,
+                                       nsIFile* location,
+                                       nsIModule** result) {
+  // This is set in base/firefox/xpcom_dynamic_load.cc on load.  The Firefox
+  // XPI contains distinct modules for Gecko 1.8 and Gecko 1.9 based browser.
+  // This will be set to NULL if it is loaded in the wrong host, at which point
+  // this test will fail, and the module won't be registered.
+  if (!XPTC_InvokeByIndex_DynLoad) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_NewGenericModule2(&kModuleInfo, result);
+}

@@ -30,8 +30,8 @@
 #include <windows.h> // must manually #include before nsIEventQueue.h
 #endif
 #include <vector>
-#include <gecko_internal/nsIEventQueue.h>
 #include "ff/genfiles/httprequest.h" // from OUTDIR
+#include "gears/base/common/message_queue.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/http_utils.h"
@@ -115,9 +115,7 @@ class GearsHttpRequest
   scoped_ptr<ResponseInfo> response_info_;
   HttpRequest *request_;
   scoped_ptr<JsRootedCallback> onreadystatechange_;
-  PRThread *apartment_thread_;
-  nsCOMPtr<nsIEventQueue> apartment_event_queue_;
-  nsCOMPtr<nsIEventQueue> ui_event_queue_;
+  ThreadId apartment_thread_id_;
   bool content_type_header_was_set_;
   bool page_is_unloaded_;
   scoped_ptr<JsEventMonitor> unload_monitor_;
@@ -142,8 +140,9 @@ class GearsHttpRequest
   // thread of control an instance of Gears.HttpRequest is created on.
 
   // Returns true if the currently executing thread is our apartment thread
-  bool IsApartmentThread() { 
-    return apartment_thread_ == PR_GetCurrentThread();
+  bool IsApartmentThread() {
+    return apartment_thread_id_ ==
+        ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
   }
 
   enum AsyncCallType {
@@ -161,14 +160,12 @@ class GearsHttpRequest
   void OnReadyStateChangedCall();
   void OnDataAvailableCall();
 
-  nsresult CallAsync(nsIEventQueue *event_queue, AsyncCallType call_type);
+  nsresult CallAsync(ThreadId thread_id, AsyncCallType call_type);
   void OnAsyncCall(AsyncCallType call_type);
-  bool InitEventQueues();
   void InitUnloadMonitor();
 
-  struct AsyncCallEvent;
-  static void *PR_CALLBACK AsyncCall_EventHandlerFunc(AsyncCallEvent*);
-  static void  PR_CALLBACK AsyncCall_EventCleanupFunc(AsyncCallEvent*);
+  class AsyncCallEvent;
+  friend class AsyncCallEvent;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsHttpRequest);
 };
