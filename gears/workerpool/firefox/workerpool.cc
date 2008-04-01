@@ -117,14 +117,20 @@ const nsCID kGearsWorkerPoolClassId = {0x0a15a787, 0x9aef, 0x4a5e, {0x92, 0x7d,
 // Message container.
 //
 
-struct Message {
-  std::string16 text;
-  int sender;
-  SecurityOrigin origin;
+struct WorkerPoolMessage {
+  scoped_ptr<MarshaledJsToken> body_;
+  std::string16 text_;
+  int sender_;
+  SecurityOrigin origin_;
 
-  Message(const std::string16 &t, int s, const SecurityOrigin &o)
-      : text(t), sender(s), origin(o) { }
-  Message() : sender(-1) { }
+  WorkerPoolMessage(MarshaledJsToken *body,
+                    const std::string16 &text,
+                    int sender,
+                    const SecurityOrigin &origin)
+      : body_(body),
+        text_(text),
+        sender_(sender),
+        origin_(origin) {}
 };
 
 
@@ -141,6 +147,14 @@ struct JavaScriptWorkerInfo {
         script_signalled(false), script_ok(false), http_request(NULL),
         is_factory_suspended(false), thread_pointer(NULL) {}
 
+  ~JavaScriptWorkerInfo() {
+    while (!message_queue.empty()) {
+      WorkerPoolMessage *wpm = message_queue.front();
+      message_queue.pop();
+      delete wpm;
+    }
+  }
+
   //
   // These fields are used for all workers in pool (parent + children).
   //
@@ -150,7 +164,7 @@ struct JavaScriptWorkerInfo {
   scoped_ptr<JsRootedCallback> onerror_handler;
 
   nsCOMPtr<nsIEventQueue> thread_event_queue;
-  std::queue<Message> message_queue;
+  std::queue<WorkerPoolMessage*> message_queue;
 
   bool is_invoking_error_handler;  // prevents recursive onerror
 
@@ -374,7 +388,7 @@ NS_IMETHODIMP GearsWorkerPool::AllowCrossOrigin() {
   RETURN_NORMAL();
 }
 
-NS_IMETHODIMP GearsWorkerPool::SendMessage(//const nsAString &message,
+NS_IMETHODIMP GearsWorkerPool::SendMessage(//const variant &message_body,
                                            //PRInt32 dest_worker_id
                                           ) {
   Initialize();
@@ -385,8 +399,6 @@ NS_IMETHODIMP GearsWorkerPool::SendMessage(//const nsAString &message,
 
   if (js_params.GetCount(false) < 1) {
     RETURN_EXCEPTION(STRING16(L"The message parameter is required."));
-  } else if (!js_params.GetAsString(0, &text)) {
-    RETURN_EXCEPTION(STRING16(L"The message parameter must be a string."));
   }
 
   if (js_params.GetCount(false) < 2) {
@@ -395,14 +407,33 @@ NS_IMETHODIMP GearsWorkerPool::SendMessage(//const nsAString &message,
     RETURN_EXCEPTION(STRING16(L"The destId parameter must be an int."));
   }
 
-  bool succeeded = threads_manager_->PutPoolMessage(text.c_str(),
+  std::string16 error;
+
+  // Here, we marshal the first argument, with the extra caveat that you can't
+  // send a JavaScript null or undefined as a message (although you can send an
+  // array containing nulls and undefineds).
+  MarshaledJsToken *mjt = NULL;
+  JsParamType first_arg_type = js_params.GetType(0);
+  if (first_arg_type == JSPARAM_NULL ||
+      first_arg_type == JSPARAM_UNDEFINED ||
+      !js_params.GetAsMarshaledJsToken(0, &mjt, &error)) {
+    RETURN_EXCEPTION(error.empty()
+        ? STRING16(L"The message parameter has an invalid type.")
+        : error.c_str());
+  }
+  if (js_params.GetType(0) != JSPARAM_STRING16 ||
+      !js_params.GetAsString(0, &text)) {
+    text = STRING16(L"");
+  }
+
+  bool succeeded = threads_manager_->PutPoolMessage(mjt,
+                                                    text.c_str(),
                                                     dest_worker_id,
                                                     EnvPageSecurityOrigin());
   if (!succeeded) {
-    std::string16 error(STRING16(L"Worker "));
+    error = STRING16(L"Worker ");
     error += IntegerToString16(dest_worker_id);
     error += STRING16(L" does not exist.");
-
     RETURN_EXCEPTION(error.c_str());
   }
   RETURN_NORMAL();
@@ -480,16 +511,16 @@ void* PoolThreadsManager::OnReceiveThreadsEvent(ThreadsEvent *event) {
   }
 
   // Retrieve message information.
-  Message msg;
-  if (!wi->threads_manager->GetPoolMessage(&msg)) {
+  scoped_ptr<WorkerPoolMessage> msg(wi->threads_manager->GetPoolMessage());
+  if (!msg.get()) {
     return NULL;
   }
 
   if (event->type == EVENT_TYPE_MESSAGE) {
-    wi->threads_manager->ProcessMessage(wi, msg);
+    wi->threads_manager->ProcessMessage(wi, *msg);
   } else {
     assert(event->type == EVENT_TYPE_ERROR);
-    wi->threads_manager->ProcessError(wi, msg);
+    wi->threads_manager->ProcessError(wi, *msg);
   }
 
   return NULL; // retval only matters for PostSynchronousEvent()
@@ -503,7 +534,7 @@ static void OnDestroyThreadsEvent(ThreadsEvent *event) {
 
 
 void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
-                                        const Message &msg) {
+                                        const WorkerPoolMessage &msg) {
   assert(wi);
   if (wi->onmessage_handler.get() &&
       !JsTokenIsNullOrUndefined(wi->onmessage_handler->token())) {
@@ -527,14 +558,18 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
       return;
     }
 
-    onmessage_param->SetPropertyString(STRING16(L"text"), msg.text);
-    onmessage_param->SetPropertyInt(STRING16(L"sender"), msg.sender);
-    onmessage_param->SetPropertyString(STRING16(L"origin"), msg.origin.url());
+    onmessage_param->SetPropertyString(STRING16(L"text"), msg.text_);
+    onmessage_param->SetPropertyInt(STRING16(L"sender"), msg.sender_);
+    onmessage_param->SetPropertyString(STRING16(L"origin"), msg.origin_.url());
+    JsToken token;
+    if (msg.body_.get() && msg.body_->Unmarshal(wi->js_runner, &token)) {
+      onmessage_param->SetProperty(STRING16(L"body"), token);
+    }
 
     const int argc = 3;
     JsParamToSend argv[argc] = {
-      { JSPARAM_STRING16, &msg.text },
-      { JSPARAM_INT, &msg.sender },
+      { JSPARAM_STRING16, &msg.text_ },
+      { JSPARAM_INT, &msg.sender_ },
       { JSPARAM_OBJECT, onmessage_param.get() }
     };
     wi->js_runner->InvokeCallback(wi->onmessage_handler.get(), argc, argv,
@@ -555,7 +590,7 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
 
 
 void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
-                                      const Message &msg) {
+                                      const WorkerPoolMessage &msg) {
 #ifdef DEBUG
   {
     // We only expect to be receive errors on the owning worker, all workers
@@ -568,7 +603,7 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
   // Bubble the error up to the owning worker's script context. If that
   // worker is also nested, this will cause PoolThreadsManager::HandleError
   // to get called again on that context.
-  ThrowGlobalError(wi->js_runner, msg.text);
+  ThrowGlobalError(wi->js_runner, msg.text_);
 }
 
 
@@ -674,8 +709,8 @@ void PoolThreadsManager::HandleError(const JsErrorInfo &error_info) {
     JavaScriptWorkerInfo *dest_wi = worker_info_[kOwningWorkerId];  // parent
 
     // Copy the message to an internal queue.
-    dest_wi->message_queue.push(Message(text, src_worker_id,
-                                        dest_wi->script_origin));
+    dest_wi->message_queue.push(new WorkerPoolMessage(
+        NULL, text, src_worker_id, dest_wi->script_origin));
     // Notify the receiving worker.
     ThreadsEvent *event = new ThreadsEvent(dest_wi, EVENT_TYPE_ERROR);
     dest_wi->thread_event_queue->InitEvent(
@@ -736,7 +771,8 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
 }
 
 
-bool PoolThreadsManager::PutPoolMessage(const char16 *text,
+bool PoolThreadsManager::PutPoolMessage(MarshaledJsToken* mjt,
+                                        const char16 *text,
                                         int dest_worker_id,
                                         const SecurityOrigin &src_origin) {
   MutexLock lock(&mutex_);
@@ -755,7 +791,8 @@ bool PoolThreadsManager::PutPoolMessage(const char16 *text,
   }
 
   // Copy the message to an internal queue.
-  dest_wi->message_queue.push(Message(text, src_worker_id, src_origin));
+  dest_wi->message_queue.push(
+      new WorkerPoolMessage(mjt, text, src_worker_id, src_origin));
   // Notify the receiving worker.
   ThreadsEvent *event = new ThreadsEvent(dest_wi, EVENT_TYPE_MESSAGE);
   dest_wi->thread_event_queue->InitEvent(
@@ -768,7 +805,7 @@ bool PoolThreadsManager::PutPoolMessage(const char16 *text,
 }
 
 
-bool PoolThreadsManager::GetPoolMessage(Message *msg) {
+WorkerPoolMessage *PoolThreadsManager::GetPoolMessage() {
   MutexLock lock(&mutex_);
 
   int current_worker_id = GetCurrentPoolWorkerId();
@@ -776,9 +813,9 @@ bool PoolThreadsManager::GetPoolMessage(Message *msg) {
 
   assert(!wi->message_queue.empty());
 
-  *msg = wi->message_queue.front();
+  WorkerPoolMessage *msg = wi->message_queue.front();
   wi->message_queue.pop();
-  return true;
+  return msg;
 }
 
 

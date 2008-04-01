@@ -33,6 +33,7 @@
 #include "ff/genfiles/workerpool.h" // from OUTDIR
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_marshal.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/security_model.h"
@@ -43,7 +44,7 @@ extern const char *kGearsWorkerPoolClassName;
 extern const nsCID kGearsWorkerPoolClassId;
 
 class PoolThreadsManager;
-struct Message;
+struct WorkerPoolMessage;
 struct JavaScriptWorkerInfo;
 struct ThreadsEvent;
 
@@ -66,7 +67,7 @@ class GearsWorkerPool
   NS_IMETHOD CreateWorkerFromUrl(//const nsAString &url
                                  PRInt32 *retval);
   NS_IMETHOD AllowCrossOrigin();
-  NS_IMETHOD SendMessage(//const nsAString &message
+  NS_IMETHOD SendMessage(//const variant &message_body
                          //PRInt32 dest_worker_id
                         );
   NS_IMETHOD SetOnmessage(nsIVariant *in_handler);
@@ -111,8 +112,8 @@ class PoolThreadsManager
                     int *worker_id);
   void AllowCrossOrigin();
   void HandleError(const JsErrorInfo &message);
-  bool PutPoolMessage(const char16 *text, int dest_worker_id,
-                      const SecurityOrigin &src_origin);
+  bool PutPoolMessage(MarshaledJsToken *mjt, const char16 *text,
+                      int dest_worker_id, const SecurityOrigin &src_origin);
 
   // Worker initialization that must be done from the worker's thread.
   bool InitWorkerThread(JavaScriptWorkerInfo *wi);
@@ -131,7 +132,7 @@ class PoolThreadsManager
   // Gets the id of the worker associated with the current thread. Caller must
   // acquire the mutex.
   int GetCurrentPoolWorkerId();
-  bool GetPoolMessage(Message *msg);
+  WorkerPoolMessage *GetPoolMessage();
   bool InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
                             const JsErrorInfo &error_info);
 
@@ -142,9 +143,9 @@ class PoolThreadsManager
 
   // Helpers for processing events received from other workers.
   void ProcessMessage(JavaScriptWorkerInfo *wi,
-                      const Message &msg);
+                      const WorkerPoolMessage &msg);
   void ProcessError(JavaScriptWorkerInfo *wi,
-                    const Message &msg);
+                    const WorkerPoolMessage &msg);
 
   int num_workers_; // used by Add/ReleaseWorkerRef()
   bool is_shutting_down_;

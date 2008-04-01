@@ -415,6 +415,7 @@ FF_CPPSRCS	+= \
 		html_event_monitor_ff.cc \
 		ipc_message_queue_null.cc \
 		http_utils.cc \
+		js_marshal.cc \
 		js_runner_ff.cc \
 		js_runner_ff_marshaling.cc \
 		js_runner_utils.cc \
@@ -486,6 +487,7 @@ IE_CPPSRCS	+= \
 		ipc_message_queue_win32_test.cc \
 		http_utils.cc \
 		ie_version.cc \
+		js_marshal.cc \
 		js_runner_ie.cc \
 		js_runner_utils.cc \
 		js_types.cc \
@@ -556,6 +558,7 @@ IEMOBILE_CPPSRCS	+= \
 		file_wince.cc \
 		ipc_message_queue_null.cc \
 		http_utils.cc \
+		js_marshal.cc \
 		js_runner_ie.cc \
 		js_runner_utils.cc \
 		js_types.cc \
