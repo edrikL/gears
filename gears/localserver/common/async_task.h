@@ -46,10 +46,10 @@
 #include "gears/localserver/ie/async_task_ie.h"
 #elif BROWSER_FF
 #include "gears/localserver/firefox/async_task_ff.h"
-#elif BROWSER_NPAPI
-#include "gears/localserver/npapi/async_task_np.h"
 #elif BROWSER_SAFARI
 #include "gears/localserver/safari/async_task_sf.h"
+#elif BROWSER_NPAPI
+#include "gears/localserver/npapi/async_task_np.h"
 #endif
 
 #endif  // GEARS_LOCALSERVER_COMMON_ASYNC_TASK_H__

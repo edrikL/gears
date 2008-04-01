@@ -23,6 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#import <Cocoa/Cocoa.h>
 #import "gears/localserver/safari/http_cookies_sf.h"
 
 CFStringRef GetHTTPCookieString(CFStringRef urlStr) {
