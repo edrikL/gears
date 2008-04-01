@@ -228,18 +228,16 @@ bool TestUrlUtils() {
       STRING16(L"http://server/directory/foo.html?b=c&a=b")
     },
     {  // Remove empty query string.
-      //  Some normalizers will remove the trailing '?'
+       //  Some normalizers will remove the trailing '?'
       base_dir,
       STRING16(L"foo.html?"),
       STRING16(L"http://server/directory/foo.html?")
     },
-
-    // Negative test cases - documenting unwanted current behavior.
-    {  // %2F should be unescaped to '/'.s
+    { // It's illegal to unsescape %2F -> '/' during normalization.
+      // Thanks to brettw for confirming that this is the desired behavior. 
       base_dir,
       STRING16(L"..%2Fbar%2Ffoo.html?%2F"),
       STRING16(L"http://server/directory/..%2Fbar%2Ffoo.html?%2F")
-      // Desired: "http://server/bar/foo.html?%2F"
     },
 
   };
