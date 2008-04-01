@@ -29,8 +29,12 @@
 #include <set>
 #include <stdio.h>
 
+#ifdef BROWSER_WEBKIT
+#include <WebKit/npapi.h>
+#else
 #include "npapi.h"
 #include "npruntime.h"
+#endif
 
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 

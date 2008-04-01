@@ -16,15 +16,15 @@
 
 // Used in place of a std::ostream.  We don't want to pull in streaming code
 // for logging messages that we don't care about.
-class FakeOStream { };
-
-inline FakeOStream& operator<<(FakeOStream& out, const char* wstr) {
-  return out;
-}
-inline FakeOStream& operator<<(FakeOStream& out, const wchar_t* wstr) {
-  return out;
-}
-
+class FakeOStream {
+ public:
+  inline FakeOStream& operator<<(const char* wstr) {
+    return *this;
+  }
+  inline FakeOStream& operator<<(const wchar_t* wstr) {
+    return *this;
+  }
+};
 // END Google Gears changes
 
 #endif  // BASE_LOGGING_H__
