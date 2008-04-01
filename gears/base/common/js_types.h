@@ -119,6 +119,9 @@ class JsTokenEqualTo {
 
 #include "gears/third_party/npapi/nphostapi.h"
 
+#endif
+
+#if BROWSER_NPAPI || BROWSER_WEBKIT
 // An NPVariant that takes ownership of its value and releases it when it goes
 // out of scope.
 class ScopedNPVariant : public NPVariant {
@@ -151,9 +154,6 @@ class ScopedNPVariant : public NPVariant {
   void Release();
 };
 
-#endif
-
-#if BROWSER_NPAPI || BROWSER_WEBKIT
 // Abstracted types for values used with JavaScript engines.
 typedef NPVariant JsToken;
 typedef ScopedNPVariant JsScopedToken;
