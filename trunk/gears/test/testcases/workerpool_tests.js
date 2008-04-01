@@ -172,6 +172,9 @@ function testOnMessageTests() {
     assertNotEqual('', message.origin, 'Incorrect origin');
   };
 
+  // m.text is deprecated, but is still provided for backwards compatability.
+  // Instead of m.text, new code should use m.body.  For m.body tests, see
+  // workerpool_message_body_tests.js.
   var childId = wp1.createWorker('var wp = google.gears.workerPool;' +
                                  'wp.onmessage = function(a, b, m) {' +
                                  '  wp.sendMessage(m.text, m.sender);' +

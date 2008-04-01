@@ -38,6 +38,7 @@
 #include <vector>
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_marshal.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/security_model.h"
@@ -48,7 +49,7 @@ const UINT WM_WORKERPOOL_ONMESSAGE = (WM_USER + 0);
 const UINT WM_WORKERPOOL_ONERROR = (WM_USER + 1);
 
 class PoolThreadsManager;
-struct Message;
+struct WorkerPoolMessage;
 struct JavaScriptWorkerInfo;
 
 
@@ -83,8 +84,8 @@ class ATL_NO_VTABLE GearsWorkerPool
   // Lets a worker opt-in to being created from another origin.
   STDMETHOD(allowCrossOrigin)();
 
-  // Sends message_string to a given worker_id.
-  STDMETHOD(sendMessage)(const BSTR *message, int dest_worker_id);
+  // Sends message to a given worker_id.
+  STDMETHOD(sendMessage)(const VARIANT *message_body, int dest_worker_id);
 
   // Sets the onmessage handler for the current worker.
   // The handler has the prototype Handler(message_string, src_worker_id).
@@ -134,8 +135,8 @@ class PoolThreadsManager
                     int *worker_id);
   void AllowCrossOrigin();
   void HandleError(const JsErrorInfo &error_info);
-  bool PutPoolMessage(const char16 *text, int dest_worker_id,
-                      const SecurityOrigin &src_origin);
+  bool PutPoolMessage(MarshaledJsToken *mjt, const char16 *text,
+                      int dest_worker_id, const SecurityOrigin &src_origin);
 
   // Worker initialization that must be done from the worker's thread.
   bool InitWorkerThread(JavaScriptWorkerInfo *wi);
@@ -154,7 +155,7 @@ class PoolThreadsManager
   // Gets the id of the worker associated with the current thread. Caller must
   // acquire the mutex.
   int GetCurrentPoolWorkerId();
-  bool GetPoolMessage(Message *msg);
+  WorkerPoolMessage *GetPoolMessage();
   bool InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
                             const JsErrorInfo &error_info);
 
@@ -166,9 +167,9 @@ class PoolThreadsManager
 
   // Helpers for processing events received from other workers.
   void ProcessMessage(JavaScriptWorkerInfo *wi,
-                      const Message &msg);
+                      const WorkerPoolMessage &msg);
   void ProcessError(JavaScriptWorkerInfo *wi,
-                    const Message &msg);
+                    const WorkerPoolMessage &msg);
 
   // This is used by Add/ReleaseWorkerRef(). Note that it is not equal to the
   // total number of threads, as each worker thread (not the main thread)

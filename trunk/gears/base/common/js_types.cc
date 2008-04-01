@@ -27,9 +27,9 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/int_types.h"  // for isnan
+#include "gears/base/common/js_marshal.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_types.h"
-#include "gears/base/common/js_runner.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 #if BROWSER_FF
@@ -57,20 +57,6 @@ static inline bool DoubleIsInt32(double val) {
 // Special conversion functions for FireFox
 #if BROWSER_FF
 
-static bool StringToToken(JsContextPtr context,
-                          const std::string16& in,
-                          JsToken* out) {
-  JSString *jstr = JS_NewUCStringCopyZ(
-                       context,
-                       reinterpret_cast<const jschar *>(in.c_str()));
-  if (jstr) {
-    *out = STRING_TO_JSVAL(jstr);
-    return true;
-  } else {
-    return false;
-  }
-}
-
 static bool ModuleToToken(JsContextPtr context, IScriptable* in, JsToken* out) {
   nsresult nr;
   nsCOMPtr<nsIXPConnect> xpc;
@@ -96,15 +82,6 @@ static bool ModuleToToken(JsContextPtr context, IScriptable* in, JsToken* out) {
     return false;
 
   *out = OBJECT_TO_JSVAL(object);
-  return true;
-}
-
-static bool DoubleToToken(JsContextPtr context, double value, JsToken* out) {
-  jsdouble* dp = JS_NewDouble(context, value);
-  if (!dp)
-    return false;
-
-  *out = DOUBLE_TO_JSVAL(dp);
   return true;
 }
 
@@ -209,7 +186,7 @@ bool JsArray::SetElementInt(int index, int value) {
 
 bool JsArray::SetElementDouble(int index, double value) {
   JsToken jsval;
-  if (DoubleToToken(js_context_, value, &jsval)) {
+  if (DoubleToJsToken(js_context_, value, &jsval)) {
     return SetElement(index, jsval);
   } else {
     return false;
@@ -218,7 +195,7 @@ bool JsArray::SetElementDouble(int index, double value) {
 
 bool JsArray::SetElementString(int index, const std::string16& value) {
   JsToken token;
-  if (StringToToken(js_context_, value, &token)) {
+  if (StringToJsToken(js_context_, value, &token)) {
     return SetElement(index, token);
   } else {
     return false;
@@ -493,6 +470,28 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
   return false;
 }
 
+bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
+  if (!js_object_) return false;
+  JSIdArray *ids = JS_Enumerate(js_context_, JSVAL_TO_OBJECT(js_object_));
+  for (int i = 0; i < ids->length; i++) {
+    jsval property_key;
+    if (!JS_IdToValue(js_context_, ids->vector[i], &property_key)) {
+      // JS_IdToValue is implemented as a typecast, and should never fail.
+      assert(false);
+    }
+    if (!JSVAL_IS_STRING(property_key)) {
+      continue;
+    }
+    std::string16 property_name;
+    if (!JsTokenToString_NoCoerce(property_key, js_context_, &property_name)) {
+      continue;
+    }
+    out->push_back(property_name);
+  }
+  JS_DestroyIdArray(js_context_, ids);
+  return true;
+}
+
 bool JsObject::GetProperty(const std::string16 &name,
                            JsScopedToken *out) const {
   if (!js_object_) return false;
@@ -537,8 +536,8 @@ bool JsObject::SetPropertyInt(const std::string16 &name, int value) {
 
 bool JsObject::SetPropertyDouble(const std::string16& name, double value) {
   JsToken jsval;
-  if (DoubleToToken(js_context_, value, &jsval)) {
-    return SetProperty(name, jsval);	
+  if (DoubleToJsToken(js_context_, value, &jsval)) {
+    return SetProperty(name, jsval);
   } else {
     return false;
   }
@@ -547,7 +546,7 @@ bool JsObject::SetPropertyDouble(const std::string16& name, double value) {
 bool JsObject::SetPropertyString(const std::string16 &name,
                                  const std::string16 &value) {
   JsToken token;
-  if (StringToToken(js_context_, value, &token)) {
+  if (StringToJsToken(js_context_, value, &token)) {
     return SetProperty(name, token);
   } else {
     return false;
@@ -578,6 +577,12 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
   js_object_ = value;
 
   return true;
+}
+
+bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
+  if (js_object_.vt != VT_DISPATCH) return false;
+  return SUCCEEDED(
+      ActiveXUtils::GetDispatchPropertyNames(js_object_.pdispVal, out));
 }
 
 bool JsObject::GetProperty(const std::string16 &name,
@@ -635,6 +640,11 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
     return true;
   }
 
+  return false;
+}
+
+bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
+  // TODO(nigeltao): implement
   return false;
 }
 
@@ -978,6 +988,49 @@ bool JsTokenIsNullOrUndefined(JsToken t) {
   return JSVAL_IS_NULL(t) || JSVAL_IS_VOID(t); // null or undefined
 }
 
+bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken* out) {
+  *out = BOOLEAN_TO_JSVAL(value);
+  return true;
+}
+
+bool IntToJsToken(JsContextPtr context, int value, JsScopedToken* out) {
+  *out = INT_TO_JSVAL(value);
+  return true;
+}
+
+// TODO(nigeltao): We creating an unrooted jsval here (and saving it as
+// *out), which is vulnerable to garbage collection.  Strictly speaking,
+// callers should immediately root the token to avoid holding a dangling
+// pointer.  The TODO is to fix up the API so that the callee does the
+// right thing.
+// Similarly for FooToJsToken in general, for Foo in {Bool, Int, Double}.
+bool StringToJsToken(JsContextPtr context,
+                     const std::string16& value,
+                     JsScopedToken* out) {
+  JSString *jstr = JS_NewUCStringCopyZ(
+                       context,
+                       reinterpret_cast<const jschar *>(value.c_str()));
+  if (jstr) {
+    *out = STRING_TO_JSVAL(jstr);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken* out) {
+  jsdouble* dp = JS_NewDouble(context, value);
+  if (!dp)
+    return false;
+
+  *out = DOUBLE_TO_JSVAL(dp);
+  return true;
+}
+
+bool NullToJsToken(JsContextPtr context, JsScopedToken* out) {
+  *out = JSVAL_NULL;
+  return true;
+}
 #elif BROWSER_IE
 
 bool JsTokenToBool_NoCoerce(JsToken t, JsContextPtr cx, bool *out) {
@@ -1101,7 +1154,8 @@ bool JsTokenToDouble_Coerce(JsToken t, JsContextPtr cx, double *out) {
 bool JsTokenToString_Coerce(JsToken t, JsContextPtr cx, std::string16 *out) {
   // JsToken is a string
   if (t.vt == VT_BSTR) {
-    out->assign(t.bstrVal);
+    // A BSTR must have identical semantics for NULL and for "".
+    out->assign(t.bstrVal ? t.bstrVal : STRING16(L""));
   // Edge-case: booleans should coerce to "true" and "false".
   // Note that VariantChangeType() converts booleans to "1" and "0",
   // or "True" and "False" (if VARIANT_ALPHABOOL is specified).
@@ -1160,7 +1214,7 @@ JsParamType JsTokenGetType(JsToken t, JsContextPtr cx) {
 }
 
 bool JsTokenIsCallback(JsToken t, JsContextPtr cx) {
-  if (t.vt != VT_DISPATCH) return false; 
+  if (t.vt != VT_DISPATCH || !t.pdispVal) return false; 
   // Check for call() method which all Function objects have.
   // Note: User defined objects that have a call() method will be incorrectly
   // flagged as callbacks but this check is better than nothing and probably
@@ -1175,7 +1229,7 @@ bool JsTokenIsCallback(JsToken t, JsContextPtr cx) {
 }
 
 bool JsTokenIsArray(JsToken t, JsContextPtr cx) {
-  if (t.vt != VT_DISPATCH) return false;
+  if (t.vt != VT_DISPATCH || !t.pdispVal) return false;
   // Check for join() method which all Array objects have.
   // Note: Function objects also have a length property so it's not safe
   // to assume that an object with a length property is an Array!
@@ -1189,11 +1243,40 @@ bool JsTokenIsArray(JsToken t, JsContextPtr cx) {
 }
 
 bool JsTokenIsObject(JsToken t) {
-  return t.vt == VT_DISPATCH;
+  return t.vt == VT_DISPATCH && t.pdispVal;
 }
 
 bool JsTokenIsNullOrUndefined(JsToken t) {
   return t.vt == VT_NULL || t.vt == VT_EMPTY;  // null or undefined
+}
+
+bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken* out) {
+  *out = value;
+  return true;
+}
+
+bool IntToJsToken(JsContextPtr context, int value, JsScopedToken* out) {
+  *out = value;
+  return true;
+}
+
+bool StringToJsToken(JsContextPtr context,
+                     const std::string16& value,
+                     JsScopedToken* out) {
+  *out = value.c_str();
+  return true;
+}
+
+bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken* out) {
+  *out = value;
+  return true;
+}
+
+bool NullToJsToken(JsContextPtr context, JsScopedToken* out) {
+  VARIANT null_variant;
+  null_variant.vt = VT_NULL;
+  *out = null_variant;
+  return true;
 }
 
 #elif BROWSER_NPAPI
@@ -1393,6 +1476,33 @@ bool JsTokenIsObject(JsToken t) {
 
 bool JsTokenIsNullOrUndefined(JsToken t) {
   return NPVARIANT_IS_NULL(t) || NPVARIANT_IS_VOID(t);
+}
+
+bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken* out) {
+  // TODO(nigeltao): implement for NPAPI
+  return false;
+}
+
+bool IntToJsToken(JsContextPtr context, int value, JsScopedToken* out) {
+  // TODO(nigeltao): implement for NPAPI
+  return false;
+}
+
+bool StringToJsToken(JsContextPtr context,
+                     const std::string16& value,
+                     JsScopedToken* out) {
+  // TODO(nigeltao): implement for NPAPI
+  return false;
+}
+
+bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken* out) {
+  // TODO(nigeltao): implement for NPAPI
+  return false;
+}
+
+bool NullToJsToken(JsContextPtr context, JsScopedToken* out) {
+  // TODO(nigeltao): implement for NPAPI
+  return false;
 }
 
 // ScopedNPVariant functions.
@@ -1960,6 +2070,14 @@ void JsParamFetcher::SetReturnValue(JsToken retval) {
       ncc_->SetReturnValueWasSet(PR_TRUE);
     }
   }
+}
+
+bool JsParamFetcher::GetAsMarshaledJsToken(int i, MarshaledJsToken **out,
+                                           std::string16 *error_message_out) {
+  if (i >= js_argc_) return false;  // see comment above, in GetAsInt()
+  *out = MarshaledJsToken::Marshal(js_argv_[i], js_context_,
+                                   error_message_out);
+  return *out != NULL;
 }
 
 JsNativeMethodRetval JsSetException(JsContextPtr cx,
