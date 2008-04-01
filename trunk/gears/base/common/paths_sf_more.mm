@@ -23,7 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#import "common/genfiles/product_name_constants.h" // from OUTDIR
+#import "common/genfiles/product_constants.h" // from OUTDIR
+#import "gears/base/common/common.h"
 #import "gears/base/safari/scoped_cf.h"
 #import "gears/base/common/string_utils.h"
 #import "gears/base/common/paths_sf_more.h"
@@ -51,7 +52,8 @@
       if (isDir)
         break;
       
-      MethodLog("File exists at %@", path);
+      LOG(("File exists at %s", 
+           [path cStringUsingEncoding:NSUTF8StringEncoding]));
       return NO;
     }
     
@@ -89,7 +91,8 @@
     path = [path stringByAppendingPathComponent:subPath];
     
     if (![mgr createDirectoryAtPath:path attributes:attrs]) {
-      MethodLog("Unable to create directory: %@", path);
+      LOG(("Unable to create directory: %s", 
+             [path cStringUsingEncoding:NSUTF8StringEncoding]));
       return NO;
     }
   }
