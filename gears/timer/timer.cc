@@ -26,7 +26,9 @@
 #include "gears/timer/timer.h"
 
 #if BROWSER_FF
+#if !defined(GECKO_19)
 #include <gecko_internal/nsITimerInternal.h>
+#endif
 #endif
 
 #include "gears/base/common/dispatcher.h"
@@ -269,11 +271,13 @@ int GearsTimer::CreateTimer(const TimerInfo &timer_info, int timeout) {
     return 0;
   }
 
+#if !defined(GECKO_19)          // FIXME: kimmo.t.kinnunen@nokia.com: Timers in gecko 1.9 are always in this thread by default?
   // Turning off idle causes the callback to be invoked in this thread,
   // instead of in the Timer idle thread.
   nsCOMPtr<nsITimerInternal> timer_internal(
       do_QueryInterface(timer->platform_timer));
   timer_internal->SetIdle(false);
+#endif
 
   // Cast because the two constants are defined in different anonymous
   // enums, so they aren't literally of the same type, which throws a

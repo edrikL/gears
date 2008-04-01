@@ -526,7 +526,6 @@ class JsCallContext {
   JsToken *retval_;
   JsRunnerInterface *js_runner_;
   nsCOMPtr<nsIXPConnect> xpc_;
-  nsCOMPtr<nsIXPCNativeCallContext> ncc_;
 #else
   // TODO: browser_xyz
 #endif
@@ -591,7 +590,11 @@ class JsParamFetcher {
   JsToken      *js_retval_;
 
   nsCOMPtr<nsIXPConnect> xpc_;
+#ifdef GECKO_19
+  nsAXPCNativeCallContext *ncc_;
+#else
   nsCOMPtr<nsIXPCNativeCallContext> ncc_;
+#endif
 };
 
 

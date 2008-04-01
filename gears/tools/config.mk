@@ -67,6 +67,15 @@ else
 PCT=%
 endif
 
+ifeq ($(FF_MOD), experimental_19)
+FF_CPPFLAGS += -DGECKO_19
+GECKO_BASE = third_party/gecko_1.9
+else
+GECKO_BASE = third_party/gecko_1.8
+endif
+GECKO_LIB = $(GECKO_SDK)/gecko_sdk/lib
+GECKO_BIN = $(GECKO_SDK)/gecko_sdk/bin
+
 MAKEFLAGS = --no-print-directory
 
 CPPFLAGS = -I.. -I$(OUTDIR)/$(OS)-$(ARCH)
@@ -86,7 +95,7 @@ endif
 
 # We include several different base paths of GECKO_SDK because different sets
 # of files include SDK/internal files differently.
-FF_CPPFLAGS = -DBROWSER_FF=1 -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -Ithird_party/gecko_1.8 -DMOZILLA_STRICT_API
+FF_CPPFLAGS += -DBROWSER_FF=1 -I$(GECKO_BASE) -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -DMOZILLA_STRICT_API
 IE_CPPFLAGS = -DBROWSER_IE=1
 IEMOBILE_CPPFLAGS = -DBROWSER_IE=1
 NPAPI_CPPFLAGS = -DBROWSER_NPAPI=1 -Ithird_party/npapi -Ithird_party -Ithird_party/googleurl -Ithird_party/icu38/public/common
@@ -143,7 +152,7 @@ SHLIBFLAGS = -o $@ -shared -fPIC -Bsymbolic -Wl,--version-script -Wl,tools/xpcom
 #TRANSLATE_LINKER_FILE_LIST = cat -
 #EXT_LINKER_CMD_FLAG = -Xlinker @
 
-GECKO_SDK = third_party/gecko_1.8/linux
+GECKO_SDK = $(GECKO_BASE)/linux
 
 FF_LIBS = -L $(GECKO_SDK)/gecko_sdk/bin -L $(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s -lnspr4
 endif
@@ -184,7 +193,7 @@ SHLIBFLAGS = -o $@ -bundle -Wl,-dead_strip -Wl,-exported_symbols_list -Wl,tools/
 TRANSLATE_LINKER_FILE_LIST = tr " " "\n"
 EXT_LINKER_CMD_FLAG = -Xlinker -filelist -Xlinker 
 
-GECKO_SDK = third_party/gecko_1.8/osx
+GECKO_SDK = $(GECKO_BASE)/osx
 OSX_SDK_ROOT = /Developer/SDKs/MacOSX10.4u.sdk
 
 FF_LIBS = -L$(GECKO_SDK)/gecko_sdk/bin -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4 -lxpcom_core
@@ -252,8 +261,8 @@ endif
 
 LIBGD_CFLAGS += /DBGDWIN32 /wd4244 /wd4996 /wd4005 /wd4142 /wd4018 /wd4133 /wd4102
 
-COMPILE_FLAGS_dbg = /MTd /Zi
-COMPILE_FLAGS_opt = /MT  /Zi /Ox
+COMPILE_FLAGS_dbg = /MTd /Zi /Zc:wchar_t-
+COMPILE_FLAGS_opt = /MT  /Zi /Ox /Zc:wchar_t-
 COMPILE_FLAGS = /c /Fo"$@" /Fd"$(@D)/$*.pdb" /W3 /WX /GR- $(COMPILE_FLAGS_$(MODE))
 # In VC8, the way to disable exceptions is to remove all /EH* flags, and to
 # define _HAS_EXCEPTIONS=0 (for C++ headers) and _ATL_NO_EXCEPTIONS (for ATL).
@@ -318,9 +327,9 @@ endif
 TRANSLATE_LINKER_FILE_LIST = cat -
 EXT_LINKER_CMD_FLAG = @
 
-GECKO_SDK = third_party/gecko_1.8/win32
+GECKO_SDK = $(GECKO_BASE)/win32
 
-FF_LIBS = $(GECKO_SDK)/gecko_sdk/lib/xpcom.lib $(GECKO_SDK)/gecko_sdk/lib/xpcomglue_s.lib $(GECKO_SDK)/gecko_sdk/lib/nspr4.lib $(GECKO_SDK)/gecko_sdk/lib/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib comdlg32.lib
+FF_LIBS = $(GECKO_LIB)/xpcom.lib $(GECKO_LIB)/xpcomglue_s.lib $(GECKO_LIB)/nspr4.lib $(GECKO_LIB)/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib comdlg32.lib
 IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib comdlg32.lib
 IEMOBILE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib cellcore.lib htmlview.lib imaging.lib toolhelp.lib aygshell.lib
 NPAPI_LIBS = 
@@ -369,6 +378,15 @@ M4FLAGS  += -DPRODUCT_VERSION_BUILD=$(BUILD)
 M4FLAGS  += -DPRODUCT_VERSION_PATCH=$(PATCH)
 
 M4FLAGS  += -DPRODUCT_OS=$(OS)
+ifeq ($(ARCH), i386)
+M4FLAGS  += -DPRODUCT_ARCH="x86"
+else
+M4FLAGS  += -DPRODUCT_ARCH="$(ARCH)"
+endif
+
+M4FLAGS  += -DPRODUCT_GCC_VERSION="gcc3"
+M4FLAGS  += -DPRODUCT_MAINTAINER="google"
+M4FLAGS  += -DPRODUCT_TARGET_APPLICATION="firefox"
 
 # These three macros are suggested by the GNU make documentation for creating
 # a comma-separated list.

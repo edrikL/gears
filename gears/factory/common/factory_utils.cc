@@ -42,6 +42,13 @@
 #include "gears/factory/safari/factory_utils.h"
 #endif
 
+#if defined(GECKO_19)
+#include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_sdk/include/nsISupportsPrimitives.h>
+#include <gecko_sdk/include/nsIProperties.h>
+#include <gecko_internal/nsIDOMWindowInternal.h>
+#include <gecko_internal/nsIPromptService.h>
+#endif
 
 const char16 *kAllowedClassVersion = STRING16(L"1.0");
 

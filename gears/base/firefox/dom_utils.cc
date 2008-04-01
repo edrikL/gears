@@ -36,6 +36,9 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_internal/nsIDocShell.h>
 #include <gecko_internal/nsIDocShellTreeItem.h>
 #include <gecko_internal/nsIDocShellTreeOwner.h>
+#if defined(GECKO_19)
+#include <gecko_internal/nsDOMJSUtils.h>
+#endif
 #include <gecko_internal/nsIDOM3Node.h>
 #include <gecko_internal/nsIDOMWindowInternal.h>
 #include <gecko_internal/nsIInterfaceInfoManager.h>
@@ -57,6 +60,12 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 // The IID for nsIContent in different versions of Firefox/Gecko
 // TODO(michaeln): Add to this list as new versions show up
 
+#if defined(GECKO_19)
+// Firefox 3.0.x
+#define NS_ICONTENT_IID_GECKO190 \
+{ 0xd3434698, 0x3a16, 0x4dbe, \
+  { 0x9d, 0xed, 0xbe, 0x64, 0x16, 0x1a, 0xa3, 0x52 } }
+#else
 // Firefox 1.5.0.x
 #define NS_ICONTENT_IID_GECKO180 \
 { 0x3fecc374, 0x2839, 0x4db3, \
@@ -67,9 +76,15 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 { 0x9d059608, 0xddb0, 0x4e6a, \
   { 0x99, 0x69, 0xd2, 0xf3, 0x63, 0xa1, 0xb5, 0x57 } }
 
+#endif
+
 static const nsIID kPossibleNsContentIIDs[] = {
+#if defined(GECKO_19)
+      NS_ICONTENT_IID_GECKO190,
+#else
       NS_ICONTENT_IID_GECKO180,
-      NS_ICONTENT_IID_GECKO181
+      NS_ICONTENT_IID_GECKO181,
+#endif
     };
 
 
@@ -241,7 +256,7 @@ static bool VerifyNsContent(nsISupports *unknown) {
     // a positive test indicates 'unknown' is not script based.
     nsCOMPtr<nsISupports> nscontent;
     rv = unknown->QueryInterface(*ns_content_iid,
-                                 NS_REINTERPRET_CAST(void**, &nscontent));
+                                 reinterpret_cast<void**>(&nscontent));
     if (NS_SUCCEEDED(rv) && nscontent) {
       return true;
     }

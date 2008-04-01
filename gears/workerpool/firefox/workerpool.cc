@@ -69,9 +69,16 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_sdk/include/nsServiceManagerUtils.h> // for NS_IMPL_*
                                                      // and NS_INTERFACE_*
 #include <gecko_sdk/include/nsCOMPtr.h>
+#if !defined(GECKO_19)
+#include <gecko_sdk/include/pratom.h>
+#endif
 #include <gecko_internal/jsapi.h>
 #include <gecko_internal/nsIDOMClassInfo.h> // for *_DOM_CLASSINFO
+#if defined(GECKO_19)
+#include <gecko_internal/nsThreadUtils.h> // for event loop
+#else
 #include <gecko_internal/nsIEventQueueService.h> // for event loop
+#endif
 #include <gecko_internal/nsIJSContextStack.h>
 #include <gecko_internal/nsIJSRuntimeService.h>
 #include <gecko_internal/nsIScriptContext.h>
@@ -81,6 +88,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 
 #include "ff/genfiles/database.h"
 #include "ff/genfiles/localserver.h"
+#include "gears/base/common/async_router.h"
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/js_runner.h"
@@ -163,7 +171,16 @@ struct JavaScriptWorkerInfo {
   scoped_ptr<JsRootedCallback> onmessage_handler;
   scoped_ptr<JsRootedCallback> onerror_handler;
 
-  nsCOMPtr<nsIEventQueue> thread_event_queue;
+  // thread_events_handle holds a pointer to an object which holds the thread's
+  // event queue.  This is different in FF2 and FF3, because the event queue
+  // was moved onto the nsIThread object in FF3.
+#if defined(GECKO_19)
+  nsCOMPtr<nsIThread> thread_events_handle;
+#else
+
+  nsCOMPtr<nsIEventQueue> thread_events_handle;
+#endif
+  ThreadId thread_id;
   std::queue<WorkerPoolMessage*> message_queue;
 
   bool is_invoking_error_handler;  // prevents recursive onerror
@@ -483,7 +500,7 @@ enum ThreadsEventType {
   EVENT_TYPE_ERROR = 1
 };
 
-struct ThreadsEvent {
+struct ThreadsEvent : public AsyncFunctor {
   ThreadsEvent(JavaScriptWorkerInfo *worker_info, ThreadsEventType event_type)
       : wi(worker_info), type(event_type) {
     wi->threads_manager->AddWorkerRef();
@@ -493,10 +510,16 @@ struct ThreadsEvent {
     wi->threads_manager->ReleaseWorkerRef();
   }
 
-  PLEvent e; // PLEvent must be first field
+  virtual void Run();
+
   JavaScriptWorkerInfo *wi;
   ThreadsEventType type;
 };
+
+// Called when the event is received.
+void ThreadsEvent::Run() {
+  PoolThreadsManager::OnReceiveThreadsEvent(this);
+}
 
 
 // Called when the event is received.
@@ -525,13 +548,6 @@ void* PoolThreadsManager::OnReceiveThreadsEvent(ThreadsEvent *event) {
 
   return NULL; // retval only matters for PostSynchronousEvent()
 }
-
-
-// Called when the event has been processed.
-static void OnDestroyThreadsEvent(ThreadsEvent *event) {
-  delete event;
-}
-
 
 void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
                                         const WorkerPoolMessage &msg) {
@@ -712,12 +728,9 @@ void PoolThreadsManager::HandleError(const JsErrorInfo &error_info) {
     dest_wi->message_queue.push(new WorkerPoolMessage(
         NULL, text, src_worker_id, dest_wi->script_origin));
     // Notify the receiving worker.
-    ThreadsEvent *event = new ThreadsEvent(dest_wi, EVENT_TYPE_ERROR);
-    dest_wi->thread_event_queue->InitEvent(
-        &event->e, nsnull, // event, owner
-        reinterpret_cast<PLHandleEventProc>(OnReceiveThreadsEvent),
-        reinterpret_cast<PLDestroyEventProc>(OnDestroyThreadsEvent));
-    dest_wi->thread_event_queue->PostEvent(&event->e);
+    AsyncRouter::GetInstance()->CallAsync(
+        dest_wi->thread_id,
+        new ThreadsEvent(dest_wi, EVENT_TYPE_ERROR));
   }
 }
 
@@ -786,7 +799,7 @@ bool PoolThreadsManager::PutPoolMessage(MarshaledJsToken* mjt,
   }
   JavaScriptWorkerInfo *dest_wi = worker_info_[dest_worker_id];
   if (NULL == dest_wi || NULL == dest_wi->threads_manager ||
-      NULL == dest_wi->thread_event_queue) {
+      NULL == dest_wi->thread_events_handle) {
     return false;
   }
 
@@ -794,14 +807,10 @@ bool PoolThreadsManager::PutPoolMessage(MarshaledJsToken* mjt,
   dest_wi->message_queue.push(
       new WorkerPoolMessage(mjt, text, src_worker_id, src_origin));
   // Notify the receiving worker.
-  ThreadsEvent *event = new ThreadsEvent(dest_wi, EVENT_TYPE_MESSAGE);
-  dest_wi->thread_event_queue->InitEvent(
-      &event->e, nsnull, // event, owner
-      reinterpret_cast<PLHandleEventProc>(OnReceiveThreadsEvent),
-      reinterpret_cast<PLDestroyEventProc>(OnDestroyThreadsEvent));
-  dest_wi->thread_event_queue->PostEvent(&event->e);
-
-  return true; // succeeded
+  AsyncRouter::GetInstance()->CallAsync(
+      dest_wi->thread_id,
+      new ThreadsEvent(dest_wi, EVENT_TYPE_MESSAGE));
+  return true;
 }
 
 
@@ -824,10 +833,11 @@ bool PoolThreadsManager::InitWorkerThread(JavaScriptWorkerInfo *wi) {
 
   // Sanity-check that we're not calling this twice. Doing so would mean we
   // created multiple hwnds for the same worker, which would be bad.
-  assert(!wi->thread_event_queue);
+  assert(!wi->thread_events_handle);
 
   // Register this worker so that it can be looked up by OS thread ID.
-  PRThread *os_thread_id = PR_GetCurrentThread();
+  ThreadId os_thread_id =
+      ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
   worker_id_to_os_thread_id_.push_back(os_thread_id);
 
   // Also get the event queue for this worker.
@@ -841,6 +851,12 @@ bool PoolThreadsManager::InitWorkerThread(JavaScriptWorkerInfo *wi) {
   // but child workers will not.
   nsresult nr;
 
+  wi->thread_id = os_thread_id;
+#if defined(GECKO_19)
+  nsIThread *thread;
+  nr = NS_GetCurrentThread(&thread);
+  wi->thread_events_handle = thread;
+#else
   nsCOMPtr<nsIEventQueueService> event_queue_service =
       do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &nr);
   if (NS_FAILED(nr)) {
@@ -863,7 +879,9 @@ bool PoolThreadsManager::InitWorkerThread(JavaScriptWorkerInfo *wi) {
     }
   }
 
-  wi->thread_event_queue = event_queue;
+  wi->thread_events_handle = event_queue;
+#endif
+  ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
   return true;
 }
 
@@ -966,7 +984,7 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
 
     // If the creating thread didn't intialize properly it doesn't have a
     // message queue, so there's no point in letting it start a new thread.
-    if (!worker_info_[GetCurrentPoolWorkerId()]->thread_event_queue) {
+    if (!worker_info_[GetCurrentPoolWorkerId()]->thread_events_handle) {
       return false;
     }
 
@@ -1090,12 +1108,18 @@ void PoolThreadsManager::JavaScriptThreadEntry(void *args) {
 
     // Pump messages. We do this whether or not the initial script evaluation
     // succeeded (just like in browsers).
-    assert(wi->thread_event_queue);
+    assert(wi->thread_events_handle);
     while (1) {
+#if defined(GECKO_19)
+      if (!NS_ProcessNextEvent(wi->thread_events_handle)) {
+        break;
+      }
+#else
       // (based on sample code in /mozilla/netwerk/test/... [sic])
       PLEvent *event;
-      wi->thread_event_queue->WaitForEvent(&event);
-      wi->thread_event_queue->HandleEvent(event);
+      wi->thread_events_handle->WaitForEvent(&event);
+      wi->thread_events_handle->HandleEvent(event);
+#endif
       // Check flag after handling, otherwise last event never gets deleted.
       if (wi->threads_manager->is_shutting_down_) {
         break;
@@ -1227,7 +1251,7 @@ void PoolThreadsManager::ShutDown() {
     }
 
     // If the worker is a created thread...
-    if (wi->thread_pointer && wi->thread_event_queue) {
+    if (wi->thread_pointer && wi->thread_events_handle) {
       // Ensure the thread isn't waiting on 'script_signalled'.
       wi->script_mutex.Lock();
       wi->script_signalled = true;
@@ -1235,12 +1259,9 @@ void PoolThreadsManager::ShutDown() {
 
       // Ensure the thread sees 'is_shutting_down_' by sending a dummy message,
       // in case it is blocked waiting for messages.
-      ThreadsEvent *event = new ThreadsEvent(wi, EVENT_TYPE_MESSAGE);
-      wi->thread_event_queue->InitEvent(
-          &event->e, nsnull, // event, owner
-          reinterpret_cast<PLHandleEventProc>(OnReceiveThreadsEvent),
-          reinterpret_cast<PLDestroyEventProc>(OnDestroyThreadsEvent));
-      wi->thread_event_queue->PostEvent(&event->e);
+      AsyncRouter::GetInstance()->CallAsync(
+          wi->thread_id,
+          new ThreadsEvent(wi, EVENT_TYPE_MESSAGE));
 
       // TODO(cprince): Improve handling of a worker spinning in a JS busy loop.
       // Ideas: (1) set it to the lowest thread priority level, or (2) interrupt

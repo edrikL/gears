@@ -94,8 +94,13 @@ static bool JsTokenToModule(JsContextPtr context, JsToken in,
   if (NS_FAILED(nr))
     return false;
 
+#ifdef GECKO_19
+  nsAXPCNativeCallContext *ncc;
+  nr = xpc->GetCurrentNativeCallContext(&ncc);
+#else
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
   nr = xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+#endif
   if (NS_FAILED(nr))
     return false;
 
@@ -1631,8 +1636,7 @@ JsCallContext::JsCallContext(JsContextPtr cx, JsRunnerInterface *js_runner,
                              int argc, JsToken *argv, JsToken *retval)
     : js_context_(cx), is_exception_set_(false),
       argc_(argc), argv_(argv), retval_(retval),
-      js_runner_(js_runner),
-      xpc_(NULL), ncc_(NULL) {}
+      js_runner_(js_runner), xpc_(NULL) {}
 
 
 void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
@@ -1646,8 +1650,23 @@ void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
 void JsCallContext::SetException(const std::string16 &message) {
   assert(!message.empty());
   is_exception_set_ = true;
+
+  nsresult nr = NS_OK;
+#ifdef GECKO_19
+  nsAXPCNativeCallContext *ncc = NULL;
+  if (xpc_) {
+    nr = xpc_->GetCurrentNativeCallContext(&ncc);
+  }
+#else
+  nsCOMPtr<nsIXPCNativeCallContext> ncc;
+  if (xpc_) {
+    nr = xpc_->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  }
+#endif
+
   JsSetException(js_context_, js_runner_, message.c_str(),
-                 ncc_ != NULL ? true : false); // notify_native_call_context
+                 ncc && NS_SUCCEEDED(nr) ?
+                     true : false); // notify_native_call_context
 }
 
 #elif BROWSER_IE
@@ -1952,14 +1971,20 @@ JsParamFetcher::JsParamFetcher(ModuleImplBaseClass *obj) {
     nsresult nr;
     xpc_ = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
     if (xpc_ && NS_SUCCEEDED(nr)) {
-      nr = xpc_->GetCurrentNativeCallContext(getter_AddRefs(ncc_));
-      if (ncc_ && NS_SUCCEEDED(nr)) {
-        ncc_->GetJSContext(&js_context_);
+#ifdef GECKO_19
+      nsAXPCNativeCallContext *ncc = NULL;
+      nr = xpc_->GetCurrentNativeCallContext(&ncc);
+#else
+      nsCOMPtr<nsIXPCNativeCallContext> ncc;
+      nr = xpc_->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+#endif
+      if (ncc && NS_SUCCEEDED(nr)) {
+        ncc->GetJSContext(&js_context_);
         PRUint32 argc;
-        ncc_->GetArgc(&argc);
+        ncc->GetArgc(&argc);
         js_argc_ = static_cast<int>(argc);
-        ncc_->GetArgvPtr(&js_argv_);
-        ncc_->GetRetValPtr(&js_retval_);
+        ncc->GetArgvPtr(&js_argv_);
+        ncc->GetRetValPtr(&js_retval_);
       }
     }
   }
@@ -2066,8 +2091,18 @@ void JsParamFetcher::SetReturnValue(JsToken retval) {
   if (js_retval_) {
     *js_retval_ = retval;
 
-    if (ncc_ != NULL) {
-      ncc_->SetReturnValueWasSet(PR_TRUE);
+    if (xpc_) {
+      nsresult nr;
+#ifdef GECKO_19
+      nsAXPCNativeCallContext *ncc = NULL;
+      nr = xpc_->GetCurrentNativeCallContext(&ncc);
+#else
+      nsCOMPtr<nsIXPCNativeCallContext> ncc;
+      nr = xpc_->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+#endif
+      if (ncc &&  NS_SUCCEEDED(nr)) {
+        ncc->SetReturnValueWasSet(PR_TRUE);
+      }
     }
   }
 }
@@ -2095,8 +2130,13 @@ JsNativeMethodRetval JsSetException(JsContextPtr cx,
     xpc = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
     if (!xpc || NS_FAILED(nr)) { return retval; }
 
+#ifdef GECKO_19
+    nsAXPCNativeCallContext *ncc = NULL;
+    nr = xpc->GetCurrentNativeCallContext(&ncc);
+#else
     nsCOMPtr<nsIXPCNativeCallContext> ncc;
     nr = xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+#endif
     if (!ncc || NS_FAILED(nr)) { return retval; }
 
     // To make XPConnect display a user-defined exception message, we must
