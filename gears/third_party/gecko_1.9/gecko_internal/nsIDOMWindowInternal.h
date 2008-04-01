@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM e:/builds/tinderbox/XR-Trunk/WINNT_5.2_Depend/mozilla/dom/public/idl/base/nsIDOMWindowInternal.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0.4beta/mozilla/dom/public/idl/base/nsIDOMWindowInternal.idl
  */
 
 #ifndef __gen_nsIDOMWindowInternal_h__
@@ -24,11 +24,11 @@ class nsIVariant; /* forward declaration */
 
 
 /* starting interface:    nsIDOMWindowInternal */
-#define NS_IDOMWINDOWINTERNAL_IID_STR "86f7b733-aff9-469a-9e8c-2996f7db2720"
+#define NS_IDOMWINDOWINTERNAL_IID_STR "89b9ff5a-78db-430b-b3b4-66469457435a"
 
 #define NS_IDOMWINDOWINTERNAL_IID \
-  {0x86f7b733, 0xaff9, 0x469a, \
-    { 0x9e, 0x8c, 0x29, 0x96, 0xf7, 0xdb, 0x27, 0x20 }}
+  {0x89b9ff5a, 0x78db, 0x430b, \
+    { 0xb3, 0xb4, 0x66, 0x46, 0x94, 0x57, 0x43, 0x5a }}
 
 class NS_NO_VTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
  public: 
@@ -236,8 +236,8 @@ class NS_NO_VTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
    * 
    * See the WHATWG HTML5 specification, section 6.4, for more details.
    */
-  /* [binaryname (PostMessageMoz)] void postMessage (in DOMString message); */
-  NS_IMETHOD PostMessageMoz(const nsAString & message) = 0;
+  /* [binaryname (PostMessageMoz)] void postMessage (in DOMString message, [optional] in DOMString origin); */
+  NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & origin) = 0;
 
 };
 
@@ -312,7 +312,7 @@ class NS_NO_VTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
   NS_IMETHOD Btoa(const nsAString & aBase64Data, nsAString & _retval); \
   NS_IMETHOD GetFrameElement(nsIDOMElement * *aFrameElement); \
   NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval); \
-  NS_IMETHOD PostMessageMoz(const nsAString & message); 
+  NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & origin); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMWINDOWINTERNAL(_to) \
@@ -383,7 +383,7 @@ class NS_NO_VTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
   NS_IMETHOD Btoa(const nsAString & aBase64Data, nsAString & _retval) { return _to Btoa(aBase64Data, _retval); } \
   NS_IMETHOD GetFrameElement(nsIDOMElement * *aFrameElement) { return _to GetFrameElement(aFrameElement); } \
   NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval) { return _to ShowModalDialog(aURI, aArgs, aOptions, _retval); } \
-  NS_IMETHOD PostMessageMoz(const nsAString & message) { return _to PostMessageMoz(message); } 
+  NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & origin) { return _to PostMessageMoz(message, origin); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMWINDOWINTERNAL(_to) \
@@ -454,7 +454,7 @@ class NS_NO_VTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
   NS_IMETHOD Btoa(const nsAString & aBase64Data, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Btoa(aBase64Data, _retval); } \
   NS_IMETHOD GetFrameElement(nsIDOMElement * *aFrameElement) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFrameElement(aFrameElement); } \
   NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ShowModalDialog(aURI, aArgs, aOptions, _retval); } \
-  NS_IMETHOD PostMessageMoz(const nsAString & message) { return !_to ? NS_ERROR_NULL_POINTER : _to->PostMessageMoz(message); } 
+  NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & origin) { return !_to ? NS_ERROR_NULL_POINTER : _to->PostMessageMoz(message, origin); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -870,8 +870,8 @@ NS_IMETHODIMP nsDOMWindowInternal::ShowModalDialog(const nsAString & aURI, nsIVa
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* [binaryname (PostMessageMoz)] void postMessage (in DOMString message); */
-NS_IMETHODIMP nsDOMWindowInternal::PostMessageMoz(const nsAString & message)
+/* [binaryname (PostMessageMoz)] void postMessage (in DOMString message, [optional] in DOMString origin); */
+NS_IMETHODIMP nsDOMWindowInternal::PostMessageMoz(const nsAString & message, const nsAString & origin)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
