@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Darwin_8.8.4_Depend/mozilla/xpcom/ds/nsIArray.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM /Users/aa/src-mozilla/mozilla/xpcom/ds/nsIArray.idl
  */
 
 #ifndef __gen_nsIArray_h__

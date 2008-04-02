@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Darwin_8.8.4_Depend/mozilla/xpcom/components/nsIComponentManager.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM /Users/aa/src-mozilla/mozilla/xpcom/components/nsIComponentManager.idl
  */
 
 #ifndef __gen_nsIComponentManager_h__

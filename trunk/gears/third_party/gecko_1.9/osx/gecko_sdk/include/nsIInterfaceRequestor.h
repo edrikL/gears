@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Darwin_8.8.4_Depend/mozilla/xpcom/base/nsIInterfaceRequestor.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM /Users/aa/src-mozilla/mozilla/xpcom/base/nsIInterfaceRequestor.idl
  */
 
 #ifndef __gen_nsIInterfaceRequestor_h__

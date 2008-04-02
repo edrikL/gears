@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Darwin_8.8.4_Depend/mozilla/xpcom/ds/nsIMutableArray.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM /Users/aa/src-mozilla/mozilla/xpcom/ds/nsIMutableArray.idl
  */
 
 #ifndef __gen_nsIMutableArray_h__

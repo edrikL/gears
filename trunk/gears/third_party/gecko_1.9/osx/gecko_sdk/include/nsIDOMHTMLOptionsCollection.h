@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Darwin_8.8.4_Depend/mozilla/dom/public/idl/html/nsIDOMHTMLOptionsCollection.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM /Users/aa/src-mozilla/mozilla/dom/public/idl/html/nsIDOMHTMLOptionsCollection.idl
  */
 
 #ifndef __gen_nsIDOMHTMLOptionsCollection_h__

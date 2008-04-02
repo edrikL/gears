@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Darwin_8.8.4_Depend/mozilla/netwerk/protocol/http/public/nsIHttpHeaderVisitor.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM /Users/aa/src-mozilla/mozilla/netwerk/protocol/http/public/nsIHttpHeaderVisitor.idl
  */
 
 #ifndef __gen_nsIHttpHeaderVisitor_h__

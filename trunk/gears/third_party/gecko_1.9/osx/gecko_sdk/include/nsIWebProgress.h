@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Darwin_8.8.4_Depend/mozilla/uriloader/base/nsIWebProgress.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM /Users/aa/src-mozilla/mozilla/uriloader/base/nsIWebProgress.idl
  */
 
 #ifndef __gen_nsIWebProgress_h__

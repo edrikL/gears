@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Darwin_8.8.4_Depend/mozilla/dom/public/idl/base/nsIDOMWindow2.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM /Users/aa/src-mozilla/mozilla/dom/public/idl/base/nsIDOMWindow2.idl
  */
 
 #ifndef __gen_nsIDOMWindow2_h__

@@ -1,23 +1,30 @@
-Win32, Linux-i386 and OSX prerelease version of Gecko 1.9 SDK. This was downloaded from here on 4 March 2008:
+Win32, Linux-i386 and OSX prerelease version of Gecko 1.9 SDK.
+
+The win32 and linux subdirectories were downloaded from here on 4 March 2008:
 
        http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9b5pre.en-US.*.sdk.*
 
-       Then...
+The osx subdirectory was incomplete. The xpidl utility was missing and the
+libraries were only compiled for PPC.
 
-       1. It was unzipped.
-       2. For sdk/ contents, regular-file contents of /include moved down to root of /include (because the way we set up 1.8 didn't allow for relative paths in #includes). Contents of bin/lib/idl moved appropriately.
-       3. For remaining stuff in non-SDK portion, attempted to build project about 1,000 times using the following script magic:
+To get the osx directory, we built a universal gecko SDK from scratch:
 
-       make FF_MOD=experimental_19 2>&1 | grep -o "[a-zA-Z0-9_-]\+\.h" | xargs -n 1 find /tmp/xulrunner-sdk/ -name | sort -u | xargs -n 1 cp -t /home/miket/src/gears/googleclient/gears/third_party/gecko_1.9/gecko_internal/ && make FF_MOD=experimental_19
+1) Copy third_party/gecko_1.9/osx/mozconfig to ~/.mozconfig (note leading period)
+2) cvs -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot co -r BRANCH mozilla/client.mk mozilla/browser/config/mozconfig mozilla/build/macosx/universal/mozconfig
+  * Note: replace BRANCH with the tag of the release you want to checkout, eg
+    FIREFOX_3_0b4_RELEASE.
+3) make -f client.mk checkout
+  * Note: I noticed that the cvs client on my mac did not work correctly with
+    mozilla's cvs server. I was getting many errors attempting to move
+    directories. I worked around this by checking out on a linux workstation.
+4) make -f client.mk build
+5) Many of the universal libraries are now available in %TOPSRCDIR%/obj-xulrunner/ppc/dist/universal/xulrunner/XUL.framework/Versions/Current
+6) A universal version of libxpcomglue_s.a was created by hand using:
+    lipo -create i386/dist/sdk/lib/libxpcomglue_s.a ppc/dist/sdk/lib/libxpcomglue_s.a -output libxpcomglue_s.a
+7) .jar files were copied from the i386 directory (they are non-binary).
+8) The bin/ directory was copied from the i386 directory (these are only used at
+   build-time and do not need to work on ppc).
 
-       which, in English, builds Gears using the experimental_19 flag, checks the output for missing header files, copies those header files into the gecko_internal directory, and tries to build again. I then set up dunking birds to alternate pressing the up-arrow and Enter keys on my keyboard, and when I got back from lunch, Gears built successfully on 1.9. The purpose of doing this, by the way, was to have the minimum of the internals of Gecko's SDK added to our project. Ideally, we wouldn't need any of gecko_internal at all.
-
-       With this CL, we can build on Linux-i386 with "make FF_MOD=experimental_19" to create a version of Gears that does not yet work (it's untested and is known to have some necessary code commented out). Next steps:
-       1. Submit this CL. This will unblock our Nokia friends, who will then be able to add the maemo-ARM version of the SDK in a way that's compatible with our new 1.8/1.9 side-by-side layout, and hopefully fix the 1.9-specific issues that they find in the process.
-       2. We continue working on the experimental_19 build and get Gears working for Linux Firefox 3.0.
-       3. We add the win32/osx versions of the Gecko 1.9 SDK, and confirm that they build and work, too.
-       4. We update all versions of the Gecko SDKs (1.8/1.9 for all platforms) to the final released versions.
-
-TODO(cprince): update this README as the more imminent issues described herein are resolved.
-
--- Mike Tsao <miket@google.com>, 21 Dec 2007
+Steps similar to 1-4 (but perhaps without the reference to universal in
+mozconfig) should be used to create a fresh copy of the SDK for all platforms
+when FF3 is final.

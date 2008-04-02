@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Darwin_8.8.4_Depend/mozilla/docshell/base/nsIGlobalHistory.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM /Users/aa/src-mozilla/mozilla/docshell/base/nsIGlobalHistory.idl
  */
 
 #ifndef __gen_nsIGlobalHistory_h__
