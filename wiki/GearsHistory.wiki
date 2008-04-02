@@ -2,6 +2,7 @@
 
 A brief history of the Google Gears project.
 
+  * 2008/04/02 - Mobile version of Picasa Web Albums adds offline support. ([http://googlephotos.blogspot.com/2008/03/more-good-news-for-mobile.html story])
   * 2008/03/31 - Google Docs adds offline support and desktop integration. ([http://googledocs.blogspot.com/2008/03/bringing-cloud-with-you.html story])
 
   * 2008/03/03 - Gears adds support for [http://gearsblog.blogspot.com/2008/03/google-gears-in-your-pocket.html Windows Mobile] devices.
