@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Darwin_8.8.4_Depend/mozilla/modules/libpref/public/nsIPrefService.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM /Users/aa/src-mozilla/mozilla/modules/libpref/public/nsIPrefService.idl
  */
 
 #ifndef __gen_nsIPrefService_h__

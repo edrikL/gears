@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Darwin_8.8.4_Depend/mozilla/js/src/xpconnect/idl/mozIJSSubScriptLoader.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM /Users/aa/src-mozilla/mozilla/js/src/xpconnect/idl/mozIJSSubScriptLoader.idl
  */
 
 #ifndef __gen_mozIJSSubScriptLoader_h__

@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Darwin_8.8.4_Depend/mozilla/security/manager/ssl/public/nsIX509CertDB.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM /Users/aa/src-mozilla/mozilla/security/manager/ssl/public/nsIX509CertDB.idl
  */
 
 #ifndef __gen_nsIX509CertDB_h__

@@ -196,7 +196,12 @@ EXT_LINKER_CMD_FLAG = -Xlinker -filelist -Xlinker
 GECKO_SDK = $(GECKO_BASE)/osx
 OSX_SDK_ROOT = /Developer/SDKs/MacOSX10.4u.sdk
 
-FF_LIBS = -L$(GECKO_SDK)/gecko_sdk/bin -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4 -lxpcom_core
+FF_LIBS = -L$(GECKO_SDK)/gecko_sdk/bin -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4
+ifeq ($(FF_MOD), experimental_19)
+FF_LIBS +=  $(GECKO_SDK)/gecko_sdk/lib/XUL $(GECKO_SDK)/gecko_sdk/lib/libxpcomglue_s.a -lsqlite3 -lsmime3 -lssl3 -lnss3 -lnssutil3 -lsoftokn3
+else
+FF_LIBS +=  -lxpcom_core
+endif
 endif
 
 ######################################################################

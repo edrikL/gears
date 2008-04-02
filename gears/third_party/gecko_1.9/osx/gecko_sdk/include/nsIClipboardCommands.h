@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Darwin_8.8.4_Depend/mozilla/webshell/public/nsIClipboardCommands.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM /Users/aa/src-mozilla/mozilla/webshell/public/nsIClipboardCommands.idl
  */
 
 #ifndef __gen_nsIClipboardCommands_h__

@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Darwin_8.8.4_Depend/mozilla/dom/public/idl/storage/nsIDOMStorage.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM /Users/aa/src-mozilla/mozilla/dom/public/idl/storage/nsIDOMStorage.idl
  */
 
 #ifndef __gen_nsIDOMStorage_h__

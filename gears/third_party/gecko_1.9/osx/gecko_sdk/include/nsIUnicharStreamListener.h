@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Darwin_8.8.4_Depend/mozilla/netwerk/base/public/nsIUnicharStreamListener.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM /Users/aa/src-mozilla/mozilla/netwerk/base/public/nsIUnicharStreamListener.idl
  */
 
 #ifndef __gen_nsIUnicharStreamListener_h__

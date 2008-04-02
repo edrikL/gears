@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Darwin_8.8.4_Depend/mozilla/embedding/browser/webBrowser/nsITooltipListener.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM /Users/aa/src-mozilla/mozilla/embedding/browser/webBrowser/nsITooltipListener.idl
  */
 
 #ifndef __gen_nsITooltipListener_h__
