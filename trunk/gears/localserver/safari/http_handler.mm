@@ -26,6 +26,11 @@
 #import "gears/base/safari/loader.h"
 #import "gears/localserver/safari/http_handler.h"
 
+// SAFARI-TEMP
+bool TurnOnURLInterception() {
+  return [GearsHTTPHandler registerHandler];
+}
+
 // The NSHTTPURLResponse doesn't have a way to set the status code, so we'll
 // subclass and override the statusCode method
 @interface GearsNSHTTPURLResponse : NSHTTPURLResponse {
@@ -41,7 +46,6 @@
 - (int)statusCode {
   return statusCode_ ? statusCode_ : [super statusCode];
 }
-
 @end
 
 // The actual GearsWebCacheDB is not linked in with this file.  It is looked up
@@ -55,8 +59,9 @@
 @implementation GearsHTTPHandler
 //------------------------------------------------------------------------------
 + (BOOL)registerHandler {
-  if (![GearsLoader loadGearsBundle])
-    return NO;
+// SAFARI-TEMP
+//  if (![GearsLoader loadGearsBundle])
+//    return NO;
   
   return [NSURLProtocol registerClass:[self class]];
 }
@@ -98,7 +103,6 @@
   
   if (!mimeType)
     mimeType = @"text/html";
-  
   // Create a HTTP response with the cached status code
   GearsNSHTTPURLResponse *response =
     [[GearsNSHTTPURLResponse alloc] initWithURL:url MIMEType:mimeType

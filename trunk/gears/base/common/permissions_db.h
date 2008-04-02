@@ -74,7 +74,12 @@ class PermissionsDB {
 
   // Returns true if the origin has permission to use Gears.
   bool IsOriginAllowed(const SecurityOrigin &origin) {
+// SAFARI-TEMP
+#ifdef BROWSER_WEBKIT
+    return true;
+#else
     return GetCanAccessGears(origin) == PERMISSION_ALLOWED;
+#endif
   }
 
   // Gets all the origins with a specific value.

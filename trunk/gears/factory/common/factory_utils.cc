@@ -166,6 +166,10 @@ bool HasPermissionToUseGears(GearsFactory *factory,
 
   // Display the modal dialog. Should not happen in a faceless worker.
   assert(!factory->EnvIsWorker());
+// SAFARI-TEMP
+#ifdef BROWSER_WEBKIT
+  return true;
+#else
   factory->permission_state_ = ShowPermissionsPrompt(origin,
                                                      custom_icon_url,
                                                      custom_name,
@@ -177,6 +181,7 @@ bool HasPermissionToUseGears(GearsFactory *factory,
     return true;
   }
   return false;
+#endif
 }
 
 #ifdef BROWSER_SAFARI
