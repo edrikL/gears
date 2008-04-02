@@ -23,6 +23,20 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef GEARS_LOCALSERVER_SAFARI_HTTP_HANDLER_H__
+#define GEARS_LOCALSERVER_SAFARI_HTTP_HANDLER_H__
+
+// begin SAFARI-TEMP
+// In production, we load the interception hook from obj-c
+// in which case we won't need the TurnOnURLInterception() method.
+#if defined(__cplusplus)
+
+// Start filtering URLs through Gears.
+bool TurnOnURLInterception();
+#endif 
+// end SAFARI-TEMP
+
+#if defined(__OBJC__)
 #import <Foundation/Foundation.h>
 
 // Protocol handler to intercept requests for pages/data that are in the Gears
@@ -48,3 +62,6 @@
 - (void)stopLoading;
 
 @end
+#endif  // __OBJC__
+
+#endif  // GEARS_LOCALSERVER_SAFARI_HTTP_HANDLER_H__
