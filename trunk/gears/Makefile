@@ -1383,6 +1383,7 @@ FF_IDLSRCS	+= \
 
 FF_CPPSRCS	+= \
 		blob_ff.cc \
+		blob_input_stream_ff.cc \
 		blob_test.cc \
 		buffer_blob.cc \
 		file_blob.cc \
@@ -1430,6 +1431,13 @@ IEMOBILE_CPPSRCS	+= \
 		buffer_blob.cc \
 		file_blob.cc \
 		slice_blob.cc \
+		$(NULL)
+endif
+
+# Blob internal tests
+ifneq ($(OFFICIAL_BUILD),1)
+FF_CPPSRCS	+= \
+		blob_input_stream_ff_test.cc \
 		$(NULL)
 endif
 

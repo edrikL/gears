@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,28 +13,34 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef GEARS_LOCALSERVER_FIREFOX_HTTP_REQUEST_FF_H__
 #define GEARS_LOCALSERVER_FIREFOX_HTTP_REQUEST_FF_H__
 
-#include <gecko_sdk/include/nsIInterfaceRequestor.h>
-#include <gecko_sdk/include/nsIStreamListener.h>
-#include <gecko_internal/nsIChannelEventSink.h>
-#include "ff/genfiles/localserver.h" // from OUTDIR
+#include <string>
+#include <vector>
+#include "gecko_sdk/include/nsIInterfaceRequestor.h"
+#include "gecko_sdk/include/nsIStreamListener.h"
+#include "gecko_internal/nsIChannelEventSink.h"
+#include "ff/genfiles/localserver.h"  // from OUTDIR
 #include "gears/base/common/common.h"
 #include "gears/base/common/security_model.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
+
+#ifndef OFFICIAL_BUILD
+class BlobInterface;
+#endif
 
 class nsIChannel;
 class nsIHttpChannel;
@@ -77,7 +83,7 @@ class FFHttpRequest : public HttpRequest,
 
   // Get or set the redirect behavior, the default is FOLLOW_ALL
   // May only be set prior to calling Send.
-  virtual RedirectBehavior GetRedirectBehavior() { 
+  virtual RedirectBehavior GetRedirectBehavior() {
     return redirect_behavior_;
   }
 
@@ -106,7 +112,7 @@ class FFHttpRequest : public HttpRequest,
   virtual bool Send();
   virtual bool SendString(const char16 *data);
 #ifndef OFFICIAL_BUILD
-  virtual bool SendBlob(BlobInterface *data);
+  virtual bool SendBlob(BlobInterface *blob);
 #endif  // !OFFICIAL_BUILD
   virtual bool GetAllResponseHeaders(std::string16 *headers);
   virtual bool GetResponseHeader(const char16 *name, std::string16 *header);
@@ -136,7 +142,7 @@ class FFHttpRequest : public HttpRequest,
                           const char *data,
                           int data_size);
   bool IsPostOrPut() {
-    return method_ == HttpConstants::kHttpPOST || 
+    return method_ == HttpConstants::kHttpPOST ||
            method_ == HttpConstants::kHttpPUT;
   }
 

@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,22 +13,23 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef GEARS_HTTPREQUEST_FIREFOX_HTTPREQUEST_FF_H__
 #define GEARS_HTTPREQUEST_FIREFOX_HTTPREQUEST_FF_H__
 
 #ifdef WIN32
-#include <windows.h> // must manually #include before nsIEventQueue.h
+#include <windows.h>  // must manually #include before nsIEventQueue.h
 #endif
+#include <utility>
 #include <vector>
 #include "ff/genfiles/httprequest.h" // from OUTDIR
 #include "gears/base/common/message_queue.h"
@@ -41,6 +42,8 @@
 #ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
 #include "gears/blob/blob_ff.h"
+#include "gears/base/common/scoped_refptr.h"
+class BlobInterface;
 #endif
 #include "gears/localserver/common/http_request.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
@@ -81,6 +84,9 @@ class GearsHttpRequest
     std::vector< std::pair<std::string16, std::string16> > headers;
     bool has_post_data;
     std::string16 post_data;
+#ifndef OFFICIAL_BUILD
+    scoped_refptr<BlobInterface> blob_;
+#endif
     RequestInfo() : has_post_data(false) {}
   };
 
@@ -146,8 +152,8 @@ class GearsHttpRequest
   }
 
   enum AsyncCallType {
-    kSend,  // invoked from apartment to execute on ui thread
-    kAbort, // invoked from apartment to execute on ui thread
+    kSend,   // invoked from apartment to execute on ui thread
+    kAbort,  // invoked from apartment to execute on ui thread
     kReadyStateChanged,  // invoked from ui to execute on apartment thread
     kDataAvailable  // invoked from ui to execute on apartment thread
   };
@@ -171,4 +177,4 @@ class GearsHttpRequest
 };
 
 
-#endif // GEARS_HTTPREQUEST_FIREFOX_HTTPREQUEST_FF_H__
+#endif  // GEARS_HTTPREQUEST_FIREFOX_HTTPREQUEST_FF_H__

@@ -75,6 +75,9 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/localserver/common/resource_store.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
+#if BROWSER_FF
+bool TestBlobInputStreamFf();  // from blob_input_stream_ff_test.cc
+#endif
 bool TestHttpCookies();
 bool TestHttpRequest();
 bool TestManifest();
@@ -182,6 +185,11 @@ void GearsTest::RunTests(JsCallContext *context) {
 
 #if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
   ok &= TestIpcMessageQueue();
+#endif
+#ifndef OFFICIAL_BUILD
+#if BROWSER_FF
+  ok &= TestBlobInputStreamFf();
+#endif
 #endif
 
   // We have to call GetDB again since TestCapabilitiesDBAll deletes

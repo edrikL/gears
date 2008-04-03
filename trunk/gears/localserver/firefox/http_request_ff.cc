@@ -51,6 +51,9 @@
 #include "gears/base/common/url_utils.h"
 #include "gears/localserver/firefox/cache_intercept.h"
 
+#ifndef OFFICIAL_BUILD
+#include "gears/blob/blob_input_stream_ff.h"
+#endif
 
 // Returns true if the currently executing thread is the main UI thread,
 // firefox/mozila has one such very special thread
@@ -317,6 +320,8 @@ bool FFHttpRequest::GetInitialUrl(std::string16 *full_url) {
 //------------------------------------------------------------------------------
 // Send, SendString, SendImpl
 //------------------------------------------------------------------------------
+// TODO(bgarcia): Consolidate all of these internal Send functions into a
+//                a single one that takes a blob.
 
 bool FFHttpRequest::Send() {
   if (IsPostOrPut()) {
@@ -325,7 +330,6 @@ bool FFHttpRequest::Send() {
     return SendImpl(NULL);
   }
 }
-
 
 bool FFHttpRequest::SendString(const char16 *data) {
   if (was_sent_ || !data) return false;
@@ -344,10 +348,12 @@ bool FFHttpRequest::SendString(const char16 *data) {
 }
 
 #ifndef OFFICIAL_BUILD
-bool FFHttpRequest::SendBlob(BlobInterface *data) {
-  // TODO(bgarcia): implement!
-  assert(false);
-  return false;
+bool FFHttpRequest::SendBlob(BlobInterface *blob) {
+  if (was_sent_) {
+    return false;
+  }
+  nsCOMPtr<BlobInputStream> blob_stream(new BlobInputStream(blob));
+  return SendImpl(blob_stream);
 }
 #endif  // !OFFICIAL_BUILD
 
@@ -379,7 +385,7 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
     }
 
     const int kGetLengthFromStream = -1;
-    rv = upload_channel->SetUploadStream(post_data_stream, 
+    rv = upload_channel->SetUploadStream(post_data_stream,
                                          content_type,
                                          kGetLengthFromStream);
     NS_ENSURE_SUCCESS(rv, false);
