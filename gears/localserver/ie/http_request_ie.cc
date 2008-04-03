@@ -35,6 +35,7 @@
 #ifdef OFFICIAL_BUILD
 #include "gears/base/ie/stream_buffer.h"
 #else  // !OFFICIAL_BUILD
+#include "gears/blob/blob_interface.h"
 #include "gears/blob/blob_stream_ie.h"
 #include "gears/blob/buffer_blob.h"
 #endif  // !OFFICIAL_BUILD
@@ -783,4 +784,3 @@ STDMETHODIMP IEHttpRequest::OnResponse(DWORD status_code,
   // so we return E_ABORT to avoid that delay.
   return (status_code == HttpConstants::HTTP_OK) ? S_OK  : E_ABORT;
 }
-

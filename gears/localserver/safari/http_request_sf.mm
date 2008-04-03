@@ -33,6 +33,9 @@
 #include "gears/base/common/url_utils.h"
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/safari/cf_string_utils.h"
+#ifndef OFFICIAL_BUILD
+#include "gears/blob/blob_interface.h"
+#endif  // !OFFICIAL_BUILD
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/safari/http_request_delegate.h"
 
@@ -281,7 +284,7 @@ bool SFHttpRequest::SendString(const char16 *data) {
 
 #ifndef OFFICIAL_BUILD
 bool SFHttpRequest::SendBlob(BlobInterface *data) {
-  // TODO(bpm): implement!
+  // TODO(bgarcia): implement!
   assert(false);
   return false;
 }

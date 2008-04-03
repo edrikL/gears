@@ -39,6 +39,7 @@
 // The blob API has not been finalized for official builds
 #include "gears/blob/blob_ff.h"
 #include "gears/blob/buffer_blob.h"
+#include "gears/blob/blob_interface.h"
 #endif
 #include "gears/localserver/common/http_constants.h"
 
@@ -257,10 +258,33 @@ NS_IMETHODIMP GearsHttpRequest::Send() {
       request_info_->method == HttpConstants::kHttpPUT) {
     JsParamFetcher js_params(this);
     if (js_params.GetCount(false) > 0) {
+#ifndef OFFICIAL_BUILD
+      nsISupports *blob_base;
+      if (js_params.GetAsString(0, &request_info_->post_data)) {
+        request_info_->has_post_data = !request_info_->post_data.empty();
+      } else if (js_params.GetAsModule(0, &blob_base)) {
+        // TODO(bgarcia): JsParamFetcher::GetAsModule does not work in
+        //                worker threads.
+        // Extract the blob
+        nsresult nr;
+        nsCOMPtr<GearsBlobPvtInterface> blob_pvt = do_QueryInterface(blob_base,
+                                                                     &nr);
+        if (NS_FAILED(nr) || !blob_pvt) {
+          RETURN_EXCEPTION(STRING16(L"Error converting blob to native class."));
+        }
+        nr = blob_pvt->GetContents(as_out_parameter(request_info_->blob_));
+        if (NS_FAILED(nr) || !request_info_->blob_.get()) {
+          RETURN_EXCEPTION(STRING16(L"Error getting blob contents."));
+        }
+      } else {
+        RETURN_EXCEPTION(STRING16(L"Data parameter must be a string or blob."));
+      }
+#else
       if (!js_params.GetAsString(0, &request_info_->post_data)) {
         RETURN_EXCEPTION(STRING16(L"Data parameter must be a string."));
       }
       request_info_->has_post_data = !request_info_->post_data.empty();
+#endif
     }
   }
 
@@ -321,10 +345,17 @@ void GearsHttpRequest::OnSendCall() {
                                  HttpConstants::kMimeTextPlain);
     }
     ok = request_->SendString(request_info_->post_data.c_str());
+#ifndef OFFICIAL_BUILD
+  } else if (request_info_->blob_.get()) {
+    if (!content_type_header_was_set_) {
+      request_->SetRequestHeader(HttpConstants::kContentTypeHeader,
+                                 HttpConstants::kMimeApplicationOctetStream);
+    }
+    ok = request_->SendBlob(request_info_->blob_.get());
+#endif
   } else {
     ok = request_->Send();
   }
-  
   if (!ok) {
     response_info_->pending_ready_state = HttpRequest::COMPLETE;
     RemoveRequest();

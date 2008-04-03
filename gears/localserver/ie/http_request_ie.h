@@ -28,14 +28,17 @@
 
 #include <string>
 #include <vector>
-
 #include "gears/base/common/security_model.h"
-#include "gears/base/ie/atl_headers.h"
 #ifndef OFFICIAL_BUILD
-#include "gears/blob/blob_interface.h"
+#include "gears/base/common/scoped_refptr.h"
 #endif  // !OFFICIAL_BUILD
+#include "gears/base/ie/atl_headers.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
+
+#ifndef OFFICIAL_BUILD
+class BlobInterface;
+#endif  // !OFFICIAL_BUILD
 
 class IEHttpRequest
     : public CComObjectRootEx<CComMultiThreadModel::ThreadModelNoCS>,

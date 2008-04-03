@@ -44,19 +44,23 @@ function testPost200() {
   var headers = [["Name1", "Value1"],
                  ["Name2", "Value2"]];
   var expectedHeaders = getExpectedEchoHeaders(headers);
+  expectedHeaders.push(["echo-Content-Type", "text/plain"]);
 
   doRequest('testcases/cgi/echo_request.py', 'POST', data, headers, 200, data,
             expectedHeaders, data.length); 
 }
 
 function testPostBlob200() {
-  if (!isOfficial && isIE) {
+  // TODO(bgarcia): Remove the workerPool check once sending of blobs works
+  //                from worker threads under linux/firefox.
+  if (!isOfficial && (isIE || (isFirefox && !google.gears.workerPool))) {
     startAsync();
     
     var data = 'This is not a valid manifest!\n';
     var headers = [["Name1", "Value1"],
                    ["Name2", "Value2"]];
     var expectedHeaders = getExpectedEchoHeaders(headers);
+    expectedHeaders.push(["echo-Content-Type", "application/octet-stream"]);
 
     // Obtain a blob so that we can upload it.
     httpGetAsRequest('/testcases/manifest-ugly.txt', function(request) {
