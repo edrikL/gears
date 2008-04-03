@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0.4beta/mozilla/dom/public/idl/base/nsIDOMWindowInternal.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/dom/public/idl/base/nsIDOMWindowInternal.idl
  */
 
 #ifndef __gen_nsIDOMWindowInternal_h__
@@ -30,164 +30,164 @@ class nsIVariant; /* forward declaration */
   {0x89b9ff5a, 0x78db, 0x430b, \
     { 0xb3, 0xb4, 0x66, 0x46, 0x94, 0x57, 0x43, 0x5a }}
 
-class NS_NO_VTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMWINDOWINTERNAL_IID)
 
   /* readonly attribute nsIDOMWindowInternal window; */
-  NS_IMETHOD GetWindow(nsIDOMWindowInternal * *aWindow) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetWindow(nsIDOMWindowInternal * *aWindow) = 0;
 
   /* readonly attribute nsIDOMWindowInternal self; */
-  NS_IMETHOD GetSelf(nsIDOMWindowInternal * *aSelf) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSelf(nsIDOMWindowInternal * *aSelf) = 0;
 
   /* readonly attribute nsIDOMNavigator navigator; */
-  NS_IMETHOD GetNavigator(nsIDOMNavigator * *aNavigator) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNavigator(nsIDOMNavigator * *aNavigator) = 0;
 
   /* readonly attribute nsIDOMScreen screen; */
-  NS_IMETHOD GetScreen(nsIDOMScreen * *aScreen) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetScreen(nsIDOMScreen * *aScreen) = 0;
 
   /* readonly attribute nsIDOMHistory history; */
-  NS_IMETHOD GetHistory(nsIDOMHistory * *aHistory) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHistory(nsIDOMHistory * *aHistory) = 0;
 
   /* readonly attribute nsIDOMWindow content; */
-  NS_IMETHOD GetContent(nsIDOMWindow * *aContent) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetContent(nsIDOMWindow * *aContent) = 0;
 
   /* [noscript] readonly attribute nsIPrompt prompter; */
   NS_IMETHOD GetPrompter(nsIPrompt * *aPrompter) = 0;
 
   /* readonly attribute nsIDOMBarProp menubar; */
-  NS_IMETHOD GetMenubar(nsIDOMBarProp * *aMenubar) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMenubar(nsIDOMBarProp * *aMenubar) = 0;
 
   /* readonly attribute nsIDOMBarProp toolbar; */
-  NS_IMETHOD GetToolbar(nsIDOMBarProp * *aToolbar) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetToolbar(nsIDOMBarProp * *aToolbar) = 0;
 
   /* readonly attribute nsIDOMBarProp locationbar; */
-  NS_IMETHOD GetLocationbar(nsIDOMBarProp * *aLocationbar) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLocationbar(nsIDOMBarProp * *aLocationbar) = 0;
 
   /* readonly attribute nsIDOMBarProp personalbar; */
-  NS_IMETHOD GetPersonalbar(nsIDOMBarProp * *aPersonalbar) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPersonalbar(nsIDOMBarProp * *aPersonalbar) = 0;
 
   /* readonly attribute nsIDOMBarProp statusbar; */
-  NS_IMETHOD GetStatusbar(nsIDOMBarProp * *aStatusbar) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetStatusbar(nsIDOMBarProp * *aStatusbar) = 0;
 
   /* readonly attribute nsIDOMBarProp directories; */
-  NS_IMETHOD GetDirectories(nsIDOMBarProp * *aDirectories) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDirectories(nsIDOMBarProp * *aDirectories) = 0;
 
   /* readonly attribute boolean closed; */
-  NS_IMETHOD GetClosed(PRBool *aClosed) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetClosed(PRBool *aClosed) = 0;
 
   /* readonly attribute nsIDOMCrypto crypto; */
-  NS_IMETHOD GetCrypto(nsIDOMCrypto * *aCrypto) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCrypto(nsIDOMCrypto * *aCrypto) = 0;
 
   /* readonly attribute nsIDOMPkcs11 pkcs11; */
-  NS_IMETHOD GetPkcs11(nsIDOMPkcs11 * *aPkcs11) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPkcs11(nsIDOMPkcs11 * *aPkcs11) = 0;
 
   /* readonly attribute nsIControllers controllers; */
-  NS_IMETHOD GetControllers(nsIControllers * *aControllers) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetControllers(nsIControllers * *aControllers) = 0;
 
   /* attribute nsIDOMWindowInternal opener; */
-  NS_IMETHOD GetOpener(nsIDOMWindowInternal * *aOpener) = 0;
-  NS_IMETHOD SetOpener(nsIDOMWindowInternal * aOpener) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetOpener(nsIDOMWindowInternal * *aOpener) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetOpener(nsIDOMWindowInternal * aOpener) = 0;
 
   /* attribute DOMString status; */
-  NS_IMETHOD GetStatus(nsAString & aStatus) = 0;
-  NS_IMETHOD SetStatus(const nsAString & aStatus) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetStatus(nsAString & aStatus) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetStatus(const nsAString & aStatus) = 0;
 
   /* attribute DOMString defaultStatus; */
-  NS_IMETHOD GetDefaultStatus(nsAString & aDefaultStatus) = 0;
-  NS_IMETHOD SetDefaultStatus(const nsAString & aDefaultStatus) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultStatus(nsAString & aDefaultStatus) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDefaultStatus(const nsAString & aDefaultStatus) = 0;
 
   /* readonly attribute nsIDOMLocation location; */
-  NS_IMETHOD GetLocation(nsIDOMLocation * *aLocation) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLocation(nsIDOMLocation * *aLocation) = 0;
 
   /* attribute long innerWidth; */
-  NS_IMETHOD GetInnerWidth(PRInt32 *aInnerWidth) = 0;
-  NS_IMETHOD SetInnerWidth(PRInt32 aInnerWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetInnerWidth(PRInt32 *aInnerWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetInnerWidth(PRInt32 aInnerWidth) = 0;
 
   /* attribute long innerHeight; */
-  NS_IMETHOD GetInnerHeight(PRInt32 *aInnerHeight) = 0;
-  NS_IMETHOD SetInnerHeight(PRInt32 aInnerHeight) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetInnerHeight(PRInt32 *aInnerHeight) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetInnerHeight(PRInt32 aInnerHeight) = 0;
 
   /* attribute long outerWidth; */
-  NS_IMETHOD GetOuterWidth(PRInt32 *aOuterWidth) = 0;
-  NS_IMETHOD SetOuterWidth(PRInt32 aOuterWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetOuterWidth(PRInt32 *aOuterWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetOuterWidth(PRInt32 aOuterWidth) = 0;
 
   /* attribute long outerHeight; */
-  NS_IMETHOD GetOuterHeight(PRInt32 *aOuterHeight) = 0;
-  NS_IMETHOD SetOuterHeight(PRInt32 aOuterHeight) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetOuterHeight(PRInt32 *aOuterHeight) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetOuterHeight(PRInt32 aOuterHeight) = 0;
 
   /* attribute long screenX; */
-  NS_IMETHOD GetScreenX(PRInt32 *aScreenX) = 0;
-  NS_IMETHOD SetScreenX(PRInt32 aScreenX) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetScreenX(PRInt32 *aScreenX) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetScreenX(PRInt32 aScreenX) = 0;
 
   /* attribute long screenY; */
-  NS_IMETHOD GetScreenY(PRInt32 *aScreenY) = 0;
-  NS_IMETHOD SetScreenY(PRInt32 aScreenY) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetScreenY(PRInt32 *aScreenY) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetScreenY(PRInt32 aScreenY) = 0;
 
   /* readonly attribute long pageXOffset; */
-  NS_IMETHOD GetPageXOffset(PRInt32 *aPageXOffset) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPageXOffset(PRInt32 *aPageXOffset) = 0;
 
   /* readonly attribute long pageYOffset; */
-  NS_IMETHOD GetPageYOffset(PRInt32 *aPageYOffset) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPageYOffset(PRInt32 *aPageYOffset) = 0;
 
   /* readonly attribute long scrollMaxX; */
-  NS_IMETHOD GetScrollMaxX(PRInt32 *aScrollMaxX) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetScrollMaxX(PRInt32 *aScrollMaxX) = 0;
 
   /* readonly attribute long scrollMaxY; */
-  NS_IMETHOD GetScrollMaxY(PRInt32 *aScrollMaxY) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetScrollMaxY(PRInt32 *aScrollMaxY) = 0;
 
   /* readonly attribute unsigned long length; */
-  NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
 
   /* attribute boolean fullScreen; */
-  NS_IMETHOD GetFullScreen(PRBool *aFullScreen) = 0;
-  NS_IMETHOD SetFullScreen(PRBool aFullScreen) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFullScreen(PRBool *aFullScreen) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFullScreen(PRBool aFullScreen) = 0;
 
   /* void alert (in DOMString text); */
-  NS_IMETHOD Alert(const nsAString & text) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Alert(const nsAString & text) = 0;
 
   /* boolean confirm (in DOMString text); */
-  NS_IMETHOD Confirm(const nsAString & text, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Confirm(const nsAString & text, PRBool *_retval) = 0;
 
   /* DOMString prompt (in DOMString aMessage, in DOMString aInitial, in DOMString aTitle, in unsigned long aSavePassword); */
-  NS_IMETHOD Prompt(const nsAString & aMessage, const nsAString & aInitial, const nsAString & aTitle, PRUint32 aSavePassword, nsAString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Prompt(const nsAString & aMessage, const nsAString & aInitial, const nsAString & aTitle, PRUint32 aSavePassword, nsAString & _retval) = 0;
 
   /* void focus (); */
-  NS_IMETHOD Focus(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Focus(void) = 0;
 
   /* void blur (); */
-  NS_IMETHOD Blur(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Blur(void) = 0;
 
   /* void back (); */
-  NS_IMETHOD Back(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Back(void) = 0;
 
   /* void forward (); */
-  NS_IMETHOD Forward(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Forward(void) = 0;
 
   /* void home (); */
-  NS_IMETHOD Home(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Home(void) = 0;
 
   /* void stop (); */
-  NS_IMETHOD Stop(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Stop(void) = 0;
 
   /* void print (); */
-  NS_IMETHOD Print(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Print(void) = 0;
 
   /* void moveTo (in long xPos, in long yPos); */
-  NS_IMETHOD MoveTo(PRInt32 xPos, PRInt32 yPos) = 0;
+  NS_SCRIPTABLE NS_IMETHOD MoveTo(PRInt32 xPos, PRInt32 yPos) = 0;
 
   /* void moveBy (in long xDif, in long yDif); */
-  NS_IMETHOD MoveBy(PRInt32 xDif, PRInt32 yDif) = 0;
+  NS_SCRIPTABLE NS_IMETHOD MoveBy(PRInt32 xDif, PRInt32 yDif) = 0;
 
   /* void resizeTo (in long width, in long height); */
-  NS_IMETHOD ResizeTo(PRInt32 width, PRInt32 height) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ResizeTo(PRInt32 width, PRInt32 height) = 0;
 
   /* void resizeBy (in long widthDif, in long heightDif); */
-  NS_IMETHOD ResizeBy(PRInt32 widthDif, PRInt32 heightDif) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ResizeBy(PRInt32 widthDif, PRInt32 heightDif) = 0;
 
   /* void scroll (in long xScroll, in long yScroll); */
-  NS_IMETHOD Scroll(PRInt32 xScroll, PRInt32 yScroll) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Scroll(PRInt32 xScroll, PRInt32 yScroll) = 0;
 
   /**
    * Open a new window with this one as the parent.  This method will
@@ -203,25 +203,25 @@ class NS_NO_VTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
   NS_IMETHOD OpenDialog(const nsAString & url, const nsAString & name, const nsAString & options, nsISupports *aExtraArgument, nsIDOMWindow **_retval) = 0;
 
   /* void close (); */
-  NS_IMETHOD Close(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Close(void) = 0;
 
   /* void updateCommands (in DOMString action); */
-  NS_IMETHOD UpdateCommands(const nsAString & action) = 0;
+  NS_SCRIPTABLE NS_IMETHOD UpdateCommands(const nsAString & action) = 0;
 
   /* [noscript] boolean find (in DOMString str, in boolean caseSensitive, in boolean backwards, in boolean wrapAround, in boolean wholeWord, in boolean searchInFrames, in boolean showDialog); */
   NS_IMETHOD Find(const nsAString & str, PRBool caseSensitive, PRBool backwards, PRBool wrapAround, PRBool wholeWord, PRBool searchInFrames, PRBool showDialog, PRBool *_retval) = 0;
 
   /* DOMString atob (in DOMString aAsciiString); */
-  NS_IMETHOD Atob(const nsAString & aAsciiString, nsAString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Atob(const nsAString & aAsciiString, nsAString & _retval) = 0;
 
   /* DOMString btoa (in DOMString aBase64Data); */
-  NS_IMETHOD Btoa(const nsAString & aBase64Data, nsAString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Btoa(const nsAString & aBase64Data, nsAString & _retval) = 0;
 
   /* readonly attribute nsIDOMElement frameElement; */
-  NS_IMETHOD GetFrameElement(nsIDOMElement * *aFrameElement) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFrameElement(nsIDOMElement * *aFrameElement) = 0;
 
   /* nsIVariant showModalDialog (in DOMString aURI, [optional] in nsIVariant aArgs, [optional] in DOMString aOptions); */
-  NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval) = 0;
 
   /**
    * Implements a safe message-passing system which can cross same-origin
@@ -237,7 +237,7 @@ class NS_NO_VTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
    * See the WHATWG HTML5 specification, section 6.4, for more details.
    */
   /* [binaryname (PostMessageMoz)] void postMessage (in DOMString message, [optional] in DOMString origin); */
-  NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & origin) = 0;
+  NS_SCRIPTABLE NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & origin) = 0;
 
 };
 
@@ -245,216 +245,216 @@ class NS_NO_VTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMWINDOWINTERNAL \
-  NS_IMETHOD GetWindow(nsIDOMWindowInternal * *aWindow); \
-  NS_IMETHOD GetSelf(nsIDOMWindowInternal * *aSelf); \
-  NS_IMETHOD GetNavigator(nsIDOMNavigator * *aNavigator); \
-  NS_IMETHOD GetScreen(nsIDOMScreen * *aScreen); \
-  NS_IMETHOD GetHistory(nsIDOMHistory * *aHistory); \
-  NS_IMETHOD GetContent(nsIDOMWindow * *aContent); \
+  NS_SCRIPTABLE NS_IMETHOD GetWindow(nsIDOMWindowInternal * *aWindow); \
+  NS_SCRIPTABLE NS_IMETHOD GetSelf(nsIDOMWindowInternal * *aSelf); \
+  NS_SCRIPTABLE NS_IMETHOD GetNavigator(nsIDOMNavigator * *aNavigator); \
+  NS_SCRIPTABLE NS_IMETHOD GetScreen(nsIDOMScreen * *aScreen); \
+  NS_SCRIPTABLE NS_IMETHOD GetHistory(nsIDOMHistory * *aHistory); \
+  NS_SCRIPTABLE NS_IMETHOD GetContent(nsIDOMWindow * *aContent); \
   NS_IMETHOD GetPrompter(nsIPrompt * *aPrompter); \
-  NS_IMETHOD GetMenubar(nsIDOMBarProp * *aMenubar); \
-  NS_IMETHOD GetToolbar(nsIDOMBarProp * *aToolbar); \
-  NS_IMETHOD GetLocationbar(nsIDOMBarProp * *aLocationbar); \
-  NS_IMETHOD GetPersonalbar(nsIDOMBarProp * *aPersonalbar); \
-  NS_IMETHOD GetStatusbar(nsIDOMBarProp * *aStatusbar); \
-  NS_IMETHOD GetDirectories(nsIDOMBarProp * *aDirectories); \
-  NS_IMETHOD GetClosed(PRBool *aClosed); \
-  NS_IMETHOD GetCrypto(nsIDOMCrypto * *aCrypto); \
-  NS_IMETHOD GetPkcs11(nsIDOMPkcs11 * *aPkcs11); \
-  NS_IMETHOD GetControllers(nsIControllers * *aControllers); \
-  NS_IMETHOD GetOpener(nsIDOMWindowInternal * *aOpener); \
-  NS_IMETHOD SetOpener(nsIDOMWindowInternal * aOpener); \
-  NS_IMETHOD GetStatus(nsAString & aStatus); \
-  NS_IMETHOD SetStatus(const nsAString & aStatus); \
-  NS_IMETHOD GetDefaultStatus(nsAString & aDefaultStatus); \
-  NS_IMETHOD SetDefaultStatus(const nsAString & aDefaultStatus); \
-  NS_IMETHOD GetLocation(nsIDOMLocation * *aLocation); \
-  NS_IMETHOD GetInnerWidth(PRInt32 *aInnerWidth); \
-  NS_IMETHOD SetInnerWidth(PRInt32 aInnerWidth); \
-  NS_IMETHOD GetInnerHeight(PRInt32 *aInnerHeight); \
-  NS_IMETHOD SetInnerHeight(PRInt32 aInnerHeight); \
-  NS_IMETHOD GetOuterWidth(PRInt32 *aOuterWidth); \
-  NS_IMETHOD SetOuterWidth(PRInt32 aOuterWidth); \
-  NS_IMETHOD GetOuterHeight(PRInt32 *aOuterHeight); \
-  NS_IMETHOD SetOuterHeight(PRInt32 aOuterHeight); \
-  NS_IMETHOD GetScreenX(PRInt32 *aScreenX); \
-  NS_IMETHOD SetScreenX(PRInt32 aScreenX); \
-  NS_IMETHOD GetScreenY(PRInt32 *aScreenY); \
-  NS_IMETHOD SetScreenY(PRInt32 aScreenY); \
-  NS_IMETHOD GetPageXOffset(PRInt32 *aPageXOffset); \
-  NS_IMETHOD GetPageYOffset(PRInt32 *aPageYOffset); \
-  NS_IMETHOD GetScrollMaxX(PRInt32 *aScrollMaxX); \
-  NS_IMETHOD GetScrollMaxY(PRInt32 *aScrollMaxY); \
-  NS_IMETHOD GetLength(PRUint32 *aLength); \
-  NS_IMETHOD GetFullScreen(PRBool *aFullScreen); \
-  NS_IMETHOD SetFullScreen(PRBool aFullScreen); \
-  NS_IMETHOD Alert(const nsAString & text); \
-  NS_IMETHOD Confirm(const nsAString & text, PRBool *_retval); \
-  NS_IMETHOD Prompt(const nsAString & aMessage, const nsAString & aInitial, const nsAString & aTitle, PRUint32 aSavePassword, nsAString & _retval); \
-  NS_IMETHOD Focus(void); \
-  NS_IMETHOD Blur(void); \
-  NS_IMETHOD Back(void); \
-  NS_IMETHOD Forward(void); \
-  NS_IMETHOD Home(void); \
-  NS_IMETHOD Stop(void); \
-  NS_IMETHOD Print(void); \
-  NS_IMETHOD MoveTo(PRInt32 xPos, PRInt32 yPos); \
-  NS_IMETHOD MoveBy(PRInt32 xDif, PRInt32 yDif); \
-  NS_IMETHOD ResizeTo(PRInt32 width, PRInt32 height); \
-  NS_IMETHOD ResizeBy(PRInt32 widthDif, PRInt32 heightDif); \
-  NS_IMETHOD Scroll(PRInt32 xScroll, PRInt32 yScroll); \
+  NS_SCRIPTABLE NS_IMETHOD GetMenubar(nsIDOMBarProp * *aMenubar); \
+  NS_SCRIPTABLE NS_IMETHOD GetToolbar(nsIDOMBarProp * *aToolbar); \
+  NS_SCRIPTABLE NS_IMETHOD GetLocationbar(nsIDOMBarProp * *aLocationbar); \
+  NS_SCRIPTABLE NS_IMETHOD GetPersonalbar(nsIDOMBarProp * *aPersonalbar); \
+  NS_SCRIPTABLE NS_IMETHOD GetStatusbar(nsIDOMBarProp * *aStatusbar); \
+  NS_SCRIPTABLE NS_IMETHOD GetDirectories(nsIDOMBarProp * *aDirectories); \
+  NS_SCRIPTABLE NS_IMETHOD GetClosed(PRBool *aClosed); \
+  NS_SCRIPTABLE NS_IMETHOD GetCrypto(nsIDOMCrypto * *aCrypto); \
+  NS_SCRIPTABLE NS_IMETHOD GetPkcs11(nsIDOMPkcs11 * *aPkcs11); \
+  NS_SCRIPTABLE NS_IMETHOD GetControllers(nsIControllers * *aControllers); \
+  NS_SCRIPTABLE NS_IMETHOD GetOpener(nsIDOMWindowInternal * *aOpener); \
+  NS_SCRIPTABLE NS_IMETHOD SetOpener(nsIDOMWindowInternal * aOpener); \
+  NS_SCRIPTABLE NS_IMETHOD GetStatus(nsAString & aStatus); \
+  NS_SCRIPTABLE NS_IMETHOD SetStatus(const nsAString & aStatus); \
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultStatus(nsAString & aDefaultStatus); \
+  NS_SCRIPTABLE NS_IMETHOD SetDefaultStatus(const nsAString & aDefaultStatus); \
+  NS_SCRIPTABLE NS_IMETHOD GetLocation(nsIDOMLocation * *aLocation); \
+  NS_SCRIPTABLE NS_IMETHOD GetInnerWidth(PRInt32 *aInnerWidth); \
+  NS_SCRIPTABLE NS_IMETHOD SetInnerWidth(PRInt32 aInnerWidth); \
+  NS_SCRIPTABLE NS_IMETHOD GetInnerHeight(PRInt32 *aInnerHeight); \
+  NS_SCRIPTABLE NS_IMETHOD SetInnerHeight(PRInt32 aInnerHeight); \
+  NS_SCRIPTABLE NS_IMETHOD GetOuterWidth(PRInt32 *aOuterWidth); \
+  NS_SCRIPTABLE NS_IMETHOD SetOuterWidth(PRInt32 aOuterWidth); \
+  NS_SCRIPTABLE NS_IMETHOD GetOuterHeight(PRInt32 *aOuterHeight); \
+  NS_SCRIPTABLE NS_IMETHOD SetOuterHeight(PRInt32 aOuterHeight); \
+  NS_SCRIPTABLE NS_IMETHOD GetScreenX(PRInt32 *aScreenX); \
+  NS_SCRIPTABLE NS_IMETHOD SetScreenX(PRInt32 aScreenX); \
+  NS_SCRIPTABLE NS_IMETHOD GetScreenY(PRInt32 *aScreenY); \
+  NS_SCRIPTABLE NS_IMETHOD SetScreenY(PRInt32 aScreenY); \
+  NS_SCRIPTABLE NS_IMETHOD GetPageXOffset(PRInt32 *aPageXOffset); \
+  NS_SCRIPTABLE NS_IMETHOD GetPageYOffset(PRInt32 *aPageYOffset); \
+  NS_SCRIPTABLE NS_IMETHOD GetScrollMaxX(PRInt32 *aScrollMaxX); \
+  NS_SCRIPTABLE NS_IMETHOD GetScrollMaxY(PRInt32 *aScrollMaxY); \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength); \
+  NS_SCRIPTABLE NS_IMETHOD GetFullScreen(PRBool *aFullScreen); \
+  NS_SCRIPTABLE NS_IMETHOD SetFullScreen(PRBool aFullScreen); \
+  NS_SCRIPTABLE NS_IMETHOD Alert(const nsAString & text); \
+  NS_SCRIPTABLE NS_IMETHOD Confirm(const nsAString & text, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD Prompt(const nsAString & aMessage, const nsAString & aInitial, const nsAString & aTitle, PRUint32 aSavePassword, nsAString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD Focus(void); \
+  NS_SCRIPTABLE NS_IMETHOD Blur(void); \
+  NS_SCRIPTABLE NS_IMETHOD Back(void); \
+  NS_SCRIPTABLE NS_IMETHOD Forward(void); \
+  NS_SCRIPTABLE NS_IMETHOD Home(void); \
+  NS_SCRIPTABLE NS_IMETHOD Stop(void); \
+  NS_SCRIPTABLE NS_IMETHOD Print(void); \
+  NS_SCRIPTABLE NS_IMETHOD MoveTo(PRInt32 xPos, PRInt32 yPos); \
+  NS_SCRIPTABLE NS_IMETHOD MoveBy(PRInt32 xDif, PRInt32 yDif); \
+  NS_SCRIPTABLE NS_IMETHOD ResizeTo(PRInt32 width, PRInt32 height); \
+  NS_SCRIPTABLE NS_IMETHOD ResizeBy(PRInt32 widthDif, PRInt32 heightDif); \
+  NS_SCRIPTABLE NS_IMETHOD Scroll(PRInt32 xScroll, PRInt32 yScroll); \
   NS_IMETHOD Open(const nsAString & url, const nsAString & name, const nsAString & options, nsIDOMWindow **_retval); \
   NS_IMETHOD OpenDialog(const nsAString & url, const nsAString & name, const nsAString & options, nsISupports *aExtraArgument, nsIDOMWindow **_retval); \
-  NS_IMETHOD Close(void); \
-  NS_IMETHOD UpdateCommands(const nsAString & action); \
+  NS_SCRIPTABLE NS_IMETHOD Close(void); \
+  NS_SCRIPTABLE NS_IMETHOD UpdateCommands(const nsAString & action); \
   NS_IMETHOD Find(const nsAString & str, PRBool caseSensitive, PRBool backwards, PRBool wrapAround, PRBool wholeWord, PRBool searchInFrames, PRBool showDialog, PRBool *_retval); \
-  NS_IMETHOD Atob(const nsAString & aAsciiString, nsAString & _retval); \
-  NS_IMETHOD Btoa(const nsAString & aBase64Data, nsAString & _retval); \
-  NS_IMETHOD GetFrameElement(nsIDOMElement * *aFrameElement); \
-  NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval); \
-  NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & origin); 
+  NS_SCRIPTABLE NS_IMETHOD Atob(const nsAString & aAsciiString, nsAString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD Btoa(const nsAString & aBase64Data, nsAString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetFrameElement(nsIDOMElement * *aFrameElement); \
+  NS_SCRIPTABLE NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & origin); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMWINDOWINTERNAL(_to) \
-  NS_IMETHOD GetWindow(nsIDOMWindowInternal * *aWindow) { return _to GetWindow(aWindow); } \
-  NS_IMETHOD GetSelf(nsIDOMWindowInternal * *aSelf) { return _to GetSelf(aSelf); } \
-  NS_IMETHOD GetNavigator(nsIDOMNavigator * *aNavigator) { return _to GetNavigator(aNavigator); } \
-  NS_IMETHOD GetScreen(nsIDOMScreen * *aScreen) { return _to GetScreen(aScreen); } \
-  NS_IMETHOD GetHistory(nsIDOMHistory * *aHistory) { return _to GetHistory(aHistory); } \
-  NS_IMETHOD GetContent(nsIDOMWindow * *aContent) { return _to GetContent(aContent); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWindow(nsIDOMWindowInternal * *aWindow) { return _to GetWindow(aWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSelf(nsIDOMWindowInternal * *aSelf) { return _to GetSelf(aSelf); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNavigator(nsIDOMNavigator * *aNavigator) { return _to GetNavigator(aNavigator); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScreen(nsIDOMScreen * *aScreen) { return _to GetScreen(aScreen); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHistory(nsIDOMHistory * *aHistory) { return _to GetHistory(aHistory); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContent(nsIDOMWindow * *aContent) { return _to GetContent(aContent); } \
   NS_IMETHOD GetPrompter(nsIPrompt * *aPrompter) { return _to GetPrompter(aPrompter); } \
-  NS_IMETHOD GetMenubar(nsIDOMBarProp * *aMenubar) { return _to GetMenubar(aMenubar); } \
-  NS_IMETHOD GetToolbar(nsIDOMBarProp * *aToolbar) { return _to GetToolbar(aToolbar); } \
-  NS_IMETHOD GetLocationbar(nsIDOMBarProp * *aLocationbar) { return _to GetLocationbar(aLocationbar); } \
-  NS_IMETHOD GetPersonalbar(nsIDOMBarProp * *aPersonalbar) { return _to GetPersonalbar(aPersonalbar); } \
-  NS_IMETHOD GetStatusbar(nsIDOMBarProp * *aStatusbar) { return _to GetStatusbar(aStatusbar); } \
-  NS_IMETHOD GetDirectories(nsIDOMBarProp * *aDirectories) { return _to GetDirectories(aDirectories); } \
-  NS_IMETHOD GetClosed(PRBool *aClosed) { return _to GetClosed(aClosed); } \
-  NS_IMETHOD GetCrypto(nsIDOMCrypto * *aCrypto) { return _to GetCrypto(aCrypto); } \
-  NS_IMETHOD GetPkcs11(nsIDOMPkcs11 * *aPkcs11) { return _to GetPkcs11(aPkcs11); } \
-  NS_IMETHOD GetControllers(nsIControllers * *aControllers) { return _to GetControllers(aControllers); } \
-  NS_IMETHOD GetOpener(nsIDOMWindowInternal * *aOpener) { return _to GetOpener(aOpener); } \
-  NS_IMETHOD SetOpener(nsIDOMWindowInternal * aOpener) { return _to SetOpener(aOpener); } \
-  NS_IMETHOD GetStatus(nsAString & aStatus) { return _to GetStatus(aStatus); } \
-  NS_IMETHOD SetStatus(const nsAString & aStatus) { return _to SetStatus(aStatus); } \
-  NS_IMETHOD GetDefaultStatus(nsAString & aDefaultStatus) { return _to GetDefaultStatus(aDefaultStatus); } \
-  NS_IMETHOD SetDefaultStatus(const nsAString & aDefaultStatus) { return _to SetDefaultStatus(aDefaultStatus); } \
-  NS_IMETHOD GetLocation(nsIDOMLocation * *aLocation) { return _to GetLocation(aLocation); } \
-  NS_IMETHOD GetInnerWidth(PRInt32 *aInnerWidth) { return _to GetInnerWidth(aInnerWidth); } \
-  NS_IMETHOD SetInnerWidth(PRInt32 aInnerWidth) { return _to SetInnerWidth(aInnerWidth); } \
-  NS_IMETHOD GetInnerHeight(PRInt32 *aInnerHeight) { return _to GetInnerHeight(aInnerHeight); } \
-  NS_IMETHOD SetInnerHeight(PRInt32 aInnerHeight) { return _to SetInnerHeight(aInnerHeight); } \
-  NS_IMETHOD GetOuterWidth(PRInt32 *aOuterWidth) { return _to GetOuterWidth(aOuterWidth); } \
-  NS_IMETHOD SetOuterWidth(PRInt32 aOuterWidth) { return _to SetOuterWidth(aOuterWidth); } \
-  NS_IMETHOD GetOuterHeight(PRInt32 *aOuterHeight) { return _to GetOuterHeight(aOuterHeight); } \
-  NS_IMETHOD SetOuterHeight(PRInt32 aOuterHeight) { return _to SetOuterHeight(aOuterHeight); } \
-  NS_IMETHOD GetScreenX(PRInt32 *aScreenX) { return _to GetScreenX(aScreenX); } \
-  NS_IMETHOD SetScreenX(PRInt32 aScreenX) { return _to SetScreenX(aScreenX); } \
-  NS_IMETHOD GetScreenY(PRInt32 *aScreenY) { return _to GetScreenY(aScreenY); } \
-  NS_IMETHOD SetScreenY(PRInt32 aScreenY) { return _to SetScreenY(aScreenY); } \
-  NS_IMETHOD GetPageXOffset(PRInt32 *aPageXOffset) { return _to GetPageXOffset(aPageXOffset); } \
-  NS_IMETHOD GetPageYOffset(PRInt32 *aPageYOffset) { return _to GetPageYOffset(aPageYOffset); } \
-  NS_IMETHOD GetScrollMaxX(PRInt32 *aScrollMaxX) { return _to GetScrollMaxX(aScrollMaxX); } \
-  NS_IMETHOD GetScrollMaxY(PRInt32 *aScrollMaxY) { return _to GetScrollMaxY(aScrollMaxY); } \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
-  NS_IMETHOD GetFullScreen(PRBool *aFullScreen) { return _to GetFullScreen(aFullScreen); } \
-  NS_IMETHOD SetFullScreen(PRBool aFullScreen) { return _to SetFullScreen(aFullScreen); } \
-  NS_IMETHOD Alert(const nsAString & text) { return _to Alert(text); } \
-  NS_IMETHOD Confirm(const nsAString & text, PRBool *_retval) { return _to Confirm(text, _retval); } \
-  NS_IMETHOD Prompt(const nsAString & aMessage, const nsAString & aInitial, const nsAString & aTitle, PRUint32 aSavePassword, nsAString & _retval) { return _to Prompt(aMessage, aInitial, aTitle, aSavePassword, _retval); } \
-  NS_IMETHOD Focus(void) { return _to Focus(); } \
-  NS_IMETHOD Blur(void) { return _to Blur(); } \
-  NS_IMETHOD Back(void) { return _to Back(); } \
-  NS_IMETHOD Forward(void) { return _to Forward(); } \
-  NS_IMETHOD Home(void) { return _to Home(); } \
-  NS_IMETHOD Stop(void) { return _to Stop(); } \
-  NS_IMETHOD Print(void) { return _to Print(); } \
-  NS_IMETHOD MoveTo(PRInt32 xPos, PRInt32 yPos) { return _to MoveTo(xPos, yPos); } \
-  NS_IMETHOD MoveBy(PRInt32 xDif, PRInt32 yDif) { return _to MoveBy(xDif, yDif); } \
-  NS_IMETHOD ResizeTo(PRInt32 width, PRInt32 height) { return _to ResizeTo(width, height); } \
-  NS_IMETHOD ResizeBy(PRInt32 widthDif, PRInt32 heightDif) { return _to ResizeBy(widthDif, heightDif); } \
-  NS_IMETHOD Scroll(PRInt32 xScroll, PRInt32 yScroll) { return _to Scroll(xScroll, yScroll); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMenubar(nsIDOMBarProp * *aMenubar) { return _to GetMenubar(aMenubar); } \
+  NS_SCRIPTABLE NS_IMETHOD GetToolbar(nsIDOMBarProp * *aToolbar) { return _to GetToolbar(aToolbar); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLocationbar(nsIDOMBarProp * *aLocationbar) { return _to GetLocationbar(aLocationbar); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPersonalbar(nsIDOMBarProp * *aPersonalbar) { return _to GetPersonalbar(aPersonalbar); } \
+  NS_SCRIPTABLE NS_IMETHOD GetStatusbar(nsIDOMBarProp * *aStatusbar) { return _to GetStatusbar(aStatusbar); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDirectories(nsIDOMBarProp * *aDirectories) { return _to GetDirectories(aDirectories); } \
+  NS_SCRIPTABLE NS_IMETHOD GetClosed(PRBool *aClosed) { return _to GetClosed(aClosed); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCrypto(nsIDOMCrypto * *aCrypto) { return _to GetCrypto(aCrypto); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPkcs11(nsIDOMPkcs11 * *aPkcs11) { return _to GetPkcs11(aPkcs11); } \
+  NS_SCRIPTABLE NS_IMETHOD GetControllers(nsIControllers * *aControllers) { return _to GetControllers(aControllers); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOpener(nsIDOMWindowInternal * *aOpener) { return _to GetOpener(aOpener); } \
+  NS_SCRIPTABLE NS_IMETHOD SetOpener(nsIDOMWindowInternal * aOpener) { return _to SetOpener(aOpener); } \
+  NS_SCRIPTABLE NS_IMETHOD GetStatus(nsAString & aStatus) { return _to GetStatus(aStatus); } \
+  NS_SCRIPTABLE NS_IMETHOD SetStatus(const nsAString & aStatus) { return _to SetStatus(aStatus); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultStatus(nsAString & aDefaultStatus) { return _to GetDefaultStatus(aDefaultStatus); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDefaultStatus(const nsAString & aDefaultStatus) { return _to SetDefaultStatus(aDefaultStatus); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLocation(nsIDOMLocation * *aLocation) { return _to GetLocation(aLocation); } \
+  NS_SCRIPTABLE NS_IMETHOD GetInnerWidth(PRInt32 *aInnerWidth) { return _to GetInnerWidth(aInnerWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetInnerWidth(PRInt32 aInnerWidth) { return _to SetInnerWidth(aInnerWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD GetInnerHeight(PRInt32 *aInnerHeight) { return _to GetInnerHeight(aInnerHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD SetInnerHeight(PRInt32 aInnerHeight) { return _to SetInnerHeight(aInnerHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOuterWidth(PRInt32 *aOuterWidth) { return _to GetOuterWidth(aOuterWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetOuterWidth(PRInt32 aOuterWidth) { return _to SetOuterWidth(aOuterWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOuterHeight(PRInt32 *aOuterHeight) { return _to GetOuterHeight(aOuterHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD SetOuterHeight(PRInt32 aOuterHeight) { return _to SetOuterHeight(aOuterHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScreenX(PRInt32 *aScreenX) { return _to GetScreenX(aScreenX); } \
+  NS_SCRIPTABLE NS_IMETHOD SetScreenX(PRInt32 aScreenX) { return _to SetScreenX(aScreenX); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScreenY(PRInt32 *aScreenY) { return _to GetScreenY(aScreenY); } \
+  NS_SCRIPTABLE NS_IMETHOD SetScreenY(PRInt32 aScreenY) { return _to SetScreenY(aScreenY); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPageXOffset(PRInt32 *aPageXOffset) { return _to GetPageXOffset(aPageXOffset); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPageYOffset(PRInt32 *aPageYOffset) { return _to GetPageYOffset(aPageYOffset); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScrollMaxX(PRInt32 *aScrollMaxX) { return _to GetScrollMaxX(aScrollMaxX); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScrollMaxY(PRInt32 *aScrollMaxY) { return _to GetScrollMaxY(aScrollMaxY); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFullScreen(PRBool *aFullScreen) { return _to GetFullScreen(aFullScreen); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFullScreen(PRBool aFullScreen) { return _to SetFullScreen(aFullScreen); } \
+  NS_SCRIPTABLE NS_IMETHOD Alert(const nsAString & text) { return _to Alert(text); } \
+  NS_SCRIPTABLE NS_IMETHOD Confirm(const nsAString & text, PRBool *_retval) { return _to Confirm(text, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Prompt(const nsAString & aMessage, const nsAString & aInitial, const nsAString & aTitle, PRUint32 aSavePassword, nsAString & _retval) { return _to Prompt(aMessage, aInitial, aTitle, aSavePassword, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Focus(void) { return _to Focus(); } \
+  NS_SCRIPTABLE NS_IMETHOD Blur(void) { return _to Blur(); } \
+  NS_SCRIPTABLE NS_IMETHOD Back(void) { return _to Back(); } \
+  NS_SCRIPTABLE NS_IMETHOD Forward(void) { return _to Forward(); } \
+  NS_SCRIPTABLE NS_IMETHOD Home(void) { return _to Home(); } \
+  NS_SCRIPTABLE NS_IMETHOD Stop(void) { return _to Stop(); } \
+  NS_SCRIPTABLE NS_IMETHOD Print(void) { return _to Print(); } \
+  NS_SCRIPTABLE NS_IMETHOD MoveTo(PRInt32 xPos, PRInt32 yPos) { return _to MoveTo(xPos, yPos); } \
+  NS_SCRIPTABLE NS_IMETHOD MoveBy(PRInt32 xDif, PRInt32 yDif) { return _to MoveBy(xDif, yDif); } \
+  NS_SCRIPTABLE NS_IMETHOD ResizeTo(PRInt32 width, PRInt32 height) { return _to ResizeTo(width, height); } \
+  NS_SCRIPTABLE NS_IMETHOD ResizeBy(PRInt32 widthDif, PRInt32 heightDif) { return _to ResizeBy(widthDif, heightDif); } \
+  NS_SCRIPTABLE NS_IMETHOD Scroll(PRInt32 xScroll, PRInt32 yScroll) { return _to Scroll(xScroll, yScroll); } \
   NS_IMETHOD Open(const nsAString & url, const nsAString & name, const nsAString & options, nsIDOMWindow **_retval) { return _to Open(url, name, options, _retval); } \
   NS_IMETHOD OpenDialog(const nsAString & url, const nsAString & name, const nsAString & options, nsISupports *aExtraArgument, nsIDOMWindow **_retval) { return _to OpenDialog(url, name, options, aExtraArgument, _retval); } \
-  NS_IMETHOD Close(void) { return _to Close(); } \
-  NS_IMETHOD UpdateCommands(const nsAString & action) { return _to UpdateCommands(action); } \
+  NS_SCRIPTABLE NS_IMETHOD Close(void) { return _to Close(); } \
+  NS_SCRIPTABLE NS_IMETHOD UpdateCommands(const nsAString & action) { return _to UpdateCommands(action); } \
   NS_IMETHOD Find(const nsAString & str, PRBool caseSensitive, PRBool backwards, PRBool wrapAround, PRBool wholeWord, PRBool searchInFrames, PRBool showDialog, PRBool *_retval) { return _to Find(str, caseSensitive, backwards, wrapAround, wholeWord, searchInFrames, showDialog, _retval); } \
-  NS_IMETHOD Atob(const nsAString & aAsciiString, nsAString & _retval) { return _to Atob(aAsciiString, _retval); } \
-  NS_IMETHOD Btoa(const nsAString & aBase64Data, nsAString & _retval) { return _to Btoa(aBase64Data, _retval); } \
-  NS_IMETHOD GetFrameElement(nsIDOMElement * *aFrameElement) { return _to GetFrameElement(aFrameElement); } \
-  NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval) { return _to ShowModalDialog(aURI, aArgs, aOptions, _retval); } \
-  NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & origin) { return _to PostMessageMoz(message, origin); } 
+  NS_SCRIPTABLE NS_IMETHOD Atob(const nsAString & aAsciiString, nsAString & _retval) { return _to Atob(aAsciiString, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Btoa(const nsAString & aBase64Data, nsAString & _retval) { return _to Btoa(aBase64Data, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFrameElement(nsIDOMElement * *aFrameElement) { return _to GetFrameElement(aFrameElement); } \
+  NS_SCRIPTABLE NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval) { return _to ShowModalDialog(aURI, aArgs, aOptions, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & origin) { return _to PostMessageMoz(message, origin); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMWINDOWINTERNAL(_to) \
-  NS_IMETHOD GetWindow(nsIDOMWindowInternal * *aWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWindow(aWindow); } \
-  NS_IMETHOD GetSelf(nsIDOMWindowInternal * *aSelf) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSelf(aSelf); } \
-  NS_IMETHOD GetNavigator(nsIDOMNavigator * *aNavigator) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNavigator(aNavigator); } \
-  NS_IMETHOD GetScreen(nsIDOMScreen * *aScreen) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScreen(aScreen); } \
-  NS_IMETHOD GetHistory(nsIDOMHistory * *aHistory) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHistory(aHistory); } \
-  NS_IMETHOD GetContent(nsIDOMWindow * *aContent) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContent(aContent); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWindow(nsIDOMWindowInternal * *aWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWindow(aWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSelf(nsIDOMWindowInternal * *aSelf) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSelf(aSelf); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNavigator(nsIDOMNavigator * *aNavigator) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNavigator(aNavigator); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScreen(nsIDOMScreen * *aScreen) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScreen(aScreen); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHistory(nsIDOMHistory * *aHistory) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHistory(aHistory); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContent(nsIDOMWindow * *aContent) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContent(aContent); } \
   NS_IMETHOD GetPrompter(nsIPrompt * *aPrompter) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrompter(aPrompter); } \
-  NS_IMETHOD GetMenubar(nsIDOMBarProp * *aMenubar) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMenubar(aMenubar); } \
-  NS_IMETHOD GetToolbar(nsIDOMBarProp * *aToolbar) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetToolbar(aToolbar); } \
-  NS_IMETHOD GetLocationbar(nsIDOMBarProp * *aLocationbar) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLocationbar(aLocationbar); } \
-  NS_IMETHOD GetPersonalbar(nsIDOMBarProp * *aPersonalbar) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPersonalbar(aPersonalbar); } \
-  NS_IMETHOD GetStatusbar(nsIDOMBarProp * *aStatusbar) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetStatusbar(aStatusbar); } \
-  NS_IMETHOD GetDirectories(nsIDOMBarProp * *aDirectories) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDirectories(aDirectories); } \
-  NS_IMETHOD GetClosed(PRBool *aClosed) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClosed(aClosed); } \
-  NS_IMETHOD GetCrypto(nsIDOMCrypto * *aCrypto) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCrypto(aCrypto); } \
-  NS_IMETHOD GetPkcs11(nsIDOMPkcs11 * *aPkcs11) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPkcs11(aPkcs11); } \
-  NS_IMETHOD GetControllers(nsIControllers * *aControllers) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetControllers(aControllers); } \
-  NS_IMETHOD GetOpener(nsIDOMWindowInternal * *aOpener) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOpener(aOpener); } \
-  NS_IMETHOD SetOpener(nsIDOMWindowInternal * aOpener) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetOpener(aOpener); } \
-  NS_IMETHOD GetStatus(nsAString & aStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetStatus(aStatus); } \
-  NS_IMETHOD SetStatus(const nsAString & aStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetStatus(aStatus); } \
-  NS_IMETHOD GetDefaultStatus(nsAString & aDefaultStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDefaultStatus(aDefaultStatus); } \
-  NS_IMETHOD SetDefaultStatus(const nsAString & aDefaultStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDefaultStatus(aDefaultStatus); } \
-  NS_IMETHOD GetLocation(nsIDOMLocation * *aLocation) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLocation(aLocation); } \
-  NS_IMETHOD GetInnerWidth(PRInt32 *aInnerWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInnerWidth(aInnerWidth); } \
-  NS_IMETHOD SetInnerWidth(PRInt32 aInnerWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetInnerWidth(aInnerWidth); } \
-  NS_IMETHOD GetInnerHeight(PRInt32 *aInnerHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInnerHeight(aInnerHeight); } \
-  NS_IMETHOD SetInnerHeight(PRInt32 aInnerHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetInnerHeight(aInnerHeight); } \
-  NS_IMETHOD GetOuterWidth(PRInt32 *aOuterWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOuterWidth(aOuterWidth); } \
-  NS_IMETHOD SetOuterWidth(PRInt32 aOuterWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetOuterWidth(aOuterWidth); } \
-  NS_IMETHOD GetOuterHeight(PRInt32 *aOuterHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOuterHeight(aOuterHeight); } \
-  NS_IMETHOD SetOuterHeight(PRInt32 aOuterHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetOuterHeight(aOuterHeight); } \
-  NS_IMETHOD GetScreenX(PRInt32 *aScreenX) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScreenX(aScreenX); } \
-  NS_IMETHOD SetScreenX(PRInt32 aScreenX) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetScreenX(aScreenX); } \
-  NS_IMETHOD GetScreenY(PRInt32 *aScreenY) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScreenY(aScreenY); } \
-  NS_IMETHOD SetScreenY(PRInt32 aScreenY) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetScreenY(aScreenY); } \
-  NS_IMETHOD GetPageXOffset(PRInt32 *aPageXOffset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPageXOffset(aPageXOffset); } \
-  NS_IMETHOD GetPageYOffset(PRInt32 *aPageYOffset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPageYOffset(aPageYOffset); } \
-  NS_IMETHOD GetScrollMaxX(PRInt32 *aScrollMaxX) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScrollMaxX(aScrollMaxX); } \
-  NS_IMETHOD GetScrollMaxY(PRInt32 *aScrollMaxY) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScrollMaxY(aScrollMaxY); } \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
-  NS_IMETHOD GetFullScreen(PRBool *aFullScreen) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFullScreen(aFullScreen); } \
-  NS_IMETHOD SetFullScreen(PRBool aFullScreen) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFullScreen(aFullScreen); } \
-  NS_IMETHOD Alert(const nsAString & text) { return !_to ? NS_ERROR_NULL_POINTER : _to->Alert(text); } \
-  NS_IMETHOD Confirm(const nsAString & text, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Confirm(text, _retval); } \
-  NS_IMETHOD Prompt(const nsAString & aMessage, const nsAString & aInitial, const nsAString & aTitle, PRUint32 aSavePassword, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Prompt(aMessage, aInitial, aTitle, aSavePassword, _retval); } \
-  NS_IMETHOD Focus(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Focus(); } \
-  NS_IMETHOD Blur(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Blur(); } \
-  NS_IMETHOD Back(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Back(); } \
-  NS_IMETHOD Forward(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Forward(); } \
-  NS_IMETHOD Home(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Home(); } \
-  NS_IMETHOD Stop(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Stop(); } \
-  NS_IMETHOD Print(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Print(); } \
-  NS_IMETHOD MoveTo(PRInt32 xPos, PRInt32 yPos) { return !_to ? NS_ERROR_NULL_POINTER : _to->MoveTo(xPos, yPos); } \
-  NS_IMETHOD MoveBy(PRInt32 xDif, PRInt32 yDif) { return !_to ? NS_ERROR_NULL_POINTER : _to->MoveBy(xDif, yDif); } \
-  NS_IMETHOD ResizeTo(PRInt32 width, PRInt32 height) { return !_to ? NS_ERROR_NULL_POINTER : _to->ResizeTo(width, height); } \
-  NS_IMETHOD ResizeBy(PRInt32 widthDif, PRInt32 heightDif) { return !_to ? NS_ERROR_NULL_POINTER : _to->ResizeBy(widthDif, heightDif); } \
-  NS_IMETHOD Scroll(PRInt32 xScroll, PRInt32 yScroll) { return !_to ? NS_ERROR_NULL_POINTER : _to->Scroll(xScroll, yScroll); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMenubar(nsIDOMBarProp * *aMenubar) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMenubar(aMenubar); } \
+  NS_SCRIPTABLE NS_IMETHOD GetToolbar(nsIDOMBarProp * *aToolbar) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetToolbar(aToolbar); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLocationbar(nsIDOMBarProp * *aLocationbar) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLocationbar(aLocationbar); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPersonalbar(nsIDOMBarProp * *aPersonalbar) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPersonalbar(aPersonalbar); } \
+  NS_SCRIPTABLE NS_IMETHOD GetStatusbar(nsIDOMBarProp * *aStatusbar) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetStatusbar(aStatusbar); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDirectories(nsIDOMBarProp * *aDirectories) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDirectories(aDirectories); } \
+  NS_SCRIPTABLE NS_IMETHOD GetClosed(PRBool *aClosed) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClosed(aClosed); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCrypto(nsIDOMCrypto * *aCrypto) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCrypto(aCrypto); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPkcs11(nsIDOMPkcs11 * *aPkcs11) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPkcs11(aPkcs11); } \
+  NS_SCRIPTABLE NS_IMETHOD GetControllers(nsIControllers * *aControllers) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetControllers(aControllers); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOpener(nsIDOMWindowInternal * *aOpener) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOpener(aOpener); } \
+  NS_SCRIPTABLE NS_IMETHOD SetOpener(nsIDOMWindowInternal * aOpener) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetOpener(aOpener); } \
+  NS_SCRIPTABLE NS_IMETHOD GetStatus(nsAString & aStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetStatus(aStatus); } \
+  NS_SCRIPTABLE NS_IMETHOD SetStatus(const nsAString & aStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetStatus(aStatus); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultStatus(nsAString & aDefaultStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDefaultStatus(aDefaultStatus); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDefaultStatus(const nsAString & aDefaultStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDefaultStatus(aDefaultStatus); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLocation(nsIDOMLocation * *aLocation) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLocation(aLocation); } \
+  NS_SCRIPTABLE NS_IMETHOD GetInnerWidth(PRInt32 *aInnerWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInnerWidth(aInnerWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetInnerWidth(PRInt32 aInnerWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetInnerWidth(aInnerWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD GetInnerHeight(PRInt32 *aInnerHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInnerHeight(aInnerHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD SetInnerHeight(PRInt32 aInnerHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetInnerHeight(aInnerHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOuterWidth(PRInt32 *aOuterWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOuterWidth(aOuterWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetOuterWidth(PRInt32 aOuterWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetOuterWidth(aOuterWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOuterHeight(PRInt32 *aOuterHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOuterHeight(aOuterHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD SetOuterHeight(PRInt32 aOuterHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetOuterHeight(aOuterHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScreenX(PRInt32 *aScreenX) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScreenX(aScreenX); } \
+  NS_SCRIPTABLE NS_IMETHOD SetScreenX(PRInt32 aScreenX) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetScreenX(aScreenX); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScreenY(PRInt32 *aScreenY) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScreenY(aScreenY); } \
+  NS_SCRIPTABLE NS_IMETHOD SetScreenY(PRInt32 aScreenY) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetScreenY(aScreenY); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPageXOffset(PRInt32 *aPageXOffset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPageXOffset(aPageXOffset); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPageYOffset(PRInt32 *aPageYOffset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPageYOffset(aPageYOffset); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScrollMaxX(PRInt32 *aScrollMaxX) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScrollMaxX(aScrollMaxX); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScrollMaxY(PRInt32 *aScrollMaxY) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScrollMaxY(aScrollMaxY); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFullScreen(PRBool *aFullScreen) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFullScreen(aFullScreen); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFullScreen(PRBool aFullScreen) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFullScreen(aFullScreen); } \
+  NS_SCRIPTABLE NS_IMETHOD Alert(const nsAString & text) { return !_to ? NS_ERROR_NULL_POINTER : _to->Alert(text); } \
+  NS_SCRIPTABLE NS_IMETHOD Confirm(const nsAString & text, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Confirm(text, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Prompt(const nsAString & aMessage, const nsAString & aInitial, const nsAString & aTitle, PRUint32 aSavePassword, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Prompt(aMessage, aInitial, aTitle, aSavePassword, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Focus(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Focus(); } \
+  NS_SCRIPTABLE NS_IMETHOD Blur(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Blur(); } \
+  NS_SCRIPTABLE NS_IMETHOD Back(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Back(); } \
+  NS_SCRIPTABLE NS_IMETHOD Forward(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Forward(); } \
+  NS_SCRIPTABLE NS_IMETHOD Home(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Home(); } \
+  NS_SCRIPTABLE NS_IMETHOD Stop(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Stop(); } \
+  NS_SCRIPTABLE NS_IMETHOD Print(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Print(); } \
+  NS_SCRIPTABLE NS_IMETHOD MoveTo(PRInt32 xPos, PRInt32 yPos) { return !_to ? NS_ERROR_NULL_POINTER : _to->MoveTo(xPos, yPos); } \
+  NS_SCRIPTABLE NS_IMETHOD MoveBy(PRInt32 xDif, PRInt32 yDif) { return !_to ? NS_ERROR_NULL_POINTER : _to->MoveBy(xDif, yDif); } \
+  NS_SCRIPTABLE NS_IMETHOD ResizeTo(PRInt32 width, PRInt32 height) { return !_to ? NS_ERROR_NULL_POINTER : _to->ResizeTo(width, height); } \
+  NS_SCRIPTABLE NS_IMETHOD ResizeBy(PRInt32 widthDif, PRInt32 heightDif) { return !_to ? NS_ERROR_NULL_POINTER : _to->ResizeBy(widthDif, heightDif); } \
+  NS_SCRIPTABLE NS_IMETHOD Scroll(PRInt32 xScroll, PRInt32 yScroll) { return !_to ? NS_ERROR_NULL_POINTER : _to->Scroll(xScroll, yScroll); } \
   NS_IMETHOD Open(const nsAString & url, const nsAString & name, const nsAString & options, nsIDOMWindow **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Open(url, name, options, _retval); } \
   NS_IMETHOD OpenDialog(const nsAString & url, const nsAString & name, const nsAString & options, nsISupports *aExtraArgument, nsIDOMWindow **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OpenDialog(url, name, options, aExtraArgument, _retval); } \
-  NS_IMETHOD Close(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Close(); } \
-  NS_IMETHOD UpdateCommands(const nsAString & action) { return !_to ? NS_ERROR_NULL_POINTER : _to->UpdateCommands(action); } \
+  NS_SCRIPTABLE NS_IMETHOD Close(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Close(); } \
+  NS_SCRIPTABLE NS_IMETHOD UpdateCommands(const nsAString & action) { return !_to ? NS_ERROR_NULL_POINTER : _to->UpdateCommands(action); } \
   NS_IMETHOD Find(const nsAString & str, PRBool caseSensitive, PRBool backwards, PRBool wrapAround, PRBool wholeWord, PRBool searchInFrames, PRBool showDialog, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Find(str, caseSensitive, backwards, wrapAround, wholeWord, searchInFrames, showDialog, _retval); } \
-  NS_IMETHOD Atob(const nsAString & aAsciiString, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Atob(aAsciiString, _retval); } \
-  NS_IMETHOD Btoa(const nsAString & aBase64Data, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Btoa(aBase64Data, _retval); } \
-  NS_IMETHOD GetFrameElement(nsIDOMElement * *aFrameElement) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFrameElement(aFrameElement); } \
-  NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ShowModalDialog(aURI, aArgs, aOptions, _retval); } \
-  NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & origin) { return !_to ? NS_ERROR_NULL_POINTER : _to->PostMessageMoz(message, origin); } 
+  NS_SCRIPTABLE NS_IMETHOD Atob(const nsAString & aAsciiString, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Atob(aAsciiString, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Btoa(const nsAString & aBase64Data, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Btoa(aBase64Data, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFrameElement(nsIDOMElement * *aFrameElement) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFrameElement(aFrameElement); } \
+  NS_SCRIPTABLE NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ShowModalDialog(aURI, aArgs, aOptions, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & origin) { return !_to ? NS_ERROR_NULL_POINTER : _to->PostMessageMoz(message, origin); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
