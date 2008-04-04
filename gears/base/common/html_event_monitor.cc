@@ -23,6 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef WINCE
+// This class does not work in WinCE, and is not referenced.
+#else
+
 #include "gears/base/common/html_event_monitor.h"
 
 
@@ -43,3 +47,5 @@ HtmlEventMonitor::~HtmlEventMonitor() {
     Stop();
   }
 }
+
+#endif  // WINCE .. else

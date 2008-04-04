@@ -97,7 +97,6 @@ endif
 # of files include SDK/internal files differently.
 FF_CPPFLAGS += -DBROWSER_FF=1 -I$(GECKO_BASE) -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -DMOZILLA_STRICT_API
 IE_CPPFLAGS = -DBROWSER_IE=1
-IEMOBILE_CPPFLAGS = -DBROWSER_IE=1
 NPAPI_CPPFLAGS = -DBROWSER_NPAPI=1 -Ithird_party/npapi -Ithird_party -Ithird_party/googleurl -Ithird_party/icu38/public/common
 
 # When adding or removing SQLITE_OMIT_* options, also update and
@@ -311,7 +310,6 @@ endif
 SHLIBFLAGS_NOPDB = $(LINKFLAGS) /DLL
 SHLIBFLAGS = $(SHLIBFLAGS_NOPDB) /PDB:"$(@D)/$(MODULE).pdb"
 
-ifeq ($(OS),win32)
 FF_SHLIBFLAGS_dbg = /NODEFAULTLIB:MSVCRT
 FF_SHLIBFLAGS_opt = /NODEFAULTLIB:MSVCRT
 FF_SHLIBFLAGS = $(FF_SHLIBFLAGS_$(MODE))
@@ -323,11 +321,7 @@ IE_SHLIBFLAGS = $(IE_SHLIBFLAGS_$(MODE)) /DEF:tools/mscom.def
 NPAPI_SHLIBFLAGS_dbg = /NODEFAULTLIB:MSVCRT
 NPAPI_SHLIBFLAGS_opt = /NODEFAULTLIB:MSVCRT
 NPAPI_SHLIBFLAGS = $(NPAPI_SHLIBFLAGS_$(MODE)) /DEF:base/npapi/npgears.def
-else
-IEMOBILE_SHLIBFLAGS_dbg =
-IEMOBILE_SHLIBFLAGS_opt =
-IEMOBILE_SHLIBFLAGS = $(IE_SHLIBFLAGS_$(MODE)) /DEF:tools/mscom.def
-endif
+
 
 TRANSLATE_LINKER_FILE_LIST = cat -
 EXT_LINKER_CMD_FLAG = @
@@ -335,14 +329,14 @@ EXT_LINKER_CMD_FLAG = @
 GECKO_SDK = $(GECKO_BASE)/win32
 
 FF_LIBS = $(GECKO_LIB)/xpcom.lib $(GECKO_LIB)/xpcomglue_s.lib $(GECKO_LIB)/nspr4.lib $(GECKO_LIB)/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib comdlg32.lib
+ifeq ($(OS),win32)
 IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib comdlg32.lib
-IEMOBILE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib cellcore.lib htmlview.lib imaging.lib toolhelp.lib aygshell.lib
+else # wince
+IE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib cellcore.lib htmlview.lib imaging.lib toolhelp.lib aygshell.lib
+endif
 NPAPI_LIBS = 
 
 # Other tools specific to win32/wince builds.
-MIDL = midl
-MIDLFLAGS = $(CPPFLAGS) -env win32 -Oicf -tlb "$(@D)/$*.tlb" -h "$(@D)/$*.h" -iid "$(IE_OUTDIR)/$*_i.c" -proxy "$(IE_OUTDIR)/$*_p.c" -dlldata "$(IE_OUTDIR)/$*_d.c"
-
 RC = rc
 RCFLAGS_dbg = /DDEBUG=1
 RCFLAGS_opt = /DNDEBUG=1
