@@ -32,6 +32,8 @@
 #include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/string16.h"  // for string16
 
+// TODO(michaeln): Split into multiple browser specific files.
+
 #if BROWSER_FF
 
 #include <gecko_sdk/include/nsCOMPtr.h>  // for JsParamFetcher
@@ -42,7 +44,6 @@ class JsContextWrapper;
 
 // Abstracted types for values used with JavaScript engines.
 typedef jsval JsToken;
-typedef std::equal_to<JsToken> JsTokenEqualTo;
 typedef jsval JsScopedToken;  // unneeded in FF, see comment on JsArray
 typedef JSContext* JsContextPtr;
 typedef JsContextWrapper* JsContextWrapperPtr;
@@ -50,6 +51,9 @@ typedef nsresult JsNativeMethodRetval;
 
 // interface required for COM objects exposed in JS
 typedef nsISupports IScriptable;
+
+// TODO(michaeln): compare string values rather than pointers?
+typedef std::equal_to<JsToken> JsTokenEqualTo;
 
 #elif BROWSER_IE
 
@@ -69,9 +73,8 @@ typedef IDispatch IScriptable;
 // On Firefox, a JsToken is a jsval, which is an int, and the natural
 // operator== is fine.  On IE, JsToken is a VARIANT, which does not have a
 // natural operator==, so we have to make one here.
-class JsTokenEqualTo {
- public:
-  bool operator()(const JsToken &x, const JsToken &y) {
+struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool> {
+  bool operator()(const JsToken &x, const JsToken &y) const {
     // All we are looking for in this comparator is that different VARIANTs
     // will compare differently, but that the same IDispatch* (wrapped as a
     // VARIANT) will compare the same.  A non-goal is that the VARIANT
@@ -93,6 +96,7 @@ class JsTokenEqualTo {
         return x.dblVal == y.dblVal;
         break;
       case VT_BSTR:
+        // TODO(michaeln): compare string values rather than pointers?
         return x.bstrVal == y.bstrVal;
         break;
       case VT_DISPATCH:
@@ -157,13 +161,53 @@ class ScopedNPVariant : public NPVariant {
 // Abstracted types for values used with JavaScript engines.
 typedef NPVariant JsToken;
 typedef ScopedNPVariant JsScopedToken;
-typedef std::equal_to<JsToken> JsTokenEqualTo;
 typedef NPP JsContextPtr;
 typedef void* JsContextWrapperPtr; // unused in NPAPI
 typedef NPError JsNativeMethodRetval;
 
 // Not used in NPAPI or WEBKIT at the moment
 typedef void* IScriptable;
+
+struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool>  {
+  bool operator()(const JsToken &x, const JsToken &y) const  {
+    // All we are looking for in this comparator is that different NPVariants
+    // will compare differently, but that the same NPObject* (wrapped as a
+    // NPVariant) will compare the same.  A non-goal is that the NPVariant
+    // representing the integer 3 is "equal to" one representing 3.0.
+    if (x.type != y.type) {
+      return false;
+    }
+    switch (x.type) {
+      case NPVariantType_Void:
+        return true;
+        break;
+      case NPVariantType_Null:
+        return true;
+        break;
+      case NPVariantType_Bool:
+        return x.value.boolValue == y.value.boolValue;
+        break;
+      case NPVariantType_Int32:
+        return x.value.intValue == y.value.intValue;
+        break;
+      case NPVariantType_Double:
+        return x.value.doubleValue == y.value.doubleValue;
+        break;
+      case NPVariantType_String:
+        // TODO(michaeln): compare string values rather than pointers?
+        return x.value.stringValue.UTF8Characters ==
+               y.value.stringValue.UTF8Characters;
+        break;
+      case NPVariantType_Object:
+        return x.value.objectValue == y.value.objectValue;
+        break;
+      default:
+        // do nothing
+        break;
+    }
+    return false;
+  }
+};
 
 #endif  // BROWSER_NPAPI || BROWSER_WEBKIT
 

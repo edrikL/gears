@@ -23,6 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <algorithm>
 #include "gears/base/common/js_marshal.h"
 #include "gears/base/common/js_types.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
@@ -71,31 +72,44 @@ MarshaledJsToken::~MarshaledJsToken() {
 }
 
 
+// static
 MarshaledJsToken *MarshaledJsToken::Marshal(
     const JsToken &token,
     JsContextPtr js_context,
     std::string16 *error_message_out) {
-  scoped_ptr<MarshalingContext> marshaling_context(new MarshalingContext);
+  JsTokenVector object_stack;  // storage used to detect cycles
   return MarshaledJsToken::Marshal(
-      token, js_context, error_message_out, marshaling_context.get());
+      token, js_context, error_message_out, &object_stack);
 }
 
 
+// Helper to detect when a object or array being marshaled contains a cycle.
+// While objects/arrays are being marshaled, their token is pushed on a stack,
+// and popped off upon completion of the object/array. Prior to marshalling
+// nested objects/array, we look for them on that stack.
+// static
+bool MarshaledJsToken::CausesCycle(const JsToken &token,
+                                   JsTokenVector *object_stack,
+                                   std::string16 *error_message_out) { 
+  JsTokenVector::iterator found = std::find_if(
+                              object_stack->begin(),
+                              object_stack->end(),
+                              std::bind2nd(JsTokenEqualTo(), token));
+  if (found != object_stack->end()) {
+    *error_message_out = STRING16(
+        L"Cannot marshal an object that contains a cycle.");
+    return true;
+  }
+  return false;
+}
+
+
+// static
 MarshaledJsToken *MarshaledJsToken::Marshal(
     const JsToken &token,
     JsContextPtr js_context,
     std::string16 *error_message_out,
-    MarshalingContext *marshaling_context) {
-  for (MarshalingContext::iterator i = marshaling_context->begin();
-      i != marshaling_context->end(); ++i) {
-    static JsTokenEqualTo comparator;
-    if (comparator(*i, token)) {
-      *error_message_out = STRING16(
-          L"Cannot marshal an object graph that contains a cycle.");
-      return NULL;
-    }
-  }
-
+    JsTokenVector *object_stack) {
   scoped_ptr<MarshaledJsToken> mjt;
 
   switch (JsTokenGetType(token, js_context)) {
@@ -136,28 +150,32 @@ MarshaledJsToken *MarshaledJsToken::Marshal(
       break;
     }
     case JSPARAM_OBJECT: {
-      JsObject value;
-      if (value.SetObject(token, js_context)) {
-        marshaling_context->push_back(token);
-        mjt.reset(new MarshaledJsToken());
-        if (!mjt->InitializeFromObject(
-            value, js_context, error_message_out, marshaling_context)) {
-          mjt.reset(NULL);
+      if (!CausesCycle(token, object_stack, error_message_out)) {
+        object_stack->push_back(token);
+        JsObject value;
+        if (value.SetObject(token, js_context)) {
+          mjt.reset(new MarshaledJsToken());
+          if (!mjt->InitializeFromObject(
+                        value, js_context, error_message_out, object_stack)) {
+            mjt.reset(NULL);
+          }
         }
-        marshaling_context->pop_back();
+        object_stack->pop_back();
       }
       break;
     }
     case JSPARAM_ARRAY: {
-      JsArray value;
-      if (value.SetArray(token, js_context)) {
-        marshaling_context->push_back(token);
-        mjt.reset(new MarshaledJsToken());
-        if (!mjt->InitializeFromArray(
-            value, js_context, error_message_out, marshaling_context)) {
-          mjt.reset(NULL);
+      if (!CausesCycle(token, object_stack, error_message_out)) {
+        object_stack->push_back(token);
+        JsArray value;
+        if (value.SetArray(token, js_context)) {
+          mjt.reset(new MarshaledJsToken());
+          if (!mjt->InitializeFromArray(
+                        value, js_context, error_message_out, object_stack)) {
+            mjt.reset(NULL);
+          }
         }
-        marshaling_context->pop_back();
+        object_stack->pop_back();
       }
       break;
     }
@@ -258,7 +276,7 @@ bool MarshaledJsToken::InitializeFromObject(
     JsObject &js_object,
     JsContextPtr js_context,
     std::string16 *error_message_out,
-    MarshalingContext *marshaling_context) {
+    JsTokenVector *object_stack) {
   std::vector<std::string16> property_names;
   if (!js_object.GetPropertyNames(&property_names)) {
     return false;
@@ -274,7 +292,7 @@ bool MarshaledJsToken::InitializeFromObject(
       return false;
     }
     MarshaledJsToken *marshaled_pv = Marshal(
-        property_value, js_context, error_message_out, marshaling_context);
+        property_value, js_context, error_message_out, object_stack);
     if (!marshaled_pv) {
       DeleteMarshaledJsTokens(o.get());
       return false;
@@ -292,7 +310,7 @@ bool MarshaledJsToken::InitializeFromArray(
     JsArray &js_array,
     JsContextPtr js_context,
     std::string16 *error_message_out,
-    MarshalingContext *marshaling_context) {
+    JsTokenVector *object_stack) {
   int n;
   if (!js_array.GetLength(&n)) {
     return false;
@@ -304,7 +322,7 @@ bool MarshaledJsToken::InitializeFromArray(
     JsScopedToken token;
     if (js_array.GetElement(i, &token)) {
       MarshaledJsToken *element_mjt =
-          Marshal(token, js_context, error_message_out, marshaling_context);
+          Marshal(token, js_context, error_message_out, object_stack);
       if (element_mjt) {
         a->push_back(element_mjt);
       } else {
