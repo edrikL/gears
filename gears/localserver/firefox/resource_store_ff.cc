@@ -704,9 +704,8 @@ GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
 // HandleEvent
 //------------------------------------------------------------------------------
 void GearsResourceStore::HandleEvent(int code, int param,
-                                     AsyncTask *source) {
-  CaptureTask *task = reinterpret_cast<CaptureTask*>(source);
-  if (task && (task == capture_task_.get())) {
+                                     AsyncTask* source) {
+  if (source == capture_task_.get()) {
     if (code == CaptureTask::CAPTURE_TASK_COMPLETE) {
       OnCaptureTaskComplete();
     } else {

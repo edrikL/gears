@@ -80,7 +80,7 @@ class GearsHttpRequest
   void GetStatusText(JsCallContext *context);
   
  private:
-  HttpRequest *request_;
+  scoped_refptr<HttpRequest> request_;
   bool content_type_header_was_set_;
   bool has_fired_completion_event_;
   scoped_ptr<JsRootedCallback> onreadystatechangehandler_;

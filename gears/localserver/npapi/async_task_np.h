@@ -33,6 +33,7 @@
 #include <atlsync.h>
 #include <vector>
 #include "gears/base/common/message_queue.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/atl_headers.h" // include this before other ATL headers
 #include "gears/localserver/common/critical_section.h"
@@ -45,7 +46,8 @@
 //------------------------------------------------------------------------------
 // AsyncTask
 //------------------------------------------------------------------------------
-class AsyncTask : protected HttpRequest::ReadyStateListener {
+class AsyncTask : protected HttpRequest::ReadyStateListener,
+                  private RefCounted {
  public:
   // Starts a worker thread which will call the Run method
   bool Start();
@@ -146,10 +148,6 @@ class AsyncTask : protected HttpRequest::ReadyStateListener {
       ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
   }
 
-  void AddReference();
-  void RemoveReference();
-
-  int refcount_;
   bool delete_when_done_;
   Listener *listener_;
   HANDLE thread_;

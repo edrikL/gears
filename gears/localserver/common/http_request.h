@@ -29,7 +29,7 @@
 #include <assert.h>
 #include <vector>
 #include "gears/base/common/int_types.h"
-#include "gears/base/common/scoped_token.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/localserver/common/http_constants.h"
@@ -45,7 +45,7 @@ class BlobInterface;
 class HttpRequest {
  public:
   // factory
-  static HttpRequest *Create();
+  static bool Create(scoped_refptr<HttpRequest>* request);
 
   // Returns true if the given scheme is supported by HttpRequest.
   static bool IsSchemeSupported(const char16 *scheme) {
@@ -58,8 +58,8 @@ class HttpRequest {
   }
 
   // refcounting
-  virtual int AddReference() = 0;
-  virtual int ReleaseReference() = 0;
+  virtual void Ref() = 0;
+  virtual void Unref() = 0;
 
   // Get or set whether to use or bypass caches, the default is USE_ALL_CACHES.
   // May only be set prior to calling Send.
@@ -139,20 +139,5 @@ class HttpRequest {
     return GetCachingBehavior() == BYPASS_ALL_CACHES;
   }
 };
-
-//------------------------------------------------------------------------------
-// A scoped ptr class that automatically calls ReleaseReference on its
-// contained HttpRequest pointer.
-//------------------------------------------------------------------------------
-
-class ReleaseHttpRequestFunctor {
- public:
-  void operator()(HttpRequest *request) const {
-    if (request) { request->ReleaseReference(); }
-  }
-};
-
-typedef scoped_token<HttpRequest*, ReleaseHttpRequestFunctor>
-    ScopedHttpRequestPtr;
 
 #endif  // GEARS_LOCALSERVER_COMMON_HTTP_REQUEST_H__

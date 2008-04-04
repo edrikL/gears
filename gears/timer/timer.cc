@@ -64,9 +64,9 @@ LRESULT WindowsPlatformTimer::OnTimer(UINT msg,
     return 0;
   }
   in_handler_ = true;
-  // We Add/RemoveReference to protect against a delete while running the timer
-  // handler.
-  gears_timer_->AddReference();
+  // Hold an extra reference to protect against deletion while running the
+  // timer handler.
+  scoped_refptr<GearsTimer> hold(gears_timer_);
 
   std::map<int, GearsTimer::TimerInfo>::iterator timer =
       gears_timer_->timers_.find(timer_id);
@@ -78,7 +78,6 @@ LRESULT WindowsPlatformTimer::OnTimer(UINT msg,
     gears_timer_->HandleTimer(&(timer->second));
   }
 
-  gears_timer_->RemoveReference();
   in_handler_ = false;
   return 0;
 }
@@ -113,7 +112,6 @@ GearsTimer::TimerInfo::~TimerInfo() {
 #if BROWSER_IE
     owner->platform_timer_->CancelGearsTimer(timer_id);
 #endif
-    owner->RemoveReference();
   }
 }
 
@@ -303,11 +301,10 @@ int GearsTimer::CreateTimer(const TimerInfo &timer_info, int timeout) {
 void GearsTimer::HandleEvent(JsEventType event_type) {
   assert(event_type == JSEVENT_UNLOAD);
 
-  // AddReference this Timer object to keep it from getting deleted
-  // while we iterate through the map
-  AddReference();
+  // Hold an extra reference to protect against deletion while clearing the map,
+  // which contains references to us.
+  scoped_refptr<GearsTimer> hold(this);
   timers_.clear();
-  RemoveReference();
 }
 
 
@@ -339,22 +336,18 @@ void TimerCallback(CFRunLoopTimerRef ref, void* closure)
   GearsTimer::TimerInfo *timer_info = 
                              static_cast<GearsTimer::TimerInfo *>(closure);
   
-  // AddReference this Timer object to keep it from getting deleted
-  // while running the timer handler.
-  GearsTimer *owner = timer_info->owner;
-  owner->AddReference();
-  owner->HandleTimer(timer_info);
-  owner->RemoveReference();
+  // Hold an extra reference to protect against deletion while running the
+  // timer handler.
+  scoped_refptr<GearsTimer> hold(timer_info->owner);
+  timer_info->owner->HandleTimer(timer_info);
 }
 #elif BROWSER_FF
 void GearsTimer::TimerCallback(nsITimer *timer, void *closure) {
   TimerInfo *timer_info = reinterpret_cast<TimerInfo *>(closure);
 
-  // AddReference this Timer object to keep it from getting deleted
-  // while running the timer handler.
-  GearsTimer *owner = timer_info->owner;
-  owner->AddReference();
-  owner->HandleTimer(timer_info);
-  owner->RemoveReference();
+  // Hold an extra reference to protect against deletion while running the
+  // timer handler.
+  scoped_refptr<GearsTimer> hold(timer_info->owner);
+  timer_info->owner->HandleTimer(timer_info);
 }
 #endif

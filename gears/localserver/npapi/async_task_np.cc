@@ -44,7 +44,6 @@ const char16 *kIsOfflineErrorMessage =
 AsyncTask::AsyncTask()
     : is_initialized_(false),
       is_aborted_(false),
-      refcount_(1),
       delete_when_done_(false),
       ready_state_changed_signalled_(false),
       abort_signalled_(false),
@@ -52,6 +51,7 @@ AsyncTask::AsyncTask()
       task_thread_id_(0),
       listener_(NULL),
       thread_(NULL) {
+  Ref();
 }
 
 //------------------------------------------------------------------------------
@@ -59,18 +59,8 @@ AsyncTask::AsyncTask()
 //------------------------------------------------------------------------------
 AsyncTask::~AsyncTask() {
   assert(!thread_);
-  assert(refcount_ == 0 || 
-         (refcount_ == 1 && !delete_when_done_));  
-}
-
-void AsyncTask::AddReference() {
-  AtomicIncrement(&refcount_, 1);
-}
-
-void AsyncTask::RemoveReference() {
-  if (AtomicIncrement(&refcount_, -1) == 0) {
-    delete this;
-  }
+  assert(GetRef() == 0 || 
+         (GetRef() == 1 && !delete_when_done_));  
 }
 
 //------------------------------------------------------------------------------
@@ -121,7 +111,7 @@ bool AsyncTask::Start() {
 
   if (thread_ == NULL) return false;
 
-  AddReference();  // reference is removed upon worker thread exit
+  Ref();  // reference is removed upon worker thread exit
   return true;
 }
 
@@ -149,11 +139,11 @@ void AsyncTask::DeleteWhenDone() {
   SetListener(NULL);
   delete_when_done_ = true;
 
-  // We have to call unlock prior to calling RemoveReference 
+  // We have to call unlock prior to calling Unref 
   // otherwise the locker would try to access deleted memory, &lock_,
   // after it's been freed.
   locker.Unlock();
-  RemoveReference();  // remove the reference added by the constructor
+  Unref();  // remove the reference added by the constructor
 }
 
 
@@ -183,7 +173,7 @@ unsigned int __stdcall AsyncTask::ThreadMain(void *task) {
 
   CloseHandle(self->thread_);
   self->thread_ = NULL;
-  self->RemoveReference();  // remove the reference added by the Start
+  self->Unref();  // remove the reference added by the Start
 
   CoUninitialize();
   return 0;
@@ -197,10 +187,10 @@ struct AsyncTaskFunctor : public AsyncFunctor {
 public:
   AsyncTaskFunctor(int code, int param, AsyncTask *target)
       : code(code), param(param), target(target) {
-    target->AddReference();
+    target->Ref();
   }
   ~AsyncTaskFunctor() {
-    target->RemoveReference();
+    target->Unref();
   }
 
   virtual void Run() {
@@ -284,9 +274,8 @@ bool AsyncTask::HttpGet(const char16 *full_url,
     }
   }
 
-  ScopedHttpRequestPtr scoped_http_request(HttpRequest::Create());
-  HttpRequest *http_request = scoped_http_request.get();
-  if (!http_request) {
+  scoped_refptr<HttpRequest> http_request;
+  if (!HttpRequest::Create(&http_request)) {
     return false;
   }
 

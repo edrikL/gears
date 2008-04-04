@@ -520,17 +520,17 @@ bool GearsDesktop::FetchIcon(GearsDesktop::IconData *icon, int expected_size,
   }
 
   // Fetch the png data
-  ScopedHttpRequestPtr request(HttpRequest::Create());
+  scoped_refptr<HttpRequest> request;
+  HttpRequest::Create(&request);
 
-  request.get()->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
-  request.get()->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
+  request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
+  request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
 
   // Get the current icon.
   int status = 0;
-  if (!request.get()->Open(HttpConstants::kHttpGET,
-                           icon->url.c_str(), false) ||
-      !request.get()->Send() ||
-      !request.get()->GetStatus(&status) ||
+  if (!request->Open(HttpConstants::kHttpGET, icon->url.c_str(), false) ||
+      !request->Send() ||
+      !request->GetStatus(&status) ||
       status != HTTPResponse::RC_REQUEST_OK) {
     *error = STRING16(L"Could not load icon ");
     *error += icon->url.c_str();
@@ -539,7 +539,7 @@ bool GearsDesktop::FetchIcon(GearsDesktop::IconData *icon, int expected_size,
   }
 
   // Extract the data.
-  if (!request.get()->GetResponseBody(&icon->png_data)) {
+  if (!request->GetResponseBody(&icon->png_data)) {
     *error = STRING16(L"Invalid data for icon ");
     *error += icon->url;
     *error += STRING16(L".");

@@ -228,7 +228,11 @@ class RefCount {
   inline bool Ref() { return (1 == AtomicIncrement(&count_, 1)); }
 
   // Decrements the count atomically, and returns true on a 1 -> 0 transition.
-  inline bool Unref() { return (0 == AtomicIncrement(&count_, -1)); }
+  inline bool Unref() { 
+    AtomicWord count = AtomicIncrement(&count_, -1);
+    assert(count >= 0);
+    return (0 == count);
+  }
 
   // Returns the current value of the count.  The value is intended for
   // diagnostic code and is meaningless in multi-threaded scenarios.

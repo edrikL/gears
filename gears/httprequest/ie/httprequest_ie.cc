@@ -221,7 +221,7 @@ STDMETHODIMP GearsHttpRequest::send(
   }
 #endif  // !OFFICIAL_BUILD
 
-  HttpRequest *request_being_sent = request_;
+  scoped_refptr<HttpRequest> request_being_sent = request_;
 
   bool ok = false;
   if (post_data_str && post_data_str[0]) {
@@ -517,7 +517,7 @@ HttpRequest::ReadyState GearsHttpRequest::GetState() {
 
 void GearsHttpRequest::CreateRequest() {
   ReleaseRequest();
-  request_ = HttpRequest::Create();
+  HttpRequest::Create(&request_);
   request_->SetOnReadyStateChange(this);
   request_->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
   request_->SetRedirectBehavior(HttpRequest::FOLLOW_WITHIN_ORIGIN);
@@ -527,7 +527,6 @@ void GearsHttpRequest::CreateRequest() {
 void GearsHttpRequest::ReleaseRequest() {
   if (request_) {
     request_->SetOnReadyStateChange(NULL);
-    request_->ReleaseReference();
     request_ = NULL;
     response_text_.reset(NULL);
 #ifndef OFFICIAL_BUILD

@@ -443,9 +443,8 @@ void GearsManagedResourceStore::GetAppVersionString(
 // HandleEvent
 //------------------------------------------------------------------------------
 void GearsManagedResourceStore::HandleEvent(int code, int param,
-                                            AsyncTask *source) {
-  FFUpdateTask* task = reinterpret_cast<FFUpdateTask*>(source);
-  if (task && (task == update_task_.get())) {
+    AsyncTask* source) {
+  if (source == update_task_.get()) {
     if (code == FFUpdateTask::UPDATE_TASK_COMPLETE) {
       update_task_->SetListener(NULL);
       update_task_.release()->DeleteWhenDone();

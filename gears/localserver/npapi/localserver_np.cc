@@ -108,9 +108,8 @@ void GearsLocalServer::CreateManagedStore(JsCallContext *context) {
          name_ascii.c_str(), required_cookie_ascii.c_str()));
 #endif
 
-  GComPtr<GearsManagedResourceStore> store(
-        CreateModule<GearsManagedResourceStore>(GetJsRunner()));
-  if (!store.get())
+  scoped_refptr<GearsManagedResourceStore> store;
+  if (!CreateModule<GearsManagedResourceStore>(GetJsRunner(), &store))
     return;  // Create function sets an error message.
 
   if (!store->InitBaseFromSibling(this)) {
@@ -157,9 +156,8 @@ void GearsLocalServer::OpenManagedStore(JsCallContext *context) {
     return;
   }
 
-  GComPtr<GearsManagedResourceStore> store(
-      CreateModule<GearsManagedResourceStore>(GetJsRunner()));
-  if (!store.get())
+  scoped_refptr<GearsManagedResourceStore> store;
+  if (!CreateModule<GearsManagedResourceStore>(GetJsRunner(), &store))
     return;  // Create function sets an error message.
 
   if (!store->InitBaseFromSibling(this)) {
@@ -245,9 +243,8 @@ void GearsLocalServer::CreateStore(JsCallContext *context) {
          name_ascii.c_str(), required_cookie_ascii.c_str()));
 #endif
 
-  GComPtr<GearsResourceStore> store(
-        CreateModule<GearsResourceStore>(GetJsRunner()));
-  if (!store.get())
+  scoped_refptr<GearsResourceStore> store;
+  if (!CreateModule<GearsResourceStore>(GetJsRunner(), &store))
     return;  // Create function sets an error message.
 
   if (!store->InitBaseFromSibling(this)) {
@@ -293,9 +290,8 @@ void GearsLocalServer::OpenStore(JsCallContext *context) {
     return;
   }
 
-  GComPtr<GearsResourceStore> store(
-        CreateModule<GearsResourceStore>(GetJsRunner()));
-  if (!store.get())
+  scoped_refptr<GearsResourceStore> store;
+  if (!CreateModule<GearsResourceStore>(GetJsRunner(), &store))
     return;  // Create function sets an error message.
 
   if (!store->InitBaseFromSibling(this)) {

@@ -686,7 +686,7 @@ void GearsHttpRequest::OnReadyStateChangedCall() {
 void GearsHttpRequest::CreateRequest() {
   assert(IsUiThread());
   RemoveRequest();
-  request_ = HttpRequest::Create();
+  HttpRequest::Create(&request_);
   request_->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
   request_->SetRedirectBehavior(HttpRequest::FOLLOW_WITHIN_ORIGIN);
   this->AddRef();
@@ -696,7 +696,6 @@ void GearsHttpRequest::RemoveRequest() {
   assert(IsUiThread());
   if (request_) {
     request_->SetOnReadyStateChange(NULL);
-    request_->ReleaseReference();
     request_ = NULL;
     this->Release();
   }

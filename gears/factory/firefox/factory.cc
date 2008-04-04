@@ -144,26 +144,26 @@ NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
 bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
                                           JsParamFetcher *js_params,
                                           std::string16 *error) {
-  GComPtr<ModuleImplBaseClass> object(NULL);
+  scoped_refptr<ModuleImplBaseClass> object;
 
   if (object_name == STRING16(L"beta.test")) {
 #ifdef DEBUG
-    object.reset(CreateModule<GearsTest>(GetJsRunner()));
+    CreateModule<GearsTest>(GetJsRunner(), &object);
 #else
     *error = STRING16(L"Object is only available in debug build.");
     return false;
 #endif
   } else if (object_name == STRING16(L"beta.desktop")) {
-    object.reset(CreateModule<GearsDesktop>(GetJsRunner()));
+    CreateModule<GearsDesktop>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.timer")) {
-    object.reset(CreateModule<GearsTimer>(GetJsRunner()));
+    CreateModule<GearsTimer>(GetJsRunner(), &object);
   } else {
     // Don't return an error here. Caller handles reporting unknown modules.
     error->clear();
     return false;
   }
 
-  if (!object.get()) {
+  if (!object) {
     *error = STRING16(L"Failed to create requested object.");
     return false;
   }
@@ -174,7 +174,7 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   }
 
   js_params->SetReturnValue(object->GetWrapperToken());
-  object.ReleaseNewObjectToScript();
+  ReleaseNewObjectToScript(object.get());
   return true;
 }
 

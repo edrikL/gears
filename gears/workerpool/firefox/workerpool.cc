@@ -198,7 +198,7 @@ struct JavaScriptWorkerInfo {
   std::string16 script_text;  // Owner: parent before signal, immutable after
   SecurityOrigin script_origin;  // Owner: parent before signal, immutable after
 
-  ScopedHttpRequestPtr http_request;  // For createWorkerFromUrl()
+  scoped_refptr<HttpRequest> http_request;  // For createWorkerFromUrl()
   scoped_ptr<HttpRequest::ReadyStateListener> http_request_listener;
   nsCOMPtr<GearsFactory> factory_ref;
   bool is_factory_suspended;
@@ -1015,27 +1015,25 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
     // setup an incoming message queue, then Mutex::Await for the script to be
     // fetched, before finally pumping messages.
 
-    wi->http_request.reset(HttpRequest::Create());
-    if (!wi->http_request.get()) { return false; }
+    if (!HttpRequest::Create(&wi->http_request)) { return false; }
     
     wi->http_request_listener.reset(new CreateWorkerUrlFetchListener(wi));
     if (!wi->http_request_listener.get()) { return false; }
 
-    HttpRequest *request = wi->http_request.get();  // shorthand
-
-    request->SetOnReadyStateChange(wi->http_request_listener.get());
-    request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
-    request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
+    wi->http_request->SetOnReadyStateChange(wi->http_request_listener.get());
+    wi->http_request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
+    wi->http_request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
 
     std::string16 url;
     ResolveAndNormalize(page_security_origin_.full_url().c_str(),
                   url_or_full_script, &url);
 
     bool is_async = true;
-    if (!request->Open(HttpConstants::kHttpGET, url.c_str(), is_async) ||
-        !request->Send()) {
-      request->SetOnReadyStateChange(NULL);
-      request->Abort();
+    if (!wi->http_request->Open(HttpConstants::kHttpGET, url.c_str(),
+                                is_async) ||
+        !wi->http_request->Send()) {
+      wi->http_request->SetOnReadyStateChange(NULL);
+      wi->http_request->Abort();
       return false;
     }
 
@@ -1240,10 +1238,9 @@ void PoolThreadsManager::ShutDown() {
     JavaScriptWorkerInfo *wi = worker_info_[i];
 
     // Cancel any createWorkerFromUrl() network requests that might be pending.
-    HttpRequest *request = wi->http_request.get();
-    if (request) {
-      request->SetOnReadyStateChange(NULL);
-      request->Abort();
+    if (wi->http_request.get()) {
+      wi->http_request->SetOnReadyStateChange(NULL);
+      wi->http_request->Abort();
       // HttpRequest is not threadsafe, must destroy from same thread that
       // created it (which is always the owning thread for now, since we cannot
       // yet make requests from background threads).

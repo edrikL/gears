@@ -29,6 +29,7 @@
 #include <vector>
 #include "gears/base/common/async_router.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/localserver/common/critical_section.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
@@ -36,7 +37,8 @@
 //------------------------------------------------------------------------------
 // AsyncTask
 //------------------------------------------------------------------------------
-class AsyncTask : protected HttpRequest::ReadyStateListener {
+class AsyncTask : protected HttpRequest::ReadyStateListener,
+                  private RefCounted {
  public:
   // Starts a worker thread which will call the Run method
   bool Start();
@@ -143,16 +145,12 @@ class AsyncTask : protected HttpRequest::ReadyStateListener {
     return thread_ == PR_GetCurrentThread();
   }
 
-  void AddReference();
-  void RemoveReference();
-
   bool delete_when_done_;
   Listener *listener_;
   PRThread *thread_;
   ThreadId listener_thread_id_;
-  ScopedHttpRequestPtr http_request_;
+  scoped_refptr<HttpRequest> http_request_;
   HttpRequestParameters *params_;
-  int refcount_;
 
   class AsyncCallEvent;
 };

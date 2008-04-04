@@ -119,7 +119,7 @@ class GearsHttpRequest
   Mutex lock_;
   scoped_ptr<RequestInfo> request_info_;
   scoped_ptr<ResponseInfo> response_info_;
-  HttpRequest *request_;
+  scoped_refptr<HttpRequest> request_;
   scoped_ptr<JsRootedCallback> onreadystatechange_;
   ThreadId apartment_thread_id_;
   bool content_type_header_was_set_;

@@ -233,9 +233,8 @@ bool AsyncTask::HttpGet(const char16 *full_url,
     }
   }
 
-  ScopedHttpRequestPtr scoped_http_request(HttpRequest::Create());
-  HttpRequest *http_request = scoped_http_request.get();
-  if (!http_request) {
+  scoped_refptr<HttpRequest> http_request;
+  if (!HttpRequest::Create(&http_request)) {
     return false;
   }
 

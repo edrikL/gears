@@ -96,11 +96,11 @@ class ATL_NO_VTABLE ModuleWrapper
     return dispatcher_.get();
   }
 
-  virtual void AddReference() {
+  virtual void Ref() {
     AddRef();
   }
 
-  virtual void RemoveReference() {
+  virtual void Unref() {
     Release();
   }
 
@@ -125,20 +125,21 @@ class ATL_NO_VTABLE ModuleWrapper
 
 
 // Creates an instance of the class and its wrapper.
-template<class GearsClass>
-GearsClass *CreateModule(JsRunnerInterface *js_runner) {
+template<class GearsClass, class OutType>
+bool CreateModule(JsRunnerInterface *js_runner,
+                  scoped_refptr<OutType>* module) {
   CComObject<ModuleWrapper> *module_wrapper;
   HRESULT hr = CComObject<ModuleWrapper>::CreateInstance(&module_wrapper);
-  if (FAILED(hr)) return NULL;
+  if (FAILED(hr))
+    return false;
 
   GearsClass *impl = new GearsClass(); 
   Dispatcher<GearsClass> *dispatcher = new Dispatcher<GearsClass>(impl);
 
   module_wrapper->Init(impl, dispatcher);
   impl->SetJsWrapper(module_wrapper);
-  impl->AddReference();
-
-  return impl;
+  module->reset(impl);
+  return true;
 }
 
 #endif  //  GEARS_BASE_IE_MODULE_WRAPPER_H__

@@ -206,7 +206,7 @@ void GearsHttpRequest::Send(JsCallContext *context) {
   if (context->is_exception_set())
     return;
 
-  HttpRequest *request_being_sent = request_;
+  scoped_refptr<HttpRequest> request_being_sent = request_;
 
   bool ok = false;
   if (!post_data.empty()) {
@@ -388,7 +388,7 @@ void GearsHttpRequest::AbortRequest() {
 
 void GearsHttpRequest::CreateRequest() {
   ReleaseRequest();
-  request_ = HttpRequest::Create();
+  HttpRequest::Create(&request_);
   request_->SetOnReadyStateChange(this);
   request_->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
   request_->SetRedirectBehavior(HttpRequest::FOLLOW_WITHIN_ORIGIN);
@@ -398,7 +398,6 @@ void GearsHttpRequest::CreateRequest() {
 void GearsHttpRequest::ReleaseRequest() {
   if (request_) {
     request_->SetOnReadyStateChange(NULL);
-    request_->ReleaseReference();
     request_ = NULL;
   }
 }

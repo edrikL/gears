@@ -35,6 +35,7 @@
 #include "gears/base/common/circular_buffer.h"
 #include "gears/base/common/ipc_message_queue.h"
 #include "gears/base/common/message_queue.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/factory/common/factory_utils.h"  // for AppendBuildInfo
@@ -656,22 +657,12 @@ bool IpcProcessRegistry::Verify(bool check_for_current_process) {
 // IpcThreadMessageEnvelope and ShareableIpcMessage
 //-----------------------------------------------------------------------------
 
-class ShareableIpcMessage {
+class ShareableIpcMessage : public RefCounted {
  public:
   ShareableIpcMessage(int ipc_message_type,
                       IpcMessageData *ipc_message_data)
       : ipc_message_type_(ipc_message_type),
-        ipc_message_data_(ipc_message_data),
-        refcount_(1) {
-  }
-
-  void AddReference() {
-    AtomicIncrement(&refcount_, 1);
-  }
-
-  void RemoveReference() {
-    if (AtomicIncrement(&refcount_, -1) == 0)
-      delete this;
+        ipc_message_data_(ipc_message_data) {
   }
 
   int ipc_message_type() { return ipc_message_type_; }
@@ -694,7 +685,6 @@ class ShareableIpcMessage {
   int ipc_message_type_;
   scoped_ptr<IpcMessageData> ipc_message_data_;
   scoped_ptr< std::vector<uint8> > serialized_message_data_;
-  int refcount_;
 };
 
 
@@ -718,14 +708,10 @@ class IpcThreadMessageEnvelope : public MessageData {
                                                  ipc_message_data);
   }
 
-  virtual ~IpcThreadMessageEnvelope() {
-    shareable_message_->RemoveReference();  
-  }
-
   bool send_to_all_;
   bool include_self_;
   IpcProcessId destination_process_id_;
-  ShareableIpcMessage *shareable_message_;
+  scoped_refptr<ShareableIpcMessage> shareable_message_;
 };
 
 
@@ -777,7 +763,6 @@ class OutboundQueue : public QueueBase {
       is_waiting_for_space_available_(false),
       wait_start_time_(0),
       last_active_time_(0),
-      in_progress_message_(NULL),
       in_progress_written_(0),
       in_progress_sequence_(0) {}
 
@@ -792,13 +777,13 @@ class OutboundQueue : public QueueBase {
  private:
   IpcProcessId process_id_;
   ATL::CHandle process_handle_;
-  std::deque<ShareableIpcMessage*> pending_;
+  std::deque< scoped_refptr<ShareableIpcMessage> > pending_;
   bool has_write_mutex_;
   bool is_waiting_for_write_mutex_;
   bool is_waiting_for_space_available_;
   int64 wait_start_time_;
   int64 last_active_time_;
-  ShareableIpcMessage* in_progress_message_;
+  scoped_refptr<ShareableIpcMessage> in_progress_message_;
   size_t in_progress_written_;
   int in_progress_sequence_;
 
@@ -894,11 +879,7 @@ class Win32IpcMessageQueue : public IpcMessageQueue,
 //-----------------------------------------------------------------------------
 
 OutboundQueue::~OutboundQueue() {
-  while (!pending_.empty()) {
-    ShareableIpcMessage *message = pending_.front();
-    pending_.pop_front();
-    message->RemoveReference();
-  }  
+  pending_.clear();
   if (has_write_mutex_) {
     LOG(("OutboundQueue - releasing write_mutex_\n"));
     BOOL ok = ::ReleaseMutex(write_mutex_.m_h);
@@ -942,7 +923,6 @@ bool OutboundQueue::Open(IpcProcessId process_id) {
 
 
 void OutboundQueue::AddMessageToQueue(ShareableIpcMessage *message) {
-  message->AddReference();
   pending_.push_back(message);
   MaybeWaitForWriteMutex();
 
@@ -1011,12 +991,10 @@ void OutboundQueue::WritePendingMessages() {
   int num_written = 0;
   bool allow_large_message = true;
   while (!pending_.empty()) {
-    ShareableIpcMessage *message = pending_.front();
-    if (!WriteOneMessage(message, allow_large_message)) {
+    if (!WriteOneMessage(pending_.front().get(), allow_large_message)) {
       break;
     }
     pending_.pop_front();
-    message->RemoveReference();
     ++num_written;
     allow_large_message = false;
   }
@@ -1509,7 +1487,7 @@ void Win32IpcMessageQueue::HandleSendToAll(
     if (envelope->include_self_ || *iter != current_process_id_) {
       OutboundQueue *outbound_queue = GetOutboundQueue(*iter);
       if (outbound_queue) {
-        outbound_queue->AddMessageToQueue(envelope->shareable_message_);
+        outbound_queue->AddMessageToQueue(envelope->shareable_message_.get());
       } else if (current_process_id_ != *iter) {
         process_registry_.Remove(*iter);
         LOG(("Removing dead processes from registry, %d\n", *iter));
@@ -1530,7 +1508,7 @@ void Win32IpcMessageQueue::HandleSendToOne(
   OutboundQueue *outbound_queue =
       GetOutboundQueue(envelope->destination_process_id_);
   if (outbound_queue)
-    outbound_queue->AddMessageToQueue(envelope->shareable_message_);
+    outbound_queue->AddMessageToQueue(envelope->shareable_message_.get());
 
 #ifdef DEBUG
   // For testing

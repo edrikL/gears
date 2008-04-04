@@ -70,11 +70,10 @@ NS_IMPL_ISUPPORTS5(FFHttpRequest,
 //------------------------------------------------------------------------------
 // HttpRequest::Create
 //------------------------------------------------------------------------------
-HttpRequest *HttpRequest::Create() {
+bool HttpRequest::Create(scoped_refptr<HttpRequest>* request) {
   assert(IsUiThread());
-  FFHttpRequest *request = new FFHttpRequest();
-  request->AddReference();
-  return request;
+  request->reset(new FFHttpRequest);
+  return true;
 }
 
 //------------------------------------------------------------------------------
@@ -90,12 +89,12 @@ FFHttpRequest::FFHttpRequest()
 FFHttpRequest::~FFHttpRequest() {
 }
 
-int FFHttpRequest::AddReference() {
-  return AddRef();
+void FFHttpRequest::Ref() {
+  AddRef();
 }
 
-int FFHttpRequest::ReleaseReference() {
-  return Release();
+void FFHttpRequest::Unref() {
+  Release();
 }
 
 //------------------------------------------------------------------------------

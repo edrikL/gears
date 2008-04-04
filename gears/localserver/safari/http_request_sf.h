@@ -41,13 +41,8 @@ class BlobInterface;
 //------------------------------------------------------------------------------
 // SFHttpRequest
 //------------------------------------------------------------------------------
-class SFHttpRequest : public HttpRequest {
+class SFHttpRequest : public RefCounted, public HttpRequest {
  public:
- 
-  // RefCounting
-  virtual int AddReference();
-  virtual int ReleaseReference();
-
   // Get or set whether to use or bypass caches, the default is USE_ALL_CACHES
   // May only be set prior to calling Send.
   virtual CachingBehavior GetCachingBehavior() {
@@ -116,7 +111,7 @@ class SFHttpRequest : public HttpRequest {
   typedef HttpHeaderVector::const_iterator HttpHeaderVectorConstIterator;
 
  private:
-  friend HttpRequest *HttpRequest::Create();
+  friend bool HttpRequest::Create(scoped_refptr<HttpRequest>* request);
  
   SFHttpRequest();
   ~SFHttpRequest();
@@ -137,7 +132,6 @@ class SFHttpRequest : public HttpRequest {
   void Reset();
 
   ReadyStateListener *listener_;
-  int ref_count_;
   ReadyState ready_state_;
   std::string16 method_;
   std::string16 url_;

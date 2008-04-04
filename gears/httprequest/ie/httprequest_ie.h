@@ -108,7 +108,7 @@ class ATL_NO_VTABLE GearsHttpRequest
 
  private:
   CComPtr<IDispatch> onreadystatechangehandler_;
-  HttpRequest *request_;
+  scoped_refptr<HttpRequest> request_;
 
   // Null if response_text_ has not yet been cached
   scoped_ptr<std::string16> response_text_;

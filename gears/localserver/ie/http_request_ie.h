@@ -50,8 +50,8 @@ class IEHttpRequest
   // HttpRequest interface
 
   // refcounting
-  virtual int AddReference();
-  virtual int ReleaseReference();
+  virtual void Ref();
+  virtual void Unref();
 
   // Get or set whether to use or bypass caches, the default is USE_ALL_CACHES
   // May only be set prior to calling Send.
