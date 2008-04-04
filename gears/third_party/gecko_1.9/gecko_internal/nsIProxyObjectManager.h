@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/xpcom/proxy/public/nsIProxyObjectManager.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/xpcom/proxy/public/nsIProxyObjectManager.idl
  */
 
 #ifndef __gen_nsIProxyObjectManager_h__
@@ -29,7 +29,7 @@ class nsIEventTarget; /* forward declaration */
  *
  * See http://www.mozilla.org/projects/xpcom/Proxies.html
  */
-class NS_NO_VTABLE nsIProxyObjectManager : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIProxyObjectManager : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPROXYOBJECTMANAGER_IID)
@@ -86,7 +86,7 @@ class NS_NO_VTABLE nsIProxyObjectManager : public nsISupports {
      *   This param holds the resulting proxy object upon successful return.
      */
   /* void getProxyForObject (in nsIEventTarget target, in nsIIDRef iid, in nsISupports object, in PRInt32 proxyType, [iid_is (iid), retval] out nsQIResult result); */
-  NS_IMETHOD GetProxyForObject(nsIEventTarget *target, const nsIID & iid, nsISupports *object, PRInt32 proxyType, void * *result) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetProxyForObject(nsIEventTarget *target, const nsIID & iid, nsISupports *object, PRInt32 proxyType, void * *result) = 0;
 
 };
 
@@ -94,15 +94,15 @@ class NS_NO_VTABLE nsIProxyObjectManager : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIPROXYOBJECTMANAGER \
-  NS_IMETHOD GetProxyForObject(nsIEventTarget *target, const nsIID & iid, nsISupports *object, PRInt32 proxyType, void * *result); 
+  NS_SCRIPTABLE NS_IMETHOD GetProxyForObject(nsIEventTarget *target, const nsIID & iid, nsISupports *object, PRInt32 proxyType, void * *result); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIPROXYOBJECTMANAGER(_to) \
-  NS_IMETHOD GetProxyForObject(nsIEventTarget *target, const nsIID & iid, nsISupports *object, PRInt32 proxyType, void * *result) { return _to GetProxyForObject(target, iid, object, proxyType, result); } 
+  NS_SCRIPTABLE NS_IMETHOD GetProxyForObject(nsIEventTarget *target, const nsIID & iid, nsISupports *object, PRInt32 proxyType, void * *result) { return _to GetProxyForObject(target, iid, object, proxyType, result); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIPROXYOBJECTMANAGER(_to) \
-  NS_IMETHOD GetProxyForObject(nsIEventTarget *target, const nsIID & iid, nsISupports *object, PRInt32 proxyType, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetProxyForObject(target, iid, object, proxyType, result); } 
+  NS_SCRIPTABLE NS_IMETHOD GetProxyForObject(nsIEventTarget *target, const nsIID & iid, nsISupports *object, PRInt32 proxyType, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetProxyForObject(target, iid, object, proxyType, result); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

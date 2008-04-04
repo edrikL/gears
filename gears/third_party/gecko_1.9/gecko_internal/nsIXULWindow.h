@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM e:/builds/tinderbox/XR-Trunk/WINNT_5.2_Depend/mozilla/xpfe/appshell/public/nsIXULWindow.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/xpfe/appshell/public/nsIXULWindow.idl
  */
 
 #ifndef __gen_nsIXULWindow_h__
@@ -30,7 +30,7 @@ class nsIXULBrowserWindow; /* forward declaration */
   {0xb6c2f9e1, 0x53a0, 0x45f2, \
     { 0xa2, 0xb8, 0xfe, 0x37, 0x86, 0x1f, 0xe8, 0xa8 }}
 
-class NS_NO_VTABLE nsIXULWindow : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIXULWindow : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXULWINDOW_IID)
@@ -39,14 +39,14 @@ class NS_NO_VTABLE nsIXULWindow : public nsISupports {
    * The docshell owning the XUL for this window.
    */
   /* readonly attribute nsIDocShell docShell; */
-  NS_IMETHOD GetDocShell(nsIDocShell * *aDocShell) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDocShell(nsIDocShell * *aDocShell) = 0;
 
   /**
    * Indicates if this window is instrinsically sized.	
    */
   /* attribute boolean intrinsicallySized; */
-  NS_IMETHOD GetIntrinsicallySized(PRBool *aIntrinsicallySized) = 0;
-  NS_IMETHOD SetIntrinsicallySized(PRBool aIntrinsicallySized) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIntrinsicallySized(PRBool *aIntrinsicallySized) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetIntrinsicallySized(PRBool aIntrinsicallySized) = 0;
 
   /**
    * The primary content shell.  
@@ -57,7 +57,7 @@ class NS_NO_VTABLE nsIXULWindow : public nsISupports {
    * Query accordingly to determine the capabilities.
    */
   /* readonly attribute nsIDocShellTreeItem primaryContentShell; */
-  NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem * *aPrimaryContentShell) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem * *aPrimaryContentShell) = 0;
 
   /**
    * The content shell specified by the supplied id.
@@ -68,21 +68,21 @@ class NS_NO_VTABLE nsIXULWindow : public nsISupports {
    * Query accordingly to determine the capabilities.
    */
   /* nsIDocShellTreeItem getContentShellById (in wstring ID); */
-  NS_IMETHOD GetContentShellById(const PRUnichar *ID, nsIDocShellTreeItem **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetContentShellById(const PRUnichar *ID, nsIDocShellTreeItem **_retval) = 0;
 
   /**
    * Tell this window that it has picked up a child XUL window
    * @param aChild the child window being added
    */
   /* void addChildWindow (in nsIXULWindow aChild); */
-  NS_IMETHOD AddChildWindow(nsIXULWindow *aChild) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AddChildWindow(nsIXULWindow *aChild) = 0;
 
   /**
    * Tell this window that it has lost a child XUL window
    * @param aChild the child window being removed
    */
   /* void removeChildWindow (in nsIXULWindow aChild); */
-  NS_IMETHOD RemoveChildWindow(nsIXULWindow *aChild) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveChildWindow(nsIXULWindow *aChild) = 0;
 
   /**
    * Move the window to a centered position.
@@ -96,14 +96,14 @@ class NS_NO_VTABLE nsIXULWindow : public nsISupports {
    *                  generally centered horizontally and 1/3 down from the top.
    */
   /* void center (in nsIXULWindow aRelative, in boolean aScreen, in boolean aAlert); */
-  NS_IMETHOD Center(nsIXULWindow *aRelative, PRBool aScreen, PRBool aAlert) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Center(nsIXULWindow *aRelative, PRBool aScreen, PRBool aAlert) = 0;
 
   /**
    * Shows the window as a modal window. That is, ensures that it is visible
    * and runs a local event loop, exiting only once the window has been closed.
    */
   /* void showModal (); */
-  NS_IMETHOD ShowModal(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ShowModal(void) = 0;
 
   enum { lowestZ = 0U };
 
@@ -116,19 +116,19 @@ class NS_NO_VTABLE nsIXULWindow : public nsISupports {
   enum { highestZ = 9U };
 
   /* attribute unsigned long zLevel; */
-  NS_IMETHOD GetZLevel(PRUint32 *aZLevel) = 0;
-  NS_IMETHOD SetZLevel(PRUint32 aZLevel) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetZLevel(PRUint32 *aZLevel) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetZLevel(PRUint32 aZLevel) = 0;
 
   /**
    * contextFlags are from nsIWindowCreator2
    */
   /* attribute PRUint32 contextFlags; */
-  NS_IMETHOD GetContextFlags(PRUint32 *aContextFlags) = 0;
-  NS_IMETHOD SetContextFlags(PRUint32 aContextFlags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetContextFlags(PRUint32 *aContextFlags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetContextFlags(PRUint32 aContextFlags) = 0;
 
   /* attribute PRUint32 chromeFlags; */
-  NS_IMETHOD GetChromeFlags(PRUint32 *aChromeFlags) = 0;
-  NS_IMETHOD SetChromeFlags(PRUint32 aChromeFlags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetChromeFlags(PRUint32 *aChromeFlags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetChromeFlags(PRUint32 aChromeFlags) = 0;
 
   /**
    * Create a new window.
@@ -136,11 +136,11 @@ class NS_NO_VTABLE nsIXULWindow : public nsISupports {
    * @return the newly minted window
    */
   /* nsIXULWindow createNewWindow (in PRInt32 aChromeFlags, in nsIAppShell aAppShell); */
-  NS_IMETHOD CreateNewWindow(PRInt32 aChromeFlags, nsIAppShell *aAppShell, nsIXULWindow **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateNewWindow(PRInt32 aChromeFlags, nsIAppShell *aAppShell, nsIXULWindow **_retval) = 0;
 
   /* attribute nsIXULBrowserWindow XULBrowserWindow; */
-  NS_IMETHOD GetXULBrowserWindow(nsIXULBrowserWindow * *aXULBrowserWindow) = 0;
-  NS_IMETHOD SetXULBrowserWindow(nsIXULBrowserWindow * aXULBrowserWindow) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetXULBrowserWindow(nsIXULBrowserWindow * *aXULBrowserWindow) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetXULBrowserWindow(nsIXULBrowserWindow * aXULBrowserWindow) = 0;
 
   /**
    * Back-door method to force application of chrome flags at a particular
@@ -157,68 +157,68 @@ class NS_NO_VTABLE nsIXULWindow : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIXULWINDOW \
-  NS_IMETHOD GetDocShell(nsIDocShell * *aDocShell); \
-  NS_IMETHOD GetIntrinsicallySized(PRBool *aIntrinsicallySized); \
-  NS_IMETHOD SetIntrinsicallySized(PRBool aIntrinsicallySized); \
-  NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem * *aPrimaryContentShell); \
-  NS_IMETHOD GetContentShellById(const PRUnichar *ID, nsIDocShellTreeItem **_retval); \
-  NS_IMETHOD AddChildWindow(nsIXULWindow *aChild); \
-  NS_IMETHOD RemoveChildWindow(nsIXULWindow *aChild); \
-  NS_IMETHOD Center(nsIXULWindow *aRelative, PRBool aScreen, PRBool aAlert); \
-  NS_IMETHOD ShowModal(void); \
-  NS_IMETHOD GetZLevel(PRUint32 *aZLevel); \
-  NS_IMETHOD SetZLevel(PRUint32 aZLevel); \
-  NS_IMETHOD GetContextFlags(PRUint32 *aContextFlags); \
-  NS_IMETHOD SetContextFlags(PRUint32 aContextFlags); \
-  NS_IMETHOD GetChromeFlags(PRUint32 *aChromeFlags); \
-  NS_IMETHOD SetChromeFlags(PRUint32 aChromeFlags); \
-  NS_IMETHOD CreateNewWindow(PRInt32 aChromeFlags, nsIAppShell *aAppShell, nsIXULWindow **_retval); \
-  NS_IMETHOD GetXULBrowserWindow(nsIXULBrowserWindow * *aXULBrowserWindow); \
-  NS_IMETHOD SetXULBrowserWindow(nsIXULBrowserWindow * aXULBrowserWindow); \
+  NS_SCRIPTABLE NS_IMETHOD GetDocShell(nsIDocShell * *aDocShell); \
+  NS_SCRIPTABLE NS_IMETHOD GetIntrinsicallySized(PRBool *aIntrinsicallySized); \
+  NS_SCRIPTABLE NS_IMETHOD SetIntrinsicallySized(PRBool aIntrinsicallySized); \
+  NS_SCRIPTABLE NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem * *aPrimaryContentShell); \
+  NS_SCRIPTABLE NS_IMETHOD GetContentShellById(const PRUnichar *ID, nsIDocShellTreeItem **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD AddChildWindow(nsIXULWindow *aChild); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveChildWindow(nsIXULWindow *aChild); \
+  NS_SCRIPTABLE NS_IMETHOD Center(nsIXULWindow *aRelative, PRBool aScreen, PRBool aAlert); \
+  NS_SCRIPTABLE NS_IMETHOD ShowModal(void); \
+  NS_SCRIPTABLE NS_IMETHOD GetZLevel(PRUint32 *aZLevel); \
+  NS_SCRIPTABLE NS_IMETHOD SetZLevel(PRUint32 aZLevel); \
+  NS_SCRIPTABLE NS_IMETHOD GetContextFlags(PRUint32 *aContextFlags); \
+  NS_SCRIPTABLE NS_IMETHOD SetContextFlags(PRUint32 aContextFlags); \
+  NS_SCRIPTABLE NS_IMETHOD GetChromeFlags(PRUint32 *aChromeFlags); \
+  NS_SCRIPTABLE NS_IMETHOD SetChromeFlags(PRUint32 aChromeFlags); \
+  NS_SCRIPTABLE NS_IMETHOD CreateNewWindow(PRInt32 aChromeFlags, nsIAppShell *aAppShell, nsIXULWindow **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetXULBrowserWindow(nsIXULBrowserWindow * *aXULBrowserWindow); \
+  NS_SCRIPTABLE NS_IMETHOD SetXULBrowserWindow(nsIXULBrowserWindow * aXULBrowserWindow); \
   NS_IMETHOD ApplyChromeFlags(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIXULWINDOW(_to) \
-  NS_IMETHOD GetDocShell(nsIDocShell * *aDocShell) { return _to GetDocShell(aDocShell); } \
-  NS_IMETHOD GetIntrinsicallySized(PRBool *aIntrinsicallySized) { return _to GetIntrinsicallySized(aIntrinsicallySized); } \
-  NS_IMETHOD SetIntrinsicallySized(PRBool aIntrinsicallySized) { return _to SetIntrinsicallySized(aIntrinsicallySized); } \
-  NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem * *aPrimaryContentShell) { return _to GetPrimaryContentShell(aPrimaryContentShell); } \
-  NS_IMETHOD GetContentShellById(const PRUnichar *ID, nsIDocShellTreeItem **_retval) { return _to GetContentShellById(ID, _retval); } \
-  NS_IMETHOD AddChildWindow(nsIXULWindow *aChild) { return _to AddChildWindow(aChild); } \
-  NS_IMETHOD RemoveChildWindow(nsIXULWindow *aChild) { return _to RemoveChildWindow(aChild); } \
-  NS_IMETHOD Center(nsIXULWindow *aRelative, PRBool aScreen, PRBool aAlert) { return _to Center(aRelative, aScreen, aAlert); } \
-  NS_IMETHOD ShowModal(void) { return _to ShowModal(); } \
-  NS_IMETHOD GetZLevel(PRUint32 *aZLevel) { return _to GetZLevel(aZLevel); } \
-  NS_IMETHOD SetZLevel(PRUint32 aZLevel) { return _to SetZLevel(aZLevel); } \
-  NS_IMETHOD GetContextFlags(PRUint32 *aContextFlags) { return _to GetContextFlags(aContextFlags); } \
-  NS_IMETHOD SetContextFlags(PRUint32 aContextFlags) { return _to SetContextFlags(aContextFlags); } \
-  NS_IMETHOD GetChromeFlags(PRUint32 *aChromeFlags) { return _to GetChromeFlags(aChromeFlags); } \
-  NS_IMETHOD SetChromeFlags(PRUint32 aChromeFlags) { return _to SetChromeFlags(aChromeFlags); } \
-  NS_IMETHOD CreateNewWindow(PRInt32 aChromeFlags, nsIAppShell *aAppShell, nsIXULWindow **_retval) { return _to CreateNewWindow(aChromeFlags, aAppShell, _retval); } \
-  NS_IMETHOD GetXULBrowserWindow(nsIXULBrowserWindow * *aXULBrowserWindow) { return _to GetXULBrowserWindow(aXULBrowserWindow); } \
-  NS_IMETHOD SetXULBrowserWindow(nsIXULBrowserWindow * aXULBrowserWindow) { return _to SetXULBrowserWindow(aXULBrowserWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDocShell(nsIDocShell * *aDocShell) { return _to GetDocShell(aDocShell); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIntrinsicallySized(PRBool *aIntrinsicallySized) { return _to GetIntrinsicallySized(aIntrinsicallySized); } \
+  NS_SCRIPTABLE NS_IMETHOD SetIntrinsicallySized(PRBool aIntrinsicallySized) { return _to SetIntrinsicallySized(aIntrinsicallySized); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem * *aPrimaryContentShell) { return _to GetPrimaryContentShell(aPrimaryContentShell); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContentShellById(const PRUnichar *ID, nsIDocShellTreeItem **_retval) { return _to GetContentShellById(ID, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD AddChildWindow(nsIXULWindow *aChild) { return _to AddChildWindow(aChild); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveChildWindow(nsIXULWindow *aChild) { return _to RemoveChildWindow(aChild); } \
+  NS_SCRIPTABLE NS_IMETHOD Center(nsIXULWindow *aRelative, PRBool aScreen, PRBool aAlert) { return _to Center(aRelative, aScreen, aAlert); } \
+  NS_SCRIPTABLE NS_IMETHOD ShowModal(void) { return _to ShowModal(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetZLevel(PRUint32 *aZLevel) { return _to GetZLevel(aZLevel); } \
+  NS_SCRIPTABLE NS_IMETHOD SetZLevel(PRUint32 aZLevel) { return _to SetZLevel(aZLevel); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContextFlags(PRUint32 *aContextFlags) { return _to GetContextFlags(aContextFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD SetContextFlags(PRUint32 aContextFlags) { return _to SetContextFlags(aContextFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChromeFlags(PRUint32 *aChromeFlags) { return _to GetChromeFlags(aChromeFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD SetChromeFlags(PRUint32 aChromeFlags) { return _to SetChromeFlags(aChromeFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateNewWindow(PRInt32 aChromeFlags, nsIAppShell *aAppShell, nsIXULWindow **_retval) { return _to CreateNewWindow(aChromeFlags, aAppShell, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetXULBrowserWindow(nsIXULBrowserWindow * *aXULBrowserWindow) { return _to GetXULBrowserWindow(aXULBrowserWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD SetXULBrowserWindow(nsIXULBrowserWindow * aXULBrowserWindow) { return _to SetXULBrowserWindow(aXULBrowserWindow); } \
   NS_IMETHOD ApplyChromeFlags(void) { return _to ApplyChromeFlags(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIXULWINDOW(_to) \
-  NS_IMETHOD GetDocShell(nsIDocShell * *aDocShell) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocShell(aDocShell); } \
-  NS_IMETHOD GetIntrinsicallySized(PRBool *aIntrinsicallySized) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIntrinsicallySized(aIntrinsicallySized); } \
-  NS_IMETHOD SetIntrinsicallySized(PRBool aIntrinsicallySized) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetIntrinsicallySized(aIntrinsicallySized); } \
-  NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem * *aPrimaryContentShell) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrimaryContentShell(aPrimaryContentShell); } \
-  NS_IMETHOD GetContentShellById(const PRUnichar *ID, nsIDocShellTreeItem **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentShellById(ID, _retval); } \
-  NS_IMETHOD AddChildWindow(nsIXULWindow *aChild) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddChildWindow(aChild); } \
-  NS_IMETHOD RemoveChildWindow(nsIXULWindow *aChild) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveChildWindow(aChild); } \
-  NS_IMETHOD Center(nsIXULWindow *aRelative, PRBool aScreen, PRBool aAlert) { return !_to ? NS_ERROR_NULL_POINTER : _to->Center(aRelative, aScreen, aAlert); } \
-  NS_IMETHOD ShowModal(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ShowModal(); } \
-  NS_IMETHOD GetZLevel(PRUint32 *aZLevel) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetZLevel(aZLevel); } \
-  NS_IMETHOD SetZLevel(PRUint32 aZLevel) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetZLevel(aZLevel); } \
-  NS_IMETHOD GetContextFlags(PRUint32 *aContextFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContextFlags(aContextFlags); } \
-  NS_IMETHOD SetContextFlags(PRUint32 aContextFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetContextFlags(aContextFlags); } \
-  NS_IMETHOD GetChromeFlags(PRUint32 *aChromeFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChromeFlags(aChromeFlags); } \
-  NS_IMETHOD SetChromeFlags(PRUint32 aChromeFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetChromeFlags(aChromeFlags); } \
-  NS_IMETHOD CreateNewWindow(PRInt32 aChromeFlags, nsIAppShell *aAppShell, nsIXULWindow **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateNewWindow(aChromeFlags, aAppShell, _retval); } \
-  NS_IMETHOD GetXULBrowserWindow(nsIXULBrowserWindow * *aXULBrowserWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetXULBrowserWindow(aXULBrowserWindow); } \
-  NS_IMETHOD SetXULBrowserWindow(nsIXULBrowserWindow * aXULBrowserWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetXULBrowserWindow(aXULBrowserWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDocShell(nsIDocShell * *aDocShell) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocShell(aDocShell); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIntrinsicallySized(PRBool *aIntrinsicallySized) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIntrinsicallySized(aIntrinsicallySized); } \
+  NS_SCRIPTABLE NS_IMETHOD SetIntrinsicallySized(PRBool aIntrinsicallySized) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetIntrinsicallySized(aIntrinsicallySized); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem * *aPrimaryContentShell) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrimaryContentShell(aPrimaryContentShell); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContentShellById(const PRUnichar *ID, nsIDocShellTreeItem **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentShellById(ID, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD AddChildWindow(nsIXULWindow *aChild) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddChildWindow(aChild); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveChildWindow(nsIXULWindow *aChild) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveChildWindow(aChild); } \
+  NS_SCRIPTABLE NS_IMETHOD Center(nsIXULWindow *aRelative, PRBool aScreen, PRBool aAlert) { return !_to ? NS_ERROR_NULL_POINTER : _to->Center(aRelative, aScreen, aAlert); } \
+  NS_SCRIPTABLE NS_IMETHOD ShowModal(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ShowModal(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetZLevel(PRUint32 *aZLevel) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetZLevel(aZLevel); } \
+  NS_SCRIPTABLE NS_IMETHOD SetZLevel(PRUint32 aZLevel) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetZLevel(aZLevel); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContextFlags(PRUint32 *aContextFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContextFlags(aContextFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD SetContextFlags(PRUint32 aContextFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetContextFlags(aContextFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChromeFlags(PRUint32 *aChromeFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChromeFlags(aChromeFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD SetChromeFlags(PRUint32 aChromeFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetChromeFlags(aChromeFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateNewWindow(PRInt32 aChromeFlags, nsIAppShell *aAppShell, nsIXULWindow **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateNewWindow(aChromeFlags, aAppShell, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetXULBrowserWindow(nsIXULBrowserWindow * *aXULBrowserWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetXULBrowserWindow(aXULBrowserWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD SetXULBrowserWindow(nsIXULBrowserWindow * aXULBrowserWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetXULBrowserWindow(aXULBrowserWindow); } \
   NS_IMETHOD ApplyChromeFlags(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ApplyChromeFlags(); } 
 
 #if 0

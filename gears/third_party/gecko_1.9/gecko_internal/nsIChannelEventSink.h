@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/netwerk/base/public/nsIChannelEventSink.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/base/public/nsIChannelEventSink.idl
  */
 
 #ifndef __gen_nsIChannelEventSink_h__
@@ -33,7 +33,7 @@ class nsIChannel; /* forward declaration */
  * These methods are called before onStartRequest, and should be handled
  * SYNCHRONOUSLY.
  */
-class NS_NO_VTABLE nsIChannelEventSink : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIChannelEventSink : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICHANNELEVENTSINK_IID)
@@ -81,7 +81,7 @@ class NS_NO_VTABLE nsIChannelEventSink : public nsISupports {
      * request for the new channel will be made.
      */
   /* void onChannelRedirect (in nsIChannel oldChannel, in nsIChannel newChannel, in unsigned long flags); */
-  NS_IMETHOD OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PRUint32 flags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PRUint32 flags) = 0;
 
 };
 
@@ -89,15 +89,15 @@ class NS_NO_VTABLE nsIChannelEventSink : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICHANNELEVENTSINK \
-  NS_IMETHOD OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PRUint32 flags); 
+  NS_SCRIPTABLE NS_IMETHOD OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PRUint32 flags); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICHANNELEVENTSINK(_to) \
-  NS_IMETHOD OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PRUint32 flags) { return _to OnChannelRedirect(oldChannel, newChannel, flags); } 
+  NS_SCRIPTABLE NS_IMETHOD OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PRUint32 flags) { return _to OnChannelRedirect(oldChannel, newChannel, flags); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICHANNELEVENTSINK(_to) \
-  NS_IMETHOD OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PRUint32 flags) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnChannelRedirect(oldChannel, newChannel, flags); } 
+  NS_SCRIPTABLE NS_IMETHOD OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PRUint32 flags) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnChannelRedirect(oldChannel, newChannel, flags); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

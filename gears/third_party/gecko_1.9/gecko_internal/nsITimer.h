@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/xpcom/threads/nsITimer.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/xpcom/threads/nsITimer.idl
  */
 
 #ifndef __gen_nsITimer_h__
@@ -41,7 +41,7 @@ class nsITimer; /* forward declaration */
   {0xa796816d, 0x7d47, 0x4348, \
     { 0x9a, 0xb8, 0xc7, 0xae, 0xb3, 0x21, 0x6a, 0x7d }}
 
-class NS_NO_VTABLE nsITimerCallback : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsITimerCallback : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITIMERCALLBACK_IID)
@@ -50,7 +50,7 @@ class NS_NO_VTABLE nsITimerCallback : public nsISupports {
    * @param aTimer the timer which has expired
    */
   /* void notify (in nsITimer timer); */
-  NS_IMETHOD Notify(nsITimer *timer) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Notify(nsITimer *timer) = 0;
 
 };
 
@@ -58,15 +58,15 @@ class NS_NO_VTABLE nsITimerCallback : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSITIMERCALLBACK \
-  NS_IMETHOD Notify(nsITimer *timer); 
+  NS_SCRIPTABLE NS_IMETHOD Notify(nsITimer *timer); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSITIMERCALLBACK(_to) \
-  NS_IMETHOD Notify(nsITimer *timer) { return _to Notify(timer); } 
+  NS_SCRIPTABLE NS_IMETHOD Notify(nsITimer *timer) { return _to Notify(timer); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSITIMERCALLBACK(_to) \
-  NS_IMETHOD Notify(nsITimer *timer) { return !_to ? NS_ERROR_NULL_POINTER : _to->Notify(timer); } 
+  NS_SCRIPTABLE NS_IMETHOD Notify(nsITimer *timer) { return !_to ? NS_ERROR_NULL_POINTER : _to->Notify(timer); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -120,7 +120,7 @@ NS_IMETHODIMP nsTimerCallback::Notify(nsITimer *timer)
 /**
  * The callback interface for timers.
  */
-class NS_NO_VTABLE nsITimer : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsITimer : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITIMER_IID)
@@ -173,7 +173,7 @@ class NS_NO_VTABLE nsITimer : public nsISupports {
    * @param aType       timer type per TYPE* consts defined above
    */
   /* void init (in nsIObserver aObserver, in unsigned long aDelay, in unsigned long aType); */
-  NS_IMETHOD Init(nsIObserver *aObserver, PRUint32 aDelay, PRUint32 aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Init(nsIObserver *aObserver, PRUint32 aDelay, PRUint32 aType) = 0;
 
   /**
    * Initialize a timer to fire after the given millisecond interval.
@@ -198,7 +198,7 @@ class NS_NO_VTABLE nsITimer : public nsISupports {
    * @param aType      Timer type per TYPE* consts defined above
    */
   /* void initWithCallback (in nsITimerCallback aCallback, in unsigned long aDelay, in unsigned long aType); */
-  NS_IMETHOD InitWithCallback(nsITimerCallback *aCallback, PRUint32 aDelay, PRUint32 aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD InitWithCallback(nsITimerCallback *aCallback, PRUint32 aDelay, PRUint32 aType) = 0;
 
   /**
    * Cancel the timer.  This method works on all types, not just on repeating
@@ -207,21 +207,21 @@ class NS_NO_VTABLE nsITimer : public nsISupports {
    * by conserving one timer instance).
    */
   /* void cancel (); */
-  NS_IMETHOD Cancel(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Cancel(void) = 0;
 
   /**
    * The millisecond delay of the timeout
    */
   /* attribute unsigned long delay; */
-  NS_IMETHOD GetDelay(PRUint32 *aDelay) = 0;
-  NS_IMETHOD SetDelay(PRUint32 aDelay) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDelay(PRUint32 *aDelay) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDelay(PRUint32 aDelay) = 0;
 
   /**
    * The timer type : one shot or repeating
    */
   /* attribute unsigned long type; */
-  NS_IMETHOD GetType(PRUint32 *aType) = 0;
-  NS_IMETHOD SetType(PRUint32 aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetType(PRUint32 *aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetType(PRUint32 aType) = 0;
 
   /**
    * The opaque pointer pass to initWithFuncCallback.
@@ -233,7 +233,7 @@ class NS_NO_VTABLE nsITimer : public nsISupports {
    * The nsITimerCallback object passed to initWithCallback.
    */
   /* readonly attribute nsITimerCallback callback; */
-  NS_IMETHOD GetCallback(nsITimerCallback * *aCallback) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCallback(nsITimerCallback * *aCallback) = 0;
 
 };
 
@@ -241,42 +241,42 @@ class NS_NO_VTABLE nsITimer : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSITIMER \
-  NS_IMETHOD Init(nsIObserver *aObserver, PRUint32 aDelay, PRUint32 aType); \
+  NS_SCRIPTABLE NS_IMETHOD Init(nsIObserver *aObserver, PRUint32 aDelay, PRUint32 aType); \
   NS_IMETHOD InitWithFuncCallback(nsTimerCallbackFunc aCallback, void * aClosure, PRUint32 aDelay, PRUint32 aType); \
-  NS_IMETHOD InitWithCallback(nsITimerCallback *aCallback, PRUint32 aDelay, PRUint32 aType); \
-  NS_IMETHOD Cancel(void); \
-  NS_IMETHOD GetDelay(PRUint32 *aDelay); \
-  NS_IMETHOD SetDelay(PRUint32 aDelay); \
-  NS_IMETHOD GetType(PRUint32 *aType); \
-  NS_IMETHOD SetType(PRUint32 aType); \
+  NS_SCRIPTABLE NS_IMETHOD InitWithCallback(nsITimerCallback *aCallback, PRUint32 aDelay, PRUint32 aType); \
+  NS_SCRIPTABLE NS_IMETHOD Cancel(void); \
+  NS_SCRIPTABLE NS_IMETHOD GetDelay(PRUint32 *aDelay); \
+  NS_SCRIPTABLE NS_IMETHOD SetDelay(PRUint32 aDelay); \
+  NS_SCRIPTABLE NS_IMETHOD GetType(PRUint32 *aType); \
+  NS_SCRIPTABLE NS_IMETHOD SetType(PRUint32 aType); \
   NS_IMETHOD GetClosure(void * *aClosure); \
-  NS_IMETHOD GetCallback(nsITimerCallback * *aCallback); 
+  NS_SCRIPTABLE NS_IMETHOD GetCallback(nsITimerCallback * *aCallback); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSITIMER(_to) \
-  NS_IMETHOD Init(nsIObserver *aObserver, PRUint32 aDelay, PRUint32 aType) { return _to Init(aObserver, aDelay, aType); } \
+  NS_SCRIPTABLE NS_IMETHOD Init(nsIObserver *aObserver, PRUint32 aDelay, PRUint32 aType) { return _to Init(aObserver, aDelay, aType); } \
   NS_IMETHOD InitWithFuncCallback(nsTimerCallbackFunc aCallback, void * aClosure, PRUint32 aDelay, PRUint32 aType) { return _to InitWithFuncCallback(aCallback, aClosure, aDelay, aType); } \
-  NS_IMETHOD InitWithCallback(nsITimerCallback *aCallback, PRUint32 aDelay, PRUint32 aType) { return _to InitWithCallback(aCallback, aDelay, aType); } \
-  NS_IMETHOD Cancel(void) { return _to Cancel(); } \
-  NS_IMETHOD GetDelay(PRUint32 *aDelay) { return _to GetDelay(aDelay); } \
-  NS_IMETHOD SetDelay(PRUint32 aDelay) { return _to SetDelay(aDelay); } \
-  NS_IMETHOD GetType(PRUint32 *aType) { return _to GetType(aType); } \
-  NS_IMETHOD SetType(PRUint32 aType) { return _to SetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD InitWithCallback(nsITimerCallback *aCallback, PRUint32 aDelay, PRUint32 aType) { return _to InitWithCallback(aCallback, aDelay, aType); } \
+  NS_SCRIPTABLE NS_IMETHOD Cancel(void) { return _to Cancel(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDelay(PRUint32 *aDelay) { return _to GetDelay(aDelay); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDelay(PRUint32 aDelay) { return _to SetDelay(aDelay); } \
+  NS_SCRIPTABLE NS_IMETHOD GetType(PRUint32 *aType) { return _to GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(PRUint32 aType) { return _to SetType(aType); } \
   NS_IMETHOD GetClosure(void * *aClosure) { return _to GetClosure(aClosure); } \
-  NS_IMETHOD GetCallback(nsITimerCallback * *aCallback) { return _to GetCallback(aCallback); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCallback(nsITimerCallback * *aCallback) { return _to GetCallback(aCallback); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSITIMER(_to) \
-  NS_IMETHOD Init(nsIObserver *aObserver, PRUint32 aDelay, PRUint32 aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->Init(aObserver, aDelay, aType); } \
+  NS_SCRIPTABLE NS_IMETHOD Init(nsIObserver *aObserver, PRUint32 aDelay, PRUint32 aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->Init(aObserver, aDelay, aType); } \
   NS_IMETHOD InitWithFuncCallback(nsTimerCallbackFunc aCallback, void * aClosure, PRUint32 aDelay, PRUint32 aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->InitWithFuncCallback(aCallback, aClosure, aDelay, aType); } \
-  NS_IMETHOD InitWithCallback(nsITimerCallback *aCallback, PRUint32 aDelay, PRUint32 aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->InitWithCallback(aCallback, aDelay, aType); } \
-  NS_IMETHOD Cancel(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Cancel(); } \
-  NS_IMETHOD GetDelay(PRUint32 *aDelay) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDelay(aDelay); } \
-  NS_IMETHOD SetDelay(PRUint32 aDelay) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDelay(aDelay); } \
-  NS_IMETHOD GetType(PRUint32 *aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
-  NS_IMETHOD SetType(PRUint32 aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD InitWithCallback(nsITimerCallback *aCallback, PRUint32 aDelay, PRUint32 aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->InitWithCallback(aCallback, aDelay, aType); } \
+  NS_SCRIPTABLE NS_IMETHOD Cancel(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Cancel(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDelay(PRUint32 *aDelay) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDelay(aDelay); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDelay(PRUint32 aDelay) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDelay(aDelay); } \
+  NS_SCRIPTABLE NS_IMETHOD GetType(PRUint32 *aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(PRUint32 aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } \
   NS_IMETHOD GetClosure(void * *aClosure) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClosure(aClosure); } \
-  NS_IMETHOD GetCallback(nsITimerCallback * *aCallback) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCallback(aCallback); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCallback(nsITimerCallback * *aCallback) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCallback(aCallback); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

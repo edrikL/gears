@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/netwerk/cache/public/nsICacheListener.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/cache/public/nsICacheListener.idl
  */
 
 #ifndef __gen_nsICacheListener_h__
@@ -28,7 +28,7 @@ class nsICacheEntryDescriptor; /* forward declaration */
   {0x638c3848, 0x778b, 0x4851, \
     { 0x8f, 0xf3, 0x94, 0x00, 0xf6, 0x5b, 0x87, 0x73 }}
 
-class NS_NO_VTABLE nsICacheListener : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsICacheListener : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICACHELISTENER_IID)
@@ -39,7 +39,7 @@ class NS_NO_VTABLE nsICacheListener : public nsISupports {
      * See nsICacheService.idl for accessGranted values.
      */
   /* void onCacheEntryAvailable (in nsICacheEntryDescriptor descriptor, in nsCacheAccessMode accessGranted, in nsresult status); */
-  NS_IMETHOD OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor, nsCacheAccessMode accessGranted, nsresult status) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor, nsCacheAccessMode accessGranted, nsresult status) = 0;
 
 };
 
@@ -47,15 +47,15 @@ class NS_NO_VTABLE nsICacheListener : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICACHELISTENER \
-  NS_IMETHOD OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor, nsCacheAccessMode accessGranted, nsresult status); 
+  NS_SCRIPTABLE NS_IMETHOD OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor, nsCacheAccessMode accessGranted, nsresult status); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICACHELISTENER(_to) \
-  NS_IMETHOD OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor, nsCacheAccessMode accessGranted, nsresult status) { return _to OnCacheEntryAvailable(descriptor, accessGranted, status); } 
+  NS_SCRIPTABLE NS_IMETHOD OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor, nsCacheAccessMode accessGranted, nsresult status) { return _to OnCacheEntryAvailable(descriptor, accessGranted, status); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICACHELISTENER(_to) \
-  NS_IMETHOD OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor, nsCacheAccessMode accessGranted, nsresult status) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnCacheEntryAvailable(descriptor, accessGranted, status); } 
+  NS_SCRIPTABLE NS_IMETHOD OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor, nsCacheAccessMode accessGranted, nsresult status) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnCacheEntryAvailable(descriptor, accessGranted, status); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

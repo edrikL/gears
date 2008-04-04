@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/xpcom/threads/nsIThread.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/xpcom/threads/nsIThread.idl
  */
 
 #ifndef __gen_nsIThread_h__
@@ -31,7 +31,7 @@
  *
  * See nsIThreadManager for the API used to create and locate threads.
  */
-class NS_NO_VTABLE nsIThread : public nsIEventTarget {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIThread : public nsIEventTarget {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITHREAD_IID)
@@ -62,7 +62,7 @@ class NS_NO_VTABLE nsIThread : public nsIEventTarget {
    *   on the thread object.
    */
   /* void shutdown (); */
-  NS_IMETHOD Shutdown(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Shutdown(void) = 0;
 
   /**
    * This method may be called to determine if there are any events ready to be
@@ -81,7 +81,7 @@ class NS_NO_VTABLE nsIThread : public nsIEventTarget {
    *   not the current thread.
    */
   /* boolean hasPendingEvents (); */
-  NS_IMETHOD HasPendingEvents(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD HasPendingEvents(PRBool *_retval) = 0;
 
   /**
    * Process the next event.  If there are no pending events, then this method
@@ -101,7 +101,7 @@ class NS_NO_VTABLE nsIThread : public nsIEventTarget {
    *   not the current thread.
    */
   /* boolean processNextEvent (in boolean mayWait); */
-  NS_IMETHOD ProcessNextEvent(PRBool mayWait, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ProcessNextEvent(PRBool mayWait, PRBool *_retval) = 0;
 
 };
 
@@ -110,23 +110,23 @@ class NS_NO_VTABLE nsIThread : public nsIEventTarget {
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSITHREAD \
   NS_IMETHOD GetPRThread(PRThread * *aPRThread); \
-  NS_IMETHOD Shutdown(void); \
-  NS_IMETHOD HasPendingEvents(PRBool *_retval); \
-  NS_IMETHOD ProcessNextEvent(PRBool mayWait, PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD Shutdown(void); \
+  NS_SCRIPTABLE NS_IMETHOD HasPendingEvents(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD ProcessNextEvent(PRBool mayWait, PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSITHREAD(_to) \
   NS_IMETHOD GetPRThread(PRThread * *aPRThread) { return _to GetPRThread(aPRThread); } \
-  NS_IMETHOD Shutdown(void) { return _to Shutdown(); } \
-  NS_IMETHOD HasPendingEvents(PRBool *_retval) { return _to HasPendingEvents(_retval); } \
-  NS_IMETHOD ProcessNextEvent(PRBool mayWait, PRBool *_retval) { return _to ProcessNextEvent(mayWait, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD Shutdown(void) { return _to Shutdown(); } \
+  NS_SCRIPTABLE NS_IMETHOD HasPendingEvents(PRBool *_retval) { return _to HasPendingEvents(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ProcessNextEvent(PRBool mayWait, PRBool *_retval) { return _to ProcessNextEvent(mayWait, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSITHREAD(_to) \
   NS_IMETHOD GetPRThread(PRThread * *aPRThread) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPRThread(aPRThread); } \
-  NS_IMETHOD Shutdown(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Shutdown(); } \
-  NS_IMETHOD HasPendingEvents(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->HasPendingEvents(_retval); } \
-  NS_IMETHOD ProcessNextEvent(PRBool mayWait, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ProcessNextEvent(mayWait, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD Shutdown(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Shutdown(); } \
+  NS_SCRIPTABLE NS_IMETHOD HasPendingEvents(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->HasPendingEvents(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ProcessNextEvent(PRBool mayWait, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ProcessNextEvent(mayWait, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

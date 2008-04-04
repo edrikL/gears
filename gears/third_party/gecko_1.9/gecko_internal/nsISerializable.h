@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/xpcom/ds/nsISerializable.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/xpcom/ds/nsISerializable.idl
  */
 
 #ifndef __gen_nsISerializable_h__
@@ -26,7 +26,7 @@ class nsIObjectOutputStream; /* forward declaration */
   {0x91cca981, 0xc26d, 0x44a8, \
     { 0xbe, 0xbe, 0xd9, 0xed, 0x48, 0x91, 0x50, 0x3a }}
 
-class NS_NO_VTABLE nsISerializable : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsISerializable : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISERIALIZABLE_IID)
@@ -38,7 +38,7 @@ class NS_NO_VTABLE nsISerializable : public nsISupports {
      * and should be read from aInputStream in the same order by this method.
      */
   /* void read (in nsIObjectInputStream aInputStream); */
-  NS_IMETHOD Read(nsIObjectInputStream *aInputStream) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Read(nsIObjectInputStream *aInputStream) = 0;
 
   /**
      * Serialize the object implementing nsISerializable to aOutputStream, by
@@ -50,7 +50,7 @@ class NS_NO_VTABLE nsISerializable : public nsISupports {
      * nsIClassInfo, in particular nsIClassInfo::GetClassID.
      */
   /* void write (in nsIObjectOutputStream aOutputStream); */
-  NS_IMETHOD Write(nsIObjectOutputStream *aOutputStream) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Write(nsIObjectOutputStream *aOutputStream) = 0;
 
 };
 
@@ -58,18 +58,18 @@ class NS_NO_VTABLE nsISerializable : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSISERIALIZABLE \
-  NS_IMETHOD Read(nsIObjectInputStream *aInputStream); \
-  NS_IMETHOD Write(nsIObjectOutputStream *aOutputStream); 
+  NS_SCRIPTABLE NS_IMETHOD Read(nsIObjectInputStream *aInputStream); \
+  NS_SCRIPTABLE NS_IMETHOD Write(nsIObjectOutputStream *aOutputStream); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSISERIALIZABLE(_to) \
-  NS_IMETHOD Read(nsIObjectInputStream *aInputStream) { return _to Read(aInputStream); } \
-  NS_IMETHOD Write(nsIObjectOutputStream *aOutputStream) { return _to Write(aOutputStream); } 
+  NS_SCRIPTABLE NS_IMETHOD Read(nsIObjectInputStream *aInputStream) { return _to Read(aInputStream); } \
+  NS_SCRIPTABLE NS_IMETHOD Write(nsIObjectOutputStream *aOutputStream) { return _to Write(aOutputStream); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSISERIALIZABLE(_to) \
-  NS_IMETHOD Read(nsIObjectInputStream *aInputStream) { return !_to ? NS_ERROR_NULL_POINTER : _to->Read(aInputStream); } \
-  NS_IMETHOD Write(nsIObjectOutputStream *aOutputStream) { return !_to ? NS_ERROR_NULL_POINTER : _to->Write(aOutputStream); } 
+  NS_SCRIPTABLE NS_IMETHOD Read(nsIObjectInputStream *aInputStream) { return !_to ? NS_ERROR_NULL_POINTER : _to->Read(aInputStream); } \
+  NS_SCRIPTABLE NS_IMETHOD Write(nsIObjectOutputStream *aOutputStream) { return !_to ? NS_ERROR_NULL_POINTER : _to->Write(aOutputStream); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

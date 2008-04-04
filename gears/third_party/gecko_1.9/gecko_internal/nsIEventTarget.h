@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/xpcom/threads/nsIEventTarget.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/xpcom/threads/nsIEventTarget.idl
  */
 
 #ifndef __gen_nsIEventTarget_h__
@@ -24,7 +24,7 @@ class nsIRunnable; /* forward declaration */
   {0x4e8febe4, 0x6631, 0x49dc, \
     { 0x8a, 0xc9, 0x30, 0x8c, 0x1c, 0xb9, 0xb0, 0x9c }}
 
-class NS_NO_VTABLE nsIEventTarget : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIEventTarget : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IEVENTTARGET_IID)
@@ -46,7 +46,7 @@ class NS_NO_VTABLE nsIEventTarget : public nsISupports {
    * events, so this event would never run and has not been dispatched. 
    */
   /* void dispatch (in nsIRunnable event, in unsigned long flags); */
-  NS_IMETHOD Dispatch(nsIRunnable *event, PRUint32 flags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Dispatch(nsIRunnable *event, PRUint32 flags) = 0;
 
   /**
    * This flag specifies the default mode of event dispatch, whereby the event
@@ -74,7 +74,7 @@ class NS_NO_VTABLE nsIEventTarget : public nsISupports {
    *   this method).
    */
   /* boolean isOnCurrentThread (); */
-  NS_IMETHOD IsOnCurrentThread(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsOnCurrentThread(PRBool *_retval) = 0;
 
 };
 
@@ -82,18 +82,18 @@ class NS_NO_VTABLE nsIEventTarget : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIEVENTTARGET \
-  NS_IMETHOD Dispatch(nsIRunnable *event, PRUint32 flags); \
-  NS_IMETHOD IsOnCurrentThread(PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD Dispatch(nsIRunnable *event, PRUint32 flags); \
+  NS_SCRIPTABLE NS_IMETHOD IsOnCurrentThread(PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIEVENTTARGET(_to) \
-  NS_IMETHOD Dispatch(nsIRunnable *event, PRUint32 flags) { return _to Dispatch(event, flags); } \
-  NS_IMETHOD IsOnCurrentThread(PRBool *_retval) { return _to IsOnCurrentThread(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD Dispatch(nsIRunnable *event, PRUint32 flags) { return _to Dispatch(event, flags); } \
+  NS_SCRIPTABLE NS_IMETHOD IsOnCurrentThread(PRBool *_retval) { return _to IsOnCurrentThread(_retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIEVENTTARGET(_to) \
-  NS_IMETHOD Dispatch(nsIRunnable *event, PRUint32 flags) { return !_to ? NS_ERROR_NULL_POINTER : _to->Dispatch(event, flags); } \
-  NS_IMETHOD IsOnCurrentThread(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsOnCurrentThread(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD Dispatch(nsIRunnable *event, PRUint32 flags) { return !_to ? NS_ERROR_NULL_POINTER : _to->Dispatch(event, flags); } \
+  NS_SCRIPTABLE NS_IMETHOD IsOnCurrentThread(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsOnCurrentThread(_retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

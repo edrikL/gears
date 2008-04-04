@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/netwerk/base/public/nsIFileStreams.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/base/public/nsIFileStreams.idl
  */
 
 #ifndef __gen_nsIFileStreams_h__
@@ -31,7 +31,7 @@ class nsIFile; /* forward declaration */
 /**
  * An input stream that allows you to read from a file.
  */
-class NS_NO_VTABLE nsIFileInputStream : public nsIInputStream {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIFileInputStream : public nsIInputStream {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFILEINPUTSTREAM_IID)
@@ -47,7 +47,7 @@ class NS_NO_VTABLE nsIFileInputStream : public nsIInputStream {
      *        (see enumerations in the class)
      */
   /* void init (in nsIFile file, in long ioFlags, in long perm, in long behaviorFlags); */
-  NS_IMETHOD Init(nsIFile *file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Init(nsIFile *file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags) = 0;
 
   /**
      * If this is set, the file will be deleted by the time the stream is
@@ -78,15 +78,15 @@ class NS_NO_VTABLE nsIFileInputStream : public nsIInputStream {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIFILEINPUTSTREAM \
-  NS_IMETHOD Init(nsIFile *file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags); \
+  NS_SCRIPTABLE NS_IMETHOD Init(nsIFile *file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags); \
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIFILEINPUTSTREAM(_to) \
-  NS_IMETHOD Init(nsIFile *file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags) { return _to Init(file, ioFlags, perm, behaviorFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD Init(nsIFile *file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags) { return _to Init(file, ioFlags, perm, behaviorFlags); } \
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIFILEINPUTSTREAM(_to) \
-  NS_IMETHOD Init(nsIFile *file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->Init(file, ioFlags, perm, behaviorFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD Init(nsIFile *file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->Init(file, ioFlags, perm, behaviorFlags); } \
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -140,7 +140,7 @@ NS_IMETHODIMP nsFileInputStream::Init(nsIFile *file, PRInt32 ioFlags, PRInt32 pe
 /**
  * An output stream that lets you stream to a file.
  */
-class NS_NO_VTABLE nsIFileOutputStream : public nsIOutputStream {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIFileOutputStream : public nsIOutputStream {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFILEOUTPUTSTREAM_IID)
@@ -157,7 +157,7 @@ class NS_NO_VTABLE nsIFileOutputStream : public nsIOutputStream {
      *        (currently none supported)
      */
   /* void init (in nsIFile file, in long ioFlags, in long perm, in long behaviorFlags); */
-  NS_IMETHOD Init(nsIFile *file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Init(nsIFile *file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags) = 0;
 
 };
 
@@ -165,15 +165,15 @@ class NS_NO_VTABLE nsIFileOutputStream : public nsIOutputStream {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIFILEOUTPUTSTREAM \
-  NS_IMETHOD Init(nsIFile *file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags); 
+  NS_SCRIPTABLE NS_IMETHOD Init(nsIFile *file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIFILEOUTPUTSTREAM(_to) \
-  NS_IMETHOD Init(nsIFile *file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags) { return _to Init(file, ioFlags, perm, behaviorFlags); } 
+  NS_SCRIPTABLE NS_IMETHOD Init(nsIFile *file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags) { return _to Init(file, ioFlags, perm, behaviorFlags); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIFILEOUTPUTSTREAM(_to) \
-  NS_IMETHOD Init(nsIFile *file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->Init(file, ioFlags, perm, behaviorFlags); } 
+  NS_SCRIPTABLE NS_IMETHOD Init(nsIFile *file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->Init(file, ioFlags, perm, behaviorFlags); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

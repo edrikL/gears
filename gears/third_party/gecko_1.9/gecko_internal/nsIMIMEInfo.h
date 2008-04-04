@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/netwerk/mime/public/nsIMIMEInfo.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/mime/public/nsIMIMEInfo.idl
  */
 
 #ifndef __gen_nsIMIMEInfo_h__
@@ -42,7 +42,7 @@ typedef PRInt32 nsHandlerInfoAction;
  * nsIHandlerInfo gives access to the information about how a given protocol
  * scheme or MIME-type is handled.
  */
-class NS_NO_VTABLE nsIHandlerInfo : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIHandlerInfo : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHANDLERINFO_IID)
@@ -54,22 +54,22 @@ class NS_NO_VTABLE nsIHandlerInfo : public nsISupports {
      * @return String representing the type.
      */
   /* readonly attribute ACString type; */
-  NS_IMETHOD GetType(nsACString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsACString & aType) = 0;
 
   /**
      * A human readable description of the handler type
      */
   /* attribute AString description; */
-  NS_IMETHOD GetDescription(nsAString & aDescription) = 0;
-  NS_IMETHOD SetDescription(const nsAString & aDescription) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDescription(nsAString & aDescription) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDescription(const nsAString & aDescription) = 0;
 
   /**
      * The application the user has said they want associated with this content
      * type. This is not always guaranteed to be set!!
      */
   /* attribute nsIHandlerApp preferredApplicationHandler; */
-  NS_IMETHOD GetPreferredApplicationHandler(nsIHandlerApp * *aPreferredApplicationHandler) = 0;
-  NS_IMETHOD SetPreferredApplicationHandler(nsIHandlerApp * aPreferredApplicationHandler) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPreferredApplicationHandler(nsIHandlerApp * *aPreferredApplicationHandler) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetPreferredApplicationHandler(nsIHandlerApp * aPreferredApplicationHandler) = 0;
 
   /**
      * Applications that can handle this content type.
@@ -81,7 +81,7 @@ class NS_NO_VTABLE nsIHandlerInfo : public nsISupports {
      * its length (nsIArray::length) to see if there are any possible handlers.
      */
   /* readonly attribute nsIMutableArray possibleApplicationHandlers; */
-  NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleApplicationHandlers) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleApplicationHandlers) = 0;
 
   /**
      * Indicates whether a default application handler exists,
@@ -89,14 +89,14 @@ class NS_NO_VTABLE nsIHandlerInfo : public nsISupports {
      * and defaultDescription will contain usable information.
      */
   /* readonly attribute boolean hasDefaultHandler; */
-  NS_IMETHOD GetHasDefaultHandler(PRBool *aHasDefaultHandler) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHasDefaultHandler(PRBool *aHasDefaultHandler) = 0;
 
   /**
      * A pretty name description of the associated default application. Only
      * usable if hasDefaultHandler is true.
      */
   /* readonly attribute AString defaultDescription; */
-  NS_IMETHOD GetDefaultDescription(nsAString & aDefaultDescription) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultDescription(nsAString & aDefaultDescription) = 0;
 
   /**
      * Launches the application with the specified URI, in a way that
@@ -121,7 +121,7 @@ class NS_NO_VTABLE nsIHandlerInfo : public nsISupports {
      * call. Other exceptions may be thrown.
      */
   /* void launchWithURI (in nsIURI aURI, [optional] in nsIInterfaceRequestor aWindowContext); */
-  NS_IMETHOD LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext) = 0;
+  NS_SCRIPTABLE NS_IMETHOD LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext) = 0;
 
   /**
      * preferredAction is how the user specified they would like to handle
@@ -130,8 +130,8 @@ class NS_NO_VTABLE nsIHandlerInfo : public nsISupports {
      * listed below
      */
   /* attribute nsHandlerInfoAction preferredAction; */
-  NS_IMETHOD GetPreferredAction(nsHandlerInfoAction *aPreferredAction) = 0;
-  NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPreferredAction(nsHandlerInfoAction *aPreferredAction) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction) = 0;
 
   enum { saveToDisk = 0 };
 
@@ -152,8 +152,8 @@ class NS_NO_VTABLE nsIHandlerInfo : public nsISupports {
      * dialog asking how to dispose of this content.
      */
   /* attribute boolean alwaysAskBeforeHandling; */
-  NS_IMETHOD GetAlwaysAskBeforeHandling(PRBool *aAlwaysAskBeforeHandling) = 0;
-  NS_IMETHOD SetAlwaysAskBeforeHandling(PRBool aAlwaysAskBeforeHandling) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAlwaysAskBeforeHandling(PRBool *aAlwaysAskBeforeHandling) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAlwaysAskBeforeHandling(PRBool aAlwaysAskBeforeHandling) = 0;
 
 };
 
@@ -161,51 +161,51 @@ class NS_NO_VTABLE nsIHandlerInfo : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIHANDLERINFO \
-  NS_IMETHOD GetType(nsACString & aType); \
-  NS_IMETHOD GetDescription(nsAString & aDescription); \
-  NS_IMETHOD SetDescription(const nsAString & aDescription); \
-  NS_IMETHOD GetPreferredApplicationHandler(nsIHandlerApp * *aPreferredApplicationHandler); \
-  NS_IMETHOD SetPreferredApplicationHandler(nsIHandlerApp * aPreferredApplicationHandler); \
-  NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleApplicationHandlers); \
-  NS_IMETHOD GetHasDefaultHandler(PRBool *aHasDefaultHandler); \
-  NS_IMETHOD GetDefaultDescription(nsAString & aDefaultDescription); \
-  NS_IMETHOD LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext); \
-  NS_IMETHOD GetPreferredAction(nsHandlerInfoAction *aPreferredAction); \
-  NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction); \
-  NS_IMETHOD GetAlwaysAskBeforeHandling(PRBool *aAlwaysAskBeforeHandling); \
-  NS_IMETHOD SetAlwaysAskBeforeHandling(PRBool aAlwaysAskBeforeHandling); 
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsACString & aType); \
+  NS_SCRIPTABLE NS_IMETHOD GetDescription(nsAString & aDescription); \
+  NS_SCRIPTABLE NS_IMETHOD SetDescription(const nsAString & aDescription); \
+  NS_SCRIPTABLE NS_IMETHOD GetPreferredApplicationHandler(nsIHandlerApp * *aPreferredApplicationHandler); \
+  NS_SCRIPTABLE NS_IMETHOD SetPreferredApplicationHandler(nsIHandlerApp * aPreferredApplicationHandler); \
+  NS_SCRIPTABLE NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleApplicationHandlers); \
+  NS_SCRIPTABLE NS_IMETHOD GetHasDefaultHandler(PRBool *aHasDefaultHandler); \
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultDescription(nsAString & aDefaultDescription); \
+  NS_SCRIPTABLE NS_IMETHOD LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext); \
+  NS_SCRIPTABLE NS_IMETHOD GetPreferredAction(nsHandlerInfoAction *aPreferredAction); \
+  NS_SCRIPTABLE NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction); \
+  NS_SCRIPTABLE NS_IMETHOD GetAlwaysAskBeforeHandling(PRBool *aAlwaysAskBeforeHandling); \
+  NS_SCRIPTABLE NS_IMETHOD SetAlwaysAskBeforeHandling(PRBool aAlwaysAskBeforeHandling); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIHANDLERINFO(_to) \
-  NS_IMETHOD GetType(nsACString & aType) { return _to GetType(aType); } \
-  NS_IMETHOD GetDescription(nsAString & aDescription) { return _to GetDescription(aDescription); } \
-  NS_IMETHOD SetDescription(const nsAString & aDescription) { return _to SetDescription(aDescription); } \
-  NS_IMETHOD GetPreferredApplicationHandler(nsIHandlerApp * *aPreferredApplicationHandler) { return _to GetPreferredApplicationHandler(aPreferredApplicationHandler); } \
-  NS_IMETHOD SetPreferredApplicationHandler(nsIHandlerApp * aPreferredApplicationHandler) { return _to SetPreferredApplicationHandler(aPreferredApplicationHandler); } \
-  NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleApplicationHandlers) { return _to GetPossibleApplicationHandlers(aPossibleApplicationHandlers); } \
-  NS_IMETHOD GetHasDefaultHandler(PRBool *aHasDefaultHandler) { return _to GetHasDefaultHandler(aHasDefaultHandler); } \
-  NS_IMETHOD GetDefaultDescription(nsAString & aDefaultDescription) { return _to GetDefaultDescription(aDefaultDescription); } \
-  NS_IMETHOD LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext) { return _to LaunchWithURI(aURI, aWindowContext); } \
-  NS_IMETHOD GetPreferredAction(nsHandlerInfoAction *aPreferredAction) { return _to GetPreferredAction(aPreferredAction); } \
-  NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction) { return _to SetPreferredAction(aPreferredAction); } \
-  NS_IMETHOD GetAlwaysAskBeforeHandling(PRBool *aAlwaysAskBeforeHandling) { return _to GetAlwaysAskBeforeHandling(aAlwaysAskBeforeHandling); } \
-  NS_IMETHOD SetAlwaysAskBeforeHandling(PRBool aAlwaysAskBeforeHandling) { return _to SetAlwaysAskBeforeHandling(aAlwaysAskBeforeHandling); } 
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsACString & aType) { return _to GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDescription(nsAString & aDescription) { return _to GetDescription(aDescription); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDescription(const nsAString & aDescription) { return _to SetDescription(aDescription); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPreferredApplicationHandler(nsIHandlerApp * *aPreferredApplicationHandler) { return _to GetPreferredApplicationHandler(aPreferredApplicationHandler); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPreferredApplicationHandler(nsIHandlerApp * aPreferredApplicationHandler) { return _to SetPreferredApplicationHandler(aPreferredApplicationHandler); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleApplicationHandlers) { return _to GetPossibleApplicationHandlers(aPossibleApplicationHandlers); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHasDefaultHandler(PRBool *aHasDefaultHandler) { return _to GetHasDefaultHandler(aHasDefaultHandler); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultDescription(nsAString & aDefaultDescription) { return _to GetDefaultDescription(aDefaultDescription); } \
+  NS_SCRIPTABLE NS_IMETHOD LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext) { return _to LaunchWithURI(aURI, aWindowContext); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPreferredAction(nsHandlerInfoAction *aPreferredAction) { return _to GetPreferredAction(aPreferredAction); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction) { return _to SetPreferredAction(aPreferredAction); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAlwaysAskBeforeHandling(PRBool *aAlwaysAskBeforeHandling) { return _to GetAlwaysAskBeforeHandling(aAlwaysAskBeforeHandling); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlwaysAskBeforeHandling(PRBool aAlwaysAskBeforeHandling) { return _to SetAlwaysAskBeforeHandling(aAlwaysAskBeforeHandling); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIHANDLERINFO(_to) \
-  NS_IMETHOD GetType(nsACString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
-  NS_IMETHOD GetDescription(nsAString & aDescription) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDescription(aDescription); } \
-  NS_IMETHOD SetDescription(const nsAString & aDescription) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDescription(aDescription); } \
-  NS_IMETHOD GetPreferredApplicationHandler(nsIHandlerApp * *aPreferredApplicationHandler) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPreferredApplicationHandler(aPreferredApplicationHandler); } \
-  NS_IMETHOD SetPreferredApplicationHandler(nsIHandlerApp * aPreferredApplicationHandler) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPreferredApplicationHandler(aPreferredApplicationHandler); } \
-  NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleApplicationHandlers) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPossibleApplicationHandlers(aPossibleApplicationHandlers); } \
-  NS_IMETHOD GetHasDefaultHandler(PRBool *aHasDefaultHandler) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHasDefaultHandler(aHasDefaultHandler); } \
-  NS_IMETHOD GetDefaultDescription(nsAString & aDefaultDescription) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDefaultDescription(aDefaultDescription); } \
-  NS_IMETHOD LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext) { return !_to ? NS_ERROR_NULL_POINTER : _to->LaunchWithURI(aURI, aWindowContext); } \
-  NS_IMETHOD GetPreferredAction(nsHandlerInfoAction *aPreferredAction) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPreferredAction(aPreferredAction); } \
-  NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPreferredAction(aPreferredAction); } \
-  NS_IMETHOD GetAlwaysAskBeforeHandling(PRBool *aAlwaysAskBeforeHandling) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlwaysAskBeforeHandling(aAlwaysAskBeforeHandling); } \
-  NS_IMETHOD SetAlwaysAskBeforeHandling(PRBool aAlwaysAskBeforeHandling) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlwaysAskBeforeHandling(aAlwaysAskBeforeHandling); } 
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsACString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDescription(nsAString & aDescription) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDescription(aDescription); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDescription(const nsAString & aDescription) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDescription(aDescription); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPreferredApplicationHandler(nsIHandlerApp * *aPreferredApplicationHandler) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPreferredApplicationHandler(aPreferredApplicationHandler); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPreferredApplicationHandler(nsIHandlerApp * aPreferredApplicationHandler) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPreferredApplicationHandler(aPreferredApplicationHandler); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleApplicationHandlers) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPossibleApplicationHandlers(aPossibleApplicationHandlers); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHasDefaultHandler(PRBool *aHasDefaultHandler) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHasDefaultHandler(aHasDefaultHandler); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultDescription(nsAString & aDefaultDescription) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDefaultDescription(aDefaultDescription); } \
+  NS_SCRIPTABLE NS_IMETHOD LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext) { return !_to ? NS_ERROR_NULL_POINTER : _to->LaunchWithURI(aURI, aWindowContext); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPreferredAction(nsHandlerInfoAction *aPreferredAction) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPreferredAction(aPreferredAction); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPreferredAction(aPreferredAction); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAlwaysAskBeforeHandling(PRBool *aAlwaysAskBeforeHandling) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlwaysAskBeforeHandling(aAlwaysAskBeforeHandling); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlwaysAskBeforeHandling(PRBool aAlwaysAskBeforeHandling) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlwaysAskBeforeHandling(aAlwaysAskBeforeHandling); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -329,7 +329,7 @@ NS_IMETHODIMP nsHandlerInfo::SetAlwaysAskBeforeHandling(PRBool aAlwaysAskBeforeH
  * MIMEInfo objects are generally retrieved from the MIME Service
  * @see nsIMIMEService
  */
-class NS_NO_VTABLE nsIMIMEInfo : public nsIHandlerInfo {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIMIMEInfo : public nsIHandlerInfo {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMIMEINFO_IID)
@@ -341,13 +341,13 @@ class NS_NO_VTABLE nsIMIMEInfo : public nsIHandlerInfo {
      * @return Array of extensions.
      */
   /* nsIUTF8StringEnumerator getFileExtensions (); */
-  NS_IMETHOD GetFileExtensions(nsIUTF8StringEnumerator **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFileExtensions(nsIUTF8StringEnumerator **_retval) = 0;
 
   /**
      * Set File Extensions. Input is a comma delimited list of extensions.
      */
   /* void setFileExtensions (in AUTF8String aExtensions); */
-  NS_IMETHOD SetFileExtensions(const nsACString & aExtensions) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFileExtensions(const nsACString & aExtensions) = 0;
 
   /**
      * Returns whether or not the given extension is
@@ -356,13 +356,13 @@ class NS_NO_VTABLE nsIMIMEInfo : public nsIHandlerInfo {
      * @return TRUE if the association exists. 
      */
   /* boolean extensionExists (in AUTF8String aExtension); */
-  NS_IMETHOD ExtensionExists(const nsACString & aExtension, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ExtensionExists(const nsACString & aExtension, PRBool *_retval) = 0;
 
   /**
      * Append a given extension to the set of extensions
      */
   /* void appendExtension (in AUTF8String aExtension); */
-  NS_IMETHOD AppendExtension(const nsACString & aExtension) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AppendExtension(const nsACString & aExtension) = 0;
 
   /**
      * Returns the first extension association in
@@ -371,8 +371,8 @@ class NS_NO_VTABLE nsIMIMEInfo : public nsIHandlerInfo {
      * @return The first extension.
      */
   /* attribute AUTF8String primaryExtension; */
-  NS_IMETHOD GetPrimaryExtension(nsACString & aPrimaryExtension) = 0;
-  NS_IMETHOD SetPrimaryExtension(const nsACString & aPrimaryExtension) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPrimaryExtension(nsACString & aPrimaryExtension) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetPrimaryExtension(const nsACString & aPrimaryExtension) = 0;
 
   /**
      * The MIME type of this MIMEInfo.
@@ -382,18 +382,18 @@ class NS_NO_VTABLE nsIMIMEInfo : public nsIHandlerInfo {
      * @deprecated  use nsIHandlerInfo::type instead.
      */
   /* readonly attribute ACString MIMEType; */
-  NS_IMETHOD GetMIMEType(nsACString & aMIMEType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMIMEType(nsACString & aMIMEType) = 0;
 
   /**
      * Mac Type and creator types
      */
   /* attribute PRUint32 macType; */
-  NS_IMETHOD GetMacType(PRUint32 *aMacType) = 0;
-  NS_IMETHOD SetMacType(PRUint32 aMacType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMacType(PRUint32 *aMacType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetMacType(PRUint32 aMacType) = 0;
 
   /* attribute PRUint32 macCreator; */
-  NS_IMETHOD GetMacCreator(PRUint32 *aMacCreator) = 0;
-  NS_IMETHOD SetMacCreator(PRUint32 aMacCreator) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMacCreator(PRUint32 *aMacCreator) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetMacCreator(PRUint32 aMacCreator) = 0;
 
   /**
      * Returns whether or not these two nsIMIMEInfos are logically
@@ -402,7 +402,7 @@ class NS_NO_VTABLE nsIMIMEInfo : public nsIHandlerInfo {
      * @returns PR_TRUE if the two are considered equal
      */
   /* boolean equals (in nsIMIMEInfo aMIMEInfo); */
-  NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval) = 0;
 
   /** 
      * Returns a list of nsILocalHandlerApp objects containing
@@ -414,7 +414,7 @@ class NS_NO_VTABLE nsIMIMEInfo : public nsIHandlerInfo {
      * @return nsIArray of nsILocalHandlerApp
      */
   /* readonly attribute nsIArray possibleLocalHandlers; */
-  NS_IMETHOD GetPossibleLocalHandlers(nsIArray * *aPossibleLocalHandlers) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPossibleLocalHandlers(nsIArray * *aPossibleLocalHandlers) = 0;
 
   /**
      * Launches the application with the specified file, in a way that
@@ -427,7 +427,7 @@ class NS_NO_VTABLE nsIMIMEInfo : public nsIHandlerInfo {
      * Other exceptions may be thrown.
      */
   /* void launchWithFile (in nsIFile aFile); */
-  NS_IMETHOD LaunchWithFile(nsIFile *aFile) = 0;
+  NS_SCRIPTABLE NS_IMETHOD LaunchWithFile(nsIFile *aFile) = 0;
 
 };
 
@@ -435,54 +435,54 @@ class NS_NO_VTABLE nsIMIMEInfo : public nsIHandlerInfo {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIMIMEINFO \
-  NS_IMETHOD GetFileExtensions(nsIUTF8StringEnumerator **_retval); \
-  NS_IMETHOD SetFileExtensions(const nsACString & aExtensions); \
-  NS_IMETHOD ExtensionExists(const nsACString & aExtension, PRBool *_retval); \
-  NS_IMETHOD AppendExtension(const nsACString & aExtension); \
-  NS_IMETHOD GetPrimaryExtension(nsACString & aPrimaryExtension); \
-  NS_IMETHOD SetPrimaryExtension(const nsACString & aPrimaryExtension); \
-  NS_IMETHOD GetMIMEType(nsACString & aMIMEType); \
-  NS_IMETHOD GetMacType(PRUint32 *aMacType); \
-  NS_IMETHOD SetMacType(PRUint32 aMacType); \
-  NS_IMETHOD GetMacCreator(PRUint32 *aMacCreator); \
-  NS_IMETHOD SetMacCreator(PRUint32 aMacCreator); \
-  NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval); \
-  NS_IMETHOD GetPossibleLocalHandlers(nsIArray * *aPossibleLocalHandlers); \
-  NS_IMETHOD LaunchWithFile(nsIFile *aFile); 
+  NS_SCRIPTABLE NS_IMETHOD GetFileExtensions(nsIUTF8StringEnumerator **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetFileExtensions(const nsACString & aExtensions); \
+  NS_SCRIPTABLE NS_IMETHOD ExtensionExists(const nsACString & aExtension, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD AppendExtension(const nsACString & aExtension); \
+  NS_SCRIPTABLE NS_IMETHOD GetPrimaryExtension(nsACString & aPrimaryExtension); \
+  NS_SCRIPTABLE NS_IMETHOD SetPrimaryExtension(const nsACString & aPrimaryExtension); \
+  NS_SCRIPTABLE NS_IMETHOD GetMIMEType(nsACString & aMIMEType); \
+  NS_SCRIPTABLE NS_IMETHOD GetMacType(PRUint32 *aMacType); \
+  NS_SCRIPTABLE NS_IMETHOD SetMacType(PRUint32 aMacType); \
+  NS_SCRIPTABLE NS_IMETHOD GetMacCreator(PRUint32 *aMacCreator); \
+  NS_SCRIPTABLE NS_IMETHOD SetMacCreator(PRUint32 aMacCreator); \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetPossibleLocalHandlers(nsIArray * *aPossibleLocalHandlers); \
+  NS_SCRIPTABLE NS_IMETHOD LaunchWithFile(nsIFile *aFile); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIMIMEINFO(_to) \
-  NS_IMETHOD GetFileExtensions(nsIUTF8StringEnumerator **_retval) { return _to GetFileExtensions(_retval); } \
-  NS_IMETHOD SetFileExtensions(const nsACString & aExtensions) { return _to SetFileExtensions(aExtensions); } \
-  NS_IMETHOD ExtensionExists(const nsACString & aExtension, PRBool *_retval) { return _to ExtensionExists(aExtension, _retval); } \
-  NS_IMETHOD AppendExtension(const nsACString & aExtension) { return _to AppendExtension(aExtension); } \
-  NS_IMETHOD GetPrimaryExtension(nsACString & aPrimaryExtension) { return _to GetPrimaryExtension(aPrimaryExtension); } \
-  NS_IMETHOD SetPrimaryExtension(const nsACString & aPrimaryExtension) { return _to SetPrimaryExtension(aPrimaryExtension); } \
-  NS_IMETHOD GetMIMEType(nsACString & aMIMEType) { return _to GetMIMEType(aMIMEType); } \
-  NS_IMETHOD GetMacType(PRUint32 *aMacType) { return _to GetMacType(aMacType); } \
-  NS_IMETHOD SetMacType(PRUint32 aMacType) { return _to SetMacType(aMacType); } \
-  NS_IMETHOD GetMacCreator(PRUint32 *aMacCreator) { return _to GetMacCreator(aMacCreator); } \
-  NS_IMETHOD SetMacCreator(PRUint32 aMacCreator) { return _to SetMacCreator(aMacCreator); } \
-  NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval) { return _to Equals(aMIMEInfo, _retval); } \
-  NS_IMETHOD GetPossibleLocalHandlers(nsIArray * *aPossibleLocalHandlers) { return _to GetPossibleLocalHandlers(aPossibleLocalHandlers); } \
-  NS_IMETHOD LaunchWithFile(nsIFile *aFile) { return _to LaunchWithFile(aFile); } 
+  NS_SCRIPTABLE NS_IMETHOD GetFileExtensions(nsIUTF8StringEnumerator **_retval) { return _to GetFileExtensions(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFileExtensions(const nsACString & aExtensions) { return _to SetFileExtensions(aExtensions); } \
+  NS_SCRIPTABLE NS_IMETHOD ExtensionExists(const nsACString & aExtension, PRBool *_retval) { return _to ExtensionExists(aExtension, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD AppendExtension(const nsACString & aExtension) { return _to AppendExtension(aExtension); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrimaryExtension(nsACString & aPrimaryExtension) { return _to GetPrimaryExtension(aPrimaryExtension); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPrimaryExtension(const nsACString & aPrimaryExtension) { return _to SetPrimaryExtension(aPrimaryExtension); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMIMEType(nsACString & aMIMEType) { return _to GetMIMEType(aMIMEType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMacType(PRUint32 *aMacType) { return _to GetMacType(aMacType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMacType(PRUint32 aMacType) { return _to SetMacType(aMacType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMacCreator(PRUint32 *aMacCreator) { return _to GetMacCreator(aMacCreator); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMacCreator(PRUint32 aMacCreator) { return _to SetMacCreator(aMacCreator); } \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval) { return _to Equals(aMIMEInfo, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPossibleLocalHandlers(nsIArray * *aPossibleLocalHandlers) { return _to GetPossibleLocalHandlers(aPossibleLocalHandlers); } \
+  NS_SCRIPTABLE NS_IMETHOD LaunchWithFile(nsIFile *aFile) { return _to LaunchWithFile(aFile); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIMIMEINFO(_to) \
-  NS_IMETHOD GetFileExtensions(nsIUTF8StringEnumerator **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFileExtensions(_retval); } \
-  NS_IMETHOD SetFileExtensions(const nsACString & aExtensions) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFileExtensions(aExtensions); } \
-  NS_IMETHOD ExtensionExists(const nsACString & aExtension, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ExtensionExists(aExtension, _retval); } \
-  NS_IMETHOD AppendExtension(const nsACString & aExtension) { return !_to ? NS_ERROR_NULL_POINTER : _to->AppendExtension(aExtension); } \
-  NS_IMETHOD GetPrimaryExtension(nsACString & aPrimaryExtension) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrimaryExtension(aPrimaryExtension); } \
-  NS_IMETHOD SetPrimaryExtension(const nsACString & aPrimaryExtension) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPrimaryExtension(aPrimaryExtension); } \
-  NS_IMETHOD GetMIMEType(nsACString & aMIMEType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMIMEType(aMIMEType); } \
-  NS_IMETHOD GetMacType(PRUint32 *aMacType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMacType(aMacType); } \
-  NS_IMETHOD SetMacType(PRUint32 aMacType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMacType(aMacType); } \
-  NS_IMETHOD GetMacCreator(PRUint32 *aMacCreator) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMacCreator(aMacCreator); } \
-  NS_IMETHOD SetMacCreator(PRUint32 aMacCreator) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMacCreator(aMacCreator); } \
-  NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Equals(aMIMEInfo, _retval); } \
-  NS_IMETHOD GetPossibleLocalHandlers(nsIArray * *aPossibleLocalHandlers) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPossibleLocalHandlers(aPossibleLocalHandlers); } \
-  NS_IMETHOD LaunchWithFile(nsIFile *aFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->LaunchWithFile(aFile); } 
+  NS_SCRIPTABLE NS_IMETHOD GetFileExtensions(nsIUTF8StringEnumerator **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFileExtensions(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFileExtensions(const nsACString & aExtensions) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFileExtensions(aExtensions); } \
+  NS_SCRIPTABLE NS_IMETHOD ExtensionExists(const nsACString & aExtension, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ExtensionExists(aExtension, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD AppendExtension(const nsACString & aExtension) { return !_to ? NS_ERROR_NULL_POINTER : _to->AppendExtension(aExtension); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrimaryExtension(nsACString & aPrimaryExtension) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrimaryExtension(aPrimaryExtension); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPrimaryExtension(const nsACString & aPrimaryExtension) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPrimaryExtension(aPrimaryExtension); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMIMEType(nsACString & aMIMEType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMIMEType(aMIMEType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMacType(PRUint32 *aMacType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMacType(aMacType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMacType(PRUint32 aMacType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMacType(aMacType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMacCreator(PRUint32 *aMacCreator) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMacCreator(aMacCreator); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMacCreator(PRUint32 aMacCreator) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMacCreator(aMacCreator); } \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Equals(aMIMEInfo, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPossibleLocalHandlers(nsIArray * *aPossibleLocalHandlers) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPossibleLocalHandlers(aPossibleLocalHandlers); } \
+  NS_SCRIPTABLE NS_IMETHOD LaunchWithFile(nsIFile *aFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->LaunchWithFile(aFile); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -605,7 +605,7 @@ NS_IMETHODIMP nsMIMEInfo::LaunchWithFile(nsIFile *aFile)
   {0x8d298761, 0x0963, 0x4c90, \
     { 0x99, 0xe2, 0x6e, 0xa4, 0x98, 0x82, 0x5e, 0x82 }}
 
-class NS_NO_VTABLE nsIHandlerApp : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIHandlerApp : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHANDLERAPP_IID)
@@ -622,8 +622,8 @@ class NS_NO_VTABLE nsIHandlerApp : public nsISupports {
      * Human readable name for the handler
      */
   /* attribute AString name; */
-  NS_IMETHOD GetName(nsAString & aName) = 0;
-  NS_IMETHOD SetName(const nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) = 0;
 
   /**
      * Whether or not the given handler app is logically equivalent to the
@@ -637,7 +637,7 @@ class NS_NO_VTABLE nsIHandlerApp : public nsISupports {
      * @returns true if the two are logically equivalent, false otherwise
      */
   /* boolean equals (in nsIHandlerApp aHandlerApp); */
-  NS_IMETHOD Equals(nsIHandlerApp *aHandlerApp, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIHandlerApp *aHandlerApp, PRBool *_retval) = 0;
 
   /**
      * Launches the application with the specified URI.
@@ -658,7 +658,7 @@ class NS_NO_VTABLE nsIHandlerApp : public nsISupports {
      *        off to the system default browser (bug 394479).
      */
   /* void launchWithURI (in nsIURI aURI, [optional] in nsIInterfaceRequestor aWindowContext); */
-  NS_IMETHOD LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext) = 0;
+  NS_SCRIPTABLE NS_IMETHOD LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext) = 0;
 
 };
 
@@ -666,24 +666,24 @@ class NS_NO_VTABLE nsIHandlerApp : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIHANDLERAPP \
-  NS_IMETHOD GetName(nsAString & aName); \
-  NS_IMETHOD SetName(const nsAString & aName); \
-  NS_IMETHOD Equals(nsIHandlerApp *aHandlerApp, PRBool *_retval); \
-  NS_IMETHOD LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext); 
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIHandlerApp *aHandlerApp, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIHANDLERAPP(_to) \
-  NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
-  NS_IMETHOD Equals(nsIHandlerApp *aHandlerApp, PRBool *_retval) { return _to Equals(aHandlerApp, _retval); } \
-  NS_IMETHOD LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext) { return _to LaunchWithURI(aURI, aWindowContext); } 
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIHandlerApp *aHandlerApp, PRBool *_retval) { return _to Equals(aHandlerApp, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext) { return _to LaunchWithURI(aURI, aWindowContext); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIHANDLERAPP(_to) \
-  NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
-  NS_IMETHOD Equals(nsIHandlerApp *aHandlerApp, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Equals(aHandlerApp, _retval); } \
-  NS_IMETHOD LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext) { return !_to ? NS_ERROR_NULL_POINTER : _to->LaunchWithURI(aURI, aWindowContext); } 
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIHandlerApp *aHandlerApp, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Equals(aHandlerApp, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext) { return !_to ? NS_ERROR_NULL_POINTER : _to->LaunchWithURI(aURI, aWindowContext); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -753,7 +753,7 @@ NS_IMETHODIMP nsHandlerApp::LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *a
 /**
  * nsILocalHandlerApp is a local OS-level executable
  */
-class NS_NO_VTABLE nsILocalHandlerApp : public nsIHandlerApp {
+class NS_NO_VTABLE NS_SCRIPTABLE nsILocalHandlerApp : public nsIHandlerApp {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILOCALHANDLERAPP_IID)
@@ -762,8 +762,8 @@ class NS_NO_VTABLE nsILocalHandlerApp : public nsIHandlerApp {
      * Pointer to the executable file used to handle content
      */
   /* attribute nsIFile executable; */
-  NS_IMETHOD GetExecutable(nsIFile * *aExecutable) = 0;
-  NS_IMETHOD SetExecutable(nsIFile * aExecutable) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetExecutable(nsIFile * *aExecutable) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetExecutable(nsIFile * aExecutable) = 0;
 
 };
 
@@ -771,18 +771,18 @@ class NS_NO_VTABLE nsILocalHandlerApp : public nsIHandlerApp {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSILOCALHANDLERAPP \
-  NS_IMETHOD GetExecutable(nsIFile * *aExecutable); \
-  NS_IMETHOD SetExecutable(nsIFile * aExecutable); 
+  NS_SCRIPTABLE NS_IMETHOD GetExecutable(nsIFile * *aExecutable); \
+  NS_SCRIPTABLE NS_IMETHOD SetExecutable(nsIFile * aExecutable); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSILOCALHANDLERAPP(_to) \
-  NS_IMETHOD GetExecutable(nsIFile * *aExecutable) { return _to GetExecutable(aExecutable); } \
-  NS_IMETHOD SetExecutable(nsIFile * aExecutable) { return _to SetExecutable(aExecutable); } 
+  NS_SCRIPTABLE NS_IMETHOD GetExecutable(nsIFile * *aExecutable) { return _to GetExecutable(aExecutable); } \
+  NS_SCRIPTABLE NS_IMETHOD SetExecutable(nsIFile * aExecutable) { return _to SetExecutable(aExecutable); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSILOCALHANDLERAPP(_to) \
-  NS_IMETHOD GetExecutable(nsIFile * *aExecutable) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetExecutable(aExecutable); } \
-  NS_IMETHOD SetExecutable(nsIFile * aExecutable) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetExecutable(aExecutable); } 
+  NS_SCRIPTABLE NS_IMETHOD GetExecutable(nsIFile * *aExecutable) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetExecutable(aExecutable); } \
+  NS_SCRIPTABLE NS_IMETHOD SetExecutable(nsIFile * aExecutable) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetExecutable(aExecutable); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -843,7 +843,7 @@ NS_IMETHODIMP nsLocalHandlerApp::SetExecutable(nsIFile * aExecutable)
  * we probably want to work with WhatWG to spec out and implement POST-based
  * handlers as well.
  */
-class NS_NO_VTABLE nsIWebHandlerApp : public nsIHandlerApp {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIWebHandlerApp : public nsIHandlerApp {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWEBHANDLERAPP_IID)
@@ -854,8 +854,8 @@ class NS_NO_VTABLE nsIWebHandlerApp : public nsIHandlerApp {
      * that %s, as per the HTML5 spec.
      */
   /* attribute AUTF8String uriTemplate; */
-  NS_IMETHOD GetUriTemplate(nsACString & aUriTemplate) = 0;
-  NS_IMETHOD SetUriTemplate(const nsACString & aUriTemplate) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetUriTemplate(nsACString & aUriTemplate) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetUriTemplate(const nsACString & aUriTemplate) = 0;
 
 };
 
@@ -863,18 +863,18 @@ class NS_NO_VTABLE nsIWebHandlerApp : public nsIHandlerApp {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWEBHANDLERAPP \
-  NS_IMETHOD GetUriTemplate(nsACString & aUriTemplate); \
-  NS_IMETHOD SetUriTemplate(const nsACString & aUriTemplate); 
+  NS_SCRIPTABLE NS_IMETHOD GetUriTemplate(nsACString & aUriTemplate); \
+  NS_SCRIPTABLE NS_IMETHOD SetUriTemplate(const nsACString & aUriTemplate); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIWEBHANDLERAPP(_to) \
-  NS_IMETHOD GetUriTemplate(nsACString & aUriTemplate) { return _to GetUriTemplate(aUriTemplate); } \
-  NS_IMETHOD SetUriTemplate(const nsACString & aUriTemplate) { return _to SetUriTemplate(aUriTemplate); } 
+  NS_SCRIPTABLE NS_IMETHOD GetUriTemplate(nsACString & aUriTemplate) { return _to GetUriTemplate(aUriTemplate); } \
+  NS_SCRIPTABLE NS_IMETHOD SetUriTemplate(const nsACString & aUriTemplate) { return _to SetUriTemplate(aUriTemplate); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIWEBHANDLERAPP(_to) \
-  NS_IMETHOD GetUriTemplate(nsACString & aUriTemplate) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUriTemplate(aUriTemplate); } \
-  NS_IMETHOD SetUriTemplate(const nsACString & aUriTemplate) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetUriTemplate(aUriTemplate); } 
+  NS_SCRIPTABLE NS_IMETHOD GetUriTemplate(nsACString & aUriTemplate) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUriTemplate(aUriTemplate); } \
+  NS_SCRIPTABLE NS_IMETHOD SetUriTemplate(const nsACString & aUriTemplate) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetUriTemplate(aUriTemplate); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
