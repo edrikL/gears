@@ -47,7 +47,7 @@ class ModuleWrapper : public ModuleWrapperBaseClass {
  public:
   ModuleWrapper(ModuleImplBaseClassVirtual *impl,
                 DispatcherInterface *dispatcher)
-      : token_(0), js_context_(NULL), ref_count_(0) {
+      : token_(0), js_context_(NULL) {
     impl_.reset(impl);
     dispatcher_.reset(dispatcher);
   }
@@ -71,18 +71,16 @@ class ModuleWrapper : public ModuleWrapperBaseClass {
     return dispatcher_.get();
   }
 
-  virtual void AddReference() {
+  virtual void Ref() {
     assert(JSVAL_IS_GCTHING(token_));
-    if (1 == AtomicIncrement(&ref_count_, 1)) {
+    if (ref_count_.Ref()) {
       JS_AddRoot(js_context_, &token_);
     }
   }
 
-  virtual void RemoveReference() {
+  virtual void Unref() {
     assert(JSVAL_IS_GCTHING(token_));
-    AtomicWord new_ref_count = AtomicIncrement(&ref_count_, -1);
-    assert(new_ref_count >= 0);
-    if (new_ref_count == 0) {
+    if (ref_count_.Unref()) {
       JS_RemoveRoot(js_context_, &token_);
     }
   }
@@ -90,7 +88,7 @@ class ModuleWrapper : public ModuleWrapperBaseClass {
   // When the JavaScript object associated with this wrapper is GC'd, we call
   // this to finally delete the wrapper and module.
   void Destroy() {
-    if (ref_count_ == 0) {
+    if (ref_count_.Value() == 0) {
       delete this;
     } else {
       token_ = 0;
@@ -105,14 +103,15 @@ class ModuleWrapper : public ModuleWrapperBaseClass {
 
   JsToken token_;
   JsContextPtr js_context_;
-  AtomicWord ref_count_;
+  RefCount ref_count_;
 
   DISALLOW_EVIL_CONSTRUCTORS(ModuleWrapper);
 };
 
 // Creates an instance of the class and its wrapper.
-template<class GearsClass>
-GearsClass *CreateModule(JsRunnerInterface *js_runner) {
+template<class GearsClass, class OutType>
+bool CreateModule(JsRunnerInterface *js_runner,
+                  scoped_refptr<OutType>* module) {
   GearsClass *impl = new GearsClass(); 
   Dispatcher<GearsClass> *dispatcher = new Dispatcher<GearsClass>(impl);
 
@@ -125,14 +124,13 @@ GearsClass *CreateModule(JsRunnerInterface *js_runner) {
   JsContextWrapperPtr context_wrapper = js_runner->GetContextWrapper();
   JsToken js_object;
   if (!context_wrapper->CreateModuleJsObject(impl, &js_object)) {
-    return NULL;
+    return false;
   }
 
   module_wrapper->SetJsObject(js_object, js_runner->GetContext());
   module_wrapper.release();
-
-  impl->AddReference();
-  return impl;
+  module->reset(impl);
+  return true;
 }
 
 #endif // GEARS_BASE_FIREFOX_MODULE_WRAPPER_H__

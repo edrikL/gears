@@ -96,9 +96,9 @@ struct JavaScriptWorkerInfo {
   std::string16 script_text;  // Owner: parent before signal, immutable after
   SecurityOrigin script_origin;  // Owner: parent before signal, immutable after
 
-  ScopedHttpRequestPtr http_request;  // For createWorkerFromUrl()
+  scoped_refptr<HttpRequest> http_request;  // For createWorkerFromUrl()
   scoped_ptr<HttpRequest::ReadyStateListener> http_request_listener;
-  GComPtr<GearsFactory> factory_ref;
+  scoped_refptr<GearsFactory> factory_ref;
   bool is_factory_suspended;
 
   SAFE_HANDLE thread_handle;  // TODO(mpcomplete): FIXME
@@ -754,24 +754,22 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
     // setup an incoming message queue, then Mutex::Await for the script to be
     // fetched, before finally pumping messages.
 
-    wi->http_request.reset(HttpRequest::Create());
-    if (!wi->http_request.get()) { return false; }
+    if (!HttpRequest::Create(&wi->http_request)) { return false; }
 
     wi->http_request_listener.reset(new CreateWorkerUrlFetchListener(wi));
     if (!wi->http_request_listener.get()) { return false; }
 
-    HttpRequest *request = wi->http_request.get();  // shorthand
-
-    request->SetOnReadyStateChange(wi->http_request_listener.get());
-    request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
-    request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
+    wi->http_request->SetOnReadyStateChange(wi->http_request_listener.get());
+    wi->http_request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
+    wi->http_request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
 
     bool is_async = true;
-    if (!request->Open(HttpConstants::kHttpGET, url_or_full_script.c_str(),
-                       is_async) ||
-        !request->Send()) {
-      request->SetOnReadyStateChange(NULL);
-      request->Abort();
+    if (!wi->http_request->Open(HttpConstants::kHttpGET,
+                                url_or_full_script.c_str(),
+                                is_async) ||
+        !wi->http_request->Send()) {
+      wi->http_request->SetOnReadyStateChange(NULL);
+      wi->http_request->Abort();
       return false;
     }
 
@@ -888,8 +886,8 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   //
   // js_runner manages the lifetime of these allocated objects.
 
-  GComPtr<GearsFactory> factory(CreateModule<GearsFactory>(js_runner));
-  if (!factory.get()) { return false; }
+  scoped_refptr<GearsFactory> factory;
+  if (!CreateModule<GearsFactory>(js_runner, &factory)) { return false; }
 
   JsContextPtr js_context = js_runner->GetContext();
   if (!factory->InitBaseManually(true,  // is_worker
@@ -899,9 +897,8 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
     return false;
   }
 
-  GComPtr<GearsWorkerPool> workerpool(
-        CreateModule<GearsWorkerPool>(js_runner));
-  if (!workerpool.get()) { return false; }
+  scoped_refptr<GearsWorkerPool> workerpool;
+  if (!CreateModule<GearsWorkerPool>(js_runner, &workerpool)) { return false; }
 
   if (!workerpool->InitBaseManually(true,  // is_worker
                                     js_context,
@@ -927,7 +924,7 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
 
 
   // Save an AddRef'd pointer to the factory so we can access it later.
-  wi->factory_ref.reset(factory.release());  // transfer ownership
+  wi->factory_ref = factory;
 
   // Expose created objects as globals in the JS engine.
   if (!js_runner->AddGlobal(kWorkerInsertedFactoryName,
@@ -1067,10 +1064,9 @@ void PoolThreadsManager::ShutDown() {
     JavaScriptWorkerInfo *wi = worker_info_[i];
 
     // Cancel any createWorkerFromUrl() network requests that might be pending.
-    HttpRequest *request = wi->http_request.get();
-    if (request) {
-      request->SetOnReadyStateChange(NULL);
-      request->Abort();
+    if (wi->http_request) {
+      wi->http_request->SetOnReadyStateChange(NULL);
+      wi->http_request->Abort();
       // Reset on creation thread for consistency with Firefox implementation.
       wi->http_request.reset(NULL);
     }

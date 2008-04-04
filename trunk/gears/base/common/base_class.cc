@@ -158,14 +158,14 @@ JsRunnerInterface *ModuleImplBaseClass::GetJsRunner() const {
   return js_runner_;
 }
 
-void ModuleImplBaseClass::AddReference() {
+void ModuleImplBaseClass::Ref() {
   assert(js_wrapper_);
-  js_wrapper_->AddReference();
+  js_wrapper_->Ref();
 }
 
-void ModuleImplBaseClass::RemoveReference() {
+void ModuleImplBaseClass::Unref() {
   assert(js_wrapper_);
-  js_wrapper_->RemoveReference();
+  js_wrapper_->Unref();
 }
 
 JsToken ModuleImplBaseClass::GetWrapperToken() const {

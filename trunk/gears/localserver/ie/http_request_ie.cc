@@ -52,15 +52,15 @@ static const int kReadAheadAmount = 16 * 1024;
 // Create
 //------------------------------------------------------------------------------
 // static
-HttpRequest *HttpRequest::Create() {
-  CComObject<IEHttpRequest> *request;
-  HRESULT hr = CComObject<IEHttpRequest>::CreateInstance(&request);
+bool HttpRequest::Create(scoped_refptr<HttpRequest>* request) {
+  CComObject<IEHttpRequest> *ie_request;
+  HRESULT hr = CComObject<IEHttpRequest>::CreateInstance(&ie_request);
   if (FAILED(hr)) {
     LOG16((L"HttpRequest::Create - CreateInstance failed - %d\n", hr));
-    return NULL;
+    return false;
   }
-  request->AddReference();
-  return request;
+  request->reset(ie_request);
+  return true;
 }
 
 //------------------------------------------------------------------------------
@@ -81,12 +81,12 @@ HRESULT IEHttpRequest::FinalConstruct() {
 void IEHttpRequest::FinalRelease() {
 }
 
-int IEHttpRequest::AddReference() {
-  return AddRef();
+void IEHttpRequest::Ref() {
+  AddRef();
 }
 
-int IEHttpRequest::ReleaseReference() {
-  return Release();
+void IEHttpRequest::Unref() {
+  Release();
 }
 
 //------------------------------------------------------------------------------

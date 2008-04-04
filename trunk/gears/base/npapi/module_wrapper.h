@@ -62,8 +62,8 @@ class ModuleWrapper
     return dispatcher_.get();
   }
 
-  virtual void AddReference() { NPN_RetainObject(this); }
-  virtual void RemoveReference() { NPN_ReleaseObject(this); }
+  virtual void Ref() { NPN_RetainObject(this); }
+  virtual void Unref() { NPN_ReleaseObject(this); }
 
  protected:
   scoped_ptr<ModuleImplBaseClassVirtual> impl_;
@@ -75,20 +75,22 @@ class ModuleWrapper
 
 
 // Creates an instance of the class and its wrapper.
-template<class GearsClass>
-GearsClass *CreateModule(JsRunnerInterface *js_runner) {
+template<class GearsClass, class OutType>
+bool CreateModule(JsRunnerInterface *js_runner,
+                  scoped_refptr<OutType>* module) {
   ModuleWrapper *wrapper = static_cast<ModuleWrapper *>(
       NPN_CreateObject(js_runner->GetContext(), GetNPClass<ModuleWrapper>()));
 
   if (!wrapper) {
     BrowserUtils::SetJsException(
         STRING16(L"Failed to create requested object."));
-    return NULL;
+    return false;
   }
 
   GearsClass *impl = new GearsClass;
   wrapper->Init(impl, new Dispatcher<GearsClass>(impl));
-  return impl;
+  module->reset(impl);
+  return true;
 }
 
 #endif // GEARS_BASE_NPAPI_MODULE_WRAPPER_H__

@@ -29,7 +29,7 @@
 #define GEARS_BASE_COMMON_BASE_CLASS_H__
 
 #include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
-#include "gears/base/common/scoped_token.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"  // for string16
 
@@ -128,8 +128,9 @@ class ModuleImplBaseClass {
     assert(js_wrapper_);
     return js_wrapper_;
   }
-  void AddReference();
-  void RemoveReference();
+
+  void Ref();
+  void Unref();
 
   // TODO(aa): Remove and replace call sites with GetWrapper()->GetToken().
   JsToken GetWrapperToken() const;
@@ -219,51 +220,32 @@ class ModuleWrapperBaseClass {
   virtual DispatcherInterface *GetDispatcher() const = 0;
 
   // Adds a reference to the wrapper class.
-  virtual void AddReference() = 0;
+  virtual void Ref() = 0;
 
   // Removes a reference to the wrapper class.
-  virtual void RemoveReference() = 0;
+  virtual void Unref() = 0;
 
  protected:
   // Don't allow direct deletion via this interface.
   virtual ~ModuleWrapperBaseClass() { }
 };
 
-// GComPtr: automatically call Release()
-class ReleaseWrapperFunctor {
- public:
-  void operator()(ModuleImplBaseClass *x) const {
-    if (x != NULL) { x->RemoveReference(); }
-  }
-};
-
-template<class Module>
-class GComPtr : public scoped_token<Module*, ReleaseWrapperFunctor> {
- public:
-  explicit GComPtr(Module *v)
-      : scoped_token<Module*, ReleaseWrapperFunctor>(v) {}
-
-  Module *operator->() const { return this->get(); }
-
-  // IE expects that when you return an object to script, it has already been
-  // AddRef()'d. NPAPI and Firefox do not do this. Gears modules should call
-  // this method after returning a newly created object to script to do the
-  // right thing.
-  void ReleaseNewObjectToScript() {
+// IE expects that when you return an object to script, it has already been
+// AddRef()'d. NPAPI and Firefox do not do this. Gears modules should call
+// this function after returning a newly created object to script to do the
+// right thing.
+inline void ReleaseNewObjectToScript(ModuleImplBaseClass *module) {
 #ifdef BROWSER_IE
-    // Leave the object AddRef()'d for IE
-#else
-    this->get()->RemoveReference();
+  // Increment the reference for IE, only.
+  module->Ref();
 #endif
-    this->release();
-  }
-};
+}
 
-// Creates new Module of the given type.  Returns NULL on failure. The new
-// module's ref count is initialized to 1. Callers should use GComPtr and
-// ReleaseNewObjectToScript() with the result of this function to ensure
-// consistent behavior across platforms.
-template<class Module>
-Module *CreateModule(JsRunnerInterface *js_runner);
+// Creates a new Module of the given type.  Returns false on failure.  Callers
+// should use ReleaseNewObjectToScript() with modules created from this
+// function before returning them to script to ensure consistent behavior
+// across browsers.  Usually, OutType will be GearsClass or ModuleImplBaseClass.
+template<class GearsClass, class OutType>
+bool CreateModule(JsRunnerInterface *js_runner, scoped_refptr<OutType>* module);
 
 #endif  // GEARS_BASE_COMMON_BASE_CLASS_H__

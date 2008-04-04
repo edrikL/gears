@@ -28,6 +28,7 @@
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/message_service.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
@@ -43,41 +44,31 @@ typedef std::map<ThreadId, ObserverSet> ThreadObserversMap;
 // a shared reference to the callers original data to each thread. In this
 // way, we avoid making copies of the callers original data.
 // See NotificationMessage.
-class SharedNotificationData {
+class SharedNotificationData : public RefCounted {
  public:
-  SharedNotificationData() : refcount_(1) {
+  SharedNotificationData() {
 #ifdef DEBUG
-    AtomicIncrement(&g_instance_count_, 1);
+    g_instance_count_.Ref();
 #endif
   }
 
   SharedNotificationData(const char16 *topic, NotificationData *data)
-      : topic_(topic), data_(data), refcount_(1) {
+      : topic_(topic), data_(data) {
 #ifdef DEBUG
-    AtomicIncrement(&g_instance_count_, 1);
+    g_instance_count_.Ref();
 #endif
   }
 
 #ifdef DEBUG
   ~SharedNotificationData() {
-    AtomicIncrement(&g_instance_count_, -1);
+    g_instance_count_.Unref();
   }
 #endif 
 
-  void AddReference() {
-    AtomicIncrement(&refcount_, 1);
-  }
-
-  void RemoveReference() {
-    if (AtomicIncrement(&refcount_, -1) == 0)
-      delete this;
-  }
-
   std::string16 topic_;
   scoped_ptr<NotificationData> data_;
-  int refcount_;
 #ifdef DEBUG
-  static int g_instance_count_;
+  static RefCount g_instance_count_;
 #endif
 };
 
@@ -85,22 +76,16 @@ class SharedNotificationData {
 // Instrumentation to observe that object lifecycles are working as expected
 // TODO(michaeln): remove this instrumentation once comfortable that things
 // are working as they should be
-int SharedNotificationData::g_instance_count_ = 0;
+RefCount SharedNotificationData::g_instance_count_;
 #endif
 
 
 class NotificationMessage : public Serializable {
  public:
   NotificationMessage() : shared_(new SharedNotificationData) {}
-  NotificationMessage(SharedNotificationData *shared) : shared_(shared) {
-    shared_->AddReference();
-  }
+  NotificationMessage(SharedNotificationData *shared) : shared_(shared) {}
 
-  ~NotificationMessage() {
-    shared_->RemoveReference();
-  }
-
-  SharedNotificationData *shared_;
+  scoped_refptr<SharedNotificationData> shared_;
 
   virtual SerializableClassId GetSerializableClassId() {
     return SERIALIZABLE_NOTIFICATION;
@@ -218,10 +203,9 @@ bool MessageService::RemoveObserver(MessageObserverInterface *observer,
 
 void MessageService::NotifyObservers(const char16 *topic,
                                      NotificationData *data) {
-  SharedNotificationData *shared_data = new SharedNotificationData(topic,
-                                                                   data);
-  NotifyObserversImpl(shared_data, true);
-  shared_data->RemoveReference();  
+  scoped_refptr<SharedNotificationData>
+      shared_data(new SharedNotificationData(topic, data));
+  NotifyObserversImpl(shared_data.get(), true);
 }
 
 
@@ -250,7 +234,7 @@ void MessageService::HandleIpcMessage(IpcProcessId source_process_id,
   assert(source_process_id != ipc_message_queue_->GetCurrentIpcProcessId());
   const NotificationMessage *notification =
                           static_cast<const NotificationMessage*>(message_data);
-  NotifyObserversImpl(notification->shared_, false);
+  NotifyObserversImpl(notification->shared_.get(), false);
 }
 
 

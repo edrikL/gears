@@ -59,9 +59,8 @@ AsyncTask::AsyncTask() :
     listener_(NULL),
     thread_(NULL),
     listener_thread_id_(NULL),
-    http_request_(NULL),
-    params_(NULL),
-    refcount_(1) {
+    params_(NULL) {
+  Ref();
 }
 
 //------------------------------------------------------------------------------
@@ -71,21 +70,9 @@ AsyncTask::~AsyncTask() {
   assert(!thread_);
   assert(!http_request_.get());
   assert(!params_);
-  assert(refcount_ == 0 ||
-         (refcount_ == 1 && !delete_when_done_));
+  assert(GetRef() == 0 || 
+         (GetRef() == 1 && !delete_when_done_));  
 }
-
-
-void AsyncTask::AddReference() {
-  AtomicIncrement(&refcount_, 1);
-}
-
-void AsyncTask::RemoveReference() {
-  if (AtomicIncrement(&refcount_, -1) == 0) {
-    delete this;
-  }
-}
-
 
 //------------------------------------------------------------------------------
 // Init
@@ -142,7 +129,7 @@ bool AsyncTask::Start() {
     return false;
   }
 
-  AddReference();  // reference is removed upon worker thread exit
+  Ref();  // reference is removed upon worker thread exit
 
   return true;
 }
@@ -169,9 +156,9 @@ void AsyncTask::OnAbortHttpGet() {
   assert(IsUiThread());
   LOG(("AsyncTask::OnAbortHttpGet - ui thread\n"));
 
-  if (http_request_.get()) {
-    http_request_.get()->SetOnReadyStateChange(NULL);
-    http_request_.get()->Abort();
+  if (http_request_) {
+    http_request_->SetOnReadyStateChange(NULL);
+    http_request_->Abort();
     http_request_.reset(NULL);
   }
   CritSecLock locker(lock_);
@@ -191,11 +178,11 @@ void AsyncTask::DeleteWhenDone() {
   SetListener(NULL);
   delete_when_done_ = true;
 
-  // We have to call unlock prior to calling RemoveReference 
+  // We have to call unlock prior to calling Unref 
   // otherwise the locker would try to access deleted memory, &lock_,
   // after it's been freed.
   locker.Unlock();
-  RemoveReference();  // remove the reference added by the constructor
+  Unref();  // remove the reference added by the constructor
 }
 
 
@@ -211,7 +198,7 @@ void AsyncTask::ThreadEntry(void *task) {
   }
   self->Run();
   self->thread_ = NULL;
-  self->RemoveReference();  // remove the reference added by the Start
+  self->Unref();  // remove the reference added by the Start
 }
 
 //------------------------------------------------------------------------------
@@ -346,9 +333,8 @@ bool AsyncTask::OnStartHttpGet() {
     }
   }
 
-  ScopedHttpRequestPtr scoped_http_request(HttpRequest::Create());
-  HttpRequest *http_request = scoped_http_request.get();
-  if (!http_request) {
+  scoped_refptr<HttpRequest> http_request;
+  if (!HttpRequest::Create(&http_request)) {
     return false;
   }
 
@@ -392,7 +378,7 @@ bool AsyncTask::OnStartHttpGet() {
 
   http_request->SetOnReadyStateChange(this);
 
-  http_request_.reset(scoped_http_request.release());
+  http_request_ = http_request;
   if (!http_request->Send()) {
     http_request->SetOnReadyStateChange(NULL);
     http_request_.reset(NULL);
@@ -407,7 +393,7 @@ bool AsyncTask::OnStartHttpGet() {
 //------------------------------------------------------------------------------
 void AsyncTask::ReadyStateChanged(HttpRequest *http_request) {
   assert(params_);
-  assert(http_request_.get() == http_request);
+  assert(http_request_ == http_request);
   HttpRequest::ReadyState state;
   if (http_request->GetReadyState(&state)) {
     if (state == HttpRequest::COMPLETE) {
@@ -476,17 +462,20 @@ class AsyncTask::AsyncCallEvent : public AsyncFunctor {
 public:
   AsyncCallEvent(AsyncTask *task, int code, void *param)
       : task(task), msg_code(code), msg_param(param) {
-    task->AddReference();
+    task->Ref();
   }
 
   ~AsyncCallEvent() {
-    task->RemoveReference();
+    task->Unref();
   }
 
   void Run() {
     task->OnAsyncCall(msg_code, msg_param);
   }
+
 private:
+  // Note: we can't make this a scoped_refptr without making AsyncTask's
+  // Ref()/Unref() members public.
   AsyncTask *task;
   int msg_code;
   void *msg_param;

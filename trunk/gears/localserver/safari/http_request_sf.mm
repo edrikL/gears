@@ -54,38 +54,16 @@ struct SFHttpRequest::HttpRequestData {
 //------------------------------------------------------------------------------
 // Create
 //------------------------------------------------------------------------------
-HttpRequest *HttpRequest::Create() {
-  HttpRequest *request = new SFHttpRequest;
-  
-  request->AddReference();
-  
-  return request;
-}
-
-//------------------------------------------------------------------------------
-// AddReference
-//------------------------------------------------------------------------------
-int SFHttpRequest::AddReference() {
-  return AtomicIncrement(&ref_count_, 1);
-}
-
-//------------------------------------------------------------------------------
-// ReleaseReference
-//------------------------------------------------------------------------------
-int SFHttpRequest::ReleaseReference() {
-  int cnt = AtomicIncrement(&ref_count_, -1);
-  
-  if (cnt < 1)
-    delete this;
-  
-  return cnt;
+bool HttpRequest::Create(scoped_refptr<HttpRequest>* request) {
+  request->reset(new SFHttpRequest);
+  return true;
 }
 
 //------------------------------------------------------------------------------
 // Constructor / Destructor
 //------------------------------------------------------------------------------
 SFHttpRequest::SFHttpRequest()
-  : listener_(NULL), ready_state_(UNINITIALIZED), ref_count_(0), 
+  : listener_(NULL), ready_state_(UNINITIALIZED), 
     caching_behavior_(USE_ALL_CACHES), 
     redirect_behavior_(FOLLOW_ALL),
     was_sent_(false), was_aborted_(false),
@@ -338,11 +316,10 @@ bool SFHttpRequest::SendImpl(const std::string &post_data) {
     // connection should be terminated, we rely on this to ensure that the
     // loop exits.
     CFTimeInterval ten_milliseconds = 10*10e-3;
-    AddReference();
+    scoped_refptr<HttpRequest> hold(this);
     while (ready_state_ != HttpRequest::COMPLETE && !was_aborted_) {
       CFRunLoopRunInMode(kCFRunLoopDefaultMode, ten_milliseconds, false);
     }
-    ReleaseReference();
   }
   
   return true;

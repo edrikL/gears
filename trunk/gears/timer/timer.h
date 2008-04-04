@@ -136,19 +136,18 @@ class GearsTimer
   // This includes the data representing the platform's timer structure, and
   // the callback information for when the timer fires.
   struct TimerInfo {
-    TimerInfo() : timer_id(0), owner(NULL) {}
+    TimerInfo() : timer_id(0) {}
     ~TimerInfo();
 
     void SetOwner(GearsTimer *new_owner) {
       owner = new_owner;
-      owner->AddReference();
     }
 
     linked_ptr<JsRootedCallback> callback;
     std::string16 script;
     bool repeat;
     int timer_id;
-    GearsTimer *owner;
+    scoped_refptr<GearsTimer> owner;
 #if BROWSER_WEBKIT
     // TimerInfo is stored in an STL container, so we need a linked_ptr to
     // act as an intermediary.

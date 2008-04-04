@@ -159,9 +159,8 @@ void GearsDatabase::Execute(JsCallContext *context) {
   }
 
   // Wrap a GearsResultSet around the statement and execute it
-  GComPtr<GearsResultSet> result_set(
-      CreateModule<GearsResultSet>(GetJsRunner()));
-  if (!result_set.get())
+  scoped_refptr<GearsResultSet> result_set;  // TODO(bpm)
+  if (!CreateModule<GearsResultSet>(GetJsRunner(), &result_set))
     return;  // Create function sets an error message.
 
   if (!result_set->InitBaseFromSibling(this)) {

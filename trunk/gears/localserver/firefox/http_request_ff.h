@@ -66,8 +66,8 @@ class FFHttpRequest : public HttpRequest,
   // Our C++ HttpRequest interface
 
   // refcounting
-  virtual int AddReference();
-  virtual int ReleaseReference();
+  virtual void Ref();
+  virtual void Unref();
 
   // Get or set whether to use or bypass caches, the default is USE_ALL_CACHES
   // May only be set prior to calling Send.
@@ -122,7 +122,7 @@ class FFHttpRequest : public HttpRequest,
   virtual bool SetOnReadyStateChange(ReadyStateListener *listener);
 
  private:
-  friend HttpRequest *HttpRequest::Create();
+  friend bool HttpRequest::Create(scoped_refptr<HttpRequest>* request);
 
   FFHttpRequest();
   ~FFHttpRequest();

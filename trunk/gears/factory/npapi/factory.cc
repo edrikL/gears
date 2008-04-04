@@ -93,26 +93,26 @@ void GearsFactory::Create(JsCallContext *context) {
   //
   // Do case-sensitive comparisons, which are always better in APIs. They make
   // code consistent across callers, and they are easier to support over time.
-  GComPtr<ModuleImplBaseClass> object(NULL);
+  scoped_refptr<ModuleImplBaseClass> object;
   if (class_name == STRING16(L"beta.database")) {
-    object.reset(CreateModule<GearsDatabase>(GetJsRunner()));
+    CreateModule<GearsDatabase>(GetJsRunner(), &object);
   } else if (class_name == STRING16(L"beta.desktop")) {
-    object.reset(CreateModule<GearsDesktop>(GetJsRunner()));
+    CreateModule<GearsDesktop>(GetJsRunner(), &object);
   } else if (class_name == STRING16(L"beta.localserver")) {
-    object.reset(CreateModule<GearsLocalServer>(GetJsRunner()));
+    CreateModule<GearsLocalServer>(GetJsRunner(), &object);
 #ifdef BROWSER_WEBKIT
 // TODO(playmobil): Add support for worker pools in Safari build.
 #else
   } else if (class_name == STRING16(L"beta.workerpool")) {
-    object.reset(CreateModule<GearsWorkerPool>(GetJsRunner()));
+    CreateModule<GearsWorkerPool>(GetJsRunner(), &object);
 #endif
   } else if (class_name == STRING16(L"beta.httprequest")) {
-    object.reset(CreateModule<GearsHttpRequest>(GetJsRunner()));
+    CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
   } else if (class_name == STRING16(L"beta.timer")) {
-    object.reset(CreateModule<GearsTimer>(GetJsRunner()));
+    CreateModule<GearsTimer>(GetJsRunner(), &object);
   } else if (class_name == STRING16(L"beta.test")) {
 #ifdef DEBUG
-    object.reset(CreateModule<GearsTest>(GetJsRunner()));
+    CreateModule<GearsTest>(GetJsRunner(), &object);
 #else
     context->SetException(L"Object is only available in debug build.");
     return;
@@ -122,7 +122,7 @@ void GearsFactory::Create(JsCallContext *context) {
     return;
   }
 
-  if (!object.get())
+  if (!object)
     return;  // Create function sets an error message.
 
   if (!object->InitBaseFromSibling(this)) {
