@@ -31,33 +31,21 @@
 #else
 
 #include <vector>
-#include "gears/base/common/mutex.h"
 #include "gears/blob/blob_interface.h"
 
 // Because BufferBlobs store their contents in a vector, they are restricted in
 // size by the maximum value of int.
 class BufferBlob : public BlobInterface {
  public:
-  // Initializes an empty, write-only BufferBlob.
-  BufferBlob() : buffer_(), writable_(true) {}
-
-  // Takes ownership of buffer and initializes a read-only BufferBlob with its
-  // contents.  buffer must have been created on the heap with new.
+  // Initialize a BufferBlob from the contents of a vector.
+  // It performs a vector::swap, so that no copy is made.
+  // The vector argument is an in/out parameter, and will be returned empty.
   BufferBlob(std::vector<uint8> *buffer);
 
-  // Returns -1 and does nothing if this is read-only.  Otherwise, attempts to
-  // write num_bytes of source to the end of this and returns the number of
-  // bytes actually written.
-  int64 Append(const void *source, int64 num_bytes);
+  // Initializes a BufferBlob from an arbitrary array of bytes.
+  // The bytes are copied.
+  BufferBlob(const void *source, int64 num_bytes);
 
-  // Indicates the blob's contents will not change further (makes it
-  // read-only).  Must be called once after all updates are complete, before
-  // any reads are attempted.
-  void Finalize();
-
-  // Returns -1 if this is write-only.  Otherwise, copies up to max_bytes at
-  // offset position to destination.  Returns the number of bytes actually
-  // read.
   int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const;
 
   int64 Length() const;
@@ -66,12 +54,6 @@ class BufferBlob : public BlobInterface {
   typedef std::vector<uint8> BufferType;
   typedef BufferType::size_type size_type;
   BufferType buffer_;
-
-  // true means write-only, false means read-only.  BufferBlobs are initialized
-  // as write-only, and once set read-only, stay read-only forever.
-  bool writable_;
-
-  mutable Mutex mutex_;
 
   DISALLOW_EVIL_CONSTRUCTORS(BufferBlob);
 };
