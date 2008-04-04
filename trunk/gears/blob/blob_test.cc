@@ -31,6 +31,7 @@
 
 #ifdef DEBUG
 
+#include <cstring>
 #include "gears/blob/buffer_blob.h"
 #include "gears/blob/slice_blob.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
@@ -44,81 +45,62 @@ bool TestBufferBlob() {
     return false; \
   } \
 }
-  int64 num_bytes = 0;
-  uint8 buffer[64] = { 0 };
 
-  // Empty blob tests
-  scoped_refptr<BufferBlob> blob(new BufferBlob);
+  int64 num_bytes = 0;
+  uint8 buffer[64];
+  memset(buffer, 0, sizeof(buffer));
+  scoped_refptr<BufferBlob> blob;
+
+  // Initialize a blob with an empty vector.
+  std::vector<uint8> vec;
+  blob.reset(new BufferBlob(&vec));
   TEST_ASSERT(blob->Length() == 0);
-  // A non-finalized blob is not readable.
-  num_bytes = blob->Read(buffer, 0, 64);
-  TEST_ASSERT(num_bytes == -1);
-  blob->Finalize();
-  TEST_ASSERT(blob->Length() == 0);
-  // An empty blob returns no bytes.
   num_bytes = blob->Read(buffer, 0, 64);
   TEST_ASSERT(num_bytes == 0);
-  // A finalized blob is not writable.
-  num_bytes = blob->Append("abc", 3);
-  TEST_ASSERT(num_bytes == -1);
+  TEST_ASSERT(buffer[0] == 0);  
 
-  memset(buffer, 0, sizeof(buffer));
-
-  // Typical blob operation
-  blob.reset(new BufferBlob);
-  num_bytes = blob->Append("abc", 3);
-  TEST_ASSERT(num_bytes == 3);
+  // Initialize a blob with a typical vector.
+  vec.push_back('a');
+  vec.push_back('b');
+  vec.push_back('c');
+  blob.reset(new BufferBlob(&vec));
+  TEST_ASSERT(vec.empty());
   TEST_ASSERT(blob->Length() == 3);
-  num_bytes = blob->Append("de", 2);
-  TEST_ASSERT(num_bytes == 2);
-  TEST_ASSERT(blob->Length() == 5);
-  // A non-finalized blob is not readable.
   num_bytes = blob->Read(buffer, 0, 64);
-  TEST_ASSERT(num_bytes == -1);
-  blob->Finalize();
-  TEST_ASSERT(blob->Length() == 5);
-  num_bytes = blob->Read(buffer, 0, 64);
-  TEST_ASSERT(num_bytes == 5);
-  // A finalized blob is not writable.
-  num_bytes = blob->Append("fgh", 3);
-  TEST_ASSERT(num_bytes == -1);
+  TEST_ASSERT(num_bytes == 3);
   TEST_ASSERT(buffer[0] == 'a');
   TEST_ASSERT(buffer[1] == 'b');
   TEST_ASSERT(buffer[2] == 'c');
-  TEST_ASSERT(buffer[3] == 'd');
-  TEST_ASSERT(buffer[4] == 'e');
-  TEST_ASSERT(buffer[5] == '\0');
+  TEST_ASSERT(buffer[3] == 0);
+
+  // Initialize buffer blob from an array.
+  const uint8 data[] = "abcdefghijklmnopqrstuvwxyz";
+  blob.reset(new BufferBlob(data, 9));
+  TEST_ASSERT(blob->Length() == 9);
 
   // Ensure that Read obeys the max_length parameter.
-  num_bytes = blob->Read(buffer, 2, 3);
-  TEST_ASSERT(num_bytes == 3);
-  TEST_ASSERT(buffer[0] == 'c');
-  TEST_ASSERT(buffer[1] == 'd');
-  TEST_ASSERT(buffer[2] == 'e');
-  TEST_ASSERT(buffer[3] == 'd');
-  TEST_ASSERT(buffer[4] == 'e');
-
-  // Initialize a blob with an empty vector.
-  std::vector<uint8> *vec3 = new std::vector<uint8>;
-  blob.reset(new BufferBlob(vec3));
-  TEST_ASSERT(blob->Length() == 0);
-  num_bytes = blob->Read(buffer, 0, 64);
-  TEST_ASSERT(num_bytes == 0);
-
-  memset(buffer, 0, sizeof(buffer));
-
-  // Initialize a blob with a typical vector.
-  std::vector<uint8> *vec4 = new std::vector<uint8>;
-  vec4->push_back('a');
-  vec4->push_back('b');
-  vec4->push_back('c');
-  blob.reset(new BufferBlob(vec4));
-  TEST_ASSERT(blob->Length() == 3);
-  num_bytes = blob->Read(buffer, 0, 64);
+  memset(buffer, 1, sizeof(buffer));
+  num_bytes = blob->Read(buffer, 0, 3);
   TEST_ASSERT(num_bytes == 3);
   TEST_ASSERT(buffer[0] == 'a');
   TEST_ASSERT(buffer[1] == 'b');
-  TEST_ASSERT(buffer[2] == 'c');  
+  TEST_ASSERT(buffer[2] == 'c');
+  TEST_ASSERT(buffer[3] == 1);
+
+  // Read with a non-zero starting offset.
+  memset(buffer, 1, sizeof(buffer));
+  num_bytes = blob->Read(buffer, 3, 3);
+  TEST_ASSERT(num_bytes == 3);
+  TEST_ASSERT(buffer[0] == 'd');
+  TEST_ASSERT(buffer[1] == 'e');
+  TEST_ASSERT(buffer[2] == 'f');
+  TEST_ASSERT(buffer[3] == 1);
+
+  // Read with an offset beyond the end of the blob.
+  memset(buffer, 1, sizeof(buffer));
+  num_bytes = blob->Read(buffer, 20, 3);
+  TEST_ASSERT(num_bytes == 0);
+  TEST_ASSERT(buffer[0] == 1);
 
   return true;
 }
@@ -137,11 +119,11 @@ bool TestSliceBlob() {
 
   uint8 buffer[64];
 
-  // Create a BufferBlob and verify it's contents.
-  scoped_refptr<BufferBlob> blob_buffer(new BufferBlob);
+  // Create a BufferBlob and verify its contents.
+  const uint8 vec_contents[] = "abcdef";
+  std::vector<uint8> vec(vec_contents, vec_contents + sizeof(vec_contents) - 1);
+  scoped_refptr<BufferBlob> blob_buffer(new BufferBlob(&vec));
   TEST_ASSERT(1 == blob_buffer->GetRef());
-  TEST_ASSERT(6 == blob_buffer->Append("abcdef", 6));
-  blob_buffer->Finalize();
 
   TEST_ASSERT(blob_buffer->Length() == 6);
   memset(buffer, 0, sizeof(buffer));

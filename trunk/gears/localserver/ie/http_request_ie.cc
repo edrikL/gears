@@ -298,9 +298,7 @@ bool IEHttpRequest::SendString(const char16 *data) {
 
   std::string data8;
   String16ToUTF8(data, &data8);
-  scoped_refptr<BufferBlob> blob(new BufferBlob);
-  blob->Append(data8.data(), data8.size());
-  blob->Finalize();
+  scoped_refptr<BufferBlob> blob(new BufferBlob(data8.data(), data8.size()));
 
   return SendImpl(blob.get());
 }

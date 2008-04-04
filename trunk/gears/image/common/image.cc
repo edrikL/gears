@@ -28,6 +28,7 @@
 #else
 
 #include <cstring>
+#include <vector>
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/string16.h"
@@ -42,7 +43,7 @@ struct BlobReader {
 
 struct BlobWriter {
   gdIOCtx io_ctx;
-  scoped_refptr<BufferBlob> blob;
+  std::vector<uint8> buffer;
 };
 
 // The resultant BlobReader satisfies libGD's gdIOCtx structure for reading
@@ -98,14 +99,13 @@ BlobWriter *NewBlobWriter() {
   reinterpret_cast<gdIOCtx*>(writer)->seek = NULL;
   reinterpret_cast<gdIOCtx*>(writer)->tell = NULL;
   reinterpret_cast<gdIOCtx*>(writer)->gd_free = NULL;
-  writer->blob = new BufferBlob;
   return writer;
 }
 
 BlobInterface *BlobWriterToBlob(BlobWriter *blob_writer) {
-  blob_writer->blob->Finalize();
-  blob_writer->blob->Ref();
-  return blob_writer->blob.get();
+  scoped_refptr<BufferBlob> blob(new BufferBlob(&(blob_writer->buffer)));
+  blob->Ref();
+  return blob.get();
 }
 
 int blobGetC(gdIOCtx *ctx) {
@@ -129,12 +129,15 @@ int blobGetBuf(gdIOCtx *ctx, void *dest, int wanted) {
 
 void blobPutC(gdIOCtx *ctx, int byte) {
   BlobWriter *blob_writer = reinterpret_cast<BlobWriter*>(ctx);
-  blob_writer->blob->Append(&byte, 1);
+  blob_writer->buffer.push_back(static_cast<uint8>(byte));
 }
 
 int blobPutBuf(gdIOCtx *ctx, const void *src, int wanted) {
   BlobWriter *blob_writer = reinterpret_cast<BlobWriter*>(ctx);
-  return static_cast<int>(blob_writer->blob->Append(src, wanted));
+  const char *begin = static_cast<const char*>(src);
+  const char *end = begin + wanted;
+  blob_writer->buffer.insert(blob_writer->buffer.end(), begin, end);
+  return wanted;
 }
 
 // Start Image class implementation
