@@ -84,15 +84,12 @@
 #include "gears/base/common/js_types.h"
 
 
-typedef std::vector<JsToken> MarshalingContext;
-
-
 // Marshaling is implemented by having a 1-1 correspondance between a JsToken
 // (e.g. representing an integer or an object) and a MarshaledJsToken.
 // Some JsToken's (and hence MarshaledJsToken's) can have children, e.g.
 // Arrays and Objects (which are basically treated as key-value maps).
 class MarshaledJsToken {
- public:
+public:
   ~MarshaledJsToken();
 
   // This method returns NULL if the marshal fails (e.g. trying to marshal a
@@ -107,23 +104,29 @@ class MarshaledJsToken {
   bool Unmarshal(JsRunnerInterface *js_runner,
                  JsScopedToken *out);
 
- private:
+private:
+  typedef std::vector<JsToken> JsTokenVector;
+
   MarshaledJsToken();
+
+  static bool CausesCycle(const JsToken &token,
+                          JsTokenVector *object_stack,
+                          std::string16 *error_message_out);
 
   static MarshaledJsToken *Marshal(const JsToken &token,
                                    JsContextPtr js_context,
                                    std::string16 *error_message_out,
-                                   MarshalingContext *marshaling_context);
+                                   JsTokenVector *object_stack);
 
   bool InitializeFromObject(JsObject &object,
                             JsContextPtr js_context,
                             std::string16 *error_message_out,
-                            MarshalingContext *marshaling_context);
+                            JsTokenVector *object_stack);
 
   bool InitializeFromArray(JsArray &array,
                            JsContextPtr js_context,
                            std::string16 *error_message_out,
-                           MarshalingContext *marshaling_context);
+                           JsTokenVector *object_stack);
 
   JsParamType type_;
   union {
