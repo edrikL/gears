@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -185,6 +186,10 @@ JS_BEGIN_EXTERN_C
 #define JSFUN_FLAGS_MASK      0x0ff8    /* overlay JSFUN_* attributes --
                                            note that bit #15 is used internally
                                            to flag interpreted functions */
+
+#define JSFUN_STUB_GSOPS      0x1000    /* use JS_PropertyStub getter/setter
+                                           instead of defaulting to class gsops
+                                           for property holding function */
 
 #endif
 
@@ -430,8 +435,6 @@ JS_GetRuntimePrivate(JSRuntime *rt);
 JS_PUBLIC_API(void)
 JS_SetRuntimePrivate(JSRuntime *rt, void *data);
 
-#ifdef JS_THREADSAFE
-
 extern JS_PUBLIC_API(void)
 JS_BeginRequest(JSContext *cx);
 
@@ -480,8 +483,6 @@ class JSAutoRequest {
 
 JS_BEGIN_EXTERN_C
 #endif
-
-#endif /* JS_THREADSAFE */
 
 extern JS_PUBLIC_API(void)
 JS_Lock(JSRuntime *rt);
@@ -563,7 +564,10 @@ JS_StringToVersion(const char *string);
                                                    JS_SetBranchCallback may be
                                                    called with a null script
                                                    parameter, by native code
-                                                   that loops intensively */
+                                                   that loops intensively.
+                                                   Deprecated, use
+                                                   JS_SetOperationCallback
+                                                   instead */
 #define JSOPTION_DONT_REPORT_UNCAUGHT \
                                 JS_BIT(8)       /* When returning from the
                                                    outermost API call, prevent
@@ -653,6 +657,16 @@ JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
  * without breaking source and binary compatibility (argv[-2] is well-known to
  * be the callee jsval, and argv[-1] is as well known to be |this|).
  *
+ * Note well: However, argv[-1] may be JSVAL_NULL where with slow natives it
+ * is the global object, so embeddings implementing fast natives *must* call
+ * JS_THIS or JS_THIS_OBJECT and test for failure indicated by a null return,
+ * which should propagate as a false return from native functions and hooks.
+ *
+ * To reduce boilerplace checks, JS_InstanceOf and JS_GetInstancePrivate now
+ * handle a null obj parameter by returning false (throwing a TypeError if
+ * given non-null argv), so most native functions that type-check their |this|
+ * parameter need not add null checking.
+ *
  * NB: there is an anti-dependency between JS_CALLEE and JS_SET_RVAL: native
  * methods that may inspect their callee must defer setting their return value
  * until after any such possible inspection. Otherwise the return value will be
@@ -664,11 +678,14 @@ JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
  */
 #define JS_CALLEE(cx,vp)        ((vp)[0])
 #define JS_ARGV_CALLEE(argv)    ((argv)[-2])
-#define JS_THIS(cx,vp)          ((vp)[1])
+#define JS_THIS(cx,vp)          JS_ComputeThis(cx, vp)
 #define JS_THIS_OBJECT(cx,vp)   ((JSObject *) JS_THIS(cx,vp))
 #define JS_ARGV(cx,vp)          ((vp) + 2)
 #define JS_RVAL(cx,vp)          (*(vp))
 #define JS_SET_RVAL(cx,vp,v)    (*(vp) = (v))
+
+extern JS_PUBLIC_API(jsval)
+JS_ComputeThis(JSContext *cx, jsval *vp);
 
 extern JS_PUBLIC_API(void *)
 JS_malloc(JSContext *cx, size_t nbytes);
@@ -1098,8 +1115,14 @@ extern JS_PUBLIC_API(JSBool)
 JS_IsAboutToBeFinalized(JSContext *cx, void *thing);
 
 typedef enum JSGCParamKey {
-    JSGC_MAX_BYTES        = 0,  /* maximum nominal heap before last ditch GC */
-    JSGC_MAX_MALLOC_BYTES = 1   /* # of JS_malloc bytes before last ditch GC */
+    /* Maximum nominal heap before last ditch GC. */
+    JSGC_MAX_BYTES          = 0,
+
+    /* Number of JS_malloc bytes before last ditch GC. */
+    JSGC_MAX_MALLOC_BYTES   = 1,
+
+    /* Hoard stackPools for this long, in ms, default is 30 seconds. */
+    JSGC_STACKPOOL_LIFESPAN = 2
 } JSGCParamKey;
 
 extern JS_PUBLIC_API(void)
@@ -1212,10 +1235,12 @@ struct JSExtendedClass {
     JSObjectOp          outerObject;
     JSObjectOp          innerObject;
     JSIteratorOp        iteratorObject;
+    JSObjectOp          wrappedObject;          /* NB: infallible, null
+                                                   returns are treated as
+                                                   the original object */
     void                (*reserved0)(void);
     void                (*reserved1)(void);
     void                (*reserved2)(void);
-    void                (*reserved3)(void);
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  /* objects have private slot */
@@ -1257,12 +1282,6 @@ struct JSExtendedClass {
 #define JSCLASS_MARK_IS_TRACE           (1<<(JSCLASS_HIGH_FLAGS_SHIFT+3))
 
 /*
- * Indicates that the class object defined on the object provided to
- * JS_InitClass should be readonly and permanent.
- */
-#define JSCLASS_FIXED_BINDING           (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
-
-/*
  * ECMA-262 requires that most constructors used internally create objects
  * with "the original Foo.prototype value" as their [[Prototype]] (__proto__)
  * member initial value.  The "original ... value" verbiage is there because
@@ -1290,7 +1309,7 @@ struct JSExtendedClass {
 
 /* Initializer for unused members of statically initialized JSClass structs. */
 #define JSCLASS_NO_OPTIONAL_MEMBERS     0,0,0,0,0,0,0,0
-#define JSCLASS_NO_RESERVED_MEMBERS     0,0,0,0
+#define JSCLASS_NO_RESERVED_MEMBERS     0,0,0
 
 /* For detailed comments on these function pointer types, see jspubtd.h. */
 struct JSObjectOps {
@@ -1423,8 +1442,10 @@ struct JSFunctionSpec {
     uint16          flags;
 
     /*
-     * extra & 0xFFFF: number of arg slots for local GC roots;
-     * extra >> 16:    reserved, must be zero.
+     * extra & 0xFFFF:  Number of extra argument slots for local GC roots.
+     *                  If fast native, must be zero.
+     * extra >> 16:     If slow native, reserved for future use (must be 0).
+     *                  If fast native, minimum required argc.
      */
     uint32          extra;
 #endif
@@ -1437,7 +1458,7 @@ struct JSFunctionSpec {
 #define JS_FS_END JS_FS(NULL,NULL,0,0,0)
 
 /*
- * Initializer macro for a row in a JSFunctionSpec array. This is the original
+ * Initializer macro for a JSFunctionSpec array element. This is the original
  * kind of native function specifier initializer. Use JS_FN ("fast native", see
  * JSFastNative in jspubtd.h) for all functions that do not need a stack frame
  * when activated.
@@ -1451,7 +1472,8 @@ struct JSFunctionSpec {
  * frame when activated.
  */
 #define JS_FN(name,fastcall,minargs,nargs,flags)                              \
-    {name, (JSNative)(fastcall), nargs, (flags) | JSFUN_FAST_NATIVE,          \
+    {name, (JSNative)(fastcall), nargs,                                       \
+     (flags) | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS,                          \
      (minargs) << 16}
 
 extern JS_PUBLIC_API(JSObject *)
@@ -1513,6 +1535,14 @@ JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
+
+/*
+ * Unlike JS_NewObject, JS_NewObjectWithGivenProto does not compute a default
+ * proto if proto's actual parameter value is null.
+ */
+extern JS_PUBLIC_API(JSObject *)
+JS_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
+                           JSObject *parent);
 
 extern JS_PUBLIC_API(JSBool)
 JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep);
@@ -2092,6 +2122,61 @@ extern JS_PUBLIC_API(JSBool)
 JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
                      jsval *argv, jsval *rval);
 
+/*
+ * The maximum value of the operation limit to pass to JS_SetOperationCallback
+ * and JS_SetOperationLimit.
+ */
+#define JS_MAX_OPERATION_LIMIT ((uint32) 0x7FFFFFFF)
+
+#define JS_OPERATION_WEIGHT_BASE 4096
+
+/*
+ * Set the operation callback that the engine calls periodically after
+ * the internal operation count reaches the specified limit.
+ *
+ * When operationLimit is JS_OPERATION_WEIGHT_BASE, the callback will be
+ * called at least after each backward jump in the interpreter. To minimize
+ * the overhead of the callback invocation we suggest at least
+ *
+ *   100 * JS_OPERATION_WEIGHT_BASE
+ *
+ * as a value for operationLimit.
+ */
+extern JS_PUBLIC_API(void)
+JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback,
+                        uint32 operationLimit);
+
+extern JS_PUBLIC_API(void)
+JS_ClearOperationCallback(JSContext *cx);
+
+extern JS_PUBLIC_API(JSOperationCallback)
+JS_GetOperationCallback(JSContext *cx);
+
+/*
+ * Get the operation limit associated with the operation callback. This API
+ * function may be called only when the result of JS_GetOperationCallback(cx)
+ * is not null.
+ */
+extern JS_PUBLIC_API(uint32)
+JS_GetOperationLimit(JSContext *cx);
+
+/*
+ * Change the operation limit associated with the operation callback. This API
+ * function may be called only when the result of JS_GetOperationCallback(cx)
+ * is not null.
+ */
+extern JS_PUBLIC_API(void)
+JS_SetOperationLimit(JSContext *cx, uint32 operationLimit);
+
+/*
+ * Note well: JS_SetBranchCallback is deprecated. It is similar to
+ *
+ *   JS_SetOperationCallback(cx, callback, 4096, NULL);
+ *
+ * except that the callback will not be called from a long-running native
+ * function when JSOPTION_NATIVE_BRANCH_CALLBACK is not set and the top-most
+ * frame is native.
+ */
 extern JS_PUBLIC_API(JSBranchCallback)
 JS_SetBranchCallback(JSContext *cx, JSBranchCallback cb);
 
@@ -2252,12 +2337,12 @@ JS_PUBLIC_API(JSBool)
 JS_CStringsAreUTF8(void);
 
 /*
- * Update the value to be returned by JS_CStringsAreUTF8().  Once set,
- * it can not be changed.  Must be called before the first call to 
+ * Update the value to be returned by JS_CStringsAreUTF8(). Once set, it
+ * can never be changed. This API must be called before the first call to
  * JS_NewRuntime.
  */
 JS_PUBLIC_API(void)
-JS_SetCStringsAreUTF8();
+JS_SetCStringsAreUTF8(void);
 
 /*
  * Character encoding support.
@@ -2375,6 +2460,12 @@ JS_ReportErrorFlagsAndNumberUC(JSContext *cx, uintN flags,
  */
 extern JS_PUBLIC_API(void)
 JS_ReportOutOfMemory(JSContext *cx);
+
+/*
+ * Complain when an allocation size overflows the maximum supported limit.
+ */
+extern JS_PUBLIC_API(void)
+JS_ReportAllocationOverflow(JSContext *cx);
 
 struct JSErrorReport {
     const char      *filename;      /* source file name, URL, etc., or null */
@@ -2499,8 +2590,6 @@ JS_ThrowReportedError(JSContext *cx, const char *message,
 extern JS_PUBLIC_API(JSBool)
 JS_ThrowStopIteration(JSContext *cx);
 
-#ifdef JS_THREADSAFE
-
 /*
  * Associate the current thread with the given context.  This is done
  * implicitly by JS_NewContext.
@@ -2518,8 +2607,6 @@ JS_SetContextThread(JSContext *cx);
 
 extern JS_PUBLIC_API(jsword)
 JS_ClearContextThread(JSContext *cx);
-
-#endif /* JS_THREADSAFE */
 
 /************************************************************************/
 

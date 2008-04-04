@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/js/src/xpconnect/idl/xpcjsid.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/js/src/xpconnect/idl/xpcjsid.idl
  */
 
 #ifndef __gen_xpcjsid_h__
@@ -16,37 +16,37 @@
 #endif
 
 /* starting interface:    nsIJSID */
-#define NS_IJSID_IID_STR "c86ae131-d101-11d2-9841-006008962422"
+#define NS_IJSID_IID_STR "baedc96a-9cee-4b6b-9160-90d257b3c8ef"
 
 #define NS_IJSID_IID \
-  {0xc86ae131, 0xd101, 0x11d2, \
-    { 0x98, 0x41, 0x00, 0x60, 0x08, 0x96, 0x24, 0x22 }}
+  {0xbaedc96a, 0x9cee, 0x4b6b, \
+    { 0x91, 0x60, 0x90, 0xd2, 0x57, 0xb3, 0xc8, 0xef }}
 
-class NS_NO_VTABLE nsIJSID : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIJSID : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IJSID_IID)
 
   /* readonly attribute string name; */
-  NS_IMETHOD GetName(char * *aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(char * *aName) = 0;
 
   /* readonly attribute string number; */
-  NS_IMETHOD GetNumber(char * *aNumber) = 0;
-
-  /* [noscript] readonly attribute nsIDPtr id; */
-  NS_IMETHOD GetId(nsID * *aId) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNumber(char * *aNumber) = 0;
 
   /* readonly attribute boolean valid; */
-  NS_IMETHOD GetValid(PRBool *aValid) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetValid(PRBool *aValid) = 0;
 
   /* boolean equals (in nsIJSID other); */
-  NS_IMETHOD Equals(nsIJSID *other, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIJSID *other, PRBool *_retval) = 0;
 
   /* void initialize (in string idString); */
-  NS_IMETHOD Initialize(const char *idString) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Initialize(const char *idString) = 0;
 
   /* string toString (); */
-  NS_IMETHOD ToString(char **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ToString(char **_retval) = 0;
+
+  /* [notxpcom] const_nsID_ptr getID (); */
+  NS_IMETHOD_(const nsID *) GetID(void) = 0;
 
 };
 
@@ -54,33 +54,33 @@ class NS_NO_VTABLE nsIJSID : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIJSID \
-  NS_IMETHOD GetName(char * *aName); \
-  NS_IMETHOD GetNumber(char * *aNumber); \
-  NS_IMETHOD GetId(nsID * *aId); \
-  NS_IMETHOD GetValid(PRBool *aValid); \
-  NS_IMETHOD Equals(nsIJSID *other, PRBool *_retval); \
-  NS_IMETHOD Initialize(const char *idString); \
-  NS_IMETHOD ToString(char **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetName(char * *aName); \
+  NS_SCRIPTABLE NS_IMETHOD GetNumber(char * *aNumber); \
+  NS_SCRIPTABLE NS_IMETHOD GetValid(PRBool *aValid); \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIJSID *other, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD Initialize(const char *idString); \
+  NS_SCRIPTABLE NS_IMETHOD ToString(char **_retval); \
+  NS_IMETHOD_(const nsID *) GetID(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIJSID(_to) \
-  NS_IMETHOD GetName(char * *aName) { return _to GetName(aName); } \
-  NS_IMETHOD GetNumber(char * *aNumber) { return _to GetNumber(aNumber); } \
-  NS_IMETHOD GetId(nsID * *aId) { return _to GetId(aId); } \
-  NS_IMETHOD GetValid(PRBool *aValid) { return _to GetValid(aValid); } \
-  NS_IMETHOD Equals(nsIJSID *other, PRBool *_retval) { return _to Equals(other, _retval); } \
-  NS_IMETHOD Initialize(const char *idString) { return _to Initialize(idString); } \
-  NS_IMETHOD ToString(char **_retval) { return _to ToString(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetName(char * *aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNumber(char * *aNumber) { return _to GetNumber(aNumber); } \
+  NS_SCRIPTABLE NS_IMETHOD GetValid(PRBool *aValid) { return _to GetValid(aValid); } \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIJSID *other, PRBool *_retval) { return _to Equals(other, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Initialize(const char *idString) { return _to Initialize(idString); } \
+  NS_SCRIPTABLE NS_IMETHOD ToString(char **_retval) { return _to ToString(_retval); } \
+  NS_IMETHOD_(const nsID *) GetID(void) { return _to GetID(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIJSID(_to) \
-  NS_IMETHOD GetName(char * *aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD GetNumber(char * *aNumber) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNumber(aNumber); } \
-  NS_IMETHOD GetId(nsID * *aId) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetId(aId); } \
-  NS_IMETHOD GetValid(PRBool *aValid) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetValid(aValid); } \
-  NS_IMETHOD Equals(nsIJSID *other, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Equals(other, _retval); } \
-  NS_IMETHOD Initialize(const char *idString) { return !_to ? NS_ERROR_NULL_POINTER : _to->Initialize(idString); } \
-  NS_IMETHOD ToString(char **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ToString(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetName(char * *aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNumber(char * *aNumber) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNumber(aNumber); } \
+  NS_SCRIPTABLE NS_IMETHOD GetValid(PRBool *aValid) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetValid(aValid); } \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIJSID *other, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Equals(other, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Initialize(const char *idString) { return !_to ? NS_ERROR_NULL_POINTER : _to->Initialize(idString); } \
+  NS_SCRIPTABLE NS_IMETHOD ToString(char **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ToString(_retval); } \
+  NS_IMETHOD_(const nsID *) GetID(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetID(); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -126,12 +126,6 @@ NS_IMETHODIMP nsJSID::GetNumber(char * *aNumber)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* [noscript] readonly attribute nsIDPtr id; */
-NS_IMETHODIMP nsJSID::GetId(nsID * *aId)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* readonly attribute boolean valid; */
 NS_IMETHODIMP nsJSID::GetValid(PRBool *aValid)
 {
@@ -156,18 +150,24 @@ NS_IMETHODIMP nsJSID::ToString(char **_retval)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* [notxpcom] const_nsID_ptr getID (); */
+NS_IMETHODIMP_(const nsID *) nsJSID::GetID()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* End of implementation class template. */
 #endif
 
 
 /* starting interface:    nsIJSIID */
-#define NS_IJSIID_IID_STR "e08dcda0-d651-11d2-9843-006008962422"
+#define NS_IJSIID_IID_STR "e76ec564-a080-4705-8609-384c755ec91e"
 
 #define NS_IJSIID_IID \
-  {0xe08dcda0, 0xd651, 0x11d2, \
-    { 0x98, 0x43, 0x00, 0x60, 0x08, 0x96, 0x24, 0x22 }}
+  {0xe76ec564, 0xa080, 0x4705, \
+    { 0x86, 0x09, 0x38, 0x4c, 0x75, 0x5e, 0xc9, 0x1e }}
 
-class NS_NO_VTABLE nsIJSIID : public nsIJSID {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIJSIID : public nsIJSID {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IJSIID_IID)
@@ -225,22 +225,22 @@ nsJSIID::~nsJSIID()
 
 
 /* starting interface:    nsIJSCID */
-#define NS_IJSCID_IID_STR "e3a24a60-d651-11d2-9843-006008962422"
+#define NS_IJSCID_IID_STR "26b2a374-6eaf-46d4-acaf-1c6be152d36b"
 
 #define NS_IJSCID_IID \
-  {0xe3a24a60, 0xd651, 0x11d2, \
-    { 0x98, 0x43, 0x00, 0x60, 0x08, 0x96, 0x24, 0x22 }}
+  {0x26b2a374, 0x6eaf, 0x46d4, \
+    { 0xac, 0xaf, 0x1c, 0x6b, 0xe1, 0x52, 0xd3, 0x6b }}
 
-class NS_NO_VTABLE nsIJSCID : public nsIJSID {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIJSCID : public nsIJSID {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IJSCID_IID)
 
   /* nsISupports createInstance (); */
-  NS_IMETHOD CreateInstance(nsISupports **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateInstance(nsISupports **_retval) = 0;
 
   /* nsISupports getService (); */
-  NS_IMETHOD GetService(nsISupports **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetService(nsISupports **_retval) = 0;
 
 };
 
@@ -248,18 +248,18 @@ class NS_NO_VTABLE nsIJSCID : public nsIJSID {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIJSCID \
-  NS_IMETHOD CreateInstance(nsISupports **_retval); \
-  NS_IMETHOD GetService(nsISupports **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD CreateInstance(nsISupports **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetService(nsISupports **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIJSCID(_to) \
-  NS_IMETHOD CreateInstance(nsISupports **_retval) { return _to CreateInstance(_retval); } \
-  NS_IMETHOD GetService(nsISupports **_retval) { return _to GetService(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD CreateInstance(nsISupports **_retval) { return _to CreateInstance(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetService(nsISupports **_retval) { return _to GetService(_retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIJSCID(_to) \
-  NS_IMETHOD CreateInstance(nsISupports **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateInstance(_retval); } \
-  NS_IMETHOD GetService(nsISupports **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetService(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD CreateInstance(nsISupports **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateInstance(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetService(nsISupports **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetService(_retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

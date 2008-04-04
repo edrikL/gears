@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/netwerk/cache/public/nsICache.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/cache/public/nsICache.idl
  */
 
 #ifndef __gen_nsICache_h__
@@ -30,7 +30,7 @@ typedef PRInt32 nsCacheAccessMode;
  * nsICache is a namespace for various cache constants.  It does not represent
  * an actual object.
  */
-class NS_NO_VTABLE nsICache {
+class NS_NO_VTABLE NS_SCRIPTABLE nsICache {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICACHE_IID)

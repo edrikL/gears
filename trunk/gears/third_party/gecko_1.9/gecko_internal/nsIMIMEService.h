@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/netwerk/mime/public/nsIMIMEService.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/mime/public/nsIMIMEService.idl
  */
 
 #ifndef __gen_nsIMIMEService_h__
@@ -52,7 +52,7 @@
  *
  * @see nsIMIMEInfo
  */
-class NS_NO_VTABLE nsIMIMEService : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIMIMEService : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMIMESERVICE_IID)
@@ -65,7 +65,7 @@ class NS_NO_VTABLE nsIMIMEService : public nsISupports {
      * must be nonempty.
      */
   /* nsIMIMEInfo getFromTypeAndExtension (in ACString aMIMEType, in AUTF8String aFileExt); */
-  NS_IMETHOD GetFromTypeAndExtension(const nsACString & aMIMEType, const nsACString & aFileExt, nsIMIMEInfo **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFromTypeAndExtension(const nsACString & aMIMEType, const nsACString & aFileExt, nsIMIMEInfo **_retval) = 0;
 
   /**
      * Retrieves a ACString representation of the MIME type
@@ -75,7 +75,7 @@ class NS_NO_VTABLE nsIMIMEService : public nsISupports {
      * @return The MIME type, if any.
      */
   /* ACString getTypeFromExtension (in AUTF8String aFileExt); */
-  NS_IMETHOD GetTypeFromExtension(const nsACString & aFileExt, nsACString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTypeFromExtension(const nsACString & aFileExt, nsACString & _retval) = 0;
 
   /**
      * Retrieves a ACString representation of the MIME type
@@ -87,10 +87,10 @@ class NS_NO_VTABLE nsIMIMEService : public nsISupports {
      * @return The MIME type, if any.
      */
   /* ACString getTypeFromURI (in nsIURI aURI); */
-  NS_IMETHOD GetTypeFromURI(nsIURI *aURI, nsACString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTypeFromURI(nsIURI *aURI, nsACString & _retval) = 0;
 
   /* ACString getTypeFromFile (in nsIFile aFile); */
-  NS_IMETHOD GetTypeFromFile(nsIFile *aFile, nsACString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTypeFromFile(nsIFile *aFile, nsACString & _retval) = 0;
 
   /**
      * Given a Type/Extension combination, returns the default extension
@@ -100,7 +100,7 @@ class NS_NO_VTABLE nsIMIMEService : public nsISupports {
      * @param aFileExt  File Extension. Can be empty.
      */
   /* AUTF8String getPrimaryExtension (in ACString aMIMEType, in AUTF8String aFileExt); */
-  NS_IMETHOD GetPrimaryExtension(const nsACString & aMIMEType, const nsACString & aFileExt, nsACString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPrimaryExtension(const nsACString & aMIMEType, const nsACString & aFileExt, nsACString & _retval) = 0;
 
 };
 
@@ -108,27 +108,27 @@ class NS_NO_VTABLE nsIMIMEService : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIMIMESERVICE \
-  NS_IMETHOD GetFromTypeAndExtension(const nsACString & aMIMEType, const nsACString & aFileExt, nsIMIMEInfo **_retval); \
-  NS_IMETHOD GetTypeFromExtension(const nsACString & aFileExt, nsACString & _retval); \
-  NS_IMETHOD GetTypeFromURI(nsIURI *aURI, nsACString & _retval); \
-  NS_IMETHOD GetTypeFromFile(nsIFile *aFile, nsACString & _retval); \
-  NS_IMETHOD GetPrimaryExtension(const nsACString & aMIMEType, const nsACString & aFileExt, nsACString & _retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetFromTypeAndExtension(const nsACString & aMIMEType, const nsACString & aFileExt, nsIMIMEInfo **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetTypeFromExtension(const nsACString & aFileExt, nsACString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetTypeFromURI(nsIURI *aURI, nsACString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetTypeFromFile(nsIFile *aFile, nsACString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetPrimaryExtension(const nsACString & aMIMEType, const nsACString & aFileExt, nsACString & _retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIMIMESERVICE(_to) \
-  NS_IMETHOD GetFromTypeAndExtension(const nsACString & aMIMEType, const nsACString & aFileExt, nsIMIMEInfo **_retval) { return _to GetFromTypeAndExtension(aMIMEType, aFileExt, _retval); } \
-  NS_IMETHOD GetTypeFromExtension(const nsACString & aFileExt, nsACString & _retval) { return _to GetTypeFromExtension(aFileExt, _retval); } \
-  NS_IMETHOD GetTypeFromURI(nsIURI *aURI, nsACString & _retval) { return _to GetTypeFromURI(aURI, _retval); } \
-  NS_IMETHOD GetTypeFromFile(nsIFile *aFile, nsACString & _retval) { return _to GetTypeFromFile(aFile, _retval); } \
-  NS_IMETHOD GetPrimaryExtension(const nsACString & aMIMEType, const nsACString & aFileExt, nsACString & _retval) { return _to GetPrimaryExtension(aMIMEType, aFileExt, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetFromTypeAndExtension(const nsACString & aMIMEType, const nsACString & aFileExt, nsIMIMEInfo **_retval) { return _to GetFromTypeAndExtension(aMIMEType, aFileExt, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTypeFromExtension(const nsACString & aFileExt, nsACString & _retval) { return _to GetTypeFromExtension(aFileExt, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTypeFromURI(nsIURI *aURI, nsACString & _retval) { return _to GetTypeFromURI(aURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTypeFromFile(nsIFile *aFile, nsACString & _retval) { return _to GetTypeFromFile(aFile, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrimaryExtension(const nsACString & aMIMEType, const nsACString & aFileExt, nsACString & _retval) { return _to GetPrimaryExtension(aMIMEType, aFileExt, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIMIMESERVICE(_to) \
-  NS_IMETHOD GetFromTypeAndExtension(const nsACString & aMIMEType, const nsACString & aFileExt, nsIMIMEInfo **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFromTypeAndExtension(aMIMEType, aFileExt, _retval); } \
-  NS_IMETHOD GetTypeFromExtension(const nsACString & aFileExt, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTypeFromExtension(aFileExt, _retval); } \
-  NS_IMETHOD GetTypeFromURI(nsIURI *aURI, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTypeFromURI(aURI, _retval); } \
-  NS_IMETHOD GetTypeFromFile(nsIFile *aFile, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTypeFromFile(aFile, _retval); } \
-  NS_IMETHOD GetPrimaryExtension(const nsACString & aMIMEType, const nsACString & aFileExt, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrimaryExtension(aMIMEType, aFileExt, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetFromTypeAndExtension(const nsACString & aMIMEType, const nsACString & aFileExt, nsIMIMEInfo **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFromTypeAndExtension(aMIMEType, aFileExt, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTypeFromExtension(const nsACString & aFileExt, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTypeFromExtension(aFileExt, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTypeFromURI(nsIURI *aURI, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTypeFromURI(aURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTypeFromFile(nsIFile *aFile, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTypeFromFile(aFile, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrimaryExtension(const nsACString & aMIMEType, const nsACString & aFileExt, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrimaryExtension(aMIMEType, aFileExt, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

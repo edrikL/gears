@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM e:/builds/tinderbox/XR-Trunk/WINNT_5.2_Depend/mozilla/docshell/base/nsIWebNavigation.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/docshell/base/nsIWebNavigation.idl
  */
 
 #ifndef __gen_nsIWebNavigation_h__
@@ -38,7 +38,7 @@ class nsIURI; /* forward declaration */
  *
  * @status UNDER_REVIEW
  */
-class NS_NO_VTABLE nsIWebNavigation : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIWebNavigation : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWEBNAVIGATION_IID)
@@ -48,14 +48,14 @@ class NS_NO_VTABLE nsIWebNavigation : public nsISupports {
    * there is back session history available for navigation.
    */
   /* readonly attribute boolean canGoBack; */
-  NS_IMETHOD GetCanGoBack(PRBool *aCanGoBack) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCanGoBack(PRBool *aCanGoBack) = 0;
 
   /**
    * Indicates if the object can go forward.  If true this indicates that
    * there is forward session history available for navigation
    */
   /* readonly attribute boolean canGoForward; */
-  NS_IMETHOD GetCanGoForward(PRBool *aCanGoForward) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCanGoForward(PRBool *aCanGoForward) = 0;
 
   /**
    * Tells the object to navigate to the previous session history item.  When a
@@ -68,7 +68,7 @@ class NS_NO_VTABLE nsIWebNavigation : public nsISupports {
    *        that canGoBack is false.
    */
   /* void goBack (); */
-  NS_IMETHOD GoBack(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GoBack(void) = 0;
 
   /**
    * Tells the object to navigate to the next session history item.  When a
@@ -81,7 +81,7 @@ class NS_NO_VTABLE nsIWebNavigation : public nsISupports {
    *        that canGoForward is false.
    */
   /* void goForward (); */
-  NS_IMETHOD GoForward(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GoForward(void) = 0;
 
   /**
    * Tells the object to navigate to the session history item at a given index.
@@ -91,7 +91,7 @@ class NS_NO_VTABLE nsIWebNavigation : public nsISupports {
    *        that session history entry at the given index does not exist.
    */
   /* void gotoIndex (in long index); */
-  NS_IMETHOD GotoIndex(PRInt32 index) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GotoIndex(PRInt32 index) = 0;
 
   /****************************************************************************
    * The following flags may be bitwise combined to form the load flags
@@ -227,7 +227,7 @@ class NS_NO_VTABLE nsIWebNavigation : public nsISupports {
    *        This parameter is optional and may be null.
    */
   /* void loadURI (in wstring aURI, in unsigned long aLoadFlags, in nsIURI aReferrer, in nsIInputStream aPostData, in nsIInputStream aHeaders); */
-  NS_IMETHOD LoadURI(const PRUnichar *aURI, PRUint32 aLoadFlags, nsIURI *aReferrer, nsIInputStream *aPostData, nsIInputStream *aHeaders) = 0;
+  NS_SCRIPTABLE NS_IMETHOD LoadURI(const PRUnichar *aURI, PRUint32 aLoadFlags, nsIURI *aReferrer, nsIInputStream *aPostData, nsIInputStream *aHeaders) = 0;
 
   /**
    * Tells the Object to reload the current page.  There may be cases where the
@@ -244,7 +244,7 @@ class NS_NO_VTABLE nsIWebNavigation : public nsISupports {
    *        Indicating that the user canceled the reload.
    */
   /* void reload (in unsigned long aReloadFlags); */
-  NS_IMETHOD Reload(PRUint32 aReloadFlags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Reload(PRUint32 aReloadFlags) = 0;
 
   /****************************************************************************
    * The following flags may be passed as the stop flags parameter to the stop
@@ -274,7 +274,7 @@ class NS_NO_VTABLE nsIWebNavigation : public nsISupports {
    *        This parameter is one of the stop flags defined above.
    */
   /* void stop (in unsigned long aStopFlags); */
-  NS_IMETHOD Stop(PRUint32 aStopFlags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Stop(PRUint32 aStopFlags) = 0;
 
   /**
    * Retrieves the current DOM document for the frame, or lazily creates a
@@ -282,26 +282,26 @@ class NS_NO_VTABLE nsIWebNavigation : public nsISupports {
    * for unexpected error situations.
    */
   /* readonly attribute nsIDOMDocument document; */
-  NS_IMETHOD GetDocument(nsIDOMDocument * *aDocument) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDocument(nsIDOMDocument * *aDocument) = 0;
 
   /**
    * The currently loaded URI or null.
    */
   /* readonly attribute nsIURI currentURI; */
-  NS_IMETHOD GetCurrentURI(nsIURI * *aCurrentURI) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentURI(nsIURI * *aCurrentURI) = 0;
 
   /**
    * The referring URI for the currently loaded URI or null.
    */
   /* readonly attribute nsIURI referringURI; */
-  NS_IMETHOD GetReferringURI(nsIURI * *aReferringURI) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetReferringURI(nsIURI * *aReferringURI) = 0;
 
   /**
    * The session history object used by this web navigation instance.
    */
   /* attribute nsISHistory sessionHistory; */
-  NS_IMETHOD GetSessionHistory(nsISHistory * *aSessionHistory) = 0;
-  NS_IMETHOD SetSessionHistory(nsISHistory * aSessionHistory) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSessionHistory(nsISHistory * *aSessionHistory) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSessionHistory(nsISHistory * aSessionHistory) = 0;
 
 };
 
@@ -309,51 +309,51 @@ class NS_NO_VTABLE nsIWebNavigation : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWEBNAVIGATION \
-  NS_IMETHOD GetCanGoBack(PRBool *aCanGoBack); \
-  NS_IMETHOD GetCanGoForward(PRBool *aCanGoForward); \
-  NS_IMETHOD GoBack(void); \
-  NS_IMETHOD GoForward(void); \
-  NS_IMETHOD GotoIndex(PRInt32 index); \
-  NS_IMETHOD LoadURI(const PRUnichar *aURI, PRUint32 aLoadFlags, nsIURI *aReferrer, nsIInputStream *aPostData, nsIInputStream *aHeaders); \
-  NS_IMETHOD Reload(PRUint32 aReloadFlags); \
-  NS_IMETHOD Stop(PRUint32 aStopFlags); \
-  NS_IMETHOD GetDocument(nsIDOMDocument * *aDocument); \
-  NS_IMETHOD GetCurrentURI(nsIURI * *aCurrentURI); \
-  NS_IMETHOD GetReferringURI(nsIURI * *aReferringURI); \
-  NS_IMETHOD GetSessionHistory(nsISHistory * *aSessionHistory); \
-  NS_IMETHOD SetSessionHistory(nsISHistory * aSessionHistory); 
+  NS_SCRIPTABLE NS_IMETHOD GetCanGoBack(PRBool *aCanGoBack); \
+  NS_SCRIPTABLE NS_IMETHOD GetCanGoForward(PRBool *aCanGoForward); \
+  NS_SCRIPTABLE NS_IMETHOD GoBack(void); \
+  NS_SCRIPTABLE NS_IMETHOD GoForward(void); \
+  NS_SCRIPTABLE NS_IMETHOD GotoIndex(PRInt32 index); \
+  NS_SCRIPTABLE NS_IMETHOD LoadURI(const PRUnichar *aURI, PRUint32 aLoadFlags, nsIURI *aReferrer, nsIInputStream *aPostData, nsIInputStream *aHeaders); \
+  NS_SCRIPTABLE NS_IMETHOD Reload(PRUint32 aReloadFlags); \
+  NS_SCRIPTABLE NS_IMETHOD Stop(PRUint32 aStopFlags); \
+  NS_SCRIPTABLE NS_IMETHOD GetDocument(nsIDOMDocument * *aDocument); \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentURI(nsIURI * *aCurrentURI); \
+  NS_SCRIPTABLE NS_IMETHOD GetReferringURI(nsIURI * *aReferringURI); \
+  NS_SCRIPTABLE NS_IMETHOD GetSessionHistory(nsISHistory * *aSessionHistory); \
+  NS_SCRIPTABLE NS_IMETHOD SetSessionHistory(nsISHistory * aSessionHistory); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIWEBNAVIGATION(_to) \
-  NS_IMETHOD GetCanGoBack(PRBool *aCanGoBack) { return _to GetCanGoBack(aCanGoBack); } \
-  NS_IMETHOD GetCanGoForward(PRBool *aCanGoForward) { return _to GetCanGoForward(aCanGoForward); } \
-  NS_IMETHOD GoBack(void) { return _to GoBack(); } \
-  NS_IMETHOD GoForward(void) { return _to GoForward(); } \
-  NS_IMETHOD GotoIndex(PRInt32 index) { return _to GotoIndex(index); } \
-  NS_IMETHOD LoadURI(const PRUnichar *aURI, PRUint32 aLoadFlags, nsIURI *aReferrer, nsIInputStream *aPostData, nsIInputStream *aHeaders) { return _to LoadURI(aURI, aLoadFlags, aReferrer, aPostData, aHeaders); } \
-  NS_IMETHOD Reload(PRUint32 aReloadFlags) { return _to Reload(aReloadFlags); } \
-  NS_IMETHOD Stop(PRUint32 aStopFlags) { return _to Stop(aStopFlags); } \
-  NS_IMETHOD GetDocument(nsIDOMDocument * *aDocument) { return _to GetDocument(aDocument); } \
-  NS_IMETHOD GetCurrentURI(nsIURI * *aCurrentURI) { return _to GetCurrentURI(aCurrentURI); } \
-  NS_IMETHOD GetReferringURI(nsIURI * *aReferringURI) { return _to GetReferringURI(aReferringURI); } \
-  NS_IMETHOD GetSessionHistory(nsISHistory * *aSessionHistory) { return _to GetSessionHistory(aSessionHistory); } \
-  NS_IMETHOD SetSessionHistory(nsISHistory * aSessionHistory) { return _to SetSessionHistory(aSessionHistory); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCanGoBack(PRBool *aCanGoBack) { return _to GetCanGoBack(aCanGoBack); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCanGoForward(PRBool *aCanGoForward) { return _to GetCanGoForward(aCanGoForward); } \
+  NS_SCRIPTABLE NS_IMETHOD GoBack(void) { return _to GoBack(); } \
+  NS_SCRIPTABLE NS_IMETHOD GoForward(void) { return _to GoForward(); } \
+  NS_SCRIPTABLE NS_IMETHOD GotoIndex(PRInt32 index) { return _to GotoIndex(index); } \
+  NS_SCRIPTABLE NS_IMETHOD LoadURI(const PRUnichar *aURI, PRUint32 aLoadFlags, nsIURI *aReferrer, nsIInputStream *aPostData, nsIInputStream *aHeaders) { return _to LoadURI(aURI, aLoadFlags, aReferrer, aPostData, aHeaders); } \
+  NS_SCRIPTABLE NS_IMETHOD Reload(PRUint32 aReloadFlags) { return _to Reload(aReloadFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD Stop(PRUint32 aStopFlags) { return _to Stop(aStopFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDocument(nsIDOMDocument * *aDocument) { return _to GetDocument(aDocument); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentURI(nsIURI * *aCurrentURI) { return _to GetCurrentURI(aCurrentURI); } \
+  NS_SCRIPTABLE NS_IMETHOD GetReferringURI(nsIURI * *aReferringURI) { return _to GetReferringURI(aReferringURI); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSessionHistory(nsISHistory * *aSessionHistory) { return _to GetSessionHistory(aSessionHistory); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSessionHistory(nsISHistory * aSessionHistory) { return _to SetSessionHistory(aSessionHistory); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIWEBNAVIGATION(_to) \
-  NS_IMETHOD GetCanGoBack(PRBool *aCanGoBack) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCanGoBack(aCanGoBack); } \
-  NS_IMETHOD GetCanGoForward(PRBool *aCanGoForward) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCanGoForward(aCanGoForward); } \
-  NS_IMETHOD GoBack(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->GoBack(); } \
-  NS_IMETHOD GoForward(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->GoForward(); } \
-  NS_IMETHOD GotoIndex(PRInt32 index) { return !_to ? NS_ERROR_NULL_POINTER : _to->GotoIndex(index); } \
-  NS_IMETHOD LoadURI(const PRUnichar *aURI, PRUint32 aLoadFlags, nsIURI *aReferrer, nsIInputStream *aPostData, nsIInputStream *aHeaders) { return !_to ? NS_ERROR_NULL_POINTER : _to->LoadURI(aURI, aLoadFlags, aReferrer, aPostData, aHeaders); } \
-  NS_IMETHOD Reload(PRUint32 aReloadFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->Reload(aReloadFlags); } \
-  NS_IMETHOD Stop(PRUint32 aStopFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->Stop(aStopFlags); } \
-  NS_IMETHOD GetDocument(nsIDOMDocument * *aDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocument(aDocument); } \
-  NS_IMETHOD GetCurrentURI(nsIURI * *aCurrentURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentURI(aCurrentURI); } \
-  NS_IMETHOD GetReferringURI(nsIURI * *aReferringURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetReferringURI(aReferringURI); } \
-  NS_IMETHOD GetSessionHistory(nsISHistory * *aSessionHistory) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSessionHistory(aSessionHistory); } \
-  NS_IMETHOD SetSessionHistory(nsISHistory * aSessionHistory) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSessionHistory(aSessionHistory); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCanGoBack(PRBool *aCanGoBack) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCanGoBack(aCanGoBack); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCanGoForward(PRBool *aCanGoForward) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCanGoForward(aCanGoForward); } \
+  NS_SCRIPTABLE NS_IMETHOD GoBack(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->GoBack(); } \
+  NS_SCRIPTABLE NS_IMETHOD GoForward(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->GoForward(); } \
+  NS_SCRIPTABLE NS_IMETHOD GotoIndex(PRInt32 index) { return !_to ? NS_ERROR_NULL_POINTER : _to->GotoIndex(index); } \
+  NS_SCRIPTABLE NS_IMETHOD LoadURI(const PRUnichar *aURI, PRUint32 aLoadFlags, nsIURI *aReferrer, nsIInputStream *aPostData, nsIInputStream *aHeaders) { return !_to ? NS_ERROR_NULL_POINTER : _to->LoadURI(aURI, aLoadFlags, aReferrer, aPostData, aHeaders); } \
+  NS_SCRIPTABLE NS_IMETHOD Reload(PRUint32 aReloadFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->Reload(aReloadFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD Stop(PRUint32 aStopFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->Stop(aStopFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDocument(nsIDOMDocument * *aDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocument(aDocument); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentURI(nsIURI * *aCurrentURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentURI(aCurrentURI); } \
+  NS_SCRIPTABLE NS_IMETHOD GetReferringURI(nsIURI * *aReferringURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetReferringURI(aReferringURI); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSessionHistory(nsISHistory * *aSessionHistory) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSessionHistory(aSessionHistory); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSessionHistory(nsISHistory * aSessionHistory) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSessionHistory(aSessionHistory); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM e:/builds/tinderbox/XR-Trunk/WINNT_5.2_Depend/mozilla/docshell/base/nsIDocShellTreeOwner.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/docshell/base/nsIDocShellTreeOwner.idl
  */
 
 #ifndef __gen_nsIDocShellTreeOwner_h__
@@ -24,13 +24,13 @@ class nsIDocShellTreeItem; /* forward declaration */
   {0xbc0eb30e, 0x656e, 0x491e, \
     { 0xa7, 0xae, 0x7f, 0x46, 0x0b, 0x66, 0x0c, 0x8d }}
 
-class NS_NO_VTABLE nsIDocShellTreeOwner : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDocShellTreeOwner : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCSHELLTREEOWNER_IID)
 
   /* nsIDocShellTreeItem findItemWithName (in wstring name, in nsIDocShellTreeItem aRequestor, in nsIDocShellTreeItem aOriginalRequestor); */
-  NS_IMETHOD FindItemWithName(const PRUnichar *name, nsIDocShellTreeItem *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD FindItemWithName(const PRUnichar *name, nsIDocShellTreeItem *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval) = 0;
 
   /**
 	 * Called when a content shell is added to the docshell tree.  This is
@@ -45,7 +45,7 @@ class NS_NO_VTABLE nsIDocShellTreeOwner : public nsISupports {
 	 *			undefined. Don't rely on this for anything.
 	 */
   /* void contentShellAdded (in nsIDocShellTreeItem aContentShell, in boolean aPrimary, in boolean aTargetable, in AString aID); */
-  NS_IMETHOD ContentShellAdded(nsIDocShellTreeItem *aContentShell, PRBool aPrimary, PRBool aTargetable, const nsAString & aID) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ContentShellAdded(nsIDocShellTreeItem *aContentShell, PRBool aPrimary, PRBool aTargetable, const nsAString & aID) = 0;
 
   /**
 	 * Called when a content shell is removed from the docshell tree.  This is
@@ -56,19 +56,19 @@ class NS_NO_VTABLE nsIDocShellTreeOwner : public nsISupports {
 	 * @param aContentShell the shell being removed.
 	 */
   /* void contentShellRemoved (in nsIDocShellTreeItem aContentShell); */
-  NS_IMETHOD ContentShellRemoved(nsIDocShellTreeItem *aContentShell) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ContentShellRemoved(nsIDocShellTreeItem *aContentShell) = 0;
 
   /* readonly attribute nsIDocShellTreeItem primaryContentShell; */
-  NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem * *aPrimaryContentShell) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem * *aPrimaryContentShell) = 0;
 
   /* void sizeShellTo (in nsIDocShellTreeItem shell, in long cx, in long cy); */
-  NS_IMETHOD SizeShellTo(nsIDocShellTreeItem *shell, PRInt32 cx, PRInt32 cy) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SizeShellTo(nsIDocShellTreeItem *shell, PRInt32 cx, PRInt32 cy) = 0;
 
   /* void setPersistence (in boolean aPersistPosition, in boolean aPersistSize, in boolean aPersistSizeMode); */
-  NS_IMETHOD SetPersistence(PRBool aPersistPosition, PRBool aPersistSize, PRBool aPersistSizeMode) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetPersistence(PRBool aPersistPosition, PRBool aPersistSize, PRBool aPersistSizeMode) = 0;
 
   /* void getPersistence (out boolean aPersistPosition, out boolean aPersistSize, out boolean aPersistSizeMode); */
-  NS_IMETHOD GetPersistence(PRBool *aPersistPosition, PRBool *aPersistSize, PRBool *aPersistSizeMode) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPersistence(PRBool *aPersistPosition, PRBool *aPersistSize, PRBool *aPersistSizeMode) = 0;
 
 };
 
@@ -76,33 +76,33 @@ class NS_NO_VTABLE nsIDocShellTreeOwner : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOCSHELLTREEOWNER \
-  NS_IMETHOD FindItemWithName(const PRUnichar *name, nsIDocShellTreeItem *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval); \
-  NS_IMETHOD ContentShellAdded(nsIDocShellTreeItem *aContentShell, PRBool aPrimary, PRBool aTargetable, const nsAString & aID); \
-  NS_IMETHOD ContentShellRemoved(nsIDocShellTreeItem *aContentShell); \
-  NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem * *aPrimaryContentShell); \
-  NS_IMETHOD SizeShellTo(nsIDocShellTreeItem *shell, PRInt32 cx, PRInt32 cy); \
-  NS_IMETHOD SetPersistence(PRBool aPersistPosition, PRBool aPersistSize, PRBool aPersistSizeMode); \
-  NS_IMETHOD GetPersistence(PRBool *aPersistPosition, PRBool *aPersistSize, PRBool *aPersistSizeMode); 
+  NS_SCRIPTABLE NS_IMETHOD FindItemWithName(const PRUnichar *name, nsIDocShellTreeItem *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD ContentShellAdded(nsIDocShellTreeItem *aContentShell, PRBool aPrimary, PRBool aTargetable, const nsAString & aID); \
+  NS_SCRIPTABLE NS_IMETHOD ContentShellRemoved(nsIDocShellTreeItem *aContentShell); \
+  NS_SCRIPTABLE NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem * *aPrimaryContentShell); \
+  NS_SCRIPTABLE NS_IMETHOD SizeShellTo(nsIDocShellTreeItem *shell, PRInt32 cx, PRInt32 cy); \
+  NS_SCRIPTABLE NS_IMETHOD SetPersistence(PRBool aPersistPosition, PRBool aPersistSize, PRBool aPersistSizeMode); \
+  NS_SCRIPTABLE NS_IMETHOD GetPersistence(PRBool *aPersistPosition, PRBool *aPersistSize, PRBool *aPersistSizeMode); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOCSHELLTREEOWNER(_to) \
-  NS_IMETHOD FindItemWithName(const PRUnichar *name, nsIDocShellTreeItem *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval) { return _to FindItemWithName(name, aRequestor, aOriginalRequestor, _retval); } \
-  NS_IMETHOD ContentShellAdded(nsIDocShellTreeItem *aContentShell, PRBool aPrimary, PRBool aTargetable, const nsAString & aID) { return _to ContentShellAdded(aContentShell, aPrimary, aTargetable, aID); } \
-  NS_IMETHOD ContentShellRemoved(nsIDocShellTreeItem *aContentShell) { return _to ContentShellRemoved(aContentShell); } \
-  NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem * *aPrimaryContentShell) { return _to GetPrimaryContentShell(aPrimaryContentShell); } \
-  NS_IMETHOD SizeShellTo(nsIDocShellTreeItem *shell, PRInt32 cx, PRInt32 cy) { return _to SizeShellTo(shell, cx, cy); } \
-  NS_IMETHOD SetPersistence(PRBool aPersistPosition, PRBool aPersistSize, PRBool aPersistSizeMode) { return _to SetPersistence(aPersistPosition, aPersistSize, aPersistSizeMode); } \
-  NS_IMETHOD GetPersistence(PRBool *aPersistPosition, PRBool *aPersistSize, PRBool *aPersistSizeMode) { return _to GetPersistence(aPersistPosition, aPersistSize, aPersistSizeMode); } 
+  NS_SCRIPTABLE NS_IMETHOD FindItemWithName(const PRUnichar *name, nsIDocShellTreeItem *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval) { return _to FindItemWithName(name, aRequestor, aOriginalRequestor, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ContentShellAdded(nsIDocShellTreeItem *aContentShell, PRBool aPrimary, PRBool aTargetable, const nsAString & aID) { return _to ContentShellAdded(aContentShell, aPrimary, aTargetable, aID); } \
+  NS_SCRIPTABLE NS_IMETHOD ContentShellRemoved(nsIDocShellTreeItem *aContentShell) { return _to ContentShellRemoved(aContentShell); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem * *aPrimaryContentShell) { return _to GetPrimaryContentShell(aPrimaryContentShell); } \
+  NS_SCRIPTABLE NS_IMETHOD SizeShellTo(nsIDocShellTreeItem *shell, PRInt32 cx, PRInt32 cy) { return _to SizeShellTo(shell, cx, cy); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPersistence(PRBool aPersistPosition, PRBool aPersistSize, PRBool aPersistSizeMode) { return _to SetPersistence(aPersistPosition, aPersistSize, aPersistSizeMode); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPersistence(PRBool *aPersistPosition, PRBool *aPersistSize, PRBool *aPersistSizeMode) { return _to GetPersistence(aPersistPosition, aPersistSize, aPersistSizeMode); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOCSHELLTREEOWNER(_to) \
-  NS_IMETHOD FindItemWithName(const PRUnichar *name, nsIDocShellTreeItem *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindItemWithName(name, aRequestor, aOriginalRequestor, _retval); } \
-  NS_IMETHOD ContentShellAdded(nsIDocShellTreeItem *aContentShell, PRBool aPrimary, PRBool aTargetable, const nsAString & aID) { return !_to ? NS_ERROR_NULL_POINTER : _to->ContentShellAdded(aContentShell, aPrimary, aTargetable, aID); } \
-  NS_IMETHOD ContentShellRemoved(nsIDocShellTreeItem *aContentShell) { return !_to ? NS_ERROR_NULL_POINTER : _to->ContentShellRemoved(aContentShell); } \
-  NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem * *aPrimaryContentShell) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrimaryContentShell(aPrimaryContentShell); } \
-  NS_IMETHOD SizeShellTo(nsIDocShellTreeItem *shell, PRInt32 cx, PRInt32 cy) { return !_to ? NS_ERROR_NULL_POINTER : _to->SizeShellTo(shell, cx, cy); } \
-  NS_IMETHOD SetPersistence(PRBool aPersistPosition, PRBool aPersistSize, PRBool aPersistSizeMode) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPersistence(aPersistPosition, aPersistSize, aPersistSizeMode); } \
-  NS_IMETHOD GetPersistence(PRBool *aPersistPosition, PRBool *aPersistSize, PRBool *aPersistSizeMode) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPersistence(aPersistPosition, aPersistSize, aPersistSizeMode); } 
+  NS_SCRIPTABLE NS_IMETHOD FindItemWithName(const PRUnichar *name, nsIDocShellTreeItem *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindItemWithName(name, aRequestor, aOriginalRequestor, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ContentShellAdded(nsIDocShellTreeItem *aContentShell, PRBool aPrimary, PRBool aTargetable, const nsAString & aID) { return !_to ? NS_ERROR_NULL_POINTER : _to->ContentShellAdded(aContentShell, aPrimary, aTargetable, aID); } \
+  NS_SCRIPTABLE NS_IMETHOD ContentShellRemoved(nsIDocShellTreeItem *aContentShell) { return !_to ? NS_ERROR_NULL_POINTER : _to->ContentShellRemoved(aContentShell); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem * *aPrimaryContentShell) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrimaryContentShell(aPrimaryContentShell); } \
+  NS_SCRIPTABLE NS_IMETHOD SizeShellTo(nsIDocShellTreeItem *shell, PRInt32 cx, PRInt32 cy) { return !_to ? NS_ERROR_NULL_POINTER : _to->SizeShellTo(shell, cx, cy); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPersistence(PRBool aPersistPosition, PRBool aPersistSize, PRBool aPersistSizeMode) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPersistence(aPersistPosition, aPersistSize, aPersistSizeMode); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPersistence(PRBool *aPersistPosition, PRBool *aPersistSize, PRBool *aPersistSizeMode) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPersistence(aPersistPosition, aPersistSize, aPersistSizeMode); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

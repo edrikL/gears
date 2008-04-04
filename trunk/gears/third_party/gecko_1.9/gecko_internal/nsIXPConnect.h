@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM e:/builds/tinderbox/XR-Trunk/WINNT_5.2_Depend/mozilla/js/src/xpconnect/idl/nsIXPConnect.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/js/src/xpconnect/idl/nsIXPConnect.idl
  */
 
 #ifndef __gen_nsIXPConnect_h__
@@ -582,13 +582,13 @@ NS_IMETHODIMP nsXPConnectWrappedJS::AggregatedQueryInterface(const nsIID & uuid,
  *  do special processing on 'nsIXPCSecurityManager::CanGetProperty' when
  *  the interface id is that of nsIXPCWrappedJSObjectGetter.
  */
-class NS_NO_VTABLE nsIXPCWrappedJSObjectGetter : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIXPCWrappedJSObjectGetter : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPCWRAPPEDJSOBJECTGETTER_IID)
 
   /* readonly attribute nsISupports neverCalled; */
-  NS_IMETHOD GetNeverCalled(nsISupports * *aNeverCalled) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNeverCalled(nsISupports * *aNeverCalled) = 0;
 
 };
 
@@ -596,15 +596,15 @@ class NS_NO_VTABLE nsIXPCWrappedJSObjectGetter : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIXPCWRAPPEDJSOBJECTGETTER \
-  NS_IMETHOD GetNeverCalled(nsISupports * *aNeverCalled); 
+  NS_SCRIPTABLE NS_IMETHOD GetNeverCalled(nsISupports * *aNeverCalled); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIXPCWRAPPEDJSOBJECTGETTER(_to) \
-  NS_IMETHOD GetNeverCalled(nsISupports * *aNeverCalled) { return _to GetNeverCalled(aNeverCalled); } 
+  NS_SCRIPTABLE NS_IMETHOD GetNeverCalled(nsISupports * *aNeverCalled) { return _to GetNeverCalled(aNeverCalled); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIXPCWRAPPEDJSOBJECTGETTER(_to) \
-  NS_IMETHOD GetNeverCalled(nsISupports * *aNeverCalled) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNeverCalled(aNeverCalled); } 
+  NS_SCRIPTABLE NS_IMETHOD GetNeverCalled(nsISupports * *aNeverCalled) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNeverCalled(aNeverCalled); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

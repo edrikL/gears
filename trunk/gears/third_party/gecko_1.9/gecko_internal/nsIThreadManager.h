@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/xpcom/threads/nsIThreadManager.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/xpcom/threads/nsIThreadManager.idl
  */
 
 #ifndef __gen_nsIThreadManager_h__
@@ -27,7 +27,7 @@ class nsIThread; /* forward declaration */
 /**
  * An interface for creating and locating nsIThread instances.
  */
-class NS_NO_VTABLE nsIThreadManager : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIThreadManager : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITHREADMANAGER_IID)
@@ -42,7 +42,7 @@ class NS_NO_VTABLE nsIThreadManager : public nsISupports {
    *   The newly created nsIThread object.
    */
   /* nsIThread newThread (in unsigned long creationFlags); */
-  NS_IMETHOD NewThread(PRUint32 creationFlags, nsIThread **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD NewThread(PRUint32 creationFlags, nsIThread **_retval) = 0;
 
   /**
    * Get the nsIThread object (if any) corresponding to the given PRThread.
@@ -62,7 +62,7 @@ class NS_NO_VTABLE nsIThreadManager : public nsISupports {
    * Get the main thread.
    */
   /* readonly attribute nsIThread mainThread; */
-  NS_IMETHOD GetMainThread(nsIThread * *aMainThread) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMainThread(nsIThread * *aMainThread) = 0;
 
   /**
    * Get the current thread.  If the calling thread does not already have a
@@ -70,14 +70,14 @@ class NS_NO_VTABLE nsIThreadManager : public nsISupports {
    * associated with the current PRThread.
    */
   /* readonly attribute nsIThread currentThread; */
-  NS_IMETHOD GetCurrentThread(nsIThread * *aCurrentThread) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentThread(nsIThread * *aCurrentThread) = 0;
 
   /**
    * This attribute is true if the calling thread is the main thread of the
    * application process.
    */
   /* readonly attribute boolean isMainThread; */
-  NS_IMETHOD GetIsMainThread(PRBool *aIsMainThread) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIsMainThread(PRBool *aIsMainThread) = 0;
 
 };
 
@@ -85,27 +85,27 @@ class NS_NO_VTABLE nsIThreadManager : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSITHREADMANAGER \
-  NS_IMETHOD NewThread(PRUint32 creationFlags, nsIThread **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD NewThread(PRUint32 creationFlags, nsIThread **_retval); \
   NS_IMETHOD GetThreadFromPRThread(PRThread * prthread, nsIThread **_retval); \
-  NS_IMETHOD GetMainThread(nsIThread * *aMainThread); \
-  NS_IMETHOD GetCurrentThread(nsIThread * *aCurrentThread); \
-  NS_IMETHOD GetIsMainThread(PRBool *aIsMainThread); 
+  NS_SCRIPTABLE NS_IMETHOD GetMainThread(nsIThread * *aMainThread); \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentThread(nsIThread * *aCurrentThread); \
+  NS_SCRIPTABLE NS_IMETHOD GetIsMainThread(PRBool *aIsMainThread); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSITHREADMANAGER(_to) \
-  NS_IMETHOD NewThread(PRUint32 creationFlags, nsIThread **_retval) { return _to NewThread(creationFlags, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD NewThread(PRUint32 creationFlags, nsIThread **_retval) { return _to NewThread(creationFlags, _retval); } \
   NS_IMETHOD GetThreadFromPRThread(PRThread * prthread, nsIThread **_retval) { return _to GetThreadFromPRThread(prthread, _retval); } \
-  NS_IMETHOD GetMainThread(nsIThread * *aMainThread) { return _to GetMainThread(aMainThread); } \
-  NS_IMETHOD GetCurrentThread(nsIThread * *aCurrentThread) { return _to GetCurrentThread(aCurrentThread); } \
-  NS_IMETHOD GetIsMainThread(PRBool *aIsMainThread) { return _to GetIsMainThread(aIsMainThread); } 
+  NS_SCRIPTABLE NS_IMETHOD GetMainThread(nsIThread * *aMainThread) { return _to GetMainThread(aMainThread); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentThread(nsIThread * *aCurrentThread) { return _to GetCurrentThread(aCurrentThread); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsMainThread(PRBool *aIsMainThread) { return _to GetIsMainThread(aIsMainThread); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSITHREADMANAGER(_to) \
-  NS_IMETHOD NewThread(PRUint32 creationFlags, nsIThread **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NewThread(creationFlags, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD NewThread(PRUint32 creationFlags, nsIThread **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NewThread(creationFlags, _retval); } \
   NS_IMETHOD GetThreadFromPRThread(PRThread * prthread, nsIThread **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetThreadFromPRThread(prthread, _retval); } \
-  NS_IMETHOD GetMainThread(nsIThread * *aMainThread) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMainThread(aMainThread); } \
-  NS_IMETHOD GetCurrentThread(nsIThread * *aCurrentThread) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentThread(aCurrentThread); } \
-  NS_IMETHOD GetIsMainThread(PRBool *aIsMainThread) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsMainThread(aIsMainThread); } 
+  NS_SCRIPTABLE NS_IMETHOD GetMainThread(nsIThread * *aMainThread) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMainThread(aMainThread); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentThread(nsIThread * *aCurrentThread) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentThread(aCurrentThread); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsMainThread(PRBool *aIsMainThread) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsMainThread(aIsMainThread); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

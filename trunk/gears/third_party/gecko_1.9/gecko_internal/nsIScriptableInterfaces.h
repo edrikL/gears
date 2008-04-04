@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/js/src/xpconnect/idl/nsIScriptableInterfaces.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/js/src/xpconnect/idl/nsIScriptableInterfaces.idl
  */
 
 #ifndef __gen_nsIScriptableInterfaces_h__
@@ -30,7 +30,7 @@
 * Interface used as Components.interfaces (and elsewhere)
 * (interesting stuff only reflected into JavaScript)
 */
-class NS_NO_VTABLE nsIScriptableInterfaces : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIScriptableInterfaces : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTABLEINTERFACES_IID)
@@ -117,7 +117,7 @@ NS_IMETHODIMP nsScriptableInterfaces::SetManager(nsIInterfaceInfoManager * aMana
 * interface of Components.interfacesByID
 * (interesting stuff only reflected into JavaScript)
 */
-class NS_NO_VTABLE nsIScriptableInterfacesByID : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIScriptableInterfacesByID : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTABLEINTERFACESBYID_IID)

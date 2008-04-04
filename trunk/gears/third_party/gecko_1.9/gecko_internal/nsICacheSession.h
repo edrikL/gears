@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/netwerk/cache/public/nsICacheSession.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/cache/public/nsICacheSession.idl
  */
 
 #ifndef __gen_nsICacheSession_h__
@@ -30,7 +30,7 @@ class nsICacheListener; /* forward declaration */
   {0xae9e84b5, 0x3e2d, 0x457e, \
     { 0x8f, 0xcd, 0x5b, 0xbd, 0x2a, 0x8b, 0x83, 0x2e }}
 
-class NS_NO_VTABLE nsICacheSession : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsICacheSession : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICACHESESSION_IID)
@@ -42,8 +42,8 @@ class NS_NO_VTABLE nsICacheSession : public nsISupports {
      * cached content).  This attribute defaults to true.
      */
   /* attribute PRBool doomEntriesIfExpired; */
-  NS_IMETHOD GetDoomEntriesIfExpired(PRBool *aDoomEntriesIfExpired) = 0;
-  NS_IMETHOD SetDoomEntriesIfExpired(PRBool aDoomEntriesIfExpired) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDoomEntriesIfExpired(PRBool *aDoomEntriesIfExpired) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDoomEntriesIfExpired(PRBool aDoomEntriesIfExpired) = 0;
 
   /**
      * A cache session can only give out one descriptor with WRITE access
@@ -59,7 +59,7 @@ class NS_NO_VTABLE nsICacheSession : public nsISupports {
      * descriptor has been given WRITE access but hasn't validated the entry yet.
      */
   /* nsICacheEntryDescriptor openCacheEntry (in ACString key, in nsCacheAccessMode accessRequested, in boolean blockingMode); */
-  NS_IMETHOD OpenCacheEntry(const nsACString & key, nsCacheAccessMode accessRequested, PRBool blockingMode, nsICacheEntryDescriptor **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OpenCacheEntry(const nsACString & key, nsCacheAccessMode accessRequested, PRBool blockingMode, nsICacheEntryDescriptor **_retval) = 0;
 
   /**
      * Asynchronous cache access. Does not block the calling thread.
@@ -67,20 +67,20 @@ class NS_NO_VTABLE nsICacheSession : public nsISupports {
      * available.
      */
   /* void asyncOpenCacheEntry (in ACString key, in nsCacheAccessMode accessRequested, in nsICacheListener listener); */
-  NS_IMETHOD AsyncOpenCacheEntry(const nsACString & key, nsCacheAccessMode accessRequested, nsICacheListener *listener) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AsyncOpenCacheEntry(const nsACString & key, nsCacheAccessMode accessRequested, nsICacheListener *listener) = 0;
 
   /**
      * Evict all entries for this session's clientID according to its storagePolicy.
      */
   /* void evictEntries (); */
-  NS_IMETHOD EvictEntries(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD EvictEntries(void) = 0;
 
   /**
      * Return whether any of the cache devices implied by the session storage policy
      * are currently enabled for instantiation if they don't already exist.
      */
   /* PRBool isStorageEnabled (); */
-  NS_IMETHOD IsStorageEnabled(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsStorageEnabled(PRBool *_retval) = 0;
 
 };
 
@@ -88,30 +88,30 @@ class NS_NO_VTABLE nsICacheSession : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICACHESESSION \
-  NS_IMETHOD GetDoomEntriesIfExpired(PRBool *aDoomEntriesIfExpired); \
-  NS_IMETHOD SetDoomEntriesIfExpired(PRBool aDoomEntriesIfExpired); \
-  NS_IMETHOD OpenCacheEntry(const nsACString & key, nsCacheAccessMode accessRequested, PRBool blockingMode, nsICacheEntryDescriptor **_retval); \
-  NS_IMETHOD AsyncOpenCacheEntry(const nsACString & key, nsCacheAccessMode accessRequested, nsICacheListener *listener); \
-  NS_IMETHOD EvictEntries(void); \
-  NS_IMETHOD IsStorageEnabled(PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetDoomEntriesIfExpired(PRBool *aDoomEntriesIfExpired); \
+  NS_SCRIPTABLE NS_IMETHOD SetDoomEntriesIfExpired(PRBool aDoomEntriesIfExpired); \
+  NS_SCRIPTABLE NS_IMETHOD OpenCacheEntry(const nsACString & key, nsCacheAccessMode accessRequested, PRBool blockingMode, nsICacheEntryDescriptor **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD AsyncOpenCacheEntry(const nsACString & key, nsCacheAccessMode accessRequested, nsICacheListener *listener); \
+  NS_SCRIPTABLE NS_IMETHOD EvictEntries(void); \
+  NS_SCRIPTABLE NS_IMETHOD IsStorageEnabled(PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICACHESESSION(_to) \
-  NS_IMETHOD GetDoomEntriesIfExpired(PRBool *aDoomEntriesIfExpired) { return _to GetDoomEntriesIfExpired(aDoomEntriesIfExpired); } \
-  NS_IMETHOD SetDoomEntriesIfExpired(PRBool aDoomEntriesIfExpired) { return _to SetDoomEntriesIfExpired(aDoomEntriesIfExpired); } \
-  NS_IMETHOD OpenCacheEntry(const nsACString & key, nsCacheAccessMode accessRequested, PRBool blockingMode, nsICacheEntryDescriptor **_retval) { return _to OpenCacheEntry(key, accessRequested, blockingMode, _retval); } \
-  NS_IMETHOD AsyncOpenCacheEntry(const nsACString & key, nsCacheAccessMode accessRequested, nsICacheListener *listener) { return _to AsyncOpenCacheEntry(key, accessRequested, listener); } \
-  NS_IMETHOD EvictEntries(void) { return _to EvictEntries(); } \
-  NS_IMETHOD IsStorageEnabled(PRBool *_retval) { return _to IsStorageEnabled(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetDoomEntriesIfExpired(PRBool *aDoomEntriesIfExpired) { return _to GetDoomEntriesIfExpired(aDoomEntriesIfExpired); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDoomEntriesIfExpired(PRBool aDoomEntriesIfExpired) { return _to SetDoomEntriesIfExpired(aDoomEntriesIfExpired); } \
+  NS_SCRIPTABLE NS_IMETHOD OpenCacheEntry(const nsACString & key, nsCacheAccessMode accessRequested, PRBool blockingMode, nsICacheEntryDescriptor **_retval) { return _to OpenCacheEntry(key, accessRequested, blockingMode, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD AsyncOpenCacheEntry(const nsACString & key, nsCacheAccessMode accessRequested, nsICacheListener *listener) { return _to AsyncOpenCacheEntry(key, accessRequested, listener); } \
+  NS_SCRIPTABLE NS_IMETHOD EvictEntries(void) { return _to EvictEntries(); } \
+  NS_SCRIPTABLE NS_IMETHOD IsStorageEnabled(PRBool *_retval) { return _to IsStorageEnabled(_retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICACHESESSION(_to) \
-  NS_IMETHOD GetDoomEntriesIfExpired(PRBool *aDoomEntriesIfExpired) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDoomEntriesIfExpired(aDoomEntriesIfExpired); } \
-  NS_IMETHOD SetDoomEntriesIfExpired(PRBool aDoomEntriesIfExpired) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDoomEntriesIfExpired(aDoomEntriesIfExpired); } \
-  NS_IMETHOD OpenCacheEntry(const nsACString & key, nsCacheAccessMode accessRequested, PRBool blockingMode, nsICacheEntryDescriptor **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OpenCacheEntry(key, accessRequested, blockingMode, _retval); } \
-  NS_IMETHOD AsyncOpenCacheEntry(const nsACString & key, nsCacheAccessMode accessRequested, nsICacheListener *listener) { return !_to ? NS_ERROR_NULL_POINTER : _to->AsyncOpenCacheEntry(key, accessRequested, listener); } \
-  NS_IMETHOD EvictEntries(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->EvictEntries(); } \
-  NS_IMETHOD IsStorageEnabled(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsStorageEnabled(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetDoomEntriesIfExpired(PRBool *aDoomEntriesIfExpired) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDoomEntriesIfExpired(aDoomEntriesIfExpired); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDoomEntriesIfExpired(PRBool aDoomEntriesIfExpired) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDoomEntriesIfExpired(aDoomEntriesIfExpired); } \
+  NS_SCRIPTABLE NS_IMETHOD OpenCacheEntry(const nsACString & key, nsCacheAccessMode accessRequested, PRBool blockingMode, nsICacheEntryDescriptor **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OpenCacheEntry(key, accessRequested, blockingMode, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD AsyncOpenCacheEntry(const nsACString & key, nsCacheAccessMode accessRequested, nsICacheListener *listener) { return !_to ? NS_ERROR_NULL_POINTER : _to->AsyncOpenCacheEntry(key, accessRequested, listener); } \
+  NS_SCRIPTABLE NS_IMETHOD EvictEntries(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->EvictEntries(); } \
+  NS_SCRIPTABLE NS_IMETHOD IsStorageEnabled(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsStorageEnabled(_retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

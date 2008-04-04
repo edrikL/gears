@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/js/src/xpconnect/idl/nsIXPCSecurityManager.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/js/src/xpconnect/idl/nsIXPCSecurityManager.idl
  */
 
 #ifndef __gen_nsIXPCSecurityManager_h__
@@ -15,9 +15,8 @@
 #define NS_NO_VTABLE
 #endif
 #include "jspubtd.h"
+class nsAXPCNativeCallContext;
 class nsIClassInfo; /* forward declaration */
-
-class nsIXPCNativeCallContext; /* forward declaration */
 
 
 /* starting interface:    nsIXPCSecurityManager */
@@ -71,8 +70,8 @@ class NS_NO_VTABLE nsIXPCSecurityManager : public nsISupports {
 
   enum { ACCESS_SET_PROPERTY = 2U };
 
-  /* void CanAccess (in PRUint32 aAction, in nsIXPCNativeCallContext aCallContext, in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in nsISupports aObj, in nsIClassInfo aClassInfo, in JSVal aName, inout voidPtr aPolicy); */
-  NS_IMETHOD CanAccess(PRUint32 aAction, nsIXPCNativeCallContext *aCallContext, JSContext * aJSContext, JSObject * aJSObject, nsISupports *aObj, nsIClassInfo *aClassInfo, jsval aName, void * *aPolicy) = 0;
+  /* void CanAccess (in PRUint32 aAction, in nsAXPCNativeCallContextPtr aCallContext, in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in nsISupports aObj, in nsIClassInfo aClassInfo, in JSVal aName, inout voidPtr aPolicy); */
+  NS_IMETHOD CanAccess(PRUint32 aAction, nsAXPCNativeCallContext * aCallContext, JSContext * aJSContext, JSObject * aJSObject, nsISupports *aObj, nsIClassInfo *aClassInfo, jsval aName, void * *aPolicy) = 0;
 
 };
 
@@ -83,21 +82,21 @@ class NS_NO_VTABLE nsIXPCSecurityManager : public nsISupports {
   NS_IMETHOD CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIClassInfo *aClassInfo, void * *aPolicy); \
   NS_IMETHOD CanCreateInstance(JSContext * aJSContext, const nsCID & aCID); \
   NS_IMETHOD CanGetService(JSContext * aJSContext, const nsCID & aCID); \
-  NS_IMETHOD CanAccess(PRUint32 aAction, nsIXPCNativeCallContext *aCallContext, JSContext * aJSContext, JSObject * aJSObject, nsISupports *aObj, nsIClassInfo *aClassInfo, jsval aName, void * *aPolicy); 
+  NS_IMETHOD CanAccess(PRUint32 aAction, nsAXPCNativeCallContext * aCallContext, JSContext * aJSContext, JSObject * aJSObject, nsISupports *aObj, nsIClassInfo *aClassInfo, jsval aName, void * *aPolicy); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIXPCSECURITYMANAGER(_to) \
   NS_IMETHOD CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIClassInfo *aClassInfo, void * *aPolicy) { return _to CanCreateWrapper(aJSContext, aIID, aObj, aClassInfo, aPolicy); } \
   NS_IMETHOD CanCreateInstance(JSContext * aJSContext, const nsCID & aCID) { return _to CanCreateInstance(aJSContext, aCID); } \
   NS_IMETHOD CanGetService(JSContext * aJSContext, const nsCID & aCID) { return _to CanGetService(aJSContext, aCID); } \
-  NS_IMETHOD CanAccess(PRUint32 aAction, nsIXPCNativeCallContext *aCallContext, JSContext * aJSContext, JSObject * aJSObject, nsISupports *aObj, nsIClassInfo *aClassInfo, jsval aName, void * *aPolicy) { return _to CanAccess(aAction, aCallContext, aJSContext, aJSObject, aObj, aClassInfo, aName, aPolicy); } 
+  NS_IMETHOD CanAccess(PRUint32 aAction, nsAXPCNativeCallContext * aCallContext, JSContext * aJSContext, JSObject * aJSObject, nsISupports *aObj, nsIClassInfo *aClassInfo, jsval aName, void * *aPolicy) { return _to CanAccess(aAction, aCallContext, aJSContext, aJSObject, aObj, aClassInfo, aName, aPolicy); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIXPCSECURITYMANAGER(_to) \
   NS_IMETHOD CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIClassInfo *aClassInfo, void * *aPolicy) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanCreateWrapper(aJSContext, aIID, aObj, aClassInfo, aPolicy); } \
   NS_IMETHOD CanCreateInstance(JSContext * aJSContext, const nsCID & aCID) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanCreateInstance(aJSContext, aCID); } \
   NS_IMETHOD CanGetService(JSContext * aJSContext, const nsCID & aCID) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanGetService(aJSContext, aCID); } \
-  NS_IMETHOD CanAccess(PRUint32 aAction, nsIXPCNativeCallContext *aCallContext, JSContext * aJSContext, JSObject * aJSObject, nsISupports *aObj, nsIClassInfo *aClassInfo, jsval aName, void * *aPolicy) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanAccess(aAction, aCallContext, aJSContext, aJSObject, aObj, aClassInfo, aName, aPolicy); } 
+  NS_IMETHOD CanAccess(PRUint32 aAction, nsAXPCNativeCallContext * aCallContext, JSContext * aJSContext, JSObject * aJSObject, nsISupports *aObj, nsIClassInfo *aClassInfo, jsval aName, void * *aPolicy) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanAccess(aAction, aCallContext, aJSContext, aJSObject, aObj, aClassInfo, aName, aPolicy); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -149,8 +148,8 @@ NS_IMETHODIMP nsXPCSecurityManager::CanGetService(JSContext * aJSContext, const 
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void CanAccess (in PRUint32 aAction, in nsIXPCNativeCallContext aCallContext, in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in nsISupports aObj, in nsIClassInfo aClassInfo, in JSVal aName, inout voidPtr aPolicy); */
-NS_IMETHODIMP nsXPCSecurityManager::CanAccess(PRUint32 aAction, nsIXPCNativeCallContext *aCallContext, JSContext * aJSContext, JSObject * aJSObject, nsISupports *aObj, nsIClassInfo *aClassInfo, jsval aName, void * *aPolicy)
+/* void CanAccess (in PRUint32 aAction, in nsAXPCNativeCallContextPtr aCallContext, in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in nsISupports aObj, in nsIClassInfo aClassInfo, in JSVal aName, inout voidPtr aPolicy); */
+NS_IMETHODIMP nsXPCSecurityManager::CanAccess(PRUint32 aAction, nsAXPCNativeCallContext * aCallContext, JSContext * aJSContext, JSObject * aJSObject, nsISupports *aObj, nsIClassInfo *aClassInfo, jsval aName, void * *aPolicy)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

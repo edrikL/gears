@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/netwerk/protocol/file/public/nsIFileProtocolHandler.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/protocol/file/public/nsIFileProtocolHandler.idl
  */
 
 #ifndef __gen_nsIFileProtocolHandler_h__
@@ -24,7 +24,7 @@ class nsIFile; /* forward declaration */
   {0x255602ea, 0xc31f, 0x4d29, \
     { 0x8f, 0x35, 0x90, 0x5e, 0xad, 0x3f, 0x76, 0xf4 }}
 
-class NS_NO_VTABLE nsIFileProtocolHandler : public nsIProtocolHandler {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIFileProtocolHandler : public nsIProtocolHandler {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFILEPROTOCOLHANDLER_IID)
@@ -36,7 +36,7 @@ class NS_NO_VTABLE nsIFileProtocolHandler : public nsIProtocolHandler {
      * @return reference to a new nsIURI object
      */
   /* nsIURI newFileURI (in nsIFile aFile); */
-  NS_IMETHOD NewFileURI(nsIFile *aFile, nsIURI **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD NewFileURI(nsIFile *aFile, nsIURI **_retval) = 0;
 
   /**
      * Converts the nsIFile to the corresponding URL string.  NOTE: under
@@ -47,14 +47,14 @@ class NS_NO_VTABLE nsIFileProtocolHandler : public nsIProtocolHandler {
      * The resulting string may contain URL-escaped characters.
      */
   /* AUTF8String getURLSpecFromFile (in nsIFile file); */
-  NS_IMETHOD GetURLSpecFromFile(nsIFile *file, nsACString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetURLSpecFromFile(nsIFile *file, nsACString & _retval) = 0;
 
   /**
      * Converts the URL string into the corresponding nsIFile if possible.
      * A local file will be created if the URL string begins with file://.
      */
   /* nsIFile getFileFromURLSpec (in AUTF8String url); */
-  NS_IMETHOD GetFileFromURLSpec(const nsACString & url, nsIFile **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFileFromURLSpec(const nsACString & url, nsIFile **_retval) = 0;
 
   /**
      * Takes a local file and tries to interpret it as an internet shortcut
@@ -66,7 +66,7 @@ class NS_NO_VTABLE nsIFileProtocolHandler : public nsIProtocolHandler {
      * @throw NS_ERROR_NOT_AVAILABLE if this file is not an internet shortcut.
      */
   /* nsIURI readURLFile (in nsIFile file); */
-  NS_IMETHOD ReadURLFile(nsIFile *file, nsIURI **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ReadURLFile(nsIFile *file, nsIURI **_retval) = 0;
 
 };
 
@@ -74,24 +74,24 @@ class NS_NO_VTABLE nsIFileProtocolHandler : public nsIProtocolHandler {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIFILEPROTOCOLHANDLER \
-  NS_IMETHOD NewFileURI(nsIFile *aFile, nsIURI **_retval); \
-  NS_IMETHOD GetURLSpecFromFile(nsIFile *file, nsACString & _retval); \
-  NS_IMETHOD GetFileFromURLSpec(const nsACString & url, nsIFile **_retval); \
-  NS_IMETHOD ReadURLFile(nsIFile *file, nsIURI **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD NewFileURI(nsIFile *aFile, nsIURI **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetURLSpecFromFile(nsIFile *file, nsACString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetFileFromURLSpec(const nsACString & url, nsIFile **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD ReadURLFile(nsIFile *file, nsIURI **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIFILEPROTOCOLHANDLER(_to) \
-  NS_IMETHOD NewFileURI(nsIFile *aFile, nsIURI **_retval) { return _to NewFileURI(aFile, _retval); } \
-  NS_IMETHOD GetURLSpecFromFile(nsIFile *file, nsACString & _retval) { return _to GetURLSpecFromFile(file, _retval); } \
-  NS_IMETHOD GetFileFromURLSpec(const nsACString & url, nsIFile **_retval) { return _to GetFileFromURLSpec(url, _retval); } \
-  NS_IMETHOD ReadURLFile(nsIFile *file, nsIURI **_retval) { return _to ReadURLFile(file, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD NewFileURI(nsIFile *aFile, nsIURI **_retval) { return _to NewFileURI(aFile, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetURLSpecFromFile(nsIFile *file, nsACString & _retval) { return _to GetURLSpecFromFile(file, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFileFromURLSpec(const nsACString & url, nsIFile **_retval) { return _to GetFileFromURLSpec(url, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ReadURLFile(nsIFile *file, nsIURI **_retval) { return _to ReadURLFile(file, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIFILEPROTOCOLHANDLER(_to) \
-  NS_IMETHOD NewFileURI(nsIFile *aFile, nsIURI **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NewFileURI(aFile, _retval); } \
-  NS_IMETHOD GetURLSpecFromFile(nsIFile *file, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetURLSpecFromFile(file, _retval); } \
-  NS_IMETHOD GetFileFromURLSpec(const nsACString & url, nsIFile **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFileFromURLSpec(url, _retval); } \
-  NS_IMETHOD ReadURLFile(nsIFile *file, nsIURI **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ReadURLFile(file, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD NewFileURI(nsIFile *aFile, nsIURI **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NewFileURI(aFile, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetURLSpecFromFile(nsIFile *file, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetURLSpecFromFile(file, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFileFromURLSpec(const nsACString & url, nsIFile **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFileFromURLSpec(url, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ReadURLFile(nsIFile *file, nsIURI **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ReadURLFile(file, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

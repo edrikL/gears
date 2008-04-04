@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/netwerk/base/public/nsIEncodedChannel.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/base/public/nsIEncodedChannel.idl
  */
 
 #ifndef __gen_nsIEncodedChannel_h__
@@ -27,7 +27,7 @@ class nsIUTF8StringEnumerator; /* forward declaration */
 /**
  * A channel interface which allows special handling of encoded content
  */
-class NS_NO_VTABLE nsIEncodedChannel : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIEncodedChannel : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IENCODEDCHANNEL_IID)
@@ -50,7 +50,7 @@ class NS_NO_VTABLE nsIEncodedChannel : public nsISupports {
      * Calling contentEncodings before OnStartRequest is an error.
      */
   /* readonly attribute nsIUTF8StringEnumerator contentEncodings; */
-  NS_IMETHOD GetContentEncodings(nsIUTF8StringEnumerator * *aContentEncodings) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetContentEncodings(nsIUTF8StringEnumerator * *aContentEncodings) = 0;
 
   /**
      * This attribute controls whether or not content conversion should be
@@ -61,8 +61,8 @@ class NS_NO_VTABLE nsIEncodedChannel : public nsISupports {
      * TRUE by default.
      */
   /* attribute boolean applyConversion; */
-  NS_IMETHOD GetApplyConversion(PRBool *aApplyConversion) = 0;
-  NS_IMETHOD SetApplyConversion(PRBool aApplyConversion) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetApplyConversion(PRBool *aApplyConversion) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetApplyConversion(PRBool aApplyConversion) = 0;
 
 };
 
@@ -70,21 +70,21 @@ class NS_NO_VTABLE nsIEncodedChannel : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIENCODEDCHANNEL \
-  NS_IMETHOD GetContentEncodings(nsIUTF8StringEnumerator * *aContentEncodings); \
-  NS_IMETHOD GetApplyConversion(PRBool *aApplyConversion); \
-  NS_IMETHOD SetApplyConversion(PRBool aApplyConversion); 
+  NS_SCRIPTABLE NS_IMETHOD GetContentEncodings(nsIUTF8StringEnumerator * *aContentEncodings); \
+  NS_SCRIPTABLE NS_IMETHOD GetApplyConversion(PRBool *aApplyConversion); \
+  NS_SCRIPTABLE NS_IMETHOD SetApplyConversion(PRBool aApplyConversion); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIENCODEDCHANNEL(_to) \
-  NS_IMETHOD GetContentEncodings(nsIUTF8StringEnumerator * *aContentEncodings) { return _to GetContentEncodings(aContentEncodings); } \
-  NS_IMETHOD GetApplyConversion(PRBool *aApplyConversion) { return _to GetApplyConversion(aApplyConversion); } \
-  NS_IMETHOD SetApplyConversion(PRBool aApplyConversion) { return _to SetApplyConversion(aApplyConversion); } 
+  NS_SCRIPTABLE NS_IMETHOD GetContentEncodings(nsIUTF8StringEnumerator * *aContentEncodings) { return _to GetContentEncodings(aContentEncodings); } \
+  NS_SCRIPTABLE NS_IMETHOD GetApplyConversion(PRBool *aApplyConversion) { return _to GetApplyConversion(aApplyConversion); } \
+  NS_SCRIPTABLE NS_IMETHOD SetApplyConversion(PRBool aApplyConversion) { return _to SetApplyConversion(aApplyConversion); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIENCODEDCHANNEL(_to) \
-  NS_IMETHOD GetContentEncodings(nsIUTF8StringEnumerator * *aContentEncodings) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentEncodings(aContentEncodings); } \
-  NS_IMETHOD GetApplyConversion(PRBool *aApplyConversion) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetApplyConversion(aApplyConversion); } \
-  NS_IMETHOD SetApplyConversion(PRBool aApplyConversion) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetApplyConversion(aApplyConversion); } 
+  NS_SCRIPTABLE NS_IMETHOD GetContentEncodings(nsIUTF8StringEnumerator * *aContentEncodings) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentEncodings(aContentEncodings); } \
+  NS_SCRIPTABLE NS_IMETHOD GetApplyConversion(PRBool *aApplyConversion) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetApplyConversion(aApplyConversion); } \
+  NS_SCRIPTABLE NS_IMETHOD SetApplyConversion(PRBool aApplyConversion) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetApplyConversion(aApplyConversion); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

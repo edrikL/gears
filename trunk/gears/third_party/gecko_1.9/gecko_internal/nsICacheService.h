@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/netwerk/cache/public/nsICacheService.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/cache/public/nsICacheService.idl
  */
 
 #ifndef __gen_nsICacheService_h__
@@ -34,7 +34,7 @@ class nsICacheVisitor; /* forward declaration */
   {0x98dd0187, 0xaad4, 0x4cab, \
     { 0x82, 0xc5, 0x1a, 0xdd, 0xde, 0xf3, 0x62, 0x9d }}
 
-class NS_NO_VTABLE nsICacheService : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsICacheService : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICACHESERVICE_IID)
@@ -60,19 +60,19 @@ class NS_NO_VTABLE nsICacheService : public nsISupports {
      * @return new cache session.
      */
   /* nsICacheSession createSession (in string clientID, in nsCacheStoragePolicy storagePolicy, in boolean streamBased); */
-  NS_IMETHOD CreateSession(const char *clientID, nsCacheStoragePolicy storagePolicy, PRBool streamBased, nsICacheSession **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateSession(const char *clientID, nsCacheStoragePolicy storagePolicy, PRBool streamBased, nsICacheSession **_retval) = 0;
 
   /**
      * Visit entries stored in the cache.  Used to implement about:cache.
      */
   /* void visitEntries (in nsICacheVisitor visitor); */
-  NS_IMETHOD VisitEntries(nsICacheVisitor *visitor) = 0;
+  NS_SCRIPTABLE NS_IMETHOD VisitEntries(nsICacheVisitor *visitor) = 0;
 
   /**
      * Evicts all entries in all devices implied by the storage policy.
      */
   /* void evictEntries (in nsCacheStoragePolicy storagePolicy); */
-  NS_IMETHOD EvictEntries(nsCacheStoragePolicy storagePolicy) = 0;
+  NS_SCRIPTABLE NS_IMETHOD EvictEntries(nsCacheStoragePolicy storagePolicy) = 0;
 
   /**
      * Return a unique, temporary cache client ID.
@@ -82,7 +82,7 @@ class NS_NO_VTABLE nsICacheService : public nsISupports {
      * using nsIOfflineCacheSession.mergeTemporaryClient().
      */
   /* ACString createTemporaryClientID (in nsCacheStoragePolicy storagePolicy); */
-  NS_IMETHOD CreateTemporaryClientID(nsCacheStoragePolicy storagePolicy, nsACString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateTemporaryClientID(nsCacheStoragePolicy storagePolicy, nsACString & _retval) = 0;
 
 };
 
@@ -90,24 +90,24 @@ class NS_NO_VTABLE nsICacheService : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICACHESERVICE \
-  NS_IMETHOD CreateSession(const char *clientID, nsCacheStoragePolicy storagePolicy, PRBool streamBased, nsICacheSession **_retval); \
-  NS_IMETHOD VisitEntries(nsICacheVisitor *visitor); \
-  NS_IMETHOD EvictEntries(nsCacheStoragePolicy storagePolicy); \
-  NS_IMETHOD CreateTemporaryClientID(nsCacheStoragePolicy storagePolicy, nsACString & _retval); 
+  NS_SCRIPTABLE NS_IMETHOD CreateSession(const char *clientID, nsCacheStoragePolicy storagePolicy, PRBool streamBased, nsICacheSession **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD VisitEntries(nsICacheVisitor *visitor); \
+  NS_SCRIPTABLE NS_IMETHOD EvictEntries(nsCacheStoragePolicy storagePolicy); \
+  NS_SCRIPTABLE NS_IMETHOD CreateTemporaryClientID(nsCacheStoragePolicy storagePolicy, nsACString & _retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICACHESERVICE(_to) \
-  NS_IMETHOD CreateSession(const char *clientID, nsCacheStoragePolicy storagePolicy, PRBool streamBased, nsICacheSession **_retval) { return _to CreateSession(clientID, storagePolicy, streamBased, _retval); } \
-  NS_IMETHOD VisitEntries(nsICacheVisitor *visitor) { return _to VisitEntries(visitor); } \
-  NS_IMETHOD EvictEntries(nsCacheStoragePolicy storagePolicy) { return _to EvictEntries(storagePolicy); } \
-  NS_IMETHOD CreateTemporaryClientID(nsCacheStoragePolicy storagePolicy, nsACString & _retval) { return _to CreateTemporaryClientID(storagePolicy, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD CreateSession(const char *clientID, nsCacheStoragePolicy storagePolicy, PRBool streamBased, nsICacheSession **_retval) { return _to CreateSession(clientID, storagePolicy, streamBased, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD VisitEntries(nsICacheVisitor *visitor) { return _to VisitEntries(visitor); } \
+  NS_SCRIPTABLE NS_IMETHOD EvictEntries(nsCacheStoragePolicy storagePolicy) { return _to EvictEntries(storagePolicy); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateTemporaryClientID(nsCacheStoragePolicy storagePolicy, nsACString & _retval) { return _to CreateTemporaryClientID(storagePolicy, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICACHESERVICE(_to) \
-  NS_IMETHOD CreateSession(const char *clientID, nsCacheStoragePolicy storagePolicy, PRBool streamBased, nsICacheSession **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateSession(clientID, storagePolicy, streamBased, _retval); } \
-  NS_IMETHOD VisitEntries(nsICacheVisitor *visitor) { return !_to ? NS_ERROR_NULL_POINTER : _to->VisitEntries(visitor); } \
-  NS_IMETHOD EvictEntries(nsCacheStoragePolicy storagePolicy) { return !_to ? NS_ERROR_NULL_POINTER : _to->EvictEntries(storagePolicy); } \
-  NS_IMETHOD CreateTemporaryClientID(nsCacheStoragePolicy storagePolicy, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateTemporaryClientID(storagePolicy, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD CreateSession(const char *clientID, nsCacheStoragePolicy storagePolicy, PRBool streamBased, nsICacheSession **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateSession(clientID, storagePolicy, streamBased, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD VisitEntries(nsICacheVisitor *visitor) { return !_to ? NS_ERROR_NULL_POINTER : _to->VisitEntries(visitor); } \
+  NS_SCRIPTABLE NS_IMETHOD EvictEntries(nsCacheStoragePolicy storagePolicy) { return !_to ? NS_ERROR_NULL_POINTER : _to->EvictEntries(storagePolicy); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateTemporaryClientID(nsCacheStoragePolicy storagePolicy, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateTemporaryClientID(storagePolicy, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

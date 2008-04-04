@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM e:/builds/tinderbox/XR-Trunk/WINNT_5.2_Depend/mozilla/docshell/base/nsIDocShell.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/docshell/base/nsIDocShell.idl
  */
 
 #ifndef __gen_nsIDocShell_h__
@@ -54,7 +54,7 @@ class nsIDOMStorage; /* forward declaration */
   {0x4b00222a, 0x8d0a, 0x46d7, \
     { 0xa1, 0xfe, 0x43, 0xbd, 0x89, 0xd1, 0x93, 0x24 }}
 
-class NS_NO_VTABLE nsIDocShell : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDocShell : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCSHELL_IID)
@@ -141,14 +141,14 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
    * to loadURI.
    */
   /* void createLoadInfo (out nsIDocShellLoadInfo loadInfo); */
-  NS_IMETHOD CreateLoadInfo(nsIDocShellLoadInfo **loadInfo) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateLoadInfo(nsIDocShellLoadInfo **loadInfo) = 0;
 
   /**
    * Reset state to a new content model within the current document and the document
    * viewer.  Called by the document before initiating an out of band document.write().
    */
   /* void prepareForNewContentModel (); */
-  NS_IMETHOD PrepareForNewContentModel(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD PrepareForNewContentModel(void) = 0;
 
   /**
    * For editors and suchlike who wish to change the URI associated with the
@@ -156,7 +156,7 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
    * property on nsIWebNavigation.
    */
   /* void setCurrentURI (in nsIURI aURI); */
-  NS_IMETHOD SetCurrentURI(nsIURI *aURI) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCurrentURI(nsIURI *aURI) = 0;
 
   /**
    * Notify the associated content viewer and all child docshells that they are
@@ -193,58 +193,58 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
    * change as the underlying content changes.
    */
   /* readonly attribute nsIContentViewer contentViewer; */
-  NS_IMETHOD GetContentViewer(nsIContentViewer * *aContentViewer) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetContentViewer(nsIContentViewer * *aContentViewer) = 0;
 
   /**
    * This attribute allows chrome to tie in to handle DOM events that may
    * be of interest to chrome.
    */
   /* attribute nsIDOMEventTarget chromeEventHandler; */
-  NS_IMETHOD GetChromeEventHandler(nsIDOMEventTarget * *aChromeEventHandler) = 0;
-  NS_IMETHOD SetChromeEventHandler(nsIDOMEventTarget * aChromeEventHandler) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetChromeEventHandler(nsIDOMEventTarget * *aChromeEventHandler) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetChromeEventHandler(nsIDOMEventTarget * aChromeEventHandler) = 0;
 
   /**
    * The document charset info.  This is used by a load to determine priorities
    * for charset detection etc.
    */
   /* attribute nsIDocumentCharsetInfo documentCharsetInfo; */
-  NS_IMETHOD GetDocumentCharsetInfo(nsIDocumentCharsetInfo * *aDocumentCharsetInfo) = 0;
-  NS_IMETHOD SetDocumentCharsetInfo(nsIDocumentCharsetInfo * aDocumentCharsetInfo) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDocumentCharsetInfo(nsIDocumentCharsetInfo * *aDocumentCharsetInfo) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDocumentCharsetInfo(nsIDocumentCharsetInfo * aDocumentCharsetInfo) = 0;
 
   /**
    * Whether to allow plugin execution
    */
   /* attribute boolean allowPlugins; */
-  NS_IMETHOD GetAllowPlugins(PRBool *aAllowPlugins) = 0;
-  NS_IMETHOD SetAllowPlugins(PRBool aAllowPlugins) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAllowPlugins(PRBool *aAllowPlugins) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAllowPlugins(PRBool aAllowPlugins) = 0;
 
   /**
    * Whether to allow Javascript execution
    */
   /* attribute boolean allowJavascript; */
-  NS_IMETHOD GetAllowJavascript(PRBool *aAllowJavascript) = 0;
-  NS_IMETHOD SetAllowJavascript(PRBool aAllowJavascript) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAllowJavascript(PRBool *aAllowJavascript) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAllowJavascript(PRBool aAllowJavascript) = 0;
 
   /**
    * Attribute stating if refresh based redirects can be allowed
    */
   /* attribute boolean allowMetaRedirects; */
-  NS_IMETHOD GetAllowMetaRedirects(PRBool *aAllowMetaRedirects) = 0;
-  NS_IMETHOD SetAllowMetaRedirects(PRBool aAllowMetaRedirects) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAllowMetaRedirects(PRBool *aAllowMetaRedirects) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAllowMetaRedirects(PRBool aAllowMetaRedirects) = 0;
 
   /**
    * Attribute stating if it should allow subframes (framesets/iframes) or not
    */
   /* attribute boolean allowSubframes; */
-  NS_IMETHOD GetAllowSubframes(PRBool *aAllowSubframes) = 0;
-  NS_IMETHOD SetAllowSubframes(PRBool aAllowSubframes) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAllowSubframes(PRBool *aAllowSubframes) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAllowSubframes(PRBool aAllowSubframes) = 0;
 
   /**
    * Attribute stating whether or not images should be loaded.
    */
   /* attribute boolean allowImages; */
-  NS_IMETHOD GetAllowImages(PRBool *aAllowImages) = 0;
-  NS_IMETHOD SetAllowImages(PRBool aAllowImages) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAllowImages(PRBool *aAllowImages) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAllowImages(PRBool aAllowImages) = 0;
 
   /**
    * Get an enumerator over this docShell and its children.
@@ -259,7 +259,7 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
   enum { ENUMERATE_BACKWARDS = 1 };
 
   /* nsISimpleEnumerator getDocShellEnumerator (in long aItemType, in long aDirection); */
-  NS_IMETHOD GetDocShellEnumerator(PRInt32 aItemType, PRInt32 aDirection, nsISimpleEnumerator **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDocShellEnumerator(PRInt32 aItemType, PRInt32 aDirection, nsISimpleEnumerator **_retval) = 0;
 
   /**
    * The type of application that created this window
@@ -271,8 +271,8 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
   enum { APP_TYPE_EDITOR = 2U };
 
   /* attribute unsigned long appType; */
-  NS_IMETHOD GetAppType(PRUint32 *aAppType) = 0;
-  NS_IMETHOD SetAppType(PRUint32 aAppType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAppType(PRUint32 *aAppType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAppType(PRUint32 aAppType) = 0;
 
   /**
    * certain dochshells (like the message pane)
@@ -280,8 +280,8 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
    * because it can act as a password trojan
    */
   /* attribute boolean allowAuth; */
-  NS_IMETHOD GetAllowAuth(PRBool *aAllowAuth) = 0;
-  NS_IMETHOD SetAllowAuth(PRBool aAllowAuth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAllowAuth(PRBool *aAllowAuth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAllowAuth(PRBool aAllowAuth) = 0;
 
   /**
    * Set/Get the document scale factor.  When setting this attribute, a
@@ -292,27 +292,27 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
    * no zoom. 
    */
   /* attribute float zoom; */
-  NS_IMETHOD GetZoom(float *aZoom) = 0;
-  NS_IMETHOD SetZoom(float aZoom) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetZoom(float *aZoom) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetZoom(float aZoom) = 0;
 
   /* attribute long marginWidth; */
-  NS_IMETHOD GetMarginWidth(PRInt32 *aMarginWidth) = 0;
-  NS_IMETHOD SetMarginWidth(PRInt32 aMarginWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMarginWidth(PRInt32 *aMarginWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetMarginWidth(PRInt32 aMarginWidth) = 0;
 
   /* attribute long marginHeight; */
-  NS_IMETHOD GetMarginHeight(PRInt32 *aMarginHeight) = 0;
-  NS_IMETHOD SetMarginHeight(PRInt32 aMarginHeight) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMarginHeight(PRInt32 *aMarginHeight) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetMarginHeight(PRInt32 aMarginHeight) = 0;
 
   /* attribute boolean hasFocus; */
-  NS_IMETHOD GetHasFocus(PRBool *aHasFocus) = 0;
-  NS_IMETHOD SetHasFocus(PRBool aHasFocus) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHasFocus(PRBool *aHasFocus) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetHasFocus(PRBool aHasFocus) = 0;
 
   /* attribute boolean canvasHasFocus; */
-  NS_IMETHOD GetCanvasHasFocus(PRBool *aCanvasHasFocus) = 0;
-  NS_IMETHOD SetCanvasHasFocus(PRBool aCanvasHasFocus) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCanvasHasFocus(PRBool *aCanvasHasFocus) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCanvasHasFocus(PRBool aCanvasHasFocus) = 0;
 
   /* void tabToTreeOwner (in boolean forward, out boolean tookFocus); */
-  NS_IMETHOD TabToTreeOwner(PRBool forward, PRBool *tookFocus) = 0;
+  NS_SCRIPTABLE NS_IMETHOD TabToTreeOwner(PRBool forward, PRBool *tookFocus) = 0;
 
   /**
    * Current busy state for DocShell
@@ -335,32 +335,32 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
   enum { LOAD_CMD_HISTORY = 4U };
 
   /* readonly attribute unsigned long busyFlags; */
-  NS_IMETHOD GetBusyFlags(PRUint32 *aBusyFlags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetBusyFlags(PRUint32 *aBusyFlags) = 0;
 
   /* attribute unsigned long loadType; */
-  NS_IMETHOD GetLoadType(PRUint32 *aLoadType) = 0;
-  NS_IMETHOD SetLoadType(PRUint32 aLoadType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLoadType(PRUint32 *aLoadType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetLoadType(PRUint32 aLoadType) = 0;
 
   /* boolean isBeingDestroyed (); */
-  NS_IMETHOD IsBeingDestroyed(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsBeingDestroyed(PRBool *_retval) = 0;
 
   /* readonly attribute boolean isExecutingOnLoadHandler; */
-  NS_IMETHOD GetIsExecutingOnLoadHandler(PRBool *aIsExecutingOnLoadHandler) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIsExecutingOnLoadHandler(PRBool *aIsExecutingOnLoadHandler) = 0;
 
   /* attribute nsILayoutHistoryState layoutHistoryState; */
-  NS_IMETHOD GetLayoutHistoryState(nsILayoutHistoryState * *aLayoutHistoryState) = 0;
-  NS_IMETHOD SetLayoutHistoryState(nsILayoutHistoryState * aLayoutHistoryState) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLayoutHistoryState(nsILayoutHistoryState * *aLayoutHistoryState) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetLayoutHistoryState(nsILayoutHistoryState * aLayoutHistoryState) = 0;
 
   /* readonly attribute boolean shouldSaveLayoutState; */
-  NS_IMETHOD GetShouldSaveLayoutState(PRBool *aShouldSaveLayoutState) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetShouldSaveLayoutState(PRBool *aShouldSaveLayoutState) = 0;
 
   /**
    * The SecureBrowserUI object for this docshell.  This is set by XUL
    * <browser> or nsWebBrowser for their root docshell.
    */
   /* attribute nsISecureBrowserUI securityUI; */
-  NS_IMETHOD GetSecurityUI(nsISecureBrowserUI * *aSecurityUI) = 0;
-  NS_IMETHOD SetSecurityUI(nsISecureBrowserUI * aSecurityUI) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSecurityUI(nsISecureBrowserUI * *aSecurityUI) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSecurityUI(nsISecureBrowserUI * aSecurityUI) = 0;
 
   /**
    * Cancel the XPCOM timers for each meta-refresh URI in this docshell,
@@ -369,7 +369,7 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
    * this has no effect.
    */
   /* void suspendRefreshURIs (); */
-  NS_IMETHOD SuspendRefreshURIs(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SuspendRefreshURIs(void) = 0;
 
   /**
    * Restart the XPCOM timers for each meta-refresh URI in this docshell,
@@ -377,7 +377,7 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
    * running, this has no effect.
    */
   /* void resumeRefreshURIs (); */
-  NS_IMETHOD ResumeRefreshURIs(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ResumeRefreshURIs(void) = 0;
 
   /**
    * Begin firing WebProgressListener notifications for restoring a page
@@ -389,7 +389,7 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
    * complete the simulated load after returning to the event loop.
    */
   /* void beginRestore (in nsIContentViewer viewer, in boolean top); */
-  NS_IMETHOD BeginRestore(nsIContentViewer *viewer, PRBool top) = 0;
+  NS_SCRIPTABLE NS_IMETHOD BeginRestore(nsIContentViewer *viewer, PRBool top) = 0;
 
   /**
    * Finish firing WebProgressListener notifications and DOM events for
@@ -397,14 +397,14 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
    * beginRestore().
    */
   /* void finishRestore (); */
-  NS_IMETHOD FinishRestore(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD FinishRestore(void) = 0;
 
   /* readonly attribute boolean restoringDocument; */
-  NS_IMETHOD GetRestoringDocument(PRBool *aRestoringDocument) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRestoringDocument(PRBool *aRestoringDocument) = 0;
 
   /* attribute boolean useErrorPages; */
-  NS_IMETHOD GetUseErrorPages(PRBool *aUseErrorPages) = 0;
-  NS_IMETHOD SetUseErrorPages(PRBool aUseErrorPages) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetUseErrorPages(PRBool *aUseErrorPages) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetUseErrorPages(PRBool aUseErrorPages) = 0;
 
   /**
    * Keeps track of the previous SHTransaction index and the current
@@ -412,10 +412,10 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
    * Used for ContentViewer eviction.
    */
   /* readonly attribute long previousTransIndex; */
-  NS_IMETHOD GetPreviousTransIndex(PRInt32 *aPreviousTransIndex) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPreviousTransIndex(PRInt32 *aPreviousTransIndex) = 0;
 
   /* readonly attribute long loadedTransIndex; */
-  NS_IMETHOD GetLoadedTransIndex(PRInt32 *aLoadedTransIndex) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLoadedTransIndex(PRInt32 *aLoadedTransIndex) = 0;
 
   /**
    * Notification that entries have been removed from the beginning of a
@@ -424,13 +424,13 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
    * @param numEntries - The number of entries removed
    */
   /* void historyPurged (in long numEntries); */
-  NS_IMETHOD HistoryPurged(PRInt32 numEntries) = 0;
+  NS_SCRIPTABLE NS_IMETHOD HistoryPurged(PRInt32 numEntries) = 0;
 
   /* nsIDOMStorage getSessionStorageForURI (in nsIURI uri); */
-  NS_IMETHOD GetSessionStorageForURI(nsIURI *uri, nsIDOMStorage **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSessionStorageForURI(nsIURI *uri, nsIDOMStorage **_retval) = 0;
 
   /* void addSessionStorage (in ACString aDomain, in nsIDOMStorage storage); */
-  NS_IMETHOD AddSessionStorage(const nsACString & aDomain, nsIDOMStorage *storage) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AddSessionStorage(const nsACString & aDomain, nsIDOMStorage *storage) = 0;
 
   /**
    * Gets the channel for the currently loaded document, if any. 
@@ -438,7 +438,7 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
    * until after OnLocationChange fires.
    */
   /* readonly attribute nsIChannel currentDocumentChannel; */
-  NS_IMETHOD GetCurrentDocumentChannel(nsIChannel * *aCurrentDocumentChannel) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentDocumentChannel(nsIChannel * *aCurrentDocumentChannel) = 0;
 
   /**
    * Set the offset of this child in its container.
@@ -452,7 +452,7 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
    * document has been set up)
    */
   /* readonly attribute boolean isInUnload; */
-  NS_IMETHOD GetIsInUnload(PRBool *aIsInUnload) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIsInUnload(PRBool *aIsInUnload) = 0;
 
   /**
    * Find out if the currently loaded document came from a suspicious channel
@@ -460,7 +460,7 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
    * known JAR type).
    */
   /* readonly attribute boolean channelIsUnsafe; */
-  NS_IMETHOD GetChannelIsUnsafe(PRBool *aChannelIsUnsafe) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetChannelIsUnsafe(PRBool *aChannelIsUnsafe) = 0;
 
 };
 
@@ -471,210 +471,210 @@ class NS_NO_VTABLE nsIDocShell : public nsISupports {
   NS_IMETHOD LoadURI(nsIURI *uri, nsIDocShellLoadInfo *loadInfo, PRUint32 aLoadFlags, PRBool firstParty); \
   NS_IMETHOD LoadStream(nsIInputStream *aStream, nsIURI *aURI, const nsACString & aContentType, const nsACString & aContentCharset, nsIDocShellLoadInfo *aLoadInfo); \
   NS_IMETHOD InternalLoad(nsIURI *aURI, nsIURI *aReferrer, nsISupports *aOwner, PRUint32 aFlags, const PRUnichar *aWindowTarget, const char *aTypeHint, nsIInputStream *aPostDataStream, nsIInputStream *aHeadersStream, PRUint32 aLoadFlags, nsISHEntry *aSHEntry, PRBool firstParty, nsIDocShell **aDocShell, nsIRequest **aRequest); \
-  NS_IMETHOD CreateLoadInfo(nsIDocShellLoadInfo **loadInfo); \
-  NS_IMETHOD PrepareForNewContentModel(void); \
-  NS_IMETHOD SetCurrentURI(nsIURI *aURI); \
+  NS_SCRIPTABLE NS_IMETHOD CreateLoadInfo(nsIDocShellLoadInfo **loadInfo); \
+  NS_SCRIPTABLE NS_IMETHOD PrepareForNewContentModel(void); \
+  NS_SCRIPTABLE NS_IMETHOD SetCurrentURI(nsIURI *aURI); \
   NS_IMETHOD FirePageHideNotification(PRBool isUnload); \
   NS_IMETHOD GetPresContext(nsPresContext * *aPresContext); \
   NS_IMETHOD GetPresShell(nsIPresShell * *aPresShell); \
   NS_IMETHOD GetEldestPresShell(nsIPresShell * *aEldestPresShell); \
-  NS_IMETHOD GetContentViewer(nsIContentViewer * *aContentViewer); \
-  NS_IMETHOD GetChromeEventHandler(nsIDOMEventTarget * *aChromeEventHandler); \
-  NS_IMETHOD SetChromeEventHandler(nsIDOMEventTarget * aChromeEventHandler); \
-  NS_IMETHOD GetDocumentCharsetInfo(nsIDocumentCharsetInfo * *aDocumentCharsetInfo); \
-  NS_IMETHOD SetDocumentCharsetInfo(nsIDocumentCharsetInfo * aDocumentCharsetInfo); \
-  NS_IMETHOD GetAllowPlugins(PRBool *aAllowPlugins); \
-  NS_IMETHOD SetAllowPlugins(PRBool aAllowPlugins); \
-  NS_IMETHOD GetAllowJavascript(PRBool *aAllowJavascript); \
-  NS_IMETHOD SetAllowJavascript(PRBool aAllowJavascript); \
-  NS_IMETHOD GetAllowMetaRedirects(PRBool *aAllowMetaRedirects); \
-  NS_IMETHOD SetAllowMetaRedirects(PRBool aAllowMetaRedirects); \
-  NS_IMETHOD GetAllowSubframes(PRBool *aAllowSubframes); \
-  NS_IMETHOD SetAllowSubframes(PRBool aAllowSubframes); \
-  NS_IMETHOD GetAllowImages(PRBool *aAllowImages); \
-  NS_IMETHOD SetAllowImages(PRBool aAllowImages); \
-  NS_IMETHOD GetDocShellEnumerator(PRInt32 aItemType, PRInt32 aDirection, nsISimpleEnumerator **_retval); \
-  NS_IMETHOD GetAppType(PRUint32 *aAppType); \
-  NS_IMETHOD SetAppType(PRUint32 aAppType); \
-  NS_IMETHOD GetAllowAuth(PRBool *aAllowAuth); \
-  NS_IMETHOD SetAllowAuth(PRBool aAllowAuth); \
-  NS_IMETHOD GetZoom(float *aZoom); \
-  NS_IMETHOD SetZoom(float aZoom); \
-  NS_IMETHOD GetMarginWidth(PRInt32 *aMarginWidth); \
-  NS_IMETHOD SetMarginWidth(PRInt32 aMarginWidth); \
-  NS_IMETHOD GetMarginHeight(PRInt32 *aMarginHeight); \
-  NS_IMETHOD SetMarginHeight(PRInt32 aMarginHeight); \
-  NS_IMETHOD GetHasFocus(PRBool *aHasFocus); \
-  NS_IMETHOD SetHasFocus(PRBool aHasFocus); \
-  NS_IMETHOD GetCanvasHasFocus(PRBool *aCanvasHasFocus); \
-  NS_IMETHOD SetCanvasHasFocus(PRBool aCanvasHasFocus); \
-  NS_IMETHOD TabToTreeOwner(PRBool forward, PRBool *tookFocus); \
-  NS_IMETHOD GetBusyFlags(PRUint32 *aBusyFlags); \
-  NS_IMETHOD GetLoadType(PRUint32 *aLoadType); \
-  NS_IMETHOD SetLoadType(PRUint32 aLoadType); \
-  NS_IMETHOD IsBeingDestroyed(PRBool *_retval); \
-  NS_IMETHOD GetIsExecutingOnLoadHandler(PRBool *aIsExecutingOnLoadHandler); \
-  NS_IMETHOD GetLayoutHistoryState(nsILayoutHistoryState * *aLayoutHistoryState); \
-  NS_IMETHOD SetLayoutHistoryState(nsILayoutHistoryState * aLayoutHistoryState); \
-  NS_IMETHOD GetShouldSaveLayoutState(PRBool *aShouldSaveLayoutState); \
-  NS_IMETHOD GetSecurityUI(nsISecureBrowserUI * *aSecurityUI); \
-  NS_IMETHOD SetSecurityUI(nsISecureBrowserUI * aSecurityUI); \
-  NS_IMETHOD SuspendRefreshURIs(void); \
-  NS_IMETHOD ResumeRefreshURIs(void); \
-  NS_IMETHOD BeginRestore(nsIContentViewer *viewer, PRBool top); \
-  NS_IMETHOD FinishRestore(void); \
-  NS_IMETHOD GetRestoringDocument(PRBool *aRestoringDocument); \
-  NS_IMETHOD GetUseErrorPages(PRBool *aUseErrorPages); \
-  NS_IMETHOD SetUseErrorPages(PRBool aUseErrorPages); \
-  NS_IMETHOD GetPreviousTransIndex(PRInt32 *aPreviousTransIndex); \
-  NS_IMETHOD GetLoadedTransIndex(PRInt32 *aLoadedTransIndex); \
-  NS_IMETHOD HistoryPurged(PRInt32 numEntries); \
-  NS_IMETHOD GetSessionStorageForURI(nsIURI *uri, nsIDOMStorage **_retval); \
-  NS_IMETHOD AddSessionStorage(const nsACString & aDomain, nsIDOMStorage *storage); \
-  NS_IMETHOD GetCurrentDocumentChannel(nsIChannel * *aCurrentDocumentChannel); \
+  NS_SCRIPTABLE NS_IMETHOD GetContentViewer(nsIContentViewer * *aContentViewer); \
+  NS_SCRIPTABLE NS_IMETHOD GetChromeEventHandler(nsIDOMEventTarget * *aChromeEventHandler); \
+  NS_SCRIPTABLE NS_IMETHOD SetChromeEventHandler(nsIDOMEventTarget * aChromeEventHandler); \
+  NS_SCRIPTABLE NS_IMETHOD GetDocumentCharsetInfo(nsIDocumentCharsetInfo * *aDocumentCharsetInfo); \
+  NS_SCRIPTABLE NS_IMETHOD SetDocumentCharsetInfo(nsIDocumentCharsetInfo * aDocumentCharsetInfo); \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowPlugins(PRBool *aAllowPlugins); \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowPlugins(PRBool aAllowPlugins); \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowJavascript(PRBool *aAllowJavascript); \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowJavascript(PRBool aAllowJavascript); \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowMetaRedirects(PRBool *aAllowMetaRedirects); \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowMetaRedirects(PRBool aAllowMetaRedirects); \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowSubframes(PRBool *aAllowSubframes); \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowSubframes(PRBool aAllowSubframes); \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowImages(PRBool *aAllowImages); \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowImages(PRBool aAllowImages); \
+  NS_SCRIPTABLE NS_IMETHOD GetDocShellEnumerator(PRInt32 aItemType, PRInt32 aDirection, nsISimpleEnumerator **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetAppType(PRUint32 *aAppType); \
+  NS_SCRIPTABLE NS_IMETHOD SetAppType(PRUint32 aAppType); \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowAuth(PRBool *aAllowAuth); \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowAuth(PRBool aAllowAuth); \
+  NS_SCRIPTABLE NS_IMETHOD GetZoom(float *aZoom); \
+  NS_SCRIPTABLE NS_IMETHOD SetZoom(float aZoom); \
+  NS_SCRIPTABLE NS_IMETHOD GetMarginWidth(PRInt32 *aMarginWidth); \
+  NS_SCRIPTABLE NS_IMETHOD SetMarginWidth(PRInt32 aMarginWidth); \
+  NS_SCRIPTABLE NS_IMETHOD GetMarginHeight(PRInt32 *aMarginHeight); \
+  NS_SCRIPTABLE NS_IMETHOD SetMarginHeight(PRInt32 aMarginHeight); \
+  NS_SCRIPTABLE NS_IMETHOD GetHasFocus(PRBool *aHasFocus); \
+  NS_SCRIPTABLE NS_IMETHOD SetHasFocus(PRBool aHasFocus); \
+  NS_SCRIPTABLE NS_IMETHOD GetCanvasHasFocus(PRBool *aCanvasHasFocus); \
+  NS_SCRIPTABLE NS_IMETHOD SetCanvasHasFocus(PRBool aCanvasHasFocus); \
+  NS_SCRIPTABLE NS_IMETHOD TabToTreeOwner(PRBool forward, PRBool *tookFocus); \
+  NS_SCRIPTABLE NS_IMETHOD GetBusyFlags(PRUint32 *aBusyFlags); \
+  NS_SCRIPTABLE NS_IMETHOD GetLoadType(PRUint32 *aLoadType); \
+  NS_SCRIPTABLE NS_IMETHOD SetLoadType(PRUint32 aLoadType); \
+  NS_SCRIPTABLE NS_IMETHOD IsBeingDestroyed(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetIsExecutingOnLoadHandler(PRBool *aIsExecutingOnLoadHandler); \
+  NS_SCRIPTABLE NS_IMETHOD GetLayoutHistoryState(nsILayoutHistoryState * *aLayoutHistoryState); \
+  NS_SCRIPTABLE NS_IMETHOD SetLayoutHistoryState(nsILayoutHistoryState * aLayoutHistoryState); \
+  NS_SCRIPTABLE NS_IMETHOD GetShouldSaveLayoutState(PRBool *aShouldSaveLayoutState); \
+  NS_SCRIPTABLE NS_IMETHOD GetSecurityUI(nsISecureBrowserUI * *aSecurityUI); \
+  NS_SCRIPTABLE NS_IMETHOD SetSecurityUI(nsISecureBrowserUI * aSecurityUI); \
+  NS_SCRIPTABLE NS_IMETHOD SuspendRefreshURIs(void); \
+  NS_SCRIPTABLE NS_IMETHOD ResumeRefreshURIs(void); \
+  NS_SCRIPTABLE NS_IMETHOD BeginRestore(nsIContentViewer *viewer, PRBool top); \
+  NS_SCRIPTABLE NS_IMETHOD FinishRestore(void); \
+  NS_SCRIPTABLE NS_IMETHOD GetRestoringDocument(PRBool *aRestoringDocument); \
+  NS_SCRIPTABLE NS_IMETHOD GetUseErrorPages(PRBool *aUseErrorPages); \
+  NS_SCRIPTABLE NS_IMETHOD SetUseErrorPages(PRBool aUseErrorPages); \
+  NS_SCRIPTABLE NS_IMETHOD GetPreviousTransIndex(PRInt32 *aPreviousTransIndex); \
+  NS_SCRIPTABLE NS_IMETHOD GetLoadedTransIndex(PRInt32 *aLoadedTransIndex); \
+  NS_SCRIPTABLE NS_IMETHOD HistoryPurged(PRInt32 numEntries); \
+  NS_SCRIPTABLE NS_IMETHOD GetSessionStorageForURI(nsIURI *uri, nsIDOMStorage **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD AddSessionStorage(const nsACString & aDomain, nsIDOMStorage *storage); \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentDocumentChannel(nsIChannel * *aCurrentDocumentChannel); \
   NS_IMETHOD SetChildOffset(PRUint32 offset); \
-  NS_IMETHOD GetIsInUnload(PRBool *aIsInUnload); \
-  NS_IMETHOD GetChannelIsUnsafe(PRBool *aChannelIsUnsafe); 
+  NS_SCRIPTABLE NS_IMETHOD GetIsInUnload(PRBool *aIsInUnload); \
+  NS_SCRIPTABLE NS_IMETHOD GetChannelIsUnsafe(PRBool *aChannelIsUnsafe); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOCSHELL(_to) \
   NS_IMETHOD LoadURI(nsIURI *uri, nsIDocShellLoadInfo *loadInfo, PRUint32 aLoadFlags, PRBool firstParty) { return _to LoadURI(uri, loadInfo, aLoadFlags, firstParty); } \
   NS_IMETHOD LoadStream(nsIInputStream *aStream, nsIURI *aURI, const nsACString & aContentType, const nsACString & aContentCharset, nsIDocShellLoadInfo *aLoadInfo) { return _to LoadStream(aStream, aURI, aContentType, aContentCharset, aLoadInfo); } \
   NS_IMETHOD InternalLoad(nsIURI *aURI, nsIURI *aReferrer, nsISupports *aOwner, PRUint32 aFlags, const PRUnichar *aWindowTarget, const char *aTypeHint, nsIInputStream *aPostDataStream, nsIInputStream *aHeadersStream, PRUint32 aLoadFlags, nsISHEntry *aSHEntry, PRBool firstParty, nsIDocShell **aDocShell, nsIRequest **aRequest) { return _to InternalLoad(aURI, aReferrer, aOwner, aFlags, aWindowTarget, aTypeHint, aPostDataStream, aHeadersStream, aLoadFlags, aSHEntry, firstParty, aDocShell, aRequest); } \
-  NS_IMETHOD CreateLoadInfo(nsIDocShellLoadInfo **loadInfo) { return _to CreateLoadInfo(loadInfo); } \
-  NS_IMETHOD PrepareForNewContentModel(void) { return _to PrepareForNewContentModel(); } \
-  NS_IMETHOD SetCurrentURI(nsIURI *aURI) { return _to SetCurrentURI(aURI); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateLoadInfo(nsIDocShellLoadInfo **loadInfo) { return _to CreateLoadInfo(loadInfo); } \
+  NS_SCRIPTABLE NS_IMETHOD PrepareForNewContentModel(void) { return _to PrepareForNewContentModel(); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCurrentURI(nsIURI *aURI) { return _to SetCurrentURI(aURI); } \
   NS_IMETHOD FirePageHideNotification(PRBool isUnload) { return _to FirePageHideNotification(isUnload); } \
   NS_IMETHOD GetPresContext(nsPresContext * *aPresContext) { return _to GetPresContext(aPresContext); } \
   NS_IMETHOD GetPresShell(nsIPresShell * *aPresShell) { return _to GetPresShell(aPresShell); } \
   NS_IMETHOD GetEldestPresShell(nsIPresShell * *aEldestPresShell) { return _to GetEldestPresShell(aEldestPresShell); } \
-  NS_IMETHOD GetContentViewer(nsIContentViewer * *aContentViewer) { return _to GetContentViewer(aContentViewer); } \
-  NS_IMETHOD GetChromeEventHandler(nsIDOMEventTarget * *aChromeEventHandler) { return _to GetChromeEventHandler(aChromeEventHandler); } \
-  NS_IMETHOD SetChromeEventHandler(nsIDOMEventTarget * aChromeEventHandler) { return _to SetChromeEventHandler(aChromeEventHandler); } \
-  NS_IMETHOD GetDocumentCharsetInfo(nsIDocumentCharsetInfo * *aDocumentCharsetInfo) { return _to GetDocumentCharsetInfo(aDocumentCharsetInfo); } \
-  NS_IMETHOD SetDocumentCharsetInfo(nsIDocumentCharsetInfo * aDocumentCharsetInfo) { return _to SetDocumentCharsetInfo(aDocumentCharsetInfo); } \
-  NS_IMETHOD GetAllowPlugins(PRBool *aAllowPlugins) { return _to GetAllowPlugins(aAllowPlugins); } \
-  NS_IMETHOD SetAllowPlugins(PRBool aAllowPlugins) { return _to SetAllowPlugins(aAllowPlugins); } \
-  NS_IMETHOD GetAllowJavascript(PRBool *aAllowJavascript) { return _to GetAllowJavascript(aAllowJavascript); } \
-  NS_IMETHOD SetAllowJavascript(PRBool aAllowJavascript) { return _to SetAllowJavascript(aAllowJavascript); } \
-  NS_IMETHOD GetAllowMetaRedirects(PRBool *aAllowMetaRedirects) { return _to GetAllowMetaRedirects(aAllowMetaRedirects); } \
-  NS_IMETHOD SetAllowMetaRedirects(PRBool aAllowMetaRedirects) { return _to SetAllowMetaRedirects(aAllowMetaRedirects); } \
-  NS_IMETHOD GetAllowSubframes(PRBool *aAllowSubframes) { return _to GetAllowSubframes(aAllowSubframes); } \
-  NS_IMETHOD SetAllowSubframes(PRBool aAllowSubframes) { return _to SetAllowSubframes(aAllowSubframes); } \
-  NS_IMETHOD GetAllowImages(PRBool *aAllowImages) { return _to GetAllowImages(aAllowImages); } \
-  NS_IMETHOD SetAllowImages(PRBool aAllowImages) { return _to SetAllowImages(aAllowImages); } \
-  NS_IMETHOD GetDocShellEnumerator(PRInt32 aItemType, PRInt32 aDirection, nsISimpleEnumerator **_retval) { return _to GetDocShellEnumerator(aItemType, aDirection, _retval); } \
-  NS_IMETHOD GetAppType(PRUint32 *aAppType) { return _to GetAppType(aAppType); } \
-  NS_IMETHOD SetAppType(PRUint32 aAppType) { return _to SetAppType(aAppType); } \
-  NS_IMETHOD GetAllowAuth(PRBool *aAllowAuth) { return _to GetAllowAuth(aAllowAuth); } \
-  NS_IMETHOD SetAllowAuth(PRBool aAllowAuth) { return _to SetAllowAuth(aAllowAuth); } \
-  NS_IMETHOD GetZoom(float *aZoom) { return _to GetZoom(aZoom); } \
-  NS_IMETHOD SetZoom(float aZoom) { return _to SetZoom(aZoom); } \
-  NS_IMETHOD GetMarginWidth(PRInt32 *aMarginWidth) { return _to GetMarginWidth(aMarginWidth); } \
-  NS_IMETHOD SetMarginWidth(PRInt32 aMarginWidth) { return _to SetMarginWidth(aMarginWidth); } \
-  NS_IMETHOD GetMarginHeight(PRInt32 *aMarginHeight) { return _to GetMarginHeight(aMarginHeight); } \
-  NS_IMETHOD SetMarginHeight(PRInt32 aMarginHeight) { return _to SetMarginHeight(aMarginHeight); } \
-  NS_IMETHOD GetHasFocus(PRBool *aHasFocus) { return _to GetHasFocus(aHasFocus); } \
-  NS_IMETHOD SetHasFocus(PRBool aHasFocus) { return _to SetHasFocus(aHasFocus); } \
-  NS_IMETHOD GetCanvasHasFocus(PRBool *aCanvasHasFocus) { return _to GetCanvasHasFocus(aCanvasHasFocus); } \
-  NS_IMETHOD SetCanvasHasFocus(PRBool aCanvasHasFocus) { return _to SetCanvasHasFocus(aCanvasHasFocus); } \
-  NS_IMETHOD TabToTreeOwner(PRBool forward, PRBool *tookFocus) { return _to TabToTreeOwner(forward, tookFocus); } \
-  NS_IMETHOD GetBusyFlags(PRUint32 *aBusyFlags) { return _to GetBusyFlags(aBusyFlags); } \
-  NS_IMETHOD GetLoadType(PRUint32 *aLoadType) { return _to GetLoadType(aLoadType); } \
-  NS_IMETHOD SetLoadType(PRUint32 aLoadType) { return _to SetLoadType(aLoadType); } \
-  NS_IMETHOD IsBeingDestroyed(PRBool *_retval) { return _to IsBeingDestroyed(_retval); } \
-  NS_IMETHOD GetIsExecutingOnLoadHandler(PRBool *aIsExecutingOnLoadHandler) { return _to GetIsExecutingOnLoadHandler(aIsExecutingOnLoadHandler); } \
-  NS_IMETHOD GetLayoutHistoryState(nsILayoutHistoryState * *aLayoutHistoryState) { return _to GetLayoutHistoryState(aLayoutHistoryState); } \
-  NS_IMETHOD SetLayoutHistoryState(nsILayoutHistoryState * aLayoutHistoryState) { return _to SetLayoutHistoryState(aLayoutHistoryState); } \
-  NS_IMETHOD GetShouldSaveLayoutState(PRBool *aShouldSaveLayoutState) { return _to GetShouldSaveLayoutState(aShouldSaveLayoutState); } \
-  NS_IMETHOD GetSecurityUI(nsISecureBrowserUI * *aSecurityUI) { return _to GetSecurityUI(aSecurityUI); } \
-  NS_IMETHOD SetSecurityUI(nsISecureBrowserUI * aSecurityUI) { return _to SetSecurityUI(aSecurityUI); } \
-  NS_IMETHOD SuspendRefreshURIs(void) { return _to SuspendRefreshURIs(); } \
-  NS_IMETHOD ResumeRefreshURIs(void) { return _to ResumeRefreshURIs(); } \
-  NS_IMETHOD BeginRestore(nsIContentViewer *viewer, PRBool top) { return _to BeginRestore(viewer, top); } \
-  NS_IMETHOD FinishRestore(void) { return _to FinishRestore(); } \
-  NS_IMETHOD GetRestoringDocument(PRBool *aRestoringDocument) { return _to GetRestoringDocument(aRestoringDocument); } \
-  NS_IMETHOD GetUseErrorPages(PRBool *aUseErrorPages) { return _to GetUseErrorPages(aUseErrorPages); } \
-  NS_IMETHOD SetUseErrorPages(PRBool aUseErrorPages) { return _to SetUseErrorPages(aUseErrorPages); } \
-  NS_IMETHOD GetPreviousTransIndex(PRInt32 *aPreviousTransIndex) { return _to GetPreviousTransIndex(aPreviousTransIndex); } \
-  NS_IMETHOD GetLoadedTransIndex(PRInt32 *aLoadedTransIndex) { return _to GetLoadedTransIndex(aLoadedTransIndex); } \
-  NS_IMETHOD HistoryPurged(PRInt32 numEntries) { return _to HistoryPurged(numEntries); } \
-  NS_IMETHOD GetSessionStorageForURI(nsIURI *uri, nsIDOMStorage **_retval) { return _to GetSessionStorageForURI(uri, _retval); } \
-  NS_IMETHOD AddSessionStorage(const nsACString & aDomain, nsIDOMStorage *storage) { return _to AddSessionStorage(aDomain, storage); } \
-  NS_IMETHOD GetCurrentDocumentChannel(nsIChannel * *aCurrentDocumentChannel) { return _to GetCurrentDocumentChannel(aCurrentDocumentChannel); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContentViewer(nsIContentViewer * *aContentViewer) { return _to GetContentViewer(aContentViewer); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChromeEventHandler(nsIDOMEventTarget * *aChromeEventHandler) { return _to GetChromeEventHandler(aChromeEventHandler); } \
+  NS_SCRIPTABLE NS_IMETHOD SetChromeEventHandler(nsIDOMEventTarget * aChromeEventHandler) { return _to SetChromeEventHandler(aChromeEventHandler); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDocumentCharsetInfo(nsIDocumentCharsetInfo * *aDocumentCharsetInfo) { return _to GetDocumentCharsetInfo(aDocumentCharsetInfo); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDocumentCharsetInfo(nsIDocumentCharsetInfo * aDocumentCharsetInfo) { return _to SetDocumentCharsetInfo(aDocumentCharsetInfo); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowPlugins(PRBool *aAllowPlugins) { return _to GetAllowPlugins(aAllowPlugins); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowPlugins(PRBool aAllowPlugins) { return _to SetAllowPlugins(aAllowPlugins); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowJavascript(PRBool *aAllowJavascript) { return _to GetAllowJavascript(aAllowJavascript); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowJavascript(PRBool aAllowJavascript) { return _to SetAllowJavascript(aAllowJavascript); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowMetaRedirects(PRBool *aAllowMetaRedirects) { return _to GetAllowMetaRedirects(aAllowMetaRedirects); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowMetaRedirects(PRBool aAllowMetaRedirects) { return _to SetAllowMetaRedirects(aAllowMetaRedirects); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowSubframes(PRBool *aAllowSubframes) { return _to GetAllowSubframes(aAllowSubframes); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowSubframes(PRBool aAllowSubframes) { return _to SetAllowSubframes(aAllowSubframes); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowImages(PRBool *aAllowImages) { return _to GetAllowImages(aAllowImages); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowImages(PRBool aAllowImages) { return _to SetAllowImages(aAllowImages); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDocShellEnumerator(PRInt32 aItemType, PRInt32 aDirection, nsISimpleEnumerator **_retval) { return _to GetDocShellEnumerator(aItemType, aDirection, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAppType(PRUint32 *aAppType) { return _to GetAppType(aAppType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAppType(PRUint32 aAppType) { return _to SetAppType(aAppType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowAuth(PRBool *aAllowAuth) { return _to GetAllowAuth(aAllowAuth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowAuth(PRBool aAllowAuth) { return _to SetAllowAuth(aAllowAuth); } \
+  NS_SCRIPTABLE NS_IMETHOD GetZoom(float *aZoom) { return _to GetZoom(aZoom); } \
+  NS_SCRIPTABLE NS_IMETHOD SetZoom(float aZoom) { return _to SetZoom(aZoom); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMarginWidth(PRInt32 *aMarginWidth) { return _to GetMarginWidth(aMarginWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMarginWidth(PRInt32 aMarginWidth) { return _to SetMarginWidth(aMarginWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMarginHeight(PRInt32 *aMarginHeight) { return _to GetMarginHeight(aMarginHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMarginHeight(PRInt32 aMarginHeight) { return _to SetMarginHeight(aMarginHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHasFocus(PRBool *aHasFocus) { return _to GetHasFocus(aHasFocus); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHasFocus(PRBool aHasFocus) { return _to SetHasFocus(aHasFocus); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCanvasHasFocus(PRBool *aCanvasHasFocus) { return _to GetCanvasHasFocus(aCanvasHasFocus); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCanvasHasFocus(PRBool aCanvasHasFocus) { return _to SetCanvasHasFocus(aCanvasHasFocus); } \
+  NS_SCRIPTABLE NS_IMETHOD TabToTreeOwner(PRBool forward, PRBool *tookFocus) { return _to TabToTreeOwner(forward, tookFocus); } \
+  NS_SCRIPTABLE NS_IMETHOD GetBusyFlags(PRUint32 *aBusyFlags) { return _to GetBusyFlags(aBusyFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLoadType(PRUint32 *aLoadType) { return _to GetLoadType(aLoadType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLoadType(PRUint32 aLoadType) { return _to SetLoadType(aLoadType); } \
+  NS_SCRIPTABLE NS_IMETHOD IsBeingDestroyed(PRBool *_retval) { return _to IsBeingDestroyed(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsExecutingOnLoadHandler(PRBool *aIsExecutingOnLoadHandler) { return _to GetIsExecutingOnLoadHandler(aIsExecutingOnLoadHandler); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLayoutHistoryState(nsILayoutHistoryState * *aLayoutHistoryState) { return _to GetLayoutHistoryState(aLayoutHistoryState); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLayoutHistoryState(nsILayoutHistoryState * aLayoutHistoryState) { return _to SetLayoutHistoryState(aLayoutHistoryState); } \
+  NS_SCRIPTABLE NS_IMETHOD GetShouldSaveLayoutState(PRBool *aShouldSaveLayoutState) { return _to GetShouldSaveLayoutState(aShouldSaveLayoutState); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSecurityUI(nsISecureBrowserUI * *aSecurityUI) { return _to GetSecurityUI(aSecurityUI); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSecurityUI(nsISecureBrowserUI * aSecurityUI) { return _to SetSecurityUI(aSecurityUI); } \
+  NS_SCRIPTABLE NS_IMETHOD SuspendRefreshURIs(void) { return _to SuspendRefreshURIs(); } \
+  NS_SCRIPTABLE NS_IMETHOD ResumeRefreshURIs(void) { return _to ResumeRefreshURIs(); } \
+  NS_SCRIPTABLE NS_IMETHOD BeginRestore(nsIContentViewer *viewer, PRBool top) { return _to BeginRestore(viewer, top); } \
+  NS_SCRIPTABLE NS_IMETHOD FinishRestore(void) { return _to FinishRestore(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRestoringDocument(PRBool *aRestoringDocument) { return _to GetRestoringDocument(aRestoringDocument); } \
+  NS_SCRIPTABLE NS_IMETHOD GetUseErrorPages(PRBool *aUseErrorPages) { return _to GetUseErrorPages(aUseErrorPages); } \
+  NS_SCRIPTABLE NS_IMETHOD SetUseErrorPages(PRBool aUseErrorPages) { return _to SetUseErrorPages(aUseErrorPages); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPreviousTransIndex(PRInt32 *aPreviousTransIndex) { return _to GetPreviousTransIndex(aPreviousTransIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLoadedTransIndex(PRInt32 *aLoadedTransIndex) { return _to GetLoadedTransIndex(aLoadedTransIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD HistoryPurged(PRInt32 numEntries) { return _to HistoryPurged(numEntries); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSessionStorageForURI(nsIURI *uri, nsIDOMStorage **_retval) { return _to GetSessionStorageForURI(uri, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD AddSessionStorage(const nsACString & aDomain, nsIDOMStorage *storage) { return _to AddSessionStorage(aDomain, storage); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentDocumentChannel(nsIChannel * *aCurrentDocumentChannel) { return _to GetCurrentDocumentChannel(aCurrentDocumentChannel); } \
   NS_IMETHOD SetChildOffset(PRUint32 offset) { return _to SetChildOffset(offset); } \
-  NS_IMETHOD GetIsInUnload(PRBool *aIsInUnload) { return _to GetIsInUnload(aIsInUnload); } \
-  NS_IMETHOD GetChannelIsUnsafe(PRBool *aChannelIsUnsafe) { return _to GetChannelIsUnsafe(aChannelIsUnsafe); } 
+  NS_SCRIPTABLE NS_IMETHOD GetIsInUnload(PRBool *aIsInUnload) { return _to GetIsInUnload(aIsInUnload); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChannelIsUnsafe(PRBool *aChannelIsUnsafe) { return _to GetChannelIsUnsafe(aChannelIsUnsafe); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOCSHELL(_to) \
   NS_IMETHOD LoadURI(nsIURI *uri, nsIDocShellLoadInfo *loadInfo, PRUint32 aLoadFlags, PRBool firstParty) { return !_to ? NS_ERROR_NULL_POINTER : _to->LoadURI(uri, loadInfo, aLoadFlags, firstParty); } \
   NS_IMETHOD LoadStream(nsIInputStream *aStream, nsIURI *aURI, const nsACString & aContentType, const nsACString & aContentCharset, nsIDocShellLoadInfo *aLoadInfo) { return !_to ? NS_ERROR_NULL_POINTER : _to->LoadStream(aStream, aURI, aContentType, aContentCharset, aLoadInfo); } \
   NS_IMETHOD InternalLoad(nsIURI *aURI, nsIURI *aReferrer, nsISupports *aOwner, PRUint32 aFlags, const PRUnichar *aWindowTarget, const char *aTypeHint, nsIInputStream *aPostDataStream, nsIInputStream *aHeadersStream, PRUint32 aLoadFlags, nsISHEntry *aSHEntry, PRBool firstParty, nsIDocShell **aDocShell, nsIRequest **aRequest) { return !_to ? NS_ERROR_NULL_POINTER : _to->InternalLoad(aURI, aReferrer, aOwner, aFlags, aWindowTarget, aTypeHint, aPostDataStream, aHeadersStream, aLoadFlags, aSHEntry, firstParty, aDocShell, aRequest); } \
-  NS_IMETHOD CreateLoadInfo(nsIDocShellLoadInfo **loadInfo) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateLoadInfo(loadInfo); } \
-  NS_IMETHOD PrepareForNewContentModel(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->PrepareForNewContentModel(); } \
-  NS_IMETHOD SetCurrentURI(nsIURI *aURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCurrentURI(aURI); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateLoadInfo(nsIDocShellLoadInfo **loadInfo) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateLoadInfo(loadInfo); } \
+  NS_SCRIPTABLE NS_IMETHOD PrepareForNewContentModel(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->PrepareForNewContentModel(); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCurrentURI(nsIURI *aURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCurrentURI(aURI); } \
   NS_IMETHOD FirePageHideNotification(PRBool isUnload) { return !_to ? NS_ERROR_NULL_POINTER : _to->FirePageHideNotification(isUnload); } \
   NS_IMETHOD GetPresContext(nsPresContext * *aPresContext) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPresContext(aPresContext); } \
   NS_IMETHOD GetPresShell(nsIPresShell * *aPresShell) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPresShell(aPresShell); } \
   NS_IMETHOD GetEldestPresShell(nsIPresShell * *aEldestPresShell) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetEldestPresShell(aEldestPresShell); } \
-  NS_IMETHOD GetContentViewer(nsIContentViewer * *aContentViewer) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentViewer(aContentViewer); } \
-  NS_IMETHOD GetChromeEventHandler(nsIDOMEventTarget * *aChromeEventHandler) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChromeEventHandler(aChromeEventHandler); } \
-  NS_IMETHOD SetChromeEventHandler(nsIDOMEventTarget * aChromeEventHandler) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetChromeEventHandler(aChromeEventHandler); } \
-  NS_IMETHOD GetDocumentCharsetInfo(nsIDocumentCharsetInfo * *aDocumentCharsetInfo) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocumentCharsetInfo(aDocumentCharsetInfo); } \
-  NS_IMETHOD SetDocumentCharsetInfo(nsIDocumentCharsetInfo * aDocumentCharsetInfo) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDocumentCharsetInfo(aDocumentCharsetInfo); } \
-  NS_IMETHOD GetAllowPlugins(PRBool *aAllowPlugins) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAllowPlugins(aAllowPlugins); } \
-  NS_IMETHOD SetAllowPlugins(PRBool aAllowPlugins) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAllowPlugins(aAllowPlugins); } \
-  NS_IMETHOD GetAllowJavascript(PRBool *aAllowJavascript) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAllowJavascript(aAllowJavascript); } \
-  NS_IMETHOD SetAllowJavascript(PRBool aAllowJavascript) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAllowJavascript(aAllowJavascript); } \
-  NS_IMETHOD GetAllowMetaRedirects(PRBool *aAllowMetaRedirects) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAllowMetaRedirects(aAllowMetaRedirects); } \
-  NS_IMETHOD SetAllowMetaRedirects(PRBool aAllowMetaRedirects) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAllowMetaRedirects(aAllowMetaRedirects); } \
-  NS_IMETHOD GetAllowSubframes(PRBool *aAllowSubframes) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAllowSubframes(aAllowSubframes); } \
-  NS_IMETHOD SetAllowSubframes(PRBool aAllowSubframes) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAllowSubframes(aAllowSubframes); } \
-  NS_IMETHOD GetAllowImages(PRBool *aAllowImages) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAllowImages(aAllowImages); } \
-  NS_IMETHOD SetAllowImages(PRBool aAllowImages) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAllowImages(aAllowImages); } \
-  NS_IMETHOD GetDocShellEnumerator(PRInt32 aItemType, PRInt32 aDirection, nsISimpleEnumerator **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocShellEnumerator(aItemType, aDirection, _retval); } \
-  NS_IMETHOD GetAppType(PRUint32 *aAppType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAppType(aAppType); } \
-  NS_IMETHOD SetAppType(PRUint32 aAppType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAppType(aAppType); } \
-  NS_IMETHOD GetAllowAuth(PRBool *aAllowAuth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAllowAuth(aAllowAuth); } \
-  NS_IMETHOD SetAllowAuth(PRBool aAllowAuth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAllowAuth(aAllowAuth); } \
-  NS_IMETHOD GetZoom(float *aZoom) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetZoom(aZoom); } \
-  NS_IMETHOD SetZoom(float aZoom) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetZoom(aZoom); } \
-  NS_IMETHOD GetMarginWidth(PRInt32 *aMarginWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMarginWidth(aMarginWidth); } \
-  NS_IMETHOD SetMarginWidth(PRInt32 aMarginWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMarginWidth(aMarginWidth); } \
-  NS_IMETHOD GetMarginHeight(PRInt32 *aMarginHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMarginHeight(aMarginHeight); } \
-  NS_IMETHOD SetMarginHeight(PRInt32 aMarginHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMarginHeight(aMarginHeight); } \
-  NS_IMETHOD GetHasFocus(PRBool *aHasFocus) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHasFocus(aHasFocus); } \
-  NS_IMETHOD SetHasFocus(PRBool aHasFocus) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHasFocus(aHasFocus); } \
-  NS_IMETHOD GetCanvasHasFocus(PRBool *aCanvasHasFocus) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCanvasHasFocus(aCanvasHasFocus); } \
-  NS_IMETHOD SetCanvasHasFocus(PRBool aCanvasHasFocus) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCanvasHasFocus(aCanvasHasFocus); } \
-  NS_IMETHOD TabToTreeOwner(PRBool forward, PRBool *tookFocus) { return !_to ? NS_ERROR_NULL_POINTER : _to->TabToTreeOwner(forward, tookFocus); } \
-  NS_IMETHOD GetBusyFlags(PRUint32 *aBusyFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetBusyFlags(aBusyFlags); } \
-  NS_IMETHOD GetLoadType(PRUint32 *aLoadType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLoadType(aLoadType); } \
-  NS_IMETHOD SetLoadType(PRUint32 aLoadType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLoadType(aLoadType); } \
-  NS_IMETHOD IsBeingDestroyed(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsBeingDestroyed(_retval); } \
-  NS_IMETHOD GetIsExecutingOnLoadHandler(PRBool *aIsExecutingOnLoadHandler) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsExecutingOnLoadHandler(aIsExecutingOnLoadHandler); } \
-  NS_IMETHOD GetLayoutHistoryState(nsILayoutHistoryState * *aLayoutHistoryState) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLayoutHistoryState(aLayoutHistoryState); } \
-  NS_IMETHOD SetLayoutHistoryState(nsILayoutHistoryState * aLayoutHistoryState) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLayoutHistoryState(aLayoutHistoryState); } \
-  NS_IMETHOD GetShouldSaveLayoutState(PRBool *aShouldSaveLayoutState) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetShouldSaveLayoutState(aShouldSaveLayoutState); } \
-  NS_IMETHOD GetSecurityUI(nsISecureBrowserUI * *aSecurityUI) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSecurityUI(aSecurityUI); } \
-  NS_IMETHOD SetSecurityUI(nsISecureBrowserUI * aSecurityUI) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSecurityUI(aSecurityUI); } \
-  NS_IMETHOD SuspendRefreshURIs(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SuspendRefreshURIs(); } \
-  NS_IMETHOD ResumeRefreshURIs(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ResumeRefreshURIs(); } \
-  NS_IMETHOD BeginRestore(nsIContentViewer *viewer, PRBool top) { return !_to ? NS_ERROR_NULL_POINTER : _to->BeginRestore(viewer, top); } \
-  NS_IMETHOD FinishRestore(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->FinishRestore(); } \
-  NS_IMETHOD GetRestoringDocument(PRBool *aRestoringDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRestoringDocument(aRestoringDocument); } \
-  NS_IMETHOD GetUseErrorPages(PRBool *aUseErrorPages) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUseErrorPages(aUseErrorPages); } \
-  NS_IMETHOD SetUseErrorPages(PRBool aUseErrorPages) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetUseErrorPages(aUseErrorPages); } \
-  NS_IMETHOD GetPreviousTransIndex(PRInt32 *aPreviousTransIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPreviousTransIndex(aPreviousTransIndex); } \
-  NS_IMETHOD GetLoadedTransIndex(PRInt32 *aLoadedTransIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLoadedTransIndex(aLoadedTransIndex); } \
-  NS_IMETHOD HistoryPurged(PRInt32 numEntries) { return !_to ? NS_ERROR_NULL_POINTER : _to->HistoryPurged(numEntries); } \
-  NS_IMETHOD GetSessionStorageForURI(nsIURI *uri, nsIDOMStorage **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSessionStorageForURI(uri, _retval); } \
-  NS_IMETHOD AddSessionStorage(const nsACString & aDomain, nsIDOMStorage *storage) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddSessionStorage(aDomain, storage); } \
-  NS_IMETHOD GetCurrentDocumentChannel(nsIChannel * *aCurrentDocumentChannel) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentDocumentChannel(aCurrentDocumentChannel); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContentViewer(nsIContentViewer * *aContentViewer) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentViewer(aContentViewer); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChromeEventHandler(nsIDOMEventTarget * *aChromeEventHandler) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChromeEventHandler(aChromeEventHandler); } \
+  NS_SCRIPTABLE NS_IMETHOD SetChromeEventHandler(nsIDOMEventTarget * aChromeEventHandler) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetChromeEventHandler(aChromeEventHandler); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDocumentCharsetInfo(nsIDocumentCharsetInfo * *aDocumentCharsetInfo) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocumentCharsetInfo(aDocumentCharsetInfo); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDocumentCharsetInfo(nsIDocumentCharsetInfo * aDocumentCharsetInfo) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDocumentCharsetInfo(aDocumentCharsetInfo); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowPlugins(PRBool *aAllowPlugins) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAllowPlugins(aAllowPlugins); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowPlugins(PRBool aAllowPlugins) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAllowPlugins(aAllowPlugins); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowJavascript(PRBool *aAllowJavascript) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAllowJavascript(aAllowJavascript); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowJavascript(PRBool aAllowJavascript) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAllowJavascript(aAllowJavascript); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowMetaRedirects(PRBool *aAllowMetaRedirects) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAllowMetaRedirects(aAllowMetaRedirects); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowMetaRedirects(PRBool aAllowMetaRedirects) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAllowMetaRedirects(aAllowMetaRedirects); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowSubframes(PRBool *aAllowSubframes) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAllowSubframes(aAllowSubframes); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowSubframes(PRBool aAllowSubframes) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAllowSubframes(aAllowSubframes); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowImages(PRBool *aAllowImages) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAllowImages(aAllowImages); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowImages(PRBool aAllowImages) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAllowImages(aAllowImages); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDocShellEnumerator(PRInt32 aItemType, PRInt32 aDirection, nsISimpleEnumerator **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocShellEnumerator(aItemType, aDirection, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAppType(PRUint32 *aAppType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAppType(aAppType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAppType(PRUint32 aAppType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAppType(aAppType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowAuth(PRBool *aAllowAuth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAllowAuth(aAllowAuth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowAuth(PRBool aAllowAuth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAllowAuth(aAllowAuth); } \
+  NS_SCRIPTABLE NS_IMETHOD GetZoom(float *aZoom) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetZoom(aZoom); } \
+  NS_SCRIPTABLE NS_IMETHOD SetZoom(float aZoom) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetZoom(aZoom); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMarginWidth(PRInt32 *aMarginWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMarginWidth(aMarginWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMarginWidth(PRInt32 aMarginWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMarginWidth(aMarginWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMarginHeight(PRInt32 *aMarginHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMarginHeight(aMarginHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMarginHeight(PRInt32 aMarginHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMarginHeight(aMarginHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHasFocus(PRBool *aHasFocus) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHasFocus(aHasFocus); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHasFocus(PRBool aHasFocus) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHasFocus(aHasFocus); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCanvasHasFocus(PRBool *aCanvasHasFocus) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCanvasHasFocus(aCanvasHasFocus); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCanvasHasFocus(PRBool aCanvasHasFocus) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCanvasHasFocus(aCanvasHasFocus); } \
+  NS_SCRIPTABLE NS_IMETHOD TabToTreeOwner(PRBool forward, PRBool *tookFocus) { return !_to ? NS_ERROR_NULL_POINTER : _to->TabToTreeOwner(forward, tookFocus); } \
+  NS_SCRIPTABLE NS_IMETHOD GetBusyFlags(PRUint32 *aBusyFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetBusyFlags(aBusyFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLoadType(PRUint32 *aLoadType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLoadType(aLoadType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLoadType(PRUint32 aLoadType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLoadType(aLoadType); } \
+  NS_SCRIPTABLE NS_IMETHOD IsBeingDestroyed(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsBeingDestroyed(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsExecutingOnLoadHandler(PRBool *aIsExecutingOnLoadHandler) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsExecutingOnLoadHandler(aIsExecutingOnLoadHandler); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLayoutHistoryState(nsILayoutHistoryState * *aLayoutHistoryState) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLayoutHistoryState(aLayoutHistoryState); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLayoutHistoryState(nsILayoutHistoryState * aLayoutHistoryState) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLayoutHistoryState(aLayoutHistoryState); } \
+  NS_SCRIPTABLE NS_IMETHOD GetShouldSaveLayoutState(PRBool *aShouldSaveLayoutState) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetShouldSaveLayoutState(aShouldSaveLayoutState); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSecurityUI(nsISecureBrowserUI * *aSecurityUI) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSecurityUI(aSecurityUI); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSecurityUI(nsISecureBrowserUI * aSecurityUI) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSecurityUI(aSecurityUI); } \
+  NS_SCRIPTABLE NS_IMETHOD SuspendRefreshURIs(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SuspendRefreshURIs(); } \
+  NS_SCRIPTABLE NS_IMETHOD ResumeRefreshURIs(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ResumeRefreshURIs(); } \
+  NS_SCRIPTABLE NS_IMETHOD BeginRestore(nsIContentViewer *viewer, PRBool top) { return !_to ? NS_ERROR_NULL_POINTER : _to->BeginRestore(viewer, top); } \
+  NS_SCRIPTABLE NS_IMETHOD FinishRestore(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->FinishRestore(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRestoringDocument(PRBool *aRestoringDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRestoringDocument(aRestoringDocument); } \
+  NS_SCRIPTABLE NS_IMETHOD GetUseErrorPages(PRBool *aUseErrorPages) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUseErrorPages(aUseErrorPages); } \
+  NS_SCRIPTABLE NS_IMETHOD SetUseErrorPages(PRBool aUseErrorPages) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetUseErrorPages(aUseErrorPages); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPreviousTransIndex(PRInt32 *aPreviousTransIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPreviousTransIndex(aPreviousTransIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLoadedTransIndex(PRInt32 *aLoadedTransIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLoadedTransIndex(aLoadedTransIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD HistoryPurged(PRInt32 numEntries) { return !_to ? NS_ERROR_NULL_POINTER : _to->HistoryPurged(numEntries); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSessionStorageForURI(nsIURI *uri, nsIDOMStorage **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSessionStorageForURI(uri, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD AddSessionStorage(const nsACString & aDomain, nsIDOMStorage *storage) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddSessionStorage(aDomain, storage); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentDocumentChannel(nsIChannel * *aCurrentDocumentChannel) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentDocumentChannel(aCurrentDocumentChannel); } \
   NS_IMETHOD SetChildOffset(PRUint32 offset) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetChildOffset(offset); } \
-  NS_IMETHOD GetIsInUnload(PRBool *aIsInUnload) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsInUnload(aIsInUnload); } \
-  NS_IMETHOD GetChannelIsUnsafe(PRBool *aChannelIsUnsafe) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChannelIsUnsafe(aChannelIsUnsafe); } 
+  NS_SCRIPTABLE NS_IMETHOD GetIsInUnload(PRBool *aIsInUnload) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsInUnload(aIsInUnload); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChannelIsUnsafe(PRBool *aChannelIsUnsafe) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChannelIsUnsafe(aChannelIsUnsafe); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

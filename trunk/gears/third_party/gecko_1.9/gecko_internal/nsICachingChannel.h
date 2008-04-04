@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/netwerk/base/public/nsICachingChannel.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/base/public/nsICachingChannel.idl
  */
 
 #ifndef __gen_nsICachingChannel_h__
@@ -18,11 +18,11 @@ class nsIFile; /* forward declaration */
 
 
 /* starting interface:    nsICachingChannel */
-#define NS_ICACHINGCHANNEL_IID_STR "09556ba7-b13d-47d2-b154-fe690b063899"
+#define NS_ICACHINGCHANNEL_IID_STR "830d4bcb-3e46-4011-9bda-51a5d1af891f"
 
 #define NS_ICACHINGCHANNEL_IID \
-  {0x09556ba7, 0xb13d, 0x47d2, \
-    { 0xb1, 0x54, 0xfe, 0x69, 0x0b, 0x06, 0x38, 0x99 }}
+  {0x830d4bcb, 0x3e46, 0x4011, \
+    { 0x9b, 0xda, 0x51, 0xa5, 0xd1, 0xaf, 0x89, 0x1f }}
 
 /**
  * A channel may optionally implement this interface to allow clients
@@ -34,7 +34,7 @@ class nsIFile; /* forward declaration */
  *   3) Support for uniquely identifying cached data in cases when the URL
  *      is insufficient (e.g., HTTP form submission).
  */
-class NS_NO_VTABLE nsICachingChannel : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsICachingChannel : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICACHINGCHANNEL_IID)
@@ -54,8 +54,19 @@ class NS_NO_VTABLE nsICachingChannel : public nsISupports {
      * about the cache entry is needed (e.g., expiration time).
      */
   /* attribute nsISupports cacheToken; */
-  NS_IMETHOD GetCacheToken(nsISupports * *aCacheToken) = 0;
-  NS_IMETHOD SetCacheToken(nsISupports * aCacheToken) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCacheToken(nsISupports * *aCacheToken) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCacheToken(nsISupports * aCacheToken) = 0;
+
+  /**
+     * The same as above but accessing the offline app cache token if there
+     * is any.
+     *
+     * @throws
+     *      NS_ERROR_NOT_AVAILABLE when there is not offline cache token
+     */
+  /* attribute nsISupports offlineCacheToken; */
+  NS_SCRIPTABLE NS_IMETHOD GetOfflineCacheToken(nsISupports * *aOfflineCacheToken) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetOfflineCacheToken(nsISupports * aOfflineCacheToken) = 0;
 
   /**
      * Set/get the cache key... uniquely identifies the data in the cache
@@ -75,8 +86,8 @@ class NS_NO_VTABLE nsICachingChannel : public nsISupports {
      * is likewise valid.
      */
   /* attribute nsISupports cacheKey; */
-  NS_IMETHOD GetCacheKey(nsISupports * *aCacheKey) = 0;
-  NS_IMETHOD SetCacheKey(nsISupports * aCacheKey) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCacheKey(nsISupports * *aCacheKey) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCacheKey(nsISupports * aCacheKey) = 0;
 
   /**
      * Specifies whether or not the data should be cached to a file.  This
@@ -86,8 +97,8 @@ class NS_NO_VTABLE nsICachingChannel : public nsISupports {
      * particular implementation of nsICachingChannel.
      */
   /* attribute boolean cacheAsFile; */
-  NS_IMETHOD GetCacheAsFile(PRBool *aCacheAsFile) = 0;
-  NS_IMETHOD SetCacheAsFile(PRBool aCacheAsFile) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCacheAsFile(PRBool *aCacheAsFile) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCacheAsFile(PRBool aCacheAsFile) = 0;
 
   /**
      * Specifies whether or not the data should be placed in the offline cache,
@@ -96,16 +107,16 @@ class NS_NO_VTABLE nsICachingChannel : public nsISupports {
      * opening the channel.
      */
   /* attribute boolean cacheForOfflineUse; */
-  NS_IMETHOD GetCacheForOfflineUse(PRBool *aCacheForOfflineUse) = 0;
-  NS_IMETHOD SetCacheForOfflineUse(PRBool aCacheForOfflineUse) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCacheForOfflineUse(PRBool *aCacheForOfflineUse) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCacheForOfflineUse(PRBool aCacheForOfflineUse) = 0;
 
   /**
      * The session into which to cache offline data.  If not specified,
      * data will be placed in "HTTP-offline"
      */
   /* attribute ACString offlineCacheClientID; */
-  NS_IMETHOD GetOfflineCacheClientID(nsACString & aOfflineCacheClientID) = 0;
-  NS_IMETHOD SetOfflineCacheClientID(const nsACString & aOfflineCacheClientID) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetOfflineCacheClientID(nsACString & aOfflineCacheClientID) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetOfflineCacheClientID(const nsACString & aOfflineCacheClientID) = 0;
 
   /**
      * Get the "file" where the cached data can be found.  This is valid for
@@ -113,7 +124,7 @@ class NS_NO_VTABLE nsICachingChannel : public nsISupports {
      * an error if cacheAsFile is false.
      */
   /* readonly attribute nsIFile cacheFile; */
-  NS_IMETHOD GetCacheFile(nsIFile * *aCacheFile) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCacheFile(nsIFile * *aCacheFile) = 0;
 
   /**
      * TRUE if this channel's data is being loaded from the cache.  This value
@@ -121,7 +132,7 @@ class NS_NO_VTABLE nsICachingChannel : public nsISupports {
      * and after the channel fires its OnStopRequest notification.
      */
   /* boolean isFromCache (); */
-  NS_IMETHOD IsFromCache(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsFromCache(PRBool *_retval) = 0;
 
   /**************************************************************************
      * Caching channel specific load flags:
@@ -187,48 +198,54 @@ class NS_NO_VTABLE nsICachingChannel : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICACHINGCHANNEL \
-  NS_IMETHOD GetCacheToken(nsISupports * *aCacheToken); \
-  NS_IMETHOD SetCacheToken(nsISupports * aCacheToken); \
-  NS_IMETHOD GetCacheKey(nsISupports * *aCacheKey); \
-  NS_IMETHOD SetCacheKey(nsISupports * aCacheKey); \
-  NS_IMETHOD GetCacheAsFile(PRBool *aCacheAsFile); \
-  NS_IMETHOD SetCacheAsFile(PRBool aCacheAsFile); \
-  NS_IMETHOD GetCacheForOfflineUse(PRBool *aCacheForOfflineUse); \
-  NS_IMETHOD SetCacheForOfflineUse(PRBool aCacheForOfflineUse); \
-  NS_IMETHOD GetOfflineCacheClientID(nsACString & aOfflineCacheClientID); \
-  NS_IMETHOD SetOfflineCacheClientID(const nsACString & aOfflineCacheClientID); \
-  NS_IMETHOD GetCacheFile(nsIFile * *aCacheFile); \
-  NS_IMETHOD IsFromCache(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheToken(nsISupports * *aCacheToken); \
+  NS_SCRIPTABLE NS_IMETHOD SetCacheToken(nsISupports * aCacheToken); \
+  NS_SCRIPTABLE NS_IMETHOD GetOfflineCacheToken(nsISupports * *aOfflineCacheToken); \
+  NS_SCRIPTABLE NS_IMETHOD SetOfflineCacheToken(nsISupports * aOfflineCacheToken); \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheKey(nsISupports * *aCacheKey); \
+  NS_SCRIPTABLE NS_IMETHOD SetCacheKey(nsISupports * aCacheKey); \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheAsFile(PRBool *aCacheAsFile); \
+  NS_SCRIPTABLE NS_IMETHOD SetCacheAsFile(PRBool aCacheAsFile); \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheForOfflineUse(PRBool *aCacheForOfflineUse); \
+  NS_SCRIPTABLE NS_IMETHOD SetCacheForOfflineUse(PRBool aCacheForOfflineUse); \
+  NS_SCRIPTABLE NS_IMETHOD GetOfflineCacheClientID(nsACString & aOfflineCacheClientID); \
+  NS_SCRIPTABLE NS_IMETHOD SetOfflineCacheClientID(const nsACString & aOfflineCacheClientID); \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheFile(nsIFile * *aCacheFile); \
+  NS_SCRIPTABLE NS_IMETHOD IsFromCache(PRBool *_retval); \
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICACHINGCHANNEL(_to) \
-  NS_IMETHOD GetCacheToken(nsISupports * *aCacheToken) { return _to GetCacheToken(aCacheToken); } \
-  NS_IMETHOD SetCacheToken(nsISupports * aCacheToken) { return _to SetCacheToken(aCacheToken); } \
-  NS_IMETHOD GetCacheKey(nsISupports * *aCacheKey) { return _to GetCacheKey(aCacheKey); } \
-  NS_IMETHOD SetCacheKey(nsISupports * aCacheKey) { return _to SetCacheKey(aCacheKey); } \
-  NS_IMETHOD GetCacheAsFile(PRBool *aCacheAsFile) { return _to GetCacheAsFile(aCacheAsFile); } \
-  NS_IMETHOD SetCacheAsFile(PRBool aCacheAsFile) { return _to SetCacheAsFile(aCacheAsFile); } \
-  NS_IMETHOD GetCacheForOfflineUse(PRBool *aCacheForOfflineUse) { return _to GetCacheForOfflineUse(aCacheForOfflineUse); } \
-  NS_IMETHOD SetCacheForOfflineUse(PRBool aCacheForOfflineUse) { return _to SetCacheForOfflineUse(aCacheForOfflineUse); } \
-  NS_IMETHOD GetOfflineCacheClientID(nsACString & aOfflineCacheClientID) { return _to GetOfflineCacheClientID(aOfflineCacheClientID); } \
-  NS_IMETHOD SetOfflineCacheClientID(const nsACString & aOfflineCacheClientID) { return _to SetOfflineCacheClientID(aOfflineCacheClientID); } \
-  NS_IMETHOD GetCacheFile(nsIFile * *aCacheFile) { return _to GetCacheFile(aCacheFile); } \
-  NS_IMETHOD IsFromCache(PRBool *_retval) { return _to IsFromCache(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheToken(nsISupports * *aCacheToken) { return _to GetCacheToken(aCacheToken); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCacheToken(nsISupports * aCacheToken) { return _to SetCacheToken(aCacheToken); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOfflineCacheToken(nsISupports * *aOfflineCacheToken) { return _to GetOfflineCacheToken(aOfflineCacheToken); } \
+  NS_SCRIPTABLE NS_IMETHOD SetOfflineCacheToken(nsISupports * aOfflineCacheToken) { return _to SetOfflineCacheToken(aOfflineCacheToken); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheKey(nsISupports * *aCacheKey) { return _to GetCacheKey(aCacheKey); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCacheKey(nsISupports * aCacheKey) { return _to SetCacheKey(aCacheKey); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheAsFile(PRBool *aCacheAsFile) { return _to GetCacheAsFile(aCacheAsFile); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCacheAsFile(PRBool aCacheAsFile) { return _to SetCacheAsFile(aCacheAsFile); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheForOfflineUse(PRBool *aCacheForOfflineUse) { return _to GetCacheForOfflineUse(aCacheForOfflineUse); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCacheForOfflineUse(PRBool aCacheForOfflineUse) { return _to SetCacheForOfflineUse(aCacheForOfflineUse); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOfflineCacheClientID(nsACString & aOfflineCacheClientID) { return _to GetOfflineCacheClientID(aOfflineCacheClientID); } \
+  NS_SCRIPTABLE NS_IMETHOD SetOfflineCacheClientID(const nsACString & aOfflineCacheClientID) { return _to SetOfflineCacheClientID(aOfflineCacheClientID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheFile(nsIFile * *aCacheFile) { return _to GetCacheFile(aCacheFile); } \
+  NS_SCRIPTABLE NS_IMETHOD IsFromCache(PRBool *_retval) { return _to IsFromCache(_retval); } \
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICACHINGCHANNEL(_to) \
-  NS_IMETHOD GetCacheToken(nsISupports * *aCacheToken) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCacheToken(aCacheToken); } \
-  NS_IMETHOD SetCacheToken(nsISupports * aCacheToken) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCacheToken(aCacheToken); } \
-  NS_IMETHOD GetCacheKey(nsISupports * *aCacheKey) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCacheKey(aCacheKey); } \
-  NS_IMETHOD SetCacheKey(nsISupports * aCacheKey) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCacheKey(aCacheKey); } \
-  NS_IMETHOD GetCacheAsFile(PRBool *aCacheAsFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCacheAsFile(aCacheAsFile); } \
-  NS_IMETHOD SetCacheAsFile(PRBool aCacheAsFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCacheAsFile(aCacheAsFile); } \
-  NS_IMETHOD GetCacheForOfflineUse(PRBool *aCacheForOfflineUse) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCacheForOfflineUse(aCacheForOfflineUse); } \
-  NS_IMETHOD SetCacheForOfflineUse(PRBool aCacheForOfflineUse) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCacheForOfflineUse(aCacheForOfflineUse); } \
-  NS_IMETHOD GetOfflineCacheClientID(nsACString & aOfflineCacheClientID) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOfflineCacheClientID(aOfflineCacheClientID); } \
-  NS_IMETHOD SetOfflineCacheClientID(const nsACString & aOfflineCacheClientID) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetOfflineCacheClientID(aOfflineCacheClientID); } \
-  NS_IMETHOD GetCacheFile(nsIFile * *aCacheFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCacheFile(aCacheFile); } \
-  NS_IMETHOD IsFromCache(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsFromCache(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheToken(nsISupports * *aCacheToken) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCacheToken(aCacheToken); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCacheToken(nsISupports * aCacheToken) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCacheToken(aCacheToken); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOfflineCacheToken(nsISupports * *aOfflineCacheToken) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOfflineCacheToken(aOfflineCacheToken); } \
+  NS_SCRIPTABLE NS_IMETHOD SetOfflineCacheToken(nsISupports * aOfflineCacheToken) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetOfflineCacheToken(aOfflineCacheToken); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheKey(nsISupports * *aCacheKey) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCacheKey(aCacheKey); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCacheKey(nsISupports * aCacheKey) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCacheKey(aCacheKey); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheAsFile(PRBool *aCacheAsFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCacheAsFile(aCacheAsFile); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCacheAsFile(PRBool aCacheAsFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCacheAsFile(aCacheAsFile); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheForOfflineUse(PRBool *aCacheForOfflineUse) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCacheForOfflineUse(aCacheForOfflineUse); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCacheForOfflineUse(PRBool aCacheForOfflineUse) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCacheForOfflineUse(aCacheForOfflineUse); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOfflineCacheClientID(nsACString & aOfflineCacheClientID) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOfflineCacheClientID(aOfflineCacheClientID); } \
+  NS_SCRIPTABLE NS_IMETHOD SetOfflineCacheClientID(const nsACString & aOfflineCacheClientID) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetOfflineCacheClientID(aOfflineCacheClientID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheFile(nsIFile * *aCacheFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCacheFile(aCacheFile); } \
+  NS_SCRIPTABLE NS_IMETHOD IsFromCache(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsFromCache(_retval); } \
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -268,6 +285,16 @@ NS_IMETHODIMP nsCachingChannel::GetCacheToken(nsISupports * *aCacheToken)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 NS_IMETHODIMP nsCachingChannel::SetCacheToken(nsISupports * aCacheToken)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute nsISupports offlineCacheToken; */
+NS_IMETHODIMP nsCachingChannel::GetOfflineCacheToken(nsISupports * *aOfflineCacheToken)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP nsCachingChannel::SetOfflineCacheToken(nsISupports * aOfflineCacheToken)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

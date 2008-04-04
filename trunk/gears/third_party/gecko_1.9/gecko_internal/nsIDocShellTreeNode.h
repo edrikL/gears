@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM e:/builds/tinderbox/XR-Trunk/WINNT_5.2_Depend/mozilla/docshell/base/nsIDocShellTreeNode.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/docshell/base/nsIDocShellTreeNode.idl
  */
 
 #ifndef __gen_nsIDocShellTreeNode_h__
@@ -29,19 +29,19 @@ class nsIDocShellTreeItem; /* forward declaration */
  * of a docshell.  These are essentially the methods that turn a single docshell
  * into a docshell tree. 
  */
-class NS_NO_VTABLE nsIDocShellTreeNode : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDocShellTreeNode : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCSHELLTREENODE_IID)
 
   /* readonly attribute long childCount; */
-  NS_IMETHOD GetChildCount(PRInt32 *aChildCount) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetChildCount(PRInt32 *aChildCount) = 0;
 
   /* void addChild (in nsIDocShellTreeItem child); */
-  NS_IMETHOD AddChild(nsIDocShellTreeItem *child) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AddChild(nsIDocShellTreeItem *child) = 0;
 
   /* void removeChild (in nsIDocShellTreeItem child); */
-  NS_IMETHOD RemoveChild(nsIDocShellTreeItem *child) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveChild(nsIDocShellTreeItem *child) = 0;
 
   /**
 	 * Return the child at the index requested.  This is 0-based.
@@ -49,10 +49,10 @@ class NS_NO_VTABLE nsIDocShellTreeNode : public nsISupports {
 	 * @throws NS_ERROR_UNEXPECTED if the index is out of range
 	 */
   /* nsIDocShellTreeItem getChildAt (in long index); */
-  NS_IMETHOD GetChildAt(PRInt32 index, nsIDocShellTreeItem **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetChildAt(PRInt32 index, nsIDocShellTreeItem **_retval) = 0;
 
   /* nsIDocShellTreeItem findChildWithName (in wstring aName, in boolean aRecurse, in boolean aSameType, in nsIDocShellTreeItem aRequestor, in nsIDocShellTreeItem aOriginalRequestor); */
-  NS_IMETHOD FindChildWithName(const PRUnichar *aName, PRBool aRecurse, PRBool aSameType, nsIDocShellTreeItem *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD FindChildWithName(const PRUnichar *aName, PRBool aRecurse, PRBool aSameType, nsIDocShellTreeItem *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval) = 0;
 
 };
 
@@ -60,27 +60,27 @@ class NS_NO_VTABLE nsIDocShellTreeNode : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOCSHELLTREENODE \
-  NS_IMETHOD GetChildCount(PRInt32 *aChildCount); \
-  NS_IMETHOD AddChild(nsIDocShellTreeItem *child); \
-  NS_IMETHOD RemoveChild(nsIDocShellTreeItem *child); \
-  NS_IMETHOD GetChildAt(PRInt32 index, nsIDocShellTreeItem **_retval); \
-  NS_IMETHOD FindChildWithName(const PRUnichar *aName, PRBool aRecurse, PRBool aSameType, nsIDocShellTreeItem *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetChildCount(PRInt32 *aChildCount); \
+  NS_SCRIPTABLE NS_IMETHOD AddChild(nsIDocShellTreeItem *child); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveChild(nsIDocShellTreeItem *child); \
+  NS_SCRIPTABLE NS_IMETHOD GetChildAt(PRInt32 index, nsIDocShellTreeItem **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD FindChildWithName(const PRUnichar *aName, PRBool aRecurse, PRBool aSameType, nsIDocShellTreeItem *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOCSHELLTREENODE(_to) \
-  NS_IMETHOD GetChildCount(PRInt32 *aChildCount) { return _to GetChildCount(aChildCount); } \
-  NS_IMETHOD AddChild(nsIDocShellTreeItem *child) { return _to AddChild(child); } \
-  NS_IMETHOD RemoveChild(nsIDocShellTreeItem *child) { return _to RemoveChild(child); } \
-  NS_IMETHOD GetChildAt(PRInt32 index, nsIDocShellTreeItem **_retval) { return _to GetChildAt(index, _retval); } \
-  NS_IMETHOD FindChildWithName(const PRUnichar *aName, PRBool aRecurse, PRBool aSameType, nsIDocShellTreeItem *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval) { return _to FindChildWithName(aName, aRecurse, aSameType, aRequestor, aOriginalRequestor, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetChildCount(PRInt32 *aChildCount) { return _to GetChildCount(aChildCount); } \
+  NS_SCRIPTABLE NS_IMETHOD AddChild(nsIDocShellTreeItem *child) { return _to AddChild(child); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveChild(nsIDocShellTreeItem *child) { return _to RemoveChild(child); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChildAt(PRInt32 index, nsIDocShellTreeItem **_retval) { return _to GetChildAt(index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD FindChildWithName(const PRUnichar *aName, PRBool aRecurse, PRBool aSameType, nsIDocShellTreeItem *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval) { return _to FindChildWithName(aName, aRecurse, aSameType, aRequestor, aOriginalRequestor, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOCSHELLTREENODE(_to) \
-  NS_IMETHOD GetChildCount(PRInt32 *aChildCount) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChildCount(aChildCount); } \
-  NS_IMETHOD AddChild(nsIDocShellTreeItem *child) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddChild(child); } \
-  NS_IMETHOD RemoveChild(nsIDocShellTreeItem *child) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveChild(child); } \
-  NS_IMETHOD GetChildAt(PRInt32 index, nsIDocShellTreeItem **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChildAt(index, _retval); } \
-  NS_IMETHOD FindChildWithName(const PRUnichar *aName, PRBool aRecurse, PRBool aSameType, nsIDocShellTreeItem *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindChildWithName(aName, aRecurse, aSameType, aRequestor, aOriginalRequestor, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetChildCount(PRInt32 *aChildCount) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChildCount(aChildCount); } \
+  NS_SCRIPTABLE NS_IMETHOD AddChild(nsIDocShellTreeItem *child) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddChild(child); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveChild(nsIDocShellTreeItem *child) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveChild(child); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChildAt(PRInt32 index, nsIDocShellTreeItem **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChildAt(index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD FindChildWithName(const PRUnichar *aName, PRBool aRecurse, PRBool aSameType, nsIDocShellTreeItem *aRequestor, nsIDocShellTreeItem *aOriginalRequestor, nsIDocShellTreeItem **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindChildWithName(aName, aRecurse, aSameType, aRequestor, aOriginalRequestor, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
