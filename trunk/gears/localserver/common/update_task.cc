@@ -340,9 +340,9 @@ bool UpdateTask::UpdateManifest(std::string16 *downloading_version,
   std::string16 manifest_redirect_url;
   if (!HttpGetUrl(server.manifest_url.c_str(),
                   false,  // not for capture into cache
-                  server.manifest_date_header.c_str(),
                   validate_manifest 
                       ? HttpConstants::kXGearsReason_ValidateManifest : NULL,
+                  server.manifest_date_header.c_str(),
                   &manifest_payload,
                   &was_redirected,
                   &manifest_redirect_url)) {
