@@ -1,1 +1,0 @@
-/Users/aa/src-mozilla/obj-xulrunner/ppc/profile/public/_xpidlgen/nsIProfileChangeStatus.h

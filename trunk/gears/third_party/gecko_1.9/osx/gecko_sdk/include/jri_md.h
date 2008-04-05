@@ -1,1 +1,0 @@
-/Users/aa/src-mozilla/mozilla/sun-java/stubs/include/jri_md.h

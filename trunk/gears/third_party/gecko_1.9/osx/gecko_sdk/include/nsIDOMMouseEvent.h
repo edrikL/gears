@@ -1,1 +1,0 @@
-/Users/aa/src-mozilla/obj-xulrunner/ppc/dom/public/idl/events/_xpidlgen/nsIDOMMouseEvent.h

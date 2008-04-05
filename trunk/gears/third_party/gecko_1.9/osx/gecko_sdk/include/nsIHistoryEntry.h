@@ -1,1 +1,0 @@
-/Users/aa/src-mozilla/obj-xulrunner/ppc/docshell/shistory/public/_xpidlgen/nsIHistoryEntry.h

@@ -1,1 +1,0 @@
-/Users/aa/src-mozilla/obj-xulrunner/ppc/embedding/components/windowwatcher/public/_xpidlgen/nsIWindowWatcher.h

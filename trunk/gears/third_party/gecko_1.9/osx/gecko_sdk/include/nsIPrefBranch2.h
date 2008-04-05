@@ -1,1 +1,0 @@
-/Users/aa/src-mozilla/obj-xulrunner/ppc/modules/libpref/public/_xpidlgen/nsIPrefBranch2.h
