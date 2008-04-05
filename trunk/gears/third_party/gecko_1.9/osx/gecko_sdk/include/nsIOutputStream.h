@@ -1,0 +1,1 @@
+/Users/aa/src-mozilla/obj-xulrunner/ppc/xpcom/io/_xpidlgen/nsIOutputStream.h

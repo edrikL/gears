@@ -1,0 +1,1 @@
+/Users/aa/src-mozilla/obj-xulrunner/ppc/webshell/public/_xpidlgen/nsIClipboardCommands.h

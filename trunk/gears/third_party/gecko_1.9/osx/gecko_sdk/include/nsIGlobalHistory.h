@@ -1,0 +1,1 @@
+/Users/aa/src-mozilla/obj-xulrunner/ppc/docshell/base/_xpidlgen/nsIGlobalHistory.h

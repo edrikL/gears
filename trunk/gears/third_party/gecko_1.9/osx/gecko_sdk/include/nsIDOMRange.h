@@ -1,0 +1,1 @@
+/Users/aa/src-mozilla/obj-xulrunner/ppc/dom/public/idl/range/_xpidlgen/nsIDOMRange.h
