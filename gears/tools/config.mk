@@ -160,8 +160,8 @@ SHLIBFLAGS = -o $@ -shared -fPIC -Bsymbolic -Wl,--version-script -Wl,tools/xpcom
 GECKO_SDK = $(GECKO_BASE)/linux
 
 # Keep these in sync:
-FF2_LIBS = -L $(GECKO_SDK)/gecko_sdk/bin -L $(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s -lnspr4
-FF3_LIBS = -L $(GECKO_SDK)/gecko_sdk/bin -L $(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s -lnspr4
+FF2_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s -lnspr4
+FF3_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s -lnspr4
 # Append differences here:
 # - No differences yet.
 endif
@@ -206,8 +206,8 @@ GECKO_SDK = $(GECKO_BASE)/osx
 OSX_SDK_ROOT = /Developer/SDKs/MacOSX10.4u.sdk
 
 # Keep these in sync:
-FF2_LIBS = -L$(GECKO_SDK)/gecko_sdk/bin -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4
-FF3_LIBS = -L$(GECKO_SDK)/gecko_sdk/bin -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4
+FF2_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4
+FF3_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4
 # Append differences here:
 FF2_LIBS +=  -lxpcom_core
 FF3_LIBS +=  $(GECKO_SDK)/gecko_sdk/lib/XUL $(GECKO_SDK)/gecko_sdk/lib/libxpcomglue_s.a -lsqlite3 -lsmime3 -lssl3 -lnss3 -lnssutil3 -lsoftokn3
