@@ -32,7 +32,7 @@
 #include "gears/base/common/message_service.h"
 #include "gears/localserver/common/managed_resource_store.h"
 #include "gears/localserver/ie/update_task_ie.h"
-#include "ie/genfiles/interfaces.h" // from OUTDIR
+#include "genfiles/interfaces.h"
 
 //------------------------------------------------------------------------------
 // GearsManagedResourceStore

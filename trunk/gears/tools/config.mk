@@ -67,18 +67,9 @@ else
 PCT=%
 endif
 
-ifeq ($(FF_MOD), experimental_19)
-FF_CPPFLAGS += -DGECKO_19
-GECKO_BASE = third_party/gecko_1.9
-else
-GECKO_BASE = third_party/gecko_1.8
-endif
-GECKO_LIB = $(GECKO_SDK)/gecko_sdk/lib
-GECKO_BIN = $(GECKO_SDK)/gecko_sdk/bin
-
 MAKEFLAGS = --no-print-directory
 
-CPPFLAGS = -I.. -I$(OUTDIR)/$(OS)-$(ARCH)
+CPPFLAGS = -I.. -I$(COMMON_OUTDIR) -I$($(BROWSER)_OUTDIR)
 
 LIBPNG_CFLAGS = -DPNG_USER_CONFIG -Ithird_party/zlib
 ZLIB_CFLAGS = -DNO_GZIP -DNO_GZCOMPRESS
@@ -93,11 +84,26 @@ ifdef IS_WIN32_OR_WINCE
 CPPFLAGS += -Ithird_party/breakpad/src
 endif
 
-# We include several different base paths of GECKO_SDK because different sets
-# of files include SDK/internal files differently.
-FF_CPPFLAGS += -DBROWSER_FF=1 -I$(GECKO_BASE) -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -DMOZILLA_STRICT_API
-IE_CPPFLAGS = -DBROWSER_IE=1
-NPAPI_CPPFLAGS = -DBROWSER_NPAPI=1 -Ithird_party/npapi -Ithird_party -Ithird_party/googleurl -Ithird_party/icu38/public/common
+ifeq ($(BROWSER),FF2)
+GECKO_BASE = third_party/gecko_1.8
+else
+GECKO_BASE = third_party/gecko_1.9
+endif
+GECKO_BIN = $(GECKO_SDK)/gecko_sdk/bin
+GECKO_LIB = $(GECKO_SDK)/gecko_sdk/lib
+# GECKO_SDK gets defined below (different for each OS).
+
+$(BROWSER)_CPPFLAGS += -DBROWSER_$(BROWSER)=1
+# TODO(cprince): Update source files so we don't need this compatibility define?
+FF2_CPPFLAGS += -DBROWSER_FF=1
+FF3_CPPFLAGS += -DBROWSER_FF=1
+
+# FF2/FF3_CPPFLAGS includes several different base paths of GECKO_SDK because
+# different sets of files include SDK/internal files differently.
+FF2_CPPFLAGS += -I$(GECKO_BASE) -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -DMOZILLA_STRICT_API
+FF3_CPPFLAGS += -I$(GECKO_BASE) -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -DMOZILLA_STRICT_API
+IE_CPPFLAGS +=
+NPAPI_CPPFLAGS += -Ithird_party/npapi -Ithird_party -Ithird_party/googleurl -Ithird_party/icu38/public/common
 
 # When adding or removing SQLITE_OMIT_* options, also update and
 # re-run ../third_party/sqlite_google/google_generate_preprocessed.sh.
@@ -121,7 +127,7 @@ ifeq ($(OS),linux)
 CC = gcc
 CXX = g++
 OBJ_SUFFIX = .o
-MKDEP = gcc -M -MF $(@D)/$*.pp -MT $@ $(CPPFLAGS) $(FF_CPPFLAGS) $<
+MKDEP = gcc -M -MF $(@D)/$*.pp -MT $@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
 
 CPPFLAGS += -DLINUX
 LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
@@ -153,7 +159,11 @@ SHLIBFLAGS = -o $@ -shared -fPIC -Bsymbolic -Wl,--version-script -Wl,tools/xpcom
 
 GECKO_SDK = $(GECKO_BASE)/linux
 
-FF_LIBS = -L $(GECKO_SDK)/gecko_sdk/bin -L $(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s -lnspr4
+# Keep these in sync:
+FF2_LIBS = -L $(GECKO_SDK)/gecko_sdk/bin -L $(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s -lnspr4
+FF3_LIBS = -L $(GECKO_SDK)/gecko_sdk/bin -L $(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s -lnspr4
+# Append differences here:
+# - No differences yet.
 endif
 
 ######################################################################
@@ -163,7 +173,7 @@ ifeq ($(OS),osx)
 CC = gcc -arch $(ARCH)
 CXX = g++ -arch $(ARCH)
 OBJ_SUFFIX = .o
-MKDEP = gcc -M -MF $(@D)/$*.pp -MT $@ $(CPPFLAGS) $(FF_CPPFLAGS) $<
+MKDEP = gcc -M -MF $(@D)/$*.pp -MT $@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
 
 CPPFLAGS += -DLINUX -DOS_MACOSX
 LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
@@ -195,12 +205,12 @@ EXT_LINKER_CMD_FLAG = -Xlinker -filelist -Xlinker
 GECKO_SDK = $(GECKO_BASE)/osx
 OSX_SDK_ROOT = /Developer/SDKs/MacOSX10.4u.sdk
 
-FF_LIBS = -L$(GECKO_SDK)/gecko_sdk/bin -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4
-ifeq ($(FF_MOD), experimental_19)
-FF_LIBS +=  $(GECKO_SDK)/gecko_sdk/lib/XUL $(GECKO_SDK)/gecko_sdk/lib/libxpcomglue_s.a -lsqlite3 -lsmime3 -lssl3 -lnss3 -lnssutil3 -lsoftokn3
-else
-FF_LIBS +=  -lxpcom_core
-endif
+# Keep these in sync:
+FF2_LIBS = -L$(GECKO_SDK)/gecko_sdk/bin -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4
+FF3_LIBS = -L$(GECKO_SDK)/gecko_sdk/bin -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4
+# Append differences here:
+FF2_LIBS +=  -lxpcom_core
+FF3_LIBS +=  $(GECKO_SDK)/gecko_sdk/lib/XUL $(GECKO_SDK)/gecko_sdk/lib/libxpcomglue_s.a -lsqlite3 -lsmime3 -lssl3 -lnss3 -lnssutil3 -lsoftokn3
 endif
 
 ######################################################################
@@ -310,9 +320,13 @@ endif
 SHLIBFLAGS_NOPDB = $(LINKFLAGS) /DLL
 SHLIBFLAGS = $(SHLIBFLAGS_NOPDB) /PDB:"$(@D)/$(MODULE).pdb"
 
-FF_SHLIBFLAGS_dbg = /NODEFAULTLIB:MSVCRT
-FF_SHLIBFLAGS_opt = /NODEFAULTLIB:MSVCRT
-FF_SHLIBFLAGS = $(FF_SHLIBFLAGS_$(MODE))
+FF2_SHLIBFLAGS_dbg = /NODEFAULTLIB:MSVCRT
+FF2_SHLIBFLAGS_opt = /NODEFAULTLIB:MSVCRT
+FF2_SHLIBFLAGS = $(FF2_SHLIBFLAGS_$(MODE))
+
+FF3_SHLIBFLAGS_dbg = /NODEFAULTLIB:MSVCRT
+FF3_SHLIBFLAGS_opt = /NODEFAULTLIB:MSVCRT
+FF3_SHLIBFLAGS = $(FF3_SHLIBFLAGS_$(MODE))
 
 IE_SHLIBFLAGS_dbg =
 IE_SHLIBFLAGS_opt =
@@ -328,7 +342,8 @@ EXT_LINKER_CMD_FLAG = @
 
 GECKO_SDK = $(GECKO_BASE)/win32
 
-FF_LIBS = $(GECKO_LIB)/xpcom.lib $(GECKO_LIB)/xpcomglue_s.lib $(GECKO_LIB)/nspr4.lib $(GECKO_LIB)/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib comdlg32.lib
+FF2_LIBS = $(GECKO_LIB)/xpcom.lib $(GECKO_LIB)/xpcomglue_s.lib $(GECKO_LIB)/nspr4.lib $(GECKO_LIB)/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib comdlg32.lib
+FF3_LIBS = $(GECKO_LIB)/xpcom.lib $(GECKO_LIB)/xpcomglue_s.lib $(GECKO_LIB)/nspr4.lib $(GECKO_LIB)/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib comdlg32.lib
 ifeq ($(OS),win32)
 IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib comdlg32.lib
 else # wince
@@ -338,11 +353,11 @@ NPAPI_LIBS =
 
 # Other tools specific to win32/wince builds.
 RC = rc
-RCFLAGS_dbg = /DDEBUG=1
-RCFLAGS_opt = /DNDEBUG=1
-RCFLAGS = $(RCFLAGS_$(MODE)) /d "_UNICODE" /d "UNICODE" /i $(OUTDIR)/$(OS)-$(ARCH) /l 0x409 /fo"$(@D)/$*.res"
+RCFLAGS_dbg = -DDEBUG=1
+RCFLAGS_opt = -DNDEBUG=1
+RCFLAGS = $(RCFLAGS_$(MODE)) -D_UNICODE -DUNICODE -I$(COMMON_OUTDIR) -I$($(BROWSER)_OUTDIR) /l 0x409 /fo"$(@D)/$*.res"
 ifeq ($(OS),wince)
-RCFLAGS += /d "WINCE" /d "_WIN32" /d "_WIN32_WCE" /d "UNDER_CE" /n /i ../
+RCFLAGS += -DWINCE -D_WIN32 -D_WIN32_WCE -DUNDER_CE -N -I..
 endif
 
 GGUIDGEN = tools/gguidgen.exe

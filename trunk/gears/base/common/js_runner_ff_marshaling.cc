@@ -85,7 +85,7 @@
 // TODO(cprince): see if we can remove nsIVariant.h/nsMemory.h after cleanup.
 #include <gecko_internal/xptinfo.h>
 
-#include "ff/genfiles/base_interface_ff.h"
+#include "genfiles/base_interface_ff.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"

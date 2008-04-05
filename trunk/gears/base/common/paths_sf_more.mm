@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#import "common/genfiles/product_constants.h" // from OUTDIR
+#import "genfiles/product_constants.h"
 #import "gears/base/common/common.h"
 #import "gears/base/safari/scoped_cf.h"
 #import "gears/base/common/string_utils.h"

@@ -22,7 +22,7 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#if defined(GECKO_19)
+#if BROWSER_FF3
 // This needs to be here because of following: common_ff.h defines
 // FORCE_PR_LOG and includes prlog.h, which defines PR_LOGGING however,
 // appearently with gecko 1.9 some other header includes prlog.h before
@@ -62,7 +62,7 @@
 #include "gears/ui/firefox/ui_utils.h"
 #include "gears/workerpool/firefox/workerpool.h"
 
-#if !defined(GECKO_19)
+#if BROWSER_FF2
 #include <gecko_internal/nsIEventQueueService.h> // for event loop
 #endif
 

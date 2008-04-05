@@ -27,7 +27,7 @@
 #define GEARS_BASE_FIREFOX_FACTORY_H__
 
 #include <vector>
-#include "ff/genfiles/factory.h" // from OUTDIR
+#include "genfiles/factory.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/html_event_monitor.h"

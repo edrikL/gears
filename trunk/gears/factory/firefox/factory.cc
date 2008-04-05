@@ -30,7 +30,7 @@
 
 #include "gears/factory/firefox/factory.h"
 
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "genfiles/product_constants.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/string16.h"

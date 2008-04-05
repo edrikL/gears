@@ -24,9 +24,9 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 LANGUAGE 0x09, 0x01
-permissions_dialog.html      HTML "common/genfiles/i18n/en-US/permissions_dialog.html"
+permissions_dialog.html      HTML "genfiles/i18n/en-US/permissions_dialog.html"
 permissions_dialog.html.end  HTML {"\0END\0"}
-settings_dialog.html         HTML "common/genfiles/i18n/en-US/settings_dialog.html"
+settings_dialog.html         HTML "genfiles/i18n/en-US/settings_dialog.html"
 settings_dialog.html.end     HTML {"\0END\0"} 
-shortcuts_dialog.html        HTML "common/genfiles/i18n/en-US/shortcuts_dialog.html"
+shortcuts_dialog.html        HTML "genfiles/i18n/en-US/shortcuts_dialog.html"
 shortcuts_dialog.html.end    HTML {"\0END\0"}

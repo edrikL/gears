@@ -29,7 +29,7 @@
 #include <gecko_sdk/include/nsComponentManagerUtils.h>
 #include <gecko_internal/nsIVariant.h>
 
-#include "ff/genfiles/database.h" // from OUTDIR
+#include "genfiles/database.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 

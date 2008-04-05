@@ -36,7 +36,7 @@
 #include <gecko_internal/nsIScriptObjectPrincipal.h>
 #include <gecko_internal/nsITimer.h>
 
-#if defined(GECKO_19)
+#if BROWSER_FF3
 #include <gecko_sdk/include/nsIArray.h>
 #include <gecko_sdk/include/nsIMutableArray.h>
 #include <gecko_internal/nsIXPConnect.h>
@@ -47,19 +47,19 @@
 #endif
 #include "gears/base/common/js_runner.h"
 
-#include "ff/genfiles/console.h"
-#include "ff/genfiles/database.h"
-#include "ff/genfiles/httprequest.h"
+#include "genfiles/console.h"
+#include "genfiles/database.h"
+#include "genfiles/httprequest.h"
 
 #ifdef OFFICIAL_BUILD
 // The Image and Blgo APIs have not been finalized for official builds
 #else
-#include "ff/genfiles/blob_ff.h"
-#include "ff/genfiles/image.h"
+#include "genfiles/blob_ff.h"
+#include "genfiles/image.h"
 #endif
 
-#include "ff/genfiles/localserver.h"
-#include "ff/genfiles/workerpool.h"
+#include "genfiles/localserver.h"
+#include "genfiles/workerpool.h"
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/html_event_monitor.h"
@@ -286,7 +286,7 @@ class JsRunner : public JsRunnerBase {
     gc_timer_ = do_CreateInstance("@mozilla.org/timer;1", &result);
 
     if (NS_SUCCEEDED(result)) {
-#if !defined(GECKO_19)
+#if BROWSER_FF2
       // Turning off idle causes the callback to be invoked in this thread,
       // instead of in the Timer idle thread.
       nsCOMPtr<nsITimerInternal> timer_internal(do_QueryInterface(gc_timer_));
@@ -800,7 +800,7 @@ bool DocumentJsRunner::InvokeCallbackSpecialized(
   nsresult result = NS_OK;
   jsval retval = 0;
 
-#if defined(GECKO_19)
+#if BROWSER_FF3
   JSContext* cx = reinterpret_cast<JSContext*>(sc->GetNativeContext());
 
   nsCOMPtr<nsIXPConnect> xpc = do_GetService("@mozilla.org/js/xpc/XPConnect;1",

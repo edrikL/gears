@@ -26,7 +26,7 @@
 #ifndef GEARS_LOCALSERVER_FIREFOX_LOCALSERVER_FF_H__
 #define GEARS_LOCALSERVER_FIREFOX_LOCALSERVER_FF_H__
 
-#include "ff/genfiles/localserver.h" // from OUTDIR
+#include "genfiles/localserver.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 

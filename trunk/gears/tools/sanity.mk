@@ -37,10 +37,12 @@ endif
 # Check that our browser target is relevant for current build OS.
 ifdef CMD_LINE_BROWSER
   ifeq ($(OS),win32)
+    ifneq ($(BROWSER),FF2)
+    ifneq ($(BROWSER),FF3)
     ifneq ($(BROWSER),IE)
-    ifneq ($(BROWSER),FF)
     ifneq ($(BROWSER),NPAPI)
-      $(error On Windows, BROWSER can only be one of: FF | IE | NPAPI)
+      $(error On Windows, BROWSER can only be one of: FF2 | FF3 | IE | NPAPI)
+    endif
     endif
     endif
     endif
@@ -51,14 +53,18 @@ ifdef CMD_LINE_BROWSER
     endif
   else
   ifeq ($(OS),osx)
-    ifneq ($(BROWSER),FF)
-      $(error On OS X, BROWSER can only be one of: FF)
+    ifneq ($(BROWSER),FF2)
+    ifneq ($(BROWSER),FF3)
+      $(error On OS X, BROWSER can only be one of: FF2 | FF3)
+    endif
     endif
   else
   ifeq ($(OS),linux)
-    ifneq ($(BROWSER),FF)
+    ifneq ($(BROWSER),FF2)
+    ifneq ($(BROWSER),FF3)
     ifneq ($(BROWSER),NPAPI)
-      $(error On Linux, BROWSER can only be one of: FF | NPAPI)
+      $(error On Linux, BROWSER can only be one of: FF2 | FF3 | NPAPI)
+    endif
     endif
     endif
   else

@@ -32,7 +32,7 @@
 void ThrowGlobalError(JsRunnerInterface *js_runner,
                       const std::string16 &message) {
   if (!js_runner) { return; }
-#if defined(GECKO_19)
+#if BROWSER_FF3
   JS_SetPendingException(
       js_runner->GetContext(),
       STRING_TO_JSVAL(JS_NewUCStringCopyZ(

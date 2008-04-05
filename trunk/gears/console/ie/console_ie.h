@@ -26,7 +26,7 @@
 #ifndef GEARS_CONSOLE_IE_CONSOLE_IE_H__
 #define GEARS_CONSOLE_IE_CONSOLE_IE_H__
 
-#include "ie/genfiles/interfaces.h" // from OUTDIR
+#include "genfiles/interfaces.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"

@@ -27,7 +27,7 @@
 #define GEARS_LOCALSERVER_FIREFOX_RESOURCE_STORE_FF_H__
 
 #include <deque>
-#include "ff/genfiles/localserver.h" // from OUTDIR
+#include "genfiles/localserver.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"

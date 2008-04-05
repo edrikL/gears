@@ -30,7 +30,7 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include "winres.h"
-#include "common/genfiles/product_version.rc"
+#include "genfiles/product_version.rc"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -58,13 +58,13 @@ END
 2 TEXTINCLUDE 
 BEGIN
     "#include ""winres.h""\r\n"
-    "#include ""common/genfiles/product_version.rc""\r\n"
+    "#include ""genfiles/product_version.rc""\r\n"
     "\0"
 END
 
 3 TEXTINCLUDE 
 BEGIN
-    "1 TYPELIB ""ie/genfiles/interfaces.tlb""\r\n"
+    "1 TYPELIB ""genfiles/interfaces.tlb""\r\n"
     "\0"
 END
 

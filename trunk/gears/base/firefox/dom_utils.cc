@@ -36,7 +36,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_internal/nsIDocShell.h>
 #include <gecko_internal/nsIDocShellTreeItem.h>
 #include <gecko_internal/nsIDocShellTreeOwner.h>
-#if defined(GECKO_19)
+#if BROWSER_FF3
 #include <gecko_internal/nsDOMJSUtils.h>
 #endif
 #include <gecko_internal/nsIDOM3Node.h>
@@ -60,7 +60,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 // The IID for nsIContent in different versions of Firefox/Gecko
 // TODO(michaeln): Add to this list as new versions show up
 
-#if defined(GECKO_19)
+#if BROWSER_FF3
 // Firefox 3.0.x
 #define NS_ICONTENT_IID_GECKO190 \
 { 0xd3434698, 0x3a16, 0x4dbe, \
@@ -79,7 +79,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #endif
 
 static const nsIID kPossibleNsContentIIDs[] = {
-#if defined(GECKO_19)
+#if BROWSER_FF3
       NS_ICONTENT_IID_GECKO190,
 #else
       NS_ICONTENT_IID_GECKO180,

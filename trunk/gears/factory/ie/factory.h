@@ -27,12 +27,12 @@
 #define GEARS_FACTORY_IE_FACTORY_H__
 
 #include <objsafe.h>
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "genfiles/product_constants.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/ie/resource.h"  // for .rgs resource ids (IDR_*)
-#include "ie/genfiles/interfaces.h"  // from OUTDIR
+#include "genfiles/interfaces.h"
 
 
 // The factory class satisfies requests for Gears objects matching specific

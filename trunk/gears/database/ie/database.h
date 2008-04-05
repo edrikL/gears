@@ -33,7 +33,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/stopwatch.h"
-#include "ie/genfiles/interfaces.h" // from OUTDIR
+#include "genfiles/interfaces.h"
 
 struct sqlite3;
 struct sqlite3_stmt;

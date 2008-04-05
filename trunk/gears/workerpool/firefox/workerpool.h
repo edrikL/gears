@@ -30,7 +30,7 @@
 #include <gecko_sdk/include/nsComponentManagerUtils.h>
 #include <gecko_internal/nsIVariant.h>
 
-#include "ff/genfiles/workerpool.h" // from OUTDIR
+#include "genfiles/workerpool.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_marshal.h"
@@ -96,9 +96,7 @@ class GearsWorkerPool
 
 class PoolThreadsManager
     : JsErrorHandlerInterface {
-//#if defined(GECKO_19)
   friend struct ThreadsEvent; // for OnReceiveThreadsEvent
-//#endif
  public:
   PoolThreadsManager(const SecurityOrigin &page_security_origin,
                      JsRunnerInterface *root_js_runner);

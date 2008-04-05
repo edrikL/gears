@@ -43,7 +43,7 @@
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
-#include "ie/genfiles/interfaces.h" // from OUTDIR
+#include "genfiles/interfaces.h"
 
 const UINT WM_WORKERPOOL_ONMESSAGE = (WM_USER + 0);
 const UINT WM_WORKERPOOL_ONERROR = (WM_USER + 1);

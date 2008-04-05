@@ -26,7 +26,7 @@
 #ifdef WIN32
 #include <windows.h>
 #endif
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "genfiles/product_constants.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/factory/common/factory_utils.h"
@@ -42,7 +42,7 @@
 #include "gears/factory/safari/factory_utils.h"
 #endif
 
-#if defined(GECKO_19)
+#if BROWSER_FF3
 #include <gecko_sdk/include/nsCOMPtr.h>
 #include <gecko_sdk/include/nsISupportsPrimitives.h>
 #include <gecko_sdk/include/nsIProperties.h>

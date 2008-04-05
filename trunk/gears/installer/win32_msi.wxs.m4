@@ -136,11 +136,15 @@ m4_ifdef(~`DEBUG`~,~`m4_dnl
                   Guid='$(var.OurComponentGUID_FFComponentsDirFiles)'>
                   <File Id='ff_bootstrap.js' Name='bootstrap.js'
                     DiskId='1' Source="$(var.OurFFPath)/components/bootstrap.js" />
-                  <File Id='ff_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
+                  <File Id='ff3_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.dll" />
+                  <File Id='ff2_dll' Name='PRODUCT_SHORT_NAME_UQ-ff2.dll' DiskId='1'
+                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ-ff2.dll" />
 m4_ifdef(~`DEBUG`~,~`m4_dnl
-                  <File Id='ff_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
+                  <File Id='ff3_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.pdb" />
+                  <File Id='ff2_pdb' Name='PRODUCT_SHORT_NAME_UQ-ff2.pdb' DiskId='1'
+                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ-ff2.pdb" />
 `~)
                   <File Id='ff_xpt' Name='PRODUCT_SHORT_NAME_UQ.xpt' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.xpt" />

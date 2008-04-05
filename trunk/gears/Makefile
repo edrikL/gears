@@ -301,11 +301,11 @@ THIRD_PARTY_CPPSRCS	+= \
 		$(NULL)
 
 
-FF_VPATH	+= \
+FF3_VPATH	+= \
 		base/common \
 		$(NULL)
 
-FF_CPPSRCS	+= \
+FF3_CPPSRCS	+= \
 		exception_handler_win32.cc \
 		$(NULL)
 
@@ -375,7 +375,7 @@ COMMON_CPPSRCS	+= \
 		$(NULL)
 # WARNING: Think carefully before listing any non-third-party C/C++ files in
 # COMMON_*SRCS. Such files only get built once per platform (not per browser),
-# and BROWSER_* #defines are not obeyed. Instead, use FF_CPPSRCS and IE_CPPSRCS
+# and BROWSER_* #defines are not obeyed.  Instead, use $(BROWSER)_CPPSRCS
 # when possible.
 # One important exception: unit-tested code is only built once per platform, so
 # it should be listed in CPPSRCS. Thus it must not use any BROWSER_* #defines,
@@ -434,20 +434,20 @@ $(BROWSER)_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # base/firefox
 
-FF_VPATH	+= \
+FF3_VPATH	+= \
 		base/common \
 		base/firefox \
 		$(NULL)
 
-FF_M4SRCS	+= \
+FF3_M4SRCS	+= \
 		install.rdf.m4 \
 		$(NULL)
 
-FF_IDLSRCS	+= \
+FF3_IDLSRCS	+= \
 		base_interface_ff.idl \
 		$(NULL)
 
-FF_CPPSRCS	+= \
+FF3_CPPSRCS	+= \
 		dom_utils.cc \
 		file_posix.cc \
 		file_win32.cc \
@@ -577,9 +577,9 @@ VISTA_BROKER_CPPSRCS += \
 #-----------------------------------------------------------------------------
 # launch_url_with_browser
 
-# TODO(cprince): Break all ties between OSX_LAUNCHURL and FF_VPATH when we
+# TODO(cprince): Break all ties between OSX_LAUNCHURL and FF3_VPATH when we
 # support a non-Firefox browser on Mac.
-FF_VPATH += \
+FF3_VPATH += \
 		base/safari \
 		$(NULL)
 
@@ -604,19 +604,19 @@ $(BROWSER)_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # console/firefox
 
-FF_VPATH	+= \
+FF3_VPATH	+= \
 		console/firefox \
 		$(NULL)
 
-FF_M4SRCS	+= \
+FF3_M4SRCS	+= \
 		console.idl.m4 \
 		$(NULL)
 
-FF_IDLSRCS	+= \
+FF3_IDLSRCS	+= \
 		console.idl \
 		$(NULL)
 
-FF_CPPSRCS	+= \
+FF3_CPPSRCS	+= \
 		console_ff.cc \
 		$(NULL)
 
@@ -658,19 +658,19 @@ $(BROWSER)_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # database/firefox
 
-FF_VPATH	+= \
+FF3_VPATH	+= \
 		database/firefox \
 		$(NULL)
 
-FF_M4SRCS	+= \
+FF3_M4SRCS	+= \
 		database.idl.m4 \
 		$(NULL)
 
-FF_IDLSRCS	+= \
+FF3_IDLSRCS	+= \
 		database.idl \
 		$(NULL)
 
-FF_CPPSRCS	+= \
+FF3_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -763,10 +763,10 @@ COMMON_M4SRCS_I18N += \
 		shortcuts_dialog.html.m4 \
 		$(NULL)
 
-FF_VPATH	+= \
+FF3_VPATH	+= \
 		$(NULL)
 
-FF_M4SRCS_I18N	+= \
+FF3_M4SRCS_I18N	+= \
 		i18n.dtd.m4 \
 		$(NULL)
 
@@ -795,21 +795,21 @@ $(BROWSER)_CPPSRCS += \
 #-----------------------------------------------------------------------------
 # ui/firefox
 
-FF_VPATH	+= \
+FF3_VPATH	+= \
 		ui/firefox \
 		$(NULL)
 
-FF_M4SRCS	+= \
+FF3_M4SRCS	+= \
 		browser-overlay.js.m4 \
 		browser-overlay.xul.m4 \
 		chrome.manifest.m4 \
 		$(NULL)
 
-FF_IDLSRCS	+= \
+FF3_IDLSRCS	+= \
 		ui_utils.idl \
 		$(NULL)
 
-FF_CPPSRCS	+= \
+FF3_CPPSRCS	+= \
 		ui_utils.cc \
 		$(NULL)
 
@@ -875,20 +875,20 @@ NPAPI_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # workerpool/firefox
 
-FF_VPATH	+= \
+FF3_VPATH	+= \
 		workerpool/common \
 		workerpool/firefox \
 		$(NULL)
 
-FF_M4SRCS	+= \
+FF3_M4SRCS	+= \
 		workerpool.idl.m4 \
 		$(NULL)
 
-FF_IDLSRCS	+= \
+FF3_IDLSRCS	+= \
 		workerpool.idl \
 		$(NULL)
 
-FF_CPPSRCS	+= \
+FF3_CPPSRCS	+= \
 		workerpool.cc \
 		workerpool_utils.cc \
 		$(NULL)
@@ -957,21 +957,21 @@ $(BROWSER)_CPPSRCS += \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
-# localserver/ff
+# localserver/firefox
 
-FF_VPATH	+= \
+FF3_VPATH	+= \
 		localserver/firefox \
 		$(NULL)
 
-FF_M4SRCS	+= \
+FF3_M4SRCS	+= \
 		localserver.idl.m4 \
 		$(NULL)
 
-FF_IDLSRCS	+= \
+FF3_IDLSRCS	+= \
 		localserver.idl \
 		$(NULL)
 
-FF_CPPSRCS	+= \
+FF3_CPPSRCS	+= \
 		async_task_ff.cc \
 		cache_intercept.cc \
 		file_submitter_ff.cc \
@@ -1041,21 +1041,21 @@ NPAPI_CPPSRCS	+= \
 
 
 #-----------------------------------------------------------------------------
-# httprequest/ff
+# httprequest/firefox
 
-FF_VPATH	+= \
+FF3_VPATH	+= \
 		httprequest/firefox \
 		$(NULL)
 
-FF_M4SRCS	+= \
+FF3_M4SRCS	+= \
 		httprequest.idl.m4 \
 		$(NULL)
 
-FF_IDLSRCS	+= \
+FF3_IDLSRCS	+= \
 		httprequest.idl \
 		$(NULL)
 
-FF_CPPSRCS	+= \
+FF3_CPPSRCS	+= \
 		httprequest_ff.cc \
 		$(NULL)
 
@@ -1105,11 +1105,11 @@ $(BROWSER)_CPPSRCS += \
 		$(NULL)
 
 # (browser-specific)
-FF_IDLSRCS	+= \
+FF3_IDLSRCS	+= \
 		blob_ff.idl \
 		$(NULL)
 
-FF_CPPSRCS	+= \
+FF3_CPPSRCS	+= \
 		blob_ff.cc \
 		blob_input_stream_ff.cc \
 		blob_test.cc \
@@ -1130,7 +1130,7 @@ NPAPI_CPPSRCS	+= \
 
 # Blob internal tests
 # TODO(bpm): Make this cross-browser, not Firefox-only.
-FF_CPPSRCS	+= \
+FF3_CPPSRCS	+= \
 		blob_input_stream_ff_test.cc \
 		$(NULL)
 endif # not OFFICIAL_BUILD
@@ -1140,20 +1140,20 @@ endif # not OFFICIAL_BUILD
 # image
 
 ifneq ($(OFFICIAL_BUILD),1)
-FF_VPATH	+= \
+FF3_VPATH	+= \
 		image/common \
 		image/firefox \
 		$(NULL)
 
-FF_M4SRCS	+= \
+FF3_M4SRCS	+= \
 		image.idl.m4 \
 		$(NULL)
 
-FF_IDLSRCS	+= \
+FF3_IDLSRCS	+= \
 		image.idl \
 		$(NULL)
 
-FF_CPPSRCS	+= \
+FF3_CPPSRCS	+= \
 		image.cc \
 		image_ff.cc \
 		image_loader_ff.cc \
@@ -1179,18 +1179,18 @@ endif # not wince
 endif # not OFFICIAL_BUILD
 
 #-----------------------------------------------------------------------------
-# factory/ff
+# factory/firefox
 
-FF_VPATH	+= \
+FF3_VPATH	+= \
 		factory/common \
 		factory/firefox \
 		$(NULL)
 
-FF_IDLSRCS	+= \
+FF3_IDLSRCS	+= \
 		factory.idl \
 		$(NULL)
 
-FF_CPPSRCS	+= \
+FF3_CPPSRCS	+= \
 		factory.cc \
 		factory_utils.cc \
 		$(NULL)
@@ -1265,6 +1265,16 @@ IE_CPPSRCS += \
 		$(NULL)
 
 endif # wince
+
+
+#-----------------------------------------------------------------------------
+# Add any hard-coded "FF3_" sources to the FF2_ sources.
+
+FF2_VPATH += $(FF3_VPATH)
+FF2_M4SRCS += $(FF3_M4SRCS)
+FF2_M4SRCS_I18N += $(FF3_M4SRCS_I18N)
+FF2_IDLSRCS += $(FF3_IDLSRCS)
+FF2_CPPSRCS += $(FF3_CPPSRCS)
 
 
 #-----------------------------------------------------------------------------

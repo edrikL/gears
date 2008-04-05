@@ -26,7 +26,7 @@
 #ifdef WINCE
   #include "aygshell.h"
   #include "afxres.h"
-  #include "common/genfiles/product_constants.h"
+  #include "genfiles/product_constants.h"
 #else
   #include "WinResrc.h"
 #endif
@@ -53,7 +53,7 @@ icon_32x32.png.end         HTML  {"\0END\0"}
 json_noeval.js             HTML  "third_party/jsonjs/json_noeval.js"
 json_noeval.js.end         HTML  {"\0END\0"}
 
-#include "ie/genfiles/ui_html.rc"
+#include "genfiles/ui_html.rc"
 
 //-----------------------------------------------------------------------------
 // Dialogs
