@@ -25,7 +25,7 @@
 
 #include "gears/database2/interpreter.h"
 
-#include "gears/database2/command.h"
+#include "gears/database2/commands.h"
 
 void Database2Interpreter::Run(Database2Command *command) {
   assert(command);

@@ -39,6 +39,20 @@ void Database2Statement::InvokeCallback(Database2Transaction* tx) {
   }
 }
 
-void Database2Statement::InvokeErrorCallback(Database2Transaction* tx, 
-                                             Database2Error* error) {
+void Database2Statement::InvokeErrorCallback(Database2Transaction* tx,
+                                             JsObject* error) {
+}
+
+bool Database2Statement::Create(const std::string16 &sql_statement, 
+                                const JsArray &sql_arguments, 
+                                JsRootedCallback *callback, 
+                                JsRootedCallback *error_callback, 
+                                Database2Statement **instance) {
+  Database2Statement* statement = new Database2Statement();
+  statement->sql_statement_.assign(sql_statement);
+  statement->callback_.reset(callback);
+  statement->error_callback_.reset(error_callback);
+  // TODO(dimitri.glazkov): convert sql_arguments to JsParamToSend[]
+  *instance = statement;
+  return true;
 }

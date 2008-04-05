@@ -28,7 +28,7 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-#include "gears/base/common/js_types.h" // for JsCallContext
+#include "gears/base/common/js_types.h"
 
 // Allows JavaScript to create database objects. Could be extended in the future
 // with removeDatabase() and listDatabases().

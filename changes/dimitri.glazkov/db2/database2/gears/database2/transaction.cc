@@ -26,7 +26,7 @@
 #include "gears/database2/transaction.h"
 
 #include "gears/base/common/dispatcher.h"
-#include "gears/base/common/js_types.h" // for JsCallContext
+#include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/database2/database2.h"

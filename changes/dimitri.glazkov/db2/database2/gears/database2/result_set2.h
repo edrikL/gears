@@ -28,7 +28,7 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-#include "gears/base/common/js_types.h" // for JsCallContext
+#include "gears/base/common/js_types.h"
 
 // interface SQLResultSet
 class Database2ResultSet : public ModuleImplBaseClassVirtual {

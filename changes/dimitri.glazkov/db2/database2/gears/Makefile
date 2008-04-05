@@ -761,6 +761,7 @@ SHARED_VPATH += \
 
 SHARED_CPPSRCS += \
 		connection.cc \
+		commands.cc \
 		database2.cc \
 		interpreter.cc \
 		manager.cc \

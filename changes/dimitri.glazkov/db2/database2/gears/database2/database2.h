@@ -28,7 +28,7 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-#include "gears/base/common/js_types.h" // for JsCallContext
+#include "gears/base/common/js_types.h"
 #include "gears/base/common/string16.h"
 #include "gears/database2/interpreter.h"
 #include "gears/database2/thread_safe_queue.h"
@@ -39,10 +39,10 @@ class Database2Transaction;
 typedef Database2ThreadSafeQueue<Database2Transaction> 
     Database2TransactionQueue;
 
- //Implements the HTML5 database interface, which allows the creation of 
- //transactions. We also have our own proprietary synchronousTransaction() 
- //method. This class also has a reference to a Database2Connection object which
- //it shares with all transactions it creates.
+// Implements the HTML5 database interface, which allows the creation of 
+// transactions. We also have our own proprietary synchronousTransaction() 
+// method. This class also has a reference to a Database2Connection object which
+// it shares with all transactions it creates.
 class Database2 : public ModuleImplBaseClassVirtual {
 public:
   Database2()

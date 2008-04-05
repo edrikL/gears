@@ -29,7 +29,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/string16.h"
-#include "gears/base/common/js_types.h" // for JsCallContext
+#include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/database2/thread_safe_queue.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
@@ -40,7 +40,7 @@ class Database2Statement;
 
 class Database2Transaction : public ModuleImplBaseClassVirtual {
  public:
-  Database2Transaction::Database2Transaction() : 
+  Database2Transaction::Database2Transaction() :
     ModuleImplBaseClassVirtual("Database2Transaction") {}
 
   // IN: in string sqlDatabase2Statement, 
@@ -54,18 +54,14 @@ class Database2Transaction : public ModuleImplBaseClassVirtual {
 
   void ExecuteNextStatement(JsCallContext *context);
 
-  // TODO(dglazkov): remove JsTokenIsNullOrUndefined check after merging with
-  // trunk
-  bool HasErrorCallback() const { 
-    return error_callback_.get() != NULL
-      && !JsTokenIsNullOrUndefined(error_callback_->token()); 
+  bool HasErrorCallback() const {
+    assert(error_callback_.get());
+    return !JsTokenIsNullOrUndefined(error_callback_->token());
   }
 
-  // TODO(dglazkov): remove JsTokenIsNullOrUndefined check after merging with
-  // trunk
   bool HasSuccessCallback() const {
-    return success_callback_.get() != NULL
-      && !JsTokenIsNullOrUndefined(success_callback_->token());
+    assert(success_callback_.get());
+    return !JsTokenIsNullOrUndefined(success_callback_->token());
   }
 
   void InvokeCallback();

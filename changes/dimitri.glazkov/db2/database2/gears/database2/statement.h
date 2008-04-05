@@ -27,45 +27,40 @@
 #define GEARS_DATABASE2_STATEMENT_H__
 
 #include "gears/base/common/common.h"
-#include "gears/base/common/js_types.h" // for JsCallContext
+#include "gears/base/common/js_types.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 // forward declarations
-class Database2Error;
 class Database2;
 class Database2Transaction;
 
 // represents Database2Statement
 class Database2Statement {
  public:
-  Database2Statement(const std::string16 &sql_statement, 
-                     const JsArray &sql_arguments,
-                     JsRootedCallback *callback,
-                     JsRootedCallback *error_callback) :
-      sql_statement_(sql_statement), 
-      sql_arguments_(sql_arguments), callback_(callback), 
-      error_callback_(error_callback) {}
+  Database2Statement() {}
 
-  // TODO(dglazkov): remove JsTokenIsNullOrUndefined check after merging with
-  // trunk
-  bool HasCallback() const { 
-    return callback_.get() != NULL
-      && !JsTokenIsNullOrUndefined(callback_->token()); 
+  bool HasCallback() const {
+    assert(callback_.get());
+    return !JsTokenIsNullOrUndefined(callback_->token());
   }
 
-  // TODO(dglazkov): remove JsTokenIsNullOrUndefined check after merging with
-  // trunk
-  bool HasErrorCallback() const { 
-    return error_callback_.get() != NULL
-      && !JsTokenIsNullOrUndefined(error_callback_->token());
+  bool HasErrorCallback() const {
+    assert(error_callback_.get());
+    return !JsTokenIsNullOrUndefined(error_callback_->token());
   }
 
   void InvokeCallback(Database2Transaction* tx);
-  void InvokeErrorCallback(Database2Transaction* tx, Database2Error* error);
+  void InvokeErrorCallback(Database2Transaction* tx, JsObject* error);
+
+  static bool Create(const std::string16 &sql_statement,
+                     const JsArray &sql_arguments,
+                     JsRootedCallback *callback,
+                     JsRootedCallback *error_callback,
+                     Database2Statement** instance);
 
  private:
   std::string16 sql_statement_;
-  JsArray sql_arguments_;
+  JsParamToSend* sql_arguments_;
   scoped_ptr<JsRootedCallback> callback_;
   scoped_ptr<JsRootedCallback> error_callback_;
 
