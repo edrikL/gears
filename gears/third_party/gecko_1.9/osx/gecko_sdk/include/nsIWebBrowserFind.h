@@ -1,1 +1,0 @@
-/Users/aa/src-mozilla/obj-xulrunner/ppc/embedding/components/find/public/_xpidlgen/nsIWebBrowserFind.h

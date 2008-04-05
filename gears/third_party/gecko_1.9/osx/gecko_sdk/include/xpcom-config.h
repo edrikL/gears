@@ -1,1 +1,0 @@
-/Users/aa/src-mozilla/obj-xulrunner/ppc/xpcom/xpcom-config.h

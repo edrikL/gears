@@ -1,1 +1,0 @@
-/Users/aa/src-mozilla/obj-xulrunner/ppc/security/manager/ssl/public/_xpidlgen/nsIX509Cert.h
