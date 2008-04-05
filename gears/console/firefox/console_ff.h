@@ -26,7 +26,7 @@
 #ifndef GEARS_CONSOLE_FIREFOX_CONSOLE_FF_H__
 #define GEARS_CONSOLE_FIREFOX_CONSOLE_FF_H__
 
-#include "ff/genfiles/console.h" // from OUTDIR
+#include "genfiles/console.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"

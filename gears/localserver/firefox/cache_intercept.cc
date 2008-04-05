@@ -43,10 +43,10 @@
 #include <gecko_internal/nsICacheService.h>
 #include <gecko_internal/nsICacheSession.h>
 #include <gecko_internal/nsICacheVisitor.h>
-#if defined(GECKO_19)
+#if BROWSER_FF3
 #include <gecko_internal/nsThreadUtils.h>
 #endif
-#include "ff/genfiles/localserver.h"  // from OUTDIR
+#include "genfiles/localserver.h"
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/factory/common/factory_utils.h"
@@ -598,7 +598,7 @@ NS_IMETHODIMP CacheIntercept::CreateSession(const char *client_id,
   return NS_OK;
 }
 
-#if defined(GECKO_19)
+#if BROWSER_FF3
 NS_IMETHODIMP CacheIntercept::CreateTemporaryClientID(
                                   nsCacheStoragePolicy policy,
                                   nsACString &retval) {

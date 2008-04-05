@@ -28,7 +28,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "genfiles/product_constants.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/npapi/module_wrapper.h"

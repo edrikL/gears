@@ -31,7 +31,7 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
-#include "ie/genfiles/interfaces.h" // from OUTDIR
+#include "genfiles/interfaces.h"
 
 //------------------------------------------------------------------------------
 // GearsHttpRequest

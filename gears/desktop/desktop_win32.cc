@@ -37,7 +37,7 @@
 
 #include "gears/desktop/desktop.h"
 
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "genfiles/product_constants.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/int_types.h"

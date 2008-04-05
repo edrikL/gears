@@ -35,7 +35,7 @@
 #include <gecko_sdk/include/nsIHttpChannel.h>
 #include <gecko_internal/nsICachingChannel.h>
 #include <gecko_internal/nsIEncodedChannel.h>
-#if defined(GECKO_19)
+#if BROWSER_FF3
 #include <gecko_internal/nsIThread.h>
 #include <gecko_internal/nsThreadUtils.h>
 #else
@@ -394,7 +394,7 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
     http_channel->SetRequestMethod(method);
   }
 
-#if !defined(GECKO_19)
+#if BROWSER_FF2
   nsCOMPtr<nsIEventQueueService> event_queue_service;
   nsCOMPtr<nsIEventQueue> modal_event_queue;
 
@@ -414,7 +414,7 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
   rv = channel_->AsyncOpen(this, nsnull);
 
   if (NS_FAILED(rv)) {
-#if !defined(GECKO_19)
+#if BROWSER_FF2
     if (!async_) {
       event_queue_service->PopThreadEventQueue(modal_event_queue);
     }
@@ -423,7 +423,7 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
   }
 
   if (!async_) {
-#if defined(GECKO_19)
+#if BROWSER_FF3
     nsCOMPtr<nsIThread> thread;
     if (NS_FAILED(NS_GetCurrentThread(getter_AddRefs(thread)))) {
       return false;

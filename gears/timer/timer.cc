@@ -26,7 +26,7 @@
 #include "gears/timer/timer.h"
 
 #if BROWSER_FF
-#if !defined(GECKO_19)
+#if BROWSER_FF2
 #include <gecko_internal/nsITimerInternal.h>
 #endif
 #endif
@@ -269,7 +269,7 @@ int GearsTimer::CreateTimer(const TimerInfo &timer_info, int timeout) {
     return 0;
   }
 
-#if !defined(GECKO_19)          // FIXME: kimmo.t.kinnunen@nokia.com: Timers in gecko 1.9 are always in this thread by default?
+#if BROWSER_FF2          // FIXME: kimmo.t.kinnunen@nokia.com: Timers in gecko 1.9 are always in this thread by default?
   // Turning off idle causes the callback to be invoked in this thread,
   // instead of in the Timer idle thread.
   nsCOMPtr<nsITimerInternal> timer_internal(

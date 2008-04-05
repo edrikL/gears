@@ -94,7 +94,7 @@ static bool JsTokenToModule(JsContextPtr context, JsToken in,
   if (NS_FAILED(nr))
     return false;
 
-#ifdef GECKO_19
+#if BROWSER_FF3
   nsAXPCNativeCallContext *ncc;
   nr = xpc->GetCurrentNativeCallContext(&ncc);
 #else
@@ -1652,7 +1652,7 @@ void JsCallContext::SetException(const std::string16 &message) {
   is_exception_set_ = true;
 
   nsresult nr = NS_OK;
-#ifdef GECKO_19
+#if BROWSER_FF3
   nsAXPCNativeCallContext *ncc = NULL;
   if (xpc_) {
     nr = xpc_->GetCurrentNativeCallContext(&ncc);
@@ -1971,7 +1971,7 @@ JsParamFetcher::JsParamFetcher(ModuleImplBaseClass *obj) {
     nsresult nr;
     xpc_ = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
     if (xpc_ && NS_SUCCEEDED(nr)) {
-#ifdef GECKO_19
+#if BROWSER_FF3
       nsAXPCNativeCallContext *ncc = NULL;
       nr = xpc_->GetCurrentNativeCallContext(&ncc);
 #else
@@ -2093,7 +2093,7 @@ void JsParamFetcher::SetReturnValue(JsToken retval) {
 
     if (xpc_) {
       nsresult nr;
-#ifdef GECKO_19
+#if BROWSER_FF3
       nsAXPCNativeCallContext *ncc = NULL;
       nr = xpc_->GetCurrentNativeCallContext(&ncc);
 #else
@@ -2130,7 +2130,7 @@ JsNativeMethodRetval JsSetException(JsContextPtr cx,
     xpc = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
     if (!xpc || NS_FAILED(nr)) { return retval; }
 
-#ifdef GECKO_19
+#if BROWSER_FF3
     nsAXPCNativeCallContext *ncc = NULL;
     nr = xpc->GetCurrentNativeCallContext(&ncc);
 #else

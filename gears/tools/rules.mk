@@ -40,7 +40,8 @@ COMMON_OUTDIR       = $(OUTDIR)/$(OS)-$(ARCH)/common
 # As of 2008/04/03, our code relies on lowercase names for the generated-file
 #   dirs, so we must explicitly list all browser OUTDIRs, instead of defining:
 #   $(BROWSER)_OUTDIR   = $(OUTDIR)/$(OS)-$(ARCH)/$(BROWSER)
-FF_OUTDIR           = $(OUTDIR)/$(OS)-$(ARCH)/ff
+FF2_OUTDIR          = $(OUTDIR)/$(OS)-$(ARCH)/ff2
+FF3_OUTDIR          = $(OUTDIR)/$(OS)-$(ARCH)/ff3
 IE_OUTDIR           = $(OUTDIR)/$(OS)-$(ARCH)/ie
 NPAPI_OUTDIR        = $(OUTDIR)/$(OS)-$(ARCH)/npapi
 LIBGD_OUTDIR        = $(COMMON_OUTDIR)/gd
@@ -64,10 +65,10 @@ COMMON_OBJS = \
 $(BROWSER)_OBJS = \
 	$(patsubst %.cc,$($(BROWSER)_OUTDIR)/%$(OBJ_SUFFIX),$($(BROWSER)_CPPSRCS)) \
 	$(patsubst %.c,$($(BROWSER)_OUTDIR)/%$(OBJ_SUFFIX),$($(BROWSER)_CSRCS))
-# TODO(cprince): Break all ties between OSX_LAUNCHURL and FF_OUTDIR when we
+# TODO(cprince): Break all ties between OSX_LAUNCHURL and FF3_OUTDIR when we
 # support a non-Firefox browser on Mac.
 OSX_LAUNCHURL_OBJS = \
-	$(patsubst %.cc,$(FF_OUTDIR)/%$(OBJ_SUFFIX),$(OSX_LAUNCHURL_CPPSRCS))
+	$(patsubst %.cc,$(FF3_OUTDIR)/%$(OBJ_SUFFIX),$(OSX_LAUNCHURL_CPPSRCS))
 VISTA_BROKER_OBJS = \
 	$(patsubst %.cc,$(VISTA_BROKER_OUTDIR)/%$(OBJ_SUFFIX),$(VISTA_BROKER_CPPSRCS))
 IE_WINCESETUP_OBJS = \
@@ -94,17 +95,15 @@ COMMON_RESOURCES = \
 	ui/common/icon_32x32.png \
 	third_party/jsonjs/json_noeval.js
 
-FF_RESOURCES = \
-	$(FF_OUTDIR)/genfiles/browser-overlay.js \
-	$(FF_OUTDIR)/genfiles/browser-overlay.xul
+FF3_RESOURCES = \
+	$(FF3_OUTDIR)/genfiles/browser-overlay.js \
+	$(FF3_OUTDIR)/genfiles/browser-overlay.xul
 # End: resource lists that MUST be kept in sync with "win32_msi.wxs.m4"
 
 DEPS = \
 	$(COMMON_OBJS:$(OBJ_SUFFIX)=.pp) \
-	$(FF_OBJS:$(OBJ_SUFFIX)=.pp) \
-	$(IE_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$($(BROWSER)_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(VISTA_BROKER_OBJS:$(OBJ_SUFFIX)=.pp) \
-	$(NPAPI_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(LIBGD_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(SQLITE_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(THIRD_PARTY_OBJS:$(OBJ_SUFFIX)=.pp)
@@ -112,8 +111,8 @@ DEPS = \
 $(BROWSER)_GEN_HEADERS = \
 	$(patsubst %.idl,$($(BROWSER)_OUTDIR)/genfiles/%.h,$($(BROWSER)_IDLSRCS))
 
-FF_GEN_TYPELIBS = \
-	$(patsubst %.idl,$(FF_OUTDIR)/genfiles/%.xpt,$(FF_IDLSRCS))
+FF3_GEN_TYPELIBS = \
+	$(patsubst %.idl,$(FF3_OUTDIR)/genfiles/%.xpt,$(FF3_IDLSRCS))
 
 IE_OBJS += \
 	$(patsubst %.idl,$(IE_OUTDIR)/%_i$(OBJ_SUFFIX),$(IE_IDLSRCS))
@@ -145,19 +144,25 @@ VPATH += $(COMMON_VPATH) $($(BROWSER)_VPATH) $(THIRD_PARTY_VPATH)
 # no ARCH in INSTALLER_BASE_NAME because we created merged installers
 INSTALLER_BASE_NAME = $(MODULE)-$(OS)-$(MODE)-$(VERSION)
 
-$(BROWSER)_MODULE_DLL = $($(BROWSER)_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
+# Rules for per-OS installers need to reference MODULE variables, but BROWSER
+#   is not defined.  So explicitly define all module vars, instead of using:
+#   $(BROWSER)_MODULE_DLL = $($(BROWSER)_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
+FF2_MODULE_DLL   =   $(FF2_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
+FF3_MODULE_DLL   =   $(FF3_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
+IE_MODULE_DLL    =    $(IE_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
+NPAPI_MODULE_DLL = $(NPAPI_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 
-FF_MODULE_TYPELIB = $(FF_OUTDIR)/$(MODULE).xpt
-
-FF_INSTALLER_XPI = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).xpi
+FF3_MODULE_TYPELIB = $(FF3_OUTDIR)/$(MODULE).xpt
 
 IE_WINCESETUP_DLL = $(IE_OUTDIR)/setup$(DLL_SUFFIX)
 
-OSX_LAUNCHURL_EXE = $(FF_OUTDIR)/launch_url_with_browser
+OSX_LAUNCHURL_EXE = $(FF3_OUTDIR)/launch_url_with_browser
 
 # Note: We use IE_OUTDIR so that relative path from gears.dll is same in
 # development environment as deployment environment.
 VISTA_BROKER_EXE = $(IE_OUTDIR)/vista_broker.exe
+
+FFMERGED_INSTALLER_XPI = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).xpi
 
 WIN32_INSTALLER_MSI = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).msi
 WIXOBJ = $(COMMON_OUTDIR)/win32_msi.wxiobj
@@ -172,7 +177,8 @@ INFSRC = $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).inf
 
 default::
 ifneq "$(BROWSER)" ""
-  # build for just the selected browser
+  # Build for just the selected browser.
+  # Note that only the modules get built, not the final installers.
   ifeq ($(OS),osx)
         # For osx, build the non-installer targets for multiple architectures.
 	$(MAKE) prereqs    BROWSER=$(BROWSER) ARCH=i386
@@ -181,54 +187,65 @@ ifneq "$(BROWSER)" ""
 	$(MAKE) genheaders BROWSER=$(BROWSER) ARCH=ppc
 	$(MAKE) modules    BROWSER=$(BROWSER) ARCH=i386
 	$(MAKE) modules    BROWSER=$(BROWSER) ARCH=ppc
-	$(MAKE) installer  BROWSER=FF
   else
 	$(MAKE) prereqs    BROWSER=$(BROWSER)
 	$(MAKE) genheaders BROWSER=$(BROWSER)
 	$(MAKE) modules    BROWSER=$(BROWSER)
-	$(MAKE) installer  BROWSER=$(BROWSER)
   endif
 else
   # build for all browsers valid on this OS
   ifeq ($(OS),linux)
-	$(MAKE) prereqs    BROWSER=FF
-	$(MAKE) genheaders BROWSER=FF
-	$(MAKE) modules    BROWSER=FF
-	$(MAKE) installer  BROWSER=FF
+	$(MAKE) prereqs    BROWSER=FF2
+	$(MAKE) genheaders BROWSER=FF2
+	$(MAKE) modules    BROWSER=FF2
+
+	$(MAKE) prereqs    BROWSER=FF3
+	$(MAKE) genheaders BROWSER=FF3
+	$(MAKE) modules    BROWSER=FF3
+
+	$(MAKE) installers
 
   else
   ifeq ($(OS),win32)
-	$(MAKE) prereqs    BROWSER=FF
-	$(MAKE) genheaders BROWSER=FF
-	$(MAKE) modules    BROWSER=FF
-	$(MAKE) installer  BROWSER=FF
+	$(MAKE) prereqs    BROWSER=FF2
+	$(MAKE) genheaders BROWSER=FF2
+	$(MAKE) modules    BROWSER=FF2
+
+	$(MAKE) prereqs    BROWSER=FF3
+	$(MAKE) genheaders BROWSER=FF3
+	$(MAKE) modules    BROWSER=FF3
 
 	$(MAKE) prereqs    BROWSER=IE
 	$(MAKE) genheaders BROWSER=IE
 	$(MAKE) modules    BROWSER=IE
-	$(MAKE) installer  BROWSER=IE
 
-        # For win32, also build a cross-browser MSI.
-	$(MAKE) win32_installer
+	$(MAKE) installers
 
   else
   ifeq ($(OS),wince)
 	$(MAKE) prereqs    BROWSER=IE
 	$(MAKE) genheaders BROWSER=IE
 	$(MAKE) modules    BROWSER=IE
-	$(MAKE) installer  BROWSER=IE
 
-	$(MAKE) wince_installer
+	$(MAKE) installers
   else
   ifeq ($(OS),osx)
         # For osx, build the non-installer targets for multiple architectures.
-	$(MAKE) prereqs    BROWSER=FF ARCH=i386
-	$(MAKE) prereqs    BROWSER=FF ARCH=ppc
-	$(MAKE) genheaders BROWSER=FF ARCH=i386
-	$(MAKE) genheaders BROWSER=FF ARCH=ppc
-	$(MAKE) modules    BROWSER=FF ARCH=i386
-	$(MAKE) modules    BROWSER=FF ARCH=ppc
-	$(MAKE) installer  BROWSER=FF
+	$(MAKE) prereqs    BROWSER=FF2 ARCH=i386
+	$(MAKE) prereqs    BROWSER=FF2 ARCH=ppc
+	$(MAKE) genheaders BROWSER=FF2 ARCH=i386
+	$(MAKE) genheaders BROWSER=FF2 ARCH=ppc
+	$(MAKE) modules    BROWSER=FF2 ARCH=i386
+	$(MAKE) modules    BROWSER=FF2 ARCH=ppc
+
+	$(MAKE) prereqs    BROWSER=FF3 ARCH=i386
+	$(MAKE) prereqs    BROWSER=FF3 ARCH=ppc
+	$(MAKE) genheaders BROWSER=FF3 ARCH=i386
+	$(MAKE) genheaders BROWSER=FF3 ARCH=ppc
+	$(MAKE) modules    BROWSER=FF3 ARCH=i386
+	$(MAKE) modules    BROWSER=FF3 ARCH=ppc
+
+	$(MAKE) installers
   endif
   endif
   endif
@@ -242,15 +259,17 @@ prereqs:: $($(BROWSER)_OUTDIR) $($(BROWSER)_OUTDIR)/genfiles $($(BROWSER)_OUTDIR
 prereqs:: $(LIBGD_OUTDIR) $(SQLITE_OUTDIR) $(THIRD_PARTY_OUTDIR) $(INSTALLERS_OUTDIR)
 modules::
 genheaders:: $($(BROWSER)_GEN_HEADERS)
-installer::
 
 # Browser-specific targets.
-ifeq ($(BROWSER),FF)
-modules:: $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB)
+ifeq ($(BROWSER),FF2)
+modules:: $(FF2_MODULE_DLL)
+endif
+
+ifeq ($(BROWSER),FF3)
+modules:: $(FF3_MODULE_DLL) $(FF3_MODULE_TYPELIB)
 ifeq ($(OS),osx)
 modules:: $(OSX_LAUNCHURL_EXE)
 endif
-installer:: $(FF_INSTALLER_XPI)
 endif
 
 ifeq ($(BROWSER),IE)
@@ -268,9 +287,24 @@ ifeq ($(BROWSER),NPAPI)
 modules:: $(NPAPI_MODULE_DLL)
 endif
 
-# Other targets.
-win32_installer:: $(WIN32_INSTALLER_MSI)
-wince_installer:: $(WINCE_INSTALLER_CAB)
+# OS-specific targets.
+ifeq ($(OS),linux)
+installers:: $(FFMERGED_INSTALLER_XPI)
+endif
+
+ifeq ($(OS),osx)
+installers:: $(FFMERGED_INSTALLER_XPI)
+endif
+
+ifeq ($(OS),win32)
+installers:: $(FFMERGED_INSTALLER_XPI) $(WIN32_INSTALLER_MSI)
+endif
+
+ifeq ($(OS),wince)
+installers:: $(WINCE_INSTALLER_CAB)
+endif
+
+
 
 
 clean::
@@ -334,10 +368,15 @@ $($(BROWSER)_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
 #
 # TODO(cprince): see whether we can remove the extra include paths after
 # the 1.9 inclusion is complete.
-$(FF_OUTDIR)/genfiles/%.h: %.idl
-	$(GECKO_BIN)/xpidl -I base/common -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m header -o $(FF_OUTDIR)/genfiles/$* $<
-$(FF_OUTDIR)/genfiles/%.xpt: %.idl
-	$(GECKO_BIN)/xpidl -I base/common -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m typelib -o $(FF_OUTDIR)/genfiles/$* $<
+$(FF2_OUTDIR)/genfiles/%.h: %.idl
+	$(GECKO_BIN)/xpidl -I base/common -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m header -o $(FF2_OUTDIR)/genfiles/$* $<
+$(FF2_OUTDIR)/genfiles/%.xpt: %.idl
+	$(GECKO_BIN)/xpidl -I base/common -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m typelib -o $(FF2_OUTDIR)/genfiles/$* $<
+
+$(FF3_OUTDIR)/genfiles/%.h: %.idl
+	$(GECKO_BIN)/xpidl -I base/common -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m header -o $(FF3_OUTDIR)/genfiles/$* $<
+$(FF3_OUTDIR)/genfiles/%.xpt: %.idl
+	$(GECKO_BIN)/xpidl -I base/common -I $(GECKO_SDK)/gecko_sdk/idl -I $(GECKO_BASE) -m typelib -o $(FF3_OUTDIR)/genfiles/$* $<
 
 $(IE_OUTDIR)/genfiles/%.h: %.idl
 	midl $(CPPFLAGS) -env win32 -Oicf -tlb "$(@D)/$*.tlb" -h "$(@D)/$*.h" -iid "$(IE_OUTDIR)/$*_i.c" -proxy "$(IE_OUTDIR)/$*_p.c" -dlldata "$(IE_OUTDIR)/$*_d.c" $<
@@ -396,17 +435,28 @@ $(VISTA_BROKER_OUTDIR)/%.res: %.rc
 
 # LINK TARGETS
 
-$(FF_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_OBJS) $(FF_LINK_EXTRAS)
+# WARNING: Must keep the following two rules (FF2|FF3_MODULE_DLL) in sync!
+# The only difference should be the rule name.
+$(FF2_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
   ifeq ($(OS),linux)
         # TODO(playmobil): Find equivalent of "@args_file" for ld on Linux.
-	$(MKSHLIB) $(SHLIBFLAGS) $(FF_SHLIBFLAGS) $(FF_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_LINK_EXTRAS) $(FF_LIBS)
+	$(MKSHLIB) $(SHLIBFLAGS) $($(BROWSER)_SHLIBFLAGS) $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS)
   else
-	@echo $(FF_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	$(MKSHLIB) $(SHLIBFLAGS) $(FF_SHLIBFLAGS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(FF_LINK_EXTRAS) $(FF_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	@echo $($(BROWSER)_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(MKSHLIB) $(SHLIBFLAGS) $($(BROWSER)_SHLIBFLAGS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	rm $(OUTDIR)/obj_list.temp
+  endif
+$(FF3_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
+  ifeq ($(OS),linux)
+        # TODO(playmobil): Find equivalent of "@args_file" for ld on Linux.
+	$(MKSHLIB) $(SHLIBFLAGS) $($(BROWSER)_SHLIBFLAGS) $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS)
+  else
+	@echo $($(BROWSER)_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	$(MKSHLIB) $(SHLIBFLAGS) $($(BROWSER)_SHLIBFLAGS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
   endif
 
-$(FF_MODULE_TYPELIB): $(FF_GEN_TYPELIBS)
+$(FF3_MODULE_TYPELIB): $(FF3_GEN_TYPELIBS)
 	$(GECKO_BIN)/xpt_link $@ $^
 
 $(IE_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(IE_OBJS) $(IE_LINK_EXTRAS)
@@ -435,10 +485,13 @@ $(OSX_LAUNCHURL_EXE): $(OSX_LAUNCHURL_OBJS)
 
 # INSTALLER TARGETS
 
+# We can't list the following as dependencies, because no BROWSER is defined
+# for this target, therefore our $(BROWSER)_FOO variables and rules don't exist.
+#   $(FF2_MODULE_DLL) $(FF3_MODULE_DLL) $(FF3_MODULE_TYPELIB) $(FF3_RESOURCES) $(FF3_M4FILES_I18N) $(FF3_OUTDIR)/genfiles/chrome.manifest
 ifeq ($(OS),osx)
-$(FF_INSTALLER_XPI): $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB) $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(FF_RESOURCES) $(FF_M4FILES_I18N) $(FF_OUTDIR)/genfiles/chrome.manifest $(OSX_LAUNCHURL_EXE)
+$(FFMERGED_INSTALLER_XPI): $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(OSX_LAUNCHURL_EXE)
 else
-$(FF_INSTALLER_XPI): $(FF_MODULE_DLL) $(FF_MODULE_TYPELIB) $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(FF_RESOURCES) $(FF_M4FILES_I18N) $(FF_OUTDIR)/genfiles/chrome.manifest
+$(FFMERGED_INSTALLER_XPI): $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N)
 endif
 	rm -rf $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)
@@ -447,10 +500,10 @@ endif
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib
 	cp base/firefox/static_files/components/bootstrap.js $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 	cp base/firefox/static_files/lib/updater.js $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/lib
-	cp $(FF_OUTDIR)/genfiles/install.rdf $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/install.rdf
-	cp $(FF_OUTDIR)/genfiles/chrome.manifest $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome.manifest
+	cp $(FF3_OUTDIR)/genfiles/install.rdf $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/install.rdf
+	cp $(FF3_OUTDIR)/genfiles/chrome.manifest $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome.manifest
 ifneq ($(OS),win32)
-  # TODO(playmobil): Inspector should be located in extensions dir on win32.
+    # TODO(playmobil): Inspector should be located in extensions dir on win32.
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/inspector
 	cp -R inspector/* $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/inspector
 	cp sdk/gears_init.js $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/inspector/common
@@ -459,43 +512,42 @@ endif
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
 	cp $(COMMON_RESOURCES) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
-	cp $(FF_RESOURCES) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
+	cp $(FF3_RESOURCES) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
 	cp -R $(COMMON_OUTDIR)/genfiles/i18n/* $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
-	cp -R $(FF_OUTDIR)/genfiles/i18n/* $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
+	cp -R $(FF3_OUTDIR)/genfiles/i18n/* $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
 ifneq ($(OS),osx)
-	cp $(FF_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
-	cp $(FF_MODULE_TYPELIB) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
+	cp $(FF3_MODULE_TYPELIB) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
+	cp $(FF3_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
+	cp $(FF2_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(DLL_PREFIX)$(MODULE)-ff2$(DLL_SUFFIX)
 ifeq ($(MODE),dbg)
 ifdef IS_WIN32_OR_WINCE
-	cp $(FF_OUTDIR)/$(MODULE).pdb $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
+	cp $(FF3_OUTDIR)/$(MODULE).pdb $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(MODULE).pdb
+	cp $(FF2_OUTDIR)/$(MODULE).pdb $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(MODULE)-ff2.pdb
 endif
 endif
 else
-    # For OSX, create universal binaries by combining the ppc and i386 versions.
-	/usr/bin/lipo -output $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(notdir $(FF_MODULE_DLL)) -create \
-		$(OUTDIR)/$(OS)-i386/ff/$(notdir $(FF_MODULE_DLL)) \
-		$(OUTDIR)/$(OS)-ppc/ff/$(notdir $(FF_MODULE_DLL))
-    # And copy any xpt file to the output dir. (The i386 and ppc xpt files are identical.)
-	cp $(OUTDIR)/$(OS)-i386/ff/$(notdir $(FF_MODULE_TYPELIB)) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
+    # Copy either .xpt file (i386 or ppc) to the output dir. (Note: these files are identical.)
+	cp $(OUTDIR)/$(OS)-i386/ff3/$(notdir $(FF3_MODULE_TYPELIB)) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
+    # For OSX, create universal binaries by combining the i386 and ppc versions.
+	/usr/bin/lipo -output $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(notdir $(FF3_MODULE_DLL)) -create \
+		$(OUTDIR)/$(OS)-i386/ff3/$(notdir $(FF3_MODULE_DLL)) \
+		$(OUTDIR)/$(OS)-ppc/ff3/$(notdir $(FF3_MODULE_DLL))
+	/usr/bin/lipo -output $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/ff2-$(notdir $(FF2_MODULE_DLL)) -create \
+		$(OUTDIR)/$(OS)-i386/ff2/$(notdir $(FF2_MODULE_DLL)) \
+		$(OUTDIR)/$(OS)-ppc/ff2/$(notdir $(FF2_MODULE_DLL))
     # Also create a universal binary for OSX_LAUNCHURL_EXE.
 	/usr/bin/lipo -output $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/resources/$(notdir $(OSX_LAUNCHURL_EXE)) -create \
-		$(OUTDIR)/$(OS)-i386/ff/$(notdir $(OSX_LAUNCHURL_EXE)) \
-		$(OUTDIR)/$(OS)-ppc/ff/$(notdir $(OSX_LAUNCHURL_EXE))
+		$(OUTDIR)/$(OS)-i386/ff3/$(notdir $(OSX_LAUNCHURL_EXE)) \
+		$(OUTDIR)/$(OS)-ppc/ff3/$(notdir $(OSX_LAUNCHURL_EXE))
 endif
     # Mark files writeable to allow .xpi rebuilds
 	chmod -R 777 $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/*
 	(cd $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME) && zip -r ../$(INSTALLER_BASE_NAME).xpi .)
 
-# We can't list the following as dependencies, because we don't define BROWSER
-# for this target, therefore our $(BROWSER)_FOO variables and rules don't exist.
-#   $(IE_MODULE_DLL) $(FF_INSTALLER_XPI)
-$(WIN32_INSTALLER_MSI): $(WIXOBJ)
+$(WIN32_INSTALLER_MSI): $(WIXOBJ) $(IE_MODULE_DLL) $(FFMERGED_INSTALLER_XPI)
 	light.exe -out $(WIN32_INSTALLER_MSI) $(WIXOBJ)
 
-# We can't list the following as dependencies, because we don't define BROWSER
-# for this target, therefore our $(BROWSER)_FOO variables and rules don't exist.
-#   $(IE_MODULE_DLL) $(IE_WINCESETUP_DLL)
-$(WINCE_INSTALLER_CAB): $(INFSRC) 
+$(WINCE_INSTALLER_CAB): $(INFSRC) $(IE_MODULE_DLL) $(IE_WINCESETUP_DLL)
 	cabwiz.exe $(INFSRC) /err cabwiz.log /compress
 	mv -f $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).cab $(WINCE_INSTALLER_CAB)
 

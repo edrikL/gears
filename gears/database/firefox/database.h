@@ -31,7 +31,7 @@
 #include <set>
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-#include "ff/genfiles/database.h" // from OUTDIR
+#include "genfiles/database.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"

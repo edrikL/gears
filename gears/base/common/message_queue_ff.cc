@@ -31,7 +31,7 @@
 
 #include <gecko_sdk/include/nspr.h>  // for PR_*
 #include <gecko_sdk/include/nsCOMPtr.h>
-#if defined(GECKO_19)
+#if BROWSER_FF3
 #include <gecko_internal/nsThreadUtils.h>
 #else
 #include <gecko_internal/nsIEventQueueService.h>
@@ -51,7 +51,7 @@ class FFThreadMessageQueue : public ThreadMessageQueue {
                     int message_type,
                     MessageData *message_data);
  private:
-#if defined(GECKO_19)
+#if BROWSER_FF3
   struct MessageEvent : public nsRunnable {
     MessageEvent(int message_type, MessageData *message_data)
         : message_type(message_type), message_data(message_data) {}
@@ -78,7 +78,7 @@ class FFThreadMessageQueue : public ThreadMessageQueue {
   static void *OnReceiveMessageEvent(MessageEvent *event);
   static void OnDestroyMessageEvent(MessageEvent *event);
 
-#if defined(GECKO_19)
+#if BROWSER_FF3
   static void ThreadEndHook(void* value);
   void InitThreadEndHook();
 
@@ -88,7 +88,7 @@ class FFThreadMessageQueue : public ThreadMessageQueue {
 };
 
 static FFThreadMessageQueue g_instance;
-#if defined(GECKO_19)
+#if BROWSER_FF3
 std::map<ThreadId, nsCOMPtr<nsIThread> > FFThreadMessageQueue::threads_;
 Mutex FFThreadMessageQueue::threads_mutex_;
 #endif
@@ -98,7 +98,7 @@ ThreadMessageQueue *ThreadMessageQueue::GetInstance() {
   return &g_instance;
 }
 
-#if defined(GECKO_19)
+#if BROWSER_FF3
 // static
 void FFThreadMessageQueue::ThreadEndHook(void* value) {
   ThreadId *id = reinterpret_cast<ThreadId*>(value);
@@ -132,7 +132,7 @@ void FFThreadMessageQueue::InitThreadEndHook() {
 #endif
 
 bool FFThreadMessageQueue::InitThreadMessageQueue() {
-#if defined(GECKO_19)
+#if BROWSER_FF3
   nsCOMPtr<nsIThread> thread;
   if (NS_FAILED(NS_GetCurrentThread(getter_AddRefs(thread)))) {
     return false;
@@ -166,7 +166,7 @@ void FFThreadMessageQueue::OnDestroyMessageEvent(MessageEvent *event) {
 bool FFThreadMessageQueue::Send(ThreadId thread,
                                 int message_type,
                                 MessageData *message_data) {
-#if defined(GECKO_19)
+#if BROWSER_FF3
   MutexLock lock(&threads_mutex_);
   std::map<ThreadId, nsCOMPtr<nsIThread> >::iterator dest_thread =
       threads_.find(thread);

@@ -30,7 +30,7 @@
 // The blob API has not been finalized for official builds
 #else
 
-#include "ie/genfiles/interfaces.h" // from OUTDIR
+#include "genfiles/interfaces.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/blob/blob_interface.h"

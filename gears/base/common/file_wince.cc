@@ -35,7 +35,7 @@
 #include <assert.h>
 #include <windows.h>
 #include <shlobj.h>
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "genfiles/product_constants.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/scoped_win32_handles.h"

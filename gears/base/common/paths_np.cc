@@ -26,7 +26,7 @@
 #include <windows.h>
 #include <shlobj.h>
 #include <shlwapi.h>
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "genfiles/product_constants.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"

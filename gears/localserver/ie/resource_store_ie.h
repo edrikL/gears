@@ -31,7 +31,7 @@
 #include "gears/base/common/common.h"
 #include "gears/localserver/common/resource_store.h"
 #include "gears/localserver/ie/capture_task_ie.h"
-#include "ie/genfiles/interfaces.h"  // from OUTDIR
+#include "genfiles/interfaces.h"
 
 //------------------------------------------------------------------------------
 // GearsResourceStore

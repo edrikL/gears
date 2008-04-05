@@ -31,7 +31,7 @@
 
 #include <float.h>
 
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "genfiles/product_constants.h"
 #include "gears/base/common/int_types.h"
 #include "gears/base/common/string16.h"
 

@@ -30,7 +30,7 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "genfiles/product_constants.h"
 #include "gears/base/common/int_types.h"
 #include "gears/base/safari/cf_string_utils.h"
 

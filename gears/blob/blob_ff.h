@@ -30,7 +30,7 @@
 // The blob API has not been finalized for official builds
 #else
 
-#include "ff/genfiles/blob_ff.h"
+#include "genfiles/blob_ff.h"
 #include "gears/base/common/base_class.h"
 #include "gears/blob/blob_interface.h"
 

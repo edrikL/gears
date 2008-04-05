@@ -26,7 +26,7 @@
 #ifndef GEARS_UI_IE_TOOLS_MENU_ITEM_H__
 #define GEARS_UI_IE_TOOLS_MENU_ITEM_H__
 
-#include "ie/genfiles/interfaces.h" // from OUTDIR
+#include "genfiles/interfaces.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/resource.h" // for .rgs resource ids (IDR_*)
 

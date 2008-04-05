@@ -25,7 +25,7 @@
 
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/ie/resource.h" // for .rgs resource ids (IDR_*)
-#include "ie/genfiles/interfaces.h" // from OUTDIR
+#include "genfiles/interfaces.h"
 
 // This is defined in gears/base/common/message_queue_ie.h.  It should only be
 // called here.

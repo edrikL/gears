@@ -634,7 +634,7 @@ class JsParamFetcher {
   JsToken      *js_retval_;
 
   nsCOMPtr<nsIXPConnect> xpc_;
-#ifdef GECKO_19
+#if BROWSER_FF3
   nsAXPCNativeCallContext *ncc_;
 #else
   nsCOMPtr<nsIXPCNativeCallContext> ncc_;

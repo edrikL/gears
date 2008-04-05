@@ -69,12 +69,12 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_sdk/include/nsServiceManagerUtils.h> // for NS_IMPL_*
                                                      // and NS_INTERFACE_*
 #include <gecko_sdk/include/nsCOMPtr.h>
-#if !defined(GECKO_19)
+#if BROWSER_FF2
 #include <gecko_sdk/include/pratom.h>
 #endif
 #include <gecko_internal/jsapi.h>
 #include <gecko_internal/nsIDOMClassInfo.h> // for *_DOM_CLASSINFO
-#if defined(GECKO_19)
+#if BROWSER_FF3
 #include <gecko_internal/nsThreadUtils.h> // for event loop
 #else
 #include <gecko_internal/nsIEventQueueService.h> // for event loop
@@ -86,8 +86,8 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 
 #include "gears/workerpool/firefox/workerpool.h"
 
-#include "ff/genfiles/database.h"
-#include "ff/genfiles/localserver.h"
+#include "genfiles/database.h"
+#include "genfiles/localserver.h"
 #include "gears/base/common/async_router.h"
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/exception_handler_win32.h"
@@ -174,10 +174,9 @@ struct JavaScriptWorkerInfo {
   // thread_events_handle holds a pointer to an object which holds the thread's
   // event queue.  This is different in FF2 and FF3, because the event queue
   // was moved onto the nsIThread object in FF3.
-#if defined(GECKO_19)
+#if BROWSER_FF3
   nsCOMPtr<nsIThread> thread_events_handle;
 #else
-
   nsCOMPtr<nsIEventQueue> thread_events_handle;
 #endif
   ThreadId thread_id;
@@ -852,7 +851,7 @@ bool PoolThreadsManager::InitWorkerThread(JavaScriptWorkerInfo *wi) {
   nsresult nr;
 
   wi->thread_id = os_thread_id;
-#if defined(GECKO_19)
+#if BROWSER_FF3
   nsIThread *thread;
   nr = NS_GetCurrentThread(&thread);
   wi->thread_events_handle = thread;
@@ -1108,7 +1107,7 @@ void PoolThreadsManager::JavaScriptThreadEntry(void *args) {
     // succeeded (just like in browsers).
     assert(wi->thread_events_handle);
     while (1) {
-#if defined(GECKO_19)
+#if BROWSER_FF3
       if (!NS_ProcessNextEvent(wi->thread_events_handle)) {
         break;
       }

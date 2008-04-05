@@ -37,7 +37,7 @@
 
 #if BROWSER_FF
 
-#include "ff/genfiles/base_interface_ff.h"
+#include "genfiles/base_interface_ff.h"
 
 #elif BROWSER_IE
 

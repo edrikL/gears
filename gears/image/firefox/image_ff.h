@@ -32,7 +32,7 @@
 
 #include <nsComponentManagerUtils.h>
 
-#include "ff/genfiles/image.h"
+#include "genfiles/image.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"

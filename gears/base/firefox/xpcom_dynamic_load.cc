@@ -50,7 +50,7 @@ PRFuncPtr DynamicLoad(const char *module, const char *function) {
 
 // Initialization of global variables
 XPTC_InvokeByIndex_Type XPTC_InvokeByIndex_DynLoad =
-#if defined(GECKO_19)
+#if BROWSER_FF3
   NS_InvokeByIndex;
 #elif defined(OS_MACOSX)
 // For OSX, the libxpcom_core is already linked, so we can access the symbol

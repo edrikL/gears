@@ -31,7 +31,7 @@
 #endif
 #include <utility>
 #include <vector>
-#include "ff/genfiles/httprequest.h" // from OUTDIR
+#include "genfiles/httprequest.h"
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
