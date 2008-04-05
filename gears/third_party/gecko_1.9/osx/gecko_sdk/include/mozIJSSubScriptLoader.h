@@ -1,0 +1,1 @@
+/Users/aa/src-mozilla/obj-xulrunner/ppc/js/src/xpconnect/idl/_xpidlgen/mozIJSSubScriptLoader.h
