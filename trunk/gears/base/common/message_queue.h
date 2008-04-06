@@ -44,6 +44,8 @@
 typedef PRThread (*ThreadId);
 #elif BROWSER_IE
 typedef DWORD ThreadId;
+#elif BROWSER_WEBKIT
+typedef pthread_t ThreadId;
 #endif
 
 

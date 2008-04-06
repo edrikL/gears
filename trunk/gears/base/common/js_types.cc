@@ -1403,12 +1403,38 @@ bool JsTokenToDouble_Coerce(JsToken t, JsContextPtr cx, double *out) {
 }
 
 bool JsTokenToString_Coerce(JsToken t, JsContextPtr cx, std::string16 *out) {
-  if (JsTokenGetType(t, cx) == JSPARAM_STRING16)
-    return JsTokenToString_NoCoerce(t, cx, out);
-
-  // TODO(mpcomplete): implement me
-  assert(false);
-  return false;
+  JsParamType param_type = JsTokenGetType(t, cx);
+  bool converted_succesfully = false;
+  
+  switch(param_type) {
+    case JSPARAM_UNDEFINED: {
+      *out = STRING16(L"undefined");
+      converted_succesfully = true;
+      break;
+    }
+    case JSPARAM_NULL: {
+      *out = STRING16(L"null");
+      converted_succesfully = true;
+      break;
+    }
+    case JSPARAM_BOOL: {
+      bool bool_val;
+      converted_succesfully = JsTokenToBool_NoCoerce(t, cx, &bool_val);
+      if (converted_succesfully) {
+        *out = bool_val ? STRING16(L"true") : STRING16(L"false");
+      }
+      break;
+    }
+    case JSPARAM_STRING16: {
+      converted_succesfully = JsTokenToString_NoCoerce(t, cx, out);
+      break;
+    }
+    default: {
+      // TODO(mpcomplete): implement me
+      break;
+    }
+  }
+  return converted_succesfully;
 }
 
 

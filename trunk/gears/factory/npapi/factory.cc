@@ -32,8 +32,13 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/npapi/module_wrapper.h"
+#include "gears/console/npapi/console_np.h"
 #include "gears/database/npapi/database.h"
+#ifdef BROWSER_WEBKIT
+// TODO(playmobil): Add support for Desktop module in Safari build.
+#else
 #include "gears/desktop/desktop.h"
+#endif
 #include "gears/factory/common/factory_utils.h"
 #include "gears/httprequest/npapi/httprequest_np.h"
 #include "gears/localserver/npapi/localserver_np.h"
@@ -45,8 +50,12 @@
 #include "gears/workerpool/npapi/workerpool.h"
 #endif
 
-#ifdef DEBUG
-#include "gears/cctests/test.h"
+#ifdef BROWSER_WEBKIT
+// TODO(playmobil): Add support for test module in Safari build.
+#else
+  #ifdef DEBUG
+  #include "gears/cctests/test.h"
+  #endif
 #endif
 
 // static
@@ -94,10 +103,16 @@ void GearsFactory::Create(JsCallContext *context) {
   // Do case-sensitive comparisons, which are always better in APIs. They make
   // code consistent across callers, and they are easier to support over time.
   scoped_refptr<ModuleImplBaseClass> object;
-  if (class_name == STRING16(L"beta.database")) {
+  if (class_name == STRING16(L"beta.console")) {
+    CreateModule<GearsConsole>(GetJsRunner(), &object);
+  } else if (class_name == STRING16(L"beta.database")) {
     CreateModule<GearsDatabase>(GetJsRunner(), &object);
+#ifdef BROWSER_WEBKIT
+// TODO(playmobil): Add support for test module in Safari build.
+#else
   } else if (class_name == STRING16(L"beta.desktop")) {
-    CreateModule<GearsDesktop>(GetJsRunner(), &object);
+    CreateModule<GearsDatabase>(GetJsRunner(), &object);
+#endif
   } else if (class_name == STRING16(L"beta.localserver")) {
     CreateModule<GearsLocalServer>(GetJsRunner(), &object);
 #ifdef BROWSER_WEBKIT
@@ -110,6 +125,9 @@ void GearsFactory::Create(JsCallContext *context) {
     CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
   } else if (class_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(GetJsRunner(), &object);
+#ifdef BROWSER_WEBKIT
+// TODO(playmobil): Add support for test module in Safari build.
+#else
   } else if (class_name == STRING16(L"beta.test")) {
 #ifdef DEBUG
     CreateModule<GearsTest>(GetJsRunner(), &object);
@@ -117,6 +135,7 @@ void GearsFactory::Create(JsCallContext *context) {
     context->SetException(L"Object is only available in debug build.");
     return;
 #endif
+#endif  // BROWSER_WEBKIT
   } else {
     context->SetException(STRING16(L"Unknown object."));
     return;
