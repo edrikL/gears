@@ -70,19 +70,22 @@ Gears.prototype.capture = function() {
   this.app_.manifestUrl = 'manifest.php';
   this.app_.checkForUpdate();
 
-  var self = this;
-  var timerId = window.setInterval(function() {
-    console.log('update status: ' + self.app_.updateStatus);
+  // ugly^2, but necessary, because Pocket IE doesn't support
+  // setInterval or function argument for setTimeout
+  Gears.app = this.app_;
+  console.log('starting check for update');
+  Gears.checkForUpdate = function() {
+    console.log('update status: ' + Gears.app.updateStatus);
 
-    if (self.app_.updateStatus == 3) { // error
-      window.clearInterval(timerId);
-      console.warn('update failed: ' + self.app_.lastErrorMessage);
-    }
-
-    if (self.app_.updateStatus == 0) { // ok
+    if (Gears.app.updateStatus == 3) { // error
+      console.warn('update failed: ' + Gears.app.lastErrorMessage);
+    } else if (Gears.app.updateStatus == 0) { // ok
       location.reload();
+    } else {
+      window.setTimeout('Gears.checkForUpdate();', 500);
     }
-  }, 500);
+  }
+  window.setTimeout('Gears.checkForUpdate();', 500);
 };
 
 Gears.prototype.createDatabase = function() {
@@ -163,16 +166,16 @@ Gears.prototype.executeToObjects = function(sql, args) {
       var cols = rs.fieldCount();
       var colNames = [];
       for (var i = 0; i < cols; i++) {
-	colNames.push(rs.fieldName(i));
+        colNames.push(rs.fieldName(i));
       }
 
       while (rs.isValidRow()) {
-	var h = {};
-	for (i = 0; i < cols; i++) {
-	  h[colNames[i]] = rs.field(i);
-	}
-	rv.push(h);
-	rs.next();
+        var h = {};
+        for (i = 0; i < cols; i++) {
+          h[colNames[i]] = rs.field(i);
+        }
+        rv.push(h);
+        rs.next();
       }
     }
   } catch (e) {
@@ -197,11 +200,17 @@ Gears.prototype.initFactory_ = function() {
   // Firefox
   if (typeof GearsFactory != 'undefined') {
     this.factory_ = new GearsFactory();
+    return;
   }
 
   try {
-    this.factory_ = new ActiveXObject("Gears.Factory");
+    var factory = new ActiveXObject("Gears.Factory");
+      // privateSetGlobalObject is only required and supported on WinCE.
+      if (factory.getBuildInfo().indexOf('ie_mobile') != -1) {
+        factory.privateSetGlobalObject(window);
+      }
+    this.factory_ = factory;
   } catch (e) {
-    // ignore, probably we are not IE?
+  // no Safari for now
   }
 };

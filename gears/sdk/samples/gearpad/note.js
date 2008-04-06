@@ -27,7 +27,7 @@
 // Watch the textarea for changes, and when they occur send them off to
 // DataStore.
 
-var t = document.getElementsByTagName("textarea")[0];
+var t = DOM.getElementsByTagName(document,"textarea")[0];
 var lastSavedVal = t.value;
 var saveTimeout = 500; // 500 milliseconds of quiet before autosave
 var idleTimeout = 5000; // 5 seconds idle sync
@@ -40,17 +40,20 @@ function init() {
   gears = new Gears();
   store = new DataStore(onsync);
 
-  document.getElementById("login-bar").style.display = "";
-  document.getElementById("logged-in-as").appendChild(
-      document.createTextNode(store.email));
+  DOM.getElementById("login-bar").style.display = "";
+  DOM.getElementById("logged-in-as").innerHTML = store.email;
 
-  if (store.localMode) {
-    document.getElementById("setup-offline").style.display = "none";
+  if (DOM.is_pocket_ie) {
+    t.style.height = (screen.availHeight - 140) + 'px';
+    // can't set the width of a textarea in Pocket IE :(
   }
 
-  listen(t, "keyup", keypress);
-  listen(t, "keypress", keypress);
-  //listen(window, "focus", focused);
+  if (store.localMode) {
+    DOM.getElementById("setup-offline").style.display = "none";
+  }
+
+  DOM.listen(t, "keyup", keypress);
+  DOM.listen(t, "keypress", keypress);
 
   sync();
 }
@@ -117,7 +120,7 @@ function onsync(newContent) {
 }
 
 function setStatus(msg, color) {
-  var elm = document.getElementById("status")
+  var elm = DOM.getElementById("status")
   elm.className = color;
   elm.innerHTML = msg;
 }
