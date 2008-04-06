@@ -70,23 +70,23 @@ if ($mode) {
   if (!$message) {
     if ($mode == 'create') {
       if (!($userid = createAccount($email, $password))) {
-	$message = '<span class="error">That email is already taken.</span>';
+        $message = '<span class="error">That email is already taken.</span>';
       }
     } else if ($mode == 'login') {
       $rslt = login($email, $password);
 
       if ($rslt == 'email') {
-	$message = '<span class="error">No user with that email address.</span>';
+        $message = '<span class="error">No user with that email address.</span>';
       } else if ($rslt == 'password') {
-	$message = '<span class="error">Wrong password.</span>';
+        $message = '<span class="error">Wrong password.</span>';
       } else {
-	$userid = $rslt;
+        $userid = $rslt;
       }
     } else if ($mode == 'forgot') {
       if (!mailPassword($email)) {
-	$message = '<span class="error">No user with that email address.</span>';
+        $message = '<span class="error">No user with that email address.</span>';
       } else {
-	$message = '<span class="ok">OK! Go check your email now.</span>';
+        $message = '<span class="ok">OK! Go check your email now.</span>';
       }
     }
   }
@@ -127,7 +127,7 @@ if (($mode == 'create' || $mode == 'login') && !$message) {
 }
 
 a {
-  margin-right:0.5em;
+  padding-right:0.5em;
 }
 </style>
 </head>
@@ -189,7 +189,7 @@ a {
   } else {
     var img = new Image();
     img.onload = onlineLogin;
-    img.onerror = offlineLogin
+    img.onerror = offlineLogin;
     img.src = "x.gif?r=" + new Date().getTime();
     var timerId = window.setTimeout(offlineLogin, 5000);
   }
@@ -199,10 +199,10 @@ a {
       window.clearTimeout(timerId);
     }
 
-    document.getElementById("offline-login").style.display = "block";
+    DOM.getElementById("offline-login").style.display = "block";
 
     var users = gears.executeToObjects('select cookie from user');
-    var select = document.getElementById("users");
+    var select = DOM.getElementById("users");
 
     for (var i = 0, user; user = users[i]; i++) {
       var opt = document.createElement('option');
@@ -214,7 +214,7 @@ a {
   }
 
   function offlineUserChosen() {
-    var select = document.getElementById("users");
+    var select = DOM.getElementById("users");
     var option = select.options[select.selectedIndex];
 
     createCookie('c', option.value, 30);
@@ -226,14 +226,12 @@ a {
       window.clearTimeout(timerId);
     }
 
-    document.getElementById("online-login").style.display = "block";
-
-
-    clip = document.getElementById("clip");
-    fields = clip.getElementsByTagName("input");
-    head = document.getElementById("head");
-    navLinks = document.forms[0].getElementsByTagName("a");
-    form = document.forms[0];
+    DOM.getElementById("online-login").style.display = "block";
+    clip = DOM.getElementById("clip");
+    fields = DOM.getElementsByTagName(clip, "input");
+    head = DOM.getElementById("head");
+    form = DOM.getElementsByTagName(document, 'form')[0];
+    navLinks = DOM.getElementsByTagName(form, 'a');
     mode = "<?= $mode ?>" || "login";
 
     setupLabels(fields);
@@ -249,16 +247,16 @@ a {
 
   function presubmit() {
     try {
-      form.email.value = document.getElementById("email").value;
+      form.email.value = DOM.getElementById("email").value;
 
       if (form.mode.value == "login") {
-	form.password.value = document.getElementById("password").value;
-	form.password2.value = "";
+        form.password.value = DOM.getElementById("password").value;
+        form.password2.value = "";
       }
 
       if (form.mode.value == "create") {
-	form.password.value = document.getElementById("password").value;
-	form.password2.value = document.getElementById("password2").value;
+        form.password.value = DOM.getElementById("password").value;
+        form.password2.value = DOM.getElementById("password2").value;
       }
 
       return true;
@@ -304,16 +302,16 @@ a {
   function changeMode(elmIdx, fast) {
     for (var i = 0; i < fields.length; i++) {
       if (i <= elmIdx) {
-	fields[i].style.display = "";
+        fields[i].style.display = "";
       } else {
-	fields[i].style.display = "none";
+        fields[i].style.display = "none";
       }
     }
 
     var elm = fields[elmIdx];
     var h = elm.offsetTop + elm.offsetHeight;
 
-    if (fast) {
+    if (fast || DOM.is_pocket_ie) {
       clip.style.height = h + "px";
     } else {
       var a = new Accelimation(clip.style, "height", h, 150, 2, "px");

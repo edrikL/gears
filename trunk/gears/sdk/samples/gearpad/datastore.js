@@ -116,11 +116,11 @@ DataStore.prototype.initClient_ = function() {
 
       // we are upgrading from an old schema that didn't have clientID. Save it.
       if (self.localMode) {
-	gears.execute('update user set clientid = ? where id = ?',
-		      [responseText[0], self.userId]);
-	// ... and then do the first sync
-	self.sync(null);
-	return;
+        gears.execute('update user set clientid = ? where id = ?',
+                [responseText[0], self.userId]);
+        // ... and then do the first sync
+        self.sync(null);
+        return;
       }
 
       // otherwise we are just initializting a regular client
@@ -140,41 +140,41 @@ DataStore.prototype.updateServer_ = function(clientUpdate) {
     function(status, statusText, responseText) {
       var response = self.parseSyncResponse_(status, statusText, responseText);
       if (!response) {
-	self.handleSync_(null);
-	return;
+        self.handleSync_(null);
+        return;
       }
 
       // check to see if the server says there is a conflict
       if (clientUpdate && response.content) {
-	if (promptToOverrideConflict()) {
-	  self.version = response.version;
-	  self.sync(clientUpdate);
-	  return;
-	}
+        if (promptToOverrideConflict()) {
+          self.version = response.version;
+          self.sync(clientUpdate);
+          return;
+        }
       }
 
       if (self.localMode) {
-	var sets = ['dirty = ?'];
-	var vals = [0];
+        var sets = ['dirty = ?'];
+        var vals = [0];
 
-	if (response.version) {
-	  sets.push('version = ?');
-	  vals.push(response.version);
-	}
+        if (response.version) {
+          sets.push('version = ?');
+          vals.push(response.version);
+        }
 
-	if (response.content) {
-	  sets.push('content = ?');
-	  vals.push(response.content);
-	}
+        if (response.content) {
+          sets.push('content = ?');
+          vals.push(response.content);
+        }
 
-	vals.push(self.userId);
-	gears.execute('update user set ' + sets.join(', ') + ' where id = ?',
-		      vals);
+        vals.push(self.userId);
+        gears.execute('update user set ' + sets.join(', ') + ' where id = ?',
+                vals);
       }
 
       self.dirty_ = false;
       if (response.version) {
-	self.version = response.version;
+        self.version = response.version;
       }
       self.handleSync_(response.content);
     },
@@ -190,12 +190,12 @@ DataStore.prototype.syncFromServer_ = function() {
 
       // If there was a change, update our internal state.
       if (response && response.content !== null) {
-	if (self.localMode) {
-	  gears.execute('update user set version = ?, content = ? where id = ?',
-			[response.version, response.content, self.userId]);
-	}
+        if (self.localMode) {
+          gears.execute('update user set version = ?, content = ? where id = ?',
+            [response.version, response.content, self.userId]);
+        }
 
-	self.version = response.version;
+        self.version = response.version;
       }
 
       self.handleSync_(response && response.content);
