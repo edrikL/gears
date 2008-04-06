@@ -52,7 +52,11 @@ bool Database2Statement::Create(const std::string16 &sql_statement,
   statement->sql_statement_.assign(sql_statement);
   statement->callback_.reset(callback);
   statement->error_callback_.reset(error_callback);
-  // TODO(dimitri.glazkov): convert sql_arguments to JsParamToSend[]
+  // TODO(dimitri.glazkov): convert sql_arguments to JsParamToSend[]. Accepted
+  // types are: double, int32, int64, string. All other types, are considered
+  // invalid
   *instance = statement;
+  // TODO(dimitri.glazkov): decide whether ever return false (so that creator
+  // could throw an exception, for instance) or mark statement as bogus
   return true;
 }

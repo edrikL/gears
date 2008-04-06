@@ -60,7 +60,7 @@ class Database2Statement {
 
  private:
   std::string16 sql_statement_;
-  scoped_array<JsParamToSend> sql_arguments_;
+  JsParamToSend* sql_arguments_;
   scoped_ptr<JsRootedCallback> callback_;
   scoped_ptr<JsRootedCallback> error_callback_;
 
