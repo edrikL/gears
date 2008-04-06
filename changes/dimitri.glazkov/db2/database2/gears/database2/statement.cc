@@ -27,7 +27,7 @@
 
 #include "gears/database2/transaction.h"
 
-void Database2Statement::InvokeCallback(Database2Transaction* tx) {
+void Database2Statement::InvokeCallback(Database2Transaction *tx) {
   // for now, just return the Database2Statement
   JsParamToSend send_argv[] = {
     { JSPARAM_STRING16, &sql_statement_ }
@@ -39,8 +39,8 @@ void Database2Statement::InvokeCallback(Database2Transaction* tx) {
   }
 }
 
-void Database2Statement::InvokeErrorCallback(Database2Transaction* tx,
-                                             JsObject* error) {
+void Database2Statement::InvokeErrorCallback(Database2Transaction *tx,
+                                             JsObject *error) {
 }
 
 bool Database2Statement::Create(const std::string16 &sql_statement, 
@@ -48,7 +48,7 @@ bool Database2Statement::Create(const std::string16 &sql_statement,
                                 JsRootedCallback *callback, 
                                 JsRootedCallback *error_callback, 
                                 Database2Statement **instance) {
-  Database2Statement* statement = new Database2Statement();
+  Database2Statement *statement = new Database2Statement();
   statement->sql_statement_.assign(sql_statement);
   statement->callback_.reset(callback);
   statement->error_callback_.reset(error_callback);

@@ -49,18 +49,18 @@ class Database2Statement {
     return !JsTokenIsNullOrUndefined(error_callback_->token());
   }
 
-  void InvokeCallback(Database2Transaction* tx);
-  void InvokeErrorCallback(Database2Transaction* tx, JsObject* error);
+  void InvokeCallback(Database2Transaction *tx);
+  void InvokeErrorCallback(Database2Transaction *tx, JsObject *error);
 
   static bool Create(const std::string16 &sql_statement,
                      const JsArray &sql_arguments,
                      JsRootedCallback *callback,
                      JsRootedCallback *error_callback,
-                     Database2Statement** instance);
+                     Database2Statement **instance);
 
  private:
   std::string16 sql_statement_;
-  JsParamToSend* sql_arguments_;
+  JsParamToSend *sql_arguments_;
   scoped_ptr<JsRootedCallback> callback_;
   scoped_ptr<JsRootedCallback> error_callback_;
 

@@ -101,12 +101,12 @@ void Database2Transaction::InvokeErrorCallback() {
 void Database2Transaction::InvokeSuccessCallback() {
 }
 
-bool Database2Transaction::Create(const Database2* database,
+bool Database2Transaction::Create(const Database2 *database,
                                   const bool async,
-                                  JsRootedCallback* callback,
-                                  JsRootedCallback* error_callback,
-                                  JsRootedCallback* success_callback,
-                                  Database2Transaction** instance) {
+                                  JsRootedCallback *callback,
+                                  JsRootedCallback *error_callback,
+                                  JsRootedCallback *success_callback,
+                                  Database2Transaction **instance) {
   Database2Transaction *tx = 
      CreateModule<Database2Transaction>(database->GetJsRunner());
   if (tx && tx->InitBaseFromSibling(database)) {
