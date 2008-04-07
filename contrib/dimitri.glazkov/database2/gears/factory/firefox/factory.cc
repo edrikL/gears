@@ -37,7 +37,7 @@
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/console/firefox/console_ff.h"
 #include "gears/database/firefox/database.h"
-#include "gears/database2/database_manager.h"
+#include "gears/database2/manager.h"
 #include "gears/desktop/desktop_ff.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/httprequest/firefox/httprequest_ff.h"
@@ -153,8 +153,8 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
     *error = STRING16(L"Object is only available in debug build.");
     return false;
 #endif
-	} else if (object_name == STRING16(L"beta.databasemanager")) {
-		object.reset(CreateModule<GearsDatabaseManager>(GetJsRunner()));
+  } else if (object_name == STRING16(L"beta.databasemanager")) {
+    object.reset(CreateModule<Database2Manager>(GetJsRunner()));
   } else {
     // Don't return an error here. Caller handles reporting unknown modules.
     error->clear();
