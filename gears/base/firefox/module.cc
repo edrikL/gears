@@ -29,6 +29,7 @@
 // #includes below include common_ff.h. this causes PR_LOGGING to be not
 // defined and gLog to become not defined symbol in opt builds
 #include "gears/base/common/common_ff.h"
+#include <gecko_internal/nsIXULAppInfo.h>
 #endif
 #include <gecko_sdk/include/nsXPCOM.h>
 #include <gecko_sdk/include/nsMemory.h>
@@ -425,6 +426,30 @@ NSGETMODULE_ENTRY_POINT(gears_module) (nsIComponentManager *servMgr,
   if (!XPTC_InvokeByIndex_DynLoad) {
     return NS_ERROR_FAILURE;
   }
+
+#ifdef BROWSER_FF3
+  // TODO(zork): Remove this code once Firefox 3 ships.
+
+  // If we're running on Firefox 3, we need to make sure we aren't loaded in
+  // any old betas, because interfaces we need do not exist.
+  nsresult nr;
+  nsCOMPtr<nsIXULAppInfo> app_info =
+      do_GetService("@mozilla.org/xre/app-info;1", &nr);
+  if (NS_FAILED(nr) || !app_info) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Get the Firefox version string.
+  nsCString version;
+  app_info->GetVersion(version);
+
+  // Check that the version string matches the proper Firefox
+  const nsCString::char_type *begin, *end;
+  version.BeginReading(&begin, &end);
+  if (strcmp(begin, "3.0b5")) {
+    return NS_ERROR_FAILURE;
+  }
+#endif
 
   return NS_NewGenericModule2(&kModuleInfo, result);
 }
