@@ -40,6 +40,7 @@
 
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/html_event_monitor.h"
+#include "gears/base/common/js_runner_utils.h"  // For ThrowGlobalErrorImpl()
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/npapi/browser_utils.h"
@@ -168,6 +169,13 @@ class JsRunnerBase : public JsRunnerInterface {
     //Eval(STRING16(L"CollectGarbage();"));
   }
 #endif
+
+  // This function and others (AddEventHandler, RemoveEventHandler etc) do not
+  // conatin any browser-specific code. They should be implemented in a new
+  // class 'JsRunnerCommon', which inherits from JsRunnerInterface.
+  virtual void ThrowGlobalError(const std::string16 &message) {
+    ThrowGlobalErrorImpl(this, message);
+  }
 
  protected:
   // Alert all monitors that an event has occured.

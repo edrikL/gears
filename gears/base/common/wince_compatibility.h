@@ -40,6 +40,8 @@
 #include "gears/base/common/string16.h"
 #include "gears/localserver/common/critical_section.h"
 
+class JsRunnerInterface;
+
 // The Win32 code uses ::PathFindXXXW. These are defined in shlwapi.h, but the
 // WinCE SDK does not provide shlwapi.lib. Instead it provides
 // ATL::PathFindXXX, which are defined in atlosapice.h (included from
@@ -116,6 +118,10 @@ class BrowserCache {
   static bool RemoveBogusEntry(const char16 *url);
   DISALLOW_EVIL_CONSTRUCTORS(BrowserCache);
 };
+
+// This should only be called in the context of the main page.
+void CallWindowOnerror(JsRunnerInterface *js_runner,
+                       const std::string16 &message);
 
 #endif  // GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
 #endif  // WINCE

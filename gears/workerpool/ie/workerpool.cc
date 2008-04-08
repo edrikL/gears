@@ -48,7 +48,6 @@
 
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/js_runner.h"
-#include "gears/base/common/js_runner_utils.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/scoped_win32_handles.h"
 #include "gears/base/common/string_utils.h"
@@ -1085,7 +1084,7 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
   // Bubble the error up to the owning worker's script context. If that
   // worker is also nested, this will cause PoolThreadsManager::HandleError
   // to get called again on that context.
-  ThrowGlobalError(wi->js_runner, msg.text_);
+  wi->js_runner->ThrowGlobalError(msg.text_);
 }
 
 

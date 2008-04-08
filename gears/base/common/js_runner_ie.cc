@@ -49,7 +49,11 @@
 #else
 #include "gears/base/common/html_event_monitor.h"
 #endif
+#include "gears/base/common/js_runner_utils.h"  // For ThrowGlobalErrorImpl()
 #include "gears/base/common/scoped_token.h"
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"  // For CallWindowOnerror()
+#endif
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/third_party/AtlActiveScriptSite.h"
@@ -128,9 +132,10 @@ class JsRunnerBase : public JsRunnerInterface {
     return js_array.release();
   }
 
-  bool InvokeCallback(const JsRootedCallback *callback,
-                      int argc, JsParamToSend *argv,
-                      JsRootedToken **optional_alloc_retval) {
+  bool InvokeCallbackImpl(const JsRootedCallback *callback,
+                          int argc, JsParamToSend *argv,
+                          JsRootedToken **optional_alloc_retval,
+                          std::string16 *optional_exception) {
     assert(callback && (!argc || argv));
     if (callback->token().vt != VT_DISPATCH) { return false; }
 
@@ -147,15 +152,26 @@ class JsRunnerBase : public JsRunnerInterface {
     invoke_params.rgvarg = js_engine_argv.get();
 
     VARIANT retval = {0};
+    EXCEPINFO exception;
+    // If the JavaScript function being invoked throws an exception, Invoke
+    // returns DISP_E_EXCEPTION, or the undocumented 0x800A139E if we don't pass
+    // an EXECINFO pointer. See
+    // http://asp3wiki.wrox.com/wiki/show/G.2.2-+Runtime+Errors for a
+    // description of 0x800A139E.
     HRESULT hr = callback->token().pdispVal->Invoke(
         DISPID_VALUE, IID_NULL,  // DISPID_VALUE = default action
         LOCALE_SYSTEM_DEFAULT,   // TODO(cprince): should this be user default?
         DISPATCH_METHOD,         // dispatch/invoke as...
         &invoke_params,          // parameters
         optional_alloc_retval ? &retval : NULL,  // receives result (NULL okay)
-        NULL,                    // receives exception (NULL okay)
+        &exception,              // receives exception (NULL okay)
         NULL);                   // receives badarg index (NULL okay)
-    if (FAILED(hr)) { return false; }
+    if (FAILED(hr)) {
+      if (DISP_E_EXCEPTION == hr && optional_exception) {
+        *optional_exception = exception.bstrDescription;
+      }
+      return false;
+    }
 
     if (optional_alloc_retval) {
       // Note: A valid VARIANT is returned no matter what the js function
@@ -196,6 +212,13 @@ class JsRunnerBase : public JsRunnerInterface {
     }
   }
 #endif
+
+  // This function and others (AddEventHandler, RemoveEventHandler etc) do not
+  // conatin any browser-specific code. They should be implemented in a new
+  // class 'JsRunnerCommon', which inherits from JsRunnerInterface.
+  virtual void ThrowGlobalError(const std::string16 &message) {
+    ThrowGlobalErrorImpl(this, message);
+  }
 
  protected:
   // Alert all monitors that an event has occured.
@@ -567,6 +590,12 @@ class JsRunner : public JsRunnerBase {
   void SetErrorHandler(JsErrorHandlerInterface *error_handler) {
     return com_obj_->SetErrorHandler(error_handler);
   }
+  bool InvokeCallback(const JsRootedCallback *callback,
+                      int argc, JsParamToSend *argv,
+                      JsRootedToken **optional_alloc_retval) {
+    return InvokeCallbackImpl(callback, argc, argv, optional_alloc_retval,
+                              NULL);
+  }
 
  private:
   CComObject<JsRunnerImpl> *com_obj_;
@@ -579,8 +608,7 @@ class JsRunner : public JsRunnerBase {
 // common functionality to both workers and the main thread.
 class DocumentJsRunner : public JsRunnerBase {
  public:
-  DocumentJsRunner(IGeneric *site) : site_(site) {
-  }
+  DocumentJsRunner(IGeneric *site) : site_(site) {}
 
   virtual ~DocumentJsRunner() {
   }
@@ -611,7 +639,8 @@ class DocumentJsRunner : public JsRunnerBase {
     return false;
   }
 
-  bool Eval(const std::string16 &script) {
+  bool EvalImpl(const std::string16 &script,
+                std::string16 *optional_exception) {
     // There appears to be no way to execute script code directly on WinCE.
     // - IPIEHTMLWindow2 does not provide execScript.
     // - We have the script engine's IDispatch pointer but there's no way to get
@@ -636,17 +665,48 @@ class DocumentJsRunner : public JsRunnerBase {
     DISPPARAMS parameters = {0};
     parameters.cArgs = 1;
     parameters.rgvarg = &script_variant;
-    return SUCCEEDED(javascript_engine_dispatch->Invoke(
+    EXCEPINFO exception;
+    // If the JavaScript code being invoked throws an exception, Invoke returns
+    // DISP_E_EXCEPTION, or the undocumented 0x800A139E if we don't pass an
+    // EXECINFO pointer. See
+    // http://asp3wiki.wrox.com/wiki/show/G.2.2-+Runtime+Errors for a
+    // description of 0x800A139E.
+    HRESULT hr = javascript_engine_dispatch->Invoke(
         function_iid,           // member to invoke
         IID_NULL,               // reserved
         LOCALE_SYSTEM_DEFAULT,  // TODO(cprince): should this be user default?
         DISPATCH_METHOD,        // dispatch/invoke as...
         &parameters,            // parameters
         NULL,                   // receives result (NULL okay)
-        NULL,                   // receives exception (NULL okay)
-        NULL));                 // receives badarg index (NULL okay)
+        &exception,             // receives exception (NULL okay)
+        NULL);                  // receives badarg index (NULL okay)
+    if (FAILED(hr)) {
+      if (DISP_E_EXCEPTION == hr && optional_exception) {
+        *optional_exception = exception.bstrDescription;
+      }
+      return false;
+    }
+    return true;
   }
 
+  bool Eval(const std::string16 &script) {
+#ifdef WINCE
+    // On WinCE, exceptions do not get thrown from JavaScript code that is
+    // invoked from C++ in the context of the main page. Therefore, to allow
+    // the user to handle these exceptions, we manually call window.onerror.
+    std::string16 exception = L"";
+    bool result = EvalImpl(script, &exception);
+    // If the exception string is empty, the callback failed for some other
+    // reason.
+    if (!result && !exception.empty()) {
+      CallWindowOnerror(this, EscapeMessage(exception));
+    }
+    return result;
+#else
+    return EvalImpl(script, NULL);
+#endif
+  }
+  
   void SetErrorHandler(JsErrorHandlerInterface *handler) {
     assert(false);  // Should not be called on the DocumentJsRunner.
   }
@@ -673,6 +733,36 @@ class DocumentJsRunner : public JsRunnerBase {
 
     return JsRunnerBase::AddEventHandler(event_type, handler);
   }
+
+  bool InvokeCallback(const JsRootedCallback *callback,
+                      int argc, JsParamToSend *argv,
+                      JsRootedToken **optional_alloc_retval) {
+#ifdef WINCE
+    // On WinCE, exceptions do not get thrown from JavaScript code that is
+    // invoked from C++ in the context of the main page. Therefore, to allow
+    // the user to handle these exceptions, we manually call window.onerror.
+    std::string16 exception = L"";
+    bool result = InvokeCallbackImpl(callback, argc, argv,
+                                     optional_alloc_retval, &exception);
+    // If the exception string is empty, the callback failed for some other
+    // reason.
+    if (!result && !exception.empty()) {
+      CallWindowOnerror(this, EscapeMessage(exception));
+    }
+    return result;
+#else
+    return InvokeCallbackImpl(callback, argc, argv, optional_alloc_retval,
+                              NULL);
+#endif
+  }
+
+#ifdef WINCE
+  // On WinCE, exceptions thrown from C++ don't trigger the default JS exception
+  // handler, so we call window.onerror manually.
+  virtual void ThrowGlobalError(const std::string16 &message) {
+    CallWindowOnerror(this, message);
+  }
+#endif
 
  private:
   static void HandleEventUnload(void *user_param) {
