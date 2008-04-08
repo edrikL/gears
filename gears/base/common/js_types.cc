@@ -1325,7 +1325,7 @@ bool JsTokenToDouble_NoCoerce(JsToken t, JsContextPtr cx, double *out) {
 bool JsTokenToString_NoCoerce(JsToken t, JsContextPtr cx, std::string16 *out) {
   if (!NPVARIANT_IS_STRING(t)) { return false; }
   NPString str = NPVARIANT_TO_STRING(t);
-  if (GetNPStringUTF8Characters(str) == 0) {
+  if (GetNPStringUTF8Length(str) == 0) {
     // TODO(mpcomplete): find out if UTF8ToString16 can be changed to return
     // true in this case.
     out->clear();
@@ -1348,7 +1348,9 @@ bool JsTokenToBool_Coerce(JsToken t, JsContextPtr cx, bool *out) {
   // null, NaN, 0, undefined and an empty string. false is already covered by
   // the case above.
   } else if (JsTokenIsNullOrUndefined(t) ||  // null, undefined
-             NPVARIANT_IS_DOUBLE(t) && isnan(NPVARIANT_TO_DOUBLE(t)) ||  // NaN
+             NPVARIANT_IS_DOUBLE(t) && // 0 or Nan
+                 (NPVARIANT_TO_DOUBLE(t) == 0 ||
+                  isnan(NPVARIANT_TO_DOUBLE(t))) || 
              NPVARIANT_IS_INT32(t) && NPVARIANT_TO_INT32(t) == 0 ||  // 0
              NPVARIANT_IS_STRING(t) &&  // empty string
                  GetNPStringUTF8Length(NPVARIANT_TO_STRING(t)) == 0) {
@@ -1393,6 +1395,20 @@ bool JsTokenToDouble_Coerce(JsToken t, JsContextPtr cx, double *out) {
   // Edge-case: undefined should return failure
   } else if (NPVARIANT_IS_VOID(t)) {
     return false;
+  // Strings
+  } else if (NPVARIANT_IS_STRING(t)) {
+    // TODO(mpcomplete): I'm not sure if NPStrings are guaranteed to be null
+    // terminated.  Do we need the str temporary?
+    NPString s = NPVARIANT_TO_STRING(t);
+    std::string str(GetNPStringUTF8Characters(s), GetNPStringUTF8Length(s));
+
+    // Edge-case: NaN should return failure
+    if (StringCompareIgnoreCase(str.c_str(), "nan") == 0) {
+      return false;
+    }
+
+    *out = atof(str.c_str());
+    return true;
   // All other coercions
   } else {
     // TODO(mpcomplete): implement me
@@ -1895,6 +1911,7 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       assert(false);
   }
 }
+
 void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
   assert(value_ptr != NULL || type == JSPARAM_NULL);
 
