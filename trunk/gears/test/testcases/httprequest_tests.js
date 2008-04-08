@@ -325,3 +325,26 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
     completeAsync();
   }
 }
+
+// Helper function used by callback exception tests.
+function callbackExceptionTest(async, message) {
+  var request = google.gears.factory.create('beta.httprequest');
+  request.onreadystatechange = function() {
+    if (request.readyState == 4) {
+      throw new Error(message);
+    }
+  };
+  // This test does not require a particular URL, we just need the
+  // onreadystatechange handler to be called.
+  request.open('GET', 'nosuchfile___', async);
+  waitForGlobalErrors([message]);
+  request.send();
+}
+
+function testCallbackExceptionAsync() {
+  callbackExceptionTest(true, 'exception from HTTPRequest callback - async');
+}
+  
+function testCallbackExceptionSync() {
+  callbackExceptionTest(false, 'exception from HTTPRequest callback');
+}
