@@ -51,7 +51,7 @@ TestSuite.prototype.addFile = function(relativePath, config) {
 
 // Lists test configuration below...
 
-var TEST_TIMEOUT_SECONDS = 15 * 60 * 1000;
+var TEST_TIMEOUT_SECONDS = 4 * 60 * 1000;
 var suites = [];
 
 if (!isWince) {
