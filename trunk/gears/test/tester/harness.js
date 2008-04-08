@@ -189,12 +189,13 @@ Harness.prototype.runTests_ = function() {
     try {
       this.runNextTest_();
     } catch(e) {
-      if (hasWindowOnerror()) {
-        throw e;  // Rethrow so browser calls window.onerror.
-      } else {
-        window.onerror(e);
-        return;
-      }
+      // We explicitly call the error handler, rather than relying on the
+      // browser to call window.onerror, because window.onerror is not supported
+      // on Safari and window.onerror seems not to be called in this particular
+      // case on WinCE.
+      // TODO(steveblock): Understand the cause of this behavior on WinCE.
+      this.handleGlobalError_(e.message);
+      return;
     }
     if (this.asyncTimerId_ || this.globalErrorTimerId_) {
       // break out of the loop if we started an async test.
