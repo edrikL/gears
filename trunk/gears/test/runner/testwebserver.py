@@ -454,6 +454,9 @@ class TestWebserver(asyncore.dispatcher):
     if self.test_completion_lock.isSet():
       test_result = self.json_test_result
     else:
+      print ('Browser tests failed to complete and timed out.  '
+             'It is likely that either the test webserver failed '
+             'to start, or one of the test cases hung.')
       test_result = 'TIMED-OUT'
     self.test_completion_lock.clear()
     self.test_instance_is_running = False
@@ -494,8 +497,8 @@ if __name__ == '__main__':
     try:
       port_number = int(sys.argv[1])
     except:
-      print 'usage:\nArgument must be an integer'\
-            'port number, or blank for default.'
+      print ('usage:\nArgument must be an integer'
+             'port number, or blank for default.')
       sys.exit()
   else:
     port_number = 8001
