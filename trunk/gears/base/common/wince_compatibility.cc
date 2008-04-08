@@ -37,6 +37,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/js_runner_utils.h"  // For EscapeMessage().
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/localserver/common/http_constants.h"
@@ -209,44 +210,29 @@ BOOL CMutexWince::Open(DWORD dwAccess, BOOL bInheritHandle, LPCTSTR pszName) {
   return success;
 }
 
-// The function below is declared in js_runner_utils.h and its purpose is to 
-// report an error to the JsRunner's global scope. Equivalent to the
-// following JavaScript: eval("throw new Error('hello')");
-// On WinCE, however, throwing a JavaScript exception from C++ doesn't trigger
-// the default JS exception handler. Instead, Invoke returns DISP_E_EXCEPTION
-// (or the undocumented 0x800A139E if we don't pass an EXCEPTIONINFO
-// pointer; see http://asp3wiki.wrox.com/wiki/show/G.2.2-+Runtime+Errors
-// for a description of 0x800A139E).
-// We try to call window.onerror if it's set. If it isn't, we
-// show an alert instead, but only if script debugging is
-// turned on in the registry.
-void ThrowGlobalError(JsRunnerInterface *js_runner,
-                      const std::string16 &message) {
-  if (!js_runner) { return; }
-
-  std::string16 string_to_eval(message);
-
-  ReplaceAll(string_to_eval, std::string16(STRING16(L"'")),
-            std::string16(STRING16(L"\\'")));
-  ReplaceAll(string_to_eval, std::string16(STRING16(L"\r")),
-            std::string16(STRING16(L"\\r")));
-  ReplaceAll(string_to_eval, std::string16(STRING16(L"\n")),
-            std::string16(STRING16(L"\\n")));
-  
+// This function is required because on WinCE, throwing a JavaScript exception
+// from C++ doesn't trigger the default JS exception handler.
+//
+// We try to call window.onerror. If this fails, we show an alert if script
+// errors are enabled in the browser.
+void CallWindowOnerror(JsRunnerInterface *js_runner,
+                       const std::string16 &message) {
+  std::string16 escaped_message = EscapeMessage(message);
   const std::string16 kEndBracket(STRING16(L"')"));
-  std::string16 throw_string(STRING16(L"throw new Error('"));
-  throw_string.append(string_to_eval);
-  throw_string.append(kEndBracket);
-  
-  // Maybe one day "throw new Error" will work, so we try anyway.
-  if (js_runner->Eval(throw_string.c_str()) == true) {    
+  // Protect against recursion when we call Eval, which detects an exception and
+  // calls us again.
+  static bool is_calling_eval = false;
+  if (is_calling_eval) {
     return;
   }
   // Try window.onerror first.
   std::string16 onerror_string(L"window.onerror('");
-  onerror_string.append(string_to_eval);
+  onerror_string.append(escaped_message);
   onerror_string.append(kEndBracket);
-  if (js_runner->Eval(onerror_string.c_str()) == true) {
+  is_calling_eval = true;
+  bool ret = js_runner->Eval(onerror_string.c_str());
+  is_calling_eval = false;
+  if (ret == true) {
     return;
   }
   // Calling window.onerror failed. Try to read the registry setting
@@ -266,9 +252,11 @@ void ThrowGlobalError(JsRunnerInterface *js_runner,
   }
   if (show_script_errors == 1) {
     std::string16 alert_string(L"alert('");
-    alert_string.append(string_to_eval);
+    alert_string.append(escaped_message);
     alert_string.append(kEndBracket);
+    is_calling_eval = true;
     js_runner->Eval(alert_string.c_str());
+    is_calling_eval = false;
   } else {
     // The key was set to 0 (or some other value than 1), so we
     // don't need to do anything.
