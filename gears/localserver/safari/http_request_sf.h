@@ -29,6 +29,7 @@
 #include <vector>
 
 #include "gears/base/common/common.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/security_model.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
@@ -41,8 +42,13 @@ class BlobInterface;
 //------------------------------------------------------------------------------
 // SFHttpRequest
 //------------------------------------------------------------------------------
-class SFHttpRequest : public RefCounted, public HttpRequest {
+class SFHttpRequest : public HttpRequest {
  public:
+ 
+  // refcounting
+  virtual void Ref();
+  virtual void Unref();
+ 
   // Get or set whether to use or bypass caches, the default is USE_ALL_CACHES
   // May only be set prior to calling Send.
   virtual CachingBehavior GetCachingBehavior() {
@@ -133,6 +139,7 @@ class SFHttpRequest : public RefCounted, public HttpRequest {
 
   ReadyStateListener *listener_;
   ReadyState ready_state_;
+  RefCount count_;
   std::string16 method_;
   std::string16 url_;
   SecurityOrigin origin_;
