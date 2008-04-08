@@ -29,6 +29,7 @@ function testTimeout() {
   startAsync();
   timer.setTimeout(function() {
     assert(!timerFired, 'Timer fired more than once');
+    timerFired = true;
     completeAsync();
   }, 20);
 }
@@ -87,5 +88,20 @@ function testTimeoutDeleteSelf() {
     timer.clearTimeout(timerId);
     completeAsync();
   }, 20);
+}
+
+function testException() {
+  var message = 'exception from timer callback - function';
+  waitForGlobalErrors([message]);
+  var timer = google.gears.factory.create('beta.timer');
+  timer.setTimeout(function() { throw new Error(message); }, 100);
+}
+
+function testExceptionScript() {
+  var message = 'exception from timer callback - script';
+  waitForGlobalErrors([message]);
+  var timer = google.gears.factory.create('beta.timer');
+  timer.setTimeout("throw new Error('exception from timer callback - script');",
+                   100);
 }
 

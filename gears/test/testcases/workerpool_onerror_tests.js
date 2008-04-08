@@ -90,3 +90,62 @@ function testWorkerOnError() {
     completeAsync();
   }, 100);
 }
+
+// Helper used to test that an error thrown in a child worker is correctly
+// bubbled to its parent worker and to the main page.
+function childWorkerBubbleTest(name, childOnerror, parentOnerror,
+                               shouldBubble) {
+  var fullName = 'childWorkerBubbleTest: ' + name;
+
+  var wp = google.gears.factory.create('beta.workerpool');
+  // Have to create a reference to the wp so that it doesn't get gc'd early.
+  workerPoolBubbleTest.wp = wp;
+
+  if (shouldBubble) {
+    waitForGlobalErrors([fullName]);
+  }
+
+  // This must not contain line breaks or single quotes.
+  var childCode = '';
+  if (childOnerror) {
+    childCode += 'google.gears.workerPool.onerror = function() {';
+    childCode += childOnerror;
+    childCode += '};';
+  }
+  childCode += 'throw new Error("' + fullName + '");';
+
+  var str = [];
+  if (parentOnerror) {
+    str.push('google.gears.workerPool.onerror = function() {');
+    str.push(parentOnerror);
+    str.push('}');
+  }
+  str.push('var childWorkerPool =
+      google.gears.factory.create("beta.workerpool");');
+  str.push('childWorkerPool.createWorker(\'' + childCode + '\');');
+  wp.createWorker(str.join('\n'));
+};
+
+// Tests begin here
+
+function testChildWorkerError1() {
+  // No onerror handler in either child or parent, error should bubble to main
+  // page.
+  childWorkerBubbleTest('child bubble 1', null, null, true);
+}
+
+function testChildWorkerError2() {
+  // onerror handler in parent only, error should not bubble to main page.
+  childWorkerBubbleTest('child bubble 2', null, 'return true;', false);
+}
+
+function testChildWorkerError3() {
+  // onerror handler in child only, error should not bubble to main page.
+  childWorkerBubbleTest('child bubble 3', 'return true;', null, false);
+}
+function testChildWorkerError4() {
+  // onerror handler in both parent and child, error should not bubble to main
+  // page.
+  childWorkerBubbleTest('child bubble 4', 'return true;', 'return true;',
+                        false);
+}
