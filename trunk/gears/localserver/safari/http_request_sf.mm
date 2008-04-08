@@ -76,6 +76,16 @@ SFHttpRequest::~SFHttpRequest() {
   delete delegate_holder_;
 }
 
+void SFHttpRequest::Ref() {
+  count_.Ref();
+}
+  
+void SFHttpRequest::Unref() {
+  if (count_.Unref()) {
+    delete this;
+  }
+}
+
 //------------------------------------------------------------------------------
 // GetReadyState
 //------------------------------------------------------------------------------
