@@ -52,18 +52,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     }
 
     #scroll td {
-      padding-top:0.75em;
-    }
-
-    #scroll tr.first td {
       padding-top:0;
     }
 
     #scroll img {
-      margin-right:1em;
-    }
-
-    #scroll input {
       margin-right:1em;
     }
 
@@ -81,16 +73,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       border-width:0 1px;
       padding:1em;
     }
-
-m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
-~
-    /* WinCE does not support absolute positioning. */
-~,~
-    #measure-checkbox {
-      /* So that we don't affect any of our other layout */
-      position:absolute;
+    
+    #shortcut-name {
+      margin-bottom:2px;
     }
-~)
 
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
@@ -117,28 +103,16 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
           <img id="icon" src="icon_32x32.png" width="32" height="32">
         </td>
         <td width="100%" align="left" valign="middle">
-          <span id="header-singular-desktop" style="display:none">
+          <span id="header-desktop" style="display:none">
           <TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut on the desktop.">
           This website wants to create a shortcut
           on your desktop. Do you want to allow this?
           </TRANS_BLOCK>
           </span>
-          <span id="header-plural-desktop" style="display:none">
-          <TRANS_BLOCK desc="Tells the user that the application wants to create multiple shortcuts on the desktop.">
-          This website wants to create the shortcuts listed below on your
-          desktop. Do you want to allow this?
-          </TRANS_BLOCK>
-          </span>
-          <span id="header-singular-wince" style="display:none">
+          <span id="header-wince" style="display:none">
           <TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut under 'Start'.">
           This website wants to create a shortcut in your list of programs.
           Do you want to allow this?
-          </TRANS_BLOCK>
-          </span>
-          <span id="header-plural-wince" style="display:none">
-          <TRANS_BLOCK desc="Tells the user that the application wants to create multiple shortcuts under 'Start'.">
-          This website wants to create the shortcuts listed below in your
-          list of programs. Do you want to allow this?
           </TRANS_BLOCK>
           </span>
         </td>
@@ -156,13 +130,6 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
   </div>
 
   <div id="foot">
-    <!-- This checkbox is used to measure how tall checkboxes are on this
-    platform. We need to know this so that we can correctly center them next to
-    the shortcut icons. -->
-    <div id="measure-checkbox-wrapper">
-      <input id="measure-checkbox" type="checkbox">
-    </div>
-
     <!-- We use these divs to store the text for our buttons in a way that can
     be translated. We copy the text to the buttons in JavaScript. -->
     <div style="display:none">
@@ -274,11 +241,8 @@ m4_include(ui/common/html_dialog.js)
 
 <script>
   var scrollBordersHeight = -1;
-  var checkboxHeight = -1;
   var iconHeight = 32;
   var iconWidth = 32;
-  var disabled = false;
-  var numShortcuts = 0;
 
   initDialog();
 
@@ -297,7 +261,6 @@ m4_include(ui/common/html_dialog.js)
     setElementContents("deny-permanently-text", "deny-permanently-link");
   }
 
-  measureCheckbox();
   // PIE can't do scrollable divs, so there's no need to do the height
   // calculations.
   if (isPIE) {
@@ -311,44 +274,35 @@ m4_include(ui/common/html_dialog.js)
    * Populate the shortcuts UI based on the data passed in from C++.
    */
   function initShortcuts() {
-    // NOTE: We only expect one argument for now, but leaving in the ability to
-    // handle multiple shortcuts in case we decide we want it.
-    var args = [getArguments()];
+    var args = getArguments();
 
-    // Populate all the rows of the table.
-    numShortcuts = args.length;
-    var showingMultiple = numShortcuts > 1;
-    var content = "";
-    for (var i = 0; i < args.length; i++) {
-      content += createShortcutRow(i, args[i], showingMultiple);
-      preloadIcons(args[i]);
-    }
+    // Handy for debugging layout:
+    // var args = {
+    //   name: "My Application",
+    //   link: "http://www.google.com/",
+    //   description: "This application does things does things!",
+    //   // description: "This application does things does things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things.",
+    //   icon16x16: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/16.png",
+    //   icon32x32: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/32.png",
+    //   icon48x48: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/48.png",
+    //   icon128x128: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/128.png"
+    // };
+
+    // Populate the layout
+    var content = createShortcutRow(args);
     getElementById("scroll").innerHTML =
         "<table cellpadding='0' cellspacing='0' border='0'><tbody>" +
         content +
         "</tbody></table>";
 
-    // Show the right heading, depending on whether we are showing multiple
-    // shortcuts.
-    var headerSingular;
-    var headerPlural;
-    if (isPIE) {
-      var headerSingular = getElementById("header-singular-wince");
-      var headerPlural = getElementById("header-plural-wince");
-    } else {
-      var headerSingular = getElementById("header-singular-desktop");
-      var headerPlural = getElementById("header-plural-desktop");
-    }
+    preloadIcons(args);
 
-    if (showingMultiple) {
-      headerPlural.style.display = "block";
-      resetDisabledState();
-    } else {
-      headerSingular.style.display = "block";
+    if (isPIE) {
+      getElementById("header-wince").style.display = "block";
       // On PIE, the allow button is disabled by default.
-      if (isPIE) {
-        enableButton(getElementById("allow-button"));
-      }
+      enableButton(getElementById("allow-button"));
+    } else {
+      getElementById("header-desktop").style.display = "block";
     }
 
     // Focus deny by default
@@ -359,39 +313,15 @@ m4_include(ui/common/html_dialog.js)
    * Helper function. Creates a row for the shortcut list from the specified
    * data object.
    */
-  function createShortcutRow(row, shortcutData, includeCheckbox) {
-    var content = "<tr";
-    if (row == 0) {
-      content += " class='first'";
-    }
-    content += ">";
-    // If we are showing checkboxes, position the checkbox so that it is
-    // vertically centered with the icon to it's right. Otherwise, hide the
-    // table entry.
-    content += "<td valign='top'";
-    if (!includeCheckbox) {
-      content += " style=display:none;";
-    }
-    content += ">";
-    content += "<input id='checkbox" + row + "' " +
-               "type='checkbox' checked='true' " +
-               "onclick='resetDisabledState()' " +
-               "style='margin-top:" + checkboxTopMargin + "px';>";
-    content += "</td>";
+  function createShortcutRow(shortcutData) {
+    var content = "<tr>";
     content += "<td valign='top'><img width='" + iconWidth + "px' " +
                "height='" + iconHeight + "px' " +
                "src='" + pickIconToRender(shortcutData) + "'>";
     content += "</td>";
     content += "<td align='left' width='100%' valign='middle'>";
-    content += "<div><b>";
-    if (!isPIE) {
-      content += "<a target='_blank' " +
-                 "href='" + shortcutData.link + "'>";
-    }
+    content += "<div id='shortcut-name'><b>";
     content += shortcutData.name;
-    if (!isPIE) {
-      content += "</a>";
-    }
     content += "</b></div>";
     if (isDefined(typeof shortcutData.description)) {
       content += "<div>" + shortcutData.description + "</div>";
@@ -430,39 +360,6 @@ m4_include(ui/common/html_dialog.js)
   }
 
   /**
-   * Resets the disabled state of the allow button depending on whether there is
-   * at least one of the shortcuts is checked.
-   */
-  function resetDisabledState() {
-    var allowButton = getElementById("allow-button");
-
-    for (var i = 0; i < numShortcuts; i++) {
-      if (getElementById("checkbox" + i).checked) {
-        // Found at least one checked checkbox. Make sure allow button is
-        // enabled.
-        enableButton(allowButton);
-        disabled = false;
-        return;
-      }
-    }
-
-    // No checkboxes were checked. Disable allow button.
-    disableButton(allowButton);
-    disabled = true;
-  }
-
-  /**
-   * Measures the height of a checkbox. The result is used for alignment when
-   * populating the table of shortcuts.
-   */
-  function measureCheckbox() {
-    var measurementCheckbox = getElementById("measure-checkbox");
-    var checkboxHeight = measurementCheckbox.offsetHeight;
-    checkboxTopMargin = Math.floor((iconHeight - checkboxHeight) / 2);
-    getElementById("measure-checkbox-wrapper").innerHTML = "";
-  }
-
-  /**
    * Custom layout for this dialog. Allow the scroll region and its borders to
    * grow until they fill all available height, but no more.
    */
@@ -494,18 +391,9 @@ m4_include(ui/common/html_dialog.js)
    * Called when the user clicks the allow button.
    */
   function allowShortcutsTemporarily() {
-    if (!disabled) {
-      var result = [];
-      for (var i = 0; i < numShortcuts; i++) {
-        result.push(getElementById("checkbox" + i).checked);
-      }
-
-      // NOTE: Caller only expects a single result right now, but leaving in
-      // support for multiple in case we want it later.
-      saveAndClose({
-        allow: result[0]
-      });
-      }
+    saveAndClose({
+      allow: true
+    });
   }
 
   /**
