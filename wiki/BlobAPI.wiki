@@ -24,6 +24,10 @@ interface Blob {
 
 The length of the Blob, in bytes.  For example, length could be used to estimate the time taken to upload the Blob.  Note that a Blob's length may be volatile, such as for a Blob representing a file on disk, since that file could be concurrently modified elsewhere.
 
+=== slice() ===
+
+Creates a new blob as a subset of this blob.
+
 == C++ Interface ==
 
 {{{
