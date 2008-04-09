@@ -120,8 +120,8 @@ function childWorkerBubbleTest(name, childOnerror, parentOnerror,
     str.push(parentOnerror);
     str.push('}');
   }
-  str.push('var childWorkerPool =
-      google.gears.factory.create("beta.workerpool");');
+  str.push('var childWorkerPool = ' +
+      'google.gears.factory.create("beta.workerpool");');
   str.push('childWorkerPool.createWorker(\'' + childCode + '\');');
   wp.createWorker(str.join('\n'));
 };
