@@ -27,87 +27,79 @@
 // The blob API has not been finalized for official builds
 #else
 
-#include "gears/base/common/security_model.h"
-#include "gears/base/common/string16.h"
-#include "gears/base/ie/activex_utils.h"
-#include "gears/base/ie/atl_headers.h"
-
-#include <comutil.h>
-
-#include "gears/blob/blob_ie.h"
+#include "gears/base/common/dispatcher.h"
+#include "gears/base/common/module_wrapper.h"
+#include "gears/blob/blob.h"
 #include "gears/blob/slice_blob.h"
 
+DECLARE_GEARS_WRAPPER(GearsBlob);
 
-STDMETHODIMP GearsBlob::get_length(VARIANT *retval) {
+template<>
+void Dispatcher<GearsBlob>::Init() {
+  RegisterMethod("slice", &GearsBlob::Slice);
+  RegisterProperty("length", &GearsBlob::GetLength, NULL);
+}
+
+const std::string GearsBlob::kModuleName("GearsBlob");
+
+void GearsBlob::GetLength(JsCallContext *context) {
   // A GearsBlob should never be let out in the JS world unless it has been
   // Initialize()d with valid contents_.
   assert(contents_.get());
 
   int64 length = contents_->Length();
   if ((length < JS_INT_MIN) || (length > JS_INT_MAX)) {
-    RETURN_EXCEPTION(STRING16(L"length is out of range."));
-  }
-  retval->vt = VT_R8;
-  retval->dblVal = static_cast<DOUBLE>(length);
-  RETURN_NORMAL();
-}
-
-
-STDMETHODIMP GearsBlob::get_contents(VARIANT *retval) {
-  // We pack the pointer into the byref field of a VARIANT.
-  retval->vt = VT_BYREF;
-  retval->byref = reinterpret_cast<void*>(contents_.get());
-  contents_->Ref();
-  RETURN_NORMAL();
-}
-
-STDMETHODIMP GearsBlob::slice(VARIANT var_offset, const VARIANT *var_length,
-                              GearsBlobInterface **retval) {
-  *retval = NULL;  // set retval in case we exit early
-
-  // Validate arguments.
-  int64 offset;
-  if (!JsTokenToInt64_NoCoerce(var_offset, NULL, &offset) || (offset < 0)) {
-    RETURN_EXCEPTION(STRING16(L"Offset must be a non-negative integer."));
+    context->SetException(STRING16(L"length is out of range."));
+    return;
   }
 
-  int64 length;
-  if (ActiveXUtils::OptionalVariantIsPresent(var_length)) {
-    if (!JsTokenToInt64_NoCoerce(*var_length, NULL, &length) || (length < 0)) {
-      RETURN_EXCEPTION(STRING16(L"Length must be a non-negative integer."));
-    }
+  // If length (which is 64-bit) fits inside 32 bits, then return it as a
+  // 32-bit int, otherwise return it as a double.
+  if ((length < INT_MIN) || (length > INT_MAX)) {
+    double length_as_double = static_cast<double>(length);
+    context->SetReturnValue(JSPARAM_DOUBLE, &length_as_double);
   } else {
+    int length_as_int = static_cast<int>(length);
+    context->SetReturnValue(JSPARAM_INT, &length_as_int);
+  }
+}
+
+void GearsBlob::Slice(JsCallContext *context) {
+  int64 offset = 0;
+  int64 length = 0;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_INT64, &offset },
+    { JSPARAM_OPTIONAL, JSPARAM_INT64, &length },
+  };
+  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
+  if (offset < 0) {
+    context->SetException(STRING16(L"Offset must be a non-negative integer."));
+    return;
+  }
+  if (argc != 2) {
     int64 blob_size = contents_->Length();
     length = (blob_size > offset) ? blob_size - offset : 0;
+  }
+  if (length < 0) {
+    context->SetException(STRING16(L"Length must be a non-negative integer."));
+    return;
   }
 
   // Slice the blob.
   scoped_refptr<BlobInterface> sliced(new SliceBlob(contents_.get(), offset,
                                                     length));
 
-  // Expose the object to JavaScript via COM.
-  CComObject<GearsBlob> *blob_internal = NULL;
-  HRESULT hr = CComObject<GearsBlob>::CreateInstance(&blob_internal);
-  if (FAILED(hr)) {
-    RETURN_EXCEPTION(STRING16(L"Could not create GearsBlob."));
+  scoped_refptr<GearsBlob> gears_blob;
+  CreateModule<GearsBlob>(GetJsRunner(), &gears_blob);
+  if (!gears_blob->InitBaseFromSibling(this)) {
+    context->SetException(STRING16(L"Initializing base class failed."));
+    return;
   }
-
-  // Note: blob_external maintains our ref count.
-  CComQIPtr<GearsBlobInterface> blob_external = blob_internal;
-  if (!blob_external) {
-    RETURN_EXCEPTION(STRING16(L"Could not get GearsBlobInterface interface."));
-  }
-
-  if (!blob_internal->InitBaseFromSibling(this)) {
-    RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
-  }
-
-  blob_internal->Reset(sliced.get());
-
-  *retval = blob_external.Detach();
-  assert((*retval)->AddRef() == 2 &&
-         (*retval)->Release() == 1);  // CComObject* does not Release
-  RETURN_NORMAL();
+  gears_blob->Reset(sliced.get());
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, gears_blob.get());
+  ReleaseNewObjectToScript(gears_blob.get());
 }
 
 #endif  // not OFFICIAL_BUILD

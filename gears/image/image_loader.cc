@@ -27,55 +27,55 @@
 // The Image API has not been finalized for official builds
 #else
 
-#include "gears/base/common/security_model.h"
-#include "gears/base/common/string16.h"
-#include "gears/base/ie/activex_utils.h"
-#include "gears/base/ie/atl_headers.h"
+#include "gears/base/common/dispatcher.h"
+#include "gears/base/common/module_wrapper.h"
+#include "gears/blob/blob.h"
+#include "gears/image/image.h"
+#include "gears/image/image_loader.h"
 
-#include "gears/image/common/image.h"
-#include "gears/image/ie/image_ie.h"
-#include "gears/image/ie/image_loader_ie.h"
+DECLARE_GEARS_WRAPPER(GearsImageLoader);
 
-HRESULT GearsImageLoader::createImageFromBlob(IUnknown *blob,
-                                              GearsImageInterface **retval) {
-  // Extract the blob
-  CComQIPtr<GearsBlobPvtInterface> blob_pvt(blob);
-  if (!blob_pvt) {
-    RETURN_EXCEPTION(STRING16(L"Error converting to native class."));
-  }
-  VARIANT var;
-  HRESULT hr = blob_pvt->get_contents(&var);
-  if (FAILED(hr)) {
-    RETURN_EXCEPTION(STRING16(L"Error getting blob contents."));
-  }
-  scoped_refptr<BlobInterface> blob_contents(
-      reinterpret_cast<BlobInterface*>(var.byref));
-  blob_contents->Unref();
+template<>
+void Dispatcher<GearsImageLoader>::Init() {
+  RegisterMethod("createImageFromBlob", &GearsImageLoader::CreateImageFromBlob);
+}
 
-  // Create the image
-  CComObject<GearsImage> *image = NULL;
-  hr = CComObject<GearsImage>::CreateInstance(&image);
-  if (FAILED(hr)) {
-    RETURN_EXCEPTION(STRING16(L"Could not create GearsImage."));
+void GearsImageLoader::CreateImageFromBlob(JsCallContext *context) {
+  ModuleImplBaseClass *other_module = NULL;
+
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_DISPATCHER_MODULE, &other_module },
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
+  // Extract the blob.
+  if (GearsBlob::kModuleName != other_module->get_module_name()) {
+    context->SetException(STRING16(L"First argument must be a Blob."));
+    return;
   }
-  CComPtr<CComObject<GearsImage> > image_ptr(image);
-  Image *image_contents = new Image();
-  image->Init(image_contents);
+  scoped_refptr<BlobInterface> blob_contents;
+  static_cast<GearsBlob*>(other_module)->GetContents(&blob_contents);
+  assert(blob_contents.get());
+
+  // Create the backing_image.
+  scoped_ptr<BackingImage> backing_image(new BackingImage());
   std::string16 error;
-  if (!image_contents->Init(blob_contents.get(), &error)) {
-    RETURN_EXCEPTION(error.c_str());
-  }
-  if (!image->InitBaseFromSibling(this)) {
-    RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
+  if (!backing_image->Init(blob_contents.get(), &error)) {
+    context->SetException(error.c_str());
+    return;
   }
 
-  // Return the image
-  CComQIPtr<GearsImageInterface> image_external = image;
-  if (!image_external) {
-    RETURN_EXCEPTION(STRING16(L"Could not get GearsImage interface."));
+  // Create and return the gears_image.
+  scoped_refptr<GearsImage> gears_image;
+  CreateModule<GearsImage>(GetJsRunner(), &gears_image);
+  if (!gears_image->InitBaseFromSibling(this)) {
+    context->SetException(STRING16(L"Initializing base class failed."));
+    return;
   }
-  *retval = image_external.Detach();
-  RETURN_NORMAL();
+  gears_image->Init(backing_image.release());
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, gears_image.get());
+  ReleaseNewObjectToScript(gears_image.get());
 }
 
 #endif  // not OFFICIAL_BUILD

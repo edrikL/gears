@@ -42,7 +42,7 @@
 #ifdef OFFICIAL_BUILD
 // The Image API has not been finalized for official builds
 #else
-#include "gears/image/ie/image_loader_ie.h"
+#include "gears/image/image_loader.h"
 #endif
 #endif
 #include "gears/localserver/ie/localserver_ie.h"
@@ -154,6 +154,16 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
 #endif
   } else if (object_name == STRING16(L"beta.desktop")) {
     CreateModule<GearsDesktop>(GetJsRunner(), &object);
+#ifdef WINCE
+// The Image API is not yet available for WinCE.
+#else
+#ifdef OFFICIAL_BUILD
+// The Image API has not been finalized for official builds
+#else
+  } else if (object_name == STRING16(L"beta.imageloader")) {
+    CreateModule<GearsImageLoader>(GetJsRunner(), &object);
+#endif
+#endif
   } else if (object_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(GetJsRunner(), &object);
   } else {
@@ -199,19 +209,6 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
     hr = CComObject<GearsHttpRequest>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
-#ifdef WINCE
-// The Image API is not yet available for WinCE.
-#else
-#ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
-#else
-  } else if (object_name == STRING16(L"beta.imageloader")) {
-    CComObject<GearsImageLoader> *obj;
-    hr = CComObject<GearsImageLoader>::CreateInstance(&obj);
-    base_class = obj;
-    idispatch = obj;
-#endif
-#endif
   } else if (object_name == STRING16(L"beta.localserver")) {
     CComObject<GearsLocalServer> *obj;
     hr = CComObject<GearsLocalServer>::CreateInstance(&obj);

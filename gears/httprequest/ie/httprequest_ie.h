@@ -29,6 +29,9 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
+#ifndef OFFICIAL_BUILD
+#include "gears/blob/blob.h"
+#endif
 #include "gears/localserver/common/http_request.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 #include "genfiles/interfaces.h"
@@ -116,7 +119,7 @@ class ATL_NO_VTABLE GearsHttpRequest
 #ifndef OFFICIAL_BUILD
   // The blob API has not been finalized for official builds
   // Valid only after a successful get_responseBlob()
-  CComPtr<GearsBlobInterface> response_blob_;
+  scoped_refptr<GearsBlob> response_blob_;
 #endif  // not OFFICIAL_BUILD
 
   bool content_type_header_was_set_;

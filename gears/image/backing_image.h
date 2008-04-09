@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_IMAGE_COMMON_IMAGE_H__
-#define GEARS_IMAGE_COMMON_IMAGE_H__
+#ifndef GEARS_IMAGE_BACKING_IMAGE_H__
+#define GEARS_IMAGE_BACKING_IMAGE_H__
 
 #ifdef OFFICIAL_BUILD
 // The Image API has not been finalized for official builds
@@ -36,7 +36,7 @@
 // To create an image, construct it, then initialize it from a blob with
 // Init(blob).  If Init is not called, or returns false, the
 // image is not initialized and should not be used until it is initialized.
-class Image {
+class BackingImage {
  public:
   // IJG quality value in the range [0..95], or -1 for the libGD default:
   static const int kJpegQuality = -1;
@@ -52,7 +52,7 @@ class Image {
   };
 
   // Creates an uninitialised image.
-  Image();
+  BackingImage();
 
   // Initializes this with the contents of blob and returns true, or returns
   // false on failure.
@@ -78,19 +78,19 @@ class Image {
   bool FlipVertical(std::string16 *error);
 
   // Composes the given image at the given displacement from the left and top.
-  bool DrawImage(const Image* img, int x, int y, std::string16 *error);
+  bool DrawImage(const BackingImage* img, int x, int y, std::string16 *error);
 
   int Width() const;
 
   int Height() const;
 
   // Returns a blob containing the image data in the format specified.
-  BlobInterface *ToBlob(ImageFormat format);
+  void ToBlob(scoped_refptr<BlobInterface> *out, ImageFormat format);
 
   // Returns a blob of the format from which it was originally saved.
-  BlobInterface *ToBlob();
+  void ToBlob(scoped_refptr<BlobInterface> *out);
 
-  ~Image();
+  ~BackingImage();
 
  private:
   gdImagePtr img_ptr_;
@@ -100,4 +100,4 @@ class Image {
 
 #endif  // not OFFICIAL_BUILD
 
-#endif  // GEARS_IMAGE_COMMON_IMAGE_H__
+#endif  // GEARS_IMAGE_BACKING_IMAGE_H__

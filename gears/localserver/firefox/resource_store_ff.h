@@ -79,7 +79,9 @@ class GearsResourceStore
 #ifdef OFFICIAL_BUILD
   // Blob support is not ready for prime time yet
 #else
-  NS_IMETHOD CaptureBlob(nsISupports *blob, const nsAString &url);
+  NS_IMETHOD CaptureBlob(// ModuleImplBaseClass *blob,
+                         // const nsAString &url
+                         );
 #endif  // OFFICIAL_BUILD
   NS_IMETHOD CaptureFile(nsISupports *file_input_element, const nsAString &url);
   NS_IMETHOD GetCapturedFileName(const nsAString &url,

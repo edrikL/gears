@@ -33,15 +33,11 @@
 #include "gears/base/common/file.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/module_wrapper.h"
+#include "gears/blob/blob.h"
 #include "gears/blob/file_blob.h"
 #include "gears/third_party/linked_ptr/linked_ptr.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
-
-#if BROWSER_FF
-  #include "gears/blob/blob_ff.h"
-#elif BROWSER_IE
-  #include "gears/blob/blob_ie.h"
-#endif  // BROWSER_xyz
 
 bool FileDialogUtils::FiltersToVector(const JsArray* filters,
                                       std::vector<FileDialog::Filter>* out,
@@ -77,74 +73,6 @@ bool FileDialogUtils::FiltersToVector(const JsArray* filters,
   }
 
   return true;
-}
-
-// Creates a new COM blob. This holds the internal BlobInterface.
-// Returns: false on failure
-// Parameters:
-//  module - in - used for constructing objects
-//  blob_internal - in - base acquires a reference to this blob
-//  base - out - addrefed interface placed in here
-//  error - out - error message is placed here
-static bool CreateBlob(const ModuleImplBaseClass& module,
-                       BlobInterface* blob_internal,
-                       GearsBlobInterface** base,
-                       std::string16* error) {
-#if BROWSER_FF
-
-    scoped_ptr<GearsBlob> gears_blob(new GearsBlob());
-    if (!gears_blob.get()) {
-      *error = STRING16(L"Failed to create blob.");
-      return false;
-    }
-
-    if (!gears_blob->InitBaseFromSibling(&module)) {
-      *error = STRING16(L"Initializing base class failed.");
-      return false;
-    }
-
-    gears_blob->Reset(blob_internal);
-
-    // disambiguate nsISupports
-    *base = gears_blob.release();
-    return true;
-
-#elif BROWSER_IE
-
-    CComObject<GearsBlob>* gears_blob_create = NULL;
-    HRESULT hr = CComObject<GearsBlob>::CreateInstance(&gears_blob_create);
-    if (FAILED(hr)) {
-      *error = STRING16(L"Could not create GearsBlob.");
-      return false;
-    }
-    // CComPtr will AddRef()
-    CComPtr<CComObject<GearsBlob> > gears_blob(gears_blob_create);
-
-    if (!gears_blob->InitBaseFromSibling(&module)) {
-      *error = STRING16(L"Initializing base class failed.");
-      return false;
-    }
-
-    gears_blob->Reset(blob_internal);
-
-    // disambiguate IUnknown
-    CComQIPtr<GearsBlobInterface> blob_external = gears_blob;
-    if (!blob_external) {
-      *error = STRING16(L"Could not get GearsBlob interface.");
-      return false;
-    }
-    *base = blob_external.Detach();
-    // CComPtr and CComQIPtr both dervie from CComPtrBase and therefore they
-    // Release() when going out of scope. CComPtr d'tor will Release() but
-    // CComQIPtr d'tor will not because it has been Detached. This leaves
-    // a reference count of 1.
-    return true;
-
-#else
-
-  return false;
-
-#endif  // BROWSER_xyz
 }
 
 bool FileDialogUtils::FilesToJsObjectArray(
@@ -193,20 +121,19 @@ bool FileDialogUtils::FilesToJsObjectArray(
 #ifdef OFFICIAL_BUILD
   // Blob support is not ready for prime time yet
 #else
-    GearsBlobInterface* base = NULL;
-    if (!CreateBlob(module, blobs[i].get(), &base, error))
-      return false;
-
-#if BROWSER_IE
-    assert(base->AddRef() == 2);
-    assert(base->Release() == 1);
-#endif
-
-    if (!obj->SetPropertyModule(STRING16(L"blob"), base)) {
-      *error = STRING16(L"Failed to set blob property on File.");
-      base->Release();
+    scoped_refptr<GearsBlob> gears_blob;
+    CreateModule<GearsBlob>(module.GetJsRunner(), &gears_blob);
+    if (!gears_blob->InitBaseFromSibling(&module)) {
+      *error = STRING16(L"Initializing base class failed.");
       return false;
     }
+    if (!obj->SetPropertyDispatcherModule(STRING16(L"blob"),
+                                          gears_blob.get())) {
+      *error = STRING16(L"Failed to set blob property on File.");
+      return false;
+    }
+    gears_blob->Reset(blobs[i].get());
+    ReleaseNewObjectToScript(gears_blob.get());
 #endif  // OFFICIAL_BUILD
 
     // JsArray takes the javascript token out of JsObject. Hence, the JsObject

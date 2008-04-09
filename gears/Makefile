@@ -1099,38 +1099,16 @@ $(BROWSER)_VPATH += \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS += \
+		blob.cc \
+		blob_test.cc \
 		buffer_blob.cc \
 		file_blob.cc \
 		slice_blob.cc \
 		$(NULL)
 
-# (browser-specific)
-FF3_IDLSRCS	+= \
-		blob_ff.idl \
-		$(NULL)
-
-FF3_CPPSRCS	+= \
-		blob_ff.cc \
-		blob_input_stream_ff.cc \
-		blob_test.cc \
-		$(NULL)
-
-IE_IDLSRCS	+= \
-		blob_ie.idl \
-		$(NULL)
-
-IE_CPPSRCS	+= \
-		blob_ie.cc \
-		blob_test.cc \
-		$(NULL)
-
-NPAPI_CPPSRCS	+= \
-		blob_test.cc \
-		$(NULL)
-
-# Blob internal tests
 # TODO(bpm): Make this cross-browser, not Firefox-only.
 FF3_CPPSRCS	+= \
+		blob_input_stream_ff.cc \
 		blob_input_stream_ff_test.cc \
 		$(NULL)
 endif # not OFFICIAL_BUILD
@@ -1140,42 +1118,17 @@ endif # not OFFICIAL_BUILD
 # image
 
 ifneq ($(OFFICIAL_BUILD),1)
-FF3_VPATH	+= \
-		image/common \
-		image/firefox \
-		$(NULL)
-
-FF3_M4SRCS	+= \
-		image.idl.m4 \
-		$(NULL)
-
-FF3_IDLSRCS	+= \
-		image.idl \
-		$(NULL)
-
-FF3_CPPSRCS	+= \
-		image.cc \
-		image_ff.cc \
-		image_loader_ff.cc \
-		$(NULL)
-
 ifneq ($(OS),wince)
-IE_VPATH	+= \
-		image/common \
-		image/ie \
+$(BROWSER)_VPATH += \
+		image \
 		$(NULL)
 
-IE_IDLSRCS	+= \
-		image.idl \
-		$(NULL)
-
-IE_CPPSRCS	+= \
+$(BROWSER)_CPPSRCS += \
+		backing_image.cc \
 		image.cc \
-		image_ie.cc \
-		image_loader_ie.cc \
+		image_loader.cc \
 		$(NULL)
 endif # not wince
-
 endif # not OFFICIAL_BUILD
 
 #-----------------------------------------------------------------------------

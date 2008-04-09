@@ -23,39 +23,23 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_IMAGE_IE_IMAGE_LOADER_IE_H__
-#define GEARS_IMAGE_IE_IMAGE_LOADER_IE_H__
+#ifndef GEARS_IMAGE_IMAGE_LOADER_H__
+#define GEARS_IMAGE_IMAGE_LOADER_H__
 
 #ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
+// The Image API has not been finalized for official builds.
 #else
 
-#include "genfiles/interfaces.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 
-
-class ATL_NO_VTABLE GearsImageLoader
-    : public ModuleImplBaseClass,
-      public CComObjectRootEx<CComMultiThreadModel>,
-      public CComCoClass<GearsImageLoader>,
-      public IDispatchImpl<GearsImageLoaderInterface> {
+class GearsImageLoader : public ModuleImplBaseClassVirtual {
  public:
-  BEGIN_COM_MAP(GearsImageLoader)
-    COM_INTERFACE_ENTRY(GearsImageLoaderInterface)
-    COM_INTERFACE_ENTRY(IDispatch)
-  END_COM_MAP()
+  GearsImageLoader() : ModuleImplBaseClassVirtual("GearsImageLoader") {}
 
-  DECLARE_NOT_AGGREGATABLE(GearsImageLoader)
-  DECLARE_PROTECT_FINAL_CONSTRUCT()
-  // End boilerplate code. Begin interface.
-
-  STDMETHOD(createImageFromBlob)(IUnknown *blob,
-                                 GearsImageInterface **retval);
-
-  GearsImageLoader() {}
-  ~GearsImageLoader() {}
-
+  // IN: GearsBlob blob
+  // OUT: GearsImage image
+  void CreateImageFromBlob(JsCallContext *context);
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(GearsImageLoader);
@@ -63,4 +47,4 @@ class ATL_NO_VTABLE GearsImageLoader
 
 #endif  // not OFFICIAL_BUILD
 
-#endif  // GEARS_IMAGE_IE_IMAGE_LOADER_IE_H__
+#endif  // GEARS_IMAGE_IMAGE_LOADER_H__

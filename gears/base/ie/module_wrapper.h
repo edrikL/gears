@@ -33,6 +33,7 @@
 #include "gears/base/common/js_types.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "genfiles/interfaces.h"
 
 // Represents the bridge between the JavaScript engine and a Gears module. A
 // ModuleWrapper wraps each Gears module instance and exposes its methods to
@@ -41,10 +42,12 @@
 class ATL_NO_VTABLE ModuleWrapper
     : public ModuleWrapperBaseClass,
       public IDispatch,
+      public GearsModuleProviderInterface,
       public CComObjectRootEx<CComMultiThreadModel>,
       public CComCoClass<ModuleWrapper> {      
  public:
   BEGIN_COM_MAP(ModuleWrapper)
+    COM_INTERFACE_ENTRY(GearsModuleProviderInterface)
     COM_INTERFACE_ENTRY(IDispatch)
   END_COM_MAP()
 
@@ -83,6 +86,8 @@ class ATL_NO_VTABLE ModuleWrapper
                     EXCEPINFO FAR* exception,
                     unsigned int FAR* arg_error_index);
 
+  STDMETHOD(get_moduleWrapper)(VARIANT *retval);
+
   // ModuleWrapperBaseClass
   // Returns a token for this wrapper class that can be returned via the
   // JsRunnerInterface.
@@ -94,6 +99,11 @@ class ATL_NO_VTABLE ModuleWrapper
   virtual DispatcherInterface *GetDispatcher() const {
     assert(dispatcher_.get());
     return dispatcher_.get();
+  }
+
+  virtual ModuleImplBaseClass *GetModuleImplBaseClass() const {
+    assert(impl_.get());
+    return impl_.get();
   }
 
   virtual void Ref() {

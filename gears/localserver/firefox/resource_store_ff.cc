@@ -40,7 +40,7 @@
 #include "gears/base/common/url_utils.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/base/firefox/ns_file_utils.h"
-#include "gears/blob/blob_ff.h"
+#include "gears/blob/blob.h"
 #include "gears/localserver/firefox/file_submitter_ff.h"
 
 
@@ -336,22 +336,29 @@ NS_IMETHODIMP GearsResourceStore::Copy(const nsAString &src_url,
 //------------------------------------------------------------------------------
 // CaptureBlob
 //------------------------------------------------------------------------------
-NS_IMETHODIMP GearsResourceStore::CaptureBlob(nsISupports *blob,
-                                              const nsAString &url_astring) {
-  // Get the blob
-  nsresult nr;
-  nsCOMPtr<GearsBlobPvtInterface> blob_pvt = do_QueryInterface(blob, &nr);
-  if (NS_FAILED(nr) || !blob_pvt) {
-    RETURN_EXCEPTION(STRING16(L"Error converting to native class."));
+NS_IMETHODIMP GearsResourceStore::CaptureBlob(// ModuleImplBaseClass *blob,
+                                              // const nsAString &url_astring
+                                              ) {
+  // Validate arguments
+  JsParamFetcher js_params(this);
+  if (js_params.GetCount(false) < 1) {
+    RETURN_EXCEPTION(STRING16(L"Blob is required."));
   }
-  scoped_refptr<BlobInterface> blob_contents;
-  nr = blob_pvt->GetContents(as_out_parameter(blob_contents));
-  if (NS_FAILED(nr) || !blob_contents.get()) {
-    RETURN_EXCEPTION(STRING16(L"Error getting blob contents."));
+  if (js_params.GetCount(false) > 2) {
+    RETURN_EXCEPTION(STRING16(L"Too many parameters."));
   }
 
+  // Extract the blob.
+  ModuleImplBaseClass *module;
+  if (!js_params.GetAsDispatcherModule(0, GetJsRunner(), &module) ||
+      GearsBlob::kModuleName != module->get_module_name()) {
+    RETURN_EXCEPTION(STRING16(L"First argument must be a Blob."));
+  }
+  scoped_refptr<BlobInterface> blob_contents;
+  static_cast<GearsBlob*>(module)->GetContents(&blob_contents);
+  assert(blob_contents.get());
+
   // Resolve the URL this file is to be registered under.
-  JsParamFetcher js_params(this);
   std::string16 url;
   if (!js_params.GetAsString(1, &url)) {
     RETURN_EXCEPTION(STRING16(L"Invalid parameter."));

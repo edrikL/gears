@@ -45,10 +45,11 @@
 #endif
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/module_wrapper.h"
 #ifdef WINCE
 // FileSubmitter is not implemented for WinCE.
 #else
-#include "gears/blob/blob_ie.h"
+#include "gears/blob/blob.h"
 #include "gears/localserver/ie/file_submitter_ie.h"
 #endif
 
@@ -484,18 +485,24 @@ STDMETHODIMP GearsResourceStore::captureBlob(
       /* [in] */ IUnknown *blob,
       /* [in] */ const BSTR url) {
   // Get the blob
-  CComQIPtr<GearsBlobPvtInterface> blob_pvt(blob);
-  if (!blob_pvt) {
-    RETURN_EXCEPTION(STRING16(L"Error converting to native class."));
+  CComQIPtr<GearsModuleProviderInterface> module_provider(blob);
+  if (!module_provider) {
+    RETURN_EXCEPTION(STRING16(L"Error getting GearsModuleProviderInterface."));
   }
   VARIANT var;
-  HRESULT hr = blob_pvt->get_contents(&var);
+  HRESULT hr = module_provider->get_moduleWrapper(&var);
   if (FAILED(hr)) {
-    RETURN_EXCEPTION(STRING16(L"Error getting blob contents."));
+    RETURN_EXCEPTION(STRING16(L"Error getting ModuleWrapper."));
   }
-  scoped_refptr<BlobInterface> blob_contents(
-      reinterpret_cast<BlobInterface*>(var.byref));
-  blob_contents->Unref();
+  ModuleWrapper *module_wrapper =
+      reinterpret_cast<ModuleWrapper*>(var.byref);
+  ModuleImplBaseClass *module = module_wrapper->GetModuleImplBaseClass();
+  if (GearsBlob::kModuleName != module->get_module_name()) {
+    RETURN_EXCEPTION(STRING16(L"First argument must be a Blob."));
+  }
+  scoped_refptr<BlobInterface> blob_contents;
+  static_cast<GearsBlob*>(module)->GetContents(&blob_contents);
+  assert(blob_contents.get());
 
   // Resolve the URL this file is to be registered under.
   std::string16 full_url;
@@ -513,7 +520,6 @@ STDMETHODIMP GearsResourceStore::captureBlob(
   if (!store_.PutItem(&item)) {
     RETURN_EXCEPTION(STRING16(L"PutItem failed."));
   }
-
   RETURN_NORMAL();
 }
 #endif  // OFFICIAL_BUILD

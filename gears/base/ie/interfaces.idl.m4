@@ -57,24 +57,22 @@ import "database/ie/database.idl";
 import "factory/ie/factory.idl";
 import "httprequest/ie/httprequest.idl";
 
-#ifdef WINCE
-// The Image API is not yet available for WinCE.
-#else
-#ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds.
-#else
-import "image/ie/image.idl";
-#endif
-#endif
-
-#ifdef OFFICIAL_BUILD
-// The Blob API has not been finalized for official builds.
-#else
-import "blob/blob_ie.idl";
-#endif
-
 import "localserver/ie/localserver.idl";
 import "workerpool/ie/workerpool.idl";
+
+// The ModuleWrapper C++ class implements GearsModuleProviderInterface in
+// order to let us distinguish VARIANTs that are ModuleWrappers from other
+// VARIANTs, and convert from a VARIANT* to a ModuleWrapper*.
+[
+  object,
+  uuid(edf6d581-3eab-3305-7598-18e0cd19d7b6),
+  nonextensible,
+  pointer_default(unique)
+]
+interface GearsModuleProviderInterface : IUnknown {
+  // retval->byref is assigned a pointer to the C++ ModuleWrapper object.
+  [propget] HRESULT moduleWrapper([out, retval] VARIANT *retval);
+};
 
 //------------------------------------------------------------------------------
 // GearsTypelib
@@ -192,33 +190,4 @@ library GearsTypelib
   {
     [default] interface GearsHttpRequestInterface;
   };
-
-#ifdef OFFICIAL_BUILD
-  // The Blob API has not been finalized for official builds.
-#else
-  [
-    uuid(B4F3B2E2-6200-4796-B49D-471BD24F18F5)
-  ]
-  coclass GearsBlob
-  {
-    [default] interface GearsBlobInterface;
-  };
-#endif
-
-#ifdef WINCE
-  // The Image API is not yet available for WinCE.
-#else
-#ifdef OFFICIAL_BUILD
-  // The Image API has not been finalized for official builds.
-#else
-  [
-    uuid(D946AEB2-263E-4448-8F29-FC714A86E9A1)
-  ]
-  coclass GearsImageLoader
-  {
-    [default] interface GearsImageLoaderInterface;
-  };
-#endif
-#endif
-
 };

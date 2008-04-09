@@ -24,16 +24,17 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
+// The Image API has not been finalized for official builds.
 #else
 
 #include <cstring>
 #include <vector>
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/string16.h"
 #include "gears/blob/buffer_blob.h"
-#include "gears/image/common/image.h"
+#include "gears/image/backing_image.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 struct BlobReader {
   gdIOCtx io_ctx;
@@ -102,10 +103,10 @@ BlobWriter *NewBlobWriter() {
   return writer;
 }
 
-BlobInterface *BlobWriterToBlob(BlobWriter *blob_writer) {
+void BlobWriterToBlob(BlobWriter *blob_writer,
+                      scoped_refptr<BlobInterface> *out) {
   scoped_refptr<BufferBlob> blob(new BufferBlob(&(blob_writer->buffer)));
-  blob->Ref();
-  return blob.get();
+  *out = blob;
 }
 
 int blobGetC(gdIOCtx *ctx) {
@@ -142,10 +143,9 @@ int blobPutBuf(gdIOCtx *ctx, const void *src, int wanted) {
 
 // Start Image class implementation
 
-Image::Image() : img_ptr_(NULL) {
-}
+BackingImage::BackingImage() : img_ptr_(NULL) {}
 
-bool Image::Init(BlobInterface *blob, std::string16 *error) {
+bool BackingImage::Init(BlobInterface *blob, std::string16 *error) {
   const int kHeaderSize = 4;  // At least the length of the longest header below
   const char *kPngHeader = "\x89PNG";
   const char *kGifHeader = "GIF8";
@@ -215,7 +215,7 @@ bool Image::Init(BlobInterface *blob, std::string16 *error) {
   return true;
 }
 
-bool Image::Resize(int width, int height, std::string16 *error) {
+bool BackingImage::Resize(int width, int height, std::string16 *error) {
   assert(img_ptr_);
   if (width <= 0 || height <= 0) {
     *error = STRING16(L"width and height must not be negative");
@@ -236,7 +236,7 @@ bool Image::Resize(int width, int height, std::string16 *error) {
   return true;
 }
 
-bool Image::Crop(int x, int y, int width, int height, std::string16 *error) {
+bool BackingImage::Crop(int x, int y, int width, int height, std::string16 *error) {
   assert(img_ptr_);
   if (width <= 0 || height <= 0 ||
       x < 0 || y < 0 ||
@@ -254,7 +254,7 @@ bool Image::Crop(int x, int y, int width, int height, std::string16 *error) {
   return true;
 }
 
-bool Image::Rotate(int degrees, std::string16 *error) {
+bool BackingImage::Rotate(int degrees, std::string16 *error) {
   assert(img_ptr_);
   if (degrees % 90 != 0) {
     *error = STRING16(L"Rotations must be orthogonal");
@@ -283,7 +283,8 @@ bool Image::Rotate(int degrees, std::string16 *error) {
   return true;
 }
 
-bool Image::DrawImage(const Image *img, int x, int y, std::string16 *error) {
+bool BackingImage::DrawImage(const BackingImage *img, int x, int y,
+                             std::string16 *error) {
   assert(img_ptr_);
   if (img == this) {
     *error = STRING16(L"Cannot draw an image onto itself");
@@ -295,7 +296,7 @@ bool Image::DrawImage(const Image *img, int x, int y, std::string16 *error) {
   return true;
 }
 
-bool Image::FlipHorizontal(std::string16 *error) {
+bool BackingImage::FlipHorizontal(std::string16 *error) {
   assert(img_ptr_);
   int width = gdImageSX(img_ptr_);
   int height = gdImageSY(img_ptr_);
@@ -314,7 +315,7 @@ bool Image::FlipHorizontal(std::string16 *error) {
   return true;
 }
 
-bool Image::FlipVertical(std::string16 *error) {
+bool BackingImage::FlipVertical(std::string16 *error) {
   assert(img_ptr_);
   int width = gdImageSX(img_ptr_);
   int height = gdImageSY(img_ptr_);
@@ -333,15 +334,16 @@ bool Image::FlipVertical(std::string16 *error) {
   return true;
 }
 
-int Image::Width() const {
+int BackingImage::Width() const {
   return gdImageSX(img_ptr_);
 }
 
-int Image::Height() const {
+int BackingImage::Height() const {
   return gdImageSY(img_ptr_);
 }
 
-BlobInterface *Image::ToBlob(ImageFormat format) {
+void BackingImage::ToBlob(scoped_refptr<BlobInterface> *out,
+                          ImageFormat format) {
   assert(img_ptr_);
   scoped_ptr<BlobWriter> blob_writer(NewBlobWriter());
   if (format == FORMAT_PNG) {
@@ -354,14 +356,14 @@ BlobInterface *Image::ToBlob(ImageFormat format) {
   } else {
     assert(false);
   }
-  return BlobWriterToBlob(blob_writer.get());
+  BlobWriterToBlob(blob_writer.get(), out);
 }
 
-BlobInterface *Image::ToBlob() {
-  return ToBlob(original_format_);
+void BackingImage::ToBlob(scoped_refptr<BlobInterface> *out) {
+  return ToBlob(out, original_format_);
 }
 
-Image::~Image() {
+BackingImage::~BackingImage() {
   if (img_ptr_) {
     gdImageDestroy(img_ptr_);
   }

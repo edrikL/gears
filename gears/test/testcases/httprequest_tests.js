@@ -51,11 +51,14 @@ function testPost200() {
 }
 
 function testPostBlob200() {
-  // TODO(bgarcia): Remove the workerPool check once sending of blobs works
-  //                from worker threads under linux/firefox.
-  if (!isOfficial && (isIE || (isFirefox && !google.gears.workerPool))) {
+  // TODO(nigeltao): Enable this test on Firefox once HttpRequest.responseBlob
+  // works - currently it is disabled because HttpRequest is a XPCOM module
+  // and Blob is a Dispatcher module.
+  // Once that works, this test should work in both the main thread and in a
+  // worker thread.
+  if (!isOfficial && isIE) {
     startAsync();
-    
+
     var data = 'This is not a valid manifest!\n';
     var headers = [["Name1", "Value1"],
                    ["Name2", "Value2"]];
@@ -276,7 +279,9 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
            'Should be able to get responseText after request');
 
     // blob not in non-official builds yet
-    if (!isOfficial) {
+    // TODO(nigeltao): re-enable this test (i.e. get rid of the "&& !isFirefox")
+    // when HttpRequest.responseBlob works in Firefox.
+    if (!isOfficial && !isFirefox) {
       assert(isObject(request.responseBlob),
              'Should be able to get responseBlob after request');
     }
@@ -303,7 +308,9 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
 
     if (expectedResponseLength != null) {
       // blob not in non-official builds yet
-      if (!isOfficial) {
+      // TODO(nigeltao): re-enable this test (i.e. get rid of the
+      // "&& !isFirefox") when HttpRequest.responseBlob works in Firefox.
+      if (!isOfficial && !isFirefox) {
         assertEqual(expectedResponseLength, request.responseBlob.length,
                     'Wrong expectedResponseLength');
       }
@@ -316,7 +323,9 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
 
     if (expectedResponseLength != null) {
       // blob not in non-official builds yet
-      if (!isOfficial) {
+      // TODO(nigeltao): re-enable this test (i.e. get rid of the
+      // "&& !isFirefox") when HttpRequest.responseBlob works in Firefox.
+      if (!isOfficial && !isFirefox) {
         assert(isObject(request.responseBlob),
                'Should be able to get responseBlob repeatedly');
       }

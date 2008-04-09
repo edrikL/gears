@@ -37,7 +37,7 @@
 #include "gears/base/firefox/dom_utils.h"
 #ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
-#include "gears/blob/blob_ff.h"
+#include "gears/blob/blob.h"
 #include "gears/blob/buffer_blob.h"
 #include "gears/blob/blob_interface.h"
 #endif
@@ -169,7 +169,7 @@ NS_IMETHODIMP GearsHttpRequest::Open() {
     response_info_->ready_state = HttpRequest::UNINITIALIZED;
 #ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
-    response_info_->response_blob = NULL;
+    response_info_->response_blob.reset(NULL);
 #endif
   }
 
@@ -259,23 +259,12 @@ NS_IMETHODIMP GearsHttpRequest::Send() {
     JsParamFetcher js_params(this);
     if (js_params.GetCount(false) > 0) {
 #ifndef OFFICIAL_BUILD
-      nsISupports *blob_base;
+      ModuleImplBaseClass *module;
       if (js_params.GetAsString(0, &request_info_->post_data)) {
         request_info_->has_post_data = !request_info_->post_data.empty();
-      } else if (js_params.GetAsModule(0, &blob_base)) {
-        // TODO(bgarcia): JsParamFetcher::GetAsModule does not work in
-        //                worker threads.
-        // Extract the blob
-        nsresult nr;
-        nsCOMPtr<GearsBlobPvtInterface> blob_pvt = do_QueryInterface(blob_base,
-                                                                     &nr);
-        if (NS_FAILED(nr) || !blob_pvt) {
-          RETURN_EXCEPTION(STRING16(L"Error converting blob to native class."));
-        }
-        nr = blob_pvt->GetContents(as_out_parameter(request_info_->blob_));
-        if (NS_FAILED(nr) || !request_info_->blob_.get()) {
-          RETURN_EXCEPTION(STRING16(L"Error getting blob contents."));
-        }
+      } else if (js_params.GetAsDispatcherModule(0, GetJsRunner(), &module) &&
+                 GearsBlob::kModuleName == module->get_module_name()) {
+        static_cast<GearsBlob*>(module)->GetContents(&(request_info_->blob_));
       } else {
         RETURN_EXCEPTION(STRING16(L"Data parameter must be a string or blob."));
       }
@@ -520,6 +509,9 @@ NS_IMETHODIMP GearsHttpRequest::GetResponseText(nsAString &retval) {
 // readonly attribute Blob responseBlob
 //------------------------------------------------------------------------------
 NS_IMETHODIMP GearsHttpRequest::GetResponseBlob(nsISupports **retval) {
+  // TODO(nigeltao): when GearsHttpRequest becomes a Dispatcher-based module,
+  // re-enable this code.
+#if 0
   assert(IsApartmentThread());
   MutexLock locker(&lock_);
   if (!IsComplete()) {
@@ -547,6 +539,8 @@ NS_IMETHODIMP GearsHttpRequest::GetResponseBlob(nsISupports **retval) {
   *retval = response_info_->response_blob;
   (*retval)->AddRef();
   RETURN_NORMAL();
+#endif
+  RETURN_EXCEPTION(STRING16(L"Not implemented."));
 }
 #endif  // not OFFICIAL_BUILD
 
