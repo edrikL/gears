@@ -149,7 +149,7 @@ void GearsFactory::Create(JsCallContext *context) {
     return;
   }
 
-  context->SetReturnValue(JSPARAM_MODULE, object.get());
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, object.get());
 }
 
 void GearsFactory::GetBuildInfo(JsCallContext *context) {

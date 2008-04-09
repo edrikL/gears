@@ -175,7 +175,7 @@ void GearsDatabase::Execute(JsCallContext *context) {
     return;
   }
 
-  context->SetReturnValue(JSPARAM_MODULE, result_set.get());
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, result_set.get());
 }
 
 bool GearsDatabase::BindArgsToStatement(JsCallContext *context,

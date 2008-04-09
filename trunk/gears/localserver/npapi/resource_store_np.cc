@@ -431,7 +431,7 @@ void GearsResourceStore::CreateFileSubmitter(JsCallContext *context) {
     return;
   }
 
-  context->SetReturnValue(JSPARAM_MODULE, submitter.get());
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, submitter.get());
   context->SetException(STRING16(L"Not Implemented"));
 }
 
