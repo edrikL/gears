@@ -274,6 +274,51 @@ function testPostRedirectBackToCache() {
   });
 }
 
+function testCaptureInstantAbort() {
+  var urls = [
+    "/testcases/test_file_0.txt",
+    "/testcases/nonexistent_file",  // should fail
+    "/testcases/test_file_1.txt",
+    "/testcases/cgi/server_redirect.py?location=/testcases/nonexistent_file",
+    "/testcases/test_file_1024.txt"
+  ];
+  var resourceStore = getFreshStore();
+  var captureCompleteCount = 0;
+
+  startAsync();
+  var captureId = resourceStore.capture(urls, function(url, success, id) {
+    assert(!success, 'Capture should have been aborted');
+    assert(!resourceStore.isCaptured(url), url+' should not be captured');
+    captureCompleteCount++;
+    if (captureCompleteCount == urls.length) {
+      completeAsync();
+    }
+  });
+  resourceStore.abortCapture(captureId);
+}
+
+function testCaptureDeferredAbort() {
+  var urls = [
+    "/testcases/test_file_0.txt",
+    "/testcases/test_file_1.txt",
+    "/testcases/test_file_fragment",
+    "/testcases/test_file_1024.txt"
+  ];
+  var resourceStore = getFreshStore();
+  var captureCompleteCount = 0;
+
+  startAsync();
+  resourceStore.capture(urls, function(url, success, id) {
+    captureCompleteCount++;
+    if (captureCompleteCount == 2) {
+      resourceStore.abortCapture(id);
+    }
+    if (captureCompleteCount == urls.length) {
+      completeAsync();
+    }
+  });
+}
+
 function testGoodManifest() {
   startAsync();
 
