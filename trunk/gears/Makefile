@@ -357,6 +357,17 @@ NPAPI_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# third_party/modp_b64
+
+THIRD_PARTY_VPATH	+= \
+		third_party/modp_b64 \
+		$(NULL)
+
+THIRD_PARTY_CPPSRCS	+= \
+		modp_b64.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # base/common
 
 COMMON_VPATH	+= \
@@ -395,6 +406,7 @@ $(BROWSER)_CPPSRCS	+= \
 		async_router.cc \
 		base_class.cc \
 		base_class_test.cc \
+		base64.cc \
 		circular_buffer_test.cc \
 		database_name_table.cc \
 		file.cc \

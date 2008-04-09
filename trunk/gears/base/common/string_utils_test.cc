@@ -35,7 +35,6 @@
 static bool TestStartsWithAndEndsWith();
 static bool TestStrUtilsReplaceAll();
 static bool TestStringCompareIgnoreCase();
-static bool TestStringUTF8FileToUrl();
 static bool TestStringMatch();
 
 bool TestStringUtils() {
@@ -43,7 +42,6 @@ bool TestStringUtils() {
   ok &= TestStringCompareIgnoreCase();
   ok &= TestStartsWithAndEndsWith();
   ok &= TestStrUtilsReplaceAll();
-  ok &= TestStringUTF8FileToUrl();
   ok &= TestStringMatch();
   return ok;
 }
@@ -188,54 +186,6 @@ static bool TestStartsWithAndEndsWith() {
     TEST_ASSERT(!EndsWith(suffix, test));
   }
   LOG(("TestStartsWithAndEndsWith - passed\n"));
-  return true;
-}
-
-static bool TestStringUTF8FileToUrl() {
-#undef TEST_ASSERT
-#define TEST_ASSERT(b,test_name) \
-{ \
-  if (!(b)) { \
-  LOG(("TestStringUTF8FileToUrl: %s - failed (%d)\n", test_name, __LINE__)); \
-    return false; \
-  } \
-}
-  struct URLCase {
-    const char *input;
-    const char *expected;
-    const char *test_name;
-  } cases[] = {
-    {"c:/Dead/Beef.txt", "file:///c:/Dead/Beef.txt", "No escapes"},
-    {"c:\\Dead\\Beef.txt", "file:///c:/Dead/Beef.txt", "Backslash"},
-    {"c:/Dead/Beef/42;.txt", "file:///c:/Dead/Beef/42%3B.txt", "Semicolon"},
-    {"c:/Dead/Beef/42#{}.txt", "file:///c:/Dead/Beef/42%23%7B%7D.txt",
-      "Disallowed Characters"},
-    {"c:/Dead/Beef/牛肉.txt",
-      "file:///c:/Dead/Beef/%E7%89%9B%E8%82%89.txt",
-      "Non-Ascii Characters"}
-  };
-
-  struct URLCase directory_cases[] = {
-    {"c:/Dead/Beef/", "file:///c:/Dead/Beef/", "Trailing slash"},
-    {"c:\\Dead\\Beef\\", "file:///c:/Dead/Beef/", "Trailing backslash"},
-    {"c:/Dead/Beef", "file:///c:/Dead/Beef/", "No trailing slash"},
-    {"c:\\Dead\\Beef", "file:///c:/Dead/Beef/", "No trailing backslash"},
-  };
-
-  for (unsigned int i = 0; i < ARRAYSIZE(cases); ++i) {
-    std::string input(cases[i].input);
-    std::string output(UTF8PathToUrl(input, false));
-    TEST_ASSERT(output == cases[i].expected, cases[i].test_name);
-  }
-
-  for (unsigned int i = 0; i < ARRAYSIZE(directory_cases); ++i) {
-    std::string input(directory_cases[i].input);
-    std::string output(UTF8PathToUrl(input, true));
-    TEST_ASSERT(output == directory_cases[i].expected,
-                directory_cases[i].test_name);
-  }
-
-  LOG(("TestStringUTF8FileToUrl - passed\n"));
   return true;
 }
 
