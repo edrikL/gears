@@ -638,7 +638,16 @@ IE_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # console/npapi
 
-# Nothing here yet.
+NPAPI_VPATH	+= \
+		console/npapi \
+		$(NULL)
+
+NPAPI_IDLSRCS	+= \
+		$(NULL)
+
+NPAPI_CPPSRCS	+= \
+		console_np.cc \
+		$(NULL)
 
 
 #-----------------------------------------------------------------------------

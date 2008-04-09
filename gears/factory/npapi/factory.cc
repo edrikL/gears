@@ -111,7 +111,7 @@ void GearsFactory::Create(JsCallContext *context) {
 // TODO(playmobil): Add support for test module in Safari build.
 #else
   } else if (class_name == STRING16(L"beta.desktop")) {
-    CreateModule<GearsDatabase>(GetJsRunner(), &object);
+    CreateModule<GearsDesktop>(GetJsRunner(), &object);
 #endif
   } else if (class_name == STRING16(L"beta.localserver")) {
     CreateModule<GearsLocalServer>(GetJsRunner(), &object);
