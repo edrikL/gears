@@ -41,10 +41,6 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/npapi/module.h"
-// SAFARI-TEMP
-#ifdef BROWSER_WEBKIT
-#include "gears/localserver/safari/http_handler.h"
-#endif
 
 #ifndef HIBYTE
 #define HIBYTE(x) ((((uint32)(x)) & 0xff00) >> 8)
@@ -148,13 +144,6 @@ NPError STDCALL NP_Initialize(NPNetscapeFuncs* funcs)
 
   g_browser_funcs = *funcs;
   ThreadLocals::SetValue(kNPNFuncsKey, &g_browser_funcs, NULL);
-  
-// SAFARI-TEMP
-// URL interception should be turned on by our InputManager and not
-// during NPAPI init.
-#ifdef BROWSER_WEBKIT
-  TurnOnURLInterception();
-#endif
 
   return NPERR_NO_ERROR;
 }

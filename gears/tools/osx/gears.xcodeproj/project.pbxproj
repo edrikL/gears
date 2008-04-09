@@ -6,9 +6,24 @@
 	objectVersion = 42;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		B54E78E80DA3862B00F439C3 /* Gears */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = B54E78F20DA3866300F439C3 /* Build configuration list for PBXAggregateTarget "Gears" */;
+			buildPhases = (
+			);
+			dependencies = (
+				B54E78EC0DA3863200F439C3 /* PBXTargetDependency */,
+			);
+			name = Gears;
+			productName = All;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		8D01CCCA0486CAD60068D4B7 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C167DFE841241C02AAC07 /* InfoPlist.strings */; };
 		8D01CCCE0486CAD60068D4B7 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08EA7FFBFE8413EDC02AAC07 /* Carbon.framework */; };
+		B535DDC50DA951A000B49CDF /* safari_workaround.m in Sources */ = {isa = PBXBuildFile; fileRef = B535DDC40DA951A000B49CDF /* safari_workaround.m */; };
 		B54247310D35999200B3D18D /* httprequest_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B542472F0D35999200B3D18D /* httprequest_np.cc */; };
 		B544D99E0D2EE5D000D30561 /* database_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544D9540D2EE5D000D30561 /* database_utils.cc */; };
 		B544D99F0D2EE5D000D30561 /* paths.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544D9560D2EE5D000D30561 /* paths.cc */; };
@@ -123,6 +138,10 @@
 		B5559D820D9BC7CB0037636E /* update_task_sf.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5559D810D9BC7CB0037636E /* update_task_sf.cc */; };
 		B55D10EF0D9931C000B405E4 /* string_utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = B55D10EE0D9931C000B405E4 /* string_utils.mm */; };
 		B55D110F0D993C7500B405E4 /* message_queue_sf.cc in Sources */ = {isa = PBXBuildFile; fileRef = B55D110E0D993C7500B405E4 /* message_queue_sf.cc */; };
+		B57A58350DA9288B001B0CC6 /* enabler.m in Sources */ = {isa = PBXBuildFile; fileRef = B57A58320DA9288B001B0CC6 /* enabler.m */; };
+		B57A58380DA928B9001B0CC6 /* http_handler.mm in Sources */ = {isa = PBXBuildFile; fileRef = B58EFD8E0D52925E00B0A65D /* http_handler.mm */; };
+		B57A58430DA92A9D001B0CC6 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C167DFE841241C02AAC07 /* InfoPlist.strings */; };
+		B57A58540DA92C6A001B0CC6 /* loader.mm in Sources */ = {isa = PBXBuildFile; fileRef = B57A58530DA92C6A001B0CC6 /* loader.mm */; };
 		B57AFFAE0D8836E500D60EB2 /* database_name_table.cc in Sources */ = {isa = PBXBuildFile; fileRef = B57AFFAC0D8836E500D60EB2 /* database_name_table.cc */; };
 		B57AFFC10D883F9800D60EB2 /* timer.cc in Sources */ = {isa = PBXBuildFile; fileRef = B57AFFBF0D883F9800D60EB2 /* timer.cc */; };
 		B57F3AD10DA101BC0088FE52 /* console.cc in Sources */ = {isa = PBXBuildFile; fileRef = B57F3ACD0DA101BC0088FE52 /* console.cc */; };
@@ -144,7 +163,6 @@
 		B58E00B20D5BB59300B0A65D /* serialization.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58E00B00D5BB59300B0A65D /* serialization.cc */; };
 		B58E00C30D5BB9AB00B0A65D /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B58E00C20D5BB9AB00B0A65D /* WebKit.framework */; };
 		B58E01410D5BCFFA00B0A65D /* stopwatch_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58E01400D5BCFFA00B0A65D /* stopwatch_osx.cc */; };
-		B58EFD8F0D52925E00B0A65D /* http_handler.mm in Sources */ = {isa = PBXBuildFile; fileRef = B58EFD8E0D52925E00B0A65D /* http_handler.mm */; };
 		B58EFD9F0D5292C100B0A65D /* localserver_db_proxy.mm in Sources */ = {isa = PBXBuildFile; fileRef = B58EFD9D0D5292C100B0A65D /* localserver_db_proxy.mm */; };
 		B58EFE620D529ACB00B0A65D /* manifest.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE490D529ACB00B0A65D /* manifest.cc */; };
 		B58EFE630D529ACB00B0A65D /* localserver.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE4A0D529ACB00B0A65D /* localserver.cc */; };
@@ -160,6 +178,7 @@
 		B58EFE7C0D529AEA00B0A65D /* file_submitter_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE710D529AEA00B0A65D /* file_submitter_np.cc */; };
 		B58EFE7D0D529AEA00B0A65D /* managed_resource_store_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE730D529AEA00B0A65D /* managed_resource_store_np.cc */; };
 		B58EFE7F0D529AEA00B0A65D /* localserver_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58EFE780D529AEA00B0A65D /* localserver_np.cc */; };
+		B5A353FD0DACCAA20038898E /* js_runner_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5A353FB0DACCAA20038898E /* js_runner_utils.cc */; };
 		B5AB77E10D9FDC2F001EE5D5 /* async_router.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5AB77E00D9FDC2F001EE5D5 /* async_router.cc */; };
 		B5BB92560D47F9AA00FA9651 /* http_cookies_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BB92550D47F9AA00FA9651 /* http_cookies_sf.mm */; };
 		B5BBD8610D8E8223001A4916 /* http_request_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BBD8600D8E8223001A4916 /* http_request_sf.mm */; };
@@ -194,6 +213,20 @@
 			remoteGlobalIDString = B544D9D30D2EE6B600D30561;
 			remoteInfo = sqlite;
 		};
+		B54E78EB0DA3863200F439C3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 089C1669FE841209C02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8D01CCC60486CAD60068D4B7;
+			remoteInfo = Gears.plugin;
+		};
+		B57A58480DA92ADF001B0CC6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 089C1669FE841209C02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B57A582A0DA927C3001B0CC6;
+			remoteInfo = InputManager;
+		};
 		B58E00470D5BB17100B0A65D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 089C1669FE841209C02AAC07 /* Project object */;
@@ -208,6 +241,7 @@
 		08EA7FFBFE8413EDC02AAC07 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		8D01CCD10486CAD60068D4B7 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8D01CCD20486CAD60068D4B7 /* Gears.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Gears.plugin; sourceTree = BUILT_PRODUCTS_DIR; };
+		B535DDC40DA951A000B49CDF /* safari_workaround.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = safari_workaround.m; path = ../../base/safari/safari_workaround.m; sourceTree = SOURCE_ROOT; };
 		B542472F0D35999200B3D18D /* httprequest_np.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = httprequest_np.cc; path = ../../httprequest/npapi/httprequest_np.cc; sourceTree = SOURCE_ROOT; };
 		B54247300D35999200B3D18D /* httprequest_np.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = httprequest_np.h; path = ../../httprequest/npapi/httprequest_np.h; sourceTree = SOURCE_ROOT; };
 		B544D9540D2EE5D000D30561 /* database_utils.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = database_utils.cc; path = ../../database/common/database_utils.cc; sourceTree = SOURCE_ROOT; };
@@ -355,6 +389,12 @@
 		B55D10DF0D992C3F00B405E4 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = common.h; path = ../../base/common/common.h; sourceTree = SOURCE_ROOT; };
 		B55D10EE0D9931C000B405E4 /* string_utils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = string_utils.mm; path = ../../base/safari/string_utils.mm; sourceTree = SOURCE_ROOT; };
 		B55D110E0D993C7500B405E4 /* message_queue_sf.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = message_queue_sf.cc; path = ../../base/common/message_queue_sf.cc; sourceTree = SOURCE_ROOT; };
+		B57A582B0DA927C3001B0CC6 /* GearsEnabler.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GearsEnabler.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		B57A582C0DA927C3001B0CC6 /* InputManager-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "InputManager-Info.plist"; sourceTree = "<group>"; };
+		B57A58310DA9288B001B0CC6 /* loader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = loader.h; path = ../../base/safari/loader.h; sourceTree = SOURCE_ROOT; };
+		B57A58320DA9288B001B0CC6 /* enabler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = enabler.m; path = ../../base/safari/enabler.m; sourceTree = SOURCE_ROOT; };
+		B57A58330DA9288B001B0CC6 /* enabler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = enabler.h; path = ../../base/safari/enabler.h; sourceTree = SOURCE_ROOT; };
+		B57A58530DA92C6A001B0CC6 /* loader.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = loader.mm; path = ../../base/safari/loader.mm; sourceTree = SOURCE_ROOT; };
 		B57AFFAC0D8836E500D60EB2 /* database_name_table.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = database_name_table.cc; path = ../../base/common/database_name_table.cc; sourceTree = SOURCE_ROOT; };
 		B57AFFAD0D8836E500D60EB2 /* database_name_table.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = database_name_table.h; path = ../../base/common/database_name_table.h; sourceTree = SOURCE_ROOT; };
 		B57AFFBF0D883F9800D60EB2 /* timer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = timer.cc; path = ../../timer/timer.cc; sourceTree = SOURCE_ROOT; };
@@ -369,7 +409,6 @@
 		B57F3BC80DA11D250088FE52 /* database_utils_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = database_utils_test.cc; path = ../../database/common/database_utils_test.cc; sourceTree = SOURCE_ROOT; };
 		B57F3BC90DA11D250088FE52 /* database_utils_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = database_utils_test.h; path = ../../database/common/database_utils_test.h; sourceTree = SOURCE_ROOT; };
 		B57F3BDC0DA11D860088FE52 /* file_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = file_test.cc; path = ../../base/common/file_test.cc; sourceTree = SOURCE_ROOT; };
-		B57F3C750DA2CA850088FE52 /* LeopardWorkaround.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LeopardWorkaround.m; path = ../../hack/LeopardWorkaround.m; sourceTree = SOURCE_ROOT; };
 		B58E000B0D53F47B00B0A65D /* libjsoncpp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libjsoncpp.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		B58E00160D5BB07A00B0A65D /* json_value.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = json_value.cc; path = ../../third_party/jsoncpp/json_value.cc; sourceTree = SOURCE_ROOT; };
 		B58E00170D5BB07A00B0A65D /* json_reader.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = json_reader.cc; path = ../../third_party/jsoncpp/json_reader.cc; sourceTree = SOURCE_ROOT; };
@@ -429,6 +468,8 @@
 		B58EFE790D529AEA00B0A65D /* file_submitter_np.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = file_submitter_np.h; path = ../../localserver/npapi/file_submitter_np.h; sourceTree = SOURCE_ROOT; };
 		B58EFEB70D529D5900B0A65D /* message_queue.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = message_queue.h; path = ../../base/common/message_queue.h; sourceTree = SOURCE_ROOT; };
 		B58EFF630D52A5DC00B0A65D /* common_sf.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = common_sf.h; path = ../../base/common/common_sf.h; sourceTree = SOURCE_ROOT; };
+		B5A353FB0DACCAA20038898E /* js_runner_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = js_runner_utils.cc; path = ../../base/common/js_runner_utils.cc; sourceTree = SOURCE_ROOT; };
+		B5A353FC0DACCAA20038898E /* js_runner_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = js_runner_utils.h; path = ../../base/common/js_runner_utils.h; sourceTree = SOURCE_ROOT; };
 		B5AB77DF0D9FDC2F001EE5D5 /* async_router.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = async_router.h; path = ../../base/common/async_router.h; sourceTree = SOURCE_ROOT; };
 		B5AB77E00D9FDC2F001EE5D5 /* async_router.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = async_router.cc; path = ../../base/common/async_router.cc; sourceTree = SOURCE_ROOT; };
 		B5BB92540D47F9AA00FA9651 /* http_cookies_sf.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = http_cookies_sf.h; path = ../../localserver/safari/http_cookies_sf.h; sourceTree = SOURCE_ROOT; };
@@ -480,6 +521,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B57A58290DA927C3001B0CC6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B58E00090D53F47B00B0A65D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -499,6 +547,7 @@
 				089C167CFE841241C02AAC07 /* Resources */,
 				089C1671FE841209C02AAC07 /* External Frameworks and Libraries */,
 				19C28FB4FE9D528D11CA2CBB /* Products */,
+				B57A582C0DA927C3001B0CC6 /* InputManager-Info.plist */,
 			);
 			name = gears;
 			sourceTree = "<group>";
@@ -535,6 +584,7 @@
 				8D01CCD20486CAD60068D4B7 /* Gears.plugin */,
 				B544D9D40D2EE6B600D30561 /* libsqlite.a */,
 				B58E000B0D53F47B00B0A65D /* libjsoncpp.a */,
+				B57A582B0DA927C3001B0CC6 /* GearsEnabler.bundle */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -563,7 +613,6 @@
 				B57F3AC80DA1019D0088FE52 /* console */,
 				B544D9520D2EE5D000D30561 /* database */,
 				B544D9950D2EE5D000D30561 /* factory */,
-				B55D0F730D98F66700B405E4 /* hack */,
 				B54247240D35940600B3D18D /* httprequest */,
 				B544D9630D2EE5D000D30561 /* localserver */,
 				B58E01620D5BE0ED00B0A65D /* timer */,
@@ -660,10 +709,15 @@
 		B544D9680D2EE5D000D30561 /* safari */ = {
 			isa = PBXGroup;
 			children = (
+				B535DDC40DA951A000B49CDF /* safari_workaround.m */,
 				B544D9690D2EE5D000D30561 /* browser_utils.h */,
 				B5F614320D402A320003ADBB /* browser_utils.cc */,
 				B5BB93F30D49255E00FA9651 /* cf_string_utils.h */,
 				B544FD620D89326D00568660 /* cf_string_utils.cc */,
+				B57A58310DA9288B001B0CC6 /* loader.h */,
+				B57A58320DA9288B001B0CC6 /* enabler.m */,
+				B57A58330DA9288B001B0CC6 /* enabler.h */,
+				B57A58530DA92C6A001B0CC6 /* loader.mm */,
 				B55D10EE0D9931C000B405E4 /* string_utils.mm */,
 			);
 			name = safari;
@@ -705,6 +759,8 @@
 				B544D97F0D2EE5D000D30561 /* int_types.h */,
 				B544D9800D2EE5D000D30561 /* string16.cc */,
 				B544D9810D2EE5D000D30561 /* js_runner_np.cc */,
+				B5A353FB0DACCAA20038898E /* js_runner_utils.cc */,
+				B5A353FC0DACCAA20038898E /* js_runner_utils.h */,
 				B544D9820D2EE5D000D30561 /* html_event_monitor_np.cc */,
 				B544D9830D2EE5D000D30561 /* html_event_monitor.cc */,
 				B544D9880D2EE5D000D30561 /* http_utils.cc */,
@@ -933,14 +989,6 @@
 			name = safari;
 			sourceTree = "<group>";
 		};
-		B55D0F730D98F66700B405E4 /* hack */ = {
-			isa = PBXGroup;
-			children = (
-				B57F3C750DA2CA850088FE52 /* LeopardWorkaround.m */,
-			);
-			name = hack;
-			sourceTree = "<group>";
-		};
 		B57F3AC80DA1019D0088FE52 /* console */ = {
 			isa = PBXGroup;
 			children = (
@@ -1097,17 +1145,18 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4FADC23308B4156C00ABE55E /* Build configuration list for PBXNativeTarget "Gears.plugin" */;
 			buildPhases = (
-				B5A34E9A0DAA190D0038898E /* ShellScript */,
+				B5A34ED70DAA358F0038898E /* Generate Headers */,
 				8D01CCC90486CAD60068D4B7 /* Resources */,
 				8D01CCCB0486CAD60068D4B7 /* Sources */,
 				8D01CCCD0486CAD60068D4B7 /* Frameworks */,
-				B544D9CC0D2EE68200D30561 /* ShellScript */,
+				B544D9CC0D2EE68200D30561 /* Install Symlink */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				B544DC430D34370000D30561 /* PBXTargetDependency */,
 				B58E00480D5BB17100B0A65D /* PBXTargetDependency */,
+				B57A58490DA92ADF001B0CC6 /* PBXTargetDependency */,
 			);
 			name = Gears.plugin;
 			productInstallPath = "$(HOME)/Library/Bundles";
@@ -1131,6 +1180,24 @@
 			productName = sqlite;
 			productReference = B544D9D40D2EE6B600D30561 /* libsqlite.a */;
 			productType = "com.apple.product-type.library.static";
+		};
+		B57A582A0DA927C3001B0CC6 /* InputManager */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B57A582F0DA927C4001B0CC6 /* Build configuration list for PBXNativeTarget "InputManager" */;
+			buildPhases = (
+				B57A58270DA927C3001B0CC6 /* Resources */,
+				B57A58280DA927C3001B0CC6 /* Sources */,
+				B57A58290DA927C3001B0CC6 /* Frameworks */,
+				B57A583E0DA9292C001B0CC6 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = InputManager;
+			productName = InputManager;
+			productReference = B57A582B0DA927C3001B0CC6 /* GearsEnabler.bundle */;
+			productType = "com.apple.product-type.bundle";
 		};
 		B58E000A0D53F47B00B0A65D /* jsoncpp */ = {
 			isa = PBXNativeTarget;
@@ -1161,9 +1228,11 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				B54E78E80DA3862B00F439C3 /* Gears */,
 				8D01CCC60486CAD60068D4B7 /* Gears.plugin */,
 				B544D9D30D2EE6B600D30561 /* sqlite */,
 				B58E000A0D53F47B00B0A65D /* jsoncpp */,
+				B57A582A0DA927C3001B0CC6 /* InputManager */,
 			);
 		};
 /* End PBXProject section */
@@ -1177,10 +1246,32 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B57A58270DA927C3001B0CC6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B57A58430DA92A9D001B0CC6 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		B544D9CC0D2EE68200D30561 /* ShellScript */ = {
+		B544D9CC0D2EE68200D30561 /* Install Symlink */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Install Symlink";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# clean up any previous products/symbolic links in the Internet Plug-Ins folder\nif [ -a \"${USER_LIBRARY_DIR}/Internet Plug-Ins/${FULL_PRODUCT_NAME}\" ]; then\n  rm -Rf \"${USER_LIBRARY_DIR}/Internet Plug-Ins/${FULL_PRODUCT_NAME}\"\nfi\n\n# Depending on the build configuration, either copy or link to the most recent product\nif [ \"${CONFIGURATION}\" == \"Debug\" ]; then\n  # if we're debugging, add a symbolic link to the plug-in\n  ln -sf \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\" \\\n    \"${USER_LIBRARY_DIR}/Internet Plug-Ins/${FULL_PRODUCT_NAME}\"\nelif [ \"${CONFIGURATION}\" == \"Release\" ]; then\n  # if we're compiling for release, just copy the plugin to the Internet Plug-ins folder\n  cp -Rfv \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\" \\\n    \"${USER_LIBRARY_DIR}/Internet Plug-Ins/${FULL_PRODUCT_NAME}\"\nfi";
+		};
+		B57A583E0DA9292C001B0CC6 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1191,16 +1282,19 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# clean up any previous products/symbolic links in the Internet Plug-Ins folder\nif [ -a \"${USER_LIBRARY_DIR}/Internet Plug-Ins/${FULL_PRODUCT_NAME}\" ]; then\n  rm -Rf \"${USER_LIBRARY_DIR}/Internet Plug-Ins/${FULL_PRODUCT_NAME}\"\nfi\n\n# Depending on the build configuration, either copy or link to the most recent product\nif [ \"${CONFIGURATION}\" == \"Debug\" ]; then\n  # if we're debugging, add a symbolic link to the plug-in\n  ln -sf \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\" \\\n    \"${USER_LIBRARY_DIR}/Internet Plug-Ins/${FULL_PRODUCT_NAME}\"\nelif [ \"${CONFIGURATION}\" == \"Release\" ]; then\n  # if we're compiling for release, just copy the plugin to the Internet Plug-ins folder\n  cp -Rfv \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\" \\\n    \"${USER_LIBRARY_DIR}/Internet Plug-Ins/${FULL_PRODUCT_NAME}\"\nfi";
+			shellScript = "# Build the input manager packaging\n\nINPUT_MGR_DIR=\"${BUILD_DIR}/${BUILD_STYLE}/GoogleGearsEnabler\"\nmkdir -p \"$INPUT_MGR_DIR\"\ncp -fR \"$BUILD_DIR/$BUILD_STYLE/$WRAPPER_NAME\" \"$INPUT_MGR_DIR\"\ncp -fR \"$SRCROOT/Info\" \"$INPUT_MGR_DIR\"\n\necho generated inputmanager @ \"$INPUT_MGR_DIR\"";
 		};
-		B5A34E9A0DAA190D0038898E /* ShellScript */ = {
+		B5A34ED70DAA358F0038898E /* Generate Headers */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
+				"$(SRCROOT)/../../tools/version.mk",
 			);
+			name = "Generate Headers";
 			outputPaths = (
+				"$(SRCROOT)/../../bin-dbg/osx-$CURRENT_ARCH/common/genfiles/product_constants.h",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -1247,7 +1341,6 @@
 				B54247310D35999200B3D18D /* httprequest_np.cc in Sources */,
 				B5F614340D402A320003ADBB /* browser_utils.cc in Sources */,
 				B5BB92560D47F9AA00FA9651 /* http_cookies_sf.mm in Sources */,
-				B58EFD8F0D52925E00B0A65D /* http_handler.mm in Sources */,
 				B58EFD9F0D5292C100B0A65D /* localserver_db_proxy.mm in Sources */,
 				B58EFE620D529ACB00B0A65D /* manifest.cc in Sources */,
 				B58EFE630D529ACB00B0A65D /* localserver.cc in Sources */,
@@ -1305,6 +1398,8 @@
 				B57F3ADB0DA102750088FE52 /* console_np.cc in Sources */,
 				B57F3BCA0DA11D250088FE52 /* database_utils_test.cc in Sources */,
 				B57F3BDD0DA11D860088FE52 /* file_test.cc in Sources */,
+				B535DDC50DA951A000B49CDF /* safari_workaround.m in Sources */,
+				B5A353FD0DACCAA20038898E /* js_runner_utils.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1369,6 +1464,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B57A58280DA927C3001B0CC6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B57A58350DA9288B001B0CC6 /* enabler.m in Sources */,
+				B57A58380DA928B9001B0CC6 /* http_handler.mm in Sources */,
+				B57A58540DA92C6A001B0CC6 /* loader.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B58E00080D53F47B00B0A65D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1386,6 +1491,16 @@
 			isa = PBXTargetDependency;
 			target = B544D9D30D2EE6B600D30561 /* sqlite */;
 			targetProxy = B544DC420D34370000D30561 /* PBXContainerItemProxy */;
+		};
+		B54E78EC0DA3863200F439C3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8D01CCC60486CAD60068D4B7 /* Gears.plugin */;
+			targetProxy = B54E78EB0DA3863200F439C3 /* PBXContainerItemProxy */;
+		};
+		B57A58490DA92ADF001B0CC6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B57A582A0DA927C3001B0CC6 /* InputManager */;
+			targetProxy = B57A58480DA92ADF001B0CC6 /* PBXContainerItemProxy */;
 		};
 		B58E00480D5BB17100B0A65D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1569,6 +1684,100 @@
 			};
 			name = Release;
 		};
+		B54E78E90DA3862B00F439C3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				PRODUCT_NAME = All;
+			};
+			name = Debug;
+		};
+		B54E78EA0DA3862B00F439C3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				PRODUCT_NAME = All;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		B57A582D0DA927C4001B0CC6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/Carbon.framework/Headers/Carbon.h";
+				INFOPLIST_FILE = "Enabler-Info.plist";
+				INSTALL_PATH = /;
+				OTHER_CFLAGS = (
+					"-DBROWSER_SAFARI=1",
+					"-DBROWSER_NPAPI=1",
+					"-DBROWSER_WEBKIT=1",
+					"-DOSX=1",
+					"-DOS_MACOSX=1",
+					"-fshort-wchar",
+					"-DDEBUG=1",
+					"-DOFFICIAL_BUILD=1",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = GearsEnabler;
+				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(SRCROOT)/../../bin-dbg/osx-i386/common/ $(SRCROOT)/../../third_party/ $(SRCROOT)/../../third_party/googleurl $(SRCROOT)/../../third_party/icu38/public/common";
+				WRAPPER_EXTENSION = bundle;
+				ZERO_LINK = YES;
+			};
+			name = Debug;
+		};
+		B57A582E0DA927C4001B0CC6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/Carbon.framework/Headers/Carbon.h";
+				INFOPLIST_FILE = "Enabler-Info.plist";
+				INSTALL_PATH = /;
+				OTHER_CFLAGS = (
+					"-DBROWSER_SAFARI=1",
+					"-DBROWSER_NPAPI=1",
+					"-DBROWSER_WEBKIT=1",
+					"-DOSX=1",
+					"-DOS_MACOSX=1",
+					"-fshort-wchar",
+					"-DNDEBUG=1",
+					"-DOFFICIAL_BUILD=1",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = GearsEnabler;
+				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(SRCROOT)/../../bin-dbg/osx-i386/common/ $(SRCROOT)/../../third_party/ $(SRCROOT)/../../third_party/googleurl $(SRCROOT)/../../third_party/icu38/public/common";
+				WRAPPER_EXTENSION = bundle;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
 		B58E00100D53F48400B0A65D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1657,6 +1866,24 @@
 			buildConfigurations = (
 				B544D9D60D2EE6C800D30561 /* Debug */,
 				B544D9D70D2EE6C800D30561 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B54E78F20DA3866300F439C3 /* Build configuration list for PBXAggregateTarget "Gears" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B54E78E90DA3862B00F439C3 /* Debug */,
+				B54E78EA0DA3862B00F439C3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B57A582F0DA927C4001B0CC6 /* Build configuration list for PBXNativeTarget "InputManager" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B57A582D0DA927C4001B0CC6 /* Debug */,
+				B57A582E0DA927C4001B0CC6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

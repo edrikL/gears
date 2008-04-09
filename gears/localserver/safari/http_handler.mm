@@ -26,11 +26,6 @@
 #import "gears/base/safari/loader.h"
 #import "gears/localserver/safari/http_handler.h"
 
-// SAFARI-TEMP
-bool TurnOnURLInterception() {
-  return [GearsHTTPHandler registerHandler];
-}
-
 // The NSHTTPURLResponse doesn't have a way to set the status code, so we'll
 // subclass and override the statusCode method
 @interface GearsNSHTTPURLResponse : NSHTTPURLResponse {
@@ -59,9 +54,8 @@ bool TurnOnURLInterception() {
 @implementation GearsHTTPHandler
 //------------------------------------------------------------------------------
 + (BOOL)registerHandler {
-// SAFARI-TEMP
-//  if (![GearsLoader loadGearsBundle])
-//    return NO;
+  if (![GearsLoader loadGearsBundle])
+    return NO;
   
   return [NSURLProtocol registerClass:[self class]];
 }

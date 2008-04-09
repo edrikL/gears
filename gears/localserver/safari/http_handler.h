@@ -26,16 +26,6 @@
 #ifndef GEARS_LOCALSERVER_SAFARI_HTTP_HANDLER_H__
 #define GEARS_LOCALSERVER_SAFARI_HTTP_HANDLER_H__
 
-// begin SAFARI-TEMP
-// In production, we load the interception hook from obj-c
-// in which case we won't need the TurnOnURLInterception() method.
-#if defined(__cplusplus)
-
-// Start filtering URLs through Gears.
-bool TurnOnURLInterception();
-#endif 
-// end SAFARI-TEMP
-
 #if defined(__OBJC__)
 #import <Foundation/Foundation.h>
 
