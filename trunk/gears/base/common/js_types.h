@@ -212,6 +212,7 @@ struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool>  {
 #endif  // BROWSER_NPAPI || BROWSER_WEBKIT
 
 class MarshaledJsToken;
+class ModuleImplBaseClass;
 class JsRootedToken;
 typedef JsRootedToken JsRootedCallback;
 
@@ -225,7 +226,11 @@ enum JsParamType {
   JSPARAM_OBJECT,
   JSPARAM_ARRAY,
   JSPARAM_FUNCTION,
-  JSPARAM_MODULE,
+  // TODO(nigeltao): when all modules are Dispatcher-based, remove the
+  // distinction between JSPARAM_COM_MODULE and JSPARAM_DISPATCHER_MODULE,
+  // and just have JSPARAM_MODULE.
+  JSPARAM_COM_MODULE,
+  JSPARAM_DISPATCHER_MODULE,
   JSPARAM_NULL,
   JSPARAM_UNDEFINED,
   JSPARAM_UNKNOWN,
@@ -263,6 +268,10 @@ bool JsTokenToDouble_NoCoerce(JsToken t, JsContextPtr cx, double *out);
 bool JsTokenToString_NoCoerce(JsToken t, JsContextPtr cx, std::string16 *out);
 bool JsTokenToNewCallback_NoCoerce(JsToken t, JsContextPtr cx,
                                    JsRootedCallback **out);
+bool JsTokenToDispatcherModule(JsContextWrapperPtr context_wrapper,
+                               JsContextPtr context,
+                               const JsToken in,
+                               ModuleImplBaseClass **out);
 
 // Utility functions to coerce JsTokens to various C++ types. These functions
 // implement coercion as defined by ECMA 262-3 Section 9:
@@ -434,7 +443,8 @@ class JsArray {
   bool SetElementArray(int index, JsArray* value);
   bool SetElementObject(int index, JsObject* value);
   bool SetElementFunction(int index, JsRootedCallback* value);
-  bool SetElementModule(int index, IScriptable* value);
+  bool SetElementComModule(int index, IScriptable* value);
+  bool SetElementDispatcherModule(int index, ModuleImplBaseClass* value);
 
 private:
   JsContextPtr js_context_;
@@ -478,7 +488,9 @@ class JsObject {
   bool SetPropertyArray(const std::string16& name, JsArray* value);
   bool SetPropertyObject(const std::string16& name, JsObject* value);
   bool SetPropertyFunction(const std::string16& name, JsRootedCallback* value);
-  bool SetPropertyModule(const std::string16& name, IScriptable* value);
+  bool SetPropertyComModule(const std::string16& name, IScriptable* value);
+  bool SetPropertyDispatcherModule(const std::string16& name,
+                                   ModuleImplBaseClass* value);
   bool SetProperty(const std::string16 &name, const JsToken &value);
 
   const JsScopedToken &token() const { return js_object_; }
@@ -488,9 +500,6 @@ class JsObject {
   JsContextPtr js_context_;
   JsScopedToken js_object_;
 };
-
-class ModuleImplBaseClass;
-class JsRunnerInterface;
 
 // This class provides an interface for a property or method access on a native
 // object from JavaScript.  It allows consumers to retrieve what arguments were
@@ -529,15 +538,15 @@ class JsCallContext {
   // Sets the value to be returned to the calling JavaScript.
   //
   // The ModuleImplBaseClass* version should only be used when returning a
-  // JSPARAM_MODULE.  It exists because passing a derived class through a void*
-  // and then casting to the base class is not safe - the compiler won't be able
-  // to correctly adjust the pointer offset.
+  // JSPARAM_COM_MODULE.  It exists because passing a derived class through a
+  // void* and then casting to the base class is not safe - the compiler won't
+  // be able to correctly adjust the pointer offset.
   //
   // The int version is for use with JSPARAM_NULL, to avoid conflicting with the
   // ModuleImplBaseClass version (works because NULL is defined as 0).
   void SetReturnValue(JsParamType type, const void *value_ptr);
   void SetReturnValue(JsParamType type, const ModuleImplBaseClass *value_ptr) {
-    assert(type == JSPARAM_MODULE);
+    assert((type == JSPARAM_COM_MODULE) || (type == JSPARAM_DISPATCHER_MODULE));
     SetReturnValue(type, reinterpret_cast<const void*>(value_ptr));
   }
   void SetReturnValue(JsParamType type, int) {
@@ -551,6 +560,9 @@ class JsCallContext {
 
   JsContextPtr js_context() { return js_context_; }
   bool is_exception_set() { return is_exception_set_; }
+#if BROWSER_FF
+  JsRunnerInterface *js_runner() { return js_runner_; }
+#endif
 
  private:
   JsContextPtr js_context_;
@@ -607,9 +619,8 @@ class JsParamFetcher {
   bool GetAsArray(int i, JsArray *out);
   bool GetAsObject(int i, JsObject *out);
 
-  // TODO(kevinww): Currently doesn't work in a worker thread because it uses
-  // XPConnect
-  bool GetAsModule(int i, nsISupports **out);
+  bool GetAsDispatcherModule(int i, JsRunnerInterface *js_runner,
+                             ModuleImplBaseClass **out);
 
   // NOTE: This method returns true if the argument at position i is null or
   // undefined. The JsRootedCallback at that point will be valid, but its

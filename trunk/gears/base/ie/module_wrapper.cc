@@ -82,3 +82,10 @@ HRESULT ModuleWrapper::Invoke(DISPID member_id, REFIID iid, LCID lcid,
     return S_OK;
   }
 }
+
+STDMETHODIMP ModuleWrapper::get_moduleWrapper(VARIANT *retval) {
+  // We pack the pointer into the byref field of a VARIANT.
+  retval->vt = VT_BYREF;
+  retval->byref = this;
+  RETURN_NORMAL();
+}

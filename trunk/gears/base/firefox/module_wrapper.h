@@ -71,6 +71,11 @@ class ModuleWrapper : public ModuleWrapperBaseClass {
     return dispatcher_.get();
   }
 
+  virtual ModuleImplBaseClass *GetModuleImplBaseClass() const {
+    assert(impl_.get());
+    return impl_.get();
+  }
+
   virtual void Ref() {
     assert(JSVAL_IS_GCTHING(token_));
     if (ref_count_.Ref()) {

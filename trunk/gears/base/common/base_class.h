@@ -77,11 +77,11 @@ class ModuleImplBaseClass {
   // TODO_REMOVE_NSISUPPORTS: this constructor only used for isupports-based
   // modules.
   ModuleImplBaseClass()
-      : module_name_(NULL), is_initialized_(false) {}
-  explicit ModuleImplBaseClass(const char *name)
+      : module_name_(""), is_initialized_(false) {}
+  explicit ModuleImplBaseClass(const std::string &name)
       : module_name_(name), is_initialized_(false) {}
 
-  const char *get_module_name() const {
+  const std::string &get_module_name() const {
     return module_name_;
   }
 
@@ -140,7 +140,7 @@ class ModuleImplBaseClass {
   // Instead of making a copy for every object (ModuleImplBaseClass), we could
   // keep a reference to one shared class per tuple.
   // (Recall idea for PageSharedState + PageThreadSharedState classes.)
-  const char *module_name_;
+  std::string module_name_;
   bool is_initialized_;
   bool env_is_worker_;
 #if BROWSER_FF || BROWSER_NPAPI
@@ -218,6 +218,9 @@ class ModuleWrapperBaseClass {
 
   // Gets the Dispatcher for this module.
   virtual DispatcherInterface *GetDispatcher() const = 0;
+
+  // Gets the ModuleImplBaseClass for this module.
+  virtual ModuleImplBaseClass *GetModuleImplBaseClass() const = 0;
 
   // Adds a reference to the wrapper class.
   virtual void Ref() = 0;

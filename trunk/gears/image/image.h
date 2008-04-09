@@ -23,64 +23,70 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_IMAGE_IE_IMAGE_IE_H__
-#define GEARS_IMAGE_IE_IMAGE_IE_H__
+#ifndef GEARS_IMAGE_IMAGE_H__
+#define GEARS_IMAGE_IMAGE_H__
 
 #ifdef OFFICIAL_BUILD
 // The Image API has not been finalized for official builds
 #else
 
-#include "genfiles/interfaces.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-
-#include "gears/image/common/image.h"
+#include "gears/image/backing_image.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-
-class ATL_NO_VTABLE GearsImage
-    : public ModuleImplBaseClass,
-      public CComObjectRootEx<CComMultiThreadModel>,
-      public CComCoClass<GearsImage>,
-      public GearsImagePvtInterface,
-      public IDispatchImpl<GearsImageInterface> {
+class GearsImage : public ModuleImplBaseClassVirtual {
  public:
-  BEGIN_COM_MAP(GearsImage)
-    COM_INTERFACE_ENTRY(GearsImageInterface)
-    COM_INTERFACE_ENTRY(GearsImagePvtInterface)
-    COM_INTERFACE_ENTRY(IDispatch)
-  END_COM_MAP()
+  static const std::string kModuleName;
 
-  DECLARE_NOT_AGGREGATABLE(GearsImage)
-  DECLARE_PROTECT_FINAL_CONSTRUCT()
-  // End boilerplate code. Begin interface.
+  GearsImage() : ModuleImplBaseClassVirtual(kModuleName.c_str()) {}
 
-  // Need a default constructor to CreateInstance objects in IE
-  GearsImage() : img_(NULL) {}
-  ~GearsImage() {}
+  // IN: int x, int y, int width, int height
+  // OUT: void
+  void Crop(JsCallContext *context);
 
-  void Init(Image *img) {
-    img_.reset(img);
+  // IN: GearsImage image, int x, int y
+  // OUT: void
+  void DrawImage(JsCallContext *context);
+
+  // IN: void
+  // OUT: void
+  void FlipHorizontal(JsCallContext *context);
+
+  // IN: void
+  // OUT: void
+  void FlipVertical(JsCallContext *context);
+
+  // IN: void
+  // OUT: int
+  void GetHeight(JsCallContext *context);
+
+  // IN: void
+  // OUT: int
+  void GetWidth(JsCallContext *context);
+
+  // IN: int width, int height
+  // OUT: void
+  void Resize(JsCallContext *context);
+
+  // IN: int degrees
+  // OUT: void
+  void Rotate(JsCallContext *context);
+
+  // IN: optional string type
+  // OUT: GearsBlob blob
+  void ToBlob(JsCallContext *context);
+
+  void Init(BackingImage *image) {
+    image_.reset(image);
   }
 
-  STDMETHOD(get_contents)(VARIANT *retval);
-
-  STDMETHOD(resize)(int width, int height);
-  STDMETHOD(crop)(int xl, int y, int width, int height);
-  STDMETHOD(rotate)(int degrees);
-  STDMETHOD(flipHorizontal)();
-  STDMETHOD(flipVertical)();
-  STDMETHOD(drawImage)(IUnknown *image, int x, int y);
-  STDMETHOD(get_width)(int *retval);
-  STDMETHOD(get_height)(int *retval);
-  STDMETHOD(toBlob)(const VARIANT *type, IUnknown **retval);
-
  private:
-  scoped_ptr<Image> img_;
+  scoped_ptr<BackingImage> image_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsImage);
 };
 
 #endif  // not OFFICIAL_BUILD
 
-#endif  // GEARS_IMAGE_IE_IMAGE_IE_H__
+#endif  // GEARS_IMAGE_IMAGE_H__

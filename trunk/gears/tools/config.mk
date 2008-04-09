@@ -120,6 +120,10 @@ LIBGD_CFLAGS += -Ithird_party/libjpeg -Ithird_party/libpng -DHAVE_CONFIG_H
 # libGD assumes it is in the include path
 CPPFLAGS += -Ithird_party/libgd
 
+# SpiderMonkey (the Firefox JS engine)'s JS_GET_CLASS macro in jsapi.h needs
+# this defined to work with the gecko SDK that we've built.
+FF_CPPFLAGS += -DJS_THREADSAFE
+
 ######################################################################
 # OS == linux
 ######################################################################

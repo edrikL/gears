@@ -33,11 +33,14 @@
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 #if BROWSER_FF
+#include "gears/base/common/js_runner_ff_marshaling.h"
 #include "gears/base/firefox/dom_utils.h"
 #elif BROWSER_IE
 #include <dispex.h>
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/module_wrapper.h"
+#include "genfiles/interfaces.h"
 #elif BROWSER_NPAPI
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/npapi/np_utils.h"
@@ -57,7 +60,9 @@ static inline bool DoubleIsInt32(double val) {
 // Special conversion functions for FireFox
 #if BROWSER_FF
 
-static bool ModuleToToken(JsContextPtr context, IScriptable* in, JsToken* out) {
+static bool ComModuleToToken(JsContextPtr context,
+                             IScriptable* in,
+                             JsToken* out) {
   nsresult nr;
   nsCOMPtr<nsIXPConnect> xpc;
   xpc = do_GetService("@mozilla.org/js/xpc/XPConnect;1", &nr);
@@ -85,8 +90,8 @@ static bool ModuleToToken(JsContextPtr context, IScriptable* in, JsToken* out) {
   return true;
 }
 
-static bool JsTokenToModule(JsContextPtr context, JsToken in,
-                            IScriptable** out) {
+static bool JsTokenToComModule(JsContextPtr context, JsToken in,
+                               IScriptable** out) {
   // TODO(kevinww): make this work in a worker pool
   nsresult nr;
   nsCOMPtr<nsIXPConnect> xpc;
@@ -120,6 +125,64 @@ static bool JsTokenToModule(JsContextPtr context, JsToken in,
   return true;
 }
 
+bool JsTokenToDispatcherModule(JsContextWrapperPtr context_wrapper,
+                               JsContextPtr context,
+                               const JsToken in,
+                               ModuleImplBaseClass **out) {
+  ModuleImplBaseClass *module = context_wrapper->GetModuleFromJsToken(in);
+  if (module) {
+    *out = module;
+    return true;
+  }
+  return false;
+}
+
+#elif BROWSER_IE
+static bool JsTokenToComModule(JsContextPtr context, JsToken in,
+                               IScriptable** out) {
+  if (in.vt == VT_DISPATCH) {
+    *out = in.pdispVal;
+    return true;
+  }
+  return false;
+}
+
+bool JsTokenToDispatcherModule(JsContextWrapperPtr context_wrapper,
+                               JsContextPtr context,
+                               const JsToken in,
+                               ModuleImplBaseClass **out) {
+  if (in.vt == VT_DISPATCH) {
+    CComQIPtr<GearsModuleProviderInterface> module_provider(in.pdispVal);
+    if (!module_provider) {
+      return false;
+    }
+    VARIANT var;
+    HRESULT hr = module_provider->get_moduleWrapper(&var);
+    if (FAILED(hr)) {
+      return false;
+    }
+    ModuleWrapper *module_wrapper =
+        reinterpret_cast<ModuleWrapper*>(var.byref);
+    *out = module_wrapper->GetModuleImplBaseClass();
+    return true;
+  }
+  return false;
+}
+
+#elif BROWSER_NPAPI
+static bool JsTokenToComModule(JsContextPtr context, JsToken in,
+                               IScriptable** out) {
+  // TODO(nigeltao): implement.
+  return false;
+}
+
+bool JsTokenToDispatcherModule(JsContextWrapperPtr context_wrapper,
+                               JsContextPtr context,
+                               const JsToken in,
+                               ModuleImplBaseClass **out) {
+  // TODO(nigeltao): implement.
+  return false;
+}
 #endif
 
 // Browser specific JsArray functions.
@@ -207,16 +270,23 @@ bool JsArray::SetElementString(int index, const std::string16& value) {
   }
 }
 
-bool JsArray::SetElementModule(int index, IScriptable* value) {
+bool JsArray::SetElementComModule(int index, IScriptable* value) {
   if (!array_)
     return false;
 
   JsToken token;
-  if (ModuleToToken(js_context_, value, &token)) {
+  if (ComModuleToToken(js_context_, value, &token)) {
     return SetElement(index, token);
   } else {
     return false;
   }
+}
+
+bool JsArray::SetElementDispatcherModule(int index,
+                                         ModuleImplBaseClass *value) {
+  if (!array_)
+    return false;
+  return SetElement(index, value->GetWrapperToken());
 }
 
 
@@ -302,8 +372,13 @@ bool JsArray::SetElementString(int index, const std::string16& value) {
   return SetElement(index, CComVariant(value.c_str()));
 }
 
-bool JsArray::SetElementModule(int index, IScriptable* value) {
+bool JsArray::SetElementComModule(int index, IScriptable* value) {
   return SetElement(index, CComVariant(value));
+}
+
+bool JsArray::SetElementDispatcherModule(int index,
+                                         ModuleImplBaseClass *value) {
+  return SetElement(index, value->GetWrapperToken());
 }
 
 #elif BROWSER_NPAPI
@@ -372,8 +447,15 @@ bool JsArray::SetElementString(int index, const std::string16& value) {
   return SetElement(index, JsScopedToken(value.c_str()));
 }
 
-bool JsArray::SetElementModule(int index, IScriptable* value) {
+bool JsArray::SetElementComModule(int index, IScriptable* value) {
   // TODO(cdevries): implement this
+  assert(false);
+  return false;
+}
+
+bool JsArray::SetElementDispatcherModule(int index,
+                                         ModuleImplBaseClass *value) {
+  // TODO(nigeltao): implement this
   assert(false);
   return false;
 }
@@ -558,14 +640,19 @@ bool JsObject::SetPropertyString(const std::string16 &name,
   }
 }
 
-bool JsObject::SetPropertyModule(const std::string16& name,
+bool JsObject::SetPropertyComModule(const std::string16& name,
                                  IScriptable* value) {
   JsToken token;
-  if (ModuleToToken(js_context_, value, &token)) {
+  if (ComModuleToToken(js_context_, value, &token)) {
     return SetProperty(name, token);
   } else {
     return false;
   }
+}
+
+bool JsObject::SetPropertyDispatcherModule(const std::string16 &name,
+                                           ModuleImplBaseClass *value) {
+  return SetProperty(name, value->GetWrapperToken());
 }
 
 #elif BROWSER_IE
@@ -624,9 +711,14 @@ bool JsObject::SetPropertyString(const std::string16 &name,
   return SetProperty(name, CComVariant(value.c_str()));
 }
 
-bool JsObject::SetPropertyModule(const std::string16& name,
-                                 IScriptable* value) {
+bool JsObject::SetPropertyComModule(const std::string16& name,
+                                    IScriptable* value) {
   return SetProperty(name, CComVariant(value));
+}
+
+bool JsObject::SetPropertyDispatcherModule(const std::string16 &name,
+                                           ModuleImplBaseClass *value) {
+  return SetProperty(name, value->GetWrapperToken());
 }
 
 #elif BROWSER_NPAPI
@@ -692,6 +784,18 @@ bool JsObject::SetPropertyBool(const std::string16 &name, bool value) {
 
 bool JsObject::SetPropertyDouble(const std::string16 &name, double value) {
   return SetProperty(name, ScopedNPVariant(value));
+}
+
+bool JsObject::SetPropertyComModule(const std::string16& name,
+                                    IScriptable* value) {
+  // TODO(nigeltao): implement
+  return false;
+}
+
+bool JsObject::SetPropertyDispatcherModule(const std::string16 &name,
+                                           ModuleImplBaseClass *value) {
+  // TODO(nigeltao): implement
+  return false;
 }
 
 #endif
@@ -841,6 +945,31 @@ static bool ConvertTokenToArgument(JsCallContext *context,
       JsToken *value = static_cast<JsToken *>(param->value_ptr);
       *value = variant;
       return true;
+    }
+    case JSPARAM_COM_MODULE: {
+      IScriptable **value = static_cast<IScriptable **>(param->value_ptr);
+      if (!JsTokenToComModule(context->js_context(), variant, value)) {
+        context->SetException(
+            STRING16(L"Invalid argument type: expected module."));
+        return false;
+      }
+      break;
+    }
+    case JSPARAM_DISPATCHER_MODULE: {
+      ModuleImplBaseClass **value =
+          static_cast<ModuleImplBaseClass **>(param->value_ptr);
+      if (!JsTokenToDispatcherModule(
+#if BROWSER_FF
+          context->js_runner()->GetContextWrapper(),
+#else
+          NULL,
+#endif
+          context->js_context(), variant, value)) {
+        context->SetException(
+            STRING16(L"Invalid argument type: expected module."));
+        return false;
+      }
+      break;
     }
     default:
       assert(false);
@@ -1657,13 +1786,11 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       *token = value->token();
       break;
     }
-    case JSPARAM_MODULE: {
-#if 0
+    case JSPARAM_DISPATCHER_MODULE:
+    case JSPARAM_COM_MODULE: {
       const ModuleImplBaseClass *value =
           static_cast<const ModuleImplBaseClass *>(param.value_ptr);
       *token = value->GetWrapperToken();
-#endif
-      assert(false);  // TODO(mpcomplete): implement GetWrapperToken().
       break;
     }
     case JSPARAM_NULL:
@@ -1753,13 +1880,11 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       *token = value->token();
       break;
     }
-    case JSPARAM_MODULE: {
-#if 0
+    case JSPARAM_DISPATCHER_MODULE:
+    case JSPARAM_COM_MODULE: {
       const ModuleImplBaseClass *value =
           static_cast<const ModuleImplBaseClass *>(param.value_ptr);
       *token = value->GetWrapperToken();
-#endif
-      assert(false);  // TODO(mpcomplete): implement GetWrapperToken().
       break;
     }
     case JSPARAM_NULL:
@@ -1874,7 +1999,8 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       variant->Reset(*value);
       break;
     }
-    case JSPARAM_MODULE: {
+    case JSPARAM_DISPATCHER_MODULE:
+    case JSPARAM_COM_MODULE: {
       const ModuleImplBaseClass *value =
           static_cast<const ModuleImplBaseClass *>(param.value_ptr);
       variant->Reset(NPVARIANT_TO_OBJECT(value->GetWrapperToken()));
@@ -2100,11 +2226,13 @@ bool JsParamFetcher::GetAsObject(int i, JsObject *out) {
   return out->SetObject(js_argv_[i], js_context_);
 }
 
-bool JsParamFetcher::GetAsModule(int i, nsISupports **out) {
+bool JsParamFetcher::GetAsDispatcherModule(int i, JsRunnerInterface *js_runner,
+                                           ModuleImplBaseClass **out) {
   if (i >= js_argc_) return false;  // see comment above, in GetAsInt()
   if (!JSVAL_IS_OBJECT(js_argv_[i])) return false;
 
-  if (!JsTokenToModule(js_context_, js_argv_[i], out))
+  if (!JsTokenToDispatcherModule(js_runner->GetContextWrapper(),
+                                 js_context_, js_argv_[i], out))
     return false;
 
   return true;

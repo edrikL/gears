@@ -50,14 +50,6 @@
 #include "genfiles/console.h"
 #include "genfiles/database.h"
 #include "genfiles/httprequest.h"
-
-#ifdef OFFICIAL_BUILD
-// The Image and Blgo APIs have not been finalized for official builds
-#else
-#include "genfiles/blob_ff.h"
-#include "genfiles/image.h"
-#endif
-
 #include "genfiles/localserver.h"
 #include "genfiles/workerpool.h"
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
@@ -538,14 +530,6 @@ bool JsRunner::InitJavaScriptEngine() {
     // GEARSFILESUBMITTERINTERFACE_IID can never be created in a child worker
     // httprequest
     {GEARSHTTPREQUESTINTERFACE_IID, NULL},
-#ifdef OFFICIAL_BUILD
-// The Image and Blog APIs have not been finalized for official builds
-#else
-    // blob
-    {GEARSBLOBINTERFACE_IID, NULL},
-    // image
-    {GEARSIMAGEINTERFACE_IID, NULL},
-#endif
     // console
     {GEARSCONSOLEINTERFACE_IID, NULL}
   };

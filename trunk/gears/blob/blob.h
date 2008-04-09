@@ -23,39 +23,37 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_BLOB_BLOB_FF_H__
-#define GEARS_BLOB_BLOB_FF_H__
+#ifndef GEARS_BLOB_BLOB_H__
+#define GEARS_BLOB_BLOB_H__
+
+#include "gears/base/common/base_class.h"
+#include "gears/base/common/common.h"
+#include "gears/base/common/scoped_refptr.h"
+#include "gears/blob/blob_interface.h"
 
 #ifdef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
 #else
 
-#include "genfiles/blob_ff.h"
-#include "gears/base/common/base_class.h"
-#include "gears/blob/blob_interface.h"
-
-extern const char *kGearsBlobClassName;
-extern const nsCID kGearsBlobClassId;
-
-class GearsBlob
-    : public ModuleImplBaseClass,
-      public GearsBlobInterface,
-      public GearsBlobPvtInterface {
+class GearsBlob : public ModuleImplBaseClassVirtual {
  public:
-  NS_DECL_ISUPPORTS
-  GEARS_IMPL_BASECLASS
+  static const std::string kModuleName;
 
-  // Initializes an empty GearsBlob
-  GearsBlob() : contents_(new EmptyBlob()) {}
-  ~GearsBlob() {}
+  GearsBlob()
+      : ModuleImplBaseClassVirtual(kModuleName.c_str()),
+        contents_(new EmptyBlob()) {}
 
-  NS_IMETHOD GetLength(PRInt64 *retval);
+  // IN: nothing
+  // OUT: int64
+  void GetLength(JsCallContext *context);
 
-  NS_IMETHOD GetContents(BlobInterface **retval);
+  // IN: int64 offset, optional int64 length
+  // OUT: GearsBlob
+  void Slice(JsCallContext *context);
 
-  NS_IMETHOD Slice(//PRInt64 offset
-                   //OPTIONAL PRInt64 length
-                   GearsBlobInterface **retval);
+  void GetContents(scoped_refptr<BlobInterface> *out) {
+    *out = contents_;
+  }
 
   void Reset(BlobInterface *blob) {
     contents_.reset(blob);
@@ -69,4 +67,4 @@ class GearsBlob
 
 #endif  // not OFFICIAL_BUILD
 
-#endif  // GEARS_BLOB_BLOB_FF_H__
+#endif  // GEARS_BLOB_BLOB_H__
