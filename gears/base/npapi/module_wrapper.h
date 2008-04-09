@@ -61,6 +61,11 @@ class ModuleWrapper
     assert(dispatcher_.get());
     return dispatcher_.get();
   }
+  
+  virtual ModuleImplBaseClass *GetModuleImplBaseClass() const {
+    assert(impl_.get());
+    return impl_.get();
+  }
 
   virtual void Ref() { NPN_RetainObject(this); }
   virtual void Unref() { NPN_ReleaseObject(this); }
