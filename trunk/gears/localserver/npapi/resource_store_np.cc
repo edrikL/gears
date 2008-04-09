@@ -454,6 +454,9 @@ void GearsResourceStore::HandleEvent(JsEventType event_type) {
 void GearsResourceStore::AbortAllRequests() {
   if (capture_task_.get()) {
     capture_task_->SetListener(NULL);
+    // No need to fire failed events since the current page is being unloaded
+    // or the resource store deleted for some other reason.
+    need_to_fire_failed_events_ = false;
     capture_task_->Abort();
     capture_task_.release()->DeleteWhenDone();
   }
@@ -511,6 +514,7 @@ GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
   }
 
   capture_task_->SetListener(this);
+  need_to_fire_failed_events_ = true;
   if (!capture_task_->Start()) {
     scoped_ptr<NPCaptureRequest> failed_request(current_request_.release());
     capture_task_.reset(NULL);
@@ -550,6 +554,7 @@ void GearsResourceStore::OnCaptureUrlComplete(int index, bool success) {
                              current_request_->id,
                              success);
   }
+  need_to_fire_failed_events_ = false;
 }
 
 //------------------------------------------------------------------------------
@@ -558,6 +563,10 @@ void GearsResourceStore::OnCaptureUrlComplete(int index, bool success) {
 void GearsResourceStore::OnCaptureTaskComplete() {
   capture_task_->SetListener(NULL);
   capture_task_.release()->DeleteWhenDone();
+  if (need_to_fire_failed_events_) {
+    assert(current_request_.get());
+    FireFailedEvents(current_request_.get());
+  }
   current_request_.reset(NULL);
   StartCaptureTaskIfNeeded(true);
 }

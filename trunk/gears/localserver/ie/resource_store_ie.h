@@ -180,6 +180,14 @@ class ATL_NO_VTABLE GearsResourceStore
   scoped_ptr<IECaptureRequest> current_request_;
   scoped_ptr<CaptureTask> capture_task_;
   ResourceStore store_;
+  // This flag is set to true until the first OnCaptureUrlComplete is called by 
+  // the capture_task_. If current_request_ is aborted before it gets a chance
+  // to begin the capture, OnCaptureUrlComplete will not be called for any of
+  // its urls, which implies that none of the corresponding capture callbacks
+  // will be called, either. To prevent this, we inspect this flag in
+  // OnCaptureTaskComplete and, if set, we call FireFailedEvents for
+  // current_request_.
+  bool need_to_fire_failed_events_;
 
   friend class GearsLocalServer;
 

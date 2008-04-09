@@ -71,6 +71,9 @@ void GearsResourceStore::FinalRelease() {
 
   if (capture_task_.get()) {
     capture_task_->SetListenerWindow(NULL, 0);
+    // No need to fire failed events since the current page is being unloaded
+    // or the resource store deleted for some other reason.
+    need_to_fire_failed_events_ = false;
     capture_task_->Abort();
     capture_task_.release()->DeleteWhenDone();
   }
@@ -273,6 +276,7 @@ GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
   }
 
   capture_task_->SetListenerWindow(m_hWnd, kCaptureTaskMessageBase);
+  need_to_fire_failed_events_ = true;
   if (!capture_task_->Start()) {
     scoped_ptr<IECaptureRequest> failed_request(current_request_.release());
     capture_task_.reset(NULL);
@@ -306,6 +310,7 @@ LRESULT GearsResourceStore::OnCaptureUrlComplete(UINT uMsg,
                 success, current_request_->id);
     }
   }
+  need_to_fire_failed_events_ = false;
   bHandled = TRUE;
   return 0;
 }
@@ -321,6 +326,10 @@ LRESULT GearsResourceStore::OnCaptureTaskComplete(UINT uMsg,
   if (task && (task == capture_task_.get())) {
     capture_task_->SetListenerWindow(NULL, 0);
     capture_task_.release()->DeleteWhenDone();
+    if (need_to_fire_failed_events_) {
+      assert(current_request_.get());
+      FireFailedEvents(current_request_.get());
+    }
     current_request_.reset(NULL);
   }
   StartCaptureTaskIfNeeded(true);
