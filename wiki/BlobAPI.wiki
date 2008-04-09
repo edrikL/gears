@@ -16,6 +16,7 @@ IDL definition:
 {{{
 interface Blob {
   readonly attribute int64 length;
+  Blob slice(int64 start, int64 length);
 }
 }}}
 
