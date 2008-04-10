@@ -174,13 +174,12 @@ function testAbortAfterSend() {
   request.abort();
 }
 
-// TODO(michaeln): modify and uncomment this test case
-/*
+
 function testAbortAfterInteractive() {
   startAsync();
   var urlbase = '/testcases/cgi/send_response_of_size.py?size=';
   var request = google.gears.factory.create('beta.httprequest');
-  request.open('GET', urlbase + 32000 + '&slowly=true', true);
+  request.open('GET', urlbase + 1000000, true);
   request.onreadystatechange = function() {
     if (request.readyState >= 3) {
       assertEqual(3, request.readyState);  // we dont want it to be complete yet
@@ -190,7 +189,50 @@ function testAbortAfterInteractive() {
   }
   request.send();
 }
-*/
+
+
+
+function testAbortWithReusedObject() {
+  startAsync();
+
+  var urlbase = '/testcases/cgi/send_response_of_size.py?size=';
+  var request = google.gears.factory.create('beta.httprequest');
+
+  // just call abort
+  request.abort();
+
+  // reusing the same GHR: open then abort
+  request.open('GET', urlbase + 1, true);
+  request.abort();
+
+  // reusing the same GHR: open, send, and then abort
+  request.open('GET', urlbase + 2, true);
+  request.send();
+  request.abort();
+
+  // reusing the same GHR: open, send, wait for interactive, then abort
+  request.open('GET', urlbase + 1000000, true);
+  request.onreadystatechange = function() {
+    if (request.readyState >= 3) {
+      assertEqual(3, request.readyState);  // we dont want it to be complete yet
+      request.abort();
+
+      // reusing the same GHR: make a successful request
+      request.open('GET', urlbase + 10, true);
+      request.onreadystatechange = function() {
+        if (request.readyState == 4) {
+          assertEqual(200, request.status);
+          assertEqual(10, request.responseText.length);
+          request.abort();  // shouldn't hurt
+          completeAsync();
+        }
+      };
+      request.send();
+    }
+  };
+  request.send();
+}
+
 
 function testGetCapturedResource() {
   startAsync();

@@ -37,7 +37,6 @@
 #include "gears/base/firefox/dom_utils.h"
 #ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
-#include "gears/blob/blob.h"
 #include "gears/blob/buffer_blob.h"
 #include "gears/blob/blob_interface.h"
 #endif
@@ -79,14 +78,16 @@ static const char16 *kNotInteractiveError =
 static const char16 *kEmptyString = STRING16(L"");
 
 GearsHttpRequest::GearsHttpRequest()
-    : request_(NULL), apartment_thread_id_(
-        ThreadMessageQueue::GetInstance()->GetCurrentThreadId()),
-      content_type_header_was_set_(false), page_is_unloaded_(false) {
+    : current_request_id_(0),
+      native_request_(NULL), native_request_id_(0),
+      apartment_thread_id_(
+          ThreadMessageQueue::GetInstance()->GetCurrentThreadId()),
+      page_is_unloaded_(false) {
   ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
 }
 
 GearsHttpRequest::~GearsHttpRequest() {
-  assert(!request_);
+  assert(!native_request_);
 }
 
 //------------------------------------------------------------------------------
@@ -128,9 +129,7 @@ NS_IMETHODIMP GearsHttpRequest::Open() {
     MutexLock locker(&lock_);
     
     if (IsComplete()) {
-      request_info_.reset(NULL);
-      response_info_.reset(NULL);
-      assert(!request_);
+      SetCurrentRequestInfo(NULL);
     }
 
     if (!IsUninitialized()) {
@@ -154,6 +153,8 @@ NS_IMETHODIMP GearsHttpRequest::Open() {
     }
 
     scoped_ptr<RequestInfo> scoped_info(new RequestInfo());
+    scoped_info->ready_state = HttpRequest::UNINITIALIZED;
+    scoped_info->upcoming_ready_state = HttpRequest::OPEN;
     scoped_info->method = MakeUpperString(method);
     
     std::string16 exception_message;
@@ -161,19 +162,10 @@ NS_IMETHODIMP GearsHttpRequest::Open() {
       RETURN_EXCEPTION(exception_message.c_str());
     }
 
-    request_info_.swap(scoped_info);
-    content_type_header_was_set_ = false;
-
-    response_info_.reset(new ResponseInfo());
-    response_info_->pending_ready_state = HttpRequest::OPEN;
-    response_info_->ready_state = HttpRequest::UNINITIALIZED;
-#ifndef OFFICIAL_BUILD
-// The blob API has not been finalized for official builds
-    response_info_->response_blob.reset(NULL);
-#endif
+    SetCurrentRequestInfo(scoped_info.release());
   }
 
-  OnReadyStateChangedCall();
+  OnReadyStateChangedCall(current_request_id_);
 
   RETURN_NORMAL();
 }
@@ -234,11 +226,11 @@ NS_IMETHODIMP GearsHttpRequest::SetRequestHeader() {
     RETURN_EXCEPTION(STRING16(L"This header may not be set."));
   }
 
-  request_info_->headers.push_back(std::make_pair(name, value));
+  current_request_info_->headers.push_back(std::make_pair(name, value));
 
   if (StringCompareIgnoreCase(name.c_str(),
                               HttpConstants::kContentTypeHeader) == 0) {
-    content_type_header_was_set_ = true;
+    current_request_info_->content_type_header_was_set = true;
   }
 
   RETURN_NORMAL();
@@ -254,25 +246,28 @@ NS_IMETHODIMP GearsHttpRequest::Send() {
     RETURN_EXCEPTION(kNotOpenError);
   }
 
-  if (request_info_->method == HttpConstants::kHttpPOST ||
-      request_info_->method == HttpConstants::kHttpPUT) {
+  if (current_request_info_->method == HttpConstants::kHttpPOST ||
+      current_request_info_->method == HttpConstants::kHttpPUT) {
     JsParamFetcher js_params(this);
     if (js_params.GetCount(false) > 0) {
 #ifndef OFFICIAL_BUILD
       ModuleImplBaseClass *module;
-      if (js_params.GetAsString(0, &request_info_->post_data)) {
-        request_info_->has_post_data = !request_info_->post_data.empty();
+      if (js_params.GetAsString(0, &current_request_info_->post_data)) {
+        current_request_info_->has_post_data =
+                                   !current_request_info_->post_data.empty();
       } else if (js_params.GetAsDispatcherModule(0, GetJsRunner(), &module) &&
                  GearsBlob::kModuleName == module->get_module_name()) {
-        static_cast<GearsBlob*>(module)->GetContents(&(request_info_->blob_));
+        static_cast<GearsBlob*>(module)->GetContents(
+                                             &(current_request_info_->blob_));
       } else {
         RETURN_EXCEPTION(STRING16(L"Data parameter must be a string or blob."));
       }
 #else
-      if (!js_params.GetAsString(0, &request_info_->post_data)) {
+      if (!js_params.GetAsString(0, &current_request_info_->post_data)) {
         RETURN_EXCEPTION(STRING16(L"Data parameter must be a string."));
       }
-      request_info_->has_post_data = !request_info_->post_data.empty();
+      current_request_info_->has_post_data = 
+                                 !current_request_info_->post_data.empty();
 #endif
     }
   }
@@ -286,7 +281,8 @@ NS_IMETHODIMP GearsHttpRequest::Send() {
   InitUnloadMonitor();
 
   if (!CallSendOnUiThread()) {
-    response_info_.reset(NULL);
+    // go back to the uninitialized state
+    SetCurrentRequestInfo(NULL);
     RETURN_EXCEPTION(kInternalError);
   }
 
@@ -294,60 +290,63 @@ NS_IMETHODIMP GearsHttpRequest::Send() {
 }
 
 bool GearsHttpRequest::CallSendOnUiThread() {
-  return CallAsync(GetUiThread(), kSend) == NS_OK;
+  return NS_OK == CallAsync(GetUiThread(), kSend);
 }
 
-void GearsHttpRequest::OnSendCall() {
+void GearsHttpRequest::OnSendCall(int request_id) {
   assert(IsUiThread());
+  assert(!native_request_);
 
   MutexLock locker(&lock_);
-
-  // TODO(michaeln): this is a quick-fix for a crashing bug,
-  // Overwrite with CL6372979 when the tree re-opens for development
-  if (!request_info_.get() || !response_info_.get()) {
+  if (request_id != current_request_id_) {
+    // The request was aborted after this message was sent, ignore it.
     return;
   }
-  // end quick-fix
+  assert(current_request_info_.get());
 
-  CreateRequest();
-  bool ok = request_->Open(request_info_->method.c_str(),
-                           request_info_->full_url.c_str(),
-                           true);  // async
+  CreateNativeRequest(request_id);
+  bool ok = native_request_->Open(current_request_info_->method.c_str(),
+                                  current_request_info_->full_url.c_str(),
+                                  true);  // async
   if (!ok) {
-    response_info_->pending_ready_state = HttpRequest::COMPLETE;
-    RemoveRequest();
+    current_request_info_->upcoming_ready_state = HttpRequest::COMPLETE;
+    RemoveNativeRequest();
     CallReadyStateChangedOnApartmentThread();
     return;
   }
 
   // We defer setting up the listener to skip the OPEN callback
-  request_->SetOnReadyStateChange(this);
+  native_request_->SetOnReadyStateChange(this);
 
-  for (size_t i = 0; i < request_info_->headers.size(); ++i) {
-    request_->SetRequestHeader(request_info_->headers[i].first.c_str(), 
-                               request_info_->headers[i].second.c_str());
+  for (size_t i = 0; i < current_request_info_->headers.size(); ++i) {
+    native_request_->SetRequestHeader(
+                         current_request_info_->headers[i].first.c_str(), 
+                         current_request_info_->headers[i].second.c_str());
   }
 
-  if (request_info_->has_post_data) {
-    if (!content_type_header_was_set_) {
-      request_->SetRequestHeader(HttpConstants::kContentTypeHeader,
-                                 HttpConstants::kMimeTextPlain);
+  if (current_request_info_->has_post_data) {
+    if (!current_request_info_->content_type_header_was_set) {
+      native_request_->SetRequestHeader(
+                           HttpConstants::kContentTypeHeader,
+                           HttpConstants::kMimeTextPlain);
     }
-    ok = request_->SendString(request_info_->post_data.c_str());
+    ok = native_request_->SendString(current_request_info_->post_data.c_str());
 #ifndef OFFICIAL_BUILD
-  } else if (request_info_->blob_.get()) {
-    if (!content_type_header_was_set_) {
-      request_->SetRequestHeader(HttpConstants::kContentTypeHeader,
-                                 HttpConstants::kMimeApplicationOctetStream);
+  } else if (current_request_info_->blob_.get()) {
+    if (!current_request_info_->content_type_header_was_set) {
+      native_request_->SetRequestHeader(
+                           HttpConstants::kContentTypeHeader,
+                           HttpConstants::kMimeApplicationOctetStream);
     }
-    ok = request_->SendBlob(request_info_->blob_.get());
+    ok = native_request_->SendBlob(current_request_info_->blob_.get());
 #endif
   } else {
-    ok = request_->Send();
+    ok = native_request_->Send();
   }
+  
   if (!ok) {
-    response_info_->pending_ready_state = HttpRequest::COMPLETE;
-    RemoveRequest();
+    current_request_info_->upcoming_ready_state = HttpRequest::COMPLETE;
+    RemoveNativeRequest();
     CallReadyStateChangedOnApartmentThread();
     return;
   }
@@ -359,35 +358,36 @@ void GearsHttpRequest::OnSendCall() {
 //------------------------------------------------------------------------------
 NS_IMETHODIMP GearsHttpRequest::Abort() {
   assert(IsApartmentThread());
-  CallAbortOnUiThread();
+  MutexLock locker(&lock_);
+  if (current_request_info_.get()) {
+    CallAbortOnUiThread();
+    // go to the uninitialized state
+    SetCurrentRequestInfo(NULL);
+  }
   RETURN_NORMAL();
 }
 
 bool GearsHttpRequest::CallAbortOnUiThread() {
   if (IsUiThread()) {
-    OnAbortCall();
+    OnAbortCall(current_request_id_);
     return true;
   } else {
-    return CallAsync(GetUiThread(), kAbort) == NS_OK;
+    return NS_OK == CallAsync(GetUiThread(), kAbort);
   }
 }
 
-void GearsHttpRequest::OnAbortCall() {
+void GearsHttpRequest::OnAbortCall(int request_id) {
   assert(IsUiThread());
-  nsCOMPtr<GearsHttpRequest> reference(this);
-  {
-    // The extra scope is to ensure we unlock prior to reference.Release
-    MutexLock locker(&lock_);
-    // TODO(michaeln): this is a quick-fix for a crashing bug,
-    // Overwrite with CL6372979 when the tree re-opens for development
-    request_info_.reset(NULL);
-    response_info_.reset(NULL);
-    // end quick-fix
-    if (request_) {
-      request_->SetOnReadyStateChange(NULL);
-      request_->Abort();
-      RemoveRequest();
-    }
+  if (native_request_) {
+    // No need to lock here, native_request is only accessed on the ui thread.
+    // Furthermore, there should not be a lock here; depending on whether
+    // or not the 'apartment thread' is also the 'ui thread', the lock may
+    // already be held and our locks are not recursive.
+    assert(native_request_id_ == request_id);
+    nsCOMPtr<GearsHttpRequest> reference(this);
+    native_request_->SetOnReadyStateChange(NULL);
+    native_request_->Abort();
+    RemoveNativeRequest();
   }
 }
 
@@ -397,26 +397,13 @@ void GearsHttpRequest::OnAbortCall() {
 NS_IMETHODIMP GearsHttpRequest::GetReadyState(PRInt32 *retval) {
   assert(IsApartmentThread());
   MutexLock locker(&lock_);
-  if (IsUninitialized()) {
-    *retval = HttpRequest::UNINITIALIZED;  // 0
-  } else if (IsOpen()) {
-    *retval = HttpRequest::OPEN;  // 1
-  } else if (IsSent()) {
-    *retval = HttpRequest::SENT;  // 2
-  } else if (IsInteractive()) {
-    *retval = HttpRequest::INTERACTIVE;  // 3
-  } else if (IsComplete()) {
-    *retval = HttpRequest::COMPLETE; // 4
-  } else {
-    assert(false);
-    RETURN_EXCEPTION(kInternalError);
-  }
+  *retval = GetState();
   RETURN_NORMAL();
 }
 
 bool GearsHttpRequest::IsValidResponse() {
   assert(IsInteractive() || IsComplete());
-  return ::IsValidResponseCode(response_info_->status);
+  return ::IsValidResponseCode(current_request_info_->response.status);
 }
 
 //------------------------------------------------------------------------------
@@ -432,7 +419,7 @@ NS_IMETHODIMP GearsHttpRequest::GetAllResponseHeaders(nsAString &retval) {
     retval.Assign(kEmptyString);
     RETURN_NORMAL();
   }
-  retval.Assign(response_info_->headers.c_str());
+  retval.Assign(current_request_info_->response.headers.c_str());
   RETURN_NORMAL();
 }
 
@@ -450,11 +437,11 @@ NS_IMETHODIMP GearsHttpRequest::GetResponseHeader(nsAString &retval) {
     retval.Assign(kEmptyString);
     RETURN_NORMAL();
   }
-  if (!response_info_->parsed_headers.get()) {
+  if (!current_request_info_->response.parsed_headers.get()) {
     scoped_ptr<HTTPHeaders> parsed_headers(new HTTPHeaders);
     std::string headers_utf8;
-    String16ToUTF8(response_info_->headers.c_str(), 
-                   response_info_->headers.length(),
+    String16ToUTF8(current_request_info_->response.headers.c_str(), 
+                   current_request_info_->response.headers.length(),
                    &headers_utf8);
     const char *body = headers_utf8.c_str();
     uint32 body_len = headers_utf8.length();
@@ -462,7 +449,7 @@ NS_IMETHODIMP GearsHttpRequest::GetResponseHeader(nsAString &retval) {
                                      true /* allow_const_cast */)) {
       return false;
     }
-    response_info_->parsed_headers.swap(parsed_headers);
+    current_request_info_->response.parsed_headers.swap(parsed_headers);
   }
 
   JsParamFetcher js_params(this);
@@ -477,7 +464,8 @@ NS_IMETHODIMP GearsHttpRequest::GetResponseHeader(nsAString &retval) {
   std::string name_utf8;
   String16ToUTF8(name.c_str(), &name_utf8);
   const char *value_utf8 =
-                  response_info_->parsed_headers->GetHeader(name_utf8.c_str());
+      current_request_info_->response.parsed_headers->GetHeader(
+                                                          name_utf8.c_str());
   std::string16 value;
   UTF8ToString16(value_utf8 ? value_utf8 : "", &value);
   retval.Assign(value.c_str());
@@ -498,7 +486,7 @@ NS_IMETHODIMP GearsHttpRequest::GetResponseText(nsAString &retval) {
     retval.Assign(kEmptyString);
     RETURN_NORMAL();
   }
-  retval.Assign(response_info_->response_text.c_str());
+  retval.Assign(current_request_info_->response.text.c_str());
   RETURN_NORMAL();
 }
 
@@ -519,11 +507,12 @@ NS_IMETHODIMP GearsHttpRequest::GetResponseBlob(nsISupports **retval) {
                               L"is complete"));
   }
 
-  if (response_info_->response_blob == NULL) {
+  if (current_request_info_->response.blob == NULL) {
     // Not already cached - make a new blob and copy the contents in
     scoped_ptr<GearsBlob> blob(new GearsBlob());
     if (IsValidResponse()) {
-      std::vector<uint8> *body = response_info_->response_body.release();
+      std::vector<uint8> *body =
+               current_request_info_->response.body.release();
       if (body) {
         blob->Reset(new BufferBlob(body));
       }
@@ -533,10 +522,10 @@ NS_IMETHODIMP GearsHttpRequest::GetResponseBlob(nsISupports **retval) {
     if (!blob->InitBaseFromSibling(this)) {
       RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
     }
-    response_info_->response_blob = blob.release();
+    current_request_info_->response.blob = blob.release();
   }
 
-  *retval = response_info_->response_blob;
+  *retval = current_request_info_->response.blob;
   (*retval)->AddRef();
   RETURN_NORMAL();
 #endif
@@ -557,7 +546,7 @@ NS_IMETHODIMP GearsHttpRequest::GetStatus(PRInt32 *retval) {
   if (!IsValidResponse()) {
     RETURN_EXCEPTION(kRequestFailedError);
   }
-  *retval = response_info_->status;
+  *retval = current_request_info_->response.status;
   RETURN_NORMAL();
 }
 
@@ -574,7 +563,7 @@ NS_IMETHODIMP GearsHttpRequest::GetStatusText(nsAString &retval) {
   if (!IsValidResponse()) {
     RETURN_EXCEPTION(kRequestFailedError);
   }
-  retval.Assign(response_info_->status_text.c_str());
+  retval.Assign(current_request_info_->response.status_text.c_str());
   RETURN_NORMAL();
 }
 
@@ -583,55 +572,69 @@ NS_IMETHODIMP GearsHttpRequest::GetStatusText(nsAString &retval) {
 //------------------------------------------------------------------------------
 void GearsHttpRequest::DataAvailable(HttpRequest *source) {
   assert(IsUiThread());
-  assert(source == request_);
+  assert(source == native_request_);
 
-  nsCOMPtr<GearsHttpRequest> reference(this);
-  {
-    // The extra scope is to ensure we unlock prior to reference.Release
-    MutexLock locker(&lock_);
-    source->GetResponseBodyAsText(&response_info_->response_text);
-    CallDataAvailableOnApartmentThread();
+  MutexLock locker(&lock_);
+  if (native_request_id_ != current_request_id_) {
+    // The request we're processing has been aborted, but we have not yet
+    // received the OnAbort message. We pre-emptively call abort here, when
+    // the message does arrive, it will be ignored.
+    OnAbortCall(native_request_id_);
+    return;
   }
+  assert(current_request_info_.get());
+
+  source->GetResponseBodyAsText(&current_request_info_->response.text);
+  CallDataAvailableOnApartmentThread();
 }
 
 bool GearsHttpRequest::CallDataAvailableOnApartmentThread() {
-  return CallAsync(apartment_thread_id_, kDataAvailable) == NS_OK;
+  return NS_OK == CallAsync(apartment_thread_id_, kDataAvailable);
 }
 
-void GearsHttpRequest::OnDataAvailableCall() {
+void GearsHttpRequest::OnDataAvailableCall(int request_id) {
   assert(IsApartmentThread());
-  OnReadyStateChangedCall();
+  OnReadyStateChangedCall(request_id);
 }
+
 
 //------------------------------------------------------------------------------
 // ReadyStateChanged called by our lower level HttpRequest class
 //------------------------------------------------------------------------------
 void GearsHttpRequest::ReadyStateChanged(HttpRequest *source) {
   assert(IsUiThread());
-  assert(source == request_);
+  assert(source == native_request_);
 
   nsCOMPtr<GearsHttpRequest> reference(this);
-  {
-    // The extra scope is to ensure we unlock prior to reference.Release
-    MutexLock locker(&lock_);
-
-    HttpRequest::ReadyState previous_state =
-        response_info_->pending_ready_state;
+  { // The extra scope is to ensure we unlock prior to reference.Release
     HttpRequest::ReadyState state;
     source->GetReadyState(&state);
+
+    MutexLock locker(&lock_);
+    if (current_request_id_ != native_request_id_) {
+      // The request we're processing has been aborted, but we have not yet
+      // received the OnAbort message. We pre-emptively call abort here, when
+      // the message does arrive, it will be ignored.
+      OnAbortCall(native_request_id_);
+      return;
+    }
+    assert(current_request_info_.get());
+
+    HttpRequest::ReadyState previous_state =
+                     current_request_info_->upcoming_ready_state;
     if (state > previous_state) {
-      response_info_->pending_ready_state = state;
+      current_request_info_->upcoming_ready_state = state;
       if (state >= HttpRequest::INTERACTIVE &&
           previous_state < HttpRequest::INTERACTIVE) {
         // For HEAD requests, we skip INTERACTIVE and jump straight to COMPLETE
-        source->GetAllResponseHeaders(&response_info_->headers);
-        source->GetStatus(&response_info_->status);
-        source->GetStatusText(&response_info_->status_text);
+        source->GetAllResponseHeaders(&current_request_info_->response.headers);
+        source->GetStatus(&current_request_info_->response.status);
+        source->GetStatusText(&current_request_info_->response.status_text);
       }
       if (state == HttpRequest::COMPLETE) {
-        source->GetResponseBodyAsText(&response_info_->response_text);
-        response_info_->response_body.reset(source->GetResponseBody());
-        RemoveRequest();
+        source->GetResponseBodyAsText(&current_request_info_->response.text);
+        current_request_info_->response.body.reset(source->GetResponseBody());
+        RemoveNativeRequest();
       }
       CallReadyStateChangedOnApartmentThread();
     }
@@ -639,21 +642,21 @@ void GearsHttpRequest::ReadyStateChanged(HttpRequest *source) {
 }
 
 bool GearsHttpRequest::CallReadyStateChangedOnApartmentThread() {
-  return CallAsync(apartment_thread_id_, kReadyStateChanged) == NS_OK;
+  return NS_OK == CallAsync(apartment_thread_id_, kReadyStateChanged);
 }
 
-void GearsHttpRequest::OnReadyStateChangedCall() {
+void GearsHttpRequest::OnReadyStateChangedCall(int request_id) {
   assert(IsApartmentThread());
   bool is_complete;
   {
     MutexLock locker(&lock_);
-    // TODO(michaeln): this is a quick fix for a crashing bug,
-    // Overwrite with CL6372979 when the tree re-opens for development
-    if (!response_info_.get()) {
+    if (current_request_id_ != request_id) {
+      // The request was aborted after this message was sent, ignore it.
       return;
     }
-    // end quick-fix
-    response_info_->ready_state = response_info_->pending_ready_state;
+    assert(current_request_info_.get());
+    current_request_info_->ready_state =
+                               current_request_info_->upcoming_ready_state;
     is_complete = IsComplete();
   }
 
@@ -674,23 +677,31 @@ void GearsHttpRequest::OnReadyStateChangedCall() {
 
 
 //------------------------------------------------------------------------------
-// CreateRequest, RemoveRequest
+// SetCurrentRequestInfo, CreateNativeRequest, RemoveNativeRequest
 //------------------------------------------------------------------------------
 
-void GearsHttpRequest::CreateRequest() {
+void GearsHttpRequest::SetCurrentRequestInfo(RequestInfo *info) {
+  assert(IsApartmentThread());
+  current_request_info_.reset(info);
+  ++current_request_id_;  
+}
+
+void GearsHttpRequest::CreateNativeRequest(int request_id) {
   assert(IsUiThread());
-  RemoveRequest();
-  HttpRequest::Create(&request_);
-  request_->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
-  request_->SetRedirectBehavior(HttpRequest::FOLLOW_WITHIN_ORIGIN);
+  RemoveNativeRequest();
+  HttpRequest::Create(&native_request_);
+  native_request_->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
+  native_request_->SetRedirectBehavior(HttpRequest::FOLLOW_WITHIN_ORIGIN);
+  native_request_id_ = request_id;
   this->AddRef();
 }
 
-void GearsHttpRequest::RemoveRequest() {
+void GearsHttpRequest::RemoveNativeRequest() {
   assert(IsUiThread());
-  if (request_) {
-    request_->SetOnReadyStateChange(NULL);
-    request_ = NULL;
+  if (native_request_) {
+    native_request_->SetOnReadyStateChange(NULL);
+    native_request_ = NULL;
+    native_request_id_ = 0;
     this->Release();
   }
 }
@@ -733,40 +744,17 @@ bool GearsHttpRequest::ResolveUrl(const char16 *url,
 
 
 //------------------------------------------------------------------------------
-// IsUninitialized, IsOpen, IsSent, IsInteractive, and IsComplete.
+// GetState, IsUninitialized, IsOpen, IsSent, IsInteractive, and IsComplete.
 // The caller is responsible for acquiring the lock prior to calling these
 // state accessors.
 //------------------------------------------------------------------------------
 
-bool GearsHttpRequest::IsUninitialized() {
+HttpRequest::ReadyState GearsHttpRequest::GetState() {
   assert(IsApartmentThread());
-  return !response_info_.get() ||
-         response_info_->ready_state == HttpRequest::UNINITIALIZED;
+  return current_request_info_.get() ? current_request_info_->ready_state
+                                     : HttpRequest::UNINITIALIZED;
 }
 
-bool GearsHttpRequest::IsOpen() {
-  assert(IsApartmentThread());
-  return response_info_.get() &&
-         response_info_->ready_state == HttpRequest::OPEN;
-}
-
-bool GearsHttpRequest::IsSent() {
-  assert(IsApartmentThread());
-  return response_info_.get() &&
-         response_info_->ready_state == HttpRequest::SENT;
-}
-
-bool GearsHttpRequest::IsInteractive() {
-  assert(IsApartmentThread());
-  return response_info_.get() &&
-         response_info_->ready_state == HttpRequest::INTERACTIVE;
-}
-
-bool GearsHttpRequest::IsComplete() {
-  assert(IsApartmentThread());
-  return response_info_.get() &&
-         response_info_->ready_state == HttpRequest::COMPLETE;
-}
 
 //------------------------------------------------------------------------------
 // InitUnloadMonitor
@@ -777,50 +765,6 @@ void GearsHttpRequest::InitUnloadMonitor() {
     unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
                                              this));
   }
-}
-
-
-//------------------------------------------------------------------------------
-// OnAsyncCall - Called when a message sent via CallAsync is delivered to us
-// on the target thread of control.
-//------------------------------------------------------------------------------
-
-void GearsHttpRequest::OnAsyncCall(AsyncCallType call_type) {
-  switch (call_type) {
-    case kDataAvailable:
-      OnDataAvailableCall();
-      break;
-    case kReadyStateChanged:
-      OnReadyStateChangedCall();
-      break;
-    case kSend:
-      OnSendCall();
-      break;
-    case kAbort:
-      OnAbortCall();
-      break;
-  }
-}
-
-class GearsHttpRequest::AsyncCallEvent : public AsyncFunctor {
-public:
-  AsyncCallEvent(GearsHttpRequest *request, AsyncCallType call_type)
-      : request(request), call_type(call_type) {}
-  void Run() {
-    request->OnAsyncCall(call_type);
-  }
-  nsCOMPtr<GearsHttpRequest> request;
-  AsyncCallType call_type;
-};
-
-
-// CallAsync - Posts a message to another thead's event queue. The message will
-// be delivered to this AsyncTask instance on that thread via OnAsyncCall.
-nsresult GearsHttpRequest::CallAsync(ThreadId thread_id,
-                                     AsyncCallType call_type) {
-  AsyncRouter::GetInstance()->CallAsync(thread_id,
-                                        new AsyncCallEvent(this, call_type));
-  return NS_OK;
 }
 
 void GearsHttpRequest::HandleEvent(JsEventType event_type) {
@@ -836,3 +780,53 @@ void GearsHttpRequest::HandleEvent(JsEventType event_type) {
   page_is_unloaded_ = true;
   Abort();
 }
+
+
+//------------------------------------------------------------------------------
+// OnAsyncCall - Called when a message sent via CallAsync is delivered to us
+// on the target thread of control.
+//------------------------------------------------------------------------------
+
+void GearsHttpRequest::OnAsyncCall(AsyncCallType call_type, int request_id) {
+  switch (call_type) {
+    case kDataAvailable:
+      OnDataAvailableCall(request_id);
+      break;
+    case kReadyStateChanged:
+      OnReadyStateChangedCall(request_id);
+      break;
+    case kSend:
+      OnSendCall(request_id);
+      break;
+    case kAbort:
+      OnAbortCall(request_id);
+      break;
+  }
+}
+
+
+class GearsHttpRequest::AsyncCallEvent : public AsyncFunctor {
+public:
+  AsyncCallEvent(GearsHttpRequest *request, AsyncCallType call_type,
+                 int request_id)
+      : request(request), call_type(call_type), request_id(request_id) {}
+  virtual void Run() {
+    request->OnAsyncCall(call_type, request_id);
+  }
+  nsCOMPtr<GearsHttpRequest> request;
+  AsyncCallType call_type;
+  int request_id;
+};
+
+
+// CallAsync - Posts a message to another thead's event queue. The message will
+// be delivered to this AsyncTask instance on that thread via OnAsyncCall.
+nsresult GearsHttpRequest::CallAsync(ThreadId thread_id, 
+                                     AsyncCallType call_type) {
+  // assert(lock_.IsLockedByCurrentThread());
+  AsyncCallEvent *event = new AsyncCallEvent(this, call_type,
+                                             current_request_id_);
+  AsyncRouter::GetInstance()->CallAsync(thread_id, event);
+  return NS_OK;
+}
+
