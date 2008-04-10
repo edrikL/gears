@@ -71,79 +71,110 @@ class GearsHttpRequest
   GearsHttpRequest();
   NS_DECL_GEARSHTTPREQUESTINTERFACE
 
-  void HandleEvent(JsEventType event_type);
-
  protected:
   // need an accessible destructor to use with nsCOMPtr<GearsHttpRequest>
   ~GearsHttpRequest();
 
  private:
-  struct RequestInfo {
-    std::string16 method;
-    std::string16 full_url;
-    std::vector< std::pair<std::string16, std::string16> > headers;
-    bool has_post_data;
-    std::string16 post_data;
-#ifndef OFFICIAL_BUILD
-    scoped_refptr<BlobInterface> blob_;
-#endif
-    RequestInfo() : has_post_data(false) {}
-  };
-
   struct ResponseInfo {
-    HttpRequest::ReadyState pending_ready_state;
-    HttpRequest::ReadyState ready_state;
     int status;
     std::string16 status_text;
     std::string16 headers;
     scoped_ptr<HTTPHeaders> parsed_headers;
 
     // valid when IsInteractive or IsComplete
-    std::string16 response_text;
+    std::string16 text;
 
     // only valid when IsComplete and prior to having transfered ownership to
     // response_blob
-    scoped_ptr< std::vector<uint8> > response_body;
+    scoped_ptr< std::vector<uint8> > body;
 
 #ifndef OFFICIAL_BUILD
     // The blob API has not been finalized for official builds
     // only valid when IsComplete and after ownership of the body has been
     // transfered
-    scoped_refptr<GearsBlob> response_blob;
+    scoped_refptr<GearsBlob> blob;
 #endif
 
-    ResponseInfo() : pending_ready_state(HttpRequest::UNINITIALIZED),
-                     ready_state(HttpRequest::UNINITIALIZED), status(0) {}
+    ResponseInfo() : status(0) {}
   };
 
-  Mutex lock_;
-  scoped_ptr<RequestInfo> request_info_;
-  scoped_ptr<ResponseInfo> response_info_;
-  scoped_refptr<HttpRequest> request_;
-  scoped_ptr<JsRootedCallback> onreadystatechange_;
-  ThreadId apartment_thread_id_;
-  bool content_type_header_was_set_;
-  bool page_is_unloaded_;
-  scoped_ptr<JsEventMonitor> unload_monitor_;
+  struct RequestInfo {
+    std::string16 method;
+    std::string16 full_url;
+    std::vector< std::pair<std::string16, std::string16> > headers;
+    bool has_post_data;
+    std::string16 post_data;
+    bool content_type_header_was_set;
+    HttpRequest::ReadyState ready_state;
+    HttpRequest::ReadyState upcoming_ready_state;
+#ifndef OFFICIAL_BUILD
+    scoped_refptr<BlobInterface> blob_;
+#endif
+    ResponseInfo response;
+    RequestInfo() : has_post_data(false), content_type_header_was_set(false),
+                    ready_state(HttpRequest::UNINITIALIZED),
+                    upcoming_ready_state(HttpRequest::UNINITIALIZED) {}
+  };
 
-  bool ResolveUrl(const char16 *url, std::string16 *resolved_url,
-                  std::string16 *exception_message);
-  virtual void DataAvailable(HttpRequest *source);
-  virtual void ReadyStateChanged(HttpRequest *source);
-  void CreateRequest();
-  void RemoveRequest();
-  bool IsUninitialized();  // ready_state 0
-  bool IsOpen();           // ready_state 1
-  bool IsSent();           // ready_state 2
-  bool IsInteractive();    // ready_state 3
-  bool IsComplete();       // ready_state 4
-  bool IsValidResponse();
-
-  // Initiating HTTP requests in Firefox can only be performed from the
-  // main ui thread. When an instance of this class is created on
+  // Notes
+  //
+  // 1. Gears.HttpRequest can be reused by script clients to make many
+  // distinct requests, not concurrently but in series. Each in the
+  // series is given a unique request_id. For each distinct request
+  // a new RequestInfo structure is allocated.
+  //
+  // 2. Initiating native HTTP requests in Firefox can only be performed from 
+  // the main ui thread. When an instance of this class is created on
   // a worker thread, we have to play ping/pong with the ui thread to
   // actually do the request. Terminology: the 'apartment thread' is the
   // thread of control an instance of Gears.HttpRequest is created on.
+  //
+  // 3. When messaging between threads, we include the request_id the
+  // message is relevant to. The receiving side of the message uses
+  // this value to determine if the distinct request being handled has
+  // changed since the message was sent.
+
+  // The following members represent the state of the current request.
+  // Methods of this class running in both the apartment and ui threads
+  // access this shared state. The apartment thread manages the life-cycle
+  // of the RequestInfo ptr.
+  Mutex lock_;
+  int current_request_id_;
+  scoped_ptr<RequestInfo> current_request_info_;
+
+  // Used only on the ui thread, the native http request object and the
+  // request_id corresponding to the request_info it was initialized for. 
+  scoped_refptr<HttpRequest> native_request_;
+  int native_request_id_;
+
+  scoped_ptr<JsRootedCallback> onreadystatechange_;
+  ThreadId apartment_thread_id_;
+  scoped_ptr<JsEventMonitor> unload_monitor_;
+  bool page_is_unloaded_;
+
+  bool ResolveUrl(const char16 *url, std::string16 *resolved_url,
+                  std::string16 *exception_message);
+
+  // JsEventHandlerInterface for page unload monitoring
+  virtual void HandleEvent(JsEventType event_type);
+  void InitUnloadMonitor();
+
+  // Native HttpRequest::ReadyStateListener interface
+  virtual void DataAvailable(HttpRequest *source);
+  virtual void ReadyStateChanged(HttpRequest *source);
+
+  void SetCurrentRequestInfo(RequestInfo *info);
+  void CreateNativeRequest(int request_id);
+  void RemoveNativeRequest();
+
+  HttpRequest::ReadyState GetState();
+  bool IsUninitialized() { return GetState() == HttpRequest::UNINITIALIZED; }
+  bool IsOpen()          { return GetState() == HttpRequest::OPEN; }
+  bool IsSent()          { return GetState() == HttpRequest::SENT; }
+  bool IsInteractive()   { return GetState() == HttpRequest::INTERACTIVE; }
+  bool IsComplete()      { return GetState() == HttpRequest::COMPLETE; }
+  bool IsValidResponse();
 
   // Returns true if the currently executing thread is our apartment thread
   bool IsApartmentThread() {
@@ -161,14 +192,13 @@ class GearsHttpRequest
   bool CallSendOnUiThread();
   bool CallReadyStateChangedOnApartmentThread();
   bool CallDataAvailableOnApartmentThread();
-  void OnAbortCall();
-  void OnSendCall();
-  void OnReadyStateChangedCall();
-  void OnDataAvailableCall();
+  void OnAbortCall(int request_id);
+  void OnSendCall(int request_id);
+  void OnReadyStateChangedCall(int request_id);
+  void OnDataAvailableCall(int request_id);
 
   nsresult CallAsync(ThreadId thread_id, AsyncCallType call_type);
-  void OnAsyncCall(AsyncCallType call_type);
-  void InitUnloadMonitor();
+  void OnAsyncCall(AsyncCallType call_type, int request_id);
 
   class AsyncCallEvent;
   friend class AsyncCallEvent;
