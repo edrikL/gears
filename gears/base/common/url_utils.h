@@ -38,6 +38,9 @@ bool IsRelativeUrl(const char16 *url);
 bool ResolveAndNormalize(const char16 *base, const char16 *url,
                          std::string16 *out);
 
+// Returns true if 'url' is a data URL.
+bool IsDataUrl(const char16 *url);
+
 // This method can be used to parse a 'data' URL into its component pieces.
 //
 // The resulting mime_type is normalized to lowercase.  The data is the

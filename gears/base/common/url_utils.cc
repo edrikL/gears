@@ -57,6 +57,10 @@ bool IsRelativeUrl(const char16 *url) {
   return true;
 }
 
+bool IsDataUrl(const char16 *url) {
+  return std::char_traits<char16>::compare(url, STRING16(L"data:"), 5) == 0;
+}
+
 // NOTE: based loosely on mozilla's nsDataChannel.cpp
 bool ParseDataUrl(const std::string16& url, std::string16* mime_type,
                   std::string16* charset, std::vector<uint8>* data) {
@@ -147,8 +151,8 @@ str UnescapeURLImpl(const str& escaped_text, bool replace_plus) {
   for (size_t i = 0, max = escaped_text.size(), max_digit_index = max - 2;
        i < max; ++i) {
     if (escaped_text[i] == '%' && i < max_digit_index) {
-      const str::value_type most_sig_digit(escaped_text[i + 1]);
-      const str::value_type least_sig_digit(escaped_text[i + 2]);
+      const typename str::value_type most_sig_digit(escaped_text[i + 1]);
+      const typename str::value_type least_sig_digit(escaped_text[i + 2]);
       if (IsHex(most_sig_digit) && IsHex(least_sig_digit)) {
         result.push_back((HexToInt(most_sig_digit) * 16) +
                          HexToInt(least_sig_digit));

@@ -519,31 +519,42 @@ bool GearsDesktop::FetchIcon(GearsDesktop::IconData *icon, int expected_size,
     return true;
   }
 
-  // Fetch the png data
-  scoped_refptr<HttpRequest> request;
-  HttpRequest::Create(&request);
-
-  request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
-  request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
-
   // Get the current icon.
-  int status = 0;
-  if (!request->Open(HttpConstants::kHttpGET, icon->url.c_str(), false) ||
-      !request->Send() ||
-      !request->GetStatus(&status) ||
-      status != HTTPResponse::RC_REQUEST_OK) {
-    *error = STRING16(L"Could not load icon ");
-    *error += icon->url.c_str();
-    *error += STRING16(L".");
-    return false;
-  }
+  if (IsDataUrl(icon->url.c_str())) {
+    // data URL
+    std::string16 mime_type, charset;
+    if (!ParseDataUrl(icon->url, &mime_type, &charset, &icon->png_data)) {
+      *error = STRING16(L"Could not load icon ");
+      *error += icon->url.c_str();
+      *error += STRING16(L".");
+      return false;
+    }
+  } else {
+    // Fetch the png data
+    scoped_refptr<HttpRequest> request;
+    HttpRequest::Create(&request);
 
-  // Extract the data.
-  if (!request->GetResponseBody(&icon->png_data)) {
-    *error = STRING16(L"Invalid data for icon ");
-    *error += icon->url;
-    *error += STRING16(L".");
-    return false;
+    request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
+    request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
+
+    int status = 0;
+    if (!request->Open(HttpConstants::kHttpGET, icon->url.c_str(), false) ||
+        !request->Send() ||
+        !request->GetStatus(&status) ||
+        status != HTTPResponse::RC_REQUEST_OK) {
+      *error = STRING16(L"Could not load icon ");
+      *error += icon->url.c_str();
+      *error += STRING16(L".");
+      return false;
+    }
+
+    // Extract the data.
+    if (!request->GetResponseBody(&icon->png_data)) {
+      *error = STRING16(L"Invalid data for icon ");
+      *error += icon->url;
+      *error += STRING16(L".");
+      return false;
+    }
   }
 
   // Decode the png
@@ -589,6 +600,9 @@ bool GearsDesktop::GetControlPanelIconLocation(const SecurityOrigin &origin,
 
 bool GearsDesktop::ResolveUrl(std::string16 *url, std::string16 *error) {
   std::string16 full_url;
+  if (IsDataUrl(url->c_str()))
+    return true;  // don't muck with data URLs
+
   if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), url->c_str(),
                            &full_url)) {
     *error = STRING16(L"Could not resolve url ");
