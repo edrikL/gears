@@ -243,6 +243,8 @@ bool AsyncTask::HttpGet(const char16 *full_url,
   scoped_refptr<HttpRequest> http_request;
   if (!HttpRequest::Create(&http_request))
     return false;
+    
+  http_request->SetCachingBehavior(HttpRequest::BYPASS_ALL_CACHES);
 
   if (!http_request->Open(HttpConstants::kHttpGET, full_url, true)) {
     return false;
