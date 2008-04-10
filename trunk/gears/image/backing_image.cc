@@ -54,10 +54,6 @@ static BlobReader *NewBlobReader(BlobInterface *blob);
 // The resultant BlobWriter satisfies libGD's gdIOCtx structure for writing.
 static BlobWriter *NewBlobWriter();
 
-// Returns an immutable Blob with the contents written to blob_writer.
-// After calling this function, blob_writer should not be used.
-static BlobInterface *BlobWriterToBlob(BlobWriter *blob_writer);
-
 // The following are functions suitable as members of a gdIOCtx which has an
 // actual type of BlobReader.
 // Reads and returns a single byte from the BlobReader ctx, or EOF.
@@ -103,6 +99,9 @@ BlobWriter *NewBlobWriter() {
   return writer;
 }
 
+// Returns (via the out parameter) an immutable BlobInterface made from this
+// BlobWriter's contents.
+// After calling this function, blob_writer should no longer be used.
 void BlobWriterToBlob(BlobWriter *blob_writer,
                       scoped_refptr<BlobInterface> *out) {
   scoped_refptr<BufferBlob> blob(new BufferBlob(&(blob_writer->buffer)));
