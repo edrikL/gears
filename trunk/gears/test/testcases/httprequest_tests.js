@@ -281,7 +281,7 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
     // blob not in non-official builds yet
     // TODO(nigeltao): re-enable this test (i.e. get rid of the "&& !isFirefox")
     // when HttpRequest.responseBlob works in Firefox.
-    if (!isOfficial && !isFirefox) {
+    if (!isOfficial && !isFirefox && !isNPAPI) {
       assert(isObject(request.responseBlob),
              'Should be able to get responseBlob after request');
     }
@@ -310,7 +310,7 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
       // blob not in non-official builds yet
       // TODO(nigeltao): re-enable this test (i.e. get rid of the
       // "&& !isFirefox") when HttpRequest.responseBlob works in Firefox.
-      if (!isOfficial && !isFirefox) {
+      if (!isOfficial && !isFirefox && !isNPAPI) {
         assertEqual(expectedResponseLength, request.responseBlob.length,
                     'Wrong expectedResponseLength');
       }
@@ -325,7 +325,7 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
       // blob not in non-official builds yet
       // TODO(nigeltao): re-enable this test (i.e. get rid of the
       // "&& !isFirefox") when HttpRequest.responseBlob works in Firefox.
-      if (!isOfficial && !isFirefox) {
+      if (!isOfficial && !isFirefox && !isNPAPI) {
         assert(isObject(request.responseBlob),
                'Should be able to get responseBlob repeatedly');
       }
