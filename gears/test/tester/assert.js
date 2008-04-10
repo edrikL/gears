@@ -46,6 +46,7 @@ var isWince = google.gears.factory.getBuildInfo().indexOf('wince') > -1;
 var isIE = google.gears.factory.getBuildInfo().indexOf(';ie') > -1;
 var isFirefox = google.gears.factory.getBuildInfo().indexOf(';firefox') > -1;
 var isSafari = google.gears.factory.getBuildInfo().indexOf(';safari') > -1;
+var isNPAPI = google.gears.factory.getBuildInfo().indexOf(';npapi') > -1;
 
 /**
  * A shared timer tests can use.
