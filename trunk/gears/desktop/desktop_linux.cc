@@ -32,9 +32,9 @@
 
 #include "gears/desktop/desktop.h"
 
+#include "gears/base/common/basictypes.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
-#include "gears/base/common/int_types.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"

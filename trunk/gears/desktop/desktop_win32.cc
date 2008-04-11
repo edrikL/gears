@@ -37,10 +37,9 @@
 
 #include "gears/desktop/desktop.h"
 
-#include "genfiles/product_constants.h"
+#include "gears/base/common/basictypes.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
-#include "gears/base/common/int_types.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/png_utils.h"
 #include "gears/base/common/scoped_win32_handles.h"
@@ -57,6 +56,7 @@
 #include "gears/desktop/shortcut_utils_win32.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "genfiles/product_constants.h"
 
 struct IcoHeader {
   uint16 reserved;

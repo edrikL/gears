@@ -28,8 +28,8 @@
 
 #include <map>
 #include <vector>
+#include "gears/base/common/basictypes.h"
 #include "gears/base/common/deletable.h"
-#include "gears/base/common/int_types.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string16.h"
 

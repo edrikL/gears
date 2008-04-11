@@ -25,8 +25,7 @@
 
 #ifdef WINCE
 
-#include "gears/base/common/common.h"
-#include "gears/base/common/int_types.h"
+#include "gears/base/common/basictypes.h"
 
 extern const uint8 kIcon16DllBegin[] = {
     0x4d, 0x5a, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00,

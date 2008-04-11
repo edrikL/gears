@@ -31,7 +31,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 
 #include "genfiles/product_constants.h"
-#include "gears/base/common/int_types.h"
+#include "gears/base/common/basictypes.h"
 #include "gears/base/safari/cf_string_utils.h"
 
 // Stupid MacTypes defines this as 0

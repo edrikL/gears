@@ -27,7 +27,7 @@
 #define GEARS_OBSERVER_SERVICE_COMMON_MESSAGE_SERVICE_H__
 
 #include <map>
-#include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/basictypes.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/ipc_message_queue.h"
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/mutex.h"

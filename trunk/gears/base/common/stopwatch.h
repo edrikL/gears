@@ -26,7 +26,7 @@
 #ifndef GEARS_BASE_COMMON_STOPWATCH_H__
 #define GEARS_BASE_COMMON_STOPWATCH_H__
 
-#include "gears/base/common/int_types.h"
+#include "gears/base/common/basictypes.h"
 #include "gears/base/common/mutex.h"
 
 

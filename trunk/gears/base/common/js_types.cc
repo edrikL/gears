@@ -26,7 +26,7 @@
 #include <math.h>
 
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/int_types.h"  // for isnan
+#include "gears/base/common/basictypes.h"  // for isnan
 #include "gears/base/common/js_marshal.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_types.h"

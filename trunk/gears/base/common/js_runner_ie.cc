@@ -42,7 +42,7 @@
 
 #include "gears/base/common/js_runner.h"
 
-#include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/basictypes.h"  // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/exception_handler_win32.h"
 #ifdef WINCE
 // WinCE does not use HtmlEventMonitor to monitor page unloading.

@@ -39,8 +39,7 @@
 #include <iterator>
 #include <string>
 #include <vector>
-#include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
-#include "gears/base/common/int_types.h"
+#include "gears/base/common/basictypes.h"
 
 class UnsafeArena;
 

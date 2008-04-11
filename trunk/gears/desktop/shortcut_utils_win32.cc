@@ -34,11 +34,11 @@
 
 #include "gears/desktop/shortcut_utils_win32.h"
 
+#include "gears/base/common/basictypes.h"
 #include "gears/base/common/common.h"
 #ifdef WINCE
 #include "gears/base/common/file.h"
 #endif
-#include "gears/base/common/int_types.h"
 #include "gears/base/common/png_utils.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
