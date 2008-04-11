@@ -73,6 +73,8 @@ suites.push(databaseSuite);
 var factorySuite = new TestSuite('Factory');
 factorySuite.addFile('../testcases/factory_tests.js',
                      {useWorker: true, useIFrame: true});
+factorySuite.addFile('../testcases/siting_tests.js',
+                     {useWorker: true, useIFrame: true});
 suites.push(factorySuite);
 
 var httpRequestSuite = new TestSuite('HttpRequest');
