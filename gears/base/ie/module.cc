@@ -26,6 +26,7 @@
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/ie/resource.h" // for .rgs resource ids (IDR_*)
 #include "genfiles/interfaces.h"
+#include "genfiles/registry_strings.h"
 
 // This is defined in gears/base/common/message_queue_ie.h.  It should only be
 // called here.
@@ -78,9 +79,43 @@ STDAPI DllGetClassObject(REFCLSID class_id, REFIID riid, LPVOID* ppv) {
 }
 
 STDAPI DllRegisterServer(void) {
-  return atl_module.DllRegisterServer();
+  HRESULT hr = atl_module.DllRegisterServer();
+#ifdef WINCE
+  // TODO(zork): Move WinCE part of tools_menu_item.rgs.m4 here as well.
+#else
+  if (SUCCEEDED(hr)) {
+    // rgs scripts don't support Unicode, so we manually add the localized
+    // strings to the registry.
+    for (int i = 0; i < ARRAYSIZE(registry_keys); ++i) {
+      HKEY hkey;
+
+      if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, registry_keys[i], 0, NULL, 0,
+                         KEY_WRITE, NULL, &hkey, NULL)) {
+        // These keys are the text for the IE 'Tools' menu item.
+        RegSetValueEx(
+            hkey, STRING16(L"MenuText"), 0, REG_SZ,
+            reinterpret_cast<const BYTE *>(registry_menu_text[i]),
+            (char16_wcslen(registry_menu_text[i]) + 1) * sizeof(char16));
+        RegSetValueEx(
+            hkey, STRING16(L"MenuStatusBar"), 0, REG_SZ,
+            reinterpret_cast<const BYTE *>(registry_menu_status_bar[i]),
+            (char16_wcslen(registry_menu_status_bar[i]) + 1) * sizeof(char16));
+      }
+    }
+  }
+#endif
+
+  return hr;
 }
 
 STDAPI DllUnregisterServer(void) {
+#ifdef WINCE
+  // TODO(zork): Move WinCE part of tools_menu_item.rgs.m4 here as well.
+#else
+  // Remove the localized strings from the registry.
+  for (int i = 0; i < ARRAYSIZE(registry_keys); ++i) {
+    RegDeleteKey(HKEY_LOCAL_MACHINE, registry_keys[i]);
+  }
+#endif
   return atl_module.DllUnregisterServer();
 }

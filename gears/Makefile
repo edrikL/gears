@@ -842,8 +842,9 @@ IE_VPATH	+= \
 		$(NULL)
 
 IE_M4SRCS	+= \
-		ui_resources.rc.m4 \
+		registry_strings.h.m4 \
 		tools_menu_item.rgs.m4 \
+		ui_resources.rc.m4 \
 		$(NULL)
 
 IE_IDLSRCS	+= \

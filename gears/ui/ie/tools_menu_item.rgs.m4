@@ -45,8 +45,6 @@ m4_ifelse(PRODUCT_OS,^win32^,^m4_dnl
           {09C04DA7-5B76-4EBC-BBEE-B25EAC5965F5}
           {
             val CLSID = s '{1FBA04EE-3024-11d2-8F1F-0000F87ABD16}'
-            val MenuText = s '&PRODUCT_FRIENDLY_NAME_UQ Settings'
-            val MenuStatusBar = s 'Manage which sites can access PRODUCT_FRIENDLY_NAME_UQ.'
             val ClsidExtension = s '{0B4350D1-055F-47A3-B112-5F2F2B0D6F08}'
           }
         }
