@@ -67,8 +67,11 @@ namespace std {
   typedef basic_string<char16> string16;
 }
 
+#endif
 
-// Define char16 versions of functions required below in char_traits<char16>
+
+// Define char16 versions of functions required below in char_traits<char16>.
+// These functions can also be useful for directly handling char16* values.
 extern "C" {
 
   inline char16 *char16_wmemmove(char16 *s1, const char16 *s2, size_t n) {
@@ -118,6 +121,8 @@ extern "C" {
 
 } // END: extern "C"
 
+
+#if (defined LINUX) || (defined OSX)
 
 // Definition of char_traits<char16>, which enables basic_string<char16>
 //
