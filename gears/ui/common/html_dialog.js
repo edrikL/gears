@@ -99,14 +99,54 @@ String.prototype.trim = function() {
 }
 
 /**
- * Set the label of input button elements using the content
- * of another element
+ * Set the label of input button, an optionally, it's accesskey.
+ * TODO(aa): This can probably get simplified when we implement <button>-based
+ * buttons.
  */
-function setButtonLabel(textID, elemID) {
+function setButtonLabel(textID, elemID, accessKeyID) {
   var textElem = getElementById(textID);
   var buttonElem = getElementById(elemID);
-  if (isDefined(typeof textElem) && isDefined(typeof buttonElem)) {
-    buttonElem.value = textElem.innerText.trim();
+  var accessKeyElem = getElementById(accessKeyID);
+  if (!isDefined(typeof textElem) || !isDefined(typeof buttonElem)) {
+    return;
+  }
+
+  // This function works for two different kinds of buttons. Simple buttons
+  // based on the <input type="button"> tag, and fancy buttons based on a
+  // crazy nested HTML structure. The accesskey and contents are setup
+  // differently depending on which type this is.
+  if (buttonElem.tagName.toLowerCase() == "input") {
+    buttonElem.value = getTextContent(textElem).trim();
+    if (isDefined(accessKeyElem)) {
+      buttonElem.accessKey = getTextContent(accessKeyElem).trim();
+    }
+  } else if (buttonElem.tagName.toLowerCase() == "a") {
+    var text = getTextContent(textElem).trim();
+    var textLength = text.length;
+
+    if (isDefined(accessKeyElem)) {
+      // Some browsers use the accessKey attribute of the the anchor tag.
+      var accessKey = getTextContent(accessKeyElem).trim();
+      buttonElem.accessKey = accessKey;
+
+      // For browsers we use a span with a special classname. Find the first
+      // matching character in the text and mark it.
+      // Note: this form of String.replace() only replaces the first occurence.
+      text = text.replace(accessKey,
+                          "<span class='accesskey'>" + accessKey + "</span>");
+    }
+
+    // HACK: Fatten the text if it is too small (the fancy buttons look funny
+    // with small text).
+    for (var i = textLength; i < 5; i++) {
+      text = "&nbsp;" + text + "&nbsp;";
+    }
+
+    buttonElem.getElementsByTagName("div")[0]
+              .getElementsByTagName("div")[0]
+              .innerHTML = text;
+  } else {
+    throw new Error("Unexpected button tag name: " + buttonElem.tagName);
   }
 }
 
