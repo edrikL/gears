@@ -95,6 +95,11 @@ bool CreateModule(JsRunnerInterface *js_runner,
   GearsClass *impl = new GearsClass;
   wrapper->Init(impl, new Dispatcher<GearsClass>(impl));
   module->reset(impl);
+
+  // In NPAPI, objects are created with refcount 1.  We want the scoped_refptr
+  // to have the only reference, so we unref here after giving a ref to the
+  // scoped_refptr.
+  wrapper->Unref();
   return true;
 }
 
