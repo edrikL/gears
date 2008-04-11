@@ -78,6 +78,15 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       margin-bottom:2px;
     }
 
+    #locations {
+      margin-top:1.2em;
+      display:none;
+    }
+    
+    #locations table {
+      margin-top:-2px;
+      margin-left:0.45em;
+    }
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
     /* 
@@ -96,26 +105,33 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
   </style>
 </head>
 <body>
+  <!-- This div contains strings that are conditionally used in the UI -->
+  <div id="strings" style="display:none;">
+    <!-- Headers -->
+    <div id="string-header-desktop"><TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut on the desktop.">This website wants to create a shortcut on your computer. Do you want to allow this?</TRANS_BLOCK></div>
+    <div id="string-header-simple"><TRANS_BLOCK desc="Header for the create shortcut dialog.">Shortcut Setup</TRANS_BLOCK></div>
+    <div id="string-header-wince"><TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut under 'Start'.">This website wants to create a shortcut in your list of programs. Do you want to allow this?</TRANS_BLOCk></div>
+
+    <!-- buttons -->
+    <div id="string-ok"><TRANS_BLOCK desc="Confirms creating the shortcut.">OK</TRANS_BLOCK></div>
+    <div id="string-ok-accesskey"><TRANS_BLOCK desc="Access key for OK button">O</TRANS_BLOCK></div>
+    <div id="string-cancel"><TRANS_BLOCK desc="Cancels the dialog">Cancel</TRANS_BLOCK></div>
+    <div id="string-cancel-accesskey"><TRANS_BLOCK desc="Access key for Cancel button">C</TRANS_BLOCK></div>
+    <div id="string-yes"><TRANS_BLOCK desc="Allows the shortcut to be created. Used when the dialog header is phrased as a question.">Yes</TRANS_BLOCK></div>
+    <div id="string-yes-accesskey"><TRANS_BLOCK desc="Access key for Yes button">Y</TRANS_BLOCK></div>
+    <div id="string-no"><TRANS_BLOCK desc="Denies the shortcut to be created. Used when the dialog header is phrased as a question.">No</TRANS_BLOCK></div>
+    <div id="string-no-accesskey"><TRANS_BLOCK desc="Access key for No button">N</TRANS_BLOCK></div>
+    <div id="string-never-allow"><TRANS_BLOCK desc="Button or link the user can press to permanently disallow Gears from creating this shortcut.">Never allow this shortcut</TRANS_BLOCK></div>
+    <div id="string-never-allow-wince"><TRANS_BLOCK desc="Button or link the user can press to permanently disallow Gears from creating this shortcut, short version.">Never allow</TRANS_BLOCK></div>
+  </div>
+
   <div id="head">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td align="left" valign="top">
           <img id="icon" src="icon_32x32.png" width="32" height="32">
         </td>
-        <td width="100%" align="left" valign="middle">
-          <span id="header-desktop" style="display:none">
-          <TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut on the desktop.">
-          This website wants to create a shortcut
-          on your desktop. Do you want to allow this?
-          </TRANS_BLOCK>
-          </span>
-          <span id="header-wince" style="display:none">
-          <TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut under 'Start'.">
-          This website wants to create a shortcut in your list of programs.
-          Do you want to allow this?
-          </TRANS_BLOCK>
-          </span>
-        </td>
+        <td id="header" width="100%" align="left" valign="middle"></td>
       </tr>
     </table>
   </div>
@@ -127,34 +143,31 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
         </div>
       </div>
     </div>
+
+    <div id="locations">
+      <p><TRANS_BLOCK desc="Asks the user to choose the locations to create a shortcut in. Only used when a platform supports multiple locations.">Create shortcuts in the following locations:</TRANS_BLOCK></p>
+      <div id="locations-windows">
+        <table cellpadding="0" cellspacing="2" border="0">
+          <tr>
+            <td valign="middle"><input type="checkbox" id="location-desktop"></td>
+            <td valign="middle"><label for="location-desktop"><TRANS_BLOCK desc="Label for the checkbox allowing a user to create a shortcut on the desktop">Desktop</TRANS_BLOCK></label></td>
+          </tr>
+          <tr>
+            <td valign="middle"><input type="checkbox" id="location-startmenu"></td>
+            <td valign="middle"><label for="location-startmenu"><TRANS_BLOCK desc="Label for the checkbox allowing a user to create a shortcut on the Windows start menu">Start Menu Programs folder</TRANS_BLOCK></label></td>
+          </tr>
+          <tr>
+            <td valign="middle"><input type="checkbox" id="location-quicklaunch"></td>
+            <td valign="middle"><label for="location-quicklaunch"><TRANS_BLOCK desc="Label for the checkbox allowing a user to create a shortcut on the Windows quick launch bar">Quick Launch toolbar</TRANS_BLOCK></label></td>
+          </tr>
+        </table>
+      </div>
+      <!-- TODO(aa): Support more locations on other platforms, such as dock
+      and applications on OSX? -->
+    </div>
   </div>
 
   <div id="foot">
-    <!-- We use these divs to store the text for our buttons in a way that can
-    be translated. We copy the text to the buttons in JavaScript. -->
-    <div style="display:none">
-      <div id="allow-text">
-        <TRANS_BLOCK desc="Button the user can press to allow Gears to create a shortcut.">
-        <span class="accesskey">Y</span>es
-        </TRANS_BLOCK>
-      </div>
-      <div id="deny-text">
-        <TRANS_BLOCK desc="Button the user can press to disallow Gears from creating a shortcut.">
-        <span class="accesskey">N</span>o
-        </TRANS_BLOCK>
-      </div>
-      <div id="deny-permanently-text">
-        <TRANS_BLOCK desc="Button the user can press to permanently disallow Gears from creating this shortcut.">
-        Never allow this shortcut
-        </TRANS_BLOCK>
-      </div>
-      <div id="deny-permanently-text-short">
-        <TRANS_BLOCK desc="Button or link the user can press to permanently disallow Gears from creating this shortcut, short version.">
-        Never allow
-        </TRANS_BLOCK>
-      </div>
-    </div>
-
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
     <!-- On SmartPhone, we don't use the regular buttons. We just use this link,
@@ -214,13 +227,13 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box" id="allow-button-contents"
-                  ><TRANS_BLOCK desc="Button the user can press to allow Gears to create a shortcut">&nbsp;&nbsp;<span class="accesskey">Y</span>es</TRANS_BLOCK>&nbsp;&nbsp;</div></div></a>
+                  ></div></div></a>
             <a href="#" accesskey="N" id="deny-button"
                 onclick="denyShortcutsTemporarily(); return false;"
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box" id="deny-button-contents"
-                  ><TRANS_BLOCK desc="Button the user can press to disallow Gears from creating a shortcut.">&nbsp;&nbsp;&nbsp;<span class="accesskey">N</span>o&nbsp;&nbsp;&nbsp;</TRANS_BLOCK></div></div></a></td>~)
+                  ></div></div></a></td>~)
         </tr>
       </table>
     </div>
@@ -243,70 +256,96 @@ m4_include(ui/common/html_dialog.js)
   var scrollBordersHeight = -1;
   var iconHeight = 32;
   var iconWidth = 32;
+  var args = getArguments();
+  // Handy for debugging layout:
+  // var args = {
+  //   style: "simple",
+  //   name: "My Application",
+  //   link: "http://www.google.com/",
+  //   description: "This application does things does things!",
+  //   // description: "This application does things does things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things.",
+  //   icon16x16: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/16.png",
+  //   icon32x32: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/32.png",
+  //   icon48x48: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/48.png",
+  //   icon128x128: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/128.png"
+  // };
 
   initDialog();
+  initLayout();
+  initShortcuts(args);
 
-  // Set the button and link labels.
-  if (isPIE) {
-    // For touchscreen devices (window.pie_dialog.IsSmartPhone() == false)
-    setButtonLabel("allow-text", "allow-button");
-    setButtonLabel("deny-text", "deny-button");
-    setButtonLabel("deny-permanently-text-short", "deny-permanently-button");
-    // For softkey UI devices (window.pie_dialog.IsSmartPhone() == true)
-    window.pie_dialog.SetButton(getElementById("allow-text").innerText,
-                                "allowShortcutsTemporarily();");
-    window.pie_dialog.SetCancelButton(getElementById("deny-text").innerText);
-    setElementContents("deny-permanently-text-short", "deny-permanently-link");
-  } else {
-    setElementContents("deny-permanently-text", "deny-permanently-link");
+  function initLayout() {
+    // Set up the rest of the layout. The details vary based on the layout style
+    // and the user agent (currently "simple" style only supported by desktop
+    // Gears).
+    if (args.style == "simple") {
+      initSimpleStyle();
+    } else if (isPIE) {
+      initPieStyle();
+    } else {
+      initDefaultStyle();
+    }
+
+    // PIE can't do scrollable divs, so there's no need to do the height
+    // calculations.
+    if (isPIE) {
+      getElementById("scroll").style.display = "block";
+    } else {
+      initCustomLayout(layoutShortcuts);
+    }
+
+    // Focus deny by default
+    getElementById("deny-button").focus();
   }
 
-  // PIE can't do scrollable divs, so there's no need to do the height
-  // calculations.
-  if (isPIE) {
-    getElementById("scroll").style.display = "block";
-  } else {
-    initCustomLayout(layoutShortcuts);
+  function initSimpleStyle() {
+    getElementById("icon").parentNode.style.display = "none";
+    getElementById("deny-permanently-link").style.display = "none";
+    // TODO(aa): Enable locations for windows even with default style.
+    getElementById("locations").style.display = "block";
+    getElementById("header").style.fontWeight = "bold";
+    setElementContents("string-header-simple", "header");
+    setButtonLabel("string-ok", "allow-button", "string-ok-accesskey");
+    setButtonLabel("string-cancel", "deny-button", "string-cancel-accesskey");
   }
-  initShortcuts();
+
+  function initPieStyle() {
+    setElementContents("string-header-wince", "header");
+
+    if (window.pie_dialog.IsSmartPhone()) {
+      // For touchscreen devices
+      setButtonLabel("string-yes", "allow-button", "string-yes-accesskey");
+      setButtonLabel("string-no", "deny-button", "string-no-accesskey");
+      setButtonLabel("string-never-allow-wince", "deny-permanently-button");
+    } else {
+      // For softkey UI devices
+      window.pie_dialog.SetButton(getElementById("allow-text").innerText,
+                                  "allowShortcutsTemporarily();");
+      window.pie_dialog.SetCancelButton(getElementById("deny-text").innerText);
+      setElementContents("string-never-allow-wince", "deny-permanently-link");
+    }
+    // On PIE, the allow button is disabled by default.
+    enableButton(getElementById("allow-button"));
+  }
+
+  function initDefaultStyle() {
+    setElementContents("string-header-desktop", "header");
+    setButtonLabel("string-yes", "allow-button", "string-yes-accesskey");
+    setButtonLabel("string-no", "deny-button", "string-no-accesskey");
+    setElementContents("string-never-allow", "deny-permanently-link");
+  }
 
   /**
    * Populate the shortcuts UI based on the data passed in from C++.
    */
-  function initShortcuts() {
-    var args = getArguments();
-
-    // Handy for debugging layout:
-    // var args = {
-    //   name: "My Application",
-    //   link: "http://www.google.com/",
-    //   description: "This application does things does things!",
-    //   // description: "This application does things does things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things.",
-    //   icon16x16: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/16.png",
-    //   icon32x32: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/32.png",
-    //   icon48x48: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/48.png",
-    //   icon128x128: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/128.png"
-    // };
-
-    // Populate the layout
+  function initShortcuts(args) {
+    // Populate the icon information
     var content = createShortcutRow(args);
     getElementById("scroll").innerHTML =
         "<table cellpadding='0' cellspacing='0' border='0'><tbody>" +
         content +
         "</tbody></table>";
-
     preloadIcons(args);
-
-    if (isPIE) {
-      getElementById("header-wince").style.display = "block";
-      // On PIE, the allow button is disabled by default.
-      enableButton(getElementById("allow-button"));
-    } else {
-      getElementById("header-desktop").style.display = "block";
-    }
-
-    // Focus deny by default
-    getElementById("deny-button").focus();
   }
 
   /**
@@ -421,6 +460,17 @@ m4_include(ui/common/html_dialog.js)
     var destElem = getElementById(destID);
     if (isDefined(typeof sourceElem) && isDefined(typeof destElem)) {
       destElem.innerHTML = sourceElem.innerHTML;
+    }
+  }
+
+  /**
+   * Gets the text-only content of the specified element.
+   */
+  function getTextContent(element) {
+    if (isDefined(typeof element.innerText)) {
+      return element.innerText;
+    } else if (isDefined(typeof element.textContent)) {
+      return element.textContent;
     }
   }
 </script>
