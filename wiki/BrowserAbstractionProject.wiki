@@ -1,4 +1,5 @@
 #summary Work needed to support new browsers and keep features in sync across all platforms.
+#labels DesignDoc-Implemented,Deprecated
 
 =PROBLEM=
 
