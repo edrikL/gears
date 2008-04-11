@@ -122,7 +122,8 @@ CPPFLAGS += -Ithird_party/libgd
 
 # SpiderMonkey (the Firefox JS engine)'s JS_GET_CLASS macro in jsapi.h needs
 # this defined to work with the gecko SDK that we've built.
-FF_CPPFLAGS += -DJS_THREADSAFE
+FF2_CPPFLAGS += -DJS_THREADSAFE
+FF3_CPPFLAGS += -DJS_THREADSAFE
 
 ######################################################################
 # OS == linux
