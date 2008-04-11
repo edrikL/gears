@@ -28,6 +28,10 @@
 #ifndef GEARS_CCTESTS_TEST_H__
 #define GEARS_CCTESTS_TEST_H__
 
+#ifdef WINCE
+#include <windows.h>
+#include <wininet.h>  // For INTERNET_CACHE_ENTRY_INFO
+#endif
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 
@@ -83,10 +87,28 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   // OUT: bool
   void TestGetType(JsCallContext *context);
 
+#ifdef WINCE
+  // These methods are used by the JavaScript testBrowserCache test.
+
+  // IN: variant urls
+  // OUT: bool
+  void RemoveEntriesFromBrowserCache(JsCallContext *context);
+  // IN: variant urls, bool should_be_present, bool should_be_bogus
+  // OUT: bool
+  void TestEntriesPresentInBrowserCache(JsCallContext *context);
+#endif
+
  private:
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsTest);
 };
+
+#ifdef WINCE
+// These functions are declared in wince_compatibility.cc. They are wrappers
+// around static functions defined there.
+INTERNET_CACHE_ENTRY_INFO* GetEntryInfoTest(const char16 *url);
+bool IsEntryBogusTest(INTERNET_CACHE_ENTRY_INFO *info);
+#endif
 
 #endif // GEARS_CCTESTS_TEST_H__
 

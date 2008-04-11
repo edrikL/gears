@@ -47,6 +47,10 @@ void Dispatcher<GearsTest>::Init() {
   RegisterMethod("testCoerceDouble", &GearsTest::TestCoerceDouble);
   RegisterMethod("testCoerceString", &GearsTest::TestCoerceString);
   RegisterMethod("testGetType", &GearsTest::TestGetType);
+  RegisterMethod("removeEntriesFromBrowserCache",
+                 &GearsTest::RemoveEntriesFromBrowserCache);
+  RegisterMethod("testEntriesPresentInBrowserCache",
+                 &GearsTest::TestEntriesPresentInBrowserCache);
 }
 
 #ifdef WIN32
@@ -66,6 +70,10 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/base/common/permissions_db_test.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
 #include "gears/base/common/string_utils.h"
+#ifdef WINCE
+#include "gears/base/common/url_utils.h"
+#include "gears/base/common/wince_compatibility.h"
+#endif
 #include "gears/database/common/database_utils_test.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/common/http_request.h"
@@ -99,7 +107,6 @@ bool TestRefCount(); // from scoped_refptr_test.cc
 bool TestBufferBlob();  // from blob_test.cc
 bool TestSliceBlob();  // from blob_test.cc
 #endif  // not OFFICIAL_BUILD
-
 #if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
 bool TestIpcMessageQueue();  // from ipc_message_queue_win32_test.cc
 #endif
@@ -1517,5 +1524,126 @@ void CreateObjectFunction(JsCallContext* context,
                           JsObject* out) {
   TEST_ASSERT(out->SetPropertyFunction(STRING16(L"func"), func));
 }
+
+#ifdef WINCE
+// These methods are used by the JavaScript testBrowserCache test.
+
+bool GetJsArrayAsStringVector(const JsArray &js_array,
+                              std::vector<std::string16> *strings) {
+  int array_size;
+  if (!js_array.GetLength(&array_size)) {
+    return false;
+  }
+  std::string16 url;
+  for (int i = 0; i < array_size; ++i) {
+    js_array.GetElementAsString(i, &url);
+    strings->push_back(url);
+  }
+  return true;
+}
+
+void GearsTest::RemoveEntriesFromBrowserCache(JsCallContext *context) {
+  bool ok = false;
+  context->SetReturnValue(JSPARAM_BOOL, &ok);
+  JsArray js_array;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_ARRAY, &js_array }
+  };
+  if (context->GetArguments(ARRAYSIZE(argv), argv) != ARRAYSIZE(argv)) {
+    assert(context->is_exception_set());
+    return;
+  }
+  std::vector<std::string16> urls;
+  if (!GetJsArrayAsStringVector(js_array, &urls)) {
+    context->SetException(STRING16(L"Failed to get urls."));
+    return;
+  }
+  for (int i = 0; i < static_cast<int>(urls.size()); ++i) {
+    std::string16 full_url;
+    if (!ResolveAndNormalize(
+             EnvPageLocationUrl().c_str(), urls[i].c_str(), &full_url)) {
+      context->SetException(STRING16(L"Failed to resolve URL ") + urls[i]);
+      return;
+    }
+    scoped_array<INTERNET_CACHE_ENTRY_INFO> info(
+        GetEntryInfoTest(full_url.c_str()));
+    if (info.get()) {
+      if (DeleteUrlCacheEntry(full_url.c_str()) == FALSE) {
+        context->SetException(
+            STRING16(L"Failed to remove browser cache entry for ") +
+            full_url +
+            STRING16(L"."));
+        return;
+      }
+    }
+  }
+  ok = true;
+  context->SetReturnValue(JSPARAM_BOOL, &ok);
+}
+
+#undef TEST_ASSERT
+#define TEST_ASSERT(test, message) \
+{ \
+  if (!(test)) { \
+    std::stringstream ss; \
+    context->SetException(message); \
+    return; \
+  } \
+}
+
+void GearsTest::TestEntriesPresentInBrowserCache(JsCallContext *context) {
+  bool ok = false;
+  context->SetReturnValue(JSPARAM_BOOL, &ok);
+  JsArray js_array;
+  bool should_be_present;
+  bool should_be_bogus = true;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_ARRAY, &js_array },
+    { JSPARAM_REQUIRED, JSPARAM_BOOL, &should_be_present },
+    { JSPARAM_OPTIONAL, JSPARAM_BOOL, &should_be_bogus }
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) {
+    return;
+  }
+  std::vector<std::string16> urls;
+  if (!GetJsArrayAsStringVector(js_array, &urls)) {
+    context->SetException(STRING16(L"Failed to get urls."));
+    return;
+  }
+  for (int i = 0; i < static_cast<int>(urls.size()); ++i) {
+    std::string16 full_url;
+    if (!ResolveAndNormalize(
+             EnvPageLocationUrl().c_str(), urls[i].c_str(), &full_url)) {
+      context->SetException(STRING16(L"Failed to resolve URL ") + urls[i]);
+      return;
+    }
+    scoped_array<INTERNET_CACHE_ENTRY_INFO> info(
+        GetEntryInfoTest(full_url.c_str()));
+    if (should_be_present) {
+      TEST_ASSERT(info.get(),
+                  STRING16(L"No browser cache entry for ") +
+                  full_url +
+                  STRING16(L"."));
+      bool is_bogus = IsEntryBogusTest(info.get());
+      TEST_ASSERT(!(should_be_bogus && !is_bogus),
+                  STRING16(L"Browser cache entry for ") +
+                  full_url +
+                  STRING16(L" should be bogus but is not."));
+      TEST_ASSERT(!(!should_be_bogus && is_bogus),
+                  STRING16(L"Browser cache entry for ") +
+                  full_url +
+                  STRING16(L" should not be bogus but is."));
+    } else {
+      TEST_ASSERT(!info.get(),
+                  STRING16(L"Spurious browser cache entry for ") +
+                  full_url +
+                  STRING16(L"."));
+    }
+  }
+  ok = true;
+  context->SetReturnValue(JSPARAM_BOOL, &ok);
+}
+#endif
 
 #endif  // DEBUG
