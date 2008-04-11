@@ -26,7 +26,7 @@
 // The methods of the File class with a Windows-specific implementation.
 
 // TODO(cprince): remove platform-specific #ifdef guards when OS-specific
-// sources (e.g. WIN32_CPPSRCS) are implemented
+// sources (e.g. WIN32_CPPSRCS) are implemented.
 #if defined(WIN32) && !defined(WINCE)
 #include <assert.h>
 #include <windows.h>
@@ -38,9 +38,8 @@
 #include <limits>
 
 #include "genfiles/product_constants.h"
-#include "gears/base/common/common.h"
+#include "gears/base/common/basictypes.h"
 #include "gears/base/common/file.h"
-#include "gears/base/common/int_types.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/png_utils.h"
 #include "gears/base/common/scoped_win32_handles.h"

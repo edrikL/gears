@@ -35,12 +35,13 @@
 #include <assert.h>
 #include <windows.h>
 #include <shlobj.h>
-#include "genfiles/product_constants.h"
+#include "gears/base/common/basictypes.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/scoped_win32_handles.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/wince_compatibility.h"
+#include "genfiles/product_constants.h"
 
 bool File::CreateNewFile(const char16 *full_filepath) {
   // Create a new file, if a file already exists this will fail

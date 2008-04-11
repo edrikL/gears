@@ -27,8 +27,7 @@
 #define GEARS_BASE_COMMON_FILE_H__
 
 #include <vector>
-#include "gears/base/common/common.h"
-#include "gears/base/common/int_types.h"
+#include "gears/base/common/basictypes.h"
 #include "gears/base/common/string16.h"
 
 class SecurityOrigin;  // base/common/security_model.h

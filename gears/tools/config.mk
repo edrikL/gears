@@ -153,10 +153,17 @@ COMPILE_FLAGS += -fshort-wchar
 CFLAGS = $(COMPILE_FLAGS)
 CXXFLAGS = $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wno-ctor-dtor-privacy -funsigned-char
 
+COMMON_LINKFLAGS = -o $@ -fPIC -Bsymbolic 
+
+MKDLL = g++
 DLL_PREFIX = lib
 DLL_SUFFIX = .so
-MKSHLIB = g++
-SHLIBFLAGS = -o $@ -shared -fPIC -Bsymbolic -Wl,--version-script -Wl,tools/xpcom-ld-script
+DLLFLAGS = $(COMMON_LINKFLAGS) -shared -Wl,--version-script -Wl,tools/xpcom-ld-script
+
+MKEXE = g++
+EXE_PREFIX =
+EXE_SUFFIX =
+EXEFLAGS = $(COMMON_LINKFLAGS)
 
 # These aren't used on Linux because ld doesn't support "@args_file".
 #TRANSLATE_LINKER_FILE_LIST = cat -
@@ -197,10 +204,17 @@ COMPILE_FLAGS += -fshort-wchar
 CFLAGS = $(COMPILE_FLAGS)
 CXXFLAGS = $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wno-ctor-dtor-privacy -funsigned-char
 
+COMMON_LINKFLAGS = -o $@ -fPIC -Bsymbolic -framework CoreServices -framework Carbon -arch $(ARCH) -isysroot $(OSX_SDK_ROOT) -Wl,-dead_strip
+
+MKDLL = g++
 DLL_PREFIX = lib
 DLL_SUFFIX = .dylib
-MKSHLIB = g++ -framework CoreServices -framework Carbon -arch $(ARCH) -isysroot $(OSX_SDK_ROOT)
-SHLIBFLAGS = -o $@ -bundle -Wl,-dead_strip -Wl,-exported_symbols_list -Wl,tools/xpcom-ld-script.darwin
+DLLFLAGS = $(COMMON_LINKFLAGS) -bundle -Wl,-exported_symbols_list -Wl,tools/xpcom-ld-script.darwin
+
+MKEXE = g++
+EXE_PREFIX =
+EXE_SUFFIX =
+EXEFLAGS = $(COMMON_LINKFLAGS) -mmacosx-version-min=10.2
 
 # ld on OSX requires filenames to be separated by a newline, rather than spaces
 # used on most platforms. So TRANSLATE_LINKER_FILE_LIST changes ' ' to '\n'.
@@ -271,14 +285,22 @@ CPPFLAGS += /D_WIN32_WCE=0x501 \
 	    $(CPPFLAGS_$(MODE))
 endif
 
-# disable some warnings when building SQLite on Windows, so we can enable /WX
-# warning C4244: conversion from 'type1' to 'type2', possible loss of data
+LIBGD_CFLAGS += /DBGDWIN32
+
+# Disable some warnings when building third-party code, so we can enable /WX.
+# Examples:
+#   warning C4244: conversion from 'type1' to 'type2', possible loss of data
+#   warning C4018: signed/unsigned mismatch in comparison
+#   warning C4003: not enough actual parameters for macro
+LIBGD_CFLAGS += /wd4244 /wd4996 /wd4005 /wd4142 /wd4018 /wd4133 /wd4102
+
 SQLITE_CFLAGS += /wd4018 /wd4244
 ifeq ($(OS),wince)
 SQLITE_CFLAGS += /wd4146
 endif
 
-LIBGD_CFLAGS += /DBGDWIN32 /wd4244 /wd4996 /wd4005 /wd4142 /wd4018 /wd4133 /wd4102
+THIRD_PARTY_CPPFLAGS = /wd4018 /wd4003
+
 
 COMPILE_FLAGS_dbg = /MTd /Zi /Zc:wchar_t-
 COMPILE_FLAGS_opt = /MT  /Zi /Ox /Zc:wchar_t-
@@ -290,56 +312,53 @@ COMPILE_FLAGS += /D_HAS_EXCEPTIONS=0 /D_ATL_NO_EXCEPTIONS
 CFLAGS = $(COMPILE_FLAGS)
 CXXFLAGS = $(COMPILE_FLAGS) /TP /J
 
-# disable some warnings when building third party code on Windows, so we can enable /WX
-# warning C4018: signed/unsigned mismatch in comparison
-# warning C4003: not enough actual parameters for macro
-THIRD_PARTY_CPPFLAGS = /wd4018 /wd4003
+# /RELEASE adds a checksum to the PE header to aid symbol loading.
+# /DEBUG causes PDB files to be produced.
+# We want both these flags in all build modes, despite their names.
+COMMON_LINKFLAGS_dbg =
+COMMON_LINKFLAGS_opt = /INCREMENTAL:NO /OPT:REF /OPT:ICF
+COMMON_LINKFLAGS = /NOLOGO /OUT:$@ /DEBUG /RELEASE
+ifeq ($(OS),win32)
+COMMON_LINKFLAGS += \
+	/MACHINE:X86 \
+	/NODEFAULTLIB:msvcrt \
+	$(COMMON_LINKFLAGS_$(MODE))
+else
+COMMON_LINKFLAGS += \
+	/MACHINE:THUMB \
+	/NODEFAULTLIB:secchk.lib \
+	/NODEFAULTLIB:oldnames.lib \
+	$(COMMON_LINKFLAGS_$(MODE))
+endif
 
-
+MKDLL = link
 ifeq ($(BROWSER),NPAPI)
 DLL_PREFIX = np
 else
 DLL_PREFIX =
 endif
 DLL_SUFFIX = .dll
-MKSHLIB	= link
-MKEXE = link
-# /RELEASE adds a checksum to the PE header to aid symbol loading.
-# /DEBUG causes PDB files to be produced.
-# We want both these flags in all build modes, despite their names.
-LINKFLAGS_dbg =
-LINKFLAGS_opt = /INCREMENTAL:NO /OPT:REF /OPT:ICF
-LINKFLAGS = /NOLOGO /OUT:$@ /DEBUG /RELEASE
+# We need DLLFLAGS_NOPDB for generating other targets than gears.dll
+# (e.g. setup.dll for Windows Mobile).
+DLLFLAGS_NOPDB = $(COMMON_LINKFLAGS) /DLL
+# Wo only use /SUBSYSTEM on DLLs. For EXEs we omit the flag, and
+# the presence of main() or WinMain() determines the subsystem.
 ifeq ($(OS),win32)
-LINKFLAGS += /SUBSYSTEM:WINDOWS \
-              /MACHINE:X86 \
-              $(LINKFLAGS_$(MODE))
+DLLFLAGS_NOPDB += /SUBSYSTEM:WINDOWS
 else
-LINKFLAGS += /SUBSYSTEM:WINDOWSCE,5.01 \
-              /NODEFAULTLIB:secchk.lib \
-              /MACHINE:THUMB \
-              $(LINKFLAGS_$(MODE))
+DLLFLAGS_NOPDB += /SUBSYSTEM:WINDOWSCE,5.01
 endif
-# We need SHLIBFLAGS_NOPDB for generating other targets than gears.dll
-# (e.g. setup.dll for Windows Mobile)
-SHLIBFLAGS_NOPDB = $(LINKFLAGS) /DLL
-SHLIBFLAGS = $(SHLIBFLAGS_NOPDB) /PDB:"$(@D)/$(MODULE).pdb"
+DLLFLAGS = $(DLLFLAGS_NOPDB) /PDB:"$(@D)/$(MODULE).pdb"
 
-FF2_SHLIBFLAGS_dbg = /NODEFAULTLIB:MSVCRT
-FF2_SHLIBFLAGS_opt = /NODEFAULTLIB:MSVCRT
-FF2_SHLIBFLAGS = $(FF2_SHLIBFLAGS_$(MODE))
+FF2_DLLFLAGS =
+FF3_DLLFLAGS =
+IE_DLLFLAGS = /DEF:tools/mscom.def
+NPAPI_DLLFLAGS = /DEF:base/npapi/npgears.def
 
-FF3_SHLIBFLAGS_dbg = /NODEFAULTLIB:MSVCRT
-FF3_SHLIBFLAGS_opt = /NODEFAULTLIB:MSVCRT
-FF3_SHLIBFLAGS = $(FF3_SHLIBFLAGS_$(MODE))
-
-IE_SHLIBFLAGS_dbg =
-IE_SHLIBFLAGS_opt =
-IE_SHLIBFLAGS = $(IE_SHLIBFLAGS_$(MODE)) /DEF:tools/mscom.def
-
-NPAPI_SHLIBFLAGS_dbg = /NODEFAULTLIB:MSVCRT
-NPAPI_SHLIBFLAGS_opt = /NODEFAULTLIB:MSVCRT
-NPAPI_SHLIBFLAGS = $(NPAPI_SHLIBFLAGS_$(MODE)) /DEF:base/npapi/npgears.def
+MKEXE = link
+EXE_PREFIX =
+EXE_SUFFIX = .exe
+EXEFLAGS = $(COMMON_LINKFLAGS) /PDB:"$(@D)/$(@F).pdb"
 
 
 TRANSLATE_LINKER_FILE_LIST = cat -

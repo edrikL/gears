@@ -26,7 +26,8 @@
 #ifndef GEARS_BASE_COMMON_MUTEX_H__
 #define GEARS_BASE_COMMON_MUTEX_H__
 
-#include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/basictypes.h" // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/common.h"
 
 // TODO(mpcomplete): implement these.
 #if BROWSER_NPAPI && defined(WIN32)

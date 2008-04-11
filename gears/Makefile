@@ -599,6 +599,17 @@ OSX_LAUNCHURL_CPPSRCS += \
 		launch_url_in_browser.cc \
 		$(NULL)
 
+#-----------------------------------------------------------------------------
+# tools/perf
+
+COMMON_VPATH += \
+		tools/perf \
+		$(NULL)
+
+PERF_TOOL_CPPSRCS += \
+		measure_startup.cc \
+		$(NULL)
+
 
 #-----------------------------------------------------------------------------
 # console/common (built for all browsers)

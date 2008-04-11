@@ -69,6 +69,8 @@ $(BROWSER)_OBJS = \
 # support a non-Firefox browser on Mac.
 OSX_LAUNCHURL_OBJS = \
 	$(patsubst %.cc,$(FF3_OUTDIR)/%$(OBJ_SUFFIX),$(OSX_LAUNCHURL_CPPSRCS))
+PERF_TOOL_OBJS = \
+	$(patsubst %.cc,$(COMMON_OUTDIR)/%$(OBJ_SUFFIX),$(PERF_TOOL_CPPSRCS))
 VISTA_BROKER_OBJS = \
 	$(patsubst %.cc,$(VISTA_BROKER_OUTDIR)/%$(OBJ_SUFFIX),$(VISTA_BROKER_CPPSRCS))
 IE_WINCESETUP_OBJS = \
@@ -103,6 +105,8 @@ FF3_RESOURCES = \
 DEPS = \
 	$(COMMON_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$($(BROWSER)_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(OSX_LAUNCHURL_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(PERF_TOOL_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(VISTA_BROKER_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(LIBGD_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(SQLITE_OBJS:$(OBJ_SUFFIX)=.pp) \
@@ -154,13 +158,15 @@ NPAPI_MODULE_DLL = $(NPAPI_OUTDIR)/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)
 
 FF3_MODULE_TYPELIB = $(FF3_OUTDIR)/$(MODULE).xpt
 
-IE_WINCESETUP_DLL = $(IE_OUTDIR)/setup$(DLL_SUFFIX)
+IE_WINCESETUP_DLL = $(IE_OUTDIR)/$(DLL_PREFIX)setup$(DLL_SUFFIX)
 
-OSX_LAUNCHURL_EXE = $(FF3_OUTDIR)/launch_url_with_browser
+OSX_LAUNCHURL_EXE = $(FF3_OUTDIR)/$(EXE_PREFIX)launch_url_with_browser$(EXE_SUFFIX)
+
+PERF_TOOL_EXE = $(COMMON_OUTDIR)/$(EXE_PREFIX)perf_tool$(EXE_SUFFIX)
 
 # Note: We use IE_OUTDIR so that relative path from gears.dll is same in
 # development environment as deployment environment.
-VISTA_BROKER_EXE = $(IE_OUTDIR)/vista_broker.exe
+VISTA_BROKER_EXE = $(IE_OUTDIR)/$(EXE_PREFIX)vista_broker$(EXE_SUFFIX)
 
 FFMERGED_INSTALLER_XPI = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).xpi
 
@@ -256,7 +262,7 @@ endif
 # Cross-browser targets.
 prereqs::     $(COMMON_OUTDIR)     $(COMMON_OUTDIR)/genfiles     $(COMMON_OUTDIRS_I18N)     $(COMMON_M4FILES)     $(COMMON_M4FILES_I18N)
 prereqs:: $($(BROWSER)_OUTDIR) $($(BROWSER)_OUTDIR)/genfiles $($(BROWSER)_OUTDIRS_I18N) $($(BROWSER)_M4FILES) $($(BROWSER)_M4FILES_I18N)
-prereqs:: $(LIBGD_OUTDIR) $(SQLITE_OUTDIR) $(THIRD_PARTY_OUTDIR) $(INSTALLERS_OUTDIR)
+prereqs:: $(INSTALLERS_OUTDIR) $(LIBGD_OUTDIR) $(SQLITE_OUTDIR) $(THIRD_PARTY_OUTDIR)
 modules::
 genheaders:: $($(BROWSER)_GEN_HEADERS)
 
@@ -304,6 +310,11 @@ ifeq ($(OS),wince)
 installers:: $(WINCE_INSTALLER_CAB)
 endif
 
+# All-platform targets.
+ifneq ($(OS),wince)
+# TODO(cprince): Get tools to link on WinCE.
+modules:: $(PERF_TOOL_EXE)
+endif
 
 
 
@@ -335,6 +346,8 @@ $($(BROWSER)_OUTDIR)/genfiles:
 	"mkdir" -p $@
 $($(BROWSER)_OUTDIRS_I18N):
 	"mkdir" -p $@
+$(INSTALLERS_OUTDIR):
+	"mkdir" -p $@
 $(LIBGD_OUTDIR):
 	"mkdir" -p $@
 $(SQLITE_OUTDIR):
@@ -342,8 +355,6 @@ $(SQLITE_OUTDIR):
 $(THIRD_PARTY_OUTDIR):
 	"mkdir" -p $@
 $(VISTA_BROKER_OUTDIR):
-	"mkdir" -p $@
-$(INSTALLERS_OUTDIR):
 	"mkdir" -p $@
 
 # M4 (GENERIC PREPROCESSOR) TARGETS
@@ -381,8 +392,8 @@ $(FF3_OUTDIR)/genfiles/%.xpt: %.idl
 $(IE_OUTDIR)/genfiles/%.h: %.idl
 	midl $(CPPFLAGS) -env win32 -Oicf -tlb "$(@D)/$*.tlb" -h "$(@D)/$*.h" -iid "$(IE_OUTDIR)/$*_i.c" -proxy "$(IE_OUTDIR)/$*_p.c" -dlldata "$(IE_OUTDIR)/$*_d.c" $<
 
-
 # Yacc UNTARGET, so we don't try to build sqlite's parse.c from parse.y.
+
 %.c: %.y
 
 # C/C++ TARGETS
@@ -421,7 +432,6 @@ $(LIBGD_OUTDIR)/%$(OBJ_SUFFIX): %.c
 $(SQLITE_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(SQLITE_CPPFLAGS) $(SQLITE_CFLAGS) $<
 
-
 # RESOURCE TARGETS
 
 $(IE_OUTDIR)/%.res: %.rc $(COMMON_RESOURCES)
@@ -440,19 +450,19 @@ $(VISTA_BROKER_OUTDIR)/%.res: %.rc
 $(FF2_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
   ifeq ($(OS),linux)
         # TODO(playmobil): Find equivalent of "@args_file" for ld on Linux.
-	$(MKSHLIB) $(SHLIBFLAGS) $($(BROWSER)_SHLIBFLAGS) $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS)
+	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS)
   else
 	@echo $($(BROWSER)_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	$(MKSHLIB) $(SHLIBFLAGS) $($(BROWSER)_SHLIBFLAGS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
   endif
 $(FF3_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
   ifeq ($(OS),linux)
         # TODO(playmobil): Find equivalent of "@args_file" for ld on Linux.
-	$(MKSHLIB) $(SHLIBFLAGS) $($(BROWSER)_SHLIBFLAGS) $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS)
+	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS)
   else
 	@echo $($(BROWSER)_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	$(MKSHLIB) $(SHLIBFLAGS) $($(BROWSER)_SHLIBFLAGS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
   endif
 
@@ -461,27 +471,30 @@ $(FF3_MODULE_TYPELIB): $(FF3_GEN_TYPELIBS)
 
 $(IE_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(IE_OBJS) $(IE_LINK_EXTRAS)
 	@echo $(IE_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	$(MKSHLIB) $(SHLIBFLAGS) $(IE_SHLIBFLAGS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(IE_LINK_EXTRAS) $(IE_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp 	
 
-# Note the use of SHLIBFLAGS_NOPDB instead of SHLIBFLAGS here.
+# Note the use of DLLFLAGS_NOPDB instead of DLLFLAGS here.
 $(IE_WINCESETUP_DLL): $(IE_WINCESETUP_OBJS) $(IE_WINCESETUP_LINK_EXTRAS)
-	$(MKSHLIB) $(SHLIBFLAGS_NOPDB) $(IE_WINCESETUP_LINK_EXTRAS) $(IE_LIBS) $(IE_WINCESETUP_OBJS)
+	$(MKDLL) $(DLLFLAGS_NOPDB) $(IE_WINCESETUP_LINK_EXTRAS) $(IE_LIBS) $(IE_WINCESETUP_OBJS)
 
 $(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS)
 	@echo $(NPAPI_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	$(MKSHLIB) $(SHLIBFLAGS) $(NPAPI_SHLIBFLAGS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_LINK_EXTRAS) $(NPAPI_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
 
 $(VISTA_BROKER_EXE): $(VISTA_BROKER_OBJS) $(VISTA_BROKER_OUTDIR)/vista_broker.res
 	@echo $(VISTA_BROKER_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	$(MKEXE) $(LINKFLAGS) /PDB:"$(@D)/vista_broker.pdb" $(VISTA_BROKER_OUTDIR)/vista_broker.res $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	$(MKEXE) $(EXEFLAGS) /PDB:"$(@D)/vista_broker.pdb" $(VISTA_BROKER_OUTDIR)/vista_broker.res $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
 
 # TODO(cprince): Remove hard-coded build flags here.  Switch to using
 # MKEXE + EXEFLAGS when those are added for all platforms.
 $(OSX_LAUNCHURL_EXE): $(OSX_LAUNCHURL_OBJS)
 	 $(CXX) -o $@ -mmacosx-version-min=10.2 -framework CoreFoundation -framework ApplicationServices -lstdc++ $(OSX_LAUNCHURL_OBJS)
+
+$(PERF_TOOL_EXE): $(PERF_TOOL_OBJS)
+	$(MKEXE) $(EXEFLAGS) $(PERF_TOOL_OBJS)
 
 # INSTALLER TARGETS
 

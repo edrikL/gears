@@ -28,7 +28,7 @@
 
 // This is a hack because something in the ATL headers prevents the gecko SDK
 // from defining int32, so we include it first.
-#include "gears/base/common/int_types.h"
+#include "gears/base/common/basictypes.h"
 
 #include <atlsync.h>
 #include <vector>

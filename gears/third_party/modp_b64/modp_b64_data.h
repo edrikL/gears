@@ -1,4 +1,4 @@
-#include "gears/base/common/int_types.h"
+#include "gears/base/common/basictypes.h"
 typedef uint8 uint8_t;
 typedef uint32 uint32_t;
 

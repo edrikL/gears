@@ -29,7 +29,8 @@
 #include <assert.h>
 #include <functional>
 #include <vector>
-#include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/basictypes.h"  // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/common.h"
 #include "gears/base/common/string16.h"  // for string16
 
 // TODO(michaeln): Split into multiple browser specific files.

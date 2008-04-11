@@ -46,7 +46,7 @@
 #define GEARS_BASE_COMMON_STRING16_H__
 
 #include <string>
-#include "gears/base/common/int_types.h"
+#include "gears/base/common/basictypes.h"
 
 // Need to cast literals (Linux, OSX) and SQLite void* retvals (all platforms)
 #define STRING16(x)  reinterpret_cast<const char16*>(x)

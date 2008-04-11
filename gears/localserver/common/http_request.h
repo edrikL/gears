@@ -28,7 +28,7 @@
 
 #include <assert.h>
 #include <vector>
-#include "gears/base/common/int_types.h"
+#include "gears/base/common/basictypes.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"

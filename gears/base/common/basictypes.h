@@ -23,8 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_BASE_COMMON_INT_TYPES_H__
-#define GEARS_BASE_COMMON_INT_TYPES_H__
+#ifndef GEARS_BASE_COMMON_BASICTYPES_H__
+#define GEARS_BASE_COMMON_BASICTYPES_H__
+
+#include <stddef.h>  // for NULL, size_t
 
 #ifdef _MSC_VER
 #include <float.h>  // for _isnan() on VC++
@@ -54,7 +56,7 @@ typedef unsigned long long uint64;
 #include <gecko_sdk/include/prtypes.h>
 #else
 //------------------------------------------------------------------------------
-// BROWSER_IE and BROWSER_NPAPI
+// BROWSER_IE || BROWSER_NPAPI
 //------------------------------------------------------------------------------
 // Signed integer types
 typedef signed char         int8;
@@ -75,7 +77,7 @@ typedef unsigned __int64   uint64;
 #else
 typedef unsigned long long uint64;
 #endif /* _MSC_VER */
-#endif /* BROWSER_FF */
+#endif /* BROWSER_* */
 
 //------------------------------------------------------------------------------
 // Defined for all browsers
@@ -103,4 +105,61 @@ const  int32 kint32max  = (( int32) 0x7FFFFFFF);
 const  int64 kint64min  = (( int64) GG_LONGLONG(0x8000000000000000));
 const  int64 kint64max  = (( int64) GG_LONGLONG(0x7FFFFFFFFFFFFFFF));
 
-#endif // GEARS_BASE_COMMON_INT_TYPES_H__
+// A macro to disallow the evil copy constructor and operator= functions.
+// This should be used in the private: declaration for a class.
+#define DISALLOW_EVIL_CONSTRUCTORS(TypeName)    \
+  TypeName(const TypeName&);                    \
+  void operator=(const TypeName&)
+
+// ARRAYSIZE performs essentially the same calculation as arraysize,
+// but can be used on anonymous types or types defined inside
+// functions.  It's less safe than arraysize as it accepts some
+// (although not all) pointers.  Therefore, you should use arraysize
+// whenever possible.
+//
+// The expression ARRAYSIZE(a) is a compile-time constant of type
+// size_t.
+//
+// ARRAYSIZE catches a few type errors.  If you see a compiler error
+//
+//   "warning: division by zero in ..."
+//
+// when using ARRAYSIZE, you are (wrongfully) giving it a pointer.
+// You should only use ARRAYSIZE on statically allocated arrays.
+//
+// The following comments are on the implementation details, and can
+// be ignored by the users.
+//
+// ARRAYSIZE(arr) works by inspecting sizeof(arr) (the # of bytes in
+// the array) and sizeof(*(arr)) (the # of bytes in one array
+// element).  If the former is divisible by the latter, perhaps arr is
+// indeed an array, in which case the division result is the # of
+// elements in the array.  Otherwise, arr cannot possibly be an array,
+// and we generate a compiler error to prevent the code from
+// compiling.
+//
+// Since the size of bool is implementation-defined, we need to cast
+// !(sizeof(a) & sizeof(*(a))) to size_t in order to ensure the final
+// result has type size_t.
+//
+// This macro is not perfect as it wrongfully accepts certain
+// pointers, namely where the pointer size is divisible by the pointee
+// size.  Since all our code has to go through a 32-bit compiler,
+// where a pointer is 4 bytes, this means all pointers to a type whose
+// size is 3 or greater than 4 will be (righteously) rejected.
+//
+// Kudos to Jorg Brown for this simple and elegant implementation.
+//
+// - wan 2005-11-16
+// 
+// Starting with Visual C++ 2005, ARRAYSIZE is defined in WinNT.h
+#if defined(_MSC_VER) && _MSC_VER >= 1400 && !defined(WINCE)
+#include <windows.h>
+#else
+#define ARRAYSIZE(a) \
+  ((sizeof(a) / sizeof(*(a))) / \
+   static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
+#endif
+
+
+#endif // GEARS_BASE_COMMON_BASICTYPES_H__

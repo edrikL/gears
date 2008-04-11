@@ -42,10 +42,13 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include "gears/base/common/basictypes.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string_utils.h"
+#include "genfiles/product_constants.h"
+
 
 // paths.h defines a char16 version of this, but we use UTF8 internally here
 // and POSIX systems are consistent in this regard.

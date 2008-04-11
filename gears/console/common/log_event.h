@@ -26,7 +26,7 @@
 #ifndef GEARS_CONSOLE_COMMON_LOG_EVENT_H__
 #define GEARS_CONSOLE_COMMON_LOG_EVENT_H__
 
-#include "gears/base/common/int_types.h"
+#include "gears/base/common/basictypes.h"
 #include "gears/base/common/message_service.h"
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/common/string16.h"
