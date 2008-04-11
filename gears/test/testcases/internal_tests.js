@@ -166,6 +166,42 @@ function testCreateObject() {
 
 }
 
+// Tests the bogus browser cache entries used on WinCE to prevent the 'Cannot
+// Connect' popup when serving content from the LocalServer when offline.
+// TODO(steveblock): Add more tests once test harness is fully working for
+// WinCE.
+// - Managed resource store.
+// - Test that existing browser cache entires are not over-written.
+function testBrowserCache() {
+  if (isDebug && google.gears.factory.getBuildInfo().indexOf("wince") > -1) {
+    // Clear the browser cache.
+    var urls = ['/testcases/test_file_1.txt',
+                '/testcases/test_file_1024.txt'];
+    internalTests.removeEntriesFromBrowserCache(urls);
+    // Create a resource store and capture some resources.
+    var localServer = google.gears.factory.create('beta.localserver');
+    var storeName = 'testBrowserCacheStore';
+    var store = localServer.createStore(storeName);
+    var responses = 0;
+    startAsync();
+    store.capture(urls, function(url, success, captureId) {
+      ++responses;
+      assert(success, 'Capture for ' + url + ' failed.');
+      if (responses == urls.length) {
+        // Check that these resources are in the browser cache.
+        internalTests.testEntriesPresentInBrowserCache(urls, true, true);
+        // Remove a URL.
+        store.remove(urls[0]);
+        internalTests.testEntriesPresentInBrowserCache([urls[0]], false);
+        internalTests.testEntriesPresentInBrowserCache([urls[1]], true, true);
+        // Remove the store.
+        localServer.removeStore(storeName);
+        internalTests.testEntriesPresentInBrowserCache(urls, false);
+        completeAsync();
+      }
+    });
+  }
+}
 
 // Helper functions
 
