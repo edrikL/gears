@@ -7,7 +7,11 @@ The purpose of this module is to provide secure access to files on the client ma
 
 ==NOTE==
 
-We should do something API wise that fits as close as possible with <input type="file"> and the webforms file picker extensions: http://www.whatwg.org/specs/web-forms/current-work/#upload.
+We should do something API wise that fits as close as possible with <input type="file"> and the webforms file picker extensions.
+
+See also:
+http://www.whatwg.org/specs/web-forms/current-work/#upload
+http://groups.google.com/group/google-gears-eng/browse_thread/thread/f73cb640a1c845/8026291efe8fc8a5
 
 The one remaining issue preventing us from designing this is that we also have some desire to implement file _writing_. It's unclear how this relates and what the API would look like.
 
