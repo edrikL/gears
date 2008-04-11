@@ -71,8 +71,7 @@
 
 // BEGIN GOOGLE GEARS MODIFICATIONS
 
-#include "gears/base/common/int_types.h"
-#include "gears/third_party/npapi/npapi.h"
+#include "gears/base/common/basictypes.h"
 
 typedef uint8 uint8_t;
 typedef int8 int8_t;

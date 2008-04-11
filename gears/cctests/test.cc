@@ -47,10 +47,12 @@ void Dispatcher<GearsTest>::Init() {
   RegisterMethod("testCoerceDouble", &GearsTest::TestCoerceDouble);
   RegisterMethod("testCoerceString", &GearsTest::TestCoerceString);
   RegisterMethod("testGetType", &GearsTest::TestGetType);
+#ifdef WINCE
   RegisterMethod("removeEntriesFromBrowserCache",
                  &GearsTest::RemoveEntriesFromBrowserCache);
   RegisterMethod("testEntriesPresentInBrowserCache",
                  &GearsTest::TestEntriesPresentInBrowserCache);
+#endif
 }
 
 #ifdef WIN32

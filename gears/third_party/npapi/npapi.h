@@ -47,7 +47,7 @@
 
 // BEGIN GOOGLE GEARS MODIFICATIONS
 
-#include "gears/base/common/int_types.h"
+#include "gears/base/common/basictypes.h"
 
 // END GOOGLE GEARS MODIFICATIONS
 
