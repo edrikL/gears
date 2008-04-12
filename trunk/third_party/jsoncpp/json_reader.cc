@@ -1,5 +1,5 @@
-#include "gears/third_party/jsoncpp/reader.h"
-#include "gears/third_party/jsoncpp/value.h"
+#include "third_party/jsoncpp/reader.h"
+#include "third_party/jsoncpp/value.h"
 #include <utility>
 #include <stdio.h>
 #include <assert.h>

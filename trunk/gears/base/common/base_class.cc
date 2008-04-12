@@ -30,7 +30,7 @@
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/security_model.h"  // for kUnknownDomain
 #include "gears/base/common/string_utils.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #if BROWSER_FF
 #include "gears/base/firefox/dom_utils.h"

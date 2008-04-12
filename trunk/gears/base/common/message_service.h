@@ -33,7 +33,7 @@
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/string16.h"
-#include "gears/third_party/linked_ptr/linked_ptr.h"
+#include "third_party/linked_ptr/linked_ptr.h"
 
 class MessageService;
 class ObserverCollection;

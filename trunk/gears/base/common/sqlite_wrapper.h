@@ -30,7 +30,7 @@
 #include <vector>
 #include "gears/base/common/common.h"
 #include "gears/base/common/string16.h"
-#include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
+#include "third_party/sqlite_google/preprocessed/sqlite3.h"
 
 // forward declarations of classes defined here
 class SQLTransaction;

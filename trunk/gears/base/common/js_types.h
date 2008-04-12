@@ -122,7 +122,7 @@ struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool> {
 
 #elif BROWSER_NPAPI
 
-#include "gears/third_party/npapi/nphostapi.h"
+#include "third_party/npapi/nphostapi.h"
 
 #endif
 

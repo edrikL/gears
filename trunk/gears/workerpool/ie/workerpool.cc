@@ -42,7 +42,7 @@
 
 #include <assert.h>  // TODO(cprince): use DCHECK() when have google3 logging
 #include <queue>
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #include "gears/workerpool/ie/workerpool.h"
 

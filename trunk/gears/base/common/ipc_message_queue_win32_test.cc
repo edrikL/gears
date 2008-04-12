@@ -35,7 +35,7 @@
 #include "gears/base/common/ipc_message_queue.h"
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/stopwatch.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 //-----------------------------------------------------------------------------
 // Functions defined in ipc_message_queue_win32.cc to facillitate testing

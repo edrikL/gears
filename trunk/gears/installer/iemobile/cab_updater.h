@@ -34,7 +34,7 @@
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/localserver/common/async_task.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 // This class takes care of periodic version updates. It does this as follows:
 // 1. When the Gears BHO is loaded, CAB updater is started immediately after

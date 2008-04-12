@@ -31,7 +31,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/console/common/console.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 
 class ATL_NO_VTABLE GearsConsole

@@ -31,7 +31,7 @@
 #include <vector>
 #include "gears/base/common/deletable.h"
 #include "gears/base/common/mutex.h"
-#include "gears/third_party/linked_ptr/linked_ptr.h"
+#include "third_party/linked_ptr/linked_ptr.h"
 
 // TODO(mpcomplete): implement these.
 #if BROWSER_NPAPI && defined(WIN32)

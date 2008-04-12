@@ -27,7 +27,7 @@
 #define GEARS_UI_COMMON_HTML_DIALOG_H__
 
 #include "gears/base/common/string16.h"
-#include "gears/third_party/jsoncpp/json.h"
+#include "third_party/jsoncpp/json.h"
 
 // This class implements a cross-platform modal dialog using HTML for the
 // dialog UI. We use HTML because it's easy to create nice-looking UIs that

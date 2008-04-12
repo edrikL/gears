@@ -3,8 +3,8 @@
 #ifndef _NPHOSTAPI_H_
 #define _NPHOSTAPI_H_
 
-#include "gears/third_party/npapi/npapi.h"
-#include "gears/third_party/npapi/npruntime.h"
+#include "third_party/npapi/npapi.h"
+#include "third_party/npapi/npruntime.h"
 
 // BEGIN GOOGLE GEARS MODIFICATIONS
 

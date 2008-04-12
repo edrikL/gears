@@ -32,7 +32,7 @@
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/string16.h"
 #include "gears/localserver/common/http_constants.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 // IE and Firefox keep cached files in the file system. Safari does not
 // yet do so.

@@ -30,7 +30,7 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/string16.h"
 #include "gears/console/common/log_event.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 
 // JsCallbackLoggingBackend provides a means of accessing the log stream

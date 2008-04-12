@@ -71,7 +71,7 @@ MAKEFLAGS = --no-print-directory
 
 CPPFLAGS = -I.. -I$(COMMON_OUTDIR) -I$($(BROWSER)_OUTDIR)
 
-LIBPNG_CFLAGS = -DPNG_USER_CONFIG -Ithird_party/zlib
+LIBPNG_CFLAGS = -DPNG_USER_CONFIG -I../third_party/zlib
 ZLIB_CFLAGS = -DNO_GZIP -DNO_GZCOMPRESS
 ifeq ($(OS),wince)
 ZLIB_CFLAGS += -DNO_ERRNO_H
@@ -81,13 +81,13 @@ CPPFLAGS += $(LIBPNG_CFLAGS) $(ZLIB_CFLAGS)
 
 ifdef IS_WIN32_OR_WINCE
 # Breakpad assumes it is in the include path
-CPPFLAGS += -Ithird_party/breakpad/src
+CPPFLAGS += -I../third_party/breakpad/src
 endif
 
 ifeq ($(BROWSER),FF2)
-GECKO_BASE = third_party/gecko_1.8
+GECKO_BASE = ../third_party/gecko_1.8
 else
-GECKO_BASE = third_party/gecko_1.9
+GECKO_BASE = ../third_party/gecko_1.9
 endif
 GECKO_BIN = $(GECKO_SDK)/gecko_sdk/bin
 GECKO_LIB = $(GECKO_SDK)/gecko_sdk/lib
@@ -103,7 +103,7 @@ FF3_CPPFLAGS += -DBROWSER_FF=1
 FF2_CPPFLAGS += -I$(GECKO_BASE) -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -DMOZILLA_STRICT_API
 FF3_CPPFLAGS += -I$(GECKO_BASE) -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -DMOZILLA_STRICT_API
 IE_CPPFLAGS +=
-NPAPI_CPPFLAGS += -Ithird_party/npapi -Ithird_party -Ithird_party/googleurl -Ithird_party/icu38/public/common
+NPAPI_CPPFLAGS += -I../third_party/npapi -I../third_party -I../third_party/googleurl -I../third_party/icu38/public/common
 
 # When adding or removing SQLITE_OMIT_* options, also update and
 # re-run ../third_party/sqlite_google/google_generate_preprocessed.sh.
@@ -113,12 +113,12 @@ SQLITE_CFLAGS += -DSQLITE_CORE -DSQLITE_ENABLE_FTS1 -DSQLITE_ENABLE_FTS2 \
   -DSQLITE_OMIT_LOAD_EXTENSION=1 \
   -DSQLITE_OMIT_VACUUM=1 \
   -DSQLITE_TRANSACTION_DEFAULT_IMMEDIATE=1 \
-  -Ithird_party/sqlite_google/src -Ithird_party/sqlite_google/preprocessed
+  -I../third_party/sqlite_google/src -I../third_party/sqlite_google/preprocessed
 
-LIBGD_CFLAGS += -Ithird_party/libjpeg -Ithird_party/libpng -DHAVE_CONFIG_H
+LIBGD_CFLAGS += -I../third_party/libjpeg -I../third_party/libpng -DHAVE_CONFIG_H
 
 # libGD assumes it is in the include path
-CPPFLAGS += -Ithird_party/libgd
+CPPFLAGS += -I../third_party/libgd
 
 # SpiderMonkey (the Firefox JS engine)'s JS_GET_CLASS macro in jsapi.h needs
 # this defined to work with the gecko SDK that we've built.
@@ -141,7 +141,7 @@ SQLITE_CFLAGS += -Wno-uninitialized -DHAVE_USLEEP=1
 THIRD_PARTY_CFLAGS = -Wno-main
 
 # all the GTK headers using includes relative to this directory
-GTK_CFLAGS = -Ithird_party/gtk/include/gtk-2.0 -Ithird_party/gtk/include/atk-1.0 -Ithird_party/gtk/include/glib-2.0 -Ithird_party/gtk/include/pango-1.0 -Ithird_party/gtk/include/cairo -Ithird_party/gtk/lib/gtk-2.0/include -Ithird_party/gtk/lib/glib-2.0/include 
+GTK_CFLAGS = -I../third_party/gtk/include/gtk-2.0 -I../third_party/gtk/include/atk-1.0 -I../third_party/gtk/include/glib-2.0 -I../third_party/gtk/include/pango-1.0 -I../third_party/gtk/include/cairo -I../third_party/gtk/lib/gtk-2.0/include -I../third_party/gtk/lib/glib-2.0/include 
 CPPFLAGS += $(GTK_CFLAGS)
 
 COMPILE_FLAGS_dbg = -g -O0

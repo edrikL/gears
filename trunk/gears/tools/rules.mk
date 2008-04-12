@@ -95,7 +95,7 @@ COMMON_RESOURCES = \
 	ui/common/html_dialog.css \
 	ui/common/html_dialog.js \
 	ui/common/icon_32x32.png \
-	third_party/jsonjs/json_noeval.js
+	../third_party/jsonjs/json_noeval.js
 
 FF3_RESOURCES = \
 	$(FF3_OUTDIR)/genfiles/browser-overlay.js \

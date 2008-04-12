@@ -26,7 +26,7 @@
 #ifdef DEBUG
 
 #include "gears/base/common/serialization.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 const int kTestBytesSize = 8;
 class SerializationTest : public Serializable {

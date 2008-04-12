@@ -40,7 +40,7 @@
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/localserver/common/http_constants.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 HANDLE CMutexWince::global_mutex_ = NULL;
 CriticalSection CMutexWince::lock_;

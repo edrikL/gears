@@ -1,8 +1,8 @@
 #ifndef CPPTL_JSON_READER_H_INCLUDED
 # define CPPTL_JSON_READER_H_INCLUDED
 
-# include "gears/third_party/jsoncpp/forwards.h"
-# include "gears/third_party/jsoncpp/value.h"
+# include "third_party/jsoncpp/forwards.h"
+# include "third_party/jsoncpp/value.h"
 # include <deque>
 # include <stack>
 # include <string>

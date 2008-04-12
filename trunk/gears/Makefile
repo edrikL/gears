@@ -33,10 +33,10 @@ MODULE		= $(SHORT_NAME)
 # third_party/sqlite_google
 
 THIRD_PARTY_VPATH	+= \
-		third_party/sqlite_google/src \
-		third_party/sqlite_google/preprocessed \
-		third_party/sqlite_google/ext/fts1 \
-		third_party/sqlite_google/ext/fts2 \
+		../third_party/sqlite_google/src \
+		../third_party/sqlite_google/preprocessed \
+		../third_party/sqlite_google/ext/fts1 \
+		../third_party/sqlite_google/ext/fts2 \
 		$(NULL)
 
 SQLITE_CSRCS	+= \
@@ -99,7 +99,7 @@ SQLITE_CSRCS	+= \
 # third_party/libpng
 
 THIRD_PARTY_VPATH	+= \
-		third_party/libpng \
+		../third_party/libpng \
 		$(NULL)
 
 # Common Files
@@ -136,7 +136,7 @@ endif
 # third_party/zlib
 
 THIRD_PARTY_VPATH	+= \
-		third_party/zlib \
+		../third_party/zlib \
 		$(NULL)
 
 # Common Files
@@ -174,7 +174,7 @@ endif
 ifneq ($(OFFICIAL_BUILD),1)
 ifneq ($(OS),wince)
 THIRD_PARTY_VPATH	+= \
-		third_party/libjpeg \
+		../third_party/libjpeg \
 		$(NULL)
 
 THIRD_PARTY_CSRCS	+= \
@@ -234,7 +234,7 @@ endif # not OFFICIAL_BUILD
 ifneq ($(OFFICIAL_BUILD),1)
 ifneq ($(OS),wince)
 THIRD_PARTY_VPATH	+= \
-		third_party/libgd \
+		../third_party/libgd \
 		$(NULL)
 
 LIBGD_CSRCS	+= \
@@ -274,7 +274,7 @@ endif # not OFFICIAL_BUILD
 # third_party/jsoncpp
 
 THIRD_PARTY_VPATH	+= \
-		third_party/jsoncpp \
+		../third_party/jsoncpp \
 		$(NULL)
 
 THIRD_PARTY_CPPSRCS	+= \
@@ -288,9 +288,9 @@ THIRD_PARTY_CPPSRCS	+= \
 
 ifeq ($(OS),win32)
 THIRD_PARTY_VPATH	+= \
-		third_party/breakpad/src/client/windows/handler \
-		third_party/breakpad/src/client/windows/sender \
-		third_party/breakpad/src/common/windows \
+		../third_party/breakpad/src/client/windows/handler \
+		../third_party/breakpad/src/client/windows/sender \
+		../third_party/breakpad/src/common/windows \
 		$(NULL)
 
 THIRD_PARTY_CPPSRCS	+= \
@@ -334,8 +334,8 @@ endif
 # NPAPI_* to THIRD_PARTY_*.
 
 NPAPI_VPATH	+= \
-		third_party/googleurl/src \
-		third_party/icu38/source/common \
+		../third_party/googleurl/src \
+		../third_party/icu38/source/common \
 		$(NULL)
 
 NPAPI_CPPSRCS	+= \
@@ -360,7 +360,7 @@ NPAPI_CPPSRCS	+= \
 # third_party/modp_b64
 
 THIRD_PARTY_VPATH	+= \
-		third_party/modp_b64 \
+		../third_party/modp_b64 \
 		$(NULL)
 
 THIRD_PARTY_CPPSRCS	+= \

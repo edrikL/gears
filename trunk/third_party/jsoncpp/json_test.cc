@@ -1,4 +1,4 @@
-#include "gears/third_party/jsoncpp/json.h"
+#include "third_party/jsoncpp/json.h"
 #include <algorithm> // sort
 #include <stdio.h>
 

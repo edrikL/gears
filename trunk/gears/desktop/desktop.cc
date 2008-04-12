@@ -40,7 +40,7 @@
 #include "gears/localserver/common/http_request.h"
 #include "gears/ui/common/html_dialog.h"
 
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #if defined(OFFICIAL_BUILD) || BROWSER_NPAPI
 #define USE_FILE_PICKER 0

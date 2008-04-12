@@ -30,7 +30,7 @@
 #include "gears/base/common/js_marshal.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_types.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #if BROWSER_FF
 #include "gears/base/common/js_runner_ff_marshaling.h"

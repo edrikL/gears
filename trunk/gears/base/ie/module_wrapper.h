@@ -32,7 +32,7 @@
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/ie/atl_headers.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 #include "genfiles/interfaces.h"
 
 // Represents the bridge between the JavaScript engine and a Gears module. A

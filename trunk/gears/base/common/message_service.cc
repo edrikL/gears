@@ -30,7 +30,7 @@
 #include "gears/base/common/message_service.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/thread_locals.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 
 typedef std::set<MessageObserverInterface*> ObserverSet;

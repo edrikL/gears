@@ -37,7 +37,7 @@
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
-#include "gears/third_party/AtlActiveScriptSite.h"
+#include "third_party/AtlActiveScriptSite.h"
 
 // Set the permissions dialog object.
 // window.external does not work on PIE, so we use this instead...

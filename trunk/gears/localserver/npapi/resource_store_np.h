@@ -33,7 +33,7 @@
 #include "gears/base/common/string16.h"
 #include "gears/localserver/common/resource_store.h"
 #include "gears/localserver/npapi/capture_task_np.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 //-----------------------------------------------------------------------------
 // GearsResourceStore

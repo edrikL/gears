@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
+#include "third_party/sqlite_google/preprocessed/sqlite3.h"
 
 #include "gears/base/common/paths.h"
 #include "gears/base/common/security_model.h"

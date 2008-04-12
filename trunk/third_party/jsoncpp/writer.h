@@ -1,7 +1,7 @@
 #ifndef JSON_WRITER_H_INCLUDED
 # define JSON_WRITER_H_INCLUDED
 
-# include "gears/third_party/jsoncpp/value.h"
+# include "third_party/jsoncpp/value.h"
 # include <vector>
 # include <string>
 

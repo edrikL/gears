@@ -31,7 +31,7 @@
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/safari/scoped_cf.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 // A concrete implementation for Safari.
 class SFThreadMessageQueue : public ThreadMessageQueue {

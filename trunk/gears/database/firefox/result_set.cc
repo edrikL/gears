@@ -30,7 +30,7 @@
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/stopwatch.h"
 #include "gears/database/common/database_utils.h"
-#include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
+#include "third_party/sqlite_google/preprocessed/sqlite3.h"
 
 #include "gears/database/firefox/database.h"
 #include "gears/database/firefox/result_set.h"

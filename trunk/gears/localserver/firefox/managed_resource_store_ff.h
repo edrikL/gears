@@ -33,7 +33,7 @@
 #include "gears/base/common/message_service.h"
 #include "gears/localserver/common/managed_resource_store.h"
 #include "gears/localserver/firefox/update_task_ff.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 // Object identifiers
 extern const char *kGearsManagedResourceStoreClassName;

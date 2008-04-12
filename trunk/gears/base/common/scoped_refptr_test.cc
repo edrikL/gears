@@ -27,7 +27,7 @@
 
 #include <vector>
 #include "gears/base/common/scoped_refptr.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 class A : virtual public RefCounted { };
 class B : virtual public RefCounted { };

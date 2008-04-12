@@ -1,7 +1,7 @@
 #ifndef JSON_FORWARDS_H_INCLUDED
 # define JSON_FORWARDS_H_INCLUDED
 
-# include "gears/third_party/jsoncpp/config.h"
+# include "third_party/jsoncpp/config.h"
 
 namespace Json {
 
