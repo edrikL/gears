@@ -26,7 +26,7 @@
 #include "gears/base/common/string_utils.h"
 
 #include "gears/base/common/common.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 // TODO(mpcomplete): implement these.
 #if BROWSER_NPAPI && defined(WIN32)

@@ -29,7 +29,7 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/string16.h"
 #include "gears/console/common/js_callback_logging_backend.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 
 class Console {

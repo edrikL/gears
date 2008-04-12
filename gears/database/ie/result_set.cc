@@ -31,7 +31,7 @@
 #include "gears/database/common/database_utils.h"
 #include "gears/database/ie/database.h"
 #include "gears/database/ie/result_set.h"
-#include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
+#include "third_party/sqlite_google/preprocessed/sqlite3.h"
 
 GearsResultSet::GearsResultSet() :
     database_(NULL),

@@ -82,7 +82,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_internal/nsIJSContextStack.h>
 #include <gecko_internal/nsIJSRuntimeService.h>
 #include <gecko_internal/nsIScriptContext.h>
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #include "gears/workerpool/firefox/workerpool.h"
 

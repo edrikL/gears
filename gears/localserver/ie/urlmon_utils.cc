@@ -26,7 +26,7 @@
 #include "gears/base/common/common.h"  // for ARRAYSIZE
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/ie/urlmon_utils.h"
-#include "gears/third_party/passthru_app/urlmon_ie7_extras.h"
+#include "third_party/passthru_app/urlmon_ie7_extras.h"
 
 
 #ifdef DEBUG

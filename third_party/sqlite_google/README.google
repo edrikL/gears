@@ -14,7 +14,7 @@ fact that sqlite.org thinks it's running under UTC is relevant.]
 DATE='2007/01/24 09:54:56'
 
 # Get to the third_party directory in your Gears client.
-cd .../gears/third_party/
+cd ../third_party/
 
 g4 edit sqlite_vendor/...
 cvs -d :pserver:anonymous@www.sqlite.org:/sqlite login
@@ -68,7 +68,7 @@ Scott Hess <shess@google.com>, April 9, 2007.
 
 How to run the SQLite tests for the Gears version of SQLite on Linux.
 
-cd .../googleclient/gears/third_part/sqlite_google/
+cd ../third_party/sqlite_google/
 mkdir build
 cd build
 make -f ../Makefile.linux-gcc testfixture

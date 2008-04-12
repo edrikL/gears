@@ -34,7 +34,7 @@
 #include "gears/factory/npapi/factory.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/workerpool/common/workerpool_utils.h"
 #include "gears/workerpool/npapi/workerpool.h"
 

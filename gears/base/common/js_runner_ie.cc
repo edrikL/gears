@@ -38,7 +38,7 @@
 #include <map>
 #include <set>
 #include <vector>
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #include "gears/base/common/js_runner.h"
 
@@ -56,7 +56,7 @@
 #endif
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
-#include "gears/third_party/AtlActiveScriptSite.h"
+#include "third_party/AtlActiveScriptSite.h"
 
 
 // Internal base class used to share some code between DocumentJsRunner and

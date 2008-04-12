@@ -42,7 +42,7 @@
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/base/safari/cf_string_utils.h"
 #elif BROWSER_NPAPI
-#include "gears/third_party/googleurl/src/url_parse.h"
+#include "third_party/googleurl/src/url_parse.h"
 #endif
 
 

@@ -83,7 +83,7 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/localserver/common/managed_resource_store.h"
 #include "gears/localserver/common/manifest.h"
 #include "gears/localserver/common/resource_store.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #if BROWSER_FF
 bool TestBlobInputStreamFf();  // from blob_input_stream_ff_test.cc

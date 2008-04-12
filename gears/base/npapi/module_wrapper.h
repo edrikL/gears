@@ -30,7 +30,7 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/npapi/plugin.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 // Represents the bridge between the JavaScript engine and a Gears module. A
 // ModuleWrapper wraps each Gears module instance and exposes its methods to

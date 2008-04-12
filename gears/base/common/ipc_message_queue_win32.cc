@@ -39,8 +39,8 @@
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/factory/common/factory_utils.h"  // for AppendBuildInfo
-#include "gears/third_party/linked_ptr/linked_ptr.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/linked_ptr/linked_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #ifdef DEBUG
 // For testing

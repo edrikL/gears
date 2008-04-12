@@ -50,7 +50,7 @@ html_dialog.js             HTML  "ui/common/html_dialog.js"
 html_dialog.js.end         HTML  {"\0END\0"}
 icon_32x32.png             HTML  "ui/common/icon_32x32.png"
 icon_32x32.png.end         HTML  {"\0END\0"}
-json_noeval.js             HTML  "third_party/jsonjs/json_noeval.js"
+json_noeval.js             HTML  "../third_party/jsonjs/json_noeval.js"
 json_noeval.js.end         HTML  {"\0END\0"}
 
 #include "genfiles/ui_html.rc"

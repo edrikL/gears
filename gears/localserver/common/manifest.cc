@@ -31,7 +31,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
-#include "gears/third_party/jsoncpp/json.h"
+#include "third_party/jsoncpp/json.h"
 
 //------------------------------------------------------------------------------
 // JsonUtils

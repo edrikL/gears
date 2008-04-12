@@ -30,7 +30,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/localserver/common/http_request.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 class HttpRequest;
 

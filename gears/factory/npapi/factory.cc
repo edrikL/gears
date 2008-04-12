@@ -42,7 +42,7 @@
 #include "gears/factory/common/factory_utils.h"
 #include "gears/httprequest/npapi/httprequest_np.h"
 #include "gears/localserver/npapi/localserver_np.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/timer/timer.h"
 #ifdef BROWSER_WEBKIT
 // TODO(playmobil): Add support for worker pools in Safari build.

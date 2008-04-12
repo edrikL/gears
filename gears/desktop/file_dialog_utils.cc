@@ -36,8 +36,8 @@
 #include "gears/base/common/module_wrapper.h"
 #include "gears/blob/blob.h"
 #include "gears/blob/file_blob.h"
-#include "gears/third_party/linked_ptr/linked_ptr.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/linked_ptr/linked_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 bool FileDialogUtils::FiltersToVector(const JsArray* filters,
                                       std::vector<FileDialog::Filter>* out,

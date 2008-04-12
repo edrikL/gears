@@ -29,8 +29,8 @@
 #include <windows.h>
 
 #include "gears/base/common/message_queue.h"
-#include "gears/third_party/linked_ptr/linked_ptr.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/linked_ptr/linked_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 class ThreadMessageWindow;
 

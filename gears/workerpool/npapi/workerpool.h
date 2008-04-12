@@ -31,7 +31,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/mutex.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 const UINT WM_WORKERPOOL_ONMESSAGE = (WM_USER + 0);
 const UINT WM_WORKERPOOL_ONERROR = (WM_USER + 1);

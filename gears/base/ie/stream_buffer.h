@@ -30,7 +30,7 @@
 #include <atlcom.h>
 #include <algorithm>
 #include <string>
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 /**
 * A minimalistic implementation of IStream on a buffer that is owned by 

@@ -46,7 +46,7 @@
 class BlobInterface;
 #endif
 #include "gears/localserver/common/http_request.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 // Object identifiers
 extern const char *kGearsHttpRequestClassName;

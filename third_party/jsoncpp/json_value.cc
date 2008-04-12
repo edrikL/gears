@@ -1,5 +1,5 @@
-#include "gears/third_party/jsoncpp/value.h"
-#include "gears/third_party/jsoncpp/writer.h"
+#include "third_party/jsoncpp/value.h"
+#include "third_party/jsoncpp/writer.h"
 #include <utility>
 #include "assert.h"
 #ifdef JSON_USE_CPPTL
@@ -7,7 +7,7 @@
 #endif
 #include <stddef.h>    // size_t
 #ifndef JSON_USE_SIMPLE_INTERNAL_ALLOCATOR
-# include "gears/third_party/jsoncpp/json_batchallocator.h"
+# include "third_party/jsoncpp/json_batchallocator.h"
 #endif // #ifndef JSON_USE_SIMPLE_INTERNAL_ALLOCATOR
 
 #define JSON_ASSERT_UNREACHABLE assert( false )
@@ -117,11 +117,11 @@ static struct DummyValueAllocatorInitializer {
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
 #ifdef JSON_VALUE_USE_INTERNAL_MAP
-# include "gears/third_party/jsoncpp/json_internalarray.inl.h"
-# include "gears/third_party/jsoncpp/json_internalmap.inl.h"
+# include "third_party/jsoncpp/json_internalarray.inl.h"
+# include "third_party/jsoncpp/json_internalmap.inl.h"
 #endif // JSON_VALUE_USE_INTERNAL_MAP
 
-# include "gears/third_party/jsoncpp/json_valueiterator.inl.h"
+# include "third_party/jsoncpp/json_valueiterator.inl.h"
 
 
 // //////////////////////////////////////////////////////////////////

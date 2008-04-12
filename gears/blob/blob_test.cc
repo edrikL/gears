@@ -34,7 +34,7 @@
 #include <cstring>
 #include "gears/blob/buffer_blob.h"
 #include "gears/blob/slice_blob.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 bool TestBufferBlob() {
 #undef TEST_ASSERT

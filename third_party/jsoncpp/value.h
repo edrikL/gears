@@ -1,7 +1,7 @@
 #ifndef CPPTL_JSON_H_INCLUDED
 # define CPPTL_JSON_H_INCLUDED
 
-# include "gears/third_party/jsoncpp/forwards.h"
+# include "third_party/jsoncpp/forwards.h"
 # include <string>
 # include <vector>
 

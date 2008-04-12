@@ -45,7 +45,7 @@
 #ifdef WINCE
 #include "gears/desktop/dll_data_wince.h"  // For kDllIconId
 #endif
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 
 static bool CreateShellLink(const char16 *link_path,
