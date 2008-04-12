@@ -89,8 +89,9 @@ STDAPI DllRegisterServer(void) {
     for (int i = 0; i < ARRAYSIZE(registry_keys); ++i) {
       HKEY hkey;
 
-      if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, registry_keys[i], 0, NULL, 0,
-                         KEY_WRITE, NULL, &hkey, NULL)) {
+      if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_LOCAL_MACHINE, registry_keys[i],
+                                          0, NULL, 0, KEY_WRITE, NULL, &hkey,
+                                          NULL)) {
         // These keys are the text for the IE 'Tools' menu item.
         RegSetValueEx(
             hkey, STRING16(L"MenuText"), 0, REG_SZ,
