@@ -40,14 +40,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
-  <Product Id='$(var.OurProductId)' Name='PRODUCT_FRIENDLY_NAME_UQ'
+  <Product Id='$(var.OurWin32ProductId)' Name='PRODUCT_FRIENDLY_NAME_UQ'
     Language='1033' Version='PRODUCT_VERSION'
     Manufacturer='Google' UpgradeCode='D91DF85A-1C3B-4d62-914B-DEEEF73AD78C'>
     <Package Description='PRODUCT_FRIENDLY_NAME_UQ'
       Comments='PRODUCT_FRIENDLY_NAME_UQ' Manufacturer='Google'
       InstallerVersion='200' Compressed='yes' />
     <Media Id='1' Cabinet='product.cab' EmbedCab='yes'
-      CompressionLevel="high" />
+      CompressionLevel='high' />
     <Upgrade Id='D91DF85A-1C3B-4d62-914B-DEEEF73AD78C'>
       <UpgradeVersion Property='UPGRADING' OnlyDetect='no'
         Minimum='0.0.0.0' IncludeMinimum='yes'
@@ -63,11 +63,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             <Component Id='OurIERegistry' Guid='$(var.OurComponentGUID_IERegistry)'>
               <RegistryValue
                 Root='HKLM' Key='Software\Google\Update\Clients\{283EAF47-8817-4c2b-A801-AD1FADFB7BAA}'
-                Name='pv' Value="PRODUCT_VERSION"
+                Name='pv' Value='PRODUCT_VERSION'
                 Action='write' Type='string' />
               <RegistryValue
                 Root='HKLM' Key='Software\Google\Update\Clients\{283EAF47-8817-4c2b-A801-AD1FADFB7BAA}'
-                Name='ap' Value=""
+                Name='ap' Value=''
                 Action='write' Type='string' />
               <!-- Automatically enable control by adding to IE7's pre-approved list. See
                 http://msdn.microsoft.com/library/default.asp?url=/library/en-us/IETechCol/cols/dnexpie/activex_security.asp?frame=true -->
@@ -111,7 +111,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
               <Directory Id='OurIEVersionedDir' Name='PRODUCT_VERSION'>
                 <Component Id='OurIEDirFiles' Guid='$(var.OurComponentGUID_IEFiles)'>
                   <File Id='ie_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
-                    Source="$(var.OurIEPath)/PRODUCT_SHORT_NAME_UQ.dll" SelfRegCost="1" />
+                    Source="$(var.OurIEPath)/PRODUCT_SHORT_NAME_UQ.dll" SelfRegCost='1' />
 m4_ifdef(~`DEBUG`~,~`m4_dnl
                   <File Id='ie_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
                     Source="$(var.OurIEPath)/PRODUCT_SHORT_NAME_UQ.pdb" />
@@ -151,7 +151,7 @@ m4_ifdef(~`DEBUG`~,~`m4_dnl
                 </Component>
               </Directory>
 
-              <!-- Begin: resource lists that MUST be kept in sync with "rules.mk" -->
+              <!-- Begin: resource lists that MUST be kept in sync with 'rules.mk' -->
               <Directory Id='OurFFChromeDir' Name='chrome'>
                 <Directory Id='OurFFChromeFilesDir' Name='chromeFiles'>
                   <Directory Id='OurFFContentDir' Name='content'>
@@ -194,7 +194,7 @@ m4_foreach(~`LANG`~, I18N_LANGUAGES, ~`m4_dnl
                   </Directory>
                 </Directory>
               </Directory>
-              <!-- End: resource lists that MUST be kept in sync with "rules.mk" -->
+              <!-- End: resource lists that MUST be kept in sync with 'rules.mk' -->
 
               <Directory Id='OurFFLibDir' Name='lib'>
                 <Component Id='OurFFLibDirFiles'
@@ -227,10 +227,10 @@ m4_foreach(~`LANG`~, I18N_LANGUAGES, ~`m4_dnl
     <InstallExecuteSequence>
       <RemoveExistingProducts After='InstallValidate'>UPGRADING</RemoveExistingProducts>
     </InstallExecuteSequence>
-    <Property Id="UILevel">1</Property>
-    <Property Id="ALLUSERS">1</Property>
+    <Property Id='UILevel'>1</Property>
+    <Property Id='ALLUSERS'>1</Property>
     <!-- Set the icon in Add/Remove Programs -->
-    <Property Id="ARPPRODUCTICON">MainIcon</Property>
-    <Icon Id="MainIcon" SourceFile="ui/common/icon_merged.ico" />
+    <Property Id='ARPPRODUCTICON'>MainIcon</Property>
+    <Icon Id='MainIcon' SourceFile="ui/common/icon_merged.ico" />
   </Product>
 </Wix>
