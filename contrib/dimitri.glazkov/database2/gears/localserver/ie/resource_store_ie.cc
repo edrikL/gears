@@ -45,10 +45,11 @@
 #endif
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
+#include "gears/base/ie/module_wrapper.h"
 #ifdef WINCE
 // FileSubmitter is not implemented for WinCE.
 #else
-#include "gears/blob/blob_ie.h"
+#include "gears/blob/blob.h"
 #include "gears/localserver/ie/file_submitter_ie.h"
 #endif
 
@@ -70,6 +71,9 @@ void GearsResourceStore::FinalRelease() {
 
   if (capture_task_.get()) {
     capture_task_->SetListenerWindow(NULL, 0);
+    // No need to fire failed events since the current page is being unloaded
+    // or the resource store deleted for some other reason.
+    need_to_fire_failed_events_ = false;
     capture_task_->Abort();
     capture_task_.release()->DeleteWhenDone();
   }
@@ -272,6 +276,7 @@ GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
   }
 
   capture_task_->SetListenerWindow(m_hWnd, kCaptureTaskMessageBase);
+  need_to_fire_failed_events_ = true;
   if (!capture_task_->Start()) {
     scoped_ptr<IECaptureRequest> failed_request(current_request_.release());
     capture_task_.reset(NULL);
@@ -305,6 +310,7 @@ LRESULT GearsResourceStore::OnCaptureUrlComplete(UINT uMsg,
                 success, current_request_->id);
     }
   }
+  need_to_fire_failed_events_ = false;
   bHandled = TRUE;
   return 0;
 }
@@ -320,6 +326,10 @@ LRESULT GearsResourceStore::OnCaptureTaskComplete(UINT uMsg,
   if (task && (task == capture_task_.get())) {
     capture_task_->SetListenerWindow(NULL, 0);
     capture_task_.release()->DeleteWhenDone();
+    if (need_to_fire_failed_events_) {
+      assert(current_request_.get());
+      FireFailedEvents(current_request_.get());
+    }
     current_request_.reset(NULL);
   }
   StartCaptureTaskIfNeeded(true);
@@ -471,8 +481,11 @@ STDMETHODIMP GearsResourceStore::copy(
   RETURN_NORMAL();
 }
 
+#ifdef WINCE
+// Blob not supported yet on Wince.
+#else
 #ifdef OFFICIAL_BUILD
-  // Blob support is not ready for prime time yet
+// Blob support is not ready for prime time yet
 #else
 //------------------------------------------------------------------------------
 // captureBlob
@@ -481,17 +494,24 @@ STDMETHODIMP GearsResourceStore::captureBlob(
       /* [in] */ IUnknown *blob,
       /* [in] */ const BSTR url) {
   // Get the blob
-  CComQIPtr<GearsBlobPvtInterface> blob_pvt(blob);
-  if (!blob_pvt) {
-    RETURN_EXCEPTION(STRING16(L"Error converting to native class."));
+  CComQIPtr<GearsModuleProviderInterface> module_provider(blob);
+  if (!module_provider) {
+    RETURN_EXCEPTION(STRING16(L"Error getting GearsModuleProviderInterface."));
   }
   VARIANT var;
-  HRESULT hr = blob_pvt->get_contents(&var);
+  HRESULT hr = module_provider->get_moduleWrapper(&var);
   if (FAILED(hr)) {
-    RETURN_EXCEPTION(STRING16(L"Error getting blob contents."));
+    RETURN_EXCEPTION(STRING16(L"Error getting ModuleWrapper."));
   }
-  const BlobInterface *blob_contents =
-      reinterpret_cast<const BlobInterface*>(var.byref);
+  ModuleWrapper *module_wrapper =
+      reinterpret_cast<ModuleWrapper*>(var.byref);
+  ModuleImplBaseClass *module = module_wrapper->GetModuleImplBaseClass();
+  if (GearsBlob::kModuleName != module->get_module_name()) {
+    RETURN_EXCEPTION(STRING16(L"First argument must be a Blob."));
+  }
+  scoped_refptr<BlobInterface> blob_contents;
+  static_cast<GearsBlob*>(module)->GetContents(&blob_contents);
+  assert(blob_contents.get());
 
   // Resolve the URL this file is to be registered under.
   std::string16 full_url;
@@ -502,16 +522,17 @@ STDMETHODIMP GearsResourceStore::captureBlob(
   ResourceStore::Item item;
 
   // Make the Item and put it in the ResourceStore
-  if (!ResourceStore::BlobToItem(blob_contents, full_url.c_str(), &item)) {
+  if (!ResourceStore::BlobToItem(blob_contents.get(), full_url.c_str(),
+                                 &item)) {
     RETURN_EXCEPTION(STRING16(L"The blob could not be captured"));
   }
   if (!store_.PutItem(&item)) {
     RETURN_EXCEPTION(STRING16(L"PutItem failed."));
   }
-
   RETURN_NORMAL();
 }
 #endif  // OFFICIAL_BUILD
+#endif  // WINCE
 
 //------------------------------------------------------------------------------
 // captureFile

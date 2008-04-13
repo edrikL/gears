@@ -30,11 +30,35 @@
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/base/safari/cf_string_utils.h"
 
+static const std::string16 kQuestionMark(STRING16(L"?"));
+static const std::string16 kEscapedPathSeparator(STRING16(L"%2F"));
+static const std::string16 kPathSeparator(STRING16(L"/"));
+
+// On OSX resolving '..%2Ffile' against 'http://host/dir' incorrectly
+// yields 'http://host/dir%2Ffile' instead of http://host/file so we
+// work around this by substituting %2F -> '/' in the path part of the URL
+// (not in the query string).
+static void UnescapeUrlPathSeparators(std::string16 *url) {
+  // Split URL into path and query_string.
+  std::string16 path = *url;
+  std::string16 query_string;
+  
+  std::string16::size_type idx = path.find(kQuestionMark);
+  
+  if (idx != std::string16::npos) {
+    int length = path.length();
+    query_string = path.substr(idx, length);
+    path = path.substr(0, idx);
+  }
+  
+  ReplaceAll(path, kEscapedPathSeparator, kPathSeparator);
+  
+  *url = path + query_string;
+}
+
 bool ResolveAndNormalize(const char16 *base, const char16 *url,
                          std::string16 *out) {
   assert(url && out);
-  static const std::string16 kQuestionMark(STRING16(L"?"));
-  static const std::string16 kPathSeparator(STRING16(L"/"));
   static const std::string16 kColon(STRING16(L":"));
   static const std::string16 kAtSign(STRING16(L"@"));
   static const std::string16 kSchemeHostSeparator(STRING16(L"://"));
@@ -64,8 +88,13 @@ bool ResolveAndNormalize(const char16 *base, const char16 *url,
   if (std::char_traits<char16>::length(url) == 0) {
     raw_resolved_url_cf.swap(base_cfurl);
   } else {
+  
+    // See comment preceding UnescapeUrlPathSepartors()
+    std::string16 url_copy(url);
+    UnescapeUrlPathSeparators(&url_copy);
+  
     std::string url_utf8;
-    String16ToUTF8(url, &url_utf8);
+    String16ToUTF8(url_copy.c_str(), &url_utf8);
     raw_resolved_url_cf.reset(
         CFURLCreateAbsoluteURLWithBytes(
             kCFAllocatorDefault,
@@ -103,7 +132,8 @@ bool ResolveAndNormalize(const char16 *base, const char16 *url,
   // Convert everything to string16 & build the url back up.
   std::string16 scheme;
   CFStringRefToString16(scheme_cf.get(), &scheme);
-  normalized_url += MakeLowerString(scheme);
+  scheme = MakeLowerString(scheme);
+  normalized_url += scheme;
   
   normalized_url += kSchemeHostSeparator;
   

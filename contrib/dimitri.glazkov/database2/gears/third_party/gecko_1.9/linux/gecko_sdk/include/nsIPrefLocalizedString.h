@@ -34,7 +34,7 @@
  * 
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIPrefLocalizedString : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIPrefLocalizedString : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPREFLOCALIZEDSTRING_IID)
@@ -46,8 +46,8 @@ class NS_NO_VTABLE nsIPrefLocalizedString : public nsISupports {
    * @return Other An error occured.
    */
   /* attribute wstring data; */
-  NS_IMETHOD GetData(PRUnichar * *aData) = 0;
-  NS_IMETHOD SetData(const PRUnichar * aData) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetData(PRUnichar * *aData) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetData(const PRUnichar * aData) = 0;
 
   /**
    * Used to retrieve the contents of this object into a wide string.
@@ -55,7 +55,7 @@ class NS_NO_VTABLE nsIPrefLocalizedString : public nsISupports {
    * @return wstring The string containing the data stored within this object.
    */
   /* wstring toString (); */
-  NS_IMETHOD ToString(PRUnichar **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ToString(PRUnichar **_retval) = 0;
 
   /**
    * Used to set the contents of this object.
@@ -72,7 +72,7 @@ class NS_NO_VTABLE nsIPrefLocalizedString : public nsISupports {
    * @return NS_OK The data was successfully stored.
    */
   /* void setDataWithLength (in unsigned long length, [size_is (length)] in wstring data); */
-  NS_IMETHOD SetDataWithLength(PRUint32 length, const PRUnichar *data) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDataWithLength(PRUint32 length, const PRUnichar *data) = 0;
 
 };
 
@@ -80,24 +80,24 @@ class NS_NO_VTABLE nsIPrefLocalizedString : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIPREFLOCALIZEDSTRING \
-  NS_IMETHOD GetData(PRUnichar * *aData); \
-  NS_IMETHOD SetData(const PRUnichar * aData); \
-  NS_IMETHOD ToString(PRUnichar **_retval); \
-  NS_IMETHOD SetDataWithLength(PRUint32 length, const PRUnichar *data); 
+  NS_SCRIPTABLE NS_IMETHOD GetData(PRUnichar * *aData); \
+  NS_SCRIPTABLE NS_IMETHOD SetData(const PRUnichar * aData); \
+  NS_SCRIPTABLE NS_IMETHOD ToString(PRUnichar **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetDataWithLength(PRUint32 length, const PRUnichar *data); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIPREFLOCALIZEDSTRING(_to) \
-  NS_IMETHOD GetData(PRUnichar * *aData) { return _to GetData(aData); } \
-  NS_IMETHOD SetData(const PRUnichar * aData) { return _to SetData(aData); } \
-  NS_IMETHOD ToString(PRUnichar **_retval) { return _to ToString(_retval); } \
-  NS_IMETHOD SetDataWithLength(PRUint32 length, const PRUnichar *data) { return _to SetDataWithLength(length, data); } 
+  NS_SCRIPTABLE NS_IMETHOD GetData(PRUnichar * *aData) { return _to GetData(aData); } \
+  NS_SCRIPTABLE NS_IMETHOD SetData(const PRUnichar * aData) { return _to SetData(aData); } \
+  NS_SCRIPTABLE NS_IMETHOD ToString(PRUnichar **_retval) { return _to ToString(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDataWithLength(PRUint32 length, const PRUnichar *data) { return _to SetDataWithLength(length, data); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIPREFLOCALIZEDSTRING(_to) \
-  NS_IMETHOD GetData(PRUnichar * *aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetData(aData); } \
-  NS_IMETHOD SetData(const PRUnichar * aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetData(aData); } \
-  NS_IMETHOD ToString(PRUnichar **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ToString(_retval); } \
-  NS_IMETHOD SetDataWithLength(PRUint32 length, const PRUnichar *data) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDataWithLength(length, data); } 
+  NS_SCRIPTABLE NS_IMETHOD GetData(PRUnichar * *aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetData(aData); } \
+  NS_SCRIPTABLE NS_IMETHOD SetData(const PRUnichar * aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetData(aData); } \
+  NS_SCRIPTABLE NS_IMETHOD ToString(PRUnichar **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ToString(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDataWithLength(PRUint32 length, const PRUnichar *data) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDataWithLength(length, data); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

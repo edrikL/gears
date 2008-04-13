@@ -45,7 +45,7 @@ class nsIDOMNode; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsITooltipTextProvider : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsITooltipTextProvider : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITOOLTIPTEXTPROVIDER_IID)
@@ -61,7 +61,7 @@ class NS_NO_VTABLE nsITooltipTextProvider : public nsISupports {
      *         <CODE>PR_FALSE</CODE> otherwise.
      */
   /* boolean getNodeText (in nsIDOMNode aNode, out wstring aText); */
-  NS_IMETHOD GetNodeText(nsIDOMNode *aNode, PRUnichar **aText, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNodeText(nsIDOMNode *aNode, PRUnichar **aText, PRBool *_retval) = 0;
 
 };
 
@@ -69,15 +69,15 @@ class NS_NO_VTABLE nsITooltipTextProvider : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSITOOLTIPTEXTPROVIDER \
-  NS_IMETHOD GetNodeText(nsIDOMNode *aNode, PRUnichar **aText, PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetNodeText(nsIDOMNode *aNode, PRUnichar **aText, PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSITOOLTIPTEXTPROVIDER(_to) \
-  NS_IMETHOD GetNodeText(nsIDOMNode *aNode, PRUnichar **aText, PRBool *_retval) { return _to GetNodeText(aNode, aText, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetNodeText(nsIDOMNode *aNode, PRUnichar **aText, PRBool *_retval) { return _to GetNodeText(aNode, aText, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSITOOLTIPTEXTPROVIDER(_to) \
-  NS_IMETHOD GetNodeText(nsIDOMNode *aNode, PRUnichar **aText, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNodeText(aNode, aText, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetNodeText(nsIDOMNode *aNode, PRUnichar **aText, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNodeText(aNode, aText, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

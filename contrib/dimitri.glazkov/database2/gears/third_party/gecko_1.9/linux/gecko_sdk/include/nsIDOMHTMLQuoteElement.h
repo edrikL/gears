@@ -31,14 +31,14 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLQuoteElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLQuoteElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLQUOTEELEMENT_IID)
 
   /* attribute DOMString cite; */
-  NS_IMETHOD GetCite(nsAString & aCite) = 0;
-  NS_IMETHOD SetCite(const nsAString & aCite) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCite(nsAString & aCite) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCite(const nsAString & aCite) = 0;
 
 };
 
@@ -46,18 +46,18 @@ class NS_NO_VTABLE nsIDOMHTMLQuoteElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLQUOTEELEMENT \
-  NS_IMETHOD GetCite(nsAString & aCite); \
-  NS_IMETHOD SetCite(const nsAString & aCite); 
+  NS_SCRIPTABLE NS_IMETHOD GetCite(nsAString & aCite); \
+  NS_SCRIPTABLE NS_IMETHOD SetCite(const nsAString & aCite); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLQUOTEELEMENT(_to) \
-  NS_IMETHOD GetCite(nsAString & aCite) { return _to GetCite(aCite); } \
-  NS_IMETHOD SetCite(const nsAString & aCite) { return _to SetCite(aCite); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCite(nsAString & aCite) { return _to GetCite(aCite); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCite(const nsAString & aCite) { return _to SetCite(aCite); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLQUOTEELEMENT(_to) \
-  NS_IMETHOD GetCite(nsAString & aCite) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCite(aCite); } \
-  NS_IMETHOD SetCite(const nsAString & aCite) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCite(aCite); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCite(nsAString & aCite) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCite(aCite); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCite(const nsAString & aCite) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCite(aCite); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

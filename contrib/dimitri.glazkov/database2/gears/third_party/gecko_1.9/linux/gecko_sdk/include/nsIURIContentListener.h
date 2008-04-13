@@ -37,7 +37,7 @@ class nsIURI; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIURIContentListener : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIURIContentListener : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IURICONTENTLISTENER_IID)
@@ -52,7 +52,7 @@ class NS_NO_VTABLE nsIURIContentListener : public nsISupports {
   *               <code>true</code> if the open should be aborted.
   */
   /* boolean onStartURIOpen (in nsIURI aURI); */
-  NS_IMETHOD OnStartURIOpen(nsIURI *aURI, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OnStartURIOpen(nsIURI *aURI, PRBool *_retval) = 0;
 
   /**
   * Notifies the content listener to hook up an nsIStreamListener capable of
@@ -75,7 +75,7 @@ class NS_NO_VTABLE nsIURIContentListener : public nsISupports {
   *                             returned streamlistener's methods. 
   */
   /* boolean doContent (in string aContentType, in boolean aIsContentPreferred, in nsIRequest aRequest, out nsIStreamListener aContentHandler); */
-  NS_IMETHOD DoContent(const char *aContentType, PRBool aIsContentPreferred, nsIRequest *aRequest, nsIStreamListener **aContentHandler, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD DoContent(const char *aContentType, PRBool aIsContentPreferred, nsIRequest *aRequest, nsIStreamListener **aContentHandler, PRBool *_retval) = 0;
 
   /**
   * When given a uri to dispatch, if the URI is specified as 'preferred 
@@ -102,7 +102,7 @@ class NS_NO_VTABLE nsIURIContentListener : public nsISupports {
   *                             <code>false<code> otherwise.
   */
   /* boolean isPreferred (in string aContentType, out string aDesiredContentType); */
-  NS_IMETHOD IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *_retval) = 0;
 
   /**
   * When given a uri to dispatch, if the URI is not specified as 'preferred
@@ -130,15 +130,15 @@ class NS_NO_VTABLE nsIURIContentListener : public nsISupports {
   * hierarchy.
   */
   /* boolean canHandleContent (in string aContentType, in boolean aIsContentPreferred, out string aDesiredContentType); */
-  NS_IMETHOD CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval) = 0;
 
   /**
   * The load context associated with a particular content listener.
   * The URI Loader stores and accesses this value as needed.
   */
   /* attribute nsISupports loadCookie; */
-  NS_IMETHOD GetLoadCookie(nsISupports * *aLoadCookie) = 0;
-  NS_IMETHOD SetLoadCookie(nsISupports * aLoadCookie) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLoadCookie(nsISupports * *aLoadCookie) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetLoadCookie(nsISupports * aLoadCookie) = 0;
 
   /**
   * The parent content listener if this particular listener is part of a chain
@@ -153,8 +153,8 @@ class NS_NO_VTABLE nsIURIContentListener : public nsISupports {
   *       parent content listener is destroyed.
   */
   /* attribute nsIURIContentListener parentContentListener; */
-  NS_IMETHOD GetParentContentListener(nsIURIContentListener * *aParentContentListener) = 0;
-  NS_IMETHOD SetParentContentListener(nsIURIContentListener * aParentContentListener) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetParentContentListener(nsIURIContentListener * *aParentContentListener) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetParentContentListener(nsIURIContentListener * aParentContentListener) = 0;
 
 };
 
@@ -162,36 +162,36 @@ class NS_NO_VTABLE nsIURIContentListener : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIURICONTENTLISTENER \
-  NS_IMETHOD OnStartURIOpen(nsIURI *aURI, PRBool *_retval); \
-  NS_IMETHOD DoContent(const char *aContentType, PRBool aIsContentPreferred, nsIRequest *aRequest, nsIStreamListener **aContentHandler, PRBool *_retval); \
-  NS_IMETHOD IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *_retval); \
-  NS_IMETHOD CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval); \
-  NS_IMETHOD GetLoadCookie(nsISupports * *aLoadCookie); \
-  NS_IMETHOD SetLoadCookie(nsISupports * aLoadCookie); \
-  NS_IMETHOD GetParentContentListener(nsIURIContentListener * *aParentContentListener); \
-  NS_IMETHOD SetParentContentListener(nsIURIContentListener * aParentContentListener); 
+  NS_SCRIPTABLE NS_IMETHOD OnStartURIOpen(nsIURI *aURI, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD DoContent(const char *aContentType, PRBool aIsContentPreferred, nsIRequest *aRequest, nsIStreamListener **aContentHandler, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetLoadCookie(nsISupports * *aLoadCookie); \
+  NS_SCRIPTABLE NS_IMETHOD SetLoadCookie(nsISupports * aLoadCookie); \
+  NS_SCRIPTABLE NS_IMETHOD GetParentContentListener(nsIURIContentListener * *aParentContentListener); \
+  NS_SCRIPTABLE NS_IMETHOD SetParentContentListener(nsIURIContentListener * aParentContentListener); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIURICONTENTLISTENER(_to) \
-  NS_IMETHOD OnStartURIOpen(nsIURI *aURI, PRBool *_retval) { return _to OnStartURIOpen(aURI, _retval); } \
-  NS_IMETHOD DoContent(const char *aContentType, PRBool aIsContentPreferred, nsIRequest *aRequest, nsIStreamListener **aContentHandler, PRBool *_retval) { return _to DoContent(aContentType, aIsContentPreferred, aRequest, aContentHandler, _retval); } \
-  NS_IMETHOD IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *_retval) { return _to IsPreferred(aContentType, aDesiredContentType, _retval); } \
-  NS_IMETHOD CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval) { return _to CanHandleContent(aContentType, aIsContentPreferred, aDesiredContentType, _retval); } \
-  NS_IMETHOD GetLoadCookie(nsISupports * *aLoadCookie) { return _to GetLoadCookie(aLoadCookie); } \
-  NS_IMETHOD SetLoadCookie(nsISupports * aLoadCookie) { return _to SetLoadCookie(aLoadCookie); } \
-  NS_IMETHOD GetParentContentListener(nsIURIContentListener * *aParentContentListener) { return _to GetParentContentListener(aParentContentListener); } \
-  NS_IMETHOD SetParentContentListener(nsIURIContentListener * aParentContentListener) { return _to SetParentContentListener(aParentContentListener); } 
+  NS_SCRIPTABLE NS_IMETHOD OnStartURIOpen(nsIURI *aURI, PRBool *_retval) { return _to OnStartURIOpen(aURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD DoContent(const char *aContentType, PRBool aIsContentPreferred, nsIRequest *aRequest, nsIStreamListener **aContentHandler, PRBool *_retval) { return _to DoContent(aContentType, aIsContentPreferred, aRequest, aContentHandler, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *_retval) { return _to IsPreferred(aContentType, aDesiredContentType, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval) { return _to CanHandleContent(aContentType, aIsContentPreferred, aDesiredContentType, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLoadCookie(nsISupports * *aLoadCookie) { return _to GetLoadCookie(aLoadCookie); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLoadCookie(nsISupports * aLoadCookie) { return _to SetLoadCookie(aLoadCookie); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParentContentListener(nsIURIContentListener * *aParentContentListener) { return _to GetParentContentListener(aParentContentListener); } \
+  NS_SCRIPTABLE NS_IMETHOD SetParentContentListener(nsIURIContentListener * aParentContentListener) { return _to SetParentContentListener(aParentContentListener); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIURICONTENTLISTENER(_to) \
-  NS_IMETHOD OnStartURIOpen(nsIURI *aURI, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnStartURIOpen(aURI, _retval); } \
-  NS_IMETHOD DoContent(const char *aContentType, PRBool aIsContentPreferred, nsIRequest *aRequest, nsIStreamListener **aContentHandler, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->DoContent(aContentType, aIsContentPreferred, aRequest, aContentHandler, _retval); } \
-  NS_IMETHOD IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsPreferred(aContentType, aDesiredContentType, _retval); } \
-  NS_IMETHOD CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanHandleContent(aContentType, aIsContentPreferred, aDesiredContentType, _retval); } \
-  NS_IMETHOD GetLoadCookie(nsISupports * *aLoadCookie) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLoadCookie(aLoadCookie); } \
-  NS_IMETHOD SetLoadCookie(nsISupports * aLoadCookie) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLoadCookie(aLoadCookie); } \
-  NS_IMETHOD GetParentContentListener(nsIURIContentListener * *aParentContentListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParentContentListener(aParentContentListener); } \
-  NS_IMETHOD SetParentContentListener(nsIURIContentListener * aParentContentListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetParentContentListener(aParentContentListener); } 
+  NS_SCRIPTABLE NS_IMETHOD OnStartURIOpen(nsIURI *aURI, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnStartURIOpen(aURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD DoContent(const char *aContentType, PRBool aIsContentPreferred, nsIRequest *aRequest, nsIStreamListener **aContentHandler, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->DoContent(aContentType, aIsContentPreferred, aRequest, aContentHandler, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsPreferred(aContentType, aDesiredContentType, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanHandleContent(aContentType, aIsContentPreferred, aDesiredContentType, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLoadCookie(nsISupports * *aLoadCookie) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLoadCookie(aLoadCookie); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLoadCookie(nsISupports * aLoadCookie) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLoadCookie(aLoadCookie); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParentContentListener(nsIURIContentListener * *aParentContentListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParentContentListener(aParentContentListener); } \
+  NS_SCRIPTABLE NS_IMETHOD SetParentContentListener(nsIURIContentListener * aParentContentListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetParentContentListener(aParentContentListener); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

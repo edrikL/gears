@@ -31,7 +31,7 @@
  * @status FROZEN
  * @version 1.0
  */
-class NS_NO_VTABLE nsISimpleEnumerator : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsISimpleEnumerator : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISIMPLEENUMERATOR_IID)
@@ -49,7 +49,7 @@ class NS_NO_VTABLE nsISimpleEnumerator : public nsISupports {
    *         PR_FALSE if there are no more elements in the enumerator.
    */
   /* boolean hasMoreElements (); */
-  NS_IMETHOD HasMoreElements(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD HasMoreElements(PRBool *_retval) = 0;
 
   /**
    * Called to retrieve the next element in the enumerator. The "next"
@@ -66,7 +66,7 @@ class NS_NO_VTABLE nsISimpleEnumerator : public nsISupports {
    * @return the next element in the enumeration.
    */
   /* nsISupports getNext (); */
-  NS_IMETHOD GetNext(nsISupports **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNext(nsISupports **_retval) = 0;
 
 };
 
@@ -74,18 +74,18 @@ class NS_NO_VTABLE nsISimpleEnumerator : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSISIMPLEENUMERATOR \
-  NS_IMETHOD HasMoreElements(PRBool *_retval); \
-  NS_IMETHOD GetNext(nsISupports **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD HasMoreElements(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetNext(nsISupports **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSISIMPLEENUMERATOR(_to) \
-  NS_IMETHOD HasMoreElements(PRBool *_retval) { return _to HasMoreElements(_retval); } \
-  NS_IMETHOD GetNext(nsISupports **_retval) { return _to GetNext(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD HasMoreElements(PRBool *_retval) { return _to HasMoreElements(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNext(nsISupports **_retval) { return _to GetNext(_retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSISIMPLEENUMERATOR(_to) \
-  NS_IMETHOD HasMoreElements(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->HasMoreElements(_retval); } \
-  NS_IMETHOD GetNext(nsISupports **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNext(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD HasMoreElements(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->HasMoreElements(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNext(nsISupports **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNext(_retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

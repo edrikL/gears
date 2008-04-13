@@ -27,10 +27,11 @@
 #define GEARS_BASE_FIREFOX_FACTORY_H__
 
 #include <vector>
-#include "ff/genfiles/factory.h" // from OUTDIR
+#include "genfiles/factory.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/html_event_monitor.h"
+#include "gears/base/common/permissions_db.h"
 
 
 // Object identifiers
@@ -76,9 +77,10 @@ class GearsFactory
   void ResumeObjectCreationAndUpdatePermissions();
 
  private:
-  // friends for exposing 'is_permission_*' fields
+  // friends for exposing 'permission_state_'
   friend class PoolThreadsManager;
   friend bool HasPermissionToUseGears(GearsFactory *factory,
+                                      bool use_temporary_permissions,
                                       const char16 *custom_icon_url,
                                       const char16 *custom_name,
                                       const char16 *custom_message);
@@ -104,8 +106,7 @@ class GearsFactory
   // TODO(cprince): move this into ModuleImplBaseClass to auto-pass permission
   // data around. Do that when we have a single instance of the info per page,
   // because multiple copies can get out of sync (permission data is mutable).
-  bool is_permission_granted_;
-  bool is_permission_value_from_user_; // user prompt, or persisted DB value
+  PermissionState permission_state_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsFactory);
 };

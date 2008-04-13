@@ -30,7 +30,7 @@ class nsIComponentManager; /* forward declaration */
  * The nsIModule interface.
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIModule : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIModule : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMODULE_IID)
@@ -48,7 +48,7 @@ class NS_NO_VTABLE nsIModule : public nsISupports {
      * 
      */
   /* void getClassObject (in nsIComponentManager aCompMgr, in nsCIDRef aClass, in nsIIDRef aIID, [iid_is (aIID), retval] out nsQIResult aResult); */
-  NS_IMETHOD GetClassObject(nsIComponentManager *aCompMgr, const nsCID & aClass, const nsIID & aIID, void * *aResult) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetClassObject(nsIComponentManager *aCompMgr, const nsCID & aClass, const nsIID & aIID, void * *aResult) = 0;
 
   /**
      * One time registration callback
@@ -62,7 +62,7 @@ class NS_NO_VTABLE nsIModule : public nsISupports {
      * @param aType     : Loader Type being used to load this module 
      */
   /* void registerSelf (in nsIComponentManager aCompMgr, in nsIFile aLocation, in string aLoaderStr, in string aType); */
-  NS_IMETHOD RegisterSelf(nsIComponentManager *aCompMgr, nsIFile *aLocation, const char *aLoaderStr, const char *aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RegisterSelf(nsIComponentManager *aCompMgr, nsIFile *aLocation, const char *aLoaderStr, const char *aType) = 0;
 
   /**
      * One time unregistration callback
@@ -76,7 +76,7 @@ class NS_NO_VTABLE nsIModule : public nsISupports {
      * 
      */
   /* void unregisterSelf (in nsIComponentManager aCompMgr, in nsIFile aLocation, in string aLoaderStr); */
-  NS_IMETHOD UnregisterSelf(nsIComponentManager *aCompMgr, nsIFile *aLocation, const char *aLoaderStr) = 0;
+  NS_SCRIPTABLE NS_IMETHOD UnregisterSelf(nsIComponentManager *aCompMgr, nsIFile *aLocation, const char *aLoaderStr) = 0;
 
   /** 
     * Module load management
@@ -92,7 +92,7 @@ class NS_NO_VTABLE nsIModule : public nsISupports {
     *		Returning PR_FALSE guaratees that the module won't be unloaded.
     */
   /* boolean canUnload (in nsIComponentManager aCompMgr); */
-  NS_IMETHOD CanUnload(nsIComponentManager *aCompMgr, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CanUnload(nsIComponentManager *aCompMgr, PRBool *_retval) = 0;
 
 };
 
@@ -100,24 +100,24 @@ class NS_NO_VTABLE nsIModule : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIMODULE \
-  NS_IMETHOD GetClassObject(nsIComponentManager *aCompMgr, const nsCID & aClass, const nsIID & aIID, void * *aResult); \
-  NS_IMETHOD RegisterSelf(nsIComponentManager *aCompMgr, nsIFile *aLocation, const char *aLoaderStr, const char *aType); \
-  NS_IMETHOD UnregisterSelf(nsIComponentManager *aCompMgr, nsIFile *aLocation, const char *aLoaderStr); \
-  NS_IMETHOD CanUnload(nsIComponentManager *aCompMgr, PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetClassObject(nsIComponentManager *aCompMgr, const nsCID & aClass, const nsIID & aIID, void * *aResult); \
+  NS_SCRIPTABLE NS_IMETHOD RegisterSelf(nsIComponentManager *aCompMgr, nsIFile *aLocation, const char *aLoaderStr, const char *aType); \
+  NS_SCRIPTABLE NS_IMETHOD UnregisterSelf(nsIComponentManager *aCompMgr, nsIFile *aLocation, const char *aLoaderStr); \
+  NS_SCRIPTABLE NS_IMETHOD CanUnload(nsIComponentManager *aCompMgr, PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIMODULE(_to) \
-  NS_IMETHOD GetClassObject(nsIComponentManager *aCompMgr, const nsCID & aClass, const nsIID & aIID, void * *aResult) { return _to GetClassObject(aCompMgr, aClass, aIID, aResult); } \
-  NS_IMETHOD RegisterSelf(nsIComponentManager *aCompMgr, nsIFile *aLocation, const char *aLoaderStr, const char *aType) { return _to RegisterSelf(aCompMgr, aLocation, aLoaderStr, aType); } \
-  NS_IMETHOD UnregisterSelf(nsIComponentManager *aCompMgr, nsIFile *aLocation, const char *aLoaderStr) { return _to UnregisterSelf(aCompMgr, aLocation, aLoaderStr); } \
-  NS_IMETHOD CanUnload(nsIComponentManager *aCompMgr, PRBool *_retval) { return _to CanUnload(aCompMgr, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetClassObject(nsIComponentManager *aCompMgr, const nsCID & aClass, const nsIID & aIID, void * *aResult) { return _to GetClassObject(aCompMgr, aClass, aIID, aResult); } \
+  NS_SCRIPTABLE NS_IMETHOD RegisterSelf(nsIComponentManager *aCompMgr, nsIFile *aLocation, const char *aLoaderStr, const char *aType) { return _to RegisterSelf(aCompMgr, aLocation, aLoaderStr, aType); } \
+  NS_SCRIPTABLE NS_IMETHOD UnregisterSelf(nsIComponentManager *aCompMgr, nsIFile *aLocation, const char *aLoaderStr) { return _to UnregisterSelf(aCompMgr, aLocation, aLoaderStr); } \
+  NS_SCRIPTABLE NS_IMETHOD CanUnload(nsIComponentManager *aCompMgr, PRBool *_retval) { return _to CanUnload(aCompMgr, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIMODULE(_to) \
-  NS_IMETHOD GetClassObject(nsIComponentManager *aCompMgr, const nsCID & aClass, const nsIID & aIID, void * *aResult) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClassObject(aCompMgr, aClass, aIID, aResult); } \
-  NS_IMETHOD RegisterSelf(nsIComponentManager *aCompMgr, nsIFile *aLocation, const char *aLoaderStr, const char *aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->RegisterSelf(aCompMgr, aLocation, aLoaderStr, aType); } \
-  NS_IMETHOD UnregisterSelf(nsIComponentManager *aCompMgr, nsIFile *aLocation, const char *aLoaderStr) { return !_to ? NS_ERROR_NULL_POINTER : _to->UnregisterSelf(aCompMgr, aLocation, aLoaderStr); } \
-  NS_IMETHOD CanUnload(nsIComponentManager *aCompMgr, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanUnload(aCompMgr, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetClassObject(nsIComponentManager *aCompMgr, const nsCID & aClass, const nsIID & aIID, void * *aResult) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClassObject(aCompMgr, aClass, aIID, aResult); } \
+  NS_SCRIPTABLE NS_IMETHOD RegisterSelf(nsIComponentManager *aCompMgr, nsIFile *aLocation, const char *aLoaderStr, const char *aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->RegisterSelf(aCompMgr, aLocation, aLoaderStr, aType); } \
+  NS_SCRIPTABLE NS_IMETHOD UnregisterSelf(nsIComponentManager *aCompMgr, nsIFile *aLocation, const char *aLoaderStr) { return !_to ? NS_ERROR_NULL_POINTER : _to->UnregisterSelf(aCompMgr, aLocation, aLoaderStr); } \
+  NS_SCRIPTABLE NS_IMETHOD CanUnload(nsIComponentManager *aCompMgr, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanUnload(aCompMgr, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

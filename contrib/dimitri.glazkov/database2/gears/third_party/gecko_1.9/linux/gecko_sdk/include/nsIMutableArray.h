@@ -39,7 +39,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIMutableArray : public nsIArray {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIMutableArray : public nsIArray {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMUTABLEARRAY_IID)
@@ -57,7 +57,7 @@ class NS_NO_VTABLE nsIMutableArray : public nsIArray {
      *                          nsIWeakReference.
      */
   /* void appendElement (in nsISupports element, in boolean weak); */
-  NS_IMETHOD AppendElement(nsISupports *element, PRBool weak) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AppendElement(nsISupports *element, PRBool weak) = 0;
 
   /**
      * removeElementAt()
@@ -71,7 +71,7 @@ class NS_NO_VTABLE nsIMutableArray : public nsIArray {
      *
      */
   /* void removeElementAt (in unsigned long index); */
-  NS_IMETHOD RemoveElementAt(PRUint32 index) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveElementAt(PRUint32 index) = 0;
 
   /**
      * insertElementAt()
@@ -95,7 +95,7 @@ class NS_NO_VTABLE nsIMutableArray : public nsIArray {
      *                          nsIWeakReference.
      */
   /* void insertElementAt (in nsISupports element, in unsigned long index, in boolean weak); */
-  NS_IMETHOD InsertElementAt(nsISupports *element, PRUint32 index, PRBool weak) = 0;
+  NS_SCRIPTABLE NS_IMETHOD InsertElementAt(nsISupports *element, PRUint32 index, PRBool weak) = 0;
 
   /**
      * replaceElementAt()
@@ -121,7 +121,7 @@ class NS_NO_VTABLE nsIMutableArray : public nsIArray {
      *                          nsIWeakReference.
      */
   /* void replaceElementAt (in nsISupports element, in unsigned long index, in boolean weak); */
-  NS_IMETHOD ReplaceElementAt(nsISupports *element, PRUint32 index, PRBool weak) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ReplaceElementAt(nsISupports *element, PRUint32 index, PRBool weak) = 0;
 
   /**
      * clear()
@@ -129,7 +129,7 @@ class NS_NO_VTABLE nsIMutableArray : public nsIArray {
      * clear the entire array, releasing all stored objects
      */
   /* void clear (); */
-  NS_IMETHOD Clear(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Clear(void) = 0;
 
 };
 
@@ -137,27 +137,27 @@ class NS_NO_VTABLE nsIMutableArray : public nsIArray {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIMUTABLEARRAY \
-  NS_IMETHOD AppendElement(nsISupports *element, PRBool weak); \
-  NS_IMETHOD RemoveElementAt(PRUint32 index); \
-  NS_IMETHOD InsertElementAt(nsISupports *element, PRUint32 index, PRBool weak); \
-  NS_IMETHOD ReplaceElementAt(nsISupports *element, PRUint32 index, PRBool weak); \
-  NS_IMETHOD Clear(void); 
+  NS_SCRIPTABLE NS_IMETHOD AppendElement(nsISupports *element, PRBool weak); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveElementAt(PRUint32 index); \
+  NS_SCRIPTABLE NS_IMETHOD InsertElementAt(nsISupports *element, PRUint32 index, PRBool weak); \
+  NS_SCRIPTABLE NS_IMETHOD ReplaceElementAt(nsISupports *element, PRUint32 index, PRBool weak); \
+  NS_SCRIPTABLE NS_IMETHOD Clear(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIMUTABLEARRAY(_to) \
-  NS_IMETHOD AppendElement(nsISupports *element, PRBool weak) { return _to AppendElement(element, weak); } \
-  NS_IMETHOD RemoveElementAt(PRUint32 index) { return _to RemoveElementAt(index); } \
-  NS_IMETHOD InsertElementAt(nsISupports *element, PRUint32 index, PRBool weak) { return _to InsertElementAt(element, index, weak); } \
-  NS_IMETHOD ReplaceElementAt(nsISupports *element, PRUint32 index, PRBool weak) { return _to ReplaceElementAt(element, index, weak); } \
-  NS_IMETHOD Clear(void) { return _to Clear(); } 
+  NS_SCRIPTABLE NS_IMETHOD AppendElement(nsISupports *element, PRBool weak) { return _to AppendElement(element, weak); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveElementAt(PRUint32 index) { return _to RemoveElementAt(index); } \
+  NS_SCRIPTABLE NS_IMETHOD InsertElementAt(nsISupports *element, PRUint32 index, PRBool weak) { return _to InsertElementAt(element, index, weak); } \
+  NS_SCRIPTABLE NS_IMETHOD ReplaceElementAt(nsISupports *element, PRUint32 index, PRBool weak) { return _to ReplaceElementAt(element, index, weak); } \
+  NS_SCRIPTABLE NS_IMETHOD Clear(void) { return _to Clear(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIMUTABLEARRAY(_to) \
-  NS_IMETHOD AppendElement(nsISupports *element, PRBool weak) { return !_to ? NS_ERROR_NULL_POINTER : _to->AppendElement(element, weak); } \
-  NS_IMETHOD RemoveElementAt(PRUint32 index) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveElementAt(index); } \
-  NS_IMETHOD InsertElementAt(nsISupports *element, PRUint32 index, PRBool weak) { return !_to ? NS_ERROR_NULL_POINTER : _to->InsertElementAt(element, index, weak); } \
-  NS_IMETHOD ReplaceElementAt(nsISupports *element, PRUint32 index, PRBool weak) { return !_to ? NS_ERROR_NULL_POINTER : _to->ReplaceElementAt(element, index, weak); } \
-  NS_IMETHOD Clear(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Clear(); } 
+  NS_SCRIPTABLE NS_IMETHOD AppendElement(nsISupports *element, PRBool weak) { return !_to ? NS_ERROR_NULL_POINTER : _to->AppendElement(element, weak); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveElementAt(PRUint32 index) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveElementAt(index); } \
+  NS_SCRIPTABLE NS_IMETHOD InsertElementAt(nsISupports *element, PRUint32 index, PRBool weak) { return !_to ? NS_ERROR_NULL_POINTER : _to->InsertElementAt(element, index, weak); } \
+  NS_SCRIPTABLE NS_IMETHOD ReplaceElementAt(nsISupports *element, PRUint32 index, PRBool weak) { return !_to ? NS_ERROR_NULL_POINTER : _to->ReplaceElementAt(element, index, weak); } \
+  NS_SCRIPTABLE NS_IMETHOD Clear(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Clear(); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

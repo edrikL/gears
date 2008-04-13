@@ -69,7 +69,7 @@
  * 
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIURI : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIURI : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IURI_IID)
@@ -84,8 +84,8 @@ class NS_NO_VTABLE nsIURI : public nsISupports {
      * Some characters may be escaped.
      */
   /* attribute AUTF8String spec; */
-  NS_IMETHOD GetSpec(nsACString & aSpec) = 0;
-  NS_IMETHOD SetSpec(const nsACString & aSpec) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSpec(nsACString & aSpec) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSpec(const nsACString & aSpec) = 0;
 
   /**
      * The prePath (eg. scheme://user:password@host:port) returns the string
@@ -94,15 +94,15 @@ class NS_NO_VTABLE nsIURI : public nsISupports {
      * Some characters may be escaped.
      */
   /* readonly attribute AUTF8String prePath; */
-  NS_IMETHOD GetPrePath(nsACString & aPrePath) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPrePath(nsACString & aPrePath) = 0;
 
   /**
      * The Scheme is the protocol to which this URI refers.  The scheme is
      * restricted to the US-ASCII charset per RFC2396.
      */
   /* attribute ACString scheme; */
-  NS_IMETHOD GetScheme(nsACString & aScheme) = 0;
-  NS_IMETHOD SetScheme(const nsACString & aScheme) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetScheme(nsACString & aScheme) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetScheme(const nsACString & aScheme) = 0;
 
   /**
      * The username:password (or username only if value doesn't contain a ':')
@@ -110,8 +110,8 @@ class NS_NO_VTABLE nsIURI : public nsISupports {
      * Some characters may be escaped.
      */
   /* attribute AUTF8String userPass; */
-  NS_IMETHOD GetUserPass(nsACString & aUserPass) = 0;
-  NS_IMETHOD SetUserPass(const nsACString & aUserPass) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetUserPass(nsACString & aUserPass) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetUserPass(const nsACString & aUserPass) = 0;
 
   /**
      * The optional username and password, assuming the preHost consists of
@@ -120,12 +120,12 @@ class NS_NO_VTABLE nsIURI : public nsISupports {
      * Some characters may be escaped.
      */
   /* attribute AUTF8String username; */
-  NS_IMETHOD GetUsername(nsACString & aUsername) = 0;
-  NS_IMETHOD SetUsername(const nsACString & aUsername) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetUsername(nsACString & aUsername) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetUsername(const nsACString & aUsername) = 0;
 
   /* attribute AUTF8String password; */
-  NS_IMETHOD GetPassword(nsACString & aPassword) = 0;
-  NS_IMETHOD SetPassword(const nsACString & aPassword) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPassword(nsACString & aPassword) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetPassword(const nsACString & aPassword) = 0;
 
   /**
      * The host:port (or simply the host, if port == -1).
@@ -133,8 +133,8 @@ class NS_NO_VTABLE nsIURI : public nsISupports {
      * Characters are NOT escaped.
      */
   /* attribute AUTF8String hostPort; */
-  NS_IMETHOD GetHostPort(nsACString & aHostPort) = 0;
-  NS_IMETHOD SetHostPort(const nsACString & aHostPort) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHostPort(nsACString & aHostPort) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetHostPort(const nsACString & aHostPort) = 0;
 
   /**
      * The host is the internet domain name to which this URI refers.  It could
@@ -144,16 +144,16 @@ class NS_NO_VTABLE nsIURI : public nsISupports {
      * Characters are NOT escaped.
      */
   /* attribute AUTF8String host; */
-  NS_IMETHOD GetHost(nsACString & aHost) = 0;
-  NS_IMETHOD SetHost(const nsACString & aHost) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHost(nsACString & aHost) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetHost(const nsACString & aHost) = 0;
 
   /**
      * A port value of -1 corresponds to the protocol's default port (eg. -1
      * implies port 80 for http URIs).
      */
   /* attribute long port; */
-  NS_IMETHOD GetPort(PRInt32 *aPort) = 0;
-  NS_IMETHOD SetPort(PRInt32 aPort) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPort(PRInt32 *aPort) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetPort(PRInt32 aPort) = 0;
 
   /**
      * The path, typically including at least a leading '/' (but may also be
@@ -162,8 +162,8 @@ class NS_NO_VTABLE nsIURI : public nsISupports {
      * Some characters may be escaped.
      */
   /* attribute AUTF8String path; */
-  NS_IMETHOD GetPath(nsACString & aPath) = 0;
-  NS_IMETHOD SetPath(const nsACString & aPath) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPath(nsACString & aPath) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetPath(const nsACString & aPath) = 0;
 
   /************************************************************************
      * An URI supports the following methods:
@@ -174,7 +174,7 @@ class NS_NO_VTABLE nsIURI : public nsISupports {
      * eg. http://foo.com:80/ == http://foo.com/
      */
   /* boolean equals (in nsIURI other); */
-  NS_IMETHOD Equals(nsIURI *other, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIURI *other, PRBool *_retval) = 0;
 
   /**
      * An optimization to do scheme checks without requiring the users of nsIURI
@@ -182,7 +182,7 @@ class NS_NO_VTABLE nsIURI : public nsISupports {
      * the schemes match (case ignored).
      */
   /* boolean schemeIs (in string scheme); */
-  NS_IMETHOD SchemeIs(const char *scheme, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SchemeIs(const char *scheme, PRBool *_retval) = 0;
 
   /**
      * Clones the current URI.  For some protocols, this is more than just an
@@ -191,7 +191,7 @@ class NS_NO_VTABLE nsIURI : public nsISupports {
      * same name.
      */
   /* nsIURI clone (); */
-  NS_IMETHOD Clone(nsIURI **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Clone(nsIURI **_retval) = 0;
 
   /**
      * This method resolves a relative string into an absolute URI string,
@@ -200,7 +200,7 @@ class NS_NO_VTABLE nsIURI : public nsISupports {
      * NOTE: some implementations may have no concept of a relative URI.
      */
   /* AUTF8String resolve (in AUTF8String relativePath); */
-  NS_IMETHOD Resolve(const nsACString & relativePath, nsACString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Resolve(const nsACString & relativePath, nsACString & _retval) = 0;
 
   /************************************************************************
      * Additional attributes:
@@ -211,7 +211,7 @@ class NS_NO_VTABLE nsIURI : public nsISupports {
      * RFC2396.  The result is strictly ASCII.
      */
   /* readonly attribute ACString asciiSpec; */
-  NS_IMETHOD GetAsciiSpec(nsACString & aAsciiSpec) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAsciiSpec(nsACString & aAsciiSpec) = 0;
 
   /**
      * The URI host with an ASCII compatible encoding.  Follows the IDNA
@@ -219,7 +219,7 @@ class NS_NO_VTABLE nsIURI : public nsISupports {
      * ASCII for compatibility with existing internet infrasture.
      */
   /* readonly attribute ACString asciiHost; */
-  NS_IMETHOD GetAsciiHost(nsACString & aAsciiHost) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAsciiHost(nsACString & aAsciiHost) = 0;
 
   /**
      * The charset of the document from which this URI originated.  An empty
@@ -231,7 +231,7 @@ class NS_NO_VTABLE nsIURI : public nsISupports {
      * characters.
      */
   /* readonly attribute ACString originCharset; */
-  NS_IMETHOD GetOriginCharset(nsACString & aOriginCharset) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetOriginCharset(nsACString & aOriginCharset) = 0;
 
 };
 
@@ -239,90 +239,90 @@ class NS_NO_VTABLE nsIURI : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIURI \
-  NS_IMETHOD GetSpec(nsACString & aSpec); \
-  NS_IMETHOD SetSpec(const nsACString & aSpec); \
-  NS_IMETHOD GetPrePath(nsACString & aPrePath); \
-  NS_IMETHOD GetScheme(nsACString & aScheme); \
-  NS_IMETHOD SetScheme(const nsACString & aScheme); \
-  NS_IMETHOD GetUserPass(nsACString & aUserPass); \
-  NS_IMETHOD SetUserPass(const nsACString & aUserPass); \
-  NS_IMETHOD GetUsername(nsACString & aUsername); \
-  NS_IMETHOD SetUsername(const nsACString & aUsername); \
-  NS_IMETHOD GetPassword(nsACString & aPassword); \
-  NS_IMETHOD SetPassword(const nsACString & aPassword); \
-  NS_IMETHOD GetHostPort(nsACString & aHostPort); \
-  NS_IMETHOD SetHostPort(const nsACString & aHostPort); \
-  NS_IMETHOD GetHost(nsACString & aHost); \
-  NS_IMETHOD SetHost(const nsACString & aHost); \
-  NS_IMETHOD GetPort(PRInt32 *aPort); \
-  NS_IMETHOD SetPort(PRInt32 aPort); \
-  NS_IMETHOD GetPath(nsACString & aPath); \
-  NS_IMETHOD SetPath(const nsACString & aPath); \
-  NS_IMETHOD Equals(nsIURI *other, PRBool *_retval); \
-  NS_IMETHOD SchemeIs(const char *scheme, PRBool *_retval); \
-  NS_IMETHOD Clone(nsIURI **_retval); \
-  NS_IMETHOD Resolve(const nsACString & relativePath, nsACString & _retval); \
-  NS_IMETHOD GetAsciiSpec(nsACString & aAsciiSpec); \
-  NS_IMETHOD GetAsciiHost(nsACString & aAsciiHost); \
-  NS_IMETHOD GetOriginCharset(nsACString & aOriginCharset); 
+  NS_SCRIPTABLE NS_IMETHOD GetSpec(nsACString & aSpec); \
+  NS_SCRIPTABLE NS_IMETHOD SetSpec(const nsACString & aSpec); \
+  NS_SCRIPTABLE NS_IMETHOD GetPrePath(nsACString & aPrePath); \
+  NS_SCRIPTABLE NS_IMETHOD GetScheme(nsACString & aScheme); \
+  NS_SCRIPTABLE NS_IMETHOD SetScheme(const nsACString & aScheme); \
+  NS_SCRIPTABLE NS_IMETHOD GetUserPass(nsACString & aUserPass); \
+  NS_SCRIPTABLE NS_IMETHOD SetUserPass(const nsACString & aUserPass); \
+  NS_SCRIPTABLE NS_IMETHOD GetUsername(nsACString & aUsername); \
+  NS_SCRIPTABLE NS_IMETHOD SetUsername(const nsACString & aUsername); \
+  NS_SCRIPTABLE NS_IMETHOD GetPassword(nsACString & aPassword); \
+  NS_SCRIPTABLE NS_IMETHOD SetPassword(const nsACString & aPassword); \
+  NS_SCRIPTABLE NS_IMETHOD GetHostPort(nsACString & aHostPort); \
+  NS_SCRIPTABLE NS_IMETHOD SetHostPort(const nsACString & aHostPort); \
+  NS_SCRIPTABLE NS_IMETHOD GetHost(nsACString & aHost); \
+  NS_SCRIPTABLE NS_IMETHOD SetHost(const nsACString & aHost); \
+  NS_SCRIPTABLE NS_IMETHOD GetPort(PRInt32 *aPort); \
+  NS_SCRIPTABLE NS_IMETHOD SetPort(PRInt32 aPort); \
+  NS_SCRIPTABLE NS_IMETHOD GetPath(nsACString & aPath); \
+  NS_SCRIPTABLE NS_IMETHOD SetPath(const nsACString & aPath); \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIURI *other, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD SchemeIs(const char *scheme, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD Clone(nsIURI **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD Resolve(const nsACString & relativePath, nsACString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetAsciiSpec(nsACString & aAsciiSpec); \
+  NS_SCRIPTABLE NS_IMETHOD GetAsciiHost(nsACString & aAsciiHost); \
+  NS_SCRIPTABLE NS_IMETHOD GetOriginCharset(nsACString & aOriginCharset); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIURI(_to) \
-  NS_IMETHOD GetSpec(nsACString & aSpec) { return _to GetSpec(aSpec); } \
-  NS_IMETHOD SetSpec(const nsACString & aSpec) { return _to SetSpec(aSpec); } \
-  NS_IMETHOD GetPrePath(nsACString & aPrePath) { return _to GetPrePath(aPrePath); } \
-  NS_IMETHOD GetScheme(nsACString & aScheme) { return _to GetScheme(aScheme); } \
-  NS_IMETHOD SetScheme(const nsACString & aScheme) { return _to SetScheme(aScheme); } \
-  NS_IMETHOD GetUserPass(nsACString & aUserPass) { return _to GetUserPass(aUserPass); } \
-  NS_IMETHOD SetUserPass(const nsACString & aUserPass) { return _to SetUserPass(aUserPass); } \
-  NS_IMETHOD GetUsername(nsACString & aUsername) { return _to GetUsername(aUsername); } \
-  NS_IMETHOD SetUsername(const nsACString & aUsername) { return _to SetUsername(aUsername); } \
-  NS_IMETHOD GetPassword(nsACString & aPassword) { return _to GetPassword(aPassword); } \
-  NS_IMETHOD SetPassword(const nsACString & aPassword) { return _to SetPassword(aPassword); } \
-  NS_IMETHOD GetHostPort(nsACString & aHostPort) { return _to GetHostPort(aHostPort); } \
-  NS_IMETHOD SetHostPort(const nsACString & aHostPort) { return _to SetHostPort(aHostPort); } \
-  NS_IMETHOD GetHost(nsACString & aHost) { return _to GetHost(aHost); } \
-  NS_IMETHOD SetHost(const nsACString & aHost) { return _to SetHost(aHost); } \
-  NS_IMETHOD GetPort(PRInt32 *aPort) { return _to GetPort(aPort); } \
-  NS_IMETHOD SetPort(PRInt32 aPort) { return _to SetPort(aPort); } \
-  NS_IMETHOD GetPath(nsACString & aPath) { return _to GetPath(aPath); } \
-  NS_IMETHOD SetPath(const nsACString & aPath) { return _to SetPath(aPath); } \
-  NS_IMETHOD Equals(nsIURI *other, PRBool *_retval) { return _to Equals(other, _retval); } \
-  NS_IMETHOD SchemeIs(const char *scheme, PRBool *_retval) { return _to SchemeIs(scheme, _retval); } \
-  NS_IMETHOD Clone(nsIURI **_retval) { return _to Clone(_retval); } \
-  NS_IMETHOD Resolve(const nsACString & relativePath, nsACString & _retval) { return _to Resolve(relativePath, _retval); } \
-  NS_IMETHOD GetAsciiSpec(nsACString & aAsciiSpec) { return _to GetAsciiSpec(aAsciiSpec); } \
-  NS_IMETHOD GetAsciiHost(nsACString & aAsciiHost) { return _to GetAsciiHost(aAsciiHost); } \
-  NS_IMETHOD GetOriginCharset(nsACString & aOriginCharset) { return _to GetOriginCharset(aOriginCharset); } 
+  NS_SCRIPTABLE NS_IMETHOD GetSpec(nsACString & aSpec) { return _to GetSpec(aSpec); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSpec(const nsACString & aSpec) { return _to SetSpec(aSpec); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrePath(nsACString & aPrePath) { return _to GetPrePath(aPrePath); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScheme(nsACString & aScheme) { return _to GetScheme(aScheme); } \
+  NS_SCRIPTABLE NS_IMETHOD SetScheme(const nsACString & aScheme) { return _to SetScheme(aScheme); } \
+  NS_SCRIPTABLE NS_IMETHOD GetUserPass(nsACString & aUserPass) { return _to GetUserPass(aUserPass); } \
+  NS_SCRIPTABLE NS_IMETHOD SetUserPass(const nsACString & aUserPass) { return _to SetUserPass(aUserPass); } \
+  NS_SCRIPTABLE NS_IMETHOD GetUsername(nsACString & aUsername) { return _to GetUsername(aUsername); } \
+  NS_SCRIPTABLE NS_IMETHOD SetUsername(const nsACString & aUsername) { return _to SetUsername(aUsername); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPassword(nsACString & aPassword) { return _to GetPassword(aPassword); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPassword(const nsACString & aPassword) { return _to SetPassword(aPassword); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHostPort(nsACString & aHostPort) { return _to GetHostPort(aHostPort); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHostPort(const nsACString & aHostPort) { return _to SetHostPort(aHostPort); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHost(nsACString & aHost) { return _to GetHost(aHost); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHost(const nsACString & aHost) { return _to SetHost(aHost); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPort(PRInt32 *aPort) { return _to GetPort(aPort); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPort(PRInt32 aPort) { return _to SetPort(aPort); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPath(nsACString & aPath) { return _to GetPath(aPath); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPath(const nsACString & aPath) { return _to SetPath(aPath); } \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIURI *other, PRBool *_retval) { return _to Equals(other, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SchemeIs(const char *scheme, PRBool *_retval) { return _to SchemeIs(scheme, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Clone(nsIURI **_retval) { return _to Clone(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Resolve(const nsACString & relativePath, nsACString & _retval) { return _to Resolve(relativePath, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAsciiSpec(nsACString & aAsciiSpec) { return _to GetAsciiSpec(aAsciiSpec); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAsciiHost(nsACString & aAsciiHost) { return _to GetAsciiHost(aAsciiHost); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOriginCharset(nsACString & aOriginCharset) { return _to GetOriginCharset(aOriginCharset); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIURI(_to) \
-  NS_IMETHOD GetSpec(nsACString & aSpec) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSpec(aSpec); } \
-  NS_IMETHOD SetSpec(const nsACString & aSpec) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSpec(aSpec); } \
-  NS_IMETHOD GetPrePath(nsACString & aPrePath) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrePath(aPrePath); } \
-  NS_IMETHOD GetScheme(nsACString & aScheme) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScheme(aScheme); } \
-  NS_IMETHOD SetScheme(const nsACString & aScheme) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetScheme(aScheme); } \
-  NS_IMETHOD GetUserPass(nsACString & aUserPass) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUserPass(aUserPass); } \
-  NS_IMETHOD SetUserPass(const nsACString & aUserPass) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetUserPass(aUserPass); } \
-  NS_IMETHOD GetUsername(nsACString & aUsername) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUsername(aUsername); } \
-  NS_IMETHOD SetUsername(const nsACString & aUsername) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetUsername(aUsername); } \
-  NS_IMETHOD GetPassword(nsACString & aPassword) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPassword(aPassword); } \
-  NS_IMETHOD SetPassword(const nsACString & aPassword) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPassword(aPassword); } \
-  NS_IMETHOD GetHostPort(nsACString & aHostPort) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHostPort(aHostPort); } \
-  NS_IMETHOD SetHostPort(const nsACString & aHostPort) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHostPort(aHostPort); } \
-  NS_IMETHOD GetHost(nsACString & aHost) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHost(aHost); } \
-  NS_IMETHOD SetHost(const nsACString & aHost) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHost(aHost); } \
-  NS_IMETHOD GetPort(PRInt32 *aPort) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPort(aPort); } \
-  NS_IMETHOD SetPort(PRInt32 aPort) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPort(aPort); } \
-  NS_IMETHOD GetPath(nsACString & aPath) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPath(aPath); } \
-  NS_IMETHOD SetPath(const nsACString & aPath) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPath(aPath); } \
-  NS_IMETHOD Equals(nsIURI *other, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Equals(other, _retval); } \
-  NS_IMETHOD SchemeIs(const char *scheme, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->SchemeIs(scheme, _retval); } \
-  NS_IMETHOD Clone(nsIURI **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Clone(_retval); } \
-  NS_IMETHOD Resolve(const nsACString & relativePath, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Resolve(relativePath, _retval); } \
-  NS_IMETHOD GetAsciiSpec(nsACString & aAsciiSpec) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAsciiSpec(aAsciiSpec); } \
-  NS_IMETHOD GetAsciiHost(nsACString & aAsciiHost) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAsciiHost(aAsciiHost); } \
-  NS_IMETHOD GetOriginCharset(nsACString & aOriginCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOriginCharset(aOriginCharset); } 
+  NS_SCRIPTABLE NS_IMETHOD GetSpec(nsACString & aSpec) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSpec(aSpec); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSpec(const nsACString & aSpec) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSpec(aSpec); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrePath(nsACString & aPrePath) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrePath(aPrePath); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScheme(nsACString & aScheme) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScheme(aScheme); } \
+  NS_SCRIPTABLE NS_IMETHOD SetScheme(const nsACString & aScheme) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetScheme(aScheme); } \
+  NS_SCRIPTABLE NS_IMETHOD GetUserPass(nsACString & aUserPass) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUserPass(aUserPass); } \
+  NS_SCRIPTABLE NS_IMETHOD SetUserPass(const nsACString & aUserPass) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetUserPass(aUserPass); } \
+  NS_SCRIPTABLE NS_IMETHOD GetUsername(nsACString & aUsername) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUsername(aUsername); } \
+  NS_SCRIPTABLE NS_IMETHOD SetUsername(const nsACString & aUsername) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetUsername(aUsername); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPassword(nsACString & aPassword) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPassword(aPassword); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPassword(const nsACString & aPassword) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPassword(aPassword); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHostPort(nsACString & aHostPort) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHostPort(aHostPort); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHostPort(const nsACString & aHostPort) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHostPort(aHostPort); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHost(nsACString & aHost) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHost(aHost); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHost(const nsACString & aHost) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHost(aHost); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPort(PRInt32 *aPort) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPort(aPort); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPort(PRInt32 aPort) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPort(aPort); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPath(nsACString & aPath) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPath(aPath); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPath(const nsACString & aPath) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPath(aPath); } \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIURI *other, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Equals(other, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SchemeIs(const char *scheme, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->SchemeIs(scheme, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Clone(nsIURI **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Clone(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Resolve(const nsACString & relativePath, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Resolve(relativePath, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAsciiSpec(nsACString & aAsciiSpec) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAsciiSpec(aAsciiSpec); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAsciiHost(nsACString & aAsciiHost) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAsciiHost(aAsciiHost); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOriginCharset(nsACString & aOriginCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOriginCharset(aOriginCharset); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

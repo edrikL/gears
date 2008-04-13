@@ -33,6 +33,8 @@
 #include "gears/base/npapi/np_utils.h"
 #include "gears/base/npapi/scoped_npapi_handles.h"
 
+extern std::string16 g_user_agent;  // Defined in base/npapi/npp_bindings.cc
+
 typedef std::stack<JsCallContext*> JsCallStack;
 static const std::string kJsCallStackKey("base:JsCallStack");
 
@@ -101,10 +103,23 @@ bool BrowserUtils::GetPageLocationUrl(JsContextPtr context,
                          location_url));
 }
 
+bool BrowserUtils::GetUserAgentString(std::string16 *user_agent) {
+  if (g_user_agent.empty()) {
+    return false;  // Not initialized yet.
+  }
+  *user_agent = g_user_agent;
+  return true;
+}
+
 bool BrowserUtils::GetPageSecurityOrigin(JsContextPtr context,
                                          SecurityOrigin *security_origin) {
   std::string16 location;
   if (!GetPageLocationUrl(context, &location))
     return false;
   return security_origin->InitFromUrl(location.c_str());
+}
+
+bool BrowserUtils::IsOnline() {
+  // TODO(mpcomplete): implement me.
+  return true;
 }

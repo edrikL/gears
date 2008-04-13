@@ -32,7 +32,7 @@
 #include "gears/base/common/message_service.h"
 #include "gears/localserver/common/managed_resource_store.h"
 #include "gears/localserver/ie/update_task_ie.h"
-#include "ie/genfiles/interfaces.h" // from OUTDIR
+#include "genfiles/interfaces.h"
 
 //------------------------------------------------------------------------------
 // GearsManagedResourceStore
@@ -96,9 +96,6 @@ class ATL_NO_VTABLE GearsManagedResourceStore
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_lastErrorMessage(
       /* [retval][out] */ BSTR *last_error_message);
 
-#ifdef WINCE
-  // Hold WinCE feature set at version 0.2 for now.
-#else
   virtual /* [propput] */ HRESULT STDMETHODCALLTYPE put_onerror(
       /* [in] */ const VARIANT *in_value);
 
@@ -107,7 +104,6 @@ class ATL_NO_VTABLE GearsManagedResourceStore
 
   virtual /* [propput] */ HRESULT STDMETHODCALLTYPE put_oncomplete(
       /* [in] */ const VARIANT *in_value);
-#endif
 
   virtual HRESULT STDMETHODCALLTYPE checkForUpdate(void);
 

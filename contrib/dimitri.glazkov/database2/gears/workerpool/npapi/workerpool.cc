@@ -27,7 +27,6 @@
 #include <queue>
 
 #include "gears/base/common/atomic_ops.h"
-#include "gears/base/common/js_runner_utils.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/permissions_db.h"
@@ -96,9 +95,9 @@ struct JavaScriptWorkerInfo {
   std::string16 script_text;  // Owner: parent before signal, immutable after
   SecurityOrigin script_origin;  // Owner: parent before signal, immutable after
 
-  ScopedHttpRequestPtr http_request;  // For createWorkerFromUrl()
+  scoped_refptr<HttpRequest> http_request;  // For createWorkerFromUrl()
   scoped_ptr<HttpRequest::ReadyStateListener> http_request_listener;
-  GComPtr<GearsFactory> factory_ref;
+  scoped_refptr<GearsFactory> factory_ref;
   bool is_factory_suspended;
 
   SAFE_HANDLE thread_handle;  // TODO(mpcomplete): FIXME
@@ -155,7 +154,7 @@ void GearsWorkerPool::SetThreadsManager(PoolThreadsManager *manager) {
 void GearsWorkerPool::SetOnmessage(JsCallContext *context) {
   JsRootedCallback *function = NULL;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &function },
+    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &function },
   };
   int argc = context->GetArguments(ARRAYSIZE(argv), argv);
   scoped_ptr<JsRootedCallback> scoped_function(function);
@@ -179,7 +178,7 @@ void GearsWorkerPool::GetOnmessage(JsCallContext *context) {
 void GearsWorkerPool::SetOnerror(JsCallContext *context) {
   JsRootedCallback *function = NULL;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &function },
+    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &function },
   };
   int argc = context->GetArguments(ARRAYSIZE(argv), argv);
   scoped_ptr<JsRootedCallback> scoped_function(function);
@@ -334,7 +333,7 @@ void GearsWorkerPool::SendMessage(JsCallContext *context) {
 
 #ifdef DEBUG
 void GearsWorkerPool::ForceGC(JsCallContext *context) {
-  context->SetException(STRING16(L"Not Implemented"));
+  threads_manager_->ForceGCCurrentThread();
 }
 #endif // DEBUG
 
@@ -509,7 +508,12 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
 
   if (wi->js_runner->InvokeCallback(wi->onerror_handler.get(), argc, argv,
                                     &alloc_js_retval)) {
-    alloc_js_retval->GetAsBool(&js_retval);
+    // Coerce the return value to bool. We typically don't coerce interfaces,
+    // but if the return type of a callback is the wrong type, there is no
+    // convenient place to report that, and it seems better to fail on this
+    // side than rejecting a value without any explanation.
+    JsTokenToBool_Coerce(alloc_js_retval->token(), alloc_js_retval->context(),
+                         &js_retval);
     delete alloc_js_retval;
   }
 
@@ -749,24 +753,22 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
     // setup an incoming message queue, then Mutex::Await for the script to be
     // fetched, before finally pumping messages.
 
-    wi->http_request.reset(HttpRequest::Create());
-    if (!wi->http_request.get()) { return false; }
+    if (!HttpRequest::Create(&wi->http_request)) { return false; }
 
     wi->http_request_listener.reset(new CreateWorkerUrlFetchListener(wi));
     if (!wi->http_request_listener.get()) { return false; }
 
-    HttpRequest *request = wi->http_request.get();  // shorthand
-
-    request->SetOnReadyStateChange(wi->http_request_listener.get());
-    request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
-    request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
+    wi->http_request->SetOnReadyStateChange(wi->http_request_listener.get());
+    wi->http_request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
+    wi->http_request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
 
     bool is_async = true;
-    if (!request->Open(HttpConstants::kHttpGET, url_or_full_script.c_str(),
-                       is_async) ||
-        !request->Send()) {
-      request->SetOnReadyStateChange(NULL);
-      request->Abort();
+    if (!wi->http_request->Open(HttpConstants::kHttpGET,
+                                url_or_full_script.c_str(),
+                                is_async) ||
+        !wi->http_request->Send()) {
+      wi->http_request->SetOnReadyStateChange(NULL);
+      wi->http_request->Abort();
       return false;
     }
 
@@ -883,8 +885,8 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   //
   // js_runner manages the lifetime of these allocated objects.
 
-  GComPtr<GearsFactory> factory(CreateModule<GearsFactory>(js_runner));
-  if (!factory.get()) { return false; }
+  scoped_refptr<GearsFactory> factory;
+  if (!CreateModule<GearsFactory>(js_runner, &factory)) { return false; }
 
   JsContextPtr js_context = js_runner->GetContext();
   if (!factory->InitBaseManually(true,  // is_worker
@@ -894,9 +896,8 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
     return false;
   }
 
-  GComPtr<GearsWorkerPool> workerpool(
-        CreateModule<GearsWorkerPool>(js_runner));
-  if (!workerpool.get()) { return false; }
+  scoped_refptr<GearsWorkerPool> workerpool;
+  if (!CreateModule<GearsWorkerPool>(js_runner, &workerpool)) { return false; }
 
   if (!workerpool->InitBaseManually(true,  // is_worker
                                     js_context,
@@ -906,9 +907,9 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   }
 
 
-  // This Factory always inherits opt-in permissions.
-  factory->is_permission_granted_ = true;
-  factory->is_permission_value_from_user_ = true;
+  // This Factory always inherits opt-in permissions.  (Either ALLOWED_* value
+  // could be used; _PERMANENTLY means getPermission() doesn't have any effect.)
+  factory->permission_state_ = ALLOWED_PERMANENTLY;
   // But for cross-origin workers, object creation is suspended until the
   // callee invokes allowCrossOrigin().
   if (!wi->threads_manager->page_security_origin().IsSameOrigin(
@@ -922,7 +923,7 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
 
 
   // Save an AddRef'd pointer to the factory so we can access it later.
-  wi->factory_ref.reset(factory.release());  // transfer ownership
+  wi->factory_ref = factory;
 
   // Expose created objects as globals in the JS engine.
   if (!js_runner->AddGlobal(kWorkerInsertedFactoryName,
@@ -1041,7 +1042,7 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
   // Bubble the error up to the owning worker's script context. If that
   // worker is also nested, this will cause PoolThreadsManager::HandleError
   // to get called again on that context.
-  ThrowGlobalError(wi->js_runner, msg.text);
+  wi->js_runner->ThrowGlobalError(msg.text);
 }
 
 
@@ -1062,10 +1063,9 @@ void PoolThreadsManager::ShutDown() {
     JavaScriptWorkerInfo *wi = worker_info_[i];
 
     // Cancel any createWorkerFromUrl() network requests that might be pending.
-    HttpRequest *request = wi->http_request.get();
-    if (request) {
-      request->SetOnReadyStateChange(NULL);
-      request->Abort();
+    if (wi->http_request) {
+      wi->http_request->SetOnReadyStateChange(NULL);
+      wi->http_request->Abort();
       // Reset on creation thread for consistency with Firefox implementation.
       wi->http_request.reset(NULL);
     }

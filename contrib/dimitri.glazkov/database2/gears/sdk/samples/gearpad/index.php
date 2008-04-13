@@ -87,9 +87,9 @@ textarea {
   margin-left:2px;
   width:expression(document.body.offsetWidth - 6);
   height:expression(document.body.offsetHeight - 
-		      (document.getElementById("status") ? 
+          (document.getElementById("status") ? 
                        document.getElementById("status").offsetHeight : 0) -
-		      this.offsetTop - 5);
+          this.offsetTop - 5);
 }
 
 iframe {

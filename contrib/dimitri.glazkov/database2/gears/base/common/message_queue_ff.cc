@@ -31,8 +31,13 @@
 
 #include <gecko_sdk/include/nspr.h>  // for PR_*
 #include <gecko_sdk/include/nsCOMPtr.h>
+#if BROWSER_FF3
+#include <gecko_internal/nsThreadUtils.h>
+#else
 #include <gecko_internal/nsIEventQueueService.h>
+#endif
 #include "gears/base/common/message_queue.h"
+#include "gears/base/common/thread_locals.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 struct MessageEvent;
@@ -46,26 +51,97 @@ class FFThreadMessageQueue : public ThreadMessageQueue {
                     int message_type,
                     MessageData *message_data);
  private:
+#if BROWSER_FF3
+  struct MessageEvent : public nsRunnable {
+    MessageEvent(int message_type, MessageData *message_data)
+        : message_type(message_type), message_data(message_data) {}
+
+    NS_IMETHOD Run() {
+      FFThreadMessageQueue::OnReceiveMessageEvent(this);
+      return NS_OK;
+    }
+
+    int message_type;
+    scoped_ptr<MessageData> message_data;
+  };
+#else
   struct MessageEvent {
     MessageEvent(int message_type, MessageData *message_data)
         : message_type(message_type), message_data(message_data) {}
+
     PLEvent pl_event;  // must be first in the struct
     int message_type;
     scoped_ptr<MessageData> message_data;
   };
+#endif
 
   static void *OnReceiveMessageEvent(MessageEvent *event);
   static void OnDestroyMessageEvent(MessageEvent *event);
+
+#if BROWSER_FF3
+  static void ThreadEndHook(void* value);
+  void InitThreadEndHook();
+
+  static std::map<ThreadId, nsCOMPtr<nsIThread> > threads_;
+  static Mutex threads_mutex_;
+#endif
 };
 
 static FFThreadMessageQueue g_instance;
+#if BROWSER_FF3
+std::map<ThreadId, nsCOMPtr<nsIThread> > FFThreadMessageQueue::threads_;
+Mutex FFThreadMessageQueue::threads_mutex_;
+#endif
 
 // static
 ThreadMessageQueue *ThreadMessageQueue::GetInstance() {
   return &g_instance;
 }
 
+#if BROWSER_FF3
+// static
+void FFThreadMessageQueue::ThreadEndHook(void* value) {
+  ThreadId *id = reinterpret_cast<ThreadId*>(value);
+  if (id) {
+    MutexLock lock(&threads_mutex_);
+    threads_.erase(*id);
+    delete id;
+  }
+}
+
+void FFThreadMessageQueue::InitThreadEndHook() {
+  // We use a ThreadLocal to get called when an OS thread terminates
+  // and use that opportunity to remove all observers that remain
+  // registered on that thread.
+  //
+  // We store the thread id in the ThreadLocal variable because on some
+  // OSes (linux), the destructor proc is called from a different thread,
+  // and on others (windows), the destructor proc is called from the
+  // terminating thread.
+  //
+  // Also, we only do this for the actual singleton instance of the
+  // MessageService class as opposed to instances created for unit testing.
+  if (GetInstance() == this) {
+    const std::string kThreadLocalKey("base:ThreadMessageQueue.ThreadEndHook");
+    if (!ThreadLocals::HasValue(kThreadLocalKey)) {
+      ThreadId *id = new ThreadId(GetCurrentThreadId());
+      ThreadLocals::SetValue(kThreadLocalKey, id, &ThreadEndHook);
+    }
+  }
+}
+#endif
+
 bool FFThreadMessageQueue::InitThreadMessageQueue() {
+#if BROWSER_FF3
+  nsCOMPtr<nsIThread> thread;
+  if (NS_FAILED(NS_GetCurrentThread(getter_AddRefs(thread)))) {
+    return false;
+  }
+  InitThreadEndHook();
+
+  MutexLock lock(&threads_mutex_);
+  threads_[GetCurrentThreadId()] = thread;
+#endif
   return true;
 }
 
@@ -90,6 +166,17 @@ void FFThreadMessageQueue::OnDestroyMessageEvent(MessageEvent *event) {
 bool FFThreadMessageQueue::Send(ThreadId thread,
                                 int message_type,
                                 MessageData *message_data) {
+#if BROWSER_FF3
+  MutexLock lock(&threads_mutex_);
+  std::map<ThreadId, nsCOMPtr<nsIThread> >::iterator dest_thread =
+      threads_.find(thread);
+  if (dest_thread == threads_.end()) {
+    delete message_data;
+    return false;
+  }
+  nsCOMPtr<nsIRunnable> event = new MessageEvent(message_type, message_data);
+  dest_thread->second->Dispatch(event, NS_DISPATCH_NORMAL);
+#else
   nsresult nr;
   nsCOMPtr<nsIEventQueueService> event_queue_service =
       do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &nr);
@@ -120,5 +207,6 @@ bool FFThreadMessageQueue::Send(ThreadId thread,
     event->message_data.reset(NULL);
     return false;
   }
+#endif
   return true;
 }

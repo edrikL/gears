@@ -31,17 +31,17 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLIsIndexElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLIsIndexElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLISINDEXELEMENT_IID)
 
   /* readonly attribute nsIDOMHTMLFormElement form; */
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) = 0;
 
   /* attribute DOMString prompt; */
-  NS_IMETHOD GetPrompt(nsAString & aPrompt) = 0;
-  NS_IMETHOD SetPrompt(const nsAString & aPrompt) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPrompt(nsAString & aPrompt) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetPrompt(const nsAString & aPrompt) = 0;
 
 };
 
@@ -49,21 +49,21 @@ class NS_NO_VTABLE nsIDOMHTMLIsIndexElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLISINDEXELEMENT \
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm); \
-  NS_IMETHOD GetPrompt(nsAString & aPrompt); \
-  NS_IMETHOD SetPrompt(const nsAString & aPrompt); 
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm); \
+  NS_SCRIPTABLE NS_IMETHOD GetPrompt(nsAString & aPrompt); \
+  NS_SCRIPTABLE NS_IMETHOD SetPrompt(const nsAString & aPrompt); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLISINDEXELEMENT(_to) \
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return _to GetForm(aForm); } \
-  NS_IMETHOD GetPrompt(nsAString & aPrompt) { return _to GetPrompt(aPrompt); } \
-  NS_IMETHOD SetPrompt(const nsAString & aPrompt) { return _to SetPrompt(aPrompt); } 
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return _to GetForm(aForm); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrompt(nsAString & aPrompt) { return _to GetPrompt(aPrompt); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPrompt(const nsAString & aPrompt) { return _to SetPrompt(aPrompt); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLISINDEXELEMENT(_to) \
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetForm(aForm); } \
-  NS_IMETHOD GetPrompt(nsAString & aPrompt) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrompt(aPrompt); } \
-  NS_IMETHOD SetPrompt(const nsAString & aPrompt) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPrompt(aPrompt); } 
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetForm(aForm); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrompt(nsAString & aPrompt) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrompt(aPrompt); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPrompt(const nsAString & aPrompt) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPrompt(aPrompt); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

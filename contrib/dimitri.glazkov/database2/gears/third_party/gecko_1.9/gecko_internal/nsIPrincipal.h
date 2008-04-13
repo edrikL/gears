@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/caps/idl/nsIPrincipal.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/caps/idl/nsIPrincipal.idl
  */
 
 #ifndef __gen_nsIPrincipal_h__
@@ -20,13 +20,13 @@ class nsIURI; /* forward declaration */
 
 
 /* starting interface:    nsIPrincipal */
-#define NS_IPRINCIPAL_IID_STR "635c413b-47c3-4ee1-87c8-e7919cc65f5a"
+#define NS_IPRINCIPAL_IID_STR "b8268b9a-2403-44ed-81e3-614075c92034"
 
 #define NS_IPRINCIPAL_IID \
-  {0x635c413b, 0x47c3, 0x4ee1, \
-    { 0x87, 0xc8, 0xe7, 0x91, 0x9c, 0xc6, 0x5f, 0x5a }}
+  {0xb8268b9a, 0x2403, 0x44ed, \
+    { 0x81, 0xe3, 0x61, 0x40, 0x75, 0xc9, 0x20, 0x34 }}
 
-class NS_NO_VTABLE nsIPrincipal : public nsISerializable {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIPrincipal : public nsISerializable {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRINCIPAL_IID)
@@ -63,7 +63,7 @@ class NS_NO_VTABLE nsIPrincipal : public nsISerializable {
      * they have the same origin, or have the same certificate fingerprint ID
      */
   /* boolean equals (in nsIPrincipal other); */
-  NS_IMETHOD Equals(nsIPrincipal *other, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIPrincipal *other, PRBool *_retval) = 0;
 
   /**
      * Returns a hash value for the principal.
@@ -120,9 +120,8 @@ class NS_NO_VTABLE nsIPrincipal : public nsISerializable {
   NS_IMETHOD SetDomain(nsIURI * aDomain) = 0;
 
   /**
-     * The origin of this principal's domain, if non-null, or its
-     * codebase URI otherwise. An origin is defined as:
-     * scheme + host + port.
+     * The origin of this principal's codebase URI.
+     * An origin is defined as: scheme + host + port.
      */
   /* [noscript] readonly attribute string origin; */
   NS_IMETHOD GetOrigin(char * *aOrigin) = 0;
@@ -131,14 +130,14 @@ class NS_NO_VTABLE nsIPrincipal : public nsISerializable {
      * Whether this principal is associated with a certificate.
      */
   /* readonly attribute boolean hasCertificate; */
-  NS_IMETHOD GetHasCertificate(PRBool *aHasCertificate) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHasCertificate(PRBool *aHasCertificate) = 0;
 
   /**
      * The fingerprint ID of this principal's certificate.
      * Throws if there is no certificate associated with this principal.
      */
   /* readonly attribute AUTF8String fingerprint; */
-  NS_IMETHOD GetFingerprint(nsACString & aFingerprint) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFingerprint(nsACString & aFingerprint) = 0;
 
   /**
      * The pretty name for the certificate.  This sort of (but not really)
@@ -150,7 +149,7 @@ class NS_NO_VTABLE nsIPrincipal : public nsISerializable {
      * Throws if there is no certificate associated with this principal.
      */
   /* readonly attribute AUTF8String prettyName; */
-  NS_IMETHOD GetPrettyName(nsACString & aPrettyName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPrettyName(nsACString & aPrettyName) = 0;
 
   /**
      * Returns whether the other principal is equal to or weaker than this
@@ -182,6 +181,30 @@ class NS_NO_VTABLE nsIPrincipal : public nsISerializable {
   NS_IMETHOD Subsumes(nsIPrincipal *other, PRBool *_retval) = 0;
 
   /**
+     * Checks whether this principal is allowed to load the network resource
+     * located at the given URI under the same-origin policy. This means that
+     * codebase principals are only allowed to load resources from the same
+     * domain, the system principal is allowed to load anything, and null
+     * principals are not allowed to load anything.
+     *
+     * If the load is allowed this function does nothing. If the load is not
+     * allowed the function throws NS_ERROR_DOM_BAD_URI.
+     *
+     * NOTE: Other policies might override this, such as the Access-Control
+     *       specification.
+     * NOTE: The 'domain' attribute has no effect on the behaviour of this
+     *       function.
+     *
+     *
+     * @param uri    The URI about to be loaded.
+     * @param report If true, will report a warning to the console service
+     *               if the load is not allowed.
+     * @throws NS_ERROR_DOM_BAD_URI if the load is not allowed.
+     */
+  /* [noscript] void checkMayLoad (in nsIURI uri, in boolean report); */
+  NS_IMETHOD CheckMayLoad(nsIURI *uri, PRBool report) = 0;
+
+  /**
      * The subject name for the certificate.  This actually identifies the
      * subject of the certificate.  This may well not be a string that would
      * mean much to a typical user on its own (e.g. it may have a number of
@@ -191,14 +214,14 @@ class NS_NO_VTABLE nsIPrincipal : public nsISerializable {
      * Throws if there is no certificate associated with this principal.
      */
   /* readonly attribute AUTF8String subjectName; */
-  NS_IMETHOD GetSubjectName(nsACString & aSubjectName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSubjectName(nsACString & aSubjectName) = 0;
 
   /**
      * The certificate associated with this principal, if any.  If there isn't
      * one, this will return null.  Getting this attribute never throws.
      */
   /* readonly attribute nsISupports certificate; */
-  NS_IMETHOD GetCertificate(nsISupports * *aCertificate) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCertificate(nsISupports * *aCertificate) = 0;
 
 };
 
@@ -207,7 +230,7 @@ class NS_NO_VTABLE nsIPrincipal : public nsISerializable {
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIPRINCIPAL \
   NS_IMETHOD GetPreferences(char **prefBranch, char **id, char **subjectName, char **grantedList, char **deniedList, PRBool *isTrusted); \
-  NS_IMETHOD Equals(nsIPrincipal *other, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIPrincipal *other, PRBool *_retval); \
   NS_IMETHOD GetHashValue(PRUint32 *aHashValue); \
   NS_IMETHOD GetJSPrincipals(JSContext * cx, JSPrincipals * *_retval); \
   NS_IMETHOD GetSecurityPolicy(void * *aSecurityPolicy); \
@@ -222,17 +245,18 @@ class NS_NO_VTABLE nsIPrincipal : public nsISerializable {
   NS_IMETHOD GetDomain(nsIURI * *aDomain); \
   NS_IMETHOD SetDomain(nsIURI * aDomain); \
   NS_IMETHOD GetOrigin(char * *aOrigin); \
-  NS_IMETHOD GetHasCertificate(PRBool *aHasCertificate); \
-  NS_IMETHOD GetFingerprint(nsACString & aFingerprint); \
-  NS_IMETHOD GetPrettyName(nsACString & aPrettyName); \
+  NS_SCRIPTABLE NS_IMETHOD GetHasCertificate(PRBool *aHasCertificate); \
+  NS_SCRIPTABLE NS_IMETHOD GetFingerprint(nsACString & aFingerprint); \
+  NS_SCRIPTABLE NS_IMETHOD GetPrettyName(nsACString & aPrettyName); \
   NS_IMETHOD Subsumes(nsIPrincipal *other, PRBool *_retval); \
-  NS_IMETHOD GetSubjectName(nsACString & aSubjectName); \
-  NS_IMETHOD GetCertificate(nsISupports * *aCertificate); 
+  NS_IMETHOD CheckMayLoad(nsIURI *uri, PRBool report); \
+  NS_SCRIPTABLE NS_IMETHOD GetSubjectName(nsACString & aSubjectName); \
+  NS_SCRIPTABLE NS_IMETHOD GetCertificate(nsISupports * *aCertificate); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIPRINCIPAL(_to) \
   NS_IMETHOD GetPreferences(char **prefBranch, char **id, char **subjectName, char **grantedList, char **deniedList, PRBool *isTrusted) { return _to GetPreferences(prefBranch, id, subjectName, grantedList, deniedList, isTrusted); } \
-  NS_IMETHOD Equals(nsIPrincipal *other, PRBool *_retval) { return _to Equals(other, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIPrincipal *other, PRBool *_retval) { return _to Equals(other, _retval); } \
   NS_IMETHOD GetHashValue(PRUint32 *aHashValue) { return _to GetHashValue(aHashValue); } \
   NS_IMETHOD GetJSPrincipals(JSContext * cx, JSPrincipals * *_retval) { return _to GetJSPrincipals(cx, _retval); } \
   NS_IMETHOD GetSecurityPolicy(void * *aSecurityPolicy) { return _to GetSecurityPolicy(aSecurityPolicy); } \
@@ -247,17 +271,18 @@ class NS_NO_VTABLE nsIPrincipal : public nsISerializable {
   NS_IMETHOD GetDomain(nsIURI * *aDomain) { return _to GetDomain(aDomain); } \
   NS_IMETHOD SetDomain(nsIURI * aDomain) { return _to SetDomain(aDomain); } \
   NS_IMETHOD GetOrigin(char * *aOrigin) { return _to GetOrigin(aOrigin); } \
-  NS_IMETHOD GetHasCertificate(PRBool *aHasCertificate) { return _to GetHasCertificate(aHasCertificate); } \
-  NS_IMETHOD GetFingerprint(nsACString & aFingerprint) { return _to GetFingerprint(aFingerprint); } \
-  NS_IMETHOD GetPrettyName(nsACString & aPrettyName) { return _to GetPrettyName(aPrettyName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHasCertificate(PRBool *aHasCertificate) { return _to GetHasCertificate(aHasCertificate); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFingerprint(nsACString & aFingerprint) { return _to GetFingerprint(aFingerprint); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrettyName(nsACString & aPrettyName) { return _to GetPrettyName(aPrettyName); } \
   NS_IMETHOD Subsumes(nsIPrincipal *other, PRBool *_retval) { return _to Subsumes(other, _retval); } \
-  NS_IMETHOD GetSubjectName(nsACString & aSubjectName) { return _to GetSubjectName(aSubjectName); } \
-  NS_IMETHOD GetCertificate(nsISupports * *aCertificate) { return _to GetCertificate(aCertificate); } 
+  NS_IMETHOD CheckMayLoad(nsIURI *uri, PRBool report) { return _to CheckMayLoad(uri, report); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSubjectName(nsACString & aSubjectName) { return _to GetSubjectName(aSubjectName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCertificate(nsISupports * *aCertificate) { return _to GetCertificate(aCertificate); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIPRINCIPAL(_to) \
   NS_IMETHOD GetPreferences(char **prefBranch, char **id, char **subjectName, char **grantedList, char **deniedList, PRBool *isTrusted) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPreferences(prefBranch, id, subjectName, grantedList, deniedList, isTrusted); } \
-  NS_IMETHOD Equals(nsIPrincipal *other, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Equals(other, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIPrincipal *other, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Equals(other, _retval); } \
   NS_IMETHOD GetHashValue(PRUint32 *aHashValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHashValue(aHashValue); } \
   NS_IMETHOD GetJSPrincipals(JSContext * cx, JSPrincipals * *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetJSPrincipals(cx, _retval); } \
   NS_IMETHOD GetSecurityPolicy(void * *aSecurityPolicy) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSecurityPolicy(aSecurityPolicy); } \
@@ -272,12 +297,13 @@ class NS_NO_VTABLE nsIPrincipal : public nsISerializable {
   NS_IMETHOD GetDomain(nsIURI * *aDomain) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDomain(aDomain); } \
   NS_IMETHOD SetDomain(nsIURI * aDomain) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDomain(aDomain); } \
   NS_IMETHOD GetOrigin(char * *aOrigin) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOrigin(aOrigin); } \
-  NS_IMETHOD GetHasCertificate(PRBool *aHasCertificate) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHasCertificate(aHasCertificate); } \
-  NS_IMETHOD GetFingerprint(nsACString & aFingerprint) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFingerprint(aFingerprint); } \
-  NS_IMETHOD GetPrettyName(nsACString & aPrettyName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrettyName(aPrettyName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHasCertificate(PRBool *aHasCertificate) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHasCertificate(aHasCertificate); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFingerprint(nsACString & aFingerprint) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFingerprint(aFingerprint); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrettyName(nsACString & aPrettyName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrettyName(aPrettyName); } \
   NS_IMETHOD Subsumes(nsIPrincipal *other, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Subsumes(other, _retval); } \
-  NS_IMETHOD GetSubjectName(nsACString & aSubjectName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSubjectName(aSubjectName); } \
-  NS_IMETHOD GetCertificate(nsISupports * *aCertificate) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCertificate(aCertificate); } 
+  NS_IMETHOD CheckMayLoad(nsIURI *uri, PRBool report) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckMayLoad(uri, report); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSubjectName(nsACString & aSubjectName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSubjectName(aSubjectName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCertificate(nsISupports * *aCertificate) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCertificate(aCertificate); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -423,6 +449,12 @@ NS_IMETHODIMP nsPrincipal::GetPrettyName(nsACString & aPrettyName)
 
 /* [noscript] boolean subsumes (in nsIPrincipal other); */
 NS_IMETHODIMP nsPrincipal::Subsumes(nsIPrincipal *other, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* [noscript] void checkMayLoad (in nsIURI uri, in boolean report); */
+NS_IMETHODIMP nsPrincipal::CheckMayLoad(nsIURI *uri, PRBool report)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

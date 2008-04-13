@@ -63,7 +63,7 @@ interface GearsHttpRequestInterface : IDispatch {
   // Blob support is not ready for prime time yet
 #else
   [propget] HRESULT responseBlob([out, retval] IUnknown **body);
-#endif
+#endif  // OFFICIAL_BUILD
 
   [propget] HRESULT status([out, retval] int *statusCode);
   [propget] HRESULT statusText([out, retval] BSTR *statusText);

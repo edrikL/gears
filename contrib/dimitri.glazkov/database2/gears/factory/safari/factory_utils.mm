@@ -25,13 +25,6 @@
 
 #include "gears/base/safari/string_utils.h"
 #include "gears/factory/safari/factory_utils.h"
-#include "common/genfiles/product_name_constants.h"  // OUTDIR
-
-//------------------------------------------------------------------------------
-GearsFactory::GearsFactory()
-    : is_permission_granted_(false),
-      is_permission_value_from_user_(false) {
-}
 
 //------------------------------------------------------------------------------
 void ShowPermissionsPrompt(const SecurityOrigin &origin,

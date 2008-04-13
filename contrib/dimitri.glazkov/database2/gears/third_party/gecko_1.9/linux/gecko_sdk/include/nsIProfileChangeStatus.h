@@ -102,13 +102,13 @@
   {0x2f977d43, 0x5485, 0x11d4, \
     { 0x87, 0xe2, 0x00, 0x10, 0xa4, 0xe7, 0x5e, 0xf2 }}
 
-class NS_NO_VTABLE nsIProfileChangeStatus : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIProfileChangeStatus : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPROFILECHANGESTATUS_IID)
 
   /* void vetoChange (); */
-  NS_IMETHOD VetoChange(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD VetoChange(void) = 0;
 
   /**
     * Called by a profile change observer when a fatal error
@@ -120,7 +120,7 @@ class NS_NO_VTABLE nsIProfileChangeStatus : public nsISupports {
     *
     */
   /* void changeFailed (); */
-  NS_IMETHOD ChangeFailed(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ChangeFailed(void) = 0;
 
 };
 
@@ -128,18 +128,18 @@ class NS_NO_VTABLE nsIProfileChangeStatus : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIPROFILECHANGESTATUS \
-  NS_IMETHOD VetoChange(void); \
-  NS_IMETHOD ChangeFailed(void); 
+  NS_SCRIPTABLE NS_IMETHOD VetoChange(void); \
+  NS_SCRIPTABLE NS_IMETHOD ChangeFailed(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIPROFILECHANGESTATUS(_to) \
-  NS_IMETHOD VetoChange(void) { return _to VetoChange(); } \
-  NS_IMETHOD ChangeFailed(void) { return _to ChangeFailed(); } 
+  NS_SCRIPTABLE NS_IMETHOD VetoChange(void) { return _to VetoChange(); } \
+  NS_SCRIPTABLE NS_IMETHOD ChangeFailed(void) { return _to ChangeFailed(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIPROFILECHANGESTATUS(_to) \
-  NS_IMETHOD VetoChange(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->VetoChange(); } \
-  NS_IMETHOD ChangeFailed(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ChangeFailed(); } 
+  NS_SCRIPTABLE NS_IMETHOD VetoChange(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->VetoChange(); } \
+  NS_SCRIPTABLE NS_IMETHOD ChangeFailed(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ChangeFailed(); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

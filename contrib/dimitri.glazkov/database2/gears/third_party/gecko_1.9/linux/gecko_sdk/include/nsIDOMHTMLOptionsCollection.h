@@ -31,20 +31,20 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLOptionsCollection : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLOptionsCollection : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLOPTIONSCOLLECTION_IID)
 
   /* attribute unsigned long length; */
-  NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
-  NS_IMETHOD SetLength(PRUint32 aLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetLength(PRUint32 aLength) = 0;
 
   /* nsIDOMNode item (in unsigned long index); */
-  NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) = 0;
 
   /* nsIDOMNode namedItem (in DOMString name); */
-  NS_IMETHOD NamedItem(const nsAString & name, nsIDOMNode **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD NamedItem(const nsAString & name, nsIDOMNode **_retval) = 0;
 
 };
 
@@ -52,24 +52,24 @@ class NS_NO_VTABLE nsIDOMHTMLOptionsCollection : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLOPTIONSCOLLECTION \
-  NS_IMETHOD GetLength(PRUint32 *aLength); \
-  NS_IMETHOD SetLength(PRUint32 aLength); \
-  NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval); \
-  NS_IMETHOD NamedItem(const nsAString & name, nsIDOMNode **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength); \
+  NS_SCRIPTABLE NS_IMETHOD SetLength(PRUint32 aLength); \
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD NamedItem(const nsAString & name, nsIDOMNode **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLOPTIONSCOLLECTION(_to) \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
-  NS_IMETHOD SetLength(PRUint32 aLength) { return _to SetLength(aLength); } \
-  NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) { return _to Item(index, _retval); } \
-  NS_IMETHOD NamedItem(const nsAString & name, nsIDOMNode **_retval) { return _to NamedItem(name, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLength(PRUint32 aLength) { return _to SetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) { return _to Item(index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD NamedItem(const nsAString & name, nsIDOMNode **_retval) { return _to NamedItem(name, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLOPTIONSCOLLECTION(_to) \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
-  NS_IMETHOD SetLength(PRUint32 aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLength(aLength); } \
-  NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Item(index, _retval); } \
-  NS_IMETHOD NamedItem(const nsAString & name, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NamedItem(name, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLength(PRUint32 aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Item(index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD NamedItem(const nsAString & name, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NamedItem(name, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

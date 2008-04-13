@@ -29,12 +29,17 @@
 
 #include "gears/httprequest/ie/httprequest_ie.h"
 
+#include "gears/base/common/js_types.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/ie/activex_utils.h"
-#include "gears/blob/blob_ie.h"
+#include "gears/base/ie/module_wrapper.h"
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+#include "gears/blob/blob.h"
 #include "gears/blob/buffer_blob.h"
+#endif  // not OFFICIAL_BUILD
 #include "gears/localserver/common/http_constants.h"
 
 
@@ -197,14 +202,32 @@ STDMETHODIMP GearsHttpRequest::send(
     RETURN_EXCEPTION(kNotOpenError);
 
   const char16 *post_data_str = NULL;
+#ifdef OFFICIAL_BUILD
   if (ActiveXUtils::OptionalVariantIsPresent(data)) {
     if (data->vt != VT_BSTR) {
       RETURN_EXCEPTION(STRING16(L"Data parameter must be a string."));
     }
     post_data_str = data->bstrVal;
   }
+#else  // !OFFICIAL_BUILD
+  scoped_refptr<BlobInterface> post_data_blob;
+  if (ActiveXUtils::OptionalVariantIsPresent(data)) {
+    if (data->vt == VT_BSTR) {
+      post_data_str = data->bstrVal;
+    } else if (data->vt == VT_DISPATCH) {
+      ModuleImplBaseClass *blob_module;
+      if (JsTokenToDispatcherModule(NULL, NULL, *data, &blob_module) &&
+          GearsBlob::kModuleName == blob_module->get_module_name()) {
+        static_cast<GearsBlob*>(blob_module)->GetContents(&post_data_blob);
+      }
+    }
+    if (!post_data_str && !post_data_blob) {
+      RETURN_EXCEPTION(STRING16(L"Data parameter must be a string or blob."));
+    }
+  }
+#endif  // !OFFICIAL_BUILD
 
-  HttpRequest *request_being_sent = request_;
+  scoped_refptr<HttpRequest> request_being_sent = request_;
 
   bool ok = false;
   if (post_data_str && post_data_str[0]) {
@@ -213,6 +236,14 @@ STDMETHODIMP GearsHttpRequest::send(
                                  HttpConstants::kMimeTextPlain);
     }
     ok = request_->SendString(post_data_str);
+#ifndef OFFICIAL_BUILD
+  } else if (post_data_blob) {
+    if (!content_type_header_was_set_) {
+      request_->SetRequestHeader(HttpConstants::kContentTypeHeader,
+                                 HttpConstants::kMimeApplicationOctetStream);
+    }
+    ok = request_->SendBlob(post_data_blob.get());
+#endif  // !OFFICIAL_BUILD
   } else {
     ok = request_->Send();
   }
@@ -332,9 +363,8 @@ STDMETHODIMP GearsHttpRequest::get_responseText(
   RETURN_NORMAL();
 }
 
-
 #ifdef OFFICIAL_BUILD
-  // Blob support is not ready for prime time yet
+// Blob support is not ready for prime time yet
 #else
 STDMETHODIMP GearsHttpRequest::get_responseBlob( 
       /* [retval][out] */ IUnknown **blob) {
@@ -343,13 +373,8 @@ STDMETHODIMP GearsHttpRequest::get_responseBlob(
                               L"is complete"));
 
   if (response_blob_ == NULL) {
-    // Not already cached - make a new blob and copy the contents in
-    CComObject<GearsBlob> *blob_com;
-    HRESULT hr = CComObject<GearsBlob>::CreateInstance(&blob_com);
-    if (FAILED(hr)) {
-      RETURN_EXCEPTION(STRING16(L"Could not create GearsBlob."));
-    }
-    scoped_ptr<CComObject<GearsBlob> > blob_ptr(blob_com);
+    scoped_refptr<GearsBlob> gears_blob;
+    CreateModule<GearsBlob>(GetJsRunner(), &gears_blob);
     if (IsValidResponse()) {
       // GetResponseBody() destroys the data, so get a copy for response_text_
       if (response_text_ == NULL) {
@@ -359,18 +384,20 @@ STDMETHODIMP GearsHttpRequest::get_responseBlob(
 
       std::vector<uint8> *body = request_->GetResponseBody();
       if (body) {
-        blob_ptr->Reset(new BufferBlob(body));
+        gears_blob->Reset(new BufferBlob(body));
       }
     }
     // else blob_ptr stays empty
 
-    if (!blob_ptr->InitBaseFromSibling(this)) {
+    if (!gears_blob->InitBaseFromSibling(this)) {
       RETURN_EXCEPTION(STRING16(L"Initializing base class failed."));
     }
-    response_blob_ = blob_ptr.release();
+    response_blob_.reset(gears_blob.get());
   }
 
-  *blob = response_blob_;
+  IDispatch *dispatch =
+      static_cast<ModuleWrapper*>(response_blob_->GetWrapper());
+  *blob = static_cast<IUnknown*>(dispatch);
   (*blob)->AddRef();
   RETURN_NORMAL();
 }
@@ -483,7 +510,7 @@ HttpRequest::ReadyState GearsHttpRequest::GetState() {
 
 void GearsHttpRequest::CreateRequest() {
   ReleaseRequest();
-  request_ = HttpRequest::Create();
+  HttpRequest::Create(&request_);
   request_->SetOnReadyStateChange(this);
   request_->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
   request_->SetRedirectBehavior(HttpRequest::FOLLOW_WITHIN_ORIGIN);
@@ -493,10 +520,12 @@ void GearsHttpRequest::CreateRequest() {
 void GearsHttpRequest::ReleaseRequest() {
   if (request_) {
     request_->SetOnReadyStateChange(NULL);
-    request_->ReleaseReference();
     request_ = NULL;
     response_text_.reset(NULL);
-    response_blob_ = NULL;
+#ifndef OFFICIAL_BUILD
+    // The blob API has not been finalized for official builds
+    response_blob_.reset(NULL);
+#endif  // not OFFICIAL_BUILD
   }
 }
 

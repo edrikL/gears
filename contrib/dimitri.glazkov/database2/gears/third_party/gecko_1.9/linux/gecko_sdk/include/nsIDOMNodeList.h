@@ -22,7 +22,7 @@
   {0xa6cf907d, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMNodeList : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMNodeList : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMNODELIST_IID)
@@ -39,10 +39,10 @@ class NS_NO_VTABLE nsIDOMNodeList : public nsISupports {
  * @status FROZEN
  */
   /* nsIDOMNode item (in unsigned long index); */
-  NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) = 0;
 
   /* readonly attribute unsigned long length; */
-  NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
 
 };
 
@@ -50,18 +50,18 @@ class NS_NO_VTABLE nsIDOMNodeList : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMNODELIST \
-  NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval); \
-  NS_IMETHOD GetLength(PRUint32 *aLength); 
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMNODELIST(_to) \
-  NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) { return _to Item(index, _retval); } \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } 
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) { return _to Item(index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMNODELIST(_to) \
-  NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Item(index, _retval); } \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } 
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Item(index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

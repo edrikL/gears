@@ -69,9 +69,16 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_sdk/include/nsServiceManagerUtils.h> // for NS_IMPL_*
                                                      // and NS_INTERFACE_*
 #include <gecko_sdk/include/nsCOMPtr.h>
+#if BROWSER_FF2
+#include <gecko_sdk/include/pratom.h>
+#endif
 #include <gecko_internal/jsapi.h>
 #include <gecko_internal/nsIDOMClassInfo.h> // for *_DOM_CLASSINFO
+#if BROWSER_FF3
+#include <gecko_internal/nsThreadUtils.h> // for event loop
+#else
 #include <gecko_internal/nsIEventQueueService.h> // for event loop
+#endif
 #include <gecko_internal/nsIJSContextStack.h>
 #include <gecko_internal/nsIJSRuntimeService.h>
 #include <gecko_internal/nsIScriptContext.h>
@@ -79,12 +86,12 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 
 #include "gears/workerpool/firefox/workerpool.h"
 
-#include "ff/genfiles/database.h"
-#include "ff/genfiles/localserver.h"
+#include "genfiles/database.h"
+#include "genfiles/localserver.h"
+#include "gears/base/common/async_router.h"
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/js_runner.h"
-#include "gears/base/common/js_runner_utils.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/common/url_utils.h"
@@ -117,14 +124,20 @@ const nsCID kGearsWorkerPoolClassId = {0x0a15a787, 0x9aef, 0x4a5e, {0x92, 0x7d,
 // Message container.
 //
 
-struct Message {
-  std::string16 text;
-  int sender;
-  SecurityOrigin origin;
+struct WorkerPoolMessage {
+  scoped_ptr<MarshaledJsToken> body_;
+  std::string16 text_;
+  int sender_;
+  SecurityOrigin origin_;
 
-  Message(const std::string16 &t, int s, const SecurityOrigin &o)
-      : text(t), sender(s), origin(o) { }
-  Message() : sender(-1) { }
+  WorkerPoolMessage(MarshaledJsToken *body,
+                    const std::string16 &text,
+                    int sender,
+                    const SecurityOrigin &origin)
+      : body_(body),
+        text_(text),
+        sender_(sender),
+        origin_(origin) {}
 };
 
 
@@ -141,6 +154,14 @@ struct JavaScriptWorkerInfo {
         script_signalled(false), script_ok(false), http_request(NULL),
         is_factory_suspended(false), thread_pointer(NULL) {}
 
+  ~JavaScriptWorkerInfo() {
+    while (!message_queue.empty()) {
+      WorkerPoolMessage *wpm = message_queue.front();
+      message_queue.pop();
+      delete wpm;
+    }
+  }
+
   //
   // These fields are used for all workers in pool (parent + children).
   //
@@ -149,8 +170,16 @@ struct JavaScriptWorkerInfo {
   scoped_ptr<JsRootedCallback> onmessage_handler;
   scoped_ptr<JsRootedCallback> onerror_handler;
 
-  nsCOMPtr<nsIEventQueue> thread_event_queue;
-  std::queue<Message> message_queue;
+  // thread_events_handle holds a pointer to an object which holds the thread's
+  // event queue.  This is different in FF2 and FF3, because the event queue
+  // was moved onto the nsIThread object in FF3.
+#if BROWSER_FF3
+  nsCOMPtr<nsIThread> thread_events_handle;
+#else
+  nsCOMPtr<nsIEventQueue> thread_events_handle;
+#endif
+  ThreadId thread_id;
+  std::queue<WorkerPoolMessage*> message_queue;
 
   bool is_invoking_error_handler;  // prevents recursive onerror
 
@@ -167,7 +196,7 @@ struct JavaScriptWorkerInfo {
   std::string16 script_text;  // Owner: parent before signal, immutable after
   SecurityOrigin script_origin;  // Owner: parent before signal, immutable after
 
-  ScopedHttpRequestPtr http_request;  // For createWorkerFromUrl()
+  scoped_refptr<HttpRequest> http_request;  // For createWorkerFromUrl()
   scoped_ptr<HttpRequest::ReadyStateListener> http_request_listener;
   nsCOMPtr<GearsFactory> factory_ref;
   bool is_factory_suspended;
@@ -374,7 +403,7 @@ NS_IMETHODIMP GearsWorkerPool::AllowCrossOrigin() {
   RETURN_NORMAL();
 }
 
-NS_IMETHODIMP GearsWorkerPool::SendMessage(//const nsAString &message,
+NS_IMETHODIMP GearsWorkerPool::SendMessage(//const variant &message_body,
                                            //PRInt32 dest_worker_id
                                           ) {
   Initialize();
@@ -385,8 +414,6 @@ NS_IMETHODIMP GearsWorkerPool::SendMessage(//const nsAString &message,
 
   if (js_params.GetCount(false) < 1) {
     RETURN_EXCEPTION(STRING16(L"The message parameter is required."));
-  } else if (!js_params.GetAsString(0, &text)) {
-    RETURN_EXCEPTION(STRING16(L"The message parameter must be a string."));
   }
 
   if (js_params.GetCount(false) < 2) {
@@ -395,14 +422,33 @@ NS_IMETHODIMP GearsWorkerPool::SendMessage(//const nsAString &message,
     RETURN_EXCEPTION(STRING16(L"The destId parameter must be an int."));
   }
 
-  bool succeeded = threads_manager_->PutPoolMessage(text.c_str(),
+  std::string16 error;
+
+  // Here, we marshal the first argument, with the extra caveat that you can't
+  // send a JavaScript null or undefined as a message (although you can send an
+  // array containing nulls and undefineds).
+  MarshaledJsToken *mjt = NULL;
+  JsParamType first_arg_type = js_params.GetType(0);
+  if (first_arg_type == JSPARAM_NULL ||
+      first_arg_type == JSPARAM_UNDEFINED ||
+      !js_params.GetAsMarshaledJsToken(0, &mjt, &error)) {
+    RETURN_EXCEPTION(error.empty()
+        ? STRING16(L"The message parameter has an invalid type.")
+        : error.c_str());
+  }
+  if (js_params.GetType(0) != JSPARAM_STRING16 ||
+      !js_params.GetAsString(0, &text)) {
+    text = STRING16(L"");
+  }
+
+  bool succeeded = threads_manager_->PutPoolMessage(mjt,
+                                                    text.c_str(),
                                                     dest_worker_id,
                                                     EnvPageSecurityOrigin());
   if (!succeeded) {
-    std::string16 error(STRING16(L"Worker "));
+    error = STRING16(L"Worker ");
     error += IntegerToString16(dest_worker_id);
     error += STRING16(L" does not exist.");
-
     RETURN_EXCEPTION(error.c_str());
   }
   RETURN_NORMAL();
@@ -452,7 +498,7 @@ enum ThreadsEventType {
   EVENT_TYPE_ERROR = 1
 };
 
-struct ThreadsEvent {
+struct ThreadsEvent : public AsyncFunctor {
   ThreadsEvent(JavaScriptWorkerInfo *worker_info, ThreadsEventType event_type)
       : wi(worker_info), type(event_type) {
     wi->threads_manager->AddWorkerRef();
@@ -462,10 +508,16 @@ struct ThreadsEvent {
     wi->threads_manager->ReleaseWorkerRef();
   }
 
-  PLEvent e; // PLEvent must be first field
+  virtual void Run();
+
   JavaScriptWorkerInfo *wi;
   ThreadsEventType type;
 };
+
+// Called when the event is received.
+void ThreadsEvent::Run() {
+  PoolThreadsManager::OnReceiveThreadsEvent(this);
+}
 
 
 // Called when the event is received.
@@ -480,30 +532,23 @@ void* PoolThreadsManager::OnReceiveThreadsEvent(ThreadsEvent *event) {
   }
 
   // Retrieve message information.
-  Message msg;
-  if (!wi->threads_manager->GetPoolMessage(&msg)) {
+  scoped_ptr<WorkerPoolMessage> msg(wi->threads_manager->GetPoolMessage());
+  if (!msg.get()) {
     return NULL;
   }
 
   if (event->type == EVENT_TYPE_MESSAGE) {
-    wi->threads_manager->ProcessMessage(wi, msg);
+    wi->threads_manager->ProcessMessage(wi, *msg);
   } else {
     assert(event->type == EVENT_TYPE_ERROR);
-    wi->threads_manager->ProcessError(wi, msg);
+    wi->threads_manager->ProcessError(wi, *msg);
   }
 
   return NULL; // retval only matters for PostSynchronousEvent()
 }
 
-
-// Called when the event has been processed.
-static void OnDestroyThreadsEvent(ThreadsEvent *event) {
-  delete event;
-}
-
-
 void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
-                                        const Message &msg) {
+                                        const WorkerPoolMessage &msg) {
   assert(wi);
   if (wi->onmessage_handler.get() &&
       !JsTokenIsNullOrUndefined(wi->onmessage_handler->token())) {
@@ -527,14 +572,18 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
       return;
     }
 
-    onmessage_param->SetPropertyString(STRING16(L"text"), msg.text);
-    onmessage_param->SetPropertyInt(STRING16(L"sender"), msg.sender);
-    onmessage_param->SetPropertyString(STRING16(L"origin"), msg.origin.url());
+    onmessage_param->SetPropertyString(STRING16(L"text"), msg.text_);
+    onmessage_param->SetPropertyInt(STRING16(L"sender"), msg.sender_);
+    onmessage_param->SetPropertyString(STRING16(L"origin"), msg.origin_.url());
+    JsToken token;
+    if (msg.body_.get() && msg.body_->Unmarshal(wi->js_runner, &token)) {
+      onmessage_param->SetProperty(STRING16(L"body"), token);
+    }
 
     const int argc = 3;
     JsParamToSend argv[argc] = {
-      { JSPARAM_STRING16, &msg.text },
-      { JSPARAM_INT, &msg.sender },
+      { JSPARAM_STRING16, &msg.text_ },
+      { JSPARAM_INT, &msg.sender_ },
       { JSPARAM_OBJECT, onmessage_param.get() }
     };
     wi->js_runner->InvokeCallback(wi->onmessage_handler.get(), argc, argv,
@@ -555,7 +604,7 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
 
 
 void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
-                                      const Message &msg) {
+                                      const WorkerPoolMessage &msg) {
 #ifdef DEBUG
   {
     // We only expect to be receive errors on the owning worker, all workers
@@ -568,7 +617,7 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
   // Bubble the error up to the owning worker's script context. If that
   // worker is also nested, this will cause PoolThreadsManager::HandleError
   // to get called again on that context.
-  ThrowGlobalError(wi->js_runner, msg.text);
+  wi->js_runner->ThrowGlobalError(msg.text_);
 }
 
 
@@ -674,15 +723,12 @@ void PoolThreadsManager::HandleError(const JsErrorInfo &error_info) {
     JavaScriptWorkerInfo *dest_wi = worker_info_[kOwningWorkerId];  // parent
 
     // Copy the message to an internal queue.
-    dest_wi->message_queue.push(Message(text, src_worker_id,
-                                        dest_wi->script_origin));
+    dest_wi->message_queue.push(new WorkerPoolMessage(
+        NULL, text, src_worker_id, dest_wi->script_origin));
     // Notify the receiving worker.
-    ThreadsEvent *event = new ThreadsEvent(dest_wi, EVENT_TYPE_ERROR);
-    dest_wi->thread_event_queue->InitEvent(
-        &event->e, nsnull, // event, owner
-        reinterpret_cast<PLHandleEventProc>(OnReceiveThreadsEvent),
-        reinterpret_cast<PLDestroyEventProc>(OnDestroyThreadsEvent));
-    dest_wi->thread_event_queue->PostEvent(&event->e);
+    AsyncRouter::GetInstance()->CallAsync(
+        dest_wi->thread_id,
+        new ThreadsEvent(dest_wi, EVENT_TYPE_ERROR));
   }
 }
 
@@ -723,7 +769,12 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
 
   if (wi->js_runner->InvokeCallback(wi->onerror_handler.get(), argc, argv,
                                     &alloc_js_retval)) {
-    alloc_js_retval->GetAsBool(&js_retval);
+    // Coerce the return value to bool. We typically don't coerce interfaces,
+    // but if the return type of a callback is the wrong type, there is no
+    // convenient place to report that, and it seems better to fail on this
+    // side than rejecting a value without any explanation.
+    JsTokenToBool_Coerce(alloc_js_retval->token(), alloc_js_retval->context(),
+                         &js_retval);
     delete alloc_js_retval;
   }
 
@@ -731,7 +782,8 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
 }
 
 
-bool PoolThreadsManager::PutPoolMessage(const char16 *text,
+bool PoolThreadsManager::PutPoolMessage(MarshaledJsToken* mjt,
+                                        const char16 *text,
                                         int dest_worker_id,
                                         const SecurityOrigin &src_origin) {
   MutexLock lock(&mutex_);
@@ -745,25 +797,22 @@ bool PoolThreadsManager::PutPoolMessage(const char16 *text,
   }
   JavaScriptWorkerInfo *dest_wi = worker_info_[dest_worker_id];
   if (NULL == dest_wi || NULL == dest_wi->threads_manager ||
-      NULL == dest_wi->thread_event_queue) {
+      NULL == dest_wi->thread_events_handle) {
     return false;
   }
 
   // Copy the message to an internal queue.
-  dest_wi->message_queue.push(Message(text, src_worker_id, src_origin));
+  dest_wi->message_queue.push(
+      new WorkerPoolMessage(mjt, text, src_worker_id, src_origin));
   // Notify the receiving worker.
-  ThreadsEvent *event = new ThreadsEvent(dest_wi, EVENT_TYPE_MESSAGE);
-  dest_wi->thread_event_queue->InitEvent(
-      &event->e, nsnull, // event, owner
-      reinterpret_cast<PLHandleEventProc>(OnReceiveThreadsEvent),
-      reinterpret_cast<PLDestroyEventProc>(OnDestroyThreadsEvent));
-  dest_wi->thread_event_queue->PostEvent(&event->e);
-
-  return true; // succeeded
+  AsyncRouter::GetInstance()->CallAsync(
+      dest_wi->thread_id,
+      new ThreadsEvent(dest_wi, EVENT_TYPE_MESSAGE));
+  return true;
 }
 
 
-bool PoolThreadsManager::GetPoolMessage(Message *msg) {
+WorkerPoolMessage *PoolThreadsManager::GetPoolMessage() {
   MutexLock lock(&mutex_);
 
   int current_worker_id = GetCurrentPoolWorkerId();
@@ -771,9 +820,9 @@ bool PoolThreadsManager::GetPoolMessage(Message *msg) {
 
   assert(!wi->message_queue.empty());
 
-  *msg = wi->message_queue.front();
+  WorkerPoolMessage *msg = wi->message_queue.front();
   wi->message_queue.pop();
-  return true;
+  return msg;
 }
 
 
@@ -782,10 +831,11 @@ bool PoolThreadsManager::InitWorkerThread(JavaScriptWorkerInfo *wi) {
 
   // Sanity-check that we're not calling this twice. Doing so would mean we
   // created multiple hwnds for the same worker, which would be bad.
-  assert(!wi->thread_event_queue);
+  assert(!wi->thread_events_handle);
 
   // Register this worker so that it can be looked up by OS thread ID.
-  PRThread *os_thread_id = PR_GetCurrentThread();
+  ThreadId os_thread_id =
+      ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
   worker_id_to_os_thread_id_.push_back(os_thread_id);
 
   // Also get the event queue for this worker.
@@ -799,6 +849,12 @@ bool PoolThreadsManager::InitWorkerThread(JavaScriptWorkerInfo *wi) {
   // but child workers will not.
   nsresult nr;
 
+  wi->thread_id = os_thread_id;
+#if BROWSER_FF3
+  nsIThread *thread;
+  nr = NS_GetCurrentThread(&thread);
+  wi->thread_events_handle = thread;
+#else
   nsCOMPtr<nsIEventQueueService> event_queue_service =
       do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &nr);
   if (NS_FAILED(nr)) {
@@ -821,7 +877,9 @@ bool PoolThreadsManager::InitWorkerThread(JavaScriptWorkerInfo *wi) {
     }
   }
 
-  wi->thread_event_queue = event_queue;
+  wi->thread_events_handle = event_queue;
+#endif
+  ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
   return true;
 }
 
@@ -924,7 +982,7 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
 
     // If the creating thread didn't intialize properly it doesn't have a
     // message queue, so there's no point in letting it start a new thread.
-    if (!worker_info_[GetCurrentPoolWorkerId()]->thread_event_queue) {
+    if (!worker_info_[GetCurrentPoolWorkerId()]->thread_events_handle) {
       return false;
     }
 
@@ -955,27 +1013,25 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
     // setup an incoming message queue, then Mutex::Await for the script to be
     // fetched, before finally pumping messages.
 
-    wi->http_request.reset(HttpRequest::Create());
-    if (!wi->http_request.get()) { return false; }
+    if (!HttpRequest::Create(&wi->http_request)) { return false; }
     
     wi->http_request_listener.reset(new CreateWorkerUrlFetchListener(wi));
     if (!wi->http_request_listener.get()) { return false; }
 
-    HttpRequest *request = wi->http_request.get();  // shorthand
-
-    request->SetOnReadyStateChange(wi->http_request_listener.get());
-    request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
-    request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
+    wi->http_request->SetOnReadyStateChange(wi->http_request_listener.get());
+    wi->http_request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
+    wi->http_request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
 
     std::string16 url;
     ResolveAndNormalize(page_security_origin_.full_url().c_str(),
                   url_or_full_script, &url);
 
     bool is_async = true;
-    if (!request->Open(HttpConstants::kHttpGET, url.c_str(), is_async) ||
-        !request->Send()) {
-      request->SetOnReadyStateChange(NULL);
-      request->Abort();
+    if (!wi->http_request->Open(HttpConstants::kHttpGET, url.c_str(),
+                                is_async) ||
+        !wi->http_request->Send()) {
+      wi->http_request->SetOnReadyStateChange(NULL);
+      wi->http_request->Abort();
       return false;
     }
 
@@ -1048,12 +1104,18 @@ void PoolThreadsManager::JavaScriptThreadEntry(void *args) {
 
     // Pump messages. We do this whether or not the initial script evaluation
     // succeeded (just like in browsers).
-    assert(wi->thread_event_queue);
+    assert(wi->thread_events_handle);
     while (1) {
+#if BROWSER_FF3
+      if (!NS_ProcessNextEvent(wi->thread_events_handle)) {
+        break;
+      }
+#else
       // (based on sample code in /mozilla/netwerk/test/... [sic])
       PLEvent *event;
-      wi->thread_event_queue->WaitForEvent(&event);
-      wi->thread_event_queue->HandleEvent(event);
+      wi->thread_events_handle->WaitForEvent(&event);
+      wi->thread_events_handle->HandleEvent(event);
+#endif
       // Check flag after handling, otherwise last event never gets deleted.
       if (wi->threads_manager->is_shutting_down_) {
         break;
@@ -1114,9 +1176,9 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   }
 
 
-  // This Factory always inherits opt-in permissions.
-  factory->is_permission_granted_ = true;
-  factory->is_permission_value_from_user_ = true;
+  // This Factory always inherits opt-in permissions.  (Either ALLOWED_* value
+  // could be used; _PERMANENTLY means getPermission() doesn't have any effect.)
+  factory->permission_state_ = ALLOWED_PERMANENTLY;
   // But for cross-origin workers, object creation is suspended until the
   // callee invokes allowCrossOrigin().
   if (!wi->threads_manager->page_security_origin().IsSameOrigin(
@@ -1174,10 +1236,9 @@ void PoolThreadsManager::ShutDown() {
     JavaScriptWorkerInfo *wi = worker_info_[i];
 
     // Cancel any createWorkerFromUrl() network requests that might be pending.
-    HttpRequest *request = wi->http_request.get();
-    if (request) {
-      request->SetOnReadyStateChange(NULL);
-      request->Abort();
+    if (wi->http_request.get()) {
+      wi->http_request->SetOnReadyStateChange(NULL);
+      wi->http_request->Abort();
       // HttpRequest is not threadsafe, must destroy from same thread that
       // created it (which is always the owning thread for now, since we cannot
       // yet make requests from background threads).
@@ -1185,7 +1246,7 @@ void PoolThreadsManager::ShutDown() {
     }
 
     // If the worker is a created thread...
-    if (wi->thread_pointer && wi->thread_event_queue) {
+    if (wi->thread_pointer && wi->thread_events_handle) {
       // Ensure the thread isn't waiting on 'script_signalled'.
       wi->script_mutex.Lock();
       wi->script_signalled = true;
@@ -1193,12 +1254,9 @@ void PoolThreadsManager::ShutDown() {
 
       // Ensure the thread sees 'is_shutting_down_' by sending a dummy message,
       // in case it is blocked waiting for messages.
-      ThreadsEvent *event = new ThreadsEvent(wi, EVENT_TYPE_MESSAGE);
-      wi->thread_event_queue->InitEvent(
-          &event->e, nsnull, // event, owner
-          reinterpret_cast<PLHandleEventProc>(OnReceiveThreadsEvent),
-          reinterpret_cast<PLDestroyEventProc>(OnDestroyThreadsEvent));
-      wi->thread_event_queue->PostEvent(&event->e);
+      AsyncRouter::GetInstance()->CallAsync(
+          wi->thread_id,
+          new ThreadsEvent(wi, EVENT_TYPE_MESSAGE));
 
       // TODO(cprince): Improve handling of a worker spinning in a JS busy loop.
       // Ideas: (1) set it to the lowest thread priority level, or (2) interrupt

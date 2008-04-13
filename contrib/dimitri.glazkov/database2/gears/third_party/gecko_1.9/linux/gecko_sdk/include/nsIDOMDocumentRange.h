@@ -31,13 +31,13 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMDocumentRange : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMDocumentRange : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMDOCUMENTRANGE_IID)
 
   /* nsIDOMRange createRange (); */
-  NS_IMETHOD CreateRange(nsIDOMRange **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateRange(nsIDOMRange **_retval) = 0;
 
 };
 
@@ -45,15 +45,15 @@ class NS_NO_VTABLE nsIDOMDocumentRange : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMDOCUMENTRANGE \
-  NS_IMETHOD CreateRange(nsIDOMRange **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD CreateRange(nsIDOMRange **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMDOCUMENTRANGE(_to) \
-  NS_IMETHOD CreateRange(nsIDOMRange **_retval) { return _to CreateRange(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD CreateRange(nsIDOMRange **_retval) { return _to CreateRange(_retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMDOCUMENTRANGE(_to) \
-  NS_IMETHOD CreateRange(nsIDOMRange **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateRange(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD CreateRange(nsIDOMRange **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateRange(_retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

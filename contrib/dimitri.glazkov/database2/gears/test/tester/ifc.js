@@ -93,6 +93,21 @@ IFC.prototype.getUserAgent = function() {
 }
 
 /**
+ * Does this browser support workers?
+ * Temporary workaround for Safari.
+ */
+// TODO(playmobil): SAFARI-TEMP remove once workers are added to Safari.
+IFC.prototype.browserSupportsWorkers = function() {
+  if (google.gears.workerPool) {
+    return true;
+  } else {
+    var isSafari = navigator.userAgent.indexOf('Safari') > -1 &&
+                   navigator.userAgent.indexOf('OS X') > -1;
+    return !isSafari;
+  }
+}
+
+/**
  * Returns true if gears is installed.
  */
 IFC.prototype.isInstalled = function() {

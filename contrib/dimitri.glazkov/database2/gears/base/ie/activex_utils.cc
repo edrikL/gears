@@ -181,6 +181,26 @@ HRESULT ActiveXUtils::GetScriptDispatch(IUnknown *site,
 }
 
 
+HRESULT ActiveXUtils::GetDispatchPropertyNames(
+    IDispatch *dispatch, std::vector<std::string16> *out) {
+  CComQIPtr<IDispatchEx> dispatchex = dispatch;
+  if (!dispatchex)
+    return E_NOINTERFACE;
+
+  HRESULT hr;
+  BSTR bstrName;
+  DISPID dispid;
+  hr = dispatchex->GetNextDispID(fdexEnumDefault, DISPID_STARTENUM, &dispid);
+  while (hr == NOERROR) {
+    hr = dispatchex->GetMemberName(dispid, &bstrName);
+    out->push_back(std::string16(bstrName));
+    SysFreeString(bstrName);
+    hr = dispatchex->GetNextDispID(fdexEnumDefault, dispid, &dispid);
+  }
+  return S_OK;
+}
+
+
 HRESULT ActiveXUtils::GetDispatchProperty(IDispatch *dispatch,
                                           DISPID dispid,
                                           VARIANT *value) {

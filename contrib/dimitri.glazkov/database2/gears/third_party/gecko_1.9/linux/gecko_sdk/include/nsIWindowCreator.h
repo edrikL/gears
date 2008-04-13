@@ -24,7 +24,7 @@ class nsIWebBrowserChrome; /* forward declaration */
   {0x30465632, 0xa777, 0x44cc, \
     { 0x90, 0xf9, 0x81, 0x45, 0x47, 0x5e, 0xf9, 0x99 }}
 
-class NS_NO_VTABLE nsIWindowCreator : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIWindowCreator : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWINDOWCREATOR_IID)
@@ -39,7 +39,7 @@ class NS_NO_VTABLE nsIWindowCreator : public nsISupports {
       @return the new window
   */
   /* nsIWebBrowserChrome createChromeWindow (in nsIWebBrowserChrome parent, in PRUint32 chromeFlags); */
-  NS_IMETHOD CreateChromeWindow(nsIWebBrowserChrome *parent, PRUint32 chromeFlags, nsIWebBrowserChrome **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateChromeWindow(nsIWebBrowserChrome *parent, PRUint32 chromeFlags, nsIWebBrowserChrome **_retval) = 0;
 
 };
 
@@ -47,15 +47,15 @@ class NS_NO_VTABLE nsIWindowCreator : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWINDOWCREATOR \
-  NS_IMETHOD CreateChromeWindow(nsIWebBrowserChrome *parent, PRUint32 chromeFlags, nsIWebBrowserChrome **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD CreateChromeWindow(nsIWebBrowserChrome *parent, PRUint32 chromeFlags, nsIWebBrowserChrome **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIWINDOWCREATOR(_to) \
-  NS_IMETHOD CreateChromeWindow(nsIWebBrowserChrome *parent, PRUint32 chromeFlags, nsIWebBrowserChrome **_retval) { return _to CreateChromeWindow(parent, chromeFlags, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD CreateChromeWindow(nsIWebBrowserChrome *parent, PRUint32 chromeFlags, nsIWebBrowserChrome **_retval) { return _to CreateChromeWindow(parent, chromeFlags, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIWINDOWCREATOR(_to) \
-  NS_IMETHOD CreateChromeWindow(nsIWebBrowserChrome *parent, PRUint32 chromeFlags, nsIWebBrowserChrome **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateChromeWindow(parent, chromeFlags, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD CreateChromeWindow(nsIWebBrowserChrome *parent, PRUint32 chromeFlags, nsIWebBrowserChrome **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateChromeWindow(parent, chromeFlags, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

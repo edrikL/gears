@@ -192,7 +192,7 @@ NS_DOMCI_EXTENSION_NAME(_module)::RegisterDOMCI(const char* aName,        \
 {
 
 #define NS_DOMCI_EXTENSION_ENTRY_BEGIN(_class)                            \
-  if (nsCRT::strcmp(aName, #_class) == 0) {                               \
+  if (strcmp(aName, #_class) == 0) {                               \
     static const nsIID* interfaces[] = {
 
 #define NS_DOMCI_EXTENSION_ENTRY_INTERFACE(_interface)                    \

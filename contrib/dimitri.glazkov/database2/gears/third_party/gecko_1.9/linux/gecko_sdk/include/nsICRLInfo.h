@@ -28,7 +28,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsICRLInfo : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsICRLInfo : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICRLINFO_IID)
@@ -37,51 +37,51 @@ class NS_NO_VTABLE nsICRLInfo : public nsISupports {
    *  The issuing CA's organization.
    */
   /* readonly attribute AString organization; */
-  NS_IMETHOD GetOrganization(nsAString & aOrganization) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetOrganization(nsAString & aOrganization) = 0;
 
   /**
    *  The issuing CA's organizational unit.
    */
   /* readonly attribute AString organizationalUnit; */
-  NS_IMETHOD GetOrganizationalUnit(nsAString & aOrganizationalUnit) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetOrganizationalUnit(nsAString & aOrganizationalUnit) = 0;
 
   /**
    *  The time this CRL was created at.
    */
   /* readonly attribute PRTime lastUpdate; */
-  NS_IMETHOD GetLastUpdate(PRTime *aLastUpdate) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLastUpdate(PRTime *aLastUpdate) = 0;
 
   /**
    *  The time the suggested next update for this CRL.
    */
   /* readonly attribute PRTime nextUpdate; */
-  NS_IMETHOD GetNextUpdate(PRTime *aNextUpdate) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNextUpdate(PRTime *aNextUpdate) = 0;
 
   /**
    *  lastUpdate formatted as a human readable string
    *  formatted according to the environment locale.
    */
   /* readonly attribute AString lastUpdateLocale; */
-  NS_IMETHOD GetLastUpdateLocale(nsAString & aLastUpdateLocale) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLastUpdateLocale(nsAString & aLastUpdateLocale) = 0;
 
   /**
    *  nextUpdate formatted as a human readable string
    *  formatted according to the environment locale.
    */
   /* readonly attribute AString nextUpdateLocale; */
-  NS_IMETHOD GetNextUpdateLocale(nsAString & aNextUpdateLocale) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNextUpdateLocale(nsAString & aNextUpdateLocale) = 0;
 
   /**
    *  The key identifying the CRL in the database.
    */
   /* readonly attribute AString nameInDb; */
-  NS_IMETHOD GetNameInDb(nsAString & aNameInDb) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNameInDb(nsAString & aNameInDb) = 0;
 
   /**
    *  The URL this CRL was last fetched from.
    */
   /* readonly attribute AUTF8String lastFetchURL; */
-  NS_IMETHOD GetLastFetchURL(nsACString & aLastFetchURL) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLastFetchURL(nsACString & aLastFetchURL) = 0;
 
 };
 
@@ -89,36 +89,36 @@ class NS_NO_VTABLE nsICRLInfo : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICRLINFO \
-  NS_IMETHOD GetOrganization(nsAString & aOrganization); \
-  NS_IMETHOD GetOrganizationalUnit(nsAString & aOrganizationalUnit); \
-  NS_IMETHOD GetLastUpdate(PRTime *aLastUpdate); \
-  NS_IMETHOD GetNextUpdate(PRTime *aNextUpdate); \
-  NS_IMETHOD GetLastUpdateLocale(nsAString & aLastUpdateLocale); \
-  NS_IMETHOD GetNextUpdateLocale(nsAString & aNextUpdateLocale); \
-  NS_IMETHOD GetNameInDb(nsAString & aNameInDb); \
-  NS_IMETHOD GetLastFetchURL(nsACString & aLastFetchURL); 
+  NS_SCRIPTABLE NS_IMETHOD GetOrganization(nsAString & aOrganization); \
+  NS_SCRIPTABLE NS_IMETHOD GetOrganizationalUnit(nsAString & aOrganizationalUnit); \
+  NS_SCRIPTABLE NS_IMETHOD GetLastUpdate(PRTime *aLastUpdate); \
+  NS_SCRIPTABLE NS_IMETHOD GetNextUpdate(PRTime *aNextUpdate); \
+  NS_SCRIPTABLE NS_IMETHOD GetLastUpdateLocale(nsAString & aLastUpdateLocale); \
+  NS_SCRIPTABLE NS_IMETHOD GetNextUpdateLocale(nsAString & aNextUpdateLocale); \
+  NS_SCRIPTABLE NS_IMETHOD GetNameInDb(nsAString & aNameInDb); \
+  NS_SCRIPTABLE NS_IMETHOD GetLastFetchURL(nsACString & aLastFetchURL); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICRLINFO(_to) \
-  NS_IMETHOD GetOrganization(nsAString & aOrganization) { return _to GetOrganization(aOrganization); } \
-  NS_IMETHOD GetOrganizationalUnit(nsAString & aOrganizationalUnit) { return _to GetOrganizationalUnit(aOrganizationalUnit); } \
-  NS_IMETHOD GetLastUpdate(PRTime *aLastUpdate) { return _to GetLastUpdate(aLastUpdate); } \
-  NS_IMETHOD GetNextUpdate(PRTime *aNextUpdate) { return _to GetNextUpdate(aNextUpdate); } \
-  NS_IMETHOD GetLastUpdateLocale(nsAString & aLastUpdateLocale) { return _to GetLastUpdateLocale(aLastUpdateLocale); } \
-  NS_IMETHOD GetNextUpdateLocale(nsAString & aNextUpdateLocale) { return _to GetNextUpdateLocale(aNextUpdateLocale); } \
-  NS_IMETHOD GetNameInDb(nsAString & aNameInDb) { return _to GetNameInDb(aNameInDb); } \
-  NS_IMETHOD GetLastFetchURL(nsACString & aLastFetchURL) { return _to GetLastFetchURL(aLastFetchURL); } 
+  NS_SCRIPTABLE NS_IMETHOD GetOrganization(nsAString & aOrganization) { return _to GetOrganization(aOrganization); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOrganizationalUnit(nsAString & aOrganizationalUnit) { return _to GetOrganizationalUnit(aOrganizationalUnit); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLastUpdate(PRTime *aLastUpdate) { return _to GetLastUpdate(aLastUpdate); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNextUpdate(PRTime *aNextUpdate) { return _to GetNextUpdate(aNextUpdate); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLastUpdateLocale(nsAString & aLastUpdateLocale) { return _to GetLastUpdateLocale(aLastUpdateLocale); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNextUpdateLocale(nsAString & aNextUpdateLocale) { return _to GetNextUpdateLocale(aNextUpdateLocale); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNameInDb(nsAString & aNameInDb) { return _to GetNameInDb(aNameInDb); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLastFetchURL(nsACString & aLastFetchURL) { return _to GetLastFetchURL(aLastFetchURL); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICRLINFO(_to) \
-  NS_IMETHOD GetOrganization(nsAString & aOrganization) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOrganization(aOrganization); } \
-  NS_IMETHOD GetOrganizationalUnit(nsAString & aOrganizationalUnit) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOrganizationalUnit(aOrganizationalUnit); } \
-  NS_IMETHOD GetLastUpdate(PRTime *aLastUpdate) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLastUpdate(aLastUpdate); } \
-  NS_IMETHOD GetNextUpdate(PRTime *aNextUpdate) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNextUpdate(aNextUpdate); } \
-  NS_IMETHOD GetLastUpdateLocale(nsAString & aLastUpdateLocale) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLastUpdateLocale(aLastUpdateLocale); } \
-  NS_IMETHOD GetNextUpdateLocale(nsAString & aNextUpdateLocale) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNextUpdateLocale(aNextUpdateLocale); } \
-  NS_IMETHOD GetNameInDb(nsAString & aNameInDb) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNameInDb(aNameInDb); } \
-  NS_IMETHOD GetLastFetchURL(nsACString & aLastFetchURL) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLastFetchURL(aLastFetchURL); } 
+  NS_SCRIPTABLE NS_IMETHOD GetOrganization(nsAString & aOrganization) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOrganization(aOrganization); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOrganizationalUnit(nsAString & aOrganizationalUnit) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOrganizationalUnit(aOrganizationalUnit); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLastUpdate(PRTime *aLastUpdate) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLastUpdate(aLastUpdate); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNextUpdate(PRTime *aNextUpdate) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNextUpdate(aNextUpdate); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLastUpdateLocale(nsAString & aLastUpdateLocale) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLastUpdateLocale(aLastUpdateLocale); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNextUpdateLocale(nsAString & aNextUpdateLocale) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNextUpdateLocale(aNextUpdateLocale); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNameInDb(nsAString & aNameInDb) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNameInDb(aNameInDb); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLastFetchURL(nsACString & aLastFetchURL) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLastFetchURL(aLastFetchURL); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

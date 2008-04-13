@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/xpcom/ds/nsIVariant.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/xpcom/ds/nsIVariant.idl
  */
 
 #ifndef __gen_nsIVariant_h__
@@ -22,7 +22,7 @@
   {0x4d12e540, 0x83d7, 0x11d5, \
     { 0x90, 0xed, 0x00, 0x10, 0xa4, 0xe7, 0x3d, 0x9a }}
 
-class NS_NO_VTABLE nsIDataType : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDataType : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDATATYPE_IID)
@@ -146,7 +146,7 @@ nsDataType::~nsDataType()
  * [noscript] since any nsIVariant object will be automatically converted to a
  * JS type anyway.
  */
-class NS_NO_VTABLE nsIVariant : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIVariant : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IVARIANT_IID)
@@ -528,101 +528,101 @@ NS_IMETHODIMP nsVariant::GetAsWStringWithSize(PRUint32 *size, PRUnichar **str)
  * may not succeed.
  *
  */
-class NS_NO_VTABLE nsIWritableVariant : public nsIVariant {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIWritableVariant : public nsIVariant {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWRITABLEVARIANT_IID)
 
   /* attribute PRBool writable; */
-  NS_IMETHOD GetWritable(PRBool *aWritable) = 0;
-  NS_IMETHOD SetWritable(PRBool aWritable) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetWritable(PRBool *aWritable) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetWritable(PRBool aWritable) = 0;
 
   /* void setAsInt8 (in PRUint8 aValue); */
-  NS_IMETHOD SetAsInt8(PRUint8 aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsInt8(PRUint8 aValue) = 0;
 
   /* void setAsInt16 (in PRInt16 aValue); */
-  NS_IMETHOD SetAsInt16(PRInt16 aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsInt16(PRInt16 aValue) = 0;
 
   /* void setAsInt32 (in PRInt32 aValue); */
-  NS_IMETHOD SetAsInt32(PRInt32 aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsInt32(PRInt32 aValue) = 0;
 
   /* void setAsInt64 (in PRInt64 aValue); */
-  NS_IMETHOD SetAsInt64(PRInt64 aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsInt64(PRInt64 aValue) = 0;
 
   /* void setAsUint8 (in PRUint8 aValue); */
-  NS_IMETHOD SetAsUint8(PRUint8 aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsUint8(PRUint8 aValue) = 0;
 
   /* void setAsUint16 (in PRUint16 aValue); */
-  NS_IMETHOD SetAsUint16(PRUint16 aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsUint16(PRUint16 aValue) = 0;
 
   /* void setAsUint32 (in PRUint32 aValue); */
-  NS_IMETHOD SetAsUint32(PRUint32 aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsUint32(PRUint32 aValue) = 0;
 
   /* void setAsUint64 (in PRUint64 aValue); */
-  NS_IMETHOD SetAsUint64(PRUint64 aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsUint64(PRUint64 aValue) = 0;
 
   /* void setAsFloat (in float aValue); */
-  NS_IMETHOD SetAsFloat(float aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsFloat(float aValue) = 0;
 
   /* void setAsDouble (in double aValue); */
-  NS_IMETHOD SetAsDouble(double aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsDouble(double aValue) = 0;
 
   /* void setAsBool (in PRBool aValue); */
-  NS_IMETHOD SetAsBool(PRBool aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsBool(PRBool aValue) = 0;
 
   /* void setAsChar (in char aValue); */
-  NS_IMETHOD SetAsChar(char aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsChar(char aValue) = 0;
 
   /* void setAsWChar (in wchar aValue); */
-  NS_IMETHOD SetAsWChar(PRUnichar aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsWChar(PRUnichar aValue) = 0;
 
   /* void setAsID (in nsIDRef aValue); */
-  NS_IMETHOD SetAsID(const nsID & aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsID(const nsID & aValue) = 0;
 
   /* void setAsAString (in AString aValue); */
-  NS_IMETHOD SetAsAString(const nsAString & aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsAString(const nsAString & aValue) = 0;
 
   /* void setAsDOMString (in DOMString aValue); */
-  NS_IMETHOD SetAsDOMString(const nsAString & aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsDOMString(const nsAString & aValue) = 0;
 
   /* void setAsACString (in ACString aValue); */
-  NS_IMETHOD SetAsACString(const nsACString & aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsACString(const nsACString & aValue) = 0;
 
   /* void setAsAUTF8String (in AUTF8String aValue); */
-  NS_IMETHOD SetAsAUTF8String(const nsACString & aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsAUTF8String(const nsACString & aValue) = 0;
 
   /* void setAsString (in string aValue); */
-  NS_IMETHOD SetAsString(const char *aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsString(const char *aValue) = 0;
 
   /* void setAsWString (in wstring aValue); */
-  NS_IMETHOD SetAsWString(const PRUnichar *aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsWString(const PRUnichar *aValue) = 0;
 
   /* void setAsISupports (in nsISupports aValue); */
-  NS_IMETHOD SetAsISupports(nsISupports *aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsISupports(nsISupports *aValue) = 0;
 
   /* void setAsInterface (in nsIIDRef iid, [iid_is (iid)] in nsQIResult iface); */
-  NS_IMETHOD SetAsInterface(const nsIID & iid, void * iface) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsInterface(const nsIID & iid, void * iface) = 0;
 
   /* [noscript] void setAsArray (in PRUint16 type, in nsIIDPtr iid, in PRUint32 count, in voidPtr ptr); */
   NS_IMETHOD SetAsArray(PRUint16 type, const nsIID * iid, PRUint32 count, void * ptr) = 0;
 
   /* void setAsStringWithSize (in PRUint32 size, [size_is (size)] in string str); */
-  NS_IMETHOD SetAsStringWithSize(PRUint32 size, const char *str) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsStringWithSize(PRUint32 size, const char *str) = 0;
 
   /* void setAsWStringWithSize (in PRUint32 size, [size_is (size)] in wstring str); */
-  NS_IMETHOD SetAsWStringWithSize(PRUint32 size, const PRUnichar *str) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsWStringWithSize(PRUint32 size, const PRUnichar *str) = 0;
 
   /* void setAsVoid (); */
-  NS_IMETHOD SetAsVoid(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsVoid(void) = 0;
 
   /* void setAsEmpty (); */
-  NS_IMETHOD SetAsEmpty(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsEmpty(void) = 0;
 
   /* void setAsEmptyArray (); */
-  NS_IMETHOD SetAsEmptyArray(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAsEmptyArray(void) = 0;
 
   /* void setFromVariant (in nsIVariant aValue); */
-  NS_IMETHOD SetFromVariant(nsIVariant *aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFromVariant(nsIVariant *aValue) = 0;
 
 };
 
@@ -630,105 +630,105 @@ class NS_NO_VTABLE nsIWritableVariant : public nsIVariant {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWRITABLEVARIANT \
-  NS_IMETHOD GetWritable(PRBool *aWritable); \
-  NS_IMETHOD SetWritable(PRBool aWritable); \
-  NS_IMETHOD SetAsInt8(PRUint8 aValue); \
-  NS_IMETHOD SetAsInt16(PRInt16 aValue); \
-  NS_IMETHOD SetAsInt32(PRInt32 aValue); \
-  NS_IMETHOD SetAsInt64(PRInt64 aValue); \
-  NS_IMETHOD SetAsUint8(PRUint8 aValue); \
-  NS_IMETHOD SetAsUint16(PRUint16 aValue); \
-  NS_IMETHOD SetAsUint32(PRUint32 aValue); \
-  NS_IMETHOD SetAsUint64(PRUint64 aValue); \
-  NS_IMETHOD SetAsFloat(float aValue); \
-  NS_IMETHOD SetAsDouble(double aValue); \
-  NS_IMETHOD SetAsBool(PRBool aValue); \
-  NS_IMETHOD SetAsChar(char aValue); \
-  NS_IMETHOD SetAsWChar(PRUnichar aValue); \
-  NS_IMETHOD SetAsID(const nsID & aValue); \
-  NS_IMETHOD SetAsAString(const nsAString & aValue); \
-  NS_IMETHOD SetAsDOMString(const nsAString & aValue); \
-  NS_IMETHOD SetAsACString(const nsACString & aValue); \
-  NS_IMETHOD SetAsAUTF8String(const nsACString & aValue); \
-  NS_IMETHOD SetAsString(const char *aValue); \
-  NS_IMETHOD SetAsWString(const PRUnichar *aValue); \
-  NS_IMETHOD SetAsISupports(nsISupports *aValue); \
-  NS_IMETHOD SetAsInterface(const nsIID & iid, void * iface); \
+  NS_SCRIPTABLE NS_IMETHOD GetWritable(PRBool *aWritable); \
+  NS_SCRIPTABLE NS_IMETHOD SetWritable(PRBool aWritable); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsInt8(PRUint8 aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsInt16(PRInt16 aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsInt32(PRInt32 aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsInt64(PRInt64 aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsUint8(PRUint8 aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsUint16(PRUint16 aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsUint32(PRUint32 aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsUint64(PRUint64 aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsFloat(float aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsDouble(double aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsBool(PRBool aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsChar(char aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsWChar(PRUnichar aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsID(const nsID & aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsAString(const nsAString & aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsDOMString(const nsAString & aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsACString(const nsACString & aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsAUTF8String(const nsACString & aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsString(const char *aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsWString(const PRUnichar *aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsISupports(nsISupports *aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsInterface(const nsIID & iid, void * iface); \
   NS_IMETHOD SetAsArray(PRUint16 type, const nsIID * iid, PRUint32 count, void * ptr); \
-  NS_IMETHOD SetAsStringWithSize(PRUint32 size, const char *str); \
-  NS_IMETHOD SetAsWStringWithSize(PRUint32 size, const PRUnichar *str); \
-  NS_IMETHOD SetAsVoid(void); \
-  NS_IMETHOD SetAsEmpty(void); \
-  NS_IMETHOD SetAsEmptyArray(void); \
-  NS_IMETHOD SetFromVariant(nsIVariant *aValue); 
+  NS_SCRIPTABLE NS_IMETHOD SetAsStringWithSize(PRUint32 size, const char *str); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsWStringWithSize(PRUint32 size, const PRUnichar *str); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsVoid(void); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsEmpty(void); \
+  NS_SCRIPTABLE NS_IMETHOD SetAsEmptyArray(void); \
+  NS_SCRIPTABLE NS_IMETHOD SetFromVariant(nsIVariant *aValue); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIWRITABLEVARIANT(_to) \
-  NS_IMETHOD GetWritable(PRBool *aWritable) { return _to GetWritable(aWritable); } \
-  NS_IMETHOD SetWritable(PRBool aWritable) { return _to SetWritable(aWritable); } \
-  NS_IMETHOD SetAsInt8(PRUint8 aValue) { return _to SetAsInt8(aValue); } \
-  NS_IMETHOD SetAsInt16(PRInt16 aValue) { return _to SetAsInt16(aValue); } \
-  NS_IMETHOD SetAsInt32(PRInt32 aValue) { return _to SetAsInt32(aValue); } \
-  NS_IMETHOD SetAsInt64(PRInt64 aValue) { return _to SetAsInt64(aValue); } \
-  NS_IMETHOD SetAsUint8(PRUint8 aValue) { return _to SetAsUint8(aValue); } \
-  NS_IMETHOD SetAsUint16(PRUint16 aValue) { return _to SetAsUint16(aValue); } \
-  NS_IMETHOD SetAsUint32(PRUint32 aValue) { return _to SetAsUint32(aValue); } \
-  NS_IMETHOD SetAsUint64(PRUint64 aValue) { return _to SetAsUint64(aValue); } \
-  NS_IMETHOD SetAsFloat(float aValue) { return _to SetAsFloat(aValue); } \
-  NS_IMETHOD SetAsDouble(double aValue) { return _to SetAsDouble(aValue); } \
-  NS_IMETHOD SetAsBool(PRBool aValue) { return _to SetAsBool(aValue); } \
-  NS_IMETHOD SetAsChar(char aValue) { return _to SetAsChar(aValue); } \
-  NS_IMETHOD SetAsWChar(PRUnichar aValue) { return _to SetAsWChar(aValue); } \
-  NS_IMETHOD SetAsID(const nsID & aValue) { return _to SetAsID(aValue); } \
-  NS_IMETHOD SetAsAString(const nsAString & aValue) { return _to SetAsAString(aValue); } \
-  NS_IMETHOD SetAsDOMString(const nsAString & aValue) { return _to SetAsDOMString(aValue); } \
-  NS_IMETHOD SetAsACString(const nsACString & aValue) { return _to SetAsACString(aValue); } \
-  NS_IMETHOD SetAsAUTF8String(const nsACString & aValue) { return _to SetAsAUTF8String(aValue); } \
-  NS_IMETHOD SetAsString(const char *aValue) { return _to SetAsString(aValue); } \
-  NS_IMETHOD SetAsWString(const PRUnichar *aValue) { return _to SetAsWString(aValue); } \
-  NS_IMETHOD SetAsISupports(nsISupports *aValue) { return _to SetAsISupports(aValue); } \
-  NS_IMETHOD SetAsInterface(const nsIID & iid, void * iface) { return _to SetAsInterface(iid, iface); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWritable(PRBool *aWritable) { return _to GetWritable(aWritable); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWritable(PRBool aWritable) { return _to SetWritable(aWritable); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsInt8(PRUint8 aValue) { return _to SetAsInt8(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsInt16(PRInt16 aValue) { return _to SetAsInt16(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsInt32(PRInt32 aValue) { return _to SetAsInt32(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsInt64(PRInt64 aValue) { return _to SetAsInt64(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsUint8(PRUint8 aValue) { return _to SetAsUint8(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsUint16(PRUint16 aValue) { return _to SetAsUint16(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsUint32(PRUint32 aValue) { return _to SetAsUint32(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsUint64(PRUint64 aValue) { return _to SetAsUint64(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsFloat(float aValue) { return _to SetAsFloat(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsDouble(double aValue) { return _to SetAsDouble(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsBool(PRBool aValue) { return _to SetAsBool(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsChar(char aValue) { return _to SetAsChar(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsWChar(PRUnichar aValue) { return _to SetAsWChar(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsID(const nsID & aValue) { return _to SetAsID(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsAString(const nsAString & aValue) { return _to SetAsAString(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsDOMString(const nsAString & aValue) { return _to SetAsDOMString(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsACString(const nsACString & aValue) { return _to SetAsACString(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsAUTF8String(const nsACString & aValue) { return _to SetAsAUTF8String(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsString(const char *aValue) { return _to SetAsString(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsWString(const PRUnichar *aValue) { return _to SetAsWString(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsISupports(nsISupports *aValue) { return _to SetAsISupports(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsInterface(const nsIID & iid, void * iface) { return _to SetAsInterface(iid, iface); } \
   NS_IMETHOD SetAsArray(PRUint16 type, const nsIID * iid, PRUint32 count, void * ptr) { return _to SetAsArray(type, iid, count, ptr); } \
-  NS_IMETHOD SetAsStringWithSize(PRUint32 size, const char *str) { return _to SetAsStringWithSize(size, str); } \
-  NS_IMETHOD SetAsWStringWithSize(PRUint32 size, const PRUnichar *str) { return _to SetAsWStringWithSize(size, str); } \
-  NS_IMETHOD SetAsVoid(void) { return _to SetAsVoid(); } \
-  NS_IMETHOD SetAsEmpty(void) { return _to SetAsEmpty(); } \
-  NS_IMETHOD SetAsEmptyArray(void) { return _to SetAsEmptyArray(); } \
-  NS_IMETHOD SetFromVariant(nsIVariant *aValue) { return _to SetFromVariant(aValue); } 
+  NS_SCRIPTABLE NS_IMETHOD SetAsStringWithSize(PRUint32 size, const char *str) { return _to SetAsStringWithSize(size, str); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsWStringWithSize(PRUint32 size, const PRUnichar *str) { return _to SetAsWStringWithSize(size, str); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsVoid(void) { return _to SetAsVoid(); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsEmpty(void) { return _to SetAsEmpty(); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsEmptyArray(void) { return _to SetAsEmptyArray(); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFromVariant(nsIVariant *aValue) { return _to SetFromVariant(aValue); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIWRITABLEVARIANT(_to) \
-  NS_IMETHOD GetWritable(PRBool *aWritable) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWritable(aWritable); } \
-  NS_IMETHOD SetWritable(PRBool aWritable) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWritable(aWritable); } \
-  NS_IMETHOD SetAsInt8(PRUint8 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsInt8(aValue); } \
-  NS_IMETHOD SetAsInt16(PRInt16 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsInt16(aValue); } \
-  NS_IMETHOD SetAsInt32(PRInt32 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsInt32(aValue); } \
-  NS_IMETHOD SetAsInt64(PRInt64 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsInt64(aValue); } \
-  NS_IMETHOD SetAsUint8(PRUint8 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsUint8(aValue); } \
-  NS_IMETHOD SetAsUint16(PRUint16 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsUint16(aValue); } \
-  NS_IMETHOD SetAsUint32(PRUint32 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsUint32(aValue); } \
-  NS_IMETHOD SetAsUint64(PRUint64 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsUint64(aValue); } \
-  NS_IMETHOD SetAsFloat(float aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsFloat(aValue); } \
-  NS_IMETHOD SetAsDouble(double aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsDouble(aValue); } \
-  NS_IMETHOD SetAsBool(PRBool aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsBool(aValue); } \
-  NS_IMETHOD SetAsChar(char aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsChar(aValue); } \
-  NS_IMETHOD SetAsWChar(PRUnichar aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsWChar(aValue); } \
-  NS_IMETHOD SetAsID(const nsID & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsID(aValue); } \
-  NS_IMETHOD SetAsAString(const nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsAString(aValue); } \
-  NS_IMETHOD SetAsDOMString(const nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsDOMString(aValue); } \
-  NS_IMETHOD SetAsACString(const nsACString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsACString(aValue); } \
-  NS_IMETHOD SetAsAUTF8String(const nsACString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsAUTF8String(aValue); } \
-  NS_IMETHOD SetAsString(const char *aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsString(aValue); } \
-  NS_IMETHOD SetAsWString(const PRUnichar *aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsWString(aValue); } \
-  NS_IMETHOD SetAsISupports(nsISupports *aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsISupports(aValue); } \
-  NS_IMETHOD SetAsInterface(const nsIID & iid, void * iface) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsInterface(iid, iface); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWritable(PRBool *aWritable) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWritable(aWritable); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWritable(PRBool aWritable) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWritable(aWritable); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsInt8(PRUint8 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsInt8(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsInt16(PRInt16 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsInt16(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsInt32(PRInt32 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsInt32(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsInt64(PRInt64 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsInt64(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsUint8(PRUint8 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsUint8(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsUint16(PRUint16 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsUint16(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsUint32(PRUint32 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsUint32(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsUint64(PRUint64 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsUint64(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsFloat(float aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsFloat(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsDouble(double aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsDouble(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsBool(PRBool aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsBool(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsChar(char aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsChar(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsWChar(PRUnichar aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsWChar(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsID(const nsID & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsID(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsAString(const nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsAString(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsDOMString(const nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsDOMString(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsACString(const nsACString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsACString(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsAUTF8String(const nsACString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsAUTF8String(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsString(const char *aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsString(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsWString(const PRUnichar *aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsWString(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsISupports(nsISupports *aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsISupports(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsInterface(const nsIID & iid, void * iface) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsInterface(iid, iface); } \
   NS_IMETHOD SetAsArray(PRUint16 type, const nsIID * iid, PRUint32 count, void * ptr) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsArray(type, iid, count, ptr); } \
-  NS_IMETHOD SetAsStringWithSize(PRUint32 size, const char *str) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsStringWithSize(size, str); } \
-  NS_IMETHOD SetAsWStringWithSize(PRUint32 size, const PRUnichar *str) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsWStringWithSize(size, str); } \
-  NS_IMETHOD SetAsVoid(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsVoid(); } \
-  NS_IMETHOD SetAsEmpty(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsEmpty(); } \
-  NS_IMETHOD SetAsEmptyArray(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsEmptyArray(); } \
-  NS_IMETHOD SetFromVariant(nsIVariant *aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFromVariant(aValue); } 
+  NS_SCRIPTABLE NS_IMETHOD SetAsStringWithSize(PRUint32 size, const char *str) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsStringWithSize(size, str); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsWStringWithSize(PRUint32 size, const PRUnichar *str) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsWStringWithSize(size, str); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsVoid(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsVoid(); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsEmpty(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsEmpty(); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAsEmptyArray(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAsEmptyArray(); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFromVariant(nsIVariant *aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFromVariant(aValue); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

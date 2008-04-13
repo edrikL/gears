@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/caps/idl/nsIScriptSecurityManager.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/caps/idl/nsIScriptSecurityManager.idl
  */
 
 #ifndef __gen_nsIScriptSecurityManager_h__
@@ -28,13 +28,13 @@ class nsIChannel; /* forward declaration */
 
 
 /* starting interface:    nsIScriptSecurityManager */
-#define NS_ISCRIPTSECURITYMANAGER_IID_STR "0b8a9b32-713f-4c39-bea0-6cacec46f385"
+#define NS_ISCRIPTSECURITYMANAGER_IID_STR "3fffd8e8-3fea-442e-a0ed-2ba81ae197d5"
 
 #define NS_ISCRIPTSECURITYMANAGER_IID \
-  {0x0b8a9b32, 0x713f, 0x4c39, \
-    { 0xbe, 0xa0, 0x6c, 0xac, 0xec, 0x46, 0xf3, 0x85 }}
+  {0x3fffd8e8, 0x3fea, 0x442e, \
+    { 0xa0, 0xed, 0x2b, 0xa8, 0x1a, 0xe1, 0x97, 0xd5 }}
 
-class NS_NO_VTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTSECURITYMANAGER_IID)
@@ -89,7 +89,7 @@ class NS_NO_VTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
      * @param flags the permission set, see above
      */
   /* void checkLoadURIWithPrincipal (in nsIPrincipal aPrincipal, in nsIURI uri, in unsigned long flags); */
-  NS_IMETHOD CheckLoadURIWithPrincipal(nsIPrincipal *aPrincipal, nsIURI *uri, PRUint32 flags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CheckLoadURIWithPrincipal(nsIPrincipal *aPrincipal, nsIURI *uri, PRUint32 flags) = 0;
 
   /**
      * Check that content from "from" can load "uri".
@@ -104,7 +104,7 @@ class NS_NO_VTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
      * @deprecated Use checkLoadURIWithPrincipal instead of this function.
      */
   /* void checkLoadURI (in nsIURI from, in nsIURI uri, in unsigned long flags); */
-  NS_IMETHOD CheckLoadURI(nsIURI *from, nsIURI *uri, PRUint32 flags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CheckLoadURI(nsIURI *from, nsIURI *uri, PRUint32 flags) = 0;
 
   /**
      * Similar to checkLoadURIWithPrincipal but there are two differences:
@@ -116,7 +116,7 @@ class NS_NO_VTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
      * function will return error code NS_ERROR_DOM_BAD_URI.
      */
   /* void checkLoadURIStrWithPrincipal (in nsIPrincipal aPrincipal, in AUTF8String uri, in unsigned long flags); */
-  NS_IMETHOD CheckLoadURIStrWithPrincipal(nsIPrincipal *aPrincipal, const nsACString & uri, PRUint32 flags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CheckLoadURIStrWithPrincipal(nsIPrincipal *aPrincipal, const nsACString & uri, PRUint32 flags) = 0;
 
   /**
      * Same as CheckLoadURI but takes string arguments for ease of use
@@ -125,7 +125,7 @@ class NS_NO_VTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
      * @deprecated Use checkLoadURIStrWithPrincipal instead of this function.
      */
   /* void checkLoadURIStr (in AUTF8String from, in AUTF8String uri, in unsigned long flags); */
-  NS_IMETHOD CheckLoadURIStr(const nsACString & from, const nsACString & uri, PRUint32 flags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CheckLoadURIStr(const nsACString & from, const nsACString & uri, PRUint32 flags) = 0;
 
   /**
      * Check that the function 'funObj' is allowed to run on 'targetObj'
@@ -176,7 +176,7 @@ class NS_NO_VTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
      * Return a principal that has the same origin as aURI.
      */
   /* nsIPrincipal getCodebasePrincipal (in nsIURI aURI); */
-  NS_IMETHOD GetCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval) = 0;
 
   /**
      * Request that 'capability' can be enabled by scripts or applets
@@ -191,14 +191,14 @@ class NS_NO_VTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
      * Return true if the currently executing script has 'capability' enabled.
      */
   /* boolean isCapabilityEnabled (in string capability); */
-  NS_IMETHOD IsCapabilityEnabled(const char *capability, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsCapabilityEnabled(const char *capability, PRBool *_retval) = 0;
 
   /**
      * Enable 'capability' in the innermost frame of the currently executing
      * script.
      */
   /* void enableCapability (in string capability); */
-  NS_IMETHOD EnableCapability(const char *capability) = 0;
+  NS_SCRIPTABLE NS_IMETHOD EnableCapability(const char *capability) = 0;
 
   /**
      * Remove 'capability' from the innermost frame of the currently
@@ -206,21 +206,21 @@ class NS_NO_VTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
      * frames thus comes into effect.
      */
   /* void revertCapability (in string capability); */
-  NS_IMETHOD RevertCapability(const char *capability) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RevertCapability(const char *capability) = 0;
 
   /**
      * Disable 'capability' in the innermost frame of the currently executing
      * script.
      */
   /* void disableCapability (in string capability); */
-  NS_IMETHOD DisableCapability(const char *capability) = 0;
+  NS_SCRIPTABLE NS_IMETHOD DisableCapability(const char *capability) = 0;
 
   /**
      * Allow 'certificateID' to enable 'capability.' Can only be performed
      * by code signed by the system certificate.
      */
   /* void setCanEnableCapability (in AUTF8String certificateFingerprint, in string capability, in short canEnable); */
-  NS_IMETHOD SetCanEnableCapability(const nsACString & certificateFingerprint, const char *capability, PRInt16 canEnable) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCanEnableCapability(const nsACString & certificateFingerprint, const char *capability, PRInt16 canEnable) = 0;
 
   /**
      * Return the principal of the specified object in the specified context.
@@ -249,14 +249,7 @@ class NS_NO_VTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
      * don't need reporting.
      */
   /* void checkSameOriginURI (in nsIURI aSourceURI, in nsIURI aTargetURI, in boolean reportError); */
-  NS_IMETHOD CheckSameOriginURI(nsIURI *aSourceURI, nsIURI *aTargetURI, PRBool reportError) = 0;
-
-  /**
-     * Returns OK if aSourcePrincipal and aTargetPrincipal
-     * have the same "origin" (scheme, host, and port).
-     */
-  /* void checkSameOriginPrincipal (in nsIPrincipal aSourcePrincipal, in nsIPrincipal aTargetPrincipal); */
-  NS_IMETHOD CheckSameOriginPrincipal(nsIPrincipal *aSourcePrincipal, nsIPrincipal *aTargetPrincipal) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CheckSameOriginURI(nsIURI *aSourceURI, nsIURI *aTargetURI, PRBool reportError) = 0;
 
   /**
      * Returns the principal of the global object of the given context, or null
@@ -271,7 +264,7 @@ class NS_NO_VTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
      * channel's URI otherwise.  aChannel must not be null.
      */
   /* nsIPrincipal getChannelPrincipal (in nsIChannel aChannel); */
-  NS_IMETHOD GetChannelPrincipal(nsIChannel *aChannel, nsIPrincipal **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetChannelPrincipal(nsIChannel *aChannel, nsIPrincipal **_retval) = 0;
 
   /**
      * Check whether a given principal is a system principal.  This allows us
@@ -279,7 +272,16 @@ class NS_NO_VTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
      * script to check whether a given principal is system.
      */
   /* boolean isSystemPrincipal (in nsIPrincipal aPrincipal); */
-  NS_IMETHOD IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval) = 0;
+
+  /**
+     * Same as getSubjectPrincipal(), only faster. cx must *never* be
+     * passed null, and it must be the context on the top of the
+     * context stack. Does *not* reference count the returned
+     * principal.
+     */
+  /* [noscript, notxpcom] nsIPrincipal getCxSubjectPrincipal (in JSContextPtr cx); */
+  NS_IMETHOD_(nsIPrincipal *) GetCxSubjectPrincipal(JSContext * cx) = 0;
 
 };
 
@@ -290,90 +292,90 @@ class NS_NO_VTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
   NS_IMETHOD CheckPropertyAccess(JSContext * aJSContext, JSObject * aJSObject, const char *aClassName, jsval aProperty, PRUint32 aAction); \
   NS_IMETHOD CheckConnect(JSContext * aJSContext, nsIURI *aTargetURI, const char *aClassName, const char *aProperty); \
   NS_IMETHOD CheckLoadURIFromScript(JSContext * cx, nsIURI *uri); \
-  NS_IMETHOD CheckLoadURIWithPrincipal(nsIPrincipal *aPrincipal, nsIURI *uri, PRUint32 flags); \
-  NS_IMETHOD CheckLoadURI(nsIURI *from, nsIURI *uri, PRUint32 flags); \
-  NS_IMETHOD CheckLoadURIStrWithPrincipal(nsIPrincipal *aPrincipal, const nsACString & uri, PRUint32 flags); \
-  NS_IMETHOD CheckLoadURIStr(const nsACString & from, const nsACString & uri, PRUint32 flags); \
+  NS_SCRIPTABLE NS_IMETHOD CheckLoadURIWithPrincipal(nsIPrincipal *aPrincipal, nsIURI *uri, PRUint32 flags); \
+  NS_SCRIPTABLE NS_IMETHOD CheckLoadURI(nsIURI *from, nsIURI *uri, PRUint32 flags); \
+  NS_SCRIPTABLE NS_IMETHOD CheckLoadURIStrWithPrincipal(nsIPrincipal *aPrincipal, const nsACString & uri, PRUint32 flags); \
+  NS_SCRIPTABLE NS_IMETHOD CheckLoadURIStr(const nsACString & from, const nsACString & uri, PRUint32 flags); \
   NS_IMETHOD CheckFunctionAccess(JSContext * cx, void * funObj, void * targetObj); \
   NS_IMETHOD CanExecuteScripts(JSContext * cx, nsIPrincipal *principal, PRBool *_retval); \
   NS_IMETHOD GetSubjectPrincipal(nsIPrincipal **_retval); \
   NS_IMETHOD GetSystemPrincipal(nsIPrincipal **_retval); \
   NS_IMETHOD GetCertificatePrincipal(const nsACString & aCertFingerprint, const nsACString & aSubjectName, const nsACString & aPrettyName, nsISupports *aCert, nsIURI *aURI, nsIPrincipal **_retval); \
-  NS_IMETHOD GetCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval); \
   NS_IMETHOD RequestCapability(nsIPrincipal *principal, const char *capability, PRInt16 *_retval); \
-  NS_IMETHOD IsCapabilityEnabled(const char *capability, PRBool *_retval); \
-  NS_IMETHOD EnableCapability(const char *capability); \
-  NS_IMETHOD RevertCapability(const char *capability); \
-  NS_IMETHOD DisableCapability(const char *capability); \
-  NS_IMETHOD SetCanEnableCapability(const nsACString & certificateFingerprint, const char *capability, PRInt16 canEnable); \
+  NS_SCRIPTABLE NS_IMETHOD IsCapabilityEnabled(const char *capability, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD EnableCapability(const char *capability); \
+  NS_SCRIPTABLE NS_IMETHOD RevertCapability(const char *capability); \
+  NS_SCRIPTABLE NS_IMETHOD DisableCapability(const char *capability); \
+  NS_SCRIPTABLE NS_IMETHOD SetCanEnableCapability(const nsACString & certificateFingerprint, const char *capability, PRInt16 canEnable); \
   NS_IMETHOD GetObjectPrincipal(JSContext * cx, JSObject * obj, nsIPrincipal **_retval); \
   NS_IMETHOD SubjectPrincipalIsSystem(PRBool *_retval); \
   NS_IMETHOD CheckSameOrigin(JSContext * aJSContext, nsIURI *aTargetURI); \
-  NS_IMETHOD CheckSameOriginURI(nsIURI *aSourceURI, nsIURI *aTargetURI, PRBool reportError); \
-  NS_IMETHOD CheckSameOriginPrincipal(nsIPrincipal *aSourcePrincipal, nsIPrincipal *aTargetPrincipal); \
+  NS_SCRIPTABLE NS_IMETHOD CheckSameOriginURI(nsIURI *aSourceURI, nsIURI *aTargetURI, PRBool reportError); \
   NS_IMETHOD GetPrincipalFromContext(JSContext * cx, nsIPrincipal **_retval); \
-  NS_IMETHOD GetChannelPrincipal(nsIChannel *aChannel, nsIPrincipal **_retval); \
-  NS_IMETHOD IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetChannelPrincipal(nsIChannel *aChannel, nsIPrincipal **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval); \
+  NS_IMETHOD_(nsIPrincipal *) GetCxSubjectPrincipal(JSContext * cx); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSISCRIPTSECURITYMANAGER(_to) \
   NS_IMETHOD CheckPropertyAccess(JSContext * aJSContext, JSObject * aJSObject, const char *aClassName, jsval aProperty, PRUint32 aAction) { return _to CheckPropertyAccess(aJSContext, aJSObject, aClassName, aProperty, aAction); } \
   NS_IMETHOD CheckConnect(JSContext * aJSContext, nsIURI *aTargetURI, const char *aClassName, const char *aProperty) { return _to CheckConnect(aJSContext, aTargetURI, aClassName, aProperty); } \
   NS_IMETHOD CheckLoadURIFromScript(JSContext * cx, nsIURI *uri) { return _to CheckLoadURIFromScript(cx, uri); } \
-  NS_IMETHOD CheckLoadURIWithPrincipal(nsIPrincipal *aPrincipal, nsIURI *uri, PRUint32 flags) { return _to CheckLoadURIWithPrincipal(aPrincipal, uri, flags); } \
-  NS_IMETHOD CheckLoadURI(nsIURI *from, nsIURI *uri, PRUint32 flags) { return _to CheckLoadURI(from, uri, flags); } \
-  NS_IMETHOD CheckLoadURIStrWithPrincipal(nsIPrincipal *aPrincipal, const nsACString & uri, PRUint32 flags) { return _to CheckLoadURIStrWithPrincipal(aPrincipal, uri, flags); } \
-  NS_IMETHOD CheckLoadURIStr(const nsACString & from, const nsACString & uri, PRUint32 flags) { return _to CheckLoadURIStr(from, uri, flags); } \
+  NS_SCRIPTABLE NS_IMETHOD CheckLoadURIWithPrincipal(nsIPrincipal *aPrincipal, nsIURI *uri, PRUint32 flags) { return _to CheckLoadURIWithPrincipal(aPrincipal, uri, flags); } \
+  NS_SCRIPTABLE NS_IMETHOD CheckLoadURI(nsIURI *from, nsIURI *uri, PRUint32 flags) { return _to CheckLoadURI(from, uri, flags); } \
+  NS_SCRIPTABLE NS_IMETHOD CheckLoadURIStrWithPrincipal(nsIPrincipal *aPrincipal, const nsACString & uri, PRUint32 flags) { return _to CheckLoadURIStrWithPrincipal(aPrincipal, uri, flags); } \
+  NS_SCRIPTABLE NS_IMETHOD CheckLoadURIStr(const nsACString & from, const nsACString & uri, PRUint32 flags) { return _to CheckLoadURIStr(from, uri, flags); } \
   NS_IMETHOD CheckFunctionAccess(JSContext * cx, void * funObj, void * targetObj) { return _to CheckFunctionAccess(cx, funObj, targetObj); } \
   NS_IMETHOD CanExecuteScripts(JSContext * cx, nsIPrincipal *principal, PRBool *_retval) { return _to CanExecuteScripts(cx, principal, _retval); } \
   NS_IMETHOD GetSubjectPrincipal(nsIPrincipal **_retval) { return _to GetSubjectPrincipal(_retval); } \
   NS_IMETHOD GetSystemPrincipal(nsIPrincipal **_retval) { return _to GetSystemPrincipal(_retval); } \
   NS_IMETHOD GetCertificatePrincipal(const nsACString & aCertFingerprint, const nsACString & aSubjectName, const nsACString & aPrettyName, nsISupports *aCert, nsIURI *aURI, nsIPrincipal **_retval) { return _to GetCertificatePrincipal(aCertFingerprint, aSubjectName, aPrettyName, aCert, aURI, _retval); } \
-  NS_IMETHOD GetCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval) { return _to GetCodebasePrincipal(aURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval) { return _to GetCodebasePrincipal(aURI, _retval); } \
   NS_IMETHOD RequestCapability(nsIPrincipal *principal, const char *capability, PRInt16 *_retval) { return _to RequestCapability(principal, capability, _retval); } \
-  NS_IMETHOD IsCapabilityEnabled(const char *capability, PRBool *_retval) { return _to IsCapabilityEnabled(capability, _retval); } \
-  NS_IMETHOD EnableCapability(const char *capability) { return _to EnableCapability(capability); } \
-  NS_IMETHOD RevertCapability(const char *capability) { return _to RevertCapability(capability); } \
-  NS_IMETHOD DisableCapability(const char *capability) { return _to DisableCapability(capability); } \
-  NS_IMETHOD SetCanEnableCapability(const nsACString & certificateFingerprint, const char *capability, PRInt16 canEnable) { return _to SetCanEnableCapability(certificateFingerprint, capability, canEnable); } \
+  NS_SCRIPTABLE NS_IMETHOD IsCapabilityEnabled(const char *capability, PRBool *_retval) { return _to IsCapabilityEnabled(capability, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD EnableCapability(const char *capability) { return _to EnableCapability(capability); } \
+  NS_SCRIPTABLE NS_IMETHOD RevertCapability(const char *capability) { return _to RevertCapability(capability); } \
+  NS_SCRIPTABLE NS_IMETHOD DisableCapability(const char *capability) { return _to DisableCapability(capability); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCanEnableCapability(const nsACString & certificateFingerprint, const char *capability, PRInt16 canEnable) { return _to SetCanEnableCapability(certificateFingerprint, capability, canEnable); } \
   NS_IMETHOD GetObjectPrincipal(JSContext * cx, JSObject * obj, nsIPrincipal **_retval) { return _to GetObjectPrincipal(cx, obj, _retval); } \
   NS_IMETHOD SubjectPrincipalIsSystem(PRBool *_retval) { return _to SubjectPrincipalIsSystem(_retval); } \
   NS_IMETHOD CheckSameOrigin(JSContext * aJSContext, nsIURI *aTargetURI) { return _to CheckSameOrigin(aJSContext, aTargetURI); } \
-  NS_IMETHOD CheckSameOriginURI(nsIURI *aSourceURI, nsIURI *aTargetURI, PRBool reportError) { return _to CheckSameOriginURI(aSourceURI, aTargetURI, reportError); } \
-  NS_IMETHOD CheckSameOriginPrincipal(nsIPrincipal *aSourcePrincipal, nsIPrincipal *aTargetPrincipal) { return _to CheckSameOriginPrincipal(aSourcePrincipal, aTargetPrincipal); } \
+  NS_SCRIPTABLE NS_IMETHOD CheckSameOriginURI(nsIURI *aSourceURI, nsIURI *aTargetURI, PRBool reportError) { return _to CheckSameOriginURI(aSourceURI, aTargetURI, reportError); } \
   NS_IMETHOD GetPrincipalFromContext(JSContext * cx, nsIPrincipal **_retval) { return _to GetPrincipalFromContext(cx, _retval); } \
-  NS_IMETHOD GetChannelPrincipal(nsIChannel *aChannel, nsIPrincipal **_retval) { return _to GetChannelPrincipal(aChannel, _retval); } \
-  NS_IMETHOD IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval) { return _to IsSystemPrincipal(aPrincipal, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetChannelPrincipal(nsIChannel *aChannel, nsIPrincipal **_retval) { return _to GetChannelPrincipal(aChannel, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval) { return _to IsSystemPrincipal(aPrincipal, _retval); } \
+  NS_IMETHOD_(nsIPrincipal *) GetCxSubjectPrincipal(JSContext * cx) { return _to GetCxSubjectPrincipal(cx); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSISCRIPTSECURITYMANAGER(_to) \
   NS_IMETHOD CheckPropertyAccess(JSContext * aJSContext, JSObject * aJSObject, const char *aClassName, jsval aProperty, PRUint32 aAction) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckPropertyAccess(aJSContext, aJSObject, aClassName, aProperty, aAction); } \
   NS_IMETHOD CheckConnect(JSContext * aJSContext, nsIURI *aTargetURI, const char *aClassName, const char *aProperty) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckConnect(aJSContext, aTargetURI, aClassName, aProperty); } \
   NS_IMETHOD CheckLoadURIFromScript(JSContext * cx, nsIURI *uri) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckLoadURIFromScript(cx, uri); } \
-  NS_IMETHOD CheckLoadURIWithPrincipal(nsIPrincipal *aPrincipal, nsIURI *uri, PRUint32 flags) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckLoadURIWithPrincipal(aPrincipal, uri, flags); } \
-  NS_IMETHOD CheckLoadURI(nsIURI *from, nsIURI *uri, PRUint32 flags) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckLoadURI(from, uri, flags); } \
-  NS_IMETHOD CheckLoadURIStrWithPrincipal(nsIPrincipal *aPrincipal, const nsACString & uri, PRUint32 flags) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckLoadURIStrWithPrincipal(aPrincipal, uri, flags); } \
-  NS_IMETHOD CheckLoadURIStr(const nsACString & from, const nsACString & uri, PRUint32 flags) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckLoadURIStr(from, uri, flags); } \
+  NS_SCRIPTABLE NS_IMETHOD CheckLoadURIWithPrincipal(nsIPrincipal *aPrincipal, nsIURI *uri, PRUint32 flags) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckLoadURIWithPrincipal(aPrincipal, uri, flags); } \
+  NS_SCRIPTABLE NS_IMETHOD CheckLoadURI(nsIURI *from, nsIURI *uri, PRUint32 flags) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckLoadURI(from, uri, flags); } \
+  NS_SCRIPTABLE NS_IMETHOD CheckLoadURIStrWithPrincipal(nsIPrincipal *aPrincipal, const nsACString & uri, PRUint32 flags) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckLoadURIStrWithPrincipal(aPrincipal, uri, flags); } \
+  NS_SCRIPTABLE NS_IMETHOD CheckLoadURIStr(const nsACString & from, const nsACString & uri, PRUint32 flags) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckLoadURIStr(from, uri, flags); } \
   NS_IMETHOD CheckFunctionAccess(JSContext * cx, void * funObj, void * targetObj) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckFunctionAccess(cx, funObj, targetObj); } \
   NS_IMETHOD CanExecuteScripts(JSContext * cx, nsIPrincipal *principal, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanExecuteScripts(cx, principal, _retval); } \
   NS_IMETHOD GetSubjectPrincipal(nsIPrincipal **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSubjectPrincipal(_retval); } \
   NS_IMETHOD GetSystemPrincipal(nsIPrincipal **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSystemPrincipal(_retval); } \
   NS_IMETHOD GetCertificatePrincipal(const nsACString & aCertFingerprint, const nsACString & aSubjectName, const nsACString & aPrettyName, nsISupports *aCert, nsIURI *aURI, nsIPrincipal **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCertificatePrincipal(aCertFingerprint, aSubjectName, aPrettyName, aCert, aURI, _retval); } \
-  NS_IMETHOD GetCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCodebasePrincipal(aURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCodebasePrincipal(aURI, _retval); } \
   NS_IMETHOD RequestCapability(nsIPrincipal *principal, const char *capability, PRInt16 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->RequestCapability(principal, capability, _retval); } \
-  NS_IMETHOD IsCapabilityEnabled(const char *capability, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsCapabilityEnabled(capability, _retval); } \
-  NS_IMETHOD EnableCapability(const char *capability) { return !_to ? NS_ERROR_NULL_POINTER : _to->EnableCapability(capability); } \
-  NS_IMETHOD RevertCapability(const char *capability) { return !_to ? NS_ERROR_NULL_POINTER : _to->RevertCapability(capability); } \
-  NS_IMETHOD DisableCapability(const char *capability) { return !_to ? NS_ERROR_NULL_POINTER : _to->DisableCapability(capability); } \
-  NS_IMETHOD SetCanEnableCapability(const nsACString & certificateFingerprint, const char *capability, PRInt16 canEnable) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCanEnableCapability(certificateFingerprint, capability, canEnable); } \
+  NS_SCRIPTABLE NS_IMETHOD IsCapabilityEnabled(const char *capability, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsCapabilityEnabled(capability, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD EnableCapability(const char *capability) { return !_to ? NS_ERROR_NULL_POINTER : _to->EnableCapability(capability); } \
+  NS_SCRIPTABLE NS_IMETHOD RevertCapability(const char *capability) { return !_to ? NS_ERROR_NULL_POINTER : _to->RevertCapability(capability); } \
+  NS_SCRIPTABLE NS_IMETHOD DisableCapability(const char *capability) { return !_to ? NS_ERROR_NULL_POINTER : _to->DisableCapability(capability); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCanEnableCapability(const nsACString & certificateFingerprint, const char *capability, PRInt16 canEnable) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCanEnableCapability(certificateFingerprint, capability, canEnable); } \
   NS_IMETHOD GetObjectPrincipal(JSContext * cx, JSObject * obj, nsIPrincipal **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetObjectPrincipal(cx, obj, _retval); } \
   NS_IMETHOD SubjectPrincipalIsSystem(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->SubjectPrincipalIsSystem(_retval); } \
   NS_IMETHOD CheckSameOrigin(JSContext * aJSContext, nsIURI *aTargetURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckSameOrigin(aJSContext, aTargetURI); } \
-  NS_IMETHOD CheckSameOriginURI(nsIURI *aSourceURI, nsIURI *aTargetURI, PRBool reportError) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckSameOriginURI(aSourceURI, aTargetURI, reportError); } \
-  NS_IMETHOD CheckSameOriginPrincipal(nsIPrincipal *aSourcePrincipal, nsIPrincipal *aTargetPrincipal) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckSameOriginPrincipal(aSourcePrincipal, aTargetPrincipal); } \
+  NS_SCRIPTABLE NS_IMETHOD CheckSameOriginURI(nsIURI *aSourceURI, nsIURI *aTargetURI, PRBool reportError) { return !_to ? NS_ERROR_NULL_POINTER : _to->CheckSameOriginURI(aSourceURI, aTargetURI, reportError); } \
   NS_IMETHOD GetPrincipalFromContext(JSContext * cx, nsIPrincipal **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrincipalFromContext(cx, _retval); } \
-  NS_IMETHOD GetChannelPrincipal(nsIChannel *aChannel, nsIPrincipal **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChannelPrincipal(aChannel, _retval); } \
-  NS_IMETHOD IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsSystemPrincipal(aPrincipal, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetChannelPrincipal(nsIChannel *aChannel, nsIPrincipal **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChannelPrincipal(aChannel, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsSystemPrincipal(aPrincipal, _retval); } \
+  NS_IMETHOD_(nsIPrincipal *) GetCxSubjectPrincipal(JSContext * cx) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCxSubjectPrincipal(cx); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -545,12 +547,6 @@ NS_IMETHODIMP nsScriptSecurityManager::CheckSameOriginURI(nsIURI *aSourceURI, ns
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void checkSameOriginPrincipal (in nsIPrincipal aSourcePrincipal, in nsIPrincipal aTargetPrincipal); */
-NS_IMETHODIMP nsScriptSecurityManager::CheckSameOriginPrincipal(nsIPrincipal *aSourcePrincipal, nsIPrincipal *aTargetPrincipal)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* [noscript] nsIPrincipal getPrincipalFromContext (in JSContextPtr cx); */
 NS_IMETHODIMP nsScriptSecurityManager::GetPrincipalFromContext(JSContext * cx, nsIPrincipal **_retval)
 {
@@ -565,6 +561,12 @@ NS_IMETHODIMP nsScriptSecurityManager::GetChannelPrincipal(nsIChannel *aChannel,
 
 /* boolean isSystemPrincipal (in nsIPrincipal aPrincipal); */
 NS_IMETHODIMP nsScriptSecurityManager::IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* [noscript, notxpcom] nsIPrincipal getCxSubjectPrincipal (in JSContextPtr cx); */
+NS_IMETHODIMP_(nsIPrincipal *) nsScriptSecurityManager::GetCxSubjectPrincipal(JSContext * cx)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

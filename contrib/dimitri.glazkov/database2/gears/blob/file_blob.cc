@@ -23,22 +23,28 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+#else
+
 #include "gears/base/common/file.h"
 #include "gears/blob/file_blob.h"
 
 
-FileBlob::FileBlob(const char16 *filename)
+FileBlob::FileBlob(const std::string16& filename)
     : BlobInterface(),
       filename_(filename) {
 }
 
 
-int FileBlob::Read(uint8* destination, int max_bytes, int64 offset) const {
+int64 FileBlob::Read(uint8 *destination, int64 offset, int64 max_bytes) const {
   return File::ReadFileSegmentToBuffer(
-      filename_.c_str(), destination, max_bytes, offset);
+      filename_.c_str(), destination, offset, max_bytes);
 }
 
 
 int64 FileBlob::Length() const {
   return File::GetFileSize(filename_.c_str());
 }
+
+#endif  // not OFFICIAL_BUILD

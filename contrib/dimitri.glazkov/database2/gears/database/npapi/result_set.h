@@ -80,7 +80,7 @@ class GearsResultSet
   bool NextImpl(std::string16 *error_message);
   bool Finalize();
 
-  GearsDatabase *database_;
+  scoped_refptr<GearsDatabase> database_;
   sqlite3_stmt *statement_;
   bool is_valid_row_;
 

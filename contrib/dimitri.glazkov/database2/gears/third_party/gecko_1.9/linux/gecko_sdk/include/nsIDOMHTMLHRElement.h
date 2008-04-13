@@ -31,26 +31,26 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLHRElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLHRElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLHRELEMENT_IID)
 
   /* attribute DOMString align; */
-  NS_IMETHOD GetAlign(nsAString & aAlign) = 0;
-  NS_IMETHOD SetAlign(const nsAString & aAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) = 0;
 
   /* attribute boolean noShade; */
-  NS_IMETHOD GetNoShade(PRBool *aNoShade) = 0;
-  NS_IMETHOD SetNoShade(PRBool aNoShade) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNoShade(PRBool *aNoShade) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetNoShade(PRBool aNoShade) = 0;
 
   /* attribute DOMString size; */
-  NS_IMETHOD GetSize(nsAString & aSize) = 0;
-  NS_IMETHOD SetSize(const nsAString & aSize) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSize(nsAString & aSize) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSize(const nsAString & aSize) = 0;
 
   /* attribute DOMString width; */
-  NS_IMETHOD GetWidth(nsAString & aWidth) = 0;
-  NS_IMETHOD SetWidth(const nsAString & aWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth) = 0;
 
 };
 
@@ -58,36 +58,36 @@ class NS_NO_VTABLE nsIDOMHTMLHRElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLHRELEMENT \
-  NS_IMETHOD GetAlign(nsAString & aAlign); \
-  NS_IMETHOD SetAlign(const nsAString & aAlign); \
-  NS_IMETHOD GetNoShade(PRBool *aNoShade); \
-  NS_IMETHOD SetNoShade(PRBool aNoShade); \
-  NS_IMETHOD GetSize(nsAString & aSize); \
-  NS_IMETHOD SetSize(const nsAString & aSize); \
-  NS_IMETHOD GetWidth(nsAString & aWidth); \
-  NS_IMETHOD SetWidth(const nsAString & aWidth); 
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign); \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign); \
+  NS_SCRIPTABLE NS_IMETHOD GetNoShade(PRBool *aNoShade); \
+  NS_SCRIPTABLE NS_IMETHOD SetNoShade(PRBool aNoShade); \
+  NS_SCRIPTABLE NS_IMETHOD GetSize(nsAString & aSize); \
+  NS_SCRIPTABLE NS_IMETHOD SetSize(const nsAString & aSize); \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth); \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLHRELEMENT(_to) \
-  NS_IMETHOD GetAlign(nsAString & aAlign) { return _to GetAlign(aAlign); } \
-  NS_IMETHOD SetAlign(const nsAString & aAlign) { return _to SetAlign(aAlign); } \
-  NS_IMETHOD GetNoShade(PRBool *aNoShade) { return _to GetNoShade(aNoShade); } \
-  NS_IMETHOD SetNoShade(PRBool aNoShade) { return _to SetNoShade(aNoShade); } \
-  NS_IMETHOD GetSize(nsAString & aSize) { return _to GetSize(aSize); } \
-  NS_IMETHOD SetSize(const nsAString & aSize) { return _to SetSize(aSize); } \
-  NS_IMETHOD GetWidth(nsAString & aWidth) { return _to GetWidth(aWidth); } \
-  NS_IMETHOD SetWidth(const nsAString & aWidth) { return _to SetWidth(aWidth); } 
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) { return _to GetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) { return _to SetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNoShade(PRBool *aNoShade) { return _to GetNoShade(aNoShade); } \
+  NS_SCRIPTABLE NS_IMETHOD SetNoShade(PRBool aNoShade) { return _to SetNoShade(aNoShade); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSize(nsAString & aSize) { return _to GetSize(aSize); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSize(const nsAString & aSize) { return _to SetSize(aSize); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth) { return _to GetWidth(aWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth) { return _to SetWidth(aWidth); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLHRELEMENT(_to) \
-  NS_IMETHOD GetAlign(nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlign(aAlign); } \
-  NS_IMETHOD SetAlign(const nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlign(aAlign); } \
-  NS_IMETHOD GetNoShade(PRBool *aNoShade) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNoShade(aNoShade); } \
-  NS_IMETHOD SetNoShade(PRBool aNoShade) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetNoShade(aNoShade); } \
-  NS_IMETHOD GetSize(nsAString & aSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSize(aSize); } \
-  NS_IMETHOD SetSize(const nsAString & aSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSize(aSize); } \
-  NS_IMETHOD GetWidth(nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWidth(aWidth); } \
-  NS_IMETHOD SetWidth(const nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWidth(aWidth); } 
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNoShade(PRBool *aNoShade) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNoShade(aNoShade); } \
+  NS_SCRIPTABLE NS_IMETHOD SetNoShade(PRBool aNoShade) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetNoShade(aNoShade); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSize(nsAString & aSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSize(aSize); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSize(const nsAString & aSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSize(aSize); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWidth(aWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWidth(aWidth); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

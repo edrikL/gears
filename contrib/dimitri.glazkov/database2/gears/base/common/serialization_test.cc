@@ -41,7 +41,7 @@ class SerializationTest : public Serializable {
   }
 
   virtual SerializableClassId GetSerializableClassId() {
-      return SERIALIZABLE_TEST;
+      return SERIALIZABLE_TEST_OBJECT;
   }
 
   static Serializable *SerializableFactoryMethod() {
@@ -89,7 +89,7 @@ bool TestSerialization() {
     return false; \
   } \
 }
-  Serializable::RegisterClass(SERIALIZABLE_TEST,
+  Serializable::RegisterClass(SERIALIZABLE_TEST_OBJECT,
                               SerializationTest::SerializableFactoryMethod);
 
   const char test_bytes_0[] = {1,2,3,4,5,6,7,8};

@@ -31,21 +31,21 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLLegendElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLLegendElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLLEGENDELEMENT_IID)
 
   /* readonly attribute nsIDOMHTMLFormElement form; */
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) = 0;
 
   /* attribute DOMString accessKey; */
-  NS_IMETHOD GetAccessKey(nsAString & aAccessKey) = 0;
-  NS_IMETHOD SetAccessKey(const nsAString & aAccessKey) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAccessKey(nsAString & aAccessKey) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAccessKey(const nsAString & aAccessKey) = 0;
 
   /* attribute DOMString align; */
-  NS_IMETHOD GetAlign(nsAString & aAlign) = 0;
-  NS_IMETHOD SetAlign(const nsAString & aAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) = 0;
 
 };
 
@@ -53,27 +53,27 @@ class NS_NO_VTABLE nsIDOMHTMLLegendElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLLEGENDELEMENT \
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm); \
-  NS_IMETHOD GetAccessKey(nsAString & aAccessKey); \
-  NS_IMETHOD SetAccessKey(const nsAString & aAccessKey); \
-  NS_IMETHOD GetAlign(nsAString & aAlign); \
-  NS_IMETHOD SetAlign(const nsAString & aAlign); 
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm); \
+  NS_SCRIPTABLE NS_IMETHOD GetAccessKey(nsAString & aAccessKey); \
+  NS_SCRIPTABLE NS_IMETHOD SetAccessKey(const nsAString & aAccessKey); \
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign); \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLLEGENDELEMENT(_to) \
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return _to GetForm(aForm); } \
-  NS_IMETHOD GetAccessKey(nsAString & aAccessKey) { return _to GetAccessKey(aAccessKey); } \
-  NS_IMETHOD SetAccessKey(const nsAString & aAccessKey) { return _to SetAccessKey(aAccessKey); } \
-  NS_IMETHOD GetAlign(nsAString & aAlign) { return _to GetAlign(aAlign); } \
-  NS_IMETHOD SetAlign(const nsAString & aAlign) { return _to SetAlign(aAlign); } 
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return _to GetForm(aForm); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAccessKey(nsAString & aAccessKey) { return _to GetAccessKey(aAccessKey); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAccessKey(const nsAString & aAccessKey) { return _to SetAccessKey(aAccessKey); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) { return _to GetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) { return _to SetAlign(aAlign); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLLEGENDELEMENT(_to) \
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetForm(aForm); } \
-  NS_IMETHOD GetAccessKey(nsAString & aAccessKey) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAccessKey(aAccessKey); } \
-  NS_IMETHOD SetAccessKey(const nsAString & aAccessKey) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAccessKey(aAccessKey); } \
-  NS_IMETHOD GetAlign(nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlign(aAlign); } \
-  NS_IMETHOD SetAlign(const nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlign(aAlign); } 
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetForm(aForm); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAccessKey(nsAString & aAccessKey) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAccessKey(aAccessKey); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAccessKey(const nsAString & aAccessKey) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAccessKey(aAccessKey); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlign(aAlign); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

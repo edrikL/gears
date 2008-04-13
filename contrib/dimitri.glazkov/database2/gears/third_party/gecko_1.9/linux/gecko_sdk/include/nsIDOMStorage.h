@@ -24,7 +24,7 @@ class nsIDOMStorageItem; /* forward declaration */
   {0x95cc1383, 0x3b62, 0x4b89, \
     { 0xaa, 0xef, 0x10, 0x04, 0xa5, 0x13, 0xef, 0x47 }}
 
-class NS_NO_VTABLE nsIDOMStorage : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMStorage : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMSTORAGE_IID)
@@ -33,7 +33,7 @@ class NS_NO_VTABLE nsIDOMStorage : public nsISupports {
    * The number of keys stored.
    */
   /* readonly attribute unsigned long length; */
-  NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
 
   /**
    * Retrieve the name of the key at a particular index.
@@ -43,7 +43,7 @@ class NS_NO_VTABLE nsIDOMStorage : public nsISupports {
    * @throws INDEX_SIZE_ERR if there is no key at that index
    */
   /* DOMString key (in unsigned long index); */
-  NS_IMETHOD Key(PRUint32 index, nsAString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Key(PRUint32 index, nsAString & _retval) = 0;
 
   /**
    * Retrieve an item with a given key
@@ -52,7 +52,7 @@ class NS_NO_VTABLE nsIDOMStorage : public nsISupports {
    * @returns found item or null if the key was not found
    */
   /* nsIDOMStorageItem getItem (in DOMString key); */
-  NS_IMETHOD GetItem(const nsAString & key, nsIDOMStorageItem **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetItem(const nsAString & key, nsIDOMStorageItem **_retval) = 0;
 
   /**
    * Assign a value with a key. If the key does not exist already, a new
@@ -64,7 +64,7 @@ class NS_NO_VTABLE nsIDOMStorage : public nsISupports {
    * @returns found item or null if the key was not found
    */
   /* void setItem (in DOMString key, in DOMString data); */
-  NS_IMETHOD SetItem(const nsAString & key, const nsAString & data) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetItem(const nsAString & key, const nsAString & data) = 0;
 
   /**
    * Remove a key and its corresponding value.
@@ -72,7 +72,7 @@ class NS_NO_VTABLE nsIDOMStorage : public nsISupports {
    * @param key key to remove
    */
   /* void removeItem (in DOMString key); */
-  NS_IMETHOD RemoveItem(const nsAString & key) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveItem(const nsAString & key) = 0;
 
 };
 
@@ -80,27 +80,27 @@ class NS_NO_VTABLE nsIDOMStorage : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMSTORAGE \
-  NS_IMETHOD GetLength(PRUint32 *aLength); \
-  NS_IMETHOD Key(PRUint32 index, nsAString & _retval); \
-  NS_IMETHOD GetItem(const nsAString & key, nsIDOMStorageItem **_retval); \
-  NS_IMETHOD SetItem(const nsAString & key, const nsAString & data); \
-  NS_IMETHOD RemoveItem(const nsAString & key); 
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength); \
+  NS_SCRIPTABLE NS_IMETHOD Key(PRUint32 index, nsAString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetItem(const nsAString & key, nsIDOMStorageItem **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetItem(const nsAString & key, const nsAString & data); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveItem(const nsAString & key); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMSTORAGE(_to) \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
-  NS_IMETHOD Key(PRUint32 index, nsAString & _retval) { return _to Key(index, _retval); } \
-  NS_IMETHOD GetItem(const nsAString & key, nsIDOMStorageItem **_retval) { return _to GetItem(key, _retval); } \
-  NS_IMETHOD SetItem(const nsAString & key, const nsAString & data) { return _to SetItem(key, data); } \
-  NS_IMETHOD RemoveItem(const nsAString & key) { return _to RemoveItem(key); } 
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD Key(PRUint32 index, nsAString & _retval) { return _to Key(index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetItem(const nsAString & key, nsIDOMStorageItem **_retval) { return _to GetItem(key, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetItem(const nsAString & key, const nsAString & data) { return _to SetItem(key, data); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveItem(const nsAString & key) { return _to RemoveItem(key); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMSTORAGE(_to) \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
-  NS_IMETHOD Key(PRUint32 index, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Key(index, _retval); } \
-  NS_IMETHOD GetItem(const nsAString & key, nsIDOMStorageItem **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetItem(key, _retval); } \
-  NS_IMETHOD SetItem(const nsAString & key, const nsAString & data) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetItem(key, data); } \
-  NS_IMETHOD RemoveItem(const nsAString & key) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveItem(key); } 
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD Key(PRUint32 index, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Key(index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetItem(const nsAString & key, nsIDOMStorageItem **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetItem(key, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetItem(const nsAString & key, const nsAString & data) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetItem(key, data); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveItem(const nsAString & key) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveItem(key); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

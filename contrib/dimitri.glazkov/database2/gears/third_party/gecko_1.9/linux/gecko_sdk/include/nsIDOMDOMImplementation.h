@@ -22,7 +22,7 @@
   {0xa6cf9074, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMDOMImplementation : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMDOMImplementation : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMDOMIMPLEMENTATION_IID)
@@ -38,13 +38,13 @@ class NS_NO_VTABLE nsIDOMDOMImplementation : public nsISupports {
  * @status FROZEN
  */
   /* boolean hasFeature (in DOMString feature, in DOMString version); */
-  NS_IMETHOD HasFeature(const nsAString & feature, const nsAString & version, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD HasFeature(const nsAString & feature, const nsAString & version, PRBool *_retval) = 0;
 
   /* nsIDOMDocumentType createDocumentType (in DOMString qualifiedName, in DOMString publicId, in DOMString systemId)  raises (DOMException); */
-  NS_IMETHOD CreateDocumentType(const nsAString & qualifiedName, const nsAString & publicId, const nsAString & systemId, nsIDOMDocumentType **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateDocumentType(const nsAString & qualifiedName, const nsAString & publicId, const nsAString & systemId, nsIDOMDocumentType **_retval) = 0;
 
   /* nsIDOMDocument createDocument (in DOMString namespaceURI, in DOMString qualifiedName, in nsIDOMDocumentType doctype)  raises (DOMException); */
-  NS_IMETHOD CreateDocument(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMDocumentType *doctype, nsIDOMDocument **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateDocument(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMDocumentType *doctype, nsIDOMDocument **_retval) = 0;
 
 };
 
@@ -52,21 +52,21 @@ class NS_NO_VTABLE nsIDOMDOMImplementation : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMDOMIMPLEMENTATION \
-  NS_IMETHOD HasFeature(const nsAString & feature, const nsAString & version, PRBool *_retval); \
-  NS_IMETHOD CreateDocumentType(const nsAString & qualifiedName, const nsAString & publicId, const nsAString & systemId, nsIDOMDocumentType **_retval); \
-  NS_IMETHOD CreateDocument(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMDocumentType *doctype, nsIDOMDocument **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD HasFeature(const nsAString & feature, const nsAString & version, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CreateDocumentType(const nsAString & qualifiedName, const nsAString & publicId, const nsAString & systemId, nsIDOMDocumentType **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CreateDocument(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMDocumentType *doctype, nsIDOMDocument **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMDOMIMPLEMENTATION(_to) \
-  NS_IMETHOD HasFeature(const nsAString & feature, const nsAString & version, PRBool *_retval) { return _to HasFeature(feature, version, _retval); } \
-  NS_IMETHOD CreateDocumentType(const nsAString & qualifiedName, const nsAString & publicId, const nsAString & systemId, nsIDOMDocumentType **_retval) { return _to CreateDocumentType(qualifiedName, publicId, systemId, _retval); } \
-  NS_IMETHOD CreateDocument(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMDocumentType *doctype, nsIDOMDocument **_retval) { return _to CreateDocument(namespaceURI, qualifiedName, doctype, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD HasFeature(const nsAString & feature, const nsAString & version, PRBool *_retval) { return _to HasFeature(feature, version, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateDocumentType(const nsAString & qualifiedName, const nsAString & publicId, const nsAString & systemId, nsIDOMDocumentType **_retval) { return _to CreateDocumentType(qualifiedName, publicId, systemId, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateDocument(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMDocumentType *doctype, nsIDOMDocument **_retval) { return _to CreateDocument(namespaceURI, qualifiedName, doctype, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMDOMIMPLEMENTATION(_to) \
-  NS_IMETHOD HasFeature(const nsAString & feature, const nsAString & version, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->HasFeature(feature, version, _retval); } \
-  NS_IMETHOD CreateDocumentType(const nsAString & qualifiedName, const nsAString & publicId, const nsAString & systemId, nsIDOMDocumentType **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateDocumentType(qualifiedName, publicId, systemId, _retval); } \
-  NS_IMETHOD CreateDocument(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMDocumentType *doctype, nsIDOMDocument **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateDocument(namespaceURI, qualifiedName, doctype, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD HasFeature(const nsAString & feature, const nsAString & version, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->HasFeature(feature, version, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateDocumentType(const nsAString & qualifiedName, const nsAString & publicId, const nsAString & systemId, nsIDOMDocumentType **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateDocumentType(qualifiedName, publicId, systemId, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateDocument(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMDocumentType *doctype, nsIDOMDocument **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateDocument(namespaceURI, qualifiedName, doctype, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

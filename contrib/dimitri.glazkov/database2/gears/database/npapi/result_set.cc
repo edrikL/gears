@@ -28,6 +28,7 @@
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/stopwatch.h"
+#include "gears/database/common/database_utils.h"
 #include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
 
 #include "gears/database/npapi/database.h"
@@ -47,7 +48,6 @@ void Dispatcher<GearsResultSet>::Init() {
 }
 
 GearsResultSet::GearsResultSet() :
-    database_(NULL),
     statement_(NULL),
     is_valid_row_(false) {
 }
@@ -61,7 +61,6 @@ GearsResultSet::~GearsResultSet() {
 
   if (database_ != NULL) {
     database_->RemoveResultSet(this);
-    database_->RemoveReference();
     database_ = NULL;
   }
 }
@@ -81,7 +80,6 @@ bool GearsResultSet::InitializeResultSet(sqlite3_stmt *statement,
     Finalize();
   } else {
     database_ = db;
-    database_->AddReference();
     db->AddResultSet(this);
   }
   return succeeded;
@@ -91,14 +89,15 @@ void GearsResultSet::PageUnloading() {
   if (database_ != NULL) {
     // Don't remove ourselves from the result set, since database_ is going away
     // soon anyway.
-    database_->RemoveReference();
     database_ = NULL;
   }
 }
 
 bool GearsResultSet::Finalize() {
   if (statement_) {
+    sqlite3 *db = sqlite3_db_handle(statement_);
     int sql_status = sqlite3_finalize(statement_);
+    sql_status = SqlitePoisonIfCorrupt(db, sql_status);
     statement_ = NULL;
 
     LOG(("DB ResultSet Close: %d", sql_status));
@@ -282,6 +281,8 @@ bool GearsResultSet::NextImpl(std::string16 *error_message) {
   assert(statement_);
   assert(error_message);
   int sql_status = sqlite3_step(statement_);
+  sql_status = SqlitePoisonIfCorrupt(sqlite3_db_handle(statement_),
+                                     sql_status);
   LOG(("GearsResultSet::next() sqlite3_step returned %d", sql_status));
   switch (sql_status) {
     case SQLITE_ROW:

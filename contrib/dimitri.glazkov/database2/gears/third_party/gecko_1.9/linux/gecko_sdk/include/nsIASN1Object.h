@@ -34,7 +34,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIASN1Object : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIASN1Object : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IASN1OBJECT_IID)
@@ -92,29 +92,29 @@ class NS_NO_VTABLE nsIASN1Object : public nsISupports {
    *  "type" will be equal to one of the defined object identifiers.
    */
   /* attribute unsigned long type; */
-  NS_IMETHOD GetType(PRUint32 *aType) = 0;
-  NS_IMETHOD SetType(PRUint32 aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetType(PRUint32 *aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetType(PRUint32 aType) = 0;
 
   /**
    *  This contains a tag as explained in ASN.1 standards documents.
    */
   /* attribute unsigned long tag; */
-  NS_IMETHOD GetTag(PRUint32 *aTag) = 0;
-  NS_IMETHOD SetTag(PRUint32 aTag) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTag(PRUint32 *aTag) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetTag(PRUint32 aTag) = 0;
 
   /**
    *  "displayName" contains a human readable explanatory label.
    */
   /* attribute AString displayName; */
-  NS_IMETHOD GetDisplayName(nsAString & aDisplayName) = 0;
-  NS_IMETHOD SetDisplayName(const nsAString & aDisplayName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDisplayName(nsAString & aDisplayName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDisplayName(const nsAString & aDisplayName) = 0;
 
   /**
    *  "displayValue" contains the human readable value.
    */
   /* attribute AString displayValue; */
-  NS_IMETHOD GetDisplayValue(nsAString & aDisplayValue) = 0;
-  NS_IMETHOD SetDisplayValue(const nsAString & aDisplayValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDisplayValue(nsAString & aDisplayValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDisplayValue(const nsAString & aDisplayValue) = 0;
 
 };
 
@@ -122,36 +122,36 @@ class NS_NO_VTABLE nsIASN1Object : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIASN1OBJECT \
-  NS_IMETHOD GetType(PRUint32 *aType); \
-  NS_IMETHOD SetType(PRUint32 aType); \
-  NS_IMETHOD GetTag(PRUint32 *aTag); \
-  NS_IMETHOD SetTag(PRUint32 aTag); \
-  NS_IMETHOD GetDisplayName(nsAString & aDisplayName); \
-  NS_IMETHOD SetDisplayName(const nsAString & aDisplayName); \
-  NS_IMETHOD GetDisplayValue(nsAString & aDisplayValue); \
-  NS_IMETHOD SetDisplayValue(const nsAString & aDisplayValue); 
+  NS_SCRIPTABLE NS_IMETHOD GetType(PRUint32 *aType); \
+  NS_SCRIPTABLE NS_IMETHOD SetType(PRUint32 aType); \
+  NS_SCRIPTABLE NS_IMETHOD GetTag(PRUint32 *aTag); \
+  NS_SCRIPTABLE NS_IMETHOD SetTag(PRUint32 aTag); \
+  NS_SCRIPTABLE NS_IMETHOD GetDisplayName(nsAString & aDisplayName); \
+  NS_SCRIPTABLE NS_IMETHOD SetDisplayName(const nsAString & aDisplayName); \
+  NS_SCRIPTABLE NS_IMETHOD GetDisplayValue(nsAString & aDisplayValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetDisplayValue(const nsAString & aDisplayValue); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIASN1OBJECT(_to) \
-  NS_IMETHOD GetType(PRUint32 *aType) { return _to GetType(aType); } \
-  NS_IMETHOD SetType(PRUint32 aType) { return _to SetType(aType); } \
-  NS_IMETHOD GetTag(PRUint32 *aTag) { return _to GetTag(aTag); } \
-  NS_IMETHOD SetTag(PRUint32 aTag) { return _to SetTag(aTag); } \
-  NS_IMETHOD GetDisplayName(nsAString & aDisplayName) { return _to GetDisplayName(aDisplayName); } \
-  NS_IMETHOD SetDisplayName(const nsAString & aDisplayName) { return _to SetDisplayName(aDisplayName); } \
-  NS_IMETHOD GetDisplayValue(nsAString & aDisplayValue) { return _to GetDisplayValue(aDisplayValue); } \
-  NS_IMETHOD SetDisplayValue(const nsAString & aDisplayValue) { return _to SetDisplayValue(aDisplayValue); } 
+  NS_SCRIPTABLE NS_IMETHOD GetType(PRUint32 *aType) { return _to GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(PRUint32 aType) { return _to SetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTag(PRUint32 *aTag) { return _to GetTag(aTag); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTag(PRUint32 aTag) { return _to SetTag(aTag); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDisplayName(nsAString & aDisplayName) { return _to GetDisplayName(aDisplayName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDisplayName(const nsAString & aDisplayName) { return _to SetDisplayName(aDisplayName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDisplayValue(nsAString & aDisplayValue) { return _to GetDisplayValue(aDisplayValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDisplayValue(const nsAString & aDisplayValue) { return _to SetDisplayValue(aDisplayValue); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIASN1OBJECT(_to) \
-  NS_IMETHOD GetType(PRUint32 *aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
-  NS_IMETHOD SetType(PRUint32 aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } \
-  NS_IMETHOD GetTag(PRUint32 *aTag) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTag(aTag); } \
-  NS_IMETHOD SetTag(PRUint32 aTag) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTag(aTag); } \
-  NS_IMETHOD GetDisplayName(nsAString & aDisplayName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDisplayName(aDisplayName); } \
-  NS_IMETHOD SetDisplayName(const nsAString & aDisplayName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDisplayName(aDisplayName); } \
-  NS_IMETHOD GetDisplayValue(nsAString & aDisplayValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDisplayValue(aDisplayValue); } \
-  NS_IMETHOD SetDisplayValue(const nsAString & aDisplayValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDisplayValue(aDisplayValue); } 
+  NS_SCRIPTABLE NS_IMETHOD GetType(PRUint32 *aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(PRUint32 aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTag(PRUint32 *aTag) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTag(aTag); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTag(PRUint32 aTag) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTag(aTag); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDisplayName(nsAString & aDisplayName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDisplayName(aDisplayName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDisplayName(const nsAString & aDisplayName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDisplayName(aDisplayName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDisplayValue(nsAString & aDisplayValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDisplayValue(aDisplayValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDisplayValue(const nsAString & aDisplayValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDisplayValue(aDisplayValue); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

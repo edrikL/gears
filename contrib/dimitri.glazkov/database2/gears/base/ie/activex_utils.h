@@ -28,6 +28,7 @@
 #ifndef GEARS_BASE_IE_ACTIVEX_UTILS_H__
 #define GEARS_BASE_IE_ACTIVEX_UTILS_H__
 
+#include <vector>
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/atl_headers.h"
 
@@ -119,6 +120,10 @@ class ActiveXUtils {
 
     return true;
   }
+
+  // Appends to the vector out the names of dispatch's properties.
+  static HRESULT GetDispatchPropertyNames(IDispatch *dispatch,
+                                          std::vector<std::string16> *out);
 
   // Returns the property value by name.
   // The caller is responsible for freeing the returned VARIANT.

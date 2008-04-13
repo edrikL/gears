@@ -100,9 +100,15 @@ bool Dispatcher<T>::SetProperty(DispatchId property_id,
                                 JsCallContext *context) {
   const IDList &properties = GetPropertySetterList();
   typename IDList::const_iterator property = properties.find(property_id);
-  if (property == properties.end() || property->second == NULL)
+  if (property == properties.end()) {
     return false;
+  }
   ImplCallback callback = property->second;
+  if (callback == NULL) { // Read only property.
+    context->SetException(
+                 STRING16(L"Cannot assign value to a read only property."));
+    return true;
+  }
 
   (impl_->*callback)(context);
   return true;

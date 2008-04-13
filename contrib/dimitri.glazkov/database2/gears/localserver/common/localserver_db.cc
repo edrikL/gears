@@ -30,13 +30,18 @@
 #include <vector>
 
 #include "gears/base/common/exception_handler_win32.h"  // For ExceptionManager
+#include "gears/base/common/file.h"
 #include "gears/base/common/http_utils.h"
+#include "gears/base/common/paths.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/common/url_utils.h"
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"  // For BrowserCache
+#endif
 #include "gears/localserver/common/blob_store.h"
 #ifdef USE_FILE_STORE
 #include "gears/localserver/common/file_store.h"
@@ -494,7 +499,10 @@ bool WebCacheDB::CanService(const char16 *url) {
   ASSERT_SINGLE_THREAD();
   int64 payload_id = kInvalidID;
   std::string16 redirect_url;
-  return Service(url, &payload_id, &redirect_url);
+  // TODO(aa): Clean up this hook at some point. Use gears:// scheme? Other
+  // options?
+  return ServiceGearsInspectorUrl(url, NULL) ||  // Hook for Gears inspector
+         Service(url, &payload_id, &redirect_url);
 }
 
 
@@ -506,6 +514,12 @@ bool WebCacheDB::Service(const char16 *url, bool head_only,
   ASSERT_SINGLE_THREAD();
   assert(url);
   assert(payload);
+
+  // Hook for intercepting and serving up Gears inspector files
+  // TODO(aa): See comment in CanService.
+  if (ServiceGearsInspectorUrl(url, payload)) {
+    return true;
+  }
 
   int64 payload_id = kInvalidID;
   std::string16 redirect_url;
@@ -696,6 +710,105 @@ bool WebCacheDB::Service(const char16 *url,
   return false;
 }
 
+//------------------------------------------------------------------------------
+// ServiceGearsInspectorUrl
+//------------------------------------------------------------------------------
+bool WebCacheDB::ServiceGearsInspectorUrl(const char16 *url,
+                                          PayloadInfo *payload) {
+
+#ifdef WIN32
+  // TODO(aa): Not yet supported on WIN32. The only missing piece is to add a
+  // section to the Wix installer to lay down the files in gears/inspector/ to
+  // the Gears shared common directory.
+  return false;
+
+#elif OFFICIAL_BUILD==1
+  // TODO(aa): There should be a global setting to enable/disable the Gears
+  // inspector. For now, its disabled in official builds.
+  return false;
+
+#else
+  SecurityOrigin origin;  // Only used to get length of url scheme
+  if (!origin.InitFromUrl(url)) return false;
+
+  // We want to intercept anything that has "__gears__" as the first path
+  // component and serve up local files.
+  std::string16 url_string;
+  url_string.assign(url);
+  // Find first "/" _after_ scheme
+  // TODO(aa): We really shouldn't need to be doing this ourselves, maybe add
+  // a helper to SecurityOrigin or somewhere to get url path components.
+  std::string16::size_type location = origin.scheme().length() + 3;
+  location = url_string.find(STRING16(L"/"), location);
+  if (location != std::string16::npos) {
+    // Find next "/" after that
+    std::string16::size_type location_end = 0;
+    location_end = url_string.find(STRING16(L"/"), location + 1);
+    std::string16 path_component;
+    // There is a second "/"
+    if (location_end != std::string16::npos) {
+      path_component = url_string.substr(location + 1,
+                                         location_end - location - 1);
+    // No other "/", take everything up to the end of the string
+    } else {
+      path_component = url_string.substr(location + 1);
+    }
+    if (path_component == STRING16(L"__gears__")) {
+
+      // Edge case: default URL must have a trailing "/" for the index page
+      // to load correctly (i.e. http://domain.com/__gears__/). Browsers
+      // usually do this automatically.
+      if (location_end == std::string16::npos) {
+        if (!payload) {
+          return true;  // Can serve but not interested in content just yet
+        } else {
+          url_string += STRING16(L"/");
+          return payload->SynthesizeHttpRedirect(NULL, url_string.c_str());
+        }
+      }
+     
+      // Get name of requested resource
+      std::string16 file_name;
+      file_name = url_string.substr(location_end + 1);
+      if (file_name == STRING16(L"")) {
+        file_name = STRING16(L"index.html");  // Default Inspector page
+      }
+     
+      // Build path to actual local file
+      std::string16 local_file;
+      if (!GetBaseResourcesDirectory(&local_file)) {
+        return false;
+      }
+      // TODO(aa): Not sure if this is completely safe. Investigate a better
+      // way of building up this path.
+      local_file += kPathSeparator;
+      local_file += STRING16(L"inspector");
+      local_file += kPathSeparator;
+      local_file += file_name;
+
+      if (!File::Exists(local_file.c_str())) return false;
+
+      // We can serve this url but are not interested in content just yet
+      if (!payload) return true;
+
+      // Set up fake HTTP response
+      payload->id = kInvalidID;
+      payload->creation_date = 0;
+      payload->headers = STRING16(L"");
+      payload->status_line = STRING16(L"");
+      payload->status_code = 200;
+      payload->is_synthesized_http_redirect = false;
+      scoped_ptr< std::vector<uint8> > data(new std::vector<uint8>);
+      if (!File::ReadFileToVector(local_file.c_str(), data.get())) {
+        return false;
+      }
+      payload->data.reset(data.release());
+      return true;
+    }
+  }
+  return false;
+#endif
+}
 
 //------------------------------------------------------------------------------
 // MaybeInitiateUpdateTask
@@ -722,7 +835,7 @@ void WebCacheDB::MaybeInitiateUpdateTask(int64 server_id) {
     last_auto_update_map[server_id] = now;
   }
 
-  LOG(("Automatically initiating update for managed store"));
+  LOG(("Automatically initiating update for managed store\n"));
 
   ManagedResourceStore store;
   if (!store.Open(server_id)) {
@@ -1166,6 +1279,14 @@ bool WebCacheDB::DeleteServer(int64 id) {
   response_bodies_store_->DeleteDirectoryForServer(id);
 #endif
 
+#ifdef WINCE
+  std::vector<EntryInfo> entries;
+  VersionInfo version;
+  if (FindVersion(id, VERSION_CURRENT, &version)) {
+    FindEntries(version.id, &entries);
+  }
+#endif
+
   // Delete all versions, entries, no longer referenced payloads
   // related to this server
 
@@ -1192,7 +1313,15 @@ bool WebCacheDB::DeleteServer(int64 id) {
     return false;
   }
 
-  return transaction.Commit();
+  bool committed = transaction.Commit();
+#ifdef WINCE
+  if (committed) {
+    for (int i = 0; i < static_cast<int>(entries.size()); ++i) {
+      BrowserCache::RemoveBogusEntry(entries[i].url.c_str());
+    }
+  }
+#endif
+  return committed;
 }
 
 
@@ -1691,6 +1820,59 @@ bool WebCacheDB::FindEntry(int64 version_id,
   return true;
 }
 
+//------------------------------------------------------------------------------
+// FindEntries
+//------------------------------------------------------------------------------
+bool WebCacheDB::FindEntries(int64 version_id,
+                             std::vector<EntryInfo> *entries) {
+  ASSERT_SINGLE_THREAD();
+  std::vector<int64> version_ids;
+  version_ids.push_back(version_id);
+  return FindEntries(&version_ids, entries);
+}
+
+//------------------------------------------------------------------------------
+// FindEntries
+//------------------------------------------------------------------------------
+bool WebCacheDB::FindEntries(std::vector<int64> *version_ids,
+                             std::vector<EntryInfo> *entries) {
+  ASSERT_SINGLE_THREAD();
+  assert(version_ids);
+  assert(entries);
+  assert(entries->empty());
+  if (version_ids->size() == 0) {
+    return true;
+  }
+
+  std::string16 sql(STRING16(L"SELECT * FROM Entries WHERE VersionId IN ("));
+  for (unsigned int i = 0; i < version_ids->size(); ++i) {
+    if (i == version_ids->size() - 1)
+      sql += STRING16(L"?");
+    else
+      sql += STRING16(L"?, ");
+  }
+  sql += STRING16(L")");
+
+  SQLStatement stmt;
+  int rv = stmt.prepare16(&db_, sql.c_str());
+  if (rv != SQLITE_OK) {
+    LOG(("WebCacheDB.FindEntries failed\n"));
+    return false;
+  }
+  for (unsigned int i = 0; i < version_ids->size(); ++i) {
+    rv |= stmt.bind_int64(i, (*version_ids)[i]);
+  }
+  if (rv != SQLITE_OK) {
+    return false;
+  }
+
+  while (stmt.step() == SQLITE_ROW) {
+    entries->push_back(EntryInfo());
+    ReadEntryInfo(stmt, &entries->back());
+  }
+
+  return true;
+}
 
 //------------------------------------------------------------------------------
 // FindEntriesHavingNoResponse
@@ -2242,6 +2424,26 @@ bool WebCacheDB::PayloadInfo::PassesValidationTests() {
   const char *body = headers_ascii.c_str();
   uint32 body_len = headers_ascii.length();
   HTTPHeaders parsed_headers;
-  return HTTPUtils::ParseHTTPHeaders(&body, &body_len, &parsed_headers,
-                                     true /* allow_const_cast */);
+  if (!HTTPUtils::ParseHTTPHeaders(&body, &body_len, &parsed_headers,
+                                   true /* allow_const_cast */)) {
+    return false;
+  }
+
+  // This is to defend against inserting degenerate responses that we
+  // occasionally capture in Firefox. In that case we get a valid status
+  // line saying OK, and a no other headers except the content-length
+  // header that we synthesized (rather than actually received). To be
+  // consistent across platforms, we'll reject this form of response
+  // in all cases, even if this is actually what the server sent us.
+  // TODO(michaeln): If and when we get a handle on the source of that
+  // problem, revisit this part of the validity test.
+  if (status_code == HttpConstants::HTTP_OK && 
+      parsed_headers.HeaderIs(HTTPHeaders::CONTENT_LENGTH, "0")) {
+    parsed_headers.ClearHeader(HTTPHeaders::CONTENT_LENGTH);
+    if (parsed_headers.IsEmpty()) {
+      return false;
+    }
+  }
+
+  return true;
 }

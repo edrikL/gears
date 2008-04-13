@@ -44,7 +44,7 @@ class nsIStreamListener; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIChannel : public nsIRequest {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIChannel : public nsIRequest {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICHANNEL_IID)
@@ -59,14 +59,14 @@ class NS_NO_VTABLE nsIChannel : public nsIRequest {
      * from nsIHttpChannel).
      */
   /* attribute nsIURI originalURI; */
-  NS_IMETHOD GetOriginalURI(nsIURI * *aOriginalURI) = 0;
-  NS_IMETHOD SetOriginalURI(nsIURI * aOriginalURI) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetOriginalURI(nsIURI * *aOriginalURI) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetOriginalURI(nsIURI * aOriginalURI) = 0;
 
   /**
      * The URI corresponding to the channel.  Its value is immutable.
      */
   /* readonly attribute nsIURI URI; */
-  NS_IMETHOD GetURI(nsIURI * *aURI) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetURI(nsIURI * *aURI) = 0;
 
   /**
      * The owner, corresponding to the entity that is responsible for this
@@ -78,8 +78,8 @@ class NS_NO_VTABLE nsIChannel : public nsIRequest {
      * explicitly drop its reference to the channel.
      */
   /* attribute nsISupports owner; */
-  NS_IMETHOD GetOwner(nsISupports * *aOwner) = 0;
-  NS_IMETHOD SetOwner(nsISupports * aOwner) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetOwner(nsISupports * *aOwner) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetOwner(nsISupports * aOwner) = 0;
 
   /**
      * The notification callbacks for the channel.  This is set by clients, who
@@ -101,14 +101,14 @@ class NS_NO_VTABLE nsIChannel : public nsIRequest {
      * become invalid and may therefore need to be re-queried.
      */
   /* attribute nsIInterfaceRequestor notificationCallbacks; */
-  NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) = 0;
-  NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) = 0;
 
   /**
      * Transport-level security information (if any) corresponding to the channel.
      */
   /* readonly attribute nsISupports securityInfo; */
-  NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) = 0;
 
   /**
      * The MIME type of the channel's content if available. 
@@ -136,8 +136,8 @@ class NS_NO_VTABLE nsIChannel : public nsIRequest {
      * Any implementation of nsIChannel must follow these rules.
      */
   /* attribute ACString contentType; */
-  NS_IMETHOD GetContentType(nsACString & aContentType) = 0;
-  NS_IMETHOD SetContentType(const nsACString & aContentType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetContentType(nsACString & aContentType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetContentType(const nsACString & aContentType) = 0;
 
   /**
      * The character set of the channel's content if available and if applicable.
@@ -146,8 +146,8 @@ class NS_NO_VTABLE nsIChannel : public nsIRequest {
      * The value of the contentCharset attribute is a mixedcase string.
      */
   /* attribute ACString contentCharset; */
-  NS_IMETHOD GetContentCharset(nsACString & aContentCharset) = 0;
-  NS_IMETHOD SetContentCharset(const nsACString & aContentCharset) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetContentCharset(nsACString & aContentCharset) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetContentCharset(const nsACString & aContentCharset) = 0;
 
   /**
      * The length of the data associated with the channel if available.  A value
@@ -158,8 +158,8 @@ class NS_NO_VTABLE nsIChannel : public nsIRequest {
      * if that interface is exposed by the channel.
      */
   /* attribute long contentLength; */
-  NS_IMETHOD GetContentLength(PRInt32 *aContentLength) = 0;
-  NS_IMETHOD SetContentLength(PRInt32 aContentLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetContentLength(PRInt32 *aContentLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetContentLength(PRInt32 aContentLength) = 0;
 
   /**
      * Synchronously open the channel.
@@ -174,7 +174,7 @@ class NS_NO_VTABLE nsIChannel : public nsIRequest {
      * is reopened.
      */
   /* nsIInputStream open (); */
-  NS_IMETHOD Open(nsIInputStream **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Open(nsIInputStream **_retval) = 0;
 
   /**
      * Asynchronously open this channel.  Data is fed to the specified stream
@@ -208,7 +208,7 @@ class NS_NO_VTABLE nsIChannel : public nsIRequest {
      * @see nsIChannelEventSink for onChannelRedirect
      */
   /* void asyncOpen (in nsIStreamListener aListener, in nsISupports aContext); */
-  NS_IMETHOD AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext) = 0;
 
   /**************************************************************************
      * Channel specific load flags:
@@ -274,60 +274,60 @@ class NS_NO_VTABLE nsIChannel : public nsIRequest {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICHANNEL \
-  NS_IMETHOD GetOriginalURI(nsIURI * *aOriginalURI); \
-  NS_IMETHOD SetOriginalURI(nsIURI * aOriginalURI); \
-  NS_IMETHOD GetURI(nsIURI * *aURI); \
-  NS_IMETHOD GetOwner(nsISupports * *aOwner); \
-  NS_IMETHOD SetOwner(nsISupports * aOwner); \
-  NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks); \
-  NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks); \
-  NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo); \
-  NS_IMETHOD GetContentType(nsACString & aContentType); \
-  NS_IMETHOD SetContentType(const nsACString & aContentType); \
-  NS_IMETHOD GetContentCharset(nsACString & aContentCharset); \
-  NS_IMETHOD SetContentCharset(const nsACString & aContentCharset); \
-  NS_IMETHOD GetContentLength(PRInt32 *aContentLength); \
-  NS_IMETHOD SetContentLength(PRInt32 aContentLength); \
-  NS_IMETHOD Open(nsIInputStream **_retval); \
-  NS_IMETHOD AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext); \
+  NS_SCRIPTABLE NS_IMETHOD GetOriginalURI(nsIURI * *aOriginalURI); \
+  NS_SCRIPTABLE NS_IMETHOD SetOriginalURI(nsIURI * aOriginalURI); \
+  NS_SCRIPTABLE NS_IMETHOD GetURI(nsIURI * *aURI); \
+  NS_SCRIPTABLE NS_IMETHOD GetOwner(nsISupports * *aOwner); \
+  NS_SCRIPTABLE NS_IMETHOD SetOwner(nsISupports * aOwner); \
+  NS_SCRIPTABLE NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks); \
+  NS_SCRIPTABLE NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks); \
+  NS_SCRIPTABLE NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo); \
+  NS_SCRIPTABLE NS_IMETHOD GetContentType(nsACString & aContentType); \
+  NS_SCRIPTABLE NS_IMETHOD SetContentType(const nsACString & aContentType); \
+  NS_SCRIPTABLE NS_IMETHOD GetContentCharset(nsACString & aContentCharset); \
+  NS_SCRIPTABLE NS_IMETHOD SetContentCharset(const nsACString & aContentCharset); \
+  NS_SCRIPTABLE NS_IMETHOD GetContentLength(PRInt32 *aContentLength); \
+  NS_SCRIPTABLE NS_IMETHOD SetContentLength(PRInt32 aContentLength); \
+  NS_SCRIPTABLE NS_IMETHOD Open(nsIInputStream **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext); \
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICHANNEL(_to) \
-  NS_IMETHOD GetOriginalURI(nsIURI * *aOriginalURI) { return _to GetOriginalURI(aOriginalURI); } \
-  NS_IMETHOD SetOriginalURI(nsIURI * aOriginalURI) { return _to SetOriginalURI(aOriginalURI); } \
-  NS_IMETHOD GetURI(nsIURI * *aURI) { return _to GetURI(aURI); } \
-  NS_IMETHOD GetOwner(nsISupports * *aOwner) { return _to GetOwner(aOwner); } \
-  NS_IMETHOD SetOwner(nsISupports * aOwner) { return _to SetOwner(aOwner); } \
-  NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) { return _to GetNotificationCallbacks(aNotificationCallbacks); } \
-  NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) { return _to SetNotificationCallbacks(aNotificationCallbacks); } \
-  NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) { return _to GetSecurityInfo(aSecurityInfo); } \
-  NS_IMETHOD GetContentType(nsACString & aContentType) { return _to GetContentType(aContentType); } \
-  NS_IMETHOD SetContentType(const nsACString & aContentType) { return _to SetContentType(aContentType); } \
-  NS_IMETHOD GetContentCharset(nsACString & aContentCharset) { return _to GetContentCharset(aContentCharset); } \
-  NS_IMETHOD SetContentCharset(const nsACString & aContentCharset) { return _to SetContentCharset(aContentCharset); } \
-  NS_IMETHOD GetContentLength(PRInt32 *aContentLength) { return _to GetContentLength(aContentLength); } \
-  NS_IMETHOD SetContentLength(PRInt32 aContentLength) { return _to SetContentLength(aContentLength); } \
-  NS_IMETHOD Open(nsIInputStream **_retval) { return _to Open(_retval); } \
-  NS_IMETHOD AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext) { return _to AsyncOpen(aListener, aContext); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOriginalURI(nsIURI * *aOriginalURI) { return _to GetOriginalURI(aOriginalURI); } \
+  NS_SCRIPTABLE NS_IMETHOD SetOriginalURI(nsIURI * aOriginalURI) { return _to SetOriginalURI(aOriginalURI); } \
+  NS_SCRIPTABLE NS_IMETHOD GetURI(nsIURI * *aURI) { return _to GetURI(aURI); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOwner(nsISupports * *aOwner) { return _to GetOwner(aOwner); } \
+  NS_SCRIPTABLE NS_IMETHOD SetOwner(nsISupports * aOwner) { return _to SetOwner(aOwner); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) { return _to GetNotificationCallbacks(aNotificationCallbacks); } \
+  NS_SCRIPTABLE NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) { return _to SetNotificationCallbacks(aNotificationCallbacks); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) { return _to GetSecurityInfo(aSecurityInfo); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContentType(nsACString & aContentType) { return _to GetContentType(aContentType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetContentType(const nsACString & aContentType) { return _to SetContentType(aContentType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContentCharset(nsACString & aContentCharset) { return _to GetContentCharset(aContentCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD SetContentCharset(const nsACString & aContentCharset) { return _to SetContentCharset(aContentCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContentLength(PRInt32 *aContentLength) { return _to GetContentLength(aContentLength); } \
+  NS_SCRIPTABLE NS_IMETHOD SetContentLength(PRInt32 aContentLength) { return _to SetContentLength(aContentLength); } \
+  NS_SCRIPTABLE NS_IMETHOD Open(nsIInputStream **_retval) { return _to Open(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext) { return _to AsyncOpen(aListener, aContext); } \
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICHANNEL(_to) \
-  NS_IMETHOD GetOriginalURI(nsIURI * *aOriginalURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOriginalURI(aOriginalURI); } \
-  NS_IMETHOD SetOriginalURI(nsIURI * aOriginalURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetOriginalURI(aOriginalURI); } \
-  NS_IMETHOD GetURI(nsIURI * *aURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetURI(aURI); } \
-  NS_IMETHOD GetOwner(nsISupports * *aOwner) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOwner(aOwner); } \
-  NS_IMETHOD SetOwner(nsISupports * aOwner) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetOwner(aOwner); } \
-  NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotificationCallbacks(aNotificationCallbacks); } \
-  NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetNotificationCallbacks(aNotificationCallbacks); } \
-  NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSecurityInfo(aSecurityInfo); } \
-  NS_IMETHOD GetContentType(nsACString & aContentType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentType(aContentType); } \
-  NS_IMETHOD SetContentType(const nsACString & aContentType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetContentType(aContentType); } \
-  NS_IMETHOD GetContentCharset(nsACString & aContentCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentCharset(aContentCharset); } \
-  NS_IMETHOD SetContentCharset(const nsACString & aContentCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetContentCharset(aContentCharset); } \
-  NS_IMETHOD GetContentLength(PRInt32 *aContentLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentLength(aContentLength); } \
-  NS_IMETHOD SetContentLength(PRInt32 aContentLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetContentLength(aContentLength); } \
-  NS_IMETHOD Open(nsIInputStream **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Open(_retval); } \
-  NS_IMETHOD AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext) { return !_to ? NS_ERROR_NULL_POINTER : _to->AsyncOpen(aListener, aContext); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOriginalURI(nsIURI * *aOriginalURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOriginalURI(aOriginalURI); } \
+  NS_SCRIPTABLE NS_IMETHOD SetOriginalURI(nsIURI * aOriginalURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetOriginalURI(aOriginalURI); } \
+  NS_SCRIPTABLE NS_IMETHOD GetURI(nsIURI * *aURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetURI(aURI); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOwner(nsISupports * *aOwner) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOwner(aOwner); } \
+  NS_SCRIPTABLE NS_IMETHOD SetOwner(nsISupports * aOwner) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetOwner(aOwner); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotificationCallbacks(aNotificationCallbacks); } \
+  NS_SCRIPTABLE NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetNotificationCallbacks(aNotificationCallbacks); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSecurityInfo(aSecurityInfo); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContentType(nsACString & aContentType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentType(aContentType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetContentType(const nsACString & aContentType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetContentType(aContentType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContentCharset(nsACString & aContentCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentCharset(aContentCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD SetContentCharset(const nsACString & aContentCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetContentCharset(aContentCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContentLength(PRInt32 *aContentLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentLength(aContentLength); } \
+  NS_SCRIPTABLE NS_IMETHOD SetContentLength(PRInt32 aContentLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetContentLength(aContentLength); } \
+  NS_SCRIPTABLE NS_IMETHOD Open(nsIInputStream **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Open(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext) { return !_to ? NS_ERROR_NULL_POINTER : _to->AsyncOpen(aListener, aContext); } \
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

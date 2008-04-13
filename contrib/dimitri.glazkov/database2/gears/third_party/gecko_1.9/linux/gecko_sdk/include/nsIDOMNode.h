@@ -22,7 +22,7 @@
   {0xa6cf907c, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMNode : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMNode : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMNODE_IID)
@@ -62,75 +62,75 @@ class NS_NO_VTABLE nsIDOMNode : public nsISupports {
   enum { NOTATION_NODE = 12U };
 
   /* readonly attribute DOMString nodeName; */
-  NS_IMETHOD GetNodeName(nsAString & aNodeName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNodeName(nsAString & aNodeName) = 0;
 
   /* attribute DOMString nodeValue; */
-  NS_IMETHOD GetNodeValue(nsAString & aNodeValue) = 0;
-  NS_IMETHOD SetNodeValue(const nsAString & aNodeValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNodeValue(nsAString & aNodeValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetNodeValue(const nsAString & aNodeValue) = 0;
 
   /* readonly attribute unsigned short nodeType; */
-  NS_IMETHOD GetNodeType(PRUint16 *aNodeType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNodeType(PRUint16 *aNodeType) = 0;
 
   /* readonly attribute nsIDOMNode parentNode; */
-  NS_IMETHOD GetParentNode(nsIDOMNode * *aParentNode) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetParentNode(nsIDOMNode * *aParentNode) = 0;
 
   /* readonly attribute nsIDOMNodeList childNodes; */
-  NS_IMETHOD GetChildNodes(nsIDOMNodeList * *aChildNodes) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetChildNodes(nsIDOMNodeList * *aChildNodes) = 0;
 
   /* readonly attribute nsIDOMNode firstChild; */
-  NS_IMETHOD GetFirstChild(nsIDOMNode * *aFirstChild) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFirstChild(nsIDOMNode * *aFirstChild) = 0;
 
   /* readonly attribute nsIDOMNode lastChild; */
-  NS_IMETHOD GetLastChild(nsIDOMNode * *aLastChild) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLastChild(nsIDOMNode * *aLastChild) = 0;
 
   /* readonly attribute nsIDOMNode previousSibling; */
-  NS_IMETHOD GetPreviousSibling(nsIDOMNode * *aPreviousSibling) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPreviousSibling(nsIDOMNode * *aPreviousSibling) = 0;
 
   /* readonly attribute nsIDOMNode nextSibling; */
-  NS_IMETHOD GetNextSibling(nsIDOMNode * *aNextSibling) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNextSibling(nsIDOMNode * *aNextSibling) = 0;
 
   /* readonly attribute nsIDOMNamedNodeMap attributes; */
-  NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap * *aAttributes) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap * *aAttributes) = 0;
 
   /* readonly attribute nsIDOMDocument ownerDocument; */
-  NS_IMETHOD GetOwnerDocument(nsIDOMDocument * *aOwnerDocument) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetOwnerDocument(nsIDOMDocument * *aOwnerDocument) = 0;
 
   /* nsIDOMNode insertBefore (in nsIDOMNode newChild, in nsIDOMNode refChild)  raises (DOMException); */
-  NS_IMETHOD InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild, nsIDOMNode **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild, nsIDOMNode **_retval) = 0;
 
   /* nsIDOMNode replaceChild (in nsIDOMNode newChild, in nsIDOMNode oldChild)  raises (DOMException); */
-  NS_IMETHOD ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild, nsIDOMNode **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild, nsIDOMNode **_retval) = 0;
 
   /* nsIDOMNode removeChild (in nsIDOMNode oldChild)  raises (DOMException); */
-  NS_IMETHOD RemoveChild(nsIDOMNode *oldChild, nsIDOMNode **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveChild(nsIDOMNode *oldChild, nsIDOMNode **_retval) = 0;
 
   /* nsIDOMNode appendChild (in nsIDOMNode newChild)  raises (DOMException); */
-  NS_IMETHOD AppendChild(nsIDOMNode *newChild, nsIDOMNode **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AppendChild(nsIDOMNode *newChild, nsIDOMNode **_retval) = 0;
 
   /* boolean hasChildNodes (); */
-  NS_IMETHOD HasChildNodes(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD HasChildNodes(PRBool *_retval) = 0;
 
   /* nsIDOMNode cloneNode (in boolean deep); */
-  NS_IMETHOD CloneNode(PRBool deep, nsIDOMNode **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CloneNode(PRBool deep, nsIDOMNode **_retval) = 0;
 
   /* void normalize (); */
-  NS_IMETHOD Normalize(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Normalize(void) = 0;
 
   /* boolean isSupported (in DOMString feature, in DOMString version); */
-  NS_IMETHOD IsSupported(const nsAString & feature, const nsAString & version, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsSupported(const nsAString & feature, const nsAString & version, PRBool *_retval) = 0;
 
   /* readonly attribute DOMString namespaceURI; */
-  NS_IMETHOD GetNamespaceURI(nsAString & aNamespaceURI) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNamespaceURI(nsAString & aNamespaceURI) = 0;
 
   /* attribute DOMString prefix; */
-  NS_IMETHOD GetPrefix(nsAString & aPrefix) = 0;
-  NS_IMETHOD SetPrefix(const nsAString & aPrefix) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPrefix(nsAString & aPrefix) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetPrefix(const nsAString & aPrefix) = 0;
 
   /* readonly attribute DOMString localName; */
-  NS_IMETHOD GetLocalName(nsAString & aLocalName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLocalName(nsAString & aLocalName) = 0;
 
   /* boolean hasAttributes (); */
-  NS_IMETHOD HasAttributes(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD HasAttributes(PRBool *_retval) = 0;
 
 };
 
@@ -138,87 +138,87 @@ class NS_NO_VTABLE nsIDOMNode : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMNODE \
-  NS_IMETHOD GetNodeName(nsAString & aNodeName); \
-  NS_IMETHOD GetNodeValue(nsAString & aNodeValue); \
-  NS_IMETHOD SetNodeValue(const nsAString & aNodeValue); \
-  NS_IMETHOD GetNodeType(PRUint16 *aNodeType); \
-  NS_IMETHOD GetParentNode(nsIDOMNode * *aParentNode); \
-  NS_IMETHOD GetChildNodes(nsIDOMNodeList * *aChildNodes); \
-  NS_IMETHOD GetFirstChild(nsIDOMNode * *aFirstChild); \
-  NS_IMETHOD GetLastChild(nsIDOMNode * *aLastChild); \
-  NS_IMETHOD GetPreviousSibling(nsIDOMNode * *aPreviousSibling); \
-  NS_IMETHOD GetNextSibling(nsIDOMNode * *aNextSibling); \
-  NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap * *aAttributes); \
-  NS_IMETHOD GetOwnerDocument(nsIDOMDocument * *aOwnerDocument); \
-  NS_IMETHOD InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild, nsIDOMNode **_retval); \
-  NS_IMETHOD ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild, nsIDOMNode **_retval); \
-  NS_IMETHOD RemoveChild(nsIDOMNode *oldChild, nsIDOMNode **_retval); \
-  NS_IMETHOD AppendChild(nsIDOMNode *newChild, nsIDOMNode **_retval); \
-  NS_IMETHOD HasChildNodes(PRBool *_retval); \
-  NS_IMETHOD CloneNode(PRBool deep, nsIDOMNode **_retval); \
-  NS_IMETHOD Normalize(void); \
-  NS_IMETHOD IsSupported(const nsAString & feature, const nsAString & version, PRBool *_retval); \
-  NS_IMETHOD GetNamespaceURI(nsAString & aNamespaceURI); \
-  NS_IMETHOD GetPrefix(nsAString & aPrefix); \
-  NS_IMETHOD SetPrefix(const nsAString & aPrefix); \
-  NS_IMETHOD GetLocalName(nsAString & aLocalName); \
-  NS_IMETHOD HasAttributes(PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetNodeName(nsAString & aNodeName); \
+  NS_SCRIPTABLE NS_IMETHOD GetNodeValue(nsAString & aNodeValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetNodeValue(const nsAString & aNodeValue); \
+  NS_SCRIPTABLE NS_IMETHOD GetNodeType(PRUint16 *aNodeType); \
+  NS_SCRIPTABLE NS_IMETHOD GetParentNode(nsIDOMNode * *aParentNode); \
+  NS_SCRIPTABLE NS_IMETHOD GetChildNodes(nsIDOMNodeList * *aChildNodes); \
+  NS_SCRIPTABLE NS_IMETHOD GetFirstChild(nsIDOMNode * *aFirstChild); \
+  NS_SCRIPTABLE NS_IMETHOD GetLastChild(nsIDOMNode * *aLastChild); \
+  NS_SCRIPTABLE NS_IMETHOD GetPreviousSibling(nsIDOMNode * *aPreviousSibling); \
+  NS_SCRIPTABLE NS_IMETHOD GetNextSibling(nsIDOMNode * *aNextSibling); \
+  NS_SCRIPTABLE NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap * *aAttributes); \
+  NS_SCRIPTABLE NS_IMETHOD GetOwnerDocument(nsIDOMDocument * *aOwnerDocument); \
+  NS_SCRIPTABLE NS_IMETHOD InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild, nsIDOMNode **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild, nsIDOMNode **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveChild(nsIDOMNode *oldChild, nsIDOMNode **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD AppendChild(nsIDOMNode *newChild, nsIDOMNode **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD HasChildNodes(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CloneNode(PRBool deep, nsIDOMNode **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD Normalize(void); \
+  NS_SCRIPTABLE NS_IMETHOD IsSupported(const nsAString & feature, const nsAString & version, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetNamespaceURI(nsAString & aNamespaceURI); \
+  NS_SCRIPTABLE NS_IMETHOD GetPrefix(nsAString & aPrefix); \
+  NS_SCRIPTABLE NS_IMETHOD SetPrefix(const nsAString & aPrefix); \
+  NS_SCRIPTABLE NS_IMETHOD GetLocalName(nsAString & aLocalName); \
+  NS_SCRIPTABLE NS_IMETHOD HasAttributes(PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMNODE(_to) \
-  NS_IMETHOD GetNodeName(nsAString & aNodeName) { return _to GetNodeName(aNodeName); } \
-  NS_IMETHOD GetNodeValue(nsAString & aNodeValue) { return _to GetNodeValue(aNodeValue); } \
-  NS_IMETHOD SetNodeValue(const nsAString & aNodeValue) { return _to SetNodeValue(aNodeValue); } \
-  NS_IMETHOD GetNodeType(PRUint16 *aNodeType) { return _to GetNodeType(aNodeType); } \
-  NS_IMETHOD GetParentNode(nsIDOMNode * *aParentNode) { return _to GetParentNode(aParentNode); } \
-  NS_IMETHOD GetChildNodes(nsIDOMNodeList * *aChildNodes) { return _to GetChildNodes(aChildNodes); } \
-  NS_IMETHOD GetFirstChild(nsIDOMNode * *aFirstChild) { return _to GetFirstChild(aFirstChild); } \
-  NS_IMETHOD GetLastChild(nsIDOMNode * *aLastChild) { return _to GetLastChild(aLastChild); } \
-  NS_IMETHOD GetPreviousSibling(nsIDOMNode * *aPreviousSibling) { return _to GetPreviousSibling(aPreviousSibling); } \
-  NS_IMETHOD GetNextSibling(nsIDOMNode * *aNextSibling) { return _to GetNextSibling(aNextSibling); } \
-  NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap * *aAttributes) { return _to GetAttributes(aAttributes); } \
-  NS_IMETHOD GetOwnerDocument(nsIDOMDocument * *aOwnerDocument) { return _to GetOwnerDocument(aOwnerDocument); } \
-  NS_IMETHOD InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild, nsIDOMNode **_retval) { return _to InsertBefore(newChild, refChild, _retval); } \
-  NS_IMETHOD ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild, nsIDOMNode **_retval) { return _to ReplaceChild(newChild, oldChild, _retval); } \
-  NS_IMETHOD RemoveChild(nsIDOMNode *oldChild, nsIDOMNode **_retval) { return _to RemoveChild(oldChild, _retval); } \
-  NS_IMETHOD AppendChild(nsIDOMNode *newChild, nsIDOMNode **_retval) { return _to AppendChild(newChild, _retval); } \
-  NS_IMETHOD HasChildNodes(PRBool *_retval) { return _to HasChildNodes(_retval); } \
-  NS_IMETHOD CloneNode(PRBool deep, nsIDOMNode **_retval) { return _to CloneNode(deep, _retval); } \
-  NS_IMETHOD Normalize(void) { return _to Normalize(); } \
-  NS_IMETHOD IsSupported(const nsAString & feature, const nsAString & version, PRBool *_retval) { return _to IsSupported(feature, version, _retval); } \
-  NS_IMETHOD GetNamespaceURI(nsAString & aNamespaceURI) { return _to GetNamespaceURI(aNamespaceURI); } \
-  NS_IMETHOD GetPrefix(nsAString & aPrefix) { return _to GetPrefix(aPrefix); } \
-  NS_IMETHOD SetPrefix(const nsAString & aPrefix) { return _to SetPrefix(aPrefix); } \
-  NS_IMETHOD GetLocalName(nsAString & aLocalName) { return _to GetLocalName(aLocalName); } \
-  NS_IMETHOD HasAttributes(PRBool *_retval) { return _to HasAttributes(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetNodeName(nsAString & aNodeName) { return _to GetNodeName(aNodeName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNodeValue(nsAString & aNodeValue) { return _to GetNodeValue(aNodeValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetNodeValue(const nsAString & aNodeValue) { return _to SetNodeValue(aNodeValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNodeType(PRUint16 *aNodeType) { return _to GetNodeType(aNodeType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParentNode(nsIDOMNode * *aParentNode) { return _to GetParentNode(aParentNode); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChildNodes(nsIDOMNodeList * *aChildNodes) { return _to GetChildNodes(aChildNodes); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFirstChild(nsIDOMNode * *aFirstChild) { return _to GetFirstChild(aFirstChild); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLastChild(nsIDOMNode * *aLastChild) { return _to GetLastChild(aLastChild); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPreviousSibling(nsIDOMNode * *aPreviousSibling) { return _to GetPreviousSibling(aPreviousSibling); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNextSibling(nsIDOMNode * *aNextSibling) { return _to GetNextSibling(aNextSibling); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap * *aAttributes) { return _to GetAttributes(aAttributes); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOwnerDocument(nsIDOMDocument * *aOwnerDocument) { return _to GetOwnerDocument(aOwnerDocument); } \
+  NS_SCRIPTABLE NS_IMETHOD InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild, nsIDOMNode **_retval) { return _to InsertBefore(newChild, refChild, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild, nsIDOMNode **_retval) { return _to ReplaceChild(newChild, oldChild, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveChild(nsIDOMNode *oldChild, nsIDOMNode **_retval) { return _to RemoveChild(oldChild, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD AppendChild(nsIDOMNode *newChild, nsIDOMNode **_retval) { return _to AppendChild(newChild, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD HasChildNodes(PRBool *_retval) { return _to HasChildNodes(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CloneNode(PRBool deep, nsIDOMNode **_retval) { return _to CloneNode(deep, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Normalize(void) { return _to Normalize(); } \
+  NS_SCRIPTABLE NS_IMETHOD IsSupported(const nsAString & feature, const nsAString & version, PRBool *_retval) { return _to IsSupported(feature, version, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNamespaceURI(nsAString & aNamespaceURI) { return _to GetNamespaceURI(aNamespaceURI); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrefix(nsAString & aPrefix) { return _to GetPrefix(aPrefix); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPrefix(const nsAString & aPrefix) { return _to SetPrefix(aPrefix); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLocalName(nsAString & aLocalName) { return _to GetLocalName(aLocalName); } \
+  NS_SCRIPTABLE NS_IMETHOD HasAttributes(PRBool *_retval) { return _to HasAttributes(_retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMNODE(_to) \
-  NS_IMETHOD GetNodeName(nsAString & aNodeName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNodeName(aNodeName); } \
-  NS_IMETHOD GetNodeValue(nsAString & aNodeValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNodeValue(aNodeValue); } \
-  NS_IMETHOD SetNodeValue(const nsAString & aNodeValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetNodeValue(aNodeValue); } \
-  NS_IMETHOD GetNodeType(PRUint16 *aNodeType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNodeType(aNodeType); } \
-  NS_IMETHOD GetParentNode(nsIDOMNode * *aParentNode) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParentNode(aParentNode); } \
-  NS_IMETHOD GetChildNodes(nsIDOMNodeList * *aChildNodes) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChildNodes(aChildNodes); } \
-  NS_IMETHOD GetFirstChild(nsIDOMNode * *aFirstChild) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFirstChild(aFirstChild); } \
-  NS_IMETHOD GetLastChild(nsIDOMNode * *aLastChild) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLastChild(aLastChild); } \
-  NS_IMETHOD GetPreviousSibling(nsIDOMNode * *aPreviousSibling) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPreviousSibling(aPreviousSibling); } \
-  NS_IMETHOD GetNextSibling(nsIDOMNode * *aNextSibling) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNextSibling(aNextSibling); } \
-  NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap * *aAttributes) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAttributes(aAttributes); } \
-  NS_IMETHOD GetOwnerDocument(nsIDOMDocument * *aOwnerDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOwnerDocument(aOwnerDocument); } \
-  NS_IMETHOD InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->InsertBefore(newChild, refChild, _retval); } \
-  NS_IMETHOD ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ReplaceChild(newChild, oldChild, _retval); } \
-  NS_IMETHOD RemoveChild(nsIDOMNode *oldChild, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveChild(oldChild, _retval); } \
-  NS_IMETHOD AppendChild(nsIDOMNode *newChild, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->AppendChild(newChild, _retval); } \
-  NS_IMETHOD HasChildNodes(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->HasChildNodes(_retval); } \
-  NS_IMETHOD CloneNode(PRBool deep, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CloneNode(deep, _retval); } \
-  NS_IMETHOD Normalize(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Normalize(); } \
-  NS_IMETHOD IsSupported(const nsAString & feature, const nsAString & version, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsSupported(feature, version, _retval); } \
-  NS_IMETHOD GetNamespaceURI(nsAString & aNamespaceURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNamespaceURI(aNamespaceURI); } \
-  NS_IMETHOD GetPrefix(nsAString & aPrefix) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrefix(aPrefix); } \
-  NS_IMETHOD SetPrefix(const nsAString & aPrefix) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPrefix(aPrefix); } \
-  NS_IMETHOD GetLocalName(nsAString & aLocalName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLocalName(aLocalName); } \
-  NS_IMETHOD HasAttributes(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->HasAttributes(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetNodeName(nsAString & aNodeName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNodeName(aNodeName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNodeValue(nsAString & aNodeValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNodeValue(aNodeValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetNodeValue(const nsAString & aNodeValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetNodeValue(aNodeValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNodeType(PRUint16 *aNodeType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNodeType(aNodeType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParentNode(nsIDOMNode * *aParentNode) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParentNode(aParentNode); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChildNodes(nsIDOMNodeList * *aChildNodes) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChildNodes(aChildNodes); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFirstChild(nsIDOMNode * *aFirstChild) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFirstChild(aFirstChild); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLastChild(nsIDOMNode * *aLastChild) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLastChild(aLastChild); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPreviousSibling(nsIDOMNode * *aPreviousSibling) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPreviousSibling(aPreviousSibling); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNextSibling(nsIDOMNode * *aNextSibling) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNextSibling(aNextSibling); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap * *aAttributes) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAttributes(aAttributes); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOwnerDocument(nsIDOMDocument * *aOwnerDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOwnerDocument(aOwnerDocument); } \
+  NS_SCRIPTABLE NS_IMETHOD InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->InsertBefore(newChild, refChild, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ReplaceChild(newChild, oldChild, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveChild(nsIDOMNode *oldChild, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveChild(oldChild, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD AppendChild(nsIDOMNode *newChild, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->AppendChild(newChild, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD HasChildNodes(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->HasChildNodes(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CloneNode(PRBool deep, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CloneNode(deep, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Normalize(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Normalize(); } \
+  NS_SCRIPTABLE NS_IMETHOD IsSupported(const nsAString & feature, const nsAString & version, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsSupported(feature, version, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNamespaceURI(nsAString & aNamespaceURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNamespaceURI(aNamespaceURI); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrefix(nsAString & aPrefix) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrefix(aPrefix); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPrefix(const nsAString & aPrefix) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPrefix(aPrefix); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLocalName(nsAString & aLocalName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLocalName(aLocalName); } \
+  NS_SCRIPTABLE NS_IMETHOD HasAttributes(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->HasAttributes(_retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

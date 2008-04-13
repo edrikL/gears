@@ -33,7 +33,7 @@ class nsICRLInfo; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsICertificateDialogs : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsICertificateDialogs : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICERTIFICATEDIALOGS_IID)
@@ -51,7 +51,7 @@ class NS_NO_VTABLE nsICertificateDialogs : public nsISupports {
    *  @return true if the user allows to import the certificate.
    */
   /* boolean confirmDownloadCACert (in nsIInterfaceRequestor ctx, in nsIX509Cert cert, out unsigned long trust); */
-  NS_IMETHOD ConfirmDownloadCACert(nsIInterfaceRequestor *ctx, nsIX509Cert *cert, PRUint32 *trust, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ConfirmDownloadCACert(nsIInterfaceRequestor *ctx, nsIX509Cert *cert, PRUint32 *trust, PRBool *_retval) = 0;
 
   /**
    *  UI shown when a web site has delivered a CA certificate to
@@ -61,7 +61,7 @@ class NS_NO_VTABLE nsICertificateDialogs : public nsISupports {
    *  @param ctx A user interface context.
    */
   /* void notifyCACertExists (in nsIInterfaceRequestor ctx); */
-  NS_IMETHOD NotifyCACertExists(nsIInterfaceRequestor *ctx) = 0;
+  NS_SCRIPTABLE NS_IMETHOD NotifyCACertExists(nsIInterfaceRequestor *ctx) = 0;
 
   /**
    *  UI shown when a user's personal certificate is going to be
@@ -78,7 +78,7 @@ class NS_NO_VTABLE nsICertificateDialogs : public nsISupports {
    *  @return false if the user requests to cancel.
    */
   /* boolean setPKCS12FilePassword (in nsIInterfaceRequestor ctx, out AString password); */
-  NS_IMETHOD SetPKCS12FilePassword(nsIInterfaceRequestor *ctx, nsAString & password, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetPKCS12FilePassword(nsIInterfaceRequestor *ctx, nsAString & password, PRBool *_retval) = 0;
 
   /**
    *  UI shown when a user is about to restore a personal
@@ -92,7 +92,7 @@ class NS_NO_VTABLE nsICertificateDialogs : public nsISupports {
    *  @return false if the user requests to cancel.
    */
   /* boolean getPKCS12FilePassword (in nsIInterfaceRequestor ctx, out AString password); */
-  NS_IMETHOD GetPKCS12FilePassword(nsIInterfaceRequestor *ctx, nsAString & password, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPKCS12FilePassword(nsIInterfaceRequestor *ctx, nsAString & password, PRBool *_retval) = 0;
 
   /**
    *  UI shown when a certificate needs to be shown to the user.
@@ -103,7 +103,7 @@ class NS_NO_VTABLE nsICertificateDialogs : public nsISupports {
    *  @param cert The certificate to be shown to the user.
    */
   /* void viewCert (in nsIInterfaceRequestor ctx, in nsIX509Cert cert); */
-  NS_IMETHOD ViewCert(nsIInterfaceRequestor *ctx, nsIX509Cert *cert) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ViewCert(nsIInterfaceRequestor *ctx, nsIX509Cert *cert) = 0;
 
   /**
    *  UI shown after a Certificate Revocation List (CRL) has been
@@ -113,7 +113,7 @@ class NS_NO_VTABLE nsICertificateDialogs : public nsISupports {
    *  @param crl Information describing the CRL that was imported.
    */
   /* void crlImportStatusDialog (in nsIInterfaceRequestor ctx, in nsICRLInfo crl); */
-  NS_IMETHOD CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICRLInfo *crl) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICRLInfo *crl) = 0;
 
 };
 
@@ -121,30 +121,30 @@ class NS_NO_VTABLE nsICertificateDialogs : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICERTIFICATEDIALOGS \
-  NS_IMETHOD ConfirmDownloadCACert(nsIInterfaceRequestor *ctx, nsIX509Cert *cert, PRUint32 *trust, PRBool *_retval); \
-  NS_IMETHOD NotifyCACertExists(nsIInterfaceRequestor *ctx); \
-  NS_IMETHOD SetPKCS12FilePassword(nsIInterfaceRequestor *ctx, nsAString & password, PRBool *_retval); \
-  NS_IMETHOD GetPKCS12FilePassword(nsIInterfaceRequestor *ctx, nsAString & password, PRBool *_retval); \
-  NS_IMETHOD ViewCert(nsIInterfaceRequestor *ctx, nsIX509Cert *cert); \
-  NS_IMETHOD CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICRLInfo *crl); 
+  NS_SCRIPTABLE NS_IMETHOD ConfirmDownloadCACert(nsIInterfaceRequestor *ctx, nsIX509Cert *cert, PRUint32 *trust, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD NotifyCACertExists(nsIInterfaceRequestor *ctx); \
+  NS_SCRIPTABLE NS_IMETHOD SetPKCS12FilePassword(nsIInterfaceRequestor *ctx, nsAString & password, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetPKCS12FilePassword(nsIInterfaceRequestor *ctx, nsAString & password, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD ViewCert(nsIInterfaceRequestor *ctx, nsIX509Cert *cert); \
+  NS_SCRIPTABLE NS_IMETHOD CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICRLInfo *crl); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICERTIFICATEDIALOGS(_to) \
-  NS_IMETHOD ConfirmDownloadCACert(nsIInterfaceRequestor *ctx, nsIX509Cert *cert, PRUint32 *trust, PRBool *_retval) { return _to ConfirmDownloadCACert(ctx, cert, trust, _retval); } \
-  NS_IMETHOD NotifyCACertExists(nsIInterfaceRequestor *ctx) { return _to NotifyCACertExists(ctx); } \
-  NS_IMETHOD SetPKCS12FilePassword(nsIInterfaceRequestor *ctx, nsAString & password, PRBool *_retval) { return _to SetPKCS12FilePassword(ctx, password, _retval); } \
-  NS_IMETHOD GetPKCS12FilePassword(nsIInterfaceRequestor *ctx, nsAString & password, PRBool *_retval) { return _to GetPKCS12FilePassword(ctx, password, _retval); } \
-  NS_IMETHOD ViewCert(nsIInterfaceRequestor *ctx, nsIX509Cert *cert) { return _to ViewCert(ctx, cert); } \
-  NS_IMETHOD CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICRLInfo *crl) { return _to CrlImportStatusDialog(ctx, crl); } 
+  NS_SCRIPTABLE NS_IMETHOD ConfirmDownloadCACert(nsIInterfaceRequestor *ctx, nsIX509Cert *cert, PRUint32 *trust, PRBool *_retval) { return _to ConfirmDownloadCACert(ctx, cert, trust, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD NotifyCACertExists(nsIInterfaceRequestor *ctx) { return _to NotifyCACertExists(ctx); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPKCS12FilePassword(nsIInterfaceRequestor *ctx, nsAString & password, PRBool *_retval) { return _to SetPKCS12FilePassword(ctx, password, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPKCS12FilePassword(nsIInterfaceRequestor *ctx, nsAString & password, PRBool *_retval) { return _to GetPKCS12FilePassword(ctx, password, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ViewCert(nsIInterfaceRequestor *ctx, nsIX509Cert *cert) { return _to ViewCert(ctx, cert); } \
+  NS_SCRIPTABLE NS_IMETHOD CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICRLInfo *crl) { return _to CrlImportStatusDialog(ctx, crl); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICERTIFICATEDIALOGS(_to) \
-  NS_IMETHOD ConfirmDownloadCACert(nsIInterfaceRequestor *ctx, nsIX509Cert *cert, PRUint32 *trust, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ConfirmDownloadCACert(ctx, cert, trust, _retval); } \
-  NS_IMETHOD NotifyCACertExists(nsIInterfaceRequestor *ctx) { return !_to ? NS_ERROR_NULL_POINTER : _to->NotifyCACertExists(ctx); } \
-  NS_IMETHOD SetPKCS12FilePassword(nsIInterfaceRequestor *ctx, nsAString & password, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPKCS12FilePassword(ctx, password, _retval); } \
-  NS_IMETHOD GetPKCS12FilePassword(nsIInterfaceRequestor *ctx, nsAString & password, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPKCS12FilePassword(ctx, password, _retval); } \
-  NS_IMETHOD ViewCert(nsIInterfaceRequestor *ctx, nsIX509Cert *cert) { return !_to ? NS_ERROR_NULL_POINTER : _to->ViewCert(ctx, cert); } \
-  NS_IMETHOD CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICRLInfo *crl) { return !_to ? NS_ERROR_NULL_POINTER : _to->CrlImportStatusDialog(ctx, crl); } 
+  NS_SCRIPTABLE NS_IMETHOD ConfirmDownloadCACert(nsIInterfaceRequestor *ctx, nsIX509Cert *cert, PRUint32 *trust, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ConfirmDownloadCACert(ctx, cert, trust, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD NotifyCACertExists(nsIInterfaceRequestor *ctx) { return !_to ? NS_ERROR_NULL_POINTER : _to->NotifyCACertExists(ctx); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPKCS12FilePassword(nsIInterfaceRequestor *ctx, nsAString & password, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPKCS12FilePassword(ctx, password, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPKCS12FilePassword(nsIInterfaceRequestor *ctx, nsAString & password, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPKCS12FilePassword(ctx, password, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ViewCert(nsIInterfaceRequestor *ctx, nsIX509Cert *cert) { return !_to ? NS_ERROR_NULL_POINTER : _to->ViewCert(ctx, cert); } \
+  NS_SCRIPTABLE NS_IMETHOD CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICRLInfo *crl) { return !_to ? NS_ERROR_NULL_POINTER : _to->CrlImportStatusDialog(ctx, crl); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

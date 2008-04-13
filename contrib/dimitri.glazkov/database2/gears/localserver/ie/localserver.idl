@@ -54,13 +54,9 @@ interface GearsManagedResourceStoreInterface : IDispatch {
   [propget] HRESULT updateStatus([out, retval] int *status);
   [propget] HRESULT lastErrorMessage([out, retval] BSTR *last_error_message);
 
-#ifdef WINCE
-  // Hold WinCE feature set at version 0.2 for now.
-#else
   [propput] HRESULT onerror([in] const VARIANT *handler);
   [propput] HRESULT onprogress([in] const VARIANT *handler);
   [propput] HRESULT oncomplete([in] const VARIANT *handler);
-#endif
 
   HRESULT checkForUpdate();
    
@@ -143,7 +139,10 @@ interface GearsResourceStoreInterface : IDispatch {
   HRESULT getAllHeaders(
       [in] const BSTR url,
       [out, retval] BSTR *all_headers);
-  
+
+#ifdef WINCE
+  // No BLOB support on WINCE yet
+#else
 #ifdef OFFICIAL_BUILD
   // Blob support is not ready for prime time yet
 #else
@@ -151,6 +150,7 @@ interface GearsResourceStoreInterface : IDispatch {
       [in] IUnknown *blob,
       [in] const BSTR url);
 #endif  // OFFICIAL_BUILD
+#endif  // WINCE
   
   HRESULT captureFile(
       [in] IDispatch *file_input_element,

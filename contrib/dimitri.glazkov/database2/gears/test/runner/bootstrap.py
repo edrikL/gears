@@ -5,6 +5,7 @@ import os.path
 import shutil
 import time
 import stat
+import socket
 
 # Workaround file permission, stat.I_WRITE not allowing delete on all systems.
 DELETABLE = int('777', 8)
@@ -58,7 +59,7 @@ class Bootstrap:
       shutil.rmtree(Bootstrap.INSTALLER_DIR)
     shutil.copytree(self.__gears_binaries, Bootstrap.INSTALLER_DIR)
 
-
+  
   def install(self):
     for installer in self.__installers:
       installer.install()
@@ -97,28 +98,47 @@ from browser_launchers import IExploreWin32Launcher
 from browser_launchers import FirefoxWin32Launcher
 from browser_launchers import FirefoxLinuxLauncher
 from browser_launchers import FirefoxMacLauncher
+from browser_launchers import IExploreWinCeLauncher
 from installer import WinVistaInstaller
 from installer import WinXpInstaller
 from installer import LinuxInstaller
 from installer import MacInstaller
+from installer import WinCeInstaller
 import osutils
 
 
-def server_root_dir():
+def serverRootDir():
     return os.path.join(os.path.dirname(__file__), '../')
                     
+def localIp():
+  """ Returns a string with the local ip address. """
+  ip = socket.gethostbyname(socket.gethostname())
+
+  # Expect that ip is a valid looking ipv4 address.
+  if len(ip.split('.')) != 4:
+    raise ValueError("Host IP appears invalid: %s" % ip)
+  return ip
+
 if __name__ == '__main__':
   profile_name = 'gears'
+  test_url = 'http://localhost:8001/tester/gui.html'
   suites_report = SuitesReport('TESTS-TestSuites.xml.tmpl')
   test_servers = []
   installers = []
   launchers = []
   
   # Adding second webserver for cross domain tests.
-  test_servers.append(TestWebserver(server_root_dir(), port=8001))
-  test_servers.append(TestWebserver(server_root_dir(), port=8002))
+  test_servers.append(TestWebserver(serverRootDir(), port=8001))
+  test_servers.append(TestWebserver(serverRootDir(), port=8002))
   
-  if osutils.osIsWin():
+  # WinCE is a special case, because it is compiled 
+  # and run on different platforms.
+  if len(sys.argv) > 2 and sys.argv[2] == 'wince':
+    local_ip = localIp()
+    launchers.append(IExploreWinCeLauncher(local_ip))
+    installers.append(WinCeInstaller(local_ip))
+    test_url = 'http://%s:8001/tester/gui.html' % local_ip
+  elif osutils.osIsWin():
     launchers.append(IExploreWin32Launcher())
     launchers.append(FirefoxWin32Launcher('ffprofile-win'))
     if osutils.osIsVista():
@@ -134,6 +154,6 @@ if __name__ == '__main__':
       installers.append(LinuxInstaller(profile_name))
       
   gears_binaries = sys.argv[1]
-  testrunner = TestRunner(launchers, test_servers)
+  testrunner = TestRunner(launchers, test_servers, test_url)
   bootstrap = Bootstrap(gears_binaries, installers, testrunner, suites_report)
   bootstrap.invoke()

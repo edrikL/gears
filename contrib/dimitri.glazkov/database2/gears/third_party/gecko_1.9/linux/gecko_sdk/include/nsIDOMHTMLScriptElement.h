@@ -31,38 +31,38 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLScriptElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLScriptElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLSCRIPTELEMENT_IID)
 
   /* attribute DOMString text; */
-  NS_IMETHOD GetText(nsAString & aText) = 0;
-  NS_IMETHOD SetText(const nsAString & aText) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetText(nsAString & aText) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetText(const nsAString & aText) = 0;
 
   /* attribute DOMString htmlFor; */
-  NS_IMETHOD GetHtmlFor(nsAString & aHtmlFor) = 0;
-  NS_IMETHOD SetHtmlFor(const nsAString & aHtmlFor) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHtmlFor(nsAString & aHtmlFor) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetHtmlFor(const nsAString & aHtmlFor) = 0;
 
   /* attribute DOMString event; */
-  NS_IMETHOD GetEvent(nsAString & aEvent) = 0;
-  NS_IMETHOD SetEvent(const nsAString & aEvent) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetEvent(nsAString & aEvent) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetEvent(const nsAString & aEvent) = 0;
 
   /* attribute DOMString charset; */
-  NS_IMETHOD GetCharset(nsAString & aCharset) = 0;
-  NS_IMETHOD SetCharset(const nsAString & aCharset) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCharset(nsAString & aCharset) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCharset(const nsAString & aCharset) = 0;
 
   /* attribute boolean defer; */
-  NS_IMETHOD GetDefer(PRBool *aDefer) = 0;
-  NS_IMETHOD SetDefer(PRBool aDefer) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDefer(PRBool *aDefer) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDefer(PRBool aDefer) = 0;
 
   /* attribute DOMString src; */
-  NS_IMETHOD GetSrc(nsAString & aSrc) = 0;
-  NS_IMETHOD SetSrc(const nsAString & aSrc) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSrc(nsAString & aSrc) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSrc(const nsAString & aSrc) = 0;
 
   /* attribute DOMString type; */
-  NS_IMETHOD GetType(nsAString & aType) = 0;
-  NS_IMETHOD SetType(const nsAString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) = 0;
 
 };
 
@@ -70,54 +70,54 @@ class NS_NO_VTABLE nsIDOMHTMLScriptElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLSCRIPTELEMENT \
-  NS_IMETHOD GetText(nsAString & aText); \
-  NS_IMETHOD SetText(const nsAString & aText); \
-  NS_IMETHOD GetHtmlFor(nsAString & aHtmlFor); \
-  NS_IMETHOD SetHtmlFor(const nsAString & aHtmlFor); \
-  NS_IMETHOD GetEvent(nsAString & aEvent); \
-  NS_IMETHOD SetEvent(const nsAString & aEvent); \
-  NS_IMETHOD GetCharset(nsAString & aCharset); \
-  NS_IMETHOD SetCharset(const nsAString & aCharset); \
-  NS_IMETHOD GetDefer(PRBool *aDefer); \
-  NS_IMETHOD SetDefer(PRBool aDefer); \
-  NS_IMETHOD GetSrc(nsAString & aSrc); \
-  NS_IMETHOD SetSrc(const nsAString & aSrc); \
-  NS_IMETHOD GetType(nsAString & aType); \
-  NS_IMETHOD SetType(const nsAString & aType); 
+  NS_SCRIPTABLE NS_IMETHOD GetText(nsAString & aText); \
+  NS_SCRIPTABLE NS_IMETHOD SetText(const nsAString & aText); \
+  NS_SCRIPTABLE NS_IMETHOD GetHtmlFor(nsAString & aHtmlFor); \
+  NS_SCRIPTABLE NS_IMETHOD SetHtmlFor(const nsAString & aHtmlFor); \
+  NS_SCRIPTABLE NS_IMETHOD GetEvent(nsAString & aEvent); \
+  NS_SCRIPTABLE NS_IMETHOD SetEvent(const nsAString & aEvent); \
+  NS_SCRIPTABLE NS_IMETHOD GetCharset(nsAString & aCharset); \
+  NS_SCRIPTABLE NS_IMETHOD SetCharset(const nsAString & aCharset); \
+  NS_SCRIPTABLE NS_IMETHOD GetDefer(PRBool *aDefer); \
+  NS_SCRIPTABLE NS_IMETHOD SetDefer(PRBool aDefer); \
+  NS_SCRIPTABLE NS_IMETHOD GetSrc(nsAString & aSrc); \
+  NS_SCRIPTABLE NS_IMETHOD SetSrc(const nsAString & aSrc); \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType); \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLSCRIPTELEMENT(_to) \
-  NS_IMETHOD GetText(nsAString & aText) { return _to GetText(aText); } \
-  NS_IMETHOD SetText(const nsAString & aText) { return _to SetText(aText); } \
-  NS_IMETHOD GetHtmlFor(nsAString & aHtmlFor) { return _to GetHtmlFor(aHtmlFor); } \
-  NS_IMETHOD SetHtmlFor(const nsAString & aHtmlFor) { return _to SetHtmlFor(aHtmlFor); } \
-  NS_IMETHOD GetEvent(nsAString & aEvent) { return _to GetEvent(aEvent); } \
-  NS_IMETHOD SetEvent(const nsAString & aEvent) { return _to SetEvent(aEvent); } \
-  NS_IMETHOD GetCharset(nsAString & aCharset) { return _to GetCharset(aCharset); } \
-  NS_IMETHOD SetCharset(const nsAString & aCharset) { return _to SetCharset(aCharset); } \
-  NS_IMETHOD GetDefer(PRBool *aDefer) { return _to GetDefer(aDefer); } \
-  NS_IMETHOD SetDefer(PRBool aDefer) { return _to SetDefer(aDefer); } \
-  NS_IMETHOD GetSrc(nsAString & aSrc) { return _to GetSrc(aSrc); } \
-  NS_IMETHOD SetSrc(const nsAString & aSrc) { return _to SetSrc(aSrc); } \
-  NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
-  NS_IMETHOD SetType(const nsAString & aType) { return _to SetType(aType); } 
+  NS_SCRIPTABLE NS_IMETHOD GetText(nsAString & aText) { return _to GetText(aText); } \
+  NS_SCRIPTABLE NS_IMETHOD SetText(const nsAString & aText) { return _to SetText(aText); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHtmlFor(nsAString & aHtmlFor) { return _to GetHtmlFor(aHtmlFor); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHtmlFor(const nsAString & aHtmlFor) { return _to SetHtmlFor(aHtmlFor); } \
+  NS_SCRIPTABLE NS_IMETHOD GetEvent(nsAString & aEvent) { return _to GetEvent(aEvent); } \
+  NS_SCRIPTABLE NS_IMETHOD SetEvent(const nsAString & aEvent) { return _to SetEvent(aEvent); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCharset(nsAString & aCharset) { return _to GetCharset(aCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCharset(const nsAString & aCharset) { return _to SetCharset(aCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDefer(PRBool *aDefer) { return _to GetDefer(aDefer); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDefer(PRBool aDefer) { return _to SetDefer(aDefer); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSrc(nsAString & aSrc) { return _to GetSrc(aSrc); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSrc(const nsAString & aSrc) { return _to SetSrc(aSrc); } \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) { return _to SetType(aType); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLSCRIPTELEMENT(_to) \
-  NS_IMETHOD GetText(nsAString & aText) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetText(aText); } \
-  NS_IMETHOD SetText(const nsAString & aText) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetText(aText); } \
-  NS_IMETHOD GetHtmlFor(nsAString & aHtmlFor) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHtmlFor(aHtmlFor); } \
-  NS_IMETHOD SetHtmlFor(const nsAString & aHtmlFor) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHtmlFor(aHtmlFor); } \
-  NS_IMETHOD GetEvent(nsAString & aEvent) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetEvent(aEvent); } \
-  NS_IMETHOD SetEvent(const nsAString & aEvent) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetEvent(aEvent); } \
-  NS_IMETHOD GetCharset(nsAString & aCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCharset(aCharset); } \
-  NS_IMETHOD SetCharset(const nsAString & aCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCharset(aCharset); } \
-  NS_IMETHOD GetDefer(PRBool *aDefer) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDefer(aDefer); } \
-  NS_IMETHOD SetDefer(PRBool aDefer) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDefer(aDefer); } \
-  NS_IMETHOD GetSrc(nsAString & aSrc) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSrc(aSrc); } \
-  NS_IMETHOD SetSrc(const nsAString & aSrc) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSrc(aSrc); } \
-  NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
-  NS_IMETHOD SetType(const nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } 
+  NS_SCRIPTABLE NS_IMETHOD GetText(nsAString & aText) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetText(aText); } \
+  NS_SCRIPTABLE NS_IMETHOD SetText(const nsAString & aText) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetText(aText); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHtmlFor(nsAString & aHtmlFor) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHtmlFor(aHtmlFor); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHtmlFor(const nsAString & aHtmlFor) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHtmlFor(aHtmlFor); } \
+  NS_SCRIPTABLE NS_IMETHOD GetEvent(nsAString & aEvent) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetEvent(aEvent); } \
+  NS_SCRIPTABLE NS_IMETHOD SetEvent(const nsAString & aEvent) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetEvent(aEvent); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCharset(nsAString & aCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCharset(aCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCharset(const nsAString & aCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCharset(aCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDefer(PRBool *aDefer) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDefer(aDefer); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDefer(PRBool aDefer) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDefer(aDefer); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSrc(nsAString & aSrc) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSrc(aSrc); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSrc(const nsAString & aSrc) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSrc(aSrc); } \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

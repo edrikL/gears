@@ -29,8 +29,8 @@ ShortcutTable::ShortcutTable(SQLDatabase *db)
     : db_(db) {
 }
 
-bool ShortcutTable::MaybeCreateTable() {
-  SQLTransaction transaction(db_, "ShortcutTable::MaybeCreateTable");
+bool ShortcutTable::MaybeCreateTableVersion4() {
+  SQLTransaction transaction(db_, "ShortcutTable::MaybeCreateTableVersion4");
   if (!transaction.Begin()) {
     return false;
   }
@@ -40,7 +40,47 @@ bool ShortcutTable::MaybeCreateTable() {
   // exist, if the version indicates that it doesn't exist, then we
   // have a schema error somewhere, and what exists may not be
   // trustworthy.  But I'm too frightened to fix it, because it's
-  // possible that other code depends on this behaviour.  Should do a
+  // possible that other code depends on this behavior.  Should do a
+  // thorough review of this.
+
+  // The set of shortcuts, one per Origin/Name.
+  const char *sql = "CREATE TABLE IF NOT EXISTS Shortcut ("
+    " ShortcutID INTEGER PRIMARY KEY, "
+    " Origin TEXT NOT NULL, Name TEXT NOT NULL, "
+    " AppUrl TEXT NOT NULL, Msg TEXT NOT NULL, "
+    " UNIQUE (Origin, Name)"
+    ")";
+  if (SQLITE_OK != db_->Execute(sql)) {
+    LOG(("ShortcutTable::MaybeCreateTableVersion4 create Shortcut "
+      "unable to execute: %d", db_->GetErrorCode()));
+    return false;
+  }
+
+  // A set of icon urls for each shortcut.
+  sql = "CREATE TABLE IF NOT EXISTS ShortcutIcon "
+    "(ShortcutID INTEGER NOT NULL, IconUrl TEXT NOT NULL,"
+    " PRIMARY KEY (ShortcutID, IconUrl))";
+  if (SQLITE_OK != db_->Execute(sql)) {
+    LOG(("ShortcutTable::MaybeCreateTableVersion4 create ShortcutIcon "
+      "unable to execute: %d", db_->GetErrorCode()));
+    return false;
+  }
+
+  return transaction.Commit();
+}
+
+bool ShortcutTable::MaybeCreateTableVersion5() {
+  SQLTransaction transaction(db_, "ShortcutTable::MaybeCreateTableVersion5");
+  if (!transaction.Begin()) {
+    return false;
+  }
+
+  // TODO(shess) I don't think "IF NOT EXISTS" is warranted below.  If
+  // the version indicates that the table should exist, it should
+  // exist, if the version indicates that it doesn't exist, then we
+  // have a schema error somewhere, and what exists may not be
+  // trustworthy.  But I'm too frightened to fix it, because it's
+  // possible that other code depends on this behavior.  Should do a
   // thorough review of this.
 
   // The set of shortcuts, one per Origin/Name.
@@ -48,10 +88,11 @@ bool ShortcutTable::MaybeCreateTable() {
                     " ShortcutID INTEGER PRIMARY KEY, "
                     " Origin TEXT NOT NULL, Name TEXT NOT NULL, "
                     " AppUrl TEXT NOT NULL, Msg TEXT NOT NULL, "
+                    " Allow INTEGER NOT NULL, "
                     " UNIQUE (Origin, Name)"
                     ")";
   if (SQLITE_OK != db_->Execute(sql)) {
-    LOG(("ShortcutTable::MaybeCreateTable create Shortcut "
+    LOG(("ShortcutTable::MaybeCreateTableVersion5 create Shortcut "
          "unable to execute: %d", db_->GetErrorCode()));
     return false;
   }
@@ -61,12 +102,51 @@ bool ShortcutTable::MaybeCreateTable() {
         "(ShortcutID INTEGER NOT NULL, IconUrl TEXT NOT NULL,"
         " PRIMARY KEY (ShortcutID, IconUrl))";
   if (SQLITE_OK != db_->Execute(sql)) {
-    LOG(("ShortcutTable::MaybeCreateTable create ShortcutIcon "
+    LOG(("ShortcutTable::MaybeCreateTableVersion5 create ShortcutIcon "
          "unable to execute: %d", db_->GetErrorCode()));
     return false;
   }
 
   return transaction.Commit();
+}
+
+bool ShortcutTable::MaybeCreateTableVersion6() {
+  SQLTransaction transaction(db_, "ShortcutTable::MaybeCreateTableVersion6");
+  if (!transaction.Begin()) {
+    return false;
+  }
+
+  // TODO(shess) I don't think "IF NOT EXISTS" is warranted below.  If
+  // the version indicates that the table should exist, it should
+  // exist, if the version indicates that it doesn't exist, then we
+  // have a schema error somewhere, and what exists may not be
+  // trustworthy.  But I'm too frightened to fix it, because it's
+  // possible that other code depends on this behavior.  Should do a
+  // thorough review of this.
+
+  // The set of shortcuts, one per Origin/Name.
+  const char *sql = "CREATE TABLE IF NOT EXISTS Shortcut ("
+                    " ShortcutID INTEGER PRIMARY KEY, "
+                    " Origin TEXT NOT NULL, Name TEXT NOT NULL, "
+                    " AppUrl TEXT NOT NULL, Msg TEXT NOT NULL, "
+                    " Icon16x16Url TEXT NOT NULL,"
+                    " Icon32x32Url TEXT NOT NULL,"
+                    " Icon48x48Url TEXT NOT NULL,"
+                    " Icon128x128Url TEXT NOT NULL,"
+                    " Allow INTEGER NOT NULL, "
+                    " UNIQUE (Origin, Name)"
+                    ")";
+  if (SQLITE_OK != db_->Execute(sql)) {
+    LOG(("ShortcutTable::MaybeCreateTableVersion6 create Shortcut "
+         "unable to execute: %d", db_->GetErrorCode()));
+    return false;
+  }
+
+  return transaction.Commit();
+}
+
+bool ShortcutTable::MaybeCreateTableLatestVersion() {
+  return MaybeCreateTableVersion6();
 }
 
 bool ShortcutTable::UpgradeToVersion3() {
@@ -99,10 +179,7 @@ bool ShortcutTable::UpgradeFromVersion3ToVersion4() {
     return false;
   }
 
-  // NOTE(shess) If this schema changes again, the version-4 create
-  // statements will need to be inlined here.  Not doing so at this
-  // time because code duplication is bad.
-  if (!MaybeCreateTable()) {
+  if (!MaybeCreateTableVersion4()) {
     LOG(("ShortcutTable::UpgradeFromVersion3ToVersion4 create failed"));
     return false;
   }
@@ -136,10 +213,106 @@ bool ShortcutTable::UpgradeFromVersion3ToVersion4() {
   return transaction.Commit();
 }
 
+// Shift the version-4 Shortcut table aside, create version-5 tables,
+// populate them from the old table, and drop the old table.
+bool ShortcutTable::UpgradeFromVersion4ToVersion5() {
+  SQLTransaction transaction(db_,
+    "ShortcutTable::UpgradeFromVersion4ToVersion5");
+  if (!transaction.Begin()) {
+    return false;
+  }
+
+  const char *sql = "ALTER TABLE Shortcut RENAME TO ShortcutOld";
+  if (SQLITE_OK != db_->Execute(sql)) {
+    LOG(("ShortcutTable::UpgradeFromVersion4ToVersion5 rename "
+         "unable to execute: %d", db_->GetErrorCode()));
+    return false;
+  }
+
+  if (!MaybeCreateTableVersion5()) {
+    LOG(("ShortcutTable::UpgradeFromVersion4ToVersion5create failed"));
+    return false;
+  }
+
+  // Use the existing rowid as ShortcutID for consistency when
+  // populating the new tables.
+  sql = "INSERT INTO Shortcut "
+    "SELECT rowid AS ShortcutID, Origin, Name, "
+    "       AppUrl, Msg, 1 as Allow FROM ShortcutOld";
+  if (SQLITE_OK != db_->Execute(sql)) {
+    LOG(("ShortcutTable::UpgradeFromVersion4ToVersion5 populate Shortcut "
+      "unable to execute: %d", db_->GetErrorCode()));
+    return false;
+  }
+
+  sql = "DROP TABLE ShortcutOld";
+  if (SQLITE_OK != db_->Execute(sql)) {
+    LOG(("ShortcutTable::UpgradeFromVersion4ToVersion5 drop old "
+      "unable to execute: %d", db_->GetErrorCode()));
+    return false;
+  }
+
+  return transaction.Commit();
+}
+
+// Shift the version-5 Shortcut tables aside, create version-6 table,
+// populate them from the old tables, and drop the old tables.
+bool ShortcutTable::UpgradeFromVersion5ToVersion6() {
+  SQLTransaction transaction(db_,
+    "ShortcutTable::UpgradeFromVersion5ToVersion6");
+  if (!transaction.Begin()) {
+    return false;
+  }
+
+  const char *sql = "ALTER TABLE Shortcut RENAME TO ShortcutOld";
+  if (SQLITE_OK != db_->Execute(sql)) {
+    LOG(("ShortcutTable::UpgradeFromVersion5ToVersion6 rename "
+         "unable to execute: %d", db_->GetErrorCode()));
+    return false;
+  }
+
+  if (!MaybeCreateTableVersion6()) {
+    LOG(("ShortcutTable::UpgradeFromVersion5ToVersion6 create failed"));
+    return false;
+  }
+
+  // Use the existing rowid as ShortcutID for consistency when
+  // populating the new tables.
+  sql = "INSERT INTO Shortcut "
+    "SELECT rowid AS ShortcutID, Origin, Name, "
+    "       '' AS Icon16x16Url, '' AS Icon32x32Url, '' AS Icon48x48Url, "
+    "       '' AS Icon128x128Url, AppUrl, Msg, Allow FROM ShortcutOld";
+  if (SQLITE_OK != db_->Execute(sql)) {
+    LOG(("ShortcutTable::UpgradeFromVersion5ToVersion6 populate Shortcut "
+      "unable to execute: %d", db_->GetErrorCode()));
+    return false;
+  }
+
+  sql = "DROP TABLE ShortcutOld";
+  if (SQLITE_OK != db_->Execute(sql)) {
+    LOG(("ShortcutTable::UpgradeFromVersion5ToVersion6 drop old "
+      "unable to execute: %d", db_->GetErrorCode()));
+    return false;
+  }
+
+  sql = "DROP TABLE ShortcutIcon";
+  if (SQLITE_OK != db_->Execute(sql)) {
+    LOG(("ShortcutTable::UpgradeFromVersion5ToVersion6 drop ShortcutIcon "
+      "unable to execute: %d", db_->GetErrorCode()));
+    return false;
+  }
+
+  return transaction.Commit();
+}
+
 bool ShortcutTable::SetShortcut(const char16 *origin, const char16 *name,
                                 const char16 *app_url,
-                                const std::vector<std::string16> &icon_urls,
-                                const char16 *msg) {
+                                const char16 *icon16x16_url,
+                                const char16 *icon32x32_url,
+                                const char16 *icon48x48_url,
+                                const char16 *icon128x128_url,
+                                const char16 *msg,
+                                const bool allow) {
   SQLTransaction transaction(db_, "ShortcutTable::SetShortcut");
   if (!transaction.Begin()) {
     return false;
@@ -151,90 +324,77 @@ bool ShortcutTable::SetShortcut(const char16 *origin, const char16 *name,
     return false;
   }
 
-  sqlite_int64 shortcut_id;
-  {
-    const char16 *sql = STRING16(L"INSERT INTO Shortcut "
-                                 L"(Origin, Name, AppUrl, Msg) "
-                                 L"VALUES (?, ?, ?, ?)");
+  const char16 *sql = STRING16(L"INSERT INTO Shortcut "
+                               L"(Origin, Name, AppUrl, Msg, Allow, "
+                               L"Icon16x16Url, Icon32x32Url, "
+                               L"Icon48x48Url, Icon128x128Url) "
+                               L"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-    SQLStatement statement;
-    if (SQLITE_OK != statement.prepare16(db_, sql)) {
-      LOG(("ShortcutTable::SetShortcut unable to prepare: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-
-    if (SQLITE_OK != statement.bind_text16(0, origin)) {
-      LOG(("ShortcutTable::SetShortcut unable to bind origin: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-
-    if (SQLITE_OK != statement.bind_text16(1, name)) {
-      LOG(("ShortcutTable::SetShortcut unable to bind name: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-
-    if (SQLITE_OK != statement.bind_text16(2, app_url)) {
-      LOG(("ShortcutTable::SetShortcut unable to bind app_url: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-
-    if (SQLITE_OK != statement.bind_text16(3, msg)) {
-      LOG(("ShortcutTable::SetShortcut unable to bind msg: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-
-    if (SQLITE_DONE != statement.step()) {
-      LOG(("ShortcutTable::SetShortcut unable to step: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-
-    shortcut_id = statement.last_insert_rowid();
+  SQLStatement statement;
+  if (SQLITE_OK != statement.prepare16(db_, sql)) {
+    LOG(("ShortcutTable::SetShortcut unable to prepare: %d\n",
+         db_->GetErrorCode()));
+    return false;
   }
 
-  if (icon_urls.size()) {
-    // "OR IGNORE" means that if we get a duplicate
-    // ShortcutID/IconUrl, we can safely drop the duplicate.
-    const char16 *sql = STRING16(L"INSERT OR IGNORE INTO ShortcutIcon "
-                                 L"(ShortcutID, IconUrl) VALUES (?, ?)");
+  if (SQLITE_OK != statement.bind_text16(0, origin)) {
+    LOG(("ShortcutTable::SetShortcut unable to bind origin: %d\n",
+         db_->GetErrorCode()));
+    return false;
+  }
 
-    SQLStatement statement;
-    if (SQLITE_OK != statement.prepare16(db_, sql)) {
-      LOG(("ShortcutTable::SetShortcut icons unable to prepare: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
+  if (SQLITE_OK != statement.bind_text16(1, name)) {
+    LOG(("ShortcutTable::SetShortcut unable to bind name: %d\n",
+         db_->GetErrorCode()));
+    return false;
+  }
 
-    if (SQLITE_OK != statement.bind_int64(0, shortcut_id)) {
-      LOG(("ShortcutTable::SetShortcut icons unable to bind id: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
+  if (SQLITE_OK != statement.bind_text16(2, app_url)) {
+    LOG(("ShortcutTable::SetShortcut unable to bind app_url: %d\n",
+         db_->GetErrorCode()));
+    return false;
+  }
 
-    for (size_t ii = 0; ii<icon_urls.size(); ++ii) {
-      if (SQLITE_OK != statement.bind_text16(1, icon_urls[ii].c_str())) {
-        LOG(("ShortcutTable::SetShortcut icons unable to bind icon: %d\n",
-             db_->GetErrorCode()));
-        return false;
-      }
+  if (SQLITE_OK != statement.bind_text16(3, msg)) {
+    LOG(("ShortcutTable::SetShortcut unable to bind msg: %d\n",
+         db_->GetErrorCode()));
+    return false;
+  }
 
-      if (SQLITE_DONE != statement.step()) {
-        LOG(("ShortcutTable::SetShortcut icons unable to step: %d\n",
-             db_->GetErrorCode()));
-        return false;
-      }
+  if (SQLITE_OK != statement.bind_int(4, allow ? 1 : 0)) {
+    LOG(("ShortcutTable::SetShortcut unable to bind Allow: %d\n",
+         db_->GetErrorCode()));
+    return false;
+  }
 
-      if (SQLITE_OK != statement.reset()) {
-        LOG(("ShortcutTable::SetShortcut icons unable to reset: %d\n",
-             db_->GetErrorCode()));
-        return false;
-      }
-    }
+  if (SQLITE_OK != statement.bind_text16(5, icon16x16_url)) {
+    LOG(("ShortcutTable::SetShortcut unable to bind icon16x16_url: %d\n",
+         db_->GetErrorCode()));
+    return false;
+  }
+
+  if (SQLITE_OK != statement.bind_text16(6, icon32x32_url)) {
+    LOG(("ShortcutTable::SetShortcut unable to bind icon32x32_url: %d\n",
+         db_->GetErrorCode()));
+    return false;
+  }
+
+  if (SQLITE_OK != statement.bind_text16(7, icon48x48_url)) {
+    LOG(("ShortcutTable::SetShortcut unable to bind icon48x48_url: %d\n",
+         db_->GetErrorCode()));
+    return false;
+  }
+
+  if (SQLITE_OK != statement.bind_text16(8, icon128x128_url)) {
+    LOG(("ShortcutTable::SetShortcut unable to bind icon128x128_url: %d\n",
+         db_->GetErrorCode()));
+    return false;
+  }
+
+  if (SQLITE_DONE != statement.step()) {
+    LOG(("ShortcutTable::SetShortcut unable to step: %d\n",
+         db_->GetErrorCode()));
+    return false;
   }
 
   return transaction.Commit();
@@ -304,16 +464,21 @@ bool ShortcutTable::GetOriginShortcuts(const char16 *origin,
 
 bool ShortcutTable::GetShortcut(const char16 *origin, const char16 *name,
                                 std::string16 *app_url,
-                                std::vector<std::string16> *icon_urls,
-                                std::string16 *msg) {
+                                std::string16 *icon16x16_url,
+                                std::string16 *icon32x32_url,
+                                std::string16 *icon48x48_url,
+                                std::string16 *icon128x128_url,
+                                std::string16 *msg,
+                                bool *allow) {
   // This query is a little convoluted in the interests of avoiding an
   // explicit transaction.  There will be one row for every associated
   // ShortcutIcon, with the LEFT JOIN forcing there to always be at
   // least one row if there is a matching Origin/Name.  The AppUrl and
   // Msg will be the same for every row.
-  const char16 *sql = STRING16(L"SELECT AppUrl, Msg, IconUrl "
-                               L"FROM Shortcut LEFT JOIN ShortcutIcon "
-                               L"  USING (ShortcutID) "
+  const char16 *sql = STRING16(L"SELECT AppUrl, Msg, Allow, "
+                               L"Icon16x16Url, Icon32x32Url, "
+                               L"Icon48x48Url, Icon128x128Url "
+                               L"FROM Shortcut "
                                L"WHERE Origin = ? AND Name = ? ");
 
   SQLStatement statement;
@@ -347,156 +512,68 @@ bool ShortcutTable::GetShortcut(const char16 *origin, const char16 *name,
   // Get these from the first row, they're always the same.
   *app_url = statement.column_text16_safe(0);
   *msg = statement.column_text16_safe(1);
-
-  // If NULL, there were no icons.
-  if (!statement.column_text16(2)) {
-    // There should be exactly one row.
-    if (SQLITE_DONE != statement.step()) {
-      LOG(("ShortcutTable::GetShortcut unexpected empty results: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-  } else {
-    do {
-      icon_urls->push_back(statement.column_text16_safe(2));
-    } while (SQLITE_ROW == (rc = statement.step()));
-
-    if (SQLITE_DONE != rc) {
-      LOG(("ShortcutTable::GetShortcut unexpected results: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-  }
+  *allow = (statement.column_int(2) != 0);
+  *icon16x16_url = statement.column_text16_safe(3);
+  *icon32x32_url = statement.column_text16_safe(4);
+  *icon48x48_url = statement.column_text16_safe(5);
+  *icon128x128_url = statement.column_text16_safe(6);
 
   return true;
 }
 
 bool ShortcutTable::DeleteShortcut(const char16 *origin, const char16 *name) {
-  SQLTransaction transaction(db_, "ShortcutTable::SetShortcut");
-  if (!transaction.Begin()) {
+  const char16 *sql = STRING16(L"DELETE FROM Shortcut "
+                               L"WHERE Origin = ? AND Name = ?");
+
+  SQLStatement statement;
+  if (SQLITE_OK != statement.prepare16(db_, sql)) {
+    LOG(("ShortcutTable::DeleteShortcut unable to prepare: %d\n",
+         db_->GetErrorCode()));
     return false;
   }
 
-  {
-    const char16 *sql = STRING16(L"DELETE FROM ShortcutIcon "
-                                 L"WHERE ShortcutID IN "
-                                 L"(SELECT ShortcutID FROM Shortcut "
-                                 L" WHERE Origin = ? AND Name = ?)");
-
-
-    SQLStatement statement;
-    if (SQLITE_OK != statement.prepare16(db_, sql)) {
-      LOG(("ShortcutTable::DeleteShortcut icon unable to prepare: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-
-    if (SQLITE_OK != statement.bind_text16(0, origin)) {
-      LOG(("ShortcutTable::DeleteShortcut icon unable to bind origin: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-
-    if (SQLITE_OK != statement.bind_text16(1, name)) {
-      LOG(("ShortcutTable::DeleteShortcut icon unable to bind name: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-
-    if (SQLITE_DONE != statement.step()) {
-      LOG(("ShortcutTable::DeleteShortcut icon unable to step: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
+  if (SQLITE_OK != statement.bind_text16(0, origin)) {
+    LOG(("ShortcutTable::DeleteShortcut unable to bind origin: %d\n",
+         db_->GetErrorCode()));
+    return false;
   }
 
-  {
-    const char16 *sql = STRING16(L"DELETE FROM Shortcut "
-                                 L"WHERE Origin = ? AND Name = ?");
-
-    SQLStatement statement;
-    if (SQLITE_OK != statement.prepare16(db_, sql)) {
-      LOG(("ShortcutTable::DeleteShortcut unable to prepare: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-
-    if (SQLITE_OK != statement.bind_text16(0, origin)) {
-      LOG(("ShortcutTable::DeleteShortcut unable to bind origin: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-
-    if (SQLITE_OK != statement.bind_text16(1, name)) {
-      LOG(("ShortcutTable::DeleteShortcut unable to bind name: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-
-    if (SQLITE_DONE != statement.step()) {
-      LOG(("ShortcutTable::DeleteShortcut unable to step: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
+  if (SQLITE_OK != statement.bind_text16(1, name)) {
+    LOG(("ShortcutTable::DeleteShortcut unable to bind name: %d\n",
+         db_->GetErrorCode()));
+    return false;
   }
 
-  return transaction.Commit();
+  if (SQLITE_DONE != statement.step()) {
+    LOG(("ShortcutTable::DeleteShortcut unable to step: %d\n",
+         db_->GetErrorCode()));
+    return false;
+  }
+
+  return true;
 }
 
 bool ShortcutTable::DeleteShortcuts(const char16 *origin) {
-  SQLTransaction transaction(db_, "ShortcutTable::SetShortcut");
-  if (!transaction.Begin()) {
+  const char16 *sql = STRING16(L"DELETE FROM Shortcut WHERE Origin = ?");
+
+  SQLStatement statement;
+  if (SQLITE_OK != statement.prepare16(db_, sql)) {
+    LOG(("ShortcutTable::DeleteShortcuts unable to prepare: %d\n",
+         db_->GetErrorCode()));
     return false;
   }
 
-  {
-    const char16 *sql = STRING16(L"DELETE FROM ShortcutIcon "
-                                 L"WHERE ShortcutID IN "
-                                 L"(SELECT ShortcutID FROM Shortcut "
-                                 L" WHERE Origin = ?)");
-
-    SQLStatement statement;
-    if (SQLITE_OK != statement.prepare16(db_, sql)) {
-      LOG(("ShortcutTable::DeleteShortcuts icon unable to prepare: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-
-    if (SQLITE_OK != statement.bind_text16(0, origin)) {
-      LOG(("ShortcutTable::DeleteShortcuts icon unable to bind origin: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-
-    if (SQLITE_DONE != statement.step()) {
-      LOG(("ShortcutTable::DeleteShortcuts icon unable to step: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
+  if (SQLITE_OK != statement.bind_text16(0, origin)) {
+    LOG(("ShortcutTable::DeleteShortcuts unable to bind origin: %d\n",
+         db_->GetErrorCode()));
+    return false;
   }
 
-  {
-    const char16 *sql = STRING16(L"DELETE FROM Shortcut WHERE Origin = ?");
-
-    SQLStatement statement;
-    if (SQLITE_OK != statement.prepare16(db_, sql)) {
-      LOG(("ShortcutTable::DeleteShortcuts unable to prepare: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-
-    if (SQLITE_OK != statement.bind_text16(0, origin)) {
-      LOG(("ShortcutTable::DeleteShortcuts unable to bind origin: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
-
-    if (SQLITE_DONE != statement.step()) {
-      LOG(("ShortcutTable::DeleteShortcuts unable to step: %d\n",
-           db_->GetErrorCode()));
-      return false;
-    }
+  if (SQLITE_DONE != statement.step()) {
+    LOG(("ShortcutTable::DeleteShortcuts unable to step: %d\n",
+         db_->GetErrorCode()));
+    return false;
   }
 
-  return transaction.Commit();
+  return true;
 }

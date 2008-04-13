@@ -29,7 +29,7 @@
 #define GEARS_BASE_COMMON_BASE_CLASS_H__
 
 #include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
-#include "gears/base/common/scoped_token.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"  // for string16
 
@@ -37,7 +37,7 @@
 
 #if BROWSER_FF
 
-#include "ff/genfiles/base_interface_ff.h"
+#include "genfiles/base_interface_ff.h"
 
 #elif BROWSER_IE
 
@@ -66,6 +66,10 @@
 class ModuleWrapperBaseClass;
 class JsRunnerInterface;
 
+#ifdef WINCE
+class GearsFactory;
+#endif
+
 // Exposes the minimal set of information that Gears objects need to work
 // consistently across the main-thread and worker-thread JavaScript engines.
 class ModuleImplBaseClass {
@@ -73,11 +77,11 @@ class ModuleImplBaseClass {
   // TODO_REMOVE_NSISUPPORTS: this constructor only used for isupports-based
   // modules.
   ModuleImplBaseClass()
-      : module_name_(NULL), is_initialized_(false) {}
-  explicit ModuleImplBaseClass(const char *name)
+      : module_name_(""), is_initialized_(false) {}
+  explicit ModuleImplBaseClass(const std::string &name)
       : module_name_(name), is_initialized_(false) {}
 
-  const char *get_module_name() const {
+  const std::string &get_module_name() const {
     return module_name_;
   }
 
@@ -124,8 +128,9 @@ class ModuleImplBaseClass {
     assert(js_wrapper_);
     return js_wrapper_;
   }
-  void AddReference();
-  void RemoveReference();
+
+  void Ref();
+  void Unref();
 
   // TODO(aa): Remove and replace call sites with GetWrapper()->GetToken().
   JsToken GetWrapperToken() const;
@@ -135,7 +140,7 @@ class ModuleImplBaseClass {
   // Instead of making a copy for every object (ModuleImplBaseClass), we could
   // keep a reference to one shared class per tuple.
   // (Recall idea for PageSharedState + PageThreadSharedState classes.)
-  const char *module_name_;
+  std::string module_name_;
   bool is_initialized_;
   bool env_is_worker_;
 #if BROWSER_FF || BROWSER_NPAPI
@@ -173,6 +178,12 @@ class ModuleImplBaseClass {
   // Weak pointer to our JavaScript wrapper.
   ModuleWrapperBaseClass *js_wrapper_;
 
+#ifdef WINCE
+  // This method is defined in desktop/ie/factory.cc. It lets us verify that
+  // privateSetGlobalObject() has been called from JavaScript on WinCE.
+  friend bool IsFactoryInitialized(GearsFactory *factory);
+#endif
+
   DISALLOW_EVIL_CONSTRUCTORS(ModuleImplBaseClass);
 };
 
@@ -208,52 +219,36 @@ class ModuleWrapperBaseClass {
   // Gets the Dispatcher for this module.
   virtual DispatcherInterface *GetDispatcher() const = 0;
 
+  // Gets the ModuleImplBaseClass for this module.
+  virtual ModuleImplBaseClass *GetModuleImplBaseClass() const = 0;
+
   // Adds a reference to the wrapper class.
-  virtual void AddReference() = 0;
+  virtual void Ref() = 0;
 
   // Removes a reference to the wrapper class.
-  virtual void RemoveReference() = 0;
+  virtual void Unref() = 0;
 
  protected:
   // Don't allow direct deletion via this interface.
   virtual ~ModuleWrapperBaseClass() { }
 };
 
-// GComPtr: automatically call Release()
-class ReleaseWrapperFunctor {
- public:
-  void operator()(ModuleImplBaseClass *x) const {
-    if (x != NULL) { x->RemoveReference(); }
-  }
-};
-
-template<class Module>
-class GComPtr : public scoped_token<Module*, ReleaseWrapperFunctor> {
- public:
-  explicit GComPtr(Module *v)
-      : scoped_token<Module*, ReleaseWrapperFunctor>(v) {}
-
-  Module *operator->() const { return this->get(); }
-
-  // IE expects that when you return an object to script, it has already been
-  // AddRef()'d. NPAPI and Firefox do not do this. Gears modules should call
-  // this method after returning a newly created object to script to do the
-  // right thing.
-  void ReleaseNewObjectToScript() {
+// IE expects that when you return an object to script, it has already been
+// AddRef()'d. NPAPI and Firefox do not do this. Gears modules should call
+// this function after returning a newly created object to script to do the
+// right thing.
+inline void ReleaseNewObjectToScript(ModuleImplBaseClass *module) {
 #ifdef BROWSER_IE
-    // Leave the object AddRef()'d for IE
-#else
-    this->get()->RemoveReference();
+  // Increment the reference for IE, only.
+  module->Ref();
 #endif
-    this->release();
-  }
-};
+}
 
-// Creates new Module of the given type.  Returns NULL on failure. The new
-// module's ref count is initialized to 1. Callers should use GComPtr and
-// ReleaseNewObjectToScript() with the result of this function to ensure
-// consistent behavior across platforms.
-template<class Module>
-Module *CreateModule(JsRunnerInterface *js_runner);
+// Creates a new Module of the given type.  Returns false on failure.  Callers
+// should use ReleaseNewObjectToScript() with modules created from this
+// function before returning them to script to ensure consistent behavior
+// across browsers.  Usually, OutType will be GearsClass or ModuleImplBaseClass.
+template<class GearsClass, class OutType>
+bool CreateModule(JsRunnerInterface *js_runner, scoped_refptr<OutType>* module);
 
 #endif  // GEARS_BASE_COMMON_BASE_CLASS_H__

@@ -33,7 +33,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsILocalFile : public nsIFile {
+class NS_NO_VTABLE NS_SCRIPTABLE nsILocalFile : public nsIFile {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILOCALFILE_IID)
@@ -56,7 +56,7 @@ class NS_NO_VTABLE nsILocalFile : public nsIFile {
      *       filesystem charset.
      */
   /* void initWithPath (in AString filePath); */
-  NS_IMETHOD InitWithPath(const nsAString & filePath) = 0;
+  NS_SCRIPTABLE NS_IMETHOD InitWithPath(const nsAString & filePath) = 0;
 
   /* [noscript] void initWithNativePath (in ACString filePath); */
   NS_IMETHOD InitWithNativePath(const nsACString & filePath) = 0;
@@ -70,7 +70,7 @@ class NS_NO_VTABLE nsILocalFile : public nsIFile {
      *       the file this becomes equivalent to
      */
   /* void initWithFile (in nsILocalFile aFile); */
-  NS_IMETHOD InitWithFile(nsILocalFile *aFile) = 0;
+  NS_SCRIPTABLE NS_IMETHOD InitWithFile(nsILocalFile *aFile) = 0;
 
   /**
      *  followLinks
@@ -81,8 +81,8 @@ class NS_NO_VTABLE nsILocalFile : public nsIFile {
      *  a noop.  
      */
   /* attribute PRBool followLinks; */
-  NS_IMETHOD GetFollowLinks(PRBool *aFollowLinks) = 0;
-  NS_IMETHOD SetFollowLinks(PRBool aFollowLinks) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFollowLinks(PRBool *aFollowLinks) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFollowLinks(PRBool aFollowLinks) = 0;
 
   /**
      * Return the result of PR_Open on the file.  The caller is
@@ -106,7 +106,7 @@ class NS_NO_VTABLE nsILocalFile : public nsIFile {
   NS_IMETHOD Load(PRLibrary * *_retval) = 0;
 
   /* readonly attribute PRInt64 diskSpaceAvailable; */
-  NS_IMETHOD GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable) = 0;
 
   /**
      *  appendRelative[Native]Path
@@ -120,7 +120,7 @@ class NS_NO_VTABLE nsILocalFile : public nsIFile {
      *       must be in the native filesystem charset.
      */
   /* void appendRelativePath (in AString relativeFilePath); */
-  NS_IMETHOD AppendRelativePath(const nsAString & relativeFilePath) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AppendRelativePath(const nsAString & relativeFilePath) = 0;
 
   /* [noscript] void appendRelativeNativePath (in ACString relativeFilePath); */
   NS_IMETHOD AppendRelativeNativePath(const nsACString & relativeFilePath) = 0;
@@ -133,8 +133,8 @@ class NS_NO_VTABLE nsILocalFile : public nsIFile {
      *  INTERPRET IT AS HUMAN READABLE TEXT!
      */
   /* attribute ACString persistentDescriptor; */
-  NS_IMETHOD GetPersistentDescriptor(nsACString & aPersistentDescriptor) = 0;
-  NS_IMETHOD SetPersistentDescriptor(const nsACString & aPersistentDescriptor) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPersistentDescriptor(nsACString & aPersistentDescriptor) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetPersistentDescriptor(const nsACString & aPersistentDescriptor) = 0;
 
   /** 
      *  reveal
@@ -144,7 +144,7 @@ class NS_NO_VTABLE nsILocalFile : public nsIFile {
      *  support the ability to open a folder...
      */
   /* void reveal (); */
-  NS_IMETHOD Reveal(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Reveal(void) = 0;
 
   /** 
      *  launch
@@ -154,7 +154,7 @@ class NS_NO_VTABLE nsILocalFile : public nsIFile {
      *  This routine only works on platforms which support this functionality.
      */
   /* void launch (); */
-  NS_IMETHOD Launch(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Launch(void) = 0;
 
   /**
      *  getRelativeDescriptor
@@ -170,7 +170,7 @@ class NS_NO_VTABLE nsILocalFile : public nsIFile {
      *       There is no defined result if this param is null.
      */
   /* ACString getRelativeDescriptor (in nsILocalFile fromFile); */
-  NS_IMETHOD GetRelativeDescriptor(nsILocalFile *fromFile, nsACString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRelativeDescriptor(nsILocalFile *fromFile, nsACString & _retval) = 0;
 
   /**
      *  setRelativeDescriptor
@@ -184,7 +184,7 @@ class NS_NO_VTABLE nsILocalFile : public nsIFile {
      *       the relative descriptor obtained from getRelativeDescriptor
      */
   /* void setRelativeDescriptor (in nsILocalFile fromFile, in ACString relativeDesc); */
-  NS_IMETHOD SetRelativeDescriptor(nsILocalFile *fromFile, const nsACString & relativeDesc) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetRelativeDescriptor(nsILocalFile *fromFile, const nsACString & relativeDesc) = 0;
 
 };
 
@@ -192,63 +192,63 @@ class NS_NO_VTABLE nsILocalFile : public nsIFile {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSILOCALFILE \
-  NS_IMETHOD InitWithPath(const nsAString & filePath); \
+  NS_SCRIPTABLE NS_IMETHOD InitWithPath(const nsAString & filePath); \
   NS_IMETHOD InitWithNativePath(const nsACString & filePath); \
-  NS_IMETHOD InitWithFile(nsILocalFile *aFile); \
-  NS_IMETHOD GetFollowLinks(PRBool *aFollowLinks); \
-  NS_IMETHOD SetFollowLinks(PRBool aFollowLinks); \
+  NS_SCRIPTABLE NS_IMETHOD InitWithFile(nsILocalFile *aFile); \
+  NS_SCRIPTABLE NS_IMETHOD GetFollowLinks(PRBool *aFollowLinks); \
+  NS_SCRIPTABLE NS_IMETHOD SetFollowLinks(PRBool aFollowLinks); \
   NS_IMETHOD OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc * *_retval); \
   NS_IMETHOD OpenANSIFileDesc(const char *mode, FILE * *_retval); \
   NS_IMETHOD Load(PRLibrary * *_retval); \
-  NS_IMETHOD GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable); \
-  NS_IMETHOD AppendRelativePath(const nsAString & relativeFilePath); \
+  NS_SCRIPTABLE NS_IMETHOD GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable); \
+  NS_SCRIPTABLE NS_IMETHOD AppendRelativePath(const nsAString & relativeFilePath); \
   NS_IMETHOD AppendRelativeNativePath(const nsACString & relativeFilePath); \
-  NS_IMETHOD GetPersistentDescriptor(nsACString & aPersistentDescriptor); \
-  NS_IMETHOD SetPersistentDescriptor(const nsACString & aPersistentDescriptor); \
-  NS_IMETHOD Reveal(void); \
-  NS_IMETHOD Launch(void); \
-  NS_IMETHOD GetRelativeDescriptor(nsILocalFile *fromFile, nsACString & _retval); \
-  NS_IMETHOD SetRelativeDescriptor(nsILocalFile *fromFile, const nsACString & relativeDesc); 
+  NS_SCRIPTABLE NS_IMETHOD GetPersistentDescriptor(nsACString & aPersistentDescriptor); \
+  NS_SCRIPTABLE NS_IMETHOD SetPersistentDescriptor(const nsACString & aPersistentDescriptor); \
+  NS_SCRIPTABLE NS_IMETHOD Reveal(void); \
+  NS_SCRIPTABLE NS_IMETHOD Launch(void); \
+  NS_SCRIPTABLE NS_IMETHOD GetRelativeDescriptor(nsILocalFile *fromFile, nsACString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetRelativeDescriptor(nsILocalFile *fromFile, const nsACString & relativeDesc); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSILOCALFILE(_to) \
-  NS_IMETHOD InitWithPath(const nsAString & filePath) { return _to InitWithPath(filePath); } \
+  NS_SCRIPTABLE NS_IMETHOD InitWithPath(const nsAString & filePath) { return _to InitWithPath(filePath); } \
   NS_IMETHOD InitWithNativePath(const nsACString & filePath) { return _to InitWithNativePath(filePath); } \
-  NS_IMETHOD InitWithFile(nsILocalFile *aFile) { return _to InitWithFile(aFile); } \
-  NS_IMETHOD GetFollowLinks(PRBool *aFollowLinks) { return _to GetFollowLinks(aFollowLinks); } \
-  NS_IMETHOD SetFollowLinks(PRBool aFollowLinks) { return _to SetFollowLinks(aFollowLinks); } \
+  NS_SCRIPTABLE NS_IMETHOD InitWithFile(nsILocalFile *aFile) { return _to InitWithFile(aFile); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFollowLinks(PRBool *aFollowLinks) { return _to GetFollowLinks(aFollowLinks); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFollowLinks(PRBool aFollowLinks) { return _to SetFollowLinks(aFollowLinks); } \
   NS_IMETHOD OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc * *_retval) { return _to OpenNSPRFileDesc(flags, mode, _retval); } \
   NS_IMETHOD OpenANSIFileDesc(const char *mode, FILE * *_retval) { return _to OpenANSIFileDesc(mode, _retval); } \
   NS_IMETHOD Load(PRLibrary * *_retval) { return _to Load(_retval); } \
-  NS_IMETHOD GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable) { return _to GetDiskSpaceAvailable(aDiskSpaceAvailable); } \
-  NS_IMETHOD AppendRelativePath(const nsAString & relativeFilePath) { return _to AppendRelativePath(relativeFilePath); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable) { return _to GetDiskSpaceAvailable(aDiskSpaceAvailable); } \
+  NS_SCRIPTABLE NS_IMETHOD AppendRelativePath(const nsAString & relativeFilePath) { return _to AppendRelativePath(relativeFilePath); } \
   NS_IMETHOD AppendRelativeNativePath(const nsACString & relativeFilePath) { return _to AppendRelativeNativePath(relativeFilePath); } \
-  NS_IMETHOD GetPersistentDescriptor(nsACString & aPersistentDescriptor) { return _to GetPersistentDescriptor(aPersistentDescriptor); } \
-  NS_IMETHOD SetPersistentDescriptor(const nsACString & aPersistentDescriptor) { return _to SetPersistentDescriptor(aPersistentDescriptor); } \
-  NS_IMETHOD Reveal(void) { return _to Reveal(); } \
-  NS_IMETHOD Launch(void) { return _to Launch(); } \
-  NS_IMETHOD GetRelativeDescriptor(nsILocalFile *fromFile, nsACString & _retval) { return _to GetRelativeDescriptor(fromFile, _retval); } \
-  NS_IMETHOD SetRelativeDescriptor(nsILocalFile *fromFile, const nsACString & relativeDesc) { return _to SetRelativeDescriptor(fromFile, relativeDesc); } 
+  NS_SCRIPTABLE NS_IMETHOD GetPersistentDescriptor(nsACString & aPersistentDescriptor) { return _to GetPersistentDescriptor(aPersistentDescriptor); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPersistentDescriptor(const nsACString & aPersistentDescriptor) { return _to SetPersistentDescriptor(aPersistentDescriptor); } \
+  NS_SCRIPTABLE NS_IMETHOD Reveal(void) { return _to Reveal(); } \
+  NS_SCRIPTABLE NS_IMETHOD Launch(void) { return _to Launch(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRelativeDescriptor(nsILocalFile *fromFile, nsACString & _retval) { return _to GetRelativeDescriptor(fromFile, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRelativeDescriptor(nsILocalFile *fromFile, const nsACString & relativeDesc) { return _to SetRelativeDescriptor(fromFile, relativeDesc); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSILOCALFILE(_to) \
-  NS_IMETHOD InitWithPath(const nsAString & filePath) { return !_to ? NS_ERROR_NULL_POINTER : _to->InitWithPath(filePath); } \
+  NS_SCRIPTABLE NS_IMETHOD InitWithPath(const nsAString & filePath) { return !_to ? NS_ERROR_NULL_POINTER : _to->InitWithPath(filePath); } \
   NS_IMETHOD InitWithNativePath(const nsACString & filePath) { return !_to ? NS_ERROR_NULL_POINTER : _to->InitWithNativePath(filePath); } \
-  NS_IMETHOD InitWithFile(nsILocalFile *aFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->InitWithFile(aFile); } \
-  NS_IMETHOD GetFollowLinks(PRBool *aFollowLinks) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFollowLinks(aFollowLinks); } \
-  NS_IMETHOD SetFollowLinks(PRBool aFollowLinks) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFollowLinks(aFollowLinks); } \
+  NS_SCRIPTABLE NS_IMETHOD InitWithFile(nsILocalFile *aFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->InitWithFile(aFile); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFollowLinks(PRBool *aFollowLinks) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFollowLinks(aFollowLinks); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFollowLinks(PRBool aFollowLinks) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFollowLinks(aFollowLinks); } \
   NS_IMETHOD OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc * *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OpenNSPRFileDesc(flags, mode, _retval); } \
   NS_IMETHOD OpenANSIFileDesc(const char *mode, FILE * *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OpenANSIFileDesc(mode, _retval); } \
   NS_IMETHOD Load(PRLibrary * *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Load(_retval); } \
-  NS_IMETHOD GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDiskSpaceAvailable(aDiskSpaceAvailable); } \
-  NS_IMETHOD AppendRelativePath(const nsAString & relativeFilePath) { return !_to ? NS_ERROR_NULL_POINTER : _to->AppendRelativePath(relativeFilePath); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDiskSpaceAvailable(aDiskSpaceAvailable); } \
+  NS_SCRIPTABLE NS_IMETHOD AppendRelativePath(const nsAString & relativeFilePath) { return !_to ? NS_ERROR_NULL_POINTER : _to->AppendRelativePath(relativeFilePath); } \
   NS_IMETHOD AppendRelativeNativePath(const nsACString & relativeFilePath) { return !_to ? NS_ERROR_NULL_POINTER : _to->AppendRelativeNativePath(relativeFilePath); } \
-  NS_IMETHOD GetPersistentDescriptor(nsACString & aPersistentDescriptor) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPersistentDescriptor(aPersistentDescriptor); } \
-  NS_IMETHOD SetPersistentDescriptor(const nsACString & aPersistentDescriptor) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPersistentDescriptor(aPersistentDescriptor); } \
-  NS_IMETHOD Reveal(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Reveal(); } \
-  NS_IMETHOD Launch(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Launch(); } \
-  NS_IMETHOD GetRelativeDescriptor(nsILocalFile *fromFile, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRelativeDescriptor(fromFile, _retval); } \
-  NS_IMETHOD SetRelativeDescriptor(nsILocalFile *fromFile, const nsACString & relativeDesc) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRelativeDescriptor(fromFile, relativeDesc); } 
+  NS_SCRIPTABLE NS_IMETHOD GetPersistentDescriptor(nsACString & aPersistentDescriptor) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPersistentDescriptor(aPersistentDescriptor); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPersistentDescriptor(const nsACString & aPersistentDescriptor) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPersistentDescriptor(aPersistentDescriptor); } \
+  NS_SCRIPTABLE NS_IMETHOD Reveal(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Reveal(); } \
+  NS_SCRIPTABLE NS_IMETHOD Launch(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Launch(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRelativeDescriptor(nsILocalFile *fromFile, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRelativeDescriptor(fromFile, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRelativeDescriptor(nsILocalFile *fromFile, const nsACString & relativeDesc) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRelativeDescriptor(fromFile, relativeDesc); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

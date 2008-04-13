@@ -34,8 +34,9 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE
 BEGIN
-    IDS_RESTART_QUESTION "Internet Explorer must be restarted for Gears to be installed.\n\nWould you like to restart Internet Explorer and continue the installation?"
-    IDS_RESTART_DIALOG_TITLE "Google Gears - Installing"
-    IDS_STOP_FAILURE_MESSAGE "Failed to stop Internet Explorer. Please stop it manually and restart this installation."
-    IDS_START_FAILURE_MESSAGE "Failed to start Internet Explorer. Please start it manually."
+    IDS_RESTART_DIALOG_TITLE "PRODUCT_FRIENDLY_NAME_UQ - Installing"
+    IDS_REBOOT_MESSAGE "For PRODUCT_FRIENDLY_NAME_UQ to function correctly, you must restart your device once this installation is complete."
+    IDS_START_FAILURE_MESSAGE "PRODUCT_FRIENDLY_NAME_UQ failed to start Internet Explorer. Please start it manually."
+    IDS_UPGRADE_MESSAGE "A new version of PRODUCT_FRIENDLY_NAME_UQ is available. Would you like to install it?"
+    IDS_UPGRADE_DIALOG_TITLE "PRODUCT_FRIENDLY_NAME_UQ"
 END

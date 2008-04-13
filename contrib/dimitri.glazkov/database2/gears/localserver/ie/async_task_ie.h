@@ -95,6 +95,7 @@ class AsyncTask : protected HttpRequest::ReadyStateListener {
   // shortly thereafter.
   bool HttpGet(const char16 *full_url,
                bool is_capturing,
+               const char16 *reason_header_value,
                const char16 *if_mod_since_date,
                const char16 *required_cookie,
                WebCacheDB::PayloadInfo *payload,

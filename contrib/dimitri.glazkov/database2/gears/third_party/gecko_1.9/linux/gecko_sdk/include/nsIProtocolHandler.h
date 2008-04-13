@@ -31,7 +31,7 @@ class nsIChannel; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIProtocolHandler : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIProtocolHandler : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPROTOCOLHANDLER_IID)
@@ -40,7 +40,7 @@ class NS_NO_VTABLE nsIProtocolHandler : public nsISupports {
      * The scheme of this protocol (e.g., "file").
      */
   /* readonly attribute ACString scheme; */
-  NS_IMETHOD GetScheme(nsACString & aScheme) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetScheme(nsACString & aScheme) = 0;
 
   /** 
      * The default port is the port that this protocol normally uses.
@@ -48,13 +48,13 @@ class NS_NO_VTABLE nsIProtocolHandler : public nsISupports {
      * then -1 will be returned.
      */
   /* readonly attribute long defaultPort; */
-  NS_IMETHOD GetDefaultPort(PRInt32 *aDefaultPort) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultPort(PRInt32 *aDefaultPort) = 0;
 
   /**
      * Returns the protocol specific flags (see flag definitions below).  
      */
   /* readonly attribute unsigned long protocolFlags; */
-  NS_IMETHOD GetProtocolFlags(PRUint32 *aProtocolFlags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetProtocolFlags(PRUint32 *aProtocolFlags) = 0;
 
   /**
      * Makes a URI object that is suitable for loading by this protocol,
@@ -82,13 +82,13 @@ class NS_NO_VTABLE nsIProtocolHandler : public nsISupports {
      *                         URI aBaseURI will simply be ignored.
      */
   /* nsIURI newURI (in AUTF8String aSpec, in string aOriginCharset, in nsIURI aBaseURI); */
-  NS_IMETHOD NewURI(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD NewURI(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval) = 0;
 
   /**
      * Constructs a new channel from the given URI for this protocol handler. 
      */
   /* nsIChannel newChannel (in nsIURI aURI); */
-  NS_IMETHOD NewChannel(nsIURI *aURI, nsIChannel **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD NewChannel(nsIURI *aURI, nsIChannel **_retval) = 0;
 
   /**
      * Allows a protocol to override blacklisted ports.
@@ -100,7 +100,7 @@ class NS_NO_VTABLE nsIProtocolHandler : public nsISupports {
      * protocol handler wants to override the ban.  
      */
   /* boolean allowPort (in long port, in string scheme); */
-  NS_IMETHOD AllowPort(PRInt32 port, const char *scheme, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AllowPort(PRInt32 port, const char *scheme, PRBool *_retval) = 0;
 
   /**************************************************************************
      * Constants for the protocol flags (the first is the default mask, the
@@ -238,30 +238,30 @@ class NS_NO_VTABLE nsIProtocolHandler : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIPROTOCOLHANDLER \
-  NS_IMETHOD GetScheme(nsACString & aScheme); \
-  NS_IMETHOD GetDefaultPort(PRInt32 *aDefaultPort); \
-  NS_IMETHOD GetProtocolFlags(PRUint32 *aProtocolFlags); \
-  NS_IMETHOD NewURI(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval); \
-  NS_IMETHOD NewChannel(nsIURI *aURI, nsIChannel **_retval); \
-  NS_IMETHOD AllowPort(PRInt32 port, const char *scheme, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetScheme(nsACString & aScheme); \
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultPort(PRInt32 *aDefaultPort); \
+  NS_SCRIPTABLE NS_IMETHOD GetProtocolFlags(PRUint32 *aProtocolFlags); \
+  NS_SCRIPTABLE NS_IMETHOD NewURI(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD NewChannel(nsIURI *aURI, nsIChannel **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD AllowPort(PRInt32 port, const char *scheme, PRBool *_retval); \
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIPROTOCOLHANDLER(_to) \
-  NS_IMETHOD GetScheme(nsACString & aScheme) { return _to GetScheme(aScheme); } \
-  NS_IMETHOD GetDefaultPort(PRInt32 *aDefaultPort) { return _to GetDefaultPort(aDefaultPort); } \
-  NS_IMETHOD GetProtocolFlags(PRUint32 *aProtocolFlags) { return _to GetProtocolFlags(aProtocolFlags); } \
-  NS_IMETHOD NewURI(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval) { return _to NewURI(aSpec, aOriginCharset, aBaseURI, _retval); } \
-  NS_IMETHOD NewChannel(nsIURI *aURI, nsIChannel **_retval) { return _to NewChannel(aURI, _retval); } \
-  NS_IMETHOD AllowPort(PRInt32 port, const char *scheme, PRBool *_retval) { return _to AllowPort(port, scheme, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScheme(nsACString & aScheme) { return _to GetScheme(aScheme); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultPort(PRInt32 *aDefaultPort) { return _to GetDefaultPort(aDefaultPort); } \
+  NS_SCRIPTABLE NS_IMETHOD GetProtocolFlags(PRUint32 *aProtocolFlags) { return _to GetProtocolFlags(aProtocolFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD NewURI(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval) { return _to NewURI(aSpec, aOriginCharset, aBaseURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD NewChannel(nsIURI *aURI, nsIChannel **_retval) { return _to NewChannel(aURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD AllowPort(PRInt32 port, const char *scheme, PRBool *_retval) { return _to AllowPort(port, scheme, _retval); } \
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIPROTOCOLHANDLER(_to) \
-  NS_IMETHOD GetScheme(nsACString & aScheme) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScheme(aScheme); } \
-  NS_IMETHOD GetDefaultPort(PRInt32 *aDefaultPort) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDefaultPort(aDefaultPort); } \
-  NS_IMETHOD GetProtocolFlags(PRUint32 *aProtocolFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetProtocolFlags(aProtocolFlags); } \
-  NS_IMETHOD NewURI(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NewURI(aSpec, aOriginCharset, aBaseURI, _retval); } \
-  NS_IMETHOD NewChannel(nsIURI *aURI, nsIChannel **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NewChannel(aURI, _retval); } \
-  NS_IMETHOD AllowPort(PRInt32 port, const char *scheme, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->AllowPort(port, scheme, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScheme(nsACString & aScheme) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScheme(aScheme); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultPort(PRInt32 *aDefaultPort) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDefaultPort(aDefaultPort); } \
+  NS_SCRIPTABLE NS_IMETHOD GetProtocolFlags(PRUint32 *aProtocolFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetProtocolFlags(aProtocolFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD NewURI(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NewURI(aSpec, aOriginCharset, aBaseURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD NewChannel(nsIURI *aURI, nsIChannel **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NewChannel(aURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD AllowPort(PRInt32 port, const char *scheme, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->AllowPort(port, scheme, _retval); } \
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

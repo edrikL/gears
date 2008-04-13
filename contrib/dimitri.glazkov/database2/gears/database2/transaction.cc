@@ -31,7 +31,6 @@
 #include "gears/base/common/module_wrapper.h"
 #include "gears/database2/database2.h"
 #include "gears/database2/statement.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 DECLARE_GEARS_WRAPPER(Database2Transaction);
 
@@ -88,7 +87,7 @@ void Database2Transaction::ExecuteNextStatement(JsCallContext *context) {
 void Database2Transaction::InvokeCallback() {
   // prepare to return transaction
   JsParamToSend send_argv[] = {
-    { JSPARAM_MODULE, static_cast<ModuleImplBaseClass *>(this) }
+    { JSPARAM_DISPATCHER_MODULE, static_cast<ModuleImplBaseClass *>(this) }
   };
 
   GetJsRunner()->InvokeCallback(callback_.get(), ARRAYSIZE(send_argv),
@@ -101,21 +100,22 @@ void Database2Transaction::InvokeErrorCallback() {
 void Database2Transaction::InvokeSuccessCallback() {
 }
 
-bool Database2Transaction::Create(const Database2 *database,
-                                  const bool async,
-                                  JsRootedCallback *callback,
-                                  JsRootedCallback *error_callback,
-                                  JsRootedCallback *success_callback,
-                                  Database2Transaction **instance) {
-  Database2Transaction *tx = 
-     CreateModule<Database2Transaction>(database->GetJsRunner());
-  if (tx && tx->InitBaseFromSibling(database)) {
+bool Database2Transaction::Create(
+                               const Database2 *database,
+                               const bool async,
+                               JsRootedCallback *callback,
+                               JsRootedCallback *error_callback,
+                               JsRootedCallback *success_callback,
+                               scoped_refptr<Database2Transaction> *instance) {
+  assert(instance);
+  if (CreateModule<Database2Transaction>(database->GetJsRunner(), instance)
+      && (*instance)->InitBaseFromSibling(database)) {
+    Database2Transaction *tx = instance->get();
     tx->async_ = async;
     // set callbacks
     tx->callback_.reset(callback);
     tx->error_callback_.reset(error_callback);
     tx->success_callback_.reset(success_callback);
-    *instance = tx;
     return true;
   }
   return false;

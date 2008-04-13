@@ -31,58 +31,58 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLImageElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLImageElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLIMAGEELEMENT_IID)
 
   /* attribute DOMString name; */
-  NS_IMETHOD GetName(nsAString & aName) = 0;
-  NS_IMETHOD SetName(const nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) = 0;
 
   /* attribute DOMString align; */
-  NS_IMETHOD GetAlign(nsAString & aAlign) = 0;
-  NS_IMETHOD SetAlign(const nsAString & aAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) = 0;
 
   /* attribute DOMString alt; */
-  NS_IMETHOD GetAlt(nsAString & aAlt) = 0;
-  NS_IMETHOD SetAlt(const nsAString & aAlt) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAlt(nsAString & aAlt) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAlt(const nsAString & aAlt) = 0;
 
   /* attribute DOMString border; */
-  NS_IMETHOD GetBorder(nsAString & aBorder) = 0;
-  NS_IMETHOD SetBorder(const nsAString & aBorder) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetBorder(nsAString & aBorder) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetBorder(const nsAString & aBorder) = 0;
 
   /* attribute long height; */
-  NS_IMETHOD GetHeight(PRInt32 *aHeight) = 0;
-  NS_IMETHOD SetHeight(PRInt32 aHeight) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHeight(PRInt32 *aHeight) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetHeight(PRInt32 aHeight) = 0;
 
   /* attribute long hspace; */
-  NS_IMETHOD GetHspace(PRInt32 *aHspace) = 0;
-  NS_IMETHOD SetHspace(PRInt32 aHspace) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHspace(PRInt32 *aHspace) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetHspace(PRInt32 aHspace) = 0;
 
   /* attribute boolean isMap; */
-  NS_IMETHOD GetIsMap(PRBool *aIsMap) = 0;
-  NS_IMETHOD SetIsMap(PRBool aIsMap) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIsMap(PRBool *aIsMap) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetIsMap(PRBool aIsMap) = 0;
 
   /* attribute DOMString longDesc; */
-  NS_IMETHOD GetLongDesc(nsAString & aLongDesc) = 0;
-  NS_IMETHOD SetLongDesc(const nsAString & aLongDesc) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLongDesc(nsAString & aLongDesc) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetLongDesc(const nsAString & aLongDesc) = 0;
 
   /* attribute DOMString src; */
-  NS_IMETHOD GetSrc(nsAString & aSrc) = 0;
-  NS_IMETHOD SetSrc(const nsAString & aSrc) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSrc(nsAString & aSrc) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSrc(const nsAString & aSrc) = 0;
 
   /* attribute DOMString useMap; */
-  NS_IMETHOD GetUseMap(nsAString & aUseMap) = 0;
-  NS_IMETHOD SetUseMap(const nsAString & aUseMap) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetUseMap(nsAString & aUseMap) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetUseMap(const nsAString & aUseMap) = 0;
 
   /* attribute long vspace; */
-  NS_IMETHOD GetVspace(PRInt32 *aVspace) = 0;
-  NS_IMETHOD SetVspace(PRInt32 aVspace) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetVspace(PRInt32 *aVspace) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetVspace(PRInt32 aVspace) = 0;
 
   /* attribute long width; */
-  NS_IMETHOD GetWidth(PRInt32 *aWidth) = 0;
-  NS_IMETHOD SetWidth(PRInt32 aWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(PRInt32 *aWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(PRInt32 aWidth) = 0;
 
 };
 
@@ -90,84 +90,84 @@ class NS_NO_VTABLE nsIDOMHTMLImageElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLIMAGEELEMENT \
-  NS_IMETHOD GetName(nsAString & aName); \
-  NS_IMETHOD SetName(const nsAString & aName); \
-  NS_IMETHOD GetAlign(nsAString & aAlign); \
-  NS_IMETHOD SetAlign(const nsAString & aAlign); \
-  NS_IMETHOD GetAlt(nsAString & aAlt); \
-  NS_IMETHOD SetAlt(const nsAString & aAlt); \
-  NS_IMETHOD GetBorder(nsAString & aBorder); \
-  NS_IMETHOD SetBorder(const nsAString & aBorder); \
-  NS_IMETHOD GetHeight(PRInt32 *aHeight); \
-  NS_IMETHOD SetHeight(PRInt32 aHeight); \
-  NS_IMETHOD GetHspace(PRInt32 *aHspace); \
-  NS_IMETHOD SetHspace(PRInt32 aHspace); \
-  NS_IMETHOD GetIsMap(PRBool *aIsMap); \
-  NS_IMETHOD SetIsMap(PRBool aIsMap); \
-  NS_IMETHOD GetLongDesc(nsAString & aLongDesc); \
-  NS_IMETHOD SetLongDesc(const nsAString & aLongDesc); \
-  NS_IMETHOD GetSrc(nsAString & aSrc); \
-  NS_IMETHOD SetSrc(const nsAString & aSrc); \
-  NS_IMETHOD GetUseMap(nsAString & aUseMap); \
-  NS_IMETHOD SetUseMap(const nsAString & aUseMap); \
-  NS_IMETHOD GetVspace(PRInt32 *aVspace); \
-  NS_IMETHOD SetVspace(PRInt32 aVspace); \
-  NS_IMETHOD GetWidth(PRInt32 *aWidth); \
-  NS_IMETHOD SetWidth(PRInt32 aWidth); 
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign); \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign); \
+  NS_SCRIPTABLE NS_IMETHOD GetAlt(nsAString & aAlt); \
+  NS_SCRIPTABLE NS_IMETHOD SetAlt(const nsAString & aAlt); \
+  NS_SCRIPTABLE NS_IMETHOD GetBorder(nsAString & aBorder); \
+  NS_SCRIPTABLE NS_IMETHOD SetBorder(const nsAString & aBorder); \
+  NS_SCRIPTABLE NS_IMETHOD GetHeight(PRInt32 *aHeight); \
+  NS_SCRIPTABLE NS_IMETHOD SetHeight(PRInt32 aHeight); \
+  NS_SCRIPTABLE NS_IMETHOD GetHspace(PRInt32 *aHspace); \
+  NS_SCRIPTABLE NS_IMETHOD SetHspace(PRInt32 aHspace); \
+  NS_SCRIPTABLE NS_IMETHOD GetIsMap(PRBool *aIsMap); \
+  NS_SCRIPTABLE NS_IMETHOD SetIsMap(PRBool aIsMap); \
+  NS_SCRIPTABLE NS_IMETHOD GetLongDesc(nsAString & aLongDesc); \
+  NS_SCRIPTABLE NS_IMETHOD SetLongDesc(const nsAString & aLongDesc); \
+  NS_SCRIPTABLE NS_IMETHOD GetSrc(nsAString & aSrc); \
+  NS_SCRIPTABLE NS_IMETHOD SetSrc(const nsAString & aSrc); \
+  NS_SCRIPTABLE NS_IMETHOD GetUseMap(nsAString & aUseMap); \
+  NS_SCRIPTABLE NS_IMETHOD SetUseMap(const nsAString & aUseMap); \
+  NS_SCRIPTABLE NS_IMETHOD GetVspace(PRInt32 *aVspace); \
+  NS_SCRIPTABLE NS_IMETHOD SetVspace(PRInt32 aVspace); \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(PRInt32 *aWidth); \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(PRInt32 aWidth); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLIMAGEELEMENT(_to) \
-  NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
-  NS_IMETHOD GetAlign(nsAString & aAlign) { return _to GetAlign(aAlign); } \
-  NS_IMETHOD SetAlign(const nsAString & aAlign) { return _to SetAlign(aAlign); } \
-  NS_IMETHOD GetAlt(nsAString & aAlt) { return _to GetAlt(aAlt); } \
-  NS_IMETHOD SetAlt(const nsAString & aAlt) { return _to SetAlt(aAlt); } \
-  NS_IMETHOD GetBorder(nsAString & aBorder) { return _to GetBorder(aBorder); } \
-  NS_IMETHOD SetBorder(const nsAString & aBorder) { return _to SetBorder(aBorder); } \
-  NS_IMETHOD GetHeight(PRInt32 *aHeight) { return _to GetHeight(aHeight); } \
-  NS_IMETHOD SetHeight(PRInt32 aHeight) { return _to SetHeight(aHeight); } \
-  NS_IMETHOD GetHspace(PRInt32 *aHspace) { return _to GetHspace(aHspace); } \
-  NS_IMETHOD SetHspace(PRInt32 aHspace) { return _to SetHspace(aHspace); } \
-  NS_IMETHOD GetIsMap(PRBool *aIsMap) { return _to GetIsMap(aIsMap); } \
-  NS_IMETHOD SetIsMap(PRBool aIsMap) { return _to SetIsMap(aIsMap); } \
-  NS_IMETHOD GetLongDesc(nsAString & aLongDesc) { return _to GetLongDesc(aLongDesc); } \
-  NS_IMETHOD SetLongDesc(const nsAString & aLongDesc) { return _to SetLongDesc(aLongDesc); } \
-  NS_IMETHOD GetSrc(nsAString & aSrc) { return _to GetSrc(aSrc); } \
-  NS_IMETHOD SetSrc(const nsAString & aSrc) { return _to SetSrc(aSrc); } \
-  NS_IMETHOD GetUseMap(nsAString & aUseMap) { return _to GetUseMap(aUseMap); } \
-  NS_IMETHOD SetUseMap(const nsAString & aUseMap) { return _to SetUseMap(aUseMap); } \
-  NS_IMETHOD GetVspace(PRInt32 *aVspace) { return _to GetVspace(aVspace); } \
-  NS_IMETHOD SetVspace(PRInt32 aVspace) { return _to SetVspace(aVspace); } \
-  NS_IMETHOD GetWidth(PRInt32 *aWidth) { return _to GetWidth(aWidth); } \
-  NS_IMETHOD SetWidth(PRInt32 aWidth) { return _to SetWidth(aWidth); } 
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) { return _to GetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) { return _to SetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAlt(nsAString & aAlt) { return _to GetAlt(aAlt); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlt(const nsAString & aAlt) { return _to SetAlt(aAlt); } \
+  NS_SCRIPTABLE NS_IMETHOD GetBorder(nsAString & aBorder) { return _to GetBorder(aBorder); } \
+  NS_SCRIPTABLE NS_IMETHOD SetBorder(const nsAString & aBorder) { return _to SetBorder(aBorder); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHeight(PRInt32 *aHeight) { return _to GetHeight(aHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHeight(PRInt32 aHeight) { return _to SetHeight(aHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHspace(PRInt32 *aHspace) { return _to GetHspace(aHspace); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHspace(PRInt32 aHspace) { return _to SetHspace(aHspace); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsMap(PRBool *aIsMap) { return _to GetIsMap(aIsMap); } \
+  NS_SCRIPTABLE NS_IMETHOD SetIsMap(PRBool aIsMap) { return _to SetIsMap(aIsMap); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLongDesc(nsAString & aLongDesc) { return _to GetLongDesc(aLongDesc); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLongDesc(const nsAString & aLongDesc) { return _to SetLongDesc(aLongDesc); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSrc(nsAString & aSrc) { return _to GetSrc(aSrc); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSrc(const nsAString & aSrc) { return _to SetSrc(aSrc); } \
+  NS_SCRIPTABLE NS_IMETHOD GetUseMap(nsAString & aUseMap) { return _to GetUseMap(aUseMap); } \
+  NS_SCRIPTABLE NS_IMETHOD SetUseMap(const nsAString & aUseMap) { return _to SetUseMap(aUseMap); } \
+  NS_SCRIPTABLE NS_IMETHOD GetVspace(PRInt32 *aVspace) { return _to GetVspace(aVspace); } \
+  NS_SCRIPTABLE NS_IMETHOD SetVspace(PRInt32 aVspace) { return _to SetVspace(aVspace); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(PRInt32 *aWidth) { return _to GetWidth(aWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(PRInt32 aWidth) { return _to SetWidth(aWidth); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLIMAGEELEMENT(_to) \
-  NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
-  NS_IMETHOD GetAlign(nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlign(aAlign); } \
-  NS_IMETHOD SetAlign(const nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlign(aAlign); } \
-  NS_IMETHOD GetAlt(nsAString & aAlt) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlt(aAlt); } \
-  NS_IMETHOD SetAlt(const nsAString & aAlt) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlt(aAlt); } \
-  NS_IMETHOD GetBorder(nsAString & aBorder) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetBorder(aBorder); } \
-  NS_IMETHOD SetBorder(const nsAString & aBorder) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetBorder(aBorder); } \
-  NS_IMETHOD GetHeight(PRInt32 *aHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHeight(aHeight); } \
-  NS_IMETHOD SetHeight(PRInt32 aHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHeight(aHeight); } \
-  NS_IMETHOD GetHspace(PRInt32 *aHspace) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHspace(aHspace); } \
-  NS_IMETHOD SetHspace(PRInt32 aHspace) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHspace(aHspace); } \
-  NS_IMETHOD GetIsMap(PRBool *aIsMap) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsMap(aIsMap); } \
-  NS_IMETHOD SetIsMap(PRBool aIsMap) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetIsMap(aIsMap); } \
-  NS_IMETHOD GetLongDesc(nsAString & aLongDesc) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLongDesc(aLongDesc); } \
-  NS_IMETHOD SetLongDesc(const nsAString & aLongDesc) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLongDesc(aLongDesc); } \
-  NS_IMETHOD GetSrc(nsAString & aSrc) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSrc(aSrc); } \
-  NS_IMETHOD SetSrc(const nsAString & aSrc) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSrc(aSrc); } \
-  NS_IMETHOD GetUseMap(nsAString & aUseMap) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUseMap(aUseMap); } \
-  NS_IMETHOD SetUseMap(const nsAString & aUseMap) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetUseMap(aUseMap); } \
-  NS_IMETHOD GetVspace(PRInt32 *aVspace) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVspace(aVspace); } \
-  NS_IMETHOD SetVspace(PRInt32 aVspace) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetVspace(aVspace); } \
-  NS_IMETHOD GetWidth(PRInt32 *aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWidth(aWidth); } \
-  NS_IMETHOD SetWidth(PRInt32 aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWidth(aWidth); } 
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAlt(nsAString & aAlt) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlt(aAlt); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlt(const nsAString & aAlt) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlt(aAlt); } \
+  NS_SCRIPTABLE NS_IMETHOD GetBorder(nsAString & aBorder) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetBorder(aBorder); } \
+  NS_SCRIPTABLE NS_IMETHOD SetBorder(const nsAString & aBorder) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetBorder(aBorder); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHeight(PRInt32 *aHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHeight(aHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHeight(PRInt32 aHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHeight(aHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHspace(PRInt32 *aHspace) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHspace(aHspace); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHspace(PRInt32 aHspace) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHspace(aHspace); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsMap(PRBool *aIsMap) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsMap(aIsMap); } \
+  NS_SCRIPTABLE NS_IMETHOD SetIsMap(PRBool aIsMap) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetIsMap(aIsMap); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLongDesc(nsAString & aLongDesc) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLongDesc(aLongDesc); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLongDesc(const nsAString & aLongDesc) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLongDesc(aLongDesc); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSrc(nsAString & aSrc) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSrc(aSrc); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSrc(const nsAString & aSrc) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSrc(aSrc); } \
+  NS_SCRIPTABLE NS_IMETHOD GetUseMap(nsAString & aUseMap) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUseMap(aUseMap); } \
+  NS_SCRIPTABLE NS_IMETHOD SetUseMap(const nsAString & aUseMap) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetUseMap(aUseMap); } \
+  NS_SCRIPTABLE NS_IMETHOD GetVspace(PRInt32 *aVspace) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVspace(aVspace); } \
+  NS_SCRIPTABLE NS_IMETHOD SetVspace(PRInt32 aVspace) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetVspace(aVspace); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(PRInt32 *aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWidth(aWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(PRInt32 aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWidth(aWidth); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

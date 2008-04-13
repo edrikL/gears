@@ -33,7 +33,7 @@ class nsIInputStream; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIUploadChannel : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIUploadChannel : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IUPLOADCHANNEL_IID)
@@ -67,13 +67,13 @@ class NS_NO_VTABLE nsIUploadChannel : public nsISupports {
      *        determined by calling the stream's |available| method.
      */
   /* void setUploadStream (in nsIInputStream aStream, in ACString aContentType, in long aContentLength); */
-  NS_IMETHOD SetUploadStream(nsIInputStream *aStream, const nsACString & aContentType, PRInt32 aContentLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetUploadStream(nsIInputStream *aStream, const nsACString & aContentType, PRInt32 aContentLength) = 0;
 
   /**
      * Get the stream (to be) uploaded by this channel.
      */
   /* readonly attribute nsIInputStream uploadStream; */
-  NS_IMETHOD GetUploadStream(nsIInputStream * *aUploadStream) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetUploadStream(nsIInputStream * *aUploadStream) = 0;
 
 };
 
@@ -81,18 +81,18 @@ class NS_NO_VTABLE nsIUploadChannel : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIUPLOADCHANNEL \
-  NS_IMETHOD SetUploadStream(nsIInputStream *aStream, const nsACString & aContentType, PRInt32 aContentLength); \
-  NS_IMETHOD GetUploadStream(nsIInputStream * *aUploadStream); 
+  NS_SCRIPTABLE NS_IMETHOD SetUploadStream(nsIInputStream *aStream, const nsACString & aContentType, PRInt32 aContentLength); \
+  NS_SCRIPTABLE NS_IMETHOD GetUploadStream(nsIInputStream * *aUploadStream); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIUPLOADCHANNEL(_to) \
-  NS_IMETHOD SetUploadStream(nsIInputStream *aStream, const nsACString & aContentType, PRInt32 aContentLength) { return _to SetUploadStream(aStream, aContentType, aContentLength); } \
-  NS_IMETHOD GetUploadStream(nsIInputStream * *aUploadStream) { return _to GetUploadStream(aUploadStream); } 
+  NS_SCRIPTABLE NS_IMETHOD SetUploadStream(nsIInputStream *aStream, const nsACString & aContentType, PRInt32 aContentLength) { return _to SetUploadStream(aStream, aContentType, aContentLength); } \
+  NS_SCRIPTABLE NS_IMETHOD GetUploadStream(nsIInputStream * *aUploadStream) { return _to GetUploadStream(aUploadStream); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIUPLOADCHANNEL(_to) \
-  NS_IMETHOD SetUploadStream(nsIInputStream *aStream, const nsACString & aContentType, PRInt32 aContentLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetUploadStream(aStream, aContentType, aContentLength); } \
-  NS_IMETHOD GetUploadStream(nsIInputStream * *aUploadStream) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUploadStream(aUploadStream); } 
+  NS_SCRIPTABLE NS_IMETHOD SetUploadStream(nsIInputStream *aStream, const nsACString & aContentType, PRInt32 aContentLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetUploadStream(aStream, aContentType, aContentLength); } \
+  NS_SCRIPTABLE NS_IMETHOD GetUploadStream(nsIInputStream * *aUploadStream) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUploadStream(aUploadStream); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

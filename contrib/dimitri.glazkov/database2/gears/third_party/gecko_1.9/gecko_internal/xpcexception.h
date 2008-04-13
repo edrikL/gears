@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/js/src/xpconnect/idl/xpcexception.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/js/src/xpconnect/idl/xpcexception.idl
  */
 
 #ifndef __gen_xpcexception_h__
@@ -26,13 +26,13 @@
   {0xb2a34010, 0x3983, 0x11d3, \
     { 0x98, 0x88, 0x00, 0x60, 0x08, 0x96, 0x24, 0x22 }}
 
-class NS_NO_VTABLE nsIXPCException : public nsIException {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIXPCException : public nsIException {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPCEXCEPTION_IID)
 
   /* void initialize (in string aMessage, in nsresult aResult, in string aName, in nsIStackFrame aLocation, in nsISupports aData, in nsIException aInner); */
-  NS_IMETHOD Initialize(const char *aMessage, nsresult aResult, const char *aName, nsIStackFrame *aLocation, nsISupports *aData, nsIException *aInner) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Initialize(const char *aMessage, nsresult aResult, const char *aName, nsIStackFrame *aLocation, nsISupports *aData, nsIException *aInner) = 0;
 
 };
 
@@ -40,15 +40,15 @@ class NS_NO_VTABLE nsIXPCException : public nsIException {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIXPCEXCEPTION \
-  NS_IMETHOD Initialize(const char *aMessage, nsresult aResult, const char *aName, nsIStackFrame *aLocation, nsISupports *aData, nsIException *aInner); 
+  NS_SCRIPTABLE NS_IMETHOD Initialize(const char *aMessage, nsresult aResult, const char *aName, nsIStackFrame *aLocation, nsISupports *aData, nsIException *aInner); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIXPCEXCEPTION(_to) \
-  NS_IMETHOD Initialize(const char *aMessage, nsresult aResult, const char *aName, nsIStackFrame *aLocation, nsISupports *aData, nsIException *aInner) { return _to Initialize(aMessage, aResult, aName, aLocation, aData, aInner); } 
+  NS_SCRIPTABLE NS_IMETHOD Initialize(const char *aMessage, nsresult aResult, const char *aName, nsIStackFrame *aLocation, nsISupports *aData, nsIException *aInner) { return _to Initialize(aMessage, aResult, aName, aLocation, aData, aInner); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIXPCEXCEPTION(_to) \
-  NS_IMETHOD Initialize(const char *aMessage, nsresult aResult, const char *aName, nsIStackFrame *aLocation, nsISupports *aData, nsIException *aInner) { return !_to ? NS_ERROR_NULL_POINTER : _to->Initialize(aMessage, aResult, aName, aLocation, aData, aInner); } 
+  NS_SCRIPTABLE NS_IMETHOD Initialize(const char *aMessage, nsresult aResult, const char *aName, nsIStackFrame *aLocation, nsISupports *aData, nsIException *aInner) { return !_to ? NS_ERROR_NULL_POINTER : _to->Initialize(aMessage, aResult, aName, aLocation, aData, aInner); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -46,7 +46,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/ie/resource.h"  // for .rgs resource ids (IDR_*)
 
-#include "ie/genfiles/interfaces.h"  // from OUTDIR
+#include "genfiles/interfaces.h"
 #include "gears/base/common/common.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/ui/ie/ui_resources.h"

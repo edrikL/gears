@@ -30,7 +30,7 @@
 #else
 #include <shlwapi.h>
 #endif
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "genfiles/product_constants.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
@@ -70,6 +70,12 @@ bool GetBaseComponentsDirectory(std::string16 *path) {
   (*path) += kComponentsSubdir;
 
   return true;
+}
+
+
+bool GetBaseResourcesDirectory(std::string16 *path) {
+  // TODO(nigeltao): implement.
+  return false;
 }
 
 

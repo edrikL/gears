@@ -22,7 +22,7 @@
   {0x33347bee, 0x6620, 0x4841, \
     { 0x81, 0x52, 0x36, 0x09, 0x1a, 0xe8, 0x0c, 0x7e }}
 
-class NS_NO_VTABLE nsIDOMEventGroup : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMEventGroup : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMEVENTGROUP_IID)
@@ -35,7 +35,7 @@ class NS_NO_VTABLE nsIDOMEventGroup : public nsISupports {
  * http://www.w3.org/TR/DOM-Level-3-Events/
  */
   /* boolean isSameEventGroup (in nsIDOMEventGroup other); */
-  NS_IMETHOD IsSameEventGroup(nsIDOMEventGroup *other, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsSameEventGroup(nsIDOMEventGroup *other, PRBool *_retval) = 0;
 
 };
 
@@ -43,15 +43,15 @@ class NS_NO_VTABLE nsIDOMEventGroup : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMEVENTGROUP \
-  NS_IMETHOD IsSameEventGroup(nsIDOMEventGroup *other, PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD IsSameEventGroup(nsIDOMEventGroup *other, PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMEVENTGROUP(_to) \
-  NS_IMETHOD IsSameEventGroup(nsIDOMEventGroup *other, PRBool *_retval) { return _to IsSameEventGroup(other, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD IsSameEventGroup(nsIDOMEventGroup *other, PRBool *_retval) { return _to IsSameEventGroup(other, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMEVENTGROUP(_to) \
-  NS_IMETHOD IsSameEventGroup(nsIDOMEventGroup *other, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsSameEventGroup(other, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD IsSameEventGroup(nsIDOMEventGroup *other, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsSameEventGroup(other, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

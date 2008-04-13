@@ -34,7 +34,7 @@ class nsIWebProgressListener; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIWebBrowserPrint : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIWebBrowserPrint : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWEBBROWSERPRINT_IID)
@@ -61,7 +61,7 @@ class NS_NO_VTABLE nsIWebBrowserPrint : public nsISupports {
    * Initializes the globalPrintSettings from the default printer
    */
   /* readonly attribute nsIPrintSettings globalPrintSettings; */
-  NS_IMETHOD GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSettings) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSettings) = 0;
 
   /**
    * Returns a pointer to the PrintSettings object that
@@ -71,7 +71,7 @@ class NS_NO_VTABLE nsIWebBrowserPrint : public nsISupports {
    * to the "current" PrintSetting at later points in the execution
    */
   /* readonly attribute nsIPrintSettings currentPrintSettings; */
-  NS_IMETHOD GetCurrentPrintSettings(nsIPrintSettings * *aCurrentPrintSettings) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentPrintSettings(nsIPrintSettings * *aCurrentPrintSettings) = 0;
 
   /**
    * Returns a pointer to the current child DOMWindow
@@ -84,49 +84,49 @@ class NS_NO_VTABLE nsIWebBrowserPrint : public nsISupports {
    * to the "current" child DOMWindow at later points in the execution
    */
   /* readonly attribute nsIDOMWindow currentChildDOMWindow; */
-  NS_IMETHOD GetCurrentChildDOMWindow(nsIDOMWindow * *aCurrentChildDOMWindow) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentChildDOMWindow(nsIDOMWindow * *aCurrentChildDOMWindow) = 0;
 
   /**
    * Returns whether it is in Print mode
    */
   /* readonly attribute boolean doingPrint; */
-  NS_IMETHOD GetDoingPrint(PRBool *aDoingPrint) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDoingPrint(PRBool *aDoingPrint) = 0;
 
   /**
    * Returns whether it is in Print Preview mode
    */
   /* readonly attribute boolean doingPrintPreview; */
-  NS_IMETHOD GetDoingPrintPreview(PRBool *aDoingPrintPreview) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDoingPrintPreview(PRBool *aDoingPrintPreview) = 0;
 
   /**
    * This returns whether the current document is a frameset document
    */
   /* readonly attribute boolean isFramesetDocument; */
-  NS_IMETHOD GetIsFramesetDocument(PRBool *aIsFramesetDocument) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIsFramesetDocument(PRBool *aIsFramesetDocument) = 0;
 
   /**
    * This returns whether the current document is a frameset document
    */
   /* readonly attribute boolean isFramesetFrameSelected; */
-  NS_IMETHOD GetIsFramesetFrameSelected(PRBool *aIsFramesetFrameSelected) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIsFramesetFrameSelected(PRBool *aIsFramesetFrameSelected) = 0;
 
   /**
    * This returns whether there is an IFrame selected
    */
   /* readonly attribute boolean isIFrameSelected; */
-  NS_IMETHOD GetIsIFrameSelected(PRBool *aIsIFrameSelected) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIsIFrameSelected(PRBool *aIsIFrameSelected) = 0;
 
   /**
    * This returns whether there is a "range" selection
    */
   /* readonly attribute boolean isRangeSelection; */
-  NS_IMETHOD GetIsRangeSelection(PRBool *aIsRangeSelection) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIsRangeSelection(PRBool *aIsRangeSelection) = 0;
 
   /**
    * This returns the total number of pages for the Print Preview
    */
   /* readonly attribute long printPreviewNumPages; */
-  NS_IMETHOD GetPrintPreviewNumPages(PRInt32 *aPrintPreviewNumPages) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPrintPreviewNumPages(PRInt32 *aPrintPreviewNumPages) = 0;
 
   /**
    * Print the specified DOM window
@@ -137,7 +137,7 @@ class NS_NO_VTABLE nsIWebBrowserPrint : public nsISupports {
    * @return void
    */
   /* void print (in nsIPrintSettings aThePrintSettings, in nsIWebProgressListener aWPListener); */
-  NS_IMETHOD Print(nsIPrintSettings *aThePrintSettings, nsIWebProgressListener *aWPListener) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Print(nsIPrintSettings *aThePrintSettings, nsIWebProgressListener *aWPListener) = 0;
 
   /**
    * Print Preview the specified DOM window
@@ -149,7 +149,7 @@ class NS_NO_VTABLE nsIWebBrowserPrint : public nsISupports {
    * @return void
    */
   /* void printPreview (in nsIPrintSettings aThePrintSettings, in nsIDOMWindow aChildDOMWin, in nsIWebProgressListener aWPListener); */
-  NS_IMETHOD PrintPreview(nsIPrintSettings *aThePrintSettings, nsIDOMWindow *aChildDOMWin, nsIWebProgressListener *aWPListener) = 0;
+  NS_SCRIPTABLE NS_IMETHOD PrintPreview(nsIPrintSettings *aThePrintSettings, nsIDOMWindow *aChildDOMWin, nsIWebProgressListener *aWPListener) = 0;
 
   /**
    * Print Preview - Navigates within the window
@@ -159,14 +159,14 @@ class NS_NO_VTABLE nsIWebBrowserPrint : public nsISupports {
    * @return void
    */
   /* void printPreviewNavigate (in short aNavType, in long aPageNum); */
-  NS_IMETHOD PrintPreviewNavigate(PRInt16 aNavType, PRInt32 aPageNum) = 0;
+  NS_SCRIPTABLE NS_IMETHOD PrintPreviewNavigate(PRInt16 aNavType, PRInt32 aPageNum) = 0;
 
   /**
    * Cancels the current print 
    * @return void
    */
   /* void cancel (); */
-  NS_IMETHOD Cancel(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Cancel(void) = 0;
 
   /**
    * Returns an array of the names of all documents names (Title or URL)
@@ -178,14 +178,14 @@ class NS_NO_VTABLE nsIWebBrowserPrint : public nsISupports {
    * @return void
    */
   /* void enumerateDocumentNames (out PRUint32 aCount, [array, size_is (aCount), retval] out wstring aResult); */
-  NS_IMETHOD EnumerateDocumentNames(PRUint32 *aCount, PRUnichar ***aResult) = 0;
+  NS_SCRIPTABLE NS_IMETHOD EnumerateDocumentNames(PRUint32 *aCount, PRUnichar ***aResult) = 0;
 
   /**
    * This exists PrintPreview mode and returns browser window to galley mode
    * @return void
    */
   /* void exitPrintPreview (); */
-  NS_IMETHOD ExitPrintPreview(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ExitPrintPreview(void) = 0;
 
 };
 
@@ -193,60 +193,60 @@ class NS_NO_VTABLE nsIWebBrowserPrint : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWEBBROWSERPRINT \
-  NS_IMETHOD GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSettings); \
-  NS_IMETHOD GetCurrentPrintSettings(nsIPrintSettings * *aCurrentPrintSettings); \
-  NS_IMETHOD GetCurrentChildDOMWindow(nsIDOMWindow * *aCurrentChildDOMWindow); \
-  NS_IMETHOD GetDoingPrint(PRBool *aDoingPrint); \
-  NS_IMETHOD GetDoingPrintPreview(PRBool *aDoingPrintPreview); \
-  NS_IMETHOD GetIsFramesetDocument(PRBool *aIsFramesetDocument); \
-  NS_IMETHOD GetIsFramesetFrameSelected(PRBool *aIsFramesetFrameSelected); \
-  NS_IMETHOD GetIsIFrameSelected(PRBool *aIsIFrameSelected); \
-  NS_IMETHOD GetIsRangeSelection(PRBool *aIsRangeSelection); \
-  NS_IMETHOD GetPrintPreviewNumPages(PRInt32 *aPrintPreviewNumPages); \
-  NS_IMETHOD Print(nsIPrintSettings *aThePrintSettings, nsIWebProgressListener *aWPListener); \
-  NS_IMETHOD PrintPreview(nsIPrintSettings *aThePrintSettings, nsIDOMWindow *aChildDOMWin, nsIWebProgressListener *aWPListener); \
-  NS_IMETHOD PrintPreviewNavigate(PRInt16 aNavType, PRInt32 aPageNum); \
-  NS_IMETHOD Cancel(void); \
-  NS_IMETHOD EnumerateDocumentNames(PRUint32 *aCount, PRUnichar ***aResult); \
-  NS_IMETHOD ExitPrintPreview(void); 
+  NS_SCRIPTABLE NS_IMETHOD GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSettings); \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentPrintSettings(nsIPrintSettings * *aCurrentPrintSettings); \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentChildDOMWindow(nsIDOMWindow * *aCurrentChildDOMWindow); \
+  NS_SCRIPTABLE NS_IMETHOD GetDoingPrint(PRBool *aDoingPrint); \
+  NS_SCRIPTABLE NS_IMETHOD GetDoingPrintPreview(PRBool *aDoingPrintPreview); \
+  NS_SCRIPTABLE NS_IMETHOD GetIsFramesetDocument(PRBool *aIsFramesetDocument); \
+  NS_SCRIPTABLE NS_IMETHOD GetIsFramesetFrameSelected(PRBool *aIsFramesetFrameSelected); \
+  NS_SCRIPTABLE NS_IMETHOD GetIsIFrameSelected(PRBool *aIsIFrameSelected); \
+  NS_SCRIPTABLE NS_IMETHOD GetIsRangeSelection(PRBool *aIsRangeSelection); \
+  NS_SCRIPTABLE NS_IMETHOD GetPrintPreviewNumPages(PRInt32 *aPrintPreviewNumPages); \
+  NS_SCRIPTABLE NS_IMETHOD Print(nsIPrintSettings *aThePrintSettings, nsIWebProgressListener *aWPListener); \
+  NS_SCRIPTABLE NS_IMETHOD PrintPreview(nsIPrintSettings *aThePrintSettings, nsIDOMWindow *aChildDOMWin, nsIWebProgressListener *aWPListener); \
+  NS_SCRIPTABLE NS_IMETHOD PrintPreviewNavigate(PRInt16 aNavType, PRInt32 aPageNum); \
+  NS_SCRIPTABLE NS_IMETHOD Cancel(void); \
+  NS_SCRIPTABLE NS_IMETHOD EnumerateDocumentNames(PRUint32 *aCount, PRUnichar ***aResult); \
+  NS_SCRIPTABLE NS_IMETHOD ExitPrintPreview(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIWEBBROWSERPRINT(_to) \
-  NS_IMETHOD GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSettings) { return _to GetGlobalPrintSettings(aGlobalPrintSettings); } \
-  NS_IMETHOD GetCurrentPrintSettings(nsIPrintSettings * *aCurrentPrintSettings) { return _to GetCurrentPrintSettings(aCurrentPrintSettings); } \
-  NS_IMETHOD GetCurrentChildDOMWindow(nsIDOMWindow * *aCurrentChildDOMWindow) { return _to GetCurrentChildDOMWindow(aCurrentChildDOMWindow); } \
-  NS_IMETHOD GetDoingPrint(PRBool *aDoingPrint) { return _to GetDoingPrint(aDoingPrint); } \
-  NS_IMETHOD GetDoingPrintPreview(PRBool *aDoingPrintPreview) { return _to GetDoingPrintPreview(aDoingPrintPreview); } \
-  NS_IMETHOD GetIsFramesetDocument(PRBool *aIsFramesetDocument) { return _to GetIsFramesetDocument(aIsFramesetDocument); } \
-  NS_IMETHOD GetIsFramesetFrameSelected(PRBool *aIsFramesetFrameSelected) { return _to GetIsFramesetFrameSelected(aIsFramesetFrameSelected); } \
-  NS_IMETHOD GetIsIFrameSelected(PRBool *aIsIFrameSelected) { return _to GetIsIFrameSelected(aIsIFrameSelected); } \
-  NS_IMETHOD GetIsRangeSelection(PRBool *aIsRangeSelection) { return _to GetIsRangeSelection(aIsRangeSelection); } \
-  NS_IMETHOD GetPrintPreviewNumPages(PRInt32 *aPrintPreviewNumPages) { return _to GetPrintPreviewNumPages(aPrintPreviewNumPages); } \
-  NS_IMETHOD Print(nsIPrintSettings *aThePrintSettings, nsIWebProgressListener *aWPListener) { return _to Print(aThePrintSettings, aWPListener); } \
-  NS_IMETHOD PrintPreview(nsIPrintSettings *aThePrintSettings, nsIDOMWindow *aChildDOMWin, nsIWebProgressListener *aWPListener) { return _to PrintPreview(aThePrintSettings, aChildDOMWin, aWPListener); } \
-  NS_IMETHOD PrintPreviewNavigate(PRInt16 aNavType, PRInt32 aPageNum) { return _to PrintPreviewNavigate(aNavType, aPageNum); } \
-  NS_IMETHOD Cancel(void) { return _to Cancel(); } \
-  NS_IMETHOD EnumerateDocumentNames(PRUint32 *aCount, PRUnichar ***aResult) { return _to EnumerateDocumentNames(aCount, aResult); } \
-  NS_IMETHOD ExitPrintPreview(void) { return _to ExitPrintPreview(); } 
+  NS_SCRIPTABLE NS_IMETHOD GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSettings) { return _to GetGlobalPrintSettings(aGlobalPrintSettings); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentPrintSettings(nsIPrintSettings * *aCurrentPrintSettings) { return _to GetCurrentPrintSettings(aCurrentPrintSettings); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentChildDOMWindow(nsIDOMWindow * *aCurrentChildDOMWindow) { return _to GetCurrentChildDOMWindow(aCurrentChildDOMWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDoingPrint(PRBool *aDoingPrint) { return _to GetDoingPrint(aDoingPrint); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDoingPrintPreview(PRBool *aDoingPrintPreview) { return _to GetDoingPrintPreview(aDoingPrintPreview); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsFramesetDocument(PRBool *aIsFramesetDocument) { return _to GetIsFramesetDocument(aIsFramesetDocument); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsFramesetFrameSelected(PRBool *aIsFramesetFrameSelected) { return _to GetIsFramesetFrameSelected(aIsFramesetFrameSelected); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsIFrameSelected(PRBool *aIsIFrameSelected) { return _to GetIsIFrameSelected(aIsIFrameSelected); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsRangeSelection(PRBool *aIsRangeSelection) { return _to GetIsRangeSelection(aIsRangeSelection); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrintPreviewNumPages(PRInt32 *aPrintPreviewNumPages) { return _to GetPrintPreviewNumPages(aPrintPreviewNumPages); } \
+  NS_SCRIPTABLE NS_IMETHOD Print(nsIPrintSettings *aThePrintSettings, nsIWebProgressListener *aWPListener) { return _to Print(aThePrintSettings, aWPListener); } \
+  NS_SCRIPTABLE NS_IMETHOD PrintPreview(nsIPrintSettings *aThePrintSettings, nsIDOMWindow *aChildDOMWin, nsIWebProgressListener *aWPListener) { return _to PrintPreview(aThePrintSettings, aChildDOMWin, aWPListener); } \
+  NS_SCRIPTABLE NS_IMETHOD PrintPreviewNavigate(PRInt16 aNavType, PRInt32 aPageNum) { return _to PrintPreviewNavigate(aNavType, aPageNum); } \
+  NS_SCRIPTABLE NS_IMETHOD Cancel(void) { return _to Cancel(); } \
+  NS_SCRIPTABLE NS_IMETHOD EnumerateDocumentNames(PRUint32 *aCount, PRUnichar ***aResult) { return _to EnumerateDocumentNames(aCount, aResult); } \
+  NS_SCRIPTABLE NS_IMETHOD ExitPrintPreview(void) { return _to ExitPrintPreview(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIWEBBROWSERPRINT(_to) \
-  NS_IMETHOD GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSettings) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetGlobalPrintSettings(aGlobalPrintSettings); } \
-  NS_IMETHOD GetCurrentPrintSettings(nsIPrintSettings * *aCurrentPrintSettings) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentPrintSettings(aCurrentPrintSettings); } \
-  NS_IMETHOD GetCurrentChildDOMWindow(nsIDOMWindow * *aCurrentChildDOMWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentChildDOMWindow(aCurrentChildDOMWindow); } \
-  NS_IMETHOD GetDoingPrint(PRBool *aDoingPrint) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDoingPrint(aDoingPrint); } \
-  NS_IMETHOD GetDoingPrintPreview(PRBool *aDoingPrintPreview) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDoingPrintPreview(aDoingPrintPreview); } \
-  NS_IMETHOD GetIsFramesetDocument(PRBool *aIsFramesetDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsFramesetDocument(aIsFramesetDocument); } \
-  NS_IMETHOD GetIsFramesetFrameSelected(PRBool *aIsFramesetFrameSelected) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsFramesetFrameSelected(aIsFramesetFrameSelected); } \
-  NS_IMETHOD GetIsIFrameSelected(PRBool *aIsIFrameSelected) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsIFrameSelected(aIsIFrameSelected); } \
-  NS_IMETHOD GetIsRangeSelection(PRBool *aIsRangeSelection) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsRangeSelection(aIsRangeSelection); } \
-  NS_IMETHOD GetPrintPreviewNumPages(PRInt32 *aPrintPreviewNumPages) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrintPreviewNumPages(aPrintPreviewNumPages); } \
-  NS_IMETHOD Print(nsIPrintSettings *aThePrintSettings, nsIWebProgressListener *aWPListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->Print(aThePrintSettings, aWPListener); } \
-  NS_IMETHOD PrintPreview(nsIPrintSettings *aThePrintSettings, nsIDOMWindow *aChildDOMWin, nsIWebProgressListener *aWPListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->PrintPreview(aThePrintSettings, aChildDOMWin, aWPListener); } \
-  NS_IMETHOD PrintPreviewNavigate(PRInt16 aNavType, PRInt32 aPageNum) { return !_to ? NS_ERROR_NULL_POINTER : _to->PrintPreviewNavigate(aNavType, aPageNum); } \
-  NS_IMETHOD Cancel(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Cancel(); } \
-  NS_IMETHOD EnumerateDocumentNames(PRUint32 *aCount, PRUnichar ***aResult) { return !_to ? NS_ERROR_NULL_POINTER : _to->EnumerateDocumentNames(aCount, aResult); } \
-  NS_IMETHOD ExitPrintPreview(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ExitPrintPreview(); } 
+  NS_SCRIPTABLE NS_IMETHOD GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSettings) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetGlobalPrintSettings(aGlobalPrintSettings); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentPrintSettings(nsIPrintSettings * *aCurrentPrintSettings) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentPrintSettings(aCurrentPrintSettings); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentChildDOMWindow(nsIDOMWindow * *aCurrentChildDOMWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentChildDOMWindow(aCurrentChildDOMWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDoingPrint(PRBool *aDoingPrint) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDoingPrint(aDoingPrint); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDoingPrintPreview(PRBool *aDoingPrintPreview) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDoingPrintPreview(aDoingPrintPreview); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsFramesetDocument(PRBool *aIsFramesetDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsFramesetDocument(aIsFramesetDocument); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsFramesetFrameSelected(PRBool *aIsFramesetFrameSelected) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsFramesetFrameSelected(aIsFramesetFrameSelected); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsIFrameSelected(PRBool *aIsIFrameSelected) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsIFrameSelected(aIsIFrameSelected); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsRangeSelection(PRBool *aIsRangeSelection) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsRangeSelection(aIsRangeSelection); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrintPreviewNumPages(PRInt32 *aPrintPreviewNumPages) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrintPreviewNumPages(aPrintPreviewNumPages); } \
+  NS_SCRIPTABLE NS_IMETHOD Print(nsIPrintSettings *aThePrintSettings, nsIWebProgressListener *aWPListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->Print(aThePrintSettings, aWPListener); } \
+  NS_SCRIPTABLE NS_IMETHOD PrintPreview(nsIPrintSettings *aThePrintSettings, nsIDOMWindow *aChildDOMWin, nsIWebProgressListener *aWPListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->PrintPreview(aThePrintSettings, aChildDOMWin, aWPListener); } \
+  NS_SCRIPTABLE NS_IMETHOD PrintPreviewNavigate(PRInt16 aNavType, PRInt32 aPageNum) { return !_to ? NS_ERROR_NULL_POINTER : _to->PrintPreviewNavigate(aNavType, aPageNum); } \
+  NS_SCRIPTABLE NS_IMETHOD Cancel(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Cancel(); } \
+  NS_SCRIPTABLE NS_IMETHOD EnumerateDocumentNames(PRUint32 *aCount, PRUnichar ***aResult) { return !_to ? NS_ERROR_NULL_POINTER : _to->EnumerateDocumentNames(aCount, aResult); } \
+  NS_SCRIPTABLE NS_IMETHOD ExitPrintPreview(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ExitPrintPreview(); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

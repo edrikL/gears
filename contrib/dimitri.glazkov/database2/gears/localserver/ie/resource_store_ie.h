@@ -31,7 +31,7 @@
 #include "gears/base/common/common.h"
 #include "gears/localserver/common/resource_store.h"
 #include "gears/localserver/ie/capture_task_ie.h"
-#include "ie/genfiles/interfaces.h"  // from OUTDIR
+#include "genfiles/interfaces.h"
 
 //------------------------------------------------------------------------------
 // GearsResourceStore
@@ -105,6 +105,9 @@ class ATL_NO_VTABLE GearsResourceStore
       /* [in] */ const BSTR url,
       /* [retval][out] */ BSTR *all_headers);
 
+#ifdef WINCE
+  // No BLOB support on WINCE yet
+#else
 #ifdef OFFICIAL_BUILD
   // Blob support is not ready for prime time yet
 #else
@@ -112,6 +115,7 @@ class ATL_NO_VTABLE GearsResourceStore
       /* [in] */ IUnknown *blob,
       /* [in] */ const BSTR url);
 #endif  // OFFICIAL_BUILD
+#endif  // WINCE
 
   virtual HRESULT STDMETHODCALLTYPE captureFile(
       /* [in] */ IDispatch *file_input_element,
@@ -176,6 +180,14 @@ class ATL_NO_VTABLE GearsResourceStore
   scoped_ptr<IECaptureRequest> current_request_;
   scoped_ptr<CaptureTask> capture_task_;
   ResourceStore store_;
+  // This flag is set to true until the first OnCaptureUrlComplete is called by 
+  // the capture_task_. If current_request_ is aborted before it gets a chance
+  // to begin the capture, OnCaptureUrlComplete will not be called for any of
+  // its urls, which implies that none of the corresponding capture callbacks
+  // will be called, either. To prevent this, we inspect this flag in
+  // OnCaptureTaskComplete and, if set, we call FireFailedEvents for
+  // current_request_.
+  bool need_to_fire_failed_events_;
 
   friend class GearsLocalServer;
 

@@ -29,7 +29,7 @@ class nsIInputStream; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIStreamListener : public nsIRequestObserver {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIStreamListener : public nsIRequestObserver {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISTREAMLISTENER_IID)
@@ -56,7 +56,7 @@ class NS_NO_VTABLE nsIStreamListener : public nsIRequestObserver {
      * causing the request to be canceled.
      */
   /* void onDataAvailable (in nsIRequest aRequest, in nsISupports aContext, in nsIInputStream aInputStream, in unsigned long aOffset, in unsigned long aCount); */
-  NS_IMETHOD OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext, nsIInputStream *aInputStream, PRUint32 aOffset, PRUint32 aCount) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext, nsIInputStream *aInputStream, PRUint32 aOffset, PRUint32 aCount) = 0;
 
 };
 
@@ -64,15 +64,15 @@ class NS_NO_VTABLE nsIStreamListener : public nsIRequestObserver {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSISTREAMLISTENER \
-  NS_IMETHOD OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext, nsIInputStream *aInputStream, PRUint32 aOffset, PRUint32 aCount); 
+  NS_SCRIPTABLE NS_IMETHOD OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext, nsIInputStream *aInputStream, PRUint32 aOffset, PRUint32 aCount); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSISTREAMLISTENER(_to) \
-  NS_IMETHOD OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext, nsIInputStream *aInputStream, PRUint32 aOffset, PRUint32 aCount) { return _to OnDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount); } 
+  NS_SCRIPTABLE NS_IMETHOD OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext, nsIInputStream *aInputStream, PRUint32 aOffset, PRUint32 aCount) { return _to OnDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSISTREAMLISTENER(_to) \
-  NS_IMETHOD OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext, nsIInputStream *aInputStream, PRUint32 aOffset, PRUint32 aCount) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount); } 
+  NS_SCRIPTABLE NS_IMETHOD OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext, nsIInputStream *aInputStream, PRUint32 aOffset, PRUint32 aCount) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

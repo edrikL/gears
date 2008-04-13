@@ -26,22 +26,22 @@
  * @status DEPRECATED  Replaced by the NS_DebugBreak function.
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDebug : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDebug : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDEBUG_IID)
 
   /* void assertion (in string aStr, in string aExpr, in string aFile, in long aLine); */
-  NS_IMETHOD Assertion(const char *aStr, const char *aExpr, const char *aFile, PRInt32 aLine) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Assertion(const char *aStr, const char *aExpr, const char *aFile, PRInt32 aLine) = 0;
 
   /* void warning (in string aStr, in string aFile, in long aLine); */
-  NS_IMETHOD Warning(const char *aStr, const char *aFile, PRInt32 aLine) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Warning(const char *aStr, const char *aFile, PRInt32 aLine) = 0;
 
   /* void break (in string aFile, in long aLine); */
-  NS_IMETHOD Break(const char *aFile, PRInt32 aLine) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Break(const char *aFile, PRInt32 aLine) = 0;
 
   /* void abort (in string aFile, in long aLine); */
-  NS_IMETHOD Abort(const char *aFile, PRInt32 aLine) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Abort(const char *aFile, PRInt32 aLine) = 0;
 
 };
 
@@ -49,24 +49,24 @@ class NS_NO_VTABLE nsIDebug : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDEBUG \
-  NS_IMETHOD Assertion(const char *aStr, const char *aExpr, const char *aFile, PRInt32 aLine); \
-  NS_IMETHOD Warning(const char *aStr, const char *aFile, PRInt32 aLine); \
-  NS_IMETHOD Break(const char *aFile, PRInt32 aLine); \
-  NS_IMETHOD Abort(const char *aFile, PRInt32 aLine); 
+  NS_SCRIPTABLE NS_IMETHOD Assertion(const char *aStr, const char *aExpr, const char *aFile, PRInt32 aLine); \
+  NS_SCRIPTABLE NS_IMETHOD Warning(const char *aStr, const char *aFile, PRInt32 aLine); \
+  NS_SCRIPTABLE NS_IMETHOD Break(const char *aFile, PRInt32 aLine); \
+  NS_SCRIPTABLE NS_IMETHOD Abort(const char *aFile, PRInt32 aLine); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDEBUG(_to) \
-  NS_IMETHOD Assertion(const char *aStr, const char *aExpr, const char *aFile, PRInt32 aLine) { return _to Assertion(aStr, aExpr, aFile, aLine); } \
-  NS_IMETHOD Warning(const char *aStr, const char *aFile, PRInt32 aLine) { return _to Warning(aStr, aFile, aLine); } \
-  NS_IMETHOD Break(const char *aFile, PRInt32 aLine) { return _to Break(aFile, aLine); } \
-  NS_IMETHOD Abort(const char *aFile, PRInt32 aLine) { return _to Abort(aFile, aLine); } 
+  NS_SCRIPTABLE NS_IMETHOD Assertion(const char *aStr, const char *aExpr, const char *aFile, PRInt32 aLine) { return _to Assertion(aStr, aExpr, aFile, aLine); } \
+  NS_SCRIPTABLE NS_IMETHOD Warning(const char *aStr, const char *aFile, PRInt32 aLine) { return _to Warning(aStr, aFile, aLine); } \
+  NS_SCRIPTABLE NS_IMETHOD Break(const char *aFile, PRInt32 aLine) { return _to Break(aFile, aLine); } \
+  NS_SCRIPTABLE NS_IMETHOD Abort(const char *aFile, PRInt32 aLine) { return _to Abort(aFile, aLine); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDEBUG(_to) \
-  NS_IMETHOD Assertion(const char *aStr, const char *aExpr, const char *aFile, PRInt32 aLine) { return !_to ? NS_ERROR_NULL_POINTER : _to->Assertion(aStr, aExpr, aFile, aLine); } \
-  NS_IMETHOD Warning(const char *aStr, const char *aFile, PRInt32 aLine) { return !_to ? NS_ERROR_NULL_POINTER : _to->Warning(aStr, aFile, aLine); } \
-  NS_IMETHOD Break(const char *aFile, PRInt32 aLine) { return !_to ? NS_ERROR_NULL_POINTER : _to->Break(aFile, aLine); } \
-  NS_IMETHOD Abort(const char *aFile, PRInt32 aLine) { return !_to ? NS_ERROR_NULL_POINTER : _to->Abort(aFile, aLine); } 
+  NS_SCRIPTABLE NS_IMETHOD Assertion(const char *aStr, const char *aExpr, const char *aFile, PRInt32 aLine) { return !_to ? NS_ERROR_NULL_POINTER : _to->Assertion(aStr, aExpr, aFile, aLine); } \
+  NS_SCRIPTABLE NS_IMETHOD Warning(const char *aStr, const char *aFile, PRInt32 aLine) { return !_to ? NS_ERROR_NULL_POINTER : _to->Warning(aStr, aFile, aLine); } \
+  NS_SCRIPTABLE NS_IMETHOD Break(const char *aFile, PRInt32 aLine) { return !_to ? NS_ERROR_NULL_POINTER : _to->Break(aFile, aLine); } \
+  NS_SCRIPTABLE NS_IMETHOD Abort(const char *aFile, PRInt32 aLine) { return !_to ? NS_ERROR_NULL_POINTER : _to->Abort(aFile, aLine); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

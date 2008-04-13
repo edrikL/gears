@@ -35,7 +35,7 @@
 #include <assert.h>
 #include <windows.h>
 #include <shlobj.h>
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "genfiles/product_constants.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/scoped_win32_handles.h"
@@ -99,42 +99,12 @@ int64 File::GetFileSize(const char16 *full_filepath) {
 }
 
 
-int File::ReadFileSegmentToBuffer(const char16 *full_filepath,
-                                  uint8* destination,
-                                  int max_bytes,
-                                  int64 position) {
-  return 0;  // Stubbed out for now
-  // TODO: Implement this function (check the following code).
-#if 0
-  if (max_bytes <= 0 || position < 0) {
-    return 0;
-  }
-
-  SAFE_HANDLE safe_file_handle(::CreateFileW(full_filepath,
-                                             GENERIC_READ,
-                                             FILE_SHARE_READ,
-                                             NULL,
-                                             OPEN_EXISTING,
-                                             FILE_ATTRIBUTE_NORMAL,
-                                             NULL));
-  if (safe_file_handle.get() == INVALID_HANDLE_VALUE) {
-    return 0;
-  }
-
-  if (::SetFilePointer(safe_file_handle.get(), static_cast<LONG>(position),
-                       NULL, FILE_BEGIN) == 0xFFFFFFFF) {
-    return 0;
-  }
-
-  // Read its contents into memory.
-  DWORD bytes_read;
-  if (!::ReadFile(safe_file_handle.get(), destination,
-                  max_bytes, &bytes_read, NULL)) {
-    return 0;
-  }
-
-  return static_cast<int>(bytes_read);
-#endif
+int64 File::ReadFileSegmentToBuffer(const char16 *full_filepath,
+                                    uint8* destination,
+                                    int64 position,
+                                    int64 max_bytes) {
+  // TODO: Implement this function (see file_win32.cc implementation).
+  return -1;
 }
 
 
@@ -167,7 +137,7 @@ bool File::ReadFileToVector(const char16 *full_filepath,
     DWORD bytes_read;
     if (!::ReadFile(safe_file_handle.get(), &(*data)[0],
                     file_size, &bytes_read, NULL)
-        || (bytes_read != bytes_read)) {
+        || (bytes_read != file_size)) {
       data->clear();
       return false;
     }

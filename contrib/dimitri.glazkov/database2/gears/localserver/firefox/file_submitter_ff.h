@@ -27,7 +27,7 @@
 #define GEARS_LOCALSERVER_FIREFOX_FILE_SUBMITTER_FF_H__
 
 #include <gecko_sdk/include/nsILocalFile.h>
-#include "ff/genfiles/localserver.h" // from OUTDIR
+#include "genfiles/localserver.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/localserver/common/resource_store.h"

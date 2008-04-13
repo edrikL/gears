@@ -22,7 +22,7 @@
   {0x009f7ea5, 0x9e80, 0x41be, \
     { 0xb0, 0x08, 0xdb, 0x62, 0xf1, 0x08, 0x23, 0xf2 }}
 
-class NS_NO_VTABLE nsIDOMCSSValue : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMCSSValue : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMCSSVALUE_IID)
@@ -45,11 +45,11 @@ class NS_NO_VTABLE nsIDOMCSSValue : public nsISupports {
   enum { CSS_CUSTOM = 3U };
 
   /* attribute DOMString cssText; */
-  NS_IMETHOD GetCssText(nsAString & aCssText) = 0;
-  NS_IMETHOD SetCssText(const nsAString & aCssText) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCssText(nsAString & aCssText) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCssText(const nsAString & aCssText) = 0;
 
   /* readonly attribute unsigned short cssValueType; */
-  NS_IMETHOD GetCssValueType(PRUint16 *aCssValueType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCssValueType(PRUint16 *aCssValueType) = 0;
 
 };
 
@@ -57,21 +57,21 @@ class NS_NO_VTABLE nsIDOMCSSValue : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMCSSVALUE \
-  NS_IMETHOD GetCssText(nsAString & aCssText); \
-  NS_IMETHOD SetCssText(const nsAString & aCssText); \
-  NS_IMETHOD GetCssValueType(PRUint16 *aCssValueType); 
+  NS_SCRIPTABLE NS_IMETHOD GetCssText(nsAString & aCssText); \
+  NS_SCRIPTABLE NS_IMETHOD SetCssText(const nsAString & aCssText); \
+  NS_SCRIPTABLE NS_IMETHOD GetCssValueType(PRUint16 *aCssValueType); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMCSSVALUE(_to) \
-  NS_IMETHOD GetCssText(nsAString & aCssText) { return _to GetCssText(aCssText); } \
-  NS_IMETHOD SetCssText(const nsAString & aCssText) { return _to SetCssText(aCssText); } \
-  NS_IMETHOD GetCssValueType(PRUint16 *aCssValueType) { return _to GetCssValueType(aCssValueType); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCssText(nsAString & aCssText) { return _to GetCssText(aCssText); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCssText(const nsAString & aCssText) { return _to SetCssText(aCssText); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCssValueType(PRUint16 *aCssValueType) { return _to GetCssValueType(aCssValueType); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMCSSVALUE(_to) \
-  NS_IMETHOD GetCssText(nsAString & aCssText) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCssText(aCssText); } \
-  NS_IMETHOD SetCssText(const nsAString & aCssText) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCssText(aCssText); } \
-  NS_IMETHOD GetCssValueType(PRUint16 *aCssValueType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCssValueType(aCssValueType); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCssText(nsAString & aCssText) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCssText(aCssText); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCssText(const nsAString & aCssText) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCssText(aCssText); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCssValueType(PRUint16 *aCssValueType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCssValueType(aCssValueType); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

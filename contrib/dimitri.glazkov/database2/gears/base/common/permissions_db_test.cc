@@ -96,41 +96,39 @@ bool TestPermissionsDBAll() {
   TEST_ASSERT(permissions->GetCanAccessGears(bar) ==
       PermissionsDB::PERMISSION_DENIED);
 
-  // Try searching by default value (should not be allowed).
+  // Try searching for PERMISSION_NOT_SET (should not be allowed).
   std::vector<SecurityOrigin> list;
   TEST_ASSERT(!permissions->GetOriginsByValue(
-      PermissionsDB::PERMISSION_DEFAULT, &list));
+      PermissionsDB::PERMISSION_NOT_SET, &list));
 
   // Now try resetting
-  permissions->SetCanAccessGears(bar, PermissionsDB::PERMISSION_DEFAULT);
+  permissions->SetCanAccessGears(bar, PermissionsDB::PERMISSION_NOT_SET);
   TEST_ASSERT(permissions->GetCanAccessGears(bar) ==
-      PermissionsDB::PERMISSION_DEFAULT);
+      PermissionsDB::PERMISSION_NOT_SET);
 
   // TODO(shess) Constants for later comparison.
   const std::string16 kFooTest1(STRING16(L"Test"));
   const std::string16 kFooTest1Url(STRING16(L"http://www.foo.com/Test.html"));
   const std::string16
       kFooTest1IcoUrl(STRING16(L"http://www.foo.com/Test.ico"));
-  const std::vector<std::string16> kFooTest1IconUrls(1, kFooTest1IcoUrl);
   const std::string16 kFooTest1Msg(STRING16(L"This is the message."));
 
   const std::string16 kFooTest2(STRING16(L"Another"));
   const std::string16
       kFooTest2Url(STRING16(L"http://www.foo.com/Another.html"));
   const std::string16
-      kFooTest2IcoUrl1(STRING16(L"http://www.foo.com/Another.ico"));
+      kFooTest2IcoUrl0(STRING16(L"http://www.foo.com/Another.ico"));
   const std::string16
-      kFooTest2IcoUrl2(STRING16(L"http://www.foo.com/YetAnother.ico"));
-  std::vector<std::string16> kFooTest2IconUrls;
-  kFooTest2IconUrls.push_back(kFooTest2IcoUrl1);
-  kFooTest2IconUrls.push_back(kFooTest2IcoUrl2);
-  kFooTest2IconUrls.push_back(kFooTest2IcoUrl1);
+      kFooTest2IcoUrl1(STRING16(L"http://www.foo.com/YetAnother.ico"));
+  const std::string16
+      kFooTest2IcoUrl2(STRING16(L"http://www.foo.com/YetAnother2.ico"));
+  const std::string16
+      kFooTest2IcoUrl3(STRING16(L"http://www.foo.com/YetAnother3.ico"));
   const std::string16 kFooTest2Msg(STRING16(L"This is another message."));
 
   const std::string16 kBarTest(STRING16(L"Test"));
   const std::string16 kBarTestUrl(STRING16(L"http://www.bar.com/Test.html"));
   const std::string16 kBarTestIcoUrl(STRING16(L"http://www.bar.com/Test.ico"));
-  const std::vector<std::string16> kBarTestIconUrls(1, kBarTestIcoUrl);
   const std::string16 kBarTestMsg(STRING16(L"This is a message."));
 
   // TODO(shess): It would be about 100x better if this could be
@@ -158,15 +156,23 @@ bool TestPermissionsDBAll() {
   // Load up some shortcuts.
   TEST_ASSERT(
       permissions->SetShortcut(foo, kFooTest1.c_str(), kFooTest1Url.c_str(),
-                               kFooTest1IconUrls, kFooTest1Msg.c_str()));
+                               kFooTest1IcoUrl.c_str(), STRING16(L""),
+                               STRING16(L""), STRING16(L""),
+                               kFooTest1Msg.c_str(), true));
 
   TEST_ASSERT(
       permissions->SetShortcut(foo, kFooTest2.c_str(), kFooTest2Url.c_str(),
-                               kFooTest2IconUrls, kFooTest2Msg.c_str()));
+                               kFooTest2IcoUrl0.c_str(),
+                               kFooTest2IcoUrl1.c_str(),
+                               kFooTest2IcoUrl2.c_str(),
+                               kFooTest2IcoUrl3.c_str(),
+                               kFooTest2Msg.c_str(), false));
 
   TEST_ASSERT(
       permissions->SetShortcut(bar, kBarTest.c_str(), kBarTestUrl.c_str(),
-                               kBarTestIconUrls, kBarTestMsg.c_str()));
+                               kBarTestIcoUrl.c_str(), STRING16(L""),
+                               STRING16(L""), STRING16(L""),
+                               kBarTestMsg.c_str(), false));
 
   // Expect 2 additional origins with shortcuts.
   std::vector<SecurityOrigin> all_origins(other_origins);
@@ -182,17 +188,38 @@ bool TestPermissionsDBAll() {
   TEST_ASSERT(names[0] == kFooTest2);
   TEST_ASSERT(names[1] == kFooTest1);
 
-  // Test a specific shortcut to see if the data comes back right.
-  std::string16 app_url, ico_url, msg;
-  std::vector<std::string16> icon_urls;
-  TEST_ASSERT(permissions->GetShortcut(foo, kFooTest2.c_str(),
-                                       &app_url, &icon_urls, &msg));
-  TEST_ASSERT(app_url == kFooTest2Url);
-  TEST_ASSERT(msg == kFooTest2Msg);
-  TEST_ASSERT(icon_urls.size() == 2);
-  std::sort(icon_urls.begin(), icon_urls.end());
-  TEST_ASSERT(icon_urls[0] == kFooTest2IcoUrl1);
-  TEST_ASSERT(icon_urls[1] == kFooTest2IcoUrl2);
+  // Test shortcut 2 to see if the data comes back right.
+  {
+    std::string16 app_url, msg;
+    std::string16 icon_url0;
+    std::string16 icon_url1;
+    std::string16 icon_url2;
+    std::string16 icon_url3;
+    bool allow_shortcut;
+    TEST_ASSERT(permissions->GetShortcut(foo, kFooTest2.c_str(),
+                                         &app_url, &icon_url0, &icon_url1,
+                                         &icon_url2, &icon_url3, &msg,
+                                         &allow_shortcut));
+    TEST_ASSERT(app_url == kFooTest2Url);
+    TEST_ASSERT(msg == kFooTest2Msg);
+    TEST_ASSERT(icon_url0 == kFooTest2IcoUrl0);
+    TEST_ASSERT(icon_url1 == kFooTest2IcoUrl1);
+    TEST_ASSERT(icon_url2 == kFooTest2IcoUrl2);
+    TEST_ASSERT(icon_url3 == kFooTest2IcoUrl3);
+    TEST_ASSERT(allow_shortcut == false);
+  }
+
+  // Test that value of true is correctly saved for allow_shortcut.
+  {
+    std::string16 app_url, msg;
+    std::string16 icon_urls[4];
+    bool allow_shortcut;
+    TEST_ASSERT(permissions->GetShortcut(foo, kFooTest1.c_str(),
+                                         &app_url, &icon_urls[0], &icon_urls[1],
+                                         &icon_urls[2], &icon_urls[3], &msg,
+                                         &allow_shortcut));
+    TEST_ASSERT(allow_shortcut == true);
+  }
 
   // Test that deleting a specific shortcut doesn't impact other
   // shortcuts for that origin.
@@ -216,6 +243,24 @@ bool TestPermissionsDBAll() {
   // Make sure we've cleaned up after ourselves.
   TEST_ASSERT(permissions->DeleteShortcuts(bar));
   TEST_ASSERT(VerifyOrigins(permissions, other_origins));
+
+  // Test that we can get a database name, and that when we mark a
+  // database corrupt we get a new name.
+  const char16 *kFooDatabaseName = STRING16(L"corruption_test");
+  std::string16 basename;
+  TEST_ASSERT(permissions->GetDatabaseBasename(foo, kFooDatabaseName,
+                                               &basename));
+
+  TEST_ASSERT(permissions->MarkDatabaseCorrupt(foo, kFooDatabaseName,
+                                               basename.c_str()));
+
+  std::string16 new_basename;
+  TEST_ASSERT(permissions->GetDatabaseBasename(foo, kFooDatabaseName,
+                                               &new_basename));
+  TEST_ASSERT(basename != new_basename);
+
+  // TODO(shess): Consider whether to poke into permissions.db and
+  // clear the database entries to prevent cruft from accumulating.
 
   LOG(("TestPermissionsDBAll - passed\n"));
   return true;

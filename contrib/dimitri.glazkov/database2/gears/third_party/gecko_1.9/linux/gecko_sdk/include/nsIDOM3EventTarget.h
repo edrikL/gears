@@ -29,22 +29,22 @@
  * For more information on this interface please see 
  * http://www.w3.org/TR/DOM-Level-3-Events/
  */
-class NS_NO_VTABLE nsIDOM3EventTarget : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOM3EventTarget : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOM3EVENTTARGET_IID)
 
   /* void addGroupedEventListener (in DOMString type, in nsIDOMEventListener listener, in boolean useCapture, in nsIDOMEventGroup evtGroup); */
-  NS_IMETHOD AddGroupedEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture, nsIDOMEventGroup *evtGroup) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AddGroupedEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture, nsIDOMEventGroup *evtGroup) = 0;
 
   /* void removeGroupedEventListener (in DOMString type, in nsIDOMEventListener listener, in boolean useCapture, in nsIDOMEventGroup evtGroup); */
-  NS_IMETHOD RemoveGroupedEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture, nsIDOMEventGroup *evtGroup) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveGroupedEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture, nsIDOMEventGroup *evtGroup) = 0;
 
   /* boolean canTrigger (in DOMString type); */
-  NS_IMETHOD CanTrigger(const nsAString & type, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CanTrigger(const nsAString & type, PRBool *_retval) = 0;
 
   /* boolean isRegisteredHere (in DOMString type); */
-  NS_IMETHOD IsRegisteredHere(const nsAString & type, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsRegisteredHere(const nsAString & type, PRBool *_retval) = 0;
 
 };
 
@@ -52,24 +52,24 @@ class NS_NO_VTABLE nsIDOM3EventTarget : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOM3EVENTTARGET \
-  NS_IMETHOD AddGroupedEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture, nsIDOMEventGroup *evtGroup); \
-  NS_IMETHOD RemoveGroupedEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture, nsIDOMEventGroup *evtGroup); \
-  NS_IMETHOD CanTrigger(const nsAString & type, PRBool *_retval); \
-  NS_IMETHOD IsRegisteredHere(const nsAString & type, PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD AddGroupedEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture, nsIDOMEventGroup *evtGroup); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveGroupedEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture, nsIDOMEventGroup *evtGroup); \
+  NS_SCRIPTABLE NS_IMETHOD CanTrigger(const nsAString & type, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD IsRegisteredHere(const nsAString & type, PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOM3EVENTTARGET(_to) \
-  NS_IMETHOD AddGroupedEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture, nsIDOMEventGroup *evtGroup) { return _to AddGroupedEventListener(type, listener, useCapture, evtGroup); } \
-  NS_IMETHOD RemoveGroupedEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture, nsIDOMEventGroup *evtGroup) { return _to RemoveGroupedEventListener(type, listener, useCapture, evtGroup); } \
-  NS_IMETHOD CanTrigger(const nsAString & type, PRBool *_retval) { return _to CanTrigger(type, _retval); } \
-  NS_IMETHOD IsRegisteredHere(const nsAString & type, PRBool *_retval) { return _to IsRegisteredHere(type, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD AddGroupedEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture, nsIDOMEventGroup *evtGroup) { return _to AddGroupedEventListener(type, listener, useCapture, evtGroup); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveGroupedEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture, nsIDOMEventGroup *evtGroup) { return _to RemoveGroupedEventListener(type, listener, useCapture, evtGroup); } \
+  NS_SCRIPTABLE NS_IMETHOD CanTrigger(const nsAString & type, PRBool *_retval) { return _to CanTrigger(type, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsRegisteredHere(const nsAString & type, PRBool *_retval) { return _to IsRegisteredHere(type, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOM3EVENTTARGET(_to) \
-  NS_IMETHOD AddGroupedEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture, nsIDOMEventGroup *evtGroup) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddGroupedEventListener(type, listener, useCapture, evtGroup); } \
-  NS_IMETHOD RemoveGroupedEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture, nsIDOMEventGroup *evtGroup) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveGroupedEventListener(type, listener, useCapture, evtGroup); } \
-  NS_IMETHOD CanTrigger(const nsAString & type, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanTrigger(type, _retval); } \
-  NS_IMETHOD IsRegisteredHere(const nsAString & type, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsRegisteredHere(type, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD AddGroupedEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture, nsIDOMEventGroup *evtGroup) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddGroupedEventListener(type, listener, useCapture, evtGroup); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveGroupedEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture, nsIDOMEventGroup *evtGroup) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveGroupedEventListener(type, listener, useCapture, evtGroup); } \
+  NS_SCRIPTABLE NS_IMETHOD CanTrigger(const nsAString & type, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanTrigger(type, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsRegisteredHere(const nsAString & type, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsRegisteredHere(type, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

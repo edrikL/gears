@@ -36,7 +36,11 @@
 #include <crtdefs.h>
 #include <windows.h>
 
+#include "gears/base/common/common.h"
+#include "gears/base/common/string16.h"
 #include "gears/localserver/common/critical_section.h"
+
+class JsRunnerInterface;
 
 // The Win32 code uses ::PathFindXXXW. These are defined in shlwapi.h, but the
 // WinCE SDK does not provide shlwapi.lib. Instead it provides
@@ -103,6 +107,21 @@ class CMutexWince : public ATL::CMutex {
   static HANDLE global_mutex_;
   static CriticalSection lock_;
 };
+
+class BrowserCache {
+ public:
+  // This method adds a zero-size entry of type EDITED_CACHE_ENTRY to the
+  // browser cache. This is used by the LocalServer as a work-around for the
+  // fact that WinCE pops up a 'Cannot Connect' dialog when serving resources
+  // from the LocalServer when offline.
+  static bool EnsureBogusEntry(const char16 *url);
+  static bool RemoveBogusEntry(const char16 *url);
+  DISALLOW_EVIL_CONSTRUCTORS(BrowserCache);
+};
+
+// This should only be called in the context of the main page.
+void CallWindowOnerror(JsRunnerInterface *js_runner,
+                       const std::string16 &message);
 
 #endif  // GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
 #endif  // WINCE

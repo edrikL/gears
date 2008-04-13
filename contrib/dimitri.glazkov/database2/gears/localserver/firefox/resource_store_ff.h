@@ -27,7 +27,7 @@
 #define GEARS_LOCALSERVER_FIREFOX_RESOURCE_STORE_FF_H__
 
 #include <deque>
-#include "ff/genfiles/localserver.h" // from OUTDIR
+#include "genfiles/localserver.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
@@ -79,7 +79,9 @@ class GearsResourceStore
 #ifdef OFFICIAL_BUILD
   // Blob support is not ready for prime time yet
 #else
-  NS_IMETHOD CaptureBlob(nsISupports *blob, const nsAString &url);
+  NS_IMETHOD CaptureBlob(// ModuleImplBaseClass *blob,
+                         // const nsAString &url
+                         );
 #endif  // OFFICIAL_BUILD
   NS_IMETHOD CaptureFile(nsISupports *file_input_element, const nsAString &url);
   NS_IMETHOD GetCapturedFileName(const nsAString &url,
@@ -118,6 +120,14 @@ class GearsResourceStore
   scoped_ptr<JsEventMonitor> unload_monitor_;
   std::string16 exception_message_;
   ResourceStore store_;
+  // This flag is set to true until the first OnCaptureUrlComplete is called by 
+  // the capture_task_. If current_request is aborted before it gets a chance
+  // to begin the capture, OnCaptureUrlComplete will not be callued for any of
+  // the urls, which implies that none of the corresponding capture callbacks
+  // will be fired. To prevent this, we inspect this flag in
+  // OnCaptureTaskComplete and, if set, we call FireFailedEvents for
+  // current_request_.
+  bool need_to_fire_failed_events_;
 
   friend class GearsLocalServer;
 

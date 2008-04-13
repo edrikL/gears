@@ -29,6 +29,7 @@
 
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_types.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/module_wrapper.h"
 
 DECLARE_GEARS_WRAPPER(GearsTest);
@@ -36,6 +37,11 @@ DECLARE_GEARS_WRAPPER(GearsTest);
 template<>
 void Dispatcher<GearsTest>::Init() {
   RegisterMethod("runTests", &GearsTest::RunTests);
+  RegisterMethod("testPassArguments", &GearsTest::TestPassArguments);
+  RegisterMethod("testPassArgumentsOptional",
+                 &GearsTest::TestPassArgumentsOptional);
+  RegisterMethod("testPassObject", &GearsTest::TestPassObject);
+  RegisterMethod("testCreateObject", &GearsTest::TestCreateObject);
   RegisterMethod("testCoerceBool", &GearsTest::TestCoerceBool);
   RegisterMethod("testCoerceInt", &GearsTest::TestCoerceInt);
   RegisterMethod("testCoerceDouble", &GearsTest::TestCoerceDouble);
@@ -45,14 +51,22 @@ void Dispatcher<GearsTest>::Init() {
 
 #ifdef WIN32
 #include <windows.h>  // must manually #include before nsIEventQueueService.h
+// the #define max on win32 conflicts with std::numeric_limits<T>::max()
+#if defined(WIN32) && defined(max)
+#undef max
 #endif
+#endif
+
+#include <cmath>
+#include <limits>
+#include <sstream>
 
 #include "gears/base/common/name_value_table_test.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/permissions_db_test.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
 #include "gears/base/common/string_utils.h"
-#include "gears/blob/buffer_blob.h"
+#include "gears/database/common/database_utils_test.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
@@ -61,6 +75,9 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/localserver/common/resource_store.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
+#if BROWSER_FF
+bool TestBlobInputStreamFf();  // from blob_input_stream_ff_test.cc
+#endif
 bool TestHttpCookies();
 bool TestHttpRequest();
 bool TestManifest();
@@ -75,8 +92,51 @@ bool TestUrlUtils();  // from url_utils_test.cc
 bool TestJsRootedTokenLifetime();  // from base_class_test.cc
 bool TestStringUtils();  // from string_utils_test.cc
 bool TestSerialization();  // from serialization_test.cc
-bool TestBufferBlob();
+bool TestCircularBuffer();  // from circular_buffer_test.cc
+bool TestRefCount(); // from scoped_refptr_test.cc
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+bool TestBufferBlob();  // from blob_test.cc
+bool TestSliceBlob();  // from blob_test.cc
+#endif  // not OFFICIAL_BUILD
 
+#if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
+bool TestIpcMessageQueue();  // from ipc_message_queue_win32_test.cc
+#endif
+
+void CreateObjectBool(JsCallContext* context,
+                      JsRunnerInterface* js_runner,
+                      JsObject* out);
+void CreateObjectInt(JsCallContext* context,
+                        JsRunnerInterface* js_runner,
+                        JsObject* out);
+void CreateObjectDouble(JsCallContext* context,
+                        JsRunnerInterface* js_runner,
+                        JsObject* out);
+void CreateObjectString(JsCallContext* context,
+                        JsRunnerInterface* js_runner,
+                        JsObject* out);
+void CreateObjectArray(JsCallContext* context,
+                       JsRunnerInterface* js_runner,
+                       JsRootedCallback* func,
+                       JsObject* out);
+void CreateObjectObject(JsCallContext* context,
+                        JsRunnerInterface* js_runner,
+                        JsObject* out);
+void CreateObjectFunction(JsCallContext* context,
+                          JsRootedCallback* func,
+                          JsObject* out);
+void TestObjectBool(JsCallContext* context, const JsObject& obj);
+void TestObjectInt(JsCallContext* context, const JsObject& obj);
+void TestObjectDouble(JsCallContext* context, const JsObject& obj);
+void TestObjectString(JsCallContext* context, const JsObject& obj);
+void TestObjectArray(JsCallContext* context,
+                     const JsObject& obj,
+                     const ModuleImplBaseClass& base);
+void TestObjectObject(JsCallContext* context, const JsObject& obj);
+void TestObjectFunction(JsCallContext* context,
+                        const JsObject& obj,
+                        const ModuleImplBaseClass& base);
 
 void GearsTest::RunTests(JsCallContext *context) {
   // We need permissions to use the localserver.
@@ -102,93 +162,263 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestSqliteUtilsAll();
   ok &= TestNameValueTableAll();
   ok &= TestPermissionsDBAll();
+  ok &= TestDatabaseUtilsAll();
   ok &= TestLocalServerDB();
   ok &= TestResourceStore();
   ok &= TestManifest();
   ok &= TestManagedResourceStore();
   ok &= TestMessageService();
   ok &= TestSerialization();
+  ok &= TestCircularBuffer();
+  ok &= TestRefCount();
+#ifndef OFFICIAL_BUILD
+  // The blob API has not been finalized for official builds
+#if BROWSER_FF || BROWSER_IE
   ok &= TestBufferBlob();
+  ok &= TestSliceBlob();
+#else
+  // Blobs not yet implemented for NPAPI.
+#endif  // BROWSER_FF || BROWSER_IE
+#endif  // not OFFICIAL_BUILD
   // TODO(zork): Add this test back in once it doesn't crash the browser.
   //ok &= TestJsRootedTokenLifetime();
+
+#if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
+  ok &= TestIpcMessageQueue();
+#endif
+#ifndef OFFICIAL_BUILD
+#if BROWSER_FF
+  ok &= TestBlobInputStreamFf();
+#endif
+#endif
 
   // We have to call GetDB again since TestCapabilitiesDBAll deletes
   // the previous instance.
   permissions = PermissionsDB::GetDB();
   permissions->SetCanAccessGears(cc_tests_origin,
-                                 PermissionsDB::PERMISSION_DEFAULT);
+                                 PermissionsDB::PERMISSION_NOT_SET);
 
   context->SetReturnValue(JSPARAM_BOOL, &ok);
 }
 
+void GearsTest::TestPassArguments(JsCallContext *context) {
+  bool bool_value = false;
+  int int_value = 0;
+  int64 int64_value = 0;
+  double double_value = 0.0;
+  std::string16 string_value;
+
+  JsArgument argv[] = {
+    {JSPARAM_REQUIRED, JSPARAM_BOOL, &bool_value},
+    {JSPARAM_REQUIRED, JSPARAM_INT, &int_value},
+    {JSPARAM_REQUIRED, JSPARAM_INT64, &int64_value},
+    {JSPARAM_REQUIRED, JSPARAM_DOUBLE, &double_value},
+    {JSPARAM_REQUIRED, JSPARAM_STRING16, &string_value}
+  };
+
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
+  if (!bool_value) {
+    context->SetException(STRING16(L"Incorrect value for parameter 1"));
+  } else if (int_value != 42) {
+    context->SetException(STRING16(L"Incorrect value for parameter 2"));
+  } else if (int64_value != (GG_LONGLONG(1) << 42)) {
+    context->SetException(STRING16(L"Incorrect value for parameter 3"));
+  } else if (double_value != 88.8) {
+    context->SetException(STRING16(L"Incorrect value for parameter 4"));
+  } else if (string_value != STRING16(L"hotdog")) {
+    context->SetException(STRING16(L"Incorrect value for parameter 5"));
+  }
+}
+
+void GearsTest::TestPassArgumentsOptional(JsCallContext *context) {
+  int int_values[3] = {};
+
+  JsArgument argv[] = {
+    {JSPARAM_REQUIRED, JSPARAM_INT, &(int_values[0])},
+    {JSPARAM_OPTIONAL, JSPARAM_INT, &(int_values[1])},
+    {JSPARAM_OPTIONAL, JSPARAM_INT, &(int_values[2])}
+  };
+
+  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
+  for (int i = 0; i < argc; ++i) {
+    if (int_values[i] != 42) {
+      std::string16 error(STRING16(L"Incorrect value for parameter "));
+      error += IntegerToString16(i + 1);
+      error += STRING16(L".");
+      context->SetException(error);
+      return;
+    }
+  }
+}
+
+// An object is passed in from JavaScript with properties set to test all the
+// JsObject::Get* functions.
+void GearsTest::TestPassObject(JsCallContext *context) {
+  const int argc = 1;
+  JsObject obj;
+  JsArgument argv[argc] = { { JSPARAM_REQUIRED, JSPARAM_OBJECT, &obj } };
+  context->GetArguments(argc, argv);
+  if (context->is_exception_set()) return;
+
+  TestObjectBool(context, obj);
+  if (context->is_exception_set()) return;
+
+  TestObjectInt(context, obj);
+  if (context->is_exception_set()) return;
+
+  TestObjectDouble(context, obj);
+  if (context->is_exception_set()) return;
+
+  TestObjectString(context, obj);
+  if (context->is_exception_set()) return;
+
+  TestObjectArray(context, obj, *this);
+  if (context->is_exception_set()) return;
+
+  TestObjectObject(context, obj);
+  if (context->is_exception_set()) return;
+
+  TestObjectFunction(context, obj, *this);
+}
+
+void GearsTest::TestCreateObject(JsCallContext* context) {
+  const int argc = 1;
+  JsRootedCallback* func = NULL;
+  JsArgument argv[argc] = { { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &func } };
+  context->GetArguments(argc, argv);
+  if (context->is_exception_set()) return;
+
+  JsRunnerInterface* js_runner = GetJsRunner();
+  if (!js_runner)
+    context->SetException(STRING16(L"Failed to get JsRunnerInterface."));
+
+  scoped_ptr<JsObject> js_object(js_runner->NewObject(NULL));
+  if (!js_object.get())
+    context->SetException(STRING16(L"Failed to create new javascript object."));
+
+  CreateObjectBool(context, js_runner, js_object.get());
+  if (context->is_exception_set()) return;
+
+  CreateObjectInt(context, js_runner, js_object.get());
+  if (context->is_exception_set()) return;
+
+  CreateObjectDouble(context, js_runner, js_object.get());
+  if (context->is_exception_set()) return;
+
+  CreateObjectString(context, js_runner, js_object.get());
+  if (context->is_exception_set()) return;
+
+  CreateObjectArray(context, js_runner, func, js_object.get());
+  if (context->is_exception_set()) return;
+
+  CreateObjectObject(context, js_runner, js_object.get());
+  if (context->is_exception_set()) return;
+
+  CreateObjectFunction(context, func, js_object.get());
+  if (context->is_exception_set()) return;
+
+  context->SetReturnValue(JSPARAM_OBJECT, js_object.get());
+}
+
 //------------------------------------------------------------------------------
 // Coercion Tests
+// TODO(aa): There is no real need to pass the values to coerce from JavaScript.
+// Implement BoolToJsToken(), IntToJsToken(), etc and use to create tokens and
+// test coercion directly in C++.
 //------------------------------------------------------------------------------
 // Coerces the first parameter to a bool and ensures the coerced value is equal
 // to the expected value.
 void GearsTest::TestCoerceBool(JsCallContext *context) {
-  bool value;
+  JsToken value;
   bool expected_value;
   const int argc = 2;
   JsArgument argv[argc] = {
-    { JSPARAM_REQUIRED, JSPARAM_BOOL, &value },
+    { JSPARAM_REQUIRED, JSPARAM_TOKEN, &value },
     { JSPARAM_REQUIRED, JSPARAM_BOOL, &expected_value }
   };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
 
-  bool ok = (value == expected_value);
+  bool coerced_value;
+  if (!JsTokenToBool_Coerce(value, context->js_context(), &coerced_value)) {
+    context->SetException(STRING16(L"Could not coerce argument to bool."));
+    return;
+  }
+
+  bool ok = (coerced_value == expected_value);
   context->SetReturnValue(JSPARAM_BOOL, &ok);
 }
 
 // Coerces the first parameter to an int and ensures the coerced value is equal
 // to the expected value.
 void GearsTest::TestCoerceInt(JsCallContext *context) {
-  int value;
+  JsToken value;
   int expected_value;
   const int argc = 2;
   JsArgument argv[argc] = {
-    { JSPARAM_REQUIRED, JSPARAM_INT, &value },
+    { JSPARAM_REQUIRED, JSPARAM_TOKEN, &value },
     { JSPARAM_REQUIRED, JSPARAM_INT, &expected_value },
   };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
 
-  bool ok = (value == expected_value);
+  int coerced_value;
+  if (!JsTokenToInt_Coerce(value, context->js_context(), &coerced_value)) {
+    context->SetException(STRING16(L"Could not coerce argument to int."));
+    return;
+  }
+
+  bool ok = (coerced_value == expected_value);
   context->SetReturnValue(JSPARAM_BOOL, &ok);
 }
 
 // Coerces the first parameter to a double and ensures the coerced value is
 // equal to the expected value.
 void GearsTest::TestCoerceDouble(JsCallContext *context) {
-  double value;
+  JsToken value;
   double expected_value;
   const int argc = 2;
   JsArgument argv[argc] = {
-    { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &value },
+    { JSPARAM_REQUIRED, JSPARAM_TOKEN, &value },
     { JSPARAM_REQUIRED, JSPARAM_DOUBLE, &expected_value },
   };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
 
-  bool ok = (value == expected_value);
+  double coerced_value;
+  if (!JsTokenToDouble_Coerce(value, context->js_context(), &coerced_value)) {
+    context->SetException(STRING16(L"Could not coerce argument to double."));
+    return;
+  }
+
+  bool ok = (coerced_value == expected_value);
   context->SetReturnValue(JSPARAM_BOOL, &ok);
 }
 
 // Coerces the first parameter to a string and ensures the coerced value is
 // equal to the expected value.
 void GearsTest::TestCoerceString(JsCallContext *context) {
-  std::string16 value;
+  JsToken value;
   std::string16 expected_value;
   const int argc = 2;
   JsArgument argv[argc] = {
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &value },
+    { JSPARAM_REQUIRED, JSPARAM_TOKEN, &value },
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &expected_value },
   };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
 
-  bool ok = (value == expected_value);
+  std::string16 coerced_value;
+  if (!JsTokenToString_Coerce(value, context->js_context(), &coerced_value)) {
+    context->SetException(STRING16(L"Could not coerce argument to string."));
+    return;
+  }
+
+  bool ok = (coerced_value == expected_value);
   context->SetReturnValue(JSPARAM_BOOL, &ok);
 }
 
@@ -204,7 +434,7 @@ void GearsTest::TestGetType(JsCallContext *context) {
   };
   context->GetArguments(argc, argv);
   if (context->is_exception_set()) return;
-  
+
   bool ok = false;
   JsParamType t = context->GetArgumentType(1);
   if (type == STRING16(L"bool") && t == JSPARAM_BOOL ||
@@ -414,7 +644,7 @@ bool TestResourceStore() {
   TEST_ASSERT(test_item1.entry.url != test_item2.entry.url);
   TEST_ASSERT(test_item1.entry.version_id == test_item2.entry.version_id);
   TEST_ASSERT(test_item1.payload.id == test_item2.payload.id);
-  TEST_ASSERT(test_item1.payload.creation_date == 
+  TEST_ASSERT(test_item1.payload.creation_date ==
               test_item2.payload.creation_date);
   TEST_ASSERT(test_item1.payload.headers == test_item2.payload.headers);
   TEST_ASSERT(test_item1.payload.status_line == test_item2.payload.status_line);
@@ -430,7 +660,7 @@ bool TestResourceStore() {
   TEST_ASSERT(test_item3.entry.url != test_item2.entry.url);
   TEST_ASSERT(test_item3.entry.version_id == test_item2.entry.version_id);
   TEST_ASSERT(test_item3.payload.id == test_item2.payload.id);
-  TEST_ASSERT(test_item3.payload.creation_date == 
+  TEST_ASSERT(test_item3.payload.creation_date ==
               test_item2.payload.creation_date);
   TEST_ASSERT(test_item3.payload.headers == test_item2.payload.headers);
   TEST_ASSERT(test_item3.payload.status_line == test_item2.payload.status_line);
@@ -749,7 +979,6 @@ class TestHttpRequestListener : public HttpRequest::ReadyStateListener {
       source->GetAllResponseHeaders(&headers);
       source->GetResponseBodyAsText(&body);
       source->SetOnReadyStateChange(NULL);
-      source->ReleaseReference();
       delete this;
       LOG(("TestHttpRequest - complete (%d)\n", status));
     }
@@ -779,12 +1008,9 @@ bool TestHttpRequest() {
   }
 #endif
 
-  // A request is created with a refcount of one, our listener will
-  // release this reference upon completion. If something goes wrong
-  // we leak, not good in a real program but fine for this test.
-
   // Send a request synchronously
-  HttpRequest *request = HttpRequest::Create();
+  scoped_refptr<HttpRequest> request;
+  TEST_ASSERT(HttpRequest::Create(&request));
   request->SetOnReadyStateChange(new TestHttpRequestListener());
   bool ok = request->Open(HttpConstants::kHttpGET,
                           STRING16(L"http://www.google.com/"),
@@ -794,7 +1020,7 @@ bool TestHttpRequest() {
   TEST_ASSERT(ok);
 
   // Send an async request
-  request = HttpRequest::Create();
+  TEST_ASSERT(HttpRequest::Create(&request));
   request->SetOnReadyStateChange(new TestHttpRequestListener());
   ok = request->Open(HttpConstants::kHttpGET,
                      STRING16(L"http://www.google.com/"),
@@ -805,89 +1031,491 @@ bool TestHttpRequest() {
   return true;
 }
 
-bool TestBufferBlob() {
+// JsObject test functions
+
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
-    printf("TestBufferBlob - failed (%d)\n", __LINE__); \
-    return false; \
+    std::stringstream ss; \
+    ss << "TestObject - failed (" << __LINE__ << ": " << __FILE__ \
+       << std::endl; \
+    std::string message8(ss.str()); \
+    std::string16 message16; \
+    if (UTF8ToString16(message8.c_str(), message8.size(), &message16)) { \
+      context->SetException(message16); \
+    } else { \
+      context->SetException(STRING16(L"Failed to convert error message.")); \
+    } \
   } \
 }
-#if BROWSER_FF || BROWSER_IE // blobs not implemented for npapi yet
-  int num_bytes = 0;
-  uint8 buffer[64] = {0};
 
-  // Empty blob tests
-  BufferBlob blob1;
-  TEST_ASSERT(blob1.Length() == 0);
-  num_bytes = blob1.Read(buffer, 64, 0);
-  TEST_ASSERT(num_bytes == 0);  // a non-finalized blob is not readable
-  blob1.Finalize();
-  TEST_ASSERT(blob1.Length() == 0);
-  num_bytes = blob1.Read(buffer, 64, 0);
-  TEST_ASSERT(num_bytes == 0);  // because it's actually empty
-  num_bytes = blob1.Append("abc", 3);
-  TEST_ASSERT(num_bytes == 0);  // a finalized blob is not writable
+void TestObjectBool(JsCallContext* context, const JsObject& obj) {
+  bool property_value = false;
+  TEST_ASSERT(obj.GetPropertyAsBool(STRING16(L"bool_true"), &property_value));
+  TEST_ASSERT(property_value == true);
 
-  memset(buffer, 0, sizeof(buffer));
+  property_value = true;
+  TEST_ASSERT(obj.GetPropertyAsBool(STRING16(L"bool_false"), &property_value));
+  TEST_ASSERT(property_value == false);
 
-  // Typical blob operation
-  BufferBlob blob2;
-  num_bytes = blob2.Append("abc", 3);
-  TEST_ASSERT(num_bytes == 3);
-  TEST_ASSERT(blob2.Length() == 3);
-  num_bytes = blob2.Append("de", 2);
-  TEST_ASSERT(num_bytes == 2);
-  TEST_ASSERT(blob2.Length() == 5);
-  num_bytes = blob2.Read(buffer, 64, 0);
-  TEST_ASSERT(num_bytes == 0);  // a non-finalized blob is not readable
-  blob2.Finalize();
-  TEST_ASSERT(blob2.Length() == 5);
-  num_bytes = blob2.Read(buffer, 64, 0);
-  TEST_ASSERT(num_bytes == 5);
-  num_bytes = blob2.Append("fgh", 3);
-  TEST_ASSERT(num_bytes == 0);  // a finalized blob is not writable
-  TEST_ASSERT(buffer[0] == 'a');
-  TEST_ASSERT(buffer[1] == 'b');
-  TEST_ASSERT(buffer[2] == 'c');
-  TEST_ASSERT(buffer[3] == 'd');
-  TEST_ASSERT(buffer[4] == 'e');
-  TEST_ASSERT(buffer[5] == '\0');
+  JsArray arr;
+  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"bool_array"), &arr));
 
-  // Overwrite the first three bytes of buffer, but don't touch the rest
-  num_bytes = blob2.Read(buffer, 3, 2);
-  TEST_ASSERT(num_bytes == 3);
-  TEST_ASSERT(buffer[0] == 'c');
-  TEST_ASSERT(buffer[1] == 'd');
-  TEST_ASSERT(buffer[2] == 'e');
-  TEST_ASSERT(buffer[3] == 'd');
-  TEST_ASSERT(buffer[4] == 'e');
+  int length = -1;
+  TEST_ASSERT(arr.GetLength(&length));
+  TEST_ASSERT(length == 2);
 
-  // Initialize a blob with an empty vector
-  std::vector<uint8> *vec3 = new std::vector<uint8>;
-  BufferBlob blob3(vec3);
-  TEST_ASSERT(blob1.Length() == 0);
-  num_bytes = blob1.Read(buffer, 64, 0);
-  TEST_ASSERT(num_bytes == 0);
+  property_value = false;
+  TEST_ASSERT(arr.GetElementAsBool(0, &property_value));
+  TEST_ASSERT(property_value == true);
 
-  memset(buffer, 0, sizeof(buffer));
+  property_value = true;
+  TEST_ASSERT(arr.GetElementAsBool(1, &property_value));
+  TEST_ASSERT(property_value == false);
+}
 
-  // Initialize a blob with a typical vector
-  std::vector<uint8> *vec4 = new std::vector<uint8>;
-  vec4->push_back('a');
-  vec4->push_back('b');
-  vec4->push_back('c');
-  BufferBlob blob4(vec4);
-  TEST_ASSERT(blob4.Length() == 3);
-  num_bytes = blob4.Read(buffer, 64, 0);
-  TEST_ASSERT(num_bytes == 3);
-  TEST_ASSERT(buffer[0] == 'a');
-  TEST_ASSERT(buffer[1] == 'b');
-  TEST_ASSERT(buffer[2] == 'c');
-#endif
-  
+const static int int_large = 1073741823;  // 2 ** 30 - 1
+
+void TestObjectInt(JsCallContext* context, const JsObject& obj) {
+  // integer (assumed to be tagged 32 bit signed integer,
+  //          30 bits magnitude, 1 bit sign, 1 bit tag)
+  int property_value = -1;
+  TEST_ASSERT(obj.GetPropertyAsInt(STRING16(L"int_0"), &property_value));
+  TEST_ASSERT(property_value == 0);
+
+  property_value = -1;
+  TEST_ASSERT(obj.GetPropertyAsInt(STRING16(L"int_1"), &property_value));
+  TEST_ASSERT(property_value == 1);
+
+  property_value = -1;
+  TEST_ASSERT(obj.GetPropertyAsInt(STRING16(L"int_large"), &property_value));
+  TEST_ASSERT(property_value == int_large);
+
+  property_value = 1;
+  TEST_ASSERT(obj.GetPropertyAsInt(STRING16(L"int_negative_1"),
+                                    &property_value));
+  TEST_ASSERT(property_value == -1);
+
+  property_value = 1;
+  TEST_ASSERT(obj.GetPropertyAsInt(STRING16(L"int_negative_large"),
+                                    &property_value));
+  TEST_ASSERT(property_value == -int_large);
+
+  JsArray arr;
+  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"int_array"), &arr));
+
+  int length = -1;
+  TEST_ASSERT(arr.GetLength(&length));
+  TEST_ASSERT(length == 5);
+
+  property_value = -1;
+  TEST_ASSERT(arr.GetElementAsInt(0, &property_value));
+  TEST_ASSERT(property_value == 0);
+
+  property_value = -1;
+  TEST_ASSERT(arr.GetElementAsInt(1, &property_value));
+  TEST_ASSERT(property_value == 1);
+
+  property_value = -1;
+  TEST_ASSERT(arr.GetElementAsInt(2, &property_value));
+  TEST_ASSERT(property_value == int_large);
+
+  property_value = 1;
+  TEST_ASSERT(arr.GetElementAsInt(3, &property_value));
+  TEST_ASSERT(property_value == -1);
+
+  property_value = -1;
+  TEST_ASSERT(arr.GetElementAsInt(4, &property_value));
+  TEST_ASSERT(property_value == -int_large);
+}
+
+// Magic number is from:
+// http://developer.mozilla.org/en/docs/
+//   Core_JavaScript_1.5_Reference:Global_Objects:Number:MIN_VALUE
+const static double JS_NUMBER_MIN_VALUE = 5e-324;
+
+void TestObjectDouble(JsCallContext* context, const JsObject& obj) {
+  // JavaScript interprets 1.0 as an integer.
+  // This is why 1 is 1.01.
+  double property_value = -1.0;
+  TEST_ASSERT(obj.GetPropertyAsDouble(STRING16(L"double_0"), &property_value));
+  TEST_ASSERT(property_value == 0.01);
+
+  property_value = -1.0;
+  TEST_ASSERT(obj.GetPropertyAsDouble(STRING16(L"double_1"), &property_value));
+  TEST_ASSERT(property_value == 1.01);
+
+  property_value = -1;
+  TEST_ASSERT(obj.GetPropertyAsDouble(STRING16(L"double_large"),
+                                      &property_value));
+  TEST_ASSERT(property_value == std::numeric_limits<double>::max());
+
+  property_value = 1;
+  TEST_ASSERT(obj.GetPropertyAsDouble(STRING16(L"double_negative_1"),
+                                    &property_value));
+  TEST_ASSERT(property_value == -1.01);
+
+  property_value = 1;
+  TEST_ASSERT(obj.GetPropertyAsDouble(STRING16(L"double_negative_large"),
+                                    &property_value));
+  TEST_ASSERT(property_value == JS_NUMBER_MIN_VALUE);
+
+  JsArray arr;
+  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"double_array"), &arr));
+
+  int length = -1;
+  TEST_ASSERT(arr.GetLength(&length));
+  TEST_ASSERT(length == 5);
+
+  property_value = -1;
+  TEST_ASSERT(arr.GetElementAsDouble(0, &property_value));
+  TEST_ASSERT(property_value == 0.01);
+
+  property_value = -1;
+  TEST_ASSERT(arr.GetElementAsDouble(1, &property_value));
+  TEST_ASSERT(property_value == 1.01);
+
+  property_value = -1;
+  TEST_ASSERT(arr.GetElementAsDouble(2, &property_value));
+  TEST_ASSERT(property_value == std::numeric_limits<double>::max());
+
+  property_value = 1;
+  TEST_ASSERT(arr.GetElementAsDouble(3, &property_value));
+  TEST_ASSERT(property_value == -1.01);
+
+  property_value = 1;
+  TEST_ASSERT(arr.GetElementAsDouble(4, &property_value));
+  TEST_ASSERT(property_value == JS_NUMBER_MIN_VALUE);
+}
+
+void TestObjectString(JsCallContext* context, const JsObject& obj) {
+  std::string16 property_value = STRING16(L"not empty");
+  TEST_ASSERT(obj.GetPropertyAsString(STRING16(L"string_0"), &property_value));
+  TEST_ASSERT(property_value.empty());
+
+  property_value = STRING16(L"");
+  TEST_ASSERT(obj.GetPropertyAsString(STRING16(L"string_1"), &property_value));
+  TEST_ASSERT(property_value == STRING16(L"a"));
+
+  property_value = STRING16(L"");
+  TEST_ASSERT(obj.GetPropertyAsString(STRING16(L"string_many"),
+                                      &property_value));
+  const static std::string16 string_many(
+      STRING16(L"asdjh1)!(@#*h38ind89!03234bnmd831%%%*&*jdlwnd8893asd1233"));
+  TEST_ASSERT(property_value == string_many);
+
+  JsArray arr;
+  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"string_array"), &arr));
+
+  int length = -1;
+  TEST_ASSERT(arr.GetLength(&length));
+  TEST_ASSERT(length == 3);
+
+  property_value = STRING16(L"");
+  TEST_ASSERT(arr.GetElementAsString(0, &property_value));
+  TEST_ASSERT(property_value.empty());
+
+  property_value = STRING16(L"");
+  TEST_ASSERT(arr.GetElementAsString(1, &property_value));
+  TEST_ASSERT(property_value == STRING16(L"a"));
+
+  property_value = STRING16(L"");
+  TEST_ASSERT(arr.GetElementAsString(2, &property_value));
+  TEST_ASSERT(property_value == string_many);
+}
+
+// The property with property_name is expected to be expected_length and contain
+// integers where index == int value. I.e. length 3 is expected to be [0, 1, 2].
+static bool ValidateGeneratedArray(const JsArray& arr, int expected_length) {
+  int length = -1;
+  if (!arr.GetLength(&length))
+    return false;
+
+  if (length != expected_length)
+    return false;
+
+  for (int i = 0; i < length; ++i) {
+    int current_element = -1;
+    if (!arr.GetElementAsInt(i, &current_element))
+      return false;
+
+    if (current_element != i)
+      return false;
+  }
+
   return true;
+}
+
+static bool ValidateGeneratedArray(const JsObject& obj,
+                                   const std::string16& property_name,
+                                   int expected_length) {
+  JsArray arr;
+  if (!obj.GetPropertyAsArray(property_name, &arr))
+    return false;
+
+  return ValidateGeneratedArray(arr, expected_length);
+}
+
+void TestObjectArray(JsCallContext* context,
+                     const JsObject& obj,
+                     const ModuleImplBaseClass& base) {
+  TEST_ASSERT(ValidateGeneratedArray(obj, STRING16(L"array_0"), 0));
+  TEST_ASSERT(ValidateGeneratedArray(obj, STRING16(L"array_1"), 1));
+  TEST_ASSERT(ValidateGeneratedArray(obj, STRING16(L"array_8"), 8));
+  TEST_ASSERT(ValidateGeneratedArray(obj, STRING16(L"array_10000"), 10000));
+
+  JsArray array_many_types;
+  TEST_ASSERT(obj.GetPropertyAsArray(STRING16(L"array_many_types"),
+                                     &array_many_types));
+  int array_many_types_length = -1;
+  TEST_ASSERT(array_many_types.GetLength(&array_many_types_length));
+  TEST_ASSERT(array_many_types_length == 7);
+
+  // index 0
+  bool bool_false = true;
+  TEST_ASSERT(array_many_types.GetElementAsBool(0, &bool_false));
+  TEST_ASSERT(bool_false == false);
+
+  // index 1
+  bool bool_true = false;
+  TEST_ASSERT(array_many_types.GetElementAsBool(1, &bool_true));
+  TEST_ASSERT(bool_true == true);
+
+  // index 2
+  int int_2 = -1;
+  TEST_ASSERT(array_many_types.GetElementAsInt(2, &int_2));
+  TEST_ASSERT(int_2 == 2);
+
+  // index 3
+  std::string16 string_3;
+  TEST_ASSERT(array_many_types.GetElementAsString(3, &string_3));
+  TEST_ASSERT(string_3 == STRING16(L"3"));
+
+  // index 4
+  double double_4 = -1;
+  TEST_ASSERT(array_many_types.GetElementAsDouble(4, &double_4));
+  TEST_ASSERT(double_4 == 4.01);
+
+  // index 5
+  JsArray array_5;
+  TEST_ASSERT(array_many_types.GetElementAsArray(5, &array_5));
+  TEST_ASSERT(ValidateGeneratedArray(array_5, 5));
+
+  // index 6
+  JsRootedCallback* function_6 = NULL;
+  TEST_ASSERT(array_many_types.GetElementAsFunction(6, &function_6));
+  JsRunnerInterface* js_runner = base.GetJsRunner();
+  TEST_ASSERT(js_runner);
+  JsRootedToken* retval = NULL;
+  TEST_ASSERT(js_runner->InvokeCallback(function_6,
+                                        0, NULL, &retval));
+  TEST_ASSERT(retval);
+  std::string16 string_retval;
+  JsContextPtr js_context = NULL;
+#ifdef BROWSER_FF
+  js_context = base.EnvPageJsContext();
+#endif
+  TEST_ASSERT(JsTokenToString_NoCoerce(retval->token(), js_context,
+                                       &string_retval));
+  TEST_ASSERT(string_retval == STRING16(L"i am a function"));
+}
+
+void TestObjectObject(JsCallContext* context, const JsObject& obj) {
+  JsObject child_obj;
+  TEST_ASSERT(obj.GetPropertyAsObject(STRING16(L"obj"), &child_obj));
+
+  bool bool_true = false;
+  TEST_ASSERT(child_obj.GetPropertyAsBool(STRING16(L"bool_true"), &bool_true));
+  TEST_ASSERT(bool_true == true);
+
+  int int_0 = -1;
+  TEST_ASSERT(child_obj.GetPropertyAsInt(STRING16(L"int_0"), &int_0));
+  TEST_ASSERT(int_0 == 0);
+
+  double double_0 = -1.0;
+  TEST_ASSERT(child_obj.GetPropertyAsDouble(STRING16(L"double_0"), &double_0));
+  TEST_ASSERT(double_0 == 0.01);
+
+  std::string16 string_0(STRING16(L"not empty"));
+  TEST_ASSERT(child_obj.GetPropertyAsString(STRING16(L"string_0"), &string_0));
+  TEST_ASSERT(string_0.empty());
+
+  TEST_ASSERT(ValidateGeneratedArray(child_obj, STRING16(L"array_0"), 0));
+}
+
+void TestObjectFunction(JsCallContext* context,
+                        const JsObject& obj,
+                        const ModuleImplBaseClass& base) {
+  JsRootedCallback* function = NULL;
+  TEST_ASSERT(obj.GetPropertyAsFunction(STRING16(L"func"), &function));
+  JsRunnerInterface* js_runner = base.GetJsRunner();
+  TEST_ASSERT(js_runner);
+  JsRootedToken* retval = NULL;
+  TEST_ASSERT(js_runner->InvokeCallback(function, 0, NULL, &retval));
+  TEST_ASSERT(retval);
+  std::string16 string_retval;
+  JsContextPtr js_context = NULL;
+#ifdef BROWSER_FF
+  js_context = base.EnvPageJsContext();
+#endif
+  TEST_ASSERT(JsTokenToString_NoCoerce(retval->token(), js_context,
+                                       &string_retval));
+  TEST_ASSERT(string_retval == STRING16(L"i am a function"));
+}
+
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    std::stringstream ss; \
+    ss << "CreateObject - failed (" << __LINE__ << ": " << __FILE__ \
+       << std::endl; \
+    std::string message8(ss.str()); \
+    printf("%s\n", message8.c_str()); \
+    std::string16 message16; \
+    if (UTF8ToString16(message8.c_str(), message8.size(), &message16)) { \
+      context->SetException(message16); \
+    } else { \
+      context->SetException(STRING16(L"Failed to convert error message.")); \
+    } \
+  } \
+}
+
+void CreateObjectBool(JsCallContext* context,
+                      JsRunnerInterface* js_runner,
+                      JsObject* out) {
+  TEST_ASSERT(out->SetPropertyBool(STRING16(L"bool_true"), true));
+  TEST_ASSERT(out->SetPropertyBool(STRING16(L"bool_false"), false));
+  JsArray* bool_array = js_runner->NewArray();
+  TEST_ASSERT(bool_array);
+  TEST_ASSERT(bool_array->SetElementBool(0, true));
+  TEST_ASSERT(bool_array->SetElementBool(1, false));
+  TEST_ASSERT(out->SetPropertyArray(STRING16(L"bool_array"), bool_array));
+}
+
+void CreateObjectInt(JsCallContext* context,
+                     JsRunnerInterface* js_runner,
+                     JsObject* out) {
+  TEST_ASSERT(out->SetPropertyInt(STRING16(L"int_0"), 0));
+  TEST_ASSERT(out->SetPropertyInt(STRING16(L"int_1"), 1));
+  TEST_ASSERT(out->SetPropertyInt(STRING16(L"int_large"), int_large));
+  TEST_ASSERT(out->SetPropertyInt(STRING16(L"int_negative_1"), -1));
+  TEST_ASSERT(out->SetPropertyInt(STRING16(L"int_negative_large"),
+                                  -int_large));
+  JsArray* int_array = js_runner->NewArray();
+  TEST_ASSERT(int_array);
+  TEST_ASSERT(int_array->SetElementInt(0, 0));
+  TEST_ASSERT(int_array->SetElementInt(1, 1));
+  TEST_ASSERT(int_array->SetElementInt(2, int_large));
+  TEST_ASSERT(int_array->SetElementInt(3, -1));
+  TEST_ASSERT(int_array->SetElementInt(4, -int_large));
+  TEST_ASSERT(out->SetPropertyArray(STRING16(L"int_array"), int_array));
+}
+
+void CreateObjectDouble(JsCallContext* context,
+                        JsRunnerInterface* js_runner,
+                        JsObject* out) {
+  TEST_ASSERT(out->SetPropertyDouble(STRING16(L"double_0"), 0.01));
+  TEST_ASSERT(out->SetPropertyDouble(STRING16(L"double_1"), 1.01));
+  TEST_ASSERT(out->SetPropertyDouble(STRING16(L"double_large"),
+                                     std::numeric_limits<double>::max()));
+  TEST_ASSERT(out->SetPropertyDouble(STRING16(L"double_negative_1"), -1.01));
+  TEST_ASSERT(out->SetPropertyDouble(STRING16(L"double_negative_large"),
+                                     JS_NUMBER_MIN_VALUE));
+  JsArray* double_array = js_runner->NewArray();
+  TEST_ASSERT(double_array);
+  TEST_ASSERT(double_array->SetElementDouble(0, 0.01));
+  TEST_ASSERT(double_array->SetElementDouble(1, 1.01));
+  TEST_ASSERT(double_array->SetElementDouble(2,
+      std::numeric_limits<double>::max()));
+  TEST_ASSERT(double_array->SetElementDouble(3, -1.01));
+  TEST_ASSERT(double_array->SetElementDouble(4, JS_NUMBER_MIN_VALUE));
+  TEST_ASSERT(out->SetPropertyArray(STRING16(L"double_array"), double_array));
+}
+
+void CreateObjectString(JsCallContext* context,
+                        JsRunnerInterface* js_runner,
+                        JsObject* out) {
+  std::string16 string_0;
+  std::string16 string_1(STRING16(L"a"));
+  std::string16 string_many(
+    STRING16(L"asdjh1)!(@#*h38ind89!03234bnmd831%%%*&*jdlwnd8893asd1233"));
+  TEST_ASSERT(out->SetPropertyString(STRING16(L"string_0"), string_0));
+  TEST_ASSERT(out->SetPropertyString(STRING16(L"string_1"), string_1));
+  TEST_ASSERT(out->SetPropertyString(STRING16(L"string_many"), string_many));
+  JsArray* string_array = js_runner->NewArray();
+  TEST_ASSERT(string_array);
+  TEST_ASSERT(string_array->SetElementString(0, string_0));
+  TEST_ASSERT(string_array->SetElementString(1, string_1));
+  TEST_ASSERT(string_array->SetElementString(2, string_many));
+  TEST_ASSERT(out->SetPropertyArray(STRING16(L"string_array"), string_array));
+}
+
+static bool FillTestArray(const int n, JsArray* arr) {
+  for (int i = 0; i < n; ++i)
+    if (!arr->SetElementInt(i, i)) return false;
+  return true;
+}
+
+void CreateObjectArray(JsCallContext* context,
+                       JsRunnerInterface* js_runner,
+                       JsRootedCallback* func,
+                       JsObject* out) {
+  JsArray* array_0 = js_runner->NewArray();
+  TEST_ASSERT(array_0);
+  TEST_ASSERT(out->SetPropertyArray(STRING16(L"array_0"), array_0));
+
+  JsArray* array_1 = js_runner->NewArray();
+  TEST_ASSERT(array_1);
+  TEST_ASSERT(FillTestArray(1, array_1));
+  TEST_ASSERT(out->SetPropertyArray(STRING16(L"array_1"), array_1));
+
+  JsArray* array_8 = js_runner->NewArray();
+  TEST_ASSERT(array_8);
+  TEST_ASSERT(FillTestArray(8, array_8));
+  TEST_ASSERT(out->SetPropertyArray(STRING16(L"array_8"), array_8));
+
+  JsArray* array_10000 = js_runner->NewArray();
+  TEST_ASSERT(array_10000);
+  TEST_ASSERT(FillTestArray(10000, array_10000));
+  TEST_ASSERT(out->SetPropertyArray(STRING16(L"array_10000"), array_10000));
+
+  JsArray* array_many_types = js_runner->NewArray();
+  TEST_ASSERT(array_many_types);
+  TEST_ASSERT(array_many_types->SetElementBool(0, false));
+  TEST_ASSERT(array_many_types->SetElementBool(1, true));
+  TEST_ASSERT(array_many_types->SetElementInt(2, 2));
+  TEST_ASSERT(array_many_types->SetElementString(3, STRING16(L"3")));
+  TEST_ASSERT(array_many_types->SetElementDouble(4, 4.01));
+  JsArray* array_5 = js_runner->NewArray();
+  TEST_ASSERT(array_5);
+  TEST_ASSERT(FillTestArray(5, array_5));
+  TEST_ASSERT(array_many_types->SetElementArray(5, array_5));
+  TEST_ASSERT(array_many_types->SetElementFunction(6, func));
+  TEST_ASSERT(out->SetPropertyArray(STRING16(L"array_many_types"),
+                                    array_many_types));
+}
+
+void CreateObjectObject(JsCallContext* context,
+                        JsRunnerInterface* js_runner,
+                        JsObject* out) {
+  JsObject* obj = js_runner->NewObject(NULL);
+  TEST_ASSERT(obj);
+  TEST_ASSERT(obj->SetPropertyBool(STRING16(L"bool_true"), true));
+  TEST_ASSERT(obj->SetPropertyInt(STRING16(L"int_0"), 0));
+  TEST_ASSERT(obj->SetPropertyDouble(STRING16(L"double_0"), 0.01));
+  TEST_ASSERT(obj->SetPropertyString(STRING16(L"string_0"), STRING16(L"")));
+  JsArray* array_0 = js_runner->NewArray();
+  TEST_ASSERT(array_0);
+  TEST_ASSERT(obj->SetPropertyArray(STRING16(L"array_0"), array_0));
+  TEST_ASSERT(out->SetPropertyObject(STRING16(L"obj"), obj));
+}
+
+void CreateObjectFunction(JsCallContext* context,
+                          JsRootedCallback* func,
+                          JsObject* out) {
+  TEST_ASSERT(out->SetPropertyFunction(STRING16(L"func"), func));
 }
 
 #endif  // DEBUG

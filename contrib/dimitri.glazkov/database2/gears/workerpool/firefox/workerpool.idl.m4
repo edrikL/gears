@@ -38,7 +38,7 @@ interface GearsWorkerPoolInterface : GearsBaseClassInterface {
   long createWorkerFromUrl(//in AString url
                           );
   void allowCrossOrigin();
-  void sendMessage(//in AString message_string
+  void sendMessage(//in variant message_body
                    //in long dest_worker_id
                   );
   

@@ -31,26 +31,26 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLParamElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLParamElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLPARAMELEMENT_IID)
 
   /* attribute DOMString name; */
-  NS_IMETHOD GetName(nsAString & aName) = 0;
-  NS_IMETHOD SetName(const nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) = 0;
 
   /* attribute DOMString type; */
-  NS_IMETHOD GetType(nsAString & aType) = 0;
-  NS_IMETHOD SetType(const nsAString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) = 0;
 
   /* attribute DOMString value; */
-  NS_IMETHOD GetValue(nsAString & aValue) = 0;
-  NS_IMETHOD SetValue(const nsAString & aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsAString & aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetValue(const nsAString & aValue) = 0;
 
   /* attribute DOMString valueType; */
-  NS_IMETHOD GetValueType(nsAString & aValueType) = 0;
-  NS_IMETHOD SetValueType(const nsAString & aValueType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetValueType(nsAString & aValueType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetValueType(const nsAString & aValueType) = 0;
 
 };
 
@@ -58,36 +58,36 @@ class NS_NO_VTABLE nsIDOMHTMLParamElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLPARAMELEMENT \
-  NS_IMETHOD GetName(nsAString & aName); \
-  NS_IMETHOD SetName(const nsAString & aName); \
-  NS_IMETHOD GetType(nsAString & aType); \
-  NS_IMETHOD SetType(const nsAString & aType); \
-  NS_IMETHOD GetValue(nsAString & aValue); \
-  NS_IMETHOD SetValue(const nsAString & aValue); \
-  NS_IMETHOD GetValueType(nsAString & aValueType); \
-  NS_IMETHOD SetValueType(const nsAString & aValueType); 
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType); \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType); \
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsAString & aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetValue(const nsAString & aValue); \
+  NS_SCRIPTABLE NS_IMETHOD GetValueType(nsAString & aValueType); \
+  NS_SCRIPTABLE NS_IMETHOD SetValueType(const nsAString & aValueType); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLPARAMELEMENT(_to) \
-  NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
-  NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
-  NS_IMETHOD SetType(const nsAString & aType) { return _to SetType(aType); } \
-  NS_IMETHOD GetValue(nsAString & aValue) { return _to GetValue(aValue); } \
-  NS_IMETHOD SetValue(const nsAString & aValue) { return _to SetValue(aValue); } \
-  NS_IMETHOD GetValueType(nsAString & aValueType) { return _to GetValueType(aValueType); } \
-  NS_IMETHOD SetValueType(const nsAString & aValueType) { return _to SetValueType(aValueType); } 
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) { return _to SetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsAString & aValue) { return _to GetValue(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetValue(const nsAString & aValue) { return _to SetValue(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetValueType(nsAString & aValueType) { return _to GetValueType(aValueType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetValueType(const nsAString & aValueType) { return _to SetValueType(aValueType); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLPARAMELEMENT(_to) \
-  NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
-  NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
-  NS_IMETHOD SetType(const nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } \
-  NS_IMETHOD GetValue(nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetValue(aValue); } \
-  NS_IMETHOD SetValue(const nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetValue(aValue); } \
-  NS_IMETHOD GetValueType(nsAString & aValueType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetValueType(aValueType); } \
-  NS_IMETHOD SetValueType(const nsAString & aValueType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetValueType(aValueType); } 
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetValue(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetValue(const nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetValue(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetValueType(nsAString & aValueType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetValueType(aValueType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetValueType(const nsAString & aValueType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetValueType(aValueType); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

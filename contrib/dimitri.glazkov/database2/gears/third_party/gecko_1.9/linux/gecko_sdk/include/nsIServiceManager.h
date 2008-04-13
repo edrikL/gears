@@ -37,7 +37,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIServiceManager : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIServiceManager : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISERVICEMANAGER_IID)
@@ -54,10 +54,10 @@ class NS_NO_VTABLE nsIServiceManager : public nsISupports {
      * @param result : resulting service 
      */
   /* void getService (in nsCIDRef aClass, in nsIIDRef aIID, [iid_is (aIID), retval] out nsQIResult result); */
-  NS_IMETHOD GetService(const nsCID & aClass, const nsIID & aIID, void * *result) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetService(const nsCID & aClass, const nsIID & aIID, void * *result) = 0;
 
   /* void getServiceByContractID (in string aContractID, in nsIIDRef aIID, [iid_is (aIID), retval] out nsQIResult result); */
-  NS_IMETHOD GetServiceByContractID(const char *aContractID, const nsIID & aIID, void * *result) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetServiceByContractID(const char *aContractID, const nsIID & aIID, void * *result) = 0;
 
   /**
      * isServiceInstantiated
@@ -71,10 +71,10 @@ class NS_NO_VTABLE nsIServiceManager : public nsISupports {
      * @param aIID : IID of interface requested
      */
   /* boolean isServiceInstantiated (in nsCIDRef aClass, in nsIIDRef aIID); */
-  NS_IMETHOD IsServiceInstantiated(const nsCID & aClass, const nsIID & aIID, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsServiceInstantiated(const nsCID & aClass, const nsIID & aIID, PRBool *_retval) = 0;
 
   /* boolean isServiceInstantiatedByContractID (in string aContractID, in nsIIDRef aIID); */
-  NS_IMETHOD IsServiceInstantiatedByContractID(const char *aContractID, const nsIID & aIID, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsServiceInstantiatedByContractID(const char *aContractID, const nsIID & aIID, PRBool *_retval) = 0;
 
 };
 
@@ -82,24 +82,24 @@ class NS_NO_VTABLE nsIServiceManager : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSISERVICEMANAGER \
-  NS_IMETHOD GetService(const nsCID & aClass, const nsIID & aIID, void * *result); \
-  NS_IMETHOD GetServiceByContractID(const char *aContractID, const nsIID & aIID, void * *result); \
-  NS_IMETHOD IsServiceInstantiated(const nsCID & aClass, const nsIID & aIID, PRBool *_retval); \
-  NS_IMETHOD IsServiceInstantiatedByContractID(const char *aContractID, const nsIID & aIID, PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetService(const nsCID & aClass, const nsIID & aIID, void * *result); \
+  NS_SCRIPTABLE NS_IMETHOD GetServiceByContractID(const char *aContractID, const nsIID & aIID, void * *result); \
+  NS_SCRIPTABLE NS_IMETHOD IsServiceInstantiated(const nsCID & aClass, const nsIID & aIID, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD IsServiceInstantiatedByContractID(const char *aContractID, const nsIID & aIID, PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSISERVICEMANAGER(_to) \
-  NS_IMETHOD GetService(const nsCID & aClass, const nsIID & aIID, void * *result) { return _to GetService(aClass, aIID, result); } \
-  NS_IMETHOD GetServiceByContractID(const char *aContractID, const nsIID & aIID, void * *result) { return _to GetServiceByContractID(aContractID, aIID, result); } \
-  NS_IMETHOD IsServiceInstantiated(const nsCID & aClass, const nsIID & aIID, PRBool *_retval) { return _to IsServiceInstantiated(aClass, aIID, _retval); } \
-  NS_IMETHOD IsServiceInstantiatedByContractID(const char *aContractID, const nsIID & aIID, PRBool *_retval) { return _to IsServiceInstantiatedByContractID(aContractID, aIID, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetService(const nsCID & aClass, const nsIID & aIID, void * *result) { return _to GetService(aClass, aIID, result); } \
+  NS_SCRIPTABLE NS_IMETHOD GetServiceByContractID(const char *aContractID, const nsIID & aIID, void * *result) { return _to GetServiceByContractID(aContractID, aIID, result); } \
+  NS_SCRIPTABLE NS_IMETHOD IsServiceInstantiated(const nsCID & aClass, const nsIID & aIID, PRBool *_retval) { return _to IsServiceInstantiated(aClass, aIID, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsServiceInstantiatedByContractID(const char *aContractID, const nsIID & aIID, PRBool *_retval) { return _to IsServiceInstantiatedByContractID(aContractID, aIID, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSISERVICEMANAGER(_to) \
-  NS_IMETHOD GetService(const nsCID & aClass, const nsIID & aIID, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetService(aClass, aIID, result); } \
-  NS_IMETHOD GetServiceByContractID(const char *aContractID, const nsIID & aIID, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetServiceByContractID(aContractID, aIID, result); } \
-  NS_IMETHOD IsServiceInstantiated(const nsCID & aClass, const nsIID & aIID, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsServiceInstantiated(aClass, aIID, _retval); } \
-  NS_IMETHOD IsServiceInstantiatedByContractID(const char *aContractID, const nsIID & aIID, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsServiceInstantiatedByContractID(aContractID, aIID, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetService(const nsCID & aClass, const nsIID & aIID, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetService(aClass, aIID, result); } \
+  NS_SCRIPTABLE NS_IMETHOD GetServiceByContractID(const char *aContractID, const nsIID & aIID, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetServiceByContractID(aContractID, aIID, result); } \
+  NS_SCRIPTABLE NS_IMETHOD IsServiceInstantiated(const nsCID & aClass, const nsIID & aIID, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsServiceInstantiated(aClass, aIID, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsServiceInstantiatedByContractID(const char *aContractID, const nsIID & aIID, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsServiceInstantiatedByContractID(aContractID, aIID, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

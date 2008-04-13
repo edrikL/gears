@@ -65,14 +65,15 @@ button {
 }
 
 #foot {
-  padding:1em;
   position:absolute;
   background:white;
   bottom:0;
+  width:100%;
 }
 
 #button-row {
   text-align:right;
+  margin:1em;
 }
 
 .accesskey {

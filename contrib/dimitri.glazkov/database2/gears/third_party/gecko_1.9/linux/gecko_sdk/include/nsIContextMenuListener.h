@@ -39,7 +39,7 @@ class nsIDOMNode; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIContextMenuListener : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIContextMenuListener : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTEXTMENULISTENER_IID)
@@ -88,7 +88,7 @@ class NS_NO_VTABLE nsIContextMenuListener : public nsISupports {
      * @return <CODE>NS_OK</CODE> always.
      */
   /* void onShowContextMenu (in unsigned long aContextFlags, in nsIDOMEvent aEvent, in nsIDOMNode aNode); */
-  NS_IMETHOD OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode) = 0;
 
 };
 
@@ -96,15 +96,15 @@ class NS_NO_VTABLE nsIContextMenuListener : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICONTEXTMENULISTENER \
-  NS_IMETHOD OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode); 
+  NS_SCRIPTABLE NS_IMETHOD OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICONTEXTMENULISTENER(_to) \
-  NS_IMETHOD OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode) { return _to OnShowContextMenu(aContextFlags, aEvent, aNode); } 
+  NS_SCRIPTABLE NS_IMETHOD OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode) { return _to OnShowContextMenu(aContextFlags, aEvent, aNode); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICONTEXTMENULISTENER(_to) \
-  NS_IMETHOD OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnShowContextMenu(aContextFlags, aEvent, aNode); } 
+  NS_SCRIPTABLE NS_IMETHOD OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnShowContextMenu(aContextFlags, aEvent, aNode); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

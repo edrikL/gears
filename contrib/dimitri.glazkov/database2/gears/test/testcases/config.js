@@ -51,13 +51,15 @@ TestSuite.prototype.addFile = function(relativePath, config) {
 
 // Lists test configuration below...
 
-var TEST_TIMEOUT_SECONDS = 90 * 1000;
+var TEST_TIMEOUT_SECONDS = 4 * 60 * 1000;
 var suites = [];
 
-var consoleSuite = new TestSuite('Console');
-consoleSuite.addFile('../testcases/console_tests.js',
-                      {useWorker: true, useIFrame: true});
-suites.push(consoleSuite);
+if (!isWince) {
+  var consoleSuite = new TestSuite('Console');
+  consoleSuite.addFile('../testcases/console_tests.js',
+                        {useWorker: true, useIFrame: true});
+  suites.push(consoleSuite);
+}
 
 var databaseSuite = new TestSuite('Database');
 databaseSuite.addFile('../testcases/database_tests.js',
@@ -91,7 +93,7 @@ localServerSuite.addFile('../testcases/localserver_noworker_tests.js',
 suites.push(localServerSuite);
 
 var internalTestSuite = new TestSuite('Internal_Tests');
-internalTestSuite.addFile('../testcases/internal_tests.js', 
+internalTestSuite.addFile('../testcases/internal_tests.js',
                           {useWorker: true, useIFrame: true});
 internalTestSuite.addFile('../testcases/coercion_tests.js', 
                           {useWorker: true, useIFrame: true});
@@ -109,4 +111,6 @@ workerPoolSuite.addFile('../testcases/workerpool_onerror_tests.js',
                         {useWorker: true, useIFrame: true});
 workerPoolSuite.addFile('../testcases/workerpool_createworkerfromurl_tests.js',
                         {useWorker: false, useIFrame: true});
+workerPoolSuite.addFile('../testcases/workerpool_message_body_tests.js',
+                        {useWorker: true, useIFrame: true});
 suites.push(workerPoolSuite);

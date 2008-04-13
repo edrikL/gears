@@ -22,7 +22,7 @@
   {0xa6cf9076, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMDocumentFragment : public nsIDOMNode {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMDocumentFragment : public nsIDOMNode {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMDOCUMENTFRAGMENT_IID)

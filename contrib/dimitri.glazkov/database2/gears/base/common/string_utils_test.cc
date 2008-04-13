@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef DEBUG
@@ -35,14 +35,14 @@
 static bool TestStartsWithAndEndsWith();
 static bool TestStrUtilsReplaceAll();
 static bool TestStringCompareIgnoreCase();
-static bool TestStringUTF8FileToUrl();
+static bool TestStringMatch();
 
 bool TestStringUtils() {
   bool ok = true;
   ok &= TestStringCompareIgnoreCase();
   ok &= TestStartsWithAndEndsWith();
   ok &= TestStrUtilsReplaceAll();
-  ok &= TestStringUTF8FileToUrl();
+  ok &= TestStringMatch();
   return ok;
 }
 
@@ -74,7 +74,7 @@ static bool TestStringCompareIgnoreCase() {
     TEST_ASSERT(strcasecmp(bbb_str.c_str(), aaa_str.c_str()) > 0);
     TEST_ASSERT(strcasecmp(aaa_str.c_str(), aaaa_str.c_str()) < 0);
     TEST_ASSERT(strcasecmp(aaa_str.c_str(), empty_str.c_str()) > 0);
-    TEST_ASSERT(strcasecmp(aaa_str.c_str(), 
+    TEST_ASSERT(strcasecmp(aaa_str.c_str(),
                            aaa_upper_str.c_str()) == 0);
 
     TEST_ASSERT(StringCompareIgnoreCase(
@@ -135,7 +135,7 @@ static bool TestStrUtilsReplaceAll() {
 
   TEST_ASSERT(ReplaceAll(str, std::string("ff"), std::string(1, 0)) == 3);
   TEST_ASSERT(str.length() == 9);
-  
+
   TEST_ASSERT(ReplaceAll(str, std::string(1, 0), std::string("bb")) == 3);
   TEST_ASSERT(str == "bbaaabbaaabb");
 
@@ -189,51 +189,34 @@ static bool TestStartsWithAndEndsWith() {
   return true;
 }
 
-static bool TestStringUTF8FileToUrl() {
+static bool TestStringMatch() {
 #undef TEST_ASSERT
-#define TEST_ASSERT(b,test_name) \
+#define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
-  LOG(("TestStringUTF8FileToUrl: %s - failed (%d)\n", test_name, __LINE__)); \
+    LOG(("TestStringMatch - failed (%d)\n", __LINE__)); \
     return false; \
   } \
 }
-  struct URLCase {
-    const char *input;
-    const char *expected;
-    const char *test_name;
-  } cases[] = {
-    {"c:/Dead/Beef.txt", "file:///c:/Dead/Beef.txt", "No escapes"},
-    {"c:\\Dead\\Beef.txt", "file:///c:/Dead/Beef.txt", "Backslash"},
-    {"c:/Dead/Beef/42;.txt", "file:///c:/Dead/Beef/42%3B.txt", "Semicolon"},
-    {"c:/Dead/Beef/42#{}.txt", "file:///c:/Dead/Beef/42%23%7B%7D.txt",
-      "Disallowed Characters"},
-    {"c:/Dead/Beef/牛肉.txt",
-      "file:///c:/Dead/Beef/%E7%89%9B%E8%82%89.txt",
-      "Non-Ascii Characters"}
-  };
 
-  struct URLCase directory_cases[] = {
-    {"c:/Dead/Beef/", "file:///c:/Dead/Beef/", "Trailing slash"},
-    {"c:\\Dead\\Beef\\", "file:///c:/Dead/Beef/", "Trailing backslash"},
-    {"c:/Dead/Beef", "file:///c:/Dead/Beef/", "No trailing slash"},
-    {"c:\\Dead\\Beef", "file:///c:/Dead/Beef/", "No trailing backslash"},
-  };
+  // 8 bit characters
+  TEST_ASSERT(StringMatch("A.B.C.D", "a.b.c.d"));
+  TEST_ASSERT(StringMatch("www.TEST.GOOGLE.COM", "www.*.com"));
+  TEST_ASSERT(StringMatch("127.0.0.1", "12*.0.*1"));
+  TEST_ASSERT(StringMatch("127.1.0.21", "12*.0.*1"));
+  TEST_ASSERT(!StringMatch("127.0.0.0", "12*.0.*1"));
+  TEST_ASSERT(!StringMatch("127.0.0.0", "12*.0.*1"));
+  TEST_ASSERT(!StringMatch("127.1.1.21", "12*.0.*1"));
 
-  for (unsigned int i = 0; i < ARRAYSIZE(cases); ++i) {
-    std::string input(cases[i].input);
-    std::string output(UTF8PathToUrl(input, false));
-    TEST_ASSERT(output == cases[i].expected, cases[i].test_name);
-  }
+  // 16 bit characters
+  TEST_ASSERT(StringMatch(L"A.B.C.D", L"a.b.c.d"));
+  TEST_ASSERT(StringMatch(L"www.TEST.GOOGLE.COM", L"www.*.com"));
+  TEST_ASSERT(StringMatch(L"127.0.0.1", L"12*.0.*1"));
+  TEST_ASSERT(StringMatch(L"127.1.0.21", L"12*.0.*1"));
+  TEST_ASSERT(!StringMatch(L"127.0.0.0", L"12*.0.*1"));
+  TEST_ASSERT(!StringMatch(L"127.0.0.0", L"12*.0.*1"));
+  TEST_ASSERT(!StringMatch(L"127.1.1.21", L"12*.0.*1"));
 
-  for (unsigned int i = 0; i < ARRAYSIZE(directory_cases); ++i) {
-    std::string input(directory_cases[i].input);
-    std::string output(UTF8PathToUrl(input, true));
-    TEST_ASSERT(output == directory_cases[i].expected,
-                directory_cases[i].test_name);
-  }
-
-  LOG(("TestStringUTF8FileToUrl - passed\n"));
   return true;
 }
 #endif  // DEBUG

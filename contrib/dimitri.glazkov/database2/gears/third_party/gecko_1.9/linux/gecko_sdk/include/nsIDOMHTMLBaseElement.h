@@ -31,18 +31,18 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLBaseElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLBaseElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLBASEELEMENT_IID)
 
   /* attribute DOMString href; */
-  NS_IMETHOD GetHref(nsAString & aHref) = 0;
-  NS_IMETHOD SetHref(const nsAString & aHref) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHref(nsAString & aHref) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetHref(const nsAString & aHref) = 0;
 
   /* attribute DOMString target; */
-  NS_IMETHOD GetTarget(nsAString & aTarget) = 0;
-  NS_IMETHOD SetTarget(const nsAString & aTarget) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetTarget(const nsAString & aTarget) = 0;
 
 };
 
@@ -50,24 +50,24 @@ class NS_NO_VTABLE nsIDOMHTMLBaseElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLBASEELEMENT \
-  NS_IMETHOD GetHref(nsAString & aHref); \
-  NS_IMETHOD SetHref(const nsAString & aHref); \
-  NS_IMETHOD GetTarget(nsAString & aTarget); \
-  NS_IMETHOD SetTarget(const nsAString & aTarget); 
+  NS_SCRIPTABLE NS_IMETHOD GetHref(nsAString & aHref); \
+  NS_SCRIPTABLE NS_IMETHOD SetHref(const nsAString & aHref); \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget); \
+  NS_SCRIPTABLE NS_IMETHOD SetTarget(const nsAString & aTarget); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLBASEELEMENT(_to) \
-  NS_IMETHOD GetHref(nsAString & aHref) { return _to GetHref(aHref); } \
-  NS_IMETHOD SetHref(const nsAString & aHref) { return _to SetHref(aHref); } \
-  NS_IMETHOD GetTarget(nsAString & aTarget) { return _to GetTarget(aTarget); } \
-  NS_IMETHOD SetTarget(const nsAString & aTarget) { return _to SetTarget(aTarget); } 
+  NS_SCRIPTABLE NS_IMETHOD GetHref(nsAString & aHref) { return _to GetHref(aHref); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHref(const nsAString & aHref) { return _to SetHref(aHref); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) { return _to GetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTarget(const nsAString & aTarget) { return _to SetTarget(aTarget); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLBASEELEMENT(_to) \
-  NS_IMETHOD GetHref(nsAString & aHref) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHref(aHref); } \
-  NS_IMETHOD SetHref(const nsAString & aHref) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHref(aHref); } \
-  NS_IMETHOD GetTarget(nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTarget(aTarget); } \
-  NS_IMETHOD SetTarget(const nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTarget(aTarget); } 
+  NS_SCRIPTABLE NS_IMETHOD GetHref(nsAString & aHref) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHref(aHref); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHref(const nsAString & aHref) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHref(aHref); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTarget(const nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTarget(aTarget); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

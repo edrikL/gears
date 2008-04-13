@@ -22,7 +22,7 @@
   {0xa6cf9082, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMText : public nsIDOMCharacterData {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMText : public nsIDOMCharacterData {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMTEXT_IID)
@@ -37,7 +37,7 @@ class NS_NO_VTABLE nsIDOMText : public nsIDOMCharacterData {
  * @status FROZEN
  */
   /* nsIDOMText splitText (in unsigned long offset)  raises (DOMException); */
-  NS_IMETHOD SplitText(PRUint32 offset, nsIDOMText **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SplitText(PRUint32 offset, nsIDOMText **_retval) = 0;
 
 };
 
@@ -45,15 +45,15 @@ class NS_NO_VTABLE nsIDOMText : public nsIDOMCharacterData {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMTEXT \
-  NS_IMETHOD SplitText(PRUint32 offset, nsIDOMText **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD SplitText(PRUint32 offset, nsIDOMText **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMTEXT(_to) \
-  NS_IMETHOD SplitText(PRUint32 offset, nsIDOMText **_retval) { return _to SplitText(offset, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD SplitText(PRUint32 offset, nsIDOMText **_retval) { return _to SplitText(offset, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMTEXT(_to) \
-  NS_IMETHOD SplitText(PRUint32 offset, nsIDOMText **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->SplitText(offset, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD SplitText(PRUint32 offset, nsIDOMText **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->SplitText(offset, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

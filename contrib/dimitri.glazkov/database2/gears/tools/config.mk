@@ -69,23 +69,41 @@ endif
 
 MAKEFLAGS = --no-print-directory
 
-CPPFLAGS = -I.. -I$(OUTDIR)/$(OS)-$(ARCH)
+CPPFLAGS = -I.. -I$(COMMON_OUTDIR) -I$($(BROWSER)_OUTDIR)
 
-LIBPNG_CFLAGS = -DPNG_USER_CONFIG -DGEARS_PNG_WRITE_SUPPORT -Ithird_party/zlib
-CFLAGS += $(LIBPNG_CFLAGS)
-CPPFLAGS += $(LIBPNG_CFLAGS)
+LIBPNG_CFLAGS = -DPNG_USER_CONFIG -Ithird_party/zlib
+ZLIB_CFLAGS = -DNO_GZIP -DNO_GZCOMPRESS
+ifeq ($(OS),wince)
+ZLIB_CFLAGS += -DNO_ERRNO_H
+endif
+CFLAGS += $(LIBPNG_CFLAGS) $(ZLIB_CFLAGS)
+CPPFLAGS += $(LIBPNG_CFLAGS) $(ZLIB_CFLAGS)
 
 ifdef IS_WIN32_OR_WINCE
 # Breakpad assumes it is in the include path
 CPPFLAGS += -Ithird_party/breakpad/src
 endif
 
-# We include several different base paths of GECKO_SDK because different sets
-# of files include SDK/internal files differently.
-FF_CPPFLAGS = -DBROWSER_FF=1 -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -Ithird_party/gecko_1.8 -DMOZILLA_STRICT_API
-IE_CPPFLAGS = -DBROWSER_IE=1
-IEMOBILE_CPPFLAGS = -DBROWSER_IE=1
-NPAPI_CPPFLAGS = -DBROWSER_NPAPI=1 -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include
+ifeq ($(BROWSER),FF2)
+GECKO_BASE = third_party/gecko_1.8
+else
+GECKO_BASE = third_party/gecko_1.9
+endif
+GECKO_BIN = $(GECKO_SDK)/gecko_sdk/bin
+GECKO_LIB = $(GECKO_SDK)/gecko_sdk/lib
+# GECKO_SDK gets defined below (different for each OS).
+
+$(BROWSER)_CPPFLAGS += -DBROWSER_$(BROWSER)=1
+# TODO(cprince): Update source files so we don't need this compatibility define?
+FF2_CPPFLAGS += -DBROWSER_FF=1
+FF3_CPPFLAGS += -DBROWSER_FF=1
+
+# FF2/FF3_CPPFLAGS includes several different base paths of GECKO_SDK because
+# different sets of files include SDK/internal files differently.
+FF2_CPPFLAGS += -I$(GECKO_BASE) -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -DMOZILLA_STRICT_API
+FF3_CPPFLAGS += -I$(GECKO_BASE) -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -DMOZILLA_STRICT_API
+IE_CPPFLAGS +=
+NPAPI_CPPFLAGS += -Ithird_party/npapi -Ithird_party -Ithird_party/googleurl -Ithird_party/icu38/public/common
 
 # When adding or removing SQLITE_OMIT_* options, also update and
 # re-run ../third_party/sqlite_google/google_generate_preprocessed.sh.
@@ -102,6 +120,10 @@ LIBGD_CFLAGS += -Ithird_party/libjpeg -Ithird_party/libpng -DHAVE_CONFIG_H
 # libGD assumes it is in the include path
 CPPFLAGS += -Ithird_party/libgd
 
+# SpiderMonkey (the Firefox JS engine)'s JS_GET_CLASS macro in jsapi.h needs
+# this defined to work with the gecko SDK that we've built.
+FF_CPPFLAGS += -DJS_THREADSAFE
+
 ######################################################################
 # OS == linux
 ######################################################################
@@ -109,13 +131,17 @@ ifeq ($(OS),linux)
 CC = gcc
 CXX = g++
 OBJ_SUFFIX = .o
-MKDEP = gcc -M -MF $(@D)/$*.pp -MT $@ $(CPPFLAGS) $(FF_CPPFLAGS) $<
+MKDEP = gcc -M -MF $(@D)/$*.pp -MT $@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
 
 CPPFLAGS += -DLINUX
 LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
 SQLITE_CFLAGS += -Wno-uninitialized -DHAVE_USLEEP=1
 # for libjpeg:
 THIRD_PARTY_CFLAGS = -Wno-main
+
+# all the GTK headers using includes relative to this directory
+GTK_CFLAGS = -Ithird_party/gtk/include/gtk-2.0 -Ithird_party/gtk/include/atk-1.0 -Ithird_party/gtk/include/glib-2.0 -Ithird_party/gtk/include/pango-1.0 -Ithird_party/gtk/include/cairo -Ithird_party/gtk/lib/gtk-2.0/include -Ithird_party/gtk/lib/glib-2.0/include 
+CPPFLAGS += $(GTK_CFLAGS)
 
 COMPILE_FLAGS_dbg = -g -O0
 COMPILE_FLAGS_opt = -O2
@@ -135,9 +161,13 @@ SHLIBFLAGS = -o $@ -shared -fPIC -Bsymbolic -Wl,--version-script -Wl,tools/xpcom
 #TRANSLATE_LINKER_FILE_LIST = cat -
 #EXT_LINKER_CMD_FLAG = -Xlinker @
 
-GECKO_SDK = third_party/gecko_1.8/linux
+GECKO_SDK = $(GECKO_BASE)/linux
 
-FF_LIBS = -L $(GECKO_SDK)/gecko_sdk/bin -L $(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s -lnspr4
+# Keep these in sync:
+FF2_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s -lnspr4
+FF3_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s -lnspr4
+# Append differences here:
+# - No differences yet.
 endif
 
 ######################################################################
@@ -147,7 +177,7 @@ ifeq ($(OS),osx)
 CC = gcc -arch $(ARCH)
 CXX = g++ -arch $(ARCH)
 OBJ_SUFFIX = .o
-MKDEP = gcc -M -MF $(@D)/$*.pp -MT $@ $(CPPFLAGS) $(FF_CPPFLAGS) $<
+MKDEP = gcc -M -MF $(@D)/$*.pp -MT $@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
 
 CPPFLAGS += -DLINUX -DOS_MACOSX
 LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
@@ -158,7 +188,8 @@ THIRD_PARTY_CFLAGS = -Wno-main
 
 COMPILE_FLAGS_dbg = -g -O0
 COMPILE_FLAGS_opt = -O2
-COMPILE_FLAGS = -c -o $@ -fPIC -fmessage-length=0 -Wall -Werror $(COMPILE_FLAGS_$(MODE)) -isysroot $(OSX_SDK_ROOT)
+COMMON_COMPILE_FLAGS = -fmessage-length=0 -Wall -Werror $(COMPILE_FLAGS_$(MODE)) -isysroot $(OSX_SDK_ROOT)
+COMPILE_FLAGS = -c -o $@ -fPIC $(COMMON_COMPILE_FLAGS)
 # NS_LITERAL_STRING does not work properly without this compiler option
 COMPILE_FLAGS += -fshort-wchar
 
@@ -175,10 +206,15 @@ SHLIBFLAGS = -o $@ -bundle -Wl,-dead_strip -Wl,-exported_symbols_list -Wl,tools/
 TRANSLATE_LINKER_FILE_LIST = tr " " "\n"
 EXT_LINKER_CMD_FLAG = -Xlinker -filelist -Xlinker 
 
-GECKO_SDK = third_party/gecko_1.8/osx
+GECKO_SDK = $(GECKO_BASE)/osx
 OSX_SDK_ROOT = /Developer/SDKs/MacOSX10.4u.sdk
 
-FF_LIBS = -L$(GECKO_SDK)/gecko_sdk/bin -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4 -lxpcom_core
+# Keep these in sync:
+FF2_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4
+FF3_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lmozjs -lnspr4 -lplds4 -lplc4
+# Append differences here:
+FF2_LIBS +=  -lxpcom_core
+FF3_LIBS +=  $(GECKO_SDK)/gecko_sdk/lib/XUL $(GECKO_SDK)/gecko_sdk/lib/libxpcomglue_s.a -lsqlite3 -lsmime3 -lssl3 -lnss3 -lnssutil3 -lsoftokn3
 endif
 
 ######################################################################
@@ -195,7 +231,7 @@ MKDEP = python tools/mkdepend.py $< $@ > $(@D)/$*.pp
 CPPFLAGS_dbg = /D_DEBUG=1
 CPPFLAGS_opt =
 CPPFLAGS += /nologo /DSTRICT /D_UNICODE /DUNICODE /D_USRDLL /DWIN32 /D_WINDLL \
-            /D_CRT_SECURE_NO_DEPRECATE
+            /D_CRT_SECURE_NO_DEPRECATE /DNOMINMAX
 
 ifeq ($(OS),win32)
 # We require APPVER=5.0 for things like HWND_MESSAGE.
@@ -230,6 +266,7 @@ CPPFLAGS += /D_WIN32_WCE=0x501 \
 	    /D_ARM_ \
 	    /DPOCKETPC2003_UI_MODEL \
 	    /D_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA \
+	    /D_CE_CRT_ALLOW_WIN_MINMAX \
 	    $(CPPFLAGS_$(MODE))
 endif
 
@@ -242,8 +279,8 @@ endif
 
 LIBGD_CFLAGS += /DBGDWIN32 /wd4244 /wd4996 /wd4005 /wd4142 /wd4018 /wd4133 /wd4102
 
-COMPILE_FLAGS_dbg = /MTd /Zi
-COMPILE_FLAGS_opt = /MT  /Zi /Ox
+COMPILE_FLAGS_dbg = /MTd /Zi /Zc:wchar_t-
+COMPILE_FLAGS_opt = /MT  /Zi /Ox /Zc:wchar_t-
 COMPILE_FLAGS = /c /Fo"$@" /Fd"$(@D)/$*.pdb" /W3 /WX /GR- $(COMPILE_FLAGS_$(MODE))
 # In VC8, the way to disable exceptions is to remove all /EH* flags, and to
 # define _HAS_EXCEPTIONS=0 (for C++ headers) and _ATL_NO_EXCEPTIONS (for ATL).
@@ -265,29 +302,35 @@ DLL_PREFIX =
 endif
 DLL_SUFFIX = .dll
 MKSHLIB	= link
+MKEXE = link
 # /RELEASE adds a checksum to the PE header to aid symbol loading.
 # /DEBUG causes PDB files to be produced.
 # We want both these flags in all build modes, despite their names.
-SHLIBFLAGS_dbg =
-SHLIBFLAGS_opt = /INCREMENTAL:NO /OPT:REF /OPT:ICF
-SHLIBFLAGS_NOPDB = /NOLOGO /OUT:$@ /DLL /DEBUG /RELEASE
+LINKFLAGS_dbg =
+LINKFLAGS_opt = /INCREMENTAL:NO /OPT:REF /OPT:ICF
+LINKFLAGS = /NOLOGO /OUT:$@ /DEBUG /RELEASE
 ifeq ($(OS),win32)
-SHLIBFLAGS_NOPDB += /SUBSYSTEM:WINDOWS \
-              $(SHLIBFLAGS_$(MODE))
+LINKFLAGS += /SUBSYSTEM:WINDOWS \
+              /MACHINE:X86 \
+              $(LINKFLAGS_$(MODE))
 else
-SHLIBFLAGS_NOPDB += /SUBSYSTEM:WINDOWSCE,5.01 \
+LINKFLAGS += /SUBSYSTEM:WINDOWSCE,5.01 \
               /NODEFAULTLIB:secchk.lib \
               /MACHINE:THUMB \
-              $(SHLIBFLAGS_$(MODE))
+              $(LINKFLAGS_$(MODE))
 endif
 # We need SHLIBFLAGS_NOPDB for generating other targets than gears.dll
 # (e.g. setup.dll for Windows Mobile)
+SHLIBFLAGS_NOPDB = $(LINKFLAGS) /DLL
 SHLIBFLAGS = $(SHLIBFLAGS_NOPDB) /PDB:"$(@D)/$(MODULE).pdb"
 
-ifeq ($(OS),win32)
-FF_SHLIBFLAGS_dbg = /NODEFAULTLIB:MSVCRT
-FF_SHLIBFLAGS_opt = /NODEFAULTLIB:MSVCRT
-FF_SHLIBFLAGS = $(FF_SHLIBFLAGS_$(MODE))
+FF2_SHLIBFLAGS_dbg = /NODEFAULTLIB:MSVCRT
+FF2_SHLIBFLAGS_opt = /NODEFAULTLIB:MSVCRT
+FF2_SHLIBFLAGS = $(FF2_SHLIBFLAGS_$(MODE))
+
+FF3_SHLIBFLAGS_dbg = /NODEFAULTLIB:MSVCRT
+FF3_SHLIBFLAGS_opt = /NODEFAULTLIB:MSVCRT
+FF3_SHLIBFLAGS = $(FF3_SHLIBFLAGS_$(MODE))
 
 IE_SHLIBFLAGS_dbg =
 IE_SHLIBFLAGS_opt =
@@ -296,32 +339,29 @@ IE_SHLIBFLAGS = $(IE_SHLIBFLAGS_$(MODE)) /DEF:tools/mscom.def
 NPAPI_SHLIBFLAGS_dbg = /NODEFAULTLIB:MSVCRT
 NPAPI_SHLIBFLAGS_opt = /NODEFAULTLIB:MSVCRT
 NPAPI_SHLIBFLAGS = $(NPAPI_SHLIBFLAGS_$(MODE)) /DEF:base/npapi/npgears.def
-else
-IEMOBILE_SHLIBFLAGS_dbg =
-IEMOBILE_SHLIBFLAGS_opt =
-IEMOBILE_SHLIBFLAGS = $(IE_SHLIBFLAGS_$(MODE)) /DEF:tools/mscom.def
-endif
+
 
 TRANSLATE_LINKER_FILE_LIST = cat -
 EXT_LINKER_CMD_FLAG = @
 
-GECKO_SDK = third_party/gecko_1.8/win32
+GECKO_SDK = $(GECKO_BASE)/win32
 
-FF_LIBS = $(GECKO_SDK)/gecko_sdk/lib/xpcom.lib $(GECKO_SDK)/gecko_sdk/lib/xpcomglue_s.lib $(GECKO_SDK)/gecko_sdk/lib/nspr4.lib $(GECKO_SDK)/gecko_sdk/lib/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib
-IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib
-IEMOBILE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib cellcore.lib htmlview.lib imaging.lib toolhelp.lib aygshell.lib
-NPAPI_LIBS = sensapi.lib ole32.lib shell32.lib advapi32.lib wininet.lib
+FF2_LIBS = $(GECKO_LIB)/xpcom.lib $(GECKO_LIB)/xpcomglue_s.lib $(GECKO_LIB)/nspr4.lib $(GECKO_LIB)/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib comdlg32.lib
+FF3_LIBS = $(GECKO_LIB)/xpcom.lib $(GECKO_LIB)/xpcomglue_s.lib $(GECKO_LIB)/nspr4.lib $(GECKO_LIB)/js3250.lib ole32.lib shell32.lib shlwapi.lib advapi32.lib wininet.lib comdlg32.lib
+ifeq ($(OS),win32)
+IE_LIBS = kernel32.lib user32.lib gdi32.lib uuid.lib sensapi.lib shlwapi.lib shell32.lib advapi32.lib wininet.lib comdlg32.lib
+else # wince
+IE_LIBS = wininet.lib ceshell.lib coredll.lib corelibc.lib ole32.lib oleaut32.lib uuid.lib commctrl.lib atlosapis.lib piedocvw.lib cellcore.lib htmlview.lib imaging.lib toolhelp.lib aygshell.lib
+endif
+NPAPI_LIBS = 
 
 # Other tools specific to win32/wince builds.
-MIDL = midl
-MIDLFLAGS = $(CPPFLAGS) -env win32 -Oicf -tlb "$(@D)/$*.tlb" -h "$(@D)/$*.h" -iid "$(IE_OUTDIR)/$*_i.c" -proxy "$(IE_OUTDIR)/$*_p.c" -dlldata "$(IE_OUTDIR)/$*_d.c"
-
 RC = rc
-RCFLAGS_dbg = /DDEBUG=1
-RCFLAGS_opt = /DNDEBUG=1
-RCFLAGS = $(RCFLAGS_$(MODE)) /d "_UNICODE" /d "UNICODE" /i $(OUTDIR)/$(OS)-$(ARCH) /l 0x409 /fo"$(@D)/$*.res"
+RCFLAGS_dbg = -DDEBUG=1
+RCFLAGS_opt = -DNDEBUG=1
+RCFLAGS = $(RCFLAGS_$(MODE)) -D_UNICODE -DUNICODE -I$(COMMON_OUTDIR) -I$($(BROWSER)_OUTDIR) /l 0x409 /fo"$(@D)/$*.res"
 ifeq ($(OS),wince)
-RCFLAGS += /d "WINCE" /d "_WIN32" /d "_WIN32_WCE" /d "UNDER_CE" /n /i ../
+RCFLAGS += -DWINCE -D_WIN32 -D_WIN32_WCE -DUNDER_CE -N -I..
 endif
 
 GGUIDGEN = tools/gguidgen.exe
@@ -356,6 +396,15 @@ M4FLAGS  += -DPRODUCT_VERSION_BUILD=$(BUILD)
 M4FLAGS  += -DPRODUCT_VERSION_PATCH=$(PATCH)
 
 M4FLAGS  += -DPRODUCT_OS=$(OS)
+ifeq ($(ARCH), i386)
+M4FLAGS  += -DPRODUCT_ARCH="x86"
+else
+M4FLAGS  += -DPRODUCT_ARCH="$(ARCH)"
+endif
+
+M4FLAGS  += -DPRODUCT_GCC_VERSION="gcc3"
+M4FLAGS  += -DPRODUCT_MAINTAINER="google"
+M4FLAGS  += -DPRODUCT_TARGET_APPLICATION="firefox"
 
 # These three macros are suggested by the GNU make documentation for creating
 # a comma-separated list.

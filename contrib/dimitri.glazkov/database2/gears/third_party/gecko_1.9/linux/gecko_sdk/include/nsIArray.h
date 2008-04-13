@@ -50,7 +50,7 @@ class nsISimpleEnumerator; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIArray : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIArray : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IARRAY_IID)
@@ -61,7 +61,7 @@ class NS_NO_VTABLE nsIArray : public nsISupports {
      * number of elements in the array.
      */
   /* readonly attribute unsigned long length; */
-  NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
 
   /**
      * queryElementAt()
@@ -81,7 +81,7 @@ class NS_NO_VTABLE nsIArray : public nsISupports {
      *
      */
   /* void queryElementAt (in unsigned long index, in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
-  NS_IMETHOD QueryElementAt(PRUint32 index, const nsIID & uuid, void * *result) = 0;
+  NS_SCRIPTABLE NS_IMETHOD QueryElementAt(PRUint32 index, const nsIID & uuid, void * *result) = 0;
 
   /**
      * indexOf()
@@ -99,7 +99,7 @@ class NS_NO_VTABLE nsIArray : public nsISupports {
      * @throws NS_ERROR_NOT_FOUND if the element was not in the array.
      */
   /* unsigned long indexOf (in unsigned long startIndex, in nsISupports element); */
-  NS_IMETHOD IndexOf(PRUint32 startIndex, nsISupports *element, PRUint32 *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IndexOf(PRUint32 startIndex, nsISupports *element, PRUint32 *_retval) = 0;
 
   /**
      * enumerate the array
@@ -109,7 +109,7 @@ class NS_NO_VTABLE nsIArray : public nsISupports {
      *         to detect errors)
      */
   /* nsISimpleEnumerator enumerate (); */
-  NS_IMETHOD Enumerate(nsISimpleEnumerator **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Enumerate(nsISimpleEnumerator **_retval) = 0;
 
 };
 
@@ -117,24 +117,24 @@ class NS_NO_VTABLE nsIArray : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIARRAY \
-  NS_IMETHOD GetLength(PRUint32 *aLength); \
-  NS_IMETHOD QueryElementAt(PRUint32 index, const nsIID & uuid, void * *result); \
-  NS_IMETHOD IndexOf(PRUint32 startIndex, nsISupports *element, PRUint32 *_retval); \
-  NS_IMETHOD Enumerate(nsISimpleEnumerator **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength); \
+  NS_SCRIPTABLE NS_IMETHOD QueryElementAt(PRUint32 index, const nsIID & uuid, void * *result); \
+  NS_SCRIPTABLE NS_IMETHOD IndexOf(PRUint32 startIndex, nsISupports *element, PRUint32 *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD Enumerate(nsISimpleEnumerator **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIARRAY(_to) \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
-  NS_IMETHOD QueryElementAt(PRUint32 index, const nsIID & uuid, void * *result) { return _to QueryElementAt(index, uuid, result); } \
-  NS_IMETHOD IndexOf(PRUint32 startIndex, nsISupports *element, PRUint32 *_retval) { return _to IndexOf(startIndex, element, _retval); } \
-  NS_IMETHOD Enumerate(nsISimpleEnumerator **_retval) { return _to Enumerate(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD QueryElementAt(PRUint32 index, const nsIID & uuid, void * *result) { return _to QueryElementAt(index, uuid, result); } \
+  NS_SCRIPTABLE NS_IMETHOD IndexOf(PRUint32 startIndex, nsISupports *element, PRUint32 *_retval) { return _to IndexOf(startIndex, element, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Enumerate(nsISimpleEnumerator **_retval) { return _to Enumerate(_retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIARRAY(_to) \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
-  NS_IMETHOD QueryElementAt(PRUint32 index, const nsIID & uuid, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->QueryElementAt(index, uuid, result); } \
-  NS_IMETHOD IndexOf(PRUint32 startIndex, nsISupports *element, PRUint32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IndexOf(startIndex, element, _retval); } \
-  NS_IMETHOD Enumerate(nsISimpleEnumerator **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Enumerate(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD QueryElementAt(PRUint32 index, const nsIID & uuid, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->QueryElementAt(index, uuid, result); } \
+  NS_SCRIPTABLE NS_IMETHOD IndexOf(PRUint32 startIndex, nsISupports *element, PRUint32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IndexOf(startIndex, element, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Enumerate(nsISimpleEnumerator **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Enumerate(_retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -29,8 +29,10 @@
 #include "gears/installer/iemobile/process_restarter.h"
 #include "gears/installer/iemobile/resource.h"  // for restart dialog strings
 
-static const char16* kInternetExplorer = L"iexplore.exe";
-static const char16* kGearsSite = L"http://gears.google.com";
+static const char16* kInternetExplorerExe = L"iexplore.exe";
+// Note that this string does not appear to be localized by Microsoft.
+static const char16* kInternetExplorerWindow = L"Internet Explorer";
+static const char16* kGearsSite = L"http://gears.google.com/done.html";
 
 HINSTANCE module_instance;
 int _charmax = 255;
@@ -40,6 +42,35 @@ BOOL WINAPI DllMain(HANDLE instance, DWORD reason, LPVOID reserved) {
   module_instance = static_cast<HINSTANCE>(instance);
   return TRUE;
 }
+
+// On Smartphones the registry keys don't get properly updated on subsequent
+// installs, including autoupdates. They point to
+// '\Windows\FilesToBeDeleted\TMPxxxx.tmp' instead of the Gears DLL.
+// We rewrite them to the correct values.
+// NOTE: this fix should be left in place even if the problem does not affect
+// the current generation of Windows Mobile phones. There may still be old
+// devices in use!
+// 1. The Bho key comes from base\ie\bho.rgs.
+static const char16* kBhoKey =
+    STRING16(L"CLSID\\{E0FEFE40-FBF9-42AE-BA58-794CA7E3FB53}\\InprocServer32");
+// 2. The Factory ActiveX key comes from factory\ie\factory.rgs.
+static const char16* kFactoryActiveXKey =
+    STRING16(L"CLSID\\{C93A7319-17B3-4504-87CD-03EFC6103E6E}\\InprocServer32");
+// 3. The Html dialog key comes from ui\ie\html_dialog_bridge_iemobile.rgs.
+static const char16* kHtmlDialogActiveXKey =
+    STRING16(L"CLSID\\{134AB400-1A81-4fc8-85DD-29CD51E9D6DE}\\InprocServer32");
+// 4. The tools menu key comes from ui\ie\tools_menu_item.rgs.
+static const char16* kToolsMenuKey =
+    STRING16(L"CLSID\\{0B4350D1-055F-47A3-B112-5F2F2B0D6F08}\\InprocServer32");
+// 5. The TypeLib key comes from base\ie\interfaces.idl.
+static const char16* kTypeLibKey =
+    STRING16(L"TypeLib\\{7708913A-B86C-4D91-B325-657DD5363433}\\1.0\\0\\win32");
+// Note that the wince_cab.inf file specifies Program Files as the installation
+// directory (%CE1%).
+static const char16* kCorrectValue =
+    STRING16(L"\\Program Files\\" PRODUCT_FRIENDLY_NAME
+             L"\\" PRODUCT_SHORT_NAME L".dll");
+static void CheckRegistryKeys();
 
 // The functions below are called during the Gears installation process.
 
@@ -63,58 +94,17 @@ __declspec(dllexport) InstallerActions Install_Init(
     LPCTSTR installation_directory) {
   // We only handle the first call.
   if (!is_first_call) return kContinue;
-  // Find out if IE Mobile is running.
-  ProcessRestarter restarter(kInternetExplorer);
-  if (restarter.IsProcessRunning()) {
-    LPCTSTR message = reinterpret_cast<LPCTSTR>(LoadString(
-        module_instance,
-        IDS_RESTART_QUESTION,
-        NULL,
-        0));
-    LPCTSTR title = reinterpret_cast<LPCTSTR>(LoadString(
-        module_instance,
-        IDS_RESTART_DIALOG_TITLE,
-        NULL,
-        0));
-    // Can't communicate with the user. Something is terribly wrong. Abort.
-    if (!message || !title) return kCancel;
-
-    // Ask the user if she wants to proceed.
-    int please_restart_iemobile = MessageBox(parent_window,
-                                             message,
-                                             title,
-                                             MB_YESNO | MB_ICONQUESTION);
-    if (please_restart_iemobile == IDYES) {
-      // Try killing the process.
-      if (FAILED(restarter.KillTheProcess(
-              10,
-              ProcessRestarter::KILL_METHOD_1_WINDOW_MESSAGE |
-              ProcessRestarter::KILL_METHOD_3_TERMINATE_PROCESS,
-              NULL))) {
-        // Unfortunately we failed, so inform the user and abort.
-        LPCTSTR fail_message = reinterpret_cast<LPCTSTR>(LoadString(
-            module_instance,
-            IDS_STOP_FAILURE_MESSAGE,
-            NULL,
-            0));
-
-        if (!fail_message) return kCancel;
-
-        MessageBox(parent_window, fail_message, title, MB_OK);
-        return kCancel;
-      }
-      return kContinue;
-    } else {
-      // The user chose to cancel the installation.
-      return kCancel;
-    }
-  }
-  // IE Mobile wasn't running.
+  ProcessRestarter restarter(kInternetExplorerExe, kInternetExplorerWindow);
+  restarter.KillTheProcess(
+      1000,
+      ProcessRestarter::KILL_METHOD_1_WINDOW_MESSAGE |
+      ProcessRestarter::KILL_METHOD_3_TERMINATE_PROCESS,
+      NULL);  
   return kContinue;
 }
 
 // This is called after installation completed. We start Internet Explorer
-// and point it to http://gears.google.com.
+// and point it to the Gears site.
 __declspec(dllexport) InstallerActions Install_Exit(
     HWND    parent_window,
     LPCTSTR final_install_dir,
@@ -123,9 +113,15 @@ __declspec(dllexport) InstallerActions Install_Exit(
     WORD    failed_registry_keys,
     WORD    failed_registry_values,
     WORD    failed_shortcuts) {
-  ProcessRestarter restarter(kInternetExplorer);
-  if (FAILED(restarter.StartTheProcess(kGearsSite))) {
-    // Unfortunately we failed, so inform the user.
+  ProcessRestarter restarter(kInternetExplorerExe, kInternetExplorerWindow);
+  bool is_running = false;
+  HRESULT result = restarter.IsProcessRunning(&is_running);
+  if ((SUCCEEDED(result) && is_running) || FAILED(result)) {
+    // We could not kill IE or we could not even tell if it was running.
+    // Tell the user he needs to reboot. This is because Gears may appear to be
+    // working (creations of Gears objects will succeed) but the HttpHandler
+    // and the Settings menu entry will not be registered with IE.
+    // This leaves Gears in an inconsistent state until IE is restarted.
     LPCTSTR title = reinterpret_cast<LPCTSTR>(LoadString(
         module_instance,
         IDS_RESTART_DIALOG_TITLE,
@@ -133,14 +129,33 @@ __declspec(dllexport) InstallerActions Install_Exit(
         0));
     LPCTSTR fail_message = reinterpret_cast<LPCTSTR>(LoadString(
         module_instance,
-        IDS_START_FAILURE_MESSAGE,
+        IDS_REBOOT_MESSAGE,
         NULL,
         0));
 
     if (!fail_message || !title) return kContinue;
 
-    MessageBox(parent_window, fail_message, title, MB_OK);
+    MessageBox(parent_window, fail_message, title, MB_OK | MB_ICONEXCLAMATION);
+  } else {
+    if (FAILED(restarter.StartTheProcess(kGearsSite))) {
+      // Unfortunately we failed, so inform the user.
+      LPCTSTR title = reinterpret_cast<LPCTSTR>(LoadString(
+          module_instance,
+          IDS_RESTART_DIALOG_TITLE,
+          NULL,
+          0));
+      LPCTSTR fail_message = reinterpret_cast<LPCTSTR>(LoadString(
+          module_instance,
+          IDS_START_FAILURE_MESSAGE,
+          NULL,
+          0));
+
+      if (!fail_message || !title) return kContinue;
+
+      MessageBox(parent_window, fail_message, title, MB_OK);
+    }
   }
+  CheckRegistryKeys();
   return kContinue;
 }
 
@@ -156,5 +171,50 @@ __declspec(dllexport) InstallerActions Uninstall_Exit(HWND parent_window) {
   // Not interested.
   return kContinue;
 }
+
+static char16* ReadValue(CRegKey* key) {  
+  ULONG size = 0;
+  if (key->QueryStringValue(L"", NULL, &size) != ERROR_SUCCESS) return NULL;
+  char16* buffer = new char16[size+1];
+  ZeroMemory(buffer, size + 1);
+  if (key->QueryStringValue(L"", buffer, &size) != ERROR_SUCCESS) {
+    delete [] buffer;
+    return NULL;
+  }
+  return buffer;
+}
+
+static void ProcessKey(const char16* keyString) {
+  CRegKey key;
+  if (key.Open(HKEY_CLASSES_ROOT, keyString, KEY_READ) != ERROR_SUCCESS) {
+    // If the key doesn't exist at all, something else may have gone wrong.
+    // We don't attempt any modification in such cases and just return.
+    return;
+  }
+  char16* value = ReadValue(&key);
+  // If the value exists but doesn't contain the word "gears", we rewrite it.
+  if (value != NULL && wcsstr(value, PRODUCT_SHORT_NAME) == NULL) {
+    key.SetStringValue(NULL, kCorrectValue);
+  }
+  delete [] value;
+  key.Close();
+}
+
+static void CheckRegistryKeys() {
+  // We open each of the five keys and look at their default string values.
+  // If they are not what they should be (e.g. they point to FilesToBeDeleted),
+  // we rewrite them programatically.
+  // 1: The BHO
+  ProcessKey(kBhoKey);
+  // 2: The Factory ActiveX
+  ProcessKey(kFactoryActiveXKey);
+  // 3: The html dialog ActiveX
+  ProcessKey(kHtmlDialogActiveXKey);
+  // 4: The Tools menu entry
+  ProcessKey(kToolsMenuKey);
+  // 5: The TypeLib key
+  ProcessKey(kTypeLibKey);
+}
+
 };  // extern "C"
 #endif  // #ifdef WINCE

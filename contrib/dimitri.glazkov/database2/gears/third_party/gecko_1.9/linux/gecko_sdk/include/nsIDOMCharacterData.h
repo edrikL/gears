@@ -22,7 +22,7 @@
   {0xa6cf9072, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMCharacterData : public nsIDOMNode {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMCharacterData : public nsIDOMNode {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMCHARACTERDATA_IID)
@@ -37,26 +37,26 @@ class NS_NO_VTABLE nsIDOMCharacterData : public nsIDOMNode {
  * @status FROZEN
  */
   /* attribute DOMString data; */
-  NS_IMETHOD GetData(nsAString & aData) = 0;
-  NS_IMETHOD SetData(const nsAString & aData) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetData(nsAString & aData) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetData(const nsAString & aData) = 0;
 
   /* readonly attribute unsigned long length; */
-  NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
 
   /* DOMString substringData (in unsigned long offset, in unsigned long count)  raises (DOMException); */
-  NS_IMETHOD SubstringData(PRUint32 offset, PRUint32 count, nsAString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SubstringData(PRUint32 offset, PRUint32 count, nsAString & _retval) = 0;
 
   /* void appendData (in DOMString arg)  raises (DOMException); */
-  NS_IMETHOD AppendData(const nsAString & arg) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AppendData(const nsAString & arg) = 0;
 
   /* void insertData (in unsigned long offset, in DOMString arg)  raises (DOMException); */
-  NS_IMETHOD InsertData(PRUint32 offset, const nsAString & arg) = 0;
+  NS_SCRIPTABLE NS_IMETHOD InsertData(PRUint32 offset, const nsAString & arg) = 0;
 
   /* void deleteData (in unsigned long offset, in unsigned long count)  raises (DOMException); */
-  NS_IMETHOD DeleteData(PRUint32 offset, PRUint32 count) = 0;
+  NS_SCRIPTABLE NS_IMETHOD DeleteData(PRUint32 offset, PRUint32 count) = 0;
 
   /* void replaceData (in unsigned long offset, in unsigned long count, in DOMString arg)  raises (DOMException); */
-  NS_IMETHOD ReplaceData(PRUint32 offset, PRUint32 count, const nsAString & arg) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ReplaceData(PRUint32 offset, PRUint32 count, const nsAString & arg) = 0;
 
 };
 
@@ -64,36 +64,36 @@ class NS_NO_VTABLE nsIDOMCharacterData : public nsIDOMNode {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMCHARACTERDATA \
-  NS_IMETHOD GetData(nsAString & aData); \
-  NS_IMETHOD SetData(const nsAString & aData); \
-  NS_IMETHOD GetLength(PRUint32 *aLength); \
-  NS_IMETHOD SubstringData(PRUint32 offset, PRUint32 count, nsAString & _retval); \
-  NS_IMETHOD AppendData(const nsAString & arg); \
-  NS_IMETHOD InsertData(PRUint32 offset, const nsAString & arg); \
-  NS_IMETHOD DeleteData(PRUint32 offset, PRUint32 count); \
-  NS_IMETHOD ReplaceData(PRUint32 offset, PRUint32 count, const nsAString & arg); 
+  NS_SCRIPTABLE NS_IMETHOD GetData(nsAString & aData); \
+  NS_SCRIPTABLE NS_IMETHOD SetData(const nsAString & aData); \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength); \
+  NS_SCRIPTABLE NS_IMETHOD SubstringData(PRUint32 offset, PRUint32 count, nsAString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD AppendData(const nsAString & arg); \
+  NS_SCRIPTABLE NS_IMETHOD InsertData(PRUint32 offset, const nsAString & arg); \
+  NS_SCRIPTABLE NS_IMETHOD DeleteData(PRUint32 offset, PRUint32 count); \
+  NS_SCRIPTABLE NS_IMETHOD ReplaceData(PRUint32 offset, PRUint32 count, const nsAString & arg); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMCHARACTERDATA(_to) \
-  NS_IMETHOD GetData(nsAString & aData) { return _to GetData(aData); } \
-  NS_IMETHOD SetData(const nsAString & aData) { return _to SetData(aData); } \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
-  NS_IMETHOD SubstringData(PRUint32 offset, PRUint32 count, nsAString & _retval) { return _to SubstringData(offset, count, _retval); } \
-  NS_IMETHOD AppendData(const nsAString & arg) { return _to AppendData(arg); } \
-  NS_IMETHOD InsertData(PRUint32 offset, const nsAString & arg) { return _to InsertData(offset, arg); } \
-  NS_IMETHOD DeleteData(PRUint32 offset, PRUint32 count) { return _to DeleteData(offset, count); } \
-  NS_IMETHOD ReplaceData(PRUint32 offset, PRUint32 count, const nsAString & arg) { return _to ReplaceData(offset, count, arg); } 
+  NS_SCRIPTABLE NS_IMETHOD GetData(nsAString & aData) { return _to GetData(aData); } \
+  NS_SCRIPTABLE NS_IMETHOD SetData(const nsAString & aData) { return _to SetData(aData); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD SubstringData(PRUint32 offset, PRUint32 count, nsAString & _retval) { return _to SubstringData(offset, count, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD AppendData(const nsAString & arg) { return _to AppendData(arg); } \
+  NS_SCRIPTABLE NS_IMETHOD InsertData(PRUint32 offset, const nsAString & arg) { return _to InsertData(offset, arg); } \
+  NS_SCRIPTABLE NS_IMETHOD DeleteData(PRUint32 offset, PRUint32 count) { return _to DeleteData(offset, count); } \
+  NS_SCRIPTABLE NS_IMETHOD ReplaceData(PRUint32 offset, PRUint32 count, const nsAString & arg) { return _to ReplaceData(offset, count, arg); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMCHARACTERDATA(_to) \
-  NS_IMETHOD GetData(nsAString & aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetData(aData); } \
-  NS_IMETHOD SetData(const nsAString & aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetData(aData); } \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
-  NS_IMETHOD SubstringData(PRUint32 offset, PRUint32 count, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->SubstringData(offset, count, _retval); } \
-  NS_IMETHOD AppendData(const nsAString & arg) { return !_to ? NS_ERROR_NULL_POINTER : _to->AppendData(arg); } \
-  NS_IMETHOD InsertData(PRUint32 offset, const nsAString & arg) { return !_to ? NS_ERROR_NULL_POINTER : _to->InsertData(offset, arg); } \
-  NS_IMETHOD DeleteData(PRUint32 offset, PRUint32 count) { return !_to ? NS_ERROR_NULL_POINTER : _to->DeleteData(offset, count); } \
-  NS_IMETHOD ReplaceData(PRUint32 offset, PRUint32 count, const nsAString & arg) { return !_to ? NS_ERROR_NULL_POINTER : _to->ReplaceData(offset, count, arg); } 
+  NS_SCRIPTABLE NS_IMETHOD GetData(nsAString & aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetData(aData); } \
+  NS_SCRIPTABLE NS_IMETHOD SetData(const nsAString & aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetData(aData); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD SubstringData(PRUint32 offset, PRUint32 count, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->SubstringData(offset, count, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD AppendData(const nsAString & arg) { return !_to ? NS_ERROR_NULL_POINTER : _to->AppendData(arg); } \
+  NS_SCRIPTABLE NS_IMETHOD InsertData(PRUint32 offset, const nsAString & arg) { return !_to ? NS_ERROR_NULL_POINTER : _to->InsertData(offset, arg); } \
+  NS_SCRIPTABLE NS_IMETHOD DeleteData(PRUint32 offset, PRUint32 count) { return !_to ? NS_ERROR_NULL_POINTER : _to->DeleteData(offset, count); } \
+  NS_SCRIPTABLE NS_IMETHOD ReplaceData(PRUint32 offset, PRUint32 count, const nsAString & arg) { return !_to ? NS_ERROR_NULL_POINTER : _to->ReplaceData(offset, count, arg); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

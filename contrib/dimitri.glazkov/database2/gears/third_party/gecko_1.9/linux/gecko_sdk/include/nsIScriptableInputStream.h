@@ -30,7 +30,7 @@ class nsIInputStream; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIScriptableInputStream : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIScriptableInputStream : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTABLEINPUTSTREAM_IID)
@@ -39,7 +39,7 @@ class NS_NO_VTABLE nsIScriptableInputStream : public nsISupports {
      * Closes the stream. 
      */
   /* void close (); */
-  NS_IMETHOD Close(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Close(void) = 0;
 
   /**
      * Wrap the given nsIInputStream with this nsIScriptableInputStream. 
@@ -47,7 +47,7 @@ class NS_NO_VTABLE nsIScriptableInputStream : public nsISupports {
      * @param aInputStream parameter providing the stream to wrap 
      */
   /* void init (in nsIInputStream aInputStream); */
-  NS_IMETHOD Init(nsIInputStream *aInputStream) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Init(nsIInputStream *aInputStream) = 0;
 
   /**
      * Return the number of bytes currently available in the stream 
@@ -57,7 +57,7 @@ class NS_NO_VTABLE nsIScriptableInputStream : public nsISupports {
      * @throws NS_BASE_STREAM_CLOSED if called after the stream has been closed
      */
   /* unsigned long available (); */
-  NS_IMETHOD Available(PRUint32 *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Available(PRUint32 *_retval) = 0;
 
   /**
      * Read data from the stream.
@@ -73,7 +73,7 @@ class NS_NO_VTABLE nsIScriptableInputStream : public nsISupports {
      * @throws NS_ERROR_NOT_INITIALIZED if init was not called
      */
   /* string read (in unsigned long aCount); */
-  NS_IMETHOD Read(PRUint32 aCount, char **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Read(PRUint32 aCount, char **_retval) = 0;
 
 };
 
@@ -81,24 +81,24 @@ class NS_NO_VTABLE nsIScriptableInputStream : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSISCRIPTABLEINPUTSTREAM \
-  NS_IMETHOD Close(void); \
-  NS_IMETHOD Init(nsIInputStream *aInputStream); \
-  NS_IMETHOD Available(PRUint32 *_retval); \
-  NS_IMETHOD Read(PRUint32 aCount, char **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD Close(void); \
+  NS_SCRIPTABLE NS_IMETHOD Init(nsIInputStream *aInputStream); \
+  NS_SCRIPTABLE NS_IMETHOD Available(PRUint32 *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD Read(PRUint32 aCount, char **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSISCRIPTABLEINPUTSTREAM(_to) \
-  NS_IMETHOD Close(void) { return _to Close(); } \
-  NS_IMETHOD Init(nsIInputStream *aInputStream) { return _to Init(aInputStream); } \
-  NS_IMETHOD Available(PRUint32 *_retval) { return _to Available(_retval); } \
-  NS_IMETHOD Read(PRUint32 aCount, char **_retval) { return _to Read(aCount, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD Close(void) { return _to Close(); } \
+  NS_SCRIPTABLE NS_IMETHOD Init(nsIInputStream *aInputStream) { return _to Init(aInputStream); } \
+  NS_SCRIPTABLE NS_IMETHOD Available(PRUint32 *_retval) { return _to Available(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Read(PRUint32 aCount, char **_retval) { return _to Read(aCount, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSISCRIPTABLEINPUTSTREAM(_to) \
-  NS_IMETHOD Close(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Close(); } \
-  NS_IMETHOD Init(nsIInputStream *aInputStream) { return !_to ? NS_ERROR_NULL_POINTER : _to->Init(aInputStream); } \
-  NS_IMETHOD Available(PRUint32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Available(_retval); } \
-  NS_IMETHOD Read(PRUint32 aCount, char **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Read(aCount, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD Close(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Close(); } \
+  NS_SCRIPTABLE NS_IMETHOD Init(nsIInputStream *aInputStream) { return !_to ? NS_ERROR_NULL_POINTER : _to->Init(aInputStream); } \
+  NS_SCRIPTABLE NS_IMETHOD Available(PRUint32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Available(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Read(PRUint32 aCount, char **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Read(aCount, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

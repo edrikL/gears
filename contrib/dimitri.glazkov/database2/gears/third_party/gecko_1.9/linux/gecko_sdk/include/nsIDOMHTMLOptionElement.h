@@ -31,39 +31,39 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLOptionElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLOptionElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLOPTIONELEMENT_IID)
 
   /* readonly attribute nsIDOMHTMLFormElement form; */
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) = 0;
 
   /* attribute boolean defaultSelected; */
-  NS_IMETHOD GetDefaultSelected(PRBool *aDefaultSelected) = 0;
-  NS_IMETHOD SetDefaultSelected(PRBool aDefaultSelected) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultSelected(PRBool *aDefaultSelected) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDefaultSelected(PRBool aDefaultSelected) = 0;
 
   /* readonly attribute DOMString text; */
-  NS_IMETHOD GetText(nsAString & aText) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetText(nsAString & aText) = 0;
 
   /* readonly attribute long index; */
-  NS_IMETHOD GetIndex(PRInt32 *aIndex) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIndex(PRInt32 *aIndex) = 0;
 
   /* attribute boolean disabled; */
-  NS_IMETHOD GetDisabled(PRBool *aDisabled) = 0;
-  NS_IMETHOD SetDisabled(PRBool aDisabled) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled) = 0;
 
   /* attribute DOMString label; */
-  NS_IMETHOD GetLabel(nsAString & aLabel) = 0;
-  NS_IMETHOD SetLabel(const nsAString & aLabel) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLabel(nsAString & aLabel) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetLabel(const nsAString & aLabel) = 0;
 
   /* attribute boolean selected; */
-  NS_IMETHOD GetSelected(PRBool *aSelected) = 0;
-  NS_IMETHOD SetSelected(PRBool aSelected) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSelected(PRBool *aSelected) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSelected(PRBool aSelected) = 0;
 
   /* attribute DOMString value; */
-  NS_IMETHOD GetValue(nsAString & aValue) = 0;
-  NS_IMETHOD SetValue(const nsAString & aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsAString & aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetValue(const nsAString & aValue) = 0;
 
 };
 
@@ -71,51 +71,51 @@ class NS_NO_VTABLE nsIDOMHTMLOptionElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLOPTIONELEMENT \
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm); \
-  NS_IMETHOD GetDefaultSelected(PRBool *aDefaultSelected); \
-  NS_IMETHOD SetDefaultSelected(PRBool aDefaultSelected); \
-  NS_IMETHOD GetText(nsAString & aText); \
-  NS_IMETHOD GetIndex(PRInt32 *aIndex); \
-  NS_IMETHOD GetDisabled(PRBool *aDisabled); \
-  NS_IMETHOD SetDisabled(PRBool aDisabled); \
-  NS_IMETHOD GetLabel(nsAString & aLabel); \
-  NS_IMETHOD SetLabel(const nsAString & aLabel); \
-  NS_IMETHOD GetSelected(PRBool *aSelected); \
-  NS_IMETHOD SetSelected(PRBool aSelected); \
-  NS_IMETHOD GetValue(nsAString & aValue); \
-  NS_IMETHOD SetValue(const nsAString & aValue); 
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm); \
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultSelected(PRBool *aDefaultSelected); \
+  NS_SCRIPTABLE NS_IMETHOD SetDefaultSelected(PRBool aDefaultSelected); \
+  NS_SCRIPTABLE NS_IMETHOD GetText(nsAString & aText); \
+  NS_SCRIPTABLE NS_IMETHOD GetIndex(PRInt32 *aIndex); \
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled); \
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled); \
+  NS_SCRIPTABLE NS_IMETHOD GetLabel(nsAString & aLabel); \
+  NS_SCRIPTABLE NS_IMETHOD SetLabel(const nsAString & aLabel); \
+  NS_SCRIPTABLE NS_IMETHOD GetSelected(PRBool *aSelected); \
+  NS_SCRIPTABLE NS_IMETHOD SetSelected(PRBool aSelected); \
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsAString & aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetValue(const nsAString & aValue); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLOPTIONELEMENT(_to) \
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return _to GetForm(aForm); } \
-  NS_IMETHOD GetDefaultSelected(PRBool *aDefaultSelected) { return _to GetDefaultSelected(aDefaultSelected); } \
-  NS_IMETHOD SetDefaultSelected(PRBool aDefaultSelected) { return _to SetDefaultSelected(aDefaultSelected); } \
-  NS_IMETHOD GetText(nsAString & aText) { return _to GetText(aText); } \
-  NS_IMETHOD GetIndex(PRInt32 *aIndex) { return _to GetIndex(aIndex); } \
-  NS_IMETHOD GetDisabled(PRBool *aDisabled) { return _to GetDisabled(aDisabled); } \
-  NS_IMETHOD SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
-  NS_IMETHOD GetLabel(nsAString & aLabel) { return _to GetLabel(aLabel); } \
-  NS_IMETHOD SetLabel(const nsAString & aLabel) { return _to SetLabel(aLabel); } \
-  NS_IMETHOD GetSelected(PRBool *aSelected) { return _to GetSelected(aSelected); } \
-  NS_IMETHOD SetSelected(PRBool aSelected) { return _to SetSelected(aSelected); } \
-  NS_IMETHOD GetValue(nsAString & aValue) { return _to GetValue(aValue); } \
-  NS_IMETHOD SetValue(const nsAString & aValue) { return _to SetValue(aValue); } 
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return _to GetForm(aForm); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultSelected(PRBool *aDefaultSelected) { return _to GetDefaultSelected(aDefaultSelected); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDefaultSelected(PRBool aDefaultSelected) { return _to SetDefaultSelected(aDefaultSelected); } \
+  NS_SCRIPTABLE NS_IMETHOD GetText(nsAString & aText) { return _to GetText(aText); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIndex(PRInt32 *aIndex) { return _to GetIndex(aIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled) { return _to GetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLabel(nsAString & aLabel) { return _to GetLabel(aLabel); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLabel(const nsAString & aLabel) { return _to SetLabel(aLabel); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSelected(PRBool *aSelected) { return _to GetSelected(aSelected); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSelected(PRBool aSelected) { return _to SetSelected(aSelected); } \
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsAString & aValue) { return _to GetValue(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetValue(const nsAString & aValue) { return _to SetValue(aValue); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLOPTIONELEMENT(_to) \
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetForm(aForm); } \
-  NS_IMETHOD GetDefaultSelected(PRBool *aDefaultSelected) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDefaultSelected(aDefaultSelected); } \
-  NS_IMETHOD SetDefaultSelected(PRBool aDefaultSelected) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDefaultSelected(aDefaultSelected); } \
-  NS_IMETHOD GetText(nsAString & aText) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetText(aText); } \
-  NS_IMETHOD GetIndex(PRInt32 *aIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIndex(aIndex); } \
-  NS_IMETHOD GetDisabled(PRBool *aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDisabled(aDisabled); } \
-  NS_IMETHOD SetDisabled(PRBool aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDisabled(aDisabled); } \
-  NS_IMETHOD GetLabel(nsAString & aLabel) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLabel(aLabel); } \
-  NS_IMETHOD SetLabel(const nsAString & aLabel) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLabel(aLabel); } \
-  NS_IMETHOD GetSelected(PRBool *aSelected) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSelected(aSelected); } \
-  NS_IMETHOD SetSelected(PRBool aSelected) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSelected(aSelected); } \
-  NS_IMETHOD GetValue(nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetValue(aValue); } \
-  NS_IMETHOD SetValue(const nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetValue(aValue); } 
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetForm(aForm); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultSelected(PRBool *aDefaultSelected) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDefaultSelected(aDefaultSelected); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDefaultSelected(PRBool aDefaultSelected) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDefaultSelected(aDefaultSelected); } \
+  NS_SCRIPTABLE NS_IMETHOD GetText(nsAString & aText) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetText(aText); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIndex(PRInt32 *aIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIndex(aIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLabel(nsAString & aLabel) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLabel(aLabel); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLabel(const nsAString & aLabel) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLabel(aLabel); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSelected(PRBool *aSelected) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSelected(aSelected); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSelected(PRBool aSelected) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSelected(aSelected); } \
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetValue(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetValue(const nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetValue(aValue); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

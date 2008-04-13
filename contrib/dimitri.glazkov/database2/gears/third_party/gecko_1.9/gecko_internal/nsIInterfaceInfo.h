@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/xpcom/reflect/xptinfo/public/nsIInterfaceInfo.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/xpcom/reflect/xptinfo/public/nsIInterfaceInfo.idl
  */
 
 #ifndef __gen_nsIInterfaceInfo_h__

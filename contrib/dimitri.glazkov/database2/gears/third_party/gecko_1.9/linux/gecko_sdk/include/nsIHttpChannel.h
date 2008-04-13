@@ -33,7 +33,7 @@ class nsIHttpHeaderVisitor; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIHttpChannel : public nsIChannel {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIHttpChannel : public nsIChannel {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTTPCHANNEL_IID)
@@ -57,8 +57,8 @@ class NS_NO_VTABLE nsIHttpChannel : public nsIChannel {
      * @throws NS_ERROR_IN_PROGRESS if set after the channel has been opened.
      */
   /* attribute ACString requestMethod; */
-  NS_IMETHOD GetRequestMethod(nsACString & aRequestMethod) = 0;
-  NS_IMETHOD SetRequestMethod(const nsACString & aRequestMethod) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRequestMethod(nsACString & aRequestMethod) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetRequestMethod(const nsACString & aRequestMethod) = 0;
 
   /**
      * Get/set the HTTP referrer URI.  This is the address (URI) of the
@@ -76,8 +76,8 @@ class NS_NO_VTABLE nsIHttpChannel : public nsIChannel {
      * @throws NS_ERROR_IN_PROGRESS if set after the channel has been opened.
      */
   /* attribute nsIURI referrer; */
-  NS_IMETHOD GetReferrer(nsIURI * *aReferrer) = 0;
-  NS_IMETHOD SetReferrer(nsIURI * aReferrer) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetReferrer(nsIURI * *aReferrer) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetReferrer(nsIURI * aReferrer) = 0;
 
   /**
      * Get the value of a particular request header.
@@ -90,7 +90,7 @@ class NS_NO_VTABLE nsIHttpChannel : public nsIChannel {
      * @throws NS_ERROR_NOT_AVAILABLE if the header is not set.
      */
   /* ACString getRequestHeader (in ACString aHeader); */
-  NS_IMETHOD GetRequestHeader(const nsACString & aHeader, nsACString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRequestHeader(const nsACString & aHeader, nsACString & _retval) = 0;
 
   /**
      * Set the value of a particular request header.
@@ -120,7 +120,7 @@ class NS_NO_VTABLE nsIHttpChannel : public nsIChannel {
      *         opened.
      */
   /* void setRequestHeader (in ACString aHeader, in ACString aValue, in boolean aMerge); */
-  NS_IMETHOD SetRequestHeader(const nsACString & aHeader, const nsACString & aValue, PRBool aMerge) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetRequestHeader(const nsACString & aHeader, const nsACString & aValue, PRBool aMerge) = 0;
 
   /**
      * Call this method to visit all request headers.  Calling setRequestHeader
@@ -130,7 +130,7 @@ class NS_NO_VTABLE nsIHttpChannel : public nsIChannel {
      *        the header visitor instance.
      */
   /* void visitRequestHeaders (in nsIHttpHeaderVisitor aVisitor); */
-  NS_IMETHOD VisitRequestHeaders(nsIHttpHeaderVisitor *aVisitor) = 0;
+  NS_SCRIPTABLE NS_IMETHOD VisitRequestHeaders(nsIHttpHeaderVisitor *aVisitor) = 0;
 
   /**
      * This attribute is a hint to the channel to indicate whether or not
@@ -147,8 +147,8 @@ class NS_NO_VTABLE nsIHttpChannel : public nsIChannel {
      * @throws NS_ERROR_FAILURE if set after the channel has been opened.
      */
   /* attribute boolean allowPipelining; */
-  NS_IMETHOD GetAllowPipelining(PRBool *aAllowPipelining) = 0;
-  NS_IMETHOD SetAllowPipelining(PRBool aAllowPipelining) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAllowPipelining(PRBool *aAllowPipelining) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAllowPipelining(PRBool aAllowPipelining) = 0;
 
   /**
      * This attribute specifies the number of redirects this channel is allowed
@@ -163,8 +163,8 @@ class NS_NO_VTABLE nsIHttpChannel : public nsIChannel {
      * implementation).
      */
   /* attribute unsigned long redirectionLimit; */
-  NS_IMETHOD GetRedirectionLimit(PRUint32 *aRedirectionLimit) = 0;
-  NS_IMETHOD SetRedirectionLimit(PRUint32 aRedirectionLimit) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRedirectionLimit(PRUint32 *aRedirectionLimit) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetRedirectionLimit(PRUint32 aRedirectionLimit) = 0;
 
   /**************************************************************************
      * RESPONSE INFO
@@ -178,7 +178,7 @@ class NS_NO_VTABLE nsIHttpChannel : public nsIChannel {
      *         has been received (before onStartRequest).
      */
   /* readonly attribute unsigned long responseStatus; */
-  NS_IMETHOD GetResponseStatus(PRUint32 *aResponseStatus) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetResponseStatus(PRUint32 *aResponseStatus) = 0;
 
   /**
      * Get the HTTP response status text (e.g., "OK").
@@ -191,7 +191,7 @@ class NS_NO_VTABLE nsIHttpChannel : public nsIChannel {
      *         has been received (before onStartRequest).
      */
   /* readonly attribute ACString responseStatusText; */
-  NS_IMETHOD GetResponseStatusText(nsACString & aResponseStatusText) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetResponseStatusText(nsACString & aResponseStatusText) = 0;
 
   /**
      * Returns true if the HTTP response code indicates success.  The value of
@@ -207,7 +207,7 @@ class NS_NO_VTABLE nsIHttpChannel : public nsIChannel {
      *         has been received (before onStartRequest).
      */
   /* readonly attribute boolean requestSucceeded; */
-  NS_IMETHOD GetRequestSucceeded(PRBool *aRequestSucceeded) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRequestSucceeded(PRBool *aRequestSucceeded) = 0;
 
   /**
      * Get the value of a particular response header.
@@ -223,7 +223,7 @@ class NS_NO_VTABLE nsIHttpChannel : public nsIChannel {
      *         not set in the response.
      */
   /* ACString getResponseHeader (in ACString header); */
-  NS_IMETHOD GetResponseHeader(const nsACString & header, nsACString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetResponseHeader(const nsACString & header, nsACString & _retval) = 0;
 
   /**
      * Set the value of a particular response header.
@@ -253,7 +253,7 @@ class NS_NO_VTABLE nsIHttpChannel : public nsIChannel {
      *         header is not allowed.
      */
   /* void setResponseHeader (in ACString header, in ACString value, in boolean merge); */
-  NS_IMETHOD SetResponseHeader(const nsACString & header, const nsACString & value, PRBool merge) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetResponseHeader(const nsACString & header, const nsACString & value, PRBool merge) = 0;
 
   /**
      * Call this method to visit all response headers.  Calling
@@ -267,7 +267,7 @@ class NS_NO_VTABLE nsIHttpChannel : public nsIChannel {
      *         has been received (before onStartRequest).
      */
   /* void visitResponseHeaders (in nsIHttpHeaderVisitor aVisitor); */
-  NS_IMETHOD VisitResponseHeaders(nsIHttpHeaderVisitor *aVisitor) = 0;
+  NS_SCRIPTABLE NS_IMETHOD VisitResponseHeaders(nsIHttpHeaderVisitor *aVisitor) = 0;
 
   /**
      * Returns true if the server sent a "Cache-Control: no-store" response
@@ -277,7 +277,7 @@ class NS_NO_VTABLE nsIHttpChannel : public nsIChannel {
      *         has been received (before onStartRequest).
      */
   /* boolean isNoStoreResponse (); */
-  NS_IMETHOD IsNoStoreResponse(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsNoStoreResponse(PRBool *_retval) = 0;
 
   /**
      * Returns true if the server sent the equivalent of a "Cache-control:
@@ -289,7 +289,7 @@ class NS_NO_VTABLE nsIHttpChannel : public nsIChannel {
      *         has been received (before onStartRequest).
      */
   /* boolean isNoCacheResponse (); */
-  NS_IMETHOD IsNoCacheResponse(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsNoCacheResponse(PRBool *_retval) = 0;
 
 };
 
@@ -297,69 +297,69 @@ class NS_NO_VTABLE nsIHttpChannel : public nsIChannel {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIHTTPCHANNEL \
-  NS_IMETHOD GetRequestMethod(nsACString & aRequestMethod); \
-  NS_IMETHOD SetRequestMethod(const nsACString & aRequestMethod); \
-  NS_IMETHOD GetReferrer(nsIURI * *aReferrer); \
-  NS_IMETHOD SetReferrer(nsIURI * aReferrer); \
-  NS_IMETHOD GetRequestHeader(const nsACString & aHeader, nsACString & _retval); \
-  NS_IMETHOD SetRequestHeader(const nsACString & aHeader, const nsACString & aValue, PRBool aMerge); \
-  NS_IMETHOD VisitRequestHeaders(nsIHttpHeaderVisitor *aVisitor); \
-  NS_IMETHOD GetAllowPipelining(PRBool *aAllowPipelining); \
-  NS_IMETHOD SetAllowPipelining(PRBool aAllowPipelining); \
-  NS_IMETHOD GetRedirectionLimit(PRUint32 *aRedirectionLimit); \
-  NS_IMETHOD SetRedirectionLimit(PRUint32 aRedirectionLimit); \
-  NS_IMETHOD GetResponseStatus(PRUint32 *aResponseStatus); \
-  NS_IMETHOD GetResponseStatusText(nsACString & aResponseStatusText); \
-  NS_IMETHOD GetRequestSucceeded(PRBool *aRequestSucceeded); \
-  NS_IMETHOD GetResponseHeader(const nsACString & header, nsACString & _retval); \
-  NS_IMETHOD SetResponseHeader(const nsACString & header, const nsACString & value, PRBool merge); \
-  NS_IMETHOD VisitResponseHeaders(nsIHttpHeaderVisitor *aVisitor); \
-  NS_IMETHOD IsNoStoreResponse(PRBool *_retval); \
-  NS_IMETHOD IsNoCacheResponse(PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetRequestMethod(nsACString & aRequestMethod); \
+  NS_SCRIPTABLE NS_IMETHOD SetRequestMethod(const nsACString & aRequestMethod); \
+  NS_SCRIPTABLE NS_IMETHOD GetReferrer(nsIURI * *aReferrer); \
+  NS_SCRIPTABLE NS_IMETHOD SetReferrer(nsIURI * aReferrer); \
+  NS_SCRIPTABLE NS_IMETHOD GetRequestHeader(const nsACString & aHeader, nsACString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetRequestHeader(const nsACString & aHeader, const nsACString & aValue, PRBool aMerge); \
+  NS_SCRIPTABLE NS_IMETHOD VisitRequestHeaders(nsIHttpHeaderVisitor *aVisitor); \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowPipelining(PRBool *aAllowPipelining); \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowPipelining(PRBool aAllowPipelining); \
+  NS_SCRIPTABLE NS_IMETHOD GetRedirectionLimit(PRUint32 *aRedirectionLimit); \
+  NS_SCRIPTABLE NS_IMETHOD SetRedirectionLimit(PRUint32 aRedirectionLimit); \
+  NS_SCRIPTABLE NS_IMETHOD GetResponseStatus(PRUint32 *aResponseStatus); \
+  NS_SCRIPTABLE NS_IMETHOD GetResponseStatusText(nsACString & aResponseStatusText); \
+  NS_SCRIPTABLE NS_IMETHOD GetRequestSucceeded(PRBool *aRequestSucceeded); \
+  NS_SCRIPTABLE NS_IMETHOD GetResponseHeader(const nsACString & header, nsACString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetResponseHeader(const nsACString & header, const nsACString & value, PRBool merge); \
+  NS_SCRIPTABLE NS_IMETHOD VisitResponseHeaders(nsIHttpHeaderVisitor *aVisitor); \
+  NS_SCRIPTABLE NS_IMETHOD IsNoStoreResponse(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD IsNoCacheResponse(PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIHTTPCHANNEL(_to) \
-  NS_IMETHOD GetRequestMethod(nsACString & aRequestMethod) { return _to GetRequestMethod(aRequestMethod); } \
-  NS_IMETHOD SetRequestMethod(const nsACString & aRequestMethod) { return _to SetRequestMethod(aRequestMethod); } \
-  NS_IMETHOD GetReferrer(nsIURI * *aReferrer) { return _to GetReferrer(aReferrer); } \
-  NS_IMETHOD SetReferrer(nsIURI * aReferrer) { return _to SetReferrer(aReferrer); } \
-  NS_IMETHOD GetRequestHeader(const nsACString & aHeader, nsACString & _retval) { return _to GetRequestHeader(aHeader, _retval); } \
-  NS_IMETHOD SetRequestHeader(const nsACString & aHeader, const nsACString & aValue, PRBool aMerge) { return _to SetRequestHeader(aHeader, aValue, aMerge); } \
-  NS_IMETHOD VisitRequestHeaders(nsIHttpHeaderVisitor *aVisitor) { return _to VisitRequestHeaders(aVisitor); } \
-  NS_IMETHOD GetAllowPipelining(PRBool *aAllowPipelining) { return _to GetAllowPipelining(aAllowPipelining); } \
-  NS_IMETHOD SetAllowPipelining(PRBool aAllowPipelining) { return _to SetAllowPipelining(aAllowPipelining); } \
-  NS_IMETHOD GetRedirectionLimit(PRUint32 *aRedirectionLimit) { return _to GetRedirectionLimit(aRedirectionLimit); } \
-  NS_IMETHOD SetRedirectionLimit(PRUint32 aRedirectionLimit) { return _to SetRedirectionLimit(aRedirectionLimit); } \
-  NS_IMETHOD GetResponseStatus(PRUint32 *aResponseStatus) { return _to GetResponseStatus(aResponseStatus); } \
-  NS_IMETHOD GetResponseStatusText(nsACString & aResponseStatusText) { return _to GetResponseStatusText(aResponseStatusText); } \
-  NS_IMETHOD GetRequestSucceeded(PRBool *aRequestSucceeded) { return _to GetRequestSucceeded(aRequestSucceeded); } \
-  NS_IMETHOD GetResponseHeader(const nsACString & header, nsACString & _retval) { return _to GetResponseHeader(header, _retval); } \
-  NS_IMETHOD SetResponseHeader(const nsACString & header, const nsACString & value, PRBool merge) { return _to SetResponseHeader(header, value, merge); } \
-  NS_IMETHOD VisitResponseHeaders(nsIHttpHeaderVisitor *aVisitor) { return _to VisitResponseHeaders(aVisitor); } \
-  NS_IMETHOD IsNoStoreResponse(PRBool *_retval) { return _to IsNoStoreResponse(_retval); } \
-  NS_IMETHOD IsNoCacheResponse(PRBool *_retval) { return _to IsNoCacheResponse(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetRequestMethod(nsACString & aRequestMethod) { return _to GetRequestMethod(aRequestMethod); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRequestMethod(const nsACString & aRequestMethod) { return _to SetRequestMethod(aRequestMethod); } \
+  NS_SCRIPTABLE NS_IMETHOD GetReferrer(nsIURI * *aReferrer) { return _to GetReferrer(aReferrer); } \
+  NS_SCRIPTABLE NS_IMETHOD SetReferrer(nsIURI * aReferrer) { return _to SetReferrer(aReferrer); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRequestHeader(const nsACString & aHeader, nsACString & _retval) { return _to GetRequestHeader(aHeader, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRequestHeader(const nsACString & aHeader, const nsACString & aValue, PRBool aMerge) { return _to SetRequestHeader(aHeader, aValue, aMerge); } \
+  NS_SCRIPTABLE NS_IMETHOD VisitRequestHeaders(nsIHttpHeaderVisitor *aVisitor) { return _to VisitRequestHeaders(aVisitor); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowPipelining(PRBool *aAllowPipelining) { return _to GetAllowPipelining(aAllowPipelining); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowPipelining(PRBool aAllowPipelining) { return _to SetAllowPipelining(aAllowPipelining); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRedirectionLimit(PRUint32 *aRedirectionLimit) { return _to GetRedirectionLimit(aRedirectionLimit); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRedirectionLimit(PRUint32 aRedirectionLimit) { return _to SetRedirectionLimit(aRedirectionLimit); } \
+  NS_SCRIPTABLE NS_IMETHOD GetResponseStatus(PRUint32 *aResponseStatus) { return _to GetResponseStatus(aResponseStatus); } \
+  NS_SCRIPTABLE NS_IMETHOD GetResponseStatusText(nsACString & aResponseStatusText) { return _to GetResponseStatusText(aResponseStatusText); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRequestSucceeded(PRBool *aRequestSucceeded) { return _to GetRequestSucceeded(aRequestSucceeded); } \
+  NS_SCRIPTABLE NS_IMETHOD GetResponseHeader(const nsACString & header, nsACString & _retval) { return _to GetResponseHeader(header, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetResponseHeader(const nsACString & header, const nsACString & value, PRBool merge) { return _to SetResponseHeader(header, value, merge); } \
+  NS_SCRIPTABLE NS_IMETHOD VisitResponseHeaders(nsIHttpHeaderVisitor *aVisitor) { return _to VisitResponseHeaders(aVisitor); } \
+  NS_SCRIPTABLE NS_IMETHOD IsNoStoreResponse(PRBool *_retval) { return _to IsNoStoreResponse(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsNoCacheResponse(PRBool *_retval) { return _to IsNoCacheResponse(_retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIHTTPCHANNEL(_to) \
-  NS_IMETHOD GetRequestMethod(nsACString & aRequestMethod) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRequestMethod(aRequestMethod); } \
-  NS_IMETHOD SetRequestMethod(const nsACString & aRequestMethod) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRequestMethod(aRequestMethod); } \
-  NS_IMETHOD GetReferrer(nsIURI * *aReferrer) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetReferrer(aReferrer); } \
-  NS_IMETHOD SetReferrer(nsIURI * aReferrer) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetReferrer(aReferrer); } \
-  NS_IMETHOD GetRequestHeader(const nsACString & aHeader, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRequestHeader(aHeader, _retval); } \
-  NS_IMETHOD SetRequestHeader(const nsACString & aHeader, const nsACString & aValue, PRBool aMerge) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRequestHeader(aHeader, aValue, aMerge); } \
-  NS_IMETHOD VisitRequestHeaders(nsIHttpHeaderVisitor *aVisitor) { return !_to ? NS_ERROR_NULL_POINTER : _to->VisitRequestHeaders(aVisitor); } \
-  NS_IMETHOD GetAllowPipelining(PRBool *aAllowPipelining) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAllowPipelining(aAllowPipelining); } \
-  NS_IMETHOD SetAllowPipelining(PRBool aAllowPipelining) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAllowPipelining(aAllowPipelining); } \
-  NS_IMETHOD GetRedirectionLimit(PRUint32 *aRedirectionLimit) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRedirectionLimit(aRedirectionLimit); } \
-  NS_IMETHOD SetRedirectionLimit(PRUint32 aRedirectionLimit) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRedirectionLimit(aRedirectionLimit); } \
-  NS_IMETHOD GetResponseStatus(PRUint32 *aResponseStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetResponseStatus(aResponseStatus); } \
-  NS_IMETHOD GetResponseStatusText(nsACString & aResponseStatusText) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetResponseStatusText(aResponseStatusText); } \
-  NS_IMETHOD GetRequestSucceeded(PRBool *aRequestSucceeded) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRequestSucceeded(aRequestSucceeded); } \
-  NS_IMETHOD GetResponseHeader(const nsACString & header, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetResponseHeader(header, _retval); } \
-  NS_IMETHOD SetResponseHeader(const nsACString & header, const nsACString & value, PRBool merge) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetResponseHeader(header, value, merge); } \
-  NS_IMETHOD VisitResponseHeaders(nsIHttpHeaderVisitor *aVisitor) { return !_to ? NS_ERROR_NULL_POINTER : _to->VisitResponseHeaders(aVisitor); } \
-  NS_IMETHOD IsNoStoreResponse(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsNoStoreResponse(_retval); } \
-  NS_IMETHOD IsNoCacheResponse(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsNoCacheResponse(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetRequestMethod(nsACString & aRequestMethod) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRequestMethod(aRequestMethod); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRequestMethod(const nsACString & aRequestMethod) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRequestMethod(aRequestMethod); } \
+  NS_SCRIPTABLE NS_IMETHOD GetReferrer(nsIURI * *aReferrer) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetReferrer(aReferrer); } \
+  NS_SCRIPTABLE NS_IMETHOD SetReferrer(nsIURI * aReferrer) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetReferrer(aReferrer); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRequestHeader(const nsACString & aHeader, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRequestHeader(aHeader, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRequestHeader(const nsACString & aHeader, const nsACString & aValue, PRBool aMerge) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRequestHeader(aHeader, aValue, aMerge); } \
+  NS_SCRIPTABLE NS_IMETHOD VisitRequestHeaders(nsIHttpHeaderVisitor *aVisitor) { return !_to ? NS_ERROR_NULL_POINTER : _to->VisitRequestHeaders(aVisitor); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAllowPipelining(PRBool *aAllowPipelining) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAllowPipelining(aAllowPipelining); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAllowPipelining(PRBool aAllowPipelining) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAllowPipelining(aAllowPipelining); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRedirectionLimit(PRUint32 *aRedirectionLimit) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRedirectionLimit(aRedirectionLimit); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRedirectionLimit(PRUint32 aRedirectionLimit) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRedirectionLimit(aRedirectionLimit); } \
+  NS_SCRIPTABLE NS_IMETHOD GetResponseStatus(PRUint32 *aResponseStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetResponseStatus(aResponseStatus); } \
+  NS_SCRIPTABLE NS_IMETHOD GetResponseStatusText(nsACString & aResponseStatusText) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetResponseStatusText(aResponseStatusText); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRequestSucceeded(PRBool *aRequestSucceeded) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRequestSucceeded(aRequestSucceeded); } \
+  NS_SCRIPTABLE NS_IMETHOD GetResponseHeader(const nsACString & header, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetResponseHeader(header, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetResponseHeader(const nsACString & header, const nsACString & value, PRBool merge) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetResponseHeader(header, value, merge); } \
+  NS_SCRIPTABLE NS_IMETHOD VisitResponseHeaders(nsIHttpHeaderVisitor *aVisitor) { return !_to ? NS_ERROR_NULL_POINTER : _to->VisitResponseHeaders(aVisitor); } \
+  NS_SCRIPTABLE NS_IMETHOD IsNoStoreResponse(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsNoStoreResponse(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsNoCacheResponse(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsNoCacheResponse(_retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

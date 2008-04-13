@@ -22,7 +22,15 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+#if BROWSER_FF3
+// This needs to be here because of following: common_ff.h defines
+// FORCE_PR_LOG and includes prlog.h, which defines PR_LOGGING however,
+// appearently with gecko 1.9 some other header includes prlog.h before
+// #includes below include common_ff.h. this causes PR_LOGGING to be not
+// defined and gLog to become not defined symbol in opt builds
+#include "gears/base/common/common_ff.h"
+#include <gecko_internal/nsIXULAppInfo.h>
+#endif
 #include <gecko_sdk/include/nsXPCOM.h>
 #include <gecko_sdk/include/nsMemory.h>
 #include <gecko_sdk/include/nsILocalFile.h>
@@ -32,29 +40,24 @@
 #include <gecko_internal/nsIScriptNameSpaceManager.h>
 
 #include "gears/base/common/thread_locals.h"
-#include "gears/blob/blob_ff.h"
+#include "gears/base/firefox/xpcom_dynamic_load.h"
 #include "gears/console/firefox/console_ff.h"
 #include "gears/database/firefox/database.h"
 #include "gears/database/firefox/result_set.h"
-#include "gears/desktop/desktop_ff.h"
 #include "gears/factory/firefox/factory.h"
 #include "gears/httprequest/firefox/httprequest_ff.h"
-
-#ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
-#else
-#include "gears/image/firefox/image_ff.h"
-#include "gears/image/firefox/image_loader_ff.h"
-#endif
 
 #include "gears/localserver/firefox/cache_intercept.h"
 #include "gears/localserver/firefox/file_submitter_ff.h"
 #include "gears/localserver/firefox/localserver_ff.h"
 #include "gears/localserver/firefox/managed_resource_store_ff.h"
 #include "gears/localserver/firefox/resource_store_ff.h"
-#include "gears/timer/timer.h"
 #include "gears/ui/firefox/ui_utils.h"
 #include "gears/workerpool/firefox/workerpool.h"
+
+#if BROWSER_FF2
+#include <gecko_internal/nsIEventQueueService.h> // for event loop
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -135,12 +138,6 @@ NS_DOMCI_EXTENSION(Scour)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsResultSet, PR_TRUE,
                                              &kGearsResultSetClassId)
 
-  // desktop
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsDesktop)
-    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsDesktopInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsDesktop, PR_TRUE,
-                                             &kGearsDesktopClassId)
-
   // httprequest
   NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsHttpRequest)
     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsHttpRequestInterface)
@@ -171,37 +168,11 @@ NS_DOMCI_EXTENSION(Scour)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsFileSubmitter, PR_TRUE,
                                              &kGearsFileSubmitterClassId)
 
-  // blob
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsBlob)
-    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsBlobInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsBlob, PR_TRUE,
-                                             &kGearsBlobClassId)
-
-  // timer
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsTimer)
-    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsTimerInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsTimer, PR_TRUE,
-                                             &kGearsTimerClassId)
-
   // console
   NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsConsole)
     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsConsoleInterface)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsConsole, PR_TRUE,
                                              &kGearsConsoleClassId)
-
-#ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
-#else
-  // image
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsImage)
-    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsImageInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsImage, PR_TRUE,
-                                             &kGearsImageClassId)
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsImageLoader)
-    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsImageLoaderInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsImageLoader, PR_TRUE,
-                                             &kGearsImageLoaderClassId)
-#endif
 
 NS_DOMCI_EXTENSION_END
 
@@ -239,9 +210,6 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
       GEARSDATABASEINTERFACE_IID_STR },
     { kGearsResultSetClassName, "GearsResultSetInterface",
       GEARSRESULTSETINTERFACE_IID_STR },
-    // desktop
-    { kGearsDesktopClassName, "GearsDesktopInterface",
-      GEARSDESKTOPINTERFACE_IID_STR },
     // httprequest
     { kGearsHttpRequestClassName, "GearsHttpRequestInterface",
       GEARSHTTPREQUESTINTERFACE_IID_STR },
@@ -257,21 +225,6 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
       GEARSRESOURCESTOREINTERFACE_IID_STR },
     { kGearsFileSubmitterClassName, "GearsFileSubmitterInterface",
       GEARSFILESUBMITTERINTERFACE_IID_STR },
-    // blob
-    { kGearsBlobClassName, "GearsBlobInterface",
-      GEARSBLOBINTERFACE_IID_STR },
-    // timer
-    { kGearsTimerClassName, "GearsTimerInterface",
-      GEARSTIMERINTERFACE_IID_STR },
-#ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
-#else
-    // image
-    { kGearsImageClassName, "GearsImageInterface",
-      GEARSIMAGEINTERFACE_IID_STR },
-    { kGearsImageLoaderClassName, "GearsImageLoaderInterface",
-      GEARSIMAGELOADERINTERFACE_IID_STR },
-#endif
     // console
     { kGearsConsoleClassName, "GearsConsoleInterface",
       GEARSCONSOLEINTERFACE_IID_STR }
@@ -306,8 +259,6 @@ NS_DECL_DOM_CLASSINFO(GearsFactory)
 // database
 NS_DECL_DOM_CLASSINFO(GearsDatabase)
 NS_DECL_DOM_CLASSINFO(GearsResultSet)
-// desktop
-NS_DECL_DOM_CLASSINFO(GearsDesktop)
 // httprequest
 NS_DECL_DOM_CLASSINFO(GearsHttpRequest)
 // workerpool
@@ -318,20 +269,8 @@ NS_DECL_DOM_CLASSINFO(GearsManagedResourceStore)
 NS_DECL_DOM_CLASSINFO(GearsResourceStore)
 NS_DECL_DOM_CLASSINFO(GearsFileSubmitter)
 
-// blob
-NS_DECL_DOM_CLASSINFO(GearsBlob)
-// timer
-NS_DECL_DOM_CLASSINFO(GearsTimer)
 // console
 NS_DECL_DOM_CLASSINFO(GearsConsole)
-
-#ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
-#else
-// image
-NS_DECL_DOM_CLASSINFO(GearsImage)
-NS_DECL_DOM_CLASSINFO(GearsImageLoader)
-#endif
 
 nsresult PR_CALLBACK ScourModuleConstructor(nsIModule *self) {
   return ThreadLocals::HandleModuleConstructed();
@@ -347,8 +286,6 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
   // database
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsDatabase));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsResultSet));
-  // desktop
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsDesktop));
   // httprequest
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsHttpRequest));
   // workerpool
@@ -357,20 +294,8 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsLocalServer));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsManagedResourceStore));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsResourceStore));
-  // blob
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsBlob));
-  // timer
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsTimer));
   // console
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsConsole));
-
-#ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
-#else
-  // image
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsImage));
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsImageLoader));
-#endif
 
 #ifdef DEBUG
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsFileSubmitter));
@@ -423,6 +348,48 @@ static const nsModuleComponentInfo components[] = {
 };
 
 
-NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(gears_module, components,
-                                   ScourModuleConstructor,
-                                   ScourModuleDestructor)
+static nsModuleInfo const kModuleInfo = {
+  NS_MODULEINFO_VERSION,
+  ("gears_module"),
+  (components),
+  (sizeof(components) / sizeof(components[0])),
+  (ScourModuleConstructor),
+  (ScourModuleDestructor)
+};
+NSGETMODULE_ENTRY_POINT(gears_module) (nsIComponentManager *servMgr,
+                                       nsIFile* location,
+                                       nsIModule** result) {
+  // This is set in base/firefox/xpcom_dynamic_load.cc on load.  The Firefox
+  // XPI contains distinct modules for Gecko 1.8 and Gecko 1.9 based browser.
+  // This will be set to NULL if it is loaded in the wrong host, at which point
+  // this test will fail, and the module won't be registered.
+  if (!XPTC_InvokeByIndex_DynLoad) {
+    return NS_ERROR_FAILURE;
+  }
+
+#ifdef BROWSER_FF3
+  // TODO(zork): Remove this code once Firefox 3 ships.
+
+  // If we're running on Firefox 3, we need to make sure we aren't loaded in
+  // any old betas, because interfaces we need do not exist.
+  nsresult nr;
+  nsCOMPtr<nsIXULAppInfo> app_info =
+      do_GetService("@mozilla.org/xre/app-info;1", &nr);
+  if (NS_FAILED(nr) || !app_info) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Get the Firefox version string.
+  nsCString version;
+  app_info->GetVersion(version);
+
+  // Check that the version string matches the proper Firefox
+  const nsCString::char_type *begin, *end;
+  version.BeginReading(&begin, &end);
+  if (strcmp(begin, "3.0b5")) {
+    return NS_ERROR_FAILURE;
+  }
+#endif
+
+  return NS_NewGenericModule2(&kModuleInfo, result);
+}

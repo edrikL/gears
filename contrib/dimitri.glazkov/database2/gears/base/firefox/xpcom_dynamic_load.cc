@@ -44,17 +44,18 @@ PRFuncPtr DynamicLoad(const char *module, const char *function) {
     }
   }
 
-  assert(function_ptr);
   return function_ptr;
 }
 
 
 // Initialization of global variables
 XPTC_InvokeByIndex_Type XPTC_InvokeByIndex_DynLoad =
-#ifdef OS_MACOSX
+#if BROWSER_FF3
+  NS_InvokeByIndex;
+#elif defined(OS_MACOSX)
 // For OSX, the libxpcom_core is already linked, so we can access the symbol
 // directly
-XPTC_InvokeByIndex;
+  XPTC_InvokeByIndex;
 #else
   reinterpret_cast<XPTC_InvokeByIndex_Type>(DynamicLoad("xpcom_core",
                                                         "XPTC_InvokeByIndex"));

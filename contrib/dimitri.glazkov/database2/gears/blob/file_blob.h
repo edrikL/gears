@@ -26,6 +26,10 @@
 #ifndef GEARS_DESKTOP_FILE_BLOB_H__
 #define GEARS_DESKTOP_FILE_BLOB_H__
 
+#ifdef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+#else
+
 #include "gears/blob/blob_interface.h"
 #include "gears/base/common/string16.h"
 
@@ -33,11 +37,9 @@ class FileBlob : public BlobInterface {
  public:
   // The filename should be an absolute path, not a relative one.
   // If it is not valid, Read() and Length() will return 0.
-  FileBlob(const char16 *filename);
+  FileBlob(const std::string16& filename);
 
-  ~FileBlob() {}
-
-  int Read(uint8* destination, int max_bytes, int64 offset) const;
+  int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const;
 
   int64 Length() const;
 
@@ -46,5 +48,7 @@ class FileBlob : public BlobInterface {
 
   DISALLOW_EVIL_CONSTRUCTORS(FileBlob);
 };
+
+#endif  // not OFFICIAL_BUILD
 
 #endif  // GEARS_DESKTOP_FILE_BLOB_H__

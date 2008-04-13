@@ -31,8 +31,12 @@
 
 #include "gears/base/common/scoped_token.h"
 
+#ifdef BROWSER_WEBKIT
+#include <WebKit/npapi.h>
+#else
 #include "npapi.h"
 #include "npruntime.h"
+#endif
 
 // ScopedNPObject: automatically call NPN_ReleaseObject()
 class ReleaseObjectFunctor {

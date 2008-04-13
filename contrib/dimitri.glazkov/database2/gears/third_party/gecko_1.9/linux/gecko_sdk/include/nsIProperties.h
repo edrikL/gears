@@ -22,7 +22,7 @@
   {0x78650582, 0x4e93, 0x4b60, \
     { 0x8e, 0x85, 0x26, 0xeb, 0xd3, 0xeb, 0x14, 0xca }}
 
-class NS_NO_VTABLE nsIProperties : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIProperties : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPROPERTIES_IID)
@@ -35,19 +35,19 @@ class NS_NO_VTABLE nsIProperties : public nsISupports {
      * given iid.
      */
   /* void get (in string prop, in nsIIDRef iid, [iid_is (iid), retval] out nsQIResult result); */
-  NS_IMETHOD Get(const char *prop, const nsIID & iid, void * *result) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Get(const char *prop, const nsIID & iid, void * *result) = 0;
 
   /**
      * Sets a property with a given name to a given value. 
      */
   /* void set (in string prop, in nsISupports value); */
-  NS_IMETHOD Set(const char *prop, nsISupports *value) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Set(const char *prop, nsISupports *value) = 0;
 
   /**
      * Returns true if the property with the given name exists.
      */
   /* boolean has (in string prop); */
-  NS_IMETHOD Has(const char *prop, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Has(const char *prop, PRBool *_retval) = 0;
 
   /**
      * Undefines a property.
@@ -55,13 +55,13 @@ class NS_NO_VTABLE nsIProperties : public nsISupports {
      * already exist.
      */
   /* void undefine (in string prop); */
-  NS_IMETHOD Undefine(const char *prop) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Undefine(const char *prop) = 0;
 
   /**
      *  Returns an array of the keys.
      */
   /* void getKeys (out PRUint32 count, [array, size_is (count), retval] out string keys); */
-  NS_IMETHOD GetKeys(PRUint32 *count, char ***keys) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetKeys(PRUint32 *count, char ***keys) = 0;
 
 };
 
@@ -69,27 +69,27 @@ class NS_NO_VTABLE nsIProperties : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIPROPERTIES \
-  NS_IMETHOD Get(const char *prop, const nsIID & iid, void * *result); \
-  NS_IMETHOD Set(const char *prop, nsISupports *value); \
-  NS_IMETHOD Has(const char *prop, PRBool *_retval); \
-  NS_IMETHOD Undefine(const char *prop); \
-  NS_IMETHOD GetKeys(PRUint32 *count, char ***keys); 
+  NS_SCRIPTABLE NS_IMETHOD Get(const char *prop, const nsIID & iid, void * *result); \
+  NS_SCRIPTABLE NS_IMETHOD Set(const char *prop, nsISupports *value); \
+  NS_SCRIPTABLE NS_IMETHOD Has(const char *prop, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD Undefine(const char *prop); \
+  NS_SCRIPTABLE NS_IMETHOD GetKeys(PRUint32 *count, char ***keys); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIPROPERTIES(_to) \
-  NS_IMETHOD Get(const char *prop, const nsIID & iid, void * *result) { return _to Get(prop, iid, result); } \
-  NS_IMETHOD Set(const char *prop, nsISupports *value) { return _to Set(prop, value); } \
-  NS_IMETHOD Has(const char *prop, PRBool *_retval) { return _to Has(prop, _retval); } \
-  NS_IMETHOD Undefine(const char *prop) { return _to Undefine(prop); } \
-  NS_IMETHOD GetKeys(PRUint32 *count, char ***keys) { return _to GetKeys(count, keys); } 
+  NS_SCRIPTABLE NS_IMETHOD Get(const char *prop, const nsIID & iid, void * *result) { return _to Get(prop, iid, result); } \
+  NS_SCRIPTABLE NS_IMETHOD Set(const char *prop, nsISupports *value) { return _to Set(prop, value); } \
+  NS_SCRIPTABLE NS_IMETHOD Has(const char *prop, PRBool *_retval) { return _to Has(prop, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Undefine(const char *prop) { return _to Undefine(prop); } \
+  NS_SCRIPTABLE NS_IMETHOD GetKeys(PRUint32 *count, char ***keys) { return _to GetKeys(count, keys); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIPROPERTIES(_to) \
-  NS_IMETHOD Get(const char *prop, const nsIID & iid, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->Get(prop, iid, result); } \
-  NS_IMETHOD Set(const char *prop, nsISupports *value) { return !_to ? NS_ERROR_NULL_POINTER : _to->Set(prop, value); } \
-  NS_IMETHOD Has(const char *prop, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Has(prop, _retval); } \
-  NS_IMETHOD Undefine(const char *prop) { return !_to ? NS_ERROR_NULL_POINTER : _to->Undefine(prop); } \
-  NS_IMETHOD GetKeys(PRUint32 *count, char ***keys) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetKeys(count, keys); } 
+  NS_SCRIPTABLE NS_IMETHOD Get(const char *prop, const nsIID & iid, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->Get(prop, iid, result); } \
+  NS_SCRIPTABLE NS_IMETHOD Set(const char *prop, nsISupports *value) { return !_to ? NS_ERROR_NULL_POINTER : _to->Set(prop, value); } \
+  NS_SCRIPTABLE NS_IMETHOD Has(const char *prop, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Has(prop, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Undefine(const char *prop) { return !_to ? NS_ERROR_NULL_POINTER : _to->Undefine(prop); } \
+  NS_SCRIPTABLE NS_IMETHOD GetKeys(PRUint32 *count, char ***keys) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetKeys(count, keys); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -22,7 +22,7 @@
   {0xa6cf90c1, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMCSSRule : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMCSSRule : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMCSSRULE_IID)
@@ -51,17 +51,17 @@ class NS_NO_VTABLE nsIDOMCSSRule : public nsISupports {
   enum { PAGE_RULE = 6U };
 
   /* readonly attribute unsigned short type; */
-  NS_IMETHOD GetType(PRUint16 *aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetType(PRUint16 *aType) = 0;
 
   /* attribute DOMString cssText; */
-  NS_IMETHOD GetCssText(nsAString & aCssText) = 0;
-  NS_IMETHOD SetCssText(const nsAString & aCssText) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCssText(nsAString & aCssText) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCssText(const nsAString & aCssText) = 0;
 
   /* readonly attribute nsIDOMCSSStyleSheet parentStyleSheet; */
-  NS_IMETHOD GetParentStyleSheet(nsIDOMCSSStyleSheet * *aParentStyleSheet) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetParentStyleSheet(nsIDOMCSSStyleSheet * *aParentStyleSheet) = 0;
 
   /* readonly attribute nsIDOMCSSRule parentRule; */
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) = 0;
 
 };
 
@@ -69,27 +69,27 @@ class NS_NO_VTABLE nsIDOMCSSRule : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMCSSRULE \
-  NS_IMETHOD GetType(PRUint16 *aType); \
-  NS_IMETHOD GetCssText(nsAString & aCssText); \
-  NS_IMETHOD SetCssText(const nsAString & aCssText); \
-  NS_IMETHOD GetParentStyleSheet(nsIDOMCSSStyleSheet * *aParentStyleSheet); \
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule); 
+  NS_SCRIPTABLE NS_IMETHOD GetType(PRUint16 *aType); \
+  NS_SCRIPTABLE NS_IMETHOD GetCssText(nsAString & aCssText); \
+  NS_SCRIPTABLE NS_IMETHOD SetCssText(const nsAString & aCssText); \
+  NS_SCRIPTABLE NS_IMETHOD GetParentStyleSheet(nsIDOMCSSStyleSheet * *aParentStyleSheet); \
+  NS_SCRIPTABLE NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMCSSRULE(_to) \
-  NS_IMETHOD GetType(PRUint16 *aType) { return _to GetType(aType); } \
-  NS_IMETHOD GetCssText(nsAString & aCssText) { return _to GetCssText(aCssText); } \
-  NS_IMETHOD SetCssText(const nsAString & aCssText) { return _to SetCssText(aCssText); } \
-  NS_IMETHOD GetParentStyleSheet(nsIDOMCSSStyleSheet * *aParentStyleSheet) { return _to GetParentStyleSheet(aParentStyleSheet); } \
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) { return _to GetParentRule(aParentRule); } 
+  NS_SCRIPTABLE NS_IMETHOD GetType(PRUint16 *aType) { return _to GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCssText(nsAString & aCssText) { return _to GetCssText(aCssText); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCssText(const nsAString & aCssText) { return _to SetCssText(aCssText); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParentStyleSheet(nsIDOMCSSStyleSheet * *aParentStyleSheet) { return _to GetParentStyleSheet(aParentStyleSheet); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) { return _to GetParentRule(aParentRule); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMCSSRULE(_to) \
-  NS_IMETHOD GetType(PRUint16 *aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
-  NS_IMETHOD GetCssText(nsAString & aCssText) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCssText(aCssText); } \
-  NS_IMETHOD SetCssText(const nsAString & aCssText) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCssText(aCssText); } \
-  NS_IMETHOD GetParentStyleSheet(nsIDOMCSSStyleSheet * *aParentStyleSheet) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParentStyleSheet(aParentStyleSheet); } \
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParentRule(aParentRule); } 
+  NS_SCRIPTABLE NS_IMETHOD GetType(PRUint16 *aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCssText(nsAString & aCssText) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCssText(aCssText); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCssText(const nsAString & aCssText) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCssText(aCssText); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParentStyleSheet(nsIDOMCSSStyleSheet * *aParentStyleSheet) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParentStyleSheet(aParentStyleSheet); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParentRule(aParentRule); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

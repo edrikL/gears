@@ -28,6 +28,7 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
@@ -73,7 +74,7 @@ class Database2Transaction : public ModuleImplBaseClassVirtual {
                      JsRootedCallback *callback,
                      JsRootedCallback *error_callback,
                      JsRootedCallback *success_callback,
-                     Database2Transaction **instance);
+                     scoped_refptr<Database2Transaction> *instance);
 
  private:
   bool async_;

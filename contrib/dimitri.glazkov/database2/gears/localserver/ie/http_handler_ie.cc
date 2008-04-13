@@ -23,27 +23,61 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// On WinCE, windows.h must be included before set to allow us to use the max
-// and min macros. This is because set indirectly includes atlcecert.h, which
-// sets NOMINMAX. windef.h (included from windows.h), defines the macros only if
-// NOMINMAX is not defined.
+
 #include <windows.h>
+#include <wininet.h>
+#include <algorithm>
 #include <set>
 #include <string>
 #include <vector>
-#include <wininet.h>
+
+#include "gears/localserver/ie/http_handler_ie.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string_utils.h"
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"  // For BrowserCache
+#endif
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/ie_version.h"
 #include "gears/localserver/common/http_constants.h"
-#include "gears/localserver/ie/http_handler_ie.h"
 #include "gears/localserver/ie/urlmon_utils.h"
 
+#ifdef WINCE
+// On WinCE, when a request is made for a network resource, the device first
+// checks the cache. If the resource is not present in the cache, the device
+// attempts to make a network connection. If this fails, a pop-up a dialog box
+// is shown to inform the user. This all happens before our HTTP handler
+// receives the request callback, so we're not able to disable the popup for
+// resources which are in the LocalServer.
+//
+// A workaround for this problem is to add an empty entry to the browser cache
+// for each resource in the LocalServer. This occurs at the following points ...
+// - For a resource store, when capturing a new resource.
+// - For a resource store, when copying or moving a resource.
+// - For a managed resource store, when reading a new manifest file.
+//
+// Note that we can not guarantee that the cache entries will persists (cache
+// entries may be removed by the system when the cache becomes full or manually
+// by the user), so we re-insert the entries at the following points ...
+// - For a resource store, when refreshing a resource, but it's unmodified.
+// - For a managed resource store, when checking for a manifest update.
+// - When serving a resource from the local server.
+//
+// Also, the LocalServer can contain multiple resources (from seperate stores)
+// for a given url which are conditionally eligible for local serving based on
+// the enable property of the containing store and the presence or absence of
+// particular cookies. This obviously doesn't map very well to the browser
+// cache, so our approach isn't completely foolproof.
+//
+// Note that SetSessionOption, which is used on Win32 with
+// kBypassIInternetProtocolInfoOption to prevent the device from attempting to
+// connect to the network for LocalServer resources, is not available on WinCE.
+#else
 // NOTE: Undocumented voodoo to kick IE into using IInternetProtocolInfo
 // for well known protocols.  We depend on this to indicate that items
 // in our webcapture database do not require the network to be accessed.
 static const DWORD kBypassIInternetProtocolInfoOption = 0x40;
+#endif
 
 static Mutex global_mutex;
 static bool has_registered_handler = false;
@@ -127,17 +161,17 @@ static HRESULT RegisterNoLock() {
     UnregisterNoLock();
     return hr;
   }
-  BOOL bypass = FALSE;
 #ifdef WINCE
-  // SetSessionOption() returns E_NOIMPL on Windows Mobile.
+  // SetSessionOption is not implemented on WinCE.
 #else
+  BOOL bypass = FALSE;
   hr = session->SetSessionOption(kBypassIInternetProtocolInfoOption,
                                  &bypass, sizeof(BOOL), 0);
-#endif
   if (FAILED(hr)) {
     UnregisterNoLock();
     return hr;
   }
+#endif
   LOG16((L"HttpHandler::Registered\n"));
   return hr;
 }
@@ -163,9 +197,13 @@ static HRESULT UnregisterNoLock() {
     factory_https.Release();
   }
   factory_protocol_info.Release();
+#ifdef WINCE
+  // SetSessionOption is not implemented on WinCE.
+#else
   BOOL bypass = TRUE;
   session->SetSessionOption(kBypassIInternetProtocolInfoOption,
                             &bypass, sizeof(BOOL), 0);
+#endif
   LOG16((L"HttpHandler::Unregistered\n"));
   return S_OK;
 }
@@ -244,7 +282,8 @@ STDMETHODIMP PassthruSink::ReportProgress(
 // This class is here to workaround a crash in IE6SP2 when the browser process
 // is exiting. In some circumstances, HttpHandlers are not terminated as they
 // should be. Some time after our DLL is unloaded during shutdown, IE
-// invokes methods on these orphaned handlers resulting in a crash.
+// invokes methods on these orphaned handlers resulting in a crash. Note that
+// WinCE does not suffer from this problem.
 // See http://code.google.com/p/google-gears/issues/detail?id=182
 //
 // To avoid this problem, we maintain a collection of the active HttpHandlers
@@ -254,6 +293,13 @@ STDMETHODIMP PassthruSink::ReportProgress(
 // remove this workaround code.
 //------------------------------------------------------------------------------
 
+#ifdef WINCE
+class ActiveHandlers {
+ public:
+  void Add(HttpHandler *handler) {}
+  void Remove(HttpHandler *handler) {}
+};
+#else
 class ActiveHandlers : public std::set<HttpHandler*> {
  public:
   ActiveHandlers()
@@ -293,24 +339,19 @@ class ActiveHandlers : public std::set<HttpHandler*> {
   }
 
   bool IsIEAtLeastVersion7() {
-#ifdef WINCE
-    // TODO(steveblock): Once LocalServer is working, test to see whether or not
-    // WinCE is subject to this bug.
-    return true;
-#else
     if (!has_determined_ie_version_) {
       MutexLock lock(&mutex_);
       is_at_least_version_7_ = IsIEAtLeastVersion(7, 0, 0, 0);
       has_determined_ie_version_ = true;
     }
     return is_at_least_version_7_;
-#endif
   }
 
   Mutex mutex_;
   bool has_determined_ie_version_;
   bool is_at_least_version_7_;
 };
+#endif
 
 static ActiveHandlers g_active_handlers;
 
@@ -849,6 +890,12 @@ HRESULT HttpHandler::StartImpl(LPCWSTR url,
     return INET_E_USE_DEFAULT_PROTOCOLHANDLER;
   }
 
+#ifdef WINCE
+  // Re-insert the cache entry to make sure it's there. We add an entry whether
+  // or not this is a redirect.
+  BrowserCache::EnsureBogusEntry(url);
+#endif
+
   // The requested url may redirect to another location
   std::string16 redirect_url;
   if (payload_.IsHttpRedirect()) {
@@ -981,7 +1028,7 @@ HRESULT HttpHandler::ReadImpl(void *buffer,
   if (is_handling_) {
     std::vector<uint8> *data = payload_.data.get();
     size_t bytes_available = data ? (data->size() - read_pointer_) : 0;
-    size_t bytes_to_copy = min(byte_count, bytes_available);
+    size_t bytes_to_copy = std::min<size_t>(byte_count, bytes_available);
 
     if (bytes_to_copy != 0) {
       memcpy(buffer, &(*data)[read_pointer_], bytes_to_copy);

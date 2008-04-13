@@ -44,6 +44,8 @@
 typedef PRThread (*ThreadId);
 #elif BROWSER_IE
 typedef DWORD ThreadId;
+#elif BROWSER_WEBKIT
+typedef pthread_t ThreadId;
 #endif
 
 
@@ -55,6 +57,7 @@ typedef Deletable MessageData;
 enum ThreadMessageTypes {
   kMessageService_Notify = 1,
   kIpcMessageQueue_Send,
+  kAsyncRouter_Call,
 };
 
 // A facility for sending and receiving messages asynchronously 

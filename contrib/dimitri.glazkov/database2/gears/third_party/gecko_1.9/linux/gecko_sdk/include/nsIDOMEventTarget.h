@@ -22,7 +22,7 @@
   {0x1c773b30, 0xd1cf, 0x11d2, \
     { 0xbd, 0x95, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4 }}
 
-class NS_NO_VTABLE nsIDOMEventTarget : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMEventTarget : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMEVENTTARGET_IID)
@@ -62,7 +62,7 @@ class NS_NO_VTABLE nsIDOMEventTarget : public nsISupports {
    *                     EventListener designated to use capture.
    */
   /* void addEventListener (in DOMString type, in nsIDOMEventListener listener, in boolean useCapture); */
-  NS_IMETHOD AddEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AddEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture) = 0;
 
   /**
    * This method allows the removal of event listeners from the event 
@@ -85,7 +85,7 @@ class NS_NO_VTABLE nsIDOMEventTarget : public nsISupports {
    *                     listener, and vice versa.
    */
   /* void removeEventListener (in DOMString type, in nsIDOMEventListener listener, in boolean useCapture); */
-  NS_IMETHOD RemoveEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture) = 0;
 
   /**
    * This method allows the dispatch of events into the implementations 
@@ -106,7 +106,7 @@ class NS_NO_VTABLE nsIDOMEventTarget : public nsISupports {
    *              exception.
    */
   /* boolean dispatchEvent (in nsIDOMEvent evt)  raises (DOMException); */
-  NS_IMETHOD DispatchEvent(nsIDOMEvent *evt, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD DispatchEvent(nsIDOMEvent *evt, PRBool *_retval) = 0;
 
 };
 
@@ -114,21 +114,21 @@ class NS_NO_VTABLE nsIDOMEventTarget : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMEVENTTARGET \
-  NS_IMETHOD AddEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture); \
-  NS_IMETHOD RemoveEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture); \
-  NS_IMETHOD DispatchEvent(nsIDOMEvent *evt, PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD AddEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture); \
+  NS_SCRIPTABLE NS_IMETHOD DispatchEvent(nsIDOMEvent *evt, PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMEVENTTARGET(_to) \
-  NS_IMETHOD AddEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture) { return _to AddEventListener(type, listener, useCapture); } \
-  NS_IMETHOD RemoveEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture) { return _to RemoveEventListener(type, listener, useCapture); } \
-  NS_IMETHOD DispatchEvent(nsIDOMEvent *evt, PRBool *_retval) { return _to DispatchEvent(evt, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD AddEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture) { return _to AddEventListener(type, listener, useCapture); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture) { return _to RemoveEventListener(type, listener, useCapture); } \
+  NS_SCRIPTABLE NS_IMETHOD DispatchEvent(nsIDOMEvent *evt, PRBool *_retval) { return _to DispatchEvent(evt, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMEVENTTARGET(_to) \
-  NS_IMETHOD AddEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddEventListener(type, listener, useCapture); } \
-  NS_IMETHOD RemoveEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveEventListener(type, listener, useCapture); } \
-  NS_IMETHOD DispatchEvent(nsIDOMEvent *evt, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->DispatchEvent(evt, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD AddEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddEventListener(type, listener, useCapture); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveEventListener(const nsAString & type, nsIDOMEventListener *listener, PRBool useCapture) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveEventListener(type, listener, useCapture); } \
+  NS_SCRIPTABLE NS_IMETHOD DispatchEvent(nsIDOMEvent *evt, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->DispatchEvent(evt, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

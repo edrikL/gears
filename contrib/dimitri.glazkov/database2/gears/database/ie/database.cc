@@ -179,6 +179,7 @@ HRESULT GearsDatabase::BindArg(const CComVariant &arg, int index,
       break;
   }
 
+  err = SqlitePoisonIfCorrupt(sqlite3_db_handle(stmt), err);
   return (err == SQLITE_OK) ? S_OK :  E_FAIL;
 }
 
@@ -205,6 +206,8 @@ STDMETHODIMP GearsDatabase::execute(const BSTR expression_in,
   scoped_sqlite3_stmt_ptr stmt;
   int sql_status = sqlite3_prepare16_v2(db_, expression, -1, &stmt, NULL);
   if ((sql_status != SQLITE_OK) || (stmt.get() == NULL)) {
+    sql_status = SqlitePoisonIfCorrupt(db_, sql_status);
+
     std::string16 msg;
     BuildSqliteErrorString(STRING16(L"SQLite prepare() failed."),
                            sql_status, db_, &msg);
@@ -274,6 +277,19 @@ STDMETHODIMP GearsDatabase::get_lastInsertRowId(VARIANT *retval) {
     }
     retval->vt = VT_R8;
     retval->dblVal = static_cast<DOUBLE>(rowid);
+    RETURN_NORMAL();
+  } else {
+    RETURN_EXCEPTION(STRING16(L"Database handle was NULL."));
+  }
+}
+
+STDMETHODIMP GearsDatabase::get_rowsAffected(VARIANT *retval) {
+  LOG16((L"GearsDatabase::rowsAffected()\n"));
+  if (db_ != NULL) {
+    VariantClear(retval);
+    int rowsAffected = sqlite3_changes(db_);
+    retval->intVal = rowsAffected;
+    retval->vt = VT_INT;
     RETURN_NORMAL();
   } else {
     RETURN_EXCEPTION(STRING16(L"Database handle was NULL."));

@@ -31,22 +31,22 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLStyleElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLStyleElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLSTYLEELEMENT_IID)
 
   /* attribute boolean disabled; */
-  NS_IMETHOD GetDisabled(PRBool *aDisabled) = 0;
-  NS_IMETHOD SetDisabled(PRBool aDisabled) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled) = 0;
 
   /* attribute DOMString media; */
-  NS_IMETHOD GetMedia(nsAString & aMedia) = 0;
-  NS_IMETHOD SetMedia(const nsAString & aMedia) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMedia(nsAString & aMedia) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetMedia(const nsAString & aMedia) = 0;
 
   /* attribute DOMString type; */
-  NS_IMETHOD GetType(nsAString & aType) = 0;
-  NS_IMETHOD SetType(const nsAString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) = 0;
 
 };
 
@@ -54,30 +54,30 @@ class NS_NO_VTABLE nsIDOMHTMLStyleElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLSTYLEELEMENT \
-  NS_IMETHOD GetDisabled(PRBool *aDisabled); \
-  NS_IMETHOD SetDisabled(PRBool aDisabled); \
-  NS_IMETHOD GetMedia(nsAString & aMedia); \
-  NS_IMETHOD SetMedia(const nsAString & aMedia); \
-  NS_IMETHOD GetType(nsAString & aType); \
-  NS_IMETHOD SetType(const nsAString & aType); 
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled); \
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled); \
+  NS_SCRIPTABLE NS_IMETHOD GetMedia(nsAString & aMedia); \
+  NS_SCRIPTABLE NS_IMETHOD SetMedia(const nsAString & aMedia); \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType); \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLSTYLEELEMENT(_to) \
-  NS_IMETHOD GetDisabled(PRBool *aDisabled) { return _to GetDisabled(aDisabled); } \
-  NS_IMETHOD SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
-  NS_IMETHOD GetMedia(nsAString & aMedia) { return _to GetMedia(aMedia); } \
-  NS_IMETHOD SetMedia(const nsAString & aMedia) { return _to SetMedia(aMedia); } \
-  NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
-  NS_IMETHOD SetType(const nsAString & aType) { return _to SetType(aType); } 
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled) { return _to GetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMedia(nsAString & aMedia) { return _to GetMedia(aMedia); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMedia(const nsAString & aMedia) { return _to SetMedia(aMedia); } \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) { return _to SetType(aType); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLSTYLEELEMENT(_to) \
-  NS_IMETHOD GetDisabled(PRBool *aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDisabled(aDisabled); } \
-  NS_IMETHOD SetDisabled(PRBool aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDisabled(aDisabled); } \
-  NS_IMETHOD GetMedia(nsAString & aMedia) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMedia(aMedia); } \
-  NS_IMETHOD SetMedia(const nsAString & aMedia) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMedia(aMedia); } \
-  NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
-  NS_IMETHOD SetType(const nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } 
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMedia(nsAString & aMedia) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMedia(aMedia); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMedia(const nsAString & aMedia) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMedia(aMedia); } \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -22,7 +22,7 @@
   {0xa6cf9080, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMStyleSheet : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMStyleSheet : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMSTYLESHEET_IID)
@@ -37,26 +37,26 @@ class NS_NO_VTABLE nsIDOMStyleSheet : public nsISupports {
  * @status FROZEN
  */
   /* readonly attribute DOMString type; */
-  NS_IMETHOD GetType(nsAString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) = 0;
 
   /* attribute boolean disabled; */
-  NS_IMETHOD GetDisabled(PRBool *aDisabled) = 0;
-  NS_IMETHOD SetDisabled(PRBool aDisabled) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled) = 0;
 
   /* readonly attribute nsIDOMNode ownerNode; */
-  NS_IMETHOD GetOwnerNode(nsIDOMNode * *aOwnerNode) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetOwnerNode(nsIDOMNode * *aOwnerNode) = 0;
 
   /* readonly attribute nsIDOMStyleSheet parentStyleSheet; */
-  NS_IMETHOD GetParentStyleSheet(nsIDOMStyleSheet * *aParentStyleSheet) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetParentStyleSheet(nsIDOMStyleSheet * *aParentStyleSheet) = 0;
 
   /* readonly attribute DOMString href; */
-  NS_IMETHOD GetHref(nsAString & aHref) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHref(nsAString & aHref) = 0;
 
   /* readonly attribute DOMString title; */
-  NS_IMETHOD GetTitle(nsAString & aTitle) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTitle(nsAString & aTitle) = 0;
 
   /* readonly attribute nsIDOMMediaList media; */
-  NS_IMETHOD GetMedia(nsIDOMMediaList * *aMedia) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMedia(nsIDOMMediaList * *aMedia) = 0;
 
 };
 
@@ -64,36 +64,36 @@ class NS_NO_VTABLE nsIDOMStyleSheet : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMSTYLESHEET \
-  NS_IMETHOD GetType(nsAString & aType); \
-  NS_IMETHOD GetDisabled(PRBool *aDisabled); \
-  NS_IMETHOD SetDisabled(PRBool aDisabled); \
-  NS_IMETHOD GetOwnerNode(nsIDOMNode * *aOwnerNode); \
-  NS_IMETHOD GetParentStyleSheet(nsIDOMStyleSheet * *aParentStyleSheet); \
-  NS_IMETHOD GetHref(nsAString & aHref); \
-  NS_IMETHOD GetTitle(nsAString & aTitle); \
-  NS_IMETHOD GetMedia(nsIDOMMediaList * *aMedia); 
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType); \
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled); \
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled); \
+  NS_SCRIPTABLE NS_IMETHOD GetOwnerNode(nsIDOMNode * *aOwnerNode); \
+  NS_SCRIPTABLE NS_IMETHOD GetParentStyleSheet(nsIDOMStyleSheet * *aParentStyleSheet); \
+  NS_SCRIPTABLE NS_IMETHOD GetHref(nsAString & aHref); \
+  NS_SCRIPTABLE NS_IMETHOD GetTitle(nsAString & aTitle); \
+  NS_SCRIPTABLE NS_IMETHOD GetMedia(nsIDOMMediaList * *aMedia); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMSTYLESHEET(_to) \
-  NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
-  NS_IMETHOD GetDisabled(PRBool *aDisabled) { return _to GetDisabled(aDisabled); } \
-  NS_IMETHOD SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
-  NS_IMETHOD GetOwnerNode(nsIDOMNode * *aOwnerNode) { return _to GetOwnerNode(aOwnerNode); } \
-  NS_IMETHOD GetParentStyleSheet(nsIDOMStyleSheet * *aParentStyleSheet) { return _to GetParentStyleSheet(aParentStyleSheet); } \
-  NS_IMETHOD GetHref(nsAString & aHref) { return _to GetHref(aHref); } \
-  NS_IMETHOD GetTitle(nsAString & aTitle) { return _to GetTitle(aTitle); } \
-  NS_IMETHOD GetMedia(nsIDOMMediaList * *aMedia) { return _to GetMedia(aMedia); } 
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled) { return _to GetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOwnerNode(nsIDOMNode * *aOwnerNode) { return _to GetOwnerNode(aOwnerNode); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParentStyleSheet(nsIDOMStyleSheet * *aParentStyleSheet) { return _to GetParentStyleSheet(aParentStyleSheet); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHref(nsAString & aHref) { return _to GetHref(aHref); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTitle(nsAString & aTitle) { return _to GetTitle(aTitle); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMedia(nsIDOMMediaList * *aMedia) { return _to GetMedia(aMedia); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMSTYLESHEET(_to) \
-  NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
-  NS_IMETHOD GetDisabled(PRBool *aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDisabled(aDisabled); } \
-  NS_IMETHOD SetDisabled(PRBool aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDisabled(aDisabled); } \
-  NS_IMETHOD GetOwnerNode(nsIDOMNode * *aOwnerNode) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOwnerNode(aOwnerNode); } \
-  NS_IMETHOD GetParentStyleSheet(nsIDOMStyleSheet * *aParentStyleSheet) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParentStyleSheet(aParentStyleSheet); } \
-  NS_IMETHOD GetHref(nsAString & aHref) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHref(aHref); } \
-  NS_IMETHOD GetTitle(nsAString & aTitle) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTitle(aTitle); } \
-  NS_IMETHOD GetMedia(nsIDOMMediaList * *aMedia) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMedia(aMedia); } 
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOwnerNode(nsIDOMNode * *aOwnerNode) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOwnerNode(aOwnerNode); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParentStyleSheet(nsIDOMStyleSheet * *aParentStyleSheet) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParentStyleSheet(aParentStyleSheet); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHref(nsAString & aHref) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHref(aHref); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTitle(nsAString & aTitle) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTitle(aTitle); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMedia(nsIDOMMediaList * *aMedia) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMedia(aMedia); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -29,7 +29,7 @@
  * Enumeration of Programming Languages
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIProgrammingLanguage : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIProgrammingLanguage : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPROGRAMMINGLANGUAGE_IID)

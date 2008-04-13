@@ -31,18 +31,18 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLModElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLModElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLMODELEMENT_IID)
 
   /* attribute DOMString cite; */
-  NS_IMETHOD GetCite(nsAString & aCite) = 0;
-  NS_IMETHOD SetCite(const nsAString & aCite) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCite(nsAString & aCite) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCite(const nsAString & aCite) = 0;
 
   /* attribute DOMString dateTime; */
-  NS_IMETHOD GetDateTime(nsAString & aDateTime) = 0;
-  NS_IMETHOD SetDateTime(const nsAString & aDateTime) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDateTime(nsAString & aDateTime) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDateTime(const nsAString & aDateTime) = 0;
 
 };
 
@@ -50,24 +50,24 @@ class NS_NO_VTABLE nsIDOMHTMLModElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLMODELEMENT \
-  NS_IMETHOD GetCite(nsAString & aCite); \
-  NS_IMETHOD SetCite(const nsAString & aCite); \
-  NS_IMETHOD GetDateTime(nsAString & aDateTime); \
-  NS_IMETHOD SetDateTime(const nsAString & aDateTime); 
+  NS_SCRIPTABLE NS_IMETHOD GetCite(nsAString & aCite); \
+  NS_SCRIPTABLE NS_IMETHOD SetCite(const nsAString & aCite); \
+  NS_SCRIPTABLE NS_IMETHOD GetDateTime(nsAString & aDateTime); \
+  NS_SCRIPTABLE NS_IMETHOD SetDateTime(const nsAString & aDateTime); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLMODELEMENT(_to) \
-  NS_IMETHOD GetCite(nsAString & aCite) { return _to GetCite(aCite); } \
-  NS_IMETHOD SetCite(const nsAString & aCite) { return _to SetCite(aCite); } \
-  NS_IMETHOD GetDateTime(nsAString & aDateTime) { return _to GetDateTime(aDateTime); } \
-  NS_IMETHOD SetDateTime(const nsAString & aDateTime) { return _to SetDateTime(aDateTime); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCite(nsAString & aCite) { return _to GetCite(aCite); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCite(const nsAString & aCite) { return _to SetCite(aCite); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDateTime(nsAString & aDateTime) { return _to GetDateTime(aDateTime); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDateTime(const nsAString & aDateTime) { return _to SetDateTime(aDateTime); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLMODELEMENT(_to) \
-  NS_IMETHOD GetCite(nsAString & aCite) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCite(aCite); } \
-  NS_IMETHOD SetCite(const nsAString & aCite) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCite(aCite); } \
-  NS_IMETHOD GetDateTime(nsAString & aDateTime) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDateTime(aDateTime); } \
-  NS_IMETHOD SetDateTime(const nsAString & aDateTime) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDateTime(aDateTime); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCite(nsAString & aCite) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCite(aCite); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCite(const nsAString & aCite) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCite(aCite); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDateTime(nsAString & aDateTime) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDateTime(aDateTime); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDateTime(const nsAString & aDateTime) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDateTime(aDateTime); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

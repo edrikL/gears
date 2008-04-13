@@ -28,8 +28,6 @@
 #include <windows.h> // must manually #include before nsIEventQueueService.h
 #endif
 #include <gecko_sdk/include/nspr.h> // for PR_*
-#include <gecko_internal/nsIEventQueue.h>
-#include <gecko_internal/nsIEventQueueService.h>
 #include "gears/base/common/atomic_ops.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/localserver/common/http_constants.h"
@@ -46,6 +44,10 @@ const char16 *kIsOfflineErrorMessage =
 // firefox/mozila has one such very special thread
 // See cache_intercept.cc for implementation
 bool IsUiThread();
+// Returns the thread id of the main UI thread,
+// firefox/mozila has one such very special thread
+// See cache_intercept.cc for implementation
+PRThread* GetUiThread();
 
 //------------------------------------------------------------------------------
 // AsyncTask
@@ -56,10 +58,9 @@ AsyncTask::AsyncTask() :
     delete_when_done_(false),
     listener_(NULL),
     thread_(NULL),
-    listener_thread_(NULL),
-    http_request_(NULL),
-    params_(NULL),
-    refcount_(1) {
+    listener_thread_id_(NULL),
+    params_(NULL) {
+  Ref();
 }
 
 //------------------------------------------------------------------------------
@@ -69,21 +70,9 @@ AsyncTask::~AsyncTask() {
   assert(!thread_);
   assert(!http_request_.get());
   assert(!params_);
-  assert(refcount_ == 0 || 
-         (refcount_ == 1 && !delete_when_done_));  
+  assert(GetRef() == 0 || 
+         (GetRef() == 1 && !delete_when_done_));  
 }
-
-
-void AsyncTask::AddReference() {
-  AtomicIncrement(&refcount_, 1);
-}
-
-void AsyncTask::RemoveReference() {
-  if (AtomicIncrement(&refcount_, -1) == 0) {
-    delete this;
-  }
-}
-
 
 //------------------------------------------------------------------------------
 // Init
@@ -100,26 +89,9 @@ bool AsyncTask::Init() {
     return false;
   }
 
-  nsresult rv;
-  nsCOMPtr<nsIEventQueueService> event_queue_service =
-      do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  rv = event_queue_service->GetThreadEventQueue(
-            NS_CURRENT_THREAD, getter_AddRefs(listener_event_queue_));
-  if (NS_FAILED(rv) || !listener_event_queue_) {
-    return false;
-  }
-
-  rv = event_queue_service->GetThreadEventQueue(
-            NS_UI_THREAD, getter_AddRefs(ui_event_queue_));
-  if (NS_FAILED(rv) || !ui_event_queue_) {
-    return false;
-  }
-
-  listener_thread_ = PR_GetCurrentThread();
+  ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
+  listener_thread_id_ =
+      ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
   is_aborted_ = false;
   is_initialized_ = true;
   return true;
@@ -157,7 +129,7 @@ bool AsyncTask::Start() {
     return false;
   }
 
-  AddReference();  // reference is removed upon worker thread exit
+  Ref();  // reference is removed upon worker thread exit
 
   return true;
 }
@@ -176,7 +148,7 @@ void AsyncTask::Abort() {
   if (params_) {
     // An http request is in progress that we must terminate.
     // We can only terminate HTTP requests from the UI thread.
-    CallAsync(ui_event_queue_, kAbortHttpGetMessageCode, NULL);
+    CallAsync(GetUiThread(), kAbortHttpGetMessageCode, NULL);
   }
 }
 
@@ -184,9 +156,9 @@ void AsyncTask::OnAbortHttpGet() {
   assert(IsUiThread());
   LOG(("AsyncTask::OnAbortHttpGet - ui thread\n"));
 
-  if (http_request_.get()) {
-    http_request_.get()->SetOnReadyStateChange(NULL);
-    http_request_.get()->Abort();
+  if (http_request_) {
+    http_request_->SetOnReadyStateChange(NULL);
+    http_request_->Abort();
     http_request_.reset(NULL);
   }
   CritSecLock locker(lock_);
@@ -206,11 +178,11 @@ void AsyncTask::DeleteWhenDone() {
   SetListener(NULL);
   delete_when_done_ = true;
 
-  // We have to call unlock prior to calling RemoveReference 
+  // We have to call unlock prior to calling Unref 
   // otherwise the locker would try to access deleted memory, &lock_,
   // after it's been freed.
   locker.Unlock();
-  RemoveReference();  // remove the reference added by the constructor
+  Unref();  // remove the reference added by the constructor
 }
 
 
@@ -226,7 +198,7 @@ void AsyncTask::ThreadEntry(void *task) {
   }
   self->Run();
   self->thread_ = NULL;
-  self->RemoveReference();  // remove the reference added by the Start
+  self->Unref();  // remove the reference added by the Start
 }
 
 //------------------------------------------------------------------------------
@@ -235,7 +207,7 @@ void AsyncTask::ThreadEntry(void *task) {
 void AsyncTask::NotifyListener(int code, int param) {
   assert(IsTaskThread());
   if (listener_) {
-    CallAsync(listener_event_queue_, code, reinterpret_cast<void*>(param));
+    CallAsync(listener_thread_id_, code, reinterpret_cast<void*>(param));
   }
 }
 
@@ -256,6 +228,7 @@ void AsyncTask::OnListenerEvent(int msg_code, int msg_param) {
 struct AsyncTask::HttpRequestParameters {
   const char16 *full_url;
   bool is_capturing;
+  const char16 *reason_header_value;
   const char16 *if_mod_since_date;
   const char16 *required_cookie;
   WebCacheDB::PayloadInfo *payload;
@@ -273,6 +246,7 @@ struct AsyncTask::HttpRequestParameters {
 //------------------------------------------------------------------------------
 bool AsyncTask::HttpGet(const char16 *full_url,
                         bool is_capturing,
+                        const char16 *reason_header_value,
                         const char16 *if_mod_since_date,
                         const char16 *required_cookie,
                         WebCacheDB::PayloadInfo *payload,
@@ -311,6 +285,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
   HttpRequestParameters params;
   params.full_url = full_url;
   params.is_capturing = is_capturing;
+  params.reason_header_value = reason_header_value;
   params.if_mod_since_date = if_mod_since_date;
   params.required_cookie = required_cookie;
   params.payload = payload;
@@ -320,7 +295,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
   params_ = &params;
 
   // Send a message to the UI thread to initiate the get
-  CallAsync(ui_event_queue_, kStartHttpGetMessageCode, NULL);
+  CallAsync(GetUiThread(), kStartHttpGetMessageCode, NULL);
 
   // Wait for completion
   PR_Wait(lock_, PR_INTERVAL_NO_TIMEOUT);
@@ -358,9 +333,8 @@ bool AsyncTask::OnStartHttpGet() {
     }
   }
 
-  ScopedHttpRequestPtr scoped_http_request(HttpRequest::Create());
-  HttpRequest *http_request = scoped_http_request.get();
-  if (!http_request) {
+  scoped_refptr<HttpRequest> http_request;
+  if (!HttpRequest::Create(&http_request)) {
     return false;
   }
 
@@ -374,6 +348,13 @@ bool AsyncTask::OnStartHttpGet() {
     http_request->SetRedirectBehavior(HttpRequest::FOLLOW_NONE);
     if (!http_request->SetRequestHeader(HttpConstants::kXGoogleGearsHeader,
                                         STRING16(L"1"))) {
+      return false;
+    }
+  }
+
+  if (params_->reason_header_value && params_->reason_header_value[0]) {
+    if (!http_request->SetRequestHeader(HttpConstants::kXGearsReasonHeader,
+                                        params_->reason_header_value)) {
       return false;
     }
   }
@@ -397,7 +378,7 @@ bool AsyncTask::OnStartHttpGet() {
 
   http_request->SetOnReadyStateChange(this);
 
-  http_request_.reset(scoped_http_request.release());
+  http_request_ = http_request;
   if (!http_request->Send()) {
     http_request->SetOnReadyStateChange(NULL);
     http_request_.reset(NULL);
@@ -412,7 +393,7 @@ bool AsyncTask::OnStartHttpGet() {
 //------------------------------------------------------------------------------
 void AsyncTask::ReadyStateChanged(HttpRequest *http_request) {
   assert(params_);
-  assert(http_request_.get() == http_request);
+  assert(http_request_ == http_request);
   HttpRequest::ReadyState state;
   if (http_request->GetReadyState(&state)) {
     if (state == HttpRequest::COMPLETE) {
@@ -477,20 +458,24 @@ void AsyncTask::OnAsyncCall(int msg_code, void *msg_param) {
 //------------------------------------------------------------------------------
 // AsyncCallEvent - Custom event class used to post messages across threads
 //------------------------------------------------------------------------------
-struct AsyncTask::AsyncCallEvent : PLEvent {
+class AsyncTask::AsyncCallEvent : public AsyncFunctor {
+public:
   AsyncCallEvent(AsyncTask *task, int code, void *param)
       : task(task), msg_code(code), msg_param(param) {
-    task->AddReference();
+    task->Ref();
   }
+
   ~AsyncCallEvent() {
-    if (task) {
-      AbandonReference();
-    }
+    task->Unref();
   }
-  void AbandonReference() {
-    task->RemoveReference();
-    task = NULL;
+
+  void Run() {
+    task->OnAsyncCall(msg_code, msg_param);
   }
+
+private:
+  // Note: we can't make this a scoped_refptr without making AsyncTask's
+  // Ref()/Unref() members public.
   AsyncTask *task;
   int msg_code;
   void *msg_param;
@@ -500,46 +485,11 @@ struct AsyncTask::AsyncCallEvent : PLEvent {
 // CallAsync - Posts a message to another thead's event queue. The message will
 // be delivered to this AsyncTask instance on that thread via OnAsyncCall.
 //------------------------------------------------------------------------------
-nsresult AsyncTask::CallAsync(nsIEventQueue *event_queue, 
+nsresult AsyncTask::CallAsync(ThreadId thread_id,
                               int msg_code, void *msg_param) {
-  AsyncCallEvent *event = new AsyncCallEvent(this, msg_code, msg_param);
-  if (!event) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult rv = event_queue->InitEvent(event, this,
-      reinterpret_cast<PLHandleEventProc>(AsyncCall_EventHandlerFunc),
-      reinterpret_cast<PLDestroyEventProc>(AsyncCall_EventCleanupFunc));
-  if (NS_FAILED(rv)) {
-    event->AbandonReference();
-    return rv;
-  }
 
-  rv = event_queue->PostEvent(event);
-  if (NS_FAILED(rv)) {
-    // TODO(michaeln): PL_DestroyEvent(event);
-    event->AbandonReference();
-  }
-  return rv;
-}
-
-//------------------------------------------------------------------------------
-// AsyncCall_EventHandlerFunc
-//------------------------------------------------------------------------------
-// static
-void *PR_CALLBACK
-AsyncTask::AsyncCall_EventHandlerFunc(AsyncCallEvent *event) {
-  if (event->task) {
-    event->task->OnAsyncCall(event->msg_code, event->msg_param);
-    event->AbandonReference();
-  }
-  return nsnull;
-}
-
-//------------------------------------------------------------------------------
-// AsyncCall_EventCleanupFunc
-//------------------------------------------------------------------------------
-// static
-void PR_CALLBACK
-AsyncTask::AsyncCall_EventCleanupFunc(AsyncCallEvent *event) {
-  delete event;
+  AsyncRouter::GetInstance()->CallAsync(
+      thread_id,
+      new AsyncCallEvent(this, msg_code, msg_param));
+  return NS_OK;
 }

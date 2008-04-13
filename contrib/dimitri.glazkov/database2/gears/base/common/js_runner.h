@@ -131,6 +131,9 @@ class JsRunnerInterface {
   virtual void ForceGC() = 0;
 #endif
 
+  // Reports an error to the JsRunner's global scope. Equivalent to the
+  // following JavaScript: eval("throw new Error('hello')");
+  virtual void ThrowGlobalError(const std::string16 &message) = 0;
 };
 
 // Wraps the calls for adding and removing event handlers.  This is designed to

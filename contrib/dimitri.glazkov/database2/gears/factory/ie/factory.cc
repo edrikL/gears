@@ -33,14 +33,18 @@
 #include "gears/console/ie/console_ie.h"
 #include "gears/database/ie/database.h"
 #include "gears/database2/manager.h"
-#include "gears/desktop/desktop_ie.h"
+#include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/factory/ie/factory.h"
 #include "gears/httprequest/ie/httprequest_ie.h"
+#ifdef WINCE
+// The Image API is not yet available for WinCE.
+#else
 #ifdef OFFICIAL_BUILD
 // The Image API has not been finalized for official builds
 #else
-#include "gears/image/ie/image_loader_ie.h"
+#include "gears/image/image_loader.h"
+#endif
 #endif
 #include "gears/localserver/ie/localserver_ie.h"
 #include "gears/timer/timer.h"
@@ -52,8 +56,7 @@
 
 GearsFactory::GearsFactory()
     : is_creation_suspended_(false),
-      is_permission_granted_(false),
-      is_permission_value_from_user_(false) {
+      permission_state_(NOT_SET) {  // can't check DB because no origin yet
   SetActiveUserFlag();
 }
 
@@ -65,6 +68,19 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
 
   LOG16((L"GearsFactory::create(%s)\n", object_name_bstr));
 
+#ifdef WINCE
+  // If privateSetGlobalObject has not been called from JavaScript (the call is
+  // made from gears_init.js), then the factory won't be sited. In this case,
+  // we should not create any Gears objects.
+  if (!IsFactoryInitialized(this)) {
+    LOG16((L"GearsFactory::create: Failed - factory has not been sited.\n"));
+    RETURN_EXCEPTION(STRING16(PRODUCT_FRIENDLY_NAME
+                              L" has not been initialized correctly. "
+                              L"Please ensure that you are using the most "
+                              L"recent version of gears_init.js."));
+  }
+#endif
+
   if (DetectedVersionCollision()) {
     if (!EnvIsWorker()) {
       MaybeNotifyUserOfVersionCollision();  // only notifies once per process
@@ -74,7 +90,9 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
 
   // Make sure the user gives this origin permission to use Gears.
 
-  if (!HasPermissionToUseGears(this, NULL, NULL, NULL)) {
+  bool use_temporary_permissions = true;
+  if (!HasPermissionToUseGears(this, use_temporary_permissions,
+                               NULL, NULL, NULL)) {
     RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
                               PRODUCT_FRIENDLY_NAME L"."));
   }
@@ -125,17 +143,31 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
 bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
                                           IDispatch **retval,
                                           std::string16 *error) {
-  GComPtr<ModuleImplBaseClass> object(NULL);
+  scoped_refptr<ModuleImplBaseClass> object;
 
   if (object_name == STRING16(L"beta.test")) {
 #ifdef DEBUG
-    object.reset(CreateModule<GearsTest>(GetJsRunner()));
+    CreateModule<GearsTest>(GetJsRunner(), &object);
 #else
     *error = STRING16(L"Object is only available in debug build.");
     return false;
 #endif
   } else if (object_name == STRING16(L"beta.databasemanager")) {
-    object.reset(CreateModule<Database2Manager>(GetJsRunner()));
+    CreateModule<Database2Manager>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.desktop")) {
+    CreateModule<GearsDesktop>(GetJsRunner(), &object);
+#ifdef WINCE
+// The Image API is not yet available for WinCE.
+#else
+#ifdef OFFICIAL_BUILD
+// The Image API has not been finalized for official builds
+#else
+  } else if (object_name == STRING16(L"beta.imageloader")) {
+    CreateModule<GearsImageLoader>(GetJsRunner(), &object);
+#endif
+#endif
+  } else if (object_name == STRING16(L"beta.timer")) {
+    CreateModule<GearsTimer>(GetJsRunner(), &object);
   } else {
     // Don't return an error here. Caller handles reporting unknown modules.
     error->clear();
@@ -149,7 +181,7 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   }
 
   *retval = object->GetWrapperToken().pdispVal;
-  object.ReleaseNewObjectToScript();
+  ReleaseNewObjectToScript(object.get());
   return true;
 }
 
@@ -161,7 +193,7 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
   HRESULT hr = E_FAIL;
   if (0) {  // dummy statement to support mixed "#ifdef" and "else if" below
 #ifdef WINCE
-  // TODO(oshlack): Implement console for WinCE.
+  // TODO(aa): Implement console for WinCE.
 #else
   } else if (object_name == STRING16(L"beta.console")) {
     CComObject<GearsConsole> *obj;
@@ -174,37 +206,14 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
     hr = CComObject<GearsDatabase>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
-#ifdef WINCE
-  // TODO(steveblock): Implement desktop for WinCE.
-#else
-  } else if (object_name == STRING16(L"beta.desktop")) {
-    CComObject<GearsDesktop> *obj;
-    hr = CComObject<GearsDesktop>::CreateInstance(&obj);
-    base_class = obj;
-    idispatch = obj;
-#endif
   } else if (object_name == STRING16(L"beta.httprequest")) {
     CComObject<GearsHttpRequest> *obj;
     hr = CComObject<GearsHttpRequest>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
-#ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
-#else
-  } else if (object_name == STRING16(L"beta.imageloader")) {
-    CComObject<GearsImageLoader> *obj;
-    hr = CComObject<GearsImageLoader>::CreateInstance(&obj);
-    base_class = obj;
-    idispatch = obj;
-#endif
   } else if (object_name == STRING16(L"beta.localserver")) {
     CComObject<GearsLocalServer> *obj;
     hr = CComObject<GearsLocalServer>::CreateInstance(&obj);
-    base_class = obj;
-    idispatch = obj;
-  } else if (object_name == STRING16(L"beta.timer")) {
-    CComObject<GearsTimer> *obj;
-    hr = CComObject<GearsTimer>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
   } else if (object_name == STRING16(L"beta.workerpool")) {
@@ -274,9 +283,6 @@ STDMETHODIMP GearsFactory::get_version(BSTR *retval) {
 }
 
 
-#ifdef WINCE
-// Hold WinCE feature set at version 0.2 for now.
-#else
 STDMETHODIMP GearsFactory::getPermission(const VARIANT *site_name_in,
                                          const VARIANT *image_url_in,
                                          const VARIANT *extra_message_in,
@@ -311,7 +317,9 @@ STDMETHODIMP GearsFactory::getPermission(const VARIANT *site_name_in,
     }
   }
 
-  if (HasPermissionToUseGears(this, image_url.c_str(), site_name.c_str(),
+  bool use_temporary_permissions = false;
+  if (HasPermissionToUseGears(this, use_temporary_permissions,
+                              image_url.c_str(), site_name.c_str(),
                               extra_message.c_str())) {
     *retval = VARIANT_TRUE;
   } else {
@@ -325,10 +333,42 @@ STDMETHODIMP GearsFactory::getPermission(const VARIANT *site_name_in,
 // indicates whether USER opt-in is still required, not whether DEVELOPER
 // methods have been called correctly (e.g. allowCrossOrigin).
 STDMETHODIMP GearsFactory::get_hasPermission(VARIANT_BOOL *retval) {
-  *retval = is_permission_granted_ ? VARIANT_TRUE : VARIANT_FALSE;
+  switch (permission_state_) {
+    case ALLOWED_PERMANENTLY:
+    case ALLOWED_TEMPORARILY:
+      *retval = VARIANT_TRUE;
+      break;
+    case DENIED_PERMANENTLY:
+    case DENIED_TEMPORARILY:
+      *retval = VARIANT_FALSE;
+      break;
+    case NOT_SET: {
+      // If the state is unknown, look in the PermissionsDB. If a persisted
+      // value exists, update permission_state_.  Otherwise do NOT modify
+      // permission_state_; it would affect subsequent factory.create() calls.
+      *retval = VARIANT_FALSE;  // default value; covers errors too
+      PermissionsDB *permissions_db = PermissionsDB::GetDB();
+      if (permissions_db) {
+        switch (permissions_db->GetCanAccessGears(EnvPageSecurityOrigin())) {
+          case PermissionsDB::PERMISSION_ALLOWED:
+            permission_state_ = ALLOWED_PERMANENTLY;
+            *retval = VARIANT_TRUE;
+            break;
+          case PermissionsDB::PERMISSION_DENIED:
+            permission_state_ = DENIED_PERMANENTLY;
+            *retval = VARIANT_FALSE;
+            break;
+          default:
+            break;  // use the default retval already set
+        }
+      }
+      break;
+    }
+    default:
+      RETURN_EXCEPTION(STRING16(L"Internal error."));
+  }
   RETURN_NORMAL();
 }
-#endif
 
 
 // InitBaseFromDOM needs the object to be sited.  We override SetSite just to
@@ -346,7 +386,14 @@ STDMETHODIMP GearsFactory::SetSite(IUnknown *site) {
 
 #ifdef WINCE
 STDMETHODIMP GearsFactory::privateSetGlobalObject(IDispatch *js_dispatch) {
-  return InitBaseFromDOM(js_dispatch);
+  if (!IsFactoryInitialized(this)) {
+    if (!InitBaseFromDOM(js_dispatch)) {
+      RETURN_EXCEPTION(STRING16(L"Failed to initialize "
+                                PRODUCT_FRIENDLY_NAME
+                                L"."));
+    }
+  }
+  RETURN_NORMAL();
 }
 #endif
 
@@ -361,3 +408,13 @@ void GearsFactory::ResumeObjectCreationAndUpdatePermissions() {
   // propagate cross-origin opt-in to the permissions DB.
   is_creation_suspended_ = false;
 }
+
+#ifdef WINCE
+// On WinCE we initialize the Factory with a call from JavaScript. Since we
+// can't guarantee that this call will be made, we need a method to determine
+// whether or not an object has been successfully initialized. This method is
+// a friend of ModuleImplBaseClass for this purpose.
+static bool IsFactoryInitialized(GearsFactory *factory) {
+  return factory->is_initialized_;
+}
+#endif

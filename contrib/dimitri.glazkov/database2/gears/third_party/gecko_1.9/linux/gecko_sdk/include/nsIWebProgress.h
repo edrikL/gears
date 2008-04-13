@@ -45,7 +45,7 @@ class nsIWebProgressListener; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIWebProgress : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIWebProgress : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWEBPROGRESS_IID)
@@ -139,7 +139,7 @@ class NS_NO_VTABLE nsIWebProgress : public nsISupports {
    *        Indicates that aListener was already registered.
    */
   /* void addProgressListener (in nsIWebProgressListener aListener, in unsigned long aNotifyMask); */
-  NS_IMETHOD AddProgressListener(nsIWebProgressListener *aListener, PRUint32 aNotifyMask) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AddProgressListener(nsIWebProgressListener *aListener, PRUint32 aNotifyMask) = 0;
 
   /**
    * Removes a previously registered listener of progress events.
@@ -152,7 +152,7 @@ class NS_NO_VTABLE nsIWebProgress : public nsISupports {
    *        Indicates that aListener was not registered.
    */
   /* void removeProgressListener (in nsIWebProgressListener aListener); */
-  NS_IMETHOD RemoveProgressListener(nsIWebProgressListener *aListener) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveProgressListener(nsIWebProgressListener *aListener) = 0;
 
   /**
    * The DOM window associated with this nsIWebProgress instance.
@@ -161,14 +161,14 @@ class NS_NO_VTABLE nsIWebProgress : public nsISupports {
    *        Indicates that there is no associated DOM window.
    */
   /* readonly attribute nsIDOMWindow DOMWindow; */
-  NS_IMETHOD GetDOMWindow(nsIDOMWindow * *aDOMWindow) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDOMWindow(nsIDOMWindow * *aDOMWindow) = 0;
 
   /**
    * Indicates whether or not a document is currently being loaded
    * in the context of this nsIWebProgress instance.
    */
   /* readonly attribute PRBool isLoadingDocument; */
-  NS_IMETHOD GetIsLoadingDocument(PRBool *aIsLoadingDocument) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIsLoadingDocument(PRBool *aIsLoadingDocument) = 0;
 
 };
 
@@ -176,24 +176,24 @@ class NS_NO_VTABLE nsIWebProgress : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWEBPROGRESS \
-  NS_IMETHOD AddProgressListener(nsIWebProgressListener *aListener, PRUint32 aNotifyMask); \
-  NS_IMETHOD RemoveProgressListener(nsIWebProgressListener *aListener); \
-  NS_IMETHOD GetDOMWindow(nsIDOMWindow * *aDOMWindow); \
-  NS_IMETHOD GetIsLoadingDocument(PRBool *aIsLoadingDocument); 
+  NS_SCRIPTABLE NS_IMETHOD AddProgressListener(nsIWebProgressListener *aListener, PRUint32 aNotifyMask); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveProgressListener(nsIWebProgressListener *aListener); \
+  NS_SCRIPTABLE NS_IMETHOD GetDOMWindow(nsIDOMWindow * *aDOMWindow); \
+  NS_SCRIPTABLE NS_IMETHOD GetIsLoadingDocument(PRBool *aIsLoadingDocument); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIWEBPROGRESS(_to) \
-  NS_IMETHOD AddProgressListener(nsIWebProgressListener *aListener, PRUint32 aNotifyMask) { return _to AddProgressListener(aListener, aNotifyMask); } \
-  NS_IMETHOD RemoveProgressListener(nsIWebProgressListener *aListener) { return _to RemoveProgressListener(aListener); } \
-  NS_IMETHOD GetDOMWindow(nsIDOMWindow * *aDOMWindow) { return _to GetDOMWindow(aDOMWindow); } \
-  NS_IMETHOD GetIsLoadingDocument(PRBool *aIsLoadingDocument) { return _to GetIsLoadingDocument(aIsLoadingDocument); } 
+  NS_SCRIPTABLE NS_IMETHOD AddProgressListener(nsIWebProgressListener *aListener, PRUint32 aNotifyMask) { return _to AddProgressListener(aListener, aNotifyMask); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveProgressListener(nsIWebProgressListener *aListener) { return _to RemoveProgressListener(aListener); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDOMWindow(nsIDOMWindow * *aDOMWindow) { return _to GetDOMWindow(aDOMWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsLoadingDocument(PRBool *aIsLoadingDocument) { return _to GetIsLoadingDocument(aIsLoadingDocument); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIWEBPROGRESS(_to) \
-  NS_IMETHOD AddProgressListener(nsIWebProgressListener *aListener, PRUint32 aNotifyMask) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddProgressListener(aListener, aNotifyMask); } \
-  NS_IMETHOD RemoveProgressListener(nsIWebProgressListener *aListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveProgressListener(aListener); } \
-  NS_IMETHOD GetDOMWindow(nsIDOMWindow * *aDOMWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDOMWindow(aDOMWindow); } \
-  NS_IMETHOD GetIsLoadingDocument(PRBool *aIsLoadingDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsLoadingDocument(aIsLoadingDocument); } 
+  NS_SCRIPTABLE NS_IMETHOD AddProgressListener(nsIWebProgressListener *aListener, PRUint32 aNotifyMask) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddProgressListener(aListener, aNotifyMask); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveProgressListener(nsIWebProgressListener *aListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveProgressListener(aListener); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDOMWindow(nsIDOMWindow * *aDOMWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDOMWindow(aDOMWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsLoadingDocument(PRBool *aIsLoadingDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsLoadingDocument(aIsLoadingDocument); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

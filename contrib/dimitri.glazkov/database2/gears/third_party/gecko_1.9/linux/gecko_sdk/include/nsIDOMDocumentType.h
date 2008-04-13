@@ -22,7 +22,7 @@
   {0xa6cf9077, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMDocumentType : public nsIDOMNode {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMDocumentType : public nsIDOMNode {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMDOCUMENTTYPE_IID)
@@ -39,22 +39,22 @@ class NS_NO_VTABLE nsIDOMDocumentType : public nsIDOMNode {
  * @status FROZEN
  */
   /* readonly attribute DOMString name; */
-  NS_IMETHOD GetName(nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) = 0;
 
   /* readonly attribute nsIDOMNamedNodeMap entities; */
-  NS_IMETHOD GetEntities(nsIDOMNamedNodeMap * *aEntities) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetEntities(nsIDOMNamedNodeMap * *aEntities) = 0;
 
   /* readonly attribute nsIDOMNamedNodeMap notations; */
-  NS_IMETHOD GetNotations(nsIDOMNamedNodeMap * *aNotations) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNotations(nsIDOMNamedNodeMap * *aNotations) = 0;
 
   /* readonly attribute DOMString publicId; */
-  NS_IMETHOD GetPublicId(nsAString & aPublicId) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPublicId(nsAString & aPublicId) = 0;
 
   /* readonly attribute DOMString systemId; */
-  NS_IMETHOD GetSystemId(nsAString & aSystemId) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSystemId(nsAString & aSystemId) = 0;
 
   /* readonly attribute DOMString internalSubset; */
-  NS_IMETHOD GetInternalSubset(nsAString & aInternalSubset) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetInternalSubset(nsAString & aInternalSubset) = 0;
 
 };
 
@@ -62,30 +62,30 @@ class NS_NO_VTABLE nsIDOMDocumentType : public nsIDOMNode {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMDOCUMENTTYPE \
-  NS_IMETHOD GetName(nsAString & aName); \
-  NS_IMETHOD GetEntities(nsIDOMNamedNodeMap * *aEntities); \
-  NS_IMETHOD GetNotations(nsIDOMNamedNodeMap * *aNotations); \
-  NS_IMETHOD GetPublicId(nsAString & aPublicId); \
-  NS_IMETHOD GetSystemId(nsAString & aSystemId); \
-  NS_IMETHOD GetInternalSubset(nsAString & aInternalSubset); 
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD GetEntities(nsIDOMNamedNodeMap * *aEntities); \
+  NS_SCRIPTABLE NS_IMETHOD GetNotations(nsIDOMNamedNodeMap * *aNotations); \
+  NS_SCRIPTABLE NS_IMETHOD GetPublicId(nsAString & aPublicId); \
+  NS_SCRIPTABLE NS_IMETHOD GetSystemId(nsAString & aSystemId); \
+  NS_SCRIPTABLE NS_IMETHOD GetInternalSubset(nsAString & aInternalSubset); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMDOCUMENTTYPE(_to) \
-  NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
-  NS_IMETHOD GetEntities(nsIDOMNamedNodeMap * *aEntities) { return _to GetEntities(aEntities); } \
-  NS_IMETHOD GetNotations(nsIDOMNamedNodeMap * *aNotations) { return _to GetNotations(aNotations); } \
-  NS_IMETHOD GetPublicId(nsAString & aPublicId) { return _to GetPublicId(aPublicId); } \
-  NS_IMETHOD GetSystemId(nsAString & aSystemId) { return _to GetSystemId(aSystemId); } \
-  NS_IMETHOD GetInternalSubset(nsAString & aInternalSubset) { return _to GetInternalSubset(aInternalSubset); } 
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetEntities(nsIDOMNamedNodeMap * *aEntities) { return _to GetEntities(aEntities); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotations(nsIDOMNamedNodeMap * *aNotations) { return _to GetNotations(aNotations); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPublicId(nsAString & aPublicId) { return _to GetPublicId(aPublicId); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSystemId(nsAString & aSystemId) { return _to GetSystemId(aSystemId); } \
+  NS_SCRIPTABLE NS_IMETHOD GetInternalSubset(nsAString & aInternalSubset) { return _to GetInternalSubset(aInternalSubset); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMDOCUMENTTYPE(_to) \
-  NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD GetEntities(nsIDOMNamedNodeMap * *aEntities) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetEntities(aEntities); } \
-  NS_IMETHOD GetNotations(nsIDOMNamedNodeMap * *aNotations) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotations(aNotations); } \
-  NS_IMETHOD GetPublicId(nsAString & aPublicId) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPublicId(aPublicId); } \
-  NS_IMETHOD GetSystemId(nsAString & aSystemId) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSystemId(aSystemId); } \
-  NS_IMETHOD GetInternalSubset(nsAString & aInternalSubset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInternalSubset(aInternalSubset); } 
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetEntities(nsIDOMNamedNodeMap * *aEntities) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetEntities(aEntities); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotations(nsIDOMNamedNodeMap * *aNotations) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotations(aNotations); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPublicId(nsAString & aPublicId) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPublicId(aPublicId); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSystemId(nsAString & aSystemId) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSystemId(aSystemId); } \
+  NS_SCRIPTABLE NS_IMETHOD GetInternalSubset(nsAString & aInternalSubset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInternalSubset(aInternalSubset); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

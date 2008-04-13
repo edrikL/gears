@@ -73,6 +73,23 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 http://msdn.microsoft.com/library/default.asp?url=/library/en-us/IETechCol/cols/dnexpie/activex_security.asp?frame=true -->
               <RegistryKey Root='HKLM' Action='createAndRemoveOnUninstall'
                 Key='Software\Microsoft\Windows\CurrentVersion\Ext\PreApproved\{C93A7319-17B3-4504-87CD-03EFC6103E6E}' />
+              <!-- For vista, a setting that allows us to silently load the our dll with low integrity using rundll32.exe. 
+                See http://msdn2.microsoft.com/en-us/library/bb250462.aspx -->
+              <RegistryKey Root='HKLM' Action='createAndRemoveOnUninstall'
+                Key='Software\Microsoft\Internet Explorer\Low Rights\RunDll32Policy\PRODUCT_SHORT_NAME_UQ.dll' />
+              <!-- For vista, a setting that allows us to silently run vista_broker.exe with medium integrity level (3) -->
+              <RegistryValue
+                Root='HKLM' Key='Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{A553FC79-0F5A-4DDE-A7AE-920F6EE4E264}'
+                Name='AppName' Value='vista_broker.exe'
+                Action='write' Type='string' />
+              <RegistryValue
+                Root='HKLM' Key='Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{A553FC79-0F5A-4DDE-A7AE-920F6EE4E264}'
+                Name='AppPath' Value='[OurIEVersionedDir]'
+                Action='write' Type='string' />
+              <RegistryValue
+                Root='HKLM' Key='Software\Microsoft\Internet Explorer\Low Rights\ElevationPolicy\{A553FC79-0F5A-4DDE-A7AE-920F6EE4E264}'
+                Name='Policy' Value='3'
+                Action='write' Type='integer' />
             </Component>
 
             <Component Id='OurFFRegistry' Guid='$(var.OurComponentGUID_FFRegistry)'>
@@ -99,6 +116,8 @@ m4_ifdef(~`DEBUG`~,~`m4_dnl
                   <File Id='ie_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
                     Source="$(var.OurIEPath)/PRODUCT_SHORT_NAME_UQ.pdb" />
 `~)
+                  <File Id='vista_broker' Name='vista_broker.exe' DiskId='1'
+                    Source="$(var.OurIEPath)/vista_broker.exe" />
                 </Component>
               </Directory>
             </Directory>
@@ -117,11 +136,15 @@ m4_ifdef(~`DEBUG`~,~`m4_dnl
                   Guid='$(var.OurComponentGUID_FFComponentsDirFiles)'>
                   <File Id='ff_bootstrap.js' Name='bootstrap.js'
                     DiskId='1' Source="$(var.OurFFPath)/components/bootstrap.js" />
-                  <File Id='ff_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
+                  <File Id='ff3_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.dll" />
+                  <File Id='ff2_dll' Name='PRODUCT_SHORT_NAME_UQ-ff2.dll' DiskId='1'
+                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ-ff2.dll" />
 m4_ifdef(~`DEBUG`~,~`m4_dnl
-                  <File Id='ff_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
+                  <File Id='ff3_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.pdb" />
+                  <File Id='ff2_pdb' Name='PRODUCT_SHORT_NAME_UQ-ff2.pdb' DiskId='1'
+                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ-ff2.pdb" />
 `~)
                   <File Id='ff_xpt' Name='PRODUCT_SHORT_NAME_UQ.xpt' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.xpt" />

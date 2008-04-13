@@ -27,7 +27,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIHttpHeaderVisitor : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIHttpHeaderVisitor : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTTPHEADERVISITOR_IID)
@@ -44,7 +44,7 @@ class NS_NO_VTABLE nsIHttpHeaderVisitor : public nsISupports {
      * @throw any exception to terminate enumeration
      */
   /* void visitHeader (in ACString aHeader, in ACString aValue); */
-  NS_IMETHOD VisitHeader(const nsACString & aHeader, const nsACString & aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD VisitHeader(const nsACString & aHeader, const nsACString & aValue) = 0;
 
 };
 
@@ -52,15 +52,15 @@ class NS_NO_VTABLE nsIHttpHeaderVisitor : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIHTTPHEADERVISITOR \
-  NS_IMETHOD VisitHeader(const nsACString & aHeader, const nsACString & aValue); 
+  NS_SCRIPTABLE NS_IMETHOD VisitHeader(const nsACString & aHeader, const nsACString & aValue); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIHTTPHEADERVISITOR(_to) \
-  NS_IMETHOD VisitHeader(const nsACString & aHeader, const nsACString & aValue) { return _to VisitHeader(aHeader, aValue); } 
+  NS_SCRIPTABLE NS_IMETHOD VisitHeader(const nsACString & aHeader, const nsACString & aValue) { return _to VisitHeader(aHeader, aValue); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIHTTPHEADERVISITOR(_to) \
-  NS_IMETHOD VisitHeader(const nsACString & aHeader, const nsACString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->VisitHeader(aHeader, aValue); } 
+  NS_SCRIPTABLE NS_IMETHOD VisitHeader(const nsACString & aHeader, const nsACString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->VisitHeader(aHeader, aValue); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

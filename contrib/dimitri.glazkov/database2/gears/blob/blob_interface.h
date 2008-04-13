@@ -26,24 +26,31 @@
 #ifndef GEARS_BLOB_BLOB_INTERFACE_H__
 #define GEARS_BLOB_BLOB_INTERFACE_H__
 
-#include "gears/base/common/common.h"
+#ifdef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+#else
 
-class BlobInterface {
+#include "gears/base/common/common.h"
+#include "gears/base/common/scoped_refptr.h"
+
+class BlobInterface : public RefCounted {
  public:
-  // Returns the number of bytes successfully read.  The position is relative
-  // to the beginning of the blob contents, and is not related to previous
-  // reads.  Reads of max_bytes < 0 will be ignored (and return 0), and
-  // similarly for position < 0.
-  virtual int Read(uint8 *destination, int max_bytes, int64 position) const = 0;
+  // Reads up to max_bytes from the blob beginning at the absolute position
+  // indicated by offset, and writes the data into destination.  Multiple Reads
+  // are unrelated.  Returns the number of bytes successfully read, or -1 on
+  // error.  A null destination or negative offset or max_bytes will result in
+  // an error.  An offset beyond the end of the stream will succeed and return 0
+  // bytes.
+  virtual int64 Read(uint8 *destination, int64 offset,
+                     int64 max_bytes) const = 0;
 
   // Note that Length can be volatile, e.g. a file-backed Blob can have that
   // file's size change underneath it.
   virtual int64 Length() const = 0;
 
-  virtual ~BlobInterface() {}
-
  protected:
   BlobInterface() {}
+  virtual ~BlobInterface() {}
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(BlobInterface);
@@ -53,7 +60,9 @@ class EmptyBlob : public BlobInterface {
  public:
   EmptyBlob() {}
 
-  int Read(uint8 *destination, int max_bytes, int64 position) const {
+  int64 Read(uint8 *destination, int64 offset, int64 max_bytes) const {
+    if (!destination || (offset < 0) || (max_bytes < 0))
+      return -1;
     return 0;
   }
 
@@ -64,5 +73,7 @@ class EmptyBlob : public BlobInterface {
  private:
   DISALLOW_EVIL_CONSTRUCTORS(EmptyBlob);
 };
+
+#endif  // not OFFICIAL_BUILD
 
 #endif  // GEARS_BLOB_BLOB_INTERFACE_H__

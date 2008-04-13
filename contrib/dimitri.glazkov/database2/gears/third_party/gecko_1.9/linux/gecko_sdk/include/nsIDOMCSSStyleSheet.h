@@ -22,7 +22,7 @@
   {0xa6cf90c2, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMCSSStyleSheet : public nsIDOMStyleSheet {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMCSSStyleSheet : public nsIDOMStyleSheet {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMCSSSTYLESHEET_IID)
@@ -37,16 +37,16 @@ class NS_NO_VTABLE nsIDOMCSSStyleSheet : public nsIDOMStyleSheet {
  * @status FROZEN
  */
   /* readonly attribute nsIDOMCSSRule ownerRule; */
-  NS_IMETHOD GetOwnerRule(nsIDOMCSSRule * *aOwnerRule) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetOwnerRule(nsIDOMCSSRule * *aOwnerRule) = 0;
 
   /* readonly attribute nsIDOMCSSRuleList cssRules; */
-  NS_IMETHOD GetCssRules(nsIDOMCSSRuleList * *aCssRules) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCssRules(nsIDOMCSSRuleList * *aCssRules) = 0;
 
   /* unsigned long insertRule (in DOMString rule, in unsigned long index)  raises (DOMException); */
-  NS_IMETHOD InsertRule(const nsAString & rule, PRUint32 index, PRUint32 *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD InsertRule(const nsAString & rule, PRUint32 index, PRUint32 *_retval) = 0;
 
   /* void deleteRule (in unsigned long index)  raises (DOMException); */
-  NS_IMETHOD DeleteRule(PRUint32 index) = 0;
+  NS_SCRIPTABLE NS_IMETHOD DeleteRule(PRUint32 index) = 0;
 
 };
 
@@ -54,24 +54,24 @@ class NS_NO_VTABLE nsIDOMCSSStyleSheet : public nsIDOMStyleSheet {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMCSSSTYLESHEET \
-  NS_IMETHOD GetOwnerRule(nsIDOMCSSRule * *aOwnerRule); \
-  NS_IMETHOD GetCssRules(nsIDOMCSSRuleList * *aCssRules); \
-  NS_IMETHOD InsertRule(const nsAString & rule, PRUint32 index, PRUint32 *_retval); \
-  NS_IMETHOD DeleteRule(PRUint32 index); 
+  NS_SCRIPTABLE NS_IMETHOD GetOwnerRule(nsIDOMCSSRule * *aOwnerRule); \
+  NS_SCRIPTABLE NS_IMETHOD GetCssRules(nsIDOMCSSRuleList * *aCssRules); \
+  NS_SCRIPTABLE NS_IMETHOD InsertRule(const nsAString & rule, PRUint32 index, PRUint32 *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD DeleteRule(PRUint32 index); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMCSSSTYLESHEET(_to) \
-  NS_IMETHOD GetOwnerRule(nsIDOMCSSRule * *aOwnerRule) { return _to GetOwnerRule(aOwnerRule); } \
-  NS_IMETHOD GetCssRules(nsIDOMCSSRuleList * *aCssRules) { return _to GetCssRules(aCssRules); } \
-  NS_IMETHOD InsertRule(const nsAString & rule, PRUint32 index, PRUint32 *_retval) { return _to InsertRule(rule, index, _retval); } \
-  NS_IMETHOD DeleteRule(PRUint32 index) { return _to DeleteRule(index); } 
+  NS_SCRIPTABLE NS_IMETHOD GetOwnerRule(nsIDOMCSSRule * *aOwnerRule) { return _to GetOwnerRule(aOwnerRule); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCssRules(nsIDOMCSSRuleList * *aCssRules) { return _to GetCssRules(aCssRules); } \
+  NS_SCRIPTABLE NS_IMETHOD InsertRule(const nsAString & rule, PRUint32 index, PRUint32 *_retval) { return _to InsertRule(rule, index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD DeleteRule(PRUint32 index) { return _to DeleteRule(index); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMCSSSTYLESHEET(_to) \
-  NS_IMETHOD GetOwnerRule(nsIDOMCSSRule * *aOwnerRule) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOwnerRule(aOwnerRule); } \
-  NS_IMETHOD GetCssRules(nsIDOMCSSRuleList * *aCssRules) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCssRules(aCssRules); } \
-  NS_IMETHOD InsertRule(const nsAString & rule, PRUint32 index, PRUint32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->InsertRule(rule, index, _retval); } \
-  NS_IMETHOD DeleteRule(PRUint32 index) { return !_to ? NS_ERROR_NULL_POINTER : _to->DeleteRule(index); } 
+  NS_SCRIPTABLE NS_IMETHOD GetOwnerRule(nsIDOMCSSRule * *aOwnerRule) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOwnerRule(aOwnerRule); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCssRules(nsIDOMCSSRuleList * *aCssRules) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCssRules(aCssRules); } \
+  NS_SCRIPTABLE NS_IMETHOD InsertRule(const nsAString & rule, PRUint32 index, PRUint32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->InsertRule(rule, index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD DeleteRule(PRUint32 index) { return !_to ? NS_ERROR_NULL_POINTER : _to->DeleteRule(index); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

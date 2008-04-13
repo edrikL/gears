@@ -31,26 +31,26 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLMetaElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLMetaElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLMETAELEMENT_IID)
 
   /* attribute DOMString content; */
-  NS_IMETHOD GetContent(nsAString & aContent) = 0;
-  NS_IMETHOD SetContent(const nsAString & aContent) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetContent(nsAString & aContent) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetContent(const nsAString & aContent) = 0;
 
   /* attribute DOMString httpEquiv; */
-  NS_IMETHOD GetHttpEquiv(nsAString & aHttpEquiv) = 0;
-  NS_IMETHOD SetHttpEquiv(const nsAString & aHttpEquiv) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHttpEquiv(nsAString & aHttpEquiv) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetHttpEquiv(const nsAString & aHttpEquiv) = 0;
 
   /* attribute DOMString name; */
-  NS_IMETHOD GetName(nsAString & aName) = 0;
-  NS_IMETHOD SetName(const nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) = 0;
 
   /* attribute DOMString scheme; */
-  NS_IMETHOD GetScheme(nsAString & aScheme) = 0;
-  NS_IMETHOD SetScheme(const nsAString & aScheme) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetScheme(nsAString & aScheme) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetScheme(const nsAString & aScheme) = 0;
 
 };
 
@@ -58,36 +58,36 @@ class NS_NO_VTABLE nsIDOMHTMLMetaElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLMETAELEMENT \
-  NS_IMETHOD GetContent(nsAString & aContent); \
-  NS_IMETHOD SetContent(const nsAString & aContent); \
-  NS_IMETHOD GetHttpEquiv(nsAString & aHttpEquiv); \
-  NS_IMETHOD SetHttpEquiv(const nsAString & aHttpEquiv); \
-  NS_IMETHOD GetName(nsAString & aName); \
-  NS_IMETHOD SetName(const nsAString & aName); \
-  NS_IMETHOD GetScheme(nsAString & aScheme); \
-  NS_IMETHOD SetScheme(const nsAString & aScheme); 
+  NS_SCRIPTABLE NS_IMETHOD GetContent(nsAString & aContent); \
+  NS_SCRIPTABLE NS_IMETHOD SetContent(const nsAString & aContent); \
+  NS_SCRIPTABLE NS_IMETHOD GetHttpEquiv(nsAString & aHttpEquiv); \
+  NS_SCRIPTABLE NS_IMETHOD SetHttpEquiv(const nsAString & aHttpEquiv); \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD GetScheme(nsAString & aScheme); \
+  NS_SCRIPTABLE NS_IMETHOD SetScheme(const nsAString & aScheme); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLMETAELEMENT(_to) \
-  NS_IMETHOD GetContent(nsAString & aContent) { return _to GetContent(aContent); } \
-  NS_IMETHOD SetContent(const nsAString & aContent) { return _to SetContent(aContent); } \
-  NS_IMETHOD GetHttpEquiv(nsAString & aHttpEquiv) { return _to GetHttpEquiv(aHttpEquiv); } \
-  NS_IMETHOD SetHttpEquiv(const nsAString & aHttpEquiv) { return _to SetHttpEquiv(aHttpEquiv); } \
-  NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
-  NS_IMETHOD GetScheme(nsAString & aScheme) { return _to GetScheme(aScheme); } \
-  NS_IMETHOD SetScheme(const nsAString & aScheme) { return _to SetScheme(aScheme); } 
+  NS_SCRIPTABLE NS_IMETHOD GetContent(nsAString & aContent) { return _to GetContent(aContent); } \
+  NS_SCRIPTABLE NS_IMETHOD SetContent(const nsAString & aContent) { return _to SetContent(aContent); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHttpEquiv(nsAString & aHttpEquiv) { return _to GetHttpEquiv(aHttpEquiv); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHttpEquiv(const nsAString & aHttpEquiv) { return _to SetHttpEquiv(aHttpEquiv); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScheme(nsAString & aScheme) { return _to GetScheme(aScheme); } \
+  NS_SCRIPTABLE NS_IMETHOD SetScheme(const nsAString & aScheme) { return _to SetScheme(aScheme); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLMETAELEMENT(_to) \
-  NS_IMETHOD GetContent(nsAString & aContent) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContent(aContent); } \
-  NS_IMETHOD SetContent(const nsAString & aContent) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetContent(aContent); } \
-  NS_IMETHOD GetHttpEquiv(nsAString & aHttpEquiv) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHttpEquiv(aHttpEquiv); } \
-  NS_IMETHOD SetHttpEquiv(const nsAString & aHttpEquiv) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHttpEquiv(aHttpEquiv); } \
-  NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
-  NS_IMETHOD GetScheme(nsAString & aScheme) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScheme(aScheme); } \
-  NS_IMETHOD SetScheme(const nsAString & aScheme) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetScheme(aScheme); } 
+  NS_SCRIPTABLE NS_IMETHOD GetContent(nsAString & aContent) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContent(aContent); } \
+  NS_SCRIPTABLE NS_IMETHOD SetContent(const nsAString & aContent) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetContent(aContent); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHttpEquiv(nsAString & aHttpEquiv) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHttpEquiv(aHttpEquiv); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHttpEquiv(const nsAString & aHttpEquiv) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHttpEquiv(aHttpEquiv); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScheme(nsAString & aScheme) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScheme(aScheme); } \
+  NS_SCRIPTABLE NS_IMETHOD SetScheme(const nsAString & aScheme) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetScheme(aScheme); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

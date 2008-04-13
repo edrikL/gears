@@ -29,13 +29,13 @@
  * For more information on this interface please see 
  * http://www.w3.org/TR/DOM-Level-3-Events/
  */
-class NS_NO_VTABLE nsIDOM3DocumentEvent : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOM3DocumentEvent : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOM3DOCUMENTEVENT_IID)
 
   /* nsIDOMEventGroup createEventGroup (); */
-  NS_IMETHOD CreateEventGroup(nsIDOMEventGroup **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateEventGroup(nsIDOMEventGroup **_retval) = 0;
 
 };
 
@@ -43,15 +43,15 @@ class NS_NO_VTABLE nsIDOM3DocumentEvent : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOM3DOCUMENTEVENT \
-  NS_IMETHOD CreateEventGroup(nsIDOMEventGroup **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD CreateEventGroup(nsIDOMEventGroup **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOM3DOCUMENTEVENT(_to) \
-  NS_IMETHOD CreateEventGroup(nsIDOMEventGroup **_retval) { return _to CreateEventGroup(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD CreateEventGroup(nsIDOMEventGroup **_retval) { return _to CreateEventGroup(_retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOM3DOCUMENTEVENT(_to) \
-  NS_IMETHOD CreateEventGroup(nsIDOMEventGroup **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateEventGroup(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD CreateEventGroup(nsIDOMEventGroup **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateEventGroup(_retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

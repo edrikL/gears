@@ -35,7 +35,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMDOMException : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMDOMException : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMDOMEXCEPTION_IID)
@@ -75,7 +75,7 @@ class NS_NO_VTABLE nsIDOMDOMException : public nsISupports {
   enum { TYPE_MISMATCH_ERR = 17U };
 
   /* readonly attribute unsigned long code; */
-  NS_IMETHOD GetCode(PRUint32 *aCode) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCode(PRUint32 *aCode) = 0;
 
 };
 
@@ -83,15 +83,15 @@ class NS_NO_VTABLE nsIDOMDOMException : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMDOMEXCEPTION \
-  NS_IMETHOD GetCode(PRUint32 *aCode); 
+  NS_SCRIPTABLE NS_IMETHOD GetCode(PRUint32 *aCode); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMDOMEXCEPTION(_to) \
-  NS_IMETHOD GetCode(PRUint32 *aCode) { return _to GetCode(aCode); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCode(PRUint32 *aCode) { return _to GetCode(aCode); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMDOMEXCEPTION(_to) \
-  NS_IMETHOD GetCode(PRUint32 *aCode) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCode(aCode); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCode(PRUint32 *aCode) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCode(aCode); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

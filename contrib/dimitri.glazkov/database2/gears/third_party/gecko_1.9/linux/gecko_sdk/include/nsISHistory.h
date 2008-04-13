@@ -43,7 +43,7 @@ class nsISimpleEnumerator; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsISHistory : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsISHistory : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISHISTORY_IID)
@@ -54,21 +54,21 @@ class NS_NO_VTABLE nsISHistory : public nsISupports {
    * in session history.
    */
   /* readonly attribute long count; */
-  NS_IMETHOD GetCount(PRInt32 *aCount) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCount(PRInt32 *aCount) = 0;
 
   /**
    * A readonly property of the interface that returns 
    * the index of the current document in session history.
    */
   /* readonly attribute long index; */
-  NS_IMETHOD GetIndex(PRInt32 *aIndex) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIndex(PRInt32 *aIndex) = 0;
 
   /**
    * A readonly property of the interface that returns 
    * the index of the last document that started to load.
    */
   /* readonly attribute long requestedIndex; */
-  NS_IMETHOD GetRequestedIndex(PRInt32 *aRequestedIndex) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRequestedIndex(PRInt32 *aRequestedIndex) = 0;
 
   /**
    * A read/write property of the interface, used to Get/Set
@@ -76,8 +76,8 @@ class NS_NO_VTABLE nsISHistory : public nsISupports {
    * can hold for each instance. 
    */
   /* attribute long maxLength; */
-  NS_IMETHOD GetMaxLength(PRInt32 *aMaxLength) = 0;
-  NS_IMETHOD SetMaxLength(PRInt32 aMaxLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMaxLength(PRInt32 *aMaxLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetMaxLength(PRInt32 aMaxLength) = 0;
 
   /**
    * Called to obtain handle to the history entry at a
@@ -94,7 +94,7 @@ class NS_NO_VTABLE nsISHistory : public nsISupports {
    *                          history entry for the given index.
    */
   /* nsIHistoryEntry getEntryAtIndex (in long index, in boolean modifyIndex); */
-  NS_IMETHOD GetEntryAtIndex(PRInt32 index, PRBool modifyIndex, nsIHistoryEntry **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetEntryAtIndex(PRInt32 index, PRBool modifyIndex, nsIHistoryEntry **_retval) = 0;
 
   /**
    * Called to purge older documents from history.
@@ -113,7 +113,7 @@ class NS_NO_VTABLE nsISHistory : public nsISupports {
    *                          
    */
   /* void PurgeHistory (in long numEntries); */
-  NS_IMETHOD PurgeHistory(PRInt32 numEntries) = 0;
+  NS_SCRIPTABLE NS_IMETHOD PurgeHistory(PRInt32 numEntries) = 0;
 
   /**
    * Called to register a listener for the session history component.
@@ -129,7 +129,7 @@ class NS_NO_VTABLE nsISHistory : public nsISupports {
    * @see nsSupportsWeakReference
    */
   /* void addSHistoryListener (in nsISHistoryListener aListener); */
-  NS_IMETHOD AddSHistoryListener(nsISHistoryListener *aListener) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AddSHistoryListener(nsISHistoryListener *aListener) = 0;
 
   /**
    * Called to remove a listener for the session history component.
@@ -144,7 +144,7 @@ class NS_NO_VTABLE nsISHistory : public nsISupports {
    * @see nsSupportsWeakReference
    */
   /* void removeSHistoryListener (in nsISHistoryListener aListener); */
-  NS_IMETHOD RemoveSHistoryListener(nsISHistoryListener *aListener) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveSHistoryListener(nsISHistoryListener *aListener) = 0;
 
   /**
    * Called to obtain a enumerator for all the  documents stored in 
@@ -168,7 +168,7 @@ class NS_NO_VTABLE nsISHistory : public nsISupports {
    * @see do_QueryInterface()
    */
   /* readonly attribute nsISimpleEnumerator SHistoryEnumerator; */
-  NS_IMETHOD GetSHistoryEnumerator(nsISimpleEnumerator * *aSHistoryEnumerator) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSHistoryEnumerator(nsISimpleEnumerator * *aSHistoryEnumerator) = 0;
 
 };
 
@@ -176,42 +176,42 @@ class NS_NO_VTABLE nsISHistory : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSISHISTORY \
-  NS_IMETHOD GetCount(PRInt32 *aCount); \
-  NS_IMETHOD GetIndex(PRInt32 *aIndex); \
-  NS_IMETHOD GetRequestedIndex(PRInt32 *aRequestedIndex); \
-  NS_IMETHOD GetMaxLength(PRInt32 *aMaxLength); \
-  NS_IMETHOD SetMaxLength(PRInt32 aMaxLength); \
-  NS_IMETHOD GetEntryAtIndex(PRInt32 index, PRBool modifyIndex, nsIHistoryEntry **_retval); \
-  NS_IMETHOD PurgeHistory(PRInt32 numEntries); \
-  NS_IMETHOD AddSHistoryListener(nsISHistoryListener *aListener); \
-  NS_IMETHOD RemoveSHistoryListener(nsISHistoryListener *aListener); \
-  NS_IMETHOD GetSHistoryEnumerator(nsISimpleEnumerator * *aSHistoryEnumerator); 
+  NS_SCRIPTABLE NS_IMETHOD GetCount(PRInt32 *aCount); \
+  NS_SCRIPTABLE NS_IMETHOD GetIndex(PRInt32 *aIndex); \
+  NS_SCRIPTABLE NS_IMETHOD GetRequestedIndex(PRInt32 *aRequestedIndex); \
+  NS_SCRIPTABLE NS_IMETHOD GetMaxLength(PRInt32 *aMaxLength); \
+  NS_SCRIPTABLE NS_IMETHOD SetMaxLength(PRInt32 aMaxLength); \
+  NS_SCRIPTABLE NS_IMETHOD GetEntryAtIndex(PRInt32 index, PRBool modifyIndex, nsIHistoryEntry **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD PurgeHistory(PRInt32 numEntries); \
+  NS_SCRIPTABLE NS_IMETHOD AddSHistoryListener(nsISHistoryListener *aListener); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveSHistoryListener(nsISHistoryListener *aListener); \
+  NS_SCRIPTABLE NS_IMETHOD GetSHistoryEnumerator(nsISimpleEnumerator * *aSHistoryEnumerator); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSISHISTORY(_to) \
-  NS_IMETHOD GetCount(PRInt32 *aCount) { return _to GetCount(aCount); } \
-  NS_IMETHOD GetIndex(PRInt32 *aIndex) { return _to GetIndex(aIndex); } \
-  NS_IMETHOD GetRequestedIndex(PRInt32 *aRequestedIndex) { return _to GetRequestedIndex(aRequestedIndex); } \
-  NS_IMETHOD GetMaxLength(PRInt32 *aMaxLength) { return _to GetMaxLength(aMaxLength); } \
-  NS_IMETHOD SetMaxLength(PRInt32 aMaxLength) { return _to SetMaxLength(aMaxLength); } \
-  NS_IMETHOD GetEntryAtIndex(PRInt32 index, PRBool modifyIndex, nsIHistoryEntry **_retval) { return _to GetEntryAtIndex(index, modifyIndex, _retval); } \
-  NS_IMETHOD PurgeHistory(PRInt32 numEntries) { return _to PurgeHistory(numEntries); } \
-  NS_IMETHOD AddSHistoryListener(nsISHistoryListener *aListener) { return _to AddSHistoryListener(aListener); } \
-  NS_IMETHOD RemoveSHistoryListener(nsISHistoryListener *aListener) { return _to RemoveSHistoryListener(aListener); } \
-  NS_IMETHOD GetSHistoryEnumerator(nsISimpleEnumerator * *aSHistoryEnumerator) { return _to GetSHistoryEnumerator(aSHistoryEnumerator); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCount(PRInt32 *aCount) { return _to GetCount(aCount); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIndex(PRInt32 *aIndex) { return _to GetIndex(aIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRequestedIndex(PRInt32 *aRequestedIndex) { return _to GetRequestedIndex(aRequestedIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMaxLength(PRInt32 *aMaxLength) { return _to GetMaxLength(aMaxLength); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMaxLength(PRInt32 aMaxLength) { return _to SetMaxLength(aMaxLength); } \
+  NS_SCRIPTABLE NS_IMETHOD GetEntryAtIndex(PRInt32 index, PRBool modifyIndex, nsIHistoryEntry **_retval) { return _to GetEntryAtIndex(index, modifyIndex, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD PurgeHistory(PRInt32 numEntries) { return _to PurgeHistory(numEntries); } \
+  NS_SCRIPTABLE NS_IMETHOD AddSHistoryListener(nsISHistoryListener *aListener) { return _to AddSHistoryListener(aListener); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveSHistoryListener(nsISHistoryListener *aListener) { return _to RemoveSHistoryListener(aListener); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSHistoryEnumerator(nsISimpleEnumerator * *aSHistoryEnumerator) { return _to GetSHistoryEnumerator(aSHistoryEnumerator); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSISHISTORY(_to) \
-  NS_IMETHOD GetCount(PRInt32 *aCount) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCount(aCount); } \
-  NS_IMETHOD GetIndex(PRInt32 *aIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIndex(aIndex); } \
-  NS_IMETHOD GetRequestedIndex(PRInt32 *aRequestedIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRequestedIndex(aRequestedIndex); } \
-  NS_IMETHOD GetMaxLength(PRInt32 *aMaxLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMaxLength(aMaxLength); } \
-  NS_IMETHOD SetMaxLength(PRInt32 aMaxLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMaxLength(aMaxLength); } \
-  NS_IMETHOD GetEntryAtIndex(PRInt32 index, PRBool modifyIndex, nsIHistoryEntry **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetEntryAtIndex(index, modifyIndex, _retval); } \
-  NS_IMETHOD PurgeHistory(PRInt32 numEntries) { return !_to ? NS_ERROR_NULL_POINTER : _to->PurgeHistory(numEntries); } \
-  NS_IMETHOD AddSHistoryListener(nsISHistoryListener *aListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddSHistoryListener(aListener); } \
-  NS_IMETHOD RemoveSHistoryListener(nsISHistoryListener *aListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveSHistoryListener(aListener); } \
-  NS_IMETHOD GetSHistoryEnumerator(nsISimpleEnumerator * *aSHistoryEnumerator) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSHistoryEnumerator(aSHistoryEnumerator); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCount(PRInt32 *aCount) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCount(aCount); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIndex(PRInt32 *aIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIndex(aIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRequestedIndex(PRInt32 *aRequestedIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRequestedIndex(aRequestedIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMaxLength(PRInt32 *aMaxLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMaxLength(aMaxLength); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMaxLength(PRInt32 aMaxLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMaxLength(aMaxLength); } \
+  NS_SCRIPTABLE NS_IMETHOD GetEntryAtIndex(PRInt32 index, PRBool modifyIndex, nsIHistoryEntry **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetEntryAtIndex(index, modifyIndex, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD PurgeHistory(PRInt32 numEntries) { return !_to ? NS_ERROR_NULL_POINTER : _to->PurgeHistory(numEntries); } \
+  NS_SCRIPTABLE NS_IMETHOD AddSHistoryListener(nsISHistoryListener *aListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddSHistoryListener(aListener); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveSHistoryListener(nsISHistoryListener *aListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveSHistoryListener(aListener); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSHistoryEnumerator(nsISimpleEnumerator * *aSHistoryEnumerator) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSHistoryEnumerator(aSHistoryEnumerator); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -27,8 +27,12 @@
 #define GEARS_BASE_COMMON_JS_TYPES_H__
 
 #include <assert.h>
+#include <functional>
+#include <vector>
 #include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/string16.h"  // for string16
+
+// TODO(michaeln): Split into multiple browser specific files.
 
 #if BROWSER_FF
 
@@ -48,6 +52,9 @@ typedef nsresult JsNativeMethodRetval;
 // interface required for COM objects exposed in JS
 typedef nsISupports IScriptable;
 
+// TODO(michaeln): compare string values rather than pointers?
+typedef std::equal_to<JsToken> JsTokenEqualTo;
+
 #elif BROWSER_IE
 
 #include <windows.h>
@@ -63,6 +70,49 @@ typedef HRESULT JsNativeMethodRetval;
 // interface required for COM objects exposed in JS
 typedef IDispatch IScriptable;
 
+// On Firefox, a JsToken is a jsval, which is an int, and the natural
+// operator== is fine.  On IE, JsToken is a VARIANT, which does not have a
+// natural operator==, so we have to make one here.
+struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool> {
+  bool operator()(const JsToken &x, const JsToken &y) const {
+    // All we are looking for in this comparator is that different VARIANTs
+    // will compare differently, but that the same IDispatch* (wrapped as a
+    // VARIANT) will compare the same.  A non-goal is that the VARIANT
+    // representing the integer 3 is "equal to" one representing 3.0.
+    if (x.vt != y.vt) {
+      return false;
+    }
+    switch (x.vt) {
+      case VT_EMPTY:
+        return true;
+        break;
+      case VT_NULL:
+        return true;
+        break;
+      case VT_I4:
+        return x.lVal == y.lVal;
+        break;
+      case VT_R8:
+        return x.dblVal == y.dblVal;
+        break;
+      case VT_BSTR:
+        // TODO(michaeln): compare string values rather than pointers?
+        return x.bstrVal == y.bstrVal;
+        break;
+      case VT_DISPATCH:
+        return x.pdispVal == y.pdispVal;
+        break;
+      case VT_BOOL:
+        return x.boolVal == y.boolVal;
+        break;
+      default:
+        // do nothing
+        break;
+    }
+    return false;
+  }
+};
+
 #elif BROWSER_WEBKIT
 
 #include <WebKit/npapi.h>
@@ -71,14 +121,46 @@ typedef IDispatch IScriptable;
 
 #elif BROWSER_NPAPI
 
-#include "gecko_sdk/include/npapi.h"
-#include "gecko_sdk/include/npupp.h"
+#include "gears/third_party/npapi/nphostapi.h"
 
 #endif
 
 #if BROWSER_NPAPI || BROWSER_WEBKIT
+// An NPVariant that takes ownership of its value and releases it when it goes
+// out of scope.
+class ScopedNPVariant : public NPVariant {
+ public:
+  ScopedNPVariant() { VOID_TO_NPVARIANT(*this); }
+  template<class T>
+  explicit ScopedNPVariant(T value) { VOID_TO_NPVARIANT(*this); Reset(value); }
+
+  ~ScopedNPVariant() { Reset(); }
+
+  // This is necessary for API transparency.
+  ScopedNPVariant& operator=(const NPVariant &value) {
+    Reset(value);
+    return *this;
+  }
+
+  // Frees the old value and replaces it with the new value.  Strings are
+  // copied, and objects are retained.
+  void Reset();
+  void Reset(bool value);
+  void Reset(int value);
+  void Reset(double value);
+  void Reset(const char *value);
+  void Reset(const char16 *value);
+  void Reset(NPObject *value);
+  void Reset(const NPVariant &value);
+
+  // Gives up ownership of this variant, without freeing or releasing the
+  // underyling object.  The variant will be VOID after this call.
+  void Release();
+};
+
 // Abstracted types for values used with JavaScript engines.
 typedef NPVariant JsToken;
+typedef ScopedNPVariant JsScopedToken;
 typedef NPP JsContextPtr;
 typedef void* JsContextWrapperPtr; // unused in NPAPI
 typedef NPError JsNativeMethodRetval;
@@ -86,8 +168,51 @@ typedef NPError JsNativeMethodRetval;
 // Not used in NPAPI or WEBKIT at the moment
 typedef void* IScriptable;
 
+struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool>  {
+  bool operator()(const JsToken &x, const JsToken &y) const  {
+    // All we are looking for in this comparator is that different NPVariants
+    // will compare differently, but that the same NPObject* (wrapped as a
+    // NPVariant) will compare the same.  A non-goal is that the NPVariant
+    // representing the integer 3 is "equal to" one representing 3.0.
+    if (x.type != y.type) {
+      return false;
+    }
+    switch (x.type) {
+      case NPVariantType_Void:
+        return true;
+        break;
+      case NPVariantType_Null:
+        return true;
+        break;
+      case NPVariantType_Bool:
+        return x.value.boolValue == y.value.boolValue;
+        break;
+      case NPVariantType_Int32:
+        return x.value.intValue == y.value.intValue;
+        break;
+      case NPVariantType_Double:
+        return x.value.doubleValue == y.value.doubleValue;
+        break;
+      case NPVariantType_String:
+        // TODO(michaeln): compare string values rather than pointers?
+        return x.value.stringValue.UTF8Characters ==
+               y.value.stringValue.UTF8Characters;
+        break;
+      case NPVariantType_Object:
+        return x.value.objectValue == y.value.objectValue;
+        break;
+      default:
+        // do nothing
+        break;
+    }
+    return false;
+  }
+};
+
 #endif  // BROWSER_NPAPI || BROWSER_WEBKIT
 
+class MarshaledJsToken;
+class ModuleImplBaseClass;
 class JsRootedToken;
 typedef JsRootedToken JsRootedCallback;
 
@@ -95,15 +220,21 @@ typedef JsRootedToken JsRootedCallback;
 enum JsParamType {
   JSPARAM_BOOL,
   JSPARAM_INT,
+  JSPARAM_INT64,
   JSPARAM_DOUBLE,
   JSPARAM_STRING16,
   JSPARAM_OBJECT,
   JSPARAM_ARRAY,
   JSPARAM_FUNCTION,
-  JSPARAM_MODULE,
+  // TODO(nigeltao): when all modules are Dispatcher-based, remove the
+  // distinction between JSPARAM_COM_MODULE and JSPARAM_DISPATCHER_MODULE,
+  // and just have JSPARAM_MODULE.
+  JSPARAM_COM_MODULE,
+  JSPARAM_DISPATCHER_MODULE,
   JSPARAM_NULL,
   JSPARAM_UNDEFINED,
   JSPARAM_UNKNOWN,
+  JSPARAM_TOKEN
 };
 
 enum JsParamRequirement {
@@ -127,16 +258,29 @@ struct JsArgument {
   void* value_ptr;
 };
 
-// Utility functions to convert JsToken to various primitives. These
-// functions will try to coerce the JsToken to the required type. null or
-// undefined are never coerced and these functions will return false in
-// that case.
-// TODO(oshlack): implement coercion for NPAPI.
-bool JsTokenToBool(JsToken t, JsContextPtr cx, bool *out);
-bool JsTokenToInt(JsToken t, JsContextPtr cx, int *out);
-bool JsTokenToString(JsToken t, JsContextPtr cx, std::string16 *out);
-bool JsTokenToDouble(JsToken t, JsContextPtr cx, double *out);
-bool JsTokenToNewCallback(JsToken t, JsContextPtr cx, JsRootedCallback **out);
+// Utility functions to convert JsToken to various C++ types without coercion.
+// If the type of the underlying JavaScript variable does not exactly match the
+// requested type, these functions return false.
+bool JsTokenToBool_NoCoerce(JsToken t, JsContextPtr cx, bool *out);
+bool JsTokenToInt_NoCoerce(JsToken t, JsContextPtr cx, int *out);
+bool JsTokenToInt64_NoCoerce(JsToken t, JsContextPtr cx, int64 *out);
+bool JsTokenToDouble_NoCoerce(JsToken t, JsContextPtr cx, double *out);
+bool JsTokenToString_NoCoerce(JsToken t, JsContextPtr cx, std::string16 *out);
+bool JsTokenToNewCallback_NoCoerce(JsToken t, JsContextPtr cx,
+                                   JsRootedCallback **out);
+bool JsTokenToDispatcherModule(JsContextWrapperPtr context_wrapper,
+                               JsContextPtr context,
+                               const JsToken in,
+                               ModuleImplBaseClass **out);
+
+// Utility functions to coerce JsTokens to various C++ types. These functions
+// implement coercion as defined by ECMA 262-3 Section 9:
+// http://bclary.com/2004/11/07/#a-9
+// They return false if the coercion could not be performed.
+bool JsTokenToBool_Coerce(JsToken t, JsContextPtr cx, bool *out);
+bool JsTokenToInt_Coerce(JsToken t, JsContextPtr cx, int *out);
+bool JsTokenToString_Coerce(JsToken t, JsContextPtr cx, std::string16 *out);
+bool JsTokenToDouble_Coerce(JsToken t, JsContextPtr cx, double *out);
 
 // Utility function to determine the type of a JsToken.
 JsParamType JsTokenGetType(JsToken t, JsContextPtr cx);
@@ -156,6 +300,14 @@ bool JsTokenIsObject(JsToken t);
 // Utility function to check for the JavaScript values null and undefined. We
 // usually treat these two identically to prevent confusion.
 bool JsTokenIsNullOrUndefined(JsToken t);
+
+bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken* out);
+bool IntToJsToken(JsContextPtr context, int value, JsScopedToken* out);
+bool StringToJsToken(JsContextPtr context,
+                     const std::string16& value,
+                     JsScopedToken* out);
+bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken* out);
+bool NullToJsToken(JsContextPtr context, JsScopedToken* out);
 
 #if BROWSER_FF
 
@@ -177,13 +329,6 @@ class JsRootedToken {
 
   JsToken token() const { return token_; }
   JsContextPtr context() const { return context_; }
-
-  bool GetAsBool(bool *out) const {
-    return JsTokenToBool(token_, context_, out);
-  }
-
-  // TODO(aa): GetAsString(), etc. But needs restructuring first. See note below
-  // above IE implementation.
 
  private:
   JsContextPtr context_;
@@ -215,10 +360,6 @@ class JsRootedToken {
   JsToken token() const { return token_; }
   JsContextPtr context() const { return NULL; }
 
-  bool GetAsBool(bool *out) const {
-    return JsTokenToBool(token_, NULL, out);
-  }
-
  private:
   JsToken token_;
   DISALLOW_EVIL_CONSTRUCTORS(JsRootedToken);
@@ -229,51 +370,14 @@ class JsRootedToken {
 
 #elif BROWSER_NPAPI
 
-// An NPVariant that takes ownership of its value and releases it when it goes
-// out of scope.
-class ScopedNPVariant : public NPVariant {
- public:
-  ScopedNPVariant() { VOID_TO_NPVARIANT(*this); }
-  template<class T>
-  explicit ScopedNPVariant(T value) { VOID_TO_NPVARIANT(*this); Reset(value); }
-
-  ~ScopedNPVariant() { Reset(); }
-
-  // This is necessary for API transparency.
-  ScopedNPVariant& operator=(const NPVariant &value) {
-    Reset(value);
-    return *this;
-  }
-
-  // Frees the old value and replaces it with the new value.  Strings are
-  // copied, and objects are retained.
-  void Reset();
-  void Reset(int value);
-  void Reset(double value);
-  void Reset(const char *value);
-  void Reset(const char16 *value);
-  void Reset(NPObject *value);
-  void Reset(const NPVariant &value);
-
-  // Gives up ownership of this variant, without freeing or releasing the
-  // underyling object.  The variant will be VOID after this call.
-  void Release();
-};
-
-typedef ScopedNPVariant JsScopedToken;
-
 // A JsToken that won't get GC'd out from under you.
 class JsRootedToken {
  public:
   JsRootedToken(JsContextPtr context, JsToken token)
        : context_(context), token_(token) { }
 
-  const JsToken& token() const { return token_; }
+  const JsScopedToken& token() const { return token_; }
   JsContextPtr context() const { return context_; }
-
-  bool GetAsBool(bool *out) const {
-    return JsTokenToBool(token_, context_, out);
-  }
 
  private:
   JsContextPtr context_;  // TODO(mpcomplete): figure out if this is necessary
@@ -320,7 +424,6 @@ class JsArray {
 
   bool GetElement(int index, JsScopedToken *out) const;
   
-  // These functions coerce values using the JsTokenTo*() functions.
   bool GetElementAsBool(int index, bool *out) const;
   bool GetElementAsInt(int index, int *out) const;
   bool GetElementAsDouble(int index, double *out) const;
@@ -340,7 +443,8 @@ class JsArray {
   bool SetElementArray(int index, JsArray* value);
   bool SetElementObject(int index, JsObject* value);
   bool SetElementFunction(int index, JsRootedCallback* value);
-  bool SetElementModule(int index, IScriptable* value);
+  bool SetElementComModule(int index, IScriptable* value);
+  bool SetElementDispatcherModule(int index, ModuleImplBaseClass* value);
 
 private:
   JsContextPtr js_context_;
@@ -351,10 +455,10 @@ class JsObject {
  public:
   JsObject();
   ~JsObject();
+
   bool GetProperty(const std::string16 &name, JsScopedToken *value) const;
   bool SetObject(JsToken value, JsContextPtr context);
 
-  // These functions coerce values using the JsTokenTo*() functions.
   bool GetPropertyAsBool(const std::string16 &name, bool *out) const;
   bool GetPropertyAsInt(const std::string16 &name, int *out) const;
   bool GetPropertyAsDouble(const std::string16 &name, double *out) const;
@@ -367,6 +471,14 @@ class JsObject {
   // Method to get the type of a property
   JsParamType GetPropertyType(const std::string16 &name) const;
   
+  // GetPropertyNames fills the given vector with the (string) names of this
+  // JsObject's properties.  There is no guarantee that it retrieves (or does
+  // not retrieve) property names from the object's prototype, nor does it
+  // rule anything in or out about property keys that aren't strings.  Also,
+  // this only *appends* property names to the vector out.  In particular, it
+  // does not reset the vector to be empty.
+  bool GetPropertyNames(std::vector<std::string16> *out) const;
+
   // SetProperty*() overwrites the existing named property or adds a new one if
   // none exists.
   bool SetPropertyBool(const std::string16& name, bool value);
@@ -376,20 +488,18 @@ class JsObject {
   bool SetPropertyArray(const std::string16& name, JsArray* value);
   bool SetPropertyObject(const std::string16& name, JsObject* value);
   bool SetPropertyFunction(const std::string16& name, JsRootedCallback* value);
-  bool SetPropertyModule(const std::string16& name, IScriptable* value);
+  bool SetPropertyComModule(const std::string16& name, IScriptable* value);
+  bool SetPropertyDispatcherModule(const std::string16& name,
+                                   ModuleImplBaseClass* value);
+  bool SetProperty(const std::string16 &name, const JsToken &value);
 
   const JsScopedToken &token() const { return js_object_; }
   const JsContextPtr &context() const { return js_context_; }
 
  private:
-  bool SetProperty(const std::string16 &name, const JsToken &value);
-
   JsContextPtr js_context_;
   JsScopedToken js_object_;
 };
-
-class ModuleImplBaseClass;
-class JsRunnerInterface;
 
 // This class provides an interface for a property or method access on a native
 // object from JavaScript.  It allows consumers to retrieve what arguments were
@@ -428,15 +538,15 @@ class JsCallContext {
   // Sets the value to be returned to the calling JavaScript.
   //
   // The ModuleImplBaseClass* version should only be used when returning a
-  // JSPARAM_MODULE.  It exists because passing a derived class through a void*
-  // and then casting to the base class is not safe - the compiler won't be able
-  // to correctly adjust the pointer offset.
+  // JSPARAM_COM_MODULE.  It exists because passing a derived class through a
+  // void* and then casting to the base class is not safe - the compiler won't
+  // be able to correctly adjust the pointer offset.
   //
   // The int version is for use with JSPARAM_NULL, to avoid conflicting with the
   // ModuleImplBaseClass version (works because NULL is defined as 0).
   void SetReturnValue(JsParamType type, const void *value_ptr);
   void SetReturnValue(JsParamType type, const ModuleImplBaseClass *value_ptr) {
-    assert(type == JSPARAM_MODULE);
+    assert((type == JSPARAM_COM_MODULE) || (type == JSPARAM_DISPATCHER_MODULE));
     SetReturnValue(type, reinterpret_cast<const void*>(value_ptr));
   }
   void SetReturnValue(JsParamType type, int) {
@@ -450,6 +560,9 @@ class JsCallContext {
 
   JsContextPtr js_context() { return js_context_; }
   bool is_exception_set() { return is_exception_set_; }
+#if BROWSER_FF
+  JsRunnerInterface *js_runner() { return js_runner_; }
+#endif
 
  private:
   JsContextPtr js_context_;
@@ -469,7 +582,6 @@ class JsCallContext {
   JsToken *retval_;
   JsRunnerInterface *js_runner_;
   nsCOMPtr<nsIXPConnect> xpc_;
-  nsCOMPtr<nsIXPCNativeCallContext> ncc_;
 #else
   // TODO: browser_xyz
 #endif
@@ -487,6 +599,8 @@ void ConvertJsParamToToken(const JsParamToSend &param,
 // Helper class to extract JavaScript parameters (including optional params
 // and varargs), in a way that hides differences between main-thread and
 // worker-thread environments.
+// NOTE: Use of this class is deprecated in new Gears modules. Use Dispatcher
+// and JsCallContext instead.
 class JsParamFetcher {
  public:
   explicit JsParamFetcher(ModuleImplBaseClass *obj);
@@ -498,7 +612,6 @@ class JsParamFetcher {
   // In Firefox, set has_string_retval iff method has a string return value.
   bool IsOptionalParamPresent(int i, bool has_string_retval);
   
-  // These functions coerce values using the JsTokenTo*() functions.
   bool GetAsInt(int i, int *out);
   bool GetAsString(int i, std::string16 *out);
   bool GetAsBool(int i, bool *out);
@@ -506,14 +619,22 @@ class JsParamFetcher {
   bool GetAsArray(int i, JsArray *out);
   bool GetAsObject(int i, JsObject *out);
 
-  // TODO(kevinww): Currently doesn't work in a worker thread because it uses
-  // XPConnect
-  bool GetAsModule(int i, nsISupports **out);
+  bool GetAsDispatcherModule(int i, JsRunnerInterface *js_runner,
+                             ModuleImplBaseClass **out);
 
+  // NOTE: This method returns true if the argument at position i is null or
+  // undefined. The JsRootedCallback at that point will be valid, but its
+  // token() will be null or undefined. This is weird, but it is the expected
+  // behavior by several older Gears modules. Since JsParamFetcher is
+  // deprecated, this method keeps its old, weird behavior. JsCallContext, which
+  // new code should use, does not share this quirk.
   bool GetAsNewRootedCallback(int i, JsRootedCallback **out);
   
   // Method to get the type of a parameter
   JsParamType GetType(int i);
+
+  bool GetAsMarshaledJsToken(int i, MarshaledJsToken **out,
+                             std::string16 *error_message_out);
 
   void SetReturnValue(JsToken retval);
 
@@ -524,7 +645,11 @@ class JsParamFetcher {
   JsToken      *js_retval_;
 
   nsCOMPtr<nsIXPConnect> xpc_;
+#if BROWSER_FF3
+  nsAXPCNativeCallContext *ncc_;
+#else
   nsCOMPtr<nsIXPCNativeCallContext> ncc_;
+#endif
 };
 
 

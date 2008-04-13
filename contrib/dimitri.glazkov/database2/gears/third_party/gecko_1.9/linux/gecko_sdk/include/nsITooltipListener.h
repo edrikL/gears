@@ -33,7 +33,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsITooltipListener : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsITooltipListener : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITOOLTIPLISTENER_IID)
@@ -54,14 +54,14 @@ class NS_NO_VTABLE nsITooltipListener : public nsISupports {
      * @return <code>NS_OK</code> if the tooltip was displayed.
      */
   /* void onShowTooltip (in long aXCoords, in long aYCoords, in wstring aTipText); */
-  NS_IMETHOD OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText) = 0;
 
   /**
      * Called when the tooltip should be hidden, either because the pointer
      * has moved or the tooltip has timed out.
      */
   /* void onHideTooltip (); */
-  NS_IMETHOD OnHideTooltip(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OnHideTooltip(void) = 0;
 
 };
 
@@ -69,18 +69,18 @@ class NS_NO_VTABLE nsITooltipListener : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSITOOLTIPLISTENER \
-  NS_IMETHOD OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText); \
-  NS_IMETHOD OnHideTooltip(void); 
+  NS_SCRIPTABLE NS_IMETHOD OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText); \
+  NS_SCRIPTABLE NS_IMETHOD OnHideTooltip(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSITOOLTIPLISTENER(_to) \
-  NS_IMETHOD OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText) { return _to OnShowTooltip(aXCoords, aYCoords, aTipText); } \
-  NS_IMETHOD OnHideTooltip(void) { return _to OnHideTooltip(); } 
+  NS_SCRIPTABLE NS_IMETHOD OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText) { return _to OnShowTooltip(aXCoords, aYCoords, aTipText); } \
+  NS_SCRIPTABLE NS_IMETHOD OnHideTooltip(void) { return _to OnHideTooltip(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSITOOLTIPLISTENER(_to) \
-  NS_IMETHOD OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnShowTooltip(aXCoords, aYCoords, aTipText); } \
-  NS_IMETHOD OnHideTooltip(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnHideTooltip(); } 
+  NS_SCRIPTABLE NS_IMETHOD OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnShowTooltip(aXCoords, aYCoords, aTipText); } \
+  NS_SCRIPTABLE NS_IMETHOD OnHideTooltip(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnHideTooltip(); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

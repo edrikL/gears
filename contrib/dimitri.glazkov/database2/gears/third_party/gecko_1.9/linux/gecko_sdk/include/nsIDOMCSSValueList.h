@@ -22,7 +22,7 @@
   {0x8f09fa84, 0x39b9, 0x4dca, \
     { 0x9b, 0x2f, 0xdb, 0x0e, 0xeb, 0x18, 0x62, 0x86 }}
 
-class NS_NO_VTABLE nsIDOMCSSValueList : public nsIDOMCSSValue {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMCSSValueList : public nsIDOMCSSValue {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMCSSVALUELIST_IID)
@@ -37,10 +37,10 @@ class NS_NO_VTABLE nsIDOMCSSValueList : public nsIDOMCSSValue {
  * @status FROZEN
  */
   /* readonly attribute unsigned long length; */
-  NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
 
   /* nsIDOMCSSValue item (in unsigned long index); */
-  NS_IMETHOD Item(PRUint32 index, nsIDOMCSSValue **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsIDOMCSSValue **_retval) = 0;
 
 };
 
@@ -48,18 +48,18 @@ class NS_NO_VTABLE nsIDOMCSSValueList : public nsIDOMCSSValue {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMCSSVALUELIST \
-  NS_IMETHOD GetLength(PRUint32 *aLength); \
-  NS_IMETHOD Item(PRUint32 index, nsIDOMCSSValue **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength); \
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsIDOMCSSValue **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMCSSVALUELIST(_to) \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
-  NS_IMETHOD Item(PRUint32 index, nsIDOMCSSValue **_retval) { return _to Item(index, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsIDOMCSSValue **_retval) { return _to Item(index, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMCSSVALUELIST(_to) \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
-  NS_IMETHOD Item(PRUint32 index, nsIDOMCSSValue **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Item(index, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsIDOMCSSValue **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Item(index, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -25,9 +25,11 @@
 
 #include "gears/database2/manager.h"
 
+#include "gears/base/common/base_class.h"
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/database2/database2.h"
 
@@ -50,9 +52,10 @@ void Database2Manager::OpenDatabase(JsCallContext *context) {
 
   // create a Database2 instance and pass name and version into it
   // displayName and estimatedSize not used by Gears
-  Database2 *database;
+  scoped_refptr<Database2> database;
   if (Database2::Create(this, name, version, &database)) {
-    context->SetReturnValue(JSPARAM_MODULE, database);
+    context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, database.get());
+    ReleaseNewObjectToScript(database.get());
   } else {
     // set exception
   }

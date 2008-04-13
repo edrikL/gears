@@ -27,7 +27,7 @@
  *
  * @status FROZEN - This interface will not change in the Mozilla 1.x lifetime
  */
-class NS_NO_VTABLE nsIHashable : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIHashable : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHASHABLE_IID)
@@ -36,7 +36,7 @@ class NS_NO_VTABLE nsIHashable : public nsISupports {
    * Is this object the equivalent of the other object?
    */
   /* boolean equals (in nsIHashable aOther); */
-  NS_IMETHOD Equals(nsIHashable *aOther, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIHashable *aOther, PRBool *_retval) = 0;
 
   /**
    * A generated hashcode for this object. Objects that are equivalent
@@ -44,7 +44,7 @@ class NS_NO_VTABLE nsIHashable : public nsISupports {
    * throw an exception!
    */
   /* readonly attribute unsigned long hashCode; */
-  NS_IMETHOD GetHashCode(PRUint32 *aHashCode) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHashCode(PRUint32 *aHashCode) = 0;
 
 };
 
@@ -52,18 +52,18 @@ class NS_NO_VTABLE nsIHashable : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIHASHABLE \
-  NS_IMETHOD Equals(nsIHashable *aOther, PRBool *_retval); \
-  NS_IMETHOD GetHashCode(PRUint32 *aHashCode); 
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIHashable *aOther, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetHashCode(PRUint32 *aHashCode); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIHASHABLE(_to) \
-  NS_IMETHOD Equals(nsIHashable *aOther, PRBool *_retval) { return _to Equals(aOther, _retval); } \
-  NS_IMETHOD GetHashCode(PRUint32 *aHashCode) { return _to GetHashCode(aHashCode); } 
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIHashable *aOther, PRBool *_retval) { return _to Equals(aOther, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHashCode(PRUint32 *aHashCode) { return _to GetHashCode(aHashCode); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIHASHABLE(_to) \
-  NS_IMETHOD Equals(nsIHashable *aOther, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Equals(aOther, _retval); } \
-  NS_IMETHOD GetHashCode(PRUint32 *aHashCode) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHashCode(aHashCode); } 
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIHashable *aOther, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Equals(aOther, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHashCode(PRUint32 *aHashCode) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHashCode(aHashCode); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

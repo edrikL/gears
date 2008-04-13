@@ -52,22 +52,27 @@ import "ui/ie/html_dialog_bridge_iemobile.idl";
 import "ui/ie/html_dialog_host_iemobile.idl";
 #endif
 
-import "blob/blob_ie.idl";
 import "console/ie/console.idl";
 import "database/ie/database.idl";
-import "desktop/desktop_ie.idl";
 import "factory/ie/factory.idl";
 import "httprequest/ie/httprequest.idl";
 
-#ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
-#else
-import "image/ie/image.idl";
-#endif
-
 import "localserver/ie/localserver.idl";
-import "timer/timer_ie.idl";
 import "workerpool/ie/workerpool.idl";
+
+// The ModuleWrapper C++ class implements GearsModuleProviderInterface in
+// order to let us distinguish VARIANTs that are ModuleWrappers from other
+// VARIANTs, and convert from a VARIANT* to a ModuleWrapper*.
+[
+  object,
+  uuid(edf6d581-3eab-3305-7598-18e0cd19d7b6),
+  nonextensible,
+  pointer_default(unique)
+]
+interface GearsModuleProviderInterface : IUnknown {
+  // retval->byref is assigned a pointer to the C++ ModuleWrapper object.
+  [propget] HRESULT moduleWrapper([out, retval] VARIANT *retval);
+};
 
 //------------------------------------------------------------------------------
 // GearsTypelib
@@ -147,14 +152,6 @@ library GearsTypelib
   };
 
   [
-    uuid(B4F3B2E2-6200-4796-B49D-471BD24F18F5)
-  ]
-  coclass GearsBlob
-  {
-    [default] interface GearsBlobInterface;
-  };
-
-  [
     uuid(51C2DE73-6A33-4975-8D7D-C521064F8A83)
   ]
   coclass GearsConsole
@@ -170,14 +167,6 @@ library GearsTypelib
     [default] interface GearsDatabaseInterface;
   };
   
-  [
-    uuid(6761C0EC-BB5C-40fe-92B2-D41686A0CF7E)
-  ]
-  coclass GearsDesktop
-  {
-    [default] interface GearsDesktopInterface;
-  };
-
   [
     uuid(B76AFB62-9BA2-43e8-B27F-9F1CAC8148B7)
   ]
@@ -195,31 +184,10 @@ library GearsTypelib
   };
 
   [
-    uuid(D056D8FA-05D8-4575-903F-180C85D2C318)
-  ]
-  coclass GearsTimer
-  {
-    [default] interface GearsTimerInterface;
-  };
-
-  [
     uuid(AAF5DBC9-70C8-45c2-B7AB-6576428F3CA3)
   ]
   coclass GearsHttpRequest
   {
     [default] interface GearsHttpRequestInterface;
   };
-
-#ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
-#else
-  [
-    uuid(D946AEB2-263E-4448-8F29-FC714A86E9A1)
-  ]
-  coclass GearsImageLoader
-  {
-    [default] interface GearsImageLoaderInterface;
-  };
-#endif
-
 };

@@ -22,7 +22,7 @@
   {0xdf31c120, 0xded6, 0x11d1, \
     { 0xbd, 0x85, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4 }}
 
-class NS_NO_VTABLE nsIDOMEventListener : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMEventListener : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMEVENTLISTENER_IID)
@@ -46,7 +46,7 @@ class NS_NO_VTABLE nsIDOMEventListener : public nsISupports {
    *              event's flow and default action.
    */
   /* void handleEvent (in nsIDOMEvent event); */
-  NS_IMETHOD HandleEvent(nsIDOMEvent *event) = 0;
+  NS_SCRIPTABLE NS_IMETHOD HandleEvent(nsIDOMEvent *event) = 0;
 
 };
 
@@ -54,15 +54,15 @@ class NS_NO_VTABLE nsIDOMEventListener : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMEVENTLISTENER \
-  NS_IMETHOD HandleEvent(nsIDOMEvent *event); 
+  NS_SCRIPTABLE NS_IMETHOD HandleEvent(nsIDOMEvent *event); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMEVENTLISTENER(_to) \
-  NS_IMETHOD HandleEvent(nsIDOMEvent *event) { return _to HandleEvent(event); } 
+  NS_SCRIPTABLE NS_IMETHOD HandleEvent(nsIDOMEvent *event) { return _to HandleEvent(event); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMEVENTLISTENER(_to) \
-  NS_IMETHOD HandleEvent(nsIDOMEvent *event) { return !_to ? NS_ERROR_NULL_POINTER : _to->HandleEvent(event); } 
+  NS_SCRIPTABLE NS_IMETHOD HandleEvent(nsIDOMEvent *event) { return !_to ? NS_ERROR_NULL_POINTER : _to->HandleEvent(event); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

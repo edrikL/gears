@@ -1,4 +1,4 @@
-m4_changequote(`^',`^')m4_dnl
+m4_changequote(`~',`~')m4_dnl
 <!DOCTYPE html>
 
 <!--
@@ -52,13 +52,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     #content {
       overflow-x:hidden;
       overflow-y:auto;
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
       margin:0 4px;
-^,
-^
+~,
+~
       margin:0 1em;
-^)
+~)
     }
 
     #content table {
@@ -74,13 +74,13 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
     #content td {
       border:1px #ccc;
       border-style:solid none;
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
       padding:4px;
-^,
-^
+~,
+~
       padding:0.5em; 
-^)
+~)
     }
 
     #version {
@@ -104,6 +104,12 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
       width: 70px;
     }
 
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
+    /* 
+     * On Windows Mobile, we hide the div containing the buttons
+     * by default, to only show the correct one (ie smartphone or not)
+     */
     #button-row {
       display:none;
     }
@@ -111,6 +117,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
     #button-row-smartphone {
       display:none;
     }
+~,~~)
 
   </style>
 </head>
@@ -164,20 +171,44 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
   </div>
   <div id="foot">
     <div id="text-buttons" style="display:none">
-      <TRANS_BLOCK desc="Button user can press to cancel the dialog.">
-        <div id="text-cancel">Cancel</div>
-      </TRANS_BLOCK>
-      <TRANS_BLOCK desc="Button user can press to save changes.">
-        <div id="text-save">Save</div>
-      </TRANS_BLOCK>
+      <div id="text-cancel">
+        <TRANS_BLOCK desc="Button user can press to cancel the dialog.">
+        Cancel
+        </TRANS_BLOCK>
+      </div>
+      <div id="text-save">
+        <TRANS_BLOCK desc="Button user can press to save changes.">
+        Save
+        </TRANS_BLOCK>
+      </div>
+      <div id="text-remove">
+        <TRANS_BLOCK desc="Button user can press to remove a site from the list.">
+        Remove
+        </TRANS_BLOCK>
+      </div>
+      <div id="text-noallowed">
+        <TRANS_BLOCK desc="States that there are no allowed sites.">
+        No allowed sites.
+        </TRANS_BLOCK>
+      </div>
+      <div id="text-nodenied">
+        <TRANS_BLOCK desc="States that there are no denied sites.">
+        No denied sites.
+        </TRANS_BLOCK>
+      </div>
     </div>
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
+    <!-- On SmartPhone, we don't use the regular buttons. We just use this link,
+    and softkeys for the other buttons. -->
     <div id="button-row-smartphone">
     </div>
+~,~~)
     <div id="button-row">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
           <div id="div-buttons">
             <td width="50%" align="left" valign="middle">
               <input type="BUTTON" id="cancel-button"
@@ -188,8 +219,8 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
                onclick="saveAndClose(g_dialogResult); return false;"></input>
             </td>
           </div>
-^,m4_dnl
-^
+~,m4_dnl
+~
           <td nowrap="true" align="right" valign="middle">
             <!--
             Fancy buttons
@@ -219,7 +250,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
                 <div class="inline-block custom-button-inner-box"
                   ><TRANS_BLOCK desc="Button user can press to discard changes."><span class="accesskey">C</span>ancel</div></TRANS_BLOCK></div></a>
           </td>
-^)
+~)
         </tr>
       </table>
     </div>
@@ -227,12 +258,12 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
 
 
 </body>
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">^m4_dnl
-^</object>^)
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">~m4_dnl
+~</object>~)
 <script>
-m4_include(third_party\jsonjs\json_noeval.js)
-m4_include(ui\common\html_dialog.js)
+m4_include(third_party/jsonjs/json_noeval.js)
+m4_include(ui/common/html_dialog.js)
 </script>
 <script>
   var g_dialogResult = {"removeSites": []};
@@ -283,11 +314,25 @@ m4_include(ui\common\html_dialog.js)
     if (!sites.length) {
       content = "<tr><td class=\"left\"><em>";
       if (kind == ALLOWED) {
-        content += "<TRANS_BLOCK desc=\"States that there are no allowed sites.\">No allowed sites.</TRANS_BLOCK>";
+        var allowedText = getElementById("text-noallowed");
+        if (allowedText) {
+          if (isDefined(typeof allowedText.innerText)) {
+            content += allowedText.innerText;
+          } else {
+            content += allowedText.textContent;
+          }
+        }
       } else if (kind == DENIED) {
-        content += "<TRANS_BLOCK desc=\"States that there are no denied sites.\">No denied sites.</TRANS_BLOCK>";
+        var deniedText = getElementById("text-nodenied");
+        if (deniedText) {
+          if (isDefined(typeof deniedText.innerText)) {
+            content += deniedText.innerText;
+          } else {
+            content += deniedText.textContent;
+          }
+        }
       }
-      content += "</em></td></tr>";
+      content += "</em></td><td></td></tr>";
     } else {
       for (var site, i = 0; site = sites[i]; i++) {
         var cont = initSite(table, site, i, kind);
@@ -298,13 +343,20 @@ m4_include(ui\common\html_dialog.js)
   }
 
   function initSite(table, siteName, rowNumber, kind) {
-    var content = "<tr><td>";
-    content += wrapString(siteName);
+    var content = "<tr><td class=\"left\">";
+    content += wrapDomain(siteName);
     content += "</td>";
-    content += "<td><a href='#' onclick='handleRemoveClick(";
+    content += "<td class=\"right\"><a href='#' onclick='handleRemoveClick(";
     content += rowNumber;
     content += ",\"" + siteName + "\"," + kind + ");'>";
-    content += "<TRANS_BLOCK desc=\"Button user can press to remove a site from the list.\">Remove</TRANS_BLOCK>";
+    var removeText = getElementById("text-remove");
+    if (removeText) {
+      if (isDefined(typeof removeText.innerText)) {
+        content += removeText.innerText;
+      } else {
+        content += removeText.textContent;
+      }
+    }
     content += "</a></td></tr>";
     return content;
   }

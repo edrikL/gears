@@ -120,7 +120,18 @@ bool File::GetParentDirectory(const std::string16 &path,
     return false;
   }
   
-  *parent = path.substr(0, parent_length);
+  std::string16 tmp_parent = path.substr(0, parent_length);
+  
+  // Clean trailing '/s' off parent.  Note that '/' is a legal value for the
+  // parent directory.
+  while (parent_length > 1 &&
+         tmp_parent[parent_length - 1] == kPathSeparator) {
+    tmp_parent.erase(parent_length - 1);
+    parent_length -= 1;
+  }
+
+  *parent = tmp_parent;
+  
   return true;
   
   

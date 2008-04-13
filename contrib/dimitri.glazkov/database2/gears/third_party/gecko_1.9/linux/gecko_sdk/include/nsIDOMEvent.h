@@ -24,7 +24,7 @@ class nsIDOMEventTarget; /* forward declaration */
   {0xa66b7b80, 0xff46, 0xbd97, \
     { 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMEvent : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMEvent : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMEVENT_IID)
@@ -58,14 +58,14 @@ class NS_NO_VTABLE nsIDOMEvent : public nsISupports {
    * name.
    */
   /* readonly attribute DOMString type; */
-  NS_IMETHOD GetType(nsAString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) = 0;
 
   /**
    * Used to indicate the EventTarget to which the event was originally 
    * dispatched.
    */
   /* readonly attribute nsIDOMEventTarget target; */
-  NS_IMETHOD GetTarget(nsIDOMEventTarget * *aTarget) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsIDOMEventTarget * *aTarget) = 0;
 
   /**
    * Used to indicate the EventTarget whose EventListeners are currently 
@@ -73,21 +73,21 @@ class NS_NO_VTABLE nsIDOMEvent : public nsISupports {
    * bubbling.
    */
   /* readonly attribute nsIDOMEventTarget currentTarget; */
-  NS_IMETHOD GetCurrentTarget(nsIDOMEventTarget * *aCurrentTarget) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentTarget(nsIDOMEventTarget * *aCurrentTarget) = 0;
 
   /**
    * Used to indicate which phase of event flow is currently being 
    * evaluated.
    */
   /* readonly attribute unsigned short eventPhase; */
-  NS_IMETHOD GetEventPhase(PRUint16 *aEventPhase) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetEventPhase(PRUint16 *aEventPhase) = 0;
 
   /**
    * Used to indicate whether or not an event is a bubbling event. If the 
    * event can bubble the value is true, else the value is false.
    */
   /* readonly attribute boolean bubbles; */
-  NS_IMETHOD GetBubbles(PRBool *aBubbles) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetBubbles(PRBool *aBubbles) = 0;
 
   /**
    * Used to indicate whether or not an event can have its default action 
@@ -95,7 +95,7 @@ class NS_NO_VTABLE nsIDOMEvent : public nsISupports {
    * else the value is false.
    */
   /* readonly attribute boolean cancelable; */
-  NS_IMETHOD GetCancelable(PRBool *aCancelable) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCancelable(PRBool *aCancelable) = 0;
 
   /**
    * Used to specify the time (in milliseconds relative to the epoch) at 
@@ -106,7 +106,7 @@ class NS_NO_VTABLE nsIDOMEvent : public nsISupports {
    * 0:0:0 UTC 1st January 1970.
    */
   /* readonly attribute DOMTimeStamp timeStamp; */
-  NS_IMETHOD GetTimeStamp(DOMTimeStamp *aTimeStamp) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTimeStamp(DOMTimeStamp *aTimeStamp) = 0;
 
   /**
    * The stopPropagation method is used prevent further propagation of an 
@@ -117,7 +117,7 @@ class NS_NO_VTABLE nsIDOMEvent : public nsISupports {
    * any stage of event flow.
    */
   /* void stopPropagation (); */
-  NS_IMETHOD StopPropagation(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD StopPropagation(void) = 0;
 
   /**
    * If an event is cancelable, the preventDefault method is used to 
@@ -132,7 +132,7 @@ class NS_NO_VTABLE nsIDOMEvent : public nsISupports {
    * event flow.
    */
   /* void preventDefault (); */
-  NS_IMETHOD PreventDefault(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD PreventDefault(void) = 0;
 
   /**
    * The initEvent method is used to initialize the value of an Event 
@@ -161,7 +161,7 @@ class NS_NO_VTABLE nsIDOMEvent : public nsISupports {
    *                        action can be prevented.
    */
   /* void initEvent (in DOMString eventTypeArg, in boolean canBubbleArg, in boolean cancelableArg); */
-  NS_IMETHOD InitEvent(const nsAString & eventTypeArg, PRBool canBubbleArg, PRBool cancelableArg) = 0;
+  NS_SCRIPTABLE NS_IMETHOD InitEvent(const nsAString & eventTypeArg, PRBool canBubbleArg, PRBool cancelableArg) = 0;
 
 };
 
@@ -169,42 +169,42 @@ class NS_NO_VTABLE nsIDOMEvent : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMEVENT \
-  NS_IMETHOD GetType(nsAString & aType); \
-  NS_IMETHOD GetTarget(nsIDOMEventTarget * *aTarget); \
-  NS_IMETHOD GetCurrentTarget(nsIDOMEventTarget * *aCurrentTarget); \
-  NS_IMETHOD GetEventPhase(PRUint16 *aEventPhase); \
-  NS_IMETHOD GetBubbles(PRBool *aBubbles); \
-  NS_IMETHOD GetCancelable(PRBool *aCancelable); \
-  NS_IMETHOD GetTimeStamp(DOMTimeStamp *aTimeStamp); \
-  NS_IMETHOD StopPropagation(void); \
-  NS_IMETHOD PreventDefault(void); \
-  NS_IMETHOD InitEvent(const nsAString & eventTypeArg, PRBool canBubbleArg, PRBool cancelableArg); 
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType); \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsIDOMEventTarget * *aTarget); \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentTarget(nsIDOMEventTarget * *aCurrentTarget); \
+  NS_SCRIPTABLE NS_IMETHOD GetEventPhase(PRUint16 *aEventPhase); \
+  NS_SCRIPTABLE NS_IMETHOD GetBubbles(PRBool *aBubbles); \
+  NS_SCRIPTABLE NS_IMETHOD GetCancelable(PRBool *aCancelable); \
+  NS_SCRIPTABLE NS_IMETHOD GetTimeStamp(DOMTimeStamp *aTimeStamp); \
+  NS_SCRIPTABLE NS_IMETHOD StopPropagation(void); \
+  NS_SCRIPTABLE NS_IMETHOD PreventDefault(void); \
+  NS_SCRIPTABLE NS_IMETHOD InitEvent(const nsAString & eventTypeArg, PRBool canBubbleArg, PRBool cancelableArg); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMEVENT(_to) \
-  NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
-  NS_IMETHOD GetTarget(nsIDOMEventTarget * *aTarget) { return _to GetTarget(aTarget); } \
-  NS_IMETHOD GetCurrentTarget(nsIDOMEventTarget * *aCurrentTarget) { return _to GetCurrentTarget(aCurrentTarget); } \
-  NS_IMETHOD GetEventPhase(PRUint16 *aEventPhase) { return _to GetEventPhase(aEventPhase); } \
-  NS_IMETHOD GetBubbles(PRBool *aBubbles) { return _to GetBubbles(aBubbles); } \
-  NS_IMETHOD GetCancelable(PRBool *aCancelable) { return _to GetCancelable(aCancelable); } \
-  NS_IMETHOD GetTimeStamp(DOMTimeStamp *aTimeStamp) { return _to GetTimeStamp(aTimeStamp); } \
-  NS_IMETHOD StopPropagation(void) { return _to StopPropagation(); } \
-  NS_IMETHOD PreventDefault(void) { return _to PreventDefault(); } \
-  NS_IMETHOD InitEvent(const nsAString & eventTypeArg, PRBool canBubbleArg, PRBool cancelableArg) { return _to InitEvent(eventTypeArg, canBubbleArg, cancelableArg); } 
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsIDOMEventTarget * *aTarget) { return _to GetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentTarget(nsIDOMEventTarget * *aCurrentTarget) { return _to GetCurrentTarget(aCurrentTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD GetEventPhase(PRUint16 *aEventPhase) { return _to GetEventPhase(aEventPhase); } \
+  NS_SCRIPTABLE NS_IMETHOD GetBubbles(PRBool *aBubbles) { return _to GetBubbles(aBubbles); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCancelable(PRBool *aCancelable) { return _to GetCancelable(aCancelable); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTimeStamp(DOMTimeStamp *aTimeStamp) { return _to GetTimeStamp(aTimeStamp); } \
+  NS_SCRIPTABLE NS_IMETHOD StopPropagation(void) { return _to StopPropagation(); } \
+  NS_SCRIPTABLE NS_IMETHOD PreventDefault(void) { return _to PreventDefault(); } \
+  NS_SCRIPTABLE NS_IMETHOD InitEvent(const nsAString & eventTypeArg, PRBool canBubbleArg, PRBool cancelableArg) { return _to InitEvent(eventTypeArg, canBubbleArg, cancelableArg); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMEVENT(_to) \
-  NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
-  NS_IMETHOD GetTarget(nsIDOMEventTarget * *aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTarget(aTarget); } \
-  NS_IMETHOD GetCurrentTarget(nsIDOMEventTarget * *aCurrentTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentTarget(aCurrentTarget); } \
-  NS_IMETHOD GetEventPhase(PRUint16 *aEventPhase) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetEventPhase(aEventPhase); } \
-  NS_IMETHOD GetBubbles(PRBool *aBubbles) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetBubbles(aBubbles); } \
-  NS_IMETHOD GetCancelable(PRBool *aCancelable) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCancelable(aCancelable); } \
-  NS_IMETHOD GetTimeStamp(DOMTimeStamp *aTimeStamp) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTimeStamp(aTimeStamp); } \
-  NS_IMETHOD StopPropagation(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->StopPropagation(); } \
-  NS_IMETHOD PreventDefault(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->PreventDefault(); } \
-  NS_IMETHOD InitEvent(const nsAString & eventTypeArg, PRBool canBubbleArg, PRBool cancelableArg) { return !_to ? NS_ERROR_NULL_POINTER : _to->InitEvent(eventTypeArg, canBubbleArg, cancelableArg); } 
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsIDOMEventTarget * *aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentTarget(nsIDOMEventTarget * *aCurrentTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentTarget(aCurrentTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD GetEventPhase(PRUint16 *aEventPhase) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetEventPhase(aEventPhase); } \
+  NS_SCRIPTABLE NS_IMETHOD GetBubbles(PRBool *aBubbles) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetBubbles(aBubbles); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCancelable(PRBool *aCancelable) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCancelable(aCancelable); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTimeStamp(DOMTimeStamp *aTimeStamp) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTimeStamp(aTimeStamp); } \
+  NS_SCRIPTABLE NS_IMETHOD StopPropagation(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->StopPropagation(); } \
+  NS_SCRIPTABLE NS_IMETHOD PreventDefault(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->PreventDefault(); } \
+  NS_SCRIPTABLE NS_IMETHOD InitEvent(const nsAString & eventTypeArg, PRBool canBubbleArg, PRBool cancelableArg) { return !_to ? NS_ERROR_NULL_POINTER : _to->InitEvent(eventTypeArg, canBubbleArg, cancelableArg); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

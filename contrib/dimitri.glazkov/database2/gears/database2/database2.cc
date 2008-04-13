@@ -123,13 +123,10 @@ void Database2::QueueTransaction(Database2Transaction *transaction) {
 bool Database2::Create(const ModuleImplBaseClass *sibling, 
                        const std::string16 &name,
                        const std::string16 &version,
-                       Database2 **instance) {
-  Database2 *database = CreateModule<Database2>(sibling->GetJsRunner());
-  if (database && database->InitBaseFromSibling(sibling)) {
-    *instance = database;
-    return true;
-  }
-  return false;
+                       scoped_refptr<Database2> *instance) {
+  assert(instance);
+  return CreateModule<Database2>(sibling->GetJsRunner(), instance)
+      && instance->get()->InitBaseFromSibling(sibling);
 }
 
 bool Database2::CreateError(const ModuleImplBaseClass *sibling,

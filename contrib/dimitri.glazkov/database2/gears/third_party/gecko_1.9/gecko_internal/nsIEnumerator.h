@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/xpcom/ds/nsIEnumerator.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/xpcom/ds/nsIEnumerator.idl
  */
 
 #ifndef __gen_nsIEnumerator_h__
@@ -23,7 +23,7 @@
   {0xad385286, 0xcbc4, 0x11d2, \
     { 0x8c, 0xca, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3 }}
 
-class NS_NO_VTABLE nsIEnumerator : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIEnumerator : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IENUMERATOR_IID)
@@ -31,24 +31,24 @@ class NS_NO_VTABLE nsIEnumerator : public nsISupports {
   /** First will reset the list. will return NS_FAILED if no items
    */
   /* void first (); */
-  NS_IMETHOD First(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD First(void) = 0;
 
   /** Next will advance the list. will return failed if already at end
    */
   /* void next (); */
-  NS_IMETHOD Next(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Next(void) = 0;
 
   /** CurrentItem will return the CurrentItem item it will fail if the 
    *  list is empty
    */
   /* nsISupports currentItem (); */
-  NS_IMETHOD CurrentItem(nsISupports **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CurrentItem(nsISupports **_retval) = 0;
 
   /** return if the collection is at the end.  that is the beginning following 
    *  a call to Prev and it is the end of the list following a call to next
    */
   /* void isDone (); */
-  NS_IMETHOD IsDone(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsDone(void) = 0;
 
 };
 
@@ -56,24 +56,24 @@ class NS_NO_VTABLE nsIEnumerator : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIENUMERATOR \
-  NS_IMETHOD First(void); \
-  NS_IMETHOD Next(void); \
-  NS_IMETHOD CurrentItem(nsISupports **_retval); \
-  NS_IMETHOD IsDone(void); 
+  NS_SCRIPTABLE NS_IMETHOD First(void); \
+  NS_SCRIPTABLE NS_IMETHOD Next(void); \
+  NS_SCRIPTABLE NS_IMETHOD CurrentItem(nsISupports **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD IsDone(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIENUMERATOR(_to) \
-  NS_IMETHOD First(void) { return _to First(); } \
-  NS_IMETHOD Next(void) { return _to Next(); } \
-  NS_IMETHOD CurrentItem(nsISupports **_retval) { return _to CurrentItem(_retval); } \
-  NS_IMETHOD IsDone(void) { return _to IsDone(); } 
+  NS_SCRIPTABLE NS_IMETHOD First(void) { return _to First(); } \
+  NS_SCRIPTABLE NS_IMETHOD Next(void) { return _to Next(); } \
+  NS_SCRIPTABLE NS_IMETHOD CurrentItem(nsISupports **_retval) { return _to CurrentItem(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsDone(void) { return _to IsDone(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIENUMERATOR(_to) \
-  NS_IMETHOD First(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->First(); } \
-  NS_IMETHOD Next(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Next(); } \
-  NS_IMETHOD CurrentItem(nsISupports **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CurrentItem(_retval); } \
-  NS_IMETHOD IsDone(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsDone(); } 
+  NS_SCRIPTABLE NS_IMETHOD First(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->First(); } \
+  NS_SCRIPTABLE NS_IMETHOD Next(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Next(); } \
+  NS_SCRIPTABLE NS_IMETHOD CurrentItem(nsISupports **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CurrentItem(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsDone(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsDone(); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

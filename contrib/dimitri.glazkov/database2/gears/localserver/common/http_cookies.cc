@@ -236,7 +236,11 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
 #include <gecko_sdk/include/nsIURI.h>
 #include <gecko_sdk/include/nsIIOService.h>
 #include <gecko_internal/nsICookieService.h>
+#if BROWSER_FF3
+#include <gecko_internal/nsXPCOMCIDInternal.h>
+#else
 #include <gecko_internal/nsIEventQueueService.h>
+#endif
 #include <gecko_internal/nsIProxyObjectManager.h>
 #include "gears/base/common/common.h"
 
@@ -280,11 +284,16 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
   #define PROXY_ASYNC   0x0002  // fire and forget
   #define PROXY_ALWAYS  0x0004  // ignore check to see if the eventQ
                                 // is on the same thread as the caller
+#if BROWSER_FF3
+  #define PROXY_TO_MAIN_THREAD NS_PROXY_TO_MAIN_THREAD
+#else
+  #define PROXY_TO_MAIN_THREAD NS_UI_THREAD_EVENTQ
+#endif
   nsCOMPtr<nsIProxyObjectManager> proxy_manager =
       do_GetService(NS_XPCOMPROXY_CONTRACTID);
   if (!proxy_manager) return false;
   nsCOMPtr<nsICookieService> cookie_service_proxy;
-  nr = proxy_manager->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+  nr = proxy_manager->GetProxyForObject(PROXY_TO_MAIN_THREAD,
                                         NS_GET_IID(nsICookieService),
                                         cookie_service,
                                         PROXY_SYNC,

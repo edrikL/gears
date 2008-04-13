@@ -24,6 +24,9 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/localserver/common/managed_resource_store.h"
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"  // For BrowserCache
+#endif
 #include "gears/localserver/common/manifest.h"
 #include "gears/localserver/common/update_task.h"
 
@@ -320,3 +323,58 @@ bool ManagedResourceStore::SetUpdateInfo(WebCacheDB::UpdateStatus status,
     return false;
   }
 }
+
+#ifdef WINCE
+//------------------------------------------------------------------------------
+// InsertBogusBrowserCacheEntries
+//------------------------------------------------------------------------------
+bool ManagedResourceStore::InsertBogusBrowserCacheEntries() {
+  WebCacheDB *db = WebCacheDB::GetDB();
+  if (!db) {
+    return false;
+  }
+  WebCacheDB::VersionInfo version;
+  if (!GetVersion(WebCacheDB::VERSION_CURRENT, &version)) {
+    // No current version is not an error.
+    return true;
+  }
+  typedef std::vector<WebCacheDB::EntryInfo> EntryInfoVector;
+  EntryInfoVector entries;    
+  if (!db->FindEntries(version.id, &entries)) {
+    return false;
+  }
+  bool res = true;
+  for (EntryInfoVector::iterator entry = entries.begin();
+       entry != entries.end();
+       ++entry) {
+    res &= BrowserCache::EnsureBogusEntry(entry->url.c_str());
+  }
+  return res;
+}
+
+//------------------------------------------------------------------------------
+// GetCurrentVersionUrls
+//------------------------------------------------------------------------------
+bool ManagedResourceStore::GetCurrentVersionUrls(
+    std::vector<std::string16> *urls) {
+  assert(urls);
+  assert(urls->empty());
+  WebCacheDB *db = WebCacheDB::GetDB();
+  if (!db) {
+    return false;
+  }
+  WebCacheDB::VersionInfo version;
+  if (!GetVersion(WebCacheDB::VERSION_CURRENT, &version)) {
+    // No current version is not an error.
+    return true;
+  }
+  std::vector<WebCacheDB::EntryInfo> entries;
+  if (!db->FindEntries(version.id, &entries)) {
+    return false;
+  }
+  for (int i = 0; i < static_cast<int>(entries.size()); ++ i) {
+    urls->push_back(entries[i].url);
+  }
+  return true;
+}
+#endif

@@ -31,7 +31,7 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include "winres.h"
-#include "common/genfiles/product_version.rc"
+#include "genfiles/product_version.rc"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -59,13 +59,13 @@ END
 2 TEXTINCLUDE 
 BEGIN
     "#include ""winres.h""\r\n"
-    "#include ""common/genfiles/product_version.rc""\r\n"
+    "#include ""genfiles/product_version.rc""\r\n"
     "\0"
 END
 
 3 TEXTINCLUDE 
 BEGIN
-    "1 TYPELIB ""ie/genfiles/interfaces.tlb""\r\n"
+    "1 TYPELIB ""genfiles/interfaces.tlb""\r\n"
     "\0"
 END
 
@@ -73,12 +73,12 @@ END
 
 
 // Registry (.rgs) files
-IDR_GEARSIE                     REGISTRY  "ie/genfiles/module.rgs"
-IDR_BROWSERHELPEROBJECT         REGISTRY  "ie/genfiles/bho.rgs"
-IDR_GEARSFACTORY                REGISTRY  "ie/genfiles/factory.rgs"
-IDR_TOOLSMENUITEM               REGISTRY  "ie/genfiles/tools_menu_item.rgs"
+IDR_GEARSIE                     REGISTRY  "genfiles/module.rgs"
+IDR_BROWSERHELPEROBJECT         REGISTRY  "genfiles/bho.rgs"
+IDR_GEARSFACTORY                REGISTRY  "genfiles/factory.rgs"
+IDR_TOOLSMENUITEM               REGISTRY  "genfiles/tools_menu_item.rgs"
 #ifdef WINCE
-IDR_PIEDIALOGBRIDGE             REGISTRY  "ie/genfiles/html_dialog_bridge_iemobile.rgs"
+IDR_PIEDIALOGBRIDGE             REGISTRY  "genfiles/html_dialog_bridge_iemobile.rgs"
 #endif
 
 #endif    // English (U.S.) resources
@@ -91,7 +91,7 @@ IDR_PIEDIALOGBRIDGE             REGISTRY  "ie/genfiles/html_dialog_bridge_iemobi
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-1 TYPELIB "ie/genfiles/interfaces.tlb"
+1 TYPELIB "genfiles/interfaces.tlb"
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED

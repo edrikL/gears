@@ -41,7 +41,7 @@ class nsIFile; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIIOService : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIIOService : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IIOSERVICE_IID)
@@ -53,7 +53,7 @@ class NS_NO_VTABLE nsIIOService : public nsISupports {
      * @return reference to corresponding nsIProtocolHandler
      */
   /* nsIProtocolHandler getProtocolHandler (in string aScheme); */
-  NS_IMETHOD GetProtocolHandler(const char *aScheme, nsIProtocolHandler **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetProtocolHandler(const char *aScheme, nsIProtocolHandler **_retval) = 0;
 
   /**
      * Returns the protocol flags for a given scheme.
@@ -62,7 +62,7 @@ class NS_NO_VTABLE nsIIOService : public nsISupports {
      * @return value of corresponding nsIProtocolHandler::protocolFlags
      */
   /* unsigned long getProtocolFlags (in string aScheme); */
-  NS_IMETHOD GetProtocolFlags(const char *aScheme, PRUint32 *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetProtocolFlags(const char *aScheme, PRUint32 *_retval) = 0;
 
   /**
      * This method constructs a new URI by determining the scheme of the
@@ -73,7 +73,7 @@ class NS_NO_VTABLE nsIIOService : public nsISupports {
      * @see nsIProtocolHandler::newURI
      */
   /* nsIURI newURI (in AUTF8String aSpec, in string aOriginCharset, in nsIURI aBaseURI); */
-  NS_IMETHOD NewURI(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD NewURI(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval) = 0;
 
   /**
      * This method constructs a new URI from a nsIFile.
@@ -82,7 +82,7 @@ class NS_NO_VTABLE nsIIOService : public nsISupports {
      * @return reference to a new nsIURI object
      */
   /* nsIURI newFileURI (in nsIFile aFile); */
-  NS_IMETHOD NewFileURI(nsIFile *aFile, nsIURI **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD NewFileURI(nsIFile *aFile, nsIURI **_retval) = 0;
 
   /**
      * Creates a channel for a given URI.
@@ -91,13 +91,13 @@ class NS_NO_VTABLE nsIIOService : public nsISupports {
      * @return reference to the new nsIChannel object
      */
   /* nsIChannel newChannelFromURI (in nsIURI aURI); */
-  NS_IMETHOD NewChannelFromURI(nsIURI *aURI, nsIChannel **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD NewChannelFromURI(nsIURI *aURI, nsIChannel **_retval) = 0;
 
   /**
      * Equivalent to newChannelFromURI(newURI(...))
      */
   /* nsIChannel newChannel (in AUTF8String aSpec, in string aOriginCharset, in nsIURI aBaseURI); */
-  NS_IMETHOD NewChannel(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIChannel **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD NewChannel(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIChannel **_retval) = 0;
 
   /**
      * Returns true if networking is in "offline" mode. When in offline mode, 
@@ -109,8 +109,8 @@ class NS_NO_VTABLE nsIIOService : public nsISupports {
      * Changing this fires observer notifications ... see below.
      */
   /* attribute boolean offline; */
-  NS_IMETHOD GetOffline(PRBool *aOffline) = 0;
-  NS_IMETHOD SetOffline(PRBool aOffline) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetOffline(PRBool *aOffline) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetOffline(PRBool aOffline) = 0;
 
   /**
      * Checks if a port number is banned. This involves consulting a list of
@@ -124,7 +124,7 @@ class NS_NO_VTABLE nsIIOService : public nsISupports {
      * @see nsIProtocolHandler::allowPort
      */
   /* boolean allowPort (in long aPort, in string aScheme); */
-  NS_IMETHOD AllowPort(PRInt32 aPort, const char *aScheme, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AllowPort(PRInt32 aPort, const char *aScheme, PRBool *_retval) = 0;
 
   /**
      * Utility to extract the scheme from a URL string, consistently and
@@ -140,7 +140,7 @@ class NS_NO_VTABLE nsIIOService : public nsISupports {
      * @throws NS_ERROR_MALFORMED_URI if URL string is not of the right form.
      */
   /* ACString extractScheme (in AUTF8String urlString); */
-  NS_IMETHOD ExtractScheme(const nsACString & urlString, nsACString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ExtractScheme(const nsACString & urlString, nsACString & _retval) = 0;
 
 };
 
@@ -148,42 +148,42 @@ class NS_NO_VTABLE nsIIOService : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIIOSERVICE \
-  NS_IMETHOD GetProtocolHandler(const char *aScheme, nsIProtocolHandler **_retval); \
-  NS_IMETHOD GetProtocolFlags(const char *aScheme, PRUint32 *_retval); \
-  NS_IMETHOD NewURI(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval); \
-  NS_IMETHOD NewFileURI(nsIFile *aFile, nsIURI **_retval); \
-  NS_IMETHOD NewChannelFromURI(nsIURI *aURI, nsIChannel **_retval); \
-  NS_IMETHOD NewChannel(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIChannel **_retval); \
-  NS_IMETHOD GetOffline(PRBool *aOffline); \
-  NS_IMETHOD SetOffline(PRBool aOffline); \
-  NS_IMETHOD AllowPort(PRInt32 aPort, const char *aScheme, PRBool *_retval); \
-  NS_IMETHOD ExtractScheme(const nsACString & urlString, nsACString & _retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetProtocolHandler(const char *aScheme, nsIProtocolHandler **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetProtocolFlags(const char *aScheme, PRUint32 *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD NewURI(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD NewFileURI(nsIFile *aFile, nsIURI **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD NewChannelFromURI(nsIURI *aURI, nsIChannel **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD NewChannel(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIChannel **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetOffline(PRBool *aOffline); \
+  NS_SCRIPTABLE NS_IMETHOD SetOffline(PRBool aOffline); \
+  NS_SCRIPTABLE NS_IMETHOD AllowPort(PRInt32 aPort, const char *aScheme, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD ExtractScheme(const nsACString & urlString, nsACString & _retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIIOSERVICE(_to) \
-  NS_IMETHOD GetProtocolHandler(const char *aScheme, nsIProtocolHandler **_retval) { return _to GetProtocolHandler(aScheme, _retval); } \
-  NS_IMETHOD GetProtocolFlags(const char *aScheme, PRUint32 *_retval) { return _to GetProtocolFlags(aScheme, _retval); } \
-  NS_IMETHOD NewURI(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval) { return _to NewURI(aSpec, aOriginCharset, aBaseURI, _retval); } \
-  NS_IMETHOD NewFileURI(nsIFile *aFile, nsIURI **_retval) { return _to NewFileURI(aFile, _retval); } \
-  NS_IMETHOD NewChannelFromURI(nsIURI *aURI, nsIChannel **_retval) { return _to NewChannelFromURI(aURI, _retval); } \
-  NS_IMETHOD NewChannel(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIChannel **_retval) { return _to NewChannel(aSpec, aOriginCharset, aBaseURI, _retval); } \
-  NS_IMETHOD GetOffline(PRBool *aOffline) { return _to GetOffline(aOffline); } \
-  NS_IMETHOD SetOffline(PRBool aOffline) { return _to SetOffline(aOffline); } \
-  NS_IMETHOD AllowPort(PRInt32 aPort, const char *aScheme, PRBool *_retval) { return _to AllowPort(aPort, aScheme, _retval); } \
-  NS_IMETHOD ExtractScheme(const nsACString & urlString, nsACString & _retval) { return _to ExtractScheme(urlString, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetProtocolHandler(const char *aScheme, nsIProtocolHandler **_retval) { return _to GetProtocolHandler(aScheme, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetProtocolFlags(const char *aScheme, PRUint32 *_retval) { return _to GetProtocolFlags(aScheme, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD NewURI(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval) { return _to NewURI(aSpec, aOriginCharset, aBaseURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD NewFileURI(nsIFile *aFile, nsIURI **_retval) { return _to NewFileURI(aFile, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD NewChannelFromURI(nsIURI *aURI, nsIChannel **_retval) { return _to NewChannelFromURI(aURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD NewChannel(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIChannel **_retval) { return _to NewChannel(aSpec, aOriginCharset, aBaseURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOffline(PRBool *aOffline) { return _to GetOffline(aOffline); } \
+  NS_SCRIPTABLE NS_IMETHOD SetOffline(PRBool aOffline) { return _to SetOffline(aOffline); } \
+  NS_SCRIPTABLE NS_IMETHOD AllowPort(PRInt32 aPort, const char *aScheme, PRBool *_retval) { return _to AllowPort(aPort, aScheme, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ExtractScheme(const nsACString & urlString, nsACString & _retval) { return _to ExtractScheme(urlString, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIIOSERVICE(_to) \
-  NS_IMETHOD GetProtocolHandler(const char *aScheme, nsIProtocolHandler **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetProtocolHandler(aScheme, _retval); } \
-  NS_IMETHOD GetProtocolFlags(const char *aScheme, PRUint32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetProtocolFlags(aScheme, _retval); } \
-  NS_IMETHOD NewURI(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NewURI(aSpec, aOriginCharset, aBaseURI, _retval); } \
-  NS_IMETHOD NewFileURI(nsIFile *aFile, nsIURI **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NewFileURI(aFile, _retval); } \
-  NS_IMETHOD NewChannelFromURI(nsIURI *aURI, nsIChannel **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NewChannelFromURI(aURI, _retval); } \
-  NS_IMETHOD NewChannel(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIChannel **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NewChannel(aSpec, aOriginCharset, aBaseURI, _retval); } \
-  NS_IMETHOD GetOffline(PRBool *aOffline) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOffline(aOffline); } \
-  NS_IMETHOD SetOffline(PRBool aOffline) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetOffline(aOffline); } \
-  NS_IMETHOD AllowPort(PRInt32 aPort, const char *aScheme, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->AllowPort(aPort, aScheme, _retval); } \
-  NS_IMETHOD ExtractScheme(const nsACString & urlString, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ExtractScheme(urlString, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetProtocolHandler(const char *aScheme, nsIProtocolHandler **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetProtocolHandler(aScheme, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetProtocolFlags(const char *aScheme, PRUint32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetProtocolFlags(aScheme, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD NewURI(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NewURI(aSpec, aOriginCharset, aBaseURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD NewFileURI(nsIFile *aFile, nsIURI **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NewFileURI(aFile, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD NewChannelFromURI(nsIURI *aURI, nsIChannel **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NewChannelFromURI(aURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD NewChannel(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIChannel **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NewChannel(aSpec, aOriginCharset, aBaseURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOffline(PRBool *aOffline) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOffline(aOffline); } \
+  NS_SCRIPTABLE NS_IMETHOD SetOffline(PRBool aOffline) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetOffline(aOffline); } \
+  NS_SCRIPTABLE NS_IMETHOD AllowPort(PRInt32 aPort, const char *aScheme, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->AllowPort(aPort, aScheme, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ExtractScheme(const nsACString & urlString, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ExtractScheme(urlString, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -52,7 +52,7 @@ Harness.inherits(RunnerBase);
 /**
  * Length of time to wait before giving up on async tests.
  */
-Harness.ASYNC_TIMEOUT_MSEC = 10000; // 10 seconds
+Harness.ASYNC_TIMEOUT_MSEC = 15000; // 15 seconds
 
 /**
  * The current harness active in this context.
@@ -186,7 +186,17 @@ Harness.prototype.handleTestsLoaded_ = function(content) {
  */
 Harness.prototype.runTests_ = function() {
   while (++this.currentTestIndex_ <= this.testNames_.length) {
-    this.runNextTest_();
+    try {
+      this.runNextTest_();
+    } catch(e) {
+      // We explicitly call the error handler, rather than relying on the
+      // browser to call window.onerror, because window.onerror is not supported
+      // on Safari and window.onerror seems not to be called in this particular
+      // case on WinCE.
+      // TODO(steveblock): Understand the cause of this behavior on WinCE.
+      this.handleGlobalError_(e.message);
+      return;
+    }
     if (this.asyncTimerId_ || this.globalErrorTimerId_) {
       // break out of the loop if we started an async test.
       return;

@@ -26,7 +26,7 @@
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/ui/common/settings_dialog.h"
 #include "gears/ui/ie/tools_menu_item.h"
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "genfiles/product_constants.h"
 
 #ifdef WINCE
 

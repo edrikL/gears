@@ -37,7 +37,7 @@
  * @see nsWeakReference
  * @see nsWeakPtr
  */
-class NS_NO_VTABLE nsIWeakReference : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIWeakReference : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWEAKREFERENCE_IID)
@@ -49,7 +49,7 @@ class NS_NO_VTABLE nsIWeakReference : public nsISupports {
      * that would defeat the purpose of using a non-owning |nsIWeakReference| in the first place.
      */
   /* void QueryReferent (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
-  NS_IMETHOD QueryReferent(const nsIID & uuid, void * *result) = 0;
+  NS_SCRIPTABLE NS_IMETHOD QueryReferent(const nsIID & uuid, void * *result) = 0;
 
 };
 
@@ -57,15 +57,15 @@ class NS_NO_VTABLE nsIWeakReference : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWEAKREFERENCE \
-  NS_IMETHOD QueryReferent(const nsIID & uuid, void * *result); 
+  NS_SCRIPTABLE NS_IMETHOD QueryReferent(const nsIID & uuid, void * *result); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIWEAKREFERENCE(_to) \
-  NS_IMETHOD QueryReferent(const nsIID & uuid, void * *result) { return _to QueryReferent(uuid, result); } 
+  NS_SCRIPTABLE NS_IMETHOD QueryReferent(const nsIID & uuid, void * *result) { return _to QueryReferent(uuid, result); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIWEAKREFERENCE(_to) \
-  NS_IMETHOD QueryReferent(const nsIID & uuid, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->QueryReferent(uuid, result); } 
+  NS_SCRIPTABLE NS_IMETHOD QueryReferent(const nsIID & uuid, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->QueryReferent(uuid, result); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -126,7 +126,7 @@ NS_IMETHODIMP nsWeakReference::QueryReferent(const nsIID & uuid, void * *result)
  * @see nsIWeakReference
  * @see nsSupportsWeakReference
  */
-class NS_NO_VTABLE nsISupportsWeakReference : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsISupportsWeakReference : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISUPPORTSWEAKREFERENCE_IID)
@@ -141,7 +141,7 @@ class NS_NO_VTABLE nsISupportsWeakReference : public nsISupports {
      * @see nsCOMPtr
      */
   /* nsIWeakReference GetWeakReference (); */
-  NS_IMETHOD GetWeakReference(nsIWeakReference **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetWeakReference(nsIWeakReference **_retval) = 0;
 
 };
 
@@ -149,15 +149,15 @@ class NS_NO_VTABLE nsISupportsWeakReference : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSISUPPORTSWEAKREFERENCE \
-  NS_IMETHOD GetWeakReference(nsIWeakReference **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetWeakReference(nsIWeakReference **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSISUPPORTSWEAKREFERENCE(_to) \
-  NS_IMETHOD GetWeakReference(nsIWeakReference **_retval) { return _to GetWeakReference(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetWeakReference(nsIWeakReference **_retval) { return _to GetWeakReference(_retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSISUPPORTSWEAKREFERENCE(_to) \
-  NS_IMETHOD GetWeakReference(nsIWeakReference **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWeakReference(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetWeakReference(nsIWeakReference **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWeakReference(_retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

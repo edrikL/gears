@@ -26,12 +26,17 @@
 #include <assert.h>
 #include <math.h>
 #include <set>
+#include <vector>
 
 #include "gears/localserver/common/update_task.h"
 
+#include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/stopwatch.h"
 #include "gears/base/common/string_utils.h"
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"  // For BrowserCache
+#endif
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/manifest.h"
 
@@ -87,11 +92,11 @@ bool UpdateTask::Init(ManagedResourceStore *store) {
 void UpdateTask::Run() {
   const char *kLogVersionSwapping =
       "UpdateTask - swapping new version in\n";
-  const char *kLogVersionSwappingFailed = 
+  const char *kLogVersionSwappingFailed =
       "UpdateTask - SetDownloadingVersionAsCurrent failed\n";
-  const char *kLogManifestChanged_Retrying = 
+  const char *kLogManifestChanged_Retrying =
       "UpdateTask - manifest changed during update, retrying\n";
-  const char *kLogManifestChanged_Failing = 
+  const char *kLogManifestChanged_Failing =
       "UpdateTask - manifest changed twice during update, failing\n";
 
   LOG(("UpdateTask - starting\n"));
@@ -106,47 +111,76 @@ void UpdateTask::Run() {
 
       std::string16 downloading_version;
       std::string16 completed_version;
-      success = UpdateManifest(&downloading_version);
+
+      // 'false' indicates the initial request for the manifest
+      success = UpdateManifest(&downloading_version, false);
+
       if (success && !downloading_version.empty()) {
         // We have to download a new version
-        int attempt = 0;
+        const int kMaxManifestChangedRetries = 1;
+        const int kMax503TaskRetries = 3;
+        int manifest_changed_attempt = 0;
+        int task_503_attempt = 0;
         while (true) {
+          task_503_failure_ = false;
           success = DownloadVersion(&completed_version);
-          if (!success)
+          if (!success) {
+            if (task_503_failure_ && task_503_attempt < kMax503TaskRetries) {
+              ++task_503_attempt;
+              continue;
+            }
             break;
+          }
           assert(downloading_version == completed_version);
 
           // Prior to swapping the new version in, we check for an
           // updated manifest, it may have changed after we started
           // downloading the set of urls for the version we've completed.
+          // 'true' indicates manifest-validation
           downloading_version.clear();
-          success = UpdateManifest(&downloading_version);
+          success = UpdateManifest(&downloading_version, true);
           if (!success)
             break;
 
           if (downloading_version == completed_version) {
             // Manifest has not changed
             LOG((kLogVersionSwapping));
+#ifdef WINCE
+            // Before we swap in the new version, get the list of URLs for the
+            // old version.
+            std::vector<std::string16> old_urls;
+            store_.GetCurrentVersionUrls(&old_urls);
+#endif
             if (!store_.SetDownloadingVersionAsCurrent()) {
               LOG((kLogVersionSwappingFailed));
               success = false;
             }
+#ifdef WINCE
+            // If the version swap succeeded, remove browser cache entries for
+            // the previous version.
+            if (success) {
+              for (int i = 0; i < static_cast<int>(old_urls.size()); ++i) {
+                BrowserCache::RemoveBogusEntry(old_urls[i].c_str());
+              }
+            }
+#endif
             break;
           } else {
             // Manifest changed
-            const int kMaxManifestChangedRetries = 1;
-            if (attempt >= kMaxManifestChangedRetries) {
+            if (manifest_changed_attempt >= kMaxManifestChangedRetries) {
               LOG((kLogManifestChanged_Failing));
               error_msg_ = kManifestKeepsChangingErrorMessage;
               success = false;
               break;
             }
             LOG((kLogManifestChanged_Retrying));
-            ++attempt;
+            ++manifest_changed_attempt;
           }
         }
       }
-
+#ifdef WINCE
+      store_.InsertBogusBrowserCacheEntries();
+#endif
       if (success) {
         store_.SetUpdateInfo(WebCacheDB::UPDATE_OK,
                              GetCurrentTimeMillis(),
@@ -192,6 +226,7 @@ void UpdateTask::NotifyTaskComplete(bool success) {
 //------------------------------------------------------------------------------
 bool UpdateTask::HttpGetUrl(const char16 *full_url,
                             bool is_capturing,
+                            const char16 *reason_header_value,
                             const char16 *if_mod_since_date,
                             WebCacheDB::PayloadInfo *payload,
                             bool *was_redirected,
@@ -223,28 +258,65 @@ bool UpdateTask::HttpGetUrl(const char16 *full_url,
   // Prior to fetching a url, ensure any required cookie is present.
 
 
-  // Fetch the url from a server
-  if (!AsyncTask::HttpGet(full_url,
-                          is_capturing,
-                          if_mod_since_date,
-                          store_.GetRequiredCookie(),
-                          payload,
-                          was_redirected,
-                          full_redirect_url,
-                          &error_msg_)) {
-    LOG(("UpdateTask::HttpGetUrl - failed to get url\n"));
-    if (error_msg_.empty())
+  // Generally if a request to fetch a resource fails, we surface the failure 
+  // to our caller. We special case the HTTP_SERVICE_UNAVAILABLE (503) error
+  // by retrying up to three times. This can useful to handle running an update
+  // task while a new version of the server-side of the app is being deployed.
+  const int kMax503Retries = 3;
+  int url_503_attempt = 0;
+  while (url_503_attempt < kMax503Retries) {
+    // Fetch the url from a server
+    if (!AsyncTask::HttpGet(full_url,
+                            is_capturing,
+                            reason_header_value,
+                            if_mod_since_date,
+                            store_.GetRequiredCookie(),
+                            payload,
+                            was_redirected,
+                            full_redirect_url,
+                            &error_msg_)) {
+      LOG(("UpdateTask::HttpGetUrl - failed to get url\n"));
+      if (error_msg_.empty())
+        SetHttpError(full_url, NULL);
+      return false;  // TODO(michaeln): retry?
+    }
+
+    if (!payload->PassesValidationTests()) {
+      LOG(("UpdateTask::HttpGetUrl - received invalid payload\n"));
+      // Explicitly overwrite error_msg_, not passing the validation tests is
+      // the reason for overall task failure.
       SetHttpError(full_url, NULL);
-    return false;  // TODO(michaeln): retry?
+      ExceptionManager::CaptureAndSendMinidump();
+      return false;  // TODO(michaeln): retry?
+    }
+
+    if (payload->status_code != HttpConstants::HTTP_SERVICE_UNAVAILABLE) {
+      return true;
+    }
+
+    // We will retry only for 503s that contain a 'Retry-After: 0' header
+    std::string16 retry_after;
+    if (!payload->GetHeader(HttpConstants::kRetryAfterHeader, &retry_after) ||
+        retry_after != STRING16(L"0")) {
+      return true;
+    }
+
+    ++url_503_attempt;
   }
 
+  // We will also retry the entire update task for 503 errors (see Run())
+  task_503_failure_ = true;
+
+  // Return the 503 response to the caller
+  assert(payload->status_code == HttpConstants::HTTP_SERVICE_UNAVAILABLE);
   return true;
 }
 
 //------------------------------------------------------------------------------
 // UpdateManifest
 //------------------------------------------------------------------------------
-bool UpdateTask::UpdateManifest(std::string16 *downloading_version) {
+bool UpdateTask::UpdateManifest(std::string16 *downloading_version,
+                                bool validate_manifest) {
   downloading_version->clear();
 
   WebCacheDB::ServerInfo server;
@@ -261,12 +333,15 @@ bool UpdateTask::UpdateManifest(std::string16 *downloading_version) {
   assert(store_.GetSecurityOrigin().IsSameOriginAsUrl(
                                         server.manifest_url.c_str()));
 
-  // Fetch a current manifest file from the server
+  // Fetch a current manifest file from the server. If we're on the validation
+  // pass, include an X-Gears-Reason header to inform the server side.
   WebCacheDB::PayloadInfo manifest_payload;
   bool was_redirected = false;
   std::string16 manifest_redirect_url;
   if (!HttpGetUrl(server.manifest_url.c_str(),
                   false,  // not for capture into cache
+                  validate_manifest 
+                      ? HttpConstants::kXGearsReason_ValidateManifest : NULL,
                   server.manifest_date_header.c_str(),
                   &manifest_payload,
                   &was_redirected,
@@ -332,7 +407,7 @@ bool UpdateTask::UpdateManifest(std::string16 *downloading_version) {
     int64 current_version_id = WebCacheDB::kInvalidID;
     int64 downloading_version_id = WebCacheDB::kInvalidID;
     for (int i = 0; i < static_cast<int>(versions.size()); i++) {
-      switch(versions[i].ready_state) {
+      switch (versions[i].ready_state) {
         case WebCacheDB::VERSION_CURRENT:
           assert(!current_version_str);
           current_version_str = &(versions[i].version_string);
@@ -496,6 +571,7 @@ bool UpdateTask::ProcessUrl(const std::string16 &url,
   WebCacheDB::PayloadInfo new_payload;
   if (!HttpGetUrl(url.c_str(),
                   true,  // for capture into cache
+                  NULL,  // X-Gears-Reason header value
                   previous_version_mod_date.c_str(),
                   &new_payload,
                   NULL, NULL)) {

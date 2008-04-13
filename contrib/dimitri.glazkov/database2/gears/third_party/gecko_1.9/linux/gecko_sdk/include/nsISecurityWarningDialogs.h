@@ -30,7 +30,7 @@ class nsIInterfaceRequestor; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsISecurityWarningDialogs : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsISecurityWarningDialogs : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISECURITYWARNINGDIALOGS_IID)
@@ -46,7 +46,7 @@ class NS_NO_VTABLE nsISecurityWarningDialogs : public nsISupports {
    *  @return true if the user confirms to continue
    */
   /* boolean confirmEnteringSecure (in nsIInterfaceRequestor ctx); */
-  NS_IMETHOD ConfirmEnteringSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ConfirmEnteringSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) = 0;
 
   /**
    *  Inform the user that a transition 
@@ -60,7 +60,7 @@ class NS_NO_VTABLE nsISecurityWarningDialogs : public nsISupports {
    *  @return true if the user confirms to continue
    */
   /* boolean confirmEnteringWeak (in nsIInterfaceRequestor ctx); */
-  NS_IMETHOD ConfirmEnteringWeak(nsIInterfaceRequestor *ctx, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ConfirmEnteringWeak(nsIInterfaceRequestor *ctx, PRBool *_retval) = 0;
 
   /**
    *  Inform the user that a transition 
@@ -73,7 +73,7 @@ class NS_NO_VTABLE nsISecurityWarningDialogs : public nsISupports {
    *  @return true if the user confirms to continue
    */
   /* boolean confirmLeavingSecure (in nsIInterfaceRequestor ctx); */
-  NS_IMETHOD ConfirmLeavingSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ConfirmLeavingSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) = 0;
 
   /**
    *  Inform the user the currently displayed page
@@ -84,7 +84,7 @@ class NS_NO_VTABLE nsISecurityWarningDialogs : public nsISupports {
    *  @return true if the user decides to show insecure objects.
    */
   /* boolean confirmMixedMode (in nsIInterfaceRequestor ctx); */
-  NS_IMETHOD ConfirmMixedMode(nsIInterfaceRequestor *ctx, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ConfirmMixedMode(nsIInterfaceRequestor *ctx, PRBool *_retval) = 0;
 
   /**
    *  Inform the user that information is being submitted
@@ -95,7 +95,7 @@ class NS_NO_VTABLE nsISecurityWarningDialogs : public nsISupports {
    *  @return true if the user confirms to submit.
    */
   /* boolean confirmPostToInsecure (in nsIInterfaceRequestor ctx); */
-  NS_IMETHOD ConfirmPostToInsecure(nsIInterfaceRequestor *ctx, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ConfirmPostToInsecure(nsIInterfaceRequestor *ctx, PRBool *_retval) = 0;
 
   /**
    *  Inform the user: Although the currently displayed
@@ -108,7 +108,7 @@ class NS_NO_VTABLE nsISecurityWarningDialogs : public nsISupports {
    *  @return true if the user confirms to submit.
    */
   /* boolean confirmPostToInsecureFromSecure (in nsIInterfaceRequestor ctx); */
-  NS_IMETHOD ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) = 0;
 
 };
 
@@ -116,30 +116,30 @@ class NS_NO_VTABLE nsISecurityWarningDialogs : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSISECURITYWARNINGDIALOGS \
-  NS_IMETHOD ConfirmEnteringSecure(nsIInterfaceRequestor *ctx, PRBool *_retval); \
-  NS_IMETHOD ConfirmEnteringWeak(nsIInterfaceRequestor *ctx, PRBool *_retval); \
-  NS_IMETHOD ConfirmLeavingSecure(nsIInterfaceRequestor *ctx, PRBool *_retval); \
-  NS_IMETHOD ConfirmMixedMode(nsIInterfaceRequestor *ctx, PRBool *_retval); \
-  NS_IMETHOD ConfirmPostToInsecure(nsIInterfaceRequestor *ctx, PRBool *_retval); \
-  NS_IMETHOD ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx, PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD ConfirmEnteringSecure(nsIInterfaceRequestor *ctx, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD ConfirmEnteringWeak(nsIInterfaceRequestor *ctx, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD ConfirmLeavingSecure(nsIInterfaceRequestor *ctx, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD ConfirmMixedMode(nsIInterfaceRequestor *ctx, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD ConfirmPostToInsecure(nsIInterfaceRequestor *ctx, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx, PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSISECURITYWARNINGDIALOGS(_to) \
-  NS_IMETHOD ConfirmEnteringSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) { return _to ConfirmEnteringSecure(ctx, _retval); } \
-  NS_IMETHOD ConfirmEnteringWeak(nsIInterfaceRequestor *ctx, PRBool *_retval) { return _to ConfirmEnteringWeak(ctx, _retval); } \
-  NS_IMETHOD ConfirmLeavingSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) { return _to ConfirmLeavingSecure(ctx, _retval); } \
-  NS_IMETHOD ConfirmMixedMode(nsIInterfaceRequestor *ctx, PRBool *_retval) { return _to ConfirmMixedMode(ctx, _retval); } \
-  NS_IMETHOD ConfirmPostToInsecure(nsIInterfaceRequestor *ctx, PRBool *_retval) { return _to ConfirmPostToInsecure(ctx, _retval); } \
-  NS_IMETHOD ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) { return _to ConfirmPostToInsecureFromSecure(ctx, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD ConfirmEnteringSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) { return _to ConfirmEnteringSecure(ctx, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ConfirmEnteringWeak(nsIInterfaceRequestor *ctx, PRBool *_retval) { return _to ConfirmEnteringWeak(ctx, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ConfirmLeavingSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) { return _to ConfirmLeavingSecure(ctx, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ConfirmMixedMode(nsIInterfaceRequestor *ctx, PRBool *_retval) { return _to ConfirmMixedMode(ctx, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ConfirmPostToInsecure(nsIInterfaceRequestor *ctx, PRBool *_retval) { return _to ConfirmPostToInsecure(ctx, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) { return _to ConfirmPostToInsecureFromSecure(ctx, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSISECURITYWARNINGDIALOGS(_to) \
-  NS_IMETHOD ConfirmEnteringSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ConfirmEnteringSecure(ctx, _retval); } \
-  NS_IMETHOD ConfirmEnteringWeak(nsIInterfaceRequestor *ctx, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ConfirmEnteringWeak(ctx, _retval); } \
-  NS_IMETHOD ConfirmLeavingSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ConfirmLeavingSecure(ctx, _retval); } \
-  NS_IMETHOD ConfirmMixedMode(nsIInterfaceRequestor *ctx, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ConfirmMixedMode(ctx, _retval); } \
-  NS_IMETHOD ConfirmPostToInsecure(nsIInterfaceRequestor *ctx, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ConfirmPostToInsecure(ctx, _retval); } \
-  NS_IMETHOD ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ConfirmPostToInsecureFromSecure(ctx, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD ConfirmEnteringSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ConfirmEnteringSecure(ctx, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ConfirmEnteringWeak(nsIInterfaceRequestor *ctx, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ConfirmEnteringWeak(ctx, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ConfirmLeavingSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ConfirmLeavingSecure(ctx, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ConfirmMixedMode(nsIInterfaceRequestor *ctx, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ConfirmMixedMode(ctx, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ConfirmPostToInsecure(nsIInterfaceRequestor *ctx, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ConfirmPostToInsecure(ctx, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ConfirmPostToInsecureFromSecure(ctx, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

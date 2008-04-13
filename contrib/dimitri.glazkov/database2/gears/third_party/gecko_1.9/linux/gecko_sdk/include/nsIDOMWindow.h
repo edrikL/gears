@@ -24,7 +24,7 @@ class nsISelection; /* forward declaration */
   {0xa6cf906b, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMWindow : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMWindow : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMWINDOW_IID)
@@ -44,7 +44,7 @@ class NS_NO_VTABLE nsIDOMWindow : public nsISupports {
    * Accessor for the document in this window.
    */
   /* readonly attribute nsIDOMDocument document; */
-  NS_IMETHOD GetDocument(nsIDOMDocument * *aDocument) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDocument(nsIDOMDocument * *aDocument) = 0;
 
   /**
    * Accessor for this window's parent window, or the window itself if
@@ -52,7 +52,7 @@ class NS_NO_VTABLE nsIDOMWindow : public nsISupports {
    * (i.e. this does not cross chrome-content boundaries).
    */
   /* readonly attribute nsIDOMWindow parent; */
-  NS_IMETHOD GetParent(nsIDOMWindow * *aParent) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetParent(nsIDOMWindow * *aParent) = 0;
 
   /**
    * Accessor for the root of this hierarchy of windows. This root may
@@ -62,7 +62,7 @@ class NS_NO_VTABLE nsIDOMWindow : public nsISupports {
    *
    * This property is "replaceable" in JavaScript */
   /* readonly attribute nsIDOMWindow top; */
-  NS_IMETHOD GetTop(nsIDOMWindow * *aTop) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTop(nsIDOMWindow * *aTop) = 0;
 
   /**
    * Accessor for the object that controls whether or not scrollbars
@@ -71,7 +71,7 @@ class NS_NO_VTABLE nsIDOMWindow : public nsISupports {
    * This attribute is "replaceable" in JavaScript
    */
   /* readonly attribute nsIDOMBarProp scrollbars; */
-  NS_IMETHOD GetScrollbars(nsIDOMBarProp * *aScrollbars) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetScrollbars(nsIDOMBarProp * *aScrollbars) = 0;
 
   /**
    * Accessor for the child windows in this window.
@@ -85,8 +85,8 @@ class NS_NO_VTABLE nsIDOMWindow : public nsISupports {
    * This attribute is "replaceable" in JavaScript
    */
   /* attribute DOMString name; */
-  NS_IMETHOD GetName(nsAString & aName) = 0;
-  NS_IMETHOD SetName(const nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) = 0;
 
   /**
    * Set/Get the document scale factor as a multiplier on the default
@@ -107,7 +107,7 @@ class NS_NO_VTABLE nsIDOMWindow : public nsISupports {
    * This attribute is "replaceable" in JavaScript
    */
   /* readonly attribute long scrollX; */
-  NS_IMETHOD GetScrollX(PRInt32 *aScrollX) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetScrollX(PRInt32 *aScrollX) = 0;
 
   /**
    * Accessor for the current y scroll position in this window in
@@ -116,44 +116,44 @@ class NS_NO_VTABLE nsIDOMWindow : public nsISupports {
    * This attribute is "replaceable" in JavaScript
    */
   /* readonly attribute long scrollY; */
-  NS_IMETHOD GetScrollY(PRInt32 *aScrollY) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetScrollY(PRInt32 *aScrollY) = 0;
 
   /**
    * Method for scrolling this window to an absolute pixel offset.
    */
   /* void scrollTo (in long xScroll, in long yScroll); */
-  NS_IMETHOD ScrollTo(PRInt32 xScroll, PRInt32 yScroll) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ScrollTo(PRInt32 xScroll, PRInt32 yScroll) = 0;
 
   /**
    * Method for scrolling this window to a pixel offset relative to
    * the current scroll position.
    */
   /* void scrollBy (in long xScrollDif, in long yScrollDif); */
-  NS_IMETHOD ScrollBy(PRInt32 xScrollDif, PRInt32 yScrollDif) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ScrollBy(PRInt32 xScrollDif, PRInt32 yScrollDif) = 0;
 
   /**
    * Method for accessing this window's selection object.
    */
   /* nsISelection getSelection (); */
-  NS_IMETHOD GetSelection(nsISelection **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSelection(nsISelection **_retval) = 0;
 
   /**
    * Method for scrolling this window by a number of lines.
    */
   /* void scrollByLines (in long numLines); */
-  NS_IMETHOD ScrollByLines(PRInt32 numLines) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ScrollByLines(PRInt32 numLines) = 0;
 
   /**
    * Method for scrolling this window by a number of pages.
    */
   /* void scrollByPages (in long numPages); */
-  NS_IMETHOD ScrollByPages(PRInt32 numPages) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ScrollByPages(PRInt32 numPages) = 0;
 
   /**
    * Method for sizing this window to the content in the window.
    */
   /* void sizeToContent (); */
-  NS_IMETHOD SizeToContent(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SizeToContent(void) = 0;
 
 };
 
@@ -161,63 +161,63 @@ class NS_NO_VTABLE nsIDOMWindow : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMWINDOW \
-  NS_IMETHOD GetDocument(nsIDOMDocument * *aDocument); \
-  NS_IMETHOD GetParent(nsIDOMWindow * *aParent); \
-  NS_IMETHOD GetTop(nsIDOMWindow * *aTop); \
-  NS_IMETHOD GetScrollbars(nsIDOMBarProp * *aScrollbars); \
+  NS_SCRIPTABLE NS_IMETHOD GetDocument(nsIDOMDocument * *aDocument); \
+  NS_SCRIPTABLE NS_IMETHOD GetParent(nsIDOMWindow * *aParent); \
+  NS_SCRIPTABLE NS_IMETHOD GetTop(nsIDOMWindow * *aTop); \
+  NS_SCRIPTABLE NS_IMETHOD GetScrollbars(nsIDOMBarProp * *aScrollbars); \
   NS_IMETHOD GetFrames(nsIDOMWindowCollection * *aFrames); \
-  NS_IMETHOD GetName(nsAString & aName); \
-  NS_IMETHOD SetName(const nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName); \
   NS_IMETHOD GetTextZoom(float *aTextZoom); \
   NS_IMETHOD SetTextZoom(float aTextZoom); \
-  NS_IMETHOD GetScrollX(PRInt32 *aScrollX); \
-  NS_IMETHOD GetScrollY(PRInt32 *aScrollY); \
-  NS_IMETHOD ScrollTo(PRInt32 xScroll, PRInt32 yScroll); \
-  NS_IMETHOD ScrollBy(PRInt32 xScrollDif, PRInt32 yScrollDif); \
-  NS_IMETHOD GetSelection(nsISelection **_retval); \
-  NS_IMETHOD ScrollByLines(PRInt32 numLines); \
-  NS_IMETHOD ScrollByPages(PRInt32 numPages); \
-  NS_IMETHOD SizeToContent(void); 
+  NS_SCRIPTABLE NS_IMETHOD GetScrollX(PRInt32 *aScrollX); \
+  NS_SCRIPTABLE NS_IMETHOD GetScrollY(PRInt32 *aScrollY); \
+  NS_SCRIPTABLE NS_IMETHOD ScrollTo(PRInt32 xScroll, PRInt32 yScroll); \
+  NS_SCRIPTABLE NS_IMETHOD ScrollBy(PRInt32 xScrollDif, PRInt32 yScrollDif); \
+  NS_SCRIPTABLE NS_IMETHOD GetSelection(nsISelection **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD ScrollByLines(PRInt32 numLines); \
+  NS_SCRIPTABLE NS_IMETHOD ScrollByPages(PRInt32 numPages); \
+  NS_SCRIPTABLE NS_IMETHOD SizeToContent(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMWINDOW(_to) \
-  NS_IMETHOD GetDocument(nsIDOMDocument * *aDocument) { return _to GetDocument(aDocument); } \
-  NS_IMETHOD GetParent(nsIDOMWindow * *aParent) { return _to GetParent(aParent); } \
-  NS_IMETHOD GetTop(nsIDOMWindow * *aTop) { return _to GetTop(aTop); } \
-  NS_IMETHOD GetScrollbars(nsIDOMBarProp * *aScrollbars) { return _to GetScrollbars(aScrollbars); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDocument(nsIDOMDocument * *aDocument) { return _to GetDocument(aDocument); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParent(nsIDOMWindow * *aParent) { return _to GetParent(aParent); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTop(nsIDOMWindow * *aTop) { return _to GetTop(aTop); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScrollbars(nsIDOMBarProp * *aScrollbars) { return _to GetScrollbars(aScrollbars); } \
   NS_IMETHOD GetFrames(nsIDOMWindowCollection * *aFrames) { return _to GetFrames(aFrames); } \
-  NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
   NS_IMETHOD GetTextZoom(float *aTextZoom) { return _to GetTextZoom(aTextZoom); } \
   NS_IMETHOD SetTextZoom(float aTextZoom) { return _to SetTextZoom(aTextZoom); } \
-  NS_IMETHOD GetScrollX(PRInt32 *aScrollX) { return _to GetScrollX(aScrollX); } \
-  NS_IMETHOD GetScrollY(PRInt32 *aScrollY) { return _to GetScrollY(aScrollY); } \
-  NS_IMETHOD ScrollTo(PRInt32 xScroll, PRInt32 yScroll) { return _to ScrollTo(xScroll, yScroll); } \
-  NS_IMETHOD ScrollBy(PRInt32 xScrollDif, PRInt32 yScrollDif) { return _to ScrollBy(xScrollDif, yScrollDif); } \
-  NS_IMETHOD GetSelection(nsISelection **_retval) { return _to GetSelection(_retval); } \
-  NS_IMETHOD ScrollByLines(PRInt32 numLines) { return _to ScrollByLines(numLines); } \
-  NS_IMETHOD ScrollByPages(PRInt32 numPages) { return _to ScrollByPages(numPages); } \
-  NS_IMETHOD SizeToContent(void) { return _to SizeToContent(); } 
+  NS_SCRIPTABLE NS_IMETHOD GetScrollX(PRInt32 *aScrollX) { return _to GetScrollX(aScrollX); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScrollY(PRInt32 *aScrollY) { return _to GetScrollY(aScrollY); } \
+  NS_SCRIPTABLE NS_IMETHOD ScrollTo(PRInt32 xScroll, PRInt32 yScroll) { return _to ScrollTo(xScroll, yScroll); } \
+  NS_SCRIPTABLE NS_IMETHOD ScrollBy(PRInt32 xScrollDif, PRInt32 yScrollDif) { return _to ScrollBy(xScrollDif, yScrollDif); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSelection(nsISelection **_retval) { return _to GetSelection(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ScrollByLines(PRInt32 numLines) { return _to ScrollByLines(numLines); } \
+  NS_SCRIPTABLE NS_IMETHOD ScrollByPages(PRInt32 numPages) { return _to ScrollByPages(numPages); } \
+  NS_SCRIPTABLE NS_IMETHOD SizeToContent(void) { return _to SizeToContent(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMWINDOW(_to) \
-  NS_IMETHOD GetDocument(nsIDOMDocument * *aDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocument(aDocument); } \
-  NS_IMETHOD GetParent(nsIDOMWindow * *aParent) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParent(aParent); } \
-  NS_IMETHOD GetTop(nsIDOMWindow * *aTop) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTop(aTop); } \
-  NS_IMETHOD GetScrollbars(nsIDOMBarProp * *aScrollbars) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScrollbars(aScrollbars); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDocument(nsIDOMDocument * *aDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocument(aDocument); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParent(nsIDOMWindow * *aParent) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParent(aParent); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTop(nsIDOMWindow * *aTop) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTop(aTop); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScrollbars(nsIDOMBarProp * *aScrollbars) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScrollbars(aScrollbars); } \
   NS_IMETHOD GetFrames(nsIDOMWindowCollection * *aFrames) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFrames(aFrames); } \
-  NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
   NS_IMETHOD GetTextZoom(float *aTextZoom) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTextZoom(aTextZoom); } \
   NS_IMETHOD SetTextZoom(float aTextZoom) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTextZoom(aTextZoom); } \
-  NS_IMETHOD GetScrollX(PRInt32 *aScrollX) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScrollX(aScrollX); } \
-  NS_IMETHOD GetScrollY(PRInt32 *aScrollY) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScrollY(aScrollY); } \
-  NS_IMETHOD ScrollTo(PRInt32 xScroll, PRInt32 yScroll) { return !_to ? NS_ERROR_NULL_POINTER : _to->ScrollTo(xScroll, yScroll); } \
-  NS_IMETHOD ScrollBy(PRInt32 xScrollDif, PRInt32 yScrollDif) { return !_to ? NS_ERROR_NULL_POINTER : _to->ScrollBy(xScrollDif, yScrollDif); } \
-  NS_IMETHOD GetSelection(nsISelection **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSelection(_retval); } \
-  NS_IMETHOD ScrollByLines(PRInt32 numLines) { return !_to ? NS_ERROR_NULL_POINTER : _to->ScrollByLines(numLines); } \
-  NS_IMETHOD ScrollByPages(PRInt32 numPages) { return !_to ? NS_ERROR_NULL_POINTER : _to->ScrollByPages(numPages); } \
-  NS_IMETHOD SizeToContent(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SizeToContent(); } 
+  NS_SCRIPTABLE NS_IMETHOD GetScrollX(PRInt32 *aScrollX) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScrollX(aScrollX); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScrollY(PRInt32 *aScrollY) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScrollY(aScrollY); } \
+  NS_SCRIPTABLE NS_IMETHOD ScrollTo(PRInt32 xScroll, PRInt32 yScroll) { return !_to ? NS_ERROR_NULL_POINTER : _to->ScrollTo(xScroll, yScroll); } \
+  NS_SCRIPTABLE NS_IMETHOD ScrollBy(PRInt32 xScrollDif, PRInt32 yScrollDif) { return !_to ? NS_ERROR_NULL_POINTER : _to->ScrollBy(xScrollDif, yScrollDif); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSelection(nsISelection **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSelection(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ScrollByLines(PRInt32 numLines) { return !_to ? NS_ERROR_NULL_POINTER : _to->ScrollByLines(numLines); } \
+  NS_SCRIPTABLE NS_IMETHOD ScrollByPages(PRInt32 numPages) { return !_to ? NS_ERROR_NULL_POINTER : _to->ScrollByPages(numPages); } \
+  NS_SCRIPTABLE NS_IMETHOD SizeToContent(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SizeToContent(); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

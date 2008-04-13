@@ -30,7 +30,7 @@
 
 #include "gears/factory/firefox/factory.h"
 
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "genfiles/product_constants.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/string16.h"
@@ -38,14 +38,14 @@
 #include "gears/console/firefox/console_ff.h"
 #include "gears/database/firefox/database.h"
 #include "gears/database2/manager.h"
-#include "gears/desktop/desktop_ff.h"
+#include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/httprequest/firefox/httprequest_ff.h"
 
 #ifdef OFFICIAL_BUILD
 // The Image API has not been finalized for official builds
 #else
-#include "gears/image/firefox/image_loader_ff.h"
+#include "gears/image/image_loader.h"
 #endif
 
 #include "gears/localserver/firefox/localserver_ff.h"
@@ -76,8 +76,7 @@ const nsCID kGearsFactoryClassId = {0x93b2e433, 0x35ab, 0x46e7, {0xa9, 0x50,
 
 GearsFactory::GearsFactory()
     : is_creation_suspended_(false),
-      is_permission_granted_(false),
-      is_permission_value_from_user_(false) {
+      permission_state_(NOT_SET) {  // can't check DB because no origin yet
   SetActiveUserFlag();
 }
 
@@ -87,7 +86,9 @@ NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
                                    nsISupports **retval) {
   // Make sure the user gives this site permission to use Gears.
 
-  if (!HasPermissionToUseGears(this, NULL, NULL, NULL)) {
+  bool use_temporary_permissions = true;
+  if (!HasPermissionToUseGears(this, use_temporary_permissions,
+                               NULL, NULL, NULL)) {
     RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
                               PRODUCT_FRIENDLY_NAME L"."));
   }
@@ -144,24 +145,34 @@ NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
 bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
                                           JsParamFetcher *js_params,
                                           std::string16 *error) {
-  GComPtr<ModuleImplBaseClass> object(NULL);
+  scoped_refptr<ModuleImplBaseClass> object;
 
   if (object_name == STRING16(L"beta.test")) {
 #ifdef DEBUG
-    object.reset(CreateModule<GearsTest>(GetJsRunner()));
+    CreateModule<GearsTest>(GetJsRunner(), &object);
 #else
     *error = STRING16(L"Object is only available in debug build.");
     return false;
 #endif
   } else if (object_name == STRING16(L"beta.databasemanager")) {
-    object.reset(CreateModule<Database2Manager>(GetJsRunner()));
+    CreateModule<Database2Manager>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.desktop")) {
+    CreateModule<GearsDesktop>(GetJsRunner(), &object);
+#ifdef OFFICIAL_BUILD
+// The Image API has not been finalized for official builds.
+#else
+  } else if (object_name == STRING16(L"beta.imageloader")) {
+    CreateModule<GearsImageLoader>(GetJsRunner(), &object);
+#endif
+  } else if (object_name == STRING16(L"beta.timer")) {
+    CreateModule<GearsTimer>(GetJsRunner(), &object);
   } else {
     // Don't return an error here. Caller handles reporting unknown modules.
     error->clear();
     return false;
   }
 
-  if (!object.get()) {
+  if (!object) {
     *error = STRING16(L"Failed to create requested object.");
     return false;
   }
@@ -172,7 +183,7 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   }
 
   js_params->SetReturnValue(object->GetWrapperToken());
-  object.ReleaseNewObjectToScript();
+  ReleaseNewObjectToScript(object.get());
   return true;
 }
 
@@ -187,20 +198,10 @@ bool GearsFactory::CreateISupportsModule(const std::string16 &object_name,
     isupports = do_QueryInterface(new GearsConsole(), &nr);
   } else if (object_name == STRING16(L"beta.database")) {
     isupports = do_QueryInterface(new GearsDatabase(), &nr);
-  } else if (object_name == STRING16(L"beta.desktop")) {
-    isupports = do_QueryInterface(new GearsDesktop(), &nr);
   } else if (object_name == STRING16(L"beta.httprequest")) {
     isupports = do_QueryInterface(new GearsHttpRequest(), &nr);
-#ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
-#else
-  } else if (object_name == STRING16(L"beta.imageloader")) {
-    isupports = do_QueryInterface(new GearsImageLoader(), &nr);
-#endif
   } else if (object_name == STRING16(L"beta.localserver")) {
     isupports = do_QueryInterface(new GearsLocalServer(), &nr);
-  } else if (object_name == STRING16(L"beta.timer")) {
-    isupports = do_QueryInterface(new GearsTimer(), &nr);
   } else if (object_name == STRING16(L"beta.workerpool")) {
     isupports = do_QueryInterface(new GearsWorkerPool(), &nr);
   }  else {
@@ -276,8 +277,10 @@ NS_IMETHODIMP GearsFactory::GetPermission(PRBool *retval) {
       RETURN_EXCEPTION(STRING16(L"extraMessage must be a string."));
   }
 
-  if (HasPermissionToUseGears(this, image_url.c_str(),
-                              site_name.c_str(), extra_message.c_str())) {
+  bool use_temporary_permissions = false;
+  if (HasPermissionToUseGears(this, use_temporary_permissions,
+                              image_url.c_str(), site_name.c_str(),
+                              extra_message.c_str())) {
     *retval = PR_TRUE;
   } else {
     *retval = PR_FALSE;
@@ -290,7 +293,40 @@ NS_IMETHODIMP GearsFactory::GetPermission(PRBool *retval) {
 // indicates whether USER opt-in is still required, not whether DEVELOPER
 // methods have been called correctly (e.g. allowCrossOrigin).
 NS_IMETHODIMP GearsFactory::GetHasPermission(PRBool *retval) {
-  *retval = is_permission_granted_ ? PR_TRUE : PR_FALSE;
+  switch (permission_state_) {
+    case ALLOWED_PERMANENTLY:
+    case ALLOWED_TEMPORARILY:
+      *retval = PR_TRUE;
+      break;
+    case DENIED_PERMANENTLY:
+    case DENIED_TEMPORARILY:
+      *retval = PR_FALSE;
+      break;
+    case NOT_SET: {
+      // If the state is unknown, look in the PermissionsDB. If a persisted
+      // value exists, update permission_state_.  Otherwise do NOT modify
+      // permission_state_; it would affect subsequent factory.create() calls.
+      *retval = PR_FALSE;  // default value; covers errors too
+      PermissionsDB *permissions_db = PermissionsDB::GetDB();
+      if (permissions_db) {
+        switch (permissions_db->GetCanAccessGears(EnvPageSecurityOrigin())) {
+          case PermissionsDB::PERMISSION_ALLOWED:
+            permission_state_ = ALLOWED_PERMANENTLY;
+            *retval = PR_TRUE;
+            break;
+          case PermissionsDB::PERMISSION_DENIED:
+            permission_state_ = DENIED_PERMANENTLY;
+            *retval = PR_FALSE;
+            break;
+          default:
+            break;  // use the default retval already set
+        }
+      }
+      break;
+    }
+    default:
+      RETURN_EXCEPTION(STRING16(L"Internal error."));
+  }
   RETURN_NORMAL();
 }
 

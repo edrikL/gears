@@ -47,9 +47,10 @@ void Dispatcher<GearsDatabase>::Init() {
   RegisterMethod("open", &GearsDatabase::Open);
   RegisterMethod("execute", &GearsDatabase::Execute);
   RegisterMethod("close", &GearsDatabase::Close);
-  RegisterMethod("getLastInsertRowId", &GearsDatabase::GetLastInsertRowId);
+  RegisterProperty("rowsAffected", &GearsDatabase::GetRowsAffected, NULL);
+  RegisterProperty("lastInsertRowId", &GearsDatabase::GetLastInsertRowId, NULL);
 #ifdef DEBUG
-  RegisterMethod("getExecuteMsec", &GearsDatabase::GetExecuteMsec);
+  RegisterProperty("executeMsec", &GearsDatabase::GetExecuteMsec, NULL);
 #endif
 }
 
@@ -133,12 +134,14 @@ void GearsDatabase::Execute(JsCallContext *context) {
 #ifdef DEBUG
   std::string expr_utf8;
   String16ToUTF8(expr.c_str(), expr.length(), &expr_utf8);
-  LOG(("DB Execute: %s", expr_utf8.c_str()));
+  LOG(("DB Execute: %s\n", expr_utf8.c_str()));
 #endif
 
   scoped_sqlite3_stmt_ptr stmt;
   sql_status = sqlite3_prepare16_v2(db_, expr.c_str(), -1, &stmt, NULL);
   if ((sql_status != SQLITE_OK) || (stmt.get() == NULL)) {
+    sql_status = SqlitePoisonIfCorrupt(db_, sql_status);
+
     std::string16 msg;
     BuildSqliteErrorString(STRING16(L"SQLite prepare() failed."),
                            sql_status, db_, &msg);
@@ -156,9 +159,8 @@ void GearsDatabase::Execute(JsCallContext *context) {
   }
 
   // Wrap a GearsResultSet around the statement and execute it
-  GComPtr<GearsResultSet> result_set(
-      CreateModule<GearsResultSet>(GetJsRunner()));
-  if (!result_set.get())
+  scoped_refptr<GearsResultSet> result_set;  // TODO(bpm)
+  if (!CreateModule<GearsResultSet>(GetJsRunner(), &result_set))
     return;  // Create function sets an error message.
 
   if (!result_set->InitBaseFromSibling(this)) {
@@ -173,7 +175,7 @@ void GearsDatabase::Execute(JsCallContext *context) {
     return;
   }
 
-  context->SetReturnValue(JSPARAM_MODULE, result_set.get());
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, result_set.get());
 }
 
 bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
@@ -195,36 +197,94 @@ bool GearsDatabase::BindArgsToStatement(JsCallContext *context,
   for (int i = 0; i < num_args; i++) {
     int sql_index = i + 1; // sql parameters are 1-based
     int sql_status = SQLITE_ERROR;
-    std::string16 arg_str;
-    int arg_int;
-    double arg_double;
-    if (arg_array->GetElementAsString(i, &arg_str)) {
+    
+    JsParamType element_type = arg_array->GetElementType(i);
+    
+    switch (element_type) {
+      case JSPARAM_STRING16: {
+        std::string16 arg_str;
+        if (!arg_array->GetElementAsString(i, &arg_str)) {
+          context->SetException(GET_INTERNAL_ERROR_MESSAGE().c_str());
+          return false;
+        }
 // TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
 #ifdef DEBUG
-      std::string str_utf8;
-      String16ToUTF8(arg_str.c_str(), arg_str.length(), &str_utf8);
-      LOG(("        Parameter %i: %s", i, str_utf8.c_str()));
+        std::string str_utf8;
+        String16ToUTF8(arg_str.c_str(), arg_str.length(), &str_utf8);
+        LOG(("        Parameter %i: %s (string)\n", i, str_utf8.c_str()));
 #endif
-      sql_status = sqlite3_bind_text16(
-          stmt, sql_index, arg_str.c_str(), -1,
-          SQLITE_TRANSIENT); // so SQLite copies string immediately
-    } else if (arg_array->GetElementAsInt(i, &arg_int)) {
-      LOG(("        Parameter %i: %i", i, arg_int));
-      sql_status = sqlite3_bind_int(stmt, sql_index, arg_int);
-    } else if (arg_array->GetElementAsDouble(i, &arg_double)) {
-      LOG(("        Parameter %i: %lf", i, arg_double));
-      sql_status = sqlite3_bind_double(stmt, sql_index, arg_double);
-    } else {
-      // TODO(mpcomplete): figure out what else we need to support here.
-      std::string16 error =
-          STRING16(L"SQL parameter ") + IntegerToString16(i) +
-          STRING16(L" has unknown type.");
-      context->SetException(error.c_str());
-      return false;
+        sql_status = sqlite3_bind_text16(
+            stmt, sql_index, arg_str.c_str(), -1,
+            SQLITE_TRANSIENT); // so SQLite copies string immediately
+        break;
+      }
+      case JSPARAM_NULL: {
+        LOG(("        Parameter %i: null\n", i));
+        sql_status = sqlite3_bind_null(stmt, sql_index);
+        break;
+      }
+      case JSPARAM_UNDEFINED: {
+        // Insert the string "undefined" to match the firefox implementation.
+        // TODO(zork): This should throw an error in beta.database2.
+        LOG(("        Parameter %i: undefined\n", i));
+        sql_status = sqlite3_bind_text16(
+            stmt, sql_index, STRING16(L"undefined"), -1,
+            SQLITE_TRANSIENT); // so SQLite copies string immediately
+        break;
+      }
+      case JSPARAM_INT: {
+        int arg_int;
+        if (!arg_array->GetElementAsInt(i, &arg_int)) {
+          context->SetException(GET_INTERNAL_ERROR_MESSAGE().c_str());
+          return false;
+        }
+        LOG(("        Parameter %i: %i\n", i, arg_int));
+        sql_status = sqlite3_bind_int(stmt, sql_index, arg_int);
+        break;
+      }
+      case JSPARAM_DOUBLE: {
+        double arg_double;
+        if (!arg_array->GetElementAsDouble(i, &arg_double)) {
+          context->SetException(GET_INTERNAL_ERROR_MESSAGE().c_str());
+          return false;
+        }
+        LOG(("        Parameter %i: %lf\n", i, arg_double));
+        sql_status = sqlite3_bind_double(stmt, sql_index, arg_double);
+        break;
+      }
+      case JSPARAM_BOOL: {
+        bool arg_bool;
+        if (!arg_array->GetElementAsBool(i, &arg_bool)) {
+          context->SetException(GET_INTERNAL_ERROR_MESSAGE().c_str());
+          return false;
+        }
+        std::string16 arg_str;
+        arg_str = arg_bool ? STRING16(L"true") : STRING16(L"false");
+  // TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
+  #ifdef DEBUG
+        std::string str_utf8;
+        String16ToUTF8(arg_str.c_str(), arg_str.length(), &str_utf8);
+        LOG(("        Parameter %i: %s\n", i, str_utf8.c_str()));
+  #endif
+        sql_status = sqlite3_bind_text16(
+            stmt, sql_index, arg_str.c_str(), -1,
+            SQLITE_TRANSIENT); // so SQLite copies string immediately
+        break;
+      }
+      default: {
+        std::string16 error =
+            STRING16(L"SQL parameter ") + IntegerToString16(i) +
+            STRING16(L" has unknown type.");
+        context->SetException(error.c_str());
+        return false;
+        break;
+      }
     }
 
     if (sql_status != SQLITE_OK) {
-      context->SetException(STRING16(L"Could not bind arguments to expression."));
+      sql_status = SqlitePoisonIfCorrupt(db_, sql_status);
+      context->SetException(STRING16(
+                                L"Could not bind arguments to expression."));
       return false;
     }
   }
@@ -239,6 +299,11 @@ void GearsDatabase::Close(JsCallContext *context) {
 }
 
 void GearsDatabase::GetLastInsertRowId(JsCallContext *context) {
+  if (!db_) {
+    context->SetException(STRING16(L"Database handle was NULL."));
+    return;
+  }
+
   sqlite_int64 rowid = sqlite3_last_insert_rowid(db_);
   if ((rowid < JS_INT_MIN) || (rowid > JS_INT_MAX)) {
     context->SetException(STRING16(L"lastInsertRowId is out of range."));
@@ -246,6 +311,16 @@ void GearsDatabase::GetLastInsertRowId(JsCallContext *context) {
   }
   double retval = static_cast<double>(rowid);
   context->SetReturnValue(JSPARAM_DOUBLE, &retval);
+}
+
+void GearsDatabase::GetRowsAffected(JsCallContext *context) {
+  if (!db_) {
+    context->SetException(STRING16(L"Database handle was NULL."));
+    return;
+  }
+
+  int retval = sqlite3_changes(db_);
+  context->SetReturnValue(JSPARAM_INT, &retval);
 }
 
 void GearsDatabase::AddResultSet(GearsResultSet *rs) {

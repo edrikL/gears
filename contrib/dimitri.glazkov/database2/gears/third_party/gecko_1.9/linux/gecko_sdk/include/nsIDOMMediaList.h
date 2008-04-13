@@ -22,7 +22,7 @@
   {0x9b0c2ed7, 0x111c, 0x4824, \
     { 0xad, 0xf9, 0xef, 0x0d, 0xa6, 0xda, 0xd3, 0x71 }}
 
-class NS_NO_VTABLE nsIDOMMediaList : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMMediaList : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMMEDIALIST_IID)
@@ -37,20 +37,20 @@ class NS_NO_VTABLE nsIDOMMediaList : public nsISupports {
  * @status FROZEN
  */
   /* attribute DOMString mediaText; */
-  NS_IMETHOD GetMediaText(nsAString & aMediaText) = 0;
-  NS_IMETHOD SetMediaText(const nsAString & aMediaText) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMediaText(nsAString & aMediaText) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetMediaText(const nsAString & aMediaText) = 0;
 
   /* readonly attribute unsigned long length; */
-  NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
 
   /* DOMString item (in unsigned long index); */
-  NS_IMETHOD Item(PRUint32 index, nsAString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsAString & _retval) = 0;
 
   /* void deleteMedium (in DOMString oldMedium)  raises (DOMException); */
-  NS_IMETHOD DeleteMedium(const nsAString & oldMedium) = 0;
+  NS_SCRIPTABLE NS_IMETHOD DeleteMedium(const nsAString & oldMedium) = 0;
 
   /* void appendMedium (in DOMString newMedium)  raises (DOMException); */
-  NS_IMETHOD AppendMedium(const nsAString & newMedium) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AppendMedium(const nsAString & newMedium) = 0;
 
 };
 
@@ -58,30 +58,30 @@ class NS_NO_VTABLE nsIDOMMediaList : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMMEDIALIST \
-  NS_IMETHOD GetMediaText(nsAString & aMediaText); \
-  NS_IMETHOD SetMediaText(const nsAString & aMediaText); \
-  NS_IMETHOD GetLength(PRUint32 *aLength); \
-  NS_IMETHOD Item(PRUint32 index, nsAString & _retval); \
-  NS_IMETHOD DeleteMedium(const nsAString & oldMedium); \
-  NS_IMETHOD AppendMedium(const nsAString & newMedium); 
+  NS_SCRIPTABLE NS_IMETHOD GetMediaText(nsAString & aMediaText); \
+  NS_SCRIPTABLE NS_IMETHOD SetMediaText(const nsAString & aMediaText); \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength); \
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsAString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD DeleteMedium(const nsAString & oldMedium); \
+  NS_SCRIPTABLE NS_IMETHOD AppendMedium(const nsAString & newMedium); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMMEDIALIST(_to) \
-  NS_IMETHOD GetMediaText(nsAString & aMediaText) { return _to GetMediaText(aMediaText); } \
-  NS_IMETHOD SetMediaText(const nsAString & aMediaText) { return _to SetMediaText(aMediaText); } \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
-  NS_IMETHOD Item(PRUint32 index, nsAString & _retval) { return _to Item(index, _retval); } \
-  NS_IMETHOD DeleteMedium(const nsAString & oldMedium) { return _to DeleteMedium(oldMedium); } \
-  NS_IMETHOD AppendMedium(const nsAString & newMedium) { return _to AppendMedium(newMedium); } 
+  NS_SCRIPTABLE NS_IMETHOD GetMediaText(nsAString & aMediaText) { return _to GetMediaText(aMediaText); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMediaText(const nsAString & aMediaText) { return _to SetMediaText(aMediaText); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsAString & _retval) { return _to Item(index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD DeleteMedium(const nsAString & oldMedium) { return _to DeleteMedium(oldMedium); } \
+  NS_SCRIPTABLE NS_IMETHOD AppendMedium(const nsAString & newMedium) { return _to AppendMedium(newMedium); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMMEDIALIST(_to) \
-  NS_IMETHOD GetMediaText(nsAString & aMediaText) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMediaText(aMediaText); } \
-  NS_IMETHOD SetMediaText(const nsAString & aMediaText) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMediaText(aMediaText); } \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
-  NS_IMETHOD Item(PRUint32 index, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Item(index, _retval); } \
-  NS_IMETHOD DeleteMedium(const nsAString & oldMedium) { return !_to ? NS_ERROR_NULL_POINTER : _to->DeleteMedium(oldMedium); } \
-  NS_IMETHOD AppendMedium(const nsAString & newMedium) { return !_to ? NS_ERROR_NULL_POINTER : _to->AppendMedium(newMedium); } 
+  NS_SCRIPTABLE NS_IMETHOD GetMediaText(nsAString & aMediaText) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMediaText(aMediaText); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMediaText(const nsAString & aMediaText) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMediaText(aMediaText); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Item(index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD DeleteMedium(const nsAString & oldMedium) { return !_to ? NS_ERROR_NULL_POINTER : _to->DeleteMedium(oldMedium); } \
+  NS_SCRIPTABLE NS_IMETHOD AppendMedium(const nsAString & newMedium) { return !_to ? NS_ERROR_NULL_POINTER : _to->AppendMedium(newMedium); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

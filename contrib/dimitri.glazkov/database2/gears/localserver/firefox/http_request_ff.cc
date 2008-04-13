@@ -35,7 +35,12 @@
 #include <gecko_sdk/include/nsIHttpChannel.h>
 #include <gecko_internal/nsICachingChannel.h>
 #include <gecko_internal/nsIEncodedChannel.h>
+#if BROWSER_FF3
+#include <gecko_internal/nsIThread.h>
+#include <gecko_internal/nsThreadUtils.h>
+#else
 #include <gecko_internal/nsIEventQueueService.h>
+#endif
 #include <gecko_internal/nsIStringStream.h>
 #include <gecko_internal/nsNetError.h>
 
@@ -46,6 +51,9 @@
 #include "gears/base/common/url_utils.h"
 #include "gears/localserver/firefox/cache_intercept.h"
 
+#ifndef OFFICIAL_BUILD
+#include "gears/blob/blob_input_stream_ff.h"
+#endif
 
 // Returns true if the currently executing thread is the main UI thread,
 // firefox/mozila has one such very special thread
@@ -62,11 +70,10 @@ NS_IMPL_ISUPPORTS5(FFHttpRequest,
 //------------------------------------------------------------------------------
 // HttpRequest::Create
 //------------------------------------------------------------------------------
-HttpRequest *HttpRequest::Create() {
+bool HttpRequest::Create(scoped_refptr<HttpRequest>* request) {
   assert(IsUiThread());
-  FFHttpRequest *request = new FFHttpRequest();
-  request->AddReference();
-  return request;
+  request->reset(new FFHttpRequest);
+  return true;
 }
 
 //------------------------------------------------------------------------------
@@ -82,12 +89,12 @@ FFHttpRequest::FFHttpRequest()
 FFHttpRequest::~FFHttpRequest() {
 }
 
-int FFHttpRequest::AddReference() {
-  return AddRef();
+void FFHttpRequest::Ref() {
+  AddRef();
 }
 
-int FFHttpRequest::ReleaseReference() {
-  return Release();
+void FFHttpRequest::Unref() {
+  Release();
 }
 
 //------------------------------------------------------------------------------
@@ -214,7 +221,6 @@ bool FFHttpRequest::Open(const char16 *method, const char16 *url, bool async) {
     return false;
 
   NS_ENSURE_TRUE(IsUninitialized(), false);
-
   async_ = async;
 
   url_ = url;
@@ -313,6 +319,8 @@ bool FFHttpRequest::GetInitialUrl(std::string16 *full_url) {
 //------------------------------------------------------------------------------
 // Send, SendString, SendImpl
 //------------------------------------------------------------------------------
+// TODO(bgarcia): Consolidate all of these internal Send functions into a
+//                a single one that takes a blob.
 
 bool FFHttpRequest::Send() {
   if (IsPostOrPut()) {
@@ -321,7 +329,6 @@ bool FFHttpRequest::Send() {
     return SendImpl(NULL);
   }
 }
-
 
 bool FFHttpRequest::SendString(const char16 *data) {
   if (was_sent_ || !data) return false;
@@ -339,6 +346,15 @@ bool FFHttpRequest::SendString(const char16 *data) {
   return SendImpl(post_data_stream);
 }
 
+#ifndef OFFICIAL_BUILD
+bool FFHttpRequest::SendBlob(BlobInterface *blob) {
+  if (was_sent_) {
+    return false;
+  }
+  nsCOMPtr<BlobInputStream> blob_stream(new BlobInputStream(blob));
+  return SendImpl(blob_stream);
+}
+#endif  // !OFFICIAL_BUILD
 
 bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
   NS_ENSURE_TRUE(channel_ && !was_sent_, false);
@@ -368,7 +384,7 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
     }
 
     const int kGetLengthFromStream = -1;
-    rv = upload_channel->SetUploadStream(post_data_stream, 
+    rv = upload_channel->SetUploadStream(post_data_stream,
                                          content_type,
                                          kGetLengthFromStream);
     NS_ENSURE_SUCCESS(rv, false);
@@ -378,6 +394,7 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
     http_channel->SetRequestMethod(method);
   }
 
+#if BROWSER_FF2
   nsCOMPtr<nsIEventQueueService> event_queue_service;
   nsCOMPtr<nsIEventQueue> modal_event_queue;
 
@@ -391,18 +408,32 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
       return false;
     }
   }
+#endif
 
   channel_->SetNotificationCallbacks(this);
   rv = channel_->AsyncOpen(this, nsnull);
 
   if (NS_FAILED(rv)) {
+#if BROWSER_FF2
     if (!async_) {
       event_queue_service->PopThreadEventQueue(modal_event_queue);
     }
+#endif
     return false;
   }
 
   if (!async_) {
+#if BROWSER_FF3
+    nsCOMPtr<nsIThread> thread;
+    if (NS_FAILED(NS_GetCurrentThread(getter_AddRefs(thread)))) {
+      return false;
+    }
+    while (ready_state_ != HttpRequest::COMPLETE && !was_aborted_) {
+      if (!NS_ProcessNextEvent(thread)) {
+        return false;
+      }
+    }
+#else
     while (ready_state_ != HttpRequest::COMPLETE && !was_aborted_) {
       modal_event_queue->ProcessPendingEvents();
 
@@ -412,6 +443,7 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
     }
 
     event_queue_service->PopThreadEventQueue(modal_event_queue);
+#endif
   }
 
   return true;

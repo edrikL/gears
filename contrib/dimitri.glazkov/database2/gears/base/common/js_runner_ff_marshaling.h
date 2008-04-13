@@ -36,6 +36,7 @@
 #define GEARS_WORKERPOOL_FIREFOX_JS_WRAPPER_H__
 
 #include <map>
+#include <set>
 #include <vector>
 
 #include <gecko_sdk/include/nsCOMPtr.h>
@@ -53,7 +54,7 @@ class IIDLessThanFunctor {
   }
 };
 typedef std::map<nsIID, JSObject*, IIDLessThanFunctor> IIDToProtoMap;
-typedef std::map<std::string, JSObject*> NameToProtoMap;
+typedef std::map<const std::string, JSObject*> NameToProtoMap;
 
 class JsContextWrapper;
 
@@ -162,6 +163,8 @@ class JsContextWrapper {
   // engine.
   bool CreateModuleJsObject(ModuleImplBaseClass *module, JsToken *object_out);
 
+  ModuleImplBaseClass *GetModuleFromJsToken(const JsToken token);
+
  private:
   // Defines a class prototype in the JS context based on a ModuleImplBaseClass.
   bool DefineClass(ModuleImplBaseClass *module, JSObject **proto_obj_out);
@@ -224,6 +227,10 @@ class JsContextWrapper {
   // Map from module name to prototype. We use this so that we create only one
   // prototype for each module type.
   NameToProtoMap name_to_proto_map_;
+
+  // The set of JSClass objects associated with each Dispatcher-based module
+  // seen in CreateModuleJsObject.
+  std::set<JSClass*> dispatcher_classes_;
 
   // This is stored as a map because we need to be able to selectively
   // remove elements when the associated JS object is finalized.

@@ -22,7 +22,7 @@
   {0xf51ebade, 0x8b1a, 0x11d3, \
     { 0xaa, 0xe7, 0x00, 0x10, 0x83, 0x01, 0x23, 0xb4 }}
 
-class NS_NO_VTABLE nsIDOMAbstractView : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMAbstractView : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMABSTRACTVIEW_IID)
@@ -37,7 +37,7 @@ class NS_NO_VTABLE nsIDOMAbstractView : public nsISupports {
  * @status FROZEN
  */
   /* readonly attribute nsIDOMDocumentView document; */
-  NS_IMETHOD GetDocument(nsIDOMDocumentView * *aDocument) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDocument(nsIDOMDocumentView * *aDocument) = 0;
 
 };
 
@@ -45,15 +45,15 @@ class NS_NO_VTABLE nsIDOMAbstractView : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMABSTRACTVIEW \
-  NS_IMETHOD GetDocument(nsIDOMDocumentView * *aDocument); 
+  NS_SCRIPTABLE NS_IMETHOD GetDocument(nsIDOMDocumentView * *aDocument); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMABSTRACTVIEW(_to) \
-  NS_IMETHOD GetDocument(nsIDOMDocumentView * *aDocument) { return _to GetDocument(aDocument); } 
+  NS_SCRIPTABLE NS_IMETHOD GetDocument(nsIDOMDocumentView * *aDocument) { return _to GetDocument(aDocument); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMABSTRACTVIEW(_to) \
-  NS_IMETHOD GetDocument(nsIDOMDocumentView * *aDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocument(aDocument); } 
+  NS_SCRIPTABLE NS_IMETHOD GetDocument(nsIDOMDocumentView * *aDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocument(aDocument); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -24,7 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #import "gears/base/common/string_utils.h"
-#import "gears/base/safari/string_utils.h"
+#import "gears/base/safari/cf_string_utils.h"
 #import "gears/localserver/common/http_constants.h"
 #import "gears/localserver/common/localserver_db.h"
 #import "gears/localserver/safari/localserver_db_proxy.h"

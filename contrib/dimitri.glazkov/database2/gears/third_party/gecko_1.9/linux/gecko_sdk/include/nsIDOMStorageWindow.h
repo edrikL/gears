@@ -26,7 +26,7 @@ class nsIDOMStorageList; /* forward declaration */
   {0x55e9c181, 0x2476, 0x47cf, \
     { 0x97, 0xf8, 0xef, 0xda, 0xaf, 0x7b, 0x6f, 0x7a }}
 
-class NS_NO_VTABLE nsIDOMStorageWindow : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMStorageWindow : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMSTORAGEWINDOW_IID)
@@ -35,13 +35,13 @@ class NS_NO_VTABLE nsIDOMStorageWindow : public nsISupports {
    * Session storage for the current browsing context.
    */
   /* readonly attribute nsIDOMStorage sessionStorage; */
-  NS_IMETHOD GetSessionStorage(nsIDOMStorage * *aSessionStorage) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSessionStorage(nsIDOMStorage * *aSessionStorage) = 0;
 
   /**
    * Global storage, accessible by domain.
    */
   /* readonly attribute nsIDOMStorageList globalStorage; */
-  NS_IMETHOD GetGlobalStorage(nsIDOMStorageList * *aGlobalStorage) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetGlobalStorage(nsIDOMStorageList * *aGlobalStorage) = 0;
 
 };
 
@@ -49,18 +49,18 @@ class NS_NO_VTABLE nsIDOMStorageWindow : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMSTORAGEWINDOW \
-  NS_IMETHOD GetSessionStorage(nsIDOMStorage * *aSessionStorage); \
-  NS_IMETHOD GetGlobalStorage(nsIDOMStorageList * *aGlobalStorage); 
+  NS_SCRIPTABLE NS_IMETHOD GetSessionStorage(nsIDOMStorage * *aSessionStorage); \
+  NS_SCRIPTABLE NS_IMETHOD GetGlobalStorage(nsIDOMStorageList * *aGlobalStorage); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMSTORAGEWINDOW(_to) \
-  NS_IMETHOD GetSessionStorage(nsIDOMStorage * *aSessionStorage) { return _to GetSessionStorage(aSessionStorage); } \
-  NS_IMETHOD GetGlobalStorage(nsIDOMStorageList * *aGlobalStorage) { return _to GetGlobalStorage(aGlobalStorage); } 
+  NS_SCRIPTABLE NS_IMETHOD GetSessionStorage(nsIDOMStorage * *aSessionStorage) { return _to GetSessionStorage(aSessionStorage); } \
+  NS_SCRIPTABLE NS_IMETHOD GetGlobalStorage(nsIDOMStorageList * *aGlobalStorage) { return _to GetGlobalStorage(aGlobalStorage); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMSTORAGEWINDOW(_to) \
-  NS_IMETHOD GetSessionStorage(nsIDOMStorage * *aSessionStorage) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSessionStorage(aSessionStorage); } \
-  NS_IMETHOD GetGlobalStorage(nsIDOMStorageList * *aGlobalStorage) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetGlobalStorage(aGlobalStorage); } 
+  NS_SCRIPTABLE NS_IMETHOD GetSessionStorage(nsIDOMStorage * *aSessionStorage) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSessionStorage(aSessionStorage); } \
+  NS_SCRIPTABLE NS_IMETHOD GetGlobalStorage(nsIDOMStorageList * *aGlobalStorage) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetGlobalStorage(aGlobalStorage); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

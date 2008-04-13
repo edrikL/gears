@@ -31,34 +31,34 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLEmbedElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLEmbedElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLEMBEDELEMENT_IID)
 
   /* attribute DOMString align; */
-  NS_IMETHOD GetAlign(nsAString & aAlign) = 0;
-  NS_IMETHOD SetAlign(const nsAString & aAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) = 0;
 
   /* attribute DOMString height; */
-  NS_IMETHOD GetHeight(nsAString & aHeight) = 0;
-  NS_IMETHOD SetHeight(const nsAString & aHeight) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHeight(nsAString & aHeight) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetHeight(const nsAString & aHeight) = 0;
 
   /* attribute DOMString name; */
-  NS_IMETHOD GetName(nsAString & aName) = 0;
-  NS_IMETHOD SetName(const nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) = 0;
 
   /* attribute DOMString src; */
-  NS_IMETHOD GetSrc(nsAString & aSrc) = 0;
-  NS_IMETHOD SetSrc(const nsAString & aSrc) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSrc(nsAString & aSrc) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSrc(const nsAString & aSrc) = 0;
 
   /* attribute DOMString type; */
-  NS_IMETHOD GetType(nsAString & aType) = 0;
-  NS_IMETHOD SetType(const nsAString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) = 0;
 
   /* attribute DOMString width; */
-  NS_IMETHOD GetWidth(nsAString & aWidth) = 0;
-  NS_IMETHOD SetWidth(const nsAString & aWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth) = 0;
 
 };
 
@@ -66,48 +66,48 @@ class NS_NO_VTABLE nsIDOMHTMLEmbedElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLEMBEDELEMENT \
-  NS_IMETHOD GetAlign(nsAString & aAlign); \
-  NS_IMETHOD SetAlign(const nsAString & aAlign); \
-  NS_IMETHOD GetHeight(nsAString & aHeight); \
-  NS_IMETHOD SetHeight(const nsAString & aHeight); \
-  NS_IMETHOD GetName(nsAString & aName); \
-  NS_IMETHOD SetName(const nsAString & aName); \
-  NS_IMETHOD GetSrc(nsAString & aSrc); \
-  NS_IMETHOD SetSrc(const nsAString & aSrc); \
-  NS_IMETHOD GetType(nsAString & aType); \
-  NS_IMETHOD SetType(const nsAString & aType); \
-  NS_IMETHOD GetWidth(nsAString & aWidth); \
-  NS_IMETHOD SetWidth(const nsAString & aWidth); 
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign); \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign); \
+  NS_SCRIPTABLE NS_IMETHOD GetHeight(nsAString & aHeight); \
+  NS_SCRIPTABLE NS_IMETHOD SetHeight(const nsAString & aHeight); \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD GetSrc(nsAString & aSrc); \
+  NS_SCRIPTABLE NS_IMETHOD SetSrc(const nsAString & aSrc); \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType); \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType); \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth); \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLEMBEDELEMENT(_to) \
-  NS_IMETHOD GetAlign(nsAString & aAlign) { return _to GetAlign(aAlign); } \
-  NS_IMETHOD SetAlign(const nsAString & aAlign) { return _to SetAlign(aAlign); } \
-  NS_IMETHOD GetHeight(nsAString & aHeight) { return _to GetHeight(aHeight); } \
-  NS_IMETHOD SetHeight(const nsAString & aHeight) { return _to SetHeight(aHeight); } \
-  NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
-  NS_IMETHOD GetSrc(nsAString & aSrc) { return _to GetSrc(aSrc); } \
-  NS_IMETHOD SetSrc(const nsAString & aSrc) { return _to SetSrc(aSrc); } \
-  NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
-  NS_IMETHOD SetType(const nsAString & aType) { return _to SetType(aType); } \
-  NS_IMETHOD GetWidth(nsAString & aWidth) { return _to GetWidth(aWidth); } \
-  NS_IMETHOD SetWidth(const nsAString & aWidth) { return _to SetWidth(aWidth); } 
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) { return _to GetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) { return _to SetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHeight(nsAString & aHeight) { return _to GetHeight(aHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHeight(const nsAString & aHeight) { return _to SetHeight(aHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSrc(nsAString & aSrc) { return _to GetSrc(aSrc); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSrc(const nsAString & aSrc) { return _to SetSrc(aSrc); } \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) { return _to SetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth) { return _to GetWidth(aWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth) { return _to SetWidth(aWidth); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLEMBEDELEMENT(_to) \
-  NS_IMETHOD GetAlign(nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlign(aAlign); } \
-  NS_IMETHOD SetAlign(const nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlign(aAlign); } \
-  NS_IMETHOD GetHeight(nsAString & aHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHeight(aHeight); } \
-  NS_IMETHOD SetHeight(const nsAString & aHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHeight(aHeight); } \
-  NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
-  NS_IMETHOD GetSrc(nsAString & aSrc) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSrc(aSrc); } \
-  NS_IMETHOD SetSrc(const nsAString & aSrc) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSrc(aSrc); } \
-  NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
-  NS_IMETHOD SetType(const nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } \
-  NS_IMETHOD GetWidth(nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWidth(aWidth); } \
-  NS_IMETHOD SetWidth(const nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWidth(aWidth); } 
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHeight(nsAString & aHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHeight(aHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHeight(const nsAString & aHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHeight(aHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSrc(nsAString & aSrc) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSrc(aSrc); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSrc(const nsAString & aSrc) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSrc(aSrc); } \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWidth(aWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWidth(aWidth); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

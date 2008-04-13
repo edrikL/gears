@@ -31,46 +31,46 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLLinkElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLLinkElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLLINKELEMENT_IID)
 
   /* attribute boolean disabled; */
-  NS_IMETHOD GetDisabled(PRBool *aDisabled) = 0;
-  NS_IMETHOD SetDisabled(PRBool aDisabled) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled) = 0;
 
   /* attribute DOMString charset; */
-  NS_IMETHOD GetCharset(nsAString & aCharset) = 0;
-  NS_IMETHOD SetCharset(const nsAString & aCharset) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCharset(nsAString & aCharset) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCharset(const nsAString & aCharset) = 0;
 
   /* attribute DOMString href; */
-  NS_IMETHOD GetHref(nsAString & aHref) = 0;
-  NS_IMETHOD SetHref(const nsAString & aHref) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHref(nsAString & aHref) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetHref(const nsAString & aHref) = 0;
 
   /* attribute DOMString hreflang; */
-  NS_IMETHOD GetHreflang(nsAString & aHreflang) = 0;
-  NS_IMETHOD SetHreflang(const nsAString & aHreflang) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHreflang(nsAString & aHreflang) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetHreflang(const nsAString & aHreflang) = 0;
 
   /* attribute DOMString media; */
-  NS_IMETHOD GetMedia(nsAString & aMedia) = 0;
-  NS_IMETHOD SetMedia(const nsAString & aMedia) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMedia(nsAString & aMedia) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetMedia(const nsAString & aMedia) = 0;
 
   /* attribute DOMString rel; */
-  NS_IMETHOD GetRel(nsAString & aRel) = 0;
-  NS_IMETHOD SetRel(const nsAString & aRel) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRel(nsAString & aRel) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetRel(const nsAString & aRel) = 0;
 
   /* attribute DOMString rev; */
-  NS_IMETHOD GetRev(nsAString & aRev) = 0;
-  NS_IMETHOD SetRev(const nsAString & aRev) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRev(nsAString & aRev) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetRev(const nsAString & aRev) = 0;
 
   /* attribute DOMString target; */
-  NS_IMETHOD GetTarget(nsAString & aTarget) = 0;
-  NS_IMETHOD SetTarget(const nsAString & aTarget) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetTarget(const nsAString & aTarget) = 0;
 
   /* attribute DOMString type; */
-  NS_IMETHOD GetType(nsAString & aType) = 0;
-  NS_IMETHOD SetType(const nsAString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) = 0;
 
 };
 
@@ -78,66 +78,66 @@ class NS_NO_VTABLE nsIDOMHTMLLinkElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLLINKELEMENT \
-  NS_IMETHOD GetDisabled(PRBool *aDisabled); \
-  NS_IMETHOD SetDisabled(PRBool aDisabled); \
-  NS_IMETHOD GetCharset(nsAString & aCharset); \
-  NS_IMETHOD SetCharset(const nsAString & aCharset); \
-  NS_IMETHOD GetHref(nsAString & aHref); \
-  NS_IMETHOD SetHref(const nsAString & aHref); \
-  NS_IMETHOD GetHreflang(nsAString & aHreflang); \
-  NS_IMETHOD SetHreflang(const nsAString & aHreflang); \
-  NS_IMETHOD GetMedia(nsAString & aMedia); \
-  NS_IMETHOD SetMedia(const nsAString & aMedia); \
-  NS_IMETHOD GetRel(nsAString & aRel); \
-  NS_IMETHOD SetRel(const nsAString & aRel); \
-  NS_IMETHOD GetRev(nsAString & aRev); \
-  NS_IMETHOD SetRev(const nsAString & aRev); \
-  NS_IMETHOD GetTarget(nsAString & aTarget); \
-  NS_IMETHOD SetTarget(const nsAString & aTarget); \
-  NS_IMETHOD GetType(nsAString & aType); \
-  NS_IMETHOD SetType(const nsAString & aType); 
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled); \
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled); \
+  NS_SCRIPTABLE NS_IMETHOD GetCharset(nsAString & aCharset); \
+  NS_SCRIPTABLE NS_IMETHOD SetCharset(const nsAString & aCharset); \
+  NS_SCRIPTABLE NS_IMETHOD GetHref(nsAString & aHref); \
+  NS_SCRIPTABLE NS_IMETHOD SetHref(const nsAString & aHref); \
+  NS_SCRIPTABLE NS_IMETHOD GetHreflang(nsAString & aHreflang); \
+  NS_SCRIPTABLE NS_IMETHOD SetHreflang(const nsAString & aHreflang); \
+  NS_SCRIPTABLE NS_IMETHOD GetMedia(nsAString & aMedia); \
+  NS_SCRIPTABLE NS_IMETHOD SetMedia(const nsAString & aMedia); \
+  NS_SCRIPTABLE NS_IMETHOD GetRel(nsAString & aRel); \
+  NS_SCRIPTABLE NS_IMETHOD SetRel(const nsAString & aRel); \
+  NS_SCRIPTABLE NS_IMETHOD GetRev(nsAString & aRev); \
+  NS_SCRIPTABLE NS_IMETHOD SetRev(const nsAString & aRev); \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget); \
+  NS_SCRIPTABLE NS_IMETHOD SetTarget(const nsAString & aTarget); \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType); \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLLINKELEMENT(_to) \
-  NS_IMETHOD GetDisabled(PRBool *aDisabled) { return _to GetDisabled(aDisabled); } \
-  NS_IMETHOD SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
-  NS_IMETHOD GetCharset(nsAString & aCharset) { return _to GetCharset(aCharset); } \
-  NS_IMETHOD SetCharset(const nsAString & aCharset) { return _to SetCharset(aCharset); } \
-  NS_IMETHOD GetHref(nsAString & aHref) { return _to GetHref(aHref); } \
-  NS_IMETHOD SetHref(const nsAString & aHref) { return _to SetHref(aHref); } \
-  NS_IMETHOD GetHreflang(nsAString & aHreflang) { return _to GetHreflang(aHreflang); } \
-  NS_IMETHOD SetHreflang(const nsAString & aHreflang) { return _to SetHreflang(aHreflang); } \
-  NS_IMETHOD GetMedia(nsAString & aMedia) { return _to GetMedia(aMedia); } \
-  NS_IMETHOD SetMedia(const nsAString & aMedia) { return _to SetMedia(aMedia); } \
-  NS_IMETHOD GetRel(nsAString & aRel) { return _to GetRel(aRel); } \
-  NS_IMETHOD SetRel(const nsAString & aRel) { return _to SetRel(aRel); } \
-  NS_IMETHOD GetRev(nsAString & aRev) { return _to GetRev(aRev); } \
-  NS_IMETHOD SetRev(const nsAString & aRev) { return _to SetRev(aRev); } \
-  NS_IMETHOD GetTarget(nsAString & aTarget) { return _to GetTarget(aTarget); } \
-  NS_IMETHOD SetTarget(const nsAString & aTarget) { return _to SetTarget(aTarget); } \
-  NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
-  NS_IMETHOD SetType(const nsAString & aType) { return _to SetType(aType); } 
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled) { return _to GetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCharset(nsAString & aCharset) { return _to GetCharset(aCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCharset(const nsAString & aCharset) { return _to SetCharset(aCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHref(nsAString & aHref) { return _to GetHref(aHref); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHref(const nsAString & aHref) { return _to SetHref(aHref); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHreflang(nsAString & aHreflang) { return _to GetHreflang(aHreflang); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHreflang(const nsAString & aHreflang) { return _to SetHreflang(aHreflang); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMedia(nsAString & aMedia) { return _to GetMedia(aMedia); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMedia(const nsAString & aMedia) { return _to SetMedia(aMedia); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRel(nsAString & aRel) { return _to GetRel(aRel); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRel(const nsAString & aRel) { return _to SetRel(aRel); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRev(nsAString & aRev) { return _to GetRev(aRev); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRev(const nsAString & aRev) { return _to SetRev(aRev); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) { return _to GetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTarget(const nsAString & aTarget) { return _to SetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) { return _to SetType(aType); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLLINKELEMENT(_to) \
-  NS_IMETHOD GetDisabled(PRBool *aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDisabled(aDisabled); } \
-  NS_IMETHOD SetDisabled(PRBool aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDisabled(aDisabled); } \
-  NS_IMETHOD GetCharset(nsAString & aCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCharset(aCharset); } \
-  NS_IMETHOD SetCharset(const nsAString & aCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCharset(aCharset); } \
-  NS_IMETHOD GetHref(nsAString & aHref) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHref(aHref); } \
-  NS_IMETHOD SetHref(const nsAString & aHref) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHref(aHref); } \
-  NS_IMETHOD GetHreflang(nsAString & aHreflang) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHreflang(aHreflang); } \
-  NS_IMETHOD SetHreflang(const nsAString & aHreflang) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHreflang(aHreflang); } \
-  NS_IMETHOD GetMedia(nsAString & aMedia) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMedia(aMedia); } \
-  NS_IMETHOD SetMedia(const nsAString & aMedia) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMedia(aMedia); } \
-  NS_IMETHOD GetRel(nsAString & aRel) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRel(aRel); } \
-  NS_IMETHOD SetRel(const nsAString & aRel) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRel(aRel); } \
-  NS_IMETHOD GetRev(nsAString & aRev) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRev(aRev); } \
-  NS_IMETHOD SetRev(const nsAString & aRev) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRev(aRev); } \
-  NS_IMETHOD GetTarget(nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTarget(aTarget); } \
-  NS_IMETHOD SetTarget(const nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTarget(aTarget); } \
-  NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
-  NS_IMETHOD SetType(const nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } 
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCharset(nsAString & aCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCharset(aCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCharset(const nsAString & aCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCharset(aCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHref(nsAString & aHref) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHref(aHref); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHref(const nsAString & aHref) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHref(aHref); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHreflang(nsAString & aHreflang) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHreflang(aHreflang); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHreflang(const nsAString & aHreflang) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHreflang(aHreflang); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMedia(nsAString & aMedia) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMedia(aMedia); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMedia(const nsAString & aMedia) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMedia(aMedia); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRel(nsAString & aRel) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRel(aRel); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRel(const nsAString & aRel) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRel(aRel); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRev(nsAString & aRev) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRev(aRev); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRev(const nsAString & aRev) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRev(aRev); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTarget(const nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

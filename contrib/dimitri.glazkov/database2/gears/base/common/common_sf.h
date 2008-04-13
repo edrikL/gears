@@ -30,7 +30,7 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "genfiles/product_constants.h"
 #include "gears/base/common/int_types.h"
 #include "gears/base/safari/cf_string_utils.h"
 
@@ -43,6 +43,17 @@ extern "C" {
 void SafariGearsLog(const char *fn, ...);
   
 #ifdef __OBJC__
+
+// NSInteger is a new type defined in Leopard, add these typedefs so code
+// using it will work with pre-10.5 SDKs.
+#if __LP64__ || NS_BUILD_32_LIKE_64
+typedef long NSInteger;
+typedef unsigned long NSUInteger;
+#else
+typedef int NSInteger;
+typedef unsigned int NSUInteger;
+#endif
+
 NSString *StringWithLocalizedKey(NSString *key, ...);
 void ThrowExceptionKey(NSString *key, ...);
 #endif
@@ -75,6 +86,10 @@ void ThrowExceptionKey(NSString *key, ...);
 
 #endif  // __OBJC__
 
+// Throw exception via WebKit's WebScriptObject interface.
+// We need this to work around http://bugs.webkit.org/show_bug.cgi?id=16829
+void ThrowWebKitException(const std::string16 &message);
+
 // Debug only code to help us assert that class methods are restricted to a
 // single thread.  To use, add a DECL_SINGLE_THREAD to your class declaration.
 // Then, add ASSERT_SINGLE_THREAD() calls to the top of each class method.
@@ -92,10 +107,6 @@ class CurrentThreadID {
  private:
   pthread_t id_;
 };
-
-// Throw exception via WebKit's WebScriptObject interface.
-// We need this to work around http://bugs.webkit.org/show_bug.cgi?id=16829
-void ThrowWebKitException(const std::string16 &message);
 
 #define DECL_SINGLE_THREAD \
   CurrentThreadID current_thread_id_;

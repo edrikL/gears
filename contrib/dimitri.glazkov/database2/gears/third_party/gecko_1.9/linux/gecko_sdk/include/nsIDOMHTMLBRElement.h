@@ -31,14 +31,14 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLBRElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLBRElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLBRELEMENT_IID)
 
   /* attribute DOMString clear; */
-  NS_IMETHOD GetClear(nsAString & aClear) = 0;
-  NS_IMETHOD SetClear(const nsAString & aClear) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetClear(nsAString & aClear) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetClear(const nsAString & aClear) = 0;
 
 };
 
@@ -46,18 +46,18 @@ class NS_NO_VTABLE nsIDOMHTMLBRElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLBRELEMENT \
-  NS_IMETHOD GetClear(nsAString & aClear); \
-  NS_IMETHOD SetClear(const nsAString & aClear); 
+  NS_SCRIPTABLE NS_IMETHOD GetClear(nsAString & aClear); \
+  NS_SCRIPTABLE NS_IMETHOD SetClear(const nsAString & aClear); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLBRELEMENT(_to) \
-  NS_IMETHOD GetClear(nsAString & aClear) { return _to GetClear(aClear); } \
-  NS_IMETHOD SetClear(const nsAString & aClear) { return _to SetClear(aClear); } 
+  NS_SCRIPTABLE NS_IMETHOD GetClear(nsAString & aClear) { return _to GetClear(aClear); } \
+  NS_SCRIPTABLE NS_IMETHOD SetClear(const nsAString & aClear) { return _to SetClear(aClear); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLBRELEMENT(_to) \
-  NS_IMETHOD GetClear(nsAString & aClear) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClear(aClear); } \
-  NS_IMETHOD SetClear(const nsAString & aClear) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetClear(aClear); } 
+  NS_SCRIPTABLE NS_IMETHOD GetClear(nsAString & aClear) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClear(aClear); } \
+  NS_SCRIPTABLE NS_IMETHOD SetClear(const nsAString & aClear) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetClear(aClear); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

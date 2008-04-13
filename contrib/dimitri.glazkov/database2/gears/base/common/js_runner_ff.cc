@@ -35,29 +35,28 @@
 #include <gecko_internal/nsIScriptGlobalObject.h>
 #include <gecko_internal/nsIScriptObjectPrincipal.h>
 #include <gecko_internal/nsITimer.h>
-#include <gecko_internal/nsITimerInternal.h>
 
+#if BROWSER_FF3
+#include <gecko_sdk/include/nsIArray.h>
+#include <gecko_sdk/include/nsIMutableArray.h>
+#include <gecko_internal/nsIXPConnect.h>
+#include <gecko_internal/nsDOMJSUtils.h>
+#include <gecko_internal/nsIJSContextStack.h>
+#else
+#include <gecko_internal/nsITimerInternal.h>
+#endif
 #include "gears/base/common/js_runner.h"
 
-#include "ff/genfiles/blob_ff.h"
-#include "ff/genfiles/console.h"
-#include "ff/genfiles/database.h"
-#include "ff/genfiles/desktop_ff.h"
-#include "ff/genfiles/httprequest.h"
-
-#ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
-#else
-#include "ff/genfiles/image.h"
-#endif
-
-#include "ff/genfiles/localserver.h"
-#include "ff/genfiles/timer_ff.h"
-#include "ff/genfiles/workerpool.h"
+#include "genfiles/console.h"
+#include "genfiles/database.h"
+#include "genfiles/httprequest.h"
+#include "genfiles/localserver.h"
+#include "genfiles/workerpool.h"
 #include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/html_event_monitor.h"
 #include "gears/base/common/js_runner_ff_marshaling.h"
+#include "gears/base/common/js_runner_utils.h"  // For ThrowGlobalErrorImpl()
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/firefox/dom_utils.h"
@@ -226,6 +225,13 @@ class JsRunnerBase : public JsRunnerInterface {
   }
 #endif
 
+  // This function and others (AddEventHandler, RemoveEventHandler etc) do not
+  // conatin any browser-specific code. They should be implemented in a new
+  // class 'JsRunnerCommon', which inherits from JsRunnerInterface.
+  virtual void ThrowGlobalError(const std::string16 &message) {
+    ThrowGlobalErrorImpl(this, message);
+  }
+
  protected:
   // Alert all monitors that an event has occured.
   void SendEvent(JsEventType event_type) {
@@ -280,10 +286,12 @@ class JsRunner : public JsRunnerBase {
     gc_timer_ = do_CreateInstance("@mozilla.org/timer;1", &result);
 
     if (NS_SUCCEEDED(result)) {
+#if BROWSER_FF2
       // Turning off idle causes the callback to be invoked in this thread,
       // instead of in the Timer idle thread.
       nsCOMPtr<nsITimerInternal> timer_internal(do_QueryInterface(gc_timer_));
       timer_internal->SetIdle(false);
+#endif
 
       // Start the timer
       gc_timer_->InitWithFuncCallback(GarbageCollectionCallback,
@@ -515,25 +523,13 @@ bool JsRunner::InitJavaScriptEngine() {
     // database
     {GEARSDATABASEINTERFACE_IID, NULL},
     {GEARSRESULTSETINTERFACE_IID, NULL},
-    // desktop
-    {GEARSDESKTOPINTERFACE_IID, NULL},
     // localserver
     {GEARSLOCALSERVERINTERFACE_IID, NULL},
     {GEARSMANAGEDRESOURCESTOREINTERFACE_IID, NULL},
     {GEARSRESOURCESTOREINTERFACE_IID, NULL},
     // GEARSFILESUBMITTERINTERFACE_IID can never be created in a child worker
-    // blob
-    {GEARSBLOBINTERFACE_IID, NULL},
-    // timer
-    {GEARSTIMERINTERFACE_IID, NULL},
     // httprequest
     {GEARSHTTPREQUESTINTERFACE_IID, NULL},
-#ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
-#else
-    // image
-    {GEARSIMAGEINTERFACE_IID, NULL},
-#endif
     // console
     {GEARSCONSOLEINTERFACE_IID, NULL}
   };
@@ -793,11 +789,57 @@ bool DocumentJsRunner::InvokeCallbackSpecialized(
   sc = GetScriptContextFromJSContext(callback->context());
   if (!sc) { return false; }
 
-  jsval retval;
-  nsresult result = sc->CallEventHandler(
-                            JS_GetGlobalObject(callback->context()),
-                            JSVAL_TO_OBJECT(callback->token()),
-                            argc, argv, &retval);
+  nsresult result = NS_OK;
+  jsval retval = 0;
+
+#if BROWSER_FF3
+  JSContext* cx = reinterpret_cast<JSContext*>(sc->GetNativeContext());
+
+  nsCOMPtr<nsIXPConnect> xpc = do_GetService("@mozilla.org/js/xpc/XPConnect;1",
+                                             &result);
+  if (NS_FAILED(result)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIMutableArray> argarray = do_CreateInstance("@mozilla.org/array;1",
+                                                         &result);
+  if (NS_FAILED(result)) {
+    return false;
+  }
+
+  for (int i = 0; i < argc; ++i) {
+    nsCOMPtr<nsIVariant> arg;
+    if (NS_FAILED(xpc->JSToVariant(cx, argv[i], getter_AddRefs(arg)))) {
+      return false;
+    }
+    argarray->AppendElement(arg, false);
+  }
+
+  JSObject* globalObject = JS_GetGlobalObject(callback->context());
+  nsCOMPtr<nsIVariant> target;
+  result = xpc->JSToVariant(cx, OBJECT_TO_JSVAL(globalObject),
+                            getter_AddRefs(target));
+  if (NS_FAILED(result)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIVariant> var_retval;
+  result = sc->CallEventHandler(target,
+                                globalObject, // scope
+                                JSVAL_TO_OBJECT(callback->token()), // function
+                                argarray,
+                                getter_AddRefs(var_retval));
+
+  if (NS_FAILED(result)) { return false; }
+
+  result = xpc->VariantToJS(cx, globalObject, var_retval, &retval);
+
+#else
+  result = sc->CallEventHandler(JS_GetGlobalObject(callback->context()),
+                                JSVAL_TO_OBJECT(callback->token()),
+                                argc, argv, &retval);
+#endif
+
   if (NS_FAILED(result)) { return false; }
 
   if (optional_alloc_retval) {

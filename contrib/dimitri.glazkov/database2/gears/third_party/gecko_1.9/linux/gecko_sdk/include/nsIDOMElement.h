@@ -22,7 +22,7 @@
   {0xa6cf9078, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMElement : public nsIDOMNode {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMElement : public nsIDOMNode {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMELEMENT_IID)
@@ -37,52 +37,52 @@ class NS_NO_VTABLE nsIDOMElement : public nsIDOMNode {
  * @status FROZEN
  */
   /* readonly attribute DOMString tagName; */
-  NS_IMETHOD GetTagName(nsAString & aTagName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTagName(nsAString & aTagName) = 0;
 
   /* DOMString getAttribute (in DOMString name); */
-  NS_IMETHOD GetAttribute(const nsAString & name, nsAString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAttribute(const nsAString & name, nsAString & _retval) = 0;
 
   /* void setAttribute (in DOMString name, in DOMString value)  raises (DOMException); */
-  NS_IMETHOD SetAttribute(const nsAString & name, const nsAString & value) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAttribute(const nsAString & name, const nsAString & value) = 0;
 
   /* void removeAttribute (in DOMString name)  raises (DOMException); */
-  NS_IMETHOD RemoveAttribute(const nsAString & name) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveAttribute(const nsAString & name) = 0;
 
   /* nsIDOMAttr getAttributeNode (in DOMString name); */
-  NS_IMETHOD GetAttributeNode(const nsAString & name, nsIDOMAttr **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAttributeNode(const nsAString & name, nsIDOMAttr **_retval) = 0;
 
   /* nsIDOMAttr setAttributeNode (in nsIDOMAttr newAttr)  raises (DOMException); */
-  NS_IMETHOD SetAttributeNode(nsIDOMAttr *newAttr, nsIDOMAttr **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAttributeNode(nsIDOMAttr *newAttr, nsIDOMAttr **_retval) = 0;
 
   /* nsIDOMAttr removeAttributeNode (in nsIDOMAttr oldAttr)  raises (DOMException); */
-  NS_IMETHOD RemoveAttributeNode(nsIDOMAttr *oldAttr, nsIDOMAttr **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveAttributeNode(nsIDOMAttr *oldAttr, nsIDOMAttr **_retval) = 0;
 
   /* nsIDOMNodeList getElementsByTagName (in DOMString name); */
-  NS_IMETHOD GetElementsByTagName(const nsAString & name, nsIDOMNodeList **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetElementsByTagName(const nsAString & name, nsIDOMNodeList **_retval) = 0;
 
   /* DOMString getAttributeNS (in DOMString namespaceURI, in DOMString localName); */
-  NS_IMETHOD GetAttributeNS(const nsAString & namespaceURI, const nsAString & localName, nsAString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAttributeNS(const nsAString & namespaceURI, const nsAString & localName, nsAString & _retval) = 0;
 
   /* void setAttributeNS (in DOMString namespaceURI, in DOMString qualifiedName, in DOMString value)  raises (DOMException); */
-  NS_IMETHOD SetAttributeNS(const nsAString & namespaceURI, const nsAString & qualifiedName, const nsAString & value) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAttributeNS(const nsAString & namespaceURI, const nsAString & qualifiedName, const nsAString & value) = 0;
 
   /* void removeAttributeNS (in DOMString namespaceURI, in DOMString localName)  raises (DOMException); */
-  NS_IMETHOD RemoveAttributeNS(const nsAString & namespaceURI, const nsAString & localName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveAttributeNS(const nsAString & namespaceURI, const nsAString & localName) = 0;
 
   /* nsIDOMAttr getAttributeNodeNS (in DOMString namespaceURI, in DOMString localName); */
-  NS_IMETHOD GetAttributeNodeNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMAttr **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAttributeNodeNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMAttr **_retval) = 0;
 
   /* nsIDOMAttr setAttributeNodeNS (in nsIDOMAttr newAttr)  raises (DOMException); */
-  NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr *newAttr, nsIDOMAttr **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr *newAttr, nsIDOMAttr **_retval) = 0;
 
   /* nsIDOMNodeList getElementsByTagNameNS (in DOMString namespaceURI, in DOMString localName); */
-  NS_IMETHOD GetElementsByTagNameNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNodeList **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetElementsByTagNameNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNodeList **_retval) = 0;
 
   /* boolean hasAttribute (in DOMString name); */
-  NS_IMETHOD HasAttribute(const nsAString & name, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD HasAttribute(const nsAString & name, PRBool *_retval) = 0;
 
   /* boolean hasAttributeNS (in DOMString namespaceURI, in DOMString localName); */
-  NS_IMETHOD HasAttributeNS(const nsAString & namespaceURI, const nsAString & localName, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD HasAttributeNS(const nsAString & namespaceURI, const nsAString & localName, PRBool *_retval) = 0;
 
 };
 
@@ -90,60 +90,60 @@ class NS_NO_VTABLE nsIDOMElement : public nsIDOMNode {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMELEMENT \
-  NS_IMETHOD GetTagName(nsAString & aTagName); \
-  NS_IMETHOD GetAttribute(const nsAString & name, nsAString & _retval); \
-  NS_IMETHOD SetAttribute(const nsAString & name, const nsAString & value); \
-  NS_IMETHOD RemoveAttribute(const nsAString & name); \
-  NS_IMETHOD GetAttributeNode(const nsAString & name, nsIDOMAttr **_retval); \
-  NS_IMETHOD SetAttributeNode(nsIDOMAttr *newAttr, nsIDOMAttr **_retval); \
-  NS_IMETHOD RemoveAttributeNode(nsIDOMAttr *oldAttr, nsIDOMAttr **_retval); \
-  NS_IMETHOD GetElementsByTagName(const nsAString & name, nsIDOMNodeList **_retval); \
-  NS_IMETHOD GetAttributeNS(const nsAString & namespaceURI, const nsAString & localName, nsAString & _retval); \
-  NS_IMETHOD SetAttributeNS(const nsAString & namespaceURI, const nsAString & qualifiedName, const nsAString & value); \
-  NS_IMETHOD RemoveAttributeNS(const nsAString & namespaceURI, const nsAString & localName); \
-  NS_IMETHOD GetAttributeNodeNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMAttr **_retval); \
-  NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr *newAttr, nsIDOMAttr **_retval); \
-  NS_IMETHOD GetElementsByTagNameNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNodeList **_retval); \
-  NS_IMETHOD HasAttribute(const nsAString & name, PRBool *_retval); \
-  NS_IMETHOD HasAttributeNS(const nsAString & namespaceURI, const nsAString & localName, PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetTagName(nsAString & aTagName); \
+  NS_SCRIPTABLE NS_IMETHOD GetAttribute(const nsAString & name, nsAString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetAttribute(const nsAString & name, const nsAString & value); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveAttribute(const nsAString & name); \
+  NS_SCRIPTABLE NS_IMETHOD GetAttributeNode(const nsAString & name, nsIDOMAttr **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetAttributeNode(nsIDOMAttr *newAttr, nsIDOMAttr **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveAttributeNode(nsIDOMAttr *oldAttr, nsIDOMAttr **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetElementsByTagName(const nsAString & name, nsIDOMNodeList **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetAttributeNS(const nsAString & namespaceURI, const nsAString & localName, nsAString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetAttributeNS(const nsAString & namespaceURI, const nsAString & qualifiedName, const nsAString & value); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveAttributeNS(const nsAString & namespaceURI, const nsAString & localName); \
+  NS_SCRIPTABLE NS_IMETHOD GetAttributeNodeNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMAttr **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr *newAttr, nsIDOMAttr **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetElementsByTagNameNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNodeList **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD HasAttribute(const nsAString & name, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD HasAttributeNS(const nsAString & namespaceURI, const nsAString & localName, PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMELEMENT(_to) \
-  NS_IMETHOD GetTagName(nsAString & aTagName) { return _to GetTagName(aTagName); } \
-  NS_IMETHOD GetAttribute(const nsAString & name, nsAString & _retval) { return _to GetAttribute(name, _retval); } \
-  NS_IMETHOD SetAttribute(const nsAString & name, const nsAString & value) { return _to SetAttribute(name, value); } \
-  NS_IMETHOD RemoveAttribute(const nsAString & name) { return _to RemoveAttribute(name); } \
-  NS_IMETHOD GetAttributeNode(const nsAString & name, nsIDOMAttr **_retval) { return _to GetAttributeNode(name, _retval); } \
-  NS_IMETHOD SetAttributeNode(nsIDOMAttr *newAttr, nsIDOMAttr **_retval) { return _to SetAttributeNode(newAttr, _retval); } \
-  NS_IMETHOD RemoveAttributeNode(nsIDOMAttr *oldAttr, nsIDOMAttr **_retval) { return _to RemoveAttributeNode(oldAttr, _retval); } \
-  NS_IMETHOD GetElementsByTagName(const nsAString & name, nsIDOMNodeList **_retval) { return _to GetElementsByTagName(name, _retval); } \
-  NS_IMETHOD GetAttributeNS(const nsAString & namespaceURI, const nsAString & localName, nsAString & _retval) { return _to GetAttributeNS(namespaceURI, localName, _retval); } \
-  NS_IMETHOD SetAttributeNS(const nsAString & namespaceURI, const nsAString & qualifiedName, const nsAString & value) { return _to SetAttributeNS(namespaceURI, qualifiedName, value); } \
-  NS_IMETHOD RemoveAttributeNS(const nsAString & namespaceURI, const nsAString & localName) { return _to RemoveAttributeNS(namespaceURI, localName); } \
-  NS_IMETHOD GetAttributeNodeNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMAttr **_retval) { return _to GetAttributeNodeNS(namespaceURI, localName, _retval); } \
-  NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr *newAttr, nsIDOMAttr **_retval) { return _to SetAttributeNodeNS(newAttr, _retval); } \
-  NS_IMETHOD GetElementsByTagNameNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNodeList **_retval) { return _to GetElementsByTagNameNS(namespaceURI, localName, _retval); } \
-  NS_IMETHOD HasAttribute(const nsAString & name, PRBool *_retval) { return _to HasAttribute(name, _retval); } \
-  NS_IMETHOD HasAttributeNS(const nsAString & namespaceURI, const nsAString & localName, PRBool *_retval) { return _to HasAttributeNS(namespaceURI, localName, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetTagName(nsAString & aTagName) { return _to GetTagName(aTagName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAttribute(const nsAString & name, nsAString & _retval) { return _to GetAttribute(name, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAttribute(const nsAString & name, const nsAString & value) { return _to SetAttribute(name, value); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveAttribute(const nsAString & name) { return _to RemoveAttribute(name); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAttributeNode(const nsAString & name, nsIDOMAttr **_retval) { return _to GetAttributeNode(name, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAttributeNode(nsIDOMAttr *newAttr, nsIDOMAttr **_retval) { return _to SetAttributeNode(newAttr, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveAttributeNode(nsIDOMAttr *oldAttr, nsIDOMAttr **_retval) { return _to RemoveAttributeNode(oldAttr, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetElementsByTagName(const nsAString & name, nsIDOMNodeList **_retval) { return _to GetElementsByTagName(name, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAttributeNS(const nsAString & namespaceURI, const nsAString & localName, nsAString & _retval) { return _to GetAttributeNS(namespaceURI, localName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAttributeNS(const nsAString & namespaceURI, const nsAString & qualifiedName, const nsAString & value) { return _to SetAttributeNS(namespaceURI, qualifiedName, value); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveAttributeNS(const nsAString & namespaceURI, const nsAString & localName) { return _to RemoveAttributeNS(namespaceURI, localName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAttributeNodeNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMAttr **_retval) { return _to GetAttributeNodeNS(namespaceURI, localName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr *newAttr, nsIDOMAttr **_retval) { return _to SetAttributeNodeNS(newAttr, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetElementsByTagNameNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNodeList **_retval) { return _to GetElementsByTagNameNS(namespaceURI, localName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD HasAttribute(const nsAString & name, PRBool *_retval) { return _to HasAttribute(name, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD HasAttributeNS(const nsAString & namespaceURI, const nsAString & localName, PRBool *_retval) { return _to HasAttributeNS(namespaceURI, localName, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMELEMENT(_to) \
-  NS_IMETHOD GetTagName(nsAString & aTagName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTagName(aTagName); } \
-  NS_IMETHOD GetAttribute(const nsAString & name, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAttribute(name, _retval); } \
-  NS_IMETHOD SetAttribute(const nsAString & name, const nsAString & value) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAttribute(name, value); } \
-  NS_IMETHOD RemoveAttribute(const nsAString & name) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveAttribute(name); } \
-  NS_IMETHOD GetAttributeNode(const nsAString & name, nsIDOMAttr **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAttributeNode(name, _retval); } \
-  NS_IMETHOD SetAttributeNode(nsIDOMAttr *newAttr, nsIDOMAttr **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAttributeNode(newAttr, _retval); } \
-  NS_IMETHOD RemoveAttributeNode(nsIDOMAttr *oldAttr, nsIDOMAttr **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveAttributeNode(oldAttr, _retval); } \
-  NS_IMETHOD GetElementsByTagName(const nsAString & name, nsIDOMNodeList **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetElementsByTagName(name, _retval); } \
-  NS_IMETHOD GetAttributeNS(const nsAString & namespaceURI, const nsAString & localName, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAttributeNS(namespaceURI, localName, _retval); } \
-  NS_IMETHOD SetAttributeNS(const nsAString & namespaceURI, const nsAString & qualifiedName, const nsAString & value) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAttributeNS(namespaceURI, qualifiedName, value); } \
-  NS_IMETHOD RemoveAttributeNS(const nsAString & namespaceURI, const nsAString & localName) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveAttributeNS(namespaceURI, localName); } \
-  NS_IMETHOD GetAttributeNodeNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMAttr **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAttributeNodeNS(namespaceURI, localName, _retval); } \
-  NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr *newAttr, nsIDOMAttr **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAttributeNodeNS(newAttr, _retval); } \
-  NS_IMETHOD GetElementsByTagNameNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNodeList **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetElementsByTagNameNS(namespaceURI, localName, _retval); } \
-  NS_IMETHOD HasAttribute(const nsAString & name, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->HasAttribute(name, _retval); } \
-  NS_IMETHOD HasAttributeNS(const nsAString & namespaceURI, const nsAString & localName, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->HasAttributeNS(namespaceURI, localName, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetTagName(nsAString & aTagName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTagName(aTagName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAttribute(const nsAString & name, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAttribute(name, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAttribute(const nsAString & name, const nsAString & value) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAttribute(name, value); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveAttribute(const nsAString & name) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveAttribute(name); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAttributeNode(const nsAString & name, nsIDOMAttr **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAttributeNode(name, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAttributeNode(nsIDOMAttr *newAttr, nsIDOMAttr **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAttributeNode(newAttr, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveAttributeNode(nsIDOMAttr *oldAttr, nsIDOMAttr **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveAttributeNode(oldAttr, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetElementsByTagName(const nsAString & name, nsIDOMNodeList **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetElementsByTagName(name, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAttributeNS(const nsAString & namespaceURI, const nsAString & localName, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAttributeNS(namespaceURI, localName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAttributeNS(const nsAString & namespaceURI, const nsAString & qualifiedName, const nsAString & value) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAttributeNS(namespaceURI, qualifiedName, value); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveAttributeNS(const nsAString & namespaceURI, const nsAString & localName) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveAttributeNS(namespaceURI, localName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAttributeNodeNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMAttr **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAttributeNodeNS(namespaceURI, localName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr *newAttr, nsIDOMAttr **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAttributeNodeNS(newAttr, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetElementsByTagNameNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNodeList **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetElementsByTagNameNS(namespaceURI, localName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD HasAttribute(const nsAString & name, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->HasAttribute(name, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD HasAttributeNS(const nsAString & namespaceURI, const nsAString & localName, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->HasAttributeNS(namespaceURI, localName, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

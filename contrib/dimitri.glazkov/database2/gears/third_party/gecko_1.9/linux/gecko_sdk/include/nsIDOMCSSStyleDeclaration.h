@@ -22,7 +22,7 @@
   {0xa6cf90be, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMCSSStyleDeclaration : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMCSSStyleDeclaration : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMCSSSTYLEDECLARATION_IID)
@@ -37,32 +37,32 @@ class NS_NO_VTABLE nsIDOMCSSStyleDeclaration : public nsISupports {
  * @status FROZEN
  */
   /* attribute DOMString cssText; */
-  NS_IMETHOD GetCssText(nsAString & aCssText) = 0;
-  NS_IMETHOD SetCssText(const nsAString & aCssText) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCssText(nsAString & aCssText) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCssText(const nsAString & aCssText) = 0;
 
   /* DOMString getPropertyValue (in DOMString propertyName); */
-  NS_IMETHOD GetPropertyValue(const nsAString & propertyName, nsAString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPropertyValue(const nsAString & propertyName, nsAString & _retval) = 0;
 
   /* nsIDOMCSSValue getPropertyCSSValue (in DOMString propertyName); */
-  NS_IMETHOD GetPropertyCSSValue(const nsAString & propertyName, nsIDOMCSSValue **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPropertyCSSValue(const nsAString & propertyName, nsIDOMCSSValue **_retval) = 0;
 
   /* DOMString removeProperty (in DOMString propertyName)  raises (DOMException); */
-  NS_IMETHOD RemoveProperty(const nsAString & propertyName, nsAString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveProperty(const nsAString & propertyName, nsAString & _retval) = 0;
 
   /* DOMString getPropertyPriority (in DOMString propertyName); */
-  NS_IMETHOD GetPropertyPriority(const nsAString & propertyName, nsAString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPropertyPriority(const nsAString & propertyName, nsAString & _retval) = 0;
 
   /* void setProperty (in DOMString propertyName, in DOMString value, in DOMString priority)  raises (DOMException); */
-  NS_IMETHOD SetProperty(const nsAString & propertyName, const nsAString & value, const nsAString & priority) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetProperty(const nsAString & propertyName, const nsAString & value, const nsAString & priority) = 0;
 
   /* readonly attribute unsigned long length; */
-  NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
 
   /* DOMString item (in unsigned long index); */
-  NS_IMETHOD Item(PRUint32 index, nsAString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsAString & _retval) = 0;
 
   /* readonly attribute nsIDOMCSSRule parentRule; */
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) = 0;
 
 };
 
@@ -70,42 +70,42 @@ class NS_NO_VTABLE nsIDOMCSSStyleDeclaration : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMCSSSTYLEDECLARATION \
-  NS_IMETHOD GetCssText(nsAString & aCssText); \
-  NS_IMETHOD SetCssText(const nsAString & aCssText); \
-  NS_IMETHOD GetPropertyValue(const nsAString & propertyName, nsAString & _retval); \
-  NS_IMETHOD GetPropertyCSSValue(const nsAString & propertyName, nsIDOMCSSValue **_retval); \
-  NS_IMETHOD RemoveProperty(const nsAString & propertyName, nsAString & _retval); \
-  NS_IMETHOD GetPropertyPriority(const nsAString & propertyName, nsAString & _retval); \
-  NS_IMETHOD SetProperty(const nsAString & propertyName, const nsAString & value, const nsAString & priority); \
-  NS_IMETHOD GetLength(PRUint32 *aLength); \
-  NS_IMETHOD Item(PRUint32 index, nsAString & _retval); \
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule); 
+  NS_SCRIPTABLE NS_IMETHOD GetCssText(nsAString & aCssText); \
+  NS_SCRIPTABLE NS_IMETHOD SetCssText(const nsAString & aCssText); \
+  NS_SCRIPTABLE NS_IMETHOD GetPropertyValue(const nsAString & propertyName, nsAString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetPropertyCSSValue(const nsAString & propertyName, nsIDOMCSSValue **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveProperty(const nsAString & propertyName, nsAString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetPropertyPriority(const nsAString & propertyName, nsAString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetProperty(const nsAString & propertyName, const nsAString & value, const nsAString & priority); \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength); \
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsAString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMCSSSTYLEDECLARATION(_to) \
-  NS_IMETHOD GetCssText(nsAString & aCssText) { return _to GetCssText(aCssText); } \
-  NS_IMETHOD SetCssText(const nsAString & aCssText) { return _to SetCssText(aCssText); } \
-  NS_IMETHOD GetPropertyValue(const nsAString & propertyName, nsAString & _retval) { return _to GetPropertyValue(propertyName, _retval); } \
-  NS_IMETHOD GetPropertyCSSValue(const nsAString & propertyName, nsIDOMCSSValue **_retval) { return _to GetPropertyCSSValue(propertyName, _retval); } \
-  NS_IMETHOD RemoveProperty(const nsAString & propertyName, nsAString & _retval) { return _to RemoveProperty(propertyName, _retval); } \
-  NS_IMETHOD GetPropertyPriority(const nsAString & propertyName, nsAString & _retval) { return _to GetPropertyPriority(propertyName, _retval); } \
-  NS_IMETHOD SetProperty(const nsAString & propertyName, const nsAString & value, const nsAString & priority) { return _to SetProperty(propertyName, value, priority); } \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
-  NS_IMETHOD Item(PRUint32 index, nsAString & _retval) { return _to Item(index, _retval); } \
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) { return _to GetParentRule(aParentRule); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCssText(nsAString & aCssText) { return _to GetCssText(aCssText); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCssText(const nsAString & aCssText) { return _to SetCssText(aCssText); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPropertyValue(const nsAString & propertyName, nsAString & _retval) { return _to GetPropertyValue(propertyName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPropertyCSSValue(const nsAString & propertyName, nsIDOMCSSValue **_retval) { return _to GetPropertyCSSValue(propertyName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveProperty(const nsAString & propertyName, nsAString & _retval) { return _to RemoveProperty(propertyName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPropertyPriority(const nsAString & propertyName, nsAString & _retval) { return _to GetPropertyPriority(propertyName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetProperty(const nsAString & propertyName, const nsAString & value, const nsAString & priority) { return _to SetProperty(propertyName, value, priority); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsAString & _retval) { return _to Item(index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) { return _to GetParentRule(aParentRule); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMCSSSTYLEDECLARATION(_to) \
-  NS_IMETHOD GetCssText(nsAString & aCssText) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCssText(aCssText); } \
-  NS_IMETHOD SetCssText(const nsAString & aCssText) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCssText(aCssText); } \
-  NS_IMETHOD GetPropertyValue(const nsAString & propertyName, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPropertyValue(propertyName, _retval); } \
-  NS_IMETHOD GetPropertyCSSValue(const nsAString & propertyName, nsIDOMCSSValue **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPropertyCSSValue(propertyName, _retval); } \
-  NS_IMETHOD RemoveProperty(const nsAString & propertyName, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveProperty(propertyName, _retval); } \
-  NS_IMETHOD GetPropertyPriority(const nsAString & propertyName, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPropertyPriority(propertyName, _retval); } \
-  NS_IMETHOD SetProperty(const nsAString & propertyName, const nsAString & value, const nsAString & priority) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetProperty(propertyName, value, priority); } \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
-  NS_IMETHOD Item(PRUint32 index, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Item(index, _retval); } \
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParentRule(aParentRule); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCssText(nsAString & aCssText) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCssText(aCssText); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCssText(const nsAString & aCssText) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCssText(aCssText); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPropertyValue(const nsAString & propertyName, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPropertyValue(propertyName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPropertyCSSValue(const nsAString & propertyName, nsIDOMCSSValue **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPropertyCSSValue(propertyName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveProperty(const nsAString & propertyName, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveProperty(propertyName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPropertyPriority(const nsAString & propertyName, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPropertyPriority(propertyName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetProperty(const nsAString & propertyName, const nsAString & value, const nsAString & priority) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetProperty(propertyName, value, priority); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Item(index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParentRule(aParentRule); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef GEARS_BASE_COMMON_STRING_UTILS_H__
@@ -40,13 +40,13 @@
 // Converts a string to lower case in place
 template<class StringT>
 inline void LowerString(StringT &str) {
-  std::transform(str.begin(), str.end(), str.begin(), 
+  std::transform(str.begin(), str.end(), str.begin(),
                  static_cast<int(*)(int)>(std::tolower));
 }
 // Converts a string to upper case in place
 template<class StringT>
 inline void UpperString(StringT &str) {
-  std::transform(str.begin(), str.end(), str.begin(), 
+  std::transform(str.begin(), str.end(), str.begin(),
                  static_cast<int(*)(int)>(std::toupper));
 }
 
@@ -291,6 +291,35 @@ inline bool IsCharValidInPathComponent(CharT c) {
 }
 
 // ----------------------------------------------------------------------
+// Hexadecimal <-> integer conversions
+// ----------------------------------------------------------------------
+
+template <class CharT>
+inline bool IsHex(CharT ch) {
+  return (ch >= '0' && ch <= '9') ||
+         (ch >= 'A' && ch <= 'F') ||
+         (ch >= 'a' && ch <= 'f');
+}
+
+template <class CharT>
+inline CharT HexToInt(CharT ch) {
+  if (ch >= '0' && ch <= '9')
+    return ch - '0';
+  if (ch >= 'A' && ch <= 'F')
+    return ch - 'A' + 10;
+  if (ch >= 'a' && ch <= 'f')
+    return ch - 'a' + 10;
+  assert(false);
+  return 0;
+}
+
+inline char IntToHex(int i) {
+  static const char* const kHexString = "0123456789ABCDEF";
+  assert(i >= 0 && i <= 15);
+  return kHexString[i];
+}
+
+// ----------------------------------------------------------------------
 // Character encoding conversions
 // ----------------------------------------------------------------------
 
@@ -307,38 +336,6 @@ inline bool String16ToUTF8(const char16 *in, std::string *out8) {
   assert(in);
   return String16ToUTF8(in, std::char_traits<char16>::length(in), out8);
 }
-
-
-// ----------------------------------------------------------------------
-// Converts a UTF8 path to a percent encoded "file:///" URL.
-// ----------------------------------------------------------------------
-enum {
-  ESCAPE_SCHEME        =     1,
-  ESCAPE_USERNAME      =     2,
-  ESCAPE_PASSWORD      =     4,
-  ESCAPE_HOST          =     8,
-  ESCAPE_DIRECTORY     =    16,
-  ESCAPE_FILEBASENAME  =    32,
-  ESCAPE_FILEEXTENSION =    64,
-  ESCAPE_PARAM         =   128,
-  ESCAPE_QUERY         =   256,
-  ESCAPE_REF           =   512,
-  // special flags
-  ESCAPE_FORCED        =  1024,  // forces escaping of existing escape
-                              // sequences
-  ESCAPE_ONLYASCII     =  2048,  // causes non-ascii octets to be skipped
-  ESCAPE_ONLYNONASCII  =  4096,  // causes _graphic_ ascii octets (0x20-0x7E)
-                              // to be skipped when escaping. causes all
-                              // ascii octets to be skipped when
-                              // unescaping
-  ESCAPE_ALWAYSCOPY    =  8192,  // copy input to result buf even if escaping
-                              // is unnecessary
-  ESCAPE_COLON         = 16384,  // forces escape of colon
-  ESCAPE_SKIPCONTROL   = 32768   // skips C0 and DEL from unescaping
-
-};
-std::string UTF8PathToUrl(const std::string &path, bool directory);
-std::string EscapeUrl(const std::string &source, unsigned int flags);
 
 // ----------------------------------------------------------------------
 // Replaces all occurences of old_pattern found in str with new_pattern
@@ -414,6 +411,36 @@ inline int StringCompareIgnoreCase(const CharT *lhs, const CharT *rhs) {
   else if (ret > 0)
     ret = 1 ;
   return ret;
+}
+
+// Determines whether the simple wildcard pattern matches target.
+// Alpha characters in pattern match case-insensitively.
+// Asterisks in pattern match 0 or more characters.
+// Ex: StringMatch("www.TEST.GOOGLE.COM", "www.*.com") -> true
+template<class CharT>
+bool StringMatch(const CharT* target, const CharT* pattern) {
+  while (*pattern) {
+    if (*pattern == '*') {
+      if (!*++pattern) {
+        return true;
+      }
+      while (*target) {
+        if ((std::toupper(*pattern) == std::toupper(*target))
+            && StringMatch(target + 1, pattern + 1)) {
+          return true;
+        }
+        ++target;
+      }
+      return false;
+    } else {
+      if (std::toupper(*pattern) != std::toupper(*target)) {
+        return false;
+      }
+      ++target;
+      ++pattern;
+    }
+  }
+  return !*target;
 }
 
 #endif  // GEARS_BASE_COMMON_STRING_UTILS_H__

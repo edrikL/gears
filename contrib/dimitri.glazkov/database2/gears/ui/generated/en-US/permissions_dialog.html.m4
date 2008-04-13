@@ -1,4 +1,4 @@
-m4_changequote(`^',`^')m4_dnl
+m4_changequote(`~',`~')m4_dnl
 <!DOCTYPE html>
 
 <!--
@@ -43,8 +43,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       padding-right:1em;
     }
 
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
     /* 
      * On Windows Mobile, we hide the div containing the buttons
      * by default, to only show the correct one (ie smartphone or not)
@@ -58,17 +58,17 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
       margin-left:2em;
       display:none;
     }
-^,^^)
+~,~~)
 
     #checkbox-row {
       margin-top:1em;
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
       margin-bottom:0.5em;
-^,
-^
+~,
+~
       margin-bottom:1em;
-^)
+~)
     }
 
     #icon {
@@ -91,13 +91,13 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
     }
 
     #custom-message {
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
       margin-top:2px; 
-^,
-^
+~,
+~
       margin-top:6px;
-^)
+~)
       display:none;
     }
 
@@ -108,7 +108,7 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
     }
 
     #yellowbox {
-      margin:0 1px;
+      margin:4px 0 4px 0;
       border:solid #f1cc1d;
       border-width:1px 0;
       background:#faefb8;
@@ -119,20 +119,20 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
       margin:0 -1px;
       border:solid #f1cc1d;
       border-width:0 1px;
-m4_ifelse(PRODUCT_OS,^wince^,^^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,~~,m4_dnl
+~
       padding:1em 0;
-^)
+~)
     }
 
     #yellowbox p {
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
       padding:0 0;
-^,
-^
+~,
+~
       padding:0 1em;
-^)
+~)
     }
 
     #permissions-help {
@@ -144,11 +144,11 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
 <body>
 
   <!--
-   PIE only works with one window, and we are in a modal dialog.
-   Using window.open(this.href) replaces the content of the current dialog,
-   which is annoying when no back button is displayed...
-   The workaround is to embed directly a short explanation text, and
-   hide/show the div container for the help and the settings dialog.
+  PIE only works with one window, and we are in a modal dialog.
+  Using window.open(this.href) replaces the content of the current dialog,
+  which is annoying when no back button is displayed...
+  The workaround is to embed directly a short explanation text, and
+  hide/show the div container for the help and the settings dialog.
   -->
 
   <div id="permissions-help">
@@ -168,8 +168,8 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
    <a href="#" onclick="showHelp(false); return false;">Go back</a>
   </div>
 
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^ <div id="permissions-settings">^)
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~ <div id="permissions-settings">~)
   <div id="head">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
@@ -179,12 +179,10 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
         <td width="100%" align="left" valign="middle">
           <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears">
           The website below wants to use PRODUCT_FRIENDLY_NAME_UQ. This site 
-          will be able to store and access information on your computer.&nbsp;
+          will be able to store and access information on your computer.
           </TRANS_BLOCK>
           <a href="#" onclick="showHelp(true); return false;">
-          <TRANS_BLOCK desc="Help link displayed in the installation dialog.">
-          What is this?
-          </TRANS_BLOCK>
+          <TRANS_BLOCK desc="Help link displayed in the installation dialog.">What&nbsp;is&nbsp;this?</TRANS_BLOCK>
           </a>
         </td>
       </tr>
@@ -228,26 +226,34 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
         </tr>
       </table>
     </p>
-    m4_ifelse(PRODUCT_OS,^wince^,^^,^<br>^)
+    m4_ifelse(PRODUCT_OS,~wince~,~~,~<br>~)
   </div>
 
   <div id="foot">
     <div id="text-buttons" style="display:none">
-      <TRANS_BLOCK desc="Link that disallows Gears on this site.">
-        <div id="text-never-allow">Never allow it</div>
-      </TRANS_BLOCK>
-      <TRANS_BLOCK desc="Button user can press to allow the use of Gears.">
-        <div id="text-allow">Allow</div>
-      </TRANS_BLOCK>
-      <TRANS_BLOCK desc="Button user can press to disallow the use of Gears.">
-        <div id="text-deny">Deny</div>
-      </TRANS_BLOCK>
-      <TRANS_BLOCK desc="Button user can press to cancel the dialog.">
-        <div id="text-cancel">Cancel</div>
-      </TRANS_BLOCK>
+      <div id="text-never-allow">
+        <TRANS_BLOCK desc="Link that disallows Gears on this site.">
+        Never allow it
+        </TRANS_BLOCK>
+      </div>
+      <div id="text-allow">
+        <TRANS_BLOCK desc="Button user can press to allow the use of Gears.">
+        Allow
+        </TRANS_BLOCK>
+      </div>
+      <div id="text-deny">
+        <TRANS_BLOCK desc="Button user can press to disallow the use of Gears.">
+        Deny
+        </TRANS_BLOCK>
+      </div>
+      <div id="text-cancel">
+        <TRANS_BLOCK desc="Button user can press to cancel the dialog.">
+        Cancel
+        </TRANS_BLOCK>
+      </div>
     </div>
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~
     <!--
     On Windows Mobile, we use the softkey bar in addition to HTML buttons.
     On Windows Mobile smartphone, we only display this div and hide the
@@ -268,14 +274,14 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
       </tr>
       </table>
     </div>
-^,^^)
+~,~~)
     <div id="button-row">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^          <!-- 
-          We use form input buttons instead of buttons elements 
-          as PIE does not support them
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~         <!-- 
+          We use form input buttons instead of buttons elements as PIE
+          does not support them.
           -->
 
           <td width="50%" align="left" valign="middle">
@@ -284,11 +290,11 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
 
           <div id="div-buttons">
             <td width="50%" align="right" valign="middle">
-              <input disabled type="BUTTON" id="allow-button" onclick="allowAccess();"></input>
-              <input type="BUTTON" id="deny-button" onclick="denyAccess(); return false;"></input>
+              <input disabled type="BUTTON" id="allow-button" onclick="allowAccessPermanently();"></input>
+              <input type="BUTTON" id="deny-button" onclick="denyAccessTemporarily(); return false;"></input>
             </td>
-          </div>^,m4_dnl
-^           
+          </div>
+~,~           
           <td width="100%" align="left" valign="middle">
             <a href="#" onclick="denyAccessPermanently(); return false;">
             <TRANS_BLOCK desc="Link that disallows Gears on this site.">
@@ -313,31 +319,31 @@ m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
             to fix that.
             -->
             <a href="#" accesskey="A" id="allow-button" 
-                onclick="allowAccess(); return false;"
+                onclick="allowAccessPermanently(); return false;"
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
                   ><TRANS_BLOCK desc="Button user can press to allow the use of Gears."><span class="accesskey">A</span>llow</TRANS_BLOCK></div></div></a>
             <a href="#" accesskey="C" id="deny-button"
-                onclick="denyAccess(); return false;"
+                onclick="denyAccessTemporarily(); return false;"
                 class="inline-block custom-button">
               <div class="inline-block custom-button-outer-box">
                 <div class="inline-block custom-button-inner-box"
-                  ><TRANS_BLOCK desc="Button user can press to disallow the use of Gears."><span class="accesskey">C</span>ancel</TRANS_BLOCK></div></div></a></td>^)
+                  ><TRANS_BLOCK desc="Button user can press to disallow the use of Gears."><span class="accesskey">C</span>ancel</TRANS_BLOCK></div></div></a></td>~)
         </tr>
       </table>
     </div>
   </div>
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^ </div>^)
-m4_ifelse(PRODUCT_OS,^wince^,m4_dnl
-^<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">
-</object>^)
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~ </div>~)
+m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
+~<object style="display:none;" classid="clsid:134AB400-1A81-4fc8-85DD-29CD51E9D6DE" id="pie_dialog">
+</object>~)
 </body>
 <!--
- We include all files through m4 as the HTML dialog implementation
- on PocketIE does not support callbacks for loading external javascript files
- TODO: find a better way to include scripts for PIE
+We include all files through m4 as the HTML dialog implementation on
+PocketIE does not support callbacks for loading external JavaScript files.
+TODO: find a better way to include scripts for PIE
 -->
 <script>
 m4_include(third_party/jsonjs/json_noeval.js)
@@ -352,7 +358,7 @@ m4_include(ui/common/html_dialog.js)
     setButtonLabel("text-deny", "deny-button");
     var allowText = getElementById("text-allow");
     if (allowText) {
-      window.pie_dialog.SetButton(allowText.innerText, "allowAccess();");
+      window.pie_dialog.SetButton(allowText.innerText, "allowAccessPermanently();");
     }
     var cancelText = getElementById("text-cancel");
     if (cancelText) {
@@ -362,7 +368,7 @@ m4_include(ui/common/html_dialog.js)
   }
   initWarning();
 
-  var disabled = true;
+  var allowButtonUnlocked = false;
 
   function setTextContent(elem, content) {
     if (isDefined(typeof document.createTextNode)) {
@@ -384,7 +390,7 @@ m4_include(ui/common/html_dialog.js)
       } else {
         elemSettings.style.display = 'block';
         elemHelp.style.display = 'none';
-        window.pie_dialog.SetButton("Allow", "allowAccess();");
+        window.pie_dialog.SetButton("Allow", "allowAccessPermanently();");
         updateAllowButtonEnabledState();
       }
       window.pie_dialog.ResizeDialog();
@@ -405,20 +411,24 @@ m4_include(ui/common/html_dialog.js)
     var elem;
 
     if (!customName) {
-       elem = getElementById("origin-only");
-       elem.style.display = "block";
-       setTextContent(elem, origin);
+      elem = getElementById("origin-only");
+      elem.style.display = "block";
+      if (isPIE) {
+        elem.innerHTML = wrapDomain(origin);
+      } else {
+        setTextContent(elem, origin);
+      }
 
-    // When all we have is the origin, we lay it out centered because that
-    // looks nicer. This is also what the original dialog did, which did not
-    // support the extra name, icon, or message.
-    if (!customIcon && !customMessage) {
-      elem.setAttribute("align", "center");
-    }
+      // When all we have is the origin, we lay it out centered because that
+      // looks nicer. This is also what the original dialog did, which did not
+      // support the extra name, icon, or message.
+      if (!isPIE && !customIcon && !customMessage) {
+        elem.setAttribute("align", "center");
+      }
     } else {
-       elem = getElementById("origin");
-       elem.style.display = "block";
-       setTextContent(elem, origin);
+      elem = getElementById("origin");
+      elem.style.display = "block";
+      setTextContent(elem, origin);
     }
 
     if (customIcon) {
@@ -461,41 +471,39 @@ m4_include(ui/common/html_dialog.js)
         var dy = contentHeightDesired - contentHeightProvided;
         window.resizeBy(0, dy);
       }
-    }  
+    } else { 
+      window.pie_dialog.ResizeDialog();
+    } 
   }
 
 
   function updateAllowButtonEnabledState() {
     var allowButton = getElementById("allow-button");
-    var checkbox = getElementById("unlock");
+    var unlockCheckbox = getElementById("unlock");
 
-    disabled = !checkbox.checked;
+    allowButtonUnlocked = unlockCheckbox.checked;
 
-    if (disabled) {
-      disableButton(allowButton);
-    } else {
+    if (allowButtonUnlocked) {
       enableButton(allowButton);
+    } else {
+      disableButton(allowButton);
     }
   }
 
-  // Note: The structure that the following functions pass are coupled to the
+  // Note: The structure that the following functions pass is coupled to the
   // code in PermissionsDialog that processes it.
-  function allowAccess() {
-    if (!disabled) {
-      saveAndClose({
-        allow: true
-      });
+  function allowAccessPermanently() {
+    if (allowButtonUnlocked) {
+      saveAndClose({"allow": true, "permanently": true});
     }
   }
 
-  function denyAccess() {
-    saveAndClose(null); // default behavior is to deny temporarily
+  function denyAccessTemporarily() {
+    saveAndClose({"allow": false, "permanently": false});
   }
 
   function denyAccessPermanently() {
-    saveAndClose({
-      allow: false
-    });
+    saveAndClose({"allow": false, "permanently": true });
   }
 </script>
 </html>

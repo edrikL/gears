@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/xpcom/base/nsIException.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/xpcom/base/nsIException.idl
  */
 
 #ifndef __gen_nsIException_h__
@@ -26,34 +26,34 @@
   {0x91d82105, 0x7c62, 0x4f8b, \
     { 0x97, 0x79, 0x15, 0x42, 0x77, 0xc0, 0xee, 0x90 }}
 
-class NS_NO_VTABLE nsIStackFrame : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIStackFrame : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISTACKFRAME_IID)
 
   /* readonly attribute PRUint32 language; */
-  NS_IMETHOD GetLanguage(PRUint32 *aLanguage) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLanguage(PRUint32 *aLanguage) = 0;
 
   /* readonly attribute string languageName; */
-  NS_IMETHOD GetLanguageName(char * *aLanguageName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLanguageName(char * *aLanguageName) = 0;
 
   /* readonly attribute string filename; */
-  NS_IMETHOD GetFilename(char * *aFilename) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFilename(char * *aFilename) = 0;
 
   /* readonly attribute string name; */
-  NS_IMETHOD GetName(char * *aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(char * *aName) = 0;
 
   /* readonly attribute PRInt32 lineNumber; */
-  NS_IMETHOD GetLineNumber(PRInt32 *aLineNumber) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLineNumber(PRInt32 *aLineNumber) = 0;
 
   /* readonly attribute string sourceLine; */
-  NS_IMETHOD GetSourceLine(char * *aSourceLine) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSourceLine(char * *aSourceLine) = 0;
 
   /* readonly attribute nsIStackFrame caller; */
-  NS_IMETHOD GetCaller(nsIStackFrame * *aCaller) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCaller(nsIStackFrame * *aCaller) = 0;
 
   /* string toString (); */
-  NS_IMETHOD ToString(char **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ToString(char **_retval) = 0;
 
 };
 
@@ -61,36 +61,36 @@ class NS_NO_VTABLE nsIStackFrame : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSISTACKFRAME \
-  NS_IMETHOD GetLanguage(PRUint32 *aLanguage); \
-  NS_IMETHOD GetLanguageName(char * *aLanguageName); \
-  NS_IMETHOD GetFilename(char * *aFilename); \
-  NS_IMETHOD GetName(char * *aName); \
-  NS_IMETHOD GetLineNumber(PRInt32 *aLineNumber); \
-  NS_IMETHOD GetSourceLine(char * *aSourceLine); \
-  NS_IMETHOD GetCaller(nsIStackFrame * *aCaller); \
-  NS_IMETHOD ToString(char **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetLanguage(PRUint32 *aLanguage); \
+  NS_SCRIPTABLE NS_IMETHOD GetLanguageName(char * *aLanguageName); \
+  NS_SCRIPTABLE NS_IMETHOD GetFilename(char * *aFilename); \
+  NS_SCRIPTABLE NS_IMETHOD GetName(char * *aName); \
+  NS_SCRIPTABLE NS_IMETHOD GetLineNumber(PRInt32 *aLineNumber); \
+  NS_SCRIPTABLE NS_IMETHOD GetSourceLine(char * *aSourceLine); \
+  NS_SCRIPTABLE NS_IMETHOD GetCaller(nsIStackFrame * *aCaller); \
+  NS_SCRIPTABLE NS_IMETHOD ToString(char **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSISTACKFRAME(_to) \
-  NS_IMETHOD GetLanguage(PRUint32 *aLanguage) { return _to GetLanguage(aLanguage); } \
-  NS_IMETHOD GetLanguageName(char * *aLanguageName) { return _to GetLanguageName(aLanguageName); } \
-  NS_IMETHOD GetFilename(char * *aFilename) { return _to GetFilename(aFilename); } \
-  NS_IMETHOD GetName(char * *aName) { return _to GetName(aName); } \
-  NS_IMETHOD GetLineNumber(PRInt32 *aLineNumber) { return _to GetLineNumber(aLineNumber); } \
-  NS_IMETHOD GetSourceLine(char * *aSourceLine) { return _to GetSourceLine(aSourceLine); } \
-  NS_IMETHOD GetCaller(nsIStackFrame * *aCaller) { return _to GetCaller(aCaller); } \
-  NS_IMETHOD ToString(char **_retval) { return _to ToString(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetLanguage(PRUint32 *aLanguage) { return _to GetLanguage(aLanguage); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLanguageName(char * *aLanguageName) { return _to GetLanguageName(aLanguageName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFilename(char * *aFilename) { return _to GetFilename(aFilename); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(char * *aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLineNumber(PRInt32 *aLineNumber) { return _to GetLineNumber(aLineNumber); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSourceLine(char * *aSourceLine) { return _to GetSourceLine(aSourceLine); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCaller(nsIStackFrame * *aCaller) { return _to GetCaller(aCaller); } \
+  NS_SCRIPTABLE NS_IMETHOD ToString(char **_retval) { return _to ToString(_retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSISTACKFRAME(_to) \
-  NS_IMETHOD GetLanguage(PRUint32 *aLanguage) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLanguage(aLanguage); } \
-  NS_IMETHOD GetLanguageName(char * *aLanguageName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLanguageName(aLanguageName); } \
-  NS_IMETHOD GetFilename(char * *aFilename) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFilename(aFilename); } \
-  NS_IMETHOD GetName(char * *aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD GetLineNumber(PRInt32 *aLineNumber) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLineNumber(aLineNumber); } \
-  NS_IMETHOD GetSourceLine(char * *aSourceLine) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSourceLine(aSourceLine); } \
-  NS_IMETHOD GetCaller(nsIStackFrame * *aCaller) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCaller(aCaller); } \
-  NS_IMETHOD ToString(char **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ToString(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetLanguage(PRUint32 *aLanguage) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLanguage(aLanguage); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLanguageName(char * *aLanguageName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLanguageName(aLanguageName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFilename(char * *aFilename) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFilename(aFilename); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(char * *aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLineNumber(PRInt32 *aLineNumber) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLineNumber(aLineNumber); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSourceLine(char * *aSourceLine) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSourceLine(aSourceLine); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCaller(nsIStackFrame * *aCaller) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCaller(aCaller); } \
+  NS_SCRIPTABLE NS_IMETHOD ToString(char **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ToString(_retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -183,40 +183,40 @@ NS_IMETHODIMP nsStackFrame::ToString(char **_retval)
   {0xf3a8d3b4, 0xc424, 0x4edc, \
     { 0x8b, 0xf6, 0x89, 0x74, 0xc9, 0x83, 0xba, 0x78 }}
 
-class NS_NO_VTABLE nsIException : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIException : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IEXCEPTION_IID)
 
-  /* readonly attribute string message; */
-  NS_IMETHOD GetMessage(char * *aMessage) = 0;
+  /* [binaryname (MessageMoz)] readonly attribute string message; */
+  NS_SCRIPTABLE NS_IMETHOD GetMessageMoz(char * *aMessage) = 0;
 
   /* readonly attribute nsresult result; */
-  NS_IMETHOD GetResult(nsresult *aResult) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetResult(nsresult *aResult) = 0;
 
   /* readonly attribute string name; */
-  NS_IMETHOD GetName(char * *aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(char * *aName) = 0;
 
   /* readonly attribute string filename; */
-  NS_IMETHOD GetFilename(char * *aFilename) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFilename(char * *aFilename) = 0;
 
   /* readonly attribute PRUint32 lineNumber; */
-  NS_IMETHOD GetLineNumber(PRUint32 *aLineNumber) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLineNumber(PRUint32 *aLineNumber) = 0;
 
   /* readonly attribute PRUint32 columnNumber; */
-  NS_IMETHOD GetColumnNumber(PRUint32 *aColumnNumber) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetColumnNumber(PRUint32 *aColumnNumber) = 0;
 
   /* readonly attribute nsIStackFrame location; */
-  NS_IMETHOD GetLocation(nsIStackFrame * *aLocation) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLocation(nsIStackFrame * *aLocation) = 0;
 
   /* readonly attribute nsIException inner; */
-  NS_IMETHOD GetInner(nsIException * *aInner) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetInner(nsIException * *aInner) = 0;
 
   /* readonly attribute nsISupports data; */
-  NS_IMETHOD GetData(nsISupports * *aData) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetData(nsISupports * *aData) = 0;
 
   /* string toString (); */
-  NS_IMETHOD ToString(char **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ToString(char **_retval) = 0;
 
 };
 
@@ -224,42 +224,42 @@ class NS_NO_VTABLE nsIException : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIEXCEPTION \
-  NS_IMETHOD GetMessage(char * *aMessage); \
-  NS_IMETHOD GetResult(nsresult *aResult); \
-  NS_IMETHOD GetName(char * *aName); \
-  NS_IMETHOD GetFilename(char * *aFilename); \
-  NS_IMETHOD GetLineNumber(PRUint32 *aLineNumber); \
-  NS_IMETHOD GetColumnNumber(PRUint32 *aColumnNumber); \
-  NS_IMETHOD GetLocation(nsIStackFrame * *aLocation); \
-  NS_IMETHOD GetInner(nsIException * *aInner); \
-  NS_IMETHOD GetData(nsISupports * *aData); \
-  NS_IMETHOD ToString(char **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetMessageMoz(char * *aMessage); \
+  NS_SCRIPTABLE NS_IMETHOD GetResult(nsresult *aResult); \
+  NS_SCRIPTABLE NS_IMETHOD GetName(char * *aName); \
+  NS_SCRIPTABLE NS_IMETHOD GetFilename(char * *aFilename); \
+  NS_SCRIPTABLE NS_IMETHOD GetLineNumber(PRUint32 *aLineNumber); \
+  NS_SCRIPTABLE NS_IMETHOD GetColumnNumber(PRUint32 *aColumnNumber); \
+  NS_SCRIPTABLE NS_IMETHOD GetLocation(nsIStackFrame * *aLocation); \
+  NS_SCRIPTABLE NS_IMETHOD GetInner(nsIException * *aInner); \
+  NS_SCRIPTABLE NS_IMETHOD GetData(nsISupports * *aData); \
+  NS_SCRIPTABLE NS_IMETHOD ToString(char **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIEXCEPTION(_to) \
-  NS_IMETHOD GetMessage(char * *aMessage) { return _to GetMessage(aMessage); } \
-  NS_IMETHOD GetResult(nsresult *aResult) { return _to GetResult(aResult); } \
-  NS_IMETHOD GetName(char * *aName) { return _to GetName(aName); } \
-  NS_IMETHOD GetFilename(char * *aFilename) { return _to GetFilename(aFilename); } \
-  NS_IMETHOD GetLineNumber(PRUint32 *aLineNumber) { return _to GetLineNumber(aLineNumber); } \
-  NS_IMETHOD GetColumnNumber(PRUint32 *aColumnNumber) { return _to GetColumnNumber(aColumnNumber); } \
-  NS_IMETHOD GetLocation(nsIStackFrame * *aLocation) { return _to GetLocation(aLocation); } \
-  NS_IMETHOD GetInner(nsIException * *aInner) { return _to GetInner(aInner); } \
-  NS_IMETHOD GetData(nsISupports * *aData) { return _to GetData(aData); } \
-  NS_IMETHOD ToString(char **_retval) { return _to ToString(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetMessageMoz(char * *aMessage) { return _to GetMessageMoz(aMessage); } \
+  NS_SCRIPTABLE NS_IMETHOD GetResult(nsresult *aResult) { return _to GetResult(aResult); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(char * *aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFilename(char * *aFilename) { return _to GetFilename(aFilename); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLineNumber(PRUint32 *aLineNumber) { return _to GetLineNumber(aLineNumber); } \
+  NS_SCRIPTABLE NS_IMETHOD GetColumnNumber(PRUint32 *aColumnNumber) { return _to GetColumnNumber(aColumnNumber); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLocation(nsIStackFrame * *aLocation) { return _to GetLocation(aLocation); } \
+  NS_SCRIPTABLE NS_IMETHOD GetInner(nsIException * *aInner) { return _to GetInner(aInner); } \
+  NS_SCRIPTABLE NS_IMETHOD GetData(nsISupports * *aData) { return _to GetData(aData); } \
+  NS_SCRIPTABLE NS_IMETHOD ToString(char **_retval) { return _to ToString(_retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIEXCEPTION(_to) \
-  NS_IMETHOD GetMessage(char * *aMessage) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMessage(aMessage); } \
-  NS_IMETHOD GetResult(nsresult *aResult) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetResult(aResult); } \
-  NS_IMETHOD GetName(char * *aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD GetFilename(char * *aFilename) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFilename(aFilename); } \
-  NS_IMETHOD GetLineNumber(PRUint32 *aLineNumber) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLineNumber(aLineNumber); } \
-  NS_IMETHOD GetColumnNumber(PRUint32 *aColumnNumber) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetColumnNumber(aColumnNumber); } \
-  NS_IMETHOD GetLocation(nsIStackFrame * *aLocation) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLocation(aLocation); } \
-  NS_IMETHOD GetInner(nsIException * *aInner) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInner(aInner); } \
-  NS_IMETHOD GetData(nsISupports * *aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetData(aData); } \
-  NS_IMETHOD ToString(char **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ToString(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetMessageMoz(char * *aMessage) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMessageMoz(aMessage); } \
+  NS_SCRIPTABLE NS_IMETHOD GetResult(nsresult *aResult) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetResult(aResult); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(char * *aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFilename(char * *aFilename) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFilename(aFilename); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLineNumber(PRUint32 *aLineNumber) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLineNumber(aLineNumber); } \
+  NS_SCRIPTABLE NS_IMETHOD GetColumnNumber(PRUint32 *aColumnNumber) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetColumnNumber(aColumnNumber); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLocation(nsIStackFrame * *aLocation) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLocation(aLocation); } \
+  NS_SCRIPTABLE NS_IMETHOD GetInner(nsIException * *aInner) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInner(aInner); } \
+  NS_SCRIPTABLE NS_IMETHOD GetData(nsISupports * *aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetData(aData); } \
+  NS_SCRIPTABLE NS_IMETHOD ToString(char **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ToString(_retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -293,8 +293,8 @@ nsException::~nsException()
   /* destructor code */
 }
 
-/* readonly attribute string message; */
-NS_IMETHODIMP nsException::GetMessage(char * *aMessage)
+/* [binaryname (MessageMoz)] readonly attribute string message; */
+NS_IMETHODIMP nsException::GetMessageMoz(char * *aMessage)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

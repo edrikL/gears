@@ -55,7 +55,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIMemory : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIMemory : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMEMORY_IID)
@@ -107,7 +107,7 @@ class NS_NO_VTABLE nsIMemory : public nsISupports {
      *   was not on the application's main thread.
      */
   /* void heapMinimize (in boolean immediate); */
-  NS_IMETHOD HeapMinimize(PRBool immediate) = 0;
+  NS_SCRIPTABLE NS_IMETHOD HeapMinimize(PRBool immediate) = 0;
 
   /**
      * This predicate can be used to determine if we're in a low-memory
@@ -115,7 +115,7 @@ class NS_NO_VTABLE nsIMemory : public nsISupports {
      * can be used to trigger the memory pressure observers.
      */
   /* boolean isLowMemory (); */
-  NS_IMETHOD IsLowMemory(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsLowMemory(PRBool *_retval) = 0;
 
 };
 
@@ -126,24 +126,24 @@ class NS_NO_VTABLE nsIMemory : public nsISupports {
   NS_IMETHOD_(void *) Alloc(size_t size); \
   NS_IMETHOD_(void *) Realloc(void * ptr, size_t newSize); \
   NS_IMETHOD_(void) Free(void * ptr); \
-  NS_IMETHOD HeapMinimize(PRBool immediate); \
-  NS_IMETHOD IsLowMemory(PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD HeapMinimize(PRBool immediate); \
+  NS_SCRIPTABLE NS_IMETHOD IsLowMemory(PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIMEMORY(_to) \
   NS_IMETHOD_(void *) Alloc(size_t size) { return _to Alloc(size); } \
   NS_IMETHOD_(void *) Realloc(void * ptr, size_t newSize) { return _to Realloc(ptr, newSize); } \
   NS_IMETHOD_(void) Free(void * ptr) { return _to Free(ptr); } \
-  NS_IMETHOD HeapMinimize(PRBool immediate) { return _to HeapMinimize(immediate); } \
-  NS_IMETHOD IsLowMemory(PRBool *_retval) { return _to IsLowMemory(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD HeapMinimize(PRBool immediate) { return _to HeapMinimize(immediate); } \
+  NS_SCRIPTABLE NS_IMETHOD IsLowMemory(PRBool *_retval) { return _to IsLowMemory(_retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIMEMORY(_to) \
   NS_IMETHOD_(void *) Alloc(size_t size) { return !_to ? NS_ERROR_NULL_POINTER : _to->Alloc(size); } \
   NS_IMETHOD_(void *) Realloc(void * ptr, size_t newSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->Realloc(ptr, newSize); } \
   NS_IMETHOD_(void) Free(void * ptr) { return !_to ? NS_ERROR_NULL_POINTER : _to->Free(ptr); } \
-  NS_IMETHOD HeapMinimize(PRBool immediate) { return !_to ? NS_ERROR_NULL_POINTER : _to->HeapMinimize(immediate); } \
-  NS_IMETHOD IsLowMemory(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsLowMemory(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD HeapMinimize(PRBool immediate) { return !_to ? NS_ERROR_NULL_POINTER : _to->HeapMinimize(immediate); } \
+  NS_SCRIPTABLE NS_IMETHOD IsLowMemory(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsLowMemory(_retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/netwerk/cache/public/nsICacheVisitor.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/cache/public/nsICacheVisitor.idl
  */
 
 #ifndef __gen_nsICacheVisitor_h__
@@ -26,7 +26,7 @@ class nsICacheEntryInfo; /* forward declaration */
   {0xf8c08c4b, 0xd778, 0x49d1, \
     { 0xa5, 0x9b, 0x86, 0x6f, 0xdc, 0x50, 0x0d, 0x95 }}
 
-class NS_NO_VTABLE nsICacheVisitor : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsICacheVisitor : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICACHEVISITOR_IID)
@@ -41,7 +41,7 @@ class NS_NO_VTABLE nsICacheVisitor : public nsISupports {
      * @return false to advance to the next device.
      */
   /* boolean visitDevice (in string deviceID, in nsICacheDeviceInfo deviceInfo); */
-  NS_IMETHOD VisitDevice(const char *deviceID, nsICacheDeviceInfo *deviceInfo, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD VisitDevice(const char *deviceID, nsICacheDeviceInfo *deviceInfo, PRBool *_retval) = 0;
 
   /**
      * Called to provide information about a cache entry.
@@ -54,7 +54,7 @@ class NS_NO_VTABLE nsICacheVisitor : public nsISupports {
      * @return false to advance to the next device.
      */
   /* boolean visitEntry (in string deviceID, in nsICacheEntryInfo entryInfo); */
-  NS_IMETHOD VisitEntry(const char *deviceID, nsICacheEntryInfo *entryInfo, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD VisitEntry(const char *deviceID, nsICacheEntryInfo *entryInfo, PRBool *_retval) = 0;
 
 };
 
@@ -62,18 +62,18 @@ class NS_NO_VTABLE nsICacheVisitor : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICACHEVISITOR \
-  NS_IMETHOD VisitDevice(const char *deviceID, nsICacheDeviceInfo *deviceInfo, PRBool *_retval); \
-  NS_IMETHOD VisitEntry(const char *deviceID, nsICacheEntryInfo *entryInfo, PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD VisitDevice(const char *deviceID, nsICacheDeviceInfo *deviceInfo, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD VisitEntry(const char *deviceID, nsICacheEntryInfo *entryInfo, PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICACHEVISITOR(_to) \
-  NS_IMETHOD VisitDevice(const char *deviceID, nsICacheDeviceInfo *deviceInfo, PRBool *_retval) { return _to VisitDevice(deviceID, deviceInfo, _retval); } \
-  NS_IMETHOD VisitEntry(const char *deviceID, nsICacheEntryInfo *entryInfo, PRBool *_retval) { return _to VisitEntry(deviceID, entryInfo, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD VisitDevice(const char *deviceID, nsICacheDeviceInfo *deviceInfo, PRBool *_retval) { return _to VisitDevice(deviceID, deviceInfo, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD VisitEntry(const char *deviceID, nsICacheEntryInfo *entryInfo, PRBool *_retval) { return _to VisitEntry(deviceID, entryInfo, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICACHEVISITOR(_to) \
-  NS_IMETHOD VisitDevice(const char *deviceID, nsICacheDeviceInfo *deviceInfo, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->VisitDevice(deviceID, deviceInfo, _retval); } \
-  NS_IMETHOD VisitEntry(const char *deviceID, nsICacheEntryInfo *entryInfo, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->VisitEntry(deviceID, entryInfo, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD VisitDevice(const char *deviceID, nsICacheDeviceInfo *deviceInfo, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->VisitDevice(deviceID, deviceInfo, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD VisitEntry(const char *deviceID, nsICacheEntryInfo *entryInfo, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->VisitEntry(deviceID, entryInfo, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -130,7 +130,7 @@ NS_IMETHODIMP nsCacheVisitor::VisitEntry(const char *deviceID, nsICacheEntryInfo
   {0x31d1c294, 0x1dd2, 0x11b2, \
     { 0xbe, 0x3a, 0xc7, 0x92, 0x30, 0xdc, 0xa2, 0x97 }}
 
-class NS_NO_VTABLE nsICacheDeviceInfo : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsICacheDeviceInfo : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICACHEDEVICEINFO_IID)
@@ -139,32 +139,32 @@ class NS_NO_VTABLE nsICacheDeviceInfo : public nsISupports {
      * Get a human readable description of the cache device.
      */
   /* readonly attribute string description; */
-  NS_IMETHOD GetDescription(char * *aDescription) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDescription(char * *aDescription) = 0;
 
   /**
      * Get a usage report, statistics, miscellaneous data about
      * the cache device.
      */
   /* readonly attribute string usageReport; */
-  NS_IMETHOD GetUsageReport(char * *aUsageReport) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetUsageReport(char * *aUsageReport) = 0;
 
   /**
      * Get the number of stored cache entries.
      */
   /* readonly attribute unsigned long entryCount; */
-  NS_IMETHOD GetEntryCount(PRUint32 *aEntryCount) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetEntryCount(PRUint32 *aEntryCount) = 0;
 
   /**
      * Get the total size of the stored cache entries.
      */
   /* readonly attribute unsigned long totalSize; */
-  NS_IMETHOD GetTotalSize(PRUint32 *aTotalSize) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTotalSize(PRUint32 *aTotalSize) = 0;
 
   /**
      * Get the upper limit of the size of the data the cache can store.
      */
   /* readonly attribute unsigned long maximumSize; */
-  NS_IMETHOD GetMaximumSize(PRUint32 *aMaximumSize) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMaximumSize(PRUint32 *aMaximumSize) = 0;
 
 };
 
@@ -172,27 +172,27 @@ class NS_NO_VTABLE nsICacheDeviceInfo : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICACHEDEVICEINFO \
-  NS_IMETHOD GetDescription(char * *aDescription); \
-  NS_IMETHOD GetUsageReport(char * *aUsageReport); \
-  NS_IMETHOD GetEntryCount(PRUint32 *aEntryCount); \
-  NS_IMETHOD GetTotalSize(PRUint32 *aTotalSize); \
-  NS_IMETHOD GetMaximumSize(PRUint32 *aMaximumSize); 
+  NS_SCRIPTABLE NS_IMETHOD GetDescription(char * *aDescription); \
+  NS_SCRIPTABLE NS_IMETHOD GetUsageReport(char * *aUsageReport); \
+  NS_SCRIPTABLE NS_IMETHOD GetEntryCount(PRUint32 *aEntryCount); \
+  NS_SCRIPTABLE NS_IMETHOD GetTotalSize(PRUint32 *aTotalSize); \
+  NS_SCRIPTABLE NS_IMETHOD GetMaximumSize(PRUint32 *aMaximumSize); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICACHEDEVICEINFO(_to) \
-  NS_IMETHOD GetDescription(char * *aDescription) { return _to GetDescription(aDescription); } \
-  NS_IMETHOD GetUsageReport(char * *aUsageReport) { return _to GetUsageReport(aUsageReport); } \
-  NS_IMETHOD GetEntryCount(PRUint32 *aEntryCount) { return _to GetEntryCount(aEntryCount); } \
-  NS_IMETHOD GetTotalSize(PRUint32 *aTotalSize) { return _to GetTotalSize(aTotalSize); } \
-  NS_IMETHOD GetMaximumSize(PRUint32 *aMaximumSize) { return _to GetMaximumSize(aMaximumSize); } 
+  NS_SCRIPTABLE NS_IMETHOD GetDescription(char * *aDescription) { return _to GetDescription(aDescription); } \
+  NS_SCRIPTABLE NS_IMETHOD GetUsageReport(char * *aUsageReport) { return _to GetUsageReport(aUsageReport); } \
+  NS_SCRIPTABLE NS_IMETHOD GetEntryCount(PRUint32 *aEntryCount) { return _to GetEntryCount(aEntryCount); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTotalSize(PRUint32 *aTotalSize) { return _to GetTotalSize(aTotalSize); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMaximumSize(PRUint32 *aMaximumSize) { return _to GetMaximumSize(aMaximumSize); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICACHEDEVICEINFO(_to) \
-  NS_IMETHOD GetDescription(char * *aDescription) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDescription(aDescription); } \
-  NS_IMETHOD GetUsageReport(char * *aUsageReport) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUsageReport(aUsageReport); } \
-  NS_IMETHOD GetEntryCount(PRUint32 *aEntryCount) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetEntryCount(aEntryCount); } \
-  NS_IMETHOD GetTotalSize(PRUint32 *aTotalSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTotalSize(aTotalSize); } \
-  NS_IMETHOD GetMaximumSize(PRUint32 *aMaximumSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMaximumSize(aMaximumSize); } 
+  NS_SCRIPTABLE NS_IMETHOD GetDescription(char * *aDescription) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDescription(aDescription); } \
+  NS_SCRIPTABLE NS_IMETHOD GetUsageReport(char * *aUsageReport) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUsageReport(aUsageReport); } \
+  NS_SCRIPTABLE NS_IMETHOD GetEntryCount(PRUint32 *aEntryCount) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetEntryCount(aEntryCount); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTotalSize(PRUint32 *aTotalSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTotalSize(aTotalSize); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMaximumSize(PRUint32 *aMaximumSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMaximumSize(aMaximumSize); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -267,7 +267,7 @@ NS_IMETHODIMP nsCacheDeviceInfo::GetMaximumSize(PRUint32 *aMaximumSize)
   {0xfab51c92, 0x95c3, 0x4468, \
     { 0xb3, 0x17, 0x7d, 0xe4, 0xd7, 0x58, 0x82, 0x54 }}
 
-class NS_NO_VTABLE nsICacheEntryInfo : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsICacheEntryInfo : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICACHEENTRYINFO_IID)
@@ -276,55 +276,55 @@ class NS_NO_VTABLE nsICacheEntryInfo : public nsISupports {
      * Get the client id associated with this cache entry.
      */
   /* readonly attribute string clientID; */
-  NS_IMETHOD GetClientID(char * *aClientID) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetClientID(char * *aClientID) = 0;
 
   /**
      * Get the id for the device that stores this cache entry.
      */
   /* readonly attribute string deviceID; */
-  NS_IMETHOD GetDeviceID(char * *aDeviceID) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDeviceID(char * *aDeviceID) = 0;
 
   /**
      * Get the key identifying the cache entry.
      */
   /* readonly attribute ACString key; */
-  NS_IMETHOD GetKey(nsACString & aKey) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetKey(nsACString & aKey) = 0;
 
   /**
      * Get the number of times the cache entry has been opened.
      */
   /* readonly attribute long fetchCount; */
-  NS_IMETHOD GetFetchCount(PRInt32 *aFetchCount) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFetchCount(PRInt32 *aFetchCount) = 0;
 
   /**
      * Get the last time the cache entry was opened (in seconds since the Epoch).
      */
   /* readonly attribute PRUint32 lastFetched; */
-  NS_IMETHOD GetLastFetched(PRUint32 *aLastFetched) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLastFetched(PRUint32 *aLastFetched) = 0;
 
   /**
      * Get the last time the cache entry was modified (in seconds since the Epoch).
      */
   /* readonly attribute PRUint32 lastModified; */
-  NS_IMETHOD GetLastModified(PRUint32 *aLastModified) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLastModified(PRUint32 *aLastModified) = 0;
 
   /**
      * Get the expiration time of the cache entry (in seconds since the Epoch).
      */
   /* readonly attribute PRUint32 expirationTime; */
-  NS_IMETHOD GetExpirationTime(PRUint32 *aExpirationTime) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetExpirationTime(PRUint32 *aExpirationTime) = 0;
 
   /**
      * Get the cache entry data size.
      */
   /* readonly attribute unsigned long dataSize; */
-  NS_IMETHOD GetDataSize(PRUint32 *aDataSize) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDataSize(PRUint32 *aDataSize) = 0;
 
   /**
      * Find out whether or not the cache entry is stream based.
      */
   /* boolean isStreamBased (); */
-  NS_IMETHOD IsStreamBased(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsStreamBased(PRBool *_retval) = 0;
 
 };
 
@@ -332,39 +332,39 @@ class NS_NO_VTABLE nsICacheEntryInfo : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICACHEENTRYINFO \
-  NS_IMETHOD GetClientID(char * *aClientID); \
-  NS_IMETHOD GetDeviceID(char * *aDeviceID); \
-  NS_IMETHOD GetKey(nsACString & aKey); \
-  NS_IMETHOD GetFetchCount(PRInt32 *aFetchCount); \
-  NS_IMETHOD GetLastFetched(PRUint32 *aLastFetched); \
-  NS_IMETHOD GetLastModified(PRUint32 *aLastModified); \
-  NS_IMETHOD GetExpirationTime(PRUint32 *aExpirationTime); \
-  NS_IMETHOD GetDataSize(PRUint32 *aDataSize); \
-  NS_IMETHOD IsStreamBased(PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetClientID(char * *aClientID); \
+  NS_SCRIPTABLE NS_IMETHOD GetDeviceID(char * *aDeviceID); \
+  NS_SCRIPTABLE NS_IMETHOD GetKey(nsACString & aKey); \
+  NS_SCRIPTABLE NS_IMETHOD GetFetchCount(PRInt32 *aFetchCount); \
+  NS_SCRIPTABLE NS_IMETHOD GetLastFetched(PRUint32 *aLastFetched); \
+  NS_SCRIPTABLE NS_IMETHOD GetLastModified(PRUint32 *aLastModified); \
+  NS_SCRIPTABLE NS_IMETHOD GetExpirationTime(PRUint32 *aExpirationTime); \
+  NS_SCRIPTABLE NS_IMETHOD GetDataSize(PRUint32 *aDataSize); \
+  NS_SCRIPTABLE NS_IMETHOD IsStreamBased(PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICACHEENTRYINFO(_to) \
-  NS_IMETHOD GetClientID(char * *aClientID) { return _to GetClientID(aClientID); } \
-  NS_IMETHOD GetDeviceID(char * *aDeviceID) { return _to GetDeviceID(aDeviceID); } \
-  NS_IMETHOD GetKey(nsACString & aKey) { return _to GetKey(aKey); } \
-  NS_IMETHOD GetFetchCount(PRInt32 *aFetchCount) { return _to GetFetchCount(aFetchCount); } \
-  NS_IMETHOD GetLastFetched(PRUint32 *aLastFetched) { return _to GetLastFetched(aLastFetched); } \
-  NS_IMETHOD GetLastModified(PRUint32 *aLastModified) { return _to GetLastModified(aLastModified); } \
-  NS_IMETHOD GetExpirationTime(PRUint32 *aExpirationTime) { return _to GetExpirationTime(aExpirationTime); } \
-  NS_IMETHOD GetDataSize(PRUint32 *aDataSize) { return _to GetDataSize(aDataSize); } \
-  NS_IMETHOD IsStreamBased(PRBool *_retval) { return _to IsStreamBased(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetClientID(char * *aClientID) { return _to GetClientID(aClientID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDeviceID(char * *aDeviceID) { return _to GetDeviceID(aDeviceID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetKey(nsACString & aKey) { return _to GetKey(aKey); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFetchCount(PRInt32 *aFetchCount) { return _to GetFetchCount(aFetchCount); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLastFetched(PRUint32 *aLastFetched) { return _to GetLastFetched(aLastFetched); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLastModified(PRUint32 *aLastModified) { return _to GetLastModified(aLastModified); } \
+  NS_SCRIPTABLE NS_IMETHOD GetExpirationTime(PRUint32 *aExpirationTime) { return _to GetExpirationTime(aExpirationTime); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDataSize(PRUint32 *aDataSize) { return _to GetDataSize(aDataSize); } \
+  NS_SCRIPTABLE NS_IMETHOD IsStreamBased(PRBool *_retval) { return _to IsStreamBased(_retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICACHEENTRYINFO(_to) \
-  NS_IMETHOD GetClientID(char * *aClientID) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClientID(aClientID); } \
-  NS_IMETHOD GetDeviceID(char * *aDeviceID) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDeviceID(aDeviceID); } \
-  NS_IMETHOD GetKey(nsACString & aKey) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetKey(aKey); } \
-  NS_IMETHOD GetFetchCount(PRInt32 *aFetchCount) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFetchCount(aFetchCount); } \
-  NS_IMETHOD GetLastFetched(PRUint32 *aLastFetched) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLastFetched(aLastFetched); } \
-  NS_IMETHOD GetLastModified(PRUint32 *aLastModified) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLastModified(aLastModified); } \
-  NS_IMETHOD GetExpirationTime(PRUint32 *aExpirationTime) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetExpirationTime(aExpirationTime); } \
-  NS_IMETHOD GetDataSize(PRUint32 *aDataSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDataSize(aDataSize); } \
-  NS_IMETHOD IsStreamBased(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsStreamBased(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetClientID(char * *aClientID) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClientID(aClientID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDeviceID(char * *aDeviceID) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDeviceID(aDeviceID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetKey(nsACString & aKey) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetKey(aKey); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFetchCount(PRInt32 *aFetchCount) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFetchCount(aFetchCount); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLastFetched(PRUint32 *aLastFetched) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLastFetched(aLastFetched); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLastModified(PRUint32 *aLastModified) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLastModified(aLastModified); } \
+  NS_SCRIPTABLE NS_IMETHOD GetExpirationTime(PRUint32 *aExpirationTime) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetExpirationTime(aExpirationTime); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDataSize(PRUint32 *aDataSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDataSize(aDataSize); } \
+  NS_SCRIPTABLE NS_IMETHOD IsStreamBased(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsStreamBased(_retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

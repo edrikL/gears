@@ -30,7 +30,7 @@ class nsIObserver; /* forward declaration */
  * @status FROZEN
  * @see nsIPrefBranch
  */
-class NS_NO_VTABLE nsIPrefBranch2 : public nsIPrefBranch {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIPrefBranch2 : public nsIPrefBranch {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPREFBRANCH2_IID)
@@ -96,7 +96,7 @@ class NS_NO_VTABLE nsIPrefBranch2 : public nsIPrefBranch {
    * @see removeObserver
    */
   /* void addObserver (in string aDomain, in nsIObserver aObserver, in boolean aHoldWeak); */
-  NS_IMETHOD AddObserver(const char *aDomain, nsIObserver *aObserver, PRBool aHoldWeak) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AddObserver(const char *aDomain, nsIObserver *aObserver, PRBool aHoldWeak) = 0;
 
   /**
    * Remove a preference change observer.
@@ -113,7 +113,7 @@ class NS_NO_VTABLE nsIPrefBranch2 : public nsIPrefBranch {
    * @see addObserver
    */
   /* void removeObserver (in string aDomain, in nsIObserver aObserver); */
-  NS_IMETHOD RemoveObserver(const char *aDomain, nsIObserver *aObserver) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveObserver(const char *aDomain, nsIObserver *aObserver) = 0;
 
 };
 
@@ -121,18 +121,18 @@ class NS_NO_VTABLE nsIPrefBranch2 : public nsIPrefBranch {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIPREFBRANCH2 \
-  NS_IMETHOD AddObserver(const char *aDomain, nsIObserver *aObserver, PRBool aHoldWeak); \
-  NS_IMETHOD RemoveObserver(const char *aDomain, nsIObserver *aObserver); 
+  NS_SCRIPTABLE NS_IMETHOD AddObserver(const char *aDomain, nsIObserver *aObserver, PRBool aHoldWeak); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveObserver(const char *aDomain, nsIObserver *aObserver); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIPREFBRANCH2(_to) \
-  NS_IMETHOD AddObserver(const char *aDomain, nsIObserver *aObserver, PRBool aHoldWeak) { return _to AddObserver(aDomain, aObserver, aHoldWeak); } \
-  NS_IMETHOD RemoveObserver(const char *aDomain, nsIObserver *aObserver) { return _to RemoveObserver(aDomain, aObserver); } 
+  NS_SCRIPTABLE NS_IMETHOD AddObserver(const char *aDomain, nsIObserver *aObserver, PRBool aHoldWeak) { return _to AddObserver(aDomain, aObserver, aHoldWeak); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveObserver(const char *aDomain, nsIObserver *aObserver) { return _to RemoveObserver(aDomain, aObserver); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIPREFBRANCH2(_to) \
-  NS_IMETHOD AddObserver(const char *aDomain, nsIObserver *aObserver, PRBool aHoldWeak) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddObserver(aDomain, aObserver, aHoldWeak); } \
-  NS_IMETHOD RemoveObserver(const char *aDomain, nsIObserver *aObserver) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveObserver(aDomain, aObserver); } 
+  NS_SCRIPTABLE NS_IMETHOD AddObserver(const char *aDomain, nsIObserver *aObserver, PRBool aHoldWeak) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddObserver(aDomain, aObserver, aHoldWeak); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveObserver(const char *aDomain, nsIObserver *aObserver) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveObserver(aDomain, aObserver); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

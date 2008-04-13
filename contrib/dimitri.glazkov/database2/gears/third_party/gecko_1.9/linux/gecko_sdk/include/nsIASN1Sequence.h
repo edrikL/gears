@@ -53,7 +53,7 @@ class nsIMutableArray; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIASN1Sequence : public nsIASN1Object {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIASN1Sequence : public nsIASN1Object {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IASN1SEQUENCE_IID)
@@ -62,8 +62,8 @@ class NS_NO_VTABLE nsIASN1Sequence : public nsIASN1Object {
    *  The array of objects stored in the sequence.
    */
   /* attribute nsIMutableArray ASN1Objects; */
-  NS_IMETHOD GetASN1Objects(nsIMutableArray * *aASN1Objects) = 0;
-  NS_IMETHOD SetASN1Objects(nsIMutableArray * aASN1Objects) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetASN1Objects(nsIMutableArray * *aASN1Objects) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetASN1Objects(nsIMutableArray * aASN1Objects) = 0;
 
   /**
    *  Whether the node at this position in the ASN.1 data structure
@@ -71,8 +71,8 @@ class NS_NO_VTABLE nsIASN1Sequence : public nsIASN1Object {
    *  application.
    */
   /* attribute boolean isValidContainer; */
-  NS_IMETHOD GetIsValidContainer(PRBool *aIsValidContainer) = 0;
-  NS_IMETHOD SetIsValidContainer(PRBool aIsValidContainer) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIsValidContainer(PRBool *aIsValidContainer) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetIsValidContainer(PRBool aIsValidContainer) = 0;
 
   /**
    *  Whether the contained objects should be shown or hidden.
@@ -80,8 +80,8 @@ class NS_NO_VTABLE nsIASN1Sequence : public nsIASN1Object {
    *  expansion state when shown in a tree widget.
    */
   /* attribute boolean isExpanded; */
-  NS_IMETHOD GetIsExpanded(PRBool *aIsExpanded) = 0;
-  NS_IMETHOD SetIsExpanded(PRBool aIsExpanded) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIsExpanded(PRBool *aIsExpanded) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetIsExpanded(PRBool aIsExpanded) = 0;
 
 };
 
@@ -89,30 +89,30 @@ class NS_NO_VTABLE nsIASN1Sequence : public nsIASN1Object {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIASN1SEQUENCE \
-  NS_IMETHOD GetASN1Objects(nsIMutableArray * *aASN1Objects); \
-  NS_IMETHOD SetASN1Objects(nsIMutableArray * aASN1Objects); \
-  NS_IMETHOD GetIsValidContainer(PRBool *aIsValidContainer); \
-  NS_IMETHOD SetIsValidContainer(PRBool aIsValidContainer); \
-  NS_IMETHOD GetIsExpanded(PRBool *aIsExpanded); \
-  NS_IMETHOD SetIsExpanded(PRBool aIsExpanded); 
+  NS_SCRIPTABLE NS_IMETHOD GetASN1Objects(nsIMutableArray * *aASN1Objects); \
+  NS_SCRIPTABLE NS_IMETHOD SetASN1Objects(nsIMutableArray * aASN1Objects); \
+  NS_SCRIPTABLE NS_IMETHOD GetIsValidContainer(PRBool *aIsValidContainer); \
+  NS_SCRIPTABLE NS_IMETHOD SetIsValidContainer(PRBool aIsValidContainer); \
+  NS_SCRIPTABLE NS_IMETHOD GetIsExpanded(PRBool *aIsExpanded); \
+  NS_SCRIPTABLE NS_IMETHOD SetIsExpanded(PRBool aIsExpanded); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIASN1SEQUENCE(_to) \
-  NS_IMETHOD GetASN1Objects(nsIMutableArray * *aASN1Objects) { return _to GetASN1Objects(aASN1Objects); } \
-  NS_IMETHOD SetASN1Objects(nsIMutableArray * aASN1Objects) { return _to SetASN1Objects(aASN1Objects); } \
-  NS_IMETHOD GetIsValidContainer(PRBool *aIsValidContainer) { return _to GetIsValidContainer(aIsValidContainer); } \
-  NS_IMETHOD SetIsValidContainer(PRBool aIsValidContainer) { return _to SetIsValidContainer(aIsValidContainer); } \
-  NS_IMETHOD GetIsExpanded(PRBool *aIsExpanded) { return _to GetIsExpanded(aIsExpanded); } \
-  NS_IMETHOD SetIsExpanded(PRBool aIsExpanded) { return _to SetIsExpanded(aIsExpanded); } 
+  NS_SCRIPTABLE NS_IMETHOD GetASN1Objects(nsIMutableArray * *aASN1Objects) { return _to GetASN1Objects(aASN1Objects); } \
+  NS_SCRIPTABLE NS_IMETHOD SetASN1Objects(nsIMutableArray * aASN1Objects) { return _to SetASN1Objects(aASN1Objects); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsValidContainer(PRBool *aIsValidContainer) { return _to GetIsValidContainer(aIsValidContainer); } \
+  NS_SCRIPTABLE NS_IMETHOD SetIsValidContainer(PRBool aIsValidContainer) { return _to SetIsValidContainer(aIsValidContainer); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsExpanded(PRBool *aIsExpanded) { return _to GetIsExpanded(aIsExpanded); } \
+  NS_SCRIPTABLE NS_IMETHOD SetIsExpanded(PRBool aIsExpanded) { return _to SetIsExpanded(aIsExpanded); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIASN1SEQUENCE(_to) \
-  NS_IMETHOD GetASN1Objects(nsIMutableArray * *aASN1Objects) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetASN1Objects(aASN1Objects); } \
-  NS_IMETHOD SetASN1Objects(nsIMutableArray * aASN1Objects) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetASN1Objects(aASN1Objects); } \
-  NS_IMETHOD GetIsValidContainer(PRBool *aIsValidContainer) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsValidContainer(aIsValidContainer); } \
-  NS_IMETHOD SetIsValidContainer(PRBool aIsValidContainer) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetIsValidContainer(aIsValidContainer); } \
-  NS_IMETHOD GetIsExpanded(PRBool *aIsExpanded) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsExpanded(aIsExpanded); } \
-  NS_IMETHOD SetIsExpanded(PRBool aIsExpanded) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetIsExpanded(aIsExpanded); } 
+  NS_SCRIPTABLE NS_IMETHOD GetASN1Objects(nsIMutableArray * *aASN1Objects) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetASN1Objects(aASN1Objects); } \
+  NS_SCRIPTABLE NS_IMETHOD SetASN1Objects(nsIMutableArray * aASN1Objects) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetASN1Objects(aASN1Objects); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsValidContainer(PRBool *aIsValidContainer) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsValidContainer(aIsValidContainer); } \
+  NS_SCRIPTABLE NS_IMETHOD SetIsValidContainer(PRBool aIsValidContainer) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetIsValidContainer(aIsValidContainer); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsExpanded(PRBool *aIsExpanded) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsExpanded(aIsExpanded); } \
+  NS_SCRIPTABLE NS_IMETHOD SetIsExpanded(PRBool aIsExpanded) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetIsExpanded(aIsExpanded); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

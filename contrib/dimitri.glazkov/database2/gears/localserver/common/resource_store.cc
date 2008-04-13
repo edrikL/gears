@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,19 +13,22 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/localserver/common/resource_store.h"
 #include <vector>
 #include "gears/base/common/string16.h"
-#include "gears/localserver/common/resource_store.h"
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"  // For BrowserCache
+#endif
 
 //------------------------------------------------------------------------------
 // ExistsInDB
@@ -53,6 +56,9 @@ bool ResourceStore::FindServer(const SecurityOrigin &security_origin,
                                  server);
 }
 
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+// AppendHeader is only used by Blob.
 //-----------------------------------------------------------------------------
 // AppendHeader
 //-----------------------------------------------------------------------------
@@ -70,7 +76,7 @@ static void AppendHeader(std::string16 &headers,
 // BlobToItem
 //------------------------------------------------------------------------------
 // static
-bool ResourceStore::BlobToItem(const BlobInterface *blob,
+bool ResourceStore::BlobToItem(BlobInterface *blob,
                                const char16 *full_url,
                                Item *item) {
   int64 file_size = blob->Length();
@@ -92,26 +98,29 @@ bool ResourceStore::BlobToItem(const BlobInterface *blob,
       return false;
     }
     blob->Read(reinterpret_cast<uint8*>(&(item->payload.data->at(0))),
-               data_len, 0);
+               0, data_len);
   }
 
   // Synthesize the http headers we'll store with this item
-  const char16 *kContentLengthHeader = STRING16(L"Content-Length");
   std::string16 headers;
   std::string16 data_len_str = IntegerToString16(data_len);
-  AppendHeader(headers, kContentLengthHeader, data_len_str.c_str());
+  AppendHeader(headers, HttpConstants::kContentLengthHeader,
+               data_len_str.c_str());
+  AppendHeader(headers, HttpConstants::kContentTypeHeader,
+               STRING16(L"application/octet-stream"));
   headers.append(HttpConstants::kCrLf);  // Terminiate with a blank line
   item->payload.headers = headers;
   return true;
 }
+#endif
 
 
 //------------------------------------------------------------------------------
 // Constructor
 //------------------------------------------------------------------------------
-ResourceStore::ResourceStore() :
-    LocalServer(WebCacheDB::RESOURCE_STORE),
-    version_id_(WebCacheDB::kInvalidID) {
+ResourceStore::ResourceStore()
+    : LocalServer(WebCacheDB::RESOURCE_STORE),
+      version_id_(WebCacheDB::kInvalidID) {
 }
 
 
@@ -235,7 +244,13 @@ bool ResourceStore::PutItem(Item *item) {
     return false;
   }
 
-  return transaction.Commit();
+  bool committed = transaction.Commit();
+#ifdef WINCE
+  if (committed) {
+    BrowserCache::EnsureBogusEntry(item->entry.url.c_str());
+  }
+#endif
+  return committed;
 }
 
 
@@ -253,7 +268,29 @@ bool ResourceStore::DeleteAll() {
     return false;
   }
 
-  return db->DeleteEntries(version_id_);
+  SQLTransaction transaction(db->GetSQLDatabase(), "ResourceStore::DeleteAll");
+  if (!transaction.Begin()) {
+    return false;
+  }
+
+#ifdef WINCE
+  std::vector<WebCacheDB::EntryInfo> entries;
+  db->FindEntries(version_id_, &entries);
+#endif
+
+  if (!db->DeleteEntries(version_id_)) {
+    return false;
+  }
+
+  bool committed = transaction.Commit();
+#ifdef WINCE
+  if (committed) {
+    for (int i = 0; i < static_cast<int>(entries.size()); ++i) {
+      BrowserCache::RemoveBogusEntry(entries[i].url.c_str());
+    }
+  }
+#endif
+  return committed;
 }
 
 
@@ -272,7 +309,13 @@ bool ResourceStore::Delete(const char16* url) {
     return false;
   }
 
-  return db->DeleteEntry(version_id_, url);
+  bool deleted = db->DeleteEntry(version_id_, url);
+#ifdef WINCE
+  if (deleted) {
+    BrowserCache::RemoveBogusEntry(url);
+  }
+#endif
+  return deleted;
 }
 
 
@@ -311,7 +354,14 @@ bool ResourceStore::Rename(const char16* orig_url, const char16 *new_url) {
     return false;
   }
 
-  return transaction.Commit();
+  bool committed = transaction.Commit();
+#ifdef WINCE
+  if (committed) {
+    BrowserCache::RemoveBogusEntry(orig_url);
+    BrowserCache::EnsureBogusEntry(new_url);
+  }
+#endif
+  return committed;
 }
 
 
@@ -355,7 +405,13 @@ bool ResourceStore::Copy(const char16* src_url, const char16 *dst_url) {
     return false;
   }
 
-  return transaction.Commit();
+  bool committed = transaction.Commit();
+#ifdef WINCE
+  if (committed) {
+    BrowserCache::EnsureBogusEntry(item.entry.url.c_str());
+  }
+#endif
+  return committed;
 }
 
 

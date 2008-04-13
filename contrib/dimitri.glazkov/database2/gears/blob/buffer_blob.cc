@@ -23,64 +23,48 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <assert.h>
+#ifdef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+#else
+
+#include <algorithm>
+#include <cassert>
+#include <limits>
 #include "gears/blob/buffer_blob.h"
 
 BufferBlob::BufferBlob(std::vector<uint8> *buffer) {
   buffer_.swap(*buffer);
-  delete buffer;
-  writable_ = false;
 }
 
+BufferBlob::BufferBlob(const void *source, int64 num_bytes)
+    : buffer_(static_cast<const uint8*>(source),
+              static_cast<const uint8*>(source) + num_bytes) {
+  // The current implementation of BufferBlob stores data in a vector.
+  // A vector has an upper bound for how much data it can hold.
+  // Make sure we haven't gone beyond this limit.
+  assert(num_bytes <= buffer_.max_size());
+}
 
-int BufferBlob::Append(const void *source, int num_bytes) {
-  MutexLock lock(&mutex_);
-  if (!writable_ ||
-      num_bytes < 0 ||
-      // Don't try to support BufferBlobs over 2GB:
-      static_cast<int64>(buffer_.size()) + num_bytes > kint32max) {
+int64 BufferBlob::Read(uint8 *destination, int64 offset,
+                       int64 max_bytes) const {
+  if (offset < 0 || max_bytes < 0) {
+    return -1;
+  }
+  if (offset >= buffer_.size() || max_bytes == 0) {
     return 0;
   }
-  int original_size = buffer_.size();
-  const uint8* bytes = static_cast<const uint8*>(source);
-  buffer_.insert(buffer_.end(), bytes, bytes + num_bytes);
-  return buffer_.size() - original_size;
-}
-
-
-void BufferBlob::Finalize() {
-  MutexLock lock(&mutex_);
-  writable_ = false;
-}
-
-
-int BufferBlob::Read(uint8 *destination, int max_bytes, int64 position) const {
-  {
-    MutexLock lock(&mutex_);
-    if (writable_) {
-      return 0;
-    }
-    // By this point, we've established that the blob will not change so we
-    // don't need the mutex lock any more.
+  int64 available = buffer_.size() - offset;
+  int64 num_bytes = std::min(available, max_bytes);
+  if (num_bytes > std::numeric_limits<size_t>::max()) {
+    num_bytes = static_cast<int64>(std::numeric_limits<size_t>::max());
   }
-  if (position >= buffer_.size() ||
-      position < 0 ||
-      max_bytes < 0) {
-    return 0;
-  }
-  assert(position <= kint32max);  // Enforced by Append()
-
-  int position_as_int = static_cast<int>(position);
-  int actual = buffer_.size() - position_as_int;
-  if (actual > max_bytes) {
-    actual = max_bytes;
-  }
-  memcpy(destination, &(buffer_[position_as_int]), actual);
-  return actual;
+  memcpy(destination, &(buffer_[static_cast<size_type>(offset)]),
+         static_cast<size_t>(num_bytes));
+  return num_bytes;
 }
-
 
 int64 BufferBlob::Length() const {
-  MutexLock lock(&mutex_);
   return buffer_.size();
 }
+
+#endif  // not OFFICIAL_BUILD

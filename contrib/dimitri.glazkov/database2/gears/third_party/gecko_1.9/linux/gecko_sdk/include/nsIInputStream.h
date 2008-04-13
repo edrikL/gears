@@ -56,7 +56,7 @@ typedef NS_CALLBACK(nsWriteSegmentFun)(nsIInputStream *aInStream,
   {0xfa9c7f6c, 0x61b3, 0x11d4, \
     { 0x98, 0x77, 0x00, 0xc0, 0x4f, 0xa0, 0xcf, 0x4a }}
 
-class NS_NO_VTABLE nsIInputStream : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIInputStream : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IINPUTSTREAM_IID)
@@ -83,7 +83,7 @@ class NS_NO_VTABLE nsIInputStream : public nsISupports {
      * subsequent calls to Available should throw NS_BASE_STREAM_CLOSED.
      */
   /* void close (); */
-  NS_IMETHOD Close(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Close(void) = 0;
 
   /**
      * Determine number of bytes available in the stream.  A non-blocking
@@ -107,7 +107,7 @@ class NS_NO_VTABLE nsIInputStream : public nsISupports {
      *   condition
      */
   /* unsigned long available (); */
-  NS_IMETHOD Available(PRUint32 *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Available(PRUint32 *_retval) = 0;
 
   /** 
      * Read data from the stream.
@@ -165,7 +165,7 @@ class NS_NO_VTABLE nsIInputStream : public nsISupports {
      * once its read method is unable to return any data without blocking.
      */
   /* boolean isNonBlocking (); */
-  NS_IMETHOD IsNonBlocking(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsNonBlocking(PRBool *_retval) = 0;
 
 };
 
@@ -173,27 +173,27 @@ class NS_NO_VTABLE nsIInputStream : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIINPUTSTREAM \
-  NS_IMETHOD Close(void); \
-  NS_IMETHOD Available(PRUint32 *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD Close(void); \
+  NS_SCRIPTABLE NS_IMETHOD Available(PRUint32 *_retval); \
   NS_IMETHOD Read(char * aBuf, PRUint32 aCount, PRUint32 *_retval); \
   NS_IMETHOD ReadSegments(nsWriteSegmentFun aWriter, void * aClosure, PRUint32 aCount, PRUint32 *_retval); \
-  NS_IMETHOD IsNonBlocking(PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD IsNonBlocking(PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIINPUTSTREAM(_to) \
-  NS_IMETHOD Close(void) { return _to Close(); } \
-  NS_IMETHOD Available(PRUint32 *_retval) { return _to Available(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Close(void) { return _to Close(); } \
+  NS_SCRIPTABLE NS_IMETHOD Available(PRUint32 *_retval) { return _to Available(_retval); } \
   NS_IMETHOD Read(char * aBuf, PRUint32 aCount, PRUint32 *_retval) { return _to Read(aBuf, aCount, _retval); } \
   NS_IMETHOD ReadSegments(nsWriteSegmentFun aWriter, void * aClosure, PRUint32 aCount, PRUint32 *_retval) { return _to ReadSegments(aWriter, aClosure, aCount, _retval); } \
-  NS_IMETHOD IsNonBlocking(PRBool *_retval) { return _to IsNonBlocking(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD IsNonBlocking(PRBool *_retval) { return _to IsNonBlocking(_retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIINPUTSTREAM(_to) \
-  NS_IMETHOD Close(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Close(); } \
-  NS_IMETHOD Available(PRUint32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Available(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Close(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Close(); } \
+  NS_SCRIPTABLE NS_IMETHOD Available(PRUint32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Available(_retval); } \
   NS_IMETHOD Read(char * aBuf, PRUint32 aCount, PRUint32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Read(aBuf, aCount, _retval); } \
   NS_IMETHOD ReadSegments(nsWriteSegmentFun aWriter, void * aClosure, PRUint32 aCount, PRUint32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ReadSegments(aWriter, aClosure, aCount, _retval); } \
-  NS_IMETHOD IsNonBlocking(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsNonBlocking(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD IsNonBlocking(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsNonBlocking(_retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

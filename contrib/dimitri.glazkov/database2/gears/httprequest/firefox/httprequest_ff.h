@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,32 +13,38 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef GEARS_HTTPREQUEST_FIREFOX_HTTPREQUEST_FF_H__
 #define GEARS_HTTPREQUEST_FIREFOX_HTTPREQUEST_FF_H__
 
 #ifdef WIN32
-#include <windows.h> // must manually #include before nsIEventQueue.h
+#include <windows.h>  // must manually #include before nsIEventQueue.h
 #endif
+#include <utility>
 #include <vector>
-#include <gecko_internal/nsIEventQueue.h>
-#include "ff/genfiles/httprequest.h" // from OUTDIR
+#include "genfiles/httprequest.h"
+#include "gears/base/common/message_queue.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string16.h"
-#include "gears/blob/blob_ff.h"
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+#include "gears/base/common/scoped_refptr.h"
+#include "gears/blob/blob.h"
+class BlobInterface;
+#endif
 #include "gears/localserver/common/http_request.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
@@ -78,6 +84,9 @@ class GearsHttpRequest
     std::vector< std::pair<std::string16, std::string16> > headers;
     bool has_post_data;
     std::string16 post_data;
+#ifndef OFFICIAL_BUILD
+    scoped_refptr<BlobInterface> blob_;
+#endif
     RequestInfo() : has_post_data(false) {}
   };
 
@@ -96,9 +105,12 @@ class GearsHttpRequest
     // response_blob
     scoped_ptr< std::vector<uint8> > response_body;
 
+#ifndef OFFICIAL_BUILD
+    // The blob API has not been finalized for official builds
     // only valid when IsComplete and after ownership of the body has been
     // transfered
-    nsCOMPtr<GearsBlobInterface> response_blob;
+    scoped_refptr<GearsBlob> response_blob;
+#endif
 
     ResponseInfo() : pending_ready_state(HttpRequest::UNINITIALIZED),
                      ready_state(HttpRequest::UNINITIALIZED), status(0) {}
@@ -107,11 +119,9 @@ class GearsHttpRequest
   Mutex lock_;
   scoped_ptr<RequestInfo> request_info_;
   scoped_ptr<ResponseInfo> response_info_;
-  HttpRequest *request_;
+  scoped_refptr<HttpRequest> request_;
   scoped_ptr<JsRootedCallback> onreadystatechange_;
-  PRThread *apartment_thread_;
-  nsCOMPtr<nsIEventQueue> apartment_event_queue_;
-  nsCOMPtr<nsIEventQueue> ui_event_queue_;
+  ThreadId apartment_thread_id_;
   bool content_type_header_was_set_;
   bool page_is_unloaded_;
   scoped_ptr<JsEventMonitor> unload_monitor_;
@@ -136,13 +146,14 @@ class GearsHttpRequest
   // thread of control an instance of Gears.HttpRequest is created on.
 
   // Returns true if the currently executing thread is our apartment thread
-  bool IsApartmentThread() { 
-    return apartment_thread_ == PR_GetCurrentThread();
+  bool IsApartmentThread() {
+    return apartment_thread_id_ ==
+        ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
   }
 
   enum AsyncCallType {
-    kSend,  // invoked from apartment to execute on ui thread
-    kAbort, // invoked from apartment to execute on ui thread
+    kSend,   // invoked from apartment to execute on ui thread
+    kAbort,  // invoked from apartment to execute on ui thread
     kReadyStateChanged,  // invoked from ui to execute on apartment thread
     kDataAvailable  // invoked from ui to execute on apartment thread
   };
@@ -155,17 +166,15 @@ class GearsHttpRequest
   void OnReadyStateChangedCall();
   void OnDataAvailableCall();
 
-  nsresult CallAsync(nsIEventQueue *event_queue, AsyncCallType call_type);
+  nsresult CallAsync(ThreadId thread_id, AsyncCallType call_type);
   void OnAsyncCall(AsyncCallType call_type);
-  bool InitEventQueues();
   void InitUnloadMonitor();
 
-  struct AsyncCallEvent;
-  static void *PR_CALLBACK AsyncCall_EventHandlerFunc(AsyncCallEvent*);
-  static void  PR_CALLBACK AsyncCall_EventCleanupFunc(AsyncCallEvent*);
+  class AsyncCallEvent;
+  friend class AsyncCallEvent;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsHttpRequest);
 };
 
 
-#endif // GEARS_HTTPREQUEST_FIREFOX_HTTPREQUEST_FF_H__
+#endif  // GEARS_HTTPREQUEST_FIREFOX_HTTPREQUEST_FF_H__

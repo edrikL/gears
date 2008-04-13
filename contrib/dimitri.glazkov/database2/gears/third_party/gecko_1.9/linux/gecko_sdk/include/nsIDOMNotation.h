@@ -22,7 +22,7 @@
   {0xa6cf907e, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMNotation : public nsIDOMNode {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMNotation : public nsIDOMNode {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMNOTATION_IID)
@@ -38,10 +38,10 @@ class NS_NO_VTABLE nsIDOMNotation : public nsIDOMNode {
  * @status FROZEN
  */
   /* readonly attribute DOMString publicId; */
-  NS_IMETHOD GetPublicId(nsAString & aPublicId) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPublicId(nsAString & aPublicId) = 0;
 
   /* readonly attribute DOMString systemId; */
-  NS_IMETHOD GetSystemId(nsAString & aSystemId) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSystemId(nsAString & aSystemId) = 0;
 
 };
 
@@ -49,18 +49,18 @@ class NS_NO_VTABLE nsIDOMNotation : public nsIDOMNode {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMNOTATION \
-  NS_IMETHOD GetPublicId(nsAString & aPublicId); \
-  NS_IMETHOD GetSystemId(nsAString & aSystemId); 
+  NS_SCRIPTABLE NS_IMETHOD GetPublicId(nsAString & aPublicId); \
+  NS_SCRIPTABLE NS_IMETHOD GetSystemId(nsAString & aSystemId); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMNOTATION(_to) \
-  NS_IMETHOD GetPublicId(nsAString & aPublicId) { return _to GetPublicId(aPublicId); } \
-  NS_IMETHOD GetSystemId(nsAString & aSystemId) { return _to GetSystemId(aSystemId); } 
+  NS_SCRIPTABLE NS_IMETHOD GetPublicId(nsAString & aPublicId) { return _to GetPublicId(aPublicId); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSystemId(nsAString & aSystemId) { return _to GetSystemId(aSystemId); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMNOTATION(_to) \
-  NS_IMETHOD GetPublicId(nsAString & aPublicId) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPublicId(aPublicId); } \
-  NS_IMETHOD GetSystemId(nsAString & aSystemId) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSystemId(aSystemId); } 
+  NS_SCRIPTABLE NS_IMETHOD GetPublicId(nsAString & aPublicId) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPublicId(aPublicId); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSystemId(nsAString & aSystemId) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSystemId(aSystemId); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

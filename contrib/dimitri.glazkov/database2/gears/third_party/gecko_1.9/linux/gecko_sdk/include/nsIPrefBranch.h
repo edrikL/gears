@@ -39,7 +39,7 @@
  * 
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIPrefBranch : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPREFBRANCH_IID)
@@ -62,7 +62,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    * "browser.startup."
    */
   /* readonly attribute string root; */
-  NS_IMETHOD GetRoot(char * *aRoot) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRoot(char * *aRoot) = 0;
 
   /**
    * Called to determine the type of a specific preference.
@@ -73,7 +73,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    *                  value will be PREF_STRING, PREF_INT, or PREF_BOOL.
    */
   /* long getPrefType (in string aPrefName); */
-  NS_IMETHOD GetPrefType(const char *aPrefName, PRInt32 *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPrefType(const char *aPrefName, PRInt32 *_retval) = 0;
 
   /**
    * Called to get the state of an individual boolean preference.
@@ -85,7 +85,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    * @see setBoolPref
    */
   /* boolean getBoolPref (in string aPrefName); */
-  NS_IMETHOD GetBoolPref(const char *aPrefName, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetBoolPref(const char *aPrefName, PRBool *_retval) = 0;
 
   /**
    * Called to set the state of an individual boolean preference.
@@ -99,7 +99,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    * @see getBoolPref
    */
   /* void setBoolPref (in string aPrefName, in long aValue); */
-  NS_IMETHOD SetBoolPref(const char *aPrefName, PRInt32 aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetBoolPref(const char *aPrefName, PRInt32 aValue) = 0;
 
   /**
    * Called to get the state of an individual string preference.
@@ -111,7 +111,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    * @see setCharPref
    */
   /* string getCharPref (in string aPrefName); */
-  NS_IMETHOD GetCharPref(const char *aPrefName, char **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCharPref(const char *aPrefName, char **_retval) = 0;
 
   /**
    * Called to set the state of an individual string preference.
@@ -125,7 +125,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    * @see getCharPref
    */
   /* void setCharPref (in string aPrefName, in string aValue); */
-  NS_IMETHOD SetCharPref(const char *aPrefName, const char *aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCharPref(const char *aPrefName, const char *aValue) = 0;
 
   /**
    * Called to get the state of an individual integer preference.
@@ -137,7 +137,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    * @see setIntPref
    */
   /* long getIntPref (in string aPrefName); */
-  NS_IMETHOD GetIntPref(const char *aPrefName, PRInt32 *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIntPref(const char *aPrefName, PRInt32 *_retval) = 0;
 
   /**
    * Called to set the state of an individual integer preference.
@@ -151,7 +151,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    * @see getIntPref
    */
   /* void setIntPref (in string aPrefName, in long aValue); */
-  NS_IMETHOD SetIntPref(const char *aPrefName, PRInt32 aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetIntPref(const char *aPrefName, PRInt32 aValue) = 0;
 
   /**
    * Called to get the state of an individual complex preference. A complex
@@ -174,7 +174,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    * @see setComplexValue
    */
   /* void getComplexValue (in string aPrefName, in nsIIDRef aType, [iid_is (aType), retval] out nsQIResult aValue); */
-  NS_IMETHOD GetComplexValue(const char *aPrefName, const nsIID & aType, void * *aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetComplexValue(const char *aPrefName, const nsIID & aType, void * *aValue) = 0;
 
   /**
    * Called to set the state of an individual complex preference. A complex
@@ -197,7 +197,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    * @see getComplexValue
    */
   /* void setComplexValue (in string aPrefName, in nsIIDRef aType, in nsISupports aValue); */
-  NS_IMETHOD SetComplexValue(const char *aPrefName, const nsIID & aType, nsISupports *aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetComplexValue(const char *aPrefName, const nsIID & aType, nsISupports *aValue) = 0;
 
   /**
    * Called to clear a user set value from a specific preference. This will, in
@@ -213,7 +213,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    * @return Other The preference does not exist or have a user set value.
    */
   /* void clearUserPref (in string aPrefName); */
-  NS_IMETHOD ClearUserPref(const char *aPrefName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ClearUserPref(const char *aPrefName) = 0;
 
   /**
    * Called to lock a specific preference. Locking a preference will cause the
@@ -232,7 +232,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    * @see unlockPref
    */
   /* void lockPref (in string aPrefName); */
-  NS_IMETHOD LockPref(const char *aPrefName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD LockPref(const char *aPrefName) = 0;
 
   /**
    * Called to check if a specific preference has a user value associated to
@@ -255,7 +255,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    *                  false The preference only has a default value.
    */
   /* boolean prefHasUserValue (in string aPrefName); */
-  NS_IMETHOD PrefHasUserValue(const char *aPrefName, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD PrefHasUserValue(const char *aPrefName, PRBool *_retval) = 0;
 
   /**
    * Called to check if a specific preference is locked. If a preference is
@@ -274,7 +274,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    * @see unlockPref
    */
   /* boolean prefIsLocked (in string aPrefName); */
-  NS_IMETHOD PrefIsLocked(const char *aPrefName, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD PrefIsLocked(const char *aPrefName, PRBool *_retval) = 0;
 
   /**
    * Called to unlock a specific preference. Unlocking a previously locked 
@@ -293,7 +293,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    * @see lockPref
    */
   /* void unlockPref (in string aPrefName); */
-  NS_IMETHOD UnlockPref(const char *aPrefName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD UnlockPref(const char *aPrefName) = 0;
 
   /**
    * Called to remove all of the preferences referenced by this branch.
@@ -310,7 +310,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    * @return Other The preference(s) do not exist or an error occurred.
    */
   /* void deleteBranch (in string aStartingAt); */
-  NS_IMETHOD DeleteBranch(const char *aStartingAt) = 0;
+  NS_SCRIPTABLE NS_IMETHOD DeleteBranch(const char *aStartingAt) = 0;
 
   /**
    * Returns an array of strings representing the child preferences of the
@@ -330,7 +330,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    * @return Other The preference(s) do not exist or an error occurred.
    */
   /* void getChildList (in string aStartingAt, out unsigned long aCount, [array, size_is (aCount), retval] out string aChildArray); */
-  NS_IMETHOD GetChildList(const char *aStartingAt, PRUint32 *aCount, char ***aChildArray) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetChildList(const char *aStartingAt, PRUint32 *aCount, char ***aChildArray) = 0;
 
   /**
    * Called to reset all of the preferences referenced by this branch to their
@@ -348,7 +348,7 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
    * @return Other The preference(s) do not exist or an error occurred.
    */
   /* void resetBranch (in string aStartingAt); */
-  NS_IMETHOD ResetBranch(const char *aStartingAt) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ResetBranch(const char *aStartingAt) = 0;
 
 };
 
@@ -356,66 +356,66 @@ class NS_NO_VTABLE nsIPrefBranch : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIPREFBRANCH \
-  NS_IMETHOD GetRoot(char * *aRoot); \
-  NS_IMETHOD GetPrefType(const char *aPrefName, PRInt32 *_retval); \
-  NS_IMETHOD GetBoolPref(const char *aPrefName, PRBool *_retval); \
-  NS_IMETHOD SetBoolPref(const char *aPrefName, PRInt32 aValue); \
-  NS_IMETHOD GetCharPref(const char *aPrefName, char **_retval); \
-  NS_IMETHOD SetCharPref(const char *aPrefName, const char *aValue); \
-  NS_IMETHOD GetIntPref(const char *aPrefName, PRInt32 *_retval); \
-  NS_IMETHOD SetIntPref(const char *aPrefName, PRInt32 aValue); \
-  NS_IMETHOD GetComplexValue(const char *aPrefName, const nsIID & aType, void * *aValue); \
-  NS_IMETHOD SetComplexValue(const char *aPrefName, const nsIID & aType, nsISupports *aValue); \
-  NS_IMETHOD ClearUserPref(const char *aPrefName); \
-  NS_IMETHOD LockPref(const char *aPrefName); \
-  NS_IMETHOD PrefHasUserValue(const char *aPrefName, PRBool *_retval); \
-  NS_IMETHOD PrefIsLocked(const char *aPrefName, PRBool *_retval); \
-  NS_IMETHOD UnlockPref(const char *aPrefName); \
-  NS_IMETHOD DeleteBranch(const char *aStartingAt); \
-  NS_IMETHOD GetChildList(const char *aStartingAt, PRUint32 *aCount, char ***aChildArray); \
-  NS_IMETHOD ResetBranch(const char *aStartingAt); 
+  NS_SCRIPTABLE NS_IMETHOD GetRoot(char * *aRoot); \
+  NS_SCRIPTABLE NS_IMETHOD GetPrefType(const char *aPrefName, PRInt32 *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetBoolPref(const char *aPrefName, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetBoolPref(const char *aPrefName, PRInt32 aValue); \
+  NS_SCRIPTABLE NS_IMETHOD GetCharPref(const char *aPrefName, char **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetCharPref(const char *aPrefName, const char *aValue); \
+  NS_SCRIPTABLE NS_IMETHOD GetIntPref(const char *aPrefName, PRInt32 *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetIntPref(const char *aPrefName, PRInt32 aValue); \
+  NS_SCRIPTABLE NS_IMETHOD GetComplexValue(const char *aPrefName, const nsIID & aType, void * *aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetComplexValue(const char *aPrefName, const nsIID & aType, nsISupports *aValue); \
+  NS_SCRIPTABLE NS_IMETHOD ClearUserPref(const char *aPrefName); \
+  NS_SCRIPTABLE NS_IMETHOD LockPref(const char *aPrefName); \
+  NS_SCRIPTABLE NS_IMETHOD PrefHasUserValue(const char *aPrefName, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD PrefIsLocked(const char *aPrefName, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD UnlockPref(const char *aPrefName); \
+  NS_SCRIPTABLE NS_IMETHOD DeleteBranch(const char *aStartingAt); \
+  NS_SCRIPTABLE NS_IMETHOD GetChildList(const char *aStartingAt, PRUint32 *aCount, char ***aChildArray); \
+  NS_SCRIPTABLE NS_IMETHOD ResetBranch(const char *aStartingAt); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIPREFBRANCH(_to) \
-  NS_IMETHOD GetRoot(char * *aRoot) { return _to GetRoot(aRoot); } \
-  NS_IMETHOD GetPrefType(const char *aPrefName, PRInt32 *_retval) { return _to GetPrefType(aPrefName, _retval); } \
-  NS_IMETHOD GetBoolPref(const char *aPrefName, PRBool *_retval) { return _to GetBoolPref(aPrefName, _retval); } \
-  NS_IMETHOD SetBoolPref(const char *aPrefName, PRInt32 aValue) { return _to SetBoolPref(aPrefName, aValue); } \
-  NS_IMETHOD GetCharPref(const char *aPrefName, char **_retval) { return _to GetCharPref(aPrefName, _retval); } \
-  NS_IMETHOD SetCharPref(const char *aPrefName, const char *aValue) { return _to SetCharPref(aPrefName, aValue); } \
-  NS_IMETHOD GetIntPref(const char *aPrefName, PRInt32 *_retval) { return _to GetIntPref(aPrefName, _retval); } \
-  NS_IMETHOD SetIntPref(const char *aPrefName, PRInt32 aValue) { return _to SetIntPref(aPrefName, aValue); } \
-  NS_IMETHOD GetComplexValue(const char *aPrefName, const nsIID & aType, void * *aValue) { return _to GetComplexValue(aPrefName, aType, aValue); } \
-  NS_IMETHOD SetComplexValue(const char *aPrefName, const nsIID & aType, nsISupports *aValue) { return _to SetComplexValue(aPrefName, aType, aValue); } \
-  NS_IMETHOD ClearUserPref(const char *aPrefName) { return _to ClearUserPref(aPrefName); } \
-  NS_IMETHOD LockPref(const char *aPrefName) { return _to LockPref(aPrefName); } \
-  NS_IMETHOD PrefHasUserValue(const char *aPrefName, PRBool *_retval) { return _to PrefHasUserValue(aPrefName, _retval); } \
-  NS_IMETHOD PrefIsLocked(const char *aPrefName, PRBool *_retval) { return _to PrefIsLocked(aPrefName, _retval); } \
-  NS_IMETHOD UnlockPref(const char *aPrefName) { return _to UnlockPref(aPrefName); } \
-  NS_IMETHOD DeleteBranch(const char *aStartingAt) { return _to DeleteBranch(aStartingAt); } \
-  NS_IMETHOD GetChildList(const char *aStartingAt, PRUint32 *aCount, char ***aChildArray) { return _to GetChildList(aStartingAt, aCount, aChildArray); } \
-  NS_IMETHOD ResetBranch(const char *aStartingAt) { return _to ResetBranch(aStartingAt); } 
+  NS_SCRIPTABLE NS_IMETHOD GetRoot(char * *aRoot) { return _to GetRoot(aRoot); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrefType(const char *aPrefName, PRInt32 *_retval) { return _to GetPrefType(aPrefName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetBoolPref(const char *aPrefName, PRBool *_retval) { return _to GetBoolPref(aPrefName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetBoolPref(const char *aPrefName, PRInt32 aValue) { return _to SetBoolPref(aPrefName, aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCharPref(const char *aPrefName, char **_retval) { return _to GetCharPref(aPrefName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCharPref(const char *aPrefName, const char *aValue) { return _to SetCharPref(aPrefName, aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIntPref(const char *aPrefName, PRInt32 *_retval) { return _to GetIntPref(aPrefName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetIntPref(const char *aPrefName, PRInt32 aValue) { return _to SetIntPref(aPrefName, aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetComplexValue(const char *aPrefName, const nsIID & aType, void * *aValue) { return _to GetComplexValue(aPrefName, aType, aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetComplexValue(const char *aPrefName, const nsIID & aType, nsISupports *aValue) { return _to SetComplexValue(aPrefName, aType, aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD ClearUserPref(const char *aPrefName) { return _to ClearUserPref(aPrefName); } \
+  NS_SCRIPTABLE NS_IMETHOD LockPref(const char *aPrefName) { return _to LockPref(aPrefName); } \
+  NS_SCRIPTABLE NS_IMETHOD PrefHasUserValue(const char *aPrefName, PRBool *_retval) { return _to PrefHasUserValue(aPrefName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD PrefIsLocked(const char *aPrefName, PRBool *_retval) { return _to PrefIsLocked(aPrefName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD UnlockPref(const char *aPrefName) { return _to UnlockPref(aPrefName); } \
+  NS_SCRIPTABLE NS_IMETHOD DeleteBranch(const char *aStartingAt) { return _to DeleteBranch(aStartingAt); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChildList(const char *aStartingAt, PRUint32 *aCount, char ***aChildArray) { return _to GetChildList(aStartingAt, aCount, aChildArray); } \
+  NS_SCRIPTABLE NS_IMETHOD ResetBranch(const char *aStartingAt) { return _to ResetBranch(aStartingAt); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIPREFBRANCH(_to) \
-  NS_IMETHOD GetRoot(char * *aRoot) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRoot(aRoot); } \
-  NS_IMETHOD GetPrefType(const char *aPrefName, PRInt32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrefType(aPrefName, _retval); } \
-  NS_IMETHOD GetBoolPref(const char *aPrefName, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetBoolPref(aPrefName, _retval); } \
-  NS_IMETHOD SetBoolPref(const char *aPrefName, PRInt32 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetBoolPref(aPrefName, aValue); } \
-  NS_IMETHOD GetCharPref(const char *aPrefName, char **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCharPref(aPrefName, _retval); } \
-  NS_IMETHOD SetCharPref(const char *aPrefName, const char *aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCharPref(aPrefName, aValue); } \
-  NS_IMETHOD GetIntPref(const char *aPrefName, PRInt32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIntPref(aPrefName, _retval); } \
-  NS_IMETHOD SetIntPref(const char *aPrefName, PRInt32 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetIntPref(aPrefName, aValue); } \
-  NS_IMETHOD GetComplexValue(const char *aPrefName, const nsIID & aType, void * *aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetComplexValue(aPrefName, aType, aValue); } \
-  NS_IMETHOD SetComplexValue(const char *aPrefName, const nsIID & aType, nsISupports *aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetComplexValue(aPrefName, aType, aValue); } \
-  NS_IMETHOD ClearUserPref(const char *aPrefName) { return !_to ? NS_ERROR_NULL_POINTER : _to->ClearUserPref(aPrefName); } \
-  NS_IMETHOD LockPref(const char *aPrefName) { return !_to ? NS_ERROR_NULL_POINTER : _to->LockPref(aPrefName); } \
-  NS_IMETHOD PrefHasUserValue(const char *aPrefName, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->PrefHasUserValue(aPrefName, _retval); } \
-  NS_IMETHOD PrefIsLocked(const char *aPrefName, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->PrefIsLocked(aPrefName, _retval); } \
-  NS_IMETHOD UnlockPref(const char *aPrefName) { return !_to ? NS_ERROR_NULL_POINTER : _to->UnlockPref(aPrefName); } \
-  NS_IMETHOD DeleteBranch(const char *aStartingAt) { return !_to ? NS_ERROR_NULL_POINTER : _to->DeleteBranch(aStartingAt); } \
-  NS_IMETHOD GetChildList(const char *aStartingAt, PRUint32 *aCount, char ***aChildArray) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChildList(aStartingAt, aCount, aChildArray); } \
-  NS_IMETHOD ResetBranch(const char *aStartingAt) { return !_to ? NS_ERROR_NULL_POINTER : _to->ResetBranch(aStartingAt); } 
+  NS_SCRIPTABLE NS_IMETHOD GetRoot(char * *aRoot) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRoot(aRoot); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPrefType(const char *aPrefName, PRInt32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrefType(aPrefName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetBoolPref(const char *aPrefName, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetBoolPref(aPrefName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetBoolPref(const char *aPrefName, PRInt32 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetBoolPref(aPrefName, aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCharPref(const char *aPrefName, char **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCharPref(aPrefName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCharPref(const char *aPrefName, const char *aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCharPref(aPrefName, aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIntPref(const char *aPrefName, PRInt32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIntPref(aPrefName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetIntPref(const char *aPrefName, PRInt32 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetIntPref(aPrefName, aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetComplexValue(const char *aPrefName, const nsIID & aType, void * *aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetComplexValue(aPrefName, aType, aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetComplexValue(const char *aPrefName, const nsIID & aType, nsISupports *aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetComplexValue(aPrefName, aType, aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD ClearUserPref(const char *aPrefName) { return !_to ? NS_ERROR_NULL_POINTER : _to->ClearUserPref(aPrefName); } \
+  NS_SCRIPTABLE NS_IMETHOD LockPref(const char *aPrefName) { return !_to ? NS_ERROR_NULL_POINTER : _to->LockPref(aPrefName); } \
+  NS_SCRIPTABLE NS_IMETHOD PrefHasUserValue(const char *aPrefName, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->PrefHasUserValue(aPrefName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD PrefIsLocked(const char *aPrefName, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->PrefIsLocked(aPrefName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD UnlockPref(const char *aPrefName) { return !_to ? NS_ERROR_NULL_POINTER : _to->UnlockPref(aPrefName); } \
+  NS_SCRIPTABLE NS_IMETHOD DeleteBranch(const char *aStartingAt) { return !_to ? NS_ERROR_NULL_POINTER : _to->DeleteBranch(aStartingAt); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChildList(const char *aStartingAt, PRUint32 *aCount, char ***aChildArray) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChildList(aStartingAt, aCount, aChildArray); } \
+  NS_SCRIPTABLE NS_IMETHOD ResetBranch(const char *aStartingAt) { return !_to ? NS_ERROR_NULL_POINTER : _to->ResetBranch(aStartingAt); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

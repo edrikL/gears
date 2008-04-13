@@ -22,7 +22,7 @@
   {0x9eb2c150, 0x1d56, 0x11d3, \
     { 0x82, 0x21, 0x00, 0x60, 0x08, 0x3a, 0x0b, 0xcf }}
 
-class NS_NO_VTABLE nsIDOMBarProp : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMBarProp : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMBARPROP_IID)
@@ -35,8 +35,8 @@ class NS_NO_VTABLE nsIDOMBarProp : public nsISupports {
  * @status FROZEN
  */
   /* attribute boolean visible; */
-  NS_IMETHOD GetVisible(PRBool *aVisible) = 0;
-  NS_IMETHOD SetVisible(PRBool aVisible) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetVisible(PRBool *aVisible) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetVisible(PRBool aVisible) = 0;
 
 };
 
@@ -44,18 +44,18 @@ class NS_NO_VTABLE nsIDOMBarProp : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMBARPROP \
-  NS_IMETHOD GetVisible(PRBool *aVisible); \
-  NS_IMETHOD SetVisible(PRBool aVisible); 
+  NS_SCRIPTABLE NS_IMETHOD GetVisible(PRBool *aVisible); \
+  NS_SCRIPTABLE NS_IMETHOD SetVisible(PRBool aVisible); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMBARPROP(_to) \
-  NS_IMETHOD GetVisible(PRBool *aVisible) { return _to GetVisible(aVisible); } \
-  NS_IMETHOD SetVisible(PRBool aVisible) { return _to SetVisible(aVisible); } 
+  NS_SCRIPTABLE NS_IMETHOD GetVisible(PRBool *aVisible) { return _to GetVisible(aVisible); } \
+  NS_SCRIPTABLE NS_IMETHOD SetVisible(PRBool aVisible) { return _to SetVisible(aVisible); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMBARPROP(_to) \
-  NS_IMETHOD GetVisible(PRBool *aVisible) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVisible(aVisible); } \
-  NS_IMETHOD SetVisible(PRBool aVisible) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetVisible(aVisible); } 
+  NS_SCRIPTABLE NS_IMETHOD GetVisible(PRBool *aVisible) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVisible(aVisible); } \
+  NS_SCRIPTABLE NS_IMETHOD SetVisible(PRBool aVisible) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetVisible(aVisible); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

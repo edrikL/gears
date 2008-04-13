@@ -29,7 +29,7 @@ class nsIRequest; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIRequestObserver : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIRequestObserver : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IREQUESTOBSERVER_IID)
@@ -44,7 +44,7 @@ class NS_NO_VTABLE nsIRequestObserver : public nsISupports {
      * causing the request to be canceled.
      */
   /* void onStartRequest (in nsIRequest aRequest, in nsISupports aContext); */
-  NS_IMETHOD OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) = 0;
 
   /**
      * Called to signify the end of an asynchronous request.  This
@@ -57,7 +57,7 @@ class NS_NO_VTABLE nsIRequestObserver : public nsISupports {
      * An exception thrown from onStopRequest is generally ignored.
      */
   /* void onStopRequest (in nsIRequest aRequest, in nsISupports aContext, in nsresult aStatusCode); */
-  NS_IMETHOD OnStopRequest(nsIRequest *aRequest, nsISupports *aContext, nsresult aStatusCode) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OnStopRequest(nsIRequest *aRequest, nsISupports *aContext, nsresult aStatusCode) = 0;
 
 };
 
@@ -65,18 +65,18 @@ class NS_NO_VTABLE nsIRequestObserver : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIREQUESTOBSERVER \
-  NS_IMETHOD OnStartRequest(nsIRequest *aRequest, nsISupports *aContext); \
-  NS_IMETHOD OnStopRequest(nsIRequest *aRequest, nsISupports *aContext, nsresult aStatusCode); 
+  NS_SCRIPTABLE NS_IMETHOD OnStartRequest(nsIRequest *aRequest, nsISupports *aContext); \
+  NS_SCRIPTABLE NS_IMETHOD OnStopRequest(nsIRequest *aRequest, nsISupports *aContext, nsresult aStatusCode); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIREQUESTOBSERVER(_to) \
-  NS_IMETHOD OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) { return _to OnStartRequest(aRequest, aContext); } \
-  NS_IMETHOD OnStopRequest(nsIRequest *aRequest, nsISupports *aContext, nsresult aStatusCode) { return _to OnStopRequest(aRequest, aContext, aStatusCode); } 
+  NS_SCRIPTABLE NS_IMETHOD OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) { return _to OnStartRequest(aRequest, aContext); } \
+  NS_SCRIPTABLE NS_IMETHOD OnStopRequest(nsIRequest *aRequest, nsISupports *aContext, nsresult aStatusCode) { return _to OnStopRequest(aRequest, aContext, aStatusCode); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIREQUESTOBSERVER(_to) \
-  NS_IMETHOD OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnStartRequest(aRequest, aContext); } \
-  NS_IMETHOD OnStopRequest(nsIRequest *aRequest, nsISupports *aContext, nsresult aStatusCode) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnStopRequest(aRequest, aContext, aStatusCode); } 
+  NS_SCRIPTABLE NS_IMETHOD OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnStartRequest(aRequest, aContext); } \
+  NS_SCRIPTABLE NS_IMETHOD OnStopRequest(nsIRequest *aRequest, nsISupports *aContext, nsresult aStatusCode) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnStopRequest(aRequest, aContext, aStatusCode); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

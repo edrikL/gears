@@ -29,6 +29,11 @@
 #include <vector>
 #include "gears/base/common/common.h"
 
+extern "C" {
+#include "gears/third_party/libpng/png.h"  // included in .h for PNG_* #defines
+}
+
+
 // Utils for dealing with PNG images. This is a wrapper around libpng, which has
 // an inconvenient interface for callers.
 class PngUtils {
@@ -46,6 +51,7 @@ class PngUtils {
     FORMAT_BGRA
   };
 
+#if defined(PNG_WRITE_SUPPORTED)
   // Encodes the given raw 'input' data, with each pixel being represented as
   // given in 'format'. The encoded PNG data will be written into the supplied
   // vector and true will be returned on success. On failure (false), the
@@ -66,7 +72,9 @@ class PngUtils {
                      int w, int h, int row_byte_width,
                      bool discard_transparency,
                      std::vector<unsigned char>* output);
+#endif  // defined(PNG_WRITE_SUPPORTED)
 
+#if defined(PNG_READ_SUPPORTED)
   // Decodes the PNG data contained in input of length input_size. The
   // decoded data will be placed in *output with the dimensions in *w and *h
   // on success (returns true). This data will be written in the 'format'
@@ -74,6 +82,7 @@ class PngUtils {
   static bool Decode(const unsigned char* input, size_t input_size,
                      ColorFormat format, std::vector<unsigned char>* output,
                      int* w, int* h);
+#endif  // defined(PNG_READ_SUPPORTED)
 
   // Downscales an image from width x height to new_width x new_height.  The
   // new dimensions must both be smaller than the original ones.  This

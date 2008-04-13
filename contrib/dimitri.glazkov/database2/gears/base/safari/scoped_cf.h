@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Scoped objects for the various CoreFoundation types.
@@ -30,6 +30,7 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <Carbon/Carbon.h>
 #define kInvalidID 0
 #include <CoreServices/CoreServices.h>
 #undef kInvalidID
@@ -73,6 +74,21 @@ class ReleaseAEDescFunctor {
   }
 };
 
+class ReleaseNavReplyRecord {
+ public:
+  void operator()(NavReplyRecord* x) const {
+    NavDisposeReply(x);
+  }
+};
+
+class ReleaseNavDialogRef {
+ public:
+  void operator()(NavDialogRef x) const {
+    if (x != NULL)
+      NavDialogDispose(x);
+  }
+};
+
 typedef scoped_token<Handle, ReleaseHandleFunctor> scoped_Handle;
 
 
@@ -97,14 +113,14 @@ typedef scoped_token<CFMutableDataRef, ReleaseCFTypeFunctor>
   scoped_CFMutableData;
 
 // CFMutableStringRef
-typedef scoped_token<CFMutableStringRef, ReleaseCFTypeFunctor> 
+typedef scoped_token<CFMutableStringRef, ReleaseCFTypeFunctor>
   scoped_CFMutableString;
 
 // CFReadStreamRef
 typedef scoped_token<CFReadStreamRef, ReleaseCFTypeFunctor> scoped_CFReadStream;
 
 // CFRunLoopSourceRef
-typedef scoped_token<CFRunLoopSourceRef, ReleaseCFTypeFunctor> 
+typedef scoped_token<CFRunLoopSourceRef, ReleaseCFTypeFunctor>
   scoped_CFRunLoopSource;
 
 // CFStringRef
@@ -117,10 +133,17 @@ typedef scoped_token<CFURLRef, ReleaseCFTypeFunctor> scoped_CFURL;
 typedef scoped_token<CFUUIDRef, ReleaseCFTypeFunctor> scoped_CFUUID;
 
 // ComponentInstance
-typedef scoped_token<ComponentInstance, ReleaseComponentFunctor> 
+typedef scoped_token<ComponentInstance, ReleaseComponentFunctor>
             scoped_ComponentInstance;
-            
+
 // AEDesc
 typedef scoped_token<AEDesc, ReleaseAEDescFunctor> scoped_AEDesc;
+
+// NavReplyRecord
+typedef scoped_token<NavReplyRecord*, ReleaseNavReplyRecord>
+  scoped_NavReplyRecord;
+
+// NavDialogRef
+typedef scoped_token<NavDialogRef, ReleaseNavDialogRef> scoped_NavDialogRef;
 
 #endif  // GEARS_BASE_SAFARI_SCOPED_CF_H__

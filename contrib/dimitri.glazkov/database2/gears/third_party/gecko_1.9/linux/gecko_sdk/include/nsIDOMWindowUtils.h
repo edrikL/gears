@@ -24,7 +24,7 @@ class nsIDOMElement; /* forward declaration */
   {0x7a55fc2b, 0xafb3, 0x41c6, \
     { 0x9e, 0x50, 0x3f, 0xee, 0x34, 0x1f, 0xa8, 0x7c }}
 
-class NS_NO_VTABLE nsIDOMWindowUtils : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMWindowUtils : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMWINDOWUTILS_IID)
@@ -47,8 +47,8 @@ class NS_NO_VTABLE nsIDOMWindowUtils : public nsISupports {
    * @see imgIContainer
    */
   /* attribute unsigned short imageAnimationMode; */
-  NS_IMETHOD GetImageAnimationMode(PRUint16 *aImageAnimationMode) = 0;
-  NS_IMETHOD SetImageAnimationMode(PRUint16 aImageAnimationMode) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetImageAnimationMode(PRUint16 *aImageAnimationMode) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetImageAnimationMode(PRUint16 aImageAnimationMode) = 0;
 
   /**
    * Whether the charset of the window's current document has been forced by
@@ -56,7 +56,7 @@ class NS_NO_VTABLE nsIDOMWindowUtils : public nsISupports {
    * Cannot be accessed from unprivileged context (not content-accessible)
    */
   /* readonly attribute boolean docCharsetIsForced; */
-  NS_IMETHOD GetDocCharsetIsForced(PRBool *aDocCharsetIsForced) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDocCharsetIsForced(PRBool *aDocCharsetIsForced) = 0;
 
   /**
    * Function to get metadata associated with the window's current document
@@ -67,13 +67,13 @@ class NS_NO_VTABLE nsIDOMWindowUtils : public nsISupports {
    * privileges.
    */
   /* AString getDocumentMetadata (in AString aName); */
-  NS_IMETHOD GetDocumentMetadata(const nsAString & aName, nsAString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDocumentMetadata(const nsAString & aName, nsAString & _retval) = 0;
 
   /**
    * Force an immediate redraw of this window.
    */
   /* void redraw (); */
-  NS_IMETHOD Redraw(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Redraw(void) = 0;
 
   /** Synthesize a mouse event for a window. The event types supported
    *  are: 
@@ -102,7 +102,7 @@ class NS_NO_VTABLE nsIDOMWindowUtils : public nsISupports {
    * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
    */
   /* void sendMouseEvent (in AString aType, in long aX, in long aY, in long aButton, in long aClickCount, in long aModifiers); */
-  NS_IMETHOD SendMouseEvent(const nsAString & aType, PRInt32 aX, PRInt32 aY, PRInt32 aButton, PRInt32 aClickCount, PRInt32 aModifiers) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SendMouseEvent(const nsAString & aType, PRInt32 aX, PRInt32 aY, PRInt32 aButton, PRInt32 aClickCount, PRInt32 aModifiers) = 0;
 
   /**
    * Synthesize a key event to the window. The event types supported are:
@@ -120,7 +120,7 @@ class NS_NO_VTABLE nsIDOMWindowUtils : public nsISupports {
    * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
    */
   /* void sendKeyEvent (in AString aType, in long aKeyCode, in long aCharCode, in long aModifiers); */
-  NS_IMETHOD SendKeyEvent(const nsAString & aType, PRInt32 aKeyCode, PRInt32 aCharCode, PRInt32 aModifiers) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SendKeyEvent(const nsAString & aType, PRInt32 aKeyCode, PRInt32 aCharCode, PRInt32 aModifiers) = 0;
 
   /**
    * Focus the element aElement. The element should be in the same document
@@ -134,7 +134,7 @@ class NS_NO_VTABLE nsIDOMWindowUtils : public nsISupports {
    * @param aElement the element to focus
    */
   /* void focus (in nsIDOMElement aElement); */
-  NS_IMETHOD Focus(nsIDOMElement *aElement) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Focus(nsIDOMElement *aElement) = 0;
 
   /**
    * Force a garbage collection. This will run the cycle-collector twice to
@@ -144,7 +144,7 @@ class NS_NO_VTABLE nsIDOMWindowUtils : public nsISupports {
    * privileges in non-debug builds. Available to all callers in debug builds.
    */
   /* void garbageCollect (); */
-  NS_IMETHOD GarbageCollect(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GarbageCollect(void) = 0;
 
 };
 
@@ -152,39 +152,39 @@ class NS_NO_VTABLE nsIDOMWindowUtils : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMWINDOWUTILS \
-  NS_IMETHOD GetImageAnimationMode(PRUint16 *aImageAnimationMode); \
-  NS_IMETHOD SetImageAnimationMode(PRUint16 aImageAnimationMode); \
-  NS_IMETHOD GetDocCharsetIsForced(PRBool *aDocCharsetIsForced); \
-  NS_IMETHOD GetDocumentMetadata(const nsAString & aName, nsAString & _retval); \
-  NS_IMETHOD Redraw(void); \
-  NS_IMETHOD SendMouseEvent(const nsAString & aType, PRInt32 aX, PRInt32 aY, PRInt32 aButton, PRInt32 aClickCount, PRInt32 aModifiers); \
-  NS_IMETHOD SendKeyEvent(const nsAString & aType, PRInt32 aKeyCode, PRInt32 aCharCode, PRInt32 aModifiers); \
-  NS_IMETHOD Focus(nsIDOMElement *aElement); \
-  NS_IMETHOD GarbageCollect(void); 
+  NS_SCRIPTABLE NS_IMETHOD GetImageAnimationMode(PRUint16 *aImageAnimationMode); \
+  NS_SCRIPTABLE NS_IMETHOD SetImageAnimationMode(PRUint16 aImageAnimationMode); \
+  NS_SCRIPTABLE NS_IMETHOD GetDocCharsetIsForced(PRBool *aDocCharsetIsForced); \
+  NS_SCRIPTABLE NS_IMETHOD GetDocumentMetadata(const nsAString & aName, nsAString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD Redraw(void); \
+  NS_SCRIPTABLE NS_IMETHOD SendMouseEvent(const nsAString & aType, PRInt32 aX, PRInt32 aY, PRInt32 aButton, PRInt32 aClickCount, PRInt32 aModifiers); \
+  NS_SCRIPTABLE NS_IMETHOD SendKeyEvent(const nsAString & aType, PRInt32 aKeyCode, PRInt32 aCharCode, PRInt32 aModifiers); \
+  NS_SCRIPTABLE NS_IMETHOD Focus(nsIDOMElement *aElement); \
+  NS_SCRIPTABLE NS_IMETHOD GarbageCollect(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMWINDOWUTILS(_to) \
-  NS_IMETHOD GetImageAnimationMode(PRUint16 *aImageAnimationMode) { return _to GetImageAnimationMode(aImageAnimationMode); } \
-  NS_IMETHOD SetImageAnimationMode(PRUint16 aImageAnimationMode) { return _to SetImageAnimationMode(aImageAnimationMode); } \
-  NS_IMETHOD GetDocCharsetIsForced(PRBool *aDocCharsetIsForced) { return _to GetDocCharsetIsForced(aDocCharsetIsForced); } \
-  NS_IMETHOD GetDocumentMetadata(const nsAString & aName, nsAString & _retval) { return _to GetDocumentMetadata(aName, _retval); } \
-  NS_IMETHOD Redraw(void) { return _to Redraw(); } \
-  NS_IMETHOD SendMouseEvent(const nsAString & aType, PRInt32 aX, PRInt32 aY, PRInt32 aButton, PRInt32 aClickCount, PRInt32 aModifiers) { return _to SendMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers); } \
-  NS_IMETHOD SendKeyEvent(const nsAString & aType, PRInt32 aKeyCode, PRInt32 aCharCode, PRInt32 aModifiers) { return _to SendKeyEvent(aType, aKeyCode, aCharCode, aModifiers); } \
-  NS_IMETHOD Focus(nsIDOMElement *aElement) { return _to Focus(aElement); } \
-  NS_IMETHOD GarbageCollect(void) { return _to GarbageCollect(); } 
+  NS_SCRIPTABLE NS_IMETHOD GetImageAnimationMode(PRUint16 *aImageAnimationMode) { return _to GetImageAnimationMode(aImageAnimationMode); } \
+  NS_SCRIPTABLE NS_IMETHOD SetImageAnimationMode(PRUint16 aImageAnimationMode) { return _to SetImageAnimationMode(aImageAnimationMode); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDocCharsetIsForced(PRBool *aDocCharsetIsForced) { return _to GetDocCharsetIsForced(aDocCharsetIsForced); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDocumentMetadata(const nsAString & aName, nsAString & _retval) { return _to GetDocumentMetadata(aName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Redraw(void) { return _to Redraw(); } \
+  NS_SCRIPTABLE NS_IMETHOD SendMouseEvent(const nsAString & aType, PRInt32 aX, PRInt32 aY, PRInt32 aButton, PRInt32 aClickCount, PRInt32 aModifiers) { return _to SendMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers); } \
+  NS_SCRIPTABLE NS_IMETHOD SendKeyEvent(const nsAString & aType, PRInt32 aKeyCode, PRInt32 aCharCode, PRInt32 aModifiers) { return _to SendKeyEvent(aType, aKeyCode, aCharCode, aModifiers); } \
+  NS_SCRIPTABLE NS_IMETHOD Focus(nsIDOMElement *aElement) { return _to Focus(aElement); } \
+  NS_SCRIPTABLE NS_IMETHOD GarbageCollect(void) { return _to GarbageCollect(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMWINDOWUTILS(_to) \
-  NS_IMETHOD GetImageAnimationMode(PRUint16 *aImageAnimationMode) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetImageAnimationMode(aImageAnimationMode); } \
-  NS_IMETHOD SetImageAnimationMode(PRUint16 aImageAnimationMode) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetImageAnimationMode(aImageAnimationMode); } \
-  NS_IMETHOD GetDocCharsetIsForced(PRBool *aDocCharsetIsForced) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocCharsetIsForced(aDocCharsetIsForced); } \
-  NS_IMETHOD GetDocumentMetadata(const nsAString & aName, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocumentMetadata(aName, _retval); } \
-  NS_IMETHOD Redraw(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Redraw(); } \
-  NS_IMETHOD SendMouseEvent(const nsAString & aType, PRInt32 aX, PRInt32 aY, PRInt32 aButton, PRInt32 aClickCount, PRInt32 aModifiers) { return !_to ? NS_ERROR_NULL_POINTER : _to->SendMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers); } \
-  NS_IMETHOD SendKeyEvent(const nsAString & aType, PRInt32 aKeyCode, PRInt32 aCharCode, PRInt32 aModifiers) { return !_to ? NS_ERROR_NULL_POINTER : _to->SendKeyEvent(aType, aKeyCode, aCharCode, aModifiers); } \
-  NS_IMETHOD Focus(nsIDOMElement *aElement) { return !_to ? NS_ERROR_NULL_POINTER : _to->Focus(aElement); } \
-  NS_IMETHOD GarbageCollect(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->GarbageCollect(); } 
+  NS_SCRIPTABLE NS_IMETHOD GetImageAnimationMode(PRUint16 *aImageAnimationMode) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetImageAnimationMode(aImageAnimationMode); } \
+  NS_SCRIPTABLE NS_IMETHOD SetImageAnimationMode(PRUint16 aImageAnimationMode) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetImageAnimationMode(aImageAnimationMode); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDocCharsetIsForced(PRBool *aDocCharsetIsForced) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocCharsetIsForced(aDocCharsetIsForced); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDocumentMetadata(const nsAString & aName, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocumentMetadata(aName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Redraw(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Redraw(); } \
+  NS_SCRIPTABLE NS_IMETHOD SendMouseEvent(const nsAString & aType, PRInt32 aX, PRInt32 aY, PRInt32 aButton, PRInt32 aClickCount, PRInt32 aModifiers) { return !_to ? NS_ERROR_NULL_POINTER : _to->SendMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers); } \
+  NS_SCRIPTABLE NS_IMETHOD SendKeyEvent(const nsAString & aType, PRInt32 aKeyCode, PRInt32 aCharCode, PRInt32 aModifiers) { return !_to ? NS_ERROR_NULL_POINTER : _to->SendKeyEvent(aType, aKeyCode, aCharCode, aModifiers); } \
+  NS_SCRIPTABLE NS_IMETHOD Focus(nsIDOMElement *aElement) { return !_to ? NS_ERROR_NULL_POINTER : _to->Focus(aElement); } \
+  NS_SCRIPTABLE NS_IMETHOD GarbageCollect(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->GarbageCollect(); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

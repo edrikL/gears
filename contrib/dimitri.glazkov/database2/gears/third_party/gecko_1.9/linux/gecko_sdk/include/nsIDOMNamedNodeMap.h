@@ -22,7 +22,7 @@
   {0xa6cf907b, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMNamedNodeMap : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMNamedNodeMap : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMNAMEDNODEMAP_IID)
@@ -37,28 +37,28 @@ class NS_NO_VTABLE nsIDOMNamedNodeMap : public nsISupports {
  * @status FROZEN
  */
   /* nsIDOMNode getNamedItem (in DOMString name); */
-  NS_IMETHOD GetNamedItem(const nsAString & name, nsIDOMNode **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNamedItem(const nsAString & name, nsIDOMNode **_retval) = 0;
 
   /* nsIDOMNode setNamedItem (in nsIDOMNode arg)  raises (DOMException); */
-  NS_IMETHOD SetNamedItem(nsIDOMNode *arg, nsIDOMNode **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetNamedItem(nsIDOMNode *arg, nsIDOMNode **_retval) = 0;
 
   /* nsIDOMNode removeNamedItem (in DOMString name)  raises (DOMException); */
-  NS_IMETHOD RemoveNamedItem(const nsAString & name, nsIDOMNode **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveNamedItem(const nsAString & name, nsIDOMNode **_retval) = 0;
 
   /* nsIDOMNode item (in unsigned long index); */
-  NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) = 0;
 
   /* readonly attribute unsigned long length; */
-  NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
 
   /* nsIDOMNode getNamedItemNS (in DOMString namespaceURI, in DOMString localName); */
-  NS_IMETHOD GetNamedItemNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNode **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNamedItemNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNode **_retval) = 0;
 
   /* nsIDOMNode setNamedItemNS (in nsIDOMNode arg)  raises (DOMException); */
-  NS_IMETHOD SetNamedItemNS(nsIDOMNode *arg, nsIDOMNode **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetNamedItemNS(nsIDOMNode *arg, nsIDOMNode **_retval) = 0;
 
   /* nsIDOMNode removeNamedItemNS (in DOMString namespaceURI, in DOMString localName)  raises (DOMException); */
-  NS_IMETHOD RemoveNamedItemNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNode **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveNamedItemNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNode **_retval) = 0;
 
 };
 
@@ -66,36 +66,36 @@ class NS_NO_VTABLE nsIDOMNamedNodeMap : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMNAMEDNODEMAP \
-  NS_IMETHOD GetNamedItem(const nsAString & name, nsIDOMNode **_retval); \
-  NS_IMETHOD SetNamedItem(nsIDOMNode *arg, nsIDOMNode **_retval); \
-  NS_IMETHOD RemoveNamedItem(const nsAString & name, nsIDOMNode **_retval); \
-  NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval); \
-  NS_IMETHOD GetLength(PRUint32 *aLength); \
-  NS_IMETHOD GetNamedItemNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNode **_retval); \
-  NS_IMETHOD SetNamedItemNS(nsIDOMNode *arg, nsIDOMNode **_retval); \
-  NS_IMETHOD RemoveNamedItemNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNode **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetNamedItem(const nsAString & name, nsIDOMNode **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetNamedItem(nsIDOMNode *arg, nsIDOMNode **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveNamedItem(const nsAString & name, nsIDOMNode **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength); \
+  NS_SCRIPTABLE NS_IMETHOD GetNamedItemNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNode **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetNamedItemNS(nsIDOMNode *arg, nsIDOMNode **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveNamedItemNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNode **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMNAMEDNODEMAP(_to) \
-  NS_IMETHOD GetNamedItem(const nsAString & name, nsIDOMNode **_retval) { return _to GetNamedItem(name, _retval); } \
-  NS_IMETHOD SetNamedItem(nsIDOMNode *arg, nsIDOMNode **_retval) { return _to SetNamedItem(arg, _retval); } \
-  NS_IMETHOD RemoveNamedItem(const nsAString & name, nsIDOMNode **_retval) { return _to RemoveNamedItem(name, _retval); } \
-  NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) { return _to Item(index, _retval); } \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
-  NS_IMETHOD GetNamedItemNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNode **_retval) { return _to GetNamedItemNS(namespaceURI, localName, _retval); } \
-  NS_IMETHOD SetNamedItemNS(nsIDOMNode *arg, nsIDOMNode **_retval) { return _to SetNamedItemNS(arg, _retval); } \
-  NS_IMETHOD RemoveNamedItemNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNode **_retval) { return _to RemoveNamedItemNS(namespaceURI, localName, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetNamedItem(const nsAString & name, nsIDOMNode **_retval) { return _to GetNamedItem(name, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetNamedItem(nsIDOMNode *arg, nsIDOMNode **_retval) { return _to SetNamedItem(arg, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveNamedItem(const nsAString & name, nsIDOMNode **_retval) { return _to RemoveNamedItem(name, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) { return _to Item(index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNamedItemNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNode **_retval) { return _to GetNamedItemNS(namespaceURI, localName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetNamedItemNS(nsIDOMNode *arg, nsIDOMNode **_retval) { return _to SetNamedItemNS(arg, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveNamedItemNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNode **_retval) { return _to RemoveNamedItemNS(namespaceURI, localName, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMNAMEDNODEMAP(_to) \
-  NS_IMETHOD GetNamedItem(const nsAString & name, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNamedItem(name, _retval); } \
-  NS_IMETHOD SetNamedItem(nsIDOMNode *arg, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetNamedItem(arg, _retval); } \
-  NS_IMETHOD RemoveNamedItem(const nsAString & name, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveNamedItem(name, _retval); } \
-  NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Item(index, _retval); } \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
-  NS_IMETHOD GetNamedItemNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNamedItemNS(namespaceURI, localName, _retval); } \
-  NS_IMETHOD SetNamedItemNS(nsIDOMNode *arg, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetNamedItemNS(arg, _retval); } \
-  NS_IMETHOD RemoveNamedItemNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveNamedItemNS(namespaceURI, localName, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetNamedItem(const nsAString & name, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNamedItem(name, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetNamedItem(nsIDOMNode *arg, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetNamedItem(arg, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveNamedItem(const nsAString & name, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveNamedItem(name, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Item(PRUint32 index, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Item(index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNamedItemNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNamedItemNS(namespaceURI, localName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetNamedItemNS(nsIDOMNode *arg, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetNamedItemNS(arg, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveNamedItemNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveNamedItemNS(namespaceURI, localName, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

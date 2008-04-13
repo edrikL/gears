@@ -22,7 +22,7 @@
   {0xa6cf9075, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMDocument : public nsIDOMNode {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMDocument : public nsIDOMNode {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMDOCUMENT_IID)
@@ -42,55 +42,55 @@ class NS_NO_VTABLE nsIDOMDocument : public nsIDOMNode {
  * @status FROZEN
  */
   /* readonly attribute nsIDOMDocumentType doctype; */
-  NS_IMETHOD GetDoctype(nsIDOMDocumentType * *aDoctype) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDoctype(nsIDOMDocumentType * *aDoctype) = 0;
 
   /* readonly attribute nsIDOMDOMImplementation implementation; */
-  NS_IMETHOD GetImplementation(nsIDOMDOMImplementation * *aImplementation) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetImplementation(nsIDOMDOMImplementation * *aImplementation) = 0;
 
   /* readonly attribute nsIDOMElement documentElement; */
-  NS_IMETHOD GetDocumentElement(nsIDOMElement * *aDocumentElement) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDocumentElement(nsIDOMElement * *aDocumentElement) = 0;
 
   /* nsIDOMElement createElement (in DOMString tagName)  raises (DOMException); */
-  NS_IMETHOD CreateElement(const nsAString & tagName, nsIDOMElement **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateElement(const nsAString & tagName, nsIDOMElement **_retval) = 0;
 
   /* nsIDOMDocumentFragment createDocumentFragment (); */
-  NS_IMETHOD CreateDocumentFragment(nsIDOMDocumentFragment **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateDocumentFragment(nsIDOMDocumentFragment **_retval) = 0;
 
   /* nsIDOMText createTextNode (in DOMString data); */
-  NS_IMETHOD CreateTextNode(const nsAString & data, nsIDOMText **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateTextNode(const nsAString & data, nsIDOMText **_retval) = 0;
 
   /* nsIDOMComment createComment (in DOMString data); */
-  NS_IMETHOD CreateComment(const nsAString & data, nsIDOMComment **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateComment(const nsAString & data, nsIDOMComment **_retval) = 0;
 
   /* nsIDOMCDATASection createCDATASection (in DOMString data)  raises (DOMException); */
-  NS_IMETHOD CreateCDATASection(const nsAString & data, nsIDOMCDATASection **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateCDATASection(const nsAString & data, nsIDOMCDATASection **_retval) = 0;
 
   /* nsIDOMProcessingInstruction createProcessingInstruction (in DOMString target, in DOMString data)  raises (DOMException); */
-  NS_IMETHOD CreateProcessingInstruction(const nsAString & target, const nsAString & data, nsIDOMProcessingInstruction **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateProcessingInstruction(const nsAString & target, const nsAString & data, nsIDOMProcessingInstruction **_retval) = 0;
 
   /* nsIDOMAttr createAttribute (in DOMString name)  raises (DOMException); */
-  NS_IMETHOD CreateAttribute(const nsAString & name, nsIDOMAttr **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateAttribute(const nsAString & name, nsIDOMAttr **_retval) = 0;
 
   /* nsIDOMEntityReference createEntityReference (in DOMString name)  raises (DOMException); */
-  NS_IMETHOD CreateEntityReference(const nsAString & name, nsIDOMEntityReference **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateEntityReference(const nsAString & name, nsIDOMEntityReference **_retval) = 0;
 
   /* nsIDOMNodeList getElementsByTagName (in DOMString tagname); */
-  NS_IMETHOD GetElementsByTagName(const nsAString & tagname, nsIDOMNodeList **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetElementsByTagName(const nsAString & tagname, nsIDOMNodeList **_retval) = 0;
 
   /* nsIDOMNode importNode (in nsIDOMNode importedNode, in boolean deep)  raises (DOMException); */
-  NS_IMETHOD ImportNode(nsIDOMNode *importedNode, PRBool deep, nsIDOMNode **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ImportNode(nsIDOMNode *importedNode, PRBool deep, nsIDOMNode **_retval) = 0;
 
   /* nsIDOMElement createElementNS (in DOMString namespaceURI, in DOMString qualifiedName)  raises (DOMException); */
-  NS_IMETHOD CreateElementNS(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMElement **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateElementNS(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMElement **_retval) = 0;
 
   /* nsIDOMAttr createAttributeNS (in DOMString namespaceURI, in DOMString qualifiedName)  raises (DOMException); */
-  NS_IMETHOD CreateAttributeNS(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMAttr **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateAttributeNS(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMAttr **_retval) = 0;
 
   /* nsIDOMNodeList getElementsByTagNameNS (in DOMString namespaceURI, in DOMString localName); */
-  NS_IMETHOD GetElementsByTagNameNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNodeList **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetElementsByTagNameNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNodeList **_retval) = 0;
 
   /* nsIDOMElement getElementById (in DOMString elementId); */
-  NS_IMETHOD GetElementById(const nsAString & elementId, nsIDOMElement **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetElementById(const nsAString & elementId, nsIDOMElement **_retval) = 0;
 
 };
 
@@ -98,63 +98,63 @@ class NS_NO_VTABLE nsIDOMDocument : public nsIDOMNode {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMDOCUMENT \
-  NS_IMETHOD GetDoctype(nsIDOMDocumentType * *aDoctype); \
-  NS_IMETHOD GetImplementation(nsIDOMDOMImplementation * *aImplementation); \
-  NS_IMETHOD GetDocumentElement(nsIDOMElement * *aDocumentElement); \
-  NS_IMETHOD CreateElement(const nsAString & tagName, nsIDOMElement **_retval); \
-  NS_IMETHOD CreateDocumentFragment(nsIDOMDocumentFragment **_retval); \
-  NS_IMETHOD CreateTextNode(const nsAString & data, nsIDOMText **_retval); \
-  NS_IMETHOD CreateComment(const nsAString & data, nsIDOMComment **_retval); \
-  NS_IMETHOD CreateCDATASection(const nsAString & data, nsIDOMCDATASection **_retval); \
-  NS_IMETHOD CreateProcessingInstruction(const nsAString & target, const nsAString & data, nsIDOMProcessingInstruction **_retval); \
-  NS_IMETHOD CreateAttribute(const nsAString & name, nsIDOMAttr **_retval); \
-  NS_IMETHOD CreateEntityReference(const nsAString & name, nsIDOMEntityReference **_retval); \
-  NS_IMETHOD GetElementsByTagName(const nsAString & tagname, nsIDOMNodeList **_retval); \
-  NS_IMETHOD ImportNode(nsIDOMNode *importedNode, PRBool deep, nsIDOMNode **_retval); \
-  NS_IMETHOD CreateElementNS(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMElement **_retval); \
-  NS_IMETHOD CreateAttributeNS(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMAttr **_retval); \
-  NS_IMETHOD GetElementsByTagNameNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNodeList **_retval); \
-  NS_IMETHOD GetElementById(const nsAString & elementId, nsIDOMElement **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetDoctype(nsIDOMDocumentType * *aDoctype); \
+  NS_SCRIPTABLE NS_IMETHOD GetImplementation(nsIDOMDOMImplementation * *aImplementation); \
+  NS_SCRIPTABLE NS_IMETHOD GetDocumentElement(nsIDOMElement * *aDocumentElement); \
+  NS_SCRIPTABLE NS_IMETHOD CreateElement(const nsAString & tagName, nsIDOMElement **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CreateDocumentFragment(nsIDOMDocumentFragment **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CreateTextNode(const nsAString & data, nsIDOMText **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CreateComment(const nsAString & data, nsIDOMComment **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CreateCDATASection(const nsAString & data, nsIDOMCDATASection **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CreateProcessingInstruction(const nsAString & target, const nsAString & data, nsIDOMProcessingInstruction **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CreateAttribute(const nsAString & name, nsIDOMAttr **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CreateEntityReference(const nsAString & name, nsIDOMEntityReference **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetElementsByTagName(const nsAString & tagname, nsIDOMNodeList **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD ImportNode(nsIDOMNode *importedNode, PRBool deep, nsIDOMNode **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CreateElementNS(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMElement **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CreateAttributeNS(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMAttr **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetElementsByTagNameNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNodeList **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetElementById(const nsAString & elementId, nsIDOMElement **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMDOCUMENT(_to) \
-  NS_IMETHOD GetDoctype(nsIDOMDocumentType * *aDoctype) { return _to GetDoctype(aDoctype); } \
-  NS_IMETHOD GetImplementation(nsIDOMDOMImplementation * *aImplementation) { return _to GetImplementation(aImplementation); } \
-  NS_IMETHOD GetDocumentElement(nsIDOMElement * *aDocumentElement) { return _to GetDocumentElement(aDocumentElement); } \
-  NS_IMETHOD CreateElement(const nsAString & tagName, nsIDOMElement **_retval) { return _to CreateElement(tagName, _retval); } \
-  NS_IMETHOD CreateDocumentFragment(nsIDOMDocumentFragment **_retval) { return _to CreateDocumentFragment(_retval); } \
-  NS_IMETHOD CreateTextNode(const nsAString & data, nsIDOMText **_retval) { return _to CreateTextNode(data, _retval); } \
-  NS_IMETHOD CreateComment(const nsAString & data, nsIDOMComment **_retval) { return _to CreateComment(data, _retval); } \
-  NS_IMETHOD CreateCDATASection(const nsAString & data, nsIDOMCDATASection **_retval) { return _to CreateCDATASection(data, _retval); } \
-  NS_IMETHOD CreateProcessingInstruction(const nsAString & target, const nsAString & data, nsIDOMProcessingInstruction **_retval) { return _to CreateProcessingInstruction(target, data, _retval); } \
-  NS_IMETHOD CreateAttribute(const nsAString & name, nsIDOMAttr **_retval) { return _to CreateAttribute(name, _retval); } \
-  NS_IMETHOD CreateEntityReference(const nsAString & name, nsIDOMEntityReference **_retval) { return _to CreateEntityReference(name, _retval); } \
-  NS_IMETHOD GetElementsByTagName(const nsAString & tagname, nsIDOMNodeList **_retval) { return _to GetElementsByTagName(tagname, _retval); } \
-  NS_IMETHOD ImportNode(nsIDOMNode *importedNode, PRBool deep, nsIDOMNode **_retval) { return _to ImportNode(importedNode, deep, _retval); } \
-  NS_IMETHOD CreateElementNS(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMElement **_retval) { return _to CreateElementNS(namespaceURI, qualifiedName, _retval); } \
-  NS_IMETHOD CreateAttributeNS(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMAttr **_retval) { return _to CreateAttributeNS(namespaceURI, qualifiedName, _retval); } \
-  NS_IMETHOD GetElementsByTagNameNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNodeList **_retval) { return _to GetElementsByTagNameNS(namespaceURI, localName, _retval); } \
-  NS_IMETHOD GetElementById(const nsAString & elementId, nsIDOMElement **_retval) { return _to GetElementById(elementId, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetDoctype(nsIDOMDocumentType * *aDoctype) { return _to GetDoctype(aDoctype); } \
+  NS_SCRIPTABLE NS_IMETHOD GetImplementation(nsIDOMDOMImplementation * *aImplementation) { return _to GetImplementation(aImplementation); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDocumentElement(nsIDOMElement * *aDocumentElement) { return _to GetDocumentElement(aDocumentElement); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateElement(const nsAString & tagName, nsIDOMElement **_retval) { return _to CreateElement(tagName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateDocumentFragment(nsIDOMDocumentFragment **_retval) { return _to CreateDocumentFragment(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateTextNode(const nsAString & data, nsIDOMText **_retval) { return _to CreateTextNode(data, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateComment(const nsAString & data, nsIDOMComment **_retval) { return _to CreateComment(data, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateCDATASection(const nsAString & data, nsIDOMCDATASection **_retval) { return _to CreateCDATASection(data, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateProcessingInstruction(const nsAString & target, const nsAString & data, nsIDOMProcessingInstruction **_retval) { return _to CreateProcessingInstruction(target, data, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateAttribute(const nsAString & name, nsIDOMAttr **_retval) { return _to CreateAttribute(name, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateEntityReference(const nsAString & name, nsIDOMEntityReference **_retval) { return _to CreateEntityReference(name, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetElementsByTagName(const nsAString & tagname, nsIDOMNodeList **_retval) { return _to GetElementsByTagName(tagname, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ImportNode(nsIDOMNode *importedNode, PRBool deep, nsIDOMNode **_retval) { return _to ImportNode(importedNode, deep, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateElementNS(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMElement **_retval) { return _to CreateElementNS(namespaceURI, qualifiedName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateAttributeNS(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMAttr **_retval) { return _to CreateAttributeNS(namespaceURI, qualifiedName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetElementsByTagNameNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNodeList **_retval) { return _to GetElementsByTagNameNS(namespaceURI, localName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetElementById(const nsAString & elementId, nsIDOMElement **_retval) { return _to GetElementById(elementId, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMDOCUMENT(_to) \
-  NS_IMETHOD GetDoctype(nsIDOMDocumentType * *aDoctype) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDoctype(aDoctype); } \
-  NS_IMETHOD GetImplementation(nsIDOMDOMImplementation * *aImplementation) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetImplementation(aImplementation); } \
-  NS_IMETHOD GetDocumentElement(nsIDOMElement * *aDocumentElement) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocumentElement(aDocumentElement); } \
-  NS_IMETHOD CreateElement(const nsAString & tagName, nsIDOMElement **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateElement(tagName, _retval); } \
-  NS_IMETHOD CreateDocumentFragment(nsIDOMDocumentFragment **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateDocumentFragment(_retval); } \
-  NS_IMETHOD CreateTextNode(const nsAString & data, nsIDOMText **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateTextNode(data, _retval); } \
-  NS_IMETHOD CreateComment(const nsAString & data, nsIDOMComment **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateComment(data, _retval); } \
-  NS_IMETHOD CreateCDATASection(const nsAString & data, nsIDOMCDATASection **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateCDATASection(data, _retval); } \
-  NS_IMETHOD CreateProcessingInstruction(const nsAString & target, const nsAString & data, nsIDOMProcessingInstruction **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateProcessingInstruction(target, data, _retval); } \
-  NS_IMETHOD CreateAttribute(const nsAString & name, nsIDOMAttr **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateAttribute(name, _retval); } \
-  NS_IMETHOD CreateEntityReference(const nsAString & name, nsIDOMEntityReference **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateEntityReference(name, _retval); } \
-  NS_IMETHOD GetElementsByTagName(const nsAString & tagname, nsIDOMNodeList **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetElementsByTagName(tagname, _retval); } \
-  NS_IMETHOD ImportNode(nsIDOMNode *importedNode, PRBool deep, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ImportNode(importedNode, deep, _retval); } \
-  NS_IMETHOD CreateElementNS(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMElement **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateElementNS(namespaceURI, qualifiedName, _retval); } \
-  NS_IMETHOD CreateAttributeNS(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMAttr **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateAttributeNS(namespaceURI, qualifiedName, _retval); } \
-  NS_IMETHOD GetElementsByTagNameNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNodeList **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetElementsByTagNameNS(namespaceURI, localName, _retval); } \
-  NS_IMETHOD GetElementById(const nsAString & elementId, nsIDOMElement **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetElementById(elementId, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetDoctype(nsIDOMDocumentType * *aDoctype) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDoctype(aDoctype); } \
+  NS_SCRIPTABLE NS_IMETHOD GetImplementation(nsIDOMDOMImplementation * *aImplementation) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetImplementation(aImplementation); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDocumentElement(nsIDOMElement * *aDocumentElement) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDocumentElement(aDocumentElement); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateElement(const nsAString & tagName, nsIDOMElement **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateElement(tagName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateDocumentFragment(nsIDOMDocumentFragment **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateDocumentFragment(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateTextNode(const nsAString & data, nsIDOMText **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateTextNode(data, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateComment(const nsAString & data, nsIDOMComment **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateComment(data, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateCDATASection(const nsAString & data, nsIDOMCDATASection **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateCDATASection(data, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateProcessingInstruction(const nsAString & target, const nsAString & data, nsIDOMProcessingInstruction **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateProcessingInstruction(target, data, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateAttribute(const nsAString & name, nsIDOMAttr **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateAttribute(name, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateEntityReference(const nsAString & name, nsIDOMEntityReference **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateEntityReference(name, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetElementsByTagName(const nsAString & tagname, nsIDOMNodeList **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetElementsByTagName(tagname, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ImportNode(nsIDOMNode *importedNode, PRBool deep, nsIDOMNode **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ImportNode(importedNode, deep, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateElementNS(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMElement **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateElementNS(namespaceURI, qualifiedName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateAttributeNS(const nsAString & namespaceURI, const nsAString & qualifiedName, nsIDOMAttr **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateAttributeNS(namespaceURI, qualifiedName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetElementsByTagNameNS(const nsAString & namespaceURI, const nsAString & localName, nsIDOMNodeList **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetElementsByTagNameNS(namespaceURI, localName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetElementById(const nsAString & elementId, nsIDOMElement **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetElementById(elementId, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

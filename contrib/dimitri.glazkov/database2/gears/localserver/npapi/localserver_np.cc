@@ -70,8 +70,14 @@ void GearsLocalServer::CanServeLocally(JsCallContext *context) {
   }
 
   bool can = LocalServer::CanServeLocally(full_url.c_str());
-  LOG16((L"LocalServer::CanServeLocally( %s ) %s\n",
-         url.c_str(), can ? STRING16(L"TRUE") : STRING16(L"FALSE")));
+// TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
+#ifdef DEBUG
+  std::string url_ascii;
+  String16ToUTF8(url.c_str(), url.length(), &url_ascii);
+  LOG(("LocalServer::CanServeLocally( %s ) %s\n",
+       url_ascii.c_str(), can ? "TRUE" : "FALSE"));
+#endif
+
   context->SetReturnValue(JSPARAM_BOOL, &can);
 }
 
@@ -91,12 +97,19 @@ void GearsLocalServer::CreateManagedStore(JsCallContext *context) {
     return;
   }
 
-  LOG16((L"LocalServer::CreateManagedStore( %s, %s )\n",
-         name.c_str(), required_cookie.c_str()));
+// TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
+#ifdef DEBUG
+  std::string name_ascii;
+  String16ToUTF8(name.c_str(), name.length(), &name_ascii);
+  std::string required_cookie_ascii;
+  String16ToUTF8(required_cookie.c_str(), required_cookie.length(), 
+                 &required_cookie_ascii);
+  LOG(("LocalServer::CreateManagedStore( %s, %s )\n",
+         name_ascii.c_str(), required_cookie_ascii.c_str()));
+#endif
 
-  GComPtr<GearsManagedResourceStore> store(
-        CreateModule<GearsManagedResourceStore>(GetJsRunner()));
-  if (!store.get())
+  scoped_refptr<GearsManagedResourceStore> store;
+  if (!CreateModule<GearsManagedResourceStore>(GetJsRunner(), &store))
     return;  // Create function sets an error message.
 
   if (!store->InitBaseFromSibling(this)) {
@@ -111,7 +124,7 @@ void GearsLocalServer::CreateManagedStore(JsCallContext *context) {
     return;
   }
 
-  context->SetReturnValue(JSPARAM_MODULE, store.get());
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, store.get());
 }
 
 //-----------------------------------------------------------------------------
@@ -123,8 +136,16 @@ void GearsLocalServer::OpenManagedStore(JsCallContext *context) {
   if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
-  LOG16((L"LocalServer::OpenManagedStore( %s, %s )\n",
-         name.c_str(), required_cookie.c_str()));
+// TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
+#ifdef DEBUG
+  std::string name_ascii;
+  String16ToUTF8(name.c_str(), name.length(), &name_ascii);
+  std::string required_cookie_ascii;
+  String16ToUTF8(required_cookie.c_str(), required_cookie.length(), 
+                 &required_cookie_ascii);
+  LOG(("LocalServer::OpenManagedStore( %s, %s )\n",
+         name_ascii.c_str(), required_cookie_ascii.c_str()));
+#endif
 
   int64 existing_store_id = WebCacheDB::kInvalidID;
   if (!ManagedResourceStore::ExistsInDB(EnvPageSecurityOrigin(),
@@ -135,9 +156,8 @@ void GearsLocalServer::OpenManagedStore(JsCallContext *context) {
     return;
   }
 
-  GComPtr<GearsManagedResourceStore> store(
-      CreateModule<GearsManagedResourceStore>(GetJsRunner()));
-  if (!store.get())
+  scoped_refptr<GearsManagedResourceStore> store;
+  if (!CreateModule<GearsManagedResourceStore>(GetJsRunner(), &store))
     return;  // Create function sets an error message.
 
   if (!store->InitBaseFromSibling(this)) {
@@ -151,7 +171,7 @@ void GearsLocalServer::OpenManagedStore(JsCallContext *context) {
     return;
   }
 
-  context->SetReturnValue(JSPARAM_MODULE, store.get());
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, store.get());
 }
 
 //-----------------------------------------------------------------------------
@@ -163,8 +183,16 @@ void GearsLocalServer::RemoveManagedStore(JsCallContext *context) {
   if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
-  LOG16((L"LocalServer::RemoveManagedStore( %s, %s )\n",
-         name.c_str(), required_cookie.c_str()));
+// TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
+#ifdef DEBUG
+  std::string name_ascii;
+  String16ToUTF8(name.c_str(), name.length(), &name_ascii);
+  std::string required_cookie_ascii;
+  String16ToUTF8(required_cookie.c_str(), required_cookie.length(), 
+                 &required_cookie_ascii);
+  LOG(("LocalServer::RemoveManagedStore( %s, %s )\n",
+         name_ascii.c_str(), required_cookie_ascii.c_str()));
+#endif
   
   int64 existing_store_id = WebCacheDB::kInvalidID;
   if (!ManagedResourceStore::ExistsInDB(EnvPageSecurityOrigin(),
@@ -204,12 +232,19 @@ void GearsLocalServer::CreateStore(JsCallContext *context) {
     return;
   }
 
-  LOG16((L"LocalServer::CreateStore( %s, %s )\n",
-         name.c_str(), required_cookie.c_str()));
+// TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
+#ifdef DEBUG
+  std::string name_ascii;
+  String16ToUTF8(name.c_str(), name.length(), &name_ascii);
+  std::string required_cookie_ascii;
+  String16ToUTF8(required_cookie.c_str(), required_cookie.length(), 
+                 &required_cookie_ascii);
+  LOG(("LocalServer::CreateStore( %s, %s )\n",
+         name_ascii.c_str(), required_cookie_ascii.c_str()));
+#endif
 
-  GComPtr<GearsResourceStore> store(
-        CreateModule<GearsResourceStore>(GetJsRunner()));
-  if (!store.get())
+  scoped_refptr<GearsResourceStore> store;
+  if (!CreateModule<GearsResourceStore>(GetJsRunner(), &store))
     return;  // Create function sets an error message.
 
   if (!store->InitBaseFromSibling(this)) {
@@ -223,7 +258,7 @@ void GearsLocalServer::CreateStore(JsCallContext *context) {
     return;
   }
 
-  context->SetReturnValue(JSPARAM_MODULE, store.get());
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, store.get());
 }
 
 //-----------------------------------------------------------------------------
@@ -235,8 +270,16 @@ void GearsLocalServer::OpenStore(JsCallContext *context) {
   if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
-  LOG16((L"LocalServer::OpenStore( %s, %s )\n",
-         name.c_str(), required_cookie.c_str()));
+// TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
+#ifdef DEBUG
+  std::string name_ascii;
+  String16ToUTF8(name.c_str(), name.length(), &name_ascii);
+  std::string required_cookie_ascii;
+  String16ToUTF8(required_cookie.c_str(), required_cookie.length(), 
+                 &required_cookie_ascii);
+  LOG(("LocalServer::OpenStore( %s, %s )\n",
+         name_ascii.c_str(), required_cookie_ascii.c_str()));
+#endif
 
   int64 existing_store_id = WebCacheDB::kInvalidID;
   if (!ResourceStore::ExistsInDB(EnvPageSecurityOrigin(),
@@ -247,9 +290,8 @@ void GearsLocalServer::OpenStore(JsCallContext *context) {
     return;
   }
 
-  GComPtr<GearsResourceStore> store(
-        CreateModule<GearsResourceStore>(GetJsRunner()));
-  if (!store.get())
+  scoped_refptr<GearsResourceStore> store;
+  if (!CreateModule<GearsResourceStore>(GetJsRunner(), &store))
     return;  // Create function sets an error message.
 
   if (!store->InitBaseFromSibling(this)) {
@@ -262,7 +304,7 @@ void GearsLocalServer::OpenStore(JsCallContext *context) {
     return;
   }
 
-  context->SetReturnValue(JSPARAM_MODULE, store.get());
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, store.get());
 }
 
 //-----------------------------------------------------------------------------
@@ -274,8 +316,16 @@ void GearsLocalServer::RemoveStore(JsCallContext *context) {
   if (!GetAndCheckParameters(context, &name, &required_cookie))
     return;
 
-  LOG16((L"LocalServer::RemoveStore( %s, %s )\n",
-         name.c_str(), required_cookie.c_str()));
+// TODO(cprince): remove #ifdef and string conversion after refactoring LOG().
+#ifdef DEBUG
+  std::string name_ascii;
+  String16ToUTF8(name.c_str(), name.length(), &name_ascii);
+  std::string required_cookie_ascii;
+  String16ToUTF8(required_cookie.c_str(), required_cookie.length(), 
+                 &required_cookie_ascii);
+  LOG(("LocalServer::RemoveStore( %s, %s )\n",
+         name_ascii.c_str(), required_cookie_ascii.c_str()));
+#endif
 
   int64 existing_store_id = WebCacheDB::kInvalidID;
   if (!ResourceStore::ExistsInDB(EnvPageSecurityOrigin(),

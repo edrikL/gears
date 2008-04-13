@@ -24,7 +24,7 @@ class nsIFactory; /* forward declaration */
   {0xa88e5a60, 0x205a, 0x4bb1, \
     { 0x94, 0xe1, 0x26, 0x28, 0xda, 0xf5, 0x1e, 0xae }}
 
-class NS_NO_VTABLE nsIComponentManager : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIComponentManager : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICOMPONENTMANAGER_IID)
@@ -38,7 +38,7 @@ class NS_NO_VTABLE nsIComponentManager : public nsISupports {
      * @param aClass The classid of the factory that is being requested
      */
   /* void getClassObject (in nsCIDRef aClass, in nsIIDRef aIID, [iid_is (aIID), retval] out nsQIResult result); */
-  NS_IMETHOD GetClassObject(const nsCID & aClass, const nsIID & aIID, void * *result) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetClassObject(const nsCID & aClass, const nsIID & aIID, void * *result) = 0;
 
   /**
      * getClassObjectByContractID
@@ -49,7 +49,7 @@ class NS_NO_VTABLE nsIComponentManager : public nsISupports {
      * @param aClass The classid of the factory that is being requested
      */
   /* void getClassObjectByContractID (in string aContractID, in nsIIDRef aIID, [iid_is (aIID), retval] out nsQIResult result); */
-  NS_IMETHOD GetClassObjectByContractID(const char *aContractID, const nsIID & aIID, void * *result) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetClassObjectByContractID(const char *aContractID, const nsIID & aIID, void * *result) = 0;
 
   /**
      * createInstance
@@ -61,7 +61,7 @@ class NS_NO_VTABLE nsIComponentManager : public nsISupports {
      * @param aIID : IID of interface requested
      */
   /* void createInstance (in nsCIDRef aClass, in nsISupports aDelegate, in nsIIDRef aIID, [iid_is (aIID), retval] out nsQIResult result); */
-  NS_IMETHOD CreateInstance(const nsCID & aClass, nsISupports *aDelegate, const nsIID & aIID, void * *result) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateInstance(const nsCID & aClass, nsISupports *aDelegate, const nsIID & aIID, void * *result) = 0;
 
   /**
      * createInstanceByContractID
@@ -74,7 +74,7 @@ class NS_NO_VTABLE nsIComponentManager : public nsISupports {
      * @param aIID : IID of interface requested
      */
   /* void createInstanceByContractID (in string aContractID, in nsISupports aDelegate, in nsIIDRef aIID, [iid_is (aIID), retval] out nsQIResult result); */
-  NS_IMETHOD CreateInstanceByContractID(const char *aContractID, nsISupports *aDelegate, const nsIID & aIID, void * *result) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateInstanceByContractID(const char *aContractID, nsISupports *aDelegate, const nsIID & aIID, void * *result) = 0;
 
 };
 
@@ -82,24 +82,24 @@ class NS_NO_VTABLE nsIComponentManager : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICOMPONENTMANAGER \
-  NS_IMETHOD GetClassObject(const nsCID & aClass, const nsIID & aIID, void * *result); \
-  NS_IMETHOD GetClassObjectByContractID(const char *aContractID, const nsIID & aIID, void * *result); \
-  NS_IMETHOD CreateInstance(const nsCID & aClass, nsISupports *aDelegate, const nsIID & aIID, void * *result); \
-  NS_IMETHOD CreateInstanceByContractID(const char *aContractID, nsISupports *aDelegate, const nsIID & aIID, void * *result); 
+  NS_SCRIPTABLE NS_IMETHOD GetClassObject(const nsCID & aClass, const nsIID & aIID, void * *result); \
+  NS_SCRIPTABLE NS_IMETHOD GetClassObjectByContractID(const char *aContractID, const nsIID & aIID, void * *result); \
+  NS_SCRIPTABLE NS_IMETHOD CreateInstance(const nsCID & aClass, nsISupports *aDelegate, const nsIID & aIID, void * *result); \
+  NS_SCRIPTABLE NS_IMETHOD CreateInstanceByContractID(const char *aContractID, nsISupports *aDelegate, const nsIID & aIID, void * *result); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICOMPONENTMANAGER(_to) \
-  NS_IMETHOD GetClassObject(const nsCID & aClass, const nsIID & aIID, void * *result) { return _to GetClassObject(aClass, aIID, result); } \
-  NS_IMETHOD GetClassObjectByContractID(const char *aContractID, const nsIID & aIID, void * *result) { return _to GetClassObjectByContractID(aContractID, aIID, result); } \
-  NS_IMETHOD CreateInstance(const nsCID & aClass, nsISupports *aDelegate, const nsIID & aIID, void * *result) { return _to CreateInstance(aClass, aDelegate, aIID, result); } \
-  NS_IMETHOD CreateInstanceByContractID(const char *aContractID, nsISupports *aDelegate, const nsIID & aIID, void * *result) { return _to CreateInstanceByContractID(aContractID, aDelegate, aIID, result); } 
+  NS_SCRIPTABLE NS_IMETHOD GetClassObject(const nsCID & aClass, const nsIID & aIID, void * *result) { return _to GetClassObject(aClass, aIID, result); } \
+  NS_SCRIPTABLE NS_IMETHOD GetClassObjectByContractID(const char *aContractID, const nsIID & aIID, void * *result) { return _to GetClassObjectByContractID(aContractID, aIID, result); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateInstance(const nsCID & aClass, nsISupports *aDelegate, const nsIID & aIID, void * *result) { return _to CreateInstance(aClass, aDelegate, aIID, result); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateInstanceByContractID(const char *aContractID, nsISupports *aDelegate, const nsIID & aIID, void * *result) { return _to CreateInstanceByContractID(aContractID, aDelegate, aIID, result); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICOMPONENTMANAGER(_to) \
-  NS_IMETHOD GetClassObject(const nsCID & aClass, const nsIID & aIID, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClassObject(aClass, aIID, result); } \
-  NS_IMETHOD GetClassObjectByContractID(const char *aContractID, const nsIID & aIID, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClassObjectByContractID(aContractID, aIID, result); } \
-  NS_IMETHOD CreateInstance(const nsCID & aClass, nsISupports *aDelegate, const nsIID & aIID, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateInstance(aClass, aDelegate, aIID, result); } \
-  NS_IMETHOD CreateInstanceByContractID(const char *aContractID, nsISupports *aDelegate, const nsIID & aIID, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateInstanceByContractID(aContractID, aDelegate, aIID, result); } 
+  NS_SCRIPTABLE NS_IMETHOD GetClassObject(const nsCID & aClass, const nsIID & aIID, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClassObject(aClass, aIID, result); } \
+  NS_SCRIPTABLE NS_IMETHOD GetClassObjectByContractID(const char *aContractID, const nsIID & aIID, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClassObjectByContractID(aContractID, aIID, result); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateInstance(const nsCID & aClass, nsISupports *aDelegate, const nsIID & aIID, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateInstance(aClass, aDelegate, aIID, result); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateInstanceByContractID(const char *aContractID, nsISupports *aDelegate, const nsIID & aIID, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateInstanceByContractID(aContractID, aDelegate, aIID, result); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

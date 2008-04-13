@@ -206,7 +206,7 @@ void GearsHttpRequest::Send(JsCallContext *context) {
   if (context->is_exception_set())
     return;
 
-  HttpRequest *request_being_sent = request_;
+  scoped_refptr<HttpRequest> request_being_sent = request_;
 
   bool ok = false;
   if (!post_data.empty()) {
@@ -302,22 +302,17 @@ void GearsHttpRequest::SetOnReadyStateChange(JsCallContext *context) {
   // Get & sanitize parameters.
   JsRootedCallback *function = NULL;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &function },
+    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &function },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   scoped_ptr<JsRootedCallback> scoped_function(function);
   
   if (context->is_exception_set())
     return;
-  
-  // Transfer ownership of callback to ourselves.
-  if (JsTokenIsNullOrUndefined(function->token())) {
-    onreadystatechangehandler_.release();
-  } else {
-    // release onreadystatechangehandler_ at end of scope
-    // and retain contents of scoped_function.
-    onreadystatechangehandler_.swap(scoped_function);
-  }
+
+  // release onreadystatechangehandler_ at end of scope
+  // and retain contents of scoped_function.
+  onreadystatechangehandler_.swap(scoped_function);
 }
 
 void GearsHttpRequest::GetReadyState(JsCallContext *context) {
@@ -393,7 +388,7 @@ void GearsHttpRequest::AbortRequest() {
 
 void GearsHttpRequest::CreateRequest() {
   ReleaseRequest();
-  request_ = HttpRequest::Create();
+  HttpRequest::Create(&request_);
   request_->SetOnReadyStateChange(this);
   request_->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
   request_->SetRedirectBehavior(HttpRequest::FOLLOW_WITHIN_ORIGIN);
@@ -403,7 +398,6 @@ void GearsHttpRequest::CreateRequest() {
 void GearsHttpRequest::ReleaseRequest() {
   if (request_) {
     request_->SetOnReadyStateChange(NULL);
-    request_->ReleaseReference();
     request_ = NULL;
   }
 }

@@ -31,19 +31,19 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMUIEvent : public nsIDOMEvent {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMUIEvent : public nsIDOMEvent {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMUIEVENT_IID)
 
   /* readonly attribute nsIDOMAbstractView view; */
-  NS_IMETHOD GetView(nsIDOMAbstractView * *aView) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetView(nsIDOMAbstractView * *aView) = 0;
 
   /* readonly attribute long detail; */
-  NS_IMETHOD GetDetail(PRInt32 *aDetail) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDetail(PRInt32 *aDetail) = 0;
 
   /* void initUIEvent (in DOMString typeArg, in boolean canBubbleArg, in boolean cancelableArg, in nsIDOMAbstractView viewArg, in long detailArg); */
-  NS_IMETHOD InitUIEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, nsIDOMAbstractView *viewArg, PRInt32 detailArg) = 0;
+  NS_SCRIPTABLE NS_IMETHOD InitUIEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, nsIDOMAbstractView *viewArg, PRInt32 detailArg) = 0;
 
 };
 
@@ -51,21 +51,21 @@ class NS_NO_VTABLE nsIDOMUIEvent : public nsIDOMEvent {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMUIEVENT \
-  NS_IMETHOD GetView(nsIDOMAbstractView * *aView); \
-  NS_IMETHOD GetDetail(PRInt32 *aDetail); \
-  NS_IMETHOD InitUIEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, nsIDOMAbstractView *viewArg, PRInt32 detailArg); 
+  NS_SCRIPTABLE NS_IMETHOD GetView(nsIDOMAbstractView * *aView); \
+  NS_SCRIPTABLE NS_IMETHOD GetDetail(PRInt32 *aDetail); \
+  NS_SCRIPTABLE NS_IMETHOD InitUIEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, nsIDOMAbstractView *viewArg, PRInt32 detailArg); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMUIEVENT(_to) \
-  NS_IMETHOD GetView(nsIDOMAbstractView * *aView) { return _to GetView(aView); } \
-  NS_IMETHOD GetDetail(PRInt32 *aDetail) { return _to GetDetail(aDetail); } \
-  NS_IMETHOD InitUIEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, nsIDOMAbstractView *viewArg, PRInt32 detailArg) { return _to InitUIEvent(typeArg, canBubbleArg, cancelableArg, viewArg, detailArg); } 
+  NS_SCRIPTABLE NS_IMETHOD GetView(nsIDOMAbstractView * *aView) { return _to GetView(aView); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDetail(PRInt32 *aDetail) { return _to GetDetail(aDetail); } \
+  NS_SCRIPTABLE NS_IMETHOD InitUIEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, nsIDOMAbstractView *viewArg, PRInt32 detailArg) { return _to InitUIEvent(typeArg, canBubbleArg, cancelableArg, viewArg, detailArg); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMUIEVENT(_to) \
-  NS_IMETHOD GetView(nsIDOMAbstractView * *aView) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetView(aView); } \
-  NS_IMETHOD GetDetail(PRInt32 *aDetail) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDetail(aDetail); } \
-  NS_IMETHOD InitUIEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, nsIDOMAbstractView *viewArg, PRInt32 detailArg) { return !_to ? NS_ERROR_NULL_POINTER : _to->InitUIEvent(typeArg, canBubbleArg, cancelableArg, viewArg, detailArg); } 
+  NS_SCRIPTABLE NS_IMETHOD GetView(nsIDOMAbstractView * *aView) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetView(aView); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDetail(PRInt32 *aDetail) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDetail(aDetail); } \
+  NS_SCRIPTABLE NS_IMETHOD InitUIEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, nsIDOMAbstractView *viewArg, PRInt32 detailArg) { return !_to ? NS_ERROR_NULL_POINTER : _to->InitUIEvent(typeArg, canBubbleArg, cancelableArg, viewArg, detailArg); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

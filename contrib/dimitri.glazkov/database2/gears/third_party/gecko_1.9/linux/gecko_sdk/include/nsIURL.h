@@ -39,7 +39,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIURL : public nsIURI {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIURL : public nsIURI {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IURL_IID)
@@ -55,8 +55,8 @@ class NS_NO_VTABLE nsIURL : public nsIURI {
      * Some characters may be escaped.
      */
   /* attribute AUTF8String filePath; */
-  NS_IMETHOD GetFilePath(nsACString & aFilePath) = 0;
-  NS_IMETHOD SetFilePath(const nsACString & aFilePath) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFilePath(nsACString & aFilePath) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFilePath(const nsACString & aFilePath) = 0;
 
   /**
      * Returns the parameters specified after the ; in the URL. 
@@ -64,8 +64,8 @@ class NS_NO_VTABLE nsIURL : public nsIURI {
      * Some characters may be escaped.
      */
   /* attribute AUTF8String param; */
-  NS_IMETHOD GetParam(nsACString & aParam) = 0;
-  NS_IMETHOD SetParam(const nsACString & aParam) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetParam(nsACString & aParam) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetParam(const nsACString & aParam) = 0;
 
   /**
      * Returns the query portion (the part after the "?") of the URL.
@@ -74,8 +74,8 @@ class NS_NO_VTABLE nsIURL : public nsIURI {
      * Some characters may be escaped.
      */
   /* attribute AUTF8String query; */
-  NS_IMETHOD GetQuery(nsACString & aQuery) = 0;
-  NS_IMETHOD SetQuery(const nsACString & aQuery) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetQuery(nsACString & aQuery) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetQuery(const nsACString & aQuery) = 0;
 
   /**
      * Returns the reference portion (the part after the "#") of the URL.
@@ -84,8 +84,8 @@ class NS_NO_VTABLE nsIURL : public nsIURI {
      * Some characters may be escaped.
      */
   /* attribute AUTF8String ref; */
-  NS_IMETHOD GetRef(nsACString & aRef) = 0;
-  NS_IMETHOD SetRef(const nsACString & aRef) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRef(nsACString & aRef) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetRef(const nsACString & aRef) = 0;
 
   /*************************************************************************
      * The URL filepath is broken down into the following sub-components:
@@ -103,8 +103,8 @@ class NS_NO_VTABLE nsIURL : public nsIURI {
      * Some characters may be escaped.
      */
   /* attribute AUTF8String directory; */
-  NS_IMETHOD GetDirectory(nsACString & aDirectory) = 0;
-  NS_IMETHOD SetDirectory(const nsACString & aDirectory) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDirectory(nsACString & aDirectory) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDirectory(const nsACString & aDirectory) = 0;
 
   /**
      * Returns the file name portion of a URL.  If the URL denotes a path to a
@@ -116,8 +116,8 @@ class NS_NO_VTABLE nsIURL : public nsIURI {
      * Some characters may be escaped.
      */
   /* attribute AUTF8String fileName; */
-  NS_IMETHOD GetFileName(nsACString & aFileName) = 0;
-  NS_IMETHOD SetFileName(const nsACString & aFileName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFileName(nsACString & aFileName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFileName(const nsACString & aFileName) = 0;
 
   /*************************************************************************
      * The URL filename is broken down even further:
@@ -128,8 +128,8 @@ class NS_NO_VTABLE nsIURL : public nsIURI {
      * Some characters may be escaped.
      */
   /* attribute AUTF8String fileBaseName; */
-  NS_IMETHOD GetFileBaseName(nsACString & aFileBaseName) = 0;
-  NS_IMETHOD SetFileBaseName(const nsACString & aFileBaseName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFileBaseName(nsACString & aFileBaseName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFileBaseName(const nsACString & aFileBaseName) = 0;
 
   /**
      * Returns the file extension portion of a filename in a url.  If a file
@@ -138,8 +138,8 @@ class NS_NO_VTABLE nsIURL : public nsIURI {
      * Some characters may be escaped.
      */
   /* attribute AUTF8String fileExtension; */
-  NS_IMETHOD GetFileExtension(nsACString & aFileExtension) = 0;
-  NS_IMETHOD SetFileExtension(const nsACString & aFileExtension) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFileExtension(nsACString & aFileExtension) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFileExtension(const nsACString & aFileExtension) = 0;
 
   /**
      * This method takes a uri and compares the two.  The common uri portion
@@ -163,7 +163,7 @@ class NS_NO_VTABLE nsIURL : public nsIURI {
      * 9) file:///a/b/c.html      file:///d/e/c.html        file:///
      */
   /* AUTF8String getCommonBaseSpec (in nsIURI aURIToCompare); */
-  NS_IMETHOD GetCommonBaseSpec(nsIURI *aURIToCompare, nsACString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCommonBaseSpec(nsIURI *aURIToCompare, nsACString & _retval) = 0;
 
   /**
      * This method takes a uri and returns a substring of this if it can be
@@ -172,7 +172,7 @@ class NS_NO_VTABLE nsIURL : public nsIURI {
      * Filename, query, etc are always returned except when uris are identical.
      */
   /* AUTF8String getRelativeSpec (in nsIURI aURIToCompare); */
-  NS_IMETHOD GetRelativeSpec(nsIURI *aURIToCompare, nsACString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRelativeSpec(nsIURI *aURIToCompare, nsACString & _retval) = 0;
 
 };
 
@@ -180,66 +180,66 @@ class NS_NO_VTABLE nsIURL : public nsIURI {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIURL \
-  NS_IMETHOD GetFilePath(nsACString & aFilePath); \
-  NS_IMETHOD SetFilePath(const nsACString & aFilePath); \
-  NS_IMETHOD GetParam(nsACString & aParam); \
-  NS_IMETHOD SetParam(const nsACString & aParam); \
-  NS_IMETHOD GetQuery(nsACString & aQuery); \
-  NS_IMETHOD SetQuery(const nsACString & aQuery); \
-  NS_IMETHOD GetRef(nsACString & aRef); \
-  NS_IMETHOD SetRef(const nsACString & aRef); \
-  NS_IMETHOD GetDirectory(nsACString & aDirectory); \
-  NS_IMETHOD SetDirectory(const nsACString & aDirectory); \
-  NS_IMETHOD GetFileName(nsACString & aFileName); \
-  NS_IMETHOD SetFileName(const nsACString & aFileName); \
-  NS_IMETHOD GetFileBaseName(nsACString & aFileBaseName); \
-  NS_IMETHOD SetFileBaseName(const nsACString & aFileBaseName); \
-  NS_IMETHOD GetFileExtension(nsACString & aFileExtension); \
-  NS_IMETHOD SetFileExtension(const nsACString & aFileExtension); \
-  NS_IMETHOD GetCommonBaseSpec(nsIURI *aURIToCompare, nsACString & _retval); \
-  NS_IMETHOD GetRelativeSpec(nsIURI *aURIToCompare, nsACString & _retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetFilePath(nsACString & aFilePath); \
+  NS_SCRIPTABLE NS_IMETHOD SetFilePath(const nsACString & aFilePath); \
+  NS_SCRIPTABLE NS_IMETHOD GetParam(nsACString & aParam); \
+  NS_SCRIPTABLE NS_IMETHOD SetParam(const nsACString & aParam); \
+  NS_SCRIPTABLE NS_IMETHOD GetQuery(nsACString & aQuery); \
+  NS_SCRIPTABLE NS_IMETHOD SetQuery(const nsACString & aQuery); \
+  NS_SCRIPTABLE NS_IMETHOD GetRef(nsACString & aRef); \
+  NS_SCRIPTABLE NS_IMETHOD SetRef(const nsACString & aRef); \
+  NS_SCRIPTABLE NS_IMETHOD GetDirectory(nsACString & aDirectory); \
+  NS_SCRIPTABLE NS_IMETHOD SetDirectory(const nsACString & aDirectory); \
+  NS_SCRIPTABLE NS_IMETHOD GetFileName(nsACString & aFileName); \
+  NS_SCRIPTABLE NS_IMETHOD SetFileName(const nsACString & aFileName); \
+  NS_SCRIPTABLE NS_IMETHOD GetFileBaseName(nsACString & aFileBaseName); \
+  NS_SCRIPTABLE NS_IMETHOD SetFileBaseName(const nsACString & aFileBaseName); \
+  NS_SCRIPTABLE NS_IMETHOD GetFileExtension(nsACString & aFileExtension); \
+  NS_SCRIPTABLE NS_IMETHOD SetFileExtension(const nsACString & aFileExtension); \
+  NS_SCRIPTABLE NS_IMETHOD GetCommonBaseSpec(nsIURI *aURIToCompare, nsACString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetRelativeSpec(nsIURI *aURIToCompare, nsACString & _retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIURL(_to) \
-  NS_IMETHOD GetFilePath(nsACString & aFilePath) { return _to GetFilePath(aFilePath); } \
-  NS_IMETHOD SetFilePath(const nsACString & aFilePath) { return _to SetFilePath(aFilePath); } \
-  NS_IMETHOD GetParam(nsACString & aParam) { return _to GetParam(aParam); } \
-  NS_IMETHOD SetParam(const nsACString & aParam) { return _to SetParam(aParam); } \
-  NS_IMETHOD GetQuery(nsACString & aQuery) { return _to GetQuery(aQuery); } \
-  NS_IMETHOD SetQuery(const nsACString & aQuery) { return _to SetQuery(aQuery); } \
-  NS_IMETHOD GetRef(nsACString & aRef) { return _to GetRef(aRef); } \
-  NS_IMETHOD SetRef(const nsACString & aRef) { return _to SetRef(aRef); } \
-  NS_IMETHOD GetDirectory(nsACString & aDirectory) { return _to GetDirectory(aDirectory); } \
-  NS_IMETHOD SetDirectory(const nsACString & aDirectory) { return _to SetDirectory(aDirectory); } \
-  NS_IMETHOD GetFileName(nsACString & aFileName) { return _to GetFileName(aFileName); } \
-  NS_IMETHOD SetFileName(const nsACString & aFileName) { return _to SetFileName(aFileName); } \
-  NS_IMETHOD GetFileBaseName(nsACString & aFileBaseName) { return _to GetFileBaseName(aFileBaseName); } \
-  NS_IMETHOD SetFileBaseName(const nsACString & aFileBaseName) { return _to SetFileBaseName(aFileBaseName); } \
-  NS_IMETHOD GetFileExtension(nsACString & aFileExtension) { return _to GetFileExtension(aFileExtension); } \
-  NS_IMETHOD SetFileExtension(const nsACString & aFileExtension) { return _to SetFileExtension(aFileExtension); } \
-  NS_IMETHOD GetCommonBaseSpec(nsIURI *aURIToCompare, nsACString & _retval) { return _to GetCommonBaseSpec(aURIToCompare, _retval); } \
-  NS_IMETHOD GetRelativeSpec(nsIURI *aURIToCompare, nsACString & _retval) { return _to GetRelativeSpec(aURIToCompare, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetFilePath(nsACString & aFilePath) { return _to GetFilePath(aFilePath); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFilePath(const nsACString & aFilePath) { return _to SetFilePath(aFilePath); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParam(nsACString & aParam) { return _to GetParam(aParam); } \
+  NS_SCRIPTABLE NS_IMETHOD SetParam(const nsACString & aParam) { return _to SetParam(aParam); } \
+  NS_SCRIPTABLE NS_IMETHOD GetQuery(nsACString & aQuery) { return _to GetQuery(aQuery); } \
+  NS_SCRIPTABLE NS_IMETHOD SetQuery(const nsACString & aQuery) { return _to SetQuery(aQuery); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRef(nsACString & aRef) { return _to GetRef(aRef); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRef(const nsACString & aRef) { return _to SetRef(aRef); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDirectory(nsACString & aDirectory) { return _to GetDirectory(aDirectory); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDirectory(const nsACString & aDirectory) { return _to SetDirectory(aDirectory); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFileName(nsACString & aFileName) { return _to GetFileName(aFileName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFileName(const nsACString & aFileName) { return _to SetFileName(aFileName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFileBaseName(nsACString & aFileBaseName) { return _to GetFileBaseName(aFileBaseName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFileBaseName(const nsACString & aFileBaseName) { return _to SetFileBaseName(aFileBaseName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFileExtension(nsACString & aFileExtension) { return _to GetFileExtension(aFileExtension); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFileExtension(const nsACString & aFileExtension) { return _to SetFileExtension(aFileExtension); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCommonBaseSpec(nsIURI *aURIToCompare, nsACString & _retval) { return _to GetCommonBaseSpec(aURIToCompare, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRelativeSpec(nsIURI *aURIToCompare, nsACString & _retval) { return _to GetRelativeSpec(aURIToCompare, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIURL(_to) \
-  NS_IMETHOD GetFilePath(nsACString & aFilePath) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFilePath(aFilePath); } \
-  NS_IMETHOD SetFilePath(const nsACString & aFilePath) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFilePath(aFilePath); } \
-  NS_IMETHOD GetParam(nsACString & aParam) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParam(aParam); } \
-  NS_IMETHOD SetParam(const nsACString & aParam) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetParam(aParam); } \
-  NS_IMETHOD GetQuery(nsACString & aQuery) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetQuery(aQuery); } \
-  NS_IMETHOD SetQuery(const nsACString & aQuery) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetQuery(aQuery); } \
-  NS_IMETHOD GetRef(nsACString & aRef) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRef(aRef); } \
-  NS_IMETHOD SetRef(const nsACString & aRef) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRef(aRef); } \
-  NS_IMETHOD GetDirectory(nsACString & aDirectory) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDirectory(aDirectory); } \
-  NS_IMETHOD SetDirectory(const nsACString & aDirectory) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDirectory(aDirectory); } \
-  NS_IMETHOD GetFileName(nsACString & aFileName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFileName(aFileName); } \
-  NS_IMETHOD SetFileName(const nsACString & aFileName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFileName(aFileName); } \
-  NS_IMETHOD GetFileBaseName(nsACString & aFileBaseName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFileBaseName(aFileBaseName); } \
-  NS_IMETHOD SetFileBaseName(const nsACString & aFileBaseName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFileBaseName(aFileBaseName); } \
-  NS_IMETHOD GetFileExtension(nsACString & aFileExtension) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFileExtension(aFileExtension); } \
-  NS_IMETHOD SetFileExtension(const nsACString & aFileExtension) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFileExtension(aFileExtension); } \
-  NS_IMETHOD GetCommonBaseSpec(nsIURI *aURIToCompare, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCommonBaseSpec(aURIToCompare, _retval); } \
-  NS_IMETHOD GetRelativeSpec(nsIURI *aURIToCompare, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRelativeSpec(aURIToCompare, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetFilePath(nsACString & aFilePath) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFilePath(aFilePath); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFilePath(const nsACString & aFilePath) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFilePath(aFilePath); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParam(nsACString & aParam) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParam(aParam); } \
+  NS_SCRIPTABLE NS_IMETHOD SetParam(const nsACString & aParam) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetParam(aParam); } \
+  NS_SCRIPTABLE NS_IMETHOD GetQuery(nsACString & aQuery) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetQuery(aQuery); } \
+  NS_SCRIPTABLE NS_IMETHOD SetQuery(const nsACString & aQuery) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetQuery(aQuery); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRef(nsACString & aRef) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRef(aRef); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRef(const nsACString & aRef) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRef(aRef); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDirectory(nsACString & aDirectory) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDirectory(aDirectory); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDirectory(const nsACString & aDirectory) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDirectory(aDirectory); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFileName(nsACString & aFileName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFileName(aFileName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFileName(const nsACString & aFileName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFileName(aFileName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFileBaseName(nsACString & aFileBaseName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFileBaseName(aFileBaseName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFileBaseName(const nsACString & aFileBaseName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFileBaseName(aFileBaseName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFileExtension(nsACString & aFileExtension) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFileExtension(aFileExtension); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFileExtension(const nsACString & aFileExtension) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFileExtension(aFileExtension); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCommonBaseSpec(nsIURI *aURIToCompare, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCommonBaseSpec(aURIToCompare, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRelativeSpec(nsIURI *aURIToCompare, nsACString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRelativeSpec(aURIToCompare, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

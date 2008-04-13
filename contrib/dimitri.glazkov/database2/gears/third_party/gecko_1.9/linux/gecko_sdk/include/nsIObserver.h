@@ -28,7 +28,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIObserver : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIObserver : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IOBSERVER_IID)
@@ -51,7 +51,7 @@ class NS_NO_VTABLE nsIObserver : public nsISupports {
     *                    subject event.
     */
   /* void observe (in nsISupports aSubject, in string aTopic, in wstring aData); */
-  NS_IMETHOD Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData) = 0;
 
 };
 
@@ -59,15 +59,15 @@ class NS_NO_VTABLE nsIObserver : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIOBSERVER \
-  NS_IMETHOD Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData); 
+  NS_SCRIPTABLE NS_IMETHOD Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIOBSERVER(_to) \
-  NS_IMETHOD Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData) { return _to Observe(aSubject, aTopic, aData); } 
+  NS_SCRIPTABLE NS_IMETHOD Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData) { return _to Observe(aSubject, aTopic, aData); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIOBSERVER(_to) \
-  NS_IMETHOD Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->Observe(aSubject, aTopic, aData); } 
+  NS_SCRIPTABLE NS_IMETHOD Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->Observe(aSubject, aTopic, aData); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

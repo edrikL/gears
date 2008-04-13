@@ -31,7 +31,7 @@
 
 #include <float.h>
 
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "genfiles/product_constants.h"
 #include "gears/base/common/int_types.h"
 #include "gears/base/common/string16.h"
 
@@ -144,22 +144,10 @@
                           msg, !this->EnvIsWorker()); \
   }
 
-#elif BROWSER_NPAPI
-
-#include "gears/base/common/common_np.h"
-
-#elif BROWSER_SAFARI
-
+#elif BROWSER_WEBKIT
 #include "gears/base/common/common_sf.h"
-
-#define RETURN_NORMAL()  return 0
-#define RETURN_EXCEPTION(msg) \
-{ \
-    /* TODO(waylonis): Return e.message to try/catch blocks in Safari. */ \
-    NSLog(@"Exception: %s", msg); \
-    return 1; \
-}
-
+#elif BROWSER_NPAPI
+#include "gears/base/common/common_np.h"
 #else
 #error "common.h: BROWSER_?? not defined."
 #endif

@@ -1,9 +1,9 @@
 // Copyright 2007, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,26 +13,39 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // This file defines all the builtins that can be used inside Gears unit tests.
-// Please feel free to add new ones as the mood strikes. Here are some ideas:
-// - assertObjectsAreEqual()
-// - assertArraysContainSameElements()
-// ... etc ...
 
 /**
  * Whether the installed Gears extension is a debug build.
  */
-var isDebug = google.gears.factory.getBuildInfo().indexOf("dbg") > -1;
+var isDebug = google.gears.factory.getBuildInfo().indexOf('dbg') > -1;
+
+/**
+ * Whether the installed Gears extension is an official build.
+ */
+var isOfficial = google.gears.factory.getBuildInfo().indexOf('official') > -1;
+
+/**
+ * Whether the installed Gears extension is for Windows Mobile
+ */
+var isWince = google.gears.factory.getBuildInfo().indexOf('wince') > -1;
+
+/**
+ * Whether the installed Gears extension is for a particular browser.
+ */
+var isIE = google.gears.factory.getBuildInfo().indexOf(';ie') > -1;
+var isFirefox = google.gears.factory.getBuildInfo().indexOf(';firefox') > -1;
+var isSafari = google.gears.factory.getBuildInfo().indexOf(';safari') > -1;
 
 /**
  * A shared timer tests can use.
@@ -60,6 +73,20 @@ function assert(expr, optMessage) {
 }
 
 /**
+ * Format error message with optional error message.
+ *
+ * @param message The original error message.
+ * @param optDescription An optional description of what went wrong.
+ */
+function formatErrorMessage(message, optDescription) {
+  if (optDescription) {
+    return optDescription + ' - ' + message;
+  } else {
+    return message;
+  }
+}
+
+/**
  * Assert that two values are equal. A strict equality test is used; 4 and "4"
  * are not equal.
  *
@@ -70,15 +97,94 @@ function assert(expr, optMessage) {
 function assertEqual(expected, actual, optDescription) {
   assert(expected === actual, function() {
     var message = 'Expected: %s (%s), actual: %s (%s)'.subs(
-       expected, typeof expected, actual, typeof actual);
-
-    if (optDescription) {
-      message = optDescription + ' - ' + message;
-    }
-
-    return message;
+        expected, typeof expected, actual, typeof actual);
+    return formatErrorMessage(message, optDescription);
   });
 }
+
+
+/**
+ * Assert that two values are equal. This function will inspect object
+ * object properties and array members. Is a function is encountered the only
+ * check that is performed is to assert that they expected and actual are of
+ * type function. Otherwise, a strict equality test is used; 4 and "4" are not
+ * equal.
+ *
+ * @param expected Any type containing the expected value.
+ * @param actual Any type containing the actual value.
+ * @param optDescription An optional description of what went wrong.
+ */
+function assertEqualAnyType(expected, actual, optDescription) {
+  if (isArray(expected) && isArray(actual)) {
+    assertArrayEqual(expected, actual, optDescription);
+  } else if (isObject(expected) && isObject(actual)) {
+    assertObjectEqual(expected, actual, optDescription);
+  } else if (isFunction(expected) && isFunction(actual)) {
+    // functions are only tested for type
+  } else {
+    assertEqual(expected, actual, optDescription);
+  }
+}
+
+/**
+ * Assert that all values in two arrays are equal. A strict equality test is
+ * used; 4 and "4" are not equal.
+ *
+ * @param expected The array containing expected values.
+ * @param actual The array containing actual values.
+ * @param optDescription An optional description of what went wrong.
+ */
+function assertArrayEqual(expected, actual, optDescription) {
+  function notArrayErrorMessage(array, optDescription) {
+    return function() {
+      var message = 'Expected array, actual: %s (%s)'.subs(array, typeof array);
+      return formatErrorMessage(message, optDescription);
+    };
+  }
+
+  assert(isArray(expected), notArrayErrorMessage(expected, optDescription));
+  assert(isArray(actual), notArrayErrorMessage(actual, optDescription));
+  assert(expected.length == actual.length, function() {
+    var message = 'Expected array length: %s actual length: %s'.subs(
+        expected.length, actual.length);
+    formatErrorMessage(message, optDescription);
+  });
+
+  for (var i = 0; i < expected.length; ++expected) {
+    assertEqualAnyType(expected[i], actual[i], function() {
+      var message = 'Expected element in array at %s: %s (%s) actual: %s (%s)'
+          .subs(i, expected[i], typeof expected[i], actual[i],
+          typeof actual[i]);
+      formatErrorMessage(message, optDescription);
+    });
+  }
+}
+
+/**
+ * Assert that all properties in two objects are equal. A strict equality test
+ * is used; 4 and "4" are not equal.
+ *
+ * @param expected The object containing expected values.
+ * @param actual The object containing actual values.
+ * @param optDescription An optional description of what went wrong.
+ */
+function assertObjectEqual(expected, actual, optDescription) {
+  function notObjectErrorMessage(array, optDescription) {
+    return function() {
+      var message = 'Expected object, actual: %s (%s)'.subs(
+          array, typeof array);
+      return formatErrorMessage(message, optDescription);
+    };
+  }
+
+  assert(isObject(expected), notObjectErrorMessage(expected, optDescription));
+  assert(isObject(actual), notObjectErrorMessage(actual, optDescription));
+
+  for (property in expected) {
+    assertEqualAnyType(expected[property], actual[property], optDescription);
+  }
+}
+
 
 /**
  * Assert that two values are not equal. A strict equality test is used; 4 and
@@ -92,12 +198,7 @@ function assertNotEqual(unexpected, actual, optDescription) {
   assert(unexpected !== actual, function() {
     var message = 'Expected value other than "%s" (%s)'.subs(
        unexpected, typeof unexpected);
-
-    if (optDescription) {
-      message = optDescription + ' - ' + message;
-    }
-
-    return message;
+    return formatErrorMessage(message, optDescription);
   });
 }
 
@@ -111,10 +212,7 @@ function assertNotEqual(unexpected, actual, optDescription) {
 function assertNull(val, optDescription) {
   assert(val === null, function() {
     var message = "Expected null value.";
-    if (optDescription) {
-      message += " " + optDescription;
-    }
-    return message;
+    return formatErrorMessage(message, optDescription);
   });
 }
 
@@ -128,10 +226,7 @@ function assertNull(val, optDescription) {
 function assertNotNull(val, optDescription) {
   assert(val !== null, function() {
     var message = "Unexpected null value.";
-    if (optDescription) {
-      message += " " + optDescription;
-    }
-    return message;
+    return formatErrorMessage(message, optDescription);
   });
 }
 
@@ -165,11 +260,7 @@ function assertError(fn, optExpectedError, optDescription) {
     message += ': "' + optExpectedError + '"';
   }
 
-  if (optDescription) {
-    message = optDescription + ' - ' + message;
-  }
-
-  throw new Error(message);
+  throw new Error(formatErrorMessage(message, optDescription));
 }
 
 /**
@@ -221,14 +312,19 @@ function handleResult(rs, fn) {
  * @param url The url to fetch
  * @param method The http method (ie. 'GET' or 'POST')
  * @param data The data to send, may be null
- * @param callback Will be called with contents of URL, or null if the request
- * was unsuccessful.
+ * @param callback The function which will be called upon completion of the
+ * request.  If cb_request is true, the callback receives the request object.
+ * Otherwise, the callback receives the contents on a 200 response and null on
+ * any other response.
+ * @param cb_request Controls the argument to callback.
  */
-function sendHttpRequest(url, method, data, callback) {
+function sendHttpRequest(url, method, data, callback, cb_request) {
   var req = google.gears.factory.create('beta.httprequest');
   req.onreadystatechange = function() {
     if (req.readyState == 4) {
-      if (req.status == 200) {
+      if (cb_request) {
+        callback(req);
+      } else if (req.status == 200) {
         callback(req.responseText);
       } else {
         callback(null);
@@ -247,7 +343,16 @@ function sendHttpRequest(url, method, data, callback) {
  * was unsuccessful.
  */
 function httpGet(url, callback) {
-  sendHttpRequest(url, 'GET', null, callback);
+  sendHttpRequest(url, 'GET', null, callback, false);
+}
+
+/**
+ * Utility to asynchronously get a URL and return the request object.
+ * @param url The url to fetch
+ * @param callback Will be called with request object.
+ */
+function httpGetAsRequest(url, callback) {
+  sendHttpRequest(url, 'GET', null, callback, true);
 }
 
 /**
@@ -258,5 +363,16 @@ function httpGet(url, callback) {
  * was unsuccessful.
  */
 function httpPost(url, data, callback) {
-  sendHttpRequest(url, 'POST', data, callback);
+  sendHttpRequest(url, 'POST', data, callback, false);
 }
+
+/**
+ * Utility to asynchronously POST to a URL and return the request object.
+ * @param url The url to fetch
+ * @param data The data to post
+ * @param callback Will be called with request object.
+ */
+function httpPostAsRequest(url, callback) {
+  sendHttpRequest(url, 'POST', data, callback, true);
+}
+

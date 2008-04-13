@@ -37,7 +37,8 @@ typedef uint32 IpcProcessId;
 
 // Ipc message type identifiers are listed here to avoid collisions
 enum IpcMessageTypes {
-  kMessageService_IpcNotify = 1,
+  kIpcQueue_TestMessage = 1,
+  kMessageService_IpcNotify,
 };
 
 // A facility for sending and receiving messages asynchronously 
@@ -111,5 +112,20 @@ class IpcMessageQueue {
  private:
   DISALLOW_EVIL_CONSTRUCTORS(IpcMessageQueue);
 };
+
+#ifdef DEBUG
+// For testing
+struct IpcMessageQueueCounters {
+  int send_to_all;
+  int send_to_one;
+  int handle_send_to_all;
+  int handle_send_to_one;
+  int queued_outbound;
+  int sent_outbound;
+  int read_inbound;
+  int dispatched_inbound;
+};
+#endif
+
 
 #endif  // GEARS_BASE_COMMON_IPC_MESSAGE_QUEUE_H__

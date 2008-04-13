@@ -27,7 +27,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIX509CertValidity : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIX509CertValidity : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IX509CERTVALIDITY_IID)
@@ -37,7 +37,7 @@ class NS_NO_VTABLE nsIX509CertValidity : public nsISupports {
    *  a certificate is valid.
    */
   /* readonly attribute PRTime notBefore; */
-  NS_IMETHOD GetNotBefore(PRTime *aNotBefore) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNotBefore(PRTime *aNotBefore) = 0;
 
   /**
    *  "notBefore" attribute formatted as a time string
@@ -45,7 +45,7 @@ class NS_NO_VTABLE nsIX509CertValidity : public nsISupports {
    *  according to the environment time zone.
    */
   /* readonly attribute AString notBeforeLocalTime; */
-  NS_IMETHOD GetNotBeforeLocalTime(nsAString & aNotBeforeLocalTime) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNotBeforeLocalTime(nsAString & aNotBeforeLocalTime) = 0;
 
   /**
    *  The day portion of "notBefore" 
@@ -54,7 +54,7 @@ class NS_NO_VTABLE nsIX509CertValidity : public nsISupports {
    *  according to the environment time zone.
    */
   /* readonly attribute AString notBeforeLocalDay; */
-  NS_IMETHOD GetNotBeforeLocalDay(nsAString & aNotBeforeLocalDay) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNotBeforeLocalDay(nsAString & aNotBeforeLocalDay) = 0;
 
   /**
    *  "notBefore" attribute formatted as a string
@@ -62,14 +62,14 @@ class NS_NO_VTABLE nsIX509CertValidity : public nsISupports {
    *  displayed as GMT / UTC.
    */
   /* readonly attribute AString notBeforeGMT; */
-  NS_IMETHOD GetNotBeforeGMT(nsAString & aNotBeforeGMT) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNotBeforeGMT(nsAString & aNotBeforeGMT) = 0;
 
   /**
    *  The latest point in time where
    *  a certificate is valid.
    */
   /* readonly attribute PRTime notAfter; */
-  NS_IMETHOD GetNotAfter(PRTime *aNotAfter) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNotAfter(PRTime *aNotAfter) = 0;
 
   /**
    *  "notAfter" attribute formatted as a time string
@@ -77,7 +77,7 @@ class NS_NO_VTABLE nsIX509CertValidity : public nsISupports {
    *  according to the environment time zone.
    */
   /* readonly attribute AString notAfterLocalTime; */
-  NS_IMETHOD GetNotAfterLocalTime(nsAString & aNotAfterLocalTime) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNotAfterLocalTime(nsAString & aNotAfterLocalTime) = 0;
 
   /**
    *  The day portion of "notAfter" 
@@ -86,7 +86,7 @@ class NS_NO_VTABLE nsIX509CertValidity : public nsISupports {
    *  according to the environment time zone.
    */
   /* readonly attribute AString notAfterLocalDay; */
-  NS_IMETHOD GetNotAfterLocalDay(nsAString & aNotAfterLocalDay) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNotAfterLocalDay(nsAString & aNotAfterLocalDay) = 0;
 
   /**
    *  "notAfter" attribute formatted as a time string
@@ -94,7 +94,7 @@ class NS_NO_VTABLE nsIX509CertValidity : public nsISupports {
    *  displayed as GMT / UTC.
    */
   /* readonly attribute AString notAfterGMT; */
-  NS_IMETHOD GetNotAfterGMT(nsAString & aNotAfterGMT) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNotAfterGMT(nsAString & aNotAfterGMT) = 0;
 
 };
 
@@ -102,36 +102,36 @@ class NS_NO_VTABLE nsIX509CertValidity : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIX509CERTVALIDITY \
-  NS_IMETHOD GetNotBefore(PRTime *aNotBefore); \
-  NS_IMETHOD GetNotBeforeLocalTime(nsAString & aNotBeforeLocalTime); \
-  NS_IMETHOD GetNotBeforeLocalDay(nsAString & aNotBeforeLocalDay); \
-  NS_IMETHOD GetNotBeforeGMT(nsAString & aNotBeforeGMT); \
-  NS_IMETHOD GetNotAfter(PRTime *aNotAfter); \
-  NS_IMETHOD GetNotAfterLocalTime(nsAString & aNotAfterLocalTime); \
-  NS_IMETHOD GetNotAfterLocalDay(nsAString & aNotAfterLocalDay); \
-  NS_IMETHOD GetNotAfterGMT(nsAString & aNotAfterGMT); 
+  NS_SCRIPTABLE NS_IMETHOD GetNotBefore(PRTime *aNotBefore); \
+  NS_SCRIPTABLE NS_IMETHOD GetNotBeforeLocalTime(nsAString & aNotBeforeLocalTime); \
+  NS_SCRIPTABLE NS_IMETHOD GetNotBeforeLocalDay(nsAString & aNotBeforeLocalDay); \
+  NS_SCRIPTABLE NS_IMETHOD GetNotBeforeGMT(nsAString & aNotBeforeGMT); \
+  NS_SCRIPTABLE NS_IMETHOD GetNotAfter(PRTime *aNotAfter); \
+  NS_SCRIPTABLE NS_IMETHOD GetNotAfterLocalTime(nsAString & aNotAfterLocalTime); \
+  NS_SCRIPTABLE NS_IMETHOD GetNotAfterLocalDay(nsAString & aNotAfterLocalDay); \
+  NS_SCRIPTABLE NS_IMETHOD GetNotAfterGMT(nsAString & aNotAfterGMT); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIX509CERTVALIDITY(_to) \
-  NS_IMETHOD GetNotBefore(PRTime *aNotBefore) { return _to GetNotBefore(aNotBefore); } \
-  NS_IMETHOD GetNotBeforeLocalTime(nsAString & aNotBeforeLocalTime) { return _to GetNotBeforeLocalTime(aNotBeforeLocalTime); } \
-  NS_IMETHOD GetNotBeforeLocalDay(nsAString & aNotBeforeLocalDay) { return _to GetNotBeforeLocalDay(aNotBeforeLocalDay); } \
-  NS_IMETHOD GetNotBeforeGMT(nsAString & aNotBeforeGMT) { return _to GetNotBeforeGMT(aNotBeforeGMT); } \
-  NS_IMETHOD GetNotAfter(PRTime *aNotAfter) { return _to GetNotAfter(aNotAfter); } \
-  NS_IMETHOD GetNotAfterLocalTime(nsAString & aNotAfterLocalTime) { return _to GetNotAfterLocalTime(aNotAfterLocalTime); } \
-  NS_IMETHOD GetNotAfterLocalDay(nsAString & aNotAfterLocalDay) { return _to GetNotAfterLocalDay(aNotAfterLocalDay); } \
-  NS_IMETHOD GetNotAfterGMT(nsAString & aNotAfterGMT) { return _to GetNotAfterGMT(aNotAfterGMT); } 
+  NS_SCRIPTABLE NS_IMETHOD GetNotBefore(PRTime *aNotBefore) { return _to GetNotBefore(aNotBefore); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotBeforeLocalTime(nsAString & aNotBeforeLocalTime) { return _to GetNotBeforeLocalTime(aNotBeforeLocalTime); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotBeforeLocalDay(nsAString & aNotBeforeLocalDay) { return _to GetNotBeforeLocalDay(aNotBeforeLocalDay); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotBeforeGMT(nsAString & aNotBeforeGMT) { return _to GetNotBeforeGMT(aNotBeforeGMT); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotAfter(PRTime *aNotAfter) { return _to GetNotAfter(aNotAfter); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotAfterLocalTime(nsAString & aNotAfterLocalTime) { return _to GetNotAfterLocalTime(aNotAfterLocalTime); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotAfterLocalDay(nsAString & aNotAfterLocalDay) { return _to GetNotAfterLocalDay(aNotAfterLocalDay); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotAfterGMT(nsAString & aNotAfterGMT) { return _to GetNotAfterGMT(aNotAfterGMT); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIX509CERTVALIDITY(_to) \
-  NS_IMETHOD GetNotBefore(PRTime *aNotBefore) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotBefore(aNotBefore); } \
-  NS_IMETHOD GetNotBeforeLocalTime(nsAString & aNotBeforeLocalTime) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotBeforeLocalTime(aNotBeforeLocalTime); } \
-  NS_IMETHOD GetNotBeforeLocalDay(nsAString & aNotBeforeLocalDay) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotBeforeLocalDay(aNotBeforeLocalDay); } \
-  NS_IMETHOD GetNotBeforeGMT(nsAString & aNotBeforeGMT) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotBeforeGMT(aNotBeforeGMT); } \
-  NS_IMETHOD GetNotAfter(PRTime *aNotAfter) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotAfter(aNotAfter); } \
-  NS_IMETHOD GetNotAfterLocalTime(nsAString & aNotAfterLocalTime) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotAfterLocalTime(aNotAfterLocalTime); } \
-  NS_IMETHOD GetNotAfterLocalDay(nsAString & aNotAfterLocalDay) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotAfterLocalDay(aNotAfterLocalDay); } \
-  NS_IMETHOD GetNotAfterGMT(nsAString & aNotAfterGMT) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotAfterGMT(aNotAfterGMT); } 
+  NS_SCRIPTABLE NS_IMETHOD GetNotBefore(PRTime *aNotBefore) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotBefore(aNotBefore); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotBeforeLocalTime(nsAString & aNotBeforeLocalTime) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotBeforeLocalTime(aNotBeforeLocalTime); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotBeforeLocalDay(nsAString & aNotBeforeLocalDay) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotBeforeLocalDay(aNotBeforeLocalDay); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotBeforeGMT(nsAString & aNotBeforeGMT) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotBeforeGMT(aNotBeforeGMT); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotAfter(PRTime *aNotAfter) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotAfter(aNotAfter); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotAfterLocalTime(nsAString & aNotAfterLocalTime) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotAfterLocalTime(aNotAfterLocalTime); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotAfterLocalDay(nsAString & aNotAfterLocalDay) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotAfterLocalDay(aNotAfterLocalDay); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNotAfterGMT(nsAString & aNotAfterGMT) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotAfterGMT(aNotAfterGMT); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

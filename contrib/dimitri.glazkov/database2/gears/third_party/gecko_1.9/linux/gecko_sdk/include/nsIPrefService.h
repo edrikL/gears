@@ -39,7 +39,7 @@ class nsIFile; /* forward declaration */
  * 
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIPrefService : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIPrefService : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPREFSERVICE_IID)
@@ -60,7 +60,7 @@ class NS_NO_VTABLE nsIPrefService : public nsISupports {
    * @see nsIFile
    */
   /* void readUserPrefs (in nsIFile aFile); */
-  NS_IMETHOD ReadUserPrefs(nsIFile *aFile) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ReadUserPrefs(nsIFile *aFile) = 0;
 
   /**
    * Called to completely flush and re-initialize the preferences system.
@@ -69,7 +69,7 @@ class NS_NO_VTABLE nsIPrefService : public nsISupports {
    * @return Other The preference service failed to restart correctly.
    */
   /* void resetPrefs (); */
-  NS_IMETHOD ResetPrefs(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ResetPrefs(void) = 0;
 
   /**
    * Called to reset all preferences with user set values back to the
@@ -78,7 +78,7 @@ class NS_NO_VTABLE nsIPrefService : public nsISupports {
    * @return NS_OK Always.
    */
   /* void resetUserPrefs (); */
-  NS_IMETHOD ResetUserPrefs(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ResetUserPrefs(void) = 0;
 
   /**
    * Called to write current preferences state to a file.
@@ -96,7 +96,7 @@ class NS_NO_VTABLE nsIPrefService : public nsISupports {
    * @see nsIFile
    */
   /* void savePrefFile (in nsIFile aFile); */
-  NS_IMETHOD SavePrefFile(nsIFile *aFile) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SavePrefFile(nsIFile *aFile) = 0;
 
   /**
    * Call to get a Preferences "Branch" which accesses user preference data.
@@ -117,7 +117,7 @@ class NS_NO_VTABLE nsIPrefService : public nsISupports {
    * @see getDefaultBranch
    */
   /* nsIPrefBranch getBranch (in string aPrefRoot); */
-  NS_IMETHOD GetBranch(const char *aPrefRoot, nsIPrefBranch **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetBranch(const char *aPrefRoot, nsIPrefBranch **_retval) = 0;
 
   /**
    * Call to get a Preferences "Branch" which accesses only the default 
@@ -143,7 +143,7 @@ class NS_NO_VTABLE nsIPrefService : public nsISupports {
    * @see getBranch
    */
   /* nsIPrefBranch getDefaultBranch (in string aPrefRoot); */
-  NS_IMETHOD GetDefaultBranch(const char *aPrefRoot, nsIPrefBranch **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultBranch(const char *aPrefRoot, nsIPrefBranch **_retval) = 0;
 
 };
 
@@ -151,30 +151,30 @@ class NS_NO_VTABLE nsIPrefService : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIPREFSERVICE \
-  NS_IMETHOD ReadUserPrefs(nsIFile *aFile); \
-  NS_IMETHOD ResetPrefs(void); \
-  NS_IMETHOD ResetUserPrefs(void); \
-  NS_IMETHOD SavePrefFile(nsIFile *aFile); \
-  NS_IMETHOD GetBranch(const char *aPrefRoot, nsIPrefBranch **_retval); \
-  NS_IMETHOD GetDefaultBranch(const char *aPrefRoot, nsIPrefBranch **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD ReadUserPrefs(nsIFile *aFile); \
+  NS_SCRIPTABLE NS_IMETHOD ResetPrefs(void); \
+  NS_SCRIPTABLE NS_IMETHOD ResetUserPrefs(void); \
+  NS_SCRIPTABLE NS_IMETHOD SavePrefFile(nsIFile *aFile); \
+  NS_SCRIPTABLE NS_IMETHOD GetBranch(const char *aPrefRoot, nsIPrefBranch **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultBranch(const char *aPrefRoot, nsIPrefBranch **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIPREFSERVICE(_to) \
-  NS_IMETHOD ReadUserPrefs(nsIFile *aFile) { return _to ReadUserPrefs(aFile); } \
-  NS_IMETHOD ResetPrefs(void) { return _to ResetPrefs(); } \
-  NS_IMETHOD ResetUserPrefs(void) { return _to ResetUserPrefs(); } \
-  NS_IMETHOD SavePrefFile(nsIFile *aFile) { return _to SavePrefFile(aFile); } \
-  NS_IMETHOD GetBranch(const char *aPrefRoot, nsIPrefBranch **_retval) { return _to GetBranch(aPrefRoot, _retval); } \
-  NS_IMETHOD GetDefaultBranch(const char *aPrefRoot, nsIPrefBranch **_retval) { return _to GetDefaultBranch(aPrefRoot, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD ReadUserPrefs(nsIFile *aFile) { return _to ReadUserPrefs(aFile); } \
+  NS_SCRIPTABLE NS_IMETHOD ResetPrefs(void) { return _to ResetPrefs(); } \
+  NS_SCRIPTABLE NS_IMETHOD ResetUserPrefs(void) { return _to ResetUserPrefs(); } \
+  NS_SCRIPTABLE NS_IMETHOD SavePrefFile(nsIFile *aFile) { return _to SavePrefFile(aFile); } \
+  NS_SCRIPTABLE NS_IMETHOD GetBranch(const char *aPrefRoot, nsIPrefBranch **_retval) { return _to GetBranch(aPrefRoot, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultBranch(const char *aPrefRoot, nsIPrefBranch **_retval) { return _to GetDefaultBranch(aPrefRoot, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIPREFSERVICE(_to) \
-  NS_IMETHOD ReadUserPrefs(nsIFile *aFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->ReadUserPrefs(aFile); } \
-  NS_IMETHOD ResetPrefs(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ResetPrefs(); } \
-  NS_IMETHOD ResetUserPrefs(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ResetUserPrefs(); } \
-  NS_IMETHOD SavePrefFile(nsIFile *aFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->SavePrefFile(aFile); } \
-  NS_IMETHOD GetBranch(const char *aPrefRoot, nsIPrefBranch **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetBranch(aPrefRoot, _retval); } \
-  NS_IMETHOD GetDefaultBranch(const char *aPrefRoot, nsIPrefBranch **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDefaultBranch(aPrefRoot, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD ReadUserPrefs(nsIFile *aFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->ReadUserPrefs(aFile); } \
+  NS_SCRIPTABLE NS_IMETHOD ResetPrefs(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ResetPrefs(); } \
+  NS_SCRIPTABLE NS_IMETHOD ResetUserPrefs(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ResetUserPrefs(); } \
+  NS_SCRIPTABLE NS_IMETHOD SavePrefFile(nsIFile *aFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->SavePrefFile(aFile); } \
+  NS_SCRIPTABLE NS_IMETHOD GetBranch(const char *aPrefRoot, nsIPrefBranch **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetBranch(aPrefRoot, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDefaultBranch(const char *aPrefRoot, nsIPrefBranch **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDefaultBranch(aPrefRoot, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

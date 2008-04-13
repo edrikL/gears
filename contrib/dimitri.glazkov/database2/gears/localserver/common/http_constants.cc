@@ -42,6 +42,7 @@ const char16 *HttpConstants::kUriHeader = STRING16(L"URI");
 const char16 *HttpConstants::kNoCache = STRING16(L"no-cache");
 const char16 *HttpConstants::kOKStatusLine = STRING16(L"HTTP/1.1 200 OK");
 const char16 *HttpConstants::kPragmaHeader = STRING16(L"Pragma");
+const char16 *HttpConstants::kRetryAfterHeader = STRING16(L"Retry-After");
 const char16 *HttpConstants::kHttpGET = STRING16(L"GET");
 const char   *HttpConstants::kHttpGETAscii = "GET";
 const char16 *HttpConstants::kHttpHEAD = STRING16(L"HEAD");
@@ -54,9 +55,14 @@ const char   *HttpConstants::kHttpsSchemeAscii =      "https";
 const char16 *HttpConstants::kFileScheme = STRING16(L"file");
 const char   *HttpConstants::kFileSchemeAscii =      "file";
 const char16 *HttpConstants::kMimeTextPlain = STRING16(L"text/plain");
+const char16 *HttpConstants::kMimeApplicationOctetStream =
+                                 STRING16(L"application/octet-stream");
 const char16 *HttpConstants::kXCapturedFilenameHeader =
                                  STRING16(L"X-Captured-Filename");
-
+const char16 *HttpConstants::kXGearsReasonHeader =
+                                 STRING16(L"X-Gears-Reason");
+const char16 *HttpConstants::kXGearsReason_ValidateManifest =
+                                 STRING16(L"validate-manifest");
 // This header value should not be prefixed with "X-Google" as those values
 // are special cased and stripped by GFEs
 const char16 *HttpConstants::kXGoogleGearsHeader =
@@ -131,7 +137,7 @@ bool IsDefaultPort(const std::string16 &scheme, int port) {
   assert((scheme == HttpConstants::kHttpScheme) ||
          (scheme == HttpConstants::kHttpsScheme) ||
          (scheme == HttpConstants::kFileScheme));
-         
+
   return ((scheme == HttpConstants::kHttpScheme) &&
           (port == HttpConstants::kHttpDefaultPort)) ||
          ((scheme == HttpConstants::kHttpsScheme) &&

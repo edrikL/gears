@@ -22,7 +22,7 @@
   {0xa6cf90b5, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMHTMLTableSectionElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLTableSectionElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLTABLESECTIONELEMENT_IID)
@@ -37,29 +37,29 @@ class NS_NO_VTABLE nsIDOMHTMLTableSectionElement : public nsIDOMHTMLElement {
  * @status FROZEN
  */
   /* attribute DOMString align; */
-  NS_IMETHOD GetAlign(nsAString & aAlign) = 0;
-  NS_IMETHOD SetAlign(const nsAString & aAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) = 0;
 
   /* attribute DOMString ch; */
-  NS_IMETHOD GetCh(nsAString & aCh) = 0;
-  NS_IMETHOD SetCh(const nsAString & aCh) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCh(nsAString & aCh) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCh(const nsAString & aCh) = 0;
 
   /* attribute DOMString chOff; */
-  NS_IMETHOD GetChOff(nsAString & aChOff) = 0;
-  NS_IMETHOD SetChOff(const nsAString & aChOff) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetChOff(nsAString & aChOff) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetChOff(const nsAString & aChOff) = 0;
 
   /* attribute DOMString vAlign; */
-  NS_IMETHOD GetVAlign(nsAString & aVAlign) = 0;
-  NS_IMETHOD SetVAlign(const nsAString & aVAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetVAlign(nsAString & aVAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetVAlign(const nsAString & aVAlign) = 0;
 
   /* readonly attribute nsIDOMHTMLCollection rows; */
-  NS_IMETHOD GetRows(nsIDOMHTMLCollection * *aRows) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRows(nsIDOMHTMLCollection * *aRows) = 0;
 
   /* nsIDOMHTMLElement insertRow (in long index)  raises (DOMException); */
-  NS_IMETHOD InsertRow(PRInt32 index, nsIDOMHTMLElement **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD InsertRow(PRInt32 index, nsIDOMHTMLElement **_retval) = 0;
 
   /* void deleteRow (in long index)  raises (DOMException); */
-  NS_IMETHOD DeleteRow(PRInt32 index) = 0;
+  NS_SCRIPTABLE NS_IMETHOD DeleteRow(PRInt32 index) = 0;
 
 };
 
@@ -67,45 +67,45 @@ class NS_NO_VTABLE nsIDOMHTMLTableSectionElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLTABLESECTIONELEMENT \
-  NS_IMETHOD GetAlign(nsAString & aAlign); \
-  NS_IMETHOD SetAlign(const nsAString & aAlign); \
-  NS_IMETHOD GetCh(nsAString & aCh); \
-  NS_IMETHOD SetCh(const nsAString & aCh); \
-  NS_IMETHOD GetChOff(nsAString & aChOff); \
-  NS_IMETHOD SetChOff(const nsAString & aChOff); \
-  NS_IMETHOD GetVAlign(nsAString & aVAlign); \
-  NS_IMETHOD SetVAlign(const nsAString & aVAlign); \
-  NS_IMETHOD GetRows(nsIDOMHTMLCollection * *aRows); \
-  NS_IMETHOD InsertRow(PRInt32 index, nsIDOMHTMLElement **_retval); \
-  NS_IMETHOD DeleteRow(PRInt32 index); 
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign); \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign); \
+  NS_SCRIPTABLE NS_IMETHOD GetCh(nsAString & aCh); \
+  NS_SCRIPTABLE NS_IMETHOD SetCh(const nsAString & aCh); \
+  NS_SCRIPTABLE NS_IMETHOD GetChOff(nsAString & aChOff); \
+  NS_SCRIPTABLE NS_IMETHOD SetChOff(const nsAString & aChOff); \
+  NS_SCRIPTABLE NS_IMETHOD GetVAlign(nsAString & aVAlign); \
+  NS_SCRIPTABLE NS_IMETHOD SetVAlign(const nsAString & aVAlign); \
+  NS_SCRIPTABLE NS_IMETHOD GetRows(nsIDOMHTMLCollection * *aRows); \
+  NS_SCRIPTABLE NS_IMETHOD InsertRow(PRInt32 index, nsIDOMHTMLElement **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD DeleteRow(PRInt32 index); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLTABLESECTIONELEMENT(_to) \
-  NS_IMETHOD GetAlign(nsAString & aAlign) { return _to GetAlign(aAlign); } \
-  NS_IMETHOD SetAlign(const nsAString & aAlign) { return _to SetAlign(aAlign); } \
-  NS_IMETHOD GetCh(nsAString & aCh) { return _to GetCh(aCh); } \
-  NS_IMETHOD SetCh(const nsAString & aCh) { return _to SetCh(aCh); } \
-  NS_IMETHOD GetChOff(nsAString & aChOff) { return _to GetChOff(aChOff); } \
-  NS_IMETHOD SetChOff(const nsAString & aChOff) { return _to SetChOff(aChOff); } \
-  NS_IMETHOD GetVAlign(nsAString & aVAlign) { return _to GetVAlign(aVAlign); } \
-  NS_IMETHOD SetVAlign(const nsAString & aVAlign) { return _to SetVAlign(aVAlign); } \
-  NS_IMETHOD GetRows(nsIDOMHTMLCollection * *aRows) { return _to GetRows(aRows); } \
-  NS_IMETHOD InsertRow(PRInt32 index, nsIDOMHTMLElement **_retval) { return _to InsertRow(index, _retval); } \
-  NS_IMETHOD DeleteRow(PRInt32 index) { return _to DeleteRow(index); } 
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) { return _to GetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) { return _to SetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCh(nsAString & aCh) { return _to GetCh(aCh); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCh(const nsAString & aCh) { return _to SetCh(aCh); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChOff(nsAString & aChOff) { return _to GetChOff(aChOff); } \
+  NS_SCRIPTABLE NS_IMETHOD SetChOff(const nsAString & aChOff) { return _to SetChOff(aChOff); } \
+  NS_SCRIPTABLE NS_IMETHOD GetVAlign(nsAString & aVAlign) { return _to GetVAlign(aVAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetVAlign(const nsAString & aVAlign) { return _to SetVAlign(aVAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRows(nsIDOMHTMLCollection * *aRows) { return _to GetRows(aRows); } \
+  NS_SCRIPTABLE NS_IMETHOD InsertRow(PRInt32 index, nsIDOMHTMLElement **_retval) { return _to InsertRow(index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD DeleteRow(PRInt32 index) { return _to DeleteRow(index); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLTABLESECTIONELEMENT(_to) \
-  NS_IMETHOD GetAlign(nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlign(aAlign); } \
-  NS_IMETHOD SetAlign(const nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlign(aAlign); } \
-  NS_IMETHOD GetCh(nsAString & aCh) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCh(aCh); } \
-  NS_IMETHOD SetCh(const nsAString & aCh) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCh(aCh); } \
-  NS_IMETHOD GetChOff(nsAString & aChOff) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChOff(aChOff); } \
-  NS_IMETHOD SetChOff(const nsAString & aChOff) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetChOff(aChOff); } \
-  NS_IMETHOD GetVAlign(nsAString & aVAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVAlign(aVAlign); } \
-  NS_IMETHOD SetVAlign(const nsAString & aVAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetVAlign(aVAlign); } \
-  NS_IMETHOD GetRows(nsIDOMHTMLCollection * *aRows) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRows(aRows); } \
-  NS_IMETHOD InsertRow(PRInt32 index, nsIDOMHTMLElement **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->InsertRow(index, _retval); } \
-  NS_IMETHOD DeleteRow(PRInt32 index) { return !_to ? NS_ERROR_NULL_POINTER : _to->DeleteRow(index); } 
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCh(nsAString & aCh) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCh(aCh); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCh(const nsAString & aCh) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCh(aCh); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChOff(nsAString & aChOff) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChOff(aChOff); } \
+  NS_SCRIPTABLE NS_IMETHOD SetChOff(const nsAString & aChOff) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetChOff(aChOff); } \
+  NS_SCRIPTABLE NS_IMETHOD GetVAlign(nsAString & aVAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVAlign(aVAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetVAlign(const nsAString & aVAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetVAlign(aVAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRows(nsIDOMHTMLCollection * *aRows) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRows(aRows); } \
+  NS_SCRIPTABLE NS_IMETHOD InsertRow(PRInt32 index, nsIDOMHTMLElement **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->InsertRow(index, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD DeleteRow(PRInt32 index) { return !_to ? NS_ERROR_NULL_POINTER : _to->DeleteRow(index); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,17 +13,22 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/localserver/common/capture_task.h"
+
+#include "gears/base/common/exception_handler_win32.h"
+#ifdef WINCE
+#include "gears/base/common/wince_compatibility.h"  // For BrowserCache
+#endif
 #include "gears/localserver/common/http_constants.h"
 
 
@@ -116,11 +121,18 @@ bool CaptureTask::HttpGetUrl(const char16 *full_url,
   // Fetch the url from a server
   if (!AsyncTask::HttpGet(full_url,
                           true,  // is_capturing
+                          NULL,  // X-Gears-Reason header value
                           if_mod_since_date,
                           store_.GetRequiredCookie(),
                           payload,
                           NULL, NULL, NULL)) {
     LOG(("CaptureTask::HttpGetUrl - failed to get url\n"));
+    return false;  // TODO(michaeln): retry?
+  }
+
+  if (!payload->PassesValidationTests()) {
+    LOG(("CaptureTask::HttpGetUrl - received invalid payload\n"));
+    ExceptionManager::CaptureAndSendMinidump();
     return false;  // TODO(michaeln): retry?
   }
 
@@ -168,6 +180,9 @@ bool CaptureTask::ProcessUrl(const std::string16 &url) {
   if (new_item.payload.status_code == HttpConstants::HTTP_NOT_MODIFIED) {
     LOG(("CaptureTask::ProcessUrl - received HTTP_NOT_MODIFIED\n"));
     processed_urls_.insert(url);
+#ifdef WINCE
+    BrowserCache::EnsureBogusEntry(url.c_str());
+#endif
     return true;
   } else if (new_item.payload.status_code != HttpConstants::HTTP_OK) {
     LOG(("CaptureTask::ProcessUrl - received bad response %d\n",

@@ -49,9 +49,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <h3>Factory</h3>
 <p>Instantiates all other Gears objects. </p>
 <pre><code><a href="api_factory.html">Factory class</a>
-   Object  <b>create</b>(className, classVersion)
+   Object  <b>create</b>(className, [classVersion])
    string  <b>getBuildInfo</b>()
-   boolean <b>getPermission</b>(siteName, imageUrl, extraMessage)
+   boolean <b>getPermission</b>([siteName], [imageUrl], [extraMessage])
    readonly attribute boolean <b>hasPermission</b>
    readonly attribute string <b>version</b></code></pre>
 
@@ -59,6 +59,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <p>Provides a SQL database for storing data on the local machine.</p>
 <pre><code><a href="api_database.html">Database class</a>
    readonly int <b>lastInsertRowId</b>
+   readonly int <b>rowsAffected</b>
    void      <b>open</b>([name])
    ResultSet <b>execute</b>(sqlStatement, [argArray])
    void      <b>close</b>()</code></pre>
@@ -75,7 +76,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <h3>Desktop module</h3>
 <p>Provides an interface for accessing Desktop functionality.</p>
 <pre><code><a href="api_desktop.html">Desktop class</a>
-   bool     <b>createShortcut</b>(name, description, url, icons)</code></pre>
+   bool     <b>createShortcut</b>(name, url, icons, [description])</code></pre>
 
 <h3>HttpRequest module</h3>
 <p>Provides the ability to send HTTP requests in workers, as well as on the main page.</p>

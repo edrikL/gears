@@ -27,17 +27,18 @@
 #define GEARS_LOCALSERVER_FIREFOX_ASYNC_TASK_FF_H__
 
 #include <vector>
+#include "gears/base/common/async_router.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/localserver/common/critical_section.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
 
-class nsIEventQueue;
-
 //------------------------------------------------------------------------------
 // AsyncTask
 //------------------------------------------------------------------------------
-class AsyncTask : protected HttpRequest::ReadyStateListener {
+class AsyncTask : protected HttpRequest::ReadyStateListener,
+                  private RefCounted {
  public:
   // Starts a worker thread which will call the Run method
   bool Start();
@@ -102,6 +103,7 @@ class AsyncTask : protected HttpRequest::ReadyStateListener {
   // shortly thereafter.
   bool HttpGet(const char16 *full_url,
                bool is_capturing,
+               const char16 *reason_header_value,
                const char16 *if_mod_since_date,
                const char16 *required_cookie,
                WebCacheDB::PayloadInfo *payload,
@@ -122,7 +124,7 @@ class AsyncTask : protected HttpRequest::ReadyStateListener {
   // worker thread methods
 
   static void ThreadEntry(void *self);
-  nsresult CallAsync(nsIEventQueue *event_queue, int msg_code, void *msg_param);
+  nsresult CallAsync(ThreadId thread_id, int msg_code, void *msg_param);
 
   // listener and main thread methods
 
@@ -133,8 +135,9 @@ class AsyncTask : protected HttpRequest::ReadyStateListener {
   void ReadyStateChanged(HttpRequest *source);
 
   // Returns true if the currently executing thread is our listener thread
-  bool IsListenerThread() { 
-    return listener_thread_ == PR_GetCurrentThread();
+  bool IsListenerThread() {
+    return listener_thread_id_ ==
+        ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
   }
 
   // Returns true if the currently executing thread is our task thread
@@ -142,22 +145,14 @@ class AsyncTask : protected HttpRequest::ReadyStateListener {
     return thread_ == PR_GetCurrentThread();
   }
 
-  void AddReference();
-  void RemoveReference();
-
   bool delete_when_done_;
   Listener *listener_;
   PRThread *thread_;
-  PRThread *listener_thread_;
-  nsCOMPtr<nsIEventQueue> listener_event_queue_;
-  nsCOMPtr<nsIEventQueue> ui_event_queue_;
-  ScopedHttpRequestPtr http_request_;
+  ThreadId listener_thread_id_;
+  scoped_refptr<HttpRequest> http_request_;
   HttpRequestParameters *params_;
-  int refcount_;
 
-  struct AsyncCallEvent;
-  static void *PR_CALLBACK AsyncCall_EventHandlerFunc(AsyncCallEvent*);
-  static void  PR_CALLBACK AsyncCall_EventCleanupFunc(AsyncCallEvent*);
+  class AsyncCallEvent;
 };
 
 #endif  // GEARS_LOCALSERVER_FIREFOX_ASYNC_TASK_FF_H__

@@ -29,7 +29,14 @@
 #include "gears/base/ie/bho.h"
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/factory/common/factory_utils.h"
+#ifdef WINCE
+#include "gears/installer/iemobile/cab_updater.h"
+#endif
 #include "gears/localserver/ie/http_handler_ie.h"
+
+#ifdef WINCE
+HWND BrowserHelperObject::browser_window_ = NULL;
+#endif
 
 STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
 #ifdef WIN32
@@ -45,9 +52,28 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
     return S_OK;
 
   if (pUnkSite == NULL) {
+    // We never get here on WinCE so we cannot know when we are
+    // uninitialized. SetSite should be called with pUnkSite = NULL
+    // when the BHO is unitialized. It seems that this call 
+    // is not made on WinCE.
     LOG16((L"SetSite(): pUnkSite is NULL\n"));
   } else {
     HttpHandler::Register();
+#ifdef WINCE
+    static CabUpdater updater;
+    CComQIPtr<IWebBrowser2> site = pUnkSite;
+    ASSERT(site);
+    updater.SetSiteAndStart(site);   
+    assert(NULL == browser_window_);
+    site->get_HWND(reinterpret_cast<long*>(&browser_window_));
+#endif
   }
   return S_OK;
 }
+
+#ifdef WINCE
+// static
+HWND BrowserHelperObject::GetBrowserWindow() {
+  return browser_window_;
+}
+#endif

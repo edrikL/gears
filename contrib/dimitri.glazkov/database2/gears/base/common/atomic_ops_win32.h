@@ -30,6 +30,7 @@
 #define GEARS_BASE_COMMON_ATOMIC_OPS_WIN32_H__
 
 #include <windows.h>
+#include <crtdefs.h>  // for intptr_t on WINCE
 
 typedef intptr_t AtomicWord;
 #ifdef _WIN64

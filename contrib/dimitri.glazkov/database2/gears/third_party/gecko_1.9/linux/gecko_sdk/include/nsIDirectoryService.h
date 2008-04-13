@@ -33,7 +33,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDirectoryServiceProvider : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDirectoryServiceProvider : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDIRECTORYSERVICEPROVIDER_IID)
@@ -55,7 +55,7 @@ class NS_NO_VTABLE nsIDirectoryServiceProvider : public nsISupports {
   *
   */
   /* nsIFile getFile (in string prop, out PRBool persistent); */
-  NS_IMETHOD GetFile(const char *prop, PRBool *persistent, nsIFile **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFile(const char *prop, PRBool *persistent, nsIFile **_retval) = 0;
 
 };
 
@@ -63,15 +63,15 @@ class NS_NO_VTABLE nsIDirectoryServiceProvider : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDIRECTORYSERVICEPROVIDER \
-  NS_IMETHOD GetFile(const char *prop, PRBool *persistent, nsIFile **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetFile(const char *prop, PRBool *persistent, nsIFile **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDIRECTORYSERVICEPROVIDER(_to) \
-  NS_IMETHOD GetFile(const char *prop, PRBool *persistent, nsIFile **_retval) { return _to GetFile(prop, persistent, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetFile(const char *prop, PRBool *persistent, nsIFile **_retval) { return _to GetFile(prop, persistent, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDIRECTORYSERVICEPROVIDER(_to) \
-  NS_IMETHOD GetFile(const char *prop, PRBool *persistent, nsIFile **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFile(prop, persistent, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetFile(const char *prop, PRBool *persistent, nsIFile **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFile(prop, persistent, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -130,7 +130,7 @@ NS_IMETHODIMP nsDirectoryServiceProvider::GetFile(const char *prop, PRBool *pers
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDirectoryServiceProvider2 : public nsIDirectoryServiceProvider {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDirectoryServiceProvider2 : public nsIDirectoryServiceProvider {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDIRECTORYSERVICEPROVIDER2_IID)
@@ -149,7 +149,7 @@ class NS_NO_VTABLE nsIDirectoryServiceProvider2 : public nsIDirectoryServiceProv
   *                     aggregated with other "lower" providers.
   */
   /* nsISimpleEnumerator getFiles (in string prop); */
-  NS_IMETHOD GetFiles(const char *prop, nsISimpleEnumerator **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFiles(const char *prop, nsISimpleEnumerator **_retval) = 0;
 
 };
 
@@ -157,15 +157,15 @@ class NS_NO_VTABLE nsIDirectoryServiceProvider2 : public nsIDirectoryServiceProv
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDIRECTORYSERVICEPROVIDER2 \
-  NS_IMETHOD GetFiles(const char *prop, nsISimpleEnumerator **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetFiles(const char *prop, nsISimpleEnumerator **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDIRECTORYSERVICEPROVIDER2(_to) \
-  NS_IMETHOD GetFiles(const char *prop, nsISimpleEnumerator **_retval) { return _to GetFiles(prop, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetFiles(const char *prop, nsISimpleEnumerator **_retval) { return _to GetFiles(prop, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDIRECTORYSERVICEPROVIDER2(_to) \
-  NS_IMETHOD GetFiles(const char *prop, nsISimpleEnumerator **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFiles(prop, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetFiles(const char *prop, nsISimpleEnumerator **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFiles(prop, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -221,7 +221,7 @@ NS_IMETHODIMP nsDirectoryServiceProvider2::GetFiles(const char *prop, nsISimpleE
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDirectoryService : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDirectoryService : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDIRECTORYSERVICE_IID)
@@ -233,7 +233,7 @@ class NS_NO_VTABLE nsIDirectoryService : public nsISupports {
   *
   */
   /* void init (); */
-  NS_IMETHOD Init(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Init(void) = 0;
 
   /**
   * registerProvider
@@ -246,7 +246,7 @@ class NS_NO_VTABLE nsIDirectoryService : public nsISupports {
   *
   */
   /* void registerProvider (in nsIDirectoryServiceProvider prov); */
-  NS_IMETHOD RegisterProvider(nsIDirectoryServiceProvider *prov) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RegisterProvider(nsIDirectoryServiceProvider *prov) = 0;
 
   /**
   * unregisterProvider
@@ -257,7 +257,7 @@ class NS_NO_VTABLE nsIDirectoryService : public nsISupports {
   *
   */
   /* void unregisterProvider (in nsIDirectoryServiceProvider prov); */
-  NS_IMETHOD UnregisterProvider(nsIDirectoryServiceProvider *prov) = 0;
+  NS_SCRIPTABLE NS_IMETHOD UnregisterProvider(nsIDirectoryServiceProvider *prov) = 0;
 
 };
 
@@ -265,21 +265,21 @@ class NS_NO_VTABLE nsIDirectoryService : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDIRECTORYSERVICE \
-  NS_IMETHOD Init(void); \
-  NS_IMETHOD RegisterProvider(nsIDirectoryServiceProvider *prov); \
-  NS_IMETHOD UnregisterProvider(nsIDirectoryServiceProvider *prov); 
+  NS_SCRIPTABLE NS_IMETHOD Init(void); \
+  NS_SCRIPTABLE NS_IMETHOD RegisterProvider(nsIDirectoryServiceProvider *prov); \
+  NS_SCRIPTABLE NS_IMETHOD UnregisterProvider(nsIDirectoryServiceProvider *prov); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDIRECTORYSERVICE(_to) \
-  NS_IMETHOD Init(void) { return _to Init(); } \
-  NS_IMETHOD RegisterProvider(nsIDirectoryServiceProvider *prov) { return _to RegisterProvider(prov); } \
-  NS_IMETHOD UnregisterProvider(nsIDirectoryServiceProvider *prov) { return _to UnregisterProvider(prov); } 
+  NS_SCRIPTABLE NS_IMETHOD Init(void) { return _to Init(); } \
+  NS_SCRIPTABLE NS_IMETHOD RegisterProvider(nsIDirectoryServiceProvider *prov) { return _to RegisterProvider(prov); } \
+  NS_SCRIPTABLE NS_IMETHOD UnregisterProvider(nsIDirectoryServiceProvider *prov) { return _to UnregisterProvider(prov); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDIRECTORYSERVICE(_to) \
-  NS_IMETHOD Init(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Init(); } \
-  NS_IMETHOD RegisterProvider(nsIDirectoryServiceProvider *prov) { return !_to ? NS_ERROR_NULL_POINTER : _to->RegisterProvider(prov); } \
-  NS_IMETHOD UnregisterProvider(nsIDirectoryServiceProvider *prov) { return !_to ? NS_ERROR_NULL_POINTER : _to->UnregisterProvider(prov); } 
+  NS_SCRIPTABLE NS_IMETHOD Init(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Init(); } \
+  NS_SCRIPTABLE NS_IMETHOD RegisterProvider(nsIDirectoryServiceProvider *prov) { return !_to ? NS_ERROR_NULL_POINTER : _to->RegisterProvider(prov); } \
+  NS_SCRIPTABLE NS_IMETHOD UnregisterProvider(nsIDirectoryServiceProvider *prov) { return !_to ? NS_ERROR_NULL_POINTER : _to->UnregisterProvider(prov); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

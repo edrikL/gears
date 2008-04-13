@@ -23,24 +23,33 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+// Some WinCE devices use 'unknown' rather than 'undefined'. If an element has
+// type 'unknown', we can not pass it to a function, so we must pass its type
+// instead.
+function isDefined(type) {
+  return (type != 'undefined' && type != 'unknown');
+}
+
 function childNodes(element) {
-  if (element.childNodes)
+  if (isDefined(typeof element.childNodes)) {
     return element.childNodes;
-  else
+  } else if (isDefined(typeof element.children)) {
     return element.children;
+  }
 }
 
 function getElementById(element_name) {
-  if (document.getElementById)
+  if (isDefined(typeof document.getElementById)) {
     return document.getElementById(element_name);
-  else
+  } else if(typeof isDefined(document.all)) {
     return document.all[element_name];
+  }
 }
 
 function setTextContent(elem, content) {
-  if (typeof elem.innerText != 'undefined') {
+  if (isDefined(typeof elem.innerText)) {
     elem.innerText = content; 
-  } else {
+  } else if (isDefined(typeof elem.textContent)) {
     elem.textContent = content;
   }
 }
@@ -49,8 +58,6 @@ function setupSample() {
   // Make sure we have Gears. If not, tell the user.
   if (!window.google || !google.gears) {
     if (confirm("This demo requires Gears to be installed. Install now?")) {
-      // TODO(steveblock): Need to modify the install page to support mobile
-      // devices before this version of the page goes 'live'.
       var spliceStart = location.href.indexOf("/samples");
       location.href =
         location.href.substring(0, spliceStart) + "/install.html";

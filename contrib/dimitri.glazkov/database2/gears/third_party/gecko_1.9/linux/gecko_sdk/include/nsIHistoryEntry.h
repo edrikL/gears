@@ -24,7 +24,7 @@ class nsIURI; /* forward declaration */
   {0xa41661d4, 0x1417, 0x11d5, \
     { 0x98, 0x82, 0x00, 0xc0, 0x4f, 0xa0, 0x2f, 0x40 }}
 
-class NS_NO_VTABLE nsIHistoryEntry : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIHistoryEntry : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHISTORYENTRY_IID)
@@ -35,7 +35,7 @@ class NS_NO_VTABLE nsIHistoryEntry : public nsISupports {
      * of type nsIURI
      */
   /* readonly attribute nsIURI URI; */
-  NS_IMETHOD GetURI(nsIURI * *aURI) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetURI(nsIURI * *aURI) = 0;
 
   /** 
      * A readonly property that returns the title
@@ -43,7 +43,7 @@ class NS_NO_VTABLE nsIHistoryEntry : public nsISupports {
      * is a encoded string
      */
   /* readonly attribute wstring title; */
-  NS_IMETHOD GetTitle(PRUnichar * *aTitle) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTitle(PRUnichar * *aTitle) = 0;
 
   /** 
      * A readonly property that returns a boolean
@@ -55,7 +55,7 @@ class NS_NO_VTABLE nsIHistoryEntry : public nsISupports {
      * navigation.
      */
   /* readonly attribute boolean isSubFrame; */
-  NS_IMETHOD GetIsSubFrame(PRBool *aIsSubFrame) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIsSubFrame(PRBool *aIsSubFrame) = 0;
 
 };
 
@@ -63,21 +63,21 @@ class NS_NO_VTABLE nsIHistoryEntry : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIHISTORYENTRY \
-  NS_IMETHOD GetURI(nsIURI * *aURI); \
-  NS_IMETHOD GetTitle(PRUnichar * *aTitle); \
-  NS_IMETHOD GetIsSubFrame(PRBool *aIsSubFrame); 
+  NS_SCRIPTABLE NS_IMETHOD GetURI(nsIURI * *aURI); \
+  NS_SCRIPTABLE NS_IMETHOD GetTitle(PRUnichar * *aTitle); \
+  NS_SCRIPTABLE NS_IMETHOD GetIsSubFrame(PRBool *aIsSubFrame); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIHISTORYENTRY(_to) \
-  NS_IMETHOD GetURI(nsIURI * *aURI) { return _to GetURI(aURI); } \
-  NS_IMETHOD GetTitle(PRUnichar * *aTitle) { return _to GetTitle(aTitle); } \
-  NS_IMETHOD GetIsSubFrame(PRBool *aIsSubFrame) { return _to GetIsSubFrame(aIsSubFrame); } 
+  NS_SCRIPTABLE NS_IMETHOD GetURI(nsIURI * *aURI) { return _to GetURI(aURI); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTitle(PRUnichar * *aTitle) { return _to GetTitle(aTitle); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsSubFrame(PRBool *aIsSubFrame) { return _to GetIsSubFrame(aIsSubFrame); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIHISTORYENTRY(_to) \
-  NS_IMETHOD GetURI(nsIURI * *aURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetURI(aURI); } \
-  NS_IMETHOD GetTitle(PRUnichar * *aTitle) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTitle(aTitle); } \
-  NS_IMETHOD GetIsSubFrame(PRBool *aIsSubFrame) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsSubFrame(aIsSubFrame); } 
+  NS_SCRIPTABLE NS_IMETHOD GetURI(nsIURI * *aURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetURI(aURI); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTitle(PRUnichar * *aTitle) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTitle(aTitle); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsSubFrame(PRBool *aIsSubFrame) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsSubFrame(aIsSubFrame); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

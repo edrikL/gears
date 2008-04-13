@@ -1,9 +1,9 @@
 // Copyright 2006, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct JSContext; // must declare this before including nsIJSContextStack.h
@@ -30,7 +30,15 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_sdk/include/nsIDOMHTMLInputElement.h>
 #include <gecko_sdk/include/nsIDOMEventTarget.h>
 #include <gecko_sdk/include/nsIDOMDocument.h>
+#include <gecko_sdk/include/nsIInterfaceRequestor.h>
 #include <gecko_internal/jsapi.h>
+#include <gecko_internal/nsIBaseWindow.h>
+#include <gecko_internal/nsIDocShell.h>
+#include <gecko_internal/nsIDocShellTreeItem.h>
+#include <gecko_internal/nsIDocShellTreeOwner.h>
+#if BROWSER_FF3
+#include <gecko_internal/nsDOMJSUtils.h>
+#endif
 #include <gecko_internal/nsIDOM3Node.h>
 #include <gecko_internal/nsIDOMWindowInternal.h>
 #include <gecko_internal/nsIInterfaceInfoManager.h>
@@ -38,15 +46,26 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_internal/nsIScriptContext.h>
 #include <gecko_internal/nsIScriptGlobalObject.h>
 #include <gecko_internal/nsIScriptSecurityManager.h>
+#include <gecko_internal/nsIWebNavigation.h>
 #include <gecko_internal/nsIXPConnect.h>
+#include <gecko_internal/nsIXULWindow.h>
 #include "gears/base/common/common.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/firefox/dom_utils.h"
 
+#if defined(LINUX) && !defined(OS_MACOSX)
+#include <gtk/gtk.h>
+#endif
 
 // The IID for nsIContent in different versions of Firefox/Gecko
 // TODO(michaeln): Add to this list as new versions show up
 
+#if BROWSER_FF3
+// Firefox 3.0.x
+#define NS_ICONTENT_IID_GECKO190 \
+{ 0xd3434698, 0x3a16, 0x4dbe, \
+  { 0x9d, 0xed, 0xbe, 0x64, 0x16, 0x1a, 0xa3, 0x52 } }
+#else
 // Firefox 1.5.0.x
 #define NS_ICONTENT_IID_GECKO180 \
 { 0x3fecc374, 0x2839, 0x4db3, \
@@ -57,9 +76,15 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 { 0x9d059608, 0xddb0, 0x4e6a, \
   { 0x99, 0x69, 0xd2, 0xf3, 0x63, 0xa1, 0xb5, 0x57 } }
 
+#endif
+
 static const nsIID kPossibleNsContentIIDs[] = {
+#if BROWSER_FF3
+      NS_ICONTENT_IID_GECKO190,
+#else
       NS_ICONTENT_IID_GECKO180,
-      NS_ICONTENT_IID_GECKO181
+      NS_ICONTENT_IID_GECKO181,
+#endif
     };
 
 
@@ -115,6 +140,73 @@ nsresult DOMUtils::GetWindow(nsIDOMWindowInternal **result) {
   return CallQueryInterface(sc->GetGlobalObject(), result);
 }
 
+nsresult DOMUtils::GetNativeWindow(NativeWindowPtr* window) {
+  nsIDOMWindowInternal* internal_window = NULL;
+  nsresult nr = GetWindow(&internal_window);
+  if (NS_FAILED(nr))
+    return nr;
+
+  nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(internal_window,
+                                                              &nr));
+  if (NS_FAILED(nr))
+    return nr;
+
+  nsCOMPtr<nsIWebNavigation> nav;
+  nr = requestor->GetInterface(NS_GET_IID(nsIWebNavigation),
+                               getter_AddRefs(nav));
+  if (NS_FAILED(nr))
+    return nr;
+
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(nav, &nr));
+  if (NS_FAILED(nr))
+    return nr;
+
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  nr = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+  if (NS_FAILED(nr))
+    return nr;
+
+  requestor = do_QueryInterface(treeOwner, &nr);
+  if (NS_FAILED(nr))
+    return nr;
+
+  nsCOMPtr<nsIXULWindow> xulWindow;
+  nr = requestor->GetInterface(NS_GET_IID(nsIXULWindow),
+                               getter_AddRefs(xulWindow));
+  if (NS_FAILED(nr))
+    return nr;
+
+  nsCOMPtr<nsIDocShell> docShell;
+  nr = xulWindow->GetDocShell(getter_AddRefs(docShell));
+  if (NS_FAILED(nr))
+    return nr;
+
+  nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(docShell, &nr));
+  if (NS_FAILED(nr))
+    return nr;
+
+  void* parentWindow = NULL;
+  nr = baseWindow->GetParentNativeWindow(&parentWindow);
+  if (!parentWindow || NS_FAILED(nr))
+    return NS_ERROR_FAILURE;
+
+#if defined(LINUX) && !defined(OS_MACOSX)
+  GdkWindow* parentGdkWindow = reinterpret_cast<GdkWindow*>(parentWindow);
+  gpointer user_data = NULL;
+  gdk_window_get_user_data(gdk_window_get_toplevel(parentGdkWindow),
+                           &user_data);
+  if (!user_data)
+    return NS_ERROR_FAILURE;
+
+  *window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(user_data)));
+#elif defined(WIN32)
+  *window = reinterpret_cast<HWND>(parentWindow);
+#else
+  *window = parentWindow;
+#endif
+
+  return NS_OK;
+}
 
 nsresult DOMUtils::GetWindowEventTarget(nsIDOMEventTarget **target) {
   // WARNING: nsIDOMWindow2::GetWindowRoot() would return an nsIDOMEventTarget
@@ -143,7 +235,7 @@ static bool VerifyNsContent(nsISupports *unknown) {
   // The nsIContentIID is version dependent, we test for all we know about
   for (size_t i = 0; i < ARRAYSIZE(kPossibleNsContentIIDs); ++i) {
     const nsIID *ns_content_iid = &kPossibleNsContentIIDs[i];
-  
+
     // Paranoia, ensure that the IID we query for is either unknown to the
     // interface manager or not scriptable. The XPConnect JSWrapper
     // QueryInterface implementation will not forward to script for such
@@ -162,9 +254,9 @@ static bool VerifyNsContent(nsISupports *unknown) {
 
     // Test if our 'unknown' argument implements nsIContent,
     // a positive test indicates 'unknown' is not script based.
-    nsCOMPtr<nsISupports> nscontent; 
-    rv = unknown->QueryInterface(*ns_content_iid, 
-                                 NS_REINTERPRET_CAST(void**, &nscontent));
+    nsCOMPtr<nsISupports> nscontent;
+    rv = unknown->QueryInterface(*ns_content_iid,
+                                 reinterpret_cast<void**>(&nscontent));
     if (NS_SUCCEEDED(rv) && nscontent) {
       return true;
     }

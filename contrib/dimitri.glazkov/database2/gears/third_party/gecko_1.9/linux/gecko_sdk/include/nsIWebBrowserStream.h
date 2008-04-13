@@ -31,7 +31,7 @@ class nsIURI; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIWebBrowserStream : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIWebBrowserStream : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWEBBROWSERSTREAM_IID)
@@ -55,7 +55,7 @@ class NS_NO_VTABLE nsIWebBrowserStream : public nsISupports {
    *        openStream was called twice without an intermediate closeStream.
    */
   /* void openStream (in nsIURI aBaseURI, in ACString aContentType); */
-  NS_IMETHOD OpenStream(nsIURI *aBaseURI, const nsACString & aContentType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OpenStream(nsIURI *aBaseURI, const nsACString & aContentType) = 0;
 
   /**
    * Append data to this stream.
@@ -65,7 +65,7 @@ class NS_NO_VTABLE nsIWebBrowserStream : public nsISupports {
    * @note To append more than 4 GB of data, call this method multiple times.
    */
   /* void appendToStream ([array, size_is (aLen), const] in octet aData, in unsigned long aLen); */
-  NS_IMETHOD AppendToStream(const PRUint8 *aData, PRUint32 aLen) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AppendToStream(const PRUint8 *aData, PRUint32 aLen) = 0;
 
   /**
    * Notifies the browser that all the data has been appended. This may notify
@@ -75,7 +75,7 @@ class NS_NO_VTABLE nsIWebBrowserStream : public nsISupports {
    *        This method was called without a preceding openStream.
    */
   /* void closeStream (); */
-  NS_IMETHOD CloseStream(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CloseStream(void) = 0;
 
 };
 
@@ -83,21 +83,21 @@ class NS_NO_VTABLE nsIWebBrowserStream : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWEBBROWSERSTREAM \
-  NS_IMETHOD OpenStream(nsIURI *aBaseURI, const nsACString & aContentType); \
-  NS_IMETHOD AppendToStream(const PRUint8 *aData, PRUint32 aLen); \
-  NS_IMETHOD CloseStream(void); 
+  NS_SCRIPTABLE NS_IMETHOD OpenStream(nsIURI *aBaseURI, const nsACString & aContentType); \
+  NS_SCRIPTABLE NS_IMETHOD AppendToStream(const PRUint8 *aData, PRUint32 aLen); \
+  NS_SCRIPTABLE NS_IMETHOD CloseStream(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIWEBBROWSERSTREAM(_to) \
-  NS_IMETHOD OpenStream(nsIURI *aBaseURI, const nsACString & aContentType) { return _to OpenStream(aBaseURI, aContentType); } \
-  NS_IMETHOD AppendToStream(const PRUint8 *aData, PRUint32 aLen) { return _to AppendToStream(aData, aLen); } \
-  NS_IMETHOD CloseStream(void) { return _to CloseStream(); } 
+  NS_SCRIPTABLE NS_IMETHOD OpenStream(nsIURI *aBaseURI, const nsACString & aContentType) { return _to OpenStream(aBaseURI, aContentType); } \
+  NS_SCRIPTABLE NS_IMETHOD AppendToStream(const PRUint8 *aData, PRUint32 aLen) { return _to AppendToStream(aData, aLen); } \
+  NS_SCRIPTABLE NS_IMETHOD CloseStream(void) { return _to CloseStream(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIWEBBROWSERSTREAM(_to) \
-  NS_IMETHOD OpenStream(nsIURI *aBaseURI, const nsACString & aContentType) { return !_to ? NS_ERROR_NULL_POINTER : _to->OpenStream(aBaseURI, aContentType); } \
-  NS_IMETHOD AppendToStream(const PRUint8 *aData, PRUint32 aLen) { return !_to ? NS_ERROR_NULL_POINTER : _to->AppendToStream(aData, aLen); } \
-  NS_IMETHOD CloseStream(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->CloseStream(); } 
+  NS_SCRIPTABLE NS_IMETHOD OpenStream(nsIURI *aBaseURI, const nsACString & aContentType) { return !_to ? NS_ERROR_NULL_POINTER : _to->OpenStream(aBaseURI, aContentType); } \
+  NS_SCRIPTABLE NS_IMETHOD AppendToStream(const PRUint8 *aData, PRUint32 aLen) { return !_to ? NS_ERROR_NULL_POINTER : _to->AppendToStream(aData, aLen); } \
+  NS_SCRIPTABLE NS_IMETHOD CloseStream(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->CloseStream(); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -32,6 +32,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/url_utils.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/ie/atl_headers.h"
 

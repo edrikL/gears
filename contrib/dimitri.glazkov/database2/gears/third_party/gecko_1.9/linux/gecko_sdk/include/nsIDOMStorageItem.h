@@ -29,7 +29,7 @@
  *
  * A respresentation of a storage object item.
  */
-class NS_NO_VTABLE nsIDOMStorageItem : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMStorageItem : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMSTORAGEITEM_IID)
@@ -38,15 +38,15 @@ class NS_NO_VTABLE nsIDOMStorageItem : public nsISupports {
    * Indicates whether a key is available only in a secure context.
    */
   /* attribute boolean secure; */
-  NS_IMETHOD GetSecure(PRBool *aSecure) = 0;
-  NS_IMETHOD SetSecure(PRBool aSecure) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSecure(PRBool *aSecure) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSecure(PRBool aSecure) = 0;
 
   /**
    * The value associated with the item.
    */
   /* attribute DOMString value; */
-  NS_IMETHOD GetValue(nsAString & aValue) = 0;
-  NS_IMETHOD SetValue(const nsAString & aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsAString & aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetValue(const nsAString & aValue) = 0;
 
 };
 
@@ -54,24 +54,24 @@ class NS_NO_VTABLE nsIDOMStorageItem : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMSTORAGEITEM \
-  NS_IMETHOD GetSecure(PRBool *aSecure); \
-  NS_IMETHOD SetSecure(PRBool aSecure); \
-  NS_IMETHOD GetValue(nsAString & aValue); \
-  NS_IMETHOD SetValue(const nsAString & aValue); 
+  NS_SCRIPTABLE NS_IMETHOD GetSecure(PRBool *aSecure); \
+  NS_SCRIPTABLE NS_IMETHOD SetSecure(PRBool aSecure); \
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsAString & aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetValue(const nsAString & aValue); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMSTORAGEITEM(_to) \
-  NS_IMETHOD GetSecure(PRBool *aSecure) { return _to GetSecure(aSecure); } \
-  NS_IMETHOD SetSecure(PRBool aSecure) { return _to SetSecure(aSecure); } \
-  NS_IMETHOD GetValue(nsAString & aValue) { return _to GetValue(aValue); } \
-  NS_IMETHOD SetValue(const nsAString & aValue) { return _to SetValue(aValue); } 
+  NS_SCRIPTABLE NS_IMETHOD GetSecure(PRBool *aSecure) { return _to GetSecure(aSecure); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSecure(PRBool aSecure) { return _to SetSecure(aSecure); } \
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsAString & aValue) { return _to GetValue(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetValue(const nsAString & aValue) { return _to SetValue(aValue); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMSTORAGEITEM(_to) \
-  NS_IMETHOD GetSecure(PRBool *aSecure) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSecure(aSecure); } \
-  NS_IMETHOD SetSecure(PRBool aSecure) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSecure(aSecure); } \
-  NS_IMETHOD GetValue(nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetValue(aValue); } \
-  NS_IMETHOD SetValue(const nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetValue(aValue); } 
+  NS_SCRIPTABLE NS_IMETHOD GetSecure(PRBool *aSecure) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSecure(aSecure); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSecure(PRBool aSecure) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSecure(aSecure); } \
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetValue(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetValue(const nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetValue(aValue); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

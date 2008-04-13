@@ -22,7 +22,7 @@
   {0xa6cf908f, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMHTMLFormElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLFormElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLFORMELEMENT_IID)
@@ -37,40 +37,40 @@ class NS_NO_VTABLE nsIDOMHTMLFormElement : public nsIDOMHTMLElement {
  * @status FROZEN
  */
   /* readonly attribute nsIDOMHTMLCollection elements; */
-  NS_IMETHOD GetElements(nsIDOMHTMLCollection * *aElements) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetElements(nsIDOMHTMLCollection * *aElements) = 0;
 
   /* readonly attribute long length; */
-  NS_IMETHOD GetLength(PRInt32 *aLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRInt32 *aLength) = 0;
 
   /* attribute DOMString name; */
-  NS_IMETHOD GetName(nsAString & aName) = 0;
-  NS_IMETHOD SetName(const nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) = 0;
 
   /* attribute DOMString acceptCharset; */
-  NS_IMETHOD GetAcceptCharset(nsAString & aAcceptCharset) = 0;
-  NS_IMETHOD SetAcceptCharset(const nsAString & aAcceptCharset) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAcceptCharset(nsAString & aAcceptCharset) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAcceptCharset(const nsAString & aAcceptCharset) = 0;
 
   /* attribute DOMString action; */
-  NS_IMETHOD GetAction(nsAString & aAction) = 0;
-  NS_IMETHOD SetAction(const nsAString & aAction) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAction(nsAString & aAction) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAction(const nsAString & aAction) = 0;
 
   /* attribute DOMString enctype; */
-  NS_IMETHOD GetEnctype(nsAString & aEnctype) = 0;
-  NS_IMETHOD SetEnctype(const nsAString & aEnctype) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetEnctype(nsAString & aEnctype) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetEnctype(const nsAString & aEnctype) = 0;
 
   /* attribute DOMString method; */
-  NS_IMETHOD GetMethod(nsAString & aMethod) = 0;
-  NS_IMETHOD SetMethod(const nsAString & aMethod) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMethod(nsAString & aMethod) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetMethod(const nsAString & aMethod) = 0;
 
   /* attribute DOMString target; */
-  NS_IMETHOD GetTarget(nsAString & aTarget) = 0;
-  NS_IMETHOD SetTarget(const nsAString & aTarget) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetTarget(const nsAString & aTarget) = 0;
 
   /* void submit (); */
-  NS_IMETHOD Submit(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Submit(void) = 0;
 
   /* void reset (); */
-  NS_IMETHOD Reset(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Reset(void) = 0;
 
 };
 
@@ -78,60 +78,60 @@ class NS_NO_VTABLE nsIDOMHTMLFormElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLFORMELEMENT \
-  NS_IMETHOD GetElements(nsIDOMHTMLCollection * *aElements); \
-  NS_IMETHOD GetLength(PRInt32 *aLength); \
-  NS_IMETHOD GetName(nsAString & aName); \
-  NS_IMETHOD SetName(const nsAString & aName); \
-  NS_IMETHOD GetAcceptCharset(nsAString & aAcceptCharset); \
-  NS_IMETHOD SetAcceptCharset(const nsAString & aAcceptCharset); \
-  NS_IMETHOD GetAction(nsAString & aAction); \
-  NS_IMETHOD SetAction(const nsAString & aAction); \
-  NS_IMETHOD GetEnctype(nsAString & aEnctype); \
-  NS_IMETHOD SetEnctype(const nsAString & aEnctype); \
-  NS_IMETHOD GetMethod(nsAString & aMethod); \
-  NS_IMETHOD SetMethod(const nsAString & aMethod); \
-  NS_IMETHOD GetTarget(nsAString & aTarget); \
-  NS_IMETHOD SetTarget(const nsAString & aTarget); \
-  NS_IMETHOD Submit(void); \
-  NS_IMETHOD Reset(void); 
+  NS_SCRIPTABLE NS_IMETHOD GetElements(nsIDOMHTMLCollection * *aElements); \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRInt32 *aLength); \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD GetAcceptCharset(nsAString & aAcceptCharset); \
+  NS_SCRIPTABLE NS_IMETHOD SetAcceptCharset(const nsAString & aAcceptCharset); \
+  NS_SCRIPTABLE NS_IMETHOD GetAction(nsAString & aAction); \
+  NS_SCRIPTABLE NS_IMETHOD SetAction(const nsAString & aAction); \
+  NS_SCRIPTABLE NS_IMETHOD GetEnctype(nsAString & aEnctype); \
+  NS_SCRIPTABLE NS_IMETHOD SetEnctype(const nsAString & aEnctype); \
+  NS_SCRIPTABLE NS_IMETHOD GetMethod(nsAString & aMethod); \
+  NS_SCRIPTABLE NS_IMETHOD SetMethod(const nsAString & aMethod); \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget); \
+  NS_SCRIPTABLE NS_IMETHOD SetTarget(const nsAString & aTarget); \
+  NS_SCRIPTABLE NS_IMETHOD Submit(void); \
+  NS_SCRIPTABLE NS_IMETHOD Reset(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLFORMELEMENT(_to) \
-  NS_IMETHOD GetElements(nsIDOMHTMLCollection * *aElements) { return _to GetElements(aElements); } \
-  NS_IMETHOD GetLength(PRInt32 *aLength) { return _to GetLength(aLength); } \
-  NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
-  NS_IMETHOD GetAcceptCharset(nsAString & aAcceptCharset) { return _to GetAcceptCharset(aAcceptCharset); } \
-  NS_IMETHOD SetAcceptCharset(const nsAString & aAcceptCharset) { return _to SetAcceptCharset(aAcceptCharset); } \
-  NS_IMETHOD GetAction(nsAString & aAction) { return _to GetAction(aAction); } \
-  NS_IMETHOD SetAction(const nsAString & aAction) { return _to SetAction(aAction); } \
-  NS_IMETHOD GetEnctype(nsAString & aEnctype) { return _to GetEnctype(aEnctype); } \
-  NS_IMETHOD SetEnctype(const nsAString & aEnctype) { return _to SetEnctype(aEnctype); } \
-  NS_IMETHOD GetMethod(nsAString & aMethod) { return _to GetMethod(aMethod); } \
-  NS_IMETHOD SetMethod(const nsAString & aMethod) { return _to SetMethod(aMethod); } \
-  NS_IMETHOD GetTarget(nsAString & aTarget) { return _to GetTarget(aTarget); } \
-  NS_IMETHOD SetTarget(const nsAString & aTarget) { return _to SetTarget(aTarget); } \
-  NS_IMETHOD Submit(void) { return _to Submit(); } \
-  NS_IMETHOD Reset(void) { return _to Reset(); } 
+  NS_SCRIPTABLE NS_IMETHOD GetElements(nsIDOMHTMLCollection * *aElements) { return _to GetElements(aElements); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRInt32 *aLength) { return _to GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAcceptCharset(nsAString & aAcceptCharset) { return _to GetAcceptCharset(aAcceptCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAcceptCharset(const nsAString & aAcceptCharset) { return _to SetAcceptCharset(aAcceptCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAction(nsAString & aAction) { return _to GetAction(aAction); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAction(const nsAString & aAction) { return _to SetAction(aAction); } \
+  NS_SCRIPTABLE NS_IMETHOD GetEnctype(nsAString & aEnctype) { return _to GetEnctype(aEnctype); } \
+  NS_SCRIPTABLE NS_IMETHOD SetEnctype(const nsAString & aEnctype) { return _to SetEnctype(aEnctype); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMethod(nsAString & aMethod) { return _to GetMethod(aMethod); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMethod(const nsAString & aMethod) { return _to SetMethod(aMethod); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) { return _to GetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTarget(const nsAString & aTarget) { return _to SetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD Submit(void) { return _to Submit(); } \
+  NS_SCRIPTABLE NS_IMETHOD Reset(void) { return _to Reset(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLFORMELEMENT(_to) \
-  NS_IMETHOD GetElements(nsIDOMHTMLCollection * *aElements) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetElements(aElements); } \
-  NS_IMETHOD GetLength(PRInt32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
-  NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
-  NS_IMETHOD GetAcceptCharset(nsAString & aAcceptCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAcceptCharset(aAcceptCharset); } \
-  NS_IMETHOD SetAcceptCharset(const nsAString & aAcceptCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAcceptCharset(aAcceptCharset); } \
-  NS_IMETHOD GetAction(nsAString & aAction) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAction(aAction); } \
-  NS_IMETHOD SetAction(const nsAString & aAction) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAction(aAction); } \
-  NS_IMETHOD GetEnctype(nsAString & aEnctype) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetEnctype(aEnctype); } \
-  NS_IMETHOD SetEnctype(const nsAString & aEnctype) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetEnctype(aEnctype); } \
-  NS_IMETHOD GetMethod(nsAString & aMethod) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMethod(aMethod); } \
-  NS_IMETHOD SetMethod(const nsAString & aMethod) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMethod(aMethod); } \
-  NS_IMETHOD GetTarget(nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTarget(aTarget); } \
-  NS_IMETHOD SetTarget(const nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTarget(aTarget); } \
-  NS_IMETHOD Submit(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Submit(); } \
-  NS_IMETHOD Reset(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Reset(); } 
+  NS_SCRIPTABLE NS_IMETHOD GetElements(nsIDOMHTMLCollection * *aElements) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetElements(aElements); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRInt32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAcceptCharset(nsAString & aAcceptCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAcceptCharset(aAcceptCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAcceptCharset(const nsAString & aAcceptCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAcceptCharset(aAcceptCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAction(nsAString & aAction) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAction(aAction); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAction(const nsAString & aAction) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAction(aAction); } \
+  NS_SCRIPTABLE NS_IMETHOD GetEnctype(nsAString & aEnctype) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetEnctype(aEnctype); } \
+  NS_SCRIPTABLE NS_IMETHOD SetEnctype(const nsAString & aEnctype) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetEnctype(aEnctype); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMethod(nsAString & aMethod) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMethod(aMethod); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMethod(const nsAString & aMethod) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMethod(aMethod); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTarget(const nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD Submit(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Submit(); } \
+  NS_SCRIPTABLE NS_IMETHOD Reset(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Reset(); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

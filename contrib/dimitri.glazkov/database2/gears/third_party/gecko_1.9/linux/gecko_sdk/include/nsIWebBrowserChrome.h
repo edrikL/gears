@@ -32,7 +32,7 @@ class nsIDocShellTreeItem; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIWebBrowserChrome : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIWebBrowserChrome : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWEBBROWSERCHROME_IID)
@@ -50,7 +50,7 @@ class NS_NO_VTABLE nsIWebBrowserChrome : public nsISupports {
      *               no status.
      */
   /* void setStatus (in unsigned long statusType, in wstring status); */
-  NS_IMETHOD SetStatus(PRUint32 statusType, const PRUnichar *status) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetStatus(PRUint32 statusType, const PRUnichar *status) = 0;
 
   /**
      * The currently loaded WebBrowser.  The browser chrome may be
@@ -61,8 +61,8 @@ class NS_NO_VTABLE nsIWebBrowserChrome : public nsISupports {
      * setting up listeners etc.
      */
   /* attribute nsIWebBrowser webBrowser; */
-  NS_IMETHOD GetWebBrowser(nsIWebBrowser * *aWebBrowser) = 0;
-  NS_IMETHOD SetWebBrowser(nsIWebBrowser * aWebBrowser) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetWebBrowser(nsIWebBrowser * *aWebBrowser) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetWebBrowser(nsIWebBrowser * aWebBrowser) = 0;
 
   /**
      * Definitions for the chrome flags
@@ -121,15 +121,15 @@ class NS_NO_VTABLE nsIWebBrowserChrome : public nsISupports {
      * appropriately.
      */
   /* attribute unsigned long chromeFlags; */
-  NS_IMETHOD GetChromeFlags(PRUint32 *aChromeFlags) = 0;
-  NS_IMETHOD SetChromeFlags(PRUint32 aChromeFlags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetChromeFlags(PRUint32 *aChromeFlags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetChromeFlags(PRUint32 aChromeFlags) = 0;
 
   /**
      * Asks the implementer to destroy the window associated with this
      * WebBrowser object.
      */
   /* void destroyBrowserWindow (); */
-  NS_IMETHOD DestroyBrowserWindow(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD DestroyBrowserWindow(void) = 0;
 
   /**
      * Tells the chrome to size itself such that the browser will be the 
@@ -138,7 +138,7 @@ class NS_NO_VTABLE nsIWebBrowserChrome : public nsISupports {
      * @param aCY new height of the browser
      */
   /* void sizeBrowserTo (in long aCX, in long aCY); */
-  NS_IMETHOD SizeBrowserTo(PRInt32 aCX, PRInt32 aCY) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SizeBrowserTo(PRInt32 aCX, PRInt32 aCY) = 0;
 
   /**
      * Shows the window as a modal window.
@@ -146,14 +146,14 @@ class NS_NO_VTABLE nsIWebBrowserChrome : public nsISupports {
      *         in exitModalEventLoop.
      */
   /* void showAsModal (); */
-  NS_IMETHOD ShowAsModal(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ShowAsModal(void) = 0;
 
   /**
      * Is the window modal (that is, currently executing a modal loop)?
      * @return true if it's a modal window
      */
   /* boolean isWindowModal (); */
-  NS_IMETHOD IsWindowModal(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsWindowModal(PRBool *_retval) = 0;
 
   /**
      * Exit a modal event loop if we're in one. The implementation
@@ -161,7 +161,7 @@ class NS_NO_VTABLE nsIWebBrowserChrome : public nsISupports {
      * @param aStatus - the result code to return from showAsModal
      */
   /* void exitModalEventLoop (in nsresult aStatus); */
-  NS_IMETHOD ExitModalEventLoop(nsresult aStatus) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ExitModalEventLoop(nsresult aStatus) = 0;
 
 };
 
@@ -169,42 +169,42 @@ class NS_NO_VTABLE nsIWebBrowserChrome : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWEBBROWSERCHROME \
-  NS_IMETHOD SetStatus(PRUint32 statusType, const PRUnichar *status); \
-  NS_IMETHOD GetWebBrowser(nsIWebBrowser * *aWebBrowser); \
-  NS_IMETHOD SetWebBrowser(nsIWebBrowser * aWebBrowser); \
-  NS_IMETHOD GetChromeFlags(PRUint32 *aChromeFlags); \
-  NS_IMETHOD SetChromeFlags(PRUint32 aChromeFlags); \
-  NS_IMETHOD DestroyBrowserWindow(void); \
-  NS_IMETHOD SizeBrowserTo(PRInt32 aCX, PRInt32 aCY); \
-  NS_IMETHOD ShowAsModal(void); \
-  NS_IMETHOD IsWindowModal(PRBool *_retval); \
-  NS_IMETHOD ExitModalEventLoop(nsresult aStatus); 
+  NS_SCRIPTABLE NS_IMETHOD SetStatus(PRUint32 statusType, const PRUnichar *status); \
+  NS_SCRIPTABLE NS_IMETHOD GetWebBrowser(nsIWebBrowser * *aWebBrowser); \
+  NS_SCRIPTABLE NS_IMETHOD SetWebBrowser(nsIWebBrowser * aWebBrowser); \
+  NS_SCRIPTABLE NS_IMETHOD GetChromeFlags(PRUint32 *aChromeFlags); \
+  NS_SCRIPTABLE NS_IMETHOD SetChromeFlags(PRUint32 aChromeFlags); \
+  NS_SCRIPTABLE NS_IMETHOD DestroyBrowserWindow(void); \
+  NS_SCRIPTABLE NS_IMETHOD SizeBrowserTo(PRInt32 aCX, PRInt32 aCY); \
+  NS_SCRIPTABLE NS_IMETHOD ShowAsModal(void); \
+  NS_SCRIPTABLE NS_IMETHOD IsWindowModal(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD ExitModalEventLoop(nsresult aStatus); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIWEBBROWSERCHROME(_to) \
-  NS_IMETHOD SetStatus(PRUint32 statusType, const PRUnichar *status) { return _to SetStatus(statusType, status); } \
-  NS_IMETHOD GetWebBrowser(nsIWebBrowser * *aWebBrowser) { return _to GetWebBrowser(aWebBrowser); } \
-  NS_IMETHOD SetWebBrowser(nsIWebBrowser * aWebBrowser) { return _to SetWebBrowser(aWebBrowser); } \
-  NS_IMETHOD GetChromeFlags(PRUint32 *aChromeFlags) { return _to GetChromeFlags(aChromeFlags); } \
-  NS_IMETHOD SetChromeFlags(PRUint32 aChromeFlags) { return _to SetChromeFlags(aChromeFlags); } \
-  NS_IMETHOD DestroyBrowserWindow(void) { return _to DestroyBrowserWindow(); } \
-  NS_IMETHOD SizeBrowserTo(PRInt32 aCX, PRInt32 aCY) { return _to SizeBrowserTo(aCX, aCY); } \
-  NS_IMETHOD ShowAsModal(void) { return _to ShowAsModal(); } \
-  NS_IMETHOD IsWindowModal(PRBool *_retval) { return _to IsWindowModal(_retval); } \
-  NS_IMETHOD ExitModalEventLoop(nsresult aStatus) { return _to ExitModalEventLoop(aStatus); } 
+  NS_SCRIPTABLE NS_IMETHOD SetStatus(PRUint32 statusType, const PRUnichar *status) { return _to SetStatus(statusType, status); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWebBrowser(nsIWebBrowser * *aWebBrowser) { return _to GetWebBrowser(aWebBrowser); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWebBrowser(nsIWebBrowser * aWebBrowser) { return _to SetWebBrowser(aWebBrowser); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChromeFlags(PRUint32 *aChromeFlags) { return _to GetChromeFlags(aChromeFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD SetChromeFlags(PRUint32 aChromeFlags) { return _to SetChromeFlags(aChromeFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD DestroyBrowserWindow(void) { return _to DestroyBrowserWindow(); } \
+  NS_SCRIPTABLE NS_IMETHOD SizeBrowserTo(PRInt32 aCX, PRInt32 aCY) { return _to SizeBrowserTo(aCX, aCY); } \
+  NS_SCRIPTABLE NS_IMETHOD ShowAsModal(void) { return _to ShowAsModal(); } \
+  NS_SCRIPTABLE NS_IMETHOD IsWindowModal(PRBool *_retval) { return _to IsWindowModal(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ExitModalEventLoop(nsresult aStatus) { return _to ExitModalEventLoop(aStatus); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIWEBBROWSERCHROME(_to) \
-  NS_IMETHOD SetStatus(PRUint32 statusType, const PRUnichar *status) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetStatus(statusType, status); } \
-  NS_IMETHOD GetWebBrowser(nsIWebBrowser * *aWebBrowser) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWebBrowser(aWebBrowser); } \
-  NS_IMETHOD SetWebBrowser(nsIWebBrowser * aWebBrowser) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWebBrowser(aWebBrowser); } \
-  NS_IMETHOD GetChromeFlags(PRUint32 *aChromeFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChromeFlags(aChromeFlags); } \
-  NS_IMETHOD SetChromeFlags(PRUint32 aChromeFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetChromeFlags(aChromeFlags); } \
-  NS_IMETHOD DestroyBrowserWindow(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->DestroyBrowserWindow(); } \
-  NS_IMETHOD SizeBrowserTo(PRInt32 aCX, PRInt32 aCY) { return !_to ? NS_ERROR_NULL_POINTER : _to->SizeBrowserTo(aCX, aCY); } \
-  NS_IMETHOD ShowAsModal(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ShowAsModal(); } \
-  NS_IMETHOD IsWindowModal(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsWindowModal(_retval); } \
-  NS_IMETHOD ExitModalEventLoop(nsresult aStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->ExitModalEventLoop(aStatus); } 
+  NS_SCRIPTABLE NS_IMETHOD SetStatus(PRUint32 statusType, const PRUnichar *status) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetStatus(statusType, status); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWebBrowser(nsIWebBrowser * *aWebBrowser) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWebBrowser(aWebBrowser); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWebBrowser(nsIWebBrowser * aWebBrowser) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWebBrowser(aWebBrowser); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChromeFlags(PRUint32 *aChromeFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChromeFlags(aChromeFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD SetChromeFlags(PRUint32 aChromeFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetChromeFlags(aChromeFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD DestroyBrowserWindow(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->DestroyBrowserWindow(); } \
+  NS_SCRIPTABLE NS_IMETHOD SizeBrowserTo(PRInt32 aCX, PRInt32 aCY) { return !_to ? NS_ERROR_NULL_POINTER : _to->SizeBrowserTo(aCX, aCY); } \
+  NS_SCRIPTABLE NS_IMETHOD ShowAsModal(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ShowAsModal(); } \
+  NS_SCRIPTABLE NS_IMETHOD IsWindowModal(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsWindowModal(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ExitModalEventLoop(nsresult aStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->ExitModalEventLoop(aStatus); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

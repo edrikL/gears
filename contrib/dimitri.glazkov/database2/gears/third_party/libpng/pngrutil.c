@@ -162,6 +162,10 @@ png_crc_error(png_structp png_ptr)
 
    png_read_data(png_ptr, crc_bytes, 4);
 
+#if defined(GEARS_PNG_NO_READ_VERIFY_CRC)
+   crc = 0;  // to avoid 'unreferenced variable' warning
+   return (0);
+#else
    if (need_crc)
    {
       crc = png_get_uint_32(crc_bytes);
@@ -169,6 +173,7 @@ png_crc_error(png_structp png_ptr)
    }
    else
       return (0);
+#endif
 }
 
 #if defined(PNG_READ_zTXt_SUPPORTED) || defined(PNG_READ_iTXt_SUPPORTED) || \

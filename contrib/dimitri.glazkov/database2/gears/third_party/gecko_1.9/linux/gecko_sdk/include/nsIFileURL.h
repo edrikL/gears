@@ -31,7 +31,7 @@ class nsIFile; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIFileURL : public nsIURL {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIFileURL : public nsIURL {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFILEURL_IID)
@@ -47,8 +47,8 @@ class NS_NO_VTABLE nsIFileURL : public nsIURL {
      *    the nsIFile object after setting it on this interface).
      */
   /* attribute nsIFile file; */
-  NS_IMETHOD GetFile(nsIFile * *aFile) = 0;
-  NS_IMETHOD SetFile(nsIFile * aFile) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFile(nsIFile * *aFile) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFile(nsIFile * aFile) = 0;
 
 };
 
@@ -56,18 +56,18 @@ class NS_NO_VTABLE nsIFileURL : public nsIURL {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIFILEURL \
-  NS_IMETHOD GetFile(nsIFile * *aFile); \
-  NS_IMETHOD SetFile(nsIFile * aFile); 
+  NS_SCRIPTABLE NS_IMETHOD GetFile(nsIFile * *aFile); \
+  NS_SCRIPTABLE NS_IMETHOD SetFile(nsIFile * aFile); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIFILEURL(_to) \
-  NS_IMETHOD GetFile(nsIFile * *aFile) { return _to GetFile(aFile); } \
-  NS_IMETHOD SetFile(nsIFile * aFile) { return _to SetFile(aFile); } 
+  NS_SCRIPTABLE NS_IMETHOD GetFile(nsIFile * *aFile) { return _to GetFile(aFile); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFile(nsIFile * aFile) { return _to SetFile(aFile); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIFILEURL(_to) \
-  NS_IMETHOD GetFile(nsIFile * *aFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFile(aFile); } \
-  NS_IMETHOD SetFile(nsIFile * aFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFile(aFile); } 
+  NS_SCRIPTABLE NS_IMETHOD GetFile(nsIFile * *aFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFile(aFile); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFile(nsIFile * aFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFile(aFile); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

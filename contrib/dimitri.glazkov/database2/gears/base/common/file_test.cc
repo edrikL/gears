@@ -37,7 +37,9 @@
 // TestFileUtils
 //------------------------------------------------------------------------------
 bool TestCollapsePathSeparators();  // friend of file.h
+bool TestSplitPath(); //friend of file.h
 static bool TestGetBaseName();
+static bool TestGetParentDirectory();
 static bool TestLongPaths();
 static bool CheckDirectoryCreation(const char16 *dir);
 
@@ -53,6 +55,7 @@ bool TestFileUtils() {
 
   //Run tests for individual functions
   TEST_ASSERT(TestGetBaseName());
+  TEST_ASSERT(TestGetParentDirectory());
   TEST_ASSERT(TestSplitPath());
   TEST_ASSERT(TestLongPaths());
 
@@ -362,6 +365,46 @@ bool TestSplitPath() {
 
   return true;
 
+}
+
+static bool TestGetParentDirectory() {
+  const std::string16 kSep(&kPathSeparator, 1);
+  const std::string16 kBackslash(STRING16(L"\\"));
+  const std::string16 kA(STRING16(L"a"));
+  const std::string16 kDrvSep(STRING16(L"c:"));
+  const std::string16 kFoo(STRING16(L"foo"));
+  const std::string16 kBar(STRING16(L"bar"));
+  const std::string16 kEmpty;
+  std::string16 out;
+
+  // Fail on empty string.
+  TEST_ASSERT(!File::GetParentDirectory(kEmpty, &out));
+  
+  // Fail on path with no parent specified.
+  TEST_ASSERT(!File::GetParentDirectory(kFoo, &out));
+  
+  // 'a/foo' -> 'a'
+  TEST_ASSERT(File::GetParentDirectory(kA + kSep + kFoo, &out));
+  TEST_ASSERT(out == kA);
+  
+  // 'a//foo' -> 'a'
+  TEST_ASSERT(File::GetParentDirectory(kA + kSep + kSep + kFoo, &out));
+  TEST_ASSERT(out == kA);
+  
+  // 'a///foo' -> 'a'
+  TEST_ASSERT(File::GetParentDirectory(kA + kSep + kSep + kSep + kFoo, &out));
+  TEST_ASSERT(out == kA);
+  
+  // '/a/foo' -> '/a'
+  TEST_ASSERT(File::GetParentDirectory(kSep + kA + kSep + kFoo, &out));
+  TEST_ASSERT(out == kSep + kA);
+  
+  // 'c:/bar/a/foo' -> 'c:/bar/a'
+  std::string16 parent_dir = kDrvSep + kSep + kBar + kSep + kA;
+  TEST_ASSERT(File::GetParentDirectory(parent_dir + kSep + kFoo, &out));
+  TEST_ASSERT(out == parent_dir);
+  
+  return true;
 }
 
 static bool TestGetBaseName() {

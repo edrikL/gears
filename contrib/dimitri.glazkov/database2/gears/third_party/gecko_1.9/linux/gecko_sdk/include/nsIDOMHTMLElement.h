@@ -22,7 +22,7 @@
   {0xa6cf9085, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMHTMLElement : public nsIDOMElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLElement : public nsIDOMElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLELEMENT_IID)
@@ -38,24 +38,24 @@ class NS_NO_VTABLE nsIDOMHTMLElement : public nsIDOMElement {
  * @status FROZEN
  */
   /* attribute DOMString id; */
-  NS_IMETHOD GetId(nsAString & aId) = 0;
-  NS_IMETHOD SetId(const nsAString & aId) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetId(nsAString & aId) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetId(const nsAString & aId) = 0;
 
   /* attribute DOMString title; */
-  NS_IMETHOD GetTitle(nsAString & aTitle) = 0;
-  NS_IMETHOD SetTitle(const nsAString & aTitle) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTitle(nsAString & aTitle) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetTitle(const nsAString & aTitle) = 0;
 
   /* attribute DOMString lang; */
-  NS_IMETHOD GetLang(nsAString & aLang) = 0;
-  NS_IMETHOD SetLang(const nsAString & aLang) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLang(nsAString & aLang) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetLang(const nsAString & aLang) = 0;
 
   /* attribute DOMString dir; */
-  NS_IMETHOD GetDir(nsAString & aDir) = 0;
-  NS_IMETHOD SetDir(const nsAString & aDir) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDir(nsAString & aDir) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDir(const nsAString & aDir) = 0;
 
   /* attribute DOMString className; */
-  NS_IMETHOD GetClassName(nsAString & aClassName) = 0;
-  NS_IMETHOD SetClassName(const nsAString & aClassName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetClassName(nsAString & aClassName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetClassName(const nsAString & aClassName) = 0;
 
 };
 
@@ -63,42 +63,42 @@ class NS_NO_VTABLE nsIDOMHTMLElement : public nsIDOMElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLELEMENT \
-  NS_IMETHOD GetId(nsAString & aId); \
-  NS_IMETHOD SetId(const nsAString & aId); \
-  NS_IMETHOD GetTitle(nsAString & aTitle); \
-  NS_IMETHOD SetTitle(const nsAString & aTitle); \
-  NS_IMETHOD GetLang(nsAString & aLang); \
-  NS_IMETHOD SetLang(const nsAString & aLang); \
-  NS_IMETHOD GetDir(nsAString & aDir); \
-  NS_IMETHOD SetDir(const nsAString & aDir); \
-  NS_IMETHOD GetClassName(nsAString & aClassName); \
-  NS_IMETHOD SetClassName(const nsAString & aClassName); 
+  NS_SCRIPTABLE NS_IMETHOD GetId(nsAString & aId); \
+  NS_SCRIPTABLE NS_IMETHOD SetId(const nsAString & aId); \
+  NS_SCRIPTABLE NS_IMETHOD GetTitle(nsAString & aTitle); \
+  NS_SCRIPTABLE NS_IMETHOD SetTitle(const nsAString & aTitle); \
+  NS_SCRIPTABLE NS_IMETHOD GetLang(nsAString & aLang); \
+  NS_SCRIPTABLE NS_IMETHOD SetLang(const nsAString & aLang); \
+  NS_SCRIPTABLE NS_IMETHOD GetDir(nsAString & aDir); \
+  NS_SCRIPTABLE NS_IMETHOD SetDir(const nsAString & aDir); \
+  NS_SCRIPTABLE NS_IMETHOD GetClassName(nsAString & aClassName); \
+  NS_SCRIPTABLE NS_IMETHOD SetClassName(const nsAString & aClassName); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLELEMENT(_to) \
-  NS_IMETHOD GetId(nsAString & aId) { return _to GetId(aId); } \
-  NS_IMETHOD SetId(const nsAString & aId) { return _to SetId(aId); } \
-  NS_IMETHOD GetTitle(nsAString & aTitle) { return _to GetTitle(aTitle); } \
-  NS_IMETHOD SetTitle(const nsAString & aTitle) { return _to SetTitle(aTitle); } \
-  NS_IMETHOD GetLang(nsAString & aLang) { return _to GetLang(aLang); } \
-  NS_IMETHOD SetLang(const nsAString & aLang) { return _to SetLang(aLang); } \
-  NS_IMETHOD GetDir(nsAString & aDir) { return _to GetDir(aDir); } \
-  NS_IMETHOD SetDir(const nsAString & aDir) { return _to SetDir(aDir); } \
-  NS_IMETHOD GetClassName(nsAString & aClassName) { return _to GetClassName(aClassName); } \
-  NS_IMETHOD SetClassName(const nsAString & aClassName) { return _to SetClassName(aClassName); } 
+  NS_SCRIPTABLE NS_IMETHOD GetId(nsAString & aId) { return _to GetId(aId); } \
+  NS_SCRIPTABLE NS_IMETHOD SetId(const nsAString & aId) { return _to SetId(aId); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTitle(nsAString & aTitle) { return _to GetTitle(aTitle); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTitle(const nsAString & aTitle) { return _to SetTitle(aTitle); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLang(nsAString & aLang) { return _to GetLang(aLang); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLang(const nsAString & aLang) { return _to SetLang(aLang); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDir(nsAString & aDir) { return _to GetDir(aDir); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDir(const nsAString & aDir) { return _to SetDir(aDir); } \
+  NS_SCRIPTABLE NS_IMETHOD GetClassName(nsAString & aClassName) { return _to GetClassName(aClassName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetClassName(const nsAString & aClassName) { return _to SetClassName(aClassName); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLELEMENT(_to) \
-  NS_IMETHOD GetId(nsAString & aId) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetId(aId); } \
-  NS_IMETHOD SetId(const nsAString & aId) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetId(aId); } \
-  NS_IMETHOD GetTitle(nsAString & aTitle) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTitle(aTitle); } \
-  NS_IMETHOD SetTitle(const nsAString & aTitle) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTitle(aTitle); } \
-  NS_IMETHOD GetLang(nsAString & aLang) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLang(aLang); } \
-  NS_IMETHOD SetLang(const nsAString & aLang) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLang(aLang); } \
-  NS_IMETHOD GetDir(nsAString & aDir) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDir(aDir); } \
-  NS_IMETHOD SetDir(const nsAString & aDir) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDir(aDir); } \
-  NS_IMETHOD GetClassName(nsAString & aClassName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClassName(aClassName); } \
-  NS_IMETHOD SetClassName(const nsAString & aClassName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetClassName(aClassName); } 
+  NS_SCRIPTABLE NS_IMETHOD GetId(nsAString & aId) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetId(aId); } \
+  NS_SCRIPTABLE NS_IMETHOD SetId(const nsAString & aId) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetId(aId); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTitle(nsAString & aTitle) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTitle(aTitle); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTitle(const nsAString & aTitle) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTitle(aTitle); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLang(nsAString & aLang) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLang(aLang); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLang(const nsAString & aLang) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLang(aLang); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDir(nsAString & aDir) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDir(aDir); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDir(const nsAString & aDir) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDir(aDir); } \
+  NS_SCRIPTABLE NS_IMETHOD GetClassName(nsAString & aClassName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClassName(aClassName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetClassName(const nsAString & aClassName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetClassName(aClassName); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

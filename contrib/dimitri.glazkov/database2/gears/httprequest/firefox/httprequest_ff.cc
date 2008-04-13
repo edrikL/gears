@@ -27,22 +27,30 @@
 #include <windows.h> // must manually #include before nsIEventQueueService.h
 #endif
 #include <gecko_internal/nsIDOMClassInfo.h>
-#include <gecko_internal/nsIEventQueueService.h>
 
 #include "gears/httprequest/firefox/httprequest_ff.h"
 
+#include "gears/base/common/async_router.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/firefox/dom_utils.h"
-#include "gears/blob/blob_ff.h"
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+#include "gears/blob/blob.h"
 #include "gears/blob/buffer_blob.h"
+#include "gears/blob/blob_interface.h"
+#endif
 #include "gears/localserver/common/http_constants.h"
 
 // Returns true if the currently executing thread is the main UI thread,
 // firefox/mozila has one such very special thread
 // See cache_intercept.cc for implementation
 bool IsUiThread();
+// Returns the thread id of the main UI thread,
+// firefox/mozila has one such very special thread
+// See cache_intercept.cc for implementation
+PRThread* GetUiThread();
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
 NS_IMPL_THREADSAFE_ADDREF(GearsHttpRequest)
@@ -71,8 +79,10 @@ static const char16 *kNotInteractiveError =
 static const char16 *kEmptyString = STRING16(L"");
 
 GearsHttpRequest::GearsHttpRequest()
-    : request_(NULL), apartment_thread_(PR_GetCurrentThread()),
+    : request_(NULL), apartment_thread_id_(
+        ThreadMessageQueue::GetInstance()->GetCurrentThreadId()),
       content_type_header_was_set_(false), page_is_unloaded_(false) {
+  ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
 }
 
 GearsHttpRequest::~GearsHttpRequest() {
@@ -157,7 +167,10 @@ NS_IMETHODIMP GearsHttpRequest::Open() {
     response_info_.reset(new ResponseInfo());
     response_info_->pending_ready_state = HttpRequest::OPEN;
     response_info_->ready_state = HttpRequest::UNINITIALIZED;
-    response_info_->response_blob = NULL;
+#ifndef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+    response_info_->response_blob.reset(NULL);
+#endif
   }
 
   OnReadyStateChangedCall();
@@ -241,18 +254,26 @@ NS_IMETHODIMP GearsHttpRequest::Send() {
     RETURN_EXCEPTION(kNotOpenError);
   }
 
-  if (!InitEventQueues()) {
-    RETURN_EXCEPTION(kInternalError);
-  }
-
   if (request_info_->method == HttpConstants::kHttpPOST ||
       request_info_->method == HttpConstants::kHttpPUT) {
     JsParamFetcher js_params(this);
     if (js_params.GetCount(false) > 0) {
+#ifndef OFFICIAL_BUILD
+      ModuleImplBaseClass *module;
+      if (js_params.GetAsString(0, &request_info_->post_data)) {
+        request_info_->has_post_data = !request_info_->post_data.empty();
+      } else if (js_params.GetAsDispatcherModule(0, GetJsRunner(), &module) &&
+                 GearsBlob::kModuleName == module->get_module_name()) {
+        static_cast<GearsBlob*>(module)->GetContents(&(request_info_->blob_));
+      } else {
+        RETURN_EXCEPTION(STRING16(L"Data parameter must be a string or blob."));
+      }
+#else
       if (!js_params.GetAsString(0, &request_info_->post_data)) {
         RETURN_EXCEPTION(STRING16(L"Data parameter must be a string."));
       }
       request_info_->has_post_data = !request_info_->post_data.empty();
+#endif
     }
   }
 
@@ -273,16 +294,21 @@ NS_IMETHODIMP GearsHttpRequest::Send() {
 }
 
 bool GearsHttpRequest::CallSendOnUiThread() {
-  return CallAsync(ui_event_queue_, kSend) == NS_OK;
+  return CallAsync(GetUiThread(), kSend) == NS_OK;
 }
 
 void GearsHttpRequest::OnSendCall() {
   assert(IsUiThread());
-  assert(!request_);
-  assert(request_info_.get());
-  assert(response_info_.get());
 
   MutexLock locker(&lock_);
+
+  // TODO(michaeln): this is a quick-fix for a crashing bug,
+  // Overwrite with CL6372979 when the tree re-opens for development
+  if (!request_info_.get() || !response_info_.get()) {
+    return;
+  }
+  // end quick-fix
+
   CreateRequest();
   bool ok = request_->Open(request_info_->method.c_str(),
                            request_info_->full_url.c_str(),
@@ -308,10 +334,17 @@ void GearsHttpRequest::OnSendCall() {
                                  HttpConstants::kMimeTextPlain);
     }
     ok = request_->SendString(request_info_->post_data.c_str());
+#ifndef OFFICIAL_BUILD
+  } else if (request_info_->blob_.get()) {
+    if (!content_type_header_was_set_) {
+      request_->SetRequestHeader(HttpConstants::kContentTypeHeader,
+                                 HttpConstants::kMimeApplicationOctetStream);
+    }
+    ok = request_->SendBlob(request_info_->blob_.get());
+#endif
   } else {
     ok = request_->Send();
   }
-  
   if (!ok) {
     response_info_->pending_ready_state = HttpRequest::COMPLETE;
     RemoveRequest();
@@ -334,10 +367,8 @@ bool GearsHttpRequest::CallAbortOnUiThread() {
   if (IsUiThread()) {
     OnAbortCall();
     return true;
-  } else if (ui_event_queue_) {
-    return CallAsync(ui_event_queue_, kAbort) == NS_OK;
   } else {
-    return true;
+    return CallAsync(GetUiThread(), kAbort) == NS_OK;
   }
 }
 
@@ -347,9 +378,12 @@ void GearsHttpRequest::OnAbortCall() {
   {
     // The extra scope is to ensure we unlock prior to reference.Release
     MutexLock locker(&lock_);
+    // TODO(michaeln): this is a quick-fix for a crashing bug,
+    // Overwrite with CL6372979 when the tree re-opens for development
+    request_info_.reset(NULL);
+    response_info_.reset(NULL);
+    // end quick-fix
     if (request_) {
-      request_info_.reset(NULL);
-      response_info_.reset(NULL);
       request_->SetOnReadyStateChange(NULL);
       request_->Abort();
       RemoveRequest();
@@ -475,6 +509,9 @@ NS_IMETHODIMP GearsHttpRequest::GetResponseText(nsAString &retval) {
 // readonly attribute Blob responseBlob
 //------------------------------------------------------------------------------
 NS_IMETHODIMP GearsHttpRequest::GetResponseBlob(nsISupports **retval) {
+  // TODO(nigeltao): when GearsHttpRequest becomes a Dispatcher-based module,
+  // re-enable this code.
+#if 0
   assert(IsApartmentThread());
   MutexLock locker(&lock_);
   if (!IsComplete()) {
@@ -502,6 +539,8 @@ NS_IMETHODIMP GearsHttpRequest::GetResponseBlob(nsISupports **retval) {
   *retval = response_info_->response_blob;
   (*retval)->AddRef();
   RETURN_NORMAL();
+#endif
+  RETURN_EXCEPTION(STRING16(L"Not implemented."));
 }
 #endif  // not OFFICIAL_BUILD
 
@@ -556,7 +595,7 @@ void GearsHttpRequest::DataAvailable(HttpRequest *source) {
 }
 
 bool GearsHttpRequest::CallDataAvailableOnApartmentThread() {
-  return CallAsync(apartment_event_queue_, kDataAvailable) == NS_OK;
+  return CallAsync(apartment_thread_id_, kDataAvailable) == NS_OK;
 }
 
 void GearsHttpRequest::OnDataAvailableCall() {
@@ -600,15 +639,23 @@ void GearsHttpRequest::ReadyStateChanged(HttpRequest *source) {
 }
 
 bool GearsHttpRequest::CallReadyStateChangedOnApartmentThread() {
-  return CallAsync(apartment_event_queue_, kReadyStateChanged) == NS_OK;
+  return CallAsync(apartment_thread_id_, kReadyStateChanged) == NS_OK;
 }
 
 void GearsHttpRequest::OnReadyStateChangedCall() {
   assert(IsApartmentThread());
-  lock_.Lock();
-  response_info_->ready_state = response_info_->pending_ready_state;
-  bool is_complete = IsComplete();
-  lock_.Unlock();
+  bool is_complete;
+  {
+    MutexLock locker(&lock_);
+    // TODO(michaeln): this is a quick fix for a crashing bug,
+    // Overwrite with CL6372979 when the tree re-opens for development
+    if (!response_info_.get()) {
+      return;
+    }
+    // end quick-fix
+    response_info_->ready_state = response_info_->pending_ready_state;
+    is_complete = IsComplete();
+  }
 
   // To remove cyclic dependencies we drop our reference to the
   // callback when the request is complete.
@@ -633,7 +680,7 @@ void GearsHttpRequest::OnReadyStateChangedCall() {
 void GearsHttpRequest::CreateRequest() {
   assert(IsUiThread());
   RemoveRequest();
-  request_ = HttpRequest::Create();
+  HttpRequest::Create(&request_);
   request_->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
   request_->SetRedirectBehavior(HttpRequest::FOLLOW_WITHIN_ORIGIN);
   this->AddRef();
@@ -643,7 +690,6 @@ void GearsHttpRequest::RemoveRequest() {
   assert(IsUiThread());
   if (request_) {
     request_->SetOnReadyStateChange(NULL);
-    request_->ReleaseReference();
     request_ = NULL;
     this->Release();
   }
@@ -722,40 +768,6 @@ bool GearsHttpRequest::IsComplete() {
          response_info_->ready_state == HttpRequest::COMPLETE;
 }
 
-
-//------------------------------------------------------------------------------
-// InitEventQueues
-//------------------------------------------------------------------------------
-bool GearsHttpRequest::InitEventQueues() {
-  assert(IsApartmentThread());
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIEventQueueService> event_queue_service =
-      do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv) || !event_queue_service) {
-    return false;
-  }
-
-  if (!apartment_event_queue_) {
-    rv = event_queue_service->GetThreadEventQueue(
-              NS_CURRENT_THREAD, getter_AddRefs(apartment_event_queue_));
-    if (NS_FAILED(rv) || !apartment_event_queue_) {
-      return false;
-    }
-  }
-
-  if (!ui_event_queue_) {
-    rv = event_queue_service->GetThreadEventQueue(
-              NS_UI_THREAD, getter_AddRefs(ui_event_queue_));
-    if (NS_FAILED(rv) || !ui_event_queue_) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-
 //------------------------------------------------------------------------------
 // InitUnloadMonitor
 //------------------------------------------------------------------------------
@@ -790,11 +802,13 @@ void GearsHttpRequest::OnAsyncCall(AsyncCallType call_type) {
   }
 }
 
-
-// AsyncCallEvent - Custom event class used to post messages across threads
-struct GearsHttpRequest::AsyncCallEvent : PLEvent {
+class GearsHttpRequest::AsyncCallEvent : public AsyncFunctor {
+public:
   AsyncCallEvent(GearsHttpRequest *request, AsyncCallType call_type)
       : request(request), call_type(call_type) {}
+  void Run() {
+    request->OnAsyncCall(call_type);
+  }
   nsCOMPtr<GearsHttpRequest> request;
   AsyncCallType call_type;
 };
@@ -802,25 +816,11 @@ struct GearsHttpRequest::AsyncCallEvent : PLEvent {
 
 // CallAsync - Posts a message to another thead's event queue. The message will
 // be delivered to this AsyncTask instance on that thread via OnAsyncCall.
-nsresult GearsHttpRequest::CallAsync(nsIEventQueue *event_queue, 
+nsresult GearsHttpRequest::CallAsync(ThreadId thread_id,
                                      AsyncCallType call_type) {
-  AsyncCallEvent *event = new AsyncCallEvent(this, call_type);
-  if (!event) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult rv = event_queue->InitEvent(event, this,
-      reinterpret_cast<PLHandleEventProc>(AsyncCall_EventHandlerFunc),
-      reinterpret_cast<PLDestroyEventProc>(AsyncCall_EventCleanupFunc));
-  if (NS_FAILED(rv)) {
-    delete event;
-    return rv;
-  }
-
-  rv = event_queue->PostEvent(event);
-  if (NS_FAILED(rv)) {
-    delete event;  // TODO(michaeln): should call PL_DestroyEvent(event) here?
-  }
-  return rv;
+  AsyncRouter::GetInstance()->CallAsync(thread_id,
+                                        new AsyncCallEvent(this, call_type));
+  return NS_OK;
 }
 
 void GearsHttpRequest::HandleEvent(JsEventType event_type) {
@@ -835,18 +835,4 @@ void GearsHttpRequest::HandleEvent(JsEventType event_type) {
 
   page_is_unloaded_ = true;
   Abort();
-}
-
-// static
-void *PR_CALLBACK
-GearsHttpRequest::AsyncCall_EventHandlerFunc(AsyncCallEvent *event) {
-  event->request->OnAsyncCall(event->call_type);
-  return nsnull;
-}
-
-
-// static
-void PR_CALLBACK
-GearsHttpRequest::AsyncCall_EventCleanupFunc(AsyncCallEvent *event) {
-  delete event;
 }

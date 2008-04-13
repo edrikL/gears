@@ -41,7 +41,7 @@ class nsIWeakReference; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIWebBrowser : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIWebBrowser : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWEBBROWSER_IID)
@@ -76,7 +76,7 @@ class NS_NO_VTABLE nsIWebBrowser : public nsISupports {
      *         specified by the IID.
      */
   /* void addWebBrowserListener (in nsIWeakReference aListener, in nsIIDRef aIID); */
-  NS_IMETHOD AddWebBrowserListener(nsIWeakReference *aListener, const nsIID & aIID) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AddWebBrowserListener(nsIWeakReference *aListener, const nsIID & aIID) = 0;
 
   /**
      * Removes a previously registered listener.
@@ -93,7 +93,7 @@ class NS_NO_VTABLE nsIWebBrowser : public nsISupports {
      * @see nsIWeakReference
      */
   /* void removeWebBrowserListener (in nsIWeakReference aListener, in nsIIDRef aIID); */
-  NS_IMETHOD RemoveWebBrowserListener(nsIWeakReference *aListener, const nsIID & aIID) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveWebBrowserListener(nsIWeakReference *aListener, const nsIID & aIID) = 0;
 
   /**
      * The chrome object associated with the browser instance. The embedder
@@ -133,8 +133,8 @@ class NS_NO_VTABLE nsIWebBrowser : public nsISupports {
      * @see nsIWebProgressListener
      */
   /* attribute nsIWebBrowserChrome containerWindow; */
-  NS_IMETHOD GetContainerWindow(nsIWebBrowserChrome * *aContainerWindow) = 0;
-  NS_IMETHOD SetContainerWindow(nsIWebBrowserChrome * aContainerWindow) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetContainerWindow(nsIWebBrowserChrome * *aContainerWindow) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetContainerWindow(nsIWebBrowserChrome * aContainerWindow) = 0;
 
   /**
      * URI content listener parent. The embedder may set this property to
@@ -152,8 +152,8 @@ class NS_NO_VTABLE nsIWebBrowser : public nsISupports {
      * @see nsIURIContentListener
      */
   /* attribute nsIURIContentListener parentURIContentListener; */
-  NS_IMETHOD GetParentURIContentListener(nsIURIContentListener * *aParentURIContentListener) = 0;
-  NS_IMETHOD SetParentURIContentListener(nsIURIContentListener * aParentURIContentListener) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetParentURIContentListener(nsIURIContentListener * *aParentURIContentListener) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetParentURIContentListener(nsIURIContentListener * aParentURIContentListener) = 0;
 
   /**
      * The top-level DOM window. The embedder may walk the entire
@@ -162,7 +162,7 @@ class NS_NO_VTABLE nsIWebBrowser : public nsISupports {
      * @see nsIDOMWindow
      */
   /* readonly attribute nsIDOMWindow contentDOMWindow; */
-  NS_IMETHOD GetContentDOMWindow(nsIDOMWindow * *aContentDOMWindow) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetContentDOMWindow(nsIDOMWindow * *aContentDOMWindow) = 0;
 
 };
 
@@ -170,33 +170,33 @@ class NS_NO_VTABLE nsIWebBrowser : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWEBBROWSER \
-  NS_IMETHOD AddWebBrowserListener(nsIWeakReference *aListener, const nsIID & aIID); \
-  NS_IMETHOD RemoveWebBrowserListener(nsIWeakReference *aListener, const nsIID & aIID); \
-  NS_IMETHOD GetContainerWindow(nsIWebBrowserChrome * *aContainerWindow); \
-  NS_IMETHOD SetContainerWindow(nsIWebBrowserChrome * aContainerWindow); \
-  NS_IMETHOD GetParentURIContentListener(nsIURIContentListener * *aParentURIContentListener); \
-  NS_IMETHOD SetParentURIContentListener(nsIURIContentListener * aParentURIContentListener); \
-  NS_IMETHOD GetContentDOMWindow(nsIDOMWindow * *aContentDOMWindow); 
+  NS_SCRIPTABLE NS_IMETHOD AddWebBrowserListener(nsIWeakReference *aListener, const nsIID & aIID); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveWebBrowserListener(nsIWeakReference *aListener, const nsIID & aIID); \
+  NS_SCRIPTABLE NS_IMETHOD GetContainerWindow(nsIWebBrowserChrome * *aContainerWindow); \
+  NS_SCRIPTABLE NS_IMETHOD SetContainerWindow(nsIWebBrowserChrome * aContainerWindow); \
+  NS_SCRIPTABLE NS_IMETHOD GetParentURIContentListener(nsIURIContentListener * *aParentURIContentListener); \
+  NS_SCRIPTABLE NS_IMETHOD SetParentURIContentListener(nsIURIContentListener * aParentURIContentListener); \
+  NS_SCRIPTABLE NS_IMETHOD GetContentDOMWindow(nsIDOMWindow * *aContentDOMWindow); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIWEBBROWSER(_to) \
-  NS_IMETHOD AddWebBrowserListener(nsIWeakReference *aListener, const nsIID & aIID) { return _to AddWebBrowserListener(aListener, aIID); } \
-  NS_IMETHOD RemoveWebBrowserListener(nsIWeakReference *aListener, const nsIID & aIID) { return _to RemoveWebBrowserListener(aListener, aIID); } \
-  NS_IMETHOD GetContainerWindow(nsIWebBrowserChrome * *aContainerWindow) { return _to GetContainerWindow(aContainerWindow); } \
-  NS_IMETHOD SetContainerWindow(nsIWebBrowserChrome * aContainerWindow) { return _to SetContainerWindow(aContainerWindow); } \
-  NS_IMETHOD GetParentURIContentListener(nsIURIContentListener * *aParentURIContentListener) { return _to GetParentURIContentListener(aParentURIContentListener); } \
-  NS_IMETHOD SetParentURIContentListener(nsIURIContentListener * aParentURIContentListener) { return _to SetParentURIContentListener(aParentURIContentListener); } \
-  NS_IMETHOD GetContentDOMWindow(nsIDOMWindow * *aContentDOMWindow) { return _to GetContentDOMWindow(aContentDOMWindow); } 
+  NS_SCRIPTABLE NS_IMETHOD AddWebBrowserListener(nsIWeakReference *aListener, const nsIID & aIID) { return _to AddWebBrowserListener(aListener, aIID); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveWebBrowserListener(nsIWeakReference *aListener, const nsIID & aIID) { return _to RemoveWebBrowserListener(aListener, aIID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContainerWindow(nsIWebBrowserChrome * *aContainerWindow) { return _to GetContainerWindow(aContainerWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD SetContainerWindow(nsIWebBrowserChrome * aContainerWindow) { return _to SetContainerWindow(aContainerWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParentURIContentListener(nsIURIContentListener * *aParentURIContentListener) { return _to GetParentURIContentListener(aParentURIContentListener); } \
+  NS_SCRIPTABLE NS_IMETHOD SetParentURIContentListener(nsIURIContentListener * aParentURIContentListener) { return _to SetParentURIContentListener(aParentURIContentListener); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContentDOMWindow(nsIDOMWindow * *aContentDOMWindow) { return _to GetContentDOMWindow(aContentDOMWindow); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIWEBBROWSER(_to) \
-  NS_IMETHOD AddWebBrowserListener(nsIWeakReference *aListener, const nsIID & aIID) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddWebBrowserListener(aListener, aIID); } \
-  NS_IMETHOD RemoveWebBrowserListener(nsIWeakReference *aListener, const nsIID & aIID) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveWebBrowserListener(aListener, aIID); } \
-  NS_IMETHOD GetContainerWindow(nsIWebBrowserChrome * *aContainerWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContainerWindow(aContainerWindow); } \
-  NS_IMETHOD SetContainerWindow(nsIWebBrowserChrome * aContainerWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetContainerWindow(aContainerWindow); } \
-  NS_IMETHOD GetParentURIContentListener(nsIURIContentListener * *aParentURIContentListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParentURIContentListener(aParentURIContentListener); } \
-  NS_IMETHOD SetParentURIContentListener(nsIURIContentListener * aParentURIContentListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetParentURIContentListener(aParentURIContentListener); } \
-  NS_IMETHOD GetContentDOMWindow(nsIDOMWindow * *aContentDOMWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentDOMWindow(aContentDOMWindow); } 
+  NS_SCRIPTABLE NS_IMETHOD AddWebBrowserListener(nsIWeakReference *aListener, const nsIID & aIID) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddWebBrowserListener(aListener, aIID); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveWebBrowserListener(nsIWeakReference *aListener, const nsIID & aIID) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveWebBrowserListener(aListener, aIID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContainerWindow(nsIWebBrowserChrome * *aContainerWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContainerWindow(aContainerWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD SetContainerWindow(nsIWebBrowserChrome * aContainerWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetContainerWindow(aContainerWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParentURIContentListener(nsIURIContentListener * *aParentURIContentListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParentURIContentListener(aParentURIContentListener); } \
+  NS_SCRIPTABLE NS_IMETHOD SetParentURIContentListener(nsIURIContentListener * aParentURIContentListener) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetParentURIContentListener(aParentURIContentListener); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContentDOMWindow(nsIDOMWindow * *aContentDOMWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentDOMWindow(aContentDOMWindow); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -45,7 +45,7 @@ interface GearsWorkerPoolInterface : IDispatch {
   HRESULT createWorkerFromUrl([in] const BSTR *url,
                               [out, retval] int *worker_id);
   HRESULT allowCrossOrigin();
-  HRESULT sendMessage([in] const BSTR *message_string,
+  HRESULT sendMessage([in] const VARIANT *message_body,
                       [in] int dest_worker_id);
   [propput] HRESULT onmessage([in] const VARIANT *handler);
   [propput] HRESULT onerror([in] const VARIANT *handler);

@@ -41,7 +41,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIWebBrowserFind : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIWebBrowserFind : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWEBBROWSERFIND_IID)
@@ -56,7 +56,7 @@ class NS_NO_VTABLE nsIWebBrowserFind : public nsISupports {
      * @return  Whether an occurrence was found
      */
   /* boolean findNext (); */
-  NS_IMETHOD FindNext(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD FindNext(PRBool *_retval) = 0;
 
   /**
      * searchString
@@ -64,8 +64,8 @@ class NS_NO_VTABLE nsIWebBrowserFind : public nsISupports {
      * The string to search for. This must be non-empty to search.
      */
   /* attribute wstring searchString; */
-  NS_IMETHOD GetSearchString(PRUnichar * *aSearchString) = 0;
-  NS_IMETHOD SetSearchString(const PRUnichar * aSearchString) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSearchString(PRUnichar * *aSearchString) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSearchString(const PRUnichar * aSearchString) = 0;
 
   /**
      * findBackwards
@@ -74,8 +74,8 @@ class NS_NO_VTABLE nsIWebBrowserFind : public nsISupports {
      * Default is false (search forward).
      */
   /* attribute boolean findBackwards; */
-  NS_IMETHOD GetFindBackwards(PRBool *aFindBackwards) = 0;
-  NS_IMETHOD SetFindBackwards(PRBool aFindBackwards) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFindBackwards(PRBool *aFindBackwards) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFindBackwards(PRBool aFindBackwards) = 0;
 
   /**
      * wrapFind
@@ -86,8 +86,8 @@ class NS_NO_VTABLE nsIWebBrowserFind : public nsISupports {
      * false.
      */
   /* attribute boolean wrapFind; */
-  NS_IMETHOD GetWrapFind(PRBool *aWrapFind) = 0;
-  NS_IMETHOD SetWrapFind(PRBool aWrapFind) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetWrapFind(PRBool *aWrapFind) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetWrapFind(PRBool aWrapFind) = 0;
 
   /**
      * entireWord
@@ -95,8 +95,8 @@ class NS_NO_VTABLE nsIWebBrowserFind : public nsISupports {
      * Whether to match entire words only. Default is false.
      */
   /* attribute boolean entireWord; */
-  NS_IMETHOD GetEntireWord(PRBool *aEntireWord) = 0;
-  NS_IMETHOD SetEntireWord(PRBool aEntireWord) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetEntireWord(PRBool *aEntireWord) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetEntireWord(PRBool aEntireWord) = 0;
 
   /**
      * matchCase
@@ -104,8 +104,8 @@ class NS_NO_VTABLE nsIWebBrowserFind : public nsISupports {
      * Whether to match case (case sensitive) when searching. Default is false.
      */
   /* attribute boolean matchCase; */
-  NS_IMETHOD GetMatchCase(PRBool *aMatchCase) = 0;
-  NS_IMETHOD SetMatchCase(PRBool aMatchCase) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMatchCase(PRBool *aMatchCase) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetMatchCase(PRBool aMatchCase) = 0;
 
   /**
      * searchFrames
@@ -118,8 +118,8 @@ class NS_NO_VTABLE nsIWebBrowserFind : public nsISupports {
      * returns false.
      */
   /* attribute boolean searchFrames; */
-  NS_IMETHOD GetSearchFrames(PRBool *aSearchFrames) = 0;
-  NS_IMETHOD SetSearchFrames(PRBool aSearchFrames) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSearchFrames(PRBool *aSearchFrames) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSearchFrames(PRBool aSearchFrames) = 0;
 
 };
 
@@ -127,51 +127,51 @@ class NS_NO_VTABLE nsIWebBrowserFind : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWEBBROWSERFIND \
-  NS_IMETHOD FindNext(PRBool *_retval); \
-  NS_IMETHOD GetSearchString(PRUnichar * *aSearchString); \
-  NS_IMETHOD SetSearchString(const PRUnichar * aSearchString); \
-  NS_IMETHOD GetFindBackwards(PRBool *aFindBackwards); \
-  NS_IMETHOD SetFindBackwards(PRBool aFindBackwards); \
-  NS_IMETHOD GetWrapFind(PRBool *aWrapFind); \
-  NS_IMETHOD SetWrapFind(PRBool aWrapFind); \
-  NS_IMETHOD GetEntireWord(PRBool *aEntireWord); \
-  NS_IMETHOD SetEntireWord(PRBool aEntireWord); \
-  NS_IMETHOD GetMatchCase(PRBool *aMatchCase); \
-  NS_IMETHOD SetMatchCase(PRBool aMatchCase); \
-  NS_IMETHOD GetSearchFrames(PRBool *aSearchFrames); \
-  NS_IMETHOD SetSearchFrames(PRBool aSearchFrames); 
+  NS_SCRIPTABLE NS_IMETHOD FindNext(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetSearchString(PRUnichar * *aSearchString); \
+  NS_SCRIPTABLE NS_IMETHOD SetSearchString(const PRUnichar * aSearchString); \
+  NS_SCRIPTABLE NS_IMETHOD GetFindBackwards(PRBool *aFindBackwards); \
+  NS_SCRIPTABLE NS_IMETHOD SetFindBackwards(PRBool aFindBackwards); \
+  NS_SCRIPTABLE NS_IMETHOD GetWrapFind(PRBool *aWrapFind); \
+  NS_SCRIPTABLE NS_IMETHOD SetWrapFind(PRBool aWrapFind); \
+  NS_SCRIPTABLE NS_IMETHOD GetEntireWord(PRBool *aEntireWord); \
+  NS_SCRIPTABLE NS_IMETHOD SetEntireWord(PRBool aEntireWord); \
+  NS_SCRIPTABLE NS_IMETHOD GetMatchCase(PRBool *aMatchCase); \
+  NS_SCRIPTABLE NS_IMETHOD SetMatchCase(PRBool aMatchCase); \
+  NS_SCRIPTABLE NS_IMETHOD GetSearchFrames(PRBool *aSearchFrames); \
+  NS_SCRIPTABLE NS_IMETHOD SetSearchFrames(PRBool aSearchFrames); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIWEBBROWSERFIND(_to) \
-  NS_IMETHOD FindNext(PRBool *_retval) { return _to FindNext(_retval); } \
-  NS_IMETHOD GetSearchString(PRUnichar * *aSearchString) { return _to GetSearchString(aSearchString); } \
-  NS_IMETHOD SetSearchString(const PRUnichar * aSearchString) { return _to SetSearchString(aSearchString); } \
-  NS_IMETHOD GetFindBackwards(PRBool *aFindBackwards) { return _to GetFindBackwards(aFindBackwards); } \
-  NS_IMETHOD SetFindBackwards(PRBool aFindBackwards) { return _to SetFindBackwards(aFindBackwards); } \
-  NS_IMETHOD GetWrapFind(PRBool *aWrapFind) { return _to GetWrapFind(aWrapFind); } \
-  NS_IMETHOD SetWrapFind(PRBool aWrapFind) { return _to SetWrapFind(aWrapFind); } \
-  NS_IMETHOD GetEntireWord(PRBool *aEntireWord) { return _to GetEntireWord(aEntireWord); } \
-  NS_IMETHOD SetEntireWord(PRBool aEntireWord) { return _to SetEntireWord(aEntireWord); } \
-  NS_IMETHOD GetMatchCase(PRBool *aMatchCase) { return _to GetMatchCase(aMatchCase); } \
-  NS_IMETHOD SetMatchCase(PRBool aMatchCase) { return _to SetMatchCase(aMatchCase); } \
-  NS_IMETHOD GetSearchFrames(PRBool *aSearchFrames) { return _to GetSearchFrames(aSearchFrames); } \
-  NS_IMETHOD SetSearchFrames(PRBool aSearchFrames) { return _to SetSearchFrames(aSearchFrames); } 
+  NS_SCRIPTABLE NS_IMETHOD FindNext(PRBool *_retval) { return _to FindNext(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSearchString(PRUnichar * *aSearchString) { return _to GetSearchString(aSearchString); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSearchString(const PRUnichar * aSearchString) { return _to SetSearchString(aSearchString); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFindBackwards(PRBool *aFindBackwards) { return _to GetFindBackwards(aFindBackwards); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFindBackwards(PRBool aFindBackwards) { return _to SetFindBackwards(aFindBackwards); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWrapFind(PRBool *aWrapFind) { return _to GetWrapFind(aWrapFind); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWrapFind(PRBool aWrapFind) { return _to SetWrapFind(aWrapFind); } \
+  NS_SCRIPTABLE NS_IMETHOD GetEntireWord(PRBool *aEntireWord) { return _to GetEntireWord(aEntireWord); } \
+  NS_SCRIPTABLE NS_IMETHOD SetEntireWord(PRBool aEntireWord) { return _to SetEntireWord(aEntireWord); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMatchCase(PRBool *aMatchCase) { return _to GetMatchCase(aMatchCase); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMatchCase(PRBool aMatchCase) { return _to SetMatchCase(aMatchCase); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSearchFrames(PRBool *aSearchFrames) { return _to GetSearchFrames(aSearchFrames); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSearchFrames(PRBool aSearchFrames) { return _to SetSearchFrames(aSearchFrames); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIWEBBROWSERFIND(_to) \
-  NS_IMETHOD FindNext(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindNext(_retval); } \
-  NS_IMETHOD GetSearchString(PRUnichar * *aSearchString) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSearchString(aSearchString); } \
-  NS_IMETHOD SetSearchString(const PRUnichar * aSearchString) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSearchString(aSearchString); } \
-  NS_IMETHOD GetFindBackwards(PRBool *aFindBackwards) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFindBackwards(aFindBackwards); } \
-  NS_IMETHOD SetFindBackwards(PRBool aFindBackwards) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFindBackwards(aFindBackwards); } \
-  NS_IMETHOD GetWrapFind(PRBool *aWrapFind) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWrapFind(aWrapFind); } \
-  NS_IMETHOD SetWrapFind(PRBool aWrapFind) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWrapFind(aWrapFind); } \
-  NS_IMETHOD GetEntireWord(PRBool *aEntireWord) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetEntireWord(aEntireWord); } \
-  NS_IMETHOD SetEntireWord(PRBool aEntireWord) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetEntireWord(aEntireWord); } \
-  NS_IMETHOD GetMatchCase(PRBool *aMatchCase) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMatchCase(aMatchCase); } \
-  NS_IMETHOD SetMatchCase(PRBool aMatchCase) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMatchCase(aMatchCase); } \
-  NS_IMETHOD GetSearchFrames(PRBool *aSearchFrames) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSearchFrames(aSearchFrames); } \
-  NS_IMETHOD SetSearchFrames(PRBool aSearchFrames) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSearchFrames(aSearchFrames); } 
+  NS_SCRIPTABLE NS_IMETHOD FindNext(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindNext(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSearchString(PRUnichar * *aSearchString) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSearchString(aSearchString); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSearchString(const PRUnichar * aSearchString) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSearchString(aSearchString); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFindBackwards(PRBool *aFindBackwards) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFindBackwards(aFindBackwards); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFindBackwards(PRBool aFindBackwards) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFindBackwards(aFindBackwards); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWrapFind(PRBool *aWrapFind) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWrapFind(aWrapFind); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWrapFind(PRBool aWrapFind) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWrapFind(aWrapFind); } \
+  NS_SCRIPTABLE NS_IMETHOD GetEntireWord(PRBool *aEntireWord) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetEntireWord(aEntireWord); } \
+  NS_SCRIPTABLE NS_IMETHOD SetEntireWord(PRBool aEntireWord) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetEntireWord(aEntireWord); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMatchCase(PRBool *aMatchCase) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMatchCase(aMatchCase); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMatchCase(PRBool aMatchCase) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMatchCase(aMatchCase); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSearchFrames(PRBool *aSearchFrames) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSearchFrames(aSearchFrames); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSearchFrames(PRBool aSearchFrames) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSearchFrames(aSearchFrames); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -291,7 +291,7 @@ NS_IMETHODIMP nsWebBrowserFind::SetSearchFrames(PRBool aSearchFrames)
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIWebBrowserFindInFrames : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIWebBrowserFindInFrames : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWEBBROWSERFINDINFRAMES_IID)
@@ -304,8 +304,8 @@ class NS_NO_VTABLE nsIWebBrowserFindInFrames : public nsISupports {
      * Has to be equal to or contained within the rootSearchFrame.
      */
   /* attribute nsIDOMWindow currentSearchFrame; */
-  NS_IMETHOD GetCurrentSearchFrame(nsIDOMWindow * *aCurrentSearchFrame) = 0;
-  NS_IMETHOD SetCurrentSearchFrame(nsIDOMWindow * aCurrentSearchFrame) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentSearchFrame(nsIDOMWindow * *aCurrentSearchFrame) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCurrentSearchFrame(nsIDOMWindow * aCurrentSearchFrame) = 0;
 
   /**
      * rootSearchFrame
@@ -314,8 +314,8 @@ class NS_NO_VTABLE nsIWebBrowserFindInFrames : public nsISupports {
      * Set this to only search a subtree of the frame hierarchy.
      */
   /* attribute nsIDOMWindow rootSearchFrame; */
-  NS_IMETHOD GetRootSearchFrame(nsIDOMWindow * *aRootSearchFrame) = 0;
-  NS_IMETHOD SetRootSearchFrame(nsIDOMWindow * aRootSearchFrame) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRootSearchFrame(nsIDOMWindow * *aRootSearchFrame) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetRootSearchFrame(nsIDOMWindow * aRootSearchFrame) = 0;
 
   /**
      * searchSubframes
@@ -325,8 +325,8 @@ class NS_NO_VTABLE nsIWebBrowserFindInFrames : public nsISupports {
      * Setting nsIWebBrowserfind.searchFrames to true sets this to true.
      */
   /* attribute boolean searchSubframes; */
-  NS_IMETHOD GetSearchSubframes(PRBool *aSearchSubframes) = 0;
-  NS_IMETHOD SetSearchSubframes(PRBool aSearchSubframes) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSearchSubframes(PRBool *aSearchSubframes) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSearchSubframes(PRBool aSearchSubframes) = 0;
 
   /**
      * searchParentFrames
@@ -338,8 +338,8 @@ class NS_NO_VTABLE nsIWebBrowserFindInFrames : public nsISupports {
      * Setting nsIWebBrowserfind.searchFrames to true sets this to true.
      */
   /* attribute boolean searchParentFrames; */
-  NS_IMETHOD GetSearchParentFrames(PRBool *aSearchParentFrames) = 0;
-  NS_IMETHOD SetSearchParentFrames(PRBool aSearchParentFrames) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSearchParentFrames(PRBool *aSearchParentFrames) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSearchParentFrames(PRBool aSearchParentFrames) = 0;
 
 };
 
@@ -347,36 +347,36 @@ class NS_NO_VTABLE nsIWebBrowserFindInFrames : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWEBBROWSERFINDINFRAMES \
-  NS_IMETHOD GetCurrentSearchFrame(nsIDOMWindow * *aCurrentSearchFrame); \
-  NS_IMETHOD SetCurrentSearchFrame(nsIDOMWindow * aCurrentSearchFrame); \
-  NS_IMETHOD GetRootSearchFrame(nsIDOMWindow * *aRootSearchFrame); \
-  NS_IMETHOD SetRootSearchFrame(nsIDOMWindow * aRootSearchFrame); \
-  NS_IMETHOD GetSearchSubframes(PRBool *aSearchSubframes); \
-  NS_IMETHOD SetSearchSubframes(PRBool aSearchSubframes); \
-  NS_IMETHOD GetSearchParentFrames(PRBool *aSearchParentFrames); \
-  NS_IMETHOD SetSearchParentFrames(PRBool aSearchParentFrames); 
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentSearchFrame(nsIDOMWindow * *aCurrentSearchFrame); \
+  NS_SCRIPTABLE NS_IMETHOD SetCurrentSearchFrame(nsIDOMWindow * aCurrentSearchFrame); \
+  NS_SCRIPTABLE NS_IMETHOD GetRootSearchFrame(nsIDOMWindow * *aRootSearchFrame); \
+  NS_SCRIPTABLE NS_IMETHOD SetRootSearchFrame(nsIDOMWindow * aRootSearchFrame); \
+  NS_SCRIPTABLE NS_IMETHOD GetSearchSubframes(PRBool *aSearchSubframes); \
+  NS_SCRIPTABLE NS_IMETHOD SetSearchSubframes(PRBool aSearchSubframes); \
+  NS_SCRIPTABLE NS_IMETHOD GetSearchParentFrames(PRBool *aSearchParentFrames); \
+  NS_SCRIPTABLE NS_IMETHOD SetSearchParentFrames(PRBool aSearchParentFrames); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIWEBBROWSERFINDINFRAMES(_to) \
-  NS_IMETHOD GetCurrentSearchFrame(nsIDOMWindow * *aCurrentSearchFrame) { return _to GetCurrentSearchFrame(aCurrentSearchFrame); } \
-  NS_IMETHOD SetCurrentSearchFrame(nsIDOMWindow * aCurrentSearchFrame) { return _to SetCurrentSearchFrame(aCurrentSearchFrame); } \
-  NS_IMETHOD GetRootSearchFrame(nsIDOMWindow * *aRootSearchFrame) { return _to GetRootSearchFrame(aRootSearchFrame); } \
-  NS_IMETHOD SetRootSearchFrame(nsIDOMWindow * aRootSearchFrame) { return _to SetRootSearchFrame(aRootSearchFrame); } \
-  NS_IMETHOD GetSearchSubframes(PRBool *aSearchSubframes) { return _to GetSearchSubframes(aSearchSubframes); } \
-  NS_IMETHOD SetSearchSubframes(PRBool aSearchSubframes) { return _to SetSearchSubframes(aSearchSubframes); } \
-  NS_IMETHOD GetSearchParentFrames(PRBool *aSearchParentFrames) { return _to GetSearchParentFrames(aSearchParentFrames); } \
-  NS_IMETHOD SetSearchParentFrames(PRBool aSearchParentFrames) { return _to SetSearchParentFrames(aSearchParentFrames); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentSearchFrame(nsIDOMWindow * *aCurrentSearchFrame) { return _to GetCurrentSearchFrame(aCurrentSearchFrame); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCurrentSearchFrame(nsIDOMWindow * aCurrentSearchFrame) { return _to SetCurrentSearchFrame(aCurrentSearchFrame); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRootSearchFrame(nsIDOMWindow * *aRootSearchFrame) { return _to GetRootSearchFrame(aRootSearchFrame); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRootSearchFrame(nsIDOMWindow * aRootSearchFrame) { return _to SetRootSearchFrame(aRootSearchFrame); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSearchSubframes(PRBool *aSearchSubframes) { return _to GetSearchSubframes(aSearchSubframes); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSearchSubframes(PRBool aSearchSubframes) { return _to SetSearchSubframes(aSearchSubframes); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSearchParentFrames(PRBool *aSearchParentFrames) { return _to GetSearchParentFrames(aSearchParentFrames); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSearchParentFrames(PRBool aSearchParentFrames) { return _to SetSearchParentFrames(aSearchParentFrames); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIWEBBROWSERFINDINFRAMES(_to) \
-  NS_IMETHOD GetCurrentSearchFrame(nsIDOMWindow * *aCurrentSearchFrame) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentSearchFrame(aCurrentSearchFrame); } \
-  NS_IMETHOD SetCurrentSearchFrame(nsIDOMWindow * aCurrentSearchFrame) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCurrentSearchFrame(aCurrentSearchFrame); } \
-  NS_IMETHOD GetRootSearchFrame(nsIDOMWindow * *aRootSearchFrame) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRootSearchFrame(aRootSearchFrame); } \
-  NS_IMETHOD SetRootSearchFrame(nsIDOMWindow * aRootSearchFrame) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRootSearchFrame(aRootSearchFrame); } \
-  NS_IMETHOD GetSearchSubframes(PRBool *aSearchSubframes) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSearchSubframes(aSearchSubframes); } \
-  NS_IMETHOD SetSearchSubframes(PRBool aSearchSubframes) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSearchSubframes(aSearchSubframes); } \
-  NS_IMETHOD GetSearchParentFrames(PRBool *aSearchParentFrames) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSearchParentFrames(aSearchParentFrames); } \
-  NS_IMETHOD SetSearchParentFrames(PRBool aSearchParentFrames) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSearchParentFrames(aSearchParentFrames); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentSearchFrame(nsIDOMWindow * *aCurrentSearchFrame) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentSearchFrame(aCurrentSearchFrame); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCurrentSearchFrame(nsIDOMWindow * aCurrentSearchFrame) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCurrentSearchFrame(aCurrentSearchFrame); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRootSearchFrame(nsIDOMWindow * *aRootSearchFrame) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRootSearchFrame(aRootSearchFrame); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRootSearchFrame(nsIDOMWindow * aRootSearchFrame) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRootSearchFrame(aRootSearchFrame); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSearchSubframes(PRBool *aSearchSubframes) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSearchSubframes(aSearchSubframes); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSearchSubframes(PRBool aSearchSubframes) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSearchSubframes(aSearchSubframes); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSearchParentFrames(PRBool *aSearchParentFrames) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSearchParentFrames(aSearchParentFrames); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSearchParentFrames(PRBool aSearchParentFrames) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSearchParentFrames(aSearchParentFrames); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

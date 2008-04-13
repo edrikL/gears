@@ -44,9 +44,38 @@ function testPost200() {
   var headers = [["Name1", "Value1"],
                  ["Name2", "Value2"]];
   var expectedHeaders = getExpectedEchoHeaders(headers);
+  expectedHeaders.push(["echo-Content-Type", "text/plain"]);
 
   doRequest('testcases/cgi/echo_request.py', 'POST', data, headers, 200, data,
             expectedHeaders, data.length); 
+}
+
+function testPostBlob200() {
+  // TODO(nigeltao): Enable this test on Firefox once HttpRequest.responseBlob
+  // works - currently it is disabled because HttpRequest is a XPCOM module
+  // and Blob is a Dispatcher module.
+  // Once that works, this test should work in both the main thread and in a
+  // worker thread.
+  if (!isOfficial && isIE) {
+    startAsync();
+
+    var data = 'This is not a valid manifest!\n';
+    var headers = [["Name1", "Value1"],
+                   ["Name2", "Value2"]];
+    var expectedHeaders = getExpectedEchoHeaders(headers);
+    expectedHeaders.push(["echo-Content-Type", "application/octet-stream"]);
+
+    // Obtain a blob so that we can upload it.
+    httpGetAsRequest('/testcases/manifest-ugly.txt', function(request) {
+      assertEqual(200, request.status, 'Failed to locate test blob');
+      assert(isObject(request.responseBlob), 'Failed to download test blob');
+      assertEqual(data.length, request.responseBlob.length,
+                  'Unexpected length of test blob');
+            
+      doRequest('testcases/cgi/echo_request.py', 'POST', request.responseBlob,
+                headers, 200, data, expectedHeaders, data.length); 
+    });
+  }
 }
 
 function testPost302_200() {
@@ -124,6 +153,44 @@ function testRequestReuse() {
     reusedRequest.send(null);
   }
 }
+
+function testAbortSimple() {
+  var request = google.gears.factory.create('beta.httprequest');
+  request.abort();
+}
+
+function testAbortAfterOpen() {
+  var urlbase = '/testcases/cgi/send_response_of_size.py?size=';
+  var request = google.gears.factory.create('beta.httprequest');
+  request.open('GET', urlbase + 1, true);
+  request.abort();
+}
+
+function testAbortAfterSend() {
+  var urlbase = '/testcases/cgi/send_response_of_size.py?size=';
+  var request = google.gears.factory.create('beta.httprequest');
+  request.open('GET', urlbase + 2, true);
+  request.send();
+  request.abort();
+}
+
+// TODO(michaeln): modify and uncomment this test case
+/*
+function testAbortAfterInteractive() {
+  startAsync();
+  var urlbase = '/testcases/cgi/send_response_of_size.py?size=';
+  var request = google.gears.factory.create('beta.httprequest');
+  request.open('GET', urlbase + 32000 + '&slowly=true', true);
+  request.onreadystatechange = function() {
+    if (request.readyState >= 3) {
+      assertEqual(3, request.readyState);  // we dont want it to be complete yet
+      request.abort();
+      completeAsync();
+    }
+  }
+  request.send();
+}
+*/
 
 function testGetCapturedResource() {
   startAsync();
@@ -210,8 +277,14 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
            'Should be able to call getAllResponseHeaders() after request');
     assert(isString(request.responseText),
            'Should be able to get responseText after request');
-    assert(isObject(request.responseBlob),
-           'Should be able to get responseBlob after request');
+
+    // blob not in non-official builds yet
+    // TODO(nigeltao): re-enable this test (i.e. get rid of the "&& !isFirefox")
+    // when HttpRequest.responseBlob works in Firefox.
+    if (!isOfficial && !isFirefox) {
+      assert(isObject(request.responseBlob),
+             'Should be able to get responseBlob after request');
+    }
 
     // see if we got what we expected to get
     if (expectedStatus != null) {
@@ -234,8 +307,13 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
     }
 
     if (expectedResponseLength != null) {
-      assertEqual(expectedResponseLength, request.responseBlob.length,
-          'Wrong expectedResponseLength');
+      // blob not in non-official builds yet
+      // TODO(nigeltao): re-enable this test (i.e. get rid of the
+      // "&& !isFirefox") when HttpRequest.responseBlob works in Firefox.
+      if (!isOfficial && !isFirefox) {
+        assertEqual(expectedResponseLength, request.responseBlob.length,
+                    'Wrong expectedResponseLength');
+      }
     }
 
     if (expectedResponse != null) {
@@ -244,10 +322,38 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
     }
 
     if (expectedResponseLength != null) {
-      assert(isObject(request.responseBlob),
-             'Should be able to get responseBlob repeatedly');
+      // blob not in non-official builds yet
+      // TODO(nigeltao): re-enable this test (i.e. get rid of the
+      // "&& !isFirefox") when HttpRequest.responseBlob works in Firefox.
+      if (!isOfficial && !isFirefox) {
+        assert(isObject(request.responseBlob),
+               'Should be able to get responseBlob repeatedly');
+      }
     }
 
     completeAsync();
   }
+}
+
+// Helper function used by callback exception tests.
+function callbackExceptionTest(async, message) {
+  var request = google.gears.factory.create('beta.httprequest');
+  request.onreadystatechange = function() {
+    if (request.readyState == 4) {
+      throw new Error(message);
+    }
+  };
+  // This test does not require a particular URL, we just need the
+  // onreadystatechange handler to be called.
+  request.open('GET', 'nosuchfile___', async);
+  waitForGlobalErrors([message]);
+  request.send();
+}
+
+function testCallbackExceptionAsync() {
+  callbackExceptionTest(true, 'exception from HTTPRequest callback - async');
+}
+  
+function testCallbackExceptionSync() {
+  callbackExceptionTest(false, 'exception from HTTPRequest callback');
 }

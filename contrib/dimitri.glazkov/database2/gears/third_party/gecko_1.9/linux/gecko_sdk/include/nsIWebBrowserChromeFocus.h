@@ -29,7 +29,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIWebBrowserChromeFocus : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIWebBrowserChromeFocus : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWEBBROWSERCHROMEFOCUS_IID)
@@ -38,13 +38,13 @@ class NS_NO_VTABLE nsIWebBrowserChromeFocus : public nsISupports {
      * Set the focus at the next focusable element in the chrome.
      */
   /* void focusNextElement (); */
-  NS_IMETHOD FocusNextElement(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD FocusNextElement(void) = 0;
 
   /**
      * Set the focus at the previous focusable element in the chrome.
      */
   /* void focusPrevElement (); */
-  NS_IMETHOD FocusPrevElement(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD FocusPrevElement(void) = 0;
 
 };
 
@@ -52,18 +52,18 @@ class NS_NO_VTABLE nsIWebBrowserChromeFocus : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWEBBROWSERCHROMEFOCUS \
-  NS_IMETHOD FocusNextElement(void); \
-  NS_IMETHOD FocusPrevElement(void); 
+  NS_SCRIPTABLE NS_IMETHOD FocusNextElement(void); \
+  NS_SCRIPTABLE NS_IMETHOD FocusPrevElement(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIWEBBROWSERCHROMEFOCUS(_to) \
-  NS_IMETHOD FocusNextElement(void) { return _to FocusNextElement(); } \
-  NS_IMETHOD FocusPrevElement(void) { return _to FocusPrevElement(); } 
+  NS_SCRIPTABLE NS_IMETHOD FocusNextElement(void) { return _to FocusNextElement(); } \
+  NS_SCRIPTABLE NS_IMETHOD FocusPrevElement(void) { return _to FocusPrevElement(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIWEBBROWSERCHROMEFOCUS(_to) \
-  NS_IMETHOD FocusNextElement(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->FocusNextElement(); } \
-  NS_IMETHOD FocusPrevElement(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->FocusPrevElement(); } 
+  NS_SCRIPTABLE NS_IMETHOD FocusNextElement(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->FocusNextElement(); } \
+  NS_SCRIPTABLE NS_IMETHOD FocusPrevElement(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->FocusPrevElement(); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

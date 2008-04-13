@@ -32,7 +32,7 @@
  * 
  * @status FROZEN
  */
-class NS_NO_VTABLE nsICookieManager : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsICookieManager : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICOOKIEMANAGER_IID)
@@ -41,14 +41,14 @@ class NS_NO_VTABLE nsICookieManager : public nsISupports {
    * Called to remove all cookies from the cookie list
    */
   /* void removeAll (); */
-  NS_IMETHOD RemoveAll(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveAll(void) = 0;
 
   /**
    * Called to enumerate through each cookie in the cookie list.
    * The objects enumerated over are of type nsICookie
    */
   /* readonly attribute nsISimpleEnumerator enumerator; */
-  NS_IMETHOD GetEnumerator(nsISimpleEnumerator * *aEnumerator) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetEnumerator(nsISimpleEnumerator * *aEnumerator) = 0;
 
   /**
    * Called to remove an individual cookie from the cookie list
@@ -59,7 +59,7 @@ class NS_NO_VTABLE nsICookieManager : public nsISupports {
    *
    */
   /* void remove (in AUTF8String aDomain, in ACString aName, in AUTF8String aPath, in boolean aBlocked); */
-  NS_IMETHOD Remove(const nsACString & aDomain, const nsACString & aName, const nsACString & aPath, PRBool aBlocked) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Remove(const nsACString & aDomain, const nsACString & aName, const nsACString & aPath, PRBool aBlocked) = 0;
 
 };
 
@@ -67,21 +67,21 @@ class NS_NO_VTABLE nsICookieManager : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICOOKIEMANAGER \
-  NS_IMETHOD RemoveAll(void); \
-  NS_IMETHOD GetEnumerator(nsISimpleEnumerator * *aEnumerator); \
-  NS_IMETHOD Remove(const nsACString & aDomain, const nsACString & aName, const nsACString & aPath, PRBool aBlocked); 
+  NS_SCRIPTABLE NS_IMETHOD RemoveAll(void); \
+  NS_SCRIPTABLE NS_IMETHOD GetEnumerator(nsISimpleEnumerator * *aEnumerator); \
+  NS_SCRIPTABLE NS_IMETHOD Remove(const nsACString & aDomain, const nsACString & aName, const nsACString & aPath, PRBool aBlocked); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICOOKIEMANAGER(_to) \
-  NS_IMETHOD RemoveAll(void) { return _to RemoveAll(); } \
-  NS_IMETHOD GetEnumerator(nsISimpleEnumerator * *aEnumerator) { return _to GetEnumerator(aEnumerator); } \
-  NS_IMETHOD Remove(const nsACString & aDomain, const nsACString & aName, const nsACString & aPath, PRBool aBlocked) { return _to Remove(aDomain, aName, aPath, aBlocked); } 
+  NS_SCRIPTABLE NS_IMETHOD RemoveAll(void) { return _to RemoveAll(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetEnumerator(nsISimpleEnumerator * *aEnumerator) { return _to GetEnumerator(aEnumerator); } \
+  NS_SCRIPTABLE NS_IMETHOD Remove(const nsACString & aDomain, const nsACString & aName, const nsACString & aPath, PRBool aBlocked) { return _to Remove(aDomain, aName, aPath, aBlocked); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICOOKIEMANAGER(_to) \
-  NS_IMETHOD RemoveAll(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveAll(); } \
-  NS_IMETHOD GetEnumerator(nsISimpleEnumerator * *aEnumerator) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetEnumerator(aEnumerator); } \
-  NS_IMETHOD Remove(const nsACString & aDomain, const nsACString & aName, const nsACString & aPath, PRBool aBlocked) { return !_to ? NS_ERROR_NULL_POINTER : _to->Remove(aDomain, aName, aPath, aBlocked); } 
+  NS_SCRIPTABLE NS_IMETHOD RemoveAll(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveAll(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetEnumerator(nsISimpleEnumerator * *aEnumerator) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetEnumerator(aEnumerator); } \
+  NS_SCRIPTABLE NS_IMETHOD Remove(const nsACString & aDomain, const nsACString & aName, const nsACString & aPath, PRBool aBlocked) { return !_to ? NS_ERROR_NULL_POINTER : _to->Remove(aDomain, aName, aPath, aBlocked); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

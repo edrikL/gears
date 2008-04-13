@@ -31,18 +31,18 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLFrameSetElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLFrameSetElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLFRAMESETELEMENT_IID)
 
   /* attribute DOMString cols; */
-  NS_IMETHOD GetCols(nsAString & aCols) = 0;
-  NS_IMETHOD SetCols(const nsAString & aCols) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCols(nsAString & aCols) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCols(const nsAString & aCols) = 0;
 
   /* attribute DOMString rows; */
-  NS_IMETHOD GetRows(nsAString & aRows) = 0;
-  NS_IMETHOD SetRows(const nsAString & aRows) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRows(nsAString & aRows) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetRows(const nsAString & aRows) = 0;
 
 };
 
@@ -50,24 +50,24 @@ class NS_NO_VTABLE nsIDOMHTMLFrameSetElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLFRAMESETELEMENT \
-  NS_IMETHOD GetCols(nsAString & aCols); \
-  NS_IMETHOD SetCols(const nsAString & aCols); \
-  NS_IMETHOD GetRows(nsAString & aRows); \
-  NS_IMETHOD SetRows(const nsAString & aRows); 
+  NS_SCRIPTABLE NS_IMETHOD GetCols(nsAString & aCols); \
+  NS_SCRIPTABLE NS_IMETHOD SetCols(const nsAString & aCols); \
+  NS_SCRIPTABLE NS_IMETHOD GetRows(nsAString & aRows); \
+  NS_SCRIPTABLE NS_IMETHOD SetRows(const nsAString & aRows); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLFRAMESETELEMENT(_to) \
-  NS_IMETHOD GetCols(nsAString & aCols) { return _to GetCols(aCols); } \
-  NS_IMETHOD SetCols(const nsAString & aCols) { return _to SetCols(aCols); } \
-  NS_IMETHOD GetRows(nsAString & aRows) { return _to GetRows(aRows); } \
-  NS_IMETHOD SetRows(const nsAString & aRows) { return _to SetRows(aRows); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCols(nsAString & aCols) { return _to GetCols(aCols); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCols(const nsAString & aCols) { return _to SetCols(aCols); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRows(nsAString & aRows) { return _to GetRows(aRows); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRows(const nsAString & aRows) { return _to SetRows(aRows); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLFRAMESETELEMENT(_to) \
-  NS_IMETHOD GetCols(nsAString & aCols) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCols(aCols); } \
-  NS_IMETHOD SetCols(const nsAString & aCols) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCols(aCols); } \
-  NS_IMETHOD GetRows(nsAString & aRows) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRows(aRows); } \
-  NS_IMETHOD SetRows(const nsAString & aRows) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRows(aRows); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCols(nsAString & aCols) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCols(aCols); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCols(const nsAString & aCols) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCols(aCols); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRows(nsAString & aRows) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRows(aRows); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRows(const nsAString & aRows) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRows(aRows); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

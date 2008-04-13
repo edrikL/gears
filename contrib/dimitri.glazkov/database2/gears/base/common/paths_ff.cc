@@ -31,7 +31,7 @@ class nsIFile; // must declare this before including nsDirectoryServiceUtils.h
 #include <gecko_sdk/include/nsDirectoryServiceDefs.h>
 #include <gecko_sdk/include/nsDirectoryServiceUtils.h>
 
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include "genfiles/product_constants.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
@@ -73,10 +73,10 @@ bool GetBaseComponentsDirectory(std::string16 *path) {
 const char16 kPathSeparator = L'/';
 // The text between the slashes must match the Gears <em:id> tag in
 // install.rdf.m4.
-static const char16 *kComponentsSubdir =
-    STRING16(L"extensions/{000a9d1c-beef-4f90-9363-039d445309b8}/components");
+static const char16 *kGearsDir =
+    STRING16(L"extensions/{000a9d1c-beef-4f90-9363-039d445309b8}");
 
-bool GetBaseComponentsDirectory(std::string16 *path) {
+static bool GetBaseGearsDirectory(std::string16 *path) {
   // Get the "regular" profile directory (not the "local").
   nsresult nr;
   nsCOMPtr<nsIFile> profile_path;
@@ -93,12 +93,43 @@ bool GetBaseComponentsDirectory(std::string16 *path) {
 
   (*path) = ns_path.get();
   (*path) += kPathSeparator;
-  (*path) += kComponentsSubdir;
+  (*path) += kGearsDir;
+  
+  return true;
+}
+
+bool GetBaseComponentsDirectory(std::string16 *path) {
+  std::string16 tmp_path;
+  
+  if (!GetBaseGearsDirectory(&tmp_path)) {
+    return false;
+  }
+  
+  (*path) = tmp_path + kPathSeparator;
+  (*path) += STRING16(L"components");
 
   return true;
 }
 
 #endif
+
+bool GetBaseResourcesDirectory(std::string16 *path) {
+#if defined(OS_MACOSX) || defined(LINUX)
+  std::string16 tmp_path;
+  
+  if (!GetBaseGearsDirectory(&tmp_path)) {
+    return false;
+  }
+  
+  (*path) = tmp_path + kPathSeparator;
+  (*path) += STRING16(L"resources");
+
+  return true;
+#else
+  // TODO(nigeltao): implement on Windows.
+  return false;
+#endif
+}
 
 // Append "for Firefox" to be consistent with IE naming scheme.
 static const char16 *kDataSubdir = STRING16(PRODUCT_FRIENDLY_NAME

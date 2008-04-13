@@ -55,12 +55,8 @@ void Database2ResultSet::GetRows(JsCallContext *context) {
 }
 
 bool Database2ResultSet::Create(const ModuleImplBaseClass *sibling,
-                                Database2ResultSet **instance) {
-  Database2ResultSet *result_set = 
-     CreateModule<Database2ResultSet>(sibling->GetJsRunner());
-  if (result_set && result_set->InitBaseFromSibling(sibling)) {
-    *instance = result_set;
-    return true;
-  }
-  return false;
+                                scoped_refptr<Database2ResultSet> *instance) {
+  assert(instance);
+  return CreateModule<Database2ResultSet>(sibling->GetJsRunner(), instance)
+      && instance->get()->InitBaseFromSibling(sibling);
 }

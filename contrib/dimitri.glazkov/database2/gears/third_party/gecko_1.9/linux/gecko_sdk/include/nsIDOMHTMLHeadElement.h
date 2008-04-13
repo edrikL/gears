@@ -31,14 +31,14 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLHeadElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLHeadElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLHEADELEMENT_IID)
 
   /* attribute DOMString profile; */
-  NS_IMETHOD GetProfile(nsAString & aProfile) = 0;
-  NS_IMETHOD SetProfile(const nsAString & aProfile) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetProfile(nsAString & aProfile) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetProfile(const nsAString & aProfile) = 0;
 
 };
 
@@ -46,18 +46,18 @@ class NS_NO_VTABLE nsIDOMHTMLHeadElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLHEADELEMENT \
-  NS_IMETHOD GetProfile(nsAString & aProfile); \
-  NS_IMETHOD SetProfile(const nsAString & aProfile); 
+  NS_SCRIPTABLE NS_IMETHOD GetProfile(nsAString & aProfile); \
+  NS_SCRIPTABLE NS_IMETHOD SetProfile(const nsAString & aProfile); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLHEADELEMENT(_to) \
-  NS_IMETHOD GetProfile(nsAString & aProfile) { return _to GetProfile(aProfile); } \
-  NS_IMETHOD SetProfile(const nsAString & aProfile) { return _to SetProfile(aProfile); } 
+  NS_SCRIPTABLE NS_IMETHOD GetProfile(nsAString & aProfile) { return _to GetProfile(aProfile); } \
+  NS_SCRIPTABLE NS_IMETHOD SetProfile(const nsAString & aProfile) { return _to SetProfile(aProfile); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLHEADELEMENT(_to) \
-  NS_IMETHOD GetProfile(nsAString & aProfile) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetProfile(aProfile); } \
-  NS_IMETHOD SetProfile(const nsAString & aProfile) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetProfile(aProfile); } 
+  NS_SCRIPTABLE NS_IMETHOD GetProfile(nsAString & aProfile) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetProfile(aProfile); } \
+  NS_SCRIPTABLE NS_IMETHOD SetProfile(const nsAString & aProfile) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetProfile(aProfile); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

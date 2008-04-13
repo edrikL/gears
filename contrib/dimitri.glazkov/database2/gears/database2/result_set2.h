@@ -29,6 +29,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_types.h"
+#include "gears/base/common/scoped_refptr.h"
 
 // interface SQLResultSet
 class Database2ResultSet : public ModuleImplBaseClassVirtual {
@@ -45,10 +46,8 @@ class Database2ResultSet : public ModuleImplBaseClassVirtual {
 
   // creates an instance, returns true if successful
   // TODO(dimitri.glazkov): Add more parameters
-  // TODO(dimitri.glazkov): Once scoped_refptr merged with this branch, change 
-  //   "instance" to be scoped_refptr<Database2ResultSet> *instance
   static bool Create(const ModuleImplBaseClass *sibling,
-                     Database2ResultSet **instance);
+                     scoped_refptr<Database2ResultSet> *instance);
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2ResultSet);
 };

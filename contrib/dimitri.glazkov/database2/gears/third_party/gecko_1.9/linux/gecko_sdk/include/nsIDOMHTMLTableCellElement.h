@@ -31,69 +31,69 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLTableCellElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLTableCellElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLTABLECELLELEMENT_IID)
 
   /* readonly attribute long cellIndex; */
-  NS_IMETHOD GetCellIndex(PRInt32 *aCellIndex) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCellIndex(PRInt32 *aCellIndex) = 0;
 
   /* attribute DOMString abbr; */
-  NS_IMETHOD GetAbbr(nsAString & aAbbr) = 0;
-  NS_IMETHOD SetAbbr(const nsAString & aAbbr) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAbbr(nsAString & aAbbr) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAbbr(const nsAString & aAbbr) = 0;
 
   /* attribute DOMString align; */
-  NS_IMETHOD GetAlign(nsAString & aAlign) = 0;
-  NS_IMETHOD SetAlign(const nsAString & aAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) = 0;
 
   /* attribute DOMString axis; */
-  NS_IMETHOD GetAxis(nsAString & aAxis) = 0;
-  NS_IMETHOD SetAxis(const nsAString & aAxis) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAxis(nsAString & aAxis) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAxis(const nsAString & aAxis) = 0;
 
   /* attribute DOMString bgColor; */
-  NS_IMETHOD GetBgColor(nsAString & aBgColor) = 0;
-  NS_IMETHOD SetBgColor(const nsAString & aBgColor) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetBgColor(nsAString & aBgColor) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetBgColor(const nsAString & aBgColor) = 0;
 
   /* attribute DOMString ch; */
-  NS_IMETHOD GetCh(nsAString & aCh) = 0;
-  NS_IMETHOD SetCh(const nsAString & aCh) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCh(nsAString & aCh) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCh(const nsAString & aCh) = 0;
 
   /* attribute DOMString chOff; */
-  NS_IMETHOD GetChOff(nsAString & aChOff) = 0;
-  NS_IMETHOD SetChOff(const nsAString & aChOff) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetChOff(nsAString & aChOff) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetChOff(const nsAString & aChOff) = 0;
 
   /* attribute long colSpan; */
-  NS_IMETHOD GetColSpan(PRInt32 *aColSpan) = 0;
-  NS_IMETHOD SetColSpan(PRInt32 aColSpan) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetColSpan(PRInt32 *aColSpan) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetColSpan(PRInt32 aColSpan) = 0;
 
   /* attribute DOMString headers; */
-  NS_IMETHOD GetHeaders(nsAString & aHeaders) = 0;
-  NS_IMETHOD SetHeaders(const nsAString & aHeaders) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHeaders(nsAString & aHeaders) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetHeaders(const nsAString & aHeaders) = 0;
 
   /* attribute DOMString height; */
-  NS_IMETHOD GetHeight(nsAString & aHeight) = 0;
-  NS_IMETHOD SetHeight(const nsAString & aHeight) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHeight(nsAString & aHeight) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetHeight(const nsAString & aHeight) = 0;
 
   /* attribute boolean noWrap; */
-  NS_IMETHOD GetNoWrap(PRBool *aNoWrap) = 0;
-  NS_IMETHOD SetNoWrap(PRBool aNoWrap) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNoWrap(PRBool *aNoWrap) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetNoWrap(PRBool aNoWrap) = 0;
 
   /* attribute long rowSpan; */
-  NS_IMETHOD GetRowSpan(PRInt32 *aRowSpan) = 0;
-  NS_IMETHOD SetRowSpan(PRInt32 aRowSpan) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRowSpan(PRInt32 *aRowSpan) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetRowSpan(PRInt32 aRowSpan) = 0;
 
   /* attribute DOMString scope; */
-  NS_IMETHOD GetScope(nsAString & aScope) = 0;
-  NS_IMETHOD SetScope(const nsAString & aScope) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetScope(nsAString & aScope) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetScope(const nsAString & aScope) = 0;
 
   /* attribute DOMString vAlign; */
-  NS_IMETHOD GetVAlign(nsAString & aVAlign) = 0;
-  NS_IMETHOD SetVAlign(const nsAString & aVAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetVAlign(nsAString & aVAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetVAlign(const nsAString & aVAlign) = 0;
 
   /* attribute DOMString width; */
-  NS_IMETHOD GetWidth(nsAString & aWidth) = 0;
-  NS_IMETHOD SetWidth(const nsAString & aWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth) = 0;
 
 };
 
@@ -101,99 +101,99 @@ class NS_NO_VTABLE nsIDOMHTMLTableCellElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLTABLECELLELEMENT \
-  NS_IMETHOD GetCellIndex(PRInt32 *aCellIndex); \
-  NS_IMETHOD GetAbbr(nsAString & aAbbr); \
-  NS_IMETHOD SetAbbr(const nsAString & aAbbr); \
-  NS_IMETHOD GetAlign(nsAString & aAlign); \
-  NS_IMETHOD SetAlign(const nsAString & aAlign); \
-  NS_IMETHOD GetAxis(nsAString & aAxis); \
-  NS_IMETHOD SetAxis(const nsAString & aAxis); \
-  NS_IMETHOD GetBgColor(nsAString & aBgColor); \
-  NS_IMETHOD SetBgColor(const nsAString & aBgColor); \
-  NS_IMETHOD GetCh(nsAString & aCh); \
-  NS_IMETHOD SetCh(const nsAString & aCh); \
-  NS_IMETHOD GetChOff(nsAString & aChOff); \
-  NS_IMETHOD SetChOff(const nsAString & aChOff); \
-  NS_IMETHOD GetColSpan(PRInt32 *aColSpan); \
-  NS_IMETHOD SetColSpan(PRInt32 aColSpan); \
-  NS_IMETHOD GetHeaders(nsAString & aHeaders); \
-  NS_IMETHOD SetHeaders(const nsAString & aHeaders); \
-  NS_IMETHOD GetHeight(nsAString & aHeight); \
-  NS_IMETHOD SetHeight(const nsAString & aHeight); \
-  NS_IMETHOD GetNoWrap(PRBool *aNoWrap); \
-  NS_IMETHOD SetNoWrap(PRBool aNoWrap); \
-  NS_IMETHOD GetRowSpan(PRInt32 *aRowSpan); \
-  NS_IMETHOD SetRowSpan(PRInt32 aRowSpan); \
-  NS_IMETHOD GetScope(nsAString & aScope); \
-  NS_IMETHOD SetScope(const nsAString & aScope); \
-  NS_IMETHOD GetVAlign(nsAString & aVAlign); \
-  NS_IMETHOD SetVAlign(const nsAString & aVAlign); \
-  NS_IMETHOD GetWidth(nsAString & aWidth); \
-  NS_IMETHOD SetWidth(const nsAString & aWidth); 
+  NS_SCRIPTABLE NS_IMETHOD GetCellIndex(PRInt32 *aCellIndex); \
+  NS_SCRIPTABLE NS_IMETHOD GetAbbr(nsAString & aAbbr); \
+  NS_SCRIPTABLE NS_IMETHOD SetAbbr(const nsAString & aAbbr); \
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign); \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign); \
+  NS_SCRIPTABLE NS_IMETHOD GetAxis(nsAString & aAxis); \
+  NS_SCRIPTABLE NS_IMETHOD SetAxis(const nsAString & aAxis); \
+  NS_SCRIPTABLE NS_IMETHOD GetBgColor(nsAString & aBgColor); \
+  NS_SCRIPTABLE NS_IMETHOD SetBgColor(const nsAString & aBgColor); \
+  NS_SCRIPTABLE NS_IMETHOD GetCh(nsAString & aCh); \
+  NS_SCRIPTABLE NS_IMETHOD SetCh(const nsAString & aCh); \
+  NS_SCRIPTABLE NS_IMETHOD GetChOff(nsAString & aChOff); \
+  NS_SCRIPTABLE NS_IMETHOD SetChOff(const nsAString & aChOff); \
+  NS_SCRIPTABLE NS_IMETHOD GetColSpan(PRInt32 *aColSpan); \
+  NS_SCRIPTABLE NS_IMETHOD SetColSpan(PRInt32 aColSpan); \
+  NS_SCRIPTABLE NS_IMETHOD GetHeaders(nsAString & aHeaders); \
+  NS_SCRIPTABLE NS_IMETHOD SetHeaders(const nsAString & aHeaders); \
+  NS_SCRIPTABLE NS_IMETHOD GetHeight(nsAString & aHeight); \
+  NS_SCRIPTABLE NS_IMETHOD SetHeight(const nsAString & aHeight); \
+  NS_SCRIPTABLE NS_IMETHOD GetNoWrap(PRBool *aNoWrap); \
+  NS_SCRIPTABLE NS_IMETHOD SetNoWrap(PRBool aNoWrap); \
+  NS_SCRIPTABLE NS_IMETHOD GetRowSpan(PRInt32 *aRowSpan); \
+  NS_SCRIPTABLE NS_IMETHOD SetRowSpan(PRInt32 aRowSpan); \
+  NS_SCRIPTABLE NS_IMETHOD GetScope(nsAString & aScope); \
+  NS_SCRIPTABLE NS_IMETHOD SetScope(const nsAString & aScope); \
+  NS_SCRIPTABLE NS_IMETHOD GetVAlign(nsAString & aVAlign); \
+  NS_SCRIPTABLE NS_IMETHOD SetVAlign(const nsAString & aVAlign); \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth); \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLTABLECELLELEMENT(_to) \
-  NS_IMETHOD GetCellIndex(PRInt32 *aCellIndex) { return _to GetCellIndex(aCellIndex); } \
-  NS_IMETHOD GetAbbr(nsAString & aAbbr) { return _to GetAbbr(aAbbr); } \
-  NS_IMETHOD SetAbbr(const nsAString & aAbbr) { return _to SetAbbr(aAbbr); } \
-  NS_IMETHOD GetAlign(nsAString & aAlign) { return _to GetAlign(aAlign); } \
-  NS_IMETHOD SetAlign(const nsAString & aAlign) { return _to SetAlign(aAlign); } \
-  NS_IMETHOD GetAxis(nsAString & aAxis) { return _to GetAxis(aAxis); } \
-  NS_IMETHOD SetAxis(const nsAString & aAxis) { return _to SetAxis(aAxis); } \
-  NS_IMETHOD GetBgColor(nsAString & aBgColor) { return _to GetBgColor(aBgColor); } \
-  NS_IMETHOD SetBgColor(const nsAString & aBgColor) { return _to SetBgColor(aBgColor); } \
-  NS_IMETHOD GetCh(nsAString & aCh) { return _to GetCh(aCh); } \
-  NS_IMETHOD SetCh(const nsAString & aCh) { return _to SetCh(aCh); } \
-  NS_IMETHOD GetChOff(nsAString & aChOff) { return _to GetChOff(aChOff); } \
-  NS_IMETHOD SetChOff(const nsAString & aChOff) { return _to SetChOff(aChOff); } \
-  NS_IMETHOD GetColSpan(PRInt32 *aColSpan) { return _to GetColSpan(aColSpan); } \
-  NS_IMETHOD SetColSpan(PRInt32 aColSpan) { return _to SetColSpan(aColSpan); } \
-  NS_IMETHOD GetHeaders(nsAString & aHeaders) { return _to GetHeaders(aHeaders); } \
-  NS_IMETHOD SetHeaders(const nsAString & aHeaders) { return _to SetHeaders(aHeaders); } \
-  NS_IMETHOD GetHeight(nsAString & aHeight) { return _to GetHeight(aHeight); } \
-  NS_IMETHOD SetHeight(const nsAString & aHeight) { return _to SetHeight(aHeight); } \
-  NS_IMETHOD GetNoWrap(PRBool *aNoWrap) { return _to GetNoWrap(aNoWrap); } \
-  NS_IMETHOD SetNoWrap(PRBool aNoWrap) { return _to SetNoWrap(aNoWrap); } \
-  NS_IMETHOD GetRowSpan(PRInt32 *aRowSpan) { return _to GetRowSpan(aRowSpan); } \
-  NS_IMETHOD SetRowSpan(PRInt32 aRowSpan) { return _to SetRowSpan(aRowSpan); } \
-  NS_IMETHOD GetScope(nsAString & aScope) { return _to GetScope(aScope); } \
-  NS_IMETHOD SetScope(const nsAString & aScope) { return _to SetScope(aScope); } \
-  NS_IMETHOD GetVAlign(nsAString & aVAlign) { return _to GetVAlign(aVAlign); } \
-  NS_IMETHOD SetVAlign(const nsAString & aVAlign) { return _to SetVAlign(aVAlign); } \
-  NS_IMETHOD GetWidth(nsAString & aWidth) { return _to GetWidth(aWidth); } \
-  NS_IMETHOD SetWidth(const nsAString & aWidth) { return _to SetWidth(aWidth); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCellIndex(PRInt32 *aCellIndex) { return _to GetCellIndex(aCellIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAbbr(nsAString & aAbbr) { return _to GetAbbr(aAbbr); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAbbr(const nsAString & aAbbr) { return _to SetAbbr(aAbbr); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) { return _to GetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) { return _to SetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAxis(nsAString & aAxis) { return _to GetAxis(aAxis); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAxis(const nsAString & aAxis) { return _to SetAxis(aAxis); } \
+  NS_SCRIPTABLE NS_IMETHOD GetBgColor(nsAString & aBgColor) { return _to GetBgColor(aBgColor); } \
+  NS_SCRIPTABLE NS_IMETHOD SetBgColor(const nsAString & aBgColor) { return _to SetBgColor(aBgColor); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCh(nsAString & aCh) { return _to GetCh(aCh); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCh(const nsAString & aCh) { return _to SetCh(aCh); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChOff(nsAString & aChOff) { return _to GetChOff(aChOff); } \
+  NS_SCRIPTABLE NS_IMETHOD SetChOff(const nsAString & aChOff) { return _to SetChOff(aChOff); } \
+  NS_SCRIPTABLE NS_IMETHOD GetColSpan(PRInt32 *aColSpan) { return _to GetColSpan(aColSpan); } \
+  NS_SCRIPTABLE NS_IMETHOD SetColSpan(PRInt32 aColSpan) { return _to SetColSpan(aColSpan); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHeaders(nsAString & aHeaders) { return _to GetHeaders(aHeaders); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHeaders(const nsAString & aHeaders) { return _to SetHeaders(aHeaders); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHeight(nsAString & aHeight) { return _to GetHeight(aHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHeight(const nsAString & aHeight) { return _to SetHeight(aHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNoWrap(PRBool *aNoWrap) { return _to GetNoWrap(aNoWrap); } \
+  NS_SCRIPTABLE NS_IMETHOD SetNoWrap(PRBool aNoWrap) { return _to SetNoWrap(aNoWrap); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRowSpan(PRInt32 *aRowSpan) { return _to GetRowSpan(aRowSpan); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRowSpan(PRInt32 aRowSpan) { return _to SetRowSpan(aRowSpan); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScope(nsAString & aScope) { return _to GetScope(aScope); } \
+  NS_SCRIPTABLE NS_IMETHOD SetScope(const nsAString & aScope) { return _to SetScope(aScope); } \
+  NS_SCRIPTABLE NS_IMETHOD GetVAlign(nsAString & aVAlign) { return _to GetVAlign(aVAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetVAlign(const nsAString & aVAlign) { return _to SetVAlign(aVAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth) { return _to GetWidth(aWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth) { return _to SetWidth(aWidth); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLTABLECELLELEMENT(_to) \
-  NS_IMETHOD GetCellIndex(PRInt32 *aCellIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCellIndex(aCellIndex); } \
-  NS_IMETHOD GetAbbr(nsAString & aAbbr) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAbbr(aAbbr); } \
-  NS_IMETHOD SetAbbr(const nsAString & aAbbr) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAbbr(aAbbr); } \
-  NS_IMETHOD GetAlign(nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlign(aAlign); } \
-  NS_IMETHOD SetAlign(const nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlign(aAlign); } \
-  NS_IMETHOD GetAxis(nsAString & aAxis) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAxis(aAxis); } \
-  NS_IMETHOD SetAxis(const nsAString & aAxis) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAxis(aAxis); } \
-  NS_IMETHOD GetBgColor(nsAString & aBgColor) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetBgColor(aBgColor); } \
-  NS_IMETHOD SetBgColor(const nsAString & aBgColor) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetBgColor(aBgColor); } \
-  NS_IMETHOD GetCh(nsAString & aCh) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCh(aCh); } \
-  NS_IMETHOD SetCh(const nsAString & aCh) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCh(aCh); } \
-  NS_IMETHOD GetChOff(nsAString & aChOff) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChOff(aChOff); } \
-  NS_IMETHOD SetChOff(const nsAString & aChOff) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetChOff(aChOff); } \
-  NS_IMETHOD GetColSpan(PRInt32 *aColSpan) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetColSpan(aColSpan); } \
-  NS_IMETHOD SetColSpan(PRInt32 aColSpan) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetColSpan(aColSpan); } \
-  NS_IMETHOD GetHeaders(nsAString & aHeaders) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHeaders(aHeaders); } \
-  NS_IMETHOD SetHeaders(const nsAString & aHeaders) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHeaders(aHeaders); } \
-  NS_IMETHOD GetHeight(nsAString & aHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHeight(aHeight); } \
-  NS_IMETHOD SetHeight(const nsAString & aHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHeight(aHeight); } \
-  NS_IMETHOD GetNoWrap(PRBool *aNoWrap) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNoWrap(aNoWrap); } \
-  NS_IMETHOD SetNoWrap(PRBool aNoWrap) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetNoWrap(aNoWrap); } \
-  NS_IMETHOD GetRowSpan(PRInt32 *aRowSpan) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRowSpan(aRowSpan); } \
-  NS_IMETHOD SetRowSpan(PRInt32 aRowSpan) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRowSpan(aRowSpan); } \
-  NS_IMETHOD GetScope(nsAString & aScope) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScope(aScope); } \
-  NS_IMETHOD SetScope(const nsAString & aScope) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetScope(aScope); } \
-  NS_IMETHOD GetVAlign(nsAString & aVAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVAlign(aVAlign); } \
-  NS_IMETHOD SetVAlign(const nsAString & aVAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetVAlign(aVAlign); } \
-  NS_IMETHOD GetWidth(nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWidth(aWidth); } \
-  NS_IMETHOD SetWidth(const nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWidth(aWidth); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCellIndex(PRInt32 *aCellIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCellIndex(aCellIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAbbr(nsAString & aAbbr) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAbbr(aAbbr); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAbbr(const nsAString & aAbbr) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAbbr(aAbbr); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAxis(nsAString & aAxis) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAxis(aAxis); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAxis(const nsAString & aAxis) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAxis(aAxis); } \
+  NS_SCRIPTABLE NS_IMETHOD GetBgColor(nsAString & aBgColor) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetBgColor(aBgColor); } \
+  NS_SCRIPTABLE NS_IMETHOD SetBgColor(const nsAString & aBgColor) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetBgColor(aBgColor); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCh(nsAString & aCh) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCh(aCh); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCh(const nsAString & aCh) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCh(aCh); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChOff(nsAString & aChOff) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChOff(aChOff); } \
+  NS_SCRIPTABLE NS_IMETHOD SetChOff(const nsAString & aChOff) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetChOff(aChOff); } \
+  NS_SCRIPTABLE NS_IMETHOD GetColSpan(PRInt32 *aColSpan) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetColSpan(aColSpan); } \
+  NS_SCRIPTABLE NS_IMETHOD SetColSpan(PRInt32 aColSpan) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetColSpan(aColSpan); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHeaders(nsAString & aHeaders) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHeaders(aHeaders); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHeaders(const nsAString & aHeaders) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHeaders(aHeaders); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHeight(nsAString & aHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHeight(aHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHeight(const nsAString & aHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHeight(aHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNoWrap(PRBool *aNoWrap) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNoWrap(aNoWrap); } \
+  NS_SCRIPTABLE NS_IMETHOD SetNoWrap(PRBool aNoWrap) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetNoWrap(aNoWrap); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRowSpan(PRInt32 *aRowSpan) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRowSpan(aRowSpan); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRowSpan(PRInt32 aRowSpan) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRowSpan(aRowSpan); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScope(nsAString & aScope) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScope(aScope); } \
+  NS_SCRIPTABLE NS_IMETHOD SetScope(const nsAString & aScope) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetScope(aScope); } \
+  NS_SCRIPTABLE NS_IMETHOD GetVAlign(nsAString & aVAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVAlign(aVAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetVAlign(const nsAString & aVAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetVAlign(aVAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWidth(aWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWidth(aWidth); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

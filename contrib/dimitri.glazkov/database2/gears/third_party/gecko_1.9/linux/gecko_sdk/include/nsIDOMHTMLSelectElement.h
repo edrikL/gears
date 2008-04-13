@@ -35,63 +35,63 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLSelectElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLSelectElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLSELECTELEMENT_IID)
 
   /* readonly attribute DOMString type; */
-  NS_IMETHOD GetType(nsAString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) = 0;
 
   /* attribute long selectedIndex; */
-  NS_IMETHOD GetSelectedIndex(PRInt32 *aSelectedIndex) = 0;
-  NS_IMETHOD SetSelectedIndex(PRInt32 aSelectedIndex) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSelectedIndex(PRInt32 *aSelectedIndex) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSelectedIndex(PRInt32 aSelectedIndex) = 0;
 
   /* attribute DOMString value; */
-  NS_IMETHOD GetValue(nsAString & aValue) = 0;
-  NS_IMETHOD SetValue(const nsAString & aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsAString & aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetValue(const nsAString & aValue) = 0;
 
   /* attribute unsigned long length; */
-  NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
-  NS_IMETHOD SetLength(PRUint32 aLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetLength(PRUint32 aLength) = 0;
 
   /* readonly attribute nsIDOMHTMLFormElement form; */
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) = 0;
 
   /* readonly attribute nsIDOMHTMLOptionsCollection options; */
-  NS_IMETHOD GetOptions(nsIDOMHTMLOptionsCollection * *aOptions) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetOptions(nsIDOMHTMLOptionsCollection * *aOptions) = 0;
 
   /* attribute boolean disabled; */
-  NS_IMETHOD GetDisabled(PRBool *aDisabled) = 0;
-  NS_IMETHOD SetDisabled(PRBool aDisabled) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled) = 0;
 
   /* attribute boolean multiple; */
-  NS_IMETHOD GetMultiple(PRBool *aMultiple) = 0;
-  NS_IMETHOD SetMultiple(PRBool aMultiple) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMultiple(PRBool *aMultiple) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetMultiple(PRBool aMultiple) = 0;
 
   /* attribute DOMString name; */
-  NS_IMETHOD GetName(nsAString & aName) = 0;
-  NS_IMETHOD SetName(const nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) = 0;
 
   /* attribute long size; */
-  NS_IMETHOD GetSize(PRInt32 *aSize) = 0;
-  NS_IMETHOD SetSize(PRInt32 aSize) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSize(PRInt32 *aSize) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSize(PRInt32 aSize) = 0;
 
   /* attribute long tabIndex; */
-  NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) = 0;
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) = 0;
 
   /* void add (in nsIDOMHTMLElement element, in nsIDOMHTMLElement before)  raises (DOMException); */
-  NS_IMETHOD Add(nsIDOMHTMLElement *element, nsIDOMHTMLElement *before) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Add(nsIDOMHTMLElement *element, nsIDOMHTMLElement *before) = 0;
 
   /* void remove (in long index); */
-  NS_IMETHOD Remove(PRInt32 index) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Remove(PRInt32 index) = 0;
 
   /* void blur (); */
-  NS_IMETHOD Blur(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Blur(void) = 0;
 
   /* void focus (); */
-  NS_IMETHOD Focus(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Focus(void) = 0;
 
 };
 
@@ -99,81 +99,81 @@ class NS_NO_VTABLE nsIDOMHTMLSelectElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLSELECTELEMENT \
-  NS_IMETHOD GetType(nsAString & aType); \
-  NS_IMETHOD GetSelectedIndex(PRInt32 *aSelectedIndex); \
-  NS_IMETHOD SetSelectedIndex(PRInt32 aSelectedIndex); \
-  NS_IMETHOD GetValue(nsAString & aValue); \
-  NS_IMETHOD SetValue(const nsAString & aValue); \
-  NS_IMETHOD GetLength(PRUint32 *aLength); \
-  NS_IMETHOD SetLength(PRUint32 aLength); \
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm); \
-  NS_IMETHOD GetOptions(nsIDOMHTMLOptionsCollection * *aOptions); \
-  NS_IMETHOD GetDisabled(PRBool *aDisabled); \
-  NS_IMETHOD SetDisabled(PRBool aDisabled); \
-  NS_IMETHOD GetMultiple(PRBool *aMultiple); \
-  NS_IMETHOD SetMultiple(PRBool aMultiple); \
-  NS_IMETHOD GetName(nsAString & aName); \
-  NS_IMETHOD SetName(const nsAString & aName); \
-  NS_IMETHOD GetSize(PRInt32 *aSize); \
-  NS_IMETHOD SetSize(PRInt32 aSize); \
-  NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex); \
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex); \
-  NS_IMETHOD Add(nsIDOMHTMLElement *element, nsIDOMHTMLElement *before); \
-  NS_IMETHOD Remove(PRInt32 index); \
-  NS_IMETHOD Blur(void); \
-  NS_IMETHOD Focus(void); 
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType); \
+  NS_SCRIPTABLE NS_IMETHOD GetSelectedIndex(PRInt32 *aSelectedIndex); \
+  NS_SCRIPTABLE NS_IMETHOD SetSelectedIndex(PRInt32 aSelectedIndex); \
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsAString & aValue); \
+  NS_SCRIPTABLE NS_IMETHOD SetValue(const nsAString & aValue); \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength); \
+  NS_SCRIPTABLE NS_IMETHOD SetLength(PRUint32 aLength); \
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm); \
+  NS_SCRIPTABLE NS_IMETHOD GetOptions(nsIDOMHTMLOptionsCollection * *aOptions); \
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled); \
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled); \
+  NS_SCRIPTABLE NS_IMETHOD GetMultiple(PRBool *aMultiple); \
+  NS_SCRIPTABLE NS_IMETHOD SetMultiple(PRBool aMultiple); \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD GetSize(PRInt32 *aSize); \
+  NS_SCRIPTABLE NS_IMETHOD SetSize(PRInt32 aSize); \
+  NS_SCRIPTABLE NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex); \
+  NS_SCRIPTABLE NS_IMETHOD SetTabIndex(PRInt32 aTabIndex); \
+  NS_SCRIPTABLE NS_IMETHOD Add(nsIDOMHTMLElement *element, nsIDOMHTMLElement *before); \
+  NS_SCRIPTABLE NS_IMETHOD Remove(PRInt32 index); \
+  NS_SCRIPTABLE NS_IMETHOD Blur(void); \
+  NS_SCRIPTABLE NS_IMETHOD Focus(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLSELECTELEMENT(_to) \
-  NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
-  NS_IMETHOD GetSelectedIndex(PRInt32 *aSelectedIndex) { return _to GetSelectedIndex(aSelectedIndex); } \
-  NS_IMETHOD SetSelectedIndex(PRInt32 aSelectedIndex) { return _to SetSelectedIndex(aSelectedIndex); } \
-  NS_IMETHOD GetValue(nsAString & aValue) { return _to GetValue(aValue); } \
-  NS_IMETHOD SetValue(const nsAString & aValue) { return _to SetValue(aValue); } \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
-  NS_IMETHOD SetLength(PRUint32 aLength) { return _to SetLength(aLength); } \
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return _to GetForm(aForm); } \
-  NS_IMETHOD GetOptions(nsIDOMHTMLOptionsCollection * *aOptions) { return _to GetOptions(aOptions); } \
-  NS_IMETHOD GetDisabled(PRBool *aDisabled) { return _to GetDisabled(aDisabled); } \
-  NS_IMETHOD SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
-  NS_IMETHOD GetMultiple(PRBool *aMultiple) { return _to GetMultiple(aMultiple); } \
-  NS_IMETHOD SetMultiple(PRBool aMultiple) { return _to SetMultiple(aMultiple); } \
-  NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
-  NS_IMETHOD GetSize(PRInt32 *aSize) { return _to GetSize(aSize); } \
-  NS_IMETHOD SetSize(PRInt32 aSize) { return _to SetSize(aSize); } \
-  NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) { return _to GetTabIndex(aTabIndex); } \
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) { return _to SetTabIndex(aTabIndex); } \
-  NS_IMETHOD Add(nsIDOMHTMLElement *element, nsIDOMHTMLElement *before) { return _to Add(element, before); } \
-  NS_IMETHOD Remove(PRInt32 index) { return _to Remove(index); } \
-  NS_IMETHOD Blur(void) { return _to Blur(); } \
-  NS_IMETHOD Focus(void) { return _to Focus(); } 
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSelectedIndex(PRInt32 *aSelectedIndex) { return _to GetSelectedIndex(aSelectedIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSelectedIndex(PRInt32 aSelectedIndex) { return _to SetSelectedIndex(aSelectedIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsAString & aValue) { return _to GetValue(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetValue(const nsAString & aValue) { return _to SetValue(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return _to GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLength(PRUint32 aLength) { return _to SetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return _to GetForm(aForm); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOptions(nsIDOMHTMLOptionsCollection * *aOptions) { return _to GetOptions(aOptions); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled) { return _to GetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMultiple(PRBool *aMultiple) { return _to GetMultiple(aMultiple); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMultiple(PRBool aMultiple) { return _to SetMultiple(aMultiple); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSize(PRInt32 *aSize) { return _to GetSize(aSize); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSize(PRInt32 aSize) { return _to SetSize(aSize); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) { return _to GetTabIndex(aTabIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) { return _to SetTabIndex(aTabIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD Add(nsIDOMHTMLElement *element, nsIDOMHTMLElement *before) { return _to Add(element, before); } \
+  NS_SCRIPTABLE NS_IMETHOD Remove(PRInt32 index) { return _to Remove(index); } \
+  NS_SCRIPTABLE NS_IMETHOD Blur(void) { return _to Blur(); } \
+  NS_SCRIPTABLE NS_IMETHOD Focus(void) { return _to Focus(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLSELECTELEMENT(_to) \
-  NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
-  NS_IMETHOD GetSelectedIndex(PRInt32 *aSelectedIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSelectedIndex(aSelectedIndex); } \
-  NS_IMETHOD SetSelectedIndex(PRInt32 aSelectedIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSelectedIndex(aSelectedIndex); } \
-  NS_IMETHOD GetValue(nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetValue(aValue); } \
-  NS_IMETHOD SetValue(const nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetValue(aValue); } \
-  NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
-  NS_IMETHOD SetLength(PRUint32 aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLength(aLength); } \
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetForm(aForm); } \
-  NS_IMETHOD GetOptions(nsIDOMHTMLOptionsCollection * *aOptions) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOptions(aOptions); } \
-  NS_IMETHOD GetDisabled(PRBool *aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDisabled(aDisabled); } \
-  NS_IMETHOD SetDisabled(PRBool aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDisabled(aDisabled); } \
-  NS_IMETHOD GetMultiple(PRBool *aMultiple) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMultiple(aMultiple); } \
-  NS_IMETHOD SetMultiple(PRBool aMultiple) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMultiple(aMultiple); } \
-  NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
-  NS_IMETHOD GetSize(PRInt32 *aSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSize(aSize); } \
-  NS_IMETHOD SetSize(PRInt32 aSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSize(aSize); } \
-  NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTabIndex(aTabIndex); } \
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTabIndex(aTabIndex); } \
-  NS_IMETHOD Add(nsIDOMHTMLElement *element, nsIDOMHTMLElement *before) { return !_to ? NS_ERROR_NULL_POINTER : _to->Add(element, before); } \
-  NS_IMETHOD Remove(PRInt32 index) { return !_to ? NS_ERROR_NULL_POINTER : _to->Remove(index); } \
-  NS_IMETHOD Blur(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Blur(); } \
-  NS_IMETHOD Focus(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Focus(); } 
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSelectedIndex(PRInt32 *aSelectedIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSelectedIndex(aSelectedIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSelectedIndex(PRInt32 aSelectedIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSelectedIndex(aSelectedIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetValue(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD SetValue(const nsAString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetValue(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLength(PRUint32 *aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLength(PRUint32 aLength) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLength(aLength); } \
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetForm(aForm); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOptions(nsIDOMHTMLOptionsCollection * *aOptions) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOptions(aOptions); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDisabled(PRBool *aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDisabled(PRBool aDisabled) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDisabled(aDisabled); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMultiple(PRBool *aMultiple) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMultiple(aMultiple); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMultiple(PRBool aMultiple) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMultiple(aMultiple); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSize(PRInt32 *aSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSize(aSize); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSize(PRInt32 aSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSize(aSize); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTabIndex(aTabIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTabIndex(aTabIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD Add(nsIDOMHTMLElement *element, nsIDOMHTMLElement *before) { return !_to ? NS_ERROR_NULL_POINTER : _to->Add(element, before); } \
+  NS_SCRIPTABLE NS_IMETHOD Remove(PRInt32 index) { return !_to ? NS_ERROR_NULL_POINTER : _to->Remove(index); } \
+  NS_SCRIPTABLE NS_IMETHOD Blur(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Blur(); } \
+  NS_SCRIPTABLE NS_IMETHOD Focus(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Focus(); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

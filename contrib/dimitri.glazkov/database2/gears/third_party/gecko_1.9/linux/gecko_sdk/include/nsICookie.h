@@ -32,7 +32,7 @@ typedef PRInt32 nsCookiePolicy;
   {0xe9fcb9a4, 0xd376, 0x458f, \
     { 0xb7, 0x20, 0xe6, 0x5e, 0x7d, 0xf5, 0x93, 0xbc }}
 
-class NS_NO_VTABLE nsICookie : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsICookie : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICOOKIE_IID)
@@ -41,37 +41,37 @@ class NS_NO_VTABLE nsICookie : public nsISupports {
      * the name of the cookie
      */
   /* readonly attribute ACString name; */
-  NS_IMETHOD GetName(nsACString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsACString & aName) = 0;
 
   /**
      * the cookie value
      */
   /* readonly attribute ACString value; */
-  NS_IMETHOD GetValue(nsACString & aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsACString & aValue) = 0;
 
   /**
      * true if the cookie is a domain cookie, false otherwise
      */
   /* readonly attribute boolean isDomain; */
-  NS_IMETHOD GetIsDomain(PRBool *aIsDomain) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIsDomain(PRBool *aIsDomain) = 0;
 
   /**
      * the host (possibly fully qualified) of the cookie
      */
   /* readonly attribute AUTF8String host; */
-  NS_IMETHOD GetHost(nsACString & aHost) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHost(nsACString & aHost) = 0;
 
   /**
      * the path pertaining to the cookie
      */
   /* readonly attribute AUTF8String path; */
-  NS_IMETHOD GetPath(nsACString & aPath) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPath(nsACString & aPath) = 0;
 
   /**
      * true if the cookie was transmitted over ssl, false otherwise
      */
   /* readonly attribute boolean isSecure; */
-  NS_IMETHOD GetIsSecure(PRBool *aIsSecure) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIsSecure(PRBool *aIsSecure) = 0;
 
   /**
      * @DEPRECATED use nsICookie2.expiry and nsICookie2.isSession instead.
@@ -81,7 +81,7 @@ class NS_NO_VTABLE nsICookie : public nsISupports {
      * expires = 1 represents an expiration time earlier than Jan 1, 1970.
      */
   /* readonly attribute PRUint64 expires; */
-  NS_IMETHOD GetExpires(PRUint64 *aExpires) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetExpires(PRUint64 *aExpires) = 0;
 
   /**
      * @DEPRECATED status implementation will return STATUS_UNKNOWN in all cases.
@@ -97,7 +97,7 @@ class NS_NO_VTABLE nsICookie : public nsISupports {
   enum { STATUS_REJECTED = 4 };
 
   /* readonly attribute nsCookieStatus status; */
-  NS_IMETHOD GetStatus(nsCookieStatus *aStatus) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetStatus(nsCookieStatus *aStatus) = 0;
 
   /**
      * @DEPRECATED policy implementation will return POLICY_UNKNOWN in all cases.
@@ -115,7 +115,7 @@ class NS_NO_VTABLE nsICookie : public nsISupports {
   enum { POLICY_NO_II = 5 };
 
   /* readonly attribute nsCookiePolicy policy; */
-  NS_IMETHOD GetPolicy(nsCookiePolicy *aPolicy) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPolicy(nsCookiePolicy *aPolicy) = 0;
 
 };
 
@@ -123,39 +123,39 @@ class NS_NO_VTABLE nsICookie : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICOOKIE \
-  NS_IMETHOD GetName(nsACString & aName); \
-  NS_IMETHOD GetValue(nsACString & aValue); \
-  NS_IMETHOD GetIsDomain(PRBool *aIsDomain); \
-  NS_IMETHOD GetHost(nsACString & aHost); \
-  NS_IMETHOD GetPath(nsACString & aPath); \
-  NS_IMETHOD GetIsSecure(PRBool *aIsSecure); \
-  NS_IMETHOD GetExpires(PRUint64 *aExpires); \
-  NS_IMETHOD GetStatus(nsCookieStatus *aStatus); \
-  NS_IMETHOD GetPolicy(nsCookiePolicy *aPolicy); 
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsACString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsACString & aValue); \
+  NS_SCRIPTABLE NS_IMETHOD GetIsDomain(PRBool *aIsDomain); \
+  NS_SCRIPTABLE NS_IMETHOD GetHost(nsACString & aHost); \
+  NS_SCRIPTABLE NS_IMETHOD GetPath(nsACString & aPath); \
+  NS_SCRIPTABLE NS_IMETHOD GetIsSecure(PRBool *aIsSecure); \
+  NS_SCRIPTABLE NS_IMETHOD GetExpires(PRUint64 *aExpires); \
+  NS_SCRIPTABLE NS_IMETHOD GetStatus(nsCookieStatus *aStatus); \
+  NS_SCRIPTABLE NS_IMETHOD GetPolicy(nsCookiePolicy *aPolicy); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICOOKIE(_to) \
-  NS_IMETHOD GetName(nsACString & aName) { return _to GetName(aName); } \
-  NS_IMETHOD GetValue(nsACString & aValue) { return _to GetValue(aValue); } \
-  NS_IMETHOD GetIsDomain(PRBool *aIsDomain) { return _to GetIsDomain(aIsDomain); } \
-  NS_IMETHOD GetHost(nsACString & aHost) { return _to GetHost(aHost); } \
-  NS_IMETHOD GetPath(nsACString & aPath) { return _to GetPath(aPath); } \
-  NS_IMETHOD GetIsSecure(PRBool *aIsSecure) { return _to GetIsSecure(aIsSecure); } \
-  NS_IMETHOD GetExpires(PRUint64 *aExpires) { return _to GetExpires(aExpires); } \
-  NS_IMETHOD GetStatus(nsCookieStatus *aStatus) { return _to GetStatus(aStatus); } \
-  NS_IMETHOD GetPolicy(nsCookiePolicy *aPolicy) { return _to GetPolicy(aPolicy); } 
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsACString & aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsACString & aValue) { return _to GetValue(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsDomain(PRBool *aIsDomain) { return _to GetIsDomain(aIsDomain); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHost(nsACString & aHost) { return _to GetHost(aHost); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPath(nsACString & aPath) { return _to GetPath(aPath); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsSecure(PRBool *aIsSecure) { return _to GetIsSecure(aIsSecure); } \
+  NS_SCRIPTABLE NS_IMETHOD GetExpires(PRUint64 *aExpires) { return _to GetExpires(aExpires); } \
+  NS_SCRIPTABLE NS_IMETHOD GetStatus(nsCookieStatus *aStatus) { return _to GetStatus(aStatus); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPolicy(nsCookiePolicy *aPolicy) { return _to GetPolicy(aPolicy); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICOOKIE(_to) \
-  NS_IMETHOD GetName(nsACString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD GetValue(nsACString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetValue(aValue); } \
-  NS_IMETHOD GetIsDomain(PRBool *aIsDomain) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsDomain(aIsDomain); } \
-  NS_IMETHOD GetHost(nsACString & aHost) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHost(aHost); } \
-  NS_IMETHOD GetPath(nsACString & aPath) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPath(aPath); } \
-  NS_IMETHOD GetIsSecure(PRBool *aIsSecure) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsSecure(aIsSecure); } \
-  NS_IMETHOD GetExpires(PRUint64 *aExpires) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetExpires(aExpires); } \
-  NS_IMETHOD GetStatus(nsCookieStatus *aStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetStatus(aStatus); } \
-  NS_IMETHOD GetPolicy(nsCookiePolicy *aPolicy) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPolicy(aPolicy); } 
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsACString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetValue(nsACString & aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetValue(aValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsDomain(PRBool *aIsDomain) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsDomain(aIsDomain); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHost(nsACString & aHost) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHost(aHost); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPath(nsACString & aPath) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPath(aPath); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsSecure(PRBool *aIsSecure) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsSecure(aIsSecure); } \
+  NS_SCRIPTABLE NS_IMETHOD GetExpires(PRUint64 *aExpires) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetExpires(aExpires); } \
+  NS_SCRIPTABLE NS_IMETHOD GetStatus(nsCookieStatus *aStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetStatus(aStatus); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPolicy(nsCookiePolicy *aPolicy) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPolicy(aPolicy); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

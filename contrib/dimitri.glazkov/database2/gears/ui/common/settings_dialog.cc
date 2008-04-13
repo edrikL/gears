@@ -23,16 +23,11 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/common/string_utils.h"
-#if BROWSER_FF
-#include "gears/desktop/desktop_ff.h"
-#elif BROWSER_IE
-#include "gears/desktop/desktop_ie.h"
-#elif BROWSER_NPAPI
-#include "gears/desktop/desktop_np.h"
-#endif
-#include "gears/ui/common/html_dialog.h"
 #include "gears/ui/common/settings_dialog.h"
+
+#include "gears/base/common/string_utils.h"
+#include "gears/ui/common/html_dialog.h"
+
 
 void SettingsDialog::Run() {
   HtmlDialog settings_dialog;
@@ -139,6 +134,6 @@ void SettingsDialog::ProcessResult(Json::Value *dialog_result) {
     }
 
     capabilities->SetCanAccessGears(origin,
-                                    PermissionsDB::PERMISSION_DEFAULT);
+                                    PermissionsDB::PERMISSION_NOT_SET);
   }
 }

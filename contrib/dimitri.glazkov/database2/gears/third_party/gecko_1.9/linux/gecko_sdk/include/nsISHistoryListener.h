@@ -39,7 +39,7 @@ class nsIURI; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsISHistoryListener : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsISHistoryListener : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISHISTORYLISTENER_IID)
@@ -52,7 +52,7 @@ class NS_NO_VTABLE nsISHistoryListener : public nsISupports {
    * @param aNewURI     The URI of the document to be added to session history.
    */
   /* void OnHistoryNewEntry (in nsIURI aNewURI); */
-  NS_IMETHOD OnHistoryNewEntry(nsIURI *aNewURI) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryNewEntry(nsIURI *aNewURI) = 0;
 
   /**
    * Called when navigating to a previous session history entry, for example
@@ -62,7 +62,7 @@ class NS_NO_VTABLE nsISHistoryListener : public nsISupports {
    * @return            Whether the operation can proceed.
    */
   /* boolean OnHistoryGoBack (in nsIURI aBackURI); */
-  NS_IMETHOD OnHistoryGoBack(nsIURI *aBackURI, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryGoBack(nsIURI *aBackURI, PRBool *_retval) = 0;
 
   /**
    * Called when navigating to a next session history entry, for example
@@ -72,7 +72,7 @@ class NS_NO_VTABLE nsISHistoryListener : public nsISupports {
    * @return              Whether the operation can proceed.
    */
   /* boolean OnHistoryGoForward (in nsIURI aForwardURI); */
-  NS_IMETHOD OnHistoryGoForward(nsIURI *aForwardURI, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryGoForward(nsIURI *aForwardURI, PRBool *_retval) = 0;
 
   /** 
    * Called when the current document is reloaded, for example due to a
@@ -87,7 +87,7 @@ class NS_NO_VTABLE nsISHistoryListener : public nsISupports {
    * @see  nsIWebNavigation
    */
   /* boolean OnHistoryReload (in nsIURI aReloadURI, in unsigned long aReloadFlags); */
-  NS_IMETHOD OnHistoryReload(nsIURI *aReloadURI, PRUint32 aReloadFlags, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryReload(nsIURI *aReloadURI, PRUint32 aReloadFlags, PRBool *_retval) = 0;
 
   /**
    * Called when navigating to a session history entry by index, for example,
@@ -98,7 +98,7 @@ class NS_NO_VTABLE nsISHistoryListener : public nsISupports {
    * @return              Whether the operation can proceed.
    */
   /* boolean OnHistoryGotoIndex (in long aIndex, in nsIURI aGotoURI); */
-  NS_IMETHOD OnHistoryGotoIndex(PRInt32 aIndex, nsIURI *aGotoURI, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryGotoIndex(PRInt32 aIndex, nsIURI *aGotoURI, PRBool *_retval) = 0;
 
   /**
    * Called when entries are removed from session history. Entries can be
@@ -112,7 +112,7 @@ class NS_NO_VTABLE nsISHistoryListener : public nsISupports {
    * @return              Whether the operation can proceed.
    */
   /* boolean OnHistoryPurge (in long aNumEntries); */
-  NS_IMETHOD OnHistoryPurge(PRInt32 aNumEntries, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryPurge(PRInt32 aNumEntries, PRBool *_retval) = 0;
 
 };
 
@@ -120,30 +120,30 @@ class NS_NO_VTABLE nsISHistoryListener : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSISHISTORYLISTENER \
-  NS_IMETHOD OnHistoryNewEntry(nsIURI *aNewURI); \
-  NS_IMETHOD OnHistoryGoBack(nsIURI *aBackURI, PRBool *_retval); \
-  NS_IMETHOD OnHistoryGoForward(nsIURI *aForwardURI, PRBool *_retval); \
-  NS_IMETHOD OnHistoryReload(nsIURI *aReloadURI, PRUint32 aReloadFlags, PRBool *_retval); \
-  NS_IMETHOD OnHistoryGotoIndex(PRInt32 aIndex, nsIURI *aGotoURI, PRBool *_retval); \
-  NS_IMETHOD OnHistoryPurge(PRInt32 aNumEntries, PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryNewEntry(nsIURI *aNewURI); \
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryGoBack(nsIURI *aBackURI, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryGoForward(nsIURI *aForwardURI, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryReload(nsIURI *aReloadURI, PRUint32 aReloadFlags, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryGotoIndex(PRInt32 aIndex, nsIURI *aGotoURI, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryPurge(PRInt32 aNumEntries, PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSISHISTORYLISTENER(_to) \
-  NS_IMETHOD OnHistoryNewEntry(nsIURI *aNewURI) { return _to OnHistoryNewEntry(aNewURI); } \
-  NS_IMETHOD OnHistoryGoBack(nsIURI *aBackURI, PRBool *_retval) { return _to OnHistoryGoBack(aBackURI, _retval); } \
-  NS_IMETHOD OnHistoryGoForward(nsIURI *aForwardURI, PRBool *_retval) { return _to OnHistoryGoForward(aForwardURI, _retval); } \
-  NS_IMETHOD OnHistoryReload(nsIURI *aReloadURI, PRUint32 aReloadFlags, PRBool *_retval) { return _to OnHistoryReload(aReloadURI, aReloadFlags, _retval); } \
-  NS_IMETHOD OnHistoryGotoIndex(PRInt32 aIndex, nsIURI *aGotoURI, PRBool *_retval) { return _to OnHistoryGotoIndex(aIndex, aGotoURI, _retval); } \
-  NS_IMETHOD OnHistoryPurge(PRInt32 aNumEntries, PRBool *_retval) { return _to OnHistoryPurge(aNumEntries, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryNewEntry(nsIURI *aNewURI) { return _to OnHistoryNewEntry(aNewURI); } \
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryGoBack(nsIURI *aBackURI, PRBool *_retval) { return _to OnHistoryGoBack(aBackURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryGoForward(nsIURI *aForwardURI, PRBool *_retval) { return _to OnHistoryGoForward(aForwardURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryReload(nsIURI *aReloadURI, PRUint32 aReloadFlags, PRBool *_retval) { return _to OnHistoryReload(aReloadURI, aReloadFlags, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryGotoIndex(PRInt32 aIndex, nsIURI *aGotoURI, PRBool *_retval) { return _to OnHistoryGotoIndex(aIndex, aGotoURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryPurge(PRInt32 aNumEntries, PRBool *_retval) { return _to OnHistoryPurge(aNumEntries, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSISHISTORYLISTENER(_to) \
-  NS_IMETHOD OnHistoryNewEntry(nsIURI *aNewURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnHistoryNewEntry(aNewURI); } \
-  NS_IMETHOD OnHistoryGoBack(nsIURI *aBackURI, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnHistoryGoBack(aBackURI, _retval); } \
-  NS_IMETHOD OnHistoryGoForward(nsIURI *aForwardURI, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnHistoryGoForward(aForwardURI, _retval); } \
-  NS_IMETHOD OnHistoryReload(nsIURI *aReloadURI, PRUint32 aReloadFlags, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnHistoryReload(aReloadURI, aReloadFlags, _retval); } \
-  NS_IMETHOD OnHistoryGotoIndex(PRInt32 aIndex, nsIURI *aGotoURI, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnHistoryGotoIndex(aIndex, aGotoURI, _retval); } \
-  NS_IMETHOD OnHistoryPurge(PRInt32 aNumEntries, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnHistoryPurge(aNumEntries, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryNewEntry(nsIURI *aNewURI) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnHistoryNewEntry(aNewURI); } \
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryGoBack(nsIURI *aBackURI, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnHistoryGoBack(aBackURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryGoForward(nsIURI *aForwardURI, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnHistoryGoForward(aForwardURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryReload(nsIURI *aReloadURI, PRUint32 aReloadFlags, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnHistoryReload(aReloadURI, aReloadFlags, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryGotoIndex(PRInt32 aIndex, nsIURI *aGotoURI, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnHistoryGotoIndex(aIndex, aGotoURI, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD OnHistoryPurge(PRInt32 aNumEntries, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnHistoryPurge(aNumEntries, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

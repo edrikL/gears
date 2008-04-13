@@ -30,7 +30,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIClipboardCommands : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIClipboardCommands : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICLIPBOARDCOMMANDS_IID)
@@ -42,7 +42,7 @@ class NS_NO_VTABLE nsIClipboardCommands : public nsISupports {
    *          <code>false</code> otherwise.
    */
   /* boolean canCutSelection (); */
-  NS_IMETHOD CanCutSelection(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CanCutSelection(PRBool *_retval) = 0;
 
   /**
    * Returns whether there is a selection and it is copyable.
@@ -51,7 +51,7 @@ class NS_NO_VTABLE nsIClipboardCommands : public nsISupports {
    *          <code>false</code> otherwise.
    */
   /* boolean canCopySelection (); */
-  NS_IMETHOD CanCopySelection(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CanCopySelection(PRBool *_retval) = 0;
 
   /**
    * Returns whether we can copy a link location.
@@ -60,7 +60,7 @@ class NS_NO_VTABLE nsIClipboardCommands : public nsISupports {
    *           <code>false</code> otherwise.
    */
   /* boolean canCopyLinkLocation (); */
-  NS_IMETHOD CanCopyLinkLocation(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CanCopyLinkLocation(PRBool *_retval) = 0;
 
   /**
    * Returns whether we can copy an image location.
@@ -69,7 +69,7 @@ class NS_NO_VTABLE nsIClipboardCommands : public nsISupports {
               <code>false</code> otherwise.
    */
   /* boolean canCopyImageLocation (); */
-  NS_IMETHOD CanCopyImageLocation(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CanCopyImageLocation(PRBool *_retval) = 0;
 
   /**
    * Returns whether we can copy an image's contents.
@@ -78,7 +78,7 @@ class NS_NO_VTABLE nsIClipboardCommands : public nsISupports {
    *          <code>false</code> otherwise
    */
   /* boolean canCopyImageContents (); */
-  NS_IMETHOD CanCopyImageContents(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CanCopyImageContents(PRBool *_retval) = 0;
 
   /**
    * Returns whether the current contents of the clipboard can be
@@ -89,57 +89,57 @@ class NS_NO_VTABLE nsIClipboardCommands : public nsISupports {
    *          <code>false</code> otherwise
    */
   /* boolean canPaste (); */
-  NS_IMETHOD CanPaste(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CanPaste(PRBool *_retval) = 0;
 
   /**
    * Cut the current selection onto the clipboard.
    */
   /* void cutSelection (); */
-  NS_IMETHOD CutSelection(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CutSelection(void) = 0;
 
   /**
    * Copy the current selection onto the clipboard.
    */
   /* void copySelection (); */
-  NS_IMETHOD CopySelection(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CopySelection(void) = 0;
 
   /**
    * Copy the link location of the current selection (e.g.,
    * the |href| attribute of a selected |a| tag).
    */
   /* void copyLinkLocation (); */
-  NS_IMETHOD CopyLinkLocation(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CopyLinkLocation(void) = 0;
 
   /**
    * Copy the location of the selected image.
    */
   /* void copyImageLocation (); */
-  NS_IMETHOD CopyImageLocation(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CopyImageLocation(void) = 0;
 
   /**
    * Copy the contents of the selected image.
    */
   /* void copyImageContents (); */
-  NS_IMETHOD CopyImageContents(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CopyImageContents(void) = 0;
 
   /**
    * Paste the contents of the clipboard into the current selection.
    */
   /* void paste (); */
-  NS_IMETHOD Paste(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Paste(void) = 0;
 
   /**
    * Select the entire contents.
    */
   /* void selectAll (); */
-  NS_IMETHOD SelectAll(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SelectAll(void) = 0;
 
   /**
    * Clear the current selection (if any). Insertion point ends up
    * at beginning of current selection.
    */
   /* void selectNone (); */
-  NS_IMETHOD SelectNone(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SelectNone(void) = 0;
 
 };
 
@@ -147,54 +147,54 @@ class NS_NO_VTABLE nsIClipboardCommands : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICLIPBOARDCOMMANDS \
-  NS_IMETHOD CanCutSelection(PRBool *_retval); \
-  NS_IMETHOD CanCopySelection(PRBool *_retval); \
-  NS_IMETHOD CanCopyLinkLocation(PRBool *_retval); \
-  NS_IMETHOD CanCopyImageLocation(PRBool *_retval); \
-  NS_IMETHOD CanCopyImageContents(PRBool *_retval); \
-  NS_IMETHOD CanPaste(PRBool *_retval); \
-  NS_IMETHOD CutSelection(void); \
-  NS_IMETHOD CopySelection(void); \
-  NS_IMETHOD CopyLinkLocation(void); \
-  NS_IMETHOD CopyImageLocation(void); \
-  NS_IMETHOD CopyImageContents(void); \
-  NS_IMETHOD Paste(void); \
-  NS_IMETHOD SelectAll(void); \
-  NS_IMETHOD SelectNone(void); 
+  NS_SCRIPTABLE NS_IMETHOD CanCutSelection(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CanCopySelection(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CanCopyLinkLocation(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CanCopyImageLocation(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CanCopyImageContents(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CanPaste(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CutSelection(void); \
+  NS_SCRIPTABLE NS_IMETHOD CopySelection(void); \
+  NS_SCRIPTABLE NS_IMETHOD CopyLinkLocation(void); \
+  NS_SCRIPTABLE NS_IMETHOD CopyImageLocation(void); \
+  NS_SCRIPTABLE NS_IMETHOD CopyImageContents(void); \
+  NS_SCRIPTABLE NS_IMETHOD Paste(void); \
+  NS_SCRIPTABLE NS_IMETHOD SelectAll(void); \
+  NS_SCRIPTABLE NS_IMETHOD SelectNone(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICLIPBOARDCOMMANDS(_to) \
-  NS_IMETHOD CanCutSelection(PRBool *_retval) { return _to CanCutSelection(_retval); } \
-  NS_IMETHOD CanCopySelection(PRBool *_retval) { return _to CanCopySelection(_retval); } \
-  NS_IMETHOD CanCopyLinkLocation(PRBool *_retval) { return _to CanCopyLinkLocation(_retval); } \
-  NS_IMETHOD CanCopyImageLocation(PRBool *_retval) { return _to CanCopyImageLocation(_retval); } \
-  NS_IMETHOD CanCopyImageContents(PRBool *_retval) { return _to CanCopyImageContents(_retval); } \
-  NS_IMETHOD CanPaste(PRBool *_retval) { return _to CanPaste(_retval); } \
-  NS_IMETHOD CutSelection(void) { return _to CutSelection(); } \
-  NS_IMETHOD CopySelection(void) { return _to CopySelection(); } \
-  NS_IMETHOD CopyLinkLocation(void) { return _to CopyLinkLocation(); } \
-  NS_IMETHOD CopyImageLocation(void) { return _to CopyImageLocation(); } \
-  NS_IMETHOD CopyImageContents(void) { return _to CopyImageContents(); } \
-  NS_IMETHOD Paste(void) { return _to Paste(); } \
-  NS_IMETHOD SelectAll(void) { return _to SelectAll(); } \
-  NS_IMETHOD SelectNone(void) { return _to SelectNone(); } 
+  NS_SCRIPTABLE NS_IMETHOD CanCutSelection(PRBool *_retval) { return _to CanCutSelection(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CanCopySelection(PRBool *_retval) { return _to CanCopySelection(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CanCopyLinkLocation(PRBool *_retval) { return _to CanCopyLinkLocation(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CanCopyImageLocation(PRBool *_retval) { return _to CanCopyImageLocation(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CanCopyImageContents(PRBool *_retval) { return _to CanCopyImageContents(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CanPaste(PRBool *_retval) { return _to CanPaste(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CutSelection(void) { return _to CutSelection(); } \
+  NS_SCRIPTABLE NS_IMETHOD CopySelection(void) { return _to CopySelection(); } \
+  NS_SCRIPTABLE NS_IMETHOD CopyLinkLocation(void) { return _to CopyLinkLocation(); } \
+  NS_SCRIPTABLE NS_IMETHOD CopyImageLocation(void) { return _to CopyImageLocation(); } \
+  NS_SCRIPTABLE NS_IMETHOD CopyImageContents(void) { return _to CopyImageContents(); } \
+  NS_SCRIPTABLE NS_IMETHOD Paste(void) { return _to Paste(); } \
+  NS_SCRIPTABLE NS_IMETHOD SelectAll(void) { return _to SelectAll(); } \
+  NS_SCRIPTABLE NS_IMETHOD SelectNone(void) { return _to SelectNone(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICLIPBOARDCOMMANDS(_to) \
-  NS_IMETHOD CanCutSelection(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanCutSelection(_retval); } \
-  NS_IMETHOD CanCopySelection(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanCopySelection(_retval); } \
-  NS_IMETHOD CanCopyLinkLocation(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanCopyLinkLocation(_retval); } \
-  NS_IMETHOD CanCopyImageLocation(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanCopyImageLocation(_retval); } \
-  NS_IMETHOD CanCopyImageContents(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanCopyImageContents(_retval); } \
-  NS_IMETHOD CanPaste(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanPaste(_retval); } \
-  NS_IMETHOD CutSelection(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->CutSelection(); } \
-  NS_IMETHOD CopySelection(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->CopySelection(); } \
-  NS_IMETHOD CopyLinkLocation(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->CopyLinkLocation(); } \
-  NS_IMETHOD CopyImageLocation(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->CopyImageLocation(); } \
-  NS_IMETHOD CopyImageContents(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->CopyImageContents(); } \
-  NS_IMETHOD Paste(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Paste(); } \
-  NS_IMETHOD SelectAll(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SelectAll(); } \
-  NS_IMETHOD SelectNone(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SelectNone(); } 
+  NS_SCRIPTABLE NS_IMETHOD CanCutSelection(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanCutSelection(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CanCopySelection(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanCopySelection(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CanCopyLinkLocation(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanCopyLinkLocation(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CanCopyImageLocation(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanCopyImageLocation(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CanCopyImageContents(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanCopyImageContents(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CanPaste(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->CanPaste(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CutSelection(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->CutSelection(); } \
+  NS_SCRIPTABLE NS_IMETHOD CopySelection(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->CopySelection(); } \
+  NS_SCRIPTABLE NS_IMETHOD CopyLinkLocation(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->CopyLinkLocation(); } \
+  NS_SCRIPTABLE NS_IMETHOD CopyImageLocation(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->CopyImageLocation(); } \
+  NS_SCRIPTABLE NS_IMETHOD CopyImageContents(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->CopyImageContents(); } \
+  NS_SCRIPTABLE NS_IMETHOD Paste(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Paste(); } \
+  NS_SCRIPTABLE NS_IMETHOD SelectAll(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SelectAll(); } \
+  NS_SCRIPTABLE NS_IMETHOD SelectNone(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SelectNone(); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

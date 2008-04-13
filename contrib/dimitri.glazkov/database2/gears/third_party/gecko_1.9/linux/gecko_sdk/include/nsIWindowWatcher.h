@@ -58,7 +58,7 @@ class nsIWindowCreator; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIWindowWatcher : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIWindowWatcher : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWINDOWWATCHER_IID)
@@ -90,7 +90,7 @@ class NS_NO_VTABLE nsIWindowWatcher : public nsISupports {
             via nsIObserverService if the window did not already exist.
   */
   /* nsIDOMWindow openWindow (in nsIDOMWindow aParent, in string aUrl, in string aName, in string aFeatures, in nsISupports aArguments); */
-  NS_IMETHOD OpenWindow(nsIDOMWindow *aParent, const char *aUrl, const char *aName, const char *aFeatures, nsISupports *aArguments, nsIDOMWindow **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OpenWindow(nsIDOMWindow *aParent, const char *aUrl, const char *aName, const char *aFeatures, nsISupports *aArguments, nsIDOMWindow **_retval) = 0;
 
   /** Clients of this service can register themselves to be notified
       when a window is opened or closed (added to or removed from this
@@ -107,7 +107,7 @@ class NS_NO_VTABLE nsIWindowWatcher : public nsISupports {
       someData not used.
   */
   /* void registerNotification (in nsIObserver aObserver); */
-  NS_IMETHOD RegisterNotification(nsIObserver *aObserver) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RegisterNotification(nsIObserver *aObserver) = 0;
 
   /** Clients of this service can register themselves to be notified
       when a window is opened or closed (added to or removed from this
@@ -116,7 +116,7 @@ class NS_NO_VTABLE nsIWindowWatcher : public nsISupports {
       @param aObserver the observer to be removed.
   */
   /* void unregisterNotification (in nsIObserver aObserver); */
-  NS_IMETHOD UnregisterNotification(nsIObserver *aObserver) = 0;
+  NS_SCRIPTABLE NS_IMETHOD UnregisterNotification(nsIObserver *aObserver) = 0;
 
   /** Get an iterator for currently open windows in the order they were opened,
       guaranteeing that each will be visited exactly once.
@@ -124,21 +124,21 @@ class NS_NO_VTABLE nsIWindowWatcher : public nsISupports {
               can be QIed to an nsIDOMWindow
   */
   /* nsISimpleEnumerator getWindowEnumerator (); */
-  NS_IMETHOD GetWindowEnumerator(nsISimpleEnumerator **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetWindowEnumerator(nsISimpleEnumerator **_retval) = 0;
 
   /** Return a newly created nsIPrompt implementation.
       @param aParent the parent window used for posing alerts. can be null.
       @return a new nsIPrompt object
   */
   /* nsIPrompt getNewPrompter (in nsIDOMWindow aParent); */
-  NS_IMETHOD GetNewPrompter(nsIDOMWindow *aParent, nsIPrompt **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNewPrompter(nsIDOMWindow *aParent, nsIPrompt **_retval) = 0;
 
   /** Return a newly created nsIAuthPrompt implementation.
       @param aParent the parent window used for posing alerts. can be null.
       @return a new nsIAuthPrompt object
   */
   /* nsIAuthPrompt getNewAuthPrompter (in nsIDOMWindow aParent); */
-  NS_IMETHOD GetNewAuthPrompter(nsIDOMWindow *aParent, nsIAuthPrompt **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNewAuthPrompter(nsIDOMWindow *aParent, nsIAuthPrompt **_retval) = 0;
 
   /** Set the window creator callback. It must be filled in by the app.
       openWindow will use it to create new windows.
@@ -146,7 +146,7 @@ class NS_NO_VTABLE nsIWindowWatcher : public nsISupports {
                      and window creation capabilities lost.
   */
   /* void setWindowCreator (in nsIWindowCreator creator); */
-  NS_IMETHOD SetWindowCreator(nsIWindowCreator *creator) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetWindowCreator(nsIWindowCreator *creator) = 0;
 
   /** Retrieve the chrome window mapped to the given DOM window. Window
       Watcher keeps a list of all top-level DOM windows currently open,
@@ -157,7 +157,7 @@ class NS_NO_VTABLE nsIWindowWatcher : public nsISupports {
       @return the corresponding chrome window
   */
   /* nsIWebBrowserChrome getChromeForWindow (in nsIDOMWindow aWindow); */
-  NS_IMETHOD GetChromeForWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetChromeForWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome **_retval) = 0;
 
   /**
       Retrieve an existing window (or frame).
@@ -171,7 +171,7 @@ class NS_NO_VTABLE nsIWindowWatcher : public nsISupports {
       security implications of this before using this method!
   */
   /* nsIDOMWindow getWindowByName (in wstring aTargetName, in nsIDOMWindow aCurrentWindow); */
-  NS_IMETHOD GetWindowByName(const PRUnichar *aTargetName, nsIDOMWindow *aCurrentWindow, nsIDOMWindow **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetWindowByName(const PRUnichar *aTargetName, nsIDOMWindow *aCurrentWindow, nsIDOMWindow **_retval) = 0;
 
   /** The Watcher serves as a global storage facility for the current active
       (frontmost non-floating-palette-type) window, storing and returning
@@ -181,8 +181,8 @@ class NS_NO_VTABLE nsIWindowWatcher : public nsISupports {
       window.
   */
   /* attribute nsIDOMWindow activeWindow; */
-  NS_IMETHOD GetActiveWindow(nsIDOMWindow * *aActiveWindow) = 0;
-  NS_IMETHOD SetActiveWindow(nsIDOMWindow * aActiveWindow) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetActiveWindow(nsIDOMWindow * *aActiveWindow) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetActiveWindow(nsIDOMWindow * aActiveWindow) = 0;
 
 };
 
@@ -190,45 +190,45 @@ class NS_NO_VTABLE nsIWindowWatcher : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWINDOWWATCHER \
-  NS_IMETHOD OpenWindow(nsIDOMWindow *aParent, const char *aUrl, const char *aName, const char *aFeatures, nsISupports *aArguments, nsIDOMWindow **_retval); \
-  NS_IMETHOD RegisterNotification(nsIObserver *aObserver); \
-  NS_IMETHOD UnregisterNotification(nsIObserver *aObserver); \
-  NS_IMETHOD GetWindowEnumerator(nsISimpleEnumerator **_retval); \
-  NS_IMETHOD GetNewPrompter(nsIDOMWindow *aParent, nsIPrompt **_retval); \
-  NS_IMETHOD GetNewAuthPrompter(nsIDOMWindow *aParent, nsIAuthPrompt **_retval); \
-  NS_IMETHOD SetWindowCreator(nsIWindowCreator *creator); \
-  NS_IMETHOD GetChromeForWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome **_retval); \
-  NS_IMETHOD GetWindowByName(const PRUnichar *aTargetName, nsIDOMWindow *aCurrentWindow, nsIDOMWindow **_retval); \
-  NS_IMETHOD GetActiveWindow(nsIDOMWindow * *aActiveWindow); \
-  NS_IMETHOD SetActiveWindow(nsIDOMWindow * aActiveWindow); 
+  NS_SCRIPTABLE NS_IMETHOD OpenWindow(nsIDOMWindow *aParent, const char *aUrl, const char *aName, const char *aFeatures, nsISupports *aArguments, nsIDOMWindow **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD RegisterNotification(nsIObserver *aObserver); \
+  NS_SCRIPTABLE NS_IMETHOD UnregisterNotification(nsIObserver *aObserver); \
+  NS_SCRIPTABLE NS_IMETHOD GetWindowEnumerator(nsISimpleEnumerator **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetNewPrompter(nsIDOMWindow *aParent, nsIPrompt **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetNewAuthPrompter(nsIDOMWindow *aParent, nsIAuthPrompt **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetWindowCreator(nsIWindowCreator *creator); \
+  NS_SCRIPTABLE NS_IMETHOD GetChromeForWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetWindowByName(const PRUnichar *aTargetName, nsIDOMWindow *aCurrentWindow, nsIDOMWindow **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetActiveWindow(nsIDOMWindow * *aActiveWindow); \
+  NS_SCRIPTABLE NS_IMETHOD SetActiveWindow(nsIDOMWindow * aActiveWindow); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIWINDOWWATCHER(_to) \
-  NS_IMETHOD OpenWindow(nsIDOMWindow *aParent, const char *aUrl, const char *aName, const char *aFeatures, nsISupports *aArguments, nsIDOMWindow **_retval) { return _to OpenWindow(aParent, aUrl, aName, aFeatures, aArguments, _retval); } \
-  NS_IMETHOD RegisterNotification(nsIObserver *aObserver) { return _to RegisterNotification(aObserver); } \
-  NS_IMETHOD UnregisterNotification(nsIObserver *aObserver) { return _to UnregisterNotification(aObserver); } \
-  NS_IMETHOD GetWindowEnumerator(nsISimpleEnumerator **_retval) { return _to GetWindowEnumerator(_retval); } \
-  NS_IMETHOD GetNewPrompter(nsIDOMWindow *aParent, nsIPrompt **_retval) { return _to GetNewPrompter(aParent, _retval); } \
-  NS_IMETHOD GetNewAuthPrompter(nsIDOMWindow *aParent, nsIAuthPrompt **_retval) { return _to GetNewAuthPrompter(aParent, _retval); } \
-  NS_IMETHOD SetWindowCreator(nsIWindowCreator *creator) { return _to SetWindowCreator(creator); } \
-  NS_IMETHOD GetChromeForWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome **_retval) { return _to GetChromeForWindow(aWindow, _retval); } \
-  NS_IMETHOD GetWindowByName(const PRUnichar *aTargetName, nsIDOMWindow *aCurrentWindow, nsIDOMWindow **_retval) { return _to GetWindowByName(aTargetName, aCurrentWindow, _retval); } \
-  NS_IMETHOD GetActiveWindow(nsIDOMWindow * *aActiveWindow) { return _to GetActiveWindow(aActiveWindow); } \
-  NS_IMETHOD SetActiveWindow(nsIDOMWindow * aActiveWindow) { return _to SetActiveWindow(aActiveWindow); } 
+  NS_SCRIPTABLE NS_IMETHOD OpenWindow(nsIDOMWindow *aParent, const char *aUrl, const char *aName, const char *aFeatures, nsISupports *aArguments, nsIDOMWindow **_retval) { return _to OpenWindow(aParent, aUrl, aName, aFeatures, aArguments, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD RegisterNotification(nsIObserver *aObserver) { return _to RegisterNotification(aObserver); } \
+  NS_SCRIPTABLE NS_IMETHOD UnregisterNotification(nsIObserver *aObserver) { return _to UnregisterNotification(aObserver); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWindowEnumerator(nsISimpleEnumerator **_retval) { return _to GetWindowEnumerator(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNewPrompter(nsIDOMWindow *aParent, nsIPrompt **_retval) { return _to GetNewPrompter(aParent, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNewAuthPrompter(nsIDOMWindow *aParent, nsIAuthPrompt **_retval) { return _to GetNewAuthPrompter(aParent, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWindowCreator(nsIWindowCreator *creator) { return _to SetWindowCreator(creator); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChromeForWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome **_retval) { return _to GetChromeForWindow(aWindow, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWindowByName(const PRUnichar *aTargetName, nsIDOMWindow *aCurrentWindow, nsIDOMWindow **_retval) { return _to GetWindowByName(aTargetName, aCurrentWindow, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetActiveWindow(nsIDOMWindow * *aActiveWindow) { return _to GetActiveWindow(aActiveWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD SetActiveWindow(nsIDOMWindow * aActiveWindow) { return _to SetActiveWindow(aActiveWindow); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIWINDOWWATCHER(_to) \
-  NS_IMETHOD OpenWindow(nsIDOMWindow *aParent, const char *aUrl, const char *aName, const char *aFeatures, nsISupports *aArguments, nsIDOMWindow **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OpenWindow(aParent, aUrl, aName, aFeatures, aArguments, _retval); } \
-  NS_IMETHOD RegisterNotification(nsIObserver *aObserver) { return !_to ? NS_ERROR_NULL_POINTER : _to->RegisterNotification(aObserver); } \
-  NS_IMETHOD UnregisterNotification(nsIObserver *aObserver) { return !_to ? NS_ERROR_NULL_POINTER : _to->UnregisterNotification(aObserver); } \
-  NS_IMETHOD GetWindowEnumerator(nsISimpleEnumerator **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWindowEnumerator(_retval); } \
-  NS_IMETHOD GetNewPrompter(nsIDOMWindow *aParent, nsIPrompt **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNewPrompter(aParent, _retval); } \
-  NS_IMETHOD GetNewAuthPrompter(nsIDOMWindow *aParent, nsIAuthPrompt **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNewAuthPrompter(aParent, _retval); } \
-  NS_IMETHOD SetWindowCreator(nsIWindowCreator *creator) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWindowCreator(creator); } \
-  NS_IMETHOD GetChromeForWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChromeForWindow(aWindow, _retval); } \
-  NS_IMETHOD GetWindowByName(const PRUnichar *aTargetName, nsIDOMWindow *aCurrentWindow, nsIDOMWindow **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWindowByName(aTargetName, aCurrentWindow, _retval); } \
-  NS_IMETHOD GetActiveWindow(nsIDOMWindow * *aActiveWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetActiveWindow(aActiveWindow); } \
-  NS_IMETHOD SetActiveWindow(nsIDOMWindow * aActiveWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetActiveWindow(aActiveWindow); } 
+  NS_SCRIPTABLE NS_IMETHOD OpenWindow(nsIDOMWindow *aParent, const char *aUrl, const char *aName, const char *aFeatures, nsISupports *aArguments, nsIDOMWindow **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OpenWindow(aParent, aUrl, aName, aFeatures, aArguments, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD RegisterNotification(nsIObserver *aObserver) { return !_to ? NS_ERROR_NULL_POINTER : _to->RegisterNotification(aObserver); } \
+  NS_SCRIPTABLE NS_IMETHOD UnregisterNotification(nsIObserver *aObserver) { return !_to ? NS_ERROR_NULL_POINTER : _to->UnregisterNotification(aObserver); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWindowEnumerator(nsISimpleEnumerator **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWindowEnumerator(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNewPrompter(nsIDOMWindow *aParent, nsIPrompt **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNewPrompter(aParent, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNewAuthPrompter(nsIDOMWindow *aParent, nsIAuthPrompt **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNewAuthPrompter(aParent, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWindowCreator(nsIWindowCreator *creator) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWindowCreator(creator); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChromeForWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChromeForWindow(aWindow, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWindowByName(const PRUnichar *aTargetName, nsIDOMWindow *aCurrentWindow, nsIDOMWindow **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWindowByName(aTargetName, aCurrentWindow, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetActiveWindow(nsIDOMWindow * *aActiveWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetActiveWindow(aActiveWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD SetActiveWindow(nsIDOMWindow * aActiveWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetActiveWindow(aActiveWindow); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

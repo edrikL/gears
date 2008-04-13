@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/js/src/xpconnect/idl/xpccomponents.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/js/src/xpconnect/idl/xpccomponents.idl
  */
 
 #ifndef __gen_xpccomponents_h__
@@ -44,7 +44,7 @@ class xpcIJSWeakReference; /* forward declaration */
 * interface of Components.classes
 * (interesting stuff only reflected into JavaScript)
 */
-class NS_NO_VTABLE nsIXPCComponents_Classes : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIXPCComponents_Classes : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPCCOMPONENTS_CLASSES_IID)
@@ -112,7 +112,7 @@ nsXPCComponents_Classes::~nsXPCComponents_Classes()
 * interface of Components.classesByID
 * (interesting stuff only reflected into JavaScript)
 */
-class NS_NO_VTABLE nsIXPCComponents_ClassesByID : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIXPCComponents_ClassesByID : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPCCOMPONENTS_CLASSESBYID_IID)
@@ -180,7 +180,7 @@ nsXPCComponents_ClassesByID::~nsXPCComponents_ClassesByID()
 * interface of Components.results
 * (interesting stuff only reflected into JavaScript)
 */
-class NS_NO_VTABLE nsIXPCComponents_Results : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIXPCComponents_Results : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPCCOMPONENTS_RESULTS_IID)
@@ -248,7 +248,7 @@ nsXPCComponents_Results::~nsXPCComponents_Results()
 * interface of Components.ID
 * (interesting stuff only reflected into JavaScript)
 */
-class NS_NO_VTABLE nsIXPCComponents_ID : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIXPCComponents_ID : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPCCOMPONENTS_ID_IID)
@@ -316,7 +316,7 @@ nsXPCComponents_ID::~nsXPCComponents_ID()
 * interface of Components.Exception
 * (interesting stuff only reflected into JavaScript)
 */
-class NS_NO_VTABLE nsIXPCComponents_Exception : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIXPCComponents_Exception : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPCCOMPONENTS_EXCEPTION_IID)
@@ -384,7 +384,7 @@ nsXPCComponents_Exception::~nsXPCComponents_Exception()
 * interface of Components.Constructor
 * (interesting stuff only reflected into JavaScript)
 */
-class NS_NO_VTABLE nsIXPCComponents_Constructor : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIXPCComponents_Constructor : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPCCOMPONENTS_CONSTRUCTOR_IID)
@@ -452,19 +452,19 @@ nsXPCComponents_Constructor::~nsXPCComponents_Constructor()
 * interface of object returned by Components.Constructor
 * (additional interesting stuff only reflected into JavaScript)
 */
-class NS_NO_VTABLE nsIXPCConstructor : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIXPCConstructor : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPCCONSTRUCTOR_IID)
 
   /* readonly attribute nsIJSCID classID; */
-  NS_IMETHOD GetClassID(nsIJSCID * *aClassID) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetClassID(nsIJSCID * *aClassID) = 0;
 
   /* readonly attribute nsIJSIID interfaceID; */
-  NS_IMETHOD GetInterfaceID(nsIJSIID * *aInterfaceID) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetInterfaceID(nsIJSIID * *aInterfaceID) = 0;
 
   /* readonly attribute string initializer; */
-  NS_IMETHOD GetInitializer(char * *aInitializer) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetInitializer(char * *aInitializer) = 0;
 
 };
 
@@ -472,21 +472,21 @@ class NS_NO_VTABLE nsIXPCConstructor : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIXPCCONSTRUCTOR \
-  NS_IMETHOD GetClassID(nsIJSCID * *aClassID); \
-  NS_IMETHOD GetInterfaceID(nsIJSIID * *aInterfaceID); \
-  NS_IMETHOD GetInitializer(char * *aInitializer); 
+  NS_SCRIPTABLE NS_IMETHOD GetClassID(nsIJSCID * *aClassID); \
+  NS_SCRIPTABLE NS_IMETHOD GetInterfaceID(nsIJSIID * *aInterfaceID); \
+  NS_SCRIPTABLE NS_IMETHOD GetInitializer(char * *aInitializer); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIXPCCONSTRUCTOR(_to) \
-  NS_IMETHOD GetClassID(nsIJSCID * *aClassID) { return _to GetClassID(aClassID); } \
-  NS_IMETHOD GetInterfaceID(nsIJSIID * *aInterfaceID) { return _to GetInterfaceID(aInterfaceID); } \
-  NS_IMETHOD GetInitializer(char * *aInitializer) { return _to GetInitializer(aInitializer); } 
+  NS_SCRIPTABLE NS_IMETHOD GetClassID(nsIJSCID * *aClassID) { return _to GetClassID(aClassID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetInterfaceID(nsIJSIID * *aInterfaceID) { return _to GetInterfaceID(aInterfaceID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetInitializer(char * *aInitializer) { return _to GetInitializer(aInitializer); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIXPCCONSTRUCTOR(_to) \
-  NS_IMETHOD GetClassID(nsIJSCID * *aClassID) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClassID(aClassID); } \
-  NS_IMETHOD GetInterfaceID(nsIJSIID * *aInterfaceID) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInterfaceID(aInterfaceID); } \
-  NS_IMETHOD GetInitializer(char * *aInitializer) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInitializer(aInitializer); } 
+  NS_SCRIPTABLE NS_IMETHOD GetClassID(nsIJSCID * *aClassID) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClassID(aClassID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetInterfaceID(nsIJSIID * *aInterfaceID) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInterfaceID(aInterfaceID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetInitializer(char * *aInitializer) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInitializer(aInitializer); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -552,7 +552,7 @@ NS_IMETHODIMP nsXPCConstructor::GetInitializer(char * *aInitializer)
 /**
 * interface of object returned by Components.utils.Sandbox.
 */
-class NS_NO_VTABLE nsIXPCComponents_utils_Sandbox : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIXPCComponents_utils_Sandbox : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPCCOMPONENTS_UTILS_SANDBOX_IID)
@@ -619,31 +619,31 @@ nsXPCComponents_utils_Sandbox::~nsXPCComponents_utils_Sandbox()
 /**
 * interface of Components.utils
 */
-class NS_NO_VTABLE nsIXPCComponents_Utils : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIXPCComponents_Utils : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPCCOMPONENTS_UTILS_IID)
 
   /* void reportError (); */
-  NS_IMETHOD ReportError(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ReportError(void) = 0;
 
   /* void lookupMethod (); */
-  NS_IMETHOD LookupMethod(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD LookupMethod(void) = 0;
 
   /* readonly attribute nsIXPCComponents_utils_Sandbox Sandbox; */
-  NS_IMETHOD GetSandbox(nsIXPCComponents_utils_Sandbox * *aSandbox) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSandbox(nsIXPCComponents_utils_Sandbox * *aSandbox) = 0;
 
   /* void evalInSandbox (in AString source); */
-  NS_IMETHOD EvalInSandbox(const nsAString & source) = 0;
+  NS_SCRIPTABLE NS_IMETHOD EvalInSandbox(const nsAString & source) = 0;
 
   /* void import (in AUTF8String registryLocation); */
-  NS_IMETHOD Import(const nsACString & registryLocation) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Import(const nsACString & registryLocation) = 0;
 
   /* xpcIJSWeakReference getWeakReference (); */
-  NS_IMETHOD GetWeakReference(xpcIJSWeakReference **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetWeakReference(xpcIJSWeakReference **_retval) = 0;
 
   /* void forceGC (); */
-  NS_IMETHOD ForceGC(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ForceGC(void) = 0;
 
 };
 
@@ -651,33 +651,33 @@ class NS_NO_VTABLE nsIXPCComponents_Utils : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIXPCCOMPONENTS_UTILS \
-  NS_IMETHOD ReportError(void); \
-  NS_IMETHOD LookupMethod(void); \
-  NS_IMETHOD GetSandbox(nsIXPCComponents_utils_Sandbox * *aSandbox); \
-  NS_IMETHOD EvalInSandbox(const nsAString & source); \
-  NS_IMETHOD Import(const nsACString & registryLocation); \
-  NS_IMETHOD GetWeakReference(xpcIJSWeakReference **_retval); \
-  NS_IMETHOD ForceGC(void); 
+  NS_SCRIPTABLE NS_IMETHOD ReportError(void); \
+  NS_SCRIPTABLE NS_IMETHOD LookupMethod(void); \
+  NS_SCRIPTABLE NS_IMETHOD GetSandbox(nsIXPCComponents_utils_Sandbox * *aSandbox); \
+  NS_SCRIPTABLE NS_IMETHOD EvalInSandbox(const nsAString & source); \
+  NS_SCRIPTABLE NS_IMETHOD Import(const nsACString & registryLocation); \
+  NS_SCRIPTABLE NS_IMETHOD GetWeakReference(xpcIJSWeakReference **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD ForceGC(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIXPCCOMPONENTS_UTILS(_to) \
-  NS_IMETHOD ReportError(void) { return _to ReportError(); } \
-  NS_IMETHOD LookupMethod(void) { return _to LookupMethod(); } \
-  NS_IMETHOD GetSandbox(nsIXPCComponents_utils_Sandbox * *aSandbox) { return _to GetSandbox(aSandbox); } \
-  NS_IMETHOD EvalInSandbox(const nsAString & source) { return _to EvalInSandbox(source); } \
-  NS_IMETHOD Import(const nsACString & registryLocation) { return _to Import(registryLocation); } \
-  NS_IMETHOD GetWeakReference(xpcIJSWeakReference **_retval) { return _to GetWeakReference(_retval); } \
-  NS_IMETHOD ForceGC(void) { return _to ForceGC(); } 
+  NS_SCRIPTABLE NS_IMETHOD ReportError(void) { return _to ReportError(); } \
+  NS_SCRIPTABLE NS_IMETHOD LookupMethod(void) { return _to LookupMethod(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSandbox(nsIXPCComponents_utils_Sandbox * *aSandbox) { return _to GetSandbox(aSandbox); } \
+  NS_SCRIPTABLE NS_IMETHOD EvalInSandbox(const nsAString & source) { return _to EvalInSandbox(source); } \
+  NS_SCRIPTABLE NS_IMETHOD Import(const nsACString & registryLocation) { return _to Import(registryLocation); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWeakReference(xpcIJSWeakReference **_retval) { return _to GetWeakReference(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ForceGC(void) { return _to ForceGC(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIXPCCOMPONENTS_UTILS(_to) \
-  NS_IMETHOD ReportError(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ReportError(); } \
-  NS_IMETHOD LookupMethod(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->LookupMethod(); } \
-  NS_IMETHOD GetSandbox(nsIXPCComponents_utils_Sandbox * *aSandbox) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSandbox(aSandbox); } \
-  NS_IMETHOD EvalInSandbox(const nsAString & source) { return !_to ? NS_ERROR_NULL_POINTER : _to->EvalInSandbox(source); } \
-  NS_IMETHOD Import(const nsACString & registryLocation) { return !_to ? NS_ERROR_NULL_POINTER : _to->Import(registryLocation); } \
-  NS_IMETHOD GetWeakReference(xpcIJSWeakReference **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWeakReference(_retval); } \
-  NS_IMETHOD ForceGC(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ForceGC(); } 
+  NS_SCRIPTABLE NS_IMETHOD ReportError(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ReportError(); } \
+  NS_SCRIPTABLE NS_IMETHOD LookupMethod(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->LookupMethod(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSandbox(nsIXPCComponents_utils_Sandbox * *aSandbox) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSandbox(aSandbox); } \
+  NS_SCRIPTABLE NS_IMETHOD EvalInSandbox(const nsAString & source) { return !_to ? NS_ERROR_NULL_POINTER : _to->EvalInSandbox(source); } \
+  NS_SCRIPTABLE NS_IMETHOD Import(const nsACString & registryLocation) { return !_to ? NS_ERROR_NULL_POINTER : _to->Import(registryLocation); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWeakReference(xpcIJSWeakReference **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWeakReference(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ForceGC(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ForceGC(); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -767,52 +767,52 @@ NS_IMETHODIMP nsXPCComponents_Utils::ForceGC()
 /**
 * interface of JavaScript's 'Components' object
 */
-class NS_NO_VTABLE nsIXPCComponents : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIXPCComponents : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPCCOMPONENTS_IID)
 
   /* readonly attribute nsIScriptableInterfaces interfaces; */
-  NS_IMETHOD GetInterfaces(nsIScriptableInterfaces * *aInterfaces) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetInterfaces(nsIScriptableInterfaces * *aInterfaces) = 0;
 
   /* readonly attribute nsIScriptableInterfacesByID interfacesByID; */
-  NS_IMETHOD GetInterfacesByID(nsIScriptableInterfacesByID * *aInterfacesByID) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetInterfacesByID(nsIScriptableInterfacesByID * *aInterfacesByID) = 0;
 
   /* readonly attribute nsIXPCComponents_Classes classes; */
-  NS_IMETHOD GetClasses(nsIXPCComponents_Classes * *aClasses) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetClasses(nsIXPCComponents_Classes * *aClasses) = 0;
 
   /* readonly attribute nsIXPCComponents_ClassesByID classesByID; */
-  NS_IMETHOD GetClassesByID(nsIXPCComponents_ClassesByID * *aClassesByID) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetClassesByID(nsIXPCComponents_ClassesByID * *aClassesByID) = 0;
 
   /* readonly attribute nsIStackFrame stack; */
-  NS_IMETHOD GetStack(nsIStackFrame * *aStack) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetStack(nsIStackFrame * *aStack) = 0;
 
   /* readonly attribute nsIXPCComponents_Results results; */
-  NS_IMETHOD GetResults(nsIXPCComponents_Results * *aResults) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetResults(nsIXPCComponents_Results * *aResults) = 0;
 
   /* readonly attribute nsIComponentManager manager; */
-  NS_IMETHOD GetManager(nsIComponentManager * *aManager) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetManager(nsIComponentManager * *aManager) = 0;
 
   /* readonly attribute nsIXPCComponents_Utils utils; */
-  NS_IMETHOD GetUtils(nsIXPCComponents_Utils * *aUtils) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetUtils(nsIXPCComponents_Utils * *aUtils) = 0;
 
   /* readonly attribute nsIXPCComponents_ID ID; */
-  NS_IMETHOD GetID(nsIXPCComponents_ID * *aID) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetID(nsIXPCComponents_ID * *aID) = 0;
 
   /* readonly attribute nsIXPCComponents_Exception Exception; */
-  NS_IMETHOD GetException(nsIXPCComponents_Exception * *aException) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetException(nsIXPCComponents_Exception * *aException) = 0;
 
   /* readonly attribute nsIXPCComponents_Constructor Constructor; */
-  NS_IMETHOD GetConstructor(nsIXPCComponents_Constructor * *aConstructor) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetConstructor(nsIXPCComponents_Constructor * *aConstructor) = 0;
 
   /* boolean isSuccessCode (in nsresult result); */
-  NS_IMETHOD IsSuccessCode(nsresult result, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsSuccessCode(nsresult result, PRBool *_retval) = 0;
 
   /* void lookupMethod (); */
-  NS_IMETHOD LookupMethod(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD LookupMethod(void) = 0;
 
   /* void reportError (); */
-  NS_IMETHOD ReportError(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ReportError(void) = 0;
 
 };
 
@@ -820,54 +820,54 @@ class NS_NO_VTABLE nsIXPCComponents : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIXPCCOMPONENTS \
-  NS_IMETHOD GetInterfaces(nsIScriptableInterfaces * *aInterfaces); \
-  NS_IMETHOD GetInterfacesByID(nsIScriptableInterfacesByID * *aInterfacesByID); \
-  NS_IMETHOD GetClasses(nsIXPCComponents_Classes * *aClasses); \
-  NS_IMETHOD GetClassesByID(nsIXPCComponents_ClassesByID * *aClassesByID); \
-  NS_IMETHOD GetStack(nsIStackFrame * *aStack); \
-  NS_IMETHOD GetResults(nsIXPCComponents_Results * *aResults); \
-  NS_IMETHOD GetManager(nsIComponentManager * *aManager); \
-  NS_IMETHOD GetUtils(nsIXPCComponents_Utils * *aUtils); \
-  NS_IMETHOD GetID(nsIXPCComponents_ID * *aID); \
-  NS_IMETHOD GetException(nsIXPCComponents_Exception * *aException); \
-  NS_IMETHOD GetConstructor(nsIXPCComponents_Constructor * *aConstructor); \
-  NS_IMETHOD IsSuccessCode(nsresult result, PRBool *_retval); \
-  NS_IMETHOD LookupMethod(void); \
-  NS_IMETHOD ReportError(void); 
+  NS_SCRIPTABLE NS_IMETHOD GetInterfaces(nsIScriptableInterfaces * *aInterfaces); \
+  NS_SCRIPTABLE NS_IMETHOD GetInterfacesByID(nsIScriptableInterfacesByID * *aInterfacesByID); \
+  NS_SCRIPTABLE NS_IMETHOD GetClasses(nsIXPCComponents_Classes * *aClasses); \
+  NS_SCRIPTABLE NS_IMETHOD GetClassesByID(nsIXPCComponents_ClassesByID * *aClassesByID); \
+  NS_SCRIPTABLE NS_IMETHOD GetStack(nsIStackFrame * *aStack); \
+  NS_SCRIPTABLE NS_IMETHOD GetResults(nsIXPCComponents_Results * *aResults); \
+  NS_SCRIPTABLE NS_IMETHOD GetManager(nsIComponentManager * *aManager); \
+  NS_SCRIPTABLE NS_IMETHOD GetUtils(nsIXPCComponents_Utils * *aUtils); \
+  NS_SCRIPTABLE NS_IMETHOD GetID(nsIXPCComponents_ID * *aID); \
+  NS_SCRIPTABLE NS_IMETHOD GetException(nsIXPCComponents_Exception * *aException); \
+  NS_SCRIPTABLE NS_IMETHOD GetConstructor(nsIXPCComponents_Constructor * *aConstructor); \
+  NS_SCRIPTABLE NS_IMETHOD IsSuccessCode(nsresult result, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD LookupMethod(void); \
+  NS_SCRIPTABLE NS_IMETHOD ReportError(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIXPCCOMPONENTS(_to) \
-  NS_IMETHOD GetInterfaces(nsIScriptableInterfaces * *aInterfaces) { return _to GetInterfaces(aInterfaces); } \
-  NS_IMETHOD GetInterfacesByID(nsIScriptableInterfacesByID * *aInterfacesByID) { return _to GetInterfacesByID(aInterfacesByID); } \
-  NS_IMETHOD GetClasses(nsIXPCComponents_Classes * *aClasses) { return _to GetClasses(aClasses); } \
-  NS_IMETHOD GetClassesByID(nsIXPCComponents_ClassesByID * *aClassesByID) { return _to GetClassesByID(aClassesByID); } \
-  NS_IMETHOD GetStack(nsIStackFrame * *aStack) { return _to GetStack(aStack); } \
-  NS_IMETHOD GetResults(nsIXPCComponents_Results * *aResults) { return _to GetResults(aResults); } \
-  NS_IMETHOD GetManager(nsIComponentManager * *aManager) { return _to GetManager(aManager); } \
-  NS_IMETHOD GetUtils(nsIXPCComponents_Utils * *aUtils) { return _to GetUtils(aUtils); } \
-  NS_IMETHOD GetID(nsIXPCComponents_ID * *aID) { return _to GetID(aID); } \
-  NS_IMETHOD GetException(nsIXPCComponents_Exception * *aException) { return _to GetException(aException); } \
-  NS_IMETHOD GetConstructor(nsIXPCComponents_Constructor * *aConstructor) { return _to GetConstructor(aConstructor); } \
-  NS_IMETHOD IsSuccessCode(nsresult result, PRBool *_retval) { return _to IsSuccessCode(result, _retval); } \
-  NS_IMETHOD LookupMethod(void) { return _to LookupMethod(); } \
-  NS_IMETHOD ReportError(void) { return _to ReportError(); } 
+  NS_SCRIPTABLE NS_IMETHOD GetInterfaces(nsIScriptableInterfaces * *aInterfaces) { return _to GetInterfaces(aInterfaces); } \
+  NS_SCRIPTABLE NS_IMETHOD GetInterfacesByID(nsIScriptableInterfacesByID * *aInterfacesByID) { return _to GetInterfacesByID(aInterfacesByID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetClasses(nsIXPCComponents_Classes * *aClasses) { return _to GetClasses(aClasses); } \
+  NS_SCRIPTABLE NS_IMETHOD GetClassesByID(nsIXPCComponents_ClassesByID * *aClassesByID) { return _to GetClassesByID(aClassesByID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetStack(nsIStackFrame * *aStack) { return _to GetStack(aStack); } \
+  NS_SCRIPTABLE NS_IMETHOD GetResults(nsIXPCComponents_Results * *aResults) { return _to GetResults(aResults); } \
+  NS_SCRIPTABLE NS_IMETHOD GetManager(nsIComponentManager * *aManager) { return _to GetManager(aManager); } \
+  NS_SCRIPTABLE NS_IMETHOD GetUtils(nsIXPCComponents_Utils * *aUtils) { return _to GetUtils(aUtils); } \
+  NS_SCRIPTABLE NS_IMETHOD GetID(nsIXPCComponents_ID * *aID) { return _to GetID(aID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetException(nsIXPCComponents_Exception * *aException) { return _to GetException(aException); } \
+  NS_SCRIPTABLE NS_IMETHOD GetConstructor(nsIXPCComponents_Constructor * *aConstructor) { return _to GetConstructor(aConstructor); } \
+  NS_SCRIPTABLE NS_IMETHOD IsSuccessCode(nsresult result, PRBool *_retval) { return _to IsSuccessCode(result, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD LookupMethod(void) { return _to LookupMethod(); } \
+  NS_SCRIPTABLE NS_IMETHOD ReportError(void) { return _to ReportError(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIXPCCOMPONENTS(_to) \
-  NS_IMETHOD GetInterfaces(nsIScriptableInterfaces * *aInterfaces) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInterfaces(aInterfaces); } \
-  NS_IMETHOD GetInterfacesByID(nsIScriptableInterfacesByID * *aInterfacesByID) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInterfacesByID(aInterfacesByID); } \
-  NS_IMETHOD GetClasses(nsIXPCComponents_Classes * *aClasses) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClasses(aClasses); } \
-  NS_IMETHOD GetClassesByID(nsIXPCComponents_ClassesByID * *aClassesByID) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClassesByID(aClassesByID); } \
-  NS_IMETHOD GetStack(nsIStackFrame * *aStack) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetStack(aStack); } \
-  NS_IMETHOD GetResults(nsIXPCComponents_Results * *aResults) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetResults(aResults); } \
-  NS_IMETHOD GetManager(nsIComponentManager * *aManager) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetManager(aManager); } \
-  NS_IMETHOD GetUtils(nsIXPCComponents_Utils * *aUtils) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUtils(aUtils); } \
-  NS_IMETHOD GetID(nsIXPCComponents_ID * *aID) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetID(aID); } \
-  NS_IMETHOD GetException(nsIXPCComponents_Exception * *aException) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetException(aException); } \
-  NS_IMETHOD GetConstructor(nsIXPCComponents_Constructor * *aConstructor) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetConstructor(aConstructor); } \
-  NS_IMETHOD IsSuccessCode(nsresult result, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsSuccessCode(result, _retval); } \
-  NS_IMETHOD LookupMethod(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->LookupMethod(); } \
-  NS_IMETHOD ReportError(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ReportError(); } 
+  NS_SCRIPTABLE NS_IMETHOD GetInterfaces(nsIScriptableInterfaces * *aInterfaces) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInterfaces(aInterfaces); } \
+  NS_SCRIPTABLE NS_IMETHOD GetInterfacesByID(nsIScriptableInterfacesByID * *aInterfacesByID) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInterfacesByID(aInterfacesByID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetClasses(nsIXPCComponents_Classes * *aClasses) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClasses(aClasses); } \
+  NS_SCRIPTABLE NS_IMETHOD GetClassesByID(nsIXPCComponents_ClassesByID * *aClassesByID) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetClassesByID(aClassesByID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetStack(nsIStackFrame * *aStack) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetStack(aStack); } \
+  NS_SCRIPTABLE NS_IMETHOD GetResults(nsIXPCComponents_Results * *aResults) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetResults(aResults); } \
+  NS_SCRIPTABLE NS_IMETHOD GetManager(nsIComponentManager * *aManager) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetManager(aManager); } \
+  NS_SCRIPTABLE NS_IMETHOD GetUtils(nsIXPCComponents_Utils * *aUtils) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUtils(aUtils); } \
+  NS_SCRIPTABLE NS_IMETHOD GetID(nsIXPCComponents_ID * *aID) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetID(aID); } \
+  NS_SCRIPTABLE NS_IMETHOD GetException(nsIXPCComponents_Exception * *aException) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetException(aException); } \
+  NS_SCRIPTABLE NS_IMETHOD GetConstructor(nsIXPCComponents_Constructor * *aConstructor) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetConstructor(aConstructor); } \
+  NS_SCRIPTABLE NS_IMETHOD IsSuccessCode(nsresult result, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsSuccessCode(result, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD LookupMethod(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->LookupMethod(); } \
+  NS_SCRIPTABLE NS_IMETHOD ReportError(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->ReportError(); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

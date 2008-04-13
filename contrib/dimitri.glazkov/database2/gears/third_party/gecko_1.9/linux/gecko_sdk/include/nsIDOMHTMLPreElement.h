@@ -31,14 +31,14 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLPreElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLPreElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLPREELEMENT_IID)
 
   /* attribute long width; */
-  NS_IMETHOD GetWidth(PRInt32 *aWidth) = 0;
-  NS_IMETHOD SetWidth(PRInt32 aWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(PRInt32 *aWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(PRInt32 aWidth) = 0;
 
 };
 
@@ -46,18 +46,18 @@ class NS_NO_VTABLE nsIDOMHTMLPreElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLPREELEMENT \
-  NS_IMETHOD GetWidth(PRInt32 *aWidth); \
-  NS_IMETHOD SetWidth(PRInt32 aWidth); 
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(PRInt32 *aWidth); \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(PRInt32 aWidth); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLPREELEMENT(_to) \
-  NS_IMETHOD GetWidth(PRInt32 *aWidth) { return _to GetWidth(aWidth); } \
-  NS_IMETHOD SetWidth(PRInt32 aWidth) { return _to SetWidth(aWidth); } 
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(PRInt32 *aWidth) { return _to GetWidth(aWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(PRInt32 aWidth) { return _to SetWidth(aWidth); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLPREELEMENT(_to) \
-  NS_IMETHOD GetWidth(PRInt32 *aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWidth(aWidth); } \
-  NS_IMETHOD SetWidth(PRInt32 aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWidth(aWidth); } 
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(PRInt32 *aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWidth(aWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(PRInt32 aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWidth(aWidth); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

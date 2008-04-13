@@ -36,7 +36,7 @@ class nsISimpleEnumerator; /* forward declaration */
  * 
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIObserverService : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIObserverService : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IOBSERVERSERVICE_IID)
@@ -56,7 +56,7 @@ class NS_NO_VTABLE nsIObserverService : public nsISupports {
      *                    returned.
      */
   /* void addObserver (in nsIObserver anObserver, in string aTopic, in boolean ownsWeak); */
-  NS_IMETHOD AddObserver(nsIObserver *anObserver, const char *aTopic, PRBool ownsWeak) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AddObserver(nsIObserver *anObserver, const char *aTopic, PRBool ownsWeak) = 0;
 
   /**
      * removeObserver
@@ -69,7 +69,7 @@ class NS_NO_VTABLE nsIObserverService : public nsISupports {
      * @param aTopic     : The notification topic or subject.
      */
   /* void removeObserver (in nsIObserver anObserver, in string aTopic); */
-  NS_IMETHOD RemoveObserver(nsIObserver *anObserver, const char *aTopic) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RemoveObserver(nsIObserver *anObserver, const char *aTopic) = 0;
 
   /**
      * notifyObservers
@@ -81,7 +81,7 @@ class NS_NO_VTABLE nsIObserverService : public nsISupports {
      * @param someData : Notification specific wide string.
      */
   /* void notifyObservers (in nsISupports aSubject, in string aTopic, in wstring someData); */
-  NS_IMETHOD NotifyObservers(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData) = 0;
+  NS_SCRIPTABLE NS_IMETHOD NotifyObservers(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData) = 0;
 
   /**
      * enumerateObservers
@@ -91,7 +91,7 @@ class NS_NO_VTABLE nsIObserverService : public nsISupports {
      * @param aTopic   : The notification topic or subject.
      */
   /* nsISimpleEnumerator enumerateObservers (in string aTopic); */
-  NS_IMETHOD EnumerateObservers(const char *aTopic, nsISimpleEnumerator **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD EnumerateObservers(const char *aTopic, nsISimpleEnumerator **_retval) = 0;
 
 };
 
@@ -99,24 +99,24 @@ class NS_NO_VTABLE nsIObserverService : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIOBSERVERSERVICE \
-  NS_IMETHOD AddObserver(nsIObserver *anObserver, const char *aTopic, PRBool ownsWeak); \
-  NS_IMETHOD RemoveObserver(nsIObserver *anObserver, const char *aTopic); \
-  NS_IMETHOD NotifyObservers(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData); \
-  NS_IMETHOD EnumerateObservers(const char *aTopic, nsISimpleEnumerator **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD AddObserver(nsIObserver *anObserver, const char *aTopic, PRBool ownsWeak); \
+  NS_SCRIPTABLE NS_IMETHOD RemoveObserver(nsIObserver *anObserver, const char *aTopic); \
+  NS_SCRIPTABLE NS_IMETHOD NotifyObservers(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData); \
+  NS_SCRIPTABLE NS_IMETHOD EnumerateObservers(const char *aTopic, nsISimpleEnumerator **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIOBSERVERSERVICE(_to) \
-  NS_IMETHOD AddObserver(nsIObserver *anObserver, const char *aTopic, PRBool ownsWeak) { return _to AddObserver(anObserver, aTopic, ownsWeak); } \
-  NS_IMETHOD RemoveObserver(nsIObserver *anObserver, const char *aTopic) { return _to RemoveObserver(anObserver, aTopic); } \
-  NS_IMETHOD NotifyObservers(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData) { return _to NotifyObservers(aSubject, aTopic, someData); } \
-  NS_IMETHOD EnumerateObservers(const char *aTopic, nsISimpleEnumerator **_retval) { return _to EnumerateObservers(aTopic, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD AddObserver(nsIObserver *anObserver, const char *aTopic, PRBool ownsWeak) { return _to AddObserver(anObserver, aTopic, ownsWeak); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveObserver(nsIObserver *anObserver, const char *aTopic) { return _to RemoveObserver(anObserver, aTopic); } \
+  NS_SCRIPTABLE NS_IMETHOD NotifyObservers(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData) { return _to NotifyObservers(aSubject, aTopic, someData); } \
+  NS_SCRIPTABLE NS_IMETHOD EnumerateObservers(const char *aTopic, nsISimpleEnumerator **_retval) { return _to EnumerateObservers(aTopic, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIOBSERVERSERVICE(_to) \
-  NS_IMETHOD AddObserver(nsIObserver *anObserver, const char *aTopic, PRBool ownsWeak) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddObserver(anObserver, aTopic, ownsWeak); } \
-  NS_IMETHOD RemoveObserver(nsIObserver *anObserver, const char *aTopic) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveObserver(anObserver, aTopic); } \
-  NS_IMETHOD NotifyObservers(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData) { return !_to ? NS_ERROR_NULL_POINTER : _to->NotifyObservers(aSubject, aTopic, someData); } \
-  NS_IMETHOD EnumerateObservers(const char *aTopic, nsISimpleEnumerator **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->EnumerateObservers(aTopic, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD AddObserver(nsIObserver *anObserver, const char *aTopic, PRBool ownsWeak) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddObserver(anObserver, aTopic, ownsWeak); } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveObserver(nsIObserver *anObserver, const char *aTopic) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveObserver(anObserver, aTopic); } \
+  NS_SCRIPTABLE NS_IMETHOD NotifyObservers(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData) { return !_to ? NS_ERROR_NULL_POINTER : _to->NotifyObservers(aSubject, aTopic, someData); } \
+  NS_SCRIPTABLE NS_IMETHOD EnumerateObservers(const char *aTopic, nsISimpleEnumerator **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->EnumerateObservers(aTopic, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

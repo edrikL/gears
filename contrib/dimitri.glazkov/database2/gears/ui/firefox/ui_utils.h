@@ -26,7 +26,7 @@
 #ifndef GEARS_UI_FIREFOX_UI_UTILS_H__
 #define GEARS_UI_FIREFOX_UI_UTILS_H__
 
-#include "ff/genfiles/ui_utils.h" // from OUTDIR
+#include "genfiles/ui_utils.h"
 #include "gears/base/common/common.h"
 
 

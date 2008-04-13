@@ -22,7 +22,7 @@
   {0xe249031f, 0x8df9, 0x4e7a, \
     { 0xb6, 0x44, 0x18, 0x94, 0x6d, 0xce, 0x00, 0x19 }}
 
-class NS_NO_VTABLE nsIDOMCSSPrimitiveValue : public nsIDOMCSSValue {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMCSSPrimitiveValue : public nsIDOMCSSValue {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMCSSPRIMITIVEVALUE_IID)
@@ -89,28 +89,28 @@ class NS_NO_VTABLE nsIDOMCSSPrimitiveValue : public nsIDOMCSSValue {
   enum { CSS_RGBCOLOR = 25U };
 
   /* readonly attribute unsigned short primitiveType; */
-  NS_IMETHOD GetPrimitiveType(PRUint16 *aPrimitiveType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPrimitiveType(PRUint16 *aPrimitiveType) = 0;
 
   /* void setFloatValue (in unsigned short unitType, in float floatValue)  raises (DOMException); */
-  NS_IMETHOD SetFloatValue(PRUint16 unitType, float floatValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFloatValue(PRUint16 unitType, float floatValue) = 0;
 
   /* float getFloatValue (in unsigned short unitType)  raises (DOMException); */
-  NS_IMETHOD GetFloatValue(PRUint16 unitType, float *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFloatValue(PRUint16 unitType, float *_retval) = 0;
 
   /* void setStringValue (in unsigned short stringType, in DOMString stringValue)  raises (DOMException); */
-  NS_IMETHOD SetStringValue(PRUint16 stringType, const nsAString & stringValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetStringValue(PRUint16 stringType, const nsAString & stringValue) = 0;
 
   /* DOMString getStringValue ()  raises (DOMException); */
-  NS_IMETHOD GetStringValue(nsAString & _retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetStringValue(nsAString & _retval) = 0;
 
   /* nsIDOMCounter getCounterValue ()  raises (DOMException); */
-  NS_IMETHOD GetCounterValue(nsIDOMCounter **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCounterValue(nsIDOMCounter **_retval) = 0;
 
   /* nsIDOMRect getRectValue ()  raises (DOMException); */
-  NS_IMETHOD GetRectValue(nsIDOMRect **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRectValue(nsIDOMRect **_retval) = 0;
 
   /* nsIDOMRGBColor getRGBColorValue ()  raises (DOMException); */
-  NS_IMETHOD GetRGBColorValue(nsIDOMRGBColor **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRGBColorValue(nsIDOMRGBColor **_retval) = 0;
 
 };
 
@@ -118,36 +118,36 @@ class NS_NO_VTABLE nsIDOMCSSPrimitiveValue : public nsIDOMCSSValue {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMCSSPRIMITIVEVALUE \
-  NS_IMETHOD GetPrimitiveType(PRUint16 *aPrimitiveType); \
-  NS_IMETHOD SetFloatValue(PRUint16 unitType, float floatValue); \
-  NS_IMETHOD GetFloatValue(PRUint16 unitType, float *_retval); \
-  NS_IMETHOD SetStringValue(PRUint16 stringType, const nsAString & stringValue); \
-  NS_IMETHOD GetStringValue(nsAString & _retval); \
-  NS_IMETHOD GetCounterValue(nsIDOMCounter **_retval); \
-  NS_IMETHOD GetRectValue(nsIDOMRect **_retval); \
-  NS_IMETHOD GetRGBColorValue(nsIDOMRGBColor **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD GetPrimitiveType(PRUint16 *aPrimitiveType); \
+  NS_SCRIPTABLE NS_IMETHOD SetFloatValue(PRUint16 unitType, float floatValue); \
+  NS_SCRIPTABLE NS_IMETHOD GetFloatValue(PRUint16 unitType, float *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetStringValue(PRUint16 stringType, const nsAString & stringValue); \
+  NS_SCRIPTABLE NS_IMETHOD GetStringValue(nsAString & _retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetCounterValue(nsIDOMCounter **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetRectValue(nsIDOMRect **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetRGBColorValue(nsIDOMRGBColor **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMCSSPRIMITIVEVALUE(_to) \
-  NS_IMETHOD GetPrimitiveType(PRUint16 *aPrimitiveType) { return _to GetPrimitiveType(aPrimitiveType); } \
-  NS_IMETHOD SetFloatValue(PRUint16 unitType, float floatValue) { return _to SetFloatValue(unitType, floatValue); } \
-  NS_IMETHOD GetFloatValue(PRUint16 unitType, float *_retval) { return _to GetFloatValue(unitType, _retval); } \
-  NS_IMETHOD SetStringValue(PRUint16 stringType, const nsAString & stringValue) { return _to SetStringValue(stringType, stringValue); } \
-  NS_IMETHOD GetStringValue(nsAString & _retval) { return _to GetStringValue(_retval); } \
-  NS_IMETHOD GetCounterValue(nsIDOMCounter **_retval) { return _to GetCounterValue(_retval); } \
-  NS_IMETHOD GetRectValue(nsIDOMRect **_retval) { return _to GetRectValue(_retval); } \
-  NS_IMETHOD GetRGBColorValue(nsIDOMRGBColor **_retval) { return _to GetRGBColorValue(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetPrimitiveType(PRUint16 *aPrimitiveType) { return _to GetPrimitiveType(aPrimitiveType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFloatValue(PRUint16 unitType, float floatValue) { return _to SetFloatValue(unitType, floatValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFloatValue(PRUint16 unitType, float *_retval) { return _to GetFloatValue(unitType, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetStringValue(PRUint16 stringType, const nsAString & stringValue) { return _to SetStringValue(stringType, stringValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetStringValue(nsAString & _retval) { return _to GetStringValue(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCounterValue(nsIDOMCounter **_retval) { return _to GetCounterValue(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRectValue(nsIDOMRect **_retval) { return _to GetRectValue(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRGBColorValue(nsIDOMRGBColor **_retval) { return _to GetRGBColorValue(_retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMCSSPRIMITIVEVALUE(_to) \
-  NS_IMETHOD GetPrimitiveType(PRUint16 *aPrimitiveType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrimitiveType(aPrimitiveType); } \
-  NS_IMETHOD SetFloatValue(PRUint16 unitType, float floatValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFloatValue(unitType, floatValue); } \
-  NS_IMETHOD GetFloatValue(PRUint16 unitType, float *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFloatValue(unitType, _retval); } \
-  NS_IMETHOD SetStringValue(PRUint16 stringType, const nsAString & stringValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetStringValue(stringType, stringValue); } \
-  NS_IMETHOD GetStringValue(nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetStringValue(_retval); } \
-  NS_IMETHOD GetCounterValue(nsIDOMCounter **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCounterValue(_retval); } \
-  NS_IMETHOD GetRectValue(nsIDOMRect **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRectValue(_retval); } \
-  NS_IMETHOD GetRGBColorValue(nsIDOMRGBColor **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRGBColorValue(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD GetPrimitiveType(PRUint16 *aPrimitiveType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPrimitiveType(aPrimitiveType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFloatValue(PRUint16 unitType, float floatValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFloatValue(unitType, floatValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFloatValue(PRUint16 unitType, float *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFloatValue(unitType, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetStringValue(PRUint16 stringType, const nsAString & stringValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetStringValue(stringType, stringValue); } \
+  NS_SCRIPTABLE NS_IMETHOD GetStringValue(nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetStringValue(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCounterValue(nsIDOMCounter **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCounterValue(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRectValue(nsIDOMRect **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRectValue(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRGBColorValue(nsIDOMRGBColor **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRGBColorValue(_retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

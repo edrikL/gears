@@ -31,34 +31,34 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLTableColElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLTableColElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLTABLECOLELEMENT_IID)
 
   /* attribute DOMString align; */
-  NS_IMETHOD GetAlign(nsAString & aAlign) = 0;
-  NS_IMETHOD SetAlign(const nsAString & aAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) = 0;
 
   /* attribute DOMString ch; */
-  NS_IMETHOD GetCh(nsAString & aCh) = 0;
-  NS_IMETHOD SetCh(const nsAString & aCh) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCh(nsAString & aCh) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCh(const nsAString & aCh) = 0;
 
   /* attribute DOMString chOff; */
-  NS_IMETHOD GetChOff(nsAString & aChOff) = 0;
-  NS_IMETHOD SetChOff(const nsAString & aChOff) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetChOff(nsAString & aChOff) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetChOff(const nsAString & aChOff) = 0;
 
   /* attribute long span; */
-  NS_IMETHOD GetSpan(PRInt32 *aSpan) = 0;
-  NS_IMETHOD SetSpan(PRInt32 aSpan) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSpan(PRInt32 *aSpan) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSpan(PRInt32 aSpan) = 0;
 
   /* attribute DOMString vAlign; */
-  NS_IMETHOD GetVAlign(nsAString & aVAlign) = 0;
-  NS_IMETHOD SetVAlign(const nsAString & aVAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetVAlign(nsAString & aVAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetVAlign(const nsAString & aVAlign) = 0;
 
   /* attribute DOMString width; */
-  NS_IMETHOD GetWidth(nsAString & aWidth) = 0;
-  NS_IMETHOD SetWidth(const nsAString & aWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth) = 0;
 
 };
 
@@ -66,48 +66,48 @@ class NS_NO_VTABLE nsIDOMHTMLTableColElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLTABLECOLELEMENT \
-  NS_IMETHOD GetAlign(nsAString & aAlign); \
-  NS_IMETHOD SetAlign(const nsAString & aAlign); \
-  NS_IMETHOD GetCh(nsAString & aCh); \
-  NS_IMETHOD SetCh(const nsAString & aCh); \
-  NS_IMETHOD GetChOff(nsAString & aChOff); \
-  NS_IMETHOD SetChOff(const nsAString & aChOff); \
-  NS_IMETHOD GetSpan(PRInt32 *aSpan); \
-  NS_IMETHOD SetSpan(PRInt32 aSpan); \
-  NS_IMETHOD GetVAlign(nsAString & aVAlign); \
-  NS_IMETHOD SetVAlign(const nsAString & aVAlign); \
-  NS_IMETHOD GetWidth(nsAString & aWidth); \
-  NS_IMETHOD SetWidth(const nsAString & aWidth); 
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign); \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign); \
+  NS_SCRIPTABLE NS_IMETHOD GetCh(nsAString & aCh); \
+  NS_SCRIPTABLE NS_IMETHOD SetCh(const nsAString & aCh); \
+  NS_SCRIPTABLE NS_IMETHOD GetChOff(nsAString & aChOff); \
+  NS_SCRIPTABLE NS_IMETHOD SetChOff(const nsAString & aChOff); \
+  NS_SCRIPTABLE NS_IMETHOD GetSpan(PRInt32 *aSpan); \
+  NS_SCRIPTABLE NS_IMETHOD SetSpan(PRInt32 aSpan); \
+  NS_SCRIPTABLE NS_IMETHOD GetVAlign(nsAString & aVAlign); \
+  NS_SCRIPTABLE NS_IMETHOD SetVAlign(const nsAString & aVAlign); \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth); \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLTABLECOLELEMENT(_to) \
-  NS_IMETHOD GetAlign(nsAString & aAlign) { return _to GetAlign(aAlign); } \
-  NS_IMETHOD SetAlign(const nsAString & aAlign) { return _to SetAlign(aAlign); } \
-  NS_IMETHOD GetCh(nsAString & aCh) { return _to GetCh(aCh); } \
-  NS_IMETHOD SetCh(const nsAString & aCh) { return _to SetCh(aCh); } \
-  NS_IMETHOD GetChOff(nsAString & aChOff) { return _to GetChOff(aChOff); } \
-  NS_IMETHOD SetChOff(const nsAString & aChOff) { return _to SetChOff(aChOff); } \
-  NS_IMETHOD GetSpan(PRInt32 *aSpan) { return _to GetSpan(aSpan); } \
-  NS_IMETHOD SetSpan(PRInt32 aSpan) { return _to SetSpan(aSpan); } \
-  NS_IMETHOD GetVAlign(nsAString & aVAlign) { return _to GetVAlign(aVAlign); } \
-  NS_IMETHOD SetVAlign(const nsAString & aVAlign) { return _to SetVAlign(aVAlign); } \
-  NS_IMETHOD GetWidth(nsAString & aWidth) { return _to GetWidth(aWidth); } \
-  NS_IMETHOD SetWidth(const nsAString & aWidth) { return _to SetWidth(aWidth); } 
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) { return _to GetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) { return _to SetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCh(nsAString & aCh) { return _to GetCh(aCh); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCh(const nsAString & aCh) { return _to SetCh(aCh); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChOff(nsAString & aChOff) { return _to GetChOff(aChOff); } \
+  NS_SCRIPTABLE NS_IMETHOD SetChOff(const nsAString & aChOff) { return _to SetChOff(aChOff); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSpan(PRInt32 *aSpan) { return _to GetSpan(aSpan); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSpan(PRInt32 aSpan) { return _to SetSpan(aSpan); } \
+  NS_SCRIPTABLE NS_IMETHOD GetVAlign(nsAString & aVAlign) { return _to GetVAlign(aVAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetVAlign(const nsAString & aVAlign) { return _to SetVAlign(aVAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth) { return _to GetWidth(aWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth) { return _to SetWidth(aWidth); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLTABLECOLELEMENT(_to) \
-  NS_IMETHOD GetAlign(nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlign(aAlign); } \
-  NS_IMETHOD SetAlign(const nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlign(aAlign); } \
-  NS_IMETHOD GetCh(nsAString & aCh) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCh(aCh); } \
-  NS_IMETHOD SetCh(const nsAString & aCh) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCh(aCh); } \
-  NS_IMETHOD GetChOff(nsAString & aChOff) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChOff(aChOff); } \
-  NS_IMETHOD SetChOff(const nsAString & aChOff) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetChOff(aChOff); } \
-  NS_IMETHOD GetSpan(PRInt32 *aSpan) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSpan(aSpan); } \
-  NS_IMETHOD SetSpan(PRInt32 aSpan) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSpan(aSpan); } \
-  NS_IMETHOD GetVAlign(nsAString & aVAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVAlign(aVAlign); } \
-  NS_IMETHOD SetVAlign(const nsAString & aVAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetVAlign(aVAlign); } \
-  NS_IMETHOD GetWidth(nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWidth(aWidth); } \
-  NS_IMETHOD SetWidth(const nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWidth(aWidth); } 
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCh(nsAString & aCh) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCh(aCh); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCh(const nsAString & aCh) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCh(aCh); } \
+  NS_SCRIPTABLE NS_IMETHOD GetChOff(nsAString & aChOff) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChOff(aChOff); } \
+  NS_SCRIPTABLE NS_IMETHOD SetChOff(const nsAString & aChOff) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetChOff(aChOff); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSpan(PRInt32 *aSpan) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSpan(aSpan); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSpan(PRInt32 aSpan) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSpan(aSpan); } \
+  NS_SCRIPTABLE NS_IMETHOD GetVAlign(nsAString & aVAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVAlign(aVAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetVAlign(const nsAString & aVAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetVAlign(aVAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWidth(aWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWidth(aWidth); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -53,9 +53,9 @@ object.</p>
 
 <h2 id="Factory">Factory class</h2>
 
-<pre><code>Object  <b>create</b>(className, classVersion)
+<pre><code>Object  <b>create</b>(className, [classVersion])
 string  <b>getBuildInfo</b>()
-boolean <b>getPermission</b>(siteName, imageUrl, extraMessage)
+boolean <b>getPermission</b>([siteName], [imageUrl], [extraMessage])
 readonly attribute boolean <b>hasPermission</b>
 readonly attribute string <b>version</b>
 </code></pre>
@@ -78,7 +78,7 @@ if (window.google && google.gears) {
 
 <table>
   <tr class="odd">
-    <th colspan="2"><code>Object create(className, classVersion)</code></th>
+    <th colspan="2"><code>Object create(className, [classVersion])</code></th>
   </tr>
   <tr class="odd">
     <td width="113">Summary:</td>
@@ -165,7 +165,7 @@ if (window.google && google.gears) {
 
 <table>
   <tr class="odd">
-    <th colspan="2"><code>boolean getPermission(siteName, imageUrl, extraMessage)</code></th>
+    <th colspan="2"><code>boolean getPermission([siteName], [imageUrl], [extraMessage])</code></th>
   </tr>
   <tr class="odd">
     <td width="113">Summary:</td>
@@ -175,13 +175,13 @@ if (window.google && google.gears) {
     <td>Parameters:</td>
     <td class="odd">
       <code>siteName</code>
-      - Friendly name of the site requesting permission.
+      - Optional. Friendly name of the site requesting permission.
       <br>
       <code>imageUrl</code>
-      - URL of a .png file to display in the dialog.
+      - Optional. URL of a .png file to display in the dialog.
       <br>
       <code>extraMessage</code>
-      - Site-specific text to display to users in the security dialog.
+      - Optional. Site-specific text to display to users in the security dialog.
       </td>
   </tr>
   <tr class="odd">
@@ -193,8 +193,8 @@ if (window.google && google.gears) {
     <td class="odd">It is always safe to call this function; it will return
     immediately if the site already has permission to use Gears.
     <br><br>
-    All arguments are required, but an empty string can be passed for any value
-    a site does not wish to use.
+    All arguments are optional. The dialog will only show those that are
+    specified.
     </td>
   </tr>
 </table>

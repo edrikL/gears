@@ -37,7 +37,7 @@ class nsIDOMElement; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIWebBrowserFocus : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIWebBrowserFocus : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWEBBROWSERFOCUS_IID)
@@ -55,7 +55,7 @@ class NS_NO_VTABLE nsIWebBrowserFocus : public nsISupports {
    * correctly.
    */
   /* void activate (); */
-  NS_IMETHOD Activate(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Activate(void) = 0;
 
   /**
    * MANDATORY
@@ -70,37 +70,37 @@ class NS_NO_VTABLE nsIWebBrowserFocus : public nsISupports {
    * correctly.
    */
   /* void deactivate (); */
-  NS_IMETHOD Deactivate(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Deactivate(void) = 0;
 
   /**
    * Give the first element focus within mozilla
    * (i.e. TAB was pressed and focus should enter mozilla)
    */
   /* void setFocusAtFirstElement (); */
-  NS_IMETHOD SetFocusAtFirstElement(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFocusAtFirstElement(void) = 0;
 
   /**
    * Give the last element focus within mozilla
    * (i.e. SHIFT-TAB was pressed and focus should enter mozilla)
    */
   /* void setFocusAtLastElement (); */
-  NS_IMETHOD SetFocusAtLastElement(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFocusAtLastElement(void) = 0;
 
   /**
    * The currently focused nsDOMWindow when the browser is active,
    * or the last focused nsDOMWindow when the browser is inactive.
    */
   /* attribute nsIDOMWindow focusedWindow; */
-  NS_IMETHOD GetFocusedWindow(nsIDOMWindow * *aFocusedWindow) = 0;
-  NS_IMETHOD SetFocusedWindow(nsIDOMWindow * aFocusedWindow) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFocusedWindow(nsIDOMWindow * *aFocusedWindow) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFocusedWindow(nsIDOMWindow * aFocusedWindow) = 0;
 
   /**
    * The currently focused nsDOMElement when the browser is active,
    * or the last focused nsDOMElement when the browser is inactive.
    */
   /* attribute nsIDOMElement focusedElement; */
-  NS_IMETHOD GetFocusedElement(nsIDOMElement * *aFocusedElement) = 0;
-  NS_IMETHOD SetFocusedElement(nsIDOMElement * aFocusedElement) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFocusedElement(nsIDOMElement * *aFocusedElement) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFocusedElement(nsIDOMElement * aFocusedElement) = 0;
 
 };
 
@@ -108,36 +108,36 @@ class NS_NO_VTABLE nsIWebBrowserFocus : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWEBBROWSERFOCUS \
-  NS_IMETHOD Activate(void); \
-  NS_IMETHOD Deactivate(void); \
-  NS_IMETHOD SetFocusAtFirstElement(void); \
-  NS_IMETHOD SetFocusAtLastElement(void); \
-  NS_IMETHOD GetFocusedWindow(nsIDOMWindow * *aFocusedWindow); \
-  NS_IMETHOD SetFocusedWindow(nsIDOMWindow * aFocusedWindow); \
-  NS_IMETHOD GetFocusedElement(nsIDOMElement * *aFocusedElement); \
-  NS_IMETHOD SetFocusedElement(nsIDOMElement * aFocusedElement); 
+  NS_SCRIPTABLE NS_IMETHOD Activate(void); \
+  NS_SCRIPTABLE NS_IMETHOD Deactivate(void); \
+  NS_SCRIPTABLE NS_IMETHOD SetFocusAtFirstElement(void); \
+  NS_SCRIPTABLE NS_IMETHOD SetFocusAtLastElement(void); \
+  NS_SCRIPTABLE NS_IMETHOD GetFocusedWindow(nsIDOMWindow * *aFocusedWindow); \
+  NS_SCRIPTABLE NS_IMETHOD SetFocusedWindow(nsIDOMWindow * aFocusedWindow); \
+  NS_SCRIPTABLE NS_IMETHOD GetFocusedElement(nsIDOMElement * *aFocusedElement); \
+  NS_SCRIPTABLE NS_IMETHOD SetFocusedElement(nsIDOMElement * aFocusedElement); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIWEBBROWSERFOCUS(_to) \
-  NS_IMETHOD Activate(void) { return _to Activate(); } \
-  NS_IMETHOD Deactivate(void) { return _to Deactivate(); } \
-  NS_IMETHOD SetFocusAtFirstElement(void) { return _to SetFocusAtFirstElement(); } \
-  NS_IMETHOD SetFocusAtLastElement(void) { return _to SetFocusAtLastElement(); } \
-  NS_IMETHOD GetFocusedWindow(nsIDOMWindow * *aFocusedWindow) { return _to GetFocusedWindow(aFocusedWindow); } \
-  NS_IMETHOD SetFocusedWindow(nsIDOMWindow * aFocusedWindow) { return _to SetFocusedWindow(aFocusedWindow); } \
-  NS_IMETHOD GetFocusedElement(nsIDOMElement * *aFocusedElement) { return _to GetFocusedElement(aFocusedElement); } \
-  NS_IMETHOD SetFocusedElement(nsIDOMElement * aFocusedElement) { return _to SetFocusedElement(aFocusedElement); } 
+  NS_SCRIPTABLE NS_IMETHOD Activate(void) { return _to Activate(); } \
+  NS_SCRIPTABLE NS_IMETHOD Deactivate(void) { return _to Deactivate(); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFocusAtFirstElement(void) { return _to SetFocusAtFirstElement(); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFocusAtLastElement(void) { return _to SetFocusAtLastElement(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFocusedWindow(nsIDOMWindow * *aFocusedWindow) { return _to GetFocusedWindow(aFocusedWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFocusedWindow(nsIDOMWindow * aFocusedWindow) { return _to SetFocusedWindow(aFocusedWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFocusedElement(nsIDOMElement * *aFocusedElement) { return _to GetFocusedElement(aFocusedElement); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFocusedElement(nsIDOMElement * aFocusedElement) { return _to SetFocusedElement(aFocusedElement); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIWEBBROWSERFOCUS(_to) \
-  NS_IMETHOD Activate(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Activate(); } \
-  NS_IMETHOD Deactivate(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Deactivate(); } \
-  NS_IMETHOD SetFocusAtFirstElement(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFocusAtFirstElement(); } \
-  NS_IMETHOD SetFocusAtLastElement(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFocusAtLastElement(); } \
-  NS_IMETHOD GetFocusedWindow(nsIDOMWindow * *aFocusedWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFocusedWindow(aFocusedWindow); } \
-  NS_IMETHOD SetFocusedWindow(nsIDOMWindow * aFocusedWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFocusedWindow(aFocusedWindow); } \
-  NS_IMETHOD GetFocusedElement(nsIDOMElement * *aFocusedElement) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFocusedElement(aFocusedElement); } \
-  NS_IMETHOD SetFocusedElement(nsIDOMElement * aFocusedElement) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFocusedElement(aFocusedElement); } 
+  NS_SCRIPTABLE NS_IMETHOD Activate(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Activate(); } \
+  NS_SCRIPTABLE NS_IMETHOD Deactivate(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Deactivate(); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFocusAtFirstElement(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFocusAtFirstElement(); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFocusAtLastElement(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFocusAtLastElement(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFocusedWindow(nsIDOMWindow * *aFocusedWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFocusedWindow(aFocusedWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFocusedWindow(nsIDOMWindow * aFocusedWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFocusedWindow(aFocusedWindow); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFocusedElement(nsIDOMElement * *aFocusedElement) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFocusedElement(aFocusedElement); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFocusedElement(nsIDOMElement * aFocusedElement) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFocusedElement(aFocusedElement); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

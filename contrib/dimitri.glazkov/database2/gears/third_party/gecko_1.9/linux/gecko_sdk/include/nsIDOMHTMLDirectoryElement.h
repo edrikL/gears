@@ -31,14 +31,14 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLDirectoryElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLDirectoryElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLDIRECTORYELEMENT_IID)
 
   /* attribute boolean compact; */
-  NS_IMETHOD GetCompact(PRBool *aCompact) = 0;
-  NS_IMETHOD SetCompact(PRBool aCompact) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCompact(PRBool *aCompact) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCompact(PRBool aCompact) = 0;
 
 };
 
@@ -46,18 +46,18 @@ class NS_NO_VTABLE nsIDOMHTMLDirectoryElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLDIRECTORYELEMENT \
-  NS_IMETHOD GetCompact(PRBool *aCompact); \
-  NS_IMETHOD SetCompact(PRBool aCompact); 
+  NS_SCRIPTABLE NS_IMETHOD GetCompact(PRBool *aCompact); \
+  NS_SCRIPTABLE NS_IMETHOD SetCompact(PRBool aCompact); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLDIRECTORYELEMENT(_to) \
-  NS_IMETHOD GetCompact(PRBool *aCompact) { return _to GetCompact(aCompact); } \
-  NS_IMETHOD SetCompact(PRBool aCompact) { return _to SetCompact(aCompact); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCompact(PRBool *aCompact) { return _to GetCompact(aCompact); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCompact(PRBool aCompact) { return _to SetCompact(aCompact); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLDIRECTORYELEMENT(_to) \
-  NS_IMETHOD GetCompact(PRBool *aCompact) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCompact(aCompact); } \
-  NS_IMETHOD SetCompact(PRBool aCompact) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCompact(aCompact); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCompact(PRBool *aCompact) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCompact(aCompact); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCompact(PRBool aCompact) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCompact(aCompact); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

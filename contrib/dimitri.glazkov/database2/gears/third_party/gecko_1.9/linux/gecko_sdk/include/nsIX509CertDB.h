@@ -37,7 +37,7 @@ class nsIInterfaceRequestor; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIX509CertDB : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IX509CERTDB_IID)
@@ -67,7 +67,7 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
    *  @return The matching certificate if found.
    */
   /* nsIX509Cert findCertByNickname (in nsISupports aToken, in AString aNickname); */
-  NS_IMETHOD FindCertByNickname(nsISupports *aToken, const nsAString & aNickname, nsIX509Cert **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD FindCertByNickname(nsISupports *aToken, const nsAString & aNickname, nsIX509Cert **_retval) = 0;
 
   /**
    *  Will find a certificate based on its dbkey
@@ -81,7 +81,7 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
    *                Can be null to mean any token.
    */
   /* nsIX509Cert findCertByDBKey (in string aDBkey, in nsISupports aToken); */
-  NS_IMETHOD FindCertByDBKey(const char *aDBkey, nsISupports *aToken, nsIX509Cert **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD FindCertByDBKey(const char *aDBkey, nsISupports *aToken, nsIX509Cert **_retval) = 0;
 
   /**
    *  Obtain a list of certificate nicknames from the database.
@@ -98,7 +98,7 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
    *  @param certNameList The returned array of certificate nicknames.
    */
   /* void findCertNicknames (in nsISupports aToken, in unsigned long aType, out unsigned long count, [array, size_is (count)] out wstring certNameList); */
-  NS_IMETHOD FindCertNicknames(nsISupports *aToken, PRUint32 aType, PRUint32 *count, PRUnichar ***certNameList) = 0;
+  NS_SCRIPTABLE NS_IMETHOD FindCertNicknames(nsISupports *aToken, PRUint32 aType, PRUint32 *count, PRUnichar ***certNameList) = 0;
 
   /**
    *  Find the email encryption certificate by nickname.
@@ -109,7 +109,7 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
    *  @return The matching certificate if found.
    */
   /* nsIX509Cert findEmailEncryptionCert (in AString aNickname); */
-  NS_IMETHOD FindEmailEncryptionCert(const nsAString & aNickname, nsIX509Cert **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD FindEmailEncryptionCert(const nsAString & aNickname, nsIX509Cert **_retval) = 0;
 
   /**
    *  Find the email signing certificate by nickname.
@@ -120,7 +120,7 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
    *  @return The matching certificate if found.
    */
   /* nsIX509Cert findEmailSigningCert (in AString aNickname); */
-  NS_IMETHOD FindEmailSigningCert(const nsAString & aNickname, nsIX509Cert **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD FindEmailSigningCert(const nsAString & aNickname, nsIX509Cert **_retval) = 0;
 
   /**
    *  Find a certificate by email address.
@@ -134,7 +134,7 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
    *  @return The matching certificate if found.
    */
   /* nsIX509Cert findCertByEmailAddress (in nsISupports aToken, in string aEmailAddress); */
-  NS_IMETHOD FindCertByEmailAddress(nsISupports *aToken, const char *aEmailAddress, nsIX509Cert **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD FindCertByEmailAddress(nsISupports *aToken, const char *aEmailAddress, nsIX509Cert **_retval) = 0;
 
   /**
    *  Use this to import a stream sent down as a mime type into
@@ -147,7 +147,7 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
    *  @param ctx A UI context.
    */
   /* void importCertificates ([array, size_is (length)] in octet data, in unsigned long length, in unsigned long type, in nsIInterfaceRequestor ctx); */
-  NS_IMETHOD ImportCertificates(PRUint8 *data, PRUint32 length, PRUint32 type, nsIInterfaceRequestor *ctx) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ImportCertificates(PRUint8 *data, PRUint32 length, PRUint32 type, nsIInterfaceRequestor *ctx) = 0;
 
   /**
    *  Import another person's email certificate into the database.
@@ -157,7 +157,7 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
    *  @param ctx A UI context.
    */
   /* void importEmailCertificate ([array, size_is (length)] in octet data, in unsigned long length, in nsIInterfaceRequestor ctx); */
-  NS_IMETHOD ImportEmailCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ImportEmailCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) = 0;
 
   /**
    *  Import a server machine's certificate into the database.
@@ -167,7 +167,7 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
    *  @param ctx A UI context.
    */
   /* void importServerCertificate ([array, size_is (length)] in octet data, in unsigned long length, in nsIInterfaceRequestor ctx); */
-  NS_IMETHOD ImportServerCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ImportServerCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) = 0;
 
   /**
    *  Import a personal certificate into the database, assuming 
@@ -178,7 +178,7 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
    *  @param ctx A UI context.
    */
   /* void importUserCertificate ([array, size_is (length)] in octet data, in unsigned long length, in nsIInterfaceRequestor ctx); */
-  NS_IMETHOD ImportUserCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ImportUserCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) = 0;
 
   /**
    *  Delete a certificate stored in the database.
@@ -186,7 +186,7 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
    *  @param aCert Delete this certificate.
    */
   /* void deleteCertificate (in nsIX509Cert aCert); */
-  NS_IMETHOD DeleteCertificate(nsIX509Cert *aCert) = 0;
+  NS_SCRIPTABLE NS_IMETHOD DeleteCertificate(nsIX509Cert *aCert) = 0;
 
   /**
    *  Modify the trust that is stored and associated to a certificate within
@@ -200,7 +200,7 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
    *               See the trust constants defined within this interface.
    */
   /* void setCertTrust (in nsIX509Cert cert, in unsigned long type, in unsigned long trust); */
-  NS_IMETHOD SetCertTrust(nsIX509Cert *cert, PRUint32 type, PRUint32 trust) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCertTrust(nsIX509Cert *cert, PRUint32 type, PRUint32 trust) = 0;
 
   /**
    *  Query whether a certificate is trusted for a particular use.
@@ -213,7 +213,7 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
    *  @return Returns true if the certificate is trusted for the given use.
    */
   /* boolean isCertTrusted (in nsIX509Cert cert, in unsigned long certType, in unsigned long trustType); */
-  NS_IMETHOD IsCertTrusted(nsIX509Cert *cert, PRUint32 certType, PRUint32 trustType, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsCertTrusted(nsIX509Cert *cert, PRUint32 certType, PRUint32 trustType, PRBool *_retval) = 0;
 
   /**
    *  Import certificate(s) from file
@@ -227,7 +227,7 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
    *               be imported. See type constants in nsIX509Cert.
    */
   /* void importCertsFromFile (in nsISupports aToken, in nsILocalFile aFile, in unsigned long aType); */
-  NS_IMETHOD ImportCertsFromFile(nsISupports *aToken, nsILocalFile *aFile, PRUint32 aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ImportCertsFromFile(nsISupports *aToken, nsILocalFile *aFile, PRUint32 aType) = 0;
 
   /**
    *  Import a PKCS#12 file containing cert(s) and key(s) into the database.
@@ -239,7 +239,7 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
    *               to be imported.
    */
   /* void importPKCS12File (in nsISupports aToken, in nsILocalFile aFile); */
-  NS_IMETHOD ImportPKCS12File(nsISupports *aToken, nsILocalFile *aFile) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ImportPKCS12File(nsISupports *aToken, nsILocalFile *aFile) = 0;
 
   /**
    *  Export a set of certs and keys from the database to a PKCS#12 file.
@@ -253,7 +253,7 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
    *  @param aCerts The array of all certificates to be exported.
    */
   /* void exportPKCS12File (in nsISupports aToken, in nsILocalFile aFile, in unsigned long count, [array, size_is (count)] in nsIX509Cert aCerts); */
-  NS_IMETHOD ExportPKCS12File(nsISupports *aToken, nsILocalFile *aFile, PRUint32 count, nsIX509Cert **aCerts) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ExportPKCS12File(nsISupports *aToken, nsILocalFile *aFile, PRUint32 count, nsIX509Cert **aCerts) = 0;
 
   /**
    *  An array of all known OCSP responders within the scope of the 
@@ -262,16 +262,16 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
    *  @return Array of OCSP responders, entries are QIable to nsIOCSPResponder.
    */
   /* nsIArray getOCSPResponders (); */
-  NS_IMETHOD GetOCSPResponders(nsIArray **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetOCSPResponders(nsIArray **_retval) = 0;
 
   /**
    *  Whether OCSP is enabled in preferences.
    */
   /* readonly attribute boolean isOcspOn; */
-  NS_IMETHOD GetIsOcspOn(PRBool *aIsOcspOn) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetIsOcspOn(PRBool *aIsOcspOn) = 0;
 
   /* nsIX509Cert constructX509FromBase64 (in string base64); */
-  NS_IMETHOD ConstructX509FromBase64(const char *base64, nsIX509Cert **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ConstructX509FromBase64(const char *base64, nsIX509Cert **_retval) = 0;
 
 };
 
@@ -279,69 +279,69 @@ class NS_NO_VTABLE nsIX509CertDB : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIX509CERTDB \
-  NS_IMETHOD FindCertByNickname(nsISupports *aToken, const nsAString & aNickname, nsIX509Cert **_retval); \
-  NS_IMETHOD FindCertByDBKey(const char *aDBkey, nsISupports *aToken, nsIX509Cert **_retval); \
-  NS_IMETHOD FindCertNicknames(nsISupports *aToken, PRUint32 aType, PRUint32 *count, PRUnichar ***certNameList); \
-  NS_IMETHOD FindEmailEncryptionCert(const nsAString & aNickname, nsIX509Cert **_retval); \
-  NS_IMETHOD FindEmailSigningCert(const nsAString & aNickname, nsIX509Cert **_retval); \
-  NS_IMETHOD FindCertByEmailAddress(nsISupports *aToken, const char *aEmailAddress, nsIX509Cert **_retval); \
-  NS_IMETHOD ImportCertificates(PRUint8 *data, PRUint32 length, PRUint32 type, nsIInterfaceRequestor *ctx); \
-  NS_IMETHOD ImportEmailCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx); \
-  NS_IMETHOD ImportServerCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx); \
-  NS_IMETHOD ImportUserCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx); \
-  NS_IMETHOD DeleteCertificate(nsIX509Cert *aCert); \
-  NS_IMETHOD SetCertTrust(nsIX509Cert *cert, PRUint32 type, PRUint32 trust); \
-  NS_IMETHOD IsCertTrusted(nsIX509Cert *cert, PRUint32 certType, PRUint32 trustType, PRBool *_retval); \
-  NS_IMETHOD ImportCertsFromFile(nsISupports *aToken, nsILocalFile *aFile, PRUint32 aType); \
-  NS_IMETHOD ImportPKCS12File(nsISupports *aToken, nsILocalFile *aFile); \
-  NS_IMETHOD ExportPKCS12File(nsISupports *aToken, nsILocalFile *aFile, PRUint32 count, nsIX509Cert **aCerts); \
-  NS_IMETHOD GetOCSPResponders(nsIArray **_retval); \
-  NS_IMETHOD GetIsOcspOn(PRBool *aIsOcspOn); \
-  NS_IMETHOD ConstructX509FromBase64(const char *base64, nsIX509Cert **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD FindCertByNickname(nsISupports *aToken, const nsAString & aNickname, nsIX509Cert **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD FindCertByDBKey(const char *aDBkey, nsISupports *aToken, nsIX509Cert **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD FindCertNicknames(nsISupports *aToken, PRUint32 aType, PRUint32 *count, PRUnichar ***certNameList); \
+  NS_SCRIPTABLE NS_IMETHOD FindEmailEncryptionCert(const nsAString & aNickname, nsIX509Cert **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD FindEmailSigningCert(const nsAString & aNickname, nsIX509Cert **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD FindCertByEmailAddress(nsISupports *aToken, const char *aEmailAddress, nsIX509Cert **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD ImportCertificates(PRUint8 *data, PRUint32 length, PRUint32 type, nsIInterfaceRequestor *ctx); \
+  NS_SCRIPTABLE NS_IMETHOD ImportEmailCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx); \
+  NS_SCRIPTABLE NS_IMETHOD ImportServerCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx); \
+  NS_SCRIPTABLE NS_IMETHOD ImportUserCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx); \
+  NS_SCRIPTABLE NS_IMETHOD DeleteCertificate(nsIX509Cert *aCert); \
+  NS_SCRIPTABLE NS_IMETHOD SetCertTrust(nsIX509Cert *cert, PRUint32 type, PRUint32 trust); \
+  NS_SCRIPTABLE NS_IMETHOD IsCertTrusted(nsIX509Cert *cert, PRUint32 certType, PRUint32 trustType, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD ImportCertsFromFile(nsISupports *aToken, nsILocalFile *aFile, PRUint32 aType); \
+  NS_SCRIPTABLE NS_IMETHOD ImportPKCS12File(nsISupports *aToken, nsILocalFile *aFile); \
+  NS_SCRIPTABLE NS_IMETHOD ExportPKCS12File(nsISupports *aToken, nsILocalFile *aFile, PRUint32 count, nsIX509Cert **aCerts); \
+  NS_SCRIPTABLE NS_IMETHOD GetOCSPResponders(nsIArray **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetIsOcspOn(PRBool *aIsOcspOn); \
+  NS_SCRIPTABLE NS_IMETHOD ConstructX509FromBase64(const char *base64, nsIX509Cert **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIX509CERTDB(_to) \
-  NS_IMETHOD FindCertByNickname(nsISupports *aToken, const nsAString & aNickname, nsIX509Cert **_retval) { return _to FindCertByNickname(aToken, aNickname, _retval); } \
-  NS_IMETHOD FindCertByDBKey(const char *aDBkey, nsISupports *aToken, nsIX509Cert **_retval) { return _to FindCertByDBKey(aDBkey, aToken, _retval); } \
-  NS_IMETHOD FindCertNicknames(nsISupports *aToken, PRUint32 aType, PRUint32 *count, PRUnichar ***certNameList) { return _to FindCertNicknames(aToken, aType, count, certNameList); } \
-  NS_IMETHOD FindEmailEncryptionCert(const nsAString & aNickname, nsIX509Cert **_retval) { return _to FindEmailEncryptionCert(aNickname, _retval); } \
-  NS_IMETHOD FindEmailSigningCert(const nsAString & aNickname, nsIX509Cert **_retval) { return _to FindEmailSigningCert(aNickname, _retval); } \
-  NS_IMETHOD FindCertByEmailAddress(nsISupports *aToken, const char *aEmailAddress, nsIX509Cert **_retval) { return _to FindCertByEmailAddress(aToken, aEmailAddress, _retval); } \
-  NS_IMETHOD ImportCertificates(PRUint8 *data, PRUint32 length, PRUint32 type, nsIInterfaceRequestor *ctx) { return _to ImportCertificates(data, length, type, ctx); } \
-  NS_IMETHOD ImportEmailCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) { return _to ImportEmailCertificate(data, length, ctx); } \
-  NS_IMETHOD ImportServerCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) { return _to ImportServerCertificate(data, length, ctx); } \
-  NS_IMETHOD ImportUserCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) { return _to ImportUserCertificate(data, length, ctx); } \
-  NS_IMETHOD DeleteCertificate(nsIX509Cert *aCert) { return _to DeleteCertificate(aCert); } \
-  NS_IMETHOD SetCertTrust(nsIX509Cert *cert, PRUint32 type, PRUint32 trust) { return _to SetCertTrust(cert, type, trust); } \
-  NS_IMETHOD IsCertTrusted(nsIX509Cert *cert, PRUint32 certType, PRUint32 trustType, PRBool *_retval) { return _to IsCertTrusted(cert, certType, trustType, _retval); } \
-  NS_IMETHOD ImportCertsFromFile(nsISupports *aToken, nsILocalFile *aFile, PRUint32 aType) { return _to ImportCertsFromFile(aToken, aFile, aType); } \
-  NS_IMETHOD ImportPKCS12File(nsISupports *aToken, nsILocalFile *aFile) { return _to ImportPKCS12File(aToken, aFile); } \
-  NS_IMETHOD ExportPKCS12File(nsISupports *aToken, nsILocalFile *aFile, PRUint32 count, nsIX509Cert **aCerts) { return _to ExportPKCS12File(aToken, aFile, count, aCerts); } \
-  NS_IMETHOD GetOCSPResponders(nsIArray **_retval) { return _to GetOCSPResponders(_retval); } \
-  NS_IMETHOD GetIsOcspOn(PRBool *aIsOcspOn) { return _to GetIsOcspOn(aIsOcspOn); } \
-  NS_IMETHOD ConstructX509FromBase64(const char *base64, nsIX509Cert **_retval) { return _to ConstructX509FromBase64(base64, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD FindCertByNickname(nsISupports *aToken, const nsAString & aNickname, nsIX509Cert **_retval) { return _to FindCertByNickname(aToken, aNickname, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD FindCertByDBKey(const char *aDBkey, nsISupports *aToken, nsIX509Cert **_retval) { return _to FindCertByDBKey(aDBkey, aToken, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD FindCertNicknames(nsISupports *aToken, PRUint32 aType, PRUint32 *count, PRUnichar ***certNameList) { return _to FindCertNicknames(aToken, aType, count, certNameList); } \
+  NS_SCRIPTABLE NS_IMETHOD FindEmailEncryptionCert(const nsAString & aNickname, nsIX509Cert **_retval) { return _to FindEmailEncryptionCert(aNickname, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD FindEmailSigningCert(const nsAString & aNickname, nsIX509Cert **_retval) { return _to FindEmailSigningCert(aNickname, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD FindCertByEmailAddress(nsISupports *aToken, const char *aEmailAddress, nsIX509Cert **_retval) { return _to FindCertByEmailAddress(aToken, aEmailAddress, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ImportCertificates(PRUint8 *data, PRUint32 length, PRUint32 type, nsIInterfaceRequestor *ctx) { return _to ImportCertificates(data, length, type, ctx); } \
+  NS_SCRIPTABLE NS_IMETHOD ImportEmailCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) { return _to ImportEmailCertificate(data, length, ctx); } \
+  NS_SCRIPTABLE NS_IMETHOD ImportServerCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) { return _to ImportServerCertificate(data, length, ctx); } \
+  NS_SCRIPTABLE NS_IMETHOD ImportUserCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) { return _to ImportUserCertificate(data, length, ctx); } \
+  NS_SCRIPTABLE NS_IMETHOD DeleteCertificate(nsIX509Cert *aCert) { return _to DeleteCertificate(aCert); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCertTrust(nsIX509Cert *cert, PRUint32 type, PRUint32 trust) { return _to SetCertTrust(cert, type, trust); } \
+  NS_SCRIPTABLE NS_IMETHOD IsCertTrusted(nsIX509Cert *cert, PRUint32 certType, PRUint32 trustType, PRBool *_retval) { return _to IsCertTrusted(cert, certType, trustType, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ImportCertsFromFile(nsISupports *aToken, nsILocalFile *aFile, PRUint32 aType) { return _to ImportCertsFromFile(aToken, aFile, aType); } \
+  NS_SCRIPTABLE NS_IMETHOD ImportPKCS12File(nsISupports *aToken, nsILocalFile *aFile) { return _to ImportPKCS12File(aToken, aFile); } \
+  NS_SCRIPTABLE NS_IMETHOD ExportPKCS12File(nsISupports *aToken, nsILocalFile *aFile, PRUint32 count, nsIX509Cert **aCerts) { return _to ExportPKCS12File(aToken, aFile, count, aCerts); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOCSPResponders(nsIArray **_retval) { return _to GetOCSPResponders(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsOcspOn(PRBool *aIsOcspOn) { return _to GetIsOcspOn(aIsOcspOn); } \
+  NS_SCRIPTABLE NS_IMETHOD ConstructX509FromBase64(const char *base64, nsIX509Cert **_retval) { return _to ConstructX509FromBase64(base64, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIX509CERTDB(_to) \
-  NS_IMETHOD FindCertByNickname(nsISupports *aToken, const nsAString & aNickname, nsIX509Cert **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindCertByNickname(aToken, aNickname, _retval); } \
-  NS_IMETHOD FindCertByDBKey(const char *aDBkey, nsISupports *aToken, nsIX509Cert **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindCertByDBKey(aDBkey, aToken, _retval); } \
-  NS_IMETHOD FindCertNicknames(nsISupports *aToken, PRUint32 aType, PRUint32 *count, PRUnichar ***certNameList) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindCertNicknames(aToken, aType, count, certNameList); } \
-  NS_IMETHOD FindEmailEncryptionCert(const nsAString & aNickname, nsIX509Cert **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindEmailEncryptionCert(aNickname, _retval); } \
-  NS_IMETHOD FindEmailSigningCert(const nsAString & aNickname, nsIX509Cert **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindEmailSigningCert(aNickname, _retval); } \
-  NS_IMETHOD FindCertByEmailAddress(nsISupports *aToken, const char *aEmailAddress, nsIX509Cert **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindCertByEmailAddress(aToken, aEmailAddress, _retval); } \
-  NS_IMETHOD ImportCertificates(PRUint8 *data, PRUint32 length, PRUint32 type, nsIInterfaceRequestor *ctx) { return !_to ? NS_ERROR_NULL_POINTER : _to->ImportCertificates(data, length, type, ctx); } \
-  NS_IMETHOD ImportEmailCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) { return !_to ? NS_ERROR_NULL_POINTER : _to->ImportEmailCertificate(data, length, ctx); } \
-  NS_IMETHOD ImportServerCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) { return !_to ? NS_ERROR_NULL_POINTER : _to->ImportServerCertificate(data, length, ctx); } \
-  NS_IMETHOD ImportUserCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) { return !_to ? NS_ERROR_NULL_POINTER : _to->ImportUserCertificate(data, length, ctx); } \
-  NS_IMETHOD DeleteCertificate(nsIX509Cert *aCert) { return !_to ? NS_ERROR_NULL_POINTER : _to->DeleteCertificate(aCert); } \
-  NS_IMETHOD SetCertTrust(nsIX509Cert *cert, PRUint32 type, PRUint32 trust) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCertTrust(cert, type, trust); } \
-  NS_IMETHOD IsCertTrusted(nsIX509Cert *cert, PRUint32 certType, PRUint32 trustType, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsCertTrusted(cert, certType, trustType, _retval); } \
-  NS_IMETHOD ImportCertsFromFile(nsISupports *aToken, nsILocalFile *aFile, PRUint32 aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->ImportCertsFromFile(aToken, aFile, aType); } \
-  NS_IMETHOD ImportPKCS12File(nsISupports *aToken, nsILocalFile *aFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->ImportPKCS12File(aToken, aFile); } \
-  NS_IMETHOD ExportPKCS12File(nsISupports *aToken, nsILocalFile *aFile, PRUint32 count, nsIX509Cert **aCerts) { return !_to ? NS_ERROR_NULL_POINTER : _to->ExportPKCS12File(aToken, aFile, count, aCerts); } \
-  NS_IMETHOD GetOCSPResponders(nsIArray **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOCSPResponders(_retval); } \
-  NS_IMETHOD GetIsOcspOn(PRBool *aIsOcspOn) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsOcspOn(aIsOcspOn); } \
-  NS_IMETHOD ConstructX509FromBase64(const char *base64, nsIX509Cert **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ConstructX509FromBase64(base64, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD FindCertByNickname(nsISupports *aToken, const nsAString & aNickname, nsIX509Cert **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindCertByNickname(aToken, aNickname, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD FindCertByDBKey(const char *aDBkey, nsISupports *aToken, nsIX509Cert **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindCertByDBKey(aDBkey, aToken, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD FindCertNicknames(nsISupports *aToken, PRUint32 aType, PRUint32 *count, PRUnichar ***certNameList) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindCertNicknames(aToken, aType, count, certNameList); } \
+  NS_SCRIPTABLE NS_IMETHOD FindEmailEncryptionCert(const nsAString & aNickname, nsIX509Cert **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindEmailEncryptionCert(aNickname, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD FindEmailSigningCert(const nsAString & aNickname, nsIX509Cert **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindEmailSigningCert(aNickname, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD FindCertByEmailAddress(nsISupports *aToken, const char *aEmailAddress, nsIX509Cert **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->FindCertByEmailAddress(aToken, aEmailAddress, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ImportCertificates(PRUint8 *data, PRUint32 length, PRUint32 type, nsIInterfaceRequestor *ctx) { return !_to ? NS_ERROR_NULL_POINTER : _to->ImportCertificates(data, length, type, ctx); } \
+  NS_SCRIPTABLE NS_IMETHOD ImportEmailCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) { return !_to ? NS_ERROR_NULL_POINTER : _to->ImportEmailCertificate(data, length, ctx); } \
+  NS_SCRIPTABLE NS_IMETHOD ImportServerCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) { return !_to ? NS_ERROR_NULL_POINTER : _to->ImportServerCertificate(data, length, ctx); } \
+  NS_SCRIPTABLE NS_IMETHOD ImportUserCertificate(PRUint8 *data, PRUint32 length, nsIInterfaceRequestor *ctx) { return !_to ? NS_ERROR_NULL_POINTER : _to->ImportUserCertificate(data, length, ctx); } \
+  NS_SCRIPTABLE NS_IMETHOD DeleteCertificate(nsIX509Cert *aCert) { return !_to ? NS_ERROR_NULL_POINTER : _to->DeleteCertificate(aCert); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCertTrust(nsIX509Cert *cert, PRUint32 type, PRUint32 trust) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCertTrust(cert, type, trust); } \
+  NS_SCRIPTABLE NS_IMETHOD IsCertTrusted(nsIX509Cert *cert, PRUint32 certType, PRUint32 trustType, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsCertTrusted(cert, certType, trustType, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD ImportCertsFromFile(nsISupports *aToken, nsILocalFile *aFile, PRUint32 aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->ImportCertsFromFile(aToken, aFile, aType); } \
+  NS_SCRIPTABLE NS_IMETHOD ImportPKCS12File(nsISupports *aToken, nsILocalFile *aFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->ImportPKCS12File(aToken, aFile); } \
+  NS_SCRIPTABLE NS_IMETHOD ExportPKCS12File(nsISupports *aToken, nsILocalFile *aFile, PRUint32 count, nsIX509Cert **aCerts) { return !_to ? NS_ERROR_NULL_POINTER : _to->ExportPKCS12File(aToken, aFile, count, aCerts); } \
+  NS_SCRIPTABLE NS_IMETHOD GetOCSPResponders(nsIArray **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOCSPResponders(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetIsOcspOn(PRBool *aIsOcspOn) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsOcspOn(aIsOcspOn); } \
+  NS_SCRIPTABLE NS_IMETHOD ConstructX509FromBase64(const char *base64, nsIX509Cert **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ConstructX509FromBase64(base64, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -28,6 +28,7 @@
 
 #include <assert.h>
 #include <atlcom.h>
+#include <algorithm>
 #include <string>
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
@@ -67,7 +68,7 @@ END_COM_MAP()
     HRESULT hr = S_OK;
 
     if (pos_ < end_) {
-      ULONG can_read = min(cb, static_cast<ULONG>(end_ - pos_));
+      ULONG can_read = std::min<ULONG>(cb, static_cast<ULONG>(end_ - pos_));
 
       memcpy(pv, pos_, can_read);
       pos_ += can_read;
@@ -202,22 +203,15 @@ END_COM_MAP()
     if (pstatstg == NULL)
       return E_POINTER;
 
-    ZeroMemory(pstatstg, sizeof(STATSTG));
-    if ((grfStatFlag & STATFLAG_NONAME) == 0) {
-      const wchar_t *kStreamBuffer = L"StreamBuffer";
-      int buffer_len = sizeof(kStreamBuffer);
-      int wchar_len = buffer_len / sizeof(wchar_t);
-      pstatstg->pwcsName = reinterpret_cast<wchar_t*>(
-        ::CoTaskMemAlloc(buffer_len));
-      assert(pstatstg->pwcsName != NULL);
-      if (pstatstg->pwcsName == NULL)
-        return E_OUTOFMEMORY;
-
-      lstrcpynW(pstatstg->pwcsName, kStreamBuffer, wchar_len);
+    memset(pstatstg, 0, sizeof(STATSTG));
+    if (0 == (grfStatFlag & STATFLAG_NONAME)) {
+      const wchar_t kStreamBuffer[] = L"StreamBuffer";
+      pstatstg->pwcsName =
+          static_cast<wchar_t*>(::CoTaskMemAlloc(sizeof(kStreamBuffer)));
+      wcscpy(pstatstg->pwcsName, kStreamBuffer);
     }
-
+    pstatstg->type = STGTY_STREAM;
     pstatstg->cbSize.QuadPart = (end_ - buffer_);
-
     return S_OK;
   }
 

@@ -382,6 +382,27 @@ static BOOL winceCreateLock(const char *zFilename, winFile *pFile){
 }
 
 /*
+** Delete a file using our 'safety' mechanism that deals with deletes
+** just failing to stick occasionally on windows CE.
+*/
+#define CE_DELETION_ATTEMPTS 3
+static BOOL winceDeleteFileW(const WCHAR *filename) {
+  int cnt = 0;
+  int rc;
+  do{
+    rc = DeleteFileW(filename);
+  }while( rc==0 && GetFileAttributesW(filename)!=0xffffffff 
+          && cnt++ < CE_DELETION_ATTEMPTS && (Sleep(100), 1) );
+  if (rc == 0) {
+    OSTRACE3("DELETE FAIL: %ls (%d)\n", filename, cnt + 1);
+    return FALSE;
+  } else {
+    OSTRACE3("DELETE %ls (%d)\n", filename, cnt + 1);
+    return TRUE;
+  }
+}
+
+/*
 ** Destroy the part of winFile that deals with wince locks
 */
 static void winceDestroyLock(winFile *pFile){
@@ -409,7 +430,7 @@ static void winceDestroyLock(winFile *pFile){
     CloseHandle(pFile->hShared);
 
     if( pFile->zDeleteOnClose ){
-      DeleteFileW(pFile->zDeleteOnClose);
+      winceDeleteFileW(pFile->zDeleteOnClose);
       sqliteFree(pFile->zDeleteOnClose);
       pFile->zDeleteOnClose = 0;
     }
@@ -705,7 +726,7 @@ int sqlite3WinOpenReadWrite(
       CloseHandle(h);
       sqliteFree(zConverted);
       return SQLITE_CANTOPEN;
-    }
+    } 
 #endif
   }else{
 #if OS_WINCE
@@ -818,6 +839,8 @@ int sqlite3WinOpenExclusive(const char *zFilename, OsFile **pId, int delFlag){
   if( delFlag && h!=INVALID_HANDLE_VALUE ){
     f.zDeleteOnClose = zConverted;
     zConverted = 0;
+  } else {
+    f.zDeleteOnClose = 0;
   }
   f.hMutex = NULL;
 #endif
@@ -982,6 +1005,11 @@ static int winClose(OsFile **pId){
     }while( rc==0 && cnt++ < MX_CLOSE_ATTEMPT && (Sleep(100), 1) );
 #if OS_WINCE
     winceDestroyLock(pFile);
+    if( pFile->zDeleteOnClose ){
+      winceDeleteFileW(pFile->zDeleteOnClose);
+      sqliteFree(pFile->zDeleteOnClose);
+      pFile->zDeleteOnClose = 0;
+    }
 #endif
     OpenCounter(-1);
     sqliteFree(pFile);

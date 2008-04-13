@@ -41,6 +41,7 @@
 #endif  // __OBJC__
 
 #if defined(__cplusplus)
+#include <CoreFoundation/CoreFoundation.h>
 #include "gears/base/common/string_utils.h"
 
 class SecurityOrigin;

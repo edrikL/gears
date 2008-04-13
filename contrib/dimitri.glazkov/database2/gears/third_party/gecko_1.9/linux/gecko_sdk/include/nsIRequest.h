@@ -31,7 +31,7 @@ typedef PRUint32 nsLoadFlags;
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIRequest : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIRequest : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IREQUEST_IID)
@@ -40,7 +40,7 @@ class NS_NO_VTABLE nsIRequest : public nsISupports {
      * The name of the request.  Often this is the URI of the request.
      */
   /* readonly attribute AUTF8String name; */
-  NS_IMETHOD GetName(nsACString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsACString & aName) = 0;
 
   /**
      * Indicates whether the request is pending. nsIRequest::isPending is
@@ -58,13 +58,13 @@ class NS_NO_VTABLE nsIRequest : public nsISupports {
      * @note Suspended requests are still considered pending.
      */
   /* boolean isPending (); */
-  NS_IMETHOD IsPending(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsPending(PRBool *_retval) = 0;
 
   /**
      * The error status associated with the request.
      */
   /* readonly attribute nsresult status; */
-  NS_IMETHOD GetStatus(nsresult *aStatus) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetStatus(nsresult *aStatus) = 0;
 
   /**
      * Cancels the current request.  This will close any open input or
@@ -88,7 +88,7 @@ class NS_NO_VTABLE nsIRequest : public nsISupports {
      * a failure code.
      */
   /* void cancel (in nsresult aStatus); */
-  NS_IMETHOD Cancel(nsresult aStatus) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Cancel(nsresult aStatus) = 0;
 
   /**
      * Suspends the current request.  This may have the effect of closing
@@ -105,7 +105,7 @@ class NS_NO_VTABLE nsIRequest : public nsISupports {
      * suspending a request.
      */
   /* void suspend (); */
-  NS_IMETHOD Suspend(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Suspend(void) = 0;
 
   /**
      * Resumes the current request.  This may have the effect of re-opening
@@ -113,7 +113,7 @@ class NS_NO_VTABLE nsIRequest : public nsISupports {
      * any open streams.
      */
   /* void resume (); */
-  NS_IMETHOD Resume(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Resume(void) = 0;
 
   /**
      * The load group of this request.  While pending, the request is a 
@@ -121,8 +121,8 @@ class NS_NO_VTABLE nsIRequest : public nsISupports {
      * to implement this policy.
      */
   /* attribute nsILoadGroup loadGroup; */
-  NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) = 0;
-  NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) = 0;
 
   /**
      * The load flags of this request.  Bits 0-15 are reserved.
@@ -131,8 +131,8 @@ class NS_NO_VTABLE nsIRequest : public nsISupports {
      * the load flags of the load group.
      */
   /* attribute nsLoadFlags loadFlags; */
-  NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags) = 0;
-  NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) = 0;
 
   /**************************************************************************
      * Listed below are the various load flags which may be or'd together.
@@ -217,42 +217,42 @@ class NS_NO_VTABLE nsIRequest : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIREQUEST \
-  NS_IMETHOD GetName(nsACString & aName); \
-  NS_IMETHOD IsPending(PRBool *_retval); \
-  NS_IMETHOD GetStatus(nsresult *aStatus); \
-  NS_IMETHOD Cancel(nsresult aStatus); \
-  NS_IMETHOD Suspend(void); \
-  NS_IMETHOD Resume(void); \
-  NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup); \
-  NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup); \
-  NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags); \
-  NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags); \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsACString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD IsPending(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetStatus(nsresult *aStatus); \
+  NS_SCRIPTABLE NS_IMETHOD Cancel(nsresult aStatus); \
+  NS_SCRIPTABLE NS_IMETHOD Suspend(void); \
+  NS_SCRIPTABLE NS_IMETHOD Resume(void); \
+  NS_SCRIPTABLE NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup); \
+  NS_SCRIPTABLE NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup); \
+  NS_SCRIPTABLE NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags); \
+  NS_SCRIPTABLE NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags); \
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIREQUEST(_to) \
-  NS_IMETHOD GetName(nsACString & aName) { return _to GetName(aName); } \
-  NS_IMETHOD IsPending(PRBool *_retval) { return _to IsPending(_retval); } \
-  NS_IMETHOD GetStatus(nsresult *aStatus) { return _to GetStatus(aStatus); } \
-  NS_IMETHOD Cancel(nsresult aStatus) { return _to Cancel(aStatus); } \
-  NS_IMETHOD Suspend(void) { return _to Suspend(); } \
-  NS_IMETHOD Resume(void) { return _to Resume(); } \
-  NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { return _to GetLoadGroup(aLoadGroup); } \
-  NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { return _to SetLoadGroup(aLoadGroup); } \
-  NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags) { return _to GetLoadFlags(aLoadFlags); } \
-  NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) { return _to SetLoadFlags(aLoadFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsACString & aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD IsPending(PRBool *_retval) { return _to IsPending(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetStatus(nsresult *aStatus) { return _to GetStatus(aStatus); } \
+  NS_SCRIPTABLE NS_IMETHOD Cancel(nsresult aStatus) { return _to Cancel(aStatus); } \
+  NS_SCRIPTABLE NS_IMETHOD Suspend(void) { return _to Suspend(); } \
+  NS_SCRIPTABLE NS_IMETHOD Resume(void) { return _to Resume(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { return _to GetLoadGroup(aLoadGroup); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { return _to SetLoadGroup(aLoadGroup); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags) { return _to GetLoadFlags(aLoadFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) { return _to SetLoadFlags(aLoadFlags); } \
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIREQUEST(_to) \
-  NS_IMETHOD GetName(nsACString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD IsPending(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsPending(_retval); } \
-  NS_IMETHOD GetStatus(nsresult *aStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetStatus(aStatus); } \
-  NS_IMETHOD Cancel(nsresult aStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->Cancel(aStatus); } \
-  NS_IMETHOD Suspend(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Suspend(); } \
-  NS_IMETHOD Resume(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Resume(); } \
-  NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLoadGroup(aLoadGroup); } \
-  NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLoadGroup(aLoadGroup); } \
-  NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLoadFlags(aLoadFlags); } \
-  NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLoadFlags(aLoadFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsACString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD IsPending(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsPending(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetStatus(nsresult *aStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetStatus(aStatus); } \
+  NS_SCRIPTABLE NS_IMETHOD Cancel(nsresult aStatus) { return !_to ? NS_ERROR_NULL_POINTER : _to->Cancel(aStatus); } \
+  NS_SCRIPTABLE NS_IMETHOD Suspend(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Suspend(); } \
+  NS_SCRIPTABLE NS_IMETHOD Resume(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Resume(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLoadGroup(aLoadGroup); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLoadGroup(aLoadGroup); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLoadFlags(aLoadFlags); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLoadFlags(aLoadFlags); } \
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

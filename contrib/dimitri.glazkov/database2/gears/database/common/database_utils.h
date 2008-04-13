@@ -26,8 +26,16 @@
 #ifndef GEARS_DATABASE_COMMON_DATABASE_UTILS_H__
 #define GEARS_DATABASE_COMMON_DATABASE_UTILS_H__
 
+#include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
 #include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
+
+// Handle dealing with corrupt databases.  This should be called after
+// any sqlite3_*() call on a handle from OpenSqliteDatabase() which
+// returned a SQLite code other than SQLITE_OK.  Pass the database
+// handle and return code, and a possibly-modified return code is
+// returned.
+int SqlitePoisonIfCorrupt(sqlite3 *db, int rc);
 
 // Opens the SQLite database for the given {name, SecurityOrigin} pair.
 // Creates the database (and appropriate directories) if necessary.

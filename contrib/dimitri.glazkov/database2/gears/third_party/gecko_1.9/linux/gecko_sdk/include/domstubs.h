@@ -58,9 +58,9 @@ class nsIDOMDOMStringList; /* forward declaration */
 
 class nsIDOMNameList; /* forward declaration */
 
-class nsIDOMTextRectangle; /* forward declaration */
+class nsIDOMClientRect; /* forward declaration */
 
-class nsIDOMTextRectangleList; /* forward declaration */
+class nsIDOMClientRectList; /* forward declaration */
 
 class DOMException; /* forward declaration */
 

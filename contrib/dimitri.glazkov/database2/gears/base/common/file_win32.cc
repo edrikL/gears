@@ -35,7 +35,9 @@
 #include <tchar.h>
 #include <wininet.h>
 
-#include "common/genfiles/product_constants.h"  // from OUTDIR
+#include <limits>
+
+#include "genfiles/product_constants.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/int_types.h"
@@ -175,12 +177,12 @@ int64 File::GetFileSize(const char16 *full_filepath) {
 }
 
 
-int File::ReadFileSegmentToBuffer(const char16 *full_filepath,
-                                  uint8* destination,
-                                  int max_bytes,
-                                  int64 position) {
-  if (max_bytes <= 0 || position < 0) {
-    return 0;
+int64 File::ReadFileSegmentToBuffer(const char16 *full_filepath,
+                                    uint8* destination,
+                                    int64 position,
+                                    int64 max_bytes) {
+  if (max_bytes < 0 || position < 0) {
+    return -1;
   }
 
   std::string16 long_path = ToLongPath(std::string16(full_filepath));
@@ -192,22 +194,26 @@ int File::ReadFileSegmentToBuffer(const char16 *full_filepath,
                                              FILE_ATTRIBUTE_NORMAL,
                                              NULL));
   if (safe_file_handle.get() == INVALID_HANDLE_VALUE) {
-    return 0;
+    return -1;
   }
 
-  if (::SetFilePointer(safe_file_handle.get(), static_cast<LONG>(position),
-                       NULL, FILE_BEGIN) == 0xFFFFFFFF) {
-    return 0;
+  LARGE_INTEGER li_pos;
+  li_pos.QuadPart = position;
+  if (!::SetFilePointerEx(safe_file_handle.get(), li_pos, NULL, FILE_BEGIN)) {
+    return -1;
   }
 
   // Read its contents into memory.
+  if (max_bytes > std::numeric_limits<DWORD>::max()) {  // ReadFile limit
+    max_bytes = std::numeric_limits<DWORD>::max();
+  }
   DWORD bytes_read;
   if (!::ReadFile(safe_file_handle.get(), destination,
-                  max_bytes, &bytes_read, NULL)) {
-    return 0;
+                  static_cast<DWORD>(max_bytes), &bytes_read, NULL)) {
+    return -1;
   }
 
-  return static_cast<int>(bytes_read);
+  return bytes_read;
 }
 
 
@@ -241,7 +247,7 @@ bool File::ReadFileToVector(const char16 *full_filepath,
     DWORD bytes_read;
     if (!::ReadFile(safe_file_handle.get(), &(*data)[0],
                     file_size, &bytes_read, NULL)
-        || (bytes_read != bytes_read)) {
+        || (bytes_read != file_size)) {
       data->clear();
       return false;
     }

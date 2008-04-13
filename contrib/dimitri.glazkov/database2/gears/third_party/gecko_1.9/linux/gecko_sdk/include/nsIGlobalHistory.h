@@ -22,7 +22,7 @@
   {0x9491c383, 0xe3c4, 0x11d2, \
     { 0xbd, 0xbe, 0x00, 0x50, 0x04, 0x0a, 0x9b, 0x44 }}
 
-class NS_NO_VTABLE nsIGlobalHistory : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIGlobalHistory : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IGLOBALHISTORY_IID)
@@ -34,7 +34,7 @@ class NS_NO_VTABLE nsIGlobalHistory : public nsISupports {
      * @param aURL the url to the page
      */
   /* void addPage (in string aURL); */
-  NS_IMETHOD AddPage(const char *aURL) = 0;
+  NS_SCRIPTABLE NS_IMETHOD AddPage(const char *aURL) = 0;
 
   /**
      * isVisited
@@ -44,7 +44,7 @@ class NS_NO_VTABLE nsIGlobalHistory : public nsISupports {
      * @param aURL the url to the page
      */
   /* boolean isVisited (in string aURL); */
-  NS_IMETHOD IsVisited(const char *aURL, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsVisited(const char *aURL, PRBool *_retval) = 0;
 
 };
 
@@ -52,18 +52,18 @@ class NS_NO_VTABLE nsIGlobalHistory : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIGLOBALHISTORY \
-  NS_IMETHOD AddPage(const char *aURL); \
-  NS_IMETHOD IsVisited(const char *aURL, PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD AddPage(const char *aURL); \
+  NS_SCRIPTABLE NS_IMETHOD IsVisited(const char *aURL, PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIGLOBALHISTORY(_to) \
-  NS_IMETHOD AddPage(const char *aURL) { return _to AddPage(aURL); } \
-  NS_IMETHOD IsVisited(const char *aURL, PRBool *_retval) { return _to IsVisited(aURL, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD AddPage(const char *aURL) { return _to AddPage(aURL); } \
+  NS_SCRIPTABLE NS_IMETHOD IsVisited(const char *aURL, PRBool *_retval) { return _to IsVisited(aURL, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIGLOBALHISTORY(_to) \
-  NS_IMETHOD AddPage(const char *aURL) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddPage(aURL); } \
-  NS_IMETHOD IsVisited(const char *aURL, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsVisited(aURL, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD AddPage(const char *aURL) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddPage(aURL); } \
+  NS_SCRIPTABLE NS_IMETHOD IsVisited(const char *aURL, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsVisited(aURL, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

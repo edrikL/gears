@@ -31,17 +31,17 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLMapElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLMapElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLMAPELEMENT_IID)
 
   /* readonly attribute nsIDOMHTMLCollection areas; */
-  NS_IMETHOD GetAreas(nsIDOMHTMLCollection * *aAreas) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAreas(nsIDOMHTMLCollection * *aAreas) = 0;
 
   /* attribute DOMString name; */
-  NS_IMETHOD GetName(nsAString & aName) = 0;
-  NS_IMETHOD SetName(const nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) = 0;
 
 };
 
@@ -49,21 +49,21 @@ class NS_NO_VTABLE nsIDOMHTMLMapElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLMAPELEMENT \
-  NS_IMETHOD GetAreas(nsIDOMHTMLCollection * *aAreas); \
-  NS_IMETHOD GetName(nsAString & aName); \
-  NS_IMETHOD SetName(const nsAString & aName); 
+  NS_SCRIPTABLE NS_IMETHOD GetAreas(nsIDOMHTMLCollection * *aAreas); \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLMAPELEMENT(_to) \
-  NS_IMETHOD GetAreas(nsIDOMHTMLCollection * *aAreas) { return _to GetAreas(aAreas); } \
-  NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } 
+  NS_SCRIPTABLE NS_IMETHOD GetAreas(nsIDOMHTMLCollection * *aAreas) { return _to GetAreas(aAreas); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLMAPELEMENT(_to) \
-  NS_IMETHOD GetAreas(nsIDOMHTMLCollection * *aAreas) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAreas(aAreas); } \
-  NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } 
+  NS_SCRIPTABLE NS_IMETHOD GetAreas(nsIDOMHTMLCollection * *aAreas) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAreas(aAreas); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

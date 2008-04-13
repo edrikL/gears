@@ -32,7 +32,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIUnicharStreamListener : public nsIRequestObserver {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIUnicharStreamListener : public nsIRequestObserver {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IUNICHARSTREAMLISTENER_IID)
@@ -49,7 +49,7 @@ class NS_NO_VTABLE nsIUnicharStreamListener : public nsIRequestObserver {
      * side-effect of causing the request to be canceled.
      */
   /* void onUnicharDataAvailable (in nsIRequest aRequest, in nsISupports aContext, in AString aData); */
-  NS_IMETHOD OnUnicharDataAvailable(nsIRequest *aRequest, nsISupports *aContext, const nsAString & aData) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OnUnicharDataAvailable(nsIRequest *aRequest, nsISupports *aContext, const nsAString & aData) = 0;
 
 };
 
@@ -57,15 +57,15 @@ class NS_NO_VTABLE nsIUnicharStreamListener : public nsIRequestObserver {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIUNICHARSTREAMLISTENER \
-  NS_IMETHOD OnUnicharDataAvailable(nsIRequest *aRequest, nsISupports *aContext, const nsAString & aData); 
+  NS_SCRIPTABLE NS_IMETHOD OnUnicharDataAvailable(nsIRequest *aRequest, nsISupports *aContext, const nsAString & aData); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIUNICHARSTREAMLISTENER(_to) \
-  NS_IMETHOD OnUnicharDataAvailable(nsIRequest *aRequest, nsISupports *aContext, const nsAString & aData) { return _to OnUnicharDataAvailable(aRequest, aContext, aData); } 
+  NS_SCRIPTABLE NS_IMETHOD OnUnicharDataAvailable(nsIRequest *aRequest, nsISupports *aContext, const nsAString & aData) { return _to OnUnicharDataAvailable(aRequest, aContext, aData); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIUNICHARSTREAMLISTENER(_to) \
-  NS_IMETHOD OnUnicharDataAvailable(nsIRequest *aRequest, nsISupports *aContext, const nsAString & aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnUnicharDataAvailable(aRequest, aContext, aData); } 
+  NS_SCRIPTABLE NS_IMETHOD OnUnicharDataAvailable(nsIRequest *aRequest, nsISupports *aContext, const nsAString & aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->OnUnicharDataAvailable(aRequest, aContext, aData); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

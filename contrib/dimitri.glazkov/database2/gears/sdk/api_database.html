@@ -95,6 +95,7 @@ rs.close();
    ResultSet <b>execute</b>(sqlStatement, [argArray])
    void      <b>close</b>()
    readonly attribute int <b>lastInsertRowId</b>
+   readonly attribute int <b>rowsAffected</b>
 </code></pre>
 
 <pre><code><a href="#ResultSet">ResultSet class</a>
@@ -231,6 +232,30 @@ rs.close();
       all rows in every table have a <span class="code">rowid</span>, even rows in tables that do not have
       integer-type primary keys. Thus, every successful insert updates this
       attribute.</td>
+  </tr>
+</table>
+<table>
+  <tr class="odd">
+    <th colspan="2"><a href="#Database-rowsAffected" name="Database-rowsAffected" class="code">rowsAffected</a></th>
+  </tr>
+  <tr class="odd">
+    <td width="113">Return value: </td>
+    <td width="489" class="code">readonly attribute int</td>
+  </tr>
+
+  <tr class="odd">
+    <td>Description:</td>
+    <td class="odd">Represents the number of database rows that were changed,
+      inserted, or deleted by the most recently completed INSERT, UPDATE, or
+      DELETE statement on this Database instance.
+      <br /><br />
+      Returns zero if no row changes have ever occurred on this instance.
+      <br /><br />
+      <b>Note:</b> An unconstrained delete of all rows in a table (<code>DELETE
+      FROM table</code>) will return zero rather than the number of rows
+      that were originally present in the table; if you need the number of
+      rows, use <code>DELETE FROM table WHERE 1</code> instead, though be
+      aware that this is slower than an unconstrained delete.</td>
   </tr>
 </table>
 
@@ -417,6 +442,8 @@ rs.close();</code></pre>
 <p><strong>Linux - Firefox </strong>- Database files are stored in the user home directory.</p>
 <p>Location: ~<em>bob</em>/.mozilla/firefox/&lt;firefox's profile id&gt;/Google Gears for Firefox <br />
   Example: ~bob/.mozilla/firefox/08ywpi3q.default/Google Gears for Firefox </p>
+<p><strong>Windows Mobile 5.0 and 6.0</strong></p>
+<p> Location: \Application Data\Google\Google Gears for Internet Explorer</p>
 
 <a name="sqlite_changes" id="sqlite_changes"></a><br />
 <br />

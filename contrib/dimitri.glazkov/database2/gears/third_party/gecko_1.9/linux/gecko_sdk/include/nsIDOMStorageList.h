@@ -24,7 +24,7 @@ class nsIDOMStorage; /* forward declaration */
   {0xf2166929, 0x91b6, 0x4372, \
     { 0x8d, 0x5f, 0xc3, 0x66, 0xf4, 0x7a, 0x5f, 0x54 }}
 
-class NS_NO_VTABLE nsIDOMStorageList : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMStorageList : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMSTORAGELIST_IID)
@@ -36,7 +36,7 @@ class NS_NO_VTABLE nsIDOMStorageList : public nsISupports {
    * @returns a storage area for the given domain
    */
   /* nsIDOMStorage namedItem (in DOMString domain); */
-  NS_IMETHOD NamedItem(const nsAString & domain, nsIDOMStorage **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD NamedItem(const nsAString & domain, nsIDOMStorage **_retval) = 0;
 
 };
 
@@ -44,15 +44,15 @@ class NS_NO_VTABLE nsIDOMStorageList : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMSTORAGELIST \
-  NS_IMETHOD NamedItem(const nsAString & domain, nsIDOMStorage **_retval); 
+  NS_SCRIPTABLE NS_IMETHOD NamedItem(const nsAString & domain, nsIDOMStorage **_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMSTORAGELIST(_to) \
-  NS_IMETHOD NamedItem(const nsAString & domain, nsIDOMStorage **_retval) { return _to NamedItem(domain, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD NamedItem(const nsAString & domain, nsIDOMStorage **_retval) { return _to NamedItem(domain, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMSTORAGELIST(_to) \
-  NS_IMETHOD NamedItem(const nsAString & domain, nsIDOMStorage **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NamedItem(domain, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD NamedItem(const nsAString & domain, nsIDOMStorage **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->NamedItem(domain, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

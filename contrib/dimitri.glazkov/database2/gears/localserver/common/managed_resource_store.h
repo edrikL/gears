@@ -97,6 +97,12 @@ class ManagedResourceStore : public LocalServer {
                      int64 *last_time,
                      std::string16 *manifest_date_header,
                      std::string16 *error_message);
+#ifdef WINCE
+  // Retrieves from the database the URLs for the current version and inserts an
+  // empty entry in the browser cache for each.
+  bool InsertBogusBrowserCacheEntries();
+  bool GetCurrentVersionUrls(std::vector<std::string16> *urls);
+#endif
 
  private:
   friend class UpdateTask;
@@ -104,10 +110,10 @@ class ManagedResourceStore : public LocalServer {
   friend class IEUpdateTask;
 #elif BROWSER_FF
   friend class FFUpdateTask;
-#elif BROWSER_NPAPI
-  friend class NPUpdateTask;
 #elif BROWSER_SAFARI
   friend class SFUpdateTask;
+#elif BROWSER_NPAPI
+  friend class NPUpdateTask;
 #endif
 
   // Returns the the rowid or our Server record in the DB

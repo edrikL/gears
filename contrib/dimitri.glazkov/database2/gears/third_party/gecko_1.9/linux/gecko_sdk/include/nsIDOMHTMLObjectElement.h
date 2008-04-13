@@ -31,84 +31,84 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLObjectElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLObjectElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLOBJECTELEMENT_IID)
 
   /* readonly attribute nsIDOMHTMLFormElement form; */
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) = 0;
 
   /* attribute DOMString code; */
-  NS_IMETHOD GetCode(nsAString & aCode) = 0;
-  NS_IMETHOD SetCode(const nsAString & aCode) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCode(nsAString & aCode) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCode(const nsAString & aCode) = 0;
 
   /* attribute DOMString align; */
-  NS_IMETHOD GetAlign(nsAString & aAlign) = 0;
-  NS_IMETHOD SetAlign(const nsAString & aAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) = 0;
 
   /* attribute DOMString archive; */
-  NS_IMETHOD GetArchive(nsAString & aArchive) = 0;
-  NS_IMETHOD SetArchive(const nsAString & aArchive) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetArchive(nsAString & aArchive) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetArchive(const nsAString & aArchive) = 0;
 
   /* attribute DOMString border; */
-  NS_IMETHOD GetBorder(nsAString & aBorder) = 0;
-  NS_IMETHOD SetBorder(const nsAString & aBorder) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetBorder(nsAString & aBorder) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetBorder(const nsAString & aBorder) = 0;
 
   /* attribute DOMString codeBase; */
-  NS_IMETHOD GetCodeBase(nsAString & aCodeBase) = 0;
-  NS_IMETHOD SetCodeBase(const nsAString & aCodeBase) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCodeBase(nsAString & aCodeBase) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCodeBase(const nsAString & aCodeBase) = 0;
 
   /* attribute DOMString codeType; */
-  NS_IMETHOD GetCodeType(nsAString & aCodeType) = 0;
-  NS_IMETHOD SetCodeType(const nsAString & aCodeType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCodeType(nsAString & aCodeType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCodeType(const nsAString & aCodeType) = 0;
 
   /* attribute DOMString data; */
-  NS_IMETHOD GetData(nsAString & aData) = 0;
-  NS_IMETHOD SetData(const nsAString & aData) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetData(nsAString & aData) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetData(const nsAString & aData) = 0;
 
   /* attribute boolean declare; */
-  NS_IMETHOD GetDeclare(PRBool *aDeclare) = 0;
-  NS_IMETHOD SetDeclare(PRBool aDeclare) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDeclare(PRBool *aDeclare) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDeclare(PRBool aDeclare) = 0;
 
   /* attribute DOMString height; */
-  NS_IMETHOD GetHeight(nsAString & aHeight) = 0;
-  NS_IMETHOD SetHeight(const nsAString & aHeight) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHeight(nsAString & aHeight) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetHeight(const nsAString & aHeight) = 0;
 
   /* attribute long hspace; */
-  NS_IMETHOD GetHspace(PRInt32 *aHspace) = 0;
-  NS_IMETHOD SetHspace(PRInt32 aHspace) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHspace(PRInt32 *aHspace) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetHspace(PRInt32 aHspace) = 0;
 
   /* attribute DOMString name; */
-  NS_IMETHOD GetName(nsAString & aName) = 0;
-  NS_IMETHOD SetName(const nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) = 0;
 
   /* attribute DOMString standby; */
-  NS_IMETHOD GetStandby(nsAString & aStandby) = 0;
-  NS_IMETHOD SetStandby(const nsAString & aStandby) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetStandby(nsAString & aStandby) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetStandby(const nsAString & aStandby) = 0;
 
   /* attribute long tabIndex; */
-  NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) = 0;
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) = 0;
 
   /* attribute DOMString type; */
-  NS_IMETHOD GetType(nsAString & aType) = 0;
-  NS_IMETHOD SetType(const nsAString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) = 0;
 
   /* attribute DOMString useMap; */
-  NS_IMETHOD GetUseMap(nsAString & aUseMap) = 0;
-  NS_IMETHOD SetUseMap(const nsAString & aUseMap) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetUseMap(nsAString & aUseMap) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetUseMap(const nsAString & aUseMap) = 0;
 
   /* attribute long vspace; */
-  NS_IMETHOD GetVspace(PRInt32 *aVspace) = 0;
-  NS_IMETHOD SetVspace(PRInt32 aVspace) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetVspace(PRInt32 *aVspace) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetVspace(PRInt32 aVspace) = 0;
 
   /* attribute DOMString width; */
-  NS_IMETHOD GetWidth(nsAString & aWidth) = 0;
-  NS_IMETHOD SetWidth(const nsAString & aWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth) = 0;
 
   /* readonly attribute nsIDOMDocument contentDocument; */
-  NS_IMETHOD GetContentDocument(nsIDOMDocument * *aContentDocument) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetContentDocument(nsIDOMDocument * *aContentDocument) = 0;
 
 };
 
@@ -116,120 +116,120 @@ class NS_NO_VTABLE nsIDOMHTMLObjectElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLOBJECTELEMENT \
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm); \
-  NS_IMETHOD GetCode(nsAString & aCode); \
-  NS_IMETHOD SetCode(const nsAString & aCode); \
-  NS_IMETHOD GetAlign(nsAString & aAlign); \
-  NS_IMETHOD SetAlign(const nsAString & aAlign); \
-  NS_IMETHOD GetArchive(nsAString & aArchive); \
-  NS_IMETHOD SetArchive(const nsAString & aArchive); \
-  NS_IMETHOD GetBorder(nsAString & aBorder); \
-  NS_IMETHOD SetBorder(const nsAString & aBorder); \
-  NS_IMETHOD GetCodeBase(nsAString & aCodeBase); \
-  NS_IMETHOD SetCodeBase(const nsAString & aCodeBase); \
-  NS_IMETHOD GetCodeType(nsAString & aCodeType); \
-  NS_IMETHOD SetCodeType(const nsAString & aCodeType); \
-  NS_IMETHOD GetData(nsAString & aData); \
-  NS_IMETHOD SetData(const nsAString & aData); \
-  NS_IMETHOD GetDeclare(PRBool *aDeclare); \
-  NS_IMETHOD SetDeclare(PRBool aDeclare); \
-  NS_IMETHOD GetHeight(nsAString & aHeight); \
-  NS_IMETHOD SetHeight(const nsAString & aHeight); \
-  NS_IMETHOD GetHspace(PRInt32 *aHspace); \
-  NS_IMETHOD SetHspace(PRInt32 aHspace); \
-  NS_IMETHOD GetName(nsAString & aName); \
-  NS_IMETHOD SetName(const nsAString & aName); \
-  NS_IMETHOD GetStandby(nsAString & aStandby); \
-  NS_IMETHOD SetStandby(const nsAString & aStandby); \
-  NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex); \
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex); \
-  NS_IMETHOD GetType(nsAString & aType); \
-  NS_IMETHOD SetType(const nsAString & aType); \
-  NS_IMETHOD GetUseMap(nsAString & aUseMap); \
-  NS_IMETHOD SetUseMap(const nsAString & aUseMap); \
-  NS_IMETHOD GetVspace(PRInt32 *aVspace); \
-  NS_IMETHOD SetVspace(PRInt32 aVspace); \
-  NS_IMETHOD GetWidth(nsAString & aWidth); \
-  NS_IMETHOD SetWidth(const nsAString & aWidth); \
-  NS_IMETHOD GetContentDocument(nsIDOMDocument * *aContentDocument); 
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm); \
+  NS_SCRIPTABLE NS_IMETHOD GetCode(nsAString & aCode); \
+  NS_SCRIPTABLE NS_IMETHOD SetCode(const nsAString & aCode); \
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign); \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign); \
+  NS_SCRIPTABLE NS_IMETHOD GetArchive(nsAString & aArchive); \
+  NS_SCRIPTABLE NS_IMETHOD SetArchive(const nsAString & aArchive); \
+  NS_SCRIPTABLE NS_IMETHOD GetBorder(nsAString & aBorder); \
+  NS_SCRIPTABLE NS_IMETHOD SetBorder(const nsAString & aBorder); \
+  NS_SCRIPTABLE NS_IMETHOD GetCodeBase(nsAString & aCodeBase); \
+  NS_SCRIPTABLE NS_IMETHOD SetCodeBase(const nsAString & aCodeBase); \
+  NS_SCRIPTABLE NS_IMETHOD GetCodeType(nsAString & aCodeType); \
+  NS_SCRIPTABLE NS_IMETHOD SetCodeType(const nsAString & aCodeType); \
+  NS_SCRIPTABLE NS_IMETHOD GetData(nsAString & aData); \
+  NS_SCRIPTABLE NS_IMETHOD SetData(const nsAString & aData); \
+  NS_SCRIPTABLE NS_IMETHOD GetDeclare(PRBool *aDeclare); \
+  NS_SCRIPTABLE NS_IMETHOD SetDeclare(PRBool aDeclare); \
+  NS_SCRIPTABLE NS_IMETHOD GetHeight(nsAString & aHeight); \
+  NS_SCRIPTABLE NS_IMETHOD SetHeight(const nsAString & aHeight); \
+  NS_SCRIPTABLE NS_IMETHOD GetHspace(PRInt32 *aHspace); \
+  NS_SCRIPTABLE NS_IMETHOD SetHspace(PRInt32 aHspace); \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD GetStandby(nsAString & aStandby); \
+  NS_SCRIPTABLE NS_IMETHOD SetStandby(const nsAString & aStandby); \
+  NS_SCRIPTABLE NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex); \
+  NS_SCRIPTABLE NS_IMETHOD SetTabIndex(PRInt32 aTabIndex); \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType); \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType); \
+  NS_SCRIPTABLE NS_IMETHOD GetUseMap(nsAString & aUseMap); \
+  NS_SCRIPTABLE NS_IMETHOD SetUseMap(const nsAString & aUseMap); \
+  NS_SCRIPTABLE NS_IMETHOD GetVspace(PRInt32 *aVspace); \
+  NS_SCRIPTABLE NS_IMETHOD SetVspace(PRInt32 aVspace); \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth); \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth); \
+  NS_SCRIPTABLE NS_IMETHOD GetContentDocument(nsIDOMDocument * *aContentDocument); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLOBJECTELEMENT(_to) \
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return _to GetForm(aForm); } \
-  NS_IMETHOD GetCode(nsAString & aCode) { return _to GetCode(aCode); } \
-  NS_IMETHOD SetCode(const nsAString & aCode) { return _to SetCode(aCode); } \
-  NS_IMETHOD GetAlign(nsAString & aAlign) { return _to GetAlign(aAlign); } \
-  NS_IMETHOD SetAlign(const nsAString & aAlign) { return _to SetAlign(aAlign); } \
-  NS_IMETHOD GetArchive(nsAString & aArchive) { return _to GetArchive(aArchive); } \
-  NS_IMETHOD SetArchive(const nsAString & aArchive) { return _to SetArchive(aArchive); } \
-  NS_IMETHOD GetBorder(nsAString & aBorder) { return _to GetBorder(aBorder); } \
-  NS_IMETHOD SetBorder(const nsAString & aBorder) { return _to SetBorder(aBorder); } \
-  NS_IMETHOD GetCodeBase(nsAString & aCodeBase) { return _to GetCodeBase(aCodeBase); } \
-  NS_IMETHOD SetCodeBase(const nsAString & aCodeBase) { return _to SetCodeBase(aCodeBase); } \
-  NS_IMETHOD GetCodeType(nsAString & aCodeType) { return _to GetCodeType(aCodeType); } \
-  NS_IMETHOD SetCodeType(const nsAString & aCodeType) { return _to SetCodeType(aCodeType); } \
-  NS_IMETHOD GetData(nsAString & aData) { return _to GetData(aData); } \
-  NS_IMETHOD SetData(const nsAString & aData) { return _to SetData(aData); } \
-  NS_IMETHOD GetDeclare(PRBool *aDeclare) { return _to GetDeclare(aDeclare); } \
-  NS_IMETHOD SetDeclare(PRBool aDeclare) { return _to SetDeclare(aDeclare); } \
-  NS_IMETHOD GetHeight(nsAString & aHeight) { return _to GetHeight(aHeight); } \
-  NS_IMETHOD SetHeight(const nsAString & aHeight) { return _to SetHeight(aHeight); } \
-  NS_IMETHOD GetHspace(PRInt32 *aHspace) { return _to GetHspace(aHspace); } \
-  NS_IMETHOD SetHspace(PRInt32 aHspace) { return _to SetHspace(aHspace); } \
-  NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
-  NS_IMETHOD GetStandby(nsAString & aStandby) { return _to GetStandby(aStandby); } \
-  NS_IMETHOD SetStandby(const nsAString & aStandby) { return _to SetStandby(aStandby); } \
-  NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) { return _to GetTabIndex(aTabIndex); } \
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) { return _to SetTabIndex(aTabIndex); } \
-  NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
-  NS_IMETHOD SetType(const nsAString & aType) { return _to SetType(aType); } \
-  NS_IMETHOD GetUseMap(nsAString & aUseMap) { return _to GetUseMap(aUseMap); } \
-  NS_IMETHOD SetUseMap(const nsAString & aUseMap) { return _to SetUseMap(aUseMap); } \
-  NS_IMETHOD GetVspace(PRInt32 *aVspace) { return _to GetVspace(aVspace); } \
-  NS_IMETHOD SetVspace(PRInt32 aVspace) { return _to SetVspace(aVspace); } \
-  NS_IMETHOD GetWidth(nsAString & aWidth) { return _to GetWidth(aWidth); } \
-  NS_IMETHOD SetWidth(const nsAString & aWidth) { return _to SetWidth(aWidth); } \
-  NS_IMETHOD GetContentDocument(nsIDOMDocument * *aContentDocument) { return _to GetContentDocument(aContentDocument); } 
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return _to GetForm(aForm); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCode(nsAString & aCode) { return _to GetCode(aCode); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCode(const nsAString & aCode) { return _to SetCode(aCode); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) { return _to GetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) { return _to SetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetArchive(nsAString & aArchive) { return _to GetArchive(aArchive); } \
+  NS_SCRIPTABLE NS_IMETHOD SetArchive(const nsAString & aArchive) { return _to SetArchive(aArchive); } \
+  NS_SCRIPTABLE NS_IMETHOD GetBorder(nsAString & aBorder) { return _to GetBorder(aBorder); } \
+  NS_SCRIPTABLE NS_IMETHOD SetBorder(const nsAString & aBorder) { return _to SetBorder(aBorder); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCodeBase(nsAString & aCodeBase) { return _to GetCodeBase(aCodeBase); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCodeBase(const nsAString & aCodeBase) { return _to SetCodeBase(aCodeBase); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCodeType(nsAString & aCodeType) { return _to GetCodeType(aCodeType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCodeType(const nsAString & aCodeType) { return _to SetCodeType(aCodeType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetData(nsAString & aData) { return _to GetData(aData); } \
+  NS_SCRIPTABLE NS_IMETHOD SetData(const nsAString & aData) { return _to SetData(aData); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDeclare(PRBool *aDeclare) { return _to GetDeclare(aDeclare); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDeclare(PRBool aDeclare) { return _to SetDeclare(aDeclare); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHeight(nsAString & aHeight) { return _to GetHeight(aHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHeight(const nsAString & aHeight) { return _to SetHeight(aHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHspace(PRInt32 *aHspace) { return _to GetHspace(aHspace); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHspace(PRInt32 aHspace) { return _to SetHspace(aHspace); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetStandby(nsAString & aStandby) { return _to GetStandby(aStandby); } \
+  NS_SCRIPTABLE NS_IMETHOD SetStandby(const nsAString & aStandby) { return _to SetStandby(aStandby); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) { return _to GetTabIndex(aTabIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) { return _to SetTabIndex(aTabIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) { return _to SetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetUseMap(nsAString & aUseMap) { return _to GetUseMap(aUseMap); } \
+  NS_SCRIPTABLE NS_IMETHOD SetUseMap(const nsAString & aUseMap) { return _to SetUseMap(aUseMap); } \
+  NS_SCRIPTABLE NS_IMETHOD GetVspace(PRInt32 *aVspace) { return _to GetVspace(aVspace); } \
+  NS_SCRIPTABLE NS_IMETHOD SetVspace(PRInt32 aVspace) { return _to SetVspace(aVspace); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth) { return _to GetWidth(aWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth) { return _to SetWidth(aWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContentDocument(nsIDOMDocument * *aContentDocument) { return _to GetContentDocument(aContentDocument); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLOBJECTELEMENT(_to) \
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetForm(aForm); } \
-  NS_IMETHOD GetCode(nsAString & aCode) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCode(aCode); } \
-  NS_IMETHOD SetCode(const nsAString & aCode) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCode(aCode); } \
-  NS_IMETHOD GetAlign(nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlign(aAlign); } \
-  NS_IMETHOD SetAlign(const nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlign(aAlign); } \
-  NS_IMETHOD GetArchive(nsAString & aArchive) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetArchive(aArchive); } \
-  NS_IMETHOD SetArchive(const nsAString & aArchive) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetArchive(aArchive); } \
-  NS_IMETHOD GetBorder(nsAString & aBorder) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetBorder(aBorder); } \
-  NS_IMETHOD SetBorder(const nsAString & aBorder) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetBorder(aBorder); } \
-  NS_IMETHOD GetCodeBase(nsAString & aCodeBase) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCodeBase(aCodeBase); } \
-  NS_IMETHOD SetCodeBase(const nsAString & aCodeBase) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCodeBase(aCodeBase); } \
-  NS_IMETHOD GetCodeType(nsAString & aCodeType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCodeType(aCodeType); } \
-  NS_IMETHOD SetCodeType(const nsAString & aCodeType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCodeType(aCodeType); } \
-  NS_IMETHOD GetData(nsAString & aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetData(aData); } \
-  NS_IMETHOD SetData(const nsAString & aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetData(aData); } \
-  NS_IMETHOD GetDeclare(PRBool *aDeclare) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDeclare(aDeclare); } \
-  NS_IMETHOD SetDeclare(PRBool aDeclare) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDeclare(aDeclare); } \
-  NS_IMETHOD GetHeight(nsAString & aHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHeight(aHeight); } \
-  NS_IMETHOD SetHeight(const nsAString & aHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHeight(aHeight); } \
-  NS_IMETHOD GetHspace(PRInt32 *aHspace) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHspace(aHspace); } \
-  NS_IMETHOD SetHspace(PRInt32 aHspace) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHspace(aHspace); } \
-  NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
-  NS_IMETHOD GetStandby(nsAString & aStandby) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetStandby(aStandby); } \
-  NS_IMETHOD SetStandby(const nsAString & aStandby) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetStandby(aStandby); } \
-  NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTabIndex(aTabIndex); } \
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTabIndex(aTabIndex); } \
-  NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
-  NS_IMETHOD SetType(const nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } \
-  NS_IMETHOD GetUseMap(nsAString & aUseMap) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUseMap(aUseMap); } \
-  NS_IMETHOD SetUseMap(const nsAString & aUseMap) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetUseMap(aUseMap); } \
-  NS_IMETHOD GetVspace(PRInt32 *aVspace) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVspace(aVspace); } \
-  NS_IMETHOD SetVspace(PRInt32 aVspace) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetVspace(aVspace); } \
-  NS_IMETHOD GetWidth(nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWidth(aWidth); } \
-  NS_IMETHOD SetWidth(const nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWidth(aWidth); } \
-  NS_IMETHOD GetContentDocument(nsIDOMDocument * *aContentDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentDocument(aContentDocument); } 
+  NS_SCRIPTABLE NS_IMETHOD GetForm(nsIDOMHTMLFormElement * *aForm) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetForm(aForm); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCode(nsAString & aCode) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCode(aCode); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCode(const nsAString & aCode) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCode(aCode); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAlign(nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAlign(const nsAString & aAlign) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAlign(aAlign); } \
+  NS_SCRIPTABLE NS_IMETHOD GetArchive(nsAString & aArchive) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetArchive(aArchive); } \
+  NS_SCRIPTABLE NS_IMETHOD SetArchive(const nsAString & aArchive) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetArchive(aArchive); } \
+  NS_SCRIPTABLE NS_IMETHOD GetBorder(nsAString & aBorder) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetBorder(aBorder); } \
+  NS_SCRIPTABLE NS_IMETHOD SetBorder(const nsAString & aBorder) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetBorder(aBorder); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCodeBase(nsAString & aCodeBase) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCodeBase(aCodeBase); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCodeBase(const nsAString & aCodeBase) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCodeBase(aCodeBase); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCodeType(nsAString & aCodeType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCodeType(aCodeType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCodeType(const nsAString & aCodeType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCodeType(aCodeType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetData(nsAString & aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetData(aData); } \
+  NS_SCRIPTABLE NS_IMETHOD SetData(const nsAString & aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetData(aData); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDeclare(PRBool *aDeclare) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDeclare(aDeclare); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDeclare(PRBool aDeclare) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDeclare(aDeclare); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHeight(nsAString & aHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHeight(aHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHeight(const nsAString & aHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHeight(aHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHspace(PRInt32 *aHspace) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHspace(aHspace); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHspace(PRInt32 aHspace) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHspace(aHspace); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetStandby(nsAString & aStandby) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetStandby(aStandby); } \
+  NS_SCRIPTABLE NS_IMETHOD SetStandby(const nsAString & aStandby) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetStandby(aStandby); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTabIndex(aTabIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTabIndex(aTabIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD GetUseMap(nsAString & aUseMap) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUseMap(aUseMap); } \
+  NS_SCRIPTABLE NS_IMETHOD SetUseMap(const nsAString & aUseMap) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetUseMap(aUseMap); } \
+  NS_SCRIPTABLE NS_IMETHOD GetVspace(PRInt32 *aVspace) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVspace(aVspace); } \
+  NS_SCRIPTABLE NS_IMETHOD SetVspace(PRInt32 aVspace) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetVspace(aVspace); } \
+  NS_SCRIPTABLE NS_IMETHOD GetWidth(nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetWidth(aWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetWidth(const nsAString & aWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetWidth(aWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContentDocument(nsIDOMDocument * *aContentDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentDocument(aContentDocument); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

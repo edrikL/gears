@@ -98,26 +98,33 @@ SQLITE_CSRCS	+= \
 #-----------------------------------------------------------------------------
 # third_party/libpng
 
-# TODO(andreip): fix errors in zlib before building this for wince
-ifneq ($(OS),wince)
 THIRD_PARTY_VPATH	+= \
 		third_party/libpng \
 		$(NULL)
 
+# Common Files
 THIRD_PARTY_CSRCS	+= \
 		png.c \
 		pngerror.c \
-		pnggccrd.c \
 		pngget.c \
 		pngmem.c \
+		pngset.c \
+		pngtrans.c \
+		$(NULL)
+# Reading PNGs
+THIRD_PARTY_CSRCS	+= \
 		pngpread.c \
 		pngread.c \
 		pngrio.c \
 		pngrtran.c \
 		pngrutil.c \
-		pngset.c \
-		pngtrans.c \
-		pngvcrd.c \
+		$(NULL)
+
+ifeq ($(OFFICIAL_BUILD),1)
+  # The following files are not yet needed; exclude them to save size.
+else
+# Writing PNGs
+THIRD_PARTY_CSRCS	+= \
 		pngwio.c \
 		pngwrite.c \
 		pngwtran.c \
@@ -128,25 +135,36 @@ endif
 #-----------------------------------------------------------------------------
 # third_party/zlib
 
-# TODO(andreip): fix errors in gzio.c for wince
-ifneq ($(OS),wince)
 THIRD_PARTY_VPATH	+= \
 		third_party/zlib \
 		$(NULL)
 
+# Common Files
 THIRD_PARTY_CSRCS	+= \
 		adler32.c \
-		compress.c \
-		crc32.c \
-		deflate.c \
-		gzio.c \
-		infback.c \
-		inffast.c \
-		inflate.c \
-		inftrees.c \
-		trees.c \
-		uncompr.c \
 		zutil.c \
+		$(NULL)
+# Inflate Algorithm (use inflate or infback, but not both)
+THIRD_PARTY_CSRCS	+= \
+		inflate.c \
+		inffast.c \
+		inftrees.c \
+		$(NULL)
+
+ifeq ($(OFFICIAL_BUILD),1)
+  # The following files are not yet needed; exclude them to save size.
+else
+# Other Algorithms
+THIRD_PARTY_CSRCS	+= \
+		compress.c \
+		deflate.c \
+		uncompr.c \
+		$(NULL)
+# Other Common Files
+THIRD_PARTY_CSRCS	+= \
+		crc32.c \
+		gzio.c \
+		trees.c \
 		$(NULL)
 endif
 
@@ -283,11 +301,11 @@ THIRD_PARTY_CPPSRCS	+= \
 		$(NULL)
 
 
-FF_VPATH	+= \
+FF3_VPATH	+= \
 		base/common \
 		$(NULL)
 
-FF_CPPSRCS	+= \
+FF3_CPPSRCS	+= \
 		exception_handler_win32.cc \
 		$(NULL)
 
@@ -311,6 +329,45 @@ NPAPI_CPPSRCS	+= \
 endif
 
 #-----------------------------------------------------------------------------
+# third_party/googleurl
+# Only NPAPI needs this right now.  When the other builds want it, change
+# NPAPI_* to THIRD_PARTY_*.
+
+NPAPI_VPATH	+= \
+		third_party/googleurl/src \
+		third_party/icu38/source/common \
+		$(NULL)
+
+NPAPI_CPPSRCS	+= \
+		gurl.cc \
+		url_canon_etc.cc \
+		url_canon_fileurl.cc \
+		url_canon_host.cc \
+		url_canon_internal.cc \
+		url_canon_ip.cc \
+		url_canon_path.cc \
+		url_canon_pathurl.cc \
+		url_canon_query.cc \
+		url_canon_relative.cc \
+		url_canon_stdurl.cc \
+		url_parse.cc \
+		url_parse_file.cc \
+		url_util.cc \
+		utf_impl.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# third_party/modp_b64
+
+THIRD_PARTY_VPATH	+= \
+		third_party/modp_b64 \
+		$(NULL)
+
+THIRD_PARTY_CPPSRCS	+= \
+		modp_b64.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # base/common
 
 COMMON_VPATH	+= \
@@ -329,7 +386,7 @@ COMMON_CPPSRCS	+= \
 		$(NULL)
 # WARNING: Think carefully before listing any non-third-party C/C++ files in
 # COMMON_*SRCS. Such files only get built once per platform (not per browser),
-# and BROWSER_* #defines are not obeyed. Instead, use FF_CPPSRCS and IE_CPPSRCS
+# and BROWSER_* #defines are not obeyed.  Instead, use $(BROWSER)_CPPSRCS
 # when possible.
 # One important exception: unit-tested code is only built once per platform, so
 # it should be listed in CPPSRCS. Thus it must not use any BROWSER_* #defines,
@@ -339,64 +396,83 @@ COMMON_CPPSRCS	+= \
 
 
 #-----------------------------------------------------------------------------
-# base/firefox
+# base/common (built for all browsers)
 
-FF_VPATH	+= \
+$(BROWSER)_VPATH	+= \
 		base/common \
-		base/firefox \
 		$(NULL)
 
-FF_M4SRCS	+= \
-		install.rdf.m4 \
-		$(NULL)
-
-FF_IDLSRCS	+= \
-		base_interface_ff.idl \
-		$(NULL)
-
-FF_CPPSRCS	+= \
+$(BROWSER)_CPPSRCS	+= \
+		async_router.cc \
 		base_class.cc \
 		base_class_test.cc \
-		dom_utils.cc \
+		base64.cc \
+		circular_buffer_test.cc \
+		database_name_table.cc \
 		file.cc \
-		file_posix.cc \
 		file_test.cc \
-		file_win32.cc \
 		html_event_monitor.cc \
-		html_event_monitor_ff.cc \
-		ipc_message_queue_null.cc \
 		http_utils.cc \
-		js_runner_ff.cc \
-		js_runner_ff_marshaling.cc \
+		js_marshal.cc \
 		js_runner_utils.cc \
 		js_types.cc \
 		message_queue.cc \
-		message_queue_ff.cc \
 		message_service.cc \
 		message_service_test.cc \
-		module.cc \
 		mutex.cc \
 		name_value_table.cc \
-		ns_file_utils.cc \
+		name_value_table_test.cc \
 		paths.cc \
-		paths_ff.cc \
 		permissions_db.cc \
+		permissions_db_test.cc \
 		png_utils.cc \
+		scoped_refptr_test.cc \
 		security_model.cc \
 		security_model_test.cc \
 		serialization.cc \
 		serialization_test.cc \
 		shortcut_table.cc \
 		sqlite_wrapper.cc \
+		sqlite_wrapper_test.cc \
 		stopwatch.cc \
-		stopwatch_ff.cc \
 		string16.cc \
 		string_utils.cc \
 		string_utils_test.cc \
 		thread_locals.cc \
 		url_utils.cc \
-		url_utils_ff.cc \
 		url_utils_test.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# base/firefox
+
+FF3_VPATH	+= \
+		base/common \
+		base/firefox \
+		$(NULL)
+
+FF3_M4SRCS	+= \
+		install.rdf.m4 \
+		$(NULL)
+
+FF3_IDLSRCS	+= \
+		base_interface_ff.idl \
+		$(NULL)
+
+FF3_CPPSRCS	+= \
+		dom_utils.cc \
+		file_posix.cc \
+		file_win32.cc \
+		html_event_monitor_ff.cc \
+		ipc_message_queue_null.cc \
+		js_runner_ff.cc \
+		js_runner_ff_marshaling.cc \
+		message_queue_ff.cc \
+		module.cc \
+		ns_file_utils.cc \
+		paths_ff.cc \
+		stopwatch_ff.cc \
+		url_utils_ff.cc \
 		xpcom_dynamic_load.cc \
 		$(NULL)
 
@@ -420,117 +496,36 @@ IE_IDLSRCS	+= \
 
 IE_CPPSRCS	+= \
 		activex_utils.cc \
-		base_class.cc \
-		base_class_test.cc \
 		bho.cc \
 		detect_version_collision.cc \
-		file.cc \
-		file_test.cc \
+		js_runner_ie.cc \
+		message_queue_ie.cc \
+		module.cc \
+		module_wrapper.cc \
+		paths_ie.cc \
+		stopwatch_ie.cc \
+		url_utils_ie.cc \
+		vista_utils.cc \
+		$(NULL)
+ifeq ($(OS),win32)
+IE_CPPSRCS	+= \
 		file_win32.cc \
-		html_event_monitor.cc \
 		html_event_monitor_ie.cc \
 		ipc_message_queue_win32.cc \
-		http_utils.cc \
+		ipc_message_queue_win32_test.cc \
 		ie_version.cc \
-		js_runner_ie.cc \
-		js_runner_utils.cc \
-		js_types.cc \
-		message_queue.cc \
-		message_queue_ie.cc \
-		message_service.cc \
-		message_service_test.cc \
-		module.cc \
-		module_wrapper.cc \
-		mutex.cc \
-		name_value_table.cc \
-		paths.cc \
-		paths_ie.cc \
-		permissions_db.cc \
-		png_utils.cc \
-		security_model.cc \
-		security_model_test.cc \
-		serialization.cc \
-		serialization_test.cc \
-		shortcut_table.cc \
-		sqlite_wrapper.cc \
-		stopwatch.cc \
-		stopwatch_ie.cc \
-		string16.cc \
-		string_utils.cc \
-		string_utils_test.cc \
-		thread_locals.cc \
-		url_utils.cc \
-		url_utils_ie.cc \
-		url_utils_test.cc \
-		vista_utils.cc \
 		$(NULL)
-
-IE_LINK_EXTRAS	+= \
-		$(IE_OUTDIR)/module.res \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
-# base/iemobile
-
-IEMOBILE_VPATH	+= \
-		base/common \
-		base/ie \
-		$(NULL)
-
-IEMOBILE_M4SRCS	+= \
-		bho.rgs.m4 \
-		interfaces.idl.m4 \
-		module.rgs.m4 \
-		$(NULL)
-
-IEMOBILE_IDLSRCS	+= \
-		interfaces.idl \
-		$(NULL)
-
-IEMOBILE_CPPSRCS	+= \
-		activex_utils.cc \
-		base_class.cc \
-		bho.cc \
-		detect_version_collision.cc \
-		file.cc \
-		file_test.cc \
+endif
+ifeq ($(OS),wince)
+IE_CPPSRCS	+= \
+		common_ie.cc \
 		file_wince.cc \
 		ipc_message_queue_null.cc \
-		http_utils.cc \
-		js_runner_ie.cc \
-		js_runner_utils.cc \
-		js_types.cc \
-		message_queue.cc \
-		message_queue_ie.cc \
-		message_service.cc \
-		message_service_test.cc \
-		module.cc \
-		module_wrapper.cc \
-		mutex.cc \
-		name_value_table.cc \
-		paths.cc \
-		paths_ie.cc \
-		permissions_db.cc \
-		security_model.cc \
-		security_model_test.cc \
-		serialization.cc \
-		serialization_test.cc \
-		shortcut_table.cc \
-		sqlite_wrapper.cc \
-		stopwatch.cc \
-		stopwatch_ie.cc \
-		string16.cc \
-		string_utils.cc \
-		string_utils_test.cc \
-		thread_locals.cc \
-		url_utils.cc \
-		url_utils_ie.cc \
-		url_utils_test.cc \
-		vista_utils.cc \
 		wince_compatibility.cc \
 		$(NULL)
+endif
 
-IEMOBILE_LINK_EXTRAS	+= \
+IE_LINK_EXTRAS	+= \
 		$(IE_OUTDIR)/module.res \
 		$(NULL)
 
@@ -550,51 +545,21 @@ NPAPI_IDLSRCS	+= \
 		$(NULL)
 
 NPAPI_CPPSRCS	+= \
-		activex_utils.cc \
-		base_class.cc \
-		base_class_test.cc \
 		browser_utils.cc \
-		file.cc \
 		file_win32.cc \
-		file_test.cc \
-		html_event_monitor.cc \
 		html_event_monitor_np.cc \
 		ipc_message_queue_null.cc \
-		http_utils.cc \
 		ie_version.cc \
 		js_runner_np.cc \
-		js_runner_utils.cc \
-		js_types.cc \
-		message_queue.cc \
 		message_queue_ie.cc \
-		message_service.cc \
-		message_service_test.cc \
 		module.cc \
-		mutex.cc \
-		name_value_table.cc \
 		np_utils.cc \
 		npn_bindings.cc \
 		npp_bindings.cc \
-		paths.cc \
 		paths_np.cc \
-		permissions_db.cc \
 		plugin.cc \
-		png_utils.cc \
-		security_model.cc \
-		security_model_test.cc \
-		serialization.cc \
-		serialization_test.cc \
-		shortcut_table.cc \
-		sqlite_wrapper.cc \
-		stopwatch.cc \
 		stopwatch_ie.cc \
-		string16.cc \
-		string_utils.cc \
-		string_utils_test.cc \
-		thread_locals.cc \
-		url_utils.cc \
-		url_utils_ie.cc \
-		url_utils_test.cc \
+		url_utils_np.cc \
 		vista_utils.cc \
 		$(NULL)
 
@@ -606,29 +571,64 @@ NPAPI_LINK_EXTRAS  += \
 endif
 
 #-----------------------------------------------------------------------------
-# console/firefox
+# vista_broker
 
-FF_VPATH	+= \
+IE_VPATH += \
+		base/common \
+		desktop \
+		vista_broker \
+		$(NULL)
+
+VISTA_BROKER_CPPSRCS += \
+		shortcut_utils_win32.cc \
+		string16.cc \
+		string_utils.cc \
+		vista_broker.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# launch_url_with_browser
+
+# TODO(cprince): Break all ties between OSX_LAUNCHURL and FF3_VPATH when we
+# support a non-Firefox browser on Mac.
+FF3_VPATH += \
+		base/safari \
+		$(NULL)
+
+OSX_LAUNCHURL_CPPSRCS += \
+		launch_url_in_browser.cc \
+		$(NULL)
+
+
+#-----------------------------------------------------------------------------
+# console/common (built for all browsers)
+
+$(BROWSER)_VPATH	+= \
 		console/common \
-		console/firefox \
-		$(NULL)
-
-FF_M4SRCS	+= \
-		console.idl.m4 \
-		$(NULL)
-
-FF_IDLSRCS	+= \
-		console.idl \
 		$(NULL)
 
 # console/common
-FF_CPPSRCS	+= \
+$(BROWSER)_CPPSRCS	+= \
 		console.cc \
 		js_callback_logging_backend.cc \
 		$(NULL)
 
+#-----------------------------------------------------------------------------
 # console/firefox
-FF_CPPSRCS	+= \
+
+FF3_VPATH	+= \
+		console/firefox \
+		$(NULL)
+
+FF3_M4SRCS	+= \
+		console.idl.m4 \
+		$(NULL)
+
+FF3_IDLSRCS	+= \
+		console.idl \
+		$(NULL)
+
+FF3_CPPSRCS	+= \
 		console_ff.cc \
 		$(NULL)
 
@@ -636,7 +636,6 @@ FF_CPPSRCS	+= \
 # console/ie
 
 IE_VPATH	+= \
-		console/common \
 		console/ie \
 		$(NULL)
 
@@ -644,67 +643,61 @@ IE_IDLSRCS	+= \
 		console.idl \
 		$(NULL)
 
-# console/common
-IE_CPPSRCS	+= \
-		console.cc \
-		js_callback_logging_backend.cc \
-		$(NULL)
-
-# console/ie
 IE_CPPSRCS	+= \
 		console_ie.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
-# console/iemobile
+# console/npapi
 
-IEMOBILE_VPATH  += \
-		console\common \
-		console\ie \
+NPAPI_VPATH	+= \
+		console/npapi \
 		$(NULL)
 
-IEMOBILE_IDLSRCS += \
-	 	console.idl \
+NPAPI_IDLSRCS	+= \
 		$(NULL)
 
-# console/common
-IEMOBILE_CPPSRCS += \
-		console.cc \
-		js_callback_logging_backend.cc \
+NPAPI_CPPSRCS	+= \
+		console_np.cc \
 		$(NULL)
 
-# console/ie
-IEMOBILE_CPPSRCS += \
-		console_ie.cc \
+
+#-----------------------------------------------------------------------------
+# database/common (built for all browsers)
+
+$(BROWSER)_VPATH	+= \
+		database/common \
+		$(NULL)
+
+$(BROWSER)_CPPSRCS	+= \
+		database.cc \
+		database_utils.cc \
+		database_utils_test.cc \
+		result_set.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
 # database/firefox
 
-FF_VPATH	+= \
-		database/common \
+FF3_VPATH	+= \
 		database/firefox \
 		$(NULL)
 
-FF_M4SRCS	+= \
+FF3_M4SRCS	+= \
 		database.idl.m4 \
 		$(NULL)
 
-FF_IDLSRCS	+= \
+FF3_IDLSRCS	+= \
 		database.idl \
 		$(NULL)
 
-FF_CPPSRCS	+= \
-		database.cc \
-		database_utils.cc \
-		result_set.cc \
+FF3_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
 # database/ie
 
 IE_VPATH	+= \
-		database/common \
 		database/ie \
 		$(NULL)
 
@@ -713,34 +706,12 @@ IE_IDLSRCS	+= \
 		$(NULL)
 
 IE_CPPSRCS	+= \
-		database.cc \
-		database_utils.cc \
-		result_set.cc \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
-# database/iemobile
-
-IEMOBILE_VPATH	+= \
-		database/common \
-		database/ie \
-		$(NULL)
-
-IEMOBILE_IDLSRCS += \
-		database.idl \
-		$(NULL)
-
-IEMOBILE_CPPSRCS += \
-		database.cc \
-		database_utils.cc \
-		result_set.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
 # database/npapi
 
 NPAPI_VPATH	+= \
-		database/common \
 		database/npapi \
 		$(NULL)
 
@@ -748,18 +719,15 @@ NPAPI_IDLSRCS	+= \
 		$(NULL)
 
 NPAPI_CPPSRCS	+= \
-		database.cc \
-		database_utils.cc \
-		result_set.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
 # database2
-SHARED_VPATH += \
+$(BROWSER)_VPATH += \
 		database2 \
 		$(NULL)
 
-SHARED_CPPSRCS += \
+$(BROWSER)_CPPSRCS += \
 		connection.cc \
 		commands.cc \
 		database2.cc \
@@ -773,66 +741,40 @@ SHARED_CPPSRCS += \
 #-----------------------------------------------------------------------------
 # desktop
 
-FF_VPATH	+= \
+$(BROWSER)_VPATH += \
 		desktop \
 		$(NULL)
 
-FF_M4SRCS	+= \
-		desktop_ff.idl.m4 \
-		$(NULL)
-
-FF_IDLSRCS	+= \
-		desktop_ff.idl \
-		$(NULL)
-
-FF_CPPSRCS	+= \
+$(BROWSER)_CPPSRCS += \
 		desktop.cc \
-		desktop_utils_linux.cc \
-		desktop_utils_osx.cc \
-		desktop_utils_win32.cc \
+		desktop_linux.cc \
+		desktop_osx.cc \
+		desktop_win32.cc \
+		dll_data_wince.cc \
+		shortcut_utils_win32.cc \
 		$(NULL)
 
-IE_VPATH	+= \
-		desktop \
+# TODO: Implement file dialogs for NPAPI
+ifneq ($(BROWSER),NPAPI)
+$(BROWSER)_CPPSRCS += \
+		file_dialog.cc \
+		file_dialog_gtk.cc \
+		file_dialog_osx.cc \
+		file_dialog_utils.cc \
+		file_dialog_win32.cc \
 		$(NULL)
-
-IEMOBILE_VPATH	+= \
-		desktop \
-		$(NULL)
-
-IE_IDLSRCS	+= \
-		desktop_ie.idl \
-		$(NULL)
-
-IEMOBILE_IDLSRCS += \
-		desktop_ie.idl \
-		$(NULL)
-
-IE_CPPSRCS	+= \
-		desktop.cc \
-		desktop_utils_win32.cc \
-		$(NULL)
-
-NPAPI_VPATH     += \
-                desktop \
-                $(NULL)
-
-NPAPI_IDLSRCS	+= \
-		$(NULL)
-
-NPAPI_CPPSRCS   += \
-                $(NULL)
+endif
 
 #-----------------------------------------------------------------------------
 # test
 
 ifeq ($(MODE),dbg)
 
-SHARED_VPATH += \
+$(BROWSER)_VPATH += \
 		cctests \
 		$(NULL)
 
-SHARED_CPPSRCS += \
+$(BROWSER)_CPPSRCS += \
 		test.cc \
 		$(NULL)
 
@@ -859,10 +801,10 @@ COMMON_M4SRCS_I18N += \
 		shortcuts_dialog.html.m4 \
 		$(NULL)
 
-FF_VPATH	+= \
+FF3_VPATH	+= \
 		$(NULL)
 
-FF_M4SRCS_I18N	+= \
+FF3_M4SRCS_I18N	+= \
 		i18n.dtd.m4 \
 		$(NULL)
 
@@ -874,36 +816,38 @@ IE_M4SRCS	+= \
 		ui_html.rc.m4 \
 		$(NULL)
 
-IEMOBILE_VPATH	+= \
-		ui/generated \
+
+#-----------------------------------------------------------------------------
+# ui/common (built for all browsers)
+
+$(BROWSER)_VPATH += \
+		ui/common \
 		$(NULL)
 
-IEMOBILE_M4SRCS	+= \
-		ui_html.rc.m4 \
+$(BROWSER)_CPPSRCS += \
+		html_dialog.cc \
+		permissions_dialog.cc \
+		settings_dialog.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
 # ui/firefox
 
-FF_VPATH	+= \
-		ui/common \
+FF3_VPATH	+= \
 		ui/firefox \
 		$(NULL)
 
-FF_M4SRCS	+= \
+FF3_M4SRCS	+= \
 		browser-overlay.js.m4 \
 		browser-overlay.xul.m4 \
 		chrome.manifest.m4 \
 		$(NULL)
 
-FF_IDLSRCS	+= \
+FF3_IDLSRCS	+= \
 		ui_utils.idl \
 		$(NULL)
 
-FF_CPPSRCS	+= \
-		html_dialog.cc \
-		permissions_dialog.cc \
-		settings_dialog.cc \
+FF3_CPPSRCS	+= \
 		ui_utils.cc \
 		$(NULL)
 
@@ -911,7 +855,6 @@ FF_CPPSRCS	+= \
 # ui/ie
 
 IE_VPATH	+= \
-		ui/common \
 		ui/ie \
 		$(NULL)
 
@@ -925,10 +868,6 @@ IE_IDLSRCS	+= \
 		$(NULL)
 
 IE_CPPSRCS	+= \
-		html_dialog.cc \
-		html_dialog_host.cc \
-		permissions_dialog.cc \
-		settings_dialog.cc \
 		tools_menu_item.cc \
 		$(NULL)
 
@@ -936,72 +875,58 @@ IE_LINK_EXTRAS	+= \
 		$(IE_OUTDIR)/ui_resources.res \
 		$(NULL)
 
-#-----------------------------------------------------------------------------
-# ui/iemobile
-
-IEMOBILE_VPATH	+= \
-		ui/common \
-		ui/ie \
+# Additional files specific to Win32 or WinCE.
+ifeq ($(OS),win32)
+IE_CPPSRCS	+= \
+		html_dialog_host.cc \
 		$(NULL)
+endif
 
-IEMOBILE_M4SRCS	+= \
-		ui_resources.rc.m4 \
+ifeq ($(OS),wince)
+IE_M4SRCS	+= \
 		html_dialog_bridge_iemobile.rgs.m4 \
-		tools_menu_item.rgs.m4 \
 		$(NULL)
 
-IEMOBILE_IDLSRCS	+= \
-		html_dialog_host.idl \
+IE_IDLSRCS	+= \
 		html_dialog_host_iemobile.idl \
 		html_dialog_bridge_iemobile.idl \
 		$(NULL)
 
-IEMOBILE_CPPSRCS	+= \
-		html_dialog.cc \
+IE_CPPSRCS	+= \
 		html_dialog_host_iemobile.cc \
-		permissions_dialog.cc \
 		html_dialog_bridge_iemobile.cc \
-		settings_dialog.cc \
-		tools_menu_item.cc \
 		$(NULL)
-
-IEMOBILE_LINK_EXTRAS	+= \
-		$(IE_OUTDIR)/ui_resources.res \
-		$(NULL)
+endif
 
 #-----------------------------------------------------------------------------
 # ui/npapi
 
 NPAPI_VPATH	+= \
-		ui/common \
 		$(NULL)
 
 NPAPI_IDLSRCS	+= \
 		$(NULL)
 
 NPAPI_CPPSRCS	+= \
-		html_dialog.cc \
-		permissions_dialog.cc \
-		settings_dialog.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
 # workerpool/firefox
 
-FF_VPATH	+= \
+FF3_VPATH	+= \
 		workerpool/common \
 		workerpool/firefox \
 		$(NULL)
 
-FF_M4SRCS	+= \
+FF3_M4SRCS	+= \
 		workerpool.idl.m4 \
 		$(NULL)
 
-FF_IDLSRCS	+= \
+FF3_IDLSRCS	+= \
 		workerpool.idl \
 		$(NULL)
 
-FF_CPPSRCS	+= \
+FF3_CPPSRCS	+= \
 		workerpool.cc \
 		workerpool_utils.cc \
 		$(NULL)
@@ -1024,23 +949,6 @@ IE_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
-# workerpool/iemobile
-
-IEMOBILE_VPATH	+= \
-		workerpool/common \
-		workerpool/ie \
-		$(NULL)
-
-IEMOBILE_IDLSRCS	+= \
-		workerpool.idl \
-		$(NULL)
-
-IEMOBILE_CPPSRCS	+= \
-		workerpool.cc \
-		workerpool_utils.cc \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
 # workerpool/npapi
 
 NPAPI_VPATH	+= \
@@ -1056,61 +964,23 @@ NPAPI_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # timer
 
-FF_VPATH	+= \
-		timer\
-		$(NULL)
-
-FF_IDLSRCS	+= \
-		timer_ff.idl \
-		$(NULL)
-
-FF_CPPSRCS	+= \
-		timer.cc \
-		$(NULL)
-
-IE_VPATH	+= \
+$(BROWSER)_VPATH += \
 		timer \
 		$(NULL)
 
-IE_IDLSRCS	+= \
-		timer_ie.idl \
-		$(NULL)
-
-IE_CPPSRCS	+= \
+$(BROWSER)_CPPSRCS += \
 		timer.cc \
 		$(NULL)
 
-IEMOBILE_VPATH	+= \
-		timer \
-		$(NULL)
-
-IEMOBILE_IDLSRCS	+= \
-		timer_ie.idl \
-		$(NULL)
-
-IEMOBILE_CPPSRCS	+= \
-		timer.cc \
-		$(NULL)
 
 #-----------------------------------------------------------------------------
-# localserver/ff
+# localserver/common (built for all browsers)
 
-FF_VPATH	+= \
-		base/common \
+$(BROWSER)_VPATH += \
 		localserver/common \
-		localserver/firefox \
 		$(NULL)
 
-FF_M4SRCS	+= \
-		localserver.idl.m4 \
-		$(NULL)
-
-FF_IDLSRCS	+= \
-		localserver.idl \
-		$(NULL)
-
-# localserver/common
-FF_CPPSRCS	+= \
+$(BROWSER)_CPPSRCS += \
 		blob_store.cc \
 		capture_task.cc \
 		file_store.cc \
@@ -1120,15 +990,26 @@ FF_CPPSRCS	+= \
 		localserver_db.cc \
 		managed_resource_store.cc \
 		manifest.cc \
-		name_value_table_test.cc \
-		permissions_db_test.cc \
 		resource_store.cc \
-		sqlite_wrapper_test.cc \
 		update_task.cc \
 		$(NULL)
 
+#-----------------------------------------------------------------------------
 # localserver/firefox
-FF_CPPSRCS	+= \
+
+FF3_VPATH	+= \
+		localserver/firefox \
+		$(NULL)
+
+FF3_M4SRCS	+= \
+		localserver.idl.m4 \
+		$(NULL)
+
+FF3_IDLSRCS	+= \
+		localserver.idl \
+		$(NULL)
+
+FF3_CPPSRCS	+= \
 		async_task_ff.cc \
 		cache_intercept.cc \
 		file_submitter_ff.cc \
@@ -1143,8 +1024,6 @@ FF_CPPSRCS	+= \
 # localserver/ie
 
 IE_VPATH	+= \
-		base/common \
-		localserver/common \
 		localserver/ie \
 		$(NULL)
 
@@ -1152,119 +1031,40 @@ IE_IDLSRCS	+= \
 		localserver.idl \
 		$(NULL)
 
-# localserver/common		
-IE_CPPSRCS	+= \
-		blob_store.cc \
-		capture_task.cc \
-		file_store.cc \
-		http_constants.cc \
-		http_cookies.cc \
-		localserver.cc \
-		localserver_db.cc \
-		managed_resource_store.cc \
-		manifest.cc \
-		name_value_table_test.cc \
-		permissions_db_test.cc \
-		resource_store.cc \
-		sqlite_wrapper_test.cc \
-		update_task.cc \
-		$(NULL)
-
-# localserver/ie
 IE_CPPSRCS	+= \
 		async_task_ie.cc \
+		http_handler_ie.cc \
+		http_request_ie.cc \
+		localserver_ie.cc \
+		managed_resource_store_ie.cc \
+		resource_store_ie.cc \
+		update_task_ie.cc \
+		urlmon_utils.cc \
+		$(NULL)
+
+# Additional files specific to Win32 or WinCE.
+ifeq ($(OS),win32)
+IE_CPPSRCS	+= \
 		file_submit_behavior.cc \
 		file_submitter_ie.cc \
-		http_handler_ie.cc \
-		http_request_ie.cc \
-		localserver_ie.cc \
-		managed_resource_store_ie.cc \
-		resource_store_ie.cc \
-		update_task_ie.cc \
-		urlmon_utils.cc \
 		$(NULL)
+endif
 
-#-----------------------------------------------------------------------------
-# localserver/iemobile
-
-IEMOBILE_VPATH	+= \
-		base/common \
-		localserver/common \
-		localserver/ie \
-		$(NULL)
-
-IEMOBILE_IDLSRCS	+= \
-		localserver.idl \
-		$(NULL)
-
-# localserver/common		
-IEMOBILE_CPPSRCS	+= \
-		blob_store.cc \
-		capture_task.cc \
-		file_store.cc \
-		http_constants.cc \
-		http_cookies.cc \
-		localserver.cc \
-		localserver_db.cc \
-		managed_resource_store.cc \
-		manifest.cc \
-		name_value_table_test.cc \
-		permissions_db_test.cc \
-		resource_store.cc \
-		sqlite_wrapper_test.cc \
-		update_task.cc \
-		$(NULL)
-
-# localserver/iemobile
-IEMOBILE_CPPSRCS	+= \
-		async_task_ie.cc \
-		http_handler_ie.cc \
-		http_request_ie.cc \
-		localserver_ie.cc \
-		managed_resource_store_ie.cc \
-		resource_store_ie.cc \
-		update_task_ie.cc \
-		urlmon_utils.cc \
-		$(NULL)
+ifeq ($(OS),wince)
+endif
 
 #-----------------------------------------------------------------------------
 # localserver/npapi
 
+# TODO(mpcomplete): Remove NPAPI reliance on localserver/ie, someday.
 NPAPI_VPATH	+= \
-		base/common \
-		localserver/common \
 		localserver/npapi \
 		localserver/ie \
-		$(NULL)
-
-NPAPI_M4SRCS	+= \
 		$(NULL)
 
 NPAPI_IDLSRCS	+= \
 		$(NULL)
 
-NPAPI_CPPSRCS	+= \
-		$(NULL)
-
-# localserver/common
-NPAPI_CPPSRCS	+= \
-		blob_store.cc \
-		capture_task.cc \
-		file_store.cc \
-		http_constants.cc \
-		http_cookies.cc \
-		localserver.cc \
-		localserver_db.cc \
-		managed_resource_store.cc \
-		manifest.cc \
-		name_value_table_test.cc \
-		permissions_db_test.cc \
-		resource_store.cc \
-		sqlite_wrapper_test.cc \
-		update_task.cc \
-		$(NULL)
-
-# localserver/npapi
 NPAPI_CPPSRCS	+= \
 		async_task_np.cc \
 		file_submitter_np.cc \
@@ -1277,22 +1077,23 @@ NPAPI_CPPSRCS	+= \
 		resource_store_np.cc \
 		$(NULL)		
 
-#-----------------------------------------------------------------------------
-# httprequest/ff
 
-FF_VPATH	+= \
+#-----------------------------------------------------------------------------
+# httprequest/firefox
+
+FF3_VPATH	+= \
 		httprequest/firefox \
 		$(NULL)
 
-FF_M4SRCS	+= \
+FF3_M4SRCS	+= \
 		httprequest.idl.m4 \
 		$(NULL)
 
-FF_IDLSRCS	+= \
+FF3_IDLSRCS	+= \
 		httprequest.idl \
 		$(NULL)
 
-FF_CPPSRCS	+= \
+FF3_CPPSRCS	+= \
 		httprequest_ff.cc \
 		$(NULL)
 
@@ -1312,117 +1113,75 @@ IE_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
-# httprequest/iemobile
+# httprequest/npapi
 
-IEMOBILE_VPATH	+= \
-		httprequest/ie \
+NPAPI_VPATH += \
+		httprequest/npapi \
 		$(NULL)
 
-IEMOBILE_IDLSRCS	+= \
-		httprequest.idl \
+NPAPI_IDLSRCS	+= \
 		$(NULL)
 
-IEMOBILE_CPPSRCS	+= \
-		httprequest_ie.cc \
+NPAPI_CPPSRCS	+= \
+		httprequest_np.cc \
 		$(NULL)
+
 
 #-----------------------------------------------------------------------------
 # blob
 
-FF_VPATH	+= \
+ifneq ($(OFFICIAL_BUILD),1)
+# (built for all browsers)
+$(BROWSER)_VPATH += \
 		blob \
 		$(NULL)
 
-FF_IDLSRCS	+= \
-		blob_ff.idl \
-		$(NULL)
-
-FF_CPPSRCS	+= \
-		blob_ff.cc \
+$(BROWSER)_CPPSRCS += \
+		blob.cc \
+		blob_test.cc \
 		buffer_blob.cc \
 		file_blob.cc \
+		slice_blob.cc \
 		$(NULL)
 
-IE_VPATH	+= \
-		blob \
+# TODO(bpm): Make this cross-browser, not Firefox-only.
+FF3_CPPSRCS	+= \
+		blob_input_stream_ff.cc \
+		blob_input_stream_ff_test.cc \
 		$(NULL)
+endif # not OFFICIAL_BUILD
 
-IE_IDLSRCS	+= \
-		blob_ie.idl \
-		$(NULL)
-
-IE_CPPSRCS	+= \
-		blob_ie.cc \
-		buffer_blob.cc \
-		file_blob.cc \
-		$(NULL)
-
-IEMOBILE_VPATH	+= \
-		blob \
-		$(NULL)
-
-IEMOBILE_IDLSRCS	+= \
-		blob_ie.idl \
-		$(NULL)
-
-IEMOBILE_CPPSRCS	+= \
-		blob_ie.cc \
-		buffer_blob.cc \
-		file_blob.cc \
-		$(NULL)
 
 #-----------------------------------------------------------------------------
-# image/ff
+# image
 
 ifneq ($(OFFICIAL_BUILD),1)
-FF_VPATH	+= \
-		image/common \
-		image/firefox \
+ifneq ($(OS),wince)
+$(BROWSER)_VPATH += \
+		image \
 		$(NULL)
 
-FF_M4SRCS	+= \
-		image.idl.m4 \
-		$(NULL)
-
-FF_IDLSRCS	+= \
-		image.idl \
-		$(NULL)
-
-FF_CPPSRCS	+= \
+$(BROWSER)_CPPSRCS += \
+		backing_image.cc \
 		image.cc \
-		image_ff.cc \
-		image_loader_ff.cc \
+		image_loader.cc \
 		$(NULL)
-
-IE_VPATH	+= \
-		image/common \
-		image/ie \
-		$(NULL)
-
-IE_IDLSRCS	+= \
-		image.idl \
-		$(NULL)
-
-IE_CPPSRCS	+= \
-		image.cc \
-		image_ie.cc \
-		image_loader_ie.cc \
-		$(NULL)
-endif
+endif # not wince
+endif # not OFFICIAL_BUILD
 
 #-----------------------------------------------------------------------------
-# factory/ff
+# factory/firefox
 
-FF_VPATH	+= \
+FF3_VPATH	+= \
 		factory/common \
 		factory/firefox \
 		$(NULL)
 
-FF_IDLSRCS	+= \
+FF3_IDLSRCS	+= \
 		factory.idl \
 		$(NULL)
 
-FF_CPPSRCS	+= \
+FF3_CPPSRCS	+= \
 		factory.cc \
 		factory_utils.cc \
 		$(NULL)
@@ -1449,27 +1208,6 @@ IE_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
-# factory/iemobile
-
-IEMOBILE_VPATH	+= \
-		factory/common \
-		factory/ie \
-		$(NULL)
-
-IEMOBILE_M4SRCS	+= \
-		factory.rgs.m4 \
-		$(NULL)
-
-IEMOBILE_IDLSRCS += \
-		factory.idl \
-		$(NULL)
-
-IEMOBILE_CPPSRCS += \
-		factory.cc \
-		factory_utils.cc \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
 # factory/npapi
 
 NPAPI_VPATH	+= \
@@ -1489,22 +1227,46 @@ NPAPI_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # installer/iemobile
 
-IEMOBILE_VPATH	+= \
+ifeq ($(OS),wince)
+IE_VPATH	+= \
 		installer/iemobile \
-		base/common \
 		$(NULL)
 
-IEMOBILE_M4SRCS	+= \
-		setup.rc.m4 \
-		$(NULL)
-
-IEMOBILE_SETUP_CPPSRCS += \
+IE_WINCESETUP_CPPSRCS += \
 		process_restarter.cc \
 		setup.cc \
 		$(NULL)
 
-IEMOBILE_SETUP_LINK_EXTRAS += \
+IE_WINCESETUP_LINK_EXTRAS += \
 		$(IE_OUTDIR)/setup.res \
 		$(NULL)
 
+# List these setup-related items in IE_FOO just so they get built before used.
+IE_M4SRCS	+= \
+		setup.rc.m4 \
+		$(NULL)
+
+IE_LINK_EXTRAS += \
+		$(IE_OUTDIR)/setup.res \
+		$(NULL)
+
+# TODO(cprince): move this to another source path; IE_MODULE_DLL links it.
+IE_CPPSRCS += \
+		cab_updater.cc \
+		$(NULL)
+
+endif # wince
+
+
+#-----------------------------------------------------------------------------
+# Add any hard-coded "FF3_" sources to the FF2_ sources.
+
+FF2_VPATH += $(FF3_VPATH)
+FF2_M4SRCS += $(FF3_M4SRCS)
+FF2_M4SRCS_I18N += $(FF3_M4SRCS_I18N)
+FF2_IDLSRCS += $(FF3_IDLSRCS)
+FF2_CPPSRCS += $(FF3_CPPSRCS)
+
+
+#-----------------------------------------------------------------------------
 include tools/rules.mk

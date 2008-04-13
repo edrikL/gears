@@ -166,6 +166,8 @@ NS_IMETHODIMP GearsDatabase::Execute(//const nsAString &expr,
   scoped_sqlite3_stmt_ptr stmt;
   sql_status = sqlite3_prepare16_v2(db_, expr.c_str(), -1, &stmt, NULL);
   if ((sql_status != SQLITE_OK) || (stmt.get() == NULL)) {
+    sql_status = SqlitePoisonIfCorrupt(db_, sql_status);
+
     std::string16 msg;
     BuildSqliteErrorString(STRING16(L"SQLite prepare() failed."),
                            sql_status, db_, &msg);
@@ -256,6 +258,7 @@ NS_IMETHODIMP GearsDatabase::Execute(//const nsAString &expr,
     } // END: switch(JS_TypeOfValue(cx, t))
 
     if (sql_status != SQLITE_OK) {
+      sql_status = SqlitePoisonIfCorrupt(db_, sql_status);
       RETURN_EXCEPTION(STRING16(L"Could not bind arguments to expression."));
     }
 
@@ -297,6 +300,15 @@ NS_IMETHODIMP GearsDatabase::GetLastInsertRowId(PRInt64 *retval) {
     RETURN_EXCEPTION(STRING16(L"lastInsertRowId is out of range."));
   }
   *retval = rowid;
+  RETURN_NORMAL();
+}
+
+NS_IMETHODIMP GearsDatabase::GetRowsAffected(PRInt32 *retval) {
+  if (!db_) {
+    RETURN_EXCEPTION(STRING16(L"Database handle was NULL."));
+  }
+
+  *retval = sqlite3_changes(db_);
   RETURN_NORMAL();
 }
 

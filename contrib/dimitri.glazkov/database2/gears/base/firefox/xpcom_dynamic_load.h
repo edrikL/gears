@@ -28,12 +28,17 @@
 
 #ifndef GEARS_BASE_FIREFOX_XPCOM_DYNAMIC_LOAD_H__
 #define GEARS_BASE_FIREFOX_XPCOM_DYNAMIC_LOAD_H__
-
+#if BROWSER_FF3
+#include <gecko_internal/nscore.h>
+#endif
 #include <gecko_internal/xptcall.h>
 
-
 // global function pointers that get initialized at load time
+#if BROWSER_FF2
 typedef XPTC_PUBLIC_API(nsresult) (*XPTC_InvokeByIndex_Type)(
+#else
+typedef nsresult (*XPTC_InvokeByIndex_Type)(
+#endif
     nsISupports* that, PRUint32 methodIndex,
     PRUint32 paramCount, nsXPTCVariant* params);
 extern XPTC_InvokeByIndex_Type XPTC_InvokeByIndex_DynLoad;

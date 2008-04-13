@@ -31,45 +31,45 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLFrameElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLFrameElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLFRAMEELEMENT_IID)
 
   /* attribute DOMString frameBorder; */
-  NS_IMETHOD GetFrameBorder(nsAString & aFrameBorder) = 0;
-  NS_IMETHOD SetFrameBorder(const nsAString & aFrameBorder) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFrameBorder(nsAString & aFrameBorder) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFrameBorder(const nsAString & aFrameBorder) = 0;
 
   /* attribute DOMString longDesc; */
-  NS_IMETHOD GetLongDesc(nsAString & aLongDesc) = 0;
-  NS_IMETHOD SetLongDesc(const nsAString & aLongDesc) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLongDesc(nsAString & aLongDesc) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetLongDesc(const nsAString & aLongDesc) = 0;
 
   /* attribute DOMString marginHeight; */
-  NS_IMETHOD GetMarginHeight(nsAString & aMarginHeight) = 0;
-  NS_IMETHOD SetMarginHeight(const nsAString & aMarginHeight) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMarginHeight(nsAString & aMarginHeight) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetMarginHeight(const nsAString & aMarginHeight) = 0;
 
   /* attribute DOMString marginWidth; */
-  NS_IMETHOD GetMarginWidth(nsAString & aMarginWidth) = 0;
-  NS_IMETHOD SetMarginWidth(const nsAString & aMarginWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMarginWidth(nsAString & aMarginWidth) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetMarginWidth(const nsAString & aMarginWidth) = 0;
 
   /* attribute DOMString name; */
-  NS_IMETHOD GetName(nsAString & aName) = 0;
-  NS_IMETHOD SetName(const nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) = 0;
 
   /* attribute boolean noResize; */
-  NS_IMETHOD GetNoResize(PRBool *aNoResize) = 0;
-  NS_IMETHOD SetNoResize(PRBool aNoResize) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetNoResize(PRBool *aNoResize) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetNoResize(PRBool aNoResize) = 0;
 
   /* attribute DOMString scrolling; */
-  NS_IMETHOD GetScrolling(nsAString & aScrolling) = 0;
-  NS_IMETHOD SetScrolling(const nsAString & aScrolling) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetScrolling(nsAString & aScrolling) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetScrolling(const nsAString & aScrolling) = 0;
 
   /* attribute DOMString src; */
-  NS_IMETHOD GetSrc(nsAString & aSrc) = 0;
-  NS_IMETHOD SetSrc(const nsAString & aSrc) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSrc(nsAString & aSrc) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSrc(const nsAString & aSrc) = 0;
 
   /* readonly attribute nsIDOMDocument contentDocument; */
-  NS_IMETHOD GetContentDocument(nsIDOMDocument * *aContentDocument) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetContentDocument(nsIDOMDocument * *aContentDocument) = 0;
 
 };
 
@@ -77,63 +77,63 @@ class NS_NO_VTABLE nsIDOMHTMLFrameElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLFRAMEELEMENT \
-  NS_IMETHOD GetFrameBorder(nsAString & aFrameBorder); \
-  NS_IMETHOD SetFrameBorder(const nsAString & aFrameBorder); \
-  NS_IMETHOD GetLongDesc(nsAString & aLongDesc); \
-  NS_IMETHOD SetLongDesc(const nsAString & aLongDesc); \
-  NS_IMETHOD GetMarginHeight(nsAString & aMarginHeight); \
-  NS_IMETHOD SetMarginHeight(const nsAString & aMarginHeight); \
-  NS_IMETHOD GetMarginWidth(nsAString & aMarginWidth); \
-  NS_IMETHOD SetMarginWidth(const nsAString & aMarginWidth); \
-  NS_IMETHOD GetName(nsAString & aName); \
-  NS_IMETHOD SetName(const nsAString & aName); \
-  NS_IMETHOD GetNoResize(PRBool *aNoResize); \
-  NS_IMETHOD SetNoResize(PRBool aNoResize); \
-  NS_IMETHOD GetScrolling(nsAString & aScrolling); \
-  NS_IMETHOD SetScrolling(const nsAString & aScrolling); \
-  NS_IMETHOD GetSrc(nsAString & aSrc); \
-  NS_IMETHOD SetSrc(const nsAString & aSrc); \
-  NS_IMETHOD GetContentDocument(nsIDOMDocument * *aContentDocument); 
+  NS_SCRIPTABLE NS_IMETHOD GetFrameBorder(nsAString & aFrameBorder); \
+  NS_SCRIPTABLE NS_IMETHOD SetFrameBorder(const nsAString & aFrameBorder); \
+  NS_SCRIPTABLE NS_IMETHOD GetLongDesc(nsAString & aLongDesc); \
+  NS_SCRIPTABLE NS_IMETHOD SetLongDesc(const nsAString & aLongDesc); \
+  NS_SCRIPTABLE NS_IMETHOD GetMarginHeight(nsAString & aMarginHeight); \
+  NS_SCRIPTABLE NS_IMETHOD SetMarginHeight(const nsAString & aMarginHeight); \
+  NS_SCRIPTABLE NS_IMETHOD GetMarginWidth(nsAString & aMarginWidth); \
+  NS_SCRIPTABLE NS_IMETHOD SetMarginWidth(const nsAString & aMarginWidth); \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD GetNoResize(PRBool *aNoResize); \
+  NS_SCRIPTABLE NS_IMETHOD SetNoResize(PRBool aNoResize); \
+  NS_SCRIPTABLE NS_IMETHOD GetScrolling(nsAString & aScrolling); \
+  NS_SCRIPTABLE NS_IMETHOD SetScrolling(const nsAString & aScrolling); \
+  NS_SCRIPTABLE NS_IMETHOD GetSrc(nsAString & aSrc); \
+  NS_SCRIPTABLE NS_IMETHOD SetSrc(const nsAString & aSrc); \
+  NS_SCRIPTABLE NS_IMETHOD GetContentDocument(nsIDOMDocument * *aContentDocument); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLFRAMEELEMENT(_to) \
-  NS_IMETHOD GetFrameBorder(nsAString & aFrameBorder) { return _to GetFrameBorder(aFrameBorder); } \
-  NS_IMETHOD SetFrameBorder(const nsAString & aFrameBorder) { return _to SetFrameBorder(aFrameBorder); } \
-  NS_IMETHOD GetLongDesc(nsAString & aLongDesc) { return _to GetLongDesc(aLongDesc); } \
-  NS_IMETHOD SetLongDesc(const nsAString & aLongDesc) { return _to SetLongDesc(aLongDesc); } \
-  NS_IMETHOD GetMarginHeight(nsAString & aMarginHeight) { return _to GetMarginHeight(aMarginHeight); } \
-  NS_IMETHOD SetMarginHeight(const nsAString & aMarginHeight) { return _to SetMarginHeight(aMarginHeight); } \
-  NS_IMETHOD GetMarginWidth(nsAString & aMarginWidth) { return _to GetMarginWidth(aMarginWidth); } \
-  NS_IMETHOD SetMarginWidth(const nsAString & aMarginWidth) { return _to SetMarginWidth(aMarginWidth); } \
-  NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
-  NS_IMETHOD GetNoResize(PRBool *aNoResize) { return _to GetNoResize(aNoResize); } \
-  NS_IMETHOD SetNoResize(PRBool aNoResize) { return _to SetNoResize(aNoResize); } \
-  NS_IMETHOD GetScrolling(nsAString & aScrolling) { return _to GetScrolling(aScrolling); } \
-  NS_IMETHOD SetScrolling(const nsAString & aScrolling) { return _to SetScrolling(aScrolling); } \
-  NS_IMETHOD GetSrc(nsAString & aSrc) { return _to GetSrc(aSrc); } \
-  NS_IMETHOD SetSrc(const nsAString & aSrc) { return _to SetSrc(aSrc); } \
-  NS_IMETHOD GetContentDocument(nsIDOMDocument * *aContentDocument) { return _to GetContentDocument(aContentDocument); } 
+  NS_SCRIPTABLE NS_IMETHOD GetFrameBorder(nsAString & aFrameBorder) { return _to GetFrameBorder(aFrameBorder); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFrameBorder(const nsAString & aFrameBorder) { return _to SetFrameBorder(aFrameBorder); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLongDesc(nsAString & aLongDesc) { return _to GetLongDesc(aLongDesc); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLongDesc(const nsAString & aLongDesc) { return _to SetLongDesc(aLongDesc); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMarginHeight(nsAString & aMarginHeight) { return _to GetMarginHeight(aMarginHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMarginHeight(const nsAString & aMarginHeight) { return _to SetMarginHeight(aMarginHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMarginWidth(nsAString & aMarginWidth) { return _to GetMarginWidth(aMarginWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMarginWidth(const nsAString & aMarginWidth) { return _to SetMarginWidth(aMarginWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNoResize(PRBool *aNoResize) { return _to GetNoResize(aNoResize); } \
+  NS_SCRIPTABLE NS_IMETHOD SetNoResize(PRBool aNoResize) { return _to SetNoResize(aNoResize); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScrolling(nsAString & aScrolling) { return _to GetScrolling(aScrolling); } \
+  NS_SCRIPTABLE NS_IMETHOD SetScrolling(const nsAString & aScrolling) { return _to SetScrolling(aScrolling); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSrc(nsAString & aSrc) { return _to GetSrc(aSrc); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSrc(const nsAString & aSrc) { return _to SetSrc(aSrc); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContentDocument(nsIDOMDocument * *aContentDocument) { return _to GetContentDocument(aContentDocument); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLFRAMEELEMENT(_to) \
-  NS_IMETHOD GetFrameBorder(nsAString & aFrameBorder) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFrameBorder(aFrameBorder); } \
-  NS_IMETHOD SetFrameBorder(const nsAString & aFrameBorder) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFrameBorder(aFrameBorder); } \
-  NS_IMETHOD GetLongDesc(nsAString & aLongDesc) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLongDesc(aLongDesc); } \
-  NS_IMETHOD SetLongDesc(const nsAString & aLongDesc) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLongDesc(aLongDesc); } \
-  NS_IMETHOD GetMarginHeight(nsAString & aMarginHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMarginHeight(aMarginHeight); } \
-  NS_IMETHOD SetMarginHeight(const nsAString & aMarginHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMarginHeight(aMarginHeight); } \
-  NS_IMETHOD GetMarginWidth(nsAString & aMarginWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMarginWidth(aMarginWidth); } \
-  NS_IMETHOD SetMarginWidth(const nsAString & aMarginWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMarginWidth(aMarginWidth); } \
-  NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
-  NS_IMETHOD GetNoResize(PRBool *aNoResize) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNoResize(aNoResize); } \
-  NS_IMETHOD SetNoResize(PRBool aNoResize) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetNoResize(aNoResize); } \
-  NS_IMETHOD GetScrolling(nsAString & aScrolling) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScrolling(aScrolling); } \
-  NS_IMETHOD SetScrolling(const nsAString & aScrolling) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetScrolling(aScrolling); } \
-  NS_IMETHOD GetSrc(nsAString & aSrc) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSrc(aSrc); } \
-  NS_IMETHOD SetSrc(const nsAString & aSrc) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSrc(aSrc); } \
-  NS_IMETHOD GetContentDocument(nsIDOMDocument * *aContentDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentDocument(aContentDocument); } 
+  NS_SCRIPTABLE NS_IMETHOD GetFrameBorder(nsAString & aFrameBorder) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFrameBorder(aFrameBorder); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFrameBorder(const nsAString & aFrameBorder) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFrameBorder(aFrameBorder); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLongDesc(nsAString & aLongDesc) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLongDesc(aLongDesc); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLongDesc(const nsAString & aLongDesc) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLongDesc(aLongDesc); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMarginHeight(nsAString & aMarginHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMarginHeight(aMarginHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMarginHeight(const nsAString & aMarginHeight) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMarginHeight(aMarginHeight); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMarginWidth(nsAString & aMarginWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMarginWidth(aMarginWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMarginWidth(const nsAString & aMarginWidth) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMarginWidth(aMarginWidth); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetNoResize(PRBool *aNoResize) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNoResize(aNoResize); } \
+  NS_SCRIPTABLE NS_IMETHOD SetNoResize(PRBool aNoResize) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetNoResize(aNoResize); } \
+  NS_SCRIPTABLE NS_IMETHOD GetScrolling(nsAString & aScrolling) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetScrolling(aScrolling); } \
+  NS_SCRIPTABLE NS_IMETHOD SetScrolling(const nsAString & aScrolling) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetScrolling(aScrolling); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSrc(nsAString & aSrc) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSrc(aSrc); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSrc(const nsAString & aSrc) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSrc(aSrc); } \
+  NS_SCRIPTABLE NS_IMETHOD GetContentDocument(nsIDOMDocument * *aContentDocument) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentDocument(aContentDocument); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

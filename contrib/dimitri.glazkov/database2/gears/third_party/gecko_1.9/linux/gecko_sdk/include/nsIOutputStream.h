@@ -53,7 +53,7 @@ typedef NS_CALLBACK(nsReadSegmentFun)(nsIOutputStream *aOutStream,
   {0x0d0acd2a, 0x61b4, 0x11d4, \
     { 0x98, 0x77, 0x00, 0xc0, 0x4f, 0xa0, 0xcf, 0x4a }}
 
-class NS_NO_VTABLE nsIOutputStream : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIOutputStream : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IOUTPUTSTREAM_IID)
@@ -81,7 +81,7 @@ class NS_NO_VTABLE nsIOutputStream : public nsISupports {
      *   the calling thread (non-blocking mode only)
      */
   /* void close (); */
-  NS_IMETHOD Close(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Close(void) = 0;
 
   /**
      * Flush the stream.
@@ -90,7 +90,7 @@ class NS_NO_VTABLE nsIOutputStream : public nsISupports {
      *   the calling thread (non-blocking mode only)
      */
   /* void flush (); */
-  NS_IMETHOD Flush(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Flush(void) = 0;
 
   /**
      * Write data into the stream.
@@ -105,7 +105,7 @@ class NS_NO_VTABLE nsIOutputStream : public nsISupports {
      * @throws <other-error> on failure
      */
   /* unsigned long write (in string aBuf, in unsigned long aCount); */
-  NS_IMETHOD Write(const char *aBuf, PRUint32 aCount, PRUint32 *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Write(const char *aBuf, PRUint32 aCount, PRUint32 *_retval) = 0;
 
   /**
      * Writes data into the stream from an input stream.
@@ -126,7 +126,7 @@ class NS_NO_VTABLE nsIOutputStream : public nsISupports {
      * the output stream's other Write method.
      */
   /* unsigned long writeFrom (in nsIInputStream aFromStream, in unsigned long aCount); */
-  NS_IMETHOD WriteFrom(nsIInputStream *aFromStream, PRUint32 aCount, PRUint32 *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD WriteFrom(nsIInputStream *aFromStream, PRUint32 aCount, PRUint32 *_retval) = 0;
 
   /**
      * Low-level write method that has access to the stream's underlying buffer.
@@ -163,7 +163,7 @@ class NS_NO_VTABLE nsIOutputStream : public nsISupports {
      * once its write method is unable to accept any data without blocking.
      */
   /* boolean isNonBlocking (); */
-  NS_IMETHOD IsNonBlocking(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsNonBlocking(PRBool *_retval) = 0;
 
 };
 
@@ -171,30 +171,30 @@ class NS_NO_VTABLE nsIOutputStream : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIOUTPUTSTREAM \
-  NS_IMETHOD Close(void); \
-  NS_IMETHOD Flush(void); \
-  NS_IMETHOD Write(const char *aBuf, PRUint32 aCount, PRUint32 *_retval); \
-  NS_IMETHOD WriteFrom(nsIInputStream *aFromStream, PRUint32 aCount, PRUint32 *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD Close(void); \
+  NS_SCRIPTABLE NS_IMETHOD Flush(void); \
+  NS_SCRIPTABLE NS_IMETHOD Write(const char *aBuf, PRUint32 aCount, PRUint32 *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD WriteFrom(nsIInputStream *aFromStream, PRUint32 aCount, PRUint32 *_retval); \
   NS_IMETHOD WriteSegments(nsReadSegmentFun aReader, void * aClosure, PRUint32 aCount, PRUint32 *_retval); \
-  NS_IMETHOD IsNonBlocking(PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD IsNonBlocking(PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIOUTPUTSTREAM(_to) \
-  NS_IMETHOD Close(void) { return _to Close(); } \
-  NS_IMETHOD Flush(void) { return _to Flush(); } \
-  NS_IMETHOD Write(const char *aBuf, PRUint32 aCount, PRUint32 *_retval) { return _to Write(aBuf, aCount, _retval); } \
-  NS_IMETHOD WriteFrom(nsIInputStream *aFromStream, PRUint32 aCount, PRUint32 *_retval) { return _to WriteFrom(aFromStream, aCount, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Close(void) { return _to Close(); } \
+  NS_SCRIPTABLE NS_IMETHOD Flush(void) { return _to Flush(); } \
+  NS_SCRIPTABLE NS_IMETHOD Write(const char *aBuf, PRUint32 aCount, PRUint32 *_retval) { return _to Write(aBuf, aCount, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD WriteFrom(nsIInputStream *aFromStream, PRUint32 aCount, PRUint32 *_retval) { return _to WriteFrom(aFromStream, aCount, _retval); } \
   NS_IMETHOD WriteSegments(nsReadSegmentFun aReader, void * aClosure, PRUint32 aCount, PRUint32 *_retval) { return _to WriteSegments(aReader, aClosure, aCount, _retval); } \
-  NS_IMETHOD IsNonBlocking(PRBool *_retval) { return _to IsNonBlocking(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD IsNonBlocking(PRBool *_retval) { return _to IsNonBlocking(_retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIOUTPUTSTREAM(_to) \
-  NS_IMETHOD Close(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Close(); } \
-  NS_IMETHOD Flush(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Flush(); } \
-  NS_IMETHOD Write(const char *aBuf, PRUint32 aCount, PRUint32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Write(aBuf, aCount, _retval); } \
-  NS_IMETHOD WriteFrom(nsIInputStream *aFromStream, PRUint32 aCount, PRUint32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->WriteFrom(aFromStream, aCount, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Close(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Close(); } \
+  NS_SCRIPTABLE NS_IMETHOD Flush(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Flush(); } \
+  NS_SCRIPTABLE NS_IMETHOD Write(const char *aBuf, PRUint32 aCount, PRUint32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Write(aBuf, aCount, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD WriteFrom(nsIInputStream *aFromStream, PRUint32 aCount, PRUint32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->WriteFrom(aFromStream, aCount, _retval); } \
   NS_IMETHOD WriteSegments(nsReadSegmentFun aReader, void * aClosure, PRUint32 aCount, PRUint32 *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->WriteSegments(aReader, aClosure, aCount, _retval); } \
-  NS_IMETHOD IsNonBlocking(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsNonBlocking(_retval); } 
+  NS_SCRIPTABLE NS_IMETHOD IsNonBlocking(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsNonBlocking(_retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

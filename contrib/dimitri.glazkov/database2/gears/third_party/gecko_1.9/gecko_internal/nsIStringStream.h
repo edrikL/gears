@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/xpcom/io/nsIStringStream.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/xpcom/io/nsIStringStream.idl
  */
 
 #ifndef __gen_nsIStringStream_h__
@@ -30,7 +30,7 @@
  *
  * @status UNDER_REVIEW
  */
-class NS_NO_VTABLE nsIStringInputStream : public nsIInputStream {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIStringInputStream : public nsIInputStream {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISTRINGINPUTSTREAM_IID)
@@ -50,7 +50,7 @@ class NS_NO_VTABLE nsIStringInputStream : public nsIInputStream {
      * from a JS string to a C++ character array.
      */
   /* void setData (in string data, in long dataLen); */
-  NS_IMETHOD SetData(const char *data, PRInt32 dataLen) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetData(const char *data, PRInt32 dataLen) = 0;
 
   /**
      * NOTE: the following methods are designed to give C++ code added control
@@ -84,19 +84,19 @@ class NS_NO_VTABLE nsIStringInputStream : public nsIInputStream {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSISTRINGINPUTSTREAM \
-  NS_IMETHOD SetData(const char *data, PRInt32 dataLen); \
+  NS_SCRIPTABLE NS_IMETHOD SetData(const char *data, PRInt32 dataLen); \
   NS_IMETHOD AdoptData(char * data, PRInt32 dataLen); \
   NS_IMETHOD ShareData(const char *data, PRInt32 dataLen); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSISTRINGINPUTSTREAM(_to) \
-  NS_IMETHOD SetData(const char *data, PRInt32 dataLen) { return _to SetData(data, dataLen); } \
+  NS_SCRIPTABLE NS_IMETHOD SetData(const char *data, PRInt32 dataLen) { return _to SetData(data, dataLen); } \
   NS_IMETHOD AdoptData(char * data, PRInt32 dataLen) { return _to AdoptData(data, dataLen); } \
   NS_IMETHOD ShareData(const char *data, PRInt32 dataLen) { return _to ShareData(data, dataLen); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSISTRINGINPUTSTREAM(_to) \
-  NS_IMETHOD SetData(const char *data, PRInt32 dataLen) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetData(data, dataLen); } \
+  NS_SCRIPTABLE NS_IMETHOD SetData(const char *data, PRInt32 dataLen) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetData(data, dataLen); } \
   NS_IMETHOD AdoptData(char * data, PRInt32 dataLen) { return !_to ? NS_ERROR_NULL_POINTER : _to->AdoptData(data, dataLen); } \
   NS_IMETHOD ShareData(const char *data, PRInt32 dataLen) { return !_to ? NS_ERROR_NULL_POINTER : _to->ShareData(data, dataLen); } 
 

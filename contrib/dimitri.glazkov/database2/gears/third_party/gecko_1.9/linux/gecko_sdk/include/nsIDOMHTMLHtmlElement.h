@@ -31,14 +31,14 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLHtmlElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLHtmlElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLHTMLELEMENT_IID)
 
   /* attribute DOMString version; */
-  NS_IMETHOD GetVersion(nsAString & aVersion) = 0;
-  NS_IMETHOD SetVersion(const nsAString & aVersion) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetVersion(nsAString & aVersion) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetVersion(const nsAString & aVersion) = 0;
 
 };
 
@@ -46,18 +46,18 @@ class NS_NO_VTABLE nsIDOMHTMLHtmlElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLHTMLELEMENT \
-  NS_IMETHOD GetVersion(nsAString & aVersion); \
-  NS_IMETHOD SetVersion(const nsAString & aVersion); 
+  NS_SCRIPTABLE NS_IMETHOD GetVersion(nsAString & aVersion); \
+  NS_SCRIPTABLE NS_IMETHOD SetVersion(const nsAString & aVersion); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLHTMLELEMENT(_to) \
-  NS_IMETHOD GetVersion(nsAString & aVersion) { return _to GetVersion(aVersion); } \
-  NS_IMETHOD SetVersion(const nsAString & aVersion) { return _to SetVersion(aVersion); } 
+  NS_SCRIPTABLE NS_IMETHOD GetVersion(nsAString & aVersion) { return _to GetVersion(aVersion); } \
+  NS_SCRIPTABLE NS_IMETHOD SetVersion(const nsAString & aVersion) { return _to SetVersion(aVersion); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLHTMLELEMENT(_to) \
-  NS_IMETHOD GetVersion(nsAString & aVersion) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVersion(aVersion); } \
-  NS_IMETHOD SetVersion(const nsAString & aVersion) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetVersion(aVersion); } 
+  NS_SCRIPTABLE NS_IMETHOD GetVersion(nsAString & aVersion) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVersion(aVersion); } \
+  NS_SCRIPTABLE NS_IMETHOD SetVersion(const nsAString & aVersion) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetVersion(aVersion); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

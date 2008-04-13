@@ -285,6 +285,13 @@ class WebCacheDB : SQLTransactionListener {
   // Returns the entry for the given version_id and url
   bool FindEntry(int64 version_id, const char16 *url, EntryInfo *entry);
 
+  // Returns the entries for the given version_id
+  bool FindEntries(int64 version_id, std::vector<EntryInfo> *entries);
+
+  // Returns the entries for the given vector of version_id
+  bool FindEntries(std::vector<int64> *version_ids,
+                   std::vector<EntryInfo> *entries);
+
   // Returns the entries for version_id that do no have an associated payload
   // or a redirect specified.
   bool FindEntriesHavingNoResponse(int64 version_id,
@@ -346,6 +353,8 @@ class WebCacheDB : SQLTransactionListener {
   bool Service(const char16 *url,
                int64 *payload_id,
                std::string16 *redirect_url);
+
+  bool ServiceGearsInspectorUrl(const char16 *url, PayloadInfo *payload);
 
   bool ServiceGearsJsUrl(bool head_only,
                          PayloadInfo *payload);

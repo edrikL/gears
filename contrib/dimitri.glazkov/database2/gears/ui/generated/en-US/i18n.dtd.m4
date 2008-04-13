@@ -24,6 +24,10 @@ WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
+<!-- IMPORTANT: Each ENTITY should be preceded by a comment explaining the
+context, which will be used for localization. -->
 
+<!-- Text of the menu item used to access the Gears settings Dialog -->
 <!ENTITY PRODUCT_SHORT_NAME_UQ.browser.settings "PRODUCT_FRIENDLY_NAME_UQ Settings">
+<!-- Menu access key for Gears in Firefox -->
 <!ENTITY PRODUCT_SHORT_NAME_UQ.browser.settings.accesskey "G">

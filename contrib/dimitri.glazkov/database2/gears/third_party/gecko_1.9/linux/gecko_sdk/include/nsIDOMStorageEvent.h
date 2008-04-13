@@ -33,7 +33,7 @@
  *
  * Event sent to a window when a storage area changes.
  */
-class NS_NO_VTABLE nsIDOMStorageEvent : public nsIDOMEvent {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMStorageEvent : public nsIDOMEvent {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMSTORAGEEVENT_IID)
@@ -43,19 +43,19 @@ class NS_NO_VTABLE nsIDOMStorageEvent : public nsIDOMEvent {
    * session storage.
    */
   /* readonly attribute DOMString domain; */
-  NS_IMETHOD GetDomain(nsAString & aDomain) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDomain(nsAString & aDomain) = 0;
 
   /**
    * Initialize a storage event.
    */
   /* void initStorageEvent (in DOMString typeArg, in boolean canBubbleArg, in boolean cancelableArg, in DOMString domainArg); */
-  NS_IMETHOD InitStorageEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, const nsAString & domainArg) = 0;
+  NS_SCRIPTABLE NS_IMETHOD InitStorageEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, const nsAString & domainArg) = 0;
 
   /**
    * Initialize a storage event.
    */
   /* void initStorageEventNS (in DOMString namespaceURIArg, in DOMString typeArg, in boolean canBubbleArg, in boolean cancelableArg, in DOMString domainArg); */
-  NS_IMETHOD InitStorageEventNS(const nsAString & namespaceURIArg, const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, const nsAString & domainArg) = 0;
+  NS_SCRIPTABLE NS_IMETHOD InitStorageEventNS(const nsAString & namespaceURIArg, const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, const nsAString & domainArg) = 0;
 
 };
 
@@ -63,21 +63,21 @@ class NS_NO_VTABLE nsIDOMStorageEvent : public nsIDOMEvent {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMSTORAGEEVENT \
-  NS_IMETHOD GetDomain(nsAString & aDomain); \
-  NS_IMETHOD InitStorageEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, const nsAString & domainArg); \
-  NS_IMETHOD InitStorageEventNS(const nsAString & namespaceURIArg, const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, const nsAString & domainArg); 
+  NS_SCRIPTABLE NS_IMETHOD GetDomain(nsAString & aDomain); \
+  NS_SCRIPTABLE NS_IMETHOD InitStorageEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, const nsAString & domainArg); \
+  NS_SCRIPTABLE NS_IMETHOD InitStorageEventNS(const nsAString & namespaceURIArg, const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, const nsAString & domainArg); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMSTORAGEEVENT(_to) \
-  NS_IMETHOD GetDomain(nsAString & aDomain) { return _to GetDomain(aDomain); } \
-  NS_IMETHOD InitStorageEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, const nsAString & domainArg) { return _to InitStorageEvent(typeArg, canBubbleArg, cancelableArg, domainArg); } \
-  NS_IMETHOD InitStorageEventNS(const nsAString & namespaceURIArg, const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, const nsAString & domainArg) { return _to InitStorageEventNS(namespaceURIArg, typeArg, canBubbleArg, cancelableArg, domainArg); } 
+  NS_SCRIPTABLE NS_IMETHOD GetDomain(nsAString & aDomain) { return _to GetDomain(aDomain); } \
+  NS_SCRIPTABLE NS_IMETHOD InitStorageEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, const nsAString & domainArg) { return _to InitStorageEvent(typeArg, canBubbleArg, cancelableArg, domainArg); } \
+  NS_SCRIPTABLE NS_IMETHOD InitStorageEventNS(const nsAString & namespaceURIArg, const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, const nsAString & domainArg) { return _to InitStorageEventNS(namespaceURIArg, typeArg, canBubbleArg, cancelableArg, domainArg); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMSTORAGEEVENT(_to) \
-  NS_IMETHOD GetDomain(nsAString & aDomain) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDomain(aDomain); } \
-  NS_IMETHOD InitStorageEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, const nsAString & domainArg) { return !_to ? NS_ERROR_NULL_POINTER : _to->InitStorageEvent(typeArg, canBubbleArg, cancelableArg, domainArg); } \
-  NS_IMETHOD InitStorageEventNS(const nsAString & namespaceURIArg, const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, const nsAString & domainArg) { return !_to ? NS_ERROR_NULL_POINTER : _to->InitStorageEventNS(namespaceURIArg, typeArg, canBubbleArg, cancelableArg, domainArg); } 
+  NS_SCRIPTABLE NS_IMETHOD GetDomain(nsAString & aDomain) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDomain(aDomain); } \
+  NS_SCRIPTABLE NS_IMETHOD InitStorageEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, const nsAString & domainArg) { return !_to ? NS_ERROR_NULL_POINTER : _to->InitStorageEvent(typeArg, canBubbleArg, cancelableArg, domainArg); } \
+  NS_SCRIPTABLE NS_IMETHOD InitStorageEventNS(const nsAString & namespaceURIArg, const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, const nsAString & domainArg) { return !_to ? NS_ERROR_NULL_POINTER : _to->InitStorageEventNS(namespaceURIArg, typeArg, canBubbleArg, cancelableArg, domainArg); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

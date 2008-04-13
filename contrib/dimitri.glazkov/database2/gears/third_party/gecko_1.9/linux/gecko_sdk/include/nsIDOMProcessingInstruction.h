@@ -22,7 +22,7 @@
   {0xa6cf907f, 0x15b3, 0x11d2, \
     { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 }}
 
-class NS_NO_VTABLE nsIDOMProcessingInstruction : public nsIDOMNode {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMProcessingInstruction : public nsIDOMNode {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMPROCESSINGINSTRUCTION_IID)
@@ -38,11 +38,11 @@ class NS_NO_VTABLE nsIDOMProcessingInstruction : public nsIDOMNode {
  * @status FROZEN
  */
   /* readonly attribute DOMString target; */
-  NS_IMETHOD GetTarget(nsAString & aTarget) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) = 0;
 
   /* attribute DOMString data; */
-  NS_IMETHOD GetData(nsAString & aData) = 0;
-  NS_IMETHOD SetData(const nsAString & aData) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetData(nsAString & aData) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetData(const nsAString & aData) = 0;
 
 };
 
@@ -50,21 +50,21 @@ class NS_NO_VTABLE nsIDOMProcessingInstruction : public nsIDOMNode {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMPROCESSINGINSTRUCTION \
-  NS_IMETHOD GetTarget(nsAString & aTarget); \
-  NS_IMETHOD GetData(nsAString & aData); \
-  NS_IMETHOD SetData(const nsAString & aData); 
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget); \
+  NS_SCRIPTABLE NS_IMETHOD GetData(nsAString & aData); \
+  NS_SCRIPTABLE NS_IMETHOD SetData(const nsAString & aData); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMPROCESSINGINSTRUCTION(_to) \
-  NS_IMETHOD GetTarget(nsAString & aTarget) { return _to GetTarget(aTarget); } \
-  NS_IMETHOD GetData(nsAString & aData) { return _to GetData(aData); } \
-  NS_IMETHOD SetData(const nsAString & aData) { return _to SetData(aData); } 
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) { return _to GetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD GetData(nsAString & aData) { return _to GetData(aData); } \
+  NS_SCRIPTABLE NS_IMETHOD SetData(const nsAString & aData) { return _to SetData(aData); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMPROCESSINGINSTRUCTION(_to) \
-  NS_IMETHOD GetTarget(nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTarget(aTarget); } \
-  NS_IMETHOD GetData(nsAString & aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetData(aData); } \
-  NS_IMETHOD SetData(const nsAString & aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetData(aData); } 
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD GetData(nsAString & aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetData(aData); } \
+  NS_SCRIPTABLE NS_IMETHOD SetData(const nsAString & aData) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetData(aData); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/netwerk/cache/public/nsICacheEntryDescriptor.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/cache/public/nsICacheEntryDescriptor.idl
  */
 
 #ifndef __gen_nsICacheEntryDescriptor_h__
@@ -38,7 +38,7 @@ class nsICacheMetaDataVisitor; /* forward declaration */
   {0x49c1a11d, 0xf5d2, 0x4f09, \
     { 0x82, 0x62, 0x55, 0x1e, 0x64, 0x90, 0x8a, 0xda }}
 
-class NS_NO_VTABLE nsICacheEntryDescriptor : public nsICacheEntryInfo {
+class NS_NO_VTABLE NS_SCRIPTABLE nsICacheEntryDescriptor : public nsICacheEntryInfo {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICACHEENTRYDESCRIPTOR_IID)
@@ -48,14 +48,14 @@ class NS_NO_VTABLE nsICacheEntryDescriptor : public nsICacheEntryInfo {
      * seconds since the Epoch).
      */
   /* void setExpirationTime (in PRUint32 expirationTime); */
-  NS_IMETHOD SetExpirationTime(PRUint32 expirationTime) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetExpirationTime(PRUint32 expirationTime) = 0;
 
   /**
      * Set the cache entry data size.  This will fail if the cache entry
      * IS stream based.
      */
   /* void setDataSize (in unsigned long size); */
-  NS_IMETHOD SetDataSize(PRUint32 size) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDataSize(PRUint32 size) = 0;
 
   /**
      * Open blocking input stream to cache data.  This will fail if the cache
@@ -70,7 +70,7 @@ class NS_NO_VTABLE nsICacheEntryDescriptor : public nsICacheEntryInfo {
      * @return blocking, unbuffered input stream.
      */
   /* nsIInputStream openInputStream (in unsigned long offset); */
-  NS_IMETHOD OpenInputStream(PRUint32 offset, nsIInputStream **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OpenInputStream(PRUint32 offset, nsIInputStream **_retval) = 0;
 
   /**
      * Open blocking output stream to cache data.  This will fail if the cache
@@ -88,7 +88,7 @@ class NS_NO_VTABLE nsICacheEntryDescriptor : public nsICacheEntryInfo {
      * @return blocking, unbuffered output stream.
      */
   /* nsIOutputStream openOutputStream (in unsigned long offset); */
-  NS_IMETHOD OpenOutputStream(PRUint32 offset, nsIOutputStream **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD OpenOutputStream(PRUint32 offset, nsIOutputStream **_retval) = 0;
 
   /**
      * Get/set the cache data element.  This will fail if the cache entry
@@ -96,8 +96,8 @@ class NS_NO_VTABLE nsICacheEntryDescriptor : public nsICacheEntryInfo {
      * object.  The object will be released when the cache entry is destroyed.
      */
   /* attribute nsISupports cacheElement; */
-  NS_IMETHOD GetCacheElement(nsISupports * *aCacheElement) = 0;
-  NS_IMETHOD SetCacheElement(nsISupports * aCacheElement) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCacheElement(nsISupports * *aCacheElement) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCacheElement(nsISupports * aCacheElement) = 0;
 
   /**
      * Get the access granted to this descriptor.  See nsICache.idl for the
@@ -105,29 +105,29 @@ class NS_NO_VTABLE nsICacheEntryDescriptor : public nsICacheEntryInfo {
      * corresponding meanings.
      */
   /* readonly attribute nsCacheAccessMode accessGranted; */
-  NS_IMETHOD GetAccessGranted(nsCacheAccessMode *aAccessGranted) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAccessGranted(nsCacheAccessMode *aAccessGranted) = 0;
 
   /**
      * Get/set the storage policy of the cache entry.  See nsICache.idl for
      * the definitions of the storage policies.
      */
   /* attribute nsCacheStoragePolicy storagePolicy; */
-  NS_IMETHOD GetStoragePolicy(nsCacheStoragePolicy *aStoragePolicy) = 0;
-  NS_IMETHOD SetStoragePolicy(nsCacheStoragePolicy aStoragePolicy) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetStoragePolicy(nsCacheStoragePolicy *aStoragePolicy) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetStoragePolicy(nsCacheStoragePolicy aStoragePolicy) = 0;
 
   /**
      * Get the disk file associated with the cache entry.
      */
   /* readonly attribute nsIFile file; */
-  NS_IMETHOD GetFile(nsIFile * *aFile) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFile(nsIFile * *aFile) = 0;
 
   /**
      * Get/set security info on the cache entry for this descriptor.  This fails
      * if the storage policy is not STORE_IN_MEMORY.
      */
   /* attribute nsISupports securityInfo; */
-  NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) = 0;
-  NS_IMETHOD SetSecurityInfo(nsISupports * aSecurityInfo) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetSecurityInfo(nsISupports * aSecurityInfo) = 0;
 
   /**
      * Doom the cache entry this descriptor references in order to slate it for 
@@ -139,23 +139,23 @@ class NS_NO_VTABLE nsICacheEntryDescriptor : public nsICacheEntryInfo {
      * instruct pending requests to skip the cache.
      */
   /* void doom (); */
-  NS_IMETHOD Doom(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Doom(void) = 0;
 
   /* void doomAndFailPendingRequests (in nsresult status); */
-  NS_IMETHOD DoomAndFailPendingRequests(nsresult status) = 0;
+  NS_SCRIPTABLE NS_IMETHOD DoomAndFailPendingRequests(nsresult status) = 0;
 
   /**
      * A writer must validate this cache object before any readers are given
      * a descriptor to the object.
      */
   /* void markValid (); */
-  NS_IMETHOD MarkValid(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD MarkValid(void) = 0;
 
   /**
      *  Explicitly close the descriptor (optional).
      */
   /* void close (); */
-  NS_IMETHOD Close(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Close(void) = 0;
 
   /**
      * Methods for accessing meta data.  Meta data is a table of key/value
@@ -163,16 +163,16 @@ class NS_NO_VTABLE nsICacheEntryDescriptor : public nsICacheEntryInfo {
      * charset, but they must be null terminated.
      */
   /* string getMetaDataElement (in string key); */
-  NS_IMETHOD GetMetaDataElement(const char *key, char **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetMetaDataElement(const char *key, char **_retval) = 0;
 
   /* void setMetaDataElement (in string key, in string value); */
-  NS_IMETHOD SetMetaDataElement(const char *key, const char *value) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetMetaDataElement(const char *key, const char *value) = 0;
 
   /**
      * Visitor will be called with key/value pair for each meta data element.
      */
   /* void visitMetaData (in nsICacheMetaDataVisitor visitor); */
-  NS_IMETHOD VisitMetaData(nsICacheMetaDataVisitor *visitor) = 0;
+  NS_SCRIPTABLE NS_IMETHOD VisitMetaData(nsICacheMetaDataVisitor *visitor) = 0;
 
 };
 
@@ -180,69 +180,69 @@ class NS_NO_VTABLE nsICacheEntryDescriptor : public nsICacheEntryInfo {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICACHEENTRYDESCRIPTOR \
-  NS_IMETHOD SetExpirationTime(PRUint32 expirationTime); \
-  NS_IMETHOD SetDataSize(PRUint32 size); \
-  NS_IMETHOD OpenInputStream(PRUint32 offset, nsIInputStream **_retval); \
-  NS_IMETHOD OpenOutputStream(PRUint32 offset, nsIOutputStream **_retval); \
-  NS_IMETHOD GetCacheElement(nsISupports * *aCacheElement); \
-  NS_IMETHOD SetCacheElement(nsISupports * aCacheElement); \
-  NS_IMETHOD GetAccessGranted(nsCacheAccessMode *aAccessGranted); \
-  NS_IMETHOD GetStoragePolicy(nsCacheStoragePolicy *aStoragePolicy); \
-  NS_IMETHOD SetStoragePolicy(nsCacheStoragePolicy aStoragePolicy); \
-  NS_IMETHOD GetFile(nsIFile * *aFile); \
-  NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo); \
-  NS_IMETHOD SetSecurityInfo(nsISupports * aSecurityInfo); \
-  NS_IMETHOD Doom(void); \
-  NS_IMETHOD DoomAndFailPendingRequests(nsresult status); \
-  NS_IMETHOD MarkValid(void); \
-  NS_IMETHOD Close(void); \
-  NS_IMETHOD GetMetaDataElement(const char *key, char **_retval); \
-  NS_IMETHOD SetMetaDataElement(const char *key, const char *value); \
-  NS_IMETHOD VisitMetaData(nsICacheMetaDataVisitor *visitor); 
+  NS_SCRIPTABLE NS_IMETHOD SetExpirationTime(PRUint32 expirationTime); \
+  NS_SCRIPTABLE NS_IMETHOD SetDataSize(PRUint32 size); \
+  NS_SCRIPTABLE NS_IMETHOD OpenInputStream(PRUint32 offset, nsIInputStream **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD OpenOutputStream(PRUint32 offset, nsIOutputStream **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheElement(nsISupports * *aCacheElement); \
+  NS_SCRIPTABLE NS_IMETHOD SetCacheElement(nsISupports * aCacheElement); \
+  NS_SCRIPTABLE NS_IMETHOD GetAccessGranted(nsCacheAccessMode *aAccessGranted); \
+  NS_SCRIPTABLE NS_IMETHOD GetStoragePolicy(nsCacheStoragePolicy *aStoragePolicy); \
+  NS_SCRIPTABLE NS_IMETHOD SetStoragePolicy(nsCacheStoragePolicy aStoragePolicy); \
+  NS_SCRIPTABLE NS_IMETHOD GetFile(nsIFile * *aFile); \
+  NS_SCRIPTABLE NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo); \
+  NS_SCRIPTABLE NS_IMETHOD SetSecurityInfo(nsISupports * aSecurityInfo); \
+  NS_SCRIPTABLE NS_IMETHOD Doom(void); \
+  NS_SCRIPTABLE NS_IMETHOD DoomAndFailPendingRequests(nsresult status); \
+  NS_SCRIPTABLE NS_IMETHOD MarkValid(void); \
+  NS_SCRIPTABLE NS_IMETHOD Close(void); \
+  NS_SCRIPTABLE NS_IMETHOD GetMetaDataElement(const char *key, char **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetMetaDataElement(const char *key, const char *value); \
+  NS_SCRIPTABLE NS_IMETHOD VisitMetaData(nsICacheMetaDataVisitor *visitor); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICACHEENTRYDESCRIPTOR(_to) \
-  NS_IMETHOD SetExpirationTime(PRUint32 expirationTime) { return _to SetExpirationTime(expirationTime); } \
-  NS_IMETHOD SetDataSize(PRUint32 size) { return _to SetDataSize(size); } \
-  NS_IMETHOD OpenInputStream(PRUint32 offset, nsIInputStream **_retval) { return _to OpenInputStream(offset, _retval); } \
-  NS_IMETHOD OpenOutputStream(PRUint32 offset, nsIOutputStream **_retval) { return _to OpenOutputStream(offset, _retval); } \
-  NS_IMETHOD GetCacheElement(nsISupports * *aCacheElement) { return _to GetCacheElement(aCacheElement); } \
-  NS_IMETHOD SetCacheElement(nsISupports * aCacheElement) { return _to SetCacheElement(aCacheElement); } \
-  NS_IMETHOD GetAccessGranted(nsCacheAccessMode *aAccessGranted) { return _to GetAccessGranted(aAccessGranted); } \
-  NS_IMETHOD GetStoragePolicy(nsCacheStoragePolicy *aStoragePolicy) { return _to GetStoragePolicy(aStoragePolicy); } \
-  NS_IMETHOD SetStoragePolicy(nsCacheStoragePolicy aStoragePolicy) { return _to SetStoragePolicy(aStoragePolicy); } \
-  NS_IMETHOD GetFile(nsIFile * *aFile) { return _to GetFile(aFile); } \
-  NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) { return _to GetSecurityInfo(aSecurityInfo); } \
-  NS_IMETHOD SetSecurityInfo(nsISupports * aSecurityInfo) { return _to SetSecurityInfo(aSecurityInfo); } \
-  NS_IMETHOD Doom(void) { return _to Doom(); } \
-  NS_IMETHOD DoomAndFailPendingRequests(nsresult status) { return _to DoomAndFailPendingRequests(status); } \
-  NS_IMETHOD MarkValid(void) { return _to MarkValid(); } \
-  NS_IMETHOD Close(void) { return _to Close(); } \
-  NS_IMETHOD GetMetaDataElement(const char *key, char **_retval) { return _to GetMetaDataElement(key, _retval); } \
-  NS_IMETHOD SetMetaDataElement(const char *key, const char *value) { return _to SetMetaDataElement(key, value); } \
-  NS_IMETHOD VisitMetaData(nsICacheMetaDataVisitor *visitor) { return _to VisitMetaData(visitor); } 
+  NS_SCRIPTABLE NS_IMETHOD SetExpirationTime(PRUint32 expirationTime) { return _to SetExpirationTime(expirationTime); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDataSize(PRUint32 size) { return _to SetDataSize(size); } \
+  NS_SCRIPTABLE NS_IMETHOD OpenInputStream(PRUint32 offset, nsIInputStream **_retval) { return _to OpenInputStream(offset, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD OpenOutputStream(PRUint32 offset, nsIOutputStream **_retval) { return _to OpenOutputStream(offset, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheElement(nsISupports * *aCacheElement) { return _to GetCacheElement(aCacheElement); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCacheElement(nsISupports * aCacheElement) { return _to SetCacheElement(aCacheElement); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAccessGranted(nsCacheAccessMode *aAccessGranted) { return _to GetAccessGranted(aAccessGranted); } \
+  NS_SCRIPTABLE NS_IMETHOD GetStoragePolicy(nsCacheStoragePolicy *aStoragePolicy) { return _to GetStoragePolicy(aStoragePolicy); } \
+  NS_SCRIPTABLE NS_IMETHOD SetStoragePolicy(nsCacheStoragePolicy aStoragePolicy) { return _to SetStoragePolicy(aStoragePolicy); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFile(nsIFile * *aFile) { return _to GetFile(aFile); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) { return _to GetSecurityInfo(aSecurityInfo); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSecurityInfo(nsISupports * aSecurityInfo) { return _to SetSecurityInfo(aSecurityInfo); } \
+  NS_SCRIPTABLE NS_IMETHOD Doom(void) { return _to Doom(); } \
+  NS_SCRIPTABLE NS_IMETHOD DoomAndFailPendingRequests(nsresult status) { return _to DoomAndFailPendingRequests(status); } \
+  NS_SCRIPTABLE NS_IMETHOD MarkValid(void) { return _to MarkValid(); } \
+  NS_SCRIPTABLE NS_IMETHOD Close(void) { return _to Close(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMetaDataElement(const char *key, char **_retval) { return _to GetMetaDataElement(key, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMetaDataElement(const char *key, const char *value) { return _to SetMetaDataElement(key, value); } \
+  NS_SCRIPTABLE NS_IMETHOD VisitMetaData(nsICacheMetaDataVisitor *visitor) { return _to VisitMetaData(visitor); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICACHEENTRYDESCRIPTOR(_to) \
-  NS_IMETHOD SetExpirationTime(PRUint32 expirationTime) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetExpirationTime(expirationTime); } \
-  NS_IMETHOD SetDataSize(PRUint32 size) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDataSize(size); } \
-  NS_IMETHOD OpenInputStream(PRUint32 offset, nsIInputStream **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OpenInputStream(offset, _retval); } \
-  NS_IMETHOD OpenOutputStream(PRUint32 offset, nsIOutputStream **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OpenOutputStream(offset, _retval); } \
-  NS_IMETHOD GetCacheElement(nsISupports * *aCacheElement) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCacheElement(aCacheElement); } \
-  NS_IMETHOD SetCacheElement(nsISupports * aCacheElement) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCacheElement(aCacheElement); } \
-  NS_IMETHOD GetAccessGranted(nsCacheAccessMode *aAccessGranted) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAccessGranted(aAccessGranted); } \
-  NS_IMETHOD GetStoragePolicy(nsCacheStoragePolicy *aStoragePolicy) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetStoragePolicy(aStoragePolicy); } \
-  NS_IMETHOD SetStoragePolicy(nsCacheStoragePolicy aStoragePolicy) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetStoragePolicy(aStoragePolicy); } \
-  NS_IMETHOD GetFile(nsIFile * *aFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFile(aFile); } \
-  NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSecurityInfo(aSecurityInfo); } \
-  NS_IMETHOD SetSecurityInfo(nsISupports * aSecurityInfo) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSecurityInfo(aSecurityInfo); } \
-  NS_IMETHOD Doom(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Doom(); } \
-  NS_IMETHOD DoomAndFailPendingRequests(nsresult status) { return !_to ? NS_ERROR_NULL_POINTER : _to->DoomAndFailPendingRequests(status); } \
-  NS_IMETHOD MarkValid(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->MarkValid(); } \
-  NS_IMETHOD Close(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Close(); } \
-  NS_IMETHOD GetMetaDataElement(const char *key, char **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMetaDataElement(key, _retval); } \
-  NS_IMETHOD SetMetaDataElement(const char *key, const char *value) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMetaDataElement(key, value); } \
-  NS_IMETHOD VisitMetaData(nsICacheMetaDataVisitor *visitor) { return !_to ? NS_ERROR_NULL_POINTER : _to->VisitMetaData(visitor); } 
+  NS_SCRIPTABLE NS_IMETHOD SetExpirationTime(PRUint32 expirationTime) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetExpirationTime(expirationTime); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDataSize(PRUint32 size) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDataSize(size); } \
+  NS_SCRIPTABLE NS_IMETHOD OpenInputStream(PRUint32 offset, nsIInputStream **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OpenInputStream(offset, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD OpenOutputStream(PRUint32 offset, nsIOutputStream **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->OpenOutputStream(offset, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCacheElement(nsISupports * *aCacheElement) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCacheElement(aCacheElement); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCacheElement(nsISupports * aCacheElement) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCacheElement(aCacheElement); } \
+  NS_SCRIPTABLE NS_IMETHOD GetAccessGranted(nsCacheAccessMode *aAccessGranted) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAccessGranted(aAccessGranted); } \
+  NS_SCRIPTABLE NS_IMETHOD GetStoragePolicy(nsCacheStoragePolicy *aStoragePolicy) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetStoragePolicy(aStoragePolicy); } \
+  NS_SCRIPTABLE NS_IMETHOD SetStoragePolicy(nsCacheStoragePolicy aStoragePolicy) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetStoragePolicy(aStoragePolicy); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFile(nsIFile * *aFile) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFile(aFile); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSecurityInfo(aSecurityInfo); } \
+  NS_SCRIPTABLE NS_IMETHOD SetSecurityInfo(nsISupports * aSecurityInfo) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetSecurityInfo(aSecurityInfo); } \
+  NS_SCRIPTABLE NS_IMETHOD Doom(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Doom(); } \
+  NS_SCRIPTABLE NS_IMETHOD DoomAndFailPendingRequests(nsresult status) { return !_to ? NS_ERROR_NULL_POINTER : _to->DoomAndFailPendingRequests(status); } \
+  NS_SCRIPTABLE NS_IMETHOD MarkValid(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->MarkValid(); } \
+  NS_SCRIPTABLE NS_IMETHOD Close(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Close(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetMetaDataElement(const char *key, char **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetMetaDataElement(key, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetMetaDataElement(const char *key, const char *value) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetMetaDataElement(key, value); } \
+  NS_SCRIPTABLE NS_IMETHOD VisitMetaData(nsICacheMetaDataVisitor *visitor) { return !_to ? NS_ERROR_NULL_POINTER : _to->VisitMetaData(visitor); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -395,7 +395,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::VisitMetaData(nsICacheMetaDataVisitor *vis
   {0x22f9a49c, 0x3cf8, 0x4c23, \
     { 0x80, 0x06, 0x54, 0xef, 0xb1, 0x1a, 0xc5, 0x62 }}
 
-class NS_NO_VTABLE nsICacheMetaDataVisitor : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsICacheMetaDataVisitor : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICACHEMETADATAVISITOR_IID)
@@ -404,7 +404,7 @@ class NS_NO_VTABLE nsICacheMetaDataVisitor : public nsISupports {
      * Called for each key/value pair in the meta data for a cache entry
      */
   /* boolean visitMetaDataElement (in string key, in string value); */
-  NS_IMETHOD VisitMetaDataElement(const char *key, const char *value, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD VisitMetaDataElement(const char *key, const char *value, PRBool *_retval) = 0;
 
 };
 
@@ -412,15 +412,15 @@ class NS_NO_VTABLE nsICacheMetaDataVisitor : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICACHEMETADATAVISITOR \
-  NS_IMETHOD VisitMetaDataElement(const char *key, const char *value, PRBool *_retval); 
+  NS_SCRIPTABLE NS_IMETHOD VisitMetaDataElement(const char *key, const char *value, PRBool *_retval); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICACHEMETADATAVISITOR(_to) \
-  NS_IMETHOD VisitMetaDataElement(const char *key, const char *value, PRBool *_retval) { return _to VisitMetaDataElement(key, value, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD VisitMetaDataElement(const char *key, const char *value, PRBool *_retval) { return _to VisitMetaDataElement(key, value, _retval); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICACHEMETADATAVISITOR(_to) \
-  NS_IMETHOD VisitMetaDataElement(const char *key, const char *value, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->VisitMetaDataElement(key, value, _retval); } 
+  NS_SCRIPTABLE NS_IMETHOD VisitMetaDataElement(const char *key, const char *value, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->VisitMetaDataElement(key, value, _retval); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

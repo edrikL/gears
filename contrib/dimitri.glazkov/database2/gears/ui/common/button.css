@@ -87,6 +87,15 @@ to inline does the trick.
   text-decoration:none!important;
 }
 
+/* On Firefox, when we set the contents of the custom-button-inner-box using
+   innerHTML, the contents get wrapped in an anchor tag. This seems to be a
+   Firefox bug. This extra anchor tag does not inherit the styles from
+   custom-button-inner-box, so we must set them manually here. */
+.custom-button-inner-box a {
+  color:#222!important;
+  text-decoration:none!important;
+}
+
 /* Pre-IE7 IE hack; ignored by IE7 and all non-IE browsers. */
 * html .custom-button-inner-box {
   /* IE6 needs to have the box shifted to make the borders line up. */

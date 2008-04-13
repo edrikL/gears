@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM /builds/tinderbox/XR-Trunk/Linux_2.6.18-8.el5_Depend/mozilla/netwerk/cookie/public/nsICookieService.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/cookie/public/nsICookieService.idl
  */
 
 #ifndef __gen_nsICookieService_h__
@@ -61,22 +61,22 @@ class nsIChannel; /* forward declaration */
  *          to set the cookie.
  * data   : none.
  */
-class NS_NO_VTABLE nsICookieService : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsICookieService : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICOOKIESERVICE_IID)
 
   /* string getCookieString (in nsIURI aURI, in nsIChannel aChannel); */
-  NS_IMETHOD GetCookieString(nsIURI *aURI, nsIChannel *aChannel, char **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCookieString(nsIURI *aURI, nsIChannel *aChannel, char **_retval) = 0;
 
   /* string getCookieStringFromHttp (in nsIURI aURI, in nsIURI aFirstURI, in nsIChannel aChannel); */
-  NS_IMETHOD GetCookieStringFromHttp(nsIURI *aURI, nsIURI *aFirstURI, nsIChannel *aChannel, char **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCookieStringFromHttp(nsIURI *aURI, nsIURI *aFirstURI, nsIChannel *aChannel, char **_retval) = 0;
 
   /* void setCookieString (in nsIURI aURI, in nsIPrompt aPrompt, in string aCookie, in nsIChannel aChannel); */
-  NS_IMETHOD SetCookieString(nsIURI *aURI, nsIPrompt *aPrompt, const char *aCookie, nsIChannel *aChannel) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCookieString(nsIURI *aURI, nsIPrompt *aPrompt, const char *aCookie, nsIChannel *aChannel) = 0;
 
   /* void setCookieStringFromHttp (in nsIURI aURI, in nsIURI aFirstURI, in nsIPrompt aPrompt, in string aCookie, in string aServerTime, in nsIChannel aChannel); */
-  NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookie, const char *aServerTime, nsIChannel *aChannel) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookie, const char *aServerTime, nsIChannel *aChannel) = 0;
 
 };
 
@@ -84,24 +84,24 @@ class NS_NO_VTABLE nsICookieService : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSICOOKIESERVICE \
-  NS_IMETHOD GetCookieString(nsIURI *aURI, nsIChannel *aChannel, char **_retval); \
-  NS_IMETHOD GetCookieStringFromHttp(nsIURI *aURI, nsIURI *aFirstURI, nsIChannel *aChannel, char **_retval); \
-  NS_IMETHOD SetCookieString(nsIURI *aURI, nsIPrompt *aPrompt, const char *aCookie, nsIChannel *aChannel); \
-  NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookie, const char *aServerTime, nsIChannel *aChannel); 
+  NS_SCRIPTABLE NS_IMETHOD GetCookieString(nsIURI *aURI, nsIChannel *aChannel, char **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetCookieStringFromHttp(nsIURI *aURI, nsIURI *aFirstURI, nsIChannel *aChannel, char **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD SetCookieString(nsIURI *aURI, nsIPrompt *aPrompt, const char *aCookie, nsIChannel *aChannel); \
+  NS_SCRIPTABLE NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookie, const char *aServerTime, nsIChannel *aChannel); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICOOKIESERVICE(_to) \
-  NS_IMETHOD GetCookieString(nsIURI *aURI, nsIChannel *aChannel, char **_retval) { return _to GetCookieString(aURI, aChannel, _retval); } \
-  NS_IMETHOD GetCookieStringFromHttp(nsIURI *aURI, nsIURI *aFirstURI, nsIChannel *aChannel, char **_retval) { return _to GetCookieStringFromHttp(aURI, aFirstURI, aChannel, _retval); } \
-  NS_IMETHOD SetCookieString(nsIURI *aURI, nsIPrompt *aPrompt, const char *aCookie, nsIChannel *aChannel) { return _to SetCookieString(aURI, aPrompt, aCookie, aChannel); } \
-  NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookie, const char *aServerTime, nsIChannel *aChannel) { return _to SetCookieStringFromHttp(aURI, aFirstURI, aPrompt, aCookie, aServerTime, aChannel); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCookieString(nsIURI *aURI, nsIChannel *aChannel, char **_retval) { return _to GetCookieString(aURI, aChannel, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCookieStringFromHttp(nsIURI *aURI, nsIURI *aFirstURI, nsIChannel *aChannel, char **_retval) { return _to GetCookieStringFromHttp(aURI, aFirstURI, aChannel, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCookieString(nsIURI *aURI, nsIPrompt *aPrompt, const char *aCookie, nsIChannel *aChannel) { return _to SetCookieString(aURI, aPrompt, aCookie, aChannel); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookie, const char *aServerTime, nsIChannel *aChannel) { return _to SetCookieStringFromHttp(aURI, aFirstURI, aPrompt, aCookie, aServerTime, aChannel); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSICOOKIESERVICE(_to) \
-  NS_IMETHOD GetCookieString(nsIURI *aURI, nsIChannel *aChannel, char **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCookieString(aURI, aChannel, _retval); } \
-  NS_IMETHOD GetCookieStringFromHttp(nsIURI *aURI, nsIURI *aFirstURI, nsIChannel *aChannel, char **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCookieStringFromHttp(aURI, aFirstURI, aChannel, _retval); } \
-  NS_IMETHOD SetCookieString(nsIURI *aURI, nsIPrompt *aPrompt, const char *aCookie, nsIChannel *aChannel) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCookieString(aURI, aPrompt, aCookie, aChannel); } \
-  NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookie, const char *aServerTime, nsIChannel *aChannel) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCookieStringFromHttp(aURI, aFirstURI, aPrompt, aCookie, aServerTime, aChannel); } 
+  NS_SCRIPTABLE NS_IMETHOD GetCookieString(nsIURI *aURI, nsIChannel *aChannel, char **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCookieString(aURI, aChannel, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCookieStringFromHttp(nsIURI *aURI, nsIURI *aFirstURI, nsIChannel *aChannel, char **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCookieStringFromHttp(aURI, aFirstURI, aChannel, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCookieString(nsIURI *aURI, nsIPrompt *aPrompt, const char *aCookie, nsIChannel *aChannel) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCookieString(aURI, aPrompt, aCookie, aChannel); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookie, const char *aServerTime, nsIChannel *aChannel) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCookieStringFromHttp(aURI, aFirstURI, aPrompt, aCookie, aServerTime, aChannel); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

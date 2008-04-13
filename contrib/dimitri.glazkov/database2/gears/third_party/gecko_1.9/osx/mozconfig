@@ -1,0 +1,8 @@
+# This file was used to create the osx/ directory. For more information see
+# README.google in the gecko_1.9 directory.
+. $topsrcdir/xulrunner/config/mozconfig
+. $topsrcdir/build/macosx/universal/mozconfig
+ac_add_options --enable-optimize=-O2
+ac_add_options --disable-tests
+ac_add_app_options ppc --enable-prebinding
+mk_add_options MOZ_OBJDIR=$topsrcdir/obj-xulrunner

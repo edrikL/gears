@@ -35,7 +35,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIInterfaceRequestor : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIInterfaceRequestor : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IINTERFACEREQUESTOR_IID)
@@ -51,7 +51,7 @@ class NS_NO_VTABLE nsIInterfaceRequestor : public nsISupports {
     *         NS_ERROR* - method failure.
     */
   /* void getInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
-  NS_IMETHOD GetInterface(const nsIID & uuid, void * *result) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetInterface(const nsIID & uuid, void * *result) = 0;
 
 };
 
@@ -59,15 +59,15 @@ class NS_NO_VTABLE nsIInterfaceRequestor : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIINTERFACEREQUESTOR \
-  NS_IMETHOD GetInterface(const nsIID & uuid, void * *result); 
+  NS_SCRIPTABLE NS_IMETHOD GetInterface(const nsIID & uuid, void * *result); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIINTERFACEREQUESTOR(_to) \
-  NS_IMETHOD GetInterface(const nsIID & uuid, void * *result) { return _to GetInterface(uuid, result); } 
+  NS_SCRIPTABLE NS_IMETHOD GetInterface(const nsIID & uuid, void * *result) { return _to GetInterface(uuid, result); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIINTERFACEREQUESTOR(_to) \
-  NS_IMETHOD GetInterface(const nsIID & uuid, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInterface(uuid, result); } 
+  NS_SCRIPTABLE NS_IMETHOD GetInterface(const nsIID & uuid, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetInterface(uuid, result); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -31,64 +31,64 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIDOMHTMLAnchorElement : public nsIDOMHTMLElement {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMHTMLAnchorElement : public nsIDOMHTMLElement {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMHTMLANCHORELEMENT_IID)
 
   /* attribute DOMString accessKey; */
-  NS_IMETHOD GetAccessKey(nsAString & aAccessKey) = 0;
-  NS_IMETHOD SetAccessKey(const nsAString & aAccessKey) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetAccessKey(nsAString & aAccessKey) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetAccessKey(const nsAString & aAccessKey) = 0;
 
   /* attribute DOMString charset; */
-  NS_IMETHOD GetCharset(nsAString & aCharset) = 0;
-  NS_IMETHOD SetCharset(const nsAString & aCharset) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCharset(nsAString & aCharset) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCharset(const nsAString & aCharset) = 0;
 
   /* attribute DOMString coords; */
-  NS_IMETHOD GetCoords(nsAString & aCoords) = 0;
-  NS_IMETHOD SetCoords(const nsAString & aCoords) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCoords(nsAString & aCoords) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCoords(const nsAString & aCoords) = 0;
 
   /* attribute DOMString href; */
-  NS_IMETHOD GetHref(nsAString & aHref) = 0;
-  NS_IMETHOD SetHref(const nsAString & aHref) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHref(nsAString & aHref) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetHref(const nsAString & aHref) = 0;
 
   /* attribute DOMString hreflang; */
-  NS_IMETHOD GetHreflang(nsAString & aHreflang) = 0;
-  NS_IMETHOD SetHreflang(const nsAString & aHreflang) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetHreflang(nsAString & aHreflang) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetHreflang(const nsAString & aHreflang) = 0;
 
   /* attribute DOMString name; */
-  NS_IMETHOD GetName(nsAString & aName) = 0;
-  NS_IMETHOD SetName(const nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) = 0;
 
   /* attribute DOMString rel; */
-  NS_IMETHOD GetRel(nsAString & aRel) = 0;
-  NS_IMETHOD SetRel(const nsAString & aRel) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRel(nsAString & aRel) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetRel(const nsAString & aRel) = 0;
 
   /* attribute DOMString rev; */
-  NS_IMETHOD GetRev(nsAString & aRev) = 0;
-  NS_IMETHOD SetRev(const nsAString & aRev) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetRev(nsAString & aRev) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetRev(const nsAString & aRev) = 0;
 
   /* attribute DOMString shape; */
-  NS_IMETHOD GetShape(nsAString & aShape) = 0;
-  NS_IMETHOD SetShape(const nsAString & aShape) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetShape(nsAString & aShape) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetShape(const nsAString & aShape) = 0;
 
   /* attribute long tabIndex; */
-  NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) = 0;
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) = 0;
 
   /* attribute DOMString target; */
-  NS_IMETHOD GetTarget(nsAString & aTarget) = 0;
-  NS_IMETHOD SetTarget(const nsAString & aTarget) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetTarget(const nsAString & aTarget) = 0;
 
   /* attribute DOMString type; */
-  NS_IMETHOD GetType(nsAString & aType) = 0;
-  NS_IMETHOD SetType(const nsAString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) = 0;
 
   /* void blur (); */
-  NS_IMETHOD Blur(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Blur(void) = 0;
 
   /* void focus (); */
-  NS_IMETHOD Focus(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Focus(void) = 0;
 
 };
 
@@ -96,90 +96,90 @@ class NS_NO_VTABLE nsIDOMHTMLAnchorElement : public nsIDOMHTMLElement {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOMHTMLANCHORELEMENT \
-  NS_IMETHOD GetAccessKey(nsAString & aAccessKey); \
-  NS_IMETHOD SetAccessKey(const nsAString & aAccessKey); \
-  NS_IMETHOD GetCharset(nsAString & aCharset); \
-  NS_IMETHOD SetCharset(const nsAString & aCharset); \
-  NS_IMETHOD GetCoords(nsAString & aCoords); \
-  NS_IMETHOD SetCoords(const nsAString & aCoords); \
-  NS_IMETHOD GetHref(nsAString & aHref); \
-  NS_IMETHOD SetHref(const nsAString & aHref); \
-  NS_IMETHOD GetHreflang(nsAString & aHreflang); \
-  NS_IMETHOD SetHreflang(const nsAString & aHreflang); \
-  NS_IMETHOD GetName(nsAString & aName); \
-  NS_IMETHOD SetName(const nsAString & aName); \
-  NS_IMETHOD GetRel(nsAString & aRel); \
-  NS_IMETHOD SetRel(const nsAString & aRel); \
-  NS_IMETHOD GetRev(nsAString & aRev); \
-  NS_IMETHOD SetRev(const nsAString & aRev); \
-  NS_IMETHOD GetShape(nsAString & aShape); \
-  NS_IMETHOD SetShape(const nsAString & aShape); \
-  NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex); \
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex); \
-  NS_IMETHOD GetTarget(nsAString & aTarget); \
-  NS_IMETHOD SetTarget(const nsAString & aTarget); \
-  NS_IMETHOD GetType(nsAString & aType); \
-  NS_IMETHOD SetType(const nsAString & aType); \
-  NS_IMETHOD Blur(void); \
-  NS_IMETHOD Focus(void); 
+  NS_SCRIPTABLE NS_IMETHOD GetAccessKey(nsAString & aAccessKey); \
+  NS_SCRIPTABLE NS_IMETHOD SetAccessKey(const nsAString & aAccessKey); \
+  NS_SCRIPTABLE NS_IMETHOD GetCharset(nsAString & aCharset); \
+  NS_SCRIPTABLE NS_IMETHOD SetCharset(const nsAString & aCharset); \
+  NS_SCRIPTABLE NS_IMETHOD GetCoords(nsAString & aCoords); \
+  NS_SCRIPTABLE NS_IMETHOD SetCoords(const nsAString & aCoords); \
+  NS_SCRIPTABLE NS_IMETHOD GetHref(nsAString & aHref); \
+  NS_SCRIPTABLE NS_IMETHOD SetHref(const nsAString & aHref); \
+  NS_SCRIPTABLE NS_IMETHOD GetHreflang(nsAString & aHreflang); \
+  NS_SCRIPTABLE NS_IMETHOD SetHreflang(const nsAString & aHreflang); \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName); \
+  NS_SCRIPTABLE NS_IMETHOD GetRel(nsAString & aRel); \
+  NS_SCRIPTABLE NS_IMETHOD SetRel(const nsAString & aRel); \
+  NS_SCRIPTABLE NS_IMETHOD GetRev(nsAString & aRev); \
+  NS_SCRIPTABLE NS_IMETHOD SetRev(const nsAString & aRev); \
+  NS_SCRIPTABLE NS_IMETHOD GetShape(nsAString & aShape); \
+  NS_SCRIPTABLE NS_IMETHOD SetShape(const nsAString & aShape); \
+  NS_SCRIPTABLE NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex); \
+  NS_SCRIPTABLE NS_IMETHOD SetTabIndex(PRInt32 aTabIndex); \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget); \
+  NS_SCRIPTABLE NS_IMETHOD SetTarget(const nsAString & aTarget); \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType); \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType); \
+  NS_SCRIPTABLE NS_IMETHOD Blur(void); \
+  NS_SCRIPTABLE NS_IMETHOD Focus(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMHTMLANCHORELEMENT(_to) \
-  NS_IMETHOD GetAccessKey(nsAString & aAccessKey) { return _to GetAccessKey(aAccessKey); } \
-  NS_IMETHOD SetAccessKey(const nsAString & aAccessKey) { return _to SetAccessKey(aAccessKey); } \
-  NS_IMETHOD GetCharset(nsAString & aCharset) { return _to GetCharset(aCharset); } \
-  NS_IMETHOD SetCharset(const nsAString & aCharset) { return _to SetCharset(aCharset); } \
-  NS_IMETHOD GetCoords(nsAString & aCoords) { return _to GetCoords(aCoords); } \
-  NS_IMETHOD SetCoords(const nsAString & aCoords) { return _to SetCoords(aCoords); } \
-  NS_IMETHOD GetHref(nsAString & aHref) { return _to GetHref(aHref); } \
-  NS_IMETHOD SetHref(const nsAString & aHref) { return _to SetHref(aHref); } \
-  NS_IMETHOD GetHreflang(nsAString & aHreflang) { return _to GetHreflang(aHreflang); } \
-  NS_IMETHOD SetHreflang(const nsAString & aHreflang) { return _to SetHreflang(aHreflang); } \
-  NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
-  NS_IMETHOD GetRel(nsAString & aRel) { return _to GetRel(aRel); } \
-  NS_IMETHOD SetRel(const nsAString & aRel) { return _to SetRel(aRel); } \
-  NS_IMETHOD GetRev(nsAString & aRev) { return _to GetRev(aRev); } \
-  NS_IMETHOD SetRev(const nsAString & aRev) { return _to SetRev(aRev); } \
-  NS_IMETHOD GetShape(nsAString & aShape) { return _to GetShape(aShape); } \
-  NS_IMETHOD SetShape(const nsAString & aShape) { return _to SetShape(aShape); } \
-  NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) { return _to GetTabIndex(aTabIndex); } \
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) { return _to SetTabIndex(aTabIndex); } \
-  NS_IMETHOD GetTarget(nsAString & aTarget) { return _to GetTarget(aTarget); } \
-  NS_IMETHOD SetTarget(const nsAString & aTarget) { return _to SetTarget(aTarget); } \
-  NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
-  NS_IMETHOD SetType(const nsAString & aType) { return _to SetType(aType); } \
-  NS_IMETHOD Blur(void) { return _to Blur(); } \
-  NS_IMETHOD Focus(void) { return _to Focus(); } 
+  NS_SCRIPTABLE NS_IMETHOD GetAccessKey(nsAString & aAccessKey) { return _to GetAccessKey(aAccessKey); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAccessKey(const nsAString & aAccessKey) { return _to SetAccessKey(aAccessKey); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCharset(nsAString & aCharset) { return _to GetCharset(aCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCharset(const nsAString & aCharset) { return _to SetCharset(aCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCoords(nsAString & aCoords) { return _to GetCoords(aCoords); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCoords(const nsAString & aCoords) { return _to SetCoords(aCoords); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHref(nsAString & aHref) { return _to GetHref(aHref); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHref(const nsAString & aHref) { return _to SetHref(aHref); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHreflang(nsAString & aHreflang) { return _to GetHreflang(aHreflang); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHreflang(const nsAString & aHreflang) { return _to SetHreflang(aHreflang); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return _to GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return _to SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRel(nsAString & aRel) { return _to GetRel(aRel); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRel(const nsAString & aRel) { return _to SetRel(aRel); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRev(nsAString & aRev) { return _to GetRev(aRev); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRev(const nsAString & aRev) { return _to SetRev(aRev); } \
+  NS_SCRIPTABLE NS_IMETHOD GetShape(nsAString & aShape) { return _to GetShape(aShape); } \
+  NS_SCRIPTABLE NS_IMETHOD SetShape(const nsAString & aShape) { return _to SetShape(aShape); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) { return _to GetTabIndex(aTabIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) { return _to SetTabIndex(aTabIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) { return _to GetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTarget(const nsAString & aTarget) { return _to SetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return _to GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) { return _to SetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD Blur(void) { return _to Blur(); } \
+  NS_SCRIPTABLE NS_IMETHOD Focus(void) { return _to Focus(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMHTMLANCHORELEMENT(_to) \
-  NS_IMETHOD GetAccessKey(nsAString & aAccessKey) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAccessKey(aAccessKey); } \
-  NS_IMETHOD SetAccessKey(const nsAString & aAccessKey) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAccessKey(aAccessKey); } \
-  NS_IMETHOD GetCharset(nsAString & aCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCharset(aCharset); } \
-  NS_IMETHOD SetCharset(const nsAString & aCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCharset(aCharset); } \
-  NS_IMETHOD GetCoords(nsAString & aCoords) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCoords(aCoords); } \
-  NS_IMETHOD SetCoords(const nsAString & aCoords) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCoords(aCoords); } \
-  NS_IMETHOD GetHref(nsAString & aHref) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHref(aHref); } \
-  NS_IMETHOD SetHref(const nsAString & aHref) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHref(aHref); } \
-  NS_IMETHOD GetHreflang(nsAString & aHreflang) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHreflang(aHreflang); } \
-  NS_IMETHOD SetHreflang(const nsAString & aHreflang) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHreflang(aHreflang); } \
-  NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
-  NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
-  NS_IMETHOD GetRel(nsAString & aRel) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRel(aRel); } \
-  NS_IMETHOD SetRel(const nsAString & aRel) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRel(aRel); } \
-  NS_IMETHOD GetRev(nsAString & aRev) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRev(aRev); } \
-  NS_IMETHOD SetRev(const nsAString & aRev) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRev(aRev); } \
-  NS_IMETHOD GetShape(nsAString & aShape) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetShape(aShape); } \
-  NS_IMETHOD SetShape(const nsAString & aShape) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetShape(aShape); } \
-  NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTabIndex(aTabIndex); } \
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTabIndex(aTabIndex); } \
-  NS_IMETHOD GetTarget(nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTarget(aTarget); } \
-  NS_IMETHOD SetTarget(const nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTarget(aTarget); } \
-  NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
-  NS_IMETHOD SetType(const nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } \
-  NS_IMETHOD Blur(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Blur(); } \
-  NS_IMETHOD Focus(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Focus(); } 
+  NS_SCRIPTABLE NS_IMETHOD GetAccessKey(nsAString & aAccessKey) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetAccessKey(aAccessKey); } \
+  NS_SCRIPTABLE NS_IMETHOD SetAccessKey(const nsAString & aAccessKey) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetAccessKey(aAccessKey); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCharset(nsAString & aCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCharset(aCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCharset(const nsAString & aCharset) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCharset(aCharset); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCoords(nsAString & aCoords) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCoords(aCoords); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCoords(const nsAString & aCoords) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCoords(aCoords); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHref(nsAString & aHref) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHref(aHref); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHref(const nsAString & aHref) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHref(aHref); } \
+  NS_SCRIPTABLE NS_IMETHOD GetHreflang(nsAString & aHreflang) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetHreflang(aHreflang); } \
+  NS_SCRIPTABLE NS_IMETHOD SetHreflang(const nsAString & aHreflang) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetHreflang(aHreflang); } \
+  NS_SCRIPTABLE NS_IMETHOD GetName(nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetName(const nsAString & aName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetName(aName); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRel(nsAString & aRel) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRel(aRel); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRel(const nsAString & aRel) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRel(aRel); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRev(nsAString & aRev) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetRev(aRev); } \
+  NS_SCRIPTABLE NS_IMETHOD SetRev(const nsAString & aRev) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetRev(aRev); } \
+  NS_SCRIPTABLE NS_IMETHOD GetShape(nsAString & aShape) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetShape(aShape); } \
+  NS_SCRIPTABLE NS_IMETHOD SetShape(const nsAString & aShape) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetShape(aShape); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTabIndex(aTabIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTabIndex(PRInt32 aTabIndex) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTabIndex(aTabIndex); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTarget(const nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD GetType(nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD SetType(const nsAString & aType) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetType(aType); } \
+  NS_SCRIPTABLE NS_IMETHOD Blur(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Blur(); } \
+  NS_SCRIPTABLE NS_IMETHOD Focus(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Focus(); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

@@ -127,11 +127,11 @@ function updateNote($id, $client, $version, $content) {
        where id = '$id' and 
          (last_client_id = '$client' or version = '$version') and
          @last_version := version"); // Assign the version before the update
-									 // to a mysql variable. We then read this
-									 // variable with the next SELECT statement.
-									 // This ensures atomicy since mysql
-									 // variables are per-connection and our
-									 // connections are per-page-view.
+                   // to a mysql variable. We then read this
+                   // variable with the next SELECT statement.
+                   // This ensures atomicy since mysql
+                   // variables are per-connection and our
+                   // connections are per-page-view.
   $num_rows = mysql_affected_rows();
   
   if ($num_rows == 1) {

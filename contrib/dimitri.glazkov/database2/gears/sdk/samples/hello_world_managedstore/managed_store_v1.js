@@ -25,6 +25,7 @@
 
 // The offline version 1
 function updateManagedStore() {
+  textOut('Updating the store ...');
   try {
     var localServer = google.gears.factory.create('beta.localserver');
   } catch (ex) {

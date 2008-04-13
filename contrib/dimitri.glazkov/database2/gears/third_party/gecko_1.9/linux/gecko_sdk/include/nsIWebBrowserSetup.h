@@ -31,7 +31,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIWebBrowserSetup : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIWebBrowserSetup : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWEBBROWSERSETUP_IID)
@@ -114,7 +114,7 @@ class NS_NO_VTABLE nsIWebBrowserSetup : public nsISupports {
      * @param aValue The value of the property.
      */
   /* void setProperty (in unsigned long aId, in unsigned long aValue); */
-  NS_IMETHOD SetProperty(PRUint32 aId, PRUint32 aValue) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetProperty(PRUint32 aId, PRUint32 aValue) = 0;
 
 };
 
@@ -122,15 +122,15 @@ class NS_NO_VTABLE nsIWebBrowserSetup : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWEBBROWSERSETUP \
-  NS_IMETHOD SetProperty(PRUint32 aId, PRUint32 aValue); 
+  NS_SCRIPTABLE NS_IMETHOD SetProperty(PRUint32 aId, PRUint32 aValue); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIWEBBROWSERSETUP(_to) \
-  NS_IMETHOD SetProperty(PRUint32 aId, PRUint32 aValue) { return _to SetProperty(aId, aValue); } 
+  NS_SCRIPTABLE NS_IMETHOD SetProperty(PRUint32 aId, PRUint32 aValue) { return _to SetProperty(aId, aValue); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIWEBBROWSERSETUP(_to) \
-  NS_IMETHOD SetProperty(PRUint32 aId, PRUint32 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetProperty(aId, aValue); } 
+  NS_SCRIPTABLE NS_IMETHOD SetProperty(PRUint32 aId, PRUint32 aValue) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetProperty(aId, aValue); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

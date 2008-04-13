@@ -29,7 +29,7 @@
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIEmbeddingSiteWindow : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIEmbeddingSiteWindow : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IEMBEDDINGSITEWINDOW_IID)
@@ -89,7 +89,7 @@ class NS_NO_VTABLE nsIEmbeddingSiteWindow : public nsISupports {
      * @see DIM_FLAGS_SIZE_INNER
      */
   /* void setDimensions (in unsigned long flags, in long x, in long y, in long cx, in long cy); */
-  NS_IMETHOD SetDimensions(PRUint32 flags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetDimensions(PRUint32 flags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy) = 0;
 
   /**
      * Gets the dimensions of the window. The caller may pass
@@ -107,27 +107,27 @@ class NS_NO_VTABLE nsIEmbeddingSiteWindow : public nsISupports {
      * @see DIM_FLAGS_SIZE_INNER
      */
   /* void getDimensions (in unsigned long flags, out long x, out long y, out long cx, out long cy); */
-  NS_IMETHOD GetDimensions(PRUint32 flags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDimensions(PRUint32 flags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy) = 0;
 
   /**
      * Give the window focus.
      */
   /* void setFocus (); */
-  NS_IMETHOD SetFocus(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFocus(void) = 0;
 
   /**
      * Visibility of the window.
      */
   /* attribute boolean visibility; */
-  NS_IMETHOD GetVisibility(PRBool *aVisibility) = 0;
-  NS_IMETHOD SetVisibility(PRBool aVisibility) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetVisibility(PRBool *aVisibility) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetVisibility(PRBool aVisibility) = 0;
 
   /**
      * Title of the window.
      */
   /* attribute wstring title; */
-  NS_IMETHOD GetTitle(PRUnichar * *aTitle) = 0;
-  NS_IMETHOD SetTitle(const PRUnichar * aTitle) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTitle(PRUnichar * *aTitle) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetTitle(const PRUnichar * aTitle) = 0;
 
   /**
      * Native window for the site's window. The implementor should copy the
@@ -150,35 +150,35 @@ class NS_NO_VTABLE nsIEmbeddingSiteWindow : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIEMBEDDINGSITEWINDOW \
-  NS_IMETHOD SetDimensions(PRUint32 flags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy); \
-  NS_IMETHOD GetDimensions(PRUint32 flags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy); \
-  NS_IMETHOD SetFocus(void); \
-  NS_IMETHOD GetVisibility(PRBool *aVisibility); \
-  NS_IMETHOD SetVisibility(PRBool aVisibility); \
-  NS_IMETHOD GetTitle(PRUnichar * *aTitle); \
-  NS_IMETHOD SetTitle(const PRUnichar * aTitle); \
+  NS_SCRIPTABLE NS_IMETHOD SetDimensions(PRUint32 flags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy); \
+  NS_SCRIPTABLE NS_IMETHOD GetDimensions(PRUint32 flags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy); \
+  NS_SCRIPTABLE NS_IMETHOD SetFocus(void); \
+  NS_SCRIPTABLE NS_IMETHOD GetVisibility(PRBool *aVisibility); \
+  NS_SCRIPTABLE NS_IMETHOD SetVisibility(PRBool aVisibility); \
+  NS_SCRIPTABLE NS_IMETHOD GetTitle(PRUnichar * *aTitle); \
+  NS_SCRIPTABLE NS_IMETHOD SetTitle(const PRUnichar * aTitle); \
   NS_IMETHOD GetSiteWindow(void * *aSiteWindow); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIEMBEDDINGSITEWINDOW(_to) \
-  NS_IMETHOD SetDimensions(PRUint32 flags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy) { return _to SetDimensions(flags, x, y, cx, cy); } \
-  NS_IMETHOD GetDimensions(PRUint32 flags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy) { return _to GetDimensions(flags, x, y, cx, cy); } \
-  NS_IMETHOD SetFocus(void) { return _to SetFocus(); } \
-  NS_IMETHOD GetVisibility(PRBool *aVisibility) { return _to GetVisibility(aVisibility); } \
-  NS_IMETHOD SetVisibility(PRBool aVisibility) { return _to SetVisibility(aVisibility); } \
-  NS_IMETHOD GetTitle(PRUnichar * *aTitle) { return _to GetTitle(aTitle); } \
-  NS_IMETHOD SetTitle(const PRUnichar * aTitle) { return _to SetTitle(aTitle); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDimensions(PRUint32 flags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy) { return _to SetDimensions(flags, x, y, cx, cy); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDimensions(PRUint32 flags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy) { return _to GetDimensions(flags, x, y, cx, cy); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFocus(void) { return _to SetFocus(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetVisibility(PRBool *aVisibility) { return _to GetVisibility(aVisibility); } \
+  NS_SCRIPTABLE NS_IMETHOD SetVisibility(PRBool aVisibility) { return _to SetVisibility(aVisibility); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTitle(PRUnichar * *aTitle) { return _to GetTitle(aTitle); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTitle(const PRUnichar * aTitle) { return _to SetTitle(aTitle); } \
   NS_IMETHOD GetSiteWindow(void * *aSiteWindow) { return _to GetSiteWindow(aSiteWindow); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIEMBEDDINGSITEWINDOW(_to) \
-  NS_IMETHOD SetDimensions(PRUint32 flags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDimensions(flags, x, y, cx, cy); } \
-  NS_IMETHOD GetDimensions(PRUint32 flags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDimensions(flags, x, y, cx, cy); } \
-  NS_IMETHOD SetFocus(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFocus(); } \
-  NS_IMETHOD GetVisibility(PRBool *aVisibility) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVisibility(aVisibility); } \
-  NS_IMETHOD SetVisibility(PRBool aVisibility) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetVisibility(aVisibility); } \
-  NS_IMETHOD GetTitle(PRUnichar * *aTitle) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTitle(aTitle); } \
-  NS_IMETHOD SetTitle(const PRUnichar * aTitle) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTitle(aTitle); } \
+  NS_SCRIPTABLE NS_IMETHOD SetDimensions(PRUint32 flags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetDimensions(flags, x, y, cx, cy); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDimensions(PRUint32 flags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDimensions(flags, x, y, cx, cy); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFocus(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFocus(); } \
+  NS_SCRIPTABLE NS_IMETHOD GetVisibility(PRBool *aVisibility) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetVisibility(aVisibility); } \
+  NS_SCRIPTABLE NS_IMETHOD SetVisibility(PRBool aVisibility) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetVisibility(aVisibility); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTitle(PRUnichar * *aTitle) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTitle(aTitle); } \
+  NS_SCRIPTABLE NS_IMETHOD SetTitle(const PRUnichar * aTitle) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetTitle(aTitle); } \
   NS_IMETHOD GetSiteWindow(void * *aSiteWindow) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSiteWindow(aSiteWindow); } 
 
 #if 0

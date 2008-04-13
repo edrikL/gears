@@ -28,13 +28,24 @@
 #include "gears/base/common/common.h"  // only for LOG()
 #include "gears/base/common/string_utils.h"
 
+static bool TestUrlUTF8FileToUrl();
+static bool TestUrlResolve();
 
 bool TestUrlUtils() {
+  bool ok = true;
+  ok &= TestUrlResolve();
+  ok &= TestUrlUTF8FileToUrl();
+  if (ok)
+    LOG(("TestUrlUtilsAll - passed\n"));
+  return ok;
+}
+
+static bool TestUrlResolve() {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
-    LOG(("TestUrlUtils - failed (%d)\n", __LINE__)); \
+    LOG(("TestUrlResolve - failed (%d)\n", __LINE__)); \
     return false; \
   } \
 }
@@ -216,7 +227,7 @@ bool TestUrlUtils() {
       STRING16(L"http://server/a/c/d.html")
     },
     {  // Leave www intact.
-       // Some normalizesr will output: http://foo.com/
+       // Some normalizers will output: http://foo.com/
       STRING16(L"http://www.foo.com/"),
       STRING16(L""),
       STRING16(L"http://www.foo.com/")
@@ -228,10 +239,16 @@ bool TestUrlUtils() {
       STRING16(L"http://server/directory/foo.html?b=c&a=b")
     },
     {  // Remove empty query string.
-      //  Some normalizers will remove the trailing '?'
+       //  Some normalizers will remove the trailing '?'
       base_dir,
       STRING16(L"foo.html?"),
       STRING16(L"http://server/directory/foo.html?")
+    },
+    { // It's illegal to unsescape %2F -> '/' during normalization.
+      // Thanks to brettw for confirming that this is the desired behavior. 
+      base_dir,
+      STRING16(L"..%2Fbar%2Ffoo.html?%2F"),
+      STRING16(L"http://server/directory/..%2Fbar%2Ffoo.html?%2F")
     },
 
   };
@@ -250,6 +267,54 @@ bool TestUrlUtils() {
     }
   }
 
-  LOG(("TestUrlUtilsAll - passed\n"));
+  LOG(("TestUrlResolve - passed\n"));
+  return true;
+}
+
+static bool TestUrlUTF8FileToUrl() {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b,test_name) \
+{ \
+  if (!(b)) { \
+  LOG(("TestUrlUTF8FileToUrl: %s - failed (%d)\n", test_name, __LINE__)); \
+    return false; \
+  } \
+}
+  struct URLCase {
+    const char *input;
+    const char *expected;
+    const char *test_name;
+  } cases[] = {
+    {"c:/Dead/Beef.txt", "file:///c:/Dead/Beef.txt", "No escapes"},
+    {"c:\\Dead\\Beef.txt", "file:///c:/Dead/Beef.txt", "Backslash"},
+    {"c:/Dead/Beef/42;.txt", "file:///c:/Dead/Beef/42%3B.txt", "Semicolon"},
+    {"c:/Dead/Beef/42#{}.txt", "file:///c:/Dead/Beef/42%23%7B%7D.txt",
+      "Disallowed Characters"},
+    {"c:/Dead/Beef/牛肉.txt",
+      "file:///c:/Dead/Beef/%E7%89%9B%E8%82%89.txt",
+      "Non-Ascii Characters"}
+  };
+
+  struct URLCase directory_cases[] = {
+    {"c:/Dead/Beef/", "file:///c:/Dead/Beef/", "Trailing slash"},
+    {"c:\\Dead\\Beef\\", "file:///c:/Dead/Beef/", "Trailing backslash"},
+    {"c:/Dead/Beef", "file:///c:/Dead/Beef/", "No trailing slash"},
+    {"c:\\Dead\\Beef", "file:///c:/Dead/Beef/", "No trailing backslash"},
+  };
+
+  for (unsigned int i = 0; i < ARRAYSIZE(cases); ++i) {
+    std::string input(cases[i].input);
+    std::string output(UTF8PathToUrl(input, false));
+    TEST_ASSERT(output == cases[i].expected, cases[i].test_name);
+  }
+
+  for (unsigned int i = 0; i < ARRAYSIZE(directory_cases); ++i) {
+    std::string input(directory_cases[i].input);
+    std::string output(UTF8PathToUrl(input, true));
+    TEST_ASSERT(output == directory_cases[i].expected,
+                directory_cases[i].test_name);
+  }
+
+  LOG(("TestUrlUTF8FileToUrl - passed\n"));
   return true;
 }

@@ -25,6 +25,7 @@
 
 // The offline version 2
 function removeManagedStore() {
+  textOut('Removing the store ...');
   try {
     var localServer = google.gears.factory.create('beta.localserver');
   } catch (ex) {

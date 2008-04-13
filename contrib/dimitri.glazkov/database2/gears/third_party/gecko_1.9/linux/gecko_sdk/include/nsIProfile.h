@@ -44,42 +44,42 @@
  * @status FROZEN
  * @version 1.0
  */
-class NS_NO_VTABLE nsIProfile : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIProfile : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPROFILE_IID)
 
   /* readonly attribute long profileCount; */
-  NS_IMETHOD GetProfileCount(PRInt32 *aProfileCount) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetProfileCount(PRInt32 *aProfileCount) = 0;
 
   /* void getProfileList (out unsigned long length, [array, size_is (length), retval] out wstring profileNames); */
-  NS_IMETHOD GetProfileList(PRUint32 *length, PRUnichar ***profileNames) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetProfileList(PRUint32 *length, PRUnichar ***profileNames) = 0;
 
   /* boolean profileExists (in wstring profileName); */
-  NS_IMETHOD ProfileExists(const PRUnichar *profileName, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ProfileExists(const PRUnichar *profileName, PRBool *_retval) = 0;
 
   /* attribute wstring currentProfile; */
-  NS_IMETHOD GetCurrentProfile(PRUnichar * *aCurrentProfile) = 0;
-  NS_IMETHOD SetCurrentProfile(const PRUnichar * aCurrentProfile) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentProfile(PRUnichar * *aCurrentProfile) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetCurrentProfile(const PRUnichar * aCurrentProfile) = 0;
 
   enum { SHUTDOWN_PERSIST = 1U };
 
   enum { SHUTDOWN_CLEANSE = 2U };
 
   /* void shutDownCurrentProfile (in unsigned long shutDownType); */
-  NS_IMETHOD ShutDownCurrentProfile(PRUint32 shutDownType) = 0;
+  NS_SCRIPTABLE NS_IMETHOD ShutDownCurrentProfile(PRUint32 shutDownType) = 0;
 
   /* void createNewProfile (in wstring profileName, in wstring nativeProfileDir, in wstring langcode, in boolean useExistingDir); */
-  NS_IMETHOD CreateNewProfile(const PRUnichar *profileName, const PRUnichar *nativeProfileDir, const PRUnichar *langcode, PRBool useExistingDir) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateNewProfile(const PRUnichar *profileName, const PRUnichar *nativeProfileDir, const PRUnichar *langcode, PRBool useExistingDir) = 0;
 
   /* void renameProfile (in wstring oldName, in wstring newName); */
-  NS_IMETHOD RenameProfile(const PRUnichar *oldName, const PRUnichar *newName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD RenameProfile(const PRUnichar *oldName, const PRUnichar *newName) = 0;
 
   /* void deleteProfile (in wstring name, in boolean canDeleteFiles); */
-  NS_IMETHOD DeleteProfile(const PRUnichar *name, PRBool canDeleteFiles) = 0;
+  NS_SCRIPTABLE NS_IMETHOD DeleteProfile(const PRUnichar *name, PRBool canDeleteFiles) = 0;
 
   /* void cloneProfile (in wstring profileName); */
-  NS_IMETHOD CloneProfile(const PRUnichar *profileName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CloneProfile(const PRUnichar *profileName) = 0;
 
 };
 
@@ -87,42 +87,42 @@ class NS_NO_VTABLE nsIProfile : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIPROFILE \
-  NS_IMETHOD GetProfileCount(PRInt32 *aProfileCount); \
-  NS_IMETHOD GetProfileList(PRUint32 *length, PRUnichar ***profileNames); \
-  NS_IMETHOD ProfileExists(const PRUnichar *profileName, PRBool *_retval); \
-  NS_IMETHOD GetCurrentProfile(PRUnichar * *aCurrentProfile); \
-  NS_IMETHOD SetCurrentProfile(const PRUnichar * aCurrentProfile); \
-  NS_IMETHOD ShutDownCurrentProfile(PRUint32 shutDownType); \
-  NS_IMETHOD CreateNewProfile(const PRUnichar *profileName, const PRUnichar *nativeProfileDir, const PRUnichar *langcode, PRBool useExistingDir); \
-  NS_IMETHOD RenameProfile(const PRUnichar *oldName, const PRUnichar *newName); \
-  NS_IMETHOD DeleteProfile(const PRUnichar *name, PRBool canDeleteFiles); \
-  NS_IMETHOD CloneProfile(const PRUnichar *profileName); 
+  NS_SCRIPTABLE NS_IMETHOD GetProfileCount(PRInt32 *aProfileCount); \
+  NS_SCRIPTABLE NS_IMETHOD GetProfileList(PRUint32 *length, PRUnichar ***profileNames); \
+  NS_SCRIPTABLE NS_IMETHOD ProfileExists(const PRUnichar *profileName, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentProfile(PRUnichar * *aCurrentProfile); \
+  NS_SCRIPTABLE NS_IMETHOD SetCurrentProfile(const PRUnichar * aCurrentProfile); \
+  NS_SCRIPTABLE NS_IMETHOD ShutDownCurrentProfile(PRUint32 shutDownType); \
+  NS_SCRIPTABLE NS_IMETHOD CreateNewProfile(const PRUnichar *profileName, const PRUnichar *nativeProfileDir, const PRUnichar *langcode, PRBool useExistingDir); \
+  NS_SCRIPTABLE NS_IMETHOD RenameProfile(const PRUnichar *oldName, const PRUnichar *newName); \
+  NS_SCRIPTABLE NS_IMETHOD DeleteProfile(const PRUnichar *name, PRBool canDeleteFiles); \
+  NS_SCRIPTABLE NS_IMETHOD CloneProfile(const PRUnichar *profileName); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIPROFILE(_to) \
-  NS_IMETHOD GetProfileCount(PRInt32 *aProfileCount) { return _to GetProfileCount(aProfileCount); } \
-  NS_IMETHOD GetProfileList(PRUint32 *length, PRUnichar ***profileNames) { return _to GetProfileList(length, profileNames); } \
-  NS_IMETHOD ProfileExists(const PRUnichar *profileName, PRBool *_retval) { return _to ProfileExists(profileName, _retval); } \
-  NS_IMETHOD GetCurrentProfile(PRUnichar * *aCurrentProfile) { return _to GetCurrentProfile(aCurrentProfile); } \
-  NS_IMETHOD SetCurrentProfile(const PRUnichar * aCurrentProfile) { return _to SetCurrentProfile(aCurrentProfile); } \
-  NS_IMETHOD ShutDownCurrentProfile(PRUint32 shutDownType) { return _to ShutDownCurrentProfile(shutDownType); } \
-  NS_IMETHOD CreateNewProfile(const PRUnichar *profileName, const PRUnichar *nativeProfileDir, const PRUnichar *langcode, PRBool useExistingDir) { return _to CreateNewProfile(profileName, nativeProfileDir, langcode, useExistingDir); } \
-  NS_IMETHOD RenameProfile(const PRUnichar *oldName, const PRUnichar *newName) { return _to RenameProfile(oldName, newName); } \
-  NS_IMETHOD DeleteProfile(const PRUnichar *name, PRBool canDeleteFiles) { return _to DeleteProfile(name, canDeleteFiles); } \
-  NS_IMETHOD CloneProfile(const PRUnichar *profileName) { return _to CloneProfile(profileName); } 
+  NS_SCRIPTABLE NS_IMETHOD GetProfileCount(PRInt32 *aProfileCount) { return _to GetProfileCount(aProfileCount); } \
+  NS_SCRIPTABLE NS_IMETHOD GetProfileList(PRUint32 *length, PRUnichar ***profileNames) { return _to GetProfileList(length, profileNames); } \
+  NS_SCRIPTABLE NS_IMETHOD ProfileExists(const PRUnichar *profileName, PRBool *_retval) { return _to ProfileExists(profileName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentProfile(PRUnichar * *aCurrentProfile) { return _to GetCurrentProfile(aCurrentProfile); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCurrentProfile(const PRUnichar * aCurrentProfile) { return _to SetCurrentProfile(aCurrentProfile); } \
+  NS_SCRIPTABLE NS_IMETHOD ShutDownCurrentProfile(PRUint32 shutDownType) { return _to ShutDownCurrentProfile(shutDownType); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateNewProfile(const PRUnichar *profileName, const PRUnichar *nativeProfileDir, const PRUnichar *langcode, PRBool useExistingDir) { return _to CreateNewProfile(profileName, nativeProfileDir, langcode, useExistingDir); } \
+  NS_SCRIPTABLE NS_IMETHOD RenameProfile(const PRUnichar *oldName, const PRUnichar *newName) { return _to RenameProfile(oldName, newName); } \
+  NS_SCRIPTABLE NS_IMETHOD DeleteProfile(const PRUnichar *name, PRBool canDeleteFiles) { return _to DeleteProfile(name, canDeleteFiles); } \
+  NS_SCRIPTABLE NS_IMETHOD CloneProfile(const PRUnichar *profileName) { return _to CloneProfile(profileName); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIPROFILE(_to) \
-  NS_IMETHOD GetProfileCount(PRInt32 *aProfileCount) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetProfileCount(aProfileCount); } \
-  NS_IMETHOD GetProfileList(PRUint32 *length, PRUnichar ***profileNames) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetProfileList(length, profileNames); } \
-  NS_IMETHOD ProfileExists(const PRUnichar *profileName, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ProfileExists(profileName, _retval); } \
-  NS_IMETHOD GetCurrentProfile(PRUnichar * *aCurrentProfile) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentProfile(aCurrentProfile); } \
-  NS_IMETHOD SetCurrentProfile(const PRUnichar * aCurrentProfile) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCurrentProfile(aCurrentProfile); } \
-  NS_IMETHOD ShutDownCurrentProfile(PRUint32 shutDownType) { return !_to ? NS_ERROR_NULL_POINTER : _to->ShutDownCurrentProfile(shutDownType); } \
-  NS_IMETHOD CreateNewProfile(const PRUnichar *profileName, const PRUnichar *nativeProfileDir, const PRUnichar *langcode, PRBool useExistingDir) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateNewProfile(profileName, nativeProfileDir, langcode, useExistingDir); } \
-  NS_IMETHOD RenameProfile(const PRUnichar *oldName, const PRUnichar *newName) { return !_to ? NS_ERROR_NULL_POINTER : _to->RenameProfile(oldName, newName); } \
-  NS_IMETHOD DeleteProfile(const PRUnichar *name, PRBool canDeleteFiles) { return !_to ? NS_ERROR_NULL_POINTER : _to->DeleteProfile(name, canDeleteFiles); } \
-  NS_IMETHOD CloneProfile(const PRUnichar *profileName) { return !_to ? NS_ERROR_NULL_POINTER : _to->CloneProfile(profileName); } 
+  NS_SCRIPTABLE NS_IMETHOD GetProfileCount(PRInt32 *aProfileCount) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetProfileCount(aProfileCount); } \
+  NS_SCRIPTABLE NS_IMETHOD GetProfileList(PRUint32 *length, PRUnichar ***profileNames) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetProfileList(length, profileNames); } \
+  NS_SCRIPTABLE NS_IMETHOD ProfileExists(const PRUnichar *profileName, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ProfileExists(profileName, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetCurrentProfile(PRUnichar * *aCurrentProfile) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentProfile(aCurrentProfile); } \
+  NS_SCRIPTABLE NS_IMETHOD SetCurrentProfile(const PRUnichar * aCurrentProfile) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetCurrentProfile(aCurrentProfile); } \
+  NS_SCRIPTABLE NS_IMETHOD ShutDownCurrentProfile(PRUint32 shutDownType) { return !_to ? NS_ERROR_NULL_POINTER : _to->ShutDownCurrentProfile(shutDownType); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateNewProfile(const PRUnichar *profileName, const PRUnichar *nativeProfileDir, const PRUnichar *langcode, PRBool useExistingDir) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateNewProfile(profileName, nativeProfileDir, langcode, useExistingDir); } \
+  NS_SCRIPTABLE NS_IMETHOD RenameProfile(const PRUnichar *oldName, const PRUnichar *newName) { return !_to ? NS_ERROR_NULL_POINTER : _to->RenameProfile(oldName, newName); } \
+  NS_SCRIPTABLE NS_IMETHOD DeleteProfile(const PRUnichar *name, PRBool canDeleteFiles) { return !_to ? NS_ERROR_NULL_POINTER : _to->DeleteProfile(name, canDeleteFiles); } \
+  NS_SCRIPTABLE NS_IMETHOD CloneProfile(const PRUnichar *profileName) { return !_to ? NS_ERROR_NULL_POINTER : _to->CloneProfile(profileName); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

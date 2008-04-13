@@ -28,10 +28,14 @@
 #ifndef GEARS_BASE_COMMON_JS_RUNNER_UTILS_H__
 #define GEARS_BASE_COMMON_JS_RUNNER_UTILS_H__
 
-#include "gears/base/common/js_runner.h"
+#include "gears/base/common/string16.h"
 
-// Reports an error to the JsRunner's global scope. Equivalent to the
-// following JavaScript: eval("throw new Error('hello')");
-void ThrowGlobalError(JsRunnerInterface *js_runner, const std::string16 &error);
+class JsRunnerInterface;
+
+// This function is defined here because it's also used by CallWindowOnerror()
+// in wince_compatibility.h.
+std::string16 EscapeMessage(const std::string16 &message);
+void ThrowGlobalErrorImpl(JsRunnerInterface *js_runner,
+                          const std::string16 &message);
 
 #endif  // GEARS_BASE_COMMON_JS_RUNNER_UTILS_H__

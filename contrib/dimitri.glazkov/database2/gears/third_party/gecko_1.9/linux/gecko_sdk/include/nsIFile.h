@@ -39,7 +39,7 @@ class nsISimpleEnumerator; /* forward declaration */
  *
  * @status FROZEN
  */
-class NS_NO_VTABLE nsIFile : public nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsIFile : public nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFILE_IID)
@@ -66,7 +66,7 @@ class NS_NO_VTABLE nsIFile : public nsISupports {
      *       filesystem charset.
      */
   /* void append (in AString node); */
-  NS_IMETHOD Append(const nsAString & node) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Append(const nsAString & node) = 0;
 
   /* [noscript] void appendNative (in ACString node); */
   NS_IMETHOD AppendNative(const nsACString & node) = 0;
@@ -75,7 +75,7 @@ class NS_NO_VTABLE nsIFile : public nsISupports {
      *  Normalize the pathName (e.g. removing .. and . components on Unix).
      */
   /* void normalize (); */
-  NS_IMETHOD Normalize(void) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Normalize(void) = 0;
 
   /**
      *  create
@@ -98,7 +98,7 @@ class NS_NO_VTABLE nsIFile : public nsISupports {
      *       permissions.
      */
   /* void create (in unsigned long type, in unsigned long permissions); */
-  NS_IMETHOD Create(PRUint32 type, PRUint32 permissions) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Create(PRUint32 type, PRUint32 permissions) = 0;
 
   /**
      *  Accessor to the leaf name of the file itself.      
@@ -106,8 +106,8 @@ class NS_NO_VTABLE nsIFile : public nsISupports {
      *  be in the native filesystem charset.
      */
   /* attribute AString leafName; */
-  NS_IMETHOD GetLeafName(nsAString & aLeafName) = 0;
-  NS_IMETHOD SetLeafName(const nsAString & aLeafName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLeafName(nsAString & aLeafName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetLeafName(const nsAString & aLeafName) = 0;
 
   /* [noscript] attribute ACString nativeLeafName; */
   NS_IMETHOD GetNativeLeafName(nsACString & aNativeLeafName) = 0;
@@ -141,7 +141,7 @@ class NS_NO_VTABLE nsIFile : public nsISupports {
      *       which case the current leaf name will be used.
      */
   /* void copyTo (in nsIFile newParentDir, in AString newName); */
-  NS_IMETHOD CopyTo(nsIFile *newParentDir, const nsAString & newName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CopyTo(nsIFile *newParentDir, const nsAString & newName) = 0;
 
   /* [noscript] void CopyToNative (in nsIFile newParentDir, in ACString newName); */
   NS_IMETHOD CopyToNative(nsIFile *newParentDir, const nsACString & newName) = 0;
@@ -156,7 +156,7 @@ class NS_NO_VTABLE nsIFile : public nsISupports {
      *  native filesystem charset.
      */
   /* void copyToFollowingLinks (in nsIFile newParentDir, in AString newName); */
-  NS_IMETHOD CopyToFollowingLinks(nsIFile *newParentDir, const nsAString & newName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CopyToFollowingLinks(nsIFile *newParentDir, const nsAString & newName) = 0;
 
   /* [noscript] void copyToFollowingLinksNative (in nsIFile newParentDir, in ACString newName); */
   NS_IMETHOD CopyToFollowingLinksNative(nsIFile *newParentDir, const nsACString & newName) = 0;
@@ -193,7 +193,7 @@ class NS_NO_VTABLE nsIFile : public nsISupports {
      *       which case the current leaf name will be used.
      */
   /* void moveTo (in nsIFile newParentDir, in AString newName); */
-  NS_IMETHOD MoveTo(nsIFile *newParentDir, const nsAString & newName) = 0;
+  NS_SCRIPTABLE NS_IMETHOD MoveTo(nsIFile *newParentDir, const nsAString & newName) = 0;
 
   /* [noscript] void moveToNative (in nsIFile newParentDir, in ACString newName); */
   NS_IMETHOD MoveToNative(nsIFile *newParentDir, const nsACString & newName) = 0;
@@ -205,18 +205,18 @@ class NS_NO_VTABLE nsIFile : public nsISupports {
      *  This will not resolve any symlinks.
      */
   /* void remove (in boolean recursive); */
-  NS_IMETHOD Remove(PRBool recursive) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Remove(PRBool recursive) = 0;
 
   /**
      *  Attributes of nsIFile.
      */
   /* attribute unsigned long permissions; */
-  NS_IMETHOD GetPermissions(PRUint32 *aPermissions) = 0;
-  NS_IMETHOD SetPermissions(PRUint32 aPermissions) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPermissions(PRUint32 *aPermissions) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetPermissions(PRUint32 aPermissions) = 0;
 
   /* attribute unsigned long permissionsOfLink; */
-  NS_IMETHOD GetPermissionsOfLink(PRUint32 *aPermissionsOfLink) = 0;
-  NS_IMETHOD SetPermissionsOfLink(PRUint32 aPermissionsOfLink) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPermissionsOfLink(PRUint32 *aPermissionsOfLink) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetPermissionsOfLink(PRUint32 aPermissionsOfLink) = 0;
 
   /**
      *  File Times are to be in milliseconds from
@@ -224,12 +224,12 @@ class NS_NO_VTABLE nsIFile : public nsISupports {
      *  Time (GMT).
      */
   /* attribute PRInt64 lastModifiedTime; */
-  NS_IMETHOD GetLastModifiedTime(PRInt64 *aLastModifiedTime) = 0;
-  NS_IMETHOD SetLastModifiedTime(PRInt64 aLastModifiedTime) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLastModifiedTime(PRInt64 *aLastModifiedTime) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetLastModifiedTime(PRInt64 aLastModifiedTime) = 0;
 
   /* attribute PRInt64 lastModifiedTimeOfLink; */
-  NS_IMETHOD GetLastModifiedTimeOfLink(PRInt64 *aLastModifiedTimeOfLink) = 0;
-  NS_IMETHOD SetLastModifiedTimeOfLink(PRInt64 aLastModifiedTimeOfLink) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetLastModifiedTimeOfLink(PRInt64 *aLastModifiedTimeOfLink) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetLastModifiedTimeOfLink(PRInt64 aLastModifiedTimeOfLink) = 0;
 
   /**
      *  WARNING!  On the Mac, getting/setting the file size with nsIFile
@@ -238,11 +238,11 @@ class NS_NO_VTABLE nsIFile : public nsISupports {
      *  GetFileSizeWithResFork() method defined on nsILocalFileMac.
      */
   /* attribute PRInt64 fileSize; */
-  NS_IMETHOD GetFileSize(PRInt64 *aFileSize) = 0;
-  NS_IMETHOD SetFileSize(PRInt64 aFileSize) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFileSize(PRInt64 *aFileSize) = 0;
+  NS_SCRIPTABLE NS_IMETHOD SetFileSize(PRInt64 aFileSize) = 0;
 
   /* readonly attribute PRInt64 fileSizeOfLink; */
-  NS_IMETHOD GetFileSizeOfLink(PRInt64 *aFileSizeOfLink) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetFileSizeOfLink(PRInt64 *aFileSizeOfLink) = 0;
 
   /**
      *  target & path
@@ -270,46 +270,46 @@ class NS_NO_VTABLE nsIFile : public nsISupports {
      *
      */
   /* readonly attribute AString target; */
-  NS_IMETHOD GetTarget(nsAString & aTarget) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) = 0;
 
   /* [noscript] readonly attribute ACString nativeTarget; */
   NS_IMETHOD GetNativeTarget(nsACString & aNativeTarget) = 0;
 
   /* readonly attribute AString path; */
-  NS_IMETHOD GetPath(nsAString & aPath) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetPath(nsAString & aPath) = 0;
 
   /* [noscript] readonly attribute ACString nativePath; */
   NS_IMETHOD GetNativePath(nsACString & aNativePath) = 0;
 
   /* boolean exists (); */
-  NS_IMETHOD Exists(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Exists(PRBool *_retval) = 0;
 
   /* boolean isWritable (); */
-  NS_IMETHOD IsWritable(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsWritable(PRBool *_retval) = 0;
 
   /* boolean isReadable (); */
-  NS_IMETHOD IsReadable(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsReadable(PRBool *_retval) = 0;
 
   /* boolean isExecutable (); */
-  NS_IMETHOD IsExecutable(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsExecutable(PRBool *_retval) = 0;
 
   /* boolean isHidden (); */
-  NS_IMETHOD IsHidden(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsHidden(PRBool *_retval) = 0;
 
   /* boolean isDirectory (); */
-  NS_IMETHOD IsDirectory(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsDirectory(PRBool *_retval) = 0;
 
   /* boolean isFile (); */
-  NS_IMETHOD IsFile(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsFile(PRBool *_retval) = 0;
 
   /* boolean isSymlink (); */
-  NS_IMETHOD IsSymlink(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsSymlink(PRBool *_retval) = 0;
 
   /**
      * Not a regular file, not a directory, not a symlink.
      */
   /* boolean isSpecial (); */
-  NS_IMETHOD IsSpecial(PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD IsSpecial(PRBool *_retval) = 0;
 
   /**
      *  createUnique
@@ -337,7 +337,7 @@ class NS_NO_VTABLE nsIFile : public nsISupports {
      *       permissions.
      */
   /* void createUnique (in unsigned long type, in unsigned long permissions); */
-  NS_IMETHOD CreateUnique(PRUint32 type, PRUint32 permissions) = 0;
+  NS_SCRIPTABLE NS_IMETHOD CreateUnique(PRUint32 type, PRUint32 permissions) = 0;
 
   /**
       * clone()
@@ -351,26 +351,26 @@ class NS_NO_VTABLE nsIFile : public nsISupports {
       *
       */
   /* nsIFile clone (); */
-  NS_IMETHOD Clone(nsIFile **_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Clone(nsIFile **_retval) = 0;
 
   /**
      *  Will determine if the inFile equals this.
      */
   /* boolean equals (in nsIFile inFile); */
-  NS_IMETHOD Equals(nsIFile *inFile, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIFile *inFile, PRBool *_retval) = 0;
 
   /**
      *  Will determine if inFile is a descendant of this file
      *  If |recur| is true, look in subdirectories too
      */
   /* boolean contains (in nsIFile inFile, in boolean recur); */
-  NS_IMETHOD Contains(nsIFile *inFile, PRBool recur, PRBool *_retval) = 0;
+  NS_SCRIPTABLE NS_IMETHOD Contains(nsIFile *inFile, PRBool recur, PRBool *_retval) = 0;
 
   /**
      *  Parent will be null when this is at the top of the volume.
      */
   /* readonly attribute nsIFile parent; */
-  NS_IMETHOD GetParent(nsIFile * *aParent) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetParent(nsIFile * *aParent) = 0;
 
   /**
      *  Returns an enumeration of the elements in a directory. Each
@@ -380,7 +380,7 @@ class NS_NO_VTABLE nsIFile : public nsISupports {
      *           not specify a directory.
      */
   /* readonly attribute nsISimpleEnumerator directoryEntries; */
-  NS_IMETHOD GetDirectoryEntries(nsISimpleEnumerator * *aDirectoryEntries) = 0;
+  NS_SCRIPTABLE NS_IMETHOD GetDirectoryEntries(nsISimpleEnumerator * *aDirectoryEntries) = 0;
 
 };
 
@@ -388,147 +388,147 @@ class NS_NO_VTABLE nsIFile : public nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIFILE \
-  NS_IMETHOD Append(const nsAString & node); \
+  NS_SCRIPTABLE NS_IMETHOD Append(const nsAString & node); \
   NS_IMETHOD AppendNative(const nsACString & node); \
-  NS_IMETHOD Normalize(void); \
-  NS_IMETHOD Create(PRUint32 type, PRUint32 permissions); \
-  NS_IMETHOD GetLeafName(nsAString & aLeafName); \
-  NS_IMETHOD SetLeafName(const nsAString & aLeafName); \
+  NS_SCRIPTABLE NS_IMETHOD Normalize(void); \
+  NS_SCRIPTABLE NS_IMETHOD Create(PRUint32 type, PRUint32 permissions); \
+  NS_SCRIPTABLE NS_IMETHOD GetLeafName(nsAString & aLeafName); \
+  NS_SCRIPTABLE NS_IMETHOD SetLeafName(const nsAString & aLeafName); \
   NS_IMETHOD GetNativeLeafName(nsACString & aNativeLeafName); \
   NS_IMETHOD SetNativeLeafName(const nsACString & aNativeLeafName); \
-  NS_IMETHOD CopyTo(nsIFile *newParentDir, const nsAString & newName); \
+  NS_SCRIPTABLE NS_IMETHOD CopyTo(nsIFile *newParentDir, const nsAString & newName); \
   NS_IMETHOD CopyToNative(nsIFile *newParentDir, const nsACString & newName); \
-  NS_IMETHOD CopyToFollowingLinks(nsIFile *newParentDir, const nsAString & newName); \
+  NS_SCRIPTABLE NS_IMETHOD CopyToFollowingLinks(nsIFile *newParentDir, const nsAString & newName); \
   NS_IMETHOD CopyToFollowingLinksNative(nsIFile *newParentDir, const nsACString & newName); \
-  NS_IMETHOD MoveTo(nsIFile *newParentDir, const nsAString & newName); \
+  NS_SCRIPTABLE NS_IMETHOD MoveTo(nsIFile *newParentDir, const nsAString & newName); \
   NS_IMETHOD MoveToNative(nsIFile *newParentDir, const nsACString & newName); \
-  NS_IMETHOD Remove(PRBool recursive); \
-  NS_IMETHOD GetPermissions(PRUint32 *aPermissions); \
-  NS_IMETHOD SetPermissions(PRUint32 aPermissions); \
-  NS_IMETHOD GetPermissionsOfLink(PRUint32 *aPermissionsOfLink); \
-  NS_IMETHOD SetPermissionsOfLink(PRUint32 aPermissionsOfLink); \
-  NS_IMETHOD GetLastModifiedTime(PRInt64 *aLastModifiedTime); \
-  NS_IMETHOD SetLastModifiedTime(PRInt64 aLastModifiedTime); \
-  NS_IMETHOD GetLastModifiedTimeOfLink(PRInt64 *aLastModifiedTimeOfLink); \
-  NS_IMETHOD SetLastModifiedTimeOfLink(PRInt64 aLastModifiedTimeOfLink); \
-  NS_IMETHOD GetFileSize(PRInt64 *aFileSize); \
-  NS_IMETHOD SetFileSize(PRInt64 aFileSize); \
-  NS_IMETHOD GetFileSizeOfLink(PRInt64 *aFileSizeOfLink); \
-  NS_IMETHOD GetTarget(nsAString & aTarget); \
+  NS_SCRIPTABLE NS_IMETHOD Remove(PRBool recursive); \
+  NS_SCRIPTABLE NS_IMETHOD GetPermissions(PRUint32 *aPermissions); \
+  NS_SCRIPTABLE NS_IMETHOD SetPermissions(PRUint32 aPermissions); \
+  NS_SCRIPTABLE NS_IMETHOD GetPermissionsOfLink(PRUint32 *aPermissionsOfLink); \
+  NS_SCRIPTABLE NS_IMETHOD SetPermissionsOfLink(PRUint32 aPermissionsOfLink); \
+  NS_SCRIPTABLE NS_IMETHOD GetLastModifiedTime(PRInt64 *aLastModifiedTime); \
+  NS_SCRIPTABLE NS_IMETHOD SetLastModifiedTime(PRInt64 aLastModifiedTime); \
+  NS_SCRIPTABLE NS_IMETHOD GetLastModifiedTimeOfLink(PRInt64 *aLastModifiedTimeOfLink); \
+  NS_SCRIPTABLE NS_IMETHOD SetLastModifiedTimeOfLink(PRInt64 aLastModifiedTimeOfLink); \
+  NS_SCRIPTABLE NS_IMETHOD GetFileSize(PRInt64 *aFileSize); \
+  NS_SCRIPTABLE NS_IMETHOD SetFileSize(PRInt64 aFileSize); \
+  NS_SCRIPTABLE NS_IMETHOD GetFileSizeOfLink(PRInt64 *aFileSizeOfLink); \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget); \
   NS_IMETHOD GetNativeTarget(nsACString & aNativeTarget); \
-  NS_IMETHOD GetPath(nsAString & aPath); \
+  NS_SCRIPTABLE NS_IMETHOD GetPath(nsAString & aPath); \
   NS_IMETHOD GetNativePath(nsACString & aNativePath); \
-  NS_IMETHOD Exists(PRBool *_retval); \
-  NS_IMETHOD IsWritable(PRBool *_retval); \
-  NS_IMETHOD IsReadable(PRBool *_retval); \
-  NS_IMETHOD IsExecutable(PRBool *_retval); \
-  NS_IMETHOD IsHidden(PRBool *_retval); \
-  NS_IMETHOD IsDirectory(PRBool *_retval); \
-  NS_IMETHOD IsFile(PRBool *_retval); \
-  NS_IMETHOD IsSymlink(PRBool *_retval); \
-  NS_IMETHOD IsSpecial(PRBool *_retval); \
-  NS_IMETHOD CreateUnique(PRUint32 type, PRUint32 permissions); \
-  NS_IMETHOD Clone(nsIFile **_retval); \
-  NS_IMETHOD Equals(nsIFile *inFile, PRBool *_retval); \
-  NS_IMETHOD Contains(nsIFile *inFile, PRBool recur, PRBool *_retval); \
-  NS_IMETHOD GetParent(nsIFile * *aParent); \
-  NS_IMETHOD GetDirectoryEntries(nsISimpleEnumerator * *aDirectoryEntries); 
+  NS_SCRIPTABLE NS_IMETHOD Exists(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD IsWritable(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD IsReadable(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD IsExecutable(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD IsHidden(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD IsDirectory(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD IsFile(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD IsSymlink(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD IsSpecial(PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD CreateUnique(PRUint32 type, PRUint32 permissions); \
+  NS_SCRIPTABLE NS_IMETHOD Clone(nsIFile **_retval); \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIFile *inFile, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD Contains(nsIFile *inFile, PRBool recur, PRBool *_retval); \
+  NS_SCRIPTABLE NS_IMETHOD GetParent(nsIFile * *aParent); \
+  NS_SCRIPTABLE NS_IMETHOD GetDirectoryEntries(nsISimpleEnumerator * *aDirectoryEntries); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIFILE(_to) \
-  NS_IMETHOD Append(const nsAString & node) { return _to Append(node); } \
+  NS_SCRIPTABLE NS_IMETHOD Append(const nsAString & node) { return _to Append(node); } \
   NS_IMETHOD AppendNative(const nsACString & node) { return _to AppendNative(node); } \
-  NS_IMETHOD Normalize(void) { return _to Normalize(); } \
-  NS_IMETHOD Create(PRUint32 type, PRUint32 permissions) { return _to Create(type, permissions); } \
-  NS_IMETHOD GetLeafName(nsAString & aLeafName) { return _to GetLeafName(aLeafName); } \
-  NS_IMETHOD SetLeafName(const nsAString & aLeafName) { return _to SetLeafName(aLeafName); } \
+  NS_SCRIPTABLE NS_IMETHOD Normalize(void) { return _to Normalize(); } \
+  NS_SCRIPTABLE NS_IMETHOD Create(PRUint32 type, PRUint32 permissions) { return _to Create(type, permissions); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLeafName(nsAString & aLeafName) { return _to GetLeafName(aLeafName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLeafName(const nsAString & aLeafName) { return _to SetLeafName(aLeafName); } \
   NS_IMETHOD GetNativeLeafName(nsACString & aNativeLeafName) { return _to GetNativeLeafName(aNativeLeafName); } \
   NS_IMETHOD SetNativeLeafName(const nsACString & aNativeLeafName) { return _to SetNativeLeafName(aNativeLeafName); } \
-  NS_IMETHOD CopyTo(nsIFile *newParentDir, const nsAString & newName) { return _to CopyTo(newParentDir, newName); } \
+  NS_SCRIPTABLE NS_IMETHOD CopyTo(nsIFile *newParentDir, const nsAString & newName) { return _to CopyTo(newParentDir, newName); } \
   NS_IMETHOD CopyToNative(nsIFile *newParentDir, const nsACString & newName) { return _to CopyToNative(newParentDir, newName); } \
-  NS_IMETHOD CopyToFollowingLinks(nsIFile *newParentDir, const nsAString & newName) { return _to CopyToFollowingLinks(newParentDir, newName); } \
+  NS_SCRIPTABLE NS_IMETHOD CopyToFollowingLinks(nsIFile *newParentDir, const nsAString & newName) { return _to CopyToFollowingLinks(newParentDir, newName); } \
   NS_IMETHOD CopyToFollowingLinksNative(nsIFile *newParentDir, const nsACString & newName) { return _to CopyToFollowingLinksNative(newParentDir, newName); } \
-  NS_IMETHOD MoveTo(nsIFile *newParentDir, const nsAString & newName) { return _to MoveTo(newParentDir, newName); } \
+  NS_SCRIPTABLE NS_IMETHOD MoveTo(nsIFile *newParentDir, const nsAString & newName) { return _to MoveTo(newParentDir, newName); } \
   NS_IMETHOD MoveToNative(nsIFile *newParentDir, const nsACString & newName) { return _to MoveToNative(newParentDir, newName); } \
-  NS_IMETHOD Remove(PRBool recursive) { return _to Remove(recursive); } \
-  NS_IMETHOD GetPermissions(PRUint32 *aPermissions) { return _to GetPermissions(aPermissions); } \
-  NS_IMETHOD SetPermissions(PRUint32 aPermissions) { return _to SetPermissions(aPermissions); } \
-  NS_IMETHOD GetPermissionsOfLink(PRUint32 *aPermissionsOfLink) { return _to GetPermissionsOfLink(aPermissionsOfLink); } \
-  NS_IMETHOD SetPermissionsOfLink(PRUint32 aPermissionsOfLink) { return _to SetPermissionsOfLink(aPermissionsOfLink); } \
-  NS_IMETHOD GetLastModifiedTime(PRInt64 *aLastModifiedTime) { return _to GetLastModifiedTime(aLastModifiedTime); } \
-  NS_IMETHOD SetLastModifiedTime(PRInt64 aLastModifiedTime) { return _to SetLastModifiedTime(aLastModifiedTime); } \
-  NS_IMETHOD GetLastModifiedTimeOfLink(PRInt64 *aLastModifiedTimeOfLink) { return _to GetLastModifiedTimeOfLink(aLastModifiedTimeOfLink); } \
-  NS_IMETHOD SetLastModifiedTimeOfLink(PRInt64 aLastModifiedTimeOfLink) { return _to SetLastModifiedTimeOfLink(aLastModifiedTimeOfLink); } \
-  NS_IMETHOD GetFileSize(PRInt64 *aFileSize) { return _to GetFileSize(aFileSize); } \
-  NS_IMETHOD SetFileSize(PRInt64 aFileSize) { return _to SetFileSize(aFileSize); } \
-  NS_IMETHOD GetFileSizeOfLink(PRInt64 *aFileSizeOfLink) { return _to GetFileSizeOfLink(aFileSizeOfLink); } \
-  NS_IMETHOD GetTarget(nsAString & aTarget) { return _to GetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD Remove(PRBool recursive) { return _to Remove(recursive); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPermissions(PRUint32 *aPermissions) { return _to GetPermissions(aPermissions); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPermissions(PRUint32 aPermissions) { return _to SetPermissions(aPermissions); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPermissionsOfLink(PRUint32 *aPermissionsOfLink) { return _to GetPermissionsOfLink(aPermissionsOfLink); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPermissionsOfLink(PRUint32 aPermissionsOfLink) { return _to SetPermissionsOfLink(aPermissionsOfLink); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLastModifiedTime(PRInt64 *aLastModifiedTime) { return _to GetLastModifiedTime(aLastModifiedTime); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLastModifiedTime(PRInt64 aLastModifiedTime) { return _to SetLastModifiedTime(aLastModifiedTime); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLastModifiedTimeOfLink(PRInt64 *aLastModifiedTimeOfLink) { return _to GetLastModifiedTimeOfLink(aLastModifiedTimeOfLink); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLastModifiedTimeOfLink(PRInt64 aLastModifiedTimeOfLink) { return _to SetLastModifiedTimeOfLink(aLastModifiedTimeOfLink); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFileSize(PRInt64 *aFileSize) { return _to GetFileSize(aFileSize); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFileSize(PRInt64 aFileSize) { return _to SetFileSize(aFileSize); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFileSizeOfLink(PRInt64 *aFileSizeOfLink) { return _to GetFileSizeOfLink(aFileSizeOfLink); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) { return _to GetTarget(aTarget); } \
   NS_IMETHOD GetNativeTarget(nsACString & aNativeTarget) { return _to GetNativeTarget(aNativeTarget); } \
-  NS_IMETHOD GetPath(nsAString & aPath) { return _to GetPath(aPath); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPath(nsAString & aPath) { return _to GetPath(aPath); } \
   NS_IMETHOD GetNativePath(nsACString & aNativePath) { return _to GetNativePath(aNativePath); } \
-  NS_IMETHOD Exists(PRBool *_retval) { return _to Exists(_retval); } \
-  NS_IMETHOD IsWritable(PRBool *_retval) { return _to IsWritable(_retval); } \
-  NS_IMETHOD IsReadable(PRBool *_retval) { return _to IsReadable(_retval); } \
-  NS_IMETHOD IsExecutable(PRBool *_retval) { return _to IsExecutable(_retval); } \
-  NS_IMETHOD IsHidden(PRBool *_retval) { return _to IsHidden(_retval); } \
-  NS_IMETHOD IsDirectory(PRBool *_retval) { return _to IsDirectory(_retval); } \
-  NS_IMETHOD IsFile(PRBool *_retval) { return _to IsFile(_retval); } \
-  NS_IMETHOD IsSymlink(PRBool *_retval) { return _to IsSymlink(_retval); } \
-  NS_IMETHOD IsSpecial(PRBool *_retval) { return _to IsSpecial(_retval); } \
-  NS_IMETHOD CreateUnique(PRUint32 type, PRUint32 permissions) { return _to CreateUnique(type, permissions); } \
-  NS_IMETHOD Clone(nsIFile **_retval) { return _to Clone(_retval); } \
-  NS_IMETHOD Equals(nsIFile *inFile, PRBool *_retval) { return _to Equals(inFile, _retval); } \
-  NS_IMETHOD Contains(nsIFile *inFile, PRBool recur, PRBool *_retval) { return _to Contains(inFile, recur, _retval); } \
-  NS_IMETHOD GetParent(nsIFile * *aParent) { return _to GetParent(aParent); } \
-  NS_IMETHOD GetDirectoryEntries(nsISimpleEnumerator * *aDirectoryEntries) { return _to GetDirectoryEntries(aDirectoryEntries); } 
+  NS_SCRIPTABLE NS_IMETHOD Exists(PRBool *_retval) { return _to Exists(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsWritable(PRBool *_retval) { return _to IsWritable(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsReadable(PRBool *_retval) { return _to IsReadable(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsExecutable(PRBool *_retval) { return _to IsExecutable(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsHidden(PRBool *_retval) { return _to IsHidden(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsDirectory(PRBool *_retval) { return _to IsDirectory(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsFile(PRBool *_retval) { return _to IsFile(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsSymlink(PRBool *_retval) { return _to IsSymlink(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsSpecial(PRBool *_retval) { return _to IsSpecial(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateUnique(PRUint32 type, PRUint32 permissions) { return _to CreateUnique(type, permissions); } \
+  NS_SCRIPTABLE NS_IMETHOD Clone(nsIFile **_retval) { return _to Clone(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIFile *inFile, PRBool *_retval) { return _to Equals(inFile, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Contains(nsIFile *inFile, PRBool recur, PRBool *_retval) { return _to Contains(inFile, recur, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParent(nsIFile * *aParent) { return _to GetParent(aParent); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDirectoryEntries(nsISimpleEnumerator * *aDirectoryEntries) { return _to GetDirectoryEntries(aDirectoryEntries); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIFILE(_to) \
-  NS_IMETHOD Append(const nsAString & node) { return !_to ? NS_ERROR_NULL_POINTER : _to->Append(node); } \
+  NS_SCRIPTABLE NS_IMETHOD Append(const nsAString & node) { return !_to ? NS_ERROR_NULL_POINTER : _to->Append(node); } \
   NS_IMETHOD AppendNative(const nsACString & node) { return !_to ? NS_ERROR_NULL_POINTER : _to->AppendNative(node); } \
-  NS_IMETHOD Normalize(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Normalize(); } \
-  NS_IMETHOD Create(PRUint32 type, PRUint32 permissions) { return !_to ? NS_ERROR_NULL_POINTER : _to->Create(type, permissions); } \
-  NS_IMETHOD GetLeafName(nsAString & aLeafName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLeafName(aLeafName); } \
-  NS_IMETHOD SetLeafName(const nsAString & aLeafName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLeafName(aLeafName); } \
+  NS_SCRIPTABLE NS_IMETHOD Normalize(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Normalize(); } \
+  NS_SCRIPTABLE NS_IMETHOD Create(PRUint32 type, PRUint32 permissions) { return !_to ? NS_ERROR_NULL_POINTER : _to->Create(type, permissions); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLeafName(nsAString & aLeafName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLeafName(aLeafName); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLeafName(const nsAString & aLeafName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLeafName(aLeafName); } \
   NS_IMETHOD GetNativeLeafName(nsACString & aNativeLeafName) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNativeLeafName(aNativeLeafName); } \
   NS_IMETHOD SetNativeLeafName(const nsACString & aNativeLeafName) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetNativeLeafName(aNativeLeafName); } \
-  NS_IMETHOD CopyTo(nsIFile *newParentDir, const nsAString & newName) { return !_to ? NS_ERROR_NULL_POINTER : _to->CopyTo(newParentDir, newName); } \
+  NS_SCRIPTABLE NS_IMETHOD CopyTo(nsIFile *newParentDir, const nsAString & newName) { return !_to ? NS_ERROR_NULL_POINTER : _to->CopyTo(newParentDir, newName); } \
   NS_IMETHOD CopyToNative(nsIFile *newParentDir, const nsACString & newName) { return !_to ? NS_ERROR_NULL_POINTER : _to->CopyToNative(newParentDir, newName); } \
-  NS_IMETHOD CopyToFollowingLinks(nsIFile *newParentDir, const nsAString & newName) { return !_to ? NS_ERROR_NULL_POINTER : _to->CopyToFollowingLinks(newParentDir, newName); } \
+  NS_SCRIPTABLE NS_IMETHOD CopyToFollowingLinks(nsIFile *newParentDir, const nsAString & newName) { return !_to ? NS_ERROR_NULL_POINTER : _to->CopyToFollowingLinks(newParentDir, newName); } \
   NS_IMETHOD CopyToFollowingLinksNative(nsIFile *newParentDir, const nsACString & newName) { return !_to ? NS_ERROR_NULL_POINTER : _to->CopyToFollowingLinksNative(newParentDir, newName); } \
-  NS_IMETHOD MoveTo(nsIFile *newParentDir, const nsAString & newName) { return !_to ? NS_ERROR_NULL_POINTER : _to->MoveTo(newParentDir, newName); } \
+  NS_SCRIPTABLE NS_IMETHOD MoveTo(nsIFile *newParentDir, const nsAString & newName) { return !_to ? NS_ERROR_NULL_POINTER : _to->MoveTo(newParentDir, newName); } \
   NS_IMETHOD MoveToNative(nsIFile *newParentDir, const nsACString & newName) { return !_to ? NS_ERROR_NULL_POINTER : _to->MoveToNative(newParentDir, newName); } \
-  NS_IMETHOD Remove(PRBool recursive) { return !_to ? NS_ERROR_NULL_POINTER : _to->Remove(recursive); } \
-  NS_IMETHOD GetPermissions(PRUint32 *aPermissions) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPermissions(aPermissions); } \
-  NS_IMETHOD SetPermissions(PRUint32 aPermissions) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPermissions(aPermissions); } \
-  NS_IMETHOD GetPermissionsOfLink(PRUint32 *aPermissionsOfLink) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPermissionsOfLink(aPermissionsOfLink); } \
-  NS_IMETHOD SetPermissionsOfLink(PRUint32 aPermissionsOfLink) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPermissionsOfLink(aPermissionsOfLink); } \
-  NS_IMETHOD GetLastModifiedTime(PRInt64 *aLastModifiedTime) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLastModifiedTime(aLastModifiedTime); } \
-  NS_IMETHOD SetLastModifiedTime(PRInt64 aLastModifiedTime) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLastModifiedTime(aLastModifiedTime); } \
-  NS_IMETHOD GetLastModifiedTimeOfLink(PRInt64 *aLastModifiedTimeOfLink) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLastModifiedTimeOfLink(aLastModifiedTimeOfLink); } \
-  NS_IMETHOD SetLastModifiedTimeOfLink(PRInt64 aLastModifiedTimeOfLink) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLastModifiedTimeOfLink(aLastModifiedTimeOfLink); } \
-  NS_IMETHOD GetFileSize(PRInt64 *aFileSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFileSize(aFileSize); } \
-  NS_IMETHOD SetFileSize(PRInt64 aFileSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFileSize(aFileSize); } \
-  NS_IMETHOD GetFileSizeOfLink(PRInt64 *aFileSizeOfLink) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFileSizeOfLink(aFileSizeOfLink); } \
-  NS_IMETHOD GetTarget(nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTarget(aTarget); } \
+  NS_SCRIPTABLE NS_IMETHOD Remove(PRBool recursive) { return !_to ? NS_ERROR_NULL_POINTER : _to->Remove(recursive); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPermissions(PRUint32 *aPermissions) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPermissions(aPermissions); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPermissions(PRUint32 aPermissions) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPermissions(aPermissions); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPermissionsOfLink(PRUint32 *aPermissionsOfLink) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPermissionsOfLink(aPermissionsOfLink); } \
+  NS_SCRIPTABLE NS_IMETHOD SetPermissionsOfLink(PRUint32 aPermissionsOfLink) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetPermissionsOfLink(aPermissionsOfLink); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLastModifiedTime(PRInt64 *aLastModifiedTime) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLastModifiedTime(aLastModifiedTime); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLastModifiedTime(PRInt64 aLastModifiedTime) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLastModifiedTime(aLastModifiedTime); } \
+  NS_SCRIPTABLE NS_IMETHOD GetLastModifiedTimeOfLink(PRInt64 *aLastModifiedTimeOfLink) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLastModifiedTimeOfLink(aLastModifiedTimeOfLink); } \
+  NS_SCRIPTABLE NS_IMETHOD SetLastModifiedTimeOfLink(PRInt64 aLastModifiedTimeOfLink) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLastModifiedTimeOfLink(aLastModifiedTimeOfLink); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFileSize(PRInt64 *aFileSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFileSize(aFileSize); } \
+  NS_SCRIPTABLE NS_IMETHOD SetFileSize(PRInt64 aFileSize) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetFileSize(aFileSize); } \
+  NS_SCRIPTABLE NS_IMETHOD GetFileSizeOfLink(PRInt64 *aFileSizeOfLink) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFileSizeOfLink(aFileSizeOfLink); } \
+  NS_SCRIPTABLE NS_IMETHOD GetTarget(nsAString & aTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetTarget(aTarget); } \
   NS_IMETHOD GetNativeTarget(nsACString & aNativeTarget) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNativeTarget(aNativeTarget); } \
-  NS_IMETHOD GetPath(nsAString & aPath) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPath(aPath); } \
+  NS_SCRIPTABLE NS_IMETHOD GetPath(nsAString & aPath) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetPath(aPath); } \
   NS_IMETHOD GetNativePath(nsACString & aNativePath) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNativePath(aNativePath); } \
-  NS_IMETHOD Exists(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Exists(_retval); } \
-  NS_IMETHOD IsWritable(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsWritable(_retval); } \
-  NS_IMETHOD IsReadable(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsReadable(_retval); } \
-  NS_IMETHOD IsExecutable(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsExecutable(_retval); } \
-  NS_IMETHOD IsHidden(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsHidden(_retval); } \
-  NS_IMETHOD IsDirectory(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsDirectory(_retval); } \
-  NS_IMETHOD IsFile(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsFile(_retval); } \
-  NS_IMETHOD IsSymlink(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsSymlink(_retval); } \
-  NS_IMETHOD IsSpecial(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsSpecial(_retval); } \
-  NS_IMETHOD CreateUnique(PRUint32 type, PRUint32 permissions) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateUnique(type, permissions); } \
-  NS_IMETHOD Clone(nsIFile **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Clone(_retval); } \
-  NS_IMETHOD Equals(nsIFile *inFile, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Equals(inFile, _retval); } \
-  NS_IMETHOD Contains(nsIFile *inFile, PRBool recur, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Contains(inFile, recur, _retval); } \
-  NS_IMETHOD GetParent(nsIFile * *aParent) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParent(aParent); } \
-  NS_IMETHOD GetDirectoryEntries(nsISimpleEnumerator * *aDirectoryEntries) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDirectoryEntries(aDirectoryEntries); } 
+  NS_SCRIPTABLE NS_IMETHOD Exists(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Exists(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsWritable(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsWritable(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsReadable(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsReadable(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsExecutable(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsExecutable(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsHidden(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsHidden(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsDirectory(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsDirectory(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsFile(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsFile(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsSymlink(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsSymlink(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD IsSpecial(PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->IsSpecial(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD CreateUnique(PRUint32 type, PRUint32 permissions) { return !_to ? NS_ERROR_NULL_POINTER : _to->CreateUnique(type, permissions); } \
+  NS_SCRIPTABLE NS_IMETHOD Clone(nsIFile **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Clone(_retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Equals(nsIFile *inFile, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Equals(inFile, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD Contains(nsIFile *inFile, PRBool recur, PRBool *_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Contains(inFile, recur, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetParent(nsIFile * *aParent) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetParent(aParent); } \
+  NS_SCRIPTABLE NS_IMETHOD GetDirectoryEntries(nsISimpleEnumerator * *aDirectoryEntries) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetDirectoryEntries(aDirectoryEntries); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */

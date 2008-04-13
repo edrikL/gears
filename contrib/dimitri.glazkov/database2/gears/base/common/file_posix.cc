@@ -23,20 +23,25 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Implmenetation of the File class for use on POSIX compliant platforms.
+// Implementation of the File class for use on POSIX compliant platforms.
 // Some methods implementations are browser neutral and can be found
 // in file.cc.
 
 #ifdef WIN32
 // Currently all non-win32 gears targets are POSIX compliant.
 #else
-#include <assert.h>
 #include <dirent.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <cassert>
+#include <cerrno>
+#include <cstdio>
+#include <cstring>
+#include <limits>
+#include <string>
+#include <vector>
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/scoped_token.h"
@@ -47,7 +52,7 @@
 static const char kPathSeparatorUTF8 = '/';
 
 // Wraps filename, "is file a directory?" pair.
-class DirEntry : public std::pair<std::string,bool> {
+class DirEntry : public std::pair<std::string, bool> {
  public:
   DirEntry(const std::string &filename, bool is_dir) :
       std::pair<std::string,bool>(filename, is_dir) {}
@@ -58,9 +63,16 @@ class DirEntry : public std::pair<std::string,bool> {
 typedef std::vector<DirEntry> DirContentsVector;
 typedef DirContentsVector::const_iterator DirContentsVectorConstIterator;
 
+// Places the direct contents of the 'path' directory into results.  This
+// method is not recursive.
+// 'results' may not be NULL.
+//
+// Returns false on error in which case 'results' isn't modified.
 static bool ReadDir(const std::string16 &path, DirContentsVector *results) {
   std::string path_utf8;
-  String16ToUTF8(path.c_str(), &path_utf8);
+  if (!String16ToUTF8(path.c_str(), &path_utf8)) {
+    return false;
+  }
   DIR *the_dir = opendir(path_utf8.c_str());
   if (the_dir == NULL) {
     return false;
@@ -74,13 +86,21 @@ static bool ReadDir(const std::string16 &path, DirContentsVector *results) {
   // knowing the difference is via errno.
   // The need to do this arose from a unit test failing - readdir() does not
   // zero errno itself (at least under OSX).
+  //
+  // To clarify, the error case we're solving here, is when we reach this point
+  // with errno != 0.  Then when readdir() returns NULL inside the loop to 
+  // signify that it's finished reading the directory - when we check errno we 
+  // will find a non-zero value and mistakenly think that readdir() has failed.
+  //
+  // We do not need to move this inside the loop, because no change will be
+  // made to errno inside the loop if there are no errors, and if there are
+  // we want to bail immediately.
   errno = 0;
   while (true) {
     struct dirent *dir_info = readdir(the_dir);
     if (dir_info == NULL) {
       if (errno != 0) {
         error_reading_dir_contents = true;
-        break;
       }
       break;  // Reached end of directory contents.
     }
@@ -108,15 +128,17 @@ static bool ReadDir(const std::string16 &path, DirContentsVector *results) {
 // Scoped file.
 class CloseFileFunctor {
  public:
-  void operator()(FILE *f) const {
-    if (f) { fclose(f); }
+  void operator()(FILE *file) const {
+    if (file) { fclose(file); }
   }
 };
 typedef scoped_token<FILE *, CloseFileFunctor> ScopedFile;
 
 bool File::CreateNewFile(const char16 *path) {
   std::string path_utf8;
-  String16ToUTF8(path, &path_utf8);
+  if (!String16ToUTF8(path, &path_utf8)) {
+    return false;
+  }
   
   // Create new file with permission 0600, fail if the file already exists.
   int fd = open(path_utf8.c_str(), O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
@@ -133,7 +155,9 @@ bool File::CreateNewFile(const char16 *path) {
 // Retrieves the stat() struct for the given file.
 static bool StatFile(const char16 *path, struct stat *stat_data) {
   std::string path_utf8;
-  String16ToUTF8(path, &path_utf8);
+  if (!String16ToUTF8(path, &path_utf8)) {
+    return false;
+  }
   
   struct stat tmp;
   if (stat(path_utf8.c_str(), &tmp) != 0) {
@@ -142,7 +166,6 @@ static bool StatFile(const char16 *path, struct stat *stat_data) {
   *stat_data = tmp;
   return true;
 }
-
 
 bool File::Exists(const char16 *full_filepath) {
   struct stat stat_data;
@@ -153,7 +176,6 @@ bool File::Exists(const char16 *full_filepath) {
   return S_ISREG(stat_data.st_mode);
 }
 
-
 bool File::DirectoryExists(const char16 *full_dirpath) {
   struct stat stat_data;
   if (!StatFile(full_dirpath, &stat_data)) {
@@ -163,7 +185,6 @@ bool File::DirectoryExists(const char16 *full_dirpath) {
   return S_ISDIR(stat_data.st_mode);
 }
 
-
 int64 File::GetFileSize(const char16 *full_filepath) {
   struct stat stat_data;
   if (!StatFile(full_filepath, &stat_data)) {
@@ -172,35 +193,43 @@ int64 File::GetFileSize(const char16 *full_filepath) {
   return static_cast<int64>(stat_data.st_size);
 }
 
-
-int File::ReadFileSegmentToBuffer(const char16 *full_filepath,
-                                  uint8* destination,
-                                  int max_bytes,
-                                  int64 position) {
-  if (max_bytes <= 0 || position < 0) {
-    return 0;
+int64 File::ReadFileSegmentToBuffer(const char16 *full_filepath,
+                                    uint8* destination,
+                                    int64 position,
+                                    int64 max_bytes) {
+  if (max_bytes < 0 || position < 0) {
+    return -1;
   }
 
   std::string file_path_utf8;
-  String16ToUTF8(full_filepath, &file_path_utf8);
+  if (!String16ToUTF8(full_filepath, &file_path_utf8)) {
+    return -1;
+  }
   ScopedFile scoped_file(fopen(file_path_utf8.c_str(), "rb"));
   if (scoped_file.get() == NULL) {
-    return 0;
+    return -1;
   }
 
-  if (position != 0 && fseek(scoped_file.get(), position, SEEK_SET) != 0) {
-    return 0;
+  if (position > std::numeric_limits<long>::max()) {  // fseek limit
+    return -1;
+  }
+  if (position != 0
+      && fseek(scoped_file.get(), static_cast<long>(position), SEEK_SET) != 0) {
+    return -1;
   }
   
-  size_t bytes_read = fread(destination, 1, max_bytes, scoped_file.get());
+  if (max_bytes > std::numeric_limits<size_t>::max()) {  // fread limit
+    max_bytes = std::numeric_limits<size_t>::max();
+  }
+  size_t bytes_read = fread(destination, 1, static_cast<size_t>(max_bytes),
+                            scoped_file.get());
   
   if (ferror(scoped_file.get()) || fclose(scoped_file.release()) != 0) {
-    return 0;
+    return -1;
   }
   
   return bytes_read;
 }
-
 
 bool File::ReadFileToVector(const char16 *full_filepath,
                             std::vector<uint8> *data) {                      
@@ -212,7 +241,9 @@ bool File::ReadFileToVector(const char16 *full_filepath,
   size_t file_size = stat_data.st_size;
 
   std::string file_path_utf8;
-  String16ToUTF8(full_filepath, &file_path_utf8);  
+  if (!String16ToUTF8(full_filepath, &file_path_utf8)) {
+    return false;
+  }
   ScopedFile scoped_file(fopen(file_path_utf8.c_str(), "rb"));
   if (scoped_file.get() == NULL) {
     return false;
@@ -229,7 +260,7 @@ bool File::ReadFileToVector(const char16 *full_filepath,
   
   if (bytes_read < file_size) {
     return false;
-  }else if (ferror(scoped_file.get())) {
+  } else if (ferror(scoped_file.get())) {
     return false;
   }
   
@@ -247,11 +278,12 @@ bool File::WriteVectorToFile(const char16 *full_filepath,
   return WriteBytesToFile(full_filepath, first_byte, data->size());
 }
 
-
 bool File::WriteBytesToFile(const char16 *full_filepath, const uint8 *buf,
                             int length) {
   std::string file_path_utf8;
-  String16ToUTF8(full_filepath, &file_path_utf8);
+  if (!String16ToUTF8(full_filepath, &file_path_utf8)) {
+    return false;
+  }
   
   // Don't create a file if it doesn't exist already.
   ScopedFile scoped_file(fopen(file_path_utf8.c_str(), "rb+"));
@@ -266,7 +298,7 @@ bool File::WriteBytesToFile(const char16 *full_filepath, const uint8 *buf,
   
   // Behave the same as other platforms - don't fail on write of 0 bytes
   // if file exists.
-  if (length > 0 ) {
+  if (length > 0) {
     if (fwrite(buf, 1, length, scoped_file.get()) != 
         static_cast<size_t>(length)) {
       return false;
@@ -282,7 +314,9 @@ bool File::WriteBytesToFile(const char16 *full_filepath, const uint8 *buf,
 
 bool File::Delete(const char16 *full_filepath) {
   std::string path_utf8;
-  String16ToUTF8(full_filepath, &path_utf8);
+  if (!String16ToUTF8(full_filepath, &path_utf8)) {
+    return false;
+  }
   
   return unlink(path_utf8.c_str()) == 0;
 }
@@ -306,10 +340,11 @@ bool File::CreateNewTempDirectory(std::string16 *full_filepath) {
     return false;
   }
   
-  UTF8ToString16(temp_dir_template, full_filepath);
+  if (!UTF8ToString16(temp_dir_template, full_filepath)) {
+    return false;
+  }
   return true;
 }
-
 
 bool File::RecursivelyCreateDir(const char16 *full_dirpath) {
    // If directory already exists, no need to do anything.
@@ -325,7 +360,6 @@ bool File::RecursivelyCreateDir(const char16 *full_dirpath) {
   for (File::PathComponents::const_iterator it = path_components.begin();
        it != path_components.end();
        ++it) {
-
     // '//', '.' & '..' shouldn't be present in the path, but if they are fail 
     // hard!
     if (it->empty() || *it == STRING16(L".") || *it == STRING16(L"..")) {
@@ -336,7 +370,10 @@ bool File::RecursivelyCreateDir(const char16 *full_dirpath) {
     long_path = long_path + kPathSeparator + *it;
 
     std::string path_utf8;
-    String16ToUTF8(long_path.c_str(), &path_utf8);
+    if (!String16ToUTF8(long_path.c_str(), &path_utf8)) {
+      return false;
+    }
+    
     // Create directory with permissions set to 0700.
     if (mkdir(path_utf8.c_str(), S_IRUSR | S_IWUSR | S_IXUSR) != 0) {
       // Any error value other than "directory already exists" is considered
@@ -352,24 +389,24 @@ bool File::RecursivelyCreateDir(const char16 *full_dirpath) {
   return true;
 }
 
-
 // Recursive function for use by DeleteRecursively.
-static bool DeleteRecursiveImp(const std::string &del_path) {
-  DirContentsVector dir_contents;
+static bool DeleteRecursivelyImpl(const std::string &del_path) {
   std::string16 del_path_utf16;
-  UTF8ToString16(del_path.c_str(), &del_path_utf16);
+  if (!UTF8ToString16(del_path.c_str(), &del_path_utf16)) {
+    return false;
+  }
+  DirContentsVector dir_contents;
   if (!ReadDir(del_path_utf16, &dir_contents)) {
     return false;
   }
 
-  for (DirContentsVectorConstIterator it = dir_contents.begin(); 
-       it != dir_contents.end(); 
+  for (DirContentsVectorConstIterator it = dir_contents.begin();
+       it != dir_contents.end();
        ++it) {
-       
     std::string path_component_to_delete = del_path + kPathSeparatorUTF8 + 
                                            it->Filename();
     if (it->IsDirectory()) {
-      if (!DeleteRecursiveImp(path_component_to_delete)) {
+      if (!DeleteRecursivelyImpl(path_component_to_delete)) {
         return false;
       }
     } else {
@@ -387,9 +424,10 @@ static bool DeleteRecursiveImp(const std::string &del_path) {
 }
 
 bool File::DeleteRecursively(const char16 *full_dirpath) {
-
   std::string dir_to_delete;
-  String16ToUTF8(full_dirpath, &dir_to_delete);
+  if (!String16ToUTF8(full_dirpath, &dir_to_delete)) {
+    return false;
+  }
 
   // We can only operate on a directory.
   if(!File::DirectoryExists(full_dirpath)) {
@@ -402,7 +440,7 @@ bool File::DeleteRecursively(const char16 *full_dirpath) {
     dir_to_delete.erase(dir_to_delete.end()-1);
   }
 
-  return DeleteRecursiveImp(dir_to_delete);
+  return DeleteRecursivelyImpl(dir_to_delete);
 }
 
 #endif  // !WIN32

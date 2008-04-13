@@ -107,11 +107,28 @@ void GearsResourceStore::SetEnabled(JsCallContext *context) {
 void GearsResourceStore::Capture(JsCallContext *context) {
   std::string16 url;
   JsArray url_array;
-  JsRootedCallback *callback;
+  JsRootedCallback *callback = NULL;
+
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_ARRAY, &url_array },
-    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &callback },
+    { JSPARAM_REQUIRED, JSPARAM_UNKNOWN, NULL },
+    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &callback },
   };
+
+  // TODO(aa): Consider coercing anything except array to string. This would
+  // make it consistent with XMLHttpRequest and window.setTimeout.
+  int url_arg_type = context->GetArgumentType(0);
+  if (url_arg_type == JSPARAM_ARRAY) {
+    argv[0].type = JSPARAM_ARRAY;
+    argv[0].value_ptr = &url_array;
+  } else if (url_arg_type == JSPARAM_STRING16) {
+    argv[0].type = JSPARAM_STRING16;
+    argv[0].value_ptr = &url;
+  } else {
+    context->SetException(
+      STRING16(L"First parameter must be an array or string."));
+    return;
+  }
+
   context->GetArguments(ARRAYSIZE(argv), argv);
   scoped_ptr<JsRootedCallback> scoped_callback(callback);
   if (context->is_exception_set())
@@ -124,20 +141,27 @@ void GearsResourceStore::Capture(JsCallContext *context) {
   request->id = capture_id;
   request->callback.swap(scoped_callback);  // transfer ownership
 
-  // TODO(mpcomplete): handle single url.
-  // 'urls' was an array of strings
-  int array_length;
-  if (!url_array.GetLength(&array_length)) {
-    context->SetException(STRING16(L"Error finding array length."));
-    return;
-  }
-
-  for (int i = 0; i < array_length; ++i) {
-    if (!url_array.GetElementAsString(i, &url)) {
-      context->SetException(STRING16(L"Invalid parameter."));
+  if (url_arg_type == JSPARAM_ARRAY) {
+    // 'urls' was an array of strings
+    int array_length;
+    if (!url_array.GetLength(&array_length)) {
+      context->SetException(GET_INTERNAL_ERROR_MESSAGE());
       return;
     }
 
+    for (int i = 0; i < array_length; ++i) {
+      if (!url_array.GetElementAsString(i, &url)) {
+        context->SetException(STRING16(L"Invalid parameter."));
+        return;
+      }
+
+      if (!ResolveAndAppendUrl(url.c_str(), request.get())) {
+        context->SetException(exception_message_.c_str());
+        return;
+      }
+    }
+  } else {
+    // 'urls' was a string
     if (!ResolveAndAppendUrl(url.c_str(), request.get())) {
       context->SetException(exception_message_.c_str());
       return;
@@ -211,7 +235,7 @@ void GearsResourceStore::IsCaptured(JsCallContext *context) {
     return;
   }
   bool is_captured = store_.IsCaptured(full_url.c_str());
-  context->SetReturnValue(JSPARAM_BOOL, is_captured);
+  context->SetReturnValue(JSPARAM_BOOL, &is_captured);
 }
 
 //------------------------------------------------------------------------------
@@ -398,9 +422,8 @@ void GearsResourceStore::CreateFileSubmitter(JsCallContext *context) {
     return;
   }
 
-  GComPtr<GearsFileSubmitter> submitter(
-        CreateModule<GearsFileSubmitter>(GetJsRunner()));
-  if (!submitter.get())
+  scoped_refptr<GearsFileSubmitter> submitter;
+  if (!CreateModule<GearsFileSubmitter>(GetJsRunner(), &submitter))
     return;  // Create function sets an error message.
 
   if (!submitter->InitBaseFromSibling(this)) {
@@ -408,7 +431,7 @@ void GearsResourceStore::CreateFileSubmitter(JsCallContext *context) {
     return;
   }
 
-  context->SetReturnValue(JSPARAM_MODULE, submitter.get());
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, submitter.get());
   context->SetException(STRING16(L"Not Implemented"));
 }
 
@@ -431,6 +454,9 @@ void GearsResourceStore::HandleEvent(JsEventType event_type) {
 void GearsResourceStore::AbortAllRequests() {
   if (capture_task_.get()) {
     capture_task_->SetListener(NULL);
+    // No need to fire failed events since the current page is being unloaded
+    // or the resource store deleted for some other reason.
+    need_to_fire_failed_events_ = false;
     capture_task_->Abort();
     capture_task_.release()->DeleteWhenDone();
   }
@@ -488,6 +514,7 @@ GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
   }
 
   capture_task_->SetListener(this);
+  need_to_fire_failed_events_ = true;
   if (!capture_task_->Start()) {
     scoped_ptr<NPCaptureRequest> failed_request(current_request_.release());
     capture_task_.reset(NULL);
@@ -506,8 +533,7 @@ GearsResourceStore::StartCaptureTaskIfNeeded(bool fire_events_on_failure) {
 //------------------------------------------------------------------------------
 void GearsResourceStore::HandleEvent(int code, int param,
                                      AsyncTask *source) {
-  CaptureTask *task = reinterpret_cast<CaptureTask*>(source);
-  if (task && (task == capture_task_.get())) {
+  if (source && (source == capture_task_.get())) {
     if (code == CaptureTask::CAPTURE_TASK_COMPLETE) {
       OnCaptureTaskComplete();
     } else {
@@ -528,6 +554,7 @@ void GearsResourceStore::OnCaptureUrlComplete(int index, bool success) {
                              current_request_->id,
                              success);
   }
+  need_to_fire_failed_events_ = false;
 }
 
 //------------------------------------------------------------------------------
@@ -536,6 +563,10 @@ void GearsResourceStore::OnCaptureUrlComplete(int index, bool success) {
 void GearsResourceStore::OnCaptureTaskComplete() {
   capture_task_->SetListener(NULL);
   capture_task_.release()->DeleteWhenDone();
+  if (need_to_fire_failed_events_) {
+    assert(current_request_.get());
+    FireFailedEvents(current_request_.get());
+  }
   current_request_.reset(NULL);
   StartCaptureTaskIfNeeded(true);
 }

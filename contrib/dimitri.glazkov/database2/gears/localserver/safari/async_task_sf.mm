@@ -207,6 +207,7 @@ void AsyncTask::OnThreadDone() {
 //------------------------------------------------------------------------------
 bool AsyncTask::HttpGet(const char16 *full_url,
                         bool is_capturing,
+                        const char16 *reason_header_value,
                         const char16 *if_mod_since_date,
                         const char16 *required_cookie,
                         WebCacheDB::PayloadInfo *payload,
@@ -224,17 +225,23 @@ bool AsyncTask::HttpGet(const char16 *full_url,
   }
   
   if (required_cookie && required_cookie[0]) {
-    if (!IsCookiePresent(full_url, required_cookie)) {
-      if (error_message) {
-        *error_message = kCookieRequiredErrorMessage;
+    std::string16 required_cookie_str(required_cookie);
+    std::string16 name, value;
+    ParseCookieNameAndValue(required_cookie_str, &name, &value);
+    if (value != kNegatedRequiredCookieValue) {
+      CookieMap cookie_map;
+      cookie_map.LoadMapForUrl(full_url);
+      if (!cookie_map.HasLocalServerRequiredCookie(required_cookie_str)) {
+        if (error_message) {
+          *(error_message) = kCookieRequiredErrorMessage;
+        }
+        return false;
       }
-      return false;
     }
   }
 
-  ScopedHttpRequestPtr scoped_http_request(HttpRequest::Create());
-  HttpRequest *http_request = scoped_http_request.get();
-  if (!http_request)
+  scoped_refptr<HttpRequest> http_request;
+  if (!HttpRequest::Create(&http_request))
     return false;
 
   if (!http_request->Open(HttpConstants::kHttpGET, full_url, true)) {
@@ -242,7 +249,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
   }
 
   if (is_capturing) {
-    http_request->SetFollowRedirects(false);
+    http_request->SetRedirectBehavior(HttpRequest::FOLLOW_NONE);
     if (!http_request->SetRequestHeader(HttpConstants::kXGoogleGearsHeader,
                                         STRING16(L"1"))) {
       return false;
@@ -257,6 +264,13 @@ bool AsyncTask::HttpGet(const char16 *full_url,
   if (!http_request->SetRequestHeader(HttpConstants::kPragmaHeader,
                                       HttpConstants::kNoCache)) {
     return false;
+  }
+  
+  if (reason_header_value && reason_header_value[0]) {
+    if (!http_request->SetRequestHeader(HttpConstants::kXGearsReasonHeader,
+                                        reason_header_value)) {
+      return false;
+    }
   }
 
   if (if_mod_since_date && if_mod_since_date[0]) {
@@ -273,11 +287,12 @@ bool AsyncTask::HttpGet(const char16 *full_url,
 
   // Wait for the data to come back from the HTTP request
   while (1) {
-    long ready_state;
+    HttpRequest::ReadyState ready_state;
     http_request->GetReadyState(&ready_state);
 
-    if (ready_state == 4) // Completed
+    if (ready_state == HttpRequest::COMPLETE) {
       break;
+    }
 
     if (is_aborted_) {
       http_request->Abort();
@@ -289,7 +304,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
   }
 
   // Extract the status & data
-  long status;
+  int status;
   if (http_request->GetStatus(&status)) {
     payload->status_code = status;
     if (http_request->GetStatusLine(&payload->status_line)) {
@@ -305,7 +320,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
       *was_redirected = true;
 
     if (full_redirect_url)
-      http_request->GetRedirectUrl(full_redirect_url);
+      http_request->GetFinalUrl(full_redirect_url);
   }
 
   return !is_aborted_ && payload->data.get();

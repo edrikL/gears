@@ -29,6 +29,7 @@
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_types.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
 #include "gears/database2/interpreter.h"
 #include "gears/database2/thread_safe_queue.h"
@@ -72,7 +73,7 @@ public:
   static bool Create(const ModuleImplBaseClass *sibling, 
                      const std::string16 &name,
                      const std::string16 &version,
-                     Database2 **instance);
+                     scoped_refptr<Database2> *instance);
 
   // creates an instance of a SQLError object, using a Javascript object
   static bool CreateError(const ModuleImplBaseClass *sibling, 

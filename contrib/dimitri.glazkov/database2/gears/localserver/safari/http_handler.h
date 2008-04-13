@@ -23,6 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef GEARS_LOCALSERVER_SAFARI_HTTP_HANDLER_H__
+#define GEARS_LOCALSERVER_SAFARI_HTTP_HANDLER_H__
+
+#if defined(__OBJC__)
 #import <Foundation/Foundation.h>
 
 // Protocol handler to intercept requests for pages/data that are in the Gears
@@ -48,3 +52,6 @@
 - (void)stopLoading;
 
 @end
+#endif  // __OBJC__
+
+#endif  // GEARS_LOCALSERVER_SAFARI_HTTP_HANDLER_H__

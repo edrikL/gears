@@ -33,6 +33,7 @@
 #include <atlsync.h>
 #include <vector>
 #include "gears/base/common/message_queue.h"
+#include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/atl_headers.h" // include this before other ATL headers
 #include "gears/localserver/common/critical_section.h"
@@ -45,7 +46,8 @@
 //------------------------------------------------------------------------------
 // AsyncTask
 //------------------------------------------------------------------------------
-class AsyncTask : protected HttpRequest::ReadyStateListener {
+class AsyncTask : protected HttpRequest::ReadyStateListener,
+                  private RefCounted {
  public:
   // Starts a worker thread which will call the Run method
   bool Start();
@@ -112,6 +114,7 @@ class AsyncTask : protected HttpRequest::ReadyStateListener {
   // shortly thereafter.
   bool HttpGet(const char16 *full_url,
                bool is_capturing,
+               const char16 *reason_header_value,
                const char16 *if_mod_since_date,
                const char16 *required_cookie,
                WebCacheDB::PayloadInfo *payload,
@@ -124,8 +127,7 @@ class AsyncTask : protected HttpRequest::ReadyStateListener {
   bool is_initialized_;
 
  private:
-  friend struct AsyncTaskMessage;
-  friend class AsyncTaskMessageRouter;
+  friend struct AsyncTaskFunctor;
 
   // An HttpRequest listener callback
   void ReadyStateChanged(HttpRequest *source);
@@ -146,10 +148,6 @@ class AsyncTask : protected HttpRequest::ReadyStateListener {
       ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
   }
 
-  void AddReference();
-  void RemoveReference();
-
-  int refcount_;
   bool delete_when_done_;
   Listener *listener_;
   HANDLE thread_;

@@ -41,7 +41,6 @@
 - (int)statusCode {
   return statusCode_ ? statusCode_ : [super statusCode];
 }
-
 @end
 
 // The actual GearsWebCacheDB is not linked in with this file.  It is looked up
@@ -98,7 +97,6 @@
   
   if (!mimeType)
     mimeType = @"text/html";
-  
   // Create a HTTP response with the cached status code
   GearsNSHTTPURLResponse *response =
     [[GearsNSHTTPURLResponse alloc] initWithURL:url MIMEType:mimeType

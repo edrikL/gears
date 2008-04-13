@@ -26,13 +26,13 @@
   {0x00000000, 0x0000, 0x0000, \
     { 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }}
 
-class NS_NO_VTABLE nsISupports {
+class NS_NO_VTABLE NS_SCRIPTABLE nsISupports {
  public: 
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISUPPORTS_IID)
 
   /* void QueryInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
-  NS_IMETHOD QueryInterface(const nsIID & uuid, void * *result) = 0;
+  NS_SCRIPTABLE NS_IMETHOD QueryInterface(const nsIID & uuid, void * *result) = 0;
 
   /* [noscript, notxpcom] nsrefcnt AddRef (); */
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
@@ -46,19 +46,19 @@ class NS_NO_VTABLE nsISupports {
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSISUPPORTS \
-  NS_IMETHOD QueryInterface(const nsIID & uuid, void * *result); \
+  NS_SCRIPTABLE NS_IMETHOD QueryInterface(const nsIID & uuid, void * *result); \
   NS_IMETHOD_(nsrefcnt) AddRef(void); \
   NS_IMETHOD_(nsrefcnt) Release(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSISUPPORTS(_to) \
-  NS_IMETHOD QueryInterface(const nsIID & uuid, void * *result) { return _to QueryInterface(uuid, result); } \
+  NS_SCRIPTABLE NS_IMETHOD QueryInterface(const nsIID & uuid, void * *result) { return _to QueryInterface(uuid, result); } \
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return _to AddRef(); } \
   NS_IMETHOD_(nsrefcnt) Release(void) { return _to Release(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSISUPPORTS(_to) \
-  NS_IMETHOD QueryInterface(const nsIID & uuid, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->QueryInterface(uuid, result); } \
+  NS_SCRIPTABLE NS_IMETHOD QueryInterface(const nsIID & uuid, void * *result) { return !_to ? NS_ERROR_NULL_POINTER : _to->QueryInterface(uuid, result); } \
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddRef(); } \
   NS_IMETHOD_(nsrefcnt) Release(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->Release(); } 
 

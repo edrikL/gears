@@ -31,31 +31,32 @@ var isIE = false;
 var isPIE = false;
 var isFF = false;
 
-if (window.pie_dialog) {
+if (isDefined(typeof window.pie_dialog)) {
   isPIE = true;
 } else {
-  isIE = Boolean(window.external &&
-                 typeof window.external.GetDialogArguments != 'undefined');
-  isFF = Boolean(window.arguments);
+  // Note that we can't use isDefined() here because
+  // window.external.GetDialogArguments has type 'unknown' on IE!
+  isIE = isDefined(typeof window.external) &&
+         typeof window.external.GetDialogArguments != 'undefined';
+  isFF = isDefined(typeof window.arguments);
 }
 
 /**
  * Initialize the base functionality of the dialog.
  */
 function initDialog() {
-  var buttonRowElem = null;
   if (!isPIE) {
-    buttonRowElem = getElementById("button-row");
     addEvent(document, "keyup", handleKeyUp);
   } else {
+    var buttonRowElem = null;
     if (window.pie_dialog.IsSmartPhone()) {
       buttonRowElem = getElementById("button-row-smartphone");
     } else {
       buttonRowElem = getElementById("button-row");
     }
-  }
-  if (buttonRowElem) {
-    buttonRowElem.style.display = 'block';
+    if (buttonRowElem) {
+      buttonRowElem.style.display = 'block';
+    }
   }
   if (isPIE) {
     window.pie_dialog.SetScriptContext(window);
@@ -84,9 +85,17 @@ function isDefined(type) {
 function getElementById(id) {
   if (isDefined(typeof document.getElementById)) {
     return document.getElementById(id);
-  } else {
+  } else if (isDefined(typeof document.all)) {
     return document.all[id];
   }
+  throw new Error("Failed to get element by ID.");
+}
+
+/**
+ * Add trim method to String.
+ */
+String.prototype.trim = function() {
+  return this.replace(/^\s+/, "").replace(/\s+$/, "");
 }
 
 /**
@@ -96,8 +105,8 @@ function getElementById(id) {
 function setButtonLabel(textID, elemID) {
   var textElem = getElementById(textID);
   var buttonElem = getElementById(elemID);
-  if (textElem && buttonElem) {
-    buttonElem.value = textElem.innerText;
+  if (isDefined(typeof textElem) && isDefined(typeof buttonElem)) {
+    buttonElem.value = textElem.innerText.trim();
   }
 }
 
@@ -245,12 +254,14 @@ function handleKeyUp(e) {
  * Utility to add an event listener cross-browser.
  */
 function addEvent(element, eventName, handler) {
-  if (element.addEventListener) {
+  if (isDefined(typeof element.addEventListener)) {
     // Standards-compatible browsers
     element.addEventListener(eventName, handler, false);
-  } else {
+  } else if (isDefined(typeof element.attachEvent)) {
     // IE
     element.attachEvent("on" + eventName, handler);
+  } else {
+    throw new Error('Failed to attach event.');
   }
 }
 
@@ -295,22 +306,48 @@ function enableButton(buttonElm) {
 }
 
 /**
- * Returns a wrapped string (useful for small screens dialogs, 
+ * Returns a wrapped domain (useful for small screens dialogs, 
  * e.g. windows mobile devices)
  */
-function wrapString(str) {
+function wrapDomain(str) {
   if (isPIE) {
-    var max = 25;
-    var content = "";
-    var pos = 0;
-    while (pos < str.length) {
-      if (pos > 0) {
-        content += "<br>";
-      }
-      content += str.substring(pos, pos + max);
-      pos += max;
+    var max = 20;
+    var url;
+    var scheme_start = str.indexOf("://");
+    var scheme = "";
+
+    if (scheme_start != -1) {
+      scheme = str.substring(0, scheme_start);
+      scheme += "://";
+      // there's automatically an hyphenation
+      // point used by the browser after http://
+      // so we only have to hyphenate the
+      // rest of the string
+      url = str.substring(scheme.length);
+    } else {
+      url = str;
     }
-    return content;
+
+    // We hyphenate the string on every dot
+    var components = url.split(".");
+    if (components.length < 1) {
+      return str;
+    }
+
+    var content = components[0];
+    var len = content.length;
+    for (var i=1; i < components.length; i++) {
+      var elem = components[i];
+      content += ".";
+      len++;
+      if (len + elem.length > max) {
+        content += "<br>";
+        len = 0;
+      }
+      content += elem;
+      len += elem.length;
+    }
+    return scheme + content;
   }
   return str;
 }

@@ -40,6 +40,7 @@
 const HWND  kMessageOnlyWindowParent = HWND_MESSAGE;
 const DWORD kMessageOnlyWindowStyle  = NULL;
 
+#define ENABLE_LOGGING
 #if defined(DEBUG) && defined(ENABLE_LOGGING)
 // ATLTRACE for Win32 can take either a wide or narrow string.
 #define LOG(args) ATLTRACE args

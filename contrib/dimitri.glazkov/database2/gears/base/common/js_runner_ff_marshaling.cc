@@ -85,7 +85,7 @@
 // TODO(cprince): see if we can remove nsIVariant.h/nsMemory.h after cleanup.
 #include <gecko_internal/xptinfo.h>
 
-#include "ff/genfiles/base_interface_ff.h"
+#include "genfiles/base_interface_ff.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
@@ -196,10 +196,10 @@ bool JsContextWrapper::CreateModuleJsObject(ModuleImplBaseClass *module,
                                             JsToken *object_out) {
   // We require the name property to be set since we use it as the key for
   // caching created prototype objects.
-  const char *module_name = module->get_module_name();
-  assert(module_name);
+  const std::string &module_name = module->get_module_name();
 
   JSObject *proto = NULL;
+  JSClass *js_class = NULL;
   JsWrapperDataForProto *proto_data = NULL;
 
   // Get the JSClass for this type of Module, or else create one if we've
@@ -208,14 +208,17 @@ bool JsContextWrapper::CreateModuleJsObject(ModuleImplBaseClass *module,
   if (iter != name_to_proto_map_.end()) {
     proto = iter->second;
     proto_data = static_cast<JsWrapperDataForProto*>(JS_GetPrivate(cx_, proto));
+    js_class = proto_data->alloc_jsclass.get();
   } else {
     scoped_ptr<JsWrapperDataForProto> proto_data_alloc(
         new JsWrapperDataForProto);
 
-    if (!InitClass(module_name, proto_data_alloc.get(), NULL, NULL, &proto))
+    if (!InitClass(module_name.c_str(), proto_data_alloc.get(),
+                   NULL, NULL, &proto))
       return false;
 
     proto_data = proto_data_alloc.release();
+    js_class = proto_data->alloc_jsclass.get();
 
     if (!AddAllFunctionsToPrototype(proto,
                                     module->GetWrapper()->GetDispatcher())) {
@@ -225,15 +228,13 @@ bool JsContextWrapper::CreateModuleJsObject(ModuleImplBaseClass *module,
     // save values
     name_to_proto_map_[module_name] = proto;
     proto_wrappers_.push_back(linked_ptr<JsWrapperDataForProto>(proto_data));
+    dispatcher_classes_.insert(js_class);
 
     // succeeded; save the pointer
     JS_SetPrivate(cx_, proto, proto_data);
   }
 
-  JSObject *instance_obj = JS_NewObject(cx_,
-                                        proto_data->alloc_jsclass.get(),
-                                        proto,
-                                        global_obj_); // parent
+  JSObject *instance_obj = JS_NewObject(cx_, js_class, proto, global_obj_);
   if (!instance_obj) return false;
 
   if (!SetupInstanceObject(instance_obj, module, NULL))
@@ -589,6 +590,33 @@ bool JsContextWrapper::SetupInstanceObject(JSObject *instance_obj,
   // succeeded; prevent scoped cleanup of allocations, and save the pointer
   JS_SetPrivate(cx_, instance_obj, instance_data.release());
   return true;
+}
+
+
+ModuleImplBaseClass *JsContextWrapper::GetModuleFromJsToken(
+    const JsToken token) {
+  // First, check that the JsToken represents a (JavaScript) object, and not
+  // a JS int, for example.
+  if (!JSVAL_IS_OBJECT(token)) {
+    return NULL;
+  }
+  JSObject *obj = JSVAL_TO_OBJECT(token);
+
+  // Next, check that the JSObject is for a Dispatcher-based module, and not
+  // any other type of JSObject.  To do that, we get its JSClass, and check
+  // that against those JSClasses we have previously seen (in this
+  // JsContextWrapper) for Dispatcher-based modules.
+  JSClass *js_class = JS_GET_CLASS(cx_, obj);
+  if (dispatcher_classes_.find(js_class) == dispatcher_classes_.end()) {
+    return NULL;
+  }
+
+  // Now that we know that we have a Dispatcher-based module, we know that
+  // the JS private data is in fact a JsWrapperDataForInstance*, which we can
+  // crack open for its ModuleImplBaseClass*.
+  JsWrapperDataForInstance *instance_data =
+      reinterpret_cast<JsWrapperDataForInstance*>(JS_GetPrivate(cx_, obj));
+  return instance_data->module;
 }
 
 
@@ -2351,8 +2379,12 @@ static JSBool JSData2Native(JSContext *cx, void* d, jsval s,
                 }
                 else if(JSVAL_IS_NULL(s))
                 {
-                  assert(false); // NOT YET IMPLEMENTED! (missing XPCReadableJSStringWrapper, and more)
-                  return JS_FALSE;
+                  // Convert to an empty string.
+                  nsDependentString *wrapper =
+                      new nsDependentString(STRING16(L""), 0);
+                  if(!wrapper)
+                    return JS_FALSE;
+                  *((const nsAString**)d) = wrapper;
 /***
                     XPCReadableJSStringWrapper *wrapper =
                         new XPCReadableJSStringWrapper();
@@ -2368,8 +2400,13 @@ static JSBool JSData2Native(JSContext *cx, void* d, jsval s,
                 }
                 else
                 {
-                  assert(false); // NOT YET IMPLEMENTED! (commented this out b/c cleanup code casts void* to invoke nsDependentString dtor. Note: cannot access nsAString_external dtor.)
-                  return JS_FALSE;
+                  // Convert to an empty string.
+                  // TODO(zork): Properly convert argument to a string.
+                  nsDependentString *wrapper =
+                      new nsDependentString(STRING16(L""), 0);
+                  if(!wrapper)
+                    return JS_FALSE;
+                  *((const nsAString**)d) = wrapper;
 /***
                     // use nsString to encourage sharing
                     const nsAString *rs = new nsString(chars, length);

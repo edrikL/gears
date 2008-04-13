@@ -48,8 +48,11 @@
 
 // Export NPAPI entry points on OS X.
 #ifdef BROWSER_WEBKIT
-// Define this to keep prototypes consistent between NPAPI implementations.
-#define OSCALL
+
+// TODO(mpcomplete): remove this if BROWSER_WEBKIT starts using the standard
+// headers.
+
+#define STDCALL
 
 #pragma export on
 extern "C" {
@@ -84,7 +87,7 @@ void ShutdownThreadMessageQueue();
 static NPNetscapeFuncs g_browser_funcs;
 const std::string kNPNFuncsKey("base:NPNetscapeFuncs");
 
-NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* funcs)
+NPError STDCALL NP_GetEntryPoints(NPPluginFuncs* funcs)
 {
   if (funcs == NULL)
     return NPERR_INVALID_FUNCTABLE_ERROR;
@@ -128,7 +131,7 @@ NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* funcs)
   return NPERR_NO_ERROR;
 }
 
-NPError OSCALL NP_Initialize(NPNetscapeFuncs* funcs)
+NPError STDCALL NP_Initialize(NPNetscapeFuncs* funcs)
 {
   if (funcs == NULL)
     return NPERR_INVALID_FUNCTABLE_ERROR;
@@ -150,9 +153,9 @@ NPError OSCALL NP_Initialize(NPNetscapeFuncs* funcs)
 // void.
 // Gecko defines this differently.
 #ifdef BROWSER_WEBKIT
-void OSCALL NP_Shutdown()
+void STDCALL NP_Shutdown()
 #else
-NPError OSCALL NP_Shutdown()
+NPError STDCALL NP_Shutdown()
 #endif
 {
 #ifdef WIN32
