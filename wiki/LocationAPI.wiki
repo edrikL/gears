@@ -79,7 +79,7 @@ interface PositionOptions {
   // providers will be used.
   // For more information on the protocol that Gears uses to communicate with
   // location providers, see Appendix B.
-  string[] _gearsLocationProviderUrls;
+  string[] gearsLocationProviderUrls;
 
   // TODO: Consider adding distanceThreshold (for use with watch())
 };
