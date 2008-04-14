@@ -1,6 +1,11 @@
+#ifdef WIN32
 #include "gears/base/common/basictypes.h"
+
 typedef uint8 uint8_t;
 typedef uint32 uint32_t;
+#else
+#include <stdint.h>
+#endif
 
 #define CHAR62 '+'
 #define CHAR63 '/'
