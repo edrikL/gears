@@ -10,11 +10,11 @@ class Config:
   """
   SPECIAL_URL_TO_FILE_MAPPINGS = {
     "gears_init.js": "../sdk/gears_init.js",
-    "json_noeval.js": "../third_party/jsonjs/json_noeval.js"
+    "json_noeval.js": "../../third_party/jsonjs/json_noeval.js"
   }
   
   # List of paths to libraries that are bundled with runner and
   # need to be available in the path before the bootstrap is invoked.
   ADDITIONAL_PYTHON_LIBRARY_PATHS = [
-    os.path.join(os.path.dirname(__file__), '../../third_party')
+    os.path.join(os.path.dirname(__file__), '../../../third_party')
   ]

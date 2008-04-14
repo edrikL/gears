@@ -27,7 +27,7 @@
 
 #import "gears/base/common/string_utils.h"
 #import "gears/base/safari/cf_string_utils.h"
-#import "gears/third_party/scoped_ptr/scoped_ptr.h"
+#import "third_party/scoped_ptr/scoped_ptr.h"
 
 @implementation NSString(GearsString16Conversion)
 //------------------------------------------------------------------------------
