@@ -435,6 +435,8 @@ $(BROWSER)_CPPSRCS	+= \
 		sqlite_wrapper.cc \
 		sqlite_wrapper_test.cc \
 		stopwatch.cc \
+		stopwatch_posix.cc \
+		stopwatch_win32.cc \
 		string16.cc \
 		string_utils.cc \
 		string_utils_test.cc \
@@ -471,7 +473,6 @@ FF3_CPPSRCS	+= \
 		module.cc \
 		ns_file_utils.cc \
 		paths_ff.cc \
-		stopwatch_ff.cc \
 		url_utils_ff.cc \
 		xpcom_dynamic_load.cc \
 		$(NULL)
@@ -503,7 +504,6 @@ IE_CPPSRCS	+= \
 		module.cc \
 		module_wrapper.cc \
 		paths_ie.cc \
-		stopwatch_ie.cc \
 		url_utils_ie.cc \
 		vista_utils.cc \
 		$(NULL)
@@ -558,7 +558,6 @@ NPAPI_CPPSRCS	+= \
 		npp_bindings.cc \
 		paths_np.cc \
 		plugin.cc \
-		stopwatch_ie.cc \
 		url_utils_np.cc \
 		vista_utils.cc \
 		$(NULL)

@@ -53,6 +53,9 @@ void Dispatcher<GearsTest>::Init() {
   RegisterMethod("testEntriesPresentInBrowserCache",
                  &GearsTest::TestEntriesPresentInBrowserCache);
 #endif
+  RegisterMethod("getSystemTime", &GearsTest::GetSystemTime);
+  RegisterMethod("getTicks", &GearsTest::GetTimingTicks);
+  RegisterMethod("getTickDeltaMicros", &GearsTest::GetTimingTickDeltaMicros);
 }
 
 #ifdef WIN32
@@ -71,6 +74,7 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/permissions_db_test.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
+#include "gears/base/common/stopwatch.h"
 #include "gears/base/common/string_utils.h"
 #ifdef WINCE
 #include "gears/base/common/url_utils.h"
@@ -146,6 +150,34 @@ void TestObjectObject(JsCallContext* context, const JsObject& obj);
 void TestObjectFunction(JsCallContext* context,
                         const JsObject& obj,
                         const ModuleImplBaseClass& base);
+
+// Return the system time as a double (we can't return int64).
+void GearsTest::GetSystemTime(JsCallContext *context) {
+  double msec = static_cast<double>(GetCurrentTimeMillis());
+  context->SetReturnValue(JSPARAM_DOUBLE, &msec);
+}
+
+// Return the number of ticks as a double (we can't return int64).
+void GearsTest::GetTimingTicks(JsCallContext *context) {
+  double ticks = static_cast<double>(GetTicks());
+  context->SetReturnValue(JSPARAM_DOUBLE, &ticks);
+}
+
+// Return the elapsed time in microseconds as a double (we can't return int64).
+void GearsTest::GetTimingTickDeltaMicros(JsCallContext *context) {
+  int64 start;
+  int64 end;
+  JsArgument argv[] = {
+    {JSPARAM_REQUIRED, JSPARAM_INT64, &start},
+    {JSPARAM_REQUIRED, JSPARAM_INT64, &end}
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) {
+    return;
+  }
+  double elapsed = static_cast<double>(GetTickDeltaMicros(start, end));
+  context->SetReturnValue(JSPARAM_DOUBLE, &elapsed);
+}
 
 void GearsTest::RunTests(JsCallContext *context) {
   // We need permissions to use the localserver.
