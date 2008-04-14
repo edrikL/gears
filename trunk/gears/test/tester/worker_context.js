@@ -34,7 +34,7 @@
   var global = this;
   var testUrl;
   var includes = [
-    '../../third_party/jsonjs/json_noeval.js',
+    '../../../third_party/jsonjs/json_noeval.js',
     'lang.js',
     'assert.js',
     'runner_base.js',
