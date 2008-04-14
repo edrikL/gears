@@ -37,7 +37,19 @@
 
 class GearsTest : public ModuleImplBaseClassVirtual {
  public:
-   GearsTest() : ModuleImplBaseClassVirtual("GearsTest") {}
+  GearsTest() : ModuleImplBaseClassVirtual("GearsTest") {}
+
+  // IN: nothing
+  // OUT: double time
+  void GetSystemTime(JsCallContext *context);
+
+  // IN: nothing
+  // OUT: double ticks
+  void GetTimingTicks(JsCallContext *context);
+
+  // IN: int64 start, int64 end
+  // OUT: double elapsed
+  void GetTimingTickDeltaMicros(JsCallContext *context);
 
   // IN: nothing
   // OUT: bool

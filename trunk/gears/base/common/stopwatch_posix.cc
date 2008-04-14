@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+// Copyright 2008, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -23,47 +23,37 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_BASE_COMMON_STOPWATCH_H__
-#define GEARS_BASE_COMMON_STOPWATCH_H__
+// This file is used by both Linux and OSX.
+// TODO(cprince): remove platform-specific #ifdef guards when OS-specific
+// sources (e.g. LINUX_CPPSRCS) are implemented
+#if defined(LINUX) || defined(OS_MACOSX)
 
-#include "gears/base/common/basictypes.h"
-#include "gears/base/common/mutex.h"
+#include "gears/base/common/stopwatch.h"
+
+#include <assert.h>
+#include <sys/time.h>
 
 // Returns the current time in milliseconds since the epoch (midnight January 1,
 // 1970 GMT).
-int64 GetCurrentTimeMillis();
+int64 GetCurrentTimeMillis() {
+  return GetTicks() / 1000;
+}
 
 // Returns a monotonically incrementing counter.
-int64 GetTicks();
+int64 GetTicks() {
+  // gettimeofday() has microsecond resolution, which is good enough, so we use
+  // that for simplicity. Note that this isn't strictly monotonic because the
+  // clock could be reset.
+  struct timeval t;
+  int ret = gettimeofday(&t, 0);
+  return ret == 0 ? 0 : (t.tv_sec * 1000000LL) + t.tv_usec;
+}
 
 // Returns the number of microseconds elapsed between the start and end tick
 // counts.
-int64 GetTickDeltaMicros(int64 start, int64 end);
+int64 GetTickDeltaMicros(int64 start, int64 end) {
+  // Ticks are always microseconds.
+  return end - start;
+}
 
-// Simple perf timer. Supports nested calls.
-class Stopwatch {
- public:
-  Stopwatch() : start_ticks_(0), total_ticks_(0), nested_count_(0) {};
-  void Start();
-  void Stop();
-  int GetElapsed();
-
- private:
-  Mutex mutex_;
-  // The starting number and total number of ticks.
-  int64 start_ticks_;
-  int64 total_ticks_;
-  int nested_count_;
-};
-
-// Times an individual block of code.
-class ScopedStopwatch {
- public:
-  ScopedStopwatch(Stopwatch *t);
-  ~ScopedStopwatch();
-
- private:
-  Stopwatch *t_;
-};
-
-#endif  // GEARS_BASE_COMMON_STOPWATCH_H__
+#endif
