@@ -27,7 +27,9 @@
 // code as possible, delegating everything else to an "owner" C++ object
 // through which the rest of the Gears code interfaces
 // This class relies on the HttpRequest "owner"  class to enforce data validity
-// and invariants. 
+// and invariants.
+// Note: This class assumes the above holds and does not perform validation
+// of it's arguments.
 
 #import <Cocoa/Cocoa.h>
 #include "gears/base/common/string16.h"
@@ -38,35 +40,74 @@
   SFHttpRequest *owner_;
   NSMutableURLRequest *request_;     // (strong)
   NSURLConnection *connection_;      // (strong)
-  NSMutableData *received_data_;     // (strong)
-  NSInteger status_code_;
-  NSDictionary *header_dictionary_;  // (strong)
-  CFStringEncoding data_encoding_;
+  NSMutableData *receivedData_;     // (strong)
+  NSInteger statusCode_;
+  NSDictionary *headerDictionary_;  // (strong)
+  CFStringEncoding dataEncoding_;
 }
 
 #pragma mark Public Instance methods
 
+// Initializes a newly allocated instance.
+//
+// Arguments: owner - the C++ object that owns this delegate, we make use
+// of the owner's SetReadyState() & AllowRedirect() methods to notify it
+// of state changes and give it control of request redirection.
 - (id)initWithOwner:(SFHttpRequest *)owner;
 
+// Open a new connection.
+//
+// Arguments: full_url - the url to open the connection to.
+//            method - "GET", "POST", "HEAD" or another HTTP method listed in 
+//                     the W3C specification.
+//
+// Returns: true on success.
 - (bool)open:(const std::string16 &)full_url
       method:(const std::string16 &)method;
 
+// Send the request
+//
+// Arguments: post_data - a string to send if the |method| specified in the open
+//                        call was 'POST'.
+//            user_agent - the User Agent string to use when sending the 
+//                         request.
+//            headers - HTTP headers to send the request with.
+//            bypass_browser_cache - whether or not to use the browser's cache
+//                                   when processing the request.
+//
+// Returns: true on success.
 - (bool)send:(const std::string &)post_data
    userAgent:(const std::string16 &)user_agent
      headers:(const SFHttpRequest::HttpHeaderVector &)headers
      bypassBrowserCache:(bool)bypass_browser_cache;
 
-// Abort the http request.
+// Abort a request.
+// Behavior is undefined if called multiple times.
 - (void)abort;
 
 #pragma mark Public Instance methods -- Access Methods
 
 // These methods should only be called after the connection is closed.
+
+// Get the headers received from the server.
 - (void)headers:(SFHttpRequest::HttpHeaderVector *)headers;
+
+// Retrieve a named header.
+// If the header specified by name doesn't exist, |value| is cleared.
 - (void)headerByName:(const std::string16 &)name 
                value:(std::string16 *)value;
-- (void)statusCode:(int *)status;
+
+// Get the HTTP status code.
+- (int)statusCode;
+
+// Get human readable text associated with the status code.
 - (void)statusText:(std::string16 *)status_line;
+
+// Retrieve the response data in a byte array.
 - (void)responseBytes:(std::vector<uint8> *)body;
+
+// Retrieve the response data as a UTF-16 string.
+//
+// Returns: true on success.
 - (bool)responseAsString:(std::string16 *)response;
 @end
