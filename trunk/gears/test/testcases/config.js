@@ -73,8 +73,8 @@ suites.push(databaseSuite);
 var factorySuite = new TestSuite('Factory');
 factorySuite.addFile('../testcases/factory_tests.js',
                      {useWorker: true, useIFrame: true});
-factorySuite.addFile('../testcases/siting_tests.js',
-                     {useWorker: true, useIFrame: true});
+factorySuite.addFile('../testcases/factory_siting_tests.js',
+                     {useWorker: false, useIFrame: true});
 suites.push(factorySuite);
 
 var httpRequestSuite = new TestSuite('HttpRequest');
@@ -92,7 +92,7 @@ suites.push(localServerSuite);
 var internalTestSuite = new TestSuite('Internal_Tests');
 internalTestSuite.addFile('../testcases/internal_tests.js',
                           {useWorker: true, useIFrame: true});
-internalTestSuite.addFile('../testcases/coercion_tests.js', 
+internalTestSuite.addFile('../testcases/internal_coercion_tests.js', 
                           {useWorker: true, useIFrame: true});
 suites.push(internalTestSuite);
 
