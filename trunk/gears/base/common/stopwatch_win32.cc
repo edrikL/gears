@@ -41,12 +41,17 @@ int64 GetCurrentTimeMillis() {
   // The FILETIME structure is a 64-bit value representing the number of
   // 100-nanosecond intervals since January 1, 1601 (UTC). We offset to our
   // epoch (January 1, 1970 GMT) and convert to milliseconds.
+
+  // WinCE doesn't have GetSystemTimeAsFileTime, so we use this alternative
+  // combo on all Windows platforms.
+  SYSTEMTIME systemtime;
+  GetSystemTime(&systemtime);
+  int64 filetime;
+  assert(sizeof(int64) == sizeof(FILETIME));
+  SystemTimeToFileTime(&systemtime, reinterpret_cast<LPFILETIME>(&filetime));
+
   const int64 kOffset = 116444736000000000LL;
-  FILETIME file_time;
-  GetSystemTimeAsFileTime(&file_time);
-  int64 file_time_int64 = (static_cast<int64>(file_time.dwHighDateTime) << 32) |
-                          (static_cast<int64>(file_time.dwLowDateTime));
-  return (file_time_int64 - kOffset) / 10000;
+  return (filetime - kOffset) / 10000;
 }
 
 // Returns a monotonically incrementing counter.
