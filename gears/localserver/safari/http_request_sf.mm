@@ -23,6 +23,11 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+// TODO(playmobil): The getters in this version of http_request test their
+// input parameters and return false in the case of NULLs.  We should look at
+// either bubbling this behavior up to other platforms, or changing this version
+// to be consistent with the others.
+
 // Safari implementation of HttpRequest using an NSURLConnection.
 
 #include <iostream>
@@ -90,6 +95,10 @@ void SFHttpRequest::Unref() {
 // GetReadyState
 //------------------------------------------------------------------------------
 bool SFHttpRequest::GetReadyState(ReadyState *state) {
+  if (!state) {
+    return false;
+  }
+
   *state = ready_state_;
   return true;
 }
@@ -98,9 +107,13 @@ bool SFHttpRequest::GetReadyState(ReadyState *state) {
 // GetResponseBodyAsText
 //------------------------------------------------------------------------------
 bool SFHttpRequest::GetResponseBodyAsText(std::string16 *text) {
-  assert(text);
-  if (!IsInteractiveOrComplete() || was_aborted_)
+  if (!IsInteractiveOrComplete() || was_aborted_) {
     return false;
+  }
+    
+  if (!text) {
+    return false;
+  }
 
   return [delegate_holder_->delegate responseAsString:text];
 }
@@ -109,8 +122,11 @@ bool SFHttpRequest::GetResponseBodyAsText(std::string16 *text) {
 // GetResponseBody
 //------------------------------------------------------------------------------
 bool SFHttpRequest::GetResponseBody(std::vector<uint8> *body) {
-  assert(body);
   if (!(IsComplete() && !was_aborted_)) {
+    return false;
+  }
+  
+  if (!body) {
     return false;
   }
   
@@ -138,7 +154,11 @@ bool SFHttpRequest::GetStatus(int *status) {
     return false;
   }
   
-  [delegate_holder_->delegate statusCode:status];
+  if (!status) {
+    return false;
+  }
+  
+  *status = [delegate_holder_->delegate statusCode];
   
   return true;
 }
@@ -148,6 +168,10 @@ bool SFHttpRequest::GetStatus(int *status) {
 //------------------------------------------------------------------------------
 bool SFHttpRequest::GetStatusText(std::string16 *status_text) {
   if (!(IsInteractiveOrComplete() && !was_aborted_)) {
+    return false;
+  }
+  
+  if (!status_text) {
     return false;
   }
 
@@ -162,9 +186,12 @@ bool SFHttpRequest::GetStatusLine(std::string16 *status_line) {
   if (!(IsInteractiveOrComplete() && !was_aborted_)) {
     return false;
   }
+  
+  if (!status_line) {
+    return false;
+  }
 
-  int status_code;
-  [delegate_holder_->delegate statusCode:&status_code];
+  int status_code = [delegate_holder_->delegate statusCode];
   std::string16 status_text;
   [delegate_holder_->delegate statusText:&status_text];
 
@@ -215,8 +242,9 @@ bool SFHttpRequest::Open(const char16 *method, const char16 *url, bool async) {
 // SetRequestHeader
 //------------------------------------------------------------------------------
 bool SFHttpRequest::SetRequestHeader(const char16* name, const char16* value) {
-  if (was_sent_)
+  if (was_sent_) {
     return false;
+  }
   
   headers_to_send_.push_back(HttpHeader(name, value));
   return true;
@@ -231,13 +259,15 @@ bool SFHttpRequest::WasRedirected() {
 }
 
 bool SFHttpRequest::GetFinalUrl(std::string16 *full_url) {
-  if (!IsInteractiveOrComplete() || was_aborted_)
+  if (!IsInteractiveOrComplete() || was_aborted_) {
     return false;
+  }
 
-  if (WasRedirected())
+  if (WasRedirected()) {
     *full_url = redirect_url_;
-  else
+  } else {
     *full_url = url_;
+  }
   return true;
 }
 
@@ -285,8 +315,8 @@ bool SFHttpRequest::SendImpl(const std::string &post_data) {
   }
   was_sent_ = true;
   
-  //If Content-type header not set by the client, we set it to 'text/plain' in
-  //order to match behavior of FF implementation.
+  // If Content-type header not set by the client, we set it to 'text/plain' in
+  // order to match behavior of FF implementation.
   bool has_content_type_header = false;
   for (HttpHeaderVectorConstIterator it = headers_to_send_.begin();
        it != headers_to_send_.end(); 
@@ -299,6 +329,9 @@ bool SFHttpRequest::SendImpl(const std::string &post_data) {
     }
   }
   
+  // TODO(playmobil): the FF implementation only performs this step if
+  // a NULL pointer is passed in for post data.  Do we need to change
+  // this to match?
   if (!has_content_type_header) {
     headers_to_send_.push_back(HttpHeader(HttpConstants::kContentTypeHeader,
                                           HttpConstants::kMimeTextPlain));
@@ -310,10 +343,10 @@ bool SFHttpRequest::SendImpl(const std::string &post_data) {
   }
   
   // TODO(playmobil): Handle case of ShouldBypassLocalServer().
-  if (![delegate_holder_->delegate send: post_data 
-                             userAgent: user_agent
-                               headers: headers_to_send_
-                    bypassBrowserCache: ShouldBypassBrowserCache()]) {
+  if (![delegate_holder_->delegate send:post_data 
+                              userAgent:user_agent
+                                headers:headers_to_send_
+                     bypassBrowserCache:ShouldBypassBrowserCache()]) {
      Reset();
      return false;
   }
@@ -325,10 +358,18 @@ bool SFHttpRequest::SendImpl(const std::string &post_data) {
     // NSURLConnection has a default idle timeout of 60 seconds after which the
     // connection should be terminated, we rely on this to ensure that the
     // loop exits.
-    CFTimeInterval ten_milliseconds = 10*10e-3;
+    const CFTimeInterval kTenMilliseconds = 10*10e-3;
+    
+    
+    // TODO(playmobil): Reexamine this code when implementing Worker pools, and
+    // consider logging cases in which NSURLConnection blocks for longer than
+    // we expect.
+    
+    // Make sure the object isn't deleted while waiting for the request to
+    // finish.
     scoped_refptr<HttpRequest> hold(this);
     while (ready_state_ != HttpRequest::COMPLETE && !was_aborted_) {
-      CFRunLoopRunInMode(kCFRunLoopDefaultMode, ten_milliseconds, false);
+      CFRunLoopRunInMode(kCFRunLoopDefaultMode, kTenMilliseconds, false);
     }
   }
   
@@ -394,8 +435,7 @@ bool SFHttpRequest::Abort() {
 //------------------------------------------------------------------------------
 // SetOnReadyStateChange
 //------------------------------------------------------------------------------
-bool SFHttpRequest::SetOnReadyStateChange(
-                        ReadyStateListener *listener) {
+bool SFHttpRequest::SetOnReadyStateChange(ReadyStateListener *listener) {
   listener_ = listener;
   return true;
 }

@@ -23,6 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/base/common/http_utils.h"
 #include "gears/base/safari/cf_string_utils.h"
 #include "gears/localserver/common/http_request.h"
 #import "gears/localserver/safari/http_request_delegate.h"
@@ -33,9 +34,9 @@
 
 - (id)initWithOwner:(SFHttpRequest *)owner {
   self = [super init];
-  if (self != nil) {
+  if (self) {
     owner_ = owner;
-    data_encoding_ = kCFStringEncodingUTF8;
+    dataEncoding_ = kCFStringEncodingUTF8;
   }
   return self;
 }
@@ -43,8 +44,8 @@
 - (void)dealloc {
   [request_ release];
   [connection_ release];
-  [received_data_ release];
-  [header_dictionary_ release];
+  [receivedData_ release];
+  [headerDictionary_ release];
   
   [super dealloc];
 }
@@ -52,7 +53,7 @@
 - (bool)open:(const std::string16 &)full_url
       method:(const std::string16 &)method {
   // It is illegal to reuse this object for multiple connections.
-  assert(request_ == nil && connection_ == nil);
+  assert(!request_ && !connection_);
 
   NSString *url_str = [NSString stringWithString16:full_url.c_str()];
   if (!url_str) {
@@ -77,31 +78,32 @@
   assert(request_);
   assert(connection_ == nil);  // It's illegal to call send more than once.
   
-  NSURLRequestCachePolicy cache_policy = 
-                              NSURLRequestUseProtocolCachePolicy;
   if (bypass_browser_cache) {
-    cache_policy = NSURLRequestReloadIgnoringCacheData;
+    [request_ setCachePolicy:NSURLRequestReloadIgnoringCacheData];
+  } else {
+    [request_ setCachePolicy:NSURLRequestUseProtocolCachePolicy];
   }
-  [request_ setCachePolicy:cache_policy];
   
   // Set the user agent header.
+  NSString *user_agent_header = [NSString 
+                                     stringWithCString:HTTPHeaders::USER_AGENT
+                                              encoding:NSUTF8StringEncoding];
   [request_ setValue:[NSString stringWithString16:user_agent.c_str()] 
-  forHTTPHeaderField:@"User-Agent"];
+            forHTTPHeaderField:user_agent_header];
               
   // Add remaining headers.
   for (SFHttpRequest::HttpHeaderVectorConstIterator it = headers.begin();
        it != headers.end();
        ++it) {
-    const std::string16 &header_name = it->first;
-    const std::string16 &header_value = it->second;
-    [request_ setValue:[NSString stringWithString16:header_value.c_str()] 
-    forHTTPHeaderField:[NSString stringWithString16:header_name.c_str()]];
+    NSString *header_name = [NSString stringWithString16:it->first.c_str()];
+    NSString *header_value = [NSString stringWithString16:it->second.c_str()];
+    [request_ setValue:header_value forHTTPHeaderField:header_name];
   }
   
   // Content-length header for post data is added automagically by Cocoa.
   if (post_data.length() > 0) {
     [request_ setHTTPBody:[NSData dataWithBytes:post_data.c_str() 
-                   length:post_data.length()]];
+                                         length:post_data.length()]];
   }
   
   [connection_ release];  // Defensive coding: stop potential memory leak in the
@@ -113,11 +115,10 @@
   request_ = nil;
                          
   if (connection_) {
-    received_data_=[[NSMutableData data] retain];
+    receivedData_ = [[NSMutableData data] retain];
     return true;
-  } else {
-    return false;
   }
+  return false;
 }
 
 - (void)abort {
@@ -131,88 +132,88 @@
 // In some cases (e.g. loading content who's mimetype is 
 // multipart/x-mixed-replace) this method may be called multiple times.
 - (void)connection:(NSURLConnection *)connection 
-didReceiveResponse:(NSURLResponse *)response
-{  
-  [received_data_ setLength:0];
+  didReceiveResponse:(NSURLResponse *)response {  
+  [receivedData_ setLength:0];
   
   // Save string encoding, for use in GetResponseAsString.
   const NSString *encoding_str = [response textEncodingName];
   if (encoding_str) {
-    data_encoding_ = CFStringConvertIANACharSetNameToEncoding(
+    dataEncoding_ = CFStringConvertIANACharSetNameToEncoding(
                          reinterpret_cast<CFStringRef>(encoding_str));
   }
   
   // Squirrel away http headers and response code
-  [header_dictionary_ release];
-  header_dictionary_ = [[(NSHTTPURLResponse *)response allHeaderFields] retain];
-  status_code_ = (NSInteger)[(NSHTTPURLResponse *)response statusCode];
+  NSHTTPURLResponse *http_response = static_cast<NSHTTPURLResponse *>(response);
+  NSDictionary *all_headers = [[http_response allHeaderFields] retain];
+  [headerDictionary_ autorelease];
+  headerDictionary_ = all_headers;
+  statusCode_ = (NSInteger)[(NSHTTPURLResponse *)response statusCode];
 }
 
 // Called when connection receives data.
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
-{
-  [received_data_ appendData:data];
+- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
+  [receivedData_ appendData:data];
   owner_->SetReadyState(HttpRequest::INTERACTIVE);
 }
 
 
 - (void)connection:(NSURLConnection *)connection
-  didFailWithError:(NSError *)error
-{
+  didFailWithError:(NSError *)error {
+  // TODO(playmobil): Pass back the fact an error occured to the calling code.
   owner_->SetReadyState(HttpRequest::COMPLETE);
 }
 
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection
-{
+- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
   owner_->SetReadyState(HttpRequest::COMPLETE);
 }
 
 // Delegate method called on redirects and URL canonicalization.
 - (NSURLRequest *)connection:(NSURLConnection *)connection
                  willSendRequest:(NSURLRequest *)request
-                 redirectResponse:(NSURLResponse *)redirect_response
-{
+                 redirectResponse:(NSURLResponse *)redirect_response {
   // if redirect_response is nil then we were called as the result of 
   // transforming a request’s URL to its canonical form which is an event that 
   // doesn't interest us.
-  if (redirect_response) {    
-    NSString *redirect_to_full_url_nsstr = 
-                  [[request URL] absoluteString];
-    std::string16 redirect_to_full_url;
-    if (![redirect_to_full_url_nsstr string16:&redirect_to_full_url]) {
-      [self abort];
-      owner_->SetReadyState(HttpRequest::COMPLETE);
-      return nil;
-    }
-    
-    // Abort redirect if it's not legal.
-    if (!owner_->AllowRedirect(redirect_to_full_url)) {
-      [self abort];
-      
-      // Save headers and status code from redirect
-      NSHTTPURLResponse *http_response = 
-                            static_cast<NSHTTPURLResponse *>(redirect_response);
-      NSDictionary *all_headers = [[http_response allHeaderFields] retain];
-      [header_dictionary_ release];
-      header_dictionary_ = all_headers;
-      status_code_ = [http_response statusCode];
+  if (!redirect_response) {
+    return request;
+  }
 
-      owner_->SetReadyState(HttpRequest::COMPLETE);
-      return nil;
-    }
+  NSString *redirect_to_full_url_nsstr = [[request URL] absoluteString];
+  std::string16 redirect_to_full_url;
+  if (![redirect_to_full_url_nsstr string16:&redirect_to_full_url]) {
+    [self abort];
+    owner_->SetReadyState(HttpRequest::COMPLETE);
+    return nil;
   }
   
+  // Abort redirect if it's not legal.
+  if (!owner_->AllowRedirect(redirect_to_full_url)) {
+    [self abort];
+    
+    // Save headers and status code from redirect
+    NSHTTPURLResponse *http_response = 
+                          static_cast<NSHTTPURLResponse *>(redirect_response);
+    NSDictionary *all_headers = [[http_response allHeaderFields] retain];
+    [headerDictionary_ autorelease];
+    headerDictionary_ = all_headers;
+    statusCode_ = [http_response statusCode];
+
+    owner_->SetReadyState(HttpRequest::COMPLETE);
+    return nil;
+  }
+
   return request;
 }
 
 #pragma mark Public Instance methods -- Access Methods
 
 - (void)headers:(SFHttpRequest::HttpHeaderVector *)headers {
-  assert(header_dictionary_);
+  assert(headerDictionary_);
+  assert(headers);
   
-  NSEnumerator *enumerator = [header_dictionary_ keyEnumerator];
+  NSEnumerator *enumerator = [headerDictionary_ keyEnumerator];
   while (NSString *header_name = [enumerator nextObject]) {
-    NSString *header_value = [header_dictionary_ objectForKey:header_name];
+    NSString *header_value = [headerDictionary_ objectForKey:header_name];
     
     std::string16 header_name_str16;
     std::string16 header_value_str16;
@@ -235,45 +236,43 @@ didReceiveResponse:(NSURLResponse *)response
   // HTTP Header fields are case insensitive and NSURLConnection has the
   // annoying habit of capitalizing the first letter of every incoming http
   // header name so we need to do a case insensitive search here.
-  NSEnumerator *enumerator = [header_dictionary_ keyEnumerator];
+  NSEnumerator *enumerator = [headerDictionary_ keyEnumerator];
   while (NSString *header_name = [enumerator nextObject]) {
-    if ([header_name compare:header_to_find options:NSCaseInsensitiveSearch]
-        == NSOrderedSame) {
-      header_value = [header_dictionary_ objectForKey:header_name];
-      break;
+    if ([header_name compare:header_to_find options:NSCaseInsensitiveSearch] == 
+        NSOrderedSame) {
+      header_value = [headerDictionary_ objectForKey:header_name];
+      [header_value string16:value];
+      return;
     }
   }
   
-  if (header_value) {
-    [header_value string16:value];
-  } else {
-    // If the requested header doesn't exist, just clear the output value.
-    value->clear();
-  }
+  // If the requested header doesn't exist, just clear the output value.
+  value->clear();
 }
 
 - (void)responseBytes:(std::vector<uint8> *)body {
-  assert(received_data_);
+  assert(body);
+  assert(receivedData_);
   
-  size_t body_len = [received_data_ length];
+  size_t body_len = [receivedData_ length];
   
-  body->reserve(body_len);
   body->resize(body_len);
   
   if (body_len) {
-    [received_data_ getBytes:&(*body)[0]];
+    [receivedData_ getBytes:&(*body)[0] length:body_len];
   }
 }
 
 - (bool)responseAsString:(std::string16 *)response {
-  assert(received_data_);
+  assert(response);
+  assert(receivedData_);
 
-  size_t length = [received_data_ length];
+  size_t length = [receivedData_ length];
   if (length > 0) {
     return ConvertToString16UsingEncoding(
-               static_cast<const char *>([received_data_ bytes]), 
+               static_cast<const char *>([receivedData_ bytes]), 
                length, 
-               data_encoding_, 
+               dataEncoding_, 
                response);
   } else {
     response->clear();
@@ -281,17 +280,15 @@ didReceiveResponse:(NSURLResponse *)response
   }
 }
 
-- (void)statusCode:(int *)status {
-  assert(status);
-  
-  *status = status_code_;
+- (int)statusCode {
+  return statusCode_;
 }
 
 - (void)statusText:(std::string16 *)status_line {
   assert(status_line);
   
   NSString *status_line_nsstr = [NSHTTPURLResponse 
-                                    localizedStringForStatusCode:status_code_];
+                                    localizedStringForStatusCode:statusCode_];
   [status_line_nsstr string16:status_line];
 }
 @end
