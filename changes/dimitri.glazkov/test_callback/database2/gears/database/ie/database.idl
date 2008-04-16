@@ -1,0 +1,79 @@
+// Copyright 2007, Google Inc.
+//
+// Redistribution and use in source and binary forms, with or without 
+// modification, are permitted provided that the following conditions are met:
+//
+//  1. Redistributions of source code must retain the above copyright notice, 
+//     this list of conditions and the following disclaimer.
+//  2. Redistributions in binary form must reproduce the above copyright notice,
+//     this list of conditions and the following disclaimer in the documentation
+//     and/or other materials provided with the distribution.
+//  3. Neither the name of Google Inc. nor the names of its contributors may be
+//     used to endorse or promote products derived from this software without
+//     specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+// OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+
+//
+// GearsResultSetInterface
+//
+
+[
+  object,
+  uuid(B8A9C568-C1C1-49BD-A752-FDC3A4022825),
+  dual,
+  nonextensible,
+  pointer_default(unique)
+]
+interface GearsResultSetInterface : IDispatch {
+  HRESULT field([in] int index, [out, retval] VARIANT *retval);
+  HRESULT fieldByName([in] const BSTR field_name,
+                      [out, retval] VARIANT *retval);
+  HRESULT fieldName([in] int index, [out, retval] VARIANT *retval);
+  HRESULT fieldCount([out, retval] int *retval);
+  HRESULT close();
+  HRESULT next();
+  HRESULT isValidRow([out, retval] VARIANT_BOOL *retval);
+};
+
+
+//
+// GearsDatabaseInterface
+//
+
+[
+  object,
+  uuid(DFCF5BD9-9C89-46EC-BC01-8A5E31E6DD3A),
+  dual,
+  nonextensible,
+  pointer_default(unique)
+]
+interface GearsDatabaseInterface : IDispatch {
+  HRESULT open([in, optional] const VARIANT *database_name);
+  HRESULT execute([in] const BSTR expression,
+                  [in, optional] const VARIANT *arg_array,
+                  [out, retval] GearsResultSetInterface **retval);
+  HRESULT close();
+
+  // retval contains an integral value, stored in a double's mantissa, for range
+  [propget] HRESULT lastInsertRowId([out, retval] VARIANT *retval);
+
+  [propget] HRESULT rowsAffected([out, retval] VARIANT *retval);
+
+#ifdef DEBUG
+  [propget] HRESULT executeMsec([out, retval] int *retval);
+#endif // DEBUG
+};
