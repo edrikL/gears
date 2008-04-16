@@ -75,22 +75,27 @@ GearsFactory::GearsFactory()
 
 void GearsFactory::Create(JsCallContext *context) {
   bool use_temporary_permissions = true;
-  if (!HasPermissionToUseGears(this, use_temporary_permissions,
-                               NULL, NULL, NULL)) {
-    context->SetException(STRING16(L"Page does not have permission to use "
-                                   PRODUCT_FRIENDLY_NAME L"."));
-    return;
-  }
-
-  std::string16 class_name;
+  std::string16 module_name;
   std::string16 version = STRING16(L"1.0");  // default for this optional param
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &class_name },
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &module_name },
     { JSPARAM_OPTIONAL, JSPARAM_STRING16, &version },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
+
+  // Make sure the user gives this site permission to use Gears unless the
+  // module is whitelisted.
+
+  if (RequiresPermissionToUseGears(module_name)) {
+    if (!HasPermissionToUseGears(this, use_temporary_permissions,
+                                 NULL, NULL, NULL)) {
+      context->SetException(STRING16(L"Page does not have permission to use "
+                                     PRODUCT_FRIENDLY_NAME L"."));
+      return;
+    }
+  }
 
   // Check the version string.
   if (version != kAllowedClassVersion) {
@@ -103,32 +108,32 @@ void GearsFactory::Create(JsCallContext *context) {
   // Do case-sensitive comparisons, which are always better in APIs. They make
   // code consistent across callers, and they are easier to support over time.
   scoped_refptr<ModuleImplBaseClass> object;
-  if (class_name == STRING16(L"beta.console")) {
+  if (module_name == STRING16(L"beta.console")) {
     CreateModule<GearsConsole>(GetJsRunner(), &object);
-  } else if (class_name == STRING16(L"beta.database")) {
+  } else if (module_name == STRING16(L"beta.database")) {
     CreateModule<GearsDatabase>(GetJsRunner(), &object);
 #ifdef BROWSER_WEBKIT
 // TODO(playmobil): Add support for test module in Safari build.
 #else
-  } else if (class_name == STRING16(L"beta.desktop")) {
+  } else if (module_name == STRING16(L"beta.desktop")) {
     CreateModule<GearsDesktop>(GetJsRunner(), &object);
 #endif
-  } else if (class_name == STRING16(L"beta.localserver")) {
+  } else if (module_name == STRING16(L"beta.localserver")) {
     CreateModule<GearsLocalServer>(GetJsRunner(), &object);
 #ifdef BROWSER_WEBKIT
 // TODO(playmobil): Add support for worker pools in Safari build.
 #else
-  } else if (class_name == STRING16(L"beta.workerpool")) {
+  } else if (module_name == STRING16(L"beta.workerpool")) {
     CreateModule<GearsWorkerPool>(GetJsRunner(), &object);
 #endif
-  } else if (class_name == STRING16(L"beta.httprequest")) {
+  } else if (module_name == STRING16(L"beta.httprequest")) {
     CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
-  } else if (class_name == STRING16(L"beta.timer")) {
+  } else if (module_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(GetJsRunner(), &object);
 #ifdef BROWSER_WEBKIT
 // TODO(playmobil): Add support for test module in Safari build.
 #else
-  } else if (class_name == STRING16(L"beta.test")) {
+  } else if (module_name == STRING16(L"beta.test")) {
 #ifdef DEBUG
     CreateModule<GearsTest>(GetJsRunner(), &object);
 #else
