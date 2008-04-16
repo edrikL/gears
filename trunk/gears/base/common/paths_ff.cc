@@ -44,7 +44,7 @@ class nsIFile; // must declare this before including nsDirectoryServiceUtils.h
 // allow mixing \ and /.  (The Win32 APIs are happy with either separator.)
 const char16 kPathSeparator = L'\\';
 
-// This path must match the path in googleclient/gears/installer/win32_msi.wxs.m4
+// This path must match the path in gears/installer/win32_msi.wxs.m4
 static const char16 *kComponentsSubdir = STRING16(L"Google\\"
                                                   PRODUCT_FRIENDLY_NAME L"\\"
                                                   L"Shared\\"

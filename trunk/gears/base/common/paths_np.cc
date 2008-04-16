@@ -42,7 +42,7 @@ static const char16 *kDataSubdir = STRING16(L"Google\\"
                                             PRODUCT_FRIENDLY_NAME
                                             L" for NPAPI");
 
-// This path must match the path in googleclient/gears/installer/win32_msi.wxs.m4
+// This path must match the path in gears/installer/win32_msi.wxs.m4
 static const char16 *kComponentsSubdir = STRING16(L"Google\\"
                                                   PRODUCT_FRIENDLY_NAME L"\\"
                                                   L"Shared\\"
