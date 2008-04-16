@@ -44,6 +44,7 @@
 #elif BROWSER_NPAPI
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/npapi/np_utils.h"
+#include "gears/base/npapi/scoped_npapi_handles.h"
 #elif BROWSER_SAFARI
 #include "gears/base/safari/browser_utils.h"
 #endif
@@ -2069,9 +2070,11 @@ void JsCallContext::SetException(const std::string16 &message) {
   if (!String16ToUTF8(message.data(), message.length(), &message_utf8))
     message_utf8 = "Unknown Gears Error";  // better to throw *something*
 
-  NPObject *global;
-  NPN_GetValue(js_context(), NPNVWindowNPObject, &global);
-  NPN_SetException(global, message_utf8.c_str());
+  NPObject *window;
+  if (NPN_GetValue(js_context(), NPNVWindowNPObject, &window) != NPERR_NO_ERROR)
+    return;
+  ScopedNPObject window_scoped(window);
+  NPN_SetException(window, message_utf8.c_str());
 #endif
 }
 
