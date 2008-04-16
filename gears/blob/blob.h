@@ -40,7 +40,7 @@ class GearsBlob : public ModuleImplBaseClassVirtual {
   static const std::string kModuleName;
 
   GearsBlob()
-      : ModuleImplBaseClassVirtual(kModuleName.c_str()),
+      : ModuleImplBaseClassVirtual(kModuleName),
         contents_(new EmptyBlob()) {}
 
   // IN: nothing

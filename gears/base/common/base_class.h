@@ -199,7 +199,8 @@ class ModuleImplBaseClass {
 class ModuleImplBaseClassVirtual : public ModuleImplBaseClass {
  public:
   ModuleImplBaseClassVirtual() : ModuleImplBaseClass() {}
-  ModuleImplBaseClassVirtual(const char *name) : ModuleImplBaseClass(name) {}
+  ModuleImplBaseClassVirtual(const std::string &name)
+      : ModuleImplBaseClass(name) {}
   virtual ~ModuleImplBaseClassVirtual(){}
 
  private:
