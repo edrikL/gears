@@ -166,6 +166,11 @@ function testCreateObject() {
 
 }
 
+// test creating a module and setting a callback as a private member
+function testCreateModule() {
+  var module = internalTests.testCreateModule();
+  module.testSetCallback(createTestFunction());
+}
 
 // Helper functions
 
