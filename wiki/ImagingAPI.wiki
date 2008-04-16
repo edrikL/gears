@@ -182,6 +182,14 @@ CanvasRenderingContext2D class
 };
 }}}
 
+*_ImageData class:_*
+{{{
+ImageData class {
+  readonly attribute long int width;
+  readonly attribute long int height;
+  readonly attribute int[] data;
+};
+}}}
 = Deviation from HTML5 =
   *  Added Text support (for annotation support)
   * Added primitives for color transformation, convolution and lookup tables.
