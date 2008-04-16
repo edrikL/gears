@@ -88,13 +88,18 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
     RETURN_EXCEPTION(kVersionCollisionErrorMessage);
   }
 
-  // Make sure the user gives this origin permission to use Gears.
+  std::string16 module_name(object_name_bstr);
 
-  bool use_temporary_permissions = true;
-  if (!HasPermissionToUseGears(this, use_temporary_permissions,
-                               NULL, NULL, NULL)) {
-    RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
-                              PRODUCT_FRIENDLY_NAME L"."));
+  // Make sure the user gives this site permission to use Gears unless the
+  // module is whitelisted.
+
+  if (RequiresPermissionToUseGears(module_name)) {
+    bool use_temporary_permissions = true;
+    if (!HasPermissionToUseGears(this, use_temporary_permissions,
+                                 NULL, NULL, NULL)) {
+      RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
+                                PRODUCT_FRIENDLY_NAME L"."));
+    }
   }
 
   // Check the version string.
@@ -118,19 +123,18 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
   // Do case-sensitive comparisons, which are always better in APIs. They make
   // code consistent across callers, and they are easier to support over time.
 
-  std::string16 object_name(object_name_bstr);
   std::string16 error;
   bool success = false;
 
   // Try creating a dispatcher-based module first.
-  success = CreateDispatcherModule(object_name, retval, &error);
+  success = CreateDispatcherModule(module_name, retval, &error);
   if (success) {
     RETURN_NORMAL();
   } else if (error.length() > 0) {
     RETURN_EXCEPTION(error.c_str());
   }
 
-  success = CreateComModule(object_name, retval, &error);
+  success = CreateComModule(module_name, retval, &error);
   if (success) {
     RETURN_NORMAL();
   } else if (error.length() > 0) {

@@ -83,16 +83,26 @@ GearsFactory::GearsFactory()
 NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
                                    //const nsAString &version
                                    nsISupports **retval) {
-  // Make sure the user gives this site permission to use Gears.
+  JsParamFetcher js_params(this);
 
-  bool use_temporary_permissions = true;
-  if (!HasPermissionToUseGears(this, use_temporary_permissions,
-                               NULL, NULL, NULL)) {
-    RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
-                              PRODUCT_FRIENDLY_NAME L"."));
+  // Get the name of the object they're trying to create.
+
+  std::string16 module_name;
+  if (!js_params.GetAsString(0, &module_name)) {
+    RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
   }
 
-  JsParamFetcher js_params(this);
+  // Make sure the user gives this site permission to use Gears unless the
+  // module is whitelisted.
+
+  if (RequiresPermissionToUseGears(module_name)) {
+    bool use_temporary_permissions = true;
+    if (!HasPermissionToUseGears(this, use_temporary_permissions,
+                                 NULL, NULL, NULL)) {
+      RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
+                                PRODUCT_FRIENDLY_NAME L"."));
+    }
+  }
 
   // Check the version string.
 
@@ -114,14 +124,9 @@ NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
   // Do case-sensitive comparisons, which are always better in APIs. They make
   // code consistent across callers, and they are easier to support over time.
 
-  std::string16 object;
-  if (!js_params.GetAsString(0, &object)) {
-    RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
-  }
-
   // First try to create a dispatcher-based module.
   std::string16 error;
-  bool success = CreateDispatcherModule(object, &js_params, &error);
+  bool success = CreateDispatcherModule(module_name, &js_params, &error);
 
   if (success) {
     RETURN_NORMAL();
@@ -131,7 +136,7 @@ NS_IMETHODIMP GearsFactory::Create(//const nsAString &object
 
   // There was no dispatcher-based implementation of this object. Try to create
   // an isupports module.
-  success = CreateISupportsModule(object, retval, &error);
+  success = CreateISupportsModule(module_name, retval, &error);
   if (success) {
     RETURN_NORMAL();
   } else if (error.length() > 0) {

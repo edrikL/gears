@@ -223,3 +223,9 @@ void SetActiveUserFlag() {
   }
 #endif  // #ifdef WIN32
 }
+
+bool RequiresPermissionToUseGears(const std::string16 &module_name) {
+  return module_name != STRING16(L"beta.desktop") &&
+         module_name != STRING16(L"beta.httprequest") &&
+         module_name != STRING16(L"beta.timer");
+}
