@@ -30,6 +30,7 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 class GearsTest : public ModuleImplBaseClassVirtual {
  public:
@@ -83,9 +84,30 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   // OUT: bool
   void TestGetType(JsCallContext *context);
 
+  // Module creation test
+
+  // IN: void
+  // OUT: module
+  void TestCreateModule(JsCallContext *context);
+
  private:
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsTest);
+};
+
+// Dispatcher module that is created by GearsTest::TestPassModule()
+class GearsTestModule : public ModuleImplBaseClassVirtual {
+ public:
+  GearsTestModule() : ModuleImplBaseClassVirtual("GearsTestModule") {}
+
+  // IN: callback
+  // OUT: void
+  void TestSetCallback(JsCallContext *context);
+ private:
+  ~GearsTestModule();
+  scoped_ptr<JsRootedCallback> callback_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(GearsTestModule);
 };
 
 #endif // GEARS_CCTESTS_TEST_H__

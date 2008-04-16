@@ -47,6 +47,7 @@ void Dispatcher<GearsTest>::Init() {
   RegisterMethod("testCoerceDouble", &GearsTest::TestCoerceDouble);
   RegisterMethod("testCoerceString", &GearsTest::TestCoerceString);
   RegisterMethod("testGetType", &GearsTest::TestGetType);
+  RegisterMethod("testCreateModule", &GearsTest::TestCreateModule);
 }
 
 #ifdef WIN32
@@ -449,6 +450,39 @@ void GearsTest::TestGetType(JsCallContext *context) {
     ok = true;
   }
   context->SetReturnValue(JSPARAM_BOOL, &ok);
+}
+
+// Creates and returns a module as result
+void GearsTest::TestCreateModule(JsCallContext *context) {
+  scoped_refptr<ModuleImplBaseClass> module;
+  if (CreateModule<GearsTestModule>(GetJsRunner(), &module)) {
+    module->InitBaseFromSibling(this);
+    context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, module.get());
+    ReleaseNewObjectToScript(module.get());
+  }
+}
+
+DECLARE_GEARS_WRAPPER(GearsTestModule);
+
+template<>
+void Dispatcher<GearsTestModule>::Init() {
+  RegisterMethod("testSetCallback", &GearsTestModule::TestSetCallback);
+}
+
+// Takes in a callback
+void GearsTestModule::TestSetCallback(JsCallContext *context) {
+  JsRootedCallback *callback;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &callback }
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+  callback_.reset(callback);
+}
+
+GearsTestModule::~GearsTestModule() {
+  // clear callback
+  callback_.reset(NULL);
 }
 
 //------------------------------------------------------------------------------
