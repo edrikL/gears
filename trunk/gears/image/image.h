@@ -39,7 +39,7 @@ class GearsImage : public ModuleImplBaseClassVirtual {
  public:
   static const std::string kModuleName;
 
-  GearsImage() : ModuleImplBaseClassVirtual(kModuleName.c_str()) {}
+  GearsImage() : ModuleImplBaseClassVirtual(kModuleName) {}
 
   // IN: int x, int y, int width, int height
   // OUT: void
