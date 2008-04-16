@@ -190,6 +190,7 @@ ImageData class {
   readonly attribute int[] data;
 };
 }}}
+
 = Deviation from HTML5 =
   *  Added Text support (for annotation support)
   * Added primitives for color transformation, convolution and lookup tables.
