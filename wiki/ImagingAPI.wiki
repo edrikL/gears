@@ -154,10 +154,10 @@ CanvasRenderingContext2D class
   // drawing images and canvii
   void drawImage(HTMLCanvasElement image, int dx, int dy);
   void drawImage(HTMLCanvasElement image, int dx, int dy, int dw, int dh);
-  void drawImage(HTMLCanvasElement image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, vdh);  
+  void drawImage(HTMLCanvasElement image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);  
   void drawImage(HTMLImageElement image, int dx, int dy);
   void drawImage(HTMLImageElement image, int dx, int dy, int dw, int dh);
-  void drawImage(HTMLImageElement image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, vdh);  
+  void drawImage(HTMLImageElement image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);  
 
   // drawing rectangles
   void clearRect(int x, int y, int w, int h);
