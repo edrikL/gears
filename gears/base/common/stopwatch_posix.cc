@@ -46,7 +46,7 @@ int64 GetTicks() {
   // clock could be reset.
   struct timeval t;
   int ret = gettimeofday(&t, 0);
-  return ret == 0 ? 0 : (t.tv_sec * 1000000LL) + t.tv_usec;
+  return ret == 0 ? (t.tv_sec * 1000000LL) + t.tv_usec : 0;
 }
 
 // Returns the number of microseconds elapsed between the start and end tick
