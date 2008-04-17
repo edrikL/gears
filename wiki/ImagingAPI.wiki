@@ -37,14 +37,14 @@ Canvas class
   //      interlaced -- boolean.
   Blob toBlob(optional String mimeType, optional Map attributes);
       
-  // COMMON WITH HTML CANVAS
-  attribute unsigned long width;
-  attribute unsigned long height;
-
   // the palette of the image, if the canvas was load()ed from an indexed mode image.
   // Note that on load, the image is converted to RGB; the palette is preserved in case you want
   // to export the image back to indexed mode, but the canvas itself doesn't have an indexed mode.
   readonly attribute palette;
+
+  // COMMON WITH HTML CANVAS
+  attribute unsigned long width;
+  attribute unsigned long height;
 
   // returns a Gears object, CanvasRenderingContext2D (only this context is supported currently).
   DOMObject getContext(DOMString contextId);
@@ -124,7 +124,9 @@ CanvasRenderingContext2D class
   void adjustHue(float angle); // angle by which to rotate on the color wheel.
 
   void blur(float factor, int radius);
-  coid sharpen(float factor, int radius);
+  void sharpen(float factor, int radius);
+  // convenience function
+  void resetTransform(); 
 
 
   // ----- THE FOLLOWING ARE FROM HTML CANVAS -------
@@ -172,8 +174,6 @@ CanvasRenderingContext2D class
   void translate(float x, float y);
   void transform(float m11, float m12, float m21, float m22, float dx, float dy);
   void setTransform(float m11, float m12, float m21, float m22, float dx, float dy);
-  // convenience function
-  void resetTransform(); 
 
   ImageData createImageData(int sw, int sh);
   ImageData getImageData(int sx, int sy, int sw, int sh);
