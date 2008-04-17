@@ -46,18 +46,69 @@ Canvas class
   attribute unsigned long width;
   attribute unsigned long height;
 
-  // returns a Gears object, CanvasRenderingContext2D (only this context is supported currently).
+  // returns a Gears object (not really a DOMObject), CanvasRenderingContext2D (only this context is supported currently, if contextId is passed as '2d').
   DOMObject getContext(DOMString contextId);
 };
 }}}
 
 *_CanvasRenderingContext2D class:_*
+Note that our notion of state is different from Canvas's. Our state consists of:
+  * The current transformation matrix
+  * The current clipping region (once we add support for this after V1)
+  * globalAlpha, globalCompositeOperation and fillStyle. HTML Canvas supports a richer state with more attributes pertaining to drawing that we don't support. See the spec. for details.
+
+Just as with HTML Canvas, the drawing functions (drawImage, clearRect, fillRect, strokeRect below) respect the state. The 'transform' function just sets the current transformation matrix and does not apply it on the underlying image on the canvas. However color transforms, convolution transforms, etc... are not part of the state, and invocations of these functions apply the changes on the underlying image. Hence, functions such as 'crop', 'resize', etc... apply the changes right then, whereas 'scale', 'rotate', etc... just update the state (the transformation matrix to be precise) and the operations are applied only when a draw function is called.
+
 {{{
 CanvasRenderingContext2D class
 {
-  // JUST AS WITH HTML CANVAS, THE DRAWING FUNCTIONS (drawImage, clearRect, fillRect, strokeRect) RESPECT THE STATE.
-  // AND ONLY THE DRAWING FUNCTIONS DO. 
+  // ----- THE FOLLOWING ARE FROM HTML CANVAS -------
+  // Please see the canvas spec at http://www.whatwg.org/specs/web-apps/current-work/#canvas
 
+  // back-reference to the canvas:
+  readonly attribute Canvas canvas;
+
+  // (default 1.0)
+  attribute float globalAlpha; 
+  // we only support source-over and copy. default source-over
+  attribute DOMString globalCompositeOperation; 
+
+  // note: must be a color, not a gradient or pattern; we don't support those.
+  attribute string fillStyle; 
+  
+  // saves current state on stack.
+  void save();
+  // pops a state object from the stack and sets the current state to that state.
+  void restore(); 
+ 
+  // drawing images and canvii
+  void drawImage(HTMLCanvasElement image, int dx, int dy);
+  void drawImage(HTMLCanvasElement image, int dx, int dy, int dw, int dh);
+  void drawImage(HTMLCanvasElement image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);  
+  void drawImage(HTMLImageElement image, int dx, int dy);
+  void drawImage(HTMLImageElement image, int dx, int dy, int dw, int dh);
+  void drawImage(HTMLImageElement image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);  
+
+  // drawing rectangles
+  void clearRect(int x, int y, int w, int h);
+  // see fillStyle.
+  void fillRect(int x, int y, int w, int h); 
+  // does not support stroke styles; draws a one-pixel border.  
+  void strokeRect(int x, int y, int w, int h);
+  
+  // affine transformations (default transform is the identity matrix)
+  void scale(float x, float y);
+  void rotate(float angle);
+  void translate(float x, float y);
+  void transform(float m11, float m12, float m21, float m22, float dx, float dy);
+  void setTransform(float m11, float m12, float m21, float m22, float dx, float dy);
+
+  ImageData createImageData(int sw, int sh);
+  ImageData getImageData(int sx, int sy, int sw, int sh);
+  void putImageData(ImageData imagedata, int dx, int dy);
+  void putImageData(ImageData imagedata, int dx, int dy, int dirtyX, int dirtyY, int dirtyWidth, int dirtyHeight);
+
+  // -------- THE FOLLOWING ARE ADDITIONAL ABSTRACTIONS WE SUPPORT ------------
   // 4x5 matrix for RGBA images and 3x4 for RGB.
   // TODO: Or is it better to take 4x5 consistently and ignore the alpha row and column if the image is RGB?
   // See http://www.adobe.com/devnet/flash/articles/matrix_transformations_04.html
@@ -95,6 +146,7 @@ CanvasRenderingContext2D class
 
 
   // ----- CONVENIENCE FUNCTIONS FOR COMMON OPERATIONS --------
+  // might build on top of one or more abstractions listed above.
 
   Canvas clone();
 
@@ -127,58 +179,6 @@ CanvasRenderingContext2D class
   void sharpen(float factor, int radius);
   // convenience function
   void resetTransform(); 
-
-
-  // ----- THE FOLLOWING ARE FROM HTML CANVAS -------
-  // Please see the canvas spec at  http://www.whatwg.org/specs/web-apps/current-work/#canvas
-
-  // back-reference to the canvas:
-  readonly attribute Canvas canvas;
-
-  // (default 1.0)
-  attribute float globalAlpha; 
-  // we only support source-over and copy. default source-over
-  attribute DOMString globalCompositeOperation; 
-
-  // note: must be a color, not a gradient or pattern; we don't support those.
-  attribute string fillStyle; 
-  
-  // saves current state on stack.
-  void save();
-  // pops a state object from the stack and sets the current state to that state.
-  void restore(); 
- 
-  // Note that our notion of state is different from Canvas's. Our state consists of:
-  // globalAlpha, globalCompositeOperation, fillStyle and the current transformation matrix (and the clip region, once we add support for that).
-  // HTML Canvas supports a richer state (see http://www.whatwg.org/specs/web-apps/current-work/#the-canvas0);
-  // we don't suppport these additional attributes.
-
-  // drawing images and canvii
-  void drawImage(HTMLCanvasElement image, int dx, int dy);
-  void drawImage(HTMLCanvasElement image, int dx, int dy, int dw, int dh);
-  void drawImage(HTMLCanvasElement image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);  
-  void drawImage(HTMLImageElement image, int dx, int dy);
-  void drawImage(HTMLImageElement image, int dx, int dy, int dw, int dh);
-  void drawImage(HTMLImageElement image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);  
-
-  // drawing rectangles
-  void clearRect(int x, int y, int w, int h);
-  // see fillStyle.
-  void fillRect(int x, int y, int w, int h); 
-  // does not support stroke styles; draws a one-pixel border.  
-  void strokeRect(int x, int y, int w, int h);
-  
-  // affine transformations (default transform is the identity matrix)
-  void scale(float x, float y);
-  void rotate(float angle);
-  void translate(float x, float y);
-  void transform(float m11, float m12, float m21, float m22, float dx, float dy);
-  void setTransform(float m11, float m12, float m21, float m22, float dx, float dy);
-
-  ImageData createImageData(int sw, int sh);
-  ImageData getImageData(int sx, int sy, int sw, int sh);
-  void putImageData(ImageData imagedata, int dx, int dy);
-  void putImageData(ImageData imagedata, int dx, int dy, int dirtyX, int dirtyY, int dirtyWidth, int dirtyHeight);
 };
 }}}
 
@@ -196,6 +196,7 @@ ImageData class {
   * Added primitives for color transformation, convolution and lookup tables.
   * Drawing of arbitrary paths not supported yet.
   * No support for clipping regions, gradients, patterns, shadows, strokes and line styles.
+  * We do not support export to data URLs because the image data can be huge plus there is a need to UUencode it. We have an alternate approach supporting a HTTP URL capture, and hence this is not a limitation.
 
 = Sample Code =
 *_Example 1: Downloads an image from a server, crops and resizes it, displays the result and uploads it_*:
