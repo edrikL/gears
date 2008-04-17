@@ -46,18 +46,18 @@ Canvas class
   attribute unsigned long width;
   attribute unsigned long height;
 
-  // returns a Gears object (not really a DOMObject), CanvasRenderingContext2D (only this context is supported currently, if contextId is passed as '2d').
+  // returns a Gears object (not really a DOMObject), (only CanvasRenderingContext2D is supported currently, and this object is got when contextId is passed as '2d').
   DOMObject getContext(DOMString contextId);
 };
 }}}
 
 *_CanvasRenderingContext2D class:_*
-Note that our notion of state is different from Canvas's. Our state consists of:
+Note that our notion of state is a subset of HTML5 Canvas's. Our state consists of:
   * The current transformation matrix
   * The current clipping region (once we add support for this after V1)
   * globalAlpha, globalCompositeOperation and fillStyle. HTML Canvas supports a richer state with more attributes pertaining to drawing that we don't support. See the spec. for details.
 
-Just as with HTML Canvas, the drawing functions (drawImage, clearRect, fillRect, strokeRect below) respect the state. The 'transform' function just sets the current transformation matrix and does not apply it on the underlying image on the canvas. However color transforms, convolution transforms, etc... are not part of the state, and invocations of these functions apply the changes on the underlying image. Hence, functions such as 'crop', 'resize', etc... apply the changes right then, whereas 'scale', 'rotate', etc... just update the state (the transformation matrix to be precise) and the operations are applied only when a draw function is called.
+The 'transform' function just sets the current transformation matrix and does not apply it on the underlying image on the canvas. Just as with HTML Canvas, the drawing functions (drawImage, clearRect, fillRect, strokeRect below) respect the state, and apply the necessary transforms on the clipping region. However color transforms, convolution transforms, etc... are not part of the state, and invocations of these functions apply the changes on the underlying image directly. Hence, functions such as 'crop', 'resize', etc... apply the changes right then, whereas 'scale', 'rotate', etc... just update the state (the transformation matrix to be precise) and the operations are applied only when a draw function is called.
 
 {{{
 CanvasRenderingContext2D class
@@ -109,6 +109,7 @@ CanvasRenderingContext2D class
   void putImageData(ImageData imagedata, int dx, int dy, int dirtyX, int dirtyY, int dirtyWidth, int dirtyHeight);
 
   // -------- THE FOLLOWING ARE ADDITIONAL ABSTRACTIONS WE SUPPORT ------------
+
   // 4x5 matrix for RGBA images and 3x4 for RGB.
   // TODO: Or is it better to take 4x5 consistently and ignore the alpha row and column if the image is RGB?
   // See http://www.adobe.com/devnet/flash/articles/matrix_transformations_04.html
@@ -119,6 +120,7 @@ CanvasRenderingContext2D class
  
   void medianFilter(float radius);
  
+  // For annotation support
   // x, y, width, height identify a bounding box into which the text is drawn. 
   // If width and height are not specified, the bounding box extends to the last row or column of the canvas.
   // attributes can have the following keys:
@@ -150,9 +152,8 @@ CanvasRenderingContext2D class
 
   Canvas clone();
 
-  // These functions change the pixels of the canvas in place, as opposed to scale, rotate, etc
+  // The below functions change the pixels of the canvas in place, as opposed to scale, rotate, etc...
   // which only set the current transformation matrix that affects future drawing operations.
-  // This can be a little confusing, but scale, rotate, etc... come from HTML canvas, where they are defined that way.
 
   // This method ignores the state of the canvas.
   void crop(int x, int y, int width, int height);
@@ -288,11 +289,12 @@ Many operations normally modify the canvas in place, but take an optional switch
 
 The problem with this approach is that for consistency the draw functions should also have an option to return a new canvas, and such a thing may be tougher to merge into the HTML standard. So right now, we don't support this. If you want to preserve the old state, you have to either clone the canvas after each operation or keep track of the initial state and the list of operations applied on it, so that you can undo to any point by applying some of the operations.
 
-We can re-examine the problem for v2 if one of our clients wants to use it. 
+We can explore this problem for v2.
 
 = Beyond V1 =
 *_Updates to CanvasRenderingContext2D class:_*
 {{{
+  // ----- NEW ABSTRACTION ------------
   // each lookup table is an array of color channel values specified as floats between 0.0 and 1.0.
   // For each pixel, the input color channel value is used as
   // an index into the lookup table to give the output color channel value which is converted back
@@ -306,6 +308,7 @@ We can re-examine the problem for v2 if one of our clients wants to use it.
                         optional float[] blueLookupTable,
                         optional float[] greenLookupTable);
 
+  // ------ CLIP REGION SUPPORT (FROM HTML5) ---------
   // assign undefined to set the clip region to the whole canvas.
   // may be arbitrarily shaped, in general, not necessarily rectangular.
   // once clipRegion is added, it will be part of the state, and drawing operations and various image operations
@@ -325,6 +328,7 @@ We can re-examine the problem for v2 if one of our clients wants to use it.
 
 *_Clip Region:_*
 {{{
+// ----- FROM HTML5 --------
 class ClipRegion {
   void add(ClipRegion other);
   void subtract(ClipRegion other);
