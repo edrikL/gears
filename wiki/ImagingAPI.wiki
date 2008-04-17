@@ -229,8 +229,9 @@ function process(var srcBlob) {
   request = google.gears.factory.create('httprequest');
   request.open('PUT', serverUrl);
   request.onreadystatechange = function() {
-  if (request.readyState == 4) {
-    alert('Upload finished!');
+    if (request.readyState == 4) {
+      alert('Upload finished!');
+    }
   }
   request.sendBlob(destBlob);
 };
@@ -267,7 +268,7 @@ function process(var srcBlob) {
 
   var destBlob = destCanvas.toBlob("image/jpeg", {
       'interlaced': true,
-      'colorMode': 16,
+      'colorMode': 32,
       'compressionQuality':0.7});
 
   // display and upload the output blob as in the previous example.
