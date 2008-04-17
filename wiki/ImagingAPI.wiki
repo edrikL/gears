@@ -290,6 +290,8 @@ Right now the way an undo can be implemented using the above API is to either cl
 = Beyond V1 =
 *_Updates to CanvasRenderingContext2D class:_*
 {{{
+  // TODO: add EXIF stuff here.
+
   // ----- NEW ABSTRACTION ------------
   // TODO: need to add an abstraction to support color lookup tables.
 
