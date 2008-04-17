@@ -40,3 +40,8 @@ bool GetBaseDataDirectory(std::string16 *path) {
   NSString *dir = [GearsPathUtilities gearsDataDirectory];
   return CFStringRefToString16((CFStringRef)dir, path);
 }
+
+bool GetBaseResourcesDirectory(std::string16 *path) {
+  NSString *dir = [GearsPathUtilities gearsComponentsDirectory];
+  return CFStringRefToString16((CFStringRef)dir, path);
+}
