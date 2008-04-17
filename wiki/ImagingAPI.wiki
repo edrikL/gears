@@ -16,6 +16,7 @@ The purpose of this module is to provide programmatic support for off-screen pho
     * Rendering on screen (real-time as opposed to via the BMP encoded capture URL through HTTP)
     * Clippings of arbitrary shape
     * Drawing primitives
+    * Support color lookup tables
     * Cool Photo stuff (Red-eye removal, smart scissors, magic wand, etc...)
     * Support other color depths (<>32 bpp)
     * Better support for non-destructive edits
@@ -283,18 +284,7 @@ Right now the way an undo can be implemented using the above API is to either cl
 *_Updates to CanvasRenderingContext2D class:_*
 {{{
   // ----- NEW ABSTRACTION ------------
-  // each lookup table is an array of color channel values specified as floats between 0.0 and 1.0.
-  // For each pixel, the input color channel value is used as
-  // an index into the lookup table to give the output color channel value which is converted back
-  // into the appropriate format for the canvas's color model.
-  // If a table is not of the correct size for the color model, we interpolate and convert it.
-  // Any argument can be 'undefined', in which case that color channel is left untouched.
-  // Specifying the elements of the lookup table as floats makes it independent of the color model.
-  // TODO: not sure whether to use channel-wise lookup tables or mappings between RGB triplets. That is,
-  // do we map R, G and B components of a color separately or the whole color at once?
-  void colorLookupTable(optional float[] redLookupTable,
-                        optional float[] blueLookupTable,
-                        optional float[] greenLookupTable);
+  // need to add an abstraction to support color lookup tables.
 
   // ------ CLIP REGION SUPPORT (FROM HTML5) ---------
   // assign undefined to set the clip region to the whole canvas.
