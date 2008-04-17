@@ -84,14 +84,6 @@ CanvasRenderingContext2D class
   // pops a state object from the stack and sets the current state to that state.
   void restore(); 
  
-  // drawing images and canvii
-  void drawImage(HTMLCanvasElement image, int dx, int dy);
-  void drawImage(HTMLCanvasElement image, int dx, int dy, int dw, int dh);
-  void drawImage(HTMLCanvasElement image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);  
-  void drawImage(HTMLImageElement image, int dx, int dy);
-  void drawImage(HTMLImageElement image, int dx, int dy, int dw, int dh);
-  void drawImage(HTMLImageElement image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);  
-
   // drawing rectangles
   void clearRect(int x, int y, int w, int h);
   // see fillStyle.
@@ -199,6 +191,7 @@ ImageData class {
   * Drawing of arbitrary paths not supported yet.
   * No support for clipping regions, gradients, patterns, shadows, strokes and line styles.
   * We do not support export to data URLs because the image data can be huge. Besides, there is a need to UUencode the data as well. We have an alternate approach supporting a HTTP URL capture, and hence this is not a limitation.
+  * We do not support the drawImage functions that take in either a HTMLImageElement or a HTMLCanvasElement as a parameter. It is hard to get efficient access to the underlying image data. (We can work around by fetching the source again, or getting a handle to the data URI but all of this is going to be inefficient).
 
 = Sample Code =
 *_Example 1: Downloads an image from a server, crops and resizes it, displays the result and uploads it_*:
