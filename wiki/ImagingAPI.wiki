@@ -28,6 +28,10 @@ We model the API based on the _HTML5CanvasElement_ in the HTML5 spec. Please ref
 {{{
 Canvas class
 {  
+  // Throws away the existing contents of the canvas.
+  // Sets the canvas's dimensions to those of the image in the blob.
+  void load(Blob blob);
+
   // Exports this canvas as a blob. This is a snapshot; updates to the canvas are not reflected in the blob.
   // Supported formats: JPEG, PNG, BMP
   // 'attributes' is a map of key-value pairs. 
@@ -44,6 +48,16 @@ Canvas class
   // Note that on load, the image is converted to RGB; the palette is preserved in case you want
   // to export the image back to indexed mode, but the canvas itself doesn't have an indexed mode.
   readonly attribute palette;
+
+  // The functions below change the pixels of the canvas in place, as opposed to scale, rotate, etc...
+  // which only set the current transformation matrix that affects future drawing operations.
+
+  // This method ignores the state of the canvas.
+  void crop(int x, int y, int width, int height);
+ 
+  // This method ignores the state of the canvas.
+  // Note: Scales up or down the contents of the canvas using interpolation, as ooposed to creating blank pixels or cropping.
+  void resize(int width, int height);
 
   // COMMON WITH HTML CANVAS
   attribute unsigned long width;
@@ -130,10 +144,6 @@ CanvasRenderingContext2D class
   // Need to guarantee consistent rendering across all platforms. We're thinking of using FreeType.
   void drawText(String text, String font, int size, int x, int y, optional int width, optional int height, optional object attributes);
 
-  // Throws away the existing contents of the canvas.
-  // Sets the canvas's dimensions to those of the image in the blob.
-  void load(Blob blob);
-
   void drawImage(Canvas image, int dx, int dy);
   void drawImage(Canvas image, int dx, int dy, int dw, int dh);
   void drawImage(Canvas image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);
@@ -145,16 +155,6 @@ CanvasRenderingContext2D class
 
   // ----- CONVENIENCE FUNCTIONS FOR COMMON OPERATIONS --------
   // might build on top of one or more abstractions listed above.
-
-  // The below functions change the pixels of the canvas in place, as opposed to scale, rotate, etc...
-  // which only set the current transformation matrix that affects future drawing operations.
-
-  // This method ignores the state of the canvas.
-  void crop(int x, int y, int width, int height);
- 
-  // This method ignores the state of the canvas.
-  // Note: resizes the image, not the canvas -- uses interpolation to generate new pixels.
-  void resize(int width, int height);
 
   // add delta to each color channel.
   // Color channel values are expressed as floats between 0.0 and 1.0, and delta should be between -1.0 and 1.0.
