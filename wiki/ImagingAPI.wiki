@@ -247,7 +247,7 @@ function process(var srcBlob) {
   var canvas = google.gears.factory.create('canvas');
   canvas.load(srcBlob);
   
-  var context = canvas.getContext('2d);
+  var context = canvas.getContext('2d');
   context.crop(10, 10, canvas.width - 20, canvas.height - 20); 
   context.resize(1024, 768);
 
