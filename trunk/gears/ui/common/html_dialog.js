@@ -30,6 +30,7 @@
 var isIE = false;
 var isPIE = false;
 var isFF = false;
+var isSafari = false;
 
 if (isDefined(typeof window.pie_dialog)) {
   isPIE = true;
@@ -39,6 +40,7 @@ if (isDefined(typeof window.pie_dialog)) {
   isIE = isDefined(typeof window.external) &&
          typeof window.external.GetDialogArguments != 'undefined';
   isFF = isDefined(typeof window.arguments);
+  isSafari = isDefined(typeof window.gears_dialogArguments);
 }
 
 /**
@@ -201,6 +203,9 @@ function getArguments() {
   } else if (isFF) {
     // Firefox
     argsString = getFirefoxArguments(window.arguments[0]);
+  } else if (isSafari) {
+    // Safari
+    argsString = window.gears_dialogArguments;
   }
 
   if (typeof argsString == "string") {
@@ -237,6 +242,9 @@ function saveAndClose(resultObject) {
     // Firefox
     saveFirefoxResults(resultString);
     window.close();
+  } else if (isSafari) {
+    // Safari
+    window.gears_dialog.setResults(resultString);
   }
 }
 

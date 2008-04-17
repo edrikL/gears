@@ -34,16 +34,12 @@
 #include "gears/base/npapi/module_wrapper.h"
 #include "gears/console/npapi/console_np.h"
 #include "gears/database/npapi/database.h"
-#ifdef BROWSER_WEBKIT
-// TODO(playmobil): Add support for Desktop module in Safari build.
-#else
 #include "gears/desktop/desktop.h"
-#endif
 #include "gears/factory/common/factory_utils.h"
 #include "gears/httprequest/npapi/httprequest_np.h"
 #include "gears/localserver/npapi/localserver_np.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
 #include "gears/timer/timer.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 #ifdef BROWSER_WEBKIT
 // TODO(playmobil): Add support for worker pools in Safari build.
 #else
@@ -112,12 +108,8 @@ void GearsFactory::Create(JsCallContext *context) {
     CreateModule<GearsConsole>(GetJsRunner(), &object);
   } else if (module_name == STRING16(L"beta.database")) {
     CreateModule<GearsDatabase>(GetJsRunner(), &object);
-#ifdef BROWSER_WEBKIT
-// TODO(playmobil): Add support for test module in Safari build.
-#else
   } else if (module_name == STRING16(L"beta.desktop")) {
     CreateModule<GearsDesktop>(GetJsRunner(), &object);
-#endif
   } else if (module_name == STRING16(L"beta.localserver")) {
     CreateModule<GearsLocalServer>(GetJsRunner(), &object);
 #ifdef BROWSER_WEBKIT
