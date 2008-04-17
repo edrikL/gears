@@ -63,6 +63,8 @@ Canvas class
   // Note: Scales up or down the contents of the canvas using interpolation, as opposed to creating blank pixels or cropping.
   void resize(int width, int height);
 
+
+
   // COMMON WITH HTML CANVAS
   attribute unsigned long width;
   attribute unsigned long height;
@@ -122,6 +124,9 @@ CanvasRenderingContext2D class
   void putImageData(ImageData imagedata, int dx, int dy);
   void putImageData(ImageData imagedata, int dx, int dy, int dirtyX, int dirtyY, int dirtyWidth, int dirtyHeight);
 
+
+
+
   // -------- THE FOLLOWING ARE ADDITIONAL ABSTRACTIONS WE SUPPORT ------------
 
   // 4x5 matrix for RGBA images and 3x4 for RGB.
@@ -155,6 +160,8 @@ CanvasRenderingContext2D class
   // similar to putImageData except that it respects the current state.
   // Useful for drawing custom shapes into an ImageData and then compositing that into the canvas.
   void drawImageData(ImageData imagedata, int sx, int sy, int sw, int sh, int dx, int dy);
+
+
 
 
   // ----- CONVENIENCE FUNCTIONS FOR COMMON OPERATIONS --------
