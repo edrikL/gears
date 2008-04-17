@@ -332,11 +332,7 @@ COMMON_LINKFLAGS += \
 endif
 
 MKDLL = link
-ifeq ($(BROWSER),NPAPI)
-DLL_PREFIX = np
-else
 DLL_PREFIX =
-endif
 DLL_SUFFIX = .dll
 # We need DLLFLAGS_NOPDB for generating other targets than gears.dll
 # (e.g. setup.dll for Windows Mobile).
@@ -353,7 +349,7 @@ DLLFLAGS = $(DLLFLAGS_NOPDB) /PDB:"$(@D)/$(MODULE).pdb"
 FF2_DLLFLAGS =
 FF3_DLLFLAGS =
 IE_DLLFLAGS = /DEF:tools/mscom.def
-NPAPI_DLLFLAGS = /DEF:base/npapi/npgears.def
+NPAPI_DLLFLAGS = /DEF:base/npapi/module.def
 
 MKEXE = link
 EXE_PREFIX =
