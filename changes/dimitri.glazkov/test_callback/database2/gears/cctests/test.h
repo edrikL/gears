@@ -30,6 +30,7 @@
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 class GearsTest : public ModuleImplBaseClassVirtual {
@@ -96,15 +97,21 @@ class GearsTest : public ModuleImplBaseClassVirtual {
 };
 
 // Dispatcher module that is created by GearsTest::TestPassModule()
-class GearsTestModule : public ModuleImplBaseClassVirtual {
+class GearsTestModule
+    : public ModuleImplBaseClassVirtual,
+      public JsEventHandlerInterface {
  public:
   GearsTestModule() : ModuleImplBaseClassVirtual("GearsTestModule") {}
 
   // IN: callback
   // OUT: void
   void TestSetCallback(JsCallContext *context);
+  // to handle the unload event
+  virtual void HandleEvent(JsEventType event_type);
  private:
   ~GearsTestModule();
+  void RegisterUnloadHandler();
+  scoped_ptr<JsEventMonitor> unload_monitor_;
   scoped_ptr<JsRootedCallback> callback_;
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsTestModule);

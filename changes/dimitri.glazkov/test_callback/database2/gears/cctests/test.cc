@@ -478,6 +478,22 @@ void GearsTestModule::TestSetCallback(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
   callback_.reset(callback);
+  // register unload handler
+  RegisterUnloadHandler();
+}
+
+void GearsTestModule::RegisterUnloadHandler() {
+  if (!unload_monitor_.get()) {
+    unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
+                                             this));
+  }
+}
+
+void GearsTestModule::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+
+  callback_.reset();
+  unload_monitor_.reset();
 }
 
 GearsTestModule::~GearsTestModule() {
