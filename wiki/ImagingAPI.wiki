@@ -32,15 +32,19 @@ Canvas class
   // Sets the canvas's dimensions to those of the image in the blob.
   void load(Blob blob);
 
+  
   // Exports this canvas as a blob. This is a snapshot; updates to the canvas are not reflected in the blob.
   // Supported formats: JPEG, PNG, BMP
   // 'attributes' is a map of key-value pairs. 
   // These are the available keys, all optional:
+  //      colorMode -- one of the constants RGBA_32 and RGB_24.
   //      indexed -- boolean. defaults to false unless palette is specified.
   //      palette -- an array of colors (as integer values). Explicitly specifying indexed = false while passing in a palette is an error.
   //      compressionQuality -- float between 0.0 (small size) and 1.0 (good quality). only for JPEG.
   //      interlaced -- boolean.
   Blob toBlob(optional String mimeType, optional Map attributes);
+  const unsigned short RGBA_32 = 32;
+  const unsigned short RGB_24 = 24;
 
   Canvas clone();
 
@@ -56,7 +60,7 @@ Canvas class
   void crop(int x, int y, int width, int height);
  
   // This method ignores the state of the canvas.
-  // Note: Scales up or down the contents of the canvas using interpolation, as ooposed to creating blank pixels or cropping.
+  // Note: Scales up or down the contents of the canvas using interpolation, as opposed to creating blank pixels or cropping.
   void resize(int width, int height);
 
   // COMMON WITH HTML CANVAS
@@ -186,12 +190,14 @@ ImageData class {
 };
 }}}
 
-= Deviation from HTML5 =
+= Deviations from HTML5 =
+Unlike the HTML5 canvas, which can be onscreen (part of the DOM) or not (instantiated using Javascript), we are purely an offscreen canvas as of v1, with export to a URL for display as an image. Also, the Gears canvas can be used from worker threads. Here are the other changes:
+
   *  Added Text support (for annotation support)
   * Added primitives for color transformation, convolution and lookup tables.
   * Drawing of arbitrary paths not supported yet.
   * No support for clipping regions, gradients, patterns, shadows, strokes and line styles.
-  * We do not support export to data URLs because the image data can be huge. Besides, there is a need to UUencode the data as well. We have an alternate approach supporting a HTTP URL capture, and hence this is not a limitation.
+  * We export to blobs, which can be uploaded to http servers or exported as a URL on the LocalServer; we do not export to data URIs. This is because exporting to a data URI involves base64-encoding the image, which makes it bigger.
   * We do not support the drawImage functions that take in either a HTMLImageElement or a HTMLCanvasElement as a parameter. It is hard to get efficient access to the underlying image data. (We can work around by fetching the source again, or getting a handle to the data URI but all of this is going to be inefficient).
 
 = Sample Code =
@@ -268,7 +274,7 @@ function process(var srcBlob) {
 
   var destBlob = destCanvas.toBlob("image/jpeg", {
       'interlaced': true,
-      'colorMode': 32,
+      'colorMode': canvas.RGB_24,
       'compressionQuality':0.7});
 
   // display and upload the output blob as in the previous example.
