@@ -33,7 +33,7 @@ Canvas class
   // These are the available keys, all optional:
   //      indexed -- boolean. defaults to false unless palette is specified.
   //      palette -- an array of colors (as integer values). Explicitly specifying indexed = false while passing in a palette is an error.
-  //      compressionFactor -- float between 0.0 (small size) and 1.0 (good quality). only for JPEG.
+  //      compressionQuality -- float between 0.0 (small size) and 1.0 (good quality). only for JPEG.
   //      interlaced -- boolean.
   Blob toBlob(optional String mimeType, optional Map attributes);
 
@@ -274,7 +274,7 @@ function process(var srcBlob) {
   var destBlob = destCanvas.toBlob("image/jpeg", {
       'interlaced': true,
       'colorMode': 16,
-      'compressionFactor':0.7});
+      'compressionQuality':0.7});
 
   // display and upload the output blob as in the previous example.
 }
