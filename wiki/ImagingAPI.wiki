@@ -284,7 +284,7 @@ Right now the way an undo can be implemented using the above API is to either cl
 *_Updates to CanvasRenderingContext2D class:_*
 {{{
   // ----- NEW ABSTRACTION ------------
-  // need to add an abstraction to support color lookup tables.
+  // TODO: need to add an abstraction to support color lookup tables.
 
   // ------ CLIP REGION SUPPORT (FROM HTML5) ---------
   // assign undefined to set the clip region to the whole canvas.
@@ -321,7 +321,7 @@ class ClipRegion {
 class PhotoUtils { 
  // Utility class that can perform operations on a canvas 
 
- // Need to add the following abstractions:
+ // TODO: Need to add the following abstractions:
  // 1. RED-EYE Correction
  // 2. Auto Color Correction
  // 3. Magic Wand
