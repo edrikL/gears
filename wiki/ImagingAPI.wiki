@@ -319,19 +319,12 @@ class ClipRegion {
 *_Cool photo manipulation stuff:_*
 {{{
 class PhotoUtils { 
- // some high-level operations.
+ // Utility class that can perform operations on a canvas 
 
- // threshold is between 0.0 and 1.0. Describes how much a pixel's red component
- // should exceed its green and blue components
- // for it to be considered part of the red eye and processed. TODO: define this precisely.
-  void redEyeFilter(Canvas canvas, int centerX, int centerY, float threshold);
+ // Add the following abstractions:
+ // 1. RED-EYE Correction
+ // 2. Auto Color Correction
+ // 3. Magic Wand
 
-  // need to define this better
-  void autoColorCorrection(Canvas canvas);
-
-  // selects pixels around the origin whose colors are close enough to the origin pixel's.
-  // The selected region may be non-rectangular.
-  // tolerance is betwen 0.0 (select only pixels with exactly the same color) and 1.0 (select all pixels)
-  ClipRegion magicWand(Canvas canvas, int originX, int originY, float tolerance);
 };
 }}}
