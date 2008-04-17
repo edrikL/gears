@@ -321,7 +321,7 @@ class ClipRegion {
 class PhotoUtils { 
  // Utility class that can perform operations on a canvas 
 
- // Add the following abstractions:
+ // Need to add the following abstractions:
  // 1. RED-EYE Correction
  // 2. Auto Color Correction
  // 3. Magic Wand
