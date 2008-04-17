@@ -198,7 +198,7 @@ ImageData class {
   * Added primitives for color transformation, convolution and lookup tables.
   * Drawing of arbitrary paths not supported yet.
   * No support for clipping regions, gradients, patterns, shadows, strokes and line styles.
-  * We do not support export to data URLs because the image data can be huge plus there is a need to UUencode it. We have an alternate approach supporting a HTTP URL capture, and hence this is not a limitation.
+  * We do not support export to data URLs because the image data can be huge. Besides, there is a need to UUencode the data as well. We have an alternate approach supporting a HTTP URL capture, and hence this is not a limitation.
 
 = Sample Code =
 *_Example 1: Downloads an image from a server, crops and resizes it, displays the result and uploads it_*:
