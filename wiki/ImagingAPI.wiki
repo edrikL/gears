@@ -22,7 +22,7 @@ The purpose of this module is to provide programmatic support for off-screen pho
     * Better support for non-destructive edits
 
 = JS interface =
-We model the API based on the _HTML5CanvasElement_ in the HTML5 spec. Please refer to http://www.whatwg.org/specs/web-apps/current-work/#canvas for details.
+We model the API based on the _HTML5CanvasElement_ in the HTML5 spec. Please refer to http://www.whatwg.org/specs/web-apps/current-work/multipage/section-the-canvas.html#the-canvas for details.
 
 *_Canvas class:_*
 {{{
