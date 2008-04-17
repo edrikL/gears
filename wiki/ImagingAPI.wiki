@@ -1,14 +1,14 @@
 #summary Off-screen photo manipulation
 
 = Introduction =
-The purpose of this module is to provide programmatic support for off-screen in-memory photo manipulation on the browser.
+The purpose of this module is to provide programmatic support for off-screen photo manipulation on the browser.
 
 = Requirements =
   #  V1 features (Basic):
     * Basic operations (crop, resize, scale, rotate)
     * Primitives (affine transforms, color transforms, convolution matrices, lookup tables)
     * Draw image onto canvas from local file / remote URL
-    * Save image (after manipulation) onto local file / post it to a remote URL
+    * Save image (after manipulation) onto local file / post it to a remote URL (We get this functionality by virtue of using the Blob abstraction)
     * Integration with Gears Blob and URL capture
     * Support for BMP, PNG and JPEG formats
     * Annotation (support for basic text)
@@ -21,7 +21,7 @@ The purpose of this module is to provide programmatic support for off-screen in-
     * Better support for non-destructive edits
 
 = JS interface =
-We model the API based on the _HTML5CanvasElement_ in the HTML5 spec. Look at http://www.whatwg.org/specs/web-apps/current-work/#canvas for details.
+We model the API based on the _HTML5CanvasElement_ in the HTML5 spec. Please refer to http://www.whatwg.org/specs/web-apps/current-work/#canvas for details.
 
 *_Canvas class:_*
 {{{
@@ -36,7 +36,9 @@ Canvas class
   //      compressionFactor -- float between 0.0 (small size) and 1.0 (good quality). only for JPEG.
   //      interlaced -- boolean.
   Blob toBlob(optional String mimeType, optional Map attributes);
-      
+
+  Canvas clone();
+
   // the palette of the image, if the canvas was load()ed from an indexed mode image.
   // Note that on load, the image is converted to RGB; the palette is preserved in case you want
   // to export the image back to indexed mode, but the canvas itself doesn't have an indexed mode.
@@ -113,10 +115,10 @@ CanvasRenderingContext2D class
 
   // 4x5 matrix for RGBA images and 3x4 for RGB.
   // TODO: Or is it better to take 4x5 consistently and ignore the alpha row and column if the image is RGB?
-  // See http://www.adobe.com/devnet/flash/articles/matrix_transformations_04.html
+  // Please refer to http://www.adobe.com/devnet/flash/articles/matrix_transformations_04.html
   void colorTransform(float[] colorMatrix);
  
-  // see http://www.adobe.com/devnet/flash/articles/matrix_transformations_05.html
+  // Please refer to http://www.adobe.com/devnet/flash/articles/matrix_transformations_05.html
   void convolutionTransform(float[] convolutionMatrix);
  
   void medianFilter(float radius);
@@ -150,8 +152,6 @@ CanvasRenderingContext2D class
 
   // ----- CONVENIENCE FUNCTIONS FOR COMMON OPERATIONS --------
   // might build on top of one or more abstractions listed above.
-
-  Canvas clone();
 
   // The below functions change the pixels of the canvas in place, as opposed to scale, rotate, etc...
   // which only set the current transformation matrix that affects future drawing operations.
@@ -284,13 +284,7 @@ function process(var srcBlob) {
 
 *_Undo_*:
 
-This is one possible way in which we can implement undo. 
-
-Many operations normally modify the canvas in place, but take an optional switch that makes them return a new canvas instead. The advantage with this approach is flexibility -- if you're interested in the previous state of the canvas (for undo), you generate the output in a new canvas without having to do a potentially expensive clone operation. On the other hand, if don't care about undo, you can overwrite the source in place without paying the memory cost of a second buffer (for many operations).
-
-The problem with this approach is that for consistency the draw functions should also have an option to return a new canvas, and such a thing may be tougher to merge into the HTML standard. So right now, we don't support this. If you want to preserve the old state, you have to either clone the canvas after each operation or keep track of the initial state and the list of operations applied on it, so that you can undo to any point by applying some of the operations.
-
-We can explore this problem for v2.
+Right now the way an undo can be implemented using the above API is to either clone the canvas after each operation or keep track of the initial state and the list of operations applied on it, so that one can undo to any point by applying some of the operations.
 
 = Beyond V1 =
 *_Updates to CanvasRenderingContext2D class:_*
