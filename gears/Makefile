@@ -377,7 +377,6 @@ COMMON_VPATH	+= \
 
 COMMON_M4SRCS	+= \
 		product_constants.h.m4 \
-		product_version.rc.m4 \
 		win32_msi.wxs.m4 \
 		wince_cab.inf.m4 \
 		$(NULL)
@@ -400,6 +399,10 @@ COMMON_CPPSRCS	+= \
 
 $(BROWSER)_VPATH	+= \
 		base/common \
+		$(NULL)
+
+$(BROWSER)_M4SRCS	+= \
+		product_version.rc.m4 \
 		$(NULL)
 
 $(BROWSER)_CPPSRCS	+= \
@@ -562,8 +565,12 @@ NPAPI_CPPSRCS	+= \
 		vista_utils.cc \
 		$(NULL)
 
-# TODO(mpcomplete): use WIN32_LINK_EXTRAS here.
 ifeq ($(OS),win32)
+NPAPI_CPPSRCS	+= \
+		detect_version_collision.cc \
+		$(NULL)
+
+# TODO(mpcomplete): use WIN32_LINK_EXTRAS here.
 NPAPI_LINK_EXTRAS  += \
                 $(NPAPI_OUTDIR)/module.res \
                 $(NULL)

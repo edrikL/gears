@@ -38,11 +38,11 @@ bool DetectedVersionCollision() {
   return detected_collision;
 }
 
-// We use two named mutex objects to determine if another version of 
-// Gears is running.  The first indicates at least one instance of some
-// version of Gears is running. The second indicates at least one instance
-// of our version of Gears is running. The embedded GUID in the mutex names
-// should not be changed across different versions.
+// We use two named mutex objects to determine if another version of the same
+// Gears distribution is running.  The first indicates an instance of ANY
+// version is running.  The second indicates an instance of OUR version is
+// running.  The base mutex names should not change across versions!
+//
 // TODO(michaeln): Ideally, these should be per user kernel objects rather
 // than per local session to detect when the same user is running Gears in
 // another windows session. See //depot/googleclient/ci/common/synchronized.cpp
@@ -50,11 +50,18 @@ bool DetectedVersionCollision() {
 static CMutex running_mutex;
 static CMutex our_version_running_mutex;
 
-static const wchar_t *kMutexName =
-    L"IsRunning{685E0F7D-005A-40a0-B9F8-168FBA824248}";
+#if BROWSER_NPAPI
+// For the Win32 NPAPI distribution.
+#define PRODUCT_COLLISION_GUID L"{6E9495F2-005B-4016-9F09-FA9F1F3F2D85}"
+#else
+// For the Win32 IE/Firefox distribution.
+#define PRODUCT_COLLISION_GUID L"{685E0F7D-005A-40a0-B9F8-168FBA824248}"
+#endif
 
+static const wchar_t *kMutexName =
+    L"IsRunning" PRODUCT_COLLISION_GUID;
 static const wchar_t *kOurVersionMutexName =
-    L"IsRunning{685E0F7D-005A-40a0-B9F8-168FBA824248}-" PRODUCT_VERSION_STRING;
+    L"IsRunning" PRODUCT_COLLISION_GUID L"-" PRODUCT_VERSION_STRING;
 
 // Returns true if we detect that a different version of Gears is running.
 // If no collision is detected, leaves mutex handles open to indicate that
