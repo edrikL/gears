@@ -56,10 +56,10 @@ Canvas class
   // The functions below change the pixels of the canvas in place, as opposed to scale, rotate, etc...
   // which only set the current transformation matrix that affects future drawing operations.
 
-  // This method ignores the state of the canvas (see below).
+  // This method ignores the state of the context (see below).
   void crop(int x, int y, int width, int height);
  
-  // This method ignores the state of the canvas.
+  // This method ignores the state of the context.
   // Note: Scales up or down the contents of the canvas using interpolation, as opposed to creating blank pixels or cropping.
   void resize(int width, int height);
 
