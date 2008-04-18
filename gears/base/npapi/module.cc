@@ -54,18 +54,18 @@
 
 #define STDCALL
 
-#pragma export on
 extern "C" {
   // Mach-o entry points
-  NPError NP_Initialize(NPNetscapeFuncs *browserFuncs);
-  NPError NP_GetEntryPoints(NPPluginFuncs *pluginFuncs);
-  void NP_Shutdown(void);
+#define EXPORT __attribute__((visibility("default")))
+  EXPORT NPError NP_Initialize(NPNetscapeFuncs *browserFuncs);
+  EXPORT NPError NP_GetEntryPoints(NPPluginFuncs *pluginFuncs);
+  EXPORT void NP_Shutdown(void);
+#undef EXPORT
   // For compatibility with NPAPI in Opera & FF on the Mac, we need to implement
   // this.
   // int main(NPNetscapeFuncs *browserFuncs, NPPluginFuncs *pluginFuncs,
   //         void *shutdown);
 }
-#pragma export off
 #endif  // BROWSER_WEBKIT
 
 #ifdef WIN32
