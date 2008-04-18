@@ -59,7 +59,7 @@ namespace std {
   typedef wstring string16;
 }
 
-#elif (defined LINUX) || (defined OSX)
+#elif (defined LINUX) || (defined OS_MACOSX)
 
 typedef unsigned short char16;
 

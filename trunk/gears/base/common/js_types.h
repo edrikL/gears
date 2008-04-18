@@ -513,9 +513,8 @@ class JsCallContext {
 #if BROWSER_NPAPI
   JsCallContext(JsContextPtr js_context, NPObject *object,
                 int argc, const JsToken *argv, JsToken *retval)
-      : js_context_(js_context), object_(object),
-        argc_(argc), argv_(argv), retval_(retval),
-        is_exception_set_(false) {}
+      : js_context_(js_context), is_exception_set_(false), object_(object),
+        argc_(argc), argv_(argv), retval_(retval) {}
 #elif BROWSER_IE
   JsCallContext(DISPPARAMS FAR *disp_params, VARIANT FAR *retval,
                 EXCEPINFO FAR *excep_info)
