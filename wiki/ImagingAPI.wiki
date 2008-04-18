@@ -51,7 +51,7 @@ Canvas class
   // the palette of the image, if the canvas was load()ed from an indexed mode image.
   // Note that on load, the image is converted to RGB; the palette is preserved in case you want
   // to export the image back to indexed mode, but the canvas itself doesn't have an indexed mode.
-  readonly attribute palette;
+  readonly attribute array palette;
 
   // The functions below change the pixels of the canvas in place, as opposed to scale, rotate, etc...
   // which only set the current transformation matrix that affects future drawing operations.
