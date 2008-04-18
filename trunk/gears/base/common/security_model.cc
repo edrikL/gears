@@ -38,7 +38,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/firefox/dom_utils.h"
 #elif BROWSER_SAFARI
-#include "gears/base/safari/browser_utils.h"
+#include "gears/base/safari/browser_utils_sf.h"
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/base/safari/cf_string_utils.h"
 #elif BROWSER_NPAPI

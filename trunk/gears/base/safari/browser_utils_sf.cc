@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+// Copyright 2008, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,51 +23,23 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#import <WebKit/WebKit.h>
+#include "gears/base/safari/browser_utils_sf.h"
+#include "gears/base/safari/scoped_cf.h"
+#include "gears/base/safari/cf_string_utils.h"
 
-#import "gears/base/common/string_utils.h"
-#import "gears/base/safari/cf_string_utils.h"
-#import "third_party/scoped_ptr/scoped_ptr.h"
-
-@implementation NSString(GearsString16Conversion)
-//------------------------------------------------------------------------------
-+ (NSString *)stringWithString16:(const char16 *)str {
-  return [(NSString *)CFStringCreateWithString16(str) autorelease];
+bool CFURLRefToString16(CFURLRef url, std::string16 *out16) {
+  if (!url || !out16)
+    return false;
+  
+  scoped_CFURL absolute(CFURLCopyAbsoluteURL(url));
+  CFStringRef absoluteStr = CFURLGetString(absolute.get());
+  
+  return CFStringRefToString16(absoluteStr, out16);
 }
 
-//------------------------------------------------------------------------------
-- (bool)string16:(std::string16 *)out16 {
-  const char *utf8 = [self UTF8String];
+CFURLRef CFURLCreateWithString16(const char16 *url_str) {
+  scoped_CFString url(CFStringCreateWithString16(url_str));
   
-  if (!strlen(utf8)) {
-    out16->empty();
-    return true;
-  }
-  
-  return(UTF8ToString16(utf8, out16));
+  return CFURLCreateWithString(kCFAllocatorDefault, url.get(), NULL);
 }
 
-//------------------------------------------------------------------------------
-- (UniChar *)copyCharacters {
-  int len = [self length];
-  UniChar *buffer = new UniChar[len + 1];
-
-  if (len)
-    [self getCharacters:buffer];
-  
-  buffer[len] = 0;
-  
-  return buffer;
-}
-
-@end
-  
-//------------------------------------------------------------------------------
-#if DEBUG
-// Only for debugging -- leaks memory
-const char *DebugString16(const char16 *str) {
-  std::string *out8(new std::string);
-  String16ToUTF8(str, out8);
-  return out8->c_str();
-}
-#endif

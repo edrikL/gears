@@ -75,7 +75,6 @@
 		B544DB720D2EE93800D30561 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B544DB710D2EE93800D30561 /* Cocoa.framework */; };
 		B544FD630D89326D00568660 /* cf_string_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544FD620D89326D00568660 /* cf_string_utils.cc */; };
 		B5559D820D9BC7CB0037636E /* update_task_sf.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5559D810D9BC7CB0037636E /* update_task_sf.cc */; };
-		B55D10EF0D9931C000B405E4 /* string_utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = B55D10EE0D9931C000B405E4 /* string_utils.mm */; };
 		B55D110F0D993C7500B405E4 /* message_queue_sf.cc in Sources */ = {isa = PBXBuildFile; fileRef = B55D110E0D993C7500B405E4 /* message_queue_sf.cc */; };
 		B55F235A0DB3D87E00AF44E2 /* uncompr.c in Sources */ = {isa = PBXBuildFile; fileRef = B55F234F0DB3D87E00AF44E2 /* uncompr.c */; };
 		B55F235B0DB3D87E00AF44E2 /* trees.c in Sources */ = {isa = PBXBuildFile; fileRef = B55F23500DB3D87E00AF44E2 /* trees.c */; };
@@ -250,7 +249,6 @@
 		B5AFB32C0DAD233D0058E178 /* permissions_dialog.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5AFB3280DAD233D0058E178 /* permissions_dialog.cc */; };
 		B5AFB32D0DAD233D0058E178 /* settings_dialog.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5AFB3290DAD233D0058E178 /* settings_dialog.cc */; };
 		B5AFB32E0DAD233D0058E178 /* html_dialog.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5AFB32B0DAD233D0058E178 /* html_dialog.cc */; };
-		B5B306C60DB5402600A206B8 /* html_dialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5AFB32F0DAD23460058E178 /* html_dialog.mm */; };
 		B5B307670DB578D900A206B8 /* button.css in Resources */ = {isa = PBXBuildFile; fileRef = B5B3075E0DB578D900A206B8 /* button.css */; };
 		B5B307680DB578D900A206B8 /* button_bg.gif in Resources */ = {isa = PBXBuildFile; fileRef = B5B3075F0DB578D900A206B8 /* button_bg.gif */; };
 		B5B307690DB578D900A206B8 /* html_dialog.css in Resources */ = {isa = PBXBuildFile; fileRef = B5B307600DB578D900A206B8 /* html_dialog.css */; };
@@ -264,10 +262,12 @@
 		B5BBD8890D8E8947001A4916 /* url_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5BBD8880D8E8947001A4916 /* url_utils.cc */; };
 		B5C4F1EC0DB3F33C00DF1457 /* vdbeapi.c in Sources */ = {isa = PBXBuildFile; fileRef = B5C4F1EB0DB3F33C00DF1457 /* vdbeapi.c */; };
 		B5C4F1EF0DB3F38300DF1457 /* pngget.c in Sources */ = {isa = PBXBuildFile; fileRef = B5C4F1EE0DB3F38300DF1457 /* pngget.c */; };
+		B5D8D33A0DB9320800C257AA /* browser_utils_sf.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D3370DB9320800C257AA /* browser_utils_sf.cc */; };
+		B5D8D33B0DB9320800C257AA /* nsstring_utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D3380DB9320800C257AA /* nsstring_utils.mm */; };
+		B5D8D3660DB9326A00C257AA /* html_dialog_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D3650DB9326A00C257AA /* html_dialog_sf.mm */; };
 		B5F583B30D9FE48E00B8FD50 /* async_task_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5F583B10D9FE48E00B8FD50 /* async_task_sf.mm */; };
 		B5F584020DA0AF0D00B8FD50 /* url_utils_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F584010DA0AF0D00B8FD50 /* url_utils_np.cc */; };
 		B5F584AA0DA0BB5C00B8FD50 /* url_utils_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F584A90DA0BB5C00B8FD50 /* url_utils_test.cc */; };
-		B5F614340D402A320003ADBB /* browser_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F614320D402A320003ADBB /* browser_utils.cc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -373,7 +373,6 @@
 		B544D9600D2EE5D000D30561 /* database.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = database.h; path = ../../database/npapi/database.h; sourceTree = SOURCE_ROOT; };
 		B544D9610D2EE5D000D30561 /* result_set.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = result_set.cc; path = ../../database/npapi/result_set.cc; sourceTree = SOURCE_ROOT; };
 		B544D9620D2EE5D000D30561 /* result_set.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = result_set.h; path = ../../database/npapi/result_set.h; sourceTree = SOURCE_ROOT; };
-		B544D9690D2EE5D000D30561 /* browser_utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = browser_utils.h; path = ../../base/safari/browser_utils.h; sourceTree = SOURCE_ROOT; };
 		B544D96F0D2EE5D000D30561 /* module.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = module.cc; path = ../../base/npapi/module.cc; sourceTree = SOURCE_ROOT; };
 		B544D9700D2EE5D000D30561 /* npp_bindings.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = npp_bindings.cc; path = ../../base/npapi/npp_bindings.cc; sourceTree = SOURCE_ROOT; };
 		B544D9710D2EE5D000D30561 /* module.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = module.h; path = ../../base/npapi/module.h; sourceTree = SOURCE_ROOT; };
@@ -425,7 +424,6 @@
 		B5559D800D9BC7CB0037636E /* update_task_sf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = update_task_sf.h; path = ../../localserver/safari/update_task_sf.h; sourceTree = SOURCE_ROOT; };
 		B5559D810D9BC7CB0037636E /* update_task_sf.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = update_task_sf.cc; path = ../../localserver/safari/update_task_sf.cc; sourceTree = SOURCE_ROOT; };
 		B55D10DF0D992C3F00B405E4 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = common.h; path = ../../base/common/common.h; sourceTree = SOURCE_ROOT; };
-		B55D10EE0D9931C000B405E4 /* string_utils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = string_utils.mm; path = ../../base/safari/string_utils.mm; sourceTree = SOURCE_ROOT; };
 		B55D110E0D993C7500B405E4 /* message_queue_sf.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = message_queue_sf.cc; path = ../../base/common/message_queue_sf.cc; sourceTree = SOURCE_ROOT; };
 		B55F234F0DB3D87E00AF44E2 /* uncompr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = uncompr.c; path = ../../../third_party/zlib/uncompr.c; sourceTree = SOURCE_ROOT; };
 		B55F23500DB3D87E00AF44E2 /* trees.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = trees.c; path = ../../../third_party/zlib/trees.c; sourceTree = SOURCE_ROOT; };
@@ -650,7 +648,6 @@
 		B5AFB3290DAD233D0058E178 /* settings_dialog.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = settings_dialog.cc; path = ../../ui/common/settings_dialog.cc; sourceTree = SOURCE_ROOT; };
 		B5AFB32A0DAD233D0058E178 /* permissions_dialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = permissions_dialog.h; path = ../../ui/common/permissions_dialog.h; sourceTree = SOURCE_ROOT; };
 		B5AFB32B0DAD233D0058E178 /* html_dialog.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = html_dialog.cc; path = ../../ui/common/html_dialog.cc; sourceTree = SOURCE_ROOT; };
-		B5AFB32F0DAD23460058E178 /* html_dialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = html_dialog.mm; path = ../../ui/safari/html_dialog.mm; sourceTree = SOURCE_ROOT; };
 		B5B305160DB503DA00A206B8 /* scoped_cf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = scoped_cf.h; path = ../../base/safari/scoped_cf.h; sourceTree = SOURCE_ROOT; };
 		B5B3075E0DB578D900A206B8 /* button.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.css; name = button.css; path = ../../ui/common/button.css; sourceTree = SOURCE_ROOT; };
 		B5B3075F0DB578D900A206B8 /* button_bg.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; name = button_bg.gif; path = ../../ui/common/button_bg.gif; sourceTree = SOURCE_ROOT; };
@@ -669,11 +666,14 @@
 		B5BBD8880D8E8947001A4916 /* url_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = url_utils.cc; path = ../../base/common/url_utils.cc; sourceTree = SOURCE_ROOT; };
 		B5C4F1EB0DB3F33C00DF1457 /* vdbeapi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vdbeapi.c; path = ../../../third_party/sqlite_google/src/vdbeapi.c; sourceTree = SOURCE_ROOT; };
 		B5C4F1EE0DB3F38300DF1457 /* pngget.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pngget.c; path = ../../../third_party/libpng/pngget.c; sourceTree = SOURCE_ROOT; };
+		B5D8D3370DB9320800C257AA /* browser_utils_sf.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = browser_utils_sf.cc; path = ../../base/safari/browser_utils_sf.cc; sourceTree = SOURCE_ROOT; };
+		B5D8D3380DB9320800C257AA /* nsstring_utils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = nsstring_utils.mm; path = ../../base/safari/nsstring_utils.mm; sourceTree = SOURCE_ROOT; };
+		B5D8D3390DB9320800C257AA /* browser_utils_sf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = browser_utils_sf.h; path = ../../base/safari/browser_utils_sf.h; sourceTree = SOURCE_ROOT; };
+		B5D8D3650DB9326A00C257AA /* html_dialog_sf.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = html_dialog_sf.mm; path = ../../ui/safari/html_dialog_sf.mm; sourceTree = SOURCE_ROOT; };
 		B5F583B10D9FE48E00B8FD50 /* async_task_sf.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = async_task_sf.mm; path = ../../localserver/safari/async_task_sf.mm; sourceTree = SOURCE_ROOT; };
 		B5F583B20D9FE48E00B8FD50 /* async_task_sf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = async_task_sf.h; path = ../../localserver/safari/async_task_sf.h; sourceTree = SOURCE_ROOT; };
 		B5F584010DA0AF0D00B8FD50 /* url_utils_np.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = url_utils_np.cc; path = ../../base/common/url_utils_np.cc; sourceTree = SOURCE_ROOT; };
 		B5F584A90DA0BB5C00B8FD50 /* url_utils_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = url_utils_test.cc; path = ../../base/common/url_utils_test.cc; sourceTree = SOURCE_ROOT; };
-		B5F614320D402A320003ADBB /* browser_utils.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = browser_utils.cc; path = ../../base/safari/browser_utils.cc; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -939,9 +939,8 @@
 		B544D9680D2EE5D000D30561 /* safari */ = {
 			isa = PBXGroup;
 			children = (
-				B535DDC40DA951A000B49CDF /* safari_workaround.m */,
-				B544D9690D2EE5D000D30561 /* browser_utils.h */,
-				B5F614320D402A320003ADBB /* browser_utils.cc */,
+				B5D8D3370DB9320800C257AA /* browser_utils_sf.cc */,
+				B5D8D3390DB9320800C257AA /* browser_utils_sf.h */,
 				B5BB93F30D49255E00FA9651 /* cf_string_utils.h */,
 				B544FD620D89326D00568660 /* cf_string_utils.cc */,
 				B57A58310DA9288B001B0CC6 /* loader.h */,
@@ -949,8 +948,9 @@
 				B57A58330DA9288B001B0CC6 /* enabler.h */,
 				B58939370DB66FA900BD56A0 /* launch_url_in_browser.cc */,
 				B57A58530DA92C6A001B0CC6 /* loader.mm */,
+				B5D8D3380DB9320800C257AA /* nsstring_utils.mm */,
+				B535DDC40DA951A000B49CDF /* safari_workaround.m */,
 				B5B305160DB503DA00A206B8 /* scoped_cf.h */,
-				B55D10EE0D9931C000B405E4 /* string_utils.mm */,
 			);
 			name = safari;
 			sourceTree = "<group>";
@@ -1388,7 +1388,7 @@
 		B5AFB3260DAD230E0058E178 /* safari */ = {
 			isa = PBXGroup;
 			children = (
-				B5AFB32F0DAD23460058E178 /* html_dialog.mm */,
+				B5D8D3650DB9326A00C257AA /* html_dialog_sf.mm */,
 			);
 			name = safari;
 			sourceTree = "<group>";
@@ -1814,7 +1814,6 @@
 				B544D9C00D2EE5D000D30561 /* factory.cc in Sources */,
 				B544D9C10D2EE5D000D30561 /* factory_utils.cc in Sources */,
 				B54247310D35999200B3D18D /* httprequest_np.cc in Sources */,
-				B5F614340D402A320003ADBB /* browser_utils.cc in Sources */,
 				B5BB92560D47F9AA00FA9651 /* http_cookies_sf.mm in Sources */,
 				B58EFD9F0D5292C100B0A65D /* localserver_db_proxy.mm in Sources */,
 				B58EFE620D529ACB00B0A65D /* manifest.cc in Sources */,
@@ -1845,7 +1844,6 @@
 				B5BBD8610D8E8223001A4916 /* http_request_sf.mm in Sources */,
 				B5BBD8640D8E822E001A4916 /* http_request_delegate.mm in Sources */,
 				B5BBD8890D8E8947001A4916 /* url_utils.cc in Sources */,
-				B55D10EF0D9931C000B405E4 /* string_utils.mm in Sources */,
 				B55D110F0D993C7500B405E4 /* message_queue_sf.cc in Sources */,
 				B5559D820D9BC7CB0037636E /* update_task_sf.cc in Sources */,
 				B5AB77E10D9FDC2F001EE5D5 /* async_router.cc in Sources */,
@@ -1885,11 +1883,13 @@
 				B55F239D0DB3D93800AF44E2 /* url_canon_etc.cc in Sources */,
 				B55F239E0DB3D93800AF44E2 /* gurl.cc in Sources */,
 				B55F243E0DB3DD4B00AF44E2 /* stopwatch_posix.cc in Sources */,
-				B5B306C60DB5402600A206B8 /* html_dialog.mm in Sources */,
 				79C3E9420DB8D8E800346806 /* blob.cc in Sources */,
 				79C3E9430DB8D8E800346806 /* buffer_blob.cc in Sources */,
 				79C3E9440DB8D8E800346806 /* file_blob.cc in Sources */,
 				79C3E9450DB8D8E800346806 /* slice_blob.cc in Sources */,
+				B5D8D33A0DB9320800C257AA /* browser_utils_sf.cc in Sources */,
+				B5D8D33B0DB9320800C257AA /* nsstring_utils.mm in Sources */,
+				B5D8D3660DB9326A00C257AA /* html_dialog_sf.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2626,7 +2626,7 @@
 					Carbon,
 				);
 				PREBINDING = NO;
-				PRODUCT_NAME = launch_url_in_browser;
+				PRODUCT_NAME = launch_url_with_browser;
 				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(SRCROOT)/../../bin-dbg/osx-i386/common/ $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common";
 				ZERO_LINK = NO;
 			};

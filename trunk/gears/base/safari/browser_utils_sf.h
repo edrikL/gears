@@ -1,4 +1,4 @@
-// Copyright 2008, Google Inc.
+// Copyright 2007, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,23 +23,42 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/base/safari/browser_utils.h"
-#include "gears/base/safari/scoped_cf.h"
-#include "gears/base/safari/cf_string_utils.h"
+// Utility functions / methods operating on URLs
 
-bool CFURLRefToString16(CFURLRef url, std::string16 *out16) {
-  if (!url || !out16)
-    return false;
-  
-  scoped_CFURL absolute(CFURLCopyAbsoluteURL(url));
-  CFStringRef absoluteStr = CFURLGetString(absolute.get());
-  
-  return CFStringRefToString16(absoluteStr, out16);
+#ifndef GEARS_BASE_SAFARI_BROWSER_UTILS_SF_H__
+#define GEARS_BASE_SAFARI_BROWSER_UTILS_SF_H__
+
+#if defined(__OBJC__)
+#import <Cocoa/Cocoa.h>
+@interface GearsURLUtilities : NSObject
+// Return URL absoluteString for |relativeURLStr| on the current page
++ (NSString *)resolveURLString:(NSString *)relativeURLStr
+               usingPluginArgs:(NSDictionary *)args;
+
++ (NSString *)resolveURLString:(NSString *)relativeURLStr
+                    baseURLStr:(NSString *)baseURLStr;
+@end
+#endif  // __OBJC__
+
+#if defined(__cplusplus)
+#include <CoreFoundation/CoreFoundation.h>
+#include "gears/base/common/string_utils.h"
+
+class SecurityOrigin;
+
+// Convert a CFURLRef into a String16 representation, returning true if 
+// successful, false otherwise
+bool CFURLRefToString16(CFURLRef url, std::string16 *out16);
+
+// Convert a String16 string into a CFURLRef.  Caller is responsible for
+// releasing CFURLRef.
+CFURLRef CFURLCreateWithString16(const char16 *url_str);
+
+namespace SafariURLUtilities {
+  bool GetPageOrigin(const char *url_str, SecurityOrigin *security_origin);  
+  bool GetPageOriginFromArguments(CFDictionaryRef dict, 
+                                  SecurityOrigin *security_origin);
 }
 
-CFURLRef CFURLCreateWithString16(const char16 *url_str) {
-  scoped_CFString url(CFStringCreateWithString16(url_str));
-  
-  return CFURLCreateWithString(kCFAllocatorDefault, url.get(), NULL);
-}
-
+#endif  // __cplusplus
+#endif  // GEARS_BASE_SAFARI_BROWSER_UTILS_SF_H__

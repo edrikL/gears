@@ -27,7 +27,7 @@
 
 #import "gears/base/common/string_utils.h"
 #import "gears/base/common/common_sf.h"
-#import "gears/base/safari/browser_utils.h"
+#import "gears/base/safari/browser_utils_sf.h"
 
 //------------------------------------------------------------------------------
 void SafariGearsLog(const char *msg, ...) {

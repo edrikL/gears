@@ -23,42 +23,41 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// Utility functions / methods operating on URLs
+#import <WebKit/WebKit.h>
 
-#ifndef GEARS_BASE_SAFARI_BROWSER_UTILS_H__
-#define GEARS_BASE_SAFARI_BROWSER_UTILS_H__
+#import "gears/base/common/string_utils.h"
+#import "gears/base/safari/cf_string_utils.h"
+#import "third_party/scoped_ptr/scoped_ptr.h"
 
-#if defined(__OBJC__)
-#import <Cocoa/Cocoa.h>
-@interface GearsURLUtilities : NSObject
-// Return URL absoluteString for |relativeURLStr| on the current page
-+ (NSString *)resolveURLString:(NSString *)relativeURLStr
-               usingPluginArgs:(NSDictionary *)args;
-
-+ (NSString *)resolveURLString:(NSString *)relativeURLStr
-                    baseURLStr:(NSString *)baseURLStr;
-@end
-#endif  // __OBJC__
-
-#if defined(__cplusplus)
-#include <CoreFoundation/CoreFoundation.h>
-#include "gears/base/common/string_utils.h"
-
-class SecurityOrigin;
-
-// Convert a CFURLRef into a String16 representation, returning true if 
-// successful, false otherwise
-bool CFURLRefToString16(CFURLRef url, std::string16 *out16);
-
-// Convert a String16 string into a CFURLRef.  Caller is responsible for
-// releasing CFURLRef.
-CFURLRef CFURLCreateWithString16(const char16 *url_str);
-
-namespace SafariURLUtilities {
-  bool GetPageOrigin(const char *url_str, SecurityOrigin *security_origin);  
-  bool GetPageOriginFromArguments(CFDictionaryRef dict, 
-                                  SecurityOrigin *security_origin);
+@implementation NSString(GearsString16Conversion)
+//------------------------------------------------------------------------------
++ (NSString *)stringWithString16:(const char16 *)str {
+  return [(NSString *)CFStringCreateWithString16(str) autorelease];
 }
 
-#endif  // __cplusplus
-#endif  // GEARS_BASE_SAFARI_BROWSER_UTILS_H__
+//------------------------------------------------------------------------------
+- (bool)string16:(std::string16 *)out16 {
+  const char *utf8 = [self UTF8String];
+  
+  if (!strlen(utf8)) {
+    out16->empty();
+    return true;
+  }
+  
+  return(UTF8ToString16(utf8, out16));
+}
+
+//------------------------------------------------------------------------------
+- (UniChar *)copyCharacters {
+  int len = [self length];
+  UniChar *buffer = new UniChar[len + 1];
+
+  if (len)
+    [self getCharacters:buffer];
+  
+  buffer[len] = 0;
+  
+  return buffer;
+}
+
+@end
