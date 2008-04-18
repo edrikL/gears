@@ -76,7 +76,7 @@ Canvas class
 
 *_CanvasRenderingContext2D class:_*
 
-Our state is a subset of HTML5 Canvas's. Our state consists of:
+As in HTML Canvas, our context has a state, which is a subset of the state in HTML Canvas's context. Our state consists of:
   * The current transformation matrix
   * The current clipping region (once we add support for this after V1)
   * globalAlpha, globalCompositeOperation and fillStyle. HTML Canvas supports a richer state with more attributes pertaining to drawing that we don't support. See the spec for details.
