@@ -71,6 +71,9 @@ GearsFactory::GearsFactory()
 }
 
 void GearsFactory::Create(JsCallContext *context) {
+// TODO(playmobil): Implement detect_version_collision.* files on non-win32 
+// platforms.
+#ifdef WIN32
   if (DetectedVersionCollision()) {
     if (!EnvIsWorker()) {
       MaybeNotifyUserOfVersionCollision();  // only notifies once per process
@@ -78,6 +81,7 @@ void GearsFactory::Create(JsCallContext *context) {
     context->SetException(kVersionCollisionErrorMessage);
     return;
   }
+#endif
 
   bool use_temporary_permissions = true;
   std::string16 module_name;
