@@ -28,9 +28,9 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "genfiles/product_constants.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/string16.h"
+#include "gears/base/ie/detect_version_collision.h"
 #include "gears/base/npapi/module_wrapper.h"
 #include "gears/console/npapi/console_np.h"
 #include "gears/database/npapi/database.h"
@@ -39,12 +39,13 @@
 #include "gears/httprequest/npapi/httprequest_np.h"
 #include "gears/localserver/npapi/localserver_np.h"
 #include "gears/timer/timer.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
 #ifdef BROWSER_WEBKIT
 // TODO(playmobil): Add support for worker pools in Safari build.
 #else
 #include "gears/workerpool/npapi/workerpool.h"
 #endif
+#include "genfiles/product_constants.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #ifdef BROWSER_WEBKIT
 // TODO(playmobil): Add support for test module in Safari build.
@@ -70,6 +71,14 @@ GearsFactory::GearsFactory()
 }
 
 void GearsFactory::Create(JsCallContext *context) {
+  if (DetectedVersionCollision()) {
+    if (!EnvIsWorker()) {
+      MaybeNotifyUserOfVersionCollision();  // only notifies once per process
+    }
+    context->SetException(kVersionCollisionErrorMessage);
+    return;
+  }
+
   bool use_temporary_permissions = true;
   std::string16 module_name;
   std::string16 version = STRING16(L"1.0");  // default for this optional param
