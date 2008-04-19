@@ -816,6 +816,14 @@ IE_M4SRCS	+= \
 		ui_html.rc.m4 \
 		$(NULL)
 
+NPAPI_VPATH	+= \
+		ui/generated \
+		$(NULL)
+
+NPAPI_M4SRCS	+= \
+		ui_html.rc.m4 \
+		$(NULL)
+
 
 #-----------------------------------------------------------------------------
 # ui/common (built for all browsers)
@@ -903,12 +911,21 @@ endif
 # ui/npapi
 
 NPAPI_VPATH	+= \
+		ui/ie \
+		$(NULL)
+
+NPAPI_M4SRCS	+= \
+		ui_resources.rc.m4 \
 		$(NULL)
 
 NPAPI_IDLSRCS	+= \
 		$(NULL)
 
 NPAPI_CPPSRCS	+= \
+		$(NULL)
+
+NPAPI_LINK_EXTRAS += \
+		$(NPAPI_OUTDIR)/ui_resources.res \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
