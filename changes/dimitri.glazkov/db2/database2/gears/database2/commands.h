@@ -47,7 +47,10 @@ protected:
   Database2Transaction *tx() const { return tx_.get(); }
   Database2Connection *connection() const { return tx_->connection(); }
   bool success() const { return success_; }
-  bool set_result(bool success) { success_ = success; return success; }
+  bool SetResult(bool success) { 
+    success_ = success; 
+    return success;
+  }
 
  private:
   bool success_;

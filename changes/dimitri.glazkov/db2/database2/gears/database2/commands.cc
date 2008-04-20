@@ -28,7 +28,7 @@
 #include "gears/database2/result_set2.h"
 
 void Database2BeginCommand::Execute(bool *has_results) {
-  set_result(connection()->Begin());
+  SetResult(connection()->Begin());
 }
 
 void Database2BeginCommand::HandleResults() {
@@ -64,7 +64,7 @@ void Database2AsyncExecuteCommand::HandleResults() {
 
 void Database2SyncExecuteCommand::Execute(bool *has_results) {
   // TODO(dimitri.glazkov): Collect row results
-  if (!set_result(connection()->Execute(statement_->sql(),
+  if (!SetResult(connection()->Execute(statement_->sql(),
       statement_->arguments(), NULL))) {
     connection()->Rollback();
     tx()->MarkClosed();
@@ -93,7 +93,7 @@ void Database2SyncExecuteCommand::HandleResults() {
 }
 
 void Database2CommitCommand::Execute(bool *has_results) {
-  if (!set_result(connection()->Commit())) {
+  if (!SetResult(connection()->Commit())) {
     connection()->Rollback();
   } else {
     *has_results = tx()->HasSuccessCallback();
