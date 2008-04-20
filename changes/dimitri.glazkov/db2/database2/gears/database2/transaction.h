@@ -57,8 +57,11 @@ class Database2Transaction
   void ExecuteSql(JsCallContext *context);
 
   void Start();
+
   void MarkOpen() { is_open_ = true; }
   void MarkClosed() { is_open_ = false; }
+  bool open() const { return is_open_; }
+
   void ExecuteNextStatement(JsCallContext *context);
 
   bool HasErrorCallback() const {

@@ -32,14 +32,8 @@ void Database2BeginCommand::Execute(bool *has_results) {
 }
 
 void Database2BeginCommand::HandleResults() {
-  // the entire synchronous transaction execution cycle is actually controlled
-  // from this method
   if (success()) {
     tx()->MarkOpen();
-    tx()->InvokeCallback();
-    tx()->MarkClosed();
-    // implicitly trigger commit
-    tx()->ExecuteNextStatement(NULL);
   } else {
     tx()->InvokeErrorCallback();
   }

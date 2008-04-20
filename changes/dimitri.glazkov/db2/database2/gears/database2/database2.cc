@@ -80,7 +80,17 @@ void Database2::SynchronousTransaction(JsCallContext *context) {
   // but it still checks for pending transactions in the queue
   // to prevent deadlocks
   //if (GetQueue(name, origin)->empty()) {
+    // the entire synchronous transaction execution cycle is actually controlled
+    // from this method
     tx->Start();
+    if (tx->open()) {
+      tx->InvokeCallback();
+      tx->MarkClosed();
+      // implicitly trigger commit
+      tx->ExecuteNextStatement(NULL);
+    }
+    // otherwise, the exception has been already thrown by InvokeErrorCallback,
+    // so we just let this go
   // }
   // else {
   //   explicitly disallow nested transactions, thus one can't
