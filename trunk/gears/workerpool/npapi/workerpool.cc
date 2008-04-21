@@ -954,10 +954,11 @@ LRESULT CALLBACK PoolThreadsManager::ThreadWndProc(HWND hwnd, UINT message_type,
       // Dequeue the message and dispatch it
       JavaScriptWorkerInfo *wi =
         reinterpret_cast<JavaScriptWorkerInfo*>(lparam);
-      assert(wi->message_hwnd == hwnd);
 
-      // See if the workerpool has been invalidated (as on termination).
-      if (wi->threads_manager->is_shutting_down_) { return NULL; }
+      // See if this was a dummy message, or if the workerpool has been
+      // invalidated (as on termination)
+      if (!wi || wi->threads_manager->is_shutting_down_) { return NULL; }
+      assert(wi->message_hwnd == hwnd);
 
       // Retrieve message information.
       Message msg;
