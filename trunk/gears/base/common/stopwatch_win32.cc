@@ -46,12 +46,16 @@ int64 GetCurrentTimeMillis() {
   // combo on all Windows platforms.
   SYSTEMTIME systemtime;
   GetSystemTime(&systemtime);
-  int64 filetime;
-  assert(sizeof(int64) == sizeof(FILETIME));
-  SystemTimeToFileTime(&systemtime, reinterpret_cast<LPFILETIME>(&filetime));
+  FILETIME filetime;
+  SystemTimeToFileTime(&systemtime, &filetime);
+
+  // MSDN warns against casting between int64* and FILETIME*. See
+  // http://msdn2.microsoft.com/en-us/library/ms724284(VS.85).aspx.
+  int64 filetime_int64 = (static_cast<int64>(filetime.dwHighDateTime) << 32) |
+                         (static_cast<int64>(filetime.dwLowDateTime));
 
   const int64 kOffset = 116444736000000000LL;
-  return (filetime - kOffset) / 10000;
+  return (filetime_int64 - kOffset) / 10000;
 }
 
 // Returns a monotonically incrementing counter.
