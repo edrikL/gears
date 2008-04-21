@@ -30,4 +30,6 @@
 
 extern const std::string kNPNFuncsKey;
 
+void AllowNPInit(bool allow);
+
 #endif  // GEARS_BASE_NPAPI_MODULE_H__

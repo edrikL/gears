@@ -46,6 +46,16 @@
 #define HIBYTE(x) ((((uint32)(x)) & 0xff00) >> 8)
 #endif
 
+#ifdef BROWSER_WEBKIT
+static bool g_allow_npinit = true;
+#else
+static bool g_allow_npinit = false;
+#endif
+
+void AllowNPInit(bool allow) {
+  g_allow_npinit = allow;
+}
+
 // Export NPAPI entry points on OS X.
 #ifdef BROWSER_WEBKIT
 
@@ -133,6 +143,9 @@ NPError STDCALL NP_GetEntryPoints(NPPluginFuncs* funcs)
 
 NPError STDCALL NP_Initialize(NPNetscapeFuncs* funcs)
 {
+  if (!g_allow_npinit)
+    return NPERR_INCOMPATIBLE_VERSION_ERROR;
+
   if (funcs == NULL)
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
@@ -150,26 +163,17 @@ NPError STDCALL NP_Initialize(NPNetscapeFuncs* funcs)
 
 
 // Apple's NetscapeMoviePlugin Example defines NP_Shutdown this as returning a
-// void.
-// Gecko defines this differently.
+// void. Gecko defines this differently.
 #ifdef BROWSER_WEBKIT
-void STDCALL NP_Shutdown()
+void STDCALL NP_Shutdown() {
+  return;
+}
 #else
-NPError STDCALL NP_Shutdown()
-#endif
-{
-#ifdef WIN32
-  // We're being unloaded, but the thread isn't necessarily detached.  Force the
-  // thread shutdown handling anyway.
-  MyDllMain(0, DLL_THREAD_DETACH, 0);
+NPError STDCALL NP_Shutdown() {
+  return NPERR_NO_ERROR;
+}
 #endif
 
-#ifdef BROWSER_WEBKIT
-// void return type in Webkit.
-#else
-  return NPERR_NO_ERROR;
-#endif
-}
 
 #ifdef WIN32
 BOOL MyDllMain(HANDLE instance, DWORD reason, LPVOID reserved) {
