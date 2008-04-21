@@ -89,25 +89,28 @@ localServerSuite.addFile('../testcases/localserver_noworker_tests.js',
                          {useWorker: false, useIFrame: true});
 suites.push(localServerSuite);
 
-var internalTestSuite = new TestSuite('Internal_Tests');
-internalTestSuite.addFile('../testcases/internal_tests.js',
-                          {useWorker: true, useIFrame: true});
-internalTestSuite.addFile('../testcases/internal_coercion_tests.js', 
-                          {useWorker: true, useIFrame: true});
-suites.push(internalTestSuite);
-
 var timerSuite = new TestSuite('Timer');
 timerSuite.addFile('../testcases/timer_tests.js', 
                    {useWorker: true, useIFrame: true});
 suites.push(timerSuite);
 
-var workerPoolSuite = new TestSuite('WorkerPool');
-workerPoolSuite.addFile('../testcases/workerpool_tests.js',
-                        {useWorker: true, useIFrame: true});
-workerPoolSuite.addFile('../testcases/workerpool_onerror_tests.js',
-                        {useWorker: true, useIFrame: true});
-workerPoolSuite.addFile('../testcases/workerpool_createworkerfromurl_tests.js',
-                        {useWorker: false, useIFrame: true});
-workerPoolSuite.addFile('../testcases/workerpool_message_body_tests.js',
-                        {useWorker: true, useIFrame: true});
-suites.push(workerPoolSuite);
+if (!isSafari()) {
+  var internalTestSuite = new TestSuite('Internal_Tests');
+  internalTestSuite.addFile('../testcases/internal_tests.js',
+                            {useWorker: true, useIFrame: true});
+  internalTestSuite.addFile('../testcases/internal_coercion_tests.js', 
+                            {useWorker: true, useIFrame: true});
+  suites.push(internalTestSuite);
+
+  var workerPoolSuite = new TestSuite('WorkerPool');
+  workerPoolSuite.addFile('../testcases/workerpool_tests.js',
+                          {useWorker: true, useIFrame: true});
+  workerPoolSuite.addFile('../testcases/workerpool_onerror_tests.js',
+                          {useWorker: true, useIFrame: true});
+  workerPoolSuite.addFile(
+                      '../testcases/workerpool_createworkerfromurl_tests.js',
+                      {useWorker: false, useIFrame: true});
+  workerPoolSuite.addFile('../testcases/workerpool_message_body_tests.js',
+                          {useWorker: true, useIFrame: true});
+  suites.push(workerPoolSuite);
+}

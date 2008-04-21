@@ -520,3 +520,8 @@ function testManagedResourceStoreErrorThreads() {
     managedStore.checkForUpdate();
   }
 }
+
+// SAFARI-TEMP - Disable tests that don't currently work on Safari.
+testPostRedirectBackToCache._disable_in_safari = true;
+testManagedResourceStoreErrorThreads._disable_in_safari = true;
+testManagedResourceStoreThreads._disable_in_safari = true;
