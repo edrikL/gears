@@ -122,11 +122,24 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
   </style>
 </head>
 <body>
+  <div id="strings" style="display:none;">
+    <div id="string-cancel"><TRANS_BLOCK desc="Button user can press to cancel the dialog.">Cancel</TRANS_BLOCK></div>
+    <div id="string-cancel-accesskey"><TRANS_BLOCK desc="Access key for cancel button.">C</TRANS_BLOCK></div>
+    <div id="string-save"><TRANS_BLOCK desc="Button user can press to save changes.">Save</TRANS_BLOCK></div>
+    <div id="string-save-accesskey"><TRANS_BLOCK desc="Access key for save button.">S</TRANS_BLOCK></div>
+    <div id="string-remove"><TRANS_BLOCK desc="Button user can press to remove a site from the list.">Remove</TRANS_BLOCK></div>
+    <div id="string-noallowed"><TRANS_BLOCK desc="States that there are no allowed sites.">No allowed sites.</TRANS_BLOCK></div>
+    <div id="string-nodenied"><TRANS_BLOCK desc="States that there are no denied sites.">No denied sites.</TRANS_BLOCK></div>
+  </div>
+  
   <div id="head">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td align="left" valign="middle">
           <img id="icon" src="icon_32x32.png" width="32" height="32">
+          <!-- Some browsers automatically focus the first focusable item. We
+          don't want anything focused, so we add this fake item. -->
+          <a href="#" id="focus-thief"></a>
         </td>
         <td width="100%" align="left" valign="middle">
           <h1>PRODUCT_FRIENDLY_NAME_UQ Settings</h1>
@@ -170,33 +183,6 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
     </div>
   </div>
   <div id="foot">
-    <div id="text-buttons" style="display:none">
-      <div id="text-cancel">
-        <TRANS_BLOCK desc="Button user can press to cancel the dialog.">
-        Cancel
-        </TRANS_BLOCK>
-      </div>
-      <div id="text-save">
-        <TRANS_BLOCK desc="Button user can press to save changes.">
-        Save
-        </TRANS_BLOCK>
-      </div>
-      <div id="text-remove">
-        <TRANS_BLOCK desc="Button user can press to remove a site from the list.">
-        Remove
-        </TRANS_BLOCK>
-      </div>
-      <div id="text-noallowed">
-        <TRANS_BLOCK desc="States that there are no allowed sites.">
-        No allowed sites.
-        </TRANS_BLOCK>
-      </div>
-      <div id="text-nodenied">
-        <TRANS_BLOCK desc="States that there are no denied sites.">
-        No denied sites.
-        </TRANS_BLOCK>
-      </div>
-    </div>
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
     <!-- On SmartPhone, we don't use the regular buttons. We just use this link,
@@ -222,33 +208,12 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~,m4_dnl
 ~
           <td nowrap="true" align="right" valign="middle">
-            <!--
-            Fancy buttons
-            Note: Weird line breaks are on purpose to avoid extra space between
-            buttons.
-            Note: Outer element is <a> because we want it to focusable and
-            behave like an anchor. Inner elements should theoretically be able
-            to be <span>, but IE renders incorrectly in this case.
-            -->
-            <a href="#" accesskey="S" id="confirm-button" 
+            <button id="confirm-button" class="custom"
                 onclick="saveAndClose(g_dialogResult); return false;"
-                class="inline-block custom-button">
-              <div class="inline-block custom-button-outer-box">
-                <div class="inline-block custom-button-inner-box"
-                  ><TRANS_BLOCK desc="Button user can press to save changes."><span class="accesskey">S</span>ave</div></TRANS_BLOCK></div></a>
-            <!--
-            Note: There must be whitespace here or Firefox messes up the
-            rendering.
-            TODO(aa): This results in inconsistent spacing in IE vs Firefox
-            between the buttons, but I am reluctant to hack things even further
-            to fix that.
-            -->
-            <a href="#" accesskey="C" id="cancel-button"
+              ></button
+            ><button id="cancel-button" accesskey="C" class="custom"
                 onclick="saveAndClose(null); return false;"
-                class="inline-block custom-button">
-              <div class="inline-block custom-button-outer-box">
-                <div class="inline-block custom-button-inner-box"
-                  ><TRANS_BLOCK desc="Button user can press to discard changes."><span class="accesskey">C</span>ancel</div></TRANS_BLOCK></div></a>
+              ></button>
           </td>
 ~)
         </tr>
@@ -263,7 +228,10 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~</object>~)
 <script>
 m4_include(../third_party/jsonjs/json_noeval.js)
+m4_include(ui/common/base.js)
+m4_include(ui/common/dom.js)
 m4_include(ui/common/html_dialog.js)
+m4_include(ui/common/button.js)
 </script>
 <script>
   var g_dialogResult = {"removeSites": []};
@@ -273,23 +241,30 @@ m4_include(ui/common/html_dialog.js)
   var DENIED = 2;
 
   initDialog();
+
+  setButtonLabel("string-cancel", "cancel-button", "string-cancel-accesskey");
+  setButtonLabel("string-save", "confirm-button", "string-save-accesskey");
+
   if (!isPIE) {
+    CustomButton.initializeAll();
     initCustomLayout(layoutSettings);
   } else {
-    setButtonLabel("text-cancel", "cancel-button");
-    setButtonLabel("text-save", "confirm-button");
-    var saveText = getElementById("text-save");
+    var saveText = dom.getElementById("string-save");
     if (saveText) {
       window.pie_dialog.SetButton(saveText.innerText, 
         "saveAndClose(g_dialogResult);");
     }
-    var cancelText = getElementById("text-cancel");
+    var cancelText = dom.getElementById("string-cancel");
     if (cancelText) {
       window.pie_dialog.SetCancelButton(cancelText.innerText);
     }
     window.pie_dialog.SetButtonEnabled(true);
   }
+
   initSettings();
+
+  // Start out with only cancel enabled, just for clarity.
+  disableButton(dom.getElementById("confirm-button"));
 
   function cancelButton() {
     saveAndClose(null);
@@ -301,6 +276,13 @@ m4_include(ui/common/html_dialog.js)
 
   function initSettings() {
     var args = getArguments();
+    
+    // Handy for debugging layout:
+    // var args = {
+    //   allowed: ["http://www.google.com", "http://aaronboodman.com"],
+    //   denied: ["http://www.evil.org"]
+    // };
+    
     allowedSites = args.allowed;
     deniedSites = args.denied;
     initList("div-allowed", args.allowed, ALLOWED);
@@ -308,13 +290,13 @@ m4_include(ui/common/html_dialog.js)
   }
 
   function initList(tableId, sites, kind) {
-    var table = getElementById(tableId);
+    var table = dom.getElementById(tableId);
 
     var content = "";
     if (!sites.length) {
       content = "<tr><td class=\"left\"><em>";
       if (kind == ALLOWED) {
-        var allowedText = getElementById("text-noallowed");
+        var allowedText = dom.getElementById("string-noallowed");
         if (allowedText) {
           if (isDefined(typeof allowedText.innerText)) {
             content += allowedText.innerText;
@@ -323,7 +305,7 @@ m4_include(ui/common/html_dialog.js)
           }
         }
       } else if (kind == DENIED) {
-        var deniedText = getElementById("text-nodenied");
+        var deniedText = dom.getElementById("string-nodenied");
         if (deniedText) {
           if (isDefined(typeof deniedText.innerText)) {
             content += deniedText.innerText;
@@ -349,7 +331,7 @@ m4_include(ui/common/html_dialog.js)
     content += "<td class=\"right\"><a href='#' onclick='handleRemoveClick(";
     content += rowNumber;
     content += ",\"" + siteName + "\"," + kind + ");'>";
-    var removeText = getElementById("text-remove");
+    var removeText = dom.getElementById("string-remove");
     if (removeText) {
       if (isDefined(typeof removeText.innerText)) {
         content += removeText.innerText;
@@ -380,10 +362,12 @@ m4_include(ui/common/html_dialog.js)
       deniedSites = removeRow(row, deniedSites);
       initList("div-denied", deniedSites, kind);
     }
+
+    enableButton(dom.getElementById("confirm-button"));
   }
 
   function layoutSettings(contentHeight) {
-    var content = getElementById("content");
+    var content = dom.getElementById("content");
 
     content.style.height = Math.max(contentHeight, 0) + "px";
 

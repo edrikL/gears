@@ -25,118 +25,51 @@ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-.inline-block {
-  display: -moz-inline-box; /* This is ignored by FF3 and later*/
-  display: inline-block; /* This is ignored by pre-FF3 Gecko */
-  position: relative;
-}
-
-/*
-Pre-IE7 IE hack.  On IE, "display: inline-block" only gives the element
-layout, but doesn't give it inline behavior.  Subsequently setting display
-to inline does the trick.
-*/
-* html .inline-block {
-  display: inline;
-}
-
-/*
-IE7-only hack.  On IE, "display: inline-block" only gives the element
-layout, but doesn't give it inline behavior.  Subsequently setting display
-to inline does the trick.
-*/
-*:first-child+html .inline-block {
-  display: inline;
-}
-
-
-/* Custom button styles. */
-.custom-button {
-  margin: 0 2px;
-  border: 0;
-  padding: 0;
+button.custom  {
   font: bold 13px arial,sans-serif;
-  background: #ddd url(button_bg.gif) repeat-x top left;
-  text-decoration: none;
-  list-style: none;
-  vertical-align: middle;
-  cursor: pointer;
-  outline: none;
-  -moz-outline: none;
-  -moz-user-select: none;
+  color: #222;
+  background: white url(button_bg.gif) repeat-x;
+  background-position:left 1px;
+  border: 1px solid #aaa;
+  padding: 2px 7px 3px;
+  white-space:nowrap;
+  cursor:pointer;
+
+  /* Start out hidden. We unhide after setting the initial width in button.js */
+  visibility:hidden;
+
+  /* Mozilla has proprietary native support for rounded corners */
+  -moz-border-radius:3px;
+
+  /* WebKit also knows how to do it, but it looks better at 2px on webkit */
+  -webkit-border-radius:2px;
+
+  /* The following styles are necesary on IE to combat it adding weird
+  extra padding. See: http://jehiah.cz/archive/button-width-in-ie */
+  width:auto;
+  overflow:visible;
 }
 
-/* Pseudo-rounded corners. */
-.custom-button-outer-box {
-  margin: 0;
-  border-width: 1px 0;
-  border-style: solid;
-  border-color: #aaa;
-  padding: 0;
-  vertical-align: middle;
+/* IE specific changes -- this class is added by button.js */
+button.custom.ie {
+  padding:2px 9px 1px;
+  background-position:left top;
 }
 
-.custom-button-inner-box {
-  margin: 0 -1px;
-  border-width: 0 1px;
-  border-style: solid;
-  border-color: #aaa;
-  padding: 3px 4px;
-  vertical-align: middle;
-  color:#222!important;
-  text-decoration:none!important;
-}
-
-/* On Firefox, when we set the contents of the custom-button-inner-box using
-   innerHTML, the contents get wrapped in an anchor tag. This seems to be a
-   Firefox bug. This extra anchor tag does not inherit the styles from
-   custom-button-inner-box, so we must set them manually here. */
-.custom-button-inner-box a {
-  color:#222!important;
-  text-decoration:none!important;
-}
-
-/* Pre-IE7 IE hack; ignored by IE7 and all non-IE browsers. */
-* html .custom-button-inner-box {
-  /* IE6 needs to have the box shifted to make the borders line up. */
-  left: -1px;
-}
-
-/* IE7-only hack; ignored by all other browsers. */
-*:first-child+html .custom-button-inner-box {
-  /* IE7 needs to have the box shifted to make the borders line up. */
-  left: -1px;
-}
-
-/* Safari-only hacks. */
-::root .custom-button,
-::root .custom-button-outer-box {
-  /* Required to make pseudo-rounded corners work on Safari. */
-  line-height: 0;
-}
-
-::root .custom-button-inner-box {
-  /* Required to make pseudo-rounded corners work on Safari. */
-  line-height: normal;
-}
-
-.custom-button-disabled * {
-  color: #999 !important;
-  border-color: #ccc !important;
-}
-
-.custom-button:hover .custom-button-outer-box,
-.custom-button:hover .custom-button-inner-box {
+/* We don't use the :hover psuedo-class because it doesn't work in IE6 and
+lower. JavaScript sets this class manually on rollover. */
+button.custom.hover {
   border-color: #9cf #69e #69e #7af;
 }
 
-/*
- TODO(aa): The :active psuedo-class doesn't work correctly in IE. Instead,
- you have to handle mousedown and mouseup and change the class manually
- if you want this. Leaving the code in so that I don't forget the colors.
-
-.custom-button:active {
-  background-color: #bbb !important;
-  background-position: bottom left !important;
+button.custom.disabled {
+  color: #999 !important;
+  border-color: #ccc !important;
+  cursor:default!important;
 }
-*/
+
+button.custom span.accesskey {
+  text-decoration: underline;
+  /* IE CSS extension */
+  accelerator: true;
+}

@@ -23,10 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-/**
- * Creates globals to simplify browser checking
- */
-
+// TODO(aa): Implement in terms of userAgent and move to base.js.
 var isIE = false;
 var isPIE = false;
 var isFF = false;
@@ -48,13 +45,13 @@ if (isDefined(typeof window.pie_dialog)) {
  */
 function initDialog() {
   if (!isPIE) {
-    addEvent(document, "keyup", handleKeyUp);
+    dom.addEvent(document, "keyup", handleKeyUp);
   } else {
     var buttonRowElem = null;
     if (window.pie_dialog.IsSmartPhone()) {
-      buttonRowElem = getElementById("button-row-smartphone");
+      buttonRowElem = dom.getElementById("button-row-smartphone");
     } else {
-      buttonRowElem = getElementById("button-row");
+      buttonRowElem = dom.getElementById("button-row");
     }
     if (buttonRowElem) {
       buttonRowElem.style.display = 'block';
@@ -67,86 +64,40 @@ function initDialog() {
 }
 
 /**
- * Check that the type is not undefined (we do it here as on
- * some devices typeof returns unknown instead of undefined...).
- * We have to pass the evaluation of (typeof elem) (i.e., a string)
- * to the function rather than simply (element) -- passing an 
- * undefined object would make the function crash on PIE.
- */
-function isDefined(type) {
-  if ((type != 'undefined') && (type != 'unknown')) {
-    return true;
-  } else {
-    return false;
-  }
-}
-  
-/**
- * Provides a cross-browser way of getting an element by its id
- */
-function getElementById(id) {
-  if (isDefined(typeof document.getElementById)) {
-    return document.getElementById(id);
-  } else if (isDefined(typeof document.all)) {
-    return document.all[id];
-  }
-  throw new Error("Failed to get element by ID.");
-}
-
-/**
- * Add trim method to String.
- */
-String.prototype.trim = function() {
-  return this.replace(/^\s+/, "").replace(/\s+$/, "");
-}
-
-/**
  * Set the label of input button, an optionally, it's accesskey.
- * TODO(aa): This can probably get simplified when we implement <button>-based
- * buttons.
  */
 function setButtonLabel(textID, elemID, accessKeyID) {
-  var textElem = getElementById(textID);
-  var buttonElem = getElementById(elemID);
-  var accessKeyElem = getElementById(accessKeyID);
+  var textElem = dom.getElementById(textID);
+  var buttonElem = dom.getElementById(elemID);
   if (!isDefined(typeof textElem) || !isDefined(typeof buttonElem)) {
     return;
   }
 
   // This function works for two different kinds of buttons. Simple buttons
-  // based on the <input type="button"> tag, and fancy buttons based on a
-  // crazy nested HTML structure. The accesskey and contents are setup
-  // differently depending on which type this is.
+  // based on the <input type="button"> tag, and custom buttons based on a
+  // <button> tag with the css class "custom".
   if (buttonElem.tagName.toLowerCase() == "input") {
-    buttonElem.value = getTextContent(textElem).trim();
-    if (isDefined(accessKeyElem)) {
-      buttonElem.accessKey = getTextContent(accessKeyElem).trim();
+    buttonElem.value = dom.getTextContent(textElem).trim();
+    if (isDefined(typeof accessKeyElem)) {
+      buttonElem.accessKey = dom.getTextContent(accessKeyElem).trim();
     }
-  } else if (buttonElem.tagName.toLowerCase() == "a") {
-    var text = getTextContent(textElem).trim();
+  } else if (buttonElem.tagName.toLowerCase() == "button") {
+    var text = dom.getTextContent(textElem).trim();
     var textLength = text.length;
 
-    if (isDefined(accessKeyElem)) {
+    if (isDefined(typeof accessKeyID)) {
       // Some browsers use the accessKey attribute of the the anchor tag.
-      var accessKey = getTextContent(accessKeyElem).trim();
+      var accessKeyElem = dom.getElementById(accessKeyID);
+      var accessKey = dom.getTextContent(accessKeyElem).trim();
       buttonElem.accessKey = accessKey;
 
-      // For browsers we use a span with a special classname. Find the first
-      // matching character in the text and mark it.
+      // Find the first matching character in the text and mark it.
       // Note: this form of String.replace() only replaces the first occurence.
       text = text.replace(accessKey,
                           "<span class='accesskey'>" + accessKey + "</span>");
     }
 
-    // HACK: Fatten the text if it is too small (the fancy buttons look funny
-    // with small text).
-    for (var i = textLength; i < 5; i++) {
-      text = "&nbsp;" + text + "&nbsp;";
-    }
-
-    buttonElem.getElementsByTagName("div")[0]
-              .getElementsByTagName("div")[0]
-              .innerHTML = text;
+    buttonElem.innerHTML = text;
   } else {
     throw new Error("Unexpected button tag name: " + buttonElem.tagName);
   }
@@ -166,8 +117,8 @@ function initCustomLayout(layoutFunction) {
 
   // We do an additional layout in onload because sometimes things aren't
   // stabilized when the first doLayout() is called above.
-  addEvent(window, "load", doLayout);
-  addEvent(window, "resize", doLayout);
+  dom.addEvent(window, "load", doLayout);
+  dom.addEvent(window, "resize", doLayout);
 
   // Mozilla doesn't fire continuous events during resize, so if we want to get
   // somewhat smooth resizing, we need to run our own timer loop. This still
@@ -178,7 +129,7 @@ function initCustomLayout(layoutFunction) {
     var lastHeight = -1;
 
     function maybeDoLayout() {
-      var currentHeight = getWindowInnerHeight();
+      var currentHeight = dom.getWindowInnerHeight();
       if (currentHeight != lastHeight) {
         lastHeight = currentHeight;
         doLayout();
@@ -267,22 +218,9 @@ function saveFirefoxResults(resultString) {
  * Returns the height of the content area of the dialog.
  */
 function getContentHeight() {
-  var head = getElementById("head");
-  var foot = getElementById("foot");
-  return getWindowInnerHeight() - head.offsetHeight - foot.offsetHeight;
-}
-
-/**
- * Returns the height of the inside of the window.
- */
-function getWindowInnerHeight() {
-  if (isDefined(typeof window.innerHeight)) { // Firefox
-    return window.innerHeight;
-  } else if (isDefined(typeof document.body.offsetHeight)) { // IE
-    return document.body.offsetHeight;
-  }
-
-  throw new Error("Could not get windowInnerHeight.");
+  var head = dom.getElementById("head");
+  var foot = dom.getElementById("foot");
+  return dom.getWindowInnerHeight() - head.offsetHeight - foot.offsetHeight;
 }
 
 /**
@@ -290,7 +228,6 @@ function getWindowInnerHeight() {
  * we implement it manually.
  */
 function handleKeyUp(e) {
-  e = e || window.event;
   var ESC_KEY_CODE = 27;
   
   if (e.keyCode == ESC_KEY_CODE) {
@@ -299,57 +236,40 @@ function handleKeyUp(e) {
 }
 
 /**
- * Utility to add an event listener cross-browser.
- */
-function addEvent(element, eventName, handler) {
-  if (isDefined(typeof element.addEventListener)) {
-    // Standards-compatible browsers
-    element.addEventListener(eventName, handler, false);
-  } else if (isDefined(typeof element.attachEvent)) {
-    // IE
-    element.attachEvent("on" + eventName, handler);
-  } else {
-    throw new Error('Failed to attach event.');
-  }
-}
-
-/**
- * Disables one of our fancy custom buttons.
+ * Disables a button in the right way, whether it is normal or custom.
  */
 function disableButton(buttonElm) {
+  buttonElm.disabled = true;
+
   if (isPIE) {
-    buttonElm.disabled = true;
-    buttonElm.style.color = "gray";
     window.pie_dialog.SetButtonEnabled(false);
+  }
+
+  if (buttonElm.tagName.toLowerCase() == "input") {
+    buttonElm.style.color = "gray";
+  } else if (buttonElm.tagName.toLowerCase() == "button") {
+    dom.addClass(buttonElm, "disabled");
   } else {
-    var classes = buttonElm.className.split(" ");
-    for (var i = 0, className; className = classes[i]; i++) {
-      if (className == "custom-button-disabled") {
-        // already disabled
-        return;
-      }
-    }
-    buttonElm.className += " custom-button-disabled";
+    throw new Error("Unexpected tag name: " + buttonElm.tagName);
   }
 }
 
 /**
- * Enables one of our fancy custom buttons.
+ * Enables a button in the right way, whether it is normal or custom.
  */
 function enableButton(buttonElm) {
+  buttonElm.disabled = false;
+
   if (isPIE) {
-    buttonElm.disabled = false;
-    buttonElm.style.color = "black";
     window.pie_dialog.SetButtonEnabled(true);
+  }
+  
+  if (buttonElm.tagName.toLowerCase() == "input") {
+    buttonElm.style.color = "black";
+  } else if (buttonElm.tagName.toLowerCase() == "button") {
+    dom.removeClass(buttonElm, "disabled");
   } else {
-    var classes = buttonElm.className.split(" ");
-    for (var i = 0, className; className = classes[i]; i++) {
-      if (className == "custom-button-disabled") {
-        classes.splice(i, 1);
-        buttonElm.className = classes.join(" ");
-        return;
-      }
-    }
+    throw new Error("Unexpected tag name: " + buttonElm.tagName);
   }
 }
 

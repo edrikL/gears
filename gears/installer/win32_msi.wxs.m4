@@ -161,12 +161,14 @@ m4_ifdef(~`DEBUG`~,~`m4_dnl
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/button.css" />
                       <File Id='button_bg.gif' Name='button_bg.gif'
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/button_bg.gif" />
+                      <File Id='button_corner_black.gif' Name='button_corner_black.gif'
+                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/button_corner_black.gif" />
+                      <File Id='button_corner_blue.gif' Name='button_corner_blue.gif'
+                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/button_corner_blue.gif" />
+                      <File Id='button_corner_grey.gif' Name='button_corner_grey.gif'
+                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/button_corner_grey.gif" />
                       <File Id='ff_html_dialog.css' Name='html_dialog.css'
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/html_dialog.css" />
-                      <File Id='ff_html_dialog.js' Name='html_dialog.js'
-                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/html_dialog.js" />
-                      <File Id='ff_json_noeval.js' Name='json_noeval.js'
-                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/json_noeval.js" />
                       <File Id='ff_browser_overlay.js' Name='browser-overlay.js'
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/browser-overlay.js" />
                       <File Id='ff_browser_overlay.xul' Name='browser-overlay.xul'
