@@ -20,7 +20,7 @@ import threading
 # TODO(aa): There has to be a better way to do this. What is it?
 # Add Cheetah's directory to the module search path, then import it
 SCRIPT_PATH = os.path.realpath(os.path.dirname(sys.argv[0]))
-sys.path.append(SCRIPT_PATH + '/../../third_party')
+sys.path.append(SCRIPT_PATH + '/../../../third_party')
 from Cheetah.Template import Template
 
 
