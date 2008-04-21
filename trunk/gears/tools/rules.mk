@@ -92,10 +92,11 @@ THIRD_PARTY_OBJS = \
 COMMON_RESOURCES = \
 	ui/common/button.css \
 	ui/common/button_bg.gif \
+	ui/common/button_corner_black.gif \
+	ui/common/button_corner_blue.gif \
+	ui/common/button_corner_grey.gif \
 	ui/common/html_dialog.css \
-	ui/common/html_dialog.js \
-	ui/common/icon_32x32.png \
-	../third_party/jsonjs/json_noeval.js
+	ui/common/icon_32x32.png
 
 FF3_RESOURCES = \
 	$(FF3_OUTDIR)/genfiles/browser-overlay.js \

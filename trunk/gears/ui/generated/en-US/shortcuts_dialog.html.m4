@@ -130,6 +130,9 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
       <tr>
         <td align="left" valign="top">
           <img id="icon" src="icon_32x32.png" width="32" height="32">
+          <!-- Some browsers automatically focus the first focusable item. We
+          don't want anything focused, so we add this fake item. -->
+          <a href="#" id="focus-thief"></a>
         </td>
         <td id="header" width="100%" align="left" valign="middle"></td>
       </tr>
@@ -198,7 +201,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 
           <div id="div-buttons">
             <td width="50%" align="right" valign="middle">
-              <input disabled type="BUTTON" id="allow-button" onclick="allowShortcutsTemporarily(); return false;"></input>
+              <input disabled="true" type="BUTTON" id="allow-button" onclick="allowShortcutsTemporarily(); return false;"></input>
               <input type="BUTTON" id="deny-button" onclick="denyShortcutsTemporarily(); return false;"></input>
             </td>
           </div>
@@ -207,33 +210,12 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
             <a href="#" onclick="denyShortcutPermanently(); return false;" id="deny-permanently-link"></a>
           </td>
           <td nowrap="true" align="right" valign="middle">
-            <!--
-            Fancy buttons
-            Note: Weird line breaks are on purpose to avoid extra space between
-            buttons.
-            Note: Outer element is <a> because we want it to focusable and
-            behave like an anchor. Inner elements should theoretically be able
-            to be <span>, but IE renders incorrectly in this case.
-             
-            Note: The whitespace in this section is very delicate.  The lack of
-            space between the tags and the space between the buttons both
-            are important to ensure proper rendering.
-            TODO(aa): This results in inconsistent spacing in IE vs Firefox
-            between the buttons, but I am reluctant to hack things even further
-            to fix that.
-            -->
-            <a href="#" accesskey="Y" id="allow-button" 
-                onclick="allowShortcutsTemporarily(); return false;"
-                class="inline-block custom-button">
-              <div class="inline-block custom-button-outer-box">
-                <div class="inline-block custom-button-inner-box" id="allow-button-contents"
-                  ></div></div></a>
-            <a href="#" accesskey="N" id="deny-button"
-                onclick="denyShortcutsTemporarily(); return false;"
-                class="inline-block custom-button">
-              <div class="inline-block custom-button-outer-box">
-                <div class="inline-block custom-button-inner-box" id="deny-button-contents"
-                  ></div></div></a></td>~)
+            <button id="allow-button" class="custom"
+              onclick="allowShortcutsTemporarily(); return false;"></button
+            ><button id="deny-button" class="custom"
+              onclick="denyShortcutsTemporarily(); return false;"></button>
+          </td>
+~)
         </tr>
       </table>
     </div>
@@ -249,7 +231,10 @@ TODO: find a better way to include scripts for PIE
 -->
 <script>
 m4_include(../third_party/jsonjs/json_noeval.js)
+m4_include(ui/common/base.js)
+m4_include(ui/common/dom.js)
 m4_include(ui/common/html_dialog.js)
+m4_include(ui/common/button.js)
 </script>
 
 <script>
@@ -257,6 +242,7 @@ m4_include(ui/common/html_dialog.js)
   var iconHeight = 32;
   var iconWidth = 32;
   var args = getArguments();
+
   // Handy for debugging layout:
   // var args = {
   //   style: "simple",
@@ -285,25 +271,24 @@ m4_include(ui/common/html_dialog.js)
     } else {
       initDefaultStyle();
     }
+    
+    CustomButton.initializeAll();
 
     // PIE can't do scrollable divs, so there's no need to do the height
     // calculations.
     if (isPIE) {
-      getElementById("scroll").style.display = "block";
+      dom.getElementById("scroll").style.display = "block";
     } else {
       initCustomLayout(layoutShortcuts);
     }
-
-    // Focus deny by default
-    getElementById("deny-button").focus();
   }
 
   function initSimpleStyle() {
-    getElementById("icon").parentNode.style.display = "none";
-    getElementById("deny-permanently-link").style.display = "none";
+    dom.getElementById("icon").parentNode.style.display = "none";
+    dom.getElementById("deny-permanently-link").style.display = "none";
     // TODO(aa): Enable locations for windows even with default style.
-    getElementById("locations").style.display = "block";
-    getElementById("header").style.fontWeight = "bold";
+    dom.getElementById("locations").style.display = "block";
+    dom.getElementById("header").style.fontWeight = "bold";
     setElementContents("string-header-simple", "header");
     setButtonLabel("string-ok", "allow-button", "string-ok-accesskey");
     setButtonLabel("string-cancel", "deny-button", "string-cancel-accesskey");
@@ -319,13 +304,14 @@ m4_include(ui/common/html_dialog.js)
       setButtonLabel("string-never-allow-wince", "deny-permanently-button");
     } else {
       // For softkey UI devices
-      window.pie_dialog.SetButton(getElementById("allow-text").innerText,
+      window.pie_dialog.SetButton(dom.getElementById("allow-text").innerText,
                                   "allowShortcutsTemporarily();");
-      window.pie_dialog.SetCancelButton(getElementById("deny-text").innerText);
+      window.pie_dialog.SetCancelButton(dom.getElementById("deny-text").innerText);
       setElementContents("string-never-allow-wince", "deny-permanently-link");
     }
     // On PIE, the allow button is disabled by default.
-    enableButton(getElementById("allow-button"));
+    // TODO(aa): Why not just remove the disabled attribute?
+    enableButton(dom.getElementById("allow-button"));
   }
 
   function initDefaultStyle() {
@@ -341,7 +327,7 @@ m4_include(ui/common/html_dialog.js)
   function initShortcuts(args) {
     // Populate the icon information
     var content = createShortcutRow(args);
-    getElementById("scroll").innerHTML =
+    dom.getElementById("scroll").innerHTML =
         "<table cellpadding='0' cellspacing='0' border='0'><tbody>" +
         content +
         "</tbody></table>";
@@ -403,11 +389,11 @@ m4_include(ui/common/html_dialog.js)
    * grow until they fill all available height, but no more.
    */
   function layoutShortcuts(contentHeight) {
-    var scroll = getElementById("scroll");
+    var scroll = dom.getElementById("scroll");
 
     // Initialize on first run
     if (scrollBordersHeight == -1) {
-      var content = getElementById("content");
+      var content = dom.getElementById("content");
       scrollBordersHeight = content.offsetHeight;
       scroll.style.display = "block";
     }
@@ -456,21 +442,10 @@ m4_include(ui/common/html_dialog.js)
    * element specified by sourceID.
    */
   function setElementContents(sourceID, destID) {
-    var sourceElem = getElementById(sourceID);
-    var destElem = getElementById(destID);
+    var sourceElem = dom.getElementById(sourceID);
+    var destElem = dom.getElementById(destID);
     if (isDefined(typeof sourceElem) && isDefined(typeof destElem)) {
       destElem.innerHTML = sourceElem.innerHTML;
-    }
-  }
-
-  /**
-   * Gets the text-only content of the specified element.
-   */
-  function getTextContent(element) {
-    if (isDefined(typeof element.innerText)) {
-      return element.innerText;
-    } else if (isDefined(typeof element.textContent)) {
-      return element.textContent;
     }
   }
 </script>

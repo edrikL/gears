@@ -40,18 +40,20 @@
 // using something else? It seems to work as is.
 //-----------------------------------------------------------------------------
 
-button.css                 HTML  "ui/common/button.css"
-button.css.end             HTML  {"\0END\0"}
-button_bg.gif              HTML  "ui/common/button_bg.gif"
-button_bg.gif.end          HTML  {"\0END\0"}
-html_dialog.css            HTML  "ui/common/html_dialog.css"
-html_dialog.css.end        HTML  {"\0END\0"}
-html_dialog.js             HTML  "ui/common/html_dialog.js"
-html_dialog.js.end         HTML  {"\0END\0"}
-icon_32x32.png             HTML  "ui/common/icon_32x32.png"
-icon_32x32.png.end         HTML  {"\0END\0"}
-json_noeval.js             HTML  "../third_party/jsonjs/json_noeval.js"
-json_noeval.js.end         HTML  {"\0END\0"}
+button.css                   HTML  "ui/common/button.css"
+button.css.end               HTML  {"\0END\0"}
+button_bg.gif                HTML  "ui/common/button_bg.gif"
+button_bg.gif.end            HTML  {"\0END\0"}
+button_corner_black.gif      HTML  "ui/common/button_corner_black.gif"
+button_corner_black.gif.end  HTML  {"\0END\0"}
+button_corner_blue.gif       HTML  "ui/common/button_corner_blue.gif"
+button_corner_blue.gif.end   HTML  {"\0END\0"}
+button_corner_grey.gif       HTML  "ui/common/button_corner_grey.gif"
+button_corner_grey.gif.end   HTML  {"\0END\0"}
+html_dialog.css              HTML  "ui/common/html_dialog.css"
+html_dialog.css.end          HTML  {"\0END\0"}
+icon_32x32.png               HTML  "ui/common/icon_32x32.png"
+icon_32x32.png.end           HTML  {"\0END\0"}
 
 #include "genfiles/ui_html.rc"
 
