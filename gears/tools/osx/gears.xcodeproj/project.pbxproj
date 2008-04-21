@@ -249,13 +249,13 @@
 		B5AFB32C0DAD233D0058E178 /* permissions_dialog.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5AFB3280DAD233D0058E178 /* permissions_dialog.cc */; };
 		B5AFB32D0DAD233D0058E178 /* settings_dialog.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5AFB3290DAD233D0058E178 /* settings_dialog.cc */; };
 		B5AFB32E0DAD233D0058E178 /* html_dialog.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5AFB32B0DAD233D0058E178 /* html_dialog.cc */; };
-		B5B307670DB578D900A206B8 /* button.css in Resources */ = {isa = PBXBuildFile; fileRef = B5B3075E0DB578D900A206B8 /* button.css */; };
-		B5B307680DB578D900A206B8 /* button_bg.gif in Resources */ = {isa = PBXBuildFile; fileRef = B5B3075F0DB578D900A206B8 /* button_bg.gif */; };
-		B5B307690DB578D900A206B8 /* html_dialog.css in Resources */ = {isa = PBXBuildFile; fileRef = B5B307600DB578D900A206B8 /* html_dialog.css */; };
-		B5B3076B0DB578D900A206B8 /* icon_16x16.png in Resources */ = {isa = PBXBuildFile; fileRef = B5B307630DB578D900A206B8 /* icon_16x16.png */; };
-		B5B3076C0DB578D900A206B8 /* icon_32x32.png in Resources */ = {isa = PBXBuildFile; fileRef = B5B307640DB578D900A206B8 /* icon_32x32.png */; };
-		B5B3076D0DB578D900A206B8 /* icon_48x48.png in Resources */ = {isa = PBXBuildFile; fileRef = B5B307650DB578D900A206B8 /* icon_48x48.png */; };
-		B5B3076E0DB578D900A206B8 /* icon_merged.ico in Resources */ = {isa = PBXBuildFile; fileRef = B5B307660DB578D900A206B8 /* icon_merged.ico */; };
+		B5B307670DB578D900A206B8 /* button.css in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B3075E0DB578D900A206B8 /* button.css */; };
+		B5B307680DB578D900A206B8 /* button_bg.gif in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B3075F0DB578D900A206B8 /* button_bg.gif */; };
+		B5B307690DB578D900A206B8 /* html_dialog.css in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B307600DB578D900A206B8 /* html_dialog.css */; };
+		B5B3076B0DB578D900A206B8 /* icon_16x16.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B307630DB578D900A206B8 /* icon_16x16.png */; };
+		B5B3076C0DB578D900A206B8 /* icon_32x32.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B307640DB578D900A206B8 /* icon_32x32.png */; };
+		B5B3076D0DB578D900A206B8 /* icon_48x48.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B307650DB578D900A206B8 /* icon_48x48.png */; };
+		B5B3076E0DB578D900A206B8 /* icon_merged.ico in CopyFiles */ = {isa = PBXBuildFile; fileRef = B5B307660DB578D900A206B8 /* icon_merged.ico */; };
 		B5BB92560D47F9AA00FA9651 /* http_cookies_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BB92550D47F9AA00FA9651 /* http_cookies_sf.mm */; };
 		B5BBD8610D8E8223001A4916 /* http_request_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BBD8600D8E8223001A4916 /* http_request_sf.mm */; };
 		B5BBD8640D8E822E001A4916 /* http_request_delegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BBD8630D8E822E001A4916 /* http_request_delegate.mm */; };
@@ -342,6 +342,25 @@
 			remoteInfo = jsoncpp;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B5CBD5E70DBCFE7D00B7B3EB /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "en-US";
+			dstSubfolderSpec = 7;
+			files = (
+				B5B307670DB578D900A206B8 /* button.css in CopyFiles */,
+				B5B307680DB578D900A206B8 /* button_bg.gif in CopyFiles */,
+				B5B307690DB578D900A206B8 /* html_dialog.css in CopyFiles */,
+				B5B3076B0DB578D900A206B8 /* icon_16x16.png in CopyFiles */,
+				B5B3076C0DB578D900A206B8 /* icon_32x32.png in CopyFiles */,
+				B5B3076D0DB578D900A206B8 /* icon_48x48.png in CopyFiles */,
+				B5B3076E0DB578D900A206B8 /* icon_merged.ico in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -563,7 +582,6 @@
 		B56F67940DAE00B300A5D6C5 /* libmodp_b64.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmodp_b64.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		B56F67A20DAE010900A5D6C5 /* modp_b64.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = modp_b64.cc; path = ../../../third_party/modp_b64/modp_b64.cc; sourceTree = SOURCE_ROOT; };
 		B57A582B0DA927C3001B0CC6 /* GearsEnabler.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GearsEnabler.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
-		B57A582C0DA927C3001B0CC6 /* InputManager-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "InputManager-Info.plist"; sourceTree = "<group>"; };
 		B57A58310DA9288B001B0CC6 /* loader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = loader.h; path = ../../base/safari/loader.h; sourceTree = SOURCE_ROOT; };
 		B57A58320DA9288B001B0CC6 /* enabler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = enabler.m; path = ../../base/safari/enabler.m; sourceTree = SOURCE_ROOT; };
 		B57A58330DA9288B001B0CC6 /* enabler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = enabler.h; path = ../../base/safari/enabler.h; sourceTree = SOURCE_ROOT; };
@@ -754,7 +772,6 @@
 				089C1671FE841209C02AAC07 /* External Frameworks and Libraries */,
 				B5B307780DB578FF00A206B8 /* Generated Files */,
 				19C28FB4FE9D528D11CA2CBB /* Products */,
-				B57A582C0DA927C3001B0CC6 /* InputManager-Info.plist */,
 			);
 			name = gears;
 			sourceTree = "<group>";
@@ -1513,6 +1530,7 @@
 			buildConfigurationList = 4FADC23308B4156C00ABE55E /* Build configuration list for PBXNativeTarget "Gears.plugin" */;
 			buildPhases = (
 				8D01CCC90486CAD60068D4B7 /* Resources */,
+				B5CBD5E70DBCFE7D00B7B3EB /* CopyFiles */,
 				8D01CCCB0486CAD60068D4B7 /* Sources */,
 				8D01CCCD0486CAD60068D4B7 /* Frameworks */,
 				B544D9CC0D2EE68200D30561 /* Install Symlink */,
@@ -1689,13 +1707,6 @@
 			files = (
 				B589393D0DB66FE500BD56A0 /* launch_url_with_browser in Resources */,
 				8D01CCCA0486CAD60068D4B7 /* InfoPlist.strings in Resources */,
-				B5B307670DB578D900A206B8 /* button.css in Resources */,
-				B5B307680DB578D900A206B8 /* button_bg.gif in Resources */,
-				B5B307690DB578D900A206B8 /* html_dialog.css in Resources */,
-				B5B3076B0DB578D900A206B8 /* icon_16x16.png in Resources */,
-				B5B3076C0DB578D900A206B8 /* icon_32x32.png in Resources */,
-				B5B3076D0DB578D900A206B8 /* icon_48x48.png in Resources */,
-				B5B3076E0DB578D900A206B8 /* icon_merged.ico in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1772,7 +1783,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script is run from the gears/tools/osx directory\n\n#Navigate to the gears/directory\ncd ../..\n\n# Created by \"Generate Headers\" build step\nsource \"bin-dbg/osx-$CURRENT_ARCH/common/genfiles/GearsVersion\"\n\nRESOURCES_DIR=\"$TARGET_BUILD_DIR/$TARGET_NAME/Contents/Resources/\"\n\n# SAFARI-TEMP\n# Add support for localizations.\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-GB/settings_dialog.html.m4 > $RESOURCES_DIR/settings_dialog.html\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-GB/permissions_dialog.html.m4 > $RESOURCES_DIR/permissions_dialog.html\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-GB/shortcuts_dialog.html.m4 > $RESOURCES_DIR//shortcuts_dialog.html\n\nexit 0;";
+			shellScript = "# This script is run from the gears/tools/osx directory\n\n#Navigate to the gears/directory\ncd ../..\n\n# Created by \"Generate Headers\" build step\nsource \"bin-dbg/osx-$CURRENT_ARCH/common/genfiles/GearsVersion\"\n\nRESOURCES_DIR=\"$TARGET_BUILD_DIR/$TARGET_NAME/Contents/Resources/\"\n\n# SAFARI-TEMP\n# Add support for localizations.\nmkdir -p \"$RESOURCES_DIR/en-US\"\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/settings_dialog.html.m4 > $RESOURCES_DIR/en-US/settings_dialog.html\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/permissions_dialog.html.m4 > $RESOURCES_DIR/en-US/permissions_dialog.html\n/usr/bin/m4 --prefix-builtins -DPRODUCT_FRIENDLY_NAME_UQ=\"$FRIENDLY_NAME\" -DPRODUCT_SHORT_NAME_UQ=\"$SHORT_NAME\" -DPRODUCT_VERSION=$VERSION ui/generated/en-US/shortcuts_dialog.html.m4 > $RESOURCES_DIR/en-US/shortcuts_dialog.html\n\nexit 0;";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
