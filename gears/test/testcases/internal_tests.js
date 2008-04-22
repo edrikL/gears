@@ -273,32 +273,37 @@ function TestObject() {
 }
 
 function testGetSystemTime() {
-  // Test system time increases.
-  var start = internalTests.getSystemTime();
-  var callback = function() {
-    var end = internalTests.getSystemTime();
-    assert(start < end, 'System time should increase.');
-    completeAsync();
-  };
-  var timer = google.gears.factory.create('beta.timer');
-  startAsync();
-  // getSystemTime resolution is only 1s on WinCE.
-  timer.setTimeout(callback, 2000);
+  if (isDebug) {
+    // Test system time increases.
+    var start = internalTests.getSystemTime();
+    var callback = function() {
+      var end = internalTests.getSystemTime();
+      assert(start < end, 'System time should increase.');
+      completeAsync();
+    };
+    var timer = google.gears.factory.create('beta.timer');
+    startAsync();
+    // getSystemTime resolution is only 1s on WinCE.
+    timer.setTimeout(callback, 2000);
+  }
 }
 
 function testPerfTimer() {
-  // Test zero tick delta.
-  var ticks = internalTests.getTicks();
-  var elapsed = internalTests.getTickDeltaMicros(ticks, ticks);
-  assert(elapsed == 0, 'Time delta should be zero.');
-  // Test non-zero tick delta.
-  var callback = function() {
-    elapsed = internalTests.getTickDeltaMicros(ticks, internalTests.getTicks());
-    assert(elapsed > 0, 'Time delta should be greater than zero.');
-    completeAsync();
-  };
-  var timer = google.gears.factory.create('beta.timer');
-  startAsync();
-  // Tick resolution should be at most 1us.
-  timer.setTimeout(callback, 1);
+  if (isDebug) {
+    // Test zero tick delta.
+    var ticks = internalTests.getTicks();
+    var elapsed = internalTests.getTickDeltaMicros(ticks, ticks);
+    assert(elapsed == 0, 'Time delta should be zero.');
+    // Test non-zero tick delta.
+    var callback = function() {
+      elapsed =
+          internalTests.getTickDeltaMicros(ticks, internalTests.getTicks());
+      assert(elapsed > 0, 'Time delta should be greater than zero.');
+      completeAsync();
+    };
+    var timer = google.gears.factory.create('beta.timer');
+    startAsync();
+    // Tick resolution should be at most 1us.
+    timer.setTimeout(callback, 1);
+  }
 }
