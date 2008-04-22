@@ -116,6 +116,7 @@ bool TestSliceBlob();  // from blob_test.cc
 #if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
 bool TestIpcMessageQueue();  // from ipc_message_queue_win32_test.cc
 #endif
+bool TestStopwatch();
 
 void CreateObjectBool(JsCallContext* context,
                       JsRunnerInterface* js_runner,
@@ -232,6 +233,7 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestBlobInputStreamFf();
 #endif
 #endif
+  ok &= TestStopwatch();
 
   // We have to call GetDB again since TestCapabilitiesDBAll deletes
   // the previous instance.
@@ -1069,6 +1071,65 @@ bool TestHttpRequest() {
   TEST_ASSERT(ok);
   ok = request->Send();
   TEST_ASSERT(ok);
+  return true;
+}
+
+bool TestStopwatch() {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    LOG(("TestStopwatch - failed (%d)\n", __LINE__)); \
+    return false; \
+  } \
+}
+
+// We define a millisecond-resolution sleep function because Windows does not
+// provide an equivalent to usleep.
+#ifdef WIN32
+#define SleepForMilliseconds Sleep
+#else
+#define SleepForMilliseconds(x) { assert(x < 1000); usleep(x * 1000); }
+#endif
+
+  // Test initialized to zero.
+  Stopwatch sw1;
+  TEST_ASSERT(sw1.GetElapsed() == 0);
+
+  // Test simple use.
+  Stopwatch sw2;
+  sw2.Start();
+  SleepForMilliseconds(1);
+  sw2.Stop();
+  TEST_ASSERT(sw2.GetElapsed() > 0);
+
+  // Test small time increment.
+  Stopwatch sw3;
+  sw3.Start();
+  sw3.Stop();
+  TEST_ASSERT(sw3.GetElapsed() >= 0);
+
+  // Test nested use.
+  Stopwatch sw4;
+  sw4.Start();
+  sw4.Start();
+  sw4.Start();
+  SleepForMilliseconds(1);
+  sw4.Stop();
+  TEST_ASSERT(sw4.GetElapsed() == 0);
+  sw4.Stop();
+  TEST_ASSERT(sw4.GetElapsed() == 0);
+  sw4.Stop();
+  TEST_ASSERT(sw4.GetElapsed() > 0);
+
+  // Test scoped stopwatch.
+  Stopwatch sw5;
+  {
+    ScopedStopwatch scopedStopwatch(&sw5);
+    SleepForMilliseconds(1);
+  }
+  TEST_ASSERT(sw5.GetElapsed() > 0);
+
   return true;
 }
 
