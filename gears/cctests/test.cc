@@ -69,6 +69,9 @@ void Dispatcher<GearsTest>::Init() {
 #include <cmath>
 #include <limits>
 #include <sstream>
+#ifdef LINUX
+#include <unistd.h>  // For usleep.
+#endif
 
 #include "gears/base/common/name_value_table_test.h"
 #include "gears/base/common/permissions_db.h"
