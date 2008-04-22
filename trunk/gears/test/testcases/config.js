@@ -94,7 +94,7 @@ timerSuite.addFile('../testcases/timer_tests.js',
                    {useWorker: true, useIFrame: true});
 suites.push(timerSuite);
 
-if (!isSafari()) {
+if (!isSafari) {
   var internalTestSuite = new TestSuite('Internal_Tests');
   internalTestSuite.addFile('../testcases/internal_tests.js',
                             {useWorker: true, useIFrame: true});
