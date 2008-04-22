@@ -246,11 +246,11 @@ class JsRunnerBase : public JsRunnerInterface {
   // contain any browser-specific code. They should be implemented in a new
   // class 'JsRunnerCommon', which inherits from JsRunnerInterface.
   virtual void ThrowGlobalError(const std::string16 &message) {
-	  std::string16 string_to_eval =
-	      std::string16(STRING16(L"window.onerror('")) +
-	      EscapeMessage(message) +
+    std::string16 string_to_eval =
+        std::string16(STRING16(L"window.onerror('")) +
+        EscapeMessage(message) +
         std::string16(STRING16(L"')"));
-	      EvalImpl(string_to_eval, false);
+        EvalImpl(string_to_eval, false);
   }
 
  protected:
@@ -297,6 +297,8 @@ class JsRunnerBase : public JsRunnerInterface {
     if (evaluator_.get())
       return evaluator_.get();
 
+    // Wierd Safari bug: if you remove the surrounding parenthesis, this ceases
+    // to work.
     const char kEvaluatorScript[] = 
       "(function (fn, args) {"
       "   var result = {};"
