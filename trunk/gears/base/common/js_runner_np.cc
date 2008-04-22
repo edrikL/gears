@@ -54,7 +54,7 @@
 // different.
 class JsRunnerBase : public JsRunnerInterface {
  public:
-  JsRunnerBase(NPP instance) : np_instance_(instance) {
+  JsRunnerBase(NPP instance) : np_instance_(instance), evaluator_(NULL) {
     NPN_GetValue(np_instance_, NPNVWindowNPObject, &global_object_);
   }
   ~JsRunnerBase() {
@@ -107,9 +107,18 @@ class JsRunnerBase : public JsRunnerInterface {
   }
 
   JsArray* NewArray() {
-    // TODO: Implement
-    assert(false);
-    return NULL;
+    scoped_ptr<JsObject> js_object(NewObject(STRING16(L"Array")));
+    if (!js_object.get())
+      return NULL;
+
+    scoped_ptr<JsArray> js_array(new JsArray());
+    if (!js_array.get())
+      return NULL;
+
+    if (!js_array->SetArray(js_object->token(), js_object->context()))
+      return NULL;
+
+    return js_array.release();
   }
 
   bool InvokeCallback(const JsRootedCallback *callback,
@@ -118,17 +127,42 @@ class JsRunnerBase : public JsRunnerInterface {
     assert(callback && (!argc || argv));
     if (!NPVARIANT_IS_OBJECT(callback->token())) { return false; }
 
+    NPObject *evaluator = GetEvaluator();
+    if (!evaluator) { return false; }
+
     // Setup argument array.
-    scoped_array<ScopedNPVariant> js_engine_argv(new ScopedNPVariant[argc]);
-    for (int i = 0; i < argc; ++i)
-      ConvertJsParamToToken(argv[i], GetContext(), &js_engine_argv[i]);
+    scoped_ptr<JsArray> array(NewArray());
+    for (int i = 0; i < argc; ++i) {
+      ScopedNPVariant np_arg;
+      ConvertJsParamToToken(argv[i], GetContext(), &np_arg);
+      array->SetElement(i, np_arg);
+    }
 
     // Invoke the method.
-    NPVariant retval;
-    bool rv = NPN_InvokeDefault(np_instance_,
-                                NPVARIANT_TO_OBJECT(callback->token()),
-                                js_engine_argv.get(), argc, &retval);
+    NPVariant args[] = { callback->token(), array->token() };
+    ScopedNPVariant result;
+    bool rv = NPN_InvokeDefault(GetContext(), evaluator,
+                                args, ARRAYSIZE(args), &result);
     if (!rv) { return false; }
+
+    if (!NPVARIANT_IS_OBJECT(result)) {
+      assert(false);
+      return false;
+    }
+
+    JsObject obj;
+    obj.SetObject(result, GetContext());
+
+    std::string16 exception;
+    if (obj.GetPropertyAsString(STRING16(L"exception"), &exception)) {
+      SetException(exception);
+      return false;
+    }
+
+    ScopedNPVariant retval;
+    if (!obj.GetProperty(STRING16(L"retval"), &retval)) {
+      retval.Reset();  // Reset to "undefined"
+    }
 
     if (optional_alloc_retval) {
       // Note: A valid NPVariant is returned no matter what the js function
@@ -139,8 +173,46 @@ class JsRunnerBase : public JsRunnerInterface {
       *optional_alloc_retval = new JsRootedToken(np_instance_, retval);
     }
 
-    NPN_ReleaseVariantValue(&retval);
+    return true;
+  }
 
+  bool Eval(const std::string16 &script) {
+    return EvalImpl(script, true);
+  }
+  
+  bool EvalImpl(const std::string16 &script, bool catch_exceptions) {
+    NPObject *global_object = GetGlobalObject();
+
+    std::string script_utf8;
+    if (!String16ToUTF8(script.data(), script.length(), &script_utf8)) {
+      LOG(("Could not convert script to UTF8."));
+      return false;
+    }
+    
+    if (catch_exceptions) {
+      const char kEvaluatorTry[] = "try { ";
+      const char kEvaluatorCatch[] =
+          "; null; } catch (e) { e.message || String(e); }";
+      script_utf8 = kEvaluatorTry + script_utf8 + kEvaluatorCatch;
+    }
+
+    NPString np_script = {script_utf8.data(), script_utf8.length()};
+    ScopedNPVariant result;
+    if (!NPN_Evaluate(GetContext(), global_object, &np_script, &result))
+      return false;
+
+    if (catch_exceptions && NPVARIANT_IS_STRING(result)) {
+      // We caught an exception.
+      NPString exception = NPVARIANT_TO_STRING(result);
+      std::string16 exception16;
+      if (!UTF8ToString16(exception.UTF8Characters, exception.UTF8Length,
+                         &exception16)) {
+       exception16 = STRING16(L"Could not get exception text");
+      }
+      SetException(exception16);
+      return false;
+    }
+ 
     return true;
   }
 
@@ -171,10 +243,14 @@ class JsRunnerBase : public JsRunnerInterface {
 #endif
 
   // This function and others (AddEventHandler, RemoveEventHandler etc) do not
-  // conatin any browser-specific code. They should be implemented in a new
+  // contain any browser-specific code. They should be implemented in a new
   // class 'JsRunnerCommon', which inherits from JsRunnerInterface.
   virtual void ThrowGlobalError(const std::string16 &message) {
-    ThrowGlobalErrorImpl(this, message);
+	  std::string16 string_to_eval =
+	      std::string16(STRING16(L"window.onerror('")) +
+	      EscapeMessage(message) +
+        std::string16(STRING16(L"')"));
+	      EvalImpl(string_to_eval, false);
   }
 
  protected:
@@ -202,12 +278,51 @@ class JsRunnerBase : public JsRunnerInterface {
     }
   }
 
+  // Throws an exception, handling the special case that we are not in
+  // JavaScript context (in which case we throw the error globally).
+  void SetException(const std::string16& exception) {
+    JsCallContext *context = BrowserUtils::GetCurrentJsCallContext();
+    if (context) {
+      context->SetException(exception);
+    } else {
+      ThrowGlobalError(exception);
+    }
+  }
+
   NPP np_instance_;
   NPObject *global_object_;
 
  private:
-  std::set<JsEventHandlerInterface *> event_handlers_[MAX_JSEVENTS];
+  NPObject *GetEvaluator() {
+    if (evaluator_.get())
+      return evaluator_.get();
 
+    const char kEvaluatorScript[] = 
+      "(function (fn, args) {"
+      "   var result = {};"
+      "   try {"
+      "     result.retval = fn.apply(null, args);"
+      "   } catch (e) {"
+      "     result.exception = String(e);"
+      "   }"
+      "   return result;"
+      " })";
+    NPObject *global = GetGlobalObject();
+    NPString np_script = { kEvaluatorScript, ARRAYSIZE(kEvaluatorScript) - 1};
+    ScopedNPVariant evaluator;
+    if (!NPN_Evaluate(GetContext(), global, &np_script, &evaluator) ||
+        !NPVARIANT_IS_OBJECT(evaluator)) {
+      assert(false);
+      return NULL;
+    }
+
+    evaluator_.reset(NPVARIANT_TO_OBJECT(evaluator));
+    evaluator.Release();  // give ownership to evaluator_.
+    return evaluator_.get();
+  }
+
+  std::set<JsEventHandlerInterface *> event_handlers_[MAX_JSEVENTS];
+  ScopedNPObject evaluator_;
   DISALLOW_EVIL_CONSTRUCTORS(JsRunnerBase);
 };
 
@@ -269,21 +384,7 @@ class DocumentJsRunner : public JsRunnerBase {
   }
 
   bool Eval(const std::string16 &script) {
-    NPObject *global_object = GetGlobalObject();
-
-    std::string script_utf8;
-    if (!String16ToUTF8(script.data(), script.length(), &script_utf8)) {
-      LOG(("Could not convert script to UTF8."));
-      return false;
-    }
-
-    NPString np_script = {script_utf8.data(), script_utf8.length()};
-    NPVariant retval;
-    if (!NPN_Evaluate(np_instance_, global_object, &np_script, &retval))
-      return false;
-
-    NPN_ReleaseVariantValue(&retval);
-    return true;
+    return EvalImpl(script, true);
   }
 
   void SetErrorHandler(JsErrorHandlerInterface *handler) {
