@@ -246,9 +246,12 @@ function testGetCapturedResource() {
   var url = 'testcases/cgi/echo_request.py?httprequest_a_captured_url';
   var captureSuccess;
 
+
+  var expectedHeaders = [["echo-Method", "GET"]];
+  
   myStore.capture(url, function(url, success, id) {
     assert(success, 'Expected captured to succeed');
-    doRequest(url, 'GET', null, null, 200, null, null, null);
+    doRequest(url, 'GET', null, null, 200, null, expectedHeaders, null);
   });
 }
 
@@ -323,7 +326,7 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
     // blob not in non-official builds yet
     // TODO(nigeltao): re-enable this test (i.e. get rid of the "&& !isFirefox")
     // when HttpRequest.responseBlob works in Firefox.
-    if (!isOfficial && !isFirefox && !isNPAPI) {
+    if (!isOfficial && !isFirefox && !isNPAPI && !isSafari) {
       assert(isObject(request.responseBlob),
              'Should be able to get responseBlob after request');
     }
@@ -352,7 +355,7 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
       // blob not in non-official builds yet
       // TODO(nigeltao): re-enable this test (i.e. get rid of the
       // "&& !isFirefox") when HttpRequest.responseBlob works in Firefox.
-      if (!isOfficial && !isFirefox && !isNPAPI) {
+      if (!isOfficial && !isFirefox && !isNPAPI && !isSafari) {
         assertEqual(expectedResponseLength, request.responseBlob.length,
                     'Wrong expectedResponseLength');
       }
@@ -367,7 +370,7 @@ function doRequest(url, method, data, requestHeaders, expectedStatus,
       // blob not in non-official builds yet
       // TODO(nigeltao): re-enable this test (i.e. get rid of the
       // "&& !isFirefox") when HttpRequest.responseBlob works in Firefox.
-      if (!isOfficial && !isFirefox && !isNPAPI) {
+      if (!isOfficial && !isFirefox && !isNPAPI && !isSafari) {
         assert(isObject(request.responseBlob),
                'Should be able to get responseBlob repeatedly');
       }
