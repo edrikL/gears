@@ -808,7 +808,7 @@ FF3_M4SRCS_I18N	+= \
 		i18n.dtd.m4 \
 		$(NULL)
 
-IE_VPATH	+= \
+$(BROWSER)_VPATH += \
 		ui/generated \
 		$(NULL)
 
@@ -882,6 +882,19 @@ IE_CPPSRCS	+= \
 
 IE_LINK_EXTRAS	+= \
 		$(IE_OUTDIR)/ui_resources.res \
+		$(IE_OUTDIR)/string_table.res \
+		$(NULL)
+
+FF2_LINK_EXTRAS	+= \
+		$(FF2_OUTDIR)/string_table.res \
+		$(NULL)
+
+FF3_LINK_EXTRAS	+= \
+		$(FF3_OUTDIR)/string_table.res \
+		$(NULL)
+
+VISTA_BROKER_LINK_EXTRAS += \
+		$(VISTA_BROKER_OUTDIR)/string_table.res \
 		$(NULL)
 
 # Additional files specific to Win32 or WinCE.

@@ -529,6 +529,7 @@ static bool CopyLaunchURLHelper(const std::string16 &mac_os_path) {
 bool GearsDesktop::CreateShortcutPlatformImpl(
                        const SecurityOrigin &origin,
                        const GearsDesktop::ShortcutInfo &shortcut,
+                       uint32 locations,
                        std::string16 *error) {
   // Before doing anything, check that we can create the shortcut legally.
   if (!CheckIllegalFileOverwrite(shortcut)) {

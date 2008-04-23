@@ -47,6 +47,7 @@
 #endif
 #include "gears/localserver/ie/localserver_ie.h"
 #include "gears/timer/timer.h"
+#include "gears/ui/ie/string_table.h"
 #include "gears/workerpool/ie/workerpool.h"
 
 #ifdef DEBUG
@@ -85,7 +86,14 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
     if (!EnvIsWorker()) {
       MaybeNotifyUserOfVersionCollision();  // only notifies once per process
     }
-    RETURN_EXCEPTION(kVersionCollisionErrorMessage);
+    const int kMaxStringLength = 256;
+    char16 error_text[kMaxStringLength];
+    if (LoadString(GetModuleHandle(PRODUCT_SHORT_NAME),
+                   IDS_VERSION_COLLISION_TEXT, error_text, kMaxStringLength)) {
+      RETURN_EXCEPTION(error_text);
+    } else {
+      RETURN_EXCEPTION(L"Internal Error");
+    }
   }
 
   std::string16 module_name(object_name_bstr);
