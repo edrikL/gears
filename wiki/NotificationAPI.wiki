@@ -17,7 +17,7 @@ var notification = desktop.createNotification();
 notification.title = 'Lunch with Sarah';
 notification.icon = 'http://calendar.google.com/calendar.gif';
 notification.subtitle1 = 'Thu Mar 27 1:25pm - 2:25pm';
-notification.subtitle2 = 'Dmitry's Diner';
+notification.subtitle2 = 'Dmitry\'s Diner';
 notification. displayUntilTime = new Date(2008, 3, 27, 14, 0, 0);
 notification.addAction(
     'View',
