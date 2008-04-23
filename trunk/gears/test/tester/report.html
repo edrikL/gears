@@ -163,7 +163,9 @@ function shouldSkipTestcase(suiteName) {
 function runNextTestFile() {
   // If we're done, post results.
   if (suiteIndex == suites.length) {
-    ifc.getResultsPublisher().postbackTestResults();
+    var publisher = ifc.getResultsPublisher();
+    publisher.allAvailableTestsStarted = true;
+    publisher.postbackTestResults();
     return;
   }
 
