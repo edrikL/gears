@@ -1,117 +1,102 @@
+#summary Providing desktop notifications for web applications.
 #labels DesignDoc
-= Very much a draft so far. =
 
-= User Interface =
+= Summary =
 
-== Configuration ==
+The Gears Notificatations APIs are responsible for managing notifications from web applications, and showing them on the user's desktop. Incoming notifications are not displayed when the user is considered not available for the notifications, i.e. the user is away, idle or in full-screen presentation mode.
 
-This is the global configuration of notifications in Google Gears. Accessed from the Gears preferences.
+Notifications are displayed in top-most balloon-styled windows. On Windows, balloons always appear starting in the lower right corner of the primary screen's working area and go upward. On Macs, they start at the upper right corner and proceed downward. The balloons are constrained to ensure that the balloons will not take up more than 75% of the height of the working area.
 
-Options per site: On/off (all notifications are turned off)
-Options per notification type: On/off, Sticky on/off.
-Global options: Sticky when computer unattended on/off, time to keep non-sticky notification.
-
-== Permission dialog ==
-
-Displayed the first time a site registers for notifications. Asks the user if he wants to allow the site to send notifications. Optionally the user can also turn on/off notifications per notification type.
-
-Allow yes/no
-Lists notifications
-Option per notification type: On/off, Sticky on/off. (Same UI as above.)
-
-== Notification ==
-
-Starts in one corner (top right Mac, bottom right Windows XP, TODO Vista? TODO is this configurable?)
-Fades in, stays for specified amount of time, fades out. If existing notification hasn't faded out yet it will place it above/below. If the whole screen is covered it will place it on top/bottom to the left.
-
-== Task bar icon/Menu bar icon ==
-
-TODO: what are we going to use this for? how would it work?
-
-== Growl ==
-
-On the Mac platform Growl is the de facto notification mechanism. It is still to be decided whether we interface with Growl or if we build our own notification mechanism.
- * The installation process of Growl needs to be as seamless as possible. Remember, we want Google Gears to be used by non-technical users as well.
- * Although the configuration UI is inspired by Growl it would be very hard to seamlessly integrate it using the standard Growl client library. Growl would not support "site-specific" notifications, and it's hard to expand on the available notifications at runtime. Most likely we would show up as one application and one notification in Growl and users would need to configure site-specific settings in Growl instead.
- * What about user Growl if it is installed and falling back on a built-in notification mechanism if it isn't?
-
-== Stickiness ==
-
-A sticky notification does not disappear until the user explicitly clicks it.
-
-TODO haven't worked out exactly how stickiness should work, several things to balance:
- * Application should be able to "indicate" stickiness when sending a specific notification.
- * User should always be able to turn stickiness on or off for a specific notification type, this would override whatever stickiness application indicates. If user chooses neither to turn on or off the applications stickiness is retained.
- * We may need to have a mechanism to prevent a site from flooding the users screen with sticky notifications which can be extremely annoying.
-
-= API =
-
-== notification.register(options) ==
-
-Register the specified URL, this should always be done every time the web site loads and before it sends it's first notification.
-(TODO: what happens when this is called with a changed set of notifications? should we display: dialog again, automatically enable those notifications or display a dialog telling the user what happened?)
-Can only be called from a page which starts with the registered URL.
-Will show a dialog asking the user whether he wants notifications from the site (see UI: Permission dialog).
-
-|| Option || Description || Required? ||
-|| url ||  || Yes ||
-|| name ||  || No, defaults to window title ||
-|| icon ||  || No, defaults to current website icon ||
-|| types || Array of strings indicating what types of notifications this site sends (eg. "Mail received") || Yes ||
-|| icon ||  || No, defaults to site icon from "register" ||
-|| onclick ||  || No, defaults to noop ||
-
-TODO: how to handle localization for the "types" array. The easiest is that the strings in the type array is already localized, but what if the user changes his language preference in the browser and returns to the same site again? I think the "types" array would just replace whatever is currently registered and configured, the only problem would be that the users configuration would not carry over to the new notification types. It's a bit of a special case so I'm hesitant to create an unwieldy design to work around this.
-
-== notification.isEnabled(type) ==
-
-Checks whether notification is enabled by user. Could be used to turn on/off polling. Notifications can be enabled/disabled at any time by the user, so this should be rechecked periodically.
-
-== notification.notify(options) ==
-
-Display notification, noop if notifications of that type are turned off.
-
-The onclick handler executes in the same context as where "notify" was called. If it was called from a worker, it will execute there, if called from a web page it will execute there.
-
-TODO: what to do if the window where it was called is closed or the worker has exited? Best option I can think of is noop.
-
-|| Option || Description || Required? ||
-|| type || || Yes ||
-|| title ||  || Yes ||
-|| description ||  || No, defaults to empty ||
-|| icon ||  || No, defaults to site icon from "register" ||
-|| sticky || User configuration overrides || No, defaults to false ||
-|| priority ||  || No, defaults to 0 ||
-|| onclick ||  || No, defaults to noop ||
-|| url ||  || Navigates to URL when clicked ||
-
-== Example ==
+= Example =
 
 {{{
+<script type="text/javascript" src="gears_init.js"></script>
+<script type="text/javascript">
+var desktop = google.gears.factory.create('beta.desktop')
+var notification = desktop.createNotification();
+notification.title = 'Lunch with Sarah';
+notification.icon = 'http://calendar.google.com/calendar.gif';
+notification.subtitle1 = 'Thu Mar 27 1:25pm - 2:25pm';
+notification.subtitle2 = 'Dmitry's Diner';
+notification. displayUntilTime = new Date(2008, 3, 27, 14, 0, 0);
+notification.addAction(
+    'View',
+    'http://calendar.google.com/view?id=...');
+notification.addAction(
+    'Snooze',
+    'http://gears.google.com/notifier/actions/snooze?duration=600');
+desktop.showNotification(notification);
+</script>
+}}}
 
-notification = google.gears.factory.create("beta.notification");
+http://gears.team.jian.googlepages.com/cal_notif.jpg
 
-notification.register({
-  url: "http://mail.google.com",
-  name: "Google Mail",
-  notificationNames: ["New mail", "Chat message"]
-});
+= Details =
 
-// periodically call pollEmails with setTimeout or in the worker poolfunction pollEmails() {
-function pollEmails() {
-  if (!notification.isEnabled("New mail")) {
-    // execute poll
-    while (var mail = receiveNextMail()) {
-      notification.notify({
-        name: "New mail",
-        title: mail.subject,
-        description: mail.bodyExcerpt,
-        onclick: function(notification) {
-          window.nagivator.url = mail.url;
-        }
-      });
-    }
-  }
-}
+== Notifier functionality in Desktop class ==
+(created by calling `google.gears.factory.create('beta.desktop')`)
 
+{{{
+// Creates a notification object.
+Notification createNotification()
+
+// Shows a notification. If the notification with the same ID is on display, 
+// it will get updated.
+// If the notification can be shown successfully, the notification ID will be
+// returned. Otherwise, an empty string is returned.
+string showNotification(Notification notification)
+
+// Removes the notification with the given ID. If the notification is on display,
+// it will get dismissed immediately.
+// If the notification with the specified ID can be found, 1 will be returned.
+// Otherwise, 0 will be returned.
+int removeNotification(string id)
+}}}
+
+== Notification class ==
+
+{{{
+/// Recommended
+
+// Specifies the title of the notification.
+readwrite attribute string               title
+
+// Specifies the icon to show. Only icon URL is supported.
+readwrite attribute string               icon
+
+/// Optional
+
+// A unique ID for the notification. It can be used for duplicate detection.
+// If this is not set, a randomly generated GUID will be used.
+readwrite attribute string               id
+
+// This is the time when the notification is meant to go away. If this is not
+// set, the notification just get displayed and goes away after the default
+// timeout. If it is set, then once displayed, the notification will remain on
+// screen until the user dismisses it or the desired time has arrived.
+readwrite attribute Date                 displayUntilTime
+
+// Specifies the 1st additional subtitle. For example, this could be used to
+// display the appointment time for the calendar notification.
+readwrite attribute string               subtitle1
+
+// Specifies the 2nd additional subtitle. For example, this could be used to
+// display the appointment location for the calendar notification.
+readwrite attribute string               subtitle2
+
+// Specifies the main content of the notification. For example, email 
+// notifications could put snippet in this field.
+readwrite attribute string               description
+
+// Adds an action for this notification.
+// The parameter text specifies the text to display for the action.
+// The parameter url either denotes the URL to launch in the browser that (first)
+// sent the notification. If that browser is no longer running, then the
+// default browser is launched. 
+// If the url starts with "http://gears.google.com/notifier/actions", then
+// it has a special behavior.
+// Currently, the only defined special behavior is
+// "http://gears.google.com/notifier/actions/snooze?duration=X", which means
+// to snooze for X seconds.
+void addAction(string text, string url)
 }}}
