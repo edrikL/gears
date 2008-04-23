@@ -47,7 +47,7 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR command_line, int) {
     return __LINE__; // return line as a sort of ghetto error code
   }
 
-  if (num_args != 5) { // first "argument" is program path
+  if (num_args != 6) { // first "argument" is program path
     return __LINE__;
   }
 
@@ -55,14 +55,24 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR command_line, int) {
   std::string16 browser_path(argv[2]);
   std::string16 url(argv[3]);
   std::string16 icon_path(argv[4]);
+  const char16 *end_ptr;
+  uint16 locations = ParseLeadingInteger(argv[5], &end_ptr);
+  if (end_ptr == argv[5]) {
+    return __LINE__;
+  }
 
   LocalFree(argv);
 
   std::string16 error;
-  if (!CreateShortcutFileWin32(name, browser_path, url, icon_path, &error)) {
-    LOG((error.c_str()));
-    return __LINE__;
+  for (uint32 location = 0x8000; location > 0; location >>= 1) {
+    if (locations & location) {
+      if (!CreateShortcutFileWin32(name, browser_path, url, icon_path,
+                                   location, &error)) {
+        LOG((error.c_str()));
+        return __LINE__;
+      }
+    }
   }
-   
+
   return 0;
 }

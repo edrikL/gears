@@ -386,6 +386,7 @@ static bool CreateIcoFile(const std::string16 &icons_path,
 
 bool GearsDesktop::CreateShortcutPlatformImpl(const SecurityOrigin &origin,
                                               const ShortcutInfo &shortcut,
+                                              uint32 locations,
                                               std::string16 *error) {
   char16 browser_path[MAX_PATH] = {0};
 
@@ -441,6 +442,7 @@ bool GearsDesktop::CreateShortcutPlatformImpl(const SecurityOrigin &origin,
       browser_path,
       shortcut.app_url.c_str(),
       icons_path.c_str(),
+      IntegerToString16(locations).c_str(),
     };
 
     std::string16 command_line;
@@ -505,7 +507,15 @@ bool GearsDesktop::CreateShortcutPlatformImpl(const SecurityOrigin &origin,
   }
 #endif
 
-  return CreateShortcutFileWin32(shortcut.app_name, browser_path,
-                                 shortcut.app_url, icons_path, error);
+  for (uint32 location = 0x8000; location > 0; location >>= 1) {
+    if (locations & location) {
+      if (!CreateShortcutFileWin32(shortcut.app_name, browser_path,
+                                   shortcut.app_url, icons_path,
+                                   location, error)) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 #endif  // #ifdef WIN32

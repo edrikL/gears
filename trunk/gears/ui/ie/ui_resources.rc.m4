@@ -31,6 +31,7 @@
   #include "WinResrc.h"
 #endif
 #include "ui/ie/ui_resources.h"
+#include "ui/ie/string_table.h"
 
 //-----------------------------------------------------------------------------
 // HTML
@@ -78,20 +79,14 @@ BEGIN
   END
 END
 
-STRINGTABLE DISCARDABLE
-BEGIN
-  IDS_CANCEL "Cancel"
-  IDS_ALLOW "Save"
-END
-
 IDR_HTML_DIALOG_MENUBAR RCDATA
 BEGIN
   IDR_HTML_DIALOG_MENU,
   2,
   I_IMAGENONE, ID_CANCEL, TBSTATE_ENABLED, TBSTYLE_BUTTON | TBSTYLE_AUTOSIZE,
-  IDS_CANCEL, 0, NOMENU,
+  0, 0, NOMENU,
   I_IMAGENONE, ID_ALLOW, TBSTATE_ENABLED, TBSTYLE_BUTTON | TBSTYLE_AUTOSIZE,
-  IDS_ALLOW, 0, NOMENU,
+  0, 0, NOMENU,
 END
 
 IDD_GENERIC_HTML DIALOG -5000, -5000, 500, 500

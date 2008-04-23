@@ -77,8 +77,4 @@ void MaybeNotifyUserOfVersionCollision();
 // Puts up a simple message box alerting the user about the problem
 void NotifyUserOfVersionCollision();
 
-// The message shown to users, also used as the message in JavaScript
-// exceptions thrown by the factory when we're crippled.
-extern const wchar_t *kVersionCollisionErrorMessage;
-
 #endif  // GEARS_BASE_IE_DETECT_VERSION_COLLISION_H__

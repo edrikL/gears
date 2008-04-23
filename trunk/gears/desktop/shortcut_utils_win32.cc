@@ -32,6 +32,7 @@
 #include <shlwapi.h>
 #include <tchar.h>
 
+#include "gears/desktop/desktop.h"
 #include "gears/desktop/shortcut_utils_win32.h"
 
 #include "gears/base/common/basictypes.h"
@@ -45,6 +46,7 @@
 #ifdef WINCE
 #include "gears/desktop/dll_data_wince.h"  // For kDllIconId
 #endif
+#include "gears/ui/ie/string_table.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 
@@ -197,42 +199,87 @@ static bool ReadShellLink(const char16 *link_path,
 #endif
 }
 
-static bool GetShortcutLocationPath(std::string16 *shortcut_location_path) {
+static bool GetShortcutLocationPath(std::string16 *shortcut_location_path,
+                                    uint32 location) {
   assert(shortcut_location_path);
-  bool succeeded = false;
   char16 path_buf[MAX_PATH];
 
   // We use the old version of this function because the new version apparently
   // won't tell you the Desktop folder path.
 #ifdef WINCE
+  // On WinCE, we only support desktop.
+  if (location != GearsDesktop::SHORTCUT_LOCATION_STARTMENU) {
+    assert(false);
+    return false;
+  }
+
   // On Pocket PC, we'd like to add to 'Start -> Programs'. On SmartPhone, this
   // location doesn't exist, so we'd like to add to 'Start'. Rather than brittle
   // phone detection, just try the former location and if it fails, try the
   // second.
-  BOOL result = SHGetSpecialFolderPath(NULL, path_buf, CSIDL_PROGRAMS, FALSE) ||
-                SHGetSpecialFolderPath(NULL, path_buf, CSIDL_STARTMENU, TRUE);
-#else
-  BOOL result = SHGetSpecialFolderPath(NULL, path_buf, CSIDL_DESKTOPDIRECTORY,
-                                       TRUE);
-#endif
-
-  if (result) {
+  if (SHGetSpecialFolderPath(NULL, path_buf, CSIDL_PROGRAMS, FALSE) ||
+      SHGetSpecialFolderPath(NULL, path_buf, CSIDL_STARTMENU, TRUE)) {
     *shortcut_location_path = path_buf;
-    succeeded = true;
+    return true;
   }
-  return succeeded;
+#else
+
+  switch (location) {
+    case GearsDesktop::SHORTCUT_LOCATION_DESKTOP:
+      if (SHGetSpecialFolderPath(NULL, path_buf, CSIDL_DESKTOPDIRECTORY,
+                                 TRUE)) {
+        *shortcut_location_path = path_buf;
+        return true;
+      }
+      break;
+    case GearsDesktop::SHORTCUT_LOCATION_QUICKLAUNCH:
+      if (SHGetSpecialFolderPath(NULL, path_buf, CSIDL_APPDATA, TRUE)) {
+        *shortcut_location_path = path_buf;
+        *shortcut_location_path +=
+            STRING16(L"\\Microsoft\\Internet Explorer\\Quick Launch");
+        return true;
+      }
+      break;
+    case GearsDesktop::SHORTCUT_LOCATION_STARTMENU:
+      {
+        const char16 *kModuleName =
+#ifdef VISTA_BROKER
+            NULL;
+#else
+            PRODUCT_SHORT_NAME;
+#endif
+        const int kMaxStringLength = 256;
+        char16 program_group[kMaxStringLength];
+        if (LoadString(GetModuleHandle(kModuleName), IDS_PROGRAM_GROUP,
+                       program_group, kMaxStringLength) &&
+            SHGetSpecialFolderPath(NULL, path_buf, CSIDL_PROGRAMS, TRUE)) {
+          std::string16 path = path_buf;
+          path += STRING16(L"\\");
+          path += program_group;
+
+          if (ERROR_SUCCESS == SHCreateDirectoryEx(NULL, path.c_str(), NULL)) {
+            *shortcut_location_path = path;
+            return true;
+          }
+        }
+      }
+      break;
+  }
+#endif
+  return false;
 }
 
 bool CreateShortcutFileWin32(const std::string16 &name,
                              const std::string16 &browser_path,
                              const std::string16 &url,
                              const std::string16 &icons_path,
+                             uint32 location,
                              std::string16 *error) {
   // Note: We assume that shortcut.app_name has been validated as a valid
   // filename and that the shortuct.app_url has been converted to absolute URL
   // by the caller.
   std::string16 link_path;
-  if (!GetShortcutLocationPath(&link_path)) {
+  if (!GetShortcutLocationPath(&link_path, location)) {
     *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }

@@ -31,4 +31,5 @@ bool CreateShortcutFileWin32(const std::string16 &name,
                              const std::string16 &browser_path,
                              const std::string16 &url,
                              const std::string16 &ico_path,
+                             uint32 location,
                              std::string16 *error);

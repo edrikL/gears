@@ -35,6 +35,12 @@
 
 class GearsDesktop : public ModuleImplBaseClassVirtual {
  public:
+  enum {
+    SHORTCUT_LOCATION_DESKTOP     = 0x00000001,
+    SHORTCUT_LOCATION_QUICKLAUNCH = 0x00000002,
+    SHORTCUT_LOCATION_STARTMENU   = 0x00000004,
+  };
+
   struct IconData {
     IconData() : width(0), height(0) {}
     int width;
@@ -71,11 +77,13 @@ class GearsDesktop : public ModuleImplBaseClassVirtual {
   // NOTE: This method is implemented in desktop_<platform>.cc
   bool CreateShortcutPlatformImpl(const SecurityOrigin &origin,
                                   const GearsDesktop::ShortcutInfo &shortcut,
+                                  uint32 locations,
                                   std::string16 *error);
 
-  bool SetShortcut(GearsDesktop::ShortcutInfo *shortcut, 
+  bool SetShortcut(GearsDesktop::ShortcutInfo *shortcut,
                    const bool allow,
                    const bool permanently,
+                   uint32 locations,
                    std::string16 *error);
 
   bool AllowCreateShortcut(const GearsDesktop::ShortcutInfo &shortcut_info,

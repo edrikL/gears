@@ -29,6 +29,7 @@
 #include <windows.h>
 #include "genfiles/product_constants.h"
 #include "gears/base/ie/detect_version_collision.h"
+#include "gears/ui/ie/string_table.h"
 
 // We run our detection code once at startup
 static bool OneTimeDetectVersionCollision();
@@ -101,9 +102,6 @@ static bool OneTimeDetectVersionCollision() {
 
 // Low tech UI to notify the user
 static bool alerted_user = false;
-const wchar_t *kVersionCollisionErrorMessage = 
-    L"A " PRODUCT_FRIENDLY_NAME L" update has been downloaded.\n\n"
-    L"Please close all browser windows to complete the upgrade process.\n";
 
 void MaybeNotifyUserOfVersionCollision() {
   assert(detected_collision);
@@ -115,6 +113,13 @@ void MaybeNotifyUserOfVersionCollision() {
 void NotifyUserOfVersionCollision() {
   assert(detected_collision);
   alerted_user = true;
-  MessageBox(NULL, kVersionCollisionErrorMessage,
-             L"Please restart your browser", MB_OK);
+  const int kMaxStringLength = 256;
+  char16 title[kMaxStringLength];
+  char16 text[kMaxStringLength];
+  if (LoadString(GetModuleHandle(PRODUCT_SHORT_NAME),
+                 IDS_VERSION_COLLISION_TITLE, title, kMaxStringLength) &&
+      LoadString(GetModuleHandle(PRODUCT_SHORT_NAME),
+                 IDS_VERSION_COLLISION_TEXT, text, kMaxStringLength)) {
+    MessageBox(NULL, text, title, MB_OK);
+  }
 }

@@ -234,7 +234,16 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
     }
   }
 
-  if (!SetShortcut(&shortcut_info, allow, permanently, &error)) {
+  // TODO(zork): Get the shortcut location from the dialog.
+  uint32 locations =
+#ifdef WINCE
+      // WinCE only supports the start menu.
+      SHORTCUT_LOCATION_STARTMENU;
+#else
+      SHORTCUT_LOCATION_DESKTOP;
+#endif
+  if (!SetShortcut(&shortcut_info, allow, permanently,
+                   locations, &error)) {
     context->SetException(error);
   }
 }
@@ -258,7 +267,7 @@ bool GearsDesktop::AllowCreateShortcut(
   std::string16 icon128x128_url;
   std::string16 msg;
   bool allow_shortcut_creation;
-  if (!capabilities->GetShortcut(EnvPageSecurityOrigin(), 
+  if (!capabilities->GetShortcut(EnvPageSecurityOrigin(),
                                  shortcut_info.app_name.c_str(),
                                  &app_url,
                                  &icon16x16_url,
@@ -372,6 +381,7 @@ void GearsDesktop::GetLocalFiles(JsCallContext *context) {
 bool GearsDesktop::SetShortcut(GearsDesktop::ShortcutInfo *shortcut,
                                const bool allow,
                                const bool permanently,
+                               uint32 locations,
                                std::string16 *error) {
   PermissionsDB *capabilities = PermissionsDB::GetDB();
   if (!capabilities) {
@@ -467,7 +477,8 @@ bool GearsDesktop::SetShortcut(GearsDesktop::ShortcutInfo *shortcut,
 
   // Create the desktop shortcut using platform-specific code
   assert(allow);
-  if (!CreateShortcutPlatformImpl(EnvPageSecurityOrigin(), *shortcut, error)) {
+  if (!CreateShortcutPlatformImpl(EnvPageSecurityOrigin(), *shortcut,
+                                  locations, error)) {
     return false;
   }
 
