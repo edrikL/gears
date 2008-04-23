@@ -1899,6 +1899,12 @@ void ConvertJsParamToToken(const JsParamToSend &param,
 int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
   bool has_optional = false;
 
+  int argc = static_cast<int>(disp_params_->cArgs);
+  if (argc > output_argc) {
+    SetException(STRING16(L"Too many parameters."));
+    return 0;
+  }
+
   for (int i = 0; i < output_argc; ++i) {
     assert(output_argv[i].value_ptr);
 
@@ -2083,6 +2089,11 @@ void JsCallContext::SetException(const std::string16 &message) {
 #if defined(BROWSER_FF) || defined(BROWSER_NPAPI)
 int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
   bool has_optional = false;
+
+  if (argc_ > output_argc) {
+    SetException(STRING16(L"Too many parameters."));
+    return 0;
+  }
 
   for (int i = 0; i < output_argc; ++i) {
     has_optional |= output_argv[i].requirement == JSPARAM_OPTIONAL;

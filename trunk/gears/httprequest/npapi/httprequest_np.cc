@@ -92,10 +92,12 @@ void GearsHttpRequest::Open(JsCallContext *context) {
   
   std::string16 method;
   std::string16 url;
+  bool async;   // We ignore this parameter.
   
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &method },
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &url },
+    { JSPARAM_OPTIONAL, JSPARAM_BOOL, &async },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
