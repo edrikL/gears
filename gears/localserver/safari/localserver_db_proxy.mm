@@ -23,10 +23,11 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#import "gears/base/common/string_utils.h"
-#import "gears/base/safari/cf_string_utils.h"
-#import "gears/localserver/common/http_constants.h"
-#import "gears/localserver/common/localserver_db.h"
+#include "gears/base/common/string_utils.h"
+#include "gears/base/common/http_utils.h"
+#include "gears/base/safari/cf_string_utils.h"
+#include "gears/localserver/common/http_constants.h"
+#include "gears/localserver/common/localserver_db.h"
 #import "gears/localserver/safari/localserver_db_proxy.h"
 
 @implementation GearsWebCacheDB
@@ -46,12 +47,14 @@
 }
 
 //------------------------------------------------------------------------------
-+ (NSData *)service:(NSURL *)url mimeType:(NSString **)mimeType          
-         statusCode:(int *)statusCode redirectURL:(NSURL **)redirectURL {
++ (NSData *)service:(NSURL *)url mimeType:(NSString **)mimeType
+      headers:(NSDictionary **)headers statusCode:(int *)statusCode 
+      redirectURL:(NSURL **)redirectURL {
   std::string16 url16;
   
   assert(url);
   assert(mimeType);
+  assert(headers);
   assert(statusCode);
   assert(redirectURL);
   
@@ -92,12 +95,43 @@
     *mimeType = nil;
  
   *statusCode = payload.status_code;
+  NSMutableDictionary *ret_headers = nil;
+  
+  // Crack header string and convert to NSDictionary.
+  // TODO(playmobil): If this turns out to be a performance bottleneck, we may
+  // want to just store the cracked header in the payload rather than re-parsing
+  // them on every request.
+  const std::string16 &headers_utf16 = payload.headers;
+  if (!headers_utf16.empty()) {
+    std::string headers_utf8;
+    if (!String16ToUTF8(headers_utf16.c_str(), 
+                        headers_utf16.length(),
+                        &headers_utf8)) {
+      return nil;
+    }
+    
+    HTTPHeaders parsed_headers;
+    const char *body = headers_utf8.c_str();
+    uint32 bodylen = headers_utf8.length();
+    if (!HTTPUtils::ParseHTTPHeaders(&body, &bodylen, &parsed_headers, true)) {
+      return nil;
+    }
+    ret_headers = [[[NSMutableDictionary alloc] init] autorelease];
+    for (HTTPHeaders::const_iterator it = parsed_headers.begin();
+         it != parsed_headers.end();
+         ++it) {
+      NSString *header_name = [NSString stringWithUTF8String:it->first];
+      NSString *header_value = [NSString stringWithUTF8String:it->second];
+      [ret_headers setValue:header_value forKey:header_name];
+    }
+  }
+  *headers = ret_headers;
   
   // Copy the data
   std::vector<unsigned char> *dataVec = payload.data.get();
   const unsigned char *bytes = dataVec ? &(*dataVec)[0] : NULL;
   unsigned int length = dataVec ? dataVec->size() : 0;
-  
+
   return [NSData dataWithBytes:bytes length:length];
 }
 
