@@ -39,6 +39,9 @@
 #include "gears/httprequest/npapi/httprequest_np.h"
 #include "gears/localserver/npapi/localserver_np.h"
 #include "gears/timer/timer.h"
+#ifdef WIN32
+#include "gears/ui/ie/string_table.h"
+#endif
 #ifdef BROWSER_WEBKIT
 // TODO(playmobil): Add support for worker pools in Safari build.
 #else
@@ -78,8 +81,14 @@ void GearsFactory::Create(JsCallContext *context) {
     if (!EnvIsWorker()) {
       MaybeNotifyUserOfVersionCollision();  // only notifies once per process
     }
-    context->SetException(kVersionCollisionErrorMessage);
-    return;
+    const int kMaxStringLength = 256;
+    char16 error_text[kMaxStringLength];
+    if (LoadString(GetModuleHandle(PRODUCT_SHORT_NAME),
+                   IDS_VERSION_COLLISION_TEXT, error_text, kMaxStringLength)) {
+      context->SetException(error_text);
+    } else {
+      context->SetException(STRING16(L"Internal Error"));
+    }
   }
 #endif
 
