@@ -140,6 +140,11 @@ class ExceptionHandler {
     UpdateNextID();  // Necessary to put dump_path_ in next_minidump_path_.
   }
 
+  // Google Gears addition
+  // Setup additional memory ranges to include if a crash occurs.
+  void AddMemoryRange(void *address, int length);
+  void ClearMemoryRanges();
+
   // Writes a minidump immediately.  This can be used to capture the
   // execution state independently of a crash.  Returns true on success.
   bool WriteMinidump();
@@ -186,6 +191,13 @@ class ExceptionHandler {
                                      unsigned int line,
                                      uintptr_t reserved);
 #endif  // _MSC_VER >= 1400
+
+  // Google Gears addition
+  // Called by MiniDumpWriteDump to customize details of the dump contents.
+  static BOOL CALLBACK ExceptionHandler::CustomizeMiniDump(
+      void *user_param,
+      const MINIDUMP_CALLBACK_INPUT *input,
+      MINIDUMP_CALLBACK_OUTPUT *output);
 
   // This is called on the exception thread or on another thread that
   // the user wishes to produce a dump from.  It calls
@@ -236,6 +248,12 @@ class ExceptionHandler {
   const wchar_t *dump_path_c_;
   const wchar_t *next_minidump_id_c_;
   const wchar_t *next_minidump_path_c_;
+
+  // Google Gears addition
+  // Structures to represent the ranges set by AddMemoryRange().
+  vector<void *> memory_range_addresses_;
+  vector<int> memory_range_lengths_;
+  int memory_range_next_index_;  // for iterating over ranges via callback
 
   HMODULE dbghelp_module_;
   MiniDumpWriteDump_type minidump_write_dump_;

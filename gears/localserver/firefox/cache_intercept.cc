@@ -49,6 +49,7 @@
 #include "genfiles/localserver.h"
 #include "gears/base/common/exception_handler_win32.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/trace_buffers_win32/trace_buffers_win32.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/localserver/common/localserver_db.h"
 #include "gears/localserver/firefox/cache_intercept.h"
@@ -643,6 +644,10 @@ void CacheIntercept::Init() {
 #ifdef OFFICIAL_BUILD
   static ExceptionManager exception_manager(false);  // false == only our DLL
   exception_manager.StartMonitoring();
+  exception_manager.AddMemoryRange(g_trace_buffers,
+                                   sizeof(g_trace_buffers));
+  exception_manager.AddMemoryRange(g_trace_positions,
+                                   sizeof(g_trace_positions));
 #endif
 #endif
 
