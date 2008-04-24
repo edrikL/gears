@@ -1936,7 +1936,7 @@ bool WebCacheDB::DeleteEntry(int64 version_id, const char16 *url) {
   }
   if (num_matches > 1) {
     LOG(("WebCacheDB.DeleteEntry - multiple matches for requested URL\n"));
-    ExceptionManager::CaptureAndSendMinidump();
+    ExceptionManager::ReportAndContinue();
   }
 
   return transaction.Commit();

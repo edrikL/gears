@@ -376,7 +376,13 @@ bool ExceptionHandler::WriteMinidumpOnHandlerThread(
 }
 
 bool ExceptionHandler::WriteMinidump() {
-  bool success = WriteMinidumpOnHandlerThread(NULL, NULL);
+  return WriteMinidump(NULL, NULL);
+}
+
+// Google Gears addition
+bool ExceptionHandler::WriteMinidump(EXCEPTION_POINTERS *exinfo,
+                                     MDRawAssertionInfo *assertion) {
+  bool success = WriteMinidumpOnHandlerThread(exinfo, assertion);
   UpdateNextID();
   return success;
 }

@@ -169,7 +169,7 @@ HRESULT ActiveXUtils::GetScriptDispatch(IUnknown *site,
   CComPtr<IHTMLDocument2> html_document2;
   HRESULT hr = GetHtmlDocument2(site, &html_document2);
   if (FAILED(hr) || !html_document2) {
-    if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+    if (dump_on_error) ExceptionManager::ReportAndContinue();
     return E_FAIL;
   }
 

@@ -84,14 +84,14 @@ class JsRunnerBase : public JsRunnerInterface {
   JsObject *NewObject(const char16 *optional_global_ctor_name,
                       bool dump_on_error = false) {
     if (!js_engine_context_) {
-      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
       LOG(("Could not get JavaScript engine context."));
       return NULL;
     }
 
     JSObject *global_object = JS_GetGlobalObject(js_engine_context_);
     if (!global_object) {
-      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
       LOG(("Could not get global object from script engine."));
       return NULL;
     }
@@ -99,7 +99,7 @@ class JsRunnerBase : public JsRunnerInterface {
     std::string ctor_name_utf8;
     if (optional_global_ctor_name) {
       if (!String16ToUTF8(optional_global_ctor_name, &ctor_name_utf8)) {
-        if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+        if (dump_on_error) ExceptionManager::ReportAndContinue();
         LOG(("Could not convert constructor name."));
         return NULL;
       }
@@ -111,14 +111,14 @@ class JsRunnerBase : public JsRunnerInterface {
     JSBool result = JS_GetProperty(js_engine_context_, global_object,
                                    ctor_name_utf8.c_str(), &val);
     if (!result) {
-      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
       LOG(("Could not get constructor property from global object."));
       return NULL;
     }
 
     JSFunction *ctor = JS_ValueToFunction(js_engine_context_, val);
     if (!ctor) {
-      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
       LOG(("Could not convert constructor property to function."));
       return NULL;
     }
@@ -140,7 +140,7 @@ class JsRunnerBase : public JsRunnerInterface {
     result = JS_CallFunction(js_engine_context_, global_object, ctor, 0, NULL,
                              &val);
     if (!result) {
-      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
       LOG(("Could not call constructor function."));
       return NULL;
     }
@@ -149,13 +149,13 @@ class JsRunnerBase : public JsRunnerInterface {
       scoped_ptr<JsObject> retval(new JsObject);
 
       if (!retval->SetObject(val, GetContext())) {
-        if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+        if (dump_on_error) ExceptionManager::ReportAndContinue();
         LOG(("Could not assign to JsObject."));
         return NULL;
       }
       return retval.release();
     } else {
-      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
       LOG(("Constructor did not return an object"));
       return NULL;
     }
@@ -468,7 +468,7 @@ bool JsRunner::InitJavaScriptEngine() {
   const int kRuntimeMaxBytes = 64 * 1024 * 1024; // mozilla/.../js.c uses 64 MB
   js_runtime_ = JS_NewRuntime(kRuntimeMaxBytes);
   if (!js_runtime_) {
-    ExceptionManager::CaptureAndSendMinidump();
+    ExceptionManager::ReportAndContinue();
     LOG(("Maximum thread count reached."));
     return false;
   }
