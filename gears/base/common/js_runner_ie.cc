@@ -81,7 +81,7 @@ class JsRunnerBase : public JsRunnerInterface {
 
     CComQIPtr<IDispatchEx> global_dispex = global_object;
     if (!global_dispex) {
-      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
       return NULL;
     }
 
@@ -91,7 +91,7 @@ class JsRunnerBase : public JsRunnerInterface {
     HRESULT hr = global_dispex->GetDispID(ctor_name, fdexNameCaseSensitive,
                                           &error_dispid);
     if (FAILED(hr)) {
-      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
       return NULL;
     }
 
@@ -104,7 +104,7 @@ class JsRunnerBase : public JsRunnerInterface {
                             NULL);  // pointer to "this" object (NULL okay)
     if (FAILED(hr)) {
       LOG(("Could not invoke object constructor."));
-      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
       return NULL;
     }
 
@@ -288,7 +288,7 @@ class ATL_NO_VTABLE JsRunnerImpl
                                          NULL,  // get global object
                                          &global_object);
     if (FAILED(hr)) {
-      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
       return NULL;
     }
     return global_object;
@@ -618,7 +618,7 @@ class DocumentJsRunner : public JsRunnerBase {
     HRESULT hr = ActiveXUtils::GetScriptDispatch(site_, &global_object,
                                                  dump_on_error);
     if (FAILED(hr)) {
-      if (dump_on_error) ExceptionManager::CaptureAndSendMinidump();
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
       return NULL;
     }
     return global_object;

@@ -144,6 +144,10 @@ class ExceptionHandler {
   // execution state independently of a crash.  Returns true on success.
   bool WriteMinidump();
 
+  // Google Gears addition
+  // Similar to WriteMinidump, but lets callers provide some of the details.
+  bool WriteMinidump(EXCEPTION_POINTERS *exinfo, MDRawAssertionInfo *assertion);
+
   // Convenience form of WriteMinidump which does not require an
   // ExceptionHandler instance.
   static bool WriteMinidump(const wstring &dump_path,

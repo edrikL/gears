@@ -10,6 +10,9 @@ License: BSD
 License File: COPYING (but see above)
 Description: Breakpad is an open-source library for generating and processing
              crash reports from multiple platforms.
-Local Modifications: - Added this file, README.google.
-                     - Added support for "#define BREAKPAD_AVOID_STREAMS" to
-                       address build problems in certain configurations.
+
+Local Modifications:
+- Added this file (README.google).
+- Added support for "#define BREAKPAD_AVOID_STREAMS" to address build problems
+    in certain configurations.
+- Added a version of WriteMinidump() that exposes the exception parameters.

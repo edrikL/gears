@@ -67,7 +67,7 @@ class ExceptionManager {
   // Manually captures and sends a minidump, returns true on success.
   // If StartMonitoring has not been called, no minidump is sent and
   // false is returned.
-  static bool CaptureAndSendMinidump();
+  static bool ReportAndContinue();
 
   // TODO(michaeln): Cleanup. The following should not be called
   // directly, ideally these should be private methods.
@@ -90,7 +90,7 @@ class ExceptionManager {
  public:
   ExceptionManager(bool catch_entire_process) {}
   void StartMonitoring() {}
-  static bool CaptureAndSendMinidump() { return false; }
+  static bool ReportAndContinue() { return false; }
 };
 
 #endif  // WIN32

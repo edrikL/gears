@@ -286,7 +286,7 @@ bool UpdateTask::HttpGetUrl(const char16 *full_url,
       // Explicitly overwrite error_msg_, not passing the validation tests is
       // the reason for overall task failure.
       SetHttpError(full_url, NULL);
-      ExceptionManager::CaptureAndSendMinidump();
+      ExceptionManager::ReportAndContinue();
       return false;  // TODO(michaeln): retry?
     }
 

@@ -235,12 +235,31 @@ void ExceptionManager::StartMonitoring() {
 }
 
 // static
-bool ExceptionManager::CaptureAndSendMinidump() {
-  if (instance_ && instance_->exception_handler_) {
-    return instance_->exception_handler_->WriteMinidump();
-  } else {
+bool ExceptionManager::ReportAndContinue() {
+  if (!instance_ || !instance_->exception_handler_) {
     return false;
   }
+
+  // Pass parameters to WriteMinidump so the reported call stack ends here,
+  // instead of including all frames down to where the dump file gets written.
+  //
+  // This requires a valid EXCEPTION_POINTERS struct.  GetExceptionInformation()
+  // can generate one for us.  But that function can only be used in an __except
+  // filter statement.  And the value returned only appears to be valid for the
+  // lifetime of the filter statement.  Hence the comma-separated statement
+  // below, which is actually common practice.
+  bool retval;
+  google_breakpad::ExceptionHandler *h = instance_->exception_handler_;
+
+  __try {
+    int *null_pointer = NULL;
+    *null_pointer = 1;
+  } __except (retval = h->WriteMinidump(GetExceptionInformation(), NULL),
+              EXCEPTION_EXECUTE_HANDLER) {
+    // EXCEPTION_EXECUTE_HANDLER causes execution to continue here.
+    // We have nothing more to do, so just continue normally.
+  }
+  return retval;
 }
 
 
