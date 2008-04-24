@@ -99,7 +99,8 @@ class PoolThreadsManager
   friend struct ThreadsEvent; // for OnReceiveThreadsEvent
  public:
   PoolThreadsManager(const SecurityOrigin &page_security_origin,
-                     JsRunnerInterface *root_js_runner);
+                     JsRunnerInterface *root_js_runner,
+                     GearsWorkerPool *owner);
 
   // We handle the lifetime of the PoolThreadsMananger using ref-counting. 
   // When all references go away, the PoolThreadsManager deletes itself.
@@ -150,6 +151,9 @@ class PoolThreadsManager
 
   int num_workers_; // used by Add/ReleaseWorkerRef()
   bool is_shutting_down_;
+  GearsWorkerPool *unrefed_owner_;
+  nsCOMPtr<GearsWorkerPool> refed_owner_;
+  // TODO(michaeln): use scoped_refptr when GearsWorkerPool is Dispatcher based
 
   std::vector<PRThread*> worker_id_to_os_thread_id_;
   // this _must_ be a vector of pointers, since each worker references its

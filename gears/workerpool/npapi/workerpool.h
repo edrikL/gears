@@ -98,7 +98,8 @@ class PoolThreadsManager
     : JsErrorHandlerInterface {
  public:
   PoolThreadsManager(const SecurityOrigin &page_security_origin,
-                     JsRunnerInterface *root_js_runner);
+                     JsRunnerInterface *root_js_runner,
+                     GearsWorkerPool *owner);
 
   // We handle the lifetime of the PoolThreadsMananger using ref-counting. 
   // When all references go away, the PoolThreadsManager deletes itself.
@@ -151,6 +152,8 @@ class PoolThreadsManager
 
   int num_workers_;  // used by Add/ReleaseWorkerRef()
   bool is_shutting_down_;
+  GearsWorkerPool *unrefed_owner_;
+  scoped_refptr<GearsWorkerPool> refed_owner_;
 
   std::vector<DWORD> worker_id_to_os_thread_id_;  // TODO(mpcomplete): FIXME
   // this _must_ be a vector of pointers, since each worker references its
