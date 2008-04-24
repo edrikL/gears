@@ -27,13 +27,13 @@
 
 #include <assert.h>
 #include <set>
+#include <map>
 #include <stdio.h>
 
 #ifdef BROWSER_WEBKIT
 #include <WebKit/npapi.h>
 #else
-#include "npapi.h"
-#include "npruntime.h"
+#include "third_party/npapi/nphostapi.h"
 #endif
 
 #include "third_party/scoped_ptr/scoped_ptr.h"
@@ -47,6 +47,29 @@
 #include "gears/base/npapi/np_utils.h"
 #include "gears/base/npapi/scoped_npapi_handles.h"
 
+// We keep a map of active DocumentJsRunners so we can notify them when their
+// NP instance is destroyed.
+class DocumentJsRunner;
+typedef std::map<NPP, DocumentJsRunner*> DocumentJsRunnerList;
+DocumentJsRunnerList *document_js_runners_ = NULL;
+
+static void RegisterDocumentJsRunner(NPP instance, DocumentJsRunner* runner) {
+  if (!document_js_runners_)
+    document_js_runners_ = new DocumentJsRunnerList;
+  (*document_js_runners_)[instance] = runner;
+}
+
+static void UnregisterDocumentJsRunner(NPP instance) {
+  assert(document_js_runners_);
+  if (!document_js_runners_)
+    return;
+
+  document_js_runners_->erase(instance);
+  if (document_js_runners_->empty()) {
+    delete document_js_runners_;
+    document_js_runners_ = NULL;
+  }
+}
 
 // Internal base class used to share some code between DocumentJsRunner and
 // JsRunner. Do not override these methods from JsRunner or DocumentJsRunner.
@@ -366,9 +389,16 @@ class JsRunner : public JsRunnerBase {
 // common functionality to both workers and the main thread.
 class DocumentJsRunner : public JsRunnerBase {
  public:
-  DocumentJsRunner(NPP instance) : JsRunnerBase(instance) { }
+  DocumentJsRunner(NPP instance) : JsRunnerBase(instance) {
+    RegisterDocumentJsRunner(np_instance_, this);
+  }
 
-  virtual ~DocumentJsRunner() {}
+  virtual ~DocumentJsRunner() {
+    // TODO(mpcomplete): This never gets called.  When should we delete the
+    // DocumentJsRunner?
+    if (document_js_runners_)
+      UnregisterDocumentJsRunner(np_instance_);
+  }
 
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
     // TODO(mpcomplete): Add this functionality to DocumentJsRunner.
@@ -393,29 +423,16 @@ class DocumentJsRunner : public JsRunnerBase {
     assert(false); // Should not be called on the DocumentJsRunner.
   }
 
-  static void HandleEventUnload(void *user_param) {
-    static_cast<DocumentJsRunner*>(user_param)->SendEvent(JSEVENT_UNLOAD);
+  void HandleNPInstanceDestroyed() {
+    SendEvent(JSEVENT_UNLOAD);
+    UnregisterDocumentJsRunner(np_instance_);
   }
 
+  // TODO(mpcomplete): We only support JSEVENT_UNLOAD.  We should rework this
+  // API to make it non-generic, and implement unload similar to NPAPI in
+  // other browsers.
   bool AddEventHandler(JsEventType event_type,
                        JsEventHandlerInterface *handler) {
-    if (event_type == JSEVENT_UNLOAD) {
-      // Monitor 'onunload' to send the unload event when the page goes away.
-      if (unload_monitor_ == NULL) {
-        // Retrieve retrieve the DOM window.
-        NPObject* window;
-        if (NPN_GetValue(GetContext(), NPNVWindowNPObject, &window)
-            != NPERR_NO_ERROR)
-          return false;
-        ScopedNPObject window_scoped(window);
-
-        unload_monitor_.reset(new HtmlEventMonitor(kEventUnload,
-                                                   HandleEventUnload,
-                                                   this));
-        unload_monitor_->Start(GetContext(), window);
-      }
-    }
-
     return JsRunnerBase::AddEventHandler(event_type, handler);
   }
 
@@ -424,6 +441,17 @@ class DocumentJsRunner : public JsRunnerBase {
   DISALLOW_EVIL_CONSTRUCTORS(DocumentJsRunner);
 };
 
+
+void NotifyNPInstanceDestroyed(NPP instance) {
+  if (!document_js_runners_)
+    return;
+
+  DocumentJsRunnerList::iterator it = document_js_runners_->find(instance);
+  if (it != document_js_runners_->end()) {
+    DocumentJsRunner *js_runner = it->second;
+    js_runner->HandleNPInstanceDestroyed();
+  }
+}
 
 JsRunnerInterface *NewJsRunner() {
   return static_cast<JsRunnerInterface *>(new JsRunner());
