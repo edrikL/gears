@@ -40,7 +40,7 @@ HWND BrowserHelperObject::browser_window_ = NULL;
 #endif
 
 STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
-#ifdef WIN32
+#if defined(WIN32) && !defined(WINCE)
 // Only send crash reports for offical builds.  Crashes on an engineer's machine
 // during internal development are confusing false alarms.
 #ifdef OFFICIAL_BUILD

@@ -89,14 +89,12 @@ class ExceptionManager {
 
 #else
 
-// Stub to allow compilation on OS'es for which we do not yet
-// implement crash reporting.
+// Stub to allow compilation on OS'es for which we do not yet implement crash
+// reporting.  (Only the static methods need to be listed here.)
 class ExceptionManager {
  public:
-  ExceptionManager(bool catch_entire_process) {}
-  void StartMonitoring() {}
   static bool ReportAndContinue() { return false; }
 };
 
-#endif  // WIN32
+#endif  // WIN32 && !WINCE
 #endif  // GEARS_BASE_COMMON_EXCEPTION_HANDLER_WIN32_H__
