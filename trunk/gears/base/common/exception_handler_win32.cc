@@ -234,6 +234,16 @@ void ExceptionManager::StartMonitoring() {
                                                              this, true);
 }
 
+void ExceptionManager::AddMemoryRange(void *address, int length) {
+  assert(exception_handler_);
+  exception_handler_->AddMemoryRange(address, length);
+}
+
+void ExceptionManager::ClearMemoryRanges() {
+  assert(exception_handler_);
+  exception_handler_->ClearMemoryRanges();
+}
+
 // static
 bool ExceptionManager::ReportAndContinue() {
   if (!instance_ || !instance_->exception_handler_) {

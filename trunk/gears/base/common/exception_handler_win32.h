@@ -64,6 +64,11 @@ class ExceptionManager {
   // automatically be captured and sent.
   void StartMonitoring();
 
+  // Specifies additional memory ranges for inclusion in minidumps.
+  // Requires a Breakpad instance, so must be called after StartMonitoring().
+  void AddMemoryRange(void *address, int length);
+  void ClearMemoryRanges();
+
   // Manually captures and sends a minidump, returns true on success.
   // If StartMonitoring has not been called, no minidump is sent and
   // false is returned.

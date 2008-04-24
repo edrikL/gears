@@ -349,6 +349,18 @@ void ExceptionHandler::HandleInvalidParameter(const wchar_t *expression,
 }
 #endif  // _MSC_VER >= 1400
 
+// Google Gears addition
+void ExceptionHandler::AddMemoryRange(void *address, int length) {
+  memory_range_addresses_.push_back(address);
+  memory_range_lengths_.push_back(length);
+}
+
+// Google Gears addition
+void ExceptionHandler::ClearMemoryRanges() {
+  memory_range_addresses_.clear();
+  memory_range_lengths_.clear();
+}
+
 bool ExceptionHandler::WriteMinidumpOnHandlerThread(
     EXCEPTION_POINTERS *exinfo, MDRawAssertionInfo *assertion) {
   EnterCriticalSection(&handler_critical_section_);
@@ -393,6 +405,45 @@ bool ExceptionHandler::WriteMinidump(const wstring &dump_path,
                                      void *callback_context) {
   ExceptionHandler handler(dump_path, NULL, callback, callback_context, false);
   return handler.WriteMinidump();
+}
+
+// Google Gears addition
+// static
+BOOL CALLBACK ExceptionHandler::CustomizeMiniDump(
+                                    void *user_param,
+                                    const MINIDUMP_CALLBACK_INPUT *input,
+                                    MINIDUMP_CALLBACK_OUTPUT *output) {
+  if (input->CallbackType == IncludeModuleCallback ||
+      input->CallbackType == IncludeThreadCallback) {
+    // Don't completely exclude any modules or threads from the dump.
+    return TRUE;  
+  }
+
+  if (input->CallbackType == ModuleCallback ||
+      input->CallbackType == ThreadCallback) {
+    // Don't clear any of the "data to include" flags we were passed.
+    return TRUE;
+  }
+
+  if (input->CallbackType == MemoryCallback) {
+    // Add specified memory regions to the dump.
+    ExceptionHandler *eh = static_cast<ExceptionHandler *>(user_param);
+    int index = eh->memory_range_next_index_;
+
+    if (index < eh->memory_range_addresses_.size()) {
+      output->MemoryBase = reinterpret_cast<UINT64>(
+                               eh->memory_range_addresses_[index]);
+      output->MemorySize = eh->memory_range_lengths_[index];
+      ++eh->memory_range_next_index_;
+      return TRUE;  // indicate more ranges exist beyond the current one
+    } else {
+      return FALSE;  // leave current range blank, and indicate we are done
+    }
+  }
+
+  // For unrecognized CallbackType values, return FALSE to be safe.  (It may be
+  // something like the 'CancelCallback' from a newer version of DbgHelp.)
+  return FALSE; 
 }
 
 bool ExceptionHandler::WriteMinidumpWithException(
@@ -453,6 +504,13 @@ bool ExceptionHandler::WriteMinidumpWithException(
         ++user_streams.UserStreamCount;
       }
 
+      // Google Gears addition
+      MINIDUMP_CALLBACK_INFORMATION callback_info = {0};
+      callback_info.CallbackRoutine =
+          reinterpret_cast<MINIDUMP_CALLBACK_ROUTINE>(CustomizeMiniDump);
+      callback_info.CallbackParam = this;
+      memory_range_next_index_ = 0;  // reset before callbacks begin
+
       // The explicit comparison to TRUE avoids a warning (C4800).
       success = (minidump_write_dump_(GetCurrentProcess(),
                                       GetCurrentProcessId(),
@@ -460,7 +518,7 @@ bool ExceptionHandler::WriteMinidumpWithException(
                                       MiniDumpNormal,
                                       exinfo ? &except_info : NULL,
                                       &user_streams,
-                                      NULL) == TRUE);
+                                      &callback_info) == TRUE);
 
       CloseHandle(dump_file);
     }

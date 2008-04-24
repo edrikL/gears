@@ -26,6 +26,7 @@
 #include "gears/base/ie/activex_utils.h"
 #endif
 #include "gears/base/common/exception_handler_win32.h"
+#include "gears/base/common/trace_buffers_win32/trace_buffers_win32.h"
 #include "gears/base/ie/bho.h"
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/factory/common/factory_utils.h"
@@ -45,6 +46,10 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
 #ifdef OFFICIAL_BUILD
   static ExceptionManager exception_manager(false);  // false == only our DLL
   exception_manager.StartMonitoring();
+  exception_manager.AddMemoryRange(g_trace_buffers,
+                                   sizeof(g_trace_buffers));
+  exception_manager.AddMemoryRange(g_trace_positions,
+                                   sizeof(g_trace_positions));
 #endif
 #endif
 

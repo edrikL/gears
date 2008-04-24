@@ -331,6 +331,14 @@ COMMON_LINKFLAGS += \
 	$(COMMON_LINKFLAGS_$(MODE))
 endif
 
+# Settings for enabling trace buffers. (These flags must be used together.)
+# Minidumps are only sent in official builds, so enable trace buffers only in
+# official (dbg) builds.
+ifeq ($(OFFICIAL_BUILD),1)
+COMPILE_FLAGS_dbg += /fastcap
+COMMON_LINKFLAGS_dbg += base\common\trace_buffers_win32\trace_buffers_win32.lib
+endif
+
 MKDLL = link
 DLL_PREFIX =
 DLL_SUFFIX = .dll
