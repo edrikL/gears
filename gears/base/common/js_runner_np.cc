@@ -51,23 +51,25 @@
 // NP instance is destroyed.
 class DocumentJsRunner;
 typedef std::map<NPP, DocumentJsRunner*> DocumentJsRunnerList;
-DocumentJsRunnerList *document_js_runners_ = NULL;
+static DocumentJsRunnerList *g_document_js_runners = NULL;
 
 static void RegisterDocumentJsRunner(NPP instance, DocumentJsRunner* runner) {
-  if (!document_js_runners_)
-    document_js_runners_ = new DocumentJsRunnerList;
-  (*document_js_runners_)[instance] = runner;
+  if (!g_document_js_runners)
+    g_document_js_runners = new DocumentJsRunnerList;
+  // Right now there is a 1:1 mapping among NPPs, GearsFactorys, and
+  // DocumentJsRunners.
+  assert((*g_document_js_runners)[instance] == NULL);
+  (*g_document_js_runners)[instance] = runner;
 }
 
 static void UnregisterDocumentJsRunner(NPP instance) {
-  assert(document_js_runners_);
-  if (!document_js_runners_)
+  if (!g_document_js_runners)
     return;
 
-  document_js_runners_->erase(instance);
-  if (document_js_runners_->empty()) {
-    delete document_js_runners_;
-    document_js_runners_ = NULL;
+  g_document_js_runners->erase(instance);
+  if (g_document_js_runners->empty()) {
+    delete g_document_js_runners;
+    g_document_js_runners = NULL;
   }
 }
 
@@ -396,8 +398,7 @@ class DocumentJsRunner : public JsRunnerBase {
   virtual ~DocumentJsRunner() {
     // TODO(mpcomplete): This never gets called.  When should we delete the
     // DocumentJsRunner?
-    if (document_js_runners_)
-      UnregisterDocumentJsRunner(np_instance_);
+    UnregisterDocumentJsRunner(np_instance_);
   }
 
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
@@ -443,11 +444,11 @@ class DocumentJsRunner : public JsRunnerBase {
 
 
 void NotifyNPInstanceDestroyed(NPP instance) {
-  if (!document_js_runners_)
+  if (!g_document_js_runners)
     return;
 
-  DocumentJsRunnerList::iterator it = document_js_runners_->find(instance);
-  if (it != document_js_runners_->end()) {
+  DocumentJsRunnerList::iterator it = g_document_js_runners->find(instance);
+  if (it != g_document_js_runners->end()) {
     DocumentJsRunner *js_runner = it->second;
     js_runner->HandleNPInstanceDestroyed();
   }
