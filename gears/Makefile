@@ -808,10 +808,6 @@ FF3_M4SRCS_I18N	+= \
 		i18n.dtd.m4 \
 		$(NULL)
 
-$(BROWSER)_VPATH += \
-		ui/generated \
-		$(NULL)
-
 IE_M4SRCS	+= \
 		ui_html.rc.m4 \
 		$(NULL)
@@ -824,6 +820,25 @@ NPAPI_M4SRCS	+= \
 		ui_html.rc.m4 \
 		$(NULL)
 
+# Some files should be omitted on Mac and Linux...
+ifeq ($(OS),osx)
+else
+ifeq ($(OS),linux)
+else
+# ...but included on Win32 and WinCE, for all targets.
+$(BROWSER)_VPATH += \
+		ui/generated \
+		$(NULL)
+
+$(BROWSER)_LINK_EXTRAS += \
+		$($(BROWSER)_OUTDIR)/string_table.res \
+		$(NULL)
+
+VISTA_BROKER_LINK_EXTRAS += \
+		$(VISTA_BROKER_OUTDIR)/string_table.res \
+		$(NULL)
+endif
+endif
 
 #-----------------------------------------------------------------------------
 # ui/common (built for all browsers)
@@ -882,19 +897,6 @@ IE_CPPSRCS	+= \
 
 IE_LINK_EXTRAS	+= \
 		$(IE_OUTDIR)/ui_resources.res \
-		$(IE_OUTDIR)/string_table.res \
-		$(NULL)
-
-FF2_LINK_EXTRAS	+= \
-		$(FF2_OUTDIR)/string_table.res \
-		$(NULL)
-
-FF3_LINK_EXTRAS	+= \
-		$(FF3_OUTDIR)/string_table.res \
-		$(NULL)
-
-VISTA_BROKER_LINK_EXTRAS += \
-		$(VISTA_BROKER_OUTDIR)/string_table.res \
 		$(NULL)
 
 # Additional files specific to Win32 or WinCE.
