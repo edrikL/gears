@@ -41,6 +41,7 @@
 // particular plugin.
 //
 #include "gears/base/common/string_utils.h"
+#include "gears/base/npapi/module.h"
 #include "gears/base/npapi/plugin.h"
 #include "gears/factory/npapi/factory_wrapper.h"
 
@@ -78,6 +79,8 @@ NPError NPP_Destroy(NPP instance, NPSavedData** save)
 {
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
+
+  NotifyNPInstanceDestroyed(instance);
 
   NPObject* obj = static_cast<NPObject*>(instance->pdata);
   if (obj)
