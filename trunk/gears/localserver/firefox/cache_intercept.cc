@@ -638,7 +638,7 @@ NS_IMETHODIMP CacheIntercept::Observe(nsISupports *subject,
 }
 
 void CacheIntercept::Init() {
-#ifdef WIN32
+#if defined(WIN32) && !defined(WINCE)
 // Only send crash reports for offical builds.  Crashes on an engineer's machine
 // during internal development are confusing false alarms.
 #ifdef OFFICIAL_BUILD
