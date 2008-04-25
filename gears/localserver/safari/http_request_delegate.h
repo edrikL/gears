@@ -32,6 +32,8 @@
 // of it's arguments.
 
 #import <Cocoa/Cocoa.h>
+#import <Foundation/NSStream.h>
+
 #include "gears/base/common/string16.h"
 #include "gears/localserver/safari/http_request_sf.h"
 
@@ -67,8 +69,8 @@
 
 // Send the request
 //
-// Arguments: post_data - a string to send if the |method| specified in the open
-//                        call was 'POST'.
+// Arguments: post_data_stream - a stream containing the data to send if the
+//                               |method| specified in the open call was 'POST'.
 //            user_agent - the User Agent string to use when sending the 
 //                         request.
 //            headers - HTTP headers to send the request with.
@@ -76,7 +78,7 @@
 //                                   when processing the request.
 //
 // Returns: true on success.
-- (bool)send:(const std::string &)post_data
+- (bool)send:(NSInputStream *)post_data_stream
    userAgent:(const std::string16 &)user_agent
      headers:(const SFHttpRequest::HttpHeaderVector &)headers
      bypassBrowserCache:(bool)bypass_browser_cache;

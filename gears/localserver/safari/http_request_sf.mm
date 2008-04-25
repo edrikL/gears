@@ -39,6 +39,7 @@
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/safari/cf_string_utils.h"
 #ifndef OFFICIAL_BUILD
+#include "gears/blob/blob_input_stream_sf.h"
 #include "gears/blob/blob_interface.h"
 #endif  // !OFFICIAL_BUILD
 #include "gears/localserver/common/http_request.h"
@@ -281,8 +282,11 @@ bool SFHttpRequest::GetInitialUrl(std::string16 *full_url) {
 //------------------------------------------------------------------------------
 
 bool SFHttpRequest::Send() {
-  std::string empty;
-  return SendImpl(empty);
+  if (IsPostOrPut()) {
+    return SendString(STRING16(L""));
+  } else {
+    return SendImpl(NULL);
+  }
 }
 
 
@@ -294,56 +298,58 @@ bool SFHttpRequest::SendString(const char16 *data) {
     return false;
   }
 
-  std::string post_data;
-  String16ToUTF8(data, &post_data);
-  return SendImpl(post_data);
+  NSString *post_data_string = [NSString stringWithString16:data];
+  NSData *post_data = [post_data_string dataUsingEncoding:NSUTF8StringEncoding];
+  NSInputStream *post_data_stream = [NSInputStream
+                                     inputStreamWithData:post_data];
+  if (!post_data_stream) {
+    return false;
+  }
+  // It appears that the OS defaults to sending out the request with
+  // chunked encoding if we assign it an inputstream.  To solve this we
+  // need to explicitly set the Content-length header.
+  std::string16 content_length_as_string(
+      IntegerToString16([post_data_string length]));
+  headers_to_send_.push_back(HttpHeader(HttpConstants::kContentLengthHeader,
+                                        content_length_as_string));
+  return SendImpl(post_data_stream);
 }
-
 
 #ifndef OFFICIAL_BUILD
-bool SFHttpRequest::SendBlob(BlobInterface *data) {
-  // TODO(bgarcia): implement!
-  assert(false);
-  return false;
+
+bool SFHttpRequest::SendBlob(BlobInterface *blob) {
+  if (was_sent_) {
+    return false;
+  }
+  NSInputStream *post_data_stream =
+      [[[BlobInputStream alloc] initFromBlob:blob] autorelease];
+  if (!post_data_stream) {
+    return false;
+  }
+  // It appears that the OS defaults to sending out the request with
+  // chunked encoding if we assign it an inputstream.  To solve this we
+  // need to explicitly set the Content-length header.
+  std::string16 content_length_as_string(Integer64ToString16(blob->Length()));
+  headers_to_send_.push_back(HttpHeader(HttpConstants::kContentLengthHeader,
+                                        content_length_as_string));
+  bool ok = SendImpl(post_data_stream);
+  return ok;
 }
-#endif  // !OFFICIAL_BUILD
+#endif
 
-
-bool SFHttpRequest::SendImpl(const std::string &post_data) {
+bool SFHttpRequest::SendImpl(NSInputStream *post_data_stream) {
   if (was_sent_) {
     return false;
   }
   was_sent_ = true;
   
-  // If Content-type header not set by the client, we set it to 'text/plain' in
-  // order to match behavior of FF implementation.
-  bool has_content_type_header = false;
-  for (HttpHeaderVectorConstIterator it = headers_to_send_.begin();
-       it != headers_to_send_.end(); 
-       ++it) {
-    const std::string16 &header_name = it->first;
-    if (StringCompareIgnoreCase(header_name.c_str(), 
-                                HttpConstants::kContentTypeHeader) == 0) {
-      has_content_type_header = true;
-      break;
-    }
-  }
-  
-  // TODO(playmobil): the FF implementation only performs this step if
-  // a NULL pointer is passed in for post data.  Do we need to change
-  // this to match?
-  if (!has_content_type_header) {
-    headers_to_send_.push_back(HttpHeader(HttpConstants::kContentTypeHeader,
-                                          HttpConstants::kMimeTextPlain));
-  }
-
   std::string16 user_agent;
   if (!BrowserUtils::GetUserAgentString(&user_agent)) {
     return false;
   }
   
   // TODO(playmobil): Handle case of ShouldBypassLocalServer().
-  if (![delegate_holder_->delegate send:post_data 
+  if (![delegate_holder_->delegate send:post_data_stream
                               userAgent:user_agent
                                 headers:headers_to_send_
                      bypassBrowserCache:ShouldBypassBrowserCache()]) {

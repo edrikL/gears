@@ -26,6 +26,7 @@
 #ifndef GEARS_LOCALSERVER_SAFARI_HTTP_REQUEST_SF_H__
 #define GEARS_LOCALSERVER_SAFARI_HTTP_REQUEST_SF_H__
 
+#import <Foundation/NSStream.h>
 #include <vector>
 
 #include "gears/base/common/common.h"
@@ -134,7 +135,7 @@ class SFHttpRequest : public HttpRequest {
            method_ == HttpConstants::kHttpPUT;
   }
   
-  bool SendImpl(const std::string &post_data);
+  bool SendImpl(NSInputStream *post_data_stream);
   void Reset();
 
   ReadyStateListener *listener_;
