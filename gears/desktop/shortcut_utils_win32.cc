@@ -257,9 +257,14 @@ static bool GetShortcutLocationPath(std::string16 *shortcut_location_path,
           path += STRING16(L"\\");
           path += program_group;
 
-          if (ERROR_SUCCESS == SHCreateDirectoryEx(NULL, path.c_str(), NULL)) {
-            *shortcut_location_path = path;
-            return true;
+          int result = SHCreateDirectoryEx(NULL, path.c_str(), NULL);
+          switch (result) {
+            case ERROR_SUCCESS:
+            case ERROR_ALREADY_EXISTS:
+            case ERROR_FILE_EXISTS: {
+              *shortcut_location_path = path;
+              return true;
+            }
           }
         }
       }
