@@ -326,7 +326,9 @@ m4_include(ui/common/button.js)
   setButtonLabel("string-allow", "allow-button", "string-allow-accesskey");
   setButtonLabel("string-deny", "deny-button", "string-deny-accesskey");
 
-  CustomButton.initializeAll();
+  if (!isPIE) {
+    CustomButton.initializeAll();
+  }
 
   if (isPIE) {
     setButtonLabel("string-never-allow", "never-allow-button");

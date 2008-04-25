@@ -271,14 +271,13 @@ m4_include(ui/common/button.js)
     } else {
       initDefaultStyle();
     }
-    
-    CustomButton.initializeAll();
 
     // PIE can't do scrollable divs, so there's no need to do the height
     // calculations.
     if (isPIE) {
       dom.getElementById("scroll").style.display = "block";
     } else {
+      CustomButton.initializeAll();
       initCustomLayout(layoutShortcuts);
     }
   }
