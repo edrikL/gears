@@ -76,7 +76,11 @@ function setButtonLabel(textID, elemID, accessKeyID) {
   // This function works for two different kinds of buttons. Simple buttons
   // based on the <input type="button"> tag, and custom buttons based on a
   // <button> tag with the css class "custom".
-  if (buttonElem.tagName.toLowerCase() == "input") {
+  // Note that on Windows Mobile 5, the tagName property is not defined.
+  // We can therefore safely assume that the converse is also true:
+  // if tagName is not defined, then the platform must be Windows Mobile 5.  
+  if (!isDefined(typeof buttonElem.tagName) ||
+      buttonElem.tagName.toLowerCase() == "input") {
     buttonElem.value = dom.getTextContent(textElem).trim();
     if (isDefined(typeof accessKeyElem)) {
       buttonElem.accessKey = dom.getTextContent(accessKeyElem).trim();
@@ -238,38 +242,40 @@ function handleKeyUp(e) {
 /**
  * Disables a button in the right way, whether it is normal or custom.
  */
-function disableButton(buttonElm) {
-  buttonElm.disabled = true;
+function disableButton(buttonElem) {
+  buttonElem.disabled = true;
 
   if (isPIE) {
     window.pie_dialog.SetButtonEnabled(false);
   }
 
-  if (buttonElm.tagName.toLowerCase() == "input") {
-    buttonElm.style.color = "gray";
-  } else if (buttonElm.tagName.toLowerCase() == "button") {
-    dom.addClass(buttonElm, "disabled");
+  if (!isDefined(typeof buttonElem.tagName) || 
+      buttonElem.tagName.toLowerCase() == "input") {
+    buttonElem.style.color = "gray";
+  } else if (buttonElem.tagName.toLowerCase() == "button") {
+    dom.addClass(buttonElem, "disabled");
   } else {
-    throw new Error("Unexpected tag name: " + buttonElm.tagName);
+    throw new Error("Unexpected tag name: " + buttonElem.tagName);
   }
 }
 
 /**
  * Enables a button in the right way, whether it is normal or custom.
  */
-function enableButton(buttonElm) {
-  buttonElm.disabled = false;
+function enableButton(buttonElem) {
+  buttonElem.disabled = false;
 
   if (isPIE) {
     window.pie_dialog.SetButtonEnabled(true);
   }
   
-  if (buttonElm.tagName.toLowerCase() == "input") {
-    buttonElm.style.color = "black";
-  } else if (buttonElm.tagName.toLowerCase() == "button") {
-    dom.removeClass(buttonElm, "disabled");
+  if (!isDefined(typeof buttonElem.tagName) ||
+      buttonElem.tagName.toLowerCase() == "input") {
+    buttonElem.style.color = "black";
+  } else if (buttonElem.tagName.toLowerCase() == "button") {
+    dom.removeClass(buttonElem, "disabled");
   } else {
-    throw new Error("Unexpected tag name: " + buttonElm.tagName);
+    throw new Error("Unexpected tag name: " + buttonElem.tagName);
   }
 }
 
