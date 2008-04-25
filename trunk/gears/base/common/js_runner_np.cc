@@ -109,22 +109,27 @@ class JsRunnerBase : public JsRunnerInterface {
     }
     assert(string_to_eval == "Object" || string_to_eval == "Error");
     string_to_eval.append("()");
-    return NewObjectImpl(ctor);
+    return NewObjectImpl(string_to_eval);
   }
 
   JsObject *NewError(const std::string16 &message,
                      bool dump_on_error = false) {
-    return NewObjectImpl("Error('" + message + "')");
+    std::string message_utf8;
+    if (!String16ToUTF8(message.c_str(), message.size(), &message_utf8)) {
+      LOG(("Could not convert message."));
+      return NULL;
+    }
+    return NewObjectImpl("Error('" + message_utf8 + "')");
   }
 
   JsObject *NewDate(int64 milliseconds_since_epoch) {
     return NewObjectImpl("new Date(" +
-                         Integer64ToString16(milliseconds_since_epoch) +
+                         Integer64ToString(milliseconds_since_epoch) +
                          ")");
   }
 
   JsArray* NewArray() {
-    scoped_ptr<JsObject> js_object(NewObjectImpl(STRING16(L"Array()")));
+    scoped_ptr<JsObject> js_object(NewObjectImpl("Array()"));
     if (!js_object.get())
       return NULL;
 
