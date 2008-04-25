@@ -497,7 +497,14 @@ class nsCOMPtr_base
           // nothing else to do here
         }
 
-      NS_COM_GLUE NS_FASTCALL ~nsCOMPtr_base();
+      // GOOGLE LOCAL CHANGE:
+      // Remove NS_FASTCALL from the destructor here, since we want to support
+      // developers using gcc newer than 3.3.3.  Since the glue library was
+      // compiled with gcc 3.2, we have to ensure that the regparm(3)
+      // attribute is _not_ applied to the destructor for compatibility.
+      // See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=13057 for details.
+      // NS_COM_GLUE NS_FASTCALL ~nsCOMPtr_base();
+      NS_COM_GLUE ~nsCOMPtr_base();
 
       NS_COM_GLUE void NS_FASTCALL   assign_with_AddRef( nsISupports* );
       NS_COM_GLUE void NS_FASTCALL   assign_from_qi( const nsQueryInterface, const nsIID& );
