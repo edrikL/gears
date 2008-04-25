@@ -39,6 +39,11 @@
 #include "gears/database/firefox/database.h"
 #include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
+#ifdef OFFICIAL_BUILD
+// The Geolocation API has not been finalized for official builds.
+#else
+#include "gears/geolocation/geolocation.h"
+#endif  // OFFICIAL_BUILD
 #include "gears/httprequest/firefox/httprequest_ff.h"
 
 #ifdef OFFICIAL_BUILD
@@ -160,6 +165,12 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
 #endif
   } else if (object_name == STRING16(L"beta.desktop")) {
     CreateModule<GearsDesktop>(GetJsRunner(), &object);
+#ifdef OFFICIAL_BUILD
+  // The Geolocation API has not been finalized for official builds.
+#else
+  } else if (object_name == STRING16(L"beta.geolocation")) {
+    CreateModule<GearsGeolocation>(GetJsRunner(), &object);
+#endif  // OFFICIAL_BUILD
 #ifdef OFFICIAL_BUILD
 // The Image API has not been finalized for official builds.
 #else

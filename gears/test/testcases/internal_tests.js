@@ -203,6 +203,101 @@ function testBrowserCache() {
   }
 }
 
+// Tests the parsing of the options passed to Geolocation.GetCurrentPosition and
+// Geolocation.WatchPosition.
+function testParseGeolocationOptions() {
+  if (isDebug && !isOfficial) {
+    var dummyFunction = function() {};
+    // All good.
+    internalTests.testParseGeolocationOptions(dummyFunction);
+    // Test correct types.
+    // Missing callback function.
+    assertError(function() { internalTests.testParseGeolocationOptions() });
+    // Wrong type for callback function.
+    assertError(function() { internalTests.testParseGeolocationOptions(42) });
+    // Wrong type for options.
+    assertError(
+        function() { internalTests.testParseGeolocationOptions(
+            dummyFunction, 42) });
+    // Wrong type for enableHighAccuracy.
+    assertError(
+        function() { internalTests.testParseGeolocationOptions(
+            dummyFunction, { enableHighAccuracy: 42 }) },
+        'options.enableHighAccuracy should be a boolean.');
+    // Wrong type for requestAddress.
+    assertError(
+        function() { internalTests.testParseGeolocationOptions(
+            dummyFunction, { requestAddress: 42 }) },
+        'options.requestAddress should be a boolean.');
+    // Wrong type for gearsLocationProviderUrls.
+    assertError(
+        function() { internalTests.testParseGeolocationOptions(
+            dummyFunction, { gearsLocationProviderUrls: 42 }) },
+        'options.gearsLocationProviderUrls should be null or an array of ' +
+        'strings');
+    assertError(
+        function() { internalTests.testParseGeolocationOptions(
+            dummyFunction, { gearsLocationProviderUrls: [42] }) },
+        'options.gearsLocationProviderUrls should be null or an array of ' +
+        'strings');
+    // Test correct parsing.
+    var defaultUrlArray = ['http://www.google.com/'];
+    var urls = ['url1', 'url2'];
+    var parsed_options;
+    // No options.
+    parsed_options = internalTests.testParseGeolocationOptions(dummyFunction);
+    assertEqual(false, parsed_options.repeats);
+    assertEqual(false, parsed_options.enableHighAccuracy);
+    assertEqual(false, parsed_options.requestAddress);
+    assertArrayEqual(defaultUrlArray,
+                     parsed_options.gearsLocationProviderUrls);
+    // Empty options.
+    parsed_options = internalTests.testParseGeolocationOptions(dummyFunction,
+                                                               {});
+    assertEqual(false, parsed_options.repeats);
+    assertEqual(false, parsed_options.enableHighAccuracy);
+    assertEqual(false, parsed_options.requestAddress);
+    assertArrayEqual(defaultUrlArray,
+                     parsed_options.gearsLocationProviderUrls);
+    // Empty provider URLs.
+    parsed_options = internalTests.testParseGeolocationOptions(
+        dummyFunction,
+        { gearsLocationProviderUrls: [] });
+    assertEqual(false, parsed_options.repeats);
+    assertEqual(false, parsed_options.enableHighAccuracy);
+    assertEqual(false, parsed_options.requestAddress);
+    assertArrayEqual([], parsed_options.gearsLocationProviderUrls);
+    // Null provider URLs.
+    parsed_options = internalTests.testParseGeolocationOptions(
+        dummyFunction,
+        { gearsLocationProviderUrls: null });
+    assertEqual(false, parsed_options.repeats);
+    assertEqual(false, parsed_options.enableHighAccuracy);
+    assertEqual(false, parsed_options.requestAddress);
+    assertArrayEqual([], parsed_options.gearsLocationProviderUrls);
+    // All properties false, provider URLs set.
+    parsed_options = internalTests.testParseGeolocationOptions(
+        dummyFunction,
+        { enableHighAccuracy: false,
+          requestAddress: false,
+          gearsLocationProviderUrls: urls });
+    assertEqual(false, parsed_options.repeats);
+    assertEqual(false, parsed_options.enableHighAccuracy);
+    assertEqual(false, parsed_options.requestAddress);
+    assertArrayEqual(urls, parsed_options.gearsLocationProviderUrls);
+    // All properties true, provider URLs set.
+    parsed_options = internalTests.testParseGeolocationOptions(
+        dummyFunction,
+        { enableHighAccuracy: true,
+          requestAddress: true,
+          gearsLocationProviderUrls: urls });
+    assertEqual(false, parsed_options.repeats);
+    assertEqual(true, parsed_options.enableHighAccuracy);
+    assertEqual(true, parsed_options.requestAddress);
+    assertArrayEqual(urls, parsed_options.gearsLocationProviderUrls);
+  }
+}
+  
 // Helper functions
 
 function createTestArray(length) {

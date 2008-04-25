@@ -35,6 +35,11 @@
 #include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/factory/ie/factory.h"
+#ifdef OFFICIAL_BUILD
+// The Geolocation API has not been finalized for official builds.
+#else
+#include "gears/geolocation/geolocation.h"
+#endif  // OFFICIAL_BUILD
 #include "gears/httprequest/ie/httprequest_ie.h"
 #ifdef WINCE
 // The Image API is not yet available for WinCE.
@@ -166,6 +171,12 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
 #endif
   } else if (object_name == STRING16(L"beta.desktop")) {
     CreateModule<GearsDesktop>(GetJsRunner(), &object);
+#ifdef OFFICIAL_BUILD
+  // The Geolocation API has not been finalized for official builds.
+#else
+  } else if (object_name == STRING16(L"beta.geolocation")) {
+    CreateModule<GearsGeolocation>(GetJsRunner(), &object);
+#endif  // OFFICIAL_BUILD
 #ifdef WINCE
 // The Image API is not yet available for WinCE.
 #else
