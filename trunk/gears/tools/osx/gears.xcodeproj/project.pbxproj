@@ -32,6 +32,10 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		79272FE10DC2141800CDF577 /* geolocation.cc in Sources */ = {isa = PBXBuildFile; fileRef = 79272FDD0DC2141700CDF577 /* geolocation.cc */; };
+		79272FE20DC2141800CDF577 /* location_provider.cc in Sources */ = {isa = PBXBuildFile; fileRef = 79272FDF0DC2141800CDF577 /* location_provider.cc */; };
+		798BF6610DBE4090004CFD12 /* blob_input_stream_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = 798BF65F0DBE4090004CFD12 /* blob_input_stream_sf.mm */; };
+		798BF6620DBE4090004CFD12 /* blob_input_stream_sf_test.mm in Sources */ = {isa = PBXBuildFile; fileRef = 798BF6600DBE4090004CFD12 /* blob_input_stream_sf_test.mm */; };
 		79C3E9420DB8D8E800346806 /* blob.cc in Sources */ = {isa = PBXBuildFile; fileRef = 79C3E9390DB8D8E800346806 /* blob.cc */; };
 		79C3E9430DB8D8E800346806 /* buffer_blob.cc in Sources */ = {isa = PBXBuildFile; fileRef = 79C3E93C0DB8D8E800346806 /* buffer_blob.cc */; };
 		79C3E9440DB8D8E800346806 /* file_blob.cc in Sources */ = {isa = PBXBuildFile; fileRef = 79C3E93E0DB8D8E800346806 /* file_blob.cc */; };
@@ -365,6 +369,13 @@
 /* Begin PBXFileReference section */
 		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		08EA7FFBFE8413EDC02AAC07 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		79272FDD0DC2141700CDF577 /* geolocation.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = geolocation.cc; path = ../../geolocation/geolocation.cc; sourceTree = SOURCE_ROOT; };
+		79272FDE0DC2141800CDF577 /* geolocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = geolocation.h; path = ../../geolocation/geolocation.h; sourceTree = SOURCE_ROOT; };
+		79272FDF0DC2141800CDF577 /* location_provider.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = location_provider.cc; path = ../../geolocation/location_provider.cc; sourceTree = SOURCE_ROOT; };
+		79272FE00DC2141800CDF577 /* location_provider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = location_provider.h; path = ../../geolocation/location_provider.h; sourceTree = SOURCE_ROOT; };
+		798BF65E0DBE4090004CFD12 /* blob_input_stream_sf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = blob_input_stream_sf.h; path = ../../blob/blob_input_stream_sf.h; sourceTree = SOURCE_ROOT; };
+		798BF65F0DBE4090004CFD12 /* blob_input_stream_sf.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = blob_input_stream_sf.mm; path = ../../blob/blob_input_stream_sf.mm; sourceTree = SOURCE_ROOT; };
+		798BF6600DBE4090004CFD12 /* blob_input_stream_sf_test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = blob_input_stream_sf_test.mm; path = ../../blob/blob_input_stream_sf_test.mm; sourceTree = SOURCE_ROOT; };
 		79C3E9390DB8D8E800346806 /* blob.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = blob.cc; path = ../../blob/blob.cc; sourceTree = SOURCE_ROOT; };
 		79C3E93A0DB8D8E800346806 /* blob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = blob.h; path = ../../blob/blob.h; sourceTree = SOURCE_ROOT; };
 		79C3E93B0DB8D8E800346806 /* blob_interface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = blob_interface.h; path = ../../blob/blob_interface.h; sourceTree = SOURCE_ROOT; };
@@ -770,7 +781,6 @@
 				08FB77ADFE841716C02AAC07 /* Source */,
 				089C167CFE841241C02AAC07 /* Resources */,
 				089C1671FE841209C02AAC07 /* External Frameworks and Libraries */,
-				B5B307780DB578FF00A206B8 /* Generated Files */,
 				19C28FB4FE9D528D11CA2CBB /* Products */,
 			);
 			name = gears;
@@ -817,9 +827,23 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		79272FD00DC213E900CDF577 /* geolocation */ = {
+			isa = PBXGroup;
+			children = (
+				79272FDD0DC2141700CDF577 /* geolocation.cc */,
+				79272FDE0DC2141800CDF577 /* geolocation.h */,
+				79272FDF0DC2141800CDF577 /* location_provider.cc */,
+				79272FE00DC2141800CDF577 /* location_provider.h */,
+			);
+			name = geolocation;
+			sourceTree = "<group>";
+		};
 		79C3E9380DB8D89D00346806 /* blob */ = {
 			isa = PBXGroup;
 			children = (
+				798BF65E0DBE4090004CFD12 /* blob_input_stream_sf.h */,
+				798BF65F0DBE4090004CFD12 /* blob_input_stream_sf.mm */,
+				798BF6600DBE4090004CFD12 /* blob_input_stream_sf_test.mm */,
 				79C3E9390DB8D8E800346806 /* blob.cc */,
 				79C3E93A0DB8D8E800346806 /* blob.h */,
 				79C3E93B0DB8D8E800346806 /* blob_interface.h */,
@@ -853,6 +877,7 @@
 		B544D9480D2EE5D000D30561 /* Gears */ = {
 			isa = PBXGroup;
 			children = (
+				79272FD00DC213E900CDF577 /* geolocation */,
 				B544D9670D2EE5D000D30561 /* base */,
 				79C3E9380DB8D89D00346806 /* blob */,
 				B57F3AC80DA1019D0088FE52 /* console */,
@@ -1410,13 +1435,6 @@
 			name = safari;
 			sourceTree = "<group>";
 		};
-		B5B307780DB578FF00A206B8 /* Generated Files */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = "Generated Files";
-			sourceTree = "<group>";
-		};
 		B5F584080DA0AF7600B8FD50 /* gurl */ = {
 			isa = PBXGroup;
 			children = (
@@ -1901,6 +1919,10 @@
 				B5D8D33A0DB9320800C257AA /* browser_utils_sf.cc in Sources */,
 				B5D8D33B0DB9320800C257AA /* nsstring_utils.mm in Sources */,
 				B5D8D3660DB9326A00C257AA /* html_dialog_sf.mm in Sources */,
+				798BF6610DBE4090004CFD12 /* blob_input_stream_sf.mm in Sources */,
+				798BF6620DBE4090004CFD12 /* blob_input_stream_sf_test.mm in Sources */,
+				79272FE10DC2141800CDF577 /* geolocation.cc in Sources */,
+				79272FE20DC2141800CDF577 /* location_provider.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

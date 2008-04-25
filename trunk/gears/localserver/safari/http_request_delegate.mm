@@ -25,6 +25,12 @@
 
 #include "gears/base/common/http_utils.h"
 #include "gears/base/safari/cf_string_utils.h"
+#ifdef OFFICIAL_BUILD
+// Blobs are not yet supported within official builds.
+#else  // OFFICIAL_BUILD
+#include "gears/blob/blob_input_stream_sf.h"
+#include "gears/blob/blob_interface.h"
+#endif  // OFFICIAL_BUILD
 #include "gears/localserver/common/http_request.h"
 #import "gears/localserver/safari/http_request_delegate.h"
 
@@ -71,7 +77,7 @@
   return true;
 }
 
-- (bool)send:(const std::string &)post_data
+- (bool)send:(NSInputStream *)post_data_stream
    userAgent:(const std::string16 &)user_agent
      headers:(const SFHttpRequest::HttpHeaderVector &)headers
      bypassBrowserCache:(bool)bypass_browser_cache {
@@ -100,10 +106,8 @@
     [request_ setValue:header_value forHTTPHeaderField:header_name];
   }
   
-  // Content-length header for post data is added automagically by Cocoa.
-  if (post_data.length() > 0) {
-    [request_ setHTTPBody:[NSData dataWithBytes:post_data.c_str() 
-                                         length:post_data.length()]];
+  if ([post_data_stream hasBytesAvailable] == YES) {
+    [request_ setHTTPBodyStream: post_data_stream];
   }
   
   [connection_ release];  // Defensive coding: stop potential memory leak in the

@@ -30,6 +30,11 @@
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/url_utils.h"
+#ifdef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+#else  // OFFICIAL_BUILD
+#include "gears/blob/blob.h"
+#endif  // OFFICIAL_BUILD
 
 // Error messages.
 static const char16 *kRequestFailedError = STRING16(L"The request failed.");
@@ -199,10 +204,20 @@ void GearsHttpRequest::Send(JsCallContext *context) {
     context->SetException(kNotOpenError);
     return;
   }
-  
   std::string16 post_data;
+#ifdef OFFICIAL_BUILD
+  // Blobs not yet supported in official builds.
+#else  // OFFICIAL_BUILD
+  ModuleImplBaseClass *blob_base(0);
+#endif  // OFFICIAL_BUILD
+
   JsArgument argv[] = {
-    { JSPARAM_OPTIONAL, JSPARAM_STRING16, &post_data }
+    { JSPARAM_OPTIONAL, JSPARAM_STRING16, &post_data },
+#ifdef OFFICIAL_BUILD
+  // Blobs not yet supported in official builds.
+#else  // OFFICIAL_BUILD
+    { JSPARAM_OPTIONAL, JSPARAM_DISPATCHER_MODULE, &blob_base }
+#endif  // OFFICIAL_BUILD
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
@@ -212,11 +227,24 @@ void GearsHttpRequest::Send(JsCallContext *context) {
 
   bool ok = false;
   if (!post_data.empty()) {
+    // TODO(bgarcia): make sure blob_base is not set?
     if (!content_type_header_was_set_) {
       request_->SetRequestHeader(HttpConstants::kContentTypeHeader,
                                  HttpConstants::kMimeTextPlain);
     }
     ok = request_->SendString(post_data.c_str());
+#ifdef OFFICIAL_BUILD
+    // Blobs not yet supported in official builds.
+#else  // OFFICIAL_BUILD
+  } else if (blob_base) {
+    scoped_refptr<BlobInterface> blob;
+    static_cast<GearsBlob*>(blob_base)->GetContents(&blob);
+    if (!content_type_header_was_set_) {
+      request_->SetRequestHeader(HttpConstants::kContentTypeHeader,
+                                 HttpConstants::kMimeApplicationOctetStream);
+    }
+    ok = request_->SendBlob(blob.get());
+#endif  // OFFICIAL_BUILD
   } else {
     ok = request_->Send();
   }
