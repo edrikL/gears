@@ -49,8 +49,8 @@ SQLITE_OUTDIR       = $(COMMON_OUTDIR)/sqlite
 THIRD_PARTY_OUTDIR  = $(COMMON_OUTDIR)/third_party
 INSTALLERS_OUTDIR   = $(OUTDIR)/installers
 VISTA_BROKER_OUTDIR = $(OUTDIR)/$(OS)-$(ARCH)/vista_broker
-COMMON_OUTDIRS_I18N = $(foreach lang,$(I18N_LANGS),$(COMMON_OUTDIR)/genfiles/i18n/$(lang))
 $(BROWSER)_OUTDIRS_I18N = $(foreach lang,$(I18N_LANGS),$($(BROWSER)_OUTDIR)/genfiles/i18n/$(lang))
+COMMON_OUTDIRS_I18N = $(foreach lang,$(I18N_LANGS),$(COMMON_OUTDIR)/genfiles/i18n/$(lang))
 # TODO(cprince): unify the Firefox directory name across the output dirs
 # (where it is 'ff') and the source dirs (where it is 'firefox').  Changing
 # the output dirs would require changing #includes that reference genfiles.
@@ -59,12 +59,12 @@ $(BROWSER)_OUTDIRS_I18N = $(foreach lang,$(I18N_LANGS),$($(BROWSER)_OUTDIR)/genf
 # will keep their relative sub-directory.
 I18N_INPUTS_BASEDIR = ui/generated
 
-COMMON_OBJS = \
-	$(patsubst %.cc,$(COMMON_OUTDIR)/%$(OBJ_SUFFIX),$(COMMON_CPPSRCS)) \
-	$(patsubst %.c,$(COMMON_OUTDIR)/%$(OBJ_SUFFIX),$(COMMON_CSRCS))
 $(BROWSER)_OBJS = \
 	$(patsubst %.cc,$($(BROWSER)_OUTDIR)/%$(OBJ_SUFFIX),$($(BROWSER)_CPPSRCS)) \
 	$(patsubst %.c,$($(BROWSER)_OUTDIR)/%$(OBJ_SUFFIX),$($(BROWSER)_CSRCS))
+COMMON_OBJS = \
+	$(patsubst %.cc,$(COMMON_OUTDIR)/%$(OBJ_SUFFIX),$(COMMON_CPPSRCS)) \
+	$(patsubst %.c,$(COMMON_OUTDIR)/%$(OBJ_SUFFIX),$(COMMON_CSRCS))
 # TODO(cprince): Break all ties between OSX_LAUNCHURL and FF3_OUTDIR when we
 # support a non-Firefox browser on Mac.
 OSX_LAUNCHURL_OBJS = \
@@ -104,8 +104,8 @@ FF3_RESOURCES = \
 # End: resource lists that MUST be kept in sync with "win32_msi.wxs.m4"
 
 DEPS = \
-	$(COMMON_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$($(BROWSER)_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(COMMON_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(OSX_LAUNCHURL_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(PERF_TOOL_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(VISTA_BROKER_OBJS:$(OBJ_SUFFIX)=.pp) \
@@ -125,24 +125,24 @@ IE_OBJS += \
 NPAPI_GEN_TYPELIBS = \
 	$(patsubst %.idl,$(NPAPI_OUTDIR)/genfiles/%.xpt,$(NPAPI_IDLSRCS))
 
-COMMON_M4FILES = \
-	$(patsubst %.m4,$(COMMON_OUTDIR)/genfiles/%,$(COMMON_M4SRCS))
 $(BROWSER)_M4FILES = \
 	$(patsubst %.m4,$($(BROWSER)_OUTDIR)/genfiles/%,$($(BROWSER)_M4SRCS))
+COMMON_M4FILES = \
+	$(patsubst %.m4,$(COMMON_OUTDIR)/genfiles/%,$(COMMON_M4SRCS))
 
-COMMON_M4FILES_I18N = \
-	$(foreach lang,$(I18N_LANGS),$(addprefix $(COMMON_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$(COMMON_M4SRCS_I18N))))
 $(BROWSER)_M4FILES_I18N = \
 	$(foreach lang,$(I18N_LANGS),$(addprefix $($(BROWSER)_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$($(BROWSER)_M4SRCS_I18N))))
+COMMON_M4FILES_I18N = \
+	$(foreach lang,$(I18N_LANGS),$(addprefix $(COMMON_OUTDIR)/genfiles/i18n/$(lang)/,$(patsubst %.m4,%,$(COMMON_M4SRCS_I18N))))
 
 
-COMMON_VPATH += $(COMMON_OUTDIR)/genfiles
 $(BROWSER)_VPATH += $($(BROWSER)_OUTDIR)/genfiles
+COMMON_VPATH += $(COMMON_OUTDIR)/genfiles
 IE_VPATH += $(IE_OUTDIR)
 IE_VPATH += $(VISTA_BROKER_OUTDIR)
 
 # Make VPATH search our paths before third-party paths.
-VPATH += $(COMMON_VPATH) $($(BROWSER)_VPATH) $(THIRD_PARTY_VPATH)
+VPATH += $($(BROWSER)_VPATH) $(COMMON_VPATH) $(THIRD_PARTY_VPATH)
 
 #-----------------------------------------------------------------------------
 # OUTPUT FILENAMES
@@ -260,8 +260,8 @@ endif
 
 
 # Cross-browser targets.
-prereqs::     $(COMMON_OUTDIR)     $(COMMON_OUTDIR)/genfiles     $(COMMON_OUTDIRS_I18N)     $(COMMON_M4FILES)     $(COMMON_M4FILES_I18N)
 prereqs:: $($(BROWSER)_OUTDIR) $($(BROWSER)_OUTDIR)/genfiles $($(BROWSER)_OUTDIRS_I18N) $($(BROWSER)_M4FILES) $($(BROWSER)_M4FILES_I18N)
+prereqs::     $(COMMON_OUTDIR)     $(COMMON_OUTDIR)/genfiles     $(COMMON_OUTDIRS_I18N)     $(COMMON_M4FILES)     $(COMMON_M4FILES_I18N)
 prereqs:: $(INSTALLERS_OUTDIR) $(LIBGD_OUTDIR) $(SQLITE_OUTDIR) $(THIRD_PARTY_OUTDIR)
 modules::
 genheaders:: $($(BROWSER)_GEN_HEADERS)
@@ -334,17 +334,17 @@ help::
 
 .PHONY: prereqs genheaders modules clean help
 
-$(COMMON_OUTDIR):
-	"mkdir" -p $@
-$(COMMON_OUTDIR)/genfiles:
-	"mkdir" -p $@
-$(COMMON_OUTDIRS_I18N):
-	"mkdir" -p $@
 $($(BROWSER)_OUTDIR):
 	"mkdir" -p $@
 $($(BROWSER)_OUTDIR)/genfiles:
 	"mkdir" -p $@
 $($(BROWSER)_OUTDIRS_I18N):
+	"mkdir" -p $@
+$(COMMON_OUTDIR):
+	"mkdir" -p $@
+$(COMMON_OUTDIR)/genfiles:
+	"mkdir" -p $@
+$(COMMON_OUTDIRS_I18N):
 	"mkdir" -p $@
 $(INSTALLERS_OUTDIR):
 	"mkdir" -p $@
@@ -359,17 +359,16 @@ $(VISTA_BROKER_OUTDIR):
 
 # M4 (GENERIC PREPROCESSOR) TARGETS
 
-$(COMMON_OUTDIR)/genfiles/%: %.m4
-	m4 $(M4FLAGS) $< > $@
-
 $($(BROWSER)_OUTDIR)/genfiles/%: %.m4
+	m4 $(M4FLAGS) $< > $@
+$(COMMON_OUTDIR)/genfiles/%: %.m4
 	m4 $(M4FLAGS) $< > $@
 
 # I18N M4 (GENERIC PREPROCESSOR) TARGETS
 
-$(COMMON_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
-	m4 $(M4FLAGS) $< > $@
 $($(BROWSER)_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
+	m4 $(M4FLAGS) $< > $@
+$(COMMON_OUTDIR)/genfiles/i18n/%: $(I18N_INPUTS_BASEDIR)/%.m4
 	m4 $(M4FLAGS) $< > $@
 
 # IDL TARGETS
@@ -398,19 +397,19 @@ $(IE_OUTDIR)/genfiles/%.h: %.idl
 
 # C/C++ TARGETS
 
-$(COMMON_OUTDIR)/%$(OBJ_SUFFIX): %.c
-	@$(MKDEP)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CFLAGS) $<
-$(COMMON_OUTDIR)/%$(OBJ_SUFFIX): %.cc
-	@$(MKDEP)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CXXFLAGS) $<
-
 $($(BROWSER)_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	@$(MKDEP)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $($(BROWSER)_CPPFLAGS) $($(BROWSER)_CFLAGS) $<
 $($(BROWSER)_OUTDIR)/%$(OBJ_SUFFIX): %.cc
 	@$(MKDEP)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $($(BROWSER)_CPPFLAGS) $($(BROWSER)_CXXFLAGS) $<
+
+$(COMMON_OUTDIR)/%$(OBJ_SUFFIX): %.c
+	@$(MKDEP)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CFLAGS) $<
+$(COMMON_OUTDIR)/%$(OBJ_SUFFIX): %.cc
+	@$(MKDEP)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(COMMON_CPPFLAGS) $(COMMON_CXXFLAGS) $<
 
 $(THIRD_PARTY_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	@$(MKDEP)
@@ -581,10 +580,10 @@ ifneq ($(OS),win32)
 endif
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
 	"mkdir" -p $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
-	cp $(COMMON_RESOURCES) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
 	cp $(FF3_RESOURCES) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
-	cp -R $(COMMON_OUTDIR)/genfiles/i18n/* $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
+	cp $(COMMON_RESOURCES) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/content
 	cp -R $(FF3_OUTDIR)/genfiles/i18n/* $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
+	cp -R $(COMMON_OUTDIR)/genfiles/i18n/* $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/chrome/chromeFiles/locale
 ifneq ($(OS),osx)
 	cp $(FF3_MODULE_TYPELIB) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components
 	cp $(FF3_MODULE_DLL) $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME)/components/$(DLL_PREFIX)$(MODULE)$(DLL_SUFFIX)

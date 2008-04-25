@@ -792,10 +792,10 @@ I18N_LANGS	+= \
 
 # ui/generated is not specified here, because it's included in the generated
 # name for _I18N source files.
-COMMON_VPATH	+= \
+$(BROWSER)_VPATH += \
 		$(NULL)
 
-COMMON_M4SRCS_I18N += \
+$(BROWSER)_M4SRCS_I18N += \
 		permissions_dialog.html.m4 \
 		settings_dialog.html.m4 \
 		shortcuts_dialog.html.m4 \
