@@ -95,44 +95,36 @@ class JsRunnerBase : public JsRunnerInterface {
   }
 
   JsObject *NewObject(const char16 *optional_global_ctor_name,
-                      bool dump_on_fail = false) {
-    NPObject *global_object = GetGlobalObject();
-    if (!global_object) {
-      LOG(("Could not get global object from script engine."));
-      return NULL;
-    }
-
-    std::string ctor_name_utf8;
+                      bool dump_on_error = false) {
+    // NOTE: optional_global_ctor_name will be removed. Use NewError and NewDate
+    // instead. We support Error for backwards compatibility.
+    std::string string_to_eval;
     if (optional_global_ctor_name) {
-      if (!String16ToUTF8(optional_global_ctor_name, &ctor_name_utf8)) {
+      if (!String16ToUTF8(optional_global_ctor_name, &string_to_eval)) {
         LOG(("Could not convert constructor name."));
         return NULL;
       }
     } else {
-      ctor_name_utf8 = "Object";
+      string_to_eval = "Object";
     }
-    ctor_name_utf8.append("()");
+    assert(string_to_eval == "Object" || string_to_eval == "Error");
+    string_to_eval.append("()");
+    return NewObjectImpl(ctor);
+  }
 
-    // Evaluate javascript code: 'ConstructorName()'
-    NPString script = {ctor_name_utf8.c_str(), ctor_name_utf8.length()};
-    ScopedNPVariant object;
-    bool rv = NPN_Evaluate(GetContext(), global_object, &script, &object);
-    if (!rv) {
-      LOG(("Could not invoke object constructor."));
-      return NULL;
-    }
+  JsObject *NewError(const std::string16 &message,
+                     bool dump_on_error = false) {
+    return NewObjectImpl("Error('" + message + "')");
+  }
 
-    scoped_ptr<JsObject> retval(new JsObject);
-    if (!retval->SetObject(object, GetContext())) {
-      LOG(("Could not assign to JsObject."));
-      return NULL;
-    }
-
-    return retval.release();
+  JsObject *NewDate(int64 milliseconds_since_epoch) {
+    return NewObjectImpl("new Date(" +
+                         Integer64ToString16(milliseconds_since_epoch) +
+                         ")");
   }
 
   JsArray* NewArray() {
-    scoped_ptr<JsObject> js_object(NewObject(STRING16(L"Array")));
+    scoped_ptr<JsObject> js_object(NewObjectImpl(STRING16(L"Array()")));
     if (!js_object.get())
       return NULL;
 
@@ -346,6 +338,31 @@ class JsRunnerBase : public JsRunnerInterface {
     evaluator_.reset(NPVARIANT_TO_OBJECT(evaluator));
     evaluator.Release();  // give ownership to evaluator_.
     return evaluator_.get();
+  }
+
+  // Creates an object by evaluating a string and getting the return value.
+  JsObject *NewObjectImpl(const std::string &string_to_eval) {
+    NPObject *global_object = GetGlobalObject();
+    if (!global_object) {
+      LOG(("Could not get global object from script engine."));
+      return NULL;
+    }
+    // Evaluate javascript code: 'ConstructorName()'
+    NPString script = {string_to_eval.c_str(), string_to_eval.length()};
+    ScopedNPVariant object;
+    bool rv = NPN_Evaluate(GetContext(), global_object, &script, &object);
+    if (!rv) {
+      LOG(("Could not invoke object constructor."));
+      return NULL;
+    }
+
+    scoped_ptr<JsObject> retval(new JsObject);
+    if (!retval->SetObject(object, GetContext())) {
+      LOG(("Could not assign to JsObject."));
+      return NULL;
+    }
+
+    return retval.release();
   }
 
   std::set<JsEventHandlerInterface *> event_handlers_[MAX_JSEVENTS];

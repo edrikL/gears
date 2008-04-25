@@ -42,6 +42,7 @@ void Dispatcher<GearsTest>::Init() {
                  &GearsTest::TestPassArgumentsOptional);
   RegisterMethod("testPassObject", &GearsTest::TestPassObject);
   RegisterMethod("testCreateObject", &GearsTest::TestCreateObject);
+  RegisterMethod("testCreateError", &GearsTest::TestCreateError);
   RegisterMethod("testCoerceBool", &GearsTest::TestCoerceBool);
   RegisterMethod("testCoerceInt", &GearsTest::TestCoerceInt);
   RegisterMethod("testCoerceDouble", &GearsTest::TestCoerceDouble);
@@ -146,6 +147,9 @@ void CreateObjectArray(JsCallContext* context,
 void CreateObjectObject(JsCallContext* context,
                         JsRunnerInterface* js_runner,
                         JsObject* out);
+void CreateObjectDate(JsCallContext* context,
+                      JsRunnerInterface* js_runner,
+                      JsObject* out);
 void CreateObjectFunction(JsCallContext* context,
                           JsRootedCallback* func,
                           JsObject* out);
@@ -370,9 +374,28 @@ void GearsTest::TestCreateObject(JsCallContext* context) {
   CreateObjectObject(context, js_runner, js_object.get());
   if (context->is_exception_set()) return;
 
+  CreateObjectDate(context, js_runner, js_object.get());
+  if (context->is_exception_set()) return;
+
   CreateObjectFunction(context, func, js_object.get());
   if (context->is_exception_set()) return;
 
+  context->SetReturnValue(JSPARAM_OBJECT, js_object.get());
+}
+
+// We don't test creation of an Error object as part of TestCreateObject, which
+// tests every property of the object, because an Error object contains a number
+// of hard-to-test properties, such as the line number at which the error
+// occurred.
+void GearsTest::TestCreateError(JsCallContext* context) {
+  JsRunnerInterface* js_runner = GetJsRunner();
+  if (!js_runner)
+    context->SetException(STRING16(L"Failed to get JsRunnerInterface."));
+  scoped_ptr<JsObject> js_object(js_runner->NewError(STRING16(L"test error")));
+  if (!js_object.get()) {
+    context->SetException(STRING16(L"Failed to create Error object"));
+    return;
+  }
   context->SetReturnValue(JSPARAM_OBJECT, js_object.get());
 }
 
@@ -478,14 +501,20 @@ void GearsTest::TestCoerceString(JsCallContext *context) {
 // parameter using GetType(). First parameter should be one of "bool", "int",
 // "double", "string", "null", "undefined", "array", "function", "object".
 void GearsTest::TestGetType(JsCallContext *context) {
+  // Don't really care about the actual value of the second parameter. We
+  // specify an argument of type JSPARAM_TOKEN because all types (other than
+  // NULL and undefined) can be cast to this type by GetArguments. In these two
+  // cases, GetArguments will not parse the argument (it is optional) and will
+  // return 1, rather than 2.
   std::string16 type;
-  const int argc = 1;
-  // Don't really care about the actual value of the second parameter
-  JsArgument argv[argc] = {
+  JsToken value;
+  JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &type },
+    { JSPARAM_OPTIONAL, JSPARAM_TOKEN, &value },
   };
-  context->GetArguments(argc, argv);
+  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
+  assert(argc >= 1);
 
   bool ok = false;
   JsParamType t = context->GetArgumentType(1);
@@ -1480,7 +1509,7 @@ void TestObjectFunction(JsCallContext* context,
 { \
   if (!(b)) { \
     std::stringstream ss; \
-    ss << "CreateObject - failed (" << __LINE__ << ": " << __FILE__ \
+    ss << "CreateObject - failed (" << __LINE__ << ": " << __FILE__ << ")" \
        << std::endl; \
     std::string message8(ss.str()); \
     printf("%s\n", message8.c_str()); \
@@ -1621,6 +1650,17 @@ void CreateObjectObject(JsCallContext* context,
   TEST_ASSERT(array_0);
   TEST_ASSERT(obj->SetPropertyArray(STRING16(L"array_0"), array_0));
   TEST_ASSERT(out->SetPropertyObject(STRING16(L"obj"), obj));
+}
+
+void CreateObjectDate(JsCallContext* context,
+                      JsRunnerInterface* js_runner,
+                      JsObject* out) {
+  assert(out);
+  JsObject* obj = js_runner->NewDate(10);
+  TEST_ASSERT(obj);
+  if (obj) {
+    TEST_ASSERT(out->SetPropertyObject(STRING16(L"date_object"), obj));
+  }
 }
 
 void CreateObjectFunction(JsCallContext* context,

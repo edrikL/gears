@@ -64,6 +64,10 @@
 
 static const int kGarbageCollectionIntervalMsec = 2000;
 
+// Local helper function.
+static JsObject* JsvalToNewJsObject(const jsval &val, JsContextPtr context,
+                                    bool dump_on_error);
+
 // Internal base class used to share some code between DocumentJsRunner and
 // JsRunner. Do not override these methods from JsRunner or DocumentJsRunner.
 // Either share the code here, or move it to those two classes if it's
@@ -81,21 +85,17 @@ class JsRunnerBase : public JsRunnerInterface {
     return alloc_js_wrapper_;
   }
 
+  virtual bool Eval(const std::string16 &full_script, jsval *return_value) = 0;
+
+  bool Eval(const std::string16 &full_script) {
+    jsval return_value;
+    return Eval(full_script, &return_value);
+  }
+
   JsObject *NewObject(const char16 *optional_global_ctor_name,
                       bool dump_on_error = false) {
-    if (!js_engine_context_) {
-      if (dump_on_error) ExceptionManager::ReportAndContinue();
-      LOG(("Could not get JavaScript engine context."));
-      return NULL;
-    }
-
-    JSObject *global_object = JS_GetGlobalObject(js_engine_context_);
-    if (!global_object) {
-      if (dump_on_error) ExceptionManager::ReportAndContinue();
-      LOG(("Could not get global object from script engine."));
-      return NULL;
-    }
-
+    // NOTE: optional_global_ctor_name will be removed. Use NewError and NewDate
+    // instead. We support Error for backwards compatibility.
     std::string ctor_name_utf8;
     if (optional_global_ctor_name) {
       if (!String16ToUTF8(optional_global_ctor_name, &ctor_name_utf8)) {
@@ -106,59 +106,34 @@ class JsRunnerBase : public JsRunnerInterface {
     } else {
       ctor_name_utf8 = "Object";
     }
+    assert(ctor_name_utf8 == "Object" || ctor_name_utf8 == "Error");
+    return NewObjectWithArguments(ctor_name_utf8, 0, NULL, dump_on_error);
+  }
 
-    jsval val = INT_TO_JSVAL(0);
-    JSBool result = JS_GetProperty(js_engine_context_, global_object,
-                                   ctor_name_utf8.c_str(), &val);
-    if (!result) {
-      if (dump_on_error) ExceptionManager::ReportAndContinue();
-      LOG(("Could not get constructor property from global object."));
+  JsObject *NewError(const std::string16 &message,
+                     bool dump_on_error = false) {
+    JsParamToSend argv[] = { {JSPARAM_STRING16, &message} };
+    return NewObjectWithArguments("Error", ARRAYSIZE(argv), argv,
+                                  dump_on_error);
+  }
+
+  // Using JS_CallFunction for Date (and String) do not work for the reasons
+  // described in NewObjectWithArguments. The object returned when we query the
+  // global context for the these properties is a function, not a constructor.
+  // The return value when we call this function is therefore a string, not a
+  // new object. Furthermore, arguments passed to JS_CallFunction for these
+  // types are ignored.
+  JsObject *NewDate(int64 milliseconds_since_epoch) {
+    jsval val;
+    Eval(STRING16(L"new Date(") +
+         Integer64ToString16(milliseconds_since_epoch) +
+         STRING16(L")"),
+         &val);
+    if (!js_engine_context_) {
+      LOG(("Could not get JavaScript engine context."));
       return NULL;
     }
-
-    JSFunction *ctor = JS_ValueToFunction(js_engine_context_, val);
-    if (!ctor) {
-      if (dump_on_error) ExceptionManager::ReportAndContinue();
-      LOG(("Could not convert constructor property to function."));
-      return NULL;
-    }
-
-    // NOTE: We are calling the specified function here as a regular function,
-    // not as a constructor. I could not find a way to call a function as a
-    // constructor using JSAPI other than JS_ConstructObject which takes
-    // arguments I don't know how to provide. Ideally, there would be something
-    // like DISPATCH_CONSTRUCT in IE.
-    //
-    // This is OK for the built-in constructors that we want to call (such as
-    // "Error", "Object", etc) because those objects are specified to behave as
-    // constructors even without the 'new' keyword.
-    //
-    // For more information, see:
-    // * ECMAScript spec section 15.2.1, 15.3.1, 15.4.1, etc.
-    // * DISPATCH_CONSTRUCT:
-    //     http://msdn2.microsoft.com/en-us/library/asd22sd4.aspx
-    result = JS_CallFunction(js_engine_context_, global_object, ctor, 0, NULL,
-                             &val);
-    if (!result) {
-      if (dump_on_error) ExceptionManager::ReportAndContinue();
-      LOG(("Could not call constructor function."));
-      return NULL;
-    }
-
-    if (JSVAL_IS_OBJECT(val)) {
-      scoped_ptr<JsObject> retval(new JsObject);
-
-      if (!retval->SetObject(val, GetContext())) {
-        if (dump_on_error) ExceptionManager::ReportAndContinue();
-        LOG(("Could not assign to JsObject."));
-        return NULL;
-      }
-      return retval.release();
-    } else {
-      if (dump_on_error) ExceptionManager::ReportAndContinue();
-      LOG(("Constructor did not return an object"));
-      return NULL;
-    }
+    return JsvalToNewJsObject(val, js_engine_context_, false);
   }
 
   JsArray* NewArray() {
@@ -264,6 +239,70 @@ class JsRunnerBase : public JsRunnerInterface {
   JSContext *js_engine_context_;
   
  private:
+  JsObject *NewObjectWithArguments(const std::string &ctor_string,
+                                   int argc, JsParamToSend *argv,
+                                   bool dump_on_error) {
+    assert(!argc || argv);
+    if (!js_engine_context_) {
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
+      LOG(("Could not get JavaScript engine context."));
+      return NULL;
+    }
+
+    JSObject *global_object = JS_GetGlobalObject(js_engine_context_);
+    if (!global_object) {
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
+      LOG(("Could not get global object from script engine."));
+      return NULL;
+    }
+
+    jsval val = INT_TO_JSVAL(0);
+    JSBool result = JS_GetProperty(js_engine_context_, global_object,
+                                   ctor_string.c_str(), &val);
+    if (!result) {
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
+      LOG(("Could not get constructor property from global object."));
+      return NULL;
+    }
+
+    JSFunction *ctor = JS_ValueToFunction(js_engine_context_, val);
+    if (!ctor) {
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
+      LOG(("Could not convert constructor property to function."));
+      return NULL;
+    }
+
+    // Form the argument array.
+    scoped_array<jsval> js_engine_argv(new jsval[argc]);
+    for (int i = 0; i < argc; ++i) {
+      ConvertJsParamToToken(argv[i], js_engine_context_, &js_engine_argv[i]);
+    }
+
+    // NOTE: We are calling the specified function here as a regular function,
+    // not as a constructor. I could not find a way to call a function as a
+    // constructor using JSAPI other than JS_ConstructObject which takes
+    // arguments I don't know how to provide. Ideally, there would be something
+    // like DISPATCH_CONSTRUCT in IE.
+    //
+    // This is OK for the built-in constructors that we want to call (such as
+    // "Error", "Object", etc) because those objects are specified to behave as
+    // constructors even without the 'new' keyword.
+    //
+    // For more information, see:
+    // * ECMAScript spec section 15.2.1, 15.3.1, 15.4.1, etc.
+    // * DISPATCH_CONSTRUCT:
+    //     http://msdn2.microsoft.com/en-us/library/asd22sd4.aspx
+    result = JS_CallFunction(js_engine_context_, global_object, ctor, argc,
+                             js_engine_argv.get(), &val);
+    if (!result) {
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
+      LOG(("Could not call constructor function."));
+      return NULL;
+    }
+
+    return JsvalToNewJsObject(val, js_engine_context_, dump_on_error);
+  }
+
   std::set<JsEventHandlerInterface *> event_handlers_[MAX_JSEVENTS];
 
   DISALLOW_EVIL_CONSTRUCTORS(JsRunnerBase);
@@ -306,7 +345,7 @@ class JsRunner : public JsRunnerBase {
   bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id);
   bool Start(const std::string16 &full_script);
   bool Stop();
-  bool Eval(const std::string16 &full_script);
+  virtual bool Eval(const std::string16 &full_script, jsval *return_value);
   void SetErrorHandler(JsErrorHandlerInterface *handler) {
     error_handler_ = handler;
   }
@@ -607,18 +646,18 @@ bool JsRunner::Stop() {
   return false;
 }
 
-bool JsRunner::Eval(const std::string16 &script) {
+bool JsRunner::Eval(const std::string16 &script, jsval *return_value) {
+  assert(return_value);
   JSObject *object = JS_GetGlobalObject(js_engine_context_);
 
   uintN line_number_start = 0;
-  jsval rval;
   JSBool js_ok = JS_EvaluateUCScript(
                        js_engine_context_,
                        object,
                        reinterpret_cast<const jschar *>(script.c_str()),
                        script.length(),
                        "script", line_number_start,
-                       &rval);
+                       return_value);
   if (!js_ok) { return false; }
   return true;
 }
@@ -676,7 +715,7 @@ class DocumentJsRunner : public JsRunnerBase {
     assert(false); // This should not be called on DocumentJsRunner.
     return false;
   }
-  bool Eval(const std::string16 &full_script);
+  virtual bool Eval(const std::string16 &full_script, jsval *return_value);
   bool InvokeCallbackSpecialized(const JsRootedCallback *callback,
                                  int argc, jsval *argv,
                                  JsRootedToken **optional_alloc_retval);
@@ -691,7 +730,7 @@ class DocumentJsRunner : public JsRunnerBase {
 };
 
 
-bool DocumentJsRunner::Eval(const std::string16 &script) {
+bool DocumentJsRunner::Eval(const std::string16 &script, jsval *return_value) {
   JSObject *object = JS_GetGlobalObject(js_engine_context_);
   if (!object) { return false; }
 
@@ -734,11 +773,10 @@ bool DocumentJsRunner::Eval(const std::string16 &script) {
   stack->Push(js_engine_context_);
 
   uintN line_number_start = 0;
-  jsval rval;
   JSBool js_ok = JS_EvaluateUCScriptForPrincipals(
       js_engine_context_, object, jsprin,
       reinterpret_cast<const jschar *>(script.c_str()),
-      script.length(), "script", line_number_start, &rval);
+      script.length(), "script", line_number_start, return_value);
 
   // Restore the context stack.
   JSContext *cx;
@@ -858,4 +896,23 @@ JsRunnerInterface* NewJsRunner() {
 
 JsRunnerInterface* NewDocumentJsRunner(IGeneric *base, JsContextPtr context) {
   return static_cast<JsRunnerInterface*>(new DocumentJsRunner(base, context));
+}
+
+// Local helper function.
+static JsObject* JsvalToNewJsObject(const jsval &val, JsContextPtr context,
+                                    bool dump_on_error) {
+  if (JSVAL_IS_OBJECT(val)) {
+    scoped_ptr<JsObject> retval(new JsObject);
+
+    if (!retval->SetObject(val, context)) {
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
+      LOG(("Could not assign to JsObject."));
+      return NULL;
+    }
+    return retval.release();
+  } else {
+    if (dump_on_error) ExceptionManager::ReportAndContinue();
+    LOG(("Constructor did not return an object"));
+    return NULL;
+  }
 }
