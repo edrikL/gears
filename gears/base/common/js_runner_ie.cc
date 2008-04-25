@@ -73,52 +73,30 @@ class JsRunnerBase : public JsRunnerInterface {
 
   JsObject *NewObject(const char16 *optional_global_ctor_name,
                       bool dump_on_error = false) {
-    CComPtr<IDispatch> global_object = GetGlobalObject(dump_on_error);
-    if (!global_object) {
-      LOG(("Could not get global object from script engine."));
-      return NULL;
-    }
-
-    CComQIPtr<IDispatchEx> global_dispex = global_object;
-    if (!global_dispex) {
-      if (dump_on_error) ExceptionManager::ReportAndContinue();
-      return NULL;
-    }
-
-    DISPID error_dispid;
-    CComBSTR ctor_name(optional_global_ctor_name ? optional_global_ctor_name :
+    // NOTE: optional_global_ctor_name will be removed. Use NewError and NewDate
+    // instead. We support Error for backwards compatibility.
+    std::string16 ctor(optional_global_ctor_name ? optional_global_ctor_name :
                        STRING16(L"Object"));
-    HRESULT hr = global_dispex->GetDispID(ctor_name, fdexNameCaseSensitive,
-                                          &error_dispid);
-    if (FAILED(hr)) {
-      if (dump_on_error) ExceptionManager::ReportAndContinue();
-      return NULL;
-    }
+    assert(ctor == STRING16(L"Object") || ctor == STRING16(L"Error"));
+    return NewObjectWithArguments(ctor, 0, NULL, dump_on_error);
+  }
 
-    CComVariant result;
-    DISPPARAMS no_args = {NULL, NULL, 0, 0};
-    hr = global_dispex->InvokeEx(
-                            error_dispid, LOCALE_USER_DEFAULT,
-                            DISPATCH_CONSTRUCT, &no_args, &result,
-                            NULL,  // receives exception (NULL okay)
-                            NULL);  // pointer to "this" object (NULL okay)
-    if (FAILED(hr)) {
-      LOG(("Could not invoke object constructor."));
-      if (dump_on_error) ExceptionManager::ReportAndContinue();
-      return NULL;
-    }
+  JsObject *NewError(const std::string16 &message,
+                     bool dump_on_error = false) {
+    JsParamToSend argv[] = { {JSPARAM_STRING16, &message} };
+    return NewObjectWithArguments(STRING16(L"Error"), ARRAYSIZE(argv), argv,
+                                  dump_on_error);
+  }
 
-    scoped_ptr<JsObject> retval(new JsObject);
-    if (!retval->SetObject(result, GetContext())) {
-      LOG(("Could not assign to JsObject."));
-      return NULL;
-    }
-
-    return retval.release();
+  JsObject *NewDate(int64 milliseconds_since_epoch) {
+    JsParamToSend argv[] = { {JSPARAM_INT, &milliseconds_since_epoch} };
+    return NewObjectWithArguments(STRING16(L"Date"), ARRAYSIZE(argv), argv,
+                                  false);
   }
 
   JsArray* NewArray() {
-    scoped_ptr<JsObject> js_object(NewObject(STRING16(L"Array")));
+    scoped_ptr<JsObject> js_object(NewObjectWithArguments(STRING16(L"Array"), 0,
+                                   NULL, false));
     if (!js_object.get())
       return NULL;
 
@@ -249,6 +227,63 @@ class JsRunnerBase : public JsRunnerInterface {
   virtual IDispatch *GetGlobalObject(bool dump_on_error = false) = 0;
 
  private:
+  JsObject *NewObjectWithArguments(const std::string16 &ctor,
+                                   int argc, JsParamToSend *argv,
+                                   bool dump_on_error) {
+    assert(!argc||argv);
+    CComPtr<IDispatch> global_object = GetGlobalObject(dump_on_error);
+    if (!global_object) {
+      LOG(("Could not get global object from script engine."));
+      return NULL;
+    }
+
+    CComQIPtr<IDispatchEx> global_dispex = global_object;
+    if (!global_dispex) {
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
+      return NULL;
+    }
+
+    DISPID error_dispid;
+    CComBSTR ctor_name(ctor.c_str());
+    HRESULT hr = global_dispex->GetDispID(ctor_name, fdexNameCaseSensitive,
+                                          &error_dispid);
+    if (FAILED(hr)) {
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
+      return NULL;
+    }
+
+    CComVariant result;
+
+    // Setup argument array.
+    scoped_array<CComVariant> js_engine_argv(new CComVariant[argc]);
+    for (int i = 0; i < argc; ++i) {
+      int dest = argc - 1 - i;  // args are expected in reverse order!!
+      ConvertJsParamToToken(argv[i], NULL, &js_engine_argv[dest]);
+    }
+    DISPPARAMS args = {0};
+    args.cArgs = argc;
+    args.rgvarg = js_engine_argv.get();
+
+    hr = global_dispex->InvokeEx(
+                            error_dispid, LOCALE_USER_DEFAULT,
+                            DISPATCH_CONSTRUCT, &args, &result,
+                            NULL,  // receives exception (NULL okay)
+                            NULL);  // pointer to "this" object (NULL okay)
+    if (FAILED(hr)) {
+      LOG(("Could not invoke object constructor."));
+      if (dump_on_error) ExceptionManager::ReportAndContinue();
+      return NULL;
+    }
+
+    scoped_ptr<JsObject> retval(new JsObject);
+    if (!retval->SetObject(result, GetContext())) {
+      LOG(("Could not assign to JsObject."));
+      return NULL;
+    }
+
+    return retval.release();
+  }
+
   std::set<JsEventHandlerInterface *> event_handlers_[MAX_JSEVENTS];
 
   DISALLOW_EVIL_CONSTRUCTORS(JsRunnerBase);

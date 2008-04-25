@@ -161,9 +161,26 @@ function testCreateObject() {
       assertEqual(testObject.array_many_types[6](),
           createdObject.array_many_types[6]());
       assertEqual(testObject.func(), createdObject.func());
+      // Explicitly test date object.
+      assertEqual(testObject.date_object.getTime(),
+                  createdObject.date_object.getTime());
     }
   }
+}
 
+// Test creating a JavaScript Error object in C++ and returning it.
+function testCreateError() {
+  if (isDebug) {
+    // TODO(cdevries): Enable this test on FF in worker pools when
+    //                 SetReturnValue() has been implemented.
+    var isFirefox = google.gears.factory.getBuildInfo().indexOf("firefox") > -1;
+    var isFirefoxWorker = isFirefox && google.gears.workerPool;
+
+    if (!isFirefoxWorker) {
+      var createdObject = internalTests.testCreateError();
+      assertEqual('test error', createdObject.message);
+    }
+  }
 }
 
 // Tests the bogus browser cache entries used on WinCE to prevent the 'Cannot
@@ -362,6 +379,9 @@ function TestObject() {
 
   // object
   this.obj = new ChildTestObject();
+
+  // Date
+  this.date_object = new Date(10);
 
   // function
   this.func = createTestFunction();
