@@ -56,6 +56,12 @@ void Dispatcher<GearsTest>::Init() {
   RegisterMethod("getSystemTime", &GearsTest::GetSystemTime);
   RegisterMethod("getTicks", &GearsTest::GetTimingTicks);
   RegisterMethod("getTickDeltaMicros", &GearsTest::GetTimingTickDeltaMicros);
+#ifdef OFFICIAL_BUILD
+  // The Geolocation API has not been finalized for official builds.
+#else
+  RegisterMethod("testParseGeolocationOptions",
+                 &GearsTest::TestParseGeolocationOptions);
+#endif
 }
 
 #ifdef WIN32
@@ -1742,6 +1748,44 @@ void GearsTest::TestEntriesPresentInBrowserCache(JsCallContext *context) {
   ok = true;
   context->SetReturnValue(JSPARAM_BOOL, &ok);
 }
+#endif
+
+#ifdef OFFICIAL_BUILD
+// The Geolocation API has not been finalized for official builds.
+#else
+void GearsTest::TestParseGeolocationOptions(JsCallContext *context) {
+  std::vector<std::string16> urls;
+  GearsGeolocation::FixRequestInfo info;
+  if (!ParseGeolocationOptionsTest(context, false, &urls, &info)) {
+    if (!context->is_exception_set()) {
+      context->SetException(
+          STRING16(L"Internal error parsing geolocation options."));
+    }
+    return;
+  }
+  // Add the urls as a property of the returned object.
+  JsObject *return_object = GetJsRunner()->NewObject(NULL);
+  assert(return_object);
+  JsArray *url_array = GetJsRunner()->NewArray();
+  assert(url_array);
+  for (int i = 0; i < static_cast<int>(urls.size()); ++i) {
+    if (!url_array->SetElementString(i, urls[i])) {
+      context->SetException(STRING16(L"Failed to set return value."));
+      return;
+    }
+  }
+  if (!return_object->SetPropertyBool(STRING16(L"repeats"), info.repeats) ||
+      !return_object->SetPropertyBool(STRING16(L"enableHighAccuracy"),
+                                      info.enable_high_accuracy) ||
+      !return_object->SetPropertyBool(STRING16(L"requestAddress"),
+                                      info.request_address) ||
+      !return_object->SetPropertyArray(STRING16(L"gearsLocationProviderUrls"),
+                                       url_array)) {
+    context->SetException(STRING16(L"Failed to set return value."));
+    return;
+  }
+  context->SetReturnValue(JSPARAM_OBJECT, return_object);
+} 
 #endif
 
 #endif  // DEBUG

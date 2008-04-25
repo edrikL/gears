@@ -1290,6 +1290,25 @@ IE_CPPSRCS += \
 
 endif # wince
 
+#-----------------------------------------------------------------------------
+# geolocation
+
+ifeq ($(OFFICIAL_BUILD),1)
+# The Geolocation API has not been finalized for official builds.
+else
+$(BROWSER)_VPATH	+= \
+		geolocation \
+		$(NULL)
+
+$(BROWSER)_IDLSRCS	+= \
+		$(NULL)
+
+$(BROWSER)_CPPSRCS	+= \
+		geolocation.cc \
+		location_provider.cc \
+		$(NULL)
+endif
+
 
 #-----------------------------------------------------------------------------
 # Add any hard-coded "FF3_" sources to the FF2_ sources.

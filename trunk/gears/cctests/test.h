@@ -34,6 +34,7 @@
 #endif
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
+#include "gears/geolocation/geolocation.h"
 
 class GearsTest : public ModuleImplBaseClassVirtual {
  public:
@@ -110,6 +111,16 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   void TestEntriesPresentInBrowserCache(JsCallContext *context);
 #endif
 
+#ifdef OFFICIAL_BUILD
+  // The Geolocation API has not been finalized for official builds.
+#else
+  // Geolocation internal tests.
+
+  // IN: object position_options
+  // OUT: object parsed_options
+  void TestParseGeolocationOptions(JsCallContext *context);
+#endif
+
  private:
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsTest);
@@ -123,5 +134,15 @@ bool IsEntryBogusTest(INTERNET_CACHE_ENTRY_INFO *info);
 #endif
 
 #endif // GEARS_CCTESTS_TEST_H__
+
+#ifdef OFFICIAL_BUILD
+// The Geolocation API has not been finalized for official builds.
+#else
+// This function is declared in geolocation/geolocation.cc It is a wrapper
+// around a static function defined there.
+bool ParseGeolocationOptionsTest(JsCallContext *context, bool repeats,
+                                 std::vector<std::string16> *urls,
+                                 GearsGeolocation::FixRequestInfo *info);
+#endif
 
 #endif // DEBUG
