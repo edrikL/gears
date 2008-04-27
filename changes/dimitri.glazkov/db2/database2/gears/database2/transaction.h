@@ -32,61 +32,27 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
-#include "gears/database2/thread_safe_queue.h"
-#include "gears/database2/interpreter.h"
 #include "gears/database2/connection.h"
+#include "gears/database2/interpreter.h"
+#include "gears/database2/thread_safe_queue.h"
 #include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 // forward declarations
 class Database2;
 class Database2Statement;
 
+// TODO(dimitri.glazkov): Currently, Database2Transaction has to listen for the
+// JSEVENT_UNLOAD event and release its callbacks, because it appears that the
+// js engine may go away before the Database2Transaction is garbage-collected,
+// which causes a crash trying to unroot the callbacks in destructor. This
+// problem was only observed when the module instance is created in an iframe.
+//Figure out whether there is a better way to handle this.
 class Database2Transaction
     : public ModuleImplBaseClassVirtual,
       public JsEventHandlerInterface {
  public:
-  Database2Transaction::Database2Transaction() :
-    ModuleImplBaseClassVirtual("Database2Transaction") {}
   ~Database2Transaction() {}
-
-  // IN: in string sqlDatabase2Statement, 
-  //     in object[] arguments, 
-  //     in SQLDatabase2StatementCallback callback, 
-  //     in SQLDatabase2StatementErrorCallback errorCallback
-  // OUT: void
-  void ExecuteSql(JsCallContext *context);
-
-  void Start();
-
-  void MarkOpen() { is_open_ = true; }
-  void MarkClosed() { is_open_ = false; }
-  bool open() const { return is_open_; }
-
-  void ExecuteNextStatement(JsCallContext *context);
-
-  bool HasErrorCallback() const {
-    assert(error_callback_.get());
-    return JsTokenIsNullOrUndefined(error_callback_->token());
-  }
-
-  bool HasSuccessCallback() const {
-    // checking for async is necessary because this method is being used to
-    // verify that the callback exists or _could_ be called at all (that is,
-    // in case the interpereter is synchronous)
-    return interpreter_->async() &&
-      JsTokenIsNullOrUndefined(success_callback_->token());
-  }
-
-  void InvokeCallback();
-  void InvokeErrorCallback();
-  void InvokeSuccessCallback();
-
-  // handles the unload event, cleans up the callbacks to prevent
-  // crashes in Firefox
-  virtual void HandleEvent(JsEventType event_type);
-
-  Database2Connection *connection() const { return connection_.get(); }
-
+  // creates Database2Transaction instance
   static bool Create(const Database2 *database,
                      Database2Connection *connection,
                      Database2Interpreter *interpreter,
@@ -95,7 +61,55 @@ class Database2Transaction
                      JsRootedCallback *success_callback,
                      scoped_refptr<Database2Transaction> *instance);
 
+  void Start();
+
+  void InvokeCallback();
+
+  void MarkOpen() { is_open_ = true; }
+
+  // IN: in string sqlDatabase2Statement, 
+  //     in object[] arguments, 
+  //     in function callback, 
+  //     in function errorCallback
+  // OUT: void
+  void ExecuteSql(JsCallContext *context);
+
+  bool open() const { return is_open_; }
+
+  void ExecuteNextStatement(JsCallContext *context);
+
+  bool HasErrorCallback() const {
+    assert(error_callback_.get());
+    return !JsTokenIsNullOrUndefined(error_callback_->token());
+  }
+
+  void MarkClosed() { is_open_ = false; }
+
+  void InvokeErrorCallback();
+
+  bool HasSuccessCallback() const {
+    // checking for async is necessary because this method is being used to
+    // verify that the callback exists or _could_ be called at all (that is,
+    // in case the interpereter is synchronous)
+    return interpreter_->async() &&
+      !JsTokenIsNullOrUndefined(success_callback_->token());
+  }
+
+  void InvokeSuccessCallback();
+
+  // handles the unload event, cleans up the callbacks to prevent
+  // crashes in Firefox
+  virtual void HandleEvent(JsEventType event_type);
+
+  Database2Connection *connection() const { return connection_.get(); }
+
  private:
+  friend bool CreateModule<Database2Transaction, Database2Transaction>(
+                  JsRunnerInterface *js_runner,
+                  scoped_refptr<Database2Transaction>* module);
+  Database2Transaction::Database2Transaction() :
+    ModuleImplBaseClassVirtual("Database2Transaction") {}
+
   std::string16 old_version_;
   std::string16 new_version_;
 

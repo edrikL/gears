@@ -43,14 +43,11 @@ class Database2Command : public MessageData {
   // true
   virtual void HandleResults() = 0;
 
-protected:
+ protected:
   Database2Transaction *tx() const { return tx_.get(); }
   Database2Connection *connection() const { return tx_->connection(); }
   bool success() const { return success_; }
-  bool SetResult(bool success) { 
-    success_ = success; 
-    return success;
-  }
+  void SetResult(bool success) { success_ = success; }
 
  private:
   bool success_;
@@ -67,8 +64,7 @@ class Database2BeginCommand : public Database2Command {
   virtual void Execute(bool *has_results);
   virtual void HandleResults();
 
-private:
-
+ private:
   DISALLOW_EVIL_CONSTRUCTORS(Database2BeginCommand);
 };
 
@@ -81,15 +77,14 @@ class Database2AsyncExecuteCommand : public Database2Command {
   virtual void HandleResults();
 
  private:
-
   DISALLOW_EVIL_CONSTRUCTORS(Database2AsyncExecuteCommand);
 };
 
 // synchronously executes a SQL statement
 class Database2SyncExecuteCommand : public Database2Command {
  public:
-// constructor accepts JsCallContext, which is ok, because
-// this command is only instantiated if the interpreter is synchronous
+  // constructor accepts JsCallContext, which is ok, because
+  // this command is only instantiated if the interpreter is synchronous
   Database2SyncExecuteCommand(Database2Transaction *tx,
                               JsCallContext *context,
                               Database2Statement *statement)
@@ -98,7 +93,7 @@ class Database2SyncExecuteCommand : public Database2Command {
   virtual void HandleResults();
 
  private:
-  scoped_ptr<JsCallContext> context_;
+  JsCallContext *context_;
   scoped_ptr<Database2Statement> statement_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2SyncExecuteCommand);
@@ -112,7 +107,6 @@ class Database2CommitCommand : public Database2Command {
   virtual void HandleResults();
 
  private:
-
   DISALLOW_EVIL_CONSTRUCTORS(Database2CommitCommand);
 };
 
@@ -123,6 +117,7 @@ class Database2RollbackCommand : public Database2Command {
   virtual void Execute(bool *has_results);
   virtual void HandleResults();
 
+ private:
   DISALLOW_EVIL_CONSTRUCTORS(Database2RollbackCommand);
 };
 

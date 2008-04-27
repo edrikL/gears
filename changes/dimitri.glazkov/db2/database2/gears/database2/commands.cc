@@ -58,48 +58,54 @@ void Database2AsyncExecuteCommand::HandleResults() {
 
 void Database2SyncExecuteCommand::Execute(bool *has_results) {
   // TODO(dimitri.glazkov): Collect row results
-  if (!SetResult(connection()->Execute(statement_->sql(),
-      statement_->arguments(), NULL))) {
+  bool result = connection()->Execute(statement_->sql(),
+      statement_->num_arguments(),
+      statement_->arguments(), NULL);
+  SetResult(result);
+  if (!result) {
     connection()->Rollback();
     tx()->MarkClosed();
   }
 }
 
 void Database2SyncExecuteCommand::HandleResults() {
-  if (success()) {
-    scoped_refptr<Database2ResultSet> result_set;
-    // TODO(dimitri.glazkov): Pass collected row results
-    if (Database2ResultSet::Create(tx(), &result_set)) {
-      context_->SetReturnValue(JSPARAM_DISPATCHER_MODULE, result_set.get());
-      ReleaseNewObjectToScript(result_set.get());
-    } else {
-      // unable to create a result_set
-      context_->SetException(kInternalError);
-    }
-  } else {
+  if (!success()) {
     // throw SQL error as an exception
     // TODO(dimitri.glazkov): Consider formatting the message to include error
     // code
     context_->SetException(connection()->error_message());
+    return;
   }
-  // since it's not longer needed and we never really owned it anyway
-  context_.release();
+
+  scoped_refptr<Database2ResultSet> result_set;
+  // TODO(dimitri.glazkov): Pass collected row results
+  if (!Database2ResultSet::Create(tx(), &result_set)) {
+    // unable to create a result_set
+    context_->SetException(GET_INTERNAL_ERROR_MESSAGE());
+  }
+
+  context_->SetReturnValue(JSPARAM_DISPATCHER_MODULE, result_set.get());
+  ReleaseNewObjectToScript(result_set.get());
 }
 
 void Database2CommitCommand::Execute(bool *has_results) {
-  if (!SetResult(connection()->Commit())) {
+  bool result = connection()->Commit();
+  SetResult(result);
+  if (!result) {
     connection()->Rollback();
-  } else {
-    *has_results = tx()->HasSuccessCallback();
+    return;
   }
+
+  *has_results = tx()->HasSuccessCallback();
 }
 
 void Database2CommitCommand::HandleResults() {
   if (success()) {
     tx()->InvokeSuccessCallback();
-  } else {
-    tx()->InvokeErrorCallback();
+    return;
   }
+
+  tx()->InvokeErrorCallback();
 }
 
 void Database2RollbackCommand::Execute(bool *has_results) {

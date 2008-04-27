@@ -42,7 +42,6 @@ class Database2Manager : public ModuleImplBaseClassVirtual {
   void OpenDatabase(JsCallContext *context);
 
  private:
-
   DISALLOW_EVIL_CONSTRUCTORS(Database2Manager);
 };
 

@@ -29,7 +29,8 @@
 // operations pretend to succeed to facilitate in-progress testing
 
 bool Database2Connection::OpenAndVerifyVersion(
-                                        const std::string16 &database_version) {
+                              const std::string16 &database_version) {
+  // open database if not already open
   // read expected_version (user_version value)
   // read version from Permissions.db
   // if database_version is not an empty value or null,
@@ -44,6 +45,7 @@ bool Database2Connection::OpenAndVerifyVersion(
 }
 
 bool Database2Connection::Execute(const std::string16 &statement,
+                                  const int num_arguments,
                                   const JsParamToSend *arguments,
                                   Database2RowHandlerInterface *row_handler) {
   // if (bogus_version_) {
@@ -75,10 +77,4 @@ bool Database2Connection::Commit() {
   // if error, set error code and message, return false
   // return true upon success
   return true;
-}
-
-sqlite3 *Database2Connection::handle() {
-  // opend database if not already open,
-  // used by all operations to obtain the handle
-  return NULL;
 }

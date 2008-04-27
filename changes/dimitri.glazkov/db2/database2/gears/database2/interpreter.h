@@ -35,6 +35,11 @@ class Database2Command;
 // simple (non-threaded) command interpreter
 class Database2Interpreter : public RefCounted {
  public:
+  // TODO(dimitri.glazkov): Because the sub-class depends on ref-counting to
+  // keep track of when to shut down a thread, this base class is also
+  // ref-counted. However, its counting is effectively rendered useless by
+  // Ref'ing in constructor. This is awkward. Must think of a better pattern
+  // here.
   Database2Interpreter() {
     // increment ref to prevent from ever being destroyed
     if (!async()) Ref();
@@ -61,6 +66,7 @@ class Database2ThreadedInterpreter : public Database2Interpreter {
   virtual void Run(Database2Command *command);
   virtual bool async() const { return true; }
 
+ private:
   DISALLOW_EVIL_CONSTRUCTORS(Database2ThreadedInterpreter);
 };
 

@@ -60,7 +60,7 @@ class Database2ThreadSafeQueue {
   // returns true if the internal queue is empty
   bool empty() { return queue_.empty(); }
 
-private:
+ private:
   std::queue<T*> queue_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2ThreadSafeQueue);
