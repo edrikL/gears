@@ -226,11 +226,17 @@ void AsyncTask::OnListenerEvent(int msg_code, int msg_param) {
 // struct HttpRequestParameters
 //------------------------------------------------------------------------------
 struct AsyncTask::HttpRequestParameters {
+  const char16 *method;
   const char16 *full_url;
   bool is_capturing;
   const char16 *reason_header_value;
   const char16 *if_mod_since_date;
   const char16 *required_cookie;
+#ifdef OFFICIAL_BUILD
+  // The Blob API has not yet been finalized for official builds.
+#else
+  BlobInterface *post_body;
+#endif
   WebCacheDB::PayloadInfo *payload;
   bool *was_redirected;
   std::string16 *full_redirect_url;
@@ -253,6 +259,73 @@ bool AsyncTask::HttpGet(const char16 *full_url,
                         bool *was_redirected,
                         std::string16 *full_redirect_url,
                         std::string16 *error_message) {
+  return MakeHttpRequest(HttpConstants::kHttpGET,
+                         full_url,
+                         is_capturing,
+                         reason_header_value,
+                         if_mod_since_date,
+                         required_cookie,
+#ifdef OFFICIAL_BUILD
+                         // The Blob API has not yet been finalized for official
+                         // builds.
+#else
+                         NULL,
+#endif
+                         payload,
+                         was_redirected,
+                         full_redirect_url,
+                         error_message);
+}
+
+#ifdef OFFICIAL_BUILD
+// The Blob API has not yet been finalized for official builds.
+#else
+//------------------------------------------------------------------------------
+// HttpPost
+//------------------------------------------------------------------------------
+bool AsyncTask::HttpPost(const char16 *full_url,
+                         bool is_capturing,
+                         const char16 *reason_header_value,
+                         const char16 *if_mod_since_date,
+                         const char16 *required_cookie,
+                         BlobInterface *post_body,
+                         WebCacheDB::PayloadInfo *payload,
+                         bool *was_redirected,
+                         std::string16 *full_redirect_url,
+                         std::string16 *error_message) {
+  return MakeHttpRequest(HttpConstants::kHttpGET,
+                         full_url,
+                         is_capturing,
+                         reason_header_value,
+                         if_mod_since_date,
+                         required_cookie,
+                         post_body,
+                         payload,
+                         was_redirected,
+                         full_redirect_url,
+                         error_message);
+}
+#endif
+
+//------------------------------------------------------------------------------
+// MakeHttpRequest
+//------------------------------------------------------------------------------
+bool AsyncTask::MakeHttpRequest(const char16 *method,
+                                const char16 *full_url,
+                                bool is_capturing,
+                                const char16 *reason_header_value,
+                                const char16 *if_mod_since_date,
+                                const char16 *required_cookie,
+#ifdef OFFICIAL_BUILD
+                                // The Blob API has not yet been finalized for
+                                // official builds.
+#else
+                                BlobInterface *post_body,
+#endif
+                                WebCacheDB::PayloadInfo *payload,
+                                bool *was_redirected,
+                                std::string16 *full_redirect_url,
+                                std::string16 *error_message) {
   // This method should only be called our worker thread.
   assert(IsTaskThread());
 
@@ -283,11 +356,17 @@ bool AsyncTask::HttpGet(const char16 *full_url,
   // it's not safe to do from a worker thread.
   // Setup parameters for OnStartHttpGet executing on the UI thread to look at
   HttpRequestParameters params;
+  params.method = method;
   params.full_url = full_url;
   params.is_capturing = is_capturing;
   params.reason_header_value = reason_header_value;
   params.if_mod_since_date = if_mod_since_date;
   params.required_cookie = required_cookie;
+#ifdef OFFICIAL_BUILD
+  // The Blob API has not yet been finalized for official builds.
+#else
+  params.post_body = post_body;
+#endif
   params.payload = payload;
   params.was_redirected = was_redirected;
   params.full_redirect_url = full_redirect_url;
@@ -340,7 +419,7 @@ bool AsyncTask::OnStartHttpGet() {
 
   http_request->SetCachingBehavior(HttpRequest::BYPASS_ALL_CACHES);
 
-  if (!http_request->Open(HttpConstants::kHttpGET, params_->full_url, true)) {
+  if (!http_request->Open(params_->method, params_->full_url, true)) {
     return false;
   }
 
@@ -379,7 +458,21 @@ bool AsyncTask::OnStartHttpGet() {
   http_request->SetOnReadyStateChange(this);
 
   http_request_ = http_request;
-  if (!http_request->Send()) {
+
+  // Rely on logic inside HttpRequest to check for valid combinations of
+  // method and presence of body.
+  bool result = false;
+#ifdef OFFICIAL_BUILD
+  // The Blob API has not yet been finalized for official builds.
+  if (false) {
+#else
+  if (params_->post_body) {
+    result = http_request->SendBlob(params_->post_body);
+#endif
+  } else {
+    result = http_request->Send();
+  }
+  if (!result) {
     http_request->SetOnReadyStateChange(NULL);
     http_request_.reset(NULL);
     return false;

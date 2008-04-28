@@ -200,6 +200,73 @@ bool AsyncTask::HttpGet(const char16 *full_url,
                         bool *was_redirected,
                         std::string16 *full_redirect_url,
                         std::string16 *error_message) {
+  return MakeHttpRequest(HttpConstants::kHttpGET,
+                         full_url,
+                         is_capturing,
+                         reason_header_value,
+                         if_mod_since_date,
+                         required_cookie,
+#ifdef OFFICIAL_BUILD
+                         // The Blob API has not yet been finalized for official
+                         // builds.
+#else
+                         NULL,
+#endif
+                         payload,
+                         was_redirected,
+                         full_redirect_url,
+                         error_message);
+}
+
+#ifdef OFFICIAL_BUILD
+// The Blob API has not yet been finalized for official builds.
+#else
+//------------------------------------------------------------------------------
+// HttpGet
+//------------------------------------------------------------------------------
+bool AsyncTask::HttpPost(const char16 *full_url,
+                         bool is_capturing,
+                         const char16 *reason_header_value,
+                         const char16 *if_mod_since_date,
+                         const char16 *required_cookie,
+                         BlobInterface *post_body,
+                         WebCacheDB::PayloadInfo *payload,
+                         bool *was_redirected,
+                         std::string16 *full_redirect_url,
+                         std::string16 *error_message) {
+  return MakeHttpRequest(HttpConstants::kHttpPOST,
+                         full_url,
+                         is_capturing,
+                         reason_header_value,
+                         if_mod_since_date,
+                         required_cookie,
+                         post_body,
+                         payload,
+                         was_redirected,
+                         full_redirect_url,
+                         error_message);
+}
+#endif
+
+//------------------------------------------------------------------------------
+// MakeHttpRequest
+//------------------------------------------------------------------------------
+bool AsyncTask::MakeHttpRequest(const char16 *method,
+                                const char16 *full_url,
+                                bool is_capturing,
+                                const char16 *reason_header_value,
+                                const char16 *if_mod_since_date,
+                                const char16 *required_cookie,
+#ifdef OFFICIAL_BUILD
+                                // The Blob API has not yet been finalized for
+                                // official builds.
+#else
+                                BlobInterface *post_body,
+#endif
+                                WebCacheDB::PayloadInfo *payload,
+                                bool *was_redirected,
+                                std::string16 *full_redirect_url,
+                                std::string16 *error_message) {
   if (was_redirected) {
     *was_redirected = false;
   }
@@ -240,7 +307,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
 
   http_request->SetCachingBehavior(HttpRequest::BYPASS_ALL_CACHES);
 
-  if (!http_request->Open(HttpConstants::kHttpGET, full_url, true)) {
+  if (!http_request->Open(method, full_url, true)) {
     return false;
   }
 
@@ -280,7 +347,20 @@ bool AsyncTask::HttpGet(const char16 *full_url,
   http_request->SetOnReadyStateChange(this);
   ready_state_changed_event_.Reset();
 
-  if (!http_request->Send()) {
+  // Rely on logic inside HttpRequest to check for valid combinations of
+  // method and presence of body.
+  bool result = false;
+#ifdef OFFICIAL_BUILD
+  // The Blob API has not yet been finalized for official builds.
+  if (false) {
+#else
+  if (post_body) {
+    result = http_request->SendBlob(post_body);
+#endif
+  } else {
+    result = http_request->Send();
+  }
+  if (!result) {
     http_request->SetOnReadyStateChange(NULL);
     return false;
   }
