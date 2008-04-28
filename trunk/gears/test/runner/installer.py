@@ -1,7 +1,6 @@
 import os
 import shutil
 import stat
-import browser_launchers
 import zipfile
 import time
 import subprocess
@@ -15,7 +14,6 @@ DELETABLE = int('777', 8)
 class Installer:
   """ Handle extension installation and browser profile adjustments. """
   GUID = '{000a9d1c-beef-4f90-9363-039d445309b8}'
-  FIREFOX_QUITTING_BUFFER = 10
   BUILDS = 'output/installers'
 
   def prepareProfiles(self):
@@ -53,7 +51,7 @@ class Installer:
     Args:
       extension: path to folder containing extension to install
     """
-    profile_folder = self.findProfileFolderIn(self.ffprofile_path)
+    profile_folder = self.findProfileFolderIn(self.ff2profile_path)
 
     if profile_folder:
       print 'copying over profile...'
@@ -62,13 +60,12 @@ class Installer:
       return
 
     shutil.rmtree(profile_folder, onerror=self.handleRmError)
-    self.copyAndChmod(self.ffprofile, profile_folder)
+    self.copyAndChmod(self.ff2profile, profile_folder)
     ext = os.path.join(profile_folder, 'extensions')
     if not os.path.exists(ext):
       os.mkdir(ext)
     gears = os.path.join(ext, Installer.GUID)
     self.copyAndChmod(extension, gears)
-    self.completeInstall(profile_folder)
 
 
   def findProfileFolderIn(self, path):
@@ -105,18 +102,6 @@ class Installer:
         return build
     raise "Can't locate build of type: %s" % type
 
-
-  def completeInstall(self, profile_path):
-    """ Launch and quit firefox, wait for it to close before returning.
-
-    Args:
-      profile_path: path to current firefox profile
-    """
-    url = 'chrome://quit/content/quit.html'
-    self.launcher.launch(url)
-    # Wait a significant amount of time for firefox to close completely
-    time.sleep(Installer.FIREFOX_QUITTING_BUFFER)
-  
 
   def saveInstalledBuild(self):
     """ Copies given build to the "current build" location. """
@@ -208,7 +193,6 @@ class Win32Installer(Installer):
     p = subprocess.Popen(c)
     p.wait()
     self.__copyProfile()
-    self.completeInstall(self.profile)
 
     # Save new build as current installed build
     self.saveInstalledBuild()
@@ -229,15 +213,13 @@ class Win32Installer(Installer):
 
 class WinXpInstaller(Win32Installer):
   """ Installer for WinXP, extends Win32Installer. """
-  def __init__(self, profile_name):
+  def __init__(self):
     """ Set up xp specific variables. """
-    self.profile = profile_name
     self.prepareProfiles()
     home = os.getenv('USERPROFILE')
     self.current_build = os.path.join(home, 'current_gears_build')
     self.appdata_path = os.path.join(home, 'Local Settings\\Application Data')
     self.ieprofile = 'ieprofile'
-    self.launcher = browser_launchers.FirefoxWin32Launcher(self.profile)
 
 
   def buildPath(self, directory):
@@ -250,14 +232,12 @@ class WinXpInstaller(Win32Installer):
 
 class WinVistaInstaller(Win32Installer):
   """ Installer for Vista, extends Win32Installer. """
-  def __init__(self, profile_name):
-    self.profile = profile_name
+  def __init__(self):
     self.prepareProfiles()
     home = os.getenv('USERPROFILE')
     self.current_build = os.path.join(home, 'current_gears_build')
     self.appdata_path = os.path.join(home, 'AppData\\LocalLow')
     self.ieprofile = 'ieprofile'
-    self.launcher = browser_launchers.FirefoxWin32Launcher(self.profile)
 
 
   def buildPath(self, directory):
@@ -345,15 +325,14 @@ class MacInstaller(Installer):
     self.profile = profile_name
     self.prepareProfiles()
     home = os.getenv('HOME')
-    ffprofile = 'Library/Application Support/Firefox/Profiles'
+    ff2profile = 'Library/Application Support/Firefox/Profiles'
     ffcache = 'Library/Caches/Firefox/Profiles'
     self.current_build = os.path.join(home, 'current_gears_build')
     self.firefox = '/Applications/Firefox.app/Contents/MacOS/firefox-bin'
-    self.ffprofile_path = os.path.join(home, ffprofile)
+    self.ff2profile_path = os.path.join(home, ff2profile)
     self.ffcache_path = os.path.join(home, ffcache)
-    self.ffprofile = 'ffprofile-mac'
+    self.ff2profile = 'ff2profile-mac'
     self.profile_arg = '-CreateProfile %s' % self.profile
-    self.launcher = browser_launchers.FirefoxMacLauncher(self.profile)
   
   
   def buildPath(self, directory):
@@ -386,10 +365,10 @@ class MacInstaller(Installer):
 
     # Empty cache and replace only with gears folder
     gears_folder = os.path.join(profile_folder, 'Google Gears for Firefox')
-    ffprofile_cache = 'ffprofile-mac/Google Gears for Firefox'
+    ff2profile_cache = 'ff2profile-mac/Google Gears for Firefox'
     shutil.rmtree(profile_folder, onerror=self.handleRmError)
     os.mkdir(profile_folder)
-    self.copyAndChmod(ffprofile_cache, gears_folder)
+    self.copyAndChmod(ff2profile_cache, gears_folder)
 
 
 class LinuxInstaller(Installer):
@@ -400,11 +379,10 @@ class LinuxInstaller(Installer):
     self.prepareProfiles()
     home = os.getenv('HOME')
     self.current_build = os.path.join(home, 'current_gears_build')
-    self.ffprofile_path = os.path.join(home, '.mozilla/firefox')
+    self.ff2profile_path = os.path.join(home, '.mozilla/firefox')
     self.firefox = 'firefox'
-    self.ffprofile = 'ffprofile-linux'
+    self.ff2profile = 'ff2profile-linux'
     self.profile_arg = '-CreateProfile %s' % self.profile
-    self.launcher = browser_launchers.FirefoxLinuxLauncher(self.profile)
 
 
   def buildPath(self, directory):
