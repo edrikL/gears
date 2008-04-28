@@ -64,6 +64,6 @@ void Database2Manager::OpenDatabase(JsCallContext *context) {
     }
   } else {
     // raise broken gear exception
-    context->SetException(kInternalError);
+    context->SetException(GET_INTERNAL_ERROR_MESSAGE());
   }
 }

@@ -46,7 +46,7 @@ class Database2Statement;
 // js engine may go away before the Database2Transaction is garbage-collected,
 // which causes a crash trying to unroot the callbacks in destructor. This
 // problem was only observed when the module instance is created in an iframe.
-//Figure out whether there is a better way to handle this.
+// Figure out whether there is a better way to handle this.
 class Database2Transaction
     : public ModuleImplBaseClassVirtual,
       public JsEventHandlerInterface {

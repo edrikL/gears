@@ -159,7 +159,7 @@ void Database2Transaction::InvokeErrorCallback() {
   if (!Database2::CreateError(this, connection()->error_code(),
       connection()->error_message(), error)) {
     // unable to create an error object
-    GetJsRunner()->ThrowGlobalError(kInternalError);
+    GetJsRunner()->ThrowGlobalError(GET_INTERNAL_ERROR_MESSAGE());
     return;
   }
 

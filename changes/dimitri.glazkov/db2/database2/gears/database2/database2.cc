@@ -53,9 +53,10 @@ bool Database2::Create(const ModuleImplBaseClass *sibling,
     return false;
   }
   instance->get()->version_.assign(version);
+
   instance->get()->connection_.reset(
-      new Database2Connection(
-          name, instance->get()->EnvPageSecurityOrigin()));
+      new Database2Connection(name,
+                              instance->get()->EnvPageSecurityOrigin()));
   return true;
 }
 
@@ -130,7 +131,7 @@ void Database2::SynchronousTransaction(JsCallContext *context) {
   scoped_refptr<Database2Transaction> tx;
   // populate with interpreter (not threaded)
   if (!Database2Transaction::Create(this, connection_.get(), &interpreter,
-                                   callback, NULL, NULL, &tx)) {
+                                 callback, NULL, NULL, &tx)) {
     // raise internal error exception
     context->SetException(GET_INTERNAL_ERROR_MESSAGE());
     return;

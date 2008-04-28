@@ -32,7 +32,6 @@
 // INVALID_STATE_ERR (per spec) exception
 static const char16 *kInvalidStateError = 
                          STRING16(L"Database version mismatch.");
-static const char16 *kInternalError = STRING16(L"Internal error.");
 static const char16 *kTransactionClosed = STRING16(L"Transaction closed.");
 
 #endif // GEARS_DATABASE2_COMMON_H__

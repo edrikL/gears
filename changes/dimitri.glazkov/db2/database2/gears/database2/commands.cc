@@ -82,6 +82,7 @@ void Database2SyncExecuteCommand::HandleResults() {
   if (!Database2ResultSet::Create(tx(), &result_set)) {
     // unable to create a result_set
     context_->SetException(GET_INTERNAL_ERROR_MESSAGE());
+    return;
   }
 
   context_->SetReturnValue(JSPARAM_DISPATCHER_MODULE, result_set.get());
