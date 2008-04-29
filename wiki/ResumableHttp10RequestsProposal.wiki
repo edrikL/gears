@@ -17,6 +17,7 @@ When a non-idempotent HTTP _request_ is resumed, the initial request combined wi
  # Should the connection be closed prior to the arrival of a final response code (possibly before all bytes of the request have even been sent), or if the client receives a 503 Service Unavailable status code, then the client retries by issueing a HEAD request to the unique URL of step (1). (TODO: include If-Resume header?) Exponential backoff should be used to separate series of sequential retries.
  # The server sends a standard response to the HEAD request, notably using the Content-Length header to indicate what portion of the file it has successfully received. (TODO: discuss byte range extension)
  # The client sends a resume request, which resembles the original request from step (2), but contains only a subset of the data bytes (specifically those not yet received by the server). An If-Resume header is added to specify the byte range which is being transfered.
+ # TODO: specify use of 412 Precondition Failed for resumption errors
 
 = Resuming Operations =
 
