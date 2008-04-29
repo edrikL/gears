@@ -23,6 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OFFICIAL_BUILD
+// The blob API has not been finalized for official builds
+#else
 #include <cstring>
 
 #import "gears/blob/blob_input_stream_sf.h"
@@ -117,3 +120,4 @@ bool TestBlobInputStreamSf() {
 
   return ok;
 }
+#endif  // OFFICIAL_BUILD
