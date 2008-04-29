@@ -1,4 +1,4 @@
-﻿#summary A proposal for supporting resumable non-idempotent HTTP requests.
+﻿#summary A proposal for supporting resumable non-idempotent HTTP requests in HTTP/1.1.
 #labels DesignDoc
 
 = Introduction =
