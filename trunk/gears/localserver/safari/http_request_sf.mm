@@ -285,7 +285,7 @@ bool SFHttpRequest::Send() {
   if (IsPostOrPut()) {
     return SendString(STRING16(L""));
   } else {
-    return SendImpl(NULL);
+    return SendImpl(nil);
   }
 }
 
