@@ -1,0 +1,66 @@
+﻿#summary A proposal for supporting resumable non-idempotent HTTP requests.
+#labels DesignDoc
+
+= Introduction =
+
+Current web standards provide no reliable mechanism to facilitate the HTTP upload of large files. As a result, file uploads at Google and other sites have traditionally been limited to moderate sizes (e.g. 100 MB), with browser-external clients being required to upload larger files. Several such clients have been created for Google Video, !YouTube, and Google Books, all using HTTP to upload large files by POSTing one segment (a.k.a. chunk) at a time, with chunk sizes on the order of 1 MB; this facilitates recovery from transient errors that occur during upload, by providing well-defined points at which the upload could be resumed (i.e. chunk boundaries). We propose an HTTP/1.0 protocol which provides native support for resuming non-idempotent HTTP requests, whose adoption would obviate the need for custom clients to reliably perform large non-idempotent operations, such as uploading large files. While our protocol adheres to HTTP/1.1, it avoids constructs which can not be dealt with properly by HTTP/1.0 proxies. For cases where HTTP/1.0 proxies are not a constraint, we have a separate, but very similar, proposal: ResumableHttp11RequestsProposal.
+
+If an HTTP connection is closed prior to the client receiving a response from the server, the client has no way of knowing how much of the content was successfully received by the server, or whether the operation completed. When this occurs, idempotent operations can be automatically retried, but in the case of non-idempotent operations HTTP/1.1 section 8.1.4 explicitly forbids the client from retrying the operation without user interaction. In order to reattempt the operation without concern for introducing unintended side effects, the server and client require a mechanism for uniquely identifying the operation across multiple requests. We thus require that each upload operation be assigned a unique, per-upload URL, whose generation is outside the scope of the resumable upload protocol itself (TODO: suggest possible use of 201 for unique URL creation).
+
+When a non-idempotent HTTP _request_ is resumed, the initial request combined with all subsequent resume requests together constitute a single logical _operation_. As such, we use the terms request and operation, respectively, to distinguish between individual HTTP requests and the combined unit of requests (the original request plus any retries) that are logically associated with each other.
+
+= Protocol Overview =
+
+ # Prior to initiating an operation, the client must first obtain a unique per-operation URL which will be used to identify all subsequent resume requests with the original operation. In other words, all requests to a given URL form a single logical operation.
+ # The client initiates a request (e.g. POST/PUT) to the unique URL obtained in step (1). Normally the client sends all data bytes in the initial request, but when necessary it can send partial data, in which case a 202 Accepted response code is expected.
+ # Once the server has received all bytes of the request, it responds with a final response code, and the operation is complete. If not all data bytes have been received, then the server responds with a 202 Accepted response code, indicating that the transferred bytes were succesfully received, but additional bytes are still expected. (TODO: return header specifying byte ranges.)
+ # Should the connection be closed prior to the arrival of a final response code (possibly before all bytes of the request have even been sent), or if the client receives a 503 Service Unavailable status code, then the client retries by issueing a HEAD request to the unique URL of step (1). (TODO: include If-Resume header?) Exponential backoff should be used to separate series of sequential retries.
+ # The server sends a standard response to the HEAD request, notably using the Content-Length header to indicate what portion of the file it has successfully received. (TODO: discuss byte range extension)
+ # The client sends a resume request, which resembles the original request from step (2), but contains only a subset of the data bytes (specifically those not yet received by the server). An If-Resume header is added to specify the byte range which is being transfered.
+
+= Resuming Operations =
+
+The server SHOULD process the data from a resumable operation in the same way it would have processed a single request with the entire content. In particular, the server may need to cache the partial data from an operation, and only process it (e.g. pass it to a CGI application) once the data is complete. Servers which support a streaming mode of processing may do so for a resumable operation as long as the streaming can be resumed normally when the client sends more data in a future resume request.
+
+If the client sends a resume request which refers to an operation that has already completed, the server MUST NOT re-process the data, and SHOULD return the same or equivalent response to the client as was returned from the original processing. If the server cannot compose an equivalent response, it MAY return 202 or some other response to indicate that the operation was processed with unknown results, keeping in mind that this response might be confusing when resuming requests occur transparently to the user. Regardless of this possibility, any sequence of resume requests with respect to the same entity tag are guaranteed idempotent, and may be retried without user interaction, despite the considerations of section 8.1.4 of HTTP/1.1.
+
+= Use Cases =
+
+The client would begin by sending a single POST/PUT containing the entire (potentially large) body, and then if the connection were prematurely terminated it could issue a HEAD request to determine at which byte range to recommence, at which point all remaining bytes would again be sent in a single POST/PUT. This process would repeat until the last byte was successfully transferred and a response was received from the server. While this should be the standard mode of operation, alternatively a client could dynamically or deterministically break a large POST/PUT into multiple pieces, sending each one separately with an appropriate If-Resume header.
+
+= Related Work =
+
+== RFC 2616: HTTP/1.1 ==
+
+http://www.w3.org/Protocols/rfc2616/rfc2616.html
+
+|| 3.6.1 || Protocol Parameters: Chunked Transfer Coding ||
+|| 8.1.4 || Connections: Practical Considerations ||
+|| 8.2.3 || Connections: Use of the 100 (Continue) Status ||
+|| 8.2.4 || Connections: Client Behavior if Server Prematurely Closes Connection ||
+|| 9.5 || Method: POST ||
+|| 9.6 || Method: PUT ||
+|| 10.1 || Status Code: Informational 1xx ||
+|| 10.4.18 || Status Code: 417 Expectation Failed ||
+|| 14.16 || Header Field: Content-Range ||
+|| 14.19 || Header Field: ETag ||
+|| 14.20 || Header Field: Expect ||
+|| 14.21 || Header Field: Expires ||
+|| 14.24 || Header Field: If-Match ||
+|| 14.27 || Header Field: If-Range ||
+|| 14.30 || Header Field: Location ||
+|| 14.32 || Header Field: Pragma ||
+|| 14.35 || Header Field: Range ||
+|| 14.41 || Header Field: Transfer-Encoding ||
+|| 19.2 || Appendix: Internet Media Type multipart/byteranges ||
+
+== XMLHttpRequest ==
+
+http://www.w3.org/TR/XMLHttpRequest/
+
+== Related Google Gears APIs ==
+
+  * ResumableHttp11RequestsProposal
+  * ContentRangePostProposal
+  * GearsHttpRequestProposal
+  * [BlobAPI]
