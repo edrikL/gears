@@ -106,7 +106,7 @@
     [request_ setValue:header_value forHTTPHeaderField:header_name];
   }
   
-  if ([post_data_stream hasBytesAvailable] == YES) {
+  if (post_data_stream) {
     [request_ setHTTPBodyStream: post_data_stream];
   }
   
