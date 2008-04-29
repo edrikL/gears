@@ -27,6 +27,8 @@
 
 #include "gears/cctests/test.h"
 
+#include "third_party/jsoncpp/json.h"
+
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
@@ -127,6 +129,7 @@ bool TestSliceBlob();  // from blob_test.cc
 bool TestIpcMessageQueue();  // from ipc_message_queue_win32_test.cc
 #endif
 bool TestStopwatch();
+bool TestJsonEscaping();
 
 void CreateObjectBool(JsCallContext* context,
                       JsRunnerInterface* js_runner,
@@ -153,6 +156,7 @@ void CreateObjectDate(JsCallContext* context,
 void CreateObjectFunction(JsCallContext* context,
                           JsRootedCallback* func,
                           JsObject* out);
+
 void TestObjectBool(JsCallContext* context, const JsObject& obj);
 void TestObjectInt(JsCallContext* context, const JsObject& obj);
 void TestObjectDouble(JsCallContext* context, const JsObject& obj);
@@ -247,6 +251,7 @@ void GearsTest::RunTests(JsCallContext *context) {
 #endif
 #endif
   ok &= TestStopwatch();
+  ok &= TestJsonEscaping();
 
   // We have to call GetDB again since TestCapabilitiesDBAll deletes
   // the previous instance.
@@ -1170,6 +1175,37 @@ bool TestStopwatch() {
 
   return true;
 }
+
+bool TestJsonEscaping() {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    LOG(("TestJsonEscaping - failed (%d)\n", __LINE__)); \
+    return false; \
+  } \
+}
+
+  Json::Value object1(Json::objectValue);
+  object1["a"] = "foo";
+  object1["b"] = "foo\nbar";
+  object1["c"] = "\"foobar\"";
+  object1["d"] = "bar\\";
+  std::string serialized(object1.toStyledString());
+
+  Json::Value object2;
+  Json::Reader reader;
+  TEST_ASSERT(reader.parse(serialized, object2));
+
+  TEST_ASSERT(object1["a"] == object2["a"]);
+  TEST_ASSERT(object1["b"] == object2["b"]);
+  TEST_ASSERT(object1["c"] == object2["c"]);
+  TEST_ASSERT(object1["d"] == object2["d"]);
+  TEST_ASSERT(serialized == object2.toStyledString());
+
+  return true;
+}
+
 
 // JsObject test functions
 
