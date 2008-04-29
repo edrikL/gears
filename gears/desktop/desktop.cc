@@ -312,20 +312,16 @@ bool GearsDesktop::AllowCreateShortcut(
 
 // Display an open file dialog returning the selected files.
 // Parameters:
-//  filters - in, optional - An array of strings containing an even number
-//    of strings.
+//  filters - in - a vector of filters
 //  module - in - used to create javascript objects and arrays
-//  files - out - the array of javascript file objects is placed in here
+//  files - out - a vector of filenames
 //  error - out - the error message is placed in here
-static bool DisplayFileDialog(const JsArray* filters,
+static bool DisplayFileDialog(const std::vector<FileDialog::Filter> &filters,
                               const ModuleImplBaseClass& module,
-                              scoped_ptr<JsArray>* files,
+                              std::vector<std::string16> *files,
                               std::string16* error) {
-  // convert filter parameters
-  std::vector<FileDialog::Filter> vec_filters;
-  if (!FileDialogUtils::FiltersToVector(filters, &vec_filters, error))
-    return false;
-
+  assert(files);
+  assert(error);
   // create and display dialog
   scoped_ptr<FileDialog> dialog(NewFileDialog(FileDialog::MULTIPLE_FILES,
                                               module));
@@ -333,43 +329,56 @@ static bool DisplayFileDialog(const JsArray* filters,
     *error = STRING16(L"Failed to create dialog.");
     return false;
   }
-  std::vector<std::string16> selected_files;
-  if (!dialog->OpenDialog(vec_filters, &selected_files, error))
-    return false;
-
-  // convert selection
-  JsRunnerInterface* js_runner = module.GetJsRunner();
-  files->reset(js_runner->NewArray());
-  if (!files->get()) {
-    *error = STRING16("Failed to create file array.");
-    return false;
-  }
-  if (!FileDialogUtils::FilesToJsObjectArray(selected_files, module,
-                                             files->get(), error))
-    return false;
-
-  return true;
+  return dialog->OpenDialog(filters, files, error);
 }
 
 void GearsDesktop::GetLocalFiles(JsCallContext *context) {
-  scoped_ptr<JsArray> filters(new JsArray());
+  JsArray filters;
 
   JsArgument argv[] = {
-    { JSPARAM_OPTIONAL, JSPARAM_ARRAY, filters.get() },
+    { JSPARAM_OPTIONAL, JSPARAM_ARRAY, &filters },
   };
-  context->GetArguments(ARRAYSIZE(argv), argv);
+  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
 
   // TODO(cdevries): set focus to tab where this function was called
 
-  scoped_ptr<JsArray> files(NULL);
+  // Form the vector of filters.
+  std::vector<FileDialog::Filter> vec_filters;
   std::string16 error;
-  if (!DisplayFileDialog(filters.get(), *this, &files, &error)) {
+  // If the optional JavaScript array was provided, convert it.
+  if (argc == 1) {
+    if (!FileDialogUtils::FiltersToVector(filters, &vec_filters, &error)) {
+      context->SetException(error);
+      return;
+    }
+  }
+  // If the optional JavaScript array was not provided, or has zero length,
+  // set a default value.
+  if (vec_filters.empty()) {
+    FileDialog::Filter filter = { STRING16(L"All Files"), STRING16(L"*.*") };
+    vec_filters.push_back(filter);
+  }
+
+  std::vector<std::string16> files;
+  if (!DisplayFileDialog(vec_filters, *this, &files, &error)) {
     context->SetException(error);
     return;
   }
 
-  context->SetReturnValue(JSPARAM_ARRAY, files.get());
+  // Convert returned files.
+  scoped_ptr<JsArray> files_array(GetJsRunner()->NewArray());
+  if (!files_array.get()) {
+    context->SetException(STRING16("Failed to create file array."));
+    return;
+  }
+  if (!FileDialogUtils::FilesToJsObjectArray(files, *this, files_array.get(),
+                                             &error)) {
+    context->SetException(error);
+    return;
+  }
+
+  context->SetReturnValue(JSPARAM_ARRAY, files_array.get());
 }
 
 #else

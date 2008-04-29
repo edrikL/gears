@@ -214,35 +214,37 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
 }
 
 bool JsArray::GetLength(int *length) const {
-  jsuint array_length;
-  if (JS_GetArrayLength(js_context_,
-                        JSVAL_TO_OBJECT(array_), &array_length)) {
-    *length = static_cast<int>(array_length);
-    return true;
-  }
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
-  return false;
+  jsuint array_length;
+  if (JS_GetArrayLength(js_context_, JSVAL_TO_OBJECT(array_), &array_length) !=
+      JS_TRUE) {
+    return false;
+  }
+  *length = static_cast<int>(array_length);
+  return true;
 }
 
 bool JsArray::GetElement(int index, JsScopedToken *out) const {
-  if (!array_) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
+  // JS_GetElement sets the token to JS_VOID if we request a non-existent index.
+  // This is the correct jsval for JSPARAM_UNDEFINED.
   return JS_GetElement(js_context_, JSVAL_TO_OBJECT(array_),
                        index, out) == JS_TRUE;
 }
 
 bool JsArray::SetElement(int index, const JsToken &value) {
-  if (!array_)
-    return false;
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
-  JSBool result = JS_DefineElement(js_context_,
-                                   JSVAL_TO_OBJECT(array_),
-                                   index, value,
-                                   nsnull, nsnull, // getter, setter
-                                   JSPROP_ENUMERATE);
-
-  // stops warning C4800 from VC (BOOL to bool performance warning)
-  return result == JS_TRUE;
+  return JS_DefineElement(js_context_,
+                          JSVAL_TO_OBJECT(array_),
+                          index, value,
+                          nsnull, nsnull, // getter, setter
+                          JSPROP_ENUMERATE) == JS_TRUE;
 }
 
 bool JsArray::SetElementBool(int index, bool value) {
@@ -272,9 +274,6 @@ bool JsArray::SetElementString(int index, const std::string16& value) {
 }
 
 bool JsArray::SetElementComModule(int index, IScriptable* value) {
-  if (!array_)
-    return false;
-
   JsToken token;
   if (ComModuleToToken(js_context_, value, &token)) {
     return SetElement(index, token);
@@ -285,8 +284,6 @@ bool JsArray::SetElementComModule(int index, IScriptable* value) {
 
 bool JsArray::SetElementDispatcherModule(int index,
                                          ModuleImplBaseClass *value) {
-  if (!array_)
-    return false;
   return SetElement(index, value->GetWrapperToken());
 }
 
@@ -308,7 +305,8 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
 }
 
 bool JsArray::GetLength(int *length) const {
-  if (array_.vt != VT_DISPATCH) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
   CComVariant out;
   if (FAILED(ActiveXUtils::GetDispatchProperty(array_.pdispVal,
@@ -324,7 +322,8 @@ bool JsArray::GetLength(int *length) const {
 }
 
 bool JsArray::GetElement(int index, JsScopedToken *out) const {
-  if (array_.vt != VT_DISPATCH) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
   std::string16 name = IntegerToString16(index);
 
@@ -334,22 +333,16 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
   if (SUCCEEDED(hr)) {
     return true;
   } else if (hr == DISP_E_UNKNOWNNAME) {
-    // There's no value at this index.
-    int length;
-    if (GetLength(&length)) {
-      if (index < length) {
-        // If the index is valid, then this element is undefined.
-        out->Clear();
-        return true;
-      }
-    }
+    // There's no value at this index, so this element is undefined.
+    out->Clear();
+    return true;
   }
   return false;
 }
 
 bool JsArray::SetElement(int index, const JsScopedToken& in) {
-  if (array_.vt != VT_DISPATCH)
-    return false;
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
   std::string16 name(IntegerToString16(index));
   HRESULT hr = ActiveXUtils::AddAndSetDispatchProperty(
@@ -400,7 +393,8 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
 }
 
 bool JsArray::GetLength(int *length) const {
-  if (!NPVARIANT_IS_OBJECT(array_)) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
 
@@ -413,7 +407,8 @@ bool JsArray::GetLength(int *length) const {
 }
 
 bool JsArray::GetElement(int index, JsScopedToken *out) const {
-  if (!NPVARIANT_IS_OBJECT(array_)) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
 
@@ -425,7 +420,8 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
 }
 
 bool JsArray::SetElement(int index, const JsScopedToken& in) {
-  if (!NPVARIANT_IS_OBJECT(array_)) { return false; }
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
   NPIdentifier index_id = NPN_GetIntIdentifier(index);
@@ -1797,6 +1793,9 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     case JSPARAM_NULL:
       *token = JSVAL_NULL;
       break;
+    case JSPARAM_UNDEFINED:
+      *token = JSVAL_VOID;
+      break;
     default:
       assert(false);
   }
@@ -1890,6 +1889,10 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     }
     case JSPARAM_NULL:
       *token = VT_NULL;
+      break;
+    case JSPARAM_UNDEFINED:
+      // Setting *token = VT_EMPTY doesn't seem to work.
+      token->Clear();
       break;
     default:
       assert(false);
@@ -2038,6 +2041,11 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     case JSPARAM_NULL: {
       variant->Reset();  // makes it VOID (undefined).
       NULL_TO_NPVARIANT(*variant);
+      break;
+    }
+    case JSPARAM_UNDEFINED: {
+      variant->Reset();  // makes it VOID (undefined).
+      VOID_TO_NPVARIANT(*variant);  // TODO(steveblock): Is this needed?
       break;
     }
     default:

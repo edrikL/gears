@@ -422,7 +422,8 @@ class JsArray {
   const JsScopedToken &token() const { return array_; }
   const JsContextPtr &context() const { return js_context_; }
 
-
+  // These methods return false on failure. They return true, and set out to
+  // JS_UNKNOWN if the requested element does not exist.
   bool GetElement(int index, JsScopedToken *out) const;
   
   bool GetElementAsBool(int index, bool *out) const;
@@ -433,7 +434,8 @@ class JsArray {
   bool GetElementAsObject(int index, JsObject *out) const;
   bool GetElementAsFunction(int index, JsRootedCallback **out) const;
 
-  // Method to get the type of an element
+  // Method to get the type of an element. Returns JS_UNKNOWN if the requested
+  // element does not exist.
   JsParamType GetElementType(int index) const;
 
   bool SetElement(int index, const JsScopedToken& value);
