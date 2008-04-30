@@ -65,8 +65,8 @@ button {
   a bug where the buttons bounce on IE when you hover over them.
   */
   position:relative;
-  margin-right:10px;
-  left:10px;
+  margin-right:7px;
+  left:7px;
 }
 
 #head {

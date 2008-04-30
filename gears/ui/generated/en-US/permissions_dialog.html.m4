@@ -326,11 +326,11 @@ m4_include(ui/common/button.js)
   setButtonLabel("string-allow", "allow-button", "string-allow-accesskey");
   setButtonLabel("string-deny", "deny-button", "string-deny-accesskey");
 
-  if (!isPIE) {
+  if (!browser.ie_mbile) {
     CustomButton.initializeAll();
   }
 
-  if (isPIE) {
+  if (browser.ie_mobile) {
     setButtonLabel("string-never-allow", "never-allow-button");
     var allowText = dom.getElementById("string-allow");
     if (allowText) {
@@ -355,7 +355,7 @@ m4_include(ui/common/button.js)
   }
 
   function showHelp(show) {
-    if (isPIE) {
+    if (browser.ie_mobile) {
       var elemSettings = dom.getElementById("permissions-settings"); 
       var elemHelp = dom.getElementById("permissions-help"); 
       if (show) {
@@ -397,7 +397,7 @@ m4_include(ui/common/button.js)
     if (!customName) {
       elem = dom.getElementById("origin-only");
       elem.style.display = "block";
-      if (isPIE) {
+      if (browser.ie_mobile) {
         elem.innerHTML = wrapDomain(origin);
       } else {
         setTextContent(elem, origin);
@@ -406,7 +406,7 @@ m4_include(ui/common/button.js)
       // When all we have is the origin, we lay it out centered because that
       // looks nicer. This is also what the original dialog did, which did not
       // support the extra name, icon, or message.
-      if (!isPIE && !customIcon && !customMessage) {
+      if (!browser.ie_mobile && !customIcon && !customMessage) {
         elem.setAttribute("align", "center");
       }
     } else {
@@ -436,25 +436,12 @@ m4_include(ui/common/button.js)
     }
 
     // This does not work on PIE...
-    if (!isPIE) {
+    if (!browser.ie_mobile) {
       // Set up the checkbox to toggle the enabledness of the Allow button.
       dom.getElementById("unlock").onclick = updateAllowButtonEnabledState;
     }
     updateAllowButtonEnabledState();
-
-    // This does not work on PIE (no height measurement)
-    if (!isPIE) {
-      // Resize the window to fit
-      var contentDiv = dom.getElementById("content");
-      var contentHeightProvided = getContentHeight();
-      var contentHeightDesired = contentDiv.offsetHeight;
-      if (contentHeightDesired != contentHeightProvided) {
-        var dy = contentHeightDesired - contentHeightProvided;
-        window.resizeBy(0, dy);
-      }
-    } else { 
-      window.pie_dialog.ResizeDialog();
-    } 
+    resizeDialogToFitContent();
   }
 
 

@@ -30,7 +30,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <html>
 <head>
-  <title>PRODUCT_FRIENDLY_NAME_UQ - Create Desktop Shortcut</title>
   <link rel="stylesheet" href="button.css">
   <link rel="stylesheet" href="html_dialog.css">
   <style type="text/css">
@@ -40,15 +39,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     #content {
       margin:0 1em;
-    }
-
-    #scroll {
-      overflow-y:auto;
-      overflow-x:hidden;
-      /* initially display:none so that we can figure out the height of the
-      borders and margins #content adds to the outside of scroll. Once we get
-      this, we remove display:none in layoutShortcuts(). */
-      display:none;
+      padding-bottom:1em;
     }
 
     #scroll td {
@@ -107,9 +98,12 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 <body>
   <!-- This div contains strings that are conditionally used in the UI -->
   <div id="strings" style="display:none;">
-    <!-- Headers -->
+    <!-- window titles -->
+    <div id="string-title-default"><TRANS_BLOCK desc="Window title for default style">PRODUCT_FRIENDLY_NAME_UQ - Create Desktop Shortcut</TRANS_BLOCK></div>
+    <div id="string-title-simple"><TRANS_BLOCK desc="Window title for the simple style">Create Application Shortcuts</TRANS_BLOCK></div>
+    
+    <!-- headers -->
     <div id="string-header-desktop"><TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut on the desktop.">This website wants to create a shortcut on your computer. Do you want to allow this?</TRANS_BLOCK></div>
-    <div id="string-header-simple"><TRANS_BLOCK desc="Header for the create shortcut dialog.">Shortcut Setup</TRANS_BLOCK></div>
     <div id="string-header-wince"><TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut under 'Start'.">This website wants to create a shortcut in your list of programs. Do you want to allow this?</TRANS_BLOCk></div>
 
     <!-- buttons -->
@@ -152,16 +146,18 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
       <div id="locations-windows">
         <table cellpadding="0" cellspacing="2" border="0">
           <tr>
-            <td valign="middle"><input type="checkbox" id="location-desktop"></td>
+            <!-- NOTE: Confusingly, onclick also gets fired when the checkbox changes via keyboard press. -->
+            <!-- NOTE: The values in the checkboxes correspond to the SHORTCUT_LOCATION_* bitmasks defined in desktop.cc. -->
+            <td valign="middle"><input type="checkbox" id="location-desktop" value="1" onclick="resetConfirmDisabledState()"></td>
             <td valign="middle"><label for="location-desktop"><TRANS_BLOCK desc="Label for the checkbox allowing a user to create a shortcut on the desktop">Desktop</TRANS_BLOCK></label></td>
           </tr>
           <tr>
-            <td valign="middle"><input type="checkbox" id="location-startmenu"></td>
-            <td valign="middle"><label for="location-startmenu"><TRANS_BLOCK desc="Label for the checkbox allowing a user to create a shortcut on the Windows start menu">Start Menu Programs folder</TRANS_BLOCK></label></td>
+            <td valign="middle"><input type="checkbox" id="location-startmenu" value="4" onclick="resetConfirmDisabledState()"></td>
+            <td valign="middle"><label for="location-startmenu"><TRANS_BLOCK desc="Label for the checkbox allowing a user to create a shortcut on the Windows start menu">Start menu</TRANS_BLOCK></label></td>
           </tr>
           <tr>
-            <td valign="middle"><input type="checkbox" id="location-quicklaunch"></td>
-            <td valign="middle"><label for="location-quicklaunch"><TRANS_BLOCK desc="Label for the checkbox allowing a user to create a shortcut on the Windows quick launch bar">Quick Launch toolbar</TRANS_BLOCK></label></td>
+            <td valign="middle"><input type="checkbox" id="location-quicklaunch" value="2" onclick="resetConfirmDisabledState()"></td>
+            <td valign="middle"><label for="location-quicklaunch"><TRANS_BLOCK desc="Label for the checkbox allowing a user to create a shortcut on the Windows quick launch bar">Quick launch bar</TRANS_BLOCK></label></td>
           </tr>
         </table>
       </div>
@@ -238,9 +234,13 @@ m4_include(ui/common/button.js)
 </script>
 
 <script>
-  var scrollBordersHeight = -1;
   var iconHeight = 32;
   var iconWidth = 32;
+  var dialogMinHeight = 200;
+
+  // We currently only support custom locations for desktop windows.
+  var locationsEnabled = browser.windows && !browser.ie_mobile;
+
   var args = getArguments();
 
   // Handy for debugging layout:
@@ -259,41 +259,51 @@ m4_include(ui/common/button.js)
   initDialog();
   initLayout();
   initShortcuts(args);
+  resizeDialogToFitContent(dialogMinHeight);
 
   function initLayout() {
+    if (locationsEnabled) {
+      dom.getElementById("locations").style.display = "block";
+    }
+    
     // Set up the rest of the layout. The details vary based on the layout style
     // and the user agent (currently "simple" style only supported by desktop
     // Gears).
-    if (args.style == "simple") {
+    if (isDefined(typeof args.style) && args.style == "simple") {
       initSimpleStyle();
-    } else if (isPIE) {
+    } else if (browser.ie_mobile) {
       initPieStyle();
     } else {
       initDefaultStyle();
     }
 
-    // PIE can't do scrollable divs, so there's no need to do the height
-    // calculations.
-    if (isPIE) {
-      dom.getElementById("scroll").style.display = "block";
-    } else {
-      CustomButton.initializeAll();
-      initCustomLayout(layoutShortcuts);
-    }
+    resetConfirmDisabledState();
   }
 
   function initSimpleStyle() {
+    window.title = dom.getTextContent(dom.getElementById("string-title-simple"));
     dom.getElementById("icon").parentNode.style.display = "none";
+    dom.getElementById("header").style.display = "none";
+    dom.getElementById("head").style.paddingBottom = "0";
     dom.getElementById("deny-permanently-link").style.display = "none";
-    // TODO(aa): Enable locations for windows even with default style.
-    dom.getElementById("locations").style.display = "block";
-    dom.getElementById("header").style.fontWeight = "bold";
-    setElementContents("string-header-simple", "header");
     setButtonLabel("string-ok", "allow-button", "string-ok-accesskey");
     setButtonLabel("string-cancel", "deny-button", "string-cancel-accesskey");
+
+    // Also check the desktop checkbox by default
+    dom.getElementById("location-desktop").checked = true;    
+
+    // Turn on the buttons. They are turned off by default for CustomButton, but
+    // simple style does not use custom button.
+    var buttons = document.getElementsByTagName("button");
+    for (var i = 0, button; button = buttons[i]; i++) {
+      button.className = "";
+      button.style.visibility = "visible";
+    }
   }
 
   function initPieStyle() {
+    // TODO(aa): Use a shorter title for PIE?
+    window.title = dom.getTextContent(dom.getElementById("string-title-default"));
     setElementContents("string-header-wince", "header");
 
     if (window.pie_dialog.IsSmartPhone()) {
@@ -314,12 +324,15 @@ m4_include(ui/common/button.js)
   }
 
   function initDefaultStyle() {
+    window.title = dom.getTextContent(dom.getElementById("string-title-default"));
     setElementContents("string-header-desktop", "header");
     setButtonLabel("string-yes", "allow-button", "string-yes-accesskey");
     setButtonLabel("string-no", "deny-button", "string-no-accesskey");
     setElementContents("string-never-allow", "deny-permanently-link");
-  }
 
+    CustomButton.initializeAll();
+  }
+  
   /**
    * Populate the shortcuts UI based on the data passed in from C++.
    */
@@ -384,40 +397,46 @@ m4_include(ui/common/button.js)
   }
 
   /**
-   * Custom layout for this dialog. Allow the scroll region and its borders to
-   * grow until they fill all available height, but no more.
-   */
-  function layoutShortcuts(contentHeight) {
-    var scroll = dom.getElementById("scroll");
-
-    // Initialize on first run
-    if (scrollBordersHeight == -1) {
-      var content = dom.getElementById("content");
-      scrollBordersHeight = content.offsetHeight;
-      scroll.style.display = "block";
+   * Sets the confirm button's disabled state depending on whether there is
+   * at least one checkbox checked.
+   */  
+  function resetConfirmDisabledState() {
+    if (!locationsEnabled) {
+      return;
     }
+    
+    var allowButton = dom.getElementById("allow-button");
+    var checkboxes =
+        dom.getElementById("locations").getElementsByTagName("input");
 
-    var scrollHeight = contentHeight - scrollBordersHeight;
-    scrollHeight = Math.min(scrollHeight, scroll.scrollHeight);
-    scrollHeight = Math.max(scrollHeight, 0);
-
-    scroll.style.height = scrollHeight + "px";
-
-    // If there is a scrollbar visible add extra padding to the left of it.
-    if (scrollHeight < scroll.scrollHeight) {
-      scroll.style.paddingRight = "1em";
-    } else {
-      scroll.style.paddingHeight = "";
+    for (var i = 0, checkbox; checkbox = checkboxes[i]; i++) {
+      if (checkbox.checked) {
+        enableButton(allowButton);
+        return;
+      }
     }
+    
+    disableButton(allowButton);
   }
 
   /**
    * Called when the user clicks the allow button.
    */
   function allowShortcutsTemporarily() {
-    saveAndClose({
-      allow: true
-    });
+    var result = {
+      allow: true,
+      locations: 0
+    };
+    
+    if (locationsEnabled) {
+      var checkboxes =
+          dom.getElementById("locations").getElementsByTagName("input");
+      for (var i = 0, checkbox; checkbox = checkboxes[i]; i++) {
+        result.locations |= parseInt(checkbox.value);
+      }
+    }
+
+    saveAndClose(result);
   }
 
   /**
