@@ -33,12 +33,21 @@
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/security_model.h"
 
-class GearsDesktop : public ModuleImplBaseClassVirtual {
+class HtmlDialog;
+
+// This is the backend object that implements our Desktop functionality in
+// a module-neutral way.
+class Desktop {
  public:
   enum {
     SHORTCUT_LOCATION_DESKTOP     = 0x00000001,
     SHORTCUT_LOCATION_QUICKLAUNCH = 0x00000002,
     SHORTCUT_LOCATION_STARTMENU   = 0x00000004,
+  };
+
+  enum DialogStyle {
+    DIALOG_STYLE_STANDARD = 0,
+    DIALOG_STYLE_SIMPLE,
   };
 
   struct IconData {
@@ -63,6 +72,62 @@ class GearsDesktop : public ModuleImplBaseClassVirtual {
     DISALLOW_EVIL_CONSTRUCTORS(ShortcutInfo);
   };
 
+  Desktop(const SecurityOrigin &security_origin);
+
+  // Getter for ShortcutInfo.  Callers are expected to prepare the shortcut info
+  // and then call ValidateShortcutInfo.
+  ShortcutInfo *shortcut_info() { return &shortcut_info_; }
+
+  // Call this after setting up the ShortcutInfo to validate it and check if
+  // the shortcut should be created.  Returns false if the shortcut should not
+  // be created, with an optional error message in error().
+  bool ValidateShortcutInfo();
+
+  // Initializes and shows the shortcuts dialog.  Should be called after
+  // validating the ShortcutInfo.  Returns false on failure, with an optional
+  // error message in error().
+  bool ShowDialog(HtmlDialog *shortcuts_dialog, DialogStyle style);
+
+  // Called to handle the results of an HtmlDialog.  Returns false on failure,
+  // with an optional error message in error().
+  bool HandleDialogResults(HtmlDialog *shortcuts_dialog);
+
+  // Error message getters.
+  bool has_error() { return !error_.empty(); }
+  const std::string16 &error() { return error_; }
+
+ private:
+  // NOTE: This method is implemented in desktop_<platform>.cc
+  bool CreateShortcutPlatformImpl(const SecurityOrigin &origin,
+                                  const ShortcutInfo &shortcut,
+                                  uint32 locations,
+                                  std::string16 *error);
+
+  bool SetShortcut(ShortcutInfo *shortcut,
+                   const bool allow,
+                   const bool permanently,
+                   uint32 locations,
+                   std::string16 *error);
+
+  bool AllowCreateShortcut(const ShortcutInfo &shortcut_info, bool *allow);
+  bool WriteControlPanelIcon(const ShortcutInfo &shortcut);
+  bool FetchIcon(IconData *icon, int expected_size, std::string16 *error);
+  bool GetControlPanelIconLocation(const SecurityOrigin &origin,
+                                   const std::string16 &app_name,
+                                   std::string16 *icon_loc);
+  bool ResolveUrl(std::string16 *url, std::string16 *error);
+
+  ShortcutInfo shortcut_info_;
+
+  SecurityOrigin security_origin_;
+
+  std::string16 error_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(Desktop);
+};
+
+class GearsDesktop : public ModuleImplBaseClassVirtual {
+ public:
   GearsDesktop() : ModuleImplBaseClassVirtual("GearsDesktop") {}
 
   // IN: string name, string url, object icons, optional string description
@@ -74,28 +139,6 @@ class GearsDesktop : public ModuleImplBaseClassVirtual {
   void GetLocalFiles(JsCallContext *context);
 
  private:
-  // NOTE: This method is implemented in desktop_<platform>.cc
-  bool CreateShortcutPlatformImpl(const SecurityOrigin &origin,
-                                  const GearsDesktop::ShortcutInfo &shortcut,
-                                  uint32 locations,
-                                  std::string16 *error);
-
-  bool SetShortcut(GearsDesktop::ShortcutInfo *shortcut,
-                   const bool allow,
-                   const bool permanently,
-                   uint32 locations,
-                   std::string16 *error);
-
-  bool AllowCreateShortcut(const GearsDesktop::ShortcutInfo &shortcut_info,
-                           bool *allow);
-  bool WriteControlPanelIcon(const GearsDesktop::ShortcutInfo &shortcut);
-  bool FetchIcon(GearsDesktop::IconData *icon, int expected_size,
-                 std::string16 *error);
-  bool GetControlPanelIconLocation(const SecurityOrigin &origin,
-                                   const std::string16 &app_name,
-                                   std::string16 *icon_loc);
-  bool ResolveUrl(std::string16 *url, std::string16 *error);
-
   DISALLOW_EVIL_CONSTRUCTORS(GearsDesktop);
 };
 

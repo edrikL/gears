@@ -208,7 +208,7 @@ static bool GetShortcutLocationPath(std::string16 *shortcut_location_path,
   // won't tell you the Desktop folder path.
 #ifdef WINCE
   // On WinCE, we only support desktop.
-  if (location != GearsDesktop::SHORTCUT_LOCATION_STARTMENU) {
+  if (location != Desktop::SHORTCUT_LOCATION_STARTMENU) {
     assert(false);
     return false;
   }
@@ -225,14 +225,14 @@ static bool GetShortcutLocationPath(std::string16 *shortcut_location_path,
 #else
 
   switch (location) {
-    case GearsDesktop::SHORTCUT_LOCATION_DESKTOP:
+    case Desktop::SHORTCUT_LOCATION_DESKTOP:
       if (SHGetSpecialFolderPath(NULL, path_buf, CSIDL_DESKTOPDIRECTORY,
                                  TRUE)) {
         *shortcut_location_path = path_buf;
         return true;
       }
       break;
-    case GearsDesktop::SHORTCUT_LOCATION_QUICKLAUNCH:
+    case Desktop::SHORTCUT_LOCATION_QUICKLAUNCH:
       if (SHGetSpecialFolderPath(NULL, path_buf, CSIDL_APPDATA, TRUE)) {
         *shortcut_location_path = path_buf;
         *shortcut_location_path +=
@@ -240,7 +240,7 @@ static bool GetShortcutLocationPath(std::string16 *shortcut_location_path,
         return true;
       }
       break;
-    case GearsDesktop::SHORTCUT_LOCATION_STARTMENU:
+    case Desktop::SHORTCUT_LOCATION_STARTMENU:
       {
         const char16 *kModuleName =
 #ifdef VISTA_BROKER

@@ -149,7 +149,7 @@ static bool CreateShellScript(const std::string16 &script_path,
 
 // Defines the visible icon for a given icon size
 static bool SetIconData(IconFamilyHandle family_handle,
-                        const GearsDesktop::IconData *icon_data, 
+                        const Desktop::IconData *icon_data, 
                         OSType icon_type) {
   scoped_Handle data_handle(NewHandle(icon_data->raw_data.size()));
   if (!data_handle.get()) return false;
@@ -175,7 +175,7 @@ static bool SetIconData(IconFamilyHandle family_handle,
 
 // Defines the alpha for a given icon size
 static bool SetIconAlphaMask(IconFamilyHandle family_handle,
-                             const GearsDesktop::IconData *icon_data,
+                             const Desktop::IconData *icon_data,
                              OSType icon_type) {
   scoped_Handle alpha_handle(NewHandle(icon_data->width * icon_data->height));
   if (!alpha_handle.get()) return false;
@@ -198,7 +198,7 @@ static bool SetIconAlphaMask(IconFamilyHandle family_handle,
 
 // Defines the clickable area for a given icon size
 static bool SetIconHitMask(IconFamilyHandle family_handle,
-                           const GearsDesktop::IconData *icon_data, 
+                           const Desktop::IconData *icon_data, 
                            OSType icon_type) {
   // NOTE: It would seem that you only need w * h / 8 bytes for this hit mask,
   // but that doesn't work. I don't understand why, but OSX actually wants twice
@@ -249,7 +249,7 @@ static bool SetIconHitMask(IconFamilyHandle family_handle,
 
 // Creates the icon file which contains the various different sized icons.
 static bool CreateIcnsFile(const std::string16 &icons_path,
-                           const GearsDesktop::ShortcutInfo &shortcut) {
+                           const Desktop::ShortcutInfo &shortcut) {
   scoped_Handle handle(NewHandle(0));
   if (!handle.get()) { return false; }
 
@@ -430,7 +430,7 @@ static bool RunAppleScript(const std::string16 &applescript) {
 // were written by another browser.  (This is best for users, and also helpful
 // during development, where we often create a shortcut in multiple browsers.)
 static bool CheckIllegalFileOverwrite(
-                const GearsDesktop::ShortcutInfo &shortcut) {
+                const Desktop::ShortcutInfo &shortcut) {
   
   // Get the destination path.
   std::string16 application_path;
@@ -526,9 +526,9 @@ static bool CopyLaunchURLHelper(const std::string16 &mac_os_path) {
 // shortcuts aren't used the same way they are on pc, so this does something
 // more appropriate: creates an application package containing a shell script to
 // open the browser to the correct URL.
-bool GearsDesktop::CreateShortcutPlatformImpl(
+bool Desktop::CreateShortcutPlatformImpl(
                        const SecurityOrigin &origin,
-                       const GearsDesktop::ShortcutInfo &shortcut,
+                       const Desktop::ShortcutInfo &shortcut,
                        uint32 locations,
                        std::string16 *error) {
   // Before doing anything, check that we can create the shortcut legally.

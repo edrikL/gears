@@ -224,8 +224,8 @@ bool WriteIconAsDLL(const char16 *file_path,
 
 // Creates the icon file which contains the various different sized icons.
 static bool CreateIcoFile(const std::string16 &icons_path,
-                          const GearsDesktop::ShortcutInfo &shortcut) {
-  std::vector<const GearsDesktop::IconData *> icons_to_write;
+                          const Desktop::ShortcutInfo &shortcut) {
+  std::vector<const Desktop::IconData *> icons_to_write;
 
   // Add each icon size that has been provided to the icon list.
 #ifdef WINCE
@@ -384,10 +384,10 @@ static bool CreateIcoFile(const std::string16 &icons_path,
   return success;
 }
 
-bool GearsDesktop::CreateShortcutPlatformImpl(const SecurityOrigin &origin,
-                                              const ShortcutInfo &shortcut,
-                                              uint32 locations,
-                                              std::string16 *error) {
+bool Desktop::CreateShortcutPlatformImpl(const SecurityOrigin &origin,
+                                         const ShortcutInfo &shortcut,
+                                         uint32 locations,
+                                         std::string16 *error) {
   char16 browser_path[MAX_PATH] = {0};
 
   if (!GetModuleFileName(NULL, browser_path, MAX_PATH)) {
