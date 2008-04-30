@@ -54,7 +54,7 @@ void GearsConsole::Log(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &message },
     { JSPARAM_OPTIONAL, JSPARAM_ARRAY, &args_array},
   };
-  context->GetArguments(ARRAYSIZE(argv), argv);
+  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
   
   if (context->is_exception_set())
     return;
@@ -71,7 +71,13 @@ void GearsConsole::Log(JsCallContext *context) {
   }
   
   // Log
-  console_.get()->Log(type_str, message, &args_array, EnvPageLocationUrl());
+  // We switch on whether or not the optional args_array was passed because it's
+  // invalid to use an uninitialized JsArray object.
+  if (argc == 3) {
+    console_.get()->Log(type_str, message, &args_array, EnvPageLocationUrl());
+  } else {
+    console_.get()->Log(type_str, message, NULL, EnvPageLocationUrl());
+  }
 }
 
 void GearsConsole::GetOnLog(JsCallContext *context) {
