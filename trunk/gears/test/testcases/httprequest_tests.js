@@ -144,6 +144,8 @@ function testRequestReuse() {
         
         if (numGot == numToGet) {
           completeAsync();
+        } else  if (numGot > numToGet) {
+          assert(false, 'got too many');
         } else {
           getOne();
         }
