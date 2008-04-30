@@ -23,28 +23,11 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// TODO(aa): Implement in terms of userAgent and move to base.js.
-var isIE = false;
-var isPIE = false;
-var isFF = false;
-var isSafari = false;
-
-if (isDefined(typeof window.pie_dialog)) {
-  isPIE = true;
-} else {
-  // Note that we can't use isDefined() here because
-  // window.external.GetDialogArguments has type 'unknown' on IE!
-  isIE = isDefined(typeof window.external) &&
-         typeof window.external.GetDialogArguments != 'undefined';
-  isFF = isDefined(typeof window.arguments);
-  isSafari = isDefined(typeof window.gears_dialogArguments);
-}
-
 /**
  * Initialize the base functionality of the dialog.
  */
 function initDialog() {
-  if (!isPIE) {
+  if (!browser.ie_mobile) {
     dom.addEvent(document, "keyup", handleKeyUp);
   } else {
     var buttonRowElem = null;
@@ -57,7 +40,7 @@ function initDialog() {
       buttonRowElem.style.display = 'block';
     }
   }
-  if (isPIE) {
+  if (browser.ie_mobile) {
     window.pie_dialog.SetScriptContext(window);
     window.pie_dialog.ResizeDialog();
   }
@@ -129,7 +112,7 @@ function initCustomLayout(layoutFunction) {
   // doesn't look perfect, because the timer goes off out of sync with the
   // browser's internal reflow, but I think it's better than nothing.
   // TODO(aa): Keep looking for a way to get an event for each reflow, like IE.
-  if (navigator.product == "Gecko") {
+  if (browser.mozilla) {
     var lastHeight = -1;
 
     function maybeDoLayout() {
@@ -149,17 +132,13 @@ function initCustomLayout(layoutFunction) {
  */
 function getArguments() {
   var argsString;
-  if (isIE) {
-    // IE
-    argsString = window.external.GetDialogArguments();
-  } else if (isPIE) {
-    // PIE
+  if (browser.ie_mobile) {
     argsString = window.pie_dialog.GetDialogArguments();
-  } else if (isFF) {
-    // Firefox
+  } else if (browser.ie) {
+    argsString = window.external.GetDialogArguments();
+  } else if (browser.mozilla) {
     argsString = getFirefoxArguments(window.arguments[0]);
-  } else if (isSafari) {
-    // Safari
+  } else if (browser.safari) {
     argsString = window.gears_dialogArguments;
   }
 
@@ -187,18 +166,14 @@ function getFirefoxArguments(windowArguments) {
  */
 function saveAndClose(resultObject) {
   var resultString = JSON.stringify(resultObject);
-  if (isIE) {
-    // IE
-    window.external.CloseDialog(resultString);
-  } else if (isPIE) {
-    // PIE
+  if (browser.ie_mobile) {
     window.pie_dialog.CloseDialog(resultString);
-  } else if (isFF) {
-    // Firefox
+  } else if (browser.ie) {
+    window.external.CloseDialog(resultString);
+  } else if (browser.mozilla) {
     saveFirefoxResults(resultString);
     window.close();
-  } else if (isSafari) {
-    // Safari
+  } else if (browser.safari) {
     window.gears_dialog.setResults(resultString);
   }
 }
@@ -245,7 +220,7 @@ function handleKeyUp(e) {
 function disableButton(buttonElem) {
   buttonElem.disabled = true;
 
-  if (isPIE) {
+  if (browser.ie_mobile) {
     window.pie_dialog.SetButtonEnabled(false);
   }
 
@@ -265,7 +240,7 @@ function disableButton(buttonElem) {
 function enableButton(buttonElem) {
   buttonElem.disabled = false;
 
-  if (isPIE) {
+  if (browser.ie_mobile) {
     window.pie_dialog.SetButtonEnabled(true);
   }
   
@@ -284,44 +259,77 @@ function enableButton(buttonElem) {
  * e.g. windows mobile devices)
  */
 function wrapDomain(str) {
-  if (isPIE) {
-    var max = 20;
-    var url;
-    var scheme_start = str.indexOf("://");
-    var scheme = "";
-
-    if (scheme_start != -1) {
-      scheme = str.substring(0, scheme_start);
-      scheme += "://";
-      // there's automatically an hyphenation
-      // point used by the browser after http://
-      // so we only have to hyphenate the
-      // rest of the string
-      url = str.substring(scheme.length);
-    } else {
-      url = str;
-    }
-
-    // We hyphenate the string on every dot
-    var components = url.split(".");
-    if (components.length < 1) {
-      return str;
-    }
-
-    var content = components[0];
-    var len = content.length;
-    for (var i=1; i < components.length; i++) {
-      var elem = components[i];
-      content += ".";
-      len++;
-      if (len + elem.length > max) {
-        content += "<br>";
-        len = 0;
-      }
-      content += elem;
-      len += elem.length;
-    }
-    return scheme + content;
+  if (!browser.ie_mobile) {
+    return str;
   }
-  return str;
+
+  var max = 20;
+  var url;
+  var scheme_start = str.indexOf("://");
+  var scheme = "";
+
+  if (scheme_start != -1) {
+    scheme = str.substring(0, scheme_start);
+    scheme += "://";
+    // there's automatically an hyphenation
+    // point used by the browser after http://
+    // so we only have to hyphenate the
+    // rest of the string
+    url = str.substring(scheme.length);
+  } else {
+    url = str;
+  }
+
+  // We hyphenate the string on every dot
+  var components = url.split(".");
+  if (components.length < 1) {
+    return str;
+  }
+
+  var content = components[0];
+  var len = content.length;
+  for (var i=1; i < components.length; i++) {
+    var elem = components[i];
+    content += ".";
+    len++;
+    if (len + elem.length > max) {
+      content += "<br>";
+      len = 0;
+    }
+    content += elem;
+    len += elem.length;
+  }
+  return scheme + content;
 }
+
+/**
+ * Resizes the dialog to fit the content size.
+ */
+function resizeDialogToFitContent(opt_minDialogInnerHeight) {
+  // This does not work on PIE (no height measurement)
+  if (browser.ie_mobile) {
+    window.pie_dialog.ResizeDialog();
+    return;
+  }
+
+  // Resize the window to fit
+  var contentDiv = dom.getElementById("content");
+  var contentHeightProvided = getContentHeight();
+  var contentHeightDesired = contentDiv.offsetHeight;
+
+  var dialogHeightProvided = dom.getWindowInnerHeight();
+  var dialogHeightDesired =
+      dialogHeightProvided + (contentHeightDesired - contentHeightProvided);
+
+  var minDialogHeight = opt_minDialogInnerHeight || 0;
+  var maxDialogHeight = 400; // arbitrary max height for a dialog to resize to
+  
+  var targetHeight = Math.max(dialogHeightDesired, minDialogHeight);
+  targetHeight = Math.min(dialogHeightDesired, maxDialogHeight);
+
+  if (targetHeight != dialogHeightProvided) {
+    var dy = targetHeight - dialogHeightProvided;
+    window.resizeBy(0, dy);
+  }
+}
+

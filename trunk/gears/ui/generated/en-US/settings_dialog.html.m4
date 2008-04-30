@@ -245,7 +245,7 @@ m4_include(ui/common/button.js)
   setButtonLabel("string-cancel", "cancel-button", "string-cancel-accesskey");
   setButtonLabel("string-save", "confirm-button", "string-save-accesskey");
 
-  if (!isPIE) {
+  if (!browser.ie_mobile) {
     CustomButton.initializeAll();
     initCustomLayout(layoutSettings);
   } else {

@@ -103,3 +103,21 @@ Array.prototype.indexOf = function(item) {
   }
   return -1;
 };
+
+
+var browser = {};
+
+(function() {
+  var ua = navigator.userAgent;
+  browser.opera = typeof opera != "undefined";
+  browser.ie = !browser.opera && ua.indexOf("MSIE") > -1;
+  browser.ie_mobile = ua.indexOf("IEMobile") > -1;
+  browser.webkit = ua.indexOf("WebKit") > -1;
+  // WebKit also gives product == "gecko".
+  browser.mozilla = !browser.webkit && navigator.product == "Gecko";
+  browser.safari = ua.indexOf("Safari") > -1;
+  browser.mac = navigator.platform.indexOf("Mac") > -1;
+  browser.linux = navigator.platform.indexOf("Linux") > -1;
+  browser.windows = navigator.platform.indexOf("Win") > -1;
+  // TODO(aa): Add detection for more browsers, as necessary.
+})();

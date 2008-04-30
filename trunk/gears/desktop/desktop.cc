@@ -220,6 +220,15 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
     return;
   }
 
+  // Default the locations.
+  uint32 locations =
+#ifdef WINCE
+      // WinCE only supports the start menu.
+      SHORTCUT_LOCATION_STARTMENU;
+#else
+      SHORTCUT_LOCATION_DESKTOP;
+#endif
+
   if (allow) {
     // Ensure the directory we'll be storing the icons in exists.
     std::string16 icon_dir;
@@ -232,16 +241,12 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
       context->SetException(GET_INTERNAL_ERROR_MESSAGE());
       return;
     }
+
+    if (shortcuts_dialog.result["locations"].asBool()) {
+      locations = shortcuts_dialog.result["locations"].asInt();
+    }
   }
 
-  // TODO(zork): Get the shortcut location from the dialog.
-  uint32 locations =
-#ifdef WINCE
-      // WinCE only supports the start menu.
-      SHORTCUT_LOCATION_STARTMENU;
-#else
-      SHORTCUT_LOCATION_DESKTOP;
-#endif
   if (!SetShortcut(&shortcut_info, allow, permanently,
                    locations, &error)) {
     context->SetException(error);
