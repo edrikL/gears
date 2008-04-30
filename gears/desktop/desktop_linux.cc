@@ -62,10 +62,10 @@ static bool GetIconPath(const SecurityOrigin &origin,
   return true;
 }
 
-static bool WriteIconFile(const GearsDesktop::ShortcutInfo &shortcut,
+static bool WriteIconFile(const Desktop::ShortcutInfo &shortcut,
                           const std::string16 &icon_path,
                           std::string16 *error) {
-  const GearsDesktop::IconData *chosen_icon = NULL;
+  const Desktop::IconData *chosen_icon = NULL;
 
   // Try to pick the best icon size of the available choices.
   if (!shortcut.icon48x48.png_data.empty()) { // 48 is default size for gnome
@@ -96,7 +96,7 @@ static bool WriteIconFile(const GearsDesktop::ShortcutInfo &shortcut,
 // were written by another browser.  (This is best for users, and also helpful
 // during development, where we often create a shortcut in multiple browsers.)
 static bool CheckIllegalFileOverwrite(
-                const GearsDesktop::ShortcutInfo &shortcut) {
+                const Desktop::ShortcutInfo &shortcut) {
   // Check if Shortcut file exists.
   std::string link_name_utf8;
   if (!String16ToUTF8(shortcut.app_name.c_str(), shortcut.app_name.length(),
@@ -146,9 +146,9 @@ static bool CheckIllegalFileOverwrite(
   return true;
 }
 
-bool GearsDesktop::CreateShortcutPlatformImpl(
+bool Desktop::CreateShortcutPlatformImpl(
                        const SecurityOrigin &origin,
-                       const GearsDesktop::ShortcutInfo &shortcut,
+                       const Desktop::ShortcutInfo &shortcut,
                        uint32 locations,
                        std::string16 *error) {
   // Before doing anything, check that we can create the shortcut legally.
