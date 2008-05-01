@@ -152,12 +152,16 @@ bool Desktop::ShowDialog(HtmlDialog *shortcuts_dialog, DialogStyle style) {
   shortcuts_dialog->arguments["icon48x48"] = Json::Value(icon48_url_utf8);
   shortcuts_dialog->arguments["icon128x128"] = Json::Value(icon128_url_utf8);
 
+  int shortcuts_dialog_width = 360;
+  int shortcuts_dialog_height = 320;
+
   switch (style) {
   case DIALOG_STYLE_STANDARD:
     // We default to the standard style.
     break;
   case DIALOG_STYLE_SIMPLE:
     shortcuts_dialog->arguments["style"] = Json::Value("simple");
+    shortcuts_dialog_height = 240;
     break;
   default:
     assert(false);
@@ -167,11 +171,10 @@ bool Desktop::ShowDialog(HtmlDialog *shortcuts_dialog, DialogStyle style) {
   // TODO(cprince): Consider moving this code to /ui/common/shortcut_dialog.cc
   // to keep it alongside the permission and settings dialog code.  And consider
   // sharing these constants to keep similar dialogs the same size.
-  const int kShortcutsDialogWidth = 360;
-  const int kShortcutsDialogHeight = 320;
+
   return shortcuts_dialog->DoModal(
       STRING16(L"shortcuts_dialog.html"),
-      kShortcutsDialogWidth, kShortcutsDialogHeight);
+      shortcuts_dialog_width, shortcuts_dialog_height);
 }
 
 bool Desktop::HandleDialogResults(HtmlDialog *shortcuts_dialog) {
