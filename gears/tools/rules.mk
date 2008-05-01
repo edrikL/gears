@@ -317,8 +317,10 @@ endif
 
 # All-platform targets.
 ifneq ($(OS),wince)
+ifneq ($(OS),android)
 # TODO(cprince): Get tools to link on WinCE.
 modules:: $(NOTIFIER_EXE) $(PERF_TOOL_EXE)
+endif
 endif
 
 
@@ -542,10 +544,14 @@ $(IE_WINCESETUP_DLL): $(IE_WINCESETUP_OBJS) $(IE_WINCESETUP_LINK_EXTRAS)
 $(NOTIFIER_EXE): $(NOTIFIER_OBJS)
 	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_OBJS)
 
+ifneq ($(OS),android)
+
 $(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS)
 	@echo $(NPAPI_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
+
+endif
 
 # TODO(cprince): Remove hard-coded build flags here.  Switch to using
 # MKEXE + EXEFLAGS when those are added for all platforms.

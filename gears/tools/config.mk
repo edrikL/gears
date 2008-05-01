@@ -23,6 +23,22 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#-----------------------------------------------------------------------------
+# use the libraries if not indicated otherwise.
+
+ifeq ($(USING_SQLITE),)
+  USING_SQLITE = 1
+endif
+ifeq ($(USING_ZLIB),)
+  USING_ZLIB = 1
+endif
+ifeq ($(USING_LIBPNG),)
+  USING_LIBPNG = 1
+endif
+ifeq ($(USING_LIBJPEG),)
+  USING_LIBJPEG = 1
+endif
+
 # Store value of unmodified command line parameters.
 ifdef MODE
   CMD_LINE_MODE = $MODE
@@ -57,7 +73,12 @@ MODE = dbg
 ifeq ($(OS),wince)
   ARCH = arm
 else
+ifeq ($(OS),android)
+  # default platform for android
+  ARCH = arm
+else
   ARCH = i386
+endif
 endif
 
 # $(shell ...) statements need to be different on Windows (%% vs %).
@@ -69,15 +90,21 @@ endif
 
 MAKEFLAGS = --no-print-directory
 
-CPPFLAGS = -I.. -I$($(BROWSER)_OUTDIR) -I$(COMMON_OUTDIR)
+CPPFLAGS += -I.. -I$($(BROWSER)_OUTDIR) -I$(COMMON_OUTDIR)
 
 LIBPNG_CFLAGS = -DPNG_USER_CONFIG -I../third_party/zlib
 ZLIB_CFLAGS = -DNO_GZIP -DNO_GZCOMPRESS
 ifeq ($(OS),wince)
 ZLIB_CFLAGS += -DNO_ERRNO_H
 endif
-CFLAGS += $(LIBPNG_CFLAGS) $(ZLIB_CFLAGS)
-CPPFLAGS += $(LIBPNG_CFLAGS) $(ZLIB_CFLAGS)
+ifeq ($(USING_ZLIB),1)
+CFLAGS += $(ZLIB_CFLAGS)
+CPPFLAGS += $(ZLIB_CFLAGS)
+endif
+ifeq ($(USING_LIBPNG),1)
+CFLAGS += $(LIBPNG_CFLAGS)
+CPPFLAGS += $(LIBPNG_CFLAGS)
+endif
 
 ifdef IS_WIN32_OR_WINCE
 # Breakpad assumes it is in the include path

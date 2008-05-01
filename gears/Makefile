@@ -32,6 +32,7 @@ MODULE		= $(SHORT_NAME)
 #-----------------------------------------------------------------------------
 # third_party/sqlite_google
 
+ifeq ($(USING_SQLITE),1)
 THIRD_PARTY_VPATH	+= \
 		../third_party/sqlite_google/src \
 		../third_party/sqlite_google/preprocessed \
@@ -94,10 +95,12 @@ SQLITE_CSRCS	+= \
 		fts2_porter.c \
 		fts2_tokenizer1.c \
 		$(NULL)
+endif # USING_SQLITE
 
 #-----------------------------------------------------------------------------
 # third_party/libpng
 
+ifeq ($(USING_LIBPNG),1)
 THIRD_PARTY_VPATH	+= \
 		../third_party/libpng \
 		$(NULL)
@@ -131,10 +134,12 @@ THIRD_PARTY_CSRCS	+= \
 		pngwutil.c \
 		$(NULL)
 endif
+endif # USING_LIBPNG
 
 #-----------------------------------------------------------------------------
 # third_party/zlib
 
+ifeq ($(USING_ZLIB),1)
 THIRD_PARTY_VPATH	+= \
 		../third_party/zlib \
 		$(NULL)
@@ -167,10 +172,12 @@ THIRD_PARTY_CSRCS	+= \
 		trees.c \
 		$(NULL)
 endif
+endif # USING_ZLIB
 
 #-----------------------------------------------------------------------------
 # third_party/libjpeg
 
+ifeq ($(USING_LIBJPEG),1)
 ifneq ($(OFFICIAL_BUILD),1)
 ifneq ($(OS),wince)
 THIRD_PARTY_VPATH	+= \
@@ -227,6 +234,7 @@ THIRD_PARTY_CSRCS	+= \
 		$(NULL)
 endif # not wince
 endif # not OFFICIAL_BUILD
+endif # USING_LIBJPEG
 
 #-----------------------------------------------------------------------------
 # third_party/libgd
@@ -549,17 +557,13 @@ NPAPI_IDLSRCS	+= \
 
 NPAPI_CPPSRCS	+= \
 		browser_utils.cc \
-		file_win32.cc \
 		html_event_monitor_np.cc \
 		ipc_message_queue_null.cc \
-		ie_version.cc \
 		js_runner_np.cc \
-		message_queue_ie.cc \
 		module.cc \
 		np_utils.cc \
 		npn_bindings.cc \
 		npp_bindings.cc \
-		paths_np.cc \
 		plugin.cc \
 		url_utils_np.cc \
 		vista_utils.cc \
@@ -568,13 +572,21 @@ NPAPI_CPPSRCS	+= \
 ifeq ($(OS),win32)
 NPAPI_CPPSRCS	+= \
 		detect_version_collision.cc \
+		file_win32.cc \
+		ie_version.cc \
+		message_queue_ie.cc \
+		paths_np.cc \
 		$(NULL)
 
 # TODO(mpcomplete): use WIN32_LINK_EXTRAS here.
 NPAPI_LINK_EXTRAS  += \
                 $(NPAPI_OUTDIR)/module.res \
                 $(NULL)
-endif
+else
+NPAPI_CPPSRCS	+= \
+		file_posix.cc \
+		$(NULL)
+endif # WIN32
 
 #-----------------------------------------------------------------------------
 # vista_broker
