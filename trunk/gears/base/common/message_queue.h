@@ -124,7 +124,7 @@ class ThreadMessageQueue {
 };
 
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 // A mock implementation of the ThreadMessageQueue that
 // can be used for testing.
 class MockThreadMessageQueue : public ThreadMessageQueue {
@@ -161,7 +161,7 @@ class MockThreadMessageQueue : public ThreadMessageQueue {
 
   DISALLOW_EVIL_CONSTRUCTORS(MockThreadMessageQueue);
 };
-#endif  // DEBUG
+#endif  // USING_CCTESTS
 
 // TODO(mpcomplete): remove
 #if BROWSER_NPAPI

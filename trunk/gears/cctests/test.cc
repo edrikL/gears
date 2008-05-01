@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 
 #include "gears/cctests/test.h"
 
@@ -519,9 +519,11 @@ void GearsTest::TestGetType(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &type },
     { JSPARAM_OPTIONAL, JSPARAM_TOKEN, &value },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
-  assert(argc >= 1);
+  // At this point, the number of arguments can only be greater than
+  // or equal to 1. If it was 0, an exception would have been set since
+  // the first parameter of this function is marked as required.
 
   bool ok = false;
   JsParamType t = context->GetArgumentType(1);
@@ -1947,4 +1949,4 @@ void GearsTest::TestParseGeolocationOptions(JsCallContext *context) {
 } 
 #endif
 
-#endif  // DEBUG
+#endif  // USING_CCTESTS

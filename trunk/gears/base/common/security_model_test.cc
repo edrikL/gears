@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 
 #include <string>
 #include "gears/base/common/common.h"
@@ -115,4 +115,4 @@ bool TestSecurityModel() {
   return true;
 }
 
-#endif  // DEBUG
+#endif  // USING_CCTESTS

@@ -779,8 +779,6 @@ NOTIFIER_CPPSRCS  += \
 #-----------------------------------------------------------------------------
 # test
 
-ifeq ($(MODE),dbg)
-
 $(BROWSER)_VPATH += \
 		cctests \
 		$(NULL)
@@ -788,8 +786,6 @@ $(BROWSER)_VPATH += \
 $(BROWSER)_CPPSRCS += \
 		test.cc \
 		$(NULL)
-
-endif
 
 #-----------------------------------------------------------------------------
 # ui/generated

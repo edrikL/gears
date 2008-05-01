@@ -49,6 +49,12 @@ var isSafari = google.gears.factory.getBuildInfo().indexOf(';safari') > -1;
 var isNPAPI = google.gears.factory.getBuildInfo().indexOf(';npapi') > -1;
 
 /**
+ * Whether the installed Gears extension has the test scriptable object.
+ * See also the definition of USING_CCTESTS in gears\tools\config.mk.
+ */
+var isUsingCCTests = isDebug || !isOfficial;
+
+/**
  * A shared timer tests can use.
  */
 var timer = google.gears.factory.create('beta.timer');

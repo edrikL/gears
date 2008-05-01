@@ -51,7 +51,7 @@ bool ThreadMessageQueue::GetRegisteredHandler(int message_type,
 }
 
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 // The MockThreadMessageQueue implementation
 
 bool MockThreadMessageQueue::Send(ThreadId thread_id,
@@ -86,4 +86,4 @@ void MockThreadMessageQueue::DeliverMockMessages() {
   pending_messages_.clear();
 }
 
-#endif  // DEBUG
+#endif  // USING_CCTESTS

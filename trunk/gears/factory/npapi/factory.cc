@@ -58,7 +58,7 @@
 #ifdef BROWSER_WEBKIT
 // TODO(playmobil): Add support for test module in Safari build.
 #else
-  #ifdef DEBUG
+  #ifdef USING_CCTESTS
   #include "gears/cctests/test.h"
   #endif
 #endif
@@ -159,7 +159,7 @@ void GearsFactory::Create(JsCallContext *context) {
 // TODO(playmobil): Add support for test module in Safari build.
 #else
   } else if (module_name == STRING16(L"beta.test")) {
-#ifdef DEBUG
+#ifdef USING_CCTESTS
     CreateModule<GearsTest>(GetJsRunner(), &object);
 #else
     context->SetException(L"Object is only available in debug build.");

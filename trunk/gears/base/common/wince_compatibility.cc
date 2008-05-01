@@ -481,7 +481,7 @@ static bool IsEntryBogus(INTERNET_CACHE_ENTRY_INFO *info) {
          wcscmp(info->lpszFileExtension, kGearsBogusEntryFileExtension) == 0;
 }
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 // These methods are defined in cctests\test.h and are used only for testing as
 // a means to access the static functions defined here.
 INTERNET_CACHE_ENTRY_INFO* GetEntryInfoTest(const char16 *url) {

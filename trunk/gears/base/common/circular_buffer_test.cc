@@ -26,7 +26,7 @@
 #include "gears/base/common/circular_buffer.h"
 #include "gears/base/common/common.h"
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 
 bool TestCircularBuffer() {
 #undef TEST_ASSERT

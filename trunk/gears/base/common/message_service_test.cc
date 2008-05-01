@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/message_service.h"
@@ -196,4 +196,4 @@ bool TestMessageService() {
   return true;
 }
 
-#endif  // DEBUG
+#endif  // USING_CCTESTS

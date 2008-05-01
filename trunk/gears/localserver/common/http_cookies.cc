@@ -130,7 +130,7 @@ void ParseCookieNameAndValue(const std::string16 &name_and_value,
 }
 
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 #include "gears/base/common/mutex.h"
 static Mutex g_fake_lock;
 static std::string16 g_fake_url;
@@ -142,7 +142,9 @@ void SetFakeCookieString(const char16* url, const char16 *cookies) {
   g_fake_url = url ? url : kEmptyString;
   g_fake_cookies = cookies ? cookies : kEmptyString;
 }
+#endif
 
+#ifdef USING_CCTESTS
 static bool GetFakeCookieString(const char16 *url, std::string16 *cookies) {
   MutexLock locker(&g_fake_lock);
   if (url == g_fake_url) {
@@ -165,7 +167,7 @@ static bool GetFakeCookieString(const char16 *url, std::string16 *cookies) {
 bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
   assert(url);
   assert(cookies_out);
-#ifdef DEBUG
+#ifdef USING_CCTESTS
   if (GetFakeCookieString(url, cookies_out)) {
     return true;
   }
@@ -247,7 +249,7 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
 bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
   assert(url);
   assert(cookies_out);
-#ifdef DEBUG
+#ifdef USING_CCTESTS
   if (GetFakeCookieString(url, cookies_out)) {
     return true;
   }
@@ -337,7 +339,7 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
 bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
   assert(url);
   assert(cookies_out);
-#ifdef DEBUG
+#ifdef USING_CCTESTS
   if (GetFakeCookieString(url, cookies_out)) {
     return true;
   }
