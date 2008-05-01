@@ -112,7 +112,6 @@ def localIp():
   return ip
 
 if __name__ == '__main__':
-  profile_name = 'gears'
   test_url = 'http://localhost:8001/tester/gui.html'
   suites_report = SuitesReport('TESTS-TestSuites.xml.tmpl')
   test_servers = []
@@ -140,11 +139,13 @@ if __name__ == '__main__':
       installers.append(installer.WinXpInstaller())
   elif osutils.osIsNix():
     if osutils.osIsMac():
-      launchers.append(browser_launchers.FirefoxMacLauncher(profile_name))
-      installers.append(installer.MacInstaller(profile_name))
+      launchers.append(browser_launchers.Firefox2MacLauncher('gears-ff2'))
+      launchers.append(browser_launchers.Firefox3MacLauncher('gears-ff3'))
+      installers.append(installer.MacFirefox2Installer('gears-ff2'))
+      installers.append(installer.MacFirefox3Installer('gears-ff3'))
     else:
-      launchers.append(browser_launchers.FirefoxLinuxLauncher(profile_name))
-      installers.append(installer.LinuxInstaller(profile_name))
+      launchers.append(browser_launchers.FirefoxLinuxLauncher('gears-ff2'))
+      installers.append(installer.LinuxInstaller('gears-ff2'))
       
   gears_binaries = sys.argv[1]
   testrunner = TestRunner(launchers, test_servers, test_url)

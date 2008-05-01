@@ -3,9 +3,10 @@ import subprocess
 import signal
 import time
 
-class BrowserLauncher:
+class BaseBrowserLauncher:
   """ Handle launching and killing of a specific test browser. """
   # Time given to allow firefox to update test profile and close.
+
   FIREFOX_QUITTING_SLEEP_TIME = 15 #seconds
 
   def launch(self, url):
@@ -17,7 +18,6 @@ class BrowserLauncher:
       url: Url to launch
     """
     self._launchImp(url)
-
 
   def _launchImp(self, url):
     """ Launch browser to the given url and track the returned process.
@@ -35,7 +35,6 @@ class BrowserLauncher:
     print 'launching: %s' % str(command)
     self.process = subprocess.Popen(command)
   
-
   def _startFirefox(self, url):
     """ Prep Firefox by launching quit, then launch url.
 
@@ -51,9 +50,8 @@ class BrowserLauncher:
     quit_url = 'chrome://quit/content/quit.html'
     # Launch quit then wait for Firefox to close completely.
     self._launchImp(quit_url)
-    time.sleep(BrowserLauncher.FIREFOX_QUITTING_SLEEP_TIME)
+    time.sleep(BaseBrowserLauncher.FIREFOX_QUITTING_SLEEP_TIME)
     self._launchImp(url)    
-
 
   def kill(self):
     """ Kill the browser process for clean-up. """
@@ -61,7 +59,7 @@ class BrowserLauncher:
     os.kill(self.process.pid, signal.SIGINT)
 
 
-class Win32Launcher(BrowserLauncher):
+class BaseWin32Launcher(BaseBrowserLauncher):
   """ Launcher for Win32 platforms. """
 
   def _launchImp(self, url):
@@ -75,7 +73,6 @@ class Win32Launcher(BrowserLauncher):
     print 'launching: %s' % str(command)
     self.process = subprocess.Popen(command)
 
-
   def kill(self):
     """ Kill browser process. """
     import win32api
@@ -83,12 +80,12 @@ class Win32Launcher(BrowserLauncher):
     win32api.TerminateProcess(int(self.process._handle), -1)
 
 
-class Firefox2Win32Launcher(Win32Launcher):
+class Firefox2Win32Launcher(BaseWin32Launcher):
   """ Launcher for ff2 in Windows. """
+
   FIREFOX_PATH = 'Mozilla Firefox\\firefox.exe'
 
   def __init__(self, profile, automated=True):
-    """ Set up firefox specific variables. """
     program_files = os.getenv('PROGRAMFILES')
     self.browser_path = os.path.join(program_files, 
                                      Firefox2Win32Launcher.FIREFOX_PATH)
@@ -97,7 +94,6 @@ class Firefox2Win32Launcher(Win32Launcher):
     else:
       self.args = []
   
-
   def launch(self, url):
     """ Launch Firefox.
 
@@ -106,17 +102,16 @@ class Firefox2Win32Launcher(Win32Launcher):
     """
     self._startFirefox(url)
 
-
   def type(self):
     return 'Firefox2Win32'
 
 
-class Firefox3Win32Launcher(Win32Launcher):
+class Firefox3Win32Launcher(BaseWin32Launcher):
   """ Launcher for ff3 on Windows. """
+
   FIREFOX_PATH = 'Mozilla Firefox 3 Beta 5\\firefox.exe'
 
   def __init__(self, profile, automated=True):
-    """ Set ff3 paths. """
     program_files = os.getenv('PROGRAMFILES')
     self.browser_path = os.path.join(program_files,
                                      Firefox3Win32Launcher.FIREFOX_PATH)
@@ -125,7 +120,6 @@ class Firefox3Win32Launcher(Win32Launcher):
     else:
       self.args = []
   
-
   def launch(self, url):
     """ Launch Firefox.
 
@@ -134,21 +128,18 @@ class Firefox3Win32Launcher(Win32Launcher):
     """
     self._startFirefox(url)
 
-  
   def type(self):
     return 'Firefox3Win32'
 
 
-class IExploreWin32Launcher(Win32Launcher):
+class IExploreWin32Launcher(BaseWin32Launcher):
   """ Launcher for iexplorer browser on Win32 platforms. """
 
   def __init__(self, automated=True):
-    """ Set ie specific variables. """
     program_files = os.getenv('PROGRAMFILES')
     self.browser_path = os.path.join(program_files,
                                      'internet explorer\\iexplore.exe')
     self.args = []
-
 
   def kill(self):
     """ Kill all instances of iexplore.exe
@@ -166,21 +157,18 @@ class IExploreWin32Launcher(Win32Launcher):
       win32api.TerminateProcess(handle, 0)
       win32api.CloseHandle(handle)
 
-
   def type(self):
     return 'IExploreWin32'
 
 
-class IExploreWinCeLauncher(BrowserLauncher):
+class IExploreWinCeLauncher(BaseBrowserLauncher):
   """ Launcher for pocket ie on Windows Mobile. """
 
   def __init__(self, automated=True):
     pass
   
-  
   def type(self):
     return 'IExploreWinCE'
-  
   
   def launch(self, url):
     """ Do launch. """
@@ -188,7 +176,6 @@ class IExploreWinCeLauncher(BrowserLauncher):
     launch_cmd = ['rapistart.exe', '\windows\iexplore.exe', url]
     subprocess.Popen(launch_cmd)
   
-
   def kill(self):
     """ Kill browser. """
     # Requires pkill.exe in path.
@@ -196,17 +183,17 @@ class IExploreWinCeLauncher(BrowserLauncher):
     subprocess.Popen(kill_cmd)
 
 
-class FirefoxMacLauncher(BrowserLauncher):
+class BaseFirefoxMacLauncher(BaseBrowserLauncher):
   """ Launcher for firefox on OSX. """
 
-  def __init__(self, profile, automated=True):
+  def __init__(self, profile, automated, firefox_bin):
     """ Set firefox vars. """
-    self.browser_path = '/Applications/Firefox.app/Contents/MacOS/firefox-bin'
+    self.browser_path = firefox_bin
     if automated:
       self.args = ['-P', profile]
     else:
       self.args = []
-  
+    
 
   def launch(self, url):
     """ Launch Firefox.
@@ -217,11 +204,33 @@ class FirefoxMacLauncher(BrowserLauncher):
     self._startFirefox(url)
   
 
+class Firefox2MacLauncher(BaseFirefoxMacLauncher):
+  """ Firefox 2 implementation for FirefoxMacLauncher. """
+
+  FIREFOX_PATH = '/Applications/Firefox.app/Contents/MacOS/firefox-bin'
+
+  def __init__(self, profile, automated=True):
+    firefox_bin = Firefox2MacLauncher.FIREFOX_PATH
+    BaseFirefoxMacLauncher.__init__(self, profile, automated, firefox_bin)
+
   def type(self):
-    return 'FirefoxMac'
+    return 'Firefox2Mac'
 
 
-class FirefoxLinuxLauncher(BrowserLauncher):
+class Firefox3MacLauncher(BaseFirefoxMacLauncher):
+  """ Firefox 3 implementation for FirefoxMacLauncher. """
+
+  FIREFOX_PATH = '/Applications/Firefox3.app/Contents/MacOS/firefox-bin'
+
+  def __init__(self, profile, automated=True):
+    firefox_bin = Firefox3MacLauncher.FIREFOX_PATH
+    BaseFirefoxMacLauncher.__init__(self, profile, automated, firefox_bin)
+  
+  def type(self):
+    return 'Firefox3Mac'
+
+
+class FirefoxLinuxLauncher(BaseBrowserLauncher):
   """ Launcher for firefox on linux, extends BrowserLauncher. """
 
   def __init__(self, profile, automated=True):
@@ -232,11 +241,9 @@ class FirefoxLinuxLauncher(BrowserLauncher):
       self.args = ['-P', profile]
     else:
       self.args = []
-
     
   def type(self):
     return 'FirefoxLinux'
-
 
   def launch(self, url):
     """ Launch Firefox.
@@ -245,7 +252,6 @@ class FirefoxLinuxLauncher(BrowserLauncher):
       url: Url to launch.
     """
     self._startFirefox(url)
-
 
   def kill(self):
     """ Kill firefox-bin process.
