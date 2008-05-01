@@ -11,8 +11,9 @@ if os.name == 'nt':
 # Workaround permission, stat.I_WRITE not allowing delete on some systems
 DELETABLE = int('777', 8)
 
-class Installer:
+class BaseInstaller:
   """ Handle extension installation and browser profile adjustments. """
+
   GUID = '{000a9d1c-beef-4f90-9363-039d445309b8}'
   BUILDS = 'output/installers'
 
@@ -29,7 +30,6 @@ class Installer:
       profile_zip = open(profile_path, 'rb')
       self.unzip(profile_zip, target_path)
       profile_zip.close()
-      
 
   def installExtension(self, build):
     """ Locate the desired ff profile, overwrite it, and unzip build to it. 
@@ -44,14 +44,13 @@ class Installer:
     xpi.close()
     self.__copyProfileAndInstall('xpi')
 
-
   def __copyProfileAndInstall(self, extension):
     """ Profile and extension placement for mac/linux.
     
     Args:
       extension: path to folder containing extension to install
     """
-    profile_folder = self.findProfileFolderIn(self.ff2profile_path)
+    profile_folder = self.findProfileFolderIn(self.ffprofile_path)
 
     if profile_folder:
       print 'copying over profile...'
@@ -60,13 +59,12 @@ class Installer:
       return
 
     shutil.rmtree(profile_folder, onerror=self.handleRmError)
-    self.copyAndChmod(self.ff2profile, profile_folder)
+    self.copyAndChmod(self.ffprofile, profile_folder)
     ext = os.path.join(profile_folder, 'extensions')
     if not os.path.exists(ext):
       os.mkdir(ext)
-    gears = os.path.join(ext, Installer.GUID)
+    gears = os.path.join(ext, BaseInstaller.GUID)
     self.copyAndChmod(extension, gears)
-
 
   def findProfileFolderIn(self, path):
     """ Find and return the right profile folder in directory at path.
@@ -83,7 +81,6 @@ class Installer:
         profile_folder = os.path.join(path, folder)
         return profile_folder
     return False
-
 
   def findBuildPath(self, type, directory):
     """ Find the path to the build of the given type.
@@ -102,19 +99,16 @@ class Installer:
         return build
     raise "Can't locate build of type: %s" % type
 
-
   def saveInstalledBuild(self):
     """ Copies given build to the "current build" location. """
     if os.path.exists(self.current_build):
       shutil.rmtree(self.current_build, onerror=self.handleRmError)
-    shutil.copytree(Installer.BUILDS, self.current_build)
-
+    shutil.copytree(BaseInstaller.BUILDS, self.current_build)
 
   def copyAndChmod(self, src, targ):
     shutil.copytree(src, targ)
     os.chmod(targ, DELETABLE)
   
-
   def handleRmError(self, func, path, exc_info):
     """ Handle errors removing files with long names on nt systems.
 
@@ -133,7 +127,6 @@ class Installer:
       win32file.DeleteFileW(unicode_path)
     else:
       raise StandardError(exc_info)
-    
 
   def unzip(self, file, target):
     """ Unzip file to target dir.
@@ -174,7 +167,7 @@ class Installer:
     return True
 
 
-class Win32Installer(Installer):
+class BaseWin32Installer(BaseInstaller):
   """ Installer for Win32 machines, extends Installer. """
   def install(self):
     """ Do installation.  """
@@ -187,7 +180,7 @@ class Win32Installer(Installer):
       p.wait()
 
     # Now install new build
-    build_path = self.buildPath(Installer.BUILDS)
+    build_path = self.buildPath(BaseInstaller.BUILDS)
     print 'Installing build %s' % build_path
     c = ['msiexec', '/passive', '/i', build_path]
     p = subprocess.Popen(c)
@@ -197,7 +190,6 @@ class Win32Installer(Installer):
     # Save new build as current installed build
     self.saveInstalledBuild()
   
-
   def __copyProfile(self):
     """ Copy IE profile to correct location. """
     google_path = os.path.join(self.appdata_path, 'Google')
@@ -211,26 +203,23 @@ class Win32Installer(Installer):
     self.copyAndChmod(self.ieprofile, ieprofile_path)
 
 
-class WinXpInstaller(Win32Installer):
+class WinXpInstaller(BaseWin32Installer):
   """ Installer for WinXP, extends Win32Installer. """
   def __init__(self):
-    """ Set up xp specific variables. """
     self.prepareProfiles()
     home = os.getenv('USERPROFILE')
     self.current_build = os.path.join(home, 'current_gears_build')
     self.appdata_path = os.path.join(home, 'Local Settings\\Application Data')
     self.ieprofile = 'ieprofile'
 
-
   def buildPath(self, directory):
     return self.findBuildPath('msi', directory)
-
 
   def type(self):
     return 'WinXpInstaller'
 
 
-class WinVistaInstaller(Win32Installer):
+class WinVistaInstaller(BaseWin32Installer):
   """ Installer for Vista, extends Win32Installer. """
   def __init__(self):
     self.prepareProfiles()
@@ -239,29 +228,24 @@ class WinVistaInstaller(Win32Installer):
     self.appdata_path = os.path.join(home, 'AppData\\LocalLow')
     self.ieprofile = 'ieprofile'
 
-
   def buildPath(self, directory):
     return self.findBuildPath('msi', directory)
 
-  
   def type(self):
     return 'WinVistaInstaller'
 
 
-class WinCeInstaller(Installer):
+class WinCeInstaller(BaseInstaller):
   """ Installer for WinCE, extends Installer. """
   def __init__(self, host):
     self.ieprofile = 'ieprofile'
     self.host = host
   
-  
   def buildPath(self, directory):
     return self.findBuildPath('cab', directory)
-
   
   def type(self):
-    return 'WinCeInstaller'
-  
+    return 'WinCeInstaller' 
   
   def install(self):
     """ Do installation. """
@@ -269,10 +253,9 @@ class WinCeInstaller(Installer):
     self.installCab()
     self.copyPermissions()
   
-  
   def installCab(self):
     """ Copy installer to device and install.  """
-    build_path = self.buildPath(Installer.BUILDS)
+    build_path = self.buildPath(BaseInstaller.BUILDS)
     
     # Requires cecopy.exe in path.
     copy_cmd = ['cecopy.exe', build_path, 'dev:\\windows\\gears.cab']
@@ -294,7 +277,6 @@ class WinCeInstaller(Installer):
     p = subprocess.Popen(kill_cmd)
     p.wait()
   
-
   def copyPermissions(self):
     """ Modify permissions file to include host address and copy to device. """
     perm_path = os.path.join(self.ieprofile, 'permissions.db')
@@ -318,40 +300,33 @@ class WinCeInstaller(Installer):
     p.wait()
 
 
-class MacInstaller(Installer):
-  """ Installer for Mac, extends Installer. """
-  def __init__(self, profile_name):
-    """ Set mac specific variables. """
+class BaseMacInstaller(BaseInstaller):
+  """ Base class for Mac installers. """
+  
+  def __init__(self, profile_name, firefox_bin, profile_loc):
     self.profile = profile_name
     self.prepareProfiles()
     home = os.getenv('HOME')
-    ff2profile = 'Library/Application Support/Firefox/Profiles'
+    ffprofile = 'Library/Application Support/Firefox/Profiles'
     ffcache = 'Library/Caches/Firefox/Profiles'
     self.current_build = os.path.join(home, 'current_gears_build')
-    self.firefox = '/Applications/Firefox.app/Contents/MacOS/firefox-bin'
-    self.ff2profile_path = os.path.join(home, ff2profile)
+    self.ffprofile_path = os.path.join(home, ffprofile)
     self.ffcache_path = os.path.join(home, ffcache)
-    self.ff2profile = 'ff2profile-mac'
+    self.firefox_bin = firefox_bin
+    self.ffprofile = profile_loc
     self.profile_arg = '-CreateProfile %s' % self.profile
-  
-  
+
   def buildPath(self, directory):
     return self.findBuildPath('xpi', directory)
-
   
-  def type(self):
-    return 'MacInstaller'
-
-
   def install(self):
     """ Do installation. """
     print 'Creating test profile and inserting extension'
-    build_path = self.buildPath(Installer.BUILDS)
-    os.system('%s %s' % (self.firefox, self.profile_arg))
+    build_path = self.buildPath(BaseInstaller.BUILDS)
+    os.system('%s %s' % (self.firefox_bin, self.profile_arg))
     self.installExtension(build_path)
     self.__copyProfileCacheMac()
     self.saveInstalledBuild()
-
 
   def __copyProfileCacheMac(self):
     """ Copy cache portion of profile on mac. """
@@ -365,38 +340,61 @@ class MacInstaller(Installer):
 
     # Empty cache and replace only with gears folder
     gears_folder = os.path.join(profile_folder, 'Google Gears for Firefox')
-    ff2profile_cache = 'ff2profile-mac/Google Gears for Firefox'
+    ffprofile_cache = 'ff2profile-mac/Google Gears for Firefox'
     shutil.rmtree(profile_folder, onerror=self.handleRmError)
     os.mkdir(profile_folder)
-    self.copyAndChmod(ff2profile_cache, gears_folder)
+    self.copyAndChmod(ffprofile_cache, gears_folder)
 
 
-class LinuxInstaller(Installer):
-  """ Installer for linux, extends Installer. """
+class MacFirefox2Installer(BaseMacInstaller):
+  """ Firefox 2 installer for Mac OS X. """
+
+  FIREFOX_PATH = '/Applications/Firefox.app/Contents/MacOS/firefox-bin'
+
   def __init__(self, profile_name):
-    """ Set linux specific variables. """
+    firefox_bin = MacFirefox2Installer.FIREFOX_PATH
+    BaseMacInstaller.__init__(self, profile_name, firefox_bin, 'ff2profile-mac')
+  
+  def type(self):
+    return 'MacFirefox2Installer'
+
+
+class MacFirefox3Installer(BaseMacInstaller):
+  """ Firefox 3 installer for Mac OS X. """
+
+  FIREFOX_PATH = '/Applications/Firefox3.app/Contents/MacOS/firefox-bin'
+
+  def __init__(self, profile_name):
+    firefox_bin = MacFirefox3Installer.FIREFOX_PATH
+    BaseMacInstaller.__init__(self, profile_name, firefox_bin, 'ff3profile-mac')
+  
+  def type(self):
+    return 'MacFirefox3Installer'
+
+
+class LinuxInstaller(BaseInstaller):
+  """ Installer for linux, extends Installer. """
+
+  def __init__(self, profile_name):
     self.profile = profile_name
     self.prepareProfiles()
     home = os.getenv('HOME')
     self.current_build = os.path.join(home, 'current_gears_build')
-    self.ff2profile_path = os.path.join(home, '.mozilla/firefox')
-    self.firefox = 'firefox'
-    self.ff2profile = 'ff2profile-linux'
+    self.ffprofile_path = os.path.join(home, '.mozilla/firefox')
+    self.firefox_bin = 'firefox'
+    self.ffprofile = 'ff2profile-linux'
     self.profile_arg = '-CreateProfile %s' % self.profile
-
 
   def buildPath(self, directory):
     return self.findBuildPath('xpi', directory)
 
-
   def type(self):
     return 'LinuxInstaller'
-
 
   def install(self):
     """ Do installation. """
     print 'Creating test profile and inserting extension'
-    build_path = self.buildPath(Installer.BUILDS)
-    os.system('%s %s' % (self.firefox, self.profile_arg))
+    build_path = self.buildPath(BaseInstaller.BUILDS)
+    os.system('%s %s' % (self.firefox_bin, self.profile_arg))
     self.installExtension(build_path)
     self.saveInstalledBuild()
