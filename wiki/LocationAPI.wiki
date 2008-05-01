@@ -216,8 +216,8 @@ The protocol between the device and the location service provider is HTTP POST. 
 === Cell-Id data elements ===
 
 || *Name* || *Description* || *Required* || *Type* ||
-|| cell_id || Unique identifier of the cell. || Yes || string ||
-|| location_area_code || Location Area Code (LAC) assigned to the current location area || Yes || int16 ||
+|| cell_id || Unique identifier of the cell. || No || string ||
+|| location_area_code || Location Area Code (LAC) assigned to the current location area || No || int16 ||
 || mobile_country_code || Mobile Country Code (MCC) for cell || No || int16 ||
 || mobile_network_code || Mobile Network Code (MNC) for cell || No || int16 ||
 || age || The number of milliseconds since this cell was primary. If age is 0, the cell_id represents a current measurement.  || No || int16 ||
@@ -227,7 +227,7 @@ The protocol between the device and the location service provider is HTTP POST. 
 === Wifi-Id data elements ===
 
 || *Name* || *Description* || *Required* || *Type* ||
-|| mac_address || The mac address of the wifi node. || Yes || string ||
+|| mac_address || The mac address of the wifi node. || No || string ||
 || signal_strength || Current signal strength measured in dBm. || No || int16 ||
 || age || The number of milliseconds since this access point was detected. If age is 0, the mac_address represents a current measurement. || No || int16 ||
 
@@ -266,6 +266,6 @@ If the request format is valid, the server replies with HTTP status 200. If the 
 || latitude || Latitude of the fix, in degrees. || Yes || double ||
 || longitude || Longitude of the fix, in degrees. || Yes || double ||
 || altitude || Altitude of the fix, in meters. || No || int ||
-|| horizontal_accuracy || The horizontal accuracy of the fix, in meters at a 95% confidence level. Location providers that cannot determine an accuracy should set this value to NaN. TODO: Should we just make this optional? TODO: Should this be an int? || Yes || double ||
+|| horizontal_accuracy || The horizontal accuracy of the fix, in meters at a 95% confidence level. || No || int ||
 || vertical_accuracy || The vertical accuracy of the fix, in meters. || No || int ||
 || address || The address of the fix if requested and available. Follows the definition of the Address interface defined above. || No || string ||
