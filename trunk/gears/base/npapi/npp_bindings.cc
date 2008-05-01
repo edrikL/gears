@@ -117,7 +117,7 @@ NPError	NPP_GetValue(NPP instance, NPPVariable variable, void *value)
 
   switch (variable) {
   case NPPVpluginNameString:
-    *((char **)value) = "NPGears";  // [naming]
+    *((char **)value) = PRODUCT_SHORT_NAME_ASCII;
     break;
   case NPPVpluginDescriptionString:
     *((char **)value) = PRODUCT_FRIENDLY_NAME_ASCII " Plugin";
