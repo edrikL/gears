@@ -432,7 +432,9 @@ m4_include(ui/common/button.js)
       var checkboxes =
           dom.getElementById("locations").getElementsByTagName("input");
       for (var i = 0, checkbox; checkbox = checkboxes[i]; i++) {
-        result.locations |= parseInt(checkbox.value);
+        if (checkbox.checked) {
+          result.locations |= parseInt(checkbox.value);
+        }
       }
     }
 
