@@ -265,6 +265,7 @@ If the request format is valid, the server replies with HTTP status 200. If the 
 || *Name* || *Description* || *Required* || *Type* ||
 || latitude || Latitude of the fix, in degrees. || Yes || double ||
 || longitude || Longitude of the fix, in degrees. || Yes || double ||
-|| altitude || Altitude of the fix, in metres. || No || int ||
+|| altitude || Altitude of the fix, in meters. || No || int ||
 || horizontal_accuracy || The horizontal accuracy of the fix, in meters at a 95% confidence level. Location providers that cannot determine an accuracy should set this value to NaN. TODO: Should we just make this optional? TODO: Should this be an int? || Yes || double ||
+|| vertical_accuracy || The vertical accuracy of the fix, in meters. || No || int ||
 || address || The address of the fix if requested and available. Follows the definition of the Address interface defined above. || No || string ||
