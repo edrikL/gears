@@ -766,6 +766,17 @@ $(BROWSER)_CPPSRCS += \
 endif
 
 #-----------------------------------------------------------------------------
+# desktop_notifier
+
+COMMON_VPATH += \
+		notifier \
+		$(NULL)
+
+NOTIFIER_CPPSRCS  += \
+		notifier.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # test
 
 ifeq ($(MODE),dbg)

@@ -132,7 +132,7 @@ ifeq ($(OS),linux)
 CC = gcc
 CXX = g++
 OBJ_SUFFIX = .o
-MKDEP = gcc -M -MF $(@D)/$*.pp -MT $@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
+MKDEP = gcc -M -MF $(@D)/$(*F).pp -MT $@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
 
 CPPFLAGS += -DLINUX
 LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
@@ -185,7 +185,7 @@ ifeq ($(OS),osx)
 CC = gcc -arch $(ARCH)
 CXX = g++ -arch $(ARCH)
 OBJ_SUFFIX = .o
-MKDEP = gcc -M -MF $(@D)/$*.pp -MT $@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
+MKDEP = gcc -M -MF $(@D)/$(*F).pp -MT $@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
 
 CPPFLAGS += -DLINUX -DOS_MACOSX
 LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
@@ -239,7 +239,7 @@ ifdef IS_WIN32_OR_WINCE
 CC = cl
 CXX = cl
 OBJ_SUFFIX = .obj
-MKDEP = python tools/mkdepend.py $< $@ > $(@D)/$*.pp
+MKDEP = python tools/mkdepend.py $< $@ > $(@D)/$(*F).pp
 
 # Most Windows headers use the cross-platform NDEBUG and DEBUG #defines
 # (handled later).  But a few Windows files look at _DEBUG instead.
@@ -304,7 +304,7 @@ THIRD_PARTY_CPPFLAGS = /wd4018 /wd4003
 
 COMPILE_FLAGS_dbg = /MTd /Zi /Zc:wchar_t-
 COMPILE_FLAGS_opt = /MT  /Zi /Ox /Zc:wchar_t-
-COMPILE_FLAGS = /c /Fo"$@" /Fd"$(@D)/$*.pdb" /W3 /WX /GR- $(COMPILE_FLAGS_$(MODE))
+COMPILE_FLAGS = /c /Fo"$@" /Fd"$(@D)/$(*F).pdb" /W3 /WX /GR- $(COMPILE_FLAGS_$(MODE))
 # In VC8, the way to disable exceptions is to remove all /EH* flags, and to
 # define _HAS_EXCEPTIONS=0 (for C++ headers) and _ATL_NO_EXCEPTIONS (for ATL).
 COMPILE_FLAGS += /D_HAS_EXCEPTIONS=0 /D_ATL_NO_EXCEPTIONS
@@ -367,7 +367,7 @@ NPAPI_DLLFLAGS = /DEF:base/npapi/module.def
 MKEXE = link
 EXE_PREFIX =
 EXE_SUFFIX = .exe
-EXEFLAGS = $(COMMON_LINKFLAGS) /PDB:"$(@D)/$(@F).pdb"
+EXEFLAGS = $(COMMON_LINKFLAGS) /PDB:"$(@D)/$(*F).pdb"
 
 
 TRANSLATE_LINKER_FILE_LIST = cat -
@@ -388,7 +388,7 @@ NPAPI_LIBS =
 RC = rc
 RCFLAGS_dbg = -DDEBUG=1
 RCFLAGS_opt = -DNDEBUG=1
-RCFLAGS = $(RCFLAGS_$(MODE)) -D_UNICODE -DUNICODE -I$($(BROWSER)_OUTDIR) -I$(COMMON_OUTDIR) /l 0x409 /fo"$(@D)/$*.res"
+RCFLAGS = $(RCFLAGS_$(MODE)) -D_UNICODE -DUNICODE -I$($(BROWSER)_OUTDIR) -I$(COMMON_OUTDIR) /l 0x409 /fo"$(@D)/$(*F).res"
 ifeq ($(OS),wince)
 RCFLAGS += -DWINCE -D_WIN32 -D_WIN32_WCE -DUNDER_CE -N -I..
 endif
