@@ -171,3 +171,80 @@ function testFulltextIndexingRowIdChangesFTS2() {
     assertEqual(23456, rs.field(0), 'select modified rowid by match failed');
   });
 }
+
+function testFulltextIndexingSnippet() {
+  // Test that SQLite ticket #2429 is fixed.
+  // http://www.sqlite.org/cvstrac/tktview?tn=2429
+  db.execute('drop table if exists t1');
+  db.execute('create virtual table t1 using fts2(a, b, c)');
+  db.execute('insert into t1(a, b, c) values(?, ?, ?)',
+             ['one three four', 'one four', 'one four two']);
+
+  // Test fts2o-1.1
+  handleResult(db.execute('select rowid, snippet(t1) from t1 where c match ?',
+                          ['four']),
+               function(rs) {
+    assert(rs.isValidRow(), 'column c snippet returned no results');
+    assertEqual('one <b>four</b> two', rs.field(1),
+                'column c snippet returned wrong results');
+    rs.next();
+    assert(!rs.isValidRow(), 'column c match returned too many results');
+  });
+
+  // Test fts2o-1.2
+  handleResult(db.execute('select rowid, snippet(t1) from t1 where b match ?',
+                          ['four']),
+               function(rs) {
+    assert(rs.isValidRow(), 'column b snippet returned no results');
+    assertEqual('one <b>four</b>', rs.field(1),
+                'column b snippet returned wrong results');
+    rs.next();
+    assert(!rs.isValidRow(), 'column b match returned too many results');
+  });
+
+  // Test fts2o-1.3
+  handleResult(db.execute('select rowid, snippet(t1) from t1 where a match ?',
+                          ['four']),
+               function(rs) {
+    assert(rs.isValidRow(), 'column a snippet returned no results');
+    assertEqual('one three <b>four</b>', rs.field(1),
+                'column a snippet returned wrong results');
+    rs.next();
+    assert(!rs.isValidRow(), 'column a match returned too many results');
+  });
+}
+
+function testFulltextIndexingSchemaChange() {
+  db.execute('drop table if exists t1');
+  db.execute('drop table if exists t3');
+  db.execute('create virtual table t1 using fts2(a, b, c)');
+  db.execute('insert into t1(a, b, c) values(?, ?, ?)',
+             ['one three four', 'one four', 'one two']);
+
+  // Test fts2o-3.1
+  handleResult(db.execute('select a, b, c from t1 where c match ?',
+                          ['two']),
+               function(rs) {
+    assert(rs.isValidRow(), 'Unexpected empty result set');
+    assertEqual('one three four', rs.field(0), 'Unexpected column a');
+    assertEqual('one four', rs.field(1), 'Unexpected column b');
+    assertEqual('one two', rs.field(2), 'Unexpected column c');
+    rs.next();
+    assert(!rs.isValidRow(), 'Unexpected second result');
+  });
+
+  // This causes an SQLITE_SCHEMA w/in fts2.
+  db.execute('create table t3(a, c, b)');
+
+  // Test fts2o-3.2
+  handleResult(db.execute('select a, b, c from t1 where c match ?',
+                          ['two']),
+               function(rs) {
+    assert(rs.isValidRow(), 'Unexpected empty result set');
+    assertEqual('one three four', rs.field(0), 'Unexpected column a');
+    assertEqual('one four', rs.field(1), 'Unexpected column b');
+    assertEqual('one two', rs.field(2), 'Unexpected column c');
+    rs.next();
+    assert(!rs.isValidRow(), 'Unexpected second result');
+  });
+}
