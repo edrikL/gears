@@ -44,6 +44,7 @@
 #include "gears/base/npapi/module.h"
 #include "gears/base/npapi/plugin.h"
 #include "gears/factory/npapi/factory_wrapper.h"
+#include "genfiles/product_constants.h"
 
 std::string16 g_user_agent;  // Access externally via BrowserUtils class.
 
@@ -116,10 +117,10 @@ NPError	NPP_GetValue(NPP instance, NPPVariable variable, void *value)
 
   switch (variable) {
   case NPPVpluginNameString:
-    *((char **)value) = "NPGears";
+    *((char **)value) = "NPGears";  // [naming]
     break;
   case NPPVpluginDescriptionString:
-    *((char **)value) = "Google Gears Plugin";
+    *((char **)value) = PRODUCT_FRIENDLY_NAME_ASCII " Plugin";
     break;
   case NPPVpluginScriptableNPObject:
     *(NPObject **)value = plugin;
