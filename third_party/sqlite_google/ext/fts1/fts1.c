@@ -1193,30 +1193,19 @@ static int sql_step_statement(fulltext_vtab *v, fulltext_statement iStmt,
   assert( s==v->pFulltextStatements[iStmt] );
 
   while( (rc=sqlite3_step(s))!=SQLITE_DONE && rc!=SQLITE_ROW ){
-    sqlite3_stmt *pNewStmt;
-
     if( rc==SQLITE_BUSY ) continue;
     if( rc!=SQLITE_ERROR ) return rc;
 
-    rc = sqlite3_reset(s);
-    if( rc!=SQLITE_SCHEMA ) return SQLITE_ERROR;
-
-    v->pFulltextStatements[iStmt] = NULL;   /* Still in s */
-    rc = sql_get_statement(v, iStmt, &pNewStmt);
-    if( rc!=SQLITE_OK ) goto err;
-    *ppStmt = pNewStmt;
-
-    rc = sqlite3_transfer_bindings(s, pNewStmt);
-    if( rc!=SQLITE_OK ) goto err;
-
+    /* If an SQLITE_SCHEMA error has occured, then finalizing this
+     * statement is going to delete the fulltext_vtab structure. If
+     * the statement just executed is in the pFulltextStatements[]
+     * array, it will be finalized twice. So remove it before
+     * calling sqlite3_finalize().
+     */
+    v->pFulltextStatements[iStmt] = NULL;
     rc = sqlite3_finalize(s);
-    if( rc!=SQLITE_OK ) return rc;
-    s = pNewStmt;
+    break;
   }
-  return rc;
-
- err:
-  sqlite3_finalize(s);
   return rc;
 }
 
@@ -2280,6 +2269,7 @@ static void snippetAllOffsets(fulltext_cursor *p){
   pFts = p->q.pFts;
   nColumn = pFts->nColumn;
   iColumn = p->iCursorType;
+  iColumn = p->iCursorType - QUERY_FULLTEXT;
   if( iColumn<0 || iColumn>=nColumn ){
     iFirst = 0;
     iLast = nColumn-1;
