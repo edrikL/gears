@@ -416,6 +416,17 @@ CPPFLAGS += -DOFFICIAL_BUILD=1
 M4FLAGS  += -DOFFICIAL_BUILD=1
 endif
 
+# Add USING_CCTESTS in debug builds and non-official opt builds.
+# This adds the GearsTest object (gears/cctest), which can be
+# used to access a perf timer and run the C++ unit tests.
+ifeq ($(MODE),dbg)
+CPPFLAGS += -DUSING_CCTESTS=1
+else
+ifneq ($(OFFICIAL_BUILD),1)
+CPPFLAGS += -DUSING_CCTESTS=1
+endif
+endif
+
 # Additional values needed for M4 preprocessing
 
 M4FLAGS  += -DPRODUCT_VERSION=$(VERSION)

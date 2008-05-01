@@ -29,7 +29,7 @@
 
 #if BROWSER_FF || BROWSER_IE // blobs not implemented for npapi yet
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 
 #include <cstring>
 #include "gears/blob/buffer_blob.h"
@@ -177,6 +177,6 @@ bool TestSliceBlob() {
   return true;
 }
 
-#endif  // DEBUG
+#endif  // USING_CCTESTS
 #endif  // BROWSER_FF || BROWSER_IE
 #endif  // not OFFICIAL_BUILD

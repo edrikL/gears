@@ -22,7 +22,7 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
@@ -229,4 +229,4 @@ bool TestSQLConcurrency() {
 }
 
 
-#endif  // DEBUG
+#endif  // USING_CCTESTS

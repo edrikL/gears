@@ -48,7 +48,7 @@ class LocationProviderInterface : public RefCounted {
 
 // Factory functions for the various types of location provider to abstract over
 // the platform-dependent implementations.
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 LocationProviderInterface* NewMockLocationProvider();
 #endif
 LocationProviderInterface* NewGpsLocationProvider();

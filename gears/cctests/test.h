@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 
 #ifndef GEARS_CCTESTS_TEST_H__
 #define GEARS_CCTESTS_TEST_H__
@@ -150,4 +150,4 @@ bool ParseGeolocationOptionsTest(JsCallContext *context, bool repeats,
                                  GearsGeolocation::FixRequestInfo *info);
 #endif
 
-#endif // DEBUG
+#endif // USING_CCTESTS

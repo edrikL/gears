@@ -23,12 +23,12 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-if (isDebug) {
+if (isUsingCCTests) {
   var internalTests = google.gears.factory.create('beta.test');
 }
 
 function testInternal() {
-  if (isDebug) {
+  if (isUsingCCTests) {
     assert(internalTests.runTests(),
            'Internal tests failed.');
   }
@@ -37,7 +37,7 @@ function testInternal() {
 
 // test functions for passing arguments
 function testPassArguments() {
-  if (isDebug) {
+  if (isUsingCCTests) {
     // Have to do this because Gears methods don't support apply() in IE.
     function callTest(args) {
       internalTests.testPassArguments(args[0], args[1], args[2], args[3],
@@ -119,7 +119,7 @@ function testPassArguments() {
 }
 
 function testPassArgumentsOptional() {
-  if (isDebug) {
+  if (isUsingCCTests) {
     internalTests.testPassArgumentsOptional(42, 42, 42);
     internalTests.testPassArgumentsOptional(42, 42);
     internalTests.testPassArgumentsOptional(42);
@@ -140,14 +140,14 @@ function testPassArgumentsOptional() {
 
 // Test passing an object with different types of properties to C++.
 function testPassObject() {
-  if (isDebug) {
+  if (isUsingCCTests) {
     internalTests.testPassObject(new TestObject());
   }
 }
 
 // Test creating a javascript object in C++ and returning it.
 function testCreateObject() {
-  if (isDebug) {
+  if (isUsingCCTests) {
     // TODO(cdevries): Enable this test on FF in worker pools when
     //                 SetReturnValue() has been implemented.
     var isFirefox = google.gears.factory.getBuildInfo().indexOf("firefox") > -1;
@@ -170,7 +170,7 @@ function testCreateObject() {
 
 // Test creating a JavaScript Error object in C++ and returning it.
 function testCreateError() {
-  if (isDebug) {
+  if (isUsingCCTests) {
     // TODO(cdevries): Enable this test on FF in worker pools when
     //                 SetReturnValue() has been implemented.
     var isFirefox = google.gears.factory.getBuildInfo().indexOf("firefox") > -1;
@@ -388,7 +388,7 @@ function TestObject() {
 }
 
 function testGetSystemTime() {
-  if (isDebug) {
+  if (isUsingCCTests) {
     // Test system time increases.
     var start = internalTests.getSystemTime();
     var callback = function() {
@@ -404,7 +404,7 @@ function testGetSystemTime() {
 }
 
 function testPerfTimer() {
-  if (isDebug) {
+  if (isUsingCCTests) {
     // Test zero tick delta.
     var ticks = internalTests.getTicks();
     var elapsed = internalTests.getTickDeltaMicros(ticks, ticks);

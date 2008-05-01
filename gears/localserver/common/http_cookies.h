@@ -113,7 +113,7 @@ class CookieMap : public std::map<std::string16, std::string16> {
   bool HasLocalServerRequiredCookie(const std::string16 &required_cookie);
 };
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 // For use by internal unit tests cases.
 // Sets a fake cookie string for a particular url.
 // When GetCookieString is queried about 'url', the fake 'cookies' value

@@ -28,7 +28,7 @@
 #error "We only use this for IE on windows desktop"
 #endif
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 
 #include <algorithm>
 #include <set>

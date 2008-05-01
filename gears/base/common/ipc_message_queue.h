@@ -113,7 +113,7 @@ class IpcMessageQueue {
   DISALLOW_EVIL_CONSTRUCTORS(IpcMessageQueue);
 };
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 // For testing
 struct IpcMessageQueueCounters {
   int send_to_all;

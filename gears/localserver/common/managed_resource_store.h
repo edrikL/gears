@@ -144,7 +144,7 @@ class ManagedResourceStore : public LocalServer {
                      const char16 *manifest_date_header,
                      const char16 *update_error);
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
   friend bool TestManagedResourceStore();
 #endif
 };

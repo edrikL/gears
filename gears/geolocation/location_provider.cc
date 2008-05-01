@@ -25,7 +25,7 @@
 
 #include "gears/geolocation/location_provider.h"
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 #include "gears/base/common/common.h"
 #include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis()
 #include "gears/geolocation/geolocation.h"  // For Position

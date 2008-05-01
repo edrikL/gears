@@ -56,7 +56,7 @@
 #include "gears/timer/timer.h"
 #include "gears/workerpool/firefox/workerpool.h"
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 #include "gears/cctests/test.h"
 #endif
 
@@ -157,10 +157,10 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   scoped_refptr<ModuleImplBaseClass> object;
 
   if (object_name == STRING16(L"beta.test")) {
-#ifdef DEBUG
+#ifdef USING_CCTESTS
     CreateModule<GearsTest>(GetJsRunner(), &object);
 #else
-    *error = STRING16(L"Object is only available in debug build.");
+    *error = STRING16(L"Object is only available in test build.");
     return false;
 #endif
   } else if (object_name == STRING16(L"beta.desktop")) {

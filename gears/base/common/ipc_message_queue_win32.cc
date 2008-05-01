@@ -42,7 +42,7 @@
 #include "third_party/linked_ptr/linked_ptr.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 // For testing
 static Mutex g_counters_mutex;
 static IpcMessageQueueCounters g_counters = {0};
@@ -395,7 +395,7 @@ class IpcBuffer {
       }
     }
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
     // For testing
     void CommitWithoutSignalling() {
       if (was_written_) {
@@ -440,7 +440,7 @@ class IpcProcessRegistry {
   SharedMemory::MappedViewOf<Registry> mapped_registry_;
   Registry cached_registry_;
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
   bool Verify(bool check_for_current_process);
  public:
   // For testing
@@ -477,7 +477,7 @@ bool IpcProcessRegistry::Open() {
     assert(mapped_registry_->revision == 0);
     assert(mapped_registry_->processes[0] == 0);
   }
-#ifdef DEBUG
+#ifdef USING_CCTESTS
   Verify(false);
 #endif
   return true;
@@ -580,7 +580,7 @@ void IpcProcessRegistry::GetAll(std::vector<IpcProcessId> *out) {
       Repair();
     }
     cached_registry_ = *mapped_registry_.get();
-#ifdef DEBUG
+#ifdef USING_CCTESTS
     Verify(true);
 #endif
   }
@@ -616,7 +616,7 @@ void IpcProcessRegistry::Repair() {
   }
 }
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 bool IpcProcessRegistry::Verify(bool check_for_current_process) {
   IpcProcessId current_process_id = ::GetCurrentProcessId();
   std::set<IpcProcessId> unique;
@@ -795,7 +795,7 @@ class OutboundQueue : public QueueBase {
   void MaybeWaitForWriteMutex();
   void WaitForSpaceAvailable();
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
  public:
   // For testing
   void DieWhileHoldingWriteLock();
@@ -926,7 +926,7 @@ void OutboundQueue::AddMessageToQueue(ShareableIpcMessage *message) {
   pending_.push_back(message);
   MaybeWaitForWriteMutex();
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
   // For testing
   MutexLock lock(&g_counters_mutex);
   ++(g_counters.queued_outbound);
@@ -1057,7 +1057,7 @@ bool OutboundQueue::WriteOneMessage(ShareableIpcMessage *message,
     return false;
   }
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
     // For testing
     MutexLock lock(&g_counters_mutex);
     ++(g_counters.sent_outbound);
@@ -1130,7 +1130,7 @@ void InboundQueue::ReadAndDispatchMessages() {
   int message_type;
   IpcMessageData *message;
   while (ReadOneMessage(&source_process_id, &message_type, &message)) {
-#ifdef DEBUG
+#ifdef USING_CCTESTS
     {
       // For testing
       MutexLock lock(&g_counters_mutex);
@@ -1267,7 +1267,7 @@ void Win32IpcMessageQueue::SendToAll(int ipc_message_type,
   thread_message_queue_->Send(thread_id_,
                               kIpcMessageQueue_Send,
                               envelope);
-#ifdef DEBUG
+#ifdef USING_CCTESTS
   // For testing
   MutexLock lock(&g_counters_mutex);
   ++(g_counters.send_to_all);
@@ -1289,7 +1289,7 @@ void Win32IpcMessageQueue::Send(IpcProcessId dest_process_id,
   thread_message_queue_->Send(thread_id_,
                               kIpcMessageQueue_Send,
                               envelope);
-#ifdef DEBUG
+#ifdef USING_CCTESTS
   // For testing
   MutexLock lock(&g_counters_mutex);
   ++(g_counters.send_to_one);
@@ -1494,7 +1494,7 @@ void Win32IpcMessageQueue::HandleSendToAll(
       }
     } 
   }
-#ifdef DEBUG
+#ifdef USING_CCTESTS
   // For testing
   MutexLock lock(&g_counters_mutex);
   ++(g_counters.handle_send_to_all);
@@ -1510,7 +1510,7 @@ void Win32IpcMessageQueue::HandleSendToOne(
   if (outbound_queue)
     outbound_queue->AddMessageToQueue(envelope->shareable_message_.get());
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
   // For testing
   MutexLock lock(&g_counters_mutex);
   ++(g_counters.handle_send_to_one);
@@ -1542,7 +1542,7 @@ void Win32IpcMessageQueue::RemoveOutboundQueue(OutboundQueue *queue) {
 
 
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 
 void TestingIpcMessageQueueWin32_GetAllProcesses(
                                      std::vector<IpcProcessId> *processes) {

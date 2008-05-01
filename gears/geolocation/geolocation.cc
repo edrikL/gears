@@ -228,7 +228,7 @@ static bool ParseOptions(JsCallContext *context, bool repeats,
   return true;
 }
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 // This method is defined in cctests\test.h and is used only for testing as
 // a means to access the static function defined here.
 bool ParseGeolocationOptionsTest(JsCallContext *context, bool repeats,
