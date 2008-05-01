@@ -165,6 +165,7 @@ The protocol between the device and the location service provider is HTTP POST. 
   home_mobile_country_code: 310,
   home_mobile_network_code: 410,
   radio_type: "gsm",
+  carrier: "Vodafone",
   cell_towers: [
     {
       cell_id: 42,
@@ -202,18 +203,19 @@ The protocol between the device and the location service provider is HTTP POST. 
 
 === Request field details ===
 
-|| *Name* || *Description* || *Required* || *Type" ||
+|| *Name* || *Description* || *Required* || *Type* ||
 || version || The protocol version. Currently, this is "1.0". || Yes || string ||
 || host || The host of the web page that is requesting the location. || Yes || string ||
 || home_mobile_country_code || The mobile country code for the device's home network || No || int32 ||
 || home_mobile_network_code || The mobile network code for the device's home network || No || int32 ||
 || radio_type || Mobile radio type. _TODO: Can somebody expand on why this is necessary/useful?_ || No || string (gsm|cdma|wcdma) ||
-|| cell_towers || Array of cell-id data objects. See description of cell-id below. || If wifi_data not present || array ||
-|| wifi_towers || Array of wifi-id data objects. See description of wifi-id below. || If cellid_data not present || array ||
+|| carrier || Carrier name. Used to help disambiguate MCC/MNC || No || string ||
+|| cell_towers || Array of cell-id data objects. See description of cell-id below. || No || array ||
+|| wifi_towers || Array of wifi-id data objects. See description of wifi-id below. || No || array ||
 
 === Cell-Id data elements ===
 
-|| *Name* || *Description* || *Required* || *Type" ||
+|| *Name* || *Description* || *Required* || *Type* ||
 || cell_id || Unique identifier of the cell. || Yes || string ||
 || location_area_code || Location Area Code (LAC) assigned to the current location area || Yes || int16 ||
 || mobile_country_code || Mobile Country Code (MCC) for cell || No || int16 ||
