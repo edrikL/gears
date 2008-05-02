@@ -131,6 +131,7 @@ bool TestIpcMessageQueue();  // from ipc_message_queue_win32_test.cc
 bool TestStopwatch();
 bool TestJsonEscaping();
 bool TestArray(JsRunnerInterface *js_runner, JsCallContext *context);
+bool TestObject(JsRunnerInterface *js_runner, JsCallContext *context);
 
 void CreateObjectBool(JsCallContext* context,
                       JsRunnerInterface* js_runner,
@@ -254,6 +255,7 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestStopwatch();
   ok &= TestJsonEscaping();
   ok &= TestArray(GetJsRunner(), context);
+  ok &= TestObject(GetJsRunner(), context);
 
   // We have to call GetDB again since TestCapabilitiesDBAll deletes
   // the previous instance.
@@ -261,7 +263,10 @@ void GearsTest::RunTests(JsCallContext *context) {
   permissions->SetCanAccessGears(cc_tests_origin,
                                  PermissionsDB::PERMISSION_NOT_SET);
 
-  context->SetReturnValue(JSPARAM_BOOL, &ok);
+  // If a test has failed but not set an exception, set a generic message here.
+  if (!ok && !context->is_exception_set()) {
+    context->SetException(STRING16(L"RunTests failed."));
+  }
 }
 
 void GearsTest::TestPassArguments(JsCallContext *context) {
@@ -1279,6 +1284,49 @@ bool TestArray(JsRunnerInterface *js_runner, JsCallContext *context) {
   TEST_ASSERT(JsTokenToString_NoCoerce(token, context->js_context(),
                                        &string_out));
   TEST_ASSERT(string_out == string_in);
+  return true;
+}
+
+bool TestObject(JsRunnerInterface *js_runner, JsCallContext *context) {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    LOG(("TestObject failed at line %d\n", __LINE__)); \
+    context->SetException(STRING16(L"TestObject failed.")); \
+    return false; \
+  } \
+}
+  // Internal tests on JsObject.
+  scoped_ptr<JsObject> test_object(js_runner->NewObject(NULL));
+  JsScopedToken token;
+  static const char16 *kPropertyName = STRING16(L"genericPropertyName");
+  // Test that a new object has no properties.
+  std::vector<std::string16> property_names;
+  TEST_ASSERT(test_object.get()->GetPropertyNames(&property_names));
+  TEST_ASSERT(property_names.empty());
+  TEST_ASSERT(test_object.get()->GetPropertyType(kPropertyName) ==
+              JSPARAM_UNDEFINED);
+  TEST_ASSERT(test_object.get()->GetProperty(kPropertyName, &token));
+  TEST_ASSERT(JsTokenGetType(token, context->js_context()) ==
+              JSPARAM_UNDEFINED);
+  // Test that we can set a property.
+  const int int_in = 42;
+  int int_out;
+  TEST_ASSERT(test_object.get()->SetPropertyInt(kPropertyName, int_in));
+  // Test that we can get a property.
+  TEST_ASSERT(test_object.get()->GetPropertyType(kPropertyName) == JSPARAM_INT);
+  TEST_ASSERT(test_object.get()->GetPropertyAsInt(kPropertyName, &int_out));
+  TEST_ASSERT(int_in == int_out);
+  // Test that we can reset a property.
+  const std::string16 string_in(STRING16(L"test"));
+  std::string16 string_out;
+  TEST_ASSERT(test_object.get()->SetPropertyString(kPropertyName, string_in));
+  TEST_ASSERT(test_object.get()->GetPropertyType(kPropertyName) ==
+              JSPARAM_STRING16);
+  TEST_ASSERT(test_object.get()->GetPropertyAsString(kPropertyName,
+                                                     &string_out));
+  TEST_ASSERT(string_in == string_out);
   return true;
 }
 

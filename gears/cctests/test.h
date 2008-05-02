@@ -53,7 +53,7 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   void GetTimingTickDeltaMicros(JsCallContext *context);
 
   // IN: nothing
-  // OUT: bool
+  // OUT: nothing
   void RunTests(JsCallContext *context);
 
 

@@ -29,8 +29,7 @@ if (isUsingCCTests) {
 
 function testInternal() {
   if (isUsingCCTests) {
-    assert(internalTests.runTests(),
-           'Internal tests failed.');
+    internalTests.runTests();
   }
 }
 

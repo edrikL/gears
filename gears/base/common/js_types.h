@@ -422,7 +422,7 @@ class JsArray {
   const JsContextPtr &context() const { return js_context_; }
 
   // These methods return false on failure. They return true, and set out to
-  // JS_UNKNOWN if the requested element does not exist.
+  // JSPARAM_UNDEFINED if the requested element does not exist.
   bool GetElement(int index, JsScopedToken *out) const;
   
   bool GetElementAsBool(int index, bool *out) const;
@@ -433,8 +433,8 @@ class JsArray {
   bool GetElementAsObject(int index, JsObject *out) const;
   bool GetElementAsFunction(int index, JsRootedCallback **out) const;
 
-  // Method to get the type of an element. Returns JS_UNKNOWN if the requested
-  // element does not exist.
+  // Method to get the type of an element. Returns JSPARAM_UNDEFINED if the
+  // requested element does not exist.
   JsParamType GetElementType(int index) const;
 
   bool SetElement(int index, const JsScopedToken &value);
@@ -458,8 +458,11 @@ class JsObject {
   JsObject();
   ~JsObject();
 
-  bool GetProperty(const std::string16 &name, JsScopedToken *value) const;
   bool SetObject(JsToken value, JsContextPtr context);
+
+  // These methods return false on failure. They return true, and set out to
+  // JSPARAM_UNDEFINED if the requested property does not exist.
+  bool GetProperty(const std::string16 &name, JsScopedToken *value) const;
 
   bool GetPropertyAsBool(const std::string16 &name, bool *out) const;
   bool GetPropertyAsInt(const std::string16 &name, int *out) const;
@@ -470,7 +473,8 @@ class JsObject {
   bool GetPropertyAsFunction(const std::string16 &name,
                              JsRootedCallback **out) const;
 
-  // Method to get the type of a property
+  // Method to get the type of a property. Returns JSPARAM_UNDEFINED if the
+  // requested property does not exist.
   JsParamType GetPropertyType(const std::string16 &name) const;
   
   // GetPropertyNames fills the given vector with the (string) names of this

@@ -114,16 +114,18 @@ bool GearsGeolocation::LocationUpdateAvailable(
 bool GetPropertyIfSpecified(JsCallContext *context, const JsObject &object,
                             const std::string16 &name, JsScopedToken *token) {
   assert(token);
-  // We have to test for type != undefined, because on FF, GetProperty will
-  // successfully return an object of type undefined if the requested property
-  // is not present.
+  // GetProperty should always succeed, but will get a token of type
+  // JSPARAM_UNDEFINED if the requested property is not present.
   JsScopedToken token_local;
-  if (object.GetProperty(name, &token_local) &&
-      JsTokenGetType(token_local, context->js_context()) != JSPARAM_UNDEFINED) {
-    *token = token_local;
-    return true;
+  if (!object.GetProperty(name, &token_local)) {
+    assert(false);
+    return false;
   }
-  return false;
+  if (JsTokenGetType(token_local, context->js_context()) == JSPARAM_UNDEFINED) {
+    return false;
+  }
+  *token = token_local;
+  return true;
 }
 
 static bool ParseOptions(JsCallContext *context, bool repeats,
@@ -150,8 +152,7 @@ static bool ParseOptions(JsCallContext *context, bool repeats,
   // Set default values for options.
   info->enable_high_accuracy = false;
   info->request_address = false;
-  // We have to check that options is present, because on FF, GetProperty will
-  // successfully return an object of type unknown when called on an
+  // We have to check that options is present because it's not valid to use an
   // uninitialised JsObject.
   if (num_arguments > 1) {
     JsScopedToken token;
