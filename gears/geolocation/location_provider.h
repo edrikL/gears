@@ -38,6 +38,7 @@ class LocationProviderInterface : public RefCounted {
    public:
     virtual bool LocationUpdateAvailable(LocationProviderInterface *provider,
                                          const Position &position) = 0;
+    virtual ~ListenerInterface() {}
   };
   virtual ~LocationProviderInterface() {};
   // Interface methods.

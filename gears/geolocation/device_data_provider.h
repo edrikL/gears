@@ -128,6 +128,7 @@ class DeviceDataProviderBase {
    public:
     virtual void DeviceDataUpdateAvailable(
         DeviceDataProviderBase<DataType> *provider) = 0;
+    virtual ~ListenerInterface() {}
   };
 
   // Adds a listener, which will be called back with DeviceDataUpdateAvailable

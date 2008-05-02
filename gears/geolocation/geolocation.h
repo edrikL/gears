@@ -26,10 +26,10 @@
 #ifndef GEARS_GEOLOCATION_GEOLOCATION_H__
 #define GEARS_GEOLOCATION_GEOLOCATION_H__
 
+#include <set>
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/geolocation/location_provider.h"
-#include <set>
 
 // The internal representation of a position. Some properties use different
 // types when passed to JavaScript.

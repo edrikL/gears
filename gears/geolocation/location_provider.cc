@@ -33,8 +33,8 @@
 // Mock implementation of a location provider for testing.
 class MockLocationProvider : public LocationProviderInterface {
  public:
-  MockLocationProvider() {};
-  virtual ~MockLocationProvider() {};
+  MockLocationProvider() {}
+  virtual ~MockLocationProvider() {}
   // LocationProviderInterface implementation.
   virtual void SetListener(ListenerInterface *listener) {
     assert(listener);
