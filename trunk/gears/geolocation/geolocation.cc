@@ -87,7 +87,7 @@ void GearsGeolocation::ClearWatch(JsCallContext *context) {
 // Non-API methods
 
 void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
-  // Get the arguments. 
+  // Get the arguments.
   std::vector<std::string16> urls;
   FixRequestInfo info;
   ParseOptions(context, repeats, &urls, &info);
