@@ -571,6 +571,10 @@ $(VISTA_BROKER_EXE): $(VISTA_BROKER_OBJS) $(VISTA_BROKER_LINK_EXTRAS) $(VISTA_BR
 # We can't list the following as dependencies, because no BROWSER is defined
 # for this target, therefore our $(BROWSER)_FOO variables and rules don't exist.
 #   $(FF2_MODULE_DLL) $(FF3_MODULE_DLL) $(FF3_MODULE_TYPELIB) $(FF3_RESOURCES) $(FF3_M4FILES_I18N) $(FF3_OUTDIR)/genfiles/chrome.manifest
+# In order to make sure the Installer is always up to date despite these missing
+# dependencies, we list it as a phony target, so it's always rebuilt.
+.PHONY: $(FFMERGED_INSTALLER_XPI)
+
 ifeq ($(OS),osx)
 $(FFMERGED_INSTALLER_XPI): $(COMMON_RESOURCES) $(COMMON_M4FILES_I18N) $(OSX_LAUNCHURL_EXE)
 else
