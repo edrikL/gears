@@ -71,11 +71,11 @@ Desktop::Desktop(const SecurityOrigin &security_origin)
     : security_origin_(security_origin) {
 }
 
-bool Desktop::ValidateShortcutInfo() {
+bool Desktop::ValidateShortcutInfo(ShortcutInfo *shortcut_info) {
   // Gears doesn't allow spaces in path names, but desktop shortcuts are the
   // exception, so instead of rewriting our path validation code, patch a
   // temporary string.
-  std::string16 name_without_spaces = shortcut_info_.app_name;
+  std::string16 name_without_spaces = shortcut_info->app_name;
   ReplaceAll(name_without_spaces, std::string16(STRING16(L" ")),
              std::string16(STRING16(L"_")));
   if (!IsUserInputValidAsPathComponent(name_without_spaces, &error_)) {
@@ -83,35 +83,35 @@ bool Desktop::ValidateShortcutInfo() {
   }
 
   // Normalize and resolve, in case this is a relative URL.
-  if (!ResolveUrl(&shortcut_info_.app_url, &error_)) {
+  if (!ResolveUrl(&shortcut_info->app_url, &error_)) {
     return false;
   }
 
   // Validate that we got at least one that we can use on all platforms
-  if (shortcut_info_.icon16x16.url.empty() &&
-      shortcut_info_.icon32x32.url.empty() &&
-      shortcut_info_.icon48x48.url.empty() &&
-      shortcut_info_.icon128x128.url.empty()) {
+  if (shortcut_info->icon16x16.url.empty() &&
+      shortcut_info->icon32x32.url.empty() &&
+      shortcut_info->icon48x48.url.empty() &&
+      shortcut_info->icon128x128.url.empty()) {
     error_ = STRING16(L"Invalid value for icon parameter. At "
                       L"least one icon must be specified.");
     return false;
   }
 
   // Resolve the icon urls
-  if (!shortcut_info_.icon16x16.url.empty() &&
-      !ResolveUrl(&shortcut_info_.icon16x16.url, &error_) ||
-      !shortcut_info_.icon32x32.url.empty() &&
-      !ResolveUrl(&shortcut_info_.icon32x32.url, &error_) ||
-      !shortcut_info_.icon48x48.url.empty() &&
-      !ResolveUrl(&shortcut_info_.icon48x48.url, &error_) ||
-      !shortcut_info_.icon128x128.url.empty() &&
-      !ResolveUrl(&shortcut_info_.icon128x128.url, &error_)) {
+  if (!shortcut_info->icon16x16.url.empty() &&
+      !ResolveUrl(&shortcut_info->icon16x16.url, &error_) ||
+      !shortcut_info->icon32x32.url.empty() &&
+      !ResolveUrl(&shortcut_info->icon32x32.url, &error_) ||
+      !shortcut_info->icon48x48.url.empty() &&
+      !ResolveUrl(&shortcut_info->icon48x48.url, &error_) ||
+      !shortcut_info->icon128x128.url.empty() &&
+      !ResolveUrl(&shortcut_info->icon128x128.url, &error_)) {
     return false;
   }
 
   // Check if we should display UI.
   bool allow_create_shortcut;
-  if (!AllowCreateShortcut(shortcut_info_, &allow_create_shortcut)) {
+  if (!AllowCreateShortcut(*shortcut_info, &allow_create_shortcut)) {
     error_ = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
@@ -119,7 +119,9 @@ bool Desktop::ValidateShortcutInfo() {
   return allow_create_shortcut;
 }
 
-bool Desktop::ShowDialog(HtmlDialog *shortcuts_dialog, DialogStyle style) {
+bool Desktop::InitializeDialog(ShortcutInfo *shortcut_info,
+                               HtmlDialog *shortcuts_dialog,
+                               DialogStyle style) {
   shortcuts_dialog->arguments = Json::Value(Json::objectValue);
 
   // Json needs utf8.
@@ -130,14 +132,14 @@ bool Desktop::ShowDialog(HtmlDialog *shortcuts_dialog, DialogStyle style) {
   std::string icon32_url_utf8;
   std::string icon48_url_utf8;
   std::string icon128_url_utf8;
-  if (!String16ToUTF8(shortcut_info_.app_url.c_str(), &app_url_utf8) ||
-      !String16ToUTF8(shortcut_info_.app_name.c_str(), &app_name_utf8) ||
-      !String16ToUTF8(shortcut_info_.app_description.c_str(),
+  if (!String16ToUTF8(shortcut_info->app_url.c_str(), &app_url_utf8) ||
+      !String16ToUTF8(shortcut_info->app_name.c_str(), &app_name_utf8) ||
+      !String16ToUTF8(shortcut_info->app_description.c_str(),
                       &app_description_utf8) ||
-      !String16ToUTF8(shortcut_info_.icon16x16.url.c_str(), &icon16_url_utf8) ||
-      !String16ToUTF8(shortcut_info_.icon32x32.url.c_str(), &icon32_url_utf8) ||
-      !String16ToUTF8(shortcut_info_.icon48x48.url.c_str(), &icon48_url_utf8) ||
-      !String16ToUTF8(shortcut_info_.icon128x128.url.c_str(),
+      !String16ToUTF8(shortcut_info->icon16x16.url.c_str(), &icon16_url_utf8) ||
+      !String16ToUTF8(shortcut_info->icon32x32.url.c_str(), &icon32_url_utf8) ||
+      !String16ToUTF8(shortcut_info->icon48x48.url.c_str(), &icon48_url_utf8) ||
+      !String16ToUTF8(shortcut_info->icon128x128.url.c_str(),
                       &icon128_url_utf8)) {
     error_ = GET_INTERNAL_ERROR_MESSAGE();
     return false;
@@ -152,32 +154,23 @@ bool Desktop::ShowDialog(HtmlDialog *shortcuts_dialog, DialogStyle style) {
   shortcuts_dialog->arguments["icon48x48"] = Json::Value(icon48_url_utf8);
   shortcuts_dialog->arguments["icon128x128"] = Json::Value(icon128_url_utf8);
 
-  int shortcuts_dialog_width = 360;
-  int shortcuts_dialog_height = 320;
-
   switch (style) {
   case DIALOG_STYLE_STANDARD:
     // We default to the standard style.
     break;
   case DIALOG_STYLE_SIMPLE:
     shortcuts_dialog->arguments["style"] = Json::Value("simple");
-    shortcuts_dialog_height = 240;
     break;
   default:
     assert(false);
+    return false;
   }
 
-  // Show the dialog.
-  // TODO(cprince): Consider moving this code to /ui/common/shortcut_dialog.cc
-  // to keep it alongside the permission and settings dialog code.  And consider
-  // sharing these constants to keep similar dialogs the same size.
-
-  return shortcuts_dialog->DoModal(
-      STRING16(L"shortcuts_dialog.html"),
-      shortcuts_dialog_width, shortcuts_dialog_height);
+  return true;
 }
 
-bool Desktop::HandleDialogResults(HtmlDialog *shortcuts_dialog) {
+bool Desktop::HandleDialogResults(ShortcutInfo *shortcut_info,
+                                  HtmlDialog *shortcuts_dialog) {
   bool allow = false;
   bool permanently = false;
 
@@ -224,7 +217,7 @@ bool Desktop::HandleDialogResults(HtmlDialog *shortcuts_dialog) {
   if (shortcuts_dialog->result["locations"].asBool()) {
     locations = shortcuts_dialog->result["locations"].asInt();
   }
-  if (!SetShortcut(&shortcut_info_, allow, permanently, locations, &error_)) {
+  if (!SetShortcut(shortcut_info, allow, permanently, locations, &error_)) {
     return false;
   }
 
@@ -238,47 +231,57 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
     return;
   }
 
-  Desktop desktop(EnvPageSecurityOrigin());
-  Desktop::ShortcutInfo *shortcut_info = desktop.shortcut_info();
+  Desktop::ShortcutInfo shortcut_info;
   JsObject icons;
 
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &shortcut_info->app_name },
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &shortcut_info->app_url },
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &shortcut_info.app_name },
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &shortcut_info.app_url },
     { JSPARAM_REQUIRED, JSPARAM_OBJECT, &icons },
-    { JSPARAM_OPTIONAL, JSPARAM_STRING16, &shortcut_info->app_description },
+    { JSPARAM_OPTIONAL, JSPARAM_STRING16, &shortcut_info.app_description },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
 
-  if (shortcut_info->app_name.empty()) {
+  if (shortcut_info.app_name.empty()) {
     context->SetException(STRING16(L"Required argument 1 is missing."));
     return;
   }
 
-  if (shortcut_info->app_url.empty()) {
+  if (shortcut_info.app_url.empty()) {
     context->SetException(STRING16(L"Required argument 2 is missing."));
     return;
   }
 
   // Get the icons the user specified
-  icons.GetPropertyAsString(STRING16(L"16x16"), &shortcut_info->icon16x16.url);
-  icons.GetPropertyAsString(STRING16(L"32x32"), &shortcut_info->icon32x32.url);
-  icons.GetPropertyAsString(STRING16(L"48x48"), &shortcut_info->icon48x48.url);
+  icons.GetPropertyAsString(STRING16(L"16x16"), &shortcut_info.icon16x16.url);
+  icons.GetPropertyAsString(STRING16(L"32x32"), &shortcut_info.icon32x32.url);
+  icons.GetPropertyAsString(STRING16(L"48x48"), &shortcut_info.icon48x48.url);
   icons.GetPropertyAsString(STRING16(L"128x128"),
-                            &shortcut_info->icon128x128.url);
+                            &shortcut_info.icon128x128.url);
 
   // Prepare the shortcut.
-  if (!desktop.ValidateShortcutInfo()) {
+  Desktop desktop(EnvPageSecurityOrigin());
+  if (!desktop.ValidateShortcutInfo(&shortcut_info)) {
     if (desktop.has_error())
       context->SetException(desktop.error());
     return;
   }
 
-  // Show up the shortcuts dialog
+  // Show the dialog.
+  // TODO(cprince): Consider moving this code to /ui/common/shortcut_dialog.cc
+  // to keep it alongside the permission and settings dialog code.  And consider
+  // sharing these constants to keep similar dialogs the same size.
+
+  const int kShortcutsDialogWidth = 360;
+  const int kShortcutsDialogHeight = 320;
+
   HtmlDialog shortcuts_dialog;
-  if (!desktop.ShowDialog(&shortcuts_dialog, Desktop::DIALOG_STYLE_STANDARD) ||
-      !desktop.HandleDialogResults(&shortcuts_dialog)) {
+  if (!desktop.InitializeDialog(&shortcut_info, &shortcuts_dialog,
+                                Desktop::DIALOG_STYLE_STANDARD) ||
+      !shortcuts_dialog.DoModal(STRING16(L"shortcuts_dialog.html"),
+                               kShortcutsDialogWidth, kShortcutsDialogHeight) ||
+      !desktop.HandleDialogResults(&shortcut_info, &shortcuts_dialog)) {
     if (desktop.has_error())
       context->SetException(desktop.error());
     return;

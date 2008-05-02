@@ -74,23 +74,21 @@ class Desktop {
 
   Desktop(const SecurityOrigin &security_origin);
 
-  // Getter for ShortcutInfo.  Callers are expected to prepare the shortcut info
-  // and then call ValidateShortcutInfo.
-  ShortcutInfo *shortcut_info() { return &shortcut_info_; }
-
   // Call this after setting up the ShortcutInfo to validate it and check if
   // the shortcut should be created.  Returns false if the shortcut should not
   // be created, with an optional error message in error().
-  bool ValidateShortcutInfo();
+  bool ValidateShortcutInfo(ShortcutInfo *shortcut_info);
 
-  // Initializes and shows the shortcuts dialog.  Should be called after
+  // Initializes the shortcuts dialog.  Should be called after
   // validating the ShortcutInfo.  Returns false on failure, with an optional
   // error message in error().
-  bool ShowDialog(HtmlDialog *shortcuts_dialog, DialogStyle style);
+  bool InitializeDialog(ShortcutInfo *shortcut_info,
+                        HtmlDialog *shortcuts_dialog, DialogStyle style);
 
   // Called to handle the results of an HtmlDialog.  Returns false on failure,
   // with an optional error message in error().
-  bool HandleDialogResults(HtmlDialog *shortcuts_dialog);
+  bool HandleDialogResults(ShortcutInfo *shortcut_info,
+                           HtmlDialog *shortcuts_dialog);
 
   // Error message getters.
   bool has_error() { return !error_.empty(); }
@@ -116,8 +114,6 @@ class Desktop {
                                    const std::string16 &app_name,
                                    std::string16 *icon_loc);
   bool ResolveUrl(std::string16 *url, std::string16 *error);
-
-  ShortcutInfo shortcut_info_;
 
   SecurityOrigin security_origin_;
 
