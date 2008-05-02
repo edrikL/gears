@@ -302,13 +302,12 @@ bool JsTokenIsObject(JsToken t);
 // usually treat these two identically to prevent confusion.
 bool JsTokenIsNullOrUndefined(JsToken t);
 
-bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken* out);
-bool IntToJsToken(JsContextPtr context, int value, JsScopedToken* out);
-bool StringToJsToken(JsContextPtr context,
-                     const std::string16& value,
-                     JsScopedToken* out);
-bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken* out);
-bool NullToJsToken(JsContextPtr context, JsScopedToken* out);
+bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken *out);
+bool IntToJsToken(JsContextPtr context, int value, JsScopedToken *out);
+bool StringToJsToken(JsContextPtr context, const char16 *value,
+                     JsScopedToken *out);
+bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken *out);
+bool NullToJsToken(JsContextPtr context, JsScopedToken *out);
 
 #if BROWSER_FF
 
@@ -438,16 +437,16 @@ class JsArray {
   // element does not exist.
   JsParamType GetElementType(int index) const;
 
-  bool SetElement(int index, const JsScopedToken& value);
+  bool SetElement(int index, const JsScopedToken &value);
   bool SetElementBool(int index, bool value);
   bool SetElementInt(int index, int value);
   bool SetElementDouble(int index, double value);
-  bool SetElementString(int index, const std::string16& value);
-  bool SetElementArray(int index, JsArray* value);
-  bool SetElementObject(int index, JsObject* value);
-  bool SetElementFunction(int index, JsRootedCallback* value);
-  bool SetElementComModule(int index, IScriptable* value);
-  bool SetElementDispatcherModule(int index, ModuleImplBaseClass* value);
+  bool SetElementString(int index, const std::string16 &value);
+  bool SetElementArray(int index, JsArray *value);
+  bool SetElementObject(int index, JsObject *value);
+  bool SetElementFunction(int index, JsRootedCallback *value);
+  bool SetElementComModule(int index, IScriptable *value);
+  bool SetElementDispatcherModule(int index, ModuleImplBaseClass *value);
 
 private:
   JsContextPtr js_context_;

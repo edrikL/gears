@@ -52,8 +52,10 @@ class GearsResultSet
 
   GearsResultSet();
 
-  NS_IMETHOD Field(PRInt32 index, nsIVariant **retval);
-  NS_IMETHOD FieldByName(const nsAString &field_name, nsIVariant **retval);
+  NS_IMETHOD Field(//PRInt32 index
+                   nsIVariant **retval);
+  NS_IMETHOD FieldByName(//const nsAString &field_name
+                         nsIVariant **retval);
   NS_IMETHOD FieldName(PRInt32 index, nsAString &retval);
   NS_IMETHOD FieldCount(PRInt32 *retval);
   NS_IMETHOD Close(void);
@@ -66,13 +68,18 @@ class GearsResultSet
  private:
   friend class GearsDatabase;
 
-  // Helper called by GearsDatabase.execute to initialize the result set
+  // Helper called by GearsDatabase.execute to initialize the result set.
   bool InitializeResultSet(sqlite3_stmt *statement,
                            GearsDatabase *db,
                            std::string16 *error_message);
 
-  // Helper shared by Next() and SetStatement()
+  // Helper shared by Field() and FieldByName().
+  bool FieldImpl(JsParamFetcher *js_params, int index,
+                 std::string16 *error_message);
+
+  // Helper shared by Next() and SetStatement().
   bool NextImpl(std::string16 *error_message);
+
   bool Finalize();
 
   GearsDatabase *database_;

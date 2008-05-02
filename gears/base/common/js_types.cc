@@ -264,16 +264,16 @@ bool JsArray::SetElementDouble(int index, double value) {
   }
 }
 
-bool JsArray::SetElementString(int index, const std::string16& value) {
+bool JsArray::SetElementString(int index, const std::string16 &value) {
   JsToken token;
-  if (StringToJsToken(js_context_, value, &token)) {
+  if (StringToJsToken(js_context_, value.c_str(), &token)) {
     return SetElement(index, token);
   } else {
     return false;
   }
 }
 
-bool JsArray::SetElementComModule(int index, IScriptable* value) {
+bool JsArray::SetElementComModule(int index, IScriptable *value) {
   JsToken token;
   if (ComModuleToToken(js_context_, value, &token)) {
     return SetElement(index, token);
@@ -340,7 +340,7 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
   return false;
 }
 
-bool JsArray::SetElement(int index, const JsScopedToken& in) {
+bool JsArray::SetElement(int index, const JsScopedToken &in) {
   // Check that we're initialized.
   assert(JsTokenIsArray(array_, js_context_));
 
@@ -362,11 +362,11 @@ bool JsArray::SetElementDouble(int index, double value) {
   return SetElement(index, CComVariant(value));
 }
 
-bool JsArray::SetElementString(int index, const std::string16& value) {
+bool JsArray::SetElementString(int index, const std::string16 &value) {
   return SetElement(index, CComVariant(value.c_str()));
 }
 
-bool JsArray::SetElementComModule(int index, IScriptable* value) {
+bool JsArray::SetElementComModule(int index, IScriptable *value) {
   return SetElement(index, CComVariant(value));
 }
 
@@ -419,7 +419,7 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
   return true;
 }
 
-bool JsArray::SetElement(int index, const JsScopedToken& in) {
+bool JsArray::SetElement(int index, const JsScopedToken &in) {
   // Check that we're initialized.
   assert(JsTokenIsArray(array_, js_context_));
 
@@ -440,11 +440,11 @@ bool JsArray::SetElementDouble(int index, double value) {
   return SetElement(index, JsScopedToken(value));
 }
 
-bool JsArray::SetElementString(int index, const std::string16& value) {
+bool JsArray::SetElementString(int index, const std::string16 &value) {
   return SetElement(index, JsScopedToken(value.c_str()));
 }
 
-bool JsArray::SetElementComModule(int index, IScriptable* value) {
+bool JsArray::SetElementComModule(int index, IScriptable *value) {
   // TODO(cdevries): implement this
   assert(false);
   return false;
@@ -517,15 +517,15 @@ JsParamType JsArray::GetElementType(int index) const {
   return JsTokenGetType(token, js_context_);
 }
 
-bool JsArray::SetElementArray(int index, JsArray* value) {
+bool JsArray::SetElementArray(int index, JsArray *value) {
   return SetElement(index, value->array_);
 }
 
-bool JsArray::SetElementObject(int index, JsObject* value) {
+bool JsArray::SetElementObject(int index, JsObject *value) {
   return SetElement(index, value->token());
 }
 
-bool JsArray::SetElementFunction(int index, JsRootedCallback* value) {
+bool JsArray::SetElementFunction(int index, JsRootedCallback *value) {
   return SetElement(index, value->token());
 }
 
@@ -630,7 +630,7 @@ bool JsObject::SetPropertyDouble(const std::string16& name, double value) {
 bool JsObject::SetPropertyString(const std::string16 &name,
                                  const std::string16 &value) {
   JsToken token;
-  if (StringToJsToken(js_context_, value, &token)) {
+  if (StringToJsToken(js_context_, value.c_str(), &token)) {
     return SetProperty(name, token);
   } else {
     return false;
@@ -1119,12 +1119,12 @@ bool JsTokenIsNullOrUndefined(JsToken t) {
   return JSVAL_IS_NULL(t) || JSVAL_IS_VOID(t); // null or undefined
 }
 
-bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken* out) {
+bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken *out) {
   *out = BOOLEAN_TO_JSVAL(value);
   return true;
 }
 
-bool IntToJsToken(JsContextPtr context, int value, JsScopedToken* out) {
+bool IntToJsToken(JsContextPtr context, int value, JsScopedToken *out) {
   *out = INT_TO_JSVAL(value);
   return true;
 }
@@ -1135,12 +1135,10 @@ bool IntToJsToken(JsContextPtr context, int value, JsScopedToken* out) {
 // pointer.  The TODO is to fix up the API so that the callee does the
 // right thing.
 // Similarly for FooToJsToken in general, for Foo in {Bool, Int, Double}.
-bool StringToJsToken(JsContextPtr context,
-                     const std::string16& value,
-                     JsScopedToken* out) {
-  JSString *jstr = JS_NewUCStringCopyZ(
-                       context,
-                       reinterpret_cast<const jschar *>(value.c_str()));
+bool StringToJsToken(JsContextPtr context, const char16 *value,
+                     JsScopedToken *out) {
+  JSString *jstr = JS_NewUCStringCopyZ(context,
+                                       reinterpret_cast<const jschar *>(value));
   if (jstr) {
     *out = STRING_TO_JSVAL(jstr);
     return true;
@@ -1149,7 +1147,7 @@ bool StringToJsToken(JsContextPtr context,
   }
 }
 
-bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken* out) {
+bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken *out) {
   jsdouble* dp = JS_NewDouble(context, value);
   if (!dp)
     return false;
@@ -1158,7 +1156,7 @@ bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken* out) {
   return true;
 }
 
-bool NullToJsToken(JsContextPtr context, JsScopedToken* out) {
+bool NullToJsToken(JsContextPtr context, JsScopedToken *out) {
   *out = JSVAL_NULL;
   return true;
 }
@@ -1381,29 +1379,28 @@ bool JsTokenIsNullOrUndefined(JsToken t) {
   return t.vt == VT_NULL || t.vt == VT_EMPTY;  // null or undefined
 }
 
-bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken* out) {
+bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken *out) {
   *out = value;
   return true;
 }
 
-bool IntToJsToken(JsContextPtr context, int value, JsScopedToken* out) {
+bool IntToJsToken(JsContextPtr context, int value, JsScopedToken *out) {
   *out = value;
   return true;
 }
 
-bool StringToJsToken(JsContextPtr context,
-                     const std::string16& value,
-                     JsScopedToken* out) {
-  *out = value.c_str();
-  return true;
-}
-
-bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken* out) {
+bool StringToJsToken(JsContextPtr context, const char16 *value,
+                     JsScopedToken *out) {
   *out = value;
   return true;
 }
 
-bool NullToJsToken(JsContextPtr context, JsScopedToken* out) {
+bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken *out) {
+  *out = value;
+  return true;
+}
+
+bool NullToJsToken(JsContextPtr context, JsScopedToken *out) {
   VARIANT null_variant;
   null_variant.vt = VT_NULL;
   *out = null_variant;
@@ -1651,29 +1648,28 @@ bool JsTokenIsNullOrUndefined(JsToken t) {
   return NPVARIANT_IS_NULL(t) || NPVARIANT_IS_VOID(t);
 }
 
-bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken* out) {
+bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken *out) {
   // TODO(nigeltao): implement for NPAPI
   return false;
 }
 
-bool IntToJsToken(JsContextPtr context, int value, JsScopedToken* out) {
+bool IntToJsToken(JsContextPtr context, int value, JsScopedToken *out) {
   // TODO(nigeltao): implement for NPAPI
   return false;
 }
 
-bool StringToJsToken(JsContextPtr context,
-                     const std::string16& value,
-                     JsScopedToken* out) {
+bool StringToJsToken(JsContextPtr context, const char16 *value,
+                     JsScopedToken *out) {
   // TODO(nigeltao): implement for NPAPI
   return false;
 }
 
-bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken* out) {
+bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken *out) {
   // TODO(nigeltao): implement for NPAPI
   return false;
 }
 
-bool NullToJsToken(JsContextPtr context, JsScopedToken* out) {
+bool NullToJsToken(JsContextPtr context, JsScopedToken *out) {
   // TODO(nigeltao): implement for NPAPI
   return false;
 }
