@@ -220,7 +220,7 @@ bool MarshaledJsToken::Unmarshal(
     }
     case JSPARAM_STRING16: {
       success = StringToJsToken(
-          js_runner->GetContext(), *(value_.string_value), out);
+          js_runner->GetContext(), value_.string_value->c_str(), out);
       break;
     }
     case JSPARAM_OBJECT: {

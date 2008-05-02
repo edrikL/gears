@@ -111,70 +111,114 @@ bool GearsResultSet::Finalize() {
   return true;
 }
 
-NS_IMETHODIMP GearsResultSet::Field(PRInt32 index, nsIVariant **retval) {
+NS_IMETHODIMP GearsResultSet::Field(//PRInt32 index
+                                    nsIVariant **retval) {
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
+
+  JsParamFetcher js_params(this);
+
+  int index;
+  if (!js_params.GetAsInt(0, &index)) {
+    RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
+  }
 
   if (statement_ == NULL) {
     RETURN_EXCEPTION(STRING16(L"SQL statement is NULL."));
   }
+
   if ((index < 0) || (index >= sqlite3_column_count(statement_))) {
     RETURN_EXCEPTION(STRING16(L"Invalid index."));
   }
 
-  nsresult nr;
-  nsCOMPtr<nsIWritableVariant> vObj(do_CreateInstance(NS_VARIANT_CONTRACTID,
-                                                      &nr));
-  if (NS_FAILED(nr)) {
-    RETURN_EXCEPTION(STRING16(L"Could not create variant."));
+  std::string16 error_message;
+  if (!FieldImpl(&js_params, index, &error_message)) {
+    RETURN_EXCEPTION(error_message.c_str());
   }
+  RETURN_NORMAL();
+}
 
-  nr = NS_ERROR_FAILURE;
+bool GearsResultSet::FieldImpl(JsParamFetcher *js_params, int index,
+                               std::string16 *error_message) {
+  assert(statement_ != NULL);
+
+  JsContextPtr js_context = js_params->GetContextPtr();
+  JsScopedToken token;
+
   int column_type = sqlite3_column_type(statement_, index);
   switch (column_type) {
     case SQLITE_INTEGER: {
       sqlite_int64 i64 = sqlite3_column_int64(statement_, index);
-      if ((i64 >= PR_INT32_MIN) && (i64 <= PR_INT32_MAX)) {
-        nr = vObj->SetAsInt32(static_cast<PRInt32>(i64));
+      // Warning: the extra check here is because the SpiderMonkey jsval int
+      // is essentially only 31 bits, giving less range than INT_MIN..INT_MAX.
+      // TODO(cprince): Hide this logic in a shared SetInt(int64) function.
+      if ((i64 >= INT_MIN) && (i64 <= INT_MAX) && INT_FITS_IN_JSVAL(i64)) {
+        // return an integer
+        if (!IntToJsToken(js_context, static_cast<int>(i64), &token)) {
+          *error_message = GET_INTERNAL_ERROR_MESSAGE();
+          return false;
+        }
       } else if ((i64 >= JS_INT_MIN) && (i64 <= JS_INT_MAX)) {
-        nr = vObj->SetAsInt64(static_cast<PRInt64>(i64));
+        // return a double, using the mantissa
+        if (!DoubleToJsToken(js_context, static_cast<double>(i64), &token)) {
+          *error_message = GET_INTERNAL_ERROR_MESSAGE();
+          return false;
+        }
       } else {
-        RETURN_EXCEPTION(STRING16(L"Integer value is out of range."));
+        *error_message = STRING16(L"Integer value is out of range.");
+        return false;
       }
       break;
     }
-    case SQLITE_FLOAT:
-      nr = vObj->SetAsDouble(sqlite3_column_double(statement_, index));
+    case SQLITE_FLOAT: {
+      double dbl = sqlite3_column_double(statement_, index);
+      if (!DoubleToJsToken(js_context, dbl, &token)) {
+        *error_message = GET_INTERNAL_ERROR_MESSAGE();
+        return false;
+      }
       break;
+    }
     case SQLITE_TEXT: {
-      const void *text = sqlite3_column_text16(statement_, index);
-      nr = vObj->SetAsWString((nsString::char_type *)text);
+      const char16 *text = static_cast<const char16 *>(
+                               sqlite3_column_text16(statement_, index));
+      if (!StringToJsToken(js_context, text, &token)) {
+        *error_message = GET_INTERNAL_ERROR_MESSAGE();
+        return false;
+      }
       break;
     }
     case SQLITE_NULL:
-      nr = vObj->SetAsISupports(NULL);
+      if (!NullToJsToken(js_context, &token)) {
+        *error_message = GET_INTERNAL_ERROR_MESSAGE();
+        return false;
+      }
       break;
     case SQLITE_BLOB:
       // TODO(miket): figure out right way to pass around blobs in variants.
-      RETURN_EXCEPTION(STRING16(L"Data type not supported."));
+      *error_message = STRING16(L"Data type not supported.");
+      return false;
     default:
-      RETURN_EXCEPTION(STRING16(L"Data type not supported."));
+      *error_message = STRING16(L"Data type not supported.");
+      return false;
   }
 
-  if (NS_FAILED(nr)) {
-    RETURN_EXCEPTION(STRING16(L"Setting variant failed."));
-  }
-
-  NS_IF_ADDREF(*retval = vObj);
-  RETURN_NORMAL();
+  js_params->SetReturnValue(token);
+  return true;
 }
 
-NS_IMETHODIMP GearsResultSet::FieldByName(const nsAString &field_name,
+NS_IMETHODIMP GearsResultSet::FieldByName(//const nsAString &field_name
                                           nsIVariant **retval) {
 #ifdef DEBUG
   ScopedStopwatch scoped_stopwatch(&GearsDatabase::g_stopwatch_);
 #endif // DEBUG
+
+  JsParamFetcher js_params(this);
+
+  std::string16 field_name;
+  if (!js_params.GetAsString(0, &field_name)) {
+    RETURN_EXCEPTION(STRING16(L"Invalid parameter."));
+  }
 
   if (statement_ == NULL) {
     RETURN_EXCEPTION(STRING16(L"SQL statement is NULL."));
@@ -183,18 +227,23 @@ NS_IMETHODIMP GearsResultSet::FieldByName(const nsAString &field_name,
   // TODO(miket): This is horrible O(n) code but we didn't have a hashtable
   // implementation handy. Fix this!
   int n = sqlite3_column_count(statement_);
-  int i;
-  for (i = 0; i < n; ++i) {
-    const void *column_name = sqlite3_column_name16(statement_, i);
+  int index;
+  for (index = 0; index < n; ++index) {
+    const void *column_name = sqlite3_column_name16(statement_, index);
     nsDependentString s(static_cast<const PRUnichar *>(column_name));
-    if (field_name.Equals(s)) {
+    if (field_name == s.get()) {
       break; // found it
     }
   }
-  if (i >= n) {
+  if (index >= n) {
     RETURN_EXCEPTION(STRING16(L"Field name not found."));
   }
-  return Field(i, retval);
+
+  std::string16 error_message;
+  if (!FieldImpl(&js_params, index, &error_message)) {
+    RETURN_EXCEPTION(error_message.c_str());
+  }
+  RETURN_NORMAL();
 }
 
 NS_IMETHODIMP GearsResultSet::FieldName(PRInt32 index, nsAString &retval) {
