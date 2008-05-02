@@ -555,7 +555,9 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
 }
 
 bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
-  if (!js_object_) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
+
   JSIdArray *ids = JS_Enumerate(js_context_, JSVAL_TO_OBJECT(js_object_));
   for (int i = 0; i < ids->length; i++) {
     jsval property_key;
@@ -578,7 +580,8 @@ bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
 
 bool JsObject::GetProperty(const std::string16 &name,
                            JsScopedToken *out) const {
-  if (!js_object_) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
 
   return JS_GetUCProperty(js_context_, JSVAL_TO_OBJECT(js_object_),
                           reinterpret_cast<const jschar*>(name.c_str()),
@@ -586,10 +589,8 @@ bool JsObject::GetProperty(const std::string16 &name,
 }
 
 bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
-  if (!js_object_) {
-    LOG(("Specified object is not initialized."));
-    return false;
-  }
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
 
   std::string name_utf8;
   if (!String16ToUTF8(name.c_str(), &name_utf8)) {
@@ -669,22 +670,34 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
 }
 
 bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
-  if (js_object_.vt != VT_DISPATCH) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
+
   return SUCCEEDED(
       ActiveXUtils::GetDispatchPropertyNames(js_object_.pdispVal, out));
 }
 
 bool JsObject::GetProperty(const std::string16 &name,
                            JsScopedToken *out) const {
-  if (js_object_.vt != VT_DISPATCH) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
 
-  return SUCCEEDED(ActiveXUtils::GetDispatchProperty(js_object_.pdispVal,
-                                                     name.c_str(),
-                                                     out));
+  // If the property name is unknown, GetDispatchProperty will return
+  // DISP_E_UNKNOWNNAME and out will be unchanged.
+  HRESULT hr = ActiveXUtils::GetDispatchProperty(js_object_.pdispVal,
+                                                 name.c_str(),
+                                                 out);
+  if (DISP_E_UNKNOWNNAME == hr) {
+    // Set the token to the equivalent of JSPARAM_UNDEFINED.
+    out->Clear();
+    return true;
+  }
+  return SUCCEEDED(hr);
 }
 
 bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
-  if (js_object_.vt != VT_DISPATCH) { return false; }
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
 
   HRESULT hr = ActiveXUtils::AddAndSetDispatchProperty(
     js_object_.pdispVal, name.c_str(), &value);
@@ -738,13 +751,17 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
 }
 
 bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
+
   // TODO(nigeltao): implement
   return false;
 }
 
 bool JsObject::GetProperty(const std::string16 &name,
                            JsScopedToken *out) const {
-  if (!NPVARIANT_IS_OBJECT(js_object_)) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
 
   std::string name_utf8;
   if (!String16ToUTF8(name.c_str(), &name_utf8)) return false;
@@ -756,7 +773,8 @@ bool JsObject::GetProperty(const std::string16 &name,
 }
 
 bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
-  if (!NPVARIANT_IS_OBJECT(js_object_)) { return false; }
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
 
   std::string name_utf8;
   if (!String16ToUTF8(name.c_str(), &name_utf8)) { return false; }
