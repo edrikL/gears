@@ -20,9 +20,11 @@ interface Geolocation {
   readonly Position lastPosition;
 
   // Get the current position.
+  // The callback function will be called with a position argument as the single parameter on success, or without a parameter on failure.
   void getCurrentPosition(PositionCallback callback, optional PositionOptions);
 
   // Watch the current position over time.
+  // The callback function will be called with a position argument as the single parameter on success, or without a parameter on failure.
   int watchPosition(PositionCallback callback, optional PositionOptions);
 
   // Stop watching the current position.
