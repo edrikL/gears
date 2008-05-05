@@ -54,16 +54,18 @@ void Database2Manager::OpenDatabase(JsCallContext *context) {
   // create a Database2 instance and pass name and version into it
   // displayName and estimatedSize are not used by Gears
   scoped_refptr<Database2> database;
-  if (Database2::Create(this, name, version, &database)) {
-    if (database->Open()) {
-      context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, database.get());
-      ReleaseNewObjectToScript(database.get());
-    } else {
-      // raise INVALID_STATE_ERR
-      context->SetException(kInvalidStateError);
-    }
-  } else {
+  if (!Database2::Create(this, name, version, &database)) {
     // raise broken gear exception
     context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+    return;
   }
+
+  if (!database->Open()) {
+    // raise INVALID_STATE_ERR
+    context->SetException(kInvalidStateError);
+    return;
+  }
+
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, database.get());
+  ReleaseNewObjectToScript(database.get());
 }

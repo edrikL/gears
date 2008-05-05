@@ -91,13 +91,13 @@ function testDatabaseTransaction() {
       inFlight = true;
       outOfOrder--;
       if (outOfOrder) {
-        assert(false, method + 'invokes callback out of sequence');
+        assert(false, method + ' invokes callback out of sequence');
       }
       completeAsync();
     });
     outOfOrder++;
     if (inFlight) {
-      assert(false, method + 'is not called asynchronously');
+      assert(false, method + ' is not called asynchronously');
     }
     startAsync();
   });
@@ -105,7 +105,7 @@ function testDatabaseTransaction() {
 
 function testDatabaseSynchronousTransaction() {
   withDb(function(db) {
-    var method = 'Database2.synchronousTransaction()';
+    var method = 'Database2.synchronousTransaction() ';
     var inFlight;
     var outOfOrder = 0;
     // this tests the fact that the transaction callback is called 
@@ -113,20 +113,29 @@ function testDatabaseSynchronousTransaction() {
     db.synchronousTransaction(function(tx) {
       inFlight = true;
       if (outOfOrder) {
-        assert(false, method + 'invokes callback out of sequence');
+        assert(false, method + ' invokes callback out of sequence');
       }
     });
-    db.synchronousTransaction(function() {});
     outOfOrder++;
     if (!inFlight) {
-      assert(false, method + 'is not called synchronously');
+      assert(false, method + ' is not called synchronously');
     }
     
     // test statement execution
     db.synchronousTransaction(function(tx) {
       var method = 'Database2Transaction.executeSql()';
       var rs = tx.executeSql('SELECT * FROM Pages;');
-      assert(rs, method + 'should return a result set');
+      assert(rs, method + ' should return a result set');
+    });
+  });
+}
+
+function testStatementArguments() {
+  withDb(function(db) {
+    db.synchronousTransaction(function(tx) {
+      // valid arguments
+      tx.executeSql('SELECT * FROM Pages WHERE pageId = ? and version = ?',
+        [ 1972, '1.0.0.0' ]);
     });
   });
 }
