@@ -25,27 +25,37 @@
 
 #include "gears/database2/connection.h"
 
-bool Database2Connection::OpenAndVerifyVersion(std::string16 database_version) {
+// TODO(dimitri.glazkov): implement actual database operations. For now, all
+// operations pretend to succeed to facilitate in-progress testing
+
+bool Database2Connection::OpenAndVerifyVersion(
+                              const std::string16 &database_version) {
+  // open database if not already open
   // read expected_version (user_version value)
   // read version from Permissions.db
   // if database_version is not an empty value or null,
+  if (!database_version.empty()) {
     // if database_version matches version
       // return true
     // otherwise,
-      // set error to INVALID_STATE_ERR exception value
+      return false;
   // return true
-  return false;
+  }
+  return true;
 }
 
-bool Database2Connection::Execute(Database2RowHandlerInterface *row_handler) {
-  if (bogus_version_) {
+bool Database2Connection::Execute(const std::string16 &statement,
+                                  const int num_arguments,
+                                  const JsParamToSend *arguments,
+                                  Database2RowHandlerInterface *row_handler) {
+  // if (bogus_version_) {
    // set error code to "version mismatch" (error code 2)
-  }
+  // }
   // prepare
   // step, for each row, call row_handler->HandleRow(..);
    // if error, set error code and message, return false;
   // return true upon success
-  return false;
+  return true;
 }
 
 bool Database2Connection::Begin() {
@@ -54,24 +64,17 @@ bool Database2Connection::Begin() {
   // read actual_version, if doesn't match expected_version_, 
     // set bogus_version_ flag
   // return true upon success
-  return false;
+  return true;
 }
 
-bool Database2Connection::Rollback() {
-  // execute COMMIT
-  // if error, set error code and message, return false
-  // return true upon success
-  return false;
+void Database2Connection::Rollback() {
+  // execute ROLLBACK
+  // don't remember or handle errors
 }
 
 bool Database2Connection::Commit() {
-  // execute ROLLBACK
-  // don't remember or handle errors
-  return false;
-}
-
-sqlite3 *Database2Connection::handle() {
-  // opend database if not already open,
-  // used by all operations to obtain the handle
-  return NULL;
+  // execute COMMIT
+  // if error, set error code and message, return false
+  // return true upon success
+  return true;
 }

@@ -26,26 +26,42 @@
 #ifndef GEARS_DATABASE2_THREAD_SAFE_QUEUE_H__
 #define GEARS_DATABASE2_THREAD_SAFE_QUEUE_H__
 
+#include <queue>
+
 #include "gears/base/common/common.h"
 
+// TODO(dimitri.glazkov): add, um ...  the thread-safety stuff
 template <class T>
 class Database2ThreadSafeQueue {
  public:
   Database2ThreadSafeQueue() {};
-  void Push(T *t) {
+
+  void Push(T *t, bool *first) {
     // lock
-    // add t to internal queue
+    *first = queue_.empty();
+    queue_.push(t);
     // unlock
   }
 
   // remove from queue
-  T *Pop() {
-    // remove an item from queue
-    return NULL;
+  T *Pop(bool *empty) {
+    // lock
+    if (queue_.empty()) {
+      *empty = true;
+      return NULL;
+    }
+    *empty = false;
+    T *t = queue_.front();
+    queue_.pop();
+    return t;
+    // unlock
   }
 
   // returns true if the internal queue is empty
-  bool empty() { return false; }
+  bool empty() { return queue_.empty(); }
+
+ private:
+  std::queue<T*> queue_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2ThreadSafeQueue);
 };

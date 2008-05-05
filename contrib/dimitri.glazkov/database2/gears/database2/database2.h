@@ -31,6 +31,7 @@
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
+#include "gears/database2/connection.h"
 #include "gears/database2/interpreter.h"
 #include "gears/database2/thread_safe_queue.h"
 
@@ -41,61 +42,68 @@ typedef Database2ThreadSafeQueue<Database2Transaction>
     Database2TransactionQueue;
 
 // Implements the HTML5 database interface, which allows the creation of 
-// transactions. We also have our own proprietary synchronousTransaction() 
-// method. This class also has a reference to a Database2Connection object which
-// it shares with all transactions it creates.
+// asynchronous transactions. We also have our own proprietary
+// synchronousTransaction() method.
+// This class creates and holds a reference to a Database2Connection object
+// which it shares with all transactions it creates.
 class Database2 : public ModuleImplBaseClassVirtual {
-public:
-  Database2()
-    : ModuleImplBaseClassVirtual("Database2") {}
+ public:
+  ~Database2() {}
 
-  // transaction(...)
-  // IN: SQLTransactionCallback callback, 
-  //     optional SQLTransactionErrorCallback errorCallback, 
-  //     optional VoidCallback successCallback);
-  // OUT: void
-  void Transaction(JsCallContext *context);
-
-  // synchronousTransaction(...)
-  // IN: function start_callback
-  // OUT: void
-  void SynchronousTransaction(JsCallContext *context);
-
-  // changeVersion(...)
-  // IN: string old version, string new version, optional function callback,
-  //     optional function success, optional function failure
-  // OUT: void
-  void ChangeVersion(JsCallContext *context);
-
-  // TODO(dimitri.glazkov): Add name, origin parameters
-  static Database2TransactionQueue *GetQueue();
-
+    // creates an instance of Database2
   static bool Create(const ModuleImplBaseClass *sibling, 
                      const std::string16 &name,
                      const std::string16 &version,
                      scoped_refptr<Database2> *instance);
 
-  // creates an instance of a SQLError object, using a Javascript object
+  // creates an object, implementing HTML5 SQLError interface
   static bool CreateError(const ModuleImplBaseClass *sibling, 
-                          int code, 
-                          std::string16 message,
-                          JsObject **instance);
+                          const int code, 
+                          const std::string16 &message,
+                          JsObject *instance);
 
-private:
+  // explicit (not part of the ::Create), so that the caller could distinguish
+  // between internal failures and version mismatch errors
+  bool Open();
+
+  // returns (or creates) a transaction queue for this database
+  Database2TransactionQueue *GetQueue();
+
+  // IN: string old_version, string new_version, optional function callback,
+  //     optional function success_callback, optional function failure
+  // OUT: void
+  void ChangeVersion(JsCallContext *context);
+
+  // IN: function start_callback
+  // OUT: void
+  void SynchronousTransaction(JsCallContext *context);
+
+  // IN: function callback, 
+  //     optional function error_callback,
+  //     optional function success_callback
+  // OUT: void
+  void Transaction(JsCallContext *context);
+
+ private:
+  friend bool CreateModule<Database2, Database2>(
+                  JsRunnerInterface *js_runner,
+                  scoped_refptr<Database2>* module);
+  Database2() : ModuleImplBaseClassVirtual("Database2") {}
+
+  void QueueTransaction(Database2Transaction *transaction);
+
   std::string16 name_;
   std::string16 origin_;
   std::string16 version_;
 
-  // TODO(dimitri.glazkov) merge RefCounted & scoped_refptr into this branch
-
   // Shared reference to the connection used by all transactions from this
   // database instance. This is initialized during the first transaction.
-
-  //scoped_refptr<Database2Connection> connection_;
-  Database2Interpreter interpreter_;
-  //scoped_refptr<Database2ThreadedInterpreter> threaded_interpreter_;
-
-  void QueueTransaction(Database2Transaction *transaction);
+  scoped_refptr<Database2Connection> connection_;
+  // The lifetime of the thread inside threaded interpreter is controlled
+  // through reference-counting, so any object that uses it should hold a
+  // scoped_refptr reference to it. The non-threaded interpreter does not
+  // require counting and thus does not need to be accounted for.
+  scoped_refptr<Database2ThreadedInterpreter> threaded_interpreter_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2);
 };

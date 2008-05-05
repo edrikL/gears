@@ -27,11 +27,15 @@
 #define GEARS_DATABASE2_COMMAND_H__
 
 #include "gears/base/common/common.h"
-#include "gears/base/common/message_queue.h" 
+#include "gears/base/common/message_queue.h"
+#include "gears/base/common/scoped_refptr.h"
+#include "gears/database2/statement.h"
+#include "gears/database2/transaction.h"
 
 // base command, represents a typical execution pattern
 class Database2Command : public MessageData {
  public:
+  Database2Command(Database2Transaction *tx) : tx_(tx) {};
   // executes a command and sets has_results to true, if there are any results
   // to process
   virtual void Execute(bool *has_results) = 0;
@@ -39,7 +43,15 @@ class Database2Command : public MessageData {
   // true
   virtual void HandleResults() = 0;
 
+ protected:
+  Database2Transaction *tx() const { return tx_.get(); }
+  Database2Connection *connection() const { return tx_->connection(); }
+  bool success() const { return success_; }
+  void SetResult(bool success) { success_ = success; }
+
  private:
+  bool success_;
+  scoped_refptr<Database2Transaction> tx_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2Command);
 };
@@ -47,46 +59,65 @@ class Database2Command : public MessageData {
 
 // begins a transaction
 class Database2BeginCommand : public Database2Command {
-public:
+ public:
+  Database2BeginCommand(Database2Transaction *tx) : Database2Command(tx) {}
   virtual void Execute(bool *has_results);
   virtual void HandleResults();
 
+ private:
   DISALLOW_EVIL_CONSTRUCTORS(Database2BeginCommand);
 };
 
 // asynchronously executes a SQL statement
 class Database2AsyncExecuteCommand : public Database2Command {
-public:
+ public:
+  Database2AsyncExecuteCommand(Database2Transaction *tx)
+      : Database2Command(tx) {}
   virtual void Execute(bool *has_results);
   virtual void HandleResults();
 
+ private:
   DISALLOW_EVIL_CONSTRUCTORS(Database2AsyncExecuteCommand);
 };
 
 // synchronously executes a SQL statement
 class Database2SyncExecuteCommand : public Database2Command {
-public:
+ public:
+  // constructor accepts JsCallContext, which is ok, because
+  // this command is only instantiated if the interpreter is synchronous
+  Database2SyncExecuteCommand(Database2Transaction *tx,
+                              JsCallContext *context,
+                              Database2Statement *statement)
+      : Database2Command(tx), context_(context), statement_(statement) {}
   virtual void Execute(bool *has_results);
   virtual void HandleResults();
+
+ private:
+  JsCallContext *context_;
+  scoped_ptr<Database2Statement> statement_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2SyncExecuteCommand);
 };
 
 // commits a transaction
 class Database2CommitCommand : public Database2Command {
-public:
+ public:
+   Database2CommitCommand(Database2Transaction *tx) : Database2Command(tx) {}
   virtual void Execute(bool *has_results);
   virtual void HandleResults();
 
+ private:
   DISALLOW_EVIL_CONSTRUCTORS(Database2CommitCommand);
 };
 
 // rolls back a transaction
 class Database2RollbackCommand : public Database2Command {
  public:
+  Database2RollbackCommand(Database2Transaction *tx) : Database2Command(tx) {}
   virtual void Execute(bool *has_results);
   virtual void HandleResults();
 
+ private:
   DISALLOW_EVIL_CONSTRUCTORS(Database2RollbackCommand);
 };
 

@@ -58,8 +58,12 @@ class Database2Statement {
                      JsRootedCallback *error_callback,
                      Database2Statement **instance);
 
+  std::string16 sql() const { return sql_statement_; }
+  JsParamToSend *arguments() const { return sql_arguments_; }
+  int num_arguments() const { return num_arguments_; }
  private:
   std::string16 sql_statement_;
+  int num_arguments_;
   JsParamToSend *sql_arguments_;
   scoped_ptr<JsRootedCallback> callback_;
   scoped_ptr<JsRootedCallback> error_callback_;

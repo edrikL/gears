@@ -26,8 +26,10 @@
 #include "gears/database2/database2.h"
 
 #include "gears/base/common/base_class.h"
+#include "gears/base/common/common.h"
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/module_wrapper.h"
+#include "gears/database2/common.h"
 #include "gears/database2/transaction.h"
 
 DECLARE_GEARS_WRAPPER(Database2);
@@ -37,6 +39,121 @@ void Dispatcher<Database2>::Init() {
   RegisterMethod("transaction", &Database2::Transaction);
   RegisterMethod("synchronousTransaction", &Database2::SynchronousTransaction);
   RegisterMethod("changeVersion", &Database2::ChangeVersion);
+}
+
+
+// static
+bool Database2::Create(const ModuleImplBaseClass *sibling, 
+                       const std::string16 &name,
+                       const std::string16 &version,
+                       scoped_refptr<Database2> *instance) {
+  assert(instance);
+  if (!CreateModule<Database2>(sibling->GetJsRunner(), instance)
+      || !instance->get()->InitBaseFromSibling(sibling)) {
+    return false;
+  }
+  instance->get()->version_.assign(version);
+
+  instance->get()->connection_.reset(
+      new Database2Connection(name,
+                              instance->get()->EnvPageSecurityOrigin()));
+  return true;
+}
+
+// static
+bool Database2::CreateError(const ModuleImplBaseClass *sibling,
+                            const int code,
+                            const std::string16 &message,
+                            JsObject *instance) {
+  // TODO(dimitri.glazkov): create an instance of the error object
+  return false;
+}
+
+bool Database2::Open() {
+  return connection_->OpenAndVerifyVersion(version_);
+}
+
+Database2TransactionQueue *Database2::GetQueue() {
+  // Use connection_'s name and origin as a key to query transaction queue table
+  return NULL;
+}
+
+void Database2::QueueTransaction(Database2Transaction *transaction) {
+  // Database2TransactionQueue queue = GetQueue(name, origin);
+  // returns true, if first iterm in queue
+  // bool first = queue->empty();
+  // sketch only, consider making a single method to prevent race conditions
+  // queue->Push(tx);
+  // if (first) {
+  // start executing transaction, if first
+  // tx->Start();
+  // }
+}
+
+void Database2::ChangeVersion(JsCallContext *context) {
+  std::string16 old_version;
+  std::string16 new_version;
+  JsRootedCallback *callback = NULL;
+  JsRootedCallback *error_callback = NULL;
+  JsRootedCallback *success_callback = NULL;
+
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &old_version },
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &new_version },
+    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &callback },
+    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &error_callback },
+    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &success_callback }
+  };
+
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
+  // populate callbacks
+  // populate with threaded interpreter
+  // + populate version
+  // ...
+}
+
+void Database2::SynchronousTransaction(JsCallContext *context) {
+  JsRootedCallback *callback = NULL;
+
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &callback }
+  };
+
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
+  // the non-threaded interpreter does not have a state and is only
+  // instantiated once here. Local static is used to express the local nature
+  // of where we neeed to know the specific kind of interpreter instance
+  static Database2Interpreter interpreter;
+  scoped_refptr<Database2Transaction> tx;
+  // populate with interpreter (not threaded)
+  if (!Database2Transaction::Create(this, connection_.get(), &interpreter,
+                                 callback, NULL, NULL, &tx)) {
+    // raise internal error exception
+    context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+    return;
+  }
+  // sync transaction never enters the queue, there's no need for it, but it
+  // still checks for pending transactions in the queue to prevent deadlocks
+  //if (!GetQueue(name, origin)->empty()) {
+  //   Explicitly disallow nested transactions, thus one can't start a
+  //   synchronous transaction while another transaction is still open.
+  //   set exception INVALID_STATE_ERR
+  //   return;
+  // }
+  tx->Start();
+  if (!tx->open()) {
+    // the exception has been already set by InvokeErrorCallback,
+    // so we just let this go
+    return;
+  }
+  tx->InvokeCallback();
+  tx->MarkClosed();
+  // implicitly trigger commit
+  tx->ExecuteNextStatement(NULL);
 }
 
 void Database2::Transaction(JsCallContext *context) {
@@ -57,87 +174,4 @@ void Database2::Transaction(JsCallContext *context) {
   // populate with threaded interpreter
 
   // QueueTransaction(tx);
-}
-
-void Database2::SynchronousTransaction(JsCallContext *context) {
-  JsRootedCallback *callback = NULL;
-
-  JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &callback }
-  };
-
-  context->GetArguments(ARRAYSIZE(argv), argv);
-  if (context->is_exception_set()) return;
-
-  // populate with interpreter (not threaded)
-
-  // sync transaction never enters the queue, there's no need for it
-  // but it still checks for pending transactions in the queue
-  // to prevent deadlocks
-  //if (GetQueue(name, origin)->empty()) {
-  //  tx->Start();
-  //}
-  //else {
-  // explicitly disallow nested transactions, thus one can't
-  // start a synchronous transaction while another transaction is still open
-  // set exception INVALID_STATE_ERR
-  //}
-}
-
-void Database2::ChangeVersion(JsCallContext *context) {
-  std::string16 oldVersion;
-  std::string16 newVersion;
-  JsRootedCallback *callback = NULL;
-  JsRootedCallback *errorCallback = NULL;
-  JsRootedCallback *successCallback = NULL;
-
-  JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &oldVersion },
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &newVersion },
-    { JSPARAM_REQUIRED, JSPARAM_FUNCTION, &callback },
-    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &errorCallback },
-    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &successCallback }
-  };
-
-  context->GetArguments(ARRAYSIZE(argv), argv);
-  if (context->is_exception_set()) return;
-
-  // populate callbacks
-  // populate with threaded interpreter
-  // + populate version
-  // ...
-}
-
-void Database2::QueueTransaction(Database2Transaction *transaction) {
-  // Database2TransactionQueue queue = GetQueue(name, origin);
-  // returns true, if first iterm in queue
-  // bool first = queue->empty();
-  // sketch only, consider making a single method to prevent race conditions
-  // queue->Push(tx);
-  // if (first) {
-  // start executing transaction, if first
-  // tx->Start();
-  // }
-}
-
-bool Database2::Create(const ModuleImplBaseClass *sibling, 
-                       const std::string16 &name,
-                       const std::string16 &version,
-                       scoped_refptr<Database2> *instance) {
-  assert(instance);
-  return CreateModule<Database2>(sibling->GetJsRunner(), instance)
-      && instance->get()->InitBaseFromSibling(sibling);
-}
-
-bool Database2::CreateError(const ModuleImplBaseClass *sibling,
-                            int code,
-                            std::string16 message,
-                            JsObject **instance) {
-  // TODO(dimitri.glazkov): create an instance of the error object
-  return false;
-}
-
-// TODO(dimitri.glazkov): Add name, origin parameters
-Database2TransactionQueue *Database2::GetQueue() {
-  return NULL;
 }

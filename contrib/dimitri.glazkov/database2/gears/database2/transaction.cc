@@ -29,6 +29,8 @@
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/module_wrapper.h"
+#include "gears/database2/commands.h"
+#include "gears/database2/common.h"
 #include "gears/database2/database2.h"
 #include "gears/database2/statement.h"
 
@@ -39,13 +41,58 @@ void Dispatcher<Database2Transaction>::Init() {
   RegisterMethod("executeSql", &Database2Transaction::ExecuteSql);
 }
 
+
+// static
+bool Database2Transaction::Create(
+                               const Database2 *database,
+                               Database2Connection *connection,
+                               Database2Interpreter *interpreter,
+                               JsRootedCallback *callback,
+                               JsRootedCallback *error_callback,
+                               JsRootedCallback *success_callback,
+                               scoped_refptr<Database2Transaction> *instance) {
+  assert(instance);
+  if (!CreateModule<Database2Transaction>(database->GetJsRunner(), instance)
+      || !instance->get()->InitBaseFromSibling(database)) {
+    return false;
+  }
+
+  Database2Transaction *tx = instance->get();
+  tx->connection_.reset(connection);
+  tx->interpreter_.reset(interpreter);
+  // set callbacks
+  tx->callback_.reset(callback);
+  tx->error_callback_.reset(error_callback);
+  tx->success_callback_.reset(success_callback);
+  // register unload handler
+  tx->unload_monitor_.reset(new JsEventMonitor(database->GetJsRunner(),
+                                               JSEVENT_UNLOAD, tx));
+  return true;
+}
+
+void Database2Transaction::Start() {
+  // queue operation to begin transaction
+  interpreter_->Run(new Database2BeginCommand(this));
+}
+
+void Database2Transaction::InvokeCallback() {
+  assert(callback_.get());
+  // prepare to return transaction
+  JsParamToSend send_argv[] = {
+    { JSPARAM_DISPATCHER_MODULE, static_cast<ModuleImplBaseClass *>(this) }
+  };
+
+  GetJsRunner()->InvokeCallback(callback_.get(), ARRAYSIZE(send_argv),
+                                send_argv, NULL);
+}
+
 void Database2Transaction::ExecuteSql(JsCallContext *context) {
-  std::string16 sql_Database2Statement;
+  std::string16 sql_statement;
   JsArray sql_arguments;
   JsRootedCallback *callback = NULL;
   JsRootedCallback *error_callback = NULL;
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &sql_Database2Statement },
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &sql_statement },
     { JSPARAM_OPTIONAL, JSPARAM_ARRAY, &sql_arguments},
     { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &callback },
     { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &error_callback }
@@ -54,69 +101,97 @@ void Database2Transaction::ExecuteSql(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
 
-  // if (!is_open_) {
-  // throw exception saying the transaction is closed
-  // }
-  // create Database2Statement with sql, arguments, and callbacks
-  // add to statement queue
-  // if first item in the queue, invoke ExecuteNextStatement
+  if (!is_open_) {
+    context->SetException(kTransactionClosed);
+    return;
+  }
 
-  // ideally, if the queue is empty prior to this call, this should be done
-  // without pushing/popping the statement
-}
+  Database2Statement *statement;
+  if (!Database2Statement::Create(sql_statement, sql_arguments, callback,
+      error_callback, &statement)) {
+    context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+    return;
+  }
 
-void Database2Transaction::Start() {
-  // queue operation to begin transaction
-  // interpreter()->Run(new Database2BeginCommand(this, database()));
+  bool first;
+  // TODO(dimitri.glazkov): ideally, if the queue is empty prior to this
+  // call, we should avoid pushing/popping the statement
+  statement_queue_.Push(statement, &first);
+  if (first) {
+    ExecuteNextStatement(context);
+  }
+  // otherwise, the statement will be executed after the previous statement
+  // in queue
 }
 
 void Database2Transaction::ExecuteNextStatement(JsCallContext *context) {
   // pop statement from the end of the queue
+  bool empty;
+  Database2Statement *statement = statement_queue_.Pop(&empty);
   // if no more statements,
-  // interpreter()->RunCommand(new Database2CommitCommand(this));
-  // otherwise
-  // if (async_) {
-  //   interpreter()->RunCommand(new Database2AsyncExecuteCommand(this, conn,
-  //     stmt));
-  // }
-  // else {
-  //   interperter()->RunCommand(new Database2SyncExecuteCommand(context, conn));
-  // }
-}
+  if (empty) {
+    interpreter_->Run(new Database2CommitCommand(this));
+    return;
+  }
 
-void Database2Transaction::InvokeCallback() {
-  // prepare to return transaction
-  JsParamToSend send_argv[] = {
-    { JSPARAM_DISPATCHER_MODULE, static_cast<ModuleImplBaseClass *>(this) }
-  };
-
-  GetJsRunner()->InvokeCallback(callback_.get(), ARRAYSIZE(send_argv),
-                                 send_argv, NULL);
+  if (interpreter_->async()) {
+  //     interpreter_->Run(new Database2AsyncExecuteCommand(this));
+  } else {
+   assert(context);
+   interpreter_->Run(new Database2SyncExecuteCommand(this, context,
+       statement));
+  }
 }
 
 void Database2Transaction::InvokeErrorCallback() {
+  // for synchronous transaction, throw an error in case of transaction failure,
+  // otherwise, invoke callback or fail silently (per HTML5 spec)
+  if (!interpreter_->async()) {
+    GetJsRunner()->ThrowGlobalError(connection()->error_message());
+    return;
+  }
+  
+  if (!HasErrorCallback()) {
+    return;
+  }
+
+  JsObject* error = new JsObject();
+  if (!Database2::CreateError(this, connection()->error_code(),
+      connection()->error_message(), error)) {
+    // unable to create an error object
+    GetJsRunner()->ThrowGlobalError(GET_INTERNAL_ERROR_MESSAGE());
+    return;
+  }
+
+  JsParamToSend send_argv[] = {
+    JSPARAM_OBJECT, error
+  };
+
+  GetJsRunner()->InvokeCallback(error_callback_.get(), ARRAYSIZE(send_argv),
+                                send_argv, NULL);
 }
 
 void Database2Transaction::InvokeSuccessCallback() {
+  // success callback may only exist for asynchronous transaction
+  // InvokeSucessCallback() is called from CommitCommand, which doesn't know
+  // whether it exists or not
+  // TODO(dimitri.glazkov): think of a better pattern that doesn't cause
+  // conflating the execution path
+  if (interpreter_->async() && HasSuccessCallback()) {
+    // TODO(dimitri.glazkov): investigate whether this is the right way to
+    // invoke callback with no parameters
+    GetJsRunner()->InvokeCallback(success_callback_.get(), 0, NULL, NULL);
+  }
 }
 
-bool Database2Transaction::Create(
-                               const Database2 *database,
-                               const bool async,
-                               JsRootedCallback *callback,
-                               JsRootedCallback *error_callback,
-                               JsRootedCallback *success_callback,
-                               scoped_refptr<Database2Transaction> *instance) {
-  assert(instance);
-  if (CreateModule<Database2Transaction>(database->GetJsRunner(), instance)
-      && (*instance)->InitBaseFromSibling(database)) {
-    Database2Transaction *tx = instance->get();
-    tx->async_ = async;
-    // set callbacks
-    tx->callback_.reset(callback);
-    tx->error_callback_.reset(error_callback);
-    tx->success_callback_.reset(success_callback);
-    return true;
-  }
-  return false;
+void Database2Transaction::HandleEvent(JsEventType event_type) {
+  assert(event_type == JSEVENT_UNLOAD);
+
+  // clear callbacks, because in FF, the JS runtime may go away without
+  // finishing garbage-collection
+  callback_.reset();
+  error_callback_.reset();
+  success_callback_.reset();
+
+  unload_monitor_.reset();
 }

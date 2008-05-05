@@ -27,11 +27,14 @@
 #define GEARS_DATABASE2_CONNECTION_H__
 
 #include "gears/base/common/common.h"
+#include "gears/base/common/js_types.h"
+#include "gears/base/common/scoped_refptr.h"
+#include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
 #include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
 
 class Database2RowHandlerInterface {
-public:
+ public:
   Database2RowHandlerInterface() {};
   ~Database2RowHandlerInterface() {};
 
@@ -44,28 +47,29 @@ public:
 };
 
 // Encapsulates database operations, opens and closes database connection
-// TODO(dimitri.glazkov): inherit RefCounted
-class Database2Connection {
+class Database2Connection : public RefCounted {
  public:
   // lazily initialized
-  Database2Connection(std::string16 name) : name_(name) {}
-
+   Database2Connection(const std::string16 &name, 
+                       const SecurityOrigin &origin) :
+     name_(name), origin_(origin) {}
   ~Database2Connection() {
     // close connection
   }
 
-  bool OpenAndVerifyVersion(std::string16 database_version);
-  bool Execute(Database2RowHandlerInterface *row_handler);
+  bool OpenAndVerifyVersion(const std::string16 &database_version);
+  bool Execute(const std::string16 &statement,
+               const int num_arguments,
+               const JsParamToSend *arguments,
+               Database2RowHandlerInterface *row_handler);
   bool Begin();
-  bool Rollback();
+  void Rollback();
   bool Commit();
 
   int error_code() const { return error_code_; }
   std::string16 error_message() const { return error_message_; }
 
  private:
-  sqlite3 *handle();
-  
   bool bogus_version_;
   int expected_version_;
 
@@ -74,6 +78,7 @@ class Database2Connection {
 
   sqlite3 *handle_;
   std::string16 name_;
+  SecurityOrigin origin_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2Connection);
 };

@@ -31,6 +31,7 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/module_wrapper.h"
+#include "gears/database2/common.h"
 #include "gears/database2/database2.h"
 
 DECLARE_GEARS_WRAPPER(Database2Manager);
@@ -51,12 +52,20 @@ void Database2Manager::OpenDatabase(JsCallContext *context) {
   if (context->is_exception_set()) return;
 
   // create a Database2 instance and pass name and version into it
-  // displayName and estimatedSize not used by Gears
+  // displayName and estimatedSize are not used by Gears
   scoped_refptr<Database2> database;
-  if (Database2::Create(this, name, version, &database)) {
-    context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, database.get());
-    ReleaseNewObjectToScript(database.get());
-  } else {
-    // set exception
+  if (!Database2::Create(this, name, version, &database)) {
+    // raise broken gear exception
+    context->SetException(GET_INTERNAL_ERROR_MESSAGE());
+    return;
   }
+
+  if (!database->Open()) {
+    // raise INVALID_STATE_ERR
+    context->SetException(kInvalidStateError);
+    return;
+  }
+
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, database.get());
+  ReleaseNewObjectToScript(database.get());
 }

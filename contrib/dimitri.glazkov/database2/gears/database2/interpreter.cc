@@ -28,12 +28,11 @@
 #include "gears/database2/commands.h"
 
 void Database2Interpreter::Run(Database2Command *command) {
-  assert(command);
+  scoped_ptr<Database2Command> cmd(command);
   bool has_results = true;
-  command->Execute(&has_results);
+  cmd->Execute(&has_results);
   if (has_results) {
-    command->HandleResults();
-    delete command;
+    cmd->HandleResults();
   }
 }
 

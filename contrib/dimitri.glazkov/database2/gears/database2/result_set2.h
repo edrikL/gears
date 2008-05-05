@@ -34,7 +34,11 @@
 // interface SQLResultSet
 class Database2ResultSet : public ModuleImplBaseClassVirtual {
  public:
-  Database2ResultSet() : ModuleImplBaseClassVirtual("Database2ResultSet") {}
+  ~Database2ResultSet() {}
+  // creates an instance, returns true if successful
+  // TODO(dimitri.glazkov): Add more parameters
+  static bool Create(const ModuleImplBaseClass *sibling,
+                     scoped_refptr<Database2ResultSet> *instance);
 
   // OUT: int
   void GetInsertId(JsCallContext *context);
@@ -44,10 +48,11 @@ class Database2ResultSet : public ModuleImplBaseClassVirtual {
   // OUT: SQLResultSetRowList
   void GetRows(JsCallContext *context);
 
-  // creates an instance, returns true if successful
-  // TODO(dimitri.glazkov): Add more parameters
-  static bool Create(const ModuleImplBaseClass *sibling,
-                     scoped_refptr<Database2ResultSet> *instance);
+ private:
+  friend bool CreateModule<Database2ResultSet, Database2ResultSet>(
+                  JsRunnerInterface *js_runner,
+                  scoped_refptr<Database2ResultSet>* module);
+  Database2ResultSet() : ModuleImplBaseClassVirtual("Database2ResultSet") {}
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2ResultSet);
 };

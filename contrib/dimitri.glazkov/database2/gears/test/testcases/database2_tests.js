@@ -26,7 +26,7 @@
 var db_manager = google.gears.factory.create('beta.databasemanager');
 
 function testDatabaseManagerCreation() {
-  assertNotNull(db_manager, 'Database manager should be a value'); 
+  assertNotNull(db_manager, 'Database manager should be a value');
 }
 
 function testDatabaseManagerApiSig() {
@@ -41,7 +41,24 @@ function testDatabaseManagerApiSig() {
 }
 
 function testDatabaseOpening() {
-  var db = db_manager.openDatabase('unit_test_db', '', 'ignored_description', 
+  var db = db_manager.openDatabase('unit_test_db', '', 'ignored_description',
+    'ignored_estimated_size');
+  assert(db, 'Database should be a value');
+}
+
+function testDatabaseOptionalParams() {
+  var db = db_manager.openDatabase('unit_test_db', '');
+  assert(db, 'Database should be a value');
+}
+
+function testDatabaseVersionNull() {
+  assertError(function() {
+    var db = db_manager.openDatabase('unit_test_db', null);
+  }, "Required argument 2 is missing.");
+}
+
+function testDatabaseVersionNonNull() {
+  var db = db_manager.openDatabase('unit_test_db', '1.0', 'ignored_description',
     'ignored_estimated_size');
   assert(db, 'Database should be a value');
 }
@@ -74,15 +91,52 @@ function testDatabaseTransaction() {
       inFlight = true;
       outOfOrder--;
       if (outOfOrder) {
-        assert(false, method + 'invokes callback out of sequence');
+        assert(false, method + ' invokes callback out of sequence');
       }
       completeAsync();
     });
     outOfOrder++;
     if (inFlight) {
-      assert(false, method + 'is not called asynchronously');
+      assert(false, method + ' is not called asynchronously');
     }
     startAsync();
+  });
+}
+
+function testDatabaseSynchronousTransaction() {
+  withDb(function(db) {
+    var method = 'Database2.synchronousTransaction() ';
+    var inFlight;
+    var outOfOrder = 0;
+    // this tests the fact that the transaction callback is called 
+    // synchronously and whether the callback is invoked in a proper sequence
+    db.synchronousTransaction(function(tx) {
+      inFlight = true;
+      if (outOfOrder) {
+        assert(false, method + ' invokes callback out of sequence');
+      }
+    });
+    outOfOrder++;
+    if (!inFlight) {
+      assert(false, method + ' is not called synchronously');
+    }
+    
+    // test statement execution
+    db.synchronousTransaction(function(tx) {
+      var method = 'Database2Transaction.executeSql()';
+      var rs = tx.executeSql('SELECT * FROM Pages;');
+      assert(rs, method + ' should return a result set');
+    });
+  });
+}
+
+function testStatementArguments() {
+  withDb(function(db) {
+    db.synchronousTransaction(function(tx) {
+      // valid arguments
+      tx.executeSql('SELECT * FROM Pages WHERE pageId = ? and version = ?',
+        [ 1972, '1.0.0.0' ]);
+    });
   });
 }
 
@@ -99,3 +153,4 @@ function withDb(fn, version) {
   db_manager && fn && fn.call(
     this, db_manager.openDatabase('unit_test_db', version || ''));
 }
+

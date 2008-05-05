@@ -27,17 +27,30 @@
 #define GEARS_DATABASE2_INTERPRETER_H__
 
 #include "gears/base/common/common.h"
+#include "gears/base/common/scoped_refptr.h"
 
 // forward class declarations
 class Database2Command;
 
 // simple (non-threaded) command interpreter
-class Database2Interpreter {
+class Database2Interpreter : public RefCounted {
  public:
-  Database2Interpreter() {};
-  ~Database2Interpreter() {};
+  // TODO(dimitri.glazkov): Because the sub-class depends on ref-counting to
+  // keep track of when to shut down a thread, this base class is also
+  // ref-counted. However, its counting is effectively rendered useless by
+  // Ref'ing in constructor. This is awkward. Must think of a better pattern
+  // here.
+  Database2Interpreter() {
+    // increment ref to prevent from ever being destroyed
+    if (!async()) Ref();
+  }
+  ~Database2Interpreter() {}
 
   virtual void Run(Database2Command *command);
+  virtual bool async() const { return false; }
+
+ private:
+  bool async_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2Interpreter);
 };
@@ -50,8 +63,10 @@ class Database2ThreadedInterpreter : public Database2Interpreter {
     // shut down thread, if started
   }
 
-  void Run(Database2Command *command);
+  virtual void Run(Database2Command *command);
+  virtual bool async() const { return true; }
 
+ private:
   DISALLOW_EVIL_CONSTRUCTORS(Database2ThreadedInterpreter);
 };
 

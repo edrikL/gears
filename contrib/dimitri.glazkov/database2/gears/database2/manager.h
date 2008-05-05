@@ -35,6 +35,7 @@
 class Database2Manager : public ModuleImplBaseClassVirtual {
  public:
   Database2Manager() : ModuleImplBaseClassVirtual("Database2Manager") {}
+  ~Database2Manager() {}
 
   // IN: string name, string version, string display name, int estimated_size
   // OUT: Database2
