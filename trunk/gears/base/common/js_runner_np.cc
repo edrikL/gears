@@ -152,19 +152,20 @@ class JsRunnerBase : public JsRunnerInterface {
     NPObject *evaluator = GetEvaluator();
     if (!evaluator) { return false; }
 
-    // Setup argument array.
-    scoped_ptr<JsArray> array(NewArray());
-    for (int i = 0; i < argc; ++i) {
-      ScopedNPVariant np_arg;
-      ConvertJsParamToToken(argv[i], GetContext(), &np_arg);
-      array->SetElement(i, np_arg);
-    }
+    // Setup argument array to pass to the evaluator.  The first argument is
+    // the callback, followed by the argv array.  We invoke the function like:
+    //   evaluator(callback, arg1, arg2, ..., argn)
+    int evaluator_argc = argc + 1;  // extra arg for callback
+    scoped_array<ScopedNPVariant> evaluator_args(
+        new ScopedNPVariant[evaluator_argc]);
+    evaluator_args[0].Reset(callback->token());
+    for (int i = 0; i < argc; ++i)
+      ConvertJsParamToToken(argv[i], GetContext(), &evaluator_args[i + 1]);
 
     // Invoke the method.
-    NPVariant args[] = { callback->token(), array->token() };
     ScopedNPVariant result;
     bool rv = NPN_InvokeDefault(GetContext(), evaluator,
-                                args, ARRAYSIZE(args), &result);
+                                evaluator_args.get(), evaluator_argc, &result);
     if (!rv) { return false; }
 
     if (!NPVARIANT_IS_OBJECT(result)) {
@@ -175,14 +176,14 @@ class JsRunnerBase : public JsRunnerInterface {
     JsObject obj;
     obj.SetObject(result, GetContext());
 
+    ScopedNPVariant retval;
     std::string16 exception;
-    if (obj.GetPropertyAsString(STRING16(L"exception"), &exception)) {
+    if (obj.GetProperty(STRING16(L"retval"), &retval)) {
+      // Do nothing.  Check this first since it's the common case.
+    } else if (obj.GetPropertyAsString(STRING16(L"exception"), &exception)) {
       SetException(exception);
       return false;
-    }
-
-    ScopedNPVariant retval;
-    if (!obj.GetProperty(STRING16(L"retval"), &retval)) {
+    } else {
       retval.Reset();  // Reset to "undefined"
     }
 
@@ -322,7 +323,9 @@ class JsRunnerBase : public JsRunnerInterface {
     // Wierd Safari bug: if you remove the surrounding parenthesis, this ceases
     // to work.
     const char kEvaluatorScript[] = 
-      "(function (fn, args) {"
+      "(function () {"  // variable number of arguments
+      "  var fn = arguments[0];"
+      "  var args = Array.prototype.slice.call(arguments, 1);"
       "   var result = {};"
       "   try {"
       "     result.retval = fn.apply(null, args);"
