@@ -23,6 +23,107 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#if ENABLE_NOTIFIER
+
+#include "gears/notifier/notifier.h"
+
+#include "gears/base/common/serialization.h"
+#include "gears/base/common/string_utils.h"
+#include "gears/notifier/notification.h"
+#include "gears/notifier/notifier_process.h"
+
+Notifier::Notifier()
+  : running_(false) {
+}
+
+bool Notifier::Initalize() {
+  Notification::RegisterAsSerializable();
+  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetInstance();
+  if (!ipc_message_queue) {
+    return false;
+  }
+  ipc_message_queue->RegisterHandler(kAddNotificationMessage, this);
+  ipc_message_queue->RegisterHandler(kRemoveNotificationMessage, this);
+
+  if (!NotifierProcess::RegisterProcess()) {
+    return false;
+  }
+
+  running_ = true;
+
+  return true;
+}
+
+int Notifier::Run() {
+  while (running_) {
+#if defined(WIN32) || defined(WINCE)
+    Sleep(100);
+#elif defined(LINUX) || defined(MAC)
+    sched_yield();
+#endif
+  }
+  return 0;
+}
+
+void Notifier::Terminate() {
+}
+
+void Notifier::HandleIpcMessage(IpcProcessId source_process_id,
+                                int message_type,
+                                const IpcMessageData *message_data) {
+  switch (message_type) {
+    case kAddNotificationMessage: {
+      const Notification *notification =
+          static_cast<const Notification*>(message_data);
+      AddNotification(notification);
+      break;
+    }
+
+    case kRemoveNotificationMessage: {
+      const Notification *notification =
+          static_cast<const Notification*>(message_data);
+      RemoveNotification(notification->id());
+      break;
+    }
+
+    default:
+      assert(false);
+      break;
+  }
+}
+
+void Notifier::AddNotification(const Notification *notification) {
+  assert(notification);
+
+  LOG(("Add notification %S - %S\n",
+       notification->id().c_str(),
+       notification->title().c_str()));
+}
+
+void Notifier::RemoveNotification(const std::string16 &notification_id) {
+  LOG(("Remove notification %S\n", notification_id.c_str()));
+}
+
+int main(int argc, char **argv) {
+  LOG(("Gears Notifier started.\n"));
+
+  Notifier notifier;
+
+  int res = -1;
+  if (notifier.Initalize()) {
+    res = notifier.Run();
+    notifier.Terminate();
+  }
+
+  LOG(("Gears Notifier terminated.\n"));
+
+  return res;
+}
+
+#else
+
 int main(int argc, char **argv) {
   return 0;
 }
+
+#endif  // ENABLE_NOTIFIER
