@@ -80,7 +80,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <h2>Parameters</h2>
 
 <ul>
-  <li><code>action</code>: Include the 'action' parameter with the value 'install' to cause the Google Gears installation page to use the <code>message</code> and <code>return</code> parameters. </li>
+  <li><code>action</code>: Enables applications to customize the Gears install page to provide context during the installation process. There are two allowed values: <code>install</code> or  <code>upgrade</code>. Use the <code>install</code> value to prompt the user to install Gears. Use the <code>upgrade</code> parameter if you detect that the version of Gears the user has installed is too old for your application (but note that Gears autodates itself, so typically the vast majority of users all have the latest version). Either of these values enable the rest of the customization parameters.
+  <li><code>icon_src</code>: Provide the URL to a 48x48 icon for your application. The icon can be any format displayable by web browsers.
+  <li><code>name</code>: Provide the name of your application. This value can be up to 150 characters in length.
   <li><code>message</code>: Provide any text up to 150 characters. This message appears at the top of the installation page. For example: &quot;Install Google Gears to enable MyGreatApp's offline features!&quot;</li>
   <li><code>return</code>: Provide your application's URL. The user will be directed back to this URL when installation is complete. </li>
 </ul>
