@@ -29,11 +29,6 @@
 #include "gears/base/common/basictypes.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/common.h"
 
-// TODO(mpcomplete): implement these.
-#if BROWSER_NPAPI && defined(WIN32)
-#define BROWSER_IE 1
-#endif
-
 class Condition;
 
 
@@ -68,11 +63,9 @@ class Mutex {
   bool is_locked_;
 #endif // DEBUG
 
-#if BROWSER_IE
+#if defined(WIN32) || defined(WINCE)
   CRITICAL_SECTION crit_sec_;
-#elif BROWSER_FF
-  PRLock *lock_;
-#elif BROWSER_SAFARI
+#elif defined(LINUX) || defined(OS_MACOSX)
   pthread_mutex_t mutex_;
 #endif
 };
@@ -172,10 +165,5 @@ inline Condition::Condition(const T *object, bool (T::*method)() const) :
   InternalMethodCallerType caller = &ConditionMethodCaller<T>;
   this->function_ = reinterpret_cast<InternalFunctionType>(caller);
 }
-
-// TODO(mpcomplete): remove
-#if BROWSER_NPAPI
-#undef BROWSER_IE
-#endif
 
 #endif // GEARS_BASE_COMMON_MUTEX_H__
