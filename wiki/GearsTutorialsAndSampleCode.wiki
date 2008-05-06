@@ -25,4 +25,5 @@ Contributions in new environments are welcome!
 
 Anyone up to writing a tutorial or example for these:
 == Ruby On Rails ==
+   * [http://code.google.com/p/gearsonrails/ Gears On Rails] A plugin for RoR that adds Gears integration.
 == Django ==
