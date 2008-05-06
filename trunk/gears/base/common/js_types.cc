@@ -1522,13 +1522,21 @@ bool JsTokenToDouble_Coerce(JsToken t, JsContextPtr cx, double *out) {
   // This coercion is very tricky to get just-right. See test cases in
   // test/testcases/internal_tests.js before making any changes. The expected
   // outputs are based on the result of doing a Number(testval) in JavaScript.
+  JsParamType type = JsTokenGetType(t, cx);
   // JsToken is a double
-  if (JsTokenGetType(t, cx) == JSPARAM_DOUBLE) {
+  if (type == JSPARAM_DOUBLE) {
     // Edge-case: NaN should return failure
     if (isnan(NPVARIANT_TO_DOUBLE(t))) { return false; }
     *out = NPVARIANT_TO_DOUBLE(t);
+  // JsToken is an integer (or a double that can be converted to an integer).
+  } else if (type == JSPARAM_INT) {
+    int out_int;
+    if (!JsTokenToInt_NoCoerce(t, cx, &out_int))
+      return false;
+    *out = out_int;
+    return true;
   // Edge-case: boolean true should coerce to 1, not -1.
-  } else if (JsTokenGetType(t, cx) == JSPARAM_BOOL) {
+  } else if (type == JSPARAM_BOOL) {
     *out = NPVARIANT_TO_BOOLEAN(t) ? 1 : 0;
   // Edge-case: null should coerce to 0
   } else if (NPVARIANT_IS_NULL(t)) {

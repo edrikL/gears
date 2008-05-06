@@ -142,6 +142,10 @@ class ScopedNPVariant : public NPVariant {
     Reset(value);
     return *this;
   }
+  ScopedNPVariant& operator=(const ScopedNPVariant &value) {
+    Reset(value);
+    return *this;
+  }
 
   // Frees the old value and replaces it with the new value.  Strings are
   // copied, and objects are retained.
