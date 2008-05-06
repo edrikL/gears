@@ -57,7 +57,7 @@
 #include "gears/localserver/firefox/http_request_ff.h"
 
 // Used to determine when we're executing on the main thread of control
-static ThreadId g_ui_thread = NULL;
+static ThreadId g_ui_thread = 0;
 
 
 // Object identifiers
