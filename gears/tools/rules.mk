@@ -636,7 +636,7 @@ $(WIN32_INSTALLER_MSI): $(WIN32_INSTALLER_WIXOBJ) $(IE_MODULE_DLL) $(FFMERGED_IN
 	light.exe -out $@ $(WIN32_INSTALLER_WIXOBJ)
 
 $(WINCE_INSTALLER_CAB): $(INFSRC) $(IE_MODULE_DLL) $(IE_WINCESETUP_DLL)
-	cabwiz.exe $(INFSRC) /err cabwiz.log /compress
+	cabwiz.exe $(INFSRC) /compress /err $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).log
 	mv -f $(COMMON_OUTDIR)/genfiles/$(INFSRC_BASE_NAME).cab $@
 
 # We generate dependency information for each source file as it is compiled.
