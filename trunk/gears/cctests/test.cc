@@ -241,8 +241,6 @@ void GearsTest::RunTests(JsCallContext *context) {
   // Blobs not yet implemented for NPAPI.
 #endif  // BROWSER_FF || BROWSER_IE
 #endif  // not OFFICIAL_BUILD
-  // TODO(zork): Add this test back in once it doesn't crash the browser.
-  //ok &= TestJsRootedTokenLifetime();
 
 #if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
   ok &= TestIpcMessageQueue();

@@ -35,6 +35,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_marshal.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/message_queue.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
@@ -128,6 +129,8 @@ class PoolThreadsManager
 
   const SecurityOrigin& page_security_origin() { return page_security_origin_; }
 
+  static void JavaScriptThreadEntry(void *args);
+
  private:
   ~PoolThreadsManager();
 
@@ -138,7 +141,6 @@ class PoolThreadsManager
   bool InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
                             const JsErrorInfo &error_info);
 
-  static void JavaScriptThreadEntry(void *args);
   static bool SetupJsRunner(JsRunnerInterface *js_runner,
                             JavaScriptWorkerInfo *wi);
   static void *OnReceiveThreadsEvent(ThreadsEvent *event);
@@ -155,7 +157,7 @@ class PoolThreadsManager
   nsCOMPtr<GearsWorkerPool> refed_owner_;
   // TODO(michaeln): use scoped_refptr when GearsWorkerPool is Dispatcher based
 
-  std::vector<PRThread*> worker_id_to_os_thread_id_;
+  std::vector<ThreadId> worker_id_to_os_thread_id_;
   // this _must_ be a vector of pointers, since each worker references its
   // JavaScriptWorkerInfo, but STL vector realloc can move its elements.
   std::vector<JavaScriptWorkerInfo*> worker_info_;

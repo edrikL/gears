@@ -39,6 +39,7 @@
 #include <gecko_internal/nsIDOMClassInfo.h>
 #include <gecko_internal/nsIScriptNameSpaceManager.h>
 
+#include "gears/base/common/message_queue.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/firefox/xpcom_dynamic_load.h"
 #include "gears/console/firefox/console_ff.h"
@@ -59,6 +60,10 @@
 #include <gecko_internal/nsIEventQueueService.h> // for event loop
 #endif
 
+#if BROWSER_FF2
+// From gears/workerpool/firefox/workerpool.h
+void DestroyThreadRecycler();
+#endif
 //-----------------------------------------------------------------------------
 
 // TODO(cprince): can remove this when switch to google3 logging
@@ -273,7 +278,11 @@ NS_DECL_DOM_CLASSINFO(GearsFileSubmitter)
 NS_DECL_DOM_CLASSINFO(GearsConsole)
 
 nsresult PR_CALLBACK ScourModuleConstructor(nsIModule *self) {
-  return ThreadLocals::HandleModuleConstructed();
+  if (NS_FAILED(ThreadLocals::HandleModuleConstructed())) {
+    return NS_ERROR_FAILURE;
+  }
+  ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
+  return NS_OK;
 }
 
 
@@ -299,6 +308,9 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
 
 #ifdef DEBUG
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsFileSubmitter));
+#endif
+#if BROWSER_FF2
+  DestroyThreadRecycler();
 #endif
 }
 

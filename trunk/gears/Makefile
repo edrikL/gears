@@ -416,7 +416,6 @@ $(BROWSER)_M4SRCS	+= \
 $(BROWSER)_CPPSRCS	+= \
 		async_router.cc \
 		base_class.cc \
-		base_class_test.cc \
 		base64.cc \
 		circular_buffer_test.cc \
 		database_name_table.cc \

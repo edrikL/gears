@@ -311,8 +311,8 @@ class JsRunnerBase : public JsRunnerInterface {
 
 class JsRunner : public JsRunnerBase {
  public:
-  JsRunner() : error_handler_(NULL), global_obj_(NULL), js_runtime_(NULL),
-               js_script_(NULL) {
+  JsRunner(JSRuntime *js_runtime) : error_handler_(NULL), global_obj_(NULL),
+               js_runtime_(js_runtime), js_script_(NULL) {
     // TODO(aa): Consider moving initialization of JsRunners out since there is
     // no way to detect errors in ctors.
     if (!InitJavaScriptEngine())
@@ -435,16 +435,16 @@ JsRunner::~JsRunner() {
   if (js_engine_context_) {
     JS_DestroyContext(js_engine_context_);
   }
-  if (js_runtime_) {
-    JS_DestroyRuntime(js_runtime_);
-  }
 
-  // This has to occur after the context and runtime have been destroyed,
+  // This has to occur after the context has been destroyed,
   // because it maintains data structures that the JS engine requires.
   // Specifically, any of the JSObjects stored in the JsWrapperData and the
-  // global_boj_ need to exist as long as the object in the JS Engine which
+  // global_obj_ need to exist as long as the object in the JS Engine which
   // they are linked to.
   delete alloc_js_wrapper_;
+
+  // We do not clean up the JSRuntime because it is owned by the creator of the
+  // JsRunner.
 }
 
 bool JsRunner::GetProtoFromIID(const nsIID iface_id, JSObject **proto) {
@@ -502,10 +502,6 @@ bool JsRunner::InitJavaScriptEngine() {
   // Instantiate a JavaScript engine
   //
 
-  // Create a new runtime.  If we instead use xpc/RuntimeService to get a
-  // runtime, strange things break (like eval).
-  const int kRuntimeMaxBytes = 64 * 1024 * 1024; // mozilla/.../js.c uses 64 MB
-  js_runtime_ = JS_NewRuntime(kRuntimeMaxBytes);
   if (!js_runtime_) {
     ExceptionManager::ReportAndContinue();
     LOG(("Maximum thread count reached."));
@@ -890,8 +886,8 @@ bool DocumentJsRunner::InvokeCallbackSpecialized(
 }
 
 
-JsRunnerInterface* NewJsRunner() {
-  return static_cast<JsRunnerInterface*>(new JsRunner());
+JsRunnerInterface* NewJsRunner(JSRuntime *js_runtime) {
+  return static_cast<JsRunnerInterface*>(new JsRunner(js_runtime));
 }
 
 JsRunnerInterface* NewDocumentJsRunner(IGeneric *base, JsContextPtr context) {
