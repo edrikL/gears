@@ -154,11 +154,10 @@ struct JavaScriptWorkerInfo {
   // Our code assumes some items begin cleared. Zero all members w/o ctors.
   JavaScriptWorkerInfo()
       : threads_manager(NULL), js_runner(NULL), is_owning_worker(false),
-        is_invoking_error_handler(false),
-        thread_init_signalled(false), thread_init_ok(false),
-        script_signalled(false), script_ok(false), http_request(NULL),
-        is_factory_suspended(false), thread_created(false),
-        js_runtime_(NULL) {}
+        is_invoking_error_handler(false), thread_init_signalled(false),
+        thread_init_ok(false), script_signalled(false), script_ok(false),
+        js_runtime_(NULL), thread_created(false), is_factory_suspended(false),
+        http_request(NULL) {}
 
   ~JavaScriptWorkerInfo() {
     while (!message_queue.empty()) {
