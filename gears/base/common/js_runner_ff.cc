@@ -28,6 +28,7 @@
 #include <set>
 #include <gecko_sdk/include/nspr.h> // for PR_*
 #include <gecko_sdk/include/nsCOMPtr.h>
+#include <gecko_sdk/include/nsIURI.h>
 #include <gecko_internal/jsapi.h>
 #include <gecko_internal/nsIJSContextStack.h>
 #include <gecko_internal/nsIPrincipal.h>
@@ -758,6 +759,27 @@ bool DocumentJsRunner::Eval(const std::string16 &script, jsval *return_value) {
   nsIPrincipal *principal = obj_prin->GetPrincipal();
   if (!principal) { return false; }
 
+  // Get the script scheme and host from the principal.  This is the URI that
+  // Firefox treats this script as running from.
+  nsCOMPtr<nsIURI> codebase;
+  principal->GetURI(getter_AddRefs(codebase));
+  if (!codebase) { return false; }
+  nsCString scheme;
+  nsCString host;
+  if (NS_FAILED(codebase->GetScheme(scheme)) ||
+      NS_FAILED(codebase->GetHostPort(host))) {
+    return false;
+  }
+
+  // Build a virtual filename that we'll run as.  This is to workaround
+  // http://lxr.mozilla.org/seamonkey/source/dom/src/base/nsJSEnvironment.cpp#500
+  // Bug: https://bugzilla.mozilla.org/show_bug.cgi?id=387477
+  // The filename is being used as the security origin instead of the principal.
+  // TODO(zork): Remove this section if this bug is resolved.
+  std::string virtual_filename(scheme.BeginReading());
+  virtual_filename += "://";
+  virtual_filename += host.BeginReading();
+
   principal->GetJSPrincipals(js_engine_context_, &jsprin);
 
   // Set up the JS stack so that our context is on top.  This is needed to
@@ -771,8 +793,8 @@ bool DocumentJsRunner::Eval(const std::string16 &script, jsval *return_value) {
   uintN line_number_start = 0;
   JSBool js_ok = JS_EvaluateUCScriptForPrincipals(
       js_engine_context_, object, jsprin,
-      reinterpret_cast<const jschar *>(script.c_str()),
-      script.length(), "script", line_number_start, return_value);
+      reinterpret_cast<const jschar *>(script.c_str()), script.length(),
+      virtual_filename.c_str(), line_number_start, return_value);
 
   // Restore the context stack.
   JSContext *cx;
