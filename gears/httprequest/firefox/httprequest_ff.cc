@@ -49,7 +49,7 @@ bool IsUiThread();
 // Returns the thread id of the main UI thread,
 // firefox/mozila has one such very special thread
 // See cache_intercept.cc for implementation
-PRThread* GetUiThread();
+ThreadId GetUiThread();
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
 NS_IMPL_THREADSAFE_ADDREF(GearsHttpRequest)
@@ -829,4 +829,3 @@ nsresult GearsHttpRequest::CallAsync(ThreadId thread_id,
   AsyncRouter::GetInstance()->CallAsync(thread_id, event);
   return NS_OK;
 }
-

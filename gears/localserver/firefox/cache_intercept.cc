@@ -48,6 +48,7 @@
 #endif
 #include "genfiles/localserver.h"
 #include "gears/base/common/exception_handler_win32.h"
+#include "gears/base/common/message_queue.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/trace_buffers_win32/trace_buffers_win32.h"
 #include "gears/factory/common/factory_utils.h"
@@ -56,7 +57,7 @@
 #include "gears/localserver/firefox/http_request_ff.h"
 
 // Used to determine when we're executing on the main thread of control
-static PRThread* g_ui_thread = NULL;
+static ThreadId g_ui_thread = NULL;
 
 
 // Object identifiers
@@ -660,7 +661,7 @@ void CacheIntercept::Init() {
   // We're initialized on the main ui thread of which there is exactly one
   // in firefox/mozila. Save this thread value so that we can easily
   // determine when we're executing on this thread of control.
-  g_ui_thread = PR_GetCurrentThread();
+  g_ui_thread = ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
 
   const nsCID kCacheCID = NS_CACHESERVICE_CID;
   default_cache_ = do_GetService(kCacheCID);
@@ -790,12 +791,12 @@ FFHttpRequest *CacheIntercept::GetGearsHttpRequest(nsIChannel *channel) {
   return http_request;
 }
 
-PRThread* GetUiThread() {
+ThreadId GetUiThread() {
   assert(g_ui_thread);
   return g_ui_thread;
 }
 
 bool IsUiThread() {
   assert(g_ui_thread);
-  return g_ui_thread == PR_GetCurrentThread();
+  return g_ui_thread == ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
 }

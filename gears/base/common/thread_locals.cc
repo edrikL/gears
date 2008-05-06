@@ -127,6 +127,20 @@ ThreadLocals::Map *ThreadLocals::GetMap(bool createIfNeeded) {
 
 
 //------------------------------------------------------------------------------
+// ClearMap
+//------------------------------------------------------------------------------
+void ThreadLocals::ClearMap() {
+  Map *map = GetTlsMap();
+  if (!map) return;
+  for (Map::iterator iter = map->begin(); iter != map->end(); iter++) {
+    if (iter->second.destructor_) {
+      iter->second.destructor_(iter->second.value_);
+    }
+  }
+  map->clear();
+}
+
+//------------------------------------------------------------------------------
 // DestroyMap
 //------------------------------------------------------------------------------
 void ThreadLocals::DestroyMap(Map* map) {

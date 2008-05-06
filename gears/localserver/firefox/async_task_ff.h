@@ -177,12 +177,14 @@ class AsyncTask : protected HttpRequest::ReadyStateListener,
 
   // Returns true if the currently executing thread is our task thread
   bool IsTaskThread() {
-    return thread_ == PR_GetCurrentThread();
+    return thread_id_ ==
+        ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
   }
 
   bool delete_when_done_;
   Listener *listener_;
-  PRThread *thread_;
+  bool thread_running_;
+  ThreadId thread_id_;
   ThreadId listener_thread_id_;
   scoped_refptr<HttpRequest> http_request_;
   HttpRequestParameters *params_;

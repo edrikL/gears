@@ -173,7 +173,14 @@ class JsEventMonitor {
 // This interface plays nicely with scoped_ptr, which was a design goal.
 
 // This creates a JsRunner that is used in a worker.
+#if BROWSER_FF
+// js_runtime is a JSRuntime created via JS_NewRuntime.  The caller retains
+// ownership of the runtime.  If NULL is passed in, the JsRunner will
+// successfully initialize to a stable but unusable state.
+JsRunnerInterface* NewJsRunner(JSRuntime *js_runtime);
+#else
 JsRunnerInterface* NewJsRunner();
+#endif
 
 // This creates a JsRunner that can be used with the script engine running in an
 // document.

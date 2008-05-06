@@ -41,7 +41,7 @@
 // TODO(michaeln): These should be defined by a threading abstraction
 // layer.
 #if BROWSER_FF
-typedef PRThread (*ThreadId);
+typedef int ThreadId;
 #elif BROWSER_IE
 typedef DWORD ThreadId;
 #elif BROWSER_WEBKIT

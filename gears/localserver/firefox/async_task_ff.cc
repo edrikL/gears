@@ -47,7 +47,7 @@ bool IsUiThread();
 // Returns the thread id of the main UI thread,
 // firefox/mozila has one such very special thread
 // See cache_intercept.cc for implementation
-PRThread* GetUiThread();
+ThreadId GetUiThread();
 
 //------------------------------------------------------------------------------
 // AsyncTask
@@ -57,8 +57,9 @@ AsyncTask::AsyncTask() :
     is_initialized_(false),
     delete_when_done_(false),
     listener_(NULL),
-    thread_(NULL),
-    listener_thread_id_(NULL),
+    thread_running_(false),
+    thread_id_(0),
+    listener_thread_id_(0),
     params_(NULL) {
   Ref();
 }
@@ -67,7 +68,7 @@ AsyncTask::AsyncTask() :
 // ~AsyncTask
 //------------------------------------------------------------------------------
 AsyncTask::~AsyncTask() {
-  assert(!thread_);
+  assert(!thread_running_);
   assert(!http_request_.get());
   assert(!params_);
   assert(GetRef() == 0 || 
@@ -113,19 +114,20 @@ bool AsyncTask::Start() {
   assert(!delete_when_done_);
   assert(IsListenerThread());
 
-  if (!is_initialized_ || thread_) {
-    assert(!(!is_initialized_ || thread_));
+  if (!is_initialized_ || thread_running_) {
+    assert(!(!is_initialized_ || thread_running_));
     return false;
   }
 
   // Start our worker thread
   CritSecLock locker(lock_);
   is_aborted_ = false;
-  thread_ = PR_CreateThread(PR_USER_THREAD, ThreadEntry, // type, func
+  thread_running_ = PR_CreateThread(PR_USER_THREAD, ThreadEntry, // type, func
                             this, PR_PRIORITY_NORMAL,   // arg, priority
                             PR_LOCAL_THREAD,          // scheduled by whom?
-                            PR_UNJOINABLE_THREAD, 0); // joinable?, stack bytes
-  if (thread_ == NULL) {
+                            PR_UNJOINABLE_THREAD, // joinable?
+                            0) != NULL; // stack bytes
+  if (!thread_running_) {
     return false;
   }
 
@@ -190,14 +192,15 @@ void AsyncTask::DeleteWhenDone() {
 // ThreadEntry - Our worker thread's entry procedure
 //------------------------------------------------------------------------------
 void AsyncTask::ThreadEntry(void *task) {
+  ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
   AsyncTask *self = reinterpret_cast<AsyncTask*>(task);
   // Don't run until we're sure all state is initialized.
   {
     CritSecLock locker(self->lock_);
-    assert(self->IsTaskThread());
+    self->thread_id_ = ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
   }
   self->Run();
-  self->thread_ = NULL;
+  self->thread_running_ = false;
   self->Unref();  // remove the reference added by the Start
 }
 

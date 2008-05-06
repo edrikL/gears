@@ -100,6 +100,7 @@ class ThreadLocals {
   // creating the map if one does not already exist.
   static Map *GetMap(bool createIfNeeded);
 
+  static void ClearMap();
   static void DestroyMap(Map* map);
   static void SetTlsMap(Map* map);
   static Map* GetTlsMap();
@@ -134,6 +135,10 @@ class ThreadLocals {
   // We declare the function that calls these methods a friend.
   // @see module.cc
   friend nsresult PR_CALLBACK ScourModuleConstructor(class nsIModule* self);
+
+  // We need the ThreadRecycler to have access to clean up thread local
+  // storage.
+  friend class JsThreadRecycler;
 
   // Should be called when the DLL is loading. If an error is returned the DLL
   // should fail to load.
