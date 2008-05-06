@@ -176,14 +176,14 @@ class JsRunnerBase : public JsRunnerInterface {
     JsObject obj;
     obj.SetObject(result, GetContext());
 
-    ScopedNPVariant retval;
     std::string16 exception;
-    if (obj.GetProperty(STRING16(L"retval"), &retval)) {
-      // Do nothing.  Check this first since it's the common case.
-    } else if (obj.GetPropertyAsString(STRING16(L"exception"), &exception)) {
+    if (obj.GetPropertyAsString(STRING16(L"exception"), &exception)) {
       SetException(exception);
       return false;
-    } else {
+    }
+
+    ScopedNPVariant retval;
+    if (!obj.GetProperty(STRING16(L"retval"), &retval)) {
       retval.Reset();  // Reset to "undefined"
     }
 
