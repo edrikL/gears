@@ -32,6 +32,8 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/security_model.h"
+#include "gears/localserver/common/http_request.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 class HtmlDialog;
 
@@ -90,6 +92,13 @@ class Desktop {
   bool HandleDialogResults(ShortcutInfo *shortcut_info,
                            HtmlDialog *shortcuts_dialog);
 
+  // Fetch icon data.  If async is false, we try to fetch and process the icon
+  // synchronously.  Otherwise, we only start the fetch, and put the HttpRequest
+  // into async_request.  It is up to the caller to handle the request at that
+  // point, and store the fetched data in icon->png_data for later decoding.
+  bool FetchIcon(IconData *icon, std::string16 *error,
+                 bool async, scoped_refptr<HttpRequest> *async_request);
+
   // Error message getters.
   bool has_error() { return !error_.empty(); }
   const std::string16 &error() { return error_; }
@@ -107,12 +116,13 @@ class Desktop {
                    uint32 locations,
                    std::string16 *error);
 
+  bool DecodeIcon(IconData *icon, int expected_size, std::string16 *error);
   bool AllowCreateShortcut(const ShortcutInfo &shortcut_info, bool *allow);
   bool WriteControlPanelIcon(const ShortcutInfo &shortcut);
-  bool FetchIcon(IconData *icon, int expected_size, std::string16 *error);
   bool GetControlPanelIconLocation(const SecurityOrigin &origin,
                                    const std::string16 &app_name,
                                    std::string16 *icon_loc);
+
   bool ResolveUrl(std::string16 *url, std::string16 *error);
 
   SecurityOrigin security_origin_;
