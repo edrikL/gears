@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef WIN32
+#if defined(WIN32) && !defined(WINCE)
 #include <shlobj.h>
 #endif
 
@@ -32,7 +32,7 @@
 #include "genfiles/product_constants.h"
 
 
-#ifdef WIN32
+#if defined(WIN32)
 const char16 kPathSeparator = L'\\';
 #else
 const char16 kPathSeparator = L'/';
@@ -112,7 +112,7 @@ bool IsUserInputValidAsPathComponent(const std::string16 &user_input,
   return true;
 }
 
-#ifdef WIN32
+#if defined(WIN32) && !defined(WINCE)
 bool GetUmbrellaInstallDirectory(std::string16 *path) {
   wchar_t dir[MAX_PATH];
 
