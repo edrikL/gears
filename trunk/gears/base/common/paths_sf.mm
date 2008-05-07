@@ -28,8 +28,6 @@
 #import "gears/base/common/paths.h"
 #import "gears/base/common/paths_sf_more.h"
 #import "gears/base/safari/cf_string_utils.h"
-
-const char16 kPathSeparator = '/';
   
 bool GetInstallDirectory(std::string16 *path) {
   // TODO(aa): Implement me when needed.
