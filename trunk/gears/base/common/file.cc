@@ -32,6 +32,7 @@
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/thread_locals.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 // An arbitrary number that is a good limit on the filename length we should 
 // be creating internally.
@@ -191,3 +192,64 @@ void File::SetLastFileError(const char16 *message,
 }
 
 
+int64 File::GetFileSize(const char16 *full_filepath) {
+  scoped_ptr<File> file(Open(full_filepath, READ, FAIL_IF_NOT_EXISTS));
+  if (!file.get()) {
+    return 0;
+  }
+  int64 size = file->Size();
+  // TODO(fry): change GetFileSize to return -1 on error
+  return (size < 0) ? 0 : size;
+}
+
+
+int64 File::ReadFileSegmentToBuffer(const char16 *full_filepath,
+                                    uint8* destination,
+                                    int64 position,
+                                    int64 max_bytes) {
+  scoped_ptr<File> file(Open(full_filepath, READ, FAIL_IF_NOT_EXISTS));
+  return file.get() && file->Seek(position, SEEK_FROM_START) &&
+      file->Read(destination, max_bytes);
+}
+
+
+bool File::ReadFileToVector(const char16 *full_filepath,
+                            std::vector<uint8> *data) {
+  scoped_ptr<File> file(Open(full_filepath, READ, FAIL_IF_NOT_EXISTS));
+  if (file.get() == NULL) {
+    return false;
+  }
+  int64 size = file->Size();
+  if (size > data->max_size()) {
+    return false;
+  }
+  data->resize(static_cast<unsigned int>(size));
+  if (size > 0) {
+    int64 read = file->Read(&(*data)[0], size);
+    if (read != size) {
+      data->clear();
+      return false;
+    }
+  }
+  return true;
+}
+
+
+bool File::WriteVectorToFile(const char16 *full_filepath,
+                             const std::vector<uint8> *data) {
+  const uint8 *first_byte = data->size() ? &(*data)[0] : (uint8 *)"";
+  return WriteBytesToFile(full_filepath, first_byte, data->size());
+}
+
+
+bool File::WriteBytesToFile(const char16 *full_filepath, const uint8 *buf,
+                            int length) {
+  scoped_ptr<File> file(Open(full_filepath, WRITE, FAIL_IF_NOT_EXISTS));
+  if (!file.get()) {
+    return false;
+  }
+  if (!file->Truncate(0)) {
+    return false;
+  }
+  return (file->Write(buf, length) == length);
+}

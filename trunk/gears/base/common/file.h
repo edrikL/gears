@@ -28,9 +28,24 @@
 
 #include <vector>
 #include "gears/base/common/basictypes.h"
+#include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string16.h"
 
 class SecurityOrigin;  // base/common/security_model.h
+
+#ifdef WIN32
+// Win32 can use SAFE_HANDLE.
+#include "gears/base/common/scoped_win32_handles.h"
+#else
+// Scoped file. (All our non-WIN32 targets are POSIX compliant.)
+class CloseFileFunctor {
+ public:
+  void operator()(FILE *file) const {
+    if (file) { fclose(file); }
+  }
+};
+typedef scoped_token<FILE *, CloseFileFunctor> ScopedFile;
+#endif
 
 class File {
  public:
@@ -53,6 +68,7 @@ class File {
 
   // Returns the size of the file. If the file does not exist, or is otherwise
   // unreadable, returns 0.
+  // TODO(fry): return -1 on error
   static int64 GetFileSize(const char16 *full_filepath);
 
   // Reads part of the contents of the file into memory. Returns the number of
@@ -80,22 +96,22 @@ class File {
   // found, or a pointer to the trailing NULL otherwise.
   static const char16 *GetFileExtension(const char16 *filename);
 
-  // The basename (last path component) for the given path is returned in the 
+  // The basename (last path component) for the given path is returned in the
   // basename parameter.
   //
   // Example usage is splitting the filename off the end of a path for the
   // purpose of sanity checking.
-  // Edge case: if a Windows \\share path is used, 'share' will be returned 
+  // Edge case: if a Windows \\share path is used, 'share' will be returned
   //  and not '\\share' as may be expected.
   //
   // Returns true if function succeeds.
   static bool GetBaseName(const std::string16 &path,  std::string16 *basename);
-  
+
   // Gets the parent directory for a path.
   // Corner cases:
   // * 'path' parameter may not be empty.
   // * Fails if path doesn't specify a parent directory e.g. 'filename'.
-  static bool GetParentDirectory(const std::string16 &path, 
+  static bool GetParentDirectory(const std::string16 &path,
                                  std::string16 *parent);
 
   // Creates a unique file in the system temporary directory.  Returns the
@@ -130,6 +146,45 @@ class File {
   // at this time.
   static bool GetLastFileError(std::string16 *error_out);
 
+  enum OpenAccessMode { READ, WRITE, READ_WRITE };
+
+  enum OpenExistsMode { NEVER_FAIL, FAIL_IF_NOT_EXISTS, FAIL_IF_EXISTS };
+
+  // Opens a file for reading, writing, or both. Optionally fail if the file
+  // already exists or does not already exist. Files opened for read and write
+  // must seek between read and write operations.
+  // Returns NULL if there is an error opening the file, or if the
+  // constraints of access_mode or exists_mode can't be met.
+  static File *Open(const char16 *full_filepath, OpenAccessMode access_mode,
+                    OpenExistsMode exists_mode);
+
+  // Reads at most max_bytes of file data at the current seek position into
+  // destination.
+  // Returns the number of bytes read, or -1 on failure or if the file is not
+  // opened for read.
+  virtual int64 Read(uint8 *destination, int64 max_bytes);
+
+  // Writes length bytes of source to the file.
+  // Returns the number of bytes written, or -1 on failure or if the file is
+  // not opened for write.
+  virtual int64 Write(const uint8 *source, int64 length);
+
+  enum SeekMethod { SEEK_FROM_START, SEEK_FROM_CURRENT, SEEK_FROM_END };
+
+  // Sets the file position indicator to the specified offset.
+  // Returns false if there is an error.
+  virtual bool Seek(int64 offset, SeekMethod seek_method = SEEK_FROM_START);
+
+  // Returns the current position in the file, or -1 on failure.
+  virtual int64 Tell();
+
+  // Returns the size of the file, or -1 on failure.
+  virtual int64 Size();
+
+  // Truncates the file to the specified length.
+  // Returns false if there is an error or if the file is not opened for write.
+  virtual bool Truncate(int64 length);
+
  private:
   static void SetLastFileError(const char16 *message,
                                const char16 *filepath,
@@ -152,9 +207,6 @@ class File {
   static void SplitPath(const std::string16 &path, 
                         PathComponents *exploded_path);
 
-
-  File() {}
-
   // Test friends :)
   friend bool TestCollapsePathSeparators();
   friend bool TestSplitPath();
@@ -162,6 +214,18 @@ class File {
   // TODO(miket): someone fix common.h so that it doesn't require a browser
   // flag to be defined! Or better yet, someone shoot common.h in the head!
   //  DISALLOW_EVIL_CONSTRUCTORS(File);
+
+
+#ifdef WIN32
+  SAFE_HANDLE handle_;
+#else
+// Currently all non-win32 targets are POSIX compliant.
+  ScopedFile handle_;
+#endif
+  OpenAccessMode mode_;
+
+  File() : handle_(NULL) {}
+
 };
 
 
