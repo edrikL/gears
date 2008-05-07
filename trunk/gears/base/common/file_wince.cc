@@ -34,8 +34,8 @@
 #ifdef WINCE
 #include <assert.h>
 #include <limits>
-#include <shlobj.h>
 #include <windows.h>
+#include <shlobj.h>  // Must include windows.h before this file.
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
@@ -91,6 +91,7 @@ File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
     // GetLastError());
     return NULL;
   }
+  return file.release();
 }
 
 int64 File::Read(uint8* destination, int64 max_bytes) {
@@ -135,21 +136,21 @@ bool File::Seek(int64 offset, SeekMethod seek_method) {
 
 
 int64 File::Size() {
-  LARGE_INTEGER size;
   return -1;
-  // TODO(fry): return
-  //   ::GetFileSizeEx(handle_.get(), &size) ? size.QuadPart : -1;
+  // TODO(fry)
+  // LARGE_INTEGER size;
+  // return ::GetFileSizeEx(handle_.get(), &size) ? size.QuadPart : -1;
 }
 
 
 int64 File::Tell() {
-  LARGE_INTEGER zero;
-  zero.QuadPart = 0;
-  LARGE_INTEGER pos;
-  pos.QuadPart = 0;
   return -1;
-  // TODO(fry): return
-  //   ::SetFilePointerEx(handle_.get(), zero, &pos, FILE_CURRENT) ?
+  // TODO(fry)
+  // LARGE_INTEGER zero;
+  // zero.QuadPart = 0;
+  // LARGE_INTEGER pos;
+  // pos.QuadPart = 0;
+  // return ::SetFilePointerEx(handle_.get(), zero, &pos, FILE_CURRENT) ?
   //   pos.QuadPart : -1;
 }
 
