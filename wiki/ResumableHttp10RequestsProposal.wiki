@@ -28,7 +28,7 @@ Normally there is nothing special about the initial request in a resumable opera
 
 = Status Code: 202 Accepted =
 
-When a server receives an incomplete byte range, it MUST respond with a 202 (Accepted). 202 (Accepted) responses MUST include a Range header as defined in HTTP/1.1 section 14.35. The presence of a Range header in this context indicates the byte ranges of the content body which the server has stored for this operation. In future resume requests, the client SHOULD use this information to minimize the amount of data that needs to be retransmitted. This header overrides the value of any previous Range headers, even if the new Range is not a superset of previous ranges (which allows for the possibility of the server losing or discarding data). In addition, the server MAY specify disjoint byte ranges but SHOULD represent the ranges in canonical form. We define the `RESUME-RANGE` to be the most recent Range header received, or the empty range if no Range header has been received.
+When a server receives an incomplete byte range, it MUST respond with a 202 (Accepted). 202 (Accepted) responses MUST include a Range header as defined in HTTP/1.1 section 14.35. The presence of a Range header in this context indicates the byte ranges of the content body which the server has stored for this operation. In future resume requests, the client SHOULD use this information to minimize the amount of data that needs to be retransmitted. This header overrides the value of any previous Range headers, even if the new Range is not a superset of previous ranges (which allows for the possibility of the server losing or discarding data). In addition, the server MAY specify disjoint byte ranges but SHOULD represent the ranges in canonical form.
 
 = HEAD Request =
 
