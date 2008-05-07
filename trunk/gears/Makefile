@@ -297,15 +297,12 @@ THIRD_PARTY_CPPSRCS	+= \
 ifeq ($(OS),win32)
 THIRD_PARTY_VPATH	+= \
 		../third_party/breakpad/src/client/windows/handler \
-		../third_party/breakpad/src/client/windows/sender \
 		../third_party/breakpad/src/common/windows \
 		$(NULL)
 
 THIRD_PARTY_CPPSRCS	+= \
 		exception_handler.cc \
 		guid_string.cc \
-		crash_report_sender.cc \
-		http_upload.cc \
 		$(NULL)
 
 
@@ -687,6 +684,22 @@ NPAPI_IDLSRCS	+= \
 
 NPAPI_CPPSRCS	+= \
 		console_np.cc \
+		$(NULL)
+
+
+#-----------------------------------------------------------------------------
+# crash_sender
+
+COMMON_VPATH += \
+		crash_sender \
+		../third_party/breakpad/src/client/windows/sender \
+		../third_party/breakpad/src/common/windows \
+		$(NULL)
+
+CRASH_SENDER_CPPSRCS  += \
+		crash_report_sender.cc \
+		crash_sender_win32.cc \
+		http_upload.cc \
 		$(NULL)
 
 

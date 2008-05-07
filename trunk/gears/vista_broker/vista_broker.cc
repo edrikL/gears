@@ -44,10 +44,10 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR command_line, int) {
   char16 **argv = CommandLineToArgvW(GetCommandLineW(), &num_args);
 
   if (!argv) {
-    return __LINE__; // return line as a sort of ghetto error code
+    return __LINE__;  // return line as a sort of ghetto error code
   }
 
-  if (num_args != 6) { // first "argument" is program path
+  if (num_args != 6) {  // first argument is program path + filename
     return __LINE__;
   }
 

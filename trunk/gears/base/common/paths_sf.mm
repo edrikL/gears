@@ -31,9 +31,9 @@
 
 const char16 kPathSeparator = '/';
   
-bool GetBaseComponentsDirectory(std::string16 *path) {
-  NSString *dir = [GearsPathUtilities gearsComponentsDirectory];
-  return CFStringRefToString16((CFStringRef)dir, path);
+bool GetInstallDirectory(std::string16 *path) {
+  // TODO(aa): Implement me when needed.
+  return false;
 }
 
 bool GetBaseDataDirectory(std::string16 *path) {
@@ -42,6 +42,6 @@ bool GetBaseDataDirectory(std::string16 *path) {
 }
 
 bool GetBaseResourcesDirectory(std::string16 *path) {
-  NSString *dir = [GearsPathUtilities gearsComponentsDirectory];
+  NSString *dir = [GearsPathUtilities gearsResourcesDirectory];
   return CFStringRefToString16((CFStringRef)dir, path);
 }

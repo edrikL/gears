@@ -23,9 +23,20 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef WIN32
+#include <shlobj.h>
+#endif
+
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
+#include "genfiles/product_constants.h"
 
+
+#ifdef WIN32
+const char16 kPathSeparator = L'\\';
+#else
+const char16 kPathSeparator = L'/';
+#endif
 
 // Define the unique suffixes for each module.
 const char16 *kDataSuffixForDatabase    = STRING16(L"#database");
@@ -100,3 +111,23 @@ bool IsUserInputValidAsPathComponent(const std::string16 &user_input,
   }
   return true;
 }
+
+#ifdef WIN32
+bool GetUmbrellaInstallDirectory(std::string16 *path) {
+  wchar_t dir[MAX_PATH];
+
+  HRESULT hr = SHGetFolderPathW(NULL, CSIDL_PROGRAM_FILES,
+                                NULL,  // user access token
+                                SHGFP_TYPE_CURRENT, dir);
+  if (FAILED(hr) || hr == S_FALSE) {  // MSDN says to handle S_FALSE
+    return false;
+  }
+
+  *path = dir;
+  *path += STRING16(L"\\Google\\" PRODUCT_FRIENDLY_NAME);
+
+  return true;
+}
+#else
+// GetInstallDirectory not needed yet by other platforms.
+#endif
