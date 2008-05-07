@@ -29,6 +29,9 @@
 
 std::string16 EscapeMessage(const std::string16 &message) {
   std::string16 escaped_message(message);
+  // This replacement must preceed the others.
+  ReplaceAll(escaped_message, std::string16(STRING16(L"\\")),
+            std::string16(STRING16(L"\\\\")));
   ReplaceAll(escaped_message, std::string16(STRING16(L"'")),
             std::string16(STRING16(L"\\'")));
   ReplaceAll(escaped_message, std::string16(STRING16(L"\r")),

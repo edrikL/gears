@@ -102,7 +102,7 @@ bool FileDialogUtils::FilesToJsObjectArray(
       *error = STRING16(L"Failed to get JsRunnerInterface.");
       return false;
     }
-    scoped_ptr<JsObject> obj(js_runner->NewObject(NULL));
+    scoped_ptr<JsObject> obj(js_runner->NewObject());
     if (!obj.get()) {
       *error = STRING16(L"Failed to create javascript object.");
       return false;

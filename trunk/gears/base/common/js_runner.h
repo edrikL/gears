@@ -105,19 +105,15 @@ class JsRunnerInterface {
   virtual bool Eval(const std::string16 &script) = 0;
   virtual void SetErrorHandler(JsErrorHandlerInterface *error_handler) = 0;
 
-  // Creates a new object in the JavaScript engine using the specified
-  // constructor. If the constructor is NULL, it defaults to "Object". The
-  // caller takes ownership of the returned value.
-  //
-  // This method should not be used for objects other than "Object". Use
-  // NewError or NewDate instead.
-  // TODO(steveblock): Remove optional_global_ctor_name and update call-sites.
-  virtual JsObject *NewObject(const char16 *optional_global_ctor_name,
-                              // TODO(zork): Remove this when we find the error.
+  // Creates a new object in the JavaScript engine. The caller takes ownership
+  // of the returned value.
+  virtual JsObject *NewObject(// TODO(zork): Remove this when we find the error.
                               bool dump_on_error = false) = 0;
+  // Creates a new Error object with the specified message.
   virtual JsObject *NewError(const std::string16 &message,
                              // TODO(zork): Remove this when we find the error.
                              bool dump_on_error = false) = 0;
+  // Creates a new Date object with the specified time.
   virtual JsObject *NewDate(int64 milliseconds_since_epoch) = 0;
   
   // Creates a new Array object in JavaScript engine. 

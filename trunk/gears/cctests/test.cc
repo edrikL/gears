@@ -362,7 +362,7 @@ void GearsTest::TestCreateObject(JsCallContext* context) {
   if (!js_runner)
     context->SetException(STRING16(L"Failed to get JsRunnerInterface."));
 
-  scoped_ptr<JsObject> js_object(js_runner->NewObject(NULL));
+  scoped_ptr<JsObject> js_object(js_runner->NewObject());
   if (!js_object.get())
     context->SetException(STRING16(L"Failed to create new javascript object."));
 
@@ -401,7 +401,8 @@ void GearsTest::TestCreateError(JsCallContext* context) {
   JsRunnerInterface* js_runner = GetJsRunner();
   if (!js_runner)
     context->SetException(STRING16(L"Failed to get JsRunnerInterface."));
-  scoped_ptr<JsObject> js_object(js_runner->NewError(STRING16(L"test error")));
+  scoped_ptr<JsObject> js_object(js_runner->NewError(
+      STRING16(L"test error\r\nwith 'special' \\characters\\")));
   if (!js_object.get()) {
     context->SetException(STRING16(L"Failed to create Error object"));
     return;
@@ -1296,7 +1297,7 @@ bool TestObject(JsRunnerInterface *js_runner, JsCallContext *context) {
   } \
 }
   // Internal tests on JsObject.
-  scoped_ptr<JsObject> test_object(js_runner->NewObject(NULL));
+  scoped_ptr<JsObject> test_object(js_runner->NewObject());
   JsScopedToken token;
   static const char16 *kPropertyName = STRING16(L"genericPropertyName");
   // Test that a new object has no properties.
@@ -1808,7 +1809,7 @@ void CreateObjectArray(JsCallContext* context,
 void CreateObjectObject(JsCallContext* context,
                         JsRunnerInterface* js_runner,
                         JsObject* out) {
-  JsObject* obj = js_runner->NewObject(NULL);
+  JsObject* obj = js_runner->NewObject();
   TEST_ASSERT(obj);
   TEST_ASSERT(obj->SetPropertyBool(STRING16(L"bool_true"), true));
   TEST_ASSERT(obj->SetPropertyInt(STRING16(L"int_0"), 0));
@@ -1971,7 +1972,7 @@ void GearsTest::TestParseGeolocationOptions(JsCallContext *context) {
     return;
   }
   // Add the urls as a property of the returned object.
-  JsObject *return_object = GetJsRunner()->NewObject(NULL);
+  JsObject *return_object = GetJsRunner()->NewObject();
   assert(return_object);
   JsArray *url_array = GetJsRunner()->NewArray();
   assert(url_array);

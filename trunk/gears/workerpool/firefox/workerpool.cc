@@ -572,7 +572,7 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
 
     // Setup the onmessage parameter (type: Object).
     assert(wi->js_runner);
-    scoped_ptr<JsObject> onmessage_param(wi->js_runner->NewObject(NULL, true));
+    scoped_ptr<JsObject> onmessage_param(wi->js_runner->NewObject(true));
     // TODO(zork): Checking this return value is temporary, as callers are not
     // supposed to have to worry about NewObject() failing.
     if (!onmessage_param.get()) {
@@ -770,12 +770,11 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
   // Setup the onerror parameter (type: Error).
   assert(wi->js_runner);
   scoped_ptr<JsObject> onerror_param(
-      wi->js_runner->NewObject(STRING16(L"Error"), true));
+      wi->js_runner->NewError(error_info.message, true));
   if (!onerror_param.get()) {
     return false;
   }
 
-  onerror_param->SetPropertyString(STRING16(L"message"), error_info.message);
   onerror_param->SetPropertyInt(STRING16(L"lineNumber"), error_info.line);
   // TODO(aa): Additional information, like fragment of code where the error
   // occurred, stack?

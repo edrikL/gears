@@ -224,7 +224,7 @@ bool MarshaledJsToken::Unmarshal(
       break;
     }
     case JSPARAM_OBJECT: {
-      scoped_ptr<JsObject> object(js_runner->NewObject(NULL));
+      scoped_ptr<JsObject> object(js_runner->NewObject());
       *out = object->token();
 
       std::map<std::string16, MarshaledJsToken*> *o = value_.object_value;
