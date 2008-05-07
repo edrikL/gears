@@ -108,6 +108,98 @@ File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
   return file.release();
 }
 
+int64 File::Read(uint8* destination, int64 max_bytes) {
+  if (mode_ == WRITE) {
+    // NOTE: we may have opened the file with read-write access to avoid
+    // truncating it, but we still want to refuse reads
+    return -1;
+  }
+  if (!destination || max_bytes < 0) {
+    return -1;
+  }
+
+  // Read its contents into memory.
+  if (max_bytes > std::numeric_limits<size_t>::max()) {  // fread limit
+    max_bytes = std::numeric_limits<size_t>::max();
+  }
+  size_t bytes_read = fread(destination, 1, static_cast<size_t>(max_bytes),
+                            handle_.get());
+  if (ferror(handle_.get()) && !feof(handle_.get())) {
+    return -1;
+  }
+  return bytes_read;
+}
+
+bool File::Seek(int64 offset, SeekMethod seek_method) {
+  int whence = 0;
+  switch (seek_method) {
+    case SEEK_FROM_START:
+      whence = SEEK_SET;
+      break;
+    case SEEK_FROM_CURRENT:
+      whence = SEEK_CUR;
+      break;
+    case SEEK_FROM_END:
+      whence = SEEK_END;
+      break;
+  }
+
+  // handle 64-bit seek for 32-bit off_t
+  while (offset > std::numeric_limits<off_t>::max()) {
+    if (fseeko(handle_.get(), std::numeric_limits<off_t>::max(), whence) != 0) {
+      return false;
+    }
+    offset -= std::numeric_limits<off_t>::max();
+    whence = SEEK_CUR;
+  }
+  while (offset < std::numeric_limits<off_t>::min()) {
+    if (fseeko(handle_.get(), std::numeric_limits<off_t>::min(), whence) != 0) {
+      return false;
+    }
+    offset -= std::numeric_limits<off_t>::min();
+    whence = SEEK_CUR;
+  }
+
+  return (fseeko(handle_.get(), static_cast<long>(offset), whence) == 0);
+}
+
+int64 File::Size() {
+  struct stat stat_data;
+  if (fstat(fileno(handle_.get()), &stat_data) != 0) {
+    return false;
+  }
+  return static_cast<int64>(stat_data.st_size);
+}
+
+int64 File::Tell() {
+  return ftello(handle_.get());
+}
+
+bool File::Truncate(int64 length) {
+  if (length < 0) {
+    return false;
+  }
+  return ftruncate(fileno(handle_.get()), length) == 0;
+}
+
+int64 File::Write(const uint8 *source, int64 length) {
+  if (mode_ == READ) {
+    // NOTE: fwrite doesn't fail after opening in READ mode
+    return -1;
+  }
+  if (!source || length < 0) {
+    return -1;
+  }
+  // can't write more data than fwrite can handle
+  assert(length <= std::numeric_limits<size_t>::max());
+
+  size_t bytes_written = fwrite(source, 1, length, handle_.get());
+  if (ferror(handle_.get())) {
+    return -1;
+  }
+  return bytes_written;
+}
+
 // Places the direct contents of the 'path' directory into results.  This
 // method is not recursive.
 // 'results' may not be NULL.
@@ -219,100 +311,6 @@ bool File::DirectoryExists(const char16 *full_dirpath) {
 
   return S_ISDIR(stat_data.st_mode);
 }
-
-int64 File::Size() {
-  struct stat stat_data;
-  if (fstat(fileno(handle_.get()), &stat_data) != 0) {
-    return false;
-  }
-  return static_cast<int64>(stat_data.st_size);
-}
-
-int64 File::Read(uint8* destination, int64 max_bytes) {
-  if (mode_ == WRITE) {
-    // NOTE: we may have opened the file with read-write access to avoid
-    // truncating it, but we still want to refuse reads
-    return -1;
-  }
-  if (!destination || max_bytes < 0) {
-    return -1;
-  }
-
-  // Read its contents into memory.
-  if (max_bytes > std::numeric_limits<size_t>::max()) {  // fread limit
-    max_bytes = std::numeric_limits<size_t>::max();
-  }
-  size_t bytes_read = fread(destination, 1, static_cast<size_t>(max_bytes),
-                            handle_.get());
-  if (ferror(handle_.get()) && !feof(handle_.get())) {
-    return -1;
-  }
-  return bytes_read;
-}
-
-bool File::Seek(int64 offset, SeekMethod seek_method) {
-  int whence = 0;
-  switch (seek_method) {
-    case SEEK_FROM_START:
-      whence = SEEK_SET;
-      break;
-    case SEEK_FROM_CURRENT:
-      whence = SEEK_CUR;
-      break;
-    case SEEK_FROM_END:
-      whence = SEEK_END;
-      break;
-  }
-
-  // handle 64-bit seek for 32-bit off_t
-  while (offset > std::numeric_limits<off_t>::max()) {
-    if (fseeko(handle_.get(), std::numeric_limits<off_t>::max(), whence) != 0) {
-      return false;
-    }
-    offset -= std::numeric_limits<off_t>::max();
-    whence = SEEK_CUR;
-  }
-  while (offset < std::numeric_limits<off_t>::min()) {
-    if (fseeko(handle_.get(), std::numeric_limits<off_t>::min(), whence) != 0) {
-      return false;
-    }
-    offset -= std::numeric_limits<off_t>::min();
-    whence = SEEK_CUR;
-  }
-
-  return (fseeko(handle_.get(), static_cast<long>(offset), whence) == 0);
-}
-
-int64 File::Tell() {
-  return ftello(handle_.get());
-}
-
-bool File::Truncate(int64 length) {
-  if (length < 0) {
-    return false;
-  }
-  return ftruncate(fileno(handle_.get()), length) == 0;
-}
-
-
-int64 File::Write(const uint8 *source, int64 length) {
-  if (mode_ == READ) {
-    // NOTE: fwrite doesn't fail after opening in READ mode
-    return -1;
-  }
-  if (!source || length < 0) {
-    return -1;
-  }
-  // can't write more data than fwrite can handle
-  assert(length <= std::numeric_limits<size_t>::max());
-
-  size_t bytes_written = fwrite(source, 1, length, handle_.get());
-  if (ferror(handle_.get())) {
-    return -1;
-  }
-  return bytes_written;
-}
-
 bool File::Delete(const char16 *full_filepath) {
   std::string path_utf8;
   if (!String16ToUTF8(full_filepath, &path_utf8)) {
