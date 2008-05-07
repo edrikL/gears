@@ -110,6 +110,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             <Directory Id='OurIEDir' Name='Internet Explorer'>
               <Directory Id='OurIEVersionedDir' Name='PRODUCT_VERSION'>
                 <Component Id='OurIEDirFiles' Guid='$(var.OurComponentGUID_IEFiles)'>
+                  <File Id='ie_crash_sender' Name='crash_sender.exe' DiskId='1'
+                    Source="$(var.OurCommonPath)/crash_sender.exe" />
+m4_ifdef(~`DEBUG`~,~`m4_dnl
+                  <File Id='ie_crash_sender_pdb' Name='crash_sender.pdb' DiskId='1'
+                    Source="$(var.OurCommonPath)/crash_sender.pdb" />
+`~)
                   <File Id='ie_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
                     Source="$(var.OurIEPath)/PRODUCT_SHORT_NAME_UQ.dll" SelfRegCost='1' />
 m4_ifdef(~`DEBUG`~,~`m4_dnl
@@ -118,6 +124,10 @@ m4_ifdef(~`DEBUG`~,~`m4_dnl
 `~)
                   <File Id='vista_broker' Name='vista_broker.exe' DiskId='1'
                     Source="$(var.OurIEPath)/vista_broker.exe" />
+m4_ifdef(~`DEBUG`~,~`m4_dnl
+                  <File Id='vista_broker_pdb' Name='vista_broker.pdb' DiskId='1'
+                    Source="$(var.OurIEPath)/vista_broker.pdb" />
+`~)
                 </Component>
               </Directory>
             </Directory>
@@ -126,28 +136,36 @@ m4_ifdef(~`DEBUG`~,~`m4_dnl
                  sometimes gets confused and disables the updated version. -->
             <Directory Id='OurFFDir' Name='Firefox'>
               <Component Id='OurFFDirFiles' Guid='$(var.OurComponentGUID_FFDirFiles)'>
-                <File Id='ff_install.rdf' Name='install.rdf' DiskId='1'
-                  Source="$(var.OurFFPath)/install.rdf" />
                 <File Id='ff_chrome.manifest' Name='chrome.manifest' DiskId='1'
                   Source="$(var.OurFFPath)/chrome.manifest" />
+                <File Id='ff_crash_sender' Name='crash_sender.exe' DiskId='1'
+                  Source="$(var.OurCommonPath)/crash_sender.exe" />
+m4_ifdef(~`DEBUG`~,~`m4_dnl
+                <File Id='ff_crash_sender_pdb' Name='crash_sender.pdb' DiskId='1'
+                  Source="$(var.OurCommonPath)/crash_sender.pdb" />
+`~)
+                <File Id='ff_install.rdf' Name='install.rdf' DiskId='1'
+                  Source="$(var.OurFFPath)/install.rdf" />
               </Component>
               <Directory Id='OurFFComponentsDir' Name='components'>
                 <Component Id='OurFFComponentsDirFiles'
                   Guid='$(var.OurComponentGUID_FFComponentsDirFiles)'>
                   <File Id='ff_bootstrap.js' Name='bootstrap.js'
                     DiskId='1' Source="$(var.OurFFPath)/components/bootstrap.js" />
-                  <File Id='ff3_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
-                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.dll" />
+                  <File Id='ff_xpt' Name='PRODUCT_SHORT_NAME_UQ.xpt' DiskId='1'
+                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.xpt" />
                   <File Id='ff2_dll' Name='PRODUCT_SHORT_NAME_UQ~``~_ff2.dll' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ~``~_ff2.dll" />
 m4_ifdef(~`DEBUG`~,~`m4_dnl
-                  <File Id='ff3_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
-                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.pdb" />
                   <File Id='ff2_pdb' Name='PRODUCT_SHORT_NAME_UQ~``~_ff2.pdb' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ~``~_ff2.pdb" />
 `~)
-                  <File Id='ff_xpt' Name='PRODUCT_SHORT_NAME_UQ.xpt' DiskId='1'
-                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.xpt" />
+                  <File Id='ff3_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
+                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.dll" />
+m4_ifdef(~`DEBUG`~,~`m4_dnl
+                  <File Id='ff3_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
+                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.pdb" />
+`~)
                 </Component>
               </Directory>
 

@@ -44,8 +44,8 @@
 + (NSString *)pathForFolder:(OSType)folderType domain:(short)domain 
                      create:(BOOL)create;
 
-// Returns the directory for components (Resource path within plugin)
-+ (NSString *)gearsComponentsDirectory;
+// Returns the directory for resources (Resource path within plugin)
++ (NSString *)gearsResourcesDirectory;
 
 // Returns the base directory for all Gears user data for the current user.
 // Does not try to create the directory.

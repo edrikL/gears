@@ -420,29 +420,22 @@ bool Desktop::CreateShortcutPlatformImpl(const SecurityOrigin &origin,
 
 #if BROWSER_IE
   if (VistaUtils::IsRunningOnVista()) {
-    char16 gears_dll_path[MAX_PATH] = {0};
-    if (!GetModuleFileName(_AtlBaseModule.GetModuleInstance(), gears_dll_path,
-                           MAX_PATH)) {
-      *error = GET_INTERNAL_ERROR_MESSAGE();
-      return false;
-    }
-
     std::string16 broker_path;
-    if (!File::GetParentDirectory(gears_dll_path, &broker_path)) {
+    if (!GetInstallDirectory(&broker_path)) {
       *error = GET_INTERNAL_ERROR_MESSAGE();
       return false;
     }
-
     broker_path += STRING16(L"\\vista_broker.exe");
 
     // Build up the command line
+    std::string16 locations_string = IntegerToString16(locations);
     const char16 *command_line_parts[] = {
       broker_path.c_str(),
       shortcut.app_name.c_str(),
       browser_path,
       shortcut.app_url.c_str(),
       icons_path.c_str(),
-      IntegerToString16(locations).c_str(),
+      locations_string.c_str(),
     };
 
     std::string16 command_line;
@@ -462,16 +455,19 @@ bool Desktop::CreateShortcutPlatformImpl(const SecurityOrigin &origin,
     startup_info.cb = sizeof(startup_info);
     PROCESS_INFORMATION process_info = {0};
 
-    // TODO(aa): CreateProcessW is modifying command_line's data in the middle.
-    // Is this OK?
-    BOOL success = CreateProcessW(NULL,  // get command from command line
+    BOOL success = CreateProcessW(NULL,  // application name (NULL to get from
+                                         // command line)
                                   const_cast<char16 *>(command_line.c_str()),
-                                  NULL,  // process handle not inheritable
-                                  NULL,  // thread handle not inheritable
-                                  FALSE, // set handle inheritance to FALSE
-                                  0,     // no creation flags
-                                  NULL,  // use parent's environment block
-                                  NULL,  // use parent's starting block
+                                  NULL,  // process attributes (NULL means
+                                         // process handle not inheritable)
+                                  NULL,  // thread attributes (NULL means thread
+                                         // handle not inheritable)
+                                  FALSE, // inherit handles
+                                  0,     // creation flags
+                                  NULL,  // environment block (NULL to use
+                                         // parent's)
+                                  NULL,  // starting block (NULL to use
+                                         // parent's)
                                   &startup_info,
                                   &process_info);
     if (!success) {

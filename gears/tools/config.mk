@@ -394,7 +394,8 @@ NPAPI_DLLFLAGS = /DEF:base/npapi/module.def
 MKEXE = link
 EXE_PREFIX =
 EXE_SUFFIX = .exe
-EXEFLAGS = $(COMMON_LINKFLAGS) /PDB:"$(@D)/$(*F).pdb"
+# Note: cannot use *F because that only works when the rule uses patterns.
+EXEFLAGS = $(COMMON_LINKFLAGS) /PDB:"$(@D)/$(patsubst %.exe,%.pdb,$(@F))"
 
 
 TRANSLATE_LINKER_FILE_LIST = cat -

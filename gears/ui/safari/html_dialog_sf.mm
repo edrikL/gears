@@ -70,7 +70,7 @@
     // TODO(playmobil): Get path for localized files.
     std::string16 localized_html_file(STRING16(L"en-US/"));
     localized_html_file += html_filename;
-    NSString *pluginPath = [GearsPathUtilities gearsComponentsDirectory];
+    NSString *pluginPath = [GearsPathUtilities gearsResourcesDirectory];
     NSString *tmp = [NSString stringWithString16:localized_html_file.c_str()];
     pluginPath = [pluginPath stringByAppendingPathComponent:tmp];
     dialog_url_ = [NSString stringWithFormat:@"file:///%@", pluginPath]; 

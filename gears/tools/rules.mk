@@ -65,6 +65,8 @@ $(BROWSER)_OBJS = \
 COMMON_OBJS = \
 	$(patsubst %.cc,$(COMMON_OUTDIR)/%$(OBJ_SUFFIX),$(COMMON_CPPSRCS)) \
 	$(patsubst %.c,$(COMMON_OUTDIR)/%$(OBJ_SUFFIX),$(COMMON_CSRCS))
+CRASH_SENDER_OBJS = \
+	$(patsubst %.cc,$(COMMON_OUTDIR)/%$(OBJ_SUFFIX),$(CRASH_SENDER_CPPSRCS))
 NOTIFIER_OBJS = \
 	$(patsubst %.cc,$(COMMON_OUTDIR)/%$(OBJ_SUFFIX),$(NOTIFIER_CPPSRCS))
 # TODO(cprince): Break all ties between OSX_LAUNCHURL and FF3_OUTDIR when we
@@ -108,6 +110,7 @@ FF3_RESOURCES = \
 DEPS = \
 	$($(BROWSER)_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(COMMON_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(CRASH_SENDER_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(NOTIFIER_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(OSX_LAUNCHURL_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(PERF_TOOL_OBJS:$(OBJ_SUFFIX)=.pp) \
@@ -165,14 +168,17 @@ FF3_MODULE_TYPELIB = $(FF3_OUTDIR)/$(MODULE).xpt
 
 IE_WINCESETUP_DLL = $(IE_OUTDIR)/$(DLL_PREFIX)setup$(DLL_SUFFIX)
 
+# Note: crash_sender.exe name needs to stay in sync with name used in
+# exception_handler_win32.cc.
+CRASH_SENDER_EXE = $(COMMON_OUTDIR)/$(EXE_PREFIX)crash_sender$(EXE_SUFFIX)
 NOTIFIER_EXE = $(COMMON_OUTDIR)/$(EXE_PREFIX)notifier$(EXE_SUFFIX)
-
 OSX_LAUNCHURL_EXE = $(FF3_OUTDIR)/$(EXE_PREFIX)launch_url_with_browser$(EXE_SUFFIX)
-
 PERF_TOOL_EXE = $(COMMON_OUTDIR)/$(EXE_PREFIX)perf_tool$(EXE_SUFFIX)
-
 # Note: We use IE_OUTDIR so that relative path from gears.dll is same in
 # development environment as deployment environment.
+# Note: vista_broker.exe needs to stay in sync with name used in
+# desktop_win32.cc.
+# TODO(aa): This can move to common_outdir like crash_sender.exe
 VISTA_BROKER_EXE = $(IE_OUTDIR)/$(EXE_PREFIX)vista_broker$(EXE_SUFFIX)
 
 FFMERGED_INSTALLER_XPI = $(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME).xpi
@@ -321,6 +327,12 @@ ifneq ($(OS),android)
 # TODO(cprince): Get tools to link on WinCE.
 modules:: $(NOTIFIER_EXE) $(PERF_TOOL_EXE)
 endif
+endif
+
+# TODO(aa): Should this run on wince too?
+# TODO(aa): Implement crash senders for more platforms
+ifeq ($(OS),win32)
+modules:: $(CRASH_SENDER_EXE)
 endif
 
 
@@ -490,6 +502,7 @@ WIX_DEFINES_I18N = $(foreach lang,$(subst -,_,$(I18N_LANGS)),-dOurComponentGUID_
 $(COMMON_OUTDIR)/%.wxiobj: %.wxs
 	candle.exe -out $@ $< \
 	  -dOurWin32ProductId=$(OUR_WIN32_PRODUCT_ID) \
+	  -dOurCommonPath=$(OUTDIR)/$(OS)-$(ARCH)/common \
 	  -dOurIEPath=$(OUTDIR)/$(OS)-$(ARCH)/ie \
 	  -dOurFFPath=$(INSTALLERS_OUTDIR)/$(INSTALLER_BASE_NAME) \
 	  -dOurComponentGUID_FFComponentsDirFiles=$(OUR_COMPONENT_GUID_FF_COMPONENTS_DIR_FILES) \
@@ -541,9 +554,6 @@ $(IE_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS
 $(IE_WINCESETUP_DLL): $(IE_WINCESETUP_OBJS) $(IE_WINCESETUP_LINK_EXTRAS)
 	$(MKDLL) $(DLLFLAGS_NOPDB) $(IE_WINCESETUP_LINK_EXTRAS) $(IE_LIBS) $(IE_WINCESETUP_OBJS)
 
-$(NOTIFIER_EXE): $(NOTIFIER_OBJS)
-	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_OBJS)
-
 ifneq ($(OS),android)
 
 $(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $(NPAPI_OBJS) $(NPAPI_LINK_EXTRAS)
@@ -552,6 +562,12 @@ $(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_O
 	rm $(OUTDIR)/obj_list.temp
 
 endif
+
+$(CRASH_SENDER_EXE): $(CRASH_SENDER_OBJS)
+	$(MKEXE) $(EXEFLAGS) $(CRASH_SENDER_OBJS) advapi32.lib shell32.lib wininet.lib
+
+$(NOTIFIER_EXE): $(NOTIFIER_OBJS)
+	$(MKEXE) $(EXEFLAGS) $(NOTIFIER_OBJS)
 
 # TODO(cprince): Remove hard-coded build flags here.  Switch to using
 # MKEXE + EXEFLAGS when those are added for all platforms.
@@ -563,7 +579,7 @@ $(PERF_TOOL_EXE): $(PERF_TOOL_OBJS)
 
 $(VISTA_BROKER_EXE): $(VISTA_BROKER_OBJS) $(VISTA_BROKER_LINK_EXTRAS) $(VISTA_BROKER_OUTDIR)/vista_broker.res
 	@echo $(VISTA_BROKER_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	$(MKEXE) $(EXEFLAGS) /PDB:"$(@D)/vista_broker.pdb" $(VISTA_BROKER_OUTDIR)/vista_broker.res $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	$(MKEXE) $(EXEFLAGS) $(VISTA_BROKER_OUTDIR)/vista_broker.res $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
 	rm $(OUTDIR)/obj_list.temp
 
 # INSTALLER TARGETS
