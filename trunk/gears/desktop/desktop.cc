@@ -462,10 +462,17 @@ bool Desktop::SetShortcut(Desktop::ShortcutInfo *shortcut,
     return true;
   }
 
-  if (!FetchIcon(&shortcut->icon16x16, 16, error) ||
-      !FetchIcon(&shortcut->icon32x32, 32, error) ||
-      !FetchIcon(&shortcut->icon48x48, 48, error) ||
-      !FetchIcon(&shortcut->icon128x128, 128, error)) {
+  if (!FetchIcon(&shortcut->icon16x16, error, false, NULL) ||
+      !FetchIcon(&shortcut->icon32x32, error, false, NULL) ||
+      !FetchIcon(&shortcut->icon48x48, error, false, NULL) ||
+      !FetchIcon(&shortcut->icon128x128, error, false, NULL)) {
+    return false;
+  }
+
+  if (!DecodeIcon(&shortcut->icon16x16, 16, error) ||
+      !DecodeIcon(&shortcut->icon32x32, 32, error) ||
+      !DecodeIcon(&shortcut->icon48x48, 48, error) ||
+      !DecodeIcon(&shortcut->icon128x128, 128, error)) {
     return false;
   }
 
@@ -572,15 +579,16 @@ bool Desktop::WriteControlPanelIcon(
   return File::WriteVectorToFile(icon_loc.c_str(), &chosen_icon->png_data);
 }
 
-bool Desktop::FetchIcon(Desktop::IconData *icon, int expected_size,
-                        std::string16 *error) {
+bool Desktop::FetchIcon(Desktop::IconData *icon, std::string16 *error,
+                        bool async, scoped_refptr<HttpRequest> *async_request) {
   // Icons are optional. Only try to fetch if one was provided.
   if (icon->url.empty()) {
     return true;
   }
 
-  // Get the current icon.
-  if (IsDataUrl(icon->url.c_str())) {
+  if (!icon->png_data.empty()) {
+    // Icons can come pre-fetched.  In that case, no need to fetch again.
+  } else if (IsDataUrl(icon->url.c_str())) {
     // data URL
     std::string16 mime_type, charset;
     if (!ParseDataUrl(icon->url, &mime_type, &charset, &icon->png_data)) {
@@ -598,14 +606,20 @@ bool Desktop::FetchIcon(Desktop::IconData *icon, int expected_size,
     request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
 
     int status = 0;
-    if (!request->Open(HttpConstants::kHttpGET, icon->url.c_str(), false) ||
+    if (!request->Open(HttpConstants::kHttpGET, icon->url.c_str(), async) ||
         !request->Send() ||
-        !request->GetStatus(&status) ||
-        status != HTTPResponse::RC_REQUEST_OK) {
+        (!async && (!request->GetStatus(&status) ||
+                    status != HTTPResponse::RC_REQUEST_OK))) {
       *error = STRING16(L"Could not load icon ");
       *error += icon->url.c_str();
       *error += STRING16(L".");
       return false;
+    }
+
+    if (async) {
+      assert(async_request);
+      *async_request = request;
+      return true;
     }
 
     // Extract the data.
@@ -615,6 +629,16 @@ bool Desktop::FetchIcon(Desktop::IconData *icon, int expected_size,
       *error += STRING16(L".");
       return false;
     }
+  }
+
+  return true;
+}
+
+bool Desktop::DecodeIcon(Desktop::IconData *icon, int expected_size,
+                         std::string16 *error) {
+  // Icons are optional.  Only try to decode if one was provided.
+  if (icon->url.empty()) {
+    return true;
   }
 
   // Decode the png
