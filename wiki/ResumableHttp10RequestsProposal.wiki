@@ -5,23 +5,60 @@
 
 Current web standards provide no reliable mechanism to facilitate the HTTP upload of large files. As a result, file uploads at Google and other sites have traditionally been limited to moderate sizes (e.g. 100 MB), with browser-external clients being required to upload larger files. Several such clients have been created for Google Video, !YouTube, and Google Books, all using HTTP to upload large files by POSTing one segment (a.k.a. chunk) at a time, with chunk sizes on the order of 1 MB; this facilitates recovery from transient errors that occur during upload, by providing well-defined points at which the upload could be resumed (i.e. chunk boundaries). We propose an HTTP/1.0 protocol which provides native support for resuming non-idempotent HTTP requests, whose adoption would obviate the need for custom clients to reliably perform large non-idempotent operations, such as uploading large files. While our protocol adheres to HTTP/1.1, it avoids constructs which can not be dealt with properly by HTTP/1.0 proxies. For cases where HTTP/1.0 proxies are not a constraint, we have a separate, but very similar, proposal: ResumableHttp11RequestsProposal.
 
-If an HTTP connection is closed prior to the client receiving a response from the server, the client has no way of knowing how much of the content was successfully received by the server, or whether the operation completed. When this occurs, idempotent operations can be automatically retried, but in the case of non-idempotent operations HTTP/1.1 section 8.1.4 explicitly forbids the client from retrying the operation without user interaction. In order to reattempt the operation without concern for introducing unintended side effects, the server and client require a mechanism for uniquely identifying the operation across multiple requests. We thus require that each upload operation be assigned a unique, per-upload URL, whose generation is outside the scope of the resumable upload protocol itself (TODO: suggest possible use of 201 for unique URL creation).
+If an HTTP connection is closed prior to the client receiving a response from the server, the client has no way of knowing how much of the content was successfully received by the server, or whether the operation completed. When this occurs, idempotent operations can be automatically retried, but in the case of non-idempotent operations HTTP/1.1 section 8.1.4 explicitly forbids the client from retrying the operation without user interaction. In order to reattempt the operation without concern for introducing unintended side effects, the server and client require a mechanism for uniquely identifying the operation across multiple requests. We thus require that each upload operation be assigned a unique, per-upload URL, whose generation is outside the scope of the resumable upload protocol itself.
 
 When a non-idempotent HTTP _request_ is resumed, the initial request combined with all subsequent resume requests together constitute a single logical _operation_. As such, we use the terms request and operation, respectively, to distinguish between individual HTTP requests and the combined unit of requests (the original request plus any retries) that are logically associated with each other.
 
 = Protocol Overview =
 
  # Prior to initiating an operation, the client must first obtain a unique per-operation URL which will be used to identify all subsequent resume requests with the original operation. In other words, all requests to a given URL form a single logical operation.
- # The client initiates a request (e.g. POST/PUT) to the unique URL obtained in step (1). Normally the client sends all data bytes in the initial request, but when necessary it can send partial data, in which case a 202 Accepted response code is expected.
- # Once the server has received all bytes of the request, it responds with a final response code, and the operation is complete. If not all data bytes have been received, then the server responds with a 202 Accepted response code, indicating that the transferred bytes were succesfully received, but additional bytes are still expected. (TODO: return header specifying byte ranges.)
- # Should the connection be closed prior to the arrival of a final response code (possibly before all bytes of the request have even been sent), or if the client receives a 503 Service Unavailable status code, then the client retries by issueing a HEAD request to the unique URL of step (1). (TODO: include If-Resume header?) Exponential backoff should be used to separate series of sequential retries.
- # The server sends a standard response to the HEAD request, notably using the Content-Length header to indicate what portion of the file it has successfully received. (TODO: discuss byte range extension)
+ # The client initiates a request (e.g. POST/PUT) to the unique URL obtained in step (1). Normally the client sends all data bytes in the initial request, but when necessary it can send partial data, in which case a 202 (Accepted) response code is expected.
+ # Once the server has received all bytes of the request, it responds with a final response code, and the operation is complete. If not all data bytes have been received, then the server responds with a 202 (Accepted) response code, indicating that the transferred bytes were succesfully received, but additional bytes are still expected.
+ # Should the connection be closed prior to the arrival of a final response code (possibly before all bytes of the request have even been sent), or if the client receives a 503 (Service Unavailable) status code, then the client retries by issueing a HEAD request to the unique URL of step (1). Exponential backoff should be used to separate series of sequential retries.
+ # The server sends a standard response to the HEAD request, notably using the Content-Length header to indicate what portion of the file it has successfully received.
  # The client sends a resume request, which resembles the original request from step (2), but contains only a subset of the data bytes (specifically those not yet received by the server). An If-Resume header is added to specify the byte range which is being transfered.
- # TODO: specify use of 412 Precondition Failed for resumption errors
+
+= Unique URL =
+
+The core logic of this protocol specification requires a unique per-upload URL, which can be used to 1) send initial requests, 2) send HEAD requests, and 3) send resume requests. In other words, different upload operations MUST each be assigned a unique URL, allowing proper server-side identification of each unique operation. The generation of this unique URL is outside of the scope of the protocol, but we do note that in cases where it is generated by an asynchronous request (versus being embedded in a web page, for example) then the 201 (Created) status code is one natural way to for the server to map a shared upload URL to a unique per-upload URL.
+
+= Initial Request =
+
+Normally there is nothing special about the initial request in a resumable operation. Specifically, it should contain the entire byte range, and not include an If-Resume header. While the protocol itself supports sending a partial range in the initial request, this is recommended against unless explicitly required.
+
+= Status Code: 202 Accepted =
+
+When a server receives an incomplete byte range, it MUST respond with a 202 (Accepted). 202 (Accepted) responses MUST include a Range header as defined in HTTP/1.1 section 14.35. The presence of a Range header in this context indicates the byte ranges of the content body which the server has stored for this operation. In future resume requests, the client SHOULD use this information to minimize the amount of data that needs to be retransmitted. This header overrides the value of any previous Range headers, even if the new Range is not a superset of previous ranges (which allows for the possibility of the server losing or discarding data). In addition, the server MAY specify disjoint byte ranges but SHOULD represent the ranges in canonical form. We define the `RESUME-RANGE` to be the most recent Range header received, or the empty range if no Range header has been received.
+
+= HEAD Request =
+
+If a client's connection to the server is terminated prior to the receipt of a final response code, or if the client receives a 503 (Service Unavailable), then the client sends a HEAD request to the server, using the same URL as the initial request, to determine which bytes the server has sucesfully received.
+
+The server responds to HEAD requests by sending a 200 (OK) response without any message-body. The Content-Length header MUST be specified in this response, and is the canonical mechanism by which the server communicates to the client the byte range that it has sucesfully received. Inasmuch as Content-Length only allows the acknowledgment of a single, contiguous chunk of bytes starting at the begining of the file, servers MAY include a Range header as defined in HTTP/1.1 section 14.35 (and as sent in 202 (Accepted) responses). The Range header has the added advantage of allowing the server to specify non-contiguous byte ranges.
+
+= If-Resume Header =
+
+The If-Resume header MUST be sent by clients on all resume requests. It has one required parameter: bytes.
+
+{{{
+if-resume = "If-Resume" ":" resume-range-spec
+resume-range-spec = bytes-resume-range-spec
+bytes-resume-range-spec = bytes-unit "=" byte-range-spec "/" ( instance-length | "*" )
+}}}
+
+When including a body in an If-Resume request, clients MUST include a resume-range-spec indicating which bytes are being transferred with respect to all bytes in the operation. Note that this may be different than the byte range specified in any Content-Range header (if present). Clients MUST specify first-byte-pos as it identifies where in the context of the operation the bytes belong. Clients MAY omit last-byte-pos in cases where the length of the range being transferred is unknown or difficult to determine. Clients SHOULD specify instance-length, unless it is unknown or difficult to determine (in which case "`*`" should be used). In cases where the instance-length is "`*`", the client MUST either use chunked transfer coding or specify the instance-length in the final chunk transferred.
+
+If the server receives a request with a If-Resume header and is not able to locate the operation identified by the URL or is otherwise prevented from continuing the operation, the server SHOULD respond with a 412 (Precondition Failed) status code. A server that doesn't support resumability MUST respond to any If-Resume header with a 412 (Precondition Failed).
+
+= Status Code: 412 Precondition Failed =
+
+Upon receiving the content body of a resume request, the server may still be unable to complete the operation without further action from the client. In such cases, the server SHOULD return status code 412 (Precondition Failed). A 412 (Precondition Failed) response MAY include a Range header as defined in HTTP/1.1 section 14.35 (and as sent in 202 (Accepted) responses, and in response to HEAD requests). A 412 (Precondition Failed) MAY include a Retry-After header as defined in HTTP/1.1 section 14.37. A client which receives a Retry-After SHOULD delay further resume operations for the specified time period. If the delay is not feasible, the client MUST fail the operation. The server MAY send a 412 (Precondition Failed) before receiving the entire request body, but as specified in section 8.2.3 of HTTP/1.1 the server SHOULD NOT close the transport connection until it has read the entire request, or until the client closes the connection.
 
 = Resuming Operations =
 
 The server SHOULD process the data from a resumable operation in the same way it would have processed a single request with the entire content. In particular, the server may need to cache the partial data from an operation, and only process it (e.g. pass it to a CGI application) once the data is complete. Servers which support a streaming mode of processing may do so for a resumable operation as long as the streaming can be resumed normally when the client sends more data in a future resume request.
+
+When resuming an operation, clients SHOULD send byte ranges that are contiguous with the bytes already acknowledged by the server. Servers MAY support the transfer of non-contiguous byte ranges, but are not required to do so; if a server does not support non-contiguous byte ranges, then it MUST respond with a 416 (Requested Range Not Satisfiable).
 
 If the client sends a resume request which refers to an operation that has already completed, the server MUST NOT re-process the data, and SHOULD return the same or equivalent response to the client as was returned from the original processing. If the server cannot compose an equivalent response, it MAY return 202 or some other response to indicate that the operation was processed with unknown results, keeping in mind that this response might be confusing when resuming requests occur transparently to the user. Regardless of this possibility, any sequence of resume requests with respect to the same entity tag are guaranteed idempotent, and may be retried without user interaction, despite the considerations of section 8.1.4 of HTTP/1.1.
 
