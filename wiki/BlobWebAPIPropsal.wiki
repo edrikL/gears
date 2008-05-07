@@ -1,0 +1,29 @@
+#summary A Web API working group proposal for blobs
+
+= Problem =
+
+Web applications have no way to interact with binary data in any way. For example, it is not possible to get the binary response of an XMLHttpRequest, or a file the user selected. It is also not possible to POST a user selected file using XMLHttpRequest, or to insert it into a Database, or to capture it for use offline.
+
+We divide the spectrum of possible use cases for binary data into two broad sets:
+
+  * Interacting with opaque chunks of binary data. For example, a developer may want to ask the user to select a file while offline, store it, then upload it later. Another use case might be to ask the user to select a large file, divide it up into smaller opaque chunks, and to POST each of these chunks separately to a web server, thereby overcoming the well known problem uploading large files using web browsers.
+
+  * Manipulating raw binary data. For example decoding ZIP or PNG formats, performing cryptography, etc.
+
+This proposal is primarily targeted at the first set of use cases, but it looks ahead to the second set, leaving a spot where APIs solving them could be added.
+
+
+= The Blob Interface =
+
+The Blob interface represents an opaque chunk of data. A blob does not necessarily have to fit entirely into memory, it can be backed by a file or stream. The details are up to the implementation. There is currently no way to create a blob directly. However, one could imagine in the future a way to assemble pieces of data together to create a blob.
+
+{{{
+interface Blob {
+  readonly attribute int64 length;
+  Blob slice(int64 start, int64 length);
+}
+}}}
+
+A blob is immutable, in the same sense that an ECMAScript string is. You can subdivide a blob into smaller blobs, but the result of that operation is a new blob object representing the subset.
+
+It is of course, impossible to prevent blobs backed by local files from being completely immutable. A blob does not guarantee that what it represents will never change, but it does not provide any API to perform such a change. It also considers such changes, if it can detect them, to be errors.
