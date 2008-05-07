@@ -93,22 +93,8 @@ class JsRunnerBase : public JsRunnerInterface {
     return Eval(full_script, &return_value);
   }
 
-  JsObject *NewObject(const char16 *optional_global_ctor_name,
-                      bool dump_on_error = false) {
-    // NOTE: optional_global_ctor_name will be removed. Use NewError and NewDate
-    // instead. We support Error for backwards compatibility.
-    std::string ctor_name_utf8;
-    if (optional_global_ctor_name) {
-      if (!String16ToUTF8(optional_global_ctor_name, &ctor_name_utf8)) {
-        if (dump_on_error) ExceptionManager::ReportAndContinue();
-        LOG(("Could not convert constructor name."));
-        return NULL;
-      }
-    } else {
-      ctor_name_utf8 = "Object";
-    }
-    assert(ctor_name_utf8 == "Object" || ctor_name_utf8 == "Error");
-    return NewObjectWithArguments(ctor_name_utf8, 0, NULL, dump_on_error);
+  JsObject *NewObject(bool dump_on_error = false) {
+    return NewObjectWithArguments("Object", 0, NULL, dump_on_error);
   }
 
   JsObject *NewError(const std::string16 &message,

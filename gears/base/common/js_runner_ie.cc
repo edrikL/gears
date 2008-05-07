@@ -71,14 +71,8 @@ class JsRunnerBase : public JsRunnerInterface {
     return NULL;  // not used in IE
   }
 
-  JsObject *NewObject(const char16 *optional_global_ctor_name,
-                      bool dump_on_error = false) {
-    // NOTE: optional_global_ctor_name will be removed. Use NewError and NewDate
-    // instead. We support Error for backwards compatibility.
-    std::string16 ctor(optional_global_ctor_name ? optional_global_ctor_name :
-                       STRING16(L"Object"));
-    assert(ctor == STRING16(L"Object") || ctor == STRING16(L"Error"));
-    return NewObjectWithArguments(ctor, 0, NULL, dump_on_error);
+  JsObject *NewObject(bool dump_on_error = false) {
+    return NewObjectWithArguments(STRING16(L"Object"), 0, NULL, dump_on_error);
   }
 
   JsObject *NewError(const std::string16 &message,

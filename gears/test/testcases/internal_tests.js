@@ -177,7 +177,8 @@ function testCreateError() {
 
     if (!isFirefoxWorker) {
       var createdObject = internalTests.testCreateError();
-      assertEqual('test error', createdObject.message);
+      assertEqual('test error\r\nwith \'special\' \\characters\\',
+                  createdObject.message);
     }
   }
 }

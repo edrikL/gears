@@ -94,32 +94,22 @@ class JsRunnerBase : public JsRunnerInterface {
     return global_object_;
   }
 
-  JsObject *NewObject(const char16 *optional_global_ctor_name,
-                      bool dump_on_error = false) {
-    // NOTE: optional_global_ctor_name will be removed. Use NewError and NewDate
-    // instead. We support Error for backwards compatibility.
-    std::string string_to_eval;
-    if (optional_global_ctor_name) {
-      if (!String16ToUTF8(optional_global_ctor_name, &string_to_eval)) {
-        LOG(("Could not convert constructor name."));
-        return NULL;
-      }
-    } else {
-      string_to_eval = "Object";
-    }
-    assert(string_to_eval == "Object" || string_to_eval == "Error");
-    string_to_eval.append("()");
-    return NewObjectImpl(string_to_eval);
+  JsObject *NewObject(bool dump_on_error = false) {
+    return NewObjectImpl("Object()");
   }
 
   JsObject *NewError(const std::string16 &message,
                      bool dump_on_error = false) {
-    std::string message_utf8;
-    if (!String16ToUTF8(message.c_str(), message.size(), &message_utf8)) {
+    // We must manually escape special characters before evaluating the
+    // JavaScript string.
+    std::string16 escaped_message = EscapeMessage(message);
+    std::string escaped_message_utf8;
+    if (!String16ToUTF8(escaped_message.c_str(), escaped_message.size(),
+                        &escaped_message_utf8)) {
       LOG(("Could not convert message."));
       return NULL;
     }
-    return NewObjectImpl("Error('" + message_utf8 + "')");
+    return NewObjectImpl("Error('" + escaped_message_utf8 + "')");
   }
 
   JsObject *NewDate(int64 milliseconds_since_epoch) {

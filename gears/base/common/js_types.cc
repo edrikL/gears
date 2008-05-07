@@ -2376,14 +2376,11 @@ JsNativeMethodRetval JsSetException(JsContextPtr cx,
   // Note: JS_ThrowReportedError and JS_ReportError look promising, but they
   // don't quite do what we need.
 
-  scoped_ptr<JsObject> error_object(js_runner->NewObject(STRING16(L"Error")));
+  scoped_ptr<JsObject> error_object(js_runner->NewError(message));
   if (!error_object.get()) { return retval; }
 
   // Note: need JS_SetPendingException to bubble 'catch' in workers.
   JS_SetPendingException(cx, error_object->token());
-
-  bool success = error_object->SetPropertyString(STRING16(L"message"), message);
-  if (!success) { return retval; }
 
   return retval;
 }
