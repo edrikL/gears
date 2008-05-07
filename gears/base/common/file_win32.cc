@@ -74,53 +74,6 @@ static std::string16 ToLongPath(const std::string16 &path) {
   }
 }
 
-// Joins 2 paths together.
-static std::string16 JoinPath(const std::string16 &path1, 
-                              const std::string16 &path2) {
-  static std::string16 path_sep(&kPathSeparator, 1);
-  return path1 + path_sep + path2;
-}
-
-// Is this path a file share?
-static bool IsFileShare(const std::string16 &path) {
-  if (StartsWith(path, kLongPathPrefixUNC)) {
-    return true;
- } else if (!StartsWith(path, kLongPathPrefix) && 
-            StartsWith(path, kSharePrefix)) {
-    return true;
- }
- return false;
-}
-
-// Given a file share this function modifies the original path by removing
-// the server name.
-//
-// Input: Full path of windows share passed in, in path parameter e.g.
-// Output: server_name - '\\server' part of share path.
-//         share_path - '\\server' prefix is stripped off.
-static void SplitServerNameOffShare(std::string16 *share_path, 
-                                    std::string16 *server_name) {
-  assert(share_path);
-  assert(server_name);
-  assert(share_path->length() > (kSharePrefix.length() + 2));
-
-  if (StartsWith(*share_path, kLongPathPrefixUNC)) {
-    // Paths of the form '\\?\UNC\server_name\rest_of_path'.
-    // Strip off everything before server_name.
-    *share_path = share_path->substr(kLongPathPrefixUNC.length());
-  } else {
-    // Paths of the form '\\server_name\rest_of_path'
-    // Strip \\ off the '\\' prefix.
-    *share_path = share_path->substr(kSharePrefix.length());
-  }
-
-  size_t end_of_servername_ofs = share_path->find(kPathSeparator);
-  assert(end_of_servername_ofs != std::string16::npos);
-
-  *server_name = kSharePrefix + share_path->substr(0, end_of_servername_ofs);
-  share_path->erase(0, end_of_servername_ofs);
-}
-
 
 File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
                  OpenExistsMode exists_mode) {
@@ -173,53 +126,6 @@ File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
 }
 
 
-bool File::CreateNewFile(const char16 *full_filepath) {
-  // TODO(fry): implement using File in file.cc
-  std::string16 long_path = ToLongPath(full_filepath);
-  // Create a new file, if a file already exists this will fail
-  SAFE_HANDLE safe_file_handle(::CreateFileW(long_path.c_str(),
-                                             GENERIC_WRITE,
-                                             0,
-                                             NULL,
-                                             CREATE_NEW,
-                                             FILE_ATTRIBUTE_NORMAL,
-                                             NULL));
-  if (safe_file_handle.get() == INVALID_HANDLE_VALUE) {
-    SetLastFileError(kCreateFileFailedMessage, full_filepath, GetLastError());
-    return false;
-  }
-  return true;
-}
-
-
-bool File::Delete(const char16 *full_filepath) {
-  std::string16 long_path = ToLongPath(std::string16(full_filepath));
-  return ::DeleteFileW(long_path.c_str()) ? true : false;
-}
-
-
-bool File::Exists(const char16 *full_filepath) {
-  std::string16 long_path = ToLongPath(std::string16(full_filepath));
-  DWORD attrs = ::GetFileAttributesW(long_path.c_str());
-  return (attrs != INVALID_FILE_ATTRIBUTES) &&
-         ((attrs & FILE_ATTRIBUTE_DIRECTORY) == 0);
-}
-
-
-bool File::DirectoryExists(const char16 *full_dirpath) {
-  std::string16 long_path = ToLongPath(std::string16(full_dirpath));
-  DWORD attrs = ::GetFileAttributesW(long_path.c_str());
-  return (attrs != INVALID_FILE_ATTRIBUTES) &&
-         ((attrs & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY);
-}
-
-
-int64 File::Size() {
-  LARGE_INTEGER size;
-  return ::GetFileSizeEx(handle_.get(), &size) ? size.QuadPart : -1;
-}
-
-
 int64 File::Read(uint8* destination, int64 max_bytes) {
   if (!destination || max_bytes < 0) {
     return -1;
@@ -256,6 +162,12 @@ bool File::Seek(int64 offset, SeekMethod seek_method) {
   LARGE_INTEGER li_pos;
   li_pos.QuadPart = offset;
   return ::SetFilePointerEx(handle_.get(), li_pos, NULL, move_method) != FALSE;
+}
+
+
+int64 File::Size() {
+  LARGE_INTEGER size;
+  return ::GetFileSizeEx(handle_.get(), &size) ? size.QuadPart : -1;
 }
 
 
@@ -299,6 +211,95 @@ int64 File::Write(const uint8 *source, int64 length) {
   DWORD bytes_written;
   return ::WriteFile(handle_.get(), source, data_size, &bytes_written, NULL)
       ? bytes_written : -1;
+}
+
+
+// Joins 2 paths together.
+static std::string16 JoinPath(const std::string16 &path1, 
+                              const std::string16 &path2) {
+  static std::string16 path_sep(&kPathSeparator, 1);
+  return path1 + path_sep + path2;
+}
+
+// Is this path a file share?
+static bool IsFileShare(const std::string16 &path) {
+  if (StartsWith(path, kLongPathPrefixUNC)) {
+    return true;
+ } else if (!StartsWith(path, kLongPathPrefix) && 
+            StartsWith(path, kSharePrefix)) {
+    return true;
+ }
+ return false;
+}
+
+// Given a file share this function modifies the original path by removing
+// the server name.
+//
+// Input: Full path of windows share passed in, in path parameter e.g.
+// Output: server_name - '\\server' part of share path.
+//         share_path - '\\server' prefix is stripped off.
+static void SplitServerNameOffShare(std::string16 *share_path, 
+                                    std::string16 *server_name) {
+  assert(share_path);
+  assert(server_name);
+  assert(share_path->length() > (kSharePrefix.length() + 2));
+
+  if (StartsWith(*share_path, kLongPathPrefixUNC)) {
+    // Paths of the form '\\?\UNC\server_name\rest_of_path'.
+    // Strip off everything before server_name.
+    *share_path = share_path->substr(kLongPathPrefixUNC.length());
+  } else {
+    // Paths of the form '\\server_name\rest_of_path'
+    // Strip \\ off the '\\' prefix.
+    *share_path = share_path->substr(kSharePrefix.length());
+  }
+
+  size_t end_of_servername_ofs = share_path->find(kPathSeparator);
+  assert(end_of_servername_ofs != std::string16::npos);
+
+  *server_name = kSharePrefix + share_path->substr(0, end_of_servername_ofs);
+  share_path->erase(0, end_of_servername_ofs);
+}
+
+
+bool File::CreateNewFile(const char16 *full_filepath) {
+  // TODO(fry): implement using File in file.cc
+  std::string16 long_path = ToLongPath(full_filepath);
+  // Create a new file, if a file already exists this will fail
+  SAFE_HANDLE safe_file_handle(::CreateFileW(long_path.c_str(),
+                                             GENERIC_WRITE,
+                                             0,
+                                             NULL,
+                                             CREATE_NEW,
+                                             FILE_ATTRIBUTE_NORMAL,
+                                             NULL));
+  if (safe_file_handle.get() == INVALID_HANDLE_VALUE) {
+    SetLastFileError(kCreateFileFailedMessage, full_filepath, GetLastError());
+    return false;
+  }
+  return true;
+}
+
+
+bool File::Delete(const char16 *full_filepath) {
+  std::string16 long_path = ToLongPath(std::string16(full_filepath));
+  return ::DeleteFileW(long_path.c_str()) ? true : false;
+}
+
+
+bool File::Exists(const char16 *full_filepath) {
+  std::string16 long_path = ToLongPath(std::string16(full_filepath));
+  DWORD attrs = ::GetFileAttributesW(long_path.c_str());
+  return (attrs != INVALID_FILE_ATTRIBUTES) &&
+         ((attrs & FILE_ATTRIBUTE_DIRECTORY) == 0);
+}
+
+
+bool File::DirectoryExists(const char16 *full_dirpath) {
+  std::string16 long_path = ToLongPath(std::string16(full_dirpath));
+  DWORD attrs = ::GetFileAttributesW(long_path.c_str());
+  return (attrs != INVALID_FILE_ATTRIBUTES) &&
+         ((attrs & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY);
 }
 
 
