@@ -105,6 +105,14 @@
   // Create a WebView and attach it.
   NSView *content_view = [dialog_ contentView];
   WebView *webview = [[WebView alloc] initWithFrame:[content_view frame]];
+  
+  // Set the user agent for the WebView that we're opening to the same one as
+  // Safari.
+  std::string16 ua_str16;
+  BrowserUtils::GetUserAgentString(&ua_str16);
+  NSString *user_agent = [NSString stringWithString16:ua_str16.c_str()];
+  [webview setCustomUserAgent:user_agent];
+
   [content_view addSubview:webview];
   [webview release]; // addSubView retains webView.
   [webview setAutoresizingMask: NSViewHeightSizable | NSViewWidthSizable];
