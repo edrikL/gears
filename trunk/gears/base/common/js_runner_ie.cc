@@ -264,8 +264,8 @@ class JsRunnerBase : public JsRunnerInterface {
                             NULL,  // receives exception (NULL okay)
                             NULL);  // pointer to "this" object (NULL okay)
     if (FAILED(hr)) {
-      LOG(("Could not invoke object constructor."));
       if (dump_on_error) ExceptionManager::ReportAndContinue();
+      LOG(("Could not invoke object constructor."));
       return NULL;
     }
 
