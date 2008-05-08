@@ -7,7 +7,6 @@ Web applications have no way to interact with binary data. For example, it is no
   * You can't build a large file uploader (like for !YouTube or Flickr) in !JavaScript because there's no way to get access to the file(s) selected through `<input type="file">` element and break them into smaller pieces.
   * You can't support attachments in an offline-enabled mail client because you can't store a selected file for later synchronization.
   * It's not practical to build a client side image editor using `<canvas>` because there isn't a good way to export the result. [http://www.whatwg.org/specs/web-apps/current-work/multipage/section-the-canvas.html#getimagedata getImageData()] requires manually encoding the image one byte at a time, which would be unacceptably slow for large files. 
-  * You can't implement export functionality from a web application to native file types using only the client because you can't manipulate the raw content of a user-selected file, or turn the result back into a file.
   * Etc...
 
 = Considerations =
