@@ -104,7 +104,7 @@ interface Window {
 }}}
 
 
-= Etcetera =
+= More =
 
 Blob support can be added to many existing and proposed APIs, including `<canvas>`, `<audio>`, `<video>`, `<img>`, Databases, Offline Applications, etc. Each new place they are integrated adds power and expressiveness to the entire system.
 
