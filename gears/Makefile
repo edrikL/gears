@@ -1081,6 +1081,7 @@ FF3_CPPSRCS	+= \
 		localserver_ff.cc \
 		managed_resource_store_ff.cc \
 		resource_store_ff.cc \
+		safe_http_request.cc \
 		update_task_ff.cc \
 		$(NULL)		
 

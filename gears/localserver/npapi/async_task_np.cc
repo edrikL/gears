@@ -342,7 +342,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
   }
 
   scoped_refptr<HttpRequest> http_request;
-  if (!HttpRequest::Create(&http_request)) {
+  if (!HttpRequest::CreateSafeRequest(&http_request)) {
     return false;
   }
 
@@ -443,12 +443,11 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
         done = true;
       }
     } else if (abort_signalled_) {
-      abort_signalled_ = false;
       LOG16((L"AsyncTask - abort event signalled, aborting request\n"));
-      // We abort the request but continue the loop waiting for it to complete
-      // TODO(michaeln): paranoia, what if it never does complete, timer?
+      abort_signalled_ = false;
       http_request->Abort();
-    }
+      done = true;
+   }
   }
 
   http_request->SetOnReadyStateChange(NULL);

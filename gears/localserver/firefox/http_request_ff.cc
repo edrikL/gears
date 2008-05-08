@@ -49,16 +49,24 @@
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
+#include "gears/localserver/common/safe_http_request.h"
 #include "gears/localserver/firefox/cache_intercept.h"
 
 #ifndef OFFICIAL_BUILD
 #include "gears/blob/blob_input_stream_ff.h"
 #endif
 
+// TODO(michaeln): define these in an appropiate .h file instead of littering
+// various .cc files with these declarations.
+//
 // Returns true if the currently executing thread is the main UI thread,
 // firefox/mozila has one such very special thread
 // See cache_intercept.cc for implementation
 bool IsUiThread();
+// Returns the thread id of the main UI thread,
+// firefox/mozila has one such very special thread
+// See cache_intercept.cc for implementation
+ThreadId GetUiThread();
 
 NS_IMPL_ISUPPORTS5(FFHttpRequest,
                    nsIRequestObserver,
@@ -71,8 +79,17 @@ NS_IMPL_ISUPPORTS5(FFHttpRequest,
 // HttpRequest::Create
 //------------------------------------------------------------------------------
 bool HttpRequest::Create(scoped_refptr<HttpRequest>* request) {
-  assert(IsUiThread());
-  request->reset(new FFHttpRequest);
+  if (IsUiThread()) {
+    request->reset(new FFHttpRequest);
+    return true;
+  } else {
+    return HttpRequest::CreateSafeRequest(request);
+  }
+}
+
+// static
+bool HttpRequest::CreateSafeRequest(scoped_refptr<HttpRequest>* request) {
+  request->reset(new SafeHttpRequest(GetUiThread()));
   return true;
 }
 

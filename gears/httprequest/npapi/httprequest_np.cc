@@ -418,7 +418,7 @@ void GearsHttpRequest::AbortRequest() {
 
 void GearsHttpRequest::CreateRequest() {
   ReleaseRequest();
-  HttpRequest::Create(&request_);
+  HttpRequest::CreateSafeRequest(&request_);
   request_->SetOnReadyStateChange(this);
   request_->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
   request_->SetRedirectBehavior(HttpRequest::FOLLOW_WITHIN_ORIGIN);
