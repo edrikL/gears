@@ -39,8 +39,8 @@ interface Blob {
 };
 
 
-// Extensions to the existing HTML file upload element to allow getting
-// Blobs for selected files.
+// Extensions to the existing <input type="file"> DOM interface to
+// allow getting Blobs for selected files.
 interface HTMLFileInputElement {
   readonly FileList files; // Reuse Mozilla's existing property in a
                            // compatible way.
@@ -62,7 +62,7 @@ interface XMLHttpRequest {
 };
 
 
-// Extends the Window object to prompt the user to save a blob to a file.
+// Extension to the Window object to prompt the user to save a blob to a file.
 interface Window {
   // prompts the user to save the file to disk.
   void exportBlobToFile(Blob blob);
@@ -103,7 +103,7 @@ function uploadFile(file) {
 
 = Reading Blob Data =
 
-Sometimes it is useful to manipulate raw data, even though it is slow in !JavaScript. This can be implemented by adding read APIs.
+Sometimes it is useful to manipulate raw data, even though it is slow in !JavaScript.
 
 {{{
 // Additional APIs for reading the contents of a blob.
@@ -135,7 +135,7 @@ _TODO: There should be some way to build up a blob from other formats, needs mor
 
 = More =
 
-Blob support can be added to many existing and proposed APIs, including `<canvas>`, `<audio>`, `<video>`, `<img>`, Databases, Offline Applications, etc. Each new supporting API adds power and expressiveness to the entire system.
+Blob support can be added to many existing and proposed APIs, including `<canvas>`, `<audio>`, `<video>`, `<img>`, Databases, Offline Applications, etc.
 
 
 = Appendix 1: Blob Immutability Details =
@@ -145,7 +145,7 @@ Although it is impossible to guarantee that the data backing a blob does not eve
 
 = Appendix 2: Alternate File Picker API =
 
-Instead of extending the existing `<input type="file">` element, we also considered designing an entirely new _FileSystem_ interface for selecting files, exporting files, and potentially other operations in the future.
+Instead of extending the existing `<input type="file">` element, we also considered designing an entirely new, and purely programmatic, _FileSystem_ interface for selecting files, exporting files, and potentially other operations in the future.
 
 This solution is elegant because all the file-related APIs can be together, and some additional flexibility is granted by having a purely programmatic interface.
 
