@@ -129,5 +129,5 @@ bool GetUmbrellaInstallDirectory(std::string16 *path) {
   return true;
 }
 #else
-// GetInstallDirectory not needed yet by other platforms.
+// GetUmbrellaInstallDirectory not needed yet by other platforms.
 #endif
