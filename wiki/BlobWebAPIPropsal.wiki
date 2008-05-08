@@ -15,7 +15,7 @@ The lack of any concept of binary data severely limits web applications' capabil
 = Considerations =
 
   1. There are many potential provides and consumers of binary data in a web application. For example, network connections, file upload controls, audio/video, cameras, and any sort of embedded resource could all naturally be extended with APIs to accept or provide binary data. 
-  1. The web model is successful partly because users can safely assume that web applications cannot violate their privacy or security. Adding !APIs to manipulate binary data must maintain this model.
+  1. The web model is successful partly because users can safely assume that web applications cannot violate their privacy or security. Adding APIs to manipulate binary data must maintain this model.
 
 = Solution =
 
