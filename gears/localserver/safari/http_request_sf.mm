@@ -60,9 +60,16 @@ struct SFHttpRequest::HttpRequestData {
 //------------------------------------------------------------------------------
 // Create
 //------------------------------------------------------------------------------
+
+// static
 bool HttpRequest::Create(scoped_refptr<HttpRequest>* request) {
   request->reset(new SFHttpRequest);
   return true;
+}
+
+// static
+bool HttpRequest::CreateSafeRequest(scoped_refptr<HttpRequest>* request) {
+  return HttpRequest::Create(request);
 }
 
 //------------------------------------------------------------------------------
