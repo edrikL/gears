@@ -33,13 +33,14 @@ interface Blob {
       ReadStreamFailureCallback on fail, optional string encoding,
       optional int64 start, optional int64 length);
   void readAsBase64(ReadStreamSuccessCallback<string> onsuccess,
-      ReadStreamFailureCallback onfail, optional int64 start, optional int64 length);
+      ReadStreamFailureCallback onfail,
+      optional int64 start, optional int64 length);
   void readAsBytes(ReadStreamSuccessCallback<!ByteArray> onsuccess,
-      ReadStreamFailureCaallback onfail, optional int64 start,
-      optional int64 length);
+      ReadStreamFailureCallback onfail,
+      optional int64 start, optional int64 length);
   void readAsByteString(ReadStreamSuccessCallback<string> onsuccess,
-      ReadStreamFailureCallback onfail, optional int64 start,
-      optional int64 length);
+      ReadStreamFailureCallback onfail,
+      optional int64 start, optional int64 length);
 }
 void ReadStreamSuccessCallback<T>(T data); // assumes T has a "length" property.
 void ReadStreamFailureCallback(Error e); // e contains some sort of data about
