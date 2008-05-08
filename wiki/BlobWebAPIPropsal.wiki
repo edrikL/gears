@@ -35,13 +35,14 @@ Having a common object to represent and manipulate binary data across all APIs p
 interface Blob {
   readonly attribute int64 length;
   Blob slice(int64 start, int64 length);
+  // ...APIs for reading blob data... See below.
 };
 
 
 // Extensions to the existing HTML file upload element to allow getting
-// Blobs for user-selected files.
+// Blobs for selected files.
 interface HTMLFileInputElement {
-  readonly FileList files; // Reuse mozilla's existing property in a
+  readonly FileList files; // Reuse Mozilla's existing property in a
                            // compatible way.
 };
 interface FileList {
@@ -69,13 +70,46 @@ interface Window {
 }}}
 
 
-= Future: Manipulating Blob Data =
+= Example =
+{{{
+<input id="picker" type="file" max="5" accept="image/*">
+<button onclick="upload()">Go!</button>
+<script>
+function upload() {
+  var files = document.getElementById("picker").files;
+  for (var i = 0; i < files.length; i++) {
+    uploadFile(files[i]);
+  }
+}
+
+function uploadFile(file) {
+  var chunkSize = 1024*1024; // 1 MB
+  var pos = 0;
+  var partNum = 0;
+  while (pos < file.contents.length) {
+    var part = file.contents.slice(pos, chunkSize);
+    var req = new XMLHttpReqest();
+    req.open("POST",
+        "upload?name= " + file.fileName + "&part=" + partNum,
+        true);
+    req.send(file.contents);
+    pos += part.length;
+    partNum++;
+  }
+}
+</script>
+}}}
+
+
+= Reading Blob Data =
 
 Sometimes it is useful to manipulate raw data, even though it is slow in !JavaScript. This can be implemented by adding read APIs.
 
 {{{
-// APIs for reading the contents of a blob.
+// Additional APIs for reading the contents of a blob.
 interface Blob {
+  ...
+
   void readAsText(ReadStreamSuccessCallback<string> onsuccess,
       ReadStreamFailureCallback on fail, optional string encoding,
       optional int64 start, optional int64 length);
@@ -93,57 +127,10 @@ void ReadStreamSuccessCallback<T>(T data); // assumes T has a "length" property.
 void ReadStreamFailureCallback(Error e); // e contains some sort of data about
                                          // what went wrong.
 
-Similarly, one can imagine APIs to build up a blob from data in various formats including other Blobs.
-}}}
+= Creating Blobs =
 
-*Note:* Although it is impossible to guarantee that the data backing a blob does not ever change, this proposal assumes that such changes are rare and accidental. The UA should attempt to detect such situations and call !ReadStreamFailureCallback with an error code that lets the application try again.
+_TODO: There should be some way to build up a blob from other formats, needs more thought._
 
-
-= Getting Blobs from Local Files =
-
-The current `<input type="file">` element can be extended to allow access to blobs representing the file (or files with !WebForms extensions) that the user has chosen. 
-
-We propose the following extensions to HTMLFileInputElement interface. These are purposely compatible where possible with the existing Mozilla experimental API to access file contents.
-
-{{{
-interface HTMLFileInputElement {
-  readonly FileList files; // Reuse mozilla's existing property in a
-                           // compatible way.
-};
-
-interface FileList {
-  readonly int length;
-  File item(int index);
-};
-
-interface File {
-  readonly string fileName; // only the name portion, not the path (for privacy)
-  readonly Blob contents;
-};
-}}}
-
-
-= Blobs + XHR, Sitting in a Tree =
-
-It is useful to be able to send and receive blobs using XHR. Using a file upload control, Blob, and XHR, one could build a very nice large file uploader for a site like Flickr or !YouTube.
-
-{{{
-interface XMLHttpRequest {
-  readonly Blob responseBlob;
-  void send(Blob data); // overloads the existing send methods
-};
-}}}
-
-
-= Exporting Blobs to Files =
-
-It is currently possible to prompt a user to save a server-generated files using window.open() and special headers. It would be useful to be able to do the same thing using client-generated blobs. This could be achieved by extending the Window object.
-
-{{{
-interface Window {
-  // prompts the user to save the file to disk.
-  void exportBlobToFile(Blob blob);
-};
 }}}
 
 
@@ -152,7 +139,12 @@ interface Window {
 Blob support can be added to many existing and proposed APIs, including `<canvas>`, `<audio>`, `<video>`, `<img>`, Databases, Offline Applications, etc. Each new place they are integrated adds power and expressiveness to the entire system.
 
 
-= Appendix: Alternate File Picker API =
+= Appendix 1: Immutability =
+
+Although it is impossible to guarantee that the data backing a blob does not ever change, this proposal assumes that such changes are rare and accidental. The UA should attempt to detect such situations and call !ReadStreamFailureCallback with an error code that lets the application try again.
+
+
+= Appendix 2: Alternate File Picker API =
 
 Instead of extending the existing `<input type="file">` element, we also considered designing an entirely new _FileSystem_ interface for selecting files, exporting files, and potentially other operations in the future.
 
