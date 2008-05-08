@@ -2,18 +2,20 @@
 
 = Problem =
 
-Web applications have no way to interact with binary data. For example, it is not possible to get the binary response of an XMLHttpRequest or a file selected from a file upload control.
+Web applications have no way to interact with binary data. For example, it is not possible to get the binary content of an XMLHttpRequest response or a user-selected file.
+
+The lack of any concept of binary data in web applications severly limits their capabilities in myriad ways.
 
 = Considerations =
 
-  1. There are many potential provides and consumers of binary data in a web application. For example, network connections, file upload controls, audio/video, cameras, and any sort of resource could all naturally be extended with APIs to accept and provide binary data. 
-  1. We must not violate the existing user understanding of web application security. For example, current web applications never ask for permission to write to your filesystem.
+  1. There are many potential provides and consumers of binary data in a web application. For example, network connections, file upload controls, audio/video, cameras, and any sort of embedded resource could all naturally be extended with APIs to accept or provide binary data. 
+  1. The web model is successful partly because users can safely assume that web applications cannot violate their privacy or security. Adding !APIs to manipulate binary data must maintain this model.
 
 = Solution =
 
-We propose the addition of a Blob interface to serve as a way to exchange binary data between producers and consumers. Blobs are complementary to ECMAScript-style ByteArrays and other in-memory representations of data. The primary difference is that Blobs are immutable, and can therefore represent large objects.
+We propose the addition of a Blob interface to serve as a way to exchange binary data between producers and consumers. Blobs are complementary to ECMAScript-style !ByteArrays and other in-memory representations of data. The primary difference is that Blobs are immutable, and can therefore represent large objects.
 
-Having a common object to represent potentially large binary between APIs provides a lot of power and flexibilty without a lot of API. For example:
+Having a common object to represent and manipulate binary data across all !APIs provides a lot of power with minimum footprint. For example:
 
   * Get a blob from a large file, chop it up into smaller blobs, and upload the pieces using XMLHttpRequest to get a large file uploader.
   * Get a blob from a file while offline, store it in the database or application cache, and upload it later when connected.
@@ -32,7 +34,7 @@ interface Blob {
       optional int64 start, optional int64 length);
   void readAsBase64(ReadStreamSuccessCallback<string> onsuccess,
       ReadStreamFailureCallback onfail, optional int64 start, optional int64 length);
-  void readAsBytes(ReadStreamSuccessCallback<ByteArray> onsuccess,
+  void readAsBytes(ReadStreamSuccessCallback<!ByteArray> onsuccess,
       ReadStreamFailureCaallback onfail, optional int64 start,
       optional int64 length);
   void readAsByteString(ReadStreamSuccessCallback<string> onsuccess,
@@ -44,18 +46,19 @@ void ReadStreamFailureCallback(Error e); // e contains some sort of data about
                                          // what went wrong.
 }}}
 
-*Note:* Although it is impossible to guarantee that the data backing a blob does not ever change, this proposal assumes that such changes are rare and accidental. The UA should attempt to detect such situations and call ReadStreamFailureCallback with an error code that lets the application try again.
+*Note:* Although it is impossible to guarantee that the data backing a blob does not ever change, this proposal assumes that such changes are rare and accidental. The UA should attempt to detect such situations and call !ReadStreamFailureCallback with an error code that lets the application try again.
 
 
 = Getting Blobs from Local Files =
 
-The current `<input type="file">` element can be extended to allow access to blobs representing the file (or files with WebForms extensions) that the user has chosen. 
+The current `<input type="file">` element can be extended to allow access to blobs representing the file (or files with !WebForms extensions) that the user has chosen. 
 
-We propose the following extension to HTMLFileInputElement interface:
+We propose the following extensions to HTMLFileInputElement interface. These are purposely compatible where possible with the existing Mozilla experimental API to access file contents.
 
 {{{
 interface HTMLFileInputElement {
-  readonly FileList files;
+  readonly FileList files; // Reuse mozilla's existing property in a
+                           // compatible way.
 };
 
 interface FileList {
@@ -64,7 +67,7 @@ interface FileList {
 };
 
 interface File {
-  readonly string name; // only the name portion, not the path (for privacy)
+  readonly string fileName; // only the name portion, not the path (for privacy)
   readonly Blob contents;
 };
 }}}
@@ -72,7 +75,7 @@ interface File {
 
 = Blobs + XHR, Sitting in a Tree =
 
-It is useful to be able to send and receive blobs using XHR. Using FilePicker, Blob, and XHR, one could build a very nice large file uploader for a site like Flickr or YouTube.
+It is useful to be able to send and receive blobs using XHR. Using a file upload control, Blob, and XHR, one could build a very nice large file uploader for a site like Flickr or !YouTube.
 
 {{{
 interface XMLHttpRequest {
