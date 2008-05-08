@@ -2,36 +2,54 @@
 
 = Problem =
 
-Web applications have no way to interact with binary data. It is not possible to get the binary response of an XMLHttpRequest, or a file the user selected. It is also not possible to POST a user selected file using XMLHttpRequest, or to insert it into a Database, or to capture it for use offline.
+Web applications have no way to interact with binary data. For example, it is not possible to get the binary response of an XMLHttpRequest or a file selected from a file upload control.
 
-We divide the spectrum of possible use cases for binary data into two broad sets:
+= Considerations =
 
-  * Interacting with opaque chunks of binary data. For example, a developer may want to ask the user to select a file while offline, store it, then upload it later. Another use case might be to ask the user to select a large file, divide it up into smaller opaque chunks, and to POST each of these chunks separately to a web server, thereby overcoming the well known problem uploading large files using web browsers.
+  1. There are many potential provides and consumers of binary data in a web application. For example, network connections, file upload controls, audio/video, cameras, and any sort of resource could all naturally be extended with APIs to accept and provide binary data. 
+  1. We must not violate the existing user understanding of web application security. For example, current web applications never ask for permission to write to your filesystem.
 
-  * Manipulating raw binary data. For example decoding ZIP or PNG formats, performing cryptography, etc.
+= Solution =
 
-This proposal is primarily targeted at the first set of use cases, but it looks ahead to the second set, leaving a spot where APIs solving them could be added.
+We propose the addition of a Blob interface to serve as a way to exchange binary data between producers and consumers. Blobs are complementary to ECMAScript-style ByteArrays and other in-memory representations of data. The primary difference is that Blobs are immutable, and can therefore represent large objects.
 
+Having a common object to represent potentially large binary between APIs provides a lot of power and flexibilty without a lot of API. For example:
+
+  * Get a blob from a large file, chop it up into smaller blobs, and upload the pieces using XMLHttpRequest to get a large file uploader.
+  * Get a blob from a file while offline, store it in the database or application cache, and upload it later when connected.
+  * Get a blob from the network, send it into canvas, then get the modifications back out and re-upload them.
+  * Etc...
 
 = The Blob Interface =
-
-The Blob interface represents an opaque chunk of data. A blob does not necessarily have to fit entirely into memory, it can be backed by a file or stream. The details are up to the implementation. There is currently no way to create a blob directly. However, one could imagine in the future a way to assemble pieces of data together to create a blob.
 
 {{{
 interface Blob {
   readonly attribute int64 length;
   Blob slice(int64 start, int64 length);
+
+  void readAsText(ReadStreamSuccessCallback<string> onsuccess,
+      ReadStreamFailureCallback on fail, optional string encoding,
+      optional int64 start, optional int64 length);
+  void readAsBase64(ReadStreamSuccessCallback<string> onsuccess,
+      ReadStreamFailureCallback onfail, optional int64 start, optional int64 length);
+  void readAsBytes(ReadStreamSuccessCallback<ByteArray> onsuccess,
+      ReadStreamFailureCaallback onfail, optional int64 start,
+      optional int64 length);
+  void readAsByteString(ReadStreamSuccessCallback<string> onsuccess,
+      ReadStreamFailureCallback onfail, optional int64 start,
+      optional int64 length);
 }
+void ReadStreamSuccessCallback<T>(T data); // assumes T has a "length" property.
+void ReadStreamFailureCallback(Error e); // e contains some sort of data about
+                                         // what went wrong.
 }}}
 
-A blob is immutable, in the same sense that an ECMAScript string is. You can subdivide a blob into smaller blobs, but the result of that operation is a new blob object representing the subset.
-
-It is of course, impossible to prevent blobs backed by local files from being completely immutable. A blob does not guarantee that what it represents will never change, but it does not provide any API to perform such a change. It also considers such changes, if it can detect them, to be runtime errors.
+*Note:* Although it is impossible to guarantee that the data backing a blob does not ever change, this proposal assumes that such changes are rare and accidental. The UA should attempt to detect such situations and call ReadStreamFailureCallback with an error code that lets the application try again.
 
 
 = Getting Blobs from Local Files =
 
-The current `<input type="file">` element can be extended to allow access to blobs representing the file (or files with WebForms extensions) that the user has chosen.
+The current `<input type="file">` element can be extended to allow access to blobs representing the file (or files with WebForms extensions) that the user has chosen. 
 
 We propose the following extension to HTMLFileInputElement interface:
 
@@ -64,17 +82,27 @@ interface XMLHttpRequest {
 }}}
 
 
-= Future Directions =
+= Exporting Blobs to Files =
 
-This proposal is focused narrowly as a starting point. However, we've tried to think ahead to possible extensions. For example:
+It is currently possible to prompt a user to save a server-generated files using window.open() and special headers. It would be useful to be able to do the same thing using client-generated blobs. This could be achieved by extending the Window object.
 
-  * Integration with more existing APIs. It seems reasonable and useful to integrate this with, for example, `<canvas>`, `<audio>`, `<video>`, `<img>`, `Database`, `Offline Applications`, etc.
-  * Reading blob contents. It seems that you could add various methods to the Blob object which would allow you to, for example, read the contents asynchronously as text, or base64, or as an ECMAScript ByteArray.
-  * Exporting Blobs to Files. Currently, it is possible to prompt the user to save a server-generated file using window.open() (depending on the file's content type). It would be nice to be able to do the same with client-generated files. You could add a method to the window to bring up a Save As... dialog 
+{{{
+interface Window {
+  // prompts the user to save the file to disk.
+  void exportBlobToFile(Blob blob);
+};
+}}}
 
 
-= Appendix: FileSystem Interface =
+= Etcetera =
+
+Blob support can be added to many existing and proposed APIs, including `<canvas>`, `<audio>`, `<video>`, `<img>`, `Database`, `Offline Applications`, etc.
+
+
+= Appendix: Alternate File Picker !API =
 
 Instead of extending the existing `<input type="file">` element, we also considered designing an entirely new _FileSystem_ interface for selecting files, exporting files, and potentially other operations in the future.
 
 This solution is elegant because all the file-related APIs can be together, and some additional flexibility is granted by having a purely programmatic interface.
+
+It also has the advantage that it would finally allow web developers to style their "Browse..." buttons as they please. 
