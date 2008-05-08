@@ -71,3 +71,10 @@ This proposal is focused narrowly as a starting point. However, we've tried to t
   * Integration with more existing APIs. It seems reasonable and useful to integrate this with, for example, `<canvas>`, `<audio>`, `<video>`, `<img>`, `Database`, `Offline Applications`, etc.
   * Reading blob contents. It seems that you could add various methods to the Blob object which would allow you to, for example, read the contents asynchronously as text, or base64, or as an ECMAScript ByteArray.
   * Exporting Blobs to Files. Currently, it is possible to prompt the user to save a server-generated file using window.open() (depending on the file's content type). It would be nice to be able to do the same with client-generated files. You could add a method to the window to bring up a Save As... dialog 
+
+
+= Appendix: FileSystem Interface =
+
+Instead of extending the existing `<input type="file">` element, we also considered designing an entirely new _FileSystem_ interface for selecting files, exporting files, and potentially other operations in the future.
+
+This solution is elegant because all the file-related APIs can be together, and some additional flexibility is granted by having a purely programmatic interface.
