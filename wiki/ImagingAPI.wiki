@@ -69,8 +69,8 @@ Canvas class
   attribute unsigned long width;
   attribute unsigned long height;
 
-  // returns a Gears object (not really a DOMObject), (only CanvasRenderingContext2D is supported currently, and this object is got when contextId is passed as '2d').
-  DOMObject getContext(DOMString contextId);
+  // returns a context
+  CanvasRenderingContext2D getContext(DOMString contextId);
 };
 }}}
 
@@ -139,7 +139,6 @@ CanvasRenderingContext2D class
  
   void medianFilter(float radius);
  
-  // For annotation support
   // x, y, width, height identify a bounding box into which the text is drawn. 
   // If width and height are not specified, the bounding box extends to the last row or column of the canvas.
   // attributes can have the following keys:
