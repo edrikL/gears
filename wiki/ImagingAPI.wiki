@@ -43,8 +43,6 @@ Canvas class
   //      compressionQuality -- float between 0.0 (small size) and 1.0 (good quality). only for JPEG.
   //      interlaced -- boolean.
   Blob toBlob(optional String mimeType, optional Map attributes);
-  const unsigned short RGBA_32 = 32;
-  const unsigned short RGB_24 = 24;
 
   Canvas clone();
 
@@ -130,13 +128,13 @@ CanvasRenderingContext2D class
   // -------- THE FOLLOWING ARE ADDITIONAL ABSTRACTIONS WE SUPPORT ------------
 
   // 4x5 matrix for RGBA images and 3x4 for RGB.
-  // TODO: Or is it better to take 4x5 consistently and ignore the alpha row and column if the image is RGB?
-  // Please refer to http://www.adobe.com/devnet/flash/articles/matrix_transformations_04.html
+  // See http://www.adobe.com/devnet/flash/articles/matrix_transformations_04.html
   void colorTransform(float[] colorMatrix);
  
-  // Please refer to http://www.adobe.com/devnet/flash/articles/matrix_transformations_05.html
+  // See http://www.adobe.com/devnet/flash/articles/matrix_transformations_05.html
   void convolutionTransform(float[] convolutionMatrix);
  
+  // Allows fractional radii. Takes the median of all pixels within the specified distance from the target pixel. Works component-wise, of course. First premultiplies alpha, and then takes median of R, G and B components separately. After the filter finishes, all pixels have alpha 1.0.
   void medianFilter(float radius);
  
   // x, y, width, height identify a bounding box into which the text is drawn. 
