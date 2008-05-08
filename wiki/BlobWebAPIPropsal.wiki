@@ -141,7 +141,7 @@ _TODO: There should be some way to build up a blob from other formats, needs mor
 Blob support can be added to many existing and proposed APIs, including `<canvas>`, `<audio>`, `<video>`, `<img>`, Databases, Offline Applications, etc. Each new place they are integrated adds power and expressiveness to the entire system.
 
 
-= Appendix 1: Immutability =
+= Appendix 1: Blob Immutability Details =
 
 Although it is impossible to guarantee that the data backing a blob does not ever change, this proposal assumes that such changes are rare and accidental. The UA should attempt to detect such situations and call !ReadStreamFailureCallback with an error code that lets the application try again.
 
