@@ -2,7 +2,7 @@
 
 = Problem =
 
-Web applications have no way to interact with binary data. For example, it is not possible to get the binary content of a user-selected file or an XMLHttpRequest response. The lack of any concept of binary data severely limits web applications' capabilities in many ways:
+Web applications have no way to interact with binary data. For example, it is not possible to get the binary content of a user-selected file or XMLHttpRequest response. The lack of any concept of binary data severely limits web applications' capabilities in many ways:
 
   * You can't build a large file uploader (like for !YouTube or Flickr) in !JavaScript because you cannot chop a large file into smaller pieces.
   * You can't support attachments in an offline-enabled mail client because you can't store a selected file for later synchronization.
