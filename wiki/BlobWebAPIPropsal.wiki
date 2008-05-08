@@ -145,7 +145,7 @@ Although it is impossible to guarantee that the data backing a blob does not eve
 
 = Appendix 2: Alternate File Picker API =
 
-Instead of extending the existing `<input type="file">` element, we also considered designing an entirely new, and purely programmatic, _FileSystem_ interface for selecting files, exporting files, and potentially other operations in the future.
+Instead of extending the existing `<input type="file">` element, we also considered designing an entirely new, and purely programmatic, _Filesystem_ interface for selecting files, exporting files, and potentially other operations in the future.
 
 This solution is elegant because all the file-related APIs can be together, and some additional flexibility is granted by having a purely programmatic interface.
 
