@@ -17,7 +17,40 @@ The lack of any concept of binary data severely limits web applications' capabil
   1. There are many potential provides and consumers of binary data in a web application. For example, network connections, file upload controls, audio/video, cameras, and any sort of embedded resource could all naturally be extended with APIs to accept or provide binary data. 
   1. The web model is successful partly because users can safely assume that web applications cannot violate their privacy or security. Adding APIs to manipulate binary data must maintain this model.
 
-= Solution =
+= Summary =
+
+{{{
+// Represents an immutable chunk of binary data
+interface Blob {
+  readonly attribute int64 length;
+  Blob slice(int64 start, int64 length);
+
+  // ... APIs to read blob contents ...
+};
+
+// Extensions to the existing HTML file upload element
+interface HTMLFileInputElement {
+  readonly FileList files; // Reuse mozilla's existing property in a
+                           // compatible way.
+};
+
+interface FileList {
+  readonly int length;
+  File item(int index);
+};
+
+interface File {
+  readonly string fileName; // only the name portion, not the path (for privacy)
+  readonly Blob contents;
+};
+
+// Extensions to XMLHttpRequest
+interface XMLHttpRequest {
+  readonly Blob responseBlob;
+  void send(Blob data); // overloads the existing send methods
+};
+}}}
+
 
 We propose the addition of a Blob interface to serve as a way to exchange binary data between the various APIs available to web developers. Blobs are complementary to ECMAScript-style !ByteArrays and other in-memory representations of data. The primary difference is that Blobs are immutable, and can therefore represent large objects.
 
