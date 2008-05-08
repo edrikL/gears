@@ -23,13 +23,15 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "gears/base/ie/detect_version_collision.h"
+
 #include <assert.h>
 #include <atlbase.h>
 #include <atlsync.h>
 #include <windows.h>
-#include "genfiles/product_constants.h"
-#include "gears/base/ie/detect_version_collision.h"
+#include "gears/base/common/string_utils.h"
 #include "gears/ui/ie/string_table.h"
+#include "genfiles/product_constants.h"
 
 // We run our detection code once at startup
 static bool OneTimeDetectVersionCollision();
@@ -52,10 +54,12 @@ static CMutex running_mutex;
 static CMutex our_version_running_mutex;
 
 #if BROWSER_NPAPI
-// For the Win32 NPAPI distribution.
-#define PRODUCT_COLLISION_GUID L"{6E9495F2-005B-4016-9F09-FA9F1F3F2D85}"
+// For the Win32 NPAPI distribution:
+//   We're going to append the exe path (see below), so keep this short to
+//   reduce odds of hitting the MAX_PATH mutex name limit.
+#define PRODUCT_COLLISION_GUID L"{" PRODUCT_SHORT_NAME L"}"
 #else
-// For the Win32 IE/Firefox distribution.
+// For the Win32 IE distribution:
 #define PRODUCT_COLLISION_GUID L"{685E0F7D-005A-40a0-B9F8-168FBA824248}"
 #endif
 
@@ -70,15 +74,36 @@ static const wchar_t *kOurVersionMutexName =
 // will be crippled, so we close all mutex handles so others don't see this
 // instance as 'running'. Should only be called once.
 static bool OneTimeDetectVersionCollision() {
+  std::wstring running_name(kMutexName);
+#if BROWSER_NPAPI
+  // Append the full path of the running executable.  Developers may run
+  // multiple NPAPI browsers, and/or multiple versions of a single browser.
+  // When Gears lives in a subdirectory of the browser, multiple versions do not
+  // collide unless they are in the same browser directory.
+  // Note: GetModuleFileName() doesn't normalize path (see MSDN).
+  assert(_pgmptr && strlen(_pgmptr) > 0);  // may need _wpgmptr if flags change
+  std::wstring browser_path;
+  UTF8ToString16(_pgmptr, &browser_path);
+  EnsureStringValidPathComponent(browser_path);  // replace bad mutex name chars
+
+  running_name += L"-";
+  running_name += browser_path;
+#endif
   // Detect if an instance of any version is running
-  if (!running_mutex.Create(NULL, FALSE, kMutexName)) {
+  if (!running_mutex.Create(NULL, FALSE, running_name.c_str())) {
     assert(false);
     return true;
   }
   bool already_running = (GetLastError() == ERROR_ALREADY_EXISTS);
 
   // Detect if another instance of our version is running
-  if (!our_version_running_mutex.Create(NULL, FALSE, kOurVersionMutexName)) {
+  std::wstring our_version_running_name(kOurVersionMutexName);
+#if BROWSER_NPAPI
+  our_version_running_name += L"-";
+  our_version_running_name += browser_path;
+#endif
+  if (!our_version_running_mutex.Create(NULL, FALSE,
+                                        our_version_running_name.c_str())) {
     assert(false);
     running_mutex.Close();
     return true;
