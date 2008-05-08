@@ -49,8 +49,18 @@ static const char16 *kDataSubdir = STRING16(L"Google\\"
 
 bool GetInstallDirectory(std::string16 *path) {
 #ifdef WINCE
-  // TODO(aa): Implement for WINCE
-  return false;
+  assert(path);
+  wchar_t dir[MAX_PATH];
+  HRESULT hr = SHGetFolderPath(NULL, CSIDL_PROGRAM_FILES,
+                               NULL, // user access token
+                               SHGFP_TYPE_CURRENT, dir);
+  if (FAILED(hr)) {
+    return false;
+  }
+  *path = dir;
+  *path += kPathSeparator;
+  *path += PRODUCT_FRIENDLY_NAME;
+  return true;
 #else
   if (!GetUmbrellaInstallDirectory(path)) return false;
   *path += STRING16(L"\\Internet Explorer\\" PRODUCT_VERSION_STRING);

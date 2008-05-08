@@ -116,7 +116,8 @@ HRESULT SHGetFolderPath(HWND hwndOwner,
                         HANDLE hToken,
                         DWORD dwFlags,
                         LPTSTR pszPath) {
-  return SHGetSpecialFolderPath(hwndOwner, pszPath, nFolder, false);
+  BOOL result = SHGetSpecialFolderPath(hwndOwner, pszPath, nFolder, false);
+  return result ? S_OK : E_FAIL;
 }
 
 BOOL IsNetworkAlive(LPDWORD lpdwFlags) {
