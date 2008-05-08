@@ -34,7 +34,8 @@ interface Blob {
   readonly attribute int64 length;
   Blob slice(int64 start, int64 length);
 
-  ... APIs for reading blob data... See "Reading Blob Data" below for details.
+  // ... APIs for reading blob data...
+  // See "Reading Blob Data" below for details.
 };
 
 
