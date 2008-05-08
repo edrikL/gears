@@ -539,7 +539,7 @@ HttpRequest::ReadyState SafeHttpRequest::GetState() {
   HttpRequest::ReadyState state;
   bool success = GetReadyState(&state);
   assert(success);
-  return state;
+  return success ? state : UNINITIALIZED;
 }
 
 bool SafeHttpRequest::IsValidResponse() {
