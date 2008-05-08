@@ -2,7 +2,7 @@
 
 = Problem =
 
-Web applications have no way to interact with binary data in any way. For example, it is not possible to get the binary response of an XMLHttpRequest, or a file the user selected. It is also not possible to POST a user selected file using XMLHttpRequest, or to insert it into a Database, or to capture it for use offline.
+Web applications have no way to interact with binary data. It is not possible to get the binary response of an XMLHttpRequest, or a file the user selected. It is also not possible to POST a user selected file using XMLHttpRequest, or to insert it into a Database, or to capture it for use offline.
 
 We divide the spectrum of possible use cases for binary data into two broad sets:
 
@@ -26,4 +26,48 @@ interface Blob {
 
 A blob is immutable, in the same sense that an ECMAScript string is. You can subdivide a blob into smaller blobs, but the result of that operation is a new blob object representing the subset.
 
-It is of course, impossible to prevent blobs backed by local files from being completely immutable. A blob does not guarantee that what it represents will never change, but it does not provide any API to perform such a change. It also considers such changes, if it can detect them, to be errors.
+It is of course, impossible to prevent blobs backed by local files from being completely immutable. A blob does not guarantee that what it represents will never change, but it does not provide any API to perform such a change. It also considers such changes, if it can detect them, to be runtime errors.
+
+
+= Getting Blobs from Local Files =
+
+The current `<input type="file">` element can be extended to allow access to blobs representing the file (or files with WebForms extensions) that the user has chosen.
+
+We propose the following extension to HTMLFileInputElement interface:
+
+{{{
+interface HTMLFileInputElement {
+  readonly FileList files;
+};
+
+interface FileList {
+  readonly int length;
+  File item(int index);
+};
+
+interface File {
+  readonly string name; // only the name portion, not the path (for privacy)
+  readonly Blob contents;
+};
+}}}
+
+
+= Blobs + XHR, Sitting in a Tree =
+
+It is useful to be able to send and receive blobs using XHR. Using FilePicker, Blob, and XHR, one could build a very nice large file uploader for a site like Flickr or YouTube.
+
+{{{
+interface XMLHttpRequest {
+  readonly Blob responseBlob;
+  void send(Blob data); // overloads the existing send methods
+};
+}}}
+
+
+= Future Directions =
+
+This proposal is focused narrowly as a starting point. However, we've tried to think ahead to possible extensions. For example:
+
+  * Integration with more existing APIs. It seems reasonable and useful to integrate this with, for example, `<canvas>`, `<audio>`, `<video>`, `<img>`, `Database`, `Offline Applications`, etc.
+  * Reading blob contents. It seems that you could add various methods to the Blob object which would allow you to, for example, read the contents asynchronously as text, or base64, or as an ECMAScript ByteArray.
+  * Exporting Blobs to Files. Currently, it is possible to prompt the user to save a server-generated file using window.open() (depending on the file's content type). It would be nice to be able to do the same with client-generated files. You could add a method to the window to bring up a Save As... dialog 
