@@ -17,6 +17,17 @@ The lack of any concept of binary data severely limits web applications' capabil
   1. There are many potential provides and consumers of binary data in a web application. For example, network connections, file upload controls, audio/video, cameras, and any sort of embedded resource could all naturally be extended with APIs to accept or provide binary data. 
   1. The web model is successful partly because users can safely assume that web applications cannot violate their privacy or security. Adding APIs to manipulate binary data must maintain this model.
 
+= Solution =
+
+We propose the addition of a Blob interface to serve as a way to exchange binary data between the various APIs available to web developers. Blobs are complementary to ECMAScript-style !ByteArrays and other in-memory representations of data. The primary difference is that Blobs are immutable, and can therefore represent large objects.
+
+Having a common object to represent and manipulate binary data across all APIs provides a lot of power with minimum footprint. For example:
+
+  * Get a blob from a large file, chop it up into smaller blobs, and upload the pieces using XMLHttpRequest to get a large file uploader.
+  * Get a blob from a file while offline, store it in the database or application cache, and upload it later when connected.
+  * Get a blob from the network, send it into canvas, then get the modifications back out and re-upload them.
+  * Etc...
+
 = Summary =
 
 {{{
@@ -50,16 +61,6 @@ interface XMLHttpRequest {
   void send(Blob data); // overloads the existing send methods
 };
 }}}
-
-
-We propose the addition of a Blob interface to serve as a way to exchange binary data between the various APIs available to web developers. Blobs are complementary to ECMAScript-style !ByteArrays and other in-memory representations of data. The primary difference is that Blobs are immutable, and can therefore represent large objects.
-
-Having a common object to represent and manipulate binary data across all APIs provides a lot of power with minimum footprint. For example:
-
-  * Get a blob from a large file, chop it up into smaller blobs, and upload the pieces using XMLHttpRequest to get a large file uploader.
-  * Get a blob from a file while offline, store it in the database or application cache, and upload it later when connected.
-  * Get a blob from the network, send it into canvas, then get the modifications back out and re-upload them.
-  * Etc...
 
 = The Blob Interface =
 
