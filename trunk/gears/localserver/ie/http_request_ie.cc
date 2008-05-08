@@ -63,6 +63,11 @@ bool HttpRequest::Create(scoped_refptr<HttpRequest>* request) {
   return true;
 }
 
+// static
+bool HttpRequest::CreateSafeRequest(scoped_refptr<HttpRequest>* request) {
+  return HttpRequest::Create(request);
+}
+
 //------------------------------------------------------------------------------
 // Construction, destruction and refcounting
 //------------------------------------------------------------------------------

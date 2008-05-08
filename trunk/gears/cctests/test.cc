@@ -1062,6 +1062,9 @@ bool TestParseHttpStatusLine() {
 
 
 class TestHttpRequestListener : public HttpRequest::ReadyStateListener {
+ public:
+  TestHttpRequestListener(HttpRequest *request): request_(request) {}
+
   virtual void ReadyStateChanged(HttpRequest *source) {
     HttpRequest::ReadyState state = HttpRequest::UNINITIALIZED;
     source->GetReadyState(&state);
@@ -1077,14 +1080,10 @@ class TestHttpRequestListener : public HttpRequest::ReadyStateListener {
       LOG(("TestHttpRequest - complete (%d)\n", status));
     }
   }
+
+  scoped_refptr<HttpRequest> request_;
 };
 
-#ifdef BROWSER_FF
-// Returns true if the currently executing thread is the main UI thread,
-// firefox/mozila has one such very special thread
-// See cache_intercept.cc for implementation
-bool IsUiThread();
-#endif
 
 bool TestHttpRequest() {
 #undef TEST_ASSERT
@@ -1096,26 +1095,25 @@ bool TestHttpRequest() {
   } \
 }
 
-#ifdef BROWSER_FF
-  if (!IsUiThread()) {
-    return true;
-  }
-#endif
+  scoped_refptr<HttpRequest> request;
 
   // Send a request synchronously
-  scoped_refptr<HttpRequest> request;
   TEST_ASSERT(HttpRequest::Create(&request));
-  request->SetOnReadyStateChange(new TestHttpRequestListener());
+  request->SetOnReadyStateChange(new TestHttpRequestListener(request.get()));
   bool ok = request->Open(HttpConstants::kHttpGET,
                           STRING16(L"http://www.google.com/"),
                           false);
-  TEST_ASSERT(ok);
-  ok = request->Send();
-  TEST_ASSERT(ok);
+  if (ok) {
+    // Sync requests are not fully supported yet, when they are revisit
+    // note: we leak the request and listener in this case
+    ok = request->Send();
+    TEST_ASSERT(ok);
+  }
+  request.reset(NULL);
 
   // Send an async request
   TEST_ASSERT(HttpRequest::Create(&request));
-  request->SetOnReadyStateChange(new TestHttpRequestListener());
+  request->SetOnReadyStateChange(new TestHttpRequestListener(request.get()));
   ok = request->Open(HttpConstants::kHttpGET,
                      STRING16(L"http://www.google.com/"),
                      true);

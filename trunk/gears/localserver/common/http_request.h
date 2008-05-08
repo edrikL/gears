@@ -44,8 +44,13 @@ class BlobInterface;
 //------------------------------------------------------------------------------
 class HttpRequest {
  public:
-  // factory
+  // Creates a platform specific instance
   static bool Create(scoped_refptr<HttpRequest>* request);
+  
+  // Creates an instance that is guaranteed to work in background threads
+  // TODO(michaeln): ween ourselves off of Create vs CreateSafeRequest, Create
+  // should always return a "safe" instance.
+  static bool CreateSafeRequest(scoped_refptr<HttpRequest>* request);
 
   // Returns true if the given scheme is supported by HttpRequest.
   static bool IsSchemeSupported(const char16 *scheme) {
