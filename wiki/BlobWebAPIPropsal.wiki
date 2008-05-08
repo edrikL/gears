@@ -133,8 +133,6 @@ void ReadStreamFailureCallback(Error e); // e contains some sort of data about
 
 _TODO: There should be some way to build up a blob from other formats, needs more thought._
 
-}}}
-
 
 = More =
 
