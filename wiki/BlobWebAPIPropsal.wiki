@@ -35,40 +35,47 @@ Having a common object to represent and manipulate binary data across all APIs p
 interface Blob {
   readonly attribute int64 length;
   Blob slice(int64 start, int64 length);
-
-  // ... APIs to read blob contents ...
 };
 
-// Extensions to the existing HTML file upload element
+
+// Extensions to the existing HTML file upload element to allow getting
+// Blobs for user-selected files.
 interface HTMLFileInputElement {
   readonly FileList files; // Reuse mozilla's existing property in a
                            // compatible way.
 };
-
 interface FileList {
   readonly int length;
   File item(int index);
 };
-
 interface File {
   readonly string fileName; // only the name portion, not the path (for privacy)
   readonly Blob contents;
 };
 
-// Extensions to XMLHttpRequest
+
+// Extensions to XMLHttpRequest to allow sending and receiving blobs.
 interface XMLHttpRequest {
   readonly Blob responseBlob;
   void send(Blob data); // overloads the existing send methods
 };
+
+
+// Extends the Window object to prompt the user to save a blob to a file.
+interface Window {
+  // prompts the user to save the file to disk.
+  void exportBlobToFile(Blob blob);
+};
 }}}
 
-= The Blob Interface =
+
+= Future: Manipulating Blob Data =
+
+Sometimes it is useful to manipulate raw data, even though it is slow in !JavaScript. This can be implemented by adding read APIs.
 
 {{{
+// APIs for reading the contents of a blob.
 interface Blob {
-  readonly attribute int64 length;
-  Blob slice(int64 start, int64 length);
-
   void readAsText(ReadStreamSuccessCallback<string> onsuccess,
       ReadStreamFailureCallback on fail, optional string encoding,
       optional int64 start, optional int64 length);
@@ -85,6 +92,8 @@ interface Blob {
 void ReadStreamSuccessCallback<T>(T data); // assumes T has a "length" property.
 void ReadStreamFailureCallback(Error e); // e contains some sort of data about
                                          // what went wrong.
+
+Similarly, one can imagine APIs to build up a blob from data in various formats including other Blobs.
 }}}
 
 *Note:* Although it is impossible to guarantee that the data backing a blob does not ever change, this proposal assumes that such changes are rare and accidental. The UA should attempt to detect such situations and call !ReadStreamFailureCallback with an error code that lets the application try again.
