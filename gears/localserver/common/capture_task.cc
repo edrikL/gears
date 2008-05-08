@@ -131,8 +131,8 @@ bool CaptureTask::HttpGetUrl(const char16 *full_url,
   }
 
   if (!payload->PassesValidationTests()) {
-    LOG(("CaptureTask::HttpGetUrl - received invalid payload\n"));
     ExceptionManager::ReportAndContinue();
+    LOG(("CaptureTask::HttpGetUrl - received invalid payload\n"));
     return false;  // TODO(michaeln): retry?
   }
 

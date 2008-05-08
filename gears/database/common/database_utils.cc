@@ -180,8 +180,8 @@ static bool OpenAndCheckDatabase(const SecurityOrigin &origin,
   if (sql_status != SQLITE_OK) {
     sql_status = SqlitePoisonIfCorrupt(temp_db, sql_status);
     if (sql_status == SQLITE_CORRUPT) {
-      pdb->MarkDatabaseCorrupt(origin, dbname.c_str(), basename.c_str());
       ExceptionManager::ReportAndContinue();
+      pdb->MarkDatabaseCorrupt(origin, dbname.c_str(), basename.c_str());
     }
 
     sqlite3_close(temp_db);

@@ -282,11 +282,11 @@ bool UpdateTask::HttpGetUrl(const char16 *full_url,
     }
 
     if (!payload->PassesValidationTests()) {
+      ExceptionManager::ReportAndContinue();
       LOG(("UpdateTask::HttpGetUrl - received invalid payload\n"));
       // Explicitly overwrite error_msg_, not passing the validation tests is
       // the reason for overall task failure.
       SetHttpError(full_url, NULL);
-      ExceptionManager::ReportAndContinue();
       return false;  // TODO(michaeln): retry?
     }
 
