@@ -8,7 +8,7 @@ The lack of any concept of binary data severely limits web applications' capabil
 
   * You can't build a large file uploader (like for !YouTube or Flickr) in !JavaScript because you cannot chop a large file into smaller pieces.
   * You can't support attachments in an offline-enabled mail client because you can't store a selected file for later synchronization.
-  * You can't build a client side image, audio, or video editor using `<canvas>` because you can only export the result one byte at a time using !JavaScript, which would be unacceptably slow for large files.
+  * You can't build a client side image, audio, or video editor because you can only export the result one byte at a time using !JavaScript, which would be unacceptably slow for large files.
   * You can't implement export functionality from a web application to native file types using only the client because you can't manipulate the raw content of a file.
   * Etc...
 
