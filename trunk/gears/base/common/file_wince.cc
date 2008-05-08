@@ -127,31 +127,36 @@ bool File::Seek(int64 offset, SeekMethod seek_method) {
       break;
   }
 
-  LARGE_INTEGER li_pos;
-  li_pos.QuadPart = offset;
-  return false;
-  // TODO(fry): return
-  //   ::SetFilePointerEx(handle_.get(), li_pos, NULL, move_method) != FALSE;
+  LARGE_INTEGER pos;
+  pos.QuadPart = offset;
+  pos.LowPart = SetFilePointer(handle_.get(), pos.LowPart, &pos.HighPart,
+                               move_method);
+
+  return (pos.LowPart != 0xFFFFFFFF || GetLastError() == NO_ERROR);
 }
 
 
 int64 File::Size() {
-  return -1;
-  // TODO(fry)
-  // LARGE_INTEGER size;
-  // return ::GetFileSizeEx(handle_.get(), &size) ? size.QuadPart : -1;
+  LARGE_INTEGER size;
+  size.LowPart = ::GetFileSize(handle_.get(),
+                               reinterpret_cast<LPDWORD>(&size.HighPart));
+  if (size.LowPart == 0xFFFFFFFF && GetLastError() != NO_ERROR) {
+    return -1;
+  }
+  return size.QuadPart;
 }
 
 
 int64 File::Tell() {
-  return -1;
-  // TODO(fry)
-  // LARGE_INTEGER zero;
-  // zero.QuadPart = 0;
-  // LARGE_INTEGER pos;
-  // pos.QuadPart = 0;
-  // return ::SetFilePointerEx(handle_.get(), zero, &pos, FILE_CURRENT) ?
-  //   pos.QuadPart : -1;
+  LARGE_INTEGER pos;
+  pos.QuadPart = 0;
+  pos.LowPart = SetFilePointer(handle_.get(), pos.LowPart, &pos.HighPart,
+                               FILE_CURRENT);
+
+  if (pos.LowPart == 0xFFFFFFFF && GetLastError() != NO_ERROR) {
+    return -1;
+  }
+  return pos.QuadPart;
 }
 
 
