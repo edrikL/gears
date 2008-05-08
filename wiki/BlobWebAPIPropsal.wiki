@@ -116,7 +116,7 @@ interface Blob {
   void readAsBase64(ReadStreamSuccessCallback<string> onsuccess,
       ReadStreamFailureCallback onfail,
       optional int64 start, optional int64 length);
-  void readAsBytes(ReadStreamSuccessCallback<!ByteArray> onsuccess,
+  void readAsBytes(ReadStreamSuccessCallback<ByteArray> onsuccess,
       ReadStreamFailureCallback onfail,
       optional int64 start, optional int64 length);
   void readAsByteString(ReadStreamSuccessCallback<string> onsuccess,
