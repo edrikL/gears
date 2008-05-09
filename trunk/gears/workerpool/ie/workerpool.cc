@@ -929,6 +929,9 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
                                        JavaScriptWorkerInfo *wi) {
   if (!js_runner) { return false; }
 
+  scoped_refptr<ModuleEnvironment> module_environment(
+      new ModuleEnvironment(wi->script_origin, NULL, true, js_runner));
+
   // Add global Factory and WorkerPool objects into the namespace.
   //
   // The factory alone is not enough; GearsFactory.create(GearsWorkerPool)
@@ -943,10 +946,7 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   HRESULT hr = CComObject<GearsFactory>::CreateInstance(&factory);
   if (FAILED(hr)) { return false; }
 
-  if (!factory->InitBaseManually(true,  // is_worker
-                                 NULL,  // page_site is NULL in workers
-                                 wi->script_origin,
-                                 js_runner)) {
+  if (!factory->InitBaseManually(module_environment.get())) {
     return false;
   }
 
@@ -954,10 +954,7 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   hr = CComObject<GearsWorkerPool>::CreateInstance(&workerpool);
   if (FAILED(hr)) { return false; }
 
-  if (!workerpool->InitBaseManually(true,  // is_worker
-                                    NULL,  // page_site is NULL in workers
-                                    wi->script_origin,
-                                    js_runner)) {
+  if (!workerpool->InitBaseManually(module_environment.get())) {
     return false;
   }
 
