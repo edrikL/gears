@@ -1339,6 +1339,7 @@ $(BROWSER)_CPPSRCS	+= \
 		device_data_provider.cc \
 		geolocation.cc \
 		location_provider.cc \
+		radio_data_provider_wince.cc \
 		$(NULL)
 endif
 
