@@ -25,6 +25,7 @@
 
 #include "gears/geolocation/geolocation.h"
 
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/module_wrapper.h"
 
 // TODO(steveblock): Update default URL when finalized.
@@ -38,7 +39,11 @@ static const char16 *kGearsLocationProviderUrls =
 // Local functions
 static bool ParseOptions(JsCallContext *context, bool repeats,
                          std::vector<std::string16> *urls,
-                        GearsGeolocation::FixRequestInfo *info);
+                         GearsGeolocation::FixRequestInfo *info);
+static bool ConvertPositionToJavaScriptObject(const Position &p,
+                                              const char16 *error,
+                                              JsRunnerInterface *js_runner,
+                                              JsObject *js_object);
 
 DECLARE_GEARS_WRAPPER(GearsGeolocation);
 
@@ -77,8 +82,8 @@ void GearsGeolocation::ClearWatch(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_INT, &id },
   };
-  if (context->GetArguments(ARRAYSIZE(argv), argv) != ARRAYSIZE(argv)) {
-    assert(context->is_exception_set());
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) {
     return;
   }
   // TODO(steveblock): Cancel the fix.
@@ -92,10 +97,15 @@ void GearsGeolocation::GetPositionFix(JsCallContext *context, bool repeats) {
   FixRequestInfo info;
   ParseOptions(context, repeats, &urls, &info);
 
-// TODO(steveblock): Create a set of LocationProviders and request them to get
+  // TODO(steveblock): Create a set of LocationProviders and request them to get
   // a position fix.
 
-  context->SetReturnValue(JSPARAM_INT, &next_fix_request_id_);
+  // Return the ID of this fix if it repeats.
+  if (info.repeats) {
+    context->SetReturnValue(JSPARAM_INT, &next_fix_request_id_);
+  }
+
+  // Store the fix info and increment the id for next time.
   ++next_fix_request_id_;
 }
 
@@ -186,14 +196,14 @@ static bool ParseOptions(JsCallContext *context, bool repeats,
         JsArray js_array;
         if (!js_array.SetArray(token, context->js_context())) {
           LOG(("GearsGeolocation::ParseOptions() : Failed to set array with "
-               "gearsLocationProviderUrls."));
+               "gearsLocationProviderUrls.\n"));
           assert(false);
           return false;
         }
         int length;
         if (!js_array.GetLength(&length)) {
           LOG(("GearsGeolocation::ParseOptions() : Failed to get length of "
-               "gearsLocationProviderUrls."));
+               "gearsLocationProviderUrls.\n"));
           assert(false);
           return false;
         }
@@ -201,7 +211,7 @@ static bool ParseOptions(JsCallContext *context, bool repeats,
           JsScopedToken token;
           if (!js_array.GetElement(i, &token)) {
             LOG(("GearsGeolocation::ParseOptions() : Failed to get element "
-                 "from gearsLocationProviderUrls."));
+                 "from gearsLocationProviderUrls.\n"));
             assert(false);
             return false;
           }
@@ -229,12 +239,69 @@ static bool ParseOptions(JsCallContext *context, bool repeats,
   return true;
 }
 
+// Sets an object integer property if the input value is valid.
+static bool SetObjectPropertyIfValidInt(const std::string16 &property_name,
+                                        int value,
+                                        JsObject *object) {
+  assert(object);
+  if (kint32min != value) {
+    return object->SetPropertyInt(property_name, value);
+  }
+  return true;
+}
+
+// Sets an object string property if the input value is valid.
+static bool SetObjectPropertyIfValidString(const std::string16 &property_name,
+                                           const std::string16 &value,
+                                           JsObject *object) {
+  assert(object);
+  if (!value.empty()) {
+    return object->SetPropertyString(property_name, value);
+  }
+  return true;
+}
+
+static bool ConvertPositionToJavaScriptObject(const Position &p,
+                                              const char16 *error,
+                                              JsRunnerInterface *js_runner,
+                                              JsObject *js_object) {
+  assert(js_object);
+  assert(p.IsValid());
+  bool ret = true;
+  // latitude, longitude and date should always be valid.
+  ret &= js_object->SetPropertyDouble(STRING16(L"latitude"), p.latitude);
+  ret &= js_object->SetPropertyDouble(STRING16(L"longitude"), p.longitude);
+  scoped_ptr<JsObject> date_object(js_runner->NewDate(p.timestamp));
+  ret &= NULL != date_object.get();
+  if (date_object.get()) {
+    ret &= js_object->SetPropertyObject(STRING16(L"timestamp"),
+                                        date_object.get());
+  }
+  // Other properties may not be valid.
+  ret &= SetObjectPropertyIfValidInt(STRING16(L"horizontalAccuracy"),
+                                     p.horizontal_accuracy,
+                                     js_object);
+  ret &= SetObjectPropertyIfValidInt(STRING16(L"verticalAccuracy"),
+                                     p.vertical_accuracy,
+                                     js_object);
+  ret &= SetObjectPropertyIfValidString(STRING16(L"errorMessage"),
+                                        error,
+                                        js_object);
+  return ret;
+}
+
 #ifdef USING_CCTESTS
-// This method is defined in cctests\test.h and is used only for testing as
-// a means to access the static function defined here.
+// These methods are used only for testing as a means to access the static
+// functions defined here.
 bool ParseGeolocationOptionsTest(JsCallContext *context, bool repeats,
                                  std::vector<std::string16> *urls,
                                  GearsGeolocation::FixRequestInfo *info) {
   return ParseOptions(context, repeats, urls, info);
+}
+bool ConvertPositionToJavaScriptObjectTest(const Position &p,
+                                           const char16 *error,
+                                           JsRunnerInterface *js_runner,
+                                           JsObject *js_object) {
+  return ConvertPositionToJavaScriptObject(p, error, js_runner, js_object);
 }
 #endif

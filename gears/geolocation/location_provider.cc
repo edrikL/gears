@@ -25,6 +25,8 @@
 
 #include "gears/geolocation/location_provider.h"
 
+#include "gears/geolocation/network_location_provider.h"
+
 #ifdef USING_CCTESTS
 #include "gears/base/common/common.h"
 #include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis()
@@ -65,11 +67,17 @@ LocationProviderInterface* NewMockLocationProvider() {
 
 LocationProviderInterface* NewGpsLocationProvider() {
   // TODO(steveblock): Implement me.
+  assert(false);
   return NULL;
 }
 
 LocationProviderInterface* NewNetworkLocationProvider(
-    const std::string16 &url) {
-  // TODO(steveblock): Implement me.
+    const std::string16 &url, const std::string16 &host_name) {
+#ifdef WIN32
+  return new NetworkLocationProvider(url, host_name);
+#else
+  // TODO(steveblock): Implement NetworkLocationProvider for other platforms.
+  assert(false);
   return NULL;
+#endif
 }

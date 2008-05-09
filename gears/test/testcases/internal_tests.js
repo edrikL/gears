@@ -190,7 +190,7 @@ function testCreateError() {
 // - Managed resource store.
 // - Test that existing browser cache entires are not over-written.
 function testBrowserCache() {
-  if (isDebug && google.gears.factory.getBuildInfo().indexOf("wince") > -1) {
+  if (isUsingCCTests && isWince) {
     // Clear the browser cache.
     var urls = ['/testcases/test_file_1.txt',
                 '/testcases/test_file_1024.txt'];
@@ -223,7 +223,7 @@ function testBrowserCache() {
 // Tests the parsing of the options passed to Geolocation.GetCurrentPosition and
 // Geolocation.WatchPosition.
 function testParseGeolocationOptions() {
-  if (isDebug && !isOfficial) {
+  if (isUsingCCTests && !isOfficial) {
     var dummyFunction = function() {};
     // All good.
     internalTests.testParseGeolocationOptions(dummyFunction);
@@ -314,7 +314,52 @@ function testParseGeolocationOptions() {
     assertArrayEqual(urls, parsed_options.gearsLocationProviderUrls);
   }
 }
-  
+
+// Tests forming the JSON request body for a network location provider. Note
+// that the inputs to the conversion are set on the C++ side.
+function testGeolocationFormRequestBody() {
+  if (isUsingCCTests && !isOfficial && (isWin32 || isWince)) {
+    var body = internalTests.testGeolocationFormRequestBody();
+    var correctBody = '{ ' +
+                      '"cell_towers" : [ { ' +
+                      '"cell_id" : 23874, ' +
+                      '"location_area_code" : 98, ' +
+                      '"mobile_country_code" : 234, ' +
+                      '"mobile_network_code" : 15, ' +
+                      '"signal_strength" : -65 ' +
+                      '} ], ' +
+                      '"host" : "www.google.com", ' +
+                      '"radio_type" : "gsm", ' +
+                      '"version" : "1.0", ' +
+                      '"wifi_towers" : [ { ' +
+                      '"mac_address" : "test mac" ' +
+                      '} ] ' +
+                      '}\n';  // Note trailing line break.
+    assertEqual(correctBody, body);
+  }
+}
+
+// Tests extracting a position object from the JSON reposnse from a network
+// location provider.
+function testGeolocationGetLocationFromResponse() {
+  if (isUsingCCTests && !isOfficial && (isWin32 || isWince)) {
+    var responseString = '{ ' +
+                         '"location" : { ' +
+                         '"latitude" : 53.1, ' +
+                         '"longitude" : -0.1 ' +
+                         '} ' +
+                         '}';
+    var position =
+        internalTests.testGeolocationGetLocationFromResponse(responseString);
+    var correctPosition = new Object();
+    correctPosition.latitude = 53.1;
+    correctPosition.longitude = -0.1;
+    correctPosition.timestamp = new Date(42);
+    correctPosition.errorMessage = 'test error';
+    assertObjectEqual(correctPosition, position);
+  }
+}
+
 // Helper functions
 
 function createTestArray(length) {
