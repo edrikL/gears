@@ -94,7 +94,7 @@ CanvasRenderingContext2D class
   // (default 1.0)
   attribute float globalAlpha;
  
-  // we only support 'source-over' and 'copy'. Default: 'source-over'
+  // we only support 'source-over' and 'copy'. Default: 'source-over'.
   attribute string globalCompositeOperation; 
 
   // note: must be a color, not a gradient or pattern; we don't support those.
