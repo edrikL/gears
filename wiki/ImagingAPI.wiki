@@ -146,7 +146,11 @@ CanvasRenderingContext2D class
   // See http://www.adobe.com/devnet/flash/articles/matrix_transformations_05.html
   void convolutionTransform(float[] convolutionMatrix);
  
-  // Allows fractional radii. Takes the median of all pixels within the specified distance from the target pixel. Works component-wise, of course. First premultiplies alpha, and then takes median of R, G and B components separately. After the filter finishes, all pixels have alpha 1.0.
+  // Allows fractional radii.
+  // Takes the median of all pixels within the specified distance from the target pixel.
+  // Works component-wise, of course. First premultiplies alpha, and then takes median
+  // of R, G and B components separately.
+  // After the filter finishes, all pixels have alpha 1.0.
   void medianFilter(float radius);
  
   // x, y, width, height identify a bounding box into which the text is drawn. 
