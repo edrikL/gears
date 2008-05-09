@@ -135,6 +135,7 @@ CanvasRenderingContext2D class
   // blueResult     = a[10] * srcR + a[11] * srcG + a[12] * srcB + a[13] * srcA + a[14]
   // alphaResult   = a[15] * srcR + a[16] * srcG + a[17] * srcB + a[18] * srcA + a[19]
   // 
+  // Result components are clipped to the range 0.0 to 1.0.
   // If the color mode is RGB, the last row and the penultimate column disappear.
   // 
   // All color channel values (both source and result) are expressed as floats between 0.0 and 1.0 so that they are independent of color depth.
@@ -192,11 +193,16 @@ CanvasRenderingContext2D class
   // This function adds a specified delta to each color channel (expressed as a float between 0.0 and 1.0).
   // delta = -1.0 => fully black image, 0.0 => original image, 1.0 => fully white image.
   // 
-  // Equivalent to a call to colorTransform() with a[4] = a[9] = a[14] = delta, and other
+  // Equivalent to a call to colorTransform with a[4] = a[9] = a[14] = delta, and other
   // elements having values from the identity matrix. 
   void adjustBrightness(float delta);
 
-  // TODO(kart)
+  // Equivalent to a call to colorTransform with the matrix
+  //     x, 0, 0, 0, 0.5*(1-x)
+  //     0, x, 0, 0, 0.5*(1-x)
+  //     0, 0, x, 0, 0.5*(1-x)
+  //     0, 0, 0, 1, 0
+  // where x is the contrast.
   void adjustContrast(float contrast);
 
   // This function adjusts saturation while preserving luminance.
@@ -215,11 +221,11 @@ CanvasRenderingContext2D class
   // Rotates colors on the color wheel while preserving luminance.
   void adjustHue(float angle); // in radians.
 
-  // Equivalent to a call to convolutionTransform() with all pixels within the specified radius having a weight w
+  // Equivalent to a call to convolutionTransform with all pixels within the specified radius having a weight w
   // and other pixels having weight zero. The weight w is chosen so that the sum of all weights is 1.
   void blur(float factor, int radius);
 
-  // Equivalent to a call to convolutionTransform() with the source pixel having a weight w,
+  // Equivalent to a call to convolutionTransform with the source pixel having a weight w,
   // all other pixels within the specified radius having a weight -1, and pixels outside the radius having a weight 0.
   // The weight w is chosen so that the sum of all weights in the matrix is 1.
   void sharpen(float factor, int radius);
