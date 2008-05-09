@@ -46,9 +46,10 @@ Canvas class
 
   Canvas clone();
 
-  // the palette of the image, if the canvas was load()ed from an indexed mode image.
+  // The palette of the image, if the canvas was load()ed from an indexed mode image.
   // Note that on load, the image is converted to RGB; the palette is preserved in case you want
   // to export the image back to indexed mode, but the canvas itself doesn't have an indexed mode.
+  // The palette is an array of color values.
   readonly attribute array palette;
 
   // The functions below change the pixels of the canvas in place, as opposed to scale, rotate, etc 
@@ -91,8 +92,9 @@ CanvasRenderingContext2D class
   readonly attribute Canvas canvas;
 
   // (default 1.0)
-  attribute float globalAlpha; 
-  // we only support source-over and copy. default source-over
+  attribute float globalAlpha;
+ 
+  // we only support 'source-over' and 'copy'. Default: 'source-over'
   attribute string globalCompositeOperation; 
 
   // note: must be a color, not a gradient or pattern; we don't support those.
@@ -112,7 +114,7 @@ CanvasRenderingContext2D class
   
   // affine transformations (default transform is the identity matrix)
   void scale(float x, float y);
-  void rotate(float angle);
+  void rotate(float angle); // in radians.
   void translate(float x, float y);
   void transform(float m11, float m12, float m21, float m22, float dx, float dy);
   void setTransform(float m11, float m12, float m21, float m22, float dx, float dy);
@@ -128,7 +130,17 @@ CanvasRenderingContext2D class
   // -------- THE FOLLOWING ARE ADDITIONAL ABSTRACTIONS WE SUPPORT ------------
 
   // 4x5 matrix for RGBA images and 3x4 for RGB.
-  // See http://www.adobe.com/devnet/flash/articles/matrix_transformations_04.html
+  // Referring to the color matrix as 'a', here's how this function works (for RGBA):
+  // redResult = a[0] * srcR + a[1] * srcG + a[2] * srcB + a[3] * srcA + a[4]
+  // greenResult = a[5] * srcR + a[6] * srcG + a[7] * srcB + a[8] * srcA + a[9]
+  // blueResult = a[10] * srcR + a[11] * srcG + a[12] * srcB + a[13] * srcA + a[14]
+  // alphaResult = a[15] * srcR + a[16] * srcG + a[17] * srcB + a[18] * srcA + a[19]
+  // 
+  // If the color mode is RGB, the last row and the penultimate column disappear.
+  // 
+  // Note that the source and result values are expressed as floats between 0.0 and 1.0 so that they are independent of color depth.
+  // 
+  // The identity matrix has a[0] = a[6] = a[12] = a[18] = 1 with other elements being 0.
   void colorTransform(float[] colorMatrix);
  
   // See http://www.adobe.com/devnet/flash/articles/matrix_transformations_05.html
@@ -167,8 +179,9 @@ CanvasRenderingContext2D class
   // add delta to each color channel.
   // Color channel values are expressed as floats between 0.0 and 1.0, and delta should be between -1.0 and 1.0.
   // delta = -1.0 => fully black image, 0.0 => original image, 1.0 => fully white image.
-  // Expressing delta as a float between -1.0 and 1.0 makes it independent of color depth -- a given delta increases
-  // brightness by a certain amount irrespective of color depth.
+  // Expressing delta as a float between -1.0 and 1.0 makes it independent of color depth.
+  // Equivalent to a call to colorTransform() with a[4] = a[9] = a[14] = delta, and other
+  // elements having values from the identity matrix. 
   void adjustBrightness(float delta);
 
   void adjustContrast(float contrast);
@@ -176,7 +189,7 @@ CanvasRenderingContext2D class
   // 0.0 => grayscale, 1.0 => original image.
   void adjustSaturation(float saturation);
  
-  void adjustHue(float angle); // angle by which to rotate on the color wheel.
+  void adjustHue(float angle); // angle by which to rotate on the color wheel, in radians.
 
   void blur(float factor, int radius);
   void sharpen(float factor, int radius);
