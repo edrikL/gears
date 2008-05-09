@@ -68,7 +68,7 @@ Canvas class
   attribute unsigned long height;
 
   // returns a context
-  CanvasRenderingContext2D getContext(DOMString contextId);
+  CanvasRenderingContext2D getContext(string contextId);
 };
 }}}
 
@@ -93,7 +93,7 @@ CanvasRenderingContext2D class
   // (default 1.0)
   attribute float globalAlpha; 
   // we only support source-over and copy. default source-over
-  attribute DOMString globalCompositeOperation; 
+  attribute string globalCompositeOperation; 
 
   // note: must be a color, not a gradient or pattern; we don't support those.
   attribute string fillStyle; 
