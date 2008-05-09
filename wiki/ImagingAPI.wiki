@@ -162,7 +162,7 @@ CanvasRenderingContext2D class
 
 
   // ----- CONVENIENCE FUNCTIONS FOR COMMON OPERATIONS --------
-  // might build on top of one or more abstractions listed above.
+  // These build on top of the primitives above.
 
   // add delta to each color channel.
   // Color channel values are expressed as floats between 0.0 and 1.0, and delta should be between -1.0 and 1.0.
