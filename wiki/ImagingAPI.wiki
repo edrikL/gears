@@ -180,20 +180,34 @@ CanvasRenderingContext2D class
   // ----- CONVENIENCE FUNCTIONS FOR COMMON OPERATIONS --------
   // These build on top of the primitives above.
 
-  // add delta to each color channel.
-  // Color channel values are expressed as floats between 0.0 and 1.0, and delta should be between -1.0 and 1.0.
-  // delta = -1.0 => fully black image, 0.0 => original image, 1.0 => fully white image.
-  // Expressing delta as a float between -1.0 and 1.0 makes it independent of color depth.
   // Equivalent to a call to colorTransform() with a[4] = a[9] = a[14] = delta, and other
   // elements having values from the identity matrix. 
+  // This method adds delta to each color channel.
+  // delta = -1.0 => fully black image, 0.0 => original image, 1.0 => fully white image.
   void adjustBrightness(float delta);
 
   void adjustContrast(float contrast);
 
-  // 0.0 => grayscale, 1.0 => original image.
+  // Equivalent a call to colorTransform() with
+  //    a[1] = (1.0-s)*rwgt + s;
+  //    a[2] = (1.0-s)*rwgt;
+  //    a[3] = (1.0-s)*rwgt;
+  //    a[5] = (1.0-s)*gwgt;
+  //    a[6] = (1.0-s)*gwgt + s;
+  //    a[7] = (1.0-s)*gwgt;
+  //    a[10] = (1.0-s)*bwgt;
+  //    a[11] = (1.0-s)*bwgt;
+  //    a[12] = (1.0-s)*bwgt + s;
+  //
+  // where s is the saturation value (the argument)
+  // and (rwgt, gwgt, bwgt) = (0.3086, 0.6094, 0.0820)  [the standard luminance vector]
+  //
+  // saturation = -1.0 => invert colors, 0.0 => grayscale, 1.0 => original image.
+  // This function preserves luminance.
   void adjustSaturation(float saturation);
  
-  void adjustHue(float angle); // angle by which to rotate on the color wheel, in radians.
+  // Rotates colors on the color wheel while preserving luminance.
+  void adjustHue(float angle); // in radians.
 
   void blur(float factor, int radius);
   void sharpen(float factor, int radius);
