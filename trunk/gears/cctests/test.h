@@ -73,7 +73,11 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   // OUT: object created_object
   // throws exception on failure
   void TestCreateError(JsCallContext *context);
-
+  
+  // IN: nothing
+  // OUT: nothing
+  // throws exception on failure
+  void TestObjectProperties(JsCallContext *context);
 
   // Argument passing tests
 
