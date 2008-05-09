@@ -94,14 +94,14 @@ timerSuite.addFile('../testcases/timer_tests.js',
                    {useWorker: true, useIFrame: true});
 suites.push(timerSuite);
 
-if (!isSafari) {
-  var internalTestSuite = new TestSuite('Internal_Tests');
-  internalTestSuite.addFile('../testcases/internal_tests.js',
-                            {useWorker: true, useIFrame: true});
-  internalTestSuite.addFile('../testcases/internal_coercion_tests.js', 
-                            {useWorker: true, useIFrame: true});
-  suites.push(internalTestSuite);
+var internalTestSuite = new TestSuite('Internal_Tests');
+internalTestSuite.addFile('../testcases/internal_tests.js',
+                          {useWorker: true, useIFrame: true});
+internalTestSuite.addFile('../testcases/internal_coercion_tests.js', 
+                          {useWorker: true, useIFrame: true});
+suites.push(internalTestSuite);
 
+if (!isSafari) {
   var workerPoolSuite = new TestSuite('WorkerPool');
   workerPoolSuite.addFile('../testcases/workerpool_tests.js',
                           {useWorker: true, useIFrame: true});

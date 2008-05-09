@@ -55,12 +55,8 @@
 #include "genfiles/product_constants.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-#ifdef BROWSER_WEBKIT
-// TODO(playmobil): Add support for test module in Safari build.
-#else
-  #ifdef USING_CCTESTS
-  #include "gears/cctests/test.h"
-  #endif
+#ifdef USING_CCTESTS
+#include "gears/cctests/test.h"
 #endif
 
 // static
@@ -155,17 +151,13 @@ void GearsFactory::Create(JsCallContext *context) {
     CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
   } else if (module_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(GetJsRunner(), &object);
-#ifdef BROWSER_WEBKIT
-// TODO(playmobil): Add support for test module in Safari build.
-#else
   } else if (module_name == STRING16(L"beta.test")) {
 #ifdef USING_CCTESTS
     CreateModule<GearsTest>(GetJsRunner(), &object);
 #else
-    context->SetException(L"Object is only available in debug build.");
+    context->SetException(STRING16(L"Object is only available in debug build."));
     return;
 #endif
-#endif  // BROWSER_WEBKIT
   } else {
     context->SetException(STRING16(L"Unknown object."));
     return;

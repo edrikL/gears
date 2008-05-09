@@ -266,3 +266,8 @@ function testGetType() {
         '{ test: "test" } should be a JSPARAM_OBJECT.');
   }
 }
+
+// SAFARI-TEMP - Disable tests that don't currently work on Safari.
+testCoerceToInt._disable_in_safari = true;
+testCoerceToDouble._disable_in_safari = true;
+testCoerceToString._disable_in_safari = true;

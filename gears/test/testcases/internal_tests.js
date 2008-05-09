@@ -138,6 +138,12 @@ function testPassArgumentsOptional() {
 // JsObject test functions
 
 // Test passing an object with different types of properties to C++.
+function testObjectProperties() {
+  if (isUsingCCTests) {
+    internalTests.testObjectProperties();
+  }
+}
+
 function testPassObject() {
   if (isUsingCCTests) {
     internalTests.testPassObject(new TestObject());
@@ -467,3 +473,6 @@ function testPerfTimer() {
     timer.setTimeout(callback, 1);
   }
 }
+
+// SAFARI-TEMP - Disable tests that don't currently work on Safari.
+testObjectProperties._disable_in_safari = true;
