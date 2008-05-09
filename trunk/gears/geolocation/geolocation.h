@@ -31,11 +31,13 @@
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/geolocation/location_provider.h"
 
-// The internal representation of a position. Some properties use different
-// types when passed to JavaScript.
+// The internal representation of a position. We use kint32min to represent
+// unknown values for integer fields. Some properties use different types when
+// passed to JavaScript.
 struct Position {
  public:
-  Position() : timestamp(-1) {}
+  Position() : altitude(kint32min), horizontal_accuracy(kint32min),
+               vertical_accuracy(kint32min), timestamp(-1) {}
   bool IsValid() const {
     return -1 != timestamp;
   }

@@ -124,6 +124,14 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   // IN: object position_options
   // OUT: object parsed_options
   void TestParseGeolocationOptions(JsCallContext *context);
+
+  // IN: nothing
+  // OUT: string request_body
+  void TestGeolocationFormRequestBody(JsCallContext *context);
+
+  // IN: string response_body
+  // OUT: object position
+  void TestGeolocationGetLocationFromResponse(JsCallContext *context);
 #endif
 
  private:
@@ -139,15 +147,5 @@ bool IsEntryBogusTest(INTERNET_CACHE_ENTRY_INFO *info);
 #endif
 
 #endif // GEARS_CCTESTS_TEST_H__
-
-#ifdef OFFICIAL_BUILD
-// The Geolocation API has not been finalized for official builds.
-#else
-// This function is declared in geolocation/geolocation.cc It is a wrapper
-// around a static function defined there.
-bool ParseGeolocationOptionsTest(JsCallContext *context, bool repeats,
-                                 std::vector<std::string16> *urls,
-                                 GearsGeolocation::FixRequestInfo *info);
-#endif
 
 #endif // USING_CCTESTS

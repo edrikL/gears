@@ -36,8 +36,9 @@ var isDebug = google.gears.factory.getBuildInfo().indexOf('dbg') > -1;
 var isOfficial = google.gears.factory.getBuildInfo().indexOf('official') > -1;
 
 /**
- * Whether the installed Gears extension is for Windows Mobile
+ * Whether the installed Gears extension is for a particular platform.
  */
+var isWin32 = google.gears.factory.getBuildInfo().indexOf('win32') > -1;
 var isWince = google.gears.factory.getBuildInfo().indexOf('wince') > -1;
 
 /**

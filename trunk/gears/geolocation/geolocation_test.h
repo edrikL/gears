@@ -23,37 +23,24 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_GEOLOCATION_LOCATION_PROVIDER_H__
-#define GEARS_GEOLOCATION_LOCATION_PROVIDER_H__
+#ifndef GEARS_GEOLOCATION_GEOLOCATION_TEST_H__
+#define GEARS_GEOLOCATION_GEOLOCATION_TEST_H__
 
-#include "gears/base/common/scoped_refptr.h"
-#include "gears/base/common/string16.h"
+class JsCallContext;
+class JsRunnerInterface;
 
-struct Position;
+// IN: object position_options
+// OUT: object parsed_options
+void TestParseGeolocationOptions(JsCallContext *context,
+                                 JsRunnerInterface *js_runner);
 
-// Interface to be implemented by each location provider.
-class LocationProviderInterface : public RefCounted {
- public:
-  class ListenerInterface {
-   public:
-    virtual bool LocationUpdateAvailable(LocationProviderInterface *provider,
-                                         const Position &position) = 0;
-    virtual ~ListenerInterface() {}
-  };
-  virtual ~LocationProviderInterface() {};
-  // Interface methods.
-  virtual void SetListener(ListenerInterface *listener) = 0;
-  // This should call back to ListenerInterface::LocationUpdateAvailable.
-  virtual bool GetCurrentPosition() = 0;
-};
+// IN: nothing
+// OUT: string request_body
+void TestGeolocationFormRequestBody(JsCallContext *context);
 
-// Factory functions for the various types of location provider to abstract over
-// the platform-dependent implementations.
-#ifdef USING_CCTESTS
-LocationProviderInterface* NewMockLocationProvider();
-#endif
-LocationProviderInterface* NewGpsLocationProvider();
-LocationProviderInterface* NewNetworkLocationProvider(
-    const std::string16 &url, const std::string16 &host_name);
+// IN: string response_body
+// OUT: object position
+void TestGeolocationGetLocationFromResponse(JsCallContext *context,
+                                            JsRunnerInterface *js_runner);
 
-#endif  // GEARS_GEOLOCATION_LOCATION_PROVIDER_H__
+#endif  // GEARS_GEOLOCATION_GEOLOCATION_TEST_H__
