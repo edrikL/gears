@@ -49,8 +49,8 @@ Canvas class
   // The palette of the image, if the canvas was load()ed from an indexed mode image.
   // Note that on load, the image is converted to RGB; the palette is preserved in case you want
   // to export the image back to indexed mode, but the canvas itself doesn't have an indexed mode.
-  // The palette is an array of color values.
-  readonly attribute array palette;
+  // The palette is an array of color values expressed as integers.
+  readonly attribute array originalPalette;
 
   // The functions below change the pixels of the canvas in place, as opposed to scale, rotate, etc 
   // which only set the current transformation matrix that affects future drawing operations.
@@ -86,21 +86,20 @@ The 'transform' function just sets the current transformation matrix and does no
 CanvasRenderingContext2D class
 {
   // ----- THE FOLLOWING ARE FROM HTML CANVAS -------
-  // Please see the canvas spec at http://www.whatwg.org/specs/web-apps/current-work/#canvas
+  // The arguments, return values and semantics are described at http://www.whatwg.org/specs/web-apps/current-work/#canvas
 
   // back-reference to the canvas:
   readonly attribute Canvas canvas;
 
-  // (default 1.0)
-  attribute float globalAlpha;
+  attribute float globalAlpha;  // default: 1.0
  
   // we only support 'source-over' and 'copy'. Default: 'source-over'.
   attribute string globalCompositeOperation; 
 
-  // note: must be a color, not a gradient or pattern; we don't support those.
+  // Note: must be a color, not a gradient or pattern; we don't support those.
   attribute string fillStyle; 
   
-  // saves current state on stack.
+  // Saves current state on stack.
   void save();
   // pops a state object from the stack and sets the current state to that state.
   void restore(); 
@@ -131,10 +130,10 @@ CanvasRenderingContext2D class
 
   // 4x5 matrix for RGBA images and 3x4 for RGB.
   // Referring to the color matrix as 'a', here's how this function works (for RGBA):
-  // redResult = a[0] * srcR + a[1] * srcG + a[2] * srcB + a[3] * srcA + a[4]
-  // greenResult = a[5] * srcR + a[6] * srcG + a[7] * srcB + a[8] * srcA + a[9]
-  // blueResult = a[10] * srcR + a[11] * srcG + a[12] * srcB + a[13] * srcA + a[14]
-  // alphaResult = a[15] * srcR + a[16] * srcG + a[17] * srcB + a[18] * srcA + a[19]
+  // redResult      = a[0] * srcR    + a[1] * srcG   + a[2] * srcB   + a[3] * srcA    + a[4]
+  // greenResult  = a[5] * srcR    + a[6] * srcG   + a[7] * srcB   + a[8] * srcA    + a[9]
+  // blueResult     = a[10] * srcR + a[11] * srcG + a[12] * srcB + a[13] * srcA + a[14]
+  // alphaResult   = a[15] * srcR + a[16] * srcG + a[17] * srcB + a[18] * srcA + a[19]
   // 
   // If the color mode is RGB, the last row and the penultimate column disappear.
   // 
@@ -147,6 +146,7 @@ CanvasRenderingContext2D class
   // The argument specifies the weights, with the center element of the matrix representing the source pixel's weight and 
   // surrounding elements in the matrix representing the surrounding pixels' weights.
   // Unlike a color matrix, a convolution matrix's size isn't fixed.
+  // 
   // All color channel values (both source and result) are expressed as floats between 0.0 and 1.0 so that they are independent of color depth.
   // For pixels that are off the source image, the input image is extended along each of its borders infinitely by duplicating the color values at the given edge of the input image.
   // If applyToAlpha is true, the convolution is applied to the alpha channel in addition to the R, G and B channels. The default is false.
@@ -159,6 +159,7 @@ CanvasRenderingContext2D class
   // After the filter finishes, all pixels have alpha 1.0.
   void medianFilter(float radius);
  
+  // NOTE: This function may change to be compatible with HTML Canvas's text drawing API.
   // x, y, width, height identify a bounding box into which the text is drawn. 
   // If width and height are not specified, the bounding box extends to the last row or column of the canvas.
   // attributes can have the following keys:
@@ -168,15 +169,16 @@ CanvasRenderingContext2D class
   //   underline: boolean
   //   wrap: boolean, specifies that at the right edge of the bounding box, text is wrapped to the next line instead of truncating it (default).
   //   singleLine: treat newlines and tab characters as single spaces,
-  //     thus forcing the output to one line. Defaults to false. Cannot be used along with wrap.
-  // Need to guarantee consistent rendering across all platforms. We're thinking of using FreeType.
+  //        thus forcing the output to one line. Defaults to false. Cannot be used along with wrap.
+  // The rendering is guaranteed to be consisten across all platforms. (We're thinking of using FreeType.)
   void drawText(String text, String font, int size, int x, int y, optional int width, optional int height, optional object attributes);
 
+  // Semantics as in HTML Canvas.
   void drawImage(Canvas image, int dx, int dy);
   void drawImage(Canvas image, int dx, int dy, int dw, int dh);
   void drawImage(Canvas image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);
  
-  // similar to putImageData except that it respects the current state.
+  // Similar to putImageData except that it respects the current state.
   // Useful for drawing custom shapes into an ImageData and then compositing that into the canvas.
   void drawImageData(ImageData imagedata, int sx, int sy, int sw, int sh, int dx, int dy);
 
@@ -186,6 +188,7 @@ CanvasRenderingContext2D class
   // ----- CONVENIENCE FUNCTIONS FOR COMMON OPERATIONS --------
   // These build on top of the primitives above.
 
+
   // This function adds a specified delta to each color channel (expressed as a float between 0.0 and 1.0).
   // delta = -1.0 => fully black image, 0.0 => original image, 1.0 => fully white image.
   // 
@@ -193,6 +196,7 @@ CanvasRenderingContext2D class
   // elements having values from the identity matrix. 
   void adjustBrightness(float delta);
 
+  // 
   void adjustContrast(float contrast);
 
   // This function adjusts saturation while preserving luminance.
@@ -261,7 +265,7 @@ function process(var srcBlob) {
   var canvas = google.gears.factory.create('canvas');
   canvas.load(srcBlob);
 
-  var context = canvas.getContext('2d');
+  var context = canvas.getContext('gears-2d');
   // crop out 10 pixels on each side.
   context.crop(10, 10, canvas.width - 20, canvas.height - 20);
   context.resize(1024, 768);
@@ -295,13 +299,13 @@ function process(var srcBlob) {
   var canvas = google.gears.factory.create('canvas');
   canvas.load(srcBlob);
   
-  var context = canvas.getContext('2d');
+  var context = canvas.getContext('gears-2d');
   context.crop(10, 10, canvas.width - 20, canvas.height - 20); 
   context.resize(1024, 768);
 
   // rotate the image:
   var destCanvas = google.gears.factory.create('canvas');
-  var destContext = destCanvas.getContext('2d');
+  var destContext = destCanvas.getContext('gears-2d');
 
   // NOTE: does not rotate the image in place;
   // instead sets the current transformation matrix for future draw operations.
