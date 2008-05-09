@@ -143,8 +143,13 @@ CanvasRenderingContext2D class
   // The identity matrix has a[0] = a[6] = a[12] = a[18] = 1 with other elements being 0.
   void colorTransform(float[] colorMatrix);
  
-  // See http://www.adobe.com/devnet/flash/articles/matrix_transformations_05.html
-  void convolutionTransform(float[] convolutionMatrix);
+  // Computes the color of each pixel by taking a weighted mean of its surrounding pixels' colors.
+  // The argument specifies the weights, with the center element of the matrix representing the source pixel's weight and 
+  // surrounding elements in the matrix representing the surrounding pixels' weights.
+  // Unlike a color matrix, a convolution matrix's size isn't fixed.
+  // For pixels that are off the source image, the input image is extended along each of its borders infinitely by duplicating the color values at the given edge of the input image.
+  // If applyToAlpha is true, the convolution is applied to the alpha channel in addition to the R, G and B channels. The default is false.
+  void convolutionTransform(float[] convolutionMatrix, optional boolean applyToAlpha);
  
   // Allows fractional radii.
   // Takes the median of all pixels within the specified distance from the target pixel.
@@ -211,7 +216,7 @@ CanvasRenderingContext2D class
 
   void blur(float factor, int radius);
   void sharpen(float factor, int radius);
-  // convenience function
+
   void resetTransform(); 
 };
 }}}
