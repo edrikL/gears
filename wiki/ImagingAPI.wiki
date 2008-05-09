@@ -138,7 +138,7 @@ CanvasRenderingContext2D class
   // 
   // If the color mode is RGB, the last row and the penultimate column disappear.
   // 
-  // Note that the source and result values are expressed as floats between 0.0 and 1.0 so that they are independent of color depth.
+  // All color channel values (both source and result) are expressed as floats between 0.0 and 1.0 so that they are independent of color depth.
   // 
   // The identity matrix has a[0] = a[6] = a[12] = a[18] = 1 with other elements being 0.
   void colorTransform(float[] colorMatrix);
@@ -147,6 +147,7 @@ CanvasRenderingContext2D class
   // The argument specifies the weights, with the center element of the matrix representing the source pixel's weight and 
   // surrounding elements in the matrix representing the surrounding pixels' weights.
   // Unlike a color matrix, a convolution matrix's size isn't fixed.
+  // All color channel values (both source and result) are expressed as floats between 0.0 and 1.0 so that they are independent of color depth.
   // For pixels that are off the source image, the input image is extended along each of its borders infinitely by duplicating the color values at the given edge of the input image.
   // If applyToAlpha is true, the convolution is applied to the alpha channel in addition to the R, G and B channels. The default is false.
   void convolutionTransform(float[] convolutionMatrix, optional float bias, optional boolean applyToAlpha);
@@ -214,9 +215,16 @@ CanvasRenderingContext2D class
   // Rotates colors on the color wheel while preserving luminance.
   void adjustHue(float angle); // in radians.
 
+  // Equivalent to a call to convolutionTransform() with all pixels within the specified radius having a weight w
+  // and other pixels having weight zero. The weight w is chosen so that the sum of all weights is 1.
   void blur(float factor, int radius);
+
+  // Equivalent to a call to convolutionTransform() with the source pixel having a weight w,
+  // all other pixels within the specified radius having a weight -1, and pixels outside the radius having a weight 0.
+  // The weight w is chosen so that the sum of all weights in the matrix is 1.
   void sharpen(float factor, int radius);
 
+  // Sets the transformation matrix to the identity matrix.
   void resetTransform(); 
 };
 }}}
