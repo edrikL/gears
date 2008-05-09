@@ -436,6 +436,6 @@ void GearsFactory::ResumeObjectCreationAndUpdatePermissions() {
 // whether or not an object has been successfully initialized. This method is
 // a friend of ModuleImplBaseClass for this purpose.
 static bool IsFactoryInitialized(GearsFactory *factory) {
-  return factory->is_initialized_;
+  return factory->module_environment_.get() != NULL;
 }
 #endif
