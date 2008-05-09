@@ -72,7 +72,21 @@ void ThrowExceptionKey(NSString *key, ...) {
 }
 
 //------------------------------------------------------------------------------
-void ThrowWebKitException(const std::string16 &message) {
-  NSString *msg = [NSString stringWithString16:message.c_str()];
+// NPN_SetException is buggy in WebKit, see 
+// http://bugs.webkit.org/show_bug.cgi?id=16829
+void WebKitNPN_SetException(NPObject* obj, const char *message)
+{
+  NSString *msg = [NSString stringWithCString:message];
   [WebScriptObject throwException:msg];
+}
+
+//------------------------------------------------------------------------------
+void *InitAutoReleasePool() {
+  return [[NSAutoreleasePool alloc] init];
+}
+
+//------------------------------------------------------------------------------
+void DestroyAutoReleasePool(void *pool) {
+  assert(pool);
+  [(NSAutoreleasePool *)pool release];
 }

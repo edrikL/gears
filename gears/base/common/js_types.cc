@@ -2099,9 +2099,6 @@ void JsCallContext::SetException(const std::string16 &message) {
 
   is_exception_set_ = true;
   
-#ifdef BROWSER_WEBKIT
-  ThrowWebKitException(message);
-#else
   std::string message_utf8;
   if (!String16ToUTF8(message.data(), message.length(), &message_utf8))
     message_utf8 = "Unknown Gears Error";  // better to throw *something*
@@ -2111,10 +2108,9 @@ void JsCallContext::SetException(const std::string16 &message) {
     return;
   ScopedNPObject window_scoped(window);
   NPN_SetException(window, message_utf8.c_str());
-#endif
 }
 
-#endif
+#endif  // BROWSER_NPAPI
 
 #if defined(BROWSER_FF) || defined(BROWSER_NPAPI)
 int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {

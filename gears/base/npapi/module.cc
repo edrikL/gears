@@ -39,6 +39,9 @@
 // Main plugin entry point implementation
 //
 #include "gears/base/common/base_class.h"
+#ifdef BROWSER_WEBKIT
+#include "gears/base/common/common_sf.h"
+#endif
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/npapi/module.h"
 
@@ -156,6 +159,13 @@ NPError STDCALL NP_Initialize(NPNetscapeFuncs* funcs)
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
   g_browser_funcs = *funcs;
+
+// NPN_SetException is buggy in WebKit, see 
+// http://bugs.webkit.org/show_bug.cgi?id=16829
+#ifdef BROWSER_WEBKIT
+  g_browser_funcs.setexception = WebKitNPN_SetException;
+#endif
+  
   ThreadLocals::SetValue(kNPNFuncsKey, &g_browser_funcs, NULL);
 
   return NPERR_NO_ERROR;
