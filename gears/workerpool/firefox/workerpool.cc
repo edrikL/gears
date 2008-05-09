@@ -1318,6 +1318,9 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   JsContextPtr cx = js_runner->GetContext();
   if (!cx) { return false; }
 
+  scoped_refptr<ModuleEnvironment> module_environment(
+      new ModuleEnvironment(wi->script_origin, cx, true, js_runner));
+
   // Add global Factory and WorkerPool objects into the namespace.
   //
   // The factory alone is not enough; GearsFactory.create(GearsWorkerPool)
@@ -1329,20 +1332,14 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   scoped_ptr<GearsFactory> factory(new GearsFactory());
   if (!factory.get()) { return false; }
 
-  if (!factory->InitBaseManually(true, // is_worker
-                                 cx,
-                                 wi->script_origin,
-                                 js_runner)) {
+  if (!factory->InitBaseManually(module_environment.get())) {
     return false;
   }
 
   scoped_ptr<GearsWorkerPool> workerpool(new GearsWorkerPool());
   if (!workerpool.get()) { return false; }
 
-  if (!workerpool->InitBaseManually(true, // is_worker
-                                    cx,
-                                    wi->script_origin,
-                                    js_runner)) {
+  if (!workerpool->InitBaseManually(module_environment.get())) {
     return false;
   }
 
