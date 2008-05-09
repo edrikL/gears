@@ -112,7 +112,7 @@ CanvasRenderingContext2D class
   void strokeRect(int x, int y, int w, int h);
   
   // affine transformations (default transform is the identity matrix)
-  void scale(float x, float y);
+  void scale(float x, optional float y);  // 'y' scale factor defaults to the 'x' scale factor.
   void rotate(float angle); // in radians.
   void translate(float x, float y);
   void transform(float m11, float m12, float m21, float m22, float dx, float dy);
