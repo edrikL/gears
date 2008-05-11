@@ -39,6 +39,15 @@ void Dispatcher<Database2ResultSet>::Init() {
   RegisterProperty("rows", &Database2ResultSet::GetRows, NULL);
 }
 
+
+// static
+bool Database2ResultSet::Create(const ModuleImplBaseClass *sibling,
+                                scoped_refptr<Database2ResultSet> *instance) {
+  assert(instance);
+  return CreateModule<Database2ResultSet>(sibling->GetJsRunner(), instance)
+      && instance->get()->InitBaseFromSibling(sibling);
+}
+
 void Database2ResultSet::GetInsertId(JsCallContext *context) {
   // stub
   context->SetReturnValue(JSPARAM_INT, 0);
@@ -52,11 +61,4 @@ void Database2ResultSet::GetRowsAffected(JsCallContext *context) {
 void Database2ResultSet::GetRows(JsCallContext *context) {
   // stub
   // return nothing for now
-}
-
-bool Database2ResultSet::Create(const ModuleImplBaseClass *sibling,
-                                scoped_refptr<Database2ResultSet> *instance) {
-  assert(instance);
-  return CreateModule<Database2ResultSet>(sibling->GetJsRunner(), instance)
-      && instance->get()->InitBaseFromSibling(sibling);
 }
