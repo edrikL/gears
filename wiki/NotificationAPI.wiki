@@ -61,20 +61,14 @@ int removeNotification(string id)
 // Specifies the title of the notification.
 readwrite attribute string               title
 
-// Specifies the icon to show. Only icon URL is supported.
-readwrite attribute string               icon
+// Specifies the icon to show.
+readwrite attribute string               iconUrl
 
 /// Optional
 
 // A unique ID for the notification. It can be used for duplicate detection.
-// If this is not set, a randomly generated GUID will be used.
+// If this is not set, a unique ID will be generated.
 readwrite attribute string               id
-
-// This is the time when the notification is meant to go away. If this is not
-// set, the notification just get displayed and goes away after the default
-// timeout. If it is set, then once displayed, the notification will remain on
-// screen until the user dismisses it or the desired time has arrived.
-readwrite attribute Date                 displayUntilTime
 
 // Specifies the 1st additional subtitle. For example, this could be used to
 // display the appointment time for the calendar notification.
@@ -87,6 +81,12 @@ readwrite attribute string               subtitle2
 // Specifies the main content of the notification. For example, email 
 // notifications could put snippet in this field.
 readwrite attribute string               description
+
+// This is the time when the notification is meant to go away. If this is not
+// set, the notification just get displayed and goes away after the default
+// timeout. If it is set, then once displayed, the notification will remain on
+// screen until the user dismisses it or the desired time has arrived.
+readwrite attribute Date                 displayUntilTime
 
 // Adds an action for this notification.
 // The parameter text specifies the text to display for the action.
