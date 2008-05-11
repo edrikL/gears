@@ -61,8 +61,8 @@ int removeNotification(string id)
 // Specifies the title of the notification.
 readwrite attribute string               title
 
-// Specifies the icon to show.
-readwrite attribute string               iconUrl
+// Specifies the URL of the icon to display.
+readwrite attribute string               icon
 
 /// Optional
 
