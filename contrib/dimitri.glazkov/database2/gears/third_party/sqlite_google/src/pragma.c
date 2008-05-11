@@ -14,6 +14,7 @@
 ** $Id: pragma.c,v 1.139 2007/05/23 13:50:24 danielk1977 Exp $
 */
 #include "sqliteInt.h"
+#include "btreeInt.h"
 #include "os.h"
 #include <ctype.h>
 
@@ -1130,6 +1131,40 @@ void sqlite3Pragma(
 pragma_out:
   sqliteFree(zLeft);
   sqliteFree(zRight);
+}
+
+int sqlite3_pragma_get_user_version(sqlite3 *sqlite, int *user_version) {
+  // grab actual (not temporary tables) database
+  Btree *bt = sqlite->aDb[0].pBt;
+  // 6 = user_version cookie
+  // because sqlite3BtreeGetMeta sets a table read lock, it is safe to use
+  // without explicit read transaction. Besides, it is very unlikely we will
+  // ever call this outside of a transaction.
+  return sqlite3BtreeGetMeta(bt, 6, (u32 *)user_version);
+}
+
+int sqlite3_pragma_set_user_version(sqlite3 *sqlite, int user_version) {
+  Btree *bt = sqlite->aDb[0].pBt;
+  int rc;
+  // have to enclose this in a write-transaction, if transaction isn't already
+  // in progress
+  int needs_transaction = bt->inTrans != TRANS_WRITE;
+  if (needs_transaction) {
+    // begin write transaction, if not already started
+    rc = sqlite3BtreeBeginTrans(bt, 1);
+    if (rc != SQLITE_OK) {
+      return rc;
+    }
+  }
+  rc = sqlite3BtreeUpdateMeta(bt, 6, (u32)user_version);
+  if (needs_transaction) {
+    if (rc != SQLITE_OK) {
+      sqlite3BtreeRollback(bt);
+      return rc;
+    }
+    return sqlite3BtreeCommit(bt);
+  }
+  return rc;
 }
 
 #endif /* SQLITE_OMIT_PRAGMA || SQLITE_OMIT_PARSER */

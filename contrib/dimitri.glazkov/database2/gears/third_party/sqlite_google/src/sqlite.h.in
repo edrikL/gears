@@ -2665,6 +2665,29 @@ int sqlite3_blob_read(sqlite3_blob *, void *z, int n, int iOffset);
 */
 int sqlite3_blob_write(sqlite3_blob *, const void *z, int n, int iOffset);
 
+#if !defined(SQLITE_OMIT_PRAGMA) && !defined(SQLITE_OMIT_PARSER)
+
+/*
+** CAPI3REF: Read User Version Value
+**
+** This function reads the user version cookie and sets the value of 
+** user_version to it.
+**
+** Returns SQLITE_OK on success. Otherwise, an error code is returned
+*/
+int sqlite3_pragma_get_user_version(sqlite3*, int *user_version);
+
+/*
+** CAPI3REF: Write User Version Value
+**
+** This function writes the user version cookie.
+**
+** returns SQLITE_OK on success. Otherwise, an error code is returned
+*/
+int sqlite3_pragma_set_user_version(sqlite3*, int user_version);
+
+#endif /* SQLITE_OMIT_PRAGMA || SQLITE_OMIT_PARSER */
+
 /*
 ** Undo the hack that converts floating point types to integer for
 ** builds on processors without floating point support.
