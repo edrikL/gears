@@ -58,7 +58,16 @@ class Mutex {
   // FUNCTION OF THE TIME, or of any other state not protected by the Mutex!
   void Await(const Condition &cond);
 
+  // As Await, but will unblock once the specified time interval has expired, if
+  // the condition has not become true by that time. Note that there is no
+  // guarantee that the thread will be unblocked immediately once the specified
+  // interval has elapsed. Return value indicates whether the condition became
+  // true.
+  bool AwaitWithTimeout(const Condition &cond, int timeout_milliseconds);
+
  private:
+  // Implementation for Await and AwaitWithTimeout.
+  bool AwaitImpl(const Condition &cond, int64 end_time);
 #ifdef DEBUG
   bool is_locked_;
 #endif // DEBUG
