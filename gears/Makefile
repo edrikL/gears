@@ -791,15 +791,39 @@ $(BROWSER)_CPPSRCS += \
 		$(NULL)
 endif
 
-#-----------------------------------------------------------------------------
-# desktop_notifier
-
-COMMON_VPATH += \
+# The browser module also needs these files, to communicate with the notifier.
+$(BROWSER)_VPATH += \
 		notifier \
 		$(NULL)
 
-NOTIFIER_CPPSRCS  += \
+$(BROWSER)_CPPSRCS += \
+		notifier_process_linux.cc \
+		notifier_process_osx.cc \
+		notifier_process_win32.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# desktop_notifier
+
+COMMON_VPATH	+= \
+		notifier \
+		$(NULL)
+
+NOTIFIER_CPPSRCS += \
+		ipc_message_queue_win32.cc \
+		message_queue.cc \
+		message_queue_ie.cc \
+		mutex.cc \
 		notifier.cc \
+		notifier_process_linux.cc \
+		notifier_process_osx.cc \
+		notifier_process_win32.cc \
+		serialization.cc \
+		stopwatch.cc \
+		stopwatch_posix.cc \
+		stopwatch_win32.cc \
+		string16.cc \
+		string_utils.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------

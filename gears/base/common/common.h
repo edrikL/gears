@@ -67,8 +67,8 @@
 #define RETURN_NORMAL()  return S_OK
 #define RETURN_EXCEPTION(msg)  \
   {  \
-    /* AtlReportError has char* and WCHAR* versions */ \
-    return AtlReportError(CLSID_NULL, msg); \
+  /* AtlReportError has char* and WCHAR* versions */ \
+  return AtlReportError(CLSID_NULL, msg); \
   }
 
 #elif BROWSER_FF
@@ -87,6 +87,16 @@
 #include "gears/base/common/common_sf.h"
 #elif BROWSER_NPAPI
 #include "gears/base/common/common_np.h"
+#elif BROWSER_NONE
+
+// TODO(jianli): implement a simple logging for other platforms.
+// In long term, we will use the logging code from brettw.
+#ifdef WIN32
+#include "gears/base/common/common_ie.h"
+#else
+#define LOG(args)  __noop
+#endif
+
 #else
 #error "common.h: BROWSER_?? not defined."
 #endif

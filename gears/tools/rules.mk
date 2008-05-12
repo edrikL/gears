@@ -325,16 +325,16 @@ endif
 ifneq ($(OS),wince)
 ifneq ($(OS),android)
 # TODO(cprince): Get tools to link on WinCE.
-modules:: $(NOTIFIER_EXE) $(PERF_TOOL_EXE)
+modules:: $(PERF_TOOL_EXE)
 endif
 endif
 
 # TODO(aa): Should this run on wince too?
 # TODO(aa): Implement crash senders for more platforms
+# TODO(jianli): Extend notifier building to other platforms.
 ifeq ($(OS),win32)
-modules:: $(CRASH_SENDER_EXE)
+modules:: $(CRASH_SENDER_EXE) $(NOTIFIER_EXE)
 endif
-
 
 
 clean::

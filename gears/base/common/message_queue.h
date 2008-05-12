@@ -33,19 +33,14 @@
 #include "gears/base/common/mutex.h"
 #include "third_party/linked_ptr/linked_ptr.h"
 
-// TODO(mpcomplete): implement these.
-#if BROWSER_NPAPI && defined(WIN32)
-#define BROWSER_IE 1
-#endif
-
 // TODO(michaeln): These should be defined by a threading abstraction
 // layer.
 #if BROWSER_FF
 typedef int ThreadId;
-#elif BROWSER_IE
-typedef DWORD ThreadId;
 #elif BROWSER_WEBKIT
 typedef pthread_t ThreadId;
+#elif BROWSER_IE || defined(WIN32) || defined(WINCE)
+typedef DWORD ThreadId;
 #endif
 
 
@@ -162,10 +157,5 @@ class MockThreadMessageQueue : public ThreadMessageQueue {
   DISALLOW_EVIL_CONSTRUCTORS(MockThreadMessageQueue);
 };
 #endif  // USING_CCTESTS
-
-// TODO(mpcomplete): remove
-#if BROWSER_NPAPI
-#undef BROWSER_IE
-#endif
 
 #endif  // GEARS_BASE_COMMON_MESSAGE_QUEUE_H__

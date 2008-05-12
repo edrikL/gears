@@ -36,6 +36,7 @@
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 class HtmlDialog;
+class IpcMessageQueue;
 
 // This is the backend object that implements our Desktop functionality in
 // a module-neutral way.
@@ -134,7 +135,7 @@ class Desktop {
 
 class GearsDesktop : public ModuleImplBaseClassVirtual {
  public:
-  GearsDesktop() : ModuleImplBaseClassVirtual("GearsDesktop") {}
+  GearsDesktop();
 
   // IN: string name, string url, object icons, optional string description
   // OUT: void
@@ -144,7 +145,13 @@ class GearsDesktop : public ModuleImplBaseClassVirtual {
   // OUT: GearsBlob[] files
   void GetLocalFiles(JsCallContext *context);
 
+  // IN: object with named properties
+  // OUT: void
+  void AddNotification(JsCallContext *context);
+
  private:
+  IpcMessageQueue *ipc_message_queue_;
+
   DISALLOW_EVIL_CONSTRUCTORS(GearsDesktop);
 };
 

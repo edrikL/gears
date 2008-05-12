@@ -152,6 +152,9 @@ CPPFLAGS += -I../third_party/libgd
 FF2_CPPFLAGS += -DJS_THREADSAFE
 FF3_CPPFLAGS += -DJS_THREADSAFE
 
+# Common items, like notifier, is not related to any browser.
+COMMON_CPPFLAGS += -DBROWSER_NONE=1
+
 ######################################################################
 # OS == linux
 ######################################################################

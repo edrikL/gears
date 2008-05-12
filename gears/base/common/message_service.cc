@@ -153,7 +153,7 @@ class ObserverCollection {
 // static
 MessageService *MessageService::GetInstance() {
   static MessageService g_service_(ThreadMessageQueue::GetInstance(),
-                                   IpcMessageQueue::GetInstance());
+                                   IpcMessageQueue::GetPeerQueue());
   return &g_service_;
 }
 

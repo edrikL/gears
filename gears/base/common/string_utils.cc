@@ -144,7 +144,7 @@ bool UTF8ToString16(const char *in, int len, std::string16 *out16) {
     *out16 = STRING16(L"");
     return true;
   }
-#if BROWSER_IE
+#if BROWSER_IE || defined(WIN32) || defined(WINCE)
   int out_len = MultiByteToWideChar(CP_UTF8, 0, in, len, NULL, 0);
   if (out_len <= 0)
     return false;
@@ -180,7 +180,7 @@ bool String16ToUTF8(const char16 *in, int len, std::string *out8) {
     *out8 = "";
     return true;
   }
-#if BROWSER_IE
+#if BROWSER_IE || defined(WIN32) || defined(WINCE)
   int out_len = WideCharToMultiByte(CP_UTF8, 0, in, len, NULL, 0, NULL, NULL);
   if (out_len <= 0)
     return false;
