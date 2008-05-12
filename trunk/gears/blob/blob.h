@@ -47,6 +47,13 @@ class GearsBlob : public ModuleImplBaseClassVirtual {
   // OUT: int64
   void GetLength(JsCallContext *context);
 
+#ifdef DEBUG
+  // Returns whether or not this Blob has identical contents to another Blob.
+  // IN: GearsBlob anotherBlob
+  // OUT: bool
+  void HasSameContentsAs(JsCallContext *context);
+#endif
+
   // IN: int64 offset, optional int64 length
   // OUT: GearsBlob
   void Slice(JsCallContext *context);
@@ -58,6 +65,8 @@ class GearsBlob : public ModuleImplBaseClassVirtual {
   void Reset(BlobInterface *blob) {
     contents_.reset(blob);
   }
+
+  virtual MarshaledModule *AsMarshaledModule();
 
  private:
   scoped_refptr<BlobInterface> contents_;

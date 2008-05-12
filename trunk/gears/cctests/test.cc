@@ -33,6 +33,11 @@
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/module_wrapper.h"
+#include "gears/base/common/string_utils.h"
+#ifndef OFFICIAL_BUILD
+#include "gears/blob/blob.h"
+#include "gears/blob/buffer_blob.h"
+#endif
 
 DECLARE_GEARS_WRAPPER(GearsTest);
 
@@ -69,6 +74,9 @@ void Dispatcher<GearsTest>::Init() {
                  &GearsTest::TestGeolocationFormRequestBody);
   RegisterMethod("testGeolocationGetLocationFromResponse",
                  &GearsTest::TestGeolocationGetLocationFromResponse);
+#endif
+#ifndef OFFICIAL_BUILD
+  RegisterMethod("createBlobFromString", &GearsTest::CreateBlobFromString);
 #endif
 }
 
@@ -1967,7 +1975,7 @@ void GearsTest::TestEntriesPresentInBrowserCache(JsCallContext *context) {
 #else
 void GearsTest::TestParseGeolocationOptions(JsCallContext *context) {
   ::TestParseGeolocationOptions(context, GetJsRunner());
-} 
+}
 
 void GearsTest::TestGeolocationFormRequestBody(JsCallContext *context) {
 #ifdef WIN32
@@ -1979,7 +1987,31 @@ void GearsTest::TestGeolocationGetLocationFromResponse(JsCallContext *context) {
 #ifdef WIN32
   ::TestGeolocationGetLocationFromResponse(context, GetJsRunner());
 #endif
-} 
+}
 #endif
+
+#ifndef OFFICIAL_BUILD
+void GearsTest::CreateBlobFromString(JsCallContext *context) {
+  std::string16 input_utf16;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &input_utf16 }
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) {
+    return;
+  }
+  std::string input_utf8;
+  String16ToUTF8(input_utf16.c_str(), &input_utf8);
+  scoped_refptr<GearsBlob> gears_blob;
+  CreateModule<GearsBlob>(GetJsRunner(), &gears_blob);
+  if (!gears_blob->InitBaseFromSibling(this)) {
+    context->SetException(STRING16(L"Initializing base class failed."));
+    return;
+  }
+  gears_blob->Reset(new BufferBlob(input_utf8.c_str(), input_utf8.size()));
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, gears_blob.get());
+  ReleaseNewObjectToScript(gears_blob.get());
+}
+#endif  // OFFICIAL_BUILD
 
 #endif  // USING_CCTESTS

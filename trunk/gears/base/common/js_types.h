@@ -642,7 +642,8 @@ class JsParamFetcher {
   // Method to get the type of a parameter
   JsParamType GetType(int i);
 
-  bool GetAsMarshaledJsToken(int i, MarshaledJsToken **out,
+  bool GetAsMarshaledJsToken(int i, JsRunnerInterface *js_runner,
+                             MarshaledJsToken **out,
                              std::string16 *error_message_out);
 
   void SetReturnValue(JsToken retval);
