@@ -41,7 +41,7 @@
 #else
 #include "gears/geolocation/geolocation.h"
 #endif  // OFFICIAL_BUILD
-#include "gears/httprequest/npapi/httprequest_np.h"
+#include "gears/httprequest/httprequest.h"
 #include "gears/localserver/npapi/localserver_np.h"
 #include "gears/timer/timer.h"
 #ifdef WIN32
