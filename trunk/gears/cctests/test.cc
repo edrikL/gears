@@ -145,7 +145,7 @@ bool TestIpcMessageQueue();  // from ipc_message_queue_win32_test.cc
 bool TestStopwatch();
 bool TestJsonEscaping();
 bool TestArray(JsRunnerInterface *js_runner, JsCallContext *context);
-bool TestObject(JsRunnerInterface *js_runner, JsCallContext *context);
+bool TestEvent(std::string16 *error);  // From event_test.cc
 
 void CreateObjectBool(JsCallContext* context,
                       JsRunnerInterface* js_runner,
@@ -226,6 +226,7 @@ void GearsTest::RunTests(JsCallContext *context) {
   permissions->SetCanAccessGears(cc_tests_origin,
                                  PermissionsDB::PERMISSION_ALLOWED);
 
+  std::string16 error;
   bool ok = true;
   ok &= TestStringUtils();
   ok &= TestFileUtils();
@@ -267,6 +268,7 @@ void GearsTest::RunTests(JsCallContext *context) {
   ok &= TestStopwatch();
   ok &= TestJsonEscaping();
   ok &= TestArray(GetJsRunner(), context);
+  ok &= TestEvent(&error);
 
   // We have to call GetDB again since TestCapabilitiesDBAll deletes
   // the previous instance.
@@ -274,9 +276,13 @@ void GearsTest::RunTests(JsCallContext *context) {
   permissions->SetCanAccessGears(cc_tests_origin,
                                  PermissionsDB::PERMISSION_NOT_SET);
 
-  // If a test has failed but not set an exception, set a generic message here.
-  if (!ok && !context->is_exception_set()) {
-    context->SetException(STRING16(L"RunTests failed."));
+  if (!ok) {
+    if (error.empty()) {
+      // If a test has failed but not set an error, set a generic message here.
+      context->SetException(STRING16(L"RunTests failed."));
+    } else {
+      context->SetException(error);
+    }
   }
 }
 

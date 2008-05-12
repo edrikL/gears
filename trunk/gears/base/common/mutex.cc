@@ -34,6 +34,7 @@
 #endif
 
 #include "gears/base/common/mutex.h"
+#include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis()
 
 Mutex::Mutex()
 #ifdef DEBUG
@@ -86,7 +87,23 @@ void Mutex::Unlock() {
 
 
 void Mutex::Await(const Condition &cond) {
-  while (!cond.Eval()) {
+  bool result = AwaitImpl(cond, 0);
+  // We call AwaitImpl without a timeout, so it should always return with the
+  // condition having become true.
+  assert(result);
+}
+
+
+bool Mutex::AwaitWithTimeout(const Condition &cond, int timeout_milliseconds) {
+  assert(timeout_milliseconds > 0);
+  return AwaitImpl(cond, GetCurrentTimeMillis() + timeout_milliseconds);
+}
+
+
+bool Mutex::AwaitImpl(const Condition &cond, int64 end_time) {
+  // end_time is milliseconds since the epoch. A value of zero indicates no
+  // timeout.
+  while (!cond.Eval() && (end_time == 0 || GetCurrentTimeMillis() < end_time)) {
     Unlock();
 
     // Yield the rest of our CPU timeslice before reacquiring the lock.
@@ -100,4 +117,5 @@ void Mutex::Await(const Condition &cond) {
 
     Lock();
   }
+  return cond.Eval();
 }

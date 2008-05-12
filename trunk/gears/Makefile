@@ -416,6 +416,8 @@ $(BROWSER)_CPPSRCS	+= \
 		base64.cc \
 		circular_buffer_test.cc \
 		database_name_table.cc \
+		event.cc \
+		event_test.cc \
 		file.cc \
 		file_test.cc \
 		html_event_monitor.cc \
