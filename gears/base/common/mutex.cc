@@ -87,10 +87,14 @@ void Mutex::Unlock() {
 
 
 void Mutex::Await(const Condition &cond) {
+#ifdef DEBUG
   bool result = AwaitImpl(cond, 0);
   // We call AwaitImpl without a timeout, so it should always return with the
   // condition having become true.
   assert(result);
+#else 
+  AwaitImpl(cond, 0);
+#endif
 }
 
 
