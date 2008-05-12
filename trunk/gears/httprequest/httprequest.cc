@@ -1,9 +1,9 @@
 // Copyright 2008, Google Inc.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,39 +13,40 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/httprequest/npapi/httprequest_np.h"
+#include "gears/httprequest/httprequest.h"
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/url_utils.h"
-#ifdef OFFICIAL_BUILD
+#ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
-#else  // OFFICIAL_BUILD
 #include "gears/blob/blob.h"
-#endif  // OFFICIAL_BUILD
+#include "gears/blob/buffer_blob.h"
+#endif  // not OFFICIAL_BUILD
 
 // Error messages.
 static const char16 *kRequestFailedError = STRING16(L"The request failed.");
 static const char16 *kInternalError = STRING16(L"Internal error.");
 static const char16 *kAlreadyOpenError =  STRING16(L"Request is already open.");
-static const char16 *kFailedURLResolveError =  
+static const char16 *kFailedURLResolveError =
                          STRING16(L"Failed to resolve URL.");
+static const char16 *kNotCompleteError = STRING16(L"Request is not done.");
 static const char16 *kNotOpenError = STRING16(L"Request is not open.");
 static const char16 *kNotInteractiveError =
                         STRING16(L"Request is not loading or done.");
-static const char16 *kURLNotFromSameOriginError = 
+static const char16 *kURLNotFromSameOriginError =
                          STRING16(L"URL is not from the same origin.");
 
 DECLARE_DISPATCHER(GearsHttpRequest);
@@ -53,27 +54,32 @@ DECLARE_DISPATCHER(GearsHttpRequest);
 // static
 template<>
 void Dispatcher<GearsHttpRequest>::Init() {
+  RegisterMethod("abort", &GearsHttpRequest::Abort);
+  RegisterMethod("getResponseHeader", &GearsHttpRequest::GetResponseHeader);
+  RegisterMethod("getAllResponseHeaders",
+                 &GearsHttpRequest::GetAllResponseHeaders);
   RegisterMethod("open", &GearsHttpRequest::Open);
   RegisterMethod("setRequestHeader", &GearsHttpRequest::SetRequestHeader);
   RegisterMethod("send", &GearsHttpRequest::Send);
-  RegisterMethod("abort", &GearsHttpRequest::Abort);
-  RegisterMethod("getResponseHeader", &GearsHttpRequest::GetResponseHeader);
-  RegisterMethod("getAllResponseHeaders", 
-                 &GearsHttpRequest::GetAllResponseHeaders);
-
-  RegisterProperty("onreadystatechange", 
-                   &GearsHttpRequest::GetOnReadyStateChange, 
+  RegisterProperty("onreadystatechange",
+                   &GearsHttpRequest::GetOnReadyStateChange,
                    &GearsHttpRequest::SetOnReadyStateChange);
-
   RegisterProperty("readyState", &GearsHttpRequest::GetReadyState, NULL);
+#ifndef OFFICIAL_BUILD
+  RegisterProperty("responseBlob", &GearsHttpRequest::GetResponseBlob, NULL);
+#endif
   RegisterProperty("responseText", &GearsHttpRequest::GetResponseText, NULL);
   RegisterProperty("status", &GearsHttpRequest::GetStatus, NULL);
   RegisterProperty("statusText", &GearsHttpRequest::GetStatusText, NULL);
 }
 
-GearsHttpRequest::GearsHttpRequest() : request_(NULL),
-                                       content_type_header_was_set_(false),
-                                       has_fired_completion_event_(false) {
+const std::string GearsHttpRequest::kModuleName("GearsHttpRequest");
+
+GearsHttpRequest::GearsHttpRequest()
+    : ModuleImplBaseClassVirtual(kModuleName),
+      request_(NULL),
+      content_type_header_was_set_(false),
+      has_fired_completion_event_(false) {
 }
 
 GearsHttpRequest::~GearsHttpRequest() {
@@ -83,6 +89,7 @@ GearsHttpRequest::~GearsHttpRequest() {
 void GearsHttpRequest::HandleEvent(JsEventType event_type) {
   assert(event_type == JSEVENT_UNLOAD);
   onreadystatechangehandler_.release();
+  unload_monitor_.reset(NULL);
   AbortRequest();
 }
 
@@ -94,30 +101,27 @@ void GearsHttpRequest::Open(JsCallContext *context) {
     context->SetException(kAlreadyOpenError);
     return;
   }
-  
+
   std::string16 method;
   std::string16 url;
-  bool async;   // We ignore this parameter.
-  
+  bool async;  // We ignore this parameter.
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &method },
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &url },
     { JSPARAM_OPTIONAL, JSPARAM_BOOL, &async },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
-  if (context->is_exception_set())
+  if (context->is_exception_set()) {
     return;
-    
+  }
   if (method.empty()) {
     context->SetException(STRING16(L"The method parameter is required."));
     return;
   }
-  
   if (url.empty()) {
     context->SetException(STRING16(L"The url parameter is required."));
     return;
   }
-  
   std::string16 full_url;
   std::string16 exception_message;
   if (!ResolveUrl(url, &full_url, &exception_message)) {
@@ -126,28 +130,23 @@ void GearsHttpRequest::Open(JsCallContext *context) {
   }
 
   CreateRequest();
-  
-  // Create an event monitor to alert us when the page unloads.
-  if (unload_monitor_ == NULL) { 
-    unload_monitor_.reset(new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD,
-                                             this));
+  if (unload_monitor_ == NULL) {
+    unload_monitor_.reset(
+        new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD, this));
   }
-
   content_type_header_was_set_ = false;
   has_fired_completion_event_ = false;
-
   if (!request_->Open(method.c_str(), full_url.c_str(), true)) {
+    ReleaseRequest();
     context->SetException(kInternalError);
     return;
   }
-
-  return;
 }
 
 static bool IsDisallowedHeader(const char16 *header) {
   // Headers which cannot be set according to the w3c spec.
   static const char16* kDisallowedHeaders[] = {
-      STRING16(L"Accept-Charset"), 
+      STRING16(L"Accept-Charset"),
       STRING16(L"Accept-Encoding"),
       STRING16(L"Connection"),
       STRING16(L"Content-Length"),
@@ -163,8 +162,9 @@ static bool IsDisallowedHeader(const char16 *header) {
       STRING16(L"Upgrade"),
       STRING16(L"Via") };
   for (int i = 0; i < static_cast<int>(ARRAYSIZE(kDisallowedHeaders)); ++i) {
-    if (StringCompareIgnoreCase(header, kDisallowedHeaders[i]) == 0)
+    if (StringCompareIgnoreCase(header, kDisallowedHeaders[i]) == 0) {
       return true;
+    }
   }
   return false;
 }
@@ -180,7 +180,7 @@ void GearsHttpRequest::SetRequestHeader(JsCallContext *context) {
   if (context->is_exception_set()) {
     return;
   }
-  
+
   if (!IsOpen()) {
     context->SetException(kNotOpenError);
     return;
@@ -193,7 +193,7 @@ void GearsHttpRequest::SetRequestHeader(JsCallContext *context) {
     context->SetException(kInternalError);
     return;
   }
-  if (StringCompareIgnoreCase(name.c_str(), 
+  if (StringCompareIgnoreCase(name.c_str(),
       HttpConstants::kContentTypeHeader) == 0) {
     content_type_header_was_set_ = true;
   }
@@ -204,47 +204,73 @@ void GearsHttpRequest::Send(JsCallContext *context) {
     context->SetException(kNotOpenError);
     return;
   }
-  std::string16 post_data;
-#ifdef OFFICIAL_BUILD
-  // Blobs not yet supported in official builds.
-#else  // OFFICIAL_BUILD
-  ModuleImplBaseClass *blob_base(0);
-#endif  // OFFICIAL_BUILD
 
-  JsArgument argv[] = {
-    { JSPARAM_OPTIONAL, JSPARAM_STRING16, &post_data },
-#ifdef OFFICIAL_BUILD
-  // Blobs not yet supported in official builds.
-#else  // OFFICIAL_BUILD
-    { JSPARAM_OPTIONAL, JSPARAM_DISPATCHER_MODULE, &blob_base }
-#endif  // OFFICIAL_BUILD
-  };
-  context->GetArguments(ARRAYSIZE(argv), argv);
-  if (context->is_exception_set())
-    return;
+  std::string16 post_data_string;
+#ifndef OFFICIAL_BUILD
+  ModuleImplBaseClass *post_data_module = NULL;
+#endif
+
+  int post_data_type = context->GetArgumentType(0);
+  // The Gears JS API treats a (JavaScript) null and undefined the same.
+  // Furthermore, if there is no arg at all (rather than an explicit null or
+  // undefined arg) then GetArgumentType will return JSPARAM_UNKNOWN.
+  if ((post_data_type != JSPARAM_NULL) &&
+      (post_data_type != JSPARAM_UNDEFINED) &&
+      (post_data_type != JSPARAM_UNKNOWN)) {
+    JsArgument argv[] = {
+      { JSPARAM_OPTIONAL, JSPARAM_UNKNOWN, NULL }
+    };
+    if (post_data_type == JSPARAM_STRING16) {
+      argv[0].type = JSPARAM_STRING16;
+      argv[0].value_ptr = &post_data_string;
+#ifndef OFFICIAL_BUILD
+    // Dispatcher modules are also JavaScript objects, and so it is valid for
+    // GetArgumentType to return JSPARAM_OBJECT for a Dispatcher module.
+    // TODO(nigeltao): fix this, so that it's always just
+    // JSPARAM_DISPATCHER_MODULE, and not JSPARAM_OBJECT.
+    } else if ((post_data_type == JSPARAM_DISPATCHER_MODULE) ||
+               (post_data_type == JSPARAM_OBJECT)) {
+      argv[0].type = JSPARAM_DISPATCHER_MODULE;
+      argv[0].value_ptr = &post_data_module;
+#endif
+    } else {
+      context->SetException(
+          STRING16(L"First parameter must be a Blob or a string."));
+      return;
+    }
+    context->GetArguments(ARRAYSIZE(argv), argv);
+    if (context->is_exception_set()) {
+      return;
+    }
+#ifndef OFFICIAL_BUILD
+    if (post_data_module &&
+        GearsBlob::kModuleName != post_data_module->get_module_name()) {
+      context->SetException(
+          STRING16(L"First parameter must be a Blob or a string."));
+      return;
+    }
+#endif
+  }
 
   scoped_refptr<HttpRequest> request_being_sent = request_;
 
   bool ok = false;
-  if (!post_data.empty()) {
-    // TODO(bgarcia): make sure blob_base is not set?
+  if (!post_data_string.empty()) {
     if (!content_type_header_was_set_) {
       request_->SetRequestHeader(HttpConstants::kContentTypeHeader,
                                  HttpConstants::kMimeTextPlain);
     }
-    ok = request_->SendString(post_data.c_str());
-#ifdef OFFICIAL_BUILD
-    // Blobs not yet supported in official builds.
-#else  // OFFICIAL_BUILD
-  } else if (blob_base) {
-    scoped_refptr<BlobInterface> blob;
-    static_cast<GearsBlob*>(blob_base)->GetContents(&blob);
+    ok = request_->SendString(post_data_string.c_str());
+#ifndef OFFICIAL_BUILD
+  } else if (post_data_module) {
     if (!content_type_header_was_set_) {
       request_->SetRequestHeader(HttpConstants::kContentTypeHeader,
                                  HttpConstants::kMimeApplicationOctetStream);
     }
+    scoped_refptr<BlobInterface> blob;
+    static_cast<GearsBlob*>(post_data_module)->GetContents(&blob);
     ok = request_->SendBlob(blob.get());
-#endif  // OFFICIAL_BUILD
+#endif
   } else {
     ok = request_->Send();
   }
@@ -253,7 +279,7 @@ void GearsHttpRequest::Send(JsCallContext *context) {
     if (!has_fired_completion_event_) {
       // We only throw here if we haven't surfaced the error through
       // an onreadystatechange callback. Since the JS code for
-      // xhr.onreadystatechange might call xhr.open(), check whether 
+      // xhr.onreadystatechange might call xhr.open(), check whether
       // 'request_' has changed, which indicates that happened.
       // Also, we don't trust IsComplete() to indicate that we actually
       // fired the event, the underlying C++ object *may* declare itself
@@ -274,13 +300,12 @@ void GearsHttpRequest::Abort(JsCallContext *context) {
 void GearsHttpRequest::GetResponseHeader(JsCallContext *context) {
   std::string16 header_name;
   JsArgument argv[] = {
-     { JSPARAM_REQUIRED, JSPARAM_STRING16, &header_name },
-   };
-   context->GetArguments(ARRAYSIZE(argv), argv);
-   if (context->is_exception_set())
-     return;
-  
-  
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &header_name },
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) {
+    return;
+  }
   if (!(IsInteractive() || IsComplete())) {
     context->SetException(kNotInteractiveError);
     return;
@@ -295,7 +320,6 @@ void GearsHttpRequest::GetResponseHeader(JsCallContext *context) {
     context->SetException(kInternalError);
     return;
   }
-
   context->SetReturnValue(JSPARAM_STRING16, &header_value);
 }
 
@@ -309,19 +333,17 @@ void GearsHttpRequest::GetAllResponseHeaders(JsCallContext *context) {
     context->SetReturnValue(JSPARAM_STRING16, &empty_string);
     return;
   }
-
   std::string16 all_headers;
   if (!request_->GetAllResponseHeaders(&all_headers)) {
     context->SetException(kInternalError);
     return;
   }
-
   context->SetReturnValue(JSPARAM_STRING16, &all_headers);
 }
 
 void GearsHttpRequest::GetOnReadyStateChange(JsCallContext *context) {
   if (onreadystatechangehandler_.get() == NULL) {
-    context->SetReturnValue(JSPARAM_NULL, NULL);
+    context->SetReturnValue(JSPARAM_NULL, 0);
   } else {
     const JsToken callback = onreadystatechangehandler_->token();
     context->SetReturnValue(JSPARAM_FUNCTION, &callback);
@@ -329,20 +351,15 @@ void GearsHttpRequest::GetOnReadyStateChange(JsCallContext *context) {
 }
 
 void GearsHttpRequest::SetOnReadyStateChange(JsCallContext *context) {
-  // Get & sanitize parameters.
   JsRootedCallback *function = NULL;
   JsArgument argv[] = {
     { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &function },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
-  scoped_ptr<JsRootedCallback> scoped_function(function);
-  
-  if (context->is_exception_set())
+  if (context->is_exception_set()) {
     return;
-
-  // release onreadystatechangehandler_ at end of scope
-  // and retain contents of scoped_function.
-  onreadystatechangehandler_.swap(scoped_function);
+  }
+  onreadystatechangehandler_.reset(function);
 }
 
 void GearsHttpRequest::GetReadyState(JsCallContext *context) {
@@ -350,25 +367,80 @@ void GearsHttpRequest::GetReadyState(JsCallContext *context) {
   context->SetReturnValue(JSPARAM_INT, &ready_state);
 }
 
+#ifndef OFFICIAL_BUILD
+void GearsHttpRequest::GetResponseBlob(JsCallContext *context) {
+  if (!IsComplete()) {
+    context->SetException(kNotCompleteError);
+    return;
+  }
+  if (!IsValidResponse()) {
+    context->SetReturnValue(JSPARAM_NULL, 0);
+    return;
+  }
+
+  // Re-use the previously created GearsBlob object, if it exists.
+  if (response_blob_.get()) {
+    ReleaseNewObjectToScript(response_blob_.get());
+    context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, response_blob_.get());
+    return;
+  }
+
+  // On some platforms' HttpRequest implementation (for example, IE/Windows),
+  // GetResponseBody() swaps the underyling data buffer, and so without this,
+  // calling GetResponseText() after calling GetResponseBody will incorrectly
+  // return an empty string.  This explicit read of response_text_ fixes that,
+  // but it does a possibly-unnecessary copy.
+  // TODO(nigeltao): once Blobs become part of the official build, make the
+  // Blob version of the canonical representation of the HTTP response, and
+  // implement GetResponseText simply as calling something like
+  // response_blob_->GetAsText(&str, encoding), and hence remove the need for
+  // this copy.
+  if (response_text_ == NULL) {
+    response_text_.reset(new std::string16);
+    request_->GetResponseBodyAsText(response_text_.get());
+  }
+
+  scoped_refptr<BlobInterface> blob(NULL);
+  scoped_ptr<std::vector<uint8> >body(request_->GetResponseBody());
+  if (body.get()) {
+    blob.reset(new BufferBlob(body.get()));
+  } else {
+    context->SetReturnValue(JSPARAM_NULL, 0);
+    return;
+  }
+
+  CreateModule<GearsBlob>(GetJsRunner(), &response_blob_);
+  if (!response_blob_->InitBaseFromSibling(this)) {
+    context->SetException(STRING16(L"Initializing base class failed."));
+    return;
+  }
+  response_blob_->Reset(blob.get());
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, response_blob_.get());
+  ReleaseNewObjectToScript(response_blob_.get());
+}
+#endif
+
 void GearsHttpRequest::GetResponseText(JsCallContext *context) {
   if (!(IsInteractive() || IsComplete())) {
     context->SetException(kNotInteractiveError);
     return;
   }
-  
-  std::string16 body;
-  
-  if (IsValidResponse()) {
-    if (!request_->GetResponseBodyAsText(&body)) {
-      context->SetException(kInternalError);
-      return;
-    }
+  // First, check the cached result (the response_text_ member variable).  It
+  // is only set if GetResponseText was previously called when IsComplete().
+  if (response_text_.get()) {
+    context->SetReturnValue(JSPARAM_STRING16, response_text_.get());
+    return;
   }
-
-  LOG(("GearsHttpRequest::get_responseText - %d chars\n",
-         body.length()));
-
-  context->SetReturnValue(JSPARAM_STRING16, &body);
+  scoped_ptr<std::string16> result(new std::string16);
+  bool is_valid_response = IsValidResponse();
+  if (is_valid_response && !request_->GetResponseBodyAsText(result.get())) {
+    context->SetException(kInternalError);
+    return;
+  }
+  context->SetReturnValue(JSPARAM_STRING16, result.get());
+  if (is_valid_response && IsComplete()) {
+    response_text_.swap(result);
+  }
 }
 
 void GearsHttpRequest::GetStatus(JsCallContext *context) {
@@ -381,7 +453,6 @@ void GearsHttpRequest::GetStatus(JsCallContext *context) {
     context->SetException(kInternalError);
     return;
   }
-    
   if (!IsValidResponseCode(status_code)) {
     context->SetException(kRequestFailedError);
     return;
@@ -398,18 +469,16 @@ void GearsHttpRequest::GetStatusText(JsCallContext *context) {
     context->SetException(kRequestFailedError);
     return;
   }
-
   std::string16 status_str;
   if (!request_->GetStatusText(&status_str)) {
     context->SetException(kInternalError);
     return;
   }
-  
   context->SetReturnValue(JSPARAM_STRING16, &status_str);
 }
 
 void GearsHttpRequest::AbortRequest() {
-  if (request_) {
+  if (request_.get()) {
     request_->SetOnReadyStateChange(NULL);
     request_->Abort();
     ReleaseRequest();
@@ -426,15 +495,19 @@ void GearsHttpRequest::CreateRequest() {
 
 
 void GearsHttpRequest::ReleaseRequest() {
-  if (request_) {
+  if (request_.get()) {
     request_->SetOnReadyStateChange(NULL);
-    request_ = NULL;
+    request_.reset(NULL);
   }
+  response_text_.reset(NULL);
+#ifndef OFFICIAL_BUILD
+  response_blob_.reset(NULL);
+#endif
 }
 
 HttpRequest::ReadyState GearsHttpRequest::GetState() {
   HttpRequest::ReadyState state = HttpRequest::UNINITIALIZED;
-  if (request_) {
+  if (request_.get()) {
     request_->GetReadyState(&state);
   }
   return state;
@@ -457,58 +530,53 @@ bool GearsHttpRequest::IsValidResponse() {
 // - ensures the the resulting url is from the same-origin.
 // - ensures the requested url is HTTP or HTTPS.
 //------------------------------------------------------------------------------
-bool GearsHttpRequest::ResolveUrl(const std::string16 &url, 
+bool GearsHttpRequest::ResolveUrl(const std::string16 &url,
                                   std::string16 *resolved_url,
                                   std::string16 *exception_message) {
   assert(resolved_url && exception_message);
-  if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), url.c_str(), 
+  if (!ResolveAndNormalize(EnvPageLocationUrl().c_str(), url.c_str(),
                            resolved_url)) {
     *exception_message = kFailedURLResolveError;
     return false;
   }
-
   SecurityOrigin url_origin;
   if (!url_origin.InitFromUrl(resolved_url->c_str()) ||
       !url_origin.IsSameOrigin(EnvPageSecurityOrigin())) {
     *exception_message = kURLNotFromSameOriginError;
     return false;
   }
-
   if (!HttpRequest::IsSchemeSupported(url_origin.scheme().c_str())) {
     *exception_message = STRING16(L"URL scheme '");
     *exception_message += url_origin.scheme();
     *exception_message += STRING16(L"' is not supported.");
     return false;
   }
-
   return true;
-                    
 }
 
 void GearsHttpRequest::DataAvailable(HttpRequest *source) {
-  assert(source == request_);
-  LOG(("GearsHttpRequest::DataAvailable\n"));
+  assert(source == request_.get());
   ReadyStateChanged(source);
 }
 
 void GearsHttpRequest::ReadyStateChanged(HttpRequest *source) {
-  assert(source == request_);
-  
-  // To remove cyclic dependencies we drop our reference to the callback when 
+  assert(source == request_.get());
+
+  // To remove cyclic dependencies we drop our reference to the callback when
   // the request is complete.
   bool is_complete = IsComplete();
-  JsRootedCallback *handler = is_complete ?
-                                  onreadystatechangehandler_.release() :
-                                  onreadystatechangehandler_.get();
-  
+  if (is_complete) {
+    has_fired_completion_event_ = true;
+  }
+  JsRootedCallback *handler = is_complete
+      ? onreadystatechangehandler_.release()
+      : onreadystatechangehandler_.get();
   if (handler) {
     JsRunnerInterface *runner = GetJsRunner();
     assert(runner);
-    
     if (runner) {
       runner->InvokeCallback(handler, 0, NULL, NULL);
     }
-    
     if (is_complete) {
       delete handler;
     }

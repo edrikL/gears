@@ -1144,53 +1144,15 @@ NPAPI_CPPSRCS	+= \
 
 
 #-----------------------------------------------------------------------------
-# httprequest/firefox
+# httprequest
 
-FF3_VPATH	+= \
-		httprequest/firefox \
+$(BROWSER)_VPATH += \
+		httprequest \
 		$(NULL)
 
-FF3_M4SRCS	+= \
-		httprequest.idl.m4 \
+$(BROWSER)_CPPSRCS += \
+		httprequest.cc \
 		$(NULL)
-
-FF3_IDLSRCS	+= \
-		httprequest.idl \
-		$(NULL)
-
-FF3_CPPSRCS	+= \
-		httprequest_ff.cc \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
-# httprequest/ie
-
-IE_VPATH	+= \
-		httprequest/ie \
-		$(NULL)
-
-IE_IDLSRCS	+= \
-		httprequest.idl \
-		$(NULL)
-
-IE_CPPSRCS	+= \
-		httprequest_ie.cc \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
-# httprequest/npapi
-
-NPAPI_VPATH += \
-		httprequest/npapi \
-		$(NULL)
-
-NPAPI_IDLSRCS	+= \
-		$(NULL)
-
-NPAPI_CPPSRCS	+= \
-		httprequest_np.cc \
-		$(NULL)
-
 
 #-----------------------------------------------------------------------------
 # blob

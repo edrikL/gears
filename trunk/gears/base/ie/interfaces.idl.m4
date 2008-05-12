@@ -55,7 +55,6 @@ import "ui/ie/html_dialog_host_iemobile.idl";
 import "console/ie/console.idl";
 import "database/ie/database.idl";
 import "factory/ie/factory.idl";
-import "httprequest/ie/httprequest.idl";
 
 import "localserver/ie/localserver.idl";
 import "workerpool/ie/workerpool.idl";
@@ -181,13 +180,5 @@ library GearsTypelib
   coclass GearsLocalServer
   {
     [default] interface GearsLocalServerInterface;
-  };
-
-  [
-    uuid(AAF5DBC9-70C8-45c2-B7AB-6576428F3CA3)
-  ]
-  coclass GearsHttpRequest
-  {
-    [default] interface GearsHttpRequestInterface;
   };
 };

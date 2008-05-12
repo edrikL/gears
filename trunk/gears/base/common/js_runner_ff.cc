@@ -50,7 +50,6 @@
 
 #include "genfiles/console.h"
 #include "genfiles/database.h"
-#include "genfiles/httprequest.h"
 #include "genfiles/localserver.h"
 #include "genfiles/workerpool.h"
 #include "gears/base/common/basictypes.h" // for DISALLOW_EVIL_CONSTRUCTORS
@@ -550,8 +549,6 @@ bool JsRunner::InitJavaScriptEngine() {
     {GEARSMANAGEDRESOURCESTOREINTERFACE_IID, NULL},
     {GEARSRESOURCESTOREINTERFACE_IID, NULL},
     // GEARSFILESUBMITTERINTERFACE_IID can never be created in a child worker
-    // httprequest
-    {GEARSHTTPREQUESTINTERFACE_IID, NULL},
     // console
     {GEARSCONSOLEINTERFACE_IID, NULL}
   };
