@@ -44,14 +44,12 @@
 #else
 #include "gears/geolocation/geolocation.h"
 #endif  // OFFICIAL_BUILD
-#include "gears/httprequest/firefox/httprequest_ff.h"
-
+#include "gears/httprequest/httprequest.h"
 #ifdef OFFICIAL_BUILD
 // The Image API has not been finalized for official builds
 #else
 #include "gears/image/image_loader.h"
 #endif
-
 #include "gears/localserver/firefox/localserver_ff.h"
 #include "gears/timer/timer.h"
 #include "gears/workerpool/firefox/workerpool.h"
@@ -165,6 +163,8 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
 #endif
   } else if (object_name == STRING16(L"beta.desktop")) {
     CreateModule<GearsDesktop>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.httprequest")) {
+    CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
 #ifdef OFFICIAL_BUILD
   // The Geolocation API has not been finalized for official builds.
 #else
@@ -210,8 +210,6 @@ bool GearsFactory::CreateISupportsModule(const std::string16 &object_name,
     isupports = do_QueryInterface(new GearsConsole(), &nr);
   } else if (object_name == STRING16(L"beta.database")) {
     isupports = do_QueryInterface(new GearsDatabase(), &nr);
-  } else if (object_name == STRING16(L"beta.httprequest")) {
-    isupports = do_QueryInterface(new GearsHttpRequest(), &nr);
   } else if (object_name == STRING16(L"beta.localserver")) {
     isupports = do_QueryInterface(new GearsLocalServer(), &nr);
   } else if (object_name == STRING16(L"beta.workerpool")) {

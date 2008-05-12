@@ -40,7 +40,7 @@
 #else
 #include "gears/geolocation/geolocation.h"
 #endif  // OFFICIAL_BUILD
-#include "gears/httprequest/ie/httprequest_ie.h"
+#include "gears/httprequest/httprequest.h"
 #ifdef WINCE
 // The Image API is not yet available for WinCE.
 #else
@@ -177,6 +177,8 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   } else if (object_name == STRING16(L"beta.geolocation")) {
     CreateModule<GearsGeolocation>(GetJsRunner(), &object);
 #endif  // OFFICIAL_BUILD
+  } else if (object_name == STRING16(L"beta.httprequest")) {
+    CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
 #ifdef WINCE
 // The Image API is not yet available for WinCE.
 #else
@@ -225,11 +227,6 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
   } else if (object_name == STRING16(L"beta.database")) {
     CComObject<GearsDatabase> *obj;
     hr = CComObject<GearsDatabase>::CreateInstance(&obj);
-    base_class = obj;
-    idispatch = obj;
-  } else if (object_name == STRING16(L"beta.httprequest")) {
-    CComObject<GearsHttpRequest> *obj;
-    hr = CComObject<GearsHttpRequest>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
   } else if (object_name == STRING16(L"beta.localserver")) {
