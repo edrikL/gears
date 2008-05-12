@@ -18,7 +18,7 @@ The purpose of this module is to provide programmatic support for off-screen pho
     * Drawing primitives
     * Support color lookup tables
     * Cool Photo stuff (Red-eye removal, smart scissors, magic wand, etc...)
-    * Support other color depths (<>32 bpp)
+    * Support other color depths (other than 32 bpp)
     * Better support for non-destructive edits
 
 = JS interface =
