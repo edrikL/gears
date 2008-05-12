@@ -2318,10 +2318,11 @@ void JsParamFetcher::SetReturnValue(JsToken retval) {
   }
 }
 
-bool JsParamFetcher::GetAsMarshaledJsToken(int i, MarshaledJsToken **out,
+bool JsParamFetcher::GetAsMarshaledJsToken(int i, JsRunnerInterface *js_runner,
+                                           MarshaledJsToken **out,
                                            std::string16 *error_message_out) {
   if (i >= js_argc_) return false;  // see comment above, in GetAsInt()
-  *out = MarshaledJsToken::Marshal(js_argv_[i], js_context_,
+  *out = MarshaledJsToken::Marshal(js_argv_[i], js_runner, js_context_,
                                    error_message_out);
   return *out != NULL;
 }

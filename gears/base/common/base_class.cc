@@ -112,6 +112,12 @@ bool ModuleImplBaseClass::InitBaseManually(
 }
 
 
+void ModuleImplBaseClass::GetModuleEnvironment(
+    scoped_refptr<ModuleEnvironment> *out) const {
+  assert(module_environment_.get());
+  out->reset(module_environment_.get());
+}
+
 bool ModuleImplBaseClass::EnvIsWorker() const {
   assert(module_environment_.get());
   return module_environment_->is_worker_;

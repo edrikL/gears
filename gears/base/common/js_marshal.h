@@ -96,13 +96,13 @@ public:
   // JavaScript function, or trying to marshal an object graph that contains
   // a cycle).  On failure, error_message_out will contain the error message.
   static MarshaledJsToken *Marshal(const JsToken &token,
+                                   JsRunnerInterface *js_runner,
                                    JsContextPtr js_context,
                                    std::string16 *error_message_out);
 
   // Returns whether or not this MarshaledJsToken was successfully restored to
-  // be a JsScopedToken (*out) inside the given JsRunnerInterface.
-  bool Unmarshal(JsRunnerInterface *js_runner,
-                 JsScopedToken *out);
+  // be a JsScopedToken (*out) inside the given ModuleEnvironment.
+  bool Unmarshal(ModuleEnvironment *module_environment, JsScopedToken *out);
 
 private:
   typedef std::vector<JsToken> JsTokenVector;
@@ -114,16 +114,19 @@ private:
                           std::string16 *error_message_out);
 
   static MarshaledJsToken *Marshal(const JsToken &token,
+                                   JsRunnerInterface *js_runner,
                                    JsContextPtr js_context,
                                    std::string16 *error_message_out,
                                    JsTokenVector *object_stack);
 
   bool InitializeFromObject(JsObject &object,
+                            JsRunnerInterface *js_runner,
                             JsContextPtr js_context,
                             std::string16 *error_message_out,
                             JsTokenVector *object_stack);
 
   bool InitializeFromArray(JsArray &array,
+                           JsRunnerInterface *js_runner,
                            JsContextPtr js_context,
                            std::string16 *error_message_out,
                            JsTokenVector *object_stack);
@@ -136,6 +139,7 @@ private:
     std::string16 *string_value;
     std::map<std::string16, MarshaledJsToken*> *object_value;
     std::vector<MarshaledJsToken*> *array_value;
+    MarshaledModule *marshaled_module_value;
   } value_;
 
   DISALLOW_EVIL_CONSTRUCTORS(MarshaledJsToken);

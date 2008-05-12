@@ -138,6 +138,13 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   void TestGeolocationGetLocationFromResponse(JsCallContext *context);
 #endif
 
+#ifndef OFFICIAL_BUILD
+  // IN: string input
+  // OUT: GearsBlob
+  // The resultant Blob's contents will the input string in UTF-8 format.
+  void CreateBlobFromString(JsCallContext *context);
+#endif
+
  private:
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsTest);

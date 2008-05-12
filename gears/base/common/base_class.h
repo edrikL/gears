@@ -124,6 +124,17 @@ struct ModuleEnvironment : public RefCounted {
 };
 
 
+class MarshaledModule {
+ public:
+  MarshaledModule() {}
+  virtual ~MarshaledModule() {}
+  virtual bool Unmarshal(ModuleEnvironment *module_environment,
+                         JsScopedToken *out) = 0;
+ private:
+  DISALLOW_EVIL_CONSTRUCTORS(MarshaledModule);
+};
+
+
 // Exposes the minimal set of information that Gears objects need to work
 // consistently across the main-thread and worker-thread JavaScript engines.
 class ModuleImplBaseClass {
@@ -159,6 +170,7 @@ class ModuleImplBaseClass {
   bool InitBaseManually(ModuleEnvironment *source_module_environment);
 
   // Host environment information
+  void GetModuleEnvironment(scoped_refptr<ModuleEnvironment> *out) const;
   bool EnvIsWorker() const;
   const std::string16& EnvPageLocationUrl() const;
 #if BROWSER_FF || BROWSER_NPAPI
@@ -232,6 +244,8 @@ class ModuleImplBaseClassVirtual : public ModuleImplBaseClass {
   ModuleImplBaseClassVirtual(const std::string &name)
       : ModuleImplBaseClass(name) {}
   virtual ~ModuleImplBaseClassVirtual(){}
+
+  virtual MarshaledModule *AsMarshaledModule() { return NULL; }
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(ModuleImplBaseClassVirtual);

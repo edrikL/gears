@@ -170,6 +170,7 @@ struct JavaScriptWorkerInfo {
   //
   // These fields are used for all workers in pool (parent + children).
   //
+  scoped_refptr<ModuleEnvironment> module_environment;
   PoolThreadsManager *threads_manager;
   JsRunnerInterface *js_runner;
   scoped_ptr<JsRootedCallback> onmessage_handler;
@@ -438,7 +439,7 @@ NS_IMETHODIMP GearsWorkerPool::SendMessage(//const variant &message_body,
   JsParamType first_arg_type = js_params.GetType(0);
   if (first_arg_type == JSPARAM_NULL ||
       first_arg_type == JSPARAM_UNDEFINED ||
-      !js_params.GetAsMarshaledJsToken(0, &mjt, &error)) {
+      !js_params.GetAsMarshaledJsToken(0, GetJsRunner(), &mjt, &error)) {
     RETURN_EXCEPTION(error.empty()
         ? STRING16(L"The message parameter has an invalid type.")
         : error.c_str());
@@ -588,7 +589,8 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
     onmessage_param->SetPropertyInt(STRING16(L"sender"), msg.sender_);
     onmessage_param->SetPropertyString(STRING16(L"origin"), msg.origin_.url());
     JsToken token;
-    if (msg.body_.get() && msg.body_->Unmarshal(wi->js_runner, &token)) {
+    if (msg.body_.get() &&
+        msg.body_->Unmarshal(wi->module_environment.get(), &token)) {
       onmessage_param->SetProperty(STRING16(L"body"), token);
     }
 
@@ -650,6 +652,7 @@ PoolThreadsManager::PoolThreadsManager(
 
   // Add a JavaScriptWorkerInfo entry for the owning worker.
   JavaScriptWorkerInfo *wi = new JavaScriptWorkerInfo;
+  owner->GetModuleEnvironment(&wi->module_environment);
   wi->threads_manager = this;
   wi->js_runner = root_js_runner;
   wi->is_owning_worker = true;
@@ -806,6 +809,7 @@ bool PoolThreadsManager::PutPoolMessage(MarshaledJsToken* mjt,
                                         const char16 *text,
                                         int dest_worker_id,
                                         const SecurityOrigin &src_origin) {
+  scoped_ptr<MarshaledJsToken> scoped_mjt(mjt);
   MutexLock lock(&mutex_);
   if (is_shutting_down_) {
     return false;
@@ -826,7 +830,8 @@ bool PoolThreadsManager::PutPoolMessage(MarshaledJsToken* mjt,
 
   // Copy the message to an internal queue.
   dest_wi->message_queue.push(
-      new WorkerPoolMessage(mjt, text, src_worker_id, src_origin));
+      new WorkerPoolMessage(scoped_mjt.release(), text,
+                            src_worker_id, src_origin));
   // Notify the receiving worker.
   AsyncRouter::GetInstance()->CallAsync(
       dest_wi->thread_id,
@@ -1301,6 +1306,7 @@ void PoolThreadsManager::JavaScriptThreadEntry(void *args) {
     // seems a little cleaner too.
     wi->js_runner = NULL;  // scoped_ptr is about to delete the object
     wi->threads_manager->ReleaseWorkerRef();
+    wi->module_environment.reset(NULL);
   }
 #if RECYCLE_JS_RUNTIME
 #else
@@ -1318,7 +1324,8 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   JsContextPtr cx = js_runner->GetContext();
   if (!cx) { return false; }
 
-  scoped_refptr<ModuleEnvironment> module_environment(
+  assert(!wi->module_environment.get());
+  wi->module_environment.reset(
       new ModuleEnvironment(wi->script_origin, cx, true, js_runner));
 
   // Add global Factory and WorkerPool objects into the namespace.
@@ -1332,14 +1339,14 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   scoped_ptr<GearsFactory> factory(new GearsFactory());
   if (!factory.get()) { return false; }
 
-  if (!factory->InitBaseManually(module_environment.get())) {
+  if (!factory->InitBaseManually(wi->module_environment.get())) {
     return false;
   }
 
   scoped_ptr<GearsWorkerPool> workerpool(new GearsWorkerPool());
   if (!workerpool.get()) { return false; }
 
-  if (!workerpool->InitBaseManually(module_environment.get())) {
+  if (!workerpool->InitBaseManually(wi->module_environment.get())) {
     return false;
   }
 
@@ -1400,7 +1407,14 @@ void PoolThreadsManager::ShutDown() {
     // an engine for the owning worker's thread.
     worker_info_[kOwningWorkerId]->onmessage_handler.reset(NULL);
     worker_info_[kOwningWorkerId]->onerror_handler.reset(NULL);
+    // We also release our reference to the thread-specific module_environment,
+    // whilst we know that we are in the main thread.  For other (worker)
+    // threads, module_environment is released at the end of
+    // JavaScriptThreadEntry, but that is not applicable to the main thread.
+    worker_info_[kOwningWorkerId]->module_environment.reset(NULL);
 
+    // TODO(nigeltao): are we also sending the shutdown message to the owning
+    // worker??  In other words, can we skip the zero'th element in this loop?
     for (size_t i = 0; i < worker_info_.size(); ++i) {
       JavaScriptWorkerInfo *wi = worker_info_[i];
 
