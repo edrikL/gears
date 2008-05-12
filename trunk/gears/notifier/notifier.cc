@@ -23,8 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if ENABLE_NOTIFIER
-
 #include "gears/notifier/notifier.h"
 
 #include "gears/base/common/serialization.h"
@@ -38,12 +36,12 @@ Notifier::Notifier()
 
 bool Notifier::Initalize() {
   Notification::RegisterAsSerializable();
-  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetInstance();
+  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetSystemQueue();
   if (!ipc_message_queue) {
     return false;
   }
-  ipc_message_queue->RegisterHandler(kAddNotificationMessage, this);
-  ipc_message_queue->RegisterHandler(kRemoveNotificationMessage, this);
+  ipc_message_queue->RegisterHandler(kDesktop_AddNotification, this);
+  ipc_message_queue->RegisterHandler(kDesktop_RemoveNotification, this);
 
   if (!NotifierProcess::RegisterProcess()) {
     return false;
@@ -72,14 +70,14 @@ void Notifier::HandleIpcMessage(IpcProcessId source_process_id,
                                 int message_type,
                                 const IpcMessageData *message_data) {
   switch (message_type) {
-    case kAddNotificationMessage: {
+    case kDesktop_AddNotification: {
       const Notification *notification =
           static_cast<const Notification*>(message_data);
       AddNotification(notification);
       break;
     }
 
-    case kRemoveNotificationMessage: {
+    case kDesktop_RemoveNotification: {
       const Notification *notification =
           static_cast<const Notification*>(message_data);
       RemoveNotification(notification->id());
@@ -119,11 +117,3 @@ int main(int argc, char **argv) {
 
   return res;
 }
-
-#else
-
-int main(int argc, char **argv) {
-  return 0;
-}
-
-#endif  // ENABLE_NOTIFIER

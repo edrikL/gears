@@ -28,14 +28,18 @@
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/http_utils.h"
+#include "gears/base/common/ipc_message_queue.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/png_utils.h"
+#include "gears/base/common/serialization.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/desktop/file_dialog_utils.h"
+#include "gears/notifier/notification.h"
+#include "gears/notifier/notifier_process.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/ui/common/html_dialog.h"
@@ -47,6 +51,7 @@
 #else
 #define USE_FILE_PICKER 1
 #endif
+
 DECLARE_GEARS_WRAPPER(GearsDesktop);
 
 template<>
@@ -57,6 +62,11 @@ void Dispatcher<GearsDesktop>::Init() {
 #else
   // File picker is not ready for this build
 #endif  // USE_FILE_PICKER
+#if !defined(OFFICIAL_BUILD)
+  RegisterMethod("addNotification", &GearsDesktop::AddNotification);
+#else
+  // Notification is not ready for this build
+#endif  // !defined(OFFICIAL_BUILD)
 }
 
 
@@ -66,6 +76,13 @@ static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_BGRA;
 #else
 static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_RGBA;
 #endif
+
+GearsDesktop::GearsDesktop()
+    : ModuleImplBaseClassVirtual("GearsDesktop"),
+      ipc_message_queue_(NULL) {
+  Notification::RegisterAsSerializable();
+  ipc_message_queue_ = IpcMessageQueue::GetSystemQueue();
+}
 
 Desktop::Desktop(const SecurityOrigin &security_origin)
     : security_origin_(security_origin) {
@@ -697,3 +714,44 @@ bool Desktop::ResolveUrl(std::string16 *url, std::string16 *error) {
   *url = full_url;
   return true;
 }
+
+#if !defined(OFFICIAL_BUILD)
+
+void GearsDesktop::AddNotification(JsCallContext *context) {
+  JsObject props;
+
+  // TODO (jianli): this is a preliminary API. 
+
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_OBJECT, &props },
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
+  std::string16 title;
+  props.GetPropertyAsString(STRING16(L"Title"), &title);
+
+  std::string16 text;
+  props.GetPropertyAsString(STRING16(L"Text"), &text);
+
+  // Try to find the process of Desktop Notifier.
+  uint32 process_id = NotifierProcess::FindProcess();
+  if (!process_id) {
+    // TODO (jianli): Do we need to start the process if not found?
+    context->SetException(STRING16(L"notifier process not found"));
+    return;
+  }
+
+  // Send the IPC message to the process of Desktop Notifier.
+  assert(ipc_message_queue_);
+  if (ipc_message_queue_) {
+    Notification *notification = new Notification();
+    notification->set_title(title);
+    notification->set_description(text);
+    ipc_message_queue_->Send(static_cast<IpcProcessId>(process_id),
+                             kDesktop_AddNotification,
+                             notification);
+  }
+}
+
+#endif  // !defined(OFFICIAL_BUILD)

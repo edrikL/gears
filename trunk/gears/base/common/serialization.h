@@ -43,6 +43,9 @@ enum SerializableClassId {
   SERIALIZABLE_UPDATE_TASK_COMPLETION_EVENT,
   SERIALIZABLE_CONSOLE_LOG_EVENT,
   SERIALIZABLE_NOTIFICATION,
+
+  // The following value can not be changed for cross-version compatibility.
+  SERIALIZABLE_DESKTOP_NOTIFICATION = 1000,
 };
 
 class Serializable;

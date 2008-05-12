@@ -30,6 +30,11 @@
 // require it, we use this file.
 
 // static
-IpcMessageQueue *IpcMessageQueue::GetInstance() {
+IpcMessageQueue *IpcMessageQueue::GetPeerQueue() {
   return NULL;
-};
+}
+
+IpcMessageQueue *IpcMessageQueue::GetSystemQueue() {
+  return NULL;
+}
+
