@@ -42,12 +42,14 @@ class AB : public A, public B {
   bool* dead_;
 };
 
-bool TestRefCount() {
+bool TestRefCount(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestRefCount - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestRefCount - failed. "); \
     return false; \
   } \
 }

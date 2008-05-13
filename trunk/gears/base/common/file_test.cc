@@ -45,12 +45,14 @@ static bool TestLongPaths();
 static bool TestFileObject();
 static bool CheckDirectoryCreation(const char16 *dir);
 
-bool TestFileUtils() {
+bool TestFileUtils(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestFileUtils - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestFileUtils - failed. "); \
     return false; \
   } \
 }
@@ -172,6 +174,15 @@ bool TestFileUtils() {
 #endif
   LOG(("TestFileUtils - passed\n"));
   return true;
+}
+
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    LOG(("TestFileUtils - failed (%d)\n", __LINE__)); \
+    return false; \
+  } \
 }
 
 bool TestFileOpen(std::string16 filepath, File::OpenAccessMode access_mode,

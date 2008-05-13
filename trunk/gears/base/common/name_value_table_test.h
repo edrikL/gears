@@ -26,6 +26,6 @@
 #ifndef GEARS_BASE_COMMON_NAME_VALUE_TABLE_TEST_H__
 #define GEARS_BASE_COMMON_NAME_VALUE_TABLE_TEST_H__
 
-bool TestNameValueTableAll();
+bool TestNameValueTableAll(std::string16 *error);
 
 #endif  // GEARS_BASE_COMMON_NAME_VALUE_TABLE_TEST_H__

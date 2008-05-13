@@ -30,12 +30,14 @@ static const std::string16 kFoo(STRING16(L"foo"));
 static const std::string16 kBar(STRING16(L"bar"));
 
 
-bool TestNameValueTableAll() {
+bool TestNameValueTableAll(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestNameValueTable - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestNameValueTable - failed. "); \
     return false; \
   } \
 }

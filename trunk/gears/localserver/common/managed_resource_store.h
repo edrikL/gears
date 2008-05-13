@@ -145,7 +145,7 @@ class ManagedResourceStore : public LocalServer {
                      const char16 *update_error);
 
 #ifdef USING_CCTESTS
-  friend bool TestManagedResourceStore();
+  friend bool TestManagedResourceStore(std::string16 *error);
 #endif
 };
 

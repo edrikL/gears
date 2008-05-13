@@ -116,35 +116,39 @@ void Dispatcher<GearsTest>::Init() {
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 #if BROWSER_FF
-bool TestBlobInputStreamFf();  // from blob_input_stream_ff_test.cc
+// from blob_input_stream_ff_test.cc
+bool TestBlobInputStreamFf(std::string16 *error);
 #endif
-bool TestHttpCookies();
-bool TestHttpRequest();
-bool TestManifest();
-bool TestMessageService();  // from message_service_test.cc
-bool TestLocalServerDB();
-bool TestResourceStore();
-bool TestManagedResourceStore();
-bool TestParseHttpStatusLine();
-bool TestSecurityModel();  // from security_model_test.cc
-bool TestFileUtils();  // from file_test.cc
-bool TestUrlUtils();  // from url_utils_test.cc
-bool TestJsRootedTokenLifetime();  // from base_class_test.cc
-bool TestStringUtils();  // from string_utils_test.cc
-bool TestSerialization();  // from serialization_test.cc
-bool TestCircularBuffer();  // from circular_buffer_test.cc
-bool TestRefCount(); // from scoped_refptr_test.cc
+bool TestHttpCookies(std::string16 *error);
+bool TestHttpRequest(std::string16 *error);
+bool TestManifest(std::string16 *error);
+bool TestMessageService(std::string16 *error);  // from message_service_test.cc
+bool TestLocalServerDB(std::string16 *error);
+bool TestResourceStore(std::string16 *error);
+bool TestManagedResourceStore(std::string16 *error);
+bool TestParseHttpStatusLine(std::string16 *error);
+bool TestSecurityModel(std::string16 *error);  // from security_model_test.cc
+bool TestFileUtils(std::string16 *error);  // from file_test.cc
+bool TestUrlUtils(std::string16 *error);  // from url_utils_test.cc
+bool TestStringUtils(std::string16 *error);  // from string_utils_test.cc
+bool TestSerialization(std::string16 *error);  // from serialization_test.cc
+bool TestCircularBuffer(std::string16 *error);  // from circular_buffer_test.cc
+bool TestRefCount(std::string16 *error); // from scoped_refptr_test.cc
 #ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
-bool TestBufferBlob();  // from blob_test.cc
-bool TestSliceBlob();  // from blob_test.cc
+bool TestBufferBlob(std::string16 *error);  // from blob_test.cc
+bool TestSliceBlob(std::string16 *error);  // from blob_test.cc
 #endif  // not OFFICIAL_BUILD
 #if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
-bool TestIpcMessageQueue();  // from ipc_message_queue_win32_test.cc
+// from ipc_message_queue_win32_test.cc
+bool TestIpcMessageQueue(std::string16 *error);
 #endif
-bool TestStopwatch();
-bool TestJsonEscaping();
-bool TestArray(JsRunnerInterface *js_runner, JsCallContext *context);
+bool TestStopwatch(std::string16 *error);
+bool TestJsonEscaping(std::string16 *error);
+bool TestArray(JsRunnerInterface *js_runner, JsCallContext *context,
+               std::string16 *error);
+bool TestObject(JsRunnerInterface *js_runner, JsCallContext *context,
+                std::string16 *error);
 bool TestEvent(std::string16 *error);  // From event_test.cc
 
 void CreateObjectBool(JsCallContext* context,
@@ -228,46 +232,46 @@ void GearsTest::RunTests(JsCallContext *context) {
 
   std::string16 error;
   bool ok = true;
-  ok &= TestStringUtils();
-  ok &= TestFileUtils();
-  ok &= TestUrlUtils();
-  ok &= TestParseHttpStatusLine();
-  ok &= TestHttpRequest();
-  ok &= TestHttpCookies();
-  ok &= TestSecurityModel();
-  ok &= TestSqliteUtilsAll();
-  ok &= TestNameValueTableAll();
-  ok &= TestPermissionsDBAll();
-  ok &= TestDatabaseUtilsAll();
-  ok &= TestLocalServerDB();
-  ok &= TestResourceStore();
-  ok &= TestManifest();
-  ok &= TestManagedResourceStore();
-  ok &= TestMessageService();
-  ok &= TestSerialization();
-  ok &= TestCircularBuffer();
-  ok &= TestRefCount();
+  ok &= TestStringUtils(&error);
+  ok &= TestFileUtils(&error);
+  ok &= TestUrlUtils(&error);
+  ok &= TestParseHttpStatusLine(&error);
+  ok &= TestHttpRequest(&error);
+  ok &= TestHttpCookies(&error);
+  ok &= TestSecurityModel(&error);
+  ok &= TestSqliteUtilsAll(&error);
+  ok &= TestNameValueTableAll(&error);
+  ok &= TestPermissionsDBAll(&error);
+  ok &= TestDatabaseUtilsAll(&error);
+  ok &= TestLocalServerDB(&error);
+  ok &= TestResourceStore(&error);
+  ok &= TestManifest(&error);
+  ok &= TestManagedResourceStore(&error);
+  ok &= TestMessageService(&error);
+  ok &= TestSerialization(&error);
+  ok &= TestCircularBuffer(&error);
+  ok &= TestRefCount(&error);
 #ifndef OFFICIAL_BUILD
   // The blob API has not been finalized for official builds
 #if BROWSER_FF || BROWSER_IE
-  ok &= TestBufferBlob();
-  ok &= TestSliceBlob();
+  ok &= TestBufferBlob(&error);
+  ok &= TestSliceBlob(&error);
 #else
   // Blobs not yet implemented for NPAPI.
 #endif  // BROWSER_FF || BROWSER_IE
 #endif  // not OFFICIAL_BUILD
 
 #if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
-  ok &= TestIpcMessageQueue();
+  ok &= TestIpcMessageQueue(&error);
 #endif
 #ifndef OFFICIAL_BUILD
 #if BROWSER_FF
-  ok &= TestBlobInputStreamFf();
+  ok &= TestBlobInputStreamFf(&error);
 #endif
 #endif
-  ok &= TestStopwatch();
-  ok &= TestJsonEscaping();
-  ok &= TestArray(GetJsRunner(), context);
+  ok &= TestStopwatch(&error);
+  ok &= TestJsonEscaping(&error);
+  ok &= TestArray(GetJsRunner(), context, &error);
   ok &= TestEvent(&error);
 
   // We have to call GetDB again since TestCapabilitiesDBAll deletes
@@ -611,12 +615,14 @@ void GearsTest::TestGetType(JsCallContext *context) {
 //------------------------------------------------------------------------------
 // TestHttpCookies
 //------------------------------------------------------------------------------
-bool TestHttpCookies() {
+bool TestHttpCookies(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestHttpCookies - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestHttpCookies - failed. "); \
     return false; \
   } \
 }
@@ -672,12 +678,14 @@ bool TestHttpCookies() {
 //------------------------------------------------------------------------------
 // TestManifest
 //------------------------------------------------------------------------------
-bool TestManifest() {
+bool TestManifest(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestManifest - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestManifest - failed. "); \
     return false; \
   } \
 }
@@ -745,12 +753,14 @@ bool TestManifest() {
 //------------------------------------------------------------------------------
 // TestResourceStore
 //------------------------------------------------------------------------------
-bool TestResourceStore() {
+bool TestResourceStore(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestResourceStore - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestResourceStore - failed. "); \
     return false; \
   } \
 }
@@ -831,12 +841,14 @@ bool TestResourceStore() {
 //------------------------------------------------------------------------------
 // TestManagedResourceStore
 //------------------------------------------------------------------------------
-bool TestManagedResourceStore() {
+bool TestManagedResourceStore(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestManagedResourceStore - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestManagedResourceStore - failed. "); \
     return false; \
   } \
 }
@@ -917,13 +929,15 @@ bool TestManagedResourceStore() {
 //------------------------------------------------------------------------------
 // TestLocalServerDB
 //------------------------------------------------------------------------------
-bool TestLocalServerDB() {
+bool TestLocalServerDB(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestWebCacheDB - failed (%d)\n", __LINE__)); \
     SetFakeCookieString(NULL, NULL); \
+    assert(error); \
+    *error += STRING16(L"TestWebCacheDB - failed. "); \
     return false; \
   } \
 }
@@ -1075,12 +1089,14 @@ bool TestLocalServerDB() {
   return true;
 }
 
-bool TestParseHttpStatusLine() {
+bool TestParseHttpStatusLine(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestParseHttpStatusLine - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestParseHttpStatusLine - failed. "); \
     return false; \
   } \
 }
@@ -1148,12 +1164,14 @@ class TestHttpRequestListener : public HttpRequest::ReadyStateListener {
 };
 
 
-bool TestHttpRequest() {
+bool TestHttpRequest(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestHttpRequest - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestHttpRequest - failed. "); \
     return false; \
   } \
 }
@@ -1186,12 +1204,14 @@ bool TestHttpRequest() {
   return true;
 }
 
-bool TestStopwatch() {
+bool TestStopwatch(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestStopwatch - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestStopwatch - failed. "); \
     return false; \
   } \
 }
@@ -1245,12 +1265,14 @@ bool TestStopwatch() {
   return true;
 }
 
-bool TestJsonEscaping() {
+bool TestJsonEscaping(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestJsonEscaping - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestJsonEscaping - failed. "); \
     return false; \
   } \
 }
@@ -1275,12 +1297,15 @@ bool TestJsonEscaping() {
   return true;
 }
 
-bool TestArray(JsRunnerInterface *js_runner, JsCallContext *context) {
+bool TestArray(JsRunnerInterface *js_runner, JsCallContext *context,
+               std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestArray - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestArray - failed. "); \
     return false; \
   } \
 }

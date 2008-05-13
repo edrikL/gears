@@ -92,7 +92,7 @@ class MessageService : public ThreadMessageQueue::HandlerInterface,
   MessageService(ThreadMessageQueue *message_queue,
                  IpcMessageQueue *ipc_message_queue);
   ~MessageService();
-  friend bool TestMessageService();
+  friend bool TestMessageService(std::string16 *error);
 
   friend class ObserverCollection;
   typedef std::map<std::string16, linked_ptr<ObserverCollection> >

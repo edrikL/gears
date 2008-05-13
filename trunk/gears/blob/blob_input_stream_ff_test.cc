@@ -170,7 +170,7 @@ bool TestBlobInputStreamFfReadSegments(Writer type,
 
 }  // namespace
 
-bool TestBlobInputStreamFf() {
+bool TestBlobInputStreamFf(std::string16 *error) {
   std::vector<uint8>* data(new std::vector<uint8>(data_size, 79));
   scoped_refptr<BlobInterface> blob(new BufferBlob(data));
   bool ok = true;
@@ -225,5 +225,9 @@ bool TestBlobInputStreamFf() {
   // NOTE - this should result in an assert, so do NOT enable this by default!
   //ok &= TestBlobInputStreamFfReadSegments(READ_ZERO, blob.get(), data_size);
 
+  if (!ok) {
+    assert(error);
+    *error += STRING16(L"TestBlobInputStreamFf - failed. ");
+  }
   return ok;
 }
