@@ -45,7 +45,18 @@
 #ifndef GEARS_BASE_COMMON_STRING16_H__
 #define GEARS_BASE_COMMON_STRING16_H__
 
+// Workaround for Apple bug, using custom string types, see:
+// http://developer.apple.com/technotes/tn2007/tn2185.html#TNTAG18
+#ifdef OS_MACOSX
+#pragma GCC visibility push(default)
+#endif
+
 #include <string>
+
+#ifdef OS_MACOSX
+#pragma GCC visibility pop
+#endif
+
 #include "gears/base/common/basictypes.h"
 
 // Need to cast literals (Linux, OSX) and SQLite void* retvals (all platforms)
@@ -122,7 +133,7 @@ extern "C" {
 } // END: extern "C"
 
 
-#if (defined LINUX) || (defined OSX)
+#if (defined LINUX) || (defined OS_MACOSX)
 
 // Definition of char_traits<char16>, which enables basic_string<char16>
 //
