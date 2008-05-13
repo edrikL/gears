@@ -364,6 +364,12 @@
 		B5D8D33A0DB9320800C257AA /* browser_utils_sf.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D3370DB9320800C257AA /* browser_utils_sf.cc */; };
 		B5D8D33B0DB9320800C257AA /* nsstring_utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D3380DB9320800C257AA /* nsstring_utils.mm */; };
 		B5D8D3660DB9326A00C257AA /* html_dialog_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D3650DB9326A00C257AA /* html_dialog_sf.mm */; };
+		B5E3E3FB0DDA04A400697AB4 /* notifier_process_win32.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E3E3F40DDA04A400697AB4 /* notifier_process_win32.cc */; };
+		B5E3E3FC0DDA04A400697AB4 /* notifier_process_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E3E3F50DDA04A400697AB4 /* notifier_process_osx.cc */; };
+		B5E3E3FD0DDA04A400697AB4 /* notifier_process_linux.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E3E3F60DDA04A400697AB4 /* notifier_process_linux.cc */; };
+		B5E3E3FE0DDA04A400697AB4 /* notifier.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E3E3F90DDA04A400697AB4 /* notifier.cc */; };
+		B5E3E4010DDA04EA00697AB4 /* event_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E3E4000DDA04EA00697AB4 /* event_test.cc */; };
+		B5E3E4060DDA052F00697AB4 /* event.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E3E4050DDA052F00697AB4 /* event.cc */; };
 		B5F583B30D9FE48E00B8FD50 /* async_task_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5F583B10D9FE48E00B8FD50 /* async_task_sf.mm */; };
 		B5F584020DA0AF0D00B8FD50 /* url_utils_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F584010DA0AF0D00B8FD50 /* url_utils_np.cc */; };
 		B5F584AA0DA0BB5C00B8FD50 /* url_utils_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F584A90DA0BB5C00B8FD50 /* url_utils_test.cc */; };
@@ -907,6 +913,16 @@
 		B5D8D3380DB9320800C257AA /* nsstring_utils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = nsstring_utils.mm; path = ../../base/safari/nsstring_utils.mm; sourceTree = SOURCE_ROOT; };
 		B5D8D3390DB9320800C257AA /* browser_utils_sf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = browser_utils_sf.h; path = ../../base/safari/browser_utils_sf.h; sourceTree = SOURCE_ROOT; };
 		B5D8D3650DB9326A00C257AA /* html_dialog_sf.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = html_dialog_sf.mm; path = ../../ui/safari/html_dialog_sf.mm; sourceTree = SOURCE_ROOT; };
+		B5E3E3F40DDA04A400697AB4 /* notifier_process_win32.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = notifier_process_win32.cc; path = ../../notifier/notifier_process_win32.cc; sourceTree = SOURCE_ROOT; };
+		B5E3E3F50DDA04A400697AB4 /* notifier_process_osx.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = notifier_process_osx.cc; path = ../../notifier/notifier_process_osx.cc; sourceTree = SOURCE_ROOT; };
+		B5E3E3F60DDA04A400697AB4 /* notifier_process_linux.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = notifier_process_linux.cc; path = ../../notifier/notifier_process_linux.cc; sourceTree = SOURCE_ROOT; };
+		B5E3E3F70DDA04A400697AB4 /* notifier_process.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = notifier_process.h; path = ../../notifier/notifier_process.h; sourceTree = SOURCE_ROOT; };
+		B5E3E3F80DDA04A400697AB4 /* notifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = notifier.h; path = ../../notifier/notifier.h; sourceTree = SOURCE_ROOT; };
+		B5E3E3F90DDA04A400697AB4 /* notifier.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = notifier.cc; path = ../../notifier/notifier.cc; sourceTree = SOURCE_ROOT; };
+		B5E3E3FA0DDA04A400697AB4 /* notification.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = notification.h; path = ../../notifier/notification.h; sourceTree = SOURCE_ROOT; };
+		B5E3E4000DDA04EA00697AB4 /* event_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = event_test.cc; path = ../../base/common/event_test.cc; sourceTree = SOURCE_ROOT; };
+		B5E3E4040DDA052F00697AB4 /* event.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = event.h; path = ../../base/common/event.h; sourceTree = SOURCE_ROOT; };
+		B5E3E4050DDA052F00697AB4 /* event.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = event.cc; path = ../../base/common/event.cc; sourceTree = SOURCE_ROOT; };
 		B5F583B10D9FE48E00B8FD50 /* async_task_sf.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = async_task_sf.mm; path = ../../localserver/safari/async_task_sf.mm; sourceTree = SOURCE_ROOT; };
 		B5F583B20D9FE48E00B8FD50 /* async_task_sf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = async_task_sf.h; path = ../../localserver/safari/async_task_sf.h; sourceTree = SOURCE_ROOT; };
 		B5F584010DA0AF0D00B8FD50 /* url_utils_np.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = url_utils_np.cc; path = ../../base/common/url_utils_np.cc; sourceTree = SOURCE_ROOT; };
@@ -1132,6 +1148,7 @@
 				79272FD00DC213E900CDF577 /* geolocation */,
 				B54247240D35940600B3D18D /* httprequest */,
 				B544D9630D2EE5D000D30561 /* localserver */,
+				B5E3E3EF0DDA047B00697AB4 /* notifier */,
 				B58E01620D5BE0ED00B0A65D /* timer */,
 				B5AFB3240DAD23030058E178 /* ui */,
 				B52E986D0DC7A6D000E5BA57 /* workerpool */,
@@ -1270,16 +1287,19 @@
 				B5AB77E00D9FDC2F001EE5D5 /* async_router.cc */,
 				B56F677D0DAE009B00A5D6C5 /* base64.cc */,
 				B56F677E0DAE009B00A5D6C5 /* base64.h */,
+				B544D97E0D2EE5D000D30561 /* base_class.cc */,
 				B55F243C0DB3DD3B00AF44E2 /* basictypes.h */,
 				B55D10DF0D992C3F00B405E4 /* common.h */,
+				B58EFF630D52A5DC00B0A65D /* common_sf.h */,
+				B544D97D0D2EE5D000D30561 /* common_sf.mm */,
 				B574984D0DD4CE8E000FBCCD /* circular_buffer_test.cc */,
 				B54D29110D9287D20029F7EF /* dispatcher.h */,
 				B54D29120D9287D20029F7EF /* dispatcher.cc */,
 				B57AFFAC0D8836E500D60EB2 /* database_name_table.cc */,
 				B57AFFAD0D8836E500D60EB2 /* database_name_table.h */,
-				B544D97E0D2EE5D000D30561 /* base_class.cc */,
-				B58EFF630D52A5DC00B0A65D /* common_sf.h */,
-				B544D97D0D2EE5D000D30561 /* common_sf.mm */,
+				B5E3E4040DDA052F00697AB4 /* event.h */,
+				B5E3E4050DDA052F00697AB4 /* event.cc */,
+				B5E3E4000DDA04EA00697AB4 /* event_test.cc */,
 				B544D9800D2EE5D000D30561 /* string16.cc */,
 				B544D9810D2EE5D000D30561 /* js_runner_np.cc */,
 				B5A353FB0DACCAA20038898E /* js_runner_utils.cc */,
@@ -1901,6 +1921,20 @@
 			name = safari;
 			sourceTree = "<group>";
 		};
+		B5E3E3EF0DDA047B00697AB4 /* notifier */ = {
+			isa = PBXGroup;
+			children = (
+				B5E3E3F40DDA04A400697AB4 /* notifier_process_win32.cc */,
+				B5E3E3F50DDA04A400697AB4 /* notifier_process_osx.cc */,
+				B5E3E3F60DDA04A400697AB4 /* notifier_process_linux.cc */,
+				B5E3E3F70DDA04A400697AB4 /* notifier_process.h */,
+				B5E3E3F80DDA04A400697AB4 /* notifier.h */,
+				B5E3E3F90DDA04A400697AB4 /* notifier.cc */,
+				B5E3E3FA0DDA04A400697AB4 /* notification.h */,
+			);
+			name = notifier;
+			sourceTree = "<group>";
+		};
 		B5F584080DA0AF7600B8FD50 /* gurl */ = {
 			isa = PBXGroup;
 			children = (
@@ -2454,6 +2488,12 @@
 				B574985F0DD4CF1E000FBCCD /* security_model_test.cc in Sources */,
 				B574991D0DD4E82A000FBCCD /* geolocation_test.cc in Sources */,
 				B524937A0DD8B1B1007B5446 /* httprequest.cc in Sources */,
+				B5E3E3FB0DDA04A400697AB4 /* notifier_process_win32.cc in Sources */,
+				B5E3E3FC0DDA04A400697AB4 /* notifier_process_osx.cc in Sources */,
+				B5E3E3FD0DDA04A400697AB4 /* notifier_process_linux.cc in Sources */,
+				B5E3E3FE0DDA04A400697AB4 /* notifier.cc in Sources */,
+				B5E3E4010DDA04EA00697AB4 /* event_test.cc in Sources */,
+				B5E3E4060DDA052F00697AB4 /* event.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
