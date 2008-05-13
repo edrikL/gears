@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef LINUX
+#if defined(LINUX) && !defined(OS_MACOSX)
 
 #include "gears/notifier/notifier_process.h"
 
@@ -42,4 +42,4 @@ unsigned int NotifierProcess::FindProcess() {
   return 0;
 }
 
-#endif  // LINUX
+#endif  // defined(LINUX) && !defined(OS_MACOSX)
