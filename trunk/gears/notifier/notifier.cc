@@ -29,6 +29,10 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/notifier/notification.h"
 #include "gears/notifier/notifier_process.h"
+#if USING_CCTESTS
+#include "gears/notifier/unit_test.h"
+#endif  // USING_CCTESTS
+
 
 Notifier::Notifier()
   : running_(false) {
@@ -103,6 +107,14 @@ void Notifier::RemoveNotification(const std::string16 &notification_id) {
 }
 
 int main(int argc, char **argv) {
+#if USING_CCTESTS
+  // TODO(levin): hook this into the normal test run so
+  // that it gets executed as part of it.
+  if (argc > 1 && strcmp(argv[1], "-tests") == 0) {
+    return RunTests(argc, argv);
+  }
+#endif  // USING_CCTESTS
+
   LOG(("Gears Notifier started.\n"));
 
   Notifier notifier;

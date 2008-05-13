@@ -22,6 +22,8 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#ifndef GEARS_NOTIFIER_NOTIFICATION_H__
+#define GEARS_NOTIFIER_NOTIFICATION_H__
 
 #include "gears/base/common/serialization.h"
 
@@ -32,6 +34,15 @@ class Notification : public Serializable {
  public:
   Notification() : version_(kNotificationVersion) {}
 
+  void CopyFrom(const Notification& from) {
+    version_ = from.version_;
+    title_ = from.title_;
+    icon_ = from.icon_;
+    service_ = from.service_;
+    id_ = from.id_;
+    description_ = from.description_;
+  }
+
   virtual SerializableClassId GetSerializableClassId() {
     return SERIALIZABLE_DESKTOP_NOTIFICATION;
   }
@@ -40,6 +51,7 @@ class Notification : public Serializable {
     out->WriteInt(version_);
     out->WriteString(title_.c_str());
     out->WriteString(icon_.c_str());
+    out->WriteString(service_.c_str());
     out->WriteString(id_.c_str());
     out->WriteString(description_.c_str());
     return true;
@@ -50,6 +62,7 @@ class Notification : public Serializable {
         version_ != kNotificationVersion ||
         !in->ReadString(&title_) ||
         !in->ReadString(&icon_) ||
+        !in->ReadString(&service_) ||
         !in->ReadString(&id_) ||
         !in->ReadString(&description_)) {
       return false;
@@ -67,11 +80,13 @@ class Notification : public Serializable {
 
   const std::string16& title() const { return title_; }
   const std::string16& icon() const { return icon_; }
+  const std::string16& service() const { return service_; }
   const std::string16& id() const { return id_; }
   const std::string16& description() const { return description_; }
-  
+
   void set_title(const std::string16& title) { title_ = title; }
   void set_icon(const std::string16& icon) { icon_ = icon; }
+  void set_service(const std::string16& service) { service_ = service; }
   void set_id(const std::string16& id) { id_ = id; }
   void set_description(const std::string16& description) {
     description_ = description;
@@ -86,7 +101,10 @@ class Notification : public Serializable {
   std::string16 title_;
   std::string16 icon_;
   std::string16 id_;
+  std::string16 service_;
   std::string16 description_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Notification);
 };
+
+#endif  // GEARS_NOTIFIER_NOTIFICATION_H__
