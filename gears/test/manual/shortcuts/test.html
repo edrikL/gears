@@ -13,7 +13,7 @@ var icons = {
 };
 
 function valid(app_name) {
-  d.createShortcut(app_name, "http://mail.google.com/", icons,
+  d.createShortcut(app_name, "test.html", icons,
                    "This \"application\" lets you do things!");
 }
 
@@ -22,21 +22,21 @@ function threeLineDescription() {
   for (var i = 0; i < 3; i++) {
     longSentence.push("TallChars:MOpy_PlusPaddingForOneWordPerLine");
   }
-  d.createShortcut("My Cool Application", "http://mail.google.com/", icons,
+  d.createShortcut("My Cool Application", ".", icons,
                    longSentence.join(" "));
 }
 
 function longDescription() {
   var longSentence = [];
-  for (var i = 0; i < 100; i++) {
+  for (var i = 0; i < 80; i++) {
     longSentence.push("foo");
   }
-  d.createShortcut("My Cool Application", "http://mail.google.com/", icons,
+  d.createShortcut("My Cool Application", "test.html", icons,
                    longSentence.join(" "));
 }
 
 function noDescription() {
-  d.createShortcut("My Spiffy Application", "http://mail.google.com/", icons);
+  d.createShortcut("My Spiffy Application", "test.html", icons);
 }
 
 function reportError(f) {
@@ -73,7 +73,7 @@ valid("My Application");
       force redisplay of the UI. -->
 <button onclick="valid('My Snazzy Application')">valid</button><br />
 This button should create a shortcut on the desktop called "My Application"
-with a monkey head icon that launches Gmail.
+with a monkey head icon that launches this page.
 </p>
 
 <p>
@@ -85,7 +85,7 @@ display a three-line description without scroll bars.
 <p>
 <button onclick="longDescription()">long description</button><br />
 This one should create the same shortcut, but the dialog should have a
-long description with a scrollable area.
+very long description.
 </p>
 
 <p>
