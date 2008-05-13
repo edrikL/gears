@@ -30,10 +30,15 @@
 #ifdef WIN32
 
 #include "gears/base/common/common.h"
+#include "gears/base/common/mutex.h"
 #include "gears/base/common/string16.h"
 #include "gears/geolocation/device_data_provider.h"
 #include "gears/geolocation/location_provider.h"
 #include "gears/geolocation/network_location_request.h"
+
+// An implementation detail of NetworkLocationProvider. Defined in
+// network_location_provider.cc
+class AsyncWait;
 
 class NetworkLocationProvider
     : public LocationProviderInterface,
@@ -41,6 +46,8 @@ class NetworkLocationProvider
       public DeviceDataProviderBase<WifiData>::ListenerInterface,
       public NetworkLocationRequest::ListenerInterface {
  public:
+  friend class AsyncWait;
+
   NetworkLocationProvider(const std::string16 &url,
                           const std::string16 &host_name);
   virtual ~NetworkLocationProvider();
@@ -60,12 +67,25 @@ class NetworkLocationProvider
   // NetworkLocationRequest::ListenerInterface implementation.
   virtual void LocationResponseAvailable(const Position &position);
 
+  // Used by the AsyncWait object to make the request when its wait expires.
+  bool MakeRequest();
+  // Used by the device data provider callbacks to make the request if all
+  // device data is now present and if we're waiting for this to be the case.
+  bool MakeRequestIfDataNowAvailable();
+
   NetworkLocationRequest *request_;
   LocationProviderInterface::ListenerInterface *listener_;
   RadioData radio_data_;
   WifiData wifi_data_;
+  Mutex data_mutex_;
   DeviceDataProviderBase<RadioData> *radio_data_provider_;
   DeviceDataProviderBase<WifiData> *wifi_data_provider_;
+  // The timestamp for the latest device data update.
+  int64 timestamp_;
+  bool is_radio_data_complete_;
+  bool is_wifi_data_complete_;
+  AsyncWait *wait_;
+  Mutex wait_mutex_;
   DISALLOW_EVIL_CONSTRUCTORS(NetworkLocationProvider);
 };
 

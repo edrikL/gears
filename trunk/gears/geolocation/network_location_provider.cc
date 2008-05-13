@@ -28,8 +28,76 @@
 
 #include "gears/geolocation/network_location_provider.h"
 
-NetworkLocationProvider::NetworkLocationProvider(
-    const std::string16 &url, const std::string16 &host_name) {
+#include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis
+#include "gears/localserver/common/async_task.h"
+
+// The maximum period of time we'll wait for a complete set of device data
+// before sending the request.
+static const int kDataCompleteWaitPeriod = 1000 * 5;  // 5 seconds
+
+// This class implements an asynchronous wait. When the wait expires, it calls
+// MakeRequest() on the NetworkLocationProvider object passed to the
+// constructor.
+class AsyncWait : public AsyncTask {
+ public:
+  explicit AsyncWait(NetworkLocationProvider *provider) : provider_(provider) {
+    if (!Init()) {
+      assert(false);
+      return;
+    }
+    if (!Start()) {
+      assert(false);
+      return;
+    }
+  }
+  // Instructs the thread to stop and delete the object when it has completed.
+  // Waits for the Run method to complete.
+  void StopThreadAndDelete() {
+    stop_event_.Set();
+    WaitForSingleObject(run_complete_event_, INFINITE);
+    DeleteWhenDone();
+  }
+  // Instructs the thread to stop and delete the object when it has completed.
+  void StopThreadAndDeleteNoWait() {
+    stop_event_.Set();
+    DeleteWhenDone();
+  }
+ private:
+  // Private destructor. Callers use StopThreadAndDelete().
+  ~AsyncWait() {}
+  // AsyncTask implementation.
+  virtual void Run() {
+    if (WaitForSingleObject(stop_event_, kDataCompleteWaitPeriod) ==
+        WAIT_TIMEOUT) {
+      // Timeout, try to make the request.
+      provider_->MakeRequest();
+    }
+    run_complete_event_.Set();
+  }
+  bool Init() {
+    if (!stop_event_.Create(NULL, FALSE, FALSE, NULL)) {
+      return false;
+    }
+    if (!run_complete_event_.Create(NULL, FALSE, FALSE, NULL)) {
+      return false;
+    }
+    return AsyncTask::Init();
+  }
+ private:
+  NetworkLocationProvider *provider_;
+  CEvent stop_event_;
+  CEvent run_complete_event_;
+  DISALLOW_EVIL_CONSTRUCTORS(AsyncWait);
+};
+
+// NetworkLocationProvider
+
+NetworkLocationProvider::NetworkLocationProvider(const std::string16 &url,
+                                                 const std::string16 &host_name)
+    : wait_(NULL),
+      is_radio_data_complete_(false),
+      is_wifi_data_complete_(false),
+      timestamp_(-1) {
   request_ = NetworkLocationRequest::Create(url, host_name, this);
   assert(request_);
   // Get the device data providers. The first call to Register will create the
@@ -41,6 +109,9 @@ NetworkLocationProvider::NetworkLocationProvider(
 NetworkLocationProvider::~NetworkLocationProvider() {
   if (request_) {
     request_->StopThreadAndDelete();
+  }
+  if (wait_) {
+    wait_->StopThreadAndDelete();
   }
   radio_data_provider_->Unregister(this);
   wifi_data_provider_->Unregister(this);
@@ -55,23 +126,49 @@ void NetworkLocationProvider::SetListener(
 }
 
 bool NetworkLocationProvider::GetCurrentPosition() {
-  // TODO(steveblock): Implement me.
-  assert(false);
-  return false;
+  {
+    MutexLock data_mutex_lock(&data_mutex_);
+    // If we already have a complete set of device data, make the request.
+    if (is_radio_data_complete_ && is_wifi_data_complete_) {
+      if (!request_->MakeRequest(radio_data_, wifi_data_, timestamp_)) {
+        // This should only fail if a request is already in progress. This
+        // method should never be called when this is the case.
+        LOG(("NetworkLocationProvider::GetCurrentPosition() : Failed to make "
+             "request.\n"));
+        assert(false);
+        return false;
+      }
+      return true;
+    }
+  }
+  // If not, launch a new thread which will wait for a certain maximum period
+  // before making the request. If we receive all possible data before the wait
+  // period expires, we make the request immediately.
+  MutexLock wait_mutex_lock(&wait_mutex_);
+  // We should never be called when we already have a wait in progress.
+  assert(!wait_);
+  wait_ = new AsyncWait(this);
+  return true;
 }
 
 // DeviceDataProviderInterface::ListenerInterface implementation.
 
 void NetworkLocationProvider::DeviceDataUpdateAvailable(
     DeviceDataProviderBase<RadioData> *provider) {
-  // TODO(steveblock): Implement me.
-  assert(false);
+  MutexLock lock(&data_mutex_);
+  assert(provider == radio_data_provider_);
+  is_radio_data_complete_ = radio_data_provider_->GetData(&radio_data_);
+  timestamp_ = GetCurrentTimeMillis();
+  MakeRequestIfDataNowAvailable();
 }
 
 void NetworkLocationProvider::DeviceDataUpdateAvailable(
     DeviceDataProviderBase<WifiData> *provider) {
-  // TODO(steveblock): Implement me.
-  assert(false);
+  assert(provider == wifi_data_provider_);
+  MutexLock lock(&data_mutex_);
+  is_wifi_data_complete_ = wifi_data_provider_->GetData(&wifi_data_);
+  timestamp_ = GetCurrentTimeMillis();
+  MakeRequestIfDataNowAvailable();
 }
 
 // NetworkLocationRequest::ListenerInterface implementation.
@@ -82,6 +179,48 @@ void NetworkLocationProvider::LocationResponseAvailable(
   if (listener_) {
     listener_->LocationUpdateAvailable(this, position);
   }
+}
+
+// Other methods.
+
+bool NetworkLocationProvider::MakeRequest() {
+  MutexLock data_mutex_lock(&data_mutex_);
+  MutexLock wait_mutex_lock(&wait_mutex_);
+  // Check that the wait object still exists. It is possible that while blocked
+  // on the above mutexes, we received a callback from a device data provider
+  // and have just deleted the wait object. In this case, there's nothing to do.
+  if (wait_) {
+    wait_ = NULL;
+    if (-1 == timestamp_) {
+      // If we've never received a callback from either the radio or wifi device
+      // data provider, the timestamp won't be set. In this case, set it here.
+      timestamp_ = GetCurrentTimeMillis();
+    }
+    if (!request_->MakeRequest(radio_data_, wifi_data_, timestamp_)) {
+      LOG(("MakeRequest() : Failed to make position request.\n"));
+      return false;
+    }
+  }
+  return true;
+}
+
+bool NetworkLocationProvider::MakeRequestIfDataNowAvailable() {
+  // If the device data is now complete, check to see if we're waiting for this.
+  // If so, stop the waiting thread and make the request. Note that data_mutex_
+  // should already be locked.
+  MutexLock lock(&wait_mutex_);
+  if (wait_ && is_radio_data_complete_ && is_wifi_data_complete_) {
+    // Stop the wait thread and delete the object. We don't wait for the thread
+    // to complete because it may be blocked on wait_mutex_ in MakeRequest().
+    wait_->StopThreadAndDeleteNoWait();
+    wait_ = NULL;
+    if (!request_->MakeRequest(radio_data_, wifi_data_, timestamp_)) {
+      LOG(("MakeRequestIfDataNowAvailable() : Failed to make position "
+           "request.\n"));
+      return false;
+    }
+  }
+  return true;
 }
 
 #endif  // WIN32
