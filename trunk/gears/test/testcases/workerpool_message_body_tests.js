@@ -267,6 +267,16 @@ function testUndefinedElementMessageFails() {
 }
 
 function testBlobMessageSucceeds() {
+  // hasSameContentsAs() not present in opt builds.
+  if (!isDebug) {
+    return;
+  }
+
+  // createBlobFromString not present in official builds.
+  if (isOfficial) {
+    return;
+  }
+  
   startAsync();
   var wp = google.gears.factory.create('beta.workerpool');
   var ccTests = google.gears.factory.create('beta.test');
