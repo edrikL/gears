@@ -118,7 +118,7 @@ class Desktop {
                    std::string16 *error);
 
   bool DecodeIcon(IconData *icon, int expected_size, std::string16 *error);
-  bool AllowCreateShortcut(const ShortcutInfo &shortcut_info, bool *allow);
+  bool AllowCreateShortcut(const ShortcutInfo &shortcut_info);
   bool WriteControlPanelIcon(const ShortcutInfo &shortcut);
   bool GetControlPanelIconLocation(const SecurityOrigin &origin,
                                    const std::string16 &app_name,

@@ -425,41 +425,16 @@ static bool RunAppleScript(const std::string16 &applescript) {
   return true;
 }
 
-// Check whether there is an existing shortcut, and whether it was created by
-// us.  We only allow overwriting shortcuts we created, but it's okay if they
-// were written by another browser.  (This is best for users, and also helpful
-// during development, where we often create a shortcut in multiple browsers.)
-static bool CheckIllegalFileOverwrite(
-                const Desktop::ShortcutInfo &shortcut) {
-  
+// Check whether a desktop shortcut exists.
+static bool CanWriteShortcut(const Desktop::ShortcutInfo &shortcut) {
   // Get the destination path.
   std::string16 application_path;
   if (!GetApplicationPath(shortcut.app_name, &application_path)) {
     return false;
   }
   
-  // An application bundle is a directory, so if a file with the same name
-  // exists then fail.
-  if (File::Exists(application_path.c_str())) {
-    return false;
-  }
-
-  // TODO(playmobil): Can we look for (PRODUCT_FRIENDLY_NAME " for "), as we do
-  // on other platforms?
-  if (File::DirectoryExists(application_path.c_str())) {
-    // Check for the existence of a launch.sh file inside the application bundle
-    // If this exists, we assume the shortcut was created by Gears.
-    std::string16 launch_script_path = application_path;
-    launch_script_path += STRING16(L"/Contents/MacOS/") + kLaunchScriptFilename;
-    
-    if (File::Exists(launch_script_path.c_str())) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-  
-  return true;
+  return !File::Exists(application_path.c_str()) &&
+    !File::DirectoryExists(application_path.c_str());
 }
 
 // Force the finder to refresh the desktop icons.
@@ -531,12 +506,11 @@ bool Desktop::CreateShortcutPlatformImpl(
                        const Desktop::ShortcutInfo &shortcut,
                        uint32 locations,
                        std::string16 *error) {
-  // Before doing anything, check that we can create the shortcut legally.
-  if (!CheckIllegalFileOverwrite(shortcut)) {
-    *error = STRING16(L"Could not create desktop icon.");
-    return false;
+  // Return immediately if shortcut already exists.
+  if (!CanWriteShortcut(shortcut)) {
+    return true;
   }
-  
+
   // Build the bundle in the temp folder so that if something goes wrong we
   // don't leave a partially built bundle on the desktop.
   std::string16 temp_path;

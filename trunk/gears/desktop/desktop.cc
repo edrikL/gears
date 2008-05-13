@@ -35,6 +35,7 @@
 #include "gears/base/common/paths.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/png_utils.h"
+#include "gears/base/common/security_model.h"
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/desktop/file_dialog_utils.h"
@@ -104,7 +105,13 @@ bool Desktop::ValidateShortcutInfo(ShortcutInfo *shortcut_info) {
     return false;
   }
 
-  // Validate that we got at least one that we can use on all platforms
+  // We only allow shortcuts to be created within origin for now.
+  if (!security_origin_.IsSameOriginAsUrl(shortcut_info->app_url.c_str())) {
+    error_ = STRING16(L"Cannot create cross-origin shortcuts.");
+    return false;
+  }
+
+  // Validate that we got at least one icon.
   if (shortcut_info->icon16x16.url.empty() &&
       shortcut_info->icon32x32.url.empty() &&
       shortcut_info->icon48x48.url.empty() &&
@@ -127,13 +134,7 @@ bool Desktop::ValidateShortcutInfo(ShortcutInfo *shortcut_info) {
   }
 
   // Check if we should display UI.
-  bool allow_create_shortcut;
-  if (!AllowCreateShortcut(*shortcut_info, &allow_create_shortcut)) {
-    error_ = GET_INTERNAL_ERROR_MESSAGE();
-    return false;
-  }
-
-  return allow_create_shortcut;
+  return AllowCreateShortcut(*shortcut_info);
 }
 
 bool Desktop::InitializeDialog(ShortcutInfo *shortcut_info,
@@ -305,13 +306,9 @@ void GearsDesktop::CreateShortcut(JsCallContext *context) {
   }
 }
 
-// Check whether or not to create shortcut and display UI.
-// Reasons for not displaying UI:
-// * The shortcut already exists and is identical to the current one.
-// * The "never allow bit" is set for that shortcut.
-bool Desktop::AllowCreateShortcut(
-                       const Desktop::ShortcutInfo &shortcut_info,
-                       bool *allow) {
+// Check whether the user has forbidden this shortcut from being created
+// permanently.
+bool Desktop::AllowCreateShortcut(const Desktop::ShortcutInfo &shortcut_info) {
   PermissionsDB *capabilities = PermissionsDB::GetDB();
   if (!capabilities) {
    return false;
@@ -323,7 +320,7 @@ bool Desktop::AllowCreateShortcut(
   std::string16 icon48x48_url;
   std::string16 icon128x128_url;
   std::string16 msg;
-  bool allow_shortcut_creation;
+  bool allow_shortcut_creation = false;
   if (!capabilities->GetShortcut(security_origin_,
                                  shortcut_info.app_name.c_str(),
                                  &app_url,
@@ -334,35 +331,10 @@ bool Desktop::AllowCreateShortcut(
                                  &msg,
                                  &allow_shortcut_creation)) {
     // If shortcut doesn't exist in DB then it's OK to create it.
-    *allow = true;
     return true;
   }
 
-  // If user has elected not to display shortcut UI, then forbid creation.
-  if (!allow_shortcut_creation) {
-    *allow = false;
-    return true;
-  }
-
-  // Check that input parameters exactly match those stored in the table.
-  // Note that we do not take the description parameter into consideration when 
-  // doing so!
-  if (app_url != shortcut_info.app_url) {
-    *allow = true;
-    return true;
-  }
-
-  // Compare icons urls.
-  if(icon16x16_url != shortcut_info.icon16x16.url ||
-     icon32x32_url != shortcut_info.icon32x32.url ||
-     icon48x48_url != shortcut_info.icon48x48.url ||
-     icon128x128_url != shortcut_info.icon128x128.url) {
-     *allow = true;
-     return true;
-   }
-
-  *allow = false;
-  return true;
+  return allow_shortcut_creation;
 }
 
 #if USE_FILE_PICKER
@@ -711,6 +683,7 @@ bool Desktop::ResolveUrl(std::string16 *url, std::string16 *error) {
     *error += STRING16(L".");
     return false;
   }
+
   *url = full_url;
   return true;
 }

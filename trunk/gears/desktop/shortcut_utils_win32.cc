@@ -293,35 +293,15 @@ bool CreateShortcutFileWin32(const std::string16 &name,
   link_path += name;
   link_path += STRING16(L".lnk");
 
-  // Check whether there is an existing shortcut, and whether it was created by
-  // us.  We only allow overwriting shortcuts we created, but it's okay if they
-  // were written by another browser.  (This is best for users, and also helpful
-  // during development, where we often create a shortcut in multiple browsers.)
-  std::string16 old_icon;
-  if (ReadShellLink(link_path.c_str(), &old_icon, NULL, NULL)) {
-#ifdef WINCE
-    // We don't need to convert from short to long path on WinCE.
-#else
-    int old_icon_length = GetLongPathNameW(old_icon.c_str(), NULL, 0);
-    scoped_array<char16> old_icon_buf(new char16[old_icon_length]);
-    GetLongPathNameW(old_icon.c_str(), old_icon_buf.get(), old_icon_length);
-    old_icon.assign(old_icon_buf.get());
-#endif
-
-    // Look for the path where we store shortcut icons. (See paths*.cc.)
-    if (old_icon.find(STRING16(PRODUCT_FRIENDLY_NAME L" for "))
-        == old_icon.npos) {
-      *error = STRING16(L"Cannot overwrite shortcut not created by ");
-      *error += PRODUCT_FRIENDLY_NAME;
-      *error += STRING16(L".");
-      return false;
-    }
+  // Return immediately if shortcut already exists.
+  if (ReadShellLink(link_path.c_str(), NULL, NULL, NULL)) {
+    return true;
   }
 
   if (!CreateShellLink(link_path.c_str(), icons_path.c_str(),
                        browser_path.c_str(), url.c_str())) {
-      *error = GET_INTERNAL_ERROR_MESSAGE();
-      return false;
+    *error = GET_INTERNAL_ERROR_MESSAGE();
+    return false;
   }
 
   return true;
