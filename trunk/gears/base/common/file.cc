@@ -208,8 +208,10 @@ int64 File::ReadFileSegmentToBuffer(const char16 *full_filepath,
                                     int64 position,
                                     int64 max_bytes) {
   scoped_ptr<File> file(Open(full_filepath, READ, FAIL_IF_NOT_EXISTS));
-  return file.get() && file->Seek(position, SEEK_FROM_START) &&
-      file->Read(destination, max_bytes);
+  if (file.get() && file->Seek(position, SEEK_FROM_START)) {
+    return file->Read(destination, max_bytes);
+  }
+  return 0;
 }
 
 
