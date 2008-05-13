@@ -814,6 +814,8 @@ NOTIFIER_CPPSRCS += \
 		message_queue.cc \
 		message_queue_ie.cc \
 		mutex.cc \
+		notification_manager.cc \
+		notification_manager_test.cc \
 		notifier.cc \
 		notifier_process_linux.cc \
 		notifier_process_osx.cc \
@@ -824,6 +826,7 @@ NOTIFIER_CPPSRCS += \
 		stopwatch_win32.cc \
 		string16.cc \
 		string_utils.cc \
+		unit_test.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
