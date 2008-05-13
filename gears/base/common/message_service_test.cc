@@ -77,12 +77,14 @@ class TestObserver : public MessageObserverInterface {
   }
 };
 
-bool TestMessageService() {
+bool TestMessageService(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestMessageService - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestMessageService - failed. "); \
     return false; \
   } \
 }

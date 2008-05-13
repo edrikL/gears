@@ -37,12 +37,16 @@ static bool TestStrUtilsReplaceAll();
 static bool TestStringCompareIgnoreCase();
 static bool TestStringMatch();
 
-bool TestStringUtils() {
+bool TestStringUtils(std::string16 *error) {
   bool ok = true;
   ok &= TestStringCompareIgnoreCase();
   ok &= TestStartsWithAndEndsWith();
   ok &= TestStrUtilsReplaceAll();
   ok &= TestStringMatch();
+  if (!ok) {
+    assert(error); \
+    *error += STRING16(L"TestStringUtils - failed. "); \
+  }
   return ok;
 }
 

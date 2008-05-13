@@ -343,7 +343,7 @@ class MasterMessageHandler : public IpcMessageQueue::HandlerInterface {
 
 static MasterMessageHandler g_master_handler;
 
-bool TestIpcMessageQueue() {
+bool TestIpcMessageQueue(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
@@ -355,6 +355,8 @@ bool TestIpcMessageQueue() {
       ipc_message_queue->SendToAll(kIpcQueue_TestMessage, \
                                    new IpcTestMessage(kQuit), \
                                    false); \
+    assert(error); \
+    *error += STRING16(L"TestIpcMessageQueue - failed. "); \
     return false; \
   } \
 }

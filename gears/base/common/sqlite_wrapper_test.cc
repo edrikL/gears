@@ -41,11 +41,15 @@ bool TestSQLConcurrency();
 //------------------------------------------------------------------------------
 // TestSqliteUtilsAll
 //------------------------------------------------------------------------------
-bool TestSqliteUtilsAll() {
+bool TestSqliteUtilsAll(std::string16 *error) {
   bool ok = true;
   ok &= TestSQLDatabaseTransactions();
   ok &= TestSQLTransaction();
   ok &= TestSQLConcurrency();
+  if (!ok) {
+    assert(error); \
+    *error += STRING16(L"TestSqliteUtilsAll - failed. "); \
+  }
   return ok;
 }
 

@@ -90,7 +90,7 @@ class SecurityOrigin {
   }
 
  private:
-  friend bool TestSecurityModel();
+  friend bool TestSecurityModel(std::string16 *error);
 
   bool Init(const char16 *full_url, const char16 *scheme,
             const char16 *host, int port);

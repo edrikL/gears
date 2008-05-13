@@ -36,12 +36,14 @@
 #include "gears/blob/slice_blob.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-bool TestBufferBlob() {
+bool TestBufferBlob(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     printf("TestBufferBlob - failed (%d)\n", __LINE__); \
+    assert(error); \
+    *error += STRING16(L"TestBufferBlob - failed. "); \
     return false; \
   } \
 }
@@ -107,12 +109,14 @@ bool TestBufferBlob() {
 
 // TODO(bpm): TestFileBlob
 
-bool TestSliceBlob() {
+bool TestSliceBlob(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     printf("TestSliceBlob - failed (%d)\n", __LINE__); \
+    assert(error); \
+    *error += STRING16(L"TestSliceBlob - failed. "); \
     return false; \
   } \
 }

@@ -80,12 +80,14 @@ class SerializationTest : public Serializable {
   uint8 test_bytes_[kTestBytesSize];
 };
 
-bool TestSerialization() {
+bool TestSerialization(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestSerialization - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestSerialization - failed. "); \
     return false; \
   } \
 }

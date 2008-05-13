@@ -28,12 +28,14 @@
 
 #ifdef USING_CCTESTS
 
-bool TestCircularBuffer() {
+bool TestCircularBuffer(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestCircularBuffer - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestCircularBuffer - failed. "); \
     return false; \
   } \
 }
