@@ -99,14 +99,16 @@ void NetworkLocationRequest::Run() {
       // If HttpPost succeeded, payload.data is guaranteed to be non-NULL,
       // even if the vector it points to is empty.
       assert(payload.data.get());
-      if (!GetLocationFromResponse(*payload.data.get(), &position)) {
+      if (GetLocationFromResponse(*payload.data.get(), &position)) {
+        // We use the timestamp from the device data that was used to generate
+        // this position fix.
+        position.timestamp = timestamp_;
+      } else {
+        // If we failed to parse the repsonse, we call back with an invalid
+        // position.
         LOG(("NetworkLocationRequest::Run() : Failed to get location from "
              "response.\n"));
-        return;
       }
-      // We use the timestamp from the device data that was used to generate
-      // this position fix.
-      position.timestamp = timestamp_;
     } else {
       // If the response was bad, we call back with an invalid position.
       LOG(("NetworkLocationRequest::Run() : HttpPost response was bad.\n"));
