@@ -33,7 +33,7 @@ Upon receiving the content body of a resume request, the server may still not po
 412 (Precondition Failed) responses MAY include a Resume-Range header, similar to the Range header as defined in HTTP/1.1 section 14.35. The presence of a Resume-Range header in this context indicates the byte ranges of the content body which the server has stored for this operation. In future resume requests, the client SHOULD use this information to minimize the amount of data that needs to be retransmitted. This header overrides the value of any previous Resume-Range headers, even if the new Resume-Range is not a superset of previous ranges (which allows for the possibility of the server losing or discarding data). In addition, the server MAY specify disjoint byte ranges but SHOULD represent the ranges in canonical form. In the absence of any such Resume-Range header over the course of the operation, the client should assume that the server has no stored bytes.
 
 {{{
-if-resume = "Resume-Range" ":" ranges-specifier
+resume-range = "Resume-Range" ":" ranges-specifier
 }}}
 
 412 (Precondition Failed) responses MAY include a Location header as defined in HTTP/1.1 section 14.30. The presence of a Location header in this context specifies the URI to which future resumable requests should be sent for this operation. The header overrides the value of any previous Location headers. In the absence of any such Location header over the course of the operation, the client should send resume requests to the original Request-URI.
