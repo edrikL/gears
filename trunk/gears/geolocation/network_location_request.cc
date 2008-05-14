@@ -23,9 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// NetworkLocationRequest is currently only implemented for Win32.
-#ifdef WIN32
-
 #include "gears/geolocation/network_location_request.h"
 
 #include "gears/blob/buffer_blob.h"
@@ -58,7 +55,7 @@ NetworkLocationRequest* NetworkLocationRequest::Create(
 NetworkLocationRequest::NetworkLocationRequest(const std::string16 &url,
                                                const std::string16 &host_name,
                                                ListenerInterface *listener)
-    : url_(url), host_name_(host_name), listener_(listener) {
+    : listener_(listener), url_(url), host_name_(host_name) {
   if (!Init()) {
     assert(false);
   }
@@ -118,25 +115,18 @@ void NetworkLocationRequest::Run() {
     // contains the network location provider, which may cause
     // StopThreadAndDelete to be called on this object. So we must signal
     // completion before we make the call.
-    run_complete_event_.Set();
+    run_complete_event_.Signal();
     LOG(("NetworkLocationRequest::Run() : Calling listener with position.\n"));
     listener_->LocationResponseAvailable(position);
   } else {
-    run_complete_event_.Set();
+    run_complete_event_.Signal();
   }
-}
-
-bool NetworkLocationRequest::Init() {
-  if (!run_complete_event_.Create(NULL, FALSE, FALSE, NULL)) {
-    return false;
-  }
-  return AsyncTask::Init();
 }
 
 void NetworkLocationRequest::StopThreadAndDelete() {
   DeleteWhenDone();
   AsyncTask::Abort();
-  WaitForSingleObject(run_complete_event_, INFINITE);
+  run_complete_event_.Wait();
 }
 
 // Local functions.
@@ -252,6 +242,8 @@ static bool GetAsInt(const Json::Value &object,
   return true;
 }
 
+// TODO(steveblock): Need to finalize address format and set address.
+/*
 // Gets a string if it's present.
 static bool GetAsString(const Json::Value &object,
                         const std::string &property_name,
@@ -263,6 +255,7 @@ static bool GetAsString(const Json::Value &object,
   std::string out_utf8 = object[property_name].asString();
   return UTF8ToString16(out_utf8.c_str(), out_utf8.size(), out);
 }
+*/
 
 static bool GetLocationFromResponse(const std::vector<uint8> &response,
                                     Position *position) {
@@ -316,5 +309,3 @@ bool GetLocationFromResponseTest(const std::vector<uint8> &response,
   return GetLocationFromResponse(response, position);
 }
 #endif
-
-#endif  // WIN32

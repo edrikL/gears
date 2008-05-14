@@ -43,12 +43,10 @@ DeviceDataProviderBase<WifiData>* DeviceDataProviderBase<WifiData>::instance =
 template <>
 Mutex DeviceDataProviderBase<WifiData>::instance_mutex;
 
-// MockRadioDataProvider and MockWifiDataProvider are currently only provided
-// for Win32.
-#if USING_MOCK_DEVICE_DATA_PROVIDERS && defined(WIN32)
+#if USING_MOCK_DEVICE_DATA_PROVIDERS
 
 #include <assert.h>
-#include <atlsync.h>  // For CEvent.
+#include "gears/base/common/event.h"
 #include "gears/localserver/common/async_task.h"
 
 // A mock implementation of DeviceDataProviderBase for testing. It simply calls
@@ -77,8 +75,8 @@ class MockDeviceDataProvider
  private:
   // DeviceDataProviderBase<DataType> implementation.
   void StopAndDelete() {
-    stop_event_.Set();
-    WaitForSingleObject(run_complete_event_, INFINITE);
+    stop_event_.Signal();
+    run_complete_event_.Wait();
     // This will delete the object immediately if the thread has already
     // terminated, so we must call it last.
     DeleteWhenDone();
@@ -86,7 +84,7 @@ class MockDeviceDataProvider
   // AsyncTask implementation.
   virtual void Run() {
     while (true) {
-      if (WaitForSingleObject(stop_event_, 1000) == WAIT_OBJECT_0) {
+      if (stop_event_.WaitWithTimeout(1000)) {
         break;
       }
       listeners_mutex_.Lock();
@@ -97,20 +95,11 @@ class MockDeviceDataProvider
       }
       listeners_mutex_.Unlock();
     }
-    run_complete_event_.Set();
-  }
-  bool Init() {
-    if (!stop_event_.Create(NULL, FALSE, FALSE, NULL)) {
-      return false;
-    }
-    if (!run_complete_event_.Create(NULL, FALSE, FALSE, NULL)) {
-      return false;
-    }
-    return AsyncTask::Init();
+    run_complete_event_.Signal();
   }
 
-  CEvent stop_event_;
-  CEvent run_complete_event_;
+  Event stop_event_;
+  Event run_complete_event_;
   DISALLOW_EVIL_CONSTRUCTORS(MockDeviceDataProvider);
 };
 
@@ -160,7 +149,7 @@ DeviceDataProviderBase<WifiData>* DeviceDataProviderBase<WifiData>::Create() {
   return new MockWifiDataProvider();
 }
 
-#else  // USING_MOCK_DEVICE_DATA_PROVIDERS && WIN32
+#else  // USING_MOCK_DEVICE_DATA_PROVIDERS
 
 // Temporarily implement these methods to avoid link errors.
 // TODO(steveblock): Implement DeviceDataProviderBase for other platforms.
@@ -183,4 +172,4 @@ DeviceDataProviderBase<WifiData>* DeviceDataProviderBase<WifiData>::Create() {
   return NULL;
 }
 
-#endif  // USING_MOCK_DEVICE_DATA_PROVIDERS && WIN32
+#endif  // USING_MOCK_DEVICE_DATA_PROVIDERS

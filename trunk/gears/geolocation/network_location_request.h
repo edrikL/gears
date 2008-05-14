@@ -26,16 +26,13 @@
 #ifndef GEARS_GEOLOCATION_NETWORK_LOCATION_REQUEST_H__
 #define GEARS_GEOLOCATION_NETWORK_LOCATION_REQUEST_H__
 
-// NetworkLocationRequest is currently only implemented for Win32.
-#ifdef WIN32
-
-#include "gears/base/common/common.h"
 #include "gears/base/common/basictypes.h"  // For int64
+#include "gears/base/common/common.h"
+#include "gears/base/common/event.h"
 #include "gears/blob/blob.h"
 #include "gears/geolocation/geolocation.h"
 #include "gears/geolocation/device_data_provider.h"
 #include "gears/localserver/common/async_task.h"
-#include <atlsync.h>  // For CEvent.
 #include <vector>
 
 // An implementation of an AsyncTask that takes a set of device data and sends
@@ -64,17 +61,14 @@ class NetworkLocationRequest : public AsyncTask {
   virtual ~NetworkLocationRequest() {}
   // AsyncTask implementation.
   virtual void Run();
-  bool Init();
 
   int64 timestamp_;  // The timestamp of the data used to make the request.
   scoped_refptr<BlobInterface> post_body_;
   ListenerInterface *listener_;
   std::string16 url_;
   std::string16 host_name_;
-  CEvent run_complete_event_;
+  Event run_complete_event_;
   DISALLOW_EVIL_CONSTRUCTORS(NetworkLocationRequest);
 };
-
-#endif  // WIN32
 
 #endif  // GEARS_GEOLOCATION_NETWORK_LOCATION_REQUEST_H__

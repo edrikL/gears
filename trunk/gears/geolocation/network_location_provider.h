@@ -26,9 +26,6 @@
 #ifndef GEARS_GEOLOCATION_NETWORK_LOCATION_PROVIDER_H__
 #define GEARS_GEOLOCATION_NETWORK_LOCATION_PROVIDER_H__
 
-// NetworkLocationProvider is currently only implemented for Win32.
-#ifdef WIN32
-
 #include "gears/base/common/common.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string16.h"
@@ -90,5 +87,3 @@ class NetworkLocationProvider
 };
 
 #endif  // WIN32
-
-#endif  // GEARS_GEOLOCATION_NETWORK_LOCATION_PROVIDER_H__
