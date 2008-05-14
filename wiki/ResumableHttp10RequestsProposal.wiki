@@ -30,7 +30,11 @@ Normally there is nothing special about the initial request in a resumable opera
 
 Upon receiving the content body of a resume request, the server may still not posses the complete byte range, requiring further action (e.g. additional requests) from the client. In such cases, the server SHOULD return status code 412 (Precondition Failed) if it is still willing to continue the operation.
 
-412 (Precondition Failed) responses MAY include a Resume-Range header as defined in HTTP/1.1 section 14.35. The presence of a Resume-Range header in this context indicates the byte ranges of the content body which the server has stored for this operation. In future resume requests, the client SHOULD use this information to minimize the amount of data that needs to be retransmitted. This header overrides the value of any previous Resume-Range headers, even if the new Resume-Range is not a superset of previous ranges (which allows for the possibility of the server losing or discarding data). In addition, the server MAY specify disjoint byte ranges but SHOULD represent the ranges in canonical form. In the absence of any such Resume-Range header over the course of the operation, the client should assume that the server has no stored bytes.
+412 (Precondition Failed) responses MAY include a Resume-Range header, similar to the Range header as defined in HTTP/1.1 section 14.35. The presence of a Resume-Range header in this context indicates the byte ranges of the content body which the server has stored for this operation. In future resume requests, the client SHOULD use this information to minimize the amount of data that needs to be retransmitted. This header overrides the value of any previous Resume-Range headers, even if the new Resume-Range is not a superset of previous ranges (which allows for the possibility of the server losing or discarding data). In addition, the server MAY specify disjoint byte ranges but SHOULD represent the ranges in canonical form. In the absence of any such Resume-Range header over the course of the operation, the client should assume that the server has no stored bytes.
+
+{{{
+if-resume = "Resume-Range" ":" ranges-specifier
+}}}
 
 412 (Precondition Failed) responses MAY include a Location header as defined in HTTP/1.1 section 14.30. The presence of a Location header in this context specifies the URI to which future resumable requests should be sent for this operation. The header overrides the value of any previous Location headers. In the absence of any such Location header over the course of the operation, the client should send resume requests to the original Request-URI.
 
@@ -47,12 +51,12 @@ When a client receives a 416 (Requested Range Not Satisfiable), if it chooses to
 The If-Resume header MUST be sent by clients on all resume requests, and MUST be sent on initial requests that contain a partial byte range. The If-Resume header has one optional parameter: bytes.
 
 {{{
-if-resume = "If-Resume" ":" [ resume-range-spec ]
-resume-range-spec = bytes-resume-range-spec
-bytes-resume-range-spec = bytes-unit "=" byte-range-spec "/" ( instance-length | "*" )
+if-resume = "If-Resume" ":" [ if-resume-spec ]
+if-resume-spec = bytes-if-resume-spec
+bytes-if-resume-spec = bytes-unit "=" [ first-byte-pos "-" [last-byte-pos] ] "/" ( instance-length | "*" )
 }}}
 
-When including a body in an If-Resume request, clients MUST include a resume-range-spec indicating which bytes are being transferred with respect to all bytes in the operation. Note that this may be different than the byte range specified in any Content-Range header (if present). Clients MUST specify first-byte-pos as it identifies where in the context of the operation the bytes belong. Clients MAY omit last-byte-pos in cases where the length of the range being transferred is unknown or difficult to determine. Clients SHOULD specify instance-length, unless it is unknown or difficult to determine (in which case "`*`" should be used). In cases where the instance-length is "`*`", the client MUST either use chunked transfer coding or specify the instance-length in the final chunk transferred. Once a client specifies instance-length on one request, all subsequent requests to the same URL MUST use the same instance-length.
+When including a body in an If-Resume request, clients MUST include a resume-range-spec indicating which bytes are being transferred with respect to all bytes in the operation. Note that this may be different than the byte range specified in any Content-Range header (if present). Clients MUST specify first-byte-pos if any bytes are being transferred (i.e. if the byte range is not zero), otherwise they MUST omit both first-byte-pos and last-byte-pos. Clients MAY omit last-byte-pos in cases where the length of the range being transferred is unknown or difficult to determine. Clients SHOULD specify instance-length, unless it is unknown or difficult to determine (in which case "`*`" should be used). In cases where the instance-length is "`*`", the client MUST either use chunked transfer coding or specify the instance-length in the final chunk transferred. Once a client specifies instance-length on one request, all subsequent requests to the same URL MUST use the same instance-length.
 
 The client MAY send an If-Resume without a resume-range-spec parameter in order to poll the server to determine which byte ranges it already possesses. In such cases, clients MUST NOT include a body in the request. This is the canonical polling mechanism whereby the client can determine which bytes the server has received under failure modes where this information is not already expossed.
 
