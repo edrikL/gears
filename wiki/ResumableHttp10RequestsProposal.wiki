@@ -14,9 +14,9 @@ When an HTTP _request_ is resumed, the initial request combined with all subsequ
  # Prior to initiating an operation, the client must first obtain a unique per-operation URL which will be used to identify all subsequent resume requests with the original operation. In other words, all requests to a given URL form a single logical operation.
  # The client initiates a request (e.g. POST/PUT) to the unique URL obtained in step (1). Normally the client sends all data bytes in the initial request, but when necessary it can send partial data, in which case a 412 (Precondition Failed) response code is expected.
  # Once the server has received all bytes of the request, it responds with a final response code, and the operation is complete. If not all data bytes have been received, then the server responds with a 412 (Precondition Failed) response code, indicating that the transferred bytes were succesfully received, but additional bytes are still expected.
- # Should the connection be closed prior to the arrival of a final response code (possibly before all bytes of the request have even been sent), or if the client receives a 503 (Service Unavailable) status code, then the client retries by issueing a HEAD request to the unique URL of step (1).
- # The server sends a standard response to the HEAD request, notably using the Content-Length header to indicate what portion of the file it has successfully received.
- # The client sends a resume request, which resembles the original request from step (2), but contains only a subset of the data bytes (specifically those not yet received by the server). An If-Resume header is added to specify the byte range which is being transfered.
+ # Should the connection be closed prior to the arrival of a final response code (possibly before all bytes of the request have even been sent), or if the client receives a 503 (Service Unavailable) status code, then the client queries the server by sending a resume request (e.g. POST/PUT) with no body.
+ # If the server has succesfully received all bytes from the operation, it responds with a final status code; otherwise it responds with a 412 (Precondition Failed), indicating which bytes of the operation it has successfully received.
+ # If the client receives a 412 (Precondition Failed), it sends a resume request, which resembles the original request from step (2), but contains only a subset of the data bytes (specifically those not yet received by the server). An If-Resume header is added to specify the byte range which is being transfered.
 
 = Unique URL =
 
@@ -30,29 +30,31 @@ Normally there is nothing special about the initial request in a resumable opera
 
 Upon receiving the content body of a resume request, the server may still not posses the complete byte range, requiring further action (e.g. additional requests) from the client. In such cases, the server SHOULD return status code 412 (Precondition Failed) if it is still willing to continue the operation.
 
-412 (Precondition Failed) responses MAY include a Range header as defined in HTTP/1.1 section 14.35. The presence of a Range header in this context indicates the byte ranges of the content body which the server has stored for this operation. In future resume requests, the client SHOULD use this information to minimize the amount of data that needs to be retransmitted. This header overrides the value of any previous Range headers, even if the new Range is not a superset of previous ranges (which allows for the possibility of the server losing or discarding data). In addition, the server MAY specify disjoint byte ranges but SHOULD represent the ranges in canonical form. In the absence of any such Range header over the course of the operation, the client should assume that the server has no stored bytes.
+412 (Precondition Failed) responses MAY include a Resume-Range header as defined in HTTP/1.1 section 14.35. The presence of a Resume-Range header in this context indicates the byte ranges of the content body which the server has stored for this operation. In future resume requests, the client SHOULD use this information to minimize the amount of data that needs to be retransmitted. This header overrides the value of any previous Resume-Range headers, even if the new Resume-Range is not a superset of previous ranges (which allows for the possibility of the server losing or discarding data). In addition, the server MAY specify disjoint byte ranges but SHOULD represent the ranges in canonical form. In the absence of any such Resume-Range header over the course of the operation, the client should assume that the server has no stored bytes.
 
 412 (Precondition Failed) responses MAY include a Location header as defined in HTTP/1.1 section 14.30. The presence of a Location header in this context specifies the URI to which future resumable requests should be sent for this operation. The header overrides the value of any previous Location headers. In the absence of any such Location header over the course of the operation, the client should send resume requests to the original Request-URI.
 
 A 412 (Precondition Failed) MAY include a Retry-After header as defined in HTTP/1.1 section 14.37. A client which receives a Retry-After SHOULD delay further resume operations for the specified time period. If the delay is not feasible, the client MUST fail the operation. The server MAY send a 412 (Precondition Failed) before receiving the entire request body, but as specified in section 8.2.3 of HTTP/1.1 the server SHOULD NOT close the transport connection until it has read the entire request, or until the client closes the connection.
 
-= HEAD Request =
+= Status Code: 416 Requested Range Not Satisfiable =
 
-If a client's connection to the server is terminated prior to the receipt of a final response code, or if the client receives a 503 (Service Unavailable), then the client sends a HEAD request to the server, using the same URL as the initial request, to determine which bytes the server has sucesfully received. Exponential backoff should be used to separate series of sequential retries, per HTTP/1.1 section 8.2.4.
+When resuming an operation, clients SHOULD send byte ranges that are contiguous with the bytes already acknowledged by the server. Servers MAY support the transfer of non-contiguous byte ranges, but are not required to do so; if a server does not support non-contiguous byte ranges, then it MUST  to them respond with a 416 (Requested Range Not Satisfiable). If the server has succesfully received any bytes from the client, then the 416 (Requested Range Not Satisfiable) response MUST include a Resume-Range header acknowledging those bytes.
 
-The server responds to HEAD requests by sending a 200 (OK) response without any message-body. Responses to HEAD requests MUST include a Range header as defined in HTTP/1.1 section 14.35, and as sent in 412 (Precondition Failed) responses.
+When a client receives a 416 (Requested Range Not Satisfiable), if it chooses to continue the operation then it MUST send a range that that is contiguous to the bytes contained in the Resume-Range header of the 416 (Requested Range Not Satisfiable), or starting at the beginning of the byte range if no such header was received.
 
 = If-Resume Header =
 
-The If-Resume header MUST be sent by clients on all resume requests (i.e. on all but the initial request). The If-Resume header has one required parameter: bytes.
+The If-Resume header MUST be sent by clients on all resume requests, and MUST be sent on initial requests that contain a partial byte range. The If-Resume header has one optional parameter: bytes.
 
 {{{
-if-resume = "If-Resume" ":" resume-range-spec
+if-resume = "If-Resume" ":" [ resume-range-spec ]
 resume-range-spec = bytes-resume-range-spec
 bytes-resume-range-spec = bytes-unit "=" byte-range-spec "/" ( instance-length | "*" )
 }}}
 
 When including a body in an If-Resume request, clients MUST include a resume-range-spec indicating which bytes are being transferred with respect to all bytes in the operation. Note that this may be different than the byte range specified in any Content-Range header (if present). Clients MUST specify first-byte-pos as it identifies where in the context of the operation the bytes belong. Clients MAY omit last-byte-pos in cases where the length of the range being transferred is unknown or difficult to determine. Clients SHOULD specify instance-length, unless it is unknown or difficult to determine (in which case "`*`" should be used). In cases where the instance-length is "`*`", the client MUST either use chunked transfer coding or specify the instance-length in the final chunk transferred. Once a client specifies instance-length on one request, all subsequent requests to the same URL MUST use the same instance-length.
+
+The client MAY send an If-Resume without a resume-range-spec parameter in order to poll the server to determine which byte ranges it already possesses. In such cases, clients MUST NOT include a body in the request. This is the canonical polling mechanism whereby the client can determine which bytes the server has received under failure modes where this information is not already expossed.
 
 If the server receives a request with a If-Resume header and is not able to locate the operation identified by the URL or is otherwise prevented from continuing the operation, the server SHOULD respond with a 412 (Precondition Failed) status code. If the server receives a resume request (e.g. duplicate request to the same URL) without an If-Resume header then it SHOULD fail with a 412 (Precondition Failed)
 
@@ -60,7 +62,7 @@ If the server receives a request with a If-Resume header and is not able to loca
 
 The server SHOULD process the data from a resumable operation in the same way it would have processed a single request with the entire content. In particular, the server may need to cache the partial data from an operation, and only process it (e.g. pass it to a CGI application) once the data is complete. Servers which support a streaming mode of processing may do so for a resumable operation as long as the streaming can be resumed normally when the client sends more data in a future resume request.
 
-When resuming an operation, clients SHOULD send byte ranges that are contiguous with the bytes already acknowledged by the server. Servers MAY support the transfer of non-contiguous byte ranges, but are not required to do so; if a server does not support non-contiguous byte ranges, then it MUST respond with a 416 (Requested Range Not Satisfiable).
+If a client's connection to the server is terminated prior to the receipt of a final response code, or if the client receives a 503 (Service Unavailable), exponential backoff should be used to separate series of sequential retries, per HTTP/1.1 section 8.2.4.
 
 If the client sends a resume request which refers to an operation that has already completed, the server MUST NOT re-process the data, and SHOULD return the same or equivalent response to the client as was returned from the original processing. If the server cannot compose an equivalent response, it MAY return 202 or some other response to indicate that the operation was processed with unknown results, keeping in mind that this response might be confusing when resuming requests occur transparently to the user. Regardless of this possibility, any sequence of resume requests with respect to the same entity tag are guaranteed idempotent, and may be retried without user interaction, despite the considerations of section 8.1.4 of HTTP/1.1.
 
