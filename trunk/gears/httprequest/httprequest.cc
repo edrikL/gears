@@ -90,7 +90,7 @@ GearsHttpRequest::~GearsHttpRequest() {
 
 void GearsHttpRequest::HandleEvent(JsEventType event_type) {
   assert(event_type == JSEVENT_UNLOAD);
-  onreadystatechangehandler_.release();
+  onreadystatechangehandler_.reset(NULL);
   unload_monitor_.reset(NULL);
   AbortRequest();
 }
@@ -132,10 +132,7 @@ void GearsHttpRequest::Open(JsCallContext *context) {
   }
 
   CreateRequest();
-  if (unload_monitor_ == NULL) {
-    unload_monitor_.reset(
-        new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD, this));
-  }
+  InitUnloadMonitor();
   content_type_header_was_set_ = false;
   has_fired_completion_event_ = false;
   if (!request_->Open(method.c_str(), full_url.c_str(), true)) {
@@ -362,6 +359,7 @@ void GearsHttpRequest::SetOnReadyStateChange(JsCallContext *context) {
     return;
   }
   onreadystatechangehandler_.reset(function);
+  InitUnloadMonitor();
 }
 
 void GearsHttpRequest::GetReadyState(JsCallContext *context) {
@@ -582,5 +580,12 @@ void GearsHttpRequest::ReadyStateChanged(HttpRequest *source) {
     if (is_complete) {
       delete handler;
     }
+  }
+}
+
+void GearsHttpRequest::InitUnloadMonitor() {
+  if (unload_monitor_ == NULL) {
+    unload_monitor_.reset(
+        new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD, this));
   }
 }
