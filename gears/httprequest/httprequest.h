@@ -125,6 +125,10 @@ class GearsHttpRequest
   bool ResolveUrl(const std::string16 &url, std::string16 *resolved_url,
                   std::string16 *exception_message);
 
+  // This needs to be called when a request is created, or if
+  // onreadystatechangehandler_ is set.  It is safe to call multiple times.
+  void GearsHttpRequest::InitUnloadMonitor();
+
   // HttpRequest::HttpListener implementation.
   virtual void DataAvailable(HttpRequest *source);
   virtual void ReadyStateChanged(HttpRequest *source);
