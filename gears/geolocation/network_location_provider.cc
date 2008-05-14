@@ -23,11 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// NetworkLocationProvider is currently only implemented for Win32.
-#ifdef WIN32
-
 #include "gears/geolocation/network_location_provider.h"
 
+#include "gears/base/common/event.h"
 #include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis
 #include "gears/localserver/common/async_task.h"
 
@@ -53,13 +51,13 @@ class AsyncWait : public AsyncTask {
   // Instructs the thread to stop and delete the object when it has completed.
   // Waits for the Run method to complete.
   void StopThreadAndDelete() {
-    stop_event_.Set();
-    WaitForSingleObject(run_complete_event_, INFINITE);
+    stop_event_.Signal();
+    run_complete_event_.Wait();
     DeleteWhenDone();
   }
   // Instructs the thread to stop and delete the object when it has completed.
   void StopThreadAndDeleteNoWait() {
-    stop_event_.Set();
+    stop_event_.Signal();
     DeleteWhenDone();
   }
  private:
@@ -67,26 +65,16 @@ class AsyncWait : public AsyncTask {
   ~AsyncWait() {}
   // AsyncTask implementation.
   virtual void Run() {
-    if (WaitForSingleObject(stop_event_, kDataCompleteWaitPeriod) ==
-        WAIT_TIMEOUT) {
+    if (!stop_event_.WaitWithTimeout(kDataCompleteWaitPeriod)) {
       // Timeout, try to make the request.
       provider_->MakeRequest();
     }
-    run_complete_event_.Set();
-  }
-  bool Init() {
-    if (!stop_event_.Create(NULL, FALSE, FALSE, NULL)) {
-      return false;
-    }
-    if (!run_complete_event_.Create(NULL, FALSE, FALSE, NULL)) {
-      return false;
-    }
-    return AsyncTask::Init();
+    run_complete_event_.Signal();
   }
  private:
   NetworkLocationProvider *provider_;
-  CEvent stop_event_;
-  CEvent run_complete_event_;
+  Event stop_event_;
+  Event run_complete_event_;
   DISALLOW_EVIL_CONSTRUCTORS(AsyncWait);
 };
 
@@ -94,10 +82,10 @@ class AsyncWait : public AsyncTask {
 
 NetworkLocationProvider::NetworkLocationProvider(const std::string16 &url,
                                                  const std::string16 &host_name)
-    : wait_(NULL),
+    : timestamp_(-1),
       is_radio_data_complete_(false),
       is_wifi_data_complete_(false),
-      timestamp_(-1) {
+      wait_(NULL) {
   request_ = NetworkLocationRequest::Create(url, host_name, this);
   assert(request_);
   // Get the device data providers. The first call to Register will create the
@@ -222,5 +210,3 @@ bool NetworkLocationProvider::MakeRequestIfDataNowAvailable() {
   }
   return true;
 }
-
-#endif  // WIN32
