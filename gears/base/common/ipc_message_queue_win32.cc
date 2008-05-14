@@ -1591,7 +1591,7 @@ void TestingIpcMessageQueueWin32_GetAllProcesses(
                                      std::vector<IpcProcessId> *processes) {
   assert(g_peer_queue_instance);
   IpcProcessRegistry registry;
-  assert(registry.Open(true));
+  registry.Open(true);
   registry.GetAll(processes);
 }
 
