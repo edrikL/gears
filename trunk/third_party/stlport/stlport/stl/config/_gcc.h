@@ -250,7 +250,8 @@ typedef unsigned int wint_t;
 #  define _STLP_NO_UNCAUGHT_EXCEPT_SUPPORT
 #  define _STLP_NO_UNEXPECTED_EXCEPT_SUPPORT
 #  define _STLP_DEF_CONST_DEF_PARAM_BUG 1
-#else
+#elif !defined (ANDROID)
+// Don't drag in these externals on Android.
 #  undef _STLP_NO_UNCAUGHT_EXCEPT_SUPPORT
 #  undef _STLP_NO_UNEXPECTED_EXCEPT_SUPPORT
 #endif
@@ -459,4 +460,3 @@ __GIVE_UP_WITH_STL(GCC_272);
 #else
 #  define _STLP_STATIC_TEMPLATE_DATA 1
 #endif
-

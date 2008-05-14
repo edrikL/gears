@@ -76,7 +76,10 @@ typedef char mbstate_t;
 #  endif /* ROOT65 */
 #else /* __sgi */
 #  include <stddef.h>
-#  include <wchar.h>
+#  if !defined (ANDROID)
+/* The Android wchar.h header is broken, and tries to redefine wchar_t. */
+#    include <wchar.h>
+#  endif
 #  include <ctype.h>
 #endif /* __sgi */
 
@@ -189,7 +192,7 @@ struct _Locale_name_hint;
 #    define _Locale_PRINT _CTYPE_R
 #    define _Locale_ALPHA _CTYPE_A
 
-#  elif defined (__NetBSD__) || defined (__OpenBSD__) || defined (__amigaos__)
+#  elif defined (__NetBSD__) || defined (__OpenBSD__) || defined (__amigaos__) || defined(ANDROID)
 
 #    define _Locale_CNTRL _C
 #    define _Locale_UPPER _U

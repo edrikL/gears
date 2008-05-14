@@ -185,9 +185,13 @@ enum {_ALIGN = 8, _ALIGN_SHIFT = 3, _MAX_BYTES = 128};
 #  endif /* __OS400__ */
 
 #if !defined (_STLP_USE_NO_IOSTREAMS)
+
+#  if !defined (_STLP_USE_SIMPLE_NODE_ALLOC)
 // Default node allocator.
 // With a reasonable compiler, this should be roughly as fast as the
 // original STL class-specific allocators, but with less fragmentation.
+// Define _STLP_USE_SIMPLE_NODE_ALLOC to use __new_alloc instead, which
+// can be implemented without out-of-line functions.
 class _STLP_CLASS_DECLSPEC __node_alloc {
   static void * _STLP_CALL _M_allocate(size_t& __n);
   /* __p may not be 0 */
@@ -209,9 +213,16 @@ public:
   { if (__n > (size_t)_MAX_BYTES) __stl_delete(__p); else _M_deallocate(__p, __n); }
 };
 
-#  if defined (_STLP_USE_TEMPLATE_EXPORT)
+#    if defined (_STLP_USE_TEMPLATE_EXPORT)
 _STLP_EXPORT_TEMPLATE_CLASS __debug_alloc<__node_alloc>;
-#  endif
+#    endif
+
+#  else /* _STLP_USE_SIMPLE_NODE_ALLOC */
+// Use __new_alloc instead of __node_alloc. This prevents the need for
+// out-of-line _M_allocate and _M_dealloacte functions.
+typedef __new_alloc __node_alloc;
+
+#  endif /* _STLP_USE_SIMPLE_NODE_ALLOC */
 
 #endif /* _STLP_USE_NO_IOSTREAMS */
 
@@ -662,4 +673,3 @@ _STLP_END_NAMESPACE
 // Local Variables:
 // mode:C++
 // End:
-

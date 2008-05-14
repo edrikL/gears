@@ -8,4 +8,53 @@ This is STLport version 5.1.4, retrieved on Jan 17th 2008. See
 http://www.stlport.org
 
 Local Modifications:
-No modifications.
+
+Fixed some compiler warnings.
+
+Added support for Android.
+
+Added #define options to allow using a subset of iostreams without
+requiring STLport to be built as a library.
+
+Changed the following files:
+
+_alloc.h:
+	Option to use simple node allocator so we don't need
+	out-of-line functions built.
+
+_cstdlib.h:
+	#if out the C library functions not present on Android.
+
+_cwchar.h:
+	#if out wide character types not defined by Android headers.
+
+_iostream.c:
+	Fix warning about ambiguous expression order.
+
+_num_put.c:
+	Fix warning about ambiguous expression order.
+
+_range_errors.c:
+	Tweak #ifs to more precisely specify when not to use
+	externally defined range error functions so we don't
+	need out-of-lines compiled separately.
+
+c_locale.h:
+	Don't #include broken Android wchar.h. Used the BSD _Locale_*
+	definitions as Android uses a BSD derived ctype.h.
+
+char_traits.h:
+	Define streamoff type for Android.
+
+_android.h:
+	Android platform configuration defines.
+
+_gcc.h:
+	Option to prevent uncaught_exception and unexpected_exception
+	being out-of-lined.
+
+_system.h:
+	Added Android platform.
+
+cstring:
+	#if out missing C library functions on Android.

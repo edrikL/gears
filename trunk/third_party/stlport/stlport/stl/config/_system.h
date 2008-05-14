@@ -166,6 +166,10 @@
 #  endif
 
 #  include <stl/config/_windows.h>
+#elif defined (ANDROID)
+   /* Android mobile phone platform. Somewhat but not entirely GNU/Linux-like */
+#  include <stl/config/_android.h>
+#  include <stl/config/_gcc.h>
 #else
 #  error Unknown platform !!
 #endif
