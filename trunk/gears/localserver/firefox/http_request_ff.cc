@@ -99,8 +99,8 @@ bool HttpRequest::CreateSafeRequest(scoped_refptr<HttpRequest>* request) {
 FFHttpRequest::FFHttpRequest()
   : ready_state_(UNINITIALIZED), async_(false),
     caching_behavior_(USE_ALL_CACHES), redirect_behavior_(FOLLOW_ALL),
-    was_sent_(false), was_aborted_(false),
-    was_redirected_(false), listener_(NULL) {
+    was_sent_(false), was_aborted_(false), was_redirected_(false),
+    listener_(NULL), listener_data_available_enabled_(false) {
 }
 
 FFHttpRequest::~FFHttpRequest() {
@@ -601,10 +601,12 @@ bool FFHttpRequest::Abort() {
 }
 
 //------------------------------------------------------------------------------
-// SetOnReadyStateChange
+// SetListener
 //------------------------------------------------------------------------------
-bool FFHttpRequest::SetOnReadyStateChange(ReadyStateListener *listener) {
+bool FFHttpRequest::SetListener(HttpListener *listener,
+                                bool enable_data_available) {
   listener_ = listener;
+  listener_data_available_enabled_ = enable_data_available;
   return true;
 }
 
@@ -691,7 +693,7 @@ NS_IMETHODIMP FFHttpRequest::OnDataAvailable(nsIRequest *request,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (body->size() > prev_size) {
-    if (listener_) {
+    if (listener_ && listener_data_available_enabled_) {
       listener_->DataAvailable(this);
     }
   }

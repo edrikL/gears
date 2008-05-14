@@ -125,12 +125,16 @@ class HttpRequest {
   virtual bool Abort() = 0;
 
   // events and listeners
-  class ReadyStateListener {
+  class HttpListener {
    public:
+    virtual void ReadyStateChanged(HttpRequest *source) {};
     virtual void DataAvailable(HttpRequest *source) {};
-    virtual void ReadyStateChanged(HttpRequest *source) = 0;
   };
-  virtual bool SetOnReadyStateChange(ReadyStateListener *listener) = 0;
+
+  // Should be called prior to Send with the exception of setting
+  // the listener to NULL which can be done at anytime.
+  virtual bool SetListener(HttpListener *listener,
+                           bool enable_data_availbable) = 0;
 
  protected:
   HttpRequest() {}

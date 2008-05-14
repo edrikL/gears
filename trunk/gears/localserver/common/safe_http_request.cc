@@ -30,9 +30,9 @@
 //------------------------------------------------------------------------------
 
 SafeHttpRequest::SafeHttpRequest(ThreadId safe_thread_id)
-    : was_aborted_(false), was_sent_(false), listener_(NULL),
-      safe_thread_id_(safe_thread_id),
-      apartment_thread_id_(0) {
+    : was_aborted_(false), was_sent_(false),
+      listener_(NULL), listener_data_available_enabled_(false), 
+      safe_thread_id_(safe_thread_id), apartment_thread_id_(0) {
   ThreadMessageQueue *msg_q = ThreadMessageQueue::GetInstance();
   msg_q->InitThreadMessageQueue();
   apartment_thread_id_ = msg_q->GetCurrentThreadId();
@@ -283,10 +283,11 @@ bool SafeHttpRequest::SetRedirectBehavior(
   return true;
 }
 
-bool SafeHttpRequest::SetOnReadyStateChange(
-                          HttpRequest::ReadyStateListener *listener) {
+bool SafeHttpRequest::SetListener(HttpRequest::HttpListener *listener,
+                                  bool enable_data_available) {
   assert(IsApartmentThread());
   listener_ = listener;
+  listener_data_available_enabled_ = enable_data_available;
   return true;
 }
 
@@ -349,7 +350,7 @@ void SafeHttpRequest::OnSendCall() {
 
   // We defer setting up the listener to skip the OPEN callback
   // since we already called it in SafeHttpRequest::Open
-  native_http_request_->SetOnReadyStateChange(this);
+  native_http_request_->SetListener(this, listener_data_available_enabled_);
 
   for (size_t i = 0; ok && i < request_info_.headers.size(); ++i) {
     ok = native_http_request_->SetRequestHeader(
@@ -395,7 +396,7 @@ void SafeHttpRequest::OnAbortCall() {
     // thread.  Furthermore, there should not be a lock here; depending on
     // whether or not the Apartment thread is also the safe thread, the lock
     // may already be held, and our locks are not recursive.
-    native_http_request_->SetOnReadyStateChange(NULL);
+    native_http_request_->SetListener(NULL, false);
     native_http_request_->Abort();
     RemoveNativeRequest();
   }
@@ -461,7 +462,7 @@ void SafeHttpRequest::CallAsync(ThreadId thread_id,
 }
 
 //------------------------------------------------------------------------------
-// HttpRequest::ReadyStateListener implementation.
+// HttpRequest::HttpListener implementation.
 //------------------------------------------------------------------------------
 
 void SafeHttpRequest::DataAvailable(HttpRequest *source) {
@@ -570,7 +571,7 @@ void SafeHttpRequest::CreateNativeRequest() {
 void SafeHttpRequest::RemoveNativeRequest() {
   assert(IsSafeThread());
   if (native_http_request_) {
-    native_http_request_->SetOnReadyStateChange(NULL);
+    native_http_request_->SetListener(NULL, false);
     native_http_request_.reset(NULL);
     Unref();
   }

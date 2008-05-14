@@ -208,7 +208,7 @@ struct JavaScriptWorkerInfo {
   nsCOMPtr<GearsFactory> factory_ref;
   bool is_factory_suspended;
   scoped_refptr<HttpRequest> http_request;  // For createWorkerFromUrl()
-  scoped_ptr<HttpRequest::ReadyStateListener> http_request_listener;
+  scoped_ptr<HttpRequest::HttpListener> http_request_listener;
 };
 
 
@@ -336,7 +336,8 @@ NS_IMETHODIMP GearsWorkerPool::CreateWorkerFromUrl(//const nsAString &url
   Initialize();
 
   // Make sure URLs are only fetched from the main thread.
-  // TODO(michaeln): Remove this limitation of Firefox HttpRequest someday.
+  // TODO(michaeln): This HttpRequest limitation has been removed.
+  //                 Add unit tests and remove the test below.
   if (EnvIsWorker()) {
     RETURN_EXCEPTION(STRING16(L"createWorkerFromUrl() cannot be called from a"
                               L" worker."));
@@ -948,7 +949,7 @@ bool PoolThreadsManager::SetCurrentThreadErrorHandler(
 }
 
 
-class CreateWorkerUrlFetchListener : public HttpRequest::ReadyStateListener {
+class CreateWorkerUrlFetchListener : public HttpRequest::HttpListener {
  public:
   explicit CreateWorkerUrlFetchListener(JavaScriptWorkerInfo *wi) : wi_(wi) {}
 
@@ -957,7 +958,7 @@ class CreateWorkerUrlFetchListener : public HttpRequest::ReadyStateListener {
     source->GetReadyState(&ready_state);
     if (ready_state == HttpRequest::COMPLETE) {
       // Fetch completed.  First, unregister this listener.
-      source->SetOnReadyStateChange(NULL);
+      source->SetListener(NULL, false);
 
       int status_code;
       std::string16 body;
@@ -1178,7 +1179,7 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
     wi->http_request_listener.reset(new CreateWorkerUrlFetchListener(wi));
     if (!wi->http_request_listener.get()) { return false; }
 
-    wi->http_request->SetOnReadyStateChange(wi->http_request_listener.get());
+    wi->http_request->SetListener(wi->http_request_listener.get(), false);
     wi->http_request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
     wi->http_request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
 
@@ -1190,7 +1191,7 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
     if (!wi->http_request->Open(HttpConstants::kHttpGET, url.c_str(),
                                 is_async) ||
         !wi->http_request->Send()) {
-      wi->http_request->SetOnReadyStateChange(NULL);
+      wi->http_request->SetListener(NULL, false);
       wi->http_request->Abort();
       return false;
     }
@@ -1420,7 +1421,7 @@ void PoolThreadsManager::ShutDown() {
 
       // Cancel any createWorkerFromUrl network requests that might be pending.
       if (wi->http_request.get()) {
-        wi->http_request->SetOnReadyStateChange(NULL);
+        wi->http_request->SetListener(NULL, false);
         wi->http_request->Abort();
         // HttpRequest is not threadsafe, must destroy from same thread that
         // created it (which is always the owning thread for now, since we

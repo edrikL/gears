@@ -48,7 +48,7 @@ class BlobInterface;
 //------------------------------------------------------------------------------
 // AsyncTask
 //------------------------------------------------------------------------------
-class AsyncTask : protected HttpRequest::ReadyStateListener,
+class AsyncTask : protected HttpRequest::HttpListener,
                   private RefCounted {
  public:
   // Starts a worker thread which will call the Run method

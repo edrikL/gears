@@ -344,7 +344,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
   }
 
   payload->data.reset();
-  http_request->SetOnReadyStateChange(this);
+  http_request->SetListener(this, false);
   ready_state_changed_event_.Reset();
 
   // Rely on logic inside HttpRequest to check for valid combinations of
@@ -361,7 +361,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
     result = http_request->Send();
   }
   if (!result) {
-    http_request->SetOnReadyStateChange(NULL);
+    http_request->SetListener(NULL, false);
     return false;
   }
 
@@ -421,7 +421,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
     }
   }
 
-  http_request->SetOnReadyStateChange(NULL);
+  http_request->SetListener(NULL, false);
 
   if (http_request->WasRedirected()) {
     if (was_redirected) {
@@ -437,7 +437,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
 
 
 //------------------------------------------------------------------------------
-// HttpRequest::ReadyStateListener::ReadyStateChanged
+// HttpRequest::HttpListener::ReadyStateChanged
 //------------------------------------------------------------------------------
 void AsyncTask::ReadyStateChanged(HttpRequest *source) {
   ready_state_changed_event_.Set();

@@ -58,7 +58,7 @@
 
 class SafeHttpRequest
     : public HttpRequest,
-      public HttpRequest::ReadyStateListener {
+      public HttpRequest::HttpListener {
  public:
   virtual void Ref() {
     ref_count_.Ref();
@@ -102,8 +102,8 @@ class SafeHttpRequest
   virtual bool SetCachingBehavior(CachingBehavior behavior);
   virtual RedirectBehavior GetRedirectBehavior();
   virtual bool SetRedirectBehavior(RedirectBehavior behavior);
-  virtual bool SetOnReadyStateChange(HttpRequest::ReadyStateListener *listener);
-
+  virtual bool SetListener(HttpRequest::HttpListener *listener,
+                           bool enable_data_available);
  private:
   struct ResponseInfo {
     int status;
@@ -208,7 +208,8 @@ class SafeHttpRequest
   bool was_sent_;
 
   RefCount ref_count_;
-  HttpRequest::ReadyStateListener *listener_;
+  HttpRequest::HttpListener *listener_;
+  bool listener_data_available_enabled_;
 
   // Used only on the safe thread 
   scoped_refptr<HttpRequest> native_http_request_;

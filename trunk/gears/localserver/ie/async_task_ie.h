@@ -39,7 +39,7 @@
 //------------------------------------------------------------------------------
 // AsyncTask
 //------------------------------------------------------------------------------
-class AsyncTask : protected HttpRequest::ReadyStateListener {
+class AsyncTask : protected HttpRequest::HttpListener {
  public:
   // Starts a worker thread which will call the Run method
   bool Start();
