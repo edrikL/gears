@@ -1910,7 +1910,9 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       break;
     }
     case JSPARAM_NULL:
-      *token = VT_NULL;
+      VARIANT null_variant;
+      null_variant.vt = VT_NULL;
+      *token = null_variant;
       break;
     case JSPARAM_UNDEFINED:
       // Setting *token = VT_EMPTY doesn't seem to work.
