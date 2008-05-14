@@ -31,6 +31,7 @@
 
 SafeHttpRequest::SafeHttpRequest(ThreadId safe_thread_id)
     : was_aborted_(false), was_sent_(false),
+      was_response_text_accessed_(false), was_data_available_called_(false),
       listener_(NULL), listener_data_available_enabled_(false), 
       safe_thread_id_(safe_thread_id), apartment_thread_id_(0) {
   ThreadMessageQueue *msg_q = ThreadMessageQueue::GetInstance();
@@ -68,6 +69,7 @@ bool SafeHttpRequest::GetResponseBodyAsText(std::string16 *text) {
   if (!IsValidResponse()) {
     return false;
   }
+  was_response_text_accessed_ = true;
   *text = request_info_.response.text;
   return true;
 }
@@ -427,7 +429,7 @@ void SafeHttpRequest::OnDataAvailableCall() {
     // The request was aborted after this message was sent, ignore it.
     return;
   }
-  if (listener_) {
+  if (listener_ && listener_data_available_enabled_) {
     listener_->DataAvailable(this);
   }
 }
@@ -477,8 +479,15 @@ void SafeHttpRequest::DataAvailable(HttpRequest *source) {
     return;
   }
 
-  // TODO(michaeln): dont copy the reponse data around
-  source->GetResponseBodyAsText(&request_info_.response.text);
+  if (was_response_text_accessed_ || !was_data_available_called_) {
+    // We don't know if your caller is going to try to read the response
+    // text incrementally or not. Here we try to decode and copy the response
+    // only if needed. On the first call to DataAvailable, we do so in case our
+    // client will access it. On subsequent calls, only do so if the caller
+    // has been accessing it.  
+    source->GetResponseBodyAsText(&request_info_.response.text);
+    was_data_available_called_ = true;
+  }
   CallDataAvailableOnApartmentThread();
 }
 
