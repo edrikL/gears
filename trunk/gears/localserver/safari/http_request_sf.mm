@@ -76,7 +76,9 @@ bool HttpRequest::CreateSafeRequest(scoped_refptr<HttpRequest>* request) {
 // Constructor / Destructor
 //------------------------------------------------------------------------------
 SFHttpRequest::SFHttpRequest()
-  : listener_(NULL), ready_state_(UNINITIALIZED), 
+  : listener_(NULL),
+    listener_data_available_enabled_(false), 
+    ready_state_(UNINITIALIZED), 
     caching_behavior_(USE_ALL_CACHES), 
     redirect_behavior_(FOLLOW_ALL),
     was_sent_(false), was_aborted_(false),
@@ -446,10 +448,12 @@ bool SFHttpRequest::Abort() {
 }
 
 //------------------------------------------------------------------------------
-// SetOnReadyStateChange
+// SetListener
 //------------------------------------------------------------------------------
-bool SFHttpRequest::SetOnReadyStateChange(ReadyStateListener *listener) {
+bool SFHttpRequest::SetListener(HttpListener *listener, 
+                                bool enable_data_available) {
   listener_ = listener;
+  listener_data_available_enabled_ = enable_data_available;
   return true;
 }
 
@@ -462,6 +466,17 @@ void SFHttpRequest::SetReadyState(ReadyState state) {
     if (listener_) {
       listener_->ReadyStateChanged(this);
     }
+  }
+}
+
+//------------------------------------------------------------------------------
+// OnDataAvailable
+//------------------------------------------------------------------------------
+void SFHttpRequest::OnDataAvailable() {
+  SetReadyState(HttpRequest::INTERACTIVE);
+  
+  if (listener_ && listener_data_available_enabled_) {
+    listener_->DataAvailable(this);
   }
 }
 

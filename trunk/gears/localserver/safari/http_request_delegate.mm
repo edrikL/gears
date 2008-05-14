@@ -157,7 +157,9 @@
 // Called when connection receives data.
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
   [receivedData_ appendData:data];
-  owner_->SetReadyState(HttpRequest::INTERACTIVE);
+  
+  // Owner should set the ready state to interactive.
+  owner_->OnDataAvailable();
 }
 
 
