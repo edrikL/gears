@@ -239,6 +239,7 @@ endif # USING_LIBJPEG
 #-----------------------------------------------------------------------------
 # third_party/libgd
 
+ifeq ($(USING_LIBGD),1)
 ifneq ($(OFFICIAL_BUILD),1)
 ifneq ($(OS),wince)
 THIRD_PARTY_VPATH	+= \
@@ -277,6 +278,7 @@ LIBGD_CSRCS	+= \
 		$(NULL)
 endif # not wince
 endif # not OFFICIAL_BUILD
+endif # USING_LIBGD
 
 #-----------------------------------------------------------------------------
 # third_party/jsoncpp

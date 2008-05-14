@@ -38,6 +38,9 @@ endif
 ifeq ($(USING_LIBJPEG),)
   USING_LIBJPEG = 1
 endif
+ifeq ($(USING_LIBGD),)
+  USING_LIBGD = 1
+endif
 
 # Store value of unmodified command line parameters.
 ifdef MODE
