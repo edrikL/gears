@@ -1644,12 +1644,14 @@ void TestObjectArray(JsCallContext* context,
   TEST_ASSERT(ValidateGeneratedArray(array_5, 5));
 
   // index 6
-  JsRootedCallback* function_6 = NULL;
-  TEST_ASSERT(array_many_types.GetElementAsFunction(6, &function_6));
+  JsRootedCallback* function_temp = NULL;
+  TEST_ASSERT(array_many_types.GetElementAsFunction(6, &function_temp));
+  TEST_ASSERT(function_temp);
+  scoped_ptr<JsRootedCallback> function_6(function_temp);
   JsRunnerInterface* js_runner = base.GetJsRunner();
   TEST_ASSERT(js_runner);
   JsRootedToken* retval = NULL;
-  TEST_ASSERT(js_runner->InvokeCallback(function_6,
+  TEST_ASSERT(js_runner->InvokeCallback(function_6.get(),
                                         0, NULL, &retval));
   TEST_ASSERT(retval);
   std::string16 string_retval;
@@ -1699,12 +1701,14 @@ void TestObjectObject(JsCallContext* context, const JsObject& obj) {
 void TestObjectFunction(JsCallContext* context,
                         const JsObject& obj,
                         const ModuleImplBaseClass& base) {
-  JsRootedCallback* function = NULL;
-  TEST_ASSERT(obj.GetPropertyAsFunction(STRING16(L"func"), &function));
+  JsRootedCallback* function_temp = NULL;
+  TEST_ASSERT(obj.GetPropertyAsFunction(STRING16(L"func"), &function_temp));
+  TEST_ASSERT(function_temp);
+  scoped_ptr<JsRootedCallback> function(function_temp);
   JsRunnerInterface* js_runner = base.GetJsRunner();
   TEST_ASSERT(js_runner);
   JsRootedToken* retval = NULL;
-  TEST_ASSERT(js_runner->InvokeCallback(function, 0, NULL, &retval));
+  TEST_ASSERT(js_runner->InvokeCallback(function.get(), 0, NULL, &retval));
   TEST_ASSERT(retval);
   std::string16 string_retval;
   JsContextPtr js_context = NULL;
@@ -1852,16 +1856,16 @@ void CreateObjectArray(JsCallContext* context,
 void CreateObjectObject(JsCallContext* context,
                         JsRunnerInterface* js_runner,
                         JsObject* out) {
-  JsObject* obj = js_runner->NewObject();
-  TEST_ASSERT(obj);
+  scoped_ptr<JsObject> obj(js_runner->NewObject());
+  TEST_ASSERT(obj.get());
   TEST_ASSERT(obj->SetPropertyBool(STRING16(L"bool_true"), true));
   TEST_ASSERT(obj->SetPropertyInt(STRING16(L"int_0"), 0));
   TEST_ASSERT(obj->SetPropertyDouble(STRING16(L"double_0"), 0.01));
   TEST_ASSERT(obj->SetPropertyString(STRING16(L"string_0"), STRING16(L"")));
-  JsArray* array_0 = js_runner->NewArray();
-  TEST_ASSERT(array_0);
-  TEST_ASSERT(obj->SetPropertyArray(STRING16(L"array_0"), array_0));
-  TEST_ASSERT(out->SetPropertyObject(STRING16(L"obj"), obj));
+  scoped_ptr<JsArray> array_0(js_runner->NewArray());
+  TEST_ASSERT(array_0.get());
+  TEST_ASSERT(obj->SetPropertyArray(STRING16(L"array_0"), array_0.get()));
+  TEST_ASSERT(out->SetPropertyObject(STRING16(L"obj"), obj.get()));
 }
 
 void CreateObjectDate(JsCallContext* context,

@@ -31,6 +31,7 @@
 #include "gears/blob/blob.h"
 #include "gears/geolocation/geolocation.h"
 #include "gears/geolocation/device_data_provider.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 // From geolocation.cc
 bool ParseGeolocationOptionsTest(JsCallContext *context,
@@ -62,10 +63,10 @@ void TestParseGeolocationOptions(JsCallContext *context,
     return;
   }
   // Add the urls as a property of the returned object.
-  JsObject *return_object = js_runner->NewObject();
-  assert(return_object);
-  JsArray *url_array = js_runner->NewArray();
-  assert(url_array);
+  scoped_ptr<JsObject> return_object(js_runner->NewObject());
+  assert(return_object.get());
+  scoped_ptr<JsArray> url_array(js_runner->NewArray());
+  assert(url_array.get());
   for (int i = 0; i < static_cast<int>(urls.size()); ++i) {
     if (!url_array->SetElementString(i, urls[i])) {
       context->SetException(STRING16(L"Failed to set return value."));
@@ -78,11 +79,11 @@ void TestParseGeolocationOptions(JsCallContext *context,
       !return_object->SetPropertyBool(STRING16(L"requestAddress"),
                                       info.request_address) ||
       !return_object->SetPropertyArray(STRING16(L"gearsLocationProviderUrls"),
-                                       url_array)) {
+                                       url_array.get())) {
     context->SetException(STRING16(L"Failed to set return value."));
     return;
   }
-  context->SetReturnValue(JSPARAM_OBJECT, return_object);
+  context->SetReturnValue(JSPARAM_OBJECT, return_object.get());
 }
 
 // These tests make use of FormRequestBodyTest and GetLocationFromResponseTest,
@@ -161,14 +162,15 @@ void TestGeolocationGetLocationFromResponse(JsCallContext *context,
     return;
   }
   position.timestamp = 42;
-  JsObject *position_object = js_runner->NewObject(NULL);
+  scoped_ptr<JsObject> position_object(js_runner->NewObject());
+
   if (!ConvertPositionToJavaScriptObjectTest(position, STRING16(L"test error"),
-                                             js_runner, position_object)) {
+                                             js_runner, position_object.get())) {
     context->SetException(STRING16(L"Failed to convert position to JavaScript"
                                    L"object."));
     return;
   }
-  context->SetReturnValue(JSPARAM_OBJECT, position_object);
+  context->SetReturnValue(JSPARAM_OBJECT, position_object.get());
 } 
 
 #endif  // WIN32
