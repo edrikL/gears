@@ -40,7 +40,7 @@
   do {                                                                  \
     if (!(test)) {                                                      \
       std::string16 final_message(                                      \
-          L"Failed(" WIDEN(__FUNCTION__) L"):"  L" " L#test L" ");       \
+          STRING16(L"Notifier Test Failed"));       \
       final_message.append(message);                                    \
       LogTestError(final_message);                                      \
     }                                                                   \
