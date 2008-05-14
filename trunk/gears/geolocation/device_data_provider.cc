@@ -154,17 +154,6 @@ DeviceDataProviderBase<WifiData>* DeviceDataProviderBase<WifiData>::Create() {
 // Temporarily implement these methods to avoid link errors.
 // TODO(steveblock): Implement DeviceDataProviderBase for other platforms.
 
-#ifdef WINCE
-// WinCE uses WinceRadioDataProvider.
-#else
-// static
-template <>
-DeviceDataProviderBase<RadioData>* DeviceDataProviderBase<RadioData>::Create() {
-  assert(false);
-  return NULL;
-}
-#endif
-
 // static
 template <>
 DeviceDataProviderBase<WifiData>* DeviceDataProviderBase<WifiData>::Create() {
