@@ -159,7 +159,7 @@ void AsyncTask::OnAbortHttpGet() {
   LOG(("AsyncTask::OnAbortHttpGet - ui thread\n"));
 
   if (http_request_) {
-    http_request_->SetOnReadyStateChange(NULL);
+    http_request_->SetListener(NULL, false);
     http_request_->Abort();
     http_request_.reset(NULL);
   }
@@ -458,7 +458,7 @@ bool AsyncTask::OnStartHttpGet() {
     }
   }
 
-  http_request->SetOnReadyStateChange(this);
+  http_request->SetListener(this, false);
 
   http_request_ = http_request;
 
@@ -476,7 +476,7 @@ bool AsyncTask::OnStartHttpGet() {
     result = http_request->Send();
   }
   if (!result) {
-    http_request->SetOnReadyStateChange(NULL);
+    http_request->SetListener(NULL, false);
     http_request_.reset(NULL);
     return false;
   }
@@ -485,7 +485,7 @@ bool AsyncTask::OnStartHttpGet() {
 }
 
 //------------------------------------------------------------------------------
-// HttpRequest::ReadyStateListener::ReadyStateChanged
+// HttpRequest::HttpListener::ReadyStateChanged
 //------------------------------------------------------------------------------
 void AsyncTask::ReadyStateChanged(HttpRequest *http_request) {
   assert(params_);
@@ -505,7 +505,7 @@ void AsyncTask::ReadyStateChanged(HttpRequest *http_request) {
           }
         }
       }
-      http_request->SetOnReadyStateChange(NULL);
+      http_request->SetListener(NULL, false);
       if (http_request->WasRedirected()) {
         if (params_->was_redirected) {
           *(params_->was_redirected) = true;
@@ -519,7 +519,7 @@ void AsyncTask::ReadyStateChanged(HttpRequest *http_request) {
       PR_Notify(lock_);
     }
   } else {
-    http_request->SetOnReadyStateChange(NULL);
+    http_request->SetListener(NULL, false);
     http_request->Abort();
     http_request_.reset(NULL);
     CritSecLock locker(lock_);

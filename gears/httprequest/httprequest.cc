@@ -481,7 +481,7 @@ void GearsHttpRequest::GetStatusText(JsCallContext *context) {
 
 void GearsHttpRequest::AbortRequest() {
   if (request_.get()) {
-    request_->SetOnReadyStateChange(NULL);
+    request_->SetListener(NULL, false);
     request_->Abort();
     ReleaseRequest();
   }
@@ -490,7 +490,7 @@ void GearsHttpRequest::AbortRequest() {
 void GearsHttpRequest::CreateRequest() {
   ReleaseRequest();
   HttpRequest::CreateSafeRequest(&request_);
-  request_->SetOnReadyStateChange(this);
+  request_->SetListener(this, true);
   request_->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
   request_->SetRedirectBehavior(HttpRequest::FOLLOW_WITHIN_ORIGIN);
 }
@@ -498,7 +498,7 @@ void GearsHttpRequest::CreateRequest() {
 
 void GearsHttpRequest::ReleaseRequest() {
   if (request_.get()) {
-    request_->SetOnReadyStateChange(NULL);
+    request_->SetListener(NULL, false);
     request_.reset(NULL);
   }
   response_text_.reset(NULL);

@@ -119,7 +119,7 @@ class FFHttpRequest : public HttpRequest,
   virtual bool Abort();
 
   // events
-  virtual bool SetOnReadyStateChange(ReadyStateListener *listener);
+  virtual bool SetListener(HttpListener *listener, bool enable_data_available);
 
  private:
   friend bool HttpRequest::Create(scoped_refptr<HttpRequest>* request);
@@ -166,7 +166,8 @@ class FFHttpRequest : public HttpRequest,
   bool was_redirected_;
   std::string16 redirect_url_;
   nsCOMPtr<nsIChannel> channel_;
-  ReadyStateListener *listener_;
+  HttpRequest::HttpListener *listener_;
+  bool listener_data_available_enabled_;
 };
 
 #endif  // GEARS_LOCALSERVER_FIREFOX_HTTP_REQUEST_FF_H__

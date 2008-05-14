@@ -38,7 +38,7 @@
 class GearsHttpRequest
     : public ModuleImplBaseClassVirtual,
       public JsEventHandlerInterface,
-      public HttpRequest::ReadyStateListener {
+      public HttpRequest::HttpListener {
  public:
   static const std::string kModuleName;
 
@@ -125,7 +125,7 @@ class GearsHttpRequest
   bool ResolveUrl(const std::string16 &url, std::string16 *resolved_url,
                   std::string16 *exception_message);
 
-  // HttpRequest::ReadyStateListener implementation.
+  // HttpRequest::HttpListener implementation.
   virtual void DataAvailable(HttpRequest *source);
   virtual void ReadyStateChanged(HttpRequest *source);
 

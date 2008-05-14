@@ -97,7 +97,7 @@ struct JavaScriptWorkerInfo {
   SecurityOrigin script_origin;  // Owner: parent before signal, immutable after
 
   scoped_refptr<HttpRequest> http_request;  // For createWorkerFromUrl()
-  scoped_ptr<HttpRequest::ReadyStateListener> http_request_listener;
+  scoped_ptr<HttpRequest::HttpListener> http_request_listener;
   scoped_refptr<GearsFactory> factory_ref;
   bool is_factory_suspended;
 
@@ -237,7 +237,8 @@ void GearsWorkerPool::CreateWorkerFromUrl(JsCallContext *context) {
   Initialize();
 
   // Make sure URLs are only fetched from the main thread.
-  // TODO(michaeln): Remove this limitation of Firefox HttpRequest someday.
+  // TODO(michaeln): This HttpRequest limitation has been removed.
+  //                 Add unit tests and remove the test below.
   if (EnvIsWorker()) {
     context->SetException(
         STRING16(L"createWorkerFromUrl() cannot be called from a worker."));
@@ -670,7 +671,7 @@ bool PoolThreadsManager::SetCurrentThreadErrorHandler(
   return true;
 }
 
-class CreateWorkerUrlFetchListener : public HttpRequest::ReadyStateListener {
+class CreateWorkerUrlFetchListener : public HttpRequest::HttpListener {
  public:
   explicit CreateWorkerUrlFetchListener(JavaScriptWorkerInfo *wi) : wi_(wi) {}
 
@@ -679,7 +680,7 @@ class CreateWorkerUrlFetchListener : public HttpRequest::ReadyStateListener {
     source->GetReadyState(&ready_state);
     if (ready_state == HttpRequest::COMPLETE) {
       // Fetch completed.  First, unregister this listener.
-      source->SetOnReadyStateChange(NULL);
+      source->SetListener(NULL, false);
 
       int status_code;
       std::string16 body;
@@ -779,7 +780,7 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
     wi->http_request_listener.reset(new CreateWorkerUrlFetchListener(wi));
     if (!wi->http_request_listener.get()) { return false; }
 
-    wi->http_request->SetOnReadyStateChange(wi->http_request_listener.get());
+    wi->http_request->SetListener(wi->http_request_listener.get(), false);
     wi->http_request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
     wi->http_request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
 
@@ -788,7 +789,7 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
                                 url_or_full_script.c_str(),
                                 is_async) ||
         !wi->http_request->Send()) {
-      wi->http_request->SetOnReadyStateChange(NULL);
+      wi->http_request->SetListener(NULL, false);
       wi->http_request->Abort();
       return false;
     }
@@ -1088,7 +1089,7 @@ void PoolThreadsManager::ShutDown() {
 
       // Cancel any createWorkerFromUrl network requests that might be pending.
       if (wi->http_request) {
-        wi->http_request->SetOnReadyStateChange(NULL);
+        wi->http_request->SetListener(NULL, false);
         wi->http_request->Abort();
         // Reset on creation thread for consistency with Firefox implementation.
         wi->http_request.reset(NULL);

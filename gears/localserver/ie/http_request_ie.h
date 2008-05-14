@@ -103,7 +103,7 @@ class IEHttpRequest
   virtual bool Abort();
 
   // events
-  virtual bool SetOnReadyStateChange(ReadyStateListener *listener);
+  virtual bool SetListener(HttpListener *listener, bool enable_data_available);
 
   // IE implementation specific
 
@@ -238,7 +238,8 @@ class IEHttpRequest
   std::string16 redirect_url_;
 
   // Our listener
-  ReadyStateListener *listener_;
+  HttpRequest::HttpListener *listener_;
+  bool listener_data_available_enabled_;
 
   // We populate this structure with various pieces of response data:
   // status code, status line, headers, data

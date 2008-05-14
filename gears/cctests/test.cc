@@ -1140,7 +1140,7 @@ bool TestParseHttpStatusLine(std::string16 *error) {
 }
 
 
-class TestHttpRequestListener : public HttpRequest::ReadyStateListener {
+class TestHttpRequestListener : public HttpRequest::HttpListener {
  public:
   TestHttpRequestListener(HttpRequest *request): request_(request) {}
 
@@ -1154,7 +1154,7 @@ class TestHttpRequestListener : public HttpRequest::ReadyStateListener {
       source->GetStatus(&status);
       source->GetAllResponseHeaders(&headers);
       source->GetResponseBodyAsText(&body);
-      source->SetOnReadyStateChange(NULL);
+      source->SetListener(NULL, false);
       delete this;
       LOG(("TestHttpRequest - complete (%d)\n", status));
     }
@@ -1180,7 +1180,7 @@ bool TestHttpRequest(std::string16 *error) {
 
   // Send a request synchronously
   TEST_ASSERT(HttpRequest::Create(&request));
-  request->SetOnReadyStateChange(new TestHttpRequestListener(request.get()));
+  request->SetListener(new TestHttpRequestListener(request.get()), false);
   bool ok = request->Open(HttpConstants::kHttpGET,
                           STRING16(L"http://www.google.com/"),
                           false);
@@ -1194,7 +1194,7 @@ bool TestHttpRequest(std::string16 *error) {
 
   // Send an async request
   TEST_ASSERT(HttpRequest::Create(&request));
-  request->SetOnReadyStateChange(new TestHttpRequestListener(request.get()));
+  request->SetListener(new TestHttpRequestListener(request.get()), false);
   ok = request->Open(HttpConstants::kHttpGET,
                      STRING16(L"http://www.google.com/"),
                      true);
