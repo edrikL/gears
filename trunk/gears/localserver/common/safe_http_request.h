@@ -206,6 +206,8 @@ class SafeHttpRequest
   RequestInfo request_info_;
   bool was_aborted_;
   bool was_sent_;
+  bool was_response_text_accessed_;
+  bool was_data_available_called_;
 
   RefCount ref_count_;
   HttpRequest::HttpListener *listener_;
