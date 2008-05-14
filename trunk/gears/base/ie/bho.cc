@@ -46,12 +46,15 @@ STDAPI BrowserHelperObject::SetSite(IUnknown *pUnkSite) {
 #ifdef OFFICIAL_BUILD
   static ExceptionManager exception_manager(false);  // false == only our DLL
   exception_manager.StartMonitoring();
+  // Trace buffers only exist in dbg official builds.
+#ifdef DEBUG
   exception_manager.AddMemoryRange(g_trace_buffers,
                                    sizeof(g_trace_buffers));
   exception_manager.AddMemoryRange(g_trace_positions,
                                    sizeof(g_trace_positions));
-#endif
-#endif
+#endif  // DEBUG
+#endif  // OFFICIAL_BUILD
+#endif  // WIN32 && !WINCE
 
   if (DetectedVersionCollision())
     return S_OK;
