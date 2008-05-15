@@ -37,6 +37,8 @@
 #include "gears/base/ie/atl_headers.h"
 #elif BROWSER_SAFARI
 #include "gears/base/safari/cf_string_utils.h"
+#else // Use ICU
+#include <unicode/ustring.h>
 #endif
 
 //------------------------------------------------------------------------------
@@ -165,6 +167,19 @@ bool UTF8ToString16(const char *in, int len, std::string16 *out16) {
   return true;
 #elif BROWSER_SAFARI
   return ConvertToString16UsingEncoding(in, len, kCFStringEncodingUTF8, out16);
+#else // Use ICU
+  int32_t out_len;
+  UErrorCode error_code = U_ZERO_ERROR;
+  u_strFromUTF8(NULL, 0, &out_len, in, len, &error_code);
+  if (error_code != U_ZERO_ERROR && error_code != U_BUFFER_OVERFLOW_ERROR)
+    return false;
+  scoped_array<char16> tmp(new char16[out_len + 1]);
+  error_code = U_ZERO_ERROR;
+  u_strFromUTF8(tmp.get(), out_len + 1, NULL, in, len, &error_code);
+  if (error_code != U_ZERO_ERROR)
+    return false;
+  out16->assign(tmp.get());
+  return true;
 #endif
 }
 
@@ -221,6 +236,25 @@ bool String16ToUTF8(const char16 *in, int len, std::string *out8) {
   out8->assign((const char *)buffer.get());
   CFRelease(inStr);
   return true;
+#else // Use ICU
+  int32_t out_len;
+  UErrorCode error_code = U_ZERO_ERROR;
+  u_strToUTF8(NULL, 0, &out_len, in, len, &error_code);
+  if (error_code != U_ZERO_ERROR && error_code != U_BUFFER_OVERFLOW_ERROR)
+    return false;
+  scoped_array<char> tmp(new char[out_len + 1]);
+  error_code = U_ZERO_ERROR;
+  u_strToUTF8(tmp.get(), out_len + 1, NULL, in, len, &error_code);
+  if (error_code != U_ZERO_ERROR)
+    return false;
+  out8->assign(tmp.get());
+  return true;
 #endif
 }
 
+#ifdef ANDROID
+// Android is missing wcslen. This is just a wide character strlen.
+size_t wcslen(const char16 *str) {
+  return u_strlen(str);
+}
+#endif

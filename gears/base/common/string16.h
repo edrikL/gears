@@ -62,6 +62,11 @@
 // Need to cast literals (Linux, OSX) and SQLite void* retvals (all platforms)
 #define STRING16(x)  reinterpret_cast<const char16*>(x)
 
+#if (defined ANDROID)
+// Native wide character support incomplete in Android - we need to define WEOF.
+#define WEOF (static_cast<wchar_t>(-1))
+#endif
+
 #if (defined WIN32)
 
 typedef wchar_t char16;
@@ -70,7 +75,7 @@ namespace std {
   typedef wstring string16;
 }
 
-#elif (defined LINUX) || (defined OS_MACOSX)
+#elif (defined LINUX) || (defined OS_MACOSX) || defined(ANDROID)
 
 typedef unsigned short char16;
 
