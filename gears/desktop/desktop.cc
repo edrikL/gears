@@ -63,11 +63,12 @@ void Dispatcher<GearsDesktop>::Init() {
 #else
   // File picker is not ready for this build
 #endif  // USE_FILE_PICKER
-#if !defined(OFFICIAL_BUILD)
-  RegisterMethod("addNotification", &GearsDesktop::AddNotification);
+
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
 #else
-  // Notification is not ready for this build
-#endif  // !defined(OFFICIAL_BUILD)
+  RegisterMethod("addNotification", &GearsDesktop::AddNotification);
+#endif  // OFFICIAL_BUILD
 }
 
 
@@ -79,10 +80,19 @@ static const PngUtils::ColorFormat kDesktopIconFormat = PngUtils::FORMAT_RGBA;
 #endif
 
 GearsDesktop::GearsDesktop()
-    : ModuleImplBaseClassVirtual("GearsDesktop"),
-      ipc_message_queue_(NULL) {
+    : ModuleImplBaseClassVirtual("GearsDesktop")
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
+#else
+    , ipc_message_queue_(NULL)
+#endif  // OFFICIAL_BUILD
+{
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
+#else
   Notification::RegisterAsSerializable();
   ipc_message_queue_ = IpcMessageQueue::GetSystemQueue();
+#endif  // OFFICIAL_BUILD
 }
 
 Desktop::Desktop(const SecurityOrigin &security_origin)
@@ -197,7 +207,7 @@ bool Desktop::HandleDialogResults(ShortcutInfo *shortcut_info,
     allow = false;
   } else if(shortcuts_dialog->result["allow"].isBool()) {
     allow = shortcuts_dialog->result["allow"].asBool();
-    
+
     // We interpret an explicit false as permanently denying shortcut creation.
     if (!allow) {
       permanently = true;
@@ -688,12 +698,14 @@ bool Desktop::ResolveUrl(std::string16 *url, std::string16 *error) {
   return true;
 }
 
-#if !defined(OFFICIAL_BUILD)
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
+#else
 
 void GearsDesktop::AddNotification(JsCallContext *context) {
   JsObject props;
 
-  // TODO (jianli): this is a preliminary API. 
+  // TODO (jianli): this is a preliminary API.
 
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_OBJECT, &props },
@@ -727,4 +739,4 @@ void GearsDesktop::AddNotification(JsCallContext *context) {
   }
 }
 
-#endif  // !defined(OFFICIAL_BUILD)
+#endif  // OFFICIAL_BUILD

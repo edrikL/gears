@@ -23,6 +23,13 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OFFICIAL_BUILD
+// The notification API has not been finalized for official builds.
+
+int main(int, char **) {
+  return 0;
+}
+#else
 #include "gears/notifier/notifier.h"
 
 #include "gears/base/common/serialization.h"
@@ -129,3 +136,5 @@ int main(int argc, char **argv) {
 
   return res;
 }
+
+#endif  // OFFICIAL_BUILD

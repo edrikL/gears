@@ -23,6 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
+#else
 #ifdef WIN32
 
 #include <atlbase.h>
@@ -91,3 +94,4 @@ unsigned int NotifierProcess::FindProcess() {
 }
 
 #endif  // defined(WIN32)
+#endif  // OFFICIAL_BUILD

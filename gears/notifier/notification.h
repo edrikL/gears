@@ -25,6 +25,10 @@
 #ifndef GEARS_NOTIFIER_NOTIFICATION_H__
 #define GEARS_NOTIFIER_NOTIFICATION_H__
 
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
+#else
+
 #include "gears/base/common/serialization.h"
 
 // Describes the information about a notification.
@@ -107,4 +111,5 @@ class Notification : public Serializable {
   DISALLOW_EVIL_CONSTRUCTORS(Notification);
 };
 
+#endif  // OFFICIAL_BUILD
 #endif  // GEARS_NOTIFIER_NOTIFICATION_H__

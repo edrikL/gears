@@ -28,6 +28,9 @@
 #ifndef GEARS_NOTIFIER_UNIT_TEST_H__
 #define GEARS_NOTIFIER_UNIT_TEST_H__
 
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
+#else
 #if USING_CCTESTS
 #include "gears/base/common/string16.h"
 
@@ -44,4 +47,5 @@ bool DidAllTestsPass();
 const std::string16& GetTestLog();
 
 #endif  // USING_CCTESTS
+#endif  // OFFICIAL_BUILD
 #endif  // GEARS_NOTIFIER_UNIT_TEST_H__

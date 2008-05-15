@@ -28,6 +28,10 @@
 #ifndef GEARS_NOTIFIER_NOTIFICATION_MANAGER_H__
 #define GEARS_NOTIFIER_NOTIFICATION_MANAGER_H__
 
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
+#else
+
 #include <deque>
 
 #include "gears/base/common/basictypes.h"
@@ -80,4 +84,5 @@ class NotificationManager : public BalloonCollectionObserver {
   DISALLOW_EVIL_CONSTRUCTORS(NotificationManager);
 };
 
+#endif  // OFFICIAL_BUILD
 #endif  // GEARS_NOTIFIER_NOTIFICATION_MANAGER_H__

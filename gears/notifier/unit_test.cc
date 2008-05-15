@@ -23,6 +23,9 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
+#else
 #if USING_CCTESTS
 #include <string>
 
@@ -106,3 +109,4 @@ int RunTests(int, char **) {
 }
 
 #endif  // USING_CCTESTS
+#endif  // OFFICIAL_BUILD
