@@ -443,4 +443,14 @@ bool StringMatch(const CharT* target, const CharT* pattern) {
   return !*target;
 }
 
+#ifdef ANDROID
+// Wide character version of strlen, not implemented on Android.
+size_t wcslen(const char16 *str);
+
+// std::wstring not defined on Android.
+namespace std {
+  typedef basic_string<char16> wstring;
+}
+#endif
+
 #endif  // GEARS_BASE_COMMON_STRING_UTILS_H__
