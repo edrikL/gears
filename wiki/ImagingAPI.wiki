@@ -65,6 +65,7 @@ Canvas class
 
 
   // COMMON WITH HTML CANVAS
+
   attribute unsigned long width;
   attribute unsigned long height;
 
