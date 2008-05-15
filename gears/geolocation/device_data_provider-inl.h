@@ -29,6 +29,15 @@
 #include <algorithm>
 
 // static
+template <typename DataType>
+Mutex DeviceDataProviderBase<DataType>::instance_mutex;
+
+// static
+template <typename DataType>
+DeviceDataProviderBase<DataType>* DeviceDataProviderBase<DataType>::instance =
+    NULL;
+
+// static
 template<typename DataType>
 DeviceDataProviderBase<DataType>* DeviceDataProviderBase<DataType>::Register(
     ListenerInterface *listener) {

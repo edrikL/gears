@@ -25,24 +25,6 @@
 
 #include "gears/geolocation/device_data_provider.h"
 
-// static
-template <>
-DeviceDataProviderBase<RadioData>* DeviceDataProviderBase<RadioData>::instance =
-    NULL;
-
-// static
-template <>
-Mutex DeviceDataProviderBase<RadioData>::instance_mutex;
-
-// static
-template <>
-DeviceDataProviderBase<WifiData>* DeviceDataProviderBase<WifiData>::instance =
-    NULL;
-
-// static
-template <>
-Mutex DeviceDataProviderBase<WifiData>::instance_mutex;
-
 #if USING_MOCK_DEVICE_DATA_PROVIDERS
 
 #include <assert.h>
