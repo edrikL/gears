@@ -112,6 +112,22 @@ CanvasRenderingContext2D class
   void fillRect(int x, int y, int w, int h);  // see fillStyle.
   void strokeRect(int x, int y, int w, int h);  // does not support stroke styles; draws a one-pixel border.  
   
+  // text
+  attribute string font;  // default: 10px sans-serif
+  attribute string textAlign;  // "left", "center", "right"
+  attribute boolean textBold;
+  attribute boolean textItalics;
+  attribute boolean textUnderline;
+
+  // (x, y) specifies a point on the baseline -- the left end, middle point or right end depending on the textAlign property.
+  void fillText(string text, float x, float y, optional int maxWidth);
+  TextMetrics measureText(string text);
+
+  // drawing images
+  void drawImage(Canvas image, int dx, int dy);
+  void drawImage(Canvas image, int dx, int dy, int dw, int dh);
+  void drawImage(Canvas image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);
+ 
   // pixel manipulation
   ImageData createImageData(int sw, int sh);
   ImageData getImageData(int sx, int sy, int sw, int sh);
@@ -154,25 +170,6 @@ CanvasRenderingContext2D class
   // of R, G and B components separately.
   // After the filter finishes, all pixels have alpha 1.0.
   void medianFilter(float radius);
- 
-  // NOTE: This function may change to be compatible with HTML Canvas's text drawing API.
-  // x, y, width, height identify a bounding box into which the text is drawn. 
-  // If width and height are not specified, the bounding box extends to the last row or column of the canvas.
-  // attributes can have the following keys:
-  //   center: boolean, centers the text within the bounding box, as opposed to left align (default).
-  //   bold: boolean
-  //   italic: boolean
-  //   underline: boolean
-  //   wrap: boolean, specifies that at the right edge of the bounding box, text is wrapped to the next line instead of truncating it (default).
-  //   singleLine: treat newlines and tab characters as single spaces,
-  //        thus forcing the output to one line. Defaults to false. Cannot be used along with wrap.
-  // The rendering is guaranteed to be consisten across all platforms. (We're thinking of using FreeType.)
-  void drawText(String text, String font, int size, int x, int y, optional int width, optional int height, optional object attributes);
-
-  // Semantics as in HTML Canvas.
-  void drawImage(Canvas image, int dx, int dy);
-  void drawImage(Canvas image, int dx, int dy, int dw, int dh);
-  void drawImage(Canvas image, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh);
  
   // Similar to putImageData except that it respects the current state.
   // Useful for drawing custom shapes into an ImageData and then compositing that into the canvas.
@@ -236,6 +233,13 @@ ImageData class {
   readonly attribute long int width;
   readonly attribute long int height;
   readonly attribute int[] data;
+};
+}}}
+
+*_TextMetrics class:_*
+{{{
+TextMetrics class {
+  readonly attribute float width;
 };
 }}}
 
