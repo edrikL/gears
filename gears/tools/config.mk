@@ -42,6 +42,11 @@ ifeq ($(USING_LIBGD),)
   USING_LIBGD = 1
 endif
 
+# Make-ish way of saying: if (browser == SF || browser == NPAPI)
+ifneq ($(findstring $(BROWSER), SF|NPAPI),)
+  USING_NPAPI = 1
+endif
+
 # Store value of unmodified command line parameters.
 ifdef MODE
   CMD_LINE_MODE = $MODE
@@ -124,6 +129,11 @@ GECKO_LIB = $(GECKO_SDK)/gecko_sdk/lib
 # GECKO_SDK gets defined below (different for each OS).
 
 $(BROWSER)_CPPFLAGS += -DBROWSER_$(BROWSER)=1
+
+ifeq ($(USING_NPAPI),1)
+$(BROWSER)_CPPFLAGS += -I../third_party/npapi -I../third_party -I../third_party/googleurl -I../third_party/icu38/public/common
+endif
+
 # TODO(cprince): Update source files so we don't need this compatibility define?
 FF2_CPPFLAGS += -DBROWSER_FF=1
 FF3_CPPFLAGS += -DBROWSER_FF=1
@@ -133,7 +143,12 @@ FF3_CPPFLAGS += -DBROWSER_FF=1
 FF2_CPPFLAGS += -I$(GECKO_BASE) -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -DMOZILLA_STRICT_API
 FF3_CPPFLAGS += -I$(GECKO_BASE) -I$(GECKO_SDK) -I$(GECKO_SDK)/gecko_sdk/include -DMOZILLA_STRICT_API
 IE_CPPFLAGS +=
-NPAPI_CPPFLAGS += -I../third_party/npapi -I../third_party -I../third_party/googleurl -I../third_party/icu38/public/common
+NPAPI_CPPFLAGS +=
+
+# These flags are needed so that instead of exporting all symbols defined in
+# the code, we just export those specifically marked, this reduces the output size.
+SF_CPPFLAGS += -fvisibility=hidden
+SF_CXXFLAGS += -fvisibility-inlines-hidden
 
 # When adding or removing SQLITE_OMIT_* options, also update and
 # re-run ../third_party/sqlite_google/google_generate_preprocessed.sh.
@@ -186,17 +201,17 @@ COMPILE_FLAGS += -fshort-wchar
 CFLAGS = $(COMPILE_FLAGS)
 CXXFLAGS = $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wno-ctor-dtor-privacy -funsigned-char
 
-COMMON_LINKFLAGS = -o $@ -fPIC -Bsymbolic 
+SHARED_LINKFLAGS = -o $@ -fPIC -Bsymbolic 
 
 MKDLL = g++
 DLL_PREFIX = lib
 DLL_SUFFIX = .so
-DLLFLAGS = $(COMMON_LINKFLAGS) -shared -Wl,--version-script -Wl,tools/xpcom-ld-script
+DLLFLAGS = $(SHARED_LINKFLAGS) -shared -Wl,--version-script -Wl,tools/xpcom-ld-script
 
 MKEXE = g++
 EXE_PREFIX =
 EXE_SUFFIX =
-EXEFLAGS = $(COMMON_LINKFLAGS)
+EXEFLAGS = $(SHARED_LINKFLAGS)
 
 # These aren't used on Linux because ld doesn't support "@args_file".
 #TRANSLATE_LINKER_FILE_LIST = cat -
@@ -220,34 +235,69 @@ CXX = g++ -arch $(ARCH)
 OBJ_SUFFIX = .o
 MKDEP = gcc -M -MF $(@D)/$(*F).pp -MT $@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
 
-CPPFLAGS += -DLINUX -DOS_MACOSX
+CPPFLAGS += -DOS_MACOSX
+ifeq ($(BROWSER),SF)
+# SAFARI-TEMP
+# Remove these - During development, it was convenient to have these defined in
+# the Safari port.  Before release we want to clean this up, and replace these
+# with a single BROWSER_SF symbol.
+# We also want to consolidate the include paths, so we don't have to add these
+# paths here.
+CPPFLAGS += -DBROWSER_NPAPI -DBROWSER_WEBKIT -DBROWSER_SAFARI
+CPPFLAGS += -I../third_party -I../third_party/googleurl -I../third_party/icu38/public/common
+else
+CPPFLAGS += -DLINUX
+endif
+
 LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
 SQLITE_CFLAGS += -Wno-uninitialized -Wno-pointer-sign -isysroot $(OSX_SDK_ROOT)
 SQLITE_CFLAGS += -DHAVE_USLEEP=1
 # for libjpeg:
 THIRD_PARTY_CFLAGS = -Wno-main
 
+# COMMON_CPPFLAGS affects non-browser-specific code, generated in /common.
+COMMON_CPPFLAGS += -fvisibility=hidden
+COMMON_CXXFLAGS += -fvisibility-inlines-hidden
+
 COMPILE_FLAGS_dbg = -g -O0
 COMPILE_FLAGS_opt = -O2
-COMMON_COMPILE_FLAGS = -fmessage-length=0 -Wall -Werror $(COMPILE_FLAGS_$(MODE)) -isysroot $(OSX_SDK_ROOT)
-COMPILE_FLAGS = -c -o $@ -fPIC $(COMMON_COMPILE_FLAGS)
+COMPILE_FLAGS = -c -o $@ -fPIC -fmessage-length=0 -Wall $(COMPILE_FLAGS_$(MODE)) -isysroot $(OSX_SDK_ROOT)
 # NS_LITERAL_STRING does not work properly without this compiler option
 COMPILE_FLAGS += -fshort-wchar
 
-CFLAGS = $(COMPILE_FLAGS)
-CXXFLAGS = $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wno-ctor-dtor-privacy -funsigned-char
+# TODO(playmobil): Remove this condition and move -Werror directly into the COMPILE_FLAGS definition.
+ifeq ($(BROWSER),SF)
+# SAFARI-TEMP
+# Need to re-enable -Werror for Safari port.
+else
+COMMON_COMPILE_FLAGS += -Werror
+endif
 
-COMMON_LINKFLAGS = -o $@ -fPIC -Bsymbolic -framework CoreServices -framework Carbon -arch $(ARCH) -isysroot $(OSX_SDK_ROOT) -Wl,-dead_strip
+CFLAGS = $(COMPILE_FLAGS)
+CXXFLAGS += $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wno-ctor-dtor-privacy -funsigned-char
+
+THIRD_PARTY_CPPFLAGS += -fvisibility=hidden
+THIRD_PARTY_CXXFLAGS += -fvisibility-inlines-hidden
+
+SHARED_LINKFLAGS = -o $@ -fPIC -Bsymbolic -arch $(ARCH) -isysroot $(OSX_SDK_ROOT) -Wl,-dead_strip
 
 MKDLL = g++
+
+DLLFLAGS = $(SHARED_LINKFLAGS) -bundle -framework Carbon -framework CoreServices
+ifeq ($(BROWSER),SF)
+DLL_PREFIX = 
+DLL_SUFFIX = 
+DLLFLAGS += -mmacosx-version-min=10.4 -framework Cocoa -framework WebKit
+else
 DLL_PREFIX = lib
 DLL_SUFFIX = .dylib
-DLLFLAGS = $(COMMON_LINKFLAGS) -bundle -Wl,-exported_symbols_list -Wl,tools/xpcom-ld-script.darwin
+DLLFLAGS += -Wl,-exported_symbols_list -Wl,tools/xpcom-ld-script.darwin
+endif
 
 MKEXE = g++
 EXE_PREFIX =
 EXE_SUFFIX =
-EXEFLAGS = $(COMMON_LINKFLAGS) -mmacosx-version-min=10.2
+EXEFLAGS = $(SHARED_LINKFLAGS) -mmacosx-version-min=10.2
 
 # ld on OSX requires filenames to be separated by a newline, rather than spaces
 # used on most platforms. So TRANSLATE_LINKER_FILE_LIST changes ' ' to '\n'.
@@ -348,20 +398,20 @@ CXXFLAGS = $(COMPILE_FLAGS) /TP /J
 # /RELEASE adds a checksum to the PE header to aid symbol loading.
 # /DEBUG causes PDB files to be produced.
 # We want both these flags in all build modes, despite their names.
-COMMON_LINKFLAGS_dbg =
-COMMON_LINKFLAGS_opt = /INCREMENTAL:NO /OPT:REF /OPT:ICF
-COMMON_LINKFLAGS = /NOLOGO /OUT:$@ /DEBUG /RELEASE
+SHARED_LINKFLAGS_dbg =
+SHARED_LINKFLAGS_opt = /INCREMENTAL:NO /OPT:REF /OPT:ICF
+SHARED_LINKFLAGS = /NOLOGO /OUT:$@ /DEBUG /RELEASE
 ifeq ($(OS),win32)
-COMMON_LINKFLAGS += \
+SHARED_LINKFLAGS += \
 	/MACHINE:X86 \
 	/NODEFAULTLIB:msvcrt \
-	$(COMMON_LINKFLAGS_$(MODE))
+	$(SHARED_LINKFLAGS_$(MODE))
 else
-COMMON_LINKFLAGS += \
+SHARED_LINKFLAGS += \
 	/MACHINE:THUMB \
 	/NODEFAULTLIB:secchk.lib \
 	/NODEFAULTLIB:oldnames.lib \
-	$(COMMON_LINKFLAGS_$(MODE))
+	$(SHARED_LINKFLAGS_$(MODE))
 endif
 
 
@@ -373,7 +423,7 @@ else
 # official (dbg) builds.
 ifeq ($(OFFICIAL_BUILD),1)
 COMPILE_FLAGS_dbg += /fastcap
-COMMON_LINKFLAGS_dbg += base\common\trace_buffers_win32\trace_buffers_win32.lib
+SHARED_LINKFLAGS_dbg += base\common\trace_buffers_win32\trace_buffers_win32.lib
 endif # OFFICIAL_BUILD
 endif # wince / win32
 
@@ -382,7 +432,7 @@ DLL_PREFIX =
 DLL_SUFFIX = .dll
 # We need DLLFLAGS_NOPDB for generating other targets than gears.dll
 # (e.g. setup.dll for Windows Mobile).
-DLLFLAGS_NOPDB = $(COMMON_LINKFLAGS) /DLL
+DLLFLAGS_NOPDB = $(SHARED_LINKFLAGS) /DLL
 # Wo only use /SUBSYSTEM on DLLs. For EXEs we omit the flag, and
 # the presence of main() or WinMain() determines the subsystem.
 ifeq ($(OS),win32)
@@ -401,7 +451,7 @@ MKEXE = link
 EXE_PREFIX =
 EXE_SUFFIX = .exe
 # Note: cannot use *F because that only works when the rule uses patterns.
-EXEFLAGS = $(COMMON_LINKFLAGS) /PDB:"$(@D)/$(patsubst %.exe,%.pdb,$(@F))"
+EXEFLAGS = $(SHARED_LINKFLAGS) /PDB:"$(@D)/$(patsubst %.exe,%.pdb,$(@F))"
 
 
 TRANSLATE_LINKER_FILE_LIST = cat -
@@ -478,7 +528,6 @@ endif
 
 M4FLAGS  += -DPRODUCT_GCC_VERSION="gcc3"
 M4FLAGS  += -DPRODUCT_MAINTAINER="google"
-M4FLAGS  += -DPRODUCT_TARGET_APPLICATION="firefox"
 
 # These three macros are suggested by the GNU make documentation for creating
 # a comma-separated list.

@@ -337,15 +337,15 @@ endif
 
 #-----------------------------------------------------------------------------
 # third_party/googleurl
-# Only NPAPI needs this right now.  When the other builds want it, change
-# NPAPI_* to THIRD_PARTY_*.
 
-NPAPI_VPATH	+= \
+# Only include gurl in NPAPI plugin builds.
+ifeq ($(USING_NPAPI),1)
+THIRD_PARTY_VPATH	+= \
 		../third_party/googleurl/src \
 		../third_party/icu38/source/common \
 		$(NULL)
-
-NPAPI_CPPSRCS	+= \
+		
+THIRD_PARTY_CPPSRCS	+= \
 		gurl.cc \
 		url_canon_etc.cc \
 		url_canon_fileurl.cc \
@@ -362,6 +362,7 @@ NPAPI_CPPSRCS	+= \
 		url_util.cc \
 		utf_impl.cc \
 		$(NULL)
+endif
 
 #-----------------------------------------------------------------------------
 # third_party/modp_b64
@@ -589,6 +590,37 @@ NPAPI_CPPSRCS	+= \
 endif # WIN32
 
 #-----------------------------------------------------------------------------
+# base/safari
+
+SF_VPATH	+= \
+		base/common \
+		base/npapi \
+		base/safari \
+		$(NULL)
+
+SF_CPPSRCS	+= \
+		browser_utils.cc \
+		browser_utils_sf.cc \
+		common_sf.mm \
+		cf_string_utils.cc \
+		file_posix.cc \
+		html_event_monitor_np.cc \
+		ipc_message_queue_null.cc \
+		js_runner_np.cc \
+		message_queue_sf.cc \
+		module.cc \
+		np_utils.cc \
+		npn_bindings.cc \
+		npp_bindings.cc \
+		nsstring_utils.mm \
+		paths_sf.mm \
+		paths_sf_more.mm \
+		plugin.cc \
+		safari_workaround.m \
+		url_utils_np.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
 # vista_broker
 
 IE_VPATH += \
@@ -607,15 +639,29 @@ VISTA_BROKER_CPPSRCS += \
 #-----------------------------------------------------------------------------
 # launch_url_with_browser
 
-# TODO(cprince): Break all ties between OSX_LAUNCHURL and FF3_VPATH when we
-# support a non-Firefox browser on Mac.
-FF3_VPATH += \
+ifeq ($(OS),osx)
+COMMON_VPATH += \
 		base/safari \
-		$(NULL)
+		$(NULL)  
 
 OSX_LAUNCHURL_CPPSRCS += \
 		launch_url_in_browser.cc \
 		$(NULL)
+endif
+
+#-----------------------------------------------------------------------------
+# Safari InputManager
+
+SF_VPATH += \
+		base/safari \
+		$(NULL)
+
+SF_INPUTMANAGER_CPPSRCS += \
+		enabler.m \
+		http_handler.mm \
+		loader.mm \
+		$(NULL)
+
 
 #-----------------------------------------------------------------------------
 # tools/perf
@@ -679,17 +725,18 @@ IE_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # console/npapi
 
-NPAPI_VPATH	+= \
+ifeq ($(USING_NPAPI),1)
+$(BROWSER)_VPATH	+= \
 		console/npapi \
 		$(NULL)
 
-NPAPI_IDLSRCS	+= \
+$(BROWSER)_IDLSRCS	+= \
 		$(NULL)
 
-NPAPI_CPPSRCS	+= \
+$(BROWSER)_CPPSRCS	+= \
 		console_np.cc \
 		$(NULL)
-
+endif
 
 #-----------------------------------------------------------------------------
 # crash_sender
@@ -755,17 +802,17 @@ IE_CPPSRCS	+= \
 
 #-----------------------------------------------------------------------------
 # database/npapi
-
-NPAPI_VPATH	+= \
+ifeq ($(USING_NPAPI),1)
+$(BROWSER)_VPATH	+= \
 		database/npapi \
 		$(NULL)
 
-NPAPI_IDLSRCS	+= \
+$(BROWSER)_IDLSRCS	+= \
 		$(NULL)
 
-NPAPI_CPPSRCS	+= \
+$(BROWSER)_CPPSRCS	+= \
 		$(NULL)
-
+endif		
 #-----------------------------------------------------------------------------
 # desktop
 
@@ -1004,6 +1051,17 @@ NPAPI_CPPSRCS	+= \
 NPAPI_LINK_EXTRAS += \
 		$(NPAPI_OUTDIR)/ui_resources.res \
 		$(NULL)
+		
+#-----------------------------------------------------------------------------
+# ui/safari
+
+SF_VPATH	+= \
+		ui/safari \
+		$(NULL)
+
+SF_CPPSRCS	+= \
+		html_dialog_sf.mm \
+		$(NULL)
 
 #-----------------------------------------------------------------------------
 # workerpool/firefox
@@ -1173,6 +1231,27 @@ NPAPI_CPPSRCS	+= \
 		resource_store_np.cc \
 		$(NULL)		
 
+#-----------------------------------------------------------------------------
+# localserver/safari
+
+SF_VPATH	+= \
+		localserver/npapi \
+		localserver/safari \
+		$(NULL)
+
+SF_CPPSRCS	+= \
+		async_task_sf.mm \
+		file_submitter_np.cc \
+		http_cookies_sf.mm \
+		http_request_delegate.mm \
+		http_request_sf.mm \
+		localserver_db_proxy.mm \
+		localserver_np.cc \
+		managed_resource_store_np.cc \
+		resource_store_np.cc \
+		update_task_sf.mm \
+		$(NULL)		
+
 
 #-----------------------------------------------------------------------------
 # httprequest
@@ -1202,10 +1281,14 @@ $(BROWSER)_CPPSRCS += \
 		slice_blob.cc \
 		$(NULL)
 
-# TODO(bpm): Make this cross-browser, not Firefox-only.
+# TODO(bpm): Make this cross-browser, not Firefox- or Safari-specific.
 FF3_CPPSRCS	+= \
 		blob_input_stream_ff.cc \
 		blob_input_stream_ff_test.cc \
+		$(NULL)
+
+SF_CPPSRCS += \
+		blob_input_stream_sf.mm \
 		$(NULL)
 endif # not OFFICIAL_BUILD
 
@@ -1268,19 +1351,21 @@ IE_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # factory/npapi
 
-NPAPI_VPATH	+= \
+ifeq ($(USING_NPAPI),1)
+$(BROWSER)_VPATH	+= \
 		factory/common \
 		factory/npapi \
 		$(NULL)
 
-NPAPI_IDLSRCS	+= \
+$(BROWSER)_IDLSRCS	+= \
 		$(NULL)
 
-NPAPI_CPPSRCS	+= \
+$(BROWSER)_CPPSRCS	+= \
 		factory.cc \
 		factory_wrapper.cc \
 		factory_utils.cc \
 		$(NULL)
+endif
 
 #-----------------------------------------------------------------------------
 # installer/iemobile

@@ -55,7 +55,9 @@ ifdef CMD_LINE_BROWSER
   ifeq ($(OS),osx)
     ifneq ($(BROWSER),FF2)
     ifneq ($(BROWSER),FF3)
-      $(error On OS X, BROWSER can only be one of: FF2 | FF3)
+    ifneq ($(BROWSER),SF)
+      $(error On OS X, BROWSER can only be one of: FF2 | FF3 | SF)
+    endif
     endif
     endif
   else
