@@ -127,7 +127,7 @@ class GearsHttpRequest
 
   // This needs to be called when a request is created, or if
   // onreadystatechangehandler_ is set.  It is safe to call multiple times.
-  void GearsHttpRequest::InitUnloadMonitor();
+  void InitUnloadMonitor();
 
   // HttpRequest::HttpListener implementation.
   virtual void DataAvailable(HttpRequest *source);
