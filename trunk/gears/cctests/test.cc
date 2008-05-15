@@ -1211,7 +1211,9 @@ bool TestStopwatch(std::string16 *error) {
   if (!(b)) { \
     LOG(("TestStopwatch - failed (%d)\n", __LINE__)); \
     assert(error); \
-    *error += STRING16(L"TestStopwatch - failed. "); \
+    *error += STRING16(L"TestStopwatch - failed at line "); \
+    *error += IntegerToString16(__LINE__); \
+    *error += STRING16(L". "); \
     return false; \
   } \
 }
@@ -1231,7 +1233,7 @@ bool TestStopwatch(std::string16 *error) {
   // Test simple use.
   Stopwatch sw2;
   sw2.Start();
-  SleepForMilliseconds(1);
+  SleepForMilliseconds(10);
   sw2.Stop();
   TEST_ASSERT(sw2.GetElapsed() > 0);
 
@@ -1246,7 +1248,7 @@ bool TestStopwatch(std::string16 *error) {
   sw4.Start();
   sw4.Start();
   sw4.Start();
-  SleepForMilliseconds(1);
+  SleepForMilliseconds(10);
   sw4.Stop();
   TEST_ASSERT(sw4.GetElapsed() == 0);
   sw4.Stop();
@@ -1258,7 +1260,7 @@ bool TestStopwatch(std::string16 *error) {
   Stopwatch sw5;
   {
     ScopedStopwatch scopedStopwatch(&sw5);
-    SleepForMilliseconds(1);
+    SleepForMilliseconds(10);
   }
   TEST_ASSERT(sw5.GetElapsed() > 0);
 

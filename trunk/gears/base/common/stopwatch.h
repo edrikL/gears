@@ -46,6 +46,7 @@ class Stopwatch {
   Stopwatch() : start_ticks_(0), total_ticks_(0), nested_count_(0) {};
   void Start();
   void Stop();
+  // Returns the number of milliseconds elapsed.
   int GetElapsed();
 
  private:
