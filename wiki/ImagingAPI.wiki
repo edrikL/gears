@@ -29,7 +29,7 @@ We model the API based on the _HTML5CanvasElement_ in the HTML5 spec. Please ref
 Canvas class
 {  
   // Throws away the existing contents of the canvas.
-  // Sets the canvas's dimensions to those of the image in the blob.
+  // Sets the canvas's dimensions and color mode to those of the image in the blob.
   void load(Blob blob);
 
   
@@ -63,11 +63,10 @@ Canvas class
   void resize(int width, int height);
 
 
-
-  // COMMON WITH HTML CANVAS
-
+  // Properties. Assigning to any of these throws away the existing contents of the canvas.
   attribute unsigned long width;
   attribute unsigned long height;
+  attribute string colorMode;  // one of the strings "RGBA32" and "RGB24".
 
   // returns a context
   CanvasRenderingContext2D getContext(string contextId);
