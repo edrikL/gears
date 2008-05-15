@@ -114,7 +114,8 @@ CanvasRenderingContext2D class
   
   // text
   attribute string font;  // default: 10px sans-serif
-  attribute string textAlign;  // "left", "center", "right"
+  // One of "left", "center", "right". We do not support RTL fonts, so we don't need "start" and "end". Default: "left".
+  attribute string textAlign;
   attribute boolean textBold;
   attribute boolean textItalic;
   attribute boolean textUnderline;
