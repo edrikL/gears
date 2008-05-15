@@ -91,26 +91,10 @@ CanvasRenderingContext2D class
   // back-reference to the canvas:
   readonly attribute Canvas canvas;
 
-  attribute float globalAlpha;  // default: 1.0
+  // state
+  void save();  // Push state on state stack
+  void restore();  // Pop state stack and restore state
  
-  // we only support 'source-over' and 'copy'. Default: 'source-over'.
-  attribute string globalCompositeOperation; 
-
-  // Note: must be a color, not a gradient or pattern; we don't support those.
-  attribute string fillStyle; 
-  
-  // Saves current state on stack.
-  void save();
-  // pops a state object from the stack and sets the current state to that state.
-  void restore(); 
- 
-  // drawing rectangles
-  void clearRect(int x, int y, int w, int h);
-  // see fillStyle.
-  void fillRect(int x, int y, int w, int h); 
-  // does not support stroke styles; draws a one-pixel border.  
-  void strokeRect(int x, int y, int w, int h);
-  
   // affine transformations (default transform is the identity matrix)
   void scale(float x, optional float y);  // 'y' scale factor defaults to the 'x' scale factor.
   void rotate(float angle); // in radians.
@@ -118,6 +102,17 @@ CanvasRenderingContext2D class
   void transform(float m11, float m12, float m21, float m22, float dx, float dy);
   void setTransform(float m11, float m12, float m21, float m22, float dx, float dy);
 
+  // compositing
+  attribute float globalAlpha;  // default: 1.0
+  attribute string globalCompositeOperation;   // we only support 'source-over' and 'copy'. Default: 'source-over'.
+  attribute string fillStyle;  // Note: must be a color, not a gradient or pattern; we don't support those.
+  
+  // drawing rectangles
+  void clearRect(int x, int y, int w, int h);
+  void fillRect(int x, int y, int w, int h);  // see fillStyle.
+  void strokeRect(int x, int y, int w, int h);  // does not support stroke styles; draws a one-pixel border.  
+  
+  // pixel manipulation
   ImageData createImageData(int sw, int sh);
   ImageData getImageData(int sx, int sy, int sw, int sh);
   void putImageData(ImageData imagedata, int dx, int dy);
