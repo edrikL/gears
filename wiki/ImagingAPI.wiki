@@ -144,9 +144,9 @@ CanvasRenderingContext2D class
   void colorTransform(float[] colorMatrix);
  
   // Computes the color of each pixel by taking a weighted mean of its surrounding pixels' colors, and then adding the bias, if it's supplied.
-  // The argument specifies the weights, with the center element of the matrix representing the source pixel's weight and 
+  // The matrix specifies the weights, with the center element of the matrix representing the source pixel's weight and 
   // surrounding elements in the matrix representing the surrounding pixels' weights.
-  // Unlike a color matrix, a convolution matrix's size isn't fixed, but it must be a square matrix of odd dimension.
+  // Unlike a color matrix, a convolution matrix's size isn't fixed, but it must be a square matrix of odd dimension (otherwise there's no center element).
   // 
   // All color channel values (both source and result) are expressed as floats between 0.0 and 1.0 so that they are independent of color depth.
   // For pixels that are off the source image, the input image is extended along each of its borders infinitely by duplicating the color values at the given edge of the input image.
