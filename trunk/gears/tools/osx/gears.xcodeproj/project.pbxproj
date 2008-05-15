@@ -283,6 +283,9 @@
 		B566D3680DC79B66006BF071 /* jsscope.c in Sources */ = {isa = PBXBuildFile; fileRef = B566D3670DC79B66006BF071 /* jsscope.c */; };
 		B566D36A0DC79B99006BF071 /* jsmath.c in Sources */ = {isa = PBXBuildFile; fileRef = B566D3690DC79B99006BF071 /* jsmath.c */; };
 		B566D37B0DC79BD6006BF071 /* uxproces.c in Sources */ = {isa = PBXBuildFile; fileRef = B566D37A0DC79BD6006BF071 /* uxproces.c */; };
+		B56F478C0DDB9E7100C748D1 /* unit_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56F478B0DDB9E7100C748D1 /* unit_test.cc */; };
+		B56F47900DDB9E8C00C748D1 /* notification_manager_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56F478F0DDB9E8C00C748D1 /* notification_manager_test.cc */; };
+		B56F479A0DDBA0F800C748D1 /* notification_manager.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56F47980DDBA0F800C748D1 /* notification_manager.cc */; };
 		B56F66170DAD412400A5D6C5 /* file_dialog.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56F660F0DAD412400A5D6C5 /* file_dialog.cc */; };
 		B56F66180DAD412400A5D6C5 /* file_dialog_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56F66100DAD412400A5D6C5 /* file_dialog_osx.cc */; };
 		B56F66190DAD412400A5D6C5 /* file_dialog_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56F66110DAD412400A5D6C5 /* file_dialog_utils.cc */; };
@@ -367,7 +370,6 @@
 		B5E3E3FB0DDA04A400697AB4 /* notifier_process_win32.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E3E3F40DDA04A400697AB4 /* notifier_process_win32.cc */; };
 		B5E3E3FC0DDA04A400697AB4 /* notifier_process_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E3E3F50DDA04A400697AB4 /* notifier_process_osx.cc */; };
 		B5E3E3FD0DDA04A400697AB4 /* notifier_process_linux.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E3E3F60DDA04A400697AB4 /* notifier_process_linux.cc */; };
-		B5E3E3FE0DDA04A400697AB4 /* notifier.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E3E3F90DDA04A400697AB4 /* notifier.cc */; };
 		B5E3E4010DDA04EA00697AB4 /* event_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E3E4000DDA04EA00697AB4 /* event_test.cc */; };
 		B5E3E4060DDA052F00697AB4 /* event.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5E3E4050DDA052F00697AB4 /* event.cc */; };
 		B5F583B30D9FE48E00B8FD50 /* async_task_sf.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5F583B10D9FE48E00B8FD50 /* async_task_sf.mm */; };
@@ -774,6 +776,12 @@
 		B566D3670DC79B66006BF071 /* jsscope.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = jsscope.c; path = ../../../third_party/spidermonkey/js/src/jsscope.c; sourceTree = SOURCE_ROOT; };
 		B566D3690DC79B99006BF071 /* jsmath.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = jsmath.c; path = ../../../third_party/spidermonkey/js/src/jsmath.c; sourceTree = SOURCE_ROOT; };
 		B566D37A0DC79BD6006BF071 /* uxproces.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = uxproces.c; path = ../../../third_party/spidermonkey/nspr/pr/src/md/unix/uxproces.c; sourceTree = SOURCE_ROOT; };
+		B56F478A0DDB9E7100C748D1 /* unit_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = unit_test.h; path = ../../notifier/unit_test.h; sourceTree = SOURCE_ROOT; };
+		B56F478B0DDB9E7100C748D1 /* unit_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = unit_test.cc; path = ../../notifier/unit_test.cc; sourceTree = SOURCE_ROOT; };
+		B56F478E0DDB9E8C00C748D1 /* notification_manager_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = notification_manager_test.h; path = ../../notifier/notification_manager_test.h; sourceTree = SOURCE_ROOT; };
+		B56F478F0DDB9E8C00C748D1 /* notification_manager_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = notification_manager_test.cc; path = ../../notifier/notification_manager_test.cc; sourceTree = SOURCE_ROOT; };
+		B56F47980DDBA0F800C748D1 /* notification_manager.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = notification_manager.cc; path = ../../notifier/notification_manager.cc; sourceTree = SOURCE_ROOT; };
+		B56F47990DDBA0F800C748D1 /* notification_manager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = notification_manager.h; path = ../../notifier/notification_manager.h; sourceTree = SOURCE_ROOT; };
 		B56F660E0DAD412400A5D6C5 /* file_dialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = file_dialog.h; path = ../../desktop/file_dialog.h; sourceTree = SOURCE_ROOT; };
 		B56F660F0DAD412400A5D6C5 /* file_dialog.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = file_dialog.cc; path = ../../desktop/file_dialog.cc; sourceTree = SOURCE_ROOT; };
 		B56F66100DAD412400A5D6C5 /* file_dialog_osx.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = file_dialog_osx.cc; path = ../../desktop/file_dialog_osx.cc; sourceTree = SOURCE_ROOT; };
@@ -917,9 +925,6 @@
 		B5E3E3F50DDA04A400697AB4 /* notifier_process_osx.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = notifier_process_osx.cc; path = ../../notifier/notifier_process_osx.cc; sourceTree = SOURCE_ROOT; };
 		B5E3E3F60DDA04A400697AB4 /* notifier_process_linux.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = notifier_process_linux.cc; path = ../../notifier/notifier_process_linux.cc; sourceTree = SOURCE_ROOT; };
 		B5E3E3F70DDA04A400697AB4 /* notifier_process.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = notifier_process.h; path = ../../notifier/notifier_process.h; sourceTree = SOURCE_ROOT; };
-		B5E3E3F80DDA04A400697AB4 /* notifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = notifier.h; path = ../../notifier/notifier.h; sourceTree = SOURCE_ROOT; };
-		B5E3E3F90DDA04A400697AB4 /* notifier.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = notifier.cc; path = ../../notifier/notifier.cc; sourceTree = SOURCE_ROOT; };
-		B5E3E3FA0DDA04A400697AB4 /* notification.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = notification.h; path = ../../notifier/notification.h; sourceTree = SOURCE_ROOT; };
 		B5E3E4000DDA04EA00697AB4 /* event_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = event_test.cc; path = ../../base/common/event_test.cc; sourceTree = SOURCE_ROOT; };
 		B5E3E4040DDA052F00697AB4 /* event.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = event.h; path = ../../base/common/event.h; sourceTree = SOURCE_ROOT; };
 		B5E3E4050DDA052F00697AB4 /* event.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = event.cc; path = ../../base/common/event.cc; sourceTree = SOURCE_ROOT; };
@@ -1924,13 +1929,16 @@
 		B5E3E3EF0DDA047B00697AB4 /* notifier */ = {
 			isa = PBXGroup;
 			children = (
+				B56F478E0DDB9E8C00C748D1 /* notification_manager_test.h */,
+				B56F478F0DDB9E8C00C748D1 /* notification_manager_test.cc */,
+				B56F47980DDBA0F800C748D1 /* notification_manager.cc */,
+				B56F47990DDBA0F800C748D1 /* notification_manager.h */,
 				B5E3E3F40DDA04A400697AB4 /* notifier_process_win32.cc */,
 				B5E3E3F50DDA04A400697AB4 /* notifier_process_osx.cc */,
 				B5E3E3F60DDA04A400697AB4 /* notifier_process_linux.cc */,
 				B5E3E3F70DDA04A400697AB4 /* notifier_process.h */,
-				B5E3E3F80DDA04A400697AB4 /* notifier.h */,
-				B5E3E3F90DDA04A400697AB4 /* notifier.cc */,
-				B5E3E3FA0DDA04A400697AB4 /* notification.h */,
+				B56F478A0DDB9E7100C748D1 /* unit_test.h */,
+				B56F478B0DDB9E7100C748D1 /* unit_test.cc */,
 			);
 			name = notifier;
 			sourceTree = "<group>";
@@ -2491,9 +2499,11 @@
 				B5E3E3FB0DDA04A400697AB4 /* notifier_process_win32.cc in Sources */,
 				B5E3E3FC0DDA04A400697AB4 /* notifier_process_osx.cc in Sources */,
 				B5E3E3FD0DDA04A400697AB4 /* notifier_process_linux.cc in Sources */,
-				B5E3E3FE0DDA04A400697AB4 /* notifier.cc in Sources */,
 				B5E3E4010DDA04EA00697AB4 /* event_test.cc in Sources */,
 				B5E3E4060DDA052F00697AB4 /* event.cc in Sources */,
+				B56F478C0DDB9E7100C748D1 /* unit_test.cc in Sources */,
+				B56F47900DDB9E8C00C748D1 /* notification_manager_test.cc in Sources */,
+				B56F479A0DDBA0F800C748D1 /* notification_manager.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
