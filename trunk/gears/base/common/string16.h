@@ -45,15 +45,16 @@
 #ifndef GEARS_BASE_COMMON_STRING16_H__
 #define GEARS_BASE_COMMON_STRING16_H__
 
+#if defined(OS_MACOSX) && (__APPLE_CC__ < 5465)
 // Workaround for Apple bug, using custom string types, see:
 // http://developer.apple.com/technotes/tn2007/tn2185.html#TNTAG18
-#ifdef OS_MACOSX
+// The bug is fixed in XCode 3 onward (and the #pragma causes warnings there).
 #pragma GCC visibility push(default)
 #endif
 
 #include <string>
 
-#ifdef OS_MACOSX
+#if defined(OS_MACOSX) && (__APPLE_CC__ < 5465)
 #pragma GCC visibility pop
 #endif
 
