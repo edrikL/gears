@@ -37,7 +37,7 @@
 #include "gears/base/ie/atl_headers.h"
 #elif BROWSER_SAFARI
 #include "gears/base/safari/cf_string_utils.h"
-#else // Use ICU
+#elif defined(ANDROID)  // Use ICU
 #include <unicode/ustring.h>
 #endif
 
@@ -167,7 +167,7 @@ bool UTF8ToString16(const char *in, int len, std::string16 *out16) {
   return true;
 #elif BROWSER_SAFARI
   return ConvertToString16UsingEncoding(in, len, kCFStringEncodingUTF8, out16);
-#else // Use ICU
+#elif defined(ANDROID)  // Use ICU
   int32_t out_len;
   UErrorCode error_code = U_ZERO_ERROR;
   u_strFromUTF8(NULL, 0, &out_len, in, len, &error_code);
@@ -236,7 +236,7 @@ bool String16ToUTF8(const char16 *in, int len, std::string *out8) {
   out8->assign((const char *)buffer.get());
   CFRelease(inStr);
   return true;
-#else // Use ICU
+#elif defined(ANDROID)  // Use ICU
   int32_t out_len;
   UErrorCode error_code = U_ZERO_ERROR;
   u_strToUTF8(NULL, 0, &out_len, in, len, &error_code);
