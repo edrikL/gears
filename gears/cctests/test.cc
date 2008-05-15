@@ -106,7 +106,11 @@ void Dispatcher<GearsTest>::Init() {
 #include "gears/base/common/wince_compatibility.h"
 #endif
 #include "gears/database/common/database_utils_test.h"
+#ifdef OFFICIAL_BUILD
+  // The Geolocation API has not been finalized for official builds.
+#else
 #include "gears/geolocation/geolocation_test.h"
+#endif
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"

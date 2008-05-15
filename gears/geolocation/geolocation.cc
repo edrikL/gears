@@ -23,6 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OFFICIAL_BUILD
+// The Geolocation API has not been finalized for official builds.
+#else
+
 #include "gears/geolocation/geolocation.h"
 
 #include "gears/base/common/js_runner.h"
@@ -305,3 +309,5 @@ bool ConvertPositionToJavaScriptObjectTest(const Position &p,
   return ConvertPositionToJavaScriptObject(p, error, js_runner, js_object);
 }
 #endif
+
+#endif  // OFFICIAL_BUILD
