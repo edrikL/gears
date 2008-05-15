@@ -23,6 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OFFICIAL_BUILD
+// The Geolocation API has not been finalized for official builds.
+#else
+
 #include "gears/geolocation/network_location_request.h"
 
 #include "gears/blob/buffer_blob.h"
@@ -311,3 +315,5 @@ bool GetLocationFromResponseTest(const std::vector<uint8> &response,
   return GetLocationFromResponse(response, position);
 }
 #endif
+
+#endif  // OFFICIAL_BUILD

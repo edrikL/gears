@@ -23,6 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OFFICIAL_BUILD
+// The Geolocation API has not been finalized for official builds.
+#else
+
 #include "gears/geolocation/network_location_provider.h"
 
 #include "gears/base/common/event.h"
@@ -210,3 +214,5 @@ bool NetworkLocationProvider::MakeRequestIfDataNowAvailable() {
   }
   return true;
 }
+
+#endif  // OFFICIAL_BUILD

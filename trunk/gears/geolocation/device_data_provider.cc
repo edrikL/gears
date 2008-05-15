@@ -23,6 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifdef OFFICIAL_BUILD
+// The Geolocation API has not been finalized for official builds.
+#else
+
 #include "gears/geolocation/device_data_provider.h"
 
 #if USING_MOCK_DEVICE_DATA_PROVIDERS
@@ -144,3 +148,5 @@ DeviceDataProviderBase<WifiData>* DeviceDataProviderBase<WifiData>::Create() {
 }
 
 #endif  // USING_MOCK_DEVICE_DATA_PROVIDERS
+
+#endif  // OFFICIAL_BUILD
