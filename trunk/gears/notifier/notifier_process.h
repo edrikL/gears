@@ -23,15 +23,25 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef GEARS_NOTIFIER_NOTIFIER_PROCESS_H__
+#define GEARS_NOTIFIER_NOTIFIER_PROCESS_H__
+
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
+#else
+
 class NotifierProcess {
  public:
   // Starts the Desktop Notifier process.
   static bool StartProcess();
 
-  // Registers the Desktop Notifier process. 
+  // Registers the Desktop Notifier process.
   static bool RegisterProcess();
 
   // Finds the Desktop Notifier process. Returns the process id if found.
   // Otherwise returns 0.
   static unsigned int FindProcess();
 };
+
+#endif  // OFFICIAL_BUILD
+#endif  // GEARS_NOTIFIER_NOTIFIER_PROCESS_H__

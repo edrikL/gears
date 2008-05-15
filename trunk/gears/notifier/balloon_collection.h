@@ -28,6 +28,9 @@
 #ifndef GEARS_NOTIFIER_BALLOON_COLLECTION_H__
 #define GEARS_NOTIFIER_BALLOON_COLLECTION_H__
 
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
+#else
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/string16.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
@@ -52,4 +55,5 @@ class BalloonCollectionInterface {
   // Is there room to add another notification?
   virtual bool has_space() = 0;
 };
+#endif  // OFFICIAL_BUILD
 #endif  // GEARS_NOTIFIER_BALLOON_COLLECTION_H__

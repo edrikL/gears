@@ -28,6 +28,10 @@
 #ifndef GEARS_NOTIFIER_USER_ACTIVITY_H__
 #define GEARS_NOTIFIER_USER_ACTIVITY_H__
 
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
+#else
+
 // Categorization of the user mode
 enum UserMode {
   // User is away
@@ -67,4 +71,5 @@ inline bool IsActiveUserMode(UserMode user_mode) {
   return user_mode == USER_NORMAL_MODE;
 }
 
+#endif  // OFFICIAL_BUILD
 #endif  // GEARS_NOTIFIER_USER_ACTIVITY_H__

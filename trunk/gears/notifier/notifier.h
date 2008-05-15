@@ -23,6 +23,13 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef GEARS_NOTIFIER_NOTIFIER_H__
+#define GEARS_NOTIFIER_NOTIFIER_H__
+
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
+#else
+
 #include "gears/base/common/ipc_message_queue.h"
 
 class Notification;
@@ -48,3 +55,6 @@ class Notifier : public IpcMessageQueue::HandlerInterface {
 
   DISALLOW_EVIL_CONSTRUCTORS(Notifier);
 };
+
+#endif  // OFFICIAL_BUILD
+#endif  // GEARS_NOTIFIER_NOTIFIER_H__

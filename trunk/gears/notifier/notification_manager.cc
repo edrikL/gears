@@ -22,6 +22,10 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+#ifdef OFFICIAL_BUILD
+  // The notification API has not been finalized for official builds.
+#else
 #include <assert.h>
 
 #include "gears/notifier/notification_manager.h"
@@ -142,4 +146,5 @@ BalloonCollectionMock *NotificationManager::UseBalloonCollectionMock() {
   balloon_collection_.reset(mock);
   return mock;
 }
-#endif
+#endif  // USING_CCTESTS
+#endif  // OFFICIAL_BUILD
