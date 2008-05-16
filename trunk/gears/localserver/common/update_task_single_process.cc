@@ -23,31 +23,33 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#if defined(BROWSER_WEBKIT) || defined(BROWSER_FF)
 #include <assert.h>
 #include <map>
 #include "gears/base/common/mutex.h"
-#include "gears/localserver/firefox/update_task_ff.h"
+#include "gears/localserver/common/update_task_single_process.h"
 
 // We use a global map to ensure that only one update task per captured
-// application executes at a time. Since Firefox only runs in a single
-// process, this mutual exclusion only needs to work across threads rather
-// than across processes.
-typedef std::map< int64, FFUpdateTask* > UpdateTaskMap;
+// application executes at a time. Since We're doing this for browsers
+// that only runs in a single process, this mutual exclusion only needs to 
+// work across threads rather than across processes.
+typedef std::map< int64, UpdateTaskSingleProcess* > UpdateTaskMap;
 static Mutex running_tasks_mutex;
 static UpdateTaskMap running_tasks;
 
-void FFUpdateTask::Run() {
+void UpdateTaskSingleProcess::Run() {
   if (SetRunningTask(this)) {
     UpdateTask::Run();
     ClearRunningTask(this);
   } else {
-    LOG(("FFUpdateTask - not running, another task is already running\n"));
+    LOG(("UpdateTaskSingleProcess - not running, another task is already" \
+         " running\n"));
     NotifyTaskComplete(false);
   }
 }
 
 // static 
-bool FFUpdateTask::SetRunningTask(FFUpdateTask *task) {
+bool UpdateTaskSingleProcess::SetRunningTask(UpdateTaskSingleProcess *task) {
   MutexLock lock(&running_tasks_mutex);
   int64 key = task->store_.GetServerID();
   UpdateTaskMap::iterator found = running_tasks.find(key);
@@ -62,7 +64,7 @@ bool FFUpdateTask::SetRunningTask(FFUpdateTask *task) {
 }
 
 // static
-void FFUpdateTask::ClearRunningTask(FFUpdateTask *task) {
+void UpdateTaskSingleProcess::ClearRunningTask(UpdateTaskSingleProcess *task) {
   MutexLock lock(&running_tasks_mutex);
   int64 key = task->store_.GetServerID();
   UpdateTaskMap::iterator found = running_tasks.find(key);
@@ -82,5 +84,6 @@ bool UpdateTask::IsUpdateTaskForStoreRunning(int64 store_server_id) {
 
 // Platform-specific implementation. See declaration in update_task.h.
 UpdateTask *UpdateTask::CreateUpdateTask() {
-  return new FFUpdateTask();
+  return new UpdateTaskSingleProcess();
 }
+#endif  // defined(BROWSER_SF) || defined(BROWSER_FF)
