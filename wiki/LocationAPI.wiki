@@ -52,7 +52,7 @@ interface Position {
 interface Address {
   readonly string streetNumber; // street number
   readonly string street;       // street address
-  readonly string premises;     // premises eg building name
+  readonly string premises;     // premises, e.g. building name
   readonly string city;         // city name
   readonly string county;       // county name
   readonly string region;       // region, e.g. a state in the US
