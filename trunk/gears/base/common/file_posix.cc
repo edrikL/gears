@@ -42,6 +42,7 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include "gears/base/common/android_compatibility.h"
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
