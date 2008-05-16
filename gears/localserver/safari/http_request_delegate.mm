@@ -165,8 +165,7 @@
 
 - (void)connection:(NSURLConnection *)connection
   didFailWithError:(NSError *)error {
-  // TODO(playmobil): Pass back the fact an error occured to the calling code.
-  owner_->SetReadyState(HttpRequest::COMPLETE);
+  owner_->Abort();
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {

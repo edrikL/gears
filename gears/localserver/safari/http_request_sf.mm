@@ -49,9 +49,10 @@
 struct SFHttpRequest::HttpRequestData {
   HttpRequestDelegate *delegate;
   
-  HttpRequestData() : delegate(nil) {}
+  HttpRequestData() : delegate(NULL) {}
   
   ~HttpRequestData() {
+    [delegate abort];
     [delegate release];
     delegate = NULL;
   }
@@ -347,6 +348,10 @@ bool SFHttpRequest::SendBlob(BlobInterface *blob) {
 #endif
 
 bool SFHttpRequest::SendImpl(NSInputStream *post_data_stream) {
+  if (!IsOpen()) {
+    return false;
+  }
+  
   if (was_sent_) {
     return false;
   }
@@ -366,6 +371,7 @@ bool SFHttpRequest::SendImpl(NSInputStream *post_data_stream) {
      return false;
   }
   
+  scoped_refptr<SFHttpRequest> reference(this);
   SetReadyState(SENT);
   
   // Block until completion on synchronous requests.
@@ -473,7 +479,12 @@ void SFHttpRequest::SetReadyState(ReadyState state) {
 // OnDataAvailable
 //------------------------------------------------------------------------------
 void SFHttpRequest::OnDataAvailable() {
+  scoped_refptr<SFHttpRequest> reference(this);
   SetReadyState(HttpRequest::INTERACTIVE);
+  
+  if (was_aborted_) {
+    return;
+  }
   
   if (listener_ && listener_data_available_enabled_) {
     listener_->DataAvailable(this);
@@ -511,8 +522,11 @@ bool SFHttpRequest::AllowRedirect(const std::string16 &redirect_url) {
 // Reset
 //------------------------------------------------------------------------------
 void SFHttpRequest::Reset() {
+  [delegate_holder_->delegate abort];
   [delegate_holder_->delegate release];
-  delegate_holder_->delegate = nil;
+  delegate_holder_->delegate = NULL;
+  listener_ = NULL;
+  listener_data_available_enabled_ = false;
   method_.clear();
   url_.clear();
   caching_behavior_ = USE_ALL_CACHES;
