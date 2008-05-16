@@ -1249,7 +1249,6 @@ SF_CPPSRCS	+= \
 		localserver_np.cc \
 		managed_resource_store_np.cc \
 		resource_store_np.cc \
-		update_task_sf.mm \
 		$(NULL)		
 
 
