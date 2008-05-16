@@ -113,28 +113,34 @@ void Notifier::RemoveNotification(const std::string16 &notification_id) {
   LOG(("Remove notification %S\n", notification_id.c_str()));
 }
 
-int main(int argc, char **argv) {
+int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
+  int argc;
+  char16 **argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+  if (!argv) { return __LINE__; }  // return line as a ghetto error code
+
 #if USING_CCTESTS
   // TODO(levin): hook this into the normal test run so
   // that it gets executed as part of it.
-  if (argc > 1 && strcmp(argv[1], "-tests") == 0) {
+  if (argc > 1 && wcscmp(argv[1], L"-tests") == 0) {
     return RunTests(argc, argv);
   }
 #endif  // USING_CCTESTS
+
+  LocalFree(argv);  // MSDN says to free 'argv', using LocalFree().
 
   LOG(("Gears Notifier started.\n"));
 
   Notifier notifier;
 
-  int res = -1;
+  int retval = -1;
   if (notifier.Initalize()) {
-    res = notifier.Run();
+    retval = notifier.Run();
     notifier.Terminate();
   }
 
   LOG(("Gears Notifier terminated.\n"));
 
-  return res;
+  return retval;
 }
 
 #endif  // OFFICIAL_BUILD

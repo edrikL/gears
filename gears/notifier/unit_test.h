@@ -35,7 +35,7 @@
 #include "gears/base/common/string16.h"
 
 // Runs all of the tests.
-int RunTests(int argc, char **argv);
+int RunTests(int argc, char16 **argv);
 
 // Saves a test error.
 void LogTestError(const std::string16& error);

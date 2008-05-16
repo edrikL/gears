@@ -37,17 +37,14 @@
 #include "gears/base/common/string16.h"
 #include "gears/desktop/shortcut_utils_win32.h"
 
-int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR command_line, int) {
+int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   CoInitializeEx(NULL, GEARS_COINIT_THREAD_MODEL);
 
-  int num_args;
-  char16 **argv = CommandLineToArgvW(GetCommandLineW(), &num_args);
+  int argc;
+  char16 **argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+  if (!argv) { return __LINE__; }  // return line as a ghetto error code
 
-  if (!argv) {
-    return __LINE__;  // return line as a sort of ghetto error code
-  }
-
-  if (num_args != 6) {  // first argument is program path + filename
+  if (argc != 6) {  // first argument is program path + filename
     return __LINE__;
   }
 
@@ -61,7 +58,7 @@ int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR command_line, int) {
     return __LINE__;
   }
 
-  LocalFree(argv);
+  LocalFree(argv);  // MSDN says to free 'argv', using LocalFree().
 
   std::string16 error;
   for (uint32 location = 0x8000; location > 0; location >>= 1) {

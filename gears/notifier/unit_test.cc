@@ -95,7 +95,7 @@ const std::string16& GetTestLog() {
   return UnitTest::instance()->log();
 }
 
-int RunTests(int, char **) {
+int RunTests(int, char16 **) {
   UnitTest::instance()->set_print(true);
 
   TestNotificationManager();
