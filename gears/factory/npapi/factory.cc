@@ -154,16 +154,12 @@ void GearsFactory::Create(JsCallContext *context) {
     CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
   } else if (module_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(GetJsRunner(), &object);
-#ifdef BROWSER_WEBKIT
-// TODO(playmobil): Add support for test module in Safari build.
-#else
   } else if (module_name == STRING16(L"beta.test")) {
 #ifdef USING_CCTESTS
     CreateModule<GearsTest>(GetJsRunner(), &object);
 #else
     context->SetException(STRING16(L"Object is only available in debug build."));
     return;
-#endif
 #endif
 #ifndef OFFICIAL_BUILD
   } else if (module_name == STRING16(L"beta.canvas")) {
