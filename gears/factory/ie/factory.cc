@@ -48,6 +48,7 @@
 // The Image API has not been finalized for official builds
 #else
 #include "gears/image/image_loader.h"
+#include "gears/canvas/canvas.h"
 #endif
 #endif
 #include "gears/localserver/ie/localserver_ie.h"
@@ -187,6 +188,8 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
 #else
   } else if (object_name == STRING16(L"beta.imageloader")) {
     CreateModule<GearsImageLoader>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.canvas")) {
+    CreateModule<GearsCanvas>(GetJsRunner(), &object);
 #endif
 #endif
   } else if (object_name == STRING16(L"beta.timer")) {
