@@ -679,8 +679,13 @@ NS_IMETHODIMP FFHttpRequest::OnDataAvailable(nsIRequest *request,
                                              nsIInputStream *stream,
                                              PRUint32 offset,
                                              PRUint32 count) {
+  scoped_refptr<FFHttpRequest> reference(this);
   NS_ENSURE_TRUE(channel_, NS_ERROR_UNEXPECTED);
   SetReadyState(HttpRequest::INTERACTIVE);
+  
+  if (was_aborted_) {
+    return NS_OK;
+  }
 
   std::vector<uint8> *body = response_body_.get();
   if (!body) {
