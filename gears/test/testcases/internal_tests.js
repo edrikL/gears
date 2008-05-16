@@ -324,7 +324,7 @@ function testParseGeolocationOptions() {
 // Tests forming the JSON request body for a network location provider. Note
 // that the inputs to the conversion are set on the C++ side.
 function testGeolocationFormRequestBody() {
-  if (isUsingCCTests && !isOfficial && (isWin32 || isWince)) {
+  if (isUsingCCTests && !isOfficial) {
     var body = internalTests.testGeolocationFormRequestBody();
     var correctBody = '{ ' +
                       '"cell_towers" : [ { ' +
@@ -348,7 +348,7 @@ function testGeolocationFormRequestBody() {
 // Tests extracting a position object from the JSON reposnse from a network
 // location provider.
 function testGeolocationGetLocationFromResponse() {
-  if (isUsingCCTests && !isOfficial && (isWin32 || isWince)) {
+  if (isUsingCCTests && !isOfficial) {
     var responseString = '{ ' +
                          '"location" : { ' +
                          '"latitude" : 53.1, ' +

@@ -107,7 +107,7 @@ void Dispatcher<GearsTest>::Init() {
 #endif
 #include "gears/database/common/database_utils_test.h"
 #ifdef OFFICIAL_BUILD
-  // The Geolocation API has not been finalized for official builds.
+// The Geolocation API has not been finalized for official builds.
 #else
 #include "gears/geolocation/geolocation_test.h"
 #endif
@@ -2019,15 +2019,11 @@ void GearsTest::TestParseGeolocationOptions(JsCallContext *context) {
 }
 
 void GearsTest::TestGeolocationFormRequestBody(JsCallContext *context) {
-#ifdef WIN32
   ::TestGeolocationFormRequestBody(context);
-#endif
 } 
 
 void GearsTest::TestGeolocationGetLocationFromResponse(JsCallContext *context) {
-#ifdef WIN32
   ::TestGeolocationGetLocationFromResponse(context, GetJsRunner());
-#endif
 }
 #endif
 
