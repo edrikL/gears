@@ -90,10 +90,6 @@ void TestParseGeolocationOptions(JsCallContext *context,
   context->SetReturnValue(JSPARAM_OBJECT, return_object.get());
 }
 
-// These tests make use of FormRequestBodyTest and GetLocationFromResponseTest,
-// which are currently only implemented for WIN32.
-#ifdef WIN32
-
 void TestGeolocationFormRequestBody(JsCallContext *context) {
   // Parsing radio and wifi data from JavaScript would involve more complex code
   // than that which we're trying to test. Instead we hard-code these values.
@@ -176,8 +172,6 @@ void TestGeolocationGetLocationFromResponse(JsCallContext *context,
   }
   context->SetReturnValue(JSPARAM_OBJECT, position_object.get());
 } 
-
-#endif  // WIN32
 
 #endif  // USING_CCTESTS
 

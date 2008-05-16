@@ -77,13 +77,7 @@ LocationProviderInterface* NewGpsLocationProvider() {
 
 LocationProviderInterface* NewNetworkLocationProvider(
     const std::string16 &url, const std::string16 &host_name) {
-#ifdef WIN32
   return new NetworkLocationProvider(url, host_name);
-#else
-  // TODO(steveblock): Implement NetworkLocationProvider for other platforms.
-  assert(false);
-  return NULL;
-#endif
 }
 
 #endif  // OFFICIAL_BUILD
