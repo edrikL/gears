@@ -86,4 +86,4 @@ class NetworkLocationProvider
   DISALLOW_EVIL_CONSTRUCTORS(NetworkLocationProvider);
 };
 
-#endif  // WIN32
+#endif  // GEARS_GEOLOCATION_NETWORK_LOCATION_PROVIDER_H__
