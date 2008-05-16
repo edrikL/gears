@@ -257,19 +257,20 @@ The response format is also JSON. An example response is:
 {{{
 {
   location: {
-    latitude:1234123,
-    longitude:-2132362,
+    latitude: 51.0,
+    longitude: -0.1,
     altitude: 30,
-    horizontal_accuracy:1200,
+    horizontal_accuracy: 1200,
     vertical_accuracy: 10,
     address:{
-      street:"100 Amphibian Walkway",
-      postal_code:94043,
-      city:"Mountain View",
-      county:"Mountain View County",
-      region:"California",
-      country:"United States of America",
-      country_code:"US"
+      street_number: "100",
+      street: "Amphibian Walkway",
+      postal_code: "94043",
+      city: "Mountain View",
+      county: "Mountain View County",
+      region: "California",
+      country: "United States of America",
+      country_code: "US"
     }
   }
 }
