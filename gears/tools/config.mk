@@ -100,6 +100,11 @@ MAKEFLAGS = --no-print-directory
 
 CPPFLAGS += -I.. -I$($(BROWSER)_OUTDIR) -I$(COMMON_OUTDIR)
 
+ifeq ($(USING_NPAPI),1)
+#Additional include paths for gurl.
+CPPFLAGS += -I../third_party/npapi -I../third_party -I../third_party/googleurl -I../third_party/icu38/public/common
+endif
+
 LIBPNG_CFLAGS = -DPNG_USER_CONFIG -I../third_party/zlib
 ZLIB_CFLAGS = -DNO_GZIP -DNO_GZCOMPRESS
 ifeq ($(OS),wince)
@@ -129,10 +134,6 @@ GECKO_LIB = $(GECKO_SDK)/gecko_sdk/lib
 # GECKO_SDK gets defined below (different for each OS).
 
 $(BROWSER)_CPPFLAGS += -DBROWSER_$(BROWSER)=1
-
-ifeq ($(USING_NPAPI),1)
-$(BROWSER)_CPPFLAGS += -I../third_party/npapi -I../third_party -I../third_party/googleurl -I../third_party/icu38/public/common
-endif
 
 # TODO(cprince): Update source files so we don't need this compatibility define?
 FF2_CPPFLAGS += -DBROWSER_FF=1
@@ -244,7 +245,6 @@ ifeq ($(BROWSER),SF)
 # We also want to consolidate the include paths, so we don't have to add these
 # paths here.
 CPPFLAGS += -DBROWSER_NPAPI -DBROWSER_WEBKIT -DBROWSER_SAFARI
-CPPFLAGS += -I../third_party -I../third_party/googleurl -I../third_party/icu38/public/common
 else
 CPPFLAGS += -DLINUX
 endif
