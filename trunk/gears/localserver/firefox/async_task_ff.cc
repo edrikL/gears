@@ -33,21 +33,13 @@
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/firefox/async_task_ff.h"
+#include "gears/localserver/firefox/ui_thread.h"
 
 const char16 *AsyncTask::kCookieRequiredErrorMessage =
                   STRING16(L"Required cookie is not present");
 
 const char16 *kIsOfflineErrorMessage =
                   STRING16(L"The browser is offline");
-
-// Returns true if the currently executing thread is the main UI thread,
-// firefox/mozila has one such very special thread
-// See cache_intercept.cc for implementation
-bool IsUiThread();
-// Returns the thread id of the main UI thread,
-// firefox/mozila has one such very special thread
-// See cache_intercept.cc for implementation
-ThreadId GetUiThread();
 
 //------------------------------------------------------------------------------
 // AsyncTask

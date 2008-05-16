@@ -794,11 +794,13 @@ FFHttpRequest *CacheIntercept::GetGearsHttpRequest(nsIChannel *channel) {
   return http_request;
 }
 
+// See ui_thread.h for declaration.
 ThreadId GetUiThread() {
   assert(g_ui_thread);
   return g_ui_thread;
 }
 
+// See ui_thread.h for declaration.
 bool IsUiThread() {
   assert(g_ui_thread);
   return g_ui_thread == ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
