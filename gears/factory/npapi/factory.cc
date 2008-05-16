@@ -66,6 +66,7 @@
 template <>
 void Dispatcher<GearsFactory>::Init() {
   RegisterProperty("version", &GearsFactory::GetVersion, NULL);
+  RegisterProperty("hasPermission", &GearsFactory::GetHasPermission, NULL);
   RegisterMethod("create", &GearsFactory::Create);
   RegisterMethod("getBuildInfo", &GearsFactory::GetBuildInfo);
   RegisterMethod("getPermission", &GearsFactory::GetPermission);
@@ -210,6 +211,49 @@ void GearsFactory::GetPermission(JsCallContext *context) {
     has_permission = true;
   }
   
+  context->SetReturnValue(JSPARAM_BOOL, &has_permission);
+}
+
+// Purposely ignores 'is_creation_suspended_'.  The 'hasPermission' property
+// indicates whether USER opt-in is still required, not whether DEVELOPER
+// methods have been called correctly (e.g. allowCrossOrigin).
+void GearsFactory::GetHasPermission(JsCallContext *context) {
+  bool has_permission = false;
+  switch (permission_state_) {
+    case ALLOWED_PERMANENTLY:
+    case ALLOWED_TEMPORARILY:
+      has_permission = true;
+      break;
+    case DENIED_PERMANENTLY:
+    case DENIED_TEMPORARILY:
+      has_permission = false;
+      break;
+    case NOT_SET: {
+      // If the state is unknown, look in the PermissionsDB. If a persisted
+      // value exists, update permission_state_.  Otherwise do NOT modify
+      // permission_state_; it would affect subsequent factory.create() calls.
+      PermissionsDB *permissions_db = PermissionsDB::GetDB();
+      if (permissions_db) {
+        switch (permissions_db->GetCanAccessGears(EnvPageSecurityOrigin())) {
+          case PermissionsDB::PERMISSION_ALLOWED:
+            permission_state_ = ALLOWED_PERMANENTLY;
+            has_permission = true;
+            break;
+          case PermissionsDB::PERMISSION_DENIED:
+            permission_state_ = DENIED_PERMANENTLY;
+            has_permission = false;
+            break;
+          default:
+            break;  // use the default retval already set
+        }
+      }
+      break;
+    }
+    default:
+      context->SetException(STRING16(L"Internal error."));
+      return;
+  }
+
   context->SetReturnValue(JSPARAM_BOOL, &has_permission);
 }
 
