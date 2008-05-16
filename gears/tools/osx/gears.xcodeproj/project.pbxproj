@@ -45,6 +45,7 @@
 		B524937A0DD8B1B1007B5446 /* httprequest.cc in Sources */ = {isa = PBXBuildFile; fileRef = B52493780DD8B1B1007B5446 /* httprequest.cc */; };
 		B52E98760DC7A79300E5BA57 /* workerpool_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B52E98740DC7A79200E5BA57 /* workerpool_utils.cc */; };
 		B52E98770DC7A79300E5BA57 /* workerpool_utils.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = B52E98750DC7A79200E5BA57 /* workerpool_utils.h */; };
+		B5348F9B0DDE0037000873AF /* empty_device_data_provider.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5348F9A0DDE0037000873AF /* empty_device_data_provider.cc */; };
 		B535DDC50DA951A000B49CDF /* safari_workaround.m in Sources */ = {isa = PBXBuildFile; fileRef = B535DDC40DA951A000B49CDF /* safari_workaround.m */; };
 		B544D99E0D2EE5D000D30561 /* database_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544D9540D2EE5D000D30561 /* database_utils.cc */; };
 		B544D99F0D2EE5D000D30561 /* paths.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544D9560D2EE5D000D30561 /* paths.cc */; };
@@ -80,6 +81,8 @@
 		B544DB6C0D2EE90100D30561 /* libsqlite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B544D9D40D2EE6B600D30561 /* libsqlite.a */; };
 		B544DB720D2EE93800D30561 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B544DB710D2EE93800D30561 /* Cocoa.framework */; };
 		B544FD630D89326D00568660 /* cf_string_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B544FD620D89326D00568660 /* cf_string_utils.cc */; };
+		B54B9D120DDDEC580045DE6D /* canvas.cc in Sources */ = {isa = PBXBuildFile; fileRef = B54B9D0E0DDDEC580045DE6D /* canvas.cc */; };
+		B54B9D130DDDEC580045DE6D /* canvas_rendering_context_2d.cc in Sources */ = {isa = PBXBuildFile; fileRef = B54B9D100DDDEC580045DE6D /* canvas_rendering_context_2d.cc */; };
 		B55D110F0D993C7500B405E4 /* message_queue_sf.cc in Sources */ = {isa = PBXBuildFile; fileRef = B55D110E0D993C7500B405E4 /* message_queue_sf.cc */; };
 		B55F235A0DB3D87E00AF44E2 /* uncompr.c in Sources */ = {isa = PBXBuildFile; fileRef = B55F234F0DB3D87E00AF44E2 /* uncompr.c */; };
 		B55F235B0DB3D87E00AF44E2 /* trees.c in Sources */ = {isa = PBXBuildFile; fileRef = B55F23500DB3D87E00AF44E2 /* trees.c */; };
@@ -512,6 +515,8 @@
 		B52493790DD8B1B1007B5446 /* httprequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = httprequest.h; path = ../../httprequest/httprequest.h; sourceTree = SOURCE_ROOT; };
 		B52E98740DC7A79200E5BA57 /* workerpool_utils.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = workerpool_utils.cc; path = ../../workerpool/common/workerpool_utils.cc; sourceTree = SOURCE_ROOT; };
 		B52E98750DC7A79200E5BA57 /* workerpool_utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = workerpool_utils.h; path = ../../workerpool/common/workerpool_utils.h; sourceTree = SOURCE_ROOT; };
+		B5348F990DDE0037000873AF /* empty_device_data_provider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = empty_device_data_provider.h; path = ../../geolocation/empty_device_data_provider.h; sourceTree = SOURCE_ROOT; };
+		B5348F9A0DDE0037000873AF /* empty_device_data_provider.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = empty_device_data_provider.cc; path = ../../geolocation/empty_device_data_provider.cc; sourceTree = SOURCE_ROOT; };
 		B535DDC40DA951A000B49CDF /* safari_workaround.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = safari_workaround.m; path = ../../base/safari/safari_workaround.m; sourceTree = SOURCE_ROOT; };
 		B544D9540D2EE5D000D30561 /* database_utils.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = database_utils.cc; path = ../../database/common/database_utils.cc; sourceTree = SOURCE_ROOT; };
 		B544D9550D2EE5D000D30561 /* database_utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = database_utils.h; path = ../../database/common/database_utils.h; sourceTree = SOURCE_ROOT; };
@@ -572,6 +577,10 @@
 		B544DB710D2EE93800D30561 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		B544DCC40D3578B000D30561 /* http_request_sf.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = http_request_sf.h; path = ../../localserver/safari/http_request_sf.h; sourceTree = SOURCE_ROOT; };
 		B544FD620D89326D00568660 /* cf_string_utils.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cf_string_utils.cc; path = ../../base/safari/cf_string_utils.cc; sourceTree = SOURCE_ROOT; };
+		B54B9D0E0DDDEC580045DE6D /* canvas.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = canvas.cc; path = ../../canvas/canvas.cc; sourceTree = SOURCE_ROOT; };
+		B54B9D0F0DDDEC580045DE6D /* canvas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = canvas.h; path = ../../canvas/canvas.h; sourceTree = SOURCE_ROOT; };
+		B54B9D100DDDEC580045DE6D /* canvas_rendering_context_2d.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = canvas_rendering_context_2d.cc; path = ../../canvas/canvas_rendering_context_2d.cc; sourceTree = SOURCE_ROOT; };
+		B54B9D110DDDEC580045DE6D /* canvas_rendering_context_2d.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = canvas_rendering_context_2d.h; path = ../../canvas/canvas_rendering_context_2d.h; sourceTree = SOURCE_ROOT; };
 		B54D29110D9287D20029F7EF /* dispatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dispatcher.h; path = ../../base/common/dispatcher.h; sourceTree = SOURCE_ROOT; };
 		B54D29120D9287D20029F7EF /* dispatcher.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dispatcher.cc; path = ../../base/common/dispatcher.cc; sourceTree = SOURCE_ROOT; };
 		B55D10DF0D992C3F00B405E4 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = common.h; path = ../../base/common/common.h; sourceTree = SOURCE_ROOT; };
@@ -1089,6 +1098,8 @@
 			children = (
 				B56F47FC0DDD271A00C748D1 /* device_data_provider.h */,
 				B56F47FD0DDD271A00C748D1 /* device_data_provider.cc */,
+				B5348F990DDE0037000873AF /* empty_device_data_provider.h */,
+				B5348F9A0DDE0037000873AF /* empty_device_data_provider.cc */,
 				B56F48010DDD273700C748D1 /* geolocation_test.cc */,
 				79272FDD0DC2141700CDF577 /* geolocation.cc */,
 				79272FDE0DC2141800CDF577 /* geolocation.h */,
@@ -1160,6 +1171,7 @@
 			children = (
 				B544D9670D2EE5D000D30561 /* base */,
 				79C3E9380DB8D89D00346806 /* blob */,
+				B54B9D0C0DDDEC3A0045DE6D /* canvas */,
 				B574982F0DD4CD14000FBCCD /* cctests */,
 				B57F3AC80DA1019D0088FE52 /* console */,
 				B56F66000DAD40DE00A5D6C5 /* desktop */,
@@ -1567,6 +1579,17 @@
 				B58EFD9E0D5292C100B0A65D /* localserver_db_proxy.h */,
 			);
 			name = safari;
+			sourceTree = "<group>";
+		};
+		B54B9D0C0DDDEC3A0045DE6D /* canvas */ = {
+			isa = PBXGroup;
+			children = (
+				B54B9D0E0DDDEC580045DE6D /* canvas.cc */,
+				B54B9D0F0DDDEC580045DE6D /* canvas.h */,
+				B54B9D100DDDEC580045DE6D /* canvas_rendering_context_2d.cc */,
+				B54B9D110DDDEC580045DE6D /* canvas_rendering_context_2d.h */,
+			);
+			name = canvas;
 			sourceTree = "<group>";
 		};
 		B566D1020DC790CD006BF071 /* spidermonkey */ = {
@@ -2522,6 +2545,9 @@
 				B56F47FE0DDD271A00C748D1 /* device_data_provider.cc in Sources */,
 				B56F48020DDD273700C748D1 /* geolocation_test.cc in Sources */,
 				B56F48050DDD276400C748D1 /* network_location_request.cc in Sources */,
+				B54B9D120DDDEC580045DE6D /* canvas.cc in Sources */,
+				B54B9D130DDDEC580045DE6D /* canvas_rendering_context_2d.cc in Sources */,
+				B5348F9B0DDE0037000873AF /* empty_device_data_provider.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2834,7 +2860,11 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				GCC_CHAR_IS_UNSIGNED_CHAR = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -2882,6 +2912,10 @@
 					ppc,
 					i386,
 				);
+				DEAD_CODE_STRIPPING = YES;
+				GCC_CHAR_IS_UNSIGNED_CHAR = YES;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
