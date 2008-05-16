@@ -49,6 +49,7 @@
 // The Image API has not been finalized for official builds
 #else
 #include "gears/image/image_loader.h"
+#include "gears/canvas/canvas.h"
 #endif
 #include "gears/localserver/firefox/localserver_ff.h"
 #include "gears/timer/timer.h"
@@ -176,6 +177,8 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
 #else
   } else if (object_name == STRING16(L"beta.imageloader")) {
     CreateModule<GearsImageLoader>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.canvas")) {
+    CreateModule<GearsCanvas>(GetJsRunner(), &object);
 #endif
   } else if (object_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(GetJsRunner(), &object);
