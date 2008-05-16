@@ -1,4 +1,4 @@
-// Copyright 2007, Google Inc.
+// Copyright 2006, Google Inc.
 //
 // Redistribution and use in source and binary forms, with or without 
 // modification, are permitted provided that the following conditions are met:
@@ -23,22 +23,24 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_LOCALSERVER_SAFARI_UPDATE_TASK_SF_H__
-#define GEARS_LOCALSERVER_SAFARI_UPDATE_TASK_SF_H__
+#ifndef GEARS_LOCALSERVER_COMMON_UPDATE_TASK_SINGLE_PROCESS_H__
+#define GEARS_LOCALSERVER_COMMON_UPDATE_TASK_SINGLE_PROCESS_H__
 
+#if defined(BROWSER_WEBKIT) || defined(BROWSER_FF)
 #include "gears/localserver/common/update_task.h"
 
 //------------------------------------------------------------------------------
-// SFUpdateTask
+// UpdateTaskSingleProcess
 //------------------------------------------------------------------------------
-class SFUpdateTask : public UpdateTask {
+class UpdateTaskSingleProcess : public UpdateTask {
  protected:
   // Overriden to ensure only one task per application runs at a time
   virtual void Run();
-  
- private:
-  static bool SetRunningTask(SFUpdateTask *task);
-  static void ClearRunningTask(SFUpdateTask *task);
-};
 
-#endif  // GEARS_LOCALSERVER_SAFARI_UPDATE_TASK_SF_H__
+private:
+  static bool SetRunningTask(UpdateTaskSingleProcess *task);
+  static void ClearRunningTask(UpdateTaskSingleProcess *task);
+};
+#endif  // defined(BROWSER_SF) || defined(BROWSER_FF)
+
+#endif  // GEARS_LOCALSERVER_COMMON_UPDATE_TASK_SINGLE_PROCESS_H__

@@ -1145,6 +1145,7 @@ $(BROWSER)_CPPSRCS += \
 		manifest.cc \
 		resource_store.cc \
 		update_task.cc \
+		update_task_single_process.cc \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
@@ -1171,7 +1172,6 @@ FF3_CPPSRCS	+= \
 		managed_resource_store_ff.cc \
 		resource_store_ff.cc \
 		safe_http_request.cc \
-		update_task_ff.cc \
 		$(NULL)		
 
 #-----------------------------------------------------------------------------

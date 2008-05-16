@@ -395,7 +395,7 @@ NS_IMETHODIMP GearsManagedResourceStore::CheckForUpdate() {
     RETURN_NORMAL();
   }
 
-  update_task_.reset(new FFUpdateTask());
+  update_task_.reset(UpdateTask::CreateUpdateTask());
   if (!update_task_->Init(&store_)) {
     update_task_.reset(NULL);
     RETURN_EXCEPTION(STRING16(L"Failed to initialize update task."));
@@ -442,7 +442,7 @@ void GearsManagedResourceStore::GetAppVersionString(
 void GearsManagedResourceStore::HandleEvent(int code, int param,
     AsyncTask* source) {
   if (source == update_task_.get()) {
-    if (code == FFUpdateTask::UPDATE_TASK_COMPLETE) {
+    if (code == UpdateTask::UPDATE_TASK_COMPLETE) {
       update_task_->SetListener(NULL);
       update_task_.release()->DeleteWhenDone();
     }
