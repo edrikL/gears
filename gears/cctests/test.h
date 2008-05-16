@@ -86,10 +86,14 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   // OUT: void
   void TestPassArguments(JsCallContext *context);
 
+  // IN: function
+  // OUT: bool bool_value, int int_value, int64 int64_value,
+  //      double double_value, string string_value
+  void TestPassArgumentsCallback(JsCallContext *context);
+
   // IN: int value1, optional int value2, optional int value3
   // OUT: void
   void TestPassArgumentsOptional(JsCallContext *context);
-
 
   // Coercion tests
 
