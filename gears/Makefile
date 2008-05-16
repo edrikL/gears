@@ -342,9 +342,8 @@ endif
 ifeq ($(USING_NPAPI),1)
 THIRD_PARTY_VPATH	+= \
 		../third_party/googleurl/src \
-		../third_party/icu38/source/common \
 		$(NULL)
-		
+
 THIRD_PARTY_CPPSRCS	+= \
 		gurl.cc \
 		url_canon_etc.cc \
@@ -360,6 +359,18 @@ THIRD_PARTY_CPPSRCS	+= \
 		url_parse.cc \
 		url_parse_file.cc \
 		url_util.cc \
+		$(NULL)
+endif
+
+#-----------------------------------------------------------------------------
+# third_party/icu38
+
+ifeq ($(USING_ICU),1)
+THIRD_PARTY_VPATH	+= \
+		../third_party/icu38/source/common \
+		$(NULL)
+
+THIRD_PARTY_CPPSRCS	+= \
 		utf_impl.cc \
 		$(NULL)
 endif
@@ -1062,7 +1073,7 @@ NPAPI_CPPSRCS	+= \
 NPAPI_LINK_EXTRAS += \
 		$(NPAPI_OUTDIR)/ui_resources.res \
 		$(NULL)
-		
+
 #-----------------------------------------------------------------------------
 # ui/safari
 

@@ -47,6 +47,11 @@ ifneq ($(findstring $(BROWSER), SF|NPAPI),)
   USING_NPAPI = 1
 endif
 
+# Build third_party ICU on NPAPI platforms, unless specifically disabled.
+ifeq ($(USING_ICU),)
+  USING_ICU = $(USING_NPAPI)
+endif
+
 # Store value of unmodified command line parameters.
 ifdef MODE
   CMD_LINE_MODE = $MODE
