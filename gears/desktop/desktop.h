@@ -75,7 +75,11 @@ class Desktop {
     DISALLOW_EVIL_CONSTRUCTORS(ShortcutInfo);
   };
 
+#ifdef OS_ANDROID
+  Desktop(const SecurityOrigin &security_origin, NPP context);
+#else
   Desktop(const SecurityOrigin &security_origin);
+#endif
 
   // Call this after setting up the ShortcutInfo to validate it and check if
   // the shortcut should be created.  Returns false if the shortcut should not
@@ -129,6 +133,10 @@ class Desktop {
   SecurityOrigin security_origin_;
 
   std::string16 error_;
+
+#ifdef OS_ANDROID
+  NPP js_call_context_;
+#endif
 
   DISALLOW_EVIL_CONSTRUCTORS(Desktop);
 };
