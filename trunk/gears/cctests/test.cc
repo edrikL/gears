@@ -45,6 +45,8 @@ template<>
 void Dispatcher<GearsTest>::Init() {
   RegisterMethod("runTests", &GearsTest::RunTests);
   RegisterMethod("testPassArguments", &GearsTest::TestPassArguments);
+  RegisterMethod("testPassArgumentsCallback",
+                 &GearsTest::TestPassArgumentsCallback);
   RegisterMethod("testPassArgumentsOptional",
                  &GearsTest::TestPassArgumentsOptional);
   RegisterMethod("testObjectProperties", &GearsTest::TestObjectProperties);
@@ -323,6 +325,32 @@ void GearsTest::TestPassArguments(JsCallContext *context) {
   } else if (string_value != STRING16(L"hotdog")) {
     context->SetException(STRING16(L"Incorrect value for parameter 5"));
   }
+}
+
+void GearsTest::TestPassArgumentsCallback(JsCallContext *context) {
+  JsRootedCallback *function = NULL;
+  JsArgument argv[] = {
+    {JSPARAM_REQUIRED, JSPARAM_FUNCTION, &function},
+  };
+  assert(&argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
+  bool bool_value = true;
+  int int_value = 42;
+  int64 int64_value = (GG_LONGLONG(1) << 42);
+  double double_value = 88.8;
+  std::string16 string_value(STRING16(L"hotdog"));
+  JsParamToSend out_argv[] = {
+    {JSPARAM_BOOL, &bool_value},
+    {JSPARAM_INT, &int_value},
+    {JSPARAM_INT64, &int64_value},
+    {JSPARAM_DOUBLE, &double_value},
+    {JSPARAM_STRING16, &string_value},
+  };
+
+  GetJsRunner()->InvokeCallback(function, ARRAYSIZE(out_argv), out_argv, NULL);
+  delete function;
 }
 
 void GearsTest::TestPassArgumentsOptional(JsCallContext *context) {

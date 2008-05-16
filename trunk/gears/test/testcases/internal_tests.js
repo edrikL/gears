@@ -117,6 +117,19 @@ function testPassArguments() {
   }
 }
 
+function testPassArgumentsCallback() {
+  function testPassArgumentCallbackFunction(arg1, arg2, arg3, arg4, arg5) {
+    assert(arg1 === true, "Bad value for argument 1");
+    assert(arg2 === 42, "Bad value for argument 2");
+    assert(arg3 === Math.pow(2, 42), "Bad value for argument 3");
+    assert(arg4 === 88.8, "Bad value for argument 4");
+    assert(arg5 === "hotdog", "Bad value for argument 5");
+  }
+  if (isUsingCCTests) {
+    internalTests.testPassArgumentsCallback(testPassArgumentCallbackFunction);
+  }
+}
+
 function testPassArgumentsOptional() {
   if (isUsingCCTests) {
     internalTests.testPassArgumentsOptional(42, 42, 42);

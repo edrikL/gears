@@ -1774,6 +1774,13 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       *token = INT_TO_JSVAL(*value);
       break;
     }
+    case JSPARAM_INT64: {
+      const int64 *value = static_cast<const int64 *>(param.value_ptr);
+      const double dvalue = static_cast<double>(*value);
+      jsdouble *js_double = JS_NewDouble(context, dvalue);
+      *token = DOUBLE_TO_JSVAL(js_double);
+      break;
+    }
     case JSPARAM_DOUBLE: {
       const double *value = static_cast<const double *>(param.value_ptr);
       jsdouble *js_double = JS_NewDouble(context, *value);
@@ -1873,6 +1880,12 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     case JSPARAM_INT: {
       const int *value = static_cast<const int *>(param.value_ptr);
       *token = *value;  // CComVariant understands 'int'
+      break;
+    }
+    case JSPARAM_INT64: {
+      const int64 *value = static_cast<const int64 *>(param.value_ptr);
+      const double dvalue = static_cast<double>(*value);
+      *token = dvalue;  // CComVariant understands 'double'
       break;
     }
     case JSPARAM_DOUBLE: {
@@ -2026,6 +2039,12 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     case JSPARAM_INT: {
       const int *value = static_cast<const int *>(param.value_ptr);
       variant->Reset(*value);
+      break;
+    }
+    case JSPARAM_INT64: {
+      const int64 *value = static_cast<const int64 *>(param.value_ptr);
+      const double dvalue = static_cast<double>(*value);
+      variant->Reset(dvalue);
       break;
     }
     case JSPARAM_DOUBLE: {
