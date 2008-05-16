@@ -176,8 +176,10 @@ Client identification is not explicitly included in the protocol. Cookies can be
   carrier: "Vodafone",
   request_address: true,
   address_language: "en_GB",
-  latitude: 51.0,
-  longitude: -0.1,
+  location: {
+    latitude: 51.0,
+    longitude: -0.1
+  },
   cell_towers: [
     {
       cell_id: 42,
@@ -224,10 +226,15 @@ Client identification is not explicitly included in the protocol. Cookies can be
 || carrier || Carrier name. Used to help disambiguate MCC/MNC || No || string ||
 || request_address || Request the server to provide an address. || No || boolean ||
 || address_language || Specifies the language of the requested address. Uses RFC 3066. || No || string ||
-|| latitude || Current latitude in degrees. Alows client to request reverse geocode for known location. || No || double ||
-|| longitude || Current longitude in degrees. Alows client to request reverse geocode for known location. || No || double ||
+|| location || Current position. Allows client to request reverse geocode for known location. || No || object ||
 || cell_towers || Array of cell-id data objects. See description of cell-id below. || No || array ||
 || wifi_towers || Array of wifi-id data objects. See description of wifi-id below. || No || array ||
+
+=== Location data elements ===
+
+|| *Name* || *Description* || *Required* || *Type* ||
+|| latitude || Current latitude in degrees. || No || double ||
+|| longitude || Current longitude in degrees.  || No || double ||
 
 === Cell-Id data elements ===
 
