@@ -387,6 +387,77 @@ THIRD_PARTY_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
+# third_party/portaudio
+
+ifeq ($(OFFICIAL_BUILD),1)
+# PortAudio is for the Audio API which has not been finalized for official 
+# builds.
+else
+
+THIRD_PARTY_VPATH       += \
+		../third_party/portaudio/src/common \
+		$(NULL)
+
+ifeq ($(IS_WIN32_OR_WINCE),1)
+THIRD_PARTY_VPATH       += \
+		../third_party/portaudio/src/hostapi/wmme \
+		../third_party/portaudio/src/os/win \
+		$(NULL)
+endif
+ifeq ($(OS),linux)
+THIRD_PARTY_VPATH       += \
+		../third_party/portaudio/src/hostapi/oss \
+		../third_party/portaudio/src/os/unix \
+		$(NULL)
+endif
+ifeq ($(OS),osx)
+THIRD_PARTY_VPATH       += \
+		../third_party/portaudio/src/hostapi/coreaudio \
+		../third_party/portaudio/src/os/mac_osx \
+		$(NULL)
+endif
+
+THIRD_PARTY_CSRCS       += \
+		pa_allocation.c \
+		pa_converters.c \
+		pa_cpuload.c \
+		pa_debugprint.c \
+		pa_dither.c \
+		pa_front.c \
+		pa_process.c \
+		pa_skeleton.c \
+		pa_stream.c \
+		pa_trace.c \
+		$(NULL)
+
+ifeq ($(IS_WIN32_OR_WINCE),1)
+THIRD_PARTY_CSRCS       += \
+		pa_win_wmme.c \
+		pa_win_hostapis.c \
+		pa_win_util.c \
+		pa_win_waveformat.c \
+		$(NULL)
+endif
+ifeq ($(OS),linux)
+THIRD_PARTY_CSRCS       += \
+		pa_unix_oss.c \
+		pa_unix_hostapis.c \
+		pa_unix_util.c \
+		$(NULL)
+endif
+ifeq ($(OS),osx)
+THIRD_PARTY_CSRCS       += \
+		pa_ringbuffer.c \
+		pa_mac_core.c \
+		pa_mac_core_blocking.c \
+		pa_mac_core_utilities.c \
+		pa_mac_hostapis.c \
+		$(NULL)
+endif
+
+endif # not OFFICIAL_BUILD
+
+#-----------------------------------------------------------------------------
 # base/common
 
 COMMON_VPATH	+= \
