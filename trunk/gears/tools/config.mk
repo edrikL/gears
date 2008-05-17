@@ -171,6 +171,11 @@ LIBGD_CFLAGS += -I../third_party/libjpeg -I../third_party/libpng -DHAVE_CONFIG_H
 # libGD assumes it is in the include path
 CPPFLAGS += -I../third_party/libgd
 
+# TODO(vamsikrishna): change CPPFLAGS to THIRD_PARTY_CPPFLAGS, when
+# we figure out the argument ordering bug.
+# PortAudio assumes it is in the include path
+CPPFLAGS += -I../third_party/portaudio/src/common -I../third_party/portaudio/include
+
 # SpiderMonkey (the Firefox JS engine)'s JS_GET_CLASS macro in jsapi.h needs
 # this defined to work with the gecko SDK that we've built.
 FF2_CPPFLAGS += -DJS_THREADSAFE
@@ -193,6 +198,18 @@ LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
 SQLITE_CFLAGS += -Wno-uninitialized -DHAVE_USLEEP=1
 # for libjpeg:
 THIRD_PARTY_CFLAGS = -Wno-main
+# TODO(vamsikrishna): change CPPFLAGS to THIRD_PARTY_CPPFLAGS, when
+# we figure out the argument ordering bug.
+# PortAudio assumes it is in the include path
+CPPFLAGS += -I../third_party/portaudio/src/os/unix
+# for PortAudio: build only the OSS hostapi for linux
+CPPFLAGS += -DPA_USE_OSS -DHAVE_SYS_SOUNDCARD_H=1
+# TODO(vamsikrishna): change THIRD_PARTY_CFLAGS to THIRD_PARTY_CPPFLAGS, when
+# we figure out the argument ordering bug.
+# for PortAudio: disable some warnings
+THIRD_PARTY_CFLAGS += -Wno-unused-variable
+# for PortAudio: enable multithreading support with pthread library 
+THIRD_PARTY_CFLAGS += -pthread
 
 # all the GTK headers using includes relative to this directory
 GTK_CFLAGS = -I../third_party/gtk/include/gtk-2.0 -I../third_party/gtk/include/atk-1.0 -I../third_party/gtk/include/glib-2.0 -I../third_party/gtk/include/pango-1.0 -I../third_party/gtk/include/cairo -I../third_party/gtk/lib/gtk-2.0/include -I../third_party/gtk/lib/glib-2.0/include 
@@ -213,6 +230,8 @@ MKDLL = g++
 DLL_PREFIX = lib
 DLL_SUFFIX = .so
 DLLFLAGS = $(SHARED_LINKFLAGS) -shared -Wl,--version-script -Wl,tools/xpcom-ld-script
+# for PortAudio: need pthread and math
+DLLFLAGS += -lpthread -lm
 
 MKEXE = g++
 EXE_PREFIX =
@@ -259,6 +278,17 @@ SQLITE_CFLAGS += -Wno-uninitialized -Wno-pointer-sign -isysroot $(OSX_SDK_ROOT)
 SQLITE_CFLAGS += -DHAVE_USLEEP=1
 # for libjpeg:
 THIRD_PARTY_CFLAGS = -Wno-main
+# TODO(vamsikrishna): change CPPFLAGS to THIRD_PARTY_CPPFLAGS, when
+# we figure out the argument ordering bug.
+# for PortAudio: build only the CoreAudio hostapi for osx
+CPPFLAGS += -DPA_USE_COREAUDIO
+# TODO(vamsikrishna): change THIRD_PARTY_CFLAGS to THIRD_PARTY_CPPFLAGS, when
+# we figure out the argument ordering bug.
+# for PortAudio: disable some warnings
+THIRD_PARTY_CFLAGS += -Wno-unused-variable -Wno-uninitialized 
+# for PortAudio: enable multithreading support with pthread library
+# gcc/g++ for OSX doesn't seem to know this flag
+#THIRD_PARTY_CFLAGS += -pthread
 
 # COMMON_CPPFLAGS affects non-browser-specific code, generated in /common.
 COMMON_CPPFLAGS += -fvisibility=hidden
@@ -298,6 +328,8 @@ DLL_PREFIX = lib
 DLL_SUFFIX = .dylib
 DLLFLAGS += -Wl,-exported_symbols_list -Wl,tools/xpcom-ld-script.darwin
 endif
+# for PortAudio: need pthread and math
+DLLFLAGS += -lpthread -lm
 
 MKEXE = g++
 EXE_PREFIX =
@@ -331,10 +363,16 @@ MKDEP = python tools/mkdepend.py $< $@ > $(@D)/$(*F).pp
 
 # Most Windows headers use the cross-platform NDEBUG and DEBUG #defines
 # (handled later).  But a few Windows files look at _DEBUG instead.
-CPPFLAGS_dbg = /D_DEBUG=1
+CPPFLAGS_dbg = -D_DEBUG=1
 CPPFLAGS_opt =
-CPPFLAGS += /nologo /DSTRICT /D_UNICODE /DUNICODE /D_USRDLL /DWIN32 /D_WINDLL \
-            /D_CRT_SECURE_NO_DEPRECATE /DNOMINMAX
+CPPFLAGS += /nologo -DSTRICT -D_UNICODE -DUNICODE -D_USRDLL -DWIN32 -D_WINDLL \
+            -D_CRT_SECURE_NO_DEPRECATE -DNOMINMAX 
+# TODO(vamsikrishna): change CPPFLAGS to THIRD_PARTY_CPPFLAGS, when
+# we figure out the argument ordering bug.
+# PortAudio assumes it is in the include path
+CPPFLAGS += -I../third_party/portaudio/src/os/win
+# for PortAudio: build only the MME hostapi for win32/wince
+CPPFLAGS += -DPA_NO_DS -DPA_NO_ASIO
 
 ifeq ($(OS),win32)
 # We require APPVER=5.0 for things like HWND_MESSAGE.
@@ -347,33 +385,33 @@ ifeq ($(OS),win32)
 #   MIDL flags: /target NT50
 # Note: _WIN32_WINDOWS was replaced by _WIN32_WINNT for post-Win95 builds.
 # Note: XP_WIN is only used by Firefox headers
-CPPFLAGS += /D_WINDOWS \
-            /DWINVER=0x0500 \
-            /D_WIN32_WINNT=0x0500 \
-            /D_WIN32_IE=0x0500 \
-            /D_RICHEDIT_VER=0x0010 \
-            /D_MERGE_PROXYSTUB \
-            /DBREAKPAD_AVOID_STREAMS \
-            /DXP_WIN \
+CPPFLAGS += -D_WINDOWS \
+            -DWINVER=0x0500 \
+            -D_WIN32_WINNT=0x0500 \
+            -D_WIN32_IE=0x0500 \
+            -D_RICHEDIT_VER=0x0010 \
+            -D_MERGE_PROXYSTUB \
+            -DBREAKPAD_AVOID_STREAMS \
+            -DXP_WIN \
             $(CPPFLAGS_$(MODE))
 else
 # For Windows Mobile we need:
 #   C defines:  _WIN32_WCE=0x0501
 #               _UNDER_CE=0x0501
-CPPFLAGS += /D_WIN32_WCE=0x501 \
-	    /DWINVER=_WIN32_WCE \
-	    /DUNDER_CE=0x501 \
-	    /DWINCE \
-	    /DWIN32_PLATFORM_PSPC \
-	    /DARM \
-	    /D_ARM_ \
-	    /DPOCKETPC2003_UI_MODEL \
-	    /D_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA \
-	    /D_CE_CRT_ALLOW_WIN_MINMAX \
-	    $(CPPFLAGS_$(MODE))
+CPPFLAGS += -D_WIN32_WCE=0x501 \
+            -DWINVER=_WIN32_WCE \
+            -DUNDER_CE=0x501 \
+            -DWINCE \
+            -DWIN32_PLATFORM_PSPC \
+            -DARM \
+            -D_ARM_ \
+            -DPOCKETPC2003_UI_MODEL \
+            -D_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA \
+            -D_CE_CRT_ALLOW_WIN_MINMAX \
+            $(CPPFLAGS_$(MODE))
 endif
 
-LIBGD_CFLAGS += /DBGDWIN32
+LIBGD_CFLAGS += -DBGDWIN32
 
 # Disable some warnings when building third-party code, so we can enable /WX.
 # Examples:
@@ -388,14 +426,17 @@ SQLITE_CFLAGS += /wd4146
 endif
 
 THIRD_PARTY_CPPFLAGS = /wd4018 /wd4003
-
+# for PortAudio: 
+#   warning C4133: 'type' : incompatible types - from 'type1' to 'type2'
+#   warning C4101: 'identifier' : unreferenced local variable
+THIRD_PARTY_CPPFLAGS += /wd4133 /wd4101
 
 COMPILE_FLAGS_dbg = /MTd /Zi /Zc:wchar_t-
 COMPILE_FLAGS_opt = /MT  /Zi /Ox /Zc:wchar_t-
 COMPILE_FLAGS = /c /Fo"$@" /Fd"$(@D)/$(*F).pdb" /W3 /WX /GR- $(COMPILE_FLAGS_$(MODE))
 # In VC8, the way to disable exceptions is to remove all /EH* flags, and to
 # define _HAS_EXCEPTIONS=0 (for C++ headers) and _ATL_NO_EXCEPTIONS (for ATL).
-COMPILE_FLAGS += /D_HAS_EXCEPTIONS=0 /D_ATL_NO_EXCEPTIONS
+COMPILE_FLAGS += -D_HAS_EXCEPTIONS=0 -D_ATL_NO_EXCEPTIONS
 
 CFLAGS = $(COMPILE_FLAGS)
 CXXFLAGS = $(COMPILE_FLAGS) /TP /J
