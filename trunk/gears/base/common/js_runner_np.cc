@@ -40,12 +40,18 @@
 
 #include "gears/base/common/basictypes.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/html_event_monitor.h"
+#include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_runner_utils.h"  // For ThrowGlobalErrorImpl()
+#include "gears/base/common/js_standalone_engine.h"
+#include "gears/base/common/mutex.h"
 #include "gears/base/common/scoped_token.h"
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/thread_locals.h"
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/npapi/np_utils.h"
 #include "gears/base/npapi/scoped_npapi_handles.h"
+
+extern const std::string kNPNFuncsKey;
 
 // We keep a map of active DocumentJsRunners so we can notify them when their
 // NP instance is destroyed.
@@ -79,19 +85,28 @@ static void UnregisterDocumentJsRunner(NPP instance) {
 // different.
 class JsRunnerBase : public JsRunnerInterface {
  public:
-  JsRunnerBase(NPP instance) : np_instance_(instance), evaluator_(NULL) {
-    NPN_GetValue(np_instance_, NPNVWindowNPObject, &global_object_);
+  JsRunnerBase() : evaluator_(NULL) {
   }
-  ~JsRunnerBase() {
-    NPN_ReleaseObject(global_object_);
+  
+  virtual ~JsRunnerBase() {
+    // Should have called Cleanup() to kill this before getting here();
+    assert(evaluator_.get() == NULL);
   }
-
-  JsContextPtr GetContext() {
-    return np_instance_;
+  
+  virtual NPObject *GetGlobalObject() = 0;
+  
+  // Because JsRunner destroys the JSEngine in it's destructor, we add this
+  // function which cleans up objects that need a valid JSEngine in order
+  // to be succesfully destructed.
+  void Cleanup() {
+    evaluator_.reset(NULL);
   }
-
-  NPObject *GetGlobalObject() {
-    return global_object_;
+  
+  bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
+    ModuleImplBaseClass *module = static_cast<ModuleImplBaseClass*>(object);
+    NPVariant np_window;
+    OBJECT_TO_NPVARIANT(GetGlobalObject(), np_window);
+    return SetProperty(np_window, name.c_str(), module->GetWrapperToken());
   }
 
   JsObject *NewObject(bool dump_on_error = false) {
@@ -183,14 +198,10 @@ class JsRunnerBase : public JsRunnerInterface {
       // variant will contain VOID. If it returns <null>, the variant will
       // contain NULL. Always returning a JsRootedToken should allow us to
       // coerce these values to other types correctly in the future.
-      *optional_alloc_retval = new JsRootedToken(np_instance_, retval);
+      *optional_alloc_retval = new JsRootedToken(GetContext(), retval);
     }
 
     return true;
-  }
-
-  bool Eval(const std::string16 &script) {
-    return EvalImpl(script, true);
   }
   
   bool EvalImpl(const std::string16 &script, bool catch_exceptions) {
@@ -217,6 +228,9 @@ class JsRunnerBase : public JsRunnerInterface {
     if (catch_exceptions && NPVARIANT_IS_STRING(result)) {
       // We caught an exception.
       NPString exception = NPVARIANT_TO_STRING(result);
+#ifdef DEBUG
+      LOG(("Exception during eval: %s\n", exception.UTF8Characters));
+#endif
       std::string16 exception16;
       if (!UTF8ToString16(exception.UTF8Characters, exception.UTF8Length,
                          &exception16)) {
@@ -247,13 +261,6 @@ class JsRunnerBase : public JsRunnerInterface {
     event_handlers_[event_type].erase(handler);
     return true;
   }
-
-#ifdef DEBUG
-  void ForceGC() {
-    // TODO(mpcomplete): figure this out.
-    //Eval(STRING16(L"CollectGarbage();"));
-  }
-#endif
 
   // This function and others (AddEventHandler, RemoveEventHandler etc) do not
   // contain any browser-specific code. They should be implemented in a new
@@ -302,10 +309,20 @@ class JsRunnerBase : public JsRunnerInterface {
     }
   }
 
-  NPP np_instance_;
   NPObject *global_object_;
 
  private:
+  bool SetProperty(JsToken object, const char16 *name, const NPVariant &value) {
+    if (!NPVARIANT_IS_OBJECT(object)) { return false; }
+
+    std::string name_utf8;
+    if (!String16ToUTF8(name, &name_utf8)) { return false; }
+
+    NPObject *np_object = NPVARIANT_TO_OBJECT(object);
+    NPIdentifier np_name = NPN_GetStringIdentifier(name_utf8.c_str());
+    return NPN_SetProperty(GetContext(), np_object, np_name, &value);
+  }
+  
   NPObject *GetEvaluator() {
     if (evaluator_.get())
       return evaluator_.get();
@@ -368,36 +385,96 @@ class JsRunnerBase : public JsRunnerInterface {
   DISALLOW_EVIL_CONSTRUCTORS(JsRunnerBase);
 };
 
-// TODO(mpcomplete): implement me.  We need a browser-independent way of
-// creating a JS engine.  Options:
-// 1. Bundle spidermonkey and just run that.
-// 2. Leave this class as a browser-specific module.
+// Runner used by workers.
+// Spools up an external JS Engine (Spidermonkey in the case of Safari), and
+// uses it's NPAPI bindings.  This allows us to share most of the code with
+// DocumentJSRunner.
 class JsRunner : public JsRunnerBase {
  public:
-  JsRunner() : JsRunnerBase(NULL) {
+  JsRunner() {
+    static NPNetscapeFuncs browser_callbacks;
+    static bool initialized = false;
+    static Mutex browser_callbacks_mutex;
+    
+    if (!initialized) {
+      MutexLock lock(&browser_callbacks_mutex); 
+      JSStandaloneEngine::GetNPNEntryPoints(&browser_callbacks);
+      initialized = true;
+    }
+    
+    JSStandaloneEngine::InitEngine(this, &np_instance_data_);
+    ThreadLocals::SetValue(kNPNFuncsKey, &browser_callbacks, NULL);
+    NPN_GetValue(GetContext(), NPNVWindowNPObject, &global_object_);
   }
+  
   virtual ~JsRunner() {
     // Alert modules that the engine is unloading.
     SendEvent(JSEVENT_UNLOAD);
+    
+    // Must do this here as cannot call after TerminateEngine().
+    Cleanup();
+    
+    NPN_ReleaseObject(global_object_);
+    JSStandaloneEngine::TerminateEngine();
   }
 
-  bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
-    return false;
+  JsContextPtr GetContext() {
+    return &np_instance_data_;
   }
+
+  NPObject *GetGlobalObject() {
+    return global_object_;
+  }
+  
   bool Start(const std::string16 &full_script) {
-    return false;
+    LOG(("Starting Worker\n"));
+    return Eval(full_script);
   }
+  
   bool Stop() {
+    LOG(("Worker Stopped\n"));
+    // TODO(mpcomplete): what does this mean?
     return false;
   }
+  
+#ifdef DEBUG
+  void ForceGC() {
+    Eval(STRING16(L"GearsInternalCollectGarbage();"));
+  }
+#endif
+
   bool Eval(const std::string16 &script) {
-    return false;
+    // EvalImpl wraps the calling code in a try{}catch block which
+    // changes the behavior of the code in SpiderMonkey (possibly other
+    // JS engines.  For an example of this try running:
+    // var a = b; function b() {}
+    // Then try wrapping in a try/catch and notice the syntax error.
+    // In order to get around this, we pass in false for the catch_exceptions
+    // parameter.  We use the native exception handling mechanism of the
+    // external JS engine to capture exceptions thrown here.
+    return EvalImpl(script, false);
   }
+  
   void SetErrorHandler(JsErrorHandlerInterface *error_handler) {
+    error_handler_ = error_handler;
+  }
+  
+  virtual void ThrowGlobalError(const std::string16 &message) {
+    if (error_handler_) {
+      JsErrorInfo error_info;
+      error_info.line = 1;  // ??
+      error_info.message = message;
+      error_handler_->HandleError(error_info);
+    }
   }
 
  private:
-
+  // Needs access to error_handler_.
+  friend void HandleJSError(const JsRunner *js_runner, JsErrorInfo &error_info);
+   
+  NPP_t np_instance_data_;
+  NPObject *global_object_;
+  JsErrorHandlerInterface *error_handler_;
   DISALLOW_EVIL_CONSTRUCTORS(JsRunner);
 };
 
@@ -406,19 +483,26 @@ class JsRunner : public JsRunnerBase {
 // common functionality to both workers and the main thread.
 class DocumentJsRunner : public JsRunnerBase {
  public:
-  DocumentJsRunner(NPP instance) : JsRunnerBase(instance) {
+  DocumentJsRunner(NPP instance)
+      : np_instance_(instance) {
+    NPN_GetValue(np_instance_, NPNVWindowNPObject, &global_object_);
     RegisterDocumentJsRunner(np_instance_, this);
   }
 
   virtual ~DocumentJsRunner() {
     // TODO(mpcomplete): This never gets called.  When should we delete the
     // DocumentJsRunner?
+    Cleanup();
     UnregisterDocumentJsRunner(np_instance_);
+    NPN_ReleaseObject(global_object_);
+  }
+   
+  NPObject *GetGlobalObject() {
+    return global_object_;
   }
 
-  bool AddGlobal(const std::string16 &name, IGeneric *object, gIID iface_id) {
-    // TODO(mpcomplete): Add this functionality to DocumentJsRunner.
-    return false;
+  JsContextPtr GetContext() {
+    return np_instance_;
   }
 
   bool Start(const std::string16 &full_script) {
@@ -430,6 +514,12 @@ class DocumentJsRunner : public JsRunnerBase {
     assert(false); // Should not be called on the DocumentJsRunner.
     return false;
   }
+  
+#ifdef DEBUG
+  void ForceGC() {
+    // TODO(playmobil): implement for main thread.
+  }
+#endif
 
   bool Eval(const std::string16 &script) {
     return EvalImpl(script, true);
@@ -453,7 +543,8 @@ class DocumentJsRunner : public JsRunnerBase {
   }
 
  private:
-  scoped_ptr<HtmlEventMonitor> unload_monitor_;  // For 'onunload' notifications
+  NPP np_instance_;
+  NPObject *global_object_;
   DISALLOW_EVIL_CONSTRUCTORS(DocumentJsRunner);
 };
 
@@ -466,6 +557,13 @@ void NotifyNPInstanceDestroyed(NPP instance) {
   if (it != g_document_js_runners->end()) {
     DocumentJsRunner *js_runner = it->second;
     js_runner->HandleNPInstanceDestroyed();
+  }
+}
+
+// Referenced from js_external_engine_mozjs.cpp, defined here.
+void HandleJSError(const JsRunner *js_runner, JsErrorInfo &error_info) {
+  if (js_runner->error_handler_) {
+    js_runner->error_handler_->HandleError(error_info);
   }
 }
 

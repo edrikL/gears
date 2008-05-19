@@ -24,9 +24,13 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h> // TODO(cprince): use DCHECK() when have google3 logging
+#ifdef OS_MACOSX
+#include <pthread.h>
+#endif
 #include <queue>
 
 #include "gears/base/common/atomic_ops.h"
+#include "gears/base/common/async_router.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/permissions_db.h"
@@ -38,7 +42,13 @@
 #include "gears/workerpool/common/workerpool_utils.h"
 #include "gears/workerpool/npapi/workerpool.h"
 
+#ifdef WIN32
 #include "gears/base/common/scoped_win32_handles.h"
+#endif
+
+#ifdef OS_MACOSX
+const CFTimeInterval kRunLoopWakeupTimeout = 0.2; // 0.2 seconds.
+#endif
 
 //
 // Message container.
@@ -63,11 +73,14 @@ struct JavaScriptWorkerInfo {
   // Our code assumes some items begin cleared. Zero all members w/o ctors.
   JavaScriptWorkerInfo()
       : threads_manager(NULL), js_runner(NULL), is_owning_worker(false),
-        message_hwnd(0), is_invoking_error_handler(false),
+        message_queue_initialized(false), is_invoking_error_handler(false),
         thread_init_signalled(false), thread_init_ok(false),
         script_signalled(false), script_ok(false), http_request(NULL),
         is_factory_suspended(false), factory_ref(NULL),
-        thread_handle(INVALID_HANDLE_VALUE) {}
+#ifdef WIN32
+        thread_handle(INVALID_HANDLE_VALUE),
+#endif
+        thread_spawned_succesfully(false) {}
 
   //
   // These fields are used for all workers in pool (parent + children).
@@ -78,11 +91,13 @@ struct JavaScriptWorkerInfo {
   scoped_ptr<JsRootedCallback> onerror_handler;
   bool is_owning_worker;
 
+#ifdef WIN32
   HWND message_hwnd;  // TODO(mpcomplete): FIXME
+#endif
+  bool message_queue_initialized;
   std::queue<Message> message_queue;
-
   bool is_invoking_error_handler;  // prevents recursive onerror
-
+  
   //
   // These fields are used only for created workers (children).
   //
@@ -101,7 +116,11 @@ struct JavaScriptWorkerInfo {
   scoped_refptr<GearsFactory> factory_ref;
   bool is_factory_suspended;
 
+#ifdef WIN32
   SAFE_HANDLE thread_handle;  // TODO(mpcomplete): FIXME
+#endif
+  ThreadId thread_id;
+  bool thread_spawned_succesfully;
 };
 
 
@@ -112,6 +131,7 @@ struct JavaScriptWorkerInfo {
 DECLARE_GEARS_WRAPPER(GearsWorkerPool);
 
 // static
+template <>
 void Dispatcher<GearsWorkerPool>::Init() {
   RegisterMethod("createWorker", &GearsWorkerPool::CreateWorker);
   RegisterMethod("createWorkerFromUrl", &GearsWorkerPool::CreateWorkerFromUrl);
@@ -157,7 +177,7 @@ void GearsWorkerPool::SetOnmessage(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &function },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   scoped_ptr<JsRootedCallback> scoped_function(function);
   if (context->is_exception_set())
     return;
@@ -181,7 +201,7 @@ void GearsWorkerPool::SetOnerror(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &function },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   scoped_ptr<JsRootedCallback> scoped_function(function);
   if (context->is_exception_set())
     return;
@@ -207,7 +227,7 @@ void GearsWorkerPool::CreateWorker(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &full_script },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
@@ -230,7 +250,7 @@ void GearsWorkerPool::CreateWorkerFromUrl(JsCallContext *context) {
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &url },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
@@ -318,7 +338,7 @@ void GearsWorkerPool::SendMessage(JsCallContext *context) {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &message },
     { JSPARAM_REQUIRED, JSPARAM_INT, &dest_worker_id },
   };
-  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
 
@@ -367,6 +387,34 @@ void GearsWorkerPool::Initialize() {
   }
 }
 
+//
+// ThreadsEvent -- used for cross-thread communication.
+//
+
+enum ThreadsEventType {
+  EVENT_TYPE_MESSAGE = 0,
+  EVENT_TYPE_ERROR = 1
+};
+
+struct ThreadsEvent : public AsyncFunctor {
+  ThreadsEvent(JavaScriptWorkerInfo *worker_info, ThreadsEventType event_type)
+      : wi(worker_info), type(event_type) {
+    wi->threads_manager->AddWorkerRef();
+  }
+
+  ~ThreadsEvent() {
+    wi->threads_manager->ReleaseWorkerRef();
+  }
+
+  // Called when the event is received.
+  virtual void Run() {
+    PoolThreadsManager::OnReceiveThreadsEvent(this);
+  }
+
+
+  JavaScriptWorkerInfo *wi;
+  ThreadsEventType type;
+};
 
 //
 // PageTheadsManager -- handles threading and JS engine setup.
@@ -380,7 +428,6 @@ PoolThreadsManager::PoolThreadsManager(
       is_shutting_down_(false),
       unrefed_owner_(owner),
       page_security_origin_(page_security_origin) {
-
   // Add a JavaScriptWorkerInfo entry for the owning worker.
   JavaScriptWorkerInfo *wi = new JavaScriptWorkerInfo;
   wi->threads_manager = this;
@@ -397,11 +444,11 @@ PoolThreadsManager::~PoolThreadsManager() {
   }
 }
 
-
 int PoolThreadsManager::GetCurrentPoolWorkerId() {
   // no MutexLock here because this function is private, and callers are
   // responsible for acquiring the exclusive lock
-  DWORD os_thread_id = ::GetCurrentThreadId();
+  ThreadId os_thread_id =
+      ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
 
   // lookup OS-defined id in list of known mappings
   // (linear scan is fine because number of threads per pool will be small)
@@ -479,8 +526,9 @@ void PoolThreadsManager::HandleError(const JsErrorInfo &error_info) {
     dest_wi->message_queue.push(Message(text, src_worker_id,
                                         dest_wi->script_origin));
     // Notify the receiving worker.
-    PostMessage(dest_wi->message_hwnd, WM_WORKERPOOL_ONERROR, 0,
-                reinterpret_cast<LPARAM>(dest_wi));
+    AsyncRouter::GetInstance()->CallAsync(
+        dest_wi->thread_id,
+        new ThreadsEvent(dest_wi, EVENT_TYPE_ERROR));
   }
 }
 
@@ -493,6 +541,7 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
   // TODO(zork): Remove this with dump_on_error.  It is declared as volatile to
   // ensure that it exists on the stack even in opt builds.
   volatile bool is_shutting_down = wi->threads_manager->is_shutting_down_;
+  is_shutting_down;
 
   // Setup the onerror parameter (type: Error).
   assert(wi->js_runner);
@@ -501,8 +550,8 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
   if (!onerror_param.get()) {
     return false;
   }
-
   onerror_param->SetPropertyInt(STRING16(L"lineNumber"), error_info.line);
+
   // TODO(aa): Additional information, like fragment of code where the error
   // occurred, stack?
 
@@ -546,15 +595,16 @@ bool PoolThreadsManager::PutPoolMessage(const char16 *text,
   }
   JavaScriptWorkerInfo *dest_wi = worker_info_[dest_worker_id];
   if (NULL == dest_wi || NULL == dest_wi->threads_manager ||
-      NULL == dest_wi->message_hwnd) {
+      false == dest_wi->message_queue_initialized) {
     return false;
   }
 
   // Copy the message to an internal queue.
   dest_wi->message_queue.push(Message(text, src_worker_id, src_origin));
   // Notify the receiving worker.
-  PostMessage(dest_wi->message_hwnd, WM_WORKERPOOL_ONMESSAGE, 0,
-              reinterpret_cast<LPARAM>(dest_wi));
+  AsyncRouter::GetInstance()->CallAsync(
+      dest_wi->thread_id,
+      new ThreadsEvent(dest_wi, EVENT_TYPE_MESSAGE));
 
   return true;  // succeeded
 }
@@ -571,70 +621,6 @@ bool PoolThreadsManager::GetPoolMessage(Message *msg) {
   *msg = wi->message_queue.front();
   wi->message_queue.pop();
   return true;
-}
-
-
-bool PoolThreadsManager::InitWorkerThread(JavaScriptWorkerInfo *wi) {
-  MutexLock lock(&mutex_);
-
-  // Sanity-check that we're not calling this twice. Doing so would mean we
-  // created multiple hwnds for the same worker, which would be bad.
-  assert(!wi->message_hwnd);
-
-  // Register this worker so that it can be looked up by OS thread ID.
-  DWORD os_thread_id = ::GetCurrentThreadId();
-  worker_id_to_os_thread_id_.push_back(os_thread_id);
-
-  // Also create a message-only window for every worker (including parent).
-  // This is how we service JS worker messages synchronously relative to other
-  // JS execution.
-  //
-  // Can create a message-only window by specifying HWND_MESSAGE as the parent.
-  // TODO(cprince): an alternative is to set another message-only window as the
-  // parent; see if that helps with cleanup.
-  static const char16* kWindowClassName = STRING16(L"JsWorkerCommWnd");
-
-  // hinstance should be the Gears DLL's base address, not the process handle
-  //   (http://blogs.msdn.com/oldnewthing/archive/2005/04/18/409205.aspx)
-  HMODULE hmodule = _AtlBaseModule.GetModuleInstance();
-
-  WNDCLASSEX wc = {0};
-  wc.cbSize        = sizeof(wc);
-  wc.lpfnWndProc   = ThreadWndProc;
-  wc.hInstance     = hmodule;
-  wc.lpszClassName = kWindowClassName;
-
-  // use 0 for all other fields
-  RegisterClassEx(&wc);
-
-  HWND message_hwnd;
-  message_hwnd = CreateWindow(kWindowClassName,          // class name
-                              kWindowClassName,          // window name
-                              NULL,                      // style
-                              0, 0,                      // pos
-                              0, 0,                      // size
-                              HWND_MESSAGE,              // parent
-                              0,        // ID if a child, else hMenu
-                              hmodule,  // module instance
-                              NULL);    // fooCREATESTRUCT param
-  wi->message_hwnd = message_hwnd;
-  return message_hwnd != NULL;
-}
-
-
-void PoolThreadsManager::UninitWorkerThread() {
-  MutexLock lock(&mutex_);
-
-  // Destroy message hwnd.
-  int worker_id = GetCurrentPoolWorkerId();
-  JavaScriptWorkerInfo *wi = worker_info_[worker_id];
-
-  if (wi->message_hwnd) {
-    BOOL success = DestroyWindow(wi->message_hwnd);
-    assert(success);
-  }
-
-  // No need to remove os thread to worker id mapping.
 }
 
 
@@ -736,7 +722,7 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
 
     // If the creating thread didn't intialize properly it doesn't have a
     // message queue, so there's no point in letting it start a new thread.
-    if (!worker_info_[GetCurrentPoolWorkerId()]->message_hwnd) {
+    if (!worker_info_[GetCurrentPoolWorkerId()]->message_queue_initialized) {
       return false;
     }
 
@@ -802,6 +788,7 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
   wi->thread_init_mutex.Lock();
   wi->thread_init_signalled = false;
 
+#ifdef WIN32
   wi->thread_handle.reset((HANDLE)_beginthreadex(
       NULL,                   // security descriptor
       0,                      // stack size (or 0 for default)
@@ -809,15 +796,25 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
       wi,                     // argument pointer
       0,                      // initial state (0 for running)
       NULL));                 // variable to receive thread ID
-  if (wi->thread_handle != 0) {  // 0 means thread creation error
+  // 0 means thread creation error
+  bool thread_succesfully_created = wi->thread_handle != 0;
+#elif defined(OS_MACOSX) || defined(LINUX)
+ bool thread_succesfully_created = true;
+ if (pthread_create(&(wi->thread_id), NULL, JavaScriptThreadEntry, wi)) {
+   thread_succesfully_created = false;
+ }
+#endif
+
+  if (thread_succesfully_created) {
+    wi->thread_spawned_succesfully = true;
     // thread needs to finish message queue init before we continue
     wi->thread_init_mutex.Await(Condition(&wi->thread_init_signalled));
   }
-
+  
   // cleanup notifier
   wi->thread_init_mutex.Unlock();
 
-  if (wi->thread_handle == 0 || !wi->thread_init_ok) {
+  if (wi->thread_spawned_succesfully == false || !wi->thread_init_ok) {
     return false;  // failed
   }
 
@@ -827,10 +824,20 @@ bool PoolThreadsManager::CreateThread(const std::string16 &url_or_full_script,
 
 
 // Creates the JS engine, then pumps messages for the thread.
+#ifdef WIN32
 unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
+#elif defined(OS_MACOSX) || defined(LINUX)
+void *PoolThreadsManager::JavaScriptThreadEntry(void *args) {
+#endif
   assert(args);
+  
+#ifdef OS_MACOSX
+  void *autorelease_pool = InitAutoReleasePool();
+#endif
+  
   JavaScriptWorkerInfo *wi = static_cast<JavaScriptWorkerInfo*>(args);
   wi->threads_manager->AddWorkerRef();
+  ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
 
   // Setup worker thread.
   // Then signal that initialization is done, and indicate success/failure.
@@ -865,6 +872,7 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
 
     // Pump messages. We do this whether or not the initial script evaluation
     // succeeded (just like in browsers).
+#ifdef WIN32
     MSG msg;
     BOOL ret;  // 0 if WM_QUIT, else non-zero (but -1 if error)
     while (ret = GetMessage(&msg, NULL, 0, 0)) {
@@ -875,8 +883,21 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
         DispatchMessage(&msg);
       }
     }
+#elif defined(OS_MACOSX)
+    // Loop, waiting for events to be processed.
+  while (!wi->threads_manager->is_shutting_down_) {
+    SInt32 result = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 
+                                       kRunLoopWakeupTimeout, true);
+    if (result == kCFRunLoopRunFinished ||
+        result == kCFRunLoopRunStopped) {
+      break;
+    }
   }
-
+#elif defined(LINUX)
+#error "Not implemented for Linux yet"
+#endif
+  }
+  
   // Remove the message handlers here, since we're destroying the context they
   // belong to.
   wi->onmessage_handler.reset(NULL);
@@ -890,6 +911,10 @@ unsigned __stdcall PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   // seems a little cleaner too.
   wi->js_runner = NULL;  // scoped_ptr is about to delete the underlying object
   wi->threads_manager->ReleaseWorkerRef();
+
+#ifdef OS_MACOSX
+  DestroyAutoReleasePool(autorelease_pool);
+#endif
 
   return 0;  // value is currently unused
 }
@@ -964,44 +989,61 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   return true;
 }
 
-LRESULT CALLBACK PoolThreadsManager::ThreadWndProc(HWND hwnd, UINT message_type,
-                                                   WPARAM wparam,
-                                                   LPARAM lparam) {
-  switch (message_type) {
-    case WM_WORKERPOOL_ONMESSAGE:
-    case WM_WORKERPOOL_ONERROR: {
-      // Dequeue the message and dispatch it
-      JavaScriptWorkerInfo *wi =
-        reinterpret_cast<JavaScriptWorkerInfo*>(lparam);
-
-      // See if this was a dummy message, or if the workerpool has been
-      // invalidated (as on termination)
-      if (!wi || wi->threads_manager->is_shutting_down_) { return NULL; }
-      assert(wi->message_hwnd == hwnd);
-
-      // Retrieve message information.
-      Message msg;
-      if (!wi->threads_manager->GetPoolMessage(&msg)) {
-        return NULL;
-      }
-
-      scoped_refptr<GearsWorkerPool> scoped_reference;
-      if (wi->is_owning_worker)
-        scoped_reference = wi->threads_manager->refed_owner_;
-
-      if (message_type == WM_WORKERPOOL_ONMESSAGE) {
-        wi->threads_manager->ProcessMessage(wi, msg);
-      } else {
-        assert(message_type == WM_WORKERPOOL_ONERROR);
-        wi->threads_manager->ProcessError(wi, msg);
-      }
-
-      return 0;  // anything will do; retval "depends on the message"
-    }
+bool PoolThreadsManager::InitWorkerThread(JavaScriptWorkerInfo *wi) {
+  MutexLock lock(&mutex_);
+  
+  if (!ThreadMessageQueue::GetInstance()->InitThreadMessageQueue()) {
+    return false;
   }
-  return DefWindowProc(hwnd, message_type, wparam, lparam);
+  
+  // Sanity-check that we're not calling this twice. Doing so would mean we
+  // created multiple hwnds for the same worker, which would be bad.
+  assert(!wi->message_queue_initialized);
+  wi->message_queue_initialized = true;
+
+  // Register this worker so that it can be looked up by OS thread ID.
+  ThreadId os_thread_id =
+      ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
+  worker_id_to_os_thread_id_.push_back(os_thread_id);
+  wi->thread_id = os_thread_id;
+  return true;
 }
 
+
+void PoolThreadsManager::UninitWorkerThread() {
+// TODO(playmobil): Do we need to do any  kind of teardown here?
+}
+
+// Called when the event is received.
+void PoolThreadsManager::OnReceiveThreadsEvent(ThreadsEvent *event) {
+  JavaScriptWorkerInfo *wi = event->wi;
+
+  // This is necessary because some events may still be in the queue and get
+  // processed after shutdown. Also, we post a final "fake" event to wake
+  // workers which should not get processed.
+  if (wi->threads_manager->is_shutting_down_) {
+    return;
+  }
+
+  // Retrieve message information.
+  Message msg;
+  if (!wi->threads_manager->GetPoolMessage(&msg)) {
+    return;
+  }
+
+  scoped_refptr<GearsWorkerPool> scoped_reference;
+  if (wi->is_owning_worker)
+    scoped_reference = wi->threads_manager->refed_owner_;
+
+  if (event->type == EVENT_TYPE_MESSAGE) {
+    wi->threads_manager->ProcessMessage(wi, msg);
+  } else {
+    assert(event->type == EVENT_TYPE_ERROR);
+    wi->threads_manager->ProcessError(wi, msg);
+  }
+
+  return;
+}
 
 void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
                                         const Message &msg) {
@@ -1010,6 +1052,7 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
   // TODO(zork): Remove this with dump_on_error.  It is declared as volatile to
   // ensure that it exists on the stack even in opt builds.
   volatile bool is_shutting_down = wi->threads_manager->is_shutting_down_;
+  is_shutting_down;
 
   if (wi->onmessage_handler.get()) {
     // Setup the onmessage parameter (type: Object).
@@ -1096,7 +1139,7 @@ void PoolThreadsManager::ShutDown() {
       }
 
       // If the worker is a created thread...
-      if (wi->thread_handle != INVALID_HANDLE_VALUE) {
+      if (wi->thread_spawned_succesfully) {
         // Ensure the thread isn't waiting on 'script_signalled'.
         wi->script_mutex.Lock();
         wi->script_signalled = true;
@@ -1104,7 +1147,9 @@ void PoolThreadsManager::ShutDown() {
 
         // Ensure the thread sees 'is_shutting_down_' by sending a dummy 
         // message, in case it is blocked waiting for messages.
-        PostMessage(wi->message_hwnd, WM_WORKERPOOL_ONMESSAGE, 0, 0);
+        AsyncRouter::GetInstance()->CallAsync(
+            wi->thread_id,
+            new ThreadsEvent(wi, EVENT_TYPE_MESSAGE));
       }
       // TODO(cprince): Improve handling of a worker spinning in a JS busy loop.
       // Ideas: (1) set it to the lowest thread priority level, or (2) interrupt

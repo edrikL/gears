@@ -47,16 +47,9 @@
 #ifdef WIN32
 #include "gears/ui/ie/string_table.h"
 #endif
-#ifdef BROWSER_WEBKIT
-// TODO(playmobil): Add support for worker pools in Safari build.
-#else
 #include "gears/workerpool/npapi/workerpool.h"
-#endif
 #include "genfiles/product_constants.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
-#ifndef OFFICIAL_BUILD
-#include "gears/canvas/canvas.h"
-#endif
 
 #ifdef USING_CCTESTS
 #include "gears/cctests/test.h"
@@ -131,6 +124,12 @@ void GearsFactory::Create(JsCallContext *context) {
   // Do case-sensitive comparisons, which are always better in APIs. They make
   // code consistent across callers, and they are easier to support over time.
   scoped_refptr<ModuleImplBaseClass> object;
+  
+  std::string tmp;
+  String16ToUTF8( module_name.c_str(),module_name.length(), &tmp);
+  const char *a = tmp.c_str();
+  
+  
   if (module_name == STRING16(L"beta.console")) {
     CreateModule<GearsConsole>(GetJsRunner(), &object);
   } else if (module_name == STRING16(L"beta.database")) {
@@ -139,12 +138,8 @@ void GearsFactory::Create(JsCallContext *context) {
     CreateModule<GearsDesktop>(GetJsRunner(), &object);
   } else if (module_name == STRING16(L"beta.localserver")) {
     CreateModule<GearsLocalServer>(GetJsRunner(), &object);
-#ifdef BROWSER_WEBKIT
-// TODO(playmobil): Add support for worker pools in Safari build.
-#else
   } else if (module_name == STRING16(L"beta.workerpool")) {
     CreateModule<GearsWorkerPool>(GetJsRunner(), &object);
-#endif
 #ifdef OFFICIAL_BUILD
   // The Geolocation API has not been finalized for official builds.
 #else
@@ -161,10 +156,6 @@ void GearsFactory::Create(JsCallContext *context) {
 #else
     context->SetException(STRING16(L"Object is only available in debug build."));
     return;
-#endif
-#ifndef OFFICIAL_BUILD
-  } else if (module_name == STRING16(L"beta.canvas")) {
-    CreateModule<GearsCanvas>(GetJsRunner(), &object);
 #endif
   } else {
     context->SetException(STRING16(L"Unknown object."));
