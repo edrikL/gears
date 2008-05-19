@@ -107,7 +107,7 @@ FileTestResults.prototype.start = function(divName, testData, suiteName) {
   appendSimpleElement(this.divName, 'div', this.resultSetName, '');
 
   // Execute tests using the inter-frame communication object.
-  if (this.testData_.config.useIFrame || !ifc.browserSupportsWorkers()) {
+  if (this.testData_.config.useIFrame) {
     this.ifc_.startFrameTests(this);
   } else if (this.testData_.config.useWorker) {
     this.ifc_.startWorkerTests(this);
@@ -208,8 +208,7 @@ FileTestResults.prototype.handleAsyncTestStart = function(isWorker, name) {
  * @param isWorker Whether the tests were run in a worker.
  */
 FileTestResults.prototype.handleAllTestsComplete = function(isWorker) {
-  if (!isWorker && this.testData_.config.useWorker && 
-      this.ifc_.browserSupportsWorkers()) {
+  if (!isWorker && this.testData_.config.useWorker) {
     this.ifc_.startWorkerTests(this);
   } else {
     // Store time since test set began.  Start time is stored in timeElapsed.

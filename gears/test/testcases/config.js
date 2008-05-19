@@ -106,16 +106,17 @@ internalTestSuite.addFile('../testcases/internal_coercion_tests.js',
                           {useWorker: true, useIFrame: true});
 suites.push(internalTestSuite);
 
+var workerPoolSuite = new TestSuite('WorkerPool');
+ workerPoolSuite.addFile('../testcases/workerpool_tests.js',
+                        {useWorker: true, useIFrame: true});
+workerPoolSuite.addFile('../testcases/workerpool_onerror_tests.js',
+                        {useWorker: true, useIFrame: true});
+workerPoolSuite.addFile(
+                        '../testcases/workerpool_createworkerfromurl_tests.js',
+                        {useWorker: false, useIFrame: true});
 if (!isSafari) {
-  var workerPoolSuite = new TestSuite('WorkerPool');
-  workerPoolSuite.addFile('../testcases/workerpool_tests.js',
-                          {useWorker: true, useIFrame: true});
-  workerPoolSuite.addFile('../testcases/workerpool_onerror_tests.js',
-                          {useWorker: true, useIFrame: true});
-  workerPoolSuite.addFile(
-                      '../testcases/workerpool_createworkerfromurl_tests.js',
-                      {useWorker: false, useIFrame: true});
   workerPoolSuite.addFile('../testcases/workerpool_message_body_tests.js',
                           {useWorker: true, useIFrame: true});
-  suites.push(workerPoolSuite);
 }
+suites.push(workerPoolSuite);
+

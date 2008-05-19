@@ -33,11 +33,9 @@
 #include "gears/base/common/mutex.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
-const UINT WM_WORKERPOOL_ONMESSAGE = (WM_USER + 0);
-const UINT WM_WORKERPOOL_ONERROR = (WM_USER + 1);
-
 class PoolThreadsManager;
 struct Message;
+struct ThreadsEvent;
 struct JavaScriptWorkerInfo;
 
 class GearsWorkerPool
@@ -97,6 +95,7 @@ class GearsWorkerPool
 class PoolThreadsManager
     : JsErrorHandlerInterface {
  public:
+  friend struct ThreadsEvent; // for OnReceiveThreadsEvent
   PoolThreadsManager(const SecurityOrigin &page_security_origin,
                      JsRunnerInterface *root_js_runner,
                      GearsWorkerPool *owner);
@@ -138,12 +137,18 @@ class PoolThreadsManager
   bool InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
                             const JsErrorInfo &error_info);
 
-  static unsigned __stdcall JavaScriptThreadEntry(void *args);
   static bool SetupJsRunner(JsRunnerInterface *js_runner,
                             JavaScriptWorkerInfo *wi);
-  static LRESULT CALLBACK ThreadWndProc(HWND hwnd, UINT message,
-                                        WPARAM wparam, LPARAM lparam);
-
+#ifdef WIN32
+  static unsigned __stdcall JavaScriptThreadEntry(void *args); 
+#elif OS_MACOSX
+  static void *JavaScriptThreadEntry(void *args);
+#else
+#error "ThreadProc only implemented for Mac & Windows at the moment.
+#endif
+  
+  static void OnReceiveThreadsEvent(ThreadsEvent *event);
+  
   // Helpers for processing events received from other workers.
   void ProcessMessage(JavaScriptWorkerInfo *wi,
                       const Message &msg);
@@ -155,7 +160,7 @@ class PoolThreadsManager
   GearsWorkerPool *unrefed_owner_;
   scoped_refptr<GearsWorkerPool> refed_owner_;
 
-  std::vector<DWORD> worker_id_to_os_thread_id_;  // TODO(mpcomplete): FIXME
+  std::vector<ThreadId> worker_id_to_os_thread_id_;
   // this _must_ be a vector of pointers, since each worker references its
   // JavaScriptWorkerInfo, but STL vector realloc can move its elements.
   std::vector<JavaScriptWorkerInfo*> worker_info_;

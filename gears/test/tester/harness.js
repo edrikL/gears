@@ -173,8 +173,8 @@ Harness.prototype.handleTestsLoaded_ = function(content) {
   for (var name in this.globalScope_) {
     if (name.substring(0, 4) == 'test') {
       // SAFARI-TEMP
-      var test_is_enbaled = !(isSafari && 
-                              window[name]._disable_in_safari);
+      var test_is_enbaled  = !(isSafari && 
+                               this.globalScope_[name]._disable_in_safari);
       if (test_is_enbaled) {
         this.testNames_.push(name);
       }
