@@ -701,8 +701,10 @@ NS_IMETHODIMP FFHttpRequest::OnDataAvailable(nsIRequest *request,
 NS_IMETHODIMP FFHttpRequest::OnStopRequest(nsIRequest *request,
                                            nsISupports *context,
                                            nsresult status) {
-  NS_ENSURE_TRUE(channel_, NS_ERROR_UNEXPECTED);
-  channel_->SetNotificationCallbacks(NULL);
+  if (!was_aborted_) {
+    NS_ENSURE_TRUE(channel_, NS_ERROR_UNEXPECTED);
+    channel_->SetNotificationCallbacks(NULL);
+  }
   SetReadyState(HttpRequest::COMPLETE);
   return NS_OK;
 }
