@@ -1,5 +1,5 @@
 #summary Provides the geolocation of a device running a Gears-enabled web browser.
-#labels DesignDoc
+#labels DesignDoc,Deprecated
 
 
 Please see the [GeolocationAPI] wiki page.
