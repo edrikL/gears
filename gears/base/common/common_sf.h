@@ -64,7 +64,11 @@ void ThrowExceptionKey(NSString *key, ...);
 }
 #endif
 
+#ifdef DEBUG
 #define LOG(a) SafariGearsLog a
+#else
+#define LOG(a) 0
+#endif
 
 // Wrappers for throwing localized vararg exceptions
 #ifdef __OBJC__
