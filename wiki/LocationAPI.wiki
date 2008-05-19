@@ -2,4 +2,4 @@
 #labels DesignDoc
 
 
-Please see the GeolocationAPI wiki page.
+Please see the [GeolocationAPI] wiki page.
