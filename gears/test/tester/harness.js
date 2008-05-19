@@ -155,7 +155,7 @@ Harness.prototype.handleRequestReadyStateChange_ = function() {
  * workerPool.onerror is an error object, not a message string.
  */
 Harness.prototype.workerHandleGlobalError_ = function(error) {
-  this.handleGlobalError_(error.message);
+  return this.handleGlobalError_(error.message);
 }
 
 /**
