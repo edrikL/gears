@@ -52,6 +52,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   ifc.log("Initializing " + test + "... ");
   var host = ifc.getCurrentFrameHost();
 
+  // In Firefox, because of BFCache, this frame can get loaded once before the
+  // main frame is loaded and the ifc instance is initialized. We just ignore
+  // this case.
+  // TODO(aa): Find a more elegant way to handle this.
+  if (!host) {
+    return;
+  }
+  
   if (host.getId() != hostId) {
     ifc.log("ERROR: Expected frame host " + hostId + " to be current; was "+
             host.getId());
