@@ -107,7 +107,11 @@ CPPFLAGS += -I.. -I$($(BROWSER)_OUTDIR) -I$(COMMON_OUTDIR)
 
 ifeq ($(USING_NPAPI),1)
 #Additional include paths for gurl.
-CPPFLAGS += -I../third_party/npapi -I../third_party -I../third_party/googleurl -I../third_party/icu38/public/common
+CPPFLAGS += -I../third_party/npapi -I../third_party -I../third_party/googleurl
+endif
+
+ifeq ($(USING_ICU),1)
+CPPFLAGS += -I../third_party/icu38/public/common
 endif
 
 LIBPNG_CFLAGS = -DPNG_USER_CONFIG -I../third_party/zlib
@@ -173,8 +177,10 @@ SQLITE_CFLAGS += -DSQLITE_CORE -DSQLITE_ENABLE_FTS1 -DSQLITE_ENABLE_FTS2 \
 
 LIBGD_CFLAGS += -I../third_party/libjpeg -I../third_party/libpng -DHAVE_CONFIG_H
 
+ifeq ($(USING_LIBGD),1)
 # libGD assumes it is in the include path
 CPPFLAGS += -I../third_party/libgd
+endif
 
 # TODO(vamsikrishna): change CPPFLAGS to THIRD_PARTY_CPPFLAGS, when
 # we figure out the argument ordering bug.
