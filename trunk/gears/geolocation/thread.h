@@ -43,7 +43,7 @@ class Thread {
 
   // Waits for the Run method to complete. Note that the thread may execute code
   // in CleanUp() after this method has returned.
-  void Join();
+  virtual void Join();
 
  private:
   // This method is called in the new thread.

@@ -66,7 +66,7 @@ bool DeviceDataProviderBase<DataType>::Unregister(ListenerInterface *listener) {
     return false;
   }
   if (instance->Unref()) {
-    instance->StopAndDelete();
+    delete instance;
     instance = NULL;
   }
   return true;
