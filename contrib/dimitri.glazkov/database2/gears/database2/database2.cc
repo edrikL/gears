@@ -80,10 +80,8 @@ Database2TransactionQueue *Database2::GetQueue() {
 
 void Database2::QueueTransaction(Database2Transaction *transaction) {
   // Database2TransactionQueue queue = GetQueue(name, origin);
-  // returns true, if first iterm in queue
-  // bool first = queue->empty();
-  // sketch only, consider making a single method to prevent race conditions
-  // queue->Push(tx);
+  // bool first = false;
+  // queue->Push(tx, &first);
   // if (first) {
   // start executing transaction, if first
   // tx->Start();
@@ -136,9 +134,10 @@ void Database2::SynchronousTransaction(JsCallContext *context) {
     context->SetException(GET_INTERNAL_ERROR_MESSAGE());
     return;
   }
-  // sync transaction never enters the queue, there's no need for it, but it
-  // still checks for pending transactions in the queue to prevent deadlocks
-  //if (!GetQueue(name, origin)->empty()) {
+  // Sync transaction never get queued; allowing them to would cause deadlock.
+  // However, we still put them in the queue if it is empty to prevent race
+  // conditions and to eliminate special cases in other parts of the code.
+  //if (!GetQueue(name, origin)->PushIfEmpty(tx)) {
   //   Explicitly disallow nested transactions, thus one can't start a
   //   synchronous transaction while another transaction is still open.
   //   set exception INVALID_STATE_ERR

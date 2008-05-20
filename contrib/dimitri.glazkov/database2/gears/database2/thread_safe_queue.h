@@ -29,38 +29,49 @@
 #include <queue>
 
 #include "gears/base/common/common.h"
+#include "gears/base/common/mutex.h"
 
-// TODO(dimitri.glazkov): add, um ...  the thread-safety stuff
 template <class T>
 class Database2ThreadSafeQueue {
  public:
   Database2ThreadSafeQueue() {};
 
+  // Adds an item to the queue. If *first is non-null, returns whether the
+  // pushed item is now first in the queue.
   void Push(T *t, bool *first) {
-    // lock
-    *first = queue_.empty();
+    MutexLock lock(&mutex_);
+    if (first) {
+      *first = queue_.empty();
+    }
     queue_.push(t);
-    // unlock
   }
 
-  // remove from queue
-  T *Pop(bool *empty) {
-    // lock
+  // Adds an item to the queue, but only if the queue is empty.
+  bool PushIfEmpty(T *t) {
+    MutexLock lock(&mutex_);
+    if (!queue_.empty()) {
+      return false;
+    }
+
+    queue_.push(t);
+    return true;
+  }
+
+  // Removes and returns the front item from the queue. Returns NULL if there
+  // are no items in the queue.
+  T *Pop() {
+    MutexLock lock(&mutex_);
     if (queue_.empty()) {
-      *empty = true;
       return NULL;
     }
-    *empty = false;
+
     T *t = queue_.front();
     queue_.pop();
     return t;
-    // unlock
   }
 
-  // returns true if the internal queue is empty
-  bool empty() { return queue_.empty(); }
-
  private:
+  Mutex mutex_;
   std::queue<T*> queue_;
 
   DISALLOW_EVIL_CONSTRUCTORS(Database2ThreadSafeQueue);

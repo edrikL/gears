@@ -126,10 +126,9 @@ void Database2Transaction::ExecuteSql(JsCallContext *context) {
 
 void Database2Transaction::ExecuteNextStatement(JsCallContext *context) {
   // pop statement from the end of the queue
-  bool empty;
-  Database2Statement *statement = statement_queue_.Pop(&empty);
+  Database2Statement *statement = statement_queue_.Pop();
   // if no more statements,
-  if (empty) {
+  if (!statement) {
     interpreter_->Run(new Database2CommitCommand(this));
     return;
   }
