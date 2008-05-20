@@ -48,10 +48,6 @@ class EmptyDeviceDataProvider : public DeviceDataProviderBase<DataType> {
   // Unregister.
   EmptyDeviceDataProvider() {}
   virtual ~EmptyDeviceDataProvider() {}
-  // DeviceDataProviderBase<DataType> implementation.
-  virtual void StopAndDelete() {
-    delete this;
-  }
   DISALLOW_EVIL_CONSTRUCTORS(EmptyDeviceDataProvider);
 };
 

@@ -33,7 +33,7 @@
 
 #include <assert.h>
 #include "gears/base/common/event.h"
-#include "gears/localserver/common/async_task.h"
+#include "gears/geolocation/thread.h"
 
 // A mock implementation of DeviceDataProviderBase for testing. It simply calls
 // back once every second with constant data.
@@ -41,7 +41,7 @@
 template<typename DataType>
 class MockDeviceDataProvider
     : public DeviceDataProviderBase<DataType>,
-      public AsyncTask {
+      public Thread {
  public:
   // Allow DeviceDataProviderBase<DataType>::Create() to access our private
   // constructor.
@@ -50,24 +50,14 @@ class MockDeviceDataProvider
   // Protected constructor and destructor, callers access singleton through
   // Register and Unregister.
   MockDeviceDataProvider() {
-    if (!Init()) {
-      assert(false);
-    }
-    if (!Start()) {
-      assert(false);
-    }
+    Start();
   }
-  virtual ~MockDeviceDataProvider() {}
- private:
-  // DeviceDataProviderBase<DataType> implementation.
-  void StopAndDelete() {
+  virtual ~MockDeviceDataProvider() {
     stop_event_.Signal();
-    run_complete_event_.Wait();
-    // This will delete the object immediately if the thread has already
-    // terminated, so we must call it last.
-    DeleteWhenDone();
+    Join();
   }
-  // AsyncTask implementation.
+ private:
+  // Thread implementation.
   virtual void Run() {
     while (true) {
       if (stop_event_.WaitWithTimeout(1000)) {
@@ -81,11 +71,9 @@ class MockDeviceDataProvider
       }
       listeners_mutex_.Unlock();
     }
-    run_complete_event_.Signal();
   }
 
   Event stop_event_;
-  Event run_complete_event_;
   DISALLOW_EVIL_CONSTRUCTORS(MockDeviceDataProvider);
 };
 

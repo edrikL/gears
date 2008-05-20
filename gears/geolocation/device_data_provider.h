@@ -164,9 +164,6 @@ class DeviceDataProviderBase {
   bool RemoveListener(ListenerInterface *listener);
   // Factory constructor.
   static DeviceDataProviderBase* Create();
-  // This method deletes the object, but allows for asynchronous deletion for
-  // use with AsyncTask.
-  virtual void StopAndDelete() = 0;
 
   // The singleton instance of this class.
   static DeviceDataProviderBase *instance;

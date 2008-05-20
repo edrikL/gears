@@ -69,9 +69,12 @@ WinceRadioDataProvider::WinceRadioDataProvider() {
   if (!Init()) {
     assert(false);
   }
-  if (!Start()) {
-    assert(false);
-  }
+  Start();
+}
+
+WinceRadioDataProvider::~WinceRadioDataProvider() {
+  stop_event_.Set();
+  Join();
 }
 
 bool WinceRadioDataProvider::GetData(RadioData *data) {
@@ -81,21 +84,12 @@ bool WinceRadioDataProvider::GetData(RadioData *data) {
   return IsAllDataAvailable();
 }
 
-void WinceRadioDataProvider::StopAndDelete() {
-  stop_event_.Set();
-  WaitForSingleObject(run_complete_event_, INFINITE);
-  // This will delete the object immediately if the thread has already
-  // terminated, so we must call it last.
-  DeleteWhenDone();
-}
-
-// AsyncTask implementation.
+// Thread implementation.
 void WinceRadioDataProvider::Run() {
   // Get the function pointers from the DLL.
   HINSTANCE ril_library = LoadLibrary(L"ril");
   if (!ril_library) {
     LOG16((L"WinceRadioDataProvider::Run() : Failed to load ril library.\n"));
-    run_complete_event_.Set();
     return;
   }
   ril_initialize_function_ = reinterpret_cast<RILInitializeFunction*>(
@@ -176,8 +170,6 @@ void WinceRadioDataProvider::Run() {
   // Deinitialise.
   ril_deinitialize_function_(ril_handle_);
   FreeLibrary(ril_library);
-
-  run_complete_event_.Set();
 }
 
 bool WinceRadioDataProvider::Init() {
@@ -187,10 +179,7 @@ bool WinceRadioDataProvider::Init() {
   if (!stop_event_.Create(NULL, FALSE, FALSE, NULL)) {
     return false;
   }
-  if (!run_complete_event_.Create(NULL, FALSE, FALSE, NULL)) {
-    return false;
-  }
-  return AsyncTask::Init();
+  return true;
 }
 
 // Private methods.

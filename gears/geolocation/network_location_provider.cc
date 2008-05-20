@@ -31,7 +31,7 @@
 
 #include "gears/base/common/event.h"
 #include "gears/base/common/stopwatch.h"  // For GetCurrentTimeMillis
-#include "gears/localserver/common/async_task.h"
+#include "gears/geolocation/thread.h"
 
 // The maximum period of time we'll wait for a complete set of device data
 // before sending the request.
@@ -40,45 +40,36 @@ static const int kDataCompleteWaitPeriod = 1000 * 5;  // 5 seconds
 // This class implements an asynchronous wait. When the wait expires, it calls
 // MakeRequest() on the NetworkLocationProvider object passed to the
 // constructor.
-class AsyncWait : public AsyncTask {
+class AsyncWait : public Thread {
  public:
   explicit AsyncWait(NetworkLocationProvider *provider) : provider_(provider) {
-    if (!Init()) {
-      assert(false);
-      return;
-    }
-    if (!Start()) {
-      assert(false);
-      return;
-    }
+    Start();
   }
-  // Instructs the thread to stop and delete the object when it has completed.
-  // Waits for the Run method to complete.
-  void StopThreadAndDelete() {
+  void Abort() {
     stop_event_.Signal();
-    run_complete_event_.Wait();
-    DeleteWhenDone();
-  }
-  // Instructs the thread to stop and delete the object when it has completed.
-  void StopThreadAndDeleteNoWait() {
-    stop_event_.Signal();
-    DeleteWhenDone();
   }
  private:
-  // Private destructor. Callers use StopThreadAndDelete().
+  // Private destructor. The object is destroyed when the thread terminates.
   ~AsyncWait() {}
-  // AsyncTask implementation.
+  // Thread implementation.
   virtual void Run() {
     if (!stop_event_.WaitWithTimeout(kDataCompleteWaitPeriod)) {
       // Timeout, try to make the request.
       provider_->MakeRequest();
     }
-    run_complete_event_.Signal();
   }
- private:
+  virtual void CleanUp() {
+    // The object deletes itself after the Run method has completed.
+    delete this;
+  }
+  // Make this method private to prevent callers from using it. Doing so is
+  // dangerous, because the object deletes itself as soon as Run() completes.
+  virtual void Join() {
+    assert(false);
+  }
+
   NetworkLocationProvider *provider_;
   Event stop_event_;
-  Event run_complete_event_;
   DISALLOW_EVIL_CONSTRUCTORS(AsyncWait);
 };
 
@@ -109,7 +100,7 @@ NetworkLocationProvider::~NetworkLocationProvider() {
     request_->StopThreadAndDelete();
   }
   if (wait_) {
-    wait_->StopThreadAndDelete();
+    wait_->Abort();
   }
   radio_data_provider_->Unregister(this);
   wifi_data_provider_->Unregister(this);
@@ -210,7 +201,7 @@ bool NetworkLocationProvider::MakeRequestIfDataNowAvailable() {
   if (wait_ && is_radio_data_complete_ && is_wifi_data_complete_) {
     // Stop the wait thread and delete the object. We don't wait for the thread
     // to complete because it may be blocked on wait_mutex_ in MakeRequest().
-    wait_->StopThreadAndDeleteNoWait();
+    wait_->Abort();
     wait_ = NULL;
     if (!MakeRequestImpl()) {
       LOG(("MakeRequestIfDataNowAvailable() : Failed to make position "

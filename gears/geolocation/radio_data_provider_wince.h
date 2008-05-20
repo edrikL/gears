@@ -32,11 +32,11 @@
 #include "gears/base/common/mutex.h"
 #include "gears/geolocation/device_data_provider.h"
 #include "gears/geolocation/radio_interface_layer_wince.h"
-#include "gears/localserver/common/async_task.h"
+#include "gears/geolocation/thread.h"
 
 class WinceRadioDataProvider
     : public DeviceDataProviderBase<RadioData>,
-      public AsyncTask {
+      public Thread {
  public:
   // Allow DeviceDataProviderBase<RadioData>::Create() to access our private
   // constructor.
@@ -56,12 +56,9 @@ class WinceRadioDataProvider
   // Private constructor and destructor, callers must use Register and
   // Unregister.
   WinceRadioDataProvider();
-  virtual ~WinceRadioDataProvider() {}
+  virtual ~WinceRadioDataProvider();
 
-  // DeviceDataProviderBase<RadioData> implementation.
-  virtual void StopAndDelete();
-
-  // AsyncTask implementation.
+  // AsyncThread implementation.
   virtual void Run();
   bool Init();
 
@@ -92,7 +89,6 @@ class WinceRadioDataProvider
   CEvent result_event_;
   // Events signalled to shut down the thread that polls the RIL.
   CEvent stop_event_;
-  CEvent run_complete_event_;
   DISALLOW_EVIL_CONSTRUCTORS(WinceRadioDataProvider);
 };
 
