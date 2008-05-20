@@ -82,10 +82,12 @@ httpRequestSuite.addFile('../testcases/httprequest_tests.js',
                          {useWorker: true, useIFrame: true});
 suites.push(httpRequestSuite);
 
-var imagingSuite = new TestSuite('Imaging');
-imagingSuite.addFile('../testcases/imaging_tests.js',
-    {useWorker: false, useIFrame: true});
-suites.push(imagingSuite);
+if (!isSafari) {
+  var imagingSuite = new TestSuite('Imaging');
+  imagingSuite.addFile('../testcases/imaging_tests.js',
+      {useWorker: false, useIFrame: true});
+  suites.push(imagingSuite);
+}
 
 var localServerSuite = new TestSuite('LocalServer');
 localServerSuite.addFile('../testcases/localserver_tests.js',
