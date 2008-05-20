@@ -30,6 +30,7 @@
 #include <atlsync.h>
 #include <windows.h>
 #include "gears/base/common/string_utils.h"
+#include "gears/base/common/process_utils_win32.h"
 #include "gears/ui/ie/string_table.h"
 #include "genfiles/product_constants.h"
 
@@ -141,9 +142,9 @@ void NotifyUserOfVersionCollision() {
   const int kMaxStringLength = 256;
   char16 title[kMaxStringLength];
   char16 text[kMaxStringLength];
-  if (LoadString(GetModuleHandle(PRODUCT_SHORT_NAME),
+  if (LoadString(GetGearsModuleHandle(),
                  IDS_VERSION_COLLISION_TITLE, title, kMaxStringLength) &&
-      LoadString(GetModuleHandle(PRODUCT_SHORT_NAME),
+      LoadString(GetGearsModuleHandle(),
                  IDS_VERSION_COLLISION_TEXT, text, kMaxStringLength)) {
     MessageBox(NULL, text, title, MB_OK);
   }

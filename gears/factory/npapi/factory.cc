@@ -45,6 +45,7 @@
 #include "gears/localserver/npapi/localserver_np.h"
 #include "gears/timer/timer.h"
 #ifdef WIN32
+#include "gears/base/common/process_utils_win32.h"
 #include "gears/ui/ie/string_table.h"
 #endif
 #include "gears/workerpool/npapi/workerpool.h"
@@ -81,7 +82,7 @@ void GearsFactory::Create(JsCallContext *context) {
     }
     const int kMaxStringLength = 256;
     char16 error_text[kMaxStringLength];
-    if (LoadString(GetModuleHandle(PRODUCT_SHORT_NAME),
+    if (LoadString(GetGearsModuleHandle(),
                    IDS_VERSION_COLLISION_TEXT, error_text, kMaxStringLength)) {
       context->SetException(error_text);
     } else {

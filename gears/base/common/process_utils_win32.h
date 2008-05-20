@@ -28,9 +28,6 @@
 
 #ifdef WIN32
 
-// Gets a reference to the Windows module containing a specific address.
-HMODULE GetModuleHandleFromAddress(void *address);
-
 // Gets a reference to the Windows module containing the Gears code.
 HMODULE GetGearsModuleHandle();
 
