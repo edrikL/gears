@@ -26,20 +26,20 @@
 #-----------------------------------------------------------------------------
 # use the libraries if not indicated otherwise.
 
+ifeq ($(USING_LIBGD),)
+  USING_LIBGD = 1
+endif
+ifeq ($(USING_LIBJPEG),)
+  USING_LIBJPEG = 1
+endif
+ifeq ($(USING_LIBPNG),)
+  USING_LIBPNG = 1
+endif
 ifeq ($(USING_SQLITE),)
   USING_SQLITE = 1
 endif
 ifeq ($(USING_ZLIB),)
   USING_ZLIB = 1
-endif
-ifeq ($(USING_LIBPNG),)
-  USING_LIBPNG = 1
-endif
-ifeq ($(USING_LIBJPEG),)
-  USING_LIBJPEG = 1
-endif
-ifeq ($(USING_LIBGD),)
-  USING_LIBGD = 1
 endif
 
 # Make-ish way of saying: if (browser == SF || browser == NPAPI)
@@ -140,6 +140,11 @@ GECKO_LIB = $(GECKO_SDK)/gecko_sdk/lib
 
 $(BROWSER)_CPPFLAGS += -DBROWSER_$(BROWSER)=1
 
+# SpiderMonkey (the Firefox JS engine)'s JS_GET_CLASS macro in jsapi.h needs
+# this defined to work with the gecko SDK that we've built.
+# The definition of JS_THREADSAFE must be kept in sync with MOZJS_CPPFLAGS.
+$(BROWSER)_CPPFLAGS += -DJS_THREADSAFE
+
 # TODO(cprince): Update source files so we don't need this compatibility define?
 FF2_CPPFLAGS += -DBROWSER_FF=1
 FF3_CPPFLAGS += -DBROWSER_FF=1
@@ -175,11 +180,6 @@ CPPFLAGS += -I../third_party/libgd
 # we figure out the argument ordering bug.
 # PortAudio assumes it is in the include path
 CPPFLAGS += -I../third_party/portaudio/src/common -I../third_party/portaudio/include
-
-# SpiderMonkey (the Firefox JS engine)'s JS_GET_CLASS macro in jsapi.h needs
-# this defined to work with the gecko SDK that we've built.
-FF2_CPPFLAGS += -DJS_THREADSAFE
-FF3_CPPFLAGS += -DJS_THREADSAFE
 
 # Common items, like notifier, is not related to any browser.
 COMMON_CPPFLAGS += -DBROWSER_NONE=1
@@ -261,7 +261,10 @@ OBJ_SUFFIX = .o
 MKDEP = gcc -M -MF $(@D)/$(*F).pp -MT $@ $(CPPFLAGS) $($(BROWSER)_CPPFLAGS) $<
 
 CPPFLAGS += -DOS_MACOSX
+
 ifeq ($(BROWSER),SF)
+CPPFLAGS += -I ../third_party/spidermonkey/nspr/pr/include
+
 # SAFARI-TEMP
 # Remove these - During development, it was convenient to have these defined in
 # the Safari port.  Before release we want to clean this up, and replace these
@@ -274,6 +277,19 @@ CPPFLAGS += -DLINUX
 endif
 
 LIBGD_CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-label
+
+# JS_THREADSAFE *MUST* be kept in sync wuith $(BROWSER)_CPPFLAGS.
+MOZJS_CFLAGS += -DJS_THREADSAFE
+MOZJS_CFLAGS += -DXP_UNIX -DDARWIN -DHAVE_BSD_FLOCK -DXP_MACOSX -DHAVE_LCHOWN \
+                -DHAVE_STRERROR -DFORCE_PR_LOG -D_PR_PTHREADS \
+                -DUHAVE_CVAR_BUILT_ON_SEM -D_NSPR_BUILD_ \
+                -DOSARCH=Darwin -DSTATIC_JS_API -DJS_USE_SAFE_ARENA \
+                -DTRIMMED -DJS_HAS_EXPORT_IMPORT \
+                -I ../third_party/spidermonkey/nspr/pr/include/private \
+                -I ../third_party/spidermonkey/nspr/pr/include \
+                -I ../third_party/spidermonkey/nspr/pr/include/obsolete \
+                -I $(OSX_SDK_ROOT)/Developer/Headers/FlatCarbon/
+
 SQLITE_CFLAGS += -Wno-uninitialized -Wno-pointer-sign -isysroot $(OSX_SDK_ROOT)
 SQLITE_CFLAGS += -DHAVE_USLEEP=1
 # for libjpeg:
