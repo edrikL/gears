@@ -37,6 +37,7 @@ static const char16 *kDefaultLocationProviderUrl =
     STRING16(L"http://www.google.com/");
 static const char16 *kEnableHighAccuracy = STRING16(L"enableHighAccuracy");
 static const char16 *kRequestAddress = STRING16(L"requestAddress");
+static const char16 *kAddressLanguage = STRING16(L"addressLanguage");
 static const char16 *kGearsLocationProviderUrls =
     STRING16(L"gearsLocationProviderUrls");
 
@@ -190,6 +191,16 @@ static bool ParseOptions(JsCallContext *context, bool repeats,
         return false;
       }
     }
+    if (GetPropertyIfSpecified(context, options, kAddressLanguage, &token)) {
+      if (!JsTokenToString_NoCoerce(token, context->js_context(),
+                                    &(info->address_language))) {
+        std::string16 error = STRING16(L"options.");
+        error += kAddressLanguage;
+        error += STRING16(L" should be a string.");
+        context->SetException(error);
+        return false;
+      }
+    }
     if (GetPropertyIfSpecified(context, options, kGearsLocationProviderUrls,
                                &token)) {
       std::string16 error = STRING16(L"options.");
@@ -282,6 +293,9 @@ static bool ConvertPositionToJavaScriptObject(const Position &p,
                                         date_object.get());
   }
   // Other properties may not be valid.
+  ret &= SetObjectPropertyIfValidInt(STRING16(L"altitude"),
+                                     p.altitude,
+                                     js_object);
   ret &= SetObjectPropertyIfValidInt(STRING16(L"horizontalAccuracy"),
                                      p.horizontal_accuracy,
                                      js_object);
@@ -291,6 +305,40 @@ static bool ConvertPositionToJavaScriptObject(const Position &p,
   ret &= SetObjectPropertyIfValidString(STRING16(L"errorMessage"),
                                         error,
                                         js_object);
+  // Address
+  scoped_ptr<JsObject> address_object(js_runner->NewObject());
+  ret &= NULL != address_object.get();
+  if (address_object.get()) {
+    ret &= SetObjectPropertyIfValidString(STRING16(L"streetNumber"),
+                                          p.address.street_number,
+                                          address_object.get());
+    ret &= SetObjectPropertyIfValidString(STRING16(L"street"),
+                                          p.address.street,
+                                          address_object.get());
+    ret &= SetObjectPropertyIfValidString(STRING16(L"premises"),
+                                          p.address.premises,
+                                          address_object.get());
+    ret &= SetObjectPropertyIfValidString(STRING16(L"city"),
+                                          p.address.city,
+                                          address_object.get());
+    ret &= SetObjectPropertyIfValidString(STRING16(L"county"),
+                                          p.address.county,
+                                          address_object.get());
+    ret &= SetObjectPropertyIfValidString(STRING16(L"region"),
+                                          p.address.region,
+                                          address_object.get());
+    ret &= SetObjectPropertyIfValidString(STRING16(L"country"),
+                                          p.address.country,
+                                          address_object.get());
+    ret &= SetObjectPropertyIfValidString(STRING16(L"countryCode"),
+                                          p.address.country_code,
+                                          address_object.get());
+    ret &= SetObjectPropertyIfValidString(STRING16(L"postalCode"),
+                                          p.address.postal_code,
+                                          address_object.get());
+    ret &= js_object->SetPropertyObject(STRING16(L"address"),
+                                        address_object.get());
+  }
   return ret;
 }
 

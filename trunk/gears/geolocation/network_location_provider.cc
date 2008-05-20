@@ -96,6 +96,12 @@ NetworkLocationProvider::NetworkLocationProvider(const std::string16 &url,
   // provider and it will be deleted by ref counting.
   radio_data_provider_ = DeviceDataProviderBase<RadioData>::Register(this);
   wifi_data_provider_ = DeviceDataProviderBase<WifiData>::Register(this);
+  // Currently, request_address and address_language are properties of a given
+  // fix request, not of a location provider.
+  // TODO(steveblock): Determine the best way to pass these parameters to the
+  // request.
+  request_address_ = false;
+  address_language_ = STRING16(L"");
 }
 
 NetworkLocationProvider::~NetworkLocationProvider() {
@@ -122,7 +128,7 @@ bool NetworkLocationProvider::GetCurrentPosition() {
     MutexLock data_mutex_lock(&data_mutex_);
     // If we already have a complete set of device data, make the request.
     if (is_radio_data_complete_ && is_wifi_data_complete_) {
-      if (!request_->MakeRequest(radio_data_, wifi_data_, timestamp_)) {
+      if (!MakeRequestImpl()) {
         // This should only fail if a request is already in progress. This
         // method should never be called when this is the case.
         LOG(("NetworkLocationProvider::GetCurrentPosition() : Failed to make "
@@ -188,7 +194,7 @@ bool NetworkLocationProvider::MakeRequest() {
       // data provider, the timestamp won't be set. In this case, set it here.
       timestamp_ = GetCurrentTimeMillis();
     }
-    if (!request_->MakeRequest(radio_data_, wifi_data_, timestamp_)) {
+    if (!MakeRequestImpl()) {
       LOG(("MakeRequest() : Failed to make position request.\n"));
       return false;
     }
@@ -206,13 +212,23 @@ bool NetworkLocationProvider::MakeRequestIfDataNowAvailable() {
     // to complete because it may be blocked on wait_mutex_ in MakeRequest().
     wait_->StopThreadAndDeleteNoWait();
     wait_ = NULL;
-    if (!request_->MakeRequest(radio_data_, wifi_data_, timestamp_)) {
+    if (!MakeRequestImpl()) {
       LOG(("MakeRequestIfDataNowAvailable() : Failed to make position "
            "request.\n"));
       return false;
     }
   }
   return true;
+}
+
+bool NetworkLocationProvider::MakeRequestImpl() {
+  return request_->MakeRequest(radio_data_,
+                               wifi_data_,
+                               request_address_,
+                               address_language_,
+                               -1000,  // We don't have a position to pass to
+                               -1000,  // the server.
+                               timestamp_);
 }
 
 #endif  // OFFICIAL_BUILD

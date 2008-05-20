@@ -89,14 +89,18 @@ struct RadioData {
 };
 
 struct AccessPointData {
-  AccessPointData() : rss(kint32min), age(kint32min) {}
+  AccessPointData()
+      : rss(kint32min), age(kint32min), cha(kint32min), snr(kint32min) {}
   bool Matches(const AccessPointData &other) const {
-    // Ignore signal strength and age when matching.
-    return mac == other.mac;
+    // Ignore signal strength, age and signal-to-noise ratio when matching.
+    return mac == other.mac && cha == other.cha && ssi == other.ssi;
   }
   std::string16 mac;
   int rss;
   int age;
+  int cha;
+  int snr;
+  std::string16 ssi;
 };
 
 struct WifiData {
