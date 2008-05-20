@@ -36,7 +36,7 @@
 #include "gears/desktop/shortcut_utils_win32.h"
 
 #include "gears/base/common/basictypes.h"
-#include "gears/base/common/common.h"
+#include "gears/base/common/process_utils_win32.h"
 #ifdef WINCE
 #include "gears/base/common/file.h"
 #endif
@@ -242,15 +242,9 @@ static bool GetShortcutLocationPath(std::string16 *shortcut_location_path,
       break;
     case Desktop::SHORTCUT_LOCATION_STARTMENU:
       {
-        const char16 *kModuleName =
-#ifdef VISTA_BROKER
-            NULL;
-#else
-            PRODUCT_SHORT_NAME;
-#endif
         const int kMaxStringLength = 256;
         char16 program_group[kMaxStringLength];
-        if (LoadString(GetModuleHandle(kModuleName), IDS_PROGRAM_GROUP,
+        if (LoadString(GetGearsModuleHandle(), IDS_PROGRAM_GROUP,
                        program_group, kMaxStringLength) &&
             SHGetSpecialFolderPath(NULL, path_buf, CSIDL_PROGRAMS, TRUE)) {
           std::string16 path = path_buf;

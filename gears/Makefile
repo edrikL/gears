@@ -557,6 +557,7 @@ $(BROWSER)_CPPSRCS	+= \
 		paths.cc \
 		permissions_db.cc \
 		permissions_db_test.cc \
+		process_utils_win32.cc \
 		png_utils.cc \
 		scoped_refptr_test.cc \
 		security_model.cc \
@@ -751,6 +752,7 @@ IE_VPATH += \
 		$(NULL)
 
 VISTA_BROKER_CPPSRCS += \
+		process_utils_win32.cc \
 		shortcut_utils_win32.cc \
 		string16.cc \
 		string_utils.cc \
