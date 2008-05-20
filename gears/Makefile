@@ -30,270 +30,6 @@ include tools/sanity.mk
 MODULE		= $(SHORT_NAME)
 
 #-----------------------------------------------------------------------------
-# third_party/sqlite_google
-
-ifeq ($(USING_SQLITE),1)
-THIRD_PARTY_VPATH	+= \
-		../third_party/sqlite_google/src \
-		../third_party/sqlite_google/preprocessed \
-		../third_party/sqlite_google/ext/fts1 \
-		../third_party/sqlite_google/ext/fts2 \
-		$(NULL)
-
-SQLITE_CSRCS	+= \
-		alter.c \
-		analyze.c \
-		attach.c \
-		auth.c \
-		btree.c \
-		build.c \
-		callback.c \
-		complete.c \
-		date.c \
-		delete.c \
-		expr.c \
-		func.c \
-		hash.c \
-		insert.c \
-		legacy.c \
-		loadext.c \
-		main.c \
-		malloc.c \
-		opcodes.c \
-		os.c \
-		os_os2.c \
-		os_unix.c \
-		os_win.c \
-		pager.c \
-		parse.c \
-		pragma.c \
-		prepare.c \
-		printf.c \
-		random.c \
-		select.c \
-		table.c \
-		tokenize.c \
-		trigger.c \
-		update.c \
-		utf.c \
-		util.c \
-		vacuum.c \
-		vdbe.c \
-		vdbeapi.c \
-		vdbeaux.c \
-		vdbeblob.c \
-		vdbefifo.c \
-		vdbemem.c \
-		vtab.c \
-		where.c \
-		fts1.c \
-		fts1_hash.c \
-		fts1_porter.c \
-		fts1_tokenizer1.c \
-		fts2.c \
-		fts2_hash.c \
-		fts2_porter.c \
-		fts2_tokenizer1.c \
-		$(NULL)
-endif # USING_SQLITE
-
-#-----------------------------------------------------------------------------
-# third_party/libpng
-
-ifeq ($(USING_LIBPNG),1)
-THIRD_PARTY_VPATH	+= \
-		../third_party/libpng \
-		$(NULL)
-
-# Common Files
-THIRD_PARTY_CSRCS	+= \
-		png.c \
-		pngerror.c \
-		pngget.c \
-		pngmem.c \
-		pngset.c \
-		pngtrans.c \
-		$(NULL)
-# Reading PNGs
-THIRD_PARTY_CSRCS	+= \
-		pngpread.c \
-		pngread.c \
-		pngrio.c \
-		pngrtran.c \
-		pngrutil.c \
-		$(NULL)
-
-ifeq ($(OFFICIAL_BUILD),1)
-  # The following files are not yet needed; exclude them to save size.
-else
-# Writing PNGs
-THIRD_PARTY_CSRCS	+= \
-		pngwio.c \
-		pngwrite.c \
-		pngwtran.c \
-		pngwutil.c \
-		$(NULL)
-endif
-endif # USING_LIBPNG
-
-#-----------------------------------------------------------------------------
-# third_party/zlib
-
-ifeq ($(USING_ZLIB),1)
-THIRD_PARTY_VPATH	+= \
-		../third_party/zlib \
-		$(NULL)
-
-# Common Files
-THIRD_PARTY_CSRCS	+= \
-		adler32.c \
-		zutil.c \
-		$(NULL)
-# Inflate Algorithm (use inflate or infback, but not both)
-THIRD_PARTY_CSRCS	+= \
-		inflate.c \
-		inffast.c \
-		inftrees.c \
-		$(NULL)
-
-ifeq ($(OFFICIAL_BUILD),1)
-  # The following files are not yet needed; exclude them to save size.
-else
-# Other Algorithms
-THIRD_PARTY_CSRCS	+= \
-		compress.c \
-		deflate.c \
-		uncompr.c \
-		$(NULL)
-# Other Common Files
-THIRD_PARTY_CSRCS	+= \
-		crc32.c \
-		gzio.c \
-		trees.c \
-		$(NULL)
-endif
-endif # USING_ZLIB
-
-#-----------------------------------------------------------------------------
-# third_party/libjpeg
-
-ifeq ($(USING_LIBJPEG),1)
-ifneq ($(OFFICIAL_BUILD),1)
-ifneq ($(OS),wince)
-THIRD_PARTY_VPATH	+= \
-		../third_party/libjpeg \
-		$(NULL)
-
-THIRD_PARTY_CSRCS	+= \
-		jcapimin.c \
-		jcapistd.c \
-		jccoefct.c \
-		jccolor.c \
-		jcdctmgr.c \
-		jchuff.c \
-		jcinit.c \
-		jcmainct.c \
-		jcmarker.c \
-		jcmaster.c \
-		jcomapi.c \
-		jcparam.c \
-		jcphuff.c \
-		jcprepct.c \
-		jcsample.c \
-		jctrans.c \
-		jdapimin.c \
-		jdapistd.c \
-		jdatadst.c \
-		jdatasrc.c \
-		jdcoefct.c \
-		jdcolor.c \
-		jddctmgr.c \
-		jdhuff.c \
-		jdinput.c \
-		jdmainct.c \
-		jdmarker.c \
-		jdmaster.c \
-		jdmerge.c \
-		jdphuff.c \
-		jdpostct.c \
-		jdsample.c \
-		jdtrans.c \
-		jerror.c \
-		jfdctflt.c \
-		jfdctfst.c \
-		jfdctint.c \
-		jidctflt.c \
-		jidctfst.c \
-		jidctint.c \
-		jidctred.c \
-		jquant1.c \
-		jquant2.c \
-		jutils.c \
-		jmemmgr.c \
-		jmemnobs.c \
-		$(NULL)
-endif # not wince
-endif # not OFFICIAL_BUILD
-endif # USING_LIBJPEG
-
-#-----------------------------------------------------------------------------
-# third_party/libgd
-
-ifeq ($(USING_LIBGD),1)
-ifneq ($(OFFICIAL_BUILD),1)
-ifneq ($(OS),wince)
-THIRD_PARTY_VPATH	+= \
-		../third_party/libgd \
-		$(NULL)
-
-LIBGD_CSRCS	+= \
-		gd.c \
-		gdfx.c \
-		gd_security.c \
-		gd_gd.c \
-		gd_gd2.c \
-		gd_io.c \
-		gd_io_dp.c \
-		gd_gif_in.c \
-		gd_gif_out.c \
-		gd_io_file.c \
-		gd_io_ss.c \
-		gd_jpeg.c \
-		gd_png.c \
-		gd_ss.c \
-		gd_topal.c \
-		gd_wbmp.c \
-		gdcache.c \
-		gdfontg.c \
-		gdfontl.c \
-		gdfontmb.c \
-		gdfonts.c \
-		gdfontt.c \
-		gdft.c \
-		gdhelpers.c \
-		gdkanji.c \
-		gdtables.c \
-		gdxpm.c \
-		wbmp.c \
-		$(NULL)
-endif # not wince
-endif # not OFFICIAL_BUILD
-endif # USING_LIBGD
-
-#-----------------------------------------------------------------------------
-# third_party/jsoncpp
-
-THIRD_PARTY_VPATH	+= \
-		../third_party/jsoncpp \
-		$(NULL)
-
-THIRD_PARTY_CPPSRCS	+= \
-		json_reader.cc \
-		json_value.cc \
-		json_writer.cc \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
 # third_party/breakpad
 
 ifeq ($(OS),win32)
@@ -376,6 +112,164 @@ THIRD_PARTY_CPPSRCS	+= \
 endif
 
 #-----------------------------------------------------------------------------
+# third_party/jsoncpp
+
+THIRD_PARTY_VPATH	+= \
+		../third_party/jsoncpp \
+		$(NULL)
+
+THIRD_PARTY_CPPSRCS	+= \
+		json_reader.cc \
+		json_value.cc \
+		json_writer.cc \
+		$(NULL)
+
+#-----------------------------------------------------------------------------
+# third_party/libgd
+
+ifeq ($(USING_LIBGD),1)
+ifneq ($(OFFICIAL_BUILD),1)
+ifneq ($(OS),wince)
+THIRD_PARTY_VPATH	+= \
+		../third_party/libgd \
+		$(NULL)
+
+LIBGD_CSRCS	+= \
+		gd.c \
+		gdfx.c \
+		gd_security.c \
+		gd_gd.c \
+		gd_gd2.c \
+		gd_io.c \
+		gd_io_dp.c \
+		gd_gif_in.c \
+		gd_gif_out.c \
+		gd_io_file.c \
+		gd_io_ss.c \
+		gd_jpeg.c \
+		gd_png.c \
+		gd_ss.c \
+		gd_topal.c \
+		gd_wbmp.c \
+		gdcache.c \
+		gdfontg.c \
+		gdfontl.c \
+		gdfontmb.c \
+		gdfonts.c \
+		gdfontt.c \
+		gdft.c \
+		gdhelpers.c \
+		gdkanji.c \
+		gdtables.c \
+		gdxpm.c \
+		wbmp.c \
+		$(NULL)
+endif # not wince
+endif # not OFFICIAL_BUILD
+endif # USING_LIBGD
+
+#-----------------------------------------------------------------------------
+# third_party/libjpeg
+
+ifeq ($(USING_LIBJPEG),1)
+ifneq ($(OFFICIAL_BUILD),1)
+ifneq ($(OS),wince)
+THIRD_PARTY_VPATH	+= \
+		../third_party/libjpeg \
+		$(NULL)
+
+THIRD_PARTY_CSRCS	+= \
+		jcapimin.c \
+		jcapistd.c \
+		jccoefct.c \
+		jccolor.c \
+		jcdctmgr.c \
+		jchuff.c \
+		jcinit.c \
+		jcmainct.c \
+		jcmarker.c \
+		jcmaster.c \
+		jcomapi.c \
+		jcparam.c \
+		jcphuff.c \
+		jcprepct.c \
+		jcsample.c \
+		jctrans.c \
+		jdapimin.c \
+		jdapistd.c \
+		jdatadst.c \
+		jdatasrc.c \
+		jdcoefct.c \
+		jdcolor.c \
+		jddctmgr.c \
+		jdhuff.c \
+		jdinput.c \
+		jdmainct.c \
+		jdmarker.c \
+		jdmaster.c \
+		jdmerge.c \
+		jdphuff.c \
+		jdpostct.c \
+		jdsample.c \
+		jdtrans.c \
+		jerror.c \
+		jfdctflt.c \
+		jfdctfst.c \
+		jfdctint.c \
+		jidctflt.c \
+		jidctfst.c \
+		jidctint.c \
+		jidctred.c \
+		jquant1.c \
+		jquant2.c \
+		jutils.c \
+		jmemmgr.c \
+		jmemnobs.c \
+		$(NULL)
+endif # not wince
+endif # not OFFICIAL_BUILD
+endif # USING_LIBJPEG
+
+#-----------------------------------------------------------------------------
+# third_party/libpng
+
+ifeq ($(USING_LIBPNG),1)
+THIRD_PARTY_VPATH	+= \
+		../third_party/libpng \
+		$(NULL)
+
+# Common Files
+THIRD_PARTY_CSRCS	+= \
+		png.c \
+		pngerror.c \
+		pngget.c \
+		pngmem.c \
+		pngset.c \
+		pngtrans.c \
+		$(NULL)
+# Reading PNGs
+THIRD_PARTY_CSRCS	+= \
+		pngpread.c \
+		pngread.c \
+		pngrio.c \
+		pngrtran.c \
+		pngrutil.c \
+		$(NULL)
+
+ifeq ($(OFFICIAL_BUILD),1)
+  # The following files are not yet needed; exclude them to save size.
+else
+# Writing PNGs
+THIRD_PARTY_CSRCS	+= \
+		pngwio.c \
+		pngwrite.c \
+		pngwtran.c \
+		pngwutil.c \
+		$(NULL)
+endif
+endif # USING_LIBPNG
+
+#-----------------------------------------------------------------------------
 # third_party/modp_b64
 
 THIRD_PARTY_VPATH	+= \
@@ -385,77 +279,221 @@ THIRD_PARTY_VPATH	+= \
 THIRD_PARTY_CPPSRCS	+= \
 		modp_b64.cc \
 		$(NULL)
+		
+#-----------------------------------------------------------------------------
+# third_party/spidermonkey
+
+ifeq ($(BROWSER),SF)
+THIRD_PARTY_VPATH	+= \
+		../third_party/spidermonkey/js/src \
+		../third_party/spidermonkey/nspr/pr/src/io \
+		../third_party/spidermonkey/nspr/pr/src/linking \
+		../third_party/spidermonkey/nspr/pr/src/malloc \
+		../third_party/spidermonkey/nspr/pr/src/md \
+		../third_party/spidermonkey/nspr/pr/src/md/unix \
+		../third_party/spidermonkey/nspr/pr/src/memory \
+		../third_party/spidermonkey/nspr/pr/src/misc \
+		../third_party/spidermonkey/nspr/pr/src/pthreads \
+		../third_party/spidermonkey/nspr/pr/src/threads \
+		../third_party/spidermonkey/xpcom/glue \
+		$(NULL)
+
+MOZJS_CSRCS	+= \
+		darwin.c \
+		jsapi.c \
+		jsarena.c \
+		jsarray.c \
+		jsatom.c \
+		jsbool.c \
+		jscntxt.c \
+		jsdate.c \
+		jsdbgapi.c \
+		jsdhash.c \
+		jsdtoa.c \
+		jsemit.c \
+		jsexn.c \
+		jsfun.c \
+		jsgc.c \
+		jshash.c \
+		jsinterp.c \
+		jsinvoke.c \
+		jsiter.c \
+		jskwgen.c \
+		jslock.c \
+		jslog2.c \
+		jslong.c \
+		jsmath.c \
+		jsnum.c \
+		jsobj.c \
+		jsopcode.c \
+		jsparse.c \
+		jsprf.c \
+		jsregexp.c \
+		jsscan.c \
+		jsscope.c \
+		jsscript.c \
+		jsstr.c \
+		jsutil.c \
+		jsxdrapi.c \
+		jsxml.c \
+		pldhash.c \
+		pratom.c \
+		prcmon.c \
+		prdtoa.c \
+		prenv.c \
+		prerr.c \
+		prerror.c \
+		prerrortable.c \
+		prfdcach.c \
+		prinit.c \
+		prinrval.c \
+		priometh.c \
+		pripv6.c \
+		prlayer.c \
+		prlink.c \
+		prlog.c \
+		prmalloc.c \
+		prmapopt.c \
+		prmem.c \
+		prmjtime.c \
+		prmmap.c \
+		prmwait.c \
+		prnetdb.c \
+		prosdep.c \
+		prprf.c \
+		prrwlock.c \
+		prscanf.c \
+		prseg.c \
+		prstdio.c \
+		prtime.c \
+		prtpd.c \
+		ptio.c \
+		ptmisc.c \
+		ptsynch.c \
+		ptthread.c \
+		unix.c \
+		unix_errors.c \
+		uxproces.c \
+		os_Darwin_ppc.s \
+		os_Darwin_x86.s \
+		$(NULL)
+
+$(BROWSER)_VPATH	+= \
+		../third_party/spidermonkey/gears_npapi_bindings \
+		$(NULL)
+
+$(BROWSER)_CPPSRCS	+= \
+		mozjs_npapi_storage.cc \
+		mozjs_npruntime.cc \
+		mozjs_npruntime_utils.cc \
+		$(NULL)
+endif # BROWSER_SF
 
 #-----------------------------------------------------------------------------
-# third_party/portaudio
+# third_party/sqlite_google
+
+ifeq ($(USING_SQLITE),1)
+THIRD_PARTY_VPATH	+= \
+		../third_party/sqlite_google/src \
+		../third_party/sqlite_google/preprocessed \
+		../third_party/sqlite_google/ext/fts1 \
+		../third_party/sqlite_google/ext/fts2 \
+		$(NULL)
+
+SQLITE_CSRCS	+= \
+		alter.c \
+		analyze.c \
+		attach.c \
+		auth.c \
+		btree.c \
+		build.c \
+		callback.c \
+		complete.c \
+		date.c \
+		delete.c \
+		expr.c \
+		func.c \
+		hash.c \
+		insert.c \
+		legacy.c \
+		loadext.c \
+		main.c \
+		malloc.c \
+		opcodes.c \
+		os.c \
+		os_os2.c \
+		os_unix.c \
+		os_win.c \
+		pager.c \
+		parse.c \
+		pragma.c \
+		prepare.c \
+		printf.c \
+		random.c \
+		select.c \
+		table.c \
+		tokenize.c \
+		trigger.c \
+		update.c \
+		utf.c \
+		util.c \
+		vacuum.c \
+		vdbe.c \
+		vdbeapi.c \
+		vdbeaux.c \
+		vdbeblob.c \
+		vdbefifo.c \
+		vdbemem.c \
+		vtab.c \
+		where.c \
+		fts1.c \
+		fts1_hash.c \
+		fts1_porter.c \
+		fts1_tokenizer1.c \
+		fts2.c \
+		fts2_hash.c \
+		fts2_porter.c \
+		fts2_tokenizer1.c \
+		$(NULL)
+endif # USING_SQLITE
+
+#-----------------------------------------------------------------------------
+# third_party/zlib
+
+ifeq ($(USING_ZLIB),1)
+THIRD_PARTY_VPATH	+= \
+		../third_party/zlib \
+		$(NULL)
+
+# Common Files
+THIRD_PARTY_CSRCS	+= \
+		adler32.c \
+		zutil.c \
+		$(NULL)
+# Inflate Algorithm (use inflate or infback, but not both)
+THIRD_PARTY_CSRCS	+= \
+		inflate.c \
+		inffast.c \
+		inftrees.c \
+		$(NULL)
 
 ifeq ($(OFFICIAL_BUILD),1)
-# PortAudio is for the Audio API which has not been finalized for official 
-# builds.
+  # The following files are not yet needed; exclude them to save size.
 else
-
-THIRD_PARTY_VPATH       += \
-		../third_party/portaudio/src/common \
+# Other Algorithms
+THIRD_PARTY_CSRCS	+= \
+		compress.c \
+		deflate.c \
+		uncompr.c \
 		$(NULL)
-
-ifeq ($(IS_WIN32_OR_WINCE),1)
-THIRD_PARTY_VPATH       += \
-		../third_party/portaudio/src/hostapi/wmme \
-		../third_party/portaudio/src/os/win \
-		$(NULL)
-endif
-ifeq ($(OS),linux)
-THIRD_PARTY_VPATH       += \
-		../third_party/portaudio/src/hostapi/oss \
-		../third_party/portaudio/src/os/unix \
+# Other Common Files
+THIRD_PARTY_CSRCS	+= \
+		crc32.c \
+		gzio.c \
+		trees.c \
 		$(NULL)
 endif
-ifeq ($(OS),osx)
-THIRD_PARTY_VPATH       += \
-		../third_party/portaudio/src/hostapi/coreaudio \
-		../third_party/portaudio/src/os/mac_osx \
-		$(NULL)
-endif
-
-THIRD_PARTY_CSRCS       += \
-		pa_allocation.c \
-		pa_converters.c \
-		pa_cpuload.c \
-		pa_debugprint.c \
-		pa_dither.c \
-		pa_front.c \
-		pa_process.c \
-		pa_skeleton.c \
-		pa_stream.c \
-		pa_trace.c \
-		$(NULL)
-
-ifeq ($(IS_WIN32_OR_WINCE),1)
-THIRD_PARTY_CSRCS       += \
-		pa_win_wmme.c \
-		pa_win_hostapis.c \
-		pa_win_util.c \
-		pa_win_waveformat.c \
-		$(NULL)
-endif
-ifeq ($(OS),linux)
-THIRD_PARTY_CSRCS       += \
-		pa_unix_oss.c \
-		pa_unix_hostapis.c \
-		pa_unix_util.c \
-		$(NULL)
-endif
-ifeq ($(OS),osx)
-THIRD_PARTY_CSRCS       += \
-		pa_ringbuffer.c \
-		pa_mac_core.c \
-		pa_mac_core_blocking.c \
-		pa_mac_core_utilities.c \
-		pa_mac_hostapis.c \
-		$(NULL)
-endif
-
-endif # not OFFICIAL_BUILD
+endif # USING_ZLIB
 
 #-----------------------------------------------------------------------------
 # base/common
@@ -689,6 +727,7 @@ SF_CPPSRCS	+= \
 		html_event_monitor_np.cc \
 		ipc_message_queue_null.cc \
 		js_runner_np.cc \
+		js_standalone_engine_mozjs.cc \
 		message_queue_sf.cc \
 		module.cc \
 		np_utils.cc \
@@ -1178,7 +1217,7 @@ FF3_CPPSRCS	+= \
 		$(NULL)
 
 #-----------------------------------------------------------------------------
-# workerpool/ie
+# workerpool/f
 
 IE_VPATH	+= \
 		workerpool/common \
@@ -1197,15 +1236,17 @@ IE_CPPSRCS	+= \
 #-----------------------------------------------------------------------------
 # workerpool/npapi
 
-NPAPI_VPATH	+= \
+ifeq ($(USING_NPAPI),1)
+$(BROWSER)_VPATH	+= \
 		workerpool/common \
 		workerpool/npapi \
 		$(NULL)
 
-NPAPI_CPPSRCS	+= \
+$(BROWSER)_CPPSRCS	+= \
 		workerpool.cc \
 		workerpool_utils.cc \
 		$(NULL)
+endif
 
 #-----------------------------------------------------------------------------
 # timer

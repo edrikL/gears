@@ -55,6 +55,7 @@ VISTA_BROKER_OUTDIR        = $(OUTDIR)/$(OS)-$(ARCH)/vista_broker
 
 LIBGD_OUTDIR               = $(COMMON_OUTDIR)/gd
 SQLITE_OUTDIR              = $(COMMON_OUTDIR)/sqlite
+MOZJS_OUTDIR               = $(COMMON_OUTDIR)/spidermonkey
 THIRD_PARTY_OUTDIR         = $(COMMON_OUTDIR)/third_party
 
 
@@ -72,7 +73,7 @@ I18N_INPUTS_BASEDIR = ui/generated
 #  out_dir/a.o out_dir/foo.o
 # In the macro's body, $1 is the output directory and $2 is the list of source
 # files.
-SOURCECODE_SUFFIXES = c cc m mm
+SOURCECODE_SUFFIXES = c cc m mm s
 SUBSTITUTE_OBJ_SUFFIX = $(foreach SUFFIX,$(SOURCECODE_SUFFIXES), \
                            $(patsubst %.$(SUFFIX),$1/%$(OBJ_SUFFIX), \
                              $(filter %.$(SUFFIX), $2) \
@@ -86,11 +87,13 @@ CRASH_SENDER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(CRA
 NOTIFIER_OBJS            = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(NOTIFIER_CPPSRCS))
 OSX_LAUNCHURL_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(OSX_LAUNCHURL_OUTDIR), $(OSX_LAUNCHURL_CPPSRCS))
 LIBGD_OBJS               = $(call SUBSTITUTE_OBJ_SUFFIX, $(LIBGD_OUTDIR), $(LIBGD_CSRCS))
+MOZJS_OBJS               = $(call SUBSTITUTE_OBJ_SUFFIX, $(MOZJS_OUTDIR), $(MOZJS_CSRCS))
 SQLITE_OBJS              = $(call SUBSTITUTE_OBJ_SUFFIX, $(SQLITE_OUTDIR), $(SQLITE_CSRCS))
 PERF_TOOL_OBJS           = $(call SUBSTITUTE_OBJ_SUFFIX, $(COMMON_OUTDIR), $(PERF_TOOL_CPPSRCS))
 IE_WINCESETUP_OBJS       = $(call SUBSTITUTE_OBJ_SUFFIX, $(IE_OUTDIR), $(IE_WINCESETUP_CPPSRCS))
 THIRD_PARTY_OBJS         = $(call SUBSTITUTE_OBJ_SUFFIX, $(THIRD_PARTY_OUTDIR), $(THIRD_PARTY_CPPSRCS) $(THIRD_PARTY_CSRCS))
 VISTA_BROKER_OBJS        = $(call SUBSTITUTE_OBJ_SUFFIX, $(VISTA_BROKER_OUTDIR), $(VISTA_BROKER_CPPSRCS))
+
 
 # IMPORTANT: If you change these lists, you need to change the corresponding
 # files in win32_msi.wxs.m4 as well.
@@ -122,6 +125,7 @@ DEPS = \
 	$(SF_INPUTMANAGER_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(VISTA_BROKER_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(LIBGD_OBJS:$(OBJ_SUFFIX)=.pp) \
+	$(MOZJS_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(SQLITE_OBJS:$(OBJ_SUFFIX)=.pp) \
 	$(THIRD_PARTY_OBJS:$(OBJ_SUFFIX)=.pp)
 
@@ -328,6 +332,7 @@ modules:: $(NPAPI_MODULE_DLL)
 endif
 
 ifeq ($(BROWSER),SF)
+prereqs:: $(MOZJS_OUTDIR)
 modules:: $(SF_MODULE_DLL) $(SF_INPUTMANAGER_EXE)
 endif
 
@@ -397,6 +402,8 @@ $(COMMON_OUTDIRS_I18N):
 $(INSTALLERS_OUTDIR):
 	"mkdir" -p $@
 $(LIBGD_OUTDIR):
+	"mkdir" -p $@
+$(MOZJS_OUTDIR):
 	"mkdir" -p $@
 $(OSX_LAUNCHURL_OUTDIR):
 	"mkdir" -p $@
@@ -483,9 +490,14 @@ $(VISTA_BROKER_OUTDIR)/%$(OBJ_SUFFIX): %.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $($(BROWSER)_CPPFLAGS) $($(BROWSER)_CXXFLAGS) $<
 
 
-# Omit @$(MKDEP) for libgd and sqlite because they include files which aren't
-# in the same directory, but don't use explicit paths.  All necessary -I
+# Omit @$(MKDEP) for mozjs, libgd and sqlite because they include files which
+# aren't in the same directory, but don't use explicit paths.  All necessary -I
 # flags are in LIBGD_CFLAGS and SQLITE_CFLAGS respectively.
+$(MOZJS_OUTDIR)/%$(OBJ_SUFFIX): %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(MOZJS_CFLAGS) $<
+$(MOZJS_OUTDIR)/%$(OBJ_SUFFIX): %.s
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(MOZJS_CFLAGS) $<
+
 $(LIBGD_OUTDIR)/%$(OBJ_SUFFIX): %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LIBGD_CFLAGS) $<
 
@@ -609,10 +621,11 @@ $(NPAPI_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_O
 
 endif
 
-$(SF_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
-	@echo $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
-	@echo $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
+$(SF_MODULE_DLL): $(COMMON_OBJS) $(LIBGD_OBJS) $(MOZJS_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) $($(BROWSER)_OBJS) $($(BROWSER)_LINK_EXTRAS)
+	@echo $($(BROWSER)_OBJS) $(COMMON_OBJS) $(LIBGD_OBJS)| $(TRANSLATE_LINKER_FILE_LIST) > $(OUTDIR)/obj_list.temp
+	@echo $(MOZJS_OBJS) $(SQLITE_OBJS) $(THIRD_PARTY_OBJS) | $(TRANSLATE_LINKER_FILE_LIST) >> $(OUTDIR)/obj_list.temp
 	$(MKDLL) $(DLLFLAGS) $($(BROWSER)_DLLFLAGS) $($(BROWSER)_LINK_EXTRAS) $($(BROWSER)_LIBS) $(EXT_LINKER_CMD_FLAG)$(OUTDIR)/obj_list.temp
+	rm $(OUTDIR)/obj_list.temp
 
 $(CRASH_SENDER_EXE): $(CRASH_SENDER_OBJS)
 	$(MKEXE) $(EXEFLAGS) $(CRASH_SENDER_OBJS) advapi32.lib shell32.lib wininet.lib
