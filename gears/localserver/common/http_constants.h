@@ -75,6 +75,7 @@ class HttpConstants {
   static const char16 *kRetryAfterHeader;
   static const char16 *kUriHeader;
   static const char16 *kXCapturedFilenameHeader;
+  static const char16 *kXGearsSafariCapturedMimeType;
   static const char16 *kXGearsReasonHeader;
   static const char16 *kXGearsReason_ValidateManifest;
   static const char16 *kXGoogleGearsHeader;

@@ -89,7 +89,8 @@
   
   std::string16 header16;
   
-  if (payload.GetHeader(HttpConstants::kContentTypeHeader, &header16))
+  if (payload.GetHeader(HttpConstants::kXGearsSafariCapturedMimeType, 
+      &header16))
     *mimeType = [NSString stringWithString16:header16.c_str()];
   else
     *mimeType = nil;
