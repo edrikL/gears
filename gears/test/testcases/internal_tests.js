@@ -340,6 +340,7 @@ function testGeolocationFormRequestBody() {
   if (isUsingCCTests && !isOfficial) {
     var body = internalTests.testGeolocationFormRequestBody();
     var correctBody = '{ ' +
+                      '"address_language" : "en-GB", ' +
                       '"cell_towers" : [ { ' +
                       '"cell_id" : 23874, ' +
                       '"location_area_code" : 98, ' +
@@ -348,10 +349,20 @@ function testGeolocationFormRequestBody() {
                       '"signal_strength" : -65 ' +
                       '} ], ' +
                       '"host" : "www.google.com", ' +
+                      '"location" : { ' +
+                      '"latitude" : 53.1, ' +
+                      '"longitude" : -0.1 ' +
+                      '}, ' +
                       '"radio_type" : "gsm", ' +
+                      '"request_address" : true, ' +
                       '"version" : "1.0", ' +
                       '"wifi_towers" : [ { ' +
-                      '"mac_address" : "test mac" ' +
+                      '"age" : 15, ' +
+                      '"channel" : 19, ' +
+                      '"mac_address" : "00-0b-86-d7-6a-42", ' +
+                      '"signal_strength" : -50, ' +
+                      '"signal_to_noise" : 10, ' +
+                      '"ssid" : "Test SSID" ' +
                       '} ] ' +
                       '}\n';  // Note trailing line break.
     assertEqual(correctBody, body);
@@ -365,14 +376,40 @@ function testGeolocationGetLocationFromResponse() {
     var responseString = '{ ' +
                          '"location" : { ' +
                          '"latitude" : 53.1, ' +
-                         '"longitude" : -0.1 ' +
+                         '"longitude" : -0.1, ' +
+                         '"altitude" : 30, ' +
+                         '"horizontal_accuracy" : 1200, ' +
+                         '"vertical_accuracy" : 10, ' +
+                         '"address" : { ' +
+                         '"street_number": "100", ' +
+                         '"street": "Amphibian Walkway", ' +
+                         '"city": "Mountain View", ' +
+                         '"county": "Mountain View County", ' +
+                         '"region": "California", ' +
+                         '"country": "United States of America", ' +
+                         '"country_code": "US", ' +
+                         '"postal_code": "94043" ' +
+                         '} ' +
                          '} ' +
                          '}';
     var position =
         internalTests.testGeolocationGetLocationFromResponse(responseString);
+    // timestamp and errorMessage are set on the C++ side.
     var correctPosition = new Object();
     correctPosition.latitude = 53.1;
     correctPosition.longitude = -0.1;
+    correctPosition.altitude = 30;
+    correctPosition.horizontalAccuracy = 1200;
+    correctPosition.verticalAccuracy = 10;
+    correctPosition.address = new Object();
+    correctPosition.address.streetNumber = '100';
+    correctPosition.address.street = 'Amphibian Walkway';
+    correctPosition.address.city = 'Mountain View';
+    correctPosition.address.county = 'Mountain View County';
+    correctPosition.address.region = 'California';
+    correctPosition.address.country = 'United States of America';
+    correctPosition.address.countryCode = 'US';
+    correctPosition.address.postalCode = '94043';
     correctPosition.timestamp = new Date(42);
     correctPosition.errorMessage = 'test error';
     assertObjectEqual(correctPosition, position);

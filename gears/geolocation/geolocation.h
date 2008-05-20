@@ -31,6 +31,19 @@
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/geolocation/location_provider.h"
 
+// The internal representation of an address.
+struct Address {
+  std::string16 street_number; // street number
+  std::string16 street;        // street address
+  std::string16 premises;      // premises, e.g. building name
+  std::string16 city;          // city name
+  std::string16 county;        // county name
+  std::string16 region;        // region, e.g. a state in the US
+  std::string16 country;       // country
+  std::string16 country_code;  // country code (ISO 3166-1)
+  std::string16 postal_code;   // postal code
+};
+
 // The internal representation of a position. We use kint32min to represent
 // unknown values for integer fields. Some properties use different types when
 // passed to JavaScript.
@@ -47,7 +60,7 @@ struct Position {
   int horizontal_accuracy;  // In metres
   int vertical_accuracy;    // In metres
   int64 timestamp;          // Milliseconds since 1st Jan 1970
-  // TODO(steveblock): Add address field once finalized.
+  Address address;
 };
 
 // The principal class of the location API.
@@ -82,6 +95,7 @@ class GearsGeolocation
     ProviderSet providers;
     bool enable_high_accuracy;
     bool request_address;
+    std::string16 address_language;
     bool repeats;
   };
 

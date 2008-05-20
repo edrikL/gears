@@ -39,9 +39,13 @@ static const char *kGearsNetworkLocationProtocolVersion = "1.0";
 
 // Local functions.
 
-static bool FormRequestBody(const std::string &host_name,
+static bool FormRequestBody(const std::string16 &host_name,
                             const RadioData &radio_data,
                             const WifiData &wifi_data,
+                            bool request_address,
+                            std::string16 address_language,
+                            double latitude,
+                            double longitude,
                             scoped_refptr<BlobInterface> *blob);
 static bool GetLocationFromResponse(const std::vector<uint8> &response,
                                     Position *position);
@@ -67,12 +71,13 @@ NetworkLocationRequest::NetworkLocationRequest(const std::string16 &url,
 
 bool NetworkLocationRequest::MakeRequest(const RadioData &radio_data,
                                          const WifiData &wifi_data,
+                                         bool request_address,
+                                         std::string16 address_language,
+                                         double latitude,
+                                         double longitude,
                                          int64 timestamp) {
-  std::string host_name_utf8;
-  if (!String16ToUTF8(host_name_.c_str(), host_name_.size(), &host_name_utf8)) {
-    return false;
-  }
-  if (!FormRequestBody(host_name_utf8, radio_data, wifi_data, &post_body_)) {
+  if (!FormRequestBody(host_name_, radio_data, wifi_data, request_address,
+                       address_language, latitude, longitude, &post_body_)) {
     return false;
   }
   timestamp_ = timestamp;
@@ -130,23 +135,23 @@ void NetworkLocationRequest::Run() {
 }
 
 void NetworkLocationRequest::StopThreadAndDelete() {
-  DeleteWhenDone();
-  AsyncTask::Abort();
+  Abort();
   run_complete_event_.Wait();
+  DeleteWhenDone();
 }
 
 // Local functions.
 
-static const char* RadioTypeToString(RadioType type) {
+static const char16* RadioTypeToString(RadioType type) {
   switch (type) {
     case RADIO_TYPE_UNKNOWN:
-      return "unknown";
+      return STRING16(L"unknown");
     case RADIO_TYPE_GSM:
-      return "gsm";
+      return STRING16(L"gsm");
     case RADIO_TYPE_CDMA:
-      return "cdma";
+      return STRING16(L"cdma");
     case RADIO_TYPE_WCDMA:
-      return "wcdma";
+      return STRING16(L"wcdma");
     default:
       assert(false);
   }
@@ -155,12 +160,15 @@ static const char* RadioTypeToString(RadioType type) {
 
 // Adds a string if it's valid.
 static void AddString(const std::string &property_name,
-                      const std::string &value,
+                      const std::string16 &value,
                       Json::Value *object) {
   assert(object);
   assert(object->isObject());
   if (!value.empty()) {
-    (*object)[property_name] = Json::Value(value);
+    std::string value_utf8;
+    if (String16ToUTF8(value.c_str(), value.size(), &value_utf8)) {
+      (*object)[property_name] = Json::Value(value_utf8);
+    }
   }
 }
 
@@ -175,20 +183,46 @@ static void AddInteger(const std::string &property_name,
   }
 }
 
-static bool FormRequestBody(const std::string &host_name,
+// Adds an angle as a double if it's valid.
+static void AddAngle(const std::string &property_name,
+                     const double &value,
+                     Json::Value *object) {
+  assert(object);
+  assert(object->isObject());
+  if (value >= -180.0 && value <= 180.0) {
+    (*object)[property_name] = Json::Value(value);
+  }
+}
+
+static bool FormRequestBody(const std::string16 &host_name,
                             const RadioData &radio_data,
                             const WifiData &wifi_data,
+                            bool request_address,
+                            std::string16 address_language,
+                            double latitude,
+                            double longitude,
                             scoped_refptr<BlobInterface> *blob) {
   assert(blob);
   Json::Value body_object;
   assert(body_object.isObject());
   // Version and host are required.
+  if (host_name.empty()) {
+    return false;
+  }
   body_object["version"] = Json::Value(kGearsNetworkLocationProtocolVersion);
-  body_object["host"] = Json::Value(host_name.c_str());
+  AddString("host", host_name, &body_object);
   AddInteger("home_mobile_country_code", radio_data.home_mcc, &body_object);
   AddInteger("home_mobile_network_code", radio_data.home_mnc, &body_object);
   AddString("radio_type", RadioTypeToString(radio_data.radio_type),
             &body_object);
+  AddString("carrier", radio_data.carrier, &body_object);
+  body_object["request_address"] = request_address;
+  AddString("address_language", address_language, &body_object);
+
+  Json::Value location;
+  AddAngle("latitude", latitude, &location);
+  AddAngle("longitude", longitude, &location);
+  body_object["location"] = location;
 
   Json::Value cell_towers;
   assert(cell_towers.isArray());
@@ -213,16 +247,13 @@ static bool FormRequestBody(const std::string &host_name,
        ++i) {
     Json::Value wifi_tower;
     assert(wifi_tower.isObject());
-    // Convert mac address to UTF8.
-    std::string mac_address_utf8;
-    if (!String16ToUTF8(wifi_data.access_point_data[i].mac.c_str(),
-                        &mac_address_utf8)) {
-      return false;
-    }
-    AddString("mac_address", mac_address_utf8, &wifi_tower);
+    AddString("mac_address", wifi_data.access_point_data[i].mac, &wifi_tower);
     AddInteger("signal_strength", wifi_data.access_point_data[i].rss,
                &wifi_tower);
     AddInteger("age", wifi_data.access_point_data[i].age, &wifi_tower);
+    AddInteger("channel", wifi_data.access_point_data[i].cha, &wifi_tower);
+    AddInteger("signal_to_noise", wifi_data.access_point_data[i].snr, &wifi_tower);
+    AddString("ssid", wifi_data.access_point_data[i].ssi, &wifi_tower);
     wifi_towers[i] = wifi_tower;
   }
   body_object["wifi_towers"] = wifi_towers;
@@ -248,8 +279,6 @@ static bool GetAsInt(const Json::Value &object,
   return true;
 }
 
-// TODO(steveblock): Need to finalize address format and set address.
-/*
 // Gets a string if it's present.
 static bool GetAsString(const Json::Value &object,
                         const std::string &property_name,
@@ -261,7 +290,6 @@ static bool GetAsString(const Json::Value &object,
   std::string out_utf8 = object[property_name].asString();
   return UTF8ToString16(out_utf8.c_str(), out_utf8.size(), out);
 }
-*/
 
 static bool GetLocationFromResponse(const std::vector<uint8> &response,
                                     Position *position) {
@@ -296,19 +324,34 @@ static bool GetLocationFromResponse(const std::vector<uint8> &response,
   GetAsInt(location, "altitude", &position->altitude);
   GetAsInt(location, "horizontal_accuracy", &position->horizontal_accuracy);
   GetAsInt(location, "vertical_accuracy", &position->vertical_accuracy);
-  // TODO(steveblock): Need to finalize address format and set address.
-  //GetAsString(location, "address", &position->address);
+  Json::Value address = location["address"];
+  if (address.isObject()) {
+    GetAsString(address, "street_number", &position->address.street_number);
+    GetAsString(address, "street", &position->address.street);
+    GetAsString(address, "premises", &position->address.premises);
+    GetAsString(address, "city", &position->address.city);
+    GetAsString(address, "county", &position->address.county);
+    GetAsString(address, "region", &position->address.region);
+    GetAsString(address, "country", &position->address.country);
+    GetAsString(address, "country_code", &position->address.country_code);
+    GetAsString(address, "postal_code", &position->address.postal_code);
+  }
   return true;
 }
 
 #ifdef USING_CCTESTS
 // These methods are used only for testing as a means to access the static
 // functions defined here.
-bool FormRequestBodyTest(const std::string &host_name,
+bool FormRequestBodyTest(const std::string16 &host_name,
                          const RadioData &radio_data,
                          const WifiData &wifi_data,
+                         bool request_address,
+                         std::string16 address_language,
+                         double latitude,
+                         double longitude,
                          scoped_refptr<BlobInterface> *blob) {
-  return FormRequestBody(host_name, radio_data, wifi_data, blob);
+  return FormRequestBody(host_name, radio_data, wifi_data, request_address,
+                         address_language, latitude, longitude, blob);
 }
 bool GetLocationFromResponseTest(const std::vector<uint8> &response,
                                  Position *position) {

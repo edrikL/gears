@@ -48,9 +48,13 @@ bool ConvertPositionToJavaScriptObjectTest(const Position &p,
                                            JsObject *js_object);
 
 // From network_location_request.cc
-bool FormRequestBodyTest(const std::string &host_name,
+bool FormRequestBodyTest(const std::string16 &host_name,
                          const RadioData &radio_data,
                          const WifiData &wifi_data,
+                         bool request_address,
+                         std::string16 address_language,
+                         double latitude,
+                         double longitude,
                          scoped_refptr<BlobInterface> *blob);
 bool GetLocationFromResponseTest(const std::vector<uint8> &response,
                                  Position *position);
@@ -82,6 +86,8 @@ void TestParseGeolocationOptions(JsCallContext *context,
                                       info.enable_high_accuracy) ||
       !return_object->SetPropertyBool(STRING16(L"requestAddress"),
                                       info.request_address) ||
+      !return_object->SetPropertyString(STRING16(L"addressLanguage"),
+                                        info.address_language) ||
       !return_object->SetPropertyArray(STRING16(L"gearsLocationProviderUrls"),
                                        url_array.get())) {
     context->SetException(STRING16(L"Failed to set return value."));
@@ -107,11 +113,17 @@ void TestGeolocationFormRequestBody(JsCallContext *context) {
 
   WifiData wifi_data;
   AccessPointData access_point_data;
-  access_point_data.mac = STRING16(L"test mac");
+  access_point_data.mac = STRING16(L"00-0b-86-d7-6a-42");
+  access_point_data.rss = -50;
+  access_point_data.age = 15;
+  access_point_data.cha = 19;
+  access_point_data.snr = 10;
+  access_point_data.ssi = STRING16(L"Test SSID");
   wifi_data.access_point_data.push_back(access_point_data);
 
   scoped_refptr<BlobInterface> blob;
-  if (!FormRequestBodyTest("www.google.com", radio_data, wifi_data, &blob)) {
+  if (!FormRequestBodyTest(STRING16(L"www.google.com"), radio_data, wifi_data,
+                           true, STRING16(L"en-GB"), 53.1, -0.1, &blob)) {
     context->SetException(STRING16(L"Failed to form request body."));
     return;
   }
@@ -139,7 +151,7 @@ void TestGeolocationFormRequestBody(JsCallContext *context) {
 } 
 
 void TestGeolocationGetLocationFromResponse(JsCallContext *context,
-                                 JsRunnerInterface *js_runner) {
+                                            JsRunnerInterface *js_runner) {
   std::string16 response_string;
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &response_string },

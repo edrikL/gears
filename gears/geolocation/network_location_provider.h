@@ -69,6 +69,9 @@ class NetworkLocationProvider
   // Used by the device data provider callbacks to make the request if all
   // device data is now present and if we're waiting for this to be the case.
   bool MakeRequestIfDataNowAvailable();
+  // Common implementation used by GetCurrentPosition, MakeRequest and
+  // MakeRequestIfDataNowAvailable.
+  bool MakeRequestImpl();
 
   NetworkLocationRequest *request_;
   LocationProviderInterface::ListenerInterface *listener_;
@@ -81,6 +84,8 @@ class NetworkLocationProvider
   int64 timestamp_;
   bool is_radio_data_complete_;
   bool is_wifi_data_complete_;
+  bool request_address_;
+  std::string16 address_language_;
   AsyncWait *wait_;
   Mutex wait_mutex_;
   DISALLOW_EVIL_CONSTRUCTORS(NetworkLocationProvider);

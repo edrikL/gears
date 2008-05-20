@@ -50,6 +50,10 @@ class NetworkLocationRequest : public AsyncTask {
                                         ListenerInterface *listener);
   bool MakeRequest(const RadioData &radio_data,
                    const WifiData &wifi_data,
+                   bool request_address,
+                   std::string16 address_language,
+                   double latitude,
+                   double longitude,
                    int64 timestamp);
   void StopThreadAndDelete();
  private:
