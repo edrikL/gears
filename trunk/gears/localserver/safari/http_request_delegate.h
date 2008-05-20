@@ -42,9 +42,10 @@
   SFHttpRequest *owner_;
   NSMutableURLRequest *request_;     // (strong)
   NSURLConnection *connection_;      // (strong)
-  NSMutableData *receivedData_;     // (strong)
+  NSMutableData *receivedData_;      // (strong)
   NSInteger statusCode_;
   NSDictionary *headerDictionary_;  // (strong)
+  NSString *mimeType_;               // (strong)
   CFStringEncoding dataEncoding_;
 }
 
@@ -101,6 +102,9 @@
 
 // Get the HTTP status code.
 - (int)statusCode;
+
+// Get the MIME Type.
+- (void)mimeType:(std::string16 *)mime_type_str;
 
 // Get human readable text associated with the status code.
 - (void)statusText:(std::string16 *)status_line;

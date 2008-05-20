@@ -405,22 +405,29 @@ bool SFHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
     return false;
   }
   
+  const char16 *kNameValueSeperator = STRING16(L": "); 
+  
   HttpHeaderVector response_headers;
   [delegate_holder_->delegate headers:&response_headers];
   std::string16 header_str;
   for (HttpHeaderVectorConstIterator hdr = response_headers.begin();
        hdr != response_headers.end();
        ++hdr) {
-    // TODO(playmobil): do we need to fixup the Content-Encoding and
-    // Content-Length headers like the FF implementation to get LocalServer
-    // to work?       
-    if (!hdr->second.empty()) {  // NULL means do not output
-      header_str += hdr->first;
-      header_str += std::string16(STRING16(L": "));
-      header_str += hdr->second;
-      header_str += HttpConstants::kCrLf;
-    }
+    header_str += hdr->first;
+    header_str += kNameValueSeperator;
+    header_str += hdr->second;
+    header_str += HttpConstants::kCrLf;
   }
+  
+  // Stash the MIMEType as a custom header.
+  // TODO(playmobil): This leaks back to the scriptable object layer,
+  // we may want to fix that at a later date.
+  std::string16 mime_type;
+  [delegate_holder_->delegate mimeType:&mime_type];
+  header_str += HttpConstants::kXGearsSafariCapturedMimeType;
+  header_str += kNameValueSeperator;
+  header_str += mime_type;
+  header_str += HttpConstants::kCrLf;
   
   header_str += HttpConstants::kCrLf;  // blank line at the end
   *headers = header_str;

@@ -52,6 +52,7 @@
   [connection_ release];
   [receivedData_ release];
   [headerDictionary_ release];
+  [mimeType_ release];
   
   [super dealloc];
 }
@@ -146,12 +147,14 @@
                          reinterpret_cast<CFStringRef>(encoding_str));
   }
   
-  // Squirrel away http headers and response code
+  // Squirrel away http headers, response code and mimeType.
   NSHTTPURLResponse *http_response = static_cast<NSHTTPURLResponse *>(response);
   NSDictionary *all_headers = [[http_response allHeaderFields] retain];
   [headerDictionary_ autorelease];
   headerDictionary_ = all_headers;
   statusCode_ = (NSInteger)[(NSHTTPURLResponse *)response statusCode];
+  [mimeType_ autorelease];
+  mimeType_ = [[response MIMEType] retain];
 }
 
 // Called when connection receives data.
@@ -287,6 +290,16 @@
 
 - (int)statusCode {
   return statusCode_;
+}
+
+- (void)mimeType:(std::string16 *)mime_type_str {
+  assert(mime_type_str);
+  
+  if (mimeType_) {
+    [mimeType_ string16:mime_type_str];
+  } else {
+    *mime_type_str = STRING16(L"");
+  }
 }
 
 - (void)statusText:(std::string16 *)status_line {

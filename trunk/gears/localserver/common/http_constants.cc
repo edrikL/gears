@@ -59,6 +59,8 @@ const char16 *HttpConstants::kMimeApplicationOctetStream =
                                  STRING16(L"application/octet-stream");
 const char16 *HttpConstants::kXCapturedFilenameHeader =
                                  STRING16(L"X-Captured-Filename");
+const char16 *HttpConstants::kXGearsSafariCapturedMimeType =
+                                 STRING16(L"X-Gears-Safari-MimeType");
 const char16 *HttpConstants::kXGearsReasonHeader =
                                  STRING16(L"X-Gears-Reason");
 const char16 *HttpConstants::kXGearsReason_ValidateManifest =
