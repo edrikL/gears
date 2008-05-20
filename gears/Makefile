@@ -1556,6 +1556,7 @@ $(BROWSER)_CPPSRCS	+= \
 		network_location_provider.cc \
 		network_location_request.cc \
 		radio_data_provider_wince.cc \
+		thread.cc \
 		$(NULL)
 endif
 
