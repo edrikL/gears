@@ -40,3 +40,4 @@ Modifications to /xpcom:
 
 Gears-only files:
 * Added gears-only file at gears_include/mozjs_api.h.
+* Files under gears_npapi_bindings/ are Gears-specific.
