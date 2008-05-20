@@ -108,7 +108,25 @@
   }
   
   if (post_data_stream) {
-    [request_ setHTTPBodyStream: post_data_stream];
+  
+    // Workaround for bug in Tiger, where [NSURLRequest setHTTPBodyStream]
+    // doesn't work correctly.
+    // This slurps all the data from the inputstream into memory.
+    // TODO(playmobil): We *MUST* fix this before releasing blob support for 
+    // Safari!
+    NSMutableData *post_data = [[NSMutableData alloc] init];
+    [post_data_stream open];
+    unsigned char buf[1024];
+    memset(buf, 0, sizeof(buf));
+    
+    while ([post_data_stream hasBytesAvailable]) {
+      int bytes_read = [post_data_stream read:buf maxLength:sizeof(buf)];
+      [post_data appendBytes:buf length:bytes_read];
+    }
+    [post_data_stream close];
+    
+    [request_ setHTTPBody:post_data];
+    [post_data release];
   }
   
   [connection_ release];  // Defensive coding: stop potential memory leak in the
