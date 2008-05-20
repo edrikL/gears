@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <set>
 #include "gears/base/common/ipc_message_queue.h"
+#include "gears/base/common/process_utils_win32.h"
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/stopwatch.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
@@ -173,18 +174,6 @@ static bool WaitForRegisteredProcesses(int n, int timeout) {
   return false;
 }
 
-static HMODULE GetModuleHandleFromAddress(void *address) {
-  MEMORY_BASIC_INFORMATION mbi;
-  SIZE_T result = VirtualQuery(address, &mbi, sizeof(mbi));
-  return static_cast<HMODULE>(mbi.AllocationBase);
-}
-
-// Gets the handle to the currently executing module.
-static HMODULE GetCurrentModuleHandle() {
-  // pass a pointer to the current function
-  return GetModuleHandleFromAddress(GetCurrentModuleHandle);
-}
-
 struct SlaveProcess {
   IpcProcessId id;
   CHandle handle;
@@ -194,7 +183,7 @@ struct SlaveProcess {
   // Start a slave process via rundll32.exe
   bool Start() {
     wchar_t module_path[MAX_PATH];  // folder + filename
-    if (0 == GetModuleFileNameW(GetCurrentModuleHandle(),
+    if (0 == GetModuleFileNameW(GetGearsModuleHandle(),
                                 module_path, MAX_PATH)) {
       return false;
     }

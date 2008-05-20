@@ -27,14 +27,11 @@
 
 #include <windows.h>
 
-HMODULE GetModuleHandleFromAddress(void *address) {
+HMODULE GetGearsModuleHandle() {
   MEMORY_BASIC_INFORMATION mbi;
+  void *address = GetGearsModuleHandle;
   SIZE_T result = VirtualQuery(address, &mbi, sizeof(mbi));
   return static_cast<HMODULE>(mbi.AllocationBase);
-}
-
-HMODULE GetGearsModuleHandle() {
-  return GetModuleHandleFromAddress(GetModuleHandleFromAddress);
 }
 
 #endif  // WIN32

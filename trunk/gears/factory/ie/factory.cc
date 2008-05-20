@@ -26,6 +26,7 @@
 #include <assert.h>
 
 #include "gears/base/common/module_wrapper.h"
+#include "gears/base/common/process_utils_win32.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
@@ -94,7 +95,7 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
     }
     const int kMaxStringLength = 256;
     char16 error_text[kMaxStringLength];
-    if (LoadString(GetModuleHandle(PRODUCT_SHORT_NAME),
+    if (LoadString(GetGearsModuleHandle(),
                    IDS_VERSION_COLLISION_TEXT, error_text, kMaxStringLength)) {
       RETURN_EXCEPTION(error_text);
     } else {

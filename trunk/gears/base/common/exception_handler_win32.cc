@@ -74,7 +74,6 @@ ExceptionManager::~ExceptionManager() {
 static HMODULE GetModuleHandleFromAddress(void *address) {
   MEMORY_BASIC_INFORMATION mbi;
   SIZE_T result = VirtualQuery(address, &mbi, sizeof(mbi));
-
   return static_cast<HMODULE>(mbi.AllocationBase);
 }
 
