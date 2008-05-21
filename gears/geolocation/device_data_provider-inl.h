@@ -105,7 +105,7 @@ bool DeviceDataProviderBase<DataType>::RemoveListener(
 template<typename DataType>
 void DeviceDataProviderBase<DataType>::NotifyListeners() {
   MutexLock lock(&listeners_mutex_);
-  for (ListenersSet::const_iterator iter = listeners_.begin();
+  for (typename ListenersSet::const_iterator iter = listeners_.begin();
        iter != listeners_.end();
        ++iter) {
     (*iter)->DeviceDataUpdateAvailable(this);
