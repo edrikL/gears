@@ -37,16 +37,16 @@ extern "C" void android_log_helper(const char *tag,
     __attribute__((format(printf, 4, 5)));
 
 #define LOG_INNER(fmt, args...) \
-        do { \
-                android_log_helper("Gears", \
-                                   __FILE__, \
-                                   __LINE__, \
-                                   fmt , \
-                                   ## args ); \
-        } while(0)
+    do { \
+      android_log_helper("Gears", \
+                         __FILE__, \
+                         __LINE__, \
+                         fmt , \
+                         ## args ); \
+    } while(0)
 
 #define LOG(args) \
-        do { LOG_INNER args ; } while(0)
+    do { LOG_INNER args ; } while(0)
 
 #else // !defined(ANDROID)
 
@@ -84,11 +84,23 @@ const DWORD kMessageOnlyWindowStyle  = NULL;
 #include <assert.h>
 #include <pthread.h>
 
+class CurrentThreadID {
+ public:
+  CurrentThreadID() {
+    id_ = pthread_self();
+  }
+  pthread_t get() {
+    return id_;
+  }
+ private:
+  pthread_t id_;
+};
+
 #define DECL_SINGLE_THREAD \
-    pthread_t thread_id_;
+    CurrentThreadID thread_id_;
 
 #define ASSERT_SINGLE_THREAD() \
-    assert(pthread_equal(pthread_self(), thread_id_))
+    assert(pthread_equal(pthread_self(), thread_id_.get()))
 
 #else // !defined(ANDROID)
 
