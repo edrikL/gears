@@ -51,10 +51,12 @@
 #include "gears/base/common/url_utils.h"
 #include "gears/localserver/common/safe_http_request.h"
 #include "gears/localserver/firefox/cache_intercept.h"
+#include "gears/localserver/firefox/progress_input_stream.h"
 #include "gears/localserver/firefox/ui_thread.h"
 
 #ifndef OFFICIAL_BUILD
 #include "gears/blob/blob_input_stream_ff.h"
+#include "gears/blob/blob_interface.h"
 #endif
 
 NS_IMPL_ISUPPORTS5(FFHttpRequest,
@@ -332,7 +334,7 @@ bool FFHttpRequest::Send() {
   if (IsPostOrPut()) {
     return SendString(STRING16(L""));
   } else {
-    return SendImpl(NULL);
+    return SendImpl();
   }
 }
 
@@ -342,14 +344,15 @@ bool FFHttpRequest::SendString(const char16 *data) {
     return false;
 
   String16ToUTF8(data, &post_data_string_);
-  nsCOMPtr<nsIInputStream> post_data_stream;
-  if (!NewByteInputStream(getter_AddRefs(post_data_stream),
+  nsCOMPtr<nsIInputStream> string_stream;
+  if (!NewByteInputStream(getter_AddRefs(string_stream),
                           post_data_string_.data(),
                           post_data_string_.size())) {
     return false;
   }
-
-  return SendImpl(post_data_stream);
+  post_data_stream_ = new ProgressInputStream(this, string_stream,
+                                              post_data_string_.size());
+  return SendImpl();
 }
 
 #ifndef OFFICIAL_BUILD
@@ -358,11 +361,13 @@ bool FFHttpRequest::SendBlob(BlobInterface *blob) {
     return false;
   }
   nsCOMPtr<BlobInputStream> blob_stream(new BlobInputStream(blob));
-  return SendImpl(blob_stream);
+  post_data_stream_ = new ProgressInputStream(this, blob_stream,
+                                              blob->Length());
+  return SendImpl();
 }
 #endif  // !OFFICIAL_BUILD
 
-bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
+bool FFHttpRequest::SendImpl() {
   NS_ENSURE_TRUE(channel_ && !was_sent_, false);
   nsresult rv = NS_OK;
   was_sent_ = true;
@@ -370,7 +375,7 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   NS_ENSURE_TRUE(http_channel, false);
 
-  if (post_data_stream) {
+  if (post_data_stream_) {
     nsCOMPtr<nsIUploadChannel> upload_channel(do_QueryInterface(http_channel));
     NS_ENSURE_TRUE(upload_channel, false);
 
@@ -390,7 +395,7 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
     }
 
     const int kGetLengthFromStream = -1;
-    rv = upload_channel->SetUploadStream(post_data_stream,
+    rv = upload_channel->SetUploadStream(post_data_stream_,
                                          content_type,
                                          kGetLengthFromStream);
     NS_ENSURE_SUCCESS(rv, false);
@@ -707,6 +712,13 @@ NS_IMETHODIMP FFHttpRequest::OnStopRequest(nsIRequest *request,
   }
   SetReadyState(HttpRequest::COMPLETE);
   return NS_OK;
+}
+
+void FFHttpRequest::OnUploadProgress(int64 position, int64 total) {
+  if (IsComplete() || was_aborted_) return;
+  if (listener_) {
+    listener_->UploadProgress(this, position, total);
+  }
 }
 
 //------------------------------------------------------------------------------

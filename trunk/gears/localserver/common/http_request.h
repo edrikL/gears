@@ -127,8 +127,10 @@ class HttpRequest {
   // events and listeners
   class HttpListener {
    public:
-    virtual void ReadyStateChanged(HttpRequest *source) {};
-    virtual void DataAvailable(HttpRequest *source) {};
+    virtual void DataAvailable(HttpRequest *source) {}
+    virtual void ReadyStateChanged(HttpRequest *source) {}
+    virtual void UploadProgress(HttpRequest *source,
+                                int64 position, int64 total) {}
   };
 
   // Should be called prior to Send with the exception of setting

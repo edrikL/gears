@@ -1306,6 +1306,7 @@ FF3_CPPSRCS	+= \
 		http_request_ff.cc \
 		localserver_ff.cc \
 		managed_resource_store_ff.cc \
+		progress_input_stream.cc \
 		resource_store_ff.cc \
 		safe_http_request.cc \
 		$(NULL)

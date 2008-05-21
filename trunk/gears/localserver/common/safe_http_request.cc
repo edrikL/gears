@@ -293,6 +293,13 @@ bool SafeHttpRequest::SetListener(HttpRequest::HttpListener *listener,
   return true;
 }
 
+//------------------------------------------------------------------------------
+// ProgressInfo
+//------------------------------------------------------------------------------
+
+SafeHttpRequest::ProgressInfo::ProgressInfo()
+    : position(0), total(0), reported(0) {
+}
 
 //------------------------------------------------------------------------------
 // Trivial CallFooOnBarThread methods.
@@ -319,6 +326,11 @@ bool SafeHttpRequest::CallReadyStateChangedOnApartmentThread() {
 
 bool SafeHttpRequest::CallDataAvailableOnApartmentThread() {
   CallAsync(apartment_thread_id_, &SafeHttpRequest::OnDataAvailableCall);
+  return true;
+}
+
+bool SafeHttpRequest::CallUploadProgressOnApartmentThread() {
+  CallAsync(apartment_thread_id_, &SafeHttpRequest::OnUploadProgressCall);
   return true;
 }
 
@@ -434,6 +446,25 @@ void SafeHttpRequest::OnDataAvailableCall() {
   }
 }
 
+void SafeHttpRequest::OnUploadProgressCall() {
+  assert(IsApartmentThread());
+  int64 position;
+  int64 total;
+  {
+    MutexLock locker(&request_info_lock_);
+    if (was_aborted_) {
+      // The request was aborted after this message was sent, ignore it.
+      return;
+    }
+    position = request_info_.upload_progress.position;
+    total = request_info_.upload_progress.total;
+    request_info_.upload_progress.reported = position;
+  }
+  if (listener_) {
+    listener_->UploadProgress(this, position, total);
+  }
+}
+
 
 //------------------------------------------------------------------------------
 // Async ping-pong support.
@@ -534,6 +565,30 @@ void SafeHttpRequest::ReadyStateChanged(HttpRequest *source) {
   }
 }
 
+void SafeHttpRequest::UploadProgress(HttpRequest *source,
+                                     int64 position, int64 total) {
+  assert(IsSafeThread());
+  assert(source == native_http_request_.get());
+  bool event_pending;
+  {
+    MutexLock locker(&request_info_lock_);
+    if (was_aborted_) {
+      // The request we're processing has been aborted, but we have not yet
+      // received the OnAbort message. We pre-emptively call abort here, when
+      // the message does arrive, it will be ignored.
+      OnAbortCall();
+      return;
+    }
+
+    event_pending = (request_info_.upload_progress.position !=
+                     request_info_.upload_progress.reported);
+    request_info_.upload_progress.position = position;
+    request_info_.upload_progress.total = total;
+  }
+  if (!event_pending) {
+    CallUploadProgressOnApartmentThread();
+  }
+}
 
 //------------------------------------------------------------------------------
 // Other private member functions.

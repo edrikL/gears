@@ -123,6 +123,13 @@ class SafeHttpRequest
     ResponseInfo() : status(0), was_redirected(false) {}
   };
 
+  struct ProgressInfo {
+    ProgressInfo();
+    int64 position;
+    int64 total;
+    int64 reported;
+  };
+
   struct RequestInfo {
     ReadyState ready_state;
     ReadyState upcoming_ready_state;
@@ -136,7 +143,7 @@ class SafeHttpRequest
 #ifndef OFFICIAL_BUILD
     scoped_refptr<BlobInterface> post_data_blob;
 #endif
-
+    ProgressInfo upload_progress;
     ResponseInfo response;
 
     RequestInfo()
@@ -174,19 +181,22 @@ class SafeHttpRequest
   bool CallSendOnSafeThread();
   bool CallReadyStateChangedOnApartmentThread();
   bool CallDataAvailableOnApartmentThread();
+  bool CallUploadProgressOnApartmentThread();
   void OnAbortCall();
   void OnSendCall();
   void OnReadyStateChangedCall();
   void OnDataAvailableCall();
+  void OnUploadProgressCall();
 
   // Async ping-pong support.
   typedef void (SafeHttpRequest::*Method)();
   class AsyncMethodCall;
   void CallAsync(ThreadId thread_id, Method method);
 
-  // ReadyStateListener implementation.
+  // HttpListener implementation.
   void DataAvailable(HttpRequest *source);
   void ReadyStateChanged(HttpRequest *source);
+  void UploadProgress(HttpRequest *source, int64 position, int64 total);
 
   // Other private methods
   ReadyState GetState();

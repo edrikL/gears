@@ -589,3 +589,8 @@ void GearsHttpRequest::InitUnloadMonitor() {
         new JsEventMonitor(GetJsRunner(), JSEVENT_UNLOAD, this));
   }
 }
+
+void GearsHttpRequest::UploadProgress(HttpRequest *source,
+                                      int64 position, int64 total) {
+  // TODO(bgarcia): implement
+}
