@@ -118,6 +118,9 @@ class FFHttpRequest : public HttpRequest,
   virtual bool GetResponseHeader(const char16 *name, std::string16 *header);
   virtual bool Abort();
 
+  // Should only be used by ProgressInputStream.
+  void OnUploadProgress(int64 position, int64 total);
+
   // events
   virtual bool SetListener(HttpListener *listener, bool enable_data_available);
 
@@ -137,7 +140,7 @@ class FFHttpRequest : public HttpRequest,
   bool IsComplete() { return ready_state_ == HttpRequest::COMPLETE; }
   bool IsInteractiveOrComplete() { return IsInteractive() || IsComplete(); }
 
-  bool SendImpl(nsIInputStream *post_data);
+  bool SendImpl();
   bool NewByteInputStream(nsIInputStream **stream,
                           const char *data,
                           int data_size);
@@ -155,6 +158,7 @@ class FFHttpRequest : public HttpRequest,
   ReadyState ready_state_;
   bool async_;
   std::string16 method_;
+  nsCOMPtr<nsIInputStream> post_data_stream_;
   std::string post_data_string_;
   scoped_ptr< std::vector<uint8> > response_body_;
   std::string16 url_;

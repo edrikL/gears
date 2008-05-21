@@ -132,6 +132,7 @@ class GearsHttpRequest
   // HttpRequest::HttpListener implementation.
   virtual void DataAvailable(HttpRequest *source);
   virtual void ReadyStateChanged(HttpRequest *source);
+  virtual void UploadProgress(HttpRequest *source, int64 position, int64 total);
 
   // JsEventHandlerInterface implementation.
   virtual void HandleEvent(JsEventType event_type);
