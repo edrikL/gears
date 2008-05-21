@@ -203,12 +203,7 @@ void WinceRadioDataProvider::NotifyListenersIfUpdateAvailable() {
   // Unlock the mutex so that the callback can use methods that lock this mutex.
   data_mutex_.Unlock();
   if (update_available) {
-    MutexLock listeners_mutex_mutex(&listeners_mutex_);
-    for (ListenersSet::const_iterator iter = listeners_.begin();
-         iter != listeners_.end();
-         ++iter) {
-      (*iter)->DeviceDataUpdateAvailable(this);
-    }
+    NotifyListeners();
   }
 }
 

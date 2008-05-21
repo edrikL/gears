@@ -102,4 +102,14 @@ bool DeviceDataProviderBase<DataType>::RemoveListener(
   return true;
 }
 
+template<typename DataType>
+void DeviceDataProviderBase<DataType>::NotifyListeners() {
+  MutexLock lock(&listeners_mutex_);
+  for (ListenersSet::const_iterator iter = listeners_.begin();
+       iter != listeners_.end();
+       ++iter) {
+    (*iter)->DeviceDataUpdateAvailable(this);
+  }
+}
+
 #endif  // GEARS_GEOLOCATION_DEVICE_DATA_PROVIDER_INL_H__

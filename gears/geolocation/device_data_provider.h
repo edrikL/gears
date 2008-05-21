@@ -156,6 +156,9 @@ class DeviceDataProviderBase {
   ListenersSet listeners_;
   Mutex listeners_mutex_;
 
+  // Calls DeviceDataUpdateAvailable() on all registered listeners.
+  void NotifyListeners();
+
  private:
   void Ref();
   // Returns true when the ref count transitions from 1 to 0.

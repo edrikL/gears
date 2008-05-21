@@ -63,13 +63,7 @@ class MockDeviceDataProvider
       if (stop_event_.WaitWithTimeout(1000)) {
         break;
       }
-      listeners_mutex_.Lock();
-      for (typename ListenersSet::const_iterator iter = listeners_.begin();
-           iter != listeners_.end();
-           ++iter) {
-        (*iter)->DeviceDataUpdateAvailable(this);
-      }
-      listeners_mutex_.Unlock();
+      NotifyListeners();
     }
   }
 
@@ -125,15 +119,19 @@ DeviceDataProviderBase<WifiData>* DeviceDataProviderBase<WifiData>::Create() {
 
 #else  // USING_MOCK_DEVICE_DATA_PROVIDERS
 
-// Temporarily implement these methods to avoid link errors.
-// TODO(steveblock): Implement DeviceDataProviderBase for other platforms.
-
+#ifdef WINCE
+// WinCE uses WinceWifiDataProvider.
+#else
 // static
 template <>
 DeviceDataProviderBase<WifiData>* DeviceDataProviderBase<WifiData>::Create() {
+  // Temporarily implement this method here to avoid link errors.
+  // TODO(steveblock): Implement DeviceDataProviderBase<WifiData> for other
+  // platforms.
   assert(false);
   return NULL;
 }
+#endif
 
 #endif  // USING_MOCK_DEVICE_DATA_PROVIDERS
 
