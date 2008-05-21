@@ -48,7 +48,7 @@ class ProgressInputStream : public nsIInputStream {
   NS_DECL_NSIINPUTSTREAM
 
  private:
-  FFHttpRequest *request_;
+  scoped_refptr<FFHttpRequest> request_;
   nsCOMPtr<nsIInputStream> input_stream_;
   int64 position_;
   int64 total_;

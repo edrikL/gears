@@ -51,6 +51,7 @@ ProgressEvent::ProgressEvent(FFHttpRequest *request,
 }
 
 void ProgressEvent::Run() {
+  assert(request_.get());
   request_->OnUploadProgress(position_, total_);
 }
 
@@ -83,6 +84,7 @@ NS_IMETHODIMP ProgressInputStream::Available(PRUint32 *out_available_bytes) {
 }
 
 NS_IMETHODIMP ProgressInputStream::Close() {
+  request_.reset();
   return input_stream_->Close();
 }
 
@@ -106,7 +108,7 @@ NS_IMETHODIMP ProgressInputStream::ReadSegments(nsWriteSegmentFun writer,
                                                 out_num_bytes_read);
   if (result == NS_OK && *out_num_bytes_read > 0) {
     position_ += *out_num_bytes_read;
-    ProgressEvent *event(new ProgressEvent(request_, position_, total_));
+    ProgressEvent *event(new ProgressEvent(request_.get(), position_, total_));
     AsyncRouter::GetInstance()->CallAsync(GetUiThread(), event);
   }
   return result;
