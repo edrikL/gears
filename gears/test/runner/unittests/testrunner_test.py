@@ -9,7 +9,7 @@ class TestRunnerTest(unittest.TestCase):
     self.test_webserver = pmock.Mock()
     self.browser_launcher = pmock.Mock()
     self.browser_launcher.stubs().type().will(pmock.return_value("launcher"))
-    self.browser_launcher.stubs().kill()
+    self.browser_launcher.stubs().killAllInstances()
 
 
   def tearDown(self):
@@ -36,7 +36,7 @@ class TestRunnerTest(unittest.TestCase):
                                   .launch(pmock.eq(TestRunner.TEST_URL))
       self.test_webserver.expects(pmock.once()).testResults() \
         .will(pmock.return_value(expected_results[browser_launcher.type()]))
-      browser_launcher.expects(pmock.once()).kill()
+      browser_launcher.expects(pmock.once()).killAllInstances()
       
     self.test_webserver.expects(pmock.once()).shutdown()
       
@@ -84,7 +84,7 @@ class TestRunnerTest(unittest.TestCase):
     failing_browser_launcher.expects(pmock.once()) \
       .launch(pmock.eq(TestRunner.TEST_URL)) \
       .will(pmock.raise_exception(RuntimeError("browser lauch failed")))
-    failing_browser_launcher.expects(pmock.once()).kill()
+    failing_browser_launcher.expects(pmock.once()).killAllInstances()
     
     self.test_webserver.expects(pmock.once()) \
       .testResults() \
@@ -96,7 +96,7 @@ class TestRunnerTest(unittest.TestCase):
         .will(pmock.return_value("launcher2"))
     second_browser_launcher.expects(pmock.once()) \
       .launch(pmock.eq(TestRunner.TEST_URL)) 
-    second_browser_launcher.expects(pmock.once()).kill()
+    second_browser_launcher.expects(pmock.once()).killAllInstances()
     
     self.test_webserver.expects(pmock.once()) \
       .testResults() \
@@ -124,7 +124,7 @@ class TestRunnerTest(unittest.TestCase):
         .will(pmock.return_value("launcher1"))
     failing_browser_launcher.expects(pmock.once()) \
       .launch(pmock.eq(TestRunner.TEST_URL))
-    failing_browser_launcher.expects(pmock.once()).kill() \
+    failing_browser_launcher.expects(pmock.once()).killAllInstances() \
       .will(pmock.raise_exception(RuntimeError("browser kill failed")))
     
     self.test_webserver.expects(pmock.once()) \
@@ -137,7 +137,7 @@ class TestRunnerTest(unittest.TestCase):
         .will(pmock.return_value("launcher2"))
     second_browser_launcher.expects(pmock.once()) \
       .launch(pmock.eq(TestRunner.TEST_URL)) 
-    second_browser_launcher.expects(pmock.once()).kill()
+    second_browser_launcher.expects(pmock.once()).killAllInstances()
     
     self.test_webserver.expects(pmock.once()) \
       .testResults() \
