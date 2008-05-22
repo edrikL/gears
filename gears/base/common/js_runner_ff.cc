@@ -48,7 +48,6 @@
 #endif
 #include "gears/base/common/js_runner.h"
 
-#include "genfiles/console.h"
 #include "genfiles/database.h"
 #include "genfiles/localserver.h"
 #include "genfiles/workerpool.h"
@@ -547,10 +546,8 @@ bool JsRunner::InitJavaScriptEngine() {
     // localserver
     {GEARSLOCALSERVERINTERFACE_IID, NULL},
     {GEARSMANAGEDRESOURCESTOREINTERFACE_IID, NULL},
-    {GEARSRESOURCESTOREINTERFACE_IID, NULL},
+    {GEARSRESOURCESTOREINTERFACE_IID, NULL}
     // GEARSFILESUBMITTERINTERFACE_IID can never be created in a child worker
-    // console
-    {GEARSCONSOLEINTERFACE_IID, NULL}
   };
   const int num_classes = sizeof(classes) / sizeof(classes[0]);
 

@@ -31,7 +31,7 @@
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/detect_version_collision.h"
-#include "gears/console/ie/console_ie.h"
+#include "gears/console/console.h"
 #include "gears/database/ie/database.h"
 #include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
@@ -173,28 +173,27 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
 #endif
   } else if (object_name == STRING16(L"beta.desktop")) {
     CreateModule<GearsDesktop>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.httprequest")) {
+    CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.timer")) {
+    CreateModule<GearsTimer>(GetJsRunner(), &object);
 #ifdef OFFICIAL_BUILD
-  // The Geolocation API has not been finalized for official builds.
+  // The Canvas, Console, Geolocation, and Image APIs have not been finalized
+  // for official builds.
 #else
   } else if (object_name == STRING16(L"beta.geolocation")) {
     CreateModule<GearsGeolocation>(GetJsRunner(), &object);
-#endif  // OFFICIAL_BUILD
-  } else if (object_name == STRING16(L"beta.httprequest")) {
-    CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
 #ifdef WINCE
-// The Image API is not yet available for WinCE.
+  // Furthermore, Canvas, Console and Image are unimplemented on WinCE.
 #else
-#ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
-#else
-  } else if (object_name == STRING16(L"beta.imageloader")) {
-    CreateModule<GearsImageLoader>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.canvas")) {
     CreateModule<GearsCanvas>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.console")) {
+    CreateModule<GearsConsole>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.imageloader")) {
+    CreateModule<GearsImageLoader>(GetJsRunner(), &object);
 #endif
 #endif
-  } else if (object_name == STRING16(L"beta.timer")) {
-    CreateModule<GearsTimer>(GetJsRunner(), &object);
   } else {
     // Don't return an error here. Caller handles reporting unknown modules.
     error->clear();
@@ -218,17 +217,7 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
   CComQIPtr<IDispatch> idispatch;
 
   HRESULT hr = E_FAIL;
-  if (0) {  // dummy statement to support mixed "#ifdef" and "else if" below
-#ifdef WINCE
-  // TODO(aa): Implement console for WinCE.
-#else
-  } else if (object_name == STRING16(L"beta.console")) {
-    CComObject<GearsConsole> *obj;
-    hr = CComObject<GearsConsole>::CreateInstance(&obj);
-    base_class = obj;
-    idispatch = obj;
-#endif
-  } else if (object_name == STRING16(L"beta.database")) {
+  if (object_name == STRING16(L"beta.database")) {
     CComObject<GearsDatabase> *obj;
     hr = CComObject<GearsDatabase>::CreateInstance(&obj);
     base_class = obj;

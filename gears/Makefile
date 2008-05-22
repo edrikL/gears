@@ -874,64 +874,13 @@ PERF_TOOL_CPPSRCS += \
 # console/common (built for all browsers)
 
 $(BROWSER)_VPATH	+= \
-		console/common \
+		console \
 		$(NULL)
 
-# console/common
 $(BROWSER)_CPPSRCS	+= \
 		console.cc \
 		js_callback_logging_backend.cc \
 		$(NULL)
-
-#-----------------------------------------------------------------------------
-# console/firefox
-
-FF3_VPATH	+= \
-		console/firefox \
-		$(NULL)
-
-FF3_M4SRCS	+= \
-		console.idl.m4 \
-		$(NULL)
-
-FF3_IDLSRCS	+= \
-		console.idl \
-		$(NULL)
-
-FF3_CPPSRCS	+= \
-		console_ff.cc \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
-# console/ie
-
-IE_VPATH	+= \
-		console/ie \
-		$(NULL)
-
-IE_IDLSRCS	+= \
-		console.idl \
-		$(NULL)
-
-IE_CPPSRCS	+= \
-		console_ie.cc \
-		$(NULL)
-
-#-----------------------------------------------------------------------------
-# console/npapi
-
-ifeq ($(USING_NPAPI),1)
-$(BROWSER)_VPATH	+= \
-		console/npapi \
-		$(NULL)
-
-$(BROWSER)_IDLSRCS	+= \
-		$(NULL)
-
-$(BROWSER)_CPPSRCS	+= \
-		console_np.cc \
-		$(NULL)
-endif
 
 #-----------------------------------------------------------------------------
 # crash_sender

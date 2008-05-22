@@ -23,11 +23,12 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "gears/console/common/js_callback_logging_backend.h"
+#include "gears/console/js_callback_logging_backend.h"
 
 
-JsCallbackLoggingBackend::JsCallbackLoggingBackend(const std::string16 &topic)
-    : observer_topic_(topic), js_runner_(NULL) {
+JsCallbackLoggingBackend::JsCallbackLoggingBackend(const std::string16 &topic,
+                                                   JsRunnerInterface* js_runner)
+    : observer_topic_(topic), js_runner_(js_runner) {
   LogEvent::RegisterLogEventClass();
 }
 
@@ -79,10 +80,6 @@ void JsCallbackLoggingBackend::SetCallback(JsRootedCallback* callback) {
   } else {
     callback_.reset(callback);
   }
-}
-
-void JsCallbackLoggingBackend::SetJsRunner(JsRunnerInterface* js_runner) {
-  js_runner_ = js_runner;
 }
 
 void JsCallbackLoggingBackend::ClearCallback() {
