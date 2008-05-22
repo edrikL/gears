@@ -32,7 +32,7 @@
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/detect_version_collision.h"
 #include "gears/base/npapi/module_wrapper.h"
-#include "gears/console/npapi/console_np.h"
+#include "gears/console/console.h"
 #include "gears/database/npapi/database.h"
 #include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
