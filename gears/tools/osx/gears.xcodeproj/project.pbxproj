@@ -279,6 +279,8 @@
 		B566D3680DC79B66006BF071 /* jsscope.c in Sources */ = {isa = PBXBuildFile; fileRef = B566D3670DC79B66006BF071 /* jsscope.c */; };
 		B566D36A0DC79B99006BF071 /* jsmath.c in Sources */ = {isa = PBXBuildFile; fileRef = B566D3690DC79B99006BF071 /* jsmath.c */; };
 		B566D37B0DC79BD6006BF071 /* uxproces.c in Sources */ = {isa = PBXBuildFile; fileRef = B566D37A0DC79BD6006BF071 /* uxproces.c */; };
+		B56B85550DE5D54C008995AB /* console.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56B85500DE5D54C008995AB /* console.cc */; };
+		B56B85560DE5D54C008995AB /* js_callback_logging_backend.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56B85530DE5D54C008995AB /* js_callback_logging_backend.cc */; };
 		B56F66170DAD412400A5D6C5 /* file_dialog.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56F660F0DAD412400A5D6C5 /* file_dialog.cc */; };
 		B56F66180DAD412400A5D6C5 /* file_dialog_osx.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56F66100DAD412400A5D6C5 /* file_dialog_osx.cc */; };
 		B56F66190DAD412400A5D6C5 /* file_dialog_utils.cc in Sources */ = {isa = PBXBuildFile; fileRef = B56F66110DAD412400A5D6C5 /* file_dialog_utils.cc */; };
@@ -298,9 +300,6 @@
 		B57A58540DA92C6A001B0CC6 /* loader.mm in Sources */ = {isa = PBXBuildFile; fileRef = B57A58530DA92C6A001B0CC6 /* loader.mm */; };
 		B57AFFAE0D8836E500D60EB2 /* database_name_table.cc in Sources */ = {isa = PBXBuildFile; fileRef = B57AFFAC0D8836E500D60EB2 /* database_name_table.cc */; };
 		B57AFFC10D883F9800D60EB2 /* timer.cc in Sources */ = {isa = PBXBuildFile; fileRef = B57AFFBF0D883F9800D60EB2 /* timer.cc */; };
-		B57F3AD10DA101BC0088FE52 /* console.cc in Sources */ = {isa = PBXBuildFile; fileRef = B57F3ACD0DA101BC0088FE52 /* console.cc */; };
-		B57F3AD20DA101BC0088FE52 /* js_callback_logging_backend.cc in Sources */ = {isa = PBXBuildFile; fileRef = B57F3AD00DA101BC0088FE52 /* js_callback_logging_backend.cc */; };
-		B57F3ADB0DA102750088FE52 /* console_np.cc in Sources */ = {isa = PBXBuildFile; fileRef = B57F3AD90DA102750088FE52 /* console_np.cc */; };
 		B57F3BCA0DA11D250088FE52 /* database_utils_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B57F3BC80DA11D250088FE52 /* database_utils_test.cc */; };
 		B57F3BDD0DA11D860088FE52 /* file_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B57F3BDC0DA11D860088FE52 /* file_test.cc */; };
 		B58727B20DD4EDDE001E4E0B /* test.cc in Sources */ = {isa = PBXBuildFile; fileRef = B58727B00DD4EDDE001E4E0B /* test.cc */; };
@@ -831,6 +830,11 @@
 		B566D3670DC79B66006BF071 /* jsscope.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = jsscope.c; path = ../../../third_party/spidermonkey/js/src/jsscope.c; sourceTree = SOURCE_ROOT; };
 		B566D3690DC79B99006BF071 /* jsmath.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = jsmath.c; path = ../../../third_party/spidermonkey/js/src/jsmath.c; sourceTree = SOURCE_ROOT; };
 		B566D37A0DC79BD6006BF071 /* uxproces.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = uxproces.c; path = ../../../third_party/spidermonkey/nspr/pr/src/md/unix/uxproces.c; sourceTree = SOURCE_ROOT; };
+		B56B85500DE5D54C008995AB /* console.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = console.cc; path = ../../console/console.cc; sourceTree = SOURCE_ROOT; };
+		B56B85510DE5D54C008995AB /* log_event.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = log_event.h; path = ../../console/log_event.h; sourceTree = SOURCE_ROOT; };
+		B56B85520DE5D54C008995AB /* js_callback_logging_backend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = js_callback_logging_backend.h; path = ../../console/js_callback_logging_backend.h; sourceTree = SOURCE_ROOT; };
+		B56B85530DE5D54C008995AB /* js_callback_logging_backend.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = js_callback_logging_backend.cc; path = ../../console/js_callback_logging_backend.cc; sourceTree = SOURCE_ROOT; };
+		B56B85540DE5D54C008995AB /* console.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = console.h; path = ../../console/console.h; sourceTree = SOURCE_ROOT; };
 		B56F660E0DAD412400A5D6C5 /* file_dialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = file_dialog.h; path = ../../desktop/file_dialog.h; sourceTree = SOURCE_ROOT; };
 		B56F660F0DAD412400A5D6C5 /* file_dialog.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = file_dialog.cc; path = ../../desktop/file_dialog.cc; sourceTree = SOURCE_ROOT; };
 		B56F66100DAD412400A5D6C5 /* file_dialog_osx.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = file_dialog_osx.cc; path = ../../desktop/file_dialog_osx.cc; sourceTree = SOURCE_ROOT; };
@@ -859,13 +863,6 @@
 		B57AFFAD0D8836E500D60EB2 /* database_name_table.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = database_name_table.h; path = ../../base/common/database_name_table.h; sourceTree = SOURCE_ROOT; };
 		B57AFFBF0D883F9800D60EB2 /* timer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = timer.cc; path = ../../timer/timer.cc; sourceTree = SOURCE_ROOT; };
 		B57AFFC00D883F9800D60EB2 /* timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = timer.h; path = ../../timer/timer.h; sourceTree = SOURCE_ROOT; };
-		B57F3ACC0DA101BC0088FE52 /* log_event.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = log_event.h; path = ../../console/common/log_event.h; sourceTree = SOURCE_ROOT; };
-		B57F3ACD0DA101BC0088FE52 /* console.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = console.cc; path = ../../console/common/console.cc; sourceTree = SOURCE_ROOT; };
-		B57F3ACE0DA101BC0088FE52 /* console.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = console.h; path = ../../console/common/console.h; sourceTree = SOURCE_ROOT; };
-		B57F3ACF0DA101BC0088FE52 /* js_callback_logging_backend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = js_callback_logging_backend.h; path = ../../console/common/js_callback_logging_backend.h; sourceTree = SOURCE_ROOT; };
-		B57F3AD00DA101BC0088FE52 /* js_callback_logging_backend.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = js_callback_logging_backend.cc; path = ../../console/common/js_callback_logging_backend.cc; sourceTree = SOURCE_ROOT; };
-		B57F3AD90DA102750088FE52 /* console_np.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = console_np.cc; path = ../../console/npapi/console_np.cc; sourceTree = SOURCE_ROOT; };
-		B57F3ADA0DA102750088FE52 /* console_np.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = console_np.h; path = ../../console/npapi/console_np.h; sourceTree = SOURCE_ROOT; };
 		B57F3BC80DA11D250088FE52 /* database_utils_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = database_utils_test.cc; path = ../../database/common/database_utils_test.cc; sourceTree = SOURCE_ROOT; };
 		B57F3BC90DA11D250088FE52 /* database_utils_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = database_utils_test.h; path = ../../database/common/database_utils_test.h; sourceTree = SOURCE_ROOT; };
 		B57F3BDC0DA11D860088FE52 /* file_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = file_test.cc; path = ../../base/common/file_test.cc; sourceTree = SOURCE_ROOT; };
@@ -1923,31 +1920,13 @@
 		B57F3AC80DA1019D0088FE52 /* console */ = {
 			isa = PBXGroup;
 			children = (
-				B57F3ACA0DA101A70088FE52 /* common */,
-				B57F3AD70DA101D30088FE52 /* npapi */,
+				B56B85500DE5D54C008995AB /* console.cc */,
+				B56B85510DE5D54C008995AB /* log_event.h */,
+				B56B85520DE5D54C008995AB /* js_callback_logging_backend.h */,
+				B56B85530DE5D54C008995AB /* js_callback_logging_backend.cc */,
+				B56B85540DE5D54C008995AB /* console.h */,
 			);
 			name = console;
-			sourceTree = "<group>";
-		};
-		B57F3ACA0DA101A70088FE52 /* common */ = {
-			isa = PBXGroup;
-			children = (
-				B57F3ACC0DA101BC0088FE52 /* log_event.h */,
-				B57F3ACD0DA101BC0088FE52 /* console.cc */,
-				B57F3ACE0DA101BC0088FE52 /* console.h */,
-				B57F3ACF0DA101BC0088FE52 /* js_callback_logging_backend.h */,
-				B57F3AD00DA101BC0088FE52 /* js_callback_logging_backend.cc */,
-			);
-			name = common;
-			sourceTree = "<group>";
-		};
-		B57F3AD70DA101D30088FE52 /* npapi */ = {
-			isa = PBXGroup;
-			children = (
-				B57F3AD90DA102750088FE52 /* console_np.cc */,
-				B57F3ADA0DA102750088FE52 /* console_np.h */,
-			);
-			name = npapi;
 			sourceTree = "<group>";
 		};
 		B58727AB0DD4EDC0001E4E0B /* cctests */ = {
@@ -2595,9 +2574,6 @@
 				B5F583B30D9FE48E00B8FD50 /* async_task_sf.mm in Sources */,
 				B5F584020DA0AF0D00B8FD50 /* url_utils_np.cc in Sources */,
 				B5F584AA0DA0BB5C00B8FD50 /* url_utils_test.cc in Sources */,
-				B57F3AD10DA101BC0088FE52 /* console.cc in Sources */,
-				B57F3AD20DA101BC0088FE52 /* js_callback_logging_backend.cc in Sources */,
-				B57F3ADB0DA102750088FE52 /* console_np.cc in Sources */,
 				B57F3BCA0DA11D250088FE52 /* database_utils_test.cc in Sources */,
 				B57F3BDD0DA11D860088FE52 /* file_test.cc in Sources */,
 				B535DDC50DA951A000B49CDF /* safari_workaround.m in Sources */,
@@ -2671,6 +2647,8 @@
 				B5950BA10DDE033500D54424 /* blob_input_stream_sf.mm in Sources */,
 				B578D1800DE20BD8006FD633 /* mozjs_npruntime_utils.cc in Sources */,
 				B578D26C0DE228EF006FD633 /* js_standalone_engine_mozjs.cc in Sources */,
+				B56B85550DE5D54C008995AB /* console.cc in Sources */,
+				B56B85560DE5D54C008995AB /* js_callback_logging_backend.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
