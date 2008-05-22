@@ -65,8 +65,9 @@ database system.</p>
 <p>Data is stored and retrieved by executing SQL statements.  For information on the SQL syntax supported, see the SQLite document &quot;<a href="http://www.google.com/url?sa=D&amp;q=http://www.sqlite.org/lang.html">SQL as Understood By SQLite</a>&quot;, and also <a href="#sqlite_changes">local modifications to SQLite</a>, below.  Google Gears includes SQLite's <a href="#sqlite_fts">full-text search</a> extension fts2.</p>
 <h4>Security considerations</h4>
 <p>SQL statements passed to <code>execute()</code> can and should use bind parameters (<code>?</code>) to prevent SQL injection attacks.  Read about <a href="security.html#database">database security</a> best practices on the Security page. </p>
-<h4>Permission from user </h4>
-<p>The database module stores persistent data on the user's disk.  It is important that your application request the user's explicit permission to do so, to prevent inadvertently storing data on an untrusted computer.</p>
+<h4>Permission</h4>
+
+<p>This API requires user permission.  If you would like to customize the default dialog, you can explicitly call <code>google.gears.factory.getPermission()</code> - <a href="api_factory.html">see how.</a></p>
 
 
 <h2 id="example">Example</h2>
