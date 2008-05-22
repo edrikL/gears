@@ -362,7 +362,12 @@ bool SFHttpRequest::SendImpl(NSInputStream *post_data_stream) {
     return false;
   }
   
-  // TODO(playmobil): Handle case of ShouldBypassLocalServer().
+  if (ShouldBypassLocalServer()) {
+    headers_to_send_.push_back(
+        HttpHeader(HttpConstants::kXGoogleGearsBypassLocalServer,
+                   STRING16(L"1")));
+  }
+  
   if (![delegate_holder_->delegate send:post_data_stream
                               userAgent:user_agent
                                 headers:headers_to_send_

@@ -32,8 +32,8 @@
 // See description above
 @interface GearsWebCacheDB : NSObject
 
-// Return YES if |url| is stored locally
-+ (BOOL)canService:(NSURL *)url;
+// Return YES if |request|'s url is stored locally.
++ (BOOL)canService:(NSURLRequest *)request;
 
 // Return the data for |url| and |mimeType| (if specified).  If the |url| had
 // a redirect, |redirectURL| will be initialized to the final destination.

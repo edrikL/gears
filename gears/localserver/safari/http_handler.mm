@@ -88,7 +88,7 @@
 //------------------------------------------------------------------------------
 + (BOOL)canInitWithRequest:(NSURLRequest *)request {
   Class webCacheClass = NSClassFromString(@"GearsWebCacheDB");  
-  return [webCacheClass canService:[request URL]];
+  return [webCacheClass canService:request];
  }
 
 //------------------------------------------------------------------------------
