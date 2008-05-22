@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/xpcom/reflect/xptinfo/public/nsIInterfaceInfoManager.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0rc1-source/mozilla/xpcom/reflect/xptinfo/public/nsIInterfaceInfoManager.idl
  */
 
 #ifndef __gen_nsIInterfaceInfoManager_h__

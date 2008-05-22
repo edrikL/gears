@@ -1,8 +1,8 @@
 Win32, Linux-i386 and OSX prerelease version of Gecko 1.9 SDK.
 
-The win32 and linux subdirectories were downloaded from here on 4 March 2008:
+The win32 and linux subdirectories were downloaded from here on 21 May 2008:
 
-       http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9b5pre.en-US.*.sdk.*
+       http://ftp.mozilla.org/pub/mozilla.org/xulrunner/nightly/latest-trunk/xulrunner-1.9pre.en-US.*.sdk.*
 
 The osx subdirectory was incomplete. The xpidl utility was missing and the
 libraries were only compiled for PPC.
@@ -28,3 +28,7 @@ To get the osx directory, we built a universal gecko SDK from scratch:
 Steps similar to 1-4 (but perhaps without the reference to universal in
 mozconfig) should be used to create a fresh copy of the SDK for all platforms
 when FF3 is final.
+
+gecko_internal can be updated by running the following from a cygwin bash prompt:
+  cp `ls | xargs -I{} /usr/bin/find /cygdrive/c/firefox-3.0rc1-source/mozilla/ -name {}` ./
+nsIDOMClassInfo.h will then need to be updated by removing "nsCRT::" in NS_DOMCI_EXTENSION_ENTRY_BEGIN(_class)

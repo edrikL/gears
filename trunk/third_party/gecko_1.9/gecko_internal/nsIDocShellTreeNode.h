@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/docshell/base/nsIDocShellTreeNode.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0rc1-source/mozilla/docshell/base/nsIDocShellTreeNode.idl
  */
 
 #ifndef __gen_nsIDocShellTreeNode_h__

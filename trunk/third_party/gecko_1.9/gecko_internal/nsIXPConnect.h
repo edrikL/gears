@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/js/src/xpconnect/idl/nsIXPConnect.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0rc1-source/mozilla/js/src/xpconnect/idl/nsIXPConnect.idl
  */
 
 #ifndef __gen_nsIXPConnect_h__
@@ -728,11 +728,11 @@ NS_IMETHODIMP nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialTh
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 
 /* starting interface:    nsIXPConnect */
-#define NS_IXPCONNECT_IID_STR "20df9082-5b83-416d-ba80-0422af516d57"
+#define NS_IXPCONNECT_IID_STR "c1d4a482-1beb-4c82-9c0b-d2ab93acc7ef"
 
 #define NS_IXPCONNECT_IID \
-  {0x20df9082, 0x5b83, 0x416d, \
-    { 0xba, 0x80, 0x04, 0x22, 0xaf, 0x51, 0x6d, 0x57 }}
+  {0xc1d4a482, 0x1beb, 0x4c82, \
+    { 0x9c, 0x0b, 0xd2, 0xab, 0x93, 0xac, 0xc7, 0xef }}
 
 class nsIXPConnect : public nsISupports {
  public: 
@@ -1047,6 +1047,15 @@ class nsIXPConnect : public nsISupports {
   /* void GetXPCWrappedNativeJSClassInfo (out JSClassConstPtr clazz, out JSGetObjectOps ops1, out JSGetObjectOps ops2); */
   NS_IMETHOD GetXPCWrappedNativeJSClassInfo(const JSClass * *clazz, JSGetObjectOps *ops1, JSGetObjectOps *ops2) = 0;
 
+  /**
+     * Whether or not XPConnect should report all JS exceptions when returning
+     * from JS into C++. False by default, although any value set in the
+     * MOZ_REPORT_ALL_JS_EXCEPTIONS environment variable will override the value
+     * passed here.
+     */
+  /* void setReportAllJSExceptions (in boolean reportAllJSExceptions); */
+  NS_IMETHOD SetReportAllJSExceptions(PRBool reportAllJSExceptions) = 0;
+
 };
 
   NS_DEFINE_STATIC_IID_ACCESSOR(nsIXPConnect, NS_IXPCONNECT_IID)
@@ -1093,7 +1102,8 @@ class nsIXPConnect : public nsISupports {
   NS_IMETHOD AddJSHolder(void * aHolder, nsScriptObjectTracer * aTracer); \
   NS_IMETHOD RemoveJSHolder(void * aHolder); \
   NS_IMETHOD_(void) NoteJSContext(JSContext * aJSContext, nsCycleCollectionTraversalCallback & aCb); \
-  NS_IMETHOD GetXPCWrappedNativeJSClassInfo(const JSClass * *clazz, JSGetObjectOps *ops1, JSGetObjectOps *ops2); 
+  NS_IMETHOD GetXPCWrappedNativeJSClassInfo(const JSClass * *clazz, JSGetObjectOps *ops1, JSGetObjectOps *ops2); \
+  NS_IMETHOD SetReportAllJSExceptions(PRBool reportAllJSExceptions); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIXPCONNECT(_to) \
@@ -1137,7 +1147,8 @@ class nsIXPConnect : public nsISupports {
   NS_IMETHOD AddJSHolder(void * aHolder, nsScriptObjectTracer * aTracer) { return _to AddJSHolder(aHolder, aTracer); } \
   NS_IMETHOD RemoveJSHolder(void * aHolder) { return _to RemoveJSHolder(aHolder); } \
   NS_IMETHOD_(void) NoteJSContext(JSContext * aJSContext, nsCycleCollectionTraversalCallback & aCb) { return _to NoteJSContext(aJSContext, aCb); } \
-  NS_IMETHOD GetXPCWrappedNativeJSClassInfo(const JSClass * *clazz, JSGetObjectOps *ops1, JSGetObjectOps *ops2) { return _to GetXPCWrappedNativeJSClassInfo(clazz, ops1, ops2); } 
+  NS_IMETHOD GetXPCWrappedNativeJSClassInfo(const JSClass * *clazz, JSGetObjectOps *ops1, JSGetObjectOps *ops2) { return _to GetXPCWrappedNativeJSClassInfo(clazz, ops1, ops2); } \
+  NS_IMETHOD SetReportAllJSExceptions(PRBool reportAllJSExceptions) { return _to SetReportAllJSExceptions(reportAllJSExceptions); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIXPCONNECT(_to) \
@@ -1181,7 +1192,8 @@ class nsIXPConnect : public nsISupports {
   NS_IMETHOD AddJSHolder(void * aHolder, nsScriptObjectTracer * aTracer) { return !_to ? NS_ERROR_NULL_POINTER : _to->AddJSHolder(aHolder, aTracer); } \
   NS_IMETHOD RemoveJSHolder(void * aHolder) { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveJSHolder(aHolder); } \
   NS_IMETHOD_(void) NoteJSContext(JSContext * aJSContext, nsCycleCollectionTraversalCallback & aCb) { return !_to ? NS_ERROR_NULL_POINTER : _to->NoteJSContext(aJSContext, aCb); } \
-  NS_IMETHOD GetXPCWrappedNativeJSClassInfo(const JSClass * *clazz, JSGetObjectOps *ops1, JSGetObjectOps *ops2) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetXPCWrappedNativeJSClassInfo(clazz, ops1, ops2); } 
+  NS_IMETHOD GetXPCWrappedNativeJSClassInfo(const JSClass * *clazz, JSGetObjectOps *ops1, JSGetObjectOps *ops2) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetXPCWrappedNativeJSClassInfo(clazz, ops1, ops2); } \
+  NS_IMETHOD SetReportAllJSExceptions(PRBool reportAllJSExceptions) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetReportAllJSExceptions(reportAllJSExceptions); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -1455,6 +1467,12 @@ NS_IMETHODIMP_(void) nsXPConnect::NoteJSContext(JSContext * aJSContext, nsCycleC
 
 /* void GetXPCWrappedNativeJSClassInfo (out JSClassConstPtr clazz, out JSGetObjectOps ops1, out JSGetObjectOps ops2); */
 NS_IMETHODIMP nsXPConnect::GetXPCWrappedNativeJSClassInfo(const JSClass * *clazz, JSGetObjectOps *ops1, JSGetObjectOps *ops2)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void setReportAllJSExceptions (in boolean reportAllJSExceptions); */
+NS_IMETHODIMP nsXPConnect::SetReportAllJSExceptions(PRBool reportAllJSExceptions)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

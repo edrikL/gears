@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/protocol/file/public/nsIFileProtocolHandler.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0rc1-source/mozilla/netwerk/protocol/file/public/nsIFileProtocolHandler.idl
  */
 
 #ifndef __gen_nsIFileProtocolHandler_h__

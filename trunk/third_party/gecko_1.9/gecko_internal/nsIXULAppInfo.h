@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/xpcom/system/nsIXULAppInfo.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0rc1-source/mozilla/xpcom/system/nsIXULAppInfo.idl
  */
 
 #ifndef __gen_nsIXULAppInfo_h__

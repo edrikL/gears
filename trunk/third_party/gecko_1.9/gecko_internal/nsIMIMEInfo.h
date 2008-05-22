@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/mime/public/nsIMIMEInfo.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0rc1-source/mozilla/netwerk/mime/public/nsIMIMEInfo.idl
  */
 
 #ifndef __gen_nsIMIMEInfo_h__

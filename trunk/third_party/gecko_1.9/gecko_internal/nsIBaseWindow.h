@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/widget/public/nsIBaseWindow.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0rc1-source/mozilla/widget/public/nsIBaseWindow.idl
  */
 
 #ifndef __gen_nsIBaseWindow_h__
