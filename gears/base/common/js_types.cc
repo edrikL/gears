@@ -1936,59 +1936,6 @@ void ConvertJsParamToToken(const JsParamToSend &param,
   }
 }
 
-int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
-  bool has_optional = false;
-
-  int argc = static_cast<int>(disp_params_->cArgs);
-  if (argc > output_argc) {
-    SetException(STRING16(L"Too many parameters."));
-    return 0;
-  }
-
-  for (int i = 0; i < output_argc; ++i) {
-    assert(output_argv[i].value_ptr);
-
-    has_optional |= output_argv[i].requirement == JSPARAM_OPTIONAL;
-    if (output_argv[i].requirement == JSPARAM_REQUIRED)
-      assert(!has_optional);  // should not have required arg after optional
-
-    if (i >= static_cast<int>(disp_params_->cArgs) ||
-        GetArgumentType(i) == JSPARAM_NULL || 
-        GetArgumentType(i) == JSPARAM_UNDEFINED) {
-      // Out of arguments
-      if (output_argv[i].requirement == JSPARAM_REQUIRED) {
-        std::string16 msg;
-        msg += STRING16(L"Required argument ");
-        msg += IntegerToString16(i + 1);
-        msg += STRING16(L" is missing.");
-        SetException(msg.c_str());
-      }
-
-      // If failed on index [N], then N args succeeded
-      return i;
-    }
-
-    // args in input array are in reverse order
-    int input_arg_index = disp_params_->cArgs - i - 1;
-    if (!ConvertTokenToArgument(this, disp_params_->rgvarg[input_arg_index],
-                                &output_argv[i])) {
-      std::string16 msg(STRING16(L"Argument "));
-      msg += IntegerToString16(i + 1);
-      msg += STRING16(L" has invalid type or is outside allowed range.");
-      SetException(msg);
-      return i;
-    }
-  }
-
-  return output_argc;
-}
-
-JsParamType JsCallContext::GetArgumentType(int i) {
-  if (i >= static_cast<int>(disp_params_->cArgs)) return JSPARAM_UNKNOWN;
-  int index = disp_params_->cArgs - i - 1;
-  return JsTokenGetType(disp_params_->rgvarg[index], js_context());
-}
-
 void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
   // There is only a valid retval_ if the javascript caller is expecting a
   // return value.
@@ -2134,15 +2081,39 @@ void JsCallContext::SetException(const std::string16 &message) {
 #endif  // BROWSER_NPAPI
 
 #if defined(BROWSER_FF) || defined(BROWSER_NPAPI)
+
+int JsCallContext::GetArgumentCount() {
+  return argc_;
+}
+
+const JsToken &JsCallContext::GetArgument(int index) {
+  return argv_[index];
+}
+
+#elif BROWSER_IE
+
+int JsCallContext::GetArgumentCount() {
+  return disp_params_->cArgs;
+}
+
+const JsToken &JsCallContext::GetArgument(int index) {
+  int arg_index = disp_params_->cArgs - index - 1;
+  return disp_params_->rgvarg[arg_index];
+}
+
+#endif
+
 int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
   bool has_optional = false;
 
-  if (argc_ > output_argc) {
+  if (GetArgumentCount() > output_argc) {
     SetException(STRING16(L"Too many parameters."));
     return 0;
   }
 
   for (int i = 0; i < output_argc; ++i) {
+    assert(output_argv[i].value_ptr);
+
     has_optional |= output_argv[i].requirement == JSPARAM_OPTIONAL;
     if (output_argv[i].requirement == JSPARAM_REQUIRED)
       assert(!has_optional);  // should not have required arg after optional
@@ -2150,7 +2121,7 @@ int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
     // TODO(mpcomplete): We need to handle this more generally.  We should
     // continue processing arguments for the case where a developer does
     // something like 'method(null, foo)' if the first argument is optional.
-    if (i >= argc_ ||
+    if (i >= GetArgumentCount() ||
         GetArgumentType(i) == JSPARAM_NULL || 
         GetArgumentType(i) == JSPARAM_UNDEFINED) {
       // Out of arguments
@@ -2166,7 +2137,7 @@ int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
       return i;
     }
 
-    if (!ConvertTokenToArgument(this, argv_[i], &output_argv[i])) {
+    if (!ConvertTokenToArgument(this, GetArgument(i), &output_argv[i])) {
       std::string16 msg(STRING16(L"Argument "));
       msg += IntegerToString16(i + 1);
       msg += STRING16(L" has invalid type or is outside allowed range.");
@@ -2179,10 +2150,9 @@ int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
 }
 
 JsParamType JsCallContext::GetArgumentType(int i) {
-  if (i >= argc_) return JSPARAM_UNKNOWN;
-  return JsTokenGetType(argv_[i], js_context());
+  if (i >= GetArgumentCount()) return JSPARAM_UNKNOWN;
+  return JsTokenGetType(GetArgument(i), js_context());
 }
-#endif
 
 
 //-----------------------------------------------------------------------------

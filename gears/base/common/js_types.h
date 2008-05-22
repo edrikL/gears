@@ -574,6 +574,9 @@ class JsCallContext {
 #endif
 
  private:
+  int GetArgumentCount();
+  const JsToken &GetArgument(int index);
+
   JsContextPtr js_context_;
   bool is_exception_set_;
 #if BROWSER_NPAPI
