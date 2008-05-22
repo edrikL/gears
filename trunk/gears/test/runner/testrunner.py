@@ -66,7 +66,7 @@ class TestRunner:
     test_results[browser_launcher.type()] = test_server.testResults()
     if automated:
       try:
-        browser_launcher.kill()
+        browser_launcher.killAllInstances()
       except:
         print 'Error killing browser ', sys.exc_info()[0]
           

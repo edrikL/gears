@@ -3,6 +3,12 @@ import subprocess
 import signal
 import time
 
+# Windows imports.
+if os.name == 'nt':
+  import win32api
+  import win32con
+  import wmi
+
 class BaseBrowserLauncher:
   """ Handle launching and killing of a specific test browser. """
   # Time given to allow firefox to update test profile and close.
@@ -10,124 +16,71 @@ class BaseBrowserLauncher:
   FIREFOX_QUITTING_SLEEP_TIME = 15 #seconds
 
   def launch(self, url):
-    """ Externally facing launch command.
-
-    The default launch is overloaded in most implementations.
-    
-    Args:
-      url: Url to launch
-    """
-    self._launchImp(url)
-
-  def _launchImp(self, url):
     """ Launch browser to the given url and track the returned process.
     
-    Handle chrome addresses by using the -chrome parameter.
-
     Args:
       url: Url to launch
     """
-    command = [self.browser_path]
-    command.extend(self.args)
-    if url[0:9] == 'chrome://':
-      command.append('-chrome')
+    command = self.browser_command
     command.append(url)
     print 'launching: %s' % str(command)
     self.process = subprocess.Popen(command)
   
-  def _startFirefox(self, url):
-    """ Prep Firefox by launching quit, then launch url.
-
-    Firefox restarts itself when it is first launched after installing
-    a new addon.  In order to track the process by pid, we launch
-    the browser to ensure addon installation is complete and call
-    the provided quit function, then launch the browser
-    a second time to the specified url.
-
-    Args:
-      url: Url to launch
-    """
-    quit_url = 'chrome://quit/content/quit.html'
-    # Launch quit then wait for Firefox to close completely.
-    self._launchImp(quit_url)
-    time.sleep(BaseBrowserLauncher.FIREFOX_QUITTING_SLEEP_TIME)
-    self._launchImp(url)    
-
-  def kill(self):
-    """ Kill the browser process for clean-up. """
-    print 'killing process: %s' % str(self.process.pid)
-    os.kill(self.process.pid, signal.SIGINT)
-
 
 class BaseWin32Launcher(BaseBrowserLauncher):
-  """ Launcher for Win32 platforms. """
+  """ Abstract base class for Win32 launchers. """
 
-  def _launchImp(self, url):
-    """ Do launch. 
+  def _killInstancesByName(self, process_name):
+    """ Kill all instances of given process name.
     
-    Windows doesn't use the -chrome parameter.
+    Args:
+      process_name: String name of process to kill.
     """
-    command = [self.browser_path]
-    command.extend(self.args)
-    command.append(url)
-    print 'launching: %s' % str(command)
-    self.process = subprocess.Popen(command)
-
-  def kill(self):
-    """ Kill browser process. """
-    import win32api
-    print 'killing process: %s' % str(self.process.pid)
-    win32api.TerminateProcess(int(self.process._handle), -1)
+    process_list = wmi.WMI().Win32_Process(Name=process_name)
+    for process in process_list:
+      pid = process.ProcessID
+      print 'killing process: %d' % pid
+      handle = win32api.OpenProcess(win32con.PROCESS_TERMINATE, 0, pid)
+      win32api.TerminateProcess(handle, 0)
+      win32api.CloseHandle(handle)
 
 
-class Firefox2Win32Launcher(BaseWin32Launcher):
+class BaseFirefoxWin32Launcher(BaseWin32Launcher):
+  """ Abstract base class for win32 firefox launchers. """
+
+  def __init__(self, profile, firefox_path, automated=True):
+    self.killAllInstances()
+    program_files = os.getenv('PROGRAMFILES')
+    self.browser_command = [os.path.join(program_files, firefox_path)]
+    if automated:
+      self.browser_command.extend(['-profile', profile])
+  
+  def killAllInstances(self):
+    self._killInstancesByName('firefox.exe')
+  
+
+class Firefox2Win32Launcher(BaseFirefoxWin32Launcher):
   """ Launcher for ff2 in Windows. """
 
   FIREFOX_PATH = 'Mozilla Firefox\\firefox.exe'
 
   def __init__(self, profile, automated=True):
-    program_files = os.getenv('PROGRAMFILES')
-    self.browser_path = os.path.join(program_files, 
-                                     Firefox2Win32Launcher.FIREFOX_PATH)
-    if automated:
-      self.args = ['-profile', profile]
-    else:
-      self.args = []
-  
-  def launch(self, url):
-    """ Launch Firefox.
-
-    Args:
-      url: Url to launch.
-    """
-    self._startFirefox(url)
+    BaseFirefoxWin32Launcher.__init__(self, profile, self.FIREFOX_PATH, 
+                                      automated)
 
   def type(self):
     return 'Firefox2Win32'
 
 
-class Firefox3Win32Launcher(BaseWin32Launcher):
+class Firefox3Win32Launcher(BaseFirefoxWin32Launcher):
   """ Launcher for ff3 on Windows. """
 
   FIREFOX_PATH = 'Mozilla Firefox 3 Beta 5\\firefox.exe'
 
   def __init__(self, profile, automated=True):
-    program_files = os.getenv('PROGRAMFILES')
-    self.browser_path = os.path.join(program_files,
-                                     Firefox3Win32Launcher.FIREFOX_PATH)
-    if automated:
-      self.args = ['-profile', profile]
-    else:
-      self.args = []
+    BaseFirefoxWin32Launcher.__init__(self, profile, self.FIREFOX_PATH, 
+                                      automated)
   
-  def launch(self, url):
-    """ Launch Firefox.
-
-    Args:
-      url: Url to launch.
-    """
-    self._startFirefox(url)
-
   def type(self):
     return 'Firefox3Win32'
 
@@ -136,26 +89,17 @@ class IExploreWin32Launcher(BaseWin32Launcher):
   """ Launcher for iexplorer browser on Win32 platforms. """
 
   def __init__(self, automated=True):
+    self.killAllInstances()
     program_files = os.getenv('PROGRAMFILES')
-    self.browser_path = os.path.join(program_files,
-                                     'internet explorer\\iexplore.exe')
-    self.args = []
+    ie_path = os.path.join(program_files, 'internet explorer\\iexplore.exe')
+    self.browser_command = [ie_path]
 
-  def kill(self):
+  def killAllInstances(self):
     """ Kill all instances of iexplore.exe
     
     Must kill ie by name and not pid for ie7 compatibility.
     """
-    import win32api
-    import win32pdhutil
-    import win32con
-
-    pid_list = win32pdhutil.FindPerformanceAttributesByName('iexplore')
-    for pid in pid_list:
-      print 'killing process: %d' % pid
-      handle = win32api.OpenProcess(win32con.PROCESS_TERMINATE, 0, pid)
-      win32api.TerminateProcess(handle, 0)
-      win32api.CloseHandle(handle)
+    self._killInstancesByName('iexplore.exe')
 
   def type(self):
     return 'IExploreWin32'
@@ -176,32 +120,59 @@ class IExploreWinCeLauncher(BaseBrowserLauncher):
     launch_cmd = ['rapistart.exe', '\windows\iexplore.exe', url]
     subprocess.Popen(launch_cmd)
   
-  def kill(self):
+  def killAllInstances(self):
     """ Kill browser. """
     # Requires pkill.exe in path.
+    print 'Killing pocket ie on device'
     kill_cmd = ['pkill.exe', 'iexplore.exe']
     subprocess.Popen(kill_cmd)
 
 
-class BaseFirefoxMacLauncher(BaseBrowserLauncher):
-  """ Launcher for firefox on OSX. """
+class BasePosixLauncher(BaseBrowserLauncher):
+  """ Abstract base class for posix platform launchers. """
+
+  def _killInstancesByName(self, process_name):
+    """ Kill all instances of process process_name.
+
+    Args:
+      process_name: string name of process to kill
+    """
+    print 'Attempting to kill all processes named %s' % process_name
+    kill_cmd = ['killall', process_name]
+    subprocess.Popen(kill_cmd)
+
+
+class SafariMacLauncher(BasePosixLauncher):
+  """ Launcher for Safari on OS X. """
+
+  def __init__(self, automated=True):
+    self.killAllInstances()
+    self.browser_command = ['open', '-a', 'Safari']
+
+  def killAllInstances(self):
+    """ Kill all instances of safari.
+
+    Must kill safari by name, as the pid can't be tracked on launch.
+    """
+    self._killInstancesByName('Safari')
+
+  def type(self):
+    return 'SafariMac'
+
+
+class BaseFirefoxMacLauncher(BasePosixLauncher):
+  """ Abstract base class for firefox launchers on OSX. """
 
   def __init__(self, profile, automated, firefox_bin):
     """ Set firefox vars. """
-    self.browser_path = firefox_bin
+    self._killInstancesByName('firefox-bin')
+    self.browser_command = [firefox_bin]
     if automated:
-      self.args = ['-P', profile]
-    else:
-      self.args = []
-    
-
-  def launch(self, url):
-    """ Launch Firefox.
-
-    Args:
-      url: Url to launch.
-    """
-    self._startFirefox(url)
+      self.browser_command.extend(['-P', profile])
+  
+  def killAllInstances(self):
+    """ Kill all firefox instances. """
+    self._killInstancesByName('firefox-bin')
   
 
 class Firefox2MacLauncher(BaseFirefoxMacLauncher):
@@ -230,50 +201,18 @@ class Firefox3MacLauncher(BaseFirefoxMacLauncher):
     return 'Firefox3Mac'
 
 
-class FirefoxLinuxLauncher(BaseBrowserLauncher):
+class FirefoxLinuxLauncher(BasePosixLauncher):
   """ Launcher for firefox on linux, extends BrowserLauncher. """
 
   def __init__(self, profile, automated=True):
-    """ Set linux vars. """
+    self.killAllInstances()
     home = os.getenv('HOME')
-    self.browser_path = 'firefox'
+    self.browser_command = ['firefox']
     if automated:
-      self.args = ['-P', profile]
-    else:
-      self.args = []
+      self.browser_command.extend(['-P', profile])
     
+  def killAllInstances(self):
+    self._killInstancesByName('firefox-bin')
+
   def type(self):
     return 'FirefoxLinux'
-
-  def launch(self, url):
-    """ Launch Firefox.
-
-    Args:
-      url: Url to launch.
-    """
-    self._startFirefox(url)
-
-  def kill(self):
-    """ Kill firefox-bin process.
-
-    Must first find the pid, then kill the process.
-    """
-    # Find firefox-bin process by running ps
-    command = ['ps', '-C', 'firefox-bin']
-    p = subprocess.Popen(command, stdout=subprocess.PIPE)
-    
-    # first line in ps output contains column descriptions
-    num_header_lines = 1
-
-    # Read pid's from stdout and kill them
-    ps_lines = p.stdout.readlines()
-    if len(ps_lines) > num_header_lines:
-      process_list = ps_lines[num_header_lines:]
-
-      # Loop in case there are multiple running
-      for process_line_text in process_list:
-        # Format the text in the process description into a list
-        # Depends on space separated columns, removes leading spaces
-        process_line = process_line_text.strip().split(' ')
-        pid = int(process_line[0])
-        os.kill(pid, signal.SIGINT)
