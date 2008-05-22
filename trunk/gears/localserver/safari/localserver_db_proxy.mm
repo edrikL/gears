@@ -32,7 +32,20 @@
 
 @implementation GearsWebCacheDB
 //------------------------------------------------------------------------------
-+ (BOOL)canService:(NSURL *)url {
++ (BOOL)canService:(NSURLRequest *)request {
+  static NSString *bypass_localserver_header_name =  
+      (NSString *)CFStringCreateWithString16(
+                      HttpConstants::kXGoogleGearsBypassLocalServer);
+
+  // Check if the bypasslocalserver header field exists.
+  if ([request respondsToSelector:@selector(valueForHTTPHeaderField:)]) {
+    if ([request valueForHTTPHeaderField:bypass_localserver_header_name] 
+        != nil) {
+      return NO;
+    }
+  }
+
+  NSURL *url = [request URL];
   NSString *urlStr = [url absoluteString];
   std::string16 url16;
   
