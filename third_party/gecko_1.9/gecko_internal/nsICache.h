@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/cache/public/nsICache.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0rc1-source/mozilla/netwerk/cache/public/nsICache.idl
  */
 
 #ifndef __gen_nsICache_h__

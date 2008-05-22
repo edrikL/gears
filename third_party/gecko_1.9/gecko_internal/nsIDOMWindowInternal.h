@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/dom/public/idl/base/nsIDOMWindowInternal.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0rc1-source/mozilla/dom/public/idl/base/nsIDOMWindowInternal.idl
  */
 
 #ifndef __gen_nsIDOMWindowInternal_h__
@@ -24,11 +24,11 @@ class nsIVariant; /* forward declaration */
 
 
 /* starting interface:    nsIDOMWindowInternal */
-#define NS_IDOMWINDOWINTERNAL_IID_STR "89b9ff5a-78db-430b-b3b4-66469457435a"
+#define NS_IDOMWINDOWINTERNAL_IID_STR "3414ebc7-731f-4697-9f43-aca6f5050875"
 
 #define NS_IDOMWINDOWINTERNAL_IID \
-  {0x89b9ff5a, 0x78db, 0x430b, \
-    { 0xb3, 0xb4, 0x66, 0x46, 0x94, 0x57, 0x43, 0x5a }}
+  {0x3414ebc7, 0x731f, 0x4697, \
+    { 0x9f, 0x43, 0xac, 0xa6, 0xf5, 0x05, 0x08, 0x75 }}
 
 class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
  public: 
@@ -227,17 +227,21 @@ class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
    * Implements a safe message-passing system which can cross same-origin
    * boundaries.
    *
-   * This method, when called, causes a MessageEvent to be dispatched at the
-   * primary document for the window upon which this method is called.  (Note
-   * that the postMessage property on windows is allAccess and thus is readable
-   * cross-origin.)  The dispatched event will have message as its data, the
-   * calling context's window as its source, and a domain and URI determined by
-   * the calling context's main document URI.
+   * This method, when called, causes a MessageEvent to be asynchronously
+   * dispatched at the primary document for the window upon which this method is
+   * called.  (Note that the postMessage property on windows is allAccess and
+   * thus is readable cross-origin.)  The dispatched event will have message as
+   * its data, the calling context's window as its source, and an origin
+   * determined by the calling context's main document URI.  The targetOrigin
+   * argument specifies a URI and is used to restrict the message to be sent
+   * only when the target window has the same origin as targetOrigin (since,
+   * when the sender and the target have different origins, neither can read the
+   * location of the other).
    * 
    * See the WHATWG HTML5 specification, section 6.4, for more details.
    */
-  /* [binaryname (PostMessageMoz)] void postMessage (in DOMString message, [optional] in DOMString origin); */
-  NS_SCRIPTABLE NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & origin) = 0;
+  /* [binaryname (PostMessageMoz)] void postMessage (in DOMString message, in DOMString targetOrigin); */
+  NS_SCRIPTABLE NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & targetOrigin) = 0;
 
 };
 
@@ -312,7 +316,7 @@ class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
   NS_SCRIPTABLE NS_IMETHOD Btoa(const nsAString & aBase64Data, nsAString & _retval); \
   NS_SCRIPTABLE NS_IMETHOD GetFrameElement(nsIDOMElement * *aFrameElement); \
   NS_SCRIPTABLE NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval); \
-  NS_SCRIPTABLE NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & origin); 
+  NS_SCRIPTABLE NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & targetOrigin); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOMWINDOWINTERNAL(_to) \
@@ -383,7 +387,7 @@ class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
   NS_SCRIPTABLE NS_IMETHOD Btoa(const nsAString & aBase64Data, nsAString & _retval) { return _to Btoa(aBase64Data, _retval); } \
   NS_SCRIPTABLE NS_IMETHOD GetFrameElement(nsIDOMElement * *aFrameElement) { return _to GetFrameElement(aFrameElement); } \
   NS_SCRIPTABLE NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval) { return _to ShowModalDialog(aURI, aArgs, aOptions, _retval); } \
-  NS_SCRIPTABLE NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & origin) { return _to PostMessageMoz(message, origin); } 
+  NS_SCRIPTABLE NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & targetOrigin) { return _to PostMessageMoz(message, targetOrigin); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOMWINDOWINTERNAL(_to) \
@@ -454,7 +458,7 @@ class NS_NO_VTABLE NS_SCRIPTABLE nsIDOMWindowInternal : public nsIDOMWindow2 {
   NS_SCRIPTABLE NS_IMETHOD Btoa(const nsAString & aBase64Data, nsAString & _retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->Btoa(aBase64Data, _retval); } \
   NS_SCRIPTABLE NS_IMETHOD GetFrameElement(nsIDOMElement * *aFrameElement) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetFrameElement(aFrameElement); } \
   NS_SCRIPTABLE NS_IMETHOD ShowModalDialog(const nsAString & aURI, nsIVariant *aArgs, const nsAString & aOptions, nsIVariant **_retval) { return !_to ? NS_ERROR_NULL_POINTER : _to->ShowModalDialog(aURI, aArgs, aOptions, _retval); } \
-  NS_SCRIPTABLE NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & origin) { return !_to ? NS_ERROR_NULL_POINTER : _to->PostMessageMoz(message, origin); } 
+  NS_SCRIPTABLE NS_IMETHOD PostMessageMoz(const nsAString & message, const nsAString & targetOrigin) { return !_to ? NS_ERROR_NULL_POINTER : _to->PostMessageMoz(message, targetOrigin); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -870,8 +874,8 @@ NS_IMETHODIMP nsDOMWindowInternal::ShowModalDialog(const nsAString & aURI, nsIVa
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* [binaryname (PostMessageMoz)] void postMessage (in DOMString message, [optional] in DOMString origin); */
-NS_IMETHODIMP nsDOMWindowInternal::PostMessageMoz(const nsAString & message, const nsAString & origin)
+/* [binaryname (PostMessageMoz)] void postMessage (in DOMString message, in DOMString targetOrigin); */
+NS_IMETHODIMP nsDOMWindowInternal::PostMessageMoz(const nsAString & message, const nsAString & targetOrigin)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

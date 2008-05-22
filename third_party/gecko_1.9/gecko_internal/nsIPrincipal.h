@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/caps/idl/nsIPrincipal.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0rc1-source/mozilla/caps/idl/nsIPrincipal.idl
  */
 
 #ifndef __gen_nsIPrincipal_h__
@@ -26,6 +26,15 @@ class nsIURI; /* forward declaration */
   {0xb8268b9a, 0x2403, 0x44ed, \
     { 0x81, 0xe3, 0x61, 0x40, 0x75, 0xc9, 0x20, 0x34 }}
 
+/**
+ * WARNING!! The JEP needs to call GetOrigin()  to support
+ * JavaScript-to-Java LiveConnect.  So every change to the  nsIPrincipal
+ * interface (big enough to change its IID) also breaks JavaScript-to-Java
+ * LiveConnect on mac.
+ *
+ * If you REALLY have to change this interface, please mark your bug as
+ * blocking bug 293973.
+ */
 class NS_NO_VTABLE NS_SCRIPTABLE nsIPrincipal : public nsISerializable {
  public: 
 

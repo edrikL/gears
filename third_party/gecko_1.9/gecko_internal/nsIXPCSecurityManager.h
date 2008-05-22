@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/js/src/xpconnect/idl/nsIXPCSecurityManager.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0rc1-source/mozilla/js/src/xpconnect/idl/nsIXPCSecurityManager.idl
  */
 
 #ifndef __gen_nsIXPCSecurityManager_h__

@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/embedding/components/windowwatcher/public/nsIPromptService.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0rc1-source/mozilla/embedding/components/windowwatcher/public/nsIPromptService.idl
  */
 
 #ifndef __gen_nsIPromptService_h__

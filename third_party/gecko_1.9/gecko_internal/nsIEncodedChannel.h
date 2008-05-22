@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/netwerk/base/public/nsIEncodedChannel.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0rc1-source/mozilla/netwerk/base/public/nsIEncodedChannel.idl
  */
 
 #ifndef __gen_nsIEncodedChannel_h__

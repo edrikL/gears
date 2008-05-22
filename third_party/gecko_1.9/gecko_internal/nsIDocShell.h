@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/docshell/base/nsIDocShell.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0rc1-source/mozilla/docshell/base/nsIDocShell.idl
  */
 
 #ifndef __gen_nsIDocShell_h__
@@ -48,11 +48,11 @@ class nsIDOMStorage; /* forward declaration */
 
 
 /* starting interface:    nsIDocShell */
-#define NS_IDOCSHELL_IID_STR "4b00222a-8d0a-46d7-a1fe-43bd89d19324"
+#define NS_IDOCSHELL_IID_STR "7d1cf6b9-daa3-476d-8f9f-9eb2a971a95c"
 
 #define NS_IDOCSHELL_IID \
-  {0x4b00222a, 0x8d0a, 0x46d7, \
-    { 0xa1, 0xfe, 0x43, 0xbd, 0x89, 0xd1, 0x93, 0x24 }}
+  {0x7d1cf6b9, 0xdaa3, 0x476d, \
+    { 0x8f, 0x9f, 0x9e, 0xb2, 0xa9, 0x71, 0xa9, 0x5c }}
 
 class NS_NO_VTABLE NS_SCRIPTABLE nsIDocShell : public nsISupports {
  public: 
@@ -462,6 +462,13 @@ class NS_NO_VTABLE NS_SCRIPTABLE nsIDocShell : public nsISupports {
   /* readonly attribute boolean channelIsUnsafe; */
   NS_SCRIPTABLE NS_IMETHOD GetChannelIsUnsafe(PRBool *aChannelIsUnsafe) = 0;
 
+  /**
+   * Disconnects this docshell's editor from its window, and stores the
+   * editor data in the open document's session history entry.
+   */
+  /* [noscript, notxpcom] void DetachEditorFromWindow (); */
+  NS_IMETHOD_(void) DetachEditorFromWindow(void) = 0;
+
 };
 
   NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocShell, NS_IDOCSHELL_IID)
@@ -534,7 +541,8 @@ class NS_NO_VTABLE NS_SCRIPTABLE nsIDocShell : public nsISupports {
   NS_SCRIPTABLE NS_IMETHOD GetCurrentDocumentChannel(nsIChannel * *aCurrentDocumentChannel); \
   NS_IMETHOD SetChildOffset(PRUint32 offset); \
   NS_SCRIPTABLE NS_IMETHOD GetIsInUnload(PRBool *aIsInUnload); \
-  NS_SCRIPTABLE NS_IMETHOD GetChannelIsUnsafe(PRBool *aChannelIsUnsafe); 
+  NS_SCRIPTABLE NS_IMETHOD GetChannelIsUnsafe(PRBool *aChannelIsUnsafe); \
+  NS_IMETHOD_(void) DetachEditorFromWindow(void); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSIDOCSHELL(_to) \
@@ -604,7 +612,8 @@ class NS_NO_VTABLE NS_SCRIPTABLE nsIDocShell : public nsISupports {
   NS_SCRIPTABLE NS_IMETHOD GetCurrentDocumentChannel(nsIChannel * *aCurrentDocumentChannel) { return _to GetCurrentDocumentChannel(aCurrentDocumentChannel); } \
   NS_IMETHOD SetChildOffset(PRUint32 offset) { return _to SetChildOffset(offset); } \
   NS_SCRIPTABLE NS_IMETHOD GetIsInUnload(PRBool *aIsInUnload) { return _to GetIsInUnload(aIsInUnload); } \
-  NS_SCRIPTABLE NS_IMETHOD GetChannelIsUnsafe(PRBool *aChannelIsUnsafe) { return _to GetChannelIsUnsafe(aChannelIsUnsafe); } 
+  NS_SCRIPTABLE NS_IMETHOD GetChannelIsUnsafe(PRBool *aChannelIsUnsafe) { return _to GetChannelIsUnsafe(aChannelIsUnsafe); } \
+  NS_IMETHOD_(void) DetachEditorFromWindow(void) { return _to DetachEditorFromWindow(); } 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_NSIDOCSHELL(_to) \
@@ -674,7 +683,8 @@ class NS_NO_VTABLE NS_SCRIPTABLE nsIDocShell : public nsISupports {
   NS_SCRIPTABLE NS_IMETHOD GetCurrentDocumentChannel(nsIChannel * *aCurrentDocumentChannel) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetCurrentDocumentChannel(aCurrentDocumentChannel); } \
   NS_IMETHOD SetChildOffset(PRUint32 offset) { return !_to ? NS_ERROR_NULL_POINTER : _to->SetChildOffset(offset); } \
   NS_SCRIPTABLE NS_IMETHOD GetIsInUnload(PRBool *aIsInUnload) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsInUnload(aIsInUnload); } \
-  NS_SCRIPTABLE NS_IMETHOD GetChannelIsUnsafe(PRBool *aChannelIsUnsafe) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChannelIsUnsafe(aChannelIsUnsafe); } 
+  NS_SCRIPTABLE NS_IMETHOD GetChannelIsUnsafe(PRBool *aChannelIsUnsafe) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetChannelIsUnsafe(aChannelIsUnsafe); } \
+  NS_IMETHOD_(void) DetachEditorFromWindow(void) { return !_to ? NS_ERROR_NULL_POINTER : _to->DetachEditorFromWindow(); } 
 
 #if 0
 /* Use the code below as a template for the implementation class for this interface. */
@@ -1070,6 +1080,12 @@ NS_IMETHODIMP nsDocShell::GetIsInUnload(PRBool *aIsInUnload)
 
 /* readonly attribute boolean channelIsUnsafe; */
 NS_IMETHODIMP nsDocShell::GetChannelIsUnsafe(PRBool *aChannelIsUnsafe)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* [noscript, notxpcom] void DetachEditorFromWindow (); */
+NS_IMETHODIMP_(void) nsDocShell::DetachEditorFromWindow()
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

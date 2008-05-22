@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/caps/idl/nsIScriptSecurityManager.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0rc1-source/mozilla/caps/idl/nsIScriptSecurityManager.idl
  */
 
 #ifndef __gen_nsIScriptSecurityManager_h__
@@ -34,6 +34,15 @@ class nsIChannel; /* forward declaration */
   {0x3fffd8e8, 0x3fea, 0x442e, \
     { 0xa0, 0xed, 0x2b, 0xa8, 0x1a, 0xe1, 0x97, 0xd5 }}
 
+/**
+ * WARNING!! The JEP needs to call GetSubjectPrincipal()
+ * to support JavaScript-to-Java LiveConnect.  So every change to the
+ * nsIScriptSecurityManager interface (big enough to change its IID) also
+ * breaks JavaScript-to-Java LiveConnect on mac.
+ *
+ * If you REALLY have to change this interface, please mark your bug as
+ * blocking bug 293973.
+ */
 class NS_NO_VTABLE NS_SCRIPTABLE nsIScriptSecurityManager : public nsIXPCSecurityManager {
  public: 
 

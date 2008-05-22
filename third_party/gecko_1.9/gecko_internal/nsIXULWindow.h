@@ -1,5 +1,5 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0b5-source/mozilla/xpfe/appshell/public/nsIXULWindow.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM c:/firefox-3.0rc1-source/mozilla/xpfe/appshell/public/nsIXULWindow.idl
  */
 
 #ifndef __gen_nsIXULWindow_h__
