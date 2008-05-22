@@ -23,14 +23,54 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "domstubs.idl"
-#include "base_interface_ff.idl" // XPIDL doesn't like slashes in #includes
+#ifndef GEARS_CONSOLE_CONSOLE_H__
+#define GEARS_CONSOLE_CONSOLE_H__
 
-interface nsIVariant;
+#include "gears/base/common/base_class.h"
+#include "gears/base/common/common.h"
+#include "gears/base/common/js_runner.h"
+#include "gears/base/common/string16.h"
+#include "gears/console/js_callback_logging_backend.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
-[scriptable, uuid(3aab5045-e312-4386-92d7-744bf981c379)]
-interface GearsConsoleInterface : GearsBaseClassInterface {
-  void log(//in AString type, in AString message, in variant array args
-          );
-  attribute nsIVariant onlog;
+class GearsConsole
+    : public ModuleImplBaseClassVirtual,
+      public JsEventHandlerInterface {
+ public:
+  static const std::string kModuleName;
+
+  GearsConsole() : ModuleImplBaseClassVirtual(kModuleName) {}
+  
+  // IN: string type, string message, optional array params
+  // OUT: -
+  void Log(JsCallContext *context);
+  
+  // IN: -
+  // OUT: function callback
+  void GetOnLog(JsCallContext *context);
+  
+  // IN: function callback
+  // OUT: -
+  void SetOnLog(JsCallContext *context);
+  
+ private:
+  void Initialize();
+
+  // Replaces instances of _%s_ in message with elements from _args[]_
+  static void InterpolateArgs(std::string16 *message, const JsArray *args);
+
+  // From JsEventHandlerInterface.
+  virtual void HandleEvent(JsEventType event_type);
+ 
+  std::string16 observer_topic_;
+
+  // Console provides a default backend for accessing the log
+  // stream via a JavaScript callback
+  scoped_ptr<JsCallbackLoggingBackend> callback_backend_;
+  
+  scoped_ptr<JsEventMonitor> unload_monitor_;
+  
+  DISALLOW_EVIL_CONSTRUCTORS(GearsConsole);
 };
+
+#endif // GEARS_CONSOLE_CONSOLE_H__

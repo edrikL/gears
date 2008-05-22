@@ -23,8 +23,8 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_CONSOLE_COMMON_LOG_EVENT_H__
-#define GEARS_CONSOLE_COMMON_LOG_EVENT_H__
+#ifndef GEARS_CONSOLE_LOG_EVENT_H__
+#define GEARS_CONSOLE_LOG_EVENT_H__
 
 #include "gears/base/common/basictypes.h"
 #include "gears/base/common/message_service.h"
@@ -79,4 +79,4 @@ class LogEvent : public NotificationData {
   }
 };
 
-#endif // GEARS_CONSOLE_COMMON_LOG_EVENT_H__
+#endif // GEARS_CONSOLE_LOG_EVENT_H__

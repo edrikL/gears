@@ -52,7 +52,6 @@ import "ui/ie/html_dialog_bridge_iemobile.idl";
 import "ui/ie/html_dialog_host_iemobile.idl";
 #endif
 
-import "console/ie/console.idl";
 import "database/ie/database.idl";
 import "factory/ie/factory.idl";
 
@@ -148,14 +147,6 @@ library GearsTypelib
   coclass GearsFactory
   {
     [default] interface GearsFactoryInterface;
-  };
-
-  [
-    uuid(51C2DE73-6A33-4975-8D7D-C521064F8A83)
-  ]
-  coclass GearsConsole
-  {
-    [default] interface GearsConsoleInterface;
   };
 
   [

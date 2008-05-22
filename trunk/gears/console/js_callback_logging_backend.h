@@ -23,13 +23,13 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GEARS_CONSOLE_COMMON_JS_CALLBACK_LOGGING_BACKEND_H__
-#define GEARS_CONSOLE_COMMON_JS_CALLBACK_LOGGING_BACKEND_H__
+#ifndef GEARS_CONSOLE_JS_CALLBACK_LOGGING_BACKEND_H__
+#define GEARS_CONSOLE_JS_CALLBACK_LOGGING_BACKEND_H__
 
 #include "gears/base/common/common.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/string16.h"
-#include "gears/console/common/log_event.h"
+#include "gears/console/log_event.h"
 #include "third_party/scoped_ptr/scoped_ptr.h"
 
 
@@ -40,15 +40,15 @@
 // JsCallbackLoggingBackend is an example implementation of a logging backend.
 class JsCallbackLoggingBackend : public MessageObserverInterface {
  public:
-  JsCallbackLoggingBackend(const std::string16 &topic);
+  JsCallbackLoggingBackend(const std::string16 &topic,
+                           JsRunnerInterface *js_runner);
   ~JsCallbackLoggingBackend();
 
   virtual void OnNotify(MessageService *service,
                         const char16 *topic,
                         const NotificationData *data);
 
-  virtual void SetJsRunner(JsRunnerInterface* js_runner);
-  void SetCallback(JsRootedCallback* callback);
+  void SetCallback(JsRootedCallback *callback);
   void ClearCallback();
 
  private:
@@ -63,4 +63,4 @@ class JsCallbackLoggingBackend : public MessageObserverInterface {
   DISALLOW_EVIL_CONSTRUCTORS(JsCallbackLoggingBackend);
 };
 
-#endif // GEARS_CONSOLE_COMMON_JS_CALLBACK_LOGGING_BACKEND_H__
+#endif // GEARS_CONSOLE_JS_CALLBACK_LOGGING_BACKEND_H__

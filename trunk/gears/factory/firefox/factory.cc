@@ -35,7 +35,7 @@
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/firefox/dom_utils.h"
-#include "gears/console/firefox/console_ff.h"
+#include "gears/console/console.h"
 #include "gears/database/firefox/database.h"
 #include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
@@ -166,22 +166,21 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
     CreateModule<GearsDesktop>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.httprequest")) {
     CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
-#ifdef OFFICIAL_BUILD
-  // The Geolocation API has not been finalized for official builds.
-#else
-  } else if (object_name == STRING16(L"beta.geolocation")) {
-    CreateModule<GearsGeolocation>(GetJsRunner(), &object);
-#endif  // OFFICIAL_BUILD
-#ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds.
-#else
-  } else if (object_name == STRING16(L"beta.imageloader")) {
-    CreateModule<GearsImageLoader>(GetJsRunner(), &object);
-  } else if (object_name == STRING16(L"beta.canvas")) {
-    CreateModule<GearsCanvas>(GetJsRunner(), &object);
-#endif
   } else if (object_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(GetJsRunner(), &object);
+#ifdef OFFICIAL_BUILD
+  // The Canvas, Console, Geolocation, and Image APIs have not been finalized
+  // for official builds.
+#else
+  } else if (object_name == STRING16(L"beta.canvas")) {
+    CreateModule<GearsCanvas>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.console")) {
+    CreateModule<GearsConsole>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.geolocation")) {
+    CreateModule<GearsGeolocation>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.imageloader")) {
+    CreateModule<GearsImageLoader>(GetJsRunner(), &object);
+#endif
   } else {
     // Don't return an error here. Caller handles reporting unknown modules.
     error->clear();
@@ -209,9 +208,7 @@ bool GearsFactory::CreateISupportsModule(const std::string16 &object_name,
   nsCOMPtr<nsISupports> isupports = NULL;
 
   nsresult nr = NS_ERROR_FAILURE;
-  if (object_name == STRING16(L"beta.console")) {
-    isupports = do_QueryInterface(new GearsConsole(), &nr);
-  } else if (object_name == STRING16(L"beta.database")) {
+  if (object_name == STRING16(L"beta.database")) {
     isupports = do_QueryInterface(new GearsDatabase(), &nr);
   } else if (object_name == STRING16(L"beta.localserver")) {
     isupports = do_QueryInterface(new GearsLocalServer(), &nr);

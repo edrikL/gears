@@ -42,7 +42,6 @@
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/firefox/xpcom_dynamic_load.h"
-#include "gears/console/firefox/console_ff.h"
 #include "gears/database/firefox/database.h"
 #include "gears/database/firefox/result_set.h"
 #include "gears/factory/firefox/factory.h"
@@ -166,12 +165,6 @@ NS_DOMCI_EXTENSION(Scour)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsFileSubmitter, PR_TRUE,
                                              &kGearsFileSubmitterClassId)
 
-  // console
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsConsole)
-    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsConsoleInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsConsole, PR_TRUE,
-                                             &kGearsConsoleClassId)
-
 NS_DOMCI_EXTENSION_END
 
 static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
@@ -219,10 +212,7 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
     { kGearsResourceStoreClassName, "GearsResourceStoreInterface",
       GEARSRESOURCESTOREINTERFACE_IID_STR },
     { kGearsFileSubmitterClassName, "GearsFileSubmitterInterface",
-      GEARSFILESUBMITTERINTERFACE_IID_STR },
-    // console
-    { kGearsConsoleClassName, "GearsConsoleInterface",
-      GEARSCONSOLEINTERFACE_IID_STR }
+      GEARSFILESUBMITTERINTERFACE_IID_STR }
   };
 
   for (size_t i = 0; i < NS_ARRAY_LENGTH(jsDOMClasses); ++i) {
@@ -262,9 +252,6 @@ NS_DECL_DOM_CLASSINFO(GearsManagedResourceStore)
 NS_DECL_DOM_CLASSINFO(GearsResourceStore)
 NS_DECL_DOM_CLASSINFO(GearsFileSubmitter)
 
-// console
-NS_DECL_DOM_CLASSINFO(GearsConsole)
-
 nsresult PR_CALLBACK ScourModuleConstructor(nsIModule *self) {
   if (NS_FAILED(ThreadLocals::HandleModuleConstructed())) {
     return NS_ERROR_FAILURE;
@@ -289,8 +276,6 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsLocalServer));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsManagedResourceStore));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsResourceStore));
-  // console
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsConsole));
 
 #ifdef DEBUG
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsFileSubmitter));
