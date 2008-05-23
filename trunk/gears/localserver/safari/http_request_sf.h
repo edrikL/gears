@@ -102,6 +102,9 @@ class SFHttpRequest : public HttpRequest {
   // events
   virtual bool SetListener(HttpListener *listener, bool enable_data_available);
 
+  // Should only be used by ProgressInputStream.
+  void OnUploadProgress(int64 position, int64 total);
+
  // Methods used to communicate between Obj C delegate and C++ class.
  // You can't make an objc-c selector a friend of a C++ class, so these
  // need to be declared public.

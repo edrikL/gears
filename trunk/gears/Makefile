@@ -1406,6 +1406,7 @@ SF_CPPSRCS	+= \
 		localserver_db_proxy.mm \
 		localserver_np.cc \
 		managed_resource_store_np.cc \
+		progress_input_stream.mm \
 		resource_store_np.cc \
 		$(NULL)		
 
