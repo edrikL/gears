@@ -159,14 +159,14 @@ bool SecurityOrigin::InitFromUrl(const char16 *full_url) {
     return Init(full_url, HttpConstants::kFileScheme, kUnknownDomain, 0);
   }
 #elif BROWSER_NPAPI || BROWSER_FF
-  int url_len = wcslen(full_url);
+  int url_len = char16_wcslen(full_url);
 
   url_parse::Component scheme_comp;
   if (!url_parse::ExtractScheme(full_url, url_len, &scheme_comp)) {
     return false;
   }
 
-  std::wstring scheme(full_url + scheme_comp.begin, scheme_comp.len);
+  std::string16 scheme(full_url + scheme_comp.begin, scheme_comp.len);
   LowerString(scheme);
   if (scheme == STRING16(L"http") || scheme == STRING16(L"https")) {
     url_parse::Parsed parsed;

@@ -131,7 +131,7 @@
  * @see UChar32
  * @stable ICU 2.4
  */
-#define U_SENTINEL (-1)
+#define U_SENTINEL (~0)
 
 /**
  * Is this code point a Unicode noncharacter?

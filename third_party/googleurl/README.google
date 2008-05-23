@@ -16,3 +16,5 @@ Local Modifications:
     copy of scoped_ptr.h.
   - Stubbed out url_canon_host.cc DoIDNHost to avoid depending on a ton of
     ICU.
+  - In url_canon_interal, changed the type of several local varialbles from int
+    to size_t to fix compile warnings on Linux.

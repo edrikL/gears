@@ -231,7 +231,7 @@ COMPILE_FLAGS = -c -o $@ -fPIC -fmessage-length=0 -Wall -Werror $(COMPILE_FLAGS_
 COMPILE_FLAGS += -fshort-wchar
 
 CFLAGS = $(COMPILE_FLAGS)
-CXXFLAGS = $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wno-ctor-dtor-privacy -funsigned-char
+CXXFLAGS = $(COMPILE_FLAGS) -fno-exceptions -fno-rtti -Wno-non-virtual-dtor -Wno-ctor-dtor-privacy -funsigned-char -Wno-char-subscripts
 
 SHARED_LINKFLAGS = -o $@ -fPIC -Bsymbolic 
 
