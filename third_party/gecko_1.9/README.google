@@ -13,6 +13,10 @@ To get the osx directory, we built a universal gecko SDK from scratch:
 2) cvs -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot co -r BRANCH mozilla/client.mk mozilla/browser/config/mozconfig mozilla/build/macosx/universal/mozconfig
   * Note: replace BRANCH with the tag of the release you want to checkout, eg
     FIREFOX_3_0b4_RELEASE.
+  * Note: If you already have a checkout and want to update it to a different tag, use this command:
+    cvs up -r BRANCH client.mk
+  * Note: If you want to see what tags are available, one way is urls like:
+    http://bonsai.mozilla.org/cvsgraph.cgi?file=mozilla/xpcom/io/nsIFile.idl&rev=1.63
 3) make -f client.mk checkout
   * Note: I noticed that the cvs client on my mac did not work correctly with
     mozilla's cvs server. I was getting many errors attempting to move
