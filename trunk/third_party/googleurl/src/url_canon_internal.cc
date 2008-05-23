@@ -366,7 +366,7 @@ int _itoa_s(int value, char* buffer, size_t size_in_chars, int radix) {
   if (radix != 10)
     return EINVAL;
 
-  int written = snprintf(buffer, size_in_chars, "%d", value);
+  size_t written = snprintf(buffer, size_in_chars, "%d", value);
   if (written >= size_in_chars) {
     // Output was truncated
     return EINVAL;
@@ -381,13 +381,13 @@ int _itow_s(int value, UTF16Char* buffer, size_t size_in_chars, int radix) {
   // No more than 12 characters will be required for a 32-bit integer.
   // Add an extra byte for the terminating null.
   char temp[13];
-  int written = snprintf(temp, sizeof(temp), "%d", value);
+  size_t written = snprintf(temp, sizeof(temp), "%d", value);
   if (written >= size_in_chars) {
     // Output was truncated
     return EINVAL;
   }
 
-  for (int i = 0; i < written; ++i) {
+  for (size_t i = 0; i < written; ++i) {
     buffer[i] = static_cast<UTF16Char>(temp[i]);
   }
   buffer[written] = '\0';

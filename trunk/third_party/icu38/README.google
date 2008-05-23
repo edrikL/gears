@@ -7,3 +7,13 @@ C/C++.  Only some UTF support is included.
 
   - Removed everything except 'source/common/utf_impl.cc' and
     'public/common/unicode/*.h'
+
+Some minor changes were required for it to build on Linux:
+  - In public/common/unicode/utf.h:
+      "#define U_SENTINEL (-1)" is changed to "#define U_SENTINEL (~0)"
+  - In public/common/unicode/umachine.h we add:
+      #elif defined(LINUX)
+      #   include "unicode/plinux.h"
+  - We add public/common/unicode/plinux.h  It is generated as platform.h on a
+    linux machine via:
+      "runConfigureICU Linux"

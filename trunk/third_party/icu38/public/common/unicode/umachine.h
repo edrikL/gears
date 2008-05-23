@@ -47,6 +47,8 @@
 #   include "unicode/pwin32.h"
 #elif defined(__APPLE__)
 #   include "unicode/pmac.h"
+#elif defined(LINUX)
+#   include "unicode/plinux.h"
 #else
 #   include "unicode/platform.h"
 #endif
