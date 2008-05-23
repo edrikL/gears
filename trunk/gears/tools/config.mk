@@ -254,9 +254,14 @@ EXEFLAGS = $(SHARED_LINKFLAGS)
 GECKO_SDK = $(GECKO_BASE)/linux
 
 # Keep these in sync:
-FF2_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s -lnspr4
-FF3_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s -lnspr4
+FF2_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s
+FF3_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s
 # Append differences here:
+# Although the 1.9 SDK contains libnspr4, it is better to link against libxul,
+# which in turn depends on libnspr4. In Ubuntu 8.04, libnspr4 was not listed in
+# /usr/lib, only libxul was.
+FF2_LIBS += -lnspr4
+FF3_LIBS += -lxul
 # - No differences yet.
 endif
 
