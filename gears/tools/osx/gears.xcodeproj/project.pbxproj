@@ -34,6 +34,7 @@
 /* Begin PBXBuildFile section */
 		79272FE10DC2141800CDF577 /* geolocation.cc in Sources */ = {isa = PBXBuildFile; fileRef = 79272FDD0DC2141700CDF577 /* geolocation.cc */; };
 		79272FE20DC2141800CDF577 /* location_provider.cc in Sources */ = {isa = PBXBuildFile; fileRef = 79272FDF0DC2141800CDF577 /* location_provider.cc */; };
+		7954654C0DE71F5700F1EDE9 /* progress_input_stream.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7954654B0DE71F5700F1EDE9 /* progress_input_stream.mm */; };
 		79C3E9420DB8D8E800346806 /* blob.cc in Sources */ = {isa = PBXBuildFile; fileRef = 79C3E9390DB8D8E800346806 /* blob.cc */; };
 		79C3E9430DB8D8E800346806 /* buffer_blob.cc in Sources */ = {isa = PBXBuildFile; fileRef = 79C3E93C0DB8D8E800346806 /* buffer_blob.cc */; };
 		79C3E9440DB8D8E800346806 /* file_blob.cc in Sources */ = {isa = PBXBuildFile; fileRef = 79C3E93E0DB8D8E800346806 /* file_blob.cc */; };
@@ -550,6 +551,7 @@
 		79272FDE0DC2141800CDF577 /* geolocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = geolocation.h; path = ../../geolocation/geolocation.h; sourceTree = SOURCE_ROOT; };
 		79272FDF0DC2141800CDF577 /* location_provider.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = location_provider.cc; path = ../../geolocation/location_provider.cc; sourceTree = SOURCE_ROOT; };
 		79272FE00DC2141800CDF577 /* location_provider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = location_provider.h; path = ../../geolocation/location_provider.h; sourceTree = SOURCE_ROOT; };
+		7954654B0DE71F5700F1EDE9 /* progress_input_stream.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = progress_input_stream.mm; path = ../../localserver/safari/progress_input_stream.mm; sourceTree = SOURCE_ROOT; };
 		79C3E9390DB8D8E800346806 /* blob.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = blob.cc; path = ../../blob/blob.cc; sourceTree = SOURCE_ROOT; };
 		79C3E93A0DB8D8E800346806 /* blob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = blob.h; path = ../../blob/blob.h; sourceTree = SOURCE_ROOT; };
 		79C3E93B0DB8D8E800346806 /* blob_interface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = blob_interface.h; path = ../../blob/blob_interface.h; sourceTree = SOURCE_ROOT; };
@@ -1637,6 +1639,7 @@
 		B544DCC10D35789D00D30561 /* safari */ = {
 			isa = PBXGroup;
 			children = (
+				7954654B0DE71F5700F1EDE9 /* progress_input_stream.mm */,
 				B5F583B10D9FE48E00B8FD50 /* async_task_sf.mm */,
 				B5F583B20D9FE48E00B8FD50 /* async_task_sf.h */,
 				B5BB92540D47F9AA00FA9651 /* http_cookies_sf.h */,
@@ -2649,6 +2652,7 @@
 				B578D26C0DE228EF006FD633 /* js_standalone_engine_mozjs.cc in Sources */,
 				B56B85550DE5D54C008995AB /* console.cc in Sources */,
 				B56B85560DE5D54C008995AB /* js_callback_logging_backend.cc in Sources */,
+				7954654C0DE71F5700F1EDE9 /* progress_input_stream.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

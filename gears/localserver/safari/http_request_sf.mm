@@ -44,6 +44,7 @@
 #endif  // !OFFICIAL_BUILD
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/safari/http_request_delegate.h"
+#include "gears/localserver/safari/progress_input_stream.h"
 
 // PIMPL store for Objective-C delegate.
 struct SFHttpRequest::HttpRequestData {
@@ -307,22 +308,33 @@ bool SFHttpRequest::SendString(const char16 *data) {
   if (!IsPostOrPut()) {
     return false;
   }
-
   NSString *post_data_string = [NSString stringWithString16:data];
   NSData *post_data = [post_data_string dataUsingEncoding:NSUTF8StringEncoding];
+
+  // It appears that the OS defaults to sending out the request with
+  // chunked encoding if we assign it an inputstream.  To solve this we
+  // need to explicitly set the Content-length header.
+  std::string16 content_length_as_string(
+      IntegerToString16([post_data length]));
+  headers_to_send_.push_back(HttpHeader(HttpConstants::kContentLengthHeader,
+                                        content_length_as_string));
   NSInputStream *post_data_stream = [NSInputStream
                                      inputStreamWithData:post_data];
   if (!post_data_stream) {
     return false;
   }
-  // It appears that the OS defaults to sending out the request with
-  // chunked encoding if we assign it an inputstream.  To solve this we
-  // need to explicitly set the Content-length header.
-  std::string16 content_length_as_string(
-      IntegerToString16([post_data_string length]));
-  headers_to_send_.push_back(HttpHeader(HttpConstants::kContentLengthHeader,
-                                        content_length_as_string));
-  return SendImpl(post_data_stream);
+  ProgressInputStream *stream = [[[ProgressInputStream alloc]
+                                  initFromStream:post_data_stream
+                                         request:this
+                                           total:[post_data length]]
+                                 autorelease];
+  if (!stream) {
+    return false;
+  }
+  // The following line works around an OSX 10.4 bug.
+  // See declaration of ProgressInputStream setData for details.
+  [stream setData:post_data];
+  return SendImpl(stream);
 }
 
 #ifndef OFFICIAL_BUILD
@@ -331,19 +343,25 @@ bool SFHttpRequest::SendBlob(BlobInterface *blob) {
   if (was_sent_) {
     return false;
   }
-  NSInputStream *post_data_stream =
-      [[[BlobInputStream alloc] initFromBlob:blob] autorelease];
-  if (!post_data_stream) {
-    return false;
-  }
   // It appears that the OS defaults to sending out the request with
   // chunked encoding if we assign it an inputstream.  To solve this we
   // need to explicitly set the Content-length header.
   std::string16 content_length_as_string(Integer64ToString16(blob->Length()));
   headers_to_send_.push_back(HttpHeader(HttpConstants::kContentLengthHeader,
                                         content_length_as_string));
-  bool ok = SendImpl(post_data_stream);
-  return ok;
+  NSInputStream *post_data_stream =
+      [[[BlobInputStream alloc] initFromBlob:blob] autorelease];
+  if (!post_data_stream) {
+    return false;
+  }
+  NSInputStream *stream = [[[ProgressInputStream alloc]
+                            initFromStream:post_data_stream
+                                   request:this
+                                     total:blob->Length()] autorelease];
+  if (!stream) {
+    return false;
+  }
+  return SendImpl(stream);
 }
 #endif
 
@@ -549,4 +567,17 @@ void SFHttpRequest::Reset() {
   async_ = false;
   redirect_url_.clear();
   ready_state_ = UNINITIALIZED;
+}
+
+//------------------------------------------------------------------------------
+// OnUploadProgress
+//------------------------------------------------------------------------------
+void SFHttpRequest::OnUploadProgress(int64 position, int64 total) {
+  scoped_refptr<SFHttpRequest> reference(this);
+  if (was_aborted_) {
+    return;
+  }
+  if (listener_) {
+    listener_->UploadProgress(this, position, total);
+  }
 }
