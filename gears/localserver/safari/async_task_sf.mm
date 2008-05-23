@@ -236,7 +236,7 @@ bool AsyncTask::HttpGet(const char16 *full_url,
 // The Blob API has not yet been finalized for official builds.
 #else
 //------------------------------------------------------------------------------
-// HttpGet
+// HttpPost
 //------------------------------------------------------------------------------
 bool AsyncTask::HttpPost(const char16 *full_url,
                          bool is_capturing,
@@ -281,6 +281,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
                                 bool *was_redirected,
                                 std::string16 *full_redirect_url,
                                 std::string16 *error_message) {
+  assert(payload);
   if (was_redirected) {
     *was_redirected = false;
   }

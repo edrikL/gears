@@ -95,7 +95,7 @@ bool AsyncTask::Init() {
 //------------------------------------------------------------------------------
 void AsyncTask::SetListener(Listener *listener) {
   assert(!delete_when_done_);
-  assert(IsListenerThread());
+  assert(IsListenerThread() || listener == NULL);
   listener_ = listener;
 }
 
@@ -134,7 +134,6 @@ bool AsyncTask::Start() {
 void AsyncTask::Abort() {
   LOG(("AsyncTask::Abort\n"));
   assert(!delete_when_done_);
-  assert(IsListenerThread());
 
   CritSecLock locker(lock_);
   is_aborted_ = true;
@@ -165,7 +164,6 @@ void AsyncTask::OnAbortHttpGet() {
 //------------------------------------------------------------------------------
 void AsyncTask::DeleteWhenDone() {
   assert(!delete_when_done_);
-  assert(IsListenerThread());
 
   LOG(("AsyncTask::DeleteWhenDone\n"));
   CritSecLock locker(lock_);
@@ -324,6 +322,7 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
   // This method should only be called our worker thread.
   assert(IsTaskThread());
 
+  assert(payload);
   if (was_redirected) {
     *was_redirected = false;
   }
