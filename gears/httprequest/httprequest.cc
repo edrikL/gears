@@ -341,11 +341,15 @@ void GearsHttpRequest::GetAllResponseHeaders(JsCallContext *context) {
 }
 
 void GearsHttpRequest::GetOnReadyStateChange(JsCallContext *context) {
-  if (onreadystatechangehandler_.get() == NULL) {
+  JsRootedCallback *callback = onreadystatechangehandler_.get();
+  // TODO(nigeltao): possibly move the null check into
+  // JsCallContext::SetReturnValue, so that I can call
+  // SetReturnValue(JSPARAM_FUNCTION, NULL) to get a (JavaScript) null, rather
+  // than having to explicitly check for a NULL JsRootedCallback*.
+  if (callback == NULL) {
     context->SetReturnValue(JSPARAM_NULL, 0);
   } else {
-    const JsToken callback = onreadystatechangehandler_->token();
-    context->SetReturnValue(JSPARAM_FUNCTION, &callback);
+    context->SetReturnValue(JSPARAM_FUNCTION, callback);
   }
 }
 

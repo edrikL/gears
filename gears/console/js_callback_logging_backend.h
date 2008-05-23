@@ -48,6 +48,7 @@ class JsCallbackLoggingBackend : public MessageObserverInterface {
                         const char16 *topic,
                         const NotificationData *data);
 
+  JsRootedCallback *GetCallback();
   void SetCallback(JsRootedCallback *callback);
   void ClearCallback();
 
