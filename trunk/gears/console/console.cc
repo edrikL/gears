@@ -77,8 +77,12 @@ void GearsConsole::Log(JsCallContext *context) {
 }
 
 void GearsConsole::GetOnLog(JsCallContext *context) {
-  // TODO(playmobil or nigeltao): Make this parameter readable.
-  context->SetException(STRING16(L"onlog property is write only."));
+  JsRootedCallback *callback = callback_backend_->GetCallback();
+  if (callback == NULL) {
+    context->SetReturnValue(JSPARAM_NULL, 0);
+  } else {
+    context->SetReturnValue(JSPARAM_FUNCTION, callback);
+  }
 }
 
 void GearsConsole::SetOnLog(JsCallContext *context) {

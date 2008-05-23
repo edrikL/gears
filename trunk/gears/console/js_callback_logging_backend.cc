@@ -66,6 +66,10 @@ void JsCallbackLoggingBackend::OnNotify(MessageService *service,
   js_runner_->InvokeCallback(callback_.get(), argc, argv, NULL);
 }
 
+JsRootedCallback *JsCallbackLoggingBackend::GetCallback() {
+  return callback_.get();
+}
+
 void JsCallbackLoggingBackend::SetCallback(JsRootedCallback* callback) {
   if (!callback) {
     ClearCallback();

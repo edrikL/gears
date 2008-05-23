@@ -395,3 +395,12 @@ function testCallbackExceptionAsync() {
 function testCallbackExceptionSync() {
   callbackExceptionTest(false, 'exception from HTTPRequest callback');
 }
+
+function testSetGetOnreadystatechange() {
+  var request = google.gears.factory.create('beta.httprequest');
+  var aFunction = function() {
+    return 'ignored return value';
+  };
+  request.onreadystatechange = aFunction;
+  assertEqual(aFunction, request.onreadystatechange);
+}
