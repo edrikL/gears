@@ -54,7 +54,7 @@ DECLARE_GEARS_WRAPPER(GearsGeolocation);
 
 template<>
 void Dispatcher<GearsGeolocation>::Init() {
-  RegisterMethod("lastPosition", &GearsGeolocation::GetLastPosition);
+  RegisterProperty("lastPosition", &GearsGeolocation::GetLastPosition, NULL);
   RegisterMethod("getCurrentPosition", &GearsGeolocation::GetCurrentPosition);
   RegisterMethod("watchPosition", &GearsGeolocation::WatchPosition);
   RegisterMethod("clearWatch", &GearsGeolocation::ClearWatch);
@@ -71,7 +71,20 @@ GearsGeolocation::~GearsGeolocation() {
 // API Methods
 
 void GearsGeolocation::GetLastPosition(JsCallContext *context) {
-  // TODO(steveblock): Implement me.
+  // TODO(steveblock): Remove hard-coded data.
+  double latitude = 37.784;  // Moscone Center, San Francisco
+  double longitude = -122.399;
+
+  scoped_ptr<JsObject> return_object(GetJsRunner()->NewObject());
+
+  // TODO(steveblock): Add remaining object properties.
+  if (!return_object->SetPropertyDouble(STRING16(L"latitude"), latitude) ||
+      !return_object->SetPropertyDouble(STRING16(L"longitude"), longitude)) {
+    context->SetException(STRING16(L"Failed to set return value."));
+    return;
+  }
+
+  context->SetReturnValue(JSPARAM_OBJECT, return_object.get());
 }
 
 void GearsGeolocation::GetCurrentPosition(JsCallContext *context) {
