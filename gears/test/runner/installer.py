@@ -227,7 +227,7 @@ class BaseWin32Installer(BaseInstaller):
     process_list = wmi.WMI().Win32_Process(Name='rundll32.exe')
     for process in process_list:
       pid = process.ProcessID
-      if process.CommandLine.rindex('gears.dll') > 0:
+      if process.CommandLine.rfind('gears.dll') > 0:
         print 'Killing deadlocked slave process: %d' % pid
         handle = win32api.OpenProcess(win32con.PROCESS_TERMINATE, 0, pid)
         win32api.TerminateProcess(handle, 0)
