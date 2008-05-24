@@ -59,12 +59,12 @@
 #include "gears/blob/blob_interface.h"
 #endif
 
-NS_IMPL_ISUPPORTS5(FFHttpRequest,
-                   nsIRequestObserver,
-                   nsIStreamListener,
-                   nsIChannelEventSink,
-                   nsIInterfaceRequestor,
-                   SpecialHttpRequestInterface)
+NS_IMPL_THREADSAFE_ISUPPORTS5(FFHttpRequest,
+                              nsIRequestObserver,
+                              nsIStreamListener,
+                              nsIChannelEventSink,
+                              nsIInterfaceRequestor,
+                              SpecialHttpRequestInterface)
 
 //------------------------------------------------------------------------------
 // HttpRequest::Create
