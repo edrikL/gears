@@ -33,6 +33,8 @@
 #include "gears/base/common/string16.h"
 #include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
 
+class Database2Values;
+
 class Database2RowHandlerInterface {
  public:
   Database2RowHandlerInterface() {};
@@ -59,8 +61,7 @@ class Database2Connection : public RefCounted {
 
   bool OpenAndVerifyVersion(const std::string16 &database_version);
   bool Execute(const std::string16 &statement,
-               const int num_arguments,
-               const JsParamToSend *arguments,
+               Database2Values *arguments,
                Database2RowHandlerInterface *row_handler);
   bool Begin();
   void Rollback();

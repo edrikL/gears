@@ -43,20 +43,136 @@ void Database2Statement::InvokeErrorCallback(Database2Transaction *tx,
                                              JsObject *error) {
 }
 
-bool Database2Statement::Create(const std::string16 &sql_statement, 
-                                const JsArray &sql_arguments, 
-                                JsRootedCallback *callback, 
-                                JsRootedCallback *error_callback, 
+bool Database2Statement::Create(const std::string16 &sql_statement,
+                                JsArray *sql_arguments,
+                                JsRootedCallback *callback,
+                                JsRootedCallback *error_callback,
                                 Database2Statement **instance) {
-  Database2Statement *statement = new Database2Statement();
+  assert(instance && *instance);
+
+  scoped_ptr<Database2Statement> statement(new Database2Statement());
+
+  // NULL should be passed if no arguments are specified
+  assert(!sql_arguments || !JsTokenIsNullOrUndefined(sql_arguments->token()));
+  // NULL should be passed if a callback is not specified
+  assert(!callback || !JsTokenIsNullOrUndefined(callback->token()));
+  assert(!error_callback || !JsTokenIsNullOrUndefined(error_callback->token()));
+
   statement->sql_statement_.assign(sql_statement);
   statement->callback_.reset(callback);
   statement->error_callback_.reset(error_callback);
-  // TODO(dimitri.glazkov): convert sql_arguments to JsParamToSend[]. Accepted
-  // types are: double, int32, int64, string. All other types, are considered
-  // invalid
-  *instance = statement;
-  // TODO(dimitri.glazkov): decide whether ever return false (so that creator
-  // could throw an exception, for instance) or mark statement as bogus
+
+  Database2Values *arguments;
+  if (!Database2Values::CreateFromJsArray(sql_arguments, &arguments)) {
+    return false;
+  }
+
+  statement->arguments_.reset(arguments);
+
+  *instance = statement.release();
+  return true;
+}
+
+// static
+bool Database2Values::CreateFromJsArray(const JsArray *js_array,
+                                        Database2Values **instance) {
+  assert(instance && *instance);
+
+  scoped_ptr<Database2Values> result(new Database2Values());
+
+  // since the arguments are optional, they could be passed as NULL
+  if (js_array == NULL) {
+    result->length_ = 0;
+    *instance = result.release();
+    return true;
+  }
+
+  int len;
+  if (!js_array->GetLength(&len)) {
+    // unable to query JsArray, someting's gone horribly wrong
+    // returning with failure will trigger an internal error
+    assert(false);
+    return false;
+  }
+
+  result->length_ = len;
+  // a JsArray produces one row of values
+  result->StartNewRow();
+  Variant *row = result->rows_.back();
+  for(int i = 0; i < len; i++) {
+    switch(js_array->GetElementType(i)) {
+      case JSPARAM_INT: {
+        int value;
+        if (!js_array->GetElementAsInt(i, &value)) {
+          return false;
+        }
+        row[i].type = JSPARAM_INT;
+        row[i].int_value = value;
+        break;
+      }
+      case JSPARAM_DOUBLE: {
+        double value;
+        if (!js_array->GetElementAsDouble(i, &value)) {
+          return false;
+        }
+        row[i].type = JSPARAM_DOUBLE;
+        row[i].double_value = value;
+        break;
+      }
+      case JSPARAM_STRING16: {
+        std::string16 value;
+        if (!js_array->GetElementAsString(i, &value)) {
+          return false;
+        }
+        row[i].type = JSPARAM_STRING16;
+        row[i].string_value = new std::string16(value);
+        break;
+      }
+      case JSPARAM_NULL: {
+        // Variant's type is set to JSPARAM_NULL by default, no need to do
+        // anything here
+        break;
+      }
+      default: {
+        // invalid type
+        return false;
+      }
+    }
+  }
+
+  *instance = result.release();
+  return true;
+}
+
+void Database2Values::StartNewRow() {
+  rows_.push_back(new Variant[length_]);
+}
+
+bool Database2Values::Next() {
+  return ++current_row_ >= length_;
+}
+
+JsParamType Database2Values::GetType(int index) const {
+  return current(index).type;
+}
+
+bool Database2Values::GetElementAsInt(int index, int *value) {
+  assert(current(index).type == JSPARAM_INT);
+  assert(value);
+  *value = current(index).int_value;
+  return true;
+}
+
+bool Database2Values::GetElementAsDouble(int index, double *value) {
+  assert(current(index).type = JSPARAM_DOUBLE);
+  assert(value);
+  *value = current(index).double_value;
+  return true;
+}
+
+bool Database2Values::GetElementAsString(int index, std::string16 *value) {
+  assert(current(index).type = JSPARAM_STRING16);
+  assert(value);
+  *value = *(current(index).string_value);
   return true;
 }

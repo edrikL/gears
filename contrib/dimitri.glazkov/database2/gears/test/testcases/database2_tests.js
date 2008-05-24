@@ -136,6 +136,21 @@ function testStatementArguments() {
       // valid arguments
       tx.executeSql('SELECT * FROM Pages WHERE pageId = ? and version = ?',
         [ 1972, '1.0.0.0' ]);
+      // arguments with null
+      tx.executeSql('SELECT * FROM Pages WHERE pageId = ? and version = ?',
+        [ 1972, null ]);
+      // null arguments
+      tx.executeSql('SELECT * FROM Pages', null);
+      // invalid arguments: function
+      assertError(function() {
+        tx.executeSql('SELECT * FROM Pages WHERE pageId = ? and version = ?',
+          [ function() {}, '1.0.0.0' ]);
+      }, null, 'Function arguments are not allowed');
+      // invalid arguments: object
+      assertError(function() {
+        tx.executeSql('SELECT * FROM Pages WHERE pageId = ? and version = ?',
+          [ { you: 'is wrong' }, '1.0.0.0' ]);
+      }, null, 'Function arguments are not allowed');
     });
   });
 }
@@ -153,4 +168,3 @@ function withDb(fn, version) {
   db_manager && fn && fn.call(
     this, db_manager.openDatabase('unit_test_db', version || ''));
 }
-

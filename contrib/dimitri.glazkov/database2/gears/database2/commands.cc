@@ -59,7 +59,6 @@ void Database2AsyncExecuteCommand::HandleResults() {
 void Database2SyncExecuteCommand::Execute(bool *has_results) {
   // TODO(dimitri.glazkov): Collect row results
   bool result = connection()->Execute(statement_->sql(),
-      statement_->num_arguments(),
       statement_->arguments(), NULL);
   SetResult(result);
   if (!result) {
@@ -116,5 +115,4 @@ void Database2RollbackCommand::Execute(bool *has_results) {
 void Database2RollbackCommand::HandleResults() {
   // stub
 }
-
 

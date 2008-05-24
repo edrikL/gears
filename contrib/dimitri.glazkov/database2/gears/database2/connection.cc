@@ -24,6 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "gears/database2/connection.h"
+#include "gears/database2/statement.h"
 
 // TODO(dimitri.glazkov): implement actual database operations. For now, all
 // operations pretend to succeed to facilitate in-progress testing
@@ -45,8 +46,7 @@ bool Database2Connection::OpenAndVerifyVersion(
 }
 
 bool Database2Connection::Execute(const std::string16 &statement,
-                                  const int num_arguments,
-                                  const JsParamToSend *arguments,
+                                  Database2Values *arguments,
                                   Database2RowHandlerInterface *row_handler) {
   // if (bogus_version_) {
    // set error code to "version mismatch" (error code 2)

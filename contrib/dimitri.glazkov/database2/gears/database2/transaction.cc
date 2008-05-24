@@ -88,17 +88,17 @@ void Database2Transaction::InvokeCallback() {
 
 void Database2Transaction::ExecuteSql(JsCallContext *context) {
   std::string16 sql_statement;
-  JsArray sql_arguments;
-  JsRootedCallback *callback = NULL;
-  JsRootedCallback *error_callback = NULL;
+  scoped_ptr<JsArray> sql_arguments(new JsArray());
+  scoped_ptr<JsRootedCallback> callback;
+  scoped_ptr<JsRootedCallback> error_callback;
   JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &sql_statement },
-    { JSPARAM_OPTIONAL, JSPARAM_ARRAY, &sql_arguments},
-    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &callback },
-    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, &error_callback }
+    { JSPARAM_OPTIONAL, JSPARAM_ARRAY, sql_arguments.get() },
+    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, callback.get() },
+    { JSPARAM_OPTIONAL, JSPARAM_FUNCTION, error_callback.get() }
   };
 
-  context->GetArguments(ARRAYSIZE(argv), argv);
+  int argc = context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
 
   if (!is_open_) {
@@ -106,9 +106,21 @@ void Database2Transaction::ExecuteSql(JsCallContext *context) {
     return;
   }
 
+  // if any of the arguments are not supplied or null, send them to statement
+  // factory as NULL
+  if (argc < 2 || JsTokenIsNullOrUndefined(sql_arguments->token())) {
+    sql_arguments.reset(NULL);
+  }
+  if (argc < 3 || JsTokenIsNullOrUndefined(callback->token())) {
+    callback.reset(NULL);
+  }
+  if (argc < 4 || JsTokenIsNullOrUndefined(error_callback->token())) {
+    error_callback.reset(NULL);
+  }
+
   Database2Statement *statement;
-  if (!Database2Statement::Create(sql_statement, sql_arguments, callback,
-      error_callback, &statement)) {
+  if (!Database2Statement::Create(sql_statement, sql_arguments.get(),
+      callback.release(), error_callback.release(), &statement)) {
     context->SetException(GET_INTERNAL_ERROR_MESSAGE());
     return;
   }
