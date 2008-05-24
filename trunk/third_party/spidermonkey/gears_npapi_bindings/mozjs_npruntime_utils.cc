@@ -1430,8 +1430,6 @@ NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     // *vp now owns the value, release our reference.
     _releasevariantvalue(&npv);
-
-    return JS_TRUE;
   }
 
   return ReportExceptionIfPending(cx);
