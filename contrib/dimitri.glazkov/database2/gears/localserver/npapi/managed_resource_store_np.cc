@@ -324,10 +324,13 @@ void GearsManagedResourceStore::OnNotify(MessageService *service,
         if (!onerror_handler_.get()) return;
         handler = onerror_handler_.get();
 
+        param.reset(GetJsRunner()->NewObject(STRING16(L"Error")));
+        if (!param.get()) return;
+
         const UpdateTask::ErrorEvent *error_event =
             static_cast<const UpdateTask::ErrorEvent *>(data);
-        param.reset(GetJsRunner()->NewError(error_event->error_message()));
-        if (!param.get()) return;
+        param->SetPropertyString(STRING16(L"message"),
+                                 error_event->error_message());
       }
       break;
 
@@ -335,7 +338,7 @@ void GearsManagedResourceStore::OnNotify(MessageService *service,
         if (!onprogress_handler_.get()) return;
         handler = onprogress_handler_.get();
 
-        param.reset(GetJsRunner()->NewObject());
+        param.reset(GetJsRunner()->NewObject(NULL));
         if (!param.get()) return;
 
         const UpdateTask::ProgressEvent *progress_event =
@@ -351,7 +354,7 @@ void GearsManagedResourceStore::OnNotify(MessageService *service,
         if (!oncomplete_handler_.get()) return;
         handler = oncomplete_handler_.get();
 
-        param.reset(GetJsRunner()->NewObject());
+        param.reset(GetJsRunner()->NewObject(NULL));
         if (!param.get()) return;
 
         const UpdateTask::CompletionEvent *completion_event =

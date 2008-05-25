@@ -100,7 +100,6 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-#include "trace_buffers_win32.h"
 #include <windows.h>
 
 // Declarations to use the intrinsic version of InterlockedIncrement.
@@ -109,7 +108,15 @@ extern "C" long __cdecl _InterlockedIncrement(long volatile* value);
 #define InterlockedIncrement _InterlockedIncrement
 
 
+// The number of simultaneous threads supported is approximately kNumTraces.
+// It could be higher or lower depending on index collisions and buffer re-use;
+// see CurrentThreadTraceIndex().
+//
 // Note: any named symbols we want to access later must be declared non-static.
+
+static const int kNumTraces = 128;  // must be a power of 2
+static const int kRecordsPerTrace = 32;  // must be a power of 2
+static const int kValuesPerRecord = 2;
 
 // It's fine for these arrays to be uninitialized.
 void* g_trace_buffers[kNumTraces][kRecordsPerTrace][kValuesPerRecord];

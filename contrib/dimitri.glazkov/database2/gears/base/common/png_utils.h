@@ -30,7 +30,7 @@
 #include "gears/base/common/common.h"
 
 extern "C" {
-#include "third_party/libpng/png.h"  // included in .h for PNG_* #defines
+#include "gears/third_party/libpng/png.h"  // included in .h for PNG_* #defines
 }
 
 

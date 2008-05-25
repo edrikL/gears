@@ -41,10 +41,8 @@
 // particular plugin.
 //
 #include "gears/base/common/string_utils.h"
-#include "gears/base/npapi/module.h"
 #include "gears/base/npapi/plugin.h"
 #include "gears/factory/npapi/factory_wrapper.h"
-#include "genfiles/product_constants.h"
 
 std::string16 g_user_agent;  // Access externally via BrowserUtils class.
 
@@ -81,8 +79,6 @@ NPError NPP_Destroy(NPP instance, NPSavedData** save)
   if (instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  NotifyNPInstanceDestroyed(instance);
-
   NPObject* obj = static_cast<NPObject*>(instance->pdata);
   if (obj)
     NPN_ReleaseObject(obj);
@@ -117,10 +113,10 @@ NPError	NPP_GetValue(NPP instance, NPPVariable variable, void *value)
 
   switch (variable) {
   case NPPVpluginNameString:
-    *((char **)value) = PRODUCT_SHORT_NAME_ASCII;
+    *((char **)value) = "NPGears";
     break;
   case NPPVpluginDescriptionString:
-    *((char **)value) = PRODUCT_FRIENDLY_NAME_ASCII " Plugin";
+    *((char **)value) = "Google Gears Plugin";
     break;
   case NPPVpluginScriptableNPObject:
     *(NPObject **)value = plugin;

@@ -66,9 +66,7 @@ heavy computation, can make the UI unresponsive.  The WorkerPool module
 runs operations in the background, without blocking the UI.
 Scripts executing in the WorkerPool will not trigger the browser's
 "unresponsive script" dialog.
-<h4>Permission</h4>
 
-<p>This API requires user permission.  If you would like to customize the default dialog, you can explicitly call <code>google.gears.factory.getPermission()</code> - <a href="api_factory.html">see how.</a></p>
 
 <h2 id="example">Example</h2>
 
@@ -78,19 +76,18 @@ Scripts executing in the WorkerPool will not trigger the browser's
 var workerPool = google.gears.factory.create('beta.workerpool');
 
 workerPool.onmessage = function(a, b, message) {
-  alert('Received message from worker ' + message.sender + ': \n' + message.body);
+  alert('Received message from worker ' + message.sender + ': ' + message.text);
 };
 
 var childWorkerId = workerPool.createWorkerFromUrl('worker.js');
 
-workerPool.sendMessage(["3..2..", 1, {helloWorld: "Hello world!"}], childWorkerId);
+workerPool.sendMessage('Hello, world!', childWorkerId);
 &lt;/script&gt;</code></pre>
 
 <pre><code>// worker.js
 var wp = google.gears.workerPool;
 wp.onmessage = function(a, b, message) {
-  var reply = message.body[0] + message.body[1] + "... " + message.body[2].helloWorld;
-  wp.sendMessage(reply, message.sender);
+  wp.sendMessage('Received: ' + message.text, message.sender);
 }</code></pre>
 
 
@@ -104,7 +101,9 @@ one worker has no effect in any other worker.  And created workers do not
 automatically inherit script code from their parents.
 
 <p>Members of a WorkerPool interact with each other only by sending message
-objects.
+strings. Workers can also pass richer data types, by first converting objects
+to strings using <a href="http://www.json.org/">JSON</a>.
+
 
 <h3 id="limitations">Limitations</h3>
 
@@ -181,11 +180,11 @@ common ways:
 
 <h2 id="workerpool_class">WorkerPool class</h2>
 
-<pre><code>callback <b>onmessage</b>(messageText, senderId, messageObject)
-callback <b>onerror</b>(errorObject)
+<pre><code>callback <b>onmessage</b>(messageText, senderId, [messageObject:{text,sender,origin}])
+callback <b>onerror</b>(errorObject:{message})
 int  <b>createWorker</b>(scriptText)
 int  <b>createWorkerFromUrl</b>(scriptUrl)
-void <b>sendMessage</b>(message, destWorkerId)
+void <b>sendMessage</b>(messageText, destWorkerId)
 void <b>allowCrossOrigin</b>()
 </code></pre>
 <br>
@@ -194,7 +193,7 @@ void <b>allowCrossOrigin</b>()
 
 <table>
   <tr class="odd">
-    <th colspan="2"><code>callback onmessage(messageText, senderId, messageObject)</code></th>
+    <th colspan="2"><code>callback onmessage(messageText, senderId, [messageObject:{text,sender,origin}])</code></th>
   </tr>
   <tr class="odd">
     <td width="113">Summary:</td>
@@ -212,11 +211,10 @@ void <b>allowCrossOrigin</b>()
       <code>messageObject</code>
         An object containing all information about the message. Has these properties:
         <!-- TODO: Create a CSS class for an indented list of object properties, which doesn't space things out as much as vanilla <ul> does. -->
-        <br>&nbsp; &nbsp; &bull; <code>body</code> - The message content object.
+        <br>&nbsp; &nbsp; &bull; <code>text</code> - The message contents.
         <br>&nbsp; &nbsp; &bull; <code>sender</code> - ID of the source worker.
         <br>&nbsp; &nbsp; &bull; <code>origin</code> - The sender's origin, represented as a string of the form: SCHEME://DOMAIN[:PORT].
         <br>&nbsp; &nbsp; The port is omitted for standard ports (http port 80, https port 443).
-        <br>&nbsp; &nbsp; &bull; <code>text</code> - The message content string <i>(Deprecated. Prefer <code>message.body</code> instead. If the message sent was a string, this property contains the message. If the message sent was some other type, it contains null.</i>)
     </td>
   </tr>
 </table>
@@ -353,19 +351,19 @@ up to the parent.</td>
 
 <table>
   <tr class="odd">
-    <th colspan="2"><code>void sendMessage(message, destWorkerId)</code></th>
+    <th colspan="2"><code>void sendMessage(messageText, destWorkerId)</code></th>
   </tr>
   <tr class="odd">
     <td width="113">Summary:</td>
     <td width="550" class="odd">
-      Sends <code>messageObject</code> to the worker specified by <code>destWorkerId</code>.
+      Sends <code>messageText</code> to the worker specified by <code>destWorkerId</code>.
     </td>
   </tr>
   <tr class="odd">
     <td>Parameters:</td>
     <td class="odd">
-      <code>messageObject</code>
-      - The message object to send.  Can be string, boolean, number, array or object.
+      <code>messageText</code>
+      - The string to send.
       <br>
       <code>destWorkerId</code>
       - ID of the destination worker.
@@ -374,6 +372,8 @@ up to the parent.</td>
   <tr class="odd">
     <td>Details:</td>
     <td class="odd">
+      Messages must be strings.
+      <br><br>
       Messages sent from worker 1 to worker 2 in a particular order will be received in the same order.
       <br><br>
       Messages can be sent and received only between members of the same WorkerPool.

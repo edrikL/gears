@@ -37,14 +37,17 @@
 #include "gears/base/common/string16.h"
 #include "gears/desktop/shortcut_utils_win32.h"
 
-int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
+int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR command_line, int) {
   CoInitializeEx(NULL, GEARS_COINIT_THREAD_MODEL);
 
-  int argc;
-  char16 **argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-  if (!argv) { return __LINE__; }  // return line as a ghetto error code
+  int num_args;
+  char16 **argv = CommandLineToArgvW(GetCommandLineW(), &num_args);
 
-  if (argc != 6) {  // first argument is program path + filename
+  if (!argv) {
+    return __LINE__; // return line as a sort of ghetto error code
+  }
+
+  if (num_args != 5) { // first "argument" is program path
     return __LINE__;
   }
 
@@ -52,24 +55,14 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
   std::string16 browser_path(argv[2]);
   std::string16 url(argv[3]);
   std::string16 icon_path(argv[4]);
-  const char16 *end_ptr;
-  uint16 locations = ParseLeadingInteger(argv[5], &end_ptr);
-  if (end_ptr == argv[5]) {
-    return __LINE__;
-  }
 
-  LocalFree(argv);  // MSDN says to free 'argv', using LocalFree().
+  LocalFree(argv);
 
   std::string16 error;
-  for (uint32 location = 0x8000; location > 0; location >>= 1) {
-    if (locations & location) {
-      if (!CreateShortcutFileWin32(name, browser_path, url, icon_path,
-                                   location, &error)) {
-        LOG((error.c_str()));
-        return __LINE__;
-      }
-    }
+  if (!CreateShortcutFileWin32(name, browser_path, url, icon_path, &error)) {
+    LOG((error.c_str()));
+    return __LINE__;
   }
-
+   
   return 0;
 }

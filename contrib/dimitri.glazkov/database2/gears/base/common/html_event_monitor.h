@@ -35,9 +35,9 @@
 #endif
 
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/basictypes.h"  // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/string16.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 extern const char16 *kEventUnload;
 

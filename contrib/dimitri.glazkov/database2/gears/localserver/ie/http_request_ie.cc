@@ -63,19 +63,13 @@ bool HttpRequest::Create(scoped_refptr<HttpRequest>* request) {
   return true;
 }
 
-// static
-bool HttpRequest::CreateSafeRequest(scoped_refptr<HttpRequest>* request) {
-  return HttpRequest::Create(request);
-}
-
 //------------------------------------------------------------------------------
 // Construction, destruction and refcounting
 //------------------------------------------------------------------------------
 
 IEHttpRequest::IEHttpRequest()
     : caching_behavior_(USE_ALL_CACHES), redirect_behavior_(FOLLOW_ALL),
-      was_redirected_(false), was_aborted_(false),
-      listener_(NULL), listener_data_available_enabled_(false),
+      was_redirected_(false), was_aborted_(false), listener_(NULL),
       ready_state_(UNINITIALIZED), has_synthesized_response_payload_(false),
       actual_data_size_(0), async_(false) {
 }
@@ -378,12 +372,10 @@ bool IEHttpRequest::Abort() {
 }
 
 //------------------------------------------------------------------------------
-// SetListener
+// SetOnReadyStateChange
 //------------------------------------------------------------------------------
-bool IEHttpRequest::SetListener(HttpListener *listener,
-                                bool enable_data_available) {
+bool IEHttpRequest::SetOnReadyStateChange(ReadyStateListener *listener) {
   listener_ = listener;
-  listener_data_available_enabled_ = enable_data_available;
   return true;
 }
 
@@ -684,7 +676,7 @@ STDMETHODIMP IEHttpRequest::OnDataAvailable(
     data->resize(actual_data_size_);
   }
 
-  if (is_new_data_available && listener_ && listener_data_available_enabled_) {
+  if (is_new_data_available && listener_) {
     listener_->DataAvailable(this);
   }
 

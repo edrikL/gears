@@ -28,39 +28,40 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "genfiles/product_constants.h"
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/string16.h"
-#include "gears/base/ie/detect_version_collision.h"
 #include "gears/base/npapi/module_wrapper.h"
-#include "gears/console/console.h"
+#include "gears/console/npapi/console_np.h"
 #include "gears/database/npapi/database.h"
-#include "gears/desktop/desktop.h"
-#include "gears/factory/common/factory_utils.h"
-#ifdef OFFICIAL_BUILD
-// The Geolocation API has not been finalized for official builds.
+#ifdef BROWSER_WEBKIT
+// TODO(playmobil): Add support for Desktop module in Safari build.
 #else
-#include "gears/geolocation/geolocation.h"
-#endif  // OFFICIAL_BUILD
-#include "gears/httprequest/httprequest.h"
-#include "gears/localserver/npapi/localserver_np.h"
-#include "gears/timer/timer.h"
-#ifdef WIN32
-#include "gears/base/common/process_utils_win32.h"
-#include "gears/ui/ie/string_table.h"
+#include "gears/desktop/desktop.h"
 #endif
+#include "gears/factory/common/factory_utils.h"
+#include "gears/httprequest/npapi/httprequest_np.h"
+#include "gears/localserver/npapi/localserver_np.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/timer/timer.h"
+#ifdef BROWSER_WEBKIT
+// TODO(playmobil): Add support for worker pools in Safari build.
+#else
 #include "gears/workerpool/npapi/workerpool.h"
-#include "genfiles/product_constants.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#endif
 
-#ifdef USING_CCTESTS
-#include "gears/cctests/test.h"
+#ifdef BROWSER_WEBKIT
+// TODO(playmobil): Add support for test module in Safari build.
+#else
+  #ifdef DEBUG
+  #include "gears/cctests/test.h"
+  #endif
 #endif
 
 // static
 template <>
 void Dispatcher<GearsFactory>::Init() {
   RegisterProperty("version", &GearsFactory::GetVersion, NULL);
-  RegisterProperty("hasPermission", &GearsFactory::GetHasPermission, NULL);
   RegisterMethod("create", &GearsFactory::Create);
   RegisterMethod("getBuildInfo", &GearsFactory::GetBuildInfo);
   RegisterMethod("getPermission", &GearsFactory::GetPermission);
@@ -73,46 +74,23 @@ GearsFactory::GearsFactory()
 }
 
 void GearsFactory::Create(JsCallContext *context) {
-// TODO(playmobil): Implement detect_version_collision.* files on non-win32 
-// platforms.
-#ifdef WIN32
-  if (DetectedVersionCollision()) {
-    if (!EnvIsWorker()) {
-      MaybeNotifyUserOfVersionCollision();  // only notifies once per process
-    }
-    const int kMaxStringLength = 256;
-    char16 error_text[kMaxStringLength];
-    if (LoadString(GetGearsModuleHandle(),
-                   IDS_VERSION_COLLISION_TEXT, error_text, kMaxStringLength)) {
-      context->SetException(error_text);
-    } else {
-      context->SetException(STRING16(L"Internal Error"));
-    }
-  }
-#endif
-
   bool use_temporary_permissions = true;
-  std::string16 module_name;
+  if (!HasPermissionToUseGears(this, use_temporary_permissions,
+                               NULL, NULL, NULL)) {
+    context->SetException(STRING16(L"Page does not have permission to use "
+                                   PRODUCT_FRIENDLY_NAME L"."));
+    return;
+  }
+
+  std::string16 class_name;
   std::string16 version = STRING16(L"1.0");  // default for this optional param
   JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_STRING16, &module_name },
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &class_name },
     { JSPARAM_OPTIONAL, JSPARAM_STRING16, &version },
   };
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set())
     return;
-
-  // Make sure the user gives this site permission to use Gears unless the
-  // module is whitelisted.
-
-  if (RequiresPermissionToUseGears(module_name)) {
-    if (!HasPermissionToUseGears(this, use_temporary_permissions,
-                                 NULL, NULL, NULL)) {
-      context->SetException(STRING16(L"Page does not have permission to use "
-                                     PRODUCT_FRIENDLY_NAME L"."));
-      return;
-    }
-  }
 
   // Check the version string.
   if (version != kAllowedClassVersion) {
@@ -125,39 +103,39 @@ void GearsFactory::Create(JsCallContext *context) {
   // Do case-sensitive comparisons, which are always better in APIs. They make
   // code consistent across callers, and they are easier to support over time.
   scoped_refptr<ModuleImplBaseClass> object;
-  
-  std::string tmp;
-  String16ToUTF8( module_name.c_str(),module_name.length(), &tmp);
-  const char *a = tmp.c_str();
-  
-  
-  if (module_name == STRING16(L"beta.console")) {
+  if (class_name == STRING16(L"beta.console")) {
     CreateModule<GearsConsole>(GetJsRunner(), &object);
-  } else if (module_name == STRING16(L"beta.database")) {
+  } else if (class_name == STRING16(L"beta.database")) {
     CreateModule<GearsDatabase>(GetJsRunner(), &object);
-  } else if (module_name == STRING16(L"beta.desktop")) {
-    CreateModule<GearsDesktop>(GetJsRunner(), &object);
-  } else if (module_name == STRING16(L"beta.localserver")) {
-    CreateModule<GearsLocalServer>(GetJsRunner(), &object);
-  } else if (module_name == STRING16(L"beta.workerpool")) {
-    CreateModule<GearsWorkerPool>(GetJsRunner(), &object);
-#ifdef OFFICIAL_BUILD
-  // The Geolocation API has not been finalized for official builds.
+#ifdef BROWSER_WEBKIT
+// TODO(playmobil): Add support for test module in Safari build.
 #else
-  } else if (module_name == STRING16(L"beta.geolocation")) {
-    CreateModule<GearsGeolocation>(GetJsRunner(), &object);
-#endif  // OFFICIAL_BUILD
-  } else if (module_name == STRING16(L"beta.httprequest")) {
+  } else if (class_name == STRING16(L"beta.desktop")) {
+    CreateModule<GearsDesktop>(GetJsRunner(), &object);
+#endif
+  } else if (class_name == STRING16(L"beta.localserver")) {
+    CreateModule<GearsLocalServer>(GetJsRunner(), &object);
+#ifdef BROWSER_WEBKIT
+// TODO(playmobil): Add support for worker pools in Safari build.
+#else
+  } else if (class_name == STRING16(L"beta.workerpool")) {
+    CreateModule<GearsWorkerPool>(GetJsRunner(), &object);
+#endif
+  } else if (class_name == STRING16(L"beta.httprequest")) {
     CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
-  } else if (module_name == STRING16(L"beta.timer")) {
+  } else if (class_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(GetJsRunner(), &object);
-  } else if (module_name == STRING16(L"beta.test")) {
-#ifdef USING_CCTESTS
+#ifdef BROWSER_WEBKIT
+// TODO(playmobil): Add support for test module in Safari build.
+#else
+  } else if (class_name == STRING16(L"beta.test")) {
+#ifdef DEBUG
     CreateModule<GearsTest>(GetJsRunner(), &object);
 #else
-    context->SetException(STRING16(L"Object is only available in debug build."));
+    context->SetException(L"Object is only available in debug build.");
     return;
 #endif
+#endif  // BROWSER_WEBKIT
   } else {
     context->SetException(STRING16(L"Unknown object."));
     return;
@@ -203,49 +181,6 @@ void GearsFactory::GetPermission(JsCallContext *context) {
     has_permission = true;
   }
   
-  context->SetReturnValue(JSPARAM_BOOL, &has_permission);
-}
-
-// Purposely ignores 'is_creation_suspended_'.  The 'hasPermission' property
-// indicates whether USER opt-in is still required, not whether DEVELOPER
-// methods have been called correctly (e.g. allowCrossOrigin).
-void GearsFactory::GetHasPermission(JsCallContext *context) {
-  bool has_permission = false;
-  switch (permission_state_) {
-    case ALLOWED_PERMANENTLY:
-    case ALLOWED_TEMPORARILY:
-      has_permission = true;
-      break;
-    case DENIED_PERMANENTLY:
-    case DENIED_TEMPORARILY:
-      has_permission = false;
-      break;
-    case NOT_SET: {
-      // If the state is unknown, look in the PermissionsDB. If a persisted
-      // value exists, update permission_state_.  Otherwise do NOT modify
-      // permission_state_; it would affect subsequent factory.create() calls.
-      PermissionsDB *permissions_db = PermissionsDB::GetDB();
-      if (permissions_db) {
-        switch (permissions_db->GetCanAccessGears(EnvPageSecurityOrigin())) {
-          case PermissionsDB::PERMISSION_ALLOWED:
-            permission_state_ = ALLOWED_PERMANENTLY;
-            has_permission = true;
-            break;
-          case PermissionsDB::PERMISSION_DENIED:
-            permission_state_ = DENIED_PERMANENTLY;
-            has_permission = false;
-            break;
-          default:
-            break;  // use the default retval already set
-        }
-      }
-      break;
-    }
-    default:
-      context->SetException(STRING16(L"Internal error."));
-      return;
-  }
-
   context->SetReturnValue(JSPARAM_BOOL, &has_permission);
 }
 

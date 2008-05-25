@@ -27,7 +27,7 @@
 #define GEARS_UI_COMMON_SETTINGS_DIALOG_H__
 
 #include "gears/base/common/permissions_db.h"
-#include "third_party/jsoncpp/json.h"
+#include "gears/third_party/jsoncpp/json.h"
 
 // For now this is very simple and only gives a way to revoke decisions made
 // with the "remember me" checkbox on the capabilities prompt.

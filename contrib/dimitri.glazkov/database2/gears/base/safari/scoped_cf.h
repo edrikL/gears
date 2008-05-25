@@ -94,24 +94,6 @@ typedef scoped_token<Handle, ReleaseHandleFunctor> scoped_Handle;
 
 // TODO(aa): Replace usages of the below with scoped_cftype above?
 
-#if defined(__OBJC__) && defined(__cplusplus)
-class ReleaseObjCRef {
- public:
-  void operator()(id x) const {
-    if (x != NULL)
-      [x release];
-  }
-};
-
-template<typename T>
-class scoped_objctype : public scoped_token<T, ReleaseObjCRef> {
- public:
-  explicit scoped_objctype(T value) :
-      scoped_token<T, ReleaseObjCRef>(value) {
-  }
-};
-#endif
-
 // CFDictionaryRef
 typedef scoped_token<CFDictionaryRef, ReleaseCFTypeFunctor> scoped_CFDictionary;
 

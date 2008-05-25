@@ -26,7 +26,7 @@
 #include <assert.h>
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/string_utils.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 std::map<SerializableClassId, SerializableFactoryMethod>
   Serializable::constructors_;

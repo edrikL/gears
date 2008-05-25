@@ -42,8 +42,8 @@
 #include <gecko_sdk/include/nsCOMPtr.h>
 #include <gecko_internal/jsapi.h>
 #include "gears/base/common/dispatcher.h"
-#include "third_party/linked_ptr/linked_ptr.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/third_party/linked_ptr/linked_ptr.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 // TODO_REMOVE_NSISUPPORTS: The next two definitions.
 class IIDLessThanFunctor {

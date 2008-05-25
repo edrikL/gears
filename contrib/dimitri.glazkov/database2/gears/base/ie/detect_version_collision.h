@@ -30,8 +30,7 @@
 // downloaded and registered but a previous version is loaded and running,
 // thing will not work properly. We can end up with both versions of Gears
 // loaded into the same process and the system is confused about which DLL
-// contains CLSIDs, so neither version is fully functional, yuck.  Similarly,
-// different versions may require different database schemas.
+// contains CLSIDs, so neither version is fully functional, yuck.
 //
 // Our general approach for the short term is to have the new version
 // cripple itself at DLL load time if it sees an old version still running.
@@ -46,7 +45,7 @@
 //    - BHO.SetSite() will not activate our HttpHandlerAPP
 //    - GearsFactory.create() will not create any other GearsObjects and will
 //      alert the user that a restart is required if they haven't already
-//      been told
+//      been told.
 //    - The tools menu item will alert the user that a restart is required
 //      instead of showing the settings dialog
 //
@@ -76,5 +75,9 @@ void MaybeNotifyUserOfVersionCollision();
 
 // Puts up a simple message box alerting the user about the problem
 void NotifyUserOfVersionCollision();
+
+// The message shown to users, also used as the message in JavaScript
+// exceptions thrown by the factory when we're crippled.
+extern const wchar_t *kVersionCollisionErrorMessage;
 
 #endif  // GEARS_BASE_IE_DETECT_VERSION_COLLISION_H__

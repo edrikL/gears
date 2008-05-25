@@ -56,17 +56,8 @@ a {
 }
 
 button {
-  /*
-  It would be better to express margins in ems, but it causes layout
-  artifacts (presumably because of rounding errors) when combined with
-  the -moz-border-radius property used in button.css on Firefox 2.
-
-  Also: bizarely, if I try to use the more natural margin-left:10px, I get
-  a bug where the buttons bounce on IE when you hover over them.
-  */
-  position:relative;
-  margin-right:7px;
-  left:7px;
+  width:8em;
+  margin-left:0.5em;
 }
 
 #head {

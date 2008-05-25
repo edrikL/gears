@@ -36,21 +36,26 @@
 #include "gears/base/common/module_wrapper.h"
 #include "gears/blob/blob.h"
 #include "gears/blob/file_blob.h"
-#include "third_party/linked_ptr/linked_ptr.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/third_party/linked_ptr/linked_ptr.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-bool FileDialogUtils::FiltersToVector(const JsArray& filters,
+bool FileDialogUtils::FiltersToVector(const JsArray* filters,
                                       std::vector<FileDialog::Filter>* out,
                                       std::string16* error) {
-  assert(out);
-  assert(error);
+  if (!filters) {
+    // add default
+    FileDialog::Filter filter = { STRING16(L"All Files"), STRING16(L"*.*") };
+    out->push_back(filter);
+    return true;
+  }
+
   // check array length
   int length = 0;
-  if (!filters.GetLength(&length)) {
+  if (!filters->GetLength(&length)) {
     *error = STRING16(L"Failed to get filters array length.");
     return false;
   }
-  if (length < 0 || length % 2 != 0) {
+  if (length <= 0 || length % 2 != 0) {
     *error = STRING16(L"Array length must be a factor of two.");
     return false;
   }
@@ -58,8 +63,8 @@ bool FileDialogUtils::FiltersToVector(const JsArray& filters,
   // add filters to vector
   FileDialog::Filter filter;
   for (int i = 0; i + 1 < length; i += 2) {
-    if (!filters.GetElementAsString(i, &filter.description) ||
-        !filters.GetElementAsString(i + 1, &filter.filter)) {
+    if (!filters->GetElementAsString(i, &filter.description)
+        || !filters->GetElementAsString(i + 1, &filter.filter)) {
       *error = STRING16(L"Failed to retrieve strings from filters array.");
       return false;
     }
@@ -102,7 +107,7 @@ bool FileDialogUtils::FilesToJsObjectArray(
       *error = STRING16(L"Failed to get JsRunnerInterface.");
       return false;
     }
-    scoped_ptr<JsObject> obj(js_runner->NewObject());
+    scoped_ptr<JsObject> obj(js_runner->NewObject(NULL));
     if (!obj.get()) {
       *error = STRING16(L"Failed to create javascript object.");
       return false;

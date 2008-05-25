@@ -28,7 +28,7 @@
 #include "gears/base/common/url_utils.h"
 
 #include "gears/base/common/string_utils.h"
-#include "third_party/googleurl/src/gurl.h"
+#include "gears/third_party/googleurl/src/gurl.h"
 
 bool ResolveAndNormalize(const char16 *base, const char16 *url,
                          std::string16 *out) {

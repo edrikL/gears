@@ -47,14 +47,19 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Google Inc."
             VALUE "FileVersion", "PRODUCT_VERSION"
-            VALUE "LegalCopyright", "Copyright 2006-2008 Google Inc. All Rights Reserved."
+            VALUE "LegalCopyright", "Copyright 2006-2007 Google Inc. All Rights Reserved."
             VALUE "ProductName", "PRODUCT_FRIENDLY_NAME_UQ"
             VALUE "ProductVersion", "PRODUCT_VERSION"
+#if BROWSER_NPAPI
+            // NPAPI requires np*.dll formatted filenames.
+            VALUE "FileDescription", "`np'PRODUCT_SHORT_NAME_UQ.dll"
+            VALUE "InternalName", "`np'PRODUCT_SHORT_NAME_UQ.dll"
+            VALUE "OriginalFilename", "`np'PRODUCT_SHORT_NAME_UQ.dll"
+            VALUE "MIMEType", "application/x-googlegears"
+#else
             VALUE "FileDescription", "PRODUCT_SHORT_NAME_UQ.dll"
             VALUE "InternalName", "PRODUCT_SHORT_NAME_UQ.dll"
             VALUE "OriginalFilename", "PRODUCT_SHORT_NAME_UQ.dll"
-#if BROWSER_NPAPI
-            VALUE "MIMEType", "application/x-googlegears"
 #endif
         END
     END

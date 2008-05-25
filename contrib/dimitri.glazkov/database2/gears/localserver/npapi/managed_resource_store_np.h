@@ -31,7 +31,7 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/message_service.h"
 #include "gears/localserver/common/managed_resource_store.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 //-----------------------------------------------------------------------------
 // GearsManagedResourceStore

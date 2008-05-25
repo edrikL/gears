@@ -23,20 +23,21 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-if (isUsingCCTests) {
+if (isDebug) {
   var internalTests = google.gears.factory.create('beta.test');
 }
 
 function testInternal() {
-  if (isUsingCCTests) {
-    internalTests.runTests();
+  if (isDebug) {
+    assert(internalTests.runTests(),
+           'Internal tests failed.');
   }
 }
 
 
 // test functions for passing arguments
 function testPassArguments() {
-  if (isUsingCCTests) {
+  if (isDebug) {
     // Have to do this because Gears methods don't support apply() in IE.
     function callTest(args) {
       internalTests.testPassArguments(args[0], args[1], args[2], args[3],
@@ -117,21 +118,8 @@ function testPassArguments() {
   }
 }
 
-function testPassArgumentsCallback() {
-  function testPassArgumentCallbackFunction(arg1, arg2, arg3, arg4, arg5) {
-    assert(arg1 === true, "Bad value for argument 1");
-    assert(arg2 === 42, "Bad value for argument 2");
-    assert(arg3 === Math.pow(2, 42), "Bad value for argument 3");
-    assert(arg4 === 88.8, "Bad value for argument 4");
-    assert(arg5 === "hotdog", "Bad value for argument 5");
-  }
-  if (isUsingCCTests) {
-    internalTests.testPassArgumentsCallback(testPassArgumentCallbackFunction);
-  }
-}
-
 function testPassArgumentsOptional() {
-  if (isUsingCCTests) {
+  if (isDebug) {
     internalTests.testPassArgumentsOptional(42, 42, 42);
     internalTests.testPassArgumentsOptional(42, 42);
     internalTests.testPassArgumentsOptional(42);
@@ -151,21 +139,15 @@ function testPassArgumentsOptional() {
 // JsObject test functions
 
 // Test passing an object with different types of properties to C++.
-function testObjectProperties() {
-  if (isUsingCCTests) {
-    internalTests.testObjectProperties();
-  }
-}
-
 function testPassObject() {
-  if (isUsingCCTests) {
+  if (isDebug) {
     internalTests.testPassObject(new TestObject());
   }
 }
 
 // Test creating a javascript object in C++ and returning it.
 function testCreateObject() {
-  if (isUsingCCTests) {
+  if (isDebug) {
     // TODO(cdevries): Enable this test on FF in worker pools when
     //                 SetReturnValue() has been implemented.
     var isFirefox = google.gears.factory.getBuildInfo().indexOf("firefox") > -1;
@@ -179,242 +161,11 @@ function testCreateObject() {
       assertEqual(testObject.array_many_types[6](),
           createdObject.array_many_types[6]());
       assertEqual(testObject.func(), createdObject.func());
-      // Explicitly test date object.
-      assertEqual(testObject.date_object.getTime(),
-                  createdObject.date_object.getTime());
     }
   }
+
 }
 
-// Test creating a JavaScript Error object in C++ and returning it.
-function testCreateError() {
-  if (isUsingCCTests) {
-    // TODO(cdevries): Enable this test on FF in worker pools when
-    //                 SetReturnValue() has been implemented.
-    var isFirefox = google.gears.factory.getBuildInfo().indexOf("firefox") > -1;
-    var isFirefoxWorker = isFirefox && google.gears.workerPool;
-
-    if (!isFirefoxWorker) {
-      var createdObject = internalTests.testCreateError();
-      assertEqual('test error\r\nwith \'special\' \\characters\\',
-                  createdObject.message);
-    }
-  }
-}
-
-// Tests the bogus browser cache entries used on WinCE to prevent the 'Cannot
-// Connect' popup when serving content from the LocalServer when offline.
-// TODO(steveblock): Add more tests once test harness is fully working for
-// WinCE.
-// - Managed resource store.
-// - Test that existing browser cache entires are not over-written.
-function testBrowserCache() {
-  if (isUsingCCTests && isWince) {
-    // Clear the browser cache.
-    var urls = ['/testcases/test_file_1.txt',
-                '/testcases/test_file_1024.txt'];
-    internalTests.removeEntriesFromBrowserCache(urls);
-    // Create a resource store and capture some resources.
-    var localServer = google.gears.factory.create('beta.localserver');
-    var storeName = 'testBrowserCacheStore';
-    var store = localServer.createStore(storeName);
-    var responses = 0;
-    startAsync();
-    store.capture(urls, function(url, success, captureId) {
-      ++responses;
-      assert(success, 'Capture for ' + url + ' failed.');
-      if (responses == urls.length) {
-        // Check that these resources are in the browser cache.
-        internalTests.testEntriesPresentInBrowserCache(urls, true, true);
-        // Remove a URL.
-        store.remove(urls[0]);
-        internalTests.testEntriesPresentInBrowserCache([urls[0]], false);
-        internalTests.testEntriesPresentInBrowserCache([urls[1]], true, true);
-        // Remove the store.
-        localServer.removeStore(storeName);
-        internalTests.testEntriesPresentInBrowserCache(urls, false);
-        completeAsync();
-      }
-    });
-  }
-}
-
-// Tests the parsing of the options passed to Geolocation.GetCurrentPosition and
-// Geolocation.WatchPosition.
-function testParseGeolocationOptions() {
-  if (isUsingCCTests && !isOfficial) {
-    var dummyFunction = function() {};
-    // All good.
-    internalTests.testParseGeolocationOptions(dummyFunction);
-    // Test correct types.
-    // Missing callback function.
-    assertError(function() { internalTests.testParseGeolocationOptions() });
-    // Wrong type for callback function.
-    assertError(function() { internalTests.testParseGeolocationOptions(42) });
-    // Wrong type for options.
-    assertError(
-        function() { internalTests.testParseGeolocationOptions(
-            dummyFunction, 42) });
-    // Wrong type for enableHighAccuracy.
-    assertError(
-        function() { internalTests.testParseGeolocationOptions(
-            dummyFunction, { enableHighAccuracy: 42 }) },
-        'options.enableHighAccuracy should be a boolean.');
-    // Wrong type for requestAddress.
-    assertError(
-        function() { internalTests.testParseGeolocationOptions(
-            dummyFunction, { requestAddress: 42 }) },
-        'options.requestAddress should be a boolean.');
-    // Wrong type for gearsLocationProviderUrls.
-    assertError(
-        function() { internalTests.testParseGeolocationOptions(
-            dummyFunction, { gearsLocationProviderUrls: 42 }) },
-        'options.gearsLocationProviderUrls should be null or an array of ' +
-        'strings');
-    assertError(
-        function() { internalTests.testParseGeolocationOptions(
-            dummyFunction, { gearsLocationProviderUrls: [42] }) },
-        'options.gearsLocationProviderUrls should be null or an array of ' +
-        'strings');
-    // Test correct parsing.
-    var defaultUrlArray = ['http://www.google.com/'];
-    var urls = ['url1', 'url2'];
-    var parsed_options;
-    // No options.
-    parsed_options = internalTests.testParseGeolocationOptions(dummyFunction);
-    assertEqual(false, parsed_options.repeats);
-    assertEqual(false, parsed_options.enableHighAccuracy);
-    assertEqual(false, parsed_options.requestAddress);
-    assertArrayEqual(defaultUrlArray,
-                     parsed_options.gearsLocationProviderUrls);
-    // Empty options.
-    parsed_options = internalTests.testParseGeolocationOptions(dummyFunction,
-                                                               {});
-    assertEqual(false, parsed_options.repeats);
-    assertEqual(false, parsed_options.enableHighAccuracy);
-    assertEqual(false, parsed_options.requestAddress);
-    assertArrayEqual(defaultUrlArray,
-                     parsed_options.gearsLocationProviderUrls);
-    // Empty provider URLs.
-    parsed_options = internalTests.testParseGeolocationOptions(
-        dummyFunction,
-        { gearsLocationProviderUrls: [] });
-    assertEqual(false, parsed_options.repeats);
-    assertEqual(false, parsed_options.enableHighAccuracy);
-    assertEqual(false, parsed_options.requestAddress);
-    assertArrayEqual([], parsed_options.gearsLocationProviderUrls);
-    // Null provider URLs.
-    parsed_options = internalTests.testParseGeolocationOptions(
-        dummyFunction,
-        { gearsLocationProviderUrls: null });
-    assertEqual(false, parsed_options.repeats);
-    assertEqual(false, parsed_options.enableHighAccuracy);
-    assertEqual(false, parsed_options.requestAddress);
-    assertArrayEqual([], parsed_options.gearsLocationProviderUrls);
-    // All properties false, provider URLs set.
-    parsed_options = internalTests.testParseGeolocationOptions(
-        dummyFunction,
-        { enableHighAccuracy: false,
-          requestAddress: false,
-          gearsLocationProviderUrls: urls });
-    assertEqual(false, parsed_options.repeats);
-    assertEqual(false, parsed_options.enableHighAccuracy);
-    assertEqual(false, parsed_options.requestAddress);
-    assertArrayEqual(urls, parsed_options.gearsLocationProviderUrls);
-    // All properties true, provider URLs set.
-    parsed_options = internalTests.testParseGeolocationOptions(
-        dummyFunction,
-        { enableHighAccuracy: true,
-          requestAddress: true,
-          gearsLocationProviderUrls: urls });
-    assertEqual(false, parsed_options.repeats);
-    assertEqual(true, parsed_options.enableHighAccuracy);
-    assertEqual(true, parsed_options.requestAddress);
-    assertArrayEqual(urls, parsed_options.gearsLocationProviderUrls);
-  }
-}
-
-// Tests forming the JSON request body for a network location provider. Note
-// that the inputs to the conversion are set on the C++ side.
-function testGeolocationFormRequestBody() {
-  if (isUsingCCTests && !isOfficial) {
-    var body = internalTests.testGeolocationFormRequestBody();
-    var correctBody = '{ ' +
-                      '"address_language" : "en-GB", ' +
-                      '"cell_towers" : [ { ' +
-                      '"cell_id" : 23874, ' +
-                      '"location_area_code" : 98, ' +
-                      '"mobile_country_code" : 234, ' +
-                      '"mobile_network_code" : 15, ' +
-                      '"signal_strength" : -65 ' +
-                      '} ], ' +
-                      '"host" : "www.google.com", ' +
-                      '"location" : { ' +
-                      '"latitude" : 53.1, ' +
-                      '"longitude" : -0.1 ' +
-                      '}, ' +
-                      '"radio_type" : "gsm", ' +
-                      '"request_address" : true, ' +
-                      '"version" : "1.0", ' +
-                      '"wifi_towers" : [ { ' +
-                      '"age" : 15, ' +
-                      '"channel" : 19, ' +
-                      '"mac_address" : "00-0b-86-d7-6a-42", ' +
-                      '"signal_strength" : -50, ' +
-                      '"signal_to_noise" : 10, ' +
-                      '"ssid" : "Test SSID" ' +
-                      '} ] ' +
-                      '}\n';  // Note trailing line break.
-    assertEqual(correctBody, body);
-  }
-}
-
-// Tests extracting a position object from the JSON reposnse from a network
-// location provider.
-function testGeolocationGetLocationFromResponse() {
-  if (isUsingCCTests && !isOfficial) {
-    var responseString = '{ ' +
-                         '"location" : { ' +
-                         '"latitude" : 53.1, ' +
-                         '"longitude" : -0.1, ' +
-                         '"altitude" : 30, ' +
-                         '"horizontal_accuracy" : 1200, ' +
-                         '"vertical_accuracy" : 10, ' +
-                         '"address" : { ' +
-                         '"street_number": "100", ' +
-                         '"street": "Amphibian Walkway", ' +
-                         '"city": "Mountain View", ' +
-                         '"county": "Mountain View County", ' +
-                         '"region": "California", ' +
-                         '"country": "United States of America", ' +
-                         '"country_code": "US", ' +
-                         '"postal_code": "94043" ' +
-                         '} ' +
-                         '} ' +
-                         '}';
-    var position =
-        internalTests.testGeolocationGetLocationFromResponse(responseString);
-    // timestamp and errorMessage are set on the C++ side.
-    var correctPosition = new Object();
-    correctPosition.latitude = 53.1;
-    correctPosition.longitude = -0.1;
-    correctPosition.altitude = 30;
-    correctPosition.horizontalAccuracy = 1200;
-    correctPosition.verticalAccuracy = 10;
-    correctPosition.address = new Object();
-    correctPosition.address.streetNumber = '100';
-    correctPosition.address.street = 'Amphibian Walkway';
-    correctPosition.address.city = 'Mountain View';
-    correctPosition.address.county = 'Mountain View County';
-    correctPosition.address.region = 'California';
-    correctPosition.address.country = 'United States of America';
-    correctPosition.address.countryCode = 'US';
-    correctPosition.address.postalCode = '94043';
-    correctPosition.timestamp = new Date(42);
-    correctPosition.errorMessage = 'test error';
-    assertObjectEqual(correctPosition, position);
-  }
-}
 
 // Helper functions
 
@@ -481,48 +232,6 @@ function TestObject() {
   // object
   this.obj = new ChildTestObject();
 
-  // Date
-  this.date_object = new Date(10);
-
   // function
   this.func = createTestFunction();
 }
-
-function testGetSystemTime() {
-  if (isUsingCCTests) {
-    // Test system time increases.
-    var start = internalTests.getSystemTime();
-    var callback = function() {
-      var end = internalTests.getSystemTime();
-      assert(start < end, 'System time should increase.');
-      completeAsync();
-    };
-    var timer = google.gears.factory.create('beta.timer');
-    startAsync();
-    // getSystemTime resolution is only 1s on WinCE.
-    timer.setTimeout(callback, 2000);
-  }
-}
-
-function testPerfTimer() {
-  if (isUsingCCTests) {
-    // Test zero tick delta.
-    var ticks = internalTests.getTicks();
-    var elapsed = internalTests.getTickDeltaMicros(ticks, ticks);
-    assert(elapsed == 0, 'Time delta should be zero.');
-    // Test non-zero tick delta.
-    var callback = function() {
-      elapsed =
-          internalTests.getTickDeltaMicros(ticks, internalTests.getTicks());
-      assert(elapsed > 0, 'Time delta should be greater than zero.');
-      completeAsync();
-    };
-    var timer = google.gears.factory.create('beta.timer');
-    startAsync();
-    // Tick resolution should be at most 1us.
-    timer.setTimeout(callback, 1);
-  }
-}
-
-// SAFARI-TEMP - Disable tests that don't currently work on Safari.
-testObjectProperties._disable_in_safari = true;

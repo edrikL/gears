@@ -26,4 +26,4 @@ interfaces.
 How to run tests:
 
 Run python test/runner/testwebserver.py
-Then go to http://localhost:8001/tester/gui.html  (or your favorite host name)
+Then go to http://hostname:8001/tester/gui.html

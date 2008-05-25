@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef USING_CCTESTS
+#ifdef DEBUG
 
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/message_service.h"
@@ -77,14 +77,12 @@ class TestObserver : public MessageObserverInterface {
   }
 };
 
-bool TestMessageService(std::string16 *error) {
+bool TestMessageService() {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestMessageService - failed (%d)\n", __LINE__)); \
-    assert(error); \
-    *error += STRING16(L"TestMessageService - failed. "); \
     return false; \
   } \
 }
@@ -198,4 +196,4 @@ bool TestMessageService(std::string16 *error) {
   return true;
 }
 
-#endif  // USING_CCTESTS
+#endif  // DEBUG

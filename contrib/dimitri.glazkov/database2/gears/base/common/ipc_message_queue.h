@@ -39,11 +39,6 @@ typedef uint32 IpcProcessId;
 enum IpcMessageTypes {
   kIpcQueue_TestMessage = 1,
   kMessageService_IpcNotify,
-
-  // For desktop notification. They can not be changed for cross-version
-  // compatibility.
-  kDesktop_AddNotification = 1000,
-  kDesktop_RemoveNotification
 };
 
 // A facility for sending and receiving messages asynchronously 
@@ -51,13 +46,9 @@ enum IpcMessageTypes {
 // queue into which other process can place messages.
 class IpcMessageQueue {
  public:
-  // Returns a pointer to the singleton for doing IPC among peers. May return 
-  // NULL if this ipc facility is not required for a particular build target.
-  static IpcMessageQueue *GetPeerQueue();
-
-  // Returns a pointer to the singleton for doing IPC in the system. May return 
-  // NULL if this ipc facility is not required for a particular build target.
-  static IpcMessageQueue *GetSystemQueue();
+  // Returns a pointer to the singleton. May return NULL if this
+  // ipc facility is not required for a particular build target.
+  static IpcMessageQueue *GetInstance();
 
   // Message handlers implement this interface. All messages of a
   // given message_type will be directed the registered handler
@@ -122,7 +113,7 @@ class IpcMessageQueue {
   DISALLOW_EVIL_CONSTRUCTORS(IpcMessageQueue);
 };
 
-#ifdef USING_CCTESTS
+#ifdef DEBUG
 // For testing
 struct IpcMessageQueueCounters {
   int send_to_all;

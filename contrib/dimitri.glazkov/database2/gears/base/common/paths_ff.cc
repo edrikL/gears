@@ -38,18 +38,45 @@ class nsIFile; // must declare this before including nsDirectoryServiceUtils.h
 #include "gears/base/common/string16.h"
 
 #ifdef WIN32
-bool GetInstallDirectory(std::string16 *path) {
-  if (!GetUmbrellaInstallDirectory(path)) return false;
-  *path += STRING16(L"\\Firefox");
+#include <shlobj.h>
+
+// On Windows, the Firefox APIs return paths containing \, and they don't
+// allow mixing \ and /.  (The Win32 APIs are happy with either separator.)
+const char16 kPathSeparator = L'\\';
+
+// This path must match the path in googleclient/gears/installer/win32_msi.wxs.m4
+static const char16 *kComponentsSubdir = STRING16(L"Google\\"
+                                                  PRODUCT_FRIENDLY_NAME L"\\"
+                                                  L"Shared\\"
+                                                  PRODUCT_VERSION_STRING);
+
+bool GetBaseComponentsDirectory(std::string16 *path) {
+  // Get the subdir where Gears keeps associated components.
+  wchar_t dir[MAX_PATH];
+
+  HRESULT hr = SHGetFolderPathW(NULL, CSIDL_PROGRAM_FILES,
+                                NULL, // user access token
+                                SHGFP_TYPE_CURRENT, dir);
+  if (FAILED(hr) || hr == S_FALSE) { // MSDN says to handle S_FALSE"
+    return false;
+  }
+
+  (*path) = dir;
+  (*path) += kPathSeparator;
+  (*path) += kComponentsSubdir;
+
   return true;
 }
+
+
 #else
+const char16 kPathSeparator = L'/';
 // The text between the slashes must match the Gears <em:id> tag in
 // install.rdf.m4.
 static const char16 *kGearsDir =
-  STRING16(L"extensions/{000a9d1c-beef-4f90-9363-039d445309b8}");
+    STRING16(L"extensions/{000a9d1c-beef-4f90-9363-039d445309b8}");
 
-bool GetInstallDirectory(std::string16 *path) {
+static bool GetBaseGearsDirectory(std::string16 *path) {
   // Get the "regular" profile directory (not the "local").
   nsresult nr;
   nsCOMPtr<nsIFile> profile_path;
@@ -71,13 +98,26 @@ bool GetInstallDirectory(std::string16 *path) {
   return true;
 }
 
+bool GetBaseComponentsDirectory(std::string16 *path) {
+  std::string16 tmp_path;
+  
+  if (!GetBaseGearsDirectory(&tmp_path)) {
+    return false;
+  }
+  
+  (*path) = tmp_path + kPathSeparator;
+  (*path) += STRING16(L"components");
+
+  return true;
+}
+
 #endif
 
 bool GetBaseResourcesDirectory(std::string16 *path) {
 #if defined(OS_MACOSX) || defined(LINUX)
   std::string16 tmp_path;
   
-  if (!GetInstallDirectory(&tmp_path)) {
+  if (!GetBaseGearsDirectory(&tmp_path)) {
     return false;
   }
   

@@ -26,7 +26,7 @@
 #include "gears/base/common/string16.h"
 
 #include <assert.h>
-#include "gears/base/common/basictypes.h"
+#include "gears/base/common/int_types.h"
 
 
 template<class CharT>

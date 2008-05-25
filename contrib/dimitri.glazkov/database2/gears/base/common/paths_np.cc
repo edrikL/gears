@@ -42,21 +42,35 @@ static const char16 *kDataSubdir = STRING16(L"Google\\"
                                             PRODUCT_FRIENDLY_NAME
                                             L" for NPAPI");
 
-// This path must match the path in gears/installer/win32_msi.wxs.m4
+// This path must match the path in googleclient/gears/installer/win32_msi.wxs.m4
 static const char16 *kComponentsSubdir = STRING16(L"Google\\"
                                                   PRODUCT_FRIENDLY_NAME L"\\"
                                                   L"Shared\\"
                                                   PRODUCT_VERSION_STRING);
 
-bool GetInstallDirectory(std::string16 *path) {
-  // TODO(aa): Implement me when needed.
-  return false;
+bool GetBaseComponentsDirectory(std::string16 *path) {
+  wchar_t dir[MAX_PATH];
+
+  HRESULT hr = SHGetFolderPathW(NULL, CSIDL_PROGRAM_FILES,
+                                NULL, // user access token
+                                SHGFP_TYPE_CURRENT, dir);
+  if (FAILED(hr) || hr == S_FALSE) {  // MSDN says to handle S_FALSE
+    return false;
+  }
+
+  (*path) = dir;
+  (*path) += kPathSeparator;
+  (*path) += kComponentsSubdir;
+
+  return true;
 }
+
 
 bool GetBaseResourcesDirectory(std::string16 *path) {
   // TODO(nigeltao): implement.
   return false;
 }
+
 
 bool GetBaseDataDirectory(std::string16 *path) {
   std::string16 path_long;

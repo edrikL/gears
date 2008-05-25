@@ -33,13 +33,21 @@
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/firefox/async_task_ff.h"
-#include "gears/localserver/firefox/ui_thread.h"
 
 const char16 *AsyncTask::kCookieRequiredErrorMessage =
                   STRING16(L"Required cookie is not present");
 
 const char16 *kIsOfflineErrorMessage =
                   STRING16(L"The browser is offline");
+
+// Returns true if the currently executing thread is the main UI thread,
+// firefox/mozila has one such very special thread
+// See cache_intercept.cc for implementation
+bool IsUiThread();
+// Returns the thread id of the main UI thread,
+// firefox/mozila has one such very special thread
+// See cache_intercept.cc for implementation
+PRThread* GetUiThread();
 
 //------------------------------------------------------------------------------
 // AsyncTask
@@ -49,9 +57,8 @@ AsyncTask::AsyncTask() :
     is_initialized_(false),
     delete_when_done_(false),
     listener_(NULL),
-    thread_running_(false),
-    thread_id_(0),
-    listener_thread_id_(0),
+    thread_(NULL),
+    listener_thread_id_(NULL),
     params_(NULL) {
   Ref();
 }
@@ -60,7 +67,7 @@ AsyncTask::AsyncTask() :
 // ~AsyncTask
 //------------------------------------------------------------------------------
 AsyncTask::~AsyncTask() {
-  assert(!thread_running_);
+  assert(!thread_);
   assert(!http_request_.get());
   assert(!params_);
   assert(GetRef() == 0 || 
@@ -95,7 +102,7 @@ bool AsyncTask::Init() {
 //------------------------------------------------------------------------------
 void AsyncTask::SetListener(Listener *listener) {
   assert(!delete_when_done_);
-  assert(IsListenerThread() || listener == NULL);
+  assert(IsListenerThread());
   listener_ = listener;
 }
 
@@ -106,20 +113,19 @@ bool AsyncTask::Start() {
   assert(!delete_when_done_);
   assert(IsListenerThread());
 
-  if (!is_initialized_ || thread_running_) {
-    assert(!(!is_initialized_ || thread_running_));
+  if (!is_initialized_ || thread_) {
+    assert(!(!is_initialized_ || thread_));
     return false;
   }
 
   // Start our worker thread
   CritSecLock locker(lock_);
   is_aborted_ = false;
-  thread_running_ = PR_CreateThread(PR_USER_THREAD, ThreadEntry, // type, func
+  thread_ = PR_CreateThread(PR_USER_THREAD, ThreadEntry, // type, func
                             this, PR_PRIORITY_NORMAL,   // arg, priority
                             PR_LOCAL_THREAD,          // scheduled by whom?
-                            PR_UNJOINABLE_THREAD, // joinable?
-                            0) != NULL; // stack bytes
-  if (!thread_running_) {
+                            PR_UNJOINABLE_THREAD, 0); // joinable?, stack bytes
+  if (thread_ == NULL) {
     return false;
   }
 
@@ -134,6 +140,7 @@ bool AsyncTask::Start() {
 void AsyncTask::Abort() {
   LOG(("AsyncTask::Abort\n"));
   assert(!delete_when_done_);
+  assert(IsListenerThread());
 
   CritSecLock locker(lock_);
   is_aborted_ = true;
@@ -150,7 +157,7 @@ void AsyncTask::OnAbortHttpGet() {
   LOG(("AsyncTask::OnAbortHttpGet - ui thread\n"));
 
   if (http_request_) {
-    http_request_->SetListener(NULL, false);
+    http_request_->SetOnReadyStateChange(NULL);
     http_request_->Abort();
     http_request_.reset(NULL);
   }
@@ -164,6 +171,7 @@ void AsyncTask::OnAbortHttpGet() {
 //------------------------------------------------------------------------------
 void AsyncTask::DeleteWhenDone() {
   assert(!delete_when_done_);
+  assert(IsListenerThread());
 
   LOG(("AsyncTask::DeleteWhenDone\n"));
   CritSecLock locker(lock_);
@@ -182,15 +190,14 @@ void AsyncTask::DeleteWhenDone() {
 // ThreadEntry - Our worker thread's entry procedure
 //------------------------------------------------------------------------------
 void AsyncTask::ThreadEntry(void *task) {
-  ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
   AsyncTask *self = reinterpret_cast<AsyncTask*>(task);
   // Don't run until we're sure all state is initialized.
   {
     CritSecLock locker(self->lock_);
-    self->thread_id_ = ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
+    assert(self->IsTaskThread());
   }
   self->Run();
-  self->thread_running_ = false;
+  self->thread_ = NULL;
   self->Unref();  // remove the reference added by the Start
 }
 
@@ -219,17 +226,11 @@ void AsyncTask::OnListenerEvent(int msg_code, int msg_param) {
 // struct HttpRequestParameters
 //------------------------------------------------------------------------------
 struct AsyncTask::HttpRequestParameters {
-  const char16 *method;
   const char16 *full_url;
   bool is_capturing;
   const char16 *reason_header_value;
   const char16 *if_mod_since_date;
   const char16 *required_cookie;
-#ifdef OFFICIAL_BUILD
-  // The Blob API has not yet been finalized for official builds.
-#else
-  BlobInterface *post_body;
-#endif
   WebCacheDB::PayloadInfo *payload;
   bool *was_redirected;
   std::string16 *full_redirect_url;
@@ -252,77 +253,9 @@ bool AsyncTask::HttpGet(const char16 *full_url,
                         bool *was_redirected,
                         std::string16 *full_redirect_url,
                         std::string16 *error_message) {
-  return MakeHttpRequest(HttpConstants::kHttpGET,
-                         full_url,
-                         is_capturing,
-                         reason_header_value,
-                         if_mod_since_date,
-                         required_cookie,
-#ifdef OFFICIAL_BUILD
-                         // The Blob API has not yet been finalized for official
-                         // builds.
-#else
-                         NULL,
-#endif
-                         payload,
-                         was_redirected,
-                         full_redirect_url,
-                         error_message);
-}
-
-#ifdef OFFICIAL_BUILD
-// The Blob API has not yet been finalized for official builds.
-#else
-//------------------------------------------------------------------------------
-// HttpPost
-//------------------------------------------------------------------------------
-bool AsyncTask::HttpPost(const char16 *full_url,
-                         bool is_capturing,
-                         const char16 *reason_header_value,
-                         const char16 *if_mod_since_date,
-                         const char16 *required_cookie,
-                         BlobInterface *post_body,
-                         WebCacheDB::PayloadInfo *payload,
-                         bool *was_redirected,
-                         std::string16 *full_redirect_url,
-                         std::string16 *error_message) {
-  return MakeHttpRequest(HttpConstants::kHttpGET,
-                         full_url,
-                         is_capturing,
-                         reason_header_value,
-                         if_mod_since_date,
-                         required_cookie,
-                         post_body,
-                         payload,
-                         was_redirected,
-                         full_redirect_url,
-                         error_message);
-}
-#endif
-
-//------------------------------------------------------------------------------
-// MakeHttpRequest
-//------------------------------------------------------------------------------
-bool AsyncTask::MakeHttpRequest(const char16 *method,
-                                const char16 *full_url,
-                                bool is_capturing,
-                                const char16 *reason_header_value,
-                                const char16 *if_mod_since_date,
-                                const char16 *required_cookie,
-#ifdef OFFICIAL_BUILD
-                                // The Blob API has not yet been finalized for
-                                // official builds.
-#else
-                                BlobInterface *post_body,
-#endif
-                                WebCacheDB::PayloadInfo *payload,
-                                bool *was_redirected,
-                                std::string16 *full_redirect_url,
-                                std::string16 *error_message) {
   // This method should only be called our worker thread.
   assert(IsTaskThread());
 
-  assert(payload);
   if (was_redirected) {
     *was_redirected = false;
   }
@@ -350,17 +283,11 @@ bool AsyncTask::MakeHttpRequest(const char16 *method,
   // it's not safe to do from a worker thread.
   // Setup parameters for OnStartHttpGet executing on the UI thread to look at
   HttpRequestParameters params;
-  params.method = method;
   params.full_url = full_url;
   params.is_capturing = is_capturing;
   params.reason_header_value = reason_header_value;
   params.if_mod_since_date = if_mod_since_date;
   params.required_cookie = required_cookie;
-#ifdef OFFICIAL_BUILD
-  // The Blob API has not yet been finalized for official builds.
-#else
-  params.post_body = post_body;
-#endif
   params.payload = payload;
   params.was_redirected = was_redirected;
   params.full_redirect_url = full_redirect_url;
@@ -413,7 +340,7 @@ bool AsyncTask::OnStartHttpGet() {
 
   http_request->SetCachingBehavior(HttpRequest::BYPASS_ALL_CACHES);
 
-  if (!http_request->Open(params_->method, params_->full_url, true)) {
+  if (!http_request->Open(HttpConstants::kHttpGET, params_->full_url, true)) {
     return false;
   }
 
@@ -449,25 +376,11 @@ bool AsyncTask::OnStartHttpGet() {
     }
   }
 
-  http_request->SetListener(this, false);
+  http_request->SetOnReadyStateChange(this);
 
   http_request_ = http_request;
-
-  // Rely on logic inside HttpRequest to check for valid combinations of
-  // method and presence of body.
-  bool result = false;
-#ifdef OFFICIAL_BUILD
-  // The Blob API has not yet been finalized for official builds.
-  if (false) {
-#else
-  if (params_->post_body) {
-    result = http_request->SendBlob(params_->post_body);
-#endif
-  } else {
-    result = http_request->Send();
-  }
-  if (!result) {
-    http_request->SetListener(NULL, false);
+  if (!http_request->Send()) {
+    http_request->SetOnReadyStateChange(NULL);
     http_request_.reset(NULL);
     return false;
   }
@@ -476,7 +389,7 @@ bool AsyncTask::OnStartHttpGet() {
 }
 
 //------------------------------------------------------------------------------
-// HttpRequest::HttpListener::ReadyStateChanged
+// HttpRequest::ReadyStateListener::ReadyStateChanged
 //------------------------------------------------------------------------------
 void AsyncTask::ReadyStateChanged(HttpRequest *http_request) {
   assert(params_);
@@ -496,7 +409,7 @@ void AsyncTask::ReadyStateChanged(HttpRequest *http_request) {
           }
         }
       }
-      http_request->SetListener(NULL, false);
+      http_request->SetOnReadyStateChange(NULL);
       if (http_request->WasRedirected()) {
         if (params_->was_redirected) {
           *(params_->was_redirected) = true;
@@ -510,7 +423,7 @@ void AsyncTask::ReadyStateChanged(HttpRequest *http_request) {
       PR_Notify(lock_);
     }
   } else {
-    http_request->SetListener(NULL, false);
+    http_request->SetOnReadyStateChange(NULL);
     http_request->Abort();
     http_request_.reset(NULL);
     CritSecLock locker(lock_);

@@ -33,7 +33,6 @@
 #include <Carbon/Carbon.h>
 
 #include <algorithm>
-#include <sys/syslimits.h>
 
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/common.h"

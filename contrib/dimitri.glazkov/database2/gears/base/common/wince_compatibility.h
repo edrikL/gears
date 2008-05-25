@@ -24,7 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // TODO(andreip): remove platform-specific #ifdef guards when OS-specific
-// sources (e.g. WIN32_CPPSRCS) are implemented.
+// sources (e.g. WIN32_CPPSRCS) are implemented
 #ifdef WINCE
 #ifndef GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
 #define GEARS_BASE_COMMON_WINCE_COMPATIBILITY_H__
@@ -36,7 +36,7 @@
 #include <crtdefs.h>
 #include <windows.h>
 
-#include "gears/base/common/basictypes.h"  // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/common.h"
 #include "gears/base/common/string16.h"
 #include "gears/localserver/common/critical_section.h"
 
@@ -79,6 +79,8 @@ inline uintptr_t _beginthreadex(void *security,
       initflag,
       reinterpret_cast<DWORD*>(thrdaddr)));
 }
+
+void GetSystemTimeAsFileTime(LPFILETIME filetime);
 
 DWORD GetShortPathNameW(LPCTSTR path_long,
                        LPTSTR path_short,

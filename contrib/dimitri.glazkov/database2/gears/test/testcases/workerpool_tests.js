@@ -164,14 +164,12 @@ function testGCWithFunctionClosures() {
 }
 
 function testOnMessageTests() {
-  startAsync();
   var wp1 = google.gears.factory.create('beta.workerpool');
   wp1.onmessage = function(text, sender, message) {
     assertEqual('PING1', text, 'Incorrect text');
     assertEqual(text, message.text, 'Incorrect message.text');
     assertEqual(sender, message.sender, 'Incorrect sender');
     assertNotEqual('', message.origin, 'Incorrect origin');
-    completeAsync();
   };
 
   // m.text is deprecated, but is still provided for backwards compatability.

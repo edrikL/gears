@@ -23,37 +23,20 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef USING_CCTESTS
+#ifdef DEBUG
 
 #ifndef GEARS_CCTESTS_TEST_H__
 #define GEARS_CCTESTS_TEST_H__
 
-#ifdef WINCE
-#include <windows.h>
-#include <wininet.h>  // For INTERNET_CACHE_ENTRY_INFO
-#endif
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"
-#include "gears/geolocation/geolocation.h"
 
 class GearsTest : public ModuleImplBaseClassVirtual {
  public:
-  GearsTest() : ModuleImplBaseClassVirtual("GearsTest") {}
+   GearsTest() : ModuleImplBaseClassVirtual("GearsTest") {}
 
   // IN: nothing
-  // OUT: double time
-  void GetSystemTime(JsCallContext *context);
-
-  // IN: nothing
-  // OUT: double ticks
-  void GetTimingTicks(JsCallContext *context);
-
-  // IN: int64 start, int64 end
-  // OUT: double elapsed
-  void GetTimingTickDeltaMicros(JsCallContext *context);
-
-  // IN: nothing
-  // OUT: nothing
+  // OUT: bool
   void RunTests(JsCallContext *context);
 
 
@@ -65,19 +48,10 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   void TestPassObject(JsCallContext *context);
 
   // IN: function test_function
-  // OUT: object created_object
+  // OUT: void
   // throws exception on failure
   void TestCreateObject(JsCallContext *context);
 
-  // IN: void
-  // OUT: object created_object
-  // throws exception on failure
-  void TestCreateError(JsCallContext *context);
-  
-  // IN: nothing
-  // OUT: nothing
-  // throws exception on failure
-  void TestObjectProperties(JsCallContext *context);
 
   // Argument passing tests
 
@@ -86,14 +60,10 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   // OUT: void
   void TestPassArguments(JsCallContext *context);
 
-  // IN: function
-  // OUT: bool bool_value, int int_value, int64 int64_value,
-  //      double double_value, string string_value
-  void TestPassArgumentsCallback(JsCallContext *context);
-
   // IN: int value1, optional int value2, optional int value3
   // OUT: void
   void TestPassArgumentsOptional(JsCallContext *context);
+
 
   // Coercion tests
 
@@ -113,54 +83,11 @@ class GearsTest : public ModuleImplBaseClassVirtual {
   // OUT: bool
   void TestGetType(JsCallContext *context);
 
-#ifdef WINCE
-  // These methods are used by the JavaScript testBrowserCache test.
-
-  // IN: variant urls
-  // OUT: bool
-  void RemoveEntriesFromBrowserCache(JsCallContext *context);
-  // IN: variant urls, bool should_be_present, bool should_be_bogus
-  // OUT: bool
-  void TestEntriesPresentInBrowserCache(JsCallContext *context);
-#endif
-
-#ifdef OFFICIAL_BUILD
-  // The Geolocation API has not been finalized for official builds.
-#else
-  // Geolocation internal tests.
-
-  // IN: object position_options
-  // OUT: object parsed_options
-  void TestParseGeolocationOptions(JsCallContext *context);
-
-  // IN: nothing
-  // OUT: string request_body
-  void TestGeolocationFormRequestBody(JsCallContext *context);
-
-  // IN: string response_body
-  // OUT: object position
-  void TestGeolocationGetLocationFromResponse(JsCallContext *context);
-#endif
-
-#ifndef OFFICIAL_BUILD
-  // IN: string input
-  // OUT: GearsBlob
-  // The resultant Blob's contents will the input string in UTF-8 format.
-  void CreateBlobFromString(JsCallContext *context);
-#endif
-
  private:
 
   DISALLOW_EVIL_CONSTRUCTORS(GearsTest);
 };
 
-#ifdef WINCE
-// These functions are declared in wince_compatibility.cc. They are wrappers
-// around static functions defined there.
-INTERNET_CACHE_ENTRY_INFO* GetEntryInfoTest(const char16 *url);
-bool IsEntryBogusTest(INTERNET_CACHE_ENTRY_INFO *info);
-#endif
-
 #endif // GEARS_CCTESTS_TEST_H__
 
-#endif // USING_CCTESTS
+#endif // DEBUG

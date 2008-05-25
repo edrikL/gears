@@ -52,9 +52,9 @@
 
 #include "gears/base/ie/atl_headers.h"
 #include "gears/localserver/common/localserver_db.h"
-#include "third_party/passthru_app/ProtocolCF.h"
-#include "third_party/passthru_app/ProtocolImpl.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/third_party/passthru_app/ProtocolCF.h"
+#include "gears/third_party/passthru_app/ProtocolImpl.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 
 class HttpHandler;

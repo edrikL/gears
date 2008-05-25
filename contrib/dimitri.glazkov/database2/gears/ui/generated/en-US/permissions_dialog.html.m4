@@ -142,14 +142,6 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
   </style>
 </head>
 <body>
-  <div id="strings" style="display:none">
-    <div id="string-allow"><TRANS_BLOCK desc="Button user can press to allow the use of Gears.">Allow</TRANS_BLOCK></div>
-    <div id="string-allow-accesskey"><TRANS_BLOCK desc="Access key for the allow button.">A</TRANS_BLOCK></div>
-    <div id="string-deny"><TRANS_BLOCK desc="Button user can press to disallow the use of Gears.">Deny</TRANS_BLOCK></div>
-    <div id="string-deny-accesskey"><TRANS_BLOCK desc="Access key for the deny button.">D</TRANS_BLOCK></div>
-    <div id="string-cancel"><TRANS_BLOCK desc="Button user can press to cancel the dialog.">Cancel</TRANS_BLOCK></div>
-    <div id="string-never-allow"><TRANS_BLOCK desc="Link that disallows Gears on this site.">Never allow it</TRANS_BLOCK></div>
-  </div>
 
   <!--
   PIE only works with one window, and we are in a modal dialog.
@@ -183,9 +175,6 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
       <tr>
         <td align="left" valign="top">
           <img id="icon" src="icon_32x32.png" width="32" height="32">
-          <!-- Some browsers automatically focus the first focusable item. We
-          don't want anything focused, so we add this fake item. -->
-          <a href="#" id="focus-thief"></a>
         </td>
         <td width="100%" align="left" valign="middle">
           <TRANS_BLOCK desc="Asks the user if they want to let the site use Gears">
@@ -241,6 +230,28 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
   </div>
 
   <div id="foot">
+    <div id="text-buttons" style="display:none">
+      <div id="text-never-allow">
+        <TRANS_BLOCK desc="Link that disallows Gears on this site.">
+        Never allow it
+        </TRANS_BLOCK>
+      </div>
+      <div id="text-allow">
+        <TRANS_BLOCK desc="Button user can press to allow the use of Gears.">
+        Allow
+        </TRANS_BLOCK>
+      </div>
+      <div id="text-deny">
+        <TRANS_BLOCK desc="Button user can press to disallow the use of Gears.">
+        Deny
+        </TRANS_BLOCK>
+      </div>
+      <div id="text-cancel">
+        <TRANS_BLOCK desc="Button user can press to cancel the dialog.">
+        Cancel
+        </TRANS_BLOCK>
+      </div>
+    </div>
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
     <!--
@@ -292,11 +303,33 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
             </a>
           </td>
           <td nowrap="true" align="right" valign="middle">
-            <button id="allow-button" class="custom"
-              onclick="allowAccessPermanently(); return false;"></button
-            ><button id="deny-button" class="custom"
-              onclick="denyAccessTemporarily(); return false;"></button>
-          </td>~)
+            <!--
+            Fancy buttons
+            Note: Weird line breaks are on purpose to avoid extra space between
+            buttons.
+            Note: Outer element is <a> because we want it to focusable and
+            behave like an anchor. Inner elements should theoretically be able
+            to be <span>, but IE renders incorrectly in this case.
+             
+            Note: The whitespace in this section is very delicate.  The lack of
+            space between the tags and the space between the buttons both
+            are important to ensure proper rendering.
+            TODO(aa): This results in inconsistent spacing in IE vs Firefox
+            between the buttons, but I am reluctant to hack things even further
+            to fix that.
+            -->
+            <a href="#" accesskey="A" id="allow-button" 
+                onclick="allowAccessPermanently(); return false;"
+                class="inline-block custom-button">
+              <div class="inline-block custom-button-outer-box">
+                <div class="inline-block custom-button-inner-box"
+                  ><TRANS_BLOCK desc="Button user can press to allow the use of Gears."><span class="accesskey">A</span>llow</TRANS_BLOCK></div></div></a>
+            <a href="#" accesskey="C" id="deny-button"
+                onclick="denyAccessTemporarily(); return false;"
+                class="inline-block custom-button">
+              <div class="inline-block custom-button-outer-box">
+                <div class="inline-block custom-button-inner-box"
+                  ><TRANS_BLOCK desc="Button user can press to disallow the use of Gears."><span class="accesskey">C</span>ancel</TRANS_BLOCK></div></div></a></td>~)
         </tr>
       </table>
     </div>
@@ -313,30 +346,21 @@ PocketIE does not support callbacks for loading external JavaScript files.
 TODO: find a better way to include scripts for PIE
 -->
 <script>
-m4_include(../third_party/jsonjs/json_noeval.js)
-m4_include(ui/common/base.js)
-m4_include(ui/common/dom.js)
+m4_include(third_party/jsonjs/json_noeval.js)
 m4_include(ui/common/html_dialog.js)
-m4_include(ui/common/button.js)
 </script>
 
 <script>
   initDialog();
-
-  setButtonLabel("string-allow", "allow-button", "string-allow-accesskey");
-  setButtonLabel("string-deny", "deny-button", "string-deny-accesskey");
-
-  if (!browser.ie_mobile) {
-    CustomButton.initializeAll();
-  }
-
-  if (browser.ie_mobile) {
-    setButtonLabel("string-never-allow", "never-allow-button");
-    var allowText = dom.getElementById("string-allow");
+  if (isPIE) {
+    setButtonLabel("text-never-allow", "never-allow-button");
+    setButtonLabel("text-allow", "allow-button");
+    setButtonLabel("text-deny", "deny-button");
+    var allowText = getElementById("text-allow");
     if (allowText) {
       window.pie_dialog.SetButton(allowText.innerText, "allowAccessPermanently();");
     }
-    var cancelText = dom.getElementById("string-cancel");
+    var cancelText = getElementById("text-cancel");
     if (cancelText) {
       window.pie_dialog.SetCancelButton(cancelText.innerText);
     }
@@ -355,9 +379,9 @@ m4_include(ui/common/button.js)
   }
 
   function showHelp(show) {
-    if (browser.ie_mobile) {
-      var elemSettings = dom.getElementById("permissions-settings"); 
-      var elemHelp = dom.getElementById("permissions-help"); 
+    if (isPIE) {
+      var elemSettings = getElementById("permissions-settings"); 
+      var elemHelp = getElementById("permissions-help"); 
       if (show) {
         elemSettings.style.display = 'none';
         elemHelp.style.display = 'block';
@@ -378,14 +402,6 @@ m4_include(ui/common/button.js)
   function initWarning() {
     // The arguments to this dialog are a single string, see PermissionsDialog
     var args = getArguments();
-    
-    // Handy for debugging layout:
-    // var args = {
-    //   origin: "http://www.google.com",
-    //   customIcon: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/32.png",
-    //   customName: "My Application",
-    //   customMessage: "Press the button to enable my application to run offline!"
-    // };
 
     var origin = args['origin'];  // required parameter
     var customIcon = args['customIcon'];
@@ -395,9 +411,9 @@ m4_include(ui/common/button.js)
     var elem;
 
     if (!customName) {
-      elem = dom.getElementById("origin-only");
+      elem = getElementById("origin-only");
       elem.style.display = "block";
-      if (browser.ie_mobile) {
+      if (isPIE) {
         elem.innerHTML = wrapDomain(origin);
       } else {
         setTextContent(elem, origin);
@@ -406,17 +422,17 @@ m4_include(ui/common/button.js)
       // When all we have is the origin, we lay it out centered because that
       // looks nicer. This is also what the original dialog did, which did not
       // support the extra name, icon, or message.
-      if (!browser.ie_mobile && !customIcon && !customMessage) {
+      if (!isPIE && !customIcon && !customMessage) {
         elem.setAttribute("align", "center");
       }
     } else {
-      elem = dom.getElementById("origin");
+      elem = getElementById("origin");
       elem.style.display = "block";
       setTextContent(elem, origin);
     }
 
     if (customIcon) {
-      elem = dom.getElementById("custom-icon");
+      elem = getElementById("custom-icon");
       elem.style.display = "inline";
       elem.src = customIcon;
       elem.height = 32;
@@ -424,30 +440,46 @@ m4_include(ui/common/button.js)
     }
 
     if (customName) {
-      elem = dom.getElementById("custom-name");
+      elem = getElementById("custom-name");
       elem.style.display = "block";
       setTextContent(elem, customName);
     }
 
     if (customMessage) {
-      elem = dom.getElementById("custom-message");
+      elem = getElementById("custom-message");
       elem.style.display = "block";
       setTextContent(elem, customMessage);
     }
 
+    // Focus deny by default
+    getElementById("deny-button").focus();
+
     // This does not work on PIE...
-    if (!browser.ie_mobile) {
+    if (!isPIE) {
       // Set up the checkbox to toggle the enabledness of the Allow button.
-      dom.getElementById("unlock").onclick = updateAllowButtonEnabledState;
+      getElementById("unlock").onclick = updateAllowButtonEnabledState;
     }
     updateAllowButtonEnabledState();
-    resizeDialogToFitContent();
+
+    // This does not work on PIE (no height measurement)
+    if (!isPIE) {
+      // Resize the window to fit
+      var contentDiv = getElementById("content");
+      var contentHeightProvided = getContentHeight();
+      var contentHeightDesired = contentDiv.offsetHeight;
+      if (contentHeightDesired != contentHeightProvided) {
+        var dy = contentHeightDesired - contentHeightProvided;
+        window.resizeBy(0, dy);
+      }
+    } else { 
+      window.pie_dialog.ResizeDialog();
+    } 
   }
 
 
   function updateAllowButtonEnabledState() {
-    var allowButton = dom.getElementById("allow-button");
-    var unlockCheckbox = dom.getElementById("unlock");
+    var allowButton = getElementById("allow-button");
+    var unlockCheckbox = getElementById("unlock");
 
     allowButtonUnlocked = unlockCheckbox.checked;
 

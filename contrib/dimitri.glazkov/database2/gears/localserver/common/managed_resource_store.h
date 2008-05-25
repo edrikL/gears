@@ -108,8 +108,10 @@ class ManagedResourceStore : public LocalServer {
   friend class UpdateTask;
 #if BROWSER_IE
   friend class IEUpdateTask;
-#elif BROWSER_FF || BROWSER_SAFARI
-  friend class UpdateTaskSingleProcess;
+#elif BROWSER_FF
+  friend class FFUpdateTask;
+#elif BROWSER_SAFARI
+  friend class SFUpdateTask;
 #elif BROWSER_NPAPI
   friend class NPUpdateTask;
 #endif
@@ -142,8 +144,8 @@ class ManagedResourceStore : public LocalServer {
                      const char16 *manifest_date_header,
                      const char16 *update_error);
 
-#ifdef USING_CCTESTS
-  friend bool TestManagedResourceStore(std::string16 *error);
+#ifdef DEBUG
+  friend bool TestManagedResourceStore();
 #endif
 };
 

@@ -55,24 +55,11 @@ ResultsPublisher.prototype.publish = function(url, parameters) {
  * to post back results to server
  */
 ResultsPublisher.prototype.postbackTestResults = function() {
-  var testResults = [];
+  testResults = [];
   for (var i = 0, fileTest; i < this.fileTestResults.length; i++) {
     fileTest = this.fileTestResults[i];
     testResults.push(fileTest.toJson());
   }
-  if (!this.allAvailableTestsStarted) {
-    // Include a timeout fail case in results
-    var results = {};
-    var timeoutMessage = 'TestTimeoutNotification';
-    var errorMessage = 'Tests failed to run to completion';
-    results[timeoutMessage] = {status: 'failed',
-                               message: errorMessage,
-                               elapsed: 0};
-    testResults.push({suitename: 'Timeout',
-                      filename: '',
-                      results: results,
-                      elapsed: 0});
-  }        
 
   var postbackHash = {
       gears_info: google.gears.factory.getBuildInfo(),

@@ -31,7 +31,7 @@
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_runner_ff_marshaling.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 // Represents the bridge between the JavaScript engine and a Gears module. A
 // ModuleWrapper wraps each Gears module instance and exposes its methods to

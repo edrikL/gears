@@ -22,7 +22,7 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#ifdef USING_CCTESTS
+#ifdef DEBUG
 
 #include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
@@ -41,15 +41,11 @@ bool TestSQLConcurrency();
 //------------------------------------------------------------------------------
 // TestSqliteUtilsAll
 //------------------------------------------------------------------------------
-bool TestSqliteUtilsAll(std::string16 *error) {
+bool TestSqliteUtilsAll() {
   bool ok = true;
   ok &= TestSQLDatabaseTransactions();
   ok &= TestSQLTransaction();
   ok &= TestSQLConcurrency();
-  if (!ok) {
-    assert(error); \
-    *error += STRING16(L"TestSqliteUtilsAll - failed. "); \
-  }
   return ok;
 }
 
@@ -233,4 +229,4 @@ bool TestSQLConcurrency() {
 }
 
 
-#endif  // USING_CCTESTS
+#endif  // DEBUG

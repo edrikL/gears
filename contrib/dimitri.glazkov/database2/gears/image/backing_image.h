@@ -30,7 +30,7 @@
 // The Image API has not been finalized for official builds
 #else
 
-#include "third_party/libgd/gd.h"
+#include "gears/third_party/libgd/gd.h"
 #include "gears/blob/blob_interface.h"
 
 // To create an image, construct it, then initialize it from a blob with

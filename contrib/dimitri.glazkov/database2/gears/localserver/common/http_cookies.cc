@@ -130,7 +130,7 @@ void ParseCookieNameAndValue(const std::string16 &name_and_value,
 }
 
 
-#ifdef USING_CCTESTS
+#ifdef DEBUG
 #include "gears/base/common/mutex.h"
 static Mutex g_fake_lock;
 static std::string16 g_fake_url;
@@ -142,9 +142,7 @@ void SetFakeCookieString(const char16* url, const char16 *cookies) {
   g_fake_url = url ? url : kEmptyString;
   g_fake_cookies = cookies ? cookies : kEmptyString;
 }
-#endif
 
-#ifdef USING_CCTESTS
 static bool GetFakeCookieString(const char16 *url, std::string16 *cookies) {
   MutexLock locker(&g_fake_lock);
   if (url == g_fake_url) {
@@ -167,7 +165,7 @@ static bool GetFakeCookieString(const char16 *url, std::string16 *cookies) {
 bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
   assert(url);
   assert(cookies_out);
-#ifdef USING_CCTESTS
+#ifdef DEBUG
   if (GetFakeCookieString(url, cookies_out)) {
     return true;
   }
@@ -249,7 +247,7 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
 bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
   assert(url);
   assert(cookies_out);
-#ifdef USING_CCTESTS
+#ifdef DEBUG
   if (GetFakeCookieString(url, cookies_out)) {
     return true;
   }
@@ -324,16 +322,22 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
 }
 
 //------------------------------------------------------------------------------
+#elif BROWSER_NPAPI
+
+bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
+  // TODO(mpcomplete): Uh oh... how do we get cookies in NPAPI?
+  return false;
+}
 
 #elif BROWSER_SAFARI
 #include "gears/base/safari/scoped_cf.h"
-#include "gears/base/safari/cf_string_utils.h"
+#include "gears/base/safari/string_utils.h"
 #include "gears/localserver/safari/http_cookies_sf.h"
 
 bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
   assert(url);
   assert(cookies_out);
-#ifdef USING_CCTESTS
+#ifdef DEBUG
   if (GetFakeCookieString(url, cookies_out)) {
     return true;
   }
@@ -343,13 +347,6 @@ bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
   scoped_CFString cookie_cfstr(GetHTTPCookieString(url_cfstr.get()));
 
   return CFStringRefToString16(cookie_cfstr.get(), cookies_out);
-}
-
-#elif BROWSER_NPAPI
-
-bool GetCookieString(const char16 *url, std::string16 *cookies_out) {
-  // TODO(mpcomplete): Uh oh... how do we get cookies in NPAPI?
-  return false;
 }
 
 #endif

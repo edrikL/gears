@@ -26,7 +26,7 @@
 #ifndef GEARS_BASE_COMMON_ASYNC_ROUTER_H__
 #define GEARS_BASE_COMMON_ASYNC_ROUTER_H__
 
-#include "gears/base/common/basictypes.h" // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/message_queue.h"
 
 // Clients implement this interface to receive an asynchronous call.

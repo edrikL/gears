@@ -32,10 +32,8 @@
 
 class JsRunnerInterface;
 
-// Escapes \n, \r, \ and ' characters in a string so that it can be used as a
-// JavaScript string literal.
-// TODO(steveblock): Rename this to something more suitable for a common
-// JavaScript escaping function.
+// This function is defined here because it's also used by CallWindowOnerror()
+// in wince_compatibility.h.
 std::string16 EscapeMessage(const std::string16 &message);
 void ThrowGlobalErrorImpl(JsRunnerInterface *js_runner,
                           const std::string16 &message);

@@ -24,69 +24,89 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /**
+ * Creates globals to simplify browser checking
+ */
+
+var isIE = false;
+var isPIE = false;
+var isFF = false;
+
+if (isDefined(typeof window.pie_dialog)) {
+  isPIE = true;
+} else {
+  // Note that we can't use isDefined() here because
+  // window.external.GetDialogArguments has type 'unknown' on IE!
+  isIE = isDefined(typeof window.external) &&
+         typeof window.external.GetDialogArguments != 'undefined';
+  isFF = isDefined(typeof window.arguments);
+}
+
+/**
  * Initialize the base functionality of the dialog.
  */
 function initDialog() {
-  if (!browser.ie_mobile) {
-    dom.addEvent(document, "keyup", handleKeyUp);
+  if (!isPIE) {
+    addEvent(document, "keyup", handleKeyUp);
   } else {
     var buttonRowElem = null;
     if (window.pie_dialog.IsSmartPhone()) {
-      buttonRowElem = dom.getElementById("button-row-smartphone");
+      buttonRowElem = getElementById("button-row-smartphone");
     } else {
-      buttonRowElem = dom.getElementById("button-row");
+      buttonRowElem = getElementById("button-row");
     }
     if (buttonRowElem) {
       buttonRowElem.style.display = 'block';
     }
   }
-  if (browser.ie_mobile) {
+  if (isPIE) {
     window.pie_dialog.SetScriptContext(window);
     window.pie_dialog.ResizeDialog();
   }
 }
 
 /**
- * Set the label of input button, an optionally, it's accesskey.
+ * Check that the type is not undefined (we do it here as on
+ * some devices typeof returns unknown instead of undefined...).
+ * We have to pass the evaluation of (typeof elem) (i.e., a string)
+ * to the function rather than simply (element) -- passing an 
+ * undefined object would make the function crash on PIE.
  */
-function setButtonLabel(textID, elemID, accessKeyID) {
-  var textElem = dom.getElementById(textID);
-  var buttonElem = dom.getElementById(elemID);
-  if (!isDefined(typeof textElem) || !isDefined(typeof buttonElem)) {
-    return;
-  }
-
-  // This function works for two different kinds of buttons. Simple buttons
-  // based on the <input type="button"> tag, and custom buttons based on a
-  // <button> tag with the css class "custom".
-  // Note that on Windows Mobile 5, the tagName property is not defined.
-  // We can therefore safely assume that the converse is also true:
-  // if tagName is not defined, then the platform must be Windows Mobile 5.  
-  if (!isDefined(typeof buttonElem.tagName) ||
-      buttonElem.tagName.toLowerCase() == "input") {
-    buttonElem.value = dom.getTextContent(textElem).trim();
-    if (isDefined(typeof accessKeyElem)) {
-      buttonElem.accessKey = dom.getTextContent(accessKeyElem).trim();
-    }
-  } else if (buttonElem.tagName.toLowerCase() == "button") {
-    var text = dom.getTextContent(textElem).trim();
-    var textLength = text.length;
-
-    if (isDefined(typeof accessKeyID)) {
-      // Some browsers use the accessKey attribute of the the anchor tag.
-      var accessKeyElem = dom.getElementById(accessKeyID);
-      var accessKey = dom.getTextContent(accessKeyElem).trim();
-      buttonElem.accessKey = accessKey;
-
-      // Find the first matching character in the text and mark it.
-      // Note: this form of String.replace() only replaces the first occurence.
-      text = text.replace(accessKey,
-                          "<span class='accesskey'>" + accessKey + "</span>");
-    }
-
-    buttonElem.innerHTML = text;
+function isDefined(type) {
+  if ((type != 'undefined') && (type != 'unknown')) {
+    return true;
   } else {
-    throw new Error("Unexpected button tag name: " + buttonElem.tagName);
+    return false;
+  }
+}
+  
+/**
+ * Provides a cross-browser way of getting an element by its id
+ */
+function getElementById(id) {
+  if (isDefined(typeof document.getElementById)) {
+    return document.getElementById(id);
+  } else if (isDefined(typeof document.all)) {
+    return document.all[id];
+  }
+  throw new Error("Failed to get element by ID.");
+}
+
+/**
+ * Add trim method to String.
+ */
+String.prototype.trim = function() {
+  return this.replace(/^\s+/, "").replace(/\s+$/, "");
+}
+
+/**
+ * Set the label of input button elements using the content
+ * of another element
+ */
+function setButtonLabel(textID, elemID) {
+  var textElem = getElementById(textID);
+  var buttonElem = getElementById(elemID);
+  if (isDefined(typeof textElem) && isDefined(typeof buttonElem)) {
+    buttonElem.value = textElem.innerText.trim();
   }
 }
 
@@ -104,19 +124,19 @@ function initCustomLayout(layoutFunction) {
 
   // We do an additional layout in onload because sometimes things aren't
   // stabilized when the first doLayout() is called above.
-  dom.addEvent(window, "load", doLayout);
-  dom.addEvent(window, "resize", doLayout);
+  addEvent(window, "load", doLayout);
+  addEvent(window, "resize", doLayout);
 
   // Mozilla doesn't fire continuous events during resize, so if we want to get
   // somewhat smooth resizing, we need to run our own timer loop. This still
   // doesn't look perfect, because the timer goes off out of sync with the
   // browser's internal reflow, but I think it's better than nothing.
   // TODO(aa): Keep looking for a way to get an event for each reflow, like IE.
-  if (browser.mozilla) {
+  if (navigator.product == "Gecko") {
     var lastHeight = -1;
 
     function maybeDoLayout() {
-      var currentHeight = dom.getWindowInnerHeight();
+      var currentHeight = getWindowInnerHeight();
       if (currentHeight != lastHeight) {
         lastHeight = currentHeight;
         doLayout();
@@ -132,14 +152,15 @@ function initCustomLayout(layoutFunction) {
  */
 function getArguments() {
   var argsString;
-  if (browser.ie_mobile) {
-    argsString = window.pie_dialog.GetDialogArguments();
-  } else if (browser.ie) {
+  if (isIE) {
+    // IE
     argsString = window.external.GetDialogArguments();
-  } else if (browser.mozilla) {
+  } else if (isPIE) {
+    // PIE
+    argsString = window.pie_dialog.GetDialogArguments();
+  } else if (isFF) {
+    // Firefox
     argsString = getFirefoxArguments(window.arguments[0]);
-  } else if (browser.safari) {
-    argsString = window.gears_dialogArguments;
   }
 
   if (typeof argsString == "string") {
@@ -166,15 +187,16 @@ function getFirefoxArguments(windowArguments) {
  */
 function saveAndClose(resultObject) {
   var resultString = JSON.stringify(resultObject);
-  if (browser.ie_mobile) {
-    window.pie_dialog.CloseDialog(resultString);
-  } else if (browser.ie) {
+  if (isIE) {
+    // IE
     window.external.CloseDialog(resultString);
-  } else if (browser.mozilla) {
+  } else if (isPIE) {
+    // PIE
+    window.pie_dialog.CloseDialog(resultString);
+  } else if (isFF) {
+    // Firefox
     saveFirefoxResults(resultString);
     window.close();
-  } else if (browser.safari) {
-    window.gears_dialog.setResults(resultString);
   }
 }
 
@@ -197,9 +219,22 @@ function saveFirefoxResults(resultString) {
  * Returns the height of the content area of the dialog.
  */
 function getContentHeight() {
-  var head = dom.getElementById("head");
-  var foot = dom.getElementById("foot");
-  return dom.getWindowInnerHeight() - head.offsetHeight - foot.offsetHeight;
+  var head = getElementById("head");
+  var foot = getElementById("foot");
+  return getWindowInnerHeight() - head.offsetHeight - foot.offsetHeight;
+}
+
+/**
+ * Returns the height of the inside of the window.
+ */
+function getWindowInnerHeight() {
+  if (isDefined(typeof window.innerHeight)) { // Firefox
+    return window.innerHeight;
+  } else if (isDefined(typeof document.body.offsetHeight)) { // IE
+    return document.body.offsetHeight;
+  }
+
+  throw new Error("Could not get windowInnerHeight.");
 }
 
 /**
@@ -207,6 +242,7 @@ function getContentHeight() {
  * we implement it manually.
  */
 function handleKeyUp(e) {
+  e = e || window.event;
   var ESC_KEY_CODE = 27;
   
   if (e.keyCode == ESC_KEY_CODE) {
@@ -215,42 +251,57 @@ function handleKeyUp(e) {
 }
 
 /**
- * Disables a button in the right way, whether it is normal or custom.
+ * Utility to add an event listener cross-browser.
  */
-function disableButton(buttonElem) {
-  buttonElem.disabled = true;
-
-  if (browser.ie_mobile) {
-    window.pie_dialog.SetButtonEnabled(false);
-  }
-
-  if (!isDefined(typeof buttonElem.tagName) || 
-      buttonElem.tagName.toLowerCase() == "input") {
-    buttonElem.style.color = "gray";
-  } else if (buttonElem.tagName.toLowerCase() == "button") {
-    dom.addClass(buttonElem, "disabled");
+function addEvent(element, eventName, handler) {
+  if (isDefined(typeof element.addEventListener)) {
+    // Standards-compatible browsers
+    element.addEventListener(eventName, handler, false);
+  } else if (isDefined(typeof element.attachEvent)) {
+    // IE
+    element.attachEvent("on" + eventName, handler);
   } else {
-    throw new Error("Unexpected tag name: " + buttonElem.tagName);
+    throw new Error('Failed to attach event.');
   }
 }
 
 /**
- * Enables a button in the right way, whether it is normal or custom.
+ * Disables one of our fancy custom buttons.
  */
-function enableButton(buttonElem) {
-  buttonElem.disabled = false;
-
-  if (browser.ie_mobile) {
-    window.pie_dialog.SetButtonEnabled(true);
-  }
-  
-  if (!isDefined(typeof buttonElem.tagName) ||
-      buttonElem.tagName.toLowerCase() == "input") {
-    buttonElem.style.color = "black";
-  } else if (buttonElem.tagName.toLowerCase() == "button") {
-    dom.removeClass(buttonElem, "disabled");
+function disableButton(buttonElm) {
+  if (isPIE) {
+    buttonElm.disabled = true;
+    buttonElm.style.color = "gray";
+    window.pie_dialog.SetButtonEnabled(false);
   } else {
-    throw new Error("Unexpected tag name: " + buttonElem.tagName);
+    var classes = buttonElm.className.split(" ");
+    for (var i = 0, className; className = classes[i]; i++) {
+      if (className == "custom-button-disabled") {
+        // already disabled
+        return;
+      }
+    }
+    buttonElm.className += " custom-button-disabled";
+  }
+}
+
+/**
+ * Enables one of our fancy custom buttons.
+ */
+function enableButton(buttonElm) {
+  if (isPIE) {
+    buttonElm.disabled = false;
+    buttonElm.style.color = "black";
+    window.pie_dialog.SetButtonEnabled(true);
+  } else {
+    var classes = buttonElm.className.split(" ");
+    for (var i = 0, className; className = classes[i]; i++) {
+      if (className == "custom-button-disabled") {
+        classes.splice(i, 1);
+        buttonElm.className = classes.join(" ");
+        return;
+      }
+    }
   }
 }
 
@@ -259,77 +310,44 @@ function enableButton(buttonElem) {
  * e.g. windows mobile devices)
  */
 function wrapDomain(str) {
-  if (!browser.ie_mobile) {
-    return str;
-  }
+  if (isPIE) {
+    var max = 20;
+    var url;
+    var scheme_start = str.indexOf("://");
+    var scheme = "";
 
-  var max = 20;
-  var url;
-  var scheme_start = str.indexOf("://");
-  var scheme = "";
-
-  if (scheme_start != -1) {
-    scheme = str.substring(0, scheme_start);
-    scheme += "://";
-    // there's automatically an hyphenation
-    // point used by the browser after http://
-    // so we only have to hyphenate the
-    // rest of the string
-    url = str.substring(scheme.length);
-  } else {
-    url = str;
-  }
-
-  // We hyphenate the string on every dot
-  var components = url.split(".");
-  if (components.length < 1) {
-    return str;
-  }
-
-  var content = components[0];
-  var len = content.length;
-  for (var i=1; i < components.length; i++) {
-    var elem = components[i];
-    content += ".";
-    len++;
-    if (len + elem.length > max) {
-      content += "<br>";
-      len = 0;
+    if (scheme_start != -1) {
+      scheme = str.substring(0, scheme_start);
+      scheme += "://";
+      // there's automatically an hyphenation
+      // point used by the browser after http://
+      // so we only have to hyphenate the
+      // rest of the string
+      url = str.substring(scheme.length);
+    } else {
+      url = str;
     }
-    content += elem;
-    len += elem.length;
+
+    // We hyphenate the string on every dot
+    var components = url.split(".");
+    if (components.length < 1) {
+      return str;
+    }
+
+    var content = components[0];
+    var len = content.length;
+    for (var i=1; i < components.length; i++) {
+      var elem = components[i];
+      content += ".";
+      len++;
+      if (len + elem.length > max) {
+        content += "<br>";
+        len = 0;
+      }
+      content += elem;
+      len += elem.length;
+    }
+    return scheme + content;
   }
-  return scheme + content;
+  return str;
 }
-
-/**
- * Resizes the dialog to fit the content size.
- */
-function resizeDialogToFitContent(opt_minDialogInnerHeight) {
-  // This does not work on PIE (no height measurement)
-  if (browser.ie_mobile) {
-    window.pie_dialog.ResizeDialog();
-    return;
-  }
-
-  // Resize the window to fit
-  var contentDiv = dom.getElementById("content");
-  var contentHeightProvided = getContentHeight();
-  var contentHeightDesired = contentDiv.offsetHeight;
-
-  var dialogHeightProvided = dom.getWindowInnerHeight();
-  var dialogHeightDesired =
-      dialogHeightProvided + (contentHeightDesired - contentHeightProvided);
-
-  var minDialogHeight = opt_minDialogInnerHeight || 0;
-  var maxDialogHeight = 400; // arbitrary max height for a dialog to resize to
-  
-  var targetHeight = Math.max(dialogHeightDesired, minDialogHeight);
-  targetHeight = Math.min(dialogHeightDesired, maxDialogHeight);
-
-  if (targetHeight != dialogHeightProvided) {
-    var dy = targetHeight - dialogHeightProvided;
-    window.resizeBy(0, dy);
-  }
-}
-

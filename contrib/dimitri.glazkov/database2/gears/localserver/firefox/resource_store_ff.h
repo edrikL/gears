@@ -34,7 +34,7 @@
 #include "gears/base/common/string16.h"
 #include "gears/localserver/common/resource_store.h"
 #include "gears/localserver/firefox/capture_task_ff.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 
 // Object identifiers

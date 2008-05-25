@@ -34,7 +34,7 @@
 #include "gears/base/common/string16.h"
 #include "gears/blob/buffer_blob.h"
 #include "gears/image/backing_image.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 struct BlobReader {
   gdIOCtx io_ctx;

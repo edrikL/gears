@@ -41,6 +41,23 @@ const OUR_MODULE_OBJECT = "GearsUpdater"; // [naming]
 // and they probably SHOULD change if OUR_RDF_ID changes. See the comments in
 // install.rdf.m4 for more on this.
 
+// GUIDs used with previous versions. We try to kill these.
+var oldExtensionIds = [
+  "scouring-powder@google.com",
+  "scour-discuss@google.com",
+  "googlescouringpowder@google.com",
+  "{0034E672-C9FA-4A8E-B5CF-D17775BC5B05}",
+  "{0034e672-c9fa-4a8e-b5cf-d17775bc5b05}"
+];
+
+// Internal state used to show alert if we removed an old version of the
+// extension via any means.
+var oldExtensionRemoved = false;
+
+// Internal state so that we only try to remove old extensions once per
+// session.
+var triedRemovingExtensions = false;
+
 try {
   loadScript(OUR_COMPILED_JS);
   compiledJsLoaded = true;
@@ -74,6 +91,12 @@ var initAutoUpdater = {
       } else if (topic == "domwindowopened") {
         this.updaterInitialized = true;
         this.updater.UpdatePeriodically(true);
+
+        if (!triedRemovingExtensions) {
+          triedRemovingExtensions = true;
+          oldExtensionIds.forEach(killOldRegistryEntry);
+          oldExtensionIds.forEach(killOldExtension);
+        }
       }
     }
   },
@@ -127,3 +150,63 @@ function getLibUrl(path) {
            .getURLSpecFromFile(file);
 }
 
+/**
+ * Attempt to remove registry entries from older versions.
+ */
+function killOldRegistryEntry(extensionId) {
+  var keyClass = Cc["@mozilla.org/windows-registry-key;1"];
+
+  if (!keyClass) {
+    // This isn't Windows. Nothing to do here.
+    return;
+  }
+  
+  var key = keyClass.createInstance(Ci.nsIWindowsRegKey);
+
+  try {
+    key.open(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+             "SOFTWARE\\Mozilla\\Firefox\\Extensions",
+             Ci.nsIWindowsRegKey.ACCESS_READ |
+             Ci.nsIWindowsRegKey.ACCESS_WRITE);
+  } catch (e) {
+    // The key doesn't exist. Nothing to do.
+    return;
+  }
+
+  try {
+    if (!key.hasValue(extensionId)) {
+    } else {
+      key.removeValue(extensionId);
+      log("Removed registration for old version: " + extensionId);
+      oldExtensionRemoved = true;
+    }
+  } catch (e) {
+    log("*** Error removing registration for " + extensionId + ": " + e);
+  }
+  
+  key.close();
+}
+
+/**
+ * Attempt to remove manually installed older versions.
+ */
+function killOldExtension(extensionId) {
+  try {
+    var em = Cc["@mozilla.org/extensions/manager;1"]
+               .getService(Ci.nsIExtensionManager);
+    var item = em.getItemForID(extensionId);
+    if (!item.installLocationKey) {
+      return;
+    }
+    
+    em.uninstallItem(extensionId);
+    oldExtensionRemoved = true;
+    log("Removed old extension: " + extensionId);
+  } catch (e) {
+    log("Error removing old extension " + extensionId + ": " + e);
+  }
+}
+
+function log(msg) {
+  dump("[Google Gears] " + msg + "\n");  // [naming]
+}

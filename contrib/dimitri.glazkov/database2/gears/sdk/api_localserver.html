@@ -100,11 +100,8 @@ resources locally, without a network connection.</p>
   are eligible for local serving without requiring the application to open the  store.</p>
   <p>To disable local serving of stored resources and force URLs to be served using the regular network connection, the application can set
   the store's <code>enabled</code> attribute to false.</p>
-  <h4>Permission</h4>
-
-  <p>This API requires user permission.  If you would like to customize the default dialog, you can explicitly call <code>google.gears.factory.getPermission()</code> - <a href="api_factory.html">see how.</a></p>
-  
   <p>&nbsp;</p>
+
 
 
 <h2 id="example">Example</h2>
@@ -116,6 +113,7 @@ var store = localServer.createManagedStore('test-store');
 store.manifestUrl = 'site-manifest.txt';
 store.checkForUpdate();
 &lt;/script&gt;</code></pre>
+
 <pre><code>// site-manifest.txt
 {
   "betaManifestVersion": 1,

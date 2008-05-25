@@ -31,7 +31,6 @@
   #include "WinResrc.h"
 #endif
 #include "ui/ie/ui_resources.h"
-#include "ui/ie/string_table.h"
 
 //-----------------------------------------------------------------------------
 // HTML
@@ -41,20 +40,18 @@
 // using something else? It seems to work as is.
 //-----------------------------------------------------------------------------
 
-button.css                   HTML  "ui/common/button.css"
-button.css.end               HTML  {"\0END\0"}
-button_bg.gif                HTML  "ui/common/button_bg.gif"
-button_bg.gif.end            HTML  {"\0END\0"}
-button_corner_black.gif      HTML  "ui/common/button_corner_black.gif"
-button_corner_black.gif.end  HTML  {"\0END\0"}
-button_corner_blue.gif       HTML  "ui/common/button_corner_blue.gif"
-button_corner_blue.gif.end   HTML  {"\0END\0"}
-button_corner_grey.gif       HTML  "ui/common/button_corner_grey.gif"
-button_corner_grey.gif.end   HTML  {"\0END\0"}
-html_dialog.css              HTML  "ui/common/html_dialog.css"
-html_dialog.css.end          HTML  {"\0END\0"}
-icon_32x32.png               HTML  "ui/common/icon_32x32.png"
-icon_32x32.png.end           HTML  {"\0END\0"}
+button.css                 HTML  "ui/common/button.css"
+button.css.end             HTML  {"\0END\0"}
+button_bg.gif              HTML  "ui/common/button_bg.gif"
+button_bg.gif.end          HTML  {"\0END\0"}
+html_dialog.css            HTML  "ui/common/html_dialog.css"
+html_dialog.css.end        HTML  {"\0END\0"}
+html_dialog.js             HTML  "ui/common/html_dialog.js"
+html_dialog.js.end         HTML  {"\0END\0"}
+icon_32x32.png             HTML  "ui/common/icon_32x32.png"
+icon_32x32.png.end         HTML  {"\0END\0"}
+json_noeval.js             HTML  "third_party/jsonjs/json_noeval.js"
+json_noeval.js.end         HTML  {"\0END\0"}
 
 #include "genfiles/ui_html.rc"
 
@@ -79,14 +76,20 @@ BEGIN
   END
 END
 
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_CANCEL "Cancel"
+  IDS_ALLOW "Save"
+END
+
 IDR_HTML_DIALOG_MENUBAR RCDATA
 BEGIN
   IDR_HTML_DIALOG_MENU,
   2,
   I_IMAGENONE, ID_CANCEL, TBSTATE_ENABLED, TBSTYLE_BUTTON | TBSTYLE_AUTOSIZE,
-  0, 0, NOMENU,
+  IDS_CANCEL, 0, NOMENU,
   I_IMAGENONE, ID_ALLOW, TBSTATE_ENABLED, TBSTYLE_BUTTON | TBSTYLE_AUTOSIZE,
-  0, 0, NOMENU,
+  IDS_ALLOW, 0, NOMENU,
 END
 
 IDD_GENERIC_HTML DIALOG -5000, -5000, 500, 500

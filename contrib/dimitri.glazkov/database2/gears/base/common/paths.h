@@ -69,6 +69,13 @@ bool GetDataDirectory(const SecurityOrigin &origin, std::string16 *path);
 void AppendDataName(const char16 *name, const char16 *module_suffix,
                     std::string16 *path);
 
+
+// Determines the base directory for Gears components files
+// and returns the full path in 'path'.  There is no trailing path separator.
+//
+// Returns true if the function succeeds.  'path' is unmodified on failure.
+bool GetBaseComponentsDirectory(std::string16 *path);
+
 // Determines the base directory for Gears resource files
 // and returns the full path in 'path'.  There is no trailing path separator.
 //
@@ -82,16 +89,6 @@ bool GetBaseResourcesDirectory(std::string16 *path);
 //
 // Returns true if the function succeeds.  'path' is unmodified on failure.
 bool GetBaseDataDirectory(std::string16 *path);
-
-#ifdef WIN32
-// For Windows, we install Gears for multiple browsers. This returns the base
-// path that all browser installations are under.
-// NOTE: Typically code should use GetBrowserInstallDirectory() instead.
-bool GetUmbrellaInstallDirectory(std::string16 *path);
-#endif
-
-// Returns the path to install directory for the current browser.
-bool GetInstallDirectory(std::string16 *path);
 
 // Checks that an unsanitized string from the user is valid for use as part
 // of a path component. 'error_message' is optional and can be NULL.

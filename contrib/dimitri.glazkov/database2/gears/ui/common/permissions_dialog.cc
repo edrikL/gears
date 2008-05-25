@@ -26,7 +26,7 @@
 #include "gears/base/common/common.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/string_utils.h"
-#include "third_party/jsoncpp/json.h"
+#include "gears/third_party/jsoncpp/json.h"
 #include "gears/ui/common/html_dialog.h"
 #include "gears/ui/common/permissions_dialog.h"
 

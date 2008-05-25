@@ -29,21 +29,19 @@
 
 #if BROWSER_FF || BROWSER_IE // blobs not implemented for npapi yet
 
-#ifdef USING_CCTESTS
+#ifdef DEBUG
 
 #include <cstring>
 #include "gears/blob/buffer_blob.h"
 #include "gears/blob/slice_blob.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
-bool TestBufferBlob(std::string16 *error) {
+bool TestBufferBlob() {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     printf("TestBufferBlob - failed (%d)\n", __LINE__); \
-    assert(error); \
-    *error += STRING16(L"TestBufferBlob - failed. "); \
     return false; \
   } \
 }
@@ -109,14 +107,12 @@ bool TestBufferBlob(std::string16 *error) {
 
 // TODO(bpm): TestFileBlob
 
-bool TestSliceBlob(std::string16 *error) {
+bool TestSliceBlob() {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     printf("TestSliceBlob - failed (%d)\n", __LINE__); \
-    assert(error); \
-    *error += STRING16(L"TestSliceBlob - failed. "); \
     return false; \
   } \
 }
@@ -181,6 +177,6 @@ bool TestSliceBlob(std::string16 *error) {
   return true;
 }
 
-#endif  // USING_CCTESTS
+#endif  // DEBUG
 #endif  // BROWSER_FF || BROWSER_IE
 #endif  // not OFFICIAL_BUILD

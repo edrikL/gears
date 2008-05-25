@@ -29,9 +29,6 @@
 
 std::string16 EscapeMessage(const std::string16 &message) {
   std::string16 escaped_message(message);
-  // This replacement must preceed the others.
-  ReplaceAll(escaped_message, std::string16(STRING16(L"\\")),
-            std::string16(STRING16(L"\\\\")));
   ReplaceAll(escaped_message, std::string16(STRING16(L"'")),
             std::string16(STRING16(L"\\'")));
   ReplaceAll(escaped_message, std::string16(STRING16(L"\r")),
@@ -50,17 +47,11 @@ void ThrowGlobalErrorImpl(JsRunnerInterface *js_runner,
           js_runner->GetContext(),
           reinterpret_cast<const jschar *>(message.c_str()))));
   JS_ReportPendingException(js_runner->GetContext());
-#elif BROWSER_NPAPI
-  std::string16 string_to_eval =
-      std::string16(STRING16(L"window.onerror('")) +
-      EscapeMessage(message) +
-      std::string16(STRING16(L"')"));
-  js_runner->Eval(string_to_eval);
 #else
   std::string16 string_to_eval =
       std::string16(STRING16(L"throw new Error('")) +
       EscapeMessage(message) +
       std::string16(STRING16(L"')"));
-  js_runner->Eval(string_to_eval);
+  js_runner->Eval(string_to_eval.c_str());
 #endif
 }

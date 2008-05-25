@@ -27,13 +27,13 @@
 #define GEARS_OBSERVER_SERVICE_COMMON_MESSAGE_SERVICE_H__
 
 #include <map>
-#include "gears/base/common/basictypes.h" // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/ipc_message_queue.h"
 #include "gears/base/common/message_queue.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/string16.h"
-#include "third_party/linked_ptr/linked_ptr.h"
+#include "gears/third_party/linked_ptr/linked_ptr.h"
 
 class MessageService;
 class ObserverCollection;
@@ -92,7 +92,7 @@ class MessageService : public ThreadMessageQueue::HandlerInterface,
   MessageService(ThreadMessageQueue *message_queue,
                  IpcMessageQueue *ipc_message_queue);
   ~MessageService();
-  friend bool TestMessageService(std::string16 *error);
+  friend bool TestMessageService();
 
   friend class ObserverCollection;
   typedef std::map<std::string16, linked_ptr<ObserverCollection> >

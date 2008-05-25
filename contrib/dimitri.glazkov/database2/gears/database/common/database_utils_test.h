@@ -26,6 +26,6 @@
 #ifndef GEARS_BASE_COMMON_DATABASE_UTILS_TEST_H__
 #define GEARS_BASE_COMMON_DATABASE_UTILS_TEST_H__
 
-bool TestDatabaseUtilsAll(std::string16 *error);
+bool TestDatabaseUtilsAll();
 
 #endif  // GEARS_BASE_COMMON_DATABASE_UTILS_TEST_H__

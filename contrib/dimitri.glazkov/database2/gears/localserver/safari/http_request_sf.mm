@@ -23,11 +23,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// TODO(playmobil): The getters in this version of http_request test their
-// input parameters and return false in the case of NULLs.  We should look at
-// either bubbling this behavior up to other platforms, or changing this version
-// to be consistent with the others.
-
 // Safari implementation of HttpRequest using an NSURLConnection.
 
 #include <iostream>
@@ -39,21 +34,18 @@
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/safari/cf_string_utils.h"
 #ifndef OFFICIAL_BUILD
-#include "gears/blob/blob_input_stream_sf.h"
 #include "gears/blob/blob_interface.h"
 #endif  // !OFFICIAL_BUILD
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/safari/http_request_delegate.h"
-#include "gears/localserver/safari/progress_input_stream.h"
 
 // PIMPL store for Objective-C delegate.
 struct SFHttpRequest::HttpRequestData {
   HttpRequestDelegate *delegate;
   
-  HttpRequestData() : delegate(NULL) {}
+  HttpRequestData() : delegate(nil) {}
   
   ~HttpRequestData() {
-    [delegate abort];
     [delegate release];
     delegate = NULL;
   }
@@ -62,25 +54,16 @@ struct SFHttpRequest::HttpRequestData {
 //------------------------------------------------------------------------------
 // Create
 //------------------------------------------------------------------------------
-
-// static
 bool HttpRequest::Create(scoped_refptr<HttpRequest>* request) {
   request->reset(new SFHttpRequest);
   return true;
-}
-
-// static
-bool HttpRequest::CreateSafeRequest(scoped_refptr<HttpRequest>* request) {
-  return HttpRequest::Create(request);
 }
 
 //------------------------------------------------------------------------------
 // Constructor / Destructor
 //------------------------------------------------------------------------------
 SFHttpRequest::SFHttpRequest()
-  : listener_(NULL),
-    listener_data_available_enabled_(false), 
-    ready_state_(UNINITIALIZED), 
+  : listener_(NULL), ready_state_(UNINITIALIZED), 
     caching_behavior_(USE_ALL_CACHES), 
     redirect_behavior_(FOLLOW_ALL),
     was_sent_(false), was_aborted_(false),
@@ -107,10 +90,6 @@ void SFHttpRequest::Unref() {
 // GetReadyState
 //------------------------------------------------------------------------------
 bool SFHttpRequest::GetReadyState(ReadyState *state) {
-  if (!state) {
-    return false;
-  }
-
   *state = ready_state_;
   return true;
 }
@@ -119,13 +98,9 @@ bool SFHttpRequest::GetReadyState(ReadyState *state) {
 // GetResponseBodyAsText
 //------------------------------------------------------------------------------
 bool SFHttpRequest::GetResponseBodyAsText(std::string16 *text) {
-  if (!IsInteractiveOrComplete() || was_aborted_) {
+  assert(text);
+  if (!IsInteractiveOrComplete() || was_aborted_)
     return false;
-  }
-    
-  if (!text) {
-    return false;
-  }
 
   return [delegate_holder_->delegate responseAsString:text];
 }
@@ -134,11 +109,8 @@ bool SFHttpRequest::GetResponseBodyAsText(std::string16 *text) {
 // GetResponseBody
 //------------------------------------------------------------------------------
 bool SFHttpRequest::GetResponseBody(std::vector<uint8> *body) {
+  assert(body);
   if (!(IsComplete() && !was_aborted_)) {
-    return false;
-  }
-  
-  if (!body) {
     return false;
   }
   
@@ -166,11 +138,7 @@ bool SFHttpRequest::GetStatus(int *status) {
     return false;
   }
   
-  if (!status) {
-    return false;
-  }
-  
-  *status = [delegate_holder_->delegate statusCode];
+  [delegate_holder_->delegate statusCode:status];
   
   return true;
 }
@@ -180,10 +148,6 @@ bool SFHttpRequest::GetStatus(int *status) {
 //------------------------------------------------------------------------------
 bool SFHttpRequest::GetStatusText(std::string16 *status_text) {
   if (!(IsInteractiveOrComplete() && !was_aborted_)) {
-    return false;
-  }
-  
-  if (!status_text) {
     return false;
   }
 
@@ -198,12 +162,9 @@ bool SFHttpRequest::GetStatusLine(std::string16 *status_line) {
   if (!(IsInteractiveOrComplete() && !was_aborted_)) {
     return false;
   }
-  
-  if (!status_line) {
-    return false;
-  }
 
-  int status_code = [delegate_holder_->delegate statusCode];
+  int status_code;
+  [delegate_holder_->delegate statusCode:&status_code];
   std::string16 status_text;
   [delegate_holder_->delegate statusText:&status_text];
 
@@ -254,9 +215,8 @@ bool SFHttpRequest::Open(const char16 *method, const char16 *url, bool async) {
 // SetRequestHeader
 //------------------------------------------------------------------------------
 bool SFHttpRequest::SetRequestHeader(const char16* name, const char16* value) {
-  if (was_sent_) {
+  if (was_sent_)
     return false;
-  }
   
   headers_to_send_.push_back(HttpHeader(name, value));
   return true;
@@ -271,15 +231,13 @@ bool SFHttpRequest::WasRedirected() {
 }
 
 bool SFHttpRequest::GetFinalUrl(std::string16 *full_url) {
-  if (!IsInteractiveOrComplete() || was_aborted_) {
+  if (!IsInteractiveOrComplete() || was_aborted_)
     return false;
-  }
 
-  if (WasRedirected()) {
+  if (WasRedirected())
     *full_url = redirect_url_;
-  } else {
+  else
     *full_url = url_;
-  }
   return true;
 }
 
@@ -293,11 +251,8 @@ bool SFHttpRequest::GetInitialUrl(std::string16 *full_url) {
 //------------------------------------------------------------------------------
 
 bool SFHttpRequest::Send() {
-  if (IsPostOrPut()) {
-    return SendString(STRING16(L""));
-  } else {
-    return SendImpl(nil);
-  }
+  std::string empty;
+  return SendImpl(empty);
 }
 
 
@@ -308,93 +263,61 @@ bool SFHttpRequest::SendString(const char16 *data) {
   if (!IsPostOrPut()) {
     return false;
   }
-  NSString *post_data_string = [NSString stringWithString16:data];
-  NSData *post_data = [post_data_string dataUsingEncoding:NSUTF8StringEncoding];
 
-  // It appears that the OS defaults to sending out the request with
-  // chunked encoding if we assign it an inputstream.  To solve this we
-  // need to explicitly set the Content-length header.
-  std::string16 content_length_as_string(
-      IntegerToString16([post_data length]));
-  headers_to_send_.push_back(HttpHeader(HttpConstants::kContentLengthHeader,
-                                        content_length_as_string));
-  NSInputStream *post_data_stream = [NSInputStream
-                                     inputStreamWithData:post_data];
-  if (!post_data_stream) {
-    return false;
-  }
-  ProgressInputStream *stream = [[[ProgressInputStream alloc]
-                                  initFromStream:post_data_stream
-                                         request:this
-                                           total:[post_data length]]
-                                 autorelease];
-  if (!stream) {
-    return false;
-  }
-  // The following line works around an OSX 10.4 bug.
-  // See declaration of ProgressInputStream setData for details.
-  [stream setData:post_data];
-  return SendImpl(stream);
+  std::string post_data;
+  String16ToUTF8(data, &post_data);
+  return SendImpl(post_data);
 }
+
 
 #ifndef OFFICIAL_BUILD
-
-bool SFHttpRequest::SendBlob(BlobInterface *blob) {
-  if (was_sent_) {
-    return false;
-  }
-  // It appears that the OS defaults to sending out the request with
-  // chunked encoding if we assign it an inputstream.  To solve this we
-  // need to explicitly set the Content-length header.
-  std::string16 content_length_as_string(Integer64ToString16(blob->Length()));
-  headers_to_send_.push_back(HttpHeader(HttpConstants::kContentLengthHeader,
-                                        content_length_as_string));
-  NSInputStream *post_data_stream =
-      [[[BlobInputStream alloc] initFromBlob:blob] autorelease];
-  if (!post_data_stream) {
-    return false;
-  }
-  NSInputStream *stream = [[[ProgressInputStream alloc]
-                            initFromStream:post_data_stream
-                                   request:this
-                                     total:blob->Length()] autorelease];
-  if (!stream) {
-    return false;
-  }
-  return SendImpl(stream);
+bool SFHttpRequest::SendBlob(BlobInterface *data) {
+  // TODO(bgarcia): implement!
+  assert(false);
+  return false;
 }
-#endif
+#endif  // !OFFICIAL_BUILD
 
-bool SFHttpRequest::SendImpl(NSInputStream *post_data_stream) {
-  if (!IsOpen()) {
-    return false;
-  }
-  
+
+bool SFHttpRequest::SendImpl(const std::string &post_data) {
   if (was_sent_) {
     return false;
   }
   was_sent_ = true;
   
+  //If Content-type header not set by the client, we set it to 'text/plain' in
+  //order to match behavior of FF implementation.
+  bool has_content_type_header = false;
+  for (HttpHeaderVectorConstIterator it = headers_to_send_.begin();
+       it != headers_to_send_.end(); 
+       ++it) {
+    const std::string16 &header_name = it->first;
+    if (StringCompareIgnoreCase(header_name.c_str(), 
+                                HttpConstants::kContentTypeHeader) == 0) {
+      has_content_type_header = true;
+      break;
+    }
+  }
+  
+  if (!has_content_type_header) {
+    headers_to_send_.push_back(HttpHeader(HttpConstants::kContentTypeHeader,
+                                          HttpConstants::kMimeTextPlain));
+  }
+
   std::string16 user_agent;
   if (!BrowserUtils::GetUserAgentString(&user_agent)) {
     return false;
   }
   
-  if (ShouldBypassLocalServer()) {
-    headers_to_send_.push_back(
-        HttpHeader(HttpConstants::kXGoogleGearsBypassLocalServer,
-                   STRING16(L"1")));
-  }
-  
-  if (![delegate_holder_->delegate send:post_data_stream
-                              userAgent:user_agent
-                                headers:headers_to_send_
-                     bypassBrowserCache:ShouldBypassBrowserCache()]) {
+  // TODO(playmobil): Handle case of ShouldBypassLocalServer().
+  if (![delegate_holder_->delegate send: post_data 
+                             userAgent: user_agent
+                               headers: headers_to_send_
+                    bypassBrowserCache: ShouldBypassBrowserCache()]) {
      Reset();
      return false;
   }
   
-  scoped_refptr<SFHttpRequest> reference(this);
   SetReadyState(SENT);
   
   // Block until completion on synchronous requests.
@@ -402,18 +325,10 @@ bool SFHttpRequest::SendImpl(NSInputStream *post_data_stream) {
     // NSURLConnection has a default idle timeout of 60 seconds after which the
     // connection should be terminated, we rely on this to ensure that the
     // loop exits.
-    const CFTimeInterval kTenMilliseconds = 10*10e-3;
-    
-    
-    // TODO(playmobil): Reexamine this code when implementing Worker pools, and
-    // consider logging cases in which NSURLConnection blocks for longer than
-    // we expect.
-    
-    // Make sure the object isn't deleted while waiting for the request to
-    // finish.
+    CFTimeInterval ten_milliseconds = 10*10e-3;
     scoped_refptr<HttpRequest> hold(this);
     while (ready_state_ != HttpRequest::COMPLETE && !was_aborted_) {
-      CFRunLoopRunInMode(kCFRunLoopDefaultMode, kTenMilliseconds, false);
+      CFRunLoopRunInMode(kCFRunLoopDefaultMode, ten_milliseconds, false);
     }
   }
   
@@ -428,29 +343,22 @@ bool SFHttpRequest::GetAllResponseHeaders(std::string16 *headers) {
     return false;
   }
   
-  const char16 *kNameValueSeperator = STRING16(L": "); 
-  
   HttpHeaderVector response_headers;
   [delegate_holder_->delegate headers:&response_headers];
   std::string16 header_str;
   for (HttpHeaderVectorConstIterator hdr = response_headers.begin();
        hdr != response_headers.end();
        ++hdr) {
-    header_str += hdr->first;
-    header_str += kNameValueSeperator;
-    header_str += hdr->second;
-    header_str += HttpConstants::kCrLf;
+    // TODO(playmobil): do we need to fixup the Content-Encoding and
+    // Content-Length headers like the FF implementation to get LocalServer
+    // to work?       
+    if (!hdr->second.empty()) {  // NULL means do not output
+      header_str += hdr->first;
+      header_str += std::string16(STRING16(L": "));
+      header_str += hdr->second;
+      header_str += HttpConstants::kCrLf;
+    }
   }
-  
-  // Stash the MIMEType as a custom header.
-  // TODO(playmobil): This leaks back to the scriptable object layer,
-  // we may want to fix that at a later date.
-  std::string16 mime_type;
-  [delegate_holder_->delegate mimeType:&mime_type];
-  header_str += HttpConstants::kXGearsSafariCapturedMimeType;
-  header_str += kNameValueSeperator;
-  header_str += mime_type;
-  header_str += HttpConstants::kCrLf;
   
   header_str += HttpConstants::kCrLf;  // blank line at the end
   *headers = header_str;
@@ -484,12 +392,11 @@ bool SFHttpRequest::Abort() {
 }
 
 //------------------------------------------------------------------------------
-// SetListener
+// SetOnReadyStateChange
 //------------------------------------------------------------------------------
-bool SFHttpRequest::SetListener(HttpListener *listener, 
-                                bool enable_data_available) {
+bool SFHttpRequest::SetOnReadyStateChange(
+                        ReadyStateListener *listener) {
   listener_ = listener;
-  listener_data_available_enabled_ = enable_data_available;
   return true;
 }
 
@@ -502,22 +409,6 @@ void SFHttpRequest::SetReadyState(ReadyState state) {
     if (listener_) {
       listener_->ReadyStateChanged(this);
     }
-  }
-}
-
-//------------------------------------------------------------------------------
-// OnDataAvailable
-//------------------------------------------------------------------------------
-void SFHttpRequest::OnDataAvailable() {
-  scoped_refptr<SFHttpRequest> reference(this);
-  SetReadyState(HttpRequest::INTERACTIVE);
-  
-  if (was_aborted_) {
-    return;
-  }
-  
-  if (listener_ && listener_data_available_enabled_) {
-    listener_->DataAvailable(this);
   }
 }
 
@@ -552,11 +443,8 @@ bool SFHttpRequest::AllowRedirect(const std::string16 &redirect_url) {
 // Reset
 //------------------------------------------------------------------------------
 void SFHttpRequest::Reset() {
-  [delegate_holder_->delegate abort];
   [delegate_holder_->delegate release];
-  delegate_holder_->delegate = NULL;
-  listener_ = NULL;
-  listener_data_available_enabled_ = false;
+  delegate_holder_->delegate = nil;
   method_.clear();
   url_.clear();
   caching_behavior_ = USE_ALL_CACHES;
@@ -567,17 +455,4 @@ void SFHttpRequest::Reset() {
   async_ = false;
   redirect_url_.clear();
   ready_state_ = UNINITIALIZED;
-}
-
-//------------------------------------------------------------------------------
-// OnUploadProgress
-//------------------------------------------------------------------------------
-void SFHttpRequest::OnUploadProgress(int64 position, int64 total) {
-  scoped_refptr<SFHttpRequest> reference(this);
-  if (was_aborted_) {
-    return;
-  }
-  if (listener_) {
-    listener_->UploadProgress(this, position, total);
-  }
 }

@@ -31,10 +31,8 @@
 #include <CoreFoundation/CoreFoundation.h>
 
 #include "genfiles/product_constants.h"
-#include "gears/base/common/basictypes.h"
+#include "gears/base/common/int_types.h"
 #include "gears/base/safari/cf_string_utils.h"
-
-struct NPObject;
 
 // Stupid MacTypes defines this as 0
 #undef kInvalidID
@@ -64,11 +62,7 @@ void ThrowExceptionKey(NSString *key, ...);
 }
 #endif
 
-#ifdef DEBUG
 #define LOG(a) SafariGearsLog a
-#else
-#define LOG(a) 0
-#endif
 
 // Wrappers for throwing localized vararg exceptions
 #ifdef __OBJC__
@@ -94,13 +88,7 @@ void ThrowExceptionKey(NSString *key, ...);
 
 // Throw exception via WebKit's WebScriptObject interface.
 // We need this to work around http://bugs.webkit.org/show_bug.cgi?id=16829
-void WebKitNPN_SetException(NPObject* obj, const char *message);
-
-// Initialize an NSAutoReleasePool.
-void *InitAutoReleasePool();
-
-// Destroys an autoreleas pool, passing in NULL is legal and is a no-op.
-void DestroyAutoReleasePool(void *pool);
+void ThrowWebKitException(const std::string16 &message);
 
 // Debug only code to help us assert that class methods are restricted to a
 // single thread.  To use, add a DECL_SINGLE_THREAD to your class declaration.

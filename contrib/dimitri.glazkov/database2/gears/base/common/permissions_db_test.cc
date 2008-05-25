@@ -60,15 +60,13 @@ static bool VerifyOrigins(PermissionsDB *permissions,
   return true;
 }
 
-bool TestPermissionsDBAll(std::string16 *error) {
+bool TestPermissionsDBAll() {
 // TODO(aa): Refactor into a common location for all the internal tests.
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestPermissionsDBAll - failed (%d)\n", __LINE__)); \
-    assert(error); \
-    *error += STRING16(L"TestPermissionsDBAll - failed. "); \
     return false; \
   } \
 }

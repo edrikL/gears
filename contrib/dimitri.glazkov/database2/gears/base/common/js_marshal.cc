@@ -26,7 +26,7 @@
 #include <algorithm>
 #include "gears/base/common/js_marshal.h"
 #include "gears/base/common/js_types.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 
 static void DeleteMarshaledJsTokens(
@@ -65,9 +65,6 @@ MarshaledJsToken::~MarshaledJsToken() {
       DeleteMarshaledJsTokens(value_.array_value);
       delete value_.array_value;
       break;
-    case JSPARAM_DISPATCHER_MODULE:
-      delete value_.marshaled_module_value;
-      break;
     default:
       // do nothing
       break;
@@ -78,12 +75,11 @@ MarshaledJsToken::~MarshaledJsToken() {
 // static
 MarshaledJsToken *MarshaledJsToken::Marshal(
     const JsToken &token,
-    JsRunnerInterface *js_runner,
     JsContextPtr js_context,
     std::string16 *error_message_out) {
   JsTokenVector object_stack;  // storage used to detect cycles
   return MarshaledJsToken::Marshal(
-      token, js_runner, js_context, error_message_out, &object_stack);
+      token, js_context, error_message_out, &object_stack);
 }
 
 
@@ -111,7 +107,6 @@ bool MarshaledJsToken::CausesCycle(const JsToken &token,
 // static
 MarshaledJsToken *MarshaledJsToken::Marshal(
     const JsToken &token,
-    JsRunnerInterface *js_runner,
     JsContextPtr js_context,
     std::string16 *error_message_out,
     JsTokenVector *object_stack) {
@@ -155,36 +150,17 @@ MarshaledJsToken *MarshaledJsToken::Marshal(
       break;
     }
     case JSPARAM_OBJECT: {
-      // Check to see if our JavaScript object is acutally a Gears module.
-      ModuleImplBaseClass *object_as_module = NULL;
-      if (JsTokenToDispatcherModule(
-              js_runner->GetContextWrapper(),
-              js_context, token, &object_as_module)) {
-        MarshaledModule *marshaled_module =
-            static_cast<ModuleImplBaseClassVirtual*>(object_as_module)->
-            AsMarshaledModule();
-        if (marshaled_module) {
+      if (!CausesCycle(token, object_stack, error_message_out)) {
+        object_stack->push_back(token);
+        JsObject value;
+        if (value.SetObject(token, js_context)) {
           mjt.reset(new MarshaledJsToken());
-          mjt->type_ = JSPARAM_DISPATCHER_MODULE;
-          mjt->value_.marshaled_module_value = marshaled_module;
-        } else {
-          *error_message_out = STRING16(
-              L"Cannot marshal arbitrary Gears modules.");
-        }
-      } else {
-        // else it's a regular JavaScript object (that isn't a Gears module).
-        if (!CausesCycle(token, object_stack, error_message_out)) {
-          object_stack->push_back(token);
-          JsObject value;
-          if (value.SetObject(token, js_context)) {
-            mjt.reset(new MarshaledJsToken());
-            if (!mjt->InitializeFromObject(value, js_runner, js_context,
-                                           error_message_out, object_stack)) {
-              mjt.reset(NULL);
-            }
+          if (!mjt->InitializeFromObject(
+                        value, js_context, error_message_out, object_stack)) {
+            mjt.reset(NULL);
           }
-          object_stack->pop_back();
         }
+        object_stack->pop_back();
       }
       break;
     }
@@ -194,8 +170,8 @@ MarshaledJsToken *MarshaledJsToken::Marshal(
         JsArray value;
         if (value.SetArray(token, js_context)) {
           mjt.reset(new MarshaledJsToken());
-          if (!mjt->InitializeFromArray(value, js_runner, js_context,
-                                        error_message_out, object_stack)) {
+          if (!mjt->InitializeFromArray(
+                        value, js_context, error_message_out, object_stack)) {
             mjt.reset(NULL);
           }
         }
@@ -213,7 +189,8 @@ MarshaledJsToken *MarshaledJsToken::Marshal(
       break;
     }
     default: {
-      *error_message_out = STRING16(L"Cannot marshal an arbitrary token.");
+      // do nothing
+      // TODO(nigeltao): catch case JSPARAM_MODULE, and special-case Blobs.
       break;
     }
   }
@@ -222,9 +199,8 @@ MarshaledJsToken *MarshaledJsToken::Marshal(
 
 
 bool MarshaledJsToken::Unmarshal(
-    ModuleEnvironment *module_environment,
+    JsRunnerInterface *js_runner,
     JsScopedToken *out) {
-  JsRunnerInterface *js_runner = module_environment->js_runner_;
   bool success = false;
   switch (type_) {
     case JSPARAM_BOOL: {
@@ -244,18 +220,18 @@ bool MarshaledJsToken::Unmarshal(
     }
     case JSPARAM_STRING16: {
       success = StringToJsToken(
-          js_runner->GetContext(), value_.string_value->c_str(), out);
+          js_runner->GetContext(), *(value_.string_value), out);
       break;
     }
     case JSPARAM_OBJECT: {
-      scoped_ptr<JsObject> object(js_runner->NewObject());
+      scoped_ptr<JsObject> object(js_runner->NewObject(NULL));
       *out = object->token();
 
       std::map<std::string16, MarshaledJsToken*> *o = value_.object_value;
       for (std::map<std::string16, MarshaledJsToken*>::iterator i =
           o->begin(); i != o->end(); ++i) {
         JsScopedToken property_value;
-        if (!i->second->Unmarshal(module_environment, &property_value)) {
+        if (!i->second->Unmarshal(js_runner, &property_value)) {
           return false;
         }
         object->SetProperty(i->first, property_value);
@@ -272,16 +248,11 @@ bool MarshaledJsToken::Unmarshal(
       for (int i = 0; i < n; i++) {
         JsScopedToken token;
         MarshaledJsToken *mjt = (*a)[i];
-        if (mjt && mjt->Unmarshal(module_environment, &token)) {
+        if (mjt && mjt->Unmarshal(js_runner, &token)) {
           array->SetElement(i, token);
         }
       }
       success = true;
-      break;
-    }
-    case JSPARAM_DISPATCHER_MODULE: {
-      success =
-          value_.marshaled_module_value->Unmarshal(module_environment, out);
       break;
     }
     case JSPARAM_NULL: {
@@ -303,7 +274,6 @@ bool MarshaledJsToken::Unmarshal(
 
 bool MarshaledJsToken::InitializeFromObject(
     JsObject &js_object,
-    JsRunnerInterface *js_runner,
     JsContextPtr js_context,
     std::string16 *error_message_out,
     JsTokenVector *object_stack) {
@@ -322,7 +292,7 @@ bool MarshaledJsToken::InitializeFromObject(
       return false;
     }
     MarshaledJsToken *marshaled_pv = Marshal(
-        property_value, js_runner, js_context, error_message_out, object_stack);
+        property_value, js_context, error_message_out, object_stack);
     if (!marshaled_pv) {
       DeleteMarshaledJsTokens(o.get());
       return false;
@@ -338,7 +308,6 @@ bool MarshaledJsToken::InitializeFromObject(
 
 bool MarshaledJsToken::InitializeFromArray(
     JsArray &js_array,
-    JsRunnerInterface *js_runner,
     JsContextPtr js_context,
     std::string16 *error_message_out,
     JsTokenVector *object_stack) {
@@ -352,8 +321,8 @@ bool MarshaledJsToken::InitializeFromArray(
   for (int i = 0; i < n; i++) {
     JsScopedToken token;
     if (js_array.GetElement(i, &token)) {
-      MarshaledJsToken *element_mjt = Marshal(
-          token, js_runner, js_context, error_message_out, object_stack);
+      MarshaledJsToken *element_mjt =
+          Marshal(token, js_context, error_message_out, object_stack);
       if (element_mjt) {
         a->push_back(element_mjt);
       } else {

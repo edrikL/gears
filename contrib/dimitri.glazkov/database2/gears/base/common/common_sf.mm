@@ -27,7 +27,7 @@
 
 #import "gears/base/common/string_utils.h"
 #import "gears/base/common/common_sf.h"
-#import "gears/base/safari/browser_utils_sf.h"
+#import "gears/base/safari/browser_utils.h"
 
 //------------------------------------------------------------------------------
 void SafariGearsLog(const char *msg, ...) {
@@ -72,21 +72,7 @@ void ThrowExceptionKey(NSString *key, ...) {
 }
 
 //------------------------------------------------------------------------------
-// NPN_SetException is buggy in WebKit, see 
-// http://bugs.webkit.org/show_bug.cgi?id=16829
-void WebKitNPN_SetException(NPObject* obj, const char *message)
-{
-  NSString *msg = [NSString stringWithCString:message];
+void ThrowWebKitException(const std::string16 &message) {
+  NSString *msg = [NSString stringWithString16:message.c_str()];
   [WebScriptObject throwException:msg];
-}
-
-//------------------------------------------------------------------------------
-void *InitAutoReleasePool() {
-  return [[NSAutoreleasePool alloc] init];
-}
-
-//------------------------------------------------------------------------------
-void DestroyAutoReleasePool(void *pool) {
-  assert(pool);
-  [(NSAutoreleasePool *)pool release];
 }

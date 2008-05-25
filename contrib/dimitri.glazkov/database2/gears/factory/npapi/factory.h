@@ -52,11 +52,8 @@ class GearsFactory
   void GetBuildInfo(JsCallContext *context);
   
   // OPTIONAL IN: string siteName, string imageUrl, string extraMessage
-  // OUT: bool has_permission
+  // OUT: boolean
   void GetPermission(JsCallContext *context);
-
-  // OUT: bool has_permission
-  void GetHasPermission(JsCallContext *context);
 
   // OUT: string version_string
   void GetVersion(JsCallContext *context);

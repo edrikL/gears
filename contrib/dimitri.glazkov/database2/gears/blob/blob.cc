@@ -36,61 +36,11 @@ DECLARE_GEARS_WRAPPER(GearsBlob);
 
 template<>
 void Dispatcher<GearsBlob>::Init() {
-#ifdef DEBUG
-  RegisterMethod("hasSameContentsAs", &GearsBlob::HasSameContentsAs);
-#endif
   RegisterMethod("slice", &GearsBlob::Slice);
   RegisterProperty("length", &GearsBlob::GetLength, NULL);
 }
 
 const std::string GearsBlob::kModuleName("GearsBlob");
-
-#ifdef DEBUG
-void GearsBlob::HasSameContentsAs(JsCallContext *context) {
-  ModuleImplBaseClass *other_module = NULL;
-  JsArgument argv[] = {
-    { JSPARAM_REQUIRED, JSPARAM_DISPATCHER_MODULE, &other_module },
-  };
-  context->GetArguments(ARRAYSIZE(argv), argv);
-  if (context->is_exception_set()) return;
-  if (GearsBlob::kModuleName != other_module->get_module_name()) {
-    context->SetException(STRING16(L"First argument must be a Blob."));
-    return;
-  }
-
-  bool result = true;
-  scoped_refptr<BlobInterface> other_contents;
-  static_cast<GearsBlob*>(other_module)->GetContents(&other_contents);
-  assert(contents_.get());
-  assert(other_contents.get());
-  if (contents_.get() != other_contents.get()) {
-    int64 this_length = contents_->Length();
-    int64 that_length = other_contents->Length();
-    if (this_length != that_length) {
-      result = false;
-    } else {
-      // We have to compare the contents of the two Blobs.  Here, we have a
-      // really naive implementation, reading and checking 1 byte at a time
-      // (rather than, e.g. batching up reads into larger chunks).  So far,
-      // however, GearsBlob::HasSameContentsAs is used only in unit-test code,
-      // on small Blobs, and is unlikely to be a bottleneck.  If those
-      // assumptions later turn out to be false, we'll optimize this code.
-      assert(this_length >= 0);
-      uint8 this_byte;
-      uint8 that_byte;
-      for (int64 i = 0; i < this_length; ++i) {
-        if ((contents_->Read(&this_byte, i, 1) != 1) ||
-            (other_contents->Read(&that_byte, i, 1) != 1) ||
-            (this_byte != that_byte)) {
-          result = false;
-          break;
-        }
-      }
-    }
-  }
-  context->SetReturnValue(JSPARAM_BOOL, &result);
-}
-#endif
 
 void GearsBlob::GetLength(JsCallContext *context) {
   // A GearsBlob should never be let out in the JS world unless it has been
@@ -150,48 +100,6 @@ void GearsBlob::Slice(JsCallContext *context) {
   gears_blob->Reset(sliced.get());
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, gears_blob.get());
   ReleaseNewObjectToScript(gears_blob.get());
-}
-
-class MarshaledGearsBlob : public MarshaledModule {
- public:
-  MarshaledGearsBlob(BlobInterface *contents) : contents_(contents) {}
-
-  bool Unmarshal(ModuleEnvironment *module_environment,
-                 JsScopedToken *out) {
-    scoped_refptr<GearsBlob> gears_blob;
-    if (!CreateModule<GearsBlob>(module_environment->js_runner_, &gears_blob) ||
-        !gears_blob->InitBaseManually(module_environment)) {
-      return false;
-    }
-    gears_blob->Reset(contents_.get());
-    *out = gears_blob->GetWrapperToken();
-    // TODO(nigeltao): Are we necessarily unmarshaling something that should
-    // be "released to script"?  What if we are unmarshaling something that is
-    // an element of another array (or a property of another object)?  Will
-    // a superfluous ReleaseNewObjectToScript lead to an extra ref-count (and
-    // hence memory leak) on IE?
-    // Perhaps the MarshaledModule interface should take a
-    // scoped_refptr<ModuleImplBaseClass> out parameter, instead of a
-    // JsScopedToken out parameter, and it would be up to the caller to decide
-    // if a ReleaseNewObjectToScript was necessary.
-    //
-    // In fact, it may be worthwhile to get rid of the oddly named
-    // ReleaseNewObjectToScript function entirely, and move the ref-count
-    // fiddling into places like JsContext::SetReturnValue,
-    // JsArray::SetElementObject and JsObject::SetPropertyObject where
-    // necessary.  See the code review discussion for OCL 6983196 for more.
-    ReleaseNewObjectToScript(gears_blob.get());
-    return true;
-  }
-
- private:
-  scoped_refptr<BlobInterface> contents_;
-  DISALLOW_EVIL_CONSTRUCTORS(MarshaledGearsBlob);
-};
-
-MarshaledModule *GearsBlob::AsMarshaledModule() {
-  assert(contents_.get());
-  return new MarshaledGearsBlob(contents_.get());
 }
 
 #endif  // not OFFICIAL_BUILD

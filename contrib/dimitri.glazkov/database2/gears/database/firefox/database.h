@@ -29,7 +29,7 @@
 #include <gecko_sdk/include/nsComponentManagerUtils.h>
 #include <gecko_internal/nsIVariant.h>
 #include <set>
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 #include "genfiles/database.h"
 #include "gears/base/common/base_class.h"

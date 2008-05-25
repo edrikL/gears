@@ -167,10 +167,15 @@ function testFunctionMessageFails() {
   var f = function() { return 'foo'; };
 
   var childId = wp.createWorker(kEchoWorkerCode);
-  assertError(function() {
+  var failed = false;
+  try {
     wp.sendMessage(f, childId);
-  }, 'Cannot marshal a JavaScript function.',
-     'Function message should not be sendable');
+  } catch (error) {
+    failed = true;
+  }
+  if (!failed) {
+    assert(false, 'Function message should not be sendable');
+  }
   completeAsync();
 }
 
@@ -185,10 +190,15 @@ function testFunctionElementMessageFails() {
   var a = [0, 1, 2, f, 4];
 
   var childId = wp.createWorker(kEchoWorkerCode);
-  assertError(function() {
+  var failed = false;
+  try {
     wp.sendMessage(a, childId);
-  }, 'Cannot marshal a JavaScript function.',
-     'Function element should not be sendable');
+  } catch (error) {
+    failed = true;
+  }
+  if (!failed) {
+    assert(false, 'Function element should not be sendable');
+  }
   completeAsync();
 }
 
@@ -206,10 +216,15 @@ function testFunctionPropertyMessageFails() {
   };
 
   var childId = wp.createWorker(kEchoWorkerCode);
-  assertError(function() {
+  var failed = false;
+  try {
     wp.sendMessage(o, childId);
-  }, 'Cannot marshal a JavaScript function.',
-     'Function property should not be sendable');
+  } catch (error) {
+    failed = true;
+  }
+  if (!failed) {
+    assert(false, 'Function property should not be sendable');
+  }
   completeAsync();
 }
 
@@ -221,17 +236,26 @@ function testNullAndUndefinedMessageFails() {
   };
 
   var childId = wp.createWorker(kEchoWorkerCode);
-
-  assertError(function() {
+  var failed = false;
+  try {
     wp.sendMessage(null, childId);
-  }, 'The message parameter has an invalid type.',
-     'Null message should not be sendable');
+  } catch (error) {
+    failed = true;
+  }
+  if (!failed) {
+    assert(false, 'Null message should not be sendable');
+  }
 
-  assertError(function() {
+  failed = false;
+  try {
     var u;
     wp.sendMessage(u, childId);
-  }, 'The message parameter has an invalid type.',
-     'Undefined message should not be sendable');
+  } catch (error) {
+    failed = true;
+  }
+  if (!failed) {
+    assert(false, 'Undefined message should not be sendable');
+  }
 
   completeAsync();
 }
@@ -260,54 +284,15 @@ function testUndefinedElementMessageFails() {
   };
 
   var childId = wp.createWorker(kEchoWorkerCode);
-  assertError(function() {
+  var failed = false;
+  try {
     wp.sendMessage([0, 1, 2, 3, , 5], childId);
-  }, null, 'Undefined element should not be sendable');
-  completeAsync();
-}
-
-function testBlobMessageSucceeds() {
-  // hasSameContentsAs() not present in opt builds.
-  if (!isDebug) {
-    return;
+  } catch (error) {
+    failed = true;
   }
-
-  // createBlobFromString not present in official builds.
-  if (isOfficial) {
-    return;
+  if (!failed) {
+    assert(false, 'Undefined element should not be sendable');
   }
-  
-  startAsync();
-  var wp = google.gears.factory.create('beta.workerpool');
-  var ccTests = google.gears.factory.create('beta.test');
-  var fooBlob = ccTests.createBlobFromString('fooBlob');
-  var barBlob = ccTests.createBlobFromString('barBlob');
-  var fooBlobToo = ccTests.createBlobFromString('fooBlob');
-
-  assert(!fooBlob.hasSameContentsAs(barBlob), 'Blobs are incorrectly equal');
-  assert(fooBlob.hasSameContentsAs(fooBlobToo),
-      'Blobs are incorrectly unequal');
-
-  wp.onmessage = function(text, sender, message) {
-    assert(fooBlob.hasSameContentsAs(message.body), 'Incorrect message body');
-    completeAsync();
-  };
-
-  var childId = wp.createWorker(kEchoWorkerCode);
-  wp.sendMessage(fooBlob, childId);
-}
-
-function testArbitraryGearsModuleMessageFails() {
-  startAsync();
-  var wp = google.gears.factory.create('beta.workerpool');
-  wp.onmessage = function(text, sender, message) {
-    assert(false, 'An arbitrary Gears module should not be sendable');
-  };
-
-  var childId = wp.createWorker(kEchoWorkerCode);
-  assertError(function() {
-    wp.sendMessage(google.gears.factory.create('beta.timer'), childId);
-  }, null, 'An arbitrary Gears module should not be sendable');
   completeAsync();
 }
 
@@ -343,13 +328,18 @@ function testSendingCyclicObjectFails() {
   };
 
   var childId = wp.createWorker(kEchoWorkerCode);
-  assertError(function() {
+  var failed = false;
+  try {
     var aa = [1, 2];
     var bb = [7, aa];
     aa.push(bb);
     wp.sendMessage(aa, childId);
-  }, 'Cannot marshal an object that contains a cycle.',
-     'Cyclic objects should not be sendable');
+  } catch (error) {
+    failed = true;
+  }
+  if (!failed) {
+    assert(false, 'Cyclic objects should not be sendable');
+  }
   completeAsync();
 }
 
@@ -375,9 +365,13 @@ function testSendingWindowDotDocumentDoesNotCrash() {
   };
 
   var childId = wp.createWorker(kEchoWorkerCode);
+  var failed = false;
   try {
     wp.sendMessage(window.document, childId);
   } catch (error) {
+    failed = true;
+  }
+  if (failed) {
     completeAsync();
   }
 }

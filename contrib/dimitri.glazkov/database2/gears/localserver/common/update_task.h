@@ -146,14 +146,7 @@ class UpdateTask : public AsyncTask {
 
   UpdateTask() : startup_signal_(false), task_503_failure_(false) {}
 
-  // Initializes and starts an auto update task within rate limits.
-  // Returns true if a task was started.
-  bool MaybeAutoUpdate(int64 store_id);
-
-  // Initializes the tasks and starts an update without checking rate limits
-  virtual bool StartUpdate(int64 store_id);
-
-  // Initializes an update task for the store without starting it
+  // Initializes an update task for the store
   bool Init(ManagedResourceStore *store);
 
   // Waits until the update task is up and running.

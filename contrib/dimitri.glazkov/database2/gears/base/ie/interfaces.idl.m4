@@ -52,8 +52,10 @@ import "ui/ie/html_dialog_bridge_iemobile.idl";
 import "ui/ie/html_dialog_host_iemobile.idl";
 #endif
 
+import "console/ie/console.idl";
 import "database/ie/database.idl";
 import "factory/ie/factory.idl";
+import "httprequest/ie/httprequest.idl";
 
 import "localserver/ie/localserver.idl";
 import "workerpool/ie/workerpool.idl";
@@ -150,6 +152,14 @@ library GearsTypelib
   };
 
   [
+    uuid(51C2DE73-6A33-4975-8D7D-C521064F8A83)
+  ]
+  coclass GearsConsole
+  {
+    [default] interface GearsConsoleInterface;
+  };
+
+  [
     uuid(B09AFBD8-FBEE-4E91-AA27-7DC433C978AB)
   ]
   coclass GearsDatabase
@@ -171,5 +181,13 @@ library GearsTypelib
   coclass GearsLocalServer
   {
     [default] interface GearsLocalServerInterface;
+  };
+
+  [
+    uuid(AAF5DBC9-70C8-45c2-B7AB-6576428F3CA3)
+  ]
+  coclass GearsHttpRequest
+  {
+    [default] interface GearsHttpRequestInterface;
   };
 };

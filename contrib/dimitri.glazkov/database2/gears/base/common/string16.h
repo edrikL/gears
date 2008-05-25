@@ -45,28 +45,11 @@
 #ifndef GEARS_BASE_COMMON_STRING16_H__
 #define GEARS_BASE_COMMON_STRING16_H__
 
-#if defined(OS_MACOSX) && (__APPLE_CC__ < 5465)
-// Workaround for Apple bug, using custom string types, see:
-// http://developer.apple.com/technotes/tn2007/tn2185.html#TNTAG18
-// The bug is fixed in XCode 3 onward (and the #pragma causes warnings there).
-#pragma GCC visibility push(default)
-#endif
-
 #include <string>
-
-#if defined(OS_MACOSX) && (__APPLE_CC__ < 5465)
-#pragma GCC visibility pop
-#endif
-
-#include "gears/base/common/basictypes.h"
+#include "gears/base/common/int_types.h"
 
 // Need to cast literals (Linux, OSX) and SQLite void* retvals (all platforms)
 #define STRING16(x)  reinterpret_cast<const char16*>(x)
-
-#if (defined ANDROID)
-// Native wide character support incomplete in Android - we need to define WEOF.
-#define WEOF (static_cast<wchar_t>(-1))
-#endif
 
 #if (defined WIN32)
 
@@ -76,7 +59,7 @@ namespace std {
   typedef wstring string16;
 }
 
-#elif (defined LINUX) || (defined OS_MACOSX) || defined(ANDROID)
+#elif (defined LINUX) || (defined OSX)
 
 typedef unsigned short char16;
 
@@ -84,11 +67,8 @@ namespace std {
   typedef basic_string<char16> string16;
 }
 
-#endif
 
-
-// Define char16 versions of functions required below in char_traits<char16>.
-// These functions can also be useful for directly handling char16* values.
+// Define char16 versions of functions required below in char_traits<char16>
 extern "C" {
 
   inline char16 *char16_wmemmove(char16 *s1, const char16 *s2, size_t n) {
@@ -138,8 +118,6 @@ extern "C" {
 
 } // END: extern "C"
 
-
-#if (defined LINUX) || (defined OS_MACOSX)
 
 // Definition of char_traits<char16>, which enables basic_string<char16>
 //

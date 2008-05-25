@@ -120,7 +120,7 @@
 }
 
 //------------------------------------------------------------------------------
-+ (NSString *)gearsResourcesDirectory {
++ (NSString *)gearsComponentsDirectory {
   NSBundle *pluginBundle = [NSBundle bundleForClass:[self class]];
   
   return [pluginBundle resourcePath];

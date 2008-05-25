@@ -28,11 +28,12 @@
 #ifndef GEARS_BASE_COMMON_BASE_CLASS_H__
 #define GEARS_BASE_COMMON_BASE_CLASS_H__
 
-#include "gears/base/common/basictypes.h"  // for DISALLOW_EVIL_CONSTRUCTORS
-#include "gears/base/common/js_types.h"
+#include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"  // for string16
+
+#include "gears/base/common/js_types.h"
 
 #if BROWSER_FF
 
@@ -69,72 +70,6 @@ class JsRunnerInterface;
 class GearsFactory;
 #endif
 
-
-// ModuleImplBaseClass objects created in the same environment (i.e. ones from
-// the same page and thread) share a reference to the same ModuleEnvironment.
-//
-// This struct has public members, but is meant to be read-only once
-// constructed.  Essentially, it should be const, apart from the inherited
-// Ref/Unref methods.
-struct ModuleEnvironment : public RefCounted {
- public:
-  ModuleEnvironment(SecurityOrigin security_origin,
-#if BROWSER_FF || BROWSER_NPAPI
-                    JsContextPtr js_context,
-#elif BROWSER_IE
-                    IUnknown *iunknown_site,
-#endif
-                    bool is_worker,
-                    JsRunnerInterface *js_runner)
-      : security_origin_(security_origin),
-#if BROWSER_FF || BROWSER_NPAPI
-        js_context_(js_context),
-#elif BROWSER_IE
-        iunknown_site_(iunknown_site),
-#endif
-        is_worker_(is_worker),
-        js_runner_(js_runner) {}
-
-  // Note that the SecurityOrigin may not necessarily be the same as the
-  // originating page, e.g. in the case of a cross-origin worker, it would be
-  // the origin of the foreign script.  Nonetheless, every module in the same
-  // thread should share the same SecurityOrigin.
-  SecurityOrigin security_origin_;
-
-#if BROWSER_FF || BROWSER_NPAPI
-  // TODO_REMOVE_NSISUPPORTS: Remove this member once all modules are based on
-  // Dispatcher.  js_context_ is only really used to initialize JsParamFetcher,
-  // which isn't needed with Dispatcher.
-  JsContextPtr js_context_;
-#elif BROWSER_IE
-  // Pointer to the object that hosts this object. On Win32, this is the pointer
-  // passed to SetSite. On WinCE this is the JS IDispatch pointer.
-  CComPtr<IUnknown> iunknown_site_;
-#endif
-
-  bool is_worker_;
-  JsRunnerInterface *js_runner_;
-
- private:
-  // This struct is ref-counted and hence has a private destructor (which
-  // should only be called on the final Unref).
-  virtual ~ModuleEnvironment() {}
-
-  DISALLOW_EVIL_CONSTRUCTORS(ModuleEnvironment);
-};
-
-
-class MarshaledModule {
- public:
-  MarshaledModule() {}
-  virtual ~MarshaledModule() {}
-  virtual bool Unmarshal(ModuleEnvironment *module_environment,
-                         JsScopedToken *out) = 0;
- private:
-  DISALLOW_EVIL_CONSTRUCTORS(MarshaledModule);
-};
-
-
 // Exposes the minimal set of information that Gears objects need to work
 // consistently across the main-thread and worker-thread JavaScript engines.
 class ModuleImplBaseClass {
@@ -142,21 +77,19 @@ class ModuleImplBaseClass {
   // TODO_REMOVE_NSISUPPORTS: this constructor only used for isupports-based
   // modules.
   ModuleImplBaseClass()
-      : module_name_("") {}
+      : module_name_(""), is_initialized_(false) {}
   explicit ModuleImplBaseClass(const std::string &name)
-      : module_name_(name) {}
+      : module_name_(name), is_initialized_(false) {}
 
   const std::string &get_module_name() const {
     return module_name_;
   }
 
-  // Initialization functions.  InitBaseFromSibling should be used for most
-  // scenarios.  The other functions should only be used when there are no
-  // sibling ModuleImplBaseClass objects readily available, such as for the
-  // factory objects (since they are created first, they have no siblings).
-  // InitBaseFromDOM is valid iff you are in the main thread.  Otherwise
-  // (i.e. in a worker thread), use InitBaseManually from an appropriately
-  // constructed ModuleEnvironment.
+  // Initialization functions
+  //
+  // Init from sibling -- should be used for most objects.
+  // Init from DOM -- should only be used for main-thread factories.
+  bool InitBaseFromSibling(const ModuleImplBaseClass *other);
 #if BROWSER_FF
   bool InitBaseFromDOM();
 #elif BROWSER_IE
@@ -166,11 +99,8 @@ class ModuleImplBaseClass {
 #elif BROWSER_SAFARI
   bool InitBaseFromDOM(const char *url_str);
 #endif
-  bool InitBaseFromSibling(const ModuleImplBaseClass *other);
-  bool InitBaseManually(ModuleEnvironment *source_module_environment);
 
   // Host environment information
-  void GetModuleEnvironment(scoped_refptr<ModuleEnvironment> *out) const;
   bool EnvIsWorker() const;
   const std::string16& EnvPageLocationUrl() const;
 #if BROWSER_FF || BROWSER_NPAPI
@@ -206,8 +136,35 @@ class ModuleImplBaseClass {
   JsToken GetWrapperToken() const;
 
  private:
-  scoped_refptr<ModuleEnvironment> module_environment_;
+  // TODO(cprince): This state should be constant per (thread,page) tuple.
+  // Instead of making a copy for every object (ModuleImplBaseClass), we could
+  // keep a reference to one shared class per tuple.
+  // (Recall idea for PageSharedState + PageThreadSharedState classes.)
   std::string module_name_;
+  bool is_initialized_;
+  bool env_is_worker_;
+#if BROWSER_FF || BROWSER_NPAPI
+  // TODO_REMOVE_NSISUPPORTS: Remove this member once all modules are based on
+  // Dispatcher. env_page_js_context_ is only really used to initialize
+  // JsParamFetcher, which isn't needed with Dispatcher.
+  JsContextPtr  env_page_js_context_;
+#elif BROWSER_IE
+  // Pointer to the object that hosts this object. On Win32, this is the pointer
+  // passed to SetSite. On WinCE this is the JS IDispatch pointer.
+  CComPtr<IUnknown> env_page_iunknown_site_;
+#endif
+  SecurityOrigin env_page_origin_;
+
+  // Init manually -- should only be used for worker-thread factories.
+  friend class PoolThreadsManager;
+  bool InitBaseManually(bool is_worker,
+#if BROWSER_FF || BROWSER_NPAPI
+                        JsContextPtr cx,
+#elif BROWSER_IE
+                        IUnknown *site,
+#endif
+                        const SecurityOrigin &page_origin,
+                        JsRunnerInterface *js_runner);
 
 #if BROWSER_FF
   int           worker_js_argc_;
@@ -217,6 +174,7 @@ class ModuleImplBaseClass {
   // These do not exist in IE yet.
 #endif
 
+  JsRunnerInterface *js_runner_;
   // Weak pointer to our JavaScript wrapper.
   ModuleWrapperBaseClass *js_wrapper_;
 
@@ -241,11 +199,8 @@ class ModuleImplBaseClass {
 class ModuleImplBaseClassVirtual : public ModuleImplBaseClass {
  public:
   ModuleImplBaseClassVirtual() : ModuleImplBaseClass() {}
-  ModuleImplBaseClassVirtual(const std::string &name)
-      : ModuleImplBaseClass(name) {}
+  ModuleImplBaseClassVirtual(const char *name) : ModuleImplBaseClass(name) {}
   virtual ~ModuleImplBaseClassVirtual(){}
-
-  virtual MarshaledModule *AsMarshaledModule() { return NULL; }
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(ModuleImplBaseClassVirtual);

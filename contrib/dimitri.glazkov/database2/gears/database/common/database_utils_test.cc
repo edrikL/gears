@@ -41,15 +41,13 @@ class Sqlite3CloseFunctor {
 };
 typedef scoped_token<sqlite3 *, Sqlite3CloseFunctor> scoped_sqlite3_handle;
 
-bool TestDatabaseUtilsAll(std::string16 *error) {
+bool TestDatabaseUtilsAll() {
 // TODO(aa): Refactor into a common location for all the internal tests.
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestDatabaseUtilsAll - failed (%d)\n", __LINE__)); \
-    assert(error); \
-    *error += STRING16(L"TestDatabaseUtilsAll - failed. "); \
     return false; \
   } \
 }

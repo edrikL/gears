@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef USING_CCTESTS
+#ifdef DEBUG
 
 #include <string>
 #include "gears/base/common/common.h"
@@ -37,16 +37,12 @@ static bool TestStrUtilsReplaceAll();
 static bool TestStringCompareIgnoreCase();
 static bool TestStringMatch();
 
-bool TestStringUtils(std::string16 *error) {
+bool TestStringUtils() {
   bool ok = true;
   ok &= TestStringCompareIgnoreCase();
   ok &= TestStartsWithAndEndsWith();
   ok &= TestStrUtilsReplaceAll();
   ok &= TestStringMatch();
-  if (!ok) {
-    assert(error); \
-    *error += STRING16(L"TestStringUtils - failed. "); \
-  }
   return ok;
 }
 
@@ -223,4 +219,4 @@ static bool TestStringMatch() {
 
   return true;
 }
-#endif  // USING_CCTESTS
+#endif  // DEBUG

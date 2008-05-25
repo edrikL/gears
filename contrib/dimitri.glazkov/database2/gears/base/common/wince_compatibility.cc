@@ -27,20 +27,21 @@
 // Mobile 5.
 
 // TODO(andreip): remove platform-specific #ifdef guards when OS-specific
-// sources (e.g. WIN32_CPPSRCS) are implemented.
+// sources (e.g. WIN32_CPPSRCS) are implemented
 #ifdef WINCE
 #include "gears/base/common/wince_compatibility.h"
 
 #include <shellapi.h>
 #include <wininet.h>  // For CreateUrlCacheEntry etc.
 
+#include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_runner_utils.h"  // For EscapeMessage().
 #include "gears/base/common/paths.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/localserver/common/http_constants.h"
-#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/third_party/scoped_ptr/scoped_ptr.h"
 
 HANDLE CMutexWince::global_mutex_ = NULL;
 CriticalSection CMutexWince::lock_;
@@ -62,6 +63,15 @@ static bool IsFiletimeGreater(const FILETIME &left_hand,
 static INTERNET_CACHE_ENTRY_INFO* GetEntryInfo(const char16 *url);
 // Determines if a cache entry is a bogus Gears entry.
 static bool IsEntryBogus(INTERNET_CACHE_ENTRY_INFO *info);
+
+// GetSystemTimeAsFileTime does not exist on Windows Mobile,
+// so we implement it here by getting the system time and
+// then converting it to file time.
+void GetSystemTimeAsFileTime(LPFILETIME filetime) {
+  SYSTEMTIME systemtime;
+  GetSystemTime(&systemtime);
+  SystemTimeToFileTime(&systemtime, filetime);
+}
 
 // There seem to be no way to implement this properly on Windows Mobile
 // since the algorithm for path shortening isn't fully specified, according
@@ -116,8 +126,7 @@ HRESULT SHGetFolderPath(HWND hwndOwner,
                         HANDLE hToken,
                         DWORD dwFlags,
                         LPTSTR pszPath) {
-  BOOL result = SHGetSpecialFolderPath(hwndOwner, pszPath, nFolder, false);
-  return result ? S_OK : E_FAIL;
+  return SHGetSpecialFolderPath(hwndOwner, pszPath, nFolder, false);
 }
 
 BOOL IsNetworkAlive(LPDWORD lpdwFlags) {
@@ -278,11 +287,8 @@ static const char16 *kGearsBogusEntryFileExtension = L"nul";
 bool BrowserCache::EnsureBogusEntry(const char16 *url) {
   // Prepare the expire time. This is used in multiple cases below.
   const __int64 kHundredsOfNanosecondsPerYear = 315360000000000;
-
-  SYSTEMTIME systemtime;
-  GetSystemTime(&systemtime);
   FILETIME current_time;
-  SystemTimeToFileTime(&systemtime, &current_time);
+  GetSystemTimeAsFileTime(&current_time);
   FILETIME expire_time = current_time;
   IncrementFiletime(&expire_time, kHundredsOfNanosecondsPerYear);
 #ifdef DEBUG
@@ -481,16 +487,5 @@ static bool IsEntryBogus(INTERNET_CACHE_ENTRY_INFO *info) {
          header_info.find(kGearsBogusEntryHeader) != -1 &&
          wcscmp(info->lpszFileExtension, kGearsBogusEntryFileExtension) == 0;
 }
-
-#ifdef USING_CCTESTS
-// These methods are defined in cctests\test.h and are used only for testing as
-// a means to access the static functions defined here.
-INTERNET_CACHE_ENTRY_INFO* GetEntryInfoTest(const char16 *url) {
-  return GetEntryInfo(url);
-}
-bool IsEntryBogusTest(INTERNET_CACHE_ENTRY_INFO *info) {
-  return IsEntryBogus(info);
-}
-#endif
 
 #endif  // WINCE

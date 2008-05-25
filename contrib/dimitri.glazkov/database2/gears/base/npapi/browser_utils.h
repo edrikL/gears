@@ -43,10 +43,10 @@ class BrowserUtils {
 
   // Sets a JavaScript exception to be thrown upon return from plugin entry
   // point.  It is an error to call this when not inside a plugin entry point.
-  static void SetJsException(const std::string16 &message);
+  static void SetJsException(const std::string16& message);
 
-  // Returns the current JsCallContext.  Returns NULL when not inside a plugin
-  // entry point.
+  // Returns the current JsCallContext.  It is an error to call this when not
+  // inside a plugin entry point.
   static JsCallContext *GetCurrentJsCallContext();
 
   // Returns the page's location url (absolute)

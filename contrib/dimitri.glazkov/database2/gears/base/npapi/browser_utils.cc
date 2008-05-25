@@ -68,8 +68,7 @@ void BrowserUtils::SetJsException(const std::string16& message) {
 }
 
 JsCallContext *BrowserUtils::GetCurrentJsCallContext() {
-  if (GetJsCallStack().empty())
-    return NULL;
+  assert(!GetJsCallStack().empty());
   return GetJsCallStack().top();
 }
 
