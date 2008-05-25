@@ -39,13 +39,12 @@
 #include <gecko_internal/nsIDOMClassInfo.h>
 #include <gecko_internal/nsIScriptNameSpaceManager.h>
 
+#include "gears/base/common/message_queue.h"
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/firefox/xpcom_dynamic_load.h"
-#include "gears/console/firefox/console_ff.h"
 #include "gears/database/firefox/database.h"
 #include "gears/database/firefox/result_set.h"
 #include "gears/factory/firefox/factory.h"
-#include "gears/httprequest/firefox/httprequest_ff.h"
 
 #include "gears/localserver/firefox/cache_intercept.h"
 #include "gears/localserver/firefox/file_submitter_ff.h"
@@ -59,6 +58,10 @@
 #include <gecko_internal/nsIEventQueueService.h> // for event loop
 #endif
 
+#if BROWSER_FF2
+// From gears/workerpool/firefox/workerpool.h
+void DestroyThreadRecycler();
+#endif
 //-----------------------------------------------------------------------------
 
 // TODO(cprince): can remove this when switch to google3 logging
@@ -138,12 +141,6 @@ NS_DOMCI_EXTENSION(Scour)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsResultSet, PR_TRUE,
                                              &kGearsResultSetClassId)
 
-  // httprequest
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsHttpRequest)
-    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsHttpRequestInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsHttpRequest, PR_TRUE,
-                                             &kGearsHttpRequestClassId)
-
   // workerpool
   NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsWorkerPool)
     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsWorkerPoolInterface)
@@ -167,12 +164,6 @@ NS_DOMCI_EXTENSION(Scour)
     NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsFileSubmitterInterface)
   NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsFileSubmitter, PR_TRUE,
                                              &kGearsFileSubmitterClassId)
-
-  // console
-  NS_DOMCI_EXTENSION_ENTRY_BEGIN(GearsConsole)
-    NS_DOMCI_EXTENSION_ENTRY_INTERFACE(GearsConsoleInterface)
-  NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(GearsConsole, PR_TRUE,
-                                             &kGearsConsoleClassId)
 
 NS_DOMCI_EXTENSION_END
 
@@ -210,9 +201,6 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
       GEARSDATABASEINTERFACE_IID_STR },
     { kGearsResultSetClassName, "GearsResultSetInterface",
       GEARSRESULTSETINTERFACE_IID_STR },
-    // httprequest
-    { kGearsHttpRequestClassName, "GearsHttpRequestInterface",
-      GEARSHTTPREQUESTINTERFACE_IID_STR },
     // workerpool
     { kGearsWorkerPoolClassName, "GearsWorkerPoolInterface",
       GEARSWORKERPOOLINTERFACE_IID_STR },
@@ -224,10 +212,7 @@ static NS_METHOD ScourRegisterSelf(nsIComponentManager *compMgr,
     { kGearsResourceStoreClassName, "GearsResourceStoreInterface",
       GEARSRESOURCESTOREINTERFACE_IID_STR },
     { kGearsFileSubmitterClassName, "GearsFileSubmitterInterface",
-      GEARSFILESUBMITTERINTERFACE_IID_STR },
-    // console
-    { kGearsConsoleClassName, "GearsConsoleInterface",
-      GEARSCONSOLEINTERFACE_IID_STR }
+      GEARSFILESUBMITTERINTERFACE_IID_STR }
   };
 
   for (size_t i = 0; i < NS_ARRAY_LENGTH(jsDOMClasses); ++i) {
@@ -259,8 +244,6 @@ NS_DECL_DOM_CLASSINFO(GearsFactory)
 // database
 NS_DECL_DOM_CLASSINFO(GearsDatabase)
 NS_DECL_DOM_CLASSINFO(GearsResultSet)
-// httprequest
-NS_DECL_DOM_CLASSINFO(GearsHttpRequest)
 // workerpool
 NS_DECL_DOM_CLASSINFO(GearsWorkerPool)
 // localserver
@@ -269,11 +252,12 @@ NS_DECL_DOM_CLASSINFO(GearsManagedResourceStore)
 NS_DECL_DOM_CLASSINFO(GearsResourceStore)
 NS_DECL_DOM_CLASSINFO(GearsFileSubmitter)
 
-// console
-NS_DECL_DOM_CLASSINFO(GearsConsole)
-
 nsresult PR_CALLBACK ScourModuleConstructor(nsIModule *self) {
-  return ThreadLocals::HandleModuleConstructed();
+  if (NS_FAILED(ThreadLocals::HandleModuleConstructed())) {
+    return NS_ERROR_FAILURE;
+  }
+  ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
+  return NS_OK;
 }
 
 
@@ -286,19 +270,18 @@ void PR_CALLBACK ScourModuleDestructor(nsIModule *self) {
   // database
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsDatabase));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsResultSet));
-  // httprequest
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsHttpRequest));
   // workerpool
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsWorkerPool));
   // localserver
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsLocalServer));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsManagedResourceStore));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsResourceStore));
-  // console
-  NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsConsole));
 
 #ifdef DEBUG
   NS_IF_RELEASE(NS_CLASSINFO_NAME(GearsFileSubmitter));
+#endif
+#if BROWSER_FF2
+  DestroyThreadRecycler();
 #endif
 }
 
@@ -386,7 +369,7 @@ NSGETMODULE_ENTRY_POINT(gears_module) (nsIComponentManager *servMgr,
   // Check that the version string matches the proper Firefox
   const nsCString::char_type *begin, *end;
   version.BeginReading(&begin, &end);
-  if (strcmp(begin, "3.0b5")) {
+  if (strcmp(begin, "3.0")) {
     return NS_ERROR_FAILURE;
   }
 #endif

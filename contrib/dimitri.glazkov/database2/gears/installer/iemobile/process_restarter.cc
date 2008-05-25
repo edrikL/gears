@@ -30,7 +30,7 @@
 #include <tlhelp32.h>
 #include <vector>
 
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 //------------------------------------------------------------------------------
 // class ProcessRestarter

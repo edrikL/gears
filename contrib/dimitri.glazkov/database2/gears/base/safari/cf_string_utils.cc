@@ -27,7 +27,7 @@
 #include "gears/base/common/string_utils.h"
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/base/safari/cf_string_utils.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 bool CFStringRefToString16(CFStringRef str, std::string16 *out16) {
   if (!str || !out16)

@@ -28,7 +28,7 @@
 #ifndef GEARS_DESKTOP_DLL_DATA_WINCE_H__
 #define GEARS_DESKTOP_DLL_DATA_WINCE_H__
 
-#include "gears/base/common/int_types.h"
+#include "gears/base/common/basictypes.h"
 
 // The resource ID of the icon in the DLL. Note that this value is baked into
 // the DLL data in the arrays defined below, so should not be changed.

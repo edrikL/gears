@@ -64,4 +64,8 @@ PermissionState ShowPermissionsPrompt(const SecurityOrigin &origin,
 // periodically reported and then reset. Currently Windows-only.
 void SetActiveUserFlag();
 
+// Checks if the module is whitelisted, and doesn't require explicit
+// permission.
+bool RequiresPermissionToUseGears(const std::string16 &module_name);
+
 #endif // GEARS_BASE_COMMON_FACTORY_UTILS_H__

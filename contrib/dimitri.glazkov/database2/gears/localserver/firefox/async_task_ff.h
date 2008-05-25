@@ -34,10 +34,12 @@
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
 
+class BlobInterface;
+
 //------------------------------------------------------------------------------
 // AsyncTask
 //------------------------------------------------------------------------------
-class AsyncTask : protected HttpRequest::ReadyStateListener,
+class AsyncTask : protected HttpRequest::HttpListener,
                   private RefCounted {
  public:
   // Starts a worker thread which will call the Run method
@@ -111,11 +113,44 @@ class AsyncTask : protected HttpRequest::ReadyStateListener,
                std::string16 *full_redirect_url,
                std::string16 *error_message);
 
+#ifdef OFFICIAL_BUILD
+  // The Blob API has not yet been finalized for official builds.
+#else
+  // As HttpGet, but for POST.
+  bool HttpPost(const char16 *full_url,
+                bool is_capturing,
+                const char16 *reason_header_value,
+                const char16 *if_mod_since_date,
+                const char16 *required_cookie,
+                BlobInterface *post_body,
+                WebCacheDB::PayloadInfo *payload,
+                bool *was_redirected,
+                std::string16 *full_redirect_url,
+                std::string16 *error_message);
+#endif
+
   CriticalSection lock_;
   bool is_aborted_;
   bool is_initialized_;
 
  private:
+  bool MakeHttpRequest(const char16 *method,
+                       const char16 *full_url,
+                       bool is_capturing,
+                       const char16 *reason_header_value,
+                       const char16 *if_mod_since_date,
+                       const char16 *required_cookie,
+#ifdef OFFICIAL_BUILD
+                       // The Blob API has not yet been finalized for official
+                       // builds.
+#else
+                       BlobInterface *post_body,
+#endif
+                       WebCacheDB::PayloadInfo *payload,
+                       bool *was_redirected,
+                       std::string16 *full_redirect_url,
+                       std::string16 *error_message);
+
   struct HttpRequestParameters;
 
   static const int kStartHttpGetMessageCode = -1;
@@ -142,12 +177,14 @@ class AsyncTask : protected HttpRequest::ReadyStateListener,
 
   // Returns true if the currently executing thread is our task thread
   bool IsTaskThread() {
-    return thread_ == PR_GetCurrentThread();
+    return thread_id_ ==
+        ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
   }
 
   bool delete_when_done_;
   Listener *listener_;
-  PRThread *thread_;
+  bool thread_running_;
+  ThreadId thread_id_;
   ThreadId listener_thread_id_;
   scoped_refptr<HttpRequest> http_request_;
   HttpRequestParameters *params_;

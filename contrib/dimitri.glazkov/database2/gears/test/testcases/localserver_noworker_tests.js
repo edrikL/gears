@@ -85,3 +85,8 @@ function testCaptureLongUrl() {
     completeAsync();      
   });
 }
+
+// SAFARI-TEMP - Disable tests that don't currently work on Safari.
+testCaptureSpoofedInputElement._disable_in_safari = true;
+testCreateFileSubmitter._disable_in_safari = true;
+testCaptureEmptyFileElement._disable_in_safari = true;

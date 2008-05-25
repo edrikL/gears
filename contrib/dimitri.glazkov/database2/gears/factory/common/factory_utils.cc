@@ -102,6 +102,8 @@ void AppendBuildInfo(std::string16 *s) {
   s->append(STRING16(L";firefox"));
 #elif BROWSER_SAFARI
   s->append(STRING16(L";safari"));
+#elif BROWSER_NPAPI
+  s->append(STRING16(L";npapi"));
 #else
   s->append(STRING16(L";unknown_browser"));
 #endif
@@ -166,10 +168,6 @@ bool HasPermissionToUseGears(GearsFactory *factory,
 
   // Display the modal dialog. Should not happen in a faceless worker.
   assert(!factory->EnvIsWorker());
-// SAFARI-TEMP
-#ifdef BROWSER_WEBKIT
-  return true;
-#else
   factory->permission_state_ = ShowPermissionsPrompt(origin,
                                                      custom_icon_url,
                                                      custom_name,
@@ -181,12 +179,8 @@ bool HasPermissionToUseGears(GearsFactory *factory,
     return true;
   }
   return false;
-#endif
 }
 
-#ifdef BROWSER_SAFARI
-// See factory_utils.mm for (temporary) Safari version.
-#else
 PermissionState ShowPermissionsPrompt(const SecurityOrigin &origin,
                                       const char16 *custom_icon_url,
                                       const char16 *custom_name,
@@ -196,7 +190,6 @@ PermissionState ShowPermissionsPrompt(const SecurityOrigin &origin,
                                    custom_name,
                                    custom_message);
 }
-#endif
 
 void SetActiveUserFlag() {
 #ifdef WIN32
@@ -220,4 +213,10 @@ void SetActiveUserFlag() {
     RegCloseKey(reg_client_state);
   }
 #endif  // #ifdef WIN32
+}
+
+bool RequiresPermissionToUseGears(const std::string16 &module_name) {
+  return module_name != STRING16(L"beta.desktop") &&
+         module_name != STRING16(L"beta.httprequest") &&
+         module_name != STRING16(L"beta.timer");
 }

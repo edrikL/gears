@@ -30,7 +30,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <html>
 <head>
-  <title>PRODUCT_FRIENDLY_NAME_UQ - Create Desktop Shortcut</title>
   <link rel="stylesheet" href="button.css">
   <link rel="stylesheet" href="html_dialog.css">
   <style type="text/css">
@@ -40,15 +39,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     #content {
       margin:0 1em;
-    }
-
-    #scroll {
-      overflow-y:auto;
-      overflow-x:hidden;
-      /* initially display:none so that we can figure out the height of the
-      borders and margins #content adds to the outside of scroll. Once we get
-      this, we remove display:none in layoutShortcuts(). */
-      display:none;
+      padding-bottom:1em;
     }
 
     #scroll td {
@@ -78,6 +69,15 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       margin-bottom:2px;
     }
 
+    #locations {
+      margin-top:1.2em;
+      display:none;
+    }
+    
+    #locations table {
+      margin-top:-2px;
+      margin-left:0.45em;
+    }
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
     /* 
@@ -96,26 +96,39 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
   </style>
 </head>
 <body>
+  <!-- This div contains strings that are conditionally used in the UI -->
+  <div id="strings" style="display:none;">
+    <!-- window titles -->
+    <div id="string-title-default"><TRANS_BLOCK desc="Window title for default style">PRODUCT_FRIENDLY_NAME_UQ - Create Desktop Shortcut</TRANS_BLOCK></div>
+    <div id="string-title-simple"><TRANS_BLOCK desc="Window title for the simple style">Create Application Shortcuts</TRANS_BLOCK></div>
+    
+    <!-- headers -->
+    <div id="string-header-desktop"><TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut on the desktop.">This website wants to create a shortcut on your computer. Do you want to allow this?</TRANS_BLOCK></div>
+    <div id="string-header-wince"><TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut under 'Start'.">This website wants to create a shortcut in your list of programs. Do you want to allow this?</TRANS_BLOCk></div>
+
+    <!-- buttons -->
+    <div id="string-ok"><TRANS_BLOCK desc="Confirms creating the shortcut.">OK</TRANS_BLOCK></div>
+    <div id="string-ok-accesskey"><TRANS_BLOCK desc="Access key for OK button">O</TRANS_BLOCK></div>
+    <div id="string-cancel"><TRANS_BLOCK desc="Cancels the dialog">Cancel</TRANS_BLOCK></div>
+    <div id="string-cancel-accesskey"><TRANS_BLOCK desc="Access key for Cancel button">C</TRANS_BLOCK></div>
+    <div id="string-yes"><TRANS_BLOCK desc="Allows the shortcut to be created. Used when the dialog header is phrased as a question.">Yes</TRANS_BLOCK></div>
+    <div id="string-yes-accesskey"><TRANS_BLOCK desc="Access key for Yes button">Y</TRANS_BLOCK></div>
+    <div id="string-no"><TRANS_BLOCK desc="Denies the shortcut to be created. Used when the dialog header is phrased as a question.">No</TRANS_BLOCK></div>
+    <div id="string-no-accesskey"><TRANS_BLOCK desc="Access key for No button">N</TRANS_BLOCK></div>
+    <div id="string-never-allow"><TRANS_BLOCK desc="Button or link the user can press to permanently disallow Gears from creating this shortcut.">Never allow this shortcut</TRANS_BLOCK></div>
+    <div id="string-never-allow-wince"><TRANS_BLOCK desc="Button or link the user can press to permanently disallow Gears from creating this shortcut, short version.">Never allow</TRANS_BLOCK></div>
+  </div>
+
   <div id="head">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td align="left" valign="top">
           <img id="icon" src="icon_32x32.png" width="32" height="32">
+          <!-- Some browsers automatically focus the first focusable item. We
+          don't want anything focused, so we add this fake item. -->
+          <a href="#" id="focus-thief"></a>
         </td>
-        <td width="100%" align="left" valign="middle">
-          <span id="header-desktop" style="display:none">
-          <TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut on the desktop.">
-          This website wants to create a shortcut
-          on your desktop. Do you want to allow this?
-          </TRANS_BLOCK>
-          </span>
-          <span id="header-wince" style="display:none">
-          <TRANS_BLOCK desc="Tells the user that the application wants to create one shortcut under 'Start'.">
-          This website wants to create a shortcut in your list of programs.
-          Do you want to allow this?
-          </TRANS_BLOCK>
-          </span>
-        </td>
+        <td id="header" width="100%" align="left" valign="middle"></td>
       </tr>
     </table>
   </div>
@@ -127,34 +140,33 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
         </div>
       </div>
     </div>
+
+    <div id="locations">
+      <p><TRANS_BLOCK desc="Asks the user to choose the locations to create a shortcut in. Only used when a platform supports multiple locations.">Create shortcuts in the following locations:</TRANS_BLOCK></p>
+      <div id="locations-windows">
+        <table cellpadding="0" cellspacing="2" border="0">
+          <tr>
+            <!-- NOTE: Confusingly, onclick also gets fired when the checkbox changes via keyboard press. -->
+            <!-- NOTE: The values in the checkboxes correspond to the SHORTCUT_LOCATION_* bitmasks defined in desktop.cc. -->
+            <td valign="middle"><input type="checkbox" id="location-desktop" value="1" onclick="resetConfirmDisabledState()"></td>
+            <td valign="middle"><label for="location-desktop"><TRANS_BLOCK desc="Label for the checkbox allowing a user to create a shortcut on the desktop">Desktop</TRANS_BLOCK></label></td>
+          </tr>
+          <tr>
+            <td valign="middle"><input type="checkbox" id="location-startmenu" value="4" onclick="resetConfirmDisabledState()"></td>
+            <td valign="middle"><label for="location-startmenu"><TRANS_BLOCK desc="Label for the checkbox allowing a user to create a shortcut on the Windows start menu">Start menu</TRANS_BLOCK></label></td>
+          </tr>
+          <tr>
+            <td valign="middle"><input type="checkbox" id="location-quicklaunch" value="2" onclick="resetConfirmDisabledState()"></td>
+            <td valign="middle"><label for="location-quicklaunch"><TRANS_BLOCK desc="Label for the checkbox allowing a user to create a shortcut on the Windows quick launch bar">Quick launch bar</TRANS_BLOCK></label></td>
+          </tr>
+        </table>
+      </div>
+      <!-- TODO(aa): Support more locations on other platforms, such as dock
+      and applications on OSX? -->
+    </div>
   </div>
 
   <div id="foot">
-    <!-- We use these divs to store the text for our buttons in a way that can
-    be translated. We copy the text to the buttons in JavaScript. -->
-    <div style="display:none">
-      <div id="allow-text">
-        <TRANS_BLOCK desc="Button the user can press to allow Gears to create a shortcut.">
-        <span class="accesskey">Y</span>es
-        </TRANS_BLOCK>
-      </div>
-      <div id="deny-text">
-        <TRANS_BLOCK desc="Button the user can press to disallow Gears from creating a shortcut.">
-        <span class="accesskey">N</span>o
-        </TRANS_BLOCK>
-      </div>
-      <div id="deny-permanently-text">
-        <TRANS_BLOCK desc="Button the user can press to permanently disallow Gears from creating this shortcut.">
-        Never allow this shortcut
-        </TRANS_BLOCK>
-      </div>
-      <div id="deny-permanently-text-short">
-        <TRANS_BLOCK desc="Button or link the user can press to permanently disallow Gears from creating this shortcut, short version.">
-        Never allow
-        </TRANS_BLOCK>
-      </div>
-    </div>
-
 m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 ~
     <!-- On SmartPhone, we don't use the regular buttons. We just use this link,
@@ -185,7 +197,7 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
 
           <div id="div-buttons">
             <td width="50%" align="right" valign="middle">
-              <input disabled type="BUTTON" id="allow-button" onclick="allowShortcutsTemporarily(); return false;"></input>
+              <input disabled="true" type="BUTTON" id="allow-button" onclick="allowShortcutsTemporarily(); return false;"></input>
               <input type="BUTTON" id="deny-button" onclick="denyShortcutsTemporarily(); return false;"></input>
             </td>
           </div>
@@ -194,33 +206,12 @@ m4_ifelse(PRODUCT_OS,~wince~,m4_dnl
             <a href="#" onclick="denyShortcutPermanently(); return false;" id="deny-permanently-link"></a>
           </td>
           <td nowrap="true" align="right" valign="middle">
-            <!--
-            Fancy buttons
-            Note: Weird line breaks are on purpose to avoid extra space between
-            buttons.
-            Note: Outer element is <a> because we want it to focusable and
-            behave like an anchor. Inner elements should theoretically be able
-            to be <span>, but IE renders incorrectly in this case.
-             
-            Note: The whitespace in this section is very delicate.  The lack of
-            space between the tags and the space between the buttons both
-            are important to ensure proper rendering.
-            TODO(aa): This results in inconsistent spacing in IE vs Firefox
-            between the buttons, but I am reluctant to hack things even further
-            to fix that.
-            -->
-            <a href="#" accesskey="Y" id="allow-button" 
-                onclick="allowShortcutsTemporarily(); return false;"
-                class="inline-block custom-button">
-              <div class="inline-block custom-button-outer-box">
-                <div class="inline-block custom-button-inner-box" id="allow-button-contents"
-                  ><TRANS_BLOCK desc="Button the user can press to allow Gears to create a shortcut">&nbsp;&nbsp;<span class="accesskey">Y</span>es</TRANS_BLOCK>&nbsp;&nbsp;</div></div></a>
-            <a href="#" accesskey="N" id="deny-button"
-                onclick="denyShortcutsTemporarily(); return false;"
-                class="inline-block custom-button">
-              <div class="inline-block custom-button-outer-box">
-                <div class="inline-block custom-button-inner-box" id="deny-button-contents"
-                  ><TRANS_BLOCK desc="Button the user can press to disallow Gears from creating a shortcut.">&nbsp;&nbsp;&nbsp;<span class="accesskey">N</span>o&nbsp;&nbsp;&nbsp;</TRANS_BLOCK></div></div></a></td>~)
+            <button id="allow-button" class="custom"
+              onclick="allowShortcutsTemporarily(); return false;"></button
+            ><button id="deny-button" class="custom"
+              onclick="denyShortcutsTemporarily(); return false;"></button>
+          </td>
+~)
         </tr>
       </table>
     </div>
@@ -235,78 +226,131 @@ PocketIE does not support callbacks for loading external JavaScript files.
 TODO: find a better way to include scripts for PIE
 -->
 <script>
-m4_include(third_party/jsonjs/json_noeval.js)
+m4_include(../third_party/jsonjs/json_noeval.js)
+m4_include(ui/common/base.js)
+m4_include(ui/common/dom.js)
 m4_include(ui/common/html_dialog.js)
+m4_include(ui/common/button.js)
 </script>
 
 <script>
-  var scrollBordersHeight = -1;
   var iconHeight = 32;
   var iconWidth = 32;
+  var dialogMinHeight = 200;
+
+  // We currently only support custom locations for desktop windows.
+  var locationsEnabled = browser.windows && !browser.ie_mobile;
+
+  var args = getArguments();
+
+  // Handy for debugging layout:
+  // var args = {
+  //   style: "simple",
+  //   name: "My Application",
+  //   link: "http://www.google.com/",
+  //   description: "This application does things does things!",
+  //   // description: "This application does things does things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things.",
+  //   icon16x16: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/16.png",
+  //   icon32x32: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/32.png",
+  //   icon48x48: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/48.png",
+  //   icon128x128: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/128.png"
+  // };
 
   initDialog();
+  initLayout();
+  initShortcuts(args);
+  resizeDialogToFitContent(dialogMinHeight);
 
-  // Set the button and link labels.
-  if (isPIE) {
-    // For touchscreen devices (window.pie_dialog.IsSmartPhone() == false)
-    setButtonLabel("allow-text", "allow-button");
-    setButtonLabel("deny-text", "deny-button");
-    setButtonLabel("deny-permanently-text-short", "deny-permanently-button");
-    // For softkey UI devices (window.pie_dialog.IsSmartPhone() == true)
-    window.pie_dialog.SetButton(getElementById("allow-text").innerText,
+  function initLayout() {
+    if (locationsEnabled) {
+      dom.getElementById("locations").style.display = "block";
+    }
+    
+    // Set up the rest of the layout. The details vary based on the layout style
+    // and the user agent (currently "simple" style only supported by desktop
+    // Gears).
+    if (isDefined(typeof args.style) && args.style == "simple") {
+      initSimpleStyle();
+    } else if (browser.ie_mobile) {
+      initPieStyle();
+    } else {
+      initDefaultStyle();
+    }
+
+    resetConfirmDisabledState();
+  }
+
+  function initSimpleStyle() {
+    window.title =
+        dom.getTextContent(dom.getElementById("string-title-simple"));
+    dom.getElementById("icon").parentNode.style.display = "none";
+    dom.getElementById("header").style.display = "none";
+    dom.getElementById("head").style.paddingBottom = "0";
+    dom.getElementById("deny-permanently-link").style.display = "none";
+    setButtonLabel("string-ok", "allow-button", "string-ok-accesskey");
+    setButtonLabel("string-cancel", "deny-button", "string-cancel-accesskey");
+
+    // Also check the desktop checkbox by default
+    dom.getElementById("location-desktop").checked = true;    
+
+    // Turn on the buttons. They are turned off by default for CustomButton, but
+    // simple style does not use custom button.
+    var buttons = document.getElementsByTagName("button");
+    for (var i = 0, button; button = buttons[i]; i++) {
+      button.className = "";
+      button.style.visibility = "visible";
+    }
+  }
+
+  function initPieStyle() {
+    // For PIE, we don't set a window title.
+    setElementContents("string-header-wince", "header");
+
+    if (window.pie_dialog.IsSmartPhone()) {
+      // On softkey-only devices we only use a regular link to trigger
+      // the "never-allow" action. For "allow" and "deny" we use only
+      // the softkey lables.
+      setElementContents("string-never-allow-wince", "deny-permanently-link");
+    } else {
+      // For touchscreen devices, we use buttons for all actions. Additionally,
+      // we also set the sofkey labels.
+      setButtonLabel("string-yes", "allow-button", "string-yes-accesskey");
+      setButtonLabel("string-no", "deny-button", "string-no-accesskey");
+      setButtonLabel("string-never-allow-wince", "deny-permanently-button");
+    }
+    // Set the softkey labels for both softkey-only and touchscreen UIs.
+    window.pie_dialog.SetButton(dom.getElementById("string-yes").innerText,
                                 "allowShortcutsTemporarily();");
-    window.pie_dialog.SetCancelButton(getElementById("deny-text").innerText);
-    setElementContents("deny-permanently-text-short", "deny-permanently-link");
-  } else {
-    setElementContents("deny-permanently-text", "deny-permanently-link");
+    window.pie_dialog.SetCancelButton(dom.getElementById("string-no").innerText);
+    // On PIE, the allow button is disabled by default.
+    // TODO(aa): Why not just remove the disabled attribute?
+    // (andreip): Because on WinCE, we need to also call
+    // window.pie_dialog.SetButtonEnabled(true); , which enables the right
+    // softkey button.
+    enableButton(dom.getElementById("allow-button"));
   }
 
-  // PIE can't do scrollable divs, so there's no need to do the height
-  // calculations.
-  if (isPIE) {
-    getElementById("scroll").style.display = "block";
-  } else {
-    initCustomLayout(layoutShortcuts);
-  }
-  initShortcuts();
+  function initDefaultStyle() {
+    window.title = dom.getTextContent(dom.getElementById("string-title-default"));
+    setElementContents("string-header-desktop", "header");
+    setButtonLabel("string-yes", "allow-button", "string-yes-accesskey");
+    setButtonLabel("string-no", "deny-button", "string-no-accesskey");
+    setElementContents("string-never-allow", "deny-permanently-link");
 
+    CustomButton.initializeAll();
+  }
+  
   /**
    * Populate the shortcuts UI based on the data passed in from C++.
    */
-  function initShortcuts() {
-    var args = getArguments();
-
-    // Handy for debugging layout:
-    // var args = {
-    //   name: "My Application",
-    //   link: "http://www.google.com/",
-    //   description: "This application does things does things!",
-    //   // description: "This application does things does things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things that do things.",
-    //   icon16x16: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/16.png",
-    //   icon32x32: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/32.png",
-    //   icon48x48: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/48.png",
-    //   icon128x128: "http://google-gears.googlecode.com/svn/trunk/gears/test/manual/shortcuts/128.png"
-    // };
-
-    // Populate the layout
+  function initShortcuts(args) {
+    // Populate the icon information
     var content = createShortcutRow(args);
-    getElementById("scroll").innerHTML =
+    dom.getElementById("scroll").innerHTML =
         "<table cellpadding='0' cellspacing='0' border='0'><tbody>" +
         content +
         "</tbody></table>";
-
     preloadIcons(args);
-
-    if (isPIE) {
-      getElementById("header-wince").style.display = "block";
-      // On PIE, the allow button is disabled by default.
-      enableButton(getElementById("allow-button"));
-    } else {
-      getElementById("header-desktop").style.display = "block";
-    }
-
-    // Focus deny by default
-    getElementById("deny-button").focus();
   }
 
   /**
@@ -360,40 +404,47 @@ m4_include(ui/common/html_dialog.js)
   }
 
   /**
-   * Custom layout for this dialog. Allow the scroll region and its borders to
-   * grow until they fill all available height, but no more.
-   */
-  function layoutShortcuts(contentHeight) {
-    var scroll = getElementById("scroll");
-
-    // Initialize on first run
-    if (scrollBordersHeight == -1) {
-      var content = getElementById("content");
-      scrollBordersHeight = content.offsetHeight;
-      scroll.style.display = "block";
+   * Sets the confirm button's disabled state depending on whether there is
+   * at least one checkbox checked.
+   */  
+  function resetConfirmDisabledState() {
+    if (!locationsEnabled) {
+      return;
     }
+    
+    var allowButton = dom.getElementById("allow-button");
+    var checkboxes =
+        dom.getElementById("locations").getElementsByTagName("input");
 
-    var scrollHeight = contentHeight - scrollBordersHeight;
-    scrollHeight = Math.min(scrollHeight, scroll.scrollHeight);
-    scrollHeight = Math.max(scrollHeight, 0);
-
-    scroll.style.height = scrollHeight + "px";
-
-    // If there is a scrollbar visible add extra padding to the left of it.
-    if (scrollHeight < scroll.scrollHeight) {
-      scroll.style.paddingRight = "1em";
-    } else {
-      scroll.style.paddingHeight = "";
+    for (var i = 0, checkbox; checkbox = checkboxes[i]; i++) {
+      if (checkbox.checked) {
+        enableButton(allowButton);
+        return;
+      }
     }
+    
+    disableButton(allowButton);
   }
 
   /**
    * Called when the user clicks the allow button.
    */
   function allowShortcutsTemporarily() {
-    saveAndClose({
-      allow: true
-    });
+    var result = {
+      allow: true,
+      locations: 0
+    };
+    
+    if (locationsEnabled) {
+      var checkboxes =
+          dom.getElementById("locations").getElementsByTagName("input");
+      for (var i = 0, checkbox; checkbox = checkboxes[i]; i++) {
+        if (checkbox.checked) {
+          result.locations |= parseInt(checkbox.value);
+        }
+      }
+    }
+    saveAndClose(result);
   }
 
   /**
@@ -417,8 +468,8 @@ m4_include(ui/common/html_dialog.js)
    * element specified by sourceID.
    */
   function setElementContents(sourceID, destID) {
-    var sourceElem = getElementById(sourceID);
-    var destElem = getElementById(destID);
+    var sourceElem = dom.getElementById(sourceID);
+    var destElem = dom.getElementById(destID);
     if (isDefined(typeof sourceElem) && isDefined(typeof destElem)) {
       destElem.innerHTML = sourceElem.innerHTML;
     }

@@ -82,7 +82,7 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include <gecko_internal/nsIJSContextStack.h>
 #include <gecko_internal/nsIJSRuntimeService.h>
 #include <gecko_internal/nsIScriptContext.h>
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #include "gears/workerpool/firefox/workerpool.h"
 
@@ -94,13 +94,18 @@ struct JSContext; // must declare this before including nsIJSContextStack.h
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/scoped_token.h"
+#include "gears/base/common/thread_locals.h"
 #include "gears/base/common/url_utils.h"
 #include "gears/base/firefox/dom_utils.h"
 #include "gears/factory/firefox/factory.h"
+#include "gears/localserver/common/critical_section.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/workerpool/common/workerpool_utils.h"
 
+#if BROWSER_FF2
+#define RECYCLE_JS_RUNTIME 1
+#endif
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
 NS_IMPL_ADDREF(GearsWorkerPool)
@@ -148,11 +153,11 @@ struct WorkerPoolMessage {
 struct JavaScriptWorkerInfo {
   // Our code assumes some items begin cleared. Zero all members w/o ctors.
   JavaScriptWorkerInfo()
-      : threads_manager(NULL), js_runner(NULL),
-        is_invoking_error_handler(false),
-        thread_init_signalled(false), thread_init_ok(false),
-        script_signalled(false), script_ok(false), http_request(NULL),
-        is_factory_suspended(false), thread_pointer(NULL) {}
+      : threads_manager(NULL), js_runner(NULL), is_owning_worker(false),
+        is_invoking_error_handler(false), thread_init_signalled(false),
+        thread_init_ok(false), script_signalled(false), script_ok(false),
+        js_runtime_(NULL), thread_created(false), is_factory_suspended(false),
+        http_request(NULL) {}
 
   ~JavaScriptWorkerInfo() {
     while (!message_queue.empty()) {
@@ -165,10 +170,12 @@ struct JavaScriptWorkerInfo {
   //
   // These fields are used for all workers in pool (parent + children).
   //
+  scoped_refptr<ModuleEnvironment> module_environment;
   PoolThreadsManager *threads_manager;
   JsRunnerInterface *js_runner;
   scoped_ptr<JsRootedCallback> onmessage_handler;
   scoped_ptr<JsRootedCallback> onerror_handler;
+  bool is_owning_worker;
 
   // thread_events_handle holds a pointer to an object which holds the thread's
   // event queue.  This is different in FF2 and FF3, because the event queue
@@ -196,11 +203,12 @@ struct JavaScriptWorkerInfo {
   std::string16 script_text;  // Owner: parent before signal, immutable after
   SecurityOrigin script_origin;  // Owner: parent before signal, immutable after
 
-  scoped_refptr<HttpRequest> http_request;  // For createWorkerFromUrl()
-  scoped_ptr<HttpRequest::ReadyStateListener> http_request_listener;
+  JSRuntime *js_runtime_;
+  bool thread_created;
   nsCOMPtr<GearsFactory> factory_ref;
   bool is_factory_suspended;
-  PRThread *thread_pointer;
+  scoped_refptr<HttpRequest> http_request;  // For createWorkerFromUrl()
+  scoped_ptr<HttpRequest::HttpListener> http_request_listener;
 };
 
 
@@ -328,7 +336,8 @@ NS_IMETHODIMP GearsWorkerPool::CreateWorkerFromUrl(//const nsAString &url
   Initialize();
 
   // Make sure URLs are only fetched from the main thread.
-  // TODO(michaeln): Remove this limitation of Firefox HttpRequest someday.
+  // TODO(michaeln): This HttpRequest limitation has been removed.
+  //                 Add unit tests and remove the test below.
   if (EnvIsWorker()) {
     RETURN_EXCEPTION(STRING16(L"createWorkerFromUrl() cannot be called from a"
                               L" worker."));
@@ -431,7 +440,7 @@ NS_IMETHODIMP GearsWorkerPool::SendMessage(//const variant &message_body,
   JsParamType first_arg_type = js_params.GetType(0);
   if (first_arg_type == JSPARAM_NULL ||
       first_arg_type == JSPARAM_UNDEFINED ||
-      !js_params.GetAsMarshaledJsToken(0, &mjt, &error)) {
+      !js_params.GetAsMarshaledJsToken(0, GetJsRunner(), &mjt, &error)) {
     RETURN_EXCEPTION(error.empty()
         ? STRING16(L"The message parameter has an invalid type.")
         : error.c_str());
@@ -465,6 +474,7 @@ void GearsWorkerPool::HandleEvent(JsEventType event_type) {
   assert(event_type == JSEVENT_UNLOAD);
 
   if (owns_threads_manager_ && threads_manager_) {
+    // Note: the following line can cause us to be deleted
     threads_manager_->ShutDown();
   }
 }
@@ -473,7 +483,7 @@ void GearsWorkerPool::Initialize() {
   if (!threads_manager_) {
     assert(EnvPageSecurityOrigin().full_url() == EnvPageLocationUrl());
     SetThreadsManager(new PoolThreadsManager(EnvPageSecurityOrigin(),
-                                             GetJsRunner()));
+                                             GetJsRunner(), this));
     owns_threads_manager_ = true;
   }
 
@@ -537,6 +547,10 @@ void* PoolThreadsManager::OnReceiveThreadsEvent(ThreadsEvent *event) {
     return NULL;
   }
 
+  nsCOMPtr<GearsWorkerPool> scoped_reference;
+  if (wi->is_owning_worker)
+    scoped_reference = wi->threads_manager->refed_owner_;
+
   if (event->type == EVENT_TYPE_MESSAGE) {
     wi->threads_manager->ProcessMessage(wi, *msg);
   } else {
@@ -560,7 +574,7 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
 
     // Setup the onmessage parameter (type: Object).
     assert(wi->js_runner);
-    scoped_ptr<JsObject> onmessage_param(wi->js_runner->NewObject(NULL, true));
+    scoped_ptr<JsObject> onmessage_param(wi->js_runner->NewObject(true));
     // TODO(zork): Checking this return value is temporary, as callers are not
     // supposed to have to worry about NewObject() failing.
     if (!onmessage_param.get()) {
@@ -576,7 +590,8 @@ void PoolThreadsManager::ProcessMessage(JavaScriptWorkerInfo *wi,
     onmessage_param->SetPropertyInt(STRING16(L"sender"), msg.sender_);
     onmessage_param->SetPropertyString(STRING16(L"origin"), msg.origin_.url());
     JsToken token;
-    if (msg.body_.get() && msg.body_->Unmarshal(wi->js_runner, &token)) {
+    if (msg.body_.get() &&
+        msg.body_->Unmarshal(wi->module_environment.get(), &token)) {
       onmessage_param->SetProperty(STRING16(L"body"), token);
     }
 
@@ -627,15 +642,21 @@ void PoolThreadsManager::ProcessError(JavaScriptWorkerInfo *wi,
 
 PoolThreadsManager::PoolThreadsManager(
                         const SecurityOrigin &page_security_origin,
-                        JsRunnerInterface *root_js_runner)
+                        JsRunnerInterface *root_js_runner,
+                        GearsWorkerPool *owner)
     : num_workers_(0), 
       is_shutting_down_(false),
+      unrefed_owner_(owner),
       page_security_origin_(page_security_origin) {
+  // Make sure we have a ThreadId for this thread.
+  ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
 
   // Add a JavaScriptWorkerInfo entry for the owning worker.
   JavaScriptWorkerInfo *wi = new JavaScriptWorkerInfo;
+  owner->GetModuleEnvironment(&wi->module_environment);
   wi->threads_manager = this;
   wi->js_runner = root_js_runner;
+  wi->is_owning_worker = true;
   InitWorkerThread(wi);
   worker_info_.push_back(wi);
 }
@@ -651,7 +672,8 @@ PoolThreadsManager::~PoolThreadsManager() {
 int PoolThreadsManager::GetCurrentPoolWorkerId() {
   // no MutexLock here because this function is private, and callers are
   // responsible for acquiring the exclusive lock
-  PRThread *os_thread_id = PR_GetCurrentThread();
+  ThreadId os_thread_id =
+      ThreadMessageQueue::GetInstance()->GetCurrentThreadId();
 
   // lookup OS-defined id in list of known mappings
   // (linear scan is fine because number of threads per pool will be small)
@@ -716,6 +738,9 @@ void PoolThreadsManager::HandleError(const JsErrorInfo &error_info) {
   // If the error was not handled, bubble it up to the parent worker.
   if (!error_was_handled) {
     MutexLock lock(&mutex_);
+    if (is_shutting_down_) {
+      return;
+    }
 
     std::string16 text;
     FormatWorkerPoolErrorMessage(error_info, src_worker_id, &text);
@@ -749,12 +774,11 @@ bool PoolThreadsManager::InvokeOnErrorHandler(JavaScriptWorkerInfo *wi,
   // Setup the onerror parameter (type: Error).
   assert(wi->js_runner);
   scoped_ptr<JsObject> onerror_param(
-      wi->js_runner->NewObject(STRING16(L"Error"), true));
+      wi->js_runner->NewError(error_info.message, true));
   if (!onerror_param.get()) {
     return false;
   }
 
-  onerror_param->SetPropertyString(STRING16(L"message"), error_info.message);
   onerror_param->SetPropertyInt(STRING16(L"lineNumber"), error_info.line);
   // TODO(aa): Additional information, like fragment of code where the error
   // occurred, stack?
@@ -786,7 +810,11 @@ bool PoolThreadsManager::PutPoolMessage(MarshaledJsToken* mjt,
                                         const char16 *text,
                                         int dest_worker_id,
                                         const SecurityOrigin &src_origin) {
+  scoped_ptr<MarshaledJsToken> scoped_mjt(mjt);
   MutexLock lock(&mutex_);
+  if (is_shutting_down_) {
+    return false;
+  }
 
   int src_worker_id = GetCurrentPoolWorkerId();
 
@@ -803,7 +831,8 @@ bool PoolThreadsManager::PutPoolMessage(MarshaledJsToken* mjt,
 
   // Copy the message to an internal queue.
   dest_wi->message_queue.push(
-      new WorkerPoolMessage(mjt, text, src_worker_id, src_origin));
+      new WorkerPoolMessage(scoped_mjt.release(), text,
+                            src_worker_id, src_origin));
   // Notify the receiving worker.
   AsyncRouter::GetInstance()->CallAsync(
       dest_wi->thread_id,
@@ -920,7 +949,7 @@ bool PoolThreadsManager::SetCurrentThreadErrorHandler(
 }
 
 
-class CreateWorkerUrlFetchListener : public HttpRequest::ReadyStateListener {
+class CreateWorkerUrlFetchListener : public HttpRequest::HttpListener {
  public:
   explicit CreateWorkerUrlFetchListener(JavaScriptWorkerInfo *wi) : wi_(wi) {}
 
@@ -929,7 +958,7 @@ class CreateWorkerUrlFetchListener : public HttpRequest::ReadyStateListener {
     source->GetReadyState(&ready_state);
     if (ready_state == HttpRequest::COMPLETE) {
       // Fetch completed.  First, unregister this listener.
-      source->SetOnReadyStateChange(NULL);
+      source->SetListener(NULL, false);
 
       int status_code;
       std::string16 body;
@@ -972,6 +1001,127 @@ class CreateWorkerUrlFetchListener : public HttpRequest::ReadyStateListener {
   JavaScriptWorkerInfo *wi_;
 };
 
+#if RECYCLE_JS_RUNTIME
+
+// This class encapsulates a thread and JSRuntime so that they can be resused by
+// future workers.
+class JsThreadRecycler {
+ public:
+  static bool StartJsThread(JavaScriptWorkerInfo *wi) {
+    {
+      // Check if any idle threads are available.
+      MutexLock lock(&idle_threads_lock_);
+      if (!idle_threads_.empty()) {
+        PooledThread *thread = idle_threads_.front();
+        idle_threads_.pop_front();
+
+        thread->wi_ = wi;
+
+        CritSecLock locker(thread->sleep_monitor_);
+        PR_Notify(thread->sleep_monitor_);
+        return true;
+      }
+    }
+
+    // Create a new thread, since none are available for reuse.
+    return PR_CreateThread(PR_USER_THREAD, ThreadMain, // type, func
+                           wi, PR_PRIORITY_NORMAL,   // arg, priority
+                           PR_LOCAL_THREAD,            // scheduled by whom?
+                           PR_UNJOINABLE_THREAD,       // joinable?
+                           0) != NULL;                 // stack bytes
+  }
+ private:
+  friend void DestroyThreadRecycler();
+  JsThreadRecycler() {};
+
+  static void ThreadMain(void *args) {
+    PooledThread pooled_thread;
+
+    // Create a new runtime.  If we instead use xpc/RuntimeService to get a
+    // runtime, strange things break (like eval).
+    // mozilla/.../js.c uses 64 MB
+    const int kRuntimeMaxBytes = 64 * 1024 * 1024;
+    // It's alright if this fails.  The logic to deal with it is in JsRunner.
+    pooled_thread.js_runtime_ = JS_NewRuntime(kRuntimeMaxBytes);
+
+    // Set the workers info for the first loop.
+    pooled_thread.wi_ = reinterpret_cast<JavaScriptWorkerInfo *>(args);
+
+    while (g_running_) {
+      // Set the worker's runtime reference.
+      pooled_thread.wi_->js_runtime_ = pooled_thread.js_runtime_;
+
+      // Call the entry point for the worker.
+      PoolThreadsManager::JavaScriptThreadEntry(pooled_thread.wi_);
+
+      // Discard our reference to the defunct worker.
+      pooled_thread.wi_ = NULL;
+      ThreadLocals::ClearMap();
+
+      // Don't reuse this if we've stopped, or if we don't have a runtime.
+      if (!g_running_ || !pooled_thread.js_runtime_) {
+        break;
+      }
+
+      // Add this thread to the idle collection and lock the monitor.
+      idle_threads_lock_.Lock();
+      idle_threads_.push_back(&pooled_thread);
+      CritSecLock locker(pooled_thread.sleep_monitor_);
+      idle_threads_lock_.Unlock();
+
+      // Wait for the thread creater to send an event.
+      PR_Wait(pooled_thread.sleep_monitor_, PR_INTERVAL_NO_TIMEOUT);
+    }
+
+    // Clean up the runtime.
+    if (pooled_thread.js_runtime_) {
+      JS_DestroyRuntime(pooled_thread.js_runtime_);
+    }
+  }
+
+  struct PooledThread {
+    JSRuntime *js_runtime_;
+    JavaScriptWorkerInfo *wi_;
+    CriticalSection sleep_monitor_;
+  };
+
+  static bool g_running_;
+  static std::deque<PooledThread *> idle_threads_;
+  static Mutex idle_threads_lock_;
+};
+bool JsThreadRecycler::g_running_ = true;
+std::deque<JsThreadRecycler::PooledThread *> JsThreadRecycler::idle_threads_;
+Mutex JsThreadRecycler::idle_threads_lock_;
+
+void DestroyThreadRecycler() {
+  // Flag that we are no longer running, so idle threads can quit.
+  JsThreadRecycler::g_running_ = false;
+
+  MutexLock lock(&JsThreadRecycler::idle_threads_lock_);
+  std::deque<JsThreadRecycler::PooledThread *>::iterator thread;
+
+  // Send an empty message to each idle thread to wake them up, letting them
+  // exit.
+  for (thread = JsThreadRecycler::idle_threads_.begin();
+       thread != JsThreadRecycler::idle_threads_.end(); ++thread) {
+    CritSecLock locker((*thread)->sleep_monitor_);
+    PR_Notify((*thread)->sleep_monitor_);
+  }
+}
+#endif
+
+bool StartJsThread(JavaScriptWorkerInfo *wi) {
+#if RECYCLE_JS_RUNTIME
+  return JsThreadRecycler::StartJsThread(wi);
+#else
+  return PR_CreateThread(PR_USER_THREAD, // type
+                         PoolThreadsManager::JavaScriptThreadEntry, // func
+                         wi, PR_PRIORITY_NORMAL,   // arg, priority
+                         PR_LOCAL_THREAD,          // scheduled by whom?
+                         PR_UNJOINABLE_THREAD,     // joinable?
+                         0) != NULL;               // stack bytes
+#endif
+}
 
 bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
                                       bool is_param_script, int *worker_id) {
@@ -979,11 +1129,22 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
   JavaScriptWorkerInfo *wi = NULL;
   {
     MutexLock lock(&mutex_);
+    if (is_shutting_down_) {
+      return false;
+    }
 
     // If the creating thread didn't intialize properly it doesn't have a
     // message queue, so there's no point in letting it start a new thread.
     if (!worker_info_[GetCurrentPoolWorkerId()]->thread_events_handle) {
       return false;
+    }
+
+    // We add a reference to the owning GearsWorkerPool upon creation of the
+    // first thread in the pool. This prevents the GearsWorkerPool object from
+    // being released until Shutdown is called at page unload time by the owner.
+    if (unrefed_owner_) {
+      refed_owner_ = unrefed_owner_;
+      unrefed_owner_ = NULL;
     }
 
     // Add a JavaScriptWorkerInfo entry.
@@ -1018,7 +1179,7 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
     wi->http_request_listener.reset(new CreateWorkerUrlFetchListener(wi));
     if (!wi->http_request_listener.get()) { return false; }
 
-    wi->http_request->SetOnReadyStateChange(wi->http_request_listener.get());
+    wi->http_request->SetListener(wi->http_request_listener.get(), false);
     wi->http_request->SetCachingBehavior(HttpRequest::USE_ALL_CACHES);
     wi->http_request->SetRedirectBehavior(HttpRequest::FOLLOW_ALL);
 
@@ -1030,7 +1191,7 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
     if (!wi->http_request->Open(HttpConstants::kHttpGET, url.c_str(),
                                 is_async) ||
         !wi->http_request->Send()) {
-      wi->http_request->SetOnReadyStateChange(NULL);
+      wi->http_request->SetListener(NULL, false);
       wi->http_request->Abort();
       return false;
     }
@@ -1043,12 +1204,8 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
   wi->thread_init_mutex.Lock();
   wi->thread_init_signalled = false;
 
-  wi->thread_pointer = PR_CreateThread(
-                           PR_USER_THREAD, JavaScriptThreadEntry, // type, func
-                           wi, PR_PRIORITY_NORMAL,   // arg, priority
-                           PR_LOCAL_THREAD,          // scheduled by whom?
-                           PR_UNJOINABLE_THREAD, 0); // joinable?, stack bytes
-  if (wi->thread_pointer != NULL) {
+  wi->thread_created = StartJsThread(wi);
+  if (wi->thread_created) {
     // thread needs to message queue init before we continue
     wi->thread_init_mutex.Await(Condition(&wi->thread_init_signalled));
   }
@@ -1056,7 +1213,7 @@ bool PoolThreadsManager::CreateThread(const char16 *url_or_full_script,
   // cleanup notifier
   wi->thread_init_mutex.Unlock();
 
-  if (wi->thread_pointer == NULL || !wi->thread_init_ok) {
+  if (!wi->thread_created || !wi->thread_init_ok) {
     return false; // failed
   }
 
@@ -1070,73 +1227,94 @@ void PoolThreadsManager::JavaScriptThreadEntry(void *args) {
   assert(args);
   JavaScriptWorkerInfo *wi = static_cast<JavaScriptWorkerInfo*>(args);
   wi->threads_manager->AddWorkerRef();
+  ThreadMessageQueue::GetInstance()->InitThreadMessageQueue();
 
-  // Setup worker thread.
-  // Then signal that initialization is done, and indicate success/failure.
-  //
-  // WARNING: must fire thread_init_signalled even on failure, or caller won't
-  // continue.  So fire it from a non-nested location, before any early exits.
-  scoped_ptr<JsRunnerInterface> js_runner(NewJsRunner());
-  assert(NULL == wi->js_runner);
-  wi->js_runner = js_runner.get();
-
-  bool thread_init_succeeded = (NULL != js_runner.get()) &&
-                               wi->threads_manager->InitWorkerThread(wi);
-
-  wi->thread_init_ok = thread_init_succeeded;
-  wi->thread_init_mutex.Lock();
-  wi->thread_init_signalled = true;
-  wi->thread_init_mutex.Unlock();
-
-  if (thread_init_succeeded) {
-    // Block until 'script_signalled' (i.e. wait for URL fetch, if being used).
-    // Thread shutdown will set this flag as well.
-    wi->script_mutex.Lock();
-    wi->script_mutex.Await(Condition(&wi->script_signalled));
-    wi->script_mutex.Unlock();
-
-    if (wi->script_ok) {
-      if (SetupJsRunner(js_runner.get(), wi)) {
-        // Add JS code to engine.  Any script errors trigger HandleError().
-        js_runner->Start(wi->script_text);
-      }
-    }
-
-    // Pump messages. We do this whether or not the initial script evaluation
-    // succeeded (just like in browsers).
-    assert(wi->thread_events_handle);
-    while (1) {
-#if BROWSER_FF3
-      if (!NS_ProcessNextEvent(wi->thread_events_handle)) {
-        break;
-      }
+#if RECYCLE_JS_RUNTIME
 #else
-      // (based on sample code in /mozilla/netwerk/test/... [sic])
-      PLEvent *event;
-      wi->thread_events_handle->WaitForEvent(&event);
-      wi->thread_events_handle->HandleEvent(event);
+
+  // Create a new runtime.  If we instead use xpc/RuntimeService to get a
+  // runtime, strange things break (like eval).
+  const int kRuntimeMaxBytes = 64 * 1024 * 1024; // mozilla/.../js.c uses 64 MB
+
+  // We keep an extra pointer to the runtime because wi will be invalid when we
+  // want to delete the runtime.
+  JSRuntime *js_runtime = JS_NewRuntime(kRuntimeMaxBytes);
+  wi->js_runtime_ = js_runtime;
 #endif
-      // Check flag after handling, otherwise last event never gets deleted.
-      if (wi->threads_manager->is_shutting_down_) {
-        break;
+  {
+    // Setup worker thread.
+    // Then signal that initialization is done, and indicate success/failure.
+    //
+    // WARNING: must fire thread_init_signalled even on failure, or caller won't
+    // continue.  So fire it from a non-nested location, before any early exits.
+    scoped_ptr<JsRunnerInterface> js_runner(NewJsRunner(wi->js_runtime_));
+    assert(NULL == wi->js_runner);
+    wi->js_runner = js_runner.get();
+
+    bool thread_init_succeeded = (NULL != js_runner.get()) &&
+        wi->threads_manager->InitWorkerThread(wi);
+
+    wi->thread_init_ok = thread_init_succeeded;
+    wi->thread_init_mutex.Lock();
+    wi->thread_init_signalled = true;
+    wi->thread_init_mutex.Unlock();
+
+    if (thread_init_succeeded) {
+      // Block until 'script_signalled' (i.e. wait for URL fetch, if being
+      // used).  Thread shutdown will set this flag as well.
+      wi->script_mutex.Lock();
+      wi->script_mutex.Await(Condition(&wi->script_signalled));
+      wi->script_mutex.Unlock();
+
+      if (wi->script_ok) {
+        if (SetupJsRunner(js_runner.get(), wi)) {
+          // Add JS code to engine.  Any script errors trigger HandleError().
+          js_runner->Start(wi->script_text);
+        }
+      }
+
+      // Pump messages. We do this whether or not the initial script evaluation
+      // succeeded (just like in browsers).
+      assert(wi->thread_events_handle);
+      while (1) {
+#if BROWSER_FF3
+        if (!NS_ProcessNextEvent(wi->thread_events_handle)) {
+          break;
+        }
+#else
+        // (based on sample code in /mozilla/netwerk/test/... [sic])
+        PLEvent *event;
+        wi->thread_events_handle->WaitForEvent(&event);
+        wi->thread_events_handle->HandleEvent(event);
+#endif
+        // Check flag after handling, otherwise last event never gets deleted.
+        if (wi->threads_manager->is_shutting_down_) {
+          break;
+        }
       }
     }
+
+    // Remove the message handlers here, since we're destroying the context they
+    // belong to.
+    wi->onmessage_handler.reset(NULL);
+    wi->onerror_handler.reset(NULL);
+
+    // nsCOMPtr is not threadsafe, must release from creation thread.
+    wi->factory_ref = NULL;
+
+    // TODO(aa): Consider deleting wi here and setting PTM.worker_info_[i] to
+    // NULL. This allows us to free up these thread resources sooner, and it
+    // seems a little cleaner too.
+    wi->js_runner = NULL;  // scoped_ptr is about to delete the object
+    wi->threads_manager->ReleaseWorkerRef();
+    wi->module_environment.reset(NULL);
   }
-
-  // Remove the message handlers here, since we're destroying the context they
-  // belong to.
-  wi->onmessage_handler.reset(NULL);
-  wi->onerror_handler.reset(NULL);
-
-  // nsCOMPtr is not threadsafe, must release from creation thread.
-  wi->factory_ref = NULL;
-
-  // TODO(aa): Consider deleting wi here and setting PTM.worker_info_[i] to
-  // NULL. This allows us to free up these thread resources sooner, and it
-  // seems a little cleaner too.
-  wi->js_runner = NULL;  // scoped_ptr is about to delete the underlying object
-  wi->threads_manager->ReleaseWorkerRef();
-
+#if RECYCLE_JS_RUNTIME
+#else
+  if (js_runtime) {
+    JS_DestroyRuntime(js_runtime);
+  }
+#endif
   // PRThread functions don't return a value
 }
 
@@ -1146,6 +1324,10 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
 
   JsContextPtr cx = js_runner->GetContext();
   if (!cx) { return false; }
+
+  assert(!wi->module_environment.get());
+  wi->module_environment.reset(
+      new ModuleEnvironment(wi->script_origin, cx, true, js_runner));
 
   // Add global Factory and WorkerPool objects into the namespace.
   //
@@ -1158,20 +1340,14 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
   scoped_ptr<GearsFactory> factory(new GearsFactory());
   if (!factory.get()) { return false; }
 
-  if (!factory->InitBaseManually(true, // is_worker
-                                 cx,
-                                 wi->script_origin,
-                                 js_runner)) {
+  if (!factory->InitBaseManually(wi->module_environment.get())) {
     return false;
   }
 
   scoped_ptr<GearsWorkerPool> workerpool(new GearsWorkerPool());
   if (!workerpool.get()) { return false; }
 
-  if (!workerpool->InitBaseManually(true, // is_worker
-                                    cx,
-                                    wi->script_origin,
-                                    js_runner)) {
+  if (!workerpool->InitBaseManually(wi->module_environment.get())) {
     return false;
   }
 
@@ -1219,45 +1395,53 @@ bool PoolThreadsManager::SetupJsRunner(JsRunnerInterface *js_runner,
 
 
 void PoolThreadsManager::ShutDown() {
-  MutexLock lock(&mutex_);
+  { // scoped to unlock prior to unref'ing the owner
+    MutexLock lock(&mutex_);
 
-  assert(GetCurrentPoolWorkerId() == kOwningWorkerId);
+    assert(GetCurrentPoolWorkerId() == kOwningWorkerId);
 
-  if (is_shutting_down_) { return; }
-  is_shutting_down_ = true;
+    if (is_shutting_down_) { return; }
+    is_shutting_down_ = true;
 
-  // Releasing callbacks in Firefox requires a valid pointer to the js engine.
-  // So release the callbacks for the owning worker now, while there is still
-  // an engine for the owning worker's thread.
-  worker_info_[kOwningWorkerId]->onmessage_handler.reset(NULL);
-  worker_info_[kOwningWorkerId]->onerror_handler.reset(NULL);
+    // Releasing callbacks in Firefox requires a valid pointer to the js engine.
+    // So release the callbacks for the owning worker now, while there is still
+    // an engine for the owning worker's thread.
+    worker_info_[kOwningWorkerId]->onmessage_handler.reset(NULL);
+    worker_info_[kOwningWorkerId]->onerror_handler.reset(NULL);
+    // We also release our reference to the thread-specific module_environment,
+    // whilst we know that we are in the main thread.  For other (worker)
+    // threads, module_environment is released at the end of
+    // JavaScriptThreadEntry, but that is not applicable to the main thread.
+    worker_info_[kOwningWorkerId]->module_environment.reset(NULL);
 
-  for (size_t i = 0; i < worker_info_.size(); ++i) {
-    JavaScriptWorkerInfo *wi = worker_info_[i];
+    // TODO(nigeltao): are we also sending the shutdown message to the owning
+    // worker??  In other words, can we skip the zero'th element in this loop?
+    for (size_t i = 0; i < worker_info_.size(); ++i) {
+      JavaScriptWorkerInfo *wi = worker_info_[i];
 
-    // Cancel any createWorkerFromUrl() network requests that might be pending.
-    if (wi->http_request.get()) {
-      wi->http_request->SetOnReadyStateChange(NULL);
-      wi->http_request->Abort();
-      // HttpRequest is not threadsafe, must destroy from same thread that
-      // created it (which is always the owning thread for now, since we cannot
-      // yet make requests from background threads).
-      wi->http_request.reset(NULL);
-    }
+      // Cancel any createWorkerFromUrl network requests that might be pending.
+      if (wi->http_request.get()) {
+        wi->http_request->SetListener(NULL, false);
+        wi->http_request->Abort();
+        // HttpRequest is not threadsafe, must destroy from same thread that
+        // created it (which is always the owning thread for now, since we
+        // cannot yet make requests from background threads).
+        wi->http_request.reset(NULL);
+      }
 
-    // If the worker is a created thread...
-    if (wi->thread_pointer && wi->thread_events_handle) {
-      // Ensure the thread isn't waiting on 'script_signalled'.
-      wi->script_mutex.Lock();
-      wi->script_signalled = true;
-      wi->script_mutex.Unlock();
+      // If the worker is a created thread...
+      if (wi->thread_created && wi->thread_events_handle) {
+        // Ensure the thread isn't waiting on 'script_signalled'.
+        wi->script_mutex.Lock();
+        wi->script_signalled = true;
+        wi->script_mutex.Unlock();
 
-      // Ensure the thread sees 'is_shutting_down_' by sending a dummy message,
-      // in case it is blocked waiting for messages.
-      AsyncRouter::GetInstance()->CallAsync(
-          wi->thread_id,
-          new ThreadsEvent(wi, EVENT_TYPE_MESSAGE));
-
+        // Ensure the thread sees 'is_shutting_down_' by sending a dummy
+        // message, in case it is blocked waiting for messages.
+        AsyncRouter::GetInstance()->CallAsync(
+            wi->thread_id,
+            new ThreadsEvent(wi, EVENT_TYPE_MESSAGE));
+      }
       // TODO(cprince): Improve handling of a worker spinning in a JS busy loop.
       // Ideas: (1) set it to the lowest thread priority level, or (2) interrupt
       // the JS engine externally (see IActiveScript::InterruptScriptThread
@@ -1265,6 +1449,14 @@ void PoolThreadsManager::ShutDown() {
       // thread; that can leave us in a bad state (e.g. mutexes locked forever).
     }
   }
+
+  // Drop any references to the owner. Unlock first since Shutdown can be
+  // called recursively when unrefing the owner. Also bump our refcount while
+  // unrefing to gaurd against being deleted prior to the scoped ptr reset.
+  AddWorkerRef();
+  unrefed_owner_ = NULL;
+  refed_owner_ = NULL;
+  ReleaseWorkerRef();
 }
 
 

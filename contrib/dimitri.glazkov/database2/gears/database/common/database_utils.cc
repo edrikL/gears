@@ -34,9 +34,9 @@
 // NOTE(shess) This may interact with various SQLite features.  For
 // instance, VACUUM is implemented in terms of more basic SQLite
 // features, such as PRAGMA (or ATTACH, which Gears also disables).
-static int ForbidAllPragmas(void *userData, int iType,
-                            const char *zPragma, const char *zArg,
-                            const char *zDatabase, const char *zView) {
+static int ForbidActions(void *userData, int iType,
+                         const char *zPragma, const char *zArg,
+                         const char *zDatabase, const char *zView) {
   if (iType == SQLITE_PRAGMA) {
     // TODO(shess): Could test zPragma for the specific pragma being
     // accessed, and allow some of them.  Could allow zArg==NULL
@@ -44,6 +44,14 @@ static int ForbidAllPragmas(void *userData, int iType,
     // open the possibility of compiling the pragma code out entirely.
     return SQLITE_DENY;
   }
+#ifdef OS_ANDROID
+  if (iType == SQLITE_ATTACH) {
+    // On Android, we're using the system version of SQLite which
+    // isn't compiled with SQLITE3_OMIT_ATTACH, so we have to deny
+    // access here.
+    return SQLITE_DENY;
+  }
+#endif
   return SQLITE_OK;
 }
 
@@ -124,6 +132,16 @@ static int OpenAndSetupDatabase(const std::string16 &filename, sqlite3 **db) {
     return sql_status;
   }
 
+#ifdef OS_ANDROID
+  // The system SQLite doesn't have BEGIN defaulting to
+  // IMMEDIATE. This Android-specific function call sets an individual
+  // instance to this behavior.
+  sql_status = sqlite3_set_transaction_default_immediate(*db, 1);
+  if (sql_status != SQLITE_OK) {
+    return sql_status;
+  }
+#endif
+
   // Set the busy timeout value before executing any SQL statements.
   // With the timeout value set, SQLite will wait and retry if another
   // thread has the database locked rather than immediately fail with an
@@ -144,7 +162,7 @@ static int OpenAndSetupDatabase(const std::string16 &filename, sqlite3 **db) {
     return sql_status;
   }
 
-  sql_status = sqlite3_set_authorizer(*db, ForbidAllPragmas, NULL);
+  sql_status = sqlite3_set_authorizer(*db, ForbidActions, NULL);
   if (sql_status != SQLITE_OK) {
     return sql_status;
   }
@@ -180,8 +198,8 @@ static bool OpenAndCheckDatabase(const SecurityOrigin &origin,
   if (sql_status != SQLITE_OK) {
     sql_status = SqlitePoisonIfCorrupt(temp_db, sql_status);
     if (sql_status == SQLITE_CORRUPT) {
+      ExceptionManager::ReportAndContinue();
       pdb->MarkDatabaseCorrupt(origin, dbname.c_str(), basename.c_str());
-      ExceptionManager::CaptureAndSendMinidump();
     }
 
     sqlite3_close(temp_db);

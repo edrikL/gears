@@ -26,14 +26,20 @@
 #import "gears/base/safari/loader.h"
 #import "gears/localserver/safari/http_handler.h"
 
-// The NSHTTPURLResponse doesn't have a way to set the status code, so we'll
-// subclass and override the statusCode method
+// The NSHTTPURLResponse doesn't have a way to set the status code or headers, 
+// so we'll subclass and override the statusCode & allHeaderFields methods.
 @interface GearsNSHTTPURLResponse : NSHTTPURLResponse {
   int statusCode_;
+  NSDictionary *headers_;  // strong
 }
 @end
 
 @implementation GearsNSHTTPURLResponse
+- (void)dealloc {
+  [headers_ release];
+  [super dealloc];
+}
+
 - (void)setStatusCode:(int)code {
   statusCode_ = code;
 }
@@ -41,14 +47,25 @@
 - (int)statusCode {
   return statusCode_ ? statusCode_ : [super statusCode];
 }
+
+- (void)setHeaders:(NSDictionary *)headers {
+  [headers_ autorelease];
+  headers_ = [headers retain];
+}
+
+- (NSDictionary *)allHeaderFields {
+  return headers_ ? [[headers_ copy] autorelease] : [super allHeaderFields];
+}
+
 @end
 
 // The actual GearsWebCacheDB is not linked in with this file.  It is looked up
 // at runtime.  This category on NSObject keeps the compiler happy.
 @interface NSObject(GearsWebCacheDBInterface)
 + (BOOL)canService:(NSURL *)url;
-+ (NSData *)service:(NSURL *)url mimeType:(NSString **)mimeType 
-         statusCode:(int *)statusCode redirectURL:(NSURL **)redirectURL;
++ (NSData *)service:(NSURL *)url mimeType:(NSString **)mimeType
+      headers:(NSDictionary **)headers statusCode:(int *)statusCode 
+      redirectURL:(NSURL **)redirectURL;
 @end
 
 @implementation GearsHTTPHandler
@@ -71,7 +88,7 @@
 //------------------------------------------------------------------------------
 + (BOOL)canInitWithRequest:(NSURLRequest *)request {
   Class webCacheClass = NSClassFromString(@"GearsWebCacheDB");  
-  return [webCacheClass canService:[request URL]];
+  return [webCacheClass canService:request];
  }
 
 //------------------------------------------------------------------------------
@@ -81,8 +98,12 @@
   int statusCode = 0;
   Class webCacheClass = NSClassFromString(@"GearsWebCacheDB");
   NSURL *redirectURL = nil;
-  NSData *data = [webCacheClass service:url mimeType:&mimeType 
-                             statusCode:&statusCode redirectURL:&redirectURL];
+  NSDictionary *headers = nil;
+  NSData *data = [webCacheClass service:url 
+                               mimeType:&mimeType 
+                               headers:&headers
+                             statusCode:&statusCode 
+                            redirectURL:&redirectURL];
   
   if (!data) {
     // Send a failed response
@@ -103,6 +124,10 @@
                  expectedContentLength:[data length] textEncodingName:nil];
   
   [response setStatusCode:statusCode];
+  
+  // WebCache should always contain some content for the headers.
+  assert(headers);
+  [response setHeaders:headers];
   
   // Notify the client if there was a redirect or just a normal response
   if (redirectURL) {

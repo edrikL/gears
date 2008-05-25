@@ -49,30 +49,38 @@
 #include "gears/base/common/http_utils.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/url_utils.h"
+#include "gears/localserver/common/safe_http_request.h"
 #include "gears/localserver/firefox/cache_intercept.h"
+#include "gears/localserver/firefox/progress_input_stream.h"
+#include "gears/localserver/firefox/ui_thread.h"
 
 #ifndef OFFICIAL_BUILD
 #include "gears/blob/blob_input_stream_ff.h"
+#include "gears/blob/blob_interface.h"
 #endif
 
-// Returns true if the currently executing thread is the main UI thread,
-// firefox/mozila has one such very special thread
-// See cache_intercept.cc for implementation
-bool IsUiThread();
-
-NS_IMPL_ISUPPORTS5(FFHttpRequest,
-                   nsIRequestObserver,
-                   nsIStreamListener,
-                   nsIChannelEventSink,
-                   nsIInterfaceRequestor,
-                   SpecialHttpRequestInterface)
+NS_IMPL_THREADSAFE_ISUPPORTS5(FFHttpRequest,
+                              nsIRequestObserver,
+                              nsIStreamListener,
+                              nsIChannelEventSink,
+                              nsIInterfaceRequestor,
+                              SpecialHttpRequestInterface)
 
 //------------------------------------------------------------------------------
 // HttpRequest::Create
 //------------------------------------------------------------------------------
 bool HttpRequest::Create(scoped_refptr<HttpRequest>* request) {
-  assert(IsUiThread());
-  request->reset(new FFHttpRequest);
+  if (IsUiThread()) {
+    request->reset(new FFHttpRequest);
+    return true;
+  } else {
+    return HttpRequest::CreateSafeRequest(request);
+  }
+}
+
+// static
+bool HttpRequest::CreateSafeRequest(scoped_refptr<HttpRequest>* request) {
+  request->reset(new SafeHttpRequest(GetUiThread()));
   return true;
 }
 
@@ -82,8 +90,8 @@ bool HttpRequest::Create(scoped_refptr<HttpRequest>* request) {
 FFHttpRequest::FFHttpRequest()
   : ready_state_(UNINITIALIZED), async_(false),
     caching_behavior_(USE_ALL_CACHES), redirect_behavior_(FOLLOW_ALL),
-    was_sent_(false), was_aborted_(false),
-    was_redirected_(false), listener_(NULL) {
+    was_sent_(false), was_aborted_(false), was_redirected_(false),
+    listener_(NULL), listener_data_available_enabled_(false) {
 }
 
 FFHttpRequest::~FFHttpRequest() {
@@ -326,7 +334,7 @@ bool FFHttpRequest::Send() {
   if (IsPostOrPut()) {
     return SendString(STRING16(L""));
   } else {
-    return SendImpl(NULL);
+    return SendImpl();
   }
 }
 
@@ -336,14 +344,15 @@ bool FFHttpRequest::SendString(const char16 *data) {
     return false;
 
   String16ToUTF8(data, &post_data_string_);
-  nsCOMPtr<nsIInputStream> post_data_stream;
-  if (!NewByteInputStream(getter_AddRefs(post_data_stream),
+  nsCOMPtr<nsIInputStream> string_stream;
+  if (!NewByteInputStream(getter_AddRefs(string_stream),
                           post_data_string_.data(),
                           post_data_string_.size())) {
     return false;
   }
-
-  return SendImpl(post_data_stream);
+  post_data_stream_ = new ProgressInputStream(this, string_stream,
+                                              post_data_string_.size());
+  return SendImpl();
 }
 
 #ifndef OFFICIAL_BUILD
@@ -352,11 +361,13 @@ bool FFHttpRequest::SendBlob(BlobInterface *blob) {
     return false;
   }
   nsCOMPtr<BlobInputStream> blob_stream(new BlobInputStream(blob));
-  return SendImpl(blob_stream);
+  post_data_stream_ = new ProgressInputStream(this, blob_stream,
+                                              blob->Length());
+  return SendImpl();
 }
 #endif  // !OFFICIAL_BUILD
 
-bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
+bool FFHttpRequest::SendImpl() {
   NS_ENSURE_TRUE(channel_ && !was_sent_, false);
   nsresult rv = NS_OK;
   was_sent_ = true;
@@ -364,7 +375,7 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
   nsCOMPtr<nsIHttpChannel> http_channel = GetCurrentHttpChannel();
   NS_ENSURE_TRUE(http_channel, false);
 
-  if (post_data_stream) {
+  if (post_data_stream_) {
     nsCOMPtr<nsIUploadChannel> upload_channel(do_QueryInterface(http_channel));
     NS_ENSURE_TRUE(upload_channel, false);
 
@@ -384,7 +395,7 @@ bool FFHttpRequest::SendImpl(nsIInputStream *post_data_stream) {
     }
 
     const int kGetLengthFromStream = -1;
-    rv = upload_channel->SetUploadStream(post_data_stream,
+    rv = upload_channel->SetUploadStream(post_data_stream_,
                                          content_type,
                                          kGetLengthFromStream);
     NS_ENSURE_SUCCESS(rv, false);
@@ -584,10 +595,12 @@ bool FFHttpRequest::Abort() {
 }
 
 //------------------------------------------------------------------------------
-// SetOnReadyStateChange
+// SetListener
 //------------------------------------------------------------------------------
-bool FFHttpRequest::SetOnReadyStateChange(ReadyStateListener *listener) {
+bool FFHttpRequest::SetListener(HttpListener *listener,
+                                bool enable_data_available) {
   listener_ = listener;
+  listener_data_available_enabled_ = enable_data_available;
   return true;
 }
 
@@ -660,8 +673,13 @@ NS_IMETHODIMP FFHttpRequest::OnDataAvailable(nsIRequest *request,
                                              nsIInputStream *stream,
                                              PRUint32 offset,
                                              PRUint32 count) {
+  scoped_refptr<FFHttpRequest> reference(this);
   NS_ENSURE_TRUE(channel_, NS_ERROR_UNEXPECTED);
   SetReadyState(HttpRequest::INTERACTIVE);
+  
+  if (was_aborted_) {
+    return NS_OK;
+  }
 
   std::vector<uint8> *body = response_body_.get();
   if (!body) {
@@ -674,7 +692,7 @@ NS_IMETHODIMP FFHttpRequest::OnDataAvailable(nsIRequest *request,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (body->size() > prev_size) {
-    if (listener_) {
+    if (listener_ && listener_data_available_enabled_) {
       listener_->DataAvailable(this);
     }
   }
@@ -688,10 +706,19 @@ NS_IMETHODIMP FFHttpRequest::OnDataAvailable(nsIRequest *request,
 NS_IMETHODIMP FFHttpRequest::OnStopRequest(nsIRequest *request,
                                            nsISupports *context,
                                            nsresult status) {
-  NS_ENSURE_TRUE(channel_, NS_ERROR_UNEXPECTED);
-  channel_->SetNotificationCallbacks(NULL);
+  if (!was_aborted_) {
+    NS_ENSURE_TRUE(channel_, NS_ERROR_UNEXPECTED);
+    channel_->SetNotificationCallbacks(NULL);
+  }
   SetReadyState(HttpRequest::COMPLETE);
   return NS_OK;
+}
+
+void FFHttpRequest::OnUploadProgress(int64 position, int64 total) {
+  if (IsComplete() || was_aborted_) return;
+  if (listener_) {
+    listener_->UploadProgress(this, position, total);
+  }
 }
 
 //------------------------------------------------------------------------------

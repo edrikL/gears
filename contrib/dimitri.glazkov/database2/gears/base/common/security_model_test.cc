@@ -23,7 +23,7 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 
 #include <string>
 #include "gears/base/common/common.h"
@@ -35,14 +35,16 @@
 #define ASSERT_TRUE(b) \
 { \
   if (!(b)) { \
-    LOG(("SecurityModelTests - failed (%d)\n", __LINE__)); \
+    LOG(("TestSecurityModel - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestSecurityModel - failed. "); \
     return false; \
   } \
 }
 
 #define ASSERT_FALSE(b) ASSERT_TRUE(!(b))
 
-bool TestSecurityModel() {
+bool TestSecurityModel(std::string16 *error) {
   SecurityOrigin origin;
   ASSERT_TRUE(origin.InitFromUrl(STRING16(L"http://www.google.com/")));
   ASSERT_TRUE(origin.scheme() == STRING16(L"http"));
@@ -115,4 +117,4 @@ bool TestSecurityModel() {
   return true;
 }
 
-#endif  // DEBUG
+#endif  // USING_CCTESTS

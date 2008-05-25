@@ -338,13 +338,10 @@ void GearsManagedResourceStore::OnNotify(MessageService *service,
         if (!onerror_handler_.get()) return;
         handler = onerror_handler_.get();
 
-        param.reset(GetJsRunner()->NewObject(STRING16(L"Error")));
-        if (!param.get()) return;
-
         const UpdateTask::ErrorEvent *error_event =
             static_cast<const UpdateTask::ErrorEvent *>(data);
-        param->SetPropertyString(STRING16(L"message"),
-                                 error_event->error_message());
+        param.reset(GetJsRunner()->NewError(error_event->error_message()));
+        if (!param.get()) return;
       }
       break;
 
@@ -352,7 +349,7 @@ void GearsManagedResourceStore::OnNotify(MessageService *service,
         if (!onprogress_handler_.get()) return;
         handler = onprogress_handler_.get();
 
-        param.reset(GetJsRunner()->NewObject(NULL));
+        param.reset(GetJsRunner()->NewObject());
         if (!param.get()) return;
 
         const UpdateTask::ProgressEvent *progress_event =
@@ -368,7 +365,7 @@ void GearsManagedResourceStore::OnNotify(MessageService *service,
         if (!oncomplete_handler_.get()) return;
         handler = oncomplete_handler_.get();
 
-        param.reset(GetJsRunner()->NewObject(NULL));
+        param.reset(GetJsRunner()->NewObject());
         if (!param.get()) return;
 
         const UpdateTask::CompletionEvent *completion_event =
@@ -398,7 +395,7 @@ NS_IMETHODIMP GearsManagedResourceStore::CheckForUpdate() {
     RETURN_NORMAL();
   }
 
-  update_task_.reset(new FFUpdateTask());
+  update_task_.reset(UpdateTask::CreateUpdateTask());
   if (!update_task_->Init(&store_)) {
     update_task_.reset(NULL);
     RETURN_EXCEPTION(STRING16(L"Failed to initialize update task."));
@@ -445,7 +442,7 @@ void GearsManagedResourceStore::GetAppVersionString(
 void GearsManagedResourceStore::HandleEvent(int code, int param,
     AsyncTask* source) {
   if (source == update_task_.get()) {
-    if (code == FFUpdateTask::UPDATE_TASK_COMPLETE) {
+    if (code == UpdateTask::UPDATE_TASK_COMPLETE) {
       update_task_->SetListener(NULL);
       update_task_.release()->DeleteWhenDone();
     }

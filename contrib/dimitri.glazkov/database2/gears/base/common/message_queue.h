@@ -31,21 +31,16 @@
 #include <vector>
 #include "gears/base/common/deletable.h"
 #include "gears/base/common/mutex.h"
-#include "gears/third_party/linked_ptr/linked_ptr.h"
-
-// TODO(mpcomplete): implement these.
-#if BROWSER_NPAPI && defined(WIN32)
-#define BROWSER_IE 1
-#endif
+#include "third_party/linked_ptr/linked_ptr.h"
 
 // TODO(michaeln): These should be defined by a threading abstraction
 // layer.
 #if BROWSER_FF
-typedef PRThread (*ThreadId);
-#elif BROWSER_IE
-typedef DWORD ThreadId;
-#elif BROWSER_WEBKIT
+typedef int ThreadId;
+#elif BROWSER_WEBKIT || defined(ANDROID)
 typedef pthread_t ThreadId;
+#elif BROWSER_IE || defined(WIN32) || defined(WINCE)
+typedef DWORD ThreadId;
 #endif
 
 
@@ -124,7 +119,7 @@ class ThreadMessageQueue {
 };
 
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 // A mock implementation of the ThreadMessageQueue that
 // can be used for testing.
 class MockThreadMessageQueue : public ThreadMessageQueue {
@@ -161,11 +156,6 @@ class MockThreadMessageQueue : public ThreadMessageQueue {
 
   DISALLOW_EVIL_CONSTRUCTORS(MockThreadMessageQueue);
 };
-#endif  // DEBUG
-
-// TODO(mpcomplete): remove
-#if BROWSER_NPAPI
-#undef BROWSER_IE
-#endif
+#endif  // USING_CCTESTS
 
 #endif  // GEARS_BASE_COMMON_MESSAGE_QUEUE_H__

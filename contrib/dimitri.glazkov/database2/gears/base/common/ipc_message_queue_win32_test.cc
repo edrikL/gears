@@ -23,19 +23,17 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
-#else
-#error "We only use this for IE on windows desktop"
-#endif
+#if defined(WIN32) && !defined(WINCE)
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 
 #include <algorithm>
 #include <set>
 #include "gears/base/common/ipc_message_queue.h"
+#include "gears/base/common/process_utils_win32.h"
 #include "gears/base/common/serialization.h"
 #include "gears/base/common/stopwatch.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 //-----------------------------------------------------------------------------
 // Functions defined in ipc_message_queue_win32.cc to facillitate testing
@@ -176,18 +174,6 @@ static bool WaitForRegisteredProcesses(int n, int timeout) {
   return false;
 }
 
-static HMODULE GetModuleHandleFromAddress(void *address) {
-  MEMORY_BASIC_INFORMATION mbi;
-  SIZE_T result = VirtualQuery(address, &mbi, sizeof(mbi));
-  return static_cast<HMODULE>(mbi.AllocationBase);
-}
-
-// Gets the handle to the currently executing module.
-static HMODULE GetCurrentModuleHandle() {
-  // pass a pointer to the current function
-  return GetModuleHandleFromAddress(GetCurrentModuleHandle);
-}
-
 struct SlaveProcess {
   IpcProcessId id;
   CHandle handle;
@@ -197,7 +183,7 @@ struct SlaveProcess {
   // Start a slave process via rundll32.exe
   bool Start() {
     wchar_t module_path[MAX_PATH];  // folder + filename
-    if (0 == GetModuleFileNameW(GetCurrentModuleHandle(),
+    if (0 == GetModuleFileNameW(GetGearsModuleHandle(),
                                 module_path, MAX_PATH)) {
       return false;
     }
@@ -346,7 +332,7 @@ class MasterMessageHandler : public IpcMessageQueue::HandlerInterface {
 
 static MasterMessageHandler g_master_handler;
 
-bool TestIpcMessageQueue() {
+bool TestIpcMessageQueue(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
@@ -358,6 +344,8 @@ bool TestIpcMessageQueue() {
       ipc_message_queue->SendToAll(kIpcQueue_TestMessage, \
                                    new IpcTestMessage(kQuit), \
                                    false); \
+    assert(error); \
+    *error += STRING16(L"TestIpcMessageQueue - failed. "); \
     return false; \
   } \
 }
@@ -366,7 +354,7 @@ bool TestIpcMessageQueue() {
   IpcTestMessage::RegisterAsSerializable();
   g_master_handler.SetSaveMessages(false);
   g_master_handler.ClearSavedMessages();
-  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetInstance();
+  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetPeerQueue();
   TEST_ASSERT(ipc_message_queue);
   ipc_message_queue->RegisterHandler(kIpcQueue_TestMessage, &g_master_handler);
 
@@ -628,7 +616,7 @@ __declspec(dllexport) void __cdecl RunIpcSlave(HWND window,
                                                int command_show) {
   LOG(("RunIpcSlave called\n"));
   IpcTestMessage::RegisterAsSerializable();
-  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetInstance();
+  IpcMessageQueue *ipc_message_queue = IpcMessageQueue::GetPeerQueue();
   ipc_message_queue->RegisterHandler(kIpcQueue_TestMessage, &g_slave_handler);
 
   std::vector<IpcProcessId> registered_processes;
@@ -663,7 +651,7 @@ void SlaveMessageHandler::HandleIpcMessage(
    LOG(("slave received %S\n", test_message->string_.c_str()));
 
   if (test_message->string_ == kPing) {
-    IpcMessageQueue::GetInstance()->Send(source_process_id,
+    IpcMessageQueue::GetPeerQueue()->Send(source_process_id,
                                          kIpcQueue_TestMessage,
                                          new IpcTestMessage(kPing));
 
@@ -684,12 +672,12 @@ void SlaveMessageHandler::HandleIpcMessage(
     if (test_message->bytes_length_ == kBigPingLength &&
         VerifyTestData(test_message->bytes_.get(),
                        test_message->bytes_length_)) {
-      IpcMessageQueue::GetInstance()->Send(source_process_id,
+      IpcMessageQueue::GetPeerQueue()->Send(source_process_id,
                                            kIpcQueue_TestMessage,
                                            new IpcTestMessage(kBigPing,
                                                               kBigPingLength));
     } else {
-      IpcMessageQueue::GetInstance()->Send(source_process_id,
+      IpcMessageQueue::GetPeerQueue()->Send(source_process_id,
                                            kIpcQueue_TestMessage,
                                            new IpcTestMessage(kError));
     }
@@ -697,39 +685,39 @@ void SlaveMessageHandler::HandleIpcMessage(
 
   } else if (test_message->string_ == kSendManyPings) {
     for (int i = 0; i < kManyPings; ++i) {
-      IpcMessageQueue::GetInstance()->Send(source_process_id,
+      IpcMessageQueue::GetPeerQueue()->Send(source_process_id,
                                            kIpcQueue_TestMessage,
                                            new IpcTestMessage(kPing));
     }
 
   } else if (test_message->string_ == kSendManyBigPings) {
     for (int i = 0; i < kManyBigPings; ++i) {
-      IpcMessageQueue::GetInstance()->Send(source_process_id,
+      IpcMessageQueue::GetPeerQueue()->Send(source_process_id,
                                            kIpcQueue_TestMessage,
                                            new IpcTestMessage(kBigPing,
                                                               kBigPingLength));
     }
 
   } else if (test_message->string_ == kDoChitChat) {
-    IpcMessageQueue::GetInstance()->SendToAll(kIpcQueue_TestMessage,
+    IpcMessageQueue::GetPeerQueue()->SendToAll(kIpcQueue_TestMessage,
                                               new IpcTestMessage(kChit),
                                               false);
 
   } else if (test_message->string_ == kChit) {
     ++chits_received_;
     chit_sources_.insert(source_process_id);
-    IpcMessageQueue::GetInstance()->Send(source_process_id,
+    IpcMessageQueue::GetPeerQueue()->Send(source_process_id,
                                          kIpcQueue_TestMessage,
                                          new IpcTestMessage(kChat));
     if (chits_received_ > kManySlavesCount - 1) {
-      IpcMessageQueue::GetInstance()->Send(parent_process_id_,
+      IpcMessageQueue::GetPeerQueue()->Send(parent_process_id_,
                                            kIpcQueue_TestMessage,
                                            new IpcTestMessage(kError));
     } else if ((chats_received_ == kManySlavesCount - 1) &&
                (chits_received_ == kManySlavesCount - 1) &&
                (chat_sources_.size() == kManySlavesCount - 1) &&
                (chit_sources_.size() == kManySlavesCount - 1)) {
-      IpcMessageQueue::GetInstance()->Send(parent_process_id_,
+      IpcMessageQueue::GetPeerQueue()->Send(parent_process_id_,
                                            kIpcQueue_TestMessage,
                                            new IpcTestMessage(kDidChitChat));
     }
@@ -738,14 +726,14 @@ void SlaveMessageHandler::HandleIpcMessage(
     ++chats_received_;
     chat_sources_.insert(source_process_id);
     if (chits_received_ > kManySlavesCount - 1) {
-      IpcMessageQueue::GetInstance()->Send(parent_process_id_,
+      IpcMessageQueue::GetPeerQueue()->Send(parent_process_id_,
                                            kIpcQueue_TestMessage,
                                            new IpcTestMessage(kError));
     } else if ((chats_received_ == kManySlavesCount - 1) &&
                (chits_received_ == kManySlavesCount - 1) &&
                (chat_sources_.size() == kManySlavesCount - 1) &&
                (chit_sources_.size() == kManySlavesCount - 1)) {
-      IpcMessageQueue::GetInstance()->Send(parent_process_id_,
+      IpcMessageQueue::GetPeerQueue()->Send(parent_process_id_,
                                            kIpcQueue_TestMessage,
                                            new IpcTestMessage(kDidChitChat));
     }
@@ -754,3 +742,5 @@ void SlaveMessageHandler::HandleIpcMessage(
 }
 
 #endif
+
+#endif  // defined(WIN32) && !defined(WINCE)

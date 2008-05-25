@@ -26,6 +26,7 @@
 #ifndef GEARS_LOCALSERVER_SAFARI_HTTP_REQUEST_SF_H__
 #define GEARS_LOCALSERVER_SAFARI_HTTP_REQUEST_SF_H__
 
+#import <Foundation/NSStream.h>
 #include <vector>
 
 #include "gears/base/common/common.h"
@@ -33,7 +34,7 @@
 #include "gears/base/common/security_model.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #ifndef OFFICIAL_BUILD
 class BlobInterface;
@@ -99,7 +100,10 @@ class SFHttpRequest : public HttpRequest {
   virtual bool Abort();
 
   // events
-  virtual bool SetOnReadyStateChange(ReadyStateListener *listener);
+  virtual bool SetListener(HttpListener *listener, bool enable_data_available);
+
+  // Should only be used by ProgressInputStream.
+  void OnUploadProgress(int64 position, int64 total);
 
  // Methods used to communicate between Obj C delegate and C++ class.
  // You can't make an objc-c selector a friend of a C++ class, so these
@@ -110,6 +114,8 @@ class SFHttpRequest : public HttpRequest {
   // returns: true - allow redirect, false - deny redirect.
   bool AllowRedirect(const std::string16 &redirect_url);
   void SetReadyState(ReadyState state);
+  // New data has arrived over the connection.
+  void OnDataAvailable();
   
   // Holders for http headers.
   typedef std::pair<std::string16, std::string16> HttpHeader;
@@ -134,10 +140,11 @@ class SFHttpRequest : public HttpRequest {
            method_ == HttpConstants::kHttpPUT;
   }
   
-  bool SendImpl(const std::string &post_data);
+  bool SendImpl(NSInputStream *post_data_stream);
   void Reset();
 
-  ReadyStateListener *listener_;
+  HttpRequest::HttpListener *listener_;
+  bool listener_data_available_enabled_;
   ReadyState ready_state_;
   RefCount count_;
   std::string16 method_;

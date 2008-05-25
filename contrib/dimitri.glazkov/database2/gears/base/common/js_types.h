@@ -29,7 +29,8 @@
 #include <assert.h>
 #include <functional>
 #include <vector>
-#include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/basictypes.h"  // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/common.h"
 #include "gears/base/common/string16.h"  // for string16
 
 // TODO(michaeln): Split into multiple browser specific files.
@@ -121,7 +122,7 @@ struct JsTokenEqualTo : public std::binary_function<JsToken, JsToken, bool> {
 
 #elif BROWSER_NPAPI
 
-#include "gears/third_party/npapi/nphostapi.h"
+#include "third_party/npapi/nphostapi.h"
 
 #endif
 
@@ -138,6 +139,10 @@ class ScopedNPVariant : public NPVariant {
 
   // This is necessary for API transparency.
   ScopedNPVariant& operator=(const NPVariant &value) {
+    Reset(value);
+    return *this;
+  }
+  ScopedNPVariant& operator=(const ScopedNPVariant &value) {
     Reset(value);
     return *this;
   }
@@ -301,13 +306,12 @@ bool JsTokenIsObject(JsToken t);
 // usually treat these two identically to prevent confusion.
 bool JsTokenIsNullOrUndefined(JsToken t);
 
-bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken* out);
-bool IntToJsToken(JsContextPtr context, int value, JsScopedToken* out);
-bool StringToJsToken(JsContextPtr context,
-                     const std::string16& value,
-                     JsScopedToken* out);
-bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken* out);
-bool NullToJsToken(JsContextPtr context, JsScopedToken* out);
+bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken *out);
+bool IntToJsToken(JsContextPtr context, int value, JsScopedToken *out);
+bool StringToJsToken(JsContextPtr context, const char16 *value,
+                     JsScopedToken *out);
+bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken *out);
+bool NullToJsToken(JsContextPtr context, JsScopedToken *out);
 
 #if BROWSER_FF
 
@@ -421,7 +425,8 @@ class JsArray {
   const JsScopedToken &token() const { return array_; }
   const JsContextPtr &context() const { return js_context_; }
 
-
+  // These methods return false on failure. They return true, and set out to
+  // JSPARAM_UNDEFINED if the requested element does not exist.
   bool GetElement(int index, JsScopedToken *out) const;
   
   bool GetElementAsBool(int index, bool *out) const;
@@ -432,19 +437,20 @@ class JsArray {
   bool GetElementAsObject(int index, JsObject *out) const;
   bool GetElementAsFunction(int index, JsRootedCallback **out) const;
 
-  // Method to get the type of an element
+  // Method to get the type of an element. Returns JSPARAM_UNDEFINED if the
+  // requested element does not exist.
   JsParamType GetElementType(int index) const;
 
-  bool SetElement(int index, const JsScopedToken& value);
+  bool SetElement(int index, const JsScopedToken &value);
   bool SetElementBool(int index, bool value);
   bool SetElementInt(int index, int value);
   bool SetElementDouble(int index, double value);
-  bool SetElementString(int index, const std::string16& value);
-  bool SetElementArray(int index, JsArray* value);
-  bool SetElementObject(int index, JsObject* value);
-  bool SetElementFunction(int index, JsRootedCallback* value);
-  bool SetElementComModule(int index, IScriptable* value);
-  bool SetElementDispatcherModule(int index, ModuleImplBaseClass* value);
+  bool SetElementString(int index, const std::string16 &value);
+  bool SetElementArray(int index, JsArray *value);
+  bool SetElementObject(int index, JsObject *value);
+  bool SetElementFunction(int index, JsRootedCallback *value);
+  bool SetElementComModule(int index, IScriptable *value);
+  bool SetElementDispatcherModule(int index, ModuleImplBaseClass *value);
 
 private:
   JsContextPtr js_context_;
@@ -456,8 +462,11 @@ class JsObject {
   JsObject();
   ~JsObject();
 
-  bool GetProperty(const std::string16 &name, JsScopedToken *value) const;
   bool SetObject(JsToken value, JsContextPtr context);
+
+  // These methods return false on failure. They return true, and set out to
+  // JSPARAM_UNDEFINED if the requested property does not exist.
+  bool GetProperty(const std::string16 &name, JsScopedToken *value) const;
 
   bool GetPropertyAsBool(const std::string16 &name, bool *out) const;
   bool GetPropertyAsInt(const std::string16 &name, int *out) const;
@@ -468,7 +477,8 @@ class JsObject {
   bool GetPropertyAsFunction(const std::string16 &name,
                              JsRootedCallback **out) const;
 
-  // Method to get the type of a property
+  // Method to get the type of a property. Returns JSPARAM_UNDEFINED if the
+  // requested property does not exist.
   JsParamType GetPropertyType(const std::string16 &name) const;
   
   // GetPropertyNames fills the given vector with the (string) names of this
@@ -512,9 +522,8 @@ class JsCallContext {
 #if BROWSER_NPAPI
   JsCallContext(JsContextPtr js_context, NPObject *object,
                 int argc, const JsToken *argv, JsToken *retval)
-      : js_context_(js_context), object_(object),
-        argc_(argc), argv_(argv), retval_(retval),
-        is_exception_set_(false) {}
+      : js_context_(js_context), is_exception_set_(false), object_(object),
+        argc_(argc), argv_(argv), retval_(retval) {}
 #elif BROWSER_IE
   JsCallContext(DISPPARAMS FAR *disp_params, VARIANT FAR *retval,
                 EXCEPINFO FAR *excep_info)
@@ -565,6 +574,9 @@ class JsCallContext {
 #endif
 
  private:
+  int GetArgumentCount();
+  const JsToken &GetArgument(int index);
+
   JsContextPtr js_context_;
   bool is_exception_set_;
 #if BROWSER_NPAPI
@@ -633,7 +645,8 @@ class JsParamFetcher {
   // Method to get the type of a parameter
   JsParamType GetType(int i);
 
-  bool GetAsMarshaledJsToken(int i, MarshaledJsToken **out,
+  bool GetAsMarshaledJsToken(int i, JsRunnerInterface *js_runner,
+                             MarshaledJsToken **out,
                              std::string16 *error_message_out);
 
   void SetReturnValue(JsToken retval);

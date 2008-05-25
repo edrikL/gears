@@ -28,15 +28,18 @@
 #import "gears/base/common/paths.h"
 #import "gears/base/common/paths_sf_more.h"
 #import "gears/base/safari/cf_string_utils.h"
-
-const char16 kPathSeparator = '/';
   
-bool GetBaseComponentsDirectory(std::string16 *path) {
-  NSString *dir = [GearsPathUtilities gearsComponentsDirectory];
-  return CFStringRefToString16((CFStringRef)dir, path);
+bool GetInstallDirectory(std::string16 *path) {
+  // TODO(aa): Implement me when needed.
+  return false;
 }
 
 bool GetBaseDataDirectory(std::string16 *path) {
   NSString *dir = [GearsPathUtilities gearsDataDirectory];
+  return CFStringRefToString16((CFStringRef)dir, path);
+}
+
+bool GetBaseResourcesDirectory(std::string16 *path) {
+  NSString *dir = [GearsPathUtilities gearsResourcesDirectory];
   return CFStringRefToString16((CFStringRef)dir, path);
 }

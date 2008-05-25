@@ -32,20 +32,22 @@
 #include <shlwapi.h>
 #include <tchar.h>
 
+#include "gears/desktop/desktop.h"
 #include "gears/desktop/shortcut_utils_win32.h"
 
-#include "gears/base/common/common.h"
+#include "gears/base/common/basictypes.h"
+#include "gears/base/common/process_utils_win32.h"
 #ifdef WINCE
 #include "gears/base/common/file.h"
 #endif
-#include "gears/base/common/int_types.h"
 #include "gears/base/common/png_utils.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
 #ifdef WINCE
 #include "gears/desktop/dll_data_wince.h"  // For kDllIconId
 #endif
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "gears/ui/ie/string_table.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 
 static bool CreateShellLink(const char16 *link_path,
@@ -197,42 +199,86 @@ static bool ReadShellLink(const char16 *link_path,
 #endif
 }
 
-static bool GetShortcutLocationPath(std::string16 *shortcut_location_path) {
+static bool GetShortcutLocationPath(std::string16 *shortcut_location_path,
+                                    uint32 location) {
   assert(shortcut_location_path);
-  bool succeeded = false;
   char16 path_buf[MAX_PATH];
 
   // We use the old version of this function because the new version apparently
   // won't tell you the Desktop folder path.
 #ifdef WINCE
+  // On WinCE, we only support desktop.
+  if (location != Desktop::SHORTCUT_LOCATION_STARTMENU) {
+    assert(false);
+    return false;
+  }
+
   // On Pocket PC, we'd like to add to 'Start -> Programs'. On SmartPhone, this
   // location doesn't exist, so we'd like to add to 'Start'. Rather than brittle
   // phone detection, just try the former location and if it fails, try the
   // second.
-  BOOL result = SHGetSpecialFolderPath(NULL, path_buf, CSIDL_PROGRAMS, FALSE) ||
-                SHGetSpecialFolderPath(NULL, path_buf, CSIDL_STARTMENU, TRUE);
-#else
-  BOOL result = SHGetSpecialFolderPath(NULL, path_buf, CSIDL_DESKTOPDIRECTORY,
-                                       TRUE);
-#endif
-
-  if (result) {
+  if (SHGetSpecialFolderPath(NULL, path_buf, CSIDL_PROGRAMS, FALSE) ||
+      SHGetSpecialFolderPath(NULL, path_buf, CSIDL_STARTMENU, TRUE)) {
     *shortcut_location_path = path_buf;
-    succeeded = true;
+    return true;
   }
-  return succeeded;
+#else
+
+  switch (location) {
+    case Desktop::SHORTCUT_LOCATION_DESKTOP:
+      if (SHGetSpecialFolderPath(NULL, path_buf, CSIDL_DESKTOPDIRECTORY,
+                                 TRUE)) {
+        *shortcut_location_path = path_buf;
+        return true;
+      }
+      break;
+    case Desktop::SHORTCUT_LOCATION_QUICKLAUNCH:
+      if (SHGetSpecialFolderPath(NULL, path_buf, CSIDL_APPDATA, TRUE)) {
+        *shortcut_location_path = path_buf;
+        *shortcut_location_path +=
+            STRING16(L"\\Microsoft\\Internet Explorer\\Quick Launch");
+        return true;
+      }
+      break;
+    case Desktop::SHORTCUT_LOCATION_STARTMENU:
+      {
+        const int kMaxStringLength = 256;
+        char16 program_group[kMaxStringLength];
+        if (LoadString(GetGearsModuleHandle(), IDS_PROGRAM_GROUP,
+                       program_group, kMaxStringLength) &&
+            SHGetSpecialFolderPath(NULL, path_buf, CSIDL_PROGRAMS, TRUE)) {
+          std::string16 path = path_buf;
+          path += STRING16(L"\\");
+          path += program_group;
+
+          int result = SHCreateDirectoryEx(NULL, path.c_str(), NULL);
+          switch (result) {
+            case ERROR_SUCCESS:
+            case ERROR_ALREADY_EXISTS:
+            case ERROR_FILE_EXISTS: {
+              *shortcut_location_path = path;
+              return true;
+            }
+          }
+        }
+      }
+      break;
+  }
+#endif
+  return false;
 }
 
 bool CreateShortcutFileWin32(const std::string16 &name,
                              const std::string16 &browser_path,
                              const std::string16 &url,
                              const std::string16 &icons_path,
+                             uint32 location,
                              std::string16 *error) {
   // Note: We assume that shortcut.app_name has been validated as a valid
   // filename and that the shortuct.app_url has been converted to absolute URL
   // by the caller.
   std::string16 link_path;
-  if (!GetShortcutLocationPath(&link_path)) {
+  if (!GetShortcutLocationPath(&link_path, location)) {
     *error = GET_INTERNAL_ERROR_MESSAGE();
     return false;
   }
@@ -241,35 +287,15 @@ bool CreateShortcutFileWin32(const std::string16 &name,
   link_path += name;
   link_path += STRING16(L".lnk");
 
-  // Check whether there is an existing shortcut, and whether it was created by
-  // us.  We only allow overwriting shortcuts we created, but it's okay if they
-  // were written by another browser.  (This is best for users, and also helpful
-  // during development, where we often create a shortcut in multiple browsers.)
-  std::string16 old_icon;
-  if (ReadShellLink(link_path.c_str(), &old_icon, NULL, NULL)) {
-#ifdef WINCE
-    // We don't need to convert from short to long path on WinCE.
-#else
-    int old_icon_length = GetLongPathNameW(old_icon.c_str(), NULL, 0);
-    scoped_array<char16> old_icon_buf(new char16[old_icon_length]);
-    GetLongPathNameW(old_icon.c_str(), old_icon_buf.get(), old_icon_length);
-    old_icon.assign(old_icon_buf.get());
-#endif
-
-    // Look for the path where we store shortcut icons. (See paths*.cc.)
-    if (old_icon.find(STRING16(PRODUCT_FRIENDLY_NAME L" for "))
-        == old_icon.npos) {
-      *error = STRING16(L"Cannot overwrite shortcut not created by ");
-      *error += PRODUCT_FRIENDLY_NAME;
-      *error += STRING16(L".");
-      return false;
-    }
+  // Return immediately if shortcut already exists.
+  if (ReadShellLink(link_path.c_str(), NULL, NULL, NULL)) {
+    return true;
   }
 
   if (!CreateShellLink(link_path.c_str(), icons_path.c_str(),
                        browser_path.c_str(), url.c_str())) {
-      *error = GET_INTERNAL_ERROR_MESSAGE();
-      return false;
+    *error = GET_INTERNAL_ERROR_MESSAGE();
+    return false;
   }
 
   return true;

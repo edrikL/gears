@@ -31,6 +31,7 @@
 #ifdef WINCE
 #include "gears/base/common/wince_compatibility.h"
 #endif
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 
 //------------------------------------------------------------------------------
@@ -41,14 +42,17 @@ bool TestSplitPath(); //friend of file.h
 static bool TestGetBaseName();
 static bool TestGetParentDirectory();
 static bool TestLongPaths();
+static bool TestFileObject();
 static bool CheckDirectoryCreation(const char16 *dir);
 
-bool TestFileUtils() {
+bool TestFileUtils(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestFileUtils - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestFileUtils - failed. "); \
     return false; \
   } \
 }
@@ -58,6 +62,7 @@ bool TestFileUtils() {
   TEST_ASSERT(TestGetParentDirectory());
   TEST_ASSERT(TestSplitPath());
   TEST_ASSERT(TestLongPaths());
+  TEST_ASSERT(TestFileObject());
 
   // Create a new empty directory work with
   std::string16 temp_dir;
@@ -168,6 +173,223 @@ bool TestFileUtils() {
   }    
 #endif
   LOG(("TestFileUtils - passed\n"));
+  return true;
+}
+
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    LOG(("TestFileUtils - failed (%d)\n", __LINE__)); \
+    return false; \
+  } \
+}
+
+bool TestFileOpen(std::string16 filepath, File::OpenAccessMode access_mode,
+                  File::OpenExistsMode exists_mode,
+                  bool instantiated, bool existsAfter) {
+  scoped_ptr<File> file(File::Open(filepath.c_str(), access_mode, exists_mode));
+  TEST_ASSERT(File::Exists(filepath.c_str()) == existsAfter);
+  return ((file.get() != NULL) == instantiated);
+}
+
+bool TestFileObject() {
+  // Create a new empty directory work with
+  std::string16 temp_dir;
+  TEST_ASSERT(File::CreateNewTempDirectory(&temp_dir));
+  TEST_ASSERT(File::DirectoryExists(temp_dir.c_str()));
+  TEST_ASSERT(File::GetDirectoryFileCount(temp_dir.c_str()) == 0);
+
+  const char16 *kFileName = STRING16(L"File.ext");
+  std::string16 filepath(temp_dir);
+  filepath += kPathSeparator;
+  filepath += kFileName;
+
+  // Read mode with non-existent file; read should never create the file
+  TEST_ASSERT(!File::Exists(filepath.c_str()));
+  TEST_ASSERT(TestFileOpen(filepath, File::READ, File::FAIL_IF_NOT_EXISTS,
+                           false, false));
+  TEST_ASSERT(TestFileOpen(filepath, File::READ, File::FAIL_IF_EXISTS,
+                           false, false));
+  TEST_ASSERT(TestFileOpen(filepath, File::READ, File::NEVER_FAIL,
+                           false, false));
+
+  // Write mode with inexistant file
+  TEST_ASSERT(TestFileOpen(filepath, File::WRITE, File::FAIL_IF_NOT_EXISTS,
+                           false, false));
+  TEST_ASSERT(TestFileOpen(filepath, File::WRITE, File::FAIL_IF_EXISTS,
+                           true, true));
+  TEST_ASSERT(File::Delete(filepath.c_str()));
+  TEST_ASSERT(TestFileOpen(filepath, File::WRITE, File::NEVER_FAIL,
+                           true, true));
+  TEST_ASSERT(File::Delete(filepath.c_str()));
+
+  // Read/Write mode with inexistant file
+  TEST_ASSERT(TestFileOpen(filepath, File::READ_WRITE, File::FAIL_IF_NOT_EXISTS,
+                           false, false));
+  TEST_ASSERT(TestFileOpen(filepath, File::READ_WRITE, File::FAIL_IF_EXISTS,
+                           true, true));
+  TEST_ASSERT(File::Delete(filepath.c_str()));
+  TEST_ASSERT(TestFileOpen(filepath, File::READ_WRITE, File::NEVER_FAIL,
+                           true, true));
+
+
+  // Read mode with existant file
+  TEST_ASSERT(File::Exists(filepath.c_str()));
+  TEST_ASSERT(TestFileOpen(filepath, File::READ, File::FAIL_IF_EXISTS,
+                           false, true));
+  TEST_ASSERT(TestFileOpen(filepath, File::READ, File::FAIL_IF_NOT_EXISTS,
+                           true, true));
+  TEST_ASSERT(TestFileOpen(filepath, File::READ, File::NEVER_FAIL,
+                           true, true));
+
+  // Write mode with existant file
+  TEST_ASSERT(TestFileOpen(filepath, File::WRITE, File::FAIL_IF_EXISTS,
+                           false, true));
+  TEST_ASSERT(TestFileOpen(filepath, File::WRITE, File::FAIL_IF_NOT_EXISTS,
+                           true, true));
+  TEST_ASSERT(TestFileOpen(filepath, File::WRITE, File::NEVER_FAIL,
+                           true, true));
+
+  // Read/Write mode with existant file
+  TEST_ASSERT(TestFileOpen(filepath, File::READ_WRITE, File::FAIL_IF_EXISTS,
+                           false, true));
+  TEST_ASSERT(TestFileOpen(filepath, File::READ_WRITE, File::FAIL_IF_NOT_EXISTS,
+                           true, true));
+  TEST_ASSERT(TestFileOpen(filepath, File::READ_WRITE, File::NEVER_FAIL,
+                           true, true));
+
+  const int size = 4096;
+  uint8 data_write[size];
+  uint8 data_read[size];
+  for (int i = 0; i < size; i++) {
+    data_write[i] = i;
+  }
+
+  // basic operations on 0-length file
+  scoped_ptr<File> file(File::Open(filepath.c_str(), File::READ,
+                                   File::NEVER_FAIL));
+  TEST_ASSERT(file.get() != NULL);
+  TEST_ASSERT(file->Size() == 0);
+  TEST_ASSERT(file->Tell() == 0);
+  TEST_ASSERT(!file->Seek(-1));
+  TEST_ASSERT(!file->Truncate(0));
+  TEST_ASSERT(file->Read(data_read, 1) == 0);
+  TEST_ASSERT(file->Write(data_write, 1) == -1);
+  // can seek past the end, but can't read anything
+  TEST_ASSERT(file->Seek(1));
+  TEST_ASSERT(file->Read(data_read, 1) == 0);
+
+  // write-only mode
+  file.reset();
+  file.reset(File::Open(filepath.c_str(), File::WRITE, File::NEVER_FAIL));
+  TEST_ASSERT(file.get() != NULL);
+  TEST_ASSERT(file->Size() == 0);
+  TEST_ASSERT(file->Tell() == 0);
+  TEST_ASSERT(!file->Seek(-1));
+  TEST_ASSERT(file->Truncate(0));
+  TEST_ASSERT(file->Read(data_read, 1) == -1);
+  TEST_ASSERT(file->Write(data_write, size) == size);
+  TEST_ASSERT(file->Tell() == size);
+  TEST_ASSERT(file->Read(data_read, 1) == -1);
+
+  // read what we just wrote on a different file handle
+  file.reset();
+  file.reset(File::Open(filepath.c_str(), File::READ, File::NEVER_FAIL));
+  TEST_ASSERT(file.get() != NULL);
+  TEST_ASSERT(file->Size() == size);
+  TEST_ASSERT(file->Tell() == 0);
+  memset(data_read, 0, size);
+  TEST_ASSERT(file->Read(data_read, size + 1) == size);
+  TEST_ASSERT(file->Tell() == size);
+  TEST_ASSERT(memcmp(data_write, data_read, size) == 0);
+  // EOF is a 0-byte read
+  TEST_ASSERT(file->Read(data_read, 1) == 0);
+  TEST_ASSERT(file->Tell() == size);
+
+  // read-write mode combined with seek
+  file.reset();
+  file.reset(File::Open(filepath.c_str(), File::READ_WRITE, File::NEVER_FAIL));
+  TEST_ASSERT(file.get() != NULL);
+  TEST_ASSERT(file->Size() == size);
+  TEST_ASSERT(file->Tell() == 0);
+  TEST_ASSERT(!file->Seek(-1));
+  memset(data_read, 0, size);
+  TEST_ASSERT(file->Read(data_read, size + 1) == size);
+  TEST_ASSERT(file->Tell() == size);
+  TEST_ASSERT(memcmp(data_write, data_read, size) == 0);
+  // write a second copy of the same bytes
+  TEST_ASSERT(file->Seek(0, File::SEEK_FROM_CURRENT));
+  TEST_ASSERT(file->Write(data_write, size) == size);
+  TEST_ASSERT(file->Tell() == size * 2);
+  // verify the first copy
+  TEST_ASSERT(file->Seek(-1 * size, File::SEEK_FROM_END));
+  TEST_ASSERT(file->Tell() == size);
+  memset(data_read, 0, size);
+  TEST_ASSERT(file->Read(data_read, size + 1) == size);
+  TEST_ASSERT(file->Tell() == size * 2);
+  TEST_ASSERT(file->Read(data_read, 1) == 0);
+  TEST_ASSERT(memcmp(data_write, data_read, size) == 0);
+  // verify both copies
+  TEST_ASSERT(file->Seek(0, File::SEEK_FROM_START));
+  memset(data_read, 0, size);
+  TEST_ASSERT(file->Read(data_read, size) == size);
+  TEST_ASSERT(file->Tell() == size);
+  TEST_ASSERT(memcmp(data_write, data_read, size) == 0);
+  memset(data_read, 0, size);
+  TEST_ASSERT(file->Read(data_read, size + 1) == size);
+  TEST_ASSERT(file->Tell() == size * 2);
+  TEST_ASSERT(memcmp(data_write, data_read, size) == 0);
+  TEST_ASSERT(file->Read(data_read, 1) == 0);
+  TEST_ASSERT(file->Tell() == size * 2);
+
+  // overwrite with new data and truncate
+  file.reset();
+  file.reset(File::Open(filepath.c_str(), File::READ_WRITE, File::NEVER_FAIL));
+  TEST_ASSERT(file.get() != NULL);
+  TEST_ASSERT(file->Size() == size * 2);
+  // verify both existing copies again
+  memset(data_read, 0, size);
+  TEST_ASSERT(file->Tell() == 0);
+  TEST_ASSERT(file->Read(data_read, size) == size);
+  TEST_ASSERT(file->Tell() == size);
+  TEST_ASSERT(memcmp(data_write, data_read, size) == 0);
+  memset(data_read, 0, size);
+  TEST_ASSERT(file->Read(data_read, size + 1) == size);
+  TEST_ASSERT(file->Tell() == size * 2);
+  TEST_ASSERT(memcmp(data_write, data_read, size) == 0);
+  TEST_ASSERT(file->Read(data_read, 1) == 0);
+  TEST_ASSERT(file->Tell() == size * 2);
+  // overwrite the first copy with new bytes
+  TEST_ASSERT(file->Seek(size * -2, File::SEEK_FROM_END));
+  TEST_ASSERT(file->Tell() == 0);
+  memset(data_write, 14, size);
+  TEST_ASSERT(file->Write(data_write, size) == size);
+  TEST_ASSERT(file->Tell() == size);
+  // and truncate the second copy
+  TEST_ASSERT(file->Seek(0));
+  TEST_ASSERT(file->Truncate(size));
+  TEST_ASSERT(file->Tell() == 0);
+  TEST_ASSERT(file->Size() == size);
+  // verify
+  TEST_ASSERT(file->Seek(0, File::SEEK_FROM_START));
+  TEST_ASSERT(file->Tell() == 0);
+  memset(data_read, 0, size);
+  TEST_ASSERT(file->Read(data_read, size + 1) == size);
+  TEST_ASSERT(file->Tell() == size);
+  TEST_ASSERT(memcmp(data_write, data_read, size) == 0);
+  TEST_ASSERT(file->Read(data_read, 1) == 0);
+  TEST_ASSERT(file->Tell() == size);
+
+  // boundary read/write parameters
+  TEST_ASSERT(file->Read(data_read, 0) == 0);
+  TEST_ASSERT(file->Read(data_read, -1) == -1);
+  TEST_ASSERT(file->Write(data_write, 0) == 0);
+  TEST_ASSERT(file->Write(data_write, -1) == -1);
+  // NULL read/write parameters
+  TEST_ASSERT(file->Read(NULL, 0) == -1);
+  TEST_ASSERT(file->Write(NULL, 0) == -1);
+
   return true;
 }
 

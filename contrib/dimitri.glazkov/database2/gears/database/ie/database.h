@@ -27,7 +27,7 @@
 #define GEARS_DATABASE_IE_DATABASE_H__
 
 #include <set>
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #include "gears/base/common/base_class.h"
 #include "gears/base/common/common.h"

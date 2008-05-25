@@ -27,7 +27,14 @@
 #define GEARS_BASE_NPAPI_MODULE_H__
 
 #include "gears/base/common/string16.h"
+#include "gears/base/common/js_types.h"
 
 extern const std::string kNPNFuncsKey;
+
+void AllowNPInit(bool allow);
+
+// Called when the given instance is being destroyed.  Implemented in
+// js_runner_np.cc.
+void NotifyNPInstanceDestroyed(NPP instance);
 
 #endif  // GEARS_BASE_NPAPI_MODULE_H__

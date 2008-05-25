@@ -282,11 +282,11 @@ bool UpdateTask::HttpGetUrl(const char16 *full_url,
     }
 
     if (!payload->PassesValidationTests()) {
+      ExceptionManager::ReportAndContinue();
       LOG(("UpdateTask::HttpGetUrl - received invalid payload\n"));
       // Explicitly overwrite error_msg_, not passing the validation tests is
       // the reason for overall task failure.
       SetHttpError(full_url, NULL);
-      ExceptionManager::CaptureAndSendMinidump();
       return false;  // TODO(michaeln): retry?
     }
 
@@ -755,5 +755,51 @@ bool UpdateTask::CompletionEvent::Deserialize(Deserializer *in) {
 bool UpdateTask::CompletionEvent::Serialize(Serializer *out) {
   out->WriteString(new_version_string_.c_str());
 
+  return true;
+}
+
+
+//------------------------------------------------------------------------------
+// MaybeAutoUpdate
+//------------------------------------------------------------------------------
+typedef std::map< int64, int64 > Int64Map;
+static Mutex last_auto_update_lock;
+static Int64Map last_auto_update_map;
+
+bool UpdateTask::MaybeAutoUpdate(int64 server_id) {
+  int64 now = GetCurrentTimeMillis();
+  const int kUpdateCheckDelayMsec = 10 * 1000;
+
+  // Rate-limit update checks so that we don't barrage the server while loading
+  // a page with many linked web-captured resources.
+  {
+    MutexLock locker(&last_auto_update_lock);
+    Int64Map::iterator found = last_auto_update_map.find(server_id);
+    if (found != last_auto_update_map.end()) {
+      int64 last_update = found->second;
+      if (now - last_update <= kUpdateCheckDelayMsec) {
+        return false;
+      }
+    }
+    last_auto_update_map[server_id] = now;
+  }
+
+  LOG(("Automatically initiating update for managed store\n"));
+  return StartUpdate(server_id);
+}
+
+
+//------------------------------------------------------------------------------
+// StartUpdate
+//------------------------------------------------------------------------------
+bool UpdateTask::StartUpdate(int64 server_id) {
+  ManagedResourceStore store;
+  if (!store.Open(server_id)) {
+    return false;
+  }
+
+  if (!Init(&store) || !Start()) {
+    return false;
+  }
   return true;
 }

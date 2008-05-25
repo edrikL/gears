@@ -28,7 +28,7 @@
 
 // This is a hack because something in the ATL headers prevents the gecko SDK
 // from defining int32, so we include it first.
-#include "gears/base/common/int_types.h"
+#include "gears/base/common/basictypes.h"
 
 #include <atlsync.h>
 #include <vector>
@@ -40,13 +40,15 @@
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/resource_store.h"
 
+class BlobInterface;
+
 // TODO(mpcomplete): this should use a cross-platform thread abstraction, when
 // we have it.
 
 //------------------------------------------------------------------------------
 // AsyncTask
 //------------------------------------------------------------------------------
-class AsyncTask : protected HttpRequest::ReadyStateListener,
+class AsyncTask : protected HttpRequest::HttpListener,
                   private RefCounted {
  public:
   // Starts a worker thread which will call the Run method
@@ -122,11 +124,45 @@ class AsyncTask : protected HttpRequest::ReadyStateListener,
                std::string16 *full_redirect_url,
                std::string16 *error_message);
 
+  #ifdef OFFICIAL_BUILD
+  // The Blob API has not yet been finalized for official builds.
+#else
+  // As HttpGet, but for POST.
+  bool HttpPost(const char16 *full_url,
+                bool is_capturing,
+                const char16 *reason_header_value,
+                const char16 *if_mod_since_date,
+                const char16 *required_cookie,
+                BlobInterface *post_body,
+                WebCacheDB::PayloadInfo *payload,
+                bool *was_redirected,
+                std::string16 *full_redirect_url,
+                std::string16 *error_message);
+#endif
+
   CriticalSection lock_;
   bool is_aborted_;
   bool is_initialized_;
 
  private:
+  // Implementation of HttpGet and HttpPost.
+  bool MakeHttpRequest(const char16 *method,
+                       const char16 *full_url,
+                       bool is_capturing,
+                       const char16 *reason_header_value,
+                       const char16 *if_mod_since_date,
+                       const char16 *required_cookie,
+#ifdef OFFICIAL_BUILD
+                       // The Blob API has not yet been finalized for official
+                       // builds.
+#else
+                       BlobInterface *post_body,
+#endif
+                       WebCacheDB::PayloadInfo *payload,
+                       bool *was_redirected,
+                       std::string16 *full_redirect_url,
+                       std::string16 *error_message);
+
   friend struct AsyncTaskFunctor;
 
   // An HttpRequest listener callback

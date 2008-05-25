@@ -30,7 +30,7 @@
 #include "gears/base/common/js_runner.h"
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/npapi/plugin.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 // Represents the bridge between the JavaScript engine and a Gears module. A
 // ModuleWrapper wraps each Gears module instance and exposes its methods to
@@ -95,6 +95,11 @@ bool CreateModule(JsRunnerInterface *js_runner,
   GearsClass *impl = new GearsClass;
   wrapper->Init(impl, new Dispatcher<GearsClass>(impl));
   module->reset(impl);
+
+  // In NPAPI, objects are created with refcount 1.  We want the scoped_refptr
+  // to have the only reference, so we unref here after giving a ref to the
+  // scoped_refptr.
+  wrapper->Unref();
   return true;
 }
 

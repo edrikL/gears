@@ -26,11 +26,11 @@
 #include <math.h>
 
 #include "gears/base/common/base_class.h"
-#include "gears/base/common/int_types.h"  // for isnan
+#include "gears/base/common/basictypes.h"  // for isnan
 #include "gears/base/common/js_marshal.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/js_types.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #if BROWSER_FF
 #include "gears/base/common/js_runner_ff_marshaling.h"
@@ -44,6 +44,7 @@
 #elif BROWSER_NPAPI
 #include "gears/base/npapi/browser_utils.h"
 #include "gears/base/npapi/np_utils.h"
+#include "gears/base/npapi/scoped_npapi_handles.h"
 #elif BROWSER_SAFARI
 #include "gears/base/safari/browser_utils.h"
 #endif
@@ -213,35 +214,37 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
 }
 
 bool JsArray::GetLength(int *length) const {
-  jsuint array_length;
-  if (JS_GetArrayLength(js_context_,
-                        JSVAL_TO_OBJECT(array_), &array_length)) {
-    *length = static_cast<int>(array_length);
-    return true;
-  }
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
-  return false;
+  jsuint array_length;
+  if (JS_GetArrayLength(js_context_, JSVAL_TO_OBJECT(array_), &array_length) !=
+      JS_TRUE) {
+    return false;
+  }
+  *length = static_cast<int>(array_length);
+  return true;
 }
 
 bool JsArray::GetElement(int index, JsScopedToken *out) const {
-  if (!array_) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
+  // JS_GetElement sets the token to JS_VOID if we request a non-existent index.
+  // This is the correct jsval for JSPARAM_UNDEFINED.
   return JS_GetElement(js_context_, JSVAL_TO_OBJECT(array_),
                        index, out) == JS_TRUE;
 }
 
 bool JsArray::SetElement(int index, const JsToken &value) {
-  if (!array_)
-    return false;
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
-  JSBool result = JS_DefineElement(js_context_,
-                                   JSVAL_TO_OBJECT(array_),
-                                   index, value,
-                                   nsnull, nsnull, // getter, setter
-                                   JSPROP_ENUMERATE);
-
-  // stops warning C4800 from VC (BOOL to bool performance warning)
-  return result == JS_TRUE;
+  return JS_DefineElement(js_context_,
+                          JSVAL_TO_OBJECT(array_),
+                          index, value,
+                          nsnull, nsnull, // getter, setter
+                          JSPROP_ENUMERATE) == JS_TRUE;
 }
 
 bool JsArray::SetElementBool(int index, bool value) {
@@ -261,19 +264,16 @@ bool JsArray::SetElementDouble(int index, double value) {
   }
 }
 
-bool JsArray::SetElementString(int index, const std::string16& value) {
+bool JsArray::SetElementString(int index, const std::string16 &value) {
   JsToken token;
-  if (StringToJsToken(js_context_, value, &token)) {
+  if (StringToJsToken(js_context_, value.c_str(), &token)) {
     return SetElement(index, token);
   } else {
     return false;
   }
 }
 
-bool JsArray::SetElementComModule(int index, IScriptable* value) {
-  if (!array_)
-    return false;
-
+bool JsArray::SetElementComModule(int index, IScriptable *value) {
   JsToken token;
   if (ComModuleToToken(js_context_, value, &token)) {
     return SetElement(index, token);
@@ -284,8 +284,6 @@ bool JsArray::SetElementComModule(int index, IScriptable* value) {
 
 bool JsArray::SetElementDispatcherModule(int index,
                                          ModuleImplBaseClass *value) {
-  if (!array_)
-    return false;
   return SetElement(index, value->GetWrapperToken());
 }
 
@@ -307,7 +305,8 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
 }
 
 bool JsArray::GetLength(int *length) const {
-  if (array_.vt != VT_DISPATCH) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
   CComVariant out;
   if (FAILED(ActiveXUtils::GetDispatchProperty(array_.pdispVal,
@@ -323,7 +322,8 @@ bool JsArray::GetLength(int *length) const {
 }
 
 bool JsArray::GetElement(int index, JsScopedToken *out) const {
-  if (array_.vt != VT_DISPATCH) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
   std::string16 name = IntegerToString16(index);
 
@@ -333,22 +333,16 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
   if (SUCCEEDED(hr)) {
     return true;
   } else if (hr == DISP_E_UNKNOWNNAME) {
-    // There's no value at this index.
-    int length;
-    if (GetLength(&length)) {
-      if (index < length) {
-        // If the index is valid, then this element is undefined.
-        out->Clear();
-        return true;
-      }
-    }
+    // There's no value at this index, so this element is undefined.
+    out->Clear();
+    return true;
   }
   return false;
 }
 
-bool JsArray::SetElement(int index, const JsScopedToken& in) {
-  if (array_.vt != VT_DISPATCH)
-    return false;
+bool JsArray::SetElement(int index, const JsScopedToken &in) {
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
   std::string16 name(IntegerToString16(index));
   HRESULT hr = ActiveXUtils::AddAndSetDispatchProperty(
@@ -368,11 +362,11 @@ bool JsArray::SetElementDouble(int index, double value) {
   return SetElement(index, CComVariant(value));
 }
 
-bool JsArray::SetElementString(int index, const std::string16& value) {
+bool JsArray::SetElementString(int index, const std::string16 &value) {
   return SetElement(index, CComVariant(value.c_str()));
 }
 
-bool JsArray::SetElementComModule(int index, IScriptable* value) {
+bool JsArray::SetElementComModule(int index, IScriptable *value) {
   return SetElement(index, CComVariant(value));
 }
 
@@ -399,7 +393,8 @@ bool JsArray::SetArray(JsToken value, JsContextPtr context) {
 }
 
 bool JsArray::GetLength(int *length) const {
-  if (!NPVARIANT_IS_OBJECT(array_)) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
 
@@ -412,7 +407,8 @@ bool JsArray::GetLength(int *length) const {
 }
 
 bool JsArray::GetElement(int index, JsScopedToken *out) const {
-  if (!NPVARIANT_IS_OBJECT(array_)) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
 
@@ -423,8 +419,9 @@ bool JsArray::GetElement(int index, JsScopedToken *out) const {
   return true;
 }
 
-bool JsArray::SetElement(int index, const JsScopedToken& in) {
-  if (!NPVARIANT_IS_OBJECT(array_)) { return false; }
+bool JsArray::SetElement(int index, const JsScopedToken &in) {
+  // Check that we're initialized.
+  assert(JsTokenIsArray(array_, js_context_));
 
   NPObject *array = NPVARIANT_TO_OBJECT(array_);
   NPIdentifier index_id = NPN_GetIntIdentifier(index);
@@ -443,11 +440,11 @@ bool JsArray::SetElementDouble(int index, double value) {
   return SetElement(index, JsScopedToken(value));
 }
 
-bool JsArray::SetElementString(int index, const std::string16& value) {
+bool JsArray::SetElementString(int index, const std::string16 &value) {
   return SetElement(index, JsScopedToken(value.c_str()));
 }
 
-bool JsArray::SetElementComModule(int index, IScriptable* value) {
+bool JsArray::SetElementComModule(int index, IScriptable *value) {
   // TODO(cdevries): implement this
   assert(false);
   return false;
@@ -520,15 +517,15 @@ JsParamType JsArray::GetElementType(int index) const {
   return JsTokenGetType(token, js_context_);
 }
 
-bool JsArray::SetElementArray(int index, JsArray* value) {
+bool JsArray::SetElementArray(int index, JsArray *value) {
   return SetElement(index, value->array_);
 }
 
-bool JsArray::SetElementObject(int index, JsObject* value) {
+bool JsArray::SetElementObject(int index, JsObject *value) {
   return SetElement(index, value->token());
 }
 
-bool JsArray::SetElementFunction(int index, JsRootedCallback* value) {
+bool JsArray::SetElementFunction(int index, JsRootedCallback *value) {
   return SetElement(index, value->token());
 }
 
@@ -558,7 +555,9 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
 }
 
 bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
-  if (!js_object_) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
+
   JSIdArray *ids = JS_Enumerate(js_context_, JSVAL_TO_OBJECT(js_object_));
   for (int i = 0; i < ids->length; i++) {
     jsval property_key;
@@ -581,7 +580,8 @@ bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
 
 bool JsObject::GetProperty(const std::string16 &name,
                            JsScopedToken *out) const {
-  if (!js_object_) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
 
   return JS_GetUCProperty(js_context_, JSVAL_TO_OBJECT(js_object_),
                           reinterpret_cast<const jschar*>(name.c_str()),
@@ -589,10 +589,8 @@ bool JsObject::GetProperty(const std::string16 &name,
 }
 
 bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
-  if (!js_object_) {
-    LOG(("Specified object is not initialized."));
-    return false;
-  }
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
 
   std::string name_utf8;
   if (!String16ToUTF8(name.c_str(), &name_utf8)) {
@@ -633,7 +631,7 @@ bool JsObject::SetPropertyDouble(const std::string16& name, double value) {
 bool JsObject::SetPropertyString(const std::string16 &name,
                                  const std::string16 &value) {
   JsToken token;
-  if (StringToJsToken(js_context_, value, &token)) {
+  if (StringToJsToken(js_context_, value.c_str(), &token)) {
     return SetProperty(name, token);
   } else {
     return false;
@@ -672,22 +670,34 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
 }
 
 bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
-  if (js_object_.vt != VT_DISPATCH) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
+
   return SUCCEEDED(
       ActiveXUtils::GetDispatchPropertyNames(js_object_.pdispVal, out));
 }
 
 bool JsObject::GetProperty(const std::string16 &name,
                            JsScopedToken *out) const {
-  if (js_object_.vt != VT_DISPATCH) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
 
-  return SUCCEEDED(ActiveXUtils::GetDispatchProperty(js_object_.pdispVal,
-                                                     name.c_str(),
-                                                     out));
+  // If the property name is unknown, GetDispatchProperty will return
+  // DISP_E_UNKNOWNNAME and out will be unchanged.
+  HRESULT hr = ActiveXUtils::GetDispatchProperty(js_object_.pdispVal,
+                                                 name.c_str(),
+                                                 out);
+  if (DISP_E_UNKNOWNNAME == hr) {
+    // Set the token to the equivalent of JSPARAM_UNDEFINED.
+    out->Clear();
+    return true;
+  }
+  return SUCCEEDED(hr);
 }
 
 bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
-  if (js_object_.vt != VT_DISPATCH) { return false; }
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
 
   HRESULT hr = ActiveXUtils::AddAndSetDispatchProperty(
     js_object_.pdispVal, name.c_str(), &value);
@@ -741,13 +751,17 @@ bool JsObject::SetObject(JsToken value, JsContextPtr context) {
 }
 
 bool JsObject::GetPropertyNames(std::vector<std::string16> *out) const {
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
+
   // TODO(nigeltao): implement
   return false;
 }
 
 bool JsObject::GetProperty(const std::string16 &name,
                            JsScopedToken *out) const {
-  if (!NPVARIANT_IS_OBJECT(js_object_)) return false;
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
 
   std::string name_utf8;
   if (!String16ToUTF8(name.c_str(), &name_utf8)) return false;
@@ -759,7 +773,8 @@ bool JsObject::GetProperty(const std::string16 &name,
 }
 
 bool JsObject::SetProperty(const std::string16 &name, const JsToken &value) {
-  if (!NPVARIANT_IS_OBJECT(js_object_)) { return false; }
+  // Check that we're initialized.
+  assert(JsTokenIsObject(js_object_));
 
   std::string name_utf8;
   if (!String16ToUTF8(name.c_str(), &name_utf8)) { return false; }
@@ -1122,12 +1137,12 @@ bool JsTokenIsNullOrUndefined(JsToken t) {
   return JSVAL_IS_NULL(t) || JSVAL_IS_VOID(t); // null or undefined
 }
 
-bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken* out) {
+bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken *out) {
   *out = BOOLEAN_TO_JSVAL(value);
   return true;
 }
 
-bool IntToJsToken(JsContextPtr context, int value, JsScopedToken* out) {
+bool IntToJsToken(JsContextPtr context, int value, JsScopedToken *out) {
   *out = INT_TO_JSVAL(value);
   return true;
 }
@@ -1138,12 +1153,10 @@ bool IntToJsToken(JsContextPtr context, int value, JsScopedToken* out) {
 // pointer.  The TODO is to fix up the API so that the callee does the
 // right thing.
 // Similarly for FooToJsToken in general, for Foo in {Bool, Int, Double}.
-bool StringToJsToken(JsContextPtr context,
-                     const std::string16& value,
-                     JsScopedToken* out) {
-  JSString *jstr = JS_NewUCStringCopyZ(
-                       context,
-                       reinterpret_cast<const jschar *>(value.c_str()));
+bool StringToJsToken(JsContextPtr context, const char16 *value,
+                     JsScopedToken *out) {
+  JSString *jstr = JS_NewUCStringCopyZ(context,
+                                       reinterpret_cast<const jschar *>(value));
   if (jstr) {
     *out = STRING_TO_JSVAL(jstr);
     return true;
@@ -1152,7 +1165,7 @@ bool StringToJsToken(JsContextPtr context,
   }
 }
 
-bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken* out) {
+bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken *out) {
   jsdouble* dp = JS_NewDouble(context, value);
   if (!dp)
     return false;
@@ -1161,7 +1174,7 @@ bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken* out) {
   return true;
 }
 
-bool NullToJsToken(JsContextPtr context, JsScopedToken* out) {
+bool NullToJsToken(JsContextPtr context, JsScopedToken *out) {
   *out = JSVAL_NULL;
   return true;
 }
@@ -1384,29 +1397,28 @@ bool JsTokenIsNullOrUndefined(JsToken t) {
   return t.vt == VT_NULL || t.vt == VT_EMPTY;  // null or undefined
 }
 
-bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken* out) {
+bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken *out) {
   *out = value;
   return true;
 }
 
-bool IntToJsToken(JsContextPtr context, int value, JsScopedToken* out) {
+bool IntToJsToken(JsContextPtr context, int value, JsScopedToken *out) {
   *out = value;
   return true;
 }
 
-bool StringToJsToken(JsContextPtr context,
-                     const std::string16& value,
-                     JsScopedToken* out) {
-  *out = value.c_str();
-  return true;
-}
-
-bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken* out) {
+bool StringToJsToken(JsContextPtr context, const char16 *value,
+                     JsScopedToken *out) {
   *out = value;
   return true;
 }
 
-bool NullToJsToken(JsContextPtr context, JsScopedToken* out) {
+bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken *out) {
+  *out = value;
+  return true;
+}
+
+bool NullToJsToken(JsContextPtr context, JsScopedToken *out) {
   VARIANT null_variant;
   null_variant.vt = VT_NULL;
   *out = null_variant;
@@ -1510,13 +1522,21 @@ bool JsTokenToDouble_Coerce(JsToken t, JsContextPtr cx, double *out) {
   // This coercion is very tricky to get just-right. See test cases in
   // test/testcases/internal_tests.js before making any changes. The expected
   // outputs are based on the result of doing a Number(testval) in JavaScript.
+  JsParamType type = JsTokenGetType(t, cx);
   // JsToken is a double
-  if (JsTokenGetType(t, cx) == JSPARAM_DOUBLE) {
+  if (type == JSPARAM_DOUBLE) {
     // Edge-case: NaN should return failure
     if (isnan(NPVARIANT_TO_DOUBLE(t))) { return false; }
     *out = NPVARIANT_TO_DOUBLE(t);
+  // JsToken is an integer (or a double that can be converted to an integer).
+  } else if (type == JSPARAM_INT) {
+    int out_int;
+    if (!JsTokenToInt_NoCoerce(t, cx, &out_int))
+      return false;
+    *out = out_int;
+    return true;
   // Edge-case: boolean true should coerce to 1, not -1.
-  } else if (JsTokenGetType(t, cx) == JSPARAM_BOOL) {
+  } else if (type == JSPARAM_BOOL) {
     *out = NPVARIANT_TO_BOOLEAN(t) ? 1 : 0;
   // Edge-case: null should coerce to 0
   } else if (NPVARIANT_IS_NULL(t)) {
@@ -1654,29 +1674,28 @@ bool JsTokenIsNullOrUndefined(JsToken t) {
   return NPVARIANT_IS_NULL(t) || NPVARIANT_IS_VOID(t);
 }
 
-bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken* out) {
+bool BoolToJsToken(JsContextPtr context, bool value, JsScopedToken *out) {
   // TODO(nigeltao): implement for NPAPI
   return false;
 }
 
-bool IntToJsToken(JsContextPtr context, int value, JsScopedToken* out) {
+bool IntToJsToken(JsContextPtr context, int value, JsScopedToken *out) {
   // TODO(nigeltao): implement for NPAPI
   return false;
 }
 
-bool StringToJsToken(JsContextPtr context,
-                     const std::string16& value,
-                     JsScopedToken* out) {
+bool StringToJsToken(JsContextPtr context, const char16 *value,
+                     JsScopedToken *out) {
   // TODO(nigeltao): implement for NPAPI
   return false;
 }
 
-bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken* out) {
+bool DoubleToJsToken(JsContextPtr context, double value, JsScopedToken *out) {
   // TODO(nigeltao): implement for NPAPI
   return false;
 }
 
-bool NullToJsToken(JsContextPtr context, JsScopedToken* out) {
+bool NullToJsToken(JsContextPtr context, JsScopedToken *out) {
   // TODO(nigeltao): implement for NPAPI
   return false;
 }
@@ -1755,6 +1774,13 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       *token = INT_TO_JSVAL(*value);
       break;
     }
+    case JSPARAM_INT64: {
+      const int64 *value = static_cast<const int64 *>(param.value_ptr);
+      const double dvalue = static_cast<double>(*value);
+      jsdouble *js_double = JS_NewDouble(context, dvalue);
+      *token = DOUBLE_TO_JSVAL(js_double);
+      break;
+    }
     case JSPARAM_DOUBLE: {
       const double *value = static_cast<const double *>(param.value_ptr);
       jsdouble *js_double = JS_NewDouble(context, *value);
@@ -1795,6 +1821,9 @@ void ConvertJsParamToToken(const JsParamToSend &param,
     }
     case JSPARAM_NULL:
       *token = JSVAL_NULL;
+      break;
+    case JSPARAM_UNDEFINED:
+      *token = JSVAL_VOID;
       break;
     default:
       assert(false);
@@ -1853,6 +1882,12 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       *token = *value;  // CComVariant understands 'int'
       break;
     }
+    case JSPARAM_INT64: {
+      const int64 *value = static_cast<const int64 *>(param.value_ptr);
+      const double dvalue = static_cast<double>(*value);
+      *token = dvalue;  // CComVariant understands 'double'
+      break;
+    }
     case JSPARAM_DOUBLE: {
       const double *value = static_cast<const double *>(param.value_ptr);
       *token = *value;  // CComVariant understands 'double'
@@ -1888,58 +1923,17 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       break;
     }
     case JSPARAM_NULL:
-      *token = VT_NULL;
+      VARIANT null_variant;
+      null_variant.vt = VT_NULL;
+      *token = null_variant;
+      break;
+    case JSPARAM_UNDEFINED:
+      // Setting *token = VT_EMPTY doesn't seem to work.
+      token->Clear();
       break;
     default:
       assert(false);
   }
-}
-
-int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
-  bool has_optional = false;
-
-  for (int i = 0; i < output_argc; ++i) {
-    assert(output_argv[i].value_ptr);
-
-    has_optional |= output_argv[i].requirement == JSPARAM_OPTIONAL;
-    if (output_argv[i].requirement == JSPARAM_REQUIRED)
-      assert(!has_optional);  // should not have required arg after optional
-
-    if (i >= static_cast<int>(disp_params_->cArgs) ||
-        GetArgumentType(i) == JSPARAM_NULL || 
-        GetArgumentType(i) == JSPARAM_UNDEFINED) {
-      // Out of arguments
-      if (output_argv[i].requirement == JSPARAM_REQUIRED) {
-        std::string16 msg;
-        msg += STRING16(L"Required argument ");
-        msg += IntegerToString16(i + 1);
-        msg += STRING16(L" is missing.");
-        SetException(msg.c_str());
-      }
-
-      // If failed on index [N], then N args succeeded
-      return i;
-    }
-
-    // args in input array are in reverse order
-    int input_arg_index = disp_params_->cArgs - i - 1;
-    if (!ConvertTokenToArgument(this, disp_params_->rgvarg[input_arg_index],
-                                &output_argv[i])) {
-      std::string16 msg(STRING16(L"Argument "));
-      msg += IntegerToString16(i + 1);
-      msg += STRING16(L" has invalid type or is outside allowed range.");
-      SetException(msg);
-      return i;
-    }
-  }
-
-  return output_argc;
-}
-
-JsParamType JsCallContext::GetArgumentType(int i) {
-  if (i >= static_cast<int>(disp_params_->cArgs)) return JSPARAM_UNKNOWN;
-  int index = disp_params_->cArgs - i - 1;
-  return JsTokenGetType(disp_params_->rgvarg[index], js_context());
 }
 
 void JsCallContext::SetReturnValue(JsParamType type, const void *value_ptr) {
@@ -1994,6 +1988,12 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       variant->Reset(*value);
       break;
     }
+    case JSPARAM_INT64: {
+      const int64 *value = static_cast<const int64 *>(param.value_ptr);
+      const double dvalue = static_cast<double>(*value);
+      variant->Reset(dvalue);
+      break;
+    }
     case JSPARAM_DOUBLE: {
       const double *value = static_cast<const double *>(param.value_ptr);
       variant->Reset(*value);
@@ -2033,6 +2033,11 @@ void ConvertJsParamToToken(const JsParamToSend &param,
       NULL_TO_NPVARIANT(*variant);
       break;
     }
+    case JSPARAM_UNDEFINED: {
+      variant->Reset();  // makes it VOID (undefined).
+      VOID_TO_NPVARIANT(*variant);  // TODO(steveblock): Is this needed?
+      break;
+    }
     default:
       assert(false);
   }
@@ -2062,26 +2067,53 @@ void JsCallContext::SetException(const std::string16 &message) {
 
   is_exception_set_ = true;
   
-#ifdef BROWSER_WEBKIT
-  ThrowWebKitException(message);
-#else
   std::string message_utf8;
   if (!String16ToUTF8(message.data(), message.length(), &message_utf8))
     message_utf8 = "Unknown Gears Error";  // better to throw *something*
 
-  NPObject *global;
-  NPN_GetValue(js_context(), NPNVWindowNPObject, &global);
-  NPN_SetException(global, message_utf8.c_str());
-#endif
+  NPObject *window;
+  if (NPN_GetValue(js_context(), NPNVWindowNPObject, &window) != NPERR_NO_ERROR)
+    return;
+  ScopedNPObject window_scoped(window);
+  NPN_SetException(window, message_utf8.c_str());
+}
+
+#endif  // BROWSER_NPAPI
+
+#if defined(BROWSER_FF) || defined(BROWSER_NPAPI)
+
+int JsCallContext::GetArgumentCount() {
+  return argc_;
+}
+
+const JsToken &JsCallContext::GetArgument(int index) {
+  return argv_[index];
+}
+
+#elif BROWSER_IE
+
+int JsCallContext::GetArgumentCount() {
+  return disp_params_->cArgs;
+}
+
+const JsToken &JsCallContext::GetArgument(int index) {
+  int arg_index = disp_params_->cArgs - index - 1;
+  return disp_params_->rgvarg[arg_index];
 }
 
 #endif
 
-#if defined(BROWSER_FF) || defined(BROWSER_NPAPI)
 int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
   bool has_optional = false;
 
+  if (GetArgumentCount() > output_argc) {
+    SetException(STRING16(L"Too many parameters."));
+    return 0;
+  }
+
   for (int i = 0; i < output_argc; ++i) {
+    assert(output_argv[i].value_ptr);
+
     has_optional |= output_argv[i].requirement == JSPARAM_OPTIONAL;
     if (output_argv[i].requirement == JSPARAM_REQUIRED)
       assert(!has_optional);  // should not have required arg after optional
@@ -2089,7 +2121,7 @@ int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
     // TODO(mpcomplete): We need to handle this more generally.  We should
     // continue processing arguments for the case where a developer does
     // something like 'method(null, foo)' if the first argument is optional.
-    if (i >= argc_ ||
+    if (i >= GetArgumentCount() ||
         GetArgumentType(i) == JSPARAM_NULL || 
         GetArgumentType(i) == JSPARAM_UNDEFINED) {
       // Out of arguments
@@ -2105,7 +2137,7 @@ int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
       return i;
     }
 
-    if (!ConvertTokenToArgument(this, argv_[i], &output_argv[i])) {
+    if (!ConvertTokenToArgument(this, GetArgument(i), &output_argv[i])) {
       std::string16 msg(STRING16(L"Argument "));
       msg += IntegerToString16(i + 1);
       msg += STRING16(L" has invalid type or is outside allowed range.");
@@ -2118,10 +2150,9 @@ int JsCallContext::GetArguments(int output_argc, JsArgument *output_argv) {
 }
 
 JsParamType JsCallContext::GetArgumentType(int i) {
-  if (i >= argc_) return JSPARAM_UNKNOWN;
-  return JsTokenGetType(argv_[i], js_context());
+  if (i >= GetArgumentCount()) return JSPARAM_UNKNOWN;
+  return JsTokenGetType(GetArgument(i), js_context());
 }
-#endif
 
 
 //-----------------------------------------------------------------------------
@@ -2278,10 +2309,11 @@ void JsParamFetcher::SetReturnValue(JsToken retval) {
   }
 }
 
-bool JsParamFetcher::GetAsMarshaledJsToken(int i, MarshaledJsToken **out,
+bool JsParamFetcher::GetAsMarshaledJsToken(int i, JsRunnerInterface *js_runner,
+                                           MarshaledJsToken **out,
                                            std::string16 *error_message_out) {
   if (i >= js_argc_) return false;  // see comment above, in GetAsInt()
-  *out = MarshaledJsToken::Marshal(js_argv_[i], js_context_,
+  *out = MarshaledJsToken::Marshal(js_argv_[i], js_runner, js_context_,
                                    error_message_out);
   return *out != NULL;
 }
@@ -2332,14 +2364,11 @@ JsNativeMethodRetval JsSetException(JsContextPtr cx,
   // Note: JS_ThrowReportedError and JS_ReportError look promising, but they
   // don't quite do what we need.
 
-  scoped_ptr<JsObject> error_object(js_runner->NewObject(STRING16(L"Error")));
+  scoped_ptr<JsObject> error_object(js_runner->NewError(message));
   if (!error_object.get()) { return retval; }
 
   // Note: need JS_SetPendingException to bubble 'catch' in workers.
   JS_SetPendingException(cx, error_object->token());
-
-  bool success = error_object->SetPropertyString(STRING16(L"message"), message);
-  if (!success) { return retval; }
 
   return retval;
 }

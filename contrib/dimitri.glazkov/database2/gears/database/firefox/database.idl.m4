@@ -51,8 +51,10 @@ m4_ifdef(^DEBUG^,^m4_dnl
 
 [scriptable, uuid(A195DFB3-22E7-4ea9-ACF9-B2F505212E98)]
 interface GearsResultSetInterface : GearsBaseClassInterface {
-  nsIVariant field(in long index);
-  nsIVariant fieldByName(in AString field_name);
+  nsIVariant field(//in long index
+                  );
+  nsIVariant fieldByName(//in AString field_name
+                        );
   AString fieldName(in long index);
   long fieldCount();
   void close();

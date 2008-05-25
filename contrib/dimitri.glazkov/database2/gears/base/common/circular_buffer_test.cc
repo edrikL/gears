@@ -26,14 +26,16 @@
 #include "gears/base/common/circular_buffer.h"
 #include "gears/base/common/common.h"
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 
-bool TestCircularBuffer() {
+bool TestCircularBuffer(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestCircularBuffer - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestCircularBuffer - failed. "); \
     return false; \
   } \
 }

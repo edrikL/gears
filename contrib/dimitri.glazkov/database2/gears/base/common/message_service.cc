@@ -30,7 +30,7 @@
 #include "gears/base/common/message_service.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/thread_locals.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 
 typedef std::set<MessageObserverInterface*> ObserverSet;
@@ -153,7 +153,7 @@ class ObserverCollection {
 // static
 MessageService *MessageService::GetInstance() {
   static MessageService g_service_(ThreadMessageQueue::GetInstance(),
-                                   IpcMessageQueue::GetInstance());
+                                   IpcMessageQueue::GetPeerQueue());
   return &g_service_;
 }
 

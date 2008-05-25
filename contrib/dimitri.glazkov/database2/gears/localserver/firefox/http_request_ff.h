@@ -36,7 +36,7 @@
 #include "gears/base/common/security_model.h"
 #include "gears/localserver/common/http_constants.h"
 #include "gears/localserver/common/http_request.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #ifndef OFFICIAL_BUILD
 class BlobInterface;
@@ -118,8 +118,11 @@ class FFHttpRequest : public HttpRequest,
   virtual bool GetResponseHeader(const char16 *name, std::string16 *header);
   virtual bool Abort();
 
+  // Should only be used by ProgressInputStream.
+  void OnUploadProgress(int64 position, int64 total);
+
   // events
-  virtual bool SetOnReadyStateChange(ReadyStateListener *listener);
+  virtual bool SetListener(HttpListener *listener, bool enable_data_available);
 
  private:
   friend bool HttpRequest::Create(scoped_refptr<HttpRequest>* request);
@@ -137,7 +140,7 @@ class FFHttpRequest : public HttpRequest,
   bool IsComplete() { return ready_state_ == HttpRequest::COMPLETE; }
   bool IsInteractiveOrComplete() { return IsInteractive() || IsComplete(); }
 
-  bool SendImpl(nsIInputStream *post_data);
+  bool SendImpl();
   bool NewByteInputStream(nsIInputStream **stream,
                           const char *data,
                           int data_size);
@@ -155,6 +158,7 @@ class FFHttpRequest : public HttpRequest,
   ReadyState ready_state_;
   bool async_;
   std::string16 method_;
+  nsCOMPtr<nsIInputStream> post_data_stream_;
   std::string post_data_string_;
   scoped_ptr< std::vector<uint8> > response_body_;
   std::string16 url_;
@@ -166,7 +170,8 @@ class FFHttpRequest : public HttpRequest,
   bool was_redirected_;
   std::string16 redirect_url_;
   nsCOMPtr<nsIChannel> channel_;
-  ReadyStateListener *listener_;
+  HttpRequest::HttpListener *listener_;
+  bool listener_data_available_enabled_;
 };
 
 #endif  // GEARS_LOCALSERVER_FIREFOX_HTTP_REQUEST_FF_H__

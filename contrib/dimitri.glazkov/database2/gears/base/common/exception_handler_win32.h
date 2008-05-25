@@ -64,10 +64,15 @@ class ExceptionManager {
   // automatically be captured and sent.
   void StartMonitoring();
 
+  // Specifies additional memory ranges for inclusion in minidumps.
+  // Requires a Breakpad instance, so must be called after StartMonitoring().
+  void AddMemoryRange(void *address, int length);
+  void ClearMemoryRanges();
+
   // Manually captures and sends a minidump, returns true on success.
   // If StartMonitoring has not been called, no minidump is sent and
   // false is returned.
-  static bool CaptureAndSendMinidump();
+  static bool ReportAndContinue();
 
   // TODO(michaeln): Cleanup. The following should not be called
   // directly, ideally these should be private methods.
@@ -84,14 +89,12 @@ class ExceptionManager {
 
 #else
 
-// Stub to allow compilation on OS'es for which we do not yet
-// implement crash reporting.
+// Stub to allow compilation on OS'es for which we do not yet implement crash
+// reporting.  (Only the static methods need to be listed here.)
 class ExceptionManager {
  public:
-  ExceptionManager(bool catch_entire_process) {}
-  void StartMonitoring() {}
-  static bool CaptureAndSendMinidump() { return false; }
+  static bool ReportAndContinue() { return false; }
 };
 
-#endif  // WIN32
+#endif  // WIN32 && !WINCE
 #endif  // GEARS_BASE_COMMON_EXCEPTION_HANDLER_WIN32_H__

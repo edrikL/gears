@@ -27,7 +27,7 @@
 #define GEARS_UI_COMMON_HTML_DIALOG_H__
 
 #include "gears/base/common/string16.h"
-#include "gears/third_party/jsoncpp/json.h"
+#include "third_party/jsoncpp/json.h"
 
 // This class implements a cross-platform modal dialog using HTML for the
 // dialog UI. We use HTML because it's easy to create nice-looking UIs that
@@ -48,6 +48,9 @@ class HtmlDialog {
   // Open the dialog.
   bool DoModal(const char16 *html_filename, int width, int height);
 
+  // Parses the result from the dialog and assings to result_.
+  bool SetResult(const char16 *result_string);
+
   // The arguments object that will be serialized to pass to the dialog.
   Json::Value arguments;
 
@@ -58,9 +61,6 @@ class HtmlDialog {
   // Platform-specific implementation of DoModal().
   bool DoModalImpl(const char16 *html_filename, int width, int height,
                    const char16 *arguments_string);
-
-  // Parses the result from the dialog and assings to result_.
-  bool SetResult(const char16 *result_string);
 };
 
 #endif  // GEARS_UI_COMMON_HTML_DIALOG_H__

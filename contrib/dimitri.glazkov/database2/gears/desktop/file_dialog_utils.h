@@ -40,11 +40,10 @@ namespace FileDialogUtils {
   // Validates and places filters in a vector.
   // Returns: false if input is invalid
   // Parameters:
-  //  filters - in optional - An array of pairs of strings (description,filter).
-  //    If filters is NULL then (All Files, *.*) is placed in out.
+  //  filters - in - An array of pairs of strings (description,filter).
   //  out - out - The filters are placed in here.
   //  error - out - error message is placed in here
-  bool FiltersToVector(const JsArray* filters,
+  bool FiltersToVector(const JsArray& filters,
                        std::vector<FileDialog::Filter>* out,
                        std::string16* error);
 

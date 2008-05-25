@@ -28,7 +28,7 @@
 
 #include <assert.h>
 #include <vector>
-#include "gears/base/common/int_types.h"
+#include "gears/base/common/basictypes.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/common/string_utils.h"
@@ -44,8 +44,13 @@ class BlobInterface;
 //------------------------------------------------------------------------------
 class HttpRequest {
  public:
-  // factory
+  // Creates a platform specific instance
   static bool Create(scoped_refptr<HttpRequest>* request);
+  
+  // Creates an instance that is guaranteed to work in background threads
+  // TODO(michaeln): ween ourselves off of Create vs CreateSafeRequest, Create
+  // should always return a "safe" instance.
+  static bool CreateSafeRequest(scoped_refptr<HttpRequest>* request);
 
   // Returns true if the given scheme is supported by HttpRequest.
   static bool IsSchemeSupported(const char16 *scheme) {
@@ -120,12 +125,18 @@ class HttpRequest {
   virtual bool Abort() = 0;
 
   // events and listeners
-  class ReadyStateListener {
+  class HttpListener {
    public:
-    virtual void DataAvailable(HttpRequest *source) {};
-    virtual void ReadyStateChanged(HttpRequest *source) = 0;
+    virtual void DataAvailable(HttpRequest *source) {}
+    virtual void ReadyStateChanged(HttpRequest *source) {}
+    virtual void UploadProgress(HttpRequest *source,
+                                int64 position, int64 total) {}
   };
-  virtual bool SetOnReadyStateChange(ReadyStateListener *listener) = 0;
+
+  // Should be called prior to Send with the exception of setting
+  // the listener to NULL which can be done at anytime.
+  virtual bool SetListener(HttpListener *listener,
+                           bool enable_data_availbable) = 0;
 
  protected:
   HttpRequest() {}

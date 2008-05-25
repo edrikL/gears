@@ -39,8 +39,7 @@
 #include <iterator>
 #include <string>
 #include <vector>
-#include "gears/base/common/common.h"  // for DISALLOW_EVIL_CONSTRUCTORS
-#include "gears/base/common/int_types.h"
+#include "gears/base/common/basictypes.h"
 
 class UnsafeArena;
 
@@ -277,7 +276,7 @@ class HTTPHeaders {
       */
       case HTTP_10: return "HTTP/1.0";
       case HTTP_11: return "HTTP/1.1";
-      default: assert("" == "Unknown HTTPVersion in http_version_str()");
+      default: assert(NULL == "Unknown HTTPVersion in http_version_str()");
                return "";
     }
   }

@@ -813,38 +813,10 @@ bool WebCacheDB::ServiceGearsInspectorUrl(const char16 *url,
 //------------------------------------------------------------------------------
 // MaybeInitiateUpdateTask
 //------------------------------------------------------------------------------
-static Mutex last_auto_update_lock;
-typedef std::map< int64, int64 > Int64Map;
-static Int64Map last_auto_update_map;
 
 void WebCacheDB::MaybeInitiateUpdateTask(int64 server_id) {
-  int64 now = GetCurrentTimeMillis();
-  const int kUpdateCheckDelayMsec = 10 * 1000;
-
-  // Rate-limit update checks so that we don't barrage the server while loading
-  // a page with many linked web-captured resources.
-  {
-    MutexLock locker(&last_auto_update_lock);
-    Int64Map::iterator found = last_auto_update_map.find(server_id);
-    if (found != last_auto_update_map.end()) {
-      int64 last_update = found->second;
-      if (now - last_update <= kUpdateCheckDelayMsec) {
-        return;
-      }
-    }
-    last_auto_update_map[server_id] = now;
-  }
-
-  LOG(("Automatically initiating update for managed store\n"));
-
-  ManagedResourceStore store;
-  if (!store.Open(server_id)) {
-    return;
-  }
-
   scoped_ptr<UpdateTask> task(UpdateTask::CreateUpdateTask());
-  if (!task.get()->Init(&store)) return;
-  if (!task.get()->Start()) return;
+  if (!task.get()->MaybeAutoUpdate(server_id)) return;
   task.release()->DeleteWhenDone();
 }
 
@@ -1963,8 +1935,8 @@ bool WebCacheDB::DeleteEntry(int64 version_id, const char16 *url) {
     return false;
   }
   if (num_matches > 1) {
+    ExceptionManager::ReportAndContinue();
     LOG(("WebCacheDB.DeleteEntry - multiple matches for requested URL\n"));
-    ExceptionManager::CaptureAndSendMinidump();
   }
 
   return transaction.Commit();

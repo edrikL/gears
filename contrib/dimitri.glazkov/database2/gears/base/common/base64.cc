@@ -25,7 +25,7 @@
 
 #include "gears/base/common/base64.h"
 
-#include "gears/third_party/modp_b64/modp_b64.h"
+#include "third_party/modp_b64/modp_b64.h"
 
 bool Base64Encode(const std::vector<uint8>& input, std::string* output) {
   std::string temp;

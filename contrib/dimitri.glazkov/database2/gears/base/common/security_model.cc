@@ -34,15 +34,13 @@
 #include <windows.h>
 #include <wininet.h>
 #elif BROWSER_FF
-#include <gecko_sdk/include/nsIURI.h>
-#include "gears/base/common/common.h"
-#include "gears/base/firefox/dom_utils.h"
+#include "third_party/googleurl/src/url_parse.h"
 #elif BROWSER_SAFARI
-#include "gears/base/safari/browser_utils.h"
+#include "gears/base/safari/browser_utils_sf.h"
 #include "gears/base/safari/scoped_cf.h"
 #include "gears/base/safari/cf_string_utils.h"
 #elif BROWSER_NPAPI
-#include "gears/third_party/googleurl/src/url_parse.h"
+#include "third_party/googleurl/src/url_parse.h"
 #endif
 
 
@@ -117,65 +115,6 @@ bool SecurityOrigin::InitFromUrl(const char16 *full_url) {
       return false;
   }
 
-#elif BROWSER_FF
-  nsCOMPtr<nsIURI> url_obj;
-  if (!DOMUtils::NewAbsoluteURI(full_url, getter_AddRefs(url_obj)))
-    return false;
-
-  // Disallow urls with embedded username:passwords. These
-  // are disabled by default in IE such that InternetCrackUrl fails.
-  // To have consistent behavior, do the same for all browsers.
-  nsCString user_name;
-  url_obj->GetUsername(user_name);
-  if (user_name.Length() > 0)
-    return false;
-
-  enum SchemeType { kSchemeTypeHttp, kSchemeTypeHttps, kSchemeTypeFile };
-  const struct {
-    SchemeType scheme_type;
-    const char16 *scheme;
-    const char *schemeAscii;
-    int default_port;
-  } kSchemes [] = {
-    { kSchemeTypeHttp, HttpConstants::kHttpScheme,
-      HttpConstants::kHttpSchemeAscii, HttpConstants::kHttpDefaultPort },
-    { kSchemeTypeHttps, HttpConstants::kHttpsScheme,
-      HttpConstants::kHttpsSchemeAscii, HttpConstants::kHttpsDefaultPort },
-    { kSchemeTypeFile, HttpConstants::kFileScheme,
-      HttpConstants::kFileSchemeAscii, HttpConstants::kFileDefaultPort }
-  };
-  nsresult nr = NS_OK;
-  PRBool match = PR_FALSE;
-  size_t i = 0;
-  for (; i < ARRAYSIZE(kSchemes); ++i) {
-    nr = url_obj->SchemeIs(kSchemes[i].schemeAscii, &match);
-    if (NS_FAILED(nr)) { return false; }
-    if (match)
-      break;
-  }
-  if (!match) { return false; }
-  switch (kSchemes[i].scheme_type) {
-    case kSchemeTypeHttp:
-    case kSchemeTypeHttps: {
-      nsCString utf8;
-      nr = url_obj->GetHost(utf8); // or GetAsciiHost to convert using IDNA spec
-      if (NS_FAILED(nr)) { return false; }
-      std::string16 host(NS_ConvertUTF8toUTF16(utf8).get());
-      int port = -1;
-      nr = url_obj->GetPort(&port);
-      if (NS_FAILED(nr)) { return false; }
-      if (port == -1) {
-        // -1 implies the default port for the scheme
-        port = kSchemes[i].default_port;
-      }
-      return Init(full_url, kSchemes[i].scheme, host.c_str(), port);
-    }
-    case kSchemeTypeFile:
-      return Init(full_url, HttpConstants::kFileScheme, kUnknownDomain, 0);
-    default:
-      return false;
-  }
-
 #elif BROWSER_SAFARI
   scoped_CFString url_str(CFStringCreateWithString16(full_url));
   scoped_CFURL url(CFURLCreateWithString(kCFAllocatorDefault,
@@ -219,15 +158,15 @@ bool SecurityOrigin::InitFromUrl(const char16 *full_url) {
   } else if (scheme == HttpConstants::kFileScheme) {
     return Init(full_url, HttpConstants::kFileScheme, kUnknownDomain, 0);
   }
-#elif BROWSER_NPAPI
-  int url_len = wcslen(full_url);
+#elif BROWSER_NPAPI || BROWSER_FF
+  int url_len = char16_wcslen(full_url);
 
   url_parse::Component scheme_comp;
   if (!url_parse::ExtractScheme(full_url, url_len, &scheme_comp)) {
     return false;
   }
 
-  std::wstring scheme(full_url + scheme_comp.begin, scheme_comp.len);
+  std::string16 scheme(full_url + scheme_comp.begin, scheme_comp.len);
   LowerString(scheme);
   if (scheme == STRING16(L"http") || scheme == STRING16(L"https")) {
     url_parse::Parsed parsed;

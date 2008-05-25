@@ -147,7 +147,6 @@ void PermissionsDB::SetCanAccessGears(const SecurityOrigin &origin,
   }
 
   if (value == PERMISSION_NOT_SET) {
-    shortcut_table_.DeleteShortcuts(origin.url().c_str());
     access_table_.Clear(origin.url().c_str());
   } else if (value == PERMISSION_ALLOWED || value == PERMISSION_DENIED) {
     access_table_.SetInt(origin.url().c_str(), value);

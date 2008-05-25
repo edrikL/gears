@@ -30,7 +30,12 @@
 #include <vector>
 #include "gears/base/common/common.h"
 #include "gears/base/common/string16.h"
-#include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
+#ifdef OS_ANDROID
+// Use the system SQLite on Android.
+#include <sqlite3.h>
+#else
+#include "third_party/sqlite_google/preprocessed/sqlite3.h"
+#endif
 
 // forward declarations of classes defined here
 class SQLTransaction;

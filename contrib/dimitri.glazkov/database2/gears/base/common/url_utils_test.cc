@@ -31,12 +31,16 @@
 static bool TestUrlUTF8FileToUrl();
 static bool TestUrlResolve();
 
-bool TestUrlUtils() {
+bool TestUrlUtils(std::string16 *error) {
   bool ok = true;
   ok &= TestUrlResolve();
   ok &= TestUrlUTF8FileToUrl();
-  if (ok)
+  if (ok) {
     LOG(("TestUrlUtilsAll - passed\n"));
+  } else {
+    assert(error); \
+    *error += STRING16(L"TestUrlUtilsAll - failed. "); \
+  }
   return ok;
 }
 

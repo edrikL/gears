@@ -23,10 +23,10 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 
 #include "gears/base/common/serialization.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 const int kTestBytesSize = 8;
 class SerializationTest : public Serializable {
@@ -80,12 +80,14 @@ class SerializationTest : public Serializable {
   uint8 test_bytes_[kTestBytesSize];
 };
 
-bool TestSerialization() {
+bool TestSerialization(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestSerialization - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestSerialization - failed. "); \
     return false; \
   } \
 }

@@ -26,17 +26,23 @@
 #include <assert.h>
 
 #include "gears/base/common/module_wrapper.h"
+#include "gears/base/common/process_utils_win32.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/activex_utils.h"
 #include "gears/base/ie/atl_headers.h"
 #include "gears/base/ie/detect_version_collision.h"
-#include "gears/console/ie/console_ie.h"
+#include "gears/console/console.h"
 #include "gears/database/ie/database.h"
 #include "gears/database2/manager.h"
 #include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
 #include "gears/factory/ie/factory.h"
-#include "gears/httprequest/ie/httprequest_ie.h"
+#ifdef OFFICIAL_BUILD
+// The Geolocation API has not been finalized for official builds.
+#else
+#include "gears/geolocation/geolocation.h"
+#endif  // OFFICIAL_BUILD
+#include "gears/httprequest/httprequest.h"
 #ifdef WINCE
 // The Image API is not yet available for WinCE.
 #else
@@ -44,13 +50,15 @@
 // The Image API has not been finalized for official builds
 #else
 #include "gears/image/image_loader.h"
+#include "gears/canvas/canvas.h"
 #endif
 #endif
 #include "gears/localserver/ie/localserver_ie.h"
 #include "gears/timer/timer.h"
+#include "gears/ui/ie/string_table.h"
 #include "gears/workerpool/ie/workerpool.h"
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 #include "gears/cctests/test.h"
 #endif
 
@@ -85,16 +93,28 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
     if (!EnvIsWorker()) {
       MaybeNotifyUserOfVersionCollision();  // only notifies once per process
     }
-    RETURN_EXCEPTION(kVersionCollisionErrorMessage);
+    const int kMaxStringLength = 256;
+    char16 error_text[kMaxStringLength];
+    if (LoadString(GetGearsModuleHandle(),
+                   IDS_VERSION_COLLISION_TEXT, error_text, kMaxStringLength)) {
+      RETURN_EXCEPTION(error_text);
+    } else {
+      RETURN_EXCEPTION(L"Internal Error");
+    }
   }
 
-  // Make sure the user gives this origin permission to use Gears.
+  std::string16 module_name(object_name_bstr);
 
-  bool use_temporary_permissions = true;
-  if (!HasPermissionToUseGears(this, use_temporary_permissions,
-                               NULL, NULL, NULL)) {
-    RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
-                              PRODUCT_FRIENDLY_NAME L"."));
+  // Make sure the user gives this site permission to use Gears unless the
+  // module is whitelisted.
+
+  if (RequiresPermissionToUseGears(module_name)) {
+    bool use_temporary_permissions = true;
+    if (!HasPermissionToUseGears(this, use_temporary_permissions,
+                                 NULL, NULL, NULL)) {
+      RETURN_EXCEPTION(STRING16(L"Page does not have permission to use "
+                                PRODUCT_FRIENDLY_NAME L"."));
+    }
   }
 
   // Check the version string.
@@ -118,19 +138,18 @@ STDMETHODIMP GearsFactory::create(const BSTR object_name_bstr_in,
   // Do case-sensitive comparisons, which are always better in APIs. They make
   // code consistent across callers, and they are easier to support over time.
 
-  std::string16 object_name(object_name_bstr);
   std::string16 error;
   bool success = false;
 
   // Try creating a dispatcher-based module first.
-  success = CreateDispatcherModule(object_name, retval, &error);
+  success = CreateDispatcherModule(module_name, retval, &error);
   if (success) {
     RETURN_NORMAL();
   } else if (error.length() > 0) {
     RETURN_EXCEPTION(error.c_str());
   }
 
-  success = CreateComModule(object_name, retval, &error);
+  success = CreateComModule(module_name, retval, &error);
   if (success) {
     RETURN_NORMAL();
   } else if (error.length() > 0) {
@@ -146,28 +165,37 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   scoped_refptr<ModuleImplBaseClass> object;
 
   if (object_name == STRING16(L"beta.test")) {
-#ifdef DEBUG
+#ifdef USING_CCTESTS
     CreateModule<GearsTest>(GetJsRunner(), &object);
 #else
-    *error = STRING16(L"Object is only available in debug build.");
+    *error = STRING16(L"Object is only available in test build.");
     return false;
 #endif
   } else if (object_name == STRING16(L"beta.databasemanager")) {
     CreateModule<Database2Manager>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.desktop")) {
     CreateModule<GearsDesktop>(GetJsRunner(), &object);
-#ifdef WINCE
-// The Image API is not yet available for WinCE.
-#else
+  } else if (object_name == STRING16(L"beta.httprequest")) {
+    CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.timer")) {
+    CreateModule<GearsTimer>(GetJsRunner(), &object);
 #ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
+  // The Canvas, Console, Geolocation, and Image APIs have not been finalized
+  // for official builds.
 #else
+  } else if (object_name == STRING16(L"beta.geolocation")) {
+    CreateModule<GearsGeolocation>(GetJsRunner(), &object);
+#ifdef WINCE
+  // Furthermore, Canvas, Console and Image are unimplemented on WinCE.
+#else
+  } else if (object_name == STRING16(L"beta.canvas")) {
+    CreateModule<GearsCanvas>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.console")) {
+    CreateModule<GearsConsole>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.imageloader")) {
     CreateModule<GearsImageLoader>(GetJsRunner(), &object);
 #endif
 #endif
-  } else if (object_name == STRING16(L"beta.timer")) {
-    CreateModule<GearsTimer>(GetJsRunner(), &object);
   } else {
     // Don't return an error here. Caller handles reporting unknown modules.
     error->clear();
@@ -191,24 +219,9 @@ bool GearsFactory::CreateComModule(const std::string16 &object_name,
   CComQIPtr<IDispatch> idispatch;
 
   HRESULT hr = E_FAIL;
-  if (0) {  // dummy statement to support mixed "#ifdef" and "else if" below
-#ifdef WINCE
-  // TODO(aa): Implement console for WinCE.
-#else
-  } else if (object_name == STRING16(L"beta.console")) {
-    CComObject<GearsConsole> *obj;
-    hr = CComObject<GearsConsole>::CreateInstance(&obj);
-    base_class = obj;
-    idispatch = obj;
-#endif
-  } else if (object_name == STRING16(L"beta.database")) {
+  if (object_name == STRING16(L"beta.database")) {
     CComObject<GearsDatabase> *obj;
     hr = CComObject<GearsDatabase>::CreateInstance(&obj);
-    base_class = obj;
-    idispatch = obj;
-  } else if (object_name == STRING16(L"beta.httprequest")) {
-    CComObject<GearsHttpRequest> *obj;
-    hr = CComObject<GearsHttpRequest>::CreateInstance(&obj);
     base_class = obj;
     idispatch = obj;
   } else if (object_name == STRING16(L"beta.localserver")) {
@@ -415,6 +428,6 @@ void GearsFactory::ResumeObjectCreationAndUpdatePermissions() {
 // whether or not an object has been successfully initialized. This method is
 // a friend of ModuleImplBaseClass for this purpose.
 static bool IsFactoryInitialized(GearsFactory *factory) {
-  return factory->is_initialized_;
+  return factory->module_environment_.get() != NULL;
 }
 #endif

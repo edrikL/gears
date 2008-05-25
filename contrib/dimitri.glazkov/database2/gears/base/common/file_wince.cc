@@ -33,14 +33,165 @@
 
 #ifdef WINCE
 #include <assert.h>
+#include <limits>
 #include <windows.h>
-#include <shlobj.h>
-#include "genfiles/product_constants.h"
+#include <shlobj.h>  // Must include windows.h before this file.
+#include "gears/base/common/basictypes.h"
 #include "gears/base/common/file.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/scoped_win32_handles.h"
 #include "gears/base/common/string_utils.h"
 #include "gears/base/common/wince_compatibility.h"
+#include "genfiles/product_constants.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
+
+File *File::Open(const char16 *full_filepath, OpenAccessMode access_mode,
+                 OpenExistsMode exists_mode) {
+  scoped_ptr<File> file(new File());
+  DWORD desired_access = 0;
+  switch (access_mode) {
+    case READ:
+      desired_access = GENERIC_READ;
+      break;
+    case WRITE:
+      desired_access = GENERIC_WRITE;
+      break;
+    case READ_WRITE:
+      desired_access = GENERIC_READ | GENERIC_WRITE;
+      break;
+  }
+  DWORD creation_disposition = 0;
+  switch (exists_mode) {
+    case NEVER_FAIL:
+      // OPEN_ALWAYS creates inexistant files, which is not desired in read mode
+      creation_disposition = (access_mode == READ) ?
+          OPEN_EXISTING : OPEN_ALWAYS;
+      break;
+    case FAIL_IF_NOT_EXISTS:
+      creation_disposition = OPEN_EXISTING;
+      break;
+    case FAIL_IF_EXISTS:
+      // CREATE_NEW creates inexistant files, which is not desired in read mode
+      if (access_mode == READ) {
+        return NULL;
+      }
+      creation_disposition = CREATE_NEW;
+      break;
+  }
+  file->mode_ = access_mode;
+  file->handle_.reset(::CreateFileW(full_filepath,
+                                    desired_access,
+                                    access_mode == READ ? FILE_SHARE_READ : 0,
+                                    NULL,
+                                    creation_disposition,
+                                    FILE_ATTRIBUTE_NORMAL,
+                                    NULL));
+  if (file->handle_.get() == INVALID_HANDLE_VALUE) {
+    // TODO(fry): SetLastFileError(kOpenFileFailedMessage, full_filepath,
+    // GetLastError());
+    return NULL;
+  }
+  return file.release();
+}
+
+int64 File::Read(uint8* destination, int64 max_bytes) {
+  if (!destination || max_bytes < 0) {
+    return -1;
+  }
+
+  // Read its contents into memory.
+  if (max_bytes > std::numeric_limits<DWORD>::max()) {  // ReadFile limit
+    max_bytes = std::numeric_limits<DWORD>::max();
+  }
+  DWORD bytes_read;
+  if (!::ReadFile(handle_.get(), destination,
+                  static_cast<DWORD>(max_bytes), &bytes_read, NULL)) {
+    return -1;
+  }
+
+  return bytes_read;
+}
+
+
+bool File::Seek(int64 offset, SeekMethod seek_method) {
+  DWORD move_method = 0;
+  switch (seek_method) {
+    case SEEK_FROM_START:
+      move_method = FILE_BEGIN;
+      break;
+    case SEEK_FROM_CURRENT:
+      move_method = FILE_CURRENT;
+      break;
+    case SEEK_FROM_END:
+      move_method = FILE_END;
+      break;
+  }
+
+  LARGE_INTEGER pos;
+  pos.QuadPart = offset;
+  pos.LowPart = SetFilePointer(handle_.get(), pos.LowPart, &pos.HighPart,
+                               move_method);
+
+  return (pos.LowPart != 0xFFFFFFFF || GetLastError() == NO_ERROR);
+}
+
+
+int64 File::Size() {
+  LARGE_INTEGER size;
+  size.LowPart = ::GetFileSize(handle_.get(),
+                               reinterpret_cast<LPDWORD>(&size.HighPart));
+  if (size.LowPart == 0xFFFFFFFF && GetLastError() != NO_ERROR) {
+    return -1;
+  }
+  return size.QuadPart;
+}
+
+
+int64 File::Tell() {
+  LARGE_INTEGER pos;
+  pos.QuadPart = 0;
+  pos.LowPart = SetFilePointer(handle_.get(), pos.LowPart, &pos.HighPart,
+                               FILE_CURRENT);
+
+  if (pos.LowPart == 0xFFFFFFFF && GetLastError() != NO_ERROR) {
+    return -1;
+  }
+  return pos.QuadPart;
+}
+
+
+bool File::Truncate(int64 length) {
+  if (length < 0) {
+    return false;
+  }
+  int64 pos = Tell();
+  if (!Seek(length, SEEK_FROM_START)) {
+    return false;
+  }
+  bool success = (SetEndOfFile(handle_.get()) != FALSE);
+  // try to seek back, even if truncate failed
+  Seek(pos, SEEK_FROM_START);
+  // TODO(fry): return false if Seek fails?
+  return success;
+}
+
+
+int64 File::Write(const uint8 *source, int64 length) {
+  if (mode_ == READ) {
+    // NOTE: WriteFile doesn't fail after opening in READ mode
+    return -1;
+  }
+  if (!source || length < 0) {
+    return -1;
+  }
+  // NOTE: disallow DWORD overflows since they won't fit in memory anyway
+  assert(length < std::numeric_limits<DWORD>::max());
+  DWORD data_size = static_cast<DWORD>(length);
+  DWORD bytes_written;
+  return ::WriteFile(handle_.get(), source, data_size, &bytes_written, NULL)
+      ? bytes_written : -1;
+}
+
 
 bool File::CreateNewFile(const char16 *full_filepath) {
   // Create a new file, if a file already exists this will fail
@@ -77,109 +228,6 @@ bool File::DirectoryExists(const char16 *full_dirpath) {
   DWORD attrs = GetFileAttributesW(full_dirpath);
   return (attrs != INVALID_FILE_ATTRIBUTES) &&
          ((attrs & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY);
-}
-
-
-int64 File::GetFileSize(const char16 *full_filepath) {
-  return 0;  // Stubbed out for now
-  // TODO: Implement this function (check the following code).
-#if 0
-  SAFE_HANDLE safe_file_handle(::CreateFileW(full_filepath,
-                                             GENERIC_READ,
-                                             FILE_SHARE_READ,
-                                             NULL,
-                                             OPEN_EXISTING,
-                                             FILE_ATTRIBUTE_NORMAL,
-                                             NULL));
-  if (safe_file_handle.get() == INVALID_HANDLE_VALUE) {
-    return 0;
-  }
-  return static_cast<int64>(::GetFileSize(safe_file_handle.get(), NULL));
-#endif
-}
-
-
-int64 File::ReadFileSegmentToBuffer(const char16 *full_filepath,
-                                    uint8* destination,
-                                    int64 position,
-                                    int64 max_bytes) {
-  // TODO: Implement this function (see file_win32.cc implementation).
-  return -1;
-}
-
-
-bool File::ReadFileToVector(const char16 *full_filepath,
-                            std::vector<uint8> *data) {
-  // Open the file for reading.
-  SAFE_HANDLE safe_file_handle(::CreateFileW(full_filepath,
-                                             GENERIC_READ,
-                                             FILE_SHARE_READ,
-                                             NULL,
-                                             OPEN_EXISTING,
-                                             FILE_ATTRIBUTE_NORMAL,
-                                             NULL));
-  if (safe_file_handle.get() == INVALID_HANDLE_VALUE) {
-    return false;
-  }
-  // Resize our buffer to fit the size of the file.
-  // TODO(michaeln): support large files here, where len > maxInt
-  DWORD file_size = ::GetFileSize(safe_file_handle.get(), NULL);
-  if (file_size == INVALID_FILE_SIZE) {
-    return false;
-  }
-  data->resize(file_size);
-  if (data->size() != file_size) {
-    return false;
-  }
-
-  if (file_size > 0) {
-    // Read its contents into memory.
-    DWORD bytes_read;
-    if (!::ReadFile(safe_file_handle.get(), &(*data)[0],
-                    file_size, &bytes_read, NULL)
-        || (bytes_read != file_size)) {
-      data->clear();
-      return false;
-    }
-  }
-  return true;
-}
-
-
-bool File::WriteVectorToFile(const char16 *full_filepath,
-                             const std::vector<uint8> *data) {
-  const uint8 *first_byte = data->size() ? &(data->at(0)) : NULL;
-  return WriteBytesToFile(full_filepath, first_byte, data->size());
-}
-
-
-bool File::WriteBytesToFile(const char16 *full_filepath, const uint8 *buf,
-                            int length) {
-  // Open the file for writing.
-  SAFE_HANDLE safe_file_handle(::CreateFileW(full_filepath,
-                                             GENERIC_WRITE,
-                                             0,
-                                             NULL,
-                                             OPEN_EXISTING,
-                                             FILE_ATTRIBUTE_NORMAL,
-                                             NULL));
-  if (safe_file_handle.get() == INVALID_HANDLE_VALUE) {
-    return false;
-  }
-  // Write the file.
-  // TODO(michaeln): support large files here, where len > maxInt
-  size_t data_size = length;
-  DWORD bytes_written;
-  unsigned char nothing;
-  if (!::WriteFile(safe_file_handle.get(),
-                   (data_size > 0) ? buf : &nothing,
-                   data_size, &bytes_written, NULL)
-      || (bytes_written != data_size)) {
-    return false;
-  }
-  // Explicitly set EOF to truncate pre-existing content beyond the end of
-  // the newly written content
-  return SetEndOfFile(safe_file_handle.get()) ? true : false;
 }
 
 

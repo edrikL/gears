@@ -113,6 +113,7 @@ Harness.prototype.load = function(testUrl) {
   this.request_ = google.gears.factory.create('beta.httprequest');
   this.request_.onreadystatechange = this.handleRequestReadyStateChange_;
   this.testUrl_ = testUrl;
+  this.requestCompleted_ = false;
 
   try {
     this.request_.open('GET', testUrl, false);
@@ -127,6 +128,10 @@ Harness.prototype.load = function(testUrl) {
  */
 Harness.prototype.handleRequestReadyStateChange_ = function() {
   if (this.request_.readyState == 4) {
+    if (this.requestCompleted_)
+      return;  
+    this.requestCompleted_ = true;
+
     if (this.request_.status == 0 || this.request_.status == 200) {
       // Have to use this hack to eval in the global scope in IE workers.
       var timer = google.gears.factory.create('beta.timer');
@@ -146,6 +151,14 @@ Harness.prototype.handleRequestReadyStateChange_ = function() {
 };
 
 /**
+ * A wrapper for handleGlobalError_ for use in a worker. The argument to
+ * workerPool.onerror is an error object, not a message string.
+ */
+Harness.prototype.workerHandleGlobalError_ = function(error) {
+  return this.handleGlobalError_(error.message);
+}
+
+/**
  * Called when a test file has been loaded. Evaluate it and run the tests.
  */
 Harness.prototype.handleTestsLoaded_ = function(content) {
@@ -159,14 +172,19 @@ Harness.prototype.handleTestsLoaded_ = function(content) {
   // Find all the test names
   for (var name in this.globalScope_) {
     if (name.substring(0, 4) == 'test') {
-      this.testNames_.push(name);
+      // SAFARI-TEMP
+      var test_is_enbaled  = !(isSafari && 
+                               this.globalScope_[name]._disable_in_safari);
+      if (test_is_enbaled) {
+        this.testNames_.push(name);
+      }
     }
   }
 
   // The global error handler is in a different place inside a worker than in
   // a document.
   if (google.gears.workerPool) {
-    google.gears.workerPool.onerror = this.handleGlobalError_;
+    google.gears.workerPool.onerror = this.workerHandleGlobalError_;
   } else {
     window.onerror = this.handleGlobalError_;
   }
@@ -331,12 +349,6 @@ Harness.prototype.waitForGlobalErrors = function(errorMessages) {
  * to start the next test (if there are no more errors we are waiting for).
  */
 Harness.prototype.handleGlobalError_ = function(message) {
-  // In the case of workers, message is actually an error object with a message
-  // property.
-  if (google.gears.workerPool) {
-    message = message.message;
-  }
-
   var expectedError = this.expectedErrors_ && this.expectedErrors_.shift();
 
   // If the error was expected, swallow it and either wait for the next expected

@@ -26,6 +26,7 @@
 #ifndef GEARS_LOCALSERVER_IE_FILE_SUBMIT_BEHAVIOR_H__
 #define GEARS_LOCALSERVER_IE_FILE_SUBMIT_BEHAVIOR_H__
 
+#include <windows.h>
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/ie/activex_utils.h"

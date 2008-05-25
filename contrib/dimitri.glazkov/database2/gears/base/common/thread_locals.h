@@ -29,7 +29,7 @@
 #include <map>
 #include "gears/base/common/common.h"
 
-#if BROWSER_SAFARI
+#if BROWSER_SAFARI || defined(ANDROID)
 #include <pthread.h>
 #endif
 
@@ -100,6 +100,7 @@ class ThreadLocals {
   // creating the map if one does not already exist.
   static Map *GetMap(bool createIfNeeded);
 
+  static void ClearMap();
   static void DestroyMap(Map* map);
   static void SetTlsMap(Map* map);
   static Map* GetTlsMap();
@@ -135,13 +136,17 @@ class ThreadLocals {
   // @see module.cc
   friend nsresult PR_CALLBACK ScourModuleConstructor(class nsIModule* self);
 
+  // We need the ThreadRecycler to have access to clean up thread local
+  // storage.
+  friend class JsThreadRecycler;
+
   // Should be called when the DLL is loading. If an error is returned the DLL
   // should fail to load.
   static nsresult HandleModuleConstructed();
 
   // Called by NSPR when the value in our TLS slot is destructed.
   static void PR_CALLBACK TlsDestructor(void *priv);
-#elif BROWSER_SAFARI
+#elif BROWSER_SAFARI || defined(ANDROID)
   // The pthread key to use to save the map
   static pthread_key_t tls_index_;
 

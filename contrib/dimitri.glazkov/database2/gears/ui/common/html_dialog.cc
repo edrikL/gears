@@ -71,6 +71,9 @@ bool HtmlDialog::SetResult(const char16 *value) {
 #include "gears/ui/firefox/html_dialog_ff.cc"
 #elif BROWSER_IE
 #include "gears/ui/ie/html_dialog_ie.cc"
+#elif BROWSER_WEBKIT
+// In the case of WebKit, DoModalImpl is declared in 
+// gears/ui/safari/html_dialog.mm so do nothing here...
 #elif BROWSER_NPAPI
 bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
                              const char16 *arguments_string) {
@@ -81,7 +84,7 @@ bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
 #else
 bool HtmlDialog::DoModalImpl(const char16 *html_filename, int width, int height,
                              const char16 *arguments_string) {
-  // TODO: implement safari, etc.
+  // TODO: implement for other browsers.
   assert(false);
   return false;
 }

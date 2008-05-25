@@ -55,7 +55,9 @@ ifdef CMD_LINE_BROWSER
   ifeq ($(OS),osx)
     ifneq ($(BROWSER),FF2)
     ifneq ($(BROWSER),FF3)
-      $(error On OS X, BROWSER can only be one of: FF2 | FF3)
+    ifneq ($(BROWSER),SF)
+      $(error On OS X, BROWSER can only be one of: FF2 | FF3 | SF)
+    endif
     endif
     endif
   else
@@ -68,8 +70,14 @@ ifdef CMD_LINE_BROWSER
     endif
     endif
   else
+  ifeq ($(OS),android)
+    ifneq ($(BROWSER),NPAPI)
+      $(error On Android, BROWSER can only be one of: NPAPI)
+    endif
+  else
     # Shouldn't get here, as config.mk should always set OS if the user doesn't.
     $(error Unrecognized OS)
+  endif  # ifeq ($(OS),android)
   endif  # ifeq ($(OS),linux)
   endif  # ifeq ($(OS),osx)
   endif  # ifeq ($(OS),wince)

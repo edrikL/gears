@@ -26,12 +26,8 @@
 #ifndef GEARS_BASE_COMMON_MUTEX_H__
 #define GEARS_BASE_COMMON_MUTEX_H__
 
-#include "gears/base/common/common.h" // for DISALLOW_EVIL_CONSTRUCTORS
-
-// TODO(mpcomplete): implement these.
-#if BROWSER_NPAPI && defined(WIN32)
-#define BROWSER_IE 1
-#endif
+#include "gears/base/common/basictypes.h" // for DISALLOW_EVIL_CONSTRUCTORS
+#include "gears/base/common/common.h"
 
 class Condition;
 
@@ -62,16 +58,23 @@ class Mutex {
   // FUNCTION OF THE TIME, or of any other state not protected by the Mutex!
   void Await(const Condition &cond);
 
+  // As Await, but will unblock once the specified time interval has expired, if
+  // the condition has not become true by that time. Note that there is no
+  // guarantee that the thread will be unblocked immediately once the specified
+  // interval has elapsed. Return value indicates whether the condition became
+  // true.
+  bool AwaitWithTimeout(const Condition &cond, int timeout_milliseconds);
+
  private:
+  // Implementation for Await and AwaitWithTimeout.
+  bool AwaitImpl(const Condition &cond, int64 end_time);
 #ifdef DEBUG
   bool is_locked_;
 #endif // DEBUG
 
-#if BROWSER_IE
+#if defined(WIN32) || defined(WINCE)
   CRITICAL_SECTION crit_sec_;
-#elif BROWSER_FF
-  PRLock *lock_;
-#elif BROWSER_SAFARI
+#elif defined(LINUX) || defined(OS_MACOSX) || defined(ANDROID)
   pthread_mutex_t mutex_;
 #endif
 };
@@ -171,10 +174,5 @@ inline Condition::Condition(const T *object, bool (T::*method)() const) :
   InternalMethodCallerType caller = &ConditionMethodCaller<T>;
   this->function_ = reinterpret_cast<InternalFunctionType>(caller);
 }
-
-// TODO(mpcomplete): remove
-#if BROWSER_NPAPI
-#undef BROWSER_IE
-#endif
 
 #endif // GEARS_BASE_COMMON_MUTEX_H__

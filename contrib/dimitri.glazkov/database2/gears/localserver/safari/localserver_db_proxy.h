@@ -32,13 +32,15 @@
 // See description above
 @interface GearsWebCacheDB : NSObject
 
-// Return YES if |url| is stored locally
-+ (BOOL)canService:(NSURL *)url;
+// Return YES if |request|'s url is stored locally.
++ (BOOL)canService:(NSURLRequest *)request;
 
 // Return the data for |url| and |mimeType| (if specified).  If the |url| had
 // a redirect, |redirectURL| will be initialized to the final destination.
 // |statusCode| indicates the code received when saved into the WebCacheDB.
+// |headers| are the request's HTTP Headers, or nil if none are found.
 + (NSData *)service:(NSURL *)url mimeType:(NSString **)mimeType 
-         statusCode:(int *)statusCode redirectURL:(NSURL **)redirectURL;
+      headers:(NSDictionary **)headers statusCode:(int *)statusCode 
+      redirectURL:(NSURL **)redirectURL;
 
 @end

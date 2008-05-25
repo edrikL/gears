@@ -23,14 +23,21 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 
 #include "gears/cctests/test.h"
+
+#include "third_party/jsoncpp/json.h"
 
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
 #include "gears/base/common/module_wrapper.h"
+#include "gears/base/common/string_utils.h"
+#ifndef OFFICIAL_BUILD
+#include "gears/blob/blob.h"
+#include "gears/blob/buffer_blob.h"
+#endif
 
 DECLARE_GEARS_WRAPPER(GearsTest);
 
@@ -38,15 +45,41 @@ template<>
 void Dispatcher<GearsTest>::Init() {
   RegisterMethod("runTests", &GearsTest::RunTests);
   RegisterMethod("testPassArguments", &GearsTest::TestPassArguments);
+  RegisterMethod("testPassArgumentsCallback",
+                 &GearsTest::TestPassArgumentsCallback);
   RegisterMethod("testPassArgumentsOptional",
                  &GearsTest::TestPassArgumentsOptional);
+  RegisterMethod("testObjectProperties", &GearsTest::TestObjectProperties);
   RegisterMethod("testPassObject", &GearsTest::TestPassObject);
   RegisterMethod("testCreateObject", &GearsTest::TestCreateObject);
+  RegisterMethod("testCreateError", &GearsTest::TestCreateError);
   RegisterMethod("testCoerceBool", &GearsTest::TestCoerceBool);
   RegisterMethod("testCoerceInt", &GearsTest::TestCoerceInt);
   RegisterMethod("testCoerceDouble", &GearsTest::TestCoerceDouble);
   RegisterMethod("testCoerceString", &GearsTest::TestCoerceString);
   RegisterMethod("testGetType", &GearsTest::TestGetType);
+#ifdef WINCE
+  RegisterMethod("removeEntriesFromBrowserCache",
+                 &GearsTest::RemoveEntriesFromBrowserCache);
+  RegisterMethod("testEntriesPresentInBrowserCache",
+                 &GearsTest::TestEntriesPresentInBrowserCache);
+#endif
+  RegisterMethod("getSystemTime", &GearsTest::GetSystemTime);
+  RegisterMethod("getTicks", &GearsTest::GetTimingTicks);
+  RegisterMethod("getTickDeltaMicros", &GearsTest::GetTimingTickDeltaMicros);
+#ifdef OFFICIAL_BUILD
+  // The Geolocation API has not been finalized for official builds.
+#else
+  RegisterMethod("testParseGeolocationOptions",
+                 &GearsTest::TestParseGeolocationOptions);
+  RegisterMethod("testGeolocationFormRequestBody",
+                 &GearsTest::TestGeolocationFormRequestBody);
+  RegisterMethod("testGeolocationGetLocationFromResponse",
+                 &GearsTest::TestGeolocationGetLocationFromResponse);
+#endif
+#ifndef OFFICIAL_BUILD
+  RegisterMethod("createBlobFromString", &GearsTest::CreateBlobFromString);
+#endif
 }
 
 #ifdef WIN32
@@ -60,49 +93,69 @@ void Dispatcher<GearsTest>::Init() {
 #include <cmath>
 #include <limits>
 #include <sstream>
+#ifdef LINUX
+#include <unistd.h>  // For usleep.
+#endif
 
 #include "gears/base/common/name_value_table_test.h"
 #include "gears/base/common/permissions_db.h"
 #include "gears/base/common/permissions_db_test.h"
 #include "gears/base/common/sqlite_wrapper_test.h"
+#include "gears/base/common/stopwatch.h"
 #include "gears/base/common/string_utils.h"
+#ifdef WINCE
+#include "gears/base/common/url_utils.h"
+#include "gears/base/common/wince_compatibility.h"
+#endif
 #include "gears/database/common/database_utils_test.h"
+#ifdef OFFICIAL_BUILD
+// The Geolocation API has not been finalized for official builds.
+#else
+#include "gears/geolocation/geolocation_test.h"
+#endif
 #include "gears/localserver/common/http_cookies.h"
 #include "gears/localserver/common/http_request.h"
 #include "gears/localserver/common/localserver_db.h"
 #include "gears/localserver/common/managed_resource_store.h"
 #include "gears/localserver/common/manifest.h"
 #include "gears/localserver/common/resource_store.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 #if BROWSER_FF
-bool TestBlobInputStreamFf();  // from blob_input_stream_ff_test.cc
+// from blob_input_stream_ff_test.cc
+bool TestBlobInputStreamFf(std::string16 *error);
 #endif
-bool TestHttpCookies();
-bool TestHttpRequest();
-bool TestManifest();
-bool TestMessageService();  // from message_service_test.cc
-bool TestLocalServerDB();
-bool TestResourceStore();
-bool TestManagedResourceStore();
-bool TestParseHttpStatusLine();
-bool TestSecurityModel();  // from security_model_test.cc
-bool TestFileUtils();  // from file_test.cc
-bool TestUrlUtils();  // from url_utils_test.cc
-bool TestJsRootedTokenLifetime();  // from base_class_test.cc
-bool TestStringUtils();  // from string_utils_test.cc
-bool TestSerialization();  // from serialization_test.cc
-bool TestCircularBuffer();  // from circular_buffer_test.cc
-bool TestRefCount(); // from scoped_refptr_test.cc
+bool TestHttpCookies(std::string16 *error);
+bool TestHttpRequest(std::string16 *error);
+bool TestManifest(std::string16 *error);
+bool TestMessageService(std::string16 *error);  // from message_service_test.cc
+bool TestLocalServerDB(std::string16 *error);
+bool TestResourceStore(std::string16 *error);
+bool TestManagedResourceStore(std::string16 *error);
+bool TestParseHttpStatusLine(std::string16 *error);
+bool TestSecurityModel(std::string16 *error);  // from security_model_test.cc
+bool TestFileUtils(std::string16 *error);  // from file_test.cc
+bool TestUrlUtils(std::string16 *error);  // from url_utils_test.cc
+bool TestStringUtils(std::string16 *error);  // from string_utils_test.cc
+bool TestSerialization(std::string16 *error);  // from serialization_test.cc
+bool TestCircularBuffer(std::string16 *error);  // from circular_buffer_test.cc
+bool TestRefCount(std::string16 *error); // from scoped_refptr_test.cc
 #ifndef OFFICIAL_BUILD
 // The blob API has not been finalized for official builds
-bool TestBufferBlob();  // from blob_test.cc
-bool TestSliceBlob();  // from blob_test.cc
+bool TestBufferBlob(std::string16 *error);  // from blob_test.cc
+bool TestSliceBlob(std::string16 *error);  // from blob_test.cc
 #endif  // not OFFICIAL_BUILD
-
 #if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
-bool TestIpcMessageQueue();  // from ipc_message_queue_win32_test.cc
+// from ipc_message_queue_win32_test.cc
+bool TestIpcMessageQueue(std::string16 *error);
 #endif
+bool TestStopwatch(std::string16 *error);
+bool TestJsonEscaping(std::string16 *error);
+bool TestArray(JsRunnerInterface *js_runner, JsCallContext *context,
+               std::string16 *error);
+bool TestObject(JsRunnerInterface *js_runner, JsCallContext *context,
+                std::string16 *error);
+bool TestEvent(std::string16 *error);  // From event_test.cc
 
 void CreateObjectBool(JsCallContext* context,
                       JsRunnerInterface* js_runner,
@@ -123,9 +176,13 @@ void CreateObjectArray(JsCallContext* context,
 void CreateObjectObject(JsCallContext* context,
                         JsRunnerInterface* js_runner,
                         JsObject* out);
+void CreateObjectDate(JsCallContext* context,
+                      JsRunnerInterface* js_runner,
+                      JsObject* out);
 void CreateObjectFunction(JsCallContext* context,
                           JsRootedCallback* func,
                           JsObject* out);
+
 void TestObjectBool(JsCallContext* context, const JsObject& obj);
 void TestObjectInt(JsCallContext* context, const JsObject& obj);
 void TestObjectDouble(JsCallContext* context, const JsObject& obj);
@@ -137,6 +194,34 @@ void TestObjectObject(JsCallContext* context, const JsObject& obj);
 void TestObjectFunction(JsCallContext* context,
                         const JsObject& obj,
                         const ModuleImplBaseClass& base);
+
+// Return the system time as a double (we can't return int64).
+void GearsTest::GetSystemTime(JsCallContext *context) {
+  double msec = static_cast<double>(GetCurrentTimeMillis());
+  context->SetReturnValue(JSPARAM_DOUBLE, &msec);
+}
+
+// Return the number of ticks as a double (we can't return int64).
+void GearsTest::GetTimingTicks(JsCallContext *context) {
+  double ticks = static_cast<double>(GetTicks());
+  context->SetReturnValue(JSPARAM_DOUBLE, &ticks);
+}
+
+// Return the elapsed time in microseconds as a double (we can't return int64).
+void GearsTest::GetTimingTickDeltaMicros(JsCallContext *context) {
+  int64 start;
+  int64 end;
+  JsArgument argv[] = {
+    {JSPARAM_REQUIRED, JSPARAM_INT64, &start},
+    {JSPARAM_REQUIRED, JSPARAM_INT64, &end}
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) {
+    return;
+  }
+  double elapsed = static_cast<double>(GetTickDeltaMicros(start, end));
+  context->SetReturnValue(JSPARAM_DOUBLE, &elapsed);
+}
 
 void GearsTest::RunTests(JsCallContext *context) {
   // We need permissions to use the localserver.
@@ -151,46 +236,49 @@ void GearsTest::RunTests(JsCallContext *context) {
   permissions->SetCanAccessGears(cc_tests_origin,
                                  PermissionsDB::PERMISSION_ALLOWED);
 
+  std::string16 error;
   bool ok = true;
-  ok &= TestStringUtils();
-  ok &= TestFileUtils();
-  ok &= TestUrlUtils();
-  ok &= TestParseHttpStatusLine();
-  ok &= TestHttpRequest();
-  ok &= TestHttpCookies();
-  ok &= TestSecurityModel();
-  ok &= TestSqliteUtilsAll();
-  ok &= TestNameValueTableAll();
-  ok &= TestPermissionsDBAll();
-  ok &= TestDatabaseUtilsAll();
-  ok &= TestLocalServerDB();
-  ok &= TestResourceStore();
-  ok &= TestManifest();
-  ok &= TestManagedResourceStore();
-  ok &= TestMessageService();
-  ok &= TestSerialization();
-  ok &= TestCircularBuffer();
-  ok &= TestRefCount();
+  ok &= TestStringUtils(&error);
+  ok &= TestFileUtils(&error);
+  ok &= TestUrlUtils(&error);
+  ok &= TestParseHttpStatusLine(&error);
+  ok &= TestHttpRequest(&error);
+  ok &= TestHttpCookies(&error);
+  ok &= TestSecurityModel(&error);
+  ok &= TestSqliteUtilsAll(&error);
+  ok &= TestNameValueTableAll(&error);
+  ok &= TestPermissionsDBAll(&error);
+  ok &= TestDatabaseUtilsAll(&error);
+  ok &= TestLocalServerDB(&error);
+  ok &= TestResourceStore(&error);
+  ok &= TestManifest(&error);
+  ok &= TestManagedResourceStore(&error);
+  ok &= TestMessageService(&error);
+  ok &= TestSerialization(&error);
+  ok &= TestCircularBuffer(&error);
+  ok &= TestRefCount(&error);
 #ifndef OFFICIAL_BUILD
   // The blob API has not been finalized for official builds
 #if BROWSER_FF || BROWSER_IE
-  ok &= TestBufferBlob();
-  ok &= TestSliceBlob();
+  ok &= TestBufferBlob(&error);
+  ok &= TestSliceBlob(&error);
 #else
   // Blobs not yet implemented for NPAPI.
 #endif  // BROWSER_FF || BROWSER_IE
 #endif  // not OFFICIAL_BUILD
-  // TODO(zork): Add this test back in once it doesn't crash the browser.
-  //ok &= TestJsRootedTokenLifetime();
 
 #if defined(WIN32) && !defined(WINCE) && defined(BROWSER_IE)
-  ok &= TestIpcMessageQueue();
+  ok &= TestIpcMessageQueue(&error);
 #endif
 #ifndef OFFICIAL_BUILD
 #if BROWSER_FF
-  ok &= TestBlobInputStreamFf();
+  ok &= TestBlobInputStreamFf(&error);
 #endif
 #endif
+  ok &= TestStopwatch(&error);
+  ok &= TestJsonEscaping(&error);
+  ok &= TestArray(GetJsRunner(), context, &error);
+  ok &= TestEvent(&error);
 
   // We have to call GetDB again since TestCapabilitiesDBAll deletes
   // the previous instance.
@@ -198,7 +286,14 @@ void GearsTest::RunTests(JsCallContext *context) {
   permissions->SetCanAccessGears(cc_tests_origin,
                                  PermissionsDB::PERMISSION_NOT_SET);
 
-  context->SetReturnValue(JSPARAM_BOOL, &ok);
+  if (!ok) {
+    if (error.empty()) {
+      // If a test has failed but not set an error, set a generic message here.
+      context->SetException(STRING16(L"RunTests failed."));
+    } else {
+      context->SetException(error);
+    }
+  }
 }
 
 void GearsTest::TestPassArguments(JsCallContext *context) {
@@ -232,6 +327,32 @@ void GearsTest::TestPassArguments(JsCallContext *context) {
   }
 }
 
+void GearsTest::TestPassArgumentsCallback(JsCallContext *context) {
+  JsRootedCallback *function = NULL;
+  JsArgument argv[] = {
+    {JSPARAM_REQUIRED, JSPARAM_FUNCTION, &function},
+  };
+  assert(&argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) return;
+
+  bool bool_value = true;
+  int int_value = 42;
+  int64 int64_value = (GG_LONGLONG(1) << 42);
+  double double_value = 88.8;
+  std::string16 string_value(STRING16(L"hotdog"));
+  JsParamToSend out_argv[] = {
+    {JSPARAM_BOOL, &bool_value},
+    {JSPARAM_INT, &int_value},
+    {JSPARAM_INT64, &int64_value},
+    {JSPARAM_DOUBLE, &double_value},
+    {JSPARAM_STRING16, &string_value},
+  };
+
+  GetJsRunner()->InvokeCallback(function, ARRAYSIZE(out_argv), out_argv, NULL);
+  delete function;
+}
+
 void GearsTest::TestPassArgumentsOptional(JsCallContext *context) {
   int int_values[3] = {};
 
@@ -253,6 +374,50 @@ void GearsTest::TestPassArgumentsOptional(JsCallContext *context) {
       return;
     }
   }
+}
+
+void GearsTest::TestObjectProperties(JsCallContext *context) {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    LOG(("TestObject failed at line %d\n", __LINE__)); \
+    context->SetException(STRING16(L"TestObjectProperties failed.")); \
+    return; \
+  } \
+}
+  JsRunnerInterface *js_runner = GetJsRunner();
+  
+  // Internal tests on JsObject.
+  scoped_ptr<JsObject> test_object(js_runner->NewObject());
+  JsScopedToken token;
+  static const char16 *kPropertyName = STRING16(L"genericPropertyName");
+  // Test that a new object has no properties.
+  std::vector<std::string16> property_names;
+  TEST_ASSERT(test_object.get()->GetPropertyNames(&property_names));
+  TEST_ASSERT(property_names.empty());
+  TEST_ASSERT(test_object.get()->GetPropertyType(kPropertyName) ==
+              JSPARAM_UNDEFINED);
+  TEST_ASSERT(test_object.get()->GetProperty(kPropertyName, &token));
+  TEST_ASSERT(JsTokenGetType(token, context->js_context()) ==
+              JSPARAM_UNDEFINED);
+  // Test that we can set a property.
+  const int int_in = 42;
+  int int_out;
+  TEST_ASSERT(test_object.get()->SetPropertyInt(kPropertyName, int_in));
+  // Test that we can get a property.
+  TEST_ASSERT(test_object.get()->GetPropertyType(kPropertyName) == JSPARAM_INT);
+  TEST_ASSERT(test_object.get()->GetPropertyAsInt(kPropertyName, &int_out));
+  TEST_ASSERT(int_in == int_out);
+  // Test that we can reset a property.
+  const std::string16 string_in(STRING16(L"test"));
+  std::string16 string_out;
+  TEST_ASSERT(test_object.get()->SetPropertyString(kPropertyName, string_in));
+  TEST_ASSERT(test_object.get()->GetPropertyType(kPropertyName) ==
+              JSPARAM_STRING16);
+  TEST_ASSERT(test_object.get()->GetPropertyAsString(kPropertyName,
+                                                     &string_out));
+  TEST_ASSERT(string_in == string_out);
 }
 
 // An object is passed in from JavaScript with properties set to test all the
@@ -296,7 +461,7 @@ void GearsTest::TestCreateObject(JsCallContext* context) {
   if (!js_runner)
     context->SetException(STRING16(L"Failed to get JsRunnerInterface."));
 
-  scoped_ptr<JsObject> js_object(js_runner->NewObject(NULL));
+  scoped_ptr<JsObject> js_object(js_runner->NewObject());
   if (!js_object.get())
     context->SetException(STRING16(L"Failed to create new javascript object."));
 
@@ -318,9 +483,29 @@ void GearsTest::TestCreateObject(JsCallContext* context) {
   CreateObjectObject(context, js_runner, js_object.get());
   if (context->is_exception_set()) return;
 
+  CreateObjectDate(context, js_runner, js_object.get());
+  if (context->is_exception_set()) return;
+
   CreateObjectFunction(context, func, js_object.get());
   if (context->is_exception_set()) return;
 
+  context->SetReturnValue(JSPARAM_OBJECT, js_object.get());
+}
+
+// We don't test creation of an Error object as part of TestCreateObject, which
+// tests every property of the object, because an Error object contains a number
+// of hard-to-test properties, such as the line number at which the error
+// occurred.
+void GearsTest::TestCreateError(JsCallContext* context) {
+  JsRunnerInterface* js_runner = GetJsRunner();
+  if (!js_runner)
+    context->SetException(STRING16(L"Failed to get JsRunnerInterface."));
+  scoped_ptr<JsObject> js_object(js_runner->NewError(
+      STRING16(L"test error\r\nwith 'special' \\characters\\")));
+  if (!js_object.get()) {
+    context->SetException(STRING16(L"Failed to create Error object"));
+    return;
+  }
   context->SetReturnValue(JSPARAM_OBJECT, js_object.get());
 }
 
@@ -426,14 +611,22 @@ void GearsTest::TestCoerceString(JsCallContext *context) {
 // parameter using GetType(). First parameter should be one of "bool", "int",
 // "double", "string", "null", "undefined", "array", "function", "object".
 void GearsTest::TestGetType(JsCallContext *context) {
+  // Don't really care about the actual value of the second parameter. We
+  // specify an argument of type JSPARAM_TOKEN because all types (other than
+  // NULL and undefined) can be cast to this type by GetArguments. In these two
+  // cases, GetArguments will not parse the argument (it is optional) and will
+  // return 1, rather than 2.
   std::string16 type;
-  const int argc = 1;
-  // Don't really care about the actual value of the second parameter
-  JsArgument argv[argc] = {
+  JsToken value;
+  JsArgument argv[] = {
     { JSPARAM_REQUIRED, JSPARAM_STRING16, &type },
+    { JSPARAM_OPTIONAL, JSPARAM_TOKEN, &value },
   };
-  context->GetArguments(argc, argv);
+  context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
+  // At this point, the number of arguments can only be greater than
+  // or equal to 1. If it was 0, an exception would have been set since
+  // the first parameter of this function is marked as required.
 
   bool ok = false;
   JsParamType t = context->GetArgumentType(1);
@@ -454,12 +647,14 @@ void GearsTest::TestGetType(JsCallContext *context) {
 //------------------------------------------------------------------------------
 // TestHttpCookies
 //------------------------------------------------------------------------------
-bool TestHttpCookies() {
+bool TestHttpCookies(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestHttpCookies - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestHttpCookies - failed. "); \
     return false; \
   } \
 }
@@ -515,12 +710,14 @@ bool TestHttpCookies() {
 //------------------------------------------------------------------------------
 // TestManifest
 //------------------------------------------------------------------------------
-bool TestManifest() {
+bool TestManifest(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestManifest - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestManifest - failed. "); \
     return false; \
   } \
 }
@@ -588,12 +785,14 @@ bool TestManifest() {
 //------------------------------------------------------------------------------
 // TestResourceStore
 //------------------------------------------------------------------------------
-bool TestResourceStore() {
+bool TestResourceStore(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestResourceStore - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestResourceStore - failed. "); \
     return false; \
   } \
 }
@@ -674,12 +873,14 @@ bool TestResourceStore() {
 //------------------------------------------------------------------------------
 // TestManagedResourceStore
 //------------------------------------------------------------------------------
-bool TestManagedResourceStore() {
+bool TestManagedResourceStore(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestManagedResourceStore - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestManagedResourceStore - failed. "); \
     return false; \
   } \
 }
@@ -760,13 +961,15 @@ bool TestManagedResourceStore() {
 //------------------------------------------------------------------------------
 // TestLocalServerDB
 //------------------------------------------------------------------------------
-bool TestLocalServerDB() {
+bool TestLocalServerDB(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestWebCacheDB - failed (%d)\n", __LINE__)); \
     SetFakeCookieString(NULL, NULL); \
+    assert(error); \
+    *error += STRING16(L"TestWebCacheDB - failed. "); \
     return false; \
   } \
 }
@@ -918,12 +1121,14 @@ bool TestLocalServerDB() {
   return true;
 }
 
-bool TestParseHttpStatusLine() {
+bool TestParseHttpStatusLine(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestParseHttpStatusLine - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestParseHttpStatusLine - failed. "); \
     return false; \
   } \
 }
@@ -967,7 +1172,10 @@ bool TestParseHttpStatusLine() {
 }
 
 
-class TestHttpRequestListener : public HttpRequest::ReadyStateListener {
+class TestHttpRequestListener : public HttpRequest::HttpListener {
+ public:
+  TestHttpRequestListener(HttpRequest *request): request_(request) {}
+
   virtual void ReadyStateChanged(HttpRequest *source) {
     HttpRequest::ReadyState state = HttpRequest::UNINITIALIZED;
     source->GetReadyState(&state);
@@ -978,56 +1186,223 @@ class TestHttpRequestListener : public HttpRequest::ReadyStateListener {
       source->GetStatus(&status);
       source->GetAllResponseHeaders(&headers);
       source->GetResponseBodyAsText(&body);
-      source->SetOnReadyStateChange(NULL);
+      source->SetListener(NULL, false);
       delete this;
       LOG(("TestHttpRequest - complete (%d)\n", status));
     }
   }
+
+  scoped_refptr<HttpRequest> request_;
 };
 
-#ifdef BROWSER_FF
-// Returns true if the currently executing thread is the main UI thread,
-// firefox/mozila has one such very special thread
-// See cache_intercept.cc for implementation
-bool IsUiThread();
-#endif
 
-bool TestHttpRequest() {
+bool TestHttpRequest(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestHttpRequest - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestHttpRequest - failed. "); \
     return false; \
   } \
 }
 
-#ifdef BROWSER_FF
-  if (!IsUiThread()) {
-    return true;
-  }
-#endif
+  scoped_refptr<HttpRequest> request;
 
   // Send a request synchronously
-  scoped_refptr<HttpRequest> request;
   TEST_ASSERT(HttpRequest::Create(&request));
-  request->SetOnReadyStateChange(new TestHttpRequestListener());
+  request->SetListener(new TestHttpRequestListener(request.get()), false);
   bool ok = request->Open(HttpConstants::kHttpGET,
                           STRING16(L"http://www.google.com/"),
                           false);
-  TEST_ASSERT(ok);
-  ok = request->Send();
-  TEST_ASSERT(ok);
+  if (ok) {
+    // Sync requests are not fully supported yet, when they are revisit
+    // note: we leak the request and listener in this case
+    ok = request->Send();
+    TEST_ASSERT(ok);
+  }
+  request.reset(NULL);
 
   // Send an async request
   TEST_ASSERT(HttpRequest::Create(&request));
-  request->SetOnReadyStateChange(new TestHttpRequestListener());
+  request->SetListener(new TestHttpRequestListener(request.get()), false);
   ok = request->Open(HttpConstants::kHttpGET,
                      STRING16(L"http://www.google.com/"),
                      true);
   TEST_ASSERT(ok);
   ok = request->Send();
   TEST_ASSERT(ok);
+  return true;
+}
+
+bool TestStopwatch(std::string16 *error) {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    LOG(("TestStopwatch - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestStopwatch - failed at line "); \
+    *error += IntegerToString16(__LINE__); \
+    *error += STRING16(L". "); \
+    return false; \
+  } \
+}
+
+// We define a millisecond-resolution sleep function because Windows does not
+// provide an equivalent to usleep.
+#ifdef WIN32
+#define SleepForMilliseconds Sleep
+#else
+#define SleepForMilliseconds(x) { assert(x < 1000); usleep(x * 1000); }
+#endif
+
+  // Test initialized to zero.
+  Stopwatch sw1;
+  TEST_ASSERT(sw1.GetElapsed() == 0);
+
+  // Test simple use.
+  Stopwatch sw2;
+  sw2.Start();
+  SleepForMilliseconds(10);
+  sw2.Stop();
+  TEST_ASSERT(sw2.GetElapsed() > 0);
+
+  // Test small time increment.
+  Stopwatch sw3;
+  sw3.Start();
+  sw3.Stop();
+  TEST_ASSERT(sw3.GetElapsed() >= 0);
+
+  // Test nested use.
+  Stopwatch sw4;
+  sw4.Start();
+  sw4.Start();
+  sw4.Start();
+  SleepForMilliseconds(10);
+  sw4.Stop();
+  TEST_ASSERT(sw4.GetElapsed() == 0);
+  sw4.Stop();
+  TEST_ASSERT(sw4.GetElapsed() == 0);
+  sw4.Stop();
+  TEST_ASSERT(sw4.GetElapsed() > 0);
+
+  // Test scoped stopwatch.
+  Stopwatch sw5;
+  {
+    ScopedStopwatch scopedStopwatch(&sw5);
+    SleepForMilliseconds(10);
+  }
+  TEST_ASSERT(sw5.GetElapsed() > 0);
+
+  return true;
+}
+
+bool TestJsonEscaping(std::string16 *error) {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    LOG(("TestJsonEscaping - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestJsonEscaping - failed. "); \
+    return false; \
+  } \
+}
+
+  Json::Value object1(Json::objectValue);
+  object1["a"] = "foo";
+  object1["b"] = "foo\nbar";
+  object1["c"] = "\"foobar\"";
+  object1["d"] = "bar\\";
+  std::string serialized(object1.toStyledString());
+
+  Json::Value object2;
+  Json::Reader reader;
+  TEST_ASSERT(reader.parse(serialized, object2));
+
+  TEST_ASSERT(object1["a"] == object2["a"]);
+  TEST_ASSERT(object1["b"] == object2["b"]);
+  TEST_ASSERT(object1["c"] == object2["c"]);
+  TEST_ASSERT(object1["d"] == object2["d"]);
+  TEST_ASSERT(serialized == object2.toStyledString());
+
+  return true;
+}
+
+bool TestArray(JsRunnerInterface *js_runner, JsCallContext *context,
+               std::string16 *error) {
+#undef TEST_ASSERT
+#define TEST_ASSERT(b) \
+{ \
+  if (!(b)) { \
+    LOG(("TestArray - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestArray - failed. "); \
+    return false; \
+  } \
+}
+  // Internal tests on JsArray.
+  scoped_ptr<JsArray> test_array(js_runner->NewArray());
+  JsScopedToken token;
+  // Test that the length of a new array is zero.
+  int length;
+  TEST_ASSERT(test_array.get()->GetLength(&length));
+  TEST_ASSERT(0 == length);
+  // Test that all elements in an empty array are undefined.
+  TEST_ASSERT(test_array.get()->GetElementType(0) == JSPARAM_UNDEFINED);
+  TEST_ASSERT(test_array.get()->GetElement(0, &token));
+  TEST_ASSERT(JsTokenGetType(token, context->js_context()) ==
+              JSPARAM_UNDEFINED);
+  // Test that we can set elements.
+  int int_in = 10;
+  JsParamToSend int_element = {JSPARAM_INT, &int_in};
+  ConvertJsParamToToken(int_element, context->js_context(), &token);
+  TEST_ASSERT(test_array.get()->SetElement(0, token));
+  TEST_ASSERT(test_array.get()->SetElement(2, token));
+  // Test that we can get elements.
+  int int_out;
+  TEST_ASSERT(test_array.get()->GetElementType(0) == JSPARAM_INT);
+  TEST_ASSERT(test_array.get()->GetElement(0, &token));
+  TEST_ASSERT(JsTokenToInt_NoCoerce(token, context->js_context(), &int_out));
+  TEST_ASSERT(int_out == int_in);
+  TEST_ASSERT(test_array.get()->GetElementType(2) == JSPARAM_INT);
+  TEST_ASSERT(test_array.get()->GetElement(2, &token));
+  TEST_ASSERT(JsTokenToInt_NoCoerce(token, context->js_context(), &int_out));
+  TEST_ASSERT(int_out == int_in);
+  // Test that out-of-range and unspecified elements are undefined.
+  TEST_ASSERT(test_array.get()->GetElementType(-1) == JSPARAM_UNDEFINED);
+  TEST_ASSERT(test_array.get()->GetElement(-1, &token));
+  TEST_ASSERT(JsTokenGetType(token, context->js_context()) ==
+              JSPARAM_UNDEFINED);
+  TEST_ASSERT(test_array.get()->GetElementType(1) == JSPARAM_UNDEFINED);
+  TEST_ASSERT(test_array.get()->GetElement(1, &token));
+  TEST_ASSERT(JsTokenGetType(token, context->js_context()) ==
+              JSPARAM_UNDEFINED);
+  TEST_ASSERT(test_array.get()->GetElementType(3) == JSPARAM_UNDEFINED);
+  TEST_ASSERT(test_array.get()->GetElement(3, &token));
+  TEST_ASSERT(JsTokenGetType(token, context->js_context()) ==
+              JSPARAM_UNDEFINED);
+  // Test that an element set with type undefined has type undefined.
+  JsParamToSend undefined_element = {JSPARAM_UNDEFINED, NULL};
+  ConvertJsParamToToken(undefined_element, context->js_context(), &token);
+  TEST_ASSERT(test_array.get()->SetElement(4, token));
+  TEST_ASSERT(test_array.get()->GetElementType(4) == JSPARAM_UNDEFINED);
+  TEST_ASSERT(test_array.get()->GetElement(4, &token));
+  TEST_ASSERT(JsTokenGetType(token, context->js_context()) ==
+              JSPARAM_UNDEFINED);
+  // Test that we can reset elements.
+  std::string16 string_in(STRING16(L"test"));
+  std::string16 string_out;
+  JsParamToSend string_element = {JSPARAM_STRING16, &string_in};
+  ConvertJsParamToToken(string_element, context->js_context(), &token);
+  TEST_ASSERT(test_array.get()->SetElement(0, token));
+  TEST_ASSERT(test_array.get()->GetElementType(0) == JSPARAM_STRING16);
+  TEST_ASSERT(test_array.get()->GetElement(0, &token));
+  TEST_ASSERT(JsTokenToString_NoCoerce(token, context->js_context(),
+                                       &string_out));
+  TEST_ASSERT(string_out == string_in);
   return true;
 }
 
@@ -1303,12 +1678,14 @@ void TestObjectArray(JsCallContext* context,
   TEST_ASSERT(ValidateGeneratedArray(array_5, 5));
 
   // index 6
-  JsRootedCallback* function_6 = NULL;
-  TEST_ASSERT(array_many_types.GetElementAsFunction(6, &function_6));
+  JsRootedCallback* function_temp = NULL;
+  TEST_ASSERT(array_many_types.GetElementAsFunction(6, &function_temp));
+  TEST_ASSERT(function_temp);
+  scoped_ptr<JsRootedCallback> function_6(function_temp);
   JsRunnerInterface* js_runner = base.GetJsRunner();
   TEST_ASSERT(js_runner);
   JsRootedToken* retval = NULL;
-  TEST_ASSERT(js_runner->InvokeCallback(function_6,
+  TEST_ASSERT(js_runner->InvokeCallback(function_6.get(),
                                         0, NULL, &retval));
   TEST_ASSERT(retval);
   std::string16 string_retval;
@@ -1319,6 +1696,17 @@ void TestObjectArray(JsCallContext* context,
   TEST_ASSERT(JsTokenToString_NoCoerce(retval->token(), js_context,
                                        &string_retval));
   TEST_ASSERT(string_retval == STRING16(L"i am a function"));
+
+  // Test that out-of-range elements are undefined.
+  JsScopedToken token;
+  TEST_ASSERT(array_many_types.GetElementType(-1) == JSPARAM_UNDEFINED);
+  TEST_ASSERT(array_many_types.GetElement(-1, &token));
+  TEST_ASSERT(JsTokenGetType(token, context->js_context()) ==
+              JSPARAM_UNDEFINED);
+  TEST_ASSERT(array_many_types.GetElementType(7) == JSPARAM_UNDEFINED);
+  TEST_ASSERT(array_many_types.GetElement(7, &token));
+  TEST_ASSERT(JsTokenGetType(token, context->js_context()) ==
+              JSPARAM_UNDEFINED);
 }
 
 void TestObjectObject(JsCallContext* context, const JsObject& obj) {
@@ -1347,12 +1735,14 @@ void TestObjectObject(JsCallContext* context, const JsObject& obj) {
 void TestObjectFunction(JsCallContext* context,
                         const JsObject& obj,
                         const ModuleImplBaseClass& base) {
-  JsRootedCallback* function = NULL;
-  TEST_ASSERT(obj.GetPropertyAsFunction(STRING16(L"func"), &function));
+  JsRootedCallback* function_temp = NULL;
+  TEST_ASSERT(obj.GetPropertyAsFunction(STRING16(L"func"), &function_temp));
+  TEST_ASSERT(function_temp);
+  scoped_ptr<JsRootedCallback> function(function_temp);
   JsRunnerInterface* js_runner = base.GetJsRunner();
   TEST_ASSERT(js_runner);
   JsRootedToken* retval = NULL;
-  TEST_ASSERT(js_runner->InvokeCallback(function, 0, NULL, &retval));
+  TEST_ASSERT(js_runner->InvokeCallback(function.get(), 0, NULL, &retval));
   TEST_ASSERT(retval);
   std::string16 string_retval;
   JsContextPtr js_context = NULL;
@@ -1369,7 +1759,7 @@ void TestObjectFunction(JsCallContext* context,
 { \
   if (!(b)) { \
     std::stringstream ss; \
-    ss << "CreateObject - failed (" << __LINE__ << ": " << __FILE__ \
+    ss << "CreateObject - failed (" << __LINE__ << ": " << __FILE__ << ")" \
        << std::endl; \
     std::string message8(ss.str()); \
     printf("%s\n", message8.c_str()); \
@@ -1500,16 +1890,27 @@ void CreateObjectArray(JsCallContext* context,
 void CreateObjectObject(JsCallContext* context,
                         JsRunnerInterface* js_runner,
                         JsObject* out) {
-  JsObject* obj = js_runner->NewObject(NULL);
-  TEST_ASSERT(obj);
+  scoped_ptr<JsObject> obj(js_runner->NewObject());
+  TEST_ASSERT(obj.get());
   TEST_ASSERT(obj->SetPropertyBool(STRING16(L"bool_true"), true));
   TEST_ASSERT(obj->SetPropertyInt(STRING16(L"int_0"), 0));
   TEST_ASSERT(obj->SetPropertyDouble(STRING16(L"double_0"), 0.01));
   TEST_ASSERT(obj->SetPropertyString(STRING16(L"string_0"), STRING16(L"")));
-  JsArray* array_0 = js_runner->NewArray();
-  TEST_ASSERT(array_0);
-  TEST_ASSERT(obj->SetPropertyArray(STRING16(L"array_0"), array_0));
-  TEST_ASSERT(out->SetPropertyObject(STRING16(L"obj"), obj));
+  scoped_ptr<JsArray> array_0(js_runner->NewArray());
+  TEST_ASSERT(array_0.get());
+  TEST_ASSERT(obj->SetPropertyArray(STRING16(L"array_0"), array_0.get()));
+  TEST_ASSERT(out->SetPropertyObject(STRING16(L"obj"), obj.get()));
+}
+
+void CreateObjectDate(JsCallContext* context,
+                      JsRunnerInterface* js_runner,
+                      JsObject* out) {
+  assert(out);
+  JsObject* obj = js_runner->NewDate(10);
+  TEST_ASSERT(obj);
+  if (obj) {
+    TEST_ASSERT(out->SetPropertyObject(STRING16(L"date_object"), obj));
+  }
 }
 
 void CreateObjectFunction(JsCallContext* context,
@@ -1518,4 +1919,164 @@ void CreateObjectFunction(JsCallContext* context,
   TEST_ASSERT(out->SetPropertyFunction(STRING16(L"func"), func));
 }
 
-#endif  // DEBUG
+#ifdef WINCE
+// These methods are used by the JavaScript testBrowserCache test.
+
+bool GetJsArrayAsStringVector(const JsArray &js_array,
+                              std::vector<std::string16> *strings) {
+  int array_size;
+  if (!js_array.GetLength(&array_size)) {
+    return false;
+  }
+  std::string16 url;
+  for (int i = 0; i < array_size; ++i) {
+    js_array.GetElementAsString(i, &url);
+    strings->push_back(url);
+  }
+  return true;
+}
+
+void GearsTest::RemoveEntriesFromBrowserCache(JsCallContext *context) {
+  bool ok = false;
+  context->SetReturnValue(JSPARAM_BOOL, &ok);
+  JsArray js_array;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_ARRAY, &js_array }
+  };
+  if (context->GetArguments(ARRAYSIZE(argv), argv) != ARRAYSIZE(argv)) {
+    assert(context->is_exception_set());
+    return;
+  }
+  std::vector<std::string16> urls;
+  if (!GetJsArrayAsStringVector(js_array, &urls)) {
+    context->SetException(STRING16(L"Failed to get urls."));
+    return;
+  }
+  for (int i = 0; i < static_cast<int>(urls.size()); ++i) {
+    std::string16 full_url;
+    if (!ResolveAndNormalize(
+             EnvPageLocationUrl().c_str(), urls[i].c_str(), &full_url)) {
+      context->SetException(STRING16(L"Failed to resolve URL ") + urls[i]);
+      return;
+    }
+    scoped_array<INTERNET_CACHE_ENTRY_INFO> info(
+        GetEntryInfoTest(full_url.c_str()));
+    if (info.get()) {
+      if (DeleteUrlCacheEntry(full_url.c_str()) == FALSE) {
+        context->SetException(
+            STRING16(L"Failed to remove browser cache entry for ") +
+            full_url +
+            STRING16(L"."));
+        return;
+      }
+    }
+  }
+  ok = true;
+  context->SetReturnValue(JSPARAM_BOOL, &ok);
+}
+
+#undef TEST_ASSERT
+#define TEST_ASSERT(test, message) \
+{ \
+  if (!(test)) { \
+    context->SetException(message); \
+    return; \
+  } \
+}
+
+void GearsTest::TestEntriesPresentInBrowserCache(JsCallContext *context) {
+  bool ok = false;
+  context->SetReturnValue(JSPARAM_BOOL, &ok);
+  JsArray js_array;
+  bool should_be_present;
+  bool should_be_bogus = true;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_ARRAY, &js_array },
+    { JSPARAM_REQUIRED, JSPARAM_BOOL, &should_be_present },
+    { JSPARAM_OPTIONAL, JSPARAM_BOOL, &should_be_bogus }
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) {
+    return;
+  }
+  std::vector<std::string16> urls;
+  if (!GetJsArrayAsStringVector(js_array, &urls)) {
+    context->SetException(STRING16(L"Failed to get urls."));
+    return;
+  }
+  for (int i = 0; i < static_cast<int>(urls.size()); ++i) {
+    std::string16 full_url;
+    if (!ResolveAndNormalize(
+             EnvPageLocationUrl().c_str(), urls[i].c_str(), &full_url)) {
+      context->SetException(STRING16(L"Failed to resolve URL ") + urls[i]);
+      return;
+    }
+    scoped_array<INTERNET_CACHE_ENTRY_INFO> info(
+        GetEntryInfoTest(full_url.c_str()));
+    if (should_be_present) {
+      TEST_ASSERT(info.get(),
+                  STRING16(L"No browser cache entry for ") +
+                  full_url +
+                  STRING16(L"."));
+      bool is_bogus = IsEntryBogusTest(info.get());
+      TEST_ASSERT(!(should_be_bogus && !is_bogus),
+                  STRING16(L"Browser cache entry for ") +
+                  full_url +
+                  STRING16(L" should be bogus but is not."));
+      TEST_ASSERT(!(!should_be_bogus && is_bogus),
+                  STRING16(L"Browser cache entry for ") +
+                  full_url +
+                  STRING16(L" should not be bogus but is."));
+    } else {
+      TEST_ASSERT(!info.get(),
+                  STRING16(L"Spurious browser cache entry for ") +
+                  full_url +
+                  STRING16(L"."));
+    }
+  }
+  ok = true;
+  context->SetReturnValue(JSPARAM_BOOL, &ok);
+}
+#endif
+
+#ifdef OFFICIAL_BUILD
+// The Geolocation API has not been finalized for official builds.
+#else
+void GearsTest::TestParseGeolocationOptions(JsCallContext *context) {
+  ::TestParseGeolocationOptions(context, GetJsRunner());
+}
+
+void GearsTest::TestGeolocationFormRequestBody(JsCallContext *context) {
+  ::TestGeolocationFormRequestBody(context);
+} 
+
+void GearsTest::TestGeolocationGetLocationFromResponse(JsCallContext *context) {
+  ::TestGeolocationGetLocationFromResponse(context, GetJsRunner());
+}
+#endif
+
+#ifndef OFFICIAL_BUILD
+void GearsTest::CreateBlobFromString(JsCallContext *context) {
+  std::string16 input_utf16;
+  JsArgument argv[] = {
+    { JSPARAM_REQUIRED, JSPARAM_STRING16, &input_utf16 }
+  };
+  context->GetArguments(ARRAYSIZE(argv), argv);
+  if (context->is_exception_set()) {
+    return;
+  }
+  std::string input_utf8;
+  String16ToUTF8(input_utf16.c_str(), &input_utf8);
+  scoped_refptr<GearsBlob> gears_blob;
+  CreateModule<GearsBlob>(GetJsRunner(), &gears_blob);
+  if (!gears_blob->InitBaseFromSibling(this)) {
+    context->SetException(STRING16(L"Initializing base class failed."));
+    return;
+  }
+  gears_blob->Reset(new BufferBlob(input_utf8.c_str(), input_utf8.size()));
+  context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, gears_blob.get());
+  ReleaseNewObjectToScript(gears_blob.get());
+}
+#endif  // OFFICIAL_BUILD
+
+#endif  // USING_CCTESTS

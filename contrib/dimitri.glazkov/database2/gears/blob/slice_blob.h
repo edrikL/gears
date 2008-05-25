@@ -31,7 +31,7 @@
 #else
 
 #include "gears/blob/blob_interface.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 // SliceBlob exposes a subset of an existing blob.
 

@@ -37,10 +37,9 @@
 
 #include "gears/desktop/desktop.h"
 
-#include "genfiles/product_constants.h"
+#include "gears/base/common/basictypes.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
-#include "gears/base/common/int_types.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/png_utils.h"
 #include "gears/base/common/scoped_win32_handles.h"
@@ -56,7 +55,8 @@
 #endif
 #include "gears/desktop/shortcut_utils_win32.h"
 #include "gears/localserver/common/http_constants.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
+#include "genfiles/product_constants.h"
 
 struct IcoHeader {
   uint16 reserved;
@@ -224,8 +224,8 @@ bool WriteIconAsDLL(const char16 *file_path,
 
 // Creates the icon file which contains the various different sized icons.
 static bool CreateIcoFile(const std::string16 &icons_path,
-                          const GearsDesktop::ShortcutInfo &shortcut) {
-  std::vector<const GearsDesktop::IconData *> icons_to_write;
+                          const Desktop::ShortcutInfo &shortcut) {
+  std::vector<const Desktop::IconData *> icons_to_write;
 
   // Add each icon size that has been provided to the icon list.
 #ifdef WINCE
@@ -384,9 +384,10 @@ static bool CreateIcoFile(const std::string16 &icons_path,
   return success;
 }
 
-bool GearsDesktop::CreateShortcutPlatformImpl(const SecurityOrigin &origin,
-                                              const ShortcutInfo &shortcut,
-                                              std::string16 *error) {
+bool Desktop::CreateShortcutPlatformImpl(const SecurityOrigin &origin,
+                                         const ShortcutInfo &shortcut,
+                                         uint32 locations,
+                                         std::string16 *error) {
   char16 browser_path[MAX_PATH] = {0};
 
   if (!GetModuleFileName(NULL, browser_path, MAX_PATH)) {
@@ -419,28 +420,22 @@ bool GearsDesktop::CreateShortcutPlatformImpl(const SecurityOrigin &origin,
 
 #if BROWSER_IE
   if (VistaUtils::IsRunningOnVista()) {
-    char16 gears_dll_path[MAX_PATH] = {0};
-    if (!GetModuleFileName(_AtlBaseModule.GetModuleInstance(), gears_dll_path,
-                           MAX_PATH)) {
-      *error = GET_INTERNAL_ERROR_MESSAGE();
-      return false;
-    }
-
     std::string16 broker_path;
-    if (!File::GetParentDirectory(gears_dll_path, &broker_path)) {
+    if (!GetInstallDirectory(&broker_path)) {
       *error = GET_INTERNAL_ERROR_MESSAGE();
       return false;
     }
-
     broker_path += STRING16(L"\\vista_broker.exe");
 
     // Build up the command line
+    std::string16 locations_string = IntegerToString16(locations);
     const char16 *command_line_parts[] = {
       broker_path.c_str(),
       shortcut.app_name.c_str(),
       browser_path,
       shortcut.app_url.c_str(),
       icons_path.c_str(),
+      locations_string.c_str(),
     };
 
     std::string16 command_line;
@@ -460,16 +455,19 @@ bool GearsDesktop::CreateShortcutPlatformImpl(const SecurityOrigin &origin,
     startup_info.cb = sizeof(startup_info);
     PROCESS_INFORMATION process_info = {0};
 
-    // TODO(aa): CreateProcessW is modifying command_line's data in the middle.
-    // Is this OK?
-    BOOL success = CreateProcessW(NULL,  // get command from command line
+    BOOL success = CreateProcessW(NULL,  // application name (NULL to get from
+                                         // command line)
                                   const_cast<char16 *>(command_line.c_str()),
-                                  NULL,  // process handle not inheritable
-                                  NULL,  // thread handle not inheritable
-                                  FALSE, // set handle inheritance to FALSE
-                                  0,     // no creation flags
-                                  NULL,  // use parent's environment block
-                                  NULL,  // use parent's starting block
+                                  NULL,  // process attributes (NULL means
+                                         // process handle not inheritable)
+                                  NULL,  // thread attributes (NULL means thread
+                                         // handle not inheritable)
+                                  FALSE, // inherit handles
+                                  0,     // creation flags
+                                  NULL,  // environment block (NULL to use
+                                         // parent's)
+                                  NULL,  // starting block (NULL to use
+                                         // parent's)
                                   &startup_info,
                                   &process_info);
     if (!success) {
@@ -505,7 +503,15 @@ bool GearsDesktop::CreateShortcutPlatformImpl(const SecurityOrigin &origin,
   }
 #endif
 
-  return CreateShortcutFileWin32(shortcut.app_name, browser_path,
-                                 shortcut.app_url, icons_path, error);
+  for (uint32 location = 0x8000; location > 0; location >>= 1) {
+    if (locations & location) {
+      if (!CreateShortcutFileWin32(shortcut.app_name, browser_path,
+                                   shortcut.app_url, icons_path,
+                                   location, error)) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 #endif  // #ifdef WIN32

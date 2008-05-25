@@ -28,8 +28,8 @@
 
 #include <map>
 #include <vector>
+#include "gears/base/common/basictypes.h"
 #include "gears/base/common/deletable.h"
-#include "gears/base/common/int_types.h"
 #include "gears/base/common/mutex.h"
 #include "gears/base/common/string16.h"
 
@@ -43,6 +43,9 @@ enum SerializableClassId {
   SERIALIZABLE_UPDATE_TASK_COMPLETION_EVENT,
   SERIALIZABLE_CONSOLE_LOG_EVENT,
   SERIALIZABLE_NOTIFICATION,
+
+  // The following value can not be changed for cross-version compatibility.
+  SERIALIZABLE_DESKTOP_NOTIFICATION = 1000,
 };
 
 class Serializable;

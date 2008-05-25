@@ -39,12 +39,25 @@
 // Main plugin entry point implementation
 //
 #include "gears/base/common/base_class.h"
+#ifdef BROWSER_WEBKIT
+#include "gears/base/common/common_sf.h"
+#endif
 #include "gears/base/common/thread_locals.h"
 #include "gears/base/npapi/module.h"
 
 #ifndef HIBYTE
 #define HIBYTE(x) ((((uint32)(x)) & 0xff00) >> 8)
 #endif
+
+#ifdef BROWSER_WEBKIT
+static bool g_allow_npinit = true;
+#else
+static bool g_allow_npinit = false;
+#endif
+
+void AllowNPInit(bool allow) {
+  g_allow_npinit = allow;
+}
 
 // Export NPAPI entry points on OS X.
 #ifdef BROWSER_WEBKIT
@@ -54,18 +67,18 @@
 
 #define STDCALL
 
-#pragma export on
 extern "C" {
   // Mach-o entry points
-  NPError NP_Initialize(NPNetscapeFuncs *browserFuncs);
-  NPError NP_GetEntryPoints(NPPluginFuncs *pluginFuncs);
-  void NP_Shutdown(void);
+#define EXPORT __attribute__((visibility("default")))
+  EXPORT NPError NP_Initialize(NPNetscapeFuncs *browserFuncs);
+  EXPORT NPError NP_GetEntryPoints(NPPluginFuncs *pluginFuncs);
+  EXPORT void NP_Shutdown(void);
+#undef EXPORT
   // For compatibility with NPAPI in Opera & FF on the Mac, we need to implement
   // this.
   // int main(NPNetscapeFuncs *browserFuncs, NPPluginFuncs *pluginFuncs,
   //         void *shutdown);
 }
-#pragma export off
 #endif  // BROWSER_WEBKIT
 
 #ifdef WIN32
@@ -133,6 +146,9 @@ NPError STDCALL NP_GetEntryPoints(NPPluginFuncs* funcs)
 
 NPError STDCALL NP_Initialize(NPNetscapeFuncs* funcs)
 {
+  if (!g_allow_npinit)
+    return NPERR_INCOMPATIBLE_VERSION_ERROR;
+
   if (funcs == NULL)
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
@@ -143,6 +159,13 @@ NPError STDCALL NP_Initialize(NPNetscapeFuncs* funcs)
     return NPERR_INVALID_FUNCTABLE_ERROR;
 
   g_browser_funcs = *funcs;
+
+// NPN_SetException is buggy in WebKit, see 
+// http://bugs.webkit.org/show_bug.cgi?id=16829
+#ifdef BROWSER_WEBKIT
+  g_browser_funcs.setexception = WebKitNPN_SetException;
+#endif
+  
   ThreadLocals::SetValue(kNPNFuncsKey, &g_browser_funcs, NULL);
 
   return NPERR_NO_ERROR;
@@ -150,26 +173,17 @@ NPError STDCALL NP_Initialize(NPNetscapeFuncs* funcs)
 
 
 // Apple's NetscapeMoviePlugin Example defines NP_Shutdown this as returning a
-// void.
-// Gecko defines this differently.
+// void. Gecko defines this differently.
 #ifdef BROWSER_WEBKIT
-void STDCALL NP_Shutdown()
+void STDCALL NP_Shutdown() {
+  return;
+}
 #else
-NPError STDCALL NP_Shutdown()
-#endif
-{
-#ifdef WIN32
-  // We're being unloaded, but the thread isn't necessarily detached.  Force the
-  // thread shutdown handling anyway.
-  MyDllMain(0, DLL_THREAD_DETACH, 0);
+NPError STDCALL NP_Shutdown() {
+  return NPERR_NO_ERROR;
+}
 #endif
 
-#ifdef BROWSER_WEBKIT
-// void return type in Webkit.
-#else
-  return NPERR_NO_ERROR;
-#endif
-}
 
 #ifdef WIN32
 BOOL MyDllMain(HANDLE instance, DWORD reason, LPVOID reserved) {

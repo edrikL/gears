@@ -40,12 +40,19 @@ class GearsBlob : public ModuleImplBaseClassVirtual {
   static const std::string kModuleName;
 
   GearsBlob()
-      : ModuleImplBaseClassVirtual(kModuleName.c_str()),
+      : ModuleImplBaseClassVirtual(kModuleName),
         contents_(new EmptyBlob()) {}
 
   // IN: nothing
   // OUT: int64
   void GetLength(JsCallContext *context);
+
+#ifdef DEBUG
+  // Returns whether or not this Blob has identical contents to another Blob.
+  // IN: GearsBlob anotherBlob
+  // OUT: bool
+  void HasSameContentsAs(JsCallContext *context);
+#endif
 
   // IN: int64 offset, optional int64 length
   // OUT: GearsBlob
@@ -58,6 +65,8 @@ class GearsBlob : public ModuleImplBaseClassVirtual {
   void Reset(BlobInterface *blob) {
     contents_.reset(blob);
   }
+
+  virtual MarshaledModule *AsMarshaledModule();
 
  private:
   scoped_refptr<BlobInterface> contents_;

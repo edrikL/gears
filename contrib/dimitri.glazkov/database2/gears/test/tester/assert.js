@@ -36,8 +36,9 @@ var isDebug = google.gears.factory.getBuildInfo().indexOf('dbg') > -1;
 var isOfficial = google.gears.factory.getBuildInfo().indexOf('official') > -1;
 
 /**
- * Whether the installed Gears extension is for Windows Mobile
+ * Whether the installed Gears extension is for a particular platform.
  */
+var isWin32 = google.gears.factory.getBuildInfo().indexOf('win32') > -1;
 var isWince = google.gears.factory.getBuildInfo().indexOf('wince') > -1;
 
 /**
@@ -46,6 +47,13 @@ var isWince = google.gears.factory.getBuildInfo().indexOf('wince') > -1;
 var isIE = google.gears.factory.getBuildInfo().indexOf(';ie') > -1;
 var isFirefox = google.gears.factory.getBuildInfo().indexOf(';firefox') > -1;
 var isSafari = google.gears.factory.getBuildInfo().indexOf(';safari') > -1;
+var isNPAPI = google.gears.factory.getBuildInfo().indexOf(';npapi') > -1;
+
+/**
+ * Whether the installed Gears extension has the test scriptable object.
+ * See also the definition of USING_CCTESTS in gears\tools\config.mk.
+ */
+var isUsingCCTests = isDebug || !isOfficial;
 
 /**
  * A shared timer tests can use.

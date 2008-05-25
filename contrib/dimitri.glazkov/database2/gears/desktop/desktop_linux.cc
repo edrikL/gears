@@ -32,9 +32,9 @@
 
 #include "gears/desktop/desktop.h"
 
+#include "gears/base/common/basictypes.h"
 #include "gears/base/common/common.h"
 #include "gears/base/common/file.h"
-#include "gears/base/common/int_types.h"
 #include "gears/base/common/paths.h"
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/string16.h"
@@ -62,10 +62,10 @@ static bool GetIconPath(const SecurityOrigin &origin,
   return true;
 }
 
-static bool WriteIconFile(const GearsDesktop::ShortcutInfo &shortcut,
+static bool WriteIconFile(const Desktop::ShortcutInfo &shortcut,
                           const std::string16 &icon_path,
                           std::string16 *error) {
-  const GearsDesktop::IconData *chosen_icon = NULL;
+  const Desktop::IconData *chosen_icon = NULL;
 
   // Try to pick the best icon size of the available choices.
   if (!shortcut.icon48x48.png_data.empty()) { // 48 is default size for gnome
@@ -91,69 +91,30 @@ static bool WriteIconFile(const GearsDesktop::ShortcutInfo &shortcut,
   return true;
 }
 
-// Check whether there is an existing shortcut, and whether it was created by
-// us.  We only allow overwriting shortcuts we created, but it's okay if they
-// were written by another browser.  (This is best for users, and also helpful
-// during development, where we often create a shortcut in multiple browsers.)
-static bool CheckIllegalFileOverwrite(
-                const GearsDesktop::ShortcutInfo &shortcut) {
-  // Check if Shortcut file exists.
-  std::string link_name_utf8;
-  if (!String16ToUTF8(shortcut.app_name.c_str(), shortcut.app_name.length(),
-                      &link_name_utf8)) {
-   return false;
-  }
-
-  std::string shortcut_path = getenv("HOME");
-  shortcut_path += "/Desktop/";
-  shortcut_path += link_name_utf8;
-  shortcut_path += ".desktop";
-
-  // One filepath + one command line + name + misc boilerplate will be less
-  // than 4kb.
-  const int kDataSize = 4096;
-  char data[kDataSize];
-  FILE *input = fopen(shortcut_path.c_str(), "r");
-  if (!input) {
-    // If there's no file, we're fine.  Otherwise, it's not ours.
-    return errno == ENOENT;
-  }
-
-  int bytes_read = fread(data, 1, kDataSize - 1, input);
-  fclose(input);
-
-  if (!bytes_read || bytes_read >= kDataSize - 1) {
-    // If the file is empty, or larger than our buffer, we didn't create it.
+// We only allow writing the shortcut if no other file exists in that spot.
+static bool CanWriteShortcut(const Desktop::ShortcutInfo &shortcut) {
+  std::string home_path = getenv("HOME");
+  std::string16 shortcut_path;
+  if (!UTF8ToString16(home_path.c_str(), home_path.length(), &shortcut_path)) {
     return false;
   }
 
-  // Ensure we have a null terminator.
-  data[bytes_read] = '\0';
+  shortcut_path += STRING16(L"/Desktop/");
+  shortcut_path += shortcut.app_name;
+  shortcut_path += STRING16(L".desktop");
 
-  char *line = strstr(data, "Icon=");
-  if (!line) {
-    // If there's no icon line, we didn't create it.
-    return false;
-  }
-  // Look for the path where we store shortcut icons. (See paths*.cc.)
-  char *gears_dir = strstr(line, PRODUCT_FRIENDLY_NAME_ASCII " for ");
-  char *newline = strchr(line, '\n');
-  if (!gears_dir || !newline || newline < gears_dir) {
-    // If the icon's path doesn't match, we didn't create it.
-    return false;
-  }
-
-  return true;
+  return !File::Exists(shortcut_path.c_str()) &&
+    !File::DirectoryExists(shortcut_path.c_str());
 }
 
-bool GearsDesktop::CreateShortcutPlatformImpl(
+bool Desktop::CreateShortcutPlatformImpl(
                        const SecurityOrigin &origin,
-                       const GearsDesktop::ShortcutInfo &shortcut,
+                       const Desktop::ShortcutInfo &shortcut,
+                       uint32 locations,
                        std::string16 *error) {
-  // Before doing anything, check that we can create the shortcut legally.
-  if (!CheckIllegalFileOverwrite(shortcut)) {
-    *error = STRING16(L"Could not create desktop icon.");
-    return false;
+  // Return immediately if shortcut already exists.
+  if (!CanWriteShortcut(shortcut)) {
+    return true;
   }
 
   // Note: We assume that link_name has already been validated by the caller to

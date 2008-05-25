@@ -26,7 +26,29 @@
 #ifndef GEARS_BASE_COMMON_COMMON_NPAPI_H__
 #define GEARS_BASE_COMMON_COMMON_NPAPI_H__
 
-// TODO(mpcomplete): make this not win32 specific.
+#ifdef ANDROID
+
+// Android logging support. Out-of-line to avoid polluting the
+// namespace with Android defines.
+extern "C" void android_log_helper(const char *tag,
+                                   const char *file,
+                                   unsigned line,
+                                   const char *fmt, ...)
+    __attribute__((format(printf, 4, 5)));
+
+#define LOG_INNER(fmt, args...) \
+    do { \
+      android_log_helper("Gears", \
+                         __FILE__, \
+                         __LINE__, \
+                         fmt , \
+                         ## args ); \
+    } while(0)
+
+#define LOG(args) \
+    do { LOG_INNER args ; } while(0)
+
+#else // !defined(ANDROID)
 
 #include <windows.h>  // for DWORD
 #include "gears/base/ie/atl_headers.h" // TODO(cprince): change ATLASSERT to DCHECK
@@ -50,10 +72,37 @@ const DWORD kMessageOnlyWindowStyle  = NULL;
 #define LOG16(args) __noop
 #endif  // defined(DEBUG) && defined(ENABLE_LOGGING)
 
+#endif // !defined(ANDROID)
+
 // Debug only code to help us assert that class methods are restricted to a
 // single thread.  To use, add a DECL_SINGLE_THREAD to your class declaration.
 // Then, add ASSERT_SINGLE_THREAD() calls to the top of each class method.
 #ifdef DEBUG
+
+#ifdef ANDROID
+
+#include <assert.h>
+#include <pthread.h>
+
+class CurrentThreadID {
+ public:
+  CurrentThreadID() {
+    id_ = pthread_self();
+  }
+  pthread_t get() {
+    return id_;
+  }
+ private:
+  pthread_t id_;
+};
+
+#define DECL_SINGLE_THREAD \
+    CurrentThreadID thread_id_;
+
+#define ASSERT_SINGLE_THREAD() \
+    assert(pthread_equal(pthread_self(), thread_id_.get()))
+
+#else // !defined(ANDROID)
 
 class CurrentThreadID {
  public:
@@ -72,6 +121,8 @@ class CurrentThreadID {
 
 #define ASSERT_SINGLE_THREAD() \
     ATLASSERT(thread_id_.get() == GetCurrentThreadId())
+
+#endif
 
 #else
 #define DECL_SINGLE_THREAD

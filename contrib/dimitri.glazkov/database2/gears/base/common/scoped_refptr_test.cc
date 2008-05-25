@@ -23,11 +23,11 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 
 #include <vector>
 #include "gears/base/common/scoped_refptr.h"
-#include "gears/third_party/scoped_ptr/scoped_ptr.h"
+#include "third_party/scoped_ptr/scoped_ptr.h"
 
 class A : virtual public RefCounted { };
 class B : virtual public RefCounted { };
@@ -42,12 +42,14 @@ class AB : public A, public B {
   bool* dead_;
 };
 
-bool TestRefCount() {
+bool TestRefCount(std::string16 *error) {
 #undef TEST_ASSERT
 #define TEST_ASSERT(b) \
 { \
   if (!(b)) { \
     LOG(("TestRefCount - failed (%d)\n", __LINE__)); \
+    assert(error); \
+    *error += STRING16(L"TestRefCount - failed. "); \
     return false; \
   } \
 }

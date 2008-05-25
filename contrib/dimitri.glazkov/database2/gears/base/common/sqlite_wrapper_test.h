@@ -25,11 +25,11 @@
 
 #ifndef GEARS_BASE_COMMON_SQLITE_WRAPPER_TEST_H__
 #define GEARS_BASE_COMMON_SQLITE_WRAPPER_TEST_H__
-#ifdef DEBUG
+#ifdef USING_CCTESTS
 
 #include "gears/base/common/sqlite_wrapper.h"
 
-bool TestSqliteUtilsAll();
+bool TestSqliteUtilsAll(std::string16 *error);
 
-#endif  // DEBUG
+#endif  // USING_CCTESTS
 #endif  // GEARS_BASE_COMMON_SQLITE_WRAPPER_TEST_H__

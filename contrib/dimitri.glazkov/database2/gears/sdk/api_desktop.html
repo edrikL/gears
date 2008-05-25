@@ -41,7 +41,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <p>The Desktop module provides an interface for accessing desktop related
 functionality, such as creating shortcuts.
+<h4>Permission</h4>
 
+<p>Does not require user permission.</p>
 <h2 id="example">Example</h2>
 
 <pre><code>&lt;script type="text/javascript" src="<a href=
@@ -94,7 +96,10 @@ desktop.createShortcut("Test Application",
       <code>icons</code> - An object containing one or more of these named
         properties: <code>128x128</code>, <code>48x48</code>,
         <code>32x32</code>, <code>16x16</code>.  The value of each property must
-        be the URL of a .png file, with dimensions matching the property name.
+        be the URL of a PNG-formatted image with dimensions matching the
+        property name. A <a
+        href="http://en.wikipedia.org/wiki/Data:_URI_scheme">data URL</a>
+        containing base64-encoded PNG data can also be used.
       <br>
       <code>description</code> - Optional. Additional text to display in the
         confirmation dialog.

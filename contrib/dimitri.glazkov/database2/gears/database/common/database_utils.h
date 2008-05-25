@@ -27,8 +27,8 @@
 #define GEARS_DATABASE_COMMON_DATABASE_UTILS_H__
 
 #include "gears/base/common/security_model.h"
+#include "gears/base/common/sqlite_wrapper.h"
 #include "gears/base/common/string16.h"
-#include "gears/third_party/sqlite_google/preprocessed/sqlite3.h"
 
 // Handle dealing with corrupt databases.  This should be called after
 // any sqlite3_*() call on a handle from OpenSqliteDatabase() which

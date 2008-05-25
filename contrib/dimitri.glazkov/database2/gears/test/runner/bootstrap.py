@@ -94,16 +94,8 @@ sys.path.extend(Config.ADDITIONAL_PYTHON_LIBRARY_PATHS)
 from testrunner import TestRunner
 from testwebserver import TestWebserver
 from suites_report import SuitesReport
-from browser_launchers import IExploreWin32Launcher
-from browser_launchers import FirefoxWin32Launcher
-from browser_launchers import FirefoxLinuxLauncher
-from browser_launchers import FirefoxMacLauncher
-from browser_launchers import IExploreWinCeLauncher
-from installer import WinVistaInstaller
-from installer import WinXpInstaller
-from installer import LinuxInstaller
-from installer import MacInstaller
-from installer import WinCeInstaller
+import browser_launchers
+import installer
 import osutils
 
 
@@ -120,7 +112,6 @@ def localIp():
   return ip
 
 if __name__ == '__main__':
-  profile_name = 'gears'
   test_url = 'http://localhost:8001/tester/gui.html'
   suites_report = SuitesReport('TESTS-TestSuites.xml.tmpl')
   test_servers = []
@@ -135,23 +126,26 @@ if __name__ == '__main__':
   # and run on different platforms.
   if len(sys.argv) > 2 and sys.argv[2] == 'wince':
     local_ip = localIp()
-    launchers.append(IExploreWinCeLauncher(local_ip))
-    installers.append(WinCeInstaller(local_ip))
+    launchers.append(browser_launchers.IExploreWinCeLauncher(local_ip))
+    installers.append(installer.WinCeInstaller(local_ip))
     test_url = 'http://%s:8001/tester/gui.html' % local_ip
   elif osutils.osIsWin():
-    launchers.append(IExploreWin32Launcher())
-    launchers.append(FirefoxWin32Launcher('ffprofile-win'))
+    launchers.append(browser_launchers.IExploreWin32Launcher('ff2profile-win'))
+    launchers.append(browser_launchers.Firefox2Win32Launcher('ff2profile-win'))
+    launchers.append(browser_launchers.Firefox3Win32Launcher('ff3profile-win'))
     if osutils.osIsVista():
-      installers.append(WinVistaInstaller('ffprofile-win'))
+      installers.append(installer.WinVistaInstaller())
     else:
-      installers.append(WinXpInstaller('ffprofile-win'))
+      installers.append(installer.WinXpInstaller())
   elif osutils.osIsNix():
     if osutils.osIsMac():
-      launchers.append(FirefoxMacLauncher(profile_name))
-      installers.append(MacInstaller(profile_name))
+      launchers.append(browser_launchers.Firefox2MacLauncher('gears-ff2'))
+      launchers.append(browser_launchers.Firefox3MacLauncher('gears-ff3'))
+      installers.append(installer.MacFirefox2Installer('gears-ff2'))
+      installers.append(installer.MacFirefox3Installer('gears-ff3'))
     else:
-      launchers.append(FirefoxLinuxLauncher(profile_name))
-      installers.append(LinuxInstaller(profile_name))
+      launchers.append(browser_launchers.FirefoxLinuxLauncher('gears-ff2'))
+      installers.append(installer.LinuxInstaller('gears-ff2'))
       
   gears_binaries = sys.argv[1]
   testrunner = TestRunner(launchers, test_servers, test_url)

@@ -34,8 +34,9 @@
 
 #include "gears/base/common/exception_handler_win32.h"
 
+#include "gears/base/common/paths.h"
+
 #include "client/windows/handler/exception_handler.h"  // from breakpad/src
-#include "client/windows/sender/crash_report_sender.h"  // from breakpad/src
 
 
 // Product-specific constants.  MODIFY THESE TO SUIT YOUR PROJECT.
@@ -50,19 +51,6 @@ const wchar_t *kCrashReportProductVersion = PRODUCT_VERSION_STRING
                                             L" (win32 npapi)";
 #endif
 
-
-// Product-independent constants.
-const wchar_t *kCrashReportUrl = L"http://www.google.com/cr/report";
-
-const wchar_t *kCrashReportThrottlingRegKey = L"Software\\Google\\Breakpad\\Throttling";
-
-const wchar_t *kCrashReportProductParam = L"prod";
-const wchar_t *kCrashReportVersionParam = L"ver";
-
-const int kCrashReportAttempts         = 3;
-const int kCrashReportResendPeriodMs   = (1 * 60 * 60 * 1000);
-const int kCrashReportsMaxPerInterval  = 5;
-const int kCrashReportsIntervalSeconds = (24 * 60  * 60);
 
 using namespace google_breakpad;
 
@@ -83,63 +71,9 @@ ExceptionManager::~ExceptionManager() {
   instance_ = NULL;
 }
 
-bool ExceptionManager::CanSendMinidump() {
-  bool can_send = false;
-
-  time_t current_time;
-  time(&current_time);
-
-  // For throttling, we remember when the last N minidumps were sent.
-
-  time_t past_send_times[kCrashReportsMaxPerInterval];
-  DWORD bytes = sizeof(past_send_times);
-  memset(&past_send_times, 0, bytes);
-
-  HKEY reg_key;
-  DWORD create_type;
-  if (ERROR_SUCCESS != RegCreateKeyExW(HKEY_CURRENT_USER,
-                                       kCrashReportThrottlingRegKey, 0, NULL, 0,
-                                       KEY_READ | KEY_WRITE, NULL,
-                                       &reg_key, &create_type)) {
-    return false;  // this should never happen, but just in case
-  }
-
-  if (ERROR_SUCCESS != RegQueryValueEx(reg_key, kCrashReportProductName, NULL,
-                                       NULL,
-                                       reinterpret_cast<BYTE*>(past_send_times),
-                                       &bytes)) {
-    // this product hasn't sent any crash reports yet
-    can_send = true;
-  } else {
-    // find crash reports within the last interval
-    int crashes_in_last_interval = 0;
-    for (int i = 0; i < kCrashReportsMaxPerInterval; ++i) {
-      if (current_time - past_send_times[i] < kCrashReportsIntervalSeconds) {
-        ++crashes_in_last_interval;
-      }
-    }
-
-    can_send = crashes_in_last_interval < kCrashReportsMaxPerInterval;
-  }
-
-  if (can_send) {
-    memmove(&past_send_times[1],
-            &past_send_times[0],
-            sizeof(time_t) * (kCrashReportsMaxPerInterval - 1));
-    past_send_times[0] = current_time;
-  }
-
-  RegSetValueEx(reg_key, kCrashReportProductName, 0, REG_BINARY,
-                reinterpret_cast<BYTE*>(past_send_times),
-                sizeof(past_send_times));
-
-  return can_send;
-}
-
 static HMODULE GetModuleHandleFromAddress(void *address) {
   MEMORY_BASIC_INFORMATION mbi;
   SIZE_T result = VirtualQuery(address, &mbi, sizeof(mbi));
-
   return static_cast<HMODULE>(mbi.AllocationBase);
 }
 
@@ -188,37 +122,47 @@ static bool MinidumpCallback(const wchar_t *minidump_folder,
     handled_exception = false;
   }
 
-  // rundll32 is a convenient way to send a minidump from an extension DLL.
-  // Another option is to bundle an executable that uploads a given minidump.
-  wchar_t module_path[MAX_PATH];  // folder + filename
-  if (0 == GetModuleFileNameW(GetCurrentModuleHandle(),
-                              module_path, MAX_PATH)) {
-    return handled_exception;
-  }
-
-  // get a version without spaces, to use it as a command line argument
-  wchar_t module_short_path[MAX_PATH];
-  if (0 == GetShortPathNameW(module_path, module_short_path, MAX_PATH)) {
-    return handled_exception;
-  }
-
-  // construct the minidump path the same way
+  // get the full path to the minidump
   wchar_t minidump_path[MAX_PATH];
   _snwprintf(minidump_path, sizeof(minidump_path), L"%s\\%s.dmp",
              minidump_folder, minidump_id);
 
-  wchar_t minidump_short_path[MAX_PATH];
-  if (0 == GetShortPathNameW(minidump_path, minidump_short_path, _MAX_PATH)) {
+  // create the command line to start the crash sender process
+  std::string16 install_directory;
+  if (!GetInstallDirectory(&install_directory)) {
     return handled_exception;
   }
 
-  // execute the rundll32 command
-  std::wstring command;
-  command += module_short_path;
-  command += L",HandleMinidump ";
-  command += minidump_short_path;
-  ShellExecuteW(NULL, NULL, L"rundll32", command.c_str(), L"", 0);
+  std::string16 command_line;
+  command_line += STRING16(L"\"");
+  command_line += install_directory;
+  command_line += STRING16(L"\\crash_sender.exe\" \"");
+  command_line += minidump_path;
+  command_line += L"\" \"";
+  command_line += kCrashReportProductName;
+  command_line += L"\" \"";
+  command_line += kCrashReportProductVersion;
+  command_line += L"\"";
 
+  // execute the process
+  STARTUPINFO startup_info = {0};
+  startup_info.cb = sizeof(startup_info);
+  PROCESS_INFORMATION process_info = {0};
+  CreateProcessW(NULL,  // application name (NULL to get from command line)
+                 const_cast<char16 *>(command_line.c_str()),
+                 NULL,  // process attributes (NULL means process handle not
+                        // inheritable)
+                 NULL,  // thread attributes (NULL means thread handle not
+                        // inheritable)
+                 FALSE, // inherit handles
+                 0,     // creation flags
+                 NULL,  // environment block (NULL to use parent's)
+                 NULL,  // starting block (NULL to use parent's)
+                 &startup_info,
+                 &process_info);
+  CloseHandle(process_info.hProcess);
+  CloseHandle(process_info.hThread);
+    
   return handled_exception;
 }
 
@@ -234,49 +178,40 @@ void ExceptionManager::StartMonitoring() {
                                                              this, true);
 }
 
+void ExceptionManager::AddMemoryRange(void *address, int length) {
+  assert(exception_handler_);
+  exception_handler_->AddMemoryRange(address, length);
+}
+
+void ExceptionManager::ClearMemoryRanges() {
+  assert(exception_handler_);
+  exception_handler_->ClearMemoryRanges();
+}
+
 // static
-bool ExceptionManager::CaptureAndSendMinidump() {
-  if (instance_ && instance_->exception_handler_) {
-    return instance_->exception_handler_->WriteMinidump();
-  } else {
+bool ExceptionManager::ReportAndContinue() {
+  if (!instance_ || !instance_->exception_handler_) {
     return false;
   }
-}
 
+  // Pass parameters to WriteMinidump so the reported call stack ends here,
+  // instead of including all frames down to where the dump file gets written.
+  //
+  // This requires a valid EXCEPTION_POINTERS struct.  GetExceptionInformation()
+  // can generate one for us.  But that function can only be used in an __except
+  // filter statement.  And the value returned only appears to be valid for the
+  // lifetime of the filter statement.  Hence the comma-separated statement
+  // below, which is actually common practice.
+  bool retval;
+  google_breakpad::ExceptionHandler *h = instance_->exception_handler_;
 
-void ExceptionManager::SendMinidump(const char *minidump_filename) {
-  if (CanSendMinidump()) {
-    map<std::wstring, std::wstring> parameters;
-    parameters[kCrashReportProductParam] = kCrashReportProductName;
-    parameters[kCrashReportVersionParam] = kCrashReportProductVersion;
-
-    std::string  minidump_str(minidump_filename);
-    std::wstring minidump_wstr(minidump_str.begin(), minidump_str.end());
-
-    for (int i = 0; i < kCrashReportAttempts; ++i) {
-      ReportResult result = CrashReportSender::SendCrashReport(kCrashReportUrl,
-                                                               parameters,
-                                                               minidump_wstr,
-                                                               NULL);
-      if (result == RESULT_FAILED) {
-        Sleep(kCrashReportResendPeriodMs);
-      } else {
-        // RESULT_SUCCEEDED or RESULT_REJECTED
-        break;
-      }
-    }
+  __try {
+    int *null_pointer = NULL;
+    *null_pointer = 1;
+  } __except (retval = h->WriteMinidump(GetExceptionInformation(), NULL),
+              EXCEPTION_EXECUTE_HANDLER) {
+    // EXCEPTION_EXECUTE_HANDLER causes execution to continue here.
+    // We have nothing more to do, so just continue normally.
   }
-
-  DeleteFileA(minidump_filename);
-}
-
-
-// This is the function that rundll32 calls to upload a minidump.  Uses
-// extern "C" so we can pass the unmangled function name to ShellExecute.
-extern "C"
-__declspec(dllexport) void __cdecl HandleMinidump(HWND window,
-                                                  HINSTANCE instance,
-                                                  LPSTR command_line,
-                                                  int command_show) {
-  ExceptionManager::SendMinidump(command_line); 
+  return retval;
 }

@@ -40,14 +40,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
-  <Product Id='$(var.OurProductId)' Name='PRODUCT_FRIENDLY_NAME_UQ'
+  <Product Id='$(var.OurWin32ProductId)' Name='PRODUCT_FRIENDLY_NAME_UQ'
     Language='1033' Version='PRODUCT_VERSION'
     Manufacturer='Google' UpgradeCode='D91DF85A-1C3B-4d62-914B-DEEEF73AD78C'>
     <Package Description='PRODUCT_FRIENDLY_NAME_UQ'
       Comments='PRODUCT_FRIENDLY_NAME_UQ' Manufacturer='Google'
       InstallerVersion='200' Compressed='yes' />
     <Media Id='1' Cabinet='product.cab' EmbedCab='yes'
-      CompressionLevel="high" />
+      CompressionLevel='high' />
     <Upgrade Id='D91DF85A-1C3B-4d62-914B-DEEEF73AD78C'>
       <UpgradeVersion Property='UPGRADING' OnlyDetect='no'
         Minimum='0.0.0.0' IncludeMinimum='yes'
@@ -63,11 +63,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             <Component Id='OurIERegistry' Guid='$(var.OurComponentGUID_IERegistry)'>
               <RegistryValue
                 Root='HKLM' Key='Software\Google\Update\Clients\{283EAF47-8817-4c2b-A801-AD1FADFB7BAA}'
-                Name='pv' Value="PRODUCT_VERSION"
+                Name='pv' Value='PRODUCT_VERSION'
                 Action='write' Type='string' />
               <RegistryValue
                 Root='HKLM' Key='Software\Google\Update\Clients\{283EAF47-8817-4c2b-A801-AD1FADFB7BAA}'
-                Name='ap' Value=""
+                Name='ap' Value=''
                 Action='write' Type='string' />
               <!-- Automatically enable control by adding to IE7's pre-approved list. See
                 http://msdn.microsoft.com/library/default.asp?url=/library/en-us/IETechCol/cols/dnexpie/activex_security.asp?frame=true -->
@@ -110,14 +110,24 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             <Directory Id='OurIEDir' Name='Internet Explorer'>
               <Directory Id='OurIEVersionedDir' Name='PRODUCT_VERSION'>
                 <Component Id='OurIEDirFiles' Guid='$(var.OurComponentGUID_IEFiles)'>
+                  <File Id='ie_crash_sender' Name='crash_sender.exe' DiskId='1'
+                    Source="$(var.OurCommonPath)/crash_sender.exe" />
+m4_ifdef(~`DEBUG`~,~`m4_dnl
+                  <File Id='ie_crash_sender_pdb' Name='crash_sender.pdb' DiskId='1'
+                    Source="$(var.OurCommonPath)/crash_sender.pdb" />
+`~)
                   <File Id='ie_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
-                    Source="$(var.OurIEPath)/PRODUCT_SHORT_NAME_UQ.dll" SelfRegCost="1" />
+                    Source="$(var.OurIEPath)/PRODUCT_SHORT_NAME_UQ.dll" SelfRegCost='1' />
 m4_ifdef(~`DEBUG`~,~`m4_dnl
                   <File Id='ie_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
                     Source="$(var.OurIEPath)/PRODUCT_SHORT_NAME_UQ.pdb" />
 `~)
                   <File Id='vista_broker' Name='vista_broker.exe' DiskId='1'
                     Source="$(var.OurIEPath)/vista_broker.exe" />
+m4_ifdef(~`DEBUG`~,~`m4_dnl
+                  <File Id='vista_broker_pdb' Name='vista_broker.pdb' DiskId='1'
+                    Source="$(var.OurIEPath)/vista_broker.pdb" />
+`~)
                 </Component>
               </Directory>
             </Directory>
@@ -126,32 +136,40 @@ m4_ifdef(~`DEBUG`~,~`m4_dnl
                  sometimes gets confused and disables the updated version. -->
             <Directory Id='OurFFDir' Name='Firefox'>
               <Component Id='OurFFDirFiles' Guid='$(var.OurComponentGUID_FFDirFiles)'>
-                <File Id='ff_install.rdf' Name='install.rdf' DiskId='1'
-                  Source="$(var.OurFFPath)/install.rdf" />
                 <File Id='ff_chrome.manifest' Name='chrome.manifest' DiskId='1'
                   Source="$(var.OurFFPath)/chrome.manifest" />
+                <File Id='ff_crash_sender' Name='crash_sender.exe' DiskId='1'
+                  Source="$(var.OurCommonPath)/crash_sender.exe" />
+m4_ifdef(~`DEBUG`~,~`m4_dnl
+                <File Id='ff_crash_sender_pdb' Name='crash_sender.pdb' DiskId='1'
+                  Source="$(var.OurCommonPath)/crash_sender.pdb" />
+`~)
+                <File Id='ff_install.rdf' Name='install.rdf' DiskId='1'
+                  Source="$(var.OurFFPath)/install.rdf" />
               </Component>
               <Directory Id='OurFFComponentsDir' Name='components'>
                 <Component Id='OurFFComponentsDirFiles'
                   Guid='$(var.OurComponentGUID_FFComponentsDirFiles)'>
                   <File Id='ff_bootstrap.js' Name='bootstrap.js'
                     DiskId='1' Source="$(var.OurFFPath)/components/bootstrap.js" />
+                  <File Id='ff_xpt' Name='PRODUCT_SHORT_NAME_UQ.xpt' DiskId='1'
+                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.xpt" />
+                  <File Id='ff2_dll' Name='PRODUCT_SHORT_NAME_UQ~``~_ff2.dll' DiskId='1'
+                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ~``~_ff2.dll" />
+m4_ifdef(~`DEBUG`~,~`m4_dnl
+                  <File Id='ff2_pdb' Name='PRODUCT_SHORT_NAME_UQ~``~_ff2.pdb' DiskId='1'
+                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ~``~_ff2.pdb" />
+`~)
                   <File Id='ff3_dll' Name='PRODUCT_SHORT_NAME_UQ.dll' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.dll" />
-                  <File Id='ff2_dll' Name='PRODUCT_SHORT_NAME_UQ-ff2.dll' DiskId='1'
-                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ-ff2.dll" />
 m4_ifdef(~`DEBUG`~,~`m4_dnl
                   <File Id='ff3_pdb' Name='PRODUCT_SHORT_NAME_UQ.pdb' DiskId='1'
                     Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.pdb" />
-                  <File Id='ff2_pdb' Name='PRODUCT_SHORT_NAME_UQ-ff2.pdb' DiskId='1'
-                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ-ff2.pdb" />
 `~)
-                  <File Id='ff_xpt' Name='PRODUCT_SHORT_NAME_UQ.xpt' DiskId='1'
-                    Source="$(var.OurFFPath)/components/PRODUCT_SHORT_NAME_UQ.xpt" />
                 </Component>
               </Directory>
 
-              <!-- Begin: resource lists that MUST be kept in sync with "rules.mk" -->
+              <!-- Begin: resource lists that MUST be kept in sync with 'rules.mk' -->
               <Directory Id='OurFFChromeDir' Name='chrome'>
                 <Directory Id='OurFFChromeFilesDir' Name='chromeFiles'>
                   <Directory Id='OurFFContentDir' Name='content'>
@@ -161,12 +179,14 @@ m4_ifdef(~`DEBUG`~,~`m4_dnl
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/button.css" />
                       <File Id='button_bg.gif' Name='button_bg.gif'
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/button_bg.gif" />
+                      <File Id='button_corner_black.gif' Name='button_corner_black.gif'
+                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/button_corner_black.gif" />
+                      <File Id='button_corner_blue.gif' Name='button_corner_blue.gif'
+                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/button_corner_blue.gif" />
+                      <File Id='button_corner_grey.gif' Name='button_corner_grey.gif'
+                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/button_corner_grey.gif" />
                       <File Id='ff_html_dialog.css' Name='html_dialog.css'
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/html_dialog.css" />
-                      <File Id='ff_html_dialog.js' Name='html_dialog.js'
-                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/html_dialog.js" />
-                      <File Id='ff_json_noeval.js' Name='json_noeval.js'
-                        DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/json_noeval.js" />
                       <File Id='ff_browser_overlay.js' Name='browser-overlay.js'
                         DiskId='1' Source="$(var.OurFFPath)/chrome/chromeFiles/content/browser-overlay.js" />
                       <File Id='ff_browser_overlay.xul' Name='browser-overlay.xul'
@@ -194,7 +214,7 @@ m4_foreach(~`LANG`~, I18N_LANGUAGES, ~`m4_dnl
                   </Directory>
                 </Directory>
               </Directory>
-              <!-- End: resource lists that MUST be kept in sync with "rules.mk" -->
+              <!-- End: resource lists that MUST be kept in sync with 'rules.mk' -->
 
               <Directory Id='OurFFLibDir' Name='lib'>
                 <Component Id='OurFFLibDirFiles'
@@ -227,10 +247,10 @@ m4_foreach(~`LANG`~, I18N_LANGUAGES, ~`m4_dnl
     <InstallExecuteSequence>
       <RemoveExistingProducts After='InstallValidate'>UPGRADING</RemoveExistingProducts>
     </InstallExecuteSequence>
-    <Property Id="UILevel">1</Property>
-    <Property Id="ALLUSERS">1</Property>
+    <Property Id='UILevel'>1</Property>
+    <Property Id='ALLUSERS'>1</Property>
     <!-- Set the icon in Add/Remove Programs -->
-    <Property Id="ARPPRODUCTICON">MainIcon</Property>
-    <Icon Id="MainIcon" SourceFile="ui/common/icon_merged.ico" />
+    <Property Id='ARPPRODUCTICON'>MainIcon</Property>
+    <Icon Id='MainIcon' SourceFile="ui/common/icon_merged.ico" />
   </Product>
 </Wix>

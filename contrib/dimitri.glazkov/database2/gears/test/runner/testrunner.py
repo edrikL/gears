@@ -42,9 +42,9 @@ class TestRunner:
         try:
           browser_launcher.launch(self.test_url)
         except:
-          self.__handleBrowserTestCompletion(browser_launcher, 
+          print 'Error launching browser ', sys.exc_info()[0]
+          self.__handleBrowserTestCompletion(browser_launcher,
                                              test_results, automated)
-          print "Error launching browser ", sys.exc_info()[0]
         else: 
           # There is not try/catch/finally available to us so
           # we will go with code duplication.
@@ -53,6 +53,7 @@ class TestRunner:
     finally:
       # Shutdown each instance of TestWebserver after testing is complete
       # to unbind sockets.
+      print 'Ending browser tests, shutting down server.'
       for server in self.web_servers:
         server.shutdown()
       return test_results
@@ -65,9 +66,9 @@ class TestRunner:
     test_results[browser_launcher.type()] = test_server.testResults()
     if automated:
       try:
-        browser_launcher.kill()
+        browser_launcher.killAllInstances()
       except:
-        print "Error killing browser ", sys.exc_info()[0]
+        print 'Error killing browser ', sys.exc_info()[0]
           
 
   def __verifyBrowserLauncherTypesUnique(self, browser_launchers):
@@ -85,7 +86,7 @@ class TestRunner:
         
     for launchers in browser_launchers_by_name.values():
       if len(launchers) > 1:
-        raise ValueError("Browser launchers all must have unique type values")
+        raise ValueError('Browser launchers all must have unique type values')
 
 
 if __name__ == '__main__':
