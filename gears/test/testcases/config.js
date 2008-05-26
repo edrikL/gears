@@ -82,7 +82,7 @@ httpRequestSuite.addFile('../testcases/httprequest_tests.js',
                          {useWorker: true, useIFrame: true});
 suites.push(httpRequestSuite);
 
-if (!isSafari) {
+if (!isSafari & !isWince) {
   var imagingSuite = new TestSuite('Imaging');
   imagingSuite.addFile('../testcases/imaging_tests.js',
       {useWorker: false, useIFrame: true});
@@ -101,6 +101,13 @@ timerSuite.addFile('../testcases/timer_tests.js',
                    {useWorker: true, useIFrame: true});
 suites.push(timerSuite);
 
+if (!isSafari && !isWince) {
+  var audioSuite = new TestSuite('Audio');
+  audioSuite.addFile('../testcases/audio_tests.js', 
+                     {useWorker: true, useIFrame: true});
+  suites.push(audioSuite);
+}
+
 var internalTestSuite = new TestSuite('Internal_Tests');
 internalTestSuite.addFile('../testcases/internal_tests.js',
                           {useWorker: true, useIFrame: true});
@@ -109,7 +116,7 @@ internalTestSuite.addFile('../testcases/internal_coercion_tests.js',
 suites.push(internalTestSuite);
 
 var workerPoolSuite = new TestSuite('WorkerPool');
- workerPoolSuite.addFile('../testcases/workerpool_tests.js',
+workerPoolSuite.addFile('../testcases/workerpool_tests.js',
                         {useWorker: true, useIFrame: true});
 workerPoolSuite.addFile('../testcases/workerpool_onerror_tests.js',
                         {useWorker: true, useIFrame: true});

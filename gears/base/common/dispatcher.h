@@ -132,6 +132,15 @@ class ImplClass; \
 template <> \
 const std::string Dispatcher<ImplClass>::kThreadLocalsKey("base:" #ImplClass)
 
+// Boilerplate code for constants
+#define DEFINE_CONSTANT(JsName, JsType, Val)               \
+  void Get##JsName(JsCallContext *context) {               \
+    context->SetReturnValue(JsType, &Val);                 \
+  }
+
+#define REGISTER_CONSTANT(JsName, GearsClass)              \
+  RegisterProperty(#JsName, &GearsClass::Get##JsName, NULL);
+
 // Need to include .cc for template definitions.
 #include "gears/base/common/dispatcher.cc"
 

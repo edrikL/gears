@@ -40,17 +40,16 @@
 #include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
 #ifdef OFFICIAL_BUILD
-// The Geolocation API has not been finalized for official builds.
+// The Geolocation, Image, Canvas and Media API have not been finalized for official builds.
 #else
 #include "gears/geolocation/geolocation.h"
-#endif  // OFFICIAL_BUILD
-#include "gears/httprequest/httprequest.h"
-#ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
-#else
 #include "gears/image/image_loader.h"
 #include "gears/canvas/canvas.h"
-#endif
+#include "gears/media/audio.h"
+#include "gears/media/audio_recorder.h"
+#endif  // OFFICIAL_BUILD
+
+#include "gears/httprequest/httprequest.h"
 #include "gears/localserver/firefox/localserver_ff.h"
 #include "gears/timer/timer.h"
 #include "gears/workerpool/firefox/workerpool.h"
@@ -169,7 +168,7 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   } else if (object_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(GetJsRunner(), &object);
 #ifdef OFFICIAL_BUILD
-  // The Canvas, Console, Geolocation, and Image APIs have not been finalized
+  // The Canvas, Console, Geolocation, Media and Image APIs have not been finalized
   // for official builds.
 #else
   } else if (object_name == STRING16(L"beta.canvas")) {
@@ -180,7 +179,11 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
     CreateModule<GearsGeolocation>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.imageloader")) {
     CreateModule<GearsImageLoader>(GetJsRunner(), &object);
-#endif
+  } else if (object_name == STRING16(L"beta.audio")) {
+    CreateModule<GearsAudio>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.audiorecorder")) {
+    CreateModule<GearsAudioRecorder>(GetJsRunner(), &object);
+#endif  // OFFICIAL_BUILD
   } else {
     // Don't return an error here. Caller handles reporting unknown modules.
     error->clear();

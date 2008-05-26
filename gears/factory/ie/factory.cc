@@ -37,21 +37,19 @@
 #include "gears/factory/common/factory_utils.h"
 #include "gears/factory/ie/factory.h"
 #ifdef OFFICIAL_BUILD
-// The Geolocation API has not been finalized for official builds.
+// The Geolocation, Canvas, Image and Media API have not been finalized for official builds.
 #else
 #include "gears/geolocation/geolocation.h"
-#endif  // OFFICIAL_BUILD
-#include "gears/httprequest/httprequest.h"
 #ifdef WINCE
-// The Image API is not yet available for WinCE.
+// The Image, Canvas and Media API are not yet available for WinCE.
 #else
-#ifdef OFFICIAL_BUILD
-// The Image API has not been finalized for official builds
-#else
+#include "gears/media/audio.h"
+#include "gears/media/audio_recorder.h"
 #include "gears/image/image_loader.h"
 #include "gears/canvas/canvas.h"
-#endif
-#endif
+#endif  // WINCE
+#endif  // OFFICIAL_BUILD
+#include "gears/httprequest/httprequest.h"
 #include "gears/localserver/ie/localserver_ie.h"
 #include "gears/timer/timer.h"
 #include "gears/ui/ie/string_table.h"
@@ -178,13 +176,13 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   } else if (object_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(GetJsRunner(), &object);
 #ifdef OFFICIAL_BUILD
-  // The Canvas, Console, Geolocation, and Image APIs have not been finalized
+  // The Canvas, Console, Geolocation, Media and Image APIs have not been finalized
   // for official builds.
 #else
   } else if (object_name == STRING16(L"beta.geolocation")) {
     CreateModule<GearsGeolocation>(GetJsRunner(), &object);
 #ifdef WINCE
-  // Furthermore, Canvas, Console and Image are unimplemented on WinCE.
+  // Furthermore, Canvas, Console, Media and Image are unimplemented on WinCE.
 #else
   } else if (object_name == STRING16(L"beta.canvas")) {
     CreateModule<GearsCanvas>(GetJsRunner(), &object);
@@ -192,8 +190,12 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
     CreateModule<GearsConsole>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.imageloader")) {
     CreateModule<GearsImageLoader>(GetJsRunner(), &object);
-#endif
-#endif
+  } else if (object_name == STRING16(L"beta.audio")) {
+    CreateModule<GearsAudio>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.audiorecorder")) {
+    CreateModule<GearsAudioRecorder>(GetJsRunner(), &object);
+#endif  // WINCE
+#endif  // OFFICIAL_BUILD
   } else {
     // Don't return an error here. Caller handles reporting unknown modules.
     error->clear();

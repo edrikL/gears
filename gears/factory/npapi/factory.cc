@@ -36,11 +36,15 @@
 #include "gears/database/npapi/database.h"
 #include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
+
 #ifdef OFFICIAL_BUILD
-// The Geolocation API has not been finalized for official builds.
+// The Geolocation and Media API have not been finalized for official builds.
 #else
 #include "gears/geolocation/geolocation.h"
+#include "gears/media/audio.h"
+#include "gears/media/audio_recorder.h"
 #endif  // OFFICIAL_BUILD
+
 #include "gears/httprequest/httprequest.h"
 #include "gears/localserver/npapi/localserver_np.h"
 #include "gears/timer/timer.h"
@@ -142,10 +146,14 @@ void GearsFactory::Create(JsCallContext *context) {
   } else if (module_name == STRING16(L"beta.workerpool")) {
     CreateModule<GearsWorkerPool>(GetJsRunner(), &object);
 #ifdef OFFICIAL_BUILD
-  // The Geolocation API has not been finalized for official builds.
+// The Geolocation and Media API have not been finalized for official builds.
 #else
   } else if (module_name == STRING16(L"beta.geolocation")) {
     CreateModule<GearsGeolocation>(GetJsRunner(), &object);
+  } else if (module_name == STRING16(L"beta.audio")) {
+    CreateModule<GearsAudio>(GetJsRunner(), &object);
+  } else if (module_name == STRING16(L"beta.audiorecorder")) {
+    CreateModule<GearsAudioRecorder>(GetJsRunner(), &object);
 #endif  // OFFICIAL_BUILD
   } else if (module_name == STRING16(L"beta.httprequest")) {
     CreateModule<GearsHttpRequest>(GetJsRunner(), &object);
