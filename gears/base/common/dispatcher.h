@@ -133,9 +133,10 @@ template <> \
 const std::string Dispatcher<ImplClass>::kThreadLocalsKey("base:" #ImplClass)
 
 // Boilerplate code for constants
-#define DEFINE_CONSTANT(JsName, JsType, Val)               \
+#define DEFINE_CONSTANT(JsName, CType, JsType, Val)        \
   void Get##JsName(JsCallContext *context) {               \
-    context->SetReturnValue(JsType, &Val);                 \
+    static const CType local_var = Val;                    \
+    context->SetReturnValue(JsType, &local_var);           \
   }
 
 #define REGISTER_CONSTANT(JsName, GearsClass)              \
