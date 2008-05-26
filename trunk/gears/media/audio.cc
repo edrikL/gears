@@ -44,7 +44,7 @@ void GearsAudio::GetError(JsCallContext *context) {
   // Implement module to get correct error state.
   struct MediaError* error = new struct MediaError();
   JsRunnerInterface* js_runner = this->GetJsRunner();
-  scoped_ptr<JsObject> error_object(js_runner->NewObject(NULL));
+  scoped_ptr<JsObject> error_object(js_runner->NewObject());
   if (!error_object.get()) {
     context->SetException(STRING16(L"Failed to create new javascript object."));
   }
