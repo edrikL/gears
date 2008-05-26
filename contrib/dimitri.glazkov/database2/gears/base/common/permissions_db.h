@@ -32,6 +32,7 @@
 #include "gears/base/common/security_model.h"
 #include "gears/base/common/shortcut_table.h"
 #include "gears/base/common/sqlite_wrapper.h"
+#include "gears/database2/database2_metadata.h"
 
 // TODO(cprince): Consider merging this with PermissionsDB::PermissionValue.
 // But note the _TEMPORARY values hae no meaning to PermissionsDB.
@@ -142,6 +143,8 @@ class PermissionsDB {
                            const char16 *database_name,
                            const char16 *basename);
 
+  Database2Metadata *database2_metadata() { return &database2_metadata_; }
+
  private:
   // Private constructor, callers must use GetDB().
   PermissionsDB();
@@ -157,6 +160,7 @@ class PermissionsDB {
 
   // Schema upgrade functions.  Higher-numbered functions call
   // lower-numbered functions as appropriate.
+  bool UpgradeToVersion8();
   bool UpgradeToVersion7();
   bool UpgradeToVersion6();
   bool UpgradeToVersion5();
@@ -181,6 +185,7 @@ class PermissionsDB {
   ShortcutTable shortcut_table_;
 
   DatabaseNameTable database_name_table_;
+  Database2Metadata database2_metadata_;
 
   DISALLOW_EVIL_CONSTRUCTORS(PermissionsDB);
   DECL_SINGLE_THREAD

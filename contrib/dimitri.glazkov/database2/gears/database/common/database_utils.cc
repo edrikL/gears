@@ -31,10 +31,7 @@
 #include "gears/base/common/string_utils.h" // for IsStringValidPathComponent()
 #include "gears/database/common/database_utils.h"
 
-// NOTE(shess) This may interact with various SQLite features.  For
-// instance, VACUUM is implemented in terms of more basic SQLite
-// features, such as PRAGMA (or ATTACH, which Gears also disables).
-static int ForbidAllPragmas(void *userData, int iType,
+int ForbidAllPragmas(void *userData, int iType,
                             const char *zPragma, const char *zArg,
                             const char *zDatabase, const char *zView) {
   if (iType == SQLITE_PRAGMA) {

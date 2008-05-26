@@ -731,6 +731,7 @@ $(BROWSER)_CPPSRCS += \
 		connection.cc \
 		commands.cc \
 		database2.cc \
+		database2_metadata.cc \
 		interpreter.cc \
 		manager.cc \
 		result_set2.cc \

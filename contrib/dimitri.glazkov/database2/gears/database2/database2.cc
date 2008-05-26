@@ -36,6 +36,7 @@ DECLARE_GEARS_WRAPPER(Database2);
 
 template<>
 void Dispatcher<Database2>::Init() {
+  RegisterProperty("version", &Database2::GetVersion, NULL);
   RegisterMethod("transaction", &Database2::Transaction);
   RegisterMethod("synchronousTransaction", &Database2::SynchronousTransaction);
   RegisterMethod("changeVersion", &Database2::ChangeVersion);
@@ -46,17 +47,16 @@ void Dispatcher<Database2>::Init() {
 bool Database2::Create(const ModuleImplBaseClass *sibling, 
                        const std::string16 &name,
                        const std::string16 &version,
+                       Database2Connection *connection,
                        scoped_refptr<Database2> *instance) {
   assert(instance);
   if (!CreateModule<Database2>(sibling->GetJsRunner(), instance)
       || !instance->get()->InitBaseFromSibling(sibling)) {
     return false;
   }
-  instance->get()->version_.assign(version);
 
-  instance->get()->connection_.reset(
-      new Database2Connection(name,
-                              instance->get()->EnvPageSecurityOrigin()));
+  instance->get()->version_.assign(version);
+  instance->get()->connection_.reset(connection);
   return true;
 }
 
@@ -69,12 +69,8 @@ bool Database2::CreateError(const ModuleImplBaseClass *sibling,
   return false;
 }
 
-bool Database2::Open() {
-  return connection_->OpenAndVerifyVersion(version_);
-}
-
 Database2TransactionQueue *Database2::GetQueue() {
-  // Use connection_'s name and origin as a key to query transaction queue table
+  // Use EnvPageSecurityOrigin()'s and name as key to query transaction table
   return NULL;
 }
 
@@ -166,7 +162,7 @@ void Database2::Transaction(JsCallContext *context) {
   };
 
   context->GetArguments(ARRAYSIZE(argv), argv);
-  if (context->is_exception_set()) return;
+  context->SetException(STRING16(L"NOT IMPLEMENTED"));
 
   // create transaction
   // populate callbacks

@@ -29,10 +29,12 @@
 #include "gears/base/common/dispatcher.h"
 #include "gears/base/common/js_types.h"
 #include "gears/base/common/js_runner.h"
+#include "gears/base/common/permissions_db.h"
 #include "gears/base/common/scoped_refptr.h"
 #include "gears/base/common/module_wrapper.h"
 #include "gears/database2/common.h"
 #include "gears/database2/database2.h"
+#include "gears/database2/database2_metadata.h"
 
 DECLARE_GEARS_WRAPPER(Database2Manager);
 
@@ -51,20 +53,46 @@ void Database2Manager::OpenDatabase(JsCallContext *context) {
   context->GetArguments(ARRAYSIZE(argv), argv);
   if (context->is_exception_set()) return;
 
-  // create a Database2 instance and pass name and version into it
-  // displayName and estimatedSize are not used by Gears
+  // Find the filename and other metadata for this database.
+  PermissionsDB *permissions_db = PermissionsDB::GetDB();
+  assert(permissions_db);
+
+  Database2Metadata *database2_metadata = permissions_db->database2_metadata();
+  assert(database2_metadata);
+
+  std::string16 filename;
+  std::string16 found_version;
+  int version_cookie = 0;
+  std::string16 error;
+  if (!database2_metadata->GetDatabaseInfo(EnvPageSecurityOrigin(), name,
+                                           version, &filename, &found_version,
+                                           &version_cookie, &error)) {
+    context->SetException(error);
+    return;
+  }
+
+  // Check for version mismatch.
+  if (filename.empty()) {
+    // TODO(aa): Raise INVALID_STATE_ERR exception per spec. Not sure what that
+    // means exactly. See also issue 100.
+    context->SetException(kInvalidStateError);
+    return;
+  }
+
+  // create the Database2 instance
+  scoped_ptr<Database2Connection> connection(
+      new Database2Connection(EnvPageSecurityOrigin(), filename, version_cookie,
+                              database2_metadata));
+
   scoped_refptr<Database2> database;
-  if (!Database2::Create(this, name, version, &database)) {
+  if (!Database2::Create(this, name, found_version, connection.get(), &database)) {
     // raise broken gear exception
     context->SetException(GET_INTERNAL_ERROR_MESSAGE());
     return;
   }
 
-  if (!database->Open()) {
-    // raise INVALID_STATE_ERR
-    context->SetException(kInvalidStateError);
-    return;
-  }
+  // transfer ownership to database2
+  connection.release();
 
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, database.get());
   ReleaseNewObjectToScript(database.get());
