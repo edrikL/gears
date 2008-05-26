@@ -75,7 +75,6 @@ void GearsImageLoader::CreateImageFromBlob(JsCallContext *context) {
   }
   gears_image->Init(backing_image.release());
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, gears_image.get());
-  ReleaseNewObjectToScript(gears_image.get());
 }
 
 #endif  // not OFFICIAL_BUILD

@@ -149,7 +149,6 @@ void GearsBlob::Slice(JsCallContext *context) {
   }
   gears_blob->Reset(sliced.get());
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, gears_blob.get());
-  ReleaseNewObjectToScript(gears_blob.get());
 }
 
 class MarshaledGearsBlob : public MarshaledModule {
@@ -165,22 +164,6 @@ class MarshaledGearsBlob : public MarshaledModule {
     }
     gears_blob->Reset(contents_.get());
     *out = gears_blob->GetWrapperToken();
-    // TODO(nigeltao): Are we necessarily unmarshaling something that should
-    // be "released to script"?  What if we are unmarshaling something that is
-    // an element of another array (or a property of another object)?  Will
-    // a superfluous ReleaseNewObjectToScript lead to an extra ref-count (and
-    // hence memory leak) on IE?
-    // Perhaps the MarshaledModule interface should take a
-    // scoped_refptr<ModuleImplBaseClass> out parameter, instead of a
-    // JsScopedToken out parameter, and it would be up to the caller to decide
-    // if a ReleaseNewObjectToScript was necessary.
-    //
-    // In fact, it may be worthwhile to get rid of the oddly named
-    // ReleaseNewObjectToScript function entirely, and move the ref-count
-    // fiddling into places like JsContext::SetReturnValue,
-    // JsArray::SetElementObject and JsObject::SetPropertyObject where
-    // necessary.  See the code review discussion for OCL 6983196 for more.
-    ReleaseNewObjectToScript(gears_blob.get());
     return true;
   }
 

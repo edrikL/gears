@@ -207,7 +207,14 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   }
 
   *retval = object->GetWrapperToken().pdispVal;
-  ReleaseNewObjectToScript(object.get());
+  // IE expects that when you return an object up to the script engine, from
+  // an IDL-defined API, then the return value will already have been Ref()'d.
+  // The NPAPI and Firefox ports do not do this - they have a different
+  // calling convention.
+  // Note that, when this factory implementation migrates to being Dispatcher-
+  // based, then we will presumably just call JsCallContext::SetReturnValue,
+  // and we will not need to explicitly Ref() here.
+  object->Ref();
   return true;
 }
 

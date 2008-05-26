@@ -278,21 +278,8 @@ class ModuleWrapperBaseClass {
   virtual ~ModuleWrapperBaseClass() { }
 };
 
-// IE expects that when you return an object to script, it has already been
-// AddRef()'d. NPAPI and Firefox do not do this. Gears modules should call
-// this function after returning a newly created object to script to do the
-// right thing.
-inline void ReleaseNewObjectToScript(ModuleImplBaseClass *module) {
-#ifdef BROWSER_IE
-  // Increment the reference for IE, only.
-  module->Ref();
-#endif
-}
-
-// Creates a new Module of the given type.  Returns false on failure.  Callers
-// should use ReleaseNewObjectToScript() with modules created from this
-// function before returning them to script to ensure consistent behavior
-// across browsers.  Usually, OutType will be GearsClass or ModuleImplBaseClass.
+// Creates a new Module of the given type.  Returns false on failure.
+// Usually, OutType will be GearsClass or ModuleImplBaseClass.
 template<class GearsClass, class OutType>
 bool CreateModule(JsRunnerInterface *js_runner, scoped_refptr<OutType>* module);
 
