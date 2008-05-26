@@ -1584,6 +1584,25 @@ $(BROWSER)_CPPSRCS	+= \
 		$(NULL)
 endif
 
+#-----------------------------------------------------------------------------
+# media
+
+ifeq ($(OFFICIAL_BUILD),1)
+# The Audio API has not been finalized for official builds.
+else
+$(BROWSER)_VPATH += \
+		media \
+		$(NULL)
+
+$(BROWSER)_CPPSRCS += \
+		media.cc \
+		media_recorder.cc \
+		audio.cc \
+		audio_recorder.cc \
+		time_ranges.cc \
+		$(NULL)
+
+endif # not OFFICIAL_BUILD
 
 #-----------------------------------------------------------------------------
 # Add any hard-coded "FF3_" sources to the FF2_ sources.
