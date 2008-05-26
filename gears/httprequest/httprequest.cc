@@ -384,7 +384,6 @@ void GearsHttpRequest::GetResponseBlob(JsCallContext *context) {
 
   // Re-use the previously created GearsBlob object, if it exists.
   if (response_blob_.get()) {
-    ReleaseNewObjectToScript(response_blob_.get());
     context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, response_blob_.get());
     return;
   }
@@ -420,7 +419,6 @@ void GearsHttpRequest::GetResponseBlob(JsCallContext *context) {
   }
   response_blob_->Reset(blob.get());
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, response_blob_.get());
-  ReleaseNewObjectToScript(response_blob_.get());
 }
 #endif
 

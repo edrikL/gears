@@ -198,7 +198,6 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   }
 
   js_params->SetReturnValue(object->GetWrapperToken());
-  ReleaseNewObjectToScript(object.get());
   return true;
 }
 

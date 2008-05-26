@@ -2075,7 +2075,6 @@ void GearsTest::CreateBlobFromString(JsCallContext *context) {
   }
   gears_blob->Reset(new BufferBlob(input_utf8.c_str(), input_utf8.size()));
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, gears_blob.get());
-  ReleaseNewObjectToScript(gears_blob.get());
 }
 #endif  // OFFICIAL_BUILD
 

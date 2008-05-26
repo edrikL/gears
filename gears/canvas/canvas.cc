@@ -191,7 +191,6 @@ void GearsCanvas::GetContext(JsCallContext *context) {
       return;
     }
     rendering_context_->InitCanvasField(this);
-    ReleaseNewObjectToScript(rendering_context_.get());
   }
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, rendering_context_.get());
 }

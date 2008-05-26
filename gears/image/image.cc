@@ -190,7 +190,6 @@ void GearsImage::ToBlob(JsCallContext *context) {
   }
   gears_blob->Reset(blob.get());
   context->SetReturnValue(JSPARAM_DISPATCHER_MODULE, gears_blob.get());
-  ReleaseNewObjectToScript(gears_blob.get());
 }
 
 #endif  // not OFFICIAL_BUILD

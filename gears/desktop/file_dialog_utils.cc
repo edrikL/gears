@@ -128,7 +128,6 @@ bool FileDialogUtils::FilesToJsObjectArray(
       return false;
     }
     gears_blob->Reset(blobs[i].get());
-    ReleaseNewObjectToScript(gears_blob.get());
 #endif  // OFFICIAL_BUILD
 
     // JsArray takes the javascript token out of JsObject. Hence, the JsObject
