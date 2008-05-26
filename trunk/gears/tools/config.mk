@@ -262,7 +262,6 @@ FF3_LIBS = -L$(GECKO_SDK)/gecko_sdk/lib -lxpcom -lxpcomglue_s
 # /usr/lib, only libxul was.
 FF2_LIBS += -lnspr4
 FF3_LIBS += -lxul
-# - No differences yet.
 endif
 
 ######################################################################
