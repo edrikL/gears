@@ -34,8 +34,18 @@ GearsMedia::GearsMedia() {
 GearsMedia::~GearsMedia() {
 }
 
-// API methods
+// constants
+const int GearsMedia::NETWORK_STATE_EMPTY = 0;
+const int GearsMedia::NETWORK_STATE_LOADING = 1;
+const int GearsMedia::NETWORK_STATE_LOADED_METADATA = 2;
+const int GearsMedia::NETWORK_STATE_LOADED_FIRST_FRAME = 3;
+const int GearsMedia::NETWORK_STATE_LOADED = 4;
+const int GearsMedia::READY_STATE_DATA_UNAVAILABLE = 0;
+const int GearsMedia::READY_STATE_CAN_SHOW_CURRENT_FRAME = 1;
+const int GearsMedia::READY_STATE_CAN_PLAY = 2;
+const int GearsMedia::READY_STATE_CAN_PLAY_THROUGH = 3;
 
+// API methods
 void GearsMedia::GetError(JsCallContext *context) {
   // TODO(aprasath): Implement me
 }
