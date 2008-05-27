@@ -133,12 +133,24 @@ template <> \
 const std::string Dispatcher<ImplClass>::kThreadLocalsKey("base:" #ImplClass)
 
 // Boilerplate code for constants
+
+// Use DEFINE_CONSTANT for generating the implementation of the getter API.
+// @JsName - name of constant as exposed in javascript.
+// @CType - the type of constant in C (eg., int).
+// @JsType - the Js type of the constant (eg., JSPARAM_INT).
+// @Val - the value the constant is expected to return.
+// This method uses a local variable to set the return value. Setting the
+// value directly does not work.
 #define DEFINE_CONSTANT(JsName, CType, JsType, Val)        \
   void Get##JsName(JsCallContext *context) {               \
     static const CType local_var = Val;                    \
     context->SetReturnValue(JsType, &local_var);           \
   }
 
+// Use REGISTER_CONSTANT in Dispatcher<>::Init to make the above generated
+// getter API available to Javascript.
+// @JsName - name of constant as exposed in javascript.
+// @GearsClass - class in which the constant is defined.
 #define REGISTER_CONSTANT(JsName, GearsClass)              \
   RegisterProperty(#JsName, &GearsClass::Get##JsName, NULL);
 

@@ -79,19 +79,26 @@ class GearsMedia {
   void GetCurrentSrc(JsCallContext *context);
 
   // const unsigned short EMPTY = 0;
-  DEFINE_CONSTANT(EMPTY, int, JSPARAM_INT, 0);
+  static const int NETWORK_STATE_EMPTY;
+  DEFINE_CONSTANT(EMPTY, int, JSPARAM_INT, NETWORK_STATE_EMPTY);
 
   // const unsigned short LOADING = 1;
-  DEFINE_CONSTANT(LOADING, int, JSPARAM_INT, 1);
+  static const int NETWORK_STATE_LOADING;
+  DEFINE_CONSTANT(LOADING, int, JSPARAM_INT, NETWORK_STATE_LOADING);
 
   // const unsigned short LOADED_METADATA = 2;
-  DEFINE_CONSTANT(LOADED_METADATA, int, JSPARAM_INT, 2);
+  static const int NETWORK_STATE_LOADED_METADATA;
+  DEFINE_CONSTANT(LOADED_METADATA, int, JSPARAM_INT,
+                  NETWORK_STATE_LOADED_METADATA);
 
   // const unsigned short LOADED_FIRST_FRAME = 3;
-  DEFINE_CONSTANT(LOADED_FIRST_FRAME, int, JSPARAM_INT, 3);
+  static const int NETWORK_STATE_LOADED_FIRST_FRAME;
+  DEFINE_CONSTANT(LOADED_FIRST_FRAME, int, JSPARAM_INT,
+                  NETWORK_STATE_LOADED_FIRST_FRAME);
 
   // const unsigned short LOADED = 4;
-  DEFINE_CONSTANT(LOADED, int, JSPARAM_INT, 4);
+  static const int NETWORK_STATE_LOADED;
+  DEFINE_CONSTANT(LOADED, int, JSPARAM_INT, NETWORK_STATE_LOADED);
 
   // readonly attribute unsigned short networkState;
   void GetNetworkState(JsCallContext *context);
@@ -104,16 +111,23 @@ class GearsMedia {
 
   // ---- READY STATE ----
   // const unsigned short DATA_UNAVAILABLE = 0;
-  DEFINE_CONSTANT(DATA_UNAVAILABLE, int, JSPARAM_INT, 0);
+  static const int READY_STATE_DATA_UNAVAILABLE;
+  DEFINE_CONSTANT(DATA_UNAVAILABLE, int, JSPARAM_INT,
+                  READY_STATE_DATA_UNAVAILABLE);
 
   // const unsigned short CAN_SHOW_CURRENT_FRAME = 1;
-  DEFINE_CONSTANT(CAN_SHOW_CURRENT_FRAME, int, JSPARAM_INT, 1);
+  static const int READY_STATE_CAN_SHOW_CURRENT_FRAME;
+  DEFINE_CONSTANT(CAN_SHOW_CURRENT_FRAME, int, JSPARAM_INT,
+                  READY_STATE_CAN_SHOW_CURRENT_FRAME);
 
   // const unsigned short CAN_PLAY = 2;
-  DEFINE_CONSTANT(CAN_PLAY, int, JSPARAM_INT, 2);
+  static const int READY_STATE_CAN_PLAY;
+  DEFINE_CONSTANT(CAN_PLAY, int, JSPARAM_INT, READY_STATE_CAN_PLAY);
 
   // const unsigned short CAN_PLAY_THROUGH = 3;
-  DEFINE_CONSTANT(CAN_PLAY_THROUGH, int, JSPARAM_INT, 3);
+  static const int READY_STATE_CAN_PLAY_THROUGH;
+  DEFINE_CONSTANT(CAN_PLAY_THROUGH, int, JSPARAM_INT,
+                  READY_STATE_CAN_PLAY_THROUGH);
 
   // readonly attribute unsigned short readyState;
   void GetReadyState(JsCallContext *context);
