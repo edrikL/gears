@@ -2062,7 +2062,7 @@ void JsCallContext::SetException(const std::string16 &message) {
 #ifdef DEBUG
   std::string message_ascii;
   String16ToUTF8(message.c_str(), message.length(), &message_ascii);
-  LOG(("SetException: %s", message_ascii.c_str()));
+  LOG(("SetException: %s\n", message_ascii.c_str()));
 #endif
 
   is_exception_set_ = true;

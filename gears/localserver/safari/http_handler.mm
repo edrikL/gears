@@ -62,7 +62,7 @@
 // The actual GearsWebCacheDB is not linked in with this file.  It is looked up
 // at runtime.  This category on NSObject keeps the compiler happy.
 @interface NSObject(GearsWebCacheDBInterface)
-+ (BOOL)canService:(NSURL *)url;
++ (BOOL)canService:(NSURLRequest *)request;
 + (NSData *)service:(NSURL *)url mimeType:(NSString **)mimeType
       headers:(NSDictionary **)headers statusCode:(int *)statusCode 
       redirectURL:(NSURL **)redirectURL;
