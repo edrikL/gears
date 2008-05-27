@@ -404,7 +404,7 @@ Not Sure If We Need These:
 
 
 
-*_Thoughts on Undo:_*
+== Thoughts on Undo: ==
 
 Right now the way an undo can be implemented using the above API is to either clone the canvas after each operation or keep track of the initial state and the list of operations applied on it, so that one can undo to any point by applying some of the operations.
 
