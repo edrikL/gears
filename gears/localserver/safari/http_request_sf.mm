@@ -366,6 +366,17 @@ bool SFHttpRequest::SendBlob(BlobInterface *blob) {
 #endif
 
 bool SFHttpRequest::SendImpl(NSInputStream *post_data_stream) {
+
+headers_to_send_.push_back(
+        HttpHeader(STRING16(L"GEARS"),
+                   STRING16(L"1")));
+
+#ifdef DEBUG
+  std::string url;
+  String16ToUTF8(url_.c_str(), url_.length(), &url);
+  LOG(("load url %s |%s|\n", (async_ ? "async" : "synchronous"), url.c_str()));
+#endif  // DEBUG
+
   if (!IsOpen()) {
     return false;
   }
@@ -394,8 +405,13 @@ bool SFHttpRequest::SendImpl(NSInputStream *post_data_stream) {
      return false;
   }
   
-  scoped_refptr<SFHttpRequest> reference(this);
-  SetReadyState(SENT);
+  // Although the name of this status code is "SENT" which would appear to mean
+  // that the request has been sent, the standard defines this state as
+  // signifying that headers have been received for the request, so it's wrong 
+  // to change the state here.  We do so later, only after headedrs have been 
+  // received.
+  // scoped_refptr<SFHttpRequest> reference(this);
+  // SetReadyState(SENT);
   
   // Block until completion on synchronous requests.
   if (!async_) {
