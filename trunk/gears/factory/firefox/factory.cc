@@ -35,28 +35,22 @@
 #include "gears/base/common/module_wrapper.h"
 #include "gears/base/common/string16.h"
 #include "gears/base/firefox/dom_utils.h"
+#include "gears/cctests/test.h"
 #include "gears/console/console.h"
 #include "gears/database/firefox/database.h"
+#include "gears/database2/manager.h"
 #include "gears/desktop/desktop.h"
 #include "gears/factory/common/factory_utils.h"
-#ifdef OFFICIAL_BUILD
-// The Geolocation, Image, Canvas and Media API have not been finalized for official builds.
-#else
 #include "gears/geolocation/geolocation.h"
 #include "gears/image/image_loader.h"
 #include "gears/canvas/canvas.h"
 #include "gears/media/audio.h"
 #include "gears/media/audio_recorder.h"
-#endif  // OFFICIAL_BUILD
 
 #include "gears/httprequest/httprequest.h"
 #include "gears/localserver/firefox/localserver_ff.h"
 #include "gears/timer/timer.h"
 #include "gears/workerpool/firefox/workerpool.h"
-
-#ifdef USING_CCTESTS
-#include "gears/cctests/test.h"
-#endif
 
 // Boilerplate. == NS_IMPL_ISUPPORTS + ..._MAP_ENTRY_EXTERNAL_DOM_CLASSINFO
 NS_IMPL_ADDREF(GearsFactory)
@@ -168,13 +162,15 @@ bool GearsFactory::CreateDispatcherModule(const std::string16 &object_name,
   } else if (object_name == STRING16(L"beta.timer")) {
     CreateModule<GearsTimer>(GetJsRunner(), &object);
 #ifdef OFFICIAL_BUILD
-  // The Canvas, Console, Geolocation, Media and Image APIs have not been finalized
-  // for official builds.
+  // The Canvas, Console, Database2, Geolocation, Media, and Image APIs have not been
+  // finalized for official builds.
 #else
   } else if (object_name == STRING16(L"beta.canvas")) {
     CreateModule<GearsCanvas>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.console")) {
     CreateModule<GearsConsole>(GetJsRunner(), &object);
+  } else if (object_name == STRING16(L"beta.databasemanager")) {
+    CreateModule<Database2Manager>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.geolocation")) {
     CreateModule<GearsGeolocation>(GetJsRunner(), &object);
   } else if (object_name == STRING16(L"beta.imageloader")) {
