@@ -178,7 +178,7 @@ void Database2Transaction::InvokeErrorCallback() {
   }
 
   JsParamToSend send_argv[] = {
-    JSPARAM_OBJECT, error
+    { JSPARAM_OBJECT, error },
   };
 
   GetJsRunner()->InvokeCallback(error_callback_.get(), ARRAYSIZE(send_argv),
