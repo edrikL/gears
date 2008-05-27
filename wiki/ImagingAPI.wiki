@@ -341,6 +341,12 @@ function process(var srcBlob) {
 }
 }}}
 
+= Things in HTML Canvas That We Omit =
+  # Drawing arbitrary paths
+  # Gradients
+  # Patterns
+  # Stroke and line styles
+  # Shadows
 
 = Beyond V1 =
 *_CanvasRenderingContext2D:_*
