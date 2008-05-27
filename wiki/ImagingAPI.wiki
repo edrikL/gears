@@ -30,7 +30,7 @@ We currently have no plans to GPU-accelerate this API.
     * Better support for non-destructive edits
 
 = JS interface =
-We model the API based on the _HTML5CanvasElement_ in the HTML5 spec. Please refer to http://www.whatwg.org/specs/web-apps/current-work/multipage/section-the-canvas.html#the-canvas for details.
+The Gears Canvas is based on HTML5 [http://www.whatwg.org/specs/web-apps/current-work/#canvas Canvas]; you should be familiar with the latter before you read this doc.
 
 *_Canvas class:_*
 {{{
