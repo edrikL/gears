@@ -340,11 +340,6 @@ function process(var srcBlob) {
 }
 }}}
 
-= Points to ponder =
-
-*_Undo_*:
-
-Right now the way an undo can be implemented using the above API is to either clone the canvas after each operation or keep track of the initial state and the list of operations applied on it, so that one can undo to any point by applying some of the operations.
 
 = Beyond V1 =
 *_Updates to CanvasRenderingContext2D class:_*
@@ -384,7 +379,7 @@ class ClipRegion {
 };
 }}}
 
-*_Cool photo manipulation stuff:_*
+*_Advanced Operations:_*
 {{{
 class PhotoUtils { 
  // Utility class that can perform operations on a canvas 
@@ -396,3 +391,14 @@ class PhotoUtils {
 
 };
 }}}
+
+*_Thoughts on Undo:_*
+Right now the way an undo can be implemented using the above API is to either clone the canvas after each operation or keep track of the initial state and the list of operations applied on it, so that one can undo to any point by applying some of the operations.
+
+If needed in future, here is one possible way in which we can implement undo in the API itself:
+
+Many operations normally modify the canvas in place, but take an optional switch that makes them return a new canvas instead. The advantage with this approach is flexibility -- if you're interested in the previous state of the canvas (for undo), you generate the output in a new canvas without having to do a potentially expensive clone operation. On the other hand, if don't care about undo, you can overwrite the source in place without paying the memory cost of a second buffer (for many operations).
+
+The problem with this approach is that for consistency the draw functions should also have an option to return a new canvas, and such a thing may be tougher to merge into the HTML standard. So right now, we don't support this. If you want to preserve the old state, you have to either clone the canvas after each operation or keep track of the initial state and the list of operations applied on it, so that you can undo to any point by applying some of the operations.
+
+We can re-examine the problem for v2 if one of our clients wants to use it.
