@@ -3105,6 +3105,7 @@
 					"$(OTHER_CFLAGS)",
 					"-Wno-non-virtual-dtor",
 				);
+				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = Gears;
 				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = dynamic;
 				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(SRCROOT)/../../bin-dbg/osx-i386/common/ $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include";
@@ -3158,6 +3159,7 @@
 					"$(OTHER_CFLAGS)",
 					"-Wno-non-virtual-dtor",
 				);
+				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = Gears;
 				STRIP_STYLE = debugging;
 				USER_HEADER_SEARCH_PATHS = ". $(SRCROOT)/../../../ $(SRCROOT)/../../bin-dbg/osx-i386/common/ $(SRCROOT)/../../../third_party/ $(SRCROOT)/../../../third_party/googleurl $(SRCROOT)/../../../third_party/icu38/public/common $(SRCROOT)/../../../third_party/spidermonkey/nspr/pr/include";
@@ -3713,6 +3715,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = (
+					ppc,
+					i386,
+				);
 				COPY_PHASE_STRIP = YES;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
