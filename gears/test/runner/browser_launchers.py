@@ -75,7 +75,7 @@ class Firefox2Win32Launcher(BaseFirefoxWin32Launcher):
 class Firefox3Win32Launcher(BaseFirefoxWin32Launcher):
   """ Launcher for ff3 on Windows. """
 
-  FIREFOX_PATH = 'Mozilla Firefox 3 Beta 5\\firefox.exe'
+  FIREFOX_PATH = 'Mozilla Firefox 3\\firefox.exe'
 
   def __init__(self, profile, automated=True):
     BaseFirefoxWin32Launcher.__init__(self, profile, self.FIREFOX_PATH, 
