@@ -1,8 +1,16 @@
-#summary Off-screen photo manipulation
+#summary Offscreen photo manipulation
 
 = Introduction =
-The purpose of this module is to provide programmatic support for off-screen photo manipulation on the browser.
+We extend a subset of HTML5's Canvas for photo manipulation, by defining a Canvas class with the additional functionality. We may not support every function the standard Canvas does -- only the ones that make sense for our use cases. But whatever functionality is common with canvas has the same API.
 
+Note that the Gears canvas works on browsers that do not support HTML canvas. If the browser does support HTML canvas, pixels can be copied from our canvas to the HTML one and back. If not, our canvas is usable by itself and can be exported as an image for on-screen display. Here's how you'd do this:
+  # Export to blob.
+  # Capture the blob at a localserver url.
+  # Create a HTMLImageElement, set the src to the blob's url, and insert the image element into the DOM. Or draw the image element onto a canvas (using drawImage). You should wait for the load to complete (onload event) before you draw, though that shouldn't take long.
+
+In the future, if this rendering path is too slow, we'll add support for direct rendering through a browser plugin (like Flash). For now we render through localserver since we anyway need to support exporting to a blob for upload, so the flow comes for free.
+
+We currently have no plans to GPU-accelerate this API.
 = Requirements =
   #  V1 features (Basic):
     * Basic operations (crop, resize, scale, rotate)
