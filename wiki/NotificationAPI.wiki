@@ -14,22 +14,19 @@ Notifications are displayed in top-most balloon-styled windows. On Windows, ball
 <script type="text/javascript">
 var desktop = google.gears.factory.create('beta.desktop')
 var notification = desktop.createNotification();
-notification.title = 'Lunch with Sarah';
-notification.icon = 'http://calendar.google.com/calendar.gif';
-notification.subtitle1 = 'Thu Mar 27 1:25pm - 2:25pm';
-notification.subtitle2 = 'Dmitry\'s Diner';
-notification. displayUntilTime = new Date(2008, 3, 27, 14, 0, 0);
-notification.addAction(
-    'View',
-    'http://calendar.google.com/view?id=...');
-notification.addAction(
-    'Snooze',
-    'http://gears.google.com/notifier/actions/snooze?duration=600');
+notification.title = Barbecue on Saturday';
+notification.icon = 'http://mail.google.com/mail.gif';
+notification.subtitle = 'Thu Mar 27 1:25pm - 2:25pm';
+notification.description = 'Hey everyone, looks like great weather this ' +
+    'weekend so I thought we might get together';
+notification.displayAtTime = new Date(2008, 5, 27, 14, 0, 0);
+notification.displayUntilTime = new Date(2008, 5, 27, 14, 0, 15);
+notification.addAction('View', 'http://mail.google.com/view?id=...');
 desktop.showNotification(notification);
 </script>
 }}}
 
-http://gears.team.jian.googlepages.com/cal_notif.jpg
+http://gears.team.jian.googlepages.com/mail_notif.jpg
 
 = Details =
 
@@ -70,17 +67,17 @@ readwrite attribute string               icon
 // If this is not set, a unique ID will be generated.
 readwrite attribute string               id
 
-// Specifies the 1st additional subtitle. For example, this could be used to
+// Specifies the additional subtitle. For example, this could be used to
 // display the appointment time for the calendar notification.
-readwrite attribute string               subtitle1
-
-// Specifies the 2nd additional subtitle. For example, this could be used to
-// display the appointment location for the calendar notification.
-readwrite attribute string               subtitle2
+readwrite attribute string               subtitle
 
 // Specifies the main content of the notification. For example, email 
 // notifications could put snippet in this field.
 readwrite attribute string               description
+
+// This is the time when the notification is meant to be displayed. If this is
+// not provided, the notification will be displayed immediately.
+readwrite attribute Date                 displayAtTime
 
 // This is the time when the notification is meant to go away. If this is not
 // set, the notification just get displayed and goes away after the default
