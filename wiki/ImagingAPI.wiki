@@ -355,6 +355,9 @@ We may add these in a future version:
   # Distort: you give a set of source and destination "control points" and the api distorts the image based on that, or the same can be done with "control lines".
   # Apply image mask, generate image mask from an existing image. Clip drawing and photo manipulation operations to an image mask.
   # Detect and remove timestamps embedded in images.
+  # Red-eye correction
+  # Auto color correction
+  # Magic Wand (as in Photoshop)
   # Clip Regions. Here's the API:
 *_CanvasRenderingContext2D:_*
 {{{
@@ -392,11 +395,6 @@ class ClipRegion {
   ClipRegion clone();
 };
 }}}
-
-  # Red-eye correction
-  # Auto color correction
-  # Magic Wand (as in Photoshop)
-
 
 Not Sure If We Need These:
    # "Smart scissors" basically allows you to select an object in a photo by drawing roughly on its boundary.
