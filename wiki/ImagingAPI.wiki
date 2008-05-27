@@ -397,10 +397,12 @@ class ClipRegion {
 }}}
 
 Not Sure If We Need These:
-   # [http://fotoflexer.com/demos/smartScissorsDemoHiRes.php "Smart scissors"] basically allows you to select an object in a photo by drawing roughly on its boundary.
-   # [http://fotoflexer.com/demos/smartResizeDemoHiRes.php "Smart resize"] enables you to change only the width (or the height) of an image without cropping it and without changing aspect ratio. It selectively deletes some rows or columns of pixels to preserve the look of the photo. Similarly it can automatically generate rows or columns of pixels. Watch the demo; it's pretty cool.
+   # "[http://fotoflexer.com/demos/smartScissorsDemoHiRes.php Smart scissors]" basically allows you to select an object in a photo by drawing roughly on its boundary.
+   # "[http://fotoflexer.com/demos/smartResizeDemoHiRes.php Smart resize]" enables you to change only the width (or the height) of an image without cropping it and without changing aspect ratio. It selectively deletes some rows or columns of pixels to preserve the look of the photo. Similarly it can automatically generate rows or columns of pixels. Watch the demo; it's pretty cool.
    # Text rendering -- sub-pixel antialiasing, control over character spacing, small caps, superscript and subscript, bidi text...
    #  Color space conversions, gamma correction.
+
+
 
 *_Thoughts on Undo:_*
 
